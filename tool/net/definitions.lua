@@ -1,6 +1,6 @@
 ---@meta
 error("Tried to evaluate definition file.")
---Documents redbean 2.0.19, lsqlite3 0.9.4
+--Documents redbean 2.2, lsqlite3 0.9.5
 
 --[[
 
@@ -2011,7 +2011,7 @@ function Decimate(data) end
 ---@nodiscard
 function MeasureEntropy(data) end
 
---- Comp sses data.
+--- Compresses data.
 ---
 ---     >: Deflate("hello")
 ---     "\xcbH\xcd\xc9\xc9\x07\x00"
@@ -2145,36 +2145,243 @@ function ResolveIp(hostname) end
 
 lsqlite3 = {
     -- Error Codes
+
+    --- The `lsqlite3.OK` result code means that the operation was successful
+    --- and that there were no errors. Most other result codes indicate an
+    --- error.
     OK = 0,
+    --- The `lsqlite3.ERROR` result code is a generic error code that is used
+    --- when no other more specific error code is available.
     ERROR = 1,
+    --- The `lsqlite3.INTERNAL` result code indicates an internal malfunction.
+    --- In a working version of SQLite, an application should never see this
+    --- result code. If application does encounter this result code, it shows
+    --- that there is a bug in the database engine.
+    ---
+    --- SQLite does not currently generate this result code. However,
+    --- application-defined SQL functions or virtual tables, or VFSes, or other
+    --- extensions might cause this result code to be returned.
     INTERNAL = 2,
+    --- The `lsqlite3.PERM` result code indicates that the requested access mode
+    --- for a newly created database could not be provided.
     PERM = 3,
+    --- The `lsqlite3.ABORT` result code indicates that an operation was aborted
+    --- prior to completion, usually be application request. See also:
+    --- `lsqlite3.INTERRUPT`.
+    ---
+    --- If the callback function to `exec()` returns non-zero, then `exec()`
+    --- will return `lsqlite3.ABORT`.
+    ---
+    --- If a ROLLBACK operation occurs on the same database connection as a
+    --- pending read or write, then the pending read or write may fail with an
+    --- `lsqlite3.ABORT` error.
     ABORT = 4,
+    --- The lsqlite3.BUSY result code indicates that the database file could not
+    --- be written (or in some cases read) because of concurrent activity by
+    --- some other database connection, usually a database connection in a
+    --- separate process.
+    ---
+    --- For example, if process A is in the middle of a large write transaction
+    --- and at the same time process B attempts to start a new write
+    --- transaction, process B will get back an `lsqlite3.BUSY` result because
+    --- SQLite only supports one writer at a time. Process B will need to wait
+    --- for process A to finish its transaction before starting a new
+    --- transaction. The `db:busy_timeout()` and `db:busy_handler()` interfaces
+    --- are available to process B to help it deal with `lsqlite3.BUSY` errors.
+    ---
+    --- An `lsqlite3.BUSY` error can occur at any point in a transaction: when
+    --- the transaction is first started, during any write or update operations,
+    --- or when the transaction commits. To avoid encountering `lsqlite3.BUSY`
+    --- errors in the middle of a transaction, the application can use 
+    --- `BEGIN IMMEDIATE` instead of just `BEGIN` to start a transaction. The
+    --- `BEGIN IMMEDIATE` command might itself return `lsqlite3.BUSY`, but if it
+    --- succeeds, then SQLite guarantees that no subsequent operations on the same database through the next COMMIT will return `lsqlite3.BUSY`.
+    ---
+    --- The `lsqlite3.BUSY` result code differs from `lsqlite3.LOCKED` in that
+    --- `lsqlite3.BUSY` indicates a conflict with a separate database
+    --- connection, probably in a separate process, whereas `lsqlite3.LOCKED`
+    --- indicates a conflict within the same database connection (or sometimes
+    --- a database connection with a shared cache).
     BUSY = 5,
+    --- The `lsqlite3.LOCKED` result code indicates that a write operation could
+    --- not continue because of a conflict within the same database connection
+    --- or a conflict with a different database connection that uses a shared
+    --- cache.
+    ---
+    --- For example, a DROP TABLE statement cannot be run while another thread
+    --- is reading from that table on the same database connection because
+    --- dropping the table would delete the table out from under the concurrent
+    --- reader.
+    ---
+    --- The `lsqlite3.LOCKED` result code differs from `lsqlite3.BUSY` in that
+    --- `lsqlite3.LOCKED` indicates a conflict on the same database connection
+    --- (or on a connection with a shared cache) whereas `lsqlite3.BUSY`
+    --- indicates a conflict with a different database connection, probably in
+    --- a different process.
     LOCKED = 6,
+    --- The `lsqlite3.NOMEM` result code indicates that SQLite was unable to
+    --- allocate all the memory it needed to complete the operation. In other
+    --- words, an internal call to `sqlite3_malloc()` or `sqlite3_realloc()` has
+    --- failed in a case where the memory being allocated was required in order
+    --- to continue the operation.
     NOMEM = 7,
+    --- The `lsqlite3.READONLY` result code is returned when an attempt is made
+    --- to alter some data for which the current database connection does not
+    --- have write permission.
     READONLY = 8,
+    --- The `lsqlite3.INTERRUPT` result code indicates that an operation was
+    --- interrupted by the `sqlite3_interrupt()` interface. See also:
+    --- `lsqlite3.ABORT`
     INTERRUPT = 9,
+    --- The `lsqlite3.IOERR` result code says that the operation could not
+    --- finish because the operating system reported an I/O error.
+    ---
+    --- A full disk drive will normally give an `lsqlite3.FULL` error rather
+    --- than an `lsqlite3.IOERR` error.
+    ---
+    --- There are many different extended result codes for I/O errors that
+    --- identify the specific I/O operation that failed.
     IOERR = 10,
+    --- The `lsqlite3.CORRUPT` result code indicates that the database file has
+    --- been corrupted. See [How To Corrupt Your Database Files](https://www.sqlite.org/lockingv3.html#how_to_corrupt)
+    --- for further discussion on how corruption can occur.
     CORRUPT = 11,
+    --- The `lsqlite3.NOTFOUND` result code is exposed in three ways:
+    ---
+    --- `lsqlite3.NOTFOUND` can be returned by the `sqlite3_file_control()` 
+    --- interface to indicate that the file control opcode passed as the third
+    --- argument was not recognized by the underlying VFS.
+    ---
+    --- `lsqlite3.NOTFOUND` can also be returned by the xSetSystemCall() method
+    --- of an sqlite3_vfs object.
+    ---
+    --- `lsqlite3.NOTFOUND` an be returned by sqlite3_vtab_rhs_value() to
+    --- indicate that the right-hand operand of a constraint is not available
+    --- to the xBestIndex method that made the call.
+    ---
+    --- The `lsqlite3.NOTFOUND` result code is also used internally by the
+    --- SQLite implementation, but those internal uses are not exposed to the
+    --- application.
     NOTFOUND = 12,
+    --- The `lsqlite3.FULL` result code indicates that a write could not
+    --- complete because the disk is full. Note that this error can occur when
+    --- trying to write information into the main database file, or it can also
+    --- occur when writing into temporary disk files.
+    --- 
+    --- Sometimes applications encounter this error even though there is an
+    --- abundance of primary disk space because the error occurs when writing
+    --- into temporary disk files on a system where temporary files are stored
+    --- on a separate partition with much less space that the primary disk.
     FULL = 13,
+    --- The `lsqlite3.CANTOPEN` result code indicates that SQLite was unable to
+    --- open a file. The file in question might be a primary database file or
+    --- one of several temporary disk files.
     CANTOPEN = 14,
+    --- The `lsqlite3.PROTOCOL` result code indicates a problem with the file
+    --- locking protocol used by SQLite. The `lsqlite3.PROTOCOL` error is
+    --- currently only returned when using WAL mode and attempting to start a
+    --- new transaction. There is a race condition that can occur when two
+    --- separate database connections both try to start a transaction at the
+    --- same time in WAL mode. The loser of the race backs off and tries again,
+    --- after a brief delay. If the same connection loses the locking race
+    --- dozens of times over a span of multiple seconds, it will eventually give
+    --- up and return `lsqlite3.PROTOCOL`. The `lsqlite3.PROTOCOL` error should
+    --- appear in practice very, very rarely, and only when there are many
+    --- separate processes all competing intensely to write to the same
+    --- database.
     PROTOCOL = 15,
+    --- The `lsqlite3.EMPTY` result code is not currently used.
     EMPTY = 16,
+    --- The `lsqlite3.SCHEMA` result code indicates that the database schema has
+    --- changed. This result code can be returned from `Statement:step()`. If
+    --- the database schema was changed by some other process in between the
+    --- time that the statement was prepared and the time the statement was run,
+    --- this error can result.
+    --- 
+    --- The statement is automatically re-prepared if the schema changes, up to
+    --- `SQLITE_MAX_SCHEMA_RETRY` times (default: 50). The `step()` interface
+    --- will only return `lsqlite3.SCHEMA` back to the application if the
+    --- failure persists after these many retries.
     SCHEMA = 17,
+    --- The `lsqlite3.TOOBIG` error code indicates that a string or BLOB was too
+    --- large. The default maximum length of a string or BLOB in SQLite is 
+    --- 1,000,000,000 bytes. This maximum length can be changed at compile-time
+    --- using the `SQLITE_MAX_LENGTH` compile-time option. The `lsqlite3.TOOBIG`
+    --- error results when SQLite encounters a string or BLOB that exceeds the
+    --- compile-time limit.
+    --- 
+    --- The `lsqlite3.TOOBIG` error code can also result when an oversized SQL
+    --- statement is passed into one of the `db:prepare()` interface. The
+    --- maximum length of an SQL statement defaults to a much smaller value of
+    --- 1,000,000,000 bytes.
     TOOBIG = 18,
+    --- The `lsqlite3.CONSTRAINT` error code means that an SQL constraint
+    --- violation occurred while trying to process an SQL statement. Additional
+    --- information about the failed constraint can be found by consulting the
+    --- accompanying error message (returned via `errmsg()`) or by looking at
+    --- the extended error code.
+    --- 
+    --- The `lsqlite3.CONSTRAINT` code can also be used as the return value from
+    --- the `xBestIndex()` method of a virtual table implementation. When
+    --- `xBestIndex()` returns `lsqlite3.CONSTRAINT`, that indicates that the
+    --- particular combination of inputs submitted to `xBestIndex()` cannot
+    --- result in a usable query plan and should not be given further
+    --- consideration.
     CONSTRAINT = 19,
+    --- SQLite is normally very forgiving about mismatches between the type of a
+    --- value and the declared type of the container in which that value is to
+    --- be stored. For example, SQLite allows the application to store a large
+    --- BLOB in a column with a declared type of BOOLEAN. But in a few cases,
+    --- SQLite is strict about types. The `lsqlite3.MISMATCH` error is returned
+    --- in those few cases when the types do not match.
+    --- 
+    --- The rowid of a table must be an integer. Attempt to set the rowid to
+    --- anything other than an integer (or a NULL which will be automatically
+    --- converted into the next available integer rowid) results in an
+    --- `lsqlite3.MISMATCH` error.
     MISMATCH = 20,
+    --- The `lsqlite3.MISUSE` return code might be returned if the application
+    --- uses any SQLite interface in a way that is undefined or unsupported. For
+    --- example, using a prepared statement after that prepared statement has
+    --- been finalized might result in an `lsqlite3.MISUSE` error.
+    ---
+    --- SQLite tries to detect misuse and report the misuse using this result
+    --- code. However, there is no guarantee that the detection of misuse will
+    --- be successful. Misuse detection is probabilistic. Applications should
+    --- never depend on an `lsqlite3.MISUSE` return value.
+    ---
+    --- If SQLite ever returns `lsqlite3.MISUSE` from any interface, that means
+    --- that the application is incorrectly coded and needs to be fixed. Do not
+    --- ship an application that sometimes returns `lsqlite3.MISUSE` from a
+    --- standard SQLite interface because that application contains potentially
+    --- serious bugs.
     MISUSE = 21,
+    --- The `lsqlite3.NOLFS` error can be returned on systems that do not
+    --- support large files when the database grows to be larger than what the
+    --- filesystem can handle. "NOLFS" stands for "NO Large File Support".
     NOLFS = 22,
+    --- The `lsqlite3.FORMAT` error code is not currently used by SQLite.
     FORMAT = 24,
+    --- The `lsqlite3.RANGE` error indices that the parameter number argument to
+    --- one of the `bind` routines or the column number in one of the `column`
+    --- routines is out of range.
     RANGE = 25,
+    --- When attempting to open a file, the `lsqlite3.NOTADB` error indicates
+    --- that the file being opened does not appear to be an SQLite database
+    --- file.
     NOTADB = 26,
+    --- The `lsqlite3.ROW` result code returned by sqlite3_step() indicates that
+    --- another row of output is available.
     ROW = 100,
+    --- The `lsqlite3.DONE` result code indicates that an operation has
+    --- completed. The `lsqlite3.DONE` result code is most commonly seen as a
+    --- return value from `step()` indicating that the SQL statement has run to
+    --- completion, but `lsqlite3.DONE` can also be returned by other multi-step
+    --- interfaces.
     DONE = 101,
 
     -- Authorizer Action Codes
+
     CREATE_INDEX = 1,
     CREATE_TABLE = 2,
     CREATE_TEMP_INDEX = 3,
@@ -2209,23 +2416,49 @@ lsqlite3 = {
     SAVEPOINT = 32,
 
     -- Open Flags
+
     ---@type integer
+    --- The database is created if it does not already exist.
     OPEN_CREATE = nil,
     ---@type integer
+    --- The database is opened with shared cache disabled, overriding the
+    --- default shared cache setting provided by sqlite3_enable_shared_cache().
     OPEN_PRIVATECACHE = nil,
     ---@type integer
+    --- The new database connection will use the "serialized" threading mode.
+    --- This means the multiple threads can safely attempt to use the same
+    --- database connection at the same time. (Mutexes will block any actual
+    --- concurrency, but in this mode there is no harm in trying.)
     OPEN_FULLMUTEX = nil,
     ---@type integer
+    --- The new database connection will use the "multi-thread" threading mode.
+    --- This means that separate threads are allowed to use SQLite at the same
+    --- time, as long as each thread is using a different database connection.
     OPEN_NOMUTEX = nil,
     ---@type integer
+    --- The database will be opened as an in-memory database. The database is
+    --- named by the "filename" argument for the purposes of cache-sharing, if
+    --- shared cache mode is enabled, but the "filename" is otherwise ignored.
     OPEN_MEMORY = nil,
     ---@type integer
+    --- The filename can be interpreted as a URI if this flag is set. See
+    --- https://www.sqlite.org/c3ref/open.html
     OPEN_URI = nil,
     ---@type integer
+    --- The database is opened for reading and writing if possible, or reading
+    --- only if the file is write protected by the operating system. In either
+    --- case the database must already exist, otherwise an error is returned.
     OPEN_READWRITE = nil,
     ---@type integer
+    --- The database is opened in read-only mode. If the database does not
+    --- already exist, an error is returned.
     OPEN_READONLY = nil,
     ---@type integer
+    --- The database is opened shared cache enabled, overriding the default
+    --- shared cache setting provided by sqlite3_enable_shared_cache(). The use
+    --- of shared cache mode is discouraged and hence shared cache capabilities
+    --- may be omitted from many builds of SQLite. In such cases, this option is
+    --- a no-op.
     OPEN_SHAREDCACHE = nil,
 
     ---@type integer
@@ -2258,6 +2491,7 @@ lsqlite3 = {
 ---@param flags? integer defaults to `lsqlite3.OPEN_READWRITE + lsqlite3.OPEN_CREATE`
 ---@return lsqlite3.Database db
 ---@nodiscard
+---@overload fun(filename: string, flags?: integer): nil, errorcode: integer, errormsg: string
 function lsqlite3.open(filename, flags) end
 
 --- Opens an SQLite database in memory and returns its handle as userdata. In case
@@ -2276,15 +2510,84 @@ function lsqlite3.lversion() end
 ---@nodiscard
 function lsqlite3.version() end
 
----@class lsqlite3.Database
---- After opening a database with `lsqlite3.open()` or `lsqlite3.open_memory()` the
---- returned database object should be used for all further method calls in
+---@class lsqlite3.Context: userdata
+--- A callback context is available as a parameter inside the callback functions
+--- `db:create_aggregate()` and `db:create_function()`. It can be used to get
+--- further information about the state of a query.
+local Context = nil
+
+---@return any udata the user-definable data field for callback funtions.
+---@nodiscard
+function Context:get_aggregate_data() end
+
+--- Set the user-definable data field for callback funtions to `udata`.
+function Context:set_aggregate_data(udata) end
+
+--- Sets the result of a callback function to `res`. The type of the result
+--- depends on the type of `res` and is either a number or a string or `nil`.
+--- All other values will raise an error message.
+---@param res string|number?
+function Context:result(res) end
+
+--- Sets the result of a callback function to the binary string in blob.
+---@param blob string
+function Context:result_blob(blob) end
+
+--- Sets the result of a callback function to the value number.
+---@param double number
+function Context:result_double(double) end
+Context.result_number = Context.result_double
+
+--- Sets the result of a callback function to the error value in `err`.
+function Context:result_error(err) end
+
+--- Sets the result of a callback function to the integer `number`
+---@param number integer
+function Context:result_int(number) end
+
+--- Sets the result of a callback function to `nil`.
+function Context:result_null() end
+
+--- Sets the result of a callback function to the string in `str`.
+---@param str string
+function Context:result_text(str) end
+
+--- Returns the userdata parameter given in the call to install the callback
+--- function (see db:create_aggregate() and db:create_function() for details).
+---@return any
+function Context:user_data() end
+
+---@class lsqlite3.Database: userdata
+--- After opening a database with `lsqlite3.open()` or `lsqlite3.open_memory()`
+--- the returned database object should be used for all further method calls in
 --- connection with that database.
-Database = {}
+local Database = {}
+
+---@param changeset string
+---@param filter_cb function
+---@param conflict_cb function
+---@param udata? any
+---@param rebaser? lsqlite3.Rebaser
+---@param flags? integer
+---@return true
+---@overload fun(db: lsqlite3.Database, changeset: string, filter_cb: function, conflict_cb: function, udata?, rebaser?: lsqlite3.Rebaser, flags?: integer): nil, errno: integer
+---@overload fun(db: lsqlite3.Database, changeset: string, conflict_cb?: function, udata?, rebaser?: lsqlite3.Rebaser, flags?: integer): true
+---@overload fun(db: lsqlite3.Database, changeset: string, conflict_cb?: function, udata?, rebaser?: lsqlite3.Rebaser, flags?: integer): nil, errno: integer
+---@overload fun(db: lsqlite3.Database, changeset: string, filter_cb: function, conflict_cb: function, udata?): true
+---@overload fun(db: lsqlite3.Database, changeset: string, filter_cb: function, conflict_cb: function, udata?): nil, errno: integer
+---@overload fun(db: lsqlite3.Database, changeset: string, conflict_cb?: function, udata?): true
+---@overload fun(db: lsqlite3.Database, changeset: string, conflict_cb?: function, udata?): nil, errno: integer
+function Database:apply_changeset(changeset, conflict_cb, filter_cb, udata, rebaser, flags) end
 
 --- Sets or removes a busy handler for a database.
----@param func function? is either a Lua function that implements the busy handler or `nil` to remove a previously set handler. This function returns nothing.
---- The handler function is called with two parameters: `udata` and the number of (re-)tries for a pending transaction. It should return `nil`, `false` or `0` if the transaction is to be aborted. All other values will result in another attempt to perform the transaction. (See the SQLite documentation for important hints about writing busy handlers.)
+---@generic Udata
+---@param func fun(udata: Udata, tries: integer)? is either a Lua function that implements the busy handler or `nil` to remove a previously set handler. This function returns nothing.
+---@param udata? Udata
+--- The handler function is called with two parameters: `udata` and the number
+--- of (re-)tries for a pending transaction. It should return `nil`, `false` or
+--- `0` if the transaction is to be aborted. All other values will result in
+--- another attempt to perform the transaction. (See the SQLite documentation
+--- for important hints about writing busy handlers.)
 function Database:busy_handler(func, udata) end
 
 --- Sets a busy handler that waits for `milliseconds` if a transaction cannot proceed.
@@ -2295,38 +2598,47 @@ function Database:busy_timeout(milliseconds) end
 
 ---@return integer # the number of database rows that were changed (or inserted or deleted) by the most recent SQL statement.
 ---@nodiscard
---- Only changes that are directly specified by INSERT, UPDATE, or DELETE statements are counted. Auxiliary changes caused by triggers are not counted. Use `db:total_changes()` to find the total number of changes.
+--- Only changes that are directly specified by INSERT, UPDATE, or DELETE
+--- statements are counted. Auxiliary changes caused by triggers are not
+--- counted. Use `db:total_changes()` to find the total number of changes.
 function Database:changes() end
 
---- Closes a database. All SQL statements prepared using `db:prepare()` should have
---- been finalized before this function is called. The function returns
+--- Closes a database. All SQL statements prepared using `db:prepare()` should
+--- have been finalized before this function is called. The function returns
 --- `lsqlite3.OK` on success or else a numerical error code.
+---@return integer
 function Database:close() end
 
----Finalizes all statements that have not been explicitly finalized. If `temponly`
---- is `true`, only internal, temporary statements are finalized.
+--- Finalizes all statements that have not been explicitly finalized. If
+--- `temponly` is `true`, only internal, temporary statements are finalized.
 ---@param temponly? boolean
 function Database:close_vm(temponly) end
 
 --- This function installs a `commit_hook` callback handler.
----@param func function a Lua function that is invoked by SQLite3 whenever a transaction is commited. This callback receives one argument:
----@param udata any argument used when the callback was installed.
+---@generic Udata
+---@param func fun(udata: Udata) a Lua function that is invoked by SQLite3 whenever a transaction is committed. This callback receives one argument:
+---@param udata Udata argument used when the callback was installed.
 ---
---- If `func` returns `false` or `nil` the COMMIT is allowed to proceed, otherwise
---- the COMMIT is converted to a ROLLBACK.
+--- If `func` returns `false` or `nil` the COMMIT is allowed to proceed, 
+--- otherwise the COMMIT is converted to a ROLLBACK.
 ---
 --- See: `db:rollback_hook` and `db:update_hook`
 function Database:commit_hook(func, udata) end
+
+--- Concatenate a list of changesets.
+---@param changesets string[]
+---@return string changeset
+function Database:concat_changeset(changesets) end
 
 --- This function creates an aggregate callback function. Aggregates perform an
 --- operation over all rows in a query.
 
 ---@param name string the name of the aggregate function as given in an SQL statement.
 ---@param nargs integer the number of arguments this call will provide
----@param step function the actual Lua function that gets called once for every row.
+---@param step fun(ctx: lsqlite3.Context, ...: string|number|nil) the actual Lua function that gets called once for every row.
 --- It should accept a function context (see Methods for callback contexts) plus
 --- the same number of parameters as given in `nargs`.
----@param final function a function that is called once after all rows have been processed.
+---@param final fun(ctx: lsqlite3.Context) a function that is called once after all rows have been processed.
 --- It receives one argument, the function context.
 ---@param userdata? any If provided, userdata can be any Lua value and would be returned by the `context:user_data()` method.
 ---
@@ -2340,14 +2652,14 @@ function Database:commit_hook(func, udata) end
 ---         INSERT INTO numbers VALUES(3,33);
 ---     ]=]
 ---     local num_sum=0
----     local function oneRow(context,num)  -- add one column in all rows
----         num_sum=num_sum+num
+---     local function oneRow(context, num)  -- add one column in all rows
+---         num_sum = num_sum + num
 ---     end
 ---     local function afterLast(context)   -- return sum after last row has been processed
----     context:result_number(num_sum)
----         num_sum=0
+---         context:result_number(num_sum)
+---         num_sum = 0
 ---     end
----     db:create_aggregate("do_the_sums",1,oneRow,afterLast)
+---     db:create_aggregate("do_the_sums", 1, oneRow, afterLast)
 ---     for sum in db:urows('SELECT do_the_sums(num1) FROM numbers') do print("Sum of col 1:",sum) end
 ---     for sum in db:urows('SELECT do_the_sums(num2) FROM numbers') do print("Sum of col 2:",sum) end
 ---
@@ -2356,12 +2668,14 @@ function Database:commit_hook(func, udata) end
 ---     Sum of col 1:   6
 ---     Sum of col 2:   66
 ---
+---@return boolean success
 function Database:create_aggregate(name, nargs, step, final, userdata) end
 
---- This creates a collation callback. A collation callback is used to establish a
---- collation order, mostly for string comparisons and sorting purposes.
+--- This creates a collation callback. A collation callback is used to establish
+--- a collation order, mostly for string comparisons and sorting purposes.
 ---@param name string the name of the collation to be created
----@param func function a function that accepts two string arguments, compares them and returns `0` if both strings are identical, `-1` if the first argument is lower in the collation order than the second and `1` if the first argument is higher in the collation order than the second. A simple example:
+---@param func fun(s1: string, s2: string): -1|0|1 a function that accepts two string arguments, compares them and returns `0` if both strings are identical, `-1` if the first argument is lower in the collation order than the second and `1` if the first argument is higher in the collation order than the second. 
+--- A simple example:
 ---
 ---    local function collate(s1,s2)
 ---      s1=s1:lower()
@@ -2387,7 +2701,7 @@ function Database:create_collation(name, func) end
 --- SQLite3 once for every row in a query.
 ---@param name string the name of the aggregate function as given in an SQL statement.
 ---@param nargs integer the number of arguments this call will provide
----@param func function the actual Lua function that gets called once for every row.
+---@param func fun(ctx: lsqlite3.Context, ...) the actual Lua function that gets called once for every row.
 --- It should accept a function context (see Methods for callback contexts) plus
 --- the same number of parameters as given in `nargs`.
 ---@param userdata? any If provided, userdata can be any Lua value and would be returned by the `context:user_data()` method.
@@ -2404,7 +2718,31 @@ function Database:create_collation(name, func) end
 ---       util.printf('%2i+%2i+%2i=%2i\n',col1,col2,col3,sum)
 ---     end
 ---
+---@return boolean success
 function Database:create_function(name, nargs, func, userdata) end
+
+---@return lsqlite3.Rebaser
+---@overload fun(self: lsqlite3.Database): nil, errno: integer
+---@nodiscard
+function Database:create_rebaser() end
+
+---@param name string? defaults to `"main"`
+---@return lsqlite3.Session
+---@overload fun(self: lsqlite3.Database, name?: string): nil, errno: integer
+---@nodiscard
+function Database:create_session(name) end
+
+---@return string? filename associated with database `name` of connection `db`.
+---@nodiscard
+---@param name string may be `"main"` for the main database file, or the name specified after the AS keyword in an ATTACH statement for an attached database.
+--- If there is no attached database name on the database connection, then no value is
+--- returned; if database name is a temporary or in-memory database, then an
+--- empty string is returned.
+function Database:db_filename(name) end
+
+--- Deserializes data from a string which was created by `db:serialize`.
+---@param s string
+function Database:deserialize(s) end
 
 ---@return integer error the numerical result code (or extended result code) for the most recent failed call associated with database db.
 --- See http://lua.sqlite.org/index.cgi/doc/tip/doc/lsqlite3.wiki#numerical_error_and_result_codes for details.
@@ -2453,34 +2791,39 @@ Database.errmsg = Database.error_message
 ---     end
 ---     db:exec(sql,showrow,'test_udata')
 ---
+---@generic Udata
 ---@param sql string
----@param func? function
----@param udata? any
+---@param func? fun(udata: Udata, cols: integer, values: string[], names: string[]): integer
+---@param udata? Udata
 function Database:execute(sql, func, udata) end
 
 Database.exec = Database.execute
 
----This function causes any pending database operation to abort and return at the next opportunity.
+--- This function causes any pending database operation to abort and return at
+--- the next opportunity.
 function Database:interrupt() end
 
----@return string filename associated with database `name` of connection `db`.
+---@param changeset string
+---@return string
 ---@nodiscard
----@param name string may be `"main"` for the main database file, or the name specified after the AS keyword in an ATTACH statement for an attached database.
---- If there is no attached database name on the database connection, then no value is
---- returned; if database name is a temporary or in-memory database, then an
---- empty string is returned.
----@nodiscard
-function Database:db_filename(name) end
+function Database:invert_changeset(changeset) end
 
 ---@return boolean
 ---@nodiscard
 function Database:isopen() end
 
+---@param name string
+---@param flags integer? defaults to `0`
+---@return lsqlite3.Iterator
+---@overload fun(self: lsqlite3.Database, name?: string, flags?: integer): nil, errno: integer
+---@nodiscard
+function Database:iterate_changeset(name, flags) end
+
 ---@return integer rowid the most recent INSERT into the database. If no inserts have ever occurred, `0` is returned.
---- Each row in an SQLite table has a unique 64-bit signed integer key called the
---- rowid. This id is always available as an undeclared column named ROWID, OID, or
---- _ROWID_. If the table has a column of type INTEGER PRIMARY KEY then that column
---- is another alias for the rowid.
+--- Each row in an SQLite table has a unique 64-bit signed integer key called
+--- the rowid. This id is always available as an undeclared column named ROWID,
+--- OID, or _ROWID_. If the table has a column of type INTEGER PRIMARY KEY then
+--- that column is another alias for the rowid.
 ---@nodiscard
 ---
 --- If an INSERT occurs within a trigger, then the rowid of the inserted row is
@@ -2511,7 +2854,7 @@ function Database:last_insert_rowid() end
 ---     num1: 3
 ---
 ---@param sql string
----@return function iterator, any, any
+---@return fun(vm: lsqlite3.VM) iterator, lsqlite3.VM vm
 ---@nodiscard
 function Database:nrows(sql) end
 
@@ -2521,13 +2864,15 @@ function Database:nrows(sql) end
 --- statement.
 --- See http://lua.sqlite.org/index.cgi/doc/tip/doc/lsqlite3.wiki#methods_for_prepared_statements.
 ---@param sql string
----@return Statement
+---@return lsqlite3.Statement
 ---@nodiscard
 function Database:prepare(sql) end
 
--- This function installs a rollback_hook callback handler.--
--- See: `db:commit_hook` and `db:update_hook`
----@param func function a Lua function that is invoked by SQLite3 whenever a transaction is rolled back. This callback receives one argument: the `udata` argument used when the callback was installed.
+--- This function installs a rollback_hook callback handler.
+--- See: `db:commit_hook` and `db:update_hook`
+---@generic Udata
+---@param func fun(udata: Udata) a Lua function that is invoked by SQLite3 whenever a transaction is rolled back. This callback receives one argument: the `udata` argument used when the callback was installed.
+---@param udata Udata
 function Database:rollback_hook(func, udata) end
 
 --- Creates an iterator that returns the successive rows selected by the SQL
@@ -2553,29 +2898,37 @@ function Database:rollback_hook(func, udata) end
 ---     2: 33
 ---
 ---@param sql string
----@return function iterator, any, any
+---@return fun(vm: lsqlite3.VM): (string|number|nil)[]? iterator, lsqlite3.VM vm
 ---@nodiscard
 function Database:rows(sql) end
+
+--- Serialize a database to be restored later with `Database:deserialize`.
+---@return string? -- `nil` if the database has no tables
+---@nodiscard
+function Database:serialize() end
 
 ---@return integer # the number of database rows that have been modified by INSERT, UPDATE or DELETE statements since the database was opened.
 --- This includes UPDATE, INSERT and DELETE statements executed as part of trigger
 --- programs. All changes are counted as soon as the statement that produces them
 --- is completed by calling either `stmt:reset()` or `stmt:finalize()`.
+---@nodiscard
 function Database:total_changes() end
 
 --- This function installs an update_hook Data Change Notification
---- Callback handler. See: db:commit_hook and db:rollback_hook
+--- Callback handler. See: `db:commit_hook` and `db:rollback_hook`
 ---
----@param func function a Lua function that is invoked by SQLite3
----     whenever a row is updated, inserted or deleted. This callback
----     receives five arguments: the first is the `udata` argument used
----     when the callback was installed; the second is an integer
----     indicating the operation that caused the callback to be invoked
----     (one of `lsqlite3.UPDATE`, `lsqlite3.INSERT`, or
----     `lsqlite3.DELETE`). The third and fourth arguments are the
----     database and table name containing the affected row. The final
----     callback parameter is the rowid of the row. In the case of an
----     update, this is the rowid after the update takes place.
+---@generic Udata
+---@param func fun(udata: Udata, op: integer, db: lsqlite3.Database, name: string, rowid: integer) a Lua function that is invoked by SQLite3
+--- whenever a row is updated, inserted or deleted. This callback
+--- receives five arguments: the first is the `udata` argument used
+--- when the callback was installed; the second is an integer
+--- indicating the operation that caused the callback to be invoked
+--- (one of `lsqlite3.UPDATE`, `lsqlite3.INSERT`, or
+--- `lsqlite3.DELETE`). The third and fourth arguments are the
+--- database and table name containing the affected row. The final
+--- callback parameter is the rowid of the row. In the case of an
+--- update, this is the rowid after the update takes place.
+---@param udata Udata
 function Database:update_hook(func, udata) end
 
 --- Creates an iterator that returns the successive rows selected by the SQL
@@ -2598,14 +2951,112 @@ function Database:update_hook(func, udata) end
 ---     3       33
 ---
 ---@param sql string
----@return function iterator
+---@return fun(vm: lsqlite3.VM): ...: string|number|nil iterator, lsqlite3.VM vm
 ---@nodiscard
 function Database:urows(sql) end
 
----@class Statement
+---@param mode integer?
+---@param name string?
+---@return integer nlog, integer nckpt
+---@overload fun(self, mode?: integer, name?: integer): nil, errno: integer
+function Database:wal_checkpoint(mode, name) end
+
+---@generic Udata
+---@param func (fun(udata: Udata, db: lsqlite3.Database, name: string, page_count: integer): integer)?
+---@param udata Udata?
+function Database:wal_hook(func, udata) end
+
+---@class lsqlite3.Iterator: userdata
+--- Returned by `db:iterate_changeset`
+local Iterator = nil
+
+---@return (string|number|false|nil)[]
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:conflict() end
+
+---@return integer nout
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:fk_conflicts() end
+
+---@return true
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:finalize() end
+
+---@return integer
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:next() end
+
+---@return (string|number|false?)[]
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:new() end
+
+---@return (string|number|false?)[]
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:old() end
+
+---@return string, integer, boolean indirect
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:op() end
+
+---@return boolean[]
+---@overload fun(self: lsqlite3.Iterator): nil, errno: integer
+function Iterator:pk() end
+
+---@class lsqlite3.Rebaser: userdata
+--- Returned by `db:create_rebaser`.
+local Rebaser = nil
+
+function Rebaser:delete() end
+
+---@param changeset string
+---@return string
+---@overload fun(self: lsqlite3.Rebaser, changeset: string): nil, errno: integer
+function Rebaser:rebase(changeset) end
+
+---@class lsqlite3.Session: userdata
+--- Returned by `db:create_session`.
+local Session = nil
+
+---@generic Udata
+---@param filter_cb fun(udata: Udata)?
+---@param udata Udata
+---@overload fun(self: lsqlite3.Session, filter_cb?: fun(udata), udata?): nil, errno: integer
+---@overload fun(self: lsqlite3.Session, s: string): true
+---@overload fun(self: lsqlite3.Session, s: string): nil, errno: integer
+---@return true
+function Session:attach(filter_cb, udata) end
+
+---@return string changeset
+---@nodiscard
+function Session:changeset() end
+
+--- Closes the session. Further method calls on the session will throw errors.
+function Session:delete() end
+
+---@param s1 string
+---@param s2 string
+---@return boolean
+---@nodiscard
+function Session:diff(s1, s2) end
+
+---@return boolean
+function Session:enable() end
+
+---@return boolean
+function Session:indirect() end
+
+---@return boolean
+---@nodiscard
+function Session:isempty() end
+
+---@return string
+---@nodiscard
+function Session:patchset() end
+
+---@class lsqlite3.Statement: userdata
 --- After creating a prepared statement with `db:prepare()` the returned statement
 --- object should be used for all further calls in connection with that statement.
-Statement = nil
+local Statement = nil
 
 --- Binds `value` to statement parameter `n`. If the type of `value` is
 --- string it is bound as text. If the type of value is number, it is
@@ -2615,12 +3066,15 @@ Statement = nil
 --- previous binding is removed.
 ---
 ---@return integer `lsqlite3.OK` on success or else a numerical error code,
+---@param n integer
 ---@param value string|number|boolean|nil
 function Statement:bind(n, value) end
 
 --- Binds string `blob` (which can be a binary string) as a blob to
 --- statement parameter `n`.
 ---
+---@param n integer
+---@param blob string
 ---@return integer `lsqlite3.OK` on success or else a numerical error code,
 function Statement:bind_blob(n, blob) end
 
@@ -2649,7 +3103,8 @@ function Statement:bind_names(nametable) end
 --- value.
 function Statement:bind_parameter_count() end
 
----@return any # the name of the n-th parameter in prepared statement.
+---@param n integer
+---@return string? -- the name of the n-th parameter in prepared statement.
 --- Statement parameters of the form `":AAA"` or `"@AAA"` or `"$VVV"` have a name
 --- which is the string `":AAA"` or `"@AAA"` or `"$VVV"`. In other words, the
 --- initial `":"` or `"$"` or `"@"` is included as part of the name. Parameters of
@@ -2659,6 +3114,7 @@ function Statement:bind_parameter_count() end
 function Statement:bind_parameter_name(n) end
 
 --- Binds the given values to statement parameters.
+---@param ... string|number|nil
 ---@return integer `lsqlite3.OK` on success or else a numerical error code,
 function Statement:bind_values(...) end
 
@@ -2765,6 +3221,124 @@ function Statement:urows() end
 ---@nodiscard
 function Statement:last_insert_rowid() end
 
+---@class lsqlite3.VM: userdata
+local VM = nil
+
+---@param index integer
+---@param value string|number|boolean|nil
+---@return integer errno
+function VM:bind(index, value) end
+
+---@param index integer
+---@param value string
+---@return integer errno
+function VM:bind_blob(index, value) end
+
+---@param names string[]
+---@return integer errno
+function VM:bind_names(names) end
+
+---@return integer parameter_count
+---@nodiscard
+function VM:bind_parameter_count() end
+
+---@param index number
+---@return string parameter_name
+---@nodiscard
+function VM:bind_parameter_name(index) end
+
+---@param ... string|number|nil
+---@return integer errno
+function VM:bind_values(...) end
+
+---@return integer columns the column count
+---@nodiscard
+function VM:columns() end
+
+---@return integer errno
+function VM:finalize() end
+
+---@param index integer
+---@return string name
+---@nodiscard
+function VM:get_name(index) end
+
+---@return string[]
+---@nodiscard
+function VM:get_named_types() end
+VM.type = VM.get_named_types
+
+---@return (string|number?)[]
+---@nodiscard
+function VM:get_named_values() end
+VM.data = VM.get_named_values
+
+---@return string[]
+---@nodiscard
+function VM:get_names() end
+VM.inames = VM.get_names
+
+---@param index integer
+---@return string
+---@nodiscard
+function VM:get_type(index) end
+
+---@return string[]
+---@nodiscard
+function VM:get_types() end
+VM.itypes = VM.get_types
+
+---@return string ...
+---@nodiscard
+function VM:get_unames() end
+
+---@return string ...
+---@nodiscard
+function VM:get_utypes() end
+
+---@return string|number? ...
+---@nodiscard
+function VM:get_uvalues() end
+
+---@param index integer
+---@return string|number?
+---@nodiscard
+function VM:get_value(index) end
+
+---@return (string|number?)[]
+---@nodiscard
+function VM:get_values() end
+VM.idata = VM.get_values
+
+---@return boolean
+---@nodiscard
+function VM:isopen() end
+
+---@return integer rowid
+---@nodiscard
+function VM:last_insert_rowid() end
+
+---@param sql string
+---@return fun(self: lsqlite3.VM): { [string]: string|number } iterator, self
+---@nodiscard
+function VM:nrows(sql) end
+
+---@return integer errno
+function VM:reset() end
+
+---@param sql string
+---@return fun(self: lsqlite3.VM): (string|number|nil)[] iterator, self
+---@nodiscard
+function VM:rows(sql) end
+
+---@return integer
+function VM:step() end
+
+---@param sql string
+---@return fun(self: lsqlite3.VM): ...: string|number|nil iterator, self
+---@nodiscard
+function VM:urows(sql) end
+
 --- This module exposes an API for POSIX regular expressions which enable you to
 --- validate input, search for substrings, extract pieces of strings, etc.
 --- Here's a usage example:
@@ -2836,7 +3410,7 @@ re = {
     NOTEOL = 0x0200,
 }
 
----@class re.Errno
+---@class re.Errno: userdata
 re.Errno = nil
 
 ---@return integer # one of the following
@@ -2865,7 +3439,7 @@ function re.Errno:doc() end
 ---@nodiscard
 function re.Errno:__tostring() end
 
----@class re.Regex
+---@class re.Regex: userdata
 re.Regex = {}
 
 --- Executes precompiled regular expression.
@@ -6485,7 +7059,7 @@ function unix.sched_yield() end
 ---@return unix.Memory
 function unix.mapshared(size) end
 
----@class unix.Memory
+---@class unix.Memory: userdata
 --- unix.Memory encapsulates memory that's shared across fork() and
 --- this module provides the fundamental synchronization primitives
 --- 
@@ -6682,7 +7256,7 @@ function unix.Memory:wait(word_index, expect, abs_deadline, nanos) end
 ---@return integer woken
 function unix.Memory:wake(index, count) end
 
----@class unix.Dir
+---@class unix.Dir: userdata
 --- `unix.Dir` objects are created by `opendir()` or `fdopendir()`.
 unix.Dir = {}
 
@@ -6692,7 +7266,7 @@ unix.Dir = {}
 ---
 --- This may be called multiple times.
 ---@return true
----@overload fun(): nil, error: unix.Errno
+---@overload fun(self: unix.Dir): nil, error: unix.Errno
 function unix.Dir:close() end
 
 --- Reads entry from directory stream.
@@ -6733,7 +7307,7 @@ function unix.Dir:tell() end
 ---Resets stream back to beginning.
 function unix.Dir:rewind() end
 
----@class unix.Rusage
+---@class unix.Rusage: userdata
 ---`unix.Rusage` objects are created by `wait()` or `getrusage()`.
 unix.Rusage = {}
 
@@ -6875,7 +7449,7 @@ function unix.Rusage:nvcsw() end
 --- allotted time slice.
 function unix.Rusage:nivcsw() end
 
----@class unix.Stat
+---@class unix.Stat: userdata
 ---`unix.Stat` objects are created by `stat()` or `fstat()`.
 unix.Stat = {}
 
@@ -7012,7 +7586,7 @@ function unix.Stat:gen() end
 ---@nodiscard
 function unix.Stat:flags() end
 
----@class unix.Sigset
+---@class unix.Sigset: userdata
 --- The unix.Sigset class defines a mutable bitset that may currently
 --- contain 128 entries. See `unix.NSIG` to find out how many signals
 --- your operating system actually supports.
@@ -7055,7 +7629,7 @@ function unix.Sigset:__tostring() end
 --- an object because for many system calls, an error is part their normal
 --- operation. For example, it's often desirable to use the `errno()` method
 --- when performing a `read()` to check for EINTR.
----@class unix.Errno
+---@class unix.Errno: userdata
 unix.Errno = {}
 
 ---@return integer error error magic number.
