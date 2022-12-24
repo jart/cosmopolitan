@@ -60,7 +60,7 @@
 #include "third_party/hiredis/dict.c"
 #include "third_party/hiredis/sds.h"
 
-#include "third_party/hiredis/async_private.h"
+#include "third_party/hiredis/async_private.inc"
 
 #ifdef NDEBUG
 #undef assert
