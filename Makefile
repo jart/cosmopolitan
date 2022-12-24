@@ -175,6 +175,7 @@ include third_party/lua/lua.mk
 include third_party/tr/tr.mk
 include third_party/sed/sed.mk
 include third_party/awk/awk.mk
+include third_party/hiredis/hiredis.mk
 include third_party/make/make.mk
 include third_party/ctags/ctags.mk
 include third_party/finger/finger.mk
