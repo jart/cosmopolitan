@@ -25,6 +25,7 @@
 #include "libc/testlib/testlib.h"
 
 #define N 16
+static const char *testArg0PassingArg = "bothArgsShouldBeThis";
 
 char *GenBuf(char buf[8], int x) {
   int i;
@@ -40,6 +41,9 @@ __attribute__((__constructor__)) static void init(void) {
   char buf[8];
   if (__argc == 4 && !strcmp(__argv[1], "-")) {
     ASSERT_STREQ(GenBuf(buf, atoi(__argv[2])), __argv[3]);
+    exit(0);
+  } else if (__argc == 2 && !strcmp(__argv[1], testArg0PassingArg)) {
+    ASSERT_STREQ(__argv[0], __argv[1]);
     exit(0);
   }
 }
@@ -57,4 +61,13 @@ TEST(execve, testArgPassing) {
     notpossible;
     EXITS(0);
   }
+}
+
+TEST(execve, testArg0Passing) {
+  SPAWN(vfork);
+  execve(GetProgramExecutableName(),
+         (char *const[]){testArg0PassingArg, testArg0PassingArg, 0},
+         (char *const[]){0});
+  notpossible;
+  EXITS(0);
 }
