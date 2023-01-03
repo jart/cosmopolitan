@@ -4877,19 +4877,19 @@ static int LuaProgramTokenBucket(lua_State *L) {
     luaL_argerror(L, 5, "require ban <= ignore");
     unreachable;
   }
-  INFOF("(token) deploying %,ld buckets "
-        "(one for every %ld ips) "
-        "each holding 127 tokens which "
-        "replenish %g times per second, "
-        "reject at %d tokens, "
-        "ignore at %d tokens, and "
-        "ban at %d tokens",
-        1L << cidr,                 //
-        4294967296 / (1L << cidr),  //
-        replenish,                  //
-        reject,                     //
-        ignore,                     //
-        ban);
+  VERBOSEF("(token) deploying %,ld buckets "
+           "(one for every %ld ips) "
+           "each holding 127 tokens which "
+           "replenish %g times per second, "
+           "reject at %d tokens, "
+           "ignore at %d tokens, and "
+           "ban at %d tokens",
+           1L << cidr,                 //
+           4294967296 / (1L << cidr),  //
+           replenish,                  //
+           reject,                     //
+           ignore,                     //
+           ban);
   if (ignore == -1) ignore = -128;
   if (ban == -1) ban = -128;
   if (ban >= 0 && (IsLinux() || IsBsd())) {

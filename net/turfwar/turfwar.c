@@ -423,6 +423,18 @@ int DbOpen(const char *path, sqlite3 **db) {
   return sqlite3_exec(*db, "PRAGMA synchronous=NORMAL", 0, 0, 0);
 }
 
+int DbStep(sqlite3_stmt *stmt) {
+  int i, rc;
+  for (i = 0; i < 12; ++i) {
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) break;
+    if (rc == SQLITE_DONE) break;
+    if (rc != SQLITE_BUSY) return rc;
+    usleep(1000L << i);
+  }
+  return rc;
+}
+
 // why not make the statement prepare api a little less hairy too
 int DbPrepare(sqlite3 *db, sqlite3_stmt **stmt, const char *sql) {
   return sqlite3_prepare_v2(db, sql, -1, stmt, 0);
@@ -1435,7 +1447,7 @@ bool GenerateScore(struct Asset *out, long secs, long cash) {
   // be sure to always use transactions with sqlite as in always
   // otherwise.. you can use --strace to see the fcntl bloodbath
   CHECK_SQL(sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0));
-  while ((rc = sqlite3_step(stmt)) != SQLITE_DONE) {
+  while ((rc = DbStep(stmt)) != SQLITE_DONE) {
     if (rc != SQLITE_ROW) CHECK_DB(rc);
     strlcpy(name2, (void *)sqlite3_column_text(stmt, 0), sizeof(name2));
     if (!IsValidNick(name2, -1)) continue;
@@ -1584,7 +1596,7 @@ StartOver:
                       t.mtim.tv_nsec));
     CHECK_SYS(appends(&t.data.p, "\"recent\":[\n"));
     CHECK_SQL(sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0));
-    for (once = false; (rc = sqlite3_step(stmt)) != SQLITE_DONE; once = true) {
+    for (once = false; (rc = DbStep(stmt)) != SQLITE_DONE; once = true) {
       if (rc != SQLITE_ROW) CHECK_SQL(rc);
       if (once) CHECK_SYS(appends(&t.data.p, ",\n"));
       CHECK_SYS(
@@ -1675,7 +1687,7 @@ StartOver:
       CHECK_DB(sqlite3_bind_text(stmt, 2, v[i].name, -1, SQLITE_TRANSIENT));
       CHECK_DB(sqlite3_bind_int64(stmt, 3, v[i].created));
       CHECK_DB(sqlite3_bind_int64(stmt, 3, v[i].created));
-      CHECK_DB((rc = sqlite3_step(stmt)) == SQLITE_DONE ? SQLITE_OK : rc);
+      CHECK_DB((rc = DbStep(stmt)) == SQLITE_DONE ? SQLITE_OK : rc);
       CHECK_DB(sqlite3_reset(stmt));
       ++processed;
     }
@@ -1819,7 +1831,7 @@ int main(int argc, char *argv[]) {
     _Exit(3);
   }
   if (!Blackhole(0)) {
-    kprintf("redbean isn't able to protect your kernel from level 4 ddos\n");
+    kprintf("turfwar isn't able to protect your kernel from level 4 ddos\n");
     kprintf("please run the blackholed program, see https://justine.lol/\n");
   }
 
