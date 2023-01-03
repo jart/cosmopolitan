@@ -4903,9 +4903,10 @@ static int LuaProgramTokenBucket(lua_State *L) {
     } else if (sendto(blackhole.fd, &testip, 4, 0,
                       (struct sockaddr *)&blackhole.addr,
                       sizeof(blackhole.addr)) == -1) {
-      WARNF("(token) error: sendto(%`'s) failed: %m", blackhole.addr.sun_path);
-      WARNF("(token) redbean isn't able to protect your kernel from ddos");
-      WARNF("(token) please run the blackholed program; see our website!");
+      VERBOSEF("(token) error: sendto(%`'s) failed: %m",
+               blackhole.addr.sun_path);
+      VERBOSEF("(token) redbean isn't able to protect your kernel from ddos");
+      VERBOSEF("(token) please run the blackholed program; see our website!");
     }
   }
   tokenbucket.b = _mapshared(ROUNDUP(1ul << cidr, FRAMESIZE));
