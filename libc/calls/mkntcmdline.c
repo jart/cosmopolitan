@@ -61,15 +61,12 @@ static inline int IsAlpha(int c) {
 // TODO(jart): this needs fuzzing and security review
 //
 // @param cmdline is output buffer
-// @param prog is frontloaded as argv[0]
 // @param argv is an a NULL-terminated array of UTF-8 strings
 // @return 0 on success, or -1 w/ errno
 // @raise E2BIG if everything is too huge
 // @see "Everyone quotes command line arguments the wrong way" MSDN
 // @see libc/runtime/getdosargv.c
-textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
-                            char *const argv[]) {
-  char *arg;
+textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], char *const argv[]) {
   uint64_t w;
   wint_t x, y;
   int slashes, n;
@@ -81,16 +78,16 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
     bzero(ansiargv, sizeof(ansiargv));
     argv = ansiargv;
   }
-  for (arg = prog, k = i = 0; arg; arg = argv[++i]) {
+  for (k = i = 0; argv[i]; ++i) {
     if (i) APPEND(u' ');
-    if ((needsquote = NeedsQuotes(arg))) APPEND(u'"');
+    if ((needsquote = NeedsQuotes(argv[i]))) APPEND(u'"');
     for (slashes = j = 0;;) {
-      x = arg[j++] & 255;
+      x = argv[i][j++] & 255;
       if (x >= 0300) {
         n = ThomPikeLen(x);
         x = ThomPikeByte(x);
         while (--n) {
-          if ((y = arg[j++] & 255)) {
+          if ((y = argv[i][j++] & 255)) {
             x = ThomPikeMerge(x, y);
           } else {
             x = 0;
@@ -101,9 +98,9 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
       if (!x) break;
       if (x == '/' || x == '\\') {
         if (!i) {
-          // turn / into \ for first arg
+          // turn / into \ for first argv[i]
           x = '\\';
-          // turn \c\... into c:\ for first arg
+          // turn \c\... into c:\ for first argv[i]
           if (k == 2 && IsAlpha(cmdline[1]) && cmdline[0] == '\\') {
             cmdline[0] = cmdline[1];
             cmdline[1] = ':';

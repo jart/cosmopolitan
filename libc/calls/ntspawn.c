@@ -84,7 +84,7 @@ textwindows int ntspawn(
                                   sizeof(*block), 0)) &&
       (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
                                sizeof(*block), 0)) &&
-      mkntcmdline(block->cmdline, prog, argv) != -1 &&
+      mkntcmdline(block->cmdline, argv) != -1 &&
       mkntenvblock(block->envvars, envp, extravar, block->buf) != -1 &&
       CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
                     opt_lpThreadAttributes, bInheritHandles,

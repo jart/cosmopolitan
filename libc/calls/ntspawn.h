@@ -6,7 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int mkntcmdline(char16_t[ARG_MAX / 2], const char *, char *const[]) _Hide;
+int mkntcmdline(char16_t[ARG_MAX / 2], char *const[]) _Hide;
 int mkntenvblock(char16_t[ARG_MAX / 2], char *const[], const char *,
                  char[ARG_MAX]) _Hide;
 int ntspawn(const char *, char *const[], char *const[], const char *,
