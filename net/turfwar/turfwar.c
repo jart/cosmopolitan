@@ -649,33 +649,6 @@ void FreeSafeBuffer(void *p) {
   free(p);
 }
 
-void OnlyRunOnCpu(int i) {
-  int n;
-  cpu_set_t cpus;
-  _Static_assert(CPUS > 0, "");
-  n = _getcpucount();
-  n = MIN(CPUS, n);
-  i = MIN(i, n - 1);
-  CPU_ZERO(&cpus);
-  CPU_SET(i, &cpus);
-  CHECK_NE(0, CPU_COUNT(&cpus));
-  pthread_setaffinity_np(pthread_self(), sizeof(cpus), &cpus);
-}
-
-void DontRunOnFirstCpus(int i) {
-  int n;
-  cpu_set_t cpus;
-  _Static_assert(CPUS > 0, "");
-  n = _getcpucount();
-  n = MIN(CPUS, n);
-  i = MIN(i, n - 1);
-  CPU_ZERO(&cpus);
-  for (; i < n; ++i) {
-    CPU_SET(i, &cpus);
-  }
-  pthread_setaffinity_np(pthread_self(), sizeof(cpus), &cpus);
-}
-
 // signals by default get delivered to any random thread
 // solution is to block every signal possible in threads
 void BlockSignals(void) {
@@ -779,7 +752,6 @@ void *ListenWorker(void *arg) {
   struct timeval timeo = {g_keepalive / 1000, g_keepalive % 1000};
   struct sockaddr_in addr = {.sin_family = AF_INET, .sin_port = htons(g_port)};
   AllowSigusr1();
-  OnlyRunOnCpu(0);
   pthread_setname_np(pthread_self(), "Listener");
   CHECK_NE(-1, (server = socket(AF_INET, SOCK_STREAM, 0)));
   setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));
@@ -828,7 +800,6 @@ void *HttpWorker(void *arg) {
   struct HttpMessage *msg = _gc(xcalloc(1, sizeof(struct HttpMessage)));
 
   BlockSignals();
-  DontRunOnFirstCpus(1);
   pthread_setname_np(pthread_self(), _gc(xasprintf("HTTP%d", id)));
 
   // connection loop
@@ -1508,7 +1479,6 @@ void *ScoreWorker(void *arg) {
   long wait = SCORE_UPDATE_MS;
   Update(&g_asset.score, GenerateScore, -1, MS2CASH(wait));
   nsync_counter_add(g_ready, -1);  // #1
-  OnlyRunOnCpu(0);
   do {
     Update(&g_asset.score, GenerateScore, -1, MS2CASH(wait));
   } while (!nsync_note_wait(g_shutdown[1], WaitFor(wait)));
@@ -1525,7 +1495,6 @@ void *ScoreHourWorker(void *arg) {
   long wait = SCORE_H_UPDATE_MS;
   Update(&g_asset.score_hour, GenerateScore, secs, MS2CASH(wait));
   nsync_counter_add(g_ready, -1);  // #2
-  OnlyRunOnCpu(0);
   do {
     Update(&g_asset.score_hour, GenerateScore, secs, MS2CASH(wait));
   } while (!nsync_note_wait(g_shutdown[1], WaitFor(wait)));
@@ -1542,7 +1511,6 @@ void *ScoreDayWorker(void *arg) {
   long wait = SCORE_D_UPDATE_MS;
   Update(&g_asset.score_day, GenerateScore, secs, MS2CASH(wait));
   nsync_counter_add(g_ready, -1);  // #3
-  OnlyRunOnCpu(0);
   do {
     Update(&g_asset.score_day, GenerateScore, secs, MS2CASH(wait));
   } while (!nsync_note_wait(g_shutdown[1], WaitFor(wait)));
@@ -1559,7 +1527,6 @@ void *ScoreWeekWorker(void *arg) {
   long wait = SCORE_W_UPDATE_MS;
   Update(&g_asset.score_week, GenerateScore, secs, MS2CASH(wait));
   nsync_counter_add(g_ready, -1);  // #4
-  OnlyRunOnCpu(0);
   do {
     Update(&g_asset.score_week, GenerateScore, secs, MS2CASH(wait));
   } while (!nsync_note_wait(g_shutdown[1], WaitFor(wait)));
@@ -1576,7 +1543,6 @@ void *ScoreMonthWorker(void *arg) {
   long wait = SCORE_M_UPDATE_MS;
   Update(&g_asset.score_month, GenerateScore, secs, MS2CASH(wait));
   nsync_counter_add(g_ready, -1);  // #5
-  OnlyRunOnCpu(0);
   do {
     Update(&g_asset.score_month, GenerateScore, secs, MS2CASH(wait));
   } while (!nsync_note_wait(g_shutdown[1], WaitFor(wait)));
@@ -1651,7 +1617,6 @@ StartOver:
     free(f[1]);
     // handle startup condition
     if (!warmedup) {
-      OnlyRunOnCpu(1);
       nsync_counter_add(g_ready, -1);  // #6
       warmedup = true;
     }
@@ -1699,7 +1664,6 @@ StartOver:
                      "    OR created IS NULL\n"
                      "    OR ?3 - created > 3600"));
   if (!warmedup) {
-    OnlyRunOnCpu(0);
     nsync_counter_add(g_ready, -1);  // #7
     warmedup = true;
   }
@@ -1739,7 +1703,6 @@ void *NowWorker(void *arg) {
   pthread_setname_np(pthread_self(), "NowWorker");
   LOG("%P NowWorker started\n");
   UpdateNow();
-  OnlyRunOnCpu(0);
   nsync_counter_add(g_ready, -1);  // #8
   for (struct timespec ts = {timespec_real().tv_sec};; ++ts.tv_sec) {
     if (!nsync_note_wait(g_shutdown[1], ts)) {
@@ -1758,7 +1721,6 @@ void *ReplenishWorker(void *arg) {
   pthread_setname_np(pthread_self(), "Replenisher");
   LOG("%P Replenisher started\n");
   UpdateNow();
-  OnlyRunOnCpu(0);
   for (struct timespec ts = timespec_real();;
        ts = timespec_add(ts, timespec_frommillis(TB_INTERVAL))) {
     if (!nsync_note_wait(g_shutdown[1], ts)) {
