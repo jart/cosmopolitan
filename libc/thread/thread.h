@@ -67,8 +67,8 @@ typedef struct pthread_mutex_s {
   _Atomic(int32_t) _lock;
   unsigned _type : 2;
   unsigned _pshared : 1;
-  unsigned _depth : 8;
-  unsigned _owner : 21;
+  unsigned _depth : 6;
+  unsigned _owner : 23;
   long _pid;
 } pthread_mutex_t;
 

@@ -59,7 +59,7 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
   t = gettid();
   if (mutex->_owner == t) {
     if (mutex->_type != PTHREAD_MUTEX_ERRORCHECK) {
-      if (mutex->_depth < 255) {
+      if (mutex->_depth < 63) {
         ++mutex->_depth;
         return 0;
       } else {
