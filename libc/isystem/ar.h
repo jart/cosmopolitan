@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_AR_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_AR_H_
+#include "libc/ar.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_AR_H_ */

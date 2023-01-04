@@ -26,6 +26,8 @@ int stbi_write_hdr_to_func(stbi_write_func *, void *, int, int, int,
                            const float *);
 int stbi_write_jpg_to_func(stbi_write_func *, void *, int, int, int,
                            const void *, int);
+unsigned char *stbi_write_png_to_mem(const unsigned char *, int, int, int, int,
+                                     int *);
 
 void stbi_flip_vertically_on_write(int);
 

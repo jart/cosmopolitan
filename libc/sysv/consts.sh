@@ -785,7 +785,7 @@ syscon	tcp	TCP_SAVED_SYN				28			0			0			0			0			0			# get recorded syn packets
 syscon	tcp	TCP_THIN_DUPACK				17			0			0			0			0			0			# what is it
 syscon	tcp	TCP_QUEUE_SEQ				21			0			0			0			0			0			# what is it
 syscon	tcp	TCP_WINDOW_CLAMP			10			0			0			0			0			0			# what is it
-syscon	tcp	TCP_DEFER_ACCEPT			9			0			0			0			0			0			# what is it
+syscon	tcp	TCP_DEFER_ACCEPT			9			0			0			0			0			0			# defer accept() until readable data has arrived
 syscon	tcp	TCP_REPAIR				19			0			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_OPTIONS			22			0			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_QUEUE			20			0			0			0			0			0			# what is it

@@ -33,6 +33,8 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
+#include "libc/intrin/hilbert.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/log/check.h"
@@ -51,6 +53,7 @@
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/append.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
 #include "libc/str/str.h"
@@ -83,6 +86,7 @@
 #include "third_party/nsync/note.h"
 #include "third_party/nsync/time.h"
 #include "third_party/sqlite3/sqlite3.h"
+#include "third_party/stb/stb_image_write.h"
 #include "third_party/zlib/zconf.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/net/lfuncs.h"
@@ -93,6 +97,8 @@
 
 #define PORT               8080    // default server listening port
 #define CPUS               64      // number of cpus to actually use
+#define XN                 64      // plot width in pixels
+#define YN                 64      // plot height in pixels
 #define WORKERS            500     // size of http client thread pool
 #define SUPERVISE_MS       1000    // how often to stat() asset files
 #define KEEPALIVE_MS       60000   // max time to keep idle conn open
@@ -101,7 +107,8 @@
 #define SCORE_D_UPDATE_MS  30000   // how often to regenerate /score/day
 #define SCORE_W_UPDATE_MS  70000   // how often to regenerate /score/week
 #define SCORE_M_UPDATE_MS  100000  // how often to regenerate /score/month
-#define SCORE_UPDATE_MS    200000  // how often to regenerate /score
+#define SCORE_UPDATE_MS    210000  // how often to regenerate /score
+#define PLOTS_UPDATE_MS    999000  // how often to regenerate /plot/xxx
 #define ACCEPT_DEADLINE_MS 100     // how long accept() can take to find worker
 #define CLAIM_DEADLINE_MS  100     // how long /claim may block if queue is full
 #define CONCERN_LOAD       .75     // avoid keepalive, upon this connection load
@@ -259,6 +266,7 @@ nsync_time g_started;
 nsync_counter g_ready;
 atomic_int g_connections;
 nsync_note g_shutdown[3];
+int g_hilbert[YN * XN][2];
 
 // whitebox metrics
 atomic_long g_banned;
@@ -330,6 +338,7 @@ struct Assets {
   struct Asset score_month;
   struct Asset recent;
   struct Asset favicon;
+  struct Asset plot[256];
 } g_asset;
 
 // queues ListenWorker() to HttpWorker()
@@ -894,6 +903,9 @@ void *HttpWorker(void *arg) {
       ksnprintf(ipbuf, sizeof(ipbuf), "%hhu.%hhu.%hhu.%hhu", ip >> 24, ip >> 16,
                 ip >> 8, ip);
 
+      if (UrlStartsWith("/plot/") && (_rand64() % 256)) {
+        goto SkipSecurity;
+      }
       if (!ipv6 && !ContainsInt(&g_whitelisted, ip) &&
           (tok = AcquireToken(g_tok.b, ip, TB_CIDR)) < 32) {
         if (tok > 4) {
@@ -910,6 +922,7 @@ void *HttpWorker(void *arg) {
         ++g_ratelimits;
         break;
       }
+    SkipSecurity:
 
       // we don't support http/1.0 and http/0.9 right now
       if (msg->version != 11) {
@@ -959,6 +972,14 @@ void *HttpWorker(void *arg) {
         a = &g_asset.score;
       } else if (UrlStartsWith("/recent")) {
         a = &g_asset.recent;
+      } else if (UrlStartsWith("/plot/")) {
+        int i, block = 0;
+        for (i = msg->uri.a + 6; i < msg->uri.b && isdigit(inbuf[i]); ++i) {
+          block *= 10;
+          block += inbuf[i] - '0';
+          block &= 255;
+        }
+        a = g_asset.plot + block;
       } else {
         a = 0;
       }
@@ -1483,6 +1504,68 @@ OnError:
   return false;
 }
 
+// generator function for the big board
+bool GeneratePlot(struct Asset *out, long block, long cash) {
+  _Static_assert(IS2POW(XN * YN), "area must be 2-power");
+  _Static_assert(XN == YN, "hilbert algorithm needs square");
+  int rc, out_len;
+  sqlite3 *db = 0;
+  struct Asset a = {0};
+  unsigned char *rgba;
+  sqlite3_stmt *stmt = 0;
+  unsigned x, y, i, ip, area, mask, clump;
+  DEBUG("GeneratePlot %ld\n", block);
+  a.type = "image/png";
+  a.cash = cash;
+  a.mtim = timespec_real();
+  FormatUnixHttpDateTime(a.lastmodified, a.mtim.tv_sec);
+  CHECK_MEM((rgba = calloc(4, YN * XN)));
+  for (y = 0; y < YN; ++y) {
+    for (x = 0; x < XN; ++x) {
+      rgba[y * XN * 4 + x * 4 + 0] = 255;
+      rgba[y * XN * 4 + x * 4 + 1] = 255;
+      rgba[y * XN * 4 + x * 4 + 2] = 255;
+    }
+  }
+  CHECK_SQL(DbOpen("db.sqlite3", &db));
+  CHECK_DB(DbPrepare(db, &stmt,
+                     "SELECT ip\n"
+                     " FROM land\n"
+                     "WHERE ip >= ?1\n"
+                     "  AND ip <= ?2"));
+  CHECK_DB(sqlite3_bind_int64(stmt, 1, block << 24 | 0x000000));
+  CHECK_DB(sqlite3_bind_int64(stmt, 2, block << 24 | 0xffffff));
+  CHECK_SQL(sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, 0));
+  area = XN * YN;
+  mask = area - 1;
+  clump = 32 - _bsr(area) - 8;
+  while ((rc = DbStep(stmt)) != SQLITE_DONE) {
+    if (rc != SQLITE_ROW) CHECK_DB(rc);
+    ip = sqlite3_column_int64(stmt, 0);
+    i = (ip >> clump) & mask;
+    y = g_hilbert[i][0];
+    x = g_hilbert[i][1];
+    if (rgba[y * XN * 4 + x * 4 + 3] < 255) {
+      ++rgba[y * XN * 4 + x * 4 + 3];
+    }
+  }
+  CHECK_SQL(sqlite3_exec(db, "END TRANSACTION", 0, 0, 0));
+  CHECK_DB(sqlite3_finalize(stmt));
+  CHECK_SQL(sqlite3_close(db));
+  a.data.p = (char *)stbi_write_png_to_mem(rgba, XN * 4, XN, YN, 4, &out_len);
+  a.data.n = out_len;
+  a.gzip = Gzip(a.data);
+  free(rgba);
+  *out = a;
+  return true;
+OnError:
+  sqlite3_finalize(stmt);
+  sqlite3_close(db);
+  free(a.data.p);
+  free(rgba);
+  return false;
+}
+
 // single thread for regenerating the user scores json
 void *ScoreWorker(void *arg) {
   BlockSignals();
@@ -1562,6 +1645,26 @@ void *ScoreMonthWorker(void *arg) {
   return 0;
 }
 
+// single thread for regenerating /8 cell background image charts
+void *PlotWorker(void *arg) {
+  long i, wait;
+  BlockSignals();
+  pthread_setname_np(pthread_self(), "Plotter");
+  LOG("%P Plotter started\n");
+  wait = PLOTS_UPDATE_MS;
+  for (i = 0; i < 256; ++i) {
+    Update(g_asset.plot + i, GeneratePlot, i, MS2CASH(wait));
+  }
+  nsync_counter_add(g_ready, -1);  // #6
+  do {
+    for (i = 0; i < 256; ++i) {
+      Update(g_asset.plot + i, GeneratePlot, i, MS2CASH(wait));
+    }
+  } while (!nsync_note_wait(g_shutdown[1], WaitFor(wait)));
+  LOG("Plotter exiting\n");
+  return 0;
+}
+
 // thread for realtime json generation of recent successful claims
 void *RecentWorker(void *arg) {
   bool once;
@@ -1629,7 +1732,7 @@ StartOver:
     free(f[1]);
     // handle startup condition
     if (!warmedup) {
-      nsync_counter_add(g_ready, -1);  // #6
+      nsync_counter_add(g_ready, -1);  // #7
       warmedup = true;
     }
     // wait for wakeup or cancel
@@ -1676,7 +1779,7 @@ StartOver:
                      "    OR created IS NULL\n"
                      "    OR ?3 - created > 3600"));
   if (!warmedup) {
-    nsync_counter_add(g_ready, -1);  // #7
+    nsync_counter_add(g_ready, -1);  // #8
     warmedup = true;
   }
   while ((n = GetClaims(&g_claims, v, BATCH_MAX))) {
@@ -1715,7 +1818,7 @@ void *NowWorker(void *arg) {
   pthread_setname_np(pthread_self(), "NowWorker");
   LOG("%P NowWorker started\n");
   UpdateNow();
-  nsync_counter_add(g_ready, -1);  // #8
+  nsync_counter_add(g_ready, -1);  // #9
   for (struct timespec ts = {timespec_real().tv_sec};; ++ts.tv_sec) {
     if (!nsync_note_wait(g_shutdown[1], ts)) {
       UpdateNow();
@@ -1849,6 +1952,13 @@ int main(int argc, char *argv[]) {
     _npassert(2 == open("turfwar.log", O_CREAT | O_WRONLY | O_APPEND, 0644));
   }
 
+  LOG("Generating Hilbert Curve...\n");
+  for (int i = 0; i < YN * XN; ++i) {
+    axdx_t h = unhilbert(XN, i);
+    g_hilbert[i][0] = h.ax;
+    g_hilbert[i][1] = h.dx;
+  }
+
   // library init
   __enable_threads();
   sqlite3_initialize();
@@ -1890,9 +2000,9 @@ int main(int argc, char *argv[]) {
   sa.sa_handler = IgnoreSignal;
   sigaction(SIGUSR1, &sa, 0);
 
-  // make 8 helper threads
-  g_ready = nsync_counter_new(9);
-  pthread_t scorer, recenter, claimer, nower, replenisher;
+  // make 9 helper threads
+  g_ready = nsync_counter_new(10);
+  pthread_t scorer, recenter, claimer, nower, replenisher, plotter;
   pthread_t scorer_hour, scorer_day, scorer_week, scorer_month;
   CHECK_EQ(0, pthread_create(&scorer, 0, ScoreWorker, 0));
   CHECK_EQ(0, pthread_create(&scorer_hour, 0, ScoreHourWorker, 0));
@@ -1902,10 +2012,11 @@ int main(int argc, char *argv[]) {
   CHECK_EQ(0, pthread_create(&replenisher, 0, ReplenishWorker, 0));
   CHECK_EQ(0, pthread_create(&recenter, 0, RecentWorker, 0));
   CHECK_EQ(0, pthread_create(&claimer, 0, ClaimWorker, 0));
+  CHECK_EQ(0, pthread_create(&plotter, 0, PlotWorker, 0));
   CHECK_EQ(0, pthread_create(&nower, 0, NowWorker, 0));
 
   // wait for helper threads to warm up creating assets
-  if (nsync_counter_add(g_ready, -1)) {  // #9
+  if (nsync_counter_add(g_ready, -1)) {  // #10
     nsync_counter_wait(g_ready, nsync_time_no_deadline);
   }
 
@@ -1942,6 +2053,7 @@ int main(int argc, char *argv[]) {
   LOG("Waiting for helpers to finish...\n");
   CHECK_EQ(0, pthread_join(nower, 0));
   CHECK_EQ(0, pthread_join(scorer, 0));
+  CHECK_EQ(0, pthread_join(plotter, 0));
   CHECK_EQ(0, pthread_join(recenter, 0));
   CHECK_EQ(0, pthread_join(scorer_day, 0));
   CHECK_EQ(0, pthread_join(scorer_hour, 0));
