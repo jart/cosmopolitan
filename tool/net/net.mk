@@ -183,11 +183,6 @@ o/$(MODE)/tool/net/demo/seekable.txt.zip.o: private				\
 			-B							\
 			-0
 
-o/$(MODE)/tool/net/demo/virtualbean.html.zip.o: private				\
-		ZIPOBJ_FLAGS +=							\
-			-Predbean.justine.lol					\
-			-B
-
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
@@ -227,7 +222,6 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/favicon.ico.zip.o				\
 		o/$(MODE)/tool/net/demo/404.html.zip.o				\
 		o/$(MODE)/tool/net/demo/seekable.txt.zip.o			\
-		o/$(MODE)/tool/net/demo/virtualbean.html.zip.o			\
 		o/$(MODE)/tool/net/demo/.lua/.zip.o				\
 		o/$(MODE)/tool/net/demo/.lua/mymodule.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/.reload.lua.zip.o			\

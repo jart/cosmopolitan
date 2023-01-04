@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
@@ -153,11 +153,16 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
   const char *script;
   regmatch_t rm[1 + 3] = {0};
   int rc, skip, count, bs, offset, size;
-  if (!(script = memmem(image, imagesize, "'\n#'\"\n", 6))) {
+
+  if ((script = memmem(image, imagesize, "'\n#'\"\n", 6))) {
+    script += 6;
+  } else if ((script = memmem(image, imagesize, "#'\"\n", 4))) {
+    script += 4;
+  } else {
     kprintf("%s: ape shell script not found\n", prog);
     exit(5);
   }
-  script += 6;
+
   DCHECK_EQ(REG_OK, regcomp(&rx,
                             "bs=([ [:digit:]]+) "
                             "skip=\"?([ [:digit:]]+)\"? "

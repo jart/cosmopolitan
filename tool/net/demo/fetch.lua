@@ -36,7 +36,7 @@ local function main()
    if IsPublicIp(GetClientAddr()) then
       ServeError(403)
    elseif GetMethod() == 'GET' or GetMethod() == 'HEAD' then
-      WriteForm("https://www.cloudflare.com/robots.txt")
+      WriteForm("https://justine.lol")
    elseif GetMethod() == 'POST' then
       status, headers, payload = Fetch(GetParam('url'))
       if status then
