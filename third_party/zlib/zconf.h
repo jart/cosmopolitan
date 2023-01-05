@@ -11,6 +11,8 @@
 #define ZLIB_DEBUG
 #endif
 
+#define z_const const
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 typedef unsigned char Byte;

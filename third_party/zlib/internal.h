@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INTERNAL_H_
 #include "libc/str/str.h"
 #include "third_party/zlib/deflate.internal.h"
+#include "third_party/zlib/zconf.h"
 
 #define Z_CRC32_SSE42_MINIMUM_LENGTH 64
 #define Z_CRC32_SSE42_CHUNKSIZE_MASK 15
@@ -11,7 +12,6 @@ COSMOPOLITAN_C_START_
 
 #define zmemzero bzero
 #define zmemcpy  memmove
-#define z_const  const
 
 unsigned deflate_read_buf(z_streamp, Bytef *, unsigned) _Hide;
 void copy_with_crc(z_streamp, Bytef *, long) _Hide;

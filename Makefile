@@ -374,11 +374,9 @@ COSMOPOLITAN_HEADERS =			\
 	THIRD_PARTY_GDTOA		\
 	THIRD_PARTY_GETOPT		\
 	THIRD_PARTY_MUSL		\
-	THIRD_PARTY_ZLIB		\
-	THIRD_PARTY_ZLIB_GZ		\
 	THIRD_PARTY_REGEX
 
-o/$(MODE)/cosmopolitan.a:	\
+o/$(MODE)/cosmopolitan.a:		\
 		$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS))
 
 o/cosmopolitan.h:							\
