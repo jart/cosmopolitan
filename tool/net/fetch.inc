@@ -12,13 +12,13 @@ static int LuaFetch(lua_State *L) {
   uint32_t ip;
   struct Url url;
   int t, ret, sock, methodidx, hdridx;
-  char *host, *port;
+  char *host, *port, *request;
   struct TlsBio *bio;
   struct addrinfo *addr;
   struct Buffer inbuf;     // shadowing intentional
   struct HttpMessage msg;  // shadowing intentional
   struct HttpUnchunker u;
-  const char *urlarg, *request, *body, *method;
+  const char *urlarg, *body, *method;
   char *conlenhdr = "";
   char *headers = 0;
   char *hosthdr = 0;
@@ -26,7 +26,7 @@ static int LuaFetch(lua_State *L) {
   char *key, *val, *hdr;
   size_t keylen, vallen;
   size_t urlarglen, requestlen, paylen, bodylen;
-  size_t g, n, hdrsize;
+  size_t i, g, n, hdrsize;
   int imethod, numredirects = 0, maxredirects = 5;
   bool followredirect = true;
   struct addrinfo hints = {.ai_family = AF_INET,
@@ -169,15 +169,19 @@ static int LuaFetch(lua_State *L) {
   /*
    * Create HTTP message.
    */
-  request = _gc(xasprintf("%s %s HTTP/1.1\r\n"
-                          "Host: %s\r\n"
-                          "Connection: close\r\n"
-                          "User-Agent: %s\r\n"
-                          "%s%s"
-                          "\r\n%s",
-                          method, _gc(EncodeUrl(&url, 0)), hosthdr, agenthdr,
-                          conlenhdr, headers ? headers : "", body));
-  requestlen = strlen(request);
+  request = 0;
+  appendf(&request,
+          "%s %s HTTP/1.1\r\n"
+          "Host: %s\r\n"
+          "Connection: close\r\n"
+          "User-Agent: %s\r\n"
+          "%s%s"
+          "\r\n",
+          method, _gc(EncodeUrl(&url, 0)), hosthdr, agenthdr, conlenhdr,
+          headers ? headers : "");
+  appendd(&request, body, bodylen);
+  requestlen = appendz(request).i;
+  _gc(request);
 
   /*
    * Perform DNS lookup.
@@ -244,19 +248,21 @@ static int LuaFetch(lua_State *L) {
    * Send HTTP Message.
    */
   DEBUGF("(ftch) client sending %s request", method);
+  for (i = 0; i < requestlen; i += rc) {
 #ifndef UNSECURE
-  if (usingssl) {
-    ret = mbedtls_ssl_write(&sslcli, request, requestlen);
-    if (ret != requestlen) {
-      if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) goto VerifyFailed;
-      close(sock);
-      return LuaNilTlsError(L, "write", ret);
-    }
-  } else
+    if (usingssl) {
+      rc = mbedtls_ssl_write(&sslcli, request + i, requestlen - i);
+      if (rc <= 0) {
+        if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) goto VerifyFailed;
+        close(sock);
+        return LuaNilTlsError(L, "write", rc);
+      }
+    } else
 #endif
-      if (WRITE(sock, request, requestlen) != requestlen) {
-    close(sock);
-    return LuaNilError(L, "write error: %s", strerror(errno));
+        if ((rc = WRITE(sock, request + i, requestlen - i)) <= 0) {
+      close(sock);
+      return LuaNilError(L, "write error: %s", strerror(errno));
+    }
   }
   if (logmessages) {
     LogMessage("sent", request, requestlen);
