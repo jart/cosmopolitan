@@ -96,6 +96,17 @@ o/ape/idata.inc:				\
 		ape/idata.internal.h		\
 		ape/relocations.h
 
+o/$(MODE)/ape/ape.o:				\
+		ape/blink-aarch64.gz		\
+		ape/blink-arm.gz		\
+		ape/blink-darwin-arm64.gz	\
+		ape/blink-i486.gz		\
+		ape/blink-mipsel.gz		\
+		ape/blink-powerpc.gz		\
+		ape/blink-powerpc64le.gz	\
+		ape/blink-riscv64.gz		\
+		ape/blink-s390x.gz
+
 o/$(MODE)/ape/ape-no-modify-self.o:		\
 		ape/ape.S			\
 		ape/macros.internal.h		\
@@ -115,6 +126,15 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/runtime/pc.internal.h	\
 		libc/runtime/symbolic.h		\
 		libc/sysv/consts/prot.h		\
+		ape/blink-aarch64.gz		\
+		ape/blink-arm.gz		\
+		ape/blink-darwin-arm64.gz	\
+		ape/blink-i486.gz		\
+		ape/blink-mipsel.gz		\
+		ape/blink-powerpc.gz		\
+		ape/blink-powerpc64le.gz	\
+		ape/blink-riscv64.gz		\
+		ape/blink-s390x.gz		\
 		o/$(MODE)/ape/ape.elf
 	@$(COMPILE)				\
 		-AOBJECTIFY.S			\
@@ -141,7 +161,16 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
 		libc/runtime/symbolic.h		\
-		libc/sysv/consts/prot.h
+		libc/sysv/consts/prot.h		\
+		ape/blink-aarch64.gz		\
+		ape/blink-arm.gz		\
+		ape/blink-darwin-arm64.gz	\
+		ape/blink-i486.gz		\
+		ape/blink-mipsel.gz		\
+		ape/blink-powerpc.gz		\
+		ape/blink-powerpc64le.gz	\
+		ape/blink-riscv64.gz		\
+		ape/blink-s390x.gz
 	@$(COMPILE)				\
 		-AOBJECTIFY.S			\
 		$(OBJECTIFY.S)			\

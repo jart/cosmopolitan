@@ -216,6 +216,8 @@ SECTIONS {
     KEEP(*(.elf.phdrs))
     HIDDEN(ape_phdrs_end = .);
 
+    KEEP(*(.emush))
+
     /* OpenBSD */
     . = ALIGN(__SIZEOF_POINTER__);
     HIDDEN(ape_note = .);
@@ -273,6 +275,7 @@ SECTIONS {
     KEEP(*(.textwindowsprologue))
     *(.text.windows)
     KEEP(*(.textwindowsepilogue))
+    KEEP(*(.blink))
     *(SORT_BY_ALIGNMENT(.text.modernity))
     *(SORT_BY_ALIGNMENT(.text.modernity.*))
     *(SORT_BY_ALIGNMENT(.text.hot))
@@ -563,6 +566,182 @@ SHSTUB2(ape_loader_dd_count,
         DEFINED(ape_loader_end)
             ? ROUNDUP(ape_loader_end - ape_loader, PAGESIZE) / 64
             : 0);
+
+HIDDEN(blink_aarch64_b0 = RVA(blink_aarch64) % 10 + 48);
+HIDDEN(blink_aarch64_b1 = RVA(blink_aarch64) < 10 ? 32 : RVA(blink_aarch64) / 10 % 10 + 48);
+HIDDEN(blink_aarch64_b2 = RVA(blink_aarch64) < 100 ? 32 : RVA(blink_aarch64) / 100 % 10 + 48);
+HIDDEN(blink_aarch64_b3 = RVA(blink_aarch64) < 1000 ? 32 : RVA(blink_aarch64) / 1000 % 10 + 48);
+HIDDEN(blink_aarch64_b4 = RVA(blink_aarch64) < 10000 ? 32 : RVA(blink_aarch64) / 10000 % 10 + 48);
+HIDDEN(blink_aarch64_b5 = RVA(blink_aarch64) < 100000 ? 32 : RVA(blink_aarch64) / 100000 % 10 + 48);
+HIDDEN(blink_aarch64_b6 = RVA(blink_aarch64) < 1000000 ? 32 : RVA(blink_aarch64) / 1000000 % 10 + 48);
+HIDDEN(blink_aarch64_b7 = RVA(blink_aarch64) < 10000000 ? 32 : RVA(blink_aarch64) / 10000000 % 10 + 48);
+HIDDEN(blink_aarch64_b8 = RVA(blink_aarch64) < 100000000 ? 32 : RVA(blink_aarch64) / 100000000 % 10 + 48);
+HIDDEN(blink_aarch64_b9 = RVA(blink_aarch64) < 1000000000 ? 32 : RVA(blink_aarch64) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_aarch64_size_b0 = blink_aarch64_size % 10 + 48);
+HIDDEN(blink_aarch64_size_b1 = blink_aarch64_size < 10 ? 32 : blink_aarch64_size / 10 % 10 + 48);
+HIDDEN(blink_aarch64_size_b2 = blink_aarch64_size < 100 ? 32 : blink_aarch64_size / 100 % 10 + 48);
+HIDDEN(blink_aarch64_size_b3 = blink_aarch64_size < 1000 ? 32 : blink_aarch64_size / 1000 % 10 + 48);
+HIDDEN(blink_aarch64_size_b4 = blink_aarch64_size < 10000 ? 32 : blink_aarch64_size / 10000 % 10 + 48);
+HIDDEN(blink_aarch64_size_b5 = blink_aarch64_size < 100000 ? 32 : blink_aarch64_size / 100000 % 10 + 48);
+HIDDEN(blink_aarch64_size_b6 = blink_aarch64_size < 1000000 ? 32 : blink_aarch64_size / 1000000 % 10 + 48);
+HIDDEN(blink_aarch64_size_b7 = blink_aarch64_size < 10000000 ? 32 : blink_aarch64_size / 10000000 % 10 + 48);
+HIDDEN(blink_aarch64_size_b8 = blink_aarch64_size < 100000000 ? 32 : blink_aarch64_size / 100000000 % 10 + 48);
+HIDDEN(blink_aarch64_size_b9 = blink_aarch64_size < 1000000000 ? 32 : blink_aarch64_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_darwin_arm64_b0 = RVA(blink_darwin_arm64) % 10 + 48);
+HIDDEN(blink_darwin_arm64_b1 = RVA(blink_darwin_arm64) < 10 ? 32 : RVA(blink_darwin_arm64) / 10 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b2 = RVA(blink_darwin_arm64) < 100 ? 32 : RVA(blink_darwin_arm64) / 100 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b3 = RVA(blink_darwin_arm64) < 1000 ? 32 : RVA(blink_darwin_arm64) / 1000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b4 = RVA(blink_darwin_arm64) < 10000 ? 32 : RVA(blink_darwin_arm64) / 10000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b5 = RVA(blink_darwin_arm64) < 100000 ? 32 : RVA(blink_darwin_arm64) / 100000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b6 = RVA(blink_darwin_arm64) < 1000000 ? 32 : RVA(blink_darwin_arm64) / 1000000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b7 = RVA(blink_darwin_arm64) < 10000000 ? 32 : RVA(blink_darwin_arm64) / 10000000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b8 = RVA(blink_darwin_arm64) < 100000000 ? 32 : RVA(blink_darwin_arm64) / 100000000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_b9 = RVA(blink_darwin_arm64) < 1000000000 ? 32 : RVA(blink_darwin_arm64) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_darwin_arm64_size_b0 = blink_darwin_arm64_size % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b1 = blink_darwin_arm64_size < 10 ? 32 : blink_darwin_arm64_size / 10 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b2 = blink_darwin_arm64_size < 100 ? 32 : blink_darwin_arm64_size / 100 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b3 = blink_darwin_arm64_size < 1000 ? 32 : blink_darwin_arm64_size / 1000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b4 = blink_darwin_arm64_size < 10000 ? 32 : blink_darwin_arm64_size / 10000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b5 = blink_darwin_arm64_size < 100000 ? 32 : blink_darwin_arm64_size / 100000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b6 = blink_darwin_arm64_size < 1000000 ? 32 : blink_darwin_arm64_size / 1000000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b7 = blink_darwin_arm64_size < 10000000 ? 32 : blink_darwin_arm64_size / 10000000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b8 = blink_darwin_arm64_size < 100000000 ? 32 : blink_darwin_arm64_size / 100000000 % 10 + 48);
+HIDDEN(blink_darwin_arm64_size_b9 = blink_darwin_arm64_size < 1000000000 ? 32 : blink_darwin_arm64_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_arm_b0 = RVA(blink_arm) % 10 + 48);
+HIDDEN(blink_arm_b1 = RVA(blink_arm) < 10 ? 32 : RVA(blink_arm) / 10 % 10 + 48);
+HIDDEN(blink_arm_b2 = RVA(blink_arm) < 100 ? 32 : RVA(blink_arm) / 100 % 10 + 48);
+HIDDEN(blink_arm_b3 = RVA(blink_arm) < 1000 ? 32 : RVA(blink_arm) / 1000 % 10 + 48);
+HIDDEN(blink_arm_b4 = RVA(blink_arm) < 10000 ? 32 : RVA(blink_arm) / 10000 % 10 + 48);
+HIDDEN(blink_arm_b5 = RVA(blink_arm) < 100000 ? 32 : RVA(blink_arm) / 100000 % 10 + 48);
+HIDDEN(blink_arm_b6 = RVA(blink_arm) < 1000000 ? 32 : RVA(blink_arm) / 1000000 % 10 + 48);
+HIDDEN(blink_arm_b7 = RVA(blink_arm) < 10000000 ? 32 : RVA(blink_arm) / 10000000 % 10 + 48);
+HIDDEN(blink_arm_b8 = RVA(blink_arm) < 100000000 ? 32 : RVA(blink_arm) / 100000000 % 10 + 48);
+HIDDEN(blink_arm_b9 = RVA(blink_arm) < 1000000000 ? 32 : RVA(blink_arm) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_arm_size_b0 = blink_arm_size % 10 + 48);
+HIDDEN(blink_arm_size_b1 = blink_arm_size < 10 ? 32 : blink_arm_size / 10 % 10 + 48);
+HIDDEN(blink_arm_size_b2 = blink_arm_size < 100 ? 32 : blink_arm_size / 100 % 10 + 48);
+HIDDEN(blink_arm_size_b3 = blink_arm_size < 1000 ? 32 : blink_arm_size / 1000 % 10 + 48);
+HIDDEN(blink_arm_size_b4 = blink_arm_size < 10000 ? 32 : blink_arm_size / 10000 % 10 + 48);
+HIDDEN(blink_arm_size_b5 = blink_arm_size < 100000 ? 32 : blink_arm_size / 100000 % 10 + 48);
+HIDDEN(blink_arm_size_b6 = blink_arm_size < 1000000 ? 32 : blink_arm_size / 1000000 % 10 + 48);
+HIDDEN(blink_arm_size_b7 = blink_arm_size < 10000000 ? 32 : blink_arm_size / 10000000 % 10 + 48);
+HIDDEN(blink_arm_size_b8 = blink_arm_size < 100000000 ? 32 : blink_arm_size / 100000000 % 10 + 48);
+HIDDEN(blink_arm_size_b9 = blink_arm_size < 1000000000 ? 32 : blink_arm_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_i486_b0 = RVA(blink_i486) % 10 + 48);
+HIDDEN(blink_i486_b1 = RVA(blink_i486) < 10 ? 32 : RVA(blink_i486) / 10 % 10 + 48);
+HIDDEN(blink_i486_b2 = RVA(blink_i486) < 100 ? 32 : RVA(blink_i486) / 100 % 10 + 48);
+HIDDEN(blink_i486_b3 = RVA(blink_i486) < 1000 ? 32 : RVA(blink_i486) / 1000 % 10 + 48);
+HIDDEN(blink_i486_b4 = RVA(blink_i486) < 10000 ? 32 : RVA(blink_i486) / 10000 % 10 + 48);
+HIDDEN(blink_i486_b5 = RVA(blink_i486) < 100000 ? 32 : RVA(blink_i486) / 100000 % 10 + 48);
+HIDDEN(blink_i486_b6 = RVA(blink_i486) < 1000000 ? 32 : RVA(blink_i486) / 1000000 % 10 + 48);
+HIDDEN(blink_i486_b7 = RVA(blink_i486) < 10000000 ? 32 : RVA(blink_i486) / 10000000 % 10 + 48);
+HIDDEN(blink_i486_b8 = RVA(blink_i486) < 100000000 ? 32 : RVA(blink_i486) / 100000000 % 10 + 48);
+HIDDEN(blink_i486_b9 = RVA(blink_i486) < 1000000000 ? 32 : RVA(blink_i486) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_i486_size_b0 = blink_i486_size % 10 + 48);
+HIDDEN(blink_i486_size_b1 = blink_i486_size < 10 ? 32 : blink_i486_size / 10 % 10 + 48);
+HIDDEN(blink_i486_size_b2 = blink_i486_size < 100 ? 32 : blink_i486_size / 100 % 10 + 48);
+HIDDEN(blink_i486_size_b3 = blink_i486_size < 1000 ? 32 : blink_i486_size / 1000 % 10 + 48);
+HIDDEN(blink_i486_size_b4 = blink_i486_size < 10000 ? 32 : blink_i486_size / 10000 % 10 + 48);
+HIDDEN(blink_i486_size_b5 = blink_i486_size < 100000 ? 32 : blink_i486_size / 100000 % 10 + 48);
+HIDDEN(blink_i486_size_b6 = blink_i486_size < 1000000 ? 32 : blink_i486_size / 1000000 % 10 + 48);
+HIDDEN(blink_i486_size_b7 = blink_i486_size < 10000000 ? 32 : blink_i486_size / 10000000 % 10 + 48);
+HIDDEN(blink_i486_size_b8 = blink_i486_size < 100000000 ? 32 : blink_i486_size / 100000000 % 10 + 48);
+HIDDEN(blink_i486_size_b9 = blink_i486_size < 1000000000 ? 32 : blink_i486_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_riscv64_b0 = RVA(blink_riscv64) % 10 + 48);
+HIDDEN(blink_riscv64_b1 = RVA(blink_riscv64) < 10 ? 32 : RVA(blink_riscv64) / 10 % 10 + 48);
+HIDDEN(blink_riscv64_b2 = RVA(blink_riscv64) < 100 ? 32 : RVA(blink_riscv64) / 100 % 10 + 48);
+HIDDEN(blink_riscv64_b3 = RVA(blink_riscv64) < 1000 ? 32 : RVA(blink_riscv64) / 1000 % 10 + 48);
+HIDDEN(blink_riscv64_b4 = RVA(blink_riscv64) < 10000 ? 32 : RVA(blink_riscv64) / 10000 % 10 + 48);
+HIDDEN(blink_riscv64_b5 = RVA(blink_riscv64) < 100000 ? 32 : RVA(blink_riscv64) / 100000 % 10 + 48);
+HIDDEN(blink_riscv64_b6 = RVA(blink_riscv64) < 1000000 ? 32 : RVA(blink_riscv64) / 1000000 % 10 + 48);
+HIDDEN(blink_riscv64_b7 = RVA(blink_riscv64) < 10000000 ? 32 : RVA(blink_riscv64) / 10000000 % 10 + 48);
+HIDDEN(blink_riscv64_b8 = RVA(blink_riscv64) < 100000000 ? 32 : RVA(blink_riscv64) / 100000000 % 10 + 48);
+HIDDEN(blink_riscv64_b9 = RVA(blink_riscv64) < 1000000000 ? 32 : RVA(blink_riscv64) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_riscv64_size_b0 = blink_riscv64_size % 10 + 48);
+HIDDEN(blink_riscv64_size_b1 = blink_riscv64_size < 10 ? 32 : blink_riscv64_size / 10 % 10 + 48);
+HIDDEN(blink_riscv64_size_b2 = blink_riscv64_size < 100 ? 32 : blink_riscv64_size / 100 % 10 + 48);
+HIDDEN(blink_riscv64_size_b3 = blink_riscv64_size < 1000 ? 32 : blink_riscv64_size / 1000 % 10 + 48);
+HIDDEN(blink_riscv64_size_b4 = blink_riscv64_size < 10000 ? 32 : blink_riscv64_size / 10000 % 10 + 48);
+HIDDEN(blink_riscv64_size_b5 = blink_riscv64_size < 100000 ? 32 : blink_riscv64_size / 100000 % 10 + 48);
+HIDDEN(blink_riscv64_size_b6 = blink_riscv64_size < 1000000 ? 32 : blink_riscv64_size / 1000000 % 10 + 48);
+HIDDEN(blink_riscv64_size_b7 = blink_riscv64_size < 10000000 ? 32 : blink_riscv64_size / 10000000 % 10 + 48);
+HIDDEN(blink_riscv64_size_b8 = blink_riscv64_size < 100000000 ? 32 : blink_riscv64_size / 100000000 % 10 + 48);
+HIDDEN(blink_riscv64_size_b9 = blink_riscv64_size < 1000000000 ? 32 : blink_riscv64_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_mipsel_b0 = RVA(blink_mipsel) % 10 + 48);
+HIDDEN(blink_mipsel_b1 = RVA(blink_mipsel) < 10 ? 32 : RVA(blink_mipsel) / 10 % 10 + 48);
+HIDDEN(blink_mipsel_b2 = RVA(blink_mipsel) < 100 ? 32 : RVA(blink_mipsel) / 100 % 10 + 48);
+HIDDEN(blink_mipsel_b3 = RVA(blink_mipsel) < 1000 ? 32 : RVA(blink_mipsel) / 1000 % 10 + 48);
+HIDDEN(blink_mipsel_b4 = RVA(blink_mipsel) < 10000 ? 32 : RVA(blink_mipsel) / 10000 % 10 + 48);
+HIDDEN(blink_mipsel_b5 = RVA(blink_mipsel) < 100000 ? 32 : RVA(blink_mipsel) / 100000 % 10 + 48);
+HIDDEN(blink_mipsel_b6 = RVA(blink_mipsel) < 1000000 ? 32 : RVA(blink_mipsel) / 1000000 % 10 + 48);
+HIDDEN(blink_mipsel_b7 = RVA(blink_mipsel) < 10000000 ? 32 : RVA(blink_mipsel) / 10000000 % 10 + 48);
+HIDDEN(blink_mipsel_b8 = RVA(blink_mipsel) < 100000000 ? 32 : RVA(blink_mipsel) / 100000000 % 10 + 48);
+HIDDEN(blink_mipsel_b9 = RVA(blink_mipsel) < 1000000000 ? 32 : RVA(blink_mipsel) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_mipsel_size_b0 = blink_mipsel_size % 10 + 48);
+HIDDEN(blink_mipsel_size_b1 = blink_mipsel_size < 10 ? 32 : blink_mipsel_size / 10 % 10 + 48);
+HIDDEN(blink_mipsel_size_b2 = blink_mipsel_size < 100 ? 32 : blink_mipsel_size / 100 % 10 + 48);
+HIDDEN(blink_mipsel_size_b3 = blink_mipsel_size < 1000 ? 32 : blink_mipsel_size / 1000 % 10 + 48);
+HIDDEN(blink_mipsel_size_b4 = blink_mipsel_size < 10000 ? 32 : blink_mipsel_size / 10000 % 10 + 48);
+HIDDEN(blink_mipsel_size_b5 = blink_mipsel_size < 100000 ? 32 : blink_mipsel_size / 100000 % 10 + 48);
+HIDDEN(blink_mipsel_size_b6 = blink_mipsel_size < 1000000 ? 32 : blink_mipsel_size / 1000000 % 10 + 48);
+HIDDEN(blink_mipsel_size_b7 = blink_mipsel_size < 10000000 ? 32 : blink_mipsel_size / 10000000 % 10 + 48);
+HIDDEN(blink_mipsel_size_b8 = blink_mipsel_size < 100000000 ? 32 : blink_mipsel_size / 100000000 % 10 + 48);
+HIDDEN(blink_mipsel_size_b9 = blink_mipsel_size < 1000000000 ? 32 : blink_mipsel_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_powerpc_b0 = RVA(blink_powerpc) % 10 + 48);
+HIDDEN(blink_powerpc_b1 = RVA(blink_powerpc) < 10 ? 32 : RVA(blink_powerpc) / 10 % 10 + 48);
+HIDDEN(blink_powerpc_b2 = RVA(blink_powerpc) < 100 ? 32 : RVA(blink_powerpc) / 100 % 10 + 48);
+HIDDEN(blink_powerpc_b3 = RVA(blink_powerpc) < 1000 ? 32 : RVA(blink_powerpc) / 1000 % 10 + 48);
+HIDDEN(blink_powerpc_b4 = RVA(blink_powerpc) < 10000 ? 32 : RVA(blink_powerpc) / 10000 % 10 + 48);
+HIDDEN(blink_powerpc_b5 = RVA(blink_powerpc) < 100000 ? 32 : RVA(blink_powerpc) / 100000 % 10 + 48);
+HIDDEN(blink_powerpc_b6 = RVA(blink_powerpc) < 1000000 ? 32 : RVA(blink_powerpc) / 1000000 % 10 + 48);
+HIDDEN(blink_powerpc_b7 = RVA(blink_powerpc) < 10000000 ? 32 : RVA(blink_powerpc) / 10000000 % 10 + 48);
+HIDDEN(blink_powerpc_b8 = RVA(blink_powerpc) < 100000000 ? 32 : RVA(blink_powerpc) / 100000000 % 10 + 48);
+HIDDEN(blink_powerpc_b9 = RVA(blink_powerpc) < 1000000000 ? 32 : RVA(blink_powerpc) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_powerpc_size_b0 = blink_powerpc_size % 10 + 48);
+HIDDEN(blink_powerpc_size_b1 = blink_powerpc_size < 10 ? 32 : blink_powerpc_size / 10 % 10 + 48);
+HIDDEN(blink_powerpc_size_b2 = blink_powerpc_size < 100 ? 32 : blink_powerpc_size / 100 % 10 + 48);
+HIDDEN(blink_powerpc_size_b3 = blink_powerpc_size < 1000 ? 32 : blink_powerpc_size / 1000 % 10 + 48);
+HIDDEN(blink_powerpc_size_b4 = blink_powerpc_size < 10000 ? 32 : blink_powerpc_size / 10000 % 10 + 48);
+HIDDEN(blink_powerpc_size_b5 = blink_powerpc_size < 100000 ? 32 : blink_powerpc_size / 100000 % 10 + 48);
+HIDDEN(blink_powerpc_size_b6 = blink_powerpc_size < 1000000 ? 32 : blink_powerpc_size / 1000000 % 10 + 48);
+HIDDEN(blink_powerpc_size_b7 = blink_powerpc_size < 10000000 ? 32 : blink_powerpc_size / 10000000 % 10 + 48);
+HIDDEN(blink_powerpc_size_b8 = blink_powerpc_size < 100000000 ? 32 : blink_powerpc_size / 100000000 % 10 + 48);
+HIDDEN(blink_powerpc_size_b9 = blink_powerpc_size < 1000000000 ? 32 : blink_powerpc_size / 1000000000 % 10 + 48);
+
+HIDDEN(blink_s390x_b0 = RVA(blink_s390x) % 10 + 48);
+HIDDEN(blink_s390x_b1 = RVA(blink_s390x) < 10 ? 32 : RVA(blink_s390x) / 10 % 10 + 48);
+HIDDEN(blink_s390x_b2 = RVA(blink_s390x) < 100 ? 32 : RVA(blink_s390x) / 100 % 10 + 48);
+HIDDEN(blink_s390x_b3 = RVA(blink_s390x) < 1000 ? 32 : RVA(blink_s390x) / 1000 % 10 + 48);
+HIDDEN(blink_s390x_b4 = RVA(blink_s390x) < 10000 ? 32 : RVA(blink_s390x) / 10000 % 10 + 48);
+HIDDEN(blink_s390x_b5 = RVA(blink_s390x) < 100000 ? 32 : RVA(blink_s390x) / 100000 % 10 + 48);
+HIDDEN(blink_s390x_b6 = RVA(blink_s390x) < 1000000 ? 32 : RVA(blink_s390x) / 1000000 % 10 + 48);
+HIDDEN(blink_s390x_b7 = RVA(blink_s390x) < 10000000 ? 32 : RVA(blink_s390x) / 10000000 % 10 + 48);
+HIDDEN(blink_s390x_b8 = RVA(blink_s390x) < 100000000 ? 32 : RVA(blink_s390x) / 100000000 % 10 + 48);
+HIDDEN(blink_s390x_b9 = RVA(blink_s390x) < 1000000000 ? 32 : RVA(blink_s390x) / 1000000000 % 10 + 48);
+
+HIDDEN(blink_s390x_size_b0 = blink_s390x_size % 10 + 48);
+HIDDEN(blink_s390x_size_b1 = blink_s390x_size < 10 ? 32 : blink_s390x_size / 10 % 10 + 48);
+HIDDEN(blink_s390x_size_b2 = blink_s390x_size < 100 ? 32 : blink_s390x_size / 100 % 10 + 48);
+HIDDEN(blink_s390x_size_b3 = blink_s390x_size < 1000 ? 32 : blink_s390x_size / 1000 % 10 + 48);
+HIDDEN(blink_s390x_size_b4 = blink_s390x_size < 10000 ? 32 : blink_s390x_size / 10000 % 10 + 48);
+HIDDEN(blink_s390x_size_b5 = blink_s390x_size < 100000 ? 32 : blink_s390x_size / 100000 % 10 + 48);
+HIDDEN(blink_s390x_size_b6 = blink_s390x_size < 1000000 ? 32 : blink_s390x_size / 1000000 % 10 + 48);
+HIDDEN(blink_s390x_size_b7 = blink_s390x_size < 10000000 ? 32 : blink_s390x_size / 10000000 % 10 + 48);
+HIDDEN(blink_s390x_size_b8 = blink_s390x_size < 100000000 ? 32 : blink_s390x_size / 100000000 % 10 + 48);
+HIDDEN(blink_s390x_size_b9 = blink_s390x_size < 1000000000 ? 32 : blink_s390x_size / 1000000000 % 10 + 48);
 
 #if SupportsMetal()
 HIDDEN(v_ape_realsectors =

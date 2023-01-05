@@ -581,6 +581,9 @@ ape_disk:
 
 #if SupportsWindows() || SupportsMetal() || SupportsXnu()
 apesh:	.ascii	"\n@\n#'\"\n"			# sixth edition shebang
+	.ascii	"m=\"$(uname -m)\"\n"
+
+	.ascii	"if [ \"$m\" = x86_64 ]; then\n"
 //	Until all operating systems can be updated to support APE,
 //	we have a beautiful, yet imperfect workaround, which is to
 //	modify the binary to follow the local system's convention.
@@ -682,17 +685,294 @@ apesh:	.ascii	"\n@\n#'\"\n"			# sixth edition shebang
 	.ascii	"o=\"$t\"\n"
 	.ascii	"exec \"$o\" \"$@\"\n"
 #endif /* APE_NO_MODIFY_SELF */
-	.ascii	"R=$?\n"
-	.ascii	"if [ \"$(uname -m)\" != x86_64 ]; then\n"
-	.ascii	  "Q=\"$(command -v qemu-x86_64)\" &&\n"
-	.ascii	    "exec \"$Q\" \"$o\" \"$@\"\n"
-#ifndef APE_NO_MODIFY_SELF
-	.ascii	"else\n"			# means argv[0] was wrong
-	.ascii	"  exec \"$o\" \"$@\"\n"	# so do a path resolution
-#endif /* APE_NO_MODIFY_SELF */
+	.ascii	"exit $?\n"
 	.ascii	"fi\n"
-	.ascii	"exit $R\n"
+
+	.ascii	"PHDRS='' <<'@'\n"
 	.endobj	apesh
+//	elf program headers get inserted here
+//	because they need to be in the first 4096 bytes
+        .section .emush,"a",@progbits
+emush:	.ascii	"\n@\n#'\"\n"
+
+//	our script is running on a non-x86_64 architecture
+//	1. `dd` out the appropriate blink vm blob
+//	2. gunzip the blink virtual machine executable
+//	3. relaunch this program inside the blink vm
+	.ascii	"o=\"$(command -v \"$0\")\"\n"
+	.ascii	"e=\"${TMPDIR:-${HOME:-.}}/.ape-blink-1.0\"\n"
+
+//	Blink for Aarch64 Linux, e.g. Raspberry Pi
+	.ascii	"if [ \"$m\" = aarch64 ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-aarch64 to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_aarch64_b9
+	.byte	blink_aarch64_b8
+	.byte	blink_aarch64_b7
+	.byte	blink_aarch64_b6
+	.byte	blink_aarch64_b5
+	.byte	blink_aarch64_b4
+	.byte	blink_aarch64_b3
+	.byte	blink_aarch64_b2
+	.byte	blink_aarch64_b1
+	.byte	blink_aarch64_b0
+	.ascii	")) count=$(("
+	.byte	blink_aarch64_size_b9
+	.byte	blink_aarch64_size_b8
+	.byte	blink_aarch64_size_b7
+	.byte	blink_aarch64_size_b6
+	.byte	blink_aarch64_size_b5
+	.byte	blink_aarch64_size_b4
+	.byte	blink_aarch64_size_b3
+	.byte	blink_aarch64_size_b2
+	.byte	blink_aarch64_size_b1
+	.byte	blink_aarch64_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Apple Silicon, e.g. M1 Macbook
+	.ascii	"if [ \"$m\" = arm64 ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-darwin-arm64 to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_darwin_arm64_b9
+	.byte	blink_darwin_arm64_b8
+	.byte	blink_darwin_arm64_b7
+	.byte	blink_darwin_arm64_b6
+	.byte	blink_darwin_arm64_b5
+	.byte	blink_darwin_arm64_b4
+	.byte	blink_darwin_arm64_b3
+	.byte	blink_darwin_arm64_b2
+	.byte	blink_darwin_arm64_b1
+	.byte	blink_darwin_arm64_b0
+	.ascii	")) count=$(("
+	.byte	blink_darwin_arm64_size_b9
+	.byte	blink_darwin_arm64_size_b8
+	.byte	blink_darwin_arm64_size_b7
+	.byte	blink_darwin_arm64_size_b6
+	.byte	blink_darwin_arm64_size_b5
+	.byte	blink_darwin_arm64_size_b4
+	.byte	blink_darwin_arm64_size_b3
+	.byte	blink_darwin_arm64_size_b2
+	.byte	blink_darwin_arm64_size_b1
+	.byte	blink_darwin_arm64_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Linux Generic ARM
+	.ascii	"if [ \"${m#arm}\" != \"$m\" ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-arm to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_arm_b9
+	.byte	blink_arm_b8
+	.byte	blink_arm_b7
+	.byte	blink_arm_b6
+	.byte	blink_arm_b5
+	.byte	blink_arm_b4
+	.byte	blink_arm_b3
+	.byte	blink_arm_b2
+	.byte	blink_arm_b1
+	.byte	blink_arm_b0
+	.ascii	")) count=$(("
+	.byte	blink_arm_size_b9
+	.byte	blink_arm_size_b8
+	.byte	blink_arm_size_b7
+	.byte	blink_arm_size_b6
+	.byte	blink_arm_size_b5
+	.byte	blink_arm_size_b4
+	.byte	blink_arm_size_b3
+	.byte	blink_arm_size_b2
+	.byte	blink_arm_size_b1
+	.byte	blink_arm_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Linux on Legacy x86
+	.ascii	"if [ \"$m\" = i686 ] || [ \"$m\" = i386 ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-i486 to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_i486_b9
+	.byte	blink_i486_b8
+	.byte	blink_i486_b7
+	.byte	blink_i486_b6
+	.byte	blink_i486_b5
+	.byte	blink_i486_b4
+	.byte	blink_i486_b3
+	.byte	blink_i486_b2
+	.byte	blink_i486_b1
+	.byte	blink_i486_b0
+	.ascii	")) count=$(("
+	.byte	blink_i486_size_b9
+	.byte	blink_i486_size_b8
+	.byte	blink_i486_size_b7
+	.byte	blink_i486_size_b6
+	.byte	blink_i486_size_b5
+	.byte	blink_i486_size_b4
+	.byte	blink_i486_size_b3
+	.byte	blink_i486_size_b2
+	.byte	blink_i486_size_b1
+	.byte	blink_i486_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Linux on RISC-V
+	.ascii	"if [ \"$m\" = riscv64 ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-riscv64 to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_riscv64_b9
+	.byte	blink_riscv64_b8
+	.byte	blink_riscv64_b7
+	.byte	blink_riscv64_b6
+	.byte	blink_riscv64_b5
+	.byte	blink_riscv64_b4
+	.byte	blink_riscv64_b3
+	.byte	blink_riscv64_b2
+	.byte	blink_riscv64_b1
+	.byte	blink_riscv64_b0
+	.ascii	")) count=$(("
+	.byte	blink_riscv64_size_b9
+	.byte	blink_riscv64_size_b8
+	.byte	blink_riscv64_size_b7
+	.byte	blink_riscv64_size_b6
+	.byte	blink_riscv64_size_b5
+	.byte	blink_riscv64_size_b4
+	.byte	blink_riscv64_size_b3
+	.byte	blink_riscv64_size_b2
+	.byte	blink_riscv64_size_b1
+	.byte	blink_riscv64_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Linux on MIPS Little Endian, e.g. Ubiquiti EdgerouterX
+	.ascii	"if [ \"$m\" = mips ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-mipsel to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_mipsel_b9
+	.byte	blink_mipsel_b8
+	.byte	blink_mipsel_b7
+	.byte	blink_mipsel_b6
+	.byte	blink_mipsel_b5
+	.byte	blink_mipsel_b4
+	.byte	blink_mipsel_b3
+	.byte	blink_mipsel_b2
+	.byte	blink_mipsel_b1
+	.byte	blink_mipsel_b0
+	.ascii	")) count=$(("
+	.byte	blink_mipsel_size_b9
+	.byte	blink_mipsel_size_b8
+	.byte	blink_mipsel_size_b7
+	.byte	blink_mipsel_size_b6
+	.byte	blink_mipsel_size_b5
+	.byte	blink_mipsel_size_b4
+	.byte	blink_mipsel_size_b3
+	.byte	blink_mipsel_size_b2
+	.byte	blink_mipsel_size_b1
+	.byte	blink_mipsel_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Linux on PowerPC, e.g. Old Macintosh
+	.ascii	"if [ \"$m\" = ppc ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-powerpc to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_powerpc_b9
+	.byte	blink_powerpc_b8
+	.byte	blink_powerpc_b7
+	.byte	blink_powerpc_b6
+	.byte	blink_powerpc_b5
+	.byte	blink_powerpc_b4
+	.byte	blink_powerpc_b3
+	.byte	blink_powerpc_b2
+	.byte	blink_powerpc_b1
+	.byte	blink_powerpc_b0
+	.ascii	")) count=$(("
+	.byte	blink_powerpc_size_b9
+	.byte	blink_powerpc_size_b8
+	.byte	blink_powerpc_size_b7
+	.byte	blink_powerpc_size_b6
+	.byte	blink_powerpc_size_b5
+	.byte	blink_powerpc_size_b4
+	.byte	blink_powerpc_size_b3
+	.byte	blink_powerpc_size_b2
+	.byte	blink_powerpc_size_b1
+	.byte	blink_powerpc_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+//	Blink for Linux on IBM Mainframes
+	.ascii	"if [ \"$m\" = s390x ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-s390x to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_s390x_b9
+	.byte	blink_s390x_b8
+	.byte	blink_s390x_b7
+	.byte	blink_s390x_b6
+	.byte	blink_s390x_b5
+	.byte	blink_s390x_b4
+	.byte	blink_s390x_b3
+	.byte	blink_s390x_b2
+	.byte	blink_s390x_b1
+	.byte	blink_s390x_b0
+	.ascii	")) count=$(("
+	.byte	blink_s390x_size_b9
+	.byte	blink_s390x_size_b8
+	.byte	blink_s390x_size_b7
+	.byte	blink_s390x_size_b6
+	.byte	blink_s390x_size_b5
+	.byte	blink_s390x_size_b4
+	.byte	blink_s390x_size_b3
+	.byte	blink_s390x_size_b2
+	.byte	blink_s390x_size_b1
+	.byte	blink_s390x_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
+	.ascii	"echo unsupported architecture >&2\n"
+	.rept	16
+	.ascii	"exit 127\n"
+	.endr
+
+	.ascii	"exit 1\n"
+	.endobj	emush
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits
 	.align	64
@@ -1836,6 +2116,70 @@ __bss_start:
 	.globl	__bss_end
 	.hidden	__bss_end
 __bss_end:
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_aarch64_size
+blink_aarch64:
+	.incbin	"ape/blink-aarch64.gz"
+	.endobj	blink_aarch64,globl
+blink_aarch64_size = . - blink_aarch64
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_darwin_arm64_size
+blink_darwin_arm64:
+	.incbin	"ape/blink-darwin-arm64.gz"
+	.endobj	blink_darwin_arm64,globl
+blink_darwin_arm64_size = . - blink_darwin_arm64
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_arm_size
+blink_arm:
+	.incbin	"ape/blink-arm.gz"
+	.endobj	blink_arm,globl
+blink_arm_size = . - blink_arm
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_i486_size
+blink_i486:
+	.incbin	"ape/blink-i486.gz"
+	.endobj	blink_i486,globl
+blink_i486_size = . - blink_i486
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_riscv64_size
+blink_riscv64:
+	.incbin	"ape/blink-riscv64.gz"
+	.endobj	blink_riscv64,globl
+blink_riscv64_size = . - blink_riscv64
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_mipsel_size
+blink_mipsel:
+	.incbin	"ape/blink-mipsel.gz"
+	.endobj	blink_mipsel,globl
+blink_mipsel_size = . - blink_mipsel
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_powerpc_size
+blink_powerpc:
+	.incbin	"ape/blink-powerpc.gz"
+	.endobj	blink_powerpc,globl
+blink_powerpc_size = . - blink_powerpc
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_s390x_size
+blink_s390x:
+	.incbin	"ape/blink-s390x.gz"
+	.endobj	blink_s390x,globl
+blink_s390x_size = . - blink_s390x
 	.previous
 
 .end
