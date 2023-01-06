@@ -583,7 +583,7 @@ ape_disk:
 apesh:	.ascii	"\n@\n#'\"\n"			# sixth edition shebang
 	.ascii	"m=\"$(uname -m)\"\n"
 
-	.ascii	"if [ \"$m\" = x86_64 ]; then\n"
+	.ascii	"if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]; then\n"
 //	Until all operating systems can be updated to support APE,
 //	we have a beautiful, yet imperfect workaround, which is to
 //	modify the binary to follow the local system's convention.
@@ -694,6 +694,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			# sixth edition shebang
 //	because they need to be in the first 4096 bytes
         .section .emush,"a",@progbits
 emush:	.ascii	"\n@\n#'\"\n"
+	.ascii	"s=\"$(uname -s)\"\n"
 
 //	our script is running on a non-x86_64 architecture
 //	1. `dd` out the appropriate blink vm blob
@@ -702,41 +703,8 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 	.ascii	"e=\"${TMPDIR:-${HOME:-.}}/.ape-blink-1.1\"\n"
 
-//	Blink for Aarch64 Linux, e.g. Raspberry Pi
-	.ascii	"if [ \"$m\" = aarch64 ]; then\n"
-	.ascii	"if ! [ -x \"$e\" ]; then\n"
-	.ascii	"echo \"extracting blink-aarch64 to ${e}\" >&2\n"
-	.ascii	"dd if=\"$o\" bs=1 skip=$(("
-	.byte	blink_aarch64_b9
-	.byte	blink_aarch64_b8
-	.byte	blink_aarch64_b7
-	.byte	blink_aarch64_b6
-	.byte	blink_aarch64_b5
-	.byte	blink_aarch64_b4
-	.byte	blink_aarch64_b3
-	.byte	blink_aarch64_b2
-	.byte	blink_aarch64_b1
-	.byte	blink_aarch64_b0
-	.ascii	")) count=$(("
-	.byte	blink_aarch64_size_b9
-	.byte	blink_aarch64_size_b8
-	.byte	blink_aarch64_size_b7
-	.byte	blink_aarch64_size_b6
-	.byte	blink_aarch64_size_b5
-	.byte	blink_aarch64_size_b4
-	.byte	blink_aarch64_size_b3
-	.byte	blink_aarch64_size_b2
-	.byte	blink_aarch64_size_b1
-	.byte	blink_aarch64_size_b0
-	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
-	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
-	.ascii	"chmod +x \"$e\"\n"
-	.ascii	"fi\n"
-	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
-	.ascii	"fi\n"
-
 //	Blink for Apple Silicon, e.g. M1 Macbook
-	.ascii	"if [ \"$m\" = arm64 ]; then\n"
+	.ascii	"if [ \"$s\" = Darwin ] && [ \"$m\" = arm64 ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-darwin-arm64 to ${e}\" >&2\n"
 	.ascii	"dd if=\"$o\" bs=1 skip=$(("
@@ -768,8 +736,43 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
 	.ascii	"fi\n"
 
+//	Blink for Aarch64 Linux, e.g. Raspberry Pi
+	.ascii	"if [ \"$s\" = Linux ]; then\n"
+	.ascii	"if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-aarch64 to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_aarch64_b9
+	.byte	blink_aarch64_b8
+	.byte	blink_aarch64_b7
+	.byte	blink_aarch64_b6
+	.byte	blink_aarch64_b5
+	.byte	blink_aarch64_b4
+	.byte	blink_aarch64_b3
+	.byte	blink_aarch64_b2
+	.byte	blink_aarch64_b1
+	.byte	blink_aarch64_b0
+	.ascii	")) count=$(("
+	.byte	blink_aarch64_size_b9
+	.byte	blink_aarch64_size_b8
+	.byte	blink_aarch64_size_b7
+	.byte	blink_aarch64_size_b6
+	.byte	blink_aarch64_size_b5
+	.byte	blink_aarch64_size_b4
+	.byte	blink_aarch64_size_b3
+	.byte	blink_aarch64_size_b2
+	.byte	blink_aarch64_size_b1
+	.byte	blink_aarch64_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+	.ascii	"fi\n"
+
 //	Blink for Linux Generic ARM
-	.ascii	"if [ \"${m#arm}\" != \"$m\" ]; then\n"
+	.ascii	"if [ \"$s\" = Linux ] && [ \"${m#arm}\" != \"$m\" ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-arm to ${e}\" >&2\n"
 	.ascii	"dd if=\"$o\" bs=1 skip=$(("
@@ -802,6 +805,7 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"fi\n"
 
 //	Blink for Linux on Legacy x86
+	.ascii	"if [ \"$s\" = Linux ]; then\n"
 	.ascii	"if [ \"$m\" = i686 ] || [ \"$m\" = i386 ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-i486 to ${e}\" >&2\n"
@@ -833,9 +837,10 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"fi\n"
 	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
 	.ascii	"fi\n"
+	.ascii	"fi\n"
 
 //	Blink for Linux on RISC-V
-	.ascii	"if [ \"$m\" = riscv64 ]; then\n"
+	.ascii	"if [ \"$s\" = Linux ] && [ \"$m\" = riscv64 ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-riscv64 to ${e}\" >&2\n"
 	.ascii	"dd if=\"$o\" bs=1 skip=$(("
@@ -868,7 +873,7 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"fi\n"
 
 //	Blink for Linux on MIPS Little Endian, e.g. Ubiquiti EdgerouterX
-	.ascii	"if [ \"$m\" = mips ]; then\n"
+	.ascii	"if [ \"$s\" = Linux ] && [ \"$m\" = mips ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-mipsel to ${e}\" >&2\n"
 	.ascii	"dd if=\"$o\" bs=1 skip=$(("
@@ -900,8 +905,41 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
 	.ascii	"fi\n"
 
+//	Blink for Linux on PowerPC 64 Little Endian, e.g. Raptor
+	.ascii	"if [ \"$s\" = Linux ] && [ \"$m\" = ppc64le ]; then\n"
+	.ascii	"if ! [ -x \"$e\" ]; then\n"
+	.ascii	"echo \"extracting blink-powerpc64le to ${e}\" >&2\n"
+	.ascii	"dd if=\"$o\" bs=1 skip=$(("
+	.byte	blink_powerpc64le_b9
+	.byte	blink_powerpc64le_b8
+	.byte	blink_powerpc64le_b7
+	.byte	blink_powerpc64le_b6
+	.byte	blink_powerpc64le_b5
+	.byte	blink_powerpc64le_b4
+	.byte	blink_powerpc64le_b3
+	.byte	blink_powerpc64le_b2
+	.byte	blink_powerpc64le_b1
+	.byte	blink_powerpc64le_b0
+	.ascii	")) count=$(("
+	.byte	blink_powerpc64le_size_b9
+	.byte	blink_powerpc64le_size_b8
+	.byte	blink_powerpc64le_size_b7
+	.byte	blink_powerpc64le_size_b6
+	.byte	blink_powerpc64le_size_b5
+	.byte	blink_powerpc64le_size_b4
+	.byte	blink_powerpc64le_size_b3
+	.byte	blink_powerpc64le_size_b2
+	.byte	blink_powerpc64le_size_b1
+	.byte	blink_powerpc64le_size_b0
+	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
+	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
+	.ascii	"chmod +x \"$e\"\n"
+	.ascii	"fi\n"
+	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
+	.ascii	"fi\n"
+
 //	Blink for Linux on PowerPC, e.g. Old Macintosh
-	.ascii	"if [ \"$m\" = ppc ]; then\n"
+	.ascii	"if [ \"$s\" = Linux ] && [ \"$m\" = ppc ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-powerpc to ${e}\" >&2\n"
 	.ascii	"dd if=\"$o\" bs=1 skip=$(("
@@ -934,7 +972,7 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"fi\n"
 
 //	Blink for Linux on IBM Mainframes
-	.ascii	"if [ \"$m\" = s390x ]; then\n"
+	.ascii	"if [ \"$s\" = Linux ] && [ \"$m\" = s390x ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-s390x to ${e}\" >&2\n"
 	.ascii	"dd if=\"$o\" bs=1 skip=$(("
@@ -2164,6 +2202,14 @@ blink_mipsel:
 	.incbin	"ape/blink-mipsel.gz"
 	.endobj	blink_mipsel,globl
 blink_mipsel_size = . - blink_mipsel
+	.previous
+
+	.section .blink,"a",@progbits
+	.globl	blink_powerpc64le_size
+blink_powerpc64le:
+	.incbin	"ape/blink-powerpc64le.gz"
+	.endobj	blink_powerpc64le,globl
+blink_powerpc64le_size = . - blink_powerpc64le
 	.previous
 
 	.section .blink,"a",@progbits
