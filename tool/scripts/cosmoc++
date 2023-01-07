@@ -33,7 +33,7 @@ CXX="/opt/cosmo/o/third_party/gcc/bin/x86_64-linux-musl-g++"
 CCFLAGS="-O2 -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
 CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem /opt/cosmos/include -isystem /opt/cosmo/libc/isystem -include libc/integral/normalize.inc"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -Wl,-z,max-page-size=0x1000 -L/opt/cosmos/lib -Wl,-T,/opt/cosmo/o/ape/public/ape.lds /opt/cosmo/o/ape/ape-no-modify-self.o /opt/cosmo/o/libc/crt/crt.o"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L/opt/cosmos/lib -Wl,-T,/opt/cosmo/o/ape/public/ape.lds /opt/cosmo/o/ape/ape-no-modify-self.o /opt/cosmo/o/libc/crt/crt.o"
 LDLIBS="/opt/cosmo/o/third_party/libcxx/libcxx.a /opt/cosmo/o/cosmopolitan.a"
 
 if [ ! -d $COSMO ]; then
@@ -88,9 +88,9 @@ done
 if [ "$HAS_E" = "1" ]; then
   set -- $CPPFLAGS "$@"
 elif [ "$HAS_C" = "1" ]; then
-  set -- $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" -fno-omit-frame-pointer
+  set -- $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
 else
-  set -- $LDFLAGS $CPPFLAGS "$@" $LDLIBS
+  set -- $LDFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096
 fi
 
 set -- "$CXX" "$@"

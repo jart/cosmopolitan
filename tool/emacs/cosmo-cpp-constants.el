@@ -16,6 +16,7 @@
     "__GNUC_PATCHLEVEL__"
     "__GNUC__"
     "__APPLE__"
+    "__EMSCRIPTEN__"
     "__ANDROID__"
     "__FreeBSD__"
     "__NetBSD__"
