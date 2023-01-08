@@ -58,6 +58,10 @@ FILE *fopen(const char *pathname, const char *mode) {
   FILE *f = 0;
   bool noclose;
   int fd, flags;
+  if (!pathname) {
+    efault();
+    return 0;
+  }
   flags = fopenflags(mode);
   pathname = fixpathname(pathname, flags);
   if ((fd = openpathname(pathname, flags, &noclose)) != -1) {
