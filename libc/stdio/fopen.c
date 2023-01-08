@@ -21,6 +21,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 static const char *fixpathname(const char *pathname, int flags) {
   if ((flags & O_ACCMODE) == O_RDONLY && strcmp(pathname, "-") == 0) {

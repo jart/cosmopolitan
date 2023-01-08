@@ -67,7 +67,7 @@ int putchar(int);
 int puts(const char *);
 ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
 ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
-FILE *fopen(const char *, const char *) paramsnonnull() dontdiscard;
+FILE *fopen(const char *, const char *) paramsnonnull((2)) dontdiscard;
 FILE *fdopen(int, const char *) paramsnonnull() dontdiscard;
 FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) dontdiscard;
 FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
