@@ -16,15 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -58,7 +59,12 @@ void TearDown(void) {
 
 TEST(commandv, testPathSearch) {
   EXPECT_NE(-1, touch("bin/sh", 0755));
-  EXPECT_STREQ("bin/sh", commandv("sh", pathbuf, sizeof(pathbuf)));
+  if (IsWindows()) {
+    EXPECT_EQ(NULL, commandv("sh", pathbuf, sizeof(pathbuf)));
+    EXPECT_EQ(errno, ENOENT);
+  } else {
+    EXPECT_STREQ("bin/sh", commandv("sh", pathbuf, sizeof(pathbuf)));
+  }
 }
 
 TEST(commandv, testPathSearch_appendsComExtension) {
@@ -67,44 +73,63 @@ TEST(commandv, testPathSearch_appendsComExtension) {
 }
 
 TEST(commandv, testSlashes_wontSearchPath_butChecksAccess) {
-  EXPECT_NE(-1, touch("home/sh", 0755));
+  EXPECT_NE(-1, touch("home/sh.com", 0755));
   i = __syscount;
-  EXPECT_STREQ("home/sh", commandv("home/sh", pathbuf, sizeof(pathbuf)));
-  if (!IsWindows()) EXPECT_EQ(i + 1, __syscount);
+  EXPECT_STREQ("home/sh.com",
+               commandv("home/sh.com", pathbuf, sizeof(pathbuf)));
+  if (!IsWindows()) EXPECT_EQ(i + 2, __syscount);
 }
 
 TEST(commandv, testSlashes_wontSearchPath_butStillAppendsComExtension) {
   EXPECT_NE(-1, touch("home/sh.com", 0755));
   i = __syscount;
   EXPECT_STREQ("home/sh.com", commandv("home/sh", pathbuf, sizeof(pathbuf)));
-  if (!IsWindows()) EXPECT_EQ(i + 2, __syscount);
+  if (!IsWindows()) EXPECT_EQ(i + 3, __syscount);
 }
 
 TEST(commandv, testSameDir_doesntHappenByDefaultUnlessItsWindows) {
-  EXPECT_NE(-1, touch("bog", 0755));
+  EXPECT_NE(-1, touch("bog.com", 0755));
   if (IsWindows()) {
-    EXPECT_STREQ("./bog", commandv("bog", pathbuf, sizeof(pathbuf)));
+    EXPECT_STREQ("./bog.com", commandv("bog.com", pathbuf, sizeof(pathbuf)));
   } else {
-    EXPECT_EQ(NULL, commandv("bog", pathbuf, sizeof(pathbuf)));
+    EXPECT_EQ(NULL, commandv("bog.com", pathbuf, sizeof(pathbuf)));
+    EXPECT_EQ(errno, ENOENT);
   }
 }
 
 TEST(commandv, testSameDir_willHappenWithColonBlank) {
   CHECK_NE(-1, setenv("PATH", "bin:", true));
-  EXPECT_NE(-1, touch("bog", 0755));
+  EXPECT_NE(-1, touch("bog.com", 0755));
   if (IsWindows()) {
-    EXPECT_STREQ("./bog", commandv("bog", pathbuf, sizeof(pathbuf)));
+    EXPECT_STREQ("./bog.com", commandv("bog.com", pathbuf, sizeof(pathbuf)));
   } else {
-    EXPECT_STREQ("bog", commandv("bog", pathbuf, sizeof(pathbuf)));
+    EXPECT_STREQ("bog.com", commandv("bog.com", pathbuf, sizeof(pathbuf)));
   }
 }
 
 TEST(commandv, testSameDir_willHappenWithColonBlank2) {
   CHECK_NE(-1, setenv("PATH", ":bin", true));
-  EXPECT_NE(-1, touch("bog", 0755));
+  EXPECT_NE(-1, touch("bog.com", 0755));
   if (IsWindows()) {
-    EXPECT_STREQ("./bog", commandv("bog", pathbuf, sizeof(pathbuf)));
+    EXPECT_STREQ("./bog.com", commandv("bog.com", pathbuf, sizeof(pathbuf)));
   } else {
-    EXPECT_STREQ("bog", commandv("bog", pathbuf, sizeof(pathbuf)));
+    EXPECT_STREQ("bog.com", commandv("bog.com", pathbuf, sizeof(pathbuf)));
+  }
+}
+
+TEST(commandv, test_DirPaths_wontConsiderDirectoriesExecutable) {
+  EXPECT_NE(-1, mkdir("Cursors", 0755));
+  EXPECT_EQ(NULL, commandv("Cursors", pathbuf, sizeof(pathbuf)));
+  EXPECT_EQ(errno, ENOENT);
+}
+
+TEST(commandv, test_DirPaths_wontConsiderDirectoriesExecutable2) {
+  EXPECT_NE(-1, mkdir("this_is_a_directory.com", 0755));
+  EXPECT_EQ(NULL,
+            commandv("this_is_a_directory.com", pathbuf, sizeof(pathbuf)));
+  if (IsWindows()) {
+    EXPECT_EQ(errno, EACCES);
+  } else {
+    EXPECT_EQ(errno, ENOENT);
   }
 }
