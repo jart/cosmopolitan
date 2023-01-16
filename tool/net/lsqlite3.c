@@ -131,6 +131,9 @@ static int sqlite_ses_meta_ref;
 static int sqlite_reb_meta_ref;
 static int sqlite_itr_meta_ref;
 #endif
+/* global config configuration */
+static int log_cb = LUA_NOREF; /* log callback */
+static int log_udata;
 
 /*
 ** =======================================================
@@ -613,7 +616,7 @@ static sdb *newdb (lua_State *L) {
     db->commit_hook_udata =
     db->rollback_hook_cb =
     db->rollback_hook_udata =
-     LUA_NOREF;
+        LUA_NOREF;
 
     luaL_getmetatable(L, sqlite_meta);
     lua_setmetatable(L, -2);        /* set metatable */
@@ -2443,6 +2446,58 @@ static int lsqlite_open_memory(lua_State *L) {
     return lsqlite_do_open(L, ":memory:", SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 }
 
+/*
+** Log callback:
+** Params: user, result code, log message
+** Returns: none
+*/
+static void log_callback(void* user, int rc, const char *msg) {
+    if (log_cb != LUA_NOREF) {
+        lua_State *L = (lua_State*)user;
+
+        /* setup lua callback call */
+        int top = lua_gettop(L);
+        lua_rawgeti(L, LUA_REGISTRYINDEX, log_cb);    /* get callback */
+        lua_rawgeti(L, LUA_REGISTRYINDEX, log_udata); /* get callback user data */
+        lua_pushinteger(L, rc);
+        lua_pushstring(L, msg);
+
+        if (lua_pcall(L, 3, 0, 0) != LUA_OK) lua_error(L);
+
+        lua_settop(L, top);
+    }
+}
+
+static int lsqlite_config(lua_State *L) {
+    int config = luaL_checkint(L, 1);
+    int result = SQLITE_OK;
+
+    switch (config) {
+        case SQLITE_CONFIG_LOG:
+            luaL_unref(L, LUA_REGISTRYINDEX, log_cb);
+            luaL_unref(L, LUA_REGISTRYINDEX, log_udata);
+
+            if (lua_gettop(L) < 2 || lua_isnil(L, 2)) {
+                log_cb =
+                log_udata = LUA_NOREF;
+            }
+            else {
+                luaL_checktype(L, 2, LUA_TFUNCTION);
+                /* make sure we have an userdata field (even if nil) */
+                lua_settop(L, 3);
+
+                log_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+                log_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+            }
+            break;
+        default:
+            result = SQLITE_MISUSE;
+            break;
+    }
+    lua_pushinteger(L, result);
+    return 1;
+}
+
 static int lsqlite_newindex(lua_State *L) {
     lua_pushliteral(L, "attempt to change readonly table");
     lua_error(L);
@@ -2529,6 +2584,9 @@ static const struct {
     SC(OPEN_FULLMUTEX)
     SC(OPEN_SHAREDCACHE)
     SC(OPEN_PRIVATECACHE)
+
+    /* config flags */
+    SC(CONFIG_LOG)
 
     /* checkpoint flags */
     SC(CHECKPOINT_PASSIVE)
@@ -2724,6 +2782,7 @@ static const luaL_Reg sqlitelib[] = {
     {"version",         lsqlite_version         },
     {"open",            lsqlite_open            },
     {"open_memory",     lsqlite_open_memory     },
+    {"config",          lsqlite_config          },
 
     {"__newindex",      lsqlite_newindex        },
     {NULL, NULL}
@@ -2743,6 +2802,8 @@ static void create_meta(lua_State *L, const char *name, const luaL_Reg *lib) {
 }
 
 LUALIB_API int luaopen_lsqlite3(lua_State *L) {
+    /* call config before calling initialize */
+    sqlite3_config(SQLITE_CONFIG_LOG, log_callback, L);
     sqlite3_initialize();
 
     create_meta(L, sqlite_meta, dblib);
