@@ -1218,7 +1218,7 @@ static int db_wal_hook_callback(void *user, sqlite3 *dbh, char const *dbname, in
     lua_pushstring(L, dbname); /* hook database name */
     lua_pushinteger(L, pnum);
 
-    if (lua_pcall(L, 3, 0, 0) != SQLITE_OK) return lua_error(L);
+    if (lua_pcall(L, 3, 0, 0) != LUA_OK) return lua_error(L);
 
     lua_settop(L, top);
     return SQLITE_OK;
