@@ -27,6 +27,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -184,6 +185,7 @@ TEST(sigaction, ignoringSignalDiscardsSignal) {
 
 TEST(sigaction, autoZombieSlayer) {
   if (IsWindows()) return;
+  if (IsCygwin()) return;
   int pid;
   struct sigaction sa;
   // make sure we're starting in expected state
@@ -194,8 +196,8 @@ TEST(sigaction, autoZombieSlayer) {
   if (!pid) _Exit(0);
   ASSERT_SYS(0, pid, wait(0));
   // enable automatic zombie slayer
-  sa.sa_handler = SIG_DFL;     // POSIX.1 says no SIG_IGN
-  sa.sa_flags = SA_NOCLDWAIT;  // seems to be optional
+  sa.sa_handler = SIG_IGN;
+  sa.sa_flags = 0;
   sigemptyset(&sa.sa_mask);
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, &sa));
   // verify it works

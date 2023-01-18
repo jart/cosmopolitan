@@ -37,11 +37,14 @@ unsigned long getauxval(unsigned long);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
 void *_mapstack(void) returnsaligned((FRAMESIZE)) mallocesque;
-int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
+int setjmp(jmp_buf)
+libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
-axdx_t setlongerjmp(jmp_buf) libcesque returnstwice paramsnonnull();
+axdx_t setlongerjmp(jmp_buf)
+libcesque returnstwice paramsnonnull();
 void longerjmp(jmp_buf, intptr_t) libcesque wontreturn paramsnonnull();
-int _setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
+int _setjmp(jmp_buf)
+libcesque returnstwice paramsnonnull();
 int sigsetjmp(sigjmp_buf, int) libcesque returnstwice paramsnonnull();
 void siglongjmp(sigjmp_buf, int) libcesque wontreturn paramsnonnull();
 void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
@@ -107,6 +110,11 @@ void __warn_if_powersave(void);
 const char *__describe_os(void);
 bool IsDynamicExecutable(const char *);
 void _restorewintty(void);
+const char *GetCpuidOs(void);
+const char *GetCpuidEmulator(void);
+void GetCpuidBrand(char[13], uint32_t);
+bool IsGenuineBlink(void);
+bool IsCygwin(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

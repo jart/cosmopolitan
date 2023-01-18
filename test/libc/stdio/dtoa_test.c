@@ -137,7 +137,7 @@ static const struct {
 };
 
 TEST(printf, longdouble) {
-  if (IsGenuineCosmo() || IsGenuineBlink()) {
+  if (IsGenuineBlink()) {
     return;  // TODO(jart): long double precision in blink
   }
   int i;

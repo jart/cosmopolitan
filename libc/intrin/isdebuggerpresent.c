@@ -21,7 +21,6 @@
 #include "libc/intrin/promises.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
@@ -42,7 +41,6 @@ int IsDebuggerPresent(bool force) {
   ssize_t got;
   int e, fd, res;
   char *p, buf[1024];
-  if (!force && IsGenuineCosmo()) return 0;
   if (!force && IsGenuineBlink()) return 0;
   if (!force && __getenv(environ, "HEISENDEBUG")) return 0;
   if (IsWindows()) return IsBeingDebugged();

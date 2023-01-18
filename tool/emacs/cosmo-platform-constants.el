@@ -41,7 +41,9 @@
            "__code_model_medium__"))
 
         (cpp92
-         '("__BYTE_ORDER__"
+         '("__SEG_FS"
+           "__SEG_GS"
+           "__BYTE_ORDER__"
            "__ORDER_LITTLE_ENDIAN__"
            "__ORDER_BIG_ENDIAN__"
            "__ORDER_PDP_ENDIAN__"

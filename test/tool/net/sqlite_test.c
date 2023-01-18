@@ -42,7 +42,7 @@ int DbOpen(const char *path, sqlite3 **db) {
   int i, rc;
   rc = sqlite3_open(path, db);
   if (rc != SQLITE_OK) return rc;
-  for (i = 0; i < 12; ++i) {
+  for (i = 0; i < 16; ++i) {
     rc = sqlite3_exec(*db, "PRAGMA journal_mode=WAL", 0, 0, 0);
     if (rc == SQLITE_OK) break;
     if (rc != SQLITE_BUSY) return rc;
@@ -53,7 +53,7 @@ int DbOpen(const char *path, sqlite3 **db) {
 
 int DbStep(sqlite3_stmt *stmt) {
   int i, rc;
-  for (i = 0; i < 12; ++i) {
+  for (i = 0; i < 16; ++i) {
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW) break;
     if (rc == SQLITE_DONE) break;
@@ -65,7 +65,7 @@ int DbStep(sqlite3_stmt *stmt) {
 
 int DbExec(sqlite3 *db, const char *sql) {
   int i, rc;
-  for (i = 0; i < 12; ++i) {
+  for (i = 0; i < 16; ++i) {
     rc = sqlite3_exec(db, sql, 0, 0, 0);
     if (rc == SQLITE_OK) break;
     if (rc != SQLITE_BUSY) return rc;

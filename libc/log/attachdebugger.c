@@ -57,8 +57,7 @@ relegated int(AttachDebugger)(intptr_t continuetoaddr) {
   char pidstr[11], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
   __restore_tty();
-  if (IsGenuineCosmo() || IsGenuineBlink() || !(gdb = GetGdbPath()) ||
-      !isatty(0) || !isatty(1) ||
+  if (IsGenuineBlink() || !(gdb = GetGdbPath()) || !isatty(0) || !isatty(1) ||
       (ttyfd = open(_PATH_TTY, O_RDWR | O_CLOEXEC)) == -1) {
     return -1;
   }

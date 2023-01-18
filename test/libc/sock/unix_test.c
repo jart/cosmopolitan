@@ -21,6 +21,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -124,6 +125,7 @@ TEST(unix, stream) {
 
 TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
   if (IsWindows()) return;
+  if (IsCygwin()) return;
   int ws, rc;
   char buf[8] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
@@ -135,7 +137,10 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
   ASSERT_SYS(0, 5, write(4, "hello", 5));
   ASSERT_SYS(0, 5, read(3, buf, 8));
   ASSERT_SYS(0, 0, close(3));
-  ASSERT_SYS(IsBsd() ? ECONNRESET : ECONNREFUSED, -1, write(4, "hello", 5));
+  ASSERT_EQ(-1, write(4, "hello", 5));
+  ASSERT_TRUE(errno == ECONNREFUSED ||  // Linux
+              errno == ECONNRESET);     // BSDs
+  errno = 0;
   ASSERT_SYS(0, 0, unlink(addr.sun_path));
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
@@ -156,6 +161,7 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
 
 TEST(unix, serverGoesDown_usingSendTo_unlink) {  // much easier
   if (IsWindows()) return;
+  if (IsCygwin()) return;
   int ws, rc;
   char buf[8] = {0};
   uint32_t len = sizeof(struct sockaddr_un);

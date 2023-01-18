@@ -133,11 +133,6 @@ static void FixIrregularFds(void) {
     pfds[i].fd = i + 3;
     pfds[i].events = POLLIN;
   }
-  if (IsGenuineCosmo()) {
-    // TODO(jart): Fix Blinkenlights poll() / close()
-    free(pfds);
-    return;
-  }
   if (poll(pfds, maxfds, 0) != -1) {
     for (i = 0; i < maxfds; ++i) {
       if (pfds[i].revents & POLLNVAL) continue;

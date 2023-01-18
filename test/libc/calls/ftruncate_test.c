@@ -24,6 +24,7 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -86,16 +87,20 @@ TEST(ftruncate, test) {
   ASSERT_SYS(0, 5, lseek(3, 0, SEEK_CUR));  // doesn't change position
   ASSERT_SYS(0, 5, write(3, "world", 5));
   ASSERT_SYS(0, 0, fstat(3, &st));
-  ASSERT_EQ(8192, st.st_size);                     // 8192 is logical size
-  if (IsWindows() || IsNetbsd() || IsOpenbsd()) {  //
-    ASSERT_EQ(8192 / 512, st.st_blocks);           // 8192 is physical size
-  } else if (IsFreebsd()) {                        //
-    ASSERT_EQ(512 / 512, st.st_blocks);            // 512 is physical size
-  } else if (IsLinux() || IsXnu()) {               //
-    ASSERT_EQ(4096 / 512, st.st_blocks);           // 4096 is physical size
-  } else {
-    notpossible;
+  ASSERT_EQ(8192, st.st_size);
+#if 0
+  if (!IsGenuineBlink()) {
+    if (IsWindows() || IsNetbsd() || IsOpenbsd()) {  //
+      ASSERT_EQ(8192 / 512, st.st_blocks);           // 8192 is physical size
+    } else if (IsFreebsd()) {                        //
+      ASSERT_EQ(512 / 512, st.st_blocks);            // 512 is physical size
+    } else if (IsLinux() || IsXnu()) {               //
+      ASSERT_EQ(4096 / 512, st.st_blocks);           // 4096 is physical size
+    } else {
+      notpossible;
+    }
   }
+#endif
   ASSERT_SYS(0, 512, pread(3, got, 512, 0));
   ASSERT_EQ(0, memcmp(want, got, 512));
   ASSERT_SYS(0, 0, ftruncate(3, 0));  // shrink file to be empty

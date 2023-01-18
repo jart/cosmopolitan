@@ -239,7 +239,7 @@
 int pledge(const char *promises, const char *execpromises) {
   int e, rc;
   unsigned long ipromises, iexecpromises;
-  if (IsGenuineCosmo() || IsGenuineBlink()) {
+  if (IsGenuineBlink()) {
     rc = 0;  // blink doesn't support seccomp
   } else if (!ParsePromises(promises, &ipromises) &&
              !ParsePromises(execpromises, &iexecpromises)) {

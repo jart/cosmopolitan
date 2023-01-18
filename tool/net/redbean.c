@@ -637,7 +637,7 @@ static void DropOutput(void) {
 }
 
 static bool ShouldAvoidGzip(void) {
-  return IsGenuineCosmo() || (IsGenuineBlink() && !X86_HAVE(JIT));
+  return (IsGenuineBlink() && !X86_HAVE(JIT));
 }
 
 static char *MergePaths(const char *p, size_t n, const char *q, size_t m,
@@ -7266,7 +7266,7 @@ static void GetOpts(int argc, char *argv[]) {
   int opt;
   bool storeasset = false;
   // only generate ecp cert under blinkenlights (rsa is slow)
-  norsagen = IsGenuineCosmo() || IsGenuineBlink();
+  norsagen = IsGenuineBlink();
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
       CASE('S', ++sandboxed);

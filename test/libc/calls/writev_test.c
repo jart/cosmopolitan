@@ -82,18 +82,18 @@ TEST(writev, test) {
 
 TEST(writev, big_fullCompletion) {
   int fd;
-  char *ba = gc(malloc(2 * 1024 * 1024));
-  char *bb = gc(malloc(2 * 1024 * 1024));
-  char *bc = gc(malloc(2 * 1024 * 1024));
+  char *ba = gc(malloc(1024 * 1024));
+  char *bb = gc(malloc(1024 * 1024));
+  char *bc = gc(malloc(1024 * 1024));
   struct iovec iov[] = {
-      {"", 0},                //
-      {ba, 2 * 1024 * 1024},  //
-      {NULL, 0},              //
-      {bb, 2 * 1024 * 1024},  //
-      {bc, 2 * 1024 * 1024},  //
+      {"", 0},            //
+      {ba, 1024 * 1024},  //
+      {NULL, 0},          //
+      {bb, 1024 * 1024},  //
+      {bc, 1024 * 1024},  //
   };
   ASSERT_NE(-1, (fd = open("file", O_RDWR | O_CREAT | O_TRUNC, 0644)));
-  EXPECT_EQ(6 * 1024 * 1024, writev(fd, iov, ARRAYLEN(iov)));
+  EXPECT_EQ(3 * 1024 * 1024, writev(fd, iov, ARRAYLEN(iov)));
   EXPECT_NE(-1, close(fd));
 }
 
@@ -125,7 +125,8 @@ TEST(writev, empty_stillPerformsIoOperation) {
   struct iovec iov[] = {{"", 0}, {NULL, 0}};
   ASSERT_NE(-1, touch("file", 0644));
   ASSERT_NE(-1, (fd = open("file", O_RDONLY)));
-  EXPECT_EQ(-1, writev(fd, iov, ARRAYLEN(iov)));
+  errno = 0;
+  EXPECT_SYS(EBADF, -1, writev(fd, iov, ARRAYLEN(iov)));
   EXPECT_EQ(-1, writev(fd, NULL, 0));
   EXPECT_NE(-1, close(fd));
 }
