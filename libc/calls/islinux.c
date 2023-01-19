@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/pr.h"
 
 privileged bool __is_linux_2_6_23(void) {
   int rc;
   if (!IsLinux()) return false;
+  if (IsGenuineBlink()) return true;
   asm volatile("syscall"
                : "=a"(rc)
                : "0"(157), "D"(PR_GET_SECCOMP)
