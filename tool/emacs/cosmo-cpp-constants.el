@@ -16,6 +16,7 @@
     "__GNUC_PATCHLEVEL__"
     "__GNUC__"
     "__APPLE__"
+    "__HAIKU__"
     "__CYGWIN__"
     "__EMSCRIPTEN__"
     "__ANDROID__"

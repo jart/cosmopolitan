@@ -35,6 +35,8 @@ int cfsetospeed(struct termios *, unsigned);
 int cfsetispeed(struct termios *, unsigned);
 uint32_t cfgetospeed(const struct termios *);
 uint32_t cfgetispeed(const struct termios *);
+int tcsetwinsize(int, const struct winsize *);
+int tcgetwinsize(int, struct winsize *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § teletypewriter » undiamonding                             ─╬─│┼

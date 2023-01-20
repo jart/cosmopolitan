@@ -511,6 +511,65 @@ textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_cflag & CSIZE) == CS8) {
         kprintf(" CS8");
       }
+      if ((termios.c_cflag & CBAUD) == B0) {
+        kprintf(" B0");
+      } else if ((termios.c_cflag & CBAUD) == B50) {
+        kprintf(" B50");
+      } else if ((termios.c_cflag & CBAUD) == B75) {
+        kprintf(" B75");
+      } else if ((termios.c_cflag & CBAUD) == B110) {
+        kprintf(" B110");
+      } else if ((termios.c_cflag & CBAUD) == B134) {
+        kprintf(" B134");
+      } else if ((termios.c_cflag & CBAUD) == B150) {
+        kprintf(" B150");
+      } else if ((termios.c_cflag & CBAUD) == B200) {
+        kprintf(" B200");
+      } else if ((termios.c_cflag & CBAUD) == B300) {
+        kprintf(" B300");
+      } else if ((termios.c_cflag & CBAUD) == B600) {
+        kprintf(" B600");
+      } else if ((termios.c_cflag & CBAUD) == B1200) {
+        kprintf(" B1200");
+      } else if ((termios.c_cflag & CBAUD) == B1800) {
+        kprintf(" B1800");
+      } else if ((termios.c_cflag & CBAUD) == B2400) {
+        kprintf(" B2400");
+      } else if ((termios.c_cflag & CBAUD) == B4800) {
+        kprintf(" B4800");
+      } else if ((termios.c_cflag & CBAUD) == B9600) {
+        kprintf(" B9600");
+      } else if ((termios.c_cflag & CBAUD) == B19200) {
+        kprintf(" B19200");
+      } else if ((termios.c_cflag & CBAUD) == B38400) {
+        kprintf(" B38400");
+      } else if ((termios.c_cflag & CBAUD) == B57600) {
+        kprintf(" B57600");
+      } else if ((termios.c_cflag & CBAUD) == B115200) {
+        kprintf(" B115200");
+      } else if ((termios.c_cflag & CBAUD) == B230400) {
+        kprintf(" B230400");
+      } else if ((termios.c_cflag & CBAUD) == B500000) {
+        kprintf(" B500000");
+      } else if ((termios.c_cflag & CBAUD) == B576000) {
+        kprintf(" B576000");
+      } else if ((termios.c_cflag & CBAUD) == B1000000) {
+        kprintf(" B1000000");
+      } else if ((termios.c_cflag & CBAUD) == B1152000) {
+        kprintf(" B1152000");
+      } else if ((termios.c_cflag & CBAUD) == B1500000) {
+        kprintf(" B1500000");
+      } else if ((termios.c_cflag & CBAUD) == B2000000) {
+        kprintf(" B2000000");
+      } else if ((termios.c_cflag & CBAUD) == B2500000) {
+        kprintf(" B2500000");
+      } else if ((termios.c_cflag & CBAUD) == B3000000) {
+        kprintf(" B3000000");
+      } else if ((termios.c_cflag & CBAUD) == B3500000) {
+        kprintf(" B3500000");
+      } else if ((termios.c_cflag & CBAUD) == B4000000) {
+        kprintf(" B4000000");
+      }
       kprintf("\n");
       kprintf(prologue);
       kprintf("    c_lflag =");
@@ -530,8 +589,8 @@ textstartup void __printargs(const char *prologue) {
       if (termios.c_lflag & PENDIN) kprintf(" PENDIN");
       if (termios.c_lflag & XCASE) kprintf(" XCASE");
       kprintf("\n");
-      PRINT("    c_ispeed = %u", termios.c_ispeed);
-      PRINT("    c_ospeed = %u", termios.c_ospeed);
+      PRINT("    c_ispeed = %u", cfgetispeed(&termios));
+      PRINT("    c_ospeed = %u", cfgetospeed(&termios));
       PRINT("    c_cc[VMIN]     = %d", termios.c_cc[VMIN]);
       PRINT("    c_cc[VTIME]    = %d", termios.c_cc[VTIME]);
       PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));
