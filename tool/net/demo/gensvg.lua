@@ -25,7 +25,7 @@ local top = [[
 ]]
 
 local bottom = [[
-    <a href="https://github.com/jart/cosmopolitan/tree/master/tool/net/demo/gensvg/index.lua">Show The Code</a>
+    <a href="https://github.com/jart/cosmopolitan/tree/master/tool/net/demo/gensvg.lua">Show The Code</a>
     </body>
 </html>
 ]]
