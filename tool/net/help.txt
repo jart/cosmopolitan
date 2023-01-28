@@ -978,10 +978,10 @@ FUNCTIONS
           Please note that '& can still break HTML and that '() can still
           break CSS URLs. This function is charset agnostic and will not
           canonicalize overlong encodings. It is assumed that a UTF-8 string
-          will be supplied. See kescapefragment.c.
+          will be supplied. See kescapefragment.S.
 
   EscapeHost(str) → str
-          Escapes URL host. See kescapeauthority.c
+          Escapes URL host. See kescapeauthority.S
 
   EscapeLiteral(str) → str
           Escapes JavaScript or JSON string literal content. The caller is
@@ -1001,10 +1001,10 @@ FUNCTIONS
           -.*_0-9A-Za-z and everything else gets %XX encoded. This function
           is charset agnostic and will not canonicalize overlong encodings.
           It is assumed that a UTF-8 string will be supplied. See
-          kescapeparam.c.
+          kescapeparam.S.
 
   EscapePass(str) → str
-          Escapes URL password. See kescapeauthority.c.
+          Escapes URL password. See kescapeauthority.S.
 
   EscapePath(str) → str
           Escapes URL path. This is the same as EscapeSegment except slash
@@ -1013,7 +1013,7 @@ FUNCTIONS
           still break HTML, so the output may need EscapeHtml too. Also note
           that '() can still break CSS URLs. This function is charset
           agnostic and will not canonicalize overlong encodings. It is
-          assumed that a UTF-8 string will be supplied. See kescapepath.c.
+          assumed that a UTF-8 string will be supplied. See kescapepath.S.
 
   EscapeSegment(str) → str
           Escapes URL path segment. This is the same as EscapePath except
@@ -1023,10 +1023,10 @@ FUNCTIONS
           EscapeHtml too. Also note that '() can still break CSS URLs. This
           function is charset agnostic and will not canonicalize overlong
           encodings. It is assumed that a UTF-8 string will be supplied. See
-          kescapesegment.c.
+          kescapesegment.S.
 
   EscapeUser(str) → str
-          Escapes URL username. See kescapeauthority.c.
+          Escapes URL username. See kescapeauthority.S.
 
   EvadeDragnetSurveillance(bool)
           If this option is programmed then redbean will not transmit a
