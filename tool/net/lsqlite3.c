@@ -2469,33 +2469,32 @@ static void log_callback(void* user, int rc, const char *msg) {
 }
 
 static int lsqlite_config(lua_State *L) {
-    int config = luaL_checkint(L, 1);
-    int result = SQLITE_OK;
-
-    switch (config) {
+    switch (luaL_checkint(L, 1)) {
         case SQLITE_CONFIG_LOG:
+            /* make sure we have an userdata field (even if nil) */
+            lua_settop(L, 3);
+
+            // prepate to return current (possibly nil) values
+            lua_pushinteger(L, SQLITE_OK);
+            lua_rawgeti(L, LUA_REGISTRYINDEX, log_cb);    /* get callback */
+            lua_rawgeti(L, LUA_REGISTRYINDEX, log_udata); /* get callback user data */
+
             luaL_unref(L, LUA_REGISTRYINDEX, log_cb);
             luaL_unref(L, LUA_REGISTRYINDEX, log_udata);
-
-            if (lua_gettop(L) < 2 || lua_isnil(L, 2)) {
+            if (lua_isnil(L, 2)) {
                 log_cb =
                 log_udata = LUA_NOREF;
             }
             else {
                 luaL_checktype(L, 2, LUA_TFUNCTION);
-                /* make sure we have an userdata field (even if nil) */
-                lua_settop(L, 3);
-
+                lua_pushvalue(L, 2);
+                lua_pushvalue(L, 3);
                 log_udata = luaL_ref(L, LUA_REGISTRYINDEX);
                 log_cb = luaL_ref(L, LUA_REGISTRYINDEX);
             }
-            break;
-        default:
-            result = SQLITE_MISUSE;
-            break;
+            return 3;  // return OK and previous callback and userdata
     }
-    lua_pushinteger(L, result);
-    return 1;
+    return pusherr(L, SQLITE_MISUSE);
 }
 
 static int lsqlite_newindex(lua_State *L) {
