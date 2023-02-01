@@ -309,7 +309,7 @@ TEST(mmap, cow) {
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
   EXPECT_NE(MAP_FAILED,
-            (p = mmap(NULL, 5, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
+            (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 5));
   EXPECT_NE(-1, close(fd));
@@ -335,6 +335,7 @@ TEST(mmap, cowFileMapReadonlyFork) {
     ASSERT_STREQN("hello", p, 5);
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 6));
   EXPECT_NE(-1, close(fd));
@@ -362,6 +363,7 @@ TEST(mmap, cowFileMapFork) {
     ASSERT_STREQN("child", p, 5);
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("parnt", p, 5);  // child changing memory did not change parent
   EXPECT_EQ(6, pread(fd, lol, 6, 0));
   EXPECT_STREQN("parnt", lol, 5);  // changing memory did not change file
@@ -387,6 +389,7 @@ TEST(mmap, sharedAnonMapFork) {
     ASSERT_STREQN("child", p, 5);
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("child", p, 5);  // boom
   EXPECT_NE(-1, munmap(p, 5));
 }
@@ -413,6 +416,7 @@ TEST(mmap, sharedFileMapFork) {
     ASSERT_NE(-1, msync(p, 6, MS_SYNC | MS_INVALIDATE));
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("child", p, 5);  // child changing memory changed parent memory
   // XXX: RHEL5 has a weird issue where if we read the file into its own
   //      shared memory then corruption occurs!
