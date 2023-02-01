@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/map.h"
@@ -29,14 +30,32 @@
 #define IP(X)      (intptr_t)(X)
 #define VIP(X)     (void *)IP(X)
 
+/**
+ * Map zipos file into memory. See mmap.
+ *
+ * @param addr should be 0 or a compatible address
+ * @param size must be >0 and will be rounded up to FRAMESIZE
+ *     automatically.
+ * @param prot can have PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE/etc.
+ * @param flags cannot have `MAP_SHARED` or `MAP_ANONYMOUS`, there is
+ *     no actual file backing for zipos files. `MAP_SHARED` could be
+ *     simulated for non-writable mappings, but that would require
+ *     tracking zipos mappings to prevent making it PROT_WRITE.
+ * @param h is a zip store object
+ * @param off specifies absolute byte index of h's file for mapping,
+ *     it does not need to be 64kb aligned.
+ * @return virtual base address of new mapping, or MAP_FAILED w/ errno
+ */
 void *__zipos_mmap(void *addr, size_t size, int prot, int flags, struct ZiposHandle *h, int64_t off) {
   if (VERY_UNLIKELY(!!(flags & MAP_ANONYMOUS))) {
-    STRACE("fd anonymous mismatch");
+    STRACE("MAP_ANONYMOUS zipos mismatch");
     return VIP(einval());
   }
 
-  if (VERY_UNLIKELY(!(!!(prot & PROT_WRITE) ^ !!(flags & MAP_SHARED)))) {
-    STRACE("PROT_WRITE and MAP_SHARED on zipos");
+  // MAP_SHARED for non-writeable pages could be implemented, but would require
+  // keeping track of zipos pages to prevent mprotect(addr,len,PROT_WRITE)
+  if (VERY_UNLIKELY(!!(flags & MAP_SHARED))) {
+    STRACE("MAP_SHARED on zipos");
     return VIP(eacces());
   }
 
@@ -46,13 +65,13 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags, struct ZiposHan
     return MAP_FAILED;
   }
   const int64_t beforeOffset = __zipos_lseek(h, 0, SEEK_CUR);
-  if ((beforeOffset == -1) || (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1)) {
+  if ((beforeOffset == -1) || (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1) ||
+  (__zipos_lseek(h, beforeOffset, SEEK_SET) == -1) ||
+  ((prot != tempProt) && (mprotect(outAddr, size, prot) == -1))) {
+    const int e = errno;
     munmap(outAddr, size);
+    errno = e;
     return MAP_FAILED;
-  }
-  __zipos_lseek(h, beforeOffset, SEEK_SET);
-  if(prot != tempProt) {
-    mprotect(outAddr, size, prot);
   }
   return outAddr;
 }

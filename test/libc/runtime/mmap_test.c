@@ -221,15 +221,79 @@ TEST(isheap, mallocOffset) {
   ASSERT_TRUE(_isheap(p + 100000));
 }
 
-TEST(mmap, ziposMapFiles) {
+static const char *ziposLifePath = "/zip/life.elf";
+TEST(mmap, ziposCannotBeAnonymous) {
   int fd;
-  const char *lifepath = "/zip/life.elf";
   void *p;
-
-  ASSERT_NE(-1, (fd = open(lifepath, O_RDONLY), "%s", lifepath));
-  ASSERT_NE(NULL, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
-  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_SYS(EINVAL, MAP_FAILED, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, fd, 0)));
   close(fd);
+}
+
+TEST(mmap, ziposCannotBeShared) {
+  int fd;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_SYS(EACCES, MAP_FAILED, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
+  close(fd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// zipos NON-SHARED READ-ONLY FILE MEMORY
+
+TEST(mmap, ziposCow) {
+  int fd;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE, fd, 0)));
+  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  EXPECT_NE(-1, munmap(p, 0x00010000));
+  EXPECT_NE(-1, close(fd));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// zipos NON-SHARED READ-ONLY FILE MEMORY BETWEEN PROCESSES
+
+TEST(mmap, ziposCowFileMapReadonlyFork) {
+  int fd, ws;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 4, PROT_READ, MAP_PRIVATE, fd, 0)));
+  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  ASSERT_NE(-1, (ws = xspawn(0)));
+  if (ws == -2) {
+    ASSERT_STREQN("ELF", ((const char *)p)+1, 3);
+    _exit(0);
+  }
+  EXPECT_EQ(0, ws);
+  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  EXPECT_NE(-1, munmap(p, 6));
+  EXPECT_NE(-1, close(fd));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// zipos NON-SHARED READ/WRITE FILE MEMORY BETWEEN PROCESSES
+
+TEST(mmap, ziposCowFileMapFork) {
+  int fd, ws;
+  void *p;
+  char lol[4];
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
+  memcpy(p, "parnt", 6);
+  ASSERT_NE(-1, (ws = xspawn(0)));
+  if (ws == -2) {
+    ASSERT_STREQN("parnt", p, 5);
+    strcpy(p, "child");
+    ASSERT_STREQN("child", p, 5);
+    _exit(0);
+  }
+  EXPECT_EQ(0, ws);
+  EXPECT_STREQN("parnt", p, 5);  // child changing memory did not change parent
+  EXPECT_EQ(4, pread(fd, lol, 4, 0));
+  EXPECT_STREQN("ELF", &lol[1], 3);  // changing memory did not change file
+  EXPECT_NE(-1, munmap(p, 6));
+  EXPECT_NE(-1, close(fd));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
