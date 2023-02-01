@@ -487,7 +487,9 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
   size_t toto;
   if (__isfdkind(fd, kFdZip)) {
-    return _weaken(__zipos_mmap)(addr, size, prot, flags, (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, off);
+    return _weaken(__zipos_mmap)(
+        addr, size, prot, flags,
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, off);
   }
 #if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
   if (IsWindows()) {

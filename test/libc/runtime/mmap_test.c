@@ -226,7 +226,9 @@ TEST(mmap, ziposCannotBeAnonymous) {
   int fd;
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_SYS(EINVAL, MAP_FAILED, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, fd, 0)));
+  EXPECT_SYS(EINVAL, MAP_FAILED,
+             (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS,
+                       fd, 0)));
   close(fd);
 }
 
@@ -234,7 +236,8 @@ TEST(mmap, ziposCannotBeShared) {
   int fd;
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_SYS(EACCES, MAP_FAILED, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
+  EXPECT_SYS(EACCES, MAP_FAILED,
+             (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
   close(fd);
 }
 
@@ -245,8 +248,9 @@ TEST(mmap, ziposCow) {
   int fd;
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE, fd, 0)));
-  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  EXPECT_NE(MAP_FAILED,
+            (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE, fd, 0)));
+  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
   EXPECT_NE(-1, munmap(p, 0x00010000));
   EXPECT_NE(-1, close(fd));
 }
@@ -259,14 +263,14 @@ TEST(mmap, ziposCowFileMapReadonlyFork) {
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
   EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 4, PROT_READ, MAP_PRIVATE, fd, 0)));
-  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
   ASSERT_NE(-1, (ws = xspawn(0)));
   if (ws == -2) {
-    ASSERT_STREQN("ELF", ((const char *)p)+1, 3);
+    ASSERT_STREQN("ELF", ((const char *)p) + 1, 3);
     _exit(0);
   }
   EXPECT_EQ(0, ws);
-  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
   EXPECT_NE(-1, munmap(p, 6));
   EXPECT_NE(-1, close(fd));
 }
@@ -279,7 +283,8 @@ TEST(mmap, ziposCowFileMapFork) {
   void *p;
   char lol[4];
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
+  EXPECT_NE(MAP_FAILED,
+            (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
   memcpy(p, "parnt", 6);
   ASSERT_NE(-1, (ws = xspawn(0)));
   if (ws == -2) {
@@ -308,8 +313,7 @@ TEST(mmap, cow) {
             path);
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED,
-            (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
+  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 5));
   EXPECT_NE(-1, close(fd));

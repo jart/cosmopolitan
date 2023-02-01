@@ -27,8 +27,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define IP(X)      (intptr_t)(X)
-#define VIP(X)     (void *)IP(X)
+#define IP(X)  (intptr_t)(X)
+#define VIP(X) (void *)IP(X)
 
 /**
  * Map zipos file into memory. See mmap.
@@ -46,7 +46,8 @@
  *     it does not need to be 64kb aligned.
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
-void *__zipos_mmap(void *addr, size_t size, int prot, int flags, struct ZiposHandle *h, int64_t off) {
+void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
+                   struct ZiposHandle *h, int64_t off) {
   if (VERY_UNLIKELY(!!(flags & MAP_ANONYMOUS))) {
     STRACE("MAP_ANONYMOUS zipos mismatch");
     return VIP(einval());
@@ -65,9 +66,10 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags, struct ZiposHan
     return MAP_FAILED;
   }
   const int64_t beforeOffset = __zipos_lseek(h, 0, SEEK_CUR);
-  if ((beforeOffset == -1) || (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1) ||
-  (__zipos_lseek(h, beforeOffset, SEEK_SET) == -1) ||
-  ((prot != tempProt) && (mprotect(outAddr, size, prot) == -1))) {
+  if ((beforeOffset == -1) ||
+      (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1) ||
+      (__zipos_lseek(h, beforeOffset, SEEK_SET) == -1) ||
+      ((prot != tempProt) && (mprotect(outAddr, size, prot) == -1))) {
     const int e = errno;
     munmap(outAddr, size);
     errno = e;
