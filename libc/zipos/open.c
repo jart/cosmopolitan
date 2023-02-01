@@ -48,7 +48,7 @@
 static char *mapend;
 static size_t maptotal;
 
-static void *__zipos_mmap(size_t mapsize) {
+static void *__zipos_mmap_space(size_t mapsize) {
   char *start;
   size_t offset;
   _unassert(mapsize);
@@ -78,7 +78,7 @@ StartOver:
     ph = &h->next;
   }
   if (!h) {
-    h = __zipos_mmap(mapsize);
+    h = __zipos_mmap_space(mapsize);
   }
   __zipos_unlock();
   if (IsAsan()) {

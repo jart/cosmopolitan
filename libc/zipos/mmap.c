@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
+#include "libc/dce.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
-//	static_yoink this symbol for open(/zip/...) support.
-	zipos = 0
-	.globl	zipos
+#define IP(X)      (intptr_t)(X)
+#define VIP(X)     (void *)IP(X)
 
-	.yoink	__zip_end
-	.yoink	__zip_start
-	.yoink	__zipos_close
-	.yoink	__zipos_fcntl
-	.yoink	__zipos_fstat
-	.yoink	__zipos_access
-	.yoink	__zipos_lseek
-	.yoink	__zipos_open
-	.yoink	__zipos_parseuri
-	.yoink	__zipos_read
-	.yoink	__zipos_stat
-	.yoink	__zipos_notat
-	.yoink	__zipos_mmap
+void *__zipos_mmap(void *addr, size_t size, int prot, int flags, struct ZiposHandle *h, int64_t off) {
+  if (VERY_UNLIKELY(!!(flags & MAP_ANONYMOUS))) {
+    STRACE("fd anonymous mismatch");
+    return VIP(einval());
+  }
 
-//	TODO(jart): why does corruption happen when zip has no assets?
-	.yoink	.cosmo
+  if (VERY_UNLIKELY(!(!!(prot & PROT_WRITE) ^ !!(flags & MAP_SHARED)))) {
+    STRACE("PROT_WRITE and MAP_SHARED on zipos");
+    return VIP(eacces());
+  }
 
-//	deprecated: use STATIC_YOINK("zipos")
-	zip_uri_support = 0
-	.globl	zip_uri_support
+  const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
+  void *outAddr = mmap(addr, size, tempProt, flags | MAP_ANONYMOUS, -1, 0);
+  if (outAddr == MAP_FAILED) {
+    return MAP_FAILED;
+  }
+  const int64_t beforeOffset = __zipos_lseek(h, 0, SEEK_CUR);
+  if ((beforeOffset == -1) || (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1)) {
+    munmap(outAddr, size);
+    return MAP_FAILED;
+  }
+  __zipos_lseek(h, beforeOffset, SEEK_SET);
+  if(prot != tempProt) {
+    mprotect(outAddr, size, prot);
+  }
+  return outAddr;
+}

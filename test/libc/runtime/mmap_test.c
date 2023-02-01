@@ -46,6 +46,8 @@
 #include "libc/x/xspawn.h"
 #include "third_party/xed/x86.h"
 
+STATIC_YOINK("zip_uri_support");
+
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
@@ -217,6 +219,17 @@ TEST(isheap, emptyMalloc) {
 TEST(isheap, mallocOffset) {
   char *p = _gc(malloc(131072));
   ASSERT_TRUE(_isheap(p + 100000));
+}
+
+TEST(mmap, ziposMapFiles) {
+  int fd;
+  const char *lifepath = "/zip/life.elf";
+  void *p;
+
+  ASSERT_NE(-1, (fd = open(lifepath, O_RDONLY), "%s", lifepath));
+  ASSERT_NE(NULL, (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
+  EXPECT_STREQN("ELF", ((const char *)p)+1, 3);
+  close(fd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
