@@ -27,6 +27,8 @@
 #include "libc/testlib/testlib.h"
 // clang-format off
 
+STATIC_YOINK("zip_uri_support");
+
 int fds[2];
 char buf[8];
 char testlib_enable_tmp_setup_teardown;
@@ -93,6 +95,15 @@ TEST(fexecve, APE) {
   SPAWN(fork);
   int fd = open("life-nomod.com", O_RDONLY);
   ASSERT_NE(-1, fd);
+  if (fd == -1 && errno == ENOSYS) _Exit(42);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
+}
+
+TEST(fexecve, zipos) {
+  if (!IsLinux()) return;
+  int fd = open("/zip/life.elf", O_RDONLY);
+  SPAWN(vfork);
   if (fd == -1 && errno == ENOSYS) _Exit(42);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
