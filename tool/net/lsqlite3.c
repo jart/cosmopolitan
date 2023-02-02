@@ -2416,6 +2416,7 @@ static int lsqlite_version(lua_State *L) {
 }
 
 static int lsqlite_do_open(lua_State *L, const char *filename, int flags) {
+    sqlite3_initialize(); /* initialize the engine if hasn't been done yet */
     sdb *db = newdb(L); /* create and leave in stack */
 
     if (sqlite3_open_v2(filename, &db->db, flags, 0) == SQLITE_OK) {
@@ -2469,7 +2470,18 @@ static void log_callback(void* user, int rc, const char *msg) {
 }
 
 static int lsqlite_config(lua_State *L) {
-    switch (luaL_checkint(L, 1)) {
+    int rc = SQLITE_MISUSE;
+    int option = luaL_checkint(L, 1);
+
+    switch (option) {
+        case SQLITE_CONFIG_SINGLETHREAD:
+        case SQLITE_CONFIG_MULTITHREAD:
+        case SQLITE_CONFIG_SERIALIZED:
+            if ((rc = sqlite3_config(option)) == SQLITE_OK) {
+                lua_pushinteger(L, rc);
+                return 1;
+            }
+            break;
         case SQLITE_CONFIG_LOG:
             /* make sure we have an userdata field (even if nil) */
             lua_settop(L, 3);
@@ -2494,7 +2506,7 @@ static int lsqlite_config(lua_State *L) {
             }
             return 3;  // return OK and previous callback and userdata
     }
-    return pusherr(L, SQLITE_MISUSE);
+    return pusherr(L, rc);
 }
 
 static int lsqlite_newindex(lua_State *L) {
@@ -2585,6 +2597,9 @@ static const struct {
     SC(OPEN_PRIVATECACHE)
 
     /* config flags */
+    SC(CONFIG_SINGLETHREAD)
+    SC(CONFIG_MULTITHREAD)
+    SC(CONFIG_SERIALIZED)
     SC(CONFIG_LOG)
 
     /* checkpoint flags */
@@ -2803,7 +2818,6 @@ static void create_meta(lua_State *L, const char *name, const luaL_Reg *lib) {
 LUALIB_API int luaopen_lsqlite3(lua_State *L) {
     /* call config before calling initialize */
     sqlite3_config(SQLITE_CONFIG_LOG, log_callback, L);
-    sqlite3_initialize();
 
     create_meta(L, sqlite_meta, dblib);
     create_meta(L, sqlite_vm_meta, vmlib);
