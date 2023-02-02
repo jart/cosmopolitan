@@ -359,6 +359,8 @@ syscon	fcntl2	F_GETFL					3			3			3			3			3			3			# unix consensus & faked nt
 syscon	fcntl2	F_SETFL					4			4			4			4			4			4			# unix consensus & faked nt
 syscon	fcntl2	F_SETOWN				8			6			6			6			6			-1			# bsd consensus
 syscon	fcntl2	F_GETOWN				9			5			5			5			5			-1			# bsd consensus
+syscon	fcntl2	F_SETOWN_EX				15			-1			-1			-1			-1			-1			# TODO(jart): polyfill
+syscon	fcntl2	F_GETOWN_EX				16			-1			-1			-1			-1			-1			# TODO(jart): polyfill
 syscon	fcntl2	F_FULLFSYNC				-1			51			-1			-1			-1			-1			#
 syscon	fcntl2	F_BARRIERFSYNC				-1			85			-1			-1			-1			-1			#
 syscon	fcntl2	F_NOCACHE				-1			48			-1			-1			-1			-1			#
@@ -410,8 +412,6 @@ syscon	ioctl	FIOCLEX					0x5451			0x20006601		0x20006601		0x20006601		0x20006601
 syscon	ioctl	FIONCLEX				0x5450			0x20006602		0x20006602		0x20006602		0x20006602		0x5450			# clears "close on exec" on file descriptor the fast way; faked nt
 #syscon	ioctl	FIONWRITE				0x0			0x0			0x40046677		0x0			0x0			-1			# [FreeBSD Generalization] bytes queued in FD's output buffer (same as TIOCOUTQ for TTY FDs; see also SO_SNDBUF)
 #syscon	ioctl	FIONSPACE				0x0			0x0			0x40046676		0x0			0x0			-1			# [FreeBSD Generalization] capacity of FD's output buffer, e.g. equivalent to TIOCGSERIAL w/ UART
-syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# [Linuxism] same as FIONREAD
-#syscon	ioctl	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473	       	0x40047473	       	-1			# bytes queued in TTY's output buffer
 
 #	openat(), fstatat(), linkat(), etc. magnums
 #
@@ -1340,6 +1340,7 @@ syscon	compat	TIOCSETAF				0x5404			0x80487416		0x802c7416		0x802c7416		0x802c74
 #syscon	compat	TCSETAF					0x5404			0x80487416		0x802c7416		0x802c7416		0x802c7416		0x5402			# Drops input & drains output & sets console settings; ≈ ioctl(tty, TCSETAF, const struct termio *argp); polyfilled NT
 syscon	termios	TIOCGWINSZ				0x5413			1074295912		1074295912		1074295912		1074295912		0x5413			# ioctl(tty, TIOCGWINSZ, struct winsize *argp); polyfilled NT
 syscon	termios	TIOCSWINSZ				0x5414			0x80087467		0x80087467		0x80087467		0x80087467		0x5414			# ioctl(tty, TIOCSWINSZ, const struct winsize *argp) (faked NT)
+syscon	termios	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# [Linuxism] same as FIONREAD
 syscon	termios	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473		0x40047473		0			# get # bytes queued in TTY's output buffer ioctl(tty, TIOCSWINSZ, const struct winsize *argp)
 syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0			# tcgetpgrp(): get pgrp of tty
 syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# tcsetpgrp(): set pgrp of tty

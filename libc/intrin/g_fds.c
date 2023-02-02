@@ -55,7 +55,7 @@ textstartup void InitializeFileDescriptors(void) {
                    kMemtrackFdsStart + kMemtrackFdsSize);
   if (IsMetal()) {
     extern const char vga_console[];
-    pushmov(&fds->f, 3ull);
+    fds->f = 3;
     if (_weaken(vga_console)) {
       fds->p[0].kind = pushpop(kFdConsole);
       fds->p[1].kind = pushpop(kFdConsole);

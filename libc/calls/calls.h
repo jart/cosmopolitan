@@ -35,11 +35,10 @@
 #define WIFCONTINUED(s) ((s) == 0xffff)
 #define WIFEXITED(s)    (!WTERMSIG(s))
 #define WIFSIGNALED(s)  ((0xffff & (s)) - 1u < 0xffu)
-#define WIFSTOPPED(s) \
-  ((short)(((0xffff & (unsigned)(s)) * 0x10001) >> 8) > 0x7f00)
-#define WSTOPSIG(s)   WEXITSTATUS(s)
-#define WTERMSIG(s)   (127 & (s))
-#define W_STOPCODE(s) ((s) << 8 | 0177)
+#define WIFSTOPPED(s)   ((255 & (s)) == 127)
+#define WSTOPSIG(s)     WEXITSTATUS(s)
+#define WTERMSIG(s)     (127 & (s))
+#define W_STOPCODE(s)   ((s) << 8 | 0177)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

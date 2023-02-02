@@ -80,6 +80,7 @@
     "__mips64"
     "__m68k__"
     "__riscv"
+    "__riscv_xlen"
     "__MICROBLAZE__"
     "__amd64__"
     "__WINT_MAX__"
