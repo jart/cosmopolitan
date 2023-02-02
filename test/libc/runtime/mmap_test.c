@@ -236,7 +236,7 @@ TEST(mmap, ziposCannotBeShared) {
   int fd;
   void *p;
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
-  EXPECT_SYS(EACCES, MAP_FAILED,
+  EXPECT_SYS(EINVAL, MAP_FAILED,
              (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
   close(fd);
 }
