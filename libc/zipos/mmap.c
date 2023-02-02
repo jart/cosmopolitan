@@ -48,14 +48,17 @@
  */
 void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
                    struct ZiposHandle *h, int64_t off) {
-  if(!(flags & MAP_PRIVATE) || (flags & ~(MAP_PRIVATE | MAP_FILE | MAP_FIXED | MAP_FIXED_NOREPLACE)) ||
-  (!!(flags & MAP_FIXED) ^ !!(flags & MAP_FIXED_NOREPLACE))) {
-    STRACE("zipos mappings currently only support MAP_PRIVATE with select flags");
+  if (!(flags & MAP_PRIVATE) ||
+      (flags & ~(MAP_PRIVATE | MAP_FILE | MAP_FIXED | MAP_FIXED_NOREPLACE)) ||
+      (!!(flags & MAP_FIXED) ^ !!(flags & MAP_FIXED_NOREPLACE))) {
+    STRACE(
+        "zipos mappings currently only support MAP_PRIVATE with select flags");
     return VIP(einval());
   }
 
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
-  void *outAddr = mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
+  void *outAddr =
+      mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }
