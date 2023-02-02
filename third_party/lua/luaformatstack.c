@@ -21,9 +21,8 @@
 #include "third_party/lua/lauxlib.h"
 
 dontdiscard char *LuaFormatStack(lua_State *L) {
-  size_t l;
   int i, top;
-  char *p, *b = 0;
+  char *b = 0;
   struct EncoderConfig conf = {
       .maxdepth = 64,
       .sorted = true,

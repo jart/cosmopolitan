@@ -1300,7 +1300,7 @@ void __asan_unregister_globals(struct AsanGlobal g[], int n) {
 void __asan_evil(uint8_t *addr, int size, const char *s) {
   struct AsanTrace tr;
   __asan_rawtrace(&tr, RBP);
-  kprintf("WARNING: ASAN bad %d byte %s at %x bt %x %x %x\n", size, s, addr,
+  kprintf("WARNING: ASAN bad %d byte %s at %lx bt %x %x %x\n", size, s, addr,
           tr.p[0], tr.p[1], tr.p[2], tr.p[3]);
 }
 
