@@ -50,6 +50,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
+#include "libc/zipos/zipos.internal.h"
 
 #define MAP_ANONYMOUS_linux   0x00000020
 #define MAP_ANONYMOUS_openbsd 0x00001000
@@ -485,6 +486,11 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
   size_t toto;
+  if (__isfdkind(fd, kFdZip)) {
+    return _weaken(__zipos_mmap)(
+        addr, size, prot, flags,
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, off);
+  }
 #if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
   if (IsWindows()) {
     STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,

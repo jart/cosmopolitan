@@ -46,6 +46,8 @@
 #include "libc/x/xspawn.h"
 #include "third_party/xed/x86.h"
 
+STATIC_YOINK("zip_uri_support");
+
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
@@ -219,6 +221,86 @@ TEST(isheap, mallocOffset) {
   ASSERT_TRUE(_isheap(p + 100000));
 }
 
+static const char *ziposLifePath = "/zip/life.elf";
+TEST(mmap, ziposCannotBeAnonymous) {
+  int fd;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_SYS(EINVAL, MAP_FAILED,
+             (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS,
+                       fd, 0)));
+  close(fd);
+}
+
+TEST(mmap, ziposCannotBeShared) {
+  int fd;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_SYS(EINVAL, MAP_FAILED,
+             (p = mmap(NULL, 0x00010000, PROT_READ, MAP_SHARED, fd, 0)));
+  close(fd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// zipos NON-SHARED READ-ONLY FILE MEMORY
+
+TEST(mmap, ziposCow) {
+  int fd;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_NE(MAP_FAILED,
+            (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE, fd, 0)));
+  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
+  EXPECT_NE(-1, munmap(p, 0x00010000));
+  EXPECT_NE(-1, close(fd));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// zipos NON-SHARED READ-ONLY FILE MEMORY BETWEEN PROCESSES
+
+TEST(mmap, ziposCowFileMapReadonlyFork) {
+  int fd, ws;
+  void *p;
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 4, PROT_READ, MAP_PRIVATE, fd, 0)));
+  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
+  ASSERT_NE(-1, (ws = xspawn(0)));
+  if (ws == -2) {
+    ASSERT_STREQN("ELF", ((const char *)p) + 1, 3);
+    _exit(0);
+  }
+  EXPECT_EQ(0, ws);
+  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
+  EXPECT_NE(-1, munmap(p, 6));
+  EXPECT_NE(-1, close(fd));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// zipos NON-SHARED READ/WRITE FILE MEMORY BETWEEN PROCESSES
+
+TEST(mmap, ziposCowFileMapFork) {
+  int fd, ws;
+  void *p;
+  char lol[4];
+  ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
+  EXPECT_NE(MAP_FAILED,
+            (p = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
+  memcpy(p, "parnt", 6);
+  ASSERT_NE(-1, (ws = xspawn(0)));
+  if (ws == -2) {
+    ASSERT_STREQN("parnt", p, 5);
+    strcpy(p, "child");
+    ASSERT_STREQN("child", p, 5);
+    _exit(0);
+  }
+  EXPECT_EQ(0, ws);
+  EXPECT_STREQN("parnt", p, 5);  // child changing memory did not change parent
+  EXPECT_EQ(4, pread(fd, lol, 4, 0));
+  EXPECT_STREQN("ELF", &lol[1], 3);  // changing memory did not change file
+  EXPECT_NE(-1, munmap(p, 6));
+  EXPECT_NE(-1, close(fd));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // NON-SHARED READ-ONLY FILE MEMORY
 
@@ -231,8 +313,7 @@ TEST(mmap, cow) {
             path);
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
-  EXPECT_NE(MAP_FAILED,
-            (p = mmap(NULL, 5, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)));
+  EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 5, PROT_READ, MAP_PRIVATE, fd, 0)));
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 5));
   EXPECT_NE(-1, close(fd));
@@ -258,6 +339,7 @@ TEST(mmap, cowFileMapReadonlyFork) {
     ASSERT_STREQN("hello", p, 5);
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("hello", p, 5);
   EXPECT_NE(-1, munmap(p, 6));
   EXPECT_NE(-1, close(fd));
@@ -285,6 +367,7 @@ TEST(mmap, cowFileMapFork) {
     ASSERT_STREQN("child", p, 5);
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("parnt", p, 5);  // child changing memory did not change parent
   EXPECT_EQ(6, pread(fd, lol, 6, 0));
   EXPECT_STREQN("parnt", lol, 5);  // changing memory did not change file
@@ -310,6 +393,7 @@ TEST(mmap, sharedAnonMapFork) {
     ASSERT_STREQN("child", p, 5);
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("child", p, 5);  // boom
   EXPECT_NE(-1, munmap(p, 5));
 }
@@ -336,6 +420,7 @@ TEST(mmap, sharedFileMapFork) {
     ASSERT_NE(-1, msync(p, 6, MS_SYNC | MS_INVALIDATE));
     _exit(0);
   }
+  EXPECT_EQ(0, ws);
   EXPECT_STREQN("child", p, 5);  // child changing memory changed parent memory
   // XXX: RHEL5 has a weird issue where if we read the file into its own
   //      shared memory then corruption occurs!

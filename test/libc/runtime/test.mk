@@ -51,6 +51,7 @@ o/$(MODE)/test/libc/runtime/runtime.pkg:			\
 
 o/$(MODE)/test/libc/runtime/%.com.dbg:				\
 		$(TEST_LIBC_RUNTIME_DEPS)			\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o			\
 		o/$(MODE)/test/libc/runtime/%.o			\
 		o/$(MODE)/test/libc/runtime/runtime.pkg		\
 		$(LIBC_TESTMAIN)				\
