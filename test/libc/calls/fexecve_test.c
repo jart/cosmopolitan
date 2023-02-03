@@ -103,7 +103,7 @@ TEST(fexecve, APE) {
 TEST(fexecve, zipos) {
   if (!IsLinux() && !IsFreebsd()) return;
   int fd = open("/zip/life.elf", O_RDONLY);
-  SPAWN(vfork);
+  SPAWN(fork);
   if (fd == -1 && errno == ENOSYS) _Exit(42);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
