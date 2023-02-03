@@ -15,7 +15,6 @@ extern const int F_GETLK64;
 extern const int F_GETLK;
 extern const int F_GETNOSIGPIPE;
 extern const int F_GETOWN;
-extern const int F_GETOWN_EX;
 extern const int F_GETPATH;
 extern const int F_GETPIPE_SZ;
 extern const int F_GETSIG;
@@ -36,7 +35,6 @@ extern const int F_SETLKW64;
 extern const int F_SETLKW;
 extern const int F_SETNOSIGPIPE;
 extern const int F_SETOWN;
-extern const int F_SETOWN_EX;
 extern const int F_SETPIPE_SZ;
 extern const int F_SETSIG;
 extern const int F_UNLCK;
@@ -56,7 +54,6 @@ COSMOPOLITAN_C_END_
 #define F_GETLK         SYMBOLIC(F_GETLK)
 #define F_GETLK64       SYMBOLIC(F_GETLK64)
 #define F_GETOWN        SYMBOLIC(F_GETOWN)
-#define F_GETOWN_EX     SYMBOLIC(F_GETOWN_EX)
 #define F_GETPATH       SYMBOLIC(F_GETPATH)
 #define F_GETPIPE_SZ    SYMBOLIC(F_GETPIPE_SZ)
 #define F_GETSIG        SYMBOLIC(F_GETSIG)
@@ -70,7 +67,6 @@ COSMOPOLITAN_C_END_
 #define F_SETLKW        SYMBOLIC(F_SETLKW)
 #define F_SETLKW64      SYMBOLIC(F_SETLKW64)
 #define F_SETOWN        SYMBOLIC(F_SETOWN)
-#define F_SETOWN_EX     SYMBOLIC(F_SETOWN_EX)
 #define F_SETPIPE_SZ    SYMBOLIC(F_SETPIPE_SZ)
 #define F_SETSIG        SYMBOLIC(F_SETSIG)
 #define F_UNLCK         SYMBOLIC(F_UNLCK)
