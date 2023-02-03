@@ -82,6 +82,11 @@ o/$(MODE)/test/libc/sock/recvmsg_test.com.runs:			\
 o/$(MODE)/test/libc/sock/shutdown_test.com.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
+o/$(MODE)/test/libc/sock/multicast_test.com.runs:		\
+		private .UNSANDBOXED = 1
+o/$(MODE)/test/libc/sock/multicast_test.com.runs:		\
+		private .INTERNET = 1
+
 $(TEST_LIBC_SOCK_OBJS): test/libc/sock/test.mk
 
 .PHONY: o/$(MODE)/test/libc/sock
