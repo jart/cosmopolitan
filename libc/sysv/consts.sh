@@ -665,7 +665,7 @@ syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
 syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# socket is configured for broadcast messages; bsd consensus
 syscon	so	SO_USELOOPBACK				0			0x40			0x40			0x40			0x40			0x40			# bsd consensus
-syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; bsd consensus
+syscon	so	SO_LINGER				13			0x1080			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; SO_LINGER_SEC on XNU; bsd consensus
 syscon	so	SO_DONTLINGER				0			0			0			0			0			~0x80			# disables so_linger on windows
 syscon	so	SO_OOBINLINE				10			0x0100			0x0100			0x0100			0x0100			0x0100			# bsd consensus
 syscon	so	SO_SNDBUF				7			0x1001			0x1001			0x1001			0x1001			0x1001			# bsd consensus

@@ -80,6 +80,7 @@
            "uint_least8_t"
            "uintptr_t"
            "ssize_t"
+           "time_t"
            "long long int"
            "unsigned long long"
            "int8_t"
