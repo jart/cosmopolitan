@@ -260,6 +260,9 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
     for a community supported version of Cosmopolitan that works on Windows
     Vista and Windows 7.
 
+## Community
+Please feel free to join us on [Matrix](https://matrix.to/#/#redbean:matrix.org) or [Discord](https://discord.gg/sN53mQMt) for further discussion and support!
+
 ## Special Thanks
 
 Funding for this project is crowdsourced using
