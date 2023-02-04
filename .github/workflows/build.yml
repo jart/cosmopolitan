@@ -5,6 +5,8 @@ on:
     branches:
       - "master"
       - "flake"
+    paths-ignore:
+      - "README.md"
   pull_request:
     branches:
       - "master"
