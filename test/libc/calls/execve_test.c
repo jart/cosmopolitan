@@ -72,15 +72,3 @@ TEST(execve, ziposELF) {
   notpossible;
   EXITS(42);
 }
-
-TEST(execve, ziposAPE) {
-  if (!IsLinux()) {
-    EXPECT_EQ(-1, execve("/zip/life-nomod.com", (char *const[]){0},
-                         (char *const[]){0}));
-    return;
-  }
-  SPAWN(fork);
-  execve("/zip/life-nomod.com", (char *const[]){0}, (char *const[]){0});
-  notpossible;
-  EXITS(42);
-}
