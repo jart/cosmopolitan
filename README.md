@@ -276,3 +276,9 @@ the following groups and individuals:
 - [Wasmer](https://wasmer.io/)
 
 For publicly sponsoring our work at the highest tier.
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/jart/cosmopolitan.svg)](https://starchart.cc/jart/cosmopolitan)
+
+
