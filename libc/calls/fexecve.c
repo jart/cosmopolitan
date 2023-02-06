@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/blockcancel.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/execve-sysv.internal.h"
 #include "libc/calls/struct/stat.internal.h"
@@ -51,9 +51,9 @@ static bool IsAPEFd(const int fd) {
 static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
   int rc;
   if (IsLinux()) {
-      char path[14 + 12];
-      FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
-      rc = __sys_execve(path, argv, envp);
+    char path[14 + 12];
+    FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
+    rc = __sys_execve(path, argv, envp);
   } else if (IsFreebsd()) {
     rc = sys_fexecve(fd, argv, envp);
   } else {
@@ -63,43 +63,41 @@ static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
 }
 
 typedef enum {
-  PTF_NUM  = 1 << 0,
+  PTF_NUM = 1 << 0,
   PTF_NUM2 = 1 << 1,
   PTF_NUM3 = 1 << 2,
-  PTF_ANY  = 1 << 3
+  PTF_ANY = 1 << 3
 } PTF_PARSE;
 
 static bool ape_to_elf(void *ape, const size_t apesize) {
   static const char printftok[] = "printf '";
-  static const size_t printftoklen = sizeof(printftok)-1;
+  static const size_t printftoklen = sizeof(printftok) - 1;
   const char *tok = memmem(ape, apesize, printftok, printftoklen);
-  if(tok) {
+  if (tok) {
     tok += printftoklen;
     uint8_t *dest = ape;
     PTF_PARSE state = PTF_ANY;
     uint8_t value = 0;
-    for(;tok < (const char*)(dest+apesize); tok++) {
-      if((state & (PTF_NUM | PTF_NUM2 | PTF_NUM3)) && (*tok >= '0' && *tok <= '7')) {
+    for (; tok < (const char *)(dest + apesize); tok++) {
+      if ((state & (PTF_NUM | PTF_NUM2 | PTF_NUM3)) &&
+          (*tok >= '0' && *tok <= '7')) {
         value = (value << 3) | (*tok - '0');
         state <<= 1;
-        if(state & PTF_ANY) {
+        if (state & PTF_ANY) {
           *dest++ = value;
         }
-      }
-      else if(state & PTF_NUM) {
+      } else if (state & PTF_NUM) {
         break;
-      }
-      else {
-        if(state & (PTF_NUM2 | PTF_NUM3)) {
+      } else {
+        if (state & (PTF_NUM2 | PTF_NUM3)) {
           *dest++ = value;
         }
-        if(*tok == '\\') {
+        if (*tok == '\\') {
           state = PTF_NUM;
           value = 0;
-        } else if(*tok == '\'') {
+        } else if (*tok == '\'') {
           return true;
-        }
-        else {
+        } else {
           *dest++ = *tok;
           state = PTF_ANY;
         }
@@ -116,7 +114,7 @@ static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
   }
 
   struct stat st;
-  if(sys_fstat(infd, &st) == -1) {
+  if (sys_fstat(infd, &st) == -1) {
     return -1;
   }
   int fd;
@@ -139,8 +137,8 @@ static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
   rc = sys_ftruncate(fd, st.st_size, st.st_size);
   END_CANCELLATION_POINT;
   if ((rc != -1) &&
-      ((space = _weaken(mmap)(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                     0)) != MAP_FAILED)) {
+      ((space = _weaken(mmap)(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                              fd, 0)) != MAP_FAILED)) {
     ssize_t readRc;
     BEGIN_CANCELLATION_POINT;
     readRc = sys_pread(infd, space, st.st_size, 0, 0);
@@ -184,9 +182,9 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
     rc = fexecve_impl(fd, argv, envp);
-    if((errno == ENOEXEC) && (IsLinux() || IsFreebsd()) && IsAPEFd(fd)) {
+    if ((errno == ENOEXEC) && (IsLinux() || IsFreebsd()) && IsAPEFd(fd)) {
       const int newfd = ape_fd_to_mem_elf_fd(fd, NULL);
-      if(newfd != -1) {
+      if (newfd != -1) {
         rc = fexecve_impl(newfd, argv, envp);
       }
     }
