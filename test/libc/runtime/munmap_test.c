@@ -175,8 +175,6 @@ TEST(munmap, tinyFile_roundupUnmapSize) {
   ASSERT_NE(MAP_FAILED, (p = mmap(0, 5, PROT_READ, MAP_PRIVATE, 3, 0)));
   ASSERT_SYS(0, 0, close(3));
   EXPECT_TRUE(testlib_memoryexists(p));
-  // some kernels/versions support this, some don't
-  EXPECT_FALSE(testlib_memoryexists(p + PAGESIZE));
   EXPECT_SYS(0, 0, munmap(p, FRAMESIZE));
   EXPECT_FALSE(testlib_memoryexists(p));
   EXPECT_FALSE(testlib_memoryexists(p + 5));
