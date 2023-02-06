@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/blockcancel.internal.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/execve-sysv.internal.h"
@@ -41,11 +42,7 @@
 static bool IsAPEFd(const int fd) {
   char buf[8];
   bool res;
-  // TODO(jart): Should we block signals too?
-  BLOCK_CANCELLATIONS;
-  res = (sys_pread(fd, buf, 8, 0, 0) == 8) && IsAPEMagic(buf);
-  ALLOW_CANCELLATIONS;
-  return res;
+  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsAPEMagic(buf);
 }
 
 static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
@@ -109,7 +106,7 @@ static bool ape_to_elf(void *ape, const size_t apesize) {
 }
 
 static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
-  if (!IsLinux() && !IsFreebsd()) {
+  if (!IsLinux() && !IsFreebsd() || !_weaken(mmap) || !_weaken(munmap)) {
     return enosys();
   }
 
@@ -132,17 +129,11 @@ static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
     return -1;
   }
   void *space;
-  int rc;
-  BEGIN_CANCELLATION_POINT;
-  rc = sys_ftruncate(fd, st.st_size, st.st_size);
-  END_CANCELLATION_POINT;
-  if ((rc != -1) &&
+  if ((sys_ftruncate(fd, st.st_size, st.st_size) != -1) &&
       ((space = _weaken(mmap)(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
                               fd, 0)) != MAP_FAILED)) {
     ssize_t readRc;
-    BEGIN_CANCELLATION_POINT;
     readRc = sys_pread(infd, space, st.st_size, 0, 0);
-    END_CANCELLATION_POINT;
     bool success = readRc != -1;
     if (success && (st.st_size > 8) && IsAPEMagic(space)) {
       success = ape_to_elf(space, st.st_size);
@@ -182,8 +173,17 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
     rc = fexecve_impl(fd, argv, envp);
-    if ((errno == ENOEXEC) && (IsLinux() || IsFreebsd()) && IsAPEFd(fd)) {
-      const int newfd = ape_fd_to_mem_elf_fd(fd, NULL);
+    if ((errno == ENOEXEC) && (IsLinux() || IsFreebsd())) {
+      int newfd = -1;
+      BEGIN_CANCELLATION_POINT;
+      BLOCK_SIGNALS;
+      strace_enabled(-1);
+      if (IsAPEFd(fd)) {
+        newfd = ape_fd_to_mem_elf_fd(fd, NULL);
+      }
+      strace_enabled(+1);
+      ALLOW_SIGNALS;
+      END_CANCELLATION_POINT;
       if (newfd != -1) {
         rc = fexecve_impl(newfd, argv, envp);
       }
