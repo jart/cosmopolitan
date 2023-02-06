@@ -238,8 +238,8 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
   return addr;
 }
 
-static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
-                                int fd, int64_t off) {
+noasan inline void *Mmap(void *addr, size_t size, int prot, int flags, int fd,
+                         int64_t off) {
   char *p = addr;
   struct DirectMap dm;
   int a, b, i, f, m, n, x;
@@ -485,12 +485,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
-  size_t toto;
-  if (__isfdkind(fd, kFdZip)) {
-    return _weaken(__zipos_mmap)(
-        addr, size, prot, flags,
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, off);
-  }
+  size_t toto = 0;
 #if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
   if (IsWindows()) {
     STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
@@ -498,7 +493,13 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   }
 #endif
   __mmi_lock();
-  res = Mmap(addr, size, prot, flags, fd, off);
+  if (!__isfdkind(fd, kFdZip)) {
+    res = Mmap(addr, size, prot, flags, fd, off);
+  } else {
+    res = _weaken(__zipos_Mmap)(
+        addr, size, prot, flags,
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, off);
+  }
 #if SYSDEBUG
   toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
 #endif
