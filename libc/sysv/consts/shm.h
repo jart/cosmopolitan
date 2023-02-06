@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_SHM_H_
 #include "libc/runtime/symbolic.h"
 
+#define SHM_ANON SYMBOLIC(SHM_ANON)
 #define SHM_DEST SYMBOLIC(SHM_DEST)
 #define SHM_EXEC SYMBOLIC(SHM_EXEC)
 #define SHM_HUGETLB SYMBOLIC(SHM_HUGETLB)
@@ -20,6 +21,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern const char *SHM_ANON;
 extern const int SHM_DEST;
 extern const int SHM_EXEC;
 extern const int SHM_HUGETLB;
