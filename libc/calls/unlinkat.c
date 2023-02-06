@@ -17,13 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -40,6 +43,7 @@
  */
 int unlinkat(int dirfd, const char *path, int flags) {
   int rc;
+
   if (IsAsan() && !__asan_is_valid_str(path)) {
     rc = efault();
   } else if (_weaken(__zipos_notat) &&
@@ -50,6 +54,18 @@ int unlinkat(int dirfd, const char *path, int flags) {
   } else {
     rc = sys_unlinkat_nt(dirfd, path, flags);
   }
+
+  // POSIX.1 says unlink(directory) raises EPERM but on Linux
+  // it always raises EISDIR, which is so much less ambiguous
+  if (!IsLinux() && rc == -1 && !flags && errno == EPERM) {
+    struct stat st;
+    if (!fstatat(dirfd, path, &st, 0) && S_ISDIR(st.st_mode)) {
+      errno = EISDIR;
+    } else {
+      errno = EPERM;
+    }
+  }
+
   STRACE("unlinkat(%s, %#s, %#b) → %d% m", DescribeDirfd(dirfd), path, flags,
          rc);
   return rc;
