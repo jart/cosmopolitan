@@ -5651,12 +5651,6 @@ static char *HandleHugePayload(void) {
   return ServeFailure(413, "Payload Too Large");
 }
 
-static char *HandlePayloadSlowloris(void) {
-  LockInc(&shared->c.slowloris);
-  LogClose("payload slowloris");
-  return ServeFailure(408, "Request Timeout");
-}
-
 static char *HandleTransferRefused(void) {
   LockInc(&shared->c.transfersrefused);
   return ServeFailure(501, "Not Implemented");
@@ -5715,15 +5709,8 @@ static void HandleForkFailure(void) {
 
 static void HandleFrag(size_t got) {
   LockInc(&shared->c.frags);
-  if (++cpm.frags == 32) {
-    SendTimeout();
-    LogClose("slowloris");
-    LockInc(&shared->c.slowloris);
-    return;
-  } else {
-    DEBUGF("(stat) %s fragged msg added %,ld bytes to %,ld byte buffer",
-           DescribeClient(), amtread, got);
-  }
+  DEBUGF("(stat) %s fragged msg added %,ld bytes to %,ld byte buffer",
+         DescribeClient(), amtread, got);
 }
 
 static void HandleReload(void) {
@@ -5823,7 +5810,6 @@ static char *ReadMore(void) {
   size_t got;
   ssize_t rc;
   LockInc(&shared->c.frags);
-  if (++cpm.frags == 64) return HandlePayloadSlowloris();
   if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
     if (!(got = rc)) return HandlePayloadDisconnect();
     amtread += got;
