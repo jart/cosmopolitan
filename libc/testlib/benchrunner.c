@@ -23,7 +23,9 @@
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/mlock.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
 double g_avx2_juiceup_doubles_[4] forcealign(32);
@@ -47,6 +49,15 @@ void testlib_benchwarmup(void) {
   }
 }
 
+void EnableCruiseControlForCool(void) {
+  int fd, micros = 10;
+  if ((fd = open("/dev/cpu_dma_latency", O_WRONLY)) != -1) {
+    write(fd, &micros, sizeof(micros));
+    fcntl(fd, F_DUPFD_CLOEXEC, 123);
+    close(fd);
+  }
+}
+
 /**
  * Runs all benchmark functions in sorted order.
  *
@@ -55,5 +66,6 @@ void testlib_benchwarmup(void) {
 void testlib_runallbenchmarks(void) {
   int e;
   __log_level = kLogWarn;
+  EnableCruiseControlForCool();
   testlib_runtestcases(__bench_start, __bench_end, testlib_benchwarmup);
 }

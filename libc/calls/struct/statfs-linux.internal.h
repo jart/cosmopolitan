@@ -9,7 +9,7 @@ struct statfs_linux {
   int64_t f_bsize;   /* optimal transfer block size */
   int64_t f_blocks;  /* total data blocks in filesystem */
   int64_t f_bfree;   /* free blocks in filesystem */
-  int64_t f_bavail;  /* free blocks available to */
+  int64_t f_bavail;  /* free blocks available to unprivileged user */
   int64_t f_files;   /* total file nodes in filesystem */
   int64_t f_ffree;   /* free file nodes in filesystem */
   fsid_t f_fsid;     /* filesystem id */

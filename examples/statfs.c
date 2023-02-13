@@ -27,13 +27,13 @@ dontinline void ShowIt(const char *path) {
          "optimal transfer block size");
   sizefmt(ibuf, sf.f_frsize, 1024);
   printf("f_frsize  = %,zu (%sb %s)\n", sf.f_frsize, ibuf, "fragment size");
-  sizefmt(ibuf, sf.f_blocks * sf.f_bsize, 1024);
+  sizefmt(ibuf, sf.f_blocks * sf.f_frsize, 1024);
   printf("f_blocks  = %,zu (%sb %s)\n", sf.f_blocks, ibuf,
          "total data blocks in filesystem");
-  sizefmt(ibuf, sf.f_bfree * sf.f_bsize, 1024);
+  sizefmt(ibuf, sf.f_bfree * sf.f_frsize, 1024);
   printf("f_bfree   = %,zu (%sb %s)\n", sf.f_bfree, ibuf,
          "free blocks in filesystem");
-  sizefmt(ibuf, sf.f_bavail * sf.f_bsize, 1024);
+  sizefmt(ibuf, sf.f_bavail * sf.f_frsize, 1024);
   printf("f_bavail  = %,zu (%sb %s)\n", sf.f_bavail, ibuf,
          "free blocks available to use");
   printf("f_files   = %,zu (%s)\n", sf.f_files,

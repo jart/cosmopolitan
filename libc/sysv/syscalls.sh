@@ -64,9 +64,9 @@ scall	sys_sched_yield		0x15e12a14bf25d018	globl hidden # select() on XNU (previo
 scall	__sys_mremap		0x19bffffffffff019	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	globl hidden
 scall	sys_madvise		0x04b04b04b204b01c	globl hidden
-scall	sys_shmget		0x0e71210e7210901d	globl # no wrapper; consider mmap
-scall	sys_shmat		0x0e40e40e4210601e	globl # no wrapper; consider mmap
-scall	sys_shmctl		0x1bb128200210701f	globl # no wrapper; consider mmap
+scall	sys_shmget		0x0e71210e7210901d	globl # no wrapper
+scall	sys_shmat		0x0e40e40e4210601e	globl # no wrapper
+scall	sys_shmctl		0x1bb128200210701f	globl # no wrapper
 scall	sys_dup			0x0290290292029020	globl hidden
 scall	sys_dup2		0x05a05a05a205a021	globl hidden
 scall	sys_pause		0xfffffffffffff022	globl hidden
@@ -107,14 +107,14 @@ scall	sys_futex_cp		0x8a68539c6ffff8ca	globl hidden # intended for futex wait op
 scall	sys_set_robust_list	0x0a7ffffffffff111	globl # no wrapper
 scall	sys_get_robust_list	0x0a8ffffffffff112	globl # no wrapper
 scall	sys_uname		0x0a4fff0a4ffff03f	globl hidden
-scall	sys_semget		0x0dd0dd0dd20ff040	globl # no wrapper; won't polyfill for windows
-scall	sys_semop		0x0de1220de2100041	globl # no wrapper; won't polyfill for windows
-scall	sys_semctl		0xfff1271fe20fe042	globl # no wrapper; won't polyfill for windows
-scall	sys_shmdt		0x0e60e60e62108043	globl # no wrapper; won't polyfill for windows
-scall	sys_msgget		0x0e10e10e12103044	globl # no wrapper; won't polyfill for windows
-scall	sys_msgsnd		0x8e28e28e22904845	globl # no wrapper; won't polyfill for windows
-scall	sys_msgrcv		0x8e38e38e32905846	globl # no wrapper; won't polyfill for windows
-scall	sys_msgctl		0x1bc1291ff2102047	globl # no wrapper; won't polyfill for windows
+scall	sys_semget		0x0dd0dd0dd20ff040	globl # no wrapper
+scall	sys_semop		0x0de1220de2100041	globl # no wrapper
+scall	sys_semctl		0xfff1271fe20fe042	globl # no wrapper
+scall	sys_shmdt		0x0e60e60e62108043	globl # no wrapper
+scall	sys_msgget		0x0e10e10e12103044	globl # no wrapper
+scall	sys_msgsnd		0x8e28e28e22904845	globl # no wrapper
+scall	sys_msgrcv		0x8e38e38e32905846	globl # no wrapper
+scall	sys_msgctl		0x1bc1291ff2102047	globl # no wrapper
 scall	__sys_fcntl		0x05c05c05c205c048	globl hidden
 scall	__sys_fcntl_cp		0x85c85c85c285c848	globl hidden # intended for F_SETLKW and F_OFD_SETLKW
 scall	sys_flock		0x8838838832883849	globl hidden
@@ -282,7 +282,7 @@ scall	sys_request_key		0xfffffffffffff0f9	globl # no wrapper
 scall	sys_keyctl		0xfffffffffffff0fa	globl # no wrapper
 scall	ioprio_set		0xfffffffffffff0fb	globl
 scall	ioprio_get		0xfffffffffffff0fc	globl
-scall	sys_inotify_init	0xfffffffffffff0fd	globl # wicked # no wrapper
+scall	sys_inotify_init	0xfffffffffffff0fd	globl # no wrapper
 scall	sys_inotify_add_watch	0xfffffffffffff0fe	globl # no wrapper
 scall	sys_inotify_rm_watch	0xfffffffffffff0ff	globl # no wrapper
 scall	__sys_openat		0x9d49419f329cf901	globl hidden # Linux 2.6.16+ (c. 2007)
@@ -323,13 +323,13 @@ scall	sys_epoll_create1	0xfffffffffffff123	globl hidden
 scall	sys_perf_event_open	0xfffffffffffff12a	globl # no wrapper
 scall	sys_inotify_init1	0xfffffffffffff126	globl # no wrapper
 scall	sys_rt_tgsigqueueinfo	0xfffffffffffff129	globl # no wrapper
-scall	sys_signalfd		0xfffffffffffff11a	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_signalfd4		0xfffffffffffff121	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_eventfd		0xfffffffffffff11c	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_eventfd2		0xfffffffffffff122	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_timerfd_create	0xfffffffffffff11b	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_timerfd_settime	0xfffffffffffff11e	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_timerfd_gettime	0xfffffffffffff11f	globl # won't polyfill; see INTON/INTOFF tutorial in examples/unbourne.c
+scall	sys_signalfd		0xfffffffffffff11a	globl # no wrapper
+scall	sys_signalfd4		0xfffffffffffff121	globl # no wrapper
+scall	sys_eventfd		0xfffffffffffff11c	globl # no wrapper
+scall	sys_eventfd2		0xfffffffffffff122	globl # no wrapper
+scall	sys_timerfd_create	0xfffffffffffff11b	globl # no wrapper
+scall	sys_timerfd_settime	0xfffffffffffff11e	globl # no wrapper
+scall	sys_timerfd_gettime	0xfffffffffffff11f	globl # no wrapper
 #──────────────────────RHEL 6.0 LIMIT──────────────────────── # ←┬─ modern glibc needs rhel6+ c. 2011
 scall	sys_recvmmsg		0x1dbffffffffff12b	globl #  ├─ end of life 2024-06-30 (extended)
 scall	sys_fanotify_init	0xfffffffffffff12c	globl #  ├─ last distro with the original gnome desktop

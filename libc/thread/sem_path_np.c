@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/str/blake2.h"
 #include "libc/str/path.h"
@@ -38,7 +39,9 @@ const char *sem_path_np(const char *name, char *buf, size_t size) {
   const char *path, *a;
   uint8_t digest[BLAKE2B256_DIGEST_LENGTH];
   a = "/tmp/", n = 5;
-  if (IsLinux()) a = "/dev/shm/", n = 9;
+  if (IsLinux() && isdirectory("/dev/shm")) {
+    a = "/dev/shm/", n = 9;
+  }
   if (n + BLAKE2B256_DIGEST_LENGTH * 2 + 4 < size) {
     BLAKE2B256(name, strlen(name), digest);
     p = mempcpy(buf, a, n);

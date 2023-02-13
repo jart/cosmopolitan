@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/utsname.h"
@@ -166,6 +167,7 @@ textstartup void __printargs(const char *prologue) {
   uintptr_t *auxp;
   struct rlimit rlim;
   struct utsname uts;
+  struct sigaction sa;
   struct sched_param sp;
   struct termios termios;
   struct AuxiliaryValue *auxinfo;
@@ -288,7 +290,7 @@ textstartup void __printargs(const char *prologue) {
 
   if (!sigprocmask(SIG_BLOCK, 0, &ss)) {
     PRINT("");
-    PRINT("SIGNALS {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
+    PRINT("SIGNAL MASK {%#lx, %#lx}", ss.__bits[0], ss.__bits[1]);
     if (ss.__bits[0] || ss.__bits[1]) {
       for (i = 0; i < 32; ++i) {
         if (ss.__bits[0] & (1u << i)) {
@@ -302,6 +304,23 @@ textstartup void __printargs(const char *prologue) {
     PRINT("");
     PRINT("SIGNALS");
     PRINT("  error: sigprocmask() failed %m");
+  }
+
+  PRINT("");
+  PRINT("SIGNALS");
+  for (gotsome = 0, i = 1; i <= 64; ++i) {
+    if (!sigaction(i, 0, &sa)) {
+      if (sa.sa_handler == SIG_IGN) {
+        PRINT(" ☼ %G is SIG_IGN", i);
+        gotsome = 1;
+      } else if (sa.sa_handler != SIG_DFL) {
+        PRINT(" ☼ %G is %p", i, sa.sa_handler);
+        gotsome = 1;
+      }
+    }
+  }
+  if (!gotsome) {
+    PRINT(" ☼ SIG_DFL");
   }
 
   if (PLEDGED(PROC)) {
@@ -419,10 +438,21 @@ textstartup void __printargs(const char *prologue) {
 
   PRINT("");
   PRINT("TERMIOS");
-  for (i = 0; i < 2; ++i) {
+  for (i = 0; i <= 2; ++i) {
     if (!tcgetattr(i, &termios)) {
-      PRINT("  - stdin");
+      struct winsize ws;
+      if (i == 0) {
+        PRINT("  - stdin");
+      } else if (i == 1) {
+        PRINT("  - stdout");
+      } else {
+        PRINT("  - stderr");
+      }
       kprintf(prologue);
+      if (!tcgetwinsize(i, &ws)) {
+        kprintf("    ws_row = %d\n", ws.ws_row);
+        kprintf("    ws_col = %d\n", ws.ws_col);
+      }
       kprintf("    c_iflag =");
       if (termios.c_iflag & IGNBRK) kprintf(" IGNBRK");
       if (termios.c_iflag & BRKINT) kprintf(" BRKINT");

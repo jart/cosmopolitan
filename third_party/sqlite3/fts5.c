@@ -1,4 +1,4 @@
-
+// clang-format off
 
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS5) 
 
@@ -5141,7 +5141,6 @@ static void *sqlite3Fts5ParserAlloc(void *(*mallocProc)(u64));
 static void sqlite3Fts5ParserFree(void*, void (*freeProc)(void*));
 static void sqlite3Fts5Parser(void*, int, Fts5Token, Fts5Parse*);
 #ifndef NDEBUG
-#include <stdio.h>
 static void sqlite3Fts5ParserTrace(FILE*, char*);
 #endif
 static int sqlite3Fts5ParserFallback(int);

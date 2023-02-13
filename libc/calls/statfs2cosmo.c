@@ -184,6 +184,10 @@ static const char *DescribeStatfsTypeLinux(int64_t x) {
       return "xfs";
     case 0x012fd16d:
       return "_xiafs";
+    case 0x2fc12fc1:
+      return "zfs";
+    case 0x4253584e:
+      return "apfs";
     default:
       return "unknown";
   }
@@ -222,7 +226,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
 
   } else if (IsFreebsd()) {
     f_type = m->freebsd.f_type;
-    f_bsize = m->freebsd.f_bsize;
+    f_bsize = m->freebsd.f_iosize;
     f_blocks = m->freebsd.f_blocks;
     f_bfree = m->freebsd.f_bfree;
     f_bavail = m->freebsd.f_bavail;
@@ -237,14 +241,14 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
 
   } else if (IsXnu()) {
     f_type = m->xnu.f_type;
-    f_bsize = m->xnu.f_bsize;
+    f_bsize = m->xnu.f_iosize;
     f_blocks = m->xnu.f_blocks;
     f_bfree = m->xnu.f_bfree;
     f_bavail = m->xnu.f_bavail;
     f_files = m->xnu.f_files;
     f_ffree = m->xnu.f_ffree;
     f_fsid = m->xnu.f_fsid;
-    f_namelen = 4096;
+    f_namelen = 255;
     f_frsize = m->xnu.f_bsize;
     f_flags = m->xnu.f_flags;
     f_owner = m->xnu.f_owner;
@@ -252,7 +256,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
 
   } else if (IsOpenbsd()) {
     f_type = f->f_type;
-    f_bsize = m->openbsd.f_bsize;
+    f_bsize = m->openbsd.f_iosize;
     f_blocks = m->openbsd.f_blocks;
     f_bfree = m->openbsd.f_bfree;
     f_bavail = m->openbsd.f_bavail;
@@ -267,7 +271,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
 
   } else if (IsNetbsd()) {
     f_type = m->netbsd.f_type;
-    f_bsize = m->netbsd.f_bsize;
+    f_bsize = m->netbsd.f_iosize;
     f_blocks = m->netbsd.f_blocks;
     f_bfree = m->netbsd.f_bfree;
     f_bavail = m->netbsd.f_bavail;

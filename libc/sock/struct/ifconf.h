@@ -11,7 +11,8 @@ COSMOPOLITAN_C_START_
  * must know all networks accessible).
  */
 struct ifconf {
-  uint64_t ifc_len; /* size of buffer   */
+  int32_t ifc_len; /* size of buffer */
+  int32_t padding;
   union {
     char *ifcu_buf;
     struct ifreq *ifcu_req;

@@ -75,7 +75,7 @@
            "noasan"
            "nomsan"
            "noubsan"
-           "smashmystack"
+           "nostackprotector"
            "initarray"
            "mayalias"
            "noinstrument"
