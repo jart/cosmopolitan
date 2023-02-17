@@ -79,7 +79,7 @@ textwindows int __mkntpath2(const char *path,
    * 1. Need +1 for NUL-terminator
    * 2. Need +1 for UTF-16 overflow
    * 3. Need ≥2 for SetCurrentDirectory trailing slash requirement
-   * 5. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
+   * 4. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
    *    which is an "8.3 filename" from the DOS days
    */
   const char *q;
@@ -119,7 +119,7 @@ textwindows int __mkntpath2(const char *path,
     q += 2;
     z -= 7;
     x = 7;
-  } else if (IsSlash(q[0]) && IsAlpha(q[1]) && IsSlash(q[2])) {
+  } else if (IsAlpha(q[0]) && q[1] == ':' && IsSlash(q[2])) {
     z = MIN(32767, PATH_MAX);
     // turn "c:\foo" into "\\?\c:\foo"
     p[0] = '\\';
