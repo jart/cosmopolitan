@@ -2228,10 +2228,6 @@ static int lsession_delete(lua_State *L) {
     return 0;
 }
 
-static int lsession_gc(lua_State *L) {
-    return lsession_delete(L);
-}
-
 static int lsession_tostring(lua_State *L) {
     char buff[32];
     lsession *lses = lsqlite_getsession(L, 1);
@@ -2736,7 +2732,6 @@ static const luaL_Reg seslib[] = {
     {"delete",          lsession_delete         },
 
     {"__tostring",      lsession_tostring       },
-    {"__gc",            lsession_gc             },
     {NULL, NULL}
 };
 
