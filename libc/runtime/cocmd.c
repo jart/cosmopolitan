@@ -36,6 +36,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/timer.h"
 #include "third_party/awk/cmd.h"
+#include "third_party/musl/glob.h"
 #include "third_party/sed/cmd.h"
 #include "third_party/tr/cmd.h"
 #include "tool/curl/cmd.h"
@@ -662,6 +663,9 @@ static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
 int _cocmd(int argc, char **argv, char **envp) {
   char *arg;
   size_t i, j;
+  size_t globCount = 0;
+  int globFlags = 0;
+  glob_t globTheBuilder;
   prog = argc > 0 ? argv[0] : "cocmd.com";
 
   for (i = 1; i < 32; ++i) {
@@ -673,12 +677,14 @@ int _cocmd(int argc, char **argv, char **envp) {
   unsupported['~'] = true;
   unsupported['`'] = true;
   unsupported['#'] = true;
-  unsupported['*'] = true;
   unsupported['('] = true;
   unsupported[')'] = true;
   unsupported['{'] = true;
   unsupported['}'] = true;
-  unsupported['?'] = true;
+  if (!_weaken(glob)) {
+    unsupported['*'] = true;
+    unsupported['?'] = true;
+  }
 
   if (argc != 3) {
     Wexit(10, prog, ": error: wrong number of args\n", 0);
@@ -727,7 +733,21 @@ int _cocmd(int argc, char **argv, char **envp) {
       } else if (arg[0] == '<') {
         Open(GetRedirectArg(prog, arg, 1), 0, O_RDONLY);
       } else {
-        args[n++] = arg;
+        int globrc = GLOB_NOMATCH;
+        if (_weaken(glob)) {
+          globrc = _weaken(glob)(arg, globFlags, NULL, &globTheBuilder);
+          if (globrc == 0) {
+            for (; globCount < globTheBuilder.gl_pathc; globCount++) {
+              args[n++] = globTheBuilder.gl_pathv[globCount];
+            }
+          } else if (globrc != GLOB_NOMATCH) {
+            Wexit(16, prog, ": error: with glob\n", 0);
+          }
+          globFlags |= GLOB_APPEND;
+        }
+        if (globrc == GLOB_NOMATCH) {
+          args[n++] = arg;
+        }
         args[n] = 0;
       }
     } else {
