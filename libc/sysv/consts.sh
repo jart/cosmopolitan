@@ -1620,6 +1620,7 @@ syscon	shm	SHM_HUGETLB				0x0800			0			0			0			0			0
 syscon	shm	SHM_LOCKED				0x0400			0			0			0			0			0
 syscon	shm	SHM_NORESERVE				0x1000			0			0			0			0			0
 syscon	shm	SHM_REMAP				0x4000			0			0			0			0			0
+syscon	shm	SHM_ANON				0			0			1			0			0			0
 
 syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0			0			# wut
 

@@ -93,6 +93,7 @@ o/$(MODE)/test/libc/calls/fexecve_test.com.dbg:				\
 		o/$(MODE)/test/libc/calls/fexecve_test.o		\
 		o/$(MODE)/test/libc/calls/calls.pkg			\
 		o/$(MODE)/tool/build/echo.zip.o				\
+		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)

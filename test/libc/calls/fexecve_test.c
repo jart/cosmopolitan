@@ -86,3 +86,14 @@ TEST(fexecve, memfd_create) {
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
 }
+
+TEST(fexecve, APE) {
+  if (!IsLinux() && !IsFreebsd()) return;
+  testlib_extract("/zip/life-nomod.com", "life-nomod.com", 0555);
+  SPAWN(fork);
+  int fd = open("life-nomod.com", O_RDONLY);
+  ASSERT_NE(-1, fd);
+  if (fd == -1 && errno == ENOSYS) _Exit(42);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
+}

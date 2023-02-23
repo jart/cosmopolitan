@@ -105,6 +105,7 @@ i32 sys_setresuid(u32, u32, u32) _Hide;
 i32 sys_setreuid(u32, u32) _Hide;
 i32 sys_setsid(void) _Hide;
 i32 sys_setuid(i32) _Hide;
+i32 sys_shm_open(const char *, i32, u32) _Hide;
 i32 sys_sigaction(i32, const void *, void *, i64, i64) _Hide;
 i32 sys_sigaltstack(const void *, void *) _Hide;
 i32 sys_symlinkat(const char *, i32, const char *) _Hide;

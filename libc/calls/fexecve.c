@@ -16,21 +16,147 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
+#include "libc/calls/execve-sysv.internal.h"
+#include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mfd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/shm.h"
 #include "libc/sysv/errfuns.h"
+
+static bool IsAPEFd(const int fd) {
+  char buf[8];
+  bool res;
+  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsAPEMagic(buf);
+}
+
+static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
+  int rc;
+  if (IsLinux()) {
+    char path[14 + 12];
+    FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
+    rc = __sys_execve(path, argv, envp);
+  } else if (IsFreebsd()) {
+    rc = sys_fexecve(fd, argv, envp);
+  } else {
+    rc = enosys();
+  }
+  return rc;
+}
+
+typedef enum {
+  PTF_NUM = 1 << 0,
+  PTF_NUM2 = 1 << 1,
+  PTF_NUM3 = 1 << 2,
+  PTF_ANY = 1 << 3
+} PTF_PARSE;
+
+static bool ape_to_elf(void *ape, const size_t apesize) {
+  static const char printftok[] = "printf '";
+  static const size_t printftoklen = sizeof(printftok) - 1;
+  const char *tok = memmem(ape, apesize, printftok, printftoklen);
+  if (tok) {
+    tok += printftoklen;
+    uint8_t *dest = ape;
+    PTF_PARSE state = PTF_ANY;
+    uint8_t value = 0;
+    for (; tok < (const char *)(dest + apesize); tok++) {
+      if ((state & (PTF_NUM | PTF_NUM2 | PTF_NUM3)) &&
+          (*tok >= '0' && *tok <= '7')) {
+        value = (value << 3) | (*tok - '0');
+        state <<= 1;
+        if (state & PTF_ANY) {
+          *dest++ = value;
+        }
+      } else if (state & PTF_NUM) {
+        break;
+      } else {
+        if (state & (PTF_NUM2 | PTF_NUM3)) {
+          *dest++ = value;
+        }
+        if (*tok == '\\') {
+          state = PTF_NUM;
+          value = 0;
+        } else if (*tok == '\'') {
+          return true;
+        } else {
+          *dest++ = *tok;
+          state = PTF_ANY;
+        }
+      }
+    }
+  }
+  errno = ENOEXEC;
+  return false;
+}
+
+static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
+  if (!IsLinux() && !IsFreebsd() || !_weaken(mmap) || !_weaken(munmap)) {
+    return enosys();
+  }
+
+  struct stat st;
+  if (sys_fstat(infd, &st) == -1) {
+    return -1;
+  }
+  int fd;
+  if (IsLinux()) {
+    fd = sys_memfd_create(__func__, MFD_CLOEXEC);
+    if ((fd != -1) && path) {
+      FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
+    }
+  } else if (IsFreebsd()) {
+    fd = sys_shm_open(SHM_ANON, O_CREAT | O_RDWR, 0);
+  } else {
+    return enosys();
+  }
+  if (fd == -1) {
+    return -1;
+  }
+  void *space;
+  if ((sys_ftruncate(fd, st.st_size, st.st_size) != -1) &&
+      ((space = _weaken(mmap)(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                              fd, 0)) != MAP_FAILED)) {
+    ssize_t readRc;
+    readRc = sys_pread(infd, space, st.st_size, 0, 0);
+    bool success = readRc != -1;
+    if (success && (st.st_size > 8) && IsAPEMagic(space)) {
+      success = ape_to_elf(space, st.st_size);
+    }
+    const int e = errno;
+    if ((_weaken(munmap)(space, st.st_size) != -1) && success) {
+      _unassert(readRc == st.st_size);
+      return fd;
+    } else if (!success) {
+      errno = e;
+    }
+  }
+  const int e = errno;
+  close(fd);
+  errno = e;
+  return -1;
+}
 
 /**
  * Executes binary executable at file descriptor.
  *
- * This is only supported on Linux and FreeBSD. APE binaries currently
- * aren't supported.
+ * This is only supported on Linux and FreeBSD. APE binaries are
+ * supported.
  *
  * @param fd is opened executable and current file position is ignored
  * @return doesn't return on success, otherwise -1 w/ errno
@@ -39,7 +165,6 @@
  */
 int fexecve(int fd, char *const argv[], char *const envp[]) {
   int rc;
-  size_t i;
   if (!argv || !envp ||
       (IsAsan() &&
        (!__asan_is_valid_strlist(argv) || !__asan_is_valid_strlist(envp)))) {
@@ -47,14 +172,21 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
   } else {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
-    if (IsLinux()) {
-      char path[14 + 12];
-      FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
-      rc = __sys_execve(path, argv, envp);
-    } else if (IsFreebsd()) {
-      rc = sys_fexecve(fd, argv, envp);
-    } else {
-      rc = enosys();
+    rc = fexecve_impl(fd, argv, envp);
+    if ((errno == ENOEXEC) && (IsLinux() || IsFreebsd())) {
+      int newfd = -1;
+      BEGIN_CANCELLATION_POINT;
+      BLOCK_SIGNALS;
+      strace_enabled(-1);
+      if (IsAPEFd(fd)) {
+        newfd = ape_fd_to_mem_elf_fd(fd, NULL);
+      }
+      strace_enabled(+1);
+      ALLOW_SIGNALS;
+      END_CANCELLATION_POINT;
+      if (newfd != -1) {
+        rc = fexecve_impl(newfd, argv, envp);
+      }
     }
   }
   STRACE("fexecve(%d) failed %d% m", fd, rc);
