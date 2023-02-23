@@ -30,7 +30,6 @@
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
-#include "third_party/python/Include/object.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
