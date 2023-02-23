@@ -29,7 +29,6 @@
  * @return 0 on success, or -1 w/ errno
  */
 int sem_getvalue(sem_t *sem, int *sval) {
-  _unassert(sem->sem_pshared || sem->sem_pid == getpid());
   *sval = atomic_load_explicit(&sem->sem_value, memory_order_relaxed);
   return 0;
 }

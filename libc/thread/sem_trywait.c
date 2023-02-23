@@ -34,7 +34,6 @@
  */
 int sem_trywait(sem_t *sem) {
   int v;
-  _unassert(sem->sem_pshared || sem->sem_pid == getpid());
   v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed);
   do {
     _unassert(v > INT_MIN);

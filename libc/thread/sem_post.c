@@ -33,11 +33,10 @@
  */
 int sem_post(sem_t *sem) {
   int rc, old, wakeups;
-  _unassert(sem->sem_pshared || sem->sem_pid == getpid());
   old = atomic_fetch_add_explicit(&sem->sem_value, 1, memory_order_acq_rel);
   _unassert(old > INT_MIN);
   if (old >= 0) {
-    wakeups = nsync_futex_wake_(&sem->sem_value, 1, sem->sem_pshared);
+    wakeups = nsync_futex_wake_(&sem->sem_value, 1, true);
     _npassert(wakeups >= 0);
     rc = 0;
   } else {

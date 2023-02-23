@@ -75,7 +75,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
 
   do {
     if (!(v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed))) {
-      rc = nsync_futex_wait_(&sem->sem_value, v, sem->sem_pshared, abstime);
+      rc = nsync_futex_wait_(&sem->sem_value, v, true, abstime);
       if (rc == -EINTR || rc == -ECANCELED) {
         errno = -rc;
         rc = -1;
