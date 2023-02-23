@@ -81,9 +81,6 @@ int sysinfo(struct sysinfo *info) {
     rc = sys_sysinfo_nt(&x);
   }
   if (rc != -1) {
-    x.procs = MAX(1, x.procs);
-    x.mem_unit = MAX(1, x.mem_unit);
-    x.totalram = MAX((8 * 1024 * 1024) / x.mem_unit, x.totalram);
     memcpy(info, &x, sizeof(x));
   }
   STRACE("sysinfo(%p) → %d% m", info, rc);

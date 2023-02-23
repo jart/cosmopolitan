@@ -46,31 +46,31 @@ int main(int argc, char *argv[]) {
          1. / 65536 * si.loads[1],    //
          1. / 65536 * si.loads[2]);   //
 
-  sizefmt(ibuf, si.totalram, 1024);
-  printf("%-16s %s\n", "totalram", ibuf);
+  sizefmt(ibuf, si.totalram * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "totalram", si.totalram, ibuf);
 
-  sizefmt(ibuf, si.freeram, 1024);
-  printf("%-16s %s\n", "freeram", ibuf);
+  sizefmt(ibuf, si.freeram * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "freeram", si.freeram, ibuf);
 
-  sizefmt(ibuf, si.sharedram, 1024);
-  printf("%-16s %s\n", "sharedram", ibuf);
+  sizefmt(ibuf, si.sharedram * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "sharedram", si.sharedram, ibuf);
 
-  sizefmt(ibuf, si.bufferram, 1024);
-  printf("%-16s %s\n", "bufferram", ibuf);
+  sizefmt(ibuf, si.bufferram * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "bufferram", si.bufferram, ibuf);
 
-  sizefmt(ibuf, si.totalswap, 1024);
-  printf("%-16s %s\n", "totalswap", ibuf);
+  sizefmt(ibuf, si.totalswap * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "totalswap", si.totalswap, ibuf);
 
-  sizefmt(ibuf, si.freeswap, 1024);
-  printf("%-16s %s\n", "freeswap", ibuf);
+  sizefmt(ibuf, si.freeswap * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "freeswap", si.freeswap, ibuf);
 
   printf("%-16s %lu\n", "processes", si.procs);
 
-  sizefmt(ibuf, si.totalhigh, 1024);
-  printf("%-16s %s\n", "totalhigh", ibuf);
+  sizefmt(ibuf, si.totalhigh * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "totalhigh", si.totalhigh, ibuf);
 
-  sizefmt(ibuf, si.freehigh, 1024);
-  printf("%-16s %s\n", "freehigh", ibuf);
+  sizefmt(ibuf, si.freehigh * si.mem_unit, 1024);
+  printf("%-16s %ld (%s)\n", "freehigh", si.freehigh, ibuf);
 
   sizefmt(ibuf, si.mem_unit, 1024);
   printf("%-16s %s\n", "mem_unit", ibuf);
