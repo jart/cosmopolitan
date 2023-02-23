@@ -48,7 +48,7 @@
  *
  * @param flags can have R_OK, W_OK, X_OK, etc.
  * @return 0 if authorized, or -1 w/ errno
- * @kudos Aaron Ballman for teaching this
+ * @see https://blog.aaronballman.com/2011/08/how-to-check-access-rights/
  * @see libc/sysv/consts.sh
  */
 textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
