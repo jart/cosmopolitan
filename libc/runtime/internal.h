@@ -44,6 +44,9 @@ int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
 int sys_mprotect_nt(void *, size_t, int) _Hide;
 int __inflate(void *, size_t, const void *, size_t);
+noasan void *Mmap(void *addr, size_t size, int prot, int flags, int fd,
+                  int64_t off) _Hide;
+noasan int Munmap(char *, size_t) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

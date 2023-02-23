@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
@@ -46,8 +47,8 @@
  *     it does not need to be 64kb aligned.
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
-void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
-                   struct ZiposHandle *h, int64_t off) {
+noasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
+                          struct ZiposHandle *h, int64_t off) {
   if (!(flags & MAP_PRIVATE) ||
       (flags & ~(MAP_PRIVATE | MAP_FILE | MAP_FIXED | MAP_FIXED_NOREPLACE)) ||
       (!!(flags & MAP_FIXED) ^ !!(flags & MAP_FIXED_NOREPLACE))) {
@@ -56,21 +57,33 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
+  if (VERY_UNLIKELY(off < 0)) {
+    STRACE("neg off");
+    return VIP(einval());
+  }
+
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
   void *outAddr =
-      mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
+      Mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }
-  const int64_t beforeOffset = __zipos_lseek(h, 0, SEEK_CUR);
-  if ((beforeOffset == -1) ||
-      (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1) ||
-      (__zipos_lseek(h, beforeOffset, SEEK_SET) == -1) ||
-      ((prot != tempProt) && (mprotect(outAddr, size, prot) == -1))) {
-    const int e = errno;
-    munmap(outAddr, size);
-    errno = e;
-    return MAP_FAILED;
-  }
-  return outAddr;
+  do {
+    if (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1) {
+      strace_enabled(-1);
+      break;
+    } else if (prot != tempProt) {
+      strace_enabled(-1);
+      if (mprotect(outAddr, size, prot) == -1) {
+        break;
+      }
+      strace_enabled(+1);
+    }
+    return outAddr;
+  } while (0);
+  const int e = errno;
+  Munmap(outAddr, size);
+  errno = e;
+  strace_enabled(+1);
+  return MAP_FAILED;
 }

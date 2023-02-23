@@ -40,8 +40,6 @@
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
-static noasan int Munmap(char *, size_t);
-
 static noasan void MunmapShadow(char *p, size_t n) {
   intptr_t a, b, x, y;
   KERNTRACE("MunmapShadow(%p, %'zu)", p, n);
@@ -115,7 +113,7 @@ static noasan void MunmapImpl(char *p, size_t n) {
   }
 }
 
-static noasan int Munmap(char *p, size_t n) {
+noasan int Munmap(char *p, size_t n) {
   unsigned i;
   char poison;
   intptr_t a, b, x, y;
