@@ -100,14 +100,12 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "_dummy_threading.__all__",
     "_overlapped", /* don't recognize if sys.platform yet */
     "_scproxy", /* don't recognize if sys.platform yet */
-    "_thread",
     "_winapi", /* don't recognize if sys.platform yet */
     "asyncio.test_support", /* todo??? */
     "builtins",
     "concurrent.futures", /* asyncio's fault */
     "concurrent.futures._base",
     "concurrent.futures.process",
-    "concurrent.futures.thread",
     "distutils.command.bdist",
     "distutils.command.bdist_dumb",
     "distutils.command.bdist_rpm",
@@ -128,7 +126,6 @@ const char *const kIgnoredModules[] = /* sorted */ {
     "distutils.command.sdist",
     "distutils.command.upload",
     "distutils.spawn._nt_quote_args",
-    "dummy_threading.Thread",
     "encodings.aliases",
     "importlib._bootstrap",
     "importlib._bootstrap.BuiltinImporter",

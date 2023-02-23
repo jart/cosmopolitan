@@ -237,10 +237,11 @@
 #define HAVE_MEMMOVE 1
 #define HAVE_MEMRCHR 1
 
-/* #undef HAVE_SEM_GETVALUE */
-/* #undef HAVE_SEM_OPEN */
-/* #undef HAVE_SEM_TIMEDWAIT */
-/* #undef HAVE_SEM_UNLINK */
+#define HAVE_SEM_GETVALUE  1
+#define HAVE_SEM_OPEN      1
+#define HAVE_SEM_TIMEDWAIT 1
+#define HAVE_SEM_UNLINK    1
+
 /* #define HAVE_MKNOD       1 */
 /* #define HAVE_MKNODAT     1 */
 /* #define HAVE_MKFIFO      1 */
@@ -394,16 +395,16 @@
 /* #undef PACKAGE_VERSION */
 
 /* Define if POSIX semaphores aren't enabled on your system */
-#define POSIX_SEMAPHORES_NOT_ENABLED 1
+/* #define POSIX_SEMAPHORES_NOT_ENABLED 1 */
 
 /* Defined if PTHREAD_SCOPE_SYSTEM supported. */
 /* #undef PTHREAD_SYSTEM_SCHED_SUPPORTED */
 
-/* #undef HAVE_PTHREAD_ATFORK */
-/* #undef HAVE_PTHREAD_DESTRUCTOR */
-/* #undef HAVE_PTHREAD_INIT */
-/* #undef HAVE_PTHREAD_KILL */
-/* #undef HAVE_PTHREAD_SIGMASK */
+#define HAVE_PTHREAD_ATFORK     1
+#define HAVE_PTHREAD_DESTRUCTOR 1
+/* #undef HAVE_PTHREAD_INIT ??? */
+#define HAVE_PTHREAD_KILL    1
+#define HAVE_PTHREAD_SIGMASK 1
 
 /* Define as the preferred size in bits of long digits */
 /* #undef PYLONG_BITS_IN_DIGIT */
@@ -524,7 +525,7 @@
 /* #define HAVE_SETGROUPS 1 */
 
 /* define to 1 if your sem_getvalue is broken. */
-#define HAVE_BROKEN_SEM_GETVALUE 1
+/* #define HAVE_BROKEN_SEM_GETVALUE 1 */
 /* Define if --enable-ipv6 is specified */
 /* #undef ENABLE_IPV6 */
 /* Define if flock needs to be linked with bsd library. */

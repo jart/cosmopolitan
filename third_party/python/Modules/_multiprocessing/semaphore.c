@@ -4,6 +4,8 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/o.h"
+#include "libc/thread/semaphore.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 /* clang-format off */
 

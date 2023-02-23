@@ -547,6 +547,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/_io/textio.c				\
 	third_party/python/Modules/_hashmbedtls.c			\
 	third_party/python/Modules/_json.c				\
+	third_party/python/Modules/_multiprocessing/semaphore.c 	\
 	third_party/python/Modules/_multiprocessing/multiprocessing.c 	\
 	third_party/python/Modules/_localemodule.c			\
 	third_party/python/Modules/_lsprof.c				\
@@ -1130,6 +1131,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E							\
 	LIBC_NT_KERNEL32						\
 	LIBC_RUNTIME							\
+	LIBC_THREAD							\
 	LIBC_SOCK							\
 	LIBC_STDIO							\
 	LIBC_STR							\
@@ -1198,7 +1200,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_PYS =						\
 	third_party/python/Lib/test/autotest.py					\
 	third_party/python/Lib/test/bytecode_helper.py				\
 	third_party/python/Lib/test/coding20731.py				\
-	third_party/python/Lib/test/datetimetester.py					\
+	third_party/python/Lib/test/datetimetester.py				\
 	third_party/python/Lib/test/dis_module.py				\
 	third_party/python/Lib/test/doctest_aliases.py				\
 	third_party/python/Lib/test/double_const.py				\
@@ -1234,6 +1236,7 @@ THIRD_PARTY_PYTHON_PYTEST_A_PYS =						\
 	third_party/python/Lib/test/pydoc_mod.py				\
 	third_party/python/Lib/test/pydocfodder.py				\
 	third_party/python/Lib/test/re_tests.py					\
+	third_party/python/Lib/test/lock_tests.py				\
 	third_party/python/Lib/test/reperf.py					\
 	third_party/python/Lib/test/sample_doctest.py				\
 	third_party/python/Lib/test/sample_doctest_no_docstrings.py		\
@@ -1886,6 +1889,8 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_pow.py					\
 	third_party/python/Lib/test/test_pprint.py				\
 	third_party/python/Lib/test/test_print.py				\
+	third_party/python/Lib/test/test_thread.py				\
+	third_party/python/Lib/test/test_threadsignals.py			\
 	third_party/python/Lib/test/test_profile.py				\
 	third_party/python/Lib/test/test_property.py				\
 	third_party/python/Lib/test/test_pstats.py				\
@@ -1975,6 +1980,8 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_zlib.py
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
+	third_party/python/Lib/test/test_threading.py				\
+	third_party/python/Lib/test/test_threading_local.py			\
 	third_party/python/Lib/test/mp_preload.py				\
 	third_party/python/Lib/test/outstanding_bugs.py				\
 	third_party/python/Lib/test/pythoninfo.py				\
@@ -2100,6 +2107,8 @@ o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs: private	\
 			/usr/local/etc/mime.types
 
 o/$(MODE)/third_party/python/Lib/test/test_epoll.py.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 o/$(MODE)/third_party/python/Lib/test/test_fcntl.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
@@ -2764,6 +2773,22 @@ o/$(MODE)/third_party/python/Lib/test/test_unary.py.runs: \
 o/$(MODE)/third_party/python/Lib/test/test_print.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_print $(PYTESTARGS)
+
+o/$(MODE)/third_party/python/Lib/test/test_thread.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com
+	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_thread $(PYTESTARGS)
+
+o/$(MODE)/third_party/python/Lib/test/test_threading.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com
+	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_threading $(PYTESTARGS)
+
+o/$(MODE)/third_party/python/Lib/test/test_threading_local.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com
+	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_threading_local $(PYTESTARGS)
+
+o/$(MODE)/third_party/python/Lib/test/test_threadsignals.py.runs: \
+		o/$(MODE)/third_party/python/pythontester.com
+	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_threadsignals $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_pprint.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
