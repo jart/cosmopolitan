@@ -1388,6 +1388,7 @@ def _setup(_bootstrap_module):
         "builtins",
         "marshal",
         "posix",
+        "_thread",
         "_weakref",
     ):
         self_mod_dict[name] = sys.modules.get(
@@ -1400,7 +1401,6 @@ def _setup(_bootstrap_module):
     self_mod_dict["_os"] = sys.modules.get(builtin_os, builtin_from_name(builtin_os))
     self_mod_dict["path_sep"] =  path_separators[0]
     self_mod_dict["path_separators"] = "".join(path_separators)
-    self_mod_dict["_thread"] = None
     # Constants
     EXTENSION_SUFFIXES.extend(_imp.extension_suffixes())
 

@@ -15,6 +15,7 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 /* clang-format off */

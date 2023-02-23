@@ -291,6 +291,7 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/clinic/audioop.inc
 
 THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
+	third_party/python/Modules/_threadmodule.c		\
 	third_party/python/Modules/_tracemalloc.c			\
 	third_party/python/Modules/faulthandler.c			\
 	third_party/python/Objects/abstract.c				\
@@ -408,6 +409,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/symtable.c				\
         third_party/python/Parser/listnode.c				\
 	third_party/python/Python/sysmodule.c				\
+	third_party/python/Python/thread.c				\
 	third_party/python/Python/traceback.c				\
 	third_party/python/Modules/unicodedata_3.2.0.c			\
 	third_party/python/Modules/unicodedata_bidirectionalnames.c	\
@@ -449,6 +451,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E							\
 	LIBC_NT_KERNEL32						\
 	LIBC_RUNTIME							\
+	LIBC_THREAD							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_STUBS							\

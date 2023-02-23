@@ -215,7 +215,7 @@ Complete(const char *p, linenoiseCompletions *c)
 static void
 TerminalCompletion(const char *p, linenoiseCompletions *c)
 {
-    Complete(p, c);
+    // Complete(p, c);
     if (PyErr_Occurred()) {
         PyErr_Clear();
     }

@@ -520,30 +520,28 @@ def _module_repr_from_spec(spec):
         else:
             return '<module {!r} ({})>'.format(spec.name, spec.origin)
 
-
-# Used by importlib.reload() and _load_module_shim().
 def _exec(spec, module):
     """Execute the spec's specified module in an existing module's namespace."""
     name = spec.name
-    if sys.modules.get(name) is not module:
-        msg = 'module {!r} not in sys.modules'.format(name)
-        raise ImportError(msg, name=name)
-    if spec.loader is None:
-        if spec.submodule_search_locations is None:
-            raise ImportError('missing loader', name=spec.name)
-        # namespace package
+    with _ModuleLockManager(name):
+        if sys.modules.get(name) is not module:
+            msg = 'module {!r} not in sys.modules'.format(name)
+            raise ImportError(msg, name=name)
+        if spec.loader is None:
+            if spec.submodule_search_locations is None:
+                raise ImportError('missing loader', name=spec.name)
+            # namespace package
+            _init_module_attrs(spec, module, override=True)
+            return module
         _init_module_attrs(spec, module, override=True)
-        return module
-    _init_module_attrs(spec, module, override=True)
-    if not hasattr(spec.loader, 'exec_module'):
-        # (issue19713) Once BuiltinImporter and ExtensionFileLoader
-        # have exec_module() implemented, we can add a deprecation
-        # warning here.
-        spec.loader.load_module(name)
-    else:
-        spec.loader.exec_module(module)
+        if not hasattr(spec.loader, 'exec_module'):
+            # (issue19713) Once BuiltinImporter and ExtensionFileLoader
+            # have exec_module() implemented, we can add a deprecation
+            # warning here.
+            spec.loader.load_module(name)
+        else:
+            spec.loader.exec_module(module)
     return sys.modules[name]
-
 
 def _load_backward_compatible(spec):
     # (issue19713) Once BuiltinImporter and ExtensionFileLoader
@@ -606,8 +604,8 @@ def _load(spec):
     clobbered.
 
     """
-    return _load_unlocked(spec)
-
+    with _ModuleLockManager(spec.name):
+        return _load_unlocked(spec)
 
 # Loaders #####################################################################
 

@@ -4,8 +4,91 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/makedev.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/statvfs.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/tms.h"
+#include "libc/calls/struct/utsname.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/sysparam.h"
+#include "libc/calls/termios.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/log/log.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/sw.h"
+#include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/dlfcn.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sock/sendfile.internal.h"
+#include "libc/sock/sock.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/grnd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/seek.h"
+#include "libc/sysv/consts/sf.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/st.h"
+#include "libc/sysv/consts/w.h"
+#include "libc/sysv/consts/waitid.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/time/struct/utimbuf.h"
+#include "libc/time/time.h"
+#include "libc/x/x.h"
+#include "third_party/musl/lockf.h"
+#include "third_party/musl/passwd.h"
+#include "third_party/python/Include/abstract.h"
+#include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
+#include "third_party/python/Include/dictobject.h"
+#include "third_party/python/Include/fileobject.h"
+#include "third_party/python/Include/fileutils.h"
+#include "third_party/python/Include/floatobject.h"
+#include "third_party/python/Include/import.h"
+#include "third_party/python/Include/intrcheck.h"
+#include "third_party/python/Include/longobject.h"
+#include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/objimpl.h"
+#include "third_party/python/Include/osmodule.h"
+#include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pylifecycle.h"
+#include "third_party/python/Include/pymacro.h"
+#include "third_party/python/Include/pymem.h"
+#include "third_party/python/Include/pythread.h"
+#include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/structmember.h"
+#include "third_party/python/Include/structseq.h"
+#include "third_party/python/Include/sysmodule.h"
+#include "third_party/python/Include/warnings.h"
+#include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 PYTHON_PROVIDE("_thread");
@@ -1029,7 +1112,7 @@ t_bootstrap(void *boot_raw)
         else {
             PyObject *file;
             PyObject *exc, *value, *tb;
-            PySys_WriteStderr(
+            PySys_FormatStderr(
                 "Unhandled exception in thread started by ");
             PyErr_Fetch(&exc, &value, &tb);
             file = _PySys_GetObjectId(&PyId_stderr);
@@ -1037,7 +1120,7 @@ t_bootstrap(void *boot_raw)
                 PyFile_WriteObject(boot->func, file, 0);
             else
                 PyObject_Print(boot->func, stderr, 0);
-            PySys_WriteStderr("\n");
+            PySys_FormatStderr("\n");
             PyErr_Restore(exc, value, tb);
             PyErr_PrintEx(0);
         }
@@ -1436,3 +1519,8 @@ PyInit__thread(void)
     PyThread_init_thread();
     return m;
 }
+
+_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__thread = {
+    "_thread",
+    PyInit__thread,
+};

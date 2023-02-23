@@ -32,6 +32,12 @@
    Locking: as above.
 */
 
+#ifdef WITH_THREAD
+extern void wait_for_thread_shutdown(void);
+extern void _PyGILState_Init(PyInterpreterState *, PyThreadState *);
+extern void _PyGILState_Fini(void);
+#endif /* WITH_THREAD */
+
 int
 Py_FinalizeEx(void)
 {

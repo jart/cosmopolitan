@@ -19,6 +19,7 @@
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/ast.h"
 #include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/code.h"
 #include "third_party/python/Include/codecs.h"
 #include "third_party/python/Include/cosmo.h"
@@ -58,7 +59,7 @@ _Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
 
 /* Forward */
-static void wait_for_thread_shutdown(void);
+void wait_for_thread_shutdown(void);
 #ifdef WITH_THREAD
 extern void _PyGILState_Init(PyInterpreterState *, PyThreadState *);
 extern void _PyGILState_Fini(void);
@@ -470,7 +471,7 @@ Py_EndInterpreter(PyThreadState *tstate)
    the threading module was imported in the first place.
    The shutdown routine will wait until all non-daemon
    "threading" threads have completed. */
-static void
+void
 wait_for_thread_shutdown(void)
 {
 #ifdef WITH_THREAD

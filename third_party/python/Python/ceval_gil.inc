@@ -4,6 +4,10 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/thread/thread2.h"
+#include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Python/condvar.h"
 /* clang-format off */
 

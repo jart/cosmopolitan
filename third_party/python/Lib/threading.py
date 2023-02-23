@@ -1323,7 +1323,7 @@ def enumerate():
         return list(_active.values()) + list(_limbo.values())
 
 
-from _dummy_thread import stack_size
+from _thread import stack_size
 
 # Create the main thread object,
 # and make it available for the interpreter
@@ -1371,7 +1371,7 @@ def main_thread():
 # module, or from the python fallback
 
 try:
-    from _dummy_thread import _local as local
+    from _thread import _local as local
 except ImportError:
     from _threading_local import local
 

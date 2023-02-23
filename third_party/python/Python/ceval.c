@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_LOCAL_AGGRESSIVE
+#include "libc/errno.h"
 #include "libc/intrin/likely.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"

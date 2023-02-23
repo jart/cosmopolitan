@@ -492,7 +492,9 @@
 #endif
 
 /* Define if you want to compile in rudimentary thread support */
-/* #undef WITH_THREAD */
+#ifndef WITH_THREAD
+#define WITH_THREAD 1
+#endif
 
 /* Define if you want pymalloc to be disabled when running under valgrind */
 /* #undef WITH_VALGRIND */
@@ -508,7 +510,9 @@
 /* #undef _POSIX_1_SOURCE */
 
 /* Define if you have POSIX threads, and your system does not define that. */
-/* #undef _POSIX_THREADS */
+#ifndef _POSIX_THREADS
+#define _POSIX_THREADS
+#endif
 
 /* #define _Py_MEMORY_SANITIZER */
 
