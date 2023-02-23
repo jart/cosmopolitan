@@ -618,7 +618,7 @@ HIDDEN(v_ape_realbytes = v_ape_realsectors * 512);
 HIDDEN(v_ape_realdwords = v_ape_realsectors * (512 / 4));
 HIDDEN(v_ape_allsectors = ROUNDUP(RVA(_ezip), 512) / 512);
 HIDDEN(v_ape_allbytes = v_ape_allsectors * 512);
-HIDDEN(v_ape_highsectors = v_ape_allsectors - v_ape_realsectors);
+HIDDEN(v_ape_highsectors = MIN(0xffff, v_ape_allsectors - v_ape_realsectors));
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
 
