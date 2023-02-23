@@ -701,7 +701,7 @@ emush:	.ascii	"\n@\n#'\"\n"
 //	2. gunzip the blink virtual machine executable
 //	3. relaunch this program inside the blink vm
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
-	.ascii	"e=\"${TMPDIR:-${HOME:-.}}/.ape-blink-1.1\"\n"
+	.ascii	"e=\"${TMPDIR:-${HOME:-.}}/.ape-blink-0.9.0\"\n"
 
 //	Blink for Apple Silicon, e.g. M1 Macbook
 	.ascii	"if [ \"$s\" = Darwin ] && [ \"$m\" = arm64 ]; then\n"
