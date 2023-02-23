@@ -34,6 +34,7 @@ LIBC_ZIPOS_A_DIRECTDEPS =				\
 	LIBC_FMT					\
 	LIBC_RUNTIME					\
 	LIBC_SYSV					\
+	LIBC_THREAD					\
 	LIBC_STR					\
 	LIBC_INTRIN					\
 	LIBC_STUBS					\

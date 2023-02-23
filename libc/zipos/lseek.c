@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -31,6 +32,7 @@
  */
 int64_t __zipos_lseek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
   int64_t rc;
+  pthread_mutex_lock(&h->lock);
   switch (whence) {
     case SEEK_SET:
       rc = offset;
@@ -50,5 +52,6 @@ int64_t __zipos_lseek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
   } else {
     rc = einval();
   }
+  pthread_mutex_unlock(&h->lock);
   return rc;
 }

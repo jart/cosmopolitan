@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #include "libc/intrin/nopl.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -15,6 +16,7 @@ struct ZiposUri {
 
 struct ZiposHandle {
   struct ZiposHandle *next;
+  pthread_mutex_t lock;
   size_t size;    /* byte length of `mem` */
   size_t mapsize; /* total size of this struct */
   size_t pos;     /* read/write byte offset state */

@@ -134,11 +134,11 @@ include libc/crt/crt.mk				# │  You can issue system calls
 include third_party/nsync/nsync.mk		# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
-include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
-include third_party/gdtoa/gdtoa.mk		# │  You can now use stdio
-include libc/time/time.mk			# │  You can finally call malloc()
-include third_party/nsync/mem/mem.mk		# │
-include libc/thread/thread.mk			# │
+include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
+include third_party/nsync/mem/mem.mk		# │  You can now use stdio
+include libc/thread/thread.mk			# │  You can finally call malloc()
+include libc/zipos/zipos.mk			# │
+include libc/time/time.mk			# │
 include libc/stdio/stdio.mk			# │
 include third_party/libcxx/libcxx.mk		# │
 include net/net.mk				# │

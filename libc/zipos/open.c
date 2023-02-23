@@ -90,6 +90,7 @@ StartOver:
   if (h) {
     h->size = size;
     h->mapsize = mapsize;
+    pthread_mutex_init(&h->lock, 0);
   }
   return h;
 }

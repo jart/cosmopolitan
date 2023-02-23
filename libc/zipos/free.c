@@ -21,6 +21,7 @@
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "libc/zipos/zipos.internal.h"
 
 void __zipos_free(struct Zipos *z, struct ZiposHandle *h) {
@@ -28,6 +29,7 @@ void __zipos_free(struct Zipos *z, struct ZiposHandle *h) {
     __asan_poison((char *)h + sizeof(struct ZiposHandle),
                   h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
   }
+  pthread_mutex_destroy(&h->lock);
   __zipos_lock();
   do h->next = z->freelist;
   while (!_cmpxchg(&z->freelist, h->next, h));
