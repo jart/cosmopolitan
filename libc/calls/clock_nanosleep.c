@@ -212,7 +212,7 @@ static bool ShouldUseSpinNanosleep(int clock, int flags,
  *     while (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs, 0));
  *
  * will accurately spin on `EINTR` errors. That way you're not impeding
- * signal delivery and you're not losing precision on your wait timeout.
+ * signal delivery and you're not loosing precision on the wait timeout.
  * This function has first-class support on Linux, FreeBSD, and NetBSD;
  * on OpenBSD it's good; on XNU it's bad; and on Windows it's ugly.
  *

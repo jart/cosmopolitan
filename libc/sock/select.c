@@ -43,8 +43,20 @@
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
   int rc;
+  struct timeval tv, *tvp;
   POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout));
+
+  // the linux kernel modifies timeout
+  if (timeout) {
+    if (IsAsan() && !__asan_is_valid(timeout, sizeof(*timeout))) {
+      return efault();
+    }
+    tv = *timeout;
+    tvp = &tv;
+  } else {
+    tvp = 0;
+  }
 
   BEGIN_CANCELLATION_POINT;
   if (nfds < 0) {
@@ -52,17 +64,16 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   } else if (IsAsan() &&
              ((readfds && !__asan_is_valid(readfds, FD_SIZE(nfds))) ||
               (writefds && !__asan_is_valid(writefds, FD_SIZE(nfds))) ||
-              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))) ||
-              (timeout && !__asan_is_valid(timeout, sizeof(*timeout))))) {
+              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))))) {
     rc = efault();
   } else if (!IsWindows()) {
-    rc = sys_select(nfds, readfds, writefds, exceptfds, timeout);
+    rc = sys_select(nfds, readfds, writefds, exceptfds, tvp);
   } else {
-    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, 0);
+    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, 0);
   }
   END_CANCELLATION_POINT;
 
   POLLTRACE("select(%d, %p, %p, %p, [%s]) → %d% m", nfds, readfds, writefds,
-            exceptfds, DescribeTimeval(rc, timeout), rc);
+            exceptfds, DescribeTimeval(rc, tvp), rc);
   return rc;
 }
