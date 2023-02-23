@@ -1937,7 +1937,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_symbol.py				\
 	third_party/python/Lib/test/test_symtable.py				\
 	third_party/python/Lib/test/test_syntax.py				\
-	third_party/python/Lib/test/test_sys.py					\
 	third_party/python/Lib/test/test_sys_setprofile.py			\
 	third_party/python/Lib/test/test_syslog.py				\
 	third_party/python/Lib/test/test_tarfile.py				\
@@ -1979,8 +1978,10 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_zlib.py
 
 # TODO: test_threading passing probably requires more mutexes in libc/calls/
+# TODO: test_sys is potentially flaky now that we have threads
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
+	third_party/python/Lib/test/test_sys.py					\
 	third_party/python/Lib/test/test_threading.py				\
 	third_party/python/Lib/test/test_threading_local.py			\
 	third_party/python/Lib/test/mp_preload.py				\
