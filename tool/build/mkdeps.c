@@ -231,6 +231,7 @@ bool ShouldSkipSource(const char *src) {
 }
 
 wontreturn void OnMissingFile(const char *list, const char *src) {
+  kprintf("%s is missing\n", src);
   DCHECK_EQ(ENOENT, errno, "%s", src);
   /*
    * This code helps GNU Make automatically fix itself when we
