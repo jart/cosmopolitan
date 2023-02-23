@@ -8,13 +8,16 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/thread/thread2.h"
 #include "third_party/python/Include/dynamic_annotations.h"
+#include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structseq.h"
+#include "third_party/python/pyconfig.h"
 /* clang-format off */
 
 /* Thread package.

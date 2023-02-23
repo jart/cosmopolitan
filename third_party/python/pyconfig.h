@@ -1,5 +1,6 @@
 #ifndef Py_PYCONFIG_H
 #define Py_PYCONFIG_H
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/str/str.h"
 

@@ -7,6 +7,7 @@
 #define PY_LOCAL_AGGRESSIVE
 #include "libc/errno.h"
 #include "libc/intrin/likely.h"
+#include "libc/runtime/stack.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -656,8 +657,7 @@ _Py_CheckRecursiveCall(const char *where)
     PyThreadState *t;
     const char *rsp, *bot;
     rsp = __builtin_frame_address(0);
-    asm(".weak\tape_stack_vaddr\n\t"
-        "movabs\t$ape_stack_vaddr+32768,%0" : "=r"(bot));
+    bot = (const char *)GetStackAddr() + 32768;
     if (rsp > bot) {
         t = PyThreadState_GET();
         _Py_CheckRecursionLimit = recursion_limit;

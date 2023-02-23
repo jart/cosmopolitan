@@ -236,7 +236,6 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Python/opcode_targets.inc			\
 	third_party/python/Python/wordcode_helpers.inc			\
 	third_party/python/Python/ceval_gil.inc				\
-	third_party/python/Python/thread_nt.inc				\
 	third_party/python/Python/clinic/import.inc			\
 	third_party/python/Python/clinic/bltinmodule.inc		\
 	third_party/python/Modules/expat/asciitab.inc			\
@@ -1978,6 +1977,8 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_yield_from.py				\
 	third_party/python/Lib/test/test_zipapp.py				\
 	third_party/python/Lib/test/test_zlib.py
+
+# TODO: test_threading passing probably requires more mutexes in libc/calls/
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_threading.py				\
