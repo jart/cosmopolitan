@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/runtime/runtime.h"
@@ -57,4 +59,28 @@ TEST(execve, testArgPassing) {
     notpossible;
     EXITS(0);
   }
+}
+
+TEST(execve, ziposELF) {
+  if (!IsLinux() && !IsFreebsd()) {
+    EXPECT_SYS(ENOSYS, -1,
+               execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
+    return;
+  }
+  SPAWN(fork);
+  execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0});
+  notpossible;
+  EXITS(42);
+}
+
+TEST(execve, ziposAPE) {
+  if (!IsLinux()) {
+    EXPECT_EQ(-1, execve("/zip/life-nomod.com", (char *const[]){0},
+                         (char *const[]){0}));
+    return;
+  }
+  SPAWN(fork);
+  execve("/zip/life-nomod.com", (char *const[]){0}, (char *const[]){0});
+  notpossible;
+  EXITS(42);
 }

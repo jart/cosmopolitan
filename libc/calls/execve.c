@@ -32,6 +32,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
  * Replaces current process with program.
@@ -51,6 +52,7 @@
  * @vforksafe
  */
 int execve(const char *prog, char *const argv[], char *const envp[]) {
+  struct ZiposUri uri;
   int rc;
   size_t i;
   if (!prog || !argv || !envp ||
@@ -61,16 +63,26 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
   } else {
     STRACE("execve(%#s, %s, %s) → ...", prog, DescribeStringList(argv),
            DescribeStringList(envp));
-    if (!IsWindows()) {
-      rc = 0;
-      if (IsLinux() && __execpromises && _weaken(sys_pledge_linux)) {
-        rc = _weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
-      }
-      if (!rc) {
+    rc = 0;
+    if (IsLinux() && __execpromises && _weaken(sys_pledge_linux)) {
+      rc = _weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
+    }
+    if (!rc) {
+      if (_weaken(__zipos_parseuri) &&
+          (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
+        rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC, 0);
+        if (rc != -1) {
+          const int zipFD = rc;
+          strace_enabled(-1);
+          rc = fexecve(zipFD, argv, envp);
+          close(zipFD);
+          strace_enabled(+1);
+        }
+      } else if (!IsWindows()) {
         rc = sys_execve(prog, argv, envp);
+      } else {
+        rc = sys_execve_nt(prog, argv, envp);
       }
-    } else {
-      rc = sys_execve_nt(prog, argv, envp);
     }
   }
   STRACE("execve(%#s) failed %d% m", prog, rc);
