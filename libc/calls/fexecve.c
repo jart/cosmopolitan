@@ -22,6 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/execve-sysv.internal.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -105,13 +106,18 @@ static bool ape_to_elf(void *ape, const size_t apesize) {
   return false;
 }
 
-static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
+/**
+ * Creates a memfd and copies fd to it.
+ *
+ * This does an inplace conversion of APE to ELF when detected!!!!
+ */
+static int fd_to_mem_fd(const int infd, char *path) {
   if (!IsLinux() && !IsFreebsd() || !_weaken(mmap) || !_weaken(munmap)) {
     return enosys();
   }
 
   struct stat st;
-  if (sys_fstat(infd, &st) == -1) {
+  if (fstat(infd, &st) == -1) {
     return -1;
   }
   int fd;
@@ -133,7 +139,7 @@ static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
       ((space = _weaken(mmap)(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED,
                               fd, 0)) != MAP_FAILED)) {
     ssize_t readRc;
-    readRc = sys_pread(infd, space, st.st_size, 0, 0);
+    readRc = pread(infd, space, st.st_size, 0);
     bool success = readRc != -1;
     if (success && (st.st_size > 8) && IsAPEMagic(space)) {
       success = ape_to_elf(space, st.st_size);
@@ -156,7 +162,7 @@ static int ape_fd_to_mem_elf_fd(const int infd, char *path) {
  * Executes binary executable at file descriptor.
  *
  * This is only supported on Linux and FreeBSD. APE binaries are
- * supported.
+ * supported. Zipos is supported.
  *
  * @param fd is opened executable and current file position is ignored
  * @return doesn't return on success, otherwise -1 w/ errno
@@ -172,14 +178,35 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
   } else {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
-    rc = fexecve_impl(fd, argv, envp);
-    if ((errno == ENOEXEC) && (IsLinux() || IsFreebsd())) {
+    do {
+      int fexecvefd = fd;
+      if (__isfdkind(fd, kFdZip)) {
+        if(!IsLinux() && !IsFreebsd()) {
+          rc = enosys();
+          break;
+        }
+        BEGIN_CANCELLATION_POINT;
+        BLOCK_SIGNALS;
+        strace_enabled(-1);
+        rc = fd_to_mem_fd(fd, NULL);
+        strace_enabled(+1);
+        ALLOW_SIGNALS;
+        END_CANCELLATION_POINT;
+        if(rc == -1) {
+          break;
+        }
+        fexecvefd = rc;
+      }
+      rc = fexecve_impl(fexecvefd, argv, envp);
+      if ((errno != ENOEXEC) || (!IsLinux() && !IsFreebsd())) {
+        break;
+      }
       int newfd = -1;
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
-      if (IsAPEFd(fd)) {
-        newfd = ape_fd_to_mem_elf_fd(fd, NULL);
+      if (IsAPEFd(fexecvefd)) {
+        newfd = fd_to_mem_fd(fexecvefd, NULL);
       }
       strace_enabled(+1);
       ALLOW_SIGNALS;
@@ -187,7 +214,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       if (newfd != -1) {
         rc = fexecve_impl(newfd, argv, envp);
       }
-    }
+    } while (0);
   }
   STRACE("fexecve(%d) failed %d% m", fd, rc);
   return rc;
