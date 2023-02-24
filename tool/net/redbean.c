@@ -498,6 +498,7 @@ static const char *histpath;
 static struct pollfd *polls;
 static size_t payloadlength;
 static int64_t cacheseconds;
+static const char *cachedirective;
 static const char *monitortty;
 static const char *serverheader;
 static struct Strings stagedirs;
@@ -1037,8 +1038,9 @@ static void ProgramTimeout(long ms) {
   }
 }
 
-static void ProgramCache(long x) {
+static void ProgramCache(long x, const char *s) {
   cacheseconds = x;
+  if (s) cachedirective = s;
 }
 
 static void SetDefaults(void) {
@@ -1046,7 +1048,7 @@ static void SetDefaults(void) {
                              VERSION >> 010, VERSION >> 000)));
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
-  ProgramCache(-1);
+  ProgramCache(-1, "must-revalidate");
   ProgramTimeout(60 * 1000);
   ProgramSslTicketLifetime(24 * 60 * 60);
   sslfetchverify = true;
@@ -2275,14 +2277,15 @@ static char *AppendExpires(char *p, int64_t t) {
   return AppendCrlf(p);
 }
 
-static char *AppendCache(char *p, int64_t seconds) {
+static char *AppendCache(char *p, int64_t seconds, char *directive) {
   if (seconds < 0) return p;
   p = stpcpy(p, "Cache-Control: max-age=");
   p = FormatUint64(p, seconds);
   if (!seconds) {
     p = stpcpy(p, ", no-store");
-  } else {
-    p = stpcpy(p, ", must-revalidate");
+  } else if (directive && *directive) {
+    p = stpcpy(p, ", ");
+    p = stpcpy(p, directive);
   }
   p = AppendCrlf(p);
   return AppendExpires(p, shared->nowish.tv_sec + seconds);
@@ -4442,7 +4445,8 @@ static int LuaProgramPort(lua_State *L) {
 
 static int LuaProgramCache(lua_State *L) {
   OnlyCallFromMainProcess(L, "ProgramCache");
-  return LuaProgramInt(L, ProgramCache);
+  ProgramCache(luaL_checkinteger(L, 1), luaL_optstring(L, 2, NULL));
+  return 0;
 }
 
 static int LuaProgramTimeout(lua_State *L) {
@@ -6159,7 +6163,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
   p = AppendHeader(p, "Last-Modified", a->lastmodifiedstr);
   if (cpm.msg.version >= 11) {
     if (!cpm.gotcachecontrol) {
-      p = AppendCache(p, cacheseconds);
+      p = AppendCache(p, cacheseconds, cachedirective);
     }
     if (!IsCompressed(a)) {
       p = stpcpy(p, "Accept-Ranges: bytes\r\n");
@@ -7279,7 +7283,11 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('G', ProgramGid(atoi(optarg)));
       CASE('p', ProgramPort(ParseInt(optarg)));
       CASE('R', ProgramRedirectArg(0, optarg));
-      CASE('c', ProgramCache(ParseInt(optarg)));
+      case 'c': ; // accept "num" or "num,directive"
+        char *p;
+        long ret = strtol(optarg, &p, 0);
+        ProgramCache(ret, *p ? p+1 : NULL);  // skip separator, if any
+        break;
       CASE('r', ProgramRedirectArg(307, optarg));
       CASE('t', ProgramTimeout(ParseInt(optarg)));
       CASE('h', PrintUsage(1, EXIT_SUCCESS));
