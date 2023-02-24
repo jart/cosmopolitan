@@ -33,6 +33,8 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/o.h"
@@ -162,7 +164,9 @@ static int fd_to_mem_fd(const int infd, char *path) {
  * Executes binary executable at file descriptor.
  *
  * This is only supported on Linux and FreeBSD. APE binaries are
- * supported. Zipos is supported.
+ * supported. Zipos is supported. Zipos fds or FD_CLOEXEC APE fds or
+ * fds that fail fexecve with ENOEXEC are copied to a new memfd (with
+ * in-memory APE to ELF conversion) and fexecve is (re)attempted.
  *
  * @param fd is opened executable and current file position is ignored
  * @return doesn't return on success, otherwise -1 w/ errno
@@ -170,7 +174,7 @@ static int fd_to_mem_fd(const int infd, char *path) {
  * @raise ENOSYS on Windows, XNU, OpenBSD, NetBSD, and Metal
  */
 int fexecve(int fd, char *const argv[], char *const envp[]) {
-  int rc;
+  int rc = 0;
   if (!argv || !envp ||
       (IsAsan() &&
        (!__asan_is_valid_strlist(argv) || !__asan_is_valid_strlist(envp)))) {
@@ -179,41 +183,57 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
     do {
-      int fexecvefd = fd;
-      if (__isfdkind(fd, kFdZip)) {
-        if(!IsLinux() && !IsFreebsd()) {
+      if(!IsLinux() && !IsFreebsd()) {
           rc = enosys();
           break;
-        }
+      }
+      if(!__isfdkind(fd, kFdZip)) {
+        bool memfdReq;
         BEGIN_CANCELLATION_POINT;
         BLOCK_SIGNALS;
         strace_enabled(-1);
-        rc = fd_to_mem_fd(fd, NULL);
+        memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) && IsAPEFd(fd);
         strace_enabled(+1);
         ALLOW_SIGNALS;
         END_CANCELLATION_POINT;
-        if(rc == -1) {
+        if (rc == -1) {
           break;
+        } else if (!memfdReq) {
+          rc = fexecve_impl(fd, argv, envp);
+          if (errno != ENOEXEC) {
+            break;
+          }
         }
-        fexecvefd = rc;
       }
-      rc = fexecve_impl(fexecvefd, argv, envp);
-      if ((errno != ENOEXEC) || (!IsLinux() && !IsFreebsd())) {
-        break;
-      }
-      int newfd = -1;
+      int newfd;
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
-      if (IsAPEFd(fexecvefd)) {
-        newfd = fd_to_mem_fd(fexecvefd, NULL);
-      }
+      newfd = fd_to_mem_fd(fd, NULL);
       strace_enabled(+1);
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
-      if (newfd != -1) {
-        rc = fexecve_impl(newfd, argv, envp);
+      if (newfd == -1) {
+        if (rc == -1) {
+          errno = ENOEXEC;
+        }
+        rc = -1;
+        break;
       }
+      fexecve_impl(newfd, argv, envp);
+      if (rc == -1) {
+        errno = ENOEXEC;
+      }
+      rc = -1;
+      const int savedErr = errno;
+      BEGIN_CANCELLATION_POINT;
+      BLOCK_SIGNALS;
+      strace_enabled(-1);
+      close(newfd);
+      strace_enabled(+1);
+      ALLOW_SIGNALS;
+      END_CANCELLATION_POINT;
+      errno = savedErr;
     } while (0);
   }
   STRACE("fexecve(%d) failed %d% m", fd, rc);
