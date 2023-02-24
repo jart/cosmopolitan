@@ -141,8 +141,8 @@
      │                            Page-level Cache Disable - PCD┐││││
      │                          Set if has been read - Accessed┐│││││
      │                         Set if has been written - Dirty┐││││││
-     │                   IsPage (if PDPTE/PDE) or PAT (if PT)┐│││││││
-     │        (If this maps 2MB/1GB page and CR4.PGE) Global┐││││││││
+     │           IsPage 2MB/1GB (if PDPTE/PDE) or PAT (if PT)┐│││││││
+     │                (If this maps page and CR4.PGE) Global┐││││││││
      │      (If IsPage 2MB/1GB, see Intel V3A § 11.12) PAT  │││││││││
      │                                                  │   │││││││││
      │            ┌─────────────────────────────────────┤   │││││││││
@@ -159,9 +159,8 @@
 #define PAGE_V    /*                                */ 0b000000000001
 #define PAGE_RW   /*                                */ 0b000000000010
 #define PAGE_U    /*                                */ 0b000000000100
-#define PAGE_4KB  /*                                */ 0b000010000000
-#define PAGE_2MB  /*                                */ 0b000110000000
-#define PAGE_1GB  /*                                */ 0b000110000000
+#define PAGE_PS   /*                                */ 0b000010000000
+#define PAGE_G    /*                                */ 0b000100000000
 #define PAGE_IGN1 /*                                */ 0b111000000000
 #define PAGE_RSRV /* blinkenlights/libc reservation */ 0b001000000000
 #define PAGE_GROD /* blinkenlights MAP_GROWSDOWN    */ 0b010000000000
