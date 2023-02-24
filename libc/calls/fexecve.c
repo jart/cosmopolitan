@@ -183,16 +183,17 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
     do {
-      if(!IsLinux() && !IsFreebsd()) {
-          rc = enosys();
-          break;
+      if (!IsLinux() && !IsFreebsd()) {
+        rc = enosys();
+        break;
       }
-      if(!__isfdkind(fd, kFdZip)) {
+      if (!__isfdkind(fd, kFdZip)) {
         bool memfdReq;
         BEGIN_CANCELLATION_POINT;
         BLOCK_SIGNALS;
         strace_enabled(-1);
-        memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) && IsAPEFd(fd);
+        memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) &&
+                   IsAPEFd(fd);
         strace_enabled(+1);
         ALLOW_SIGNALS;
         END_CANCELLATION_POINT;
