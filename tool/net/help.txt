@@ -1419,15 +1419,18 @@ FUNCTIONS
           listing page. The brand string needs to be a UTF-8 value that's
           encodable as ISO-8859-1. If the brand is changed to something
           other than redbean, then the promotional links will be removed
-          from the listing page too. This function should only be called
-          from /.init.lua.
+          from the listing page too.
+          This function should only be called from /.init.lua.
 
-  ProgramCache(seconds:int)
+  ProgramCache(seconds:int[, directive:string])
           Configures Cache-Control and Expires header generation for static
           asset serving. A negative value will disable the headers. Zero
           means don't cache. Greater than zero asks public proxies and
-          browsers to cache for a given number of seconds. This should only
-          be called from /.init.lua.
+          browsers to cache for a given number of seconds. The directive
+          value is added to the Cache-Control header when specified (with
+          "must-revalidate" provided by default) and can be set to an empty
+          string to remove the default value.
+          This function should only be called from /.init.lua.
 
   ProgramCertificate(pem:str)
           Same as the -C flag if called from .init.lua, e.g.
@@ -1458,7 +1461,7 @@ FUNCTIONS
   ProgramTimeout(milliseconds:int|seconds:int)
           Default timeout is 60000ms. Minimal value of timeout is 10(ms).
           Negative values (<0) sets the keepalive in seconds.
-          This should only be called from /.init.lua.
+          This function should only be called from /.init.lua.
 
   ProgramPort(uint16)
           Hard-codes the port number on which to listen, which can be any
@@ -1496,8 +1499,8 @@ FUNCTIONS
           Configures fallback routing for paths which would otherwise return
           404 Not Found. If code is 0 then the path is rewritten internally
           as an accelerated redirect. If code is 301, 302, 307, or 308 then
-          a redirect response will be sent to the client. This should only
-          be called from /.init.lua.
+          a redirect response will be sent to the client.
+          This function should only be called from /.init.lua.
 
   ProgramSslTicketLifetime(seconds:int)
           Defaults to 86400 (24 hours). This may be set to ≤0 to disable
