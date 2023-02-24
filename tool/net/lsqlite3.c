@@ -194,29 +194,19 @@ static sdb_vm *newvm(lua_State *L, sdb *db) {
     /* add an entry on the database table: svm -> db to keep db live while svm is live */
     lua_pushlightuserdata(L, db);     /* db sql svm_ud db_lud -- */
     lua_rawget(L, LUA_REGISTRYINDEX); /* db sql svm_ud reg[db_lud] -- */
-    lua_pushlightuserdata(L, svm);    /* db sql svm_ud reg[db_lud] svm_lud -- */
-    lua_pushvalue(L, -5);             /* db sql svm_ud reg[db_lud] svm_lud db -- */
-    lua_rawset(L, -3);                /* (reg[db_lud])[svm_lud] = db ; set the db for this vm */
+    lua_pushvalue(L, -2);             /* db sql svm_ud reg[db_lud] svm_ud -- */
+    lua_pushvalue(L, -5);             /* db sql svm_ud reg[db_lud] svm_ud db -- */
+    lua_rawset(L, -3);                /* (reg[db_lud])[svm_ud] = db ; set the db for this vm */
     lua_pop(L, 1);                    /* db sql svm_ud -- */
 
     return svm;
 }
 
 static int cleanupvm(lua_State *L, sdb_vm *svm) {
-
-    /* remove entry in database table - no harm if not present in the table */
-    lua_pushlightuserdata(L, svm->db);
-    lua_rawget(L, LUA_REGISTRYINDEX);
-    lua_pushlightuserdata(L, svm);
-    lua_pushnil(L);
-    lua_rawset(L, -3);
-    lua_pop(L, 1);
-
     svm->columns = 0;
     svm->has_values = 0;
 
     if (!svm->vm) return 0;
-
     lua_pushinteger(L, sqlite3_finalize(svm->vm));
     svm->vm = NULL;
     return 1;
@@ -245,7 +235,7 @@ static int dbvm_isopen(lua_State *L) {
 }
 
 static int dbvm_tostring(lua_State *L) {
-    char buff[39];
+    char buff[40];
     sdb_vm *svm = lsqlite_getvm(L, 1);
     if (svm->vm == NULL)
         strcpy(buff, "closed");
@@ -256,9 +246,7 @@ static int dbvm_tostring(lua_State *L) {
 }
 
 static int dbvm_gc(lua_State *L) {
-    sdb_vm *svm = lsqlite_getvm(L, 1);
-    if (svm->vm != NULL)  /* ignore closed vms */
-        cleanupvm(L, svm);
+    cleanupvm(L, lsqlite_getvm(L, 1));
     return 0;
 }
 
@@ -621,12 +609,31 @@ static sdb *newdb (lua_State *L) {
     luaL_getmetatable(L, sqlite_meta);
     lua_setmetatable(L, -2);        /* set metatable */
 
-    /* to keep track of 'open' virtual machines */
+    /* to keep track of 'open' virtual machines; make keys week */
     lua_pushlightuserdata(L, db);
-    lua_newtable(L);
+    lua_newtable(L);                    // t
+    lua_newtable(L);                    // t mt
+    lua_pushstring(L, "k");             // t mt v
+    lua_setfield(L, -2, "__mode");      // t mt
+    lua_setmetatable(L, -2);            // t
     lua_rawset(L, LUA_REGISTRYINDEX);
 
     return db;
+}
+
+/* cleanup all vms or just temporary ones */
+static void closevms(lua_State *L, sdb *db, int temp) {
+    /* free associated virtual machines */
+    lua_pushlightuserdata(L, db);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+
+    /* close all used handles */
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        sdb_vm *svm = lua_touserdata(L, -2); /* key: vm; val: sql text */
+        if ((!temp || svm->temp)) lua_pop(L, cleanupvm(L, svm));
+        lua_pop(L, 1); /* pop value; leave key in the stack */
+    }
 }
 
 static int cleanupdb(lua_State *L, sdb *db) {
@@ -635,22 +642,9 @@ static int cleanupdb(lua_State *L, sdb *db) {
     int top;
     int result;
 
-    /* free associated virtual machines */
-    lua_pushlightuserdata(L, db);
-    lua_rawget(L, LUA_REGISTRYINDEX);
+    if (!db->db) return SQLITE_MISUSE;
 
-    /* close all used handles */
-    top = lua_gettop(L);
-    lua_pushnil(L);
-    while (lua_next(L, -2)) {
-        sdb_vm *svm = lua_touserdata(L, -2); /* key: vm; val: sql text */
-        cleanupvm(L, svm);
-
-        lua_settop(L, top);
-        lua_pushnil(L);
-    }
-
-    lua_pop(L, 1); /* pop vm table */
+    closevms(L, db, 0);
 
     /* remove entry in lua registry table */
     lua_pushlightuserdata(L, db);
@@ -669,8 +663,9 @@ static int cleanupdb(lua_State *L, sdb *db) {
     luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_cb);
     luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_udata);
 
-    /* close database */
-    result = sqlite3_close(db->db);
+    /* close database; _v2 is intended for use with garbage collected languages
+       and where the order in which destructors are called is arbitrary. */
+    result = sqlite3_close_v2(db->db);
     db->db = NULL;
 
     /* free associated memory with created functions */
@@ -732,7 +727,7 @@ static lcontext *lsqlite_checkcontext(lua_State *L, int index) {
 }
 
 static int lcontext_tostring(lua_State *L) {
-    char buff[39];
+    char buff[41];
     lcontext *ctx = lsqlite_getcontext(L, 1);
     if (ctx->ctx == NULL)
         strcpy(buff, "closed");
@@ -1723,7 +1718,7 @@ static int db_urows(lua_State *L) {
 }
 
 static int db_tostring(lua_State *L) {
-    char buff[32];
+    char buff[33];
     sdb *db = lsqlite_getdb(L, 1);
     if (db->db == NULL)
         strcpy(buff, "closed");
@@ -1741,27 +1736,7 @@ static int db_close(lua_State *L) {
 
 static int db_close_vm(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
-    /* cleanup temporary only tables? */
-    int temp = lua_toboolean(L, 2);
-
-    /* free associated virtual machines */
-    lua_pushlightuserdata(L, db);
-    lua_rawget(L, LUA_REGISTRYINDEX);
-
-    /* close all used handles */
-    lua_pushnil(L);
-    while (lua_next(L, -2)) {
-        sdb_vm *svm = lua_touserdata(L, -2); /* key: vm; val: sql text */
-
-        if ((!temp || svm->temp) && svm->vm)
-        {
-            sqlite3_finalize(svm->vm);
-            svm->vm = NULL;
-        }
-
-        /* leave key in the stack */
-        lua_pop(L, 1);
-    }
+    closevms(L, db, lua_toboolean(L, 2));
     return 0;
 }
 
@@ -1858,7 +1833,7 @@ static int liter_gc(lua_State *L) {
 }
 
 static int liter_tostring(lua_State *L) {
-    char buff[32];
+    char buff[33];
     liter *litr = lsqlite_getiter(L, 1);
     if (litr->itr == NULL)
         strcpy(buff, "closed");
@@ -1997,7 +1972,7 @@ static int lrebaser_gc(lua_State *L) {
 }
 
 static int lrebaser_tostring(lua_State *L) {
-    char buff[30];
+    char buff[32];
     lrebaser *lreb = lsqlite_getrebaser(L, 1);
     if (lreb->reb == NULL)
         strcpy(buff, "closed");
@@ -2253,12 +2228,8 @@ static int lsession_delete(lua_State *L) {
     return 0;
 }
 
-static int lsession_gc(lua_State *L) {
-    return lsession_delete(L);
-}
-
 static int lsession_tostring(lua_State *L) {
-    char buff[30];
+    char buff[32];
     lsession *lses = lsqlite_getsession(L, 1);
     if (lses->ses == NULL)
         strcpy(buff, "closed");
@@ -2416,6 +2387,7 @@ static int lsqlite_version(lua_State *L) {
 }
 
 static int lsqlite_do_open(lua_State *L, const char *filename, int flags) {
+    sqlite3_initialize(); /* initialize the engine if hasn't been done yet */
     sdb *db = newdb(L); /* create and leave in stack */
 
     if (sqlite3_open_v2(filename, &db->db, flags, 0) == SQLITE_OK) {
@@ -2469,7 +2441,18 @@ static void log_callback(void* user, int rc, const char *msg) {
 }
 
 static int lsqlite_config(lua_State *L) {
-    switch (luaL_checkint(L, 1)) {
+    int rc = SQLITE_MISUSE;
+    int option = luaL_checkint(L, 1);
+
+    switch (option) {
+        case SQLITE_CONFIG_SINGLETHREAD:
+        case SQLITE_CONFIG_MULTITHREAD:
+        case SQLITE_CONFIG_SERIALIZED:
+            if ((rc = sqlite3_config(option)) == SQLITE_OK) {
+                lua_pushinteger(L, rc);
+                return 1;
+            }
+            break;
         case SQLITE_CONFIG_LOG:
             /* make sure we have an userdata field (even if nil) */
             lua_settop(L, 3);
@@ -2494,7 +2477,7 @@ static int lsqlite_config(lua_State *L) {
             }
             return 3;  // return OK and previous callback and userdata
     }
-    return pusherr(L, SQLITE_MISUSE);
+    return pusherr(L, rc);
 }
 
 static int lsqlite_newindex(lua_State *L) {
@@ -2585,6 +2568,9 @@ static const struct {
     SC(OPEN_PRIVATECACHE)
 
     /* config flags */
+    SC(CONFIG_SINGLETHREAD)
+    SC(CONFIG_MULTITHREAD)
+    SC(CONFIG_SERIALIZED)
     SC(CONFIG_LOG)
 
     /* checkpoint flags */
@@ -2746,7 +2732,6 @@ static const luaL_Reg seslib[] = {
     {"delete",          lsession_delete         },
 
     {"__tostring",      lsession_tostring       },
-    {"__gc",            lsession_gc             },
     {NULL, NULL}
 };
 
@@ -2803,7 +2788,6 @@ static void create_meta(lua_State *L, const char *name, const luaL_Reg *lib) {
 LUALIB_API int luaopen_lsqlite3(lua_State *L) {
     /* call config before calling initialize */
     sqlite3_config(SQLITE_CONFIG_LOG, log_callback, L);
-    sqlite3_initialize();
 
     create_meta(L, sqlite_meta, dblib);
     create_meta(L, sqlite_vm_meta, vmlib);
