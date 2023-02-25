@@ -190,6 +190,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
   } else {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
+    int savedErr = 0;
     do {
       if (!IsLinux() && !IsFreebsd()) {
         rc = enosys();
@@ -208,10 +209,11 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         if (rc == -1) {
           break;
         } else if (!memfdReq) {
-          rc = fexecve_impl(fd, argv, envp);
+          fexecve_impl(fd, argv, envp);
           if (errno != ENOEXEC) {
             break;
           }
+          savedErr = ENOEXEC;
         }
       }
       int newfd;
@@ -224,27 +226,23 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
       if (newfd == -1) {
-        if (rc == -1) {
-          errno = ENOEXEC;
-        }
-        rc = -1;
         break;
       }
-      size_t numargs;
-      for (numargs = 0; argv[numargs];) ++numargs;
-      const size_t desargs = min(128, max(numargs + 1, 2));
-      char **args = alloca(desargs * sizeof(char *));
-      args[0] = path;
-      if(numargs > 0) {
-        argv++;
+      size_t numenvs;
+      for (numenvs = 0; envp[numenvs];) ++numenvs;
+      const size_t desenvs = min(500, max(numenvs + 1, 2));
+      char *envs[500];
+      if (envs) {
+        memcpy(envs, envp, numenvs * sizeof(char *));
+        envs[numenvs] = path;
+        envs[numenvs+1] = NULL;
+        fexecve_impl(newfd, argv, envs);
+        if(!savedErr) {
+          savedErr = errno;
+        }
+      } else if(!savedErr) {
+        savedErr = ENOMEM;
       }
-      memcpy(args + 1, argv, (desargs - 1) * sizeof(char *));
-      fexecve_impl(newfd, args, envp);
-      if (rc == -1) {
-        errno = ENOEXEC;
-      }
-      rc = -1;
-      const int savedErr = errno;
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
@@ -252,8 +250,11 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       strace_enabled(+1);
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
-      errno = savedErr;
     } while (0);
+    if(savedErr) {
+      errno = savedErr;
+    }
+    rc = -1;
   }
   STRACE("fexecve(%d) failed %d% m", fd, rc);
   return rc;

@@ -68,10 +68,9 @@ struct Zipos *__zipos_get(void) {
   const char *progpath;
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
-  static const char fdProgName[] = "COSMOPOLITAN_INIT_ZIPOS=";
-  if(__argc && (strncmp(fdProgName, __argv[0], sizeof(fdProgName)-1) == 0)) {
-    fd = atoi(__argv[0]+sizeof(fdProgName)-1);
-    progpath = __argv[0];
+  progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
+  if(progpath) {
+    fd = atoi(progpath);
   }
   if (!once && ((fd != -1) || PLEDGED(RPATH))) {
     __zipos_lock();
