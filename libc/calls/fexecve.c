@@ -30,6 +30,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
@@ -125,9 +126,6 @@ static int fd_to_mem_fd(const int infd, char *path) {
   int fd;
   if (IsLinux()) {
     fd = sys_memfd_create(__func__, MFD_CLOEXEC);
-    if ((fd != -1) && path) {
-      FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
-    }
   } else if (IsFreebsd()) {
     fd = sys_shm_open(SHM_ANON, O_CREAT | O_RDWR, 0);
   } else {
@@ -144,10 +142,20 @@ static int fd_to_mem_fd(const int infd, char *path) {
     readRc = pread(infd, space, st.st_size, 0);
     bool success = readRc != -1;
     if (success && (st.st_size > 8) && IsAPEMagic(space)) {
-      success = ape_to_elf(space, st.st_size);
+      int flags = fcntl(fd, F_GETFD);
+      if(success = (flags != -1) && (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) && ape_to_elf(space, st.st_size)) {
+        const int newfd = fcntl(fd, F_DUPFD, 9001);
+        if(newfd != -1) {
+          close(fd);
+          fd = newfd;
+        }
+      }
     }
     const int e = errno;
     if ((_weaken(munmap)(space, st.st_size) != -1) && success) {
+      if(path) {
+        FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
+      }
       _unassert(readRc == st.st_size);
       return fd;
     } else if (!success) {
@@ -207,10 +215,11 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         }
       }
       int newfd;
+      char *path = alloca(PATH_MAX);
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
-      newfd = fd_to_mem_fd(fd, NULL);
+      newfd = fd_to_mem_fd(fd, path);
       strace_enabled(+1);
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
@@ -221,7 +230,16 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         rc = -1;
         break;
       }
-      fexecve_impl(newfd, argv, envp);
+      size_t numargs;
+      for (numargs = 0; argv[numargs];) ++numargs;
+      const size_t desargs = min(128, max(numargs + 1, 2));
+      char **args = alloca(desargs * sizeof(char *));
+      args[0] = path;
+      if(numargs > 0) {
+        argv++;
+      }
+      memcpy(args + 1, argv, (desargs - 1) * sizeof(char *));
+      fexecve_impl(newfd, args, envp);
       if (rc == -1) {
         errno = ENOEXEC;
       }
