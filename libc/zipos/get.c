@@ -69,12 +69,12 @@ struct Zipos *__zipos_get(void) {
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
   progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
-  if(progpath) {
+  if (progpath) {
     fd = atoi(progpath);
   }
   if (!once && ((fd != -1) || PLEDGED(RPATH))) {
     __zipos_lock();
-    if(fd == -1) {
+    if (fd == -1) {
       progpath = GetProgramExecutableName();
       fd = open(progpath, O_RDONLY);
     }

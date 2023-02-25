@@ -143,9 +143,11 @@ static int fd_to_mem_fd(const int infd, char *path) {
     bool success = readRc != -1;
     if (success && (st.st_size > 8) && IsAPEMagic(space)) {
       int flags = fcntl(fd, F_GETFD);
-      if(success = (flags != -1) && (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) && ape_to_elf(space, st.st_size)) {
+      if (success = (flags != -1) &&
+                    (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&
+                    ape_to_elf(space, st.st_size)) {
         const int newfd = fcntl(fd, F_DUPFD, 9001);
-        if(newfd != -1) {
+        if (newfd != -1) {
           close(fd);
           fd = newfd;
         }
@@ -153,7 +155,7 @@ static int fd_to_mem_fd(const int infd, char *path) {
     }
     const int e = errno;
     if ((_weaken(munmap)(space, st.st_size) != -1) && success) {
-      if(path) {
+      if (path) {
         FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
       }
       _unassert(readRc == st.st_size);
@@ -232,16 +234,12 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       for (numenvs = 0; envp[numenvs];) ++numenvs;
       const size_t desenvs = min(500, max(numenvs + 1, 2));
       char *envs[500];
-      if (envs) {
-        memcpy(envs, envp, numenvs * sizeof(char *));
-        envs[numenvs] = path;
-        envs[numenvs+1] = NULL;
-        fexecve_impl(newfd, argv, envs);
-        if(!savedErr) {
-          savedErr = errno;
-        }
-      } else if(!savedErr) {
-        savedErr = ENOMEM;
+      memcpy(envs, envp, numenvs * sizeof(char *));
+      envs[numenvs] = path;
+      envs[numenvs + 1] = NULL;
+      fexecve_impl(newfd, argv, envs);
+      if (!savedErr) {
+        savedErr = errno;
       }
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
@@ -251,7 +249,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
     } while (0);
-    if(savedErr) {
+    if (savedErr) {
       errno = savedErr;
     }
     rc = -1;

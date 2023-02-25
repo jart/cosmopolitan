@@ -24,11 +24,14 @@ STATIC_YOINK("zip_uri_support");
 
 int main(int argc, char *argv[]) {
   int fd = open("/zip/life.elf", O_RDONLY);
-  if (fd != -1 ) {
+  if (fd != -1) {
     uint8_t buf[4] = {0};
     ssize_t readres = read(fd, buf, sizeof(buf));
     if (readres == sizeof(buf)) {
-      if(memcmp(buf, "\x7F""ELF", sizeof(buf)) == 0) {
+      if (memcmp(buf,
+                 "\x7F"
+                 "ELF",
+                 sizeof(buf)) == 0) {
         return 42;
       }
     }
