@@ -685,7 +685,7 @@ int _cocmd(int argc, char **argv, char **envp) {
   unsupported['('] = true;
   unsupported[')'] = true;
   unsupported['{'] = true;
-  unsupported['}'] = true;
+  unsupported['}'] = false; // Perl t/op/exec.t depends on unpaired } being passed from the shell to Perl
   if (!_weaken(glob)) {
     unsupported['*'] = true;
     unsupported['?'] = true;
