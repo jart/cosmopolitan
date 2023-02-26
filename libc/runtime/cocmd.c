@@ -573,6 +573,11 @@ static char *Tokenize(void) {
             Run();
             t = STATE_WHITESPACE;
           }
+        } else if (*p == '>') {
+          Append(*p);
+          if (p[1] == '&') {
+            Append(*++p);
+          }
         } else if (*p == '&') {
           if (q > r) {
             return Finish();
