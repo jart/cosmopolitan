@@ -71,7 +71,7 @@ TEST(system, testStderrRedirect_toStdout) {
   ASSERT_NE(-1, dup2(1, 2));
   bool success = false;
   if (WEXITSTATUS(system("echo aaa 2>&1")) == 0) {
-    success = read(pipefd[0], buf, sizeof(buf)-1) == (sizeof(buf)-1);
+    success = read(pipefd[0], buf, sizeof(buf) - 1) == (sizeof(buf) - 1);
   }
   ASSERT_NE(-1, dup2(stderrBack, 2));
   ASSERT_EQ(true, success);
@@ -84,7 +84,7 @@ TEST(system, testStderrRedirect_toStdout) {
   ASSERT_NE(-1, dup2(1, 2));
   success = false;
   if (WEXITSTATUS(system("./echo.com aaa 2>&1")) == 0) {
-    success = read(pipefd[0], buf, sizeof(buf)-1) == (sizeof(buf)-1);
+    success = read(pipefd[0], buf, sizeof(buf) - 1) == (sizeof(buf) - 1);
   }
   ASSERT_NE(-1, dup2(stderrBack, 2));
   ASSERT_EQ(true, success);
@@ -159,7 +159,7 @@ TEST(system, kill) {
 TEST(system, exitStatusPreservedAfterSemiColon) {
   ASSERT_EQ(1, WEXITSTATUS(system("false;")));
   ASSERT_EQ(1, WEXITSTATUS(system("false; ")));
-  if(!IsWindows() && !IsMetal()) {
+  if (!IsWindows() && !IsMetal()) {
     ASSERT_EQ(1, WEXITSTATUS(system("/bin/false;")));
     ASSERT_EQ(1, WEXITSTATUS(system("/bin/false;")));
   }
@@ -174,7 +174,7 @@ TEST(system, exitStatusPreservedAfterSemiColon) {
   char buf[3] = {0};
   ASSERT_EQ(2, read(pipefd[0], buf, 2));
   ASSERT_STREQ("1\n", buf);
-  if(!IsWindows() && !IsMetal()) {
+  if (!IsWindows() && !IsMetal()) {
     ASSERT_EQ(0, WEXITSTATUS(system("/bin/false; echo $?")));
     buf[0] = 0;
     buf[1] = 0;
@@ -196,7 +196,7 @@ TEST(system, allowsLoneCloseCurlyBrace) {
   char buf[6] = {0};
 
   ASSERT_EQ(0, WEXITSTATUS(system("echo \"aaa\"}")));
-  ASSERT_EQ(sizeof(buf)-1, read(pipefd[0], buf, sizeof(buf)-1));
+  ASSERT_EQ(sizeof(buf) - 1, read(pipefd[0], buf, sizeof(buf) - 1));
   ASSERT_STREQ("aaa}\n", buf);
   buf[0] = 0;
   buf[1] = 0;
@@ -205,7 +205,7 @@ TEST(system, allowsLoneCloseCurlyBrace) {
   buf[4] = 0;
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   ASSERT_EQ(0, WEXITSTATUS(system("./echo.com \"aaa\"}")));
-  ASSERT_EQ(sizeof(buf)-1, read(pipefd[0], buf, sizeof(buf)-1));
+  ASSERT_EQ(sizeof(buf) - 1, read(pipefd[0], buf, sizeof(buf) - 1));
   ASSERT_STREQ("aaa}\n", buf);
 
   ASSERT_NE(-1, dup2(stdoutBack, 1));
