@@ -74,7 +74,7 @@ TEST(execve, ziposELF) {
 }
 
 TEST(execve, ziposAPE) {
-  if (!IsLinux()) {
+  if (!IsLinux() && !IsFreebsd()) {
     EXPECT_EQ(-1, execve("/zip/life-nomod.com", (char *const[]){0},
                          (char *const[]){0}));
     return;

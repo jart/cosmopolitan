@@ -95,7 +95,6 @@ TEST(fexecve, APE) {
   SPAWN(fork);
   int fd = open("life-nomod.com", O_RDONLY);
   ASSERT_NE(-1, fd);
-  if (fd == -1 && errno == ENOSYS) _Exit(42);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
 }
@@ -106,7 +105,6 @@ TEST(fexecve, APE_cloexec) {
   SPAWN(fork);
   int fd = open("life-nomod.com", O_RDONLY | O_CLOEXEC);
   ASSERT_NE(-1, fd);
-  if (fd == -1 && errno == ENOSYS) _Exit(42);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
 }
@@ -114,8 +112,8 @@ TEST(fexecve, APE_cloexec) {
 TEST(fexecve, zipos) {
   if (!IsLinux() && !IsFreebsd()) return;
   int fd = open("/zip/life.elf", O_RDONLY);
+  ASSERT_NE(-1, fd);
   SPAWN(fork);
-  if (fd == -1 && errno == ENOSYS) _Exit(42);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
   close(fd);
@@ -124,9 +122,8 @@ TEST(fexecve, zipos) {
 TEST(fexecve, ziposAPE) {
   if (!IsLinux() && !IsFreebsd()) return;
   int fd = open("/zip/life-nomod.com", O_RDONLY);
-  SPAWN(fork);
   ASSERT_NE(-1, fd);
-  if (fd == -1 && errno == ENOSYS) _Exit(42);
+  SPAWN(fork);
   fexecve(fd, (char *const[]){0}, (char *const[]){0});
   EXITS(42);
   close(fd);
