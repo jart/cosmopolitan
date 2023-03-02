@@ -55,11 +55,12 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
         continue;
       }
     }
-    while (magic = READ32LE(p + i),
-           magic != kZipCdir64LocatorMagic && magic != kZipCdirHdrMagic &&
-           i + 0x10000 + 0x1000 >= n) --i;
-    if (magic == kZipCdir64LocatorMagic &&
-        i + kZipCdir64LocatorSize <= n &&
+    while (magic = READ32LE(p + i), magic != kZipCdir64LocatorMagic &&
+                                        magic != kZipCdirHdrMagic &&
+                                        i + 0x10000 + 0x1000 >= n && i > 0) {
+      --i;
+    }
+    if (magic == kZipCdir64LocatorMagic && i + kZipCdir64LocatorSize <= n &&
         IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + i))) {
       return p + ZIP_LOCATE64_OFFSET(p + i);
     } else if (magic == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
@@ -73,6 +74,6 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
       } while (j-- && i - j < 128);
       return p + i;
     }
-  } while (i-- + 0x10000 + 0x1000 >= n);
+  } while (i > 0 && i-- + 0x10000 + 0x1000 >= n);
   return 0;
 }

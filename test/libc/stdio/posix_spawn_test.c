@@ -51,7 +51,7 @@ __attribute__((__constructor__)) static void init(void) {
 TEST(posix_spawn, test) {
   int rc, ws, pid;
   char *prog = GetProgramExecutableName();
-  char *args[] = {program_invocation_name, NULL};
+  char *args[] = {prog, NULL};
   char *envs[] = {"THE_DOGE=42", NULL};
   EXPECT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
