@@ -62,6 +62,7 @@ static const struct ContentTypeExtension {
     {"md", "text/plain"},                      //
     {"mid", "audio/midi"},                     //
     {"midi", "audio/midi"},                    //
+    {"mjs", "text/javascript"},                //
     {"mp2", "audio/mpeg"},                     //
     {"mp3", "audio/mpeg"},                     //
     {"mp4", "video/mp4"},                      //
