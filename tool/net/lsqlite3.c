@@ -639,7 +639,7 @@ static void closevms(lua_State *L, sdb *db, int temp) {
 static int cleanupdb(lua_State *L, sdb *db) {
     sdb_func *func;
     sdb_func *func_next;
-    int top;
+    int top = lua_gettop(L);
     int result;
 
     if (!db->db) return SQLITE_MISUSE;
@@ -679,6 +679,8 @@ static int cleanupdb(lua_State *L, sdb *db) {
         func = func_next;
     }
     db->func = NULL;
+
+    lua_settop(L, top);
     return result;
 }
 
