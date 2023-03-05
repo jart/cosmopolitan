@@ -3,7 +3,6 @@
 if IsDaemon() then
     ProgramPort(443)
     ProgramUid(65534)
-    ProgramUid(65534)
     ProgramLogPath('/var/log/turfbean.log')
     ProgramPidPath('/var/log/turfbean.pid')
     ProgramTrustedIp(ParseIp(Slurp('/etc/justine-ip.txt')), 32);
