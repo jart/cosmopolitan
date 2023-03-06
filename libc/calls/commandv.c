@@ -16,16 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 
 static bool IsExePath(const char *s, size_t n) {
@@ -48,6 +50,9 @@ static bool AccessCommand(const char *name, char *path, size_t pathsz,
                           size_t pathlen) {
   size_t suffixlen;
   suffixlen = strlen(suffix);
+  if (IsWindows() && suffixlen == 0 && !IsExePath(name, namelen) &&
+      !IsComPath(name, namelen))
+    return false;
   if (pathlen + 1 + namelen + suffixlen + 1 > pathsz) return false;
   if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
     path[pathlen] = !IsWindows()                  ? '/'
@@ -57,7 +62,16 @@ static bool AccessCommand(const char *name, char *path, size_t pathsz,
   }
   memcpy(path + pathlen, name, namelen);
   memcpy(path + pathlen + namelen, suffix, suffixlen + 1);
-  if (!access(path, X_OK)) return true;
+  if (!access(path, X_OK)) {
+    struct stat st;
+    if (!stat(path, &st)) {
+      if (S_ISREG(st.st_mode)) {
+        return true;
+      } else {
+        errno = EACCES;
+      }
+    }
+  }
   if (errno == EACCES || *err != EACCES) *err = errno;
   return false;
 }
