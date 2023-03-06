@@ -1876,6 +1876,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
   gethostname(hbuf, sizeof(hbuf));
   for (i = 0; i < htxt->entries.i; ++i) {
     for (j = 0; j < ips.n; ++j) {
+      if (IsLoopbackIp(ips.p[j])) continue;
       if (ips.p[j] == READ32BE(htxt->entries.p[i].ip)) {
         isduplicate = false;
         s = htxt->strings.p + htxt->entries.p[i].name;
@@ -1898,6 +1899,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
     }
   }
   for (i = 0; i < ips.n; ++i) {
+    if (IsLoopbackIp(ips.p[i])) continue;
     san = realloc(san, ++nsan * sizeof(*san));
     san[nsan - 1].tag = MBEDTLS_X509_SAN_IP_ADDRESS;
     san[nsan - 1].ip4 = ips.p[i];
@@ -7283,17 +7285,17 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('G', ProgramGid(atoi(optarg)));
       CASE('p', ProgramPort(ParseInt(optarg)));
       CASE('R', ProgramRedirectArg(0, optarg));
-      case 'c': ; // accept "num" or "num,directive"
+      case 'c':;  // accept "num" or "num,directive"
         char *p;
         long ret = strtol(optarg, &p, 0);
-        ProgramCache(ret, *p ? p+1 : NULL);  // skip separator, if any
+        ProgramCache(ret, *p ? p + 1 : NULL);  // skip separator, if any
         break;
-      CASE('r', ProgramRedirectArg(307, optarg));
-      CASE('t', ProgramTimeout(ParseInt(optarg)));
-      CASE('h', PrintUsage(1, EXIT_SUCCESS));
-      CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
+        CASE('r', ProgramRedirectArg(307, optarg));
+        CASE('t', ProgramTimeout(ParseInt(optarg)));
+        CASE('h', PrintUsage(1, EXIT_SUCCESS));
+        CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #if !IsTiny()
-      CASE('W', monitortty = optarg);
+        CASE('W', monitortty = optarg);
       case 'f':
         funtrace = true;
         if (ftrace_install() == -1) {
