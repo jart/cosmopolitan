@@ -25,7 +25,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/nexgen32e/msr.h"
+#include "libc/nexgen32e/msr.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/sig.h"

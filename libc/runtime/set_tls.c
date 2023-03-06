@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/nexgen32e/msr.h"
+#include "libc/nexgen32e/msr.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/thread/tls.h"
 
