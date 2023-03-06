@@ -1406,12 +1406,12 @@ longmodeloader:
 	.endfn	longmodeloader
 
 //	Long Mode Hardware Check
-lcheck:	pushf				# check for i8086 / i8088 / i80186
-	pop	%ax
-	test	$0x80,%ah		# see intel manual volume 1 20.1.2
-	jnz	10f			# we now assume 32bit is supported
-	pushfl				# now check for i386 or early i486
-	pop	%eax			# test ability to change cpuid bit
+lcheck:	pushf				# checks for i8086 / i8088 / i80186
+	pop	%ax			# see intel manual volume 1 §20.1.2
+	test	$0x80,%ah
+	jnz	10f			# we now assume 32 bit is supported
+	pushfl				# now check for i386, or early i486
+	pop	%eax			# tests ability to change cpuid bit
 	mov	%eax,%ecx
 	mov	$1<<21,%ebx
 	xor	%ebx,%eax
@@ -1424,16 +1424,16 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	or	%ebx,%eax		# puts cpuid bit in the on position
 	push	%eax
 	popfl
-	mov	$0x80000000,%edi	# get amd ext cpuid thingy length
+	mov	$0x80000000,%edi	# get amd64 ext cpuid thingy length
 	mov	%edi,%eax
 	inc	%edi
-	cpuid				# clobbers eax, ebx, ecx, and edx
+	cpuid				# leaf 0x80000000, clob ax/bx/cx/dx
 	cmp	%edi,%eax
 	jl	10f
 	mov	%edi,%eax
-	cpuid
-	mov	$1<<29|1<<20,%edi	# need nexgen32e long mode support
-	and	%edi,%edx		# & nx support
+	cpuid				# leaf 0x80000001, clob ax/bx/cx/dx
+	mov	$1<<29|1<<20,%edi	# 29 = LM (long), 20 = NX (no exec)
+	and	%edi,%edx		# we need to both, or we won't work
 	cmp	%edi,%edx
 	jne	10f
 	xor	%ax,%ax
