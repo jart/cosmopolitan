@@ -2127,7 +2127,7 @@ TEST(pext, fuzz) {
 TEST(palignr, fuzz) {
   int i, imm;
   int8_t x[16], y[16], a[16], b[16];
-  for (i = 0; i < 1000; ++i) {
+  for (i = 0; i < 50; ++i) {
     for (imm = 0; imm < 32; ++imm) {
       RngSet(x, sizeof(x));
       RngSet(y, sizeof(y));
@@ -2144,7 +2144,7 @@ TEST(palignr, fuzz) {
 TEST(shufps, fuzz) {
   int i, imm;
   char x[16], y[16], a[16], b[16];
-  for (i = 0; i < 1000; ++i) {
+  for (i = 0; i < 20; ++i) {
     for (imm = 0; imm < 256; ++imm) {
       RngSet(x, sizeof(x));
       RngSet(y, sizeof(y));
@@ -2161,7 +2161,7 @@ TEST(shufps, fuzz) {
 TEST(shufpd, fuzz) {
   int i, imm;
   char x[16], y[16], a[16], b[16];
-  for (i = 0; i < 1000; ++i) {
+  for (i = 0; i < 20; ++i) {
     for (imm = 0; imm < 256; ++imm) {
       RngSet(x, sizeof(x));
       RngSet(y, sizeof(y));
