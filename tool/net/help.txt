@@ -1927,7 +1927,8 @@ FUNCTIONS
     Although you might want consider trusting redbean's open source
     freedom embracing solution to DDOS protection instead!
 
-  ProgramTokenBucket([replenish:num, cidr:int, reject:int, ignore:int, ban:int])
+  ProgramTokenBucket(
+      [replenish:num[, cidr:int[, reject:int[, ignore:int[, ban:int]]]]])
 
     Enables DDOS protection.
 
@@ -1947,7 +1948,7 @@ FUNCTIONS
 
     This model of network rate limiting generously lets people "burst" a
     tiny bit. For example someone might get a strong craving for content
-    and smash the reload button in Chrome 64 times in a fow seconds. But
+    and smash the reload button in Chrome 64 times in a few seconds. But
     since the client only get 1 new token per second, they'd better cool
     their heels for a few minutes after doing that. This amount of burst
     can be altered by choosing the `reject` / `ignore` / `ban` threshold
@@ -1986,7 +1987,7 @@ FUNCTIONS
     `reject` is the token count or treshold at which redbean should send
     429 Too Many Request warnings to the client. Permitted values can be
     anywhere between -1 and 126 inclusively. The default value is 30 and
-    -1 means disable to disable (assuming AcquireToken() will be used).
+    -1 means to disable (assuming AcquireToken() will be used).
 
     `ignore` is the token count or treshold, at which redbean should try
     simply ignoring clients and close the connection without logging any
@@ -2827,7 +2828,7 @@ UNIX MODULE
 
     `env` is a string list table. Values are coerced to strings. No
     ordering requirement is imposed. By convention, each string has its
-    key and value divided by an equals sign without spaces. If this
+    key and value separated by an equals sign without spaces. If this
     parameter is not specified, it'll default to the C/C++ `environ`
     variable which is inherited from the shell that launched redbean.
     It's the responsibility of the user to supply a sanitized environ
@@ -3676,6 +3677,8 @@ UNIX MODULE
       ├─→ fd:int
       └─→ nil, unix.Errno
 
+    Creates socket endpoint for process communication.
+
     `family` defaults to `AF_INET` and can be:
 
     - `AF_INET`: Creates Internet Protocol Version 4 (IPv4) socket.
@@ -3974,6 +3977,8 @@ UNIX MODULE
       ├─→ data:str
       └─→ nil, unix.Errno
 
+    Receives message from a socket.
+
     `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_WAITALL`
@@ -3985,6 +3990,8 @@ UNIX MODULE
       ├─→ data:str, ip:uint32, port:uint16
       ├─→ data:str, unixpath:str
       └─→ nil, unix.Errno
+
+    Receives message from a socket.
 
     `flags` may have any combination (using bitwise OR) of:
 
@@ -4061,6 +4068,8 @@ UNIX MODULE
   unix.sigaction(sig:int[, handler:func|int[, flags:int[, mask:unix.Sigset]]])
       ├─→ oldhandler:func|int, flags:int, mask:unix.Sigset
       └─→ nil, unix.Errno
+
+    Changes action taken upon receipt of a specific signal.
 
     `sig` can be one of:
 
