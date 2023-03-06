@@ -32,6 +32,7 @@
 #include "libc/intrin/paddusb.h"
 #include "libc/intrin/paddusw.h"
 #include "libc/intrin/paddw.h"
+#include "libc/intrin/palignr.h"
 #include "libc/intrin/pand.h"
 #include "libc/intrin/pandn.h"
 #include "libc/intrin/pavgb.h"
@@ -99,6 +100,8 @@
 #include "libc/intrin/punpcklqdq.h"
 #include "libc/intrin/punpcklwd.h"
 #include "libc/intrin/pxor.h"
+#include "libc/intrin/shufpd.h"
+#include "libc/intrin/shufps.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/gc.internal.h"
@@ -2118,5 +2121,60 @@ TEST(pext, fuzz) {
     x = _rand64();
     y = _rand64();
     ASSERT_EQ(pext(x, y), (pext)(x, y));
+  }
+}
+
+TEST(palignr, fuzz) {
+  int i, imm;
+  int8_t x[16], y[16], a[16], b[16];
+  for (i = 0; i < 1000; ++i) {
+    for (imm = 0; imm < 32; ++imm) {
+      RngSet(x, sizeof(x));
+      RngSet(y, sizeof(y));
+      memcpy(a, x, 16);
+      memcpy(b, y, 16);
+      palignr(a, a, b, imm);
+      (palignr)(x, x, y, imm);
+      ASSERT_EQ(0, memcmp(a, x, 16));
+      ASSERT_EQ(0, memcmp(b, y, 16));
+    }
+  }
+}
+
+TEST(shufps, fuzz) {
+  int i, imm;
+  char x[16], y[16], a[16], b[16];
+  for (i = 0; i < 1000; ++i) {
+    for (imm = 0; imm < 256; ++imm) {
+      RngSet(x, sizeof(x));
+      RngSet(y, sizeof(y));
+      memcpy(a, x, 16);
+      memcpy(b, y, 16);
+      shufps((void *)a, (void *)a, (void *)b, imm);
+      (shufps)((void *)x, (void *)x, (void *)y, imm);
+      ASSERT_EQ(0, memcmp(a, x, 16));
+      ASSERT_EQ(0, memcmp(b, y, 16));
+    }
+  }
+}
+
+TEST(shufpd, fuzz) {
+  int i, imm;
+  char x[16], y[16], a[16], b[16];
+  for (i = 0; i < 1000; ++i) {
+    for (imm = 0; imm < 256; ++imm) {
+      RngSet(x, sizeof(x));
+      RngSet(y, sizeof(y));
+      memcpy(a, x, 16);
+      memcpy(b, y, 16);
+      shufpd((void *)a, (void *)a, (void *)b, imm);
+      (shufpd)((void *)x, (void *)x, (void *)y, imm);
+      ASSERT_EQ(0, memcmp(a, x, 16),
+                "imm=%d\n\t"
+                "a=%.*hhs\n\t"
+                "x=%.*hhs",
+                imm, 16, a, 16, x);
+      ASSERT_EQ(0, memcmp(b, y, 16), "imm=%d", imm);
+    }
   }
 }
