@@ -26,12 +26,12 @@
 /**
  * Returns maximum number of open files.
  */
-long GetMaxFd(void) {
+long _GetMaxFd(void) {
   int rc;
   if (IsNetbsd()) {
     if ((rc = __sys_fcntl(0, F_MAXFD, 0)) != -1) {
       return rc;
     }
   }
-  return GetResourceLimit(RLIMIT_NOFILE);
+  return _GetResourceLimit(RLIMIT_NOFILE);
 }

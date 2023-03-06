@@ -121,6 +121,7 @@ include libc/tinymath/tinymath.mk		# │  You can issue raw system calls
 include third_party/compiler_rt/compiler_rt.mk	# │
 include libc/str/str.mk				# │
 include third_party/xed/xed.mk			# │
+include third_party/puff/puff.mk		# │
 include third_party/zlib/zlib.mk		# │
 include third_party/double-conversion/dc.mk	# │
 include libc/elf/elf.mk				# │
@@ -309,7 +310,6 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_LOG			\
 	LIBC_TIME			\
 	LIBC_ZIPOS			\
-	THIRD_PARTY_ZLIB		\
 	THIRD_PARTY_MUSL		\
 	LIBC_STDIO			\
 	THIRD_PARTY_GDTOA		\
@@ -335,6 +335,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_NT_ADVAPI32		\
 	LIBC_NT_SYNCHRONIZATION		\
 	LIBC_FMT			\
+	THIRD_PARTY_PUFF		\
 	THIRD_PARTY_COMPILER_RT		\
 	LIBC_TINYMATH			\
 	THIRD_PARTY_XED			\

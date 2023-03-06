@@ -53,7 +53,7 @@ static noasan void MunmapShadow(char *p, size_t n) {
       // to be >1mb since we can only unmap it if it's aligned, and
       // as such we poison the edges if there are any.
       __repstosb((void *)a, kAsanUnmapped, x - a);
-      Munmap((void *)x, y - x);
+      _Munmap((void *)x, y - x);
       __repstosb((void *)y, kAsanUnmapped, b - y);
     } else {
       // otherwise just poison and assume reuse
@@ -113,7 +113,7 @@ static noasan void MunmapImpl(char *p, size_t n) {
   }
 }
 
-noasan int Munmap(char *p, size_t n) {
+noasan int _Munmap(char *p, size_t n) {
   unsigned i;
   char poison;
   intptr_t a, b, x, y;
@@ -157,7 +157,7 @@ int munmap(void *p, size_t n) {
   int rc;
   size_t toto;
   __mmi_lock();
-  rc = Munmap(p, n);
+  rc = _Munmap(p, n);
 #if SYSDEBUG
   toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
 #endif

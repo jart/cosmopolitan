@@ -30,7 +30,7 @@
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
-#include "third_party/zlib/puff.h"
+#include "third_party/puff/puff.h"
 
 static pthread_spinlock_t g_lock;
 _Hide struct SymbolTable *__symtab;  // for kprintf

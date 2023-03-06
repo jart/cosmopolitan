@@ -64,7 +64,7 @@ noasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
 
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
   void *outAddr =
-      Mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
+      _Mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }
@@ -82,7 +82,7 @@ noasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
     return outAddr;
   } while (0);
   const int e = errno;
-  Munmap(outAddr, size);
+  _Munmap(outAddr, size);
   errno = e;
   strace_enabled(+1);
   return MAP_FAILED;

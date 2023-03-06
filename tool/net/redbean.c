@@ -6893,7 +6893,7 @@ static void MakeExecutableModifiable(void) {
   if (_endswith(zpath, ".com.dbg")) return;
   close(zfd);
   ft = ftrace_enabled(0);
-  if ((zfd = OpenExecutable()) == -1) {
+  if ((zfd = _OpenExecutable()) == -1) {
     WARNF("(srvr) can't open executable for modification: %m");
   }
   if (ft > 0) {

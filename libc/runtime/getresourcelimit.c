@@ -21,7 +21,7 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/rlim.h"
 
-long GetResourceLimit(int resource) {
+long _GetResourceLimit(int resource) {
   struct rlimit rl;
   getrlimit(resource, &rl);
   if (rl.rlim_cur == RLIM_INFINITY) return -1;

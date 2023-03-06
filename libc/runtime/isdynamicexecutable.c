@@ -33,7 +33,7 @@
 /**
  * Returns true if ELF executable uses dynamic loading magic.
  */
-bool IsDynamicExecutable(const char *prog) {
+bool _IsDynamicExecutable(const char *prog) {
   bool res;
   Elf64_Ehdr *e;
   Elf64_Phdr *p;

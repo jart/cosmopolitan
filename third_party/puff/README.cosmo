@@ -1,0 +1,18 @@
+DESCRIPTION
+
+  puff is a tiny implementation of deflate decompression
+
+LICENSE
+
+  zlib license
+
+ORIGIN
+
+  Origin: git@github.com:madler/zlib.git
+  Commit: 03614c56ad299f9b238c75aa1e66f0c08fc4fc8b
+  Author: Mark Adler <madler@alumni.caltech.edu>
+  Date:   Sun Oct 30 08:36:13 2016 -0700
+
+LOCAL CHANGES
+
+  None.

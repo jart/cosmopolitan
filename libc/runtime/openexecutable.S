@@ -30,7 +30,7 @@
 //	@return	file descriptor
 //	@note	only works on .com binary (not .com.dbg)
 //	@note	only supports linux, freebsd, openbsd, and netbsd
-OpenExecutable:
+_OpenExecutable:
 	push	%rbp
 	mov	%rsp,%rbp
 	pushq	__NR_open(%rip)			# -0x08(%rbp)
@@ -198,7 +198,7 @@ OpenExecutable:
 	pop	%rbx
 	leave
 	ret
-9:	.endfn	OpenExecutable,globl
+9:	.endfn	_OpenExecutable,globl
 
 	.weak	ape_rom_vaddr
 	.weak	ape_rom_filesz

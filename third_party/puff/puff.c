@@ -23,7 +23,7 @@
 │  Mark Adler    madler@alumni.caltech.edu                                     │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
-#include "third_party/zlib/puff.h"
+#include "third_party/puff/puff.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -825,10 +825,10 @@ local int dynamic(struct state *s)
  *   block (if it was a fixed or dynamic block) are undefined and have no
  *   expected values to check.
  */
-int puff(unsigned char *dest,           /* pointer to destination pointer */
-         unsigned long *destlen,        /* amount of output space */
-         const unsigned char *source,   /* pointer to source data pointer */
-         unsigned long *sourcelen)      /* amount of input available */
+int _puff(unsigned char *dest,           /* pointer to destination pointer */
+          unsigned long *destlen,        /* amount of output space */
+          const unsigned char *source,   /* pointer to source data pointer */
+          unsigned long *sourcelen)      /* amount of input available */
 {
     struct state s;             /* input/output state */
     int last, type;             /* block information */

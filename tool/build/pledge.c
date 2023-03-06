@@ -673,7 +673,7 @@ int main(int argc, char *argv[]) {
   }
 
   // figure out where we want the dso
-  if (IsDynamicExecutable(prog)) {
+  if (_IsDynamicExecutable(prog)) {
     isdynamic = true;
     if ((s = getenv("TMPDIR")) ||  //
         (s = getenv("HOME")) ||    //

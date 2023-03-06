@@ -7,8 +7,8 @@ COSMOPOLITAN_C_START_
 #define NIL ((unsigned char *)0) /* for no output option */
 #endif
 
-int puff(unsigned char *dest, unsigned long *destlen,
-         const unsigned char *source, unsigned long *sourcelen);
+int _puff(unsigned char *dest, unsigned long *destlen,
+          const unsigned char *source, unsigned long *sourcelen);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -238,8 +238,8 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
   return addr;
 }
 
-noasan inline void *Mmap(void *addr, size_t size, int prot, int flags, int fd,
-                         int64_t off) {
+noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
+                          int64_t off) {
   char *p = addr;
   struct DirectMap dm;
   int a, b, i, f, m, n, x;
@@ -494,7 +494,7 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
 #endif
   __mmi_lock();
   if (!__isfdkind(fd, kFdZip)) {
-    res = Mmap(addr, size, prot, flags, fd, off);
+    res = _Mmap(addr, size, prot, flags, fd, off);
   } else {
     res = _weaken(__zipos_Mmap)(
         addr, size, prot, flags,

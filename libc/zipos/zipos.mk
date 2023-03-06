@@ -40,7 +40,7 @@ LIBC_ZIPOS_A_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_SYSV_CALLS					\
 	LIBC_NT_KERNEL32				\
-	THIRD_PARTY_ZLIB
+	THIRD_PARTY_PUFF
 
 LIBC_ZIPOS_A_DEPS :=					\
 	$(call uniq,$(foreach zipos,$(LIBC_ZIPOS_A_DIRECTDEPS),$($(zipos))))
