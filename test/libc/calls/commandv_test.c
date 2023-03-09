@@ -118,18 +118,20 @@ TEST(commandv, testSameDir_willHappenWithColonBlank2) {
 }
 
 TEST(commandv, test_DirPaths_wontConsiderDirectoriesExecutable) {
+  CHECK_NE(-1, setenv("PATH", ":bin", true));
   EXPECT_NE(-1, mkdir("Cursors", 0755));
   EXPECT_EQ(NULL, commandv("Cursors", pathbuf, sizeof(pathbuf)));
-  EXPECT_EQ(errno, ENOENT);
+  if (IsWindows()) {
+    EXPECT_EQ(errno, ENOENT);
+  } else {
+    EXPECT_EQ(errno, EACCES);
+  }
 }
 
 TEST(commandv, test_DirPaths_wontConsiderDirectoriesExecutable2) {
+  CHECK_NE(-1, setenv("PATH", ":bin", true));
   EXPECT_NE(-1, mkdir("this_is_a_directory.com", 0755));
   EXPECT_EQ(NULL,
             commandv("this_is_a_directory.com", pathbuf, sizeof(pathbuf)));
-  if (IsWindows()) {
-    EXPECT_EQ(errno, EACCES);
-  } else {
-    EXPECT_EQ(errno, ENOENT);
-  }
+  EXPECT_EQ(errno, EACCES);
 }
