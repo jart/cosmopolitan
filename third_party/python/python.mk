@@ -724,6 +724,28 @@ THIRD_PARTY_PYTHON_STAGE2_A_PYS =						\
 	third_party/python/Lib/_sysconfigdata_m_cosmo_x86_64_cosmo.py		\
 	third_party/python/Lib/_threading_local.py				\
 	third_party/python/Lib/_weakrefset.py					\
+	third_party/python/Lib/asyncio/base_events.py	\
+	third_party/python/Lib/asyncio/base_futures.py	\
+	third_party/python/Lib/asyncio/base_subprocess.py	\
+	third_party/python/Lib/asyncio/base_tasks.py	\
+	third_party/python/Lib/asyncio/compat.py	\
+	third_party/python/Lib/asyncio/constants.py	\
+	third_party/python/Lib/asyncio/coroutines.py	\
+	third_party/python/Lib/asyncio/events.py	\
+	third_party/python/Lib/asyncio/futures.py	\
+	third_party/python/Lib/asyncio/__init__.py	\
+	third_party/python/Lib/asyncio/locks.py	\
+	third_party/python/Lib/asyncio/log.py	\
+	third_party/python/Lib/asyncio/proactor_events.py	\
+	third_party/python/Lib/asyncio/protocols.py	\
+	third_party/python/Lib/asyncio/queues.py	\
+	third_party/python/Lib/asyncio/selector_events.py	\
+	third_party/python/Lib/asyncio/sslproto.py	\
+	third_party/python/Lib/asyncio/streams.py	\
+	third_party/python/Lib/asyncio/subprocess.py	\
+	third_party/python/Lib/asyncio/tasks.py	\
+	third_party/python/Lib/asyncio/transports.py	\
+	third_party/python/Lib/asyncio/unix_events.py	\
 	third_party/python/Lib/abc.py						\
 	third_party/python/Lib/aifc.py						\
 	third_party/python/Lib/antigravity.py					\
@@ -759,6 +781,11 @@ THIRD_PARTY_PYTHON_STAGE2_A_PYS =						\
 	third_party/python/Lib/difflib.py					\
 	third_party/python/Lib/dis.py						\
 	third_party/python/Lib/dummy_threading.py				\
+	third_party/python/Lib/concurrent/__init__.py			\
+	third_party/python/Lib/concurrent/futures/__init__.py			\
+	third_party/python/Lib/concurrent/futures/process.py			\
+	third_party/python/Lib/concurrent/futures/thread.py			\
+	third_party/python/Lib/concurrent/futures/_base.py			\
 	third_party/python/Lib/email/__init__.py				\
 	third_party/python/Lib/email/_encoded_words.py				\
 	third_party/python/Lib/email/_header_value_parser.py			\

@@ -19,7 +19,7 @@ from . import coroutines
 from . import events
 from . import futures
 from . import selector_events
-from . import selectors
+import selectors
 from . import transports
 from .coroutines import coroutine
 from .log import logger

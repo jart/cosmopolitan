@@ -22,7 +22,7 @@ from . import compat
 from . import constants
 from . import events
 from . import futures
-from . import selectors
+import selectors
 from . import transports
 from . import sslproto
 from .coroutines import coroutine

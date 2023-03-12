@@ -495,7 +495,7 @@ PYTHON_YOINK("smtplib");
 PYTHON_YOINK("nntplib");
 
 PYTHON_YOINK("asdl");
-#ifdef WITH_THREAD
+
 PYTHON_YOINK("_thread");
 PYTHON_YOINK("_thread.LockType");
 PYTHON_YOINK("_thread.RLock");
@@ -513,6 +513,11 @@ PYTHON_YOINK("_thread.interrupt_main");
 PYTHON_YOINK("_thread.stack_size");
 PYTHON_YOINK("_thread.start_new");
 PYTHON_YOINK("_thread.start_new_thread");
+PYTHON_YOINK("concurrent");
+PYTHON_YOINK("concurrent.futures");
+PYTHON_YOINK("concurrent.futures._base");
+PYTHON_YOINK("concurrent.futures.process");
+PYTHON_YOINK("concurrent.futures.thread");
 PYTHON_YOINK("asynchat");
 PYTHON_YOINK("asyncore");
 PYTHON_YOINK("asyncio");
@@ -535,12 +540,8 @@ PYTHON_YOINK("asyncio.sslproto");
 PYTHON_YOINK("asyncio.streams");
 PYTHON_YOINK("asyncio.subprocess");
 PYTHON_YOINK("asyncio.tasks");
-PYTHON_YOINK("asyncio.test_utils");
 PYTHON_YOINK("asyncio.transports");
 PYTHON_YOINK("asyncio.unix_events");
-PYTHON_YOINK("asyncio.windows_events");
-PYTHON_YOINK("asyncio.windows_utils");
-#endif
 
 int
 main(int argc, char **argv)
