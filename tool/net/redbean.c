@@ -3351,7 +3351,7 @@ static void OnlyCallFromMainProcess(lua_State *L, const char *api) {
 
 static void OnlyCallDuringConnection(lua_State *L, const char *api) {
   if (!ishandlingconnection) {
-    luaL_error(L, "%s() can only be called ", api,
+    luaL_error(L, "%s() can only be called %s", api,
                "while handling a connection");
     unreachable;
   }
