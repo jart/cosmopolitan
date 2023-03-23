@@ -359,10 +359,15 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           p = "\r\e[K";
           goto FormatString;
         }
+      case 'S':
+        // Specified by POSIX to be equivalent to %ls
+        signbit = 63;
+        goto FormatStringPNotFetchedYet;
       case 'q':
         flags |= FLAGS_QUOTE;
         // fallthrough
       case 's':
+      FormatStringPNotFetchedYet:
         p = va_arg(va, void *);
       FormatString:
         if (__fmt_stoa(out, arg, p, flags, prec, width, signbit, qchar) == -1) {
