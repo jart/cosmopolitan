@@ -34,17 +34,15 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
                              unsigned char flags) {
   unsigned i;
   /* pad leading zeros */
-  if (!(flags & FLAGS_LEFT)) {
-    if (width && (flags & FLAGS_ZEROPAD) &&
-        (negative || (flags & (FLAGS_PLUS | FLAGS_SPACE)))) {
-      width--;
-    }
-    while ((len < prec) && (len < BUFFER_SIZE)) {
-      buf[len++] = '0';
-    }
-    while ((flags & FLAGS_ZEROPAD) && (len < width) && (len < BUFFER_SIZE)) {
-      buf[len++] = '0';
-    }
+  if (width && (flags & FLAGS_ZEROPAD) &&
+      (negative || (flags & (FLAGS_PLUS | FLAGS_SPACE)))) {
+    width--;
+  }
+  while ((len < prec) && (len < BUFFER_SIZE)) {
+    buf[len++] = '0';
+  }
+  while ((flags & FLAGS_ZEROPAD) && (len < width) && (len < BUFFER_SIZE)) {
+    buf[len++] = '0';
   }
   /* handle hash */
   if (flags & FLAGS_HASH) {
@@ -134,8 +132,8 @@ int __fmt_ntoa(int out(const char *, void *, size_t), void *arg, va_list va,
   bool neg;
   uint128_t value, sign;
 
-  /* ignore '0' flag when prec is given */
-  if (flags & FLAGS_PRECISION) {
+  /* ignore '0' flag when prec or minus flag is given */
+  if (flags & (FLAGS_PRECISION | FLAGS_LEFT)) {
     flags &= ~FLAGS_ZEROPAD;
   }
 
