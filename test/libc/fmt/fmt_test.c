@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
@@ -84,6 +85,24 @@ TEST(fmt, b) {
 }
 
 TEST(fmt, s) {
+  EXPECT_STREQ("123456", _gc(xasprintf("%4.*s", -5, "123456")));
+  EXPECT_STREQ("123456789", _gc(xasprintf("%4.*s", -5, "123456789")));
+  EXPECT_STREQ("12345678901234567890",
+               _gc(xasprintf("%4.*s", -5, "12345678901234567890")));
+  EXPECT_STREQ("123456789012345678901234567890",
+               _gc(xasprintf("%4.*s", -5, "123456789012345678901234567890")));
+  EXPECT_STREQ(
+      "1234567890123456789012345678901234567890",
+      _gc(xasprintf("%4.*s", -5, "1234567890123456789012345678901234567890")));
+  EXPECT_STREQ(
+      "12345678901234567890123456789012345678901234567890",
+      _gc(xasprintf("%4.*s", -5,
+                    "12345678901234567890123456789012345678901234567890")));
+  EXPECT_STREQ(
+      "123456789012345678901234567890123456789012345678901234567890",
+      _gc(xasprintf(
+          "%4.*s", -5,
+          "123456789012345678901234567890123456789012345678901234567890")));
   EXPECT_STREQ("Wide character output test",
                _gc(xasprintf("%S", L"Wide character output test")));
 }
