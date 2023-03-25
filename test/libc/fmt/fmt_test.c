@@ -62,6 +62,25 @@ TEST(fmt, d) {
   EXPECT_STREQ(" 16", _gc(xasprintf("% d", 16)));
   EXPECT_STREQ(" 2147483647", _gc(xasprintf("% d", INT_MAX)));
   EXPECT_STREQ("-2147483648", _gc(xasprintf("% d", INT_MIN)));
+  EXPECT_STREQ("042 ", _gc(xasprintf("%-4.3d", 42)));
+  EXPECT_STREQ("-00054", _gc(xasprintf("%-1.5lld", -54ll)));
+  EXPECT_STREQ("00109", _gc(xasprintf("%-.5lld", 109ll)));
+  EXPECT_STREQ("-00116", _gc(xasprintf("%-.5lld", -116ll)));
+  EXPECT_STREQ("00108   ", _gc(xasprintf("%-8.5lld", 108ll)));
+  EXPECT_STREQ("-00054  ", _gc(xasprintf("%-8.5lld", -54ll)));
+}
+
+TEST(fmt, u) {
+  EXPECT_STREQ("042 ", _gc(xasprintf("%-4.3u", 42)));
+}
+
+TEST(fmt, x) {
+  EXPECT_STREQ("0x01   ", _gc(xasprintf("%#-07.2x", 1)));
+  EXPECT_STREQ("0x00136d  ", _gc(xasprintf("%#-010.6x", 4973)));
+}
+
+TEST(fmt, b) {
+  EXPECT_STREQ("000010100     ", _gc(xasprintf("%-14.9b", 20)));
 }
 
 TEST(fmt, s) {
