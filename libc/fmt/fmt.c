@@ -317,6 +317,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         goto FormatNumber;
       case 'b':
         log2base = 1;
+        alphabet = "0123456789abcdefpb";
         goto FormatNumber;
       case 'o':
         log2base = 3;

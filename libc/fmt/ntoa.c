@@ -31,7 +31,7 @@ uint128_t __udivmodti4(uint128_t, uint128_t, uint128_t *);
 static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
                              char *buf, unsigned len, bool negative,
                              unsigned log2base, unsigned prec, unsigned width,
-                             unsigned char flags) {
+                             unsigned char flags, const char *alphabet) {
   unsigned i;
   /* pad leading zeros */
   if (width && (flags & FLAGS_ZEROPAD) &&
@@ -53,10 +53,9 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
         len--;
       }
     }
-    if (log2base == 4 && len < BUFFER_SIZE) {
-      buf[len++] = 'x';
-    } else if (log2base == 1 && len < BUFFER_SIZE) {
-      buf[len++] = 'b';
+    if ((log2base == 4 || log2base == 1) && len < BUFFER_SIZE) {
+      buf[len++] = alphabet[17];  // x, X or b (for the corresponding conversion
+                                  // specifiers)
     }
     if (len < BUFFER_SIZE) {
       buf[len++] = '0';
@@ -122,7 +121,7 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
     _npassert(count <= BUFFER_SIZE);
   }
   return __fmt_ntoa_format(out, arg, buf, len, neg, log2base, prec, width,
-                           flags);
+                           flags, alphabet);
 }
 
 int __fmt_ntoa(int out(const char *, void *, size_t), void *arg, va_list va,

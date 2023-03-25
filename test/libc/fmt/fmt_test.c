@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
@@ -77,6 +78,26 @@ TEST(fmt, u) {
 TEST(fmt, x) {
   EXPECT_STREQ("0x01   ", _gc(xasprintf("%#-07.2x", 1)));
   EXPECT_STREQ("0x00136d  ", _gc(xasprintf("%#-010.6x", 4973)));
+  EXPECT_STREQ("0X1", _gc(xasprintf("%#X", 1)));
+  EXPECT_STREQ("0XA", _gc(xasprintf("%#X", 10)));
+  EXPECT_STREQ("0XFFFF", _gc(xasprintf("%#X", 65535)));
+  EXPECT_STREQ("0XABCDEF", _gc(xasprintf("%#X", 0xABCDEF)));
+  EXPECT_STREQ("0X1", _gc(xasprintf("%#hX", (short)1)));
+  EXPECT_STREQ("0XA", _gc(xasprintf("%#hX", (short)10)));
+  EXPECT_STREQ("0XFFFF", _gc(xasprintf("%#hX", (short)65535)));
+  EXPECT_STREQ("0XABCD", _gc(xasprintf("%#hX", (short)0xABCD)));
+  EXPECT_STREQ("          0X308C6705", _gc(xasprintf("%#20X", 814507781)));
+  EXPECT_STREQ("0X0000000000308C6705", _gc(xasprintf("%#020X", 814507781)));
+  EXPECT_STREQ("              0X6705",
+               _gc(xasprintf("%#20hX", (short)814507781)));
+  EXPECT_STREQ("0X000000000000006705",
+               _gc(xasprintf("%#020hX", (short)814507781)));
+  EXPECT_STREQ("            0XABCDEF", _gc(xasprintf("%#20X", 0xABCDEF)));
+  EXPECT_STREQ("0X000000000000ABCDEF", _gc(xasprintf("%#020X", 0xABCDEF)));
+  EXPECT_STREQ("              0XCDEF",
+               _gc(xasprintf("%#20hX", (short)0xABCDEF)));
+  EXPECT_STREQ("0X00000000000000CDEF",
+               _gc(xasprintf("%#020hX", (short)0xABCDEF)));
 }
 
 TEST(fmt, b) {
