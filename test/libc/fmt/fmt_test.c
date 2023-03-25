@@ -64,6 +64,11 @@ TEST(fmt, d) {
   EXPECT_STREQ("-2147483648", _gc(xasprintf("% d", INT_MIN)));
 }
 
+TEST(fmt, s) {
+  EXPECT_STREQ("Wide character output test",
+               _gc(xasprintf("%S", L"Wide character output test")));
+}
+
 TEST(fmt, g) {
   EXPECT_STREQ("1", _gc(xasprintf("%g", 1.)));
   EXPECT_STREQ(" 1", _gc(xasprintf("% g", 1.)));
