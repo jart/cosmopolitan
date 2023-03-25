@@ -65,7 +65,8 @@ TEST(fmt, d) {
 }
 
 TEST(fmt, s) {
-  EXPECT_STREQ("Wide character output test", _gc(xasprintf("%S", L"Wide character output test")));
+  EXPECT_STREQ("Wide character output test",
+               _gc(xasprintf("%S", L"Wide character output test")));
 }
 
 TEST(fmt, g) {
