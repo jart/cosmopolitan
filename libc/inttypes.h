@@ -86,7 +86,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIdLEAST128 __PRI128 "d"
 
 #define PRIdFAST8   __PRI8 "d"
-#define PRIdFAST16  __PRI16 "d"
+#define PRIdFAST16  __PRI32 "d"
 #define PRIdFAST32  __PRI32 "d"
 #define PRIdFAST64  __PRI64 "d"
 #define PRIdFAST128 __PRI128 "d"
@@ -108,7 +108,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIuLEAST128 __PRI128 "u"
 
 #define PRIuFAST8   __PRI8 "u"
-#define PRIuFAST16  __PRI16 "u"
+#define PRIuFAST16  __PRI32 "u"
 #define PRIuFAST32  __PRI32 "u"
 #define PRIuFAST64  __PRI64 "u"
 #define PRIuFAST128 __PRI128 "u"
@@ -130,7 +130,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIiLEAST128 __PRI128 "i"
 
 #define PRIiFAST8   __PRI8 "i"
-#define PRIiFAST16  __PRI16 "i"
+#define PRIiFAST16  __PRI32 "i"
 #define PRIiFAST32  __PRI32 "i"
 #define PRIiFAST64  __PRI64 "i"
 #define PRIiFAST128 __PRI128 "i"
@@ -152,7 +152,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIoLEAST128 __PRI128 "o"
 
 #define PRIoFAST8   __PRI8 "o"
-#define PRIoFAST16  __PRI16 "o"
+#define PRIoFAST16  __PRI32 "o"
 #define PRIoFAST32  __PRI32 "o"
 #define PRIoFAST64  __PRI64 "o"
 #define PRIoFAST128 __PRI128 "o"
@@ -174,7 +174,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIxLEAST128 __PRI128 "x"
 
 #define PRIxFAST8   __PRI8 "x"
-#define PRIxFAST16  __PRI16 "x"
+#define PRIxFAST16  __PRI32 "x"
 #define PRIxFAST32  __PRI32 "x"
 #define PRIxFAST64  __PRI64 "x"
 #define PRIxFAST128 __PRI128 "x"
@@ -192,7 +192,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIXLEAST128 __PRI128 "X"
 
 #define PRIXFAST8   __PRI8 "X"
-#define PRIXFAST16  __PRI16 "X"
+#define PRIXFAST16  __PRI32 "X"
 #define PRIXFAST32  __PRI32 "X"
 #define PRIXFAST64  __PRI64 "X"
 #define PRIXFAST128 __PRI128 "X"
@@ -214,7 +214,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIbLEAST128 __PRI128 "b"
 
 #define PRIbFAST8   __PRI8 "b"
-#define PRIbFAST16  __PRI16 "b"
+#define PRIbFAST16  __PRI32 "b"
 #define PRIbFAST32  __PRI32 "b"
 #define PRIbFAST64  __PRI64 "b"
 #define PRIbFAST128 __PRI128 "b"
@@ -232,7 +232,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define PRIBLEAST128 __PRI128 "B"
 
 #define PRIBFAST8   __PRI8 "B"
-#define PRIBFAST16  __PRI16 "B"
+#define PRIBFAST16  __PRI32 "B"
 #define PRIBFAST32  __PRI32 "B"
 #define PRIBFAST64  __PRI64 "B"
 #define PRIBFAST128 __PRI128 "B"
@@ -272,7 +272,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define SCNdLEAST128 __PRI128 "d"
 
 #define SCNdFAST8   __PRI8 "d"
-#define SCNdFAST16  __PRI16 "d"
+#define SCNdFAST16  __PRI32 "d"
 #define SCNdFAST32  __PRI32 "d"
 #define SCNdFAST64  __PRI64 "d"
 #define SCNdFAST128 __PRI128 "d"
@@ -294,7 +294,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define SCNiLEAST128 __PRI128 "i"
 
 #define SCNiFAST8   __PRI8 "i"
-#define SCNiFAST16  __PRI16 "i"
+#define SCNiFAST16  __PRI32 "i"
 #define SCNiFAST32  __PRI32 "i"
 #define SCNiFAST64  __PRI64 "i"
 #define SCNiFAST128 __PRI128 "i"
@@ -316,7 +316,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define SCNuLEAST128 __PRI128 "u"
 
 #define SCNuFAST8   __PRI8 "u"
-#define SCNuFAST16  __PRI16 "u"
+#define SCNuFAST16  __PRI32 "u"
 #define SCNuFAST32  __PRI32 "u"
 #define SCNuFAST64  __PRI64 "u"
 #define SCNuFAST128 __PRI128 "u"
@@ -338,7 +338,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define SCNoLEAST128 __PRI128 "o"
 
 #define SCNoFAST8   __PRI8 "o"
-#define SCNoFAST16  __PRI16 "o"
+#define SCNoFAST16  __PRI32 "o"
 #define SCNoFAST32  __PRI32 "o"
 #define SCNoFAST64  __PRI64 "o"
 #define SCNoFAST128 __PRI128 "o"
@@ -360,7 +360,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define SCNxLEAST128 __PRI128 "x"
 
 #define SCNxFAST8   __PRI8 "x"
-#define SCNxFAST16  __PRI16 "x"
+#define SCNxFAST16  __PRI32 "x"
 #define SCNxFAST32  __PRI32 "x"
 #define SCNxFAST64  __PRI64 "x"
 #define SCNxFAST128 __PRI128 "x"
@@ -382,7 +382,7 @@ typedef __UINT_FAST64_TYPE__ uint_fast64_t;
 #define SCNbLEAST128 __PRI128 "b"
 
 #define SCNbFAST8   __PRI8 "b"
-#define SCNbFAST16  __PRI16 "b"
+#define SCNbFAST16  __PRI32 "b"
 #define SCNbFAST32  __PRI32 "b"
 #define SCNbFAST64  __PRI64 "b"
 #define SCNbFAST128 __PRI128 "b"
