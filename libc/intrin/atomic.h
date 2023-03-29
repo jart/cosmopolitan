@@ -13,13 +13,16 @@
  * @see libc/atomic.h
  */
 
-#define memory_order         int
-#define memory_order_relaxed 0
-#define memory_order_consume 1
-#define memory_order_acquire 2
-#define memory_order_release 3
-#define memory_order_acq_rel 4
-#define memory_order_seq_cst 5
+typedef int memory_order;
+
+enum {
+  memory_order_relaxed,
+  memory_order_consume,
+  memory_order_acquire,
+  memory_order_release,
+  memory_order_acq_rel,
+  memory_order_seq_cst,
+};
 
 #define ATOMIC_VAR_INIT(...)     __VA_ARGS__
 #define atomic_is_lock_free(obj) ((void)(obj), sizeof(obj) <= sizeof(void *))
