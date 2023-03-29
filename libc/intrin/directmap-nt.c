@@ -38,10 +38,10 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
   struct ProtectNt fl;
   const struct NtSecurityAttributes *sec;
 
-  if (fd != -1) {
-    handle = g_fds.p[fd].handle;
-  } else {
+  if (flags & MAP_ANONYMOUS) {
     handle = kNtInvalidHandleValue;
+  } else {
+    handle = g_fds.p[fd].handle;
   }
 
   if ((flags & MAP_TYPE) != MAP_SHARED) {
