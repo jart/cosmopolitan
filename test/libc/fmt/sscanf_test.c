@@ -19,6 +19,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
+#include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
@@ -148,4 +149,85 @@ TEST(sscanf, testFixedWidthFormat_Integer) {
   ASSERT_EQ(0x32, r);
   ASSERT_EQ(2, g);
   ASSERT_EQ(30, b);
+}
+
+TEST(sscanf, testInttypes_macros) {
+  int8_t i8 = (int8_t)0xFFFFFFFFFFFFFFFF;
+  uint8_t u8 = (uint8_t)0xFFFFFFFFFFFFFFFF;
+  int16_t i16 = (int16_t)0xFFFFFFFFFFFFFFFF;
+  uint16_t u16 = (uint16_t)0xFFFFFFFFFFFFFFFF;
+  int32_t i32 = (int32_t)0xFFFFFFFFFFFFFFFF;
+  uint32_t u32 = (uint32_t)0xFFFFFFFFFFFFFFFF;
+  int64_t i64 = (int64_t)0xFFFFFFFFFFFFFFFF;
+  uint64_t u64 = (uint64_t)0xFFFFFFFFFFFFFFFF;
+  intmax_t imax = (intmax_t)0xFFFFFFFFFFFFFFFF;
+  uintmax_t umax = (uintmax_t)0xFFFFFFFFFFFFFFFF;
+  int_least8_t il8 = (int_least8_t)0xFFFFFFFFFFFFFFFF;
+  uint_least8_t ul8 = (uint_least8_t)0xFFFFFFFFFFFFFFFF;
+  int_least16_t il16 = (int_least16_t)0xFFFFFFFFFFFFFFFF;
+  uint_least16_t ul16 = (uint_least16_t)0xFFFFFFFFFFFFFFFF;
+  int_least32_t il32 = (int_least32_t)0xFFFFFFFFFFFFFFFF;
+  uint_least32_t ul32 = (uint_least32_t)0xFFFFFFFFFFFFFFFF;
+  int_least64_t il64 = (int_least64_t)0xFFFFFFFFFFFFFFFF;
+  uint_least64_t ul64 = (uint_least64_t)0xFFFFFFFFFFFFFFFF;
+  int_fast8_t if8 = (int_fast8_t)0xFFFFFFFFFFFFFFFF;
+  uint_fast8_t uf8 = (uint_fast8_t)0xFFFFFFFFFFFFFFFF;
+  int_fast16_t if16 = (int_fast16_t)0xFFFFFFFFFFFFFFFF;
+  uint_fast16_t uf16 = (uint_fast16_t)0xFFFFFFFFFFFFFFFF;
+  int_fast32_t if32 = (int_fast32_t)0xFFFFFFFFFFFFFFFF;
+  uint_fast32_t uf32 = (uint_fast32_t)0xFFFFFFFFFFFFFFFF;
+  int_fast64_t if64 = (int_fast64_t)0xFFFFFFFFFFFFFFFF;
+  uint_fast64_t uf64 = (uint_fast64_t)0xFFFFFFFFFFFFFFFF;
+
+  ASSERT_EQ(sscanf("1", "%" SCNd8, &i8), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNu8, &u8), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNd16, &i16), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNu16, &u16), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNd32, &i32), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNu32, &u32), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNd64, &i64), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNu64, &u64), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdMAX, &imax), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuMAX, &umax), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdLEAST8, &il8), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuLEAST8, &ul8), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdLEAST16, &il16), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuLEAST16, &ul16), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdLEAST32, &il32), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuLEAST32, &ul32), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdLEAST64, &il64), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuLEAST64, &ul64), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdFAST8, &if8), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuFAST8, &uf8), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdFAST16, &if16), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuFAST16, &uf16), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdFAST32, &if32), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuFAST32, &uf32), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNdFAST64, &if64), 1);
+  ASSERT_EQ(sscanf("1", "%" SCNuFAST64, &uf64), 1);
+
+  ASSERT_EQ(i8, 1);
+  ASSERT_EQ(u8, 1);
+  ASSERT_EQ(i16, 1);
+  ASSERT_EQ(u16, 1);
+  ASSERT_EQ(i32, 1);
+  ASSERT_EQ(u32, 1);
+  ASSERT_EQ(i64, 1);
+  ASSERT_EQ(u64, 1);
+  ASSERT_EQ(imax, 1);
+  ASSERT_EQ(umax, 1);
+  ASSERT_EQ(il8, 1);
+  ASSERT_EQ(ul8, 1);
+  ASSERT_EQ(il16, 1);
+  ASSERT_EQ(ul16, 1);
+  ASSERT_EQ(il32, 1);
+  ASSERT_EQ(ul32, 1);
+  ASSERT_EQ(il64, 1);
+  ASSERT_EQ(ul64, 1);
+  ASSERT_EQ(if16, 1);
+  ASSERT_EQ(uf16, 1);
+  ASSERT_EQ(if32, 1);
+  ASSERT_EQ(uf32, 1);
+  ASSERT_EQ(if64, 1);
+  ASSERT_EQ(uf64, 1);
 }
