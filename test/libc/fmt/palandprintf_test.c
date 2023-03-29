@@ -310,8 +310,8 @@ TEST(sprintf, test_padding_pound_020) {
   EXPECT_STREQ("00000000037777777001", Format("%#020o", 4294966785U));
   EXPECT_STREQ("0x00000000001234abcd", Format("%#020x", 305441741));
   EXPECT_STREQ("0x0000000000edcb5433", Format("%#020x", 3989525555U));
-  EXPECT_STREQ("0x00000000001234ABCD", Format("%#020X", 305441741));
-  EXPECT_STREQ("0x0000000000EDCB5433", Format("%#020X", 3989525555U));
+  EXPECT_STREQ("0X00000000001234ABCD", Format("%#020X", 305441741));
+  EXPECT_STREQ("0X0000000000EDCB5433", Format("%#020X", 3989525555U));
 }
 
 TEST(sprintf, test_padding_pound_20) {
@@ -325,8 +325,8 @@ TEST(sprintf, test_padding_pound_20) {
   EXPECT_STREQ("        037777777001", Format("%#20o", 4294966785U));
   EXPECT_STREQ("          0x1234abcd", Format("%#20x", 305441741));
   EXPECT_STREQ("          0xedcb5433", Format("%#20x", 3989525555U));
-  EXPECT_STREQ("          0x1234ABCD", Format("%#20X", 305441741));
-  EXPECT_STREQ("          0xEDCB5433", Format("%#20X", 3989525555U));
+  EXPECT_STREQ("          0X1234ABCD", Format("%#20X", 305441741));
+  EXPECT_STREQ("          0XEDCB5433", Format("%#20X", 3989525555U));
 }
 
 TEST(sprintf, test_padding_20_point_5) {
