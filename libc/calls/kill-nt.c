@@ -29,7 +29,19 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processentry32.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+
+static inline int GetConsoleCtrlEvent(int sig) {
+  switch (sig) {
+    case SIGINT:
+      return kNtCtrlCEvent;
+    case SIGQUIT:
+      return kNtCtrlBreakEvent;
+    default:
+      return -1;
+  }
+}
 
 textwindows int sys_kill_nt(int pid, int sig) {
   bool32 ok;
@@ -46,6 +58,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
 
   // If we're targeting current process group then just call raise().
   if (!pid || pid == getpid()) {
+    if (!sig) return 0;  // ability check passes
     return raise(sig);
   }
 
@@ -72,6 +85,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
 
   // is this a cosmo pid that was returned by fork?
   if (__isfdkind(pid, kFdProcess)) {
+    if (!sig) return 0;  // ability check passes
     // since windows can't execve we need to kill the grandchildren
     // TODO(jart): should we just kill the whole tree too? there's
     //             no obvious way to tell if it's the execve shell
@@ -96,9 +110,11 @@ textwindows int sys_kill_nt(int pid, int sig) {
 
   // XXX: Is this a raw new technology pid? Because that's messy.
   if ((h = OpenProcess(kNtProcessTerminate, false, pid))) {
-    ok = TerminateProcess(h, 128 + sig);
-    if (!ok && GetLastError() == kNtErrorAccessDenied) {
-      ok = true;  // cargo culting other codebases here
+    if (sig) {
+      ok = TerminateProcess(h, 128 + sig);
+      if (!ok && GetLastError() == kNtErrorAccessDenied) {
+        ok = true;  // cargo culting other codebases here
+      }
     }
     CloseHandle(h);
     return 0;
