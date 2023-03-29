@@ -628,6 +628,12 @@ TEST(sprintf, commas) {
   ASSERT_STREQ("123,456,789", buf);
 }
 
+TEST(vsnprintf, issue785) {
+  ASSERT_EQ(0, snprintf(0, 0, "%s", ""));
+  ASSERT_EQ(1, snprintf(0, 0, "%s", " "));
+  ASSERT_EQ(2, snprintf(0, 0, "%s", "  "));
+}
+
 BENCH(palandprintf, bench) {
   EZBENCH2("ascii", donothing, Format(VEIL("r", "hiuhcreohucreo")));
   EZBENCH2("ascii %s", donothing, Format("%s", VEIL("r", "hiuhcreohucreo")));
