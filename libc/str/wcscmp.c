@@ -30,5 +30,5 @@ int wcscmp(const wchar_t *a, const wchar_t *b) {
   size_t i = 0;
   if (a == b) return 0;
   while (a[i] == b[i] && b[i]) ++i;
-  return (unsigned)a[i] - (unsigned)b[i];
+  return (a[i] > b[i]) - (a[i] < b[i]);
 }

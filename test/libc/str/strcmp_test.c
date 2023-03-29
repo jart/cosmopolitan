@@ -460,11 +460,11 @@ TEST(wcscmp, testTwosComplementBane) {
   EXPECT_EQ(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                    memcpy(B2, "\x00\x00\x00\x80", 4)),
             0);
-  EXPECT_EQ(-1, wcscmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
-                       memcpy(B2, "\x00\x00\x00\x80", 4)));
-  EXPECT_EQ(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
+  EXPECT_LT(0, wcscmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
+                      memcpy(B2, "\x00\x00\x00\x80", 4)));
+  EXPECT_LT(wcscmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                    memcpy(B2, "\xff\xff\xff\x7f", 4)),
-            1);
+            0);
   free(B2);
   free(B1);
 }
@@ -475,12 +475,12 @@ TEST(wcsncmp, testTwosComplementBane) {
   EXPECT_EQ(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\x00\x00\x00\x80", 4), 1),
             0);
-  EXPECT_EQ(wcsncmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
+  EXPECT_GT(wcsncmp(memcpy(B1, "\xff\xff\xff\x7f", 4),
                     memcpy(B2, "\x00\x00\x00\x80", 4), 1),
-            -1);
-  EXPECT_EQ(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
+            0);
+  EXPECT_LT(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\xff\xff\xff\x7f", 4), 1),
-            1);
+            0);
   free(B2);
   free(B1);
 }
