@@ -174,6 +174,8 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
           c = callback(arg);
           if (c == prefix || c == prefix + ('a' - 'A')) {
             c = callback(arg);
+          } else if (c == -1) {
+            c = '0';
           }
         }
       DecodeNumber:

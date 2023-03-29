@@ -231,3 +231,31 @@ TEST(sscanf, testInttypes_macros) {
   ASSERT_EQ(if64, 1);
   ASSERT_EQ(uf64, 1);
 }
+
+TEST(sscanf, test0) {
+  int v;
+
+  v = 0xFFFFFFFF;
+  ASSERT_EQ(sscanf("0", "%x", &v), 1);
+  ASSERT_EQ(v, 0);
+
+  v = 0xFFFFFFFF;
+  ASSERT_EQ(sscanf("0", "%X", &v), 1);
+  ASSERT_EQ(v, 0);
+
+  v = 0xFFFFFFFF;
+  ASSERT_EQ(sscanf("0", "%d", &v), 1);
+  ASSERT_EQ(v, 0);
+
+  v = 0xFFFFFFFF;
+  ASSERT_EQ(sscanf("0", "%o", &v), 1);
+  ASSERT_EQ(v, 0);
+
+  v = 0xFFFFFFFF;
+  ASSERT_EQ(sscanf("0", "%u", &v), 1);
+  ASSERT_EQ(v, 0);
+
+  v = 0xFFFFFFFF;
+  ASSERT_EQ(sscanf("0", "%b", &v), 1);
+  ASSERT_EQ(v, 0);
+}
