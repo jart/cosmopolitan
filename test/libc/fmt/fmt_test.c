@@ -100,11 +100,36 @@ TEST(fmt, x) {
                _gc(xasprintf("%#020hX", (short)0xABCDEF)));
 }
 
+TEST(fmt, o) {
+  EXPECT_STREQ("0000000000000037777777634", _gc(xasprintf("%#.25o", -100)));
+  EXPECT_STREQ("0001777777777777777777634", _gc(xasprintf("%#.25lo", -100L)));
+  EXPECT_STREQ("0001777777777777777777634", _gc(xasprintf("%#.25llo", -100LL)));
+  EXPECT_STREQ("0", _gc(xasprintf("%#.o", 0)));
+}
+
 TEST(fmt, b) {
   EXPECT_STREQ("000010100     ", _gc(xasprintf("%-14.9b", 20)));
 }
 
 TEST(fmt, s) {
+  EXPECT_STREQ("123456", _gc(xasprintf("%4.*s", -5, "123456")));
+  EXPECT_STREQ("123456789", _gc(xasprintf("%4.*s", -5, "123456789")));
+  EXPECT_STREQ("12345678901234567890",
+               _gc(xasprintf("%4.*s", -5, "12345678901234567890")));
+  EXPECT_STREQ("123456789012345678901234567890",
+               _gc(xasprintf("%4.*s", -5, "123456789012345678901234567890")));
+  EXPECT_STREQ(
+      "1234567890123456789012345678901234567890",
+      _gc(xasprintf("%4.*s", -5, "1234567890123456789012345678901234567890")));
+  EXPECT_STREQ(
+      "12345678901234567890123456789012345678901234567890",
+      _gc(xasprintf("%4.*s", -5,
+                    "12345678901234567890123456789012345678901234567890")));
+  EXPECT_STREQ(
+      "123456789012345678901234567890123456789012345678901234567890",
+      _gc(xasprintf(
+          "%4.*s", -5,
+          "123456789012345678901234567890123456789012345678901234567890")));
   EXPECT_STREQ("Wide character output test",
                _gc(xasprintf("%S", L"Wide character output test")));
 }

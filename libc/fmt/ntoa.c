@@ -46,8 +46,8 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
   }
   /* handle hash */
   if (flags & FLAGS_HASH) {
-    if (!(flags & FLAGS_PRECISION) && len &&
-        ((len == prec) || (len == width)) && buf[len - 1] == '0') {
+    if ((!(flags & FLAGS_PRECISION) || log2base == 3) && len &&
+        ((len >= prec) || (len >= width)) && buf[len - 1] == '0') {
       len--;
       if (len && (log2base == 4 || log2base == 1) && buf[len - 1] == '0') {
         len--;
@@ -94,7 +94,9 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
   len = 0;
-  if (!value) flags &= ~FLAGS_HASH;
+  /* we check for log2base != 3 because otherwise we'll print nothing for a value of 0 with precision 0 when # mandates that one be printed */
+  if (!value && log2base != 3)
+    flags &= ~FLAGS_HASH;
   if (value || !(flags & FLAGS_PRECISION)) {
     count = 0;
     do {

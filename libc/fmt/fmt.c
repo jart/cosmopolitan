@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/fmt.h"
+
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/fmt/itoa.h"
@@ -255,6 +256,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
     }
     if (prec < 0) {
       prec = 0;
+      flags &= ~FLAGS_PRECISION;
     }
 
     // evaluate length field
