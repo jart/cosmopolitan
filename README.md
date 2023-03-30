@@ -246,9 +246,7 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 ## Discord Chatroom
 
 The Cosmopolitan development team collaborates on the Redbean Discord
-server. Everyone is welcome to join us! However you need to email
-<jtunney@gmail.com> and ask for an invite link (because Discord makes
-links expire after a few days).
+server. You're welcome to join us! <https://discord.gg/FwAVVu7eJ4>
 
 ## Support Vector
 
