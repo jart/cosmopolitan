@@ -30,6 +30,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
@@ -125,9 +126,6 @@ static int fd_to_mem_fd(const int infd, char *path) {
   int fd;
   if (IsLinux()) {
     fd = sys_memfd_create(__func__, MFD_CLOEXEC);
-    if ((fd != -1) && path) {
-      FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
-    }
   } else if (IsFreebsd()) {
     fd = sys_shm_open(SHM_ANON, O_CREAT | O_RDWR, 0);
   } else {
@@ -144,10 +142,22 @@ static int fd_to_mem_fd(const int infd, char *path) {
     readRc = pread(infd, space, st.st_size, 0);
     bool success = readRc != -1;
     if (success && (st.st_size > 8) && IsAPEMagic(space)) {
-      success = ape_to_elf(space, st.st_size);
+      int flags = fcntl(fd, F_GETFD);
+      if (success = (flags != -1) &&
+                    (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&
+                    ape_to_elf(space, st.st_size)) {
+        const int newfd = fcntl(fd, F_DUPFD, 9001);
+        if (newfd != -1) {
+          close(fd);
+          fd = newfd;
+        }
+      }
     }
     const int e = errno;
     if ((_weaken(munmap)(space, st.st_size) != -1) && success) {
+      if (path) {
+        FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
+      }
       _unassert(readRc == st.st_size);
       return fd;
     } else if (!success) {
@@ -182,6 +192,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
   } else {
     STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
            DescribeStringList(envp));
+    int savedErr = 0;
     do {
       if (!IsLinux() && !IsFreebsd()) {
         rc = enosys();
@@ -200,33 +211,36 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         if (rc == -1) {
           break;
         } else if (!memfdReq) {
-          rc = fexecve_impl(fd, argv, envp);
+          fexecve_impl(fd, argv, envp);
           if (errno != ENOEXEC) {
             break;
           }
+          savedErr = ENOEXEC;
         }
       }
       int newfd;
+      char *path = alloca(PATH_MAX);
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
-      newfd = fd_to_mem_fd(fd, NULL);
+      newfd = fd_to_mem_fd(fd, path);
       strace_enabled(+1);
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
       if (newfd == -1) {
-        if (rc == -1) {
-          errno = ENOEXEC;
-        }
-        rc = -1;
         break;
       }
-      fexecve_impl(newfd, argv, envp);
-      if (rc == -1) {
-        errno = ENOEXEC;
+      size_t numenvs;
+      for (numenvs = 0; envp[numenvs];) ++numenvs;
+      const size_t desenvs = min(500, max(numenvs + 1, 2));
+      static _Thread_local char *envs[500];
+      memcpy(envs, envp, numenvs * sizeof(char *));
+      envs[numenvs] = path;
+      envs[numenvs + 1] = NULL;
+      fexecve_impl(newfd, argv, envs);
+      if (!savedErr) {
+        savedErr = errno;
       }
-      rc = -1;
-      const int savedErr = errno;
       BEGIN_CANCELLATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
@@ -234,8 +248,11 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       strace_enabled(+1);
       ALLOW_SIGNALS;
       END_CANCELLATION_POINT;
-      errno = savedErr;
     } while (0);
+    if (savedErr) {
+      errno = savedErr;
+    }
+    rc = -1;
   }
   STRACE("fexecve(%d) failed %d% m", fd, rc);
   return rc;

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
+#include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -59,7 +60,7 @@ static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
  * @threadsafe
  */
 struct Zipos *__zipos_get(void) {
-  int fd;
+  int fd = -1;
   ssize_t size;
   const char *msg;
   static bool once;
@@ -67,10 +68,17 @@ struct Zipos *__zipos_get(void) {
   const char *progpath;
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
-  if (!once && PLEDGED(RPATH)) {
+  progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
+  if (progpath) {
+    fd = atoi(progpath);
+  }
+  if (!once && ((fd != -1) || PLEDGED(RPATH))) {
     __zipos_lock();
-    progpath = GetProgramExecutableName();
-    if ((fd = open(progpath, O_RDONLY)) != -1) {
+    if (fd == -1) {
+      progpath = GetProgramExecutableName();
+      fd = open(progpath, O_RDONLY);
+    }
+    if (fd != -1) {
       if ((size = getfiledescriptorsize(fd)) != -1ul &&
           (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         if ((base = FindEmbeddedApe(map, size))) {

@@ -128,3 +128,14 @@ TEST(fexecve, ziposAPE) {
   EXITS(42);
   close(fd);
 }
+
+TEST(fexecve, ziposAPEHasZipos) {
+  if (!IsLinux() && !IsFreebsd()) return;
+  int fd = open("/zip/zipread.com", O_RDONLY);
+  SPAWN(fork);
+  ASSERT_NE(-1, fd);
+  if (fd == -1 && errno == ENOSYS) _Exit(42);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
+  close(fd);
+}
