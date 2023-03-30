@@ -47,7 +47,7 @@ int fsync(int fd) {
       rc = sys_fdatasync_nt(fd);
     }
     END_CANCELLATION_POINT;
-    STRACE("fysnc(%d) → %d% m", fd, rc);
+    STRACE("fsync(%d) → %d% m", fd, rc);
   } else {
     rc = fstat(fd, &st);
     STRACE("fsync_fake(%d) → %d% m", fd, rc);
