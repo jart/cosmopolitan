@@ -55,6 +55,9 @@ $(TEST_LIBC_FMT_OBJS): private				\
 	DEFAULT_CCFLAGS +=				\
 		-fno-builtin
 
+o/$(MODE)/test/libc/fmt/fprintf_test.com.runs:		\
+	private .UNVEIL += w:/dev/full
+
 .PHONY: o/$(MODE)/test/libc/fmt
 o/$(MODE)/test/libc/fmt:				\
 		$(TEST_LIBC_FMT_BINS)			\
