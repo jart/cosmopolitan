@@ -32,43 +32,66 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
                              char *buf, unsigned len, bool negative,
                              unsigned log2base, unsigned prec, unsigned width,
                              unsigned char flags, const char *alphabet) {
-  unsigned i;
+  unsigned i, prec_width_zeros;
+  char alternate_form_middle_char, sign_character;
+  unsigned actual_buf_len;
+  actual_buf_len = len;
+  prec_width_zeros = 0;
   /* pad leading zeros */
   if (width && (flags & FLAGS_ZEROPAD) &&
       (negative || (flags & (FLAGS_PLUS | FLAGS_SPACE)))) {
     width--;
   }
-  while ((len < prec) && (len < BUFFER_SIZE)) {
-    buf[len++] = '0';
+  if (len < prec) {
+    prec_width_zeros += (prec - len);
+    len = prec;
   }
-  while ((flags & FLAGS_ZEROPAD) && (len < width) && (len < BUFFER_SIZE)) {
-    buf[len++] = '0';
+  if ((flags & FLAGS_ZEROPAD) && (len < width)) {
+    prec_width_zeros += (width - len);
+    len = width;
   }
   /* handle hash */
   if (flags & FLAGS_HASH) {
     if ((!(flags & FLAGS_PRECISION) || log2base == 3) && len &&
-        ((len >= prec) || (len >= width)) && buf[len - 1] == '0') {
-      len--;
-      if (len && (log2base == 4 || log2base == 1) && buf[len - 1] == '0') {
-        len--;
+        ((len >= prec) || (len >= width)) &&
+        (prec_width_zeros || buf[len - 1] == '0')) {
+      if (prec_width_zeros) {
+        --prec_width_zeros;
+      }
+      --len;
+      if (len < actual_buf_len) {
+        actual_buf_len = len;
+      }
+      if (len && (log2base == 4 || log2base == 1) &&
+          (prec_width_zeros || buf[len - 1] == '0')) {
+        if (prec_width_zeros) {
+          --prec_width_zeros;
+        }
+        --len;
+        if (len < actual_buf_len) {
+          actual_buf_len = len;
+        }
       }
     }
-    if ((log2base == 4 || log2base == 1) && len < BUFFER_SIZE) {
-      buf[len++] = alphabet[17];  // x, X or b (for the corresponding conversion
-                                  // specifiers)
+    alternate_form_middle_char = '\0';
+    if ((log2base == 4 || log2base == 1)) {
+      ++len;
+      alternate_form_middle_char =
+          alphabet[17];  // x, X or b (for the corresponding conversion
+                         // specifiers)
     }
-    if (len < BUFFER_SIZE) {
-      buf[len++] = '0';
-    }
+    ++len;
   }
-  if (len < BUFFER_SIZE) {
-    if (negative) {
-      buf[len++] = '-';
-    } else if (flags & FLAGS_PLUS) {
-      buf[len++] = '+'; /* ignore the space if the '+' exists */
-    } else if (flags & FLAGS_SPACE) {
-      buf[len++] = ' ';
-    }
+  sign_character = '\0';
+  if (negative) {
+    ++len;
+    sign_character = '-';
+  } else if (flags & FLAGS_PLUS) {
+    ++len;
+    sign_character = '+'; /* ignore the space if the '+' exists */
+  } else if (flags & FLAGS_SPACE) {
+    ++len;
+    sign_character = ' ';
   }
   /* pad spaces up to given width */
   if (!(flags & FLAGS_LEFT) && !(flags & FLAGS_ZEROPAD)) {
@@ -76,8 +99,17 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
       if (__fmt_pad(out, arg, width - len) == -1) return -1;
     }
   }
-  reverse(buf, len);
-  if (out(buf, arg, len) == -1) return -1;
+  if (sign_character != '\0' && out(&sign_character, arg, 1) == -1) return -1;
+  if (flags & FLAGS_HASH) {
+    if (out("0", arg, 1) == -1) return -1;
+    if (alternate_form_middle_char != '\0' &&
+        out(&alternate_form_middle_char, arg, 1) == -1)
+      return -1;
+  }
+  for (i = 0; i < prec_width_zeros; ++i)
+    if (out("0", arg, 1) == -1) return -1;
+  reverse(buf, actual_buf_len);
+  if (out(buf, arg, actual_buf_len) == -1) return -1;
   /* append pad spaces up to given width */
   if (flags & FLAGS_LEFT) {
     if (len < width) {
@@ -94,9 +126,9 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
   len = 0;
-  /* we check for log2base != 3 because otherwise we'll print nothing for a value of 0 with precision 0 when # mandates that one be printed */
-  if (!value && log2base != 3)
-    flags &= ~FLAGS_HASH;
+  /* we check for log2base != 3 because otherwise we'll print nothing for a
+   * value of 0 with precision 0 when # mandates that one be printed */
+  if (!value && log2base != 3) flags &= ~FLAGS_HASH;
   if (value || !(flags & FLAGS_PRECISION)) {
     count = 0;
     do {

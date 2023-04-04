@@ -105,10 +105,16 @@ TEST(fmt, o) {
   EXPECT_STREQ("0001777777777777777777634", _gc(xasprintf("%#.25lo", -100L)));
   EXPECT_STREQ("0001777777777777777777634", _gc(xasprintf("%#.25llo", -100LL)));
   EXPECT_STREQ("0", _gc(xasprintf("%#.o", 0)));
+  EXPECT_STREQ("  056520", _gc(xasprintf("%#8.6o", 23888)));
+  EXPECT_STREQ("00144   ", _gc(xasprintf("%#-8.5llo", 100ll)));
+  EXPECT_STREQ("0 ", _gc(xasprintf("%-#02lo", 0l)));
+  EXPECT_STREQ("0", _gc(xasprintf("%#01lo", 0l)));
+  EXPECT_STREQ("00", _gc(xasprintf("%#02lo", 0l)));
 }
 
 TEST(fmt, b) {
   EXPECT_STREQ("000010100     ", _gc(xasprintf("%-14.9b", 20)));
+  EXPECT_STREQ("0b110", _gc(xasprintf("%#b", 6)));
 }
 
 TEST(fmt, s) {
