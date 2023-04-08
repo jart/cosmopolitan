@@ -82,6 +82,7 @@
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/log.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mount.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
@@ -3605,6 +3606,52 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "PLEDGE_PENALTY_KILL_PROCESS", PLEDGE_PENALTY_KILL_PROCESS);
   LuaSetIntField(L, "PLEDGE_PENALTY_RETURN_EPERM", PLEDGE_PENALTY_RETURN_EPERM);
   LuaSetIntField(L, "PLEDGE_STDERR_LOGGING", PLEDGE_STDERR_LOGGING);
+
+  // mount() / unmount() options
+  LuaSetIntField(L, "MS_RDONLY", MS_RDONLY);
+  LuaSetIntField(L, "MNT_RDONLY", MNT_RDONLY);
+  LuaSetIntField(L, "MS_NOSUID", MS_NOSUID);
+  LuaSetIntField(L, "MNT_NOSUID", MNT_NOSUID);
+  LuaSetIntField(L, "MS_NODEV", MS_NODEV);
+  LuaSetIntField(L, "MNT_NODEV", MNT_NODEV);
+  LuaSetIntField(L, "MS_NOEXEC", MS_NOEXEC);
+  LuaSetIntField(L, "MNT_NOEXEC", MNT_NOEXEC);
+  LuaSetIntField(L, "MS_SYNCHRONOUS", MS_SYNCHRONOUS);
+  LuaSetIntField(L, "MNT_SYNCHRONOUS", MNT_SYNCHRONOUS);
+  LuaSetIntField(L, "MS_REMOUNT", MS_REMOUNT);
+  LuaSetIntField(L, "MNT_UPDATE", MNT_UPDATE);
+  LuaSetIntField(L, "MS_MANDLOCK", MS_MANDLOCK);
+  LuaSetIntField(L, "MS_DIRSYNC", MS_DIRSYNC);
+  LuaSetIntField(L, "MS_NOATIME", MS_NOATIME);
+  LuaSetIntField(L, "MNT_NOATIME", MNT_NOATIME);
+  LuaSetIntField(L, "MS_NODIRATIME", MS_NODIRATIME);
+  LuaSetIntField(L, "MS_BIND", MS_BIND);
+  LuaSetIntField(L, "MS_MOVE", MS_MOVE);
+  LuaSetIntField(L, "MS_REC", MS_REC);
+  LuaSetIntField(L, "MS_SILENT", MS_SILENT);
+  LuaSetIntField(L, "MS_POSIXACL", MS_POSIXACL);
+  LuaSetIntField(L, "MS_UNBINDABLE", MS_UNBINDABLE);
+  LuaSetIntField(L, "MS_PRIVATE", MS_PRIVATE);
+  LuaSetIntField(L, "MS_SLAVE", MS_SLAVE);
+  LuaSetIntField(L, "MS_SHARED", MS_SHARED);
+  LuaSetIntField(L, "MS_RELATIME", MS_RELATIME);
+  LuaSetIntField(L, "MNT_RELATIME", MNT_RELATIME);
+  LuaSetIntField(L, "MS_KERNMOUNT", MS_KERNMOUNT);
+  LuaSetIntField(L, "MS_I_VERSION", MS_I_VERSION);
+  LuaSetIntField(L, "MS_STRICTATIME", MS_STRICTATIME);
+  LuaSetIntField(L, "MNT_STRICTATIME", MNT_STRICTATIME);
+  LuaSetIntField(L, "MS_LAZYTIME", MS_LAZYTIME);
+  LuaSetIntField(L, "MS_ACTIVE", MS_ACTIVE);
+  LuaSetIntField(L, "MS_NOUSER", MS_NOUSER);
+  LuaSetIntField(L, "MS_RMT_MASK", MS_RMT_MASK);
+  LuaSetIntField(L, "MS_MGC_VAL", MS_MGC_VAL);
+  LuaSetIntField(L, "MS_MGC_MSK", MS_MGC_MSK);
+  LuaSetIntField(L, "MNT_ASYNC", MNT_ASYNC);
+  LuaSetIntField(L, "MNT_RELOAD", MNT_RELOAD);
+  LuaSetIntField(L, "MNT_SUIDDIR", MNT_SUIDDIR);
+  LuaSetIntField(L, "MNT_NOCLUSTERR", MNT_NOCLUSTERR);
+  LuaSetIntField(L, "MNT_NOCLUSTERW", MNT_NOCLUSTERW);
+  LuaSetIntField(L, "MNT_SNAPSHOT", MNT_SNAPSHOT);
 
   // prctl() options
   LuaSetIntField(L, "PR_GET_SECCOMP", PR_GET_SECCOMP);
