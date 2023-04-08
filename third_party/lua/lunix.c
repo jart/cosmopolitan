@@ -22,6 +22,7 @@
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
+#include "libc/calls/mount.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/dirent.h"
@@ -3196,6 +3197,28 @@ static int LuaUnixFdopendir(lua_State *L) {
   }
 }
 
+
+// unix.mount(source:str, target:str, filesystemtype: str[, mountflags: int[, data: str]])
+//     ├─→ true
+//     ├─→ nil, unix.Errno
+static int LuaUnixMount(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(
+	L, "mount", olderr,
+	mount(luaL_checkstring(L, 1), luaL_checkstring(L, 2), luaL_checkstring(L, 3),
+	      luaL_optinteger(L, 4, 0), luaL_optstring(L, 5, NULL)));
+}
+
+// unix.umount(target: str[, flags: int)
+//     ├─→ true
+//     ├─→ nil, unix.Errorno
+static int LuaUnixUnmount(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(
+	L, "unmount", olderr,
+	unmount(luaL_checkstring(L, 1), luaL_optinteger(L, 2, 0)));
+}
+
 static const luaL_Reg kLuaUnixDirMeth[] = {
     {"close", LuaUnixDirClose},    //
     {"read", LuaUnixDirRead},      //
@@ -3288,6 +3311,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"mapshared", LuaUnixMapshared},      // mmap(MAP_SHARED) w/ mutex+atomics
     {"minor", LuaUnixMinor},              // extract device info
     {"mkdir", LuaUnixMkdir},              // make directory
+    {"mount", LuaUnixMount},		  // mount filesystem
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
     {"open", LuaUnixOpen},                // open file fd at lowest slot
     {"opendir", LuaUnixOpendir},          // read directory entry list
@@ -3337,6 +3361,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set default file mask
     {"unlink", LuaUnixUnlink},            // remove file
+    {"unmount", LuaUnixUnmount},	  // unmount filesystem
     {"unveil", LuaUnixUnveil},            // filesystem sandboxing
     {"utimensat", LuaUnixUtimensat},      // change access/modified time
     {"wait", LuaUnixWait},                // wait for child to change status
