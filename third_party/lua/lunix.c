@@ -3213,7 +3213,7 @@ static int LuaUnixMount(lua_State *L) {
 
 // unix.umount(target: str[, flags: int)
 //     ├─→ true
-//     ├─→ nil, unix.Errorno
+//     ├─→ nil, unix.Errrno
 static int LuaUnixUnmount(lua_State *L) {
   int olderr = errno;
   return SysretBool(
@@ -3223,45 +3223,42 @@ static int LuaUnixUnmount(lua_State *L) {
 
 // unix.prctl(option: int[, arg2: int[, arg3: int[, arg4: int[, arg5: int]]]])
 //     ├─→ result: int
-//     ├─→ nil, unix.Errorno
+//     └─→ nil, unix.Errno
 static int LuaUnixPrctl(lua_State *L) {
   int olderr;
   int option;
+  int status;
   unsigned long arg2 = 0, arg3 = 0, arg4 = 0, arg5 = 0;
 
   olderr = errno;
   option = luaL_checkinteger(L, 1);
-    if (lua_gettop(L) >= 2) {
-        if (lua_isnumber(L, 2)) {
-            arg2 = lua_tointeger(L, 2);
-        } else if (lua_isstring(L, 2)) {
-            arg2 = (unsigned long) lua_tostring(L, 2);
-        }
-    }
+  if (lua_gettop(L) >= 2) {
+      arg2 = lua_tointegerx(L, 2, &status);
+      if (!status) {
+          arg2 = (unsigned long)lua_tostring(L, 2);
+      }
+  }
 
-    if (lua_gettop(L) >= 3) {
-        if (lua_isnumber(L, 3)) {
-            arg3 = lua_tointeger(L, 3);
-        } else if (lua_isstring(L, 3)) {
-            arg3 = (unsigned long) lua_tostring(L, 3);
-        }
-    }
+  if (lua_gettop(L) >= 3) {
+      arg3 = lua_tointegerx(L, 3, &status);
+      if (!status) {
+          arg3 = (unsigned long)lua_tostring(L, 3);
+      }
+  }
 
-    if (lua_gettop(L) >= 4) {
-        if (lua_isnumber(L, 4)) {
-            arg4 = lua_tointeger(L, 4);
-        } else if (lua_isstring(L, 4)) {
-            arg4 = (unsigned long) lua_tostring(L, 4);
-        }
-    }
+  if (lua_gettop(L) >= 4) {
+      arg4 = lua_tointegerx(L, 4, &status);
+      if (!status) {
+          arg4 = (unsigned long)lua_tostring(L, 4);
+      }
+  }
 
-    if (lua_gettop(L) >= 5) {
-        if (lua_isnumber(L, 5)) {
-            arg5 = lua_tointeger(L, 5);
-        } else if (lua_isstring(L, 5)) {
-            arg5 = (unsigned long) lua_tostring(L, 5);
-        }
-    }
+  if (lua_gettop(L) >= 5) {
+      arg5 = lua_tointegerx(L, 5, &status);
+      if (!status) {
+          arg5 = (unsigned long)lua_tostring(L, 5);
+      }
+  }
   return SysretInteger(
     L, "prctl", olderr,
     prctl(option, arg2, arg3, arg4, arg5));
