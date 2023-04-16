@@ -30,11 +30,19 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
+typedef short __m16 _Vector_size(2) mayalias;
+typedef int __m32 _Vector_size(4) mayalias;
+typedef int __m64 _Vector_size(8) mayalias;
+typedef float __m128 _Vector_size(16) mayalias forcealign(16);
+
+typedef short __m16_u _Vector_size(2) mayalias forcealign(1);
+typedef int __m32_u _Vector_size(4) mayalias forcealign(1);
+typedef int __m64_u _Vector_size(8) mayalias forcealign(1);
+typedef float __m128_u _Vector_size(16) mayalias forcealign(1);
+
 typedef int __v4si _Vector_size(16);
 typedef unsigned int __v4su _Vector_size(16);
 typedef float __v4sf _Vector_size(16);
-typedef float __m128 _Vector_size(16) forcealign(16) mayalias;
-typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § it's a trap! » sse » simd ops                             ─╬─│┼
