@@ -292,6 +292,7 @@ static const struct thatispacked SyscallName {
     {__NR_linux_epoll_wait, "epoll_wait"},                            //
     {__NR_linux_epoll_ctl, "epoll_ctl"},                              //
     {__NR_linux_getdents, "getdents"},                                //
+    {__NR_linux_oldgetdents, "oldgetdents"},                          //
     {__NR_linux_set_tid_address, "set_tid_address"},                  //
     {__NR_linux_restart_syscall, "restart_syscall"},                  //
     {__NR_linux_semtimedop, "semtimedop"},                            //
@@ -582,6 +583,7 @@ static const uint16_t kPledgeRpath[] = {
     __NR_linux_statfs,             //
     __NR_linux_fstatfs,            //
     __NR_linux_getdents,           //
+    __NR_linux_oldgetdents,        //
 };
 
 static const uint16_t kPledgeWpath[] = {
