@@ -435,16 +435,12 @@ struct thatispacked mayalias __usi128ma {
 
 #define _mm_setr_epi64(M64_0, M64_1) (_mm_set_epi64((M64_1), (M64_0)))
 
-#define _mm_loadu_si128(PTR) (*(__m128i_u const *)(PTR))
-
 #define _mm_loadl_epi64(PTR) \
   (_mm_set_epi64((__m64)0LL, *(__m64_u *)(__m128i_u const *)(PTR)))
 
 #define _mm_loadu_si64(PTR) (_mm_loadl_epi64((__m128i_u *)(PTR)))
 
 #define _mm_store_si128(M128I_PTR_0, M128I_1) (*(M128I_PTR_0) = (M128I_1))
-
-#define _mm_storeu_si128(PTR, M128I_1) (*(__m128i_u *)(PTR) = (M128I_1))
 
 #define _mm_storel_epi64(PTR, M128I_1) \
   (*(__m64_u *)(__m128i_u *)(PTR) = (__m64)((__v2di)(M128_I))[0])
