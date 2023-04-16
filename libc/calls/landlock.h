@@ -26,6 +26,15 @@
  */
 #define LANDLOCK_ACCESS_FS_REFER 0x2000ul
 
+/**
+ * Control file truncation.
+ *
+ * @see https://lore.kernel.org/all/20221018182216.301684-1-gnoack3000@gmail.com/
+ * @see https://docs.kernel.org/userspace-api/landlock.html
+ * @note ABI 3+
+ */
+#define LANDLOCK_ACCESS_FS_TRUNCATE 0x4000ul
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

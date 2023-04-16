@@ -53,7 +53,7 @@
 #define UNVEIL_READ                                             \
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR | \
    LANDLOCK_ACCESS_FS_REFER)
-#define UNVEIL_WRITE (LANDLOCK_ACCESS_FS_WRITE_FILE)
+#define UNVEIL_WRITE (LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_TRUNCATE)
 #define UNVEIL_EXEC  (LANDLOCK_ACCESS_FS_EXECUTE)
 #define UNVEIL_CREATE                                             \
   (LANDLOCK_ACCESS_FS_MAKE_CHAR | LANDLOCK_ACCESS_FS_MAKE_DIR |   \
@@ -65,7 +65,7 @@
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_WRITE_FILE | \
    LANDLOCK_ACCESS_FS_EXECUTE)
 
-static const struct sock_filter kUnveilBlacklist[] = {
+static const struct sock_filter kUnveilBlacklistAbiVersionBelow3[] = {
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(arch)),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
@@ -76,13 +76,29 @@ static const struct sock_filter kUnveilBlacklist[] = {
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
 };
 
+static const struct sock_filter kUnveilBlacklistLatestAbi[] = {
+    BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(arch)),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
+    BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setxattr, 0, 1),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (1 & SECCOMP_RET_DATA)),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+};
+
+static int landlock_abi_version;
+
+__attribute__((__constructor__)) void init_landlock_version() {
+  landlock_abi_version = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION);
+}
+
 /**
  * Long living state for landlock calls.
  * fs_mask is set to use all the access rights from the latest landlock ABI.
  * On init, the current supported abi is checked and unavailable rights are
  * masked off.
  *
- * As of 5.19, the latest abi is v2.
+ * As of 6.2, the latest abi is v3.
  *
  * TODO:
  *  - Integrate with pledge and remove the file access?
@@ -96,9 +112,15 @@ _Thread_local static struct {
 static int unveil_final(void) {
   int e, rc;
   struct sock_fprog sandbox = {
-      .filter = kUnveilBlacklist,
-      .len = ARRAYLEN(kUnveilBlacklist),
+      .filter = kUnveilBlacklistLatestAbi,
+      .len = ARRAYLEN(kUnveilBlacklistLatestAbi),
   };
+  if (landlock_abi_version < 3) {
+    sandbox = (struct sock_fprog){
+      .filter = kUnveilBlacklistAbiVersionBelow3,
+      .len = ARRAYLEN(kUnveilBlacklistAbiVersionBelow3),
+    };
+  }
   e = errno;
   prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
   errno = e;
@@ -120,15 +142,17 @@ static int err_close(int rc, int fd) {
 static int unveil_init(void) {
   int rc, fd;
   State.fs_mask = UNVEIL_READ | UNVEIL_WRITE | UNVEIL_EXEC | UNVEIL_CREATE;
-  if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) ==
-      -1) {
+  if (landlock_abi_version == -1) {
     if (errno == EOPNOTSUPP) {
       errno = ENOSYS;
     }
     return -1;
   }
-  if (rc < 2) {
+  if (landlock_abi_version < 2) {
     State.fs_mask &= ~LANDLOCK_ACCESS_FS_REFER;
+  }
+  if (landlock_abi_version < 3) {
+    State.fs_mask &= ~LANDLOCK_ACCESS_FS_TRUNCATE;
   }
   const struct landlock_ruleset_attr attr = {
       .handled_access_fs = State.fs_mask,
@@ -301,14 +325,19 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *    possible to use opendir() and go fishing for paths which weren't
  *    previously known.
  *
- * 5. Use ftruncate() rather than truncate(). One issue Landlock hasn't
- *    addressed yet is restrictions over truncate() and setxattr() which
- *    could permit certain kinds of modifications to files outside the
- *    sandbox. When your policy is committed, we install a SECCOMP BPF
- *    filter to disable those calls, however similar trickery may be
- *    possible through other unaddressed calls like ioctl(). Using the
- *    pledge() function in addition to unveil() will solve this, since
- *    it installs a strong system call access policy.
+ * 5. Use ftruncate() rather than truncate() if you wish for portability to
+ *    Linux kernels versions released before February 2022. One issue
+ *    Landlock hadn't addressed as of ABI version 2 was restrictions over
+ *    truncate() and setxattr() which could permit certain kinds of
+ *    modifications to files outside the sandbox. When your policy is
+ *    committed, we install a SECCOMP BPF filter to disable those calls,
+ *    however similar trickery may be possible through other unaddressed
+ *    calls like ioctl(). Using the pledge() function in addition to
+ *    unveil() will solve this, since it installs a strong system call
+ *    access policy. Linux 6.2 has improved this situation with Landlock
+ *    ABI v3, which added the ability to control truncation operations -
+ *    this means the SECCOMP BPF filter will only disable
+ *    truncate() on Linux 6.1 or older
  *
  * 6. Set your process-wide policy at startup from the main thread. On
  *    OpenBSD unveil() will apply process-wide even when called from a
@@ -347,7 +376,8 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  * @raise EINVAL if one argument is set and the other is not
  * @raise EINVAL if an invalid character in `permissions` was found
  * @raise EPERM if unveil() is called after locking
- * @note on Linux this function requires Linux Kernel 5.13+
+ * @note on Linux this function requires Linux Kernel 5.13+ and version 6.2+
+ *     to properly support truncation operations
  * @see [1] https://docs.kernel.org/userspace-api/landlock.html
  * @threadsafe
  */
