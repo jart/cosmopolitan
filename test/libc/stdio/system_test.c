@@ -29,6 +29,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
+STATIC_YOINK("glob");
+
 char testlib_enable_tmp_setup_teardown;
 
 TEST(system, haveShell) {
@@ -54,6 +56,43 @@ TEST(system, testStdoutRedirect_withSpacesInFilename) {
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   ASSERT_EQ(0, system("./echo.com hello >\"hello there.txt\""));
   EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
+}
+
+TEST(system, testStderrRedirect_toStdout) {
+  int pipefd[2];
+  int stdoutBack = dup(1);
+  ASSERT_NE(-1, stdoutBack);
+  ASSERT_EQ(0, pipe(pipefd));
+  ASSERT_NE(-1, dup2(pipefd[1], 1));
+  int stderrBack = dup(2);
+  ASSERT_NE(-1, stderrBack);
+  char buf[5] = {0};
+
+  ASSERT_NE(-1, dup2(1, 2));
+  bool success = false;
+  if (WEXITSTATUS(system("echo aaa 2>&1")) == 0) {
+    success = read(pipefd[0], buf, sizeof(buf) - 1) == (sizeof(buf) - 1);
+  }
+  ASSERT_NE(-1, dup2(stderrBack, 2));
+  ASSERT_EQ(true, success);
+  ASSERT_STREQ("aaa\n", buf);
+  buf[0] = 0;
+  buf[1] = 0;
+  buf[2] = 0;
+  buf[3] = 0;
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  ASSERT_NE(-1, dup2(1, 2));
+  success = false;
+  if (WEXITSTATUS(system("./echo.com aaa 2>&1")) == 0) {
+    success = read(pipefd[0], buf, sizeof(buf) - 1) == (sizeof(buf) - 1);
+  }
+  ASSERT_NE(-1, dup2(stderrBack, 2));
+  ASSERT_EQ(true, success);
+  ASSERT_STREQ("aaa\n", buf);
+
+  ASSERT_NE(-1, dup2(stdoutBack, 1));
+  ASSERT_EQ(0, close(pipefd[1]));
+  ASSERT_EQ(0, close(pipefd[0]));
 }
 
 BENCH(system, bench) {
@@ -115,4 +154,67 @@ TEST(system, usleep) {
 TEST(system, kill) {
   int ws = system("kill -TERM $$; usleep");
   if (!IsWindows()) ASSERT_EQ(SIGTERM, WTERMSIG(ws));
+}
+
+TEST(system, exitStatusPreservedAfterSemiColon) {
+  ASSERT_EQ(1, WEXITSTATUS(system("false;")));
+  ASSERT_EQ(1, WEXITSTATUS(system("false; ")));
+  if (!IsWindows() && !IsMetal()) {
+    ASSERT_EQ(1, WEXITSTATUS(system("/bin/false;")));
+    ASSERT_EQ(1, WEXITSTATUS(system("/bin/false;")));
+  }
+
+  int pipefd[2];
+  int stdoutBack = dup(1);
+  ASSERT_NE(-1, stdoutBack);
+  ASSERT_EQ(0, pipe(pipefd));
+  ASSERT_NE(-1, dup2(pipefd[1], 1));
+
+  ASSERT_EQ(0, WEXITSTATUS(system("false; echo $?")));
+  char buf[3] = {0};
+  ASSERT_EQ(2, read(pipefd[0], buf, 2));
+  ASSERT_STREQ("1\n", buf);
+  if (!IsWindows() && !IsMetal()) {
+    ASSERT_EQ(0, WEXITSTATUS(system("/bin/false; echo $?")));
+    buf[0] = 0;
+    buf[1] = 0;
+    ASSERT_EQ(2, read(pipefd[0], buf, 2));
+    ASSERT_STREQ("1\n", buf);
+  }
+
+  ASSERT_NE(-1, dup2(stdoutBack, 1));
+  ASSERT_EQ(0, close(pipefd[1]));
+  ASSERT_EQ(0, close(pipefd[0]));
+}
+
+TEST(system, allowsLoneCloseCurlyBrace) {
+  int pipefd[2];
+  int stdoutBack = dup(1);
+  ASSERT_NE(-1, stdoutBack);
+  ASSERT_EQ(0, pipe(pipefd));
+  ASSERT_NE(-1, dup2(pipefd[1], 1));
+  char buf[6] = {0};
+
+  ASSERT_EQ(0, WEXITSTATUS(system("echo \"aaa\"}")));
+  ASSERT_EQ(sizeof(buf) - 1, read(pipefd[0], buf, sizeof(buf) - 1));
+  ASSERT_STREQ("aaa}\n", buf);
+  buf[0] = 0;
+  buf[1] = 0;
+  buf[2] = 0;
+  buf[3] = 0;
+  buf[4] = 0;
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  ASSERT_EQ(0, WEXITSTATUS(system("./echo.com \"aaa\"}")));
+  ASSERT_EQ(sizeof(buf) - 1, read(pipefd[0], buf, sizeof(buf) - 1));
+  ASSERT_STREQ("aaa}\n", buf);
+
+  ASSERT_NE(-1, dup2(stdoutBack, 1));
+  ASSERT_EQ(0, close(pipefd[1]));
+  ASSERT_EQ(0, close(pipefd[0]));
+}
+
+TEST(system, glob) {
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  ASSERT_EQ(0, WEXITSTATUS(system("./ec*.com aaa")));
+  ASSERT_EQ(0, WEXITSTATUS(system("./ec?o.com aaa")));
 }

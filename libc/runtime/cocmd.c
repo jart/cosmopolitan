@@ -399,7 +399,7 @@ static int Fake(int main(int, char **)) {
 }
 
 static int TryBuiltin(void) {
-  if (!n) return 0;
+  if (!n) return exitstatus;
   if (!strcmp(args[0], "exit")) Exit();
   if (!strcmp(args[0], "cd")) return Cd();
   if (!strcmp(args[0], "rm")) return Rm();
@@ -570,8 +570,13 @@ static char *Tokenize(void) {
           if (q > r) {
             return Finish();
           } else {
-            Run();
+            exitstatus = Run();
             t = STATE_WHITESPACE;
+          }
+        } else if (*p == '>') {
+          Append(*p);
+          if (p[1] == '&') {
+            Append(*++p);
           }
         } else if (*p == '&') {
           if (q > r) {
@@ -680,7 +685,8 @@ int _cocmd(int argc, char **argv, char **envp) {
   unsupported['('] = true;
   unsupported[')'] = true;
   unsupported['{'] = true;
-  unsupported['}'] = true;
+  unsupported['}'] = false;  // Perl t/op/exec.t depends on unpaired } being
+                             // passed from the shell to Perl
   if (!_weaken(glob)) {
     unsupported['*'] = true;
     unsupported['?'] = true;
