@@ -250,11 +250,7 @@ struct thatispacked mayalias __usi128ma {
 
 #define _mm_setr_pd(DBL_0, DBL_1) ((__m128d){(double)(DBL_0), (double)(DBL_1)})
 
-#define _mm_undefined_pd() \
-  ({                       \
-    __m128d __Y = __Y;     \
-    return __Y;            \
-  })
+#define _mm_undefined_pd() ((__m128d){0.0, 0.0})
 
 #define _mm_setzero_pd() ((__m128d){0.0, 0.0})
 
@@ -455,7 +451,7 @@ struct thatispacked mayalias __usi128ma {
 #define _mm_move_epi64(M128I_0) \
   ((__m128i)__builtin_ia32_movq128((__v2di)(M128I_0)))
 
-#define _mm_undefined_si128() ({ __m128i __Y = __Y; })
+#define _mm_undefined_si128() ((__m128i)(__v2di){0, 0})
 
 #define _mm_cvtepi32_ps(M128I_0) \
   ((__m128)__builtin_ia32_cvtdq2ps((__v4si)(M128I_0)))
