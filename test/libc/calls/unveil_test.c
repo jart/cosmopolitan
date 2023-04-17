@@ -68,6 +68,10 @@ void SetUp(void) {
   ASSERT_SYS(0, 0, stat("/zip/life.elf", &st));
 }
 
+bool HasTruncateSupport(void) {
+  return IsOpenbsd() || landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION) >= 3;
+}
+
 TEST(unveil, api_differences) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("foo", 0755));
@@ -245,7 +249,7 @@ TEST(unveil, truncate_isForbiddenBySeccomp) {
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
   ASSERT_SYS(0, 0, unveil("jail", "rw"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(IsOpenbsd() ? ENOENT : EPERM, -1,
+  ASSERT_SYS(!HasTruncateSupport() ? EPERM : EACCES_OR_ENOENT, -1,
              truncate("garden/secret.txt", 0));
   if (IsLinux()) {
     ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));
