@@ -209,6 +209,7 @@
 #define __NR_linux_epoll_wait              0x00e8
 #define __NR_linux_epoll_ctl               0x00e9
 #define __NR_linux_getdents                0x00d9
+#define __NR_linux_oldgetdents             0x004e
 #define __NR_linux_set_tid_address         0x00da
 #define __NR_linux_restart_syscall         0x00db
 #define __NR_linux_semtimedop              0x00dc
