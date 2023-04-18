@@ -782,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function () {\n\
               free(prefix);
             }
           }
-        } else {
+        } else if (o->javadown) {
           for (k = 0; k < o->javadown->tags.n; ++k) {
             if (!strcmp(o->javadown->tags.p[k].tag, "param")) {
               fprintf(f, "<dd>");
