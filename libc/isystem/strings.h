@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ISYSTEM_STRINGS_H_
 #define COSMOPOLITAN_LIBC_ISYSTEM_STRINGS_H_
+#include "libc/nexgen32e/ffs.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 

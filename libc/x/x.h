@@ -30,7 +30,7 @@ char *xstrndup(const char *, size_t) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 char *xstrcat(const char *, ...) paramsnonnull((1)) nullterminated()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
-#define xstrcat(...) (xstrcat)(__VA_ARGS__, 0)
+#define xstrcat(...) (xstrcat)(__VA_ARGS__, NULL)
 char *xstrmul(const char *, size_t) paramsnonnull((1))
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 char *xinet_ntop(int, const void *) paramsnonnull()

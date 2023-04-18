@@ -977,13 +977,13 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
     if (HasSyscall(kPledge + i, si->si_syscall)) {
       Log("error: pledge ", kPledge[i].name, " for ",
           GetSyscallName(si->si_syscall), " (ord=", ord, " rip=", rip, ")\n",
-          0);
+          NULL);
       found = true;
     }
   }
   if (!found) {
     Log("error: bad syscall (", GetSyscallName(si->si_syscall), " ord=", ord,
-        " rip=", rip, ")\n", 0);
+        " rip=", rip, ")\n", NULL);
   }
   switch (mode & PLEDGE_PENALTY_MASK) {
     case PLEDGE_PENALTY_KILL_PROCESS:
