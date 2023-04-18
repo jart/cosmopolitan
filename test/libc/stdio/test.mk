@@ -69,6 +69,7 @@ o/$(MODE)/test/libc/stdio/system_test.com.dbg:			\
 		o/$(MODE)/test/libc/stdio/stdio.pkg		\
 		o/$(MODE)/tool/build/echo.com.zip.o		\
 		o/$(MODE)/tool/build/cocmd.com.zip.o		\
+		o/$(MODE)/tool/build/false.com.zip.o		\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)

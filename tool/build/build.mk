@@ -16,6 +16,7 @@ TOOL_BUILD_BINS =					\
 	o/$(MODE)/tool/build/cp				\
 	o/$(MODE)/tool/build/mv				\
 	o/$(MODE)/tool/build/echo			\
+	o/$(MODE)/tool/build/false			\
 	o/$(MODE)/tool/build/gzip			\
 	o/$(MODE)/tool/build/printf			\
 	o/$(MODE)/tool/build/dd
@@ -110,6 +111,8 @@ o/$(MODE)/tool/build/mkdir.zip.o			\
 o/$(MODE)/tool/build/chmod.zip.o			\
 o/$(MODE)/tool/build/cp.zip.o				\
 o/$(MODE)/tool/build/mv.zip.o				\
+o/$(MODE)/tool/build/false.zip.o			\
+o/$(MODE)/tool/build/false.com.zip.o			\
 o/$(MODE)/tool/build/echo.zip.o				\
 o/$(MODE)/tool/build/echo.com.zip.o			\
 o/$(MODE)/tool/build/cocmd.com.zip.o			\
