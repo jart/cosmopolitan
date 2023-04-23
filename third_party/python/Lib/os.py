@@ -1180,6 +1180,7 @@ if __name__ == 'PYOBJ.COM':
     get_terminal_size = 0
     getcwd = 0
     getcwdb = 0
+    geteuid = 0
     getgrouplist = 0
     getgroups = 0
     getlogin = 0

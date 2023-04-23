@@ -100,6 +100,7 @@
 #define HAVE_DECL_RTLD_NOW      1
 
 #define HAVE_GETSID        1
+#define HAVE_GETEUID        1
 #define HAVE_GETTIMEOFDAY  1
 #define HAVE_GETUID        1
 #define HAVE_GETNAMEINFO   1
