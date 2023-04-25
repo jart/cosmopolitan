@@ -53,3 +53,32 @@ BENCH(_longsort, bench) {
   EZBENCH2("qsort", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
 }
+
+int CompareInt(const void *a, const void *b) {
+  const int *x = a;
+  const int *y = b;
+  if (*x < *y) return -1;
+  if (*x > *y) return +1;
+  return 0;
+}
+
+TEST(_intsort, test) {
+  size_t n = 5000;
+  int *a = gc(calloc(n, sizeof(int)));
+  int *b = gc(calloc(n, sizeof(int)));
+  rngset(a, n * sizeof(int), 0, 0);
+  memcpy(b, a, n * sizeof(int));
+  qsort(a, n, sizeof(int), CompareInt);
+  _intsort(b, n);
+  ASSERT_EQ(0, memcmp(b, a, n * sizeof(int)));
+}
+
+BENCH(_intsort, bench) {
+  size_t n = 1000;
+  int *p1 = gc(malloc(n * sizeof(int)));
+  int *p2 = gc(malloc(n * sizeof(int)));
+  rngset(p1, n * sizeof(int), 0, 0);
+  EZBENCH2("_intsort", memcpy(p2, p1, n * sizeof(int)), _intsort(p2, n));
+  EZBENCH2("qsort", memcpy(p2, p1, n * sizeof(int)),
+           qsort(p2, n, sizeof(int), CompareInt));
+}

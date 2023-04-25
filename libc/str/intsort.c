@@ -19,20 +19,36 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
-static void _intsorter(int *A, size_t n) {
-  int t, p;
-  size_t i, j;
-  if (n < 2) return;
-  for (p = A[n / 2], i = 0, j = n - 1;; i++, j--) {
-    while (A[i] < p) i++;
-    while (A[j] > p) j--;
-    if (i >= j) break;
+static inline void InsertionSort(int *A, long n) {
+  long i, j, t;
+  for (i = 1; i < n; i++) {
     t = A[i];
-    A[i] = A[j];
-    A[j] = t;
+    j = i - 1;
+    while (j >= 0 && A[j] > t) {
+      A[j + 1] = A[j];
+      j = j - 1;
+    }
+    A[j + 1] = t;
   }
-  _intsorter(A, i);
-  _intsorter(A + i, n - i);
+}
+
+static void IntSort(int *A, long n) {
+  int t, p;
+  long i, j;
+  if (n <= 32) {
+    InsertionSort(A, n);
+  } else {
+    for (p = A[n >> 1], i = 0, j = n - 1;; i++, j--) {
+      while (A[i] < p) i++;
+      while (A[j] > p) j--;
+      if (i >= j) break;
+      t = A[i];
+      A[i] = A[j];
+      A[j] = t;
+    }
+    IntSort(A, i);
+    IntSort(A + i, n - i);
+  }
 }
 
 /**
@@ -40,7 +56,7 @@ static void _intsorter(int *A, size_t n) {
  * @see djbsort
  */
 void _intsort(int *A, size_t n) {
-  _intsorter(A, n);
+  IntSort(A, n);
   if (n > 1000) {
     STRACE("_intsort(%p, %'zu)", A, n);
   }
