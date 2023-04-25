@@ -46,8 +46,6 @@ FLAGS
   -b        log message bodies
   -a        log resource usage
   -g        log handler latency
-  -e        eval Lua code in arg
-  -F        eval Lua code in file
   -E        show crash reports to public ips
   -j        enable ssl client verify
   -k        disable ssl fetch verify
@@ -62,6 +60,8 @@ FLAGS
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
   -S        increase pledge sandboxing        [repeatable]
+  -e CODE   eval Lua code in arg              [repeatable]
+  -F PATH   eval Lua code in file             [repeatable]
   -H K:V    sets http header globally         [repeatable]
   -D DIR    overlay assets in local directory [repeatable]
   -r /X=/Y  redirect X to Y                   [repeatable]
