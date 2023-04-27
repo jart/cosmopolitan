@@ -67,10 +67,8 @@
 #endif
 
 /* TODO(jart): Remove this in favor of GetStackSize() */
-#if defined(COSMO) && (defined(MODE_DBG) || defined(__SANITIZE_ADDRESS__))
+#ifdef COSMO
 #define STACKSIZE 262144 /* 256kb stack */
-#elif defined(COSMO)
-#define STACKSIZE 131072 /* 128kb stack */
 #else
 #define STACKSIZE 8388608 /* 8mb stack */
 #endif
