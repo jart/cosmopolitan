@@ -66,6 +66,8 @@ void *VirtualAlloc(void *opt_lpAddress, uint64_t dwSize,
 bool32 VirtualFree(void *lpAddress, uint64_t dwSize, uint32_t dwFreeType);
 bool32 VirtualProtect(void *lpAddress, uint64_t dwSize, uint32_t flNewProtect,
                       uint32_t *lpflOldProtect) paramsnonnull();
+bool32 VirtualLock(void *lpAddress, size_t dwSize);
+bool32 VirtualUnlock(void *lpAddress, size_t dwSize);
 uint64_t VirtualQuery(const void *lpAddress,
                       struct NtMemoryBasicInformation *lpBuffer,
                       uint64_t dwLength);

@@ -1046,11 +1046,11 @@ imp	'VirtualAllocEx'					VirtualAllocEx						kernel32	0	5
 imp	'VirtualAllocExNuma'					VirtualAllocExNuma					kernel32	0
 imp	'VirtualFree'						VirtualFree						kernel32	0	3
 imp	'VirtualFreeEx'						VirtualFreeEx						kernel32	0
-imp	'VirtualLock'						VirtualLock						kernel32	0
+imp	'VirtualLock'						VirtualLock						kernel32	0	2
+imp	'VirtualUnlock'						VirtualUnlock						kernel32	0	2
 imp	'VirtualProtectEx'					VirtualProtectEx					kernel32	0
 imp	'VirtualQuery'						VirtualQuery						kernel32	0	3
 imp	'VirtualQueryEx'					VirtualQueryEx						kernel32	0
-imp	'VirtualUnlock'						VirtualUnlock						kernel32	0
 imp	'WTSGetActiveConsoleSessionId'				WTSGetActiveConsoleSessionId				kernel32	1497
 imp	'WaitCommEvent'						WaitCommEvent						kernel32	0
 imp	'WaitForDebugEvent'					WaitForDebugEvent					kernel32	0
