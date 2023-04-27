@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/xmmintrin.internal.h"
-#include "libc/intrin/repstosb.h"
 #include "tool/build/emubin/metalsha256.h"
+#include "libc/intrin/repstosb.h"
 
 #define ROTR(a, b)   (((a) >> (b)) | ((a) << (32 - (b))))
 #define CH(x, y, z)  (((x) & (y)) ^ (~(x) & (z)))

@@ -21,16 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include "third_party/quickjs/libbf.h"
 #include "libc/assert.h"
-#include "libc/intrin/avxintrin.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/inttypes.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "third_party/intel/immintrin.internal.h"
 #include "third_party/quickjs/cutils.h"
 #include "third_party/quickjs/diglet.h"
-#include "third_party/quickjs/libbf.h"
 
 asm(".ident\t\"\\n\\n\
 QuickJS (MIT License)\\n\

@@ -1,4 +1,0 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SHAINTRIN_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_SHAINTRIN_H_
-#include "libc/intrin/shaintrin.internal.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SHAINTRIN_H_ */

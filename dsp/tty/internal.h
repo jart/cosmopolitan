@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_DSP_TTY_INTERNAL_H_
 #define COSMOPOLITAN_DSP_TTY_INTERNAL_H_
 #include "dsp/tty/ttyrgb.h"
-#include "libc/intrin/xmmintrin.internal.h"
+#include "third_party/intel/xmmintrin.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

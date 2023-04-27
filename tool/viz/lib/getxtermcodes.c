@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/macros.internal.h"
 #include "tool/viz/lib/graphic.h"
 

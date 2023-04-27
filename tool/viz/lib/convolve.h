@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLVE_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLVE_H_
-#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/str/str.h"
 #include "tool/viz/lib/graphic.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

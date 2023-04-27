@@ -3,9 +3,9 @@
 #include "dsp/tty/ttyrgb.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
+#include "third_party/intel/xmmintrin.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
