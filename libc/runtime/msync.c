@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/msync.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
@@ -24,7 +25,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/sysv/consts/msync.h"
 
 /**
  * Synchronize memory mapping changes to disk.

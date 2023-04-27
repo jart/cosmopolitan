@@ -19,7 +19,8 @@ extern int daylight;
 
 char *ctime(const int64_t *);
 char *ctime_r(const int64_t *, char[hasatleast 26]);
-double difftime(int64_t, int64_t) dontthrow pureconst;
+double difftime(int64_t, int64_t)
+dontthrow pureconst;
 extern long double (*nowl)(void);
 int64_t clock(void);
 int64_t posix2time(int64_t) pureconst;

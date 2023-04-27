@@ -39,10 +39,10 @@
 #undef KLOGTTY
 #define MAYUNROLLLOOPS unrollloops
 
-#define COLOR          TtyCanvasColor
-#define BPP            32
-#define MAPCOLOR       TtyGraphMapColor
-#define DIRTY          TtyGraphDirty
+#define COLOR    TtyCanvasColor
+#define BPP      32
+#define MAPCOLOR TtyGraphMapColor
+#define DIRTY    TtyGraphDirty
 #undef UPDATE
 #define RESETDIRTY     TtyGraphResetDirty
 #define DRAWBITMAP     TtyGraphDrawBitmap

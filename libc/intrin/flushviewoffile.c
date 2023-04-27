@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/memory.h"
 
 __msabi extern typeof(FlushViewOfFile) *const __imp_FlushViewOfFile;

@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/sigtimedwait.h"
 #include "libc/calls/asan.internal.h"
 #include "libc/calls/cp.internal.h"
-#include "libc/calls/sigtimedwait.h"
 #include "libc/calls/sigtimedwait.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigset.internal.h"

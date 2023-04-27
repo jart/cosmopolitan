@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/rand.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/lcg.internal.h"
-#include "libc/stdio/rand.h"
 
 /**
  * Returns 31-bit linear congruential pseudorandom number, e.g.

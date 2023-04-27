@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
-
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"

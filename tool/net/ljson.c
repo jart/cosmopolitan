@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/net/ljson.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
@@ -29,7 +30,6 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
-#include "tool/net/ljson.h"
 
 #define KEY    1
 #define COMMA  2

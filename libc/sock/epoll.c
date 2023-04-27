@@ -32,6 +32,7 @@
 │  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.        │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sock/epoll.h"
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
@@ -67,7 +68,6 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/epoll.h"
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/epoll.h"

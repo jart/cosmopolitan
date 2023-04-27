@@ -41,7 +41,7 @@
  * @return pointer to inflated data
  * @threadsafe
  */
-void *xload(_Atomic(void *) * a, const void *p, size_t n, size_t m) {
+void *xload(_Atomic(void *) *a, const void *p, size_t n, size_t m) {
   void *r, *z;
   if ((r = atomic_load_explicit(a, memory_order_acquire))) return r;
   if (!(r = kmalloc(m))) return 0;

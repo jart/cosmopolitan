@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/mremap.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -30,7 +31,6 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/mremap.h"
 #include "libc/sysv/errfuns.h"
 
 #define IP(X)      (intptr_t)(X)

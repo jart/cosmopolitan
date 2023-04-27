@@ -16,19 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/pushpop.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/fmt/fmt.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 static struct HostsTxt *g_hoststxt;
 static struct HostsTxtInitialStaticMemory {

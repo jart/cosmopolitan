@@ -76,11 +76,13 @@
 #undef VGA_PERSNICKETY_STATUS
 
 /* Flags which are passed to _StartTty(). */
-#define kTtyAllocWcs  0x01              /* allocate Unicode character array
-                                           (if VGA_USE_WCS also defined) */
-#define kTtyKlog      0x02              /* the system might be in an abnormal
-                                           state, & we are setting up the tty
-                                           to show system messages */
+#define kTtyAllocWcs                       \
+  0x01 /* allocate Unicode character array \
+          (if VGA_USE_WCS also defined) */
+#define kTtyKlog                             \
+  0x02 /* the system might be in an abnormal \
+          state, & we are setting up the tty \
+          to show system messages */
 
 /**
  * Flags for Tty::pr.  These govern properties of individual character cells.
@@ -250,7 +252,7 @@ void _TtyBgr555Update(struct Tty *);
 void _TtyGraphDrawChar(struct Tty *, size_t, size_t, wchar_t);
 void _TtyGraphEraseLineCells(struct Tty *, size_t, size_t, size_t);
 void _TtyGraphMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
-                                          size_t);
+                            size_t);
 
 /*
  * Routines that implement emergency or system console output in graphical
@@ -260,17 +262,17 @@ void _TtyKlog16Update(struct Tty *);
 void _TtyKlog16DrawChar(struct Tty *, size_t, size_t, wchar_t);
 void _TtyKlog16EraseLineCells(struct Tty *, size_t, size_t, size_t);
 void _TtyKlog16MoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
-                                           size_t);
+                             size_t);
 void _TtyKlog32Update(struct Tty *);
 void _TtyKlog32DrawChar(struct Tty *, size_t, size_t, wchar_t);
 void _TtyKlog32EraseLineCells(struct Tty *, size_t, size_t, size_t);
 void _TtyKlog32MoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
-                                           size_t);
+                             size_t);
 
 /* High-level teletypewriter routines. */
 void _StartTty(struct Tty *, unsigned char, unsigned short, unsigned short,
-               unsigned short, unsigned short, unsigned short,
-               unsigned char, unsigned char, void *, unsigned);
+               unsigned short, unsigned short, unsigned short, unsigned char,
+               unsigned char, void *, unsigned);
 ssize_t _TtyRead(struct Tty *, void *, size_t);
 ssize_t _TtyWrite(struct Tty *, const void *, size_t);
 ssize_t _TtyWriteInput(struct Tty *, const void *, size_t);

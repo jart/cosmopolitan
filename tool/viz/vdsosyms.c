@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/elf/def.h"
 #include "libc/elf/scalar.h"
 #include "libc/elf/struct/ehdr.h"
@@ -25,6 +24,7 @@
 #include "libc/elf/struct/verdaux.h"
 #include "libc/elf/struct/verdef.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 

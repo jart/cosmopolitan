@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "libc/str/locale.h"
+#include "libc/str/str.h"
 
 int tolower_l(int c, locale_t l) {
   return tolower(c);

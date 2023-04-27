@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/dns/servicestxt.h"
 #include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"

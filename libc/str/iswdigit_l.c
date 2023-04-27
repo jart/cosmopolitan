@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "libc/str/locale.h"
+#include "libc/str/str.h"
 
 int iswdigit_l(wint_t c, locale_t l) {
   return iswdigit(c);

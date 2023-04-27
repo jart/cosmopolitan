@@ -29,9 +29,9 @@
 #define sa_family_t   uint16_t /* bsd:uint8_t */
 #define socklen_t     uint32_t
 #define speed_t       uint32_t
-#define suseconds_t   int64_t /* int32_t on xnu */
+#define suseconds_t   int64_t  /* int32_t on xnu */
 #define useconds_t    uint64_t /* uint32_t on xnu */
-#define syscall_arg_t int64_t /* uint64_t on xnu */
+#define syscall_arg_t int64_t  /* uint64_t on xnu */
 #define tcflag_t      uint32_t
 #define time_t        int64_t
 #define timer_t       void*

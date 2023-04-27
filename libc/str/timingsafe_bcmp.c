@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/likely.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 noasan static dontinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
-                                                              const char *q,
-                                                              size_t n) {
+                                                                const char *q,
+                                                                size_t n) {
   uint64_t w;
   xmm_t a = {0};
   while (n > 16 + 16) {

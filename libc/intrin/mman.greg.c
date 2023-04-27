@@ -44,7 +44,7 @@
 #include "libc/runtime/runtime.h"
 
 #define INVERT(x) (BANE + PHYSICAL(x))
-#define NOPAGE ((uint64_t)-1)
+#define NOPAGE    ((uint64_t)-1)
 
 struct ReclaimedPage {
   uint64_t next;
@@ -133,8 +133,7 @@ static noasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
 /**
  * Identity maps an area of physical memory to its negative address.
  */
-noasan textreal uint64_t *__invert_memory_area(struct mman *mm,
-                                               uint64_t *pml4t,
+noasan textreal uint64_t *__invert_memory_area(struct mman *mm, uint64_t *pml4t,
                                                uint64_t ps, uint64_t size,
                                                uint64_t pte_flags) {
   uint64_t pe = ps + size, p, *m = NULL;

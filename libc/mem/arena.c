@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/arena.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -26,7 +27,6 @@
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/arena.h"
 #include "libc/mem/hook/hook.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"

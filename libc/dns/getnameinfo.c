@@ -24,7 +24,6 @@
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/consts.h"
 #include "libc/dns/dns.h"
@@ -34,6 +33,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"

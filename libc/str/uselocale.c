@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/errfuns.h"
 #include "libc/str/locale.h"
+#include "libc/sysv/errfuns.h"
 
 locale_t uselocale(locale_t l) {
   // TODO: implement me!

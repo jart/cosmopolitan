@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
 #include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
 
 int fsetpos(FILE *stream, const fpos_t *pos) {
   return fseek(stream, *pos, SEEK_SET);

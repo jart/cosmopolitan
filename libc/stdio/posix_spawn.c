@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/posix_spawn.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/posix_spawn.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"

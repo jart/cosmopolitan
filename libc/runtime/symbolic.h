@@ -7,7 +7,7 @@
 #define LITERALLY(NAME) $NAME
 /* clang-format on */
 #else
-#define SYMBOLIC(NAME) NAME
+#define SYMBOLIC(NAME)  NAME
 #define LITERALLY(NAME) NAME
 #endif
 

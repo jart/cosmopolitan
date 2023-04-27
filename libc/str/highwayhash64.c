@@ -15,8 +15,8 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/str/highwayhash64.h"
+#include "libc/intrin/bits.h"
 
 asm(".ident\t\"\\n\\n\
 HighwayHash (Apache 2.0)\\n\

@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigaction.h"
 #include "libc/assert.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -248,8 +248,9 @@ static int __sigaction(int sig, const struct sigaction *act,
   if (rc != -1 && !__vforked) {
     if (oldact) {
       oldrva = __sighandrvas[sig];
-      oldact->sa_sigaction = (sigaction_f)(
-          oldrva < kSigactionMinRva ? oldrva : (intptr_t)&_base + oldrva);
+      oldact->sa_sigaction =
+          (sigaction_f)(oldrva < kSigactionMinRva ? oldrva
+                                                  : (intptr_t)&_base + oldrva);
     }
     if (act) {
       __sighandrvas[sig] = rva;

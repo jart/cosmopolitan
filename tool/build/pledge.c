@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/pledge.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
-#include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"

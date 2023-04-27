@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 
-__msabi extern typeof(WSAWaitForMultipleEvents) *const
-    __imp_WSAWaitForMultipleEvents;
+__msabi extern typeof(WSAWaitForMultipleEvents)
+    *const __imp_WSAWaitForMultipleEvents;
 
 /**
  * Waits for events on Windows sockets.

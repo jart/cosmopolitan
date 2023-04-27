@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/tls.h"
 #include "tool/plinko/lib/plinko.h"
+#include "libc/thread/tls.h"
 
 STATIC_YOINK("__zipos_get");
 

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "libc/str/locale.h"
+#include "libc/str/str.h"
 
 int wcscoll_l(const wchar_t *p, const wchar_t *q, locale_t l) {
   return wcscmp(p, q);

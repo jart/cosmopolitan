@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/thread/thread.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/symboliclink.h"
@@ -32,6 +31,7 @@
 #include "libc/nt/struct/tokenprivileges.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 

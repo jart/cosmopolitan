@@ -97,29 +97,29 @@
   "Beautifies source code in current buffer."
   (interactive)
   (when (and (memq major-mode cosmo-format-modes)
-           (member (file-name-extension (buffer-file-name))
-              cosmo-format-exts)
-           (not (member (file-name-nondirectory (buffer-name))
-                 cosmo-format-blacklist))
-           (not (save-excursion
-                (beginning-of-buffer)
-                (looking-at "/\\* clang-format off \\*/"))))
-    (let ((bin (cosmo--find-clang-format-bin)))
-      (when bin
+             (member (file-name-extension (buffer-file-name))
+                     cosmo-format-exts)
+             (not (member (file-name-nondirectory (buffer-name))
+                          cosmo-format-blacklist))
+             (not (save-excursion
+                    (beginning-of-buffer)
+                    (looking-at "/\\* clang-format off \\*/"))))
+    (let* ((bin (cosmo--find-clang-format-bin))
+           (this (buffer-file-name))
+           (root (locate-dominating-file this ".clang-format")))
+      (when (and bin root)
         (let ((p (point))
               (tmp (make-temp-file "cosmo-format"))
-              (arg (or cosmo-format-arg
-                      (and (locate-dominating-file
-                          (buffer-file-name)
-                          ".clang-format")
-                         "-style=file"))))
-          (when arg
-            (message arg)
+              (arg1 (concat "--assume-filename="
+                            (file-relative-name this root)))
+              (arg2 (or cosmo-format-arg
+                        "-style=file")))
+          (when arg2
             (write-region nil nil tmp)
             (let ((buf (get-buffer-create "*clang-format*"))
                   (exe (cosmo--find-clang-format-bin)))
               (with-current-buffer buf
-                (call-process exe tmp t nil arg))
+                (call-process exe tmp t nil arg1 arg2))
               (replace-buffer-contents buf)
               (kill-buffer buf)
               (delete-file tmp nil))))))))

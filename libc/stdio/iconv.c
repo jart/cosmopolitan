@@ -25,9 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/iconv.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/iconv.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"

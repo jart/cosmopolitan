@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_XMMINTRIN_H_
 #define COSMOPOLITAN_LIBC_BITS_XMMINTRIN_H_
-#include "libc/intrin/emmintrin.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/emmintrin.internal.h"
 
 #define _MM_EXCEPT_MASK       0x003f
 #define _MM_EXCEPT_INVALID    0x0001

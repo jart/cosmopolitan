@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "libc/str/locale.h"
+#include "libc/str/str.h"
 
 size_t strxfrm_l(char *dest, const char *src, size_t count, locale_t l) {
   return strxfrm(dest, src, count);

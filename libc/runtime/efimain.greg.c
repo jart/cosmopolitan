@@ -70,7 +70,7 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
         case 0x00FF0000U:
           if (le32toh(PixelInfo->ReservedMask) >= 0x01000000U &&
               le32toh(PixelInfo->GreenMask) == 0x0000FF00U &&
-              le32toh(PixelInfo->BlueMask)  == 0x000000FFU) {
+              le32toh(PixelInfo->BlueMask) == 0x000000FFU) {
             vid_typ = PC_VIDEO_BGRX8888;
             bytes_per_pix = 4;
           }
@@ -78,7 +78,7 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
         case 0x000000FFU:
           if (le32toh(PixelInfo->ReservedMask) >= 0x01000000U &&
               le32toh(PixelInfo->GreenMask) == 0x0000FF00U &&
-              le32toh(PixelInfo->BlueMask)  == 0x00FF0000U) {
+              le32toh(PixelInfo->BlueMask) == 0x00FF0000U) {
             vid_typ = PC_VIDEO_RGBX8888;
             bytes_per_pix = 4;
           }
@@ -86,7 +86,7 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
         case 0x0000F800U:
           if (le32toh(PixelInfo->ReservedMask) <= 0x0000FFFFU &&
               le32toh(PixelInfo->GreenMask) == 0x000007E0U &&
-              le32toh(PixelInfo->BlueMask)  == 0x0000001FU) {
+              le32toh(PixelInfo->BlueMask) == 0x0000001FU) {
             vid_typ = PC_VIDEO_BGR565;
             bytes_per_pix = 2;
           }
@@ -94,7 +94,7 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
         case 0x00007C00U:
           if (le32toh(PixelInfo->ReservedMask) <= 0x0000FFFFU &&
               le32toh(PixelInfo->GreenMask) == 0x000003E0U &&
-              le32toh(PixelInfo->BlueMask)  == 0x0000001FU) {
+              le32toh(PixelInfo->BlueMask) == 0x0000001FU) {
             vid_typ = PC_VIDEO_BGR555;
             bytes_per_pix = 2;
           }
@@ -172,12 +172,12 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
       (0x7e000 - 0x79000 + sizeof(struct EfiArgs) + 4095) / 4096, &Address);
   Address = IMAGE_BASE_PHYSICAL;
   SystemTable->BootServices->AllocatePages(
-      AllocateAddress, EfiRuntimeServicesData,
-      ((_end - _base) + 4095) / 4096, &Address);
+      AllocateAddress, EfiRuntimeServicesData, ((_end - _base) + 4095) / 4096,
+      &Address);
   mm = (struct mman *)0x0500;
   SystemTable->BootServices->SetMem(mm, sizeof(*mm), 0);
-  SystemTable->BootServices->SetMem((void *)0x79000,
-      0x7e000 - 0x79000 + sizeof(struct EfiArgs), 0);
+  SystemTable->BootServices->SetMem(
+      (void *)0x79000, 0x7e000 - 0x79000 + sizeof(struct EfiArgs), 0);
   SystemTable->BootServices->CopyMem((void *)IMAGE_BASE_PHYSICAL, _base,
                                      _end - _base);
 
@@ -215,8 +215,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
       case EfiLoaderData:
       case EfiBootServicesCode:
       case EfiBootServicesData:
-        if (Desc->PhysicalStart != 0)
-          break;
+        if (Desc->PhysicalStart != 0) break;
         /* fallthrough */
       case EfiConventionalMemory:
         mm->e820[j].addr = Desc->PhysicalStart;

@@ -242,14 +242,19 @@ int _curl(int argc, char *argv[]) {
   bool senthost = false, sentcontenttype = false, sentcontentlength = false;
   for (int i = 0; i < headers.n; ++i) {
     appendf(&request, "%s\r\n", headers.p[i]);
-    if (!strncasecmp("Host:", headers.p[i], 5)) senthost = true;
-    else if (!strncasecmp("Content-Type:", headers.p[i], 13)) sentcontenttype = true;
-    else if (!strncasecmp("Content-Length:", headers.p[i], 15)) sentcontentlength = true;
+    if (!strncasecmp("Host:", headers.p[i], 5))
+      senthost = true;
+    else if (!strncasecmp("Content-Type:", headers.p[i], 13))
+      sentcontenttype = true;
+    else if (!strncasecmp("Content-Length:", headers.p[i], 15))
+      sentcontentlength = true;
   }
   if (!senthost) appendf(&request, "Host: %s:%s\r\n", host, port);
   if (postdata) {
-    if (!sentcontenttype) appends(&request, "Content-Type: application/x-www-form-urlencoded\r\n");
-    if (!sentcontentlength) appendf(&request, "Content-Length: %d\r\n", strlen(postdata));
+    if (!sentcontenttype)
+      appends(&request, "Content-Type: application/x-www-form-urlencoded\r\n");
+    if (!sentcontentlength)
+      appendf(&request, "Content-Length: %d\r\n", strlen(postdata));
   }
   appendf(&request, "\r\n");
   if (postdata) appends(&request, postdata);

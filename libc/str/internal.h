@@ -17,8 +17,8 @@ nodebuginfo forceinline bool32 iscont(wint_t c) {
 
 char *strstr_sse42(const char *, const char *) strlenesque _Hide;
 char16_t *strstr16_sse42(const char16_t *, const char16_t *) strlenesque _Hide;
-void *memmem_sse42(const void *, size_t, const void *,
-                   size_t) strlenesque _Hide;
+void *memmem_sse42(const void *, size_t, const void *, size_t)
+strlenesque _Hide;
 void sha256_x86(uint32_t[hasatleast 8], const uint8_t[hasatleast 64],
                 uint32_t) _Hide;
 

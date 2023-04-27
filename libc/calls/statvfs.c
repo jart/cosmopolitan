@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/statvfs.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/statfs.h"
 #include "libc/calls/struct/statfs.internal.h"
-#include "libc/calls/struct/statvfs.h"
 
 /**
  * Returns information about filesystem.

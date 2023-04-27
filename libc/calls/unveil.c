@@ -53,8 +53,9 @@
 #define UNVEIL_READ                                             \
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR | \
    LANDLOCK_ACCESS_FS_REFER)
-#define UNVEIL_WRITE (LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_TRUNCATE)
-#define UNVEIL_EXEC  (LANDLOCK_ACCESS_FS_EXECUTE)
+#define UNVEIL_WRITE \
+  (LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_TRUNCATE)
+#define UNVEIL_EXEC (LANDLOCK_ACCESS_FS_EXECUTE)
 #define UNVEIL_CREATE                                             \
   (LANDLOCK_ACCESS_FS_MAKE_CHAR | LANDLOCK_ACCESS_FS_MAKE_DIR |   \
    LANDLOCK_ACCESS_FS_MAKE_REG | LANDLOCK_ACCESS_FS_MAKE_SOCK |   \
@@ -89,7 +90,8 @@ static const struct sock_filter kUnveilBlacklistLatestAbi[] = {
 static int landlock_abi_version;
 
 __attribute__((__constructor__)) void init_landlock_version() {
-  landlock_abi_version = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION);
+  landlock_abi_version =
+      landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION);
 }
 
 /**
@@ -117,8 +119,8 @@ static int unveil_final(void) {
   };
   if (landlock_abi_version < 3) {
     sandbox = (struct sock_fprog){
-      .filter = kUnveilBlacklistAbiVersionBelow3,
-      .len = ARRAYLEN(kUnveilBlacklistAbiVersionBelow3),
+        .filter = kUnveilBlacklistAbiVersionBelow3,
+        .len = ARRAYLEN(kUnveilBlacklistAbiVersionBelow3),
     };
   }
   e = errno;

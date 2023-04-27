@@ -79,12 +79,14 @@ size_t wcsnlen(const wchar_t *, size_t) strlenesque;
 size_t wcsnlen_s(const wchar_t *, size_t);
 wchar_t *wcschr(const wchar_t *, wchar_t) strlenesque;
 wchar_t *wmemchr(const wchar_t *, wchar_t, size_t) strlenesque;
-wchar_t *wcschrnul(const wchar_t *, wchar_t) strlenesque returnsnonnull;
+wchar_t *wcschrnul(const wchar_t *, wchar_t)
+strlenesque returnsnonnull;
 char *strstr(const char *, const char *) strlenesque;
 char *strcasestr(const char *, const char *) strlenesque;
 char16_t *strstr16(const char16_t *, const char16_t *) strlenesque;
 wchar_t *wcsstr(const wchar_t *, const wchar_t *) strlenesque;
-void *rawwmemchr(const void *, wchar_t) strlenesque returnsnonnull;
+void *rawwmemchr(const void *, wchar_t)
+strlenesque returnsnonnull;
 int strcmp(const char *, const char *) strlenesque;
 int strncmp(const char *, const char *, size_t) strlenesque;
 int strcmp16(const char16_t *, const char16_t *) strlenesque;
@@ -154,7 +156,8 @@ wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
-void *memmem(const void *, size_t, const void *, size_t) libcesque nosideeffect;
+void *memmem(const void *, size_t, const void *, size_t)
+libcesque nosideeffect;
 ssize_t strfmon(char *, size_t, const char *, ...);
 long a64l(const char *);
 char *l64a(long);
@@ -211,11 +214,14 @@ wint_t towctrans(wint_t, wctrans_t);
 char *strsignal(int) returnsnonnull libcesque;
 char *strsignal_r(int, char[hasatleast 15]) returnsnonnull libcesque;
 char *strerror(int) returnsnonnull dontthrow nocallback;
-int strerror_r(int, char *, size_t) dontthrow nocallback;
-int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
+int strerror_r(int, char *, size_t)
+dontthrow nocallback;
+int strerror_wr(int, uint32_t, char *, size_t)
+dontthrow nocallback;
 char *_strerrno(int) nosideeffect libcesque;
 char *_strerdoc(int) nosideeffect libcesque;
-int __xpg_strerror_r(int, char *, size_t) dontthrow nocallback;
+int __xpg_strerror_r(int, char *, size_t)
+dontthrow nocallback;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thunk/msabi.h"
 
-__msabi extern typeof(WaitForMultipleObjects) *const
-    __imp_WaitForMultipleObjects;
+__msabi extern typeof(WaitForMultipleObjects)
+    *const __imp_WaitForMultipleObjects;
 
 /**
  * Waits for handles to change status.

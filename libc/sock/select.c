@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sock/select.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -23,7 +24,6 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/select.h"
 #include "libc/sysv/errfuns.h"
 
 /**

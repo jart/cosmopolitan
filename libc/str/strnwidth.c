@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/bsf.h"
 #include "libc/intrin/pcmpgtb.h"
 #include "libc/intrin/pmovmskb.h"
 #include "libc/intrin/psubb.h"
 #include "libc/macros.internal.h"
-#include "libc/intrin/bsf.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/unicode.h"

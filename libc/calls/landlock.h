@@ -29,7 +29,8 @@
 /**
  * Control file truncation.
  *
- * @see https://lore.kernel.org/all/20221018182216.301684-1-gnoack3000@gmail.com/
+ * @see
+ * https://lore.kernel.org/all/20221018182216.301684-1-gnoack3000@gmail.com/
  * @see https://docs.kernel.org/userspace-api/landlock.html
  * @note ABI 3+
  */

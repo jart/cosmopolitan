@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/thunk/msabi.h"
 
-__msabi extern typeof(GenerateConsoleCtrlEvent) *const
-    __imp_GenerateConsoleCtrlEvent;
+__msabi extern typeof(GenerateConsoleCtrlEvent)
+    *const __imp_GenerateConsoleCtrlEvent;
 
 /**
  * Sends signal to process group that shares console w/ calling process.

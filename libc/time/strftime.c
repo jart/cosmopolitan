@@ -19,9 +19,9 @@
 #include "libc/fmt/fmt.h"
 #include "libc/inttypes.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/locale.h"
 #include "libc/time/time.h"
 #include "libc/time/tz.internal.h"
-#include "libc/str/locale.h"
 // clang-format off
 // converts broken-down timestamp to string
 

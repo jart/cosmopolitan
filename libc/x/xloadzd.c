@@ -40,7 +40,7 @@
  * @return pointer to decoded data
  * @threadsafe
  */
-void *xloadzd(_Atomic(void *) * a, const void *p, size_t n, size_t m, size_t c,
+void *xloadzd(_Atomic(void *) *a, const void *p, size_t n, size_t m, size_t c,
               size_t z, uint32_t s) {
   size_t i;
   char *q, *b;

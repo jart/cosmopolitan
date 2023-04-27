@@ -18,4 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/internal.h"
 
-void __stack_chk_fail_local(void) { __stack_chk_fail(); }
+void __stack_chk_fail_local(void) {
+  __stack_chk_fail();
+}

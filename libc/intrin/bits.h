@@ -15,8 +15,10 @@ uint32_t gray(uint32_t) pureconst;
 uint32_t ungray(uint32_t) pureconst;
 int _bitreverse8(int) libcesque pureconst;
 int _bitreverse16(int) libcesque pureconst;
-uint32_t _bitreverse32(uint32_t) libcesque pureconst;
-uint64_t _bitreverse64(uint64_t) libcesque pureconst;
+uint32_t _bitreverse32(uint32_t)
+libcesque pureconst;
+uint64_t _bitreverse64(uint64_t)
+libcesque pureconst;
 unsigned long _roundup2pow(unsigned long) libcesque pureconst;
 unsigned long _roundup2log(unsigned long) libcesque pureconst;
 unsigned long _rounddown2pow(unsigned long) libcesque pureconst;

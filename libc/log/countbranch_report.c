@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/countbranch.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/sysconf.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/rlimit.h"
 

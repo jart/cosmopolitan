@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/net/lfuncs.h"
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
@@ -66,7 +67,6 @@
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
 #include "third_party/zlib/zlib.h"
-#include "tool/net/lfuncs.h"
 
 static int Rdpid(void) {
   return rdpid();

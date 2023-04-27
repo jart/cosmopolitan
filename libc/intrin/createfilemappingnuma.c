@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/struct/securityattributes.h"
 
-__msabi extern typeof(CreateFileMappingNuma) *const
-    __imp_CreateFileMappingNumaW;
+__msabi extern typeof(CreateFileMappingNuma)
+    *const __imp_CreateFileMappingNumaW;
 
 /**
  * Creates file mapping object on the New Technology.

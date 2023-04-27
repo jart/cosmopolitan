@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
+#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/xchg.internal.h"
-#include "libc/fmt/fmt.h"
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

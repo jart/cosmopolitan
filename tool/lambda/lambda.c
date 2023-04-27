@@ -23,11 +23,11 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/locale.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/str/locale.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/lambda/lib/blc.h"
 

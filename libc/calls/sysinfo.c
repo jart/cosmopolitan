@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/sysinfo.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/sysinfo.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"

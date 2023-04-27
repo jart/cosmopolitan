@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/clock.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
-#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 
