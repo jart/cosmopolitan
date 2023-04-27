@@ -1,0 +1,21 @@
+DESCRIPTION
+
+  ggml is a machine learning library useful for LLM inference on CPUs
+
+LICENSE
+
+  MIT
+
+ORIGIN
+
+  https://github.com/ggerganov/llama.cpp
+  commit 0b2da20538d01926b77ea237dd1c930c4d20b686
+  Author: Stephan Walter <stephan@walter.name>
+  Date:   Wed Apr 26 20:26:42 2023 +0000
+  ggml : slightly faster AVX2 implementation for Q5 (#1197)
+
+LOCAL CHANGES
+
+  - Refactor headers per cosmo convention
+  - Replace code like 'ggjt' with READ32BE("ggjt")
+  - Remove C++ exceptions; use Die() function instead

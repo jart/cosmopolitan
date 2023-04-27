@@ -1066,7 +1066,7 @@ public:
 
 #ifndef _LIBCPP_CXX03_LANG
     template <class _Key, class ..._Args>
-    _LIBCPP_INLINE_VISIBILITY
+    inline _LIBCPP_INLINE_VISIBILITY
     pair<iterator, bool> __emplace_unique_key_args(_Key const& __k, _Args&&... __args);
 
     template <class... _Args>
@@ -2104,7 +2104,7 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::__emplace_unique_key_args(_Key const& 
     size_type __bc = bucket_count();
     bool __inserted = false;
     __next_pointer __nd;
-    size_t __chash;
+    size_t __chash = 0;
     if (__bc != 0)
     {
         __chash = __constrain_hash(__hash, __bc);

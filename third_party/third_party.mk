@@ -13,6 +13,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/finger		\
 	o/$(MODE)/third_party/gdtoa		\
 	o/$(MODE)/third_party/getopt		\
+	o/$(MODE)/third_party/ggml		\
 	o/$(MODE)/third_party/hiredis		\
 	o/$(MODE)/third_party/libcxx		\
 	o/$(MODE)/third_party/linenoise		\
