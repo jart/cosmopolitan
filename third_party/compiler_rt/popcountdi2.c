@@ -22,6 +22,10 @@ STATIC_YOINK("huge_compiler_rt_license");
 COMPILER_RT_ABI si_int
 __popcountdi2(di_int a)
 {
+#ifdef __POPCNT__
+    asm("popcnt\t%1,%0" : "=r"(a) : "r"(a) : "cc");
+    return a;
+#else
     du_int x2 = (du_int)a;
     x2 = x2 - ((x2 >> 1) & 0x5555555555555555uLL);
     /* Every 2 bits holds the sum of every pair of bits (32) */
@@ -36,4 +40,5 @@ __popcountdi2(di_int a)
     /* The lower 16 bits hold two 32 bit sums (6 significant bits). */
     /*   Upper 16 bits are garbage */
     return (x + (x >> 8)) & 0x0000007F;  /* (7 significant bits) */
+#endif
 }

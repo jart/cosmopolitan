@@ -34,6 +34,9 @@ int _tarjan(int, const int (*)[2], int, int[], int[], int *)
 char *_replacestr(const char *, const char *, const char *)
     paramsnonnull() __algalloc;
 
+bool radix_sort_int32(int32_t *, size_t);
+bool radix_sort_int64(int64_t *, size_t);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ALG_ALG_H_ */

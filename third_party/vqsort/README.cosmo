@@ -1,0 +1,23 @@
+DESCRIPTION
+
+  vqsort implements vectorized quicksort using avx2. this is the fastest
+  way to sort integers. this goes as fast as djbsort for 32-bit integers
+  except it supports 64-bit integers too, which go just as fast: about a
+  gigabyte of memory sorted per second. It's 3x faster than simple radix
+  sort. It's 5x faster than simple quicksort. It's 10x faster than qsort
+
+LICENSE
+
+  Apache 2.o
+
+ORIGIN
+
+  https://github.com/google/highway/
+  commit 50331e0523bbf5f6c94b94263a91680f118e0986
+  Author: Jan Wassenberg <janwas@google.com>
+  Date:   Wed Apr 26 11:20:33 2023 -0700
+  Faster vqsort for small arrays (7x speedup! for N=100)
+
+LOCAL CHANGES
+
+  Precompiled beacuse upstream codebase is slow, gigantic, and hairy.
