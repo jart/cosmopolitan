@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-│
+│vi: set net ft=c++ ts=4 sts=4 sw=4 fenc=utf-8                              :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  llama.cpp                                                                   │
@@ -25,6 +25,30 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/ggml/llama.h"
+#include "libc/intrin/bits.h"
+#include "third_party/ggml/ggml.h"
+#include "third_party/ggml/llama_util.h"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/array"
+#include "third_party/libcxx/atomic"
+#include "third_party/libcxx/cassert"
+#include "third_party/libcxx/cinttypes"
+#include "third_party/libcxx/climits"
+#include "third_party/libcxx/cstdint"
+#include "third_party/libcxx/cstdio"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/ctime"
+#include "third_party/libcxx/fstream"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/map"
+#include "third_party/libcxx/memory"
+#include "third_party/libcxx/mutex"
+#include "third_party/libcxx/queue"
+#include "third_party/libcxx/random"
+#include "third_party/libcxx/sstream"
+#include "third_party/libcxx/thread"
+#include "third_party/libcxx/unordered_map"
 
 asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\
@@ -32,45 +56,8 @@ Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-// Defines fileno on msys:
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#include "third_party/libcxx/cstdint"
-#include "third_party/libcxx/cstdio"
-#endif
-
-#include "third_party/ggml/llama_util.h"
-#include "third_party/ggml/llama.h"
-
-#include "third_party/ggml/ggml.h"
-
-#include "third_party/libcxx/array"
-#include "third_party/libcxx/ctime"
-#include "third_party/libcxx/cinttypes"
-#include "third_party/libcxx/fstream"
-#include "third_party/libcxx/random"
-#include "third_party/libcxx/map"
-#include "third_party/libcxx/unordered_map"
-#include "third_party/libcxx/queue"
-#include "third_party/libcxx/cassert"
-#include "third_party/libcxx/cstring"
-#include "third_party/libcxx/climits"
-#include "third_party/libcxx/memory"
-#include "third_party/libcxx/algorithm"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/thread"
-#include "third_party/libcxx/atomic"
-#include "third_party/libcxx/mutex"
-#include "third_party/libcxx/sstream"
-
 #define LLAMA_USE_SCRATCH
 #define LLAMA_MAX_SCRATCH_BUFFERS 16
-
-#define READ32BE(s)                                     \
-    ((uint32_t)((const uint8_t *)(s))[0] << 030 |       \
-     (uint32_t)((const uint8_t *)(s))[1] << 020 |       \
-     (uint32_t)((const uint8_t *)(s))[2] << 010 |       \
-     (uint32_t)((const uint8_t *)(s))[3] << 000)
 
 // available llama models
 enum e_model {

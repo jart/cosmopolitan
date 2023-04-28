@@ -72,6 +72,7 @@ THIRD_PARTY_GGML_LLAMA_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
+	LIBC_LOG						\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
