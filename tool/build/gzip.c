@@ -137,19 +137,20 @@ void Compress(const char *inpath) {
   int rc, n, errnum;
   const char *outpath;
   char *p, openflags[5];
-  outpath = 0;
-  if (inpath) {
-    input = fopen(inpath, "rb");
-  } else if (opt_usestdout && (opt_force || !isatty(1))) {
+  if ((!inpath || opt_usestdout) && (!isatty(1) || opt_force)) {
     opt_usestdout = true;
-    inpath = "/dev/stdin";
-    input = stdin;
   } else {
     fputs(prog, stderr);
     fputs(": compressed data not written to a terminal."
           " Use -f to force compression.\n",
           stderr);
     exit(1);
+  }
+  if (inpath) {
+    input = fopen(inpath, "rb");
+  } else {
+    inpath = "/dev/stdin";
+    input = stdin;
   }
   p = openflags;
   *p++ = opt_append ? 'a' : 'w';
@@ -160,7 +161,7 @@ void Compress(const char *inpath) {
   *p = 0;
   if (opt_usestdout) {
     outpath = "/dev/stdout";
-    output = gzdopen(0, openflags);
+    output = gzdopen(1, openflags);
   } else {
     if (strlen(inpath) + 3 + 1 > PATH_MAX) _Exit(2);
     stpcpy(stpcpy(pathbuf, inpath), ".gz");
