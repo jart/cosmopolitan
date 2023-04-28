@@ -16,6 +16,11 @@ ORIGIN
 
 LOCAL CHANGES
 
+  - Introduce -v and --verbose flags
+  - Don't print stats / diagnostics unless -v is passed
+  - Reduce --top_p default from 0.95 to 0.70
+  - Change --reverse-prompt to no longer imply --interactive
+  - Permit --reverse-prompt specifying custom EOS if non-interactive
   - Refactor headers per cosmo convention
   - Replace code like 'ggjt' with READ32BE("ggjt")
   - Remove C++ exceptions; use Die() function instead

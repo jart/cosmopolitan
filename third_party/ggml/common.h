@@ -17,6 +17,7 @@
 
 struct gpt_params {
     int32_t seed          = -1;   // RNG seed
+    int32_t verbose       = 0;    // Logging verbosity
     int32_t n_threads     = std::min(4, (int32_t) std::thread::hardware_concurrency());
     int32_t n_predict     = 128;  // new tokens to predict
     int32_t repeat_last_n = 64;   // last n tokens to penalize
@@ -27,7 +28,7 @@ struct gpt_params {
 
     // sampling parameters
     int32_t top_k = 40;
-    float   top_p = 0.95f;
+    float   top_p = 0.70f;
     float   temp  = 0.80f;
     float   repeat_penalty  = 1.10f;
 

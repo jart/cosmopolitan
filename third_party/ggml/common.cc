@@ -91,6 +91,8 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
                 break;
             }
             params.seed = std::stoi(argv[i]);
+        } else if (arg == "-v" || arg == "--verbose") {
+            ++params.verbose;
         } else if (arg == "-t" || arg == "--threads") {
             if (++i >= argc) {
                 invalid_param = true;

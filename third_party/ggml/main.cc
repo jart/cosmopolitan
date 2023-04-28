@@ -96,8 +96,7 @@ void sigint_handler(int signo) {
         if (!is_interacting) {
             is_interacting=true;
         } else {
-            llama_print_timings(*g_ctx);
-            _exit(130);
+            _exit(128 + signo);
         }
     }
 }
@@ -155,7 +154,9 @@ int main(int argc, char ** argv) {
         params.seed = time(NULL);
     }
 
-    fprintf(stderr, "%s: seed = %d\n", __func__, params.seed);
+    if (params.verbose) {
+        fprintf(stderr, "%s: seed = %d\n", __func__, params.seed);
+    }
 
     std::mt19937 rng(params.seed);
     if (params.random_prompt) {
@@ -179,7 +180,7 @@ int main(int argc, char ** argv) {
         lparams.use_mmap   = params.use_mmap;
         lparams.use_mlock  = params.use_mlock;
 
-        ctx = llama_init_from_file(params.model.c_str(), lparams);
+        ctx = llama_init_from_file(params.model.c_str(), lparams, params.verbose);
 
         if (ctx == NULL) {
             fprintf(stderr, "%s: error: failed to load model '%s'\n", __func__, params.model.c_str());
@@ -199,7 +200,7 @@ int main(int argc, char ** argv) {
     }
 
     // print system information
-    {
+    if (params.verbose) {
         fprintf(stderr, "\n");
         fprintf(stderr, "system_info: n_threads = %d / %d | %s\n",
                 params.n_threads, std::thread::hardware_concurrency(), llama_print_system_info());
@@ -218,7 +219,9 @@ int main(int argc, char ** argv) {
             llama_eval(ctx, tmp.data(), tmp.size(), params.n_predict - 1, params.n_threads);
         }
 
-        llama_print_timings(ctx);
+        if (params.verbose) {
+            llama_print_timings(ctx);
+        }
         llama_free(ctx);
 
         return 0;
@@ -252,8 +255,8 @@ int main(int argc, char ** argv) {
         params.antiprompt.push_back("### Instruction:\n\n");
     }
 
-    // enable interactive mode if reverse prompt or interactive start is specified
-    if (params.antiprompt.size() != 0 || params.interactive_first) {
+    // enable interactive mode if interactive start is specified
+    if (params.interactive_first) {
         params.interactive = true;
     }
 
@@ -288,28 +291,33 @@ int main(int argc, char ** argv) {
         signal(SIGINT, sigint_handler);
 #endif
 
-        fprintf(stderr, "%s: interactive mode on.\n", __func__);
+        if (params.verbose) {
+            fprintf(stderr, "%s: interactive mode on.\n", __func__);
+        }
 
-        if (params.antiprompt.size()) {
+        if (params.verbose && params.antiprompt.size()) {
             for (auto antiprompt : params.antiprompt) {
                 fprintf(stderr, "Reverse prompt: '%s'\n", antiprompt.c_str());
             }
         }
 
-        if (!params.input_prefix.empty()) {
+        if (params.verbose && !params.input_prefix.empty()) {
             fprintf(stderr, "Input prefix: '%s'\n", params.input_prefix.c_str());
         }
     }
-    fprintf(stderr, "sampling: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n",
-        params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
-    fprintf(stderr, "generate: n_ctx = %d, n_batch = %d, n_predict = %d, n_keep = %d\n", n_ctx, params.n_batch, params.n_predict, params.n_keep);
-    fprintf(stderr, "\n\n");
+    
+    if (params.verbose) {
+        fprintf(stderr, "sampling: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n",
+                params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
+        fprintf(stderr, "generate: n_ctx = %d, n_batch = %d, n_predict = %d, n_keep = %d\n", n_ctx, params.n_batch, params.n_predict, params.n_keep);
+        fprintf(stderr, "\n\n");
+    }
 
     // TODO: replace with ring-buffer
     std::vector<llama_token> last_n_tokens(n_ctx);
     std::fill(last_n_tokens.begin(), last_n_tokens.end(), 0);
 
-    if (params.interactive) {
+    if (params.verbose && params.interactive) {
         fprintf(stderr, "== Running in interactive mode. ==\n"
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__)) || defined (_WIN32)
                " - Press Ctrl+C to interject at any time.\n"
@@ -320,7 +328,7 @@ int main(int argc, char ** argv) {
     }
 
     bool is_antiprompt = false;
-    bool input_noecho  = false;
+    bool input_noecho  = !params.verbose;
 
     int n_past     = 0;
     int n_remain   = params.n_predict;
@@ -427,6 +435,40 @@ int main(int argc, char ** argv) {
             }
         }
 
+        // checks for reverse prompt
+        //
+        // 1. in interactive mode, this lets us detect when the llm is
+        //    prompting the user, so we can pause for input, e.g.
+        //
+        //       --interactive
+        //       --prompt $'CompanionAI: How can I help you?\nHuman:'
+        //       --reverse-prompt 'Human:'
+        //
+        // 2. in normal mode, the reverse prompt can be used to specify
+        //    a custom EOS token, e.g.
+        //
+        //       --prompt 'Question: How old are you?\nAnswer: '
+        //       --reverse-prompt $'\n'
+        //
+        if (params.antiprompt.size()) {
+            std::string last_output;
+            for (auto id : last_n_tokens) {
+                last_output += llama_token_to_str(ctx, id);
+            }
+            is_antiprompt = false;
+            // Check if each of the reverse prompts appears at the end of the output.
+            for (std::string & antiprompt : params.antiprompt) {
+                if (last_output.find(antiprompt.c_str(), last_output.length() - antiprompt.length(), antiprompt.length()) != std::string::npos) {
+                    is_antiprompt = true;
+                    break;
+                }
+            }
+            if (is_antiprompt && !params.interactive) {
+                printf("\n");
+                break;
+            }
+        }
+
         // display text
         if (!input_noecho) {
             for (auto id : embd) {
@@ -435,33 +477,19 @@ int main(int argc, char ** argv) {
             fflush(stdout);
         }
         // reset color to default if we there is no pending user input
-        if (!input_noecho && (int)embd_inp.size() == n_consumed) {
+        if (params.verbose && !input_noecho && (int)embd_inp.size() == n_consumed) {
             set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+        }
+
+        if (is_antiprompt) {
+            is_interacting = true;
+            set_console_color(con_st, CONSOLE_COLOR_USER_INPUT);
+            fflush(stdout);
         }
 
         // in interactive mode, and not currently processing queued inputs;
         // check if we should prompt the user for more
         if (params.interactive && (int) embd_inp.size() <= n_consumed) {
-
-            // check for reverse prompt
-            if (params.antiprompt.size()) {
-                std::string last_output;
-                for (auto id : last_n_tokens) {
-                    last_output += llama_token_to_str(ctx, id);
-                }
-
-                is_antiprompt = false;
-                // Check if each of the reverse prompts appears at the end of the output.
-                for (std::string & antiprompt : params.antiprompt) {
-                    if (last_output.find(antiprompt.c_str(), last_output.length() - antiprompt.length(), antiprompt.length()) != std::string::npos) {
-                        is_interacting = true;
-                        is_antiprompt = true;
-                        set_console_color(con_st, CONSOLE_COLOR_USER_INPUT);
-                        fflush(stdout);
-                        break;
-                    }
-                }
-            }
 
             if (n_past > 0 && is_interacting) {
                 // potentially set color to indicate we are taking user input
@@ -542,7 +570,7 @@ int main(int argc, char ** argv) {
         if (!embd.empty() && embd.back() == llama_token_eos()) {
             if (params.instruct) {
                 is_interacting = true;
-            } else {
+            } else if (params.verbose) {
                 fprintf(stderr, " [end of text]\n");
                 break;
             }
@@ -559,7 +587,9 @@ int main(int argc, char ** argv) {
     signal(SIGINT, SIG_DFL);
 #endif
 
-    llama_print_timings(ctx);
+    if (params.verbose) {
+        llama_print_timings(ctx);
+    }
     llama_free(ctx);
 
     set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
