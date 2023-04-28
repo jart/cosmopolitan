@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2020 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 1999-2022, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,48 +25,80 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/likely.h"
 #include "libc/math.h"
-#include "libc/tinymath/kernel.internal.h"
+#include "libc/tinymath/sincosf.internal.h"
 
 asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
+Optimized Routines (MIT License)\\n\
+Copyright 2022 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-/* origin: FreeBSD /usr/src/lib/msun/src/k_cosf.c */
-/*
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- * Debugged and optimized by Bruce D. Evans.
- */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
- */
-
-/* |cos(x) - c(x)| < 2**-34.1 (~[-5.37e-11, 5.295e-11]). */
-static const double
-C0  = -0x1ffffffd0c5e81.0p-54, /* -0.499999997251031003120 */
-C1  =  0x155553e1053a42.0p-57, /*  0.0416666233237390631894 */
-C2  = -0x16c087e80f1e27.0p-62, /* -0.00138867637746099294692 */
-C3  =  0x199342e0ee5069.0p-68; /*  0.0000243904487962774090654 */
-
-noinstrument float __cosdf(double x)
+/* Fast sincosf implementation.  Worst-case ULP is 0.5607, maximum relative
+   error is 0.5303 * 2^-23.  A single-step range reduction is used for
+   small values.  Large inputs have their range reduced using fast integer
+   arithmetic.  */
+void
+sincosf (float y, float *sinp, float *cosp)
 {
-	double_t r, w, z;
+  double x = y;
+  double s;
+  int n;
+  const sincos_t *p = &__sincosf_table[0];
 
-	/* Try to optimize for parallel evaluation as in __tandf.c. */
-	z = x*x;
-	w = z*z;
-	r = C2+z*C3;
-	return ((1.0+z*C0) + w*C1) + (w*z)*r;
+  if (abstop12 (y) < abstop12 (pio4f))
+    {
+      double x2 = x * x;
+
+      if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-12f)))
+	{
+	  if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-126f)))
+	    /* Force underflow for tiny y.  */
+	    FORCE_EVAL (x2);
+	  *sinp = y;
+	  *cosp = 1.0f;
+	  return;
+	}
+
+      sincosf_poly (x, x2, p, 0, sinp, cosp);
+    }
+  else if (abstop12 (y) < abstop12 (120.0f))
+    {
+      x = reduce_fast (x, p, &n);
+
+      /* Setup the signs for sin and cos.  */
+      s = p->sign[n & 3];
+
+      if (n & 2)
+	p = &__sincosf_table[1];
+
+      sincosf_poly (x * s, x * x, p, n, sinp, cosp);
+    }
+  else if (LIKELY (abstop12 (y) < abstop12 (INFINITY)))
+    {
+      uint32_t xi = asuint (y);
+      int sign = xi >> 31;
+
+      x = reduce_large (xi, &n);
+
+      /* Setup signs for sin and cos - include original sign.  */
+      s = p->sign[(n + sign) & 3];
+
+      if ((n + sign) & 2)
+	p = &__sincosf_table[1];
+
+      sincosf_poly (x * s, x * x, p, n, sinp, cosp);
+    }
+  else
+    {
+      /* Return NaN if Inf or NaN for both sin and cos.  */
+      *sinp = *cosp = y - y;
+#if WANT_ERRNO
+      /* Needed to set errno for +-Inf, the add is a hack to work
+	 around a gcc register allocation issue: just passing y
+	 affects code generation in the fast path.  */
+      __math_invalidf (y + y);
+#endif
+    }
 }

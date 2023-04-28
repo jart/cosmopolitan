@@ -1,9 +1,9 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2020 Rich Felker, et al.                                   │
+│  Optimized Routines                                                          │
+│  Copyright (c) 1999-2022, Arm Limited.                                       │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,48 +25,42 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/tinymath/kernel.internal.h"
+#include "libc/tinymath/logf_data.internal.h"
 
 asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
+Double-precision math functions (MIT License)\\n\
+Copyright 2018 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-/* origin: FreeBSD /usr/src/lib/msun/src/k_cosf.c */
 /*
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- * Debugged and optimized by Bruce D. Evans.
- */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ * Data definition for logf.
  *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Copyright (c) 2017-2018, Arm Limited.
+ * SPDX-License-Identifier: MIT
  */
 
-/* |cos(x) - c(x)| < 2**-34.1 (~[-5.37e-11, 5.295e-11]). */
-static const double
-C0  = -0x1ffffffd0c5e81.0p-54, /* -0.499999997251031003120 */
-C1  =  0x155553e1053a42.0p-57, /*  0.0416666233237390631894 */
-C2  = -0x16c087e80f1e27.0p-62, /* -0.00138867637746099294692 */
-C3  =  0x199342e0ee5069.0p-68; /*  0.0000243904487962774090654 */
-
-noinstrument float __cosdf(double x)
-{
-	double_t r, w, z;
-
-	/* Try to optimize for parallel evaluation as in __tandf.c. */
-	z = x*x;
-	w = z*z;
-	r = C2+z*C3;
-	return ((1.0+z*C0) + w*C1) + (w*z)*r;
-}
+const struct logf_data __logf_data = {
+  .tab = {
+  { 0x1.661ec79f8f3bep+0, -0x1.57bf7808caadep-2 },
+  { 0x1.571ed4aaf883dp+0, -0x1.2bef0a7c06ddbp-2 },
+  { 0x1.49539f0f010bp+0, -0x1.01eae7f513a67p-2 },
+  { 0x1.3c995b0b80385p+0, -0x1.b31d8a68224e9p-3 },
+  { 0x1.30d190c8864a5p+0, -0x1.6574f0ac07758p-3 },
+  { 0x1.25e227b0b8eap+0, -0x1.1aa2bc79c81p-3 },
+  { 0x1.1bb4a4a1a343fp+0, -0x1.a4e76ce8c0e5ep-4 },
+  { 0x1.12358f08ae5bap+0, -0x1.1973c5a611cccp-4 },
+  { 0x1.0953f419900a7p+0, -0x1.252f438e10c1ep-5 },
+  { 0x1p+0, 0x0p+0 },
+  { 0x1.e608cfd9a47acp-1, 0x1.aa5aa5df25984p-5 },
+  { 0x1.ca4b31f026aap-1, 0x1.c5e53aa362eb4p-4 },
+  { 0x1.b2036576afce6p-1, 0x1.526e57720db08p-3 },
+  { 0x1.9c2d163a1aa2dp-1, 0x1.bc2860d22477p-3 },
+  { 0x1.886e6037841edp-1, 0x1.1058bc8a07ee1p-2 },
+  { 0x1.767dcf5534862p-1, 0x1.4043057b6ee09p-2 },
+  },
+  .ln2 = 0x1.62e42fefa39efp-1,
+  .poly = {
+  -0x1.00ea348b88334p-2, 0x1.5575b0be00b6ap-2, -0x1.ffffef20a4123p-2,
+  }
+};

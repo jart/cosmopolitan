@@ -25,19 +25,21 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/complex.h"
 #include "libc/math.h"
-#include "libc/tinymath/complex.internal.h"
+#include "libc/runtime/fenv.h"
 
+asm(".ident\t\"\\n\\n\
+Fused Multiply Add (MIT License)\\n\
+Copyright (c) 2005-2011 David Schultz <das@FreeBSD.ORG>\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-/* origin: FreeBSD /usr/src/lib/msun/src/k_expf.c */
+/* origin: FreeBSD /usr/src/lib/msun/src/s_fmaf.c */
 /*-
- * Copyright (c) 2011 David Schultz <das@FreeBSD.ORG>
+ * Copyright (c) 2005-2011 David Schultz <das@FreeBSD.ORG>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,43 +64,64 @@ asm(".include \"libc/disclaimer.inc\"");
  * SUCH DAMAGE.
  */
 
-
-static const uint32_t k = 235; /* constant for reduction */
-static const float kln2 = 162.88958740F; /* k * ln2 */
-
 /*
- * See __cexp.c for details.
+ * Fused multiply-add: Compute x * y + z with a single rounding error.
  *
- * Input:  ln(FLT_MAX) <= x < ln(2 * FLT_MAX / FLT_MIN_DENORM) ~= 192.7
- * Output: 2**127 <= y < 2**128
+ * A double has more than twice as much precision than a float, so
+ * direct double-precision arithmetic suffices, except where double
+ * rounding occurs.
  */
-static float __frexp_expf(float x, int *expt)
+float fmaf(float x, float y, float z)
 {
-	float exp_x;
-	uint32_t hx;
+	// #pragma STDC FENV_ACCESS ON
+	double xy, result;
+	union {double f; uint64_t i;} u;
+	int e;
 
-	exp_x = expf(x - kln2);
-	GET_FLOAT_WORD(hx, exp_x);
-	*expt = (hx >> 23) - (0x7f + 127) + k;
-	SET_FLOAT_WORD(exp_x, (hx & 0x7fffff) | ((0x7f + 127) << 23));
-	return exp_x;
-}
+	xy = (double)x * y;
+	result = xy + z;
+	u.f = result;
+	e = u.i>>52 & 0x7ff;
+	/* Common case: The double precision result is fine. */
+	if ((u.i & 0x1fffffff) != 0x10000000 || /* not a halfway case */
+		e == 0x7ff ||                   /* NaN */
+		(result - xy == z && result - z == xy) || /* exact */
+		fegetround() != FE_TONEAREST)       /* not round-to-nearest */
+	{
+		/*
+		underflow may not be raised correctly, example:
+		fmaf(0x1p-120f, 0x1p-120f, 0x1p-149f)
+		*/
+#if defined(FE_INEXACT) && defined(FE_UNDERFLOW)
+		if (e < 0x3ff-126 && e >= 0x3ff-149 && fetestexcept(FE_INEXACT)) {
+			feclearexcept(FE_INEXACT);
+			/* TODO: gcc and clang bug workaround */
+			volatile float vz = z;
+			result = xy + vz;
+			if (fetestexcept(FE_INEXACT))
+				feraiseexcept(FE_UNDERFLOW);
+			else
+				feraiseexcept(FE_INEXACT);
+		}
+#endif
+		z = result;
+		return z;
+	}
 
-float complex __ldexp_cexpf(float complex z, int expt)
-{
-	float x, y, exp_x, scale1, scale2;
-	int ex_expt, half_expt;
-
-	x = crealf(z);
-	y = cimagf(z);
-	exp_x = __frexp_expf(x, &ex_expt);
-	expt += ex_expt;
-
-	half_expt = expt / 2;
-	SET_FLOAT_WORD(scale1, (0x7f + half_expt) << 23);
-	half_expt = expt - half_expt;
-	SET_FLOAT_WORD(scale2, (0x7f + half_expt) << 23);
-
-	return CMPLXF(cosf(y) * exp_x * scale1 * scale2,
-	  sinf(y) * exp_x * scale1 * scale2);
+	/*
+	 * If result is inexact, and exactly halfway between two float values,
+	 * we need to adjust the low-order bit in the direction of the error.
+	 */
+	double err;
+	int neg = u.i >> 63;
+	if (neg == (z > xy))
+		err = xy - result + z;
+	else
+		err = z - result + xy;
+	if (neg == (err < 0))
+		u.i++;
+	else
+		u.i--;
+	z = u.f;
+	return z;
 }

@@ -144,8 +144,8 @@ include libc/stdio/stdio.mk			# │
 include third_party/libcxx/libcxx.mk		# │
 include net/net.mk				# │
 include third_party/vqsort/vqsort.mk		# │
-include third_party/ggml/ggml.mk		# │
 include libc/log/log.mk				# │
+include third_party/ggml/ggml.mk		# │
 include third_party/bzip2/bzip2.mk		# │
 include dsp/core/core.mk			# │
 include libc/x/x.mk				# │

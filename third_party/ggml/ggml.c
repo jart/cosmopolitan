@@ -362,7 +362,7 @@ static const uint64_t table_b2b_u[1 << 8] = { B8(00, 10) };
 // This is also true for POWER9.
 #if !defined(GGML_FP16_TO_FP32) || !defined(GGML_FP32_TO_FP16)
 
-inline static float ggml_lookup_fp16_to_fp32(ggml_fp16_t f) {
+forceinline float ggml_lookup_fp16_to_fp32(ggml_fp16_t f) {
     uint16_t s;
     memcpy(&s, &f, sizeof(uint16_t));
     return table_f32_f16[s];
@@ -507,7 +507,7 @@ static inline int hsum_i32_4(const __m128i a) {
 
 #if __AVX2__ || __AVX512F__
 // spread 32 bits to 32 bytes { 0x00, 0xFF }
-static inline __m256i bytes_from_bits_32(const uint8_t * x) {
+forceinline __m256i bytes_from_bits_32(const uint8_t * x) {
     uint32_t x32;
     memcpy(&x32, x, sizeof(uint32_t));
     const __m256i shuf_mask = _mm256_set_epi64x(
@@ -521,7 +521,7 @@ static inline __m256i bytes_from_bits_32(const uint8_t * x) {
 
 // Unpack 32 4-bit fields into 32 bytes
 // The output vector contains 32 bytes, each one in [ 0 .. 15 ] interval
-static inline __m256i bytes_from_nibbles_32(const uint8_t * rsi)
+forceinline __m256i bytes_from_nibbles_32(const uint8_t * rsi)
 {
     // Load 16 bytes from memory
     __m128i tmp = _mm_loadu_si128( ( const __m128i* )rsi );
@@ -539,14 +539,14 @@ static inline __m256i bytes_from_nibbles_32(const uint8_t * rsi)
 }
 
 // add int16_t pairwise and return as float vector
-static inline __m256 sum_i16_pairs_float(const __m256i x) {
+forceinline __m256 sum_i16_pairs_float(const __m256i x) {
     const __m256i ones = _mm256_set1_epi16(1);
     const __m256i summed_pairs = _mm256_madd_epi16(ones, x);
     return _mm256_cvtepi32_ps(summed_pairs);
 }
 
 // multiply int8_t, add results pairwise twice and return as float vector
-static inline __m256 mul_sum_i8_pairs_float(const __m256i x, const __m256i y) {
+forceinline __m256 mul_sum_i8_pairs_float(const __m256i x, const __m256i y) {
     // Get absolute values of x vectors
     const __m256i ax = _mm256_sign_epi8(x, x);
     // Sign the values of the y vectors
