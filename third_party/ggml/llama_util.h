@@ -1,6 +1,6 @@
+// -*- c++ -*-
 // Internal header to be included only by llama.cpp.
 // Contains wrappers around OS interfaces.
-
 #ifndef LLAMA_UTIL_H
 #define LLAMA_UTIL_H
 #include "libc/calls/struct/rlimit.h"

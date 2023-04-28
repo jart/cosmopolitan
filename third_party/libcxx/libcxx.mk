@@ -8,6 +8,11 @@ THIRD_PARTY_LIBCXX = $(THIRD_PARTY_LIBCXX_A_DEPS) $(THIRD_PARTY_LIBCXX_A)
 THIRD_PARTY_LIBCXX_A = o/$(MODE)/third_party/libcxx/libcxx.a
 
 THIRD_PARTY_LIBCXX_A_HDRS =					\
+	third_party/libcxx/rmi.h				\
+	third_party/libcxx/utils.h				\
+	third_party/libcxx/learned_sort.h			\
+	third_party/libcxx/pdqsort.h				\
+	third_party/libcxx/ska_sort.h				\
 	third_party/libcxx/__bit_reference			\
 	third_party/libcxx/__bsd_locale_fallbacks.h		\
 	third_party/libcxx/__config				\
@@ -138,6 +143,9 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/wctype.h
 
 THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
+	third_party/libcxx/learned_sort.cc			\
+	third_party/libcxx/pdqsort.cc				\
+	third_party/libcxx/ska_sort.cc				\
 	third_party/libcxx/algorithm.cc				\
 	third_party/libcxx/charconv.cc				\
 	third_party/libcxx/chrono.cc				\

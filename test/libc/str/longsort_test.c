@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
@@ -25,7 +26,23 @@
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+#include "third_party/libcxx/learned_sort.h"
+#include "third_party/libcxx/pdqsort.h"
+#include "third_party/libcxx/ska_sort.h"
 #include "third_party/vqsort/vqsort.h"
+
+void InsertionSort(long *A, long n) {
+  long i, j, t;
+  for (i = 1; i < n; i++) {
+    t = A[i];
+    j = i - 1;
+    while (j >= 0 && A[j] > t) {
+      A[j + 1] = A[j];
+      j = j - 1;
+    }
+    A[j + 1] = t;
+  }
+}
 
 int CompareLong(const void *a, const void *b) {
   const long *x = a;
@@ -110,25 +127,87 @@ BENCH(_longsort, bench) {
   long *p1 = gc(malloc(n * sizeof(long)));
   long *p2 = gc(malloc(n * sizeof(long)));
   rngset(p1, n * sizeof(long), 0, 0);
-  EZBENCH2("_longsort", memcpy(p2, p1, n * sizeof(long)), _longsort(p2, n));
+  EZBENCH2("_longsort rand", memcpy(p2, p1, n * sizeof(long)),
+           _longsort(p2, n));
   if (X86_HAVE(AVX2)) {
-    EZBENCH2("vqsort_int64_avx2", memcpy(p2, p1, n * sizeof(long)),
+    EZBENCH2("vq_int64_avx2 rand", memcpy(p2, p1, n * sizeof(long)),
              vqsort_int64_avx2(p2, n));
   }
   if (X86_HAVE(SSE4_2)) {
-    EZBENCH2("vqsort_int64_sse4", memcpy(p2, p1, n * sizeof(long)),
+    EZBENCH2("vq_int64_sse4 rand", memcpy(p2, p1, n * sizeof(long)),
              vqsort_int64_sse4(p2, n));
   }
   if (X86_HAVE(SSSE3)) {
-    EZBENCH2("vqsort_int64_ssse3", memcpy(p2, p1, n * sizeof(long)),
+    EZBENCH2("vq_int64_ssse3 rand", memcpy(p2, p1, n * sizeof(long)),
              vqsort_int64_ssse3(p2, n));
   }
-  EZBENCH2("vqsort_int64_sse2", memcpy(p2, p1, n * sizeof(long)),
+  EZBENCH2("vq_int64_sse2 rand", memcpy(p2, p1, n * sizeof(long)),
            vqsort_int64_sse2(p2, n));
-  EZBENCH2("radix_sort_int64", memcpy(p2, p1, n * sizeof(long)),
+  EZBENCH2("radix_int64 rand", memcpy(p2, p1, n * sizeof(long)),
            radix_sort_int64(p2, n));
-  EZBENCH2("qsort(long)", memcpy(p2, p1, n * sizeof(long)),
+  EZBENCH2("ska_sort_int64 rand", memcpy(p2, p1, n * sizeof(long)),
+           ska_sort_int64(p2, n));
+  EZBENCH2("pdq_int64 rand", memcpy(p2, p1, n * sizeof(long)),
+           pdqsort_int64(p2, n));
+  EZBENCH2("pdq_branchless rand", memcpy(p2, p1, n * sizeof(long)),
+           pdqsort_branchless_int64(p2, n));
+  EZBENCH2("learned_int64 rand", memcpy(p2, p1, n * sizeof(long)),
+           learned_sort_int64(p2, n));
+  EZBENCH2("qsort(long) rand", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("InsertionSort rand", memcpy(p2, p1, n * sizeof(long)),
+           InsertionSort(p2, n));
+}
+
+BENCH(_longsort, benchNearlySorted) {
+  printf("\n");
+  long i, j, k, t;
+  long n = 5000;  // total items
+  long m = 500;   // misplaced items
+  long d = 5;     // maximum drift
+  long *p1 = gc(malloc(n * sizeof(long)));
+  long *p2 = gc(malloc(n * sizeof(long)));
+  for (i = 0; i < n; ++i) {
+    p1[i] = i;
+  }
+  for (i = 0; i < m; ++i) {
+    j = rand() % n;
+    k = rand() % (d * 2) - d + j;
+    k = MIN(MAX(0, k), n - 1);
+    t = p1[j];
+    p1[j] = p1[k];
+    p1[k] = t;
+  }
+  EZBENCH2("_longsort near", memcpy(p2, p1, n * sizeof(long)),
+           _longsort(p2, n));
+  if (X86_HAVE(AVX2)) {
+    EZBENCH2("vq_int64_avx2 near", memcpy(p2, p1, n * sizeof(long)),
+             vqsort_int64_avx2(p2, n));
+  }
+  if (X86_HAVE(SSE4_2)) {
+    EZBENCH2("vq_int64_sse4 near", memcpy(p2, p1, n * sizeof(long)),
+             vqsort_int64_sse4(p2, n));
+  }
+  if (X86_HAVE(SSSE3)) {
+    EZBENCH2("vq_int64_ssse3 near", memcpy(p2, p1, n * sizeof(long)),
+             vqsort_int64_ssse3(p2, n));
+  }
+  EZBENCH2("vq_int64_sse2 near", memcpy(p2, p1, n * sizeof(long)),
+           vqsort_int64_sse2(p2, n));
+  EZBENCH2("radix_int64 near", memcpy(p2, p1, n * sizeof(long)),
+           radix_sort_int64(p2, n));
+  EZBENCH2("ska_sort_int64 near", memcpy(p2, p1, n * sizeof(long)),
+           ska_sort_int64(p2, n));
+  EZBENCH2("pdq_int64 near", memcpy(p2, p1, n * sizeof(long)),
+           pdqsort_int64(p2, n));
+  EZBENCH2("pdq_branchless near", memcpy(p2, p1, n * sizeof(long)),
+           pdqsort_branchless_int64(p2, n));
+  EZBENCH2("learned_int64 near", memcpy(p2, p1, n * sizeof(long)),
+           learned_sort_int64(p2, n));
+  EZBENCH2("qsort(long) near", memcpy(p2, p1, n * sizeof(long)),
+           qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("InsertionSort near", memcpy(p2, p1, n * sizeof(long)),
+           InsertionSort(p2, n));
 }
 
 int CompareInt(const void *a, const void *b) {
@@ -215,6 +294,7 @@ BENCH(_intsort, bench) {
   int *p2 = gc(malloc(n * sizeof(int)));
   rngset(p1, n * sizeof(int), 0, 0);
   EZBENCH2("_intsort", memcpy(p2, p1, n * sizeof(int)), _intsort(p2, n));
+  EZBENCH2("djbsort", memcpy(p2, p1, n * sizeof(int)), djbsort(p2, n));
   if (X86_HAVE(AVX2)) {
     EZBENCH2("vqsort_int32_avx2", memcpy(p2, p1, n * sizeof(int)),
              vqsort_int32_avx2(p2, n));
@@ -229,7 +309,6 @@ BENCH(_intsort, bench) {
   }
   EZBENCH2("vqsort_int32_sse2", memcpy(p2, p1, n * sizeof(int)),
            vqsort_int32_sse2(p2, n));
-  EZBENCH2("djbsort", memcpy(p2, p1, n * sizeof(int)), djbsort(p2, n));
   EZBENCH2("radix_sort_int32", memcpy(p2, p1, n * sizeof(int)),
            radix_sort_int32(p2, n));
   EZBENCH2("qsort(int)", memcpy(p2, p1, n * sizeof(int)),
