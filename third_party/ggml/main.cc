@@ -52,6 +52,7 @@ asm(".include \"libc/disclaimer.inc\"");
 static console_state con_st;
 static llama_context ** g_ctx;
 
+static int g_verbose;
 static bool is_interacting = false;
 
 #define EPHEMERAL(fmt) "\r\e[K\033[1;35m" fmt " \033[0m"
@@ -64,6 +65,9 @@ void sigint_handler(int signo) {
         if (!is_interacting) {
             is_interacting=true;
         } else {
+            if (g_verbose) {
+                llama_print_timings(*g_ctx);
+            }
             _exit(128 + signo);
         }
     }
@@ -107,6 +111,8 @@ int main(int argc, char ** argv) {
 #if defined (_WIN32)
     win32_console_init(params.use_color);
 #endif
+
+    g_verbose = params.verbose;
 
     if (params.perplexity) {
         printf("\n************\n");
