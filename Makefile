@@ -156,6 +156,7 @@ include dsp/dsp.mk				# │
 include third_party/zlib/gz/gz.mk		# │
 include third_party/musl/musl.mk		# │
 include third_party/intel/intel.mk		# │
+include third_party/aarch64/aarch64.mk		# │
 include libc/libc.mk				#─┘
 include libc/sock/sock.mk			#─┐
 include dsp/tty/tty.mk				# ├──ONLINE RUNTIME

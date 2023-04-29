@@ -1,3 +1,5 @@
 # -*- conf -*-
+*.gz                         binary
+/build/bootstrap/*.com       binary
 /build/bootstrap/*.com       binary
 /usr/share/zoneinfo/*        binary

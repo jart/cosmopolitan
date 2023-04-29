@@ -74,9 +74,11 @@ IGNORE := $(shell $(MKDIR) o/tmp)
 
 ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
 PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
+PREFIX_AARCH64 = o/third_party/gcc/bin/aarch64-pc-linux-gnu-
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
+PREFIX_AARCH64 = o/third_party/gcc/bin/aarch64-linux-musl-
 endif
 
 AS = $(PREFIX)as
@@ -90,6 +92,18 @@ STRIP = $(PREFIX)strip
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 ADDR2LINE = $(PWD)/$(PREFIX)addr2line
+
+AS_AARCH64 = $(PREFIX_AARCH64)as
+CC_AARCH64 = $(PREFIX_AARCH64)gcc
+CXX_AARCH64 = $(PREFIX_AARCH64)g++
+CXXFILT_AARCH64 = $(PREFIX_AARCH64)c++filt
+LD_AARCH64 = $(PREFIX_AARCH64)ld.bfd
+NM_AARCH64 = $(PREFIX_AARCH64)nm
+GCC_AARCH64 = $(PREFIX_AARCH64)gcc
+STRIP_AARCH64 = $(PREFIX_AARCH64)strip
+OBJCOPY_AARCH64 = $(PREFIX_AARCH64)objcopy
+OBJDUMP_AARCH64 = $(PREFIX_AARCH64)objdump
+ADDR2LINE_AARCH64 = $(PWD)/$(PREFIX_AARCH64)addr2line
 
 export ADDR2LINE
 export LC_ALL
