@@ -16,40 +16,40 @@ THIRD_PARTY_GGML_A_OBJS = $(THIRD_PARTY_GGML_A_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_GGML_A_FILES = $(THIRD_PARTY_GGML_A_SRCS) $(THIRD_PARTY_GGML_A_HDRS)
 THIRD_PARTY_GGML_A_CHECKS = $(THIRD_PARTY_GGML_A).pkg $(THIRD_PARTY_GGML_A_HDRS:%=o/$(MODE)/%.ok)
 
-THIRD_PARTY_GGML_A_DIRECTDEPS =					\
-	LIBC_CALLS						\
-	LIBC_INTRIN						\
-	LIBC_MEM						\
-	LIBC_NEXGEN32E						\
-	LIBC_RUNTIME						\
-	LIBC_STDIO						\
-	LIBC_THREAD						\
-	LIBC_STR						\
-	LIBC_STUBS						\
-	LIBC_SYSV						\
+THIRD_PARTY_GGML_A_DIRECTDEPS =						\
+	LIBC_CALLS							\
+	LIBC_INTRIN							\
+	LIBC_MEM							\
+	LIBC_NEXGEN32E							\
+	LIBC_RUNTIME							\
+	LIBC_STDIO							\
+	LIBC_THREAD							\
+	LIBC_STR							\
+	LIBC_STUBS							\
+	LIBC_SYSV							\
 	LIBC_TINYMATH
 
-THIRD_PARTY_GGML_A_DEPS :=					\
+THIRD_PARTY_GGML_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_GGML_A_DIRECTDEPS),$($(x))))
 
-$(THIRD_PARTY_GGML_A):						\
-		third_party/ggml/				\
-		$(THIRD_PARTY_GGML_A).pkg			\
+$(THIRD_PARTY_GGML_A):							\
+		third_party/ggml/					\
+		$(THIRD_PARTY_GGML_A).pkg				\
 		$(THIRD_PARTY_GGML_A_OBJS)
 
-$(THIRD_PARTY_GGML_A).pkg:					\
-		$(THIRD_PARTY_GGML_A_OBJS)			\
+$(THIRD_PARTY_GGML_A).pkg:						\
+		$(THIRD_PARTY_GGML_A_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_GGML_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_GGML_A_OBJS): private				\
-		OVERRIDE_CFLAGS +=				\
-			-O3					\
-			-ffunction-sections			\
-			-fdata-sections				\
-			-msse3					\
-			-mavx					\
-			-mavx2					\
-			-mf16c					\
+$(THIRD_PARTY_GGML_A_OBJS): private					\
+		OVERRIDE_CFLAGS +=					\
+			-O3						\
+			-ffunction-sections				\
+			-fdata-sections					\
+			-msse3						\
+			-mavx						\
+			-mavx2						\
+			-mf16c						\
 			-mfma
 
 ################################################################################
@@ -64,39 +64,45 @@ THIRD_PARTY_GGML_LLAMA_OBJS = $(THIRD_PARTY_GGML_LLAMA_SRCS:%.cc=o/$(MODE)/%.o)
 THIRD_PARTY_GGML_LLAMA_FILES := $(THIRD_PARTY_GGML_LLAMA_SRCS) $(THIRD_PARTY_GGML_LLAMA_HDRS)
 THIRD_PARTY_GGML_LLAMA_CHECKS = $(THIRD_PARTY_GGML_LLAMA).pkg $(THIRD_PARTY_GGML_LLAMA_HDRS:%=o/$(MODE)/%.okk)
 
-THIRD_PARTY_GGML_LLAMA_DIRECTDEPS =				\
-	LIBC_CALLS						\
-	LIBC_FMT						\
-	LIBC_INTRIN						\
-	LIBC_MEM						\
-	LIBC_NEXGEN32E						\
-	LIBC_RUNTIME						\
-	LIBC_STDIO						\
-	LIBC_LOG						\
-	LIBC_STR						\
-	LIBC_STUBS						\
-	LIBC_SYSV						\
-	LIBC_THREAD						\
-	LIBC_TINYMATH						\
-	THIRD_PARTY_GGML					\
+THIRD_PARTY_GGML_LLAMA_DIRECTDEPS =					\
+	LIBC_CALLS							\
+	LIBC_FMT							\
+	LIBC_INTRIN							\
+	LIBC_MEM							\
+	LIBC_NEXGEN32E							\
+	LIBC_RUNTIME							\
+	LIBC_STDIO							\
+	LIBC_LOG							\
+	LIBC_STR							\
+	LIBC_STUBS							\
+	LIBC_SYSV							\
+	LIBC_THREAD							\
+	LIBC_TINYMATH							\
+	LIBC_ZIPOS							\
+	THIRD_PARTY_GGML						\
 	THIRD_PARTY_LIBCXX
 
-THIRD_PARTY_GGML_LLAMA_DEPS :=					\
+THIRD_PARTY_GGML_LLAMA_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_GGML_LLAMA_DIRECTDEPS),$($(x))))
 
-$(THIRD_PARTY_GGML_LLAMA).dbg:					\
-		$(THIRD_PARTY_GGML_LLAMA).pkg			\
-		$(THIRD_PARTY_GGML_LLAMA_DEPS)			\
-		o/$(MODE)/third_party/ggml/common.o		\
-		o/$(MODE)/third_party/ggml/llama.o		\
-		o/$(MODE)/third_party/ggml/main.o		\
-		$(CRT)						\
+$(THIRD_PARTY_GGML_LLAMA).dbg:						\
+		$(THIRD_PARTY_GGML_LLAMA).pkg				\
+		$(THIRD_PARTY_GGML_LLAMA_DEPS)				\
+		o/$(MODE)/third_party/ggml/companionai.txt.zip.o	\
+		o/$(MODE)/third_party/ggml/common.o			\
+		o/$(MODE)/third_party/ggml/llama.o			\
+		o/$(MODE)/third_party/ggml/main.o			\
+		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(THIRD_PARTY_GGML_LLAMA).pkg:					\
-		$(THIRD_PARTY_GGML_LLAMA_OBJS)			\
+$(THIRD_PARTY_GGML_LLAMA).pkg:						\
+		$(THIRD_PARTY_GGML_LLAMA_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_GGML_LLAMA_DIRECTDEPS),$($(x)_A).pkg)
+
+o/$(MODE)/third_party/ggml/companionai.txt.zip.o: private		\
+		ZIPOBJ_FLAGS +=						\
+			-B
 
 ################################################################################
 
@@ -110,6 +116,6 @@ THIRD_PARTY_GGML_CHECKS = $(foreach x,$(THIRD_PARTY_GGML_ARTIFACTS),$($(x)_CHECK
 $(THIRD_PARTY_GGML_OBJS): third_party/ggml/ggml.mk
 
 .PHONY: o/$(MODE)/third_party/ggml
-o/$(MODE)/third_party/ggml:					\
-		$(THIRD_PARTY_GGML_BINS)			\
+o/$(MODE)/third_party/ggml:						\
+		$(THIRD_PARTY_GGML_BINS)				\
 		$(THIRD_PARTY_GGML_CHECKS)

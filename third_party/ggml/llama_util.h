@@ -4,6 +4,7 @@
 #ifndef LLAMA_UTIL_H
 #define LLAMA_UTIL_H
 #include "libc/calls/struct/rlimit.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/madv.h"
@@ -163,7 +164,7 @@ struct llama_mmap {
             Die("mmap failed: %s", strerror(errno));
         }
 
-        if (prefetch) {
+        if (prefetch && !IsWindows()) {
             // Advise the kernel to preload the mapped memory
             if (madvise(addr, file->size, MADV_WILLNEED)) {
                 fprintf(stderr, "warning: madvise(.., MADV_WILLNEED) failed: %s\n",

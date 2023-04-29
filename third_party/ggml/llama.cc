@@ -2,7 +2,8 @@
 │vi: set net ft=c++ ts=4 sts=4 sw=4 fenc=utf-8                              :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  llama.cpp                                                                   │
+│  llama.com                                                                   │
+│  Copyright (c) 2023 Justine Alexandra Roberts Tunney                         │
 │  Copyright (c) 2023 Georgi Gerganov                                          │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │

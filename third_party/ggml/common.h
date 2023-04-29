@@ -6,6 +6,7 @@
 #include "third_party/libcxx/string"
 #include "third_party/libcxx/vector"
 #include "third_party/libcxx/random"
+#include "libc/runtime/runtime.h"
 #include "third_party/libcxx/thread"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 // clang-format off
@@ -18,7 +19,7 @@
 struct gpt_params {
     int32_t seed          = -1;   // RNG seed
     int32_t verbose       = 0;    // Logging verbosity
-    int32_t n_threads     = std::min(4, (int32_t) std::thread::hardware_concurrency());
+    int32_t n_threads     = std::min(1, (int)(_getcpucount() * 0.75));
     int32_t n_predict     = 128;  // new tokens to predict
     int32_t repeat_last_n = 64;   // last n tokens to penalize
     int32_t n_parts       = -1;   // amount of model parts (-1 = determine from model dimensions)
@@ -36,6 +37,7 @@ struct gpt_params {
     std::string prompt = "";
     std::string prompt_path = ".prompt.jtlp";
     std::string input_prefix = "";       // string to prefix user inputs with
+    std::string n_keep_str = "";         // substring in prompt used to override n_keep == 0
     std::vector<std::string> antiprompt; // string upon seeing which more user input is prompted
 
     std::string lora_adapter = "";  // lora adapter path
