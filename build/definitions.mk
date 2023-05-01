@@ -157,7 +157,6 @@ DEFAULT_OFLAGS =							\
 	-gdescribe-dies
 
 DEFAULT_COPTS =								\
-	-mno-red-zone							\
 	-fno-math-errno							\
 	-fno-trapping-math						\
 	-fno-fp-int-builtin-inexact					\
@@ -166,8 +165,13 @@ DEFAULT_COPTS =								\
 	-fno-gnu-unique							\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
-	-fno-semantic-interposition					\
+	-fno-semantic-interposition
+
+ifneq ($(MODE), aarch64)
+DEFAULT_COPTS +=							\
+	-mno-red-zone							\
 	-mno-tls-direct-seg-refs
+endif
 
 MATHEMATICAL =								\
 	-O3								\
@@ -338,9 +342,13 @@ OBJECTIFY.greg.c =							\
 	-fno-optimize-sibling-calls					\
 	-fno-sanitize=all						\
 	-ffreestanding							\
-	-mno-fentry							\
 	-fwrapv								\
 	-c
+
+ifneq ($(MODE), aarch64)
+OBJECTIFY.greg.c +=							\
+	-mno-fentry
+endif
 
 OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c99.c = $(CC) $(OBJECTIFY.c.flags) -std=c99 -Wextra -Werror -pedantic-errors -c

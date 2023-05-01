@@ -17,6 +17,11 @@ CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
 
+ifeq ($(MODE), aarch64)
+CONFIG_CCFLAGS += -O2  # $(BACKTRACES) $(FTRACE)
+CONFIG_CPPFLAGS += -DSYSDEBUG
+endif
+
 # Fast Build Mode
 #
 #   - `make MODE=fastbuild`

@@ -165,7 +165,7 @@
         ((eq arg 4) "dbg")
         ((eq arg 5) "")
         ((eq arg 6) "llvm")
-        ((eq arg 7) "tinylinux")
+        ((eq arg 7) "aarch64")
         ((eq arg 8) "tsan")
         (default default)
         ((cosmo-intest) "dbg")
@@ -225,7 +225,7 @@
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
                       "size -A o/$m/$n.o | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
-                      "objdump %s -wzCd o/$m/$n%s.o | c++filt"))
+                      "build/objdump %s -wzCd o/$m/$n%s.o | c++filt"))
                    mode name suffix objdumpflags suffix))
           ((eq kind 'run)
            (format
@@ -249,7 +249,7 @@
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
-               "objdump %s -wzCd $f | c++filt"))
+               "build/objdump %s -wzCd $f | c++filt"))
             mode name suffix objdumpflags)))))
 
 (defun cosmo-compile (arg)

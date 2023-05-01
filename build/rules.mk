@@ -16,25 +16,14 @@
 
 MAKEFLAGS += --no-builtin-rules
 
-o/%.o: %.s                         ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
-o/%.o: o/%.s                       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
-o/%.s: %.S                         ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
-o/%.s: o/%.S                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
-o/%.o: %.S                         ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
-o/%.o: o/%.S                       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-
 o/$(MODE)/%: o/$(MODE)/%.dbg       ; @$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-o/$(MODE)/%.o: %.s                 ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.o: o/$(MODE)/%.s       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.f                 ; @$(COMPILE) -AOBJECTIFY.f $(OBJECTIFY.f) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.F                 ; @$(COMPILE) -AOBJECTIFY.F $(OBJECTIFY.F) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.h: %.c                 ; @$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
 o/$(MODE)/%.h: o/$(MODE)/%.c       ; @$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
-o/$(MODE)/%.o: %.S                 ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.o: o/$(MODE)/%.S       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.cc                ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
@@ -42,6 +31,30 @@ o/$(MODE)/%.greg.o: %.greg.c       ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.gr
 o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.initabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
+
+ifneq ($(MODE), aarch64)
+o/%.o: %.s                         ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
+o/%.o: o/%.s                       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
+o/%.s: %.S                         ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
+o/%.s: o/%.S                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
+o/%.o: %.S                         ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/%.o: o/%.S                       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.o: %.s                 ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.o: o/$(MODE)/%.s       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.o: %.S                 ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.o: o/$(MODE)/%.S       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+else
+o/%.o: %.s libc/empty.s                   ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/%.o: o/%.s libc/empty.s                 ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/%.s: %.S libc/empty.s                   ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) libc/empty.s
+o/%.s: o/%.S libc/empty.s                 ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) libc/empty.s
+o/%.o: %.S libc/empty.s                   ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/%.o: o/%.S libc/empty.s                 ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/$(MODE)/%.o: %.s libc/empty.s           ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/$(MODE)/%.o: o/$(MODE)/%.s libc/empty.s ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/$(MODE)/%.o: %.S libc/empty.s           ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+o/$(MODE)/%.o: o/$(MODE)/%.S libc/empty.s ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.s) $(OUTPUT_OPTION) libc/empty.s
+endif
 
 o/%.o: %.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<

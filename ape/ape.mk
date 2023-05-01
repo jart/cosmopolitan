@@ -13,6 +13,8 @@
 #   build like turning off the System V "Red Zone" optimization, because
 #   αcτµαlly pδrταblε εxεcµταblεs need to be able to run in kernelspace.
 
+ifneq ($(MODE), aarch64)
+
 PKGS += APE
 
 APE =	o/$(MODE)/ape/ape.o			\
@@ -194,3 +196,5 @@ o/$(MODE)/ape:	$(APE_CHECKS)			\
 		o/$(MODE)/ape/ape.macho		\
 		o/$(MODE)/ape/ape-copy-self.o	\
 		o/$(MODE)/ape/ape-no-modify-self.o
+
+endif

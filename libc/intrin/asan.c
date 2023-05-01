@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#ifdef __x86_64__
 #include "libc/calls/state.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -1497,3 +1498,5 @@ __attribute__((__constructor__)) void __asan_init(int argc, char **argv,
   STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
+
+#endif /* __x86_64__ */

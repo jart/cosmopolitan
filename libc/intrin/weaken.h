@@ -4,7 +4,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef __STRICT_ANSI__
 
-#define _weaken(symbol) ((const typeof(&(symbol)))_weakaddr(#symbol))
+#define _weaken(symbol)     \
+  ({                        \
+    asm(".weak\t" #symbol); \
+    &symbol;                \
+  })
 
 #define _strongaddr(symbolstr)                \
   ({                                          \
