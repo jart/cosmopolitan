@@ -417,7 +417,8 @@ toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/ape/ape-copy-self.o			\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
-		o/$(MODE)/cosmopolitan.a
+		o/$(MODE)/cosmopolitan.a			\
+		o/$(MODE)/third_party/libcxx/libcxx.a
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #
