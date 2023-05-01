@@ -290,7 +290,7 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/clinic/audioop.inc
 
 THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
-	third_party/python/Modules/_threadmodule.c		\
+	third_party/python/Modules/_threadmodule.c			\
 	third_party/python/Modules/_tracemalloc.c			\
 	third_party/python/Modules/faulthandler.c			\
 	third_party/python/Objects/abstract.c				\

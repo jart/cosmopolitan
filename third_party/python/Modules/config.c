@@ -18,6 +18,7 @@ PyObject *PyInit__ast(void);
 PyObject *PyInit_gc(void);
 PyObject *_PyWarnings_Init(void);
 PyObject *PyInit__string(void);
+PyObject *PyInit__thread(void);
 
 _Alignas(16) _Section(".rodata.pytab.0") const struct _inittab _PyImport_Inittab[0];
 _Alignas(16) _Section(".rodata.pytab.2") const struct _inittab _PyImport_Inittab2[] = {
@@ -25,6 +26,7 @@ _Alignas(16) _Section(".rodata.pytab.2") const struct _inittab _PyImport_Inittab
     {"_codecs", PyInit__codecs},
     {"itertools", PyInit_itertools},
     {"_io", PyInit__io},
+    {"_thread", PyInit__thread},
     {"_weakref", PyInit__weakref},
     {"marshal", PyMarshal_Init},
     {"_imp", PyInit_imp},

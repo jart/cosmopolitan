@@ -1519,8 +1519,3 @@ PyInit__thread(void)
     PyThread_init_thread();
     return m;
 }
-
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__thread = {
-    "_thread",
-    PyInit__thread,
-};

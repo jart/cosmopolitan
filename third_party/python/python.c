@@ -167,7 +167,6 @@ STATIC_YOINK("_PyImport_Inittab__stat");
 STATIC_YOINK("_PyImport_Inittab__struct");
 STATIC_YOINK("_PyImport_Inittab__symtable");
 STATIC_YOINK("_PyImport_Inittab__testcapi");
-STATIC_YOINK("_PyImport_Inittab__thread");
 STATIC_YOINK("_PyImport_Inittab__tracemalloc");
 STATIC_YOINK("_PyImport_Inittab_array");
 STATIC_YOINK("_PyImport_Inittab_atexit");
