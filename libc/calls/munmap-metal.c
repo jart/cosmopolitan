@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/directmap.internal.h"
 #include "libc/runtime/pc.internal.h"
+#ifdef __x86_64__
 
 noasan int sys_munmap_metal(void *addr, size_t size) {
   size_t i;
@@ -36,3 +37,5 @@ noasan int sys_munmap_metal(void *addr, size_t size) {
   }
   return 0;
 }
+
+#endif

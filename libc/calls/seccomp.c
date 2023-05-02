@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -36,6 +37,7 @@
  */
 privileged int seccomp(unsigned operation, unsigned flags, void *args) {
   int rc;
+#ifdef __x86_64__
   if (IsLinux()) {
     asm volatile("syscall"
                  : "=a"(rc)
@@ -62,6 +64,20 @@ privileged int seccomp(unsigned operation, unsigned flags, void *args) {
   } else {
     rc = enosys();
   }
+#elif defined(__aarch64__)
+  register long r0 asm("x0") = (long)operation;
+  register long r1 asm("x1") = (long)flags;
+  register long r2 asm("x2") = (long)args;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(211), "r"(r0), "r"(r1), "r"(r2)
+               : "x8", "memory");
+  rc = _sysret32(res_x0);
+#else
+#error "arch unsupported"
+#endif
   STRACE("seccomp(%s, %#x, %p) → %d% m", DescribeSeccompOperation(operation),
          flags, args, rc);
   return rc;

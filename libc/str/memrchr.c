@@ -34,6 +34,7 @@ static inline const unsigned char *memrchr_pure(const unsigned char *s,
   return 0;
 }
 
+#ifdef __x86_64__
 noasan static inline const unsigned char *memrchr_sse(const unsigned char *s,
                                                       unsigned char c,
                                                       size_t n) {
@@ -55,6 +56,7 @@ noasan static inline const unsigned char *memrchr_sse(const unsigned char *s,
   }
   return 0;
 }
+#endif
 
 /**
  * Returns pointer to first instance of character.
@@ -66,6 +68,7 @@ noasan static inline const unsigned char *memrchr_sse(const unsigned char *s,
  * @asyncsignalsafe
  */
 void *memrchr(const void *s, int c, size_t n) {
+#ifdef __x86_64__
   const void *r;
   if (!IsTiny() && X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, n);
@@ -74,4 +77,7 @@ void *memrchr(const void *s, int c, size_t n) {
     r = memrchr_pure(s, c, n);
   }
   return (void *)r;
+#else
+  return memrchr_pure(s, c, n);
+#endif
 }

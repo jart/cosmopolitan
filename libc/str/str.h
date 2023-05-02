@@ -105,7 +105,7 @@ char *strrchr(const char *, int) strlenesque;
 void *memrchr(const void *, int, size_t) strlenesque;
 char16_t *strrchr16(const char16_t *, int) strlenesque;
 void *memrchr16(const void *, int, size_t) strlenesque;
-wchar_t *wcsrchr(const wchar_t *, int) strlenesque;
+wchar_t *wcsrchr(const wchar_t *, wchar_t) strlenesque;
 void *wmemrchr(const wchar_t *, wchar_t, size_t) strlenesque;
 char *strpbrk(const char *, const char *) strlenesque;
 char16_t *strpbrk16(const char16_t *, const char16_t *) strlenesque;

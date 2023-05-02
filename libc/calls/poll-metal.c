@@ -24,6 +24,7 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/poll.h"
+#ifdef __x86_64__
 
 int sys_poll_metal(struct pollfd *fds, size_t nfds, unsigned timeout_ms) {
   int rc;
@@ -80,3 +81,5 @@ int sys_poll_metal(struct pollfd *fds, size_t nfds, unsigned timeout_ms) {
   }
   return rc;
 }
+
+#endif

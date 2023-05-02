@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -41,6 +42,7 @@ privileged int prctl(int operation, ...) {
   d = va_arg(va, intptr_t);
   va_end(va);
 
+#ifdef __x86_64__
   if (IsLinux()) {
     asm volatile("mov\t%5,%%r10\n\t"
                  "mov\t%6,%%r8\n\t"
@@ -52,6 +54,22 @@ privileged int prctl(int operation, ...) {
   } else {
     rc = enosys();
   }
+#elif defined(__aarch64__)
+  register long r0 asm("x0") = (long)operation;
+  register long r1 asm("x1") = (long)a;
+  register long r2 asm("x2") = (long)b;
+  register long r3 asm("x3") = (long)c;
+  register long r4 asm("x4") = (long)d;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(167), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
+               : "x8", "memory");
+  rc = _sysret32(res_x0);
+#else
+#error "arch unsupported"
+#endif
 
 #ifdef SYSDEBUG
   if (operation == PR_CAPBSET_READ || operation == PR_CAPBSET_DROP) {

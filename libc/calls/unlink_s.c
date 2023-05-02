@@ -17,7 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/lockxchg.h"
+
+// TODO(jart): DELETE
 
 /**
  * Deletes file.
@@ -29,6 +30,7 @@
  * @asyncsignalsafe
  */
 int unlink_s(const char **namep) {
-  const char *name = NULL;
-  return unlink(lockxchg(namep, &name));
+  const char *name = *namep;
+  *namep = 0;
+  return unlink(name);
 }

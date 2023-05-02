@@ -31,6 +31,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#ifdef __x86_64__
 
 /**
  * @fileoverview XNU kernel callback normalization.
@@ -527,3 +528,5 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
                : "rcx", "r11", "memory", "cc");
   notpossible;
 }
+
+#endif

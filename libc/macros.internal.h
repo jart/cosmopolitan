@@ -142,6 +142,14 @@
 	.section .privileged,"ax",@progbits
 .endm
 
+//	Declares alternative implementation of function.
+//	@param	implement e.g. tinymath_pow
+//	@param	canonical e.g. pow
+.macro	.alias	implement:req canonical:req
+	.equ	\canonical,\implement
+	.weak	\canonical
+.endm
+
 //	Pulls unrelated module into linkage.
 //
 //	In order for this technique to work with --gc-sections, another
@@ -229,14 +237,6 @@
 .macro	.init.end number:req name:req bnd=globl vis
 	.endfn	"\name",\bnd,\vis
 	.previous
-.endm
-
-//	Declares alternative implementation of function.
-//	@param	implement e.g. tinymath_pow
-//	@param	canonical e.g. pow
-.macro	.alias	implement:req canonical:req
-	.equ	\canonical,\implement
-	.weak	\canonical
 .endm
 
 //	LOOP Instruction Replacement.

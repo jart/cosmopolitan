@@ -16,14 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/panel.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.internal.h"
 #include "libc/str/unicode.h"
 #include "tool/build/lib/buffer.h"
-#include "tool/build/lib/panel.h"
+
+static int tpdecode(const char *s, wint_t *out) {
+  uint32_t wc, cb, need, msb, j, i = 0;
+  if ((wc = s[i++] & 255) == -1) return -1;
+  while ((wc & 0300) == 0200) {
+    if ((wc = s[i++] & 255) == -1) return -1;
+  }
+  if (!(0 <= wc && wc <= 0x7F)) {
+    msb = wc < 252 ? _bsr(~wc & 0xff) : 1;
+    need = 7 - msb;
+    wc &= ((1u << msb) - 1) | 0003;
+    for (j = 1; j < need; ++j) {
+      if ((cb = s[i++] & 255) == -1) return -1;
+      if ((cb & 0300) == 0200) {
+        wc = wc << 6 | (cb & 077);
+      } else {
+        if (out) *out = 0xFFFD;
+        return -1;
+      }
+    }
+  }
+  if (out) *out = wc;
+  return i;
+}
 
 /**
  * Renders panel div flex boxen inside terminal display for tui.

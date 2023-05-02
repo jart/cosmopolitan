@@ -6,6 +6,7 @@ COSMOPOLITAN_C_START_
 
 uint32_t pmovmskb(const uint8_t[16]);
 
+#if defined(__x86_64__) && defined(__GNUC__)
 #define pmovmskb(A)                                            \
   ({                                                           \
     uint32_t Mask;                                             \
@@ -21,6 +22,7 @@ uint32_t pmovmskb(const uint8_t[16]);
     }                                                          \
     Mask;                                                      \
   })
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

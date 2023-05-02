@@ -23,9 +23,9 @@ IFS=","
 
 scall() {
   {
-    echo ".include \"o/libc/sysv/macros.internal.inc\""
+    echo "#include \"libc/sysv/macros.internal.h\""
     echo ".scall" "$*"
-  } >"$dir/${1/$/-}.s"
+  } >"$dir/${1/$/-}.S"
 }
 
 syscon() {
@@ -45,9 +45,9 @@ syscon() {
 
 sysstr() {
   {
-    echo ".include \"o/libc/sysv/macros.internal.inc\""
+    echo "#include \"libc/sysv/macros.internal.h\""
     echo ".sysstr $1 \"$2\""
-  } >"$dir/${1/$/-}.s"
+  } >"$dir/${1/$/-}.S"
 }
 
 errfun() {

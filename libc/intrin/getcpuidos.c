@@ -19,6 +19,7 @@
 #include "libc/runtime/runtime.h"
 
 const char *GetCpuidOs(void) {
+#ifdef __x86_64__
   static bool once;
   static char s[13];
   if (!once) {
@@ -26,4 +27,7 @@ const char *GetCpuidOs(void) {
     once = true;
   }
   return s;
+#else
+  return "";
+#endif
 }

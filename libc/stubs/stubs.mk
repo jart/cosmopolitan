@@ -42,6 +42,10 @@ $(LIBC_STUBS_A).pkg:					\
 		$(LIBC_STUBS_A_OBJS)			\
 		$(foreach x,$(LIBC_STUBS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/stubs/ld.o: libc/stubs/ld.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 LIBC_STUBS_LIBS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)))
 LIBC_STUBS_SRCS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)_SRCS))
 LIBC_STUBS_CHECKS = $(foreach x,$(LIBC_STUBS_ARTIFACTS),$($(x)_CHECKS))

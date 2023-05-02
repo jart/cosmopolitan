@@ -34,6 +34,7 @@ static inline const char16_t *memrchr16_pure(const char16_t *s, char16_t c,
   return 0;
 }
 
+#ifdef __x86_64__
 noasan static inline const char16_t *memrchr16_sse(const char16_t *s,
                                                    char16_t c, size_t n) {
   size_t i;
@@ -54,6 +55,7 @@ noasan static inline const char16_t *memrchr16_sse(const char16_t *s,
   }
   return 0;
 }
+#endif
 
 /**
  * Returns pointer to first instance of character.
@@ -65,6 +67,7 @@ noasan static inline const char16_t *memrchr16_sse(const char16_t *s,
  * @asyncsignalsafe
  */
 void *memrchr16(const void *s, int c, size_t n) {
+#ifdef __x86_64__
   const void *r;
   if (!IsTiny() && X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, n * 2);
@@ -73,4 +76,7 @@ void *memrchr16(const void *s, int c, size_t n) {
     r = memrchr16_pure(s, c, n);
   }
   return (void *)r;
+#else
+  return memrchr16_pure(s, c, n);
+#endif
 }

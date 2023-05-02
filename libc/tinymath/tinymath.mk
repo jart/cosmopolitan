@@ -27,7 +27,8 @@ LIBC_TINYMATH_A_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_STUBS					\
 	LIBC_NEXGEN32E					\
-	LIBC_SYSV
+	LIBC_SYSV					\
+	THIRD_PARTY_COMPILER_RT
 
 LIBC_TINYMATH_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_TINYMATH_A_DIRECTDEPS),$($(x))))
@@ -57,4 +58,6 @@ LIBC_TINYMATH_CHECKS = $(LIBC_TINYMATH_HDRS:%=o/$(MODE)/%.ok)
 $(LIBC_TINYMATH_OBJS): $(BUILD_FILES) libc/tinymath/tinymath.mk
 
 .PHONY: o/$(MODE)/libc/tinymath
-o/$(MODE)/libc/tinymath: $(LIBC_TINYMATH_CHECKS)
+o/$(MODE)/libc/tinymath:				\
+		$(LIBC_TINYMATH_CHECKS)			\
+		o/$(MODE)/libc/tinymath/tinymath.a

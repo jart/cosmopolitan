@@ -70,5 +70,7 @@ privileged int sys_gettid(void) {
                : "i"(178)
                : "x8", "memory");
   return res_x0;
+#else
+#error "arch unsupported"
 #endif
 }

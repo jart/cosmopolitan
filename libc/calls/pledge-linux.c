@@ -35,6 +35,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
+#ifdef __x86_64__
 
 /**
  * @fileoverview OpenBSD pledge() Polyfill Payload for GNU/Systemd
@@ -2060,3 +2061,5 @@ privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
 
   return rc;
 }
+
+#endif

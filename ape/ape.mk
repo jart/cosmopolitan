@@ -13,9 +13,13 @@
 #   build like turning off the System V "Red Zone" optimization, because
 #   αcτµαlly pδrταblε εxεcµταblεs need to be able to run in kernelspace.
 
-ifneq ($(MODE), aarch64)
-
 PKGS += APE
+
+APE_FILES := $(wildcard ape/*.*)
+APE_HDRS = $(filter %.h,$(APE_FILES))
+APE_INCS = $(filter %.inc,$(APE_FILES))
+
+ifneq ($(MODE), aarch64)
 
 APE =	o/$(MODE)/ape/ape.o			\
 	o/$(MODE)/ape/ape.lds
@@ -51,9 +55,6 @@ APE_LOADER_FLAGS =				\
 	 $(OUTPUT_OPTION)			\
 	$<
 
-APE_FILES := $(wildcard ape/*.*)
-APE_HDRS = $(filter %.h,$(APE_FILES))
-APE_INCS = $(filter %.inc,$(APE_FILES))
 APE_SRCS_C = ape/loader.c
 APE_SRCS_S = $(filter %.S,$(APE_FILES))
 APE_SRCS = $(APE_SRCS_C) $(APE_SRCS_S)

@@ -26,6 +26,7 @@
 //	@return	0 on success, or -1 w/ errno
 //	@norestart
 sched_yield:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	xor	%eax,%eax
@@ -86,5 +87,15 @@ sched_yield:
 
 9:	leave
 	ret
+
+#elif defined(__aarch64__)
+	mov	x8,#0x7c
+	svc	0
+	mov	w0,#0
+	ret
+
+#else
+#error "arch unsupported"
+#endif
 	.endfn	sched_yield,globl
 	.previous

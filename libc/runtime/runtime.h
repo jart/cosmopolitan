@@ -6,7 +6,12 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § runtime                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+#ifdef __x86_64__
 typedef long jmp_buf[8];
+#elif defined(__aarch64__)
+typedef long jmp_buf[22];
+#endif
+
 typedef long sigjmp_buf[12];
 
 extern char **environ;                      /* CRT */

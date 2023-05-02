@@ -30,6 +30,7 @@ typedef char16_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @asyncsignalsafe
  */
 noasan size_t strlen16(const char16_t *s) {
+#ifdef __x86_64__
   size_t n;
   xmm_t z = {0};
   unsigned m, k = (uintptr_t)s & 15;
@@ -40,4 +41,9 @@ noasan size_t strlen16(const char16_t *s) {
   n = (const char16_t *)p + (__builtin_ctzl(m) >> 1) - s;
   if (IsAsan()) __asan_verify(s, n * 2);
   return n;
+#else
+  size_t n = 0;
+  while (*s++) ++n;
+  return n;
+#endif
 }

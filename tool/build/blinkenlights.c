@@ -61,8 +61,6 @@
 #include "libc/str/strwidth.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpdecode.internal.h"
-#include "libc/str/tpencode.internal.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"

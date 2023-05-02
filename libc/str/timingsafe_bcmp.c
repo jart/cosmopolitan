@@ -41,6 +41,7 @@ noasan static dontinline antiquity unsigned timingsafe_bcmp_sse(const char *p,
   return w | w >> 32;
 }
 
+#ifdef __x86_64__
 noasan static microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
                                                                const char *q,
                                                                size_t n) {
@@ -74,6 +75,7 @@ noasan static microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
   w = a[0] | a[1];
   return w | w >> 32;
 }
+#endif
 
 /**
  * Tests inequality of first 𝑛 bytes of 𝑝 and 𝑞.
@@ -140,11 +142,12 @@ int timingsafe_bcmp(const void *a, const void *b, size_t n) {
           __asan_verify(a, n);
           __asan_verify(b, n);
         }
+#ifdef __x86_64__
         if (X86_HAVE(AVX)) {
           return timingsafe_bcmp_avx(p, q, n);
-        } else {
-          return timingsafe_bcmp_sse(p, q, n);
         }
+#endif
+        return timingsafe_bcmp_sse(p, q, n);
       }
     } else if (n >= 4) {
       __builtin_memcpy(&u0, p, 4);

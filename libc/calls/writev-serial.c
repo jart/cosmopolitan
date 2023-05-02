@@ -21,6 +21,7 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/runtime/pc.internal.h"
+#ifdef __x86_64__
 
 ssize_t sys_writev_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, j, wrote = 0;
@@ -35,3 +36,5 @@ ssize_t sys_writev_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
   }
   return wrote;
 }
+
+#endif

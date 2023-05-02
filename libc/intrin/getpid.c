@@ -48,7 +48,19 @@ int getpid(void) {
   } else if (!__vforked) {
     rc = __pid;
   } else {
+#ifdef __x86_64__
     rc = sys_getpid().ax;
+#elif defined(__aarch64__)
+    register long res_x0 asm("x0");
+    asm volatile("mov\tx8,%1\n"
+                 "svc\t0"
+                 : "=r"(res_x0)
+                 : "i"(172)
+                 : "x8", "memory");
+    rc = res_x0;
+#else
+#error "arch unsupported"
+#endif
   }
   return rc;
 }

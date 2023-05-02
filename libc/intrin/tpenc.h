@@ -5,7 +5,8 @@ COSMOPOLITAN_C_START_
 
 uint64_t _tpenc(int32_t) pureconst;
 
-#if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__x86_64__) && defined(__MNO_RED_ZONE__) && defined(__GNUC__) && \
+    !defined(__STRICT_ANSI__)
 #define _tpenc(CODE)           \
   ({                           \
     long Edi, Buf;             \

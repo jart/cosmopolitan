@@ -45,6 +45,7 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
   i = n - 4;
   asm("" : "+x"(pk));
   do {
+#ifdef __x86_64__
     if (i >= 14) {
       x = *(const v2di *)(p + i - 14);
       if (!(__builtin_ia32_pmovmskb128(
@@ -55,6 +56,7 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
         continue;
       }
     }
+#endif
     while (magic = READ32LE(p + i), magic != kZipCdir64LocatorMagic &&
                                         magic != kZipCdirHdrMagic &&
                                         i + 0x10000 + 0x1000 >= n && i > 0) {

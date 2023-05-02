@@ -48,7 +48,21 @@ o/$(MODE)/libc/nexgen32e/threaded.o: private		\
 			-fno-sanitize=all
 
 # these assembly files are safe to build on aarch64
+o/$(MODE)/libc/nexgen32e/mcount.o: libc/nexgen32e/mcount.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/ksha256.o: libc/nexgen32e/ksha256.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/ksha512.o: libc/nexgen32e/ksha512.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/kcp437.o: libc/nexgen32e/kcp437.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/kreversebits.o: libc/nexgen32e/kreversebits.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/ktensindex.o: libc/nexgen32e/ktensindex.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/longjmp.o: libc/nexgen32e/longjmp.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/setjmp.o: libc/nexgen32e/setjmp.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_NEXGEN32E_LIBS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)))

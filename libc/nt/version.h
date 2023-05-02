@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 bool IsAtLeastWindows10(void) pureconst;
 bool32 GetVersionEx(struct NtOsVersionInfo *lpVersionInformation);
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86_64__)
 #define IsAtLeastWindows10() (GetNtMajorVersion() >= 10)
 #define GetNtMajorVersion()    \
   ({                           \

@@ -38,6 +38,7 @@ static dontinline antiquity int bcmp_sse(const char *p, const char *q,
   return !!(a[0] | a[1]);
 }
 
+#ifdef __x86_64__
 microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
                                              size_t n) {
   xmm_t a, b, c, d;
@@ -67,6 +68,7 @@ microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
       *(const xmm_t *)(p + n - 16) ^ *(const xmm_t *)(q + n - 16);
   return !!(a[0] | a[1]);
 }
+#endif
 
 /**
  * Tests inequality of first 𝑛 bytes of 𝑝 and 𝑞.
@@ -122,8 +124,10 @@ int bcmp(const void *a, const void *b, size_t n) {
         __builtin_memcpy(&j, q + n - 4, 4);
         return !!(i ^ j);
       }
+#ifdef __x86_64__
     } else if (LIKELY(X86_HAVE(AVX))) {
       return bcmp_avx(p, q, n);
+#endif
     } else {
       return bcmp_sse(p, q, n);
     }

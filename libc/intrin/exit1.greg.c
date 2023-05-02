@@ -81,5 +81,7 @@ privileged wontreturn void _Exit1(int rc) {
                : "i"(93), "r"(r0)
                : "x8", "memory");
   notpossible;
+#else
+#error "arch unsupported"
 #endif
 }

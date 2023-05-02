@@ -31,6 +31,7 @@ static inline const char *strchr_pure(const char *s, int c) {
   }
 }
 
+#ifdef __x86_64__
 noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
@@ -52,6 +53,7 @@ noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   if (c && !*s) s = 0;
   return s;
 }
+#endif
 
 /**
  * Returns pointer to first instance of character.
@@ -64,6 +66,7 @@ noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
  * @vforksafe
  */
 char *strchr(const char *s, int c) {
+#ifdef __x86_64__
   const char *r;
   if (X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, 1);
@@ -73,4 +76,7 @@ char *strchr(const char *s, int c) {
   }
   _unassert(!r || *r || !(c & 255));
   return (char *)r;
+#else
+  return strchr_pure(s, c);
+#endif
 }

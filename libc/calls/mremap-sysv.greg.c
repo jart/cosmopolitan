@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asmflag.h"
@@ -34,34 +35,52 @@
  * features like ASAN memory safety and kprintf() won't work as well.
  */
 privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
+#ifdef __x86_64__
   bool cf;
-  uintptr_t rax, rdi, rsi, rdx;
+  uintptr_t res, rdi, rsi, rdx;
   register uintptr_t r8 asm("r8");
   register uintptr_t r10 asm("r10");
   if (IsLinux()) {
     r10 = f;
     r8 = (uintptr_t)q;
     asm("syscall"
-        : "=a"(rax)
+        : "=a"(res)
         : "0"(0x019), "D"(p), "S"(n), "d"(m), "r"(r10), "r"(r8)
         : "rcx", "r11", "memory", "cc");
-    if (rax > -4096ul) errno = -rax, rax = -1;
+    if (res > -4096ul) errno = -res, res = -1;
   } else if (IsNetbsd()) {
     if (f & MREMAP_MAYMOVE) {
-      rax = 0x19B;
+      res = 0x19B;
       r10 = m;
       r8 = (f & MREMAP_FIXED) ? MAP_FIXED : 0;
       asm(CFLAG_ASM("syscall")
-          : CFLAG_CONSTRAINT(cf), "+a"(rax), "=d"(rdx)
+          : CFLAG_CONSTRAINT(cf), "+a"(res), "=d"(rdx)
           : "D"(p), "S"(n), "2"(q), "r"(r10), "r"(r8)
           : "rcx", "r9", "r11", "memory", "cc");
-      if (cf) errno = rax, rax = -1;
+      if (cf) errno = res, res = -1;
     } else {
-      rax = einval();
+      res = einval();
     }
   } else {
-    rax = enosys();
+    res = enosys();
   }
-  KERNTRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p% m", p, n, m, f, q, rax);
-  return (void *)rax;
+#elif defined(__aarch64__)
+  long res;
+  register long r0 asm("x0") = (long)p;
+  register long r1 asm("x1") = (long)n;
+  register long r2 asm("x2") = (long)m;
+  register long r3 asm("x3") = (long)f;
+  register long r4 asm("x4") = (long)q;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(216), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
+               : "x8", "memory");
+  res = _sysret64(res_x0);
+#else
+#error "arch unsupported"
+#endif
+  KERNTRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p% m", p, n, m, f, q, res);
+  return (void *)res;
 }

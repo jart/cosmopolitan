@@ -21,6 +21,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
+#ifdef __x86_64__
 
 static unsigned _getcachesize_cpuid4(int type, int level) {
   unsigned i, k;
@@ -55,3 +56,5 @@ unsigned _getcachesize(int type, int level) {
   _unassert(level >= 1);
   return _getcachesize_cpuid4(type, level);
 }
+
+#endif

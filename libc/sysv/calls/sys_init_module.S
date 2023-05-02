@@ -1,0 +1,2 @@
+#include "libc/sysv/macros.internal.h"
+.scall sys_init_module,0xfffffffffffff0af,globl

@@ -31,22 +31,22 @@
 	.balign	4
 	.underrun
 kSockOptnames:
-	.e	SO_DEBUG,"DEBUG"			# bool32
-	.e	SO_ACCEPTCONN,"ACCEPTCONN"		# bool32
-	.e	SO_BROADCAST,"BROADCAST"		# bool32
-	.e	SO_REUSEADDR,"REUSEADDR"		# bool32
-	.e	SO_REUSEPORT,"REUSEPORT"		# bool32
-	.e	SO_KEEPALIVE,"KEEPALIVE"		# bool32
-	.e	SO_DONTROUTE,"DONTROUTE"		# bool32
-	.e	SO_RCVTIMEO,"RCVTIMEO"			# timeval
-	.e	SO_SNDTIMEO,"SNDTIMEO"			# timeval
-	.e	SO_LINGER,"LINGER"			# linger
-	.e	SO_TYPE,"TYPE"				# int
-	.e	SO_SNDBUF,"SNDBUF"			# int
-	.e	SO_RCVBUF,"RCVBUF"			# int
-	.e	SO_RCVLOWAT,"RCVLOWAT"			# int
-	.e	SO_SNDLOWAT,"SNDLOWAT"			# int
-	.e	SO_ERROR,"ERROR"			# int
+	.e	SO_DEBUG,"DEBUG"			// bool32
+	.e	SO_ACCEPTCONN,"ACCEPTCONN"		// bool32
+	.e	SO_BROADCAST,"BROADCAST"		// bool32
+	.e	SO_REUSEADDR,"REUSEADDR"		// bool32
+	.e	SO_REUSEPORT,"REUSEPORT"		// bool32
+	.e	SO_KEEPALIVE,"KEEPALIVE"		// bool32
+	.e	SO_DONTROUTE,"DONTROUTE"		// bool32
+	.e	SO_RCVTIMEO,"RCVTIMEO"			// timeval
+	.e	SO_SNDTIMEO,"SNDTIMEO"			// timeval
+	.e	SO_LINGER,"LINGER"			// linger
+	.e	SO_TYPE,"TYPE"				// int
+	.e	SO_SNDBUF,"SNDBUF"			// int
+	.e	SO_RCVBUF,"RCVBUF"			// int
+	.e	SO_RCVLOWAT,"RCVLOWAT"			// int
+	.e	SO_SNDLOWAT,"SNDLOWAT"			// int
+	.e	SO_ERROR,"ERROR"			// int
 	.long	MAGNUM_TERMINATOR
 	.endobj	kSockOptnames,globl,hidden
 	.overrun

@@ -38,6 +38,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
 	libc/sysv/errno_location.greg.c			\
+	libc/sysv/sysret.c				\
 	libc/sysv/errno.c				\
 	libc/sysv/errfun.S				\
 	libc/sysv/strace.greg.c				\
@@ -69,10 +70,6 @@ $(LIBC_SYSV_A).pkg:					\
 		$(LIBC_SYSV_A_OBJS)			\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/libc/sysv/macros.internal.inc:			\
-		libc/sysv/macros.internal.h		\
-		libc/macros.internal.h
-
 #───────────────────────────────────────────────────────────────────────────────
 
 LIBC_SYSV_CALLS =					\
@@ -81,8 +78,8 @@ LIBC_SYSV_CALLS =					\
 
 LIBC_SYSV_ARTIFACTS += LIBC_SYSV_CALLS_A
 LIBC_SYSV_CALLS_A = o/$(MODE)/libc/sysv/calls.a
-LIBC_SYSV_CALLS_A_SRCS := $(wildcard libc/sysv/calls/*.s)
-LIBC_SYSV_CALLS_A_OBJS = $(LIBC_SYSV_CALLS_A_SRCS:%.s=o/$(MODE)/%.o)
+LIBC_SYSV_CALLS_A_SRCS := $(wildcard libc/sysv/calls/*.S)
+LIBC_SYSV_CALLS_A_OBJS = $(LIBC_SYSV_CALLS_A_SRCS:%.S=o/$(MODE)/%.o)
 LIBC_SYSV_CALLS_A_CHECKS = $(LIBC_SYSV_CALLS_A).pkg
 
 LIBC_SYSV_CALLS_A_DIRECTDEPS =				\
@@ -99,9 +96,6 @@ $(LIBC_SYSV_CALLS_A):					\
 $(LIBC_SYSV_CALLS_A).pkg:				\
 		$(LIBC_SYSV_CALLS_A_OBJS)		\
 		$(foreach x,$(LIBC_SYSV_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
-
-$(LIBC_SYSV_CALLS_A_OBJS):				\
-		o/libc/sysv/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 
@@ -129,9 +123,6 @@ $(LIBC_SYSV_MACHCALLS_A):				\
 $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 		$(LIBC_SYSV_MACHCALLS_A_OBJS)		\
 		$(foreach x,$(LIBC_SYSV_MACHCALLS_A_DIRECTDEPS),$($(x)_A).pkg)
-
-$(LIBC_SYSV_MACHCALLS_A_OBJS):				\
-		o/libc/sysv/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────
 

@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/math.h"
+#include "third_party/libcxx/math.h"
 
 /**
  * Returns 𝑥^𝑦.
  * @note should take ~56ns
  */
 long double powl(long double x, long double y) {
+#ifdef __x86_64__
   long double t, u;
   if (!isunordered(x, y)) {
     if (!isinf(y)) {
@@ -85,4 +87,7 @@ long double powl(long double x, long double y) {
   } else {
     return NAN;
   }
+#else
+  return pow(x, y);
+#endif
 }

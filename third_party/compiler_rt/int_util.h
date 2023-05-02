@@ -22,7 +22,7 @@
 #include "libc/runtime/runtime.h"
 
 /** \brief Trigger a program abort (or panic for kernel code). */
-#define compilerrt_abort() abort()
+#define compilerrt_abort() __builtin_trap()
 
 /* #define compilerrt_abort() __compilerrt_abort_impl(__FILE__, __LINE__, __func__) */
 

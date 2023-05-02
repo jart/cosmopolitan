@@ -33,6 +33,7 @@ static inline const unsigned char *rawmemchr_pure(const unsigned char *s,
   }
 }
 
+#ifdef __x86_64__
 noasan static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
@@ -51,6 +52,7 @@ noasan static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
   m = __builtin_ctzll(m);
   return (const char *)p + m;
 }
+#endif
 
 /**
  * Returns pointer to first instance of character.
@@ -60,6 +62,7 @@ noasan static inline const char *rawmemchr_sse(const char *s, unsigned char c) {
  * @return is pointer to first instance of c
  */
 void *rawmemchr(const void *s, int c) {
+#ifdef __x86_64__
   const void *r;
   if (X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, 1);
@@ -68,4 +71,7 @@ void *rawmemchr(const void *s, int c) {
     r = rawmemchr_pure(s, c);
   }
   return (void *)r;
+#else
+  return rawmemchr_pure(s, c);
+#endif
 }

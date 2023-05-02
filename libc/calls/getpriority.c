@@ -49,6 +49,7 @@
  */
 privileged int getpriority(int which, unsigned who) {
   int rc;
+#ifdef __x86_64__
   char cf;
   if (IsLinux()) {
     asm volatile("syscall"
@@ -73,6 +74,23 @@ privileged int getpriority(int which, unsigned who) {
   } else {
     rc = sys_getpriority_nt(which, who);
   }
+#elif defined(__aarch64__)
+  register long r0 asm("x0") = (long)which;
+  register long r1 asm("x1") = (long)who;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(141), "r"(r0), "r"(r1)
+               : "x8", "memory");
+  rc = res_x0;
+  if (rc >= 0) {
+    rc = NZERO - rc;
+  } else {
+    errno = -rc;
+    rc = -1;
+  }
+#endif
   STRACE("getpriority(%s, %u) → %d% m", DescribeWhichPrio(which), who, rc);
   return rc;
 }

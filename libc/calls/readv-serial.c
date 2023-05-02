@@ -20,6 +20,7 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/runtime/pc.internal.h"
+#ifdef __x86_64__
 
 static bool IsDataAvailable(struct Fd *fd) {
   return inb(fd->handle + UART_LSR) & UART_TTYDA;
@@ -47,3 +48,5 @@ ssize_t sys_readv_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
     return 0;
   }
 }
+
+#endif

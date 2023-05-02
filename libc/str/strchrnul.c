@@ -31,6 +31,7 @@ static inline const char *strchrnul_pure(const char *s, int c) {
   }
 }
 
+#ifdef __x86_64__
 noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
@@ -49,6 +50,7 @@ noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
   }
   return (const char *)p + __builtin_ctzl(m);
 }
+#endif
 
 /**
  * Returns pointer to first instance of character.
@@ -61,6 +63,7 @@ noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
  *     NUL terminator if c is not found
  */
 char *strchrnul(const char *s, int c) {
+#ifdef __x86_64__
   const char *r;
   if (X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, 1);
@@ -70,4 +73,7 @@ char *strchrnul(const char *s, int c) {
   }
   _unassert((*r & 255) == (c & 255) || !*r);
   return (char *)r;
+#else
+  return strchrnul_pure(s, c);
+#endif
 }

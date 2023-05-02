@@ -36,6 +36,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @see memmem()
  */
 noasan char *strstr(const char *haystack, const char *needle) {
+#ifdef __x86_64__
   xmm_t *p;
   size_t i;
   unsigned k, m;
@@ -66,4 +67,18 @@ noasan char *strstr(const char *haystack, const char *needle) {
     if (!*haystack++) break;
   }
   return 0;
+#else
+  size_t i;
+  unsigned k, m;
+  if (haystack == needle || !*needle) return haystack;
+  for (;;) {
+    for (i = 0;; ++i) {
+      if (!needle[i]) return (/*unconst*/ char *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+    }
+    if (!*haystack++) break;
+  }
+  return 0;
+#endif
 }
