@@ -47,17 +47,17 @@
 #define USE_SYMBOL_HACK 1
 
 	.section .text,"ax",@progbits
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.previous
 	.section .rodata,"a",@progbits
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 __ro:	.endobj	__ro,globl,hidden		# ←for gdb readability
 	.previous
 	.section .data,"aw",@progbits
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.previous
 	.section .bss,"aw",@nobits
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.previous
 	.section .rodata.str1.1,"a",@progbits
 cstr:	.endobj	cstr,globl,hidden		# ←for gdb readability
@@ -179,7 +179,7 @@ ape_mz:
 	.byte	1				#   6: elf v1.o
 	.byte	ELFOSABI_FREEBSD		#   7: FreeBSD
 	.byte	0				#   8: os/abi ver.
-	.align	8,0				#   9: padding
+	.balign	8,0				#   9: padding
 	.short	ET_EXEC				#  10: εxεcµταblε
 	.short	EM_NEXGEN32E			#  12: NexGen32e
 	.long	1				#  14: elf v1.o
@@ -780,11 +780,11 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.endobj	emush
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits
-	.align	64
+	.balign	64
 ape_loader:
         .incbin APE_LOADER
 	.endobj	ape_loader,globl
-	.align	64
+	.balign	64
 ape_loader_end:
 	nop
 	.endobj	ape_loader_end,globl
@@ -858,7 +858,7 @@ openbsd.ident:
 	.long	4f-3f
 	.long	1
 1:	.asciz	"OpenBSD"
-2:	.align	4
+2:	.balign	4
 3:	.long	0
 4:	.size	openbsd.ident,.-openbsd.ident
 	.type	openbsd.ident,@object
@@ -872,7 +872,7 @@ netbsd.ident:
 	.long	4f-3f
 	.long	1
 1:	.asciz	"NetBSD"
-2:	.align	4
+2:	.balign	4
 3:	.long	901000000
 4:	.size	netbsd.ident,.-netbsd.ident
 	.type	netbsd.ident,@object
@@ -912,7 +912,7 @@ netbsd.ident:
 
 #if SupportsXnu()
 .section .macho,"a",@progbits
-.align	__SIZEOF_POINTER__
+.balign	__SIZEOF_POINTER__
 
 ape_macho:
 	.long	0xFEEDFACE+1
@@ -1095,7 +1095,7 @@ PEIMPS = 0b11000000000000000000000001000000
 #if SupportsWindows() || SupportsMetal()
 
 	.section .pe.header,"a",@progbits
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 ape_pe:	.ascin	"PE",4
 	.short	kNtImageFileMachineNexgen32e
 	.stub	ape_pe_shnum,short	# NumberOfSections
@@ -1198,7 +1198,7 @@ ape_idata_idtend:
 	.previous
 
 	.section .piro.data.sort.metal_gdt,"aw",@progbits
-	.align	8
+	.balign	8
 _gdt:
 //	          ┌G:granularity (1 → limit *= 0x1000)
 //	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
@@ -1289,7 +1289,7 @@ sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
 	.endobj	sconf,global,hidden
 
 //	Global Descriptor Table
-	.align	8
+	.balign	8
 _gdtrlo:
 	.short	2f-_gdtlo-1	# table byte length
 	.long	REAL(_gdtlo)	# table address (base memory space)
@@ -1298,7 +1298,7 @@ _gdtr:
 	.short	_gdt_end-_gdt-1	# table byte length
 	.quad	_gdt		# table address (final virtual space)
 	.endobj	_gdtr,global,hidden
-	.align	8
+	.balign	8
 //	Partial GDT with descriptors for switching to unreal mode or long mode.
 _gdtlo	= .-GDT_LEGACY_DATA
 .quad	0b0000000011001111100100100000000000000000000000001111111111111111 #32
@@ -1715,7 +1715,7 @@ long:	movabs	$BANE+PHYSICAL(0f),%rax
 #define GRUB_CHECKSUM(FLAGS) (-(GRUB_MAGIC + (FLAGS)) & 0xffffffff)
 
 //	Grub Header.
-	.align	4
+	.balign	4
 ape_grub:
 	.long	GRUB_MAGIC			# Magic
 	.long	GRUB_AOUT			# Flags
@@ -1730,7 +1730,7 @@ ape_grub:
 //	Grub Entrypoint.
 //	Takes CPU out of legacy mode and jumps to normal entrypoint.
 //	@noreturn
-	.align	4
+	.balign	4
 ape_grub_entry:
 	.code32
 //	cmp	$GRUB_EAX,%eax
@@ -1874,7 +1874,7 @@ ape_pad_text:
 	.type	ape_pad_privileged,@object
 	.hidden	ape_pad_privileged
 ape_pad_privileged:
-	.align	4096
+	.balign	4096
 	.previous
 
 	.section .ape.pad.rodata,"a",@progbits

@@ -27,7 +27,7 @@ kHyperion:
 	.endobj	kHyperion,globl
 	.overrun
 
-	.align	8
+	.balign	8
 kHyperionSize:
 	.quad	1b-0b
 	.endobj	kHyperionSize,globl

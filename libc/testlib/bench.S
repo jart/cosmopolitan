@@ -28,7 +28,7 @@
 	.globl	__bench_start,__bench_end
 	.hidden	__bench_start,__bench_end
 	.byte	0
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 __bench_start:
 	.previous/*

@@ -23,7 +23,8 @@
 #ifdef __ASSEMBLER__
 /* clang-format off */
 
-.macro	.ntimp	fn:req
+.macro	.ntimp	fn:req name:req
+#ifdef __x86_64__
 	.yoink	_init_ntdll
 	.initbss 202,_init_ntdll.\fn
 __imp_\fn:
@@ -37,6 +38,16 @@ __imp_\fn:
 .L\fn:
 	.asciz	"\fn"
 	.previous
+#elif defined(__aarch64__)
+	.section .text.nt.\fn,"ax",@progbits
+	.globl	\name
+\name:	ret
+	.section .data.nt.\fn,"aw",@progbits
+	.globl	__imp_\fn
+	.balign	8
+__imp_\fn:
+	.quad	\name
+#endif
 .endm
 
 /* clang-format on */

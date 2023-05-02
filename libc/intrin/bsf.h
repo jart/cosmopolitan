@@ -9,6 +9,7 @@ int _bsfll(long long) pureconst;
 int _bsf128(uintmax_t) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#ifdef __x86_64__
 #define _bsf(u)                                                 \
   ({                                                            \
     unsigned BiTs;                                              \
@@ -22,6 +23,11 @@ int _bsf128(uintmax_t) pureconst;
     (unsigned)BiTs;                                                  \
   })
 #define _bsfll(u) _bsfl(u)
+#else
+#define _bsf(x)   __builtin_ctz(x)
+#define _bsfl(x)  __builtin_ctzl(x)
+#define _bsfll(x) __builtin_ctzll(x)
+#endif
 #endif
 
 COSMOPOLITAN_C_END_

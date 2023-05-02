@@ -13,20 +13,20 @@
 #define TRUE  1
 #define FALSE 0
 
-#define IS2POW(X)           (!((X) & ((X)-1)))
-#define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
-#define ROUNDDOWN(X, K)     ((X) & -(K))
+#define IS2POW(X)       (!((X) & ((X)-1)))
+#define ROUNDUP(X, K)   (((X) + (K)-1) & -(K))
+#define ROUNDDOWN(X, K) ((X) & -(K))
 #ifndef __ASSEMBLER__
-#define ABS(X)              ((X) >= 0 ? (X) : -(X))
-#define MIN(X, Y)           ((Y) > (X) ? (X) : (Y))
-#define MAX(X, Y)           ((Y) < (X) ? (X) : (Y))
+#define ABS(X)    ((X) >= 0 ? (X) : -(X))
+#define MIN(X, Y) ((Y) > (X) ? (X) : (Y))
+#define MAX(X, Y) ((Y) < (X) ? (X) : (Y))
 #else
 // The GNU assembler does not grok the ?: ternary operator; furthermore,
 // boolean expressions yield -1 and 0 for "true" and "false", not 1 and 0.
-#define __MAPBOOL(P)        (!!(P) / (!!(P) + !(P)))
-#define __IFELSE(P, X, Y)   (__MAPBOOL(P) * (X) + __MAPBOOL(!(P)) * (Y))
-#define MIN(X, Y)           (__IFELSE((Y) > (X), (X), (Y)))
-#define MAX(X, Y)           (__IFELSE((Y) < (X), (X), (Y)))
+#define __MAPBOOL(P)      (!!(P) / (!!(P) + !(P)))
+#define __IFELSE(P, X, Y) (__MAPBOOL(P) * (X) + __MAPBOOL(!(P)) * (Y))
+#define MIN(X, Y)         (__IFELSE((Y) > (X), (X), (Y)))
+#define MAX(X, Y)         (__IFELSE((Y) < (X), (X), (Y)))
 #endif
 #define PASTE(A, B)         __PASTE(A, B)
 #define STRINGIFY(A)        __STRINGIFY(A)
@@ -43,9 +43,31 @@
 #ifdef __ASSEMBLER__
 // clang-format off
 
-#if __MNO_VZEROUPPER__ + 0
-#define vzeroupper
-#endif
+//	Ends function definition.
+//	@cost	saves 1-3 lines of code
+.macro	.endfn	name:req bnd vis
+ .size	"\name",.-"\name"
+ .type	"\name",@function
+ .ifnb	\bnd
+  .\bnd	"\name"
+ .endif
+ .ifnb	\vis
+  .\vis	"\name"
+ .endif
+.endm
+
+//	Ends variable definition.
+//	@cost	saves 1-3 lines of code
+.macro	.endobj	name:req bnd vis
+ .size	"\name",.-"\name"
+ .type	"\name",@object
+ .ifnb	\bnd
+  .\bnd	"\name"
+ .endif
+ .ifnb	\vis
+  .\vis	"\name"
+ .endif
+.endm
 
 //	Shorthand notation for widely-acknowledged sections.
 .macro	.rodata
@@ -77,7 +99,7 @@
 .endm
 .macro	.text.modernity
 	.section .text.modernity,"ax",@progbits
-	.align	16
+	.balign	16
 .endm
 .macro	.text.antiquity
 	.section .text.antiquity,"ax",@progbits
@@ -94,6 +116,51 @@
 .macro	.text.windows
 	.section .text.windows,"ax",@progbits
 .endm
+
+//	Mergeable NUL-terminated UTF-8 string constant section.
+//
+//	@note	linker de-dupes C strings here across whole compile
+//	@note	therefore item/values are reordered w.r.t. link order
+//	@note	therefore no section relative addressing
+.macro	.rodata.str1.1
+	.section .rodata.str1.1,"aMS",@progbits,1
+	.align	1
+.endm
+
+//	Locates unreferenced code invulnerable to --gc-sections.
+.macro	.keep.text
+	.section .keep.text,"ax",@progbits
+.endm
+
+//	Flags code as only allowed for testing purposes.
+.macro	.testonly
+	.section .test,"ax",@progbits
+.endm
+
+//	Makes code runnable while code morphing.
+.macro	.privileged
+	.section .privileged,"ax",@progbits
+.endm
+
+//	Pulls unrelated module into linkage.
+//
+//	In order for this technique to work with --gc-sections, another
+//	module somewhere might want to weakly reference whats yoinked.
+.macro	.yoink	symbol:req
+	.section .yoink
+#ifdef __x86_64__
+	nopl	"\symbol"(%rip)
+#elif defined(__aarch64__)
+	b	"\symbol"
+#endif
+	.previous
+.endm
+
+#ifdef __x86_64__
+
+#if __MNO_VZEROUPPER__ + 0
+#define vzeroupper
+#endif
 
 //	Mergeable numeric constant sections.
 //
@@ -127,31 +194,6 @@
 .macro	.tbss
 	.section .tdata,"awT",@nobits
 	.align	4
-.endm
-
-//	Mergeable NUL-terminated UTF-8 string constant section.
-//
-//	@note	linker de-dupes C strings here across whole compile
-//	@note	therefore item/values are reordered w.r.t. link order
-//	@note	therefore no section relative addressing
-.macro	.rodata.str1.1
-	.section .rodata.str1.1,"aMS",@progbits,1
-	.align	1
-.endm
-
-//	Locates unreferenced code invulnerable to --gc-sections.
-.macro	.keep.text
-	.section .keep.text,"ax",@progbits
-.endm
-
-//	Flags code as only allowed for testing purposes.
-.macro	.testonly
-	.section .test,"ax",@progbits
-.endm
-
-//	Makes code runnable while code morphing.
-.macro	.privileged
-	.section .privileged,"ax",@progbits
 .endm
 
 //	Loads address of errno into %rcx
@@ -195,32 +237,6 @@
 .macro	.alias	implement:req canonical:req
 	.equ	\canonical,\implement
 	.weak	\canonical
-.endm
-
-//	Ends function definition.
-//	@cost	saves 1-3 lines of code
-.macro	.endfn	name:req bnd vis
- .size	"\name",.-"\name"
- .type	"\name",@function
- .ifnb	\bnd
-  .\bnd	"\name"
- .endif
- .ifnb	\vis
-  .\vis	"\name"
- .endif
-.endm
-
-//	Ends variable definition.
-//	@cost	saves 1-3 lines of code
-.macro	.endobj	name:req bnd vis
- .size	"\name",.-"\name"
- .type	"\name",@object
- .ifnb	\bnd
-  .\bnd	"\name"
- .endif
- .ifnb	\vis
-  .\vis	"\name"
- .endif
 .endm
 
 //	LOOP Instruction Replacement.
@@ -339,16 +355,6 @@
 //	Assembles Intel Official 4-Byte NOP.
 .macro	fatnop4
  .byte	0x0f,0x1f,0x40,0x00
-.endm
-
-//	Pulls unrelated module into linkage.
-//
-//	In order for this technique to work with --gc-sections, another
-//	module somewhere might want to weakly reference whats yoinked.
-.macro	.yoink	symbol:req
-	.section .yoink
-	nopl	"\symbol"(%rip)
-	.previous
 .endm
 
 //	Calls Windows function.
@@ -542,6 +548,14 @@
 #endif
 .endm
 
+#else
+
+.macro	.underrun
+.endm
+.macro	.overrun
+.endm
+
 // clang-format on
+#endif /* __x86_64__ */
 #endif /* __ASSEMBLER__ */
 #endif /* COSMOPOLITAN_LIBC_MACROS_H_ */

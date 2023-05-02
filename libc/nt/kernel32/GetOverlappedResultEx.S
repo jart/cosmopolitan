@@ -1,0 +1,14 @@
+#include "libc/nt/codegen.h"
+.imp	kernel32,__imp_GetOverlappedResultEx,GetOverlappedResultEx,0
+
+#ifdef __x86_64__
+	.text.windows
+GetOverlappedResultEx:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	__imp_GetOverlappedResultEx(%rip),%rax
+	jmp	__sysv2nt6
+	.endfn	GetOverlappedResultEx,globl
+	.previous
+#endif

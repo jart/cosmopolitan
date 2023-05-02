@@ -28,7 +28,7 @@
 	.endm
 
 	.section .rodata
-	.align	4
+	.balign	4
 	.underrun
 kOpenFlags:
 	.e	O_RDWR,"RDWR"			// order matters

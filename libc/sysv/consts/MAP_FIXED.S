@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon mmap,MAP_FIXED,0x00000010,0x00000010,0x00000010,0x00000010,0x00000010,0x00000010

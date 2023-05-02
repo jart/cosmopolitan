@@ -25,6 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 #define MAP_ANONYMOUS_linux 0x00000020
 #define MAP_FIXED_linux     0x00000010
@@ -109,3 +110,5 @@ noasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
   res.maphandle = -1;
   return res;
 }
+
+#endif /* __x86_64__ */

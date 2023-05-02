@@ -74,11 +74,12 @@ IGNORE := $(shell $(MKDIR) o/tmp)
 
 ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
 PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
-PREFIX_AARCH64 = o/third_party/gcc/bin/aarch64-pc-linux-gnu-
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
-PREFIX_AARCH64 = o/third_party/gcc/bin/aarch64-linux-musl-
+endif
+ifeq ($(MODE), aarch64)
+PREFIX = o/third_party/gcc/bin/aarch64-linux-musl-
 endif
 
 AS = $(PREFIX)as
@@ -93,18 +94,6 @@ OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 ADDR2LINE = $(PWD)/$(PREFIX)addr2line
 
-AS_AARCH64 = $(PREFIX_AARCH64)as
-CC_AARCH64 = $(PREFIX_AARCH64)gcc
-CXX_AARCH64 = $(PREFIX_AARCH64)g++
-CXXFILT_AARCH64 = $(PREFIX_AARCH64)c++filt
-LD_AARCH64 = $(PREFIX_AARCH64)ld.bfd
-NM_AARCH64 = $(PREFIX_AARCH64)nm
-GCC_AARCH64 = $(PREFIX_AARCH64)gcc
-STRIP_AARCH64 = $(PREFIX_AARCH64)strip
-OBJCOPY_AARCH64 = $(PREFIX_AARCH64)objcopy
-OBJDUMP_AARCH64 = $(PREFIX_AARCH64)objdump
-ADDR2LINE_AARCH64 = $(PWD)/$(PREFIX_AARCH64)addr2line
-
 export ADDR2LINE
 export LC_ALL
 export MKDIR
@@ -116,6 +105,10 @@ ifeq ($(LANDLOCKMAKE_VERSION),)
 TMPSAFE = $(TMPDIR)/$(subst /,_,$@).tmp
 else
 TMPSAFE = $(TMPDIR)/
+endif
+
+ifneq ($(MODE), aarch64)
+MNO_FENTRY = -mno-fentry
 endif
 
 FTRACE =								\
@@ -131,7 +124,7 @@ SANITIZER =								\
 	-fsanitize=address
 
 NO_MAGIC =								\
-	-mno-fentry							\
+	$(MNO_FENTRY)							\
 	-fno-stack-protector						\
 	-fwrapv								\
 	-fno-sanitize=all
@@ -342,13 +335,9 @@ OBJECTIFY.greg.c =							\
 	-fno-optimize-sibling-calls					\
 	-fno-sanitize=all						\
 	-ffreestanding							\
+	$(MNO_FENTRY)							\
 	-fwrapv								\
 	-c
-
-ifneq ($(MODE), aarch64)
-OBJECTIFY.greg.c +=							\
-	-mno-fentry
-endif
 
 OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c99.c = $(CC) $(OBJECTIFY.c.flags) -std=c99 -Wextra -Werror -pedantic-errors -c
@@ -386,7 +375,7 @@ OBJECTIFY.ncabi.c =							\
 	$(OBJECTIFY.c.flags)						\
 	-mno-sse							\
 	-mfpmath=387							\
-	-mno-fentry							\
+	$(MNO_FENTRY)							\
 	-fno-stack-protector						\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\
@@ -405,7 +394,7 @@ OBJECTIFY.ncabi.c =							\
 OBJECTIFY.initabi.c =							\
 	$(GCC)								\
 	$(OBJECTIFY.c.flags)						\
-	-mno-fentry							\
+	$(MNO_FENTRY)							\
 	-fno-stack-protector						\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\

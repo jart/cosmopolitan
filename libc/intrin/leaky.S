@@ -25,7 +25,7 @@
 	.globl	_leaky_start,_leaky_end
 	.hidden	_leaky_start,_leaky_end
 	.byte	0
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 _leaky_start:
 	.previous/*

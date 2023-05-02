@@ -7,7 +7,8 @@ int _bsr(int) pureconst;
 int _bsrl(long) pureconst;
 int _bsrll(long long) pureconst;
 
-#if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#ifdef __x86_64__
 int _bsr128(uint128_t) pureconst;
 #define _bsr(u)                                                 \
   ({                                                            \
@@ -22,6 +23,11 @@ int _bsr128(uint128_t) pureconst;
     (unsigned)BiTs;                                                  \
   })
 #define _bsrll(u) _bsrl(u)
+#else
+#define _bsr(x)   (__builtin_clz(x) ^ (sizeof(int) * CHAR_BIT - 1))
+#define _bsrl(x)  (__builtin_clzl(x) ^ (sizeof(long) * CHAR_BIT - 1))
+#define _bsrll(x) (__builtin_clzll(x) ^ (sizeof(long long) * CHAR_BIT - 1))
+#endif
 #endif
 
 COSMOPOLITAN_C_END_

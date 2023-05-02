@@ -165,6 +165,7 @@ privileged bool kisdangerous(const void *p) {
 }
 
 privileged static void klog(const char *b, size_t n) {
+#ifdef __x86_64__
   int e;
   bool cf;
   size_t i;
@@ -196,6 +197,17 @@ privileged static void klog(const char *b, size_t n) {
                  : "0"(__NR_write), "1"(2), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
+#else
+  register long r0 asm("x0") = (long)2;
+  register long r1 asm("x1") = (long)b;
+  register long r2 asm("x2") = (long)n;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(64), "r"(r0), "r"(r1), "r"(r2)
+               : "x8", "memory");
+#endif
 }
 
 privileged static size_t kformat(char *b, size_t n, const char *fmt,
@@ -798,7 +810,6 @@ privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
 privileged void kvprintf(const char *fmt, va_list v) {
   size_t n;
   char b[4000];
-  if (!v) return;
   n = kformat(b, sizeof(b), fmt, v);
   klog(b, MIN(n, sizeof(b) - 1));
 }

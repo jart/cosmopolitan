@@ -106,7 +106,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#ifdef __x86_64__
 extern const int __hostos;
+#else
+#define __hostos _HOSTLINUX
+#endif
 
 bool IsWsl1(void);
 

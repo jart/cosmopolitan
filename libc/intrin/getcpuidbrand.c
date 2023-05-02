@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
+#ifdef __x86_64__
 
 void GetCpuidBrand(char s[13], uint32_t leaf) {
   int ax, cx;
@@ -32,3 +33,5 @@ void GetCpuidBrand(char s[13], uint32_t leaf) {
       : "rdx");
   s[12] = 0;
 }
+
+#endif /* __x86_64__ */

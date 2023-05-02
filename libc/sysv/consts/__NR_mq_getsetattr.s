@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_mq_getsetattr,0x00f5,0xfff,0xfff,0xfff,0xfff,0xfff

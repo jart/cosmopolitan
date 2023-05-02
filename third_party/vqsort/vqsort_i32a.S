@@ -23958,7 +23958,7 @@ vqsort_int32_sse2:
 	.hidden	_ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.weak	_ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.section	.rodata._ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,"aG",@progbits,_ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, @object
 	.size	_ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, 256
 _ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices:
@@ -23982,7 +23982,7 @@ _ZZN3hwy6N_SSE26detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Z
 	.hidden	_ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array
 	.weak	_ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array
 	.section	.rodata._ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array,"aG",@progbits,_ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array, @object
 	.size	_ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array, 1024
 _ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array:
@@ -24245,7 +24245,7 @@ _ZZN3hwy6N_AVX26detail21IndicesFromNotBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_
 	.hidden	_ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.weak	_ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.section	.rodata._ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,"aG",@progbits,_ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, @object
 	.size	_ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, 256
 _ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices:
@@ -24269,7 +24269,7 @@ _ZZN3hwy6N_SSE46detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Z
 	.hidden	_ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.weak	_ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.section	.rodata._ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,"aG",@progbits,_ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, @object
 	.size	_ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, 256
 _ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices:
@@ -24293,7 +24293,7 @@ _ZZN3hwy7N_SSSE36detail21IndicesFromNotBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4
 	.hidden	_ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.weak	_ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.section	.rodata._ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,"aG",@progbits,_ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, @object
 	.size	_ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, 256
 _ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices:
@@ -24317,7 +24317,7 @@ _ZZN3hwy6N_SSE26detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zero
 	.hidden	_ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array
 	.weak	_ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array
 	.section	.rodata._ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array,"aG",@progbits,_ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array, @object
 	.size	_ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array, 1024
 _ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_array:
@@ -24580,7 +24580,7 @@ _ZZN3hwy6N_AVX26detail18IndicesFromBits256IiLPv0EEENS0_6Vec256IjEEmE12packed_arr
 	.hidden	_ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.weak	_ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.section	.rodata._ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,"aG",@progbits,_ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, @object
 	.size	_ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, 256
 _ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices:
@@ -24604,7 +24604,7 @@ _ZZN3hwy6N_SSE46detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zero
 	.hidden	_ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.weak	_ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices
 	.section	.rodata._ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,"aG",@progbits,_ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices,comdat
-	.align 16
+	.balign 16
 	.type	_ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, @object
 	.size	_ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices, 256
 _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4ZerocvT__EEES6_mE10u8_indices:
@@ -24627,7 +24627,7 @@ _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zer
 	.ascii	"\001\002\003\004\005\006\007\b\t\n\013\f\r\016\017"
 	.set	.LC0,.LC3
 	.section	.rodata
-	.align 64
+	.balign 64
 .LC1:
 	.long	7
 	.long	6
@@ -24645,7 +24645,7 @@ _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zer
 	.long	10
 	.long	9
 	.long	8
-	.align 64
+	.balign 64
 .LC2:
 	.long	15
 	.long	14
@@ -24664,7 +24664,7 @@ _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zer
 	.long	1
 	.long	0
 	.section	.rodata.cst32,"aM",@progbits,32
-	.align 32
+	.balign 32
 .LC3:
 	.long	0
 	.long	1
@@ -24678,7 +24678,7 @@ _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zer
 	.set	.LC5,.LC8
 	.set	.LC6,.LC9
 	.section	.rodata
-	.align 64
+	.balign 64
 .LC8:
 	.long	-2147483648
 	.long	-2147483648
@@ -24696,7 +24696,7 @@ _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zer
 	.long	-2147483648
 	.long	-2147483648
 	.long	-2147483648
-	.align 64
+	.balign 64
 .LC9:
 	.long	2147483647
 	.long	2147483647
@@ -24720,7 +24720,7 @@ _ZZN3hwy7N_SSSE36detail18IndicesFromBits128INS0_4SimdIiLm4ELi0EEELPv0EEEDTcl4Zer
 	.set	.LC15,.LC8
 	.set	.LC16,.LC9
 	.section	.rodata.cst32
-	.align 32
+	.balign 32
 .LC17:
 	.long	0
 	.long	4

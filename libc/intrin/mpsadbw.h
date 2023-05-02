@@ -6,7 +6,7 @@ COSMOPOLITAN_C_START_
 
 void mpsadbw(uint16_t[8], const uint8_t[16], const uint8_t[16], uint8_t);
 
-#ifndef __STRICT_ANSI__
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
 __intrin_xmm_t __mpsadbws(__intrin_xmm_t, __intrin_xmm_t);
 #define mpsadbw(C, B, A, I)                                                   \
   do {                                                                        \

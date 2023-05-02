@@ -27,7 +27,7 @@ kMoby:
 	.endobj	kMoby,globl
 	.overrun
 
-	.align	8
+	.balign	8
 kMobySize:
 	.quad	1b-0b
 	.endobj	kMobySize,globl

@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon iff,IFF_PROMISC,0x100,0x100,0x100,0x100,0x100,0

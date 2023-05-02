@@ -19,7 +19,7 @@
 #include "libc/macros.internal.h"
 
 	.bss
-	.align	8
+	.balign	8
 g_rando:
 	.quad	0
 	.endobj	g_rando,globl

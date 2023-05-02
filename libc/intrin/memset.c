@@ -44,6 +44,7 @@ static dontinline antiquity void *memset_sse(char *p, char c, size_t n) {
   return p;
 }
 
+#ifdef __x86_64__
 microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
   char *t;
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
@@ -76,6 +77,7 @@ microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
   }
   return p;
 }
+#endif /* __x86_64__ */
 
 /**
  * Sets memory.
@@ -155,11 +157,13 @@ void *memset(void *p, int c, size_t n) {
       } while (n);
     }
     return b;
+#ifdef __x86_64__
   } else if (IsTiny()) {
     asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "0"(p), "a"(c));
     return p;
   } else if (X86_HAVE(AVX)) {
     return memset_avx(b, c, n);
+#endif
   } else {
     return memset_sse(b, c, n);
   }

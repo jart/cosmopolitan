@@ -55,7 +55,7 @@ __syscall__:
 	.endfn	__syscall__,globl,hidden
 
 	.bss
-	.align	8
+	.balign	8
 .Lrcx:	.quad	0			# clobbered by syscall
 .Lrdi:	.quad	0			# just in case
 .Lrsi:	.quad	0			# just in case

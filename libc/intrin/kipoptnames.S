@@ -28,7 +28,7 @@
 	.endm
 
 	.section .rodata
-	.align	4
+	.balign	4
 	.underrun
 kIpOptnames:
 	.e	IP_TOS,"TOS"			# int

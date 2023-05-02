@@ -1,0 +1,2 @@
+#include "libc/nt/ntdllimport.h"
+.ntimp	RtlSetLastWin32ErrorAndNtStatusFromNtStatus,RtlSetLastWin32ErrorAndNtStatusFromNtStatus

@@ -20,7 +20,7 @@
 #include "libc/macros.internal.h"
 
 	.bss
-	.align	4
+	.balign	4
 __log_level:
 	.long	0
 	.endobj	__log_level,globl

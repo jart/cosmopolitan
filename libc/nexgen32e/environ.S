@@ -21,7 +21,7 @@
 
 //	Environment variable pointer list.
 	.bss
-	.align	8
+	.balign	8
 environ:
 	.quad	0
 	.endobj	environ,globl

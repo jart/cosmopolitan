@@ -83,7 +83,7 @@ _woot:	leave
 	.type	__init_rodata_end,@object
 	.globl	__init_rodata_start,__init_rodata_end
 	.hidden	__init_rodata_start,__init_rodata_end
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 __init_rodata_start:
 	.previous/*
@@ -108,7 +108,7 @@ __init_rodata_end:
 	.type	__init_bss_end,@object
 	.globl	__init_bss_start,__init_bss_end
 	.hidden	__init_bss_start,__init_bss_end
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 __init_bss_start:
 	.previous/*

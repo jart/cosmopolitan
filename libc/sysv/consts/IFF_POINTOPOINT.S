@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon iff,IFF_POINTOPOINT,0x10,0x10,0x10,0x10,0x10,0x10

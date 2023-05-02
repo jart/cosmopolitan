@@ -21,14 +21,14 @@
 	.yoink	countbranch_report
 
 	.section .sort.data.countbranch.1,"a",@progbits
-	.align	8
+	.balign	8
 	.underrun
 	.globl	countbranch_data
 countbranch_data:
 	.previous
 
 	.section .sort.data.countbranch.3,"a",@progbits
-	.align	8
+	.balign	8
 	.rept	5
 	.quad	-1
 	.endr

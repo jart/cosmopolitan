@@ -634,7 +634,6 @@ imp	'InitOnceExecuteOnce'					InitOnceExecuteOnce					kernel32	0
 imp	'InitializeContext'					InitializeContext					kernel32	0
 imp	'InitializeCriticalSection'				InitializeCriticalSection				kernel32	0	1
 imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			kernel32	0	2
-imp	'InitializeCriticalSectionAndSpinCount'			InitializeCriticalSectionAndSpinCount			kernel32	0	2
 imp	'InitializeCriticalSectionEx'				InitializeCriticalSectionEx				kernel32	0
 imp	'InitializeProcThreadAttributeList'			InitializeProcThreadAttributeList			kernel32	0	4
 imp	'InitializeSRWLock'					InitializeSRWLock					kernel32	0	1
@@ -1412,7 +1411,6 @@ imp	'MakeSelfRelativeSD'					MakeSelfRelativeSD					advapi32	0
 imp	'MapGenericMask'					MapGenericMask						advapi32	0	2
 imp	'NotifyBootConfigStatus'				NotifyBootConfigStatus					advapi32	1514
 imp	'NotifyChangeEventLog'					NotifyChangeEventLog					advapi32	1515
-imp	'NotifyServiceStatusChange'				NotifyServiceStatusChange				advapi32	0
 imp	'NotifyServiceStatusChange'				NotifyServiceStatusChangeW				advapi32	1518
 imp	'ObjectCloseAuditAlarm'					ObjectCloseAuditAlarmW					advapi32	0
 imp	'ObjectDeleteAuditAlarm'				ObjectDeleteAuditAlarmW					advapi32	0

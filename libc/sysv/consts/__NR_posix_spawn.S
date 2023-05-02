@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_posix_spawn,0xfff,0x20000f4,0xfff,0xfff,0xfff,0xfff

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_X86FEATURE_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_X86FEATURE_H_
+#ifdef __x86_64__
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86compiler.h"
 
@@ -248,4 +249,8 @@
 
 #define _X86_HOOK__(X) X
 
+#else
+#define X86_HAVE(FEATURE) 0
+#define X86_NEED(FEATURE) 0
+#endif /* __x86_64__ */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_X86FEATURE_H_ */

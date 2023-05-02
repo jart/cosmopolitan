@@ -22,7 +22,7 @@
 //	@see	libc/sysv/dos2errno.sh for the numbers
 
 	.section .sort.rodata.dos2errno.1,"a",@progbits
-	.align	8
+	.balign	8
 kDos2Errno:/*
 	...decentralized content...
 	*/.endobj kDos2Errno,globl

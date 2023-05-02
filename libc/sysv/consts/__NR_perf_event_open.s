@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_perf_event_open,0x012a,0xfff,0xfff,0xfff,0xfff,0xfff

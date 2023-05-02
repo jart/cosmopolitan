@@ -28,7 +28,7 @@
 	.endm
 
 	.section .rodata,"a",@progbits
-	.align 4
+	.balign 4
 	.underrun
 kFcntlCmds:
 	.e	F_GETFD,"GETFD"

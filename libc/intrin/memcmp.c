@@ -25,6 +25,8 @@
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
+#ifdef __x86_64__
+
 static dontinline antiquity int memcmp_sse(const unsigned char *p,
                                            const unsigned char *q, size_t n) {
   unsigned u;
@@ -99,6 +101,8 @@ microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
   }
 }
 
+#endif /* __x86_64__ */
+
 /**
  * Compares memory byte by byte.
  *
@@ -136,6 +140,7 @@ int memcmp(const void *a, const void *b, size_t n) {
   const unsigned char *p, *q;
   if ((p = a) == (q = b) || !n) return 0;
   if ((c = *p - *q)) return c;
+#ifdef __x86_64__
   if (!IsTiny()) {
     if (n <= 16) {
       if (n >= 8) {
@@ -187,6 +192,7 @@ int memcmp(const void *a, const void *b, size_t n) {
       return memcmp_sse(p, q, n);
     }
   }
+#endif /* __x86_64__ */
   for (; n; ++p, ++q, --n) {
     if ((c = *p - *q)) {
       return c;

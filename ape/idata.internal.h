@@ -32,6 +32,7 @@
 //	@see	ape/ape.lds
 //	@see	winimp
 .macro	.imp	dll:req fn:req actual:req hint
+#ifdef __x86_64__
 	.dll	"\dll"
 	.section ".piro.data.sort.iat.2.\dll\().2.\actual","aw",@progbits
 	.type	\fn,@object
@@ -49,18 +50,28 @@
 	.previous
 	.section ".idata.ro.hnt.\dll\().2.\actual","a",@progbits
 "\dll\().\actual":
-	.ifnb	\hint			# hint i.e. guess function ordinal
+	.ifnb	\hint			// hint i.e. guess function ordinal
 	.short	\hint
 	.else
 	.short	0
 	.endif
 	.asciz	"\actual"
-	.align	2			# documented requirement
+	.align	2			// documented requirement
 	.globl	"\dll\().\actual"
 	.hidden	"\dll\().\actual"
 	.type	"\dll\().\actual",@object
 	.size	"\dll\().\actual",.-"\dll\().\actual"
 	.previous
+#else
+	.section ".text.nt.\actual","ax",@progbits
+	.globl	"\actual"
+"\actual":
+	ret
+	.section ".data.nt.\actual","aw",@progbits
+	.globl	"\fn"
+	.balign	8
+"\fn":	.quad	"\actual"
+#endif
 .endm
 
 //	Defines DLL import.
@@ -68,11 +79,11 @@
 .macro	.dll	name:req
   .section ".idata.ro.idt.2.\name","aG",@progbits,"\name",comdat
 	.equ	".Lidata.idt.\name",.
-	.long	RVA("idata.ilt.\name")		# ImportLookupTable
-	.long	0				# TimeDateStamp
-	.long	0				# ForwarderChain
-	.long	RVA(".Lidata.str.\name")	# DllNameRva
-	.long	RVA("idata.iat.\name")		# ImportAddressTable
+	.long	RVA("idata.ilt.\name")		// ImportLookupTable
+	.long	0				// TimeDateStamp
+	.long	0				// ForwarderChain
+	.long	RVA(".Lidata.str.\name")	// DllNameRva
+	.long	RVA("idata.iat.\name")		// ImportAddressTable
 	.type	".Lidata.idt.\name",@object
 	.size	".Lidata.idt.\name",.-".Lidata.idt.\name"
   .previous

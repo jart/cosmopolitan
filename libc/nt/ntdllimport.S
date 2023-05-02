@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/enum/status.h"
 #include "libc/macros.internal.h"
+#ifdef __x86_64__
 
 //	@fileoverview NTDLL.DLL Non-Mandatory Importer
 //
@@ -65,3 +66,5 @@ _ntdllmissingno:
 	mov	$kNtStatusDllNotFound,%eax
 	ret
 	.previous
+
+#endif /* __x86_64__ */

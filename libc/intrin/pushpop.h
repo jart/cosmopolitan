@@ -3,7 +3,7 @@
 #include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__)
 #define pushpop(x) (x)
 #else
 /**
@@ -31,7 +31,7 @@
   })
 #endif
 
-#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__)
 #define pushmov(d, x) (*(d) = (x))
 #else
 #define pushmov(d, x)                                       \

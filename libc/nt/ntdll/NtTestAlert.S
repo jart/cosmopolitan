@@ -1,0 +1,16 @@
+#include "libc/nt/ntdllimport.h"
+.ntimp	NtTestAlert,NtTestAlert
+
+#ifdef __x86_64__
+	.text.windows
+NtTestAlert:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	sub	$32,%rsp
+	call	*__imp_NtTestAlert(%rip)
+	leave
+	ret
+	.endfn	NtTestAlert,globl
+	.previous
+#endif

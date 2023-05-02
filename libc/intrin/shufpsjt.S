@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.align	8
+	.balign	8
 shufpsjt:
 	i=0
 	.rept	256
 	shufps	$i,%xmm1,%xmm0
 	ret
-	.align	8
+	.balign	8
 	i=i+1
 	.endr
 	.endfn	shufpsjt,globl

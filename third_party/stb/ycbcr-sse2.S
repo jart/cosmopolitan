@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.align	16
+	.balign	16
 stbi__YCbCr_to_RGB_row$sse2:
 	.leafprologue
 	.profilable
@@ -32,7 +32,7 @@ stbi__YCbCr_to_RGB_row$sse2:
 	movdqa	5f(%rip),%xmm10
 	movdqa	6f(%rip),%xmm4
 	movdqa	7f(%rip),%xmm5
-	.align	16
+	.balign	16
 0:	movq	(%rsi,%rax),%xmm6
 	movq	(%rcx,%rax),%xmm7
 	movq	(%rdx,%rax),%xmm1

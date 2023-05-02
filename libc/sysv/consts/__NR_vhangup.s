@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_vhangup,0x0099,0xfff,0xfff,0xfff,0xfff,0xfff

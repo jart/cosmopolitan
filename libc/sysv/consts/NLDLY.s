@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon termios,NLDLY,0b0000000100000000,0b000000001100000000,0b000000001100000000,0,0,0b0000000100000000

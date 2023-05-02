@@ -28,7 +28,7 @@
 	.endm
 
 	.section .rodata
-	.align	4
+	.balign	4
 	.underrun
 kRlimitNames:
 	.e	RLIMIT_AS,"AS"

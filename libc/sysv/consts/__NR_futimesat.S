@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_futimesat,0x0105,0xfff,0x01ee,0xfff,0xfff,0xfff

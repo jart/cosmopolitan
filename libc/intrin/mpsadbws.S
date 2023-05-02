@@ -22,7 +22,7 @@
 //
 //	@note	needs sse4 cf. core c. 2006 cf. bulldozer c. 2011
 //	@see	mpsadbw()
-	.align	8
+	.balign	8
 __mpsadbws:
 	i = 0
 	.rept	8

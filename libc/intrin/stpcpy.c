@@ -21,6 +21,7 @@
 typedef char xmm_u __attribute__((__vector_size__(16), __aligned__(1)));
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 
+#ifdef __x86_64__
 static inline noasan size_t stpcpy_sse2(char *d, const char *s, size_t i) {
   xmm_t v, z = {0};
   for (;;) {
@@ -34,6 +35,7 @@ static inline noasan size_t stpcpy_sse2(char *d, const char *s, size_t i) {
   }
   return i;
 }
+#endif
 
 /**
  * Copies bytes from 𝑠 to 𝑑 until a NUL is encountered.
@@ -45,13 +47,15 @@ static inline noasan size_t stpcpy_sse2(char *d, const char *s, size_t i) {
  * @asyncsignalsafe
  */
 char *stpcpy(char *d, const char *s) {
-  size_t i;
-  for (i = 0; (uintptr_t)(s + i) & 15; ++i) {
+  size_t i = 0;
+#ifdef __x86_64__
+  for (; (uintptr_t)(s + i) & 15; ++i) {
     if (!(d[i] = s[i])) {
       return d + i;
     }
   }
   i = stpcpy_sse2(d, s, i);
+#endif
   for (;;) {
     if (!(d[i] = s[i])) {
       return d + i;

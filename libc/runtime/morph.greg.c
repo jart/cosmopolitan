@@ -38,8 +38,33 @@
 
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
+static inline int __morph_rt_sigprocmask(int h, const sigset_t *s, sigset_t *o,
+                                         size_t c) {
+#ifdef __aarch64__
+  register long r0 asm("x0") = (long)h;
+  register long r1 asm("x1") = (long)s;
+  register long r2 asm("x2") = (long)o;
+  register long r3 asm("x3") = (long)c;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(135), "r"(r0), "r"(r1), "r"(r2), "r"(r3)
+               : "x8", "memory");
+  return res_x0;
+#else
+  return 0;
+#endif
+}
+
+static inline int __morph_sigprocmask(int how, const sigset_t *set,
+                                      sigset_t *oldset) {
+  return __morph_rt_sigprocmask(how, set, oldset, sizeof(*set));
+}
+
 static privileged void __morph_mprotect(void *addr, size_t size, int prot,
                                         int ntprot) {
+#ifdef __x86_64__
   bool cf;
   int ax, dx;
   uint32_t op;
@@ -60,6 +85,18 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
   } else {
     __imp_VirtualProtect(addr, size, ntprot, &op);
   }
+#elif defined(__aarch64__)
+  register long r0 asm("x0") = (long)addr;
+  register long r1 asm("x1") = (long)size;
+  register long r2 asm("x2") = (long)prot;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(226), "r"(r0), "r"(r1), "r"(r2)
+               : "x8", "memory");
+  _npassert(!res_x0);
+#endif
 }
 
 /**
@@ -73,6 +110,7 @@ privileged void __morph_begin(sigset_t *save) {
   intptr_t dx;
   sigset_t ss = {{-1, -1}};
   STRACE("__morph_begin()");
+#ifdef __x86_64__
   if (IsOpenbsd()) {
     asm volatile(CFLAG_ASM("syscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
@@ -88,6 +126,9 @@ privileged void __morph_begin(sigset_t *save) {
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
     _npassert(!ax);
   }
+#else
+  __morph_sigprocmask(SIG_BLOCK, &ss, save);
+#endif
   __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_WRITE,
                    kNtPageWritecopy);
 }
@@ -101,6 +142,7 @@ privileged void __morph_end(sigset_t *save) {
   bool cf;
   __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_EXEC,
                    kNtPageExecuteRead);
+#ifdef __x86_64__
   if (IsOpenbsd()) {
     asm volatile(CFLAG_ASM("syscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
@@ -115,5 +157,8 @@ privileged void __morph_end(sigset_t *save) {
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
     _npassert(!ax);
   }
+#else
+  __morph_sigprocmask(SIG_SETMASK, save, 0);
+#endif
   STRACE("__morph_end()");
 }

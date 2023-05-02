@@ -28,7 +28,7 @@
 //
 //	@see	libc/sysv/systemfive.S
 	.rodata
-	.align	4
+	.balign	4
 kLinuxErrnos:
 	.e	EPERM,1
 	.e	ENOENT,2

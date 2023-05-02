@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_utimensat,0x0118,0xfff,0x0223,0x0054,0x1d3,0xfff

@@ -622,7 +622,7 @@ sha512_transform_rorx:
 	## schedule 64 input dwords, by doing 12 rounds of 4 each
 	movq	$4, frame_SRND(%rsp)
 
-.align 16
+.balign 16
 .Loop1:
 	vpaddq	(TBL), Y_0, XFER
 	vmovdqa XFER, frame_XFER(%rsp)

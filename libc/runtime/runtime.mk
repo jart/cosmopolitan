@@ -67,7 +67,7 @@ $(LIBC_RUNTIME_A).pkg:					\
 o/$(MODE)/libc/runtime/ftracer.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-x-no-pg			\
-			-mno-fentry			\
+			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all
 

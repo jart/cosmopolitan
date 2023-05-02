@@ -89,7 +89,7 @@ o/$(MODE)/libc/intrin/kprintf.greg.o: private		\
 			-fpie				\
 			-fwrapv				\
 			-x-no-pg			\
-			-mno-fentry			\
+			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
@@ -105,7 +105,7 @@ o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-fwrapv				\
 			-x-no-pg			\
-			-mno-fentry			\
+			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
 			-mgeneral-regs-only		\
@@ -185,6 +185,10 @@ o/$(MODE)/libc/intrin/memcmp.o				\
 o/$(MODE)/libc/intrin/memmove.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fpie
+
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/intrin/kclocknames.o: libc/intrin/kclocknames.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))

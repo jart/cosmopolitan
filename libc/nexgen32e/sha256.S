@@ -529,7 +529,7 @@ STACK_SIZE	= _RSP      + _RSP_SIZE
 ## arg 3 : Num blocks
 ########################################################################
 .text
-.align 32
+.balign 32
 sha256_transform_rorx:
 	push	%rbp
 	mov	%rsp,%rbp
@@ -596,7 +596,7 @@ sha256_transform_rorx:
 	## schedule 48 input dwords, by doing 3 rounds of 12 each
 	xor	SRND, SRND
 
-.align 16
+.balign 16
 .Loop1:
 	vpaddd	kSha256x2+0*32(SRND), X0, XFER
 	vmovdqa XFER, 0*32+_XFER(%rsp, SRND)
@@ -652,7 +652,7 @@ sha256_transform_rorx:
 
 	#### Do second block using previously scheduled results
 	xor	SRND, SRND
-.align 16
+.balign 16
 .Loop3:
 	DO_4ROUNDS	 _XFER + 0*32 + 16
 	DO_4ROUNDS	 _XFER + 1*32 + 16
@@ -739,7 +739,7 @@ _SHUF_DC00:
 	.octa	0x0b0a090803020100FFFFFFFFFFFFFFFF
 
 	.bss
-	.align	64
+	.balign	64
 kSha256x2:
 	.zero	512
 	.endobj	kSha256x2,globl

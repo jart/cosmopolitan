@@ -6,7 +6,7 @@ COSMOPOLITAN_C_START_
 
 void psrldq(uint8_t[16], const uint8_t[16], unsigned long);
 
-#ifndef __STRICT_ANSI__
+#if defined(__x86_64__) && !defined(__STRICT_ANSI__)
 __intrin_xmm_t __psrldqs(__intrin_xmm_t);
 #define psrldq(B, A, I)                                                   \
   do {                                                                    \

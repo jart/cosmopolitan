@@ -43,6 +43,7 @@ __msabi extern typeof(ExitThread) *const __imp_ExitThread;
  * @noreturn
  */
 privileged wontreturn void _Exit1(int rc) {
+#ifdef __x86_64__
   char cf;
   int ax, dx, di, si;
   if (!IsWindows() && !IsMetal()) {
@@ -72,4 +73,13 @@ privileged wontreturn void _Exit1(int rc) {
     unreachable;
   }
   notpossible;
+#elif defined(__aarch64__)
+  register long r0 asm("x0") = rc;
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : /* no outputs */
+               : "i"(93), "r"(r0)
+               : "x8", "memory");
+  notpossible;
+#endif
 }

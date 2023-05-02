@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_io_pgetevents,0x014d,0xfff,0xfff,0xfff,0xfff,0xfff

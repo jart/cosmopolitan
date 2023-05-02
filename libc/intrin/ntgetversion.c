@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
+#ifdef __x86_64__
 
 /**
  * Returns New Technology version, e.g.
@@ -29,3 +30,5 @@
 textwindows noasan int NtGetVersion(void) {
   return (NtGetPeb()->OSMajorVersion & 0xff) << 8 | NtGetPeb()->OSMinorVersion;
 }
+
+#endif /* __x86_64__ */

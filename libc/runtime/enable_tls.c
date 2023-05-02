@@ -140,8 +140,10 @@ void __enable_tls(void) {
   // ask the operating system to change the x86 segment register
   __set_tls(tib);
 
+#ifdef __x86_64__
   // rewrite the executable tls opcodes in memory
   __morph_tls();
+#endif
 
   // we are now allowed to use tls
   __tls_enabled = true;

@@ -19,7 +19,7 @@
 #include "libc/macros.internal.h"
 
 //	Jump table for psrldq() with non-constexpr immediate parameter.
-	.align	8
+	.balign	8
 __psrldqs:
   	psrldq	$0,%xmm0
 	ret

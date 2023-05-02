@@ -40,6 +40,7 @@ size_t _countbits(const void *a, size_t n) {
   p = a;
   e = p + n;
   if (!IsTiny()) {
+#ifdef __x86_64__
     if (X86_HAVE(POPCNT)) {
       while (p + sizeof(long) * 4 <= e) {
         __builtin_memcpy(&Ai, p + 000, sizeof(long));
@@ -60,6 +61,7 @@ size_t _countbits(const void *a, size_t n) {
         t += Ao;
       }
     } else {
+#endif
       while (p + 8 <= e) {
         __builtin_memcpy(&x, p, 8);
         x = x - ((x >> 1) & 0x5555555555555555);
@@ -71,7 +73,9 @@ size_t _countbits(const void *a, size_t n) {
         t += x;
         p += 8;
       }
+#ifdef __x86_64__
     }
+#endif
   }
   while (p < e) {
     b = *p++ & 255;

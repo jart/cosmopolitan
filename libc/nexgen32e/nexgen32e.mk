@@ -47,6 +47,10 @@ o/$(MODE)/libc/nexgen32e/threaded.o: private		\
 			$(NO_MAGIC)			\
 			-fno-sanitize=all
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/nexgen32e/kreversebits.o: libc/nexgen32e/kreversebits.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 LIBC_NEXGEN32E_LIBS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)))
 LIBC_NEXGEN32E_SRCS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)_SRCS))
 LIBC_NEXGEN32E_HDRS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)_HDRS))

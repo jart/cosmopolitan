@@ -42,6 +42,7 @@
 #include "libc/runtime/metalprintf.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
+#ifdef __x86_64__
 
 #define INVERT(x) (BANE + PHYSICAL(x))
 #define NOPAGE    ((uint64_t)-1)
@@ -313,3 +314,5 @@ noasan textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
   }
   mm->frp = p;
 }
+
+#endif /* __x86_64__ */

@@ -25,9 +25,9 @@ __restore_bt:
 	nop
 	.endfn	__restore_bt,globl,hidden
 	nop	# gap so that __get_symbol(st, addr - 1) fails
-	.align	16
+	.balign	16
 __restore_rt:					# @see gdb/amd64-linux-tdep.c
 	mov	$__NR_linux_sigreturn,%rax	# [sic]
 	syscall
-	.align	16
+	.balign	16
 	.endfn	__restore_rt,globl,hidden

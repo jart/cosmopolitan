@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_mq_unlink,0x00f1,0xfff,0xfff,0xfff,0x103,0xfff

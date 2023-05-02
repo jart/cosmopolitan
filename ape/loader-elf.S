@@ -25,7 +25,7 @@
 //	APE Loader Executable Structure
 //	Linux, FreeBSD, NetBSD, OpenBSD
 
-	.align	8
+	.balign	8
 ehdr:	.ascii	"\177ELF"
 	.byte	ELFCLASS64
 	.byte	ELFDATA2LSB
@@ -47,7 +47,7 @@ ehdr:	.ascii	"\177ELF"
 	.word	0			# e_shstrndx
 	.endobj	ehdr,globl
 
-	.align	8
+	.balign	8
 phdrs:	.long	PT_LOAD			# p_type
 	.long	PF_R|PF_X		# p_flags
 	.quad	0			# p_offset
@@ -89,18 +89,18 @@ note:	.long	2f-1f
 	.long	4f-3f
 	.long	1
 1:	.asciz	"OpenBSD"
-2:	.align	4
+2:	.balign	4
 3:	.long	0
 4:	.long	2f-1f
 	.long	4f-3f
 	.long	1
 1:	.asciz	"NetBSD"
-2:	.align	4
+2:	.balign	4
 3:	.long	901000000
 4:	.endobj	note
 	notesize = . - note
 
-	.align	64,0				# for ape.S dd
+	.balign	64,0				# for ape.S dd
 	.org	0x180				# for ape.S dd
 
 //	APE Loader XNU Header
@@ -197,7 +197,7 @@ macho:	.long	0xFEEDFACE+1
 60:
 	.endobj	macho
 
-	.align	64,0				# for ape.S dd
+	.balign	64,0				# for ape.S dd
 	.org	0x400				# for ape.S dd
 
 //	Ape Loader Entrpoint

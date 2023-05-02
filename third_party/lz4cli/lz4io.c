@@ -54,7 +54,6 @@
 #include "third_party/lz4cli/lz4hc.h"     /* still required for legacy format */
 #define LZ4F_STATIC_LINKING_ONLY
 #include "libc/runtime/runtime.h"
-#include "libc/intrin/initializer.internal.h"
 #include "third_party/lz4cli/lz4frame.h"
 
 
@@ -99,8 +98,7 @@ static int g_displayLevel = 0;   /* 0 : no display  ; 1: errors  ; 2 : + result 
                 if (g_displayLevel>=4) fflush(stderr); \
         }   }
 static clock_t g_time = 0;
-static clock_t refreshRate;
-INITIALIZER(300, _init_refreshRate2, { refreshRate = CLOCKS_PER_SEC * 6; });
+static clock_t refreshRate = CLOCKS_PER_SEC * 6;
 
 
 /**************************************

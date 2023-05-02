@@ -27,6 +27,7 @@
 int sys_set_tls();
 
 void __set_tls(struct CosmoTib *tib) {
+#ifdef __x86_64__
   // ask the operating system to change the x86 segment register
   int ax, dx;
   if (IsWindows()) {
@@ -56,4 +57,7 @@ void __set_tls(struct CosmoTib *tib) {
                  : "c"(MSR_IA32_FS_BASE), "a"((uint32_t)val),
                    "d"((uint32_t)(val >> 32)));
   }
+#else
+  asm volatile("msr\ttpidr_el0,%0" : /* no outputs */ : "r"(tib + 1));
+#endif
 }

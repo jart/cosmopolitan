@@ -34,7 +34,7 @@
 #include "libc/macros.internal.h"
 
 .text
-.align 32
+.balign 32
 .ident "\n\
 Intel SHA-NI (BSD-3 License)\n\
 Copyright 2015 Intel Corporation\n\
@@ -276,11 +276,11 @@ sha1_transform_ni:
 	.endfn	sha1_transform_ni,globl
 
 .section .rodata.cst16.PSHUFFLE_BYTE_FLIP_MASK, "aM", @progbits, 16
-.align 16
+.balign 16
 PSHUFFLE_BYTE_FLIP_MASK:
 	.octa 0x000102030405060708090a0b0c0d0e0f
 
 .section .rodata.cst16.UPPER_WORD_MASK, "aM", @progbits, 16
-.align 16
+.balign 16
 UPPER_WORD_MASK:
 	.octa 0xFFFFFFFF000000000000000000000000

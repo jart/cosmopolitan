@@ -35,12 +35,12 @@ syscon() {
     EXT=".s"
   fi
   {
-    echo ".include \"o/libc/sysv/consts/syscon.internal.inc\""
+    echo "#include \"libc/sysv/consts/syscon.internal.h\""
     echo ".syscon" "$*"
     if [ -f "libc/sysv/dos2errno/${2/$/-}.S" ]; then
       echo ".yoink kDos2Errno.${2/$/-}"
     fi
-  } >"$dir/${2/$/-}.s"
+  } >"$dir/${2/$/-}.S"
 }
 
 sysstr() {

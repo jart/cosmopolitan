@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_nanosleep,0x0023,0xfff,0x00f0,0x005b,0x1ae,0xfff

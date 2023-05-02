@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/fsgsbase.h"
+#ifdef __x86_64__
 
 /**
  * Reads `%fs` base address.
@@ -26,3 +27,5 @@
 void *(_rdfsbase)(void) {
   return _rdfsbase();
 }
+
+#endif /* __x86_64__ */

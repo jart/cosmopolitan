@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon mmap,MAP_ANONYMOUS,0x00000020,0x00001000,0x00001000,0x00001000,0x00001000,0x00000020

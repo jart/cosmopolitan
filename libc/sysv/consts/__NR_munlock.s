@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_munlock,0x0096,0x20000cc,0x00cc,0x00cc,0x0cc,0xfff

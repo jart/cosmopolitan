@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_epoll_pwait,0x0119,0xfff,0xfff,0xfff,0xfff,0xfff

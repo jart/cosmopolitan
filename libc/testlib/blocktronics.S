@@ -27,7 +27,7 @@ kBlocktronics:
 	.endobj	kBlocktronics,globl
 	.overrun
 
-	.align	8
+	.balign	8
 kBlocktronicsSize:
 	.quad	1b-0b
 	.endobj	kBlocktronicsSize,globl

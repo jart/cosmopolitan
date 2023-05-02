@@ -107,7 +107,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#if defined(__GNUC__) && __GNUC__ >= 6 && !defined(__chibicc__)
+#if defined(__GNUC__) && __GNUC__ >= 6 && !defined(__chibicc__) && \
+    defined(__x86_64__)
 #define EFIAPI __attribute__((__ms_abi__))
 #else
 #define EFIAPI /* TODO(jart): fix me */

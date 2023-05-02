@@ -39,6 +39,7 @@
 privileged wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
+#ifdef __x86_64__
   if (!IsWindows() && !IsMetal()) {
     // On Linux _Exit1 (exit) must be called in pledge("") mode. If we
     // call _Exit (exit_group) when we haven't used pledge("stdio") then
@@ -64,4 +65,13 @@ privileged wontreturn void _Exit(int exitcode) {
       "cli\n\t"
       "lidt\t(%rsp)");
   for (;;) asm("ud2");
+#elif defined(__aarch64__)
+  register long x0 asm("x0") = exitcode;
+  asm volatile("mov\tx8,%1\n"
+               "svc\t0"
+               : /* no outputs */
+               : "i"(94), "r"(x0)
+               : "x8", "memory");
+  notpossible;
+#endif
 }

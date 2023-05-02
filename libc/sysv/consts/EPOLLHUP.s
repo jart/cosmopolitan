@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon epoll,EPOLLHUP,0x10,0x10,0x10,0x10,0x10,0x10

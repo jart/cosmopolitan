@@ -9,7 +9,7 @@ void *_wrfsbase(void *);
 void *_wrgsbase(void *);
 int _have_fsgsbase(void);
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86_64__)
 #define _rdfsbase()                 \
   ({                                \
     void *_p;                       \

@@ -45,6 +45,7 @@ extern unsigned __tls_index;
 void __require_tls(void);
 void __set_tls(struct CosmoTib *);
 
+#ifdef __x86_64__
 /**
  * Returns location of thread information block.
  *
@@ -56,6 +57,9 @@ void __set_tls(struct CosmoTib *);
     asm("mov\t%%fs:0,%0" : "=r"(_t) : /* no inputs */ : "memory"); \
     _t;                                                            \
   })
+#else
+#define __get_tls() ((struct CosmoTib *)__builtin_thread_pointer())
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

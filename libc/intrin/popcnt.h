@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 size_t _countbits(const void *, size_t);
 unsigned long popcnt(unsigned long) pureconst;
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86_64__)
 #define popcnt(X)                                                \
   (__builtin_constant_p(X) ? __builtin_popcountll(X) : ({        \
     unsigned long PoP = (X);                                     \
@@ -18,6 +18,8 @@ unsigned long popcnt(unsigned long) pureconst;
     }                                                            \
     PoP;                                                         \
   }))
+#else
+#define popcnt(x) __builtin_popcountll(x)
 #endif /* GNUC && !ANSI */
 
 COSMOPOLITAN_C_END_

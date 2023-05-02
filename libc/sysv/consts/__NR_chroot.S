@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_chroot,0x00a1,0x200003d,0x003d,0x003d,0x03d,0xfff

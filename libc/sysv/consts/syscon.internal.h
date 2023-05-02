@@ -21,6 +21,8 @@
 /* clang-format off */
 
 .macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
+
+#ifdef __x86_64__
 	.yoink	_init_systemfive
 
 	.section .piro.bss.sort.syscon.2.\group\().\name,"aw",@nobits
@@ -63,5 +65,13 @@
 	.uleb128 \windows
 	.previous
 #endif
+
+#else
+	.section .rodata,"a",@progbits
+	.balign	8
+\name:	.quad	\linux
+	.endobj	\name,globl
+	.previous
+#endif /* __x86_64__ */
 
 .endm

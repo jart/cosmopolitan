@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && !defined(__x86__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86__)
 #define _cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                       \
   ({                                                                          \
     bool DidIt;                                                               \

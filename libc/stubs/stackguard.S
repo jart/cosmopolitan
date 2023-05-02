@@ -37,7 +37,7 @@ __stack_chk_fail:
 	.endfn	__stack_chk_fail,weak
 
 	.bss
-	.align	8
+	.balign	8
 __stack_chk_guard:
 	.quad	0
 	.endobj	__stack_chk_guard,weak

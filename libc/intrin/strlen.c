@@ -30,6 +30,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @asyncsignalsafe
  */
 noasan size_t strlen(const char *s) {
+#ifdef __x86_64__
   size_t n;
   xmm_t z = {0};
   unsigned m, k = (uintptr_t)s & 15;
@@ -39,4 +40,9 @@ noasan size_t strlen(const char *s) {
   while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
   n = (const char *)p + __builtin_ctzl(m) - s;
   return n;
+#else
+  size_t n = 0;
+  while (*s++) ++n;
+  return n;
+#endif
 }

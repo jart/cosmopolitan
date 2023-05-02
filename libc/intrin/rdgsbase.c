@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/fsgsbase.h"
+#ifdef __x86_64__
 
 /**
  * Reads `%gs` base address.
@@ -26,3 +27,5 @@
 void *(_rdgsbase)(void) {
   return _rdgsbase();
 }
+
+#endif /* __x86_64__ */

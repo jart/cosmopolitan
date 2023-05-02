@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_lookup_dcookie,0x00d4,0xfff,0xfff,0xfff,0xfff,0xfff

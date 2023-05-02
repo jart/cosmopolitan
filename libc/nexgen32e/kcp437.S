@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .rodata
-.align	16
+.balign	16
 
 //	ibm cp437 unicode table w/ string literal safety
 //

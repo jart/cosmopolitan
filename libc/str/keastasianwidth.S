@@ -2,7 +2,7 @@
 #include "libc/macros.internal.h"
 
 	.rodata
-	.align	4
+	.balign	4
 kEastAsianWidthBits:
 	.long	32768 * 8
 	.endobj	kEastAsianWidthBits,globl,hidden

@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon ip,INET_ADDRSTRLEN,0x10,0x10,0x10,0x10,0x10,22

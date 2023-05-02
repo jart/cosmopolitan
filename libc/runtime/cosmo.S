@@ -53,7 +53,7 @@ cosmo:	push	%rbp
 //	     Section 3.4.1: Initial Stack and Register State
 	fldcw	1f(%rip)
 	.rodata
-	.align	2
+	.balign	2
 //	8087 FPU Control Word
 //	 IM: Invalid Operation ───────────────┐
 //	 DM: Denormal Operand ───────────────┐│

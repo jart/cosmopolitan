@@ -1,0 +1,2 @@
+#include "libc/nt/ntdllimport.h"
+.ntimp	ZwConvertBetweenAuxiliaryCounterAndPerformanceCounter,ZwConvertBetweenAuxiliaryCounterAndPerformanceCounter

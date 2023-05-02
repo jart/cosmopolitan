@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon poll,POLLHUP,0x10,0x10,0x10,0x10,0x10,0x0002

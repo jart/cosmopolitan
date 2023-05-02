@@ -460,7 +460,7 @@ _init_systemfive_done:
 //	@see libc/sysv/consts.sh
 //	@see libc/sysv/consts/syscon_h
 	.section .piro.bss.sort.syscon.1,"aw",@nobits
-	.align	8
+	.balign	8
 syscon_start:/*
 	...decentralized quadwords...
 	*/.previous
@@ -473,7 +473,7 @@ syscon_end:
 	.globl	syscon_end
 #if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
-	.align	1
+	.balign	1
 syscon_linux:/*
 	...decentralized leb128...
 	*/.previous
@@ -482,7 +482,7 @@ syscon_linux:/*
 #endif
 #if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.1,"a",@progbits
-	.align	1
+	.balign	1
 syscon_xnu:/*
 	...decentralized leb128...
 	*/.previous
@@ -491,7 +491,7 @@ syscon_xnu:/*
 #endif
 #if SupportsFreebsd()
 	.section .sort.rodata.syscon.freebsd.1,"a",@progbits
-	.align	1
+	.balign	1
 syscon_freebsd:/*
 	...decentralized leb128...
 	*/.previous
@@ -500,7 +500,7 @@ syscon_freebsd:/*
 #endif
 #if SupportsOpenbsd()
 	.section .sort.rodata.syscon.openbsd.1,"a",@progbits
-	.align	1
+	.balign	1
 syscon_openbsd:/*
 	...decentralized leb128...
 	*/.previous
@@ -509,7 +509,7 @@ syscon_openbsd:/*
 #endif
 #if SupportsNetbsd()
 	.section .sort.rodata.syscon.netbsd.1,"a",@progbits
-	.align	1
+	.balign	1
 syscon_netbsd:/*
 	...decentralized leb128...
 	*/.previous
@@ -518,7 +518,7 @@ syscon_netbsd:/*
 #endif
 #if SupportsWindows()
 	.section .sort.rodata.syscon.windows.1,"a",@progbits
-	.align	1
+	.balign	1
 syscon_windows:/*
 	...decentralized leb128...
 	*/.previous

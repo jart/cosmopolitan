@@ -4,10 +4,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef __STRICT_ANSI__
 
-#define _weaken(symbol)     \
-  ({                        \
-    asm(".weak\t" #symbol); \
-    &symbol;                \
+#define _weaken(symbol)                \
+  ({                                   \
+    typeof(&symbol) _p = &symbol;      \
+    asm(".weak\t" #symbol : "+r"(_p)); \
+    _p;                                \
   })
 
 #define _strongaddr(symbolstr)                \

@@ -1,0 +1,14 @@
+#include "libc/nt/codegen.h"
+.imp	kernel32,__imp_SetStdHandle,SetStdHandle,0
+
+#ifdef __x86_64__
+	.text.windows
+SetStdHandle:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	__imp_SetStdHandle(%rip),%rax
+	jmp	__sysv2nt
+	.endfn	SetStdHandle,globl
+	.previous
+#endif

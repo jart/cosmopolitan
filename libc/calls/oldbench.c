@@ -21,7 +21,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/initializer.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"

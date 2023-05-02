@@ -43,7 +43,6 @@
 #include "libc/stdio/stdio.h"       /* fprintf, fopen, ftello */
 #include "libc/time/time.h"        /* clock_t, clock, CLOCKS_PER_SEC */
 #include "libc/assert.h"
-#include "libc/intrin/initializer.internal.h"
 #include "libc/runtime/runtime.h"      /* assert */
 
 #include "third_party/lz4cli/datagen.h"     /* RDG_genBuffer */
@@ -99,8 +98,7 @@ static U32 g_displayLevel = 2;   /* 0 : no display;   1: errors;   2 : + result 
             { g_time = clock(); DISPLAY(__VA_ARGS__); \
             if (g_displayLevel>=4) fflush(stdout); } }
 static clock_t g_time = 0;
-static clock_t refreshRate;
-INITIALIZER(300, _init_refreshRate1, { refreshRate = CLOCKS_PER_SEC * 15 / 100; });
+static clock_t refreshRate = CLOCKS_PER_SEC * 15 / 100;
 
 
 /* *************************************

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/fsgsbase.h"
+#ifdef __x86_64__
 
 /**
  * Changes `%fs` base address.
@@ -26,3 +27,5 @@
 void *(_wrfsbase)(void *p) {
   return _wrfsbase(p);
 }
+
+#endif /* __x86_64__ */

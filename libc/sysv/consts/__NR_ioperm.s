@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_ioperm,0x00ad,0xfff,0xfff,0xfff,0xfff,0xfff

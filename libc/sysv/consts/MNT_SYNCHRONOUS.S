@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon mount,MNT_SYNCHRONOUS,0x00000010,0x00000002,0x00000002,0x00000002,0x00000002,0x00000010

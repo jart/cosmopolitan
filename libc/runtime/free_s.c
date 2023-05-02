@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/lockxchg.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 
@@ -24,8 +23,8 @@
 
 void free_s(void *v) {
   void **pp = (void **)v;
-  void *p = NULL;
-  lockxchg(pp, &p);
+  void *p = *pp;
+  *pp = 0;
   if (_isheap(p)) {
     _weakfree(p);
   }

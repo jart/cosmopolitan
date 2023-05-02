@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_membarrier,0x0144,0xfff,0xfff,0xfff,0xfff,0xfff

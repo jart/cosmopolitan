@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon misc,TUWRITE,0x80,0x80,0x80,0x80,0x80,0

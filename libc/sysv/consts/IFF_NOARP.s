@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon iff,IFF_NOARP,0x80,0x80,0x80,0x80,0x80,0x80

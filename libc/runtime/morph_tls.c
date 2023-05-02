@@ -26,6 +26,7 @@
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 privileged void __morph_tls(void) {
+#ifdef __x86_64__
   // We need to rewrite SysV _Thread_local code. You MUST use the
   // -mno-tls-direct-seg-refs flag which generates code like this
   //
@@ -115,4 +116,5 @@ privileged void __morph_tls(void) {
 
     __morph_end(&mask);
   }
+#endif
 }

@@ -210,7 +210,7 @@ void _log_exit(int) wontreturn;
 
 #define ARGS  unsigned, const char *, int, FILE *, const char *
 #define ATTR  paramsnonnull((5)) printfesque(5)
-#define ATTRV paramsnonnull((5, 6))
+#define ATTRV paramsnonnull((5))
 void flogf(ARGS, ...) ATTR libcesque;
 void vflogf(ARGS, va_list) ATTRV libcesque;
 void fverbosef(ARGS, ...) asm("flogf") ATTR relegated libcesque;

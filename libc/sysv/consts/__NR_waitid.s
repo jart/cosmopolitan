@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_waitid,0x00f7,0x20000ad,0xfff,0xfff,0xfff,0xfff

@@ -578,10 +578,14 @@ typedef struct {
 #define autotype(x) typeof(x)
 #endif
 
+#ifdef __x86_64__
 #if __GNUC__ >= 7 || __has_attribute(__no_caller_saved_registers__)
 #define nocallersavedregisters __attribute__((__no_caller_saved_registers__))
 #else
 #define nocallersavedregisters "need modern compiler"
+#endif
+#else
+#define nocallersavedregisters
 #endif
 
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
@@ -608,11 +612,15 @@ typedef struct {
 #endif
 #endif
 
+#ifdef __x86_64__
 #define notpossible           \
   do {                        \
     asm("nop\n\tud2\n\tnop"); \
     unreachable;              \
   } while (0)
+#else
+#define notpossible __builtin_trap()
+#endif
 
 #define donothing \
   do {            \
@@ -667,7 +675,7 @@ typedef struct {
 #endif
 #endif
 
-#ifndef __llvm__
+#if defined(__x86_64__) && !defined(__llvm__)
 #define initarray _Section(".init_array,\"a\",@init_array #")
 #else
 #define initarray _Section(".init_array")
@@ -773,7 +781,11 @@ typedef struct {
 #endif /* -w */
 
 #ifndef __STRICT_ANSI__
+#ifdef __x86_64__
 #define DebugBreak() asm("int3")
+#else
+#define DebugBreak() __builtin_trap()
+#endif
 #else
 #define DebugBreak() (void)0
 #endif
@@ -810,14 +822,14 @@ typedef struct {
 #define EXPROPRIATE(EXPRESSION) (EXPRESSION)
 #endif
 
-#if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
+#if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
 #define YOINK(SYMBOL) \
   asm(".section .yoink\n\tnopl\t%a0\n\t.previous" : : "X"(SYMBOL))
 #else
 #define YOINK(SYMBOL) (void)0
 #endif
 
-#if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
+#if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
 #else

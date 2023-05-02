@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 
 void palignr(void *, const void *, const void *, unsigned long);
 
-#if !defined(__STRICT_ANSI__) && !defined(__chibicc__)
+#if !defined(__STRICT_ANSI__) && !defined(__chibicc__) && defined(__x86_64__)
 __intrin_xmm_t __palignrs(__intrin_xmm_t, __intrin_xmm_t);
 #define palignr(C, B, A, I)                                                \
   do {                                                                     \

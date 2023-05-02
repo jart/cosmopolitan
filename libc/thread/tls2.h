@@ -36,6 +36,10 @@ static noasan inline void __set_tls_win32(void *tls) {
   asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tls));
 }
 
+#elif defined(__aarch64__)
+#define __get_tls_privileged() ((struct CosmoTib *)__builtin_thread_pointer())
+#define __get_tls_win32()      ((struct CosmoTib *)0)
+#define __set_tls_win32(tls)   (void)0
 #endif /* GNU x86-64 */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -3,9 +3,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+/* TODO(jart): DELETE */
+
 intptr_t lockxchg(void *, void *, size_t);
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86_64__)
 /**
  * Exchanges *MEMORY into *LOCALVAR w/ one operation.
  *

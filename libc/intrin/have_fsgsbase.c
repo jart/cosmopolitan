@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/fsgsbase.h"
 #include "libc/nexgen32e/x86feature.h"
+#ifdef __x86_64__
 
 /**
  * Returns true if FSGSBASE ISA can be used.
@@ -61,3 +62,5 @@ privileged int _have_fsgsbase(void) {
     return 0;
   }
 }
+
+#endif /* __x86_64__ */

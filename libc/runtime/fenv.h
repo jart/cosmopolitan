@@ -1,11 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_FENV_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_FENV_H_
 
-#define FE_TONEAREST  0x0000
-#define FE_DOWNWARD   0x0400
-#define FE_UPWARD     0x0800
-#define FE_TOWARDZERO 0x0c00
-
+#ifdef __x86_64__
 #define FE_INVALID    1
 #define __FE_DENORM   2
 #define FE_DIVBYZERO  4
@@ -13,6 +9,22 @@
 #define FE_UNDERFLOW  16
 #define FE_INEXACT    32
 #define FE_ALL_EXCEPT 63
+#define FE_TONEAREST  0x0000
+#define FE_DOWNWARD   0x0400
+#define FE_UPWARD     0x0800
+#define FE_TOWARDZERO 0x0c00
+#elif defined(__aarch64__)
+#define FE_INVALID    1
+#define FE_DIVBYZERO  2
+#define FE_OVERFLOW   4
+#define FE_UNDERFLOW  8
+#define FE_INEXACT    16
+#define FE_ALL_EXCEPT 31
+#define FE_TONEAREST  0
+#define FE_DOWNWARD   0x800000
+#define FE_UPWARD     0x400000
+#define FE_TOWARDZERO 0xc00000
+#endif
 
 #ifdef __FLT_EVAL_METHOD__
 #define FLT_EVAL_METHOD __FLT_EVAL_METHOD__

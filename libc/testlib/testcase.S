@@ -27,7 +27,7 @@
 	.globl	__testcase_start,__testcase_end
 	.hidden	__testcase_start,__testcase_end
 	.byte	0
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 __testcase_start:
 	.previous/*

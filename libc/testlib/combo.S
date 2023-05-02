@@ -27,7 +27,7 @@
 	.globl	__combo_start,__combo_end
 	.hidden	__combo_start,__combo_end
 	.byte	0
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 __combo_start:
 	.previous/*

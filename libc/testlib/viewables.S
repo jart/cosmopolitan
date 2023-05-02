@@ -27,7 +27,7 @@ kViewables:
 	.endobj	kViewables,globl
 	.overrun
 
-	.align	8
+	.balign	8
 kViewablesSize:
 	.quad	1b-0b
 	.endobj	kViewablesSize,globl

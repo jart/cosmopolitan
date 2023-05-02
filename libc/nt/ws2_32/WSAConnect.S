@@ -1,0 +1,14 @@
+#include "libc/nt/codegen.h"
+.imp	ws2_32,__imp_WSAConnect,WSAConnect,46
+
+#ifdef __x86_64__
+	.text.windows
+WSAConnect:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	mov	__imp_WSAConnect(%rip),%rax
+	jmp	__sysv2nt8
+	.endfn	WSAConnect,globl
+	.previous
+#endif

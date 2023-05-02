@@ -25,7 +25,7 @@
 //	note wrappers may still short circuit calls sometimes, which
 //	wouldn't impact this counter.
 	.bss
-	.align	8
+	.balign	8
 __syscount:
 	.quad	0
 	.endobj	__syscount,globl

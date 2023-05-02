@@ -30,7 +30,7 @@ imapxlatab:
  	pushpop	32,%rcx
 	mov	$0x0706050403020100,%rax
 	mov	$0x0808080808080808,%rdx
-	.align	8
+	.balign	8
 1:	stosq
 	add	%rdx,%rax
 	.loop	1b

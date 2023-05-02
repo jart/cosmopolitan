@@ -1,2 +1,0 @@
-.include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon nr,__NR_utimes,0x00eb,0x200008a,0x008a,0x004c,0x1a4,0xfff

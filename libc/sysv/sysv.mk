@@ -69,16 +69,6 @@ $(LIBC_SYSV_A).pkg:					\
 		$(LIBC_SYSV_A_OBJS)			\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_SYSV_A_OBJS):					\
-		o/libc/sysv/consts/syscon.internal.inc
-
-o/libc/sysv/consts/syscon.internal.inc:			\
-		libc/sysv/consts/syscon.internal.h	\
-		libc/macros.internal.h			\
-		libc/dce.h				\
-		libc/intrin/asancodes.h			\
-		ape/relocations.h
-
 o/libc/sysv/macros.internal.inc:			\
 		libc/sysv/macros.internal.h		\
 		libc/macros.internal.h
@@ -142,6 +132,14 @@ $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 
 $(LIBC_SYSV_MACHCALLS_A_OBJS):				\
 		o/libc/sysv/macros.internal.inc
+
+#───────────────────────────────────────────────────────────────────────────────
+
+# let aarch64 compile these
+o/$(MODE)/libc/sysv/consts/%.o: libc/sysv/consts/%.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/libc/sysv/dos2errno/%.o: libc/sysv/dos2errno/%.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 
 #───────────────────────────────────────────────────────────────────────────────
 

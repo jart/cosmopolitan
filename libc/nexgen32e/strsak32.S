@@ -118,7 +118,7 @@ wmemchr:.leafprologue
 //	@param	r10 masks result on chars exhausted (for length v. NULL)
 //	@return	rax end pointer after r8/r9/r10 modifications
 wcssak:	lea	-4(%rdi),%rax
-	.align	16
+	.balign	16
 1:	add	$4,%rax
 	sub	$1,%rsi
 	jb	.Lend

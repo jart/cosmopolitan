@@ -27,7 +27,7 @@
 	.globl	__fixture_start,__fixture_end
 	.hidden	__fixture_start,__fixture_end
 	.byte	0
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.underrun
 __fixture_start:
 	.previous/*

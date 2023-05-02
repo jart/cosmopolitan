@@ -98,6 +98,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
 #define GetStackAddr() \
   (((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize())
 
+#ifdef __x86_64__
 /**
  * Returns preferred bottom address of stack.
  *
@@ -116,6 +117,9 @@ extern char ape_stack_align[] __attribute__((__weak__));
             : "i"(ADDEND));                 \
     vAddr;                                  \
   })
+#else
+#define GetStaticStackAddr(ADDEND) (GetStackAddr() + ADDEND)
+#endif
 
 /**
  * Returns true if at least `n` bytes of stack are available.

@@ -23,7 +23,7 @@
 
 //	APE Loader Executable Structure for XNU
 
-	.align	4096
+	.balign	4096
 macho:	.long	0xFEEDFACE+1
 	.long	MAC_CPU_NEXGEN32E
 	.long	MAC_CPU_NEXGEN32E_ALL
@@ -112,7 +112,7 @@ macho:	.long	0xFEEDFACE+1
 60:
 	.endobj	macho,globl
 
-	.align	64
+	.balign	64
 _start:
 
 //	Hack for detecting M1 Rosetta environment.

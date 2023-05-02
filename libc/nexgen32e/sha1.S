@@ -432,7 +432,7 @@ Copyright 2014 Intel Corporation\n"
 	ADD_IF_GE BUFFER_PTR2, BLOCKS_CTR, 4, 128
 	xchg	WK_BUF, PRECALC_BUF
 
-	.align 32
+	.balign 32
 .L_loop:
 
 //	code loops through more than one block
@@ -440,10 +440,10 @@ Copyright 2014 Intel Corporation\n"
 //	it is set below by: cmovae BUFFER_PTR, K_BASE
 	test BLOCKS_CTR, BLOCKS_CTR
 	jnz .L_begin
-	.align 32
+	.balign 32
 	jmp	.L_end
 
-	.align 32
+	.balign 32
 .L_begin:
 
 //	process first block
@@ -562,7 +562,7 @@ Copyright 2014 Intel Corporation\n"
 
 	jmp	.L_loop
 
-	.align 32
+	.balign 32
 	.L_end:
 
 .endm
@@ -574,7 +574,7 @@ Copyright 2014 Intel Corporation\n"
 #define K3 0x8f1bbcdc
 #define K4 0xca62c1d6
 
-.align 128
+.balign 128
 K_XMM_AR:
 	.long K1,K1,K1,K1
 	.long K1,K1,K1,K1

@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_shutdown,0x0030,0x2000086,0x0086,0x0086,0x086,0xfff

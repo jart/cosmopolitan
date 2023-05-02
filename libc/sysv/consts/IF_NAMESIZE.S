@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon misc,IF_NAMESIZE,0x10,0x10,0x10,0x10,0x10,0
