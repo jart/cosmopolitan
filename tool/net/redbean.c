@@ -1166,22 +1166,24 @@ static void LogLuaError(char *hook, char *err) {
   ERRORF("(lua) failed to run %s: %s", hook, err);
 }
 
-static bool LuaEvalCode(const char *code) {
+// handles `-e CODE` (frontloads web server code)
+// handles `-i -e CODE` (interprets expression and exits)
+static void LuaEvalCode(const char *code) {
   lua_State *L = GL;
   int status = luaL_loadstring(L, code);
   if (status != LUA_OK || LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
     LogLuaError("lua code", lua_tostring(L, -1));
     lua_pop(L, 1);  // pop error
-    return false;
+    exit(1);
   }
   AssertLuaStackIsAt(L, 0);
-  return true;
 }
 
-static bool LuaEvalFile(const char *path) {
+// handle `-F PATH` arg
+static void LuaEvalFile(const char *path) {
   char *f = _gc(xslurp(path, 0));
   if (!f) FATALF("(cfg) error: failed to read file %`'s", path);
-  return LuaEvalCode(f);
+  LuaEvalCode(f);
 }
 
 static bool LuaOnClientConnection(void) {
@@ -7256,6 +7258,7 @@ static void TlsDestroy(void) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
+  bool got_e_arg = false;
   bool storeasset = false;
   // only generate ecp cert under blinkenlights (rsa is slow)
   norsagen = IsGenuineBlink();
@@ -7304,11 +7307,14 @@ static void GetOpts(int argc, char *argv[]) {
         break;
 #endif
 #ifndef STATIC
-        CASE('e', LuaEvalCode(optarg));
         CASE('F', LuaEvalFile(optarg));
         CASE('*', selfmodifiable = true);
         CASE('i', interpretermode = true);
         CASE('E', leakcrashreports = true);
+      case 'e':
+        got_e_arg = true;
+        LuaEvalCode(optarg);
+        break;
       case 'A':
         if (!storeasset) {
           storeasset = true;
@@ -7332,6 +7338,8 @@ static void GetOpts(int argc, char *argv[]) {
   }
   // if storing asset(s) is requested, don't need to continue
   if (storeasset) exit(0);
+  // we don't want to drop into a repl after using -e in -i mode
+  if (interpretermode && got_e_arg) exit(0);
 }
 
 void RedBean(int argc, char *argv[]) {
