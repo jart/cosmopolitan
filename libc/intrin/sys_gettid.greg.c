@@ -64,7 +64,7 @@ privileged int sys_gettid(void) {
   return tid;
 #elif defined(__aarch64__)
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(178)

@@ -55,6 +55,35 @@ noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
 }
 #endif
 
+static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
+  unsigned a, b;
+  uint64_t w, x, y;
+  for (c *= 0x0101010101010101;; p += 8) {
+    w = (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
+        (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
+        (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
+        (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
+    if ((x = ~(w ^ c) & ((w ^ c) - 0x0101010101010101) & 0x8080808080808080) |
+        (y = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
+      if (x) {
+        a = __builtin_ctzll(x);
+        if (y) {
+          b = __builtin_ctzll(y);
+          if (a <= b) {
+            return p + (a >> 3);
+          } else {
+            return 0;
+          }
+        } else {
+          return p + (a >> 3);
+        }
+      } else {
+        return 0;
+      }
+    }
+  }
+}
+
 /**
  * Returns pointer to first instance of character.
  *
@@ -77,6 +106,13 @@ char *strchr(const char *s, int c) {
   _unassert(!r || *r || !(c & 255));
   return (char *)r;
 #else
-  return strchr_pure(s, c);
+  char *r;
+  for (c &= 255; (uintptr_t)s & 7; ++s) {
+    if ((*s & 255) == c) return s;
+    if (!*s) return NULL;
+  }
+  r = strchr_x64(s, c);
+  _unassert(!r || *r || !c);
+  return r;
 #endif
 }

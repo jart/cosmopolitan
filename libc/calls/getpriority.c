@@ -78,7 +78,7 @@ privileged int getpriority(int which, unsigned who) {
   register long r0 asm("x0") = (long)which;
   register long r1 asm("x1") = (long)who;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(141), "r"(r0), "r"(r1)

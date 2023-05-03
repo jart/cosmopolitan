@@ -7,7 +7,6 @@
  */
 
 #define blkcnt_t      int64_t
-#define blksize_t     int64_t /* int32_t on xnu */
 #define cc_t          uint8_t
 #define clock_t       int64_t  /* uint64_t on xnu */
 #define dev_t         uint64_t /* int32_t on xnu */
@@ -38,7 +37,14 @@
 #define uid_t         uint32_t
 #define rlim_t        uint64_t /* int64_t on bsd */
 #define clockid_t     int32_t
-#define nlink_t       uint64_t
+
+#ifdef __x86_64__
+#define blksize_t int64_t /* int32_t on xnu */
+#define nlink_t   uint64_t
+#elif defined(__aarch64__)
+#define blksize_t int32_t
+#define nlink_t   uint32_t
+#endif
 
 #define TIME_T_MAX __INT64_MAX__
 #define TIME_T_MIN (-TIME_T_MAX - 1)

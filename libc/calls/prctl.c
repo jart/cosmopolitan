@@ -61,7 +61,7 @@ privileged int prctl(int operation, ...) {
   register long r3 asm("x3") = (long)c;
   register long r4 asm("x4") = (long)d;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(167), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)

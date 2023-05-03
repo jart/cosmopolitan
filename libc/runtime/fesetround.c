@@ -26,23 +26,13 @@
  * @param mode may be FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, or FE_TOWARDZERO
  * @return 0 on success, or -1 on error
  */
-int fesetround(int mode) {
-  uint16_t x87cw;
-  uint32_t ssecw;
-  switch (mode) {
+int fesetround(int r) {
+  switch (r) {
     case FE_TONEAREST:
     case FE_DOWNWARD:
     case FE_UPWARD:
     case FE_TOWARDZERO:
-      asm("fnstcw\t%0" : "=m"(x87cw));
-      x87cw &= ~0x0c00;
-      x87cw |= mode;
-      asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
-      asm("stmxcsr\t%0" : "=m"(ssecw));
-      ssecw &= ~(0x0c00 << 3);
-      ssecw |= (mode << 3);
-      asm volatile("ldmxcsr\t%0" : /* no outputs */ : "m"(ssecw));
-      return 0;
+      return __fesetround(r);
     default:
       return -1;
   }

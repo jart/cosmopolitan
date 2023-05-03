@@ -22,6 +22,20 @@
 void __stat2cosmo(struct stat *restrict st, const union metastat *ms) {
   if (st) {
     if (IsLinux()) {
+      st->st_dev = ms->linux.st_dev;
+      st->st_ino = ms->linux.st_ino;
+      st->st_nlink = ms->linux.st_nlink;
+      st->st_mode = ms->linux.st_mode;
+      st->st_uid = ms->linux.st_uid;
+      st->st_gid = ms->linux.st_gid;
+      st->st_flags = 0;
+      st->st_rdev = ms->linux.st_rdev;
+      st->st_size = ms->linux.st_size;
+      st->st_blksize = ms->linux.st_blksize;
+      st->st_blocks = ms->linux.st_blocks;
+      st->st_atim = ms->linux.st_atim;
+      st->st_mtim = ms->linux.st_mtim;
+      st->st_ctim = ms->linux.st_ctim;
       st->st_birthtim = st->st_ctim;
       if (st->st_atim.tv_sec < st->st_ctim.tv_sec)
         st->st_birthtim = st->st_atim;

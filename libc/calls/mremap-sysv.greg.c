@@ -72,7 +72,7 @@ privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
   register long r3 asm("x3") = (long)f;
   register long r4 asm("x4") = (long)q;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(216), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)

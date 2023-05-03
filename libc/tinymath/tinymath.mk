@@ -42,12 +42,18 @@ $(LIBC_TINYMATH_A).pkg:					\
 		$(LIBC_TINYMATH_A_OBJS)			\
 		$(foreach x,$(LIBC_TINYMATH_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/tinymath/cpow.o \
-o/$(MODE)/libc/tinymath/cpowf.o \
-o/$(MODE)/libc/tinymath/cpowl.o \
+o/$(MODE)/libc/tinymath/cpow.o				\
+o/$(MODE)/libc/tinymath/cpowf.o				\
+o/$(MODE)/libc/tinymath/cpowl.o				\
 o/$(MODE)/libc/tinymath/powfin.o : private		\
 		OVERRIDE_CFLAGS +=			\
 			-ffast-math
+
+o/$(MODE)/libc/tinymath/lround.o			\
+o/$(MODE)/libc/tinymath/lroundf.o			\
+o/$(MODE)/libc/tinymath/lroundl.o : private		\
+		OVERRIDE_CFLAGS +=			\
+			-fno-builtin
 
 LIBC_TINYMATH_LIBS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)))
 LIBC_TINYMATH_HDRS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)_HDRS))

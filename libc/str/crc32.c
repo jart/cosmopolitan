@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/metastat.internal.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/nexgen32e/crc32.h"
+#include "third_party/zlib/zlib.h"
 
-/**
- * Forms fstat() on System Five.
- * @asyncsignalsafe
- */
-int32_t sys_fstat(int32_t fd, struct stat *st) {
-  void *p;
-  union metastat ms;
-  if (st) {
-    p = &ms;
-  } else {
-    p = 0;
-  }
-  if (__sys_fstat(fd, p) != -1) {
-    __stat2cosmo(st, &ms);
-    return 0;
-  } else {
-    return -1;
-  }
+uLong crc32(uLong crc, const Bytef *buf, uInt len) {
+  return crc32_z(crc, buf, len);
 }

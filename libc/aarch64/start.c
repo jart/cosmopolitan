@@ -29,8 +29,8 @@ static inline long sys_set_tid_address(int *t) {
   register int64_t __r0 asm("x0") = (int64_t)t;
   register int64_t __res_x0 asm("x0");
   int64_t __res;
-  asm volatile("mov x8, %1\n"
-               "svc 0x0\n"
+  asm volatile("mov\tx8,%1\n\t"
+               "svc\t0x0\n"
                : "=r"(__res_x0)
                : "i"(96), "r"(__r0)
                : "x8", "memory");

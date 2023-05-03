@@ -151,7 +151,6 @@ DEFAULT_OFLAGS =							\
 
 DEFAULT_COPTS =								\
 	-fno-math-errno							\
-	-fno-trapping-math						\
 	-fno-fp-int-builtin-inexact					\
 	-fno-ident							\
 	-fno-common							\

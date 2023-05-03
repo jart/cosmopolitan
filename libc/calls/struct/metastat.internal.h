@@ -16,6 +16,7 @@ COSMOPOLITAN_C_START_
 struct stat_linux {
   uint64_t st_dev;
   uint64_t st_ino;
+#ifdef __x86_64__
   uint64_t st_nlink;
   uint32_t st_mode;
   uint32_t st_uid;
@@ -29,6 +30,23 @@ struct stat_linux {
   struct timespec st_mtim;
   struct timespec st_ctim;
   int64_t __unused[3];
+#elif defined(__aarch64__)
+  uint32_t st_mode;
+  uint32_t st_nlink;
+  uint32_t st_uid;
+  uint32_t st_gid;
+  uint64_t st_rdev;
+  uint64_t __pad1;
+  int64_t st_size;
+  int32_t st_blksize;
+  int32_t __pad2;
+  int64_t st_blocks;
+  struct timespec st_atim;
+  struct timespec st_mtim;
+  struct timespec st_ctim;
+  uint32_t __unused4;
+  uint32_t __unused5;
+#endif
 };
 
 struct stat_xnu {

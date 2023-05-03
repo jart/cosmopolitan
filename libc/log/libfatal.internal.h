@@ -20,7 +20,7 @@ forceinline long __sysv_exit(long rc) {
 #elif defined(__aarch64__)
   register long r0 asm("x0") = rc;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(94), "r"(r0)
@@ -42,7 +42,7 @@ forceinline int __sysv_close(long fd) {
 #elif defined(__aarch64__)
   register long r0 asm("x0") = fd;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(57), "r"(r0)
@@ -67,7 +67,7 @@ forceinline int __sysv_open(const char *path, long flags, long mode) {
   register long r2 asm("x2") = (long)flags;
   register long r3 asm("x3") = (long)mode;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(56), "r"(r0), "r"(r1), "r"(r2), "r"(r3)
@@ -91,7 +91,7 @@ forceinline long __sysv_read(long fd, void *data, unsigned long size) {
   register long r1 asm("x1") = (long)data;
   register long r2 asm("x2") = (long)size;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(63), "r"(r0), "r"(r1), "r"(r2)
@@ -115,7 +115,7 @@ forceinline long __sysv_write(long fd, const void *data, unsigned long size) {
   register long r1 asm("x1") = (long)data;
   register long r2 asm("x2") = (long)size;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(64), "r"(r0), "r"(r1), "r"(r2)
@@ -139,7 +139,7 @@ forceinline long __sysv_mprotect(void *addr, size_t size, long prot) {
   register long r1 asm("x1") = (long)size;
   register long r2 asm("x2") = (long)prot;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(226), "r"(r0), "r"(r1), "r"(r2)
@@ -160,7 +160,7 @@ forceinline int __sysv_getpid(void) {
                : "rdx", "memory", "cc");
 #elif defined(__aarch64__)
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(172)

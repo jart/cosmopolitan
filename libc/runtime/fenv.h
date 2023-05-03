@@ -53,6 +53,7 @@ int fesetround(int);
 int fetestexcept(int);
 int feupdateenv(const fenv_t *);
 int __flt_rounds(void);
+int __fesetround(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

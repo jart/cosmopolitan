@@ -150,7 +150,7 @@ static inline ssize_t sys_write(int f, const void *b, size_t c) {
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)c;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(64), "r"(r0), "r"(r1), "r"(r2)
@@ -172,7 +172,7 @@ static inline int sys_ioctl(int d, int r, ...) {
   register long r1 asm("x1") = (long)r;
   register long r2 asm("x2") = (long)a;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n"
+  asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
                : "i"(29), "r"(r0), "r"(r1), "r"(r2)

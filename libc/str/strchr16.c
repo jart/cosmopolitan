@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/str/str.h"
 
-	.initbss 300,_init_kToUpper
-//	ASCII lowercase → uppercase translation tables.
-//
-//		char kToUpper[256];
-//
-//	@see	kToLower
-kToUpper:
-	.rept	256
-	.byte	0
-	.endr
-	.endobj	kToUpper,globl,hidden
-	.previous
-
-	.init.start 300,_init_kToUpper
-	push	%rdi
-	call	imapxlatab
-	xchg	%rsi,(%rsp)
-	xor	%ecx,%ecx
-0:	inc	%ecx
-	subb	$0x20,'a'-1(%rsi,%rcx)
-	cmp	$'z'-'a'+1,%ecx
-	jne	0b
-	pop	%rsi
-	.init.end 300,_init_kToUpper
+/**
+ * Returns pointer to first instance of character.
+ */
+char16_t *strchr16(const char16_t *s, int c) {
+  for (;; ++s) {
+    if ((*s & 65535) == (c & 65535)) return (char16_t *)s;
+    if (!*s) return (char16_t *)0;
+  }
+}

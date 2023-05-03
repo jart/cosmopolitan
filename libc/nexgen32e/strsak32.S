@@ -19,34 +19,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/macros.internal.h"
 
-//	Returns pointer to first instance of character.
-//
-//	@param	rdi is a non-null NUL-terminated wchar_t string pointer
-//	@param	esi is the search word
-//	@return	rax points to character, or to NUL word if not found
-//	@note	this won't return NULL if search character is NUL
-wcschrnul:
-	.leafprologue
-	.profilable
-	or	$-1,%r9
-	jmp	0f
-
-//	Returns pointer to first instance of character.
-//
-//	@param	rdi is a non-null NUL-terminated wchar_t string pointer
-//	@param	esi is the search word
-//	@return	rax points to first result, or NULL if not found
-//	@note	this won't return NULL if search character is NUL
-//	@asyncsignalsafe
-wcschr:	.leafprologue
-	.profilable
-	xor	%r9,%r9
-0:	mov	%esi,%edx
-	xor	%r11d,%r11d
-	pushpop	-1,%rsi
-	xor	%r8,%r8
-	jmp	wcssak
-
 //	Returns length of wchar_t string w/ security blankets.
 //
 //	This is like wcsnlen() except it'll return 0 if (1) RDI is NULL
@@ -168,5 +140,3 @@ wcssak:	lea	-4(%rdi),%rax
 	.endfn	wmemchr,globl
 	.endfn	rawwmemchr,globl
 	.endfn	wcsnlen,globl
-	.endfn	wcschr,globl
-	.endfn	wcschrnul,globl

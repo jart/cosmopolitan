@@ -69,7 +69,6 @@ char *strchrnul(const char *, int) strlenesque returnsnonnull;
 void *rawmemchr(const void *, int) strlenesque returnsnonnull;
 size_t strlen16(const char16_t *) strlenesque;
 size_t strnlen16(const char16_t *, size_t) strlenesque;
-size_t strnlen16_s(const char16_t *, size_t);
 char16_t *strchr16(const char16_t *, int) strlenesque;
 void *memchr16(const void *, int, size_t) strlenesque;
 char16_t *strchrnul16(const char16_t *, int) strlenesque returnsnonnull;

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/str/str.h"
 
-//	Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
-//
-//	@param	edi is init crc32 value
-//	@param	rsi is nullable pointer to data
-//	@param	edx is int size per zlib interface
-crc32:	mov	%edx,%edx
-	jmp	crc32_z
-	.endfn	crc32,globl
+/**
+ * Returns pointer to first instance of character in range.
+ */
+void *memchr16(const void *s, int c, size_t n) {
+  size_t i;
+  const char *p = (const char *)s;
+  for (i = 0; i < n; ++i) {
+    if ((p[i] & 65535) == (c & 65535)) {
+      return (void *)(p + i);
+    }
+  }
+  return 0;
+}
