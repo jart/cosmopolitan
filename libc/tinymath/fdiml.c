@@ -22,6 +22,10 @@
  * Returns positive difference.
  */
 long double fdiml(long double x, long double y) {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+  return fdim(x, y);
+#else
   if (isnan(x) || isnan(y)) return NAN;
   return x > y ? x - y : 0;
+#endif
 }

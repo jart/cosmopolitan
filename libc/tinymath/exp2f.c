@@ -29,13 +29,12 @@
 #include "libc/math.h"
 #include "libc/tinymath/exp2f_data.internal.h"
 #include "libc/tinymath/internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
 Copyright 2018 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /*
  * Single-precision 2^x function.
@@ -104,5 +103,3 @@ float exp2f(float x)
 	y = y * s;
 	return eval_as_float(y);
 }
-
-#endif /* !TINY */

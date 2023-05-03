@@ -33,7 +33,7 @@ asm(".ident\t\"\\n\\n\
 Optimized Routines (MIT License)\\n\
 Copyright 2022 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* Fast sincosf implementation.  Worst-case ULP is 0.5607, maximum relative
    error is 0.5303 * 2^-23.  A single-step range reduction is used for

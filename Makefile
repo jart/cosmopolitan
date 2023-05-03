@@ -288,12 +288,12 @@ o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
 TAGS: private .UNSANDBOXED = 1
-TAGS:	o/$(MODE)/srcs-old.txt $(SRCS) o/$(MODE)/third_party/ctags/ctags.com
+TAGS:	o/$(MODE)/srcs-old.txt $(SRCS) #o/$(MODE)/third_party/ctags/ctags.com
 	@$(RM) $@
 	@o/$(MODE)/third_party/ctags/ctags.com $(TAGSFLAGS) -L $< -o $@
 
 HTAGS: private .UNSANDBOXED = 1
-HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS) o/$(MODE)/third_party/ctags/ctags.com
+HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS) #o/$(MODE)/third_party/ctags/ctags.com
 	@$(RM) $@
 	@build/htags o/$(MODE)/third_party/ctags/ctags.com -L $< -o $@
 

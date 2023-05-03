@@ -35,6 +35,13 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+long double atanhl(long double x)
+{
+	return atanh(x);
+}
+#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
+
 /**
  * Returns inverse hyperbolic tangent of 𝑥.
  * @define x ? log1p(2 * x / (1 - x)) / 2 : x
@@ -64,3 +71,5 @@ long double atanhl(long double x)
 	}
 	return s ? -x : x;
 }
+
+#endif

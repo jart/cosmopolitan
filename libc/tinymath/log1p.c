@@ -29,7 +29,6 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/log_data.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
@@ -160,5 +159,3 @@ double log1p(double x)
 	dk = k;
 	return s*(hfsq+R) + (dk*ln2_lo+c) - hfsq + f + dk*ln2_hi;
 }
-
-#endif /* TINY */

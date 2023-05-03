@@ -28,6 +28,7 @@
 #include "libc/macros.internal.h"
 
 feclearexcept:
+#ifdef __x86_64__
 	# maintain exceptions in the sse mxcsr, clear x87 exceptions
 	mov	%edi,%ecx
 	and	$0x3f,%ecx
@@ -45,18 +46,36 @@ feclearexcept:
 	ldmxcsr	-8(%rsp)
 1:	xor	%eax,%eax
 	ret
+#elif defined(__aarch64__)
+	and	w0,w0,#0x1f
+	mrs	x1,fpsr
+	bic	w1,w1,w0
+	msr	fpsr,x1
+	mov	w0,#0
+	ret
+#endif
 	.endfn	feclearexcept,globl
 
 feraiseexcept:
+#ifdef __x86_64__
 	and	$0x3f,%edi
 	stmxcsr	-8(%rsp)
 	or	%edi,-8(%rsp)
 	ldmxcsr	-8(%rsp)
 	xor	%eax,%eax
 	ret
+#elif defined(__aarch64__)
+	and	w0,w0,#0x1f
+	mrs	x1,fpsr
+	orr	w1,w1,w0
+	msr	fpsr,x1
+	mov	w0,#0
+	ret
+#endif
 	.endfn	feraiseexcept,globl
 
 __fesetround:
+#ifdef __x86_64__
 	push	%rax
 	xor	%eax,%eax
 	mov	%edi,%ecx
@@ -71,25 +90,48 @@ __fesetround:
 	ldmxcsr	(%rsp)
 	pop	%rcx
 	ret
+#elif defined(__aarch64__)
+	mrs	x1,fpcr
+	bic	w1,w1,#0xc00000
+	orr	w1,w1,w0
+	msr	fpcr,x1
+	mov	w0,#0
+	ret
+#endif
 	.endfn	__fesetround,globl,hidden
 
 fegetround:
+#ifdef __x86_64__
 	push	%rax
 	stmxcsr	(%rsp)
 	pop	%rax
 	shr	$3,%eax
 	and	$0xc00,%eax
 	ret
+#elif defined(__aarch64__)
+	mrs	x0,fpcr
+	and	w0,w0,#0xc00000
+	ret
+#endif
 	.endfn	fegetround,globl
 
 fegetenv:
+#ifdef __x86_64__
 	xor	%eax,%eax
 	fnstenv	(%rdi)
 	stmxcsr	28(%rdi)
 	ret
+#elif defined(__aarch64__)
+	mrs	x1,fpcr
+	mrs	x2,fpsr
+	stp	w1,w2,[x0]
+	mov	w0,#0
+	ret
+#endif
 	.endfn	fegetenv,globl
 
 fesetenv:
+#ifdef __x86_64__
 	xor	%eax,%eax
 	inc	%rdi
 	jz	1f
@@ -105,9 +147,21 @@ fesetenv:
 	ldmxcsr	(%rsp)
 	add	$40,%rsp
 	ret
+#elif defined(__aarch64__)
+	mov	x1,#0
+	mov	x2,#0
+	cmn	x0,#1
+	b.eq	1f
+	ldp	w1,w2,[x0]
+1:	msr	fpcr,x1
+	msr	fpsr,x2
+	mov	w0,#0
+	ret
+#endif
 	.endfn	fesetenv,globl
 
 fetestexcept:
+#ifdef __x86_64__
 	and	$0x3f,%edi
 	push	%rax
 	stmxcsr	(%rsp)
@@ -116,4 +170,10 @@ fetestexcept:
 	or	%esi,%eax
 	and	%edi,%eax
 	ret
+#elif defined(__aarch64__)
+	and	w0,w0,#0x1f
+	mrs	x1,fpsr
+	and	w0,w0,w1
+	ret
+#endif
 	.endfn	fetestexcept,globl

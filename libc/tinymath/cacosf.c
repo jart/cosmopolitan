@@ -35,8 +35,6 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-
-
 // FIXME
 
 float complex cacosf(float complex z)

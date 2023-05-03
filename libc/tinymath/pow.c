@@ -30,7 +30,6 @@
 #include "libc/tinymath/exp_data.internal.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/pow_data.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
@@ -379,5 +378,3 @@ double pow(double x, double y)
 #endif
 	return exp_inline(ehi, elo, sign_bias);
 }
-
-#endif /* !TINY */

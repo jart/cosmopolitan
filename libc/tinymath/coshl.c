@@ -43,8 +43,10 @@ asm(".include \"libc/disclaimer.inc\"");
  *             = 1 + 0.5*(exp(x)-1)*(exp(x)-1)/exp(x)
  *             = 1 + x*x/2 + o(x^4)
  */
-long double coshl(long double x)
-{
+long double coshl(long double x) {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+	return cosh(x);
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 	union ldshape u = {x};
 	unsigned ex = u.i.se & 0x7fff;
 	uint32_t w;
@@ -74,4 +76,8 @@ long double coshl(long double x)
 	/* |x| > log(LDBL_MAX) or nan */
 	t = expl(0.5*x);
 	return 0.5*t*t;
+#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
+// TODO: broken implementation to make things compile
+	return cosh(x);
+#endif
 }

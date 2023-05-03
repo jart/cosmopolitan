@@ -34,7 +34,7 @@ asm(".ident\t\"\\n\\n\
 Optimized Routines (MIT License)\\n\
 Copyright 2022 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 #define Shift (0x1.8p23f)
 #define InvLn2 (0x1.715476p+0f)

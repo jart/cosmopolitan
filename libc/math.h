@@ -255,7 +255,6 @@ long double nearbyintl(long double);
 long double nextafterl(long double, long double);
 long double nexttowardl(long double, long double);
 long double pow10l(long double);
-long double powil(long double, int);
 long double powl(long double, long double);
 long double remainderl(long double, long double);
 long double rintl(long double);

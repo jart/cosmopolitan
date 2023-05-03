@@ -27,8 +27,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
-#ifndef TINY
 
+asm(".ident\t\"\\n\\n\
+fdlibm (fdlibm license)\\n\
+Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
@@ -98,5 +100,3 @@ float asinf(float x)
 		return -x;
 	return x;
 }
-
-#endif /* TINY */

@@ -27,7 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -107,5 +106,3 @@ float acosf(float x)
 	w = R(z)*s+c;
 	return 2*(df+w);
 }
-
-#endif /* TINY */

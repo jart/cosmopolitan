@@ -30,7 +30,6 @@
 #include "libc/tinymath/complex.internal.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/log2_data.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
@@ -142,5 +141,3 @@ double log10(double x)
 
 	return val_lo + val_hi;
 }
-
-#endif /* !TINY */

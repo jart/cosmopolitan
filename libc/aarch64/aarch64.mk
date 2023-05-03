@@ -10,5 +10,4 @@ o/$(MODE)/libc/aarch64/start.o:				\
 
 o/$(MODE)/libc/aarch64:					\
 		o/$(MODE)/libc/aarch64/crt.o		\
-		o/$(MODE)/libc/aarch64/fenv.o		\
 		o/$(MODE)/libc/aarch64/start.o

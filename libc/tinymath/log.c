@@ -29,7 +29,6 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/log_data.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
@@ -147,5 +146,3 @@ double log(double x)
 	    r * r2 * (A[1] + r * A[2] + r2 * (A[3] + r * A[4])) + hi;
 	return eval_as_double(y);
 }
-
-#endif /* !TINY */

@@ -30,11 +30,13 @@
 #include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
+OpenBSD libm (MIT License)\\n\
+Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
+asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
+// clang-format off
 
 /* origin: OpenBSD /usr/src/lib/libm/src/s_catanl.c */
 /*
@@ -146,4 +148,5 @@ long double complex catanl(long double complex z)
 	w = CMPLXF(w, 0.25L * logl(a));
 	return w;
 }
+
 #endif

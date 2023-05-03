@@ -51,6 +51,8 @@ static inline float fp_barrierf(float x) {
   return y;
 }
 
+extern const uint16_t __rsqrt_tab[128] _Hide;
+
 double __math_divzero(uint32_t) _Hide;
 double __math_invalid(double) _Hide;
 double __math_oflow(uint32_t) _Hide;
@@ -61,6 +63,9 @@ float __math_invalidf(float) _Hide;
 float __math_oflowf(uint32_t) _Hide;
 float __math_uflowf(uint32_t) _Hide;
 float __math_xflowf(uint32_t, float) _Hide;
+long double __polevll(long double, const long double *, int) _Hide;
+long double __p1evll(long double, const long double *, int) _Hide;
+long double __math_invalidl(long double) _Hide;
 
 #define FORCE_EVAL(x)                         \
   do {                                        \

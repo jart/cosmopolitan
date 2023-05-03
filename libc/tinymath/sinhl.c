@@ -42,8 +42,10 @@ asm(".include \"libc/disclaimer.inc\"");
  *             = (exp(x)-1 + (exp(x)-1)/exp(x))/2
  *             = x + x^3/6 + o(x^5)
  */
-long double sinhl(long double x)
-{
+long double sinhl(long double x) {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+	return sinh(x);
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 	union ldshape u = {x};
 	unsigned ex = u.i.se & 0x7fff;
 	long double h, t, absx;
@@ -69,4 +71,8 @@ long double sinhl(long double x)
 	/* |x| > log(LDBL_MAX) or nan */
 	t = expl(0.5*absx);
 	return h*t*t;
+#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
+// TODO: broken implementation to make things compile
+	return sinh(x);
+#endif
 }

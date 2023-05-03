@@ -30,6 +30,9 @@
 #include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
+FreeBSD libm (BSD-2 License)\\n\
+Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
+asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");

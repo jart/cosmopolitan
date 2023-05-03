@@ -31,7 +31,6 @@
 #include "libc/tinymath/exp_data.internal.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/powf_data.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
@@ -222,5 +221,3 @@ float powf(float x, float y)
 	}
 	return exp2_inline(ylogx, sign_bias);
 }
-
-#endif /* TINY */

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -47,4 +48,13 @@ TEST(sqrtf, test) {
   EXPECT_STREQ("0", gc(xdtoaf(sqrtf(0))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(sqrtf(INFINITY))));
   EXPECT_STREQ("-NAN", gc(xdtoaf(sqrtf(-1))));
+}
+
+BENCH(sqrt, bench) {
+  double _sqrt(double) asm("sqrt");
+  float _sqrtf(float) asm("sqrtf");
+  long double _sqrtl(long double) asm("sqrtl");
+  EZBENCH2("sqrt", donothing, _sqrt(.7));   /*  ~5ns */
+  EZBENCH2("sqrtf", donothing, _sqrtf(.7)); /*  ~5ns */
+  EZBENCH2("sqrtl", donothing, _sqrtl(.7)); /* ~28ns */
 }

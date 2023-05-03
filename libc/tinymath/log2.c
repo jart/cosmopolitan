@@ -30,7 +30,6 @@
 #include "libc/tinymath/complex.internal.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/log2_data.internal.h"
-#ifndef TINY
 
 asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
@@ -158,5 +157,3 @@ double log2(double x)
 	y = lo + r2 * p + hi;
 	return eval_as_double(y);
 }
-
-#endif /* !TINY */

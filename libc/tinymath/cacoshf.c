@@ -35,12 +35,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-
-
 float complex cacoshf(float complex z)
 {
 	int zineg = signbit(cimagf(z));
-
 	z = cacosf(z);
 	if (zineg) return CMPLXF(cimagf(z), -crealf(z));
 	else       return CMPLXF(-cimagf(z), crealf(z));

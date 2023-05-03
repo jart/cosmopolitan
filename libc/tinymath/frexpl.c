@@ -32,13 +32,16 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /**
  * Splits number normalized fraction and exponent.
  */
 long double frexpl(long double x, int *e)
 {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+	return frexp(x, e);
+#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 	union ldshape u = {x};
 	int ee = u.i.se & 0x7fff;
 
@@ -56,4 +59,5 @@ long double frexpl(long double x, int *e)
 	u.i.se &= 0x8000;
 	u.i.se |= 0x3ffe;
 	return u.f;
+#endif
 }

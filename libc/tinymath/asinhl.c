@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/feval.internal.h"
+#include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -34,6 +35,13 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+long double asinhl(long double x)
+{
+	return asinh(x);
+}
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 /**
  * Returns inverse hyperbolic sine of 𝑥.
@@ -60,7 +68,15 @@ long double asinhl(long double x)
 		x = log1pl(x + x*x/(sqrtl(x*x+1)+1));
 	} else {
 		/* |x| < 0x1p-32, raise inexact if x!=0 */
-		fevall(x + 0x1p120f);
+		FORCE_EVAL(x + 0x1p120f);
 	}
 	return s ? -x : x;
 }
+
+#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
+// TODO: broken implementation to make things compile
+long double asinhl(long double x)
+{
+	return asinh(x);
+}
+#endif
