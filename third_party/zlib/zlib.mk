@@ -45,6 +45,9 @@ ifeq ($(ARCH), x86_64)
 o/$(MODE)/third_party/zlib/adler32simd.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-mssse3
+o/$(MODE)/third_party/zlib/adler32simd.o: private	\
+		OVERRIDE_CPPFLAGS +=			\
+			-DADLER32_SIMD_SSSE3
 o/$(MODE)/third_party/zlib/adler32.o: private		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DADLER32_SIMD_SSSE3

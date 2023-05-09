@@ -57,6 +57,10 @@ o/$(MODE)/libc/zipos/.cosmo.zip.o: private		\
 		ZIPOBJ_FLAGS +=				\
 			-B
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/zipos/zipos.o: libc/zipos/zipos.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 LIBC_ZIPOS_LIBS = $(foreach zipos,$(LIBC_ZIPOS_ARTIFACTS),$($(zipos)))
 LIBC_ZIPOS_SRCS = $(foreach zipos,$(LIBC_ZIPOS_ARTIFACTS),$($(zipos)_SRCS))
 LIBC_ZIPOS_HDRS = $(foreach zipos,$(LIBC_ZIPOS_ARTIFACTS),$($(zipos)_HDRS))

@@ -99,14 +99,15 @@ int main(int argc, char ** argv) {
 
     params.model = "models/llama-7B/ggml-model.bin";
 
+#ifdef __x86_64__
     if (!X86_HAVE(AVX2)) return on_missing_feature("avx2");
     if (!X86_HAVE(AVX)) return on_missing_feature("avx");
     if (!X86_HAVE(FMA)) return on_missing_feature("fma");
     if (!X86_HAVE(SSE3)) return on_missing_feature("sse3");
-
     if (!X86_HAVE(F16C)) {
         fprintf(stderr, "%s: warning: cpuid f16c not detected; inference might crash\n", __func__);
     }
+#endif /* __x86_64__ */
 
     if (gpt_params_parse(argc, argv, params) == false) {
         return 1;

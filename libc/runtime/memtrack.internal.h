@@ -45,6 +45,7 @@ struct MemoryIntervals {
 
 extern struct MemoryIntervals _mmi;
 
+void __mmi_init(void);
 void __mmi_lock(void);
 void __mmi_unlock(void);
 void __mmi_funlock(void);

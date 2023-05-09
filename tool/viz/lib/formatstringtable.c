@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/viz/lib/formatstringtable.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/str/strwidth.h"
 
 void *FreeStringTableCells(long yn, long xn, char *T[yn][xn]) {

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/intrin/intrin.h"
+#include "libc/intrin/kprintf.h"
 
-//	Allocates memory the C++ way.
-//
-//	\param	%rdi is bytes to allocate
-//	\param	%rsi is ignored
-//	\return	new memory or NULL on OOM
-_ZnamRKSt9nothrow_t:
-//	operator new[](unsigned long, std::nothrow_t const&)
-	nop
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	_ZnamRKSt9nothrow_t,weak
-_ZnwmRKSt9nothrow_t:
-//	operator new(unsigned long, std::nothrow_t const&)
-	nop
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	_ZnwmRKSt9nothrow_t,weak
-_Znam:
-//	operator new[](unsigned long)
-	nop
-//	𝑠𝑙𝑖𝑑𝑒
-	.endfn	_Znam,weak
-_Znwm:
-//	operator new(unsigned long)
-	test	%rdi,%rdi
-	jne	1f
-	mov	$1,%edi
-1:	jmp	*hook_malloc(%rip)
-	.endfn	_Znwm,weak
+void __cxa_pure_virtual(void) {
+#ifndef NDEBUG
+  kprintf("__cxa_pure_virtual() called\n"
+          "Did you call a virtual method from a destructor?\n");
+#endif
+  __builtin_trap();
+}

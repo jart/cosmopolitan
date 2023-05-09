@@ -26,6 +26,8 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
+#ifdef __x86_64__
+
 static double GetTotal(const struct countbranch *p) {
   return p->total;
 }
@@ -101,3 +103,5 @@ static textstartup void countbranch_init() {
 const void *const countbranch_ctor[] initarray = {
     countbranch_init,
 };
+
+#endif /* __x86_64__ */

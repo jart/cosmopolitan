@@ -16,8 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
-
-STATIC_YOINK("_init__mmi");
+#include "libc/thread/thread.h"
 
 struct MemoryIntervals _mmi;
+pthread_mutex_t __mmi_lock_obj;  // recursive :'(
+
+__attribute__((__constructor__)) void __mmi_init(void) {
+  static bool once;
+  if (once) return;
+  _mmi.n = ARRAYLEN(_mmi.s);
+  _mmi.p = _mmi.s;
+  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+  once = true;
+}

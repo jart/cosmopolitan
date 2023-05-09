@@ -24,6 +24,7 @@
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -84,4 +85,22 @@ const struct HostsTxt *GetHostsTxt(void) {
   }
   pthread_mutex_unlock(&init->lock);
   return g_hoststxt;
+}
+
+/**
+ * Frees HOSTS.TXT data structure populated by ParseHostsTxt().
+ */
+void FreeHostsTxt(struct HostsTxt **ht) {
+  if (*ht) {
+    if ((*ht)->entries.p != g_hoststxt_init.entries) {
+      free((*ht)->entries.p);
+    }
+    if ((*ht)->strings.p != g_hoststxt_init.strings) {
+      free((*ht)->strings.p);
+    }
+    if (*ht != &g_hoststxt_init.ht) {
+      free(*ht);
+    }
+    *ht = 0;
+  }
 }

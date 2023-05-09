@@ -64,6 +64,7 @@ void elfwriter_commit(struct ElfWriter *, size_t);
 void elfwriter_finishsection(struct ElfWriter *);
 void elfwriter_appendrela(struct ElfWriter *, uint64_t, struct ElfWriterSymRef,
                           uint32_t, int64_t);
+uint32_t elfwriter_relatype_abs32(const struct ElfWriter *);
 struct ElfWriterSymRef elfwriter_linksym(struct ElfWriter *, const char *, int,
                                          int);
 struct ElfWriterSymRef elfwriter_appendsym(struct ElfWriter *, const char *,

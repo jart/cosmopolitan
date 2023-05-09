@@ -40,7 +40,8 @@ LIBC_TIME_A_DIRECTDEPS =			\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_SYSV_CALLS				\
-	LIBC_ZIPOS
+	LIBC_ZIPOS				\
+	THIRD_PARTY_COMPILER_RT
 
 LIBC_TIME_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_TIME_A_DIRECTDEPS),$($(x))))
@@ -71,6 +72,15 @@ o/$(MODE)/libc/time/iso8601us.o: private	\
 
 o/$(MODE)/usr/share/zoneinfo/.zip.o:		\
 	usr/share/zoneinfo
+
+o/$(MODE)/libc/time/kmonthname.o: libc/time/kmonthname.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/time/kmonthnameshort.o: libc/time/kmonthnameshort.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/time/kweekdayname.o: libc/time/kweekdayname.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/time/kweekdaynameshort.o: libc/time/kweekdaynameshort.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_TIME_LIBS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)))
 LIBC_TIME_SRCS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)_SRCS))

@@ -141,6 +141,7 @@ cosmo:	push	%rbp
 	push	%rsi
 
 //	allocate stack
+	call	__mmi_init
 	movabs	$ape_stack_vaddr,%rdi
 	mov	$ape_stack_memsz,%esi
 	mov	$ape_stack_prot,%edx

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/elfwriter.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/elf/def.h"
@@ -30,7 +31,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/xasprintf.h"
-#include "tool/build/lib/elfwriter.h"
 
 static const Elf64_Ehdr kObjHeader = {
     .e_ident = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3, ELFCLASS64, ELFDATA2LSB, 1,
@@ -166,6 +166,15 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
                                         elf->mapsize, PROT_READ | PROT_WRITE,
                                         MAP_SHARED | MAP_FIXED, elf->fd, 0)));
   elf->ehdr = memcpy(elf->map, &kObjHeader, (elf->wrote = sizeof(kObjHeader)));
+  if (strstr(path, "/aarch64")) {
+    elf->ehdr->e_machine = EM_AARCH64;
+  } else if (strstr(path, "/powerpc64")) {
+    elf->ehdr->e_machine = EM_PPC64;
+  } else if (strstr(path, "/riscv")) {
+    elf->ehdr->e_machine = EM_RISCV;
+  } else if (strstr(path, "/s390")) {
+    elf->ehdr->e_machine = EM_S390;
+  }
   elf->strtab = newinterner();
   elf->shstrtab = newinterner();
   intern(elf->strtab, "");
@@ -273,4 +282,21 @@ void elfwriter_appendrela(struct ElfWriter *elf, uint64_t r_offset,
                                                .symkey = symkey,
                                                .offset = r_offset,
                                                .addend = r_addend})));
+}
+
+uint32_t elfwriter_relatype_abs32(const struct ElfWriter *elf) {
+  switch (elf->ehdr->e_machine) {
+    case EM_NEXGEN32E:
+      return R_X86_64_32;
+    case EM_AARCH64:
+      return R_AARCH64_ABS32;
+    case EM_PPC64:
+      return R_PPC64_ADDR32;
+    case EM_RISCV:
+      return R_RISCV_32;
+    case EM_S390:
+      return R_390_32;
+    default:
+      notpossible;
+  }
 }

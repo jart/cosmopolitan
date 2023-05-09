@@ -47,6 +47,8 @@
 #include "libc/thread/tls.h"
 #include "third_party/libcxx/math.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
  * @see libc/onkill.c
@@ -361,3 +363,5 @@ ItsATrap:
   strace_enabled(+1);
   ftrace_enabled(+1);
 }
+
+#endif /* __x86_64__ */

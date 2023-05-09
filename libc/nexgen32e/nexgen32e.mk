@@ -48,6 +48,8 @@ o/$(MODE)/libc/nexgen32e/threaded.o: private		\
 			-fno-sanitize=all
 
 # these assembly files are safe to build on aarch64
+o/$(MODE)/libc/nexgen32e/zip.o: libc/nexgen32e/zip.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/mcount.o: libc/nexgen32e/mcount.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/ksha256.o: libc/nexgen32e/ksha256.S

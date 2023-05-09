@@ -175,6 +175,13 @@
 #endif
 .endm
 
+//	Embeds Fixed-Width Zero-Padded String.
+//	@note	.fxstr is better
+.macro	.ascin str:req fieldsize:req
+1347:	.ascii	"\str"
+ .org	1347b+\fieldsize,0x00
+.endm
+
 #ifdef __x86_64__
 
 #if __MNO_VZEROUPPER__ + 0
@@ -295,13 +302,6 @@
 	.org	0b+\width
 	.fxstr	\width,\rest
  .endif
-.endm
-
-//	Embeds Fixed-Width Zero-Padded String.
-//	@note	.fxstr is better
-.macro	.ascin str:req fieldsize:req
-1347:	.ascii	"\str"
- .org	1347b+\fieldsize,0x00
 .endm
 
 //	Marks symbols as object en-masse.

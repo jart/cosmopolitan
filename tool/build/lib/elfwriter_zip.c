@@ -215,8 +215,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   elfwriter_appendsym(elf, _gc(xasprintf("%s%s", "zip+cdir:", name)),
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
                       kZipCdirHdrLinkableSizeBootstrap);
-  elfwriter_appendrela(elf, kZipCfileOffsetOffset, lfilesym, R_X86_64_32,
-                       -imagebase);
+  elfwriter_appendrela(elf, kZipCfileOffsetOffset, lfilesym,
+                       elfwriter_relatype_abs32(elf), -imagebase);
   elfwriter_commit(elf, kZipCdirHdrLinkableSizeBootstrap);
   elfwriter_finishsection(elf);
 }

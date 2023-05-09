@@ -52,6 +52,7 @@
     "__BMI2__"
     "__FMA__"
     "__FMA4__"
+    "__F16C__"
     "__CLZERO__"
     "__MWAITX__"
     "__SGX__"
@@ -78,8 +79,12 @@
   '("__x86_64__"
     "__arm__"
     "__aarch64__"
+    "__AARCH64EB__"
+    "__ARM_NEON"
     "__powerpc__"
     "__powerpc64__"
+    "__POWER9_VECTOR__"
+    "__wasm_simd128__"
     "_ARCH_PWR5X"
     "__mips__"
     "__s390__"
@@ -204,6 +209,8 @@
   '("__llvm__"
     "__clang__"
     "_MSC_VER"
+    "_WIN32"
+    "__MINGW32__"
     "__INTEL_COMPILER"))
 
 (defconst cosmo-cpp-constants

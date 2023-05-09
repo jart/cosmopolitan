@@ -26,6 +26,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
+#ifdef __x86_64__
+
 static long GetLongSum(const long *h, size_t n) {
   long t;
   size_t i;
@@ -80,3 +82,5 @@ static textstartup void countexpr_init() {
 const void *const countexpr_ctor[] initarray = {
     countexpr_init,
 };
+
+#endif /* __x86_64__ */

@@ -24,6 +24,8 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 static bool __watch_busy;
 static void *__watch_addr;
 static size_t __watch_size;
@@ -85,3 +87,5 @@ int __watch(void *addr, size_t size) {
   Copy(__watch_last, __watch_addr, __watch_size);
   return 0;
 }
+
+#endif /* __x86_64__ */

@@ -27,7 +27,8 @@ THIRD_PARTY_GGML_A_DIRECTDEPS =						\
 	LIBC_STR							\
 	LIBC_STUBS							\
 	LIBC_SYSV							\
-	LIBC_TINYMATH
+	LIBC_TINYMATH							\
+	THIRD_PARTY_COMPILER_RT
 
 THIRD_PARTY_GGML_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_GGML_A_DIRECTDEPS),$($(x))))

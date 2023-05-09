@@ -34,6 +34,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
+#ifdef __x86_64__
+
 STATIC_YOINK("zipos");                       // for symtab
 STATIC_YOINK("__die");                       // for backtracing
 STATIC_YOINK("ShowBacktrace");               // for backtracing
@@ -123,3 +125,8 @@ void ShowCrashReports(void) {
   }
   GetSymbolTable();
 }
+
+#else
+void ShowCrashReports(void) {
+}
+#endif /* __x86_64__ */

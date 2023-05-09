@@ -111,7 +111,8 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:				\
 		o/$(MODE)/ape/public/ape.lds				\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
-		o/$(MODE)/cosmopolitan.a
+		o/$(MODE)/cosmopolitan.a				\
+		o/$(MODE)/third_party/libcxx/libcxx.a
 	@$(COMPILE) -ALD $(LD)						\
 		-static							\
 		-no-pie							\
@@ -120,6 +121,7 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:				\
 		o/$(MODE)/test/libc/release/smokecxx.o			\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
+		o/$(MODE)/third_party/libcxx/libcxx.a			\
 		o/$(MODE)/cosmopolitan.a				\
 		-o $@
 
