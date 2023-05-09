@@ -184,11 +184,10 @@ o/$(MODE)/usr/share/dict/words.zip.o: private ZIPOBJ_FLAGS += -C2
 
 $(EXAMPLES_OBJS): examples/examples.mk
 
-o/$(MODE)/usr/share/dict/words:							\
-		usr/share/dict/words.gz						\
-		o/$(MODE)/tool/build/gzip.com
+o/$(MODE)/usr/share/dict/words:					\
+		usr/share/dict/words.gz
 	@$(MKDIR) $(@D)
-	@o/$(MODE)/tool/build/gzip.com $(ZFLAGS) -cd <$< >$@
+	@$(GZIP) $(ZFLAGS) -cd <$< >$@
 
 ################################################################################
 

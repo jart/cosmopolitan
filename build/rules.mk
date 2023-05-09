@@ -32,7 +32,7 @@ o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.in
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 
-ifneq ($(MODE), aarch64)
+ifneq ($(ARCH), aarch64)
 o/%.o: %.s                         ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/%.o: o/%.s                       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/%.s: %.S                         ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
@@ -142,8 +142,8 @@ o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/as
 # then the stdout/stderr output, which would normally be suppressed,
 # will actually be displayed.
 
-o/$(MODE)/%.runs: o/$(MODE)/%
-	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
+o/$(MODE)/%.runs: o/$(MODE)/% $(VM)
+	@$(COMPILE) -ACHECK -wtT$@ $(VM) $< $(TESTARGS)
 
 ################################################################################
 # ELF ZIP FILES

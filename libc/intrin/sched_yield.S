@@ -91,7 +91,6 @@ sched_yield:
 #elif defined(__aarch64__)
 	mov	x8,#0x7c
 	svc	0
-	mov	w0,#0
 	ret
 
 #else

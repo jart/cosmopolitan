@@ -18,7 +18,7 @@ TARGET_ARCH ?= -msse3
 endif
 
 ifeq ($(MODE), aarch64)
-CONFIG_CCFLAGS += -O2  # $(BACKTRACES) $(FTRACE)
+CONFIG_CCFLAGS += -O2 $(BACKTRACES) #$(FTRACE)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 
@@ -32,7 +32,7 @@ endif
 #   - Limited Backtraces
 #   - Compiles 28% faster
 #
-ifeq ($(MODE),fastbuild)
+ifeq ($(MODE), fastbuild)
 CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O
 CONFIG_CPPFLAGS += -DSYSDEBUG -DDWARFLESS
 CONFIG_OFLAGS += -g0
@@ -180,6 +180,31 @@ CONFIG_LDFLAGS +=			\
 	-S
 TARGET_ARCH ?=				\
 	-msse3
+PYFLAGS +=				\
+	-O2				\
+	-B
+endif
+
+ifeq ($(MODE), aarch64-tiny)
+CONFIG_CPPFLAGS +=			\
+	-DTINY				\
+	-DNDEBUG			\
+	-DTRUSTWORTHY
+CONFIG_CCFLAGS +=			\
+	-Os				\
+	-fno-align-functions		\
+	-fno-align-jumps		\
+	-fno-align-labels		\
+	-fno-align-loops		\
+	-fschedule-insns2		\
+	-fomit-frame-pointer		\
+	-momit-leaf-frame-pointer	\
+	-foptimize-sibling-calls	\
+	-DDWARFLESS
+CONFIG_OFLAGS +=			\
+	-g0
+CONFIG_LDFLAGS +=			\
+	-S
 PYFLAGS +=				\
 	-O2				\
 	-B

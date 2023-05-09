@@ -103,10 +103,10 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
       return -1;
     }
     addr = frame->addr;
-    if (addr == _weakaddr("__gc")) {
+    if (addr == (uintptr_t)_weaken(__gc)) {
       do {
         --gi;
-      } while ((addr = garbage->p[gi].ret) == _weakaddr("__gc"));
+      } while ((addr = garbage->p[gi].ret) == (uintptr_t)_weaken(__gc));
     }
     argv[i++] = buf + j;
     buf[j++] = '0';

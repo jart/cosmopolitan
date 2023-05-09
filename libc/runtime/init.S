@@ -48,16 +48,23 @@
 	.section .initprologue,"ax",@progbits
 	.type	_init,@function
 	.globl	_init
-_init:	push	%rbp
+_init:
+#ifdef __x86_64__
+	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	ezlea	__init_bss_start,di
 	ezlea	__init_rodata_start,si
+#elif defined(__aarch64__)
+	stp	x29,x30,[sp,-16]!
+	mov	x29,sp
+#endif
 	.previous/*
 	...
 	decentralized content
 	...
 	*/.section .initepilogue,"ax",@progbits
+#ifdef __x86_64__
 #if IsModeDbg()
 _init_check_rdi_rsi:
 	jmp	2f
@@ -71,8 +78,13 @@ _init_check_rdi_rsi:
 3:	.endfn	_init_check_rdi_rsi
 #endif
 _woot:	leave
+#elif defined(__aarch64__)
+	ldp	x29,x30,[sp],#16
+#endif
 	ret
 	.previous
+
+#ifdef __x86_64__
 
 //	Decentralized section for packed data structures & initializers.
 //
@@ -144,3 +156,5 @@ __text_windows_start:
 __text_windows_end:
 	int3
 	.previous
+
+#endif /* __x86_64__ */

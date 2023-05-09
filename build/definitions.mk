@@ -56,6 +56,7 @@ TMPDIR = o/tmp
 AR = build/bootstrap/ar.com
 CP = build/bootstrap/cp.com
 RM = build/bootstrap/rm.com -f
+GZIP = build/bootstrap/gzip.com
 ECHO = build/bootstrap/echo.com
 TOUCH = build/bootstrap/touch.com
 PKG = build/bootstrap/package.com
@@ -72,13 +73,20 @@ IMAGE_BASE_VIRTUAL ?= 0x400000
 IGNORE := $(shell $(ECHO) -2 ♥cosmo)
 IGNORE := $(shell $(MKDIR) o/tmp)
 
+ifneq ($(findstring aarch64,$(MODE)),)
+ARCH = aarch64
+VM = o/third_party/qemu/qemu-aarch64
+else
+ARCH = x86_64
+endif
+
 ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
 PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
 endif
-ifeq ($(MODE), aarch64)
+ifeq ($(ARCH), aarch64)
 PREFIX = o/third_party/gcc/bin/aarch64-linux-musl-
 endif
 
@@ -107,7 +115,7 @@ else
 TMPSAFE = $(TMPDIR)/
 endif
 
-ifneq ($(MODE), aarch64)
+ifneq ($(ARCH), aarch64)
 MNO_FENTRY = -mno-fentry
 endif
 
@@ -115,10 +123,13 @@ FTRACE =								\
 	-pg
 
 BACKTRACES =								\
-	-fno-schedule-insns2						\
 	-fno-omit-frame-pointer						\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
+
+ifneq ($(ARCH), aarch64)
+BACKTRACES += -fno-schedule-insns2
+endif
 
 SANITIZER =								\
 	-fsanitize=address
@@ -159,7 +170,7 @@ DEFAULT_COPTS =								\
 	-fstrict-overflow						\
 	-fno-semantic-interposition
 
-ifneq ($(MODE), aarch64)
+ifneq ($(ARCH), aarch64)
 DEFAULT_COPTS +=							\
 	-mno-red-zone							\
 	-mno-tls-direct-seg-refs
@@ -197,7 +208,6 @@ DEFAULT_ASFLAGS =							\
 DEFAULT_LDFLAGS =							\
 	-static								\
 	-nostdlib							\
-	-melf_x86_64							\
 	--gc-sections							\
 	--build-id=none							\
 	--no-dynamic-linker						\

@@ -33,7 +33,6 @@ void __morph_tls(void);
 void __enable_tls(void);
 void __enable_threads(void) _Hide;
 void *__cxa_finalize(void *) _Hide;
-void cosmo(int, char **, char **, long (*)[2]) _Hide wontreturn;
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated _Hide;
 void _jmpstack(void *, void *, ...) _Hide wontreturn;

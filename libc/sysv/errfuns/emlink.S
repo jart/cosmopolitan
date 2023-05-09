@@ -1,8 +1,17 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
-emlink:	.leafprologue
+emlink:
+#ifdef __x86_64__
+	.leafprologue
 	.profilable
 	mov	EMLINK(%rip),%ecx
 	jmp	__errfun
+#elif defined(__aarch64__)
+	adrp	x1,EMLINK
+	ldr	w0,[x1,#:lo12:EMLINK]
+	b	__errfun
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	emlink,globl,hidden

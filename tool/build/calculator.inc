@@ -60,7 +60,6 @@ M(1, g, "expm1", Expm1, expm1l(x), "𝑒ˣ-1")
 M(1, g, "exp2", Exp2, exp2l(x), "2ˣ")
 M(1, g, "exp10", Exp10, exp10l(x), "10ˣ")
 M(2, g, "ldexp", Ldexp, ldexpl(x, y), "𝑥×2ʸ")
-M(2, g, "scalb", Scalb, scalbl(x, y), "𝑥×2ʸ")
 
 M(1, f, "log", Log, logl(x), "logₑ𝑥")
 M(1, g, "log2", Log2, log2l(x), "log₂𝑥")

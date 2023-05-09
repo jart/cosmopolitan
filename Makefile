@@ -132,6 +132,7 @@ include libc/calls/calls.mk			#─┐
 include third_party/getopt/getopt.mk		# │
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
+include tool/hello/hello.mk			# │
 include third_party/nsync/nsync.mk		# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐

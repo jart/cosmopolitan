@@ -16,7 +16,7 @@
  */
 
 .macro	.scall	name:req amd:req arm:req kw1 kw2
-	.section .privileged,"ax",@progbits
+	.section .text.syscall,"ax",@progbits
 #ifdef __x86_64__
   .ifnb	\kw2
 	.align	16

@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 
-privileged wontreturn void _Exitr(int exitcode) {
+wontreturn void _Exitr(int exitcode) {
+#if SupportsWindows()
   _restorewintty();
+#endif
   _Exit(exitcode);
 }

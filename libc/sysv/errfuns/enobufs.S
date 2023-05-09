@@ -2,8 +2,16 @@
 .text.unlikely
 
 enobufs:
+#ifdef __x86_64__
 	.leafprologue
 	.profilable
 	mov	ENOBUFS(%rip),%ecx
 	jmp	__errfun
+#elif defined(__aarch64__)
+	adrp	x1,ENOBUFS
+	ldr	w0,[x1,#:lo12:ENOBUFS]
+	b	__errfun
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	enobufs,globl,hidden

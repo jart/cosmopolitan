@@ -55,16 +55,21 @@ errfun() {
   ERRNO="$2"
   {
     printf '#include "libc/macros.internal.h"\n.text.unlikely\n\n'
-    printf '%s:' "$NAME"
-    if [ "${#NAME}" -gt 6 ]; then
-      printf '\n'
-    fi
-    printf '	.leafprologue
+    printf '%s:\n' "$NAME"
+    printf '#ifdef __x86_64__
+	.leafprologue
 	.profilable
 	mov	%s(%%rip),%%ecx
 	jmp	__errfun
+#elif defined(__aarch64__)
+	adrp	x1,%s
+	ldr	w0,[x1,#:lo12:%s]
+	b	__errfun
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	%s,globl,hidden
-' "$ERRNO" "$NAME"
+' "$ERRNO" "$ERRNO" "$ERRNO" "$NAME"
   } >"$dir/${1/$/-}.S"
 }
 

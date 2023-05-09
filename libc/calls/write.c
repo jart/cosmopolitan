@@ -72,9 +72,7 @@ ssize_t write(int fd, const void *buf, size_t size) {
     if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
       rc = efault();
     } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = _weaken(__zipos_write)(
-          (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
-          &(struct iovec){buf, size}, 1, -1);
+      rc = enotsup();
     } else if (!IsWindows() && !IsMetal()) {
       rc = sys_write(fd, buf, size);
     } else if (fd >= g_fds.n) {

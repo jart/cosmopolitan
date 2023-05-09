@@ -8,6 +8,7 @@ o/$(MODE)/tool:			\
 	o/$(MODE)/tool/curl	\
 	o/$(MODE)/tool/decode	\
 	o/$(MODE)/tool/hash	\
+	o/$(MODE)/tool/hello	\
 	o/$(MODE)/tool/lambda	\
 	o/$(MODE)/tool/net	\
 	o/$(MODE)/tool/plinko	\

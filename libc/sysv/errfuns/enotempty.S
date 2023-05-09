@@ -2,8 +2,16 @@
 .text.unlikely
 
 enotempty:
+#ifdef __x86_64__
 	.leafprologue
 	.profilable
 	mov	ENOTEMPTY(%rip),%ecx
 	jmp	__errfun
+#elif defined(__aarch64__)
+	adrp	x1,ENOTEMPTY
+	ldr	w0,[x1,#:lo12:ENOTEMPTY]
+	b	__errfun
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	enotempty,globl,hidden

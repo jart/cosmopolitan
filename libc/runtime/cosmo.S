@@ -83,10 +83,10 @@ cosmo:	push	%rbp
 	call	_init
 
 //	call constructors
-	ezlea	__init_array_start,ax		# static ctors in forward order
-	.weak	__init_array_start		# could be called multiple times
-	ezlea	__init_array_end,cx		# idempotency recommended
-	.weak	__init_array_end		# @see ape/ape.lds
+	ezlea	__init_array_start,ax		// static ctors in forward order
+	.weak	__init_array_start		// could be called multiple times
+	ezlea	__init_array_end,cx		// idempotency recommended
+	.weak	__init_array_end		// @see ape/ape.lds
 1:	cmp	%rax,%rcx
 	je	2f
 	push	%rax
@@ -163,8 +163,8 @@ cosmo:	push	%rbp
 //	we subtract 8 because the openbsd kernel always checks rsp
 //	is on a MAP_STACK interval non-inclusively of stack + size
 	leave
-	pop	%rcx			# return address
-	sub	$8,%r8d			# openbsd:stackbound
+	pop	%rcx			// return address
+	sub	$8,%r8d			// openbsd:stackbound
 	lea	(%rax,%r8),%rsp
 	mov	$ape_stack_align,%eax
 	neg	%rax

@@ -2,7 +2,6 @@
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
 o/third_party/qemu/qemu-aarch64:				\
-		third_party/qemu/qemu-aarch64.gz		\
-		o/$(MODE)/tool/build/gzip.com
+		third_party/qemu/qemu-aarch64.gz
 	@$(MKDIR) $(@D)
-	@o/$(MODE)/tool/build/gzip.com $(ZFLAGS) -cd <$< >$@
+	@$(GZIP) $(ZFLAGS) -cd <$< >$@

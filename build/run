@@ -1,0 +1,10 @@
+#!/bin/sh
+for last; do true; done
+if printf '%s\n' "$last" | grep aarch64 >/dev/null 2>&1; then
+  if [ ! -f o/third_party/qemu/qemu-aarch64 ]; then
+    make -j8 o/third_party/qemu/qemu-aarch64
+  fi
+  exec o/third_party/qemu/qemu-aarch64 "$@"
+else
+  exec "$@"
+fi

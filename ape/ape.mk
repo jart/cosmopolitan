@@ -22,7 +22,14 @@ APE_INCS = $(filter %.inc,$(APE_FILES))
 APE =	o/$(MODE)/ape/ape.o			\
 	o/$(MODE)/ape/ape.lds
 
-ifeq ($(MODE), aarch64)
+APELINK =					\
+	$(COMPILE)				\
+	-ALINK.ape				\
+	$(LINK)					\
+	$(LINKARGS)				\
+	$(OUTPUT_OPTION)
+
+ifeq ($(ARCH), aarch64)
 
 APE_SRCS = ape/ape.S
 APE_OBJS = o/$(MODE)/ape/ape.o
@@ -41,13 +48,6 @@ APE_NO_MODIFY_SELF =				\
 APE_COPY_SELF =					\
 	o/$(MODE)/ape/ape.lds			\
 	o/$(MODE)/ape/ape-copy-self.o
-
-APELINK =					\
-	$(COMPILE)				\
-	-ALINK.ape				\
-	$(LINK)					\
-	$(LINKARGS)				\
-	$(OUTPUT_OPTION)
 
 APE_LOADER_FLAGS =				\
 	-DNDEBUG				\
@@ -75,6 +75,7 @@ o/$(MODE)/ape/public/ape.lds: OVERRIDE_CPPFLAGS += -UCOSMO
 o/$(MODE)/ape/public/ape.lds:			\
 		ape/public/ape.lds		\
 		ape/ape.lds			\
+		ape/ape.internal.h		\
 		ape/macros.internal.h		\
 		ape/relocations.h		\
 		libc/intrin/bits.h		\
@@ -98,6 +99,7 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		ape/macros.internal.h		\
 		ape/notice.inc			\
 		ape/relocations.h		\
+		ape/ape.internal.h		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/intrin/asancodes.h		\
@@ -127,6 +129,7 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		ape/macros.internal.h		\
 		ape/notice.inc			\
 		ape/relocations.h		\
+		ape/ape.internal.h		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/intrin/asancodes.h		\
@@ -202,6 +205,7 @@ o/$(MODE)/ape/ape.lds:				\
 		ape/ape.lds			\
 		ape/macros.internal.h		\
 		ape/relocations.h		\
+		ape/ape.internal.h		\
 		libc/intrin/bits.h		\
 		libc/thread/tls.h		\
 		libc/calls/struct/timespec.h	\

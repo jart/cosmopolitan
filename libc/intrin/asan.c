@@ -1021,9 +1021,9 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     }
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
-      if (addr == _weakaddr("__gc") && _weakaddr("__gc")) {
+      if (addr == (uintptr_t)_weaken(__gc) && (uintptr_t)_weaken(__gc)) {
         do --gi;
-        while ((addr = garbage->p[gi].ret) == _weakaddr("__gc"));
+        while ((addr = garbage->p[gi].ret) == (uintptr_t)_weaken(__gc));
       }
       bt->p[i] = addr;
     } else {

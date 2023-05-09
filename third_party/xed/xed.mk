@@ -32,7 +32,7 @@ THIRD_PARTY_XED_A_DIRECTDEPS =				\
 THIRD_PARTY_XED_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_XED_A_DIRECTDEPS),$($(x))))
 
-ifneq ($(MODE), aarch64)
+ifneq ($(ARCH), aarch64)
 o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-mstringop-strategy=unrolled_loop

@@ -29,7 +29,7 @@
 
 feclearexcept:
 #ifdef __x86_64__
-	# maintain exceptions in the sse mxcsr, clear x87 exceptions
+//	maintain exceptions in the sse mxcsr, clear x87 exceptions
 	mov	%edi,%ecx
 	and	$0x3f,%ecx
 	fnstsw	%ax

@@ -36,7 +36,7 @@
  * @vforksafe
  * @noreturn
  */
-privileged wontreturn void _Exit(int exitcode) {
+wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
 #ifdef __x86_64__
@@ -67,7 +67,7 @@ privileged wontreturn void _Exit(int exitcode) {
   for (;;) asm("ud2");
 #elif defined(__aarch64__)
   register long x0 asm("x0") = exitcode;
-  asm volatile("mov\tx8,%1\n\t"
+  asm volatile("mov\tx8,%0\n\t"
                "svc\t0"
                : /* no outputs */
                : "i"(94), "r"(x0)

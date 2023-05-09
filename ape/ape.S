@@ -42,6 +42,7 @@
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/runtime/pc.internal.h"
+#include "ape/ape.internal.h"
 #include "libc/sysv/consts/prot.h"
 
 #define USE_SYMBOL_HACK 1
@@ -587,7 +588,7 @@ ape_disk:
 ╚────────────────────────────────────────────────────────────────────────────│─╝
 	the bourne executable & linkable format */
 
-#if SupportsWindows() || SupportsMetal() || SupportsXnu()
+#ifdef APE_IS_SHELL_SCRIPT
 apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	"m=\"$(uname -m)\"\n"
 
@@ -698,6 +699,8 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 
 	.ascii	"PHDRS='' <<'@'\n"
 	.endobj	apesh
+
+#if !IsTiny()
 //	elf program headers get inserted here
 //	because they need to be in the first 4096 bytes
         .section .emush,"a",@progbits
@@ -786,6 +789,8 @@ emush:	.ascii	"\n@\n#'\"\n"
 
 	.ascii	"exit 1\n"
 	.endobj	emush
+#endif /* !IsTiny() */
+
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits
 	.balign	64
@@ -798,7 +803,7 @@ ape_loader_end:
 	.endobj	ape_loader_end,globl
         .previous
 #endif /* APE_LOADER */
-#endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
+#endif /* APE_IS_SHELL_SCRIPT */
 
 #if SupportsSystemv() || SupportsMetal()
 	.section .elf.phdrs,"a",@progbits
@@ -1024,6 +1029,7 @@ ape_macho:
 .previous /* .macho */
 #endif /* SupportsXnu() */
 
+#if SupportsWindows() || SupportsMetal()
 /*                             ░░░░
                         ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
                        ▒▒▒▒░░░▒▒▒▒▒▒▓▓▓▓▓▓░
@@ -1099,8 +1105,6 @@ DLLEXE = DLLSTD
 PETEXT = 0b01100000000000000000000001100000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
-
-#if SupportsWindows() || SupportsMetal()
 
 	.section .pe.header,"a",@progbits
 	.balign	__SIZEOF_POINTER__
@@ -1190,6 +1194,8 @@ ape_pe:	.ascin	"PE",4
 
 #endif /* SupportsWindows() || SupportsMetal() */
 
+#if SupportsWindows()
+
 	.section .idata.ro.idt.1,"a",@progbits
 	.type	ape_idata_idtend,@object
 	.type	ape_idata_idt,@object
@@ -1204,6 +1210,24 @@ ape_idata_idt:
 	.long	0,0,0,0,0
 ape_idata_idtend:
 	.previous
+
+	.section .piro.data.sort.iat.1,"aw",@progbits
+	.type	ape_idata_iatend,@object
+	.type	ape_idata_iat,@object
+	.globl	ape_idata_iat,ape_idata_iatend
+	.hidden	ape_idata_iat,ape_idata_iatend
+ape_idata_iat:
+	.previous/*
+	...
+	decentralized content
+	...
+	*/.section .piro.data.sort.iat.3,"aw",@progbits
+ape_idata_iatend:
+	.previous
+
+#endif /* SupportsWindows() */
+
+#if SupportsMetal()
 
 	.section .piro.data.sort.metal_gdt,"aw",@progbits
 	.balign	8
@@ -1241,21 +1265,6 @@ _gdt_end:
 	.endobj	_gdt,global,hidden
 	.previous
 
-	.section .piro.data.sort.iat.1,"aw",@progbits
-	.type	ape_idata_iatend,@object
-	.type	ape_idata_iat,@object
-	.globl	ape_idata_iat,ape_idata_iatend
-	.hidden	ape_idata_iat,ape_idata_iatend
-ape_idata_iat:
-	.previous/*
-	...
-	decentralized content
-	...
-	*/.section .piro.data.sort.iat.3,"aw",@progbits
-ape_idata_iatend:
-	.previous
-
-#if SupportsMetal()
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § early-stage read-only data                    │
 ╚──────────────────────────────────────────────────────────────────────────────╝
@@ -1882,7 +1891,6 @@ ape_pad_text:
 	.type	ape_pad_privileged,@object
 	.hidden	ape_pad_privileged
 ape_pad_privileged:
-	.balign	4096
 	.previous
 
 	.section .ape.pad.rodata,"a",@progbits
@@ -1897,11 +1905,13 @@ ape_pad_rodata:
 ape_pad_data:
 	.previous
 
+#if SupportsWindows()
 	.section .idata.ro,"a",@progbits
 	.type	ape_idata_ro,@object
 	.hidden	ape_idata_ro
 ape_idata_ro:
 	.previous
+#endif /* SupportsWindows() */
 
 	.section .dataprologue,"aw",@progbits
 	.type	__data_start,@object
@@ -1931,6 +1941,8 @@ __bss_start:
 __bss_end:
 	.previous
 
+#ifdef APE_IS_SHELL_SCRIPT
+
 	.section .blink,"a",@progbits
 	.globl	blink_aarch64_size
 blink_aarch64:
@@ -1946,6 +1958,8 @@ blink_darwin_arm64:
 	.endobj	blink_darwin_arm64,globl
 blink_darwin_arm64_size = . - blink_darwin_arm64
 	.previous
+
+#endif /* APE_IS_SHELL_SCRIPT */
 
 .end
 

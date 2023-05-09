@@ -181,7 +181,14 @@
 #include "libc/elf/pf2prot.internal.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/thread/tls.h"
+#include "ape/ape.internal.h"
 #include "libc/zip.h"
+
+#ifdef __x86__
+#define CODE_GRANULE 1
+#else
+#define CODE_GRANULE 4
+#endif
 
 ENTRY(_start)
 
@@ -250,10 +257,11 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
     /* Code we want earlier in the binary w/o modifications */
     KEEP(*(.ape.loader))
+    . = ALIGN(CODE_GRANULE);
     HIDDEN(_ereal = .);
 /*END: realmode addressability guarantee */
 /*BEGIN: morphable code */
-    . += 1;
+    . += CODE_GRANULE;
 
     /* Normal Code */
     *(.start)
@@ -291,13 +299,12 @@ SECTIONS {
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
-    . += . > 0 ? 1 : 0;
+    . = ALIGN(__privileged_end > __privileged_start ? PAGESIZE : 1);
 /*END: morphable code */
     HIDDEN(__privileged_start = .);
-    . += . > 0 ? 1 : 0;
     *(.privileged)
     HIDDEN(__privileged_end = .);
-    . += . > 0 ? 1 : 0;
+    . += . > 0 ? CODE_GRANULE : 0;
 
 /*BEGIN: Read Only Data */
 
@@ -383,7 +390,7 @@ SECTIONS {
     KEEP(*(.dataprologue))
     *(.data .data.*)
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
-    . += . > 0 ? 1 : 0;
+    . += . > 0 ? CODE_GRANULE : 0;
 
     KEEP(*(.gotprologue))
     *(.got)
@@ -420,7 +427,7 @@ SECTIONS {
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
     HIDDEN(__piro_end = .);
-    . += . > 0 ? 1 : 0;
+    . += . > 0 ? CODE_GRANULE : 0;
 /*END: Post-Initialization Read-Only */
 
     /* Statically Allocated Empty Space */
@@ -567,6 +574,8 @@ SHSTUB2(ape_loader_dd_count,
             ? ROUNDUP(ape_loader_end - ape_loader, PAGESIZE) / 64
             : 0);
 
+#if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()
+
 HIDDEN(blink_aarch64_b0 = RVA(blink_aarch64) % 10 + 48);
 HIDDEN(blink_aarch64_b1 = RVA(blink_aarch64) < 10 ? 32 : RVA(blink_aarch64) / 10 % 10 + 48);
 HIDDEN(blink_aarch64_b2 = RVA(blink_aarch64) < 100 ? 32 : RVA(blink_aarch64) / 100 % 10 + 48);
@@ -610,6 +619,8 @@ HIDDEN(blink_darwin_arm64_size_b6 = blink_darwin_arm64_size < 1000000 ? 32 : bli
 HIDDEN(blink_darwin_arm64_size_b7 = blink_darwin_arm64_size < 10000000 ? 32 : blink_darwin_arm64_size / 10000000 % 10 + 48);
 HIDDEN(blink_darwin_arm64_size_b8 = blink_darwin_arm64_size < 100000000 ? 32 : blink_darwin_arm64_size / 100000000 % 10 + 48);
 HIDDEN(blink_darwin_arm64_size_b9 = blink_darwin_arm64_size < 1000000000 ? 32 : blink_darwin_arm64_size / 1000000000 % 10 + 48);
+
+#endif /* APE_IS_SHELL_SCRIPT */
 
 #if SupportsMetal()
 HIDDEN(v_ape_realsectors =

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #ifndef __x86_64__
 
@@ -34,8 +35,15 @@ static inline long sys_set_tid_address(int *t) {
 }
 #endif
 
+typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
+
+extern init_f __strace_init;
+extern init_f *__init_array_start[] __attribute__((__weak__));
+extern init_f *__init_array_end[] __attribute__((__weak__));
+
 void cosmo(long *sp) {
   int argc;
+  init_f **fp;
   char **argv, **envp;
   unsigned long *auxv;
   argc = *sp;
@@ -47,12 +55,19 @@ void cosmo(long *sp) {
       break;
     }
   }
+#ifdef SYSDEBUG
+  argc = __strace_init(argc, argv, envp, auxv);
+#endif
   __argc = argc;
   __argv = argv;
   __envp = envp;
   __auxv = auxv;
   environ = envp;
   if (argc) program_invocation_name = argv[0];
+  _init();
+  for (fp = __init_array_start; fp < __init_array_end; ++fp) {
+    (*fp)(argc, argv, envp, auxv);
+  }
   exit(main(argc, argv, envp));
 }
 

@@ -147,8 +147,8 @@
 ;;   M-3 C-c C-c   Compile w/ MODE=rel
 ;;   M-4 C-c C-c   Compile w/ MODE=dbg
 ;;   M-5 C-c C-c   Compile w/ MODE=""
-;;   M-7 C-c C-c   Compile w/ MODE=tinylinux
-;;   M-8 C-c C-c   Compile w/ clang tsan
+;;   M-7 C-c C-c   Compile w/ MODE=aarch64
+;;   M-8 C-c C-c   Compile w/ MODE=aarch64-tiny
 ;;   M-9 C-c C-c   Compile w/ chibicc
 
 (defun cosmo-intest (&optional file-name)
@@ -166,7 +166,7 @@
         ((eq arg 5) "")
         ((eq arg 6) "llvm")
         ((eq arg 7) "aarch64")
-        ((eq arg 8) "tsan")
+        ((eq arg 8) "aarch64-tiny")
         (default default)
         ((cosmo-intest) "dbg")
         (t "fastbuild")))
@@ -233,13 +233,13 @@
              " && "
              `("m=%s; f=o/$m/%s.com"
                ,(concat "make -j12 $f MODE=$m")
-               "./$f"))
+               "build/run ./$f"))
             mode name))
           ((eq kind 'test)
            (format `"m=%s; f=o/$m/%s.com.ok && make -j12 $f MODE=$m" mode name))
           ((and (file-regular-p this)
                 (file-executable-p this))
-           (format "./%s" file))
+           (format "build/run ./%s" file))
           ('t
            (format
             (cosmo-join
@@ -606,7 +606,7 @@
               ((file-executable-p file)
                (compile (if (cosmo-contains "/" file)
                             file
-                          (format "./%s" file))))
+                          (format "build/run ./%s" file))))
               ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
                (let* ((mode (cosmo--make-mode arg))
                       (compile-command (cosmo--compile-command this root 'run mode "" "" ".runs")))
