@@ -1,9 +1,9 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	RtlLockHeap,RtlLockHeap
 
-#ifdef __x86_64__
 	.text.windows
 RtlLockHeap:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ RtlLockHeap:
 	sub	$32,%rsp
 	call	*__imp_RtlLockHeap(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	RtlLockHeap,globl
 	.previous
-#endif

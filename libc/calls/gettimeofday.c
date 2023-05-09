@@ -31,8 +31,8 @@
 #include "libc/time/struct/timezone.h"
 
 typedef axdx_t gettimeofday_f(struct timeval *, struct timezone *, void *);
-
-extern gettimeofday_f *__gettimeofday;
+static gettimeofday_f __gettimeofday_init;
+static gettimeofday_f *__gettimeofday = __gettimeofday_init;
 
 /**
  * Returns system wall time in microseconds, e.g.
@@ -97,8 +97,10 @@ gettimeofday_f *__gettimeofday_get(bool *opt_out_isfast) {
   return res;
 }
 
-_Hide int __gettimeofday_init(struct timeval *tv, struct timezone *tz) {
+static axdx_t __gettimeofday_init(struct timeval *tv,   //
+                                  struct timezone *tz,  //
+                                  void *arg) {
   gettimeofday_f *gettime;
   __gettimeofday = gettime = __gettimeofday_get(0);
-  return gettime(tv, tz, 0).ax;
+  return gettime(tv, tz, 0);
 }

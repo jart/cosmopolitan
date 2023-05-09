@@ -21,14 +21,10 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/str/str.h"
 
-#ifdef DescribeSchedParam
-#undef DescribeSchedParam
-#endif
-
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *DescribeSchedParam(char buf[32], const struct sched_param *x) {
+const char *(DescribeSchedParam)(char buf[32], const struct sched_param *x) {
   char *p;
   if (!x) return "0";
   p = buf;

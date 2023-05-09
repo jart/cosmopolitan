@@ -157,7 +157,7 @@ void *memset(void *p, int c, size_t n) {
       } while (n);
     }
     return b;
-#ifdef __x86_64__
+#ifdef __x86__
   } else if (IsTiny()) {
     asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "0"(p), "a"(c));
     return p;

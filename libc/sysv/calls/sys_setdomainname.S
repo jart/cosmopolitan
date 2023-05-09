@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_setdomainname,0xffffff0a3ffff0ab,globl
+.scall sys_setdomainname,0xffffff0a3ffff0ab,0x0a2,globl

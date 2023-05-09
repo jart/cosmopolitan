@@ -164,6 +164,17 @@
 	.previous
 .endm
 
+//	Documents unreachable assembly code.
+.macro	.unreachable
+#if !defined(NDEBUG) && defined(__x86_64__)
+	ud2		// crash if contract is broken
+#elif !defined(NDEBUG) && defined(__aarch64__)
+	brk	#1000
+#elif defined(__FNO_OMIT_FRAME_POINTER__)
+	nop		// avoid noreturn tail call backtrace ambiguity
+#endif
+.endm
+
 #ifdef __x86_64__
 
 #if __MNO_VZEROUPPER__ + 0
@@ -444,15 +455,6 @@
 	call	*\symbol\()@gotpcrel(%rip)
 #else
 	call	\symbol\()@plt
-#endif
-.endm
-
-//	Documents unreachable assembly code.
-.macro	.unreachable
-#ifndef NDEBUG
-	ud2		# crash if contract is broken
-#elif defined(__FNO_OMIT_FRAME_POINTER__)
-	nop		# avoid noreturn tail call backtrace ambiguity
 #endif
 .endm
 

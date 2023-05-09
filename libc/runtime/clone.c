@@ -49,6 +49,8 @@
 #include "libc/thread/tls2.h"
 #include "libc/thread/xnu.internal.h"
 
+#ifdef __x86_64__
+
 #define __NR_thr_new                      455
 #define __NR_clone_linux                  56
 #define __NR__lwp_create                  309
@@ -425,6 +427,8 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
   }
 }
 
+#endif /* __x86_64__ */
+
 ////////////////////////////////////////////////////////////////////////////////
 // GNU/SYSTEMD
 
@@ -594,6 +598,7 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
                   CLONE_SIGHAND)) {
     STRACE("clone flag unsupported on this platform");
     rc = EINVAL;
+#ifdef __x86_64__
   } else if (IsXnu()) {
     rc = CloneXnu(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsFreebsd()) {
@@ -604,6 +609,7 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
     rc = CloneOpenbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsWindows()) {
     rc = CloneWindows(func, stk, stksz, flags, arg, tls, ptid, ctid);
+#endif /* __x86_64__ */
   } else {
     rc = ENOSYS;
   }

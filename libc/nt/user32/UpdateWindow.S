@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	user32,__imp_UpdateWindow,UpdateWindow,2474
 
-#ifdef __x86_64__
 	.text.windows
 UpdateWindow:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ UpdateWindow:
 	sub	$32,%rsp
 	call	*__imp_UpdateWindow(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	UpdateWindow,globl
 	.previous
-#endif

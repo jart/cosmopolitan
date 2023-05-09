@@ -34,6 +34,8 @@
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
 
+#ifdef __x86_64__
+
 privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
   int64_t rip;
   int sig, code;
@@ -147,3 +149,5 @@ privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
 
   return kNtExceptionContinueExecution;
 }
+
+#endif /* __x86_64__ */

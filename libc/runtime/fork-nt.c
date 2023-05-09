@@ -58,6 +58,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
+#ifdef __x86_64__
+
 STATIC_YOINK("_check_sigchld");
 
 extern int64_t __wincrashearly;
@@ -361,3 +363,5 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   }
   return rc;
 }
+
+#endif /* __x86_64__ */

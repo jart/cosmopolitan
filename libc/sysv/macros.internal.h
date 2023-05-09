@@ -15,21 +15,30 @@
  * risk of slowing down builds too much with complicated headers.
  */
 
-.macro	.scall	name:req num:req kw1 kw2
+.macro	.scall	name:req amd:req arm:req kw1 kw2
 	.section .privileged,"ax",@progbits
+#ifdef __x86_64__
   .ifnb	\kw2
 	.align	16
-\name:	movabs	$\num,%rax
+\name:	movabs	$\amd,%rax
 	jmp	*__systemfive(%rip)
   .else
 \name:	push	%rbp
 	mov	%rsp,%rbp
-	movabs	$\num,%rax
+	movabs	$\amd,%rax
 	.hookable
 	call	*__systemfive(%rip)
 	pop	%rbp
 	ret
   .endif
+#elif defined(__aarch64__)
+\name:	mov	x8,#\arm
+	svc	#0
+	b	_sysret
+	.hidden	_sysret
+#else
+#error "architecture unsupported"
+#endif
 	.endfn	\name,\kw1,\kw2
 	.previous
 .endm

@@ -127,6 +127,10 @@ $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 #───────────────────────────────────────────────────────────────────────────────
 
 # let aarch64 compile these
+o/$(MODE)/libc/sysv/restorert.o: libc/sysv/restorert.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/libc/sysv/calls/%.o: libc/sysv/calls/%.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/consts/%.o: libc/sysv/consts/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/dos2errno/%.o: libc/sysv/dos2errno/%.S

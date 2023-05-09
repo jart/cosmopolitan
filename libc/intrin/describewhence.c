@@ -20,11 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
 
-#ifdef DescribeWhence
-#undef DescribeWhence
-#endif
-
-const char *DescribeWhence(char buf[12], int whence) {
+const char *(DescribeWhence)(char buf[12], int whence) {
   if (whence == SEEK_SET) return "SEEK_SET";
   if (whence == SEEK_CUR) return "SEEK_CUR";
   if (whence == SEEK_END) return "SEEK_END";

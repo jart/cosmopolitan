@@ -41,6 +41,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview Heartbreaking polyfill for SIGALRM on NT.
  *
@@ -130,3 +132,5 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
 
   return 0;
 }
+
+#endif /* __x86_64__ */

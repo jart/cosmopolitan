@@ -19,10 +19,20 @@ APE_FILES := $(wildcard ape/*.*)
 APE_HDRS = $(filter %.h,$(APE_FILES))
 APE_INCS = $(filter %.inc,$(APE_FILES))
 
-ifneq ($(MODE), aarch64)
-
 APE =	o/$(MODE)/ape/ape.o			\
 	o/$(MODE)/ape/ape.lds
+
+ifeq ($(MODE), aarch64)
+
+APE_SRCS = ape/ape.S
+APE_OBJS = o/$(MODE)/ape/ape.o
+APE_NO_MODIFY_SELF = $(APE)
+APE_COPY_SELF = $(APE)
+
+.PHONY: o/$(MODE)/ape
+o/$(MODE)/ape: $(APE)
+
+else
 
 APE_NO_MODIFY_SELF =				\
 	o/$(MODE)/ape/ape.lds			\
@@ -61,22 +71,6 @@ APE_SRCS = $(APE_SRCS_C) $(APE_SRCS_S)
 APE_OBJS = $(APE_SRCS_S:%.S=o/$(MODE)/%.o)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
-o/$(MODE)/ape/ape.lds:				\
-		ape/ape.lds			\
-		ape/macros.internal.h		\
-		ape/relocations.h		\
-		libc/intrin/bits.h		\
-		libc/thread/tls.h		\
-		libc/calls/struct/timespec.h	\
-		libc/thread/thread.h		\
-		libc/dce.h			\
-		libc/elf/def.h			\
-		libc/elf/pf2prot.internal.h	\
-		libc/macros.internal.h		\
-		libc/nt/pedef.internal.h	\
-		libc/str/str.h			\
-		libc/zip.h
-
 o/$(MODE)/ape/public/ape.lds: OVERRIDE_CPPFLAGS += -UCOSMO
 o/$(MODE)/ape/public/ape.lds:			\
 		ape/public/ape.lds		\
@@ -98,10 +92,6 @@ o/$(MODE)/ape/public/ape.lds:			\
 o/ape/idata.inc:				\
 		ape/idata.internal.h		\
 		ape/relocations.h
-
-o/$(MODE)/ape/ape.o:				\
-		ape/blink-aarch64.gz		\
-		ape/blink-darwin-arm64.gz
 
 o/$(MODE)/ape/ape-no-modify-self.o:		\
 		ape/ape.S			\
@@ -199,3 +189,27 @@ o/$(MODE)/ape:	$(APE_CHECKS)			\
 		o/$(MODE)/ape/ape-no-modify-self.o
 
 endif
+
+# these assembly files are safe to build on aarch64
+o/$(MODE)/ape/ape.o: ape/ape.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
+o/$(MODE)/ape/ape.o:				\
+		ape/blink-aarch64.gz		\
+		ape/blink-darwin-arm64.gz
+
+o/$(MODE)/ape/ape.lds:				\
+		ape/ape.lds			\
+		ape/macros.internal.h		\
+		ape/relocations.h		\
+		libc/intrin/bits.h		\
+		libc/thread/tls.h		\
+		libc/calls/struct/timespec.h	\
+		libc/thread/thread.h		\
+		libc/dce.h			\
+		libc/elf/def.h			\
+		libc/elf/pf2prot.internal.h	\
+		libc/macros.internal.h		\
+		libc/nt/pedef.internal.h	\
+		libc/str/str.h			\
+		libc/zip.h

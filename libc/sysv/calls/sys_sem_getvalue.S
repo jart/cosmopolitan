@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_sem_getvalue,0x0fefff197fffffff,globl
+.scall sys_sem_getvalue,0x0fefff197fffffff,0xfff,globl

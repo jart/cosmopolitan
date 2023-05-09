@@ -126,7 +126,6 @@ include third_party/zlib/zlib.mk		# │
 include third_party/double-conversion/dc.mk	# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
-include libc/aarch64/aarch64.mk			# │
 include libc/fmt/fmt.mk				# │
 include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐

@@ -39,15 +39,15 @@ syscall:
 	.profilable
 
 //	slide arguments into their right places
-	mov	%rdi,%rax		# nr
-	mov	%rsi,%rdi		# arg 1
-	mov	%rdx,%rsi		# arg 2
-	mov	%rcx,%rdx		# arg 3
-	mov	%r8,%rcx		# arg 4
-	mov	%r9,%r8			# arg 5
-	mov	16(%rbp),%r9		# arg 6
-	push	32(%rbp)		# arg 8
-	push	24(%rbp)		# arg 7
+	mov	%rdi,%rax		// nr
+	mov	%rsi,%rdi		// arg 1
+	mov	%rdx,%rsi		// arg 2
+	mov	%rcx,%rdx		// arg 3
+	mov	%r8,%rcx		// arg 4
+	mov	%r9,%r8			// arg 5
+	mov	16(%rbp),%r9		// arg 6
+	push	32(%rbp)		// arg 8
+	push	24(%rbp)		// arg 7
 
 //	convert from consts.sh to syscalls.sh encoding
 	push	%rcx

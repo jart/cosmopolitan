@@ -45,6 +45,8 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
                                          int options,
                                          struct rusage *opt_out_rusage) {
@@ -156,3 +158,5 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
   __sig_mask(SIG_SETMASK, &oldmask, 0);
   return rc;
 }
+
+#endif /* __x86_64__ */

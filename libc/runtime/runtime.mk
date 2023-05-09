@@ -113,6 +113,14 @@ o//libc/runtime/opensymboltable.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/runtime/vfork.o: libc/runtime/vfork.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/runtime/clone-linux.o: libc/runtime/clone-linux.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/runtime/ftrace-hook.o: libc/runtime/ftrace-hook.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 LIBC_RUNTIME_LIBS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)))
 LIBC_RUNTIME_SRCS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_SRCS))
 LIBC_RUNTIME_HDRS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_HDRS))

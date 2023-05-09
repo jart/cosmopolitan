@@ -18,13 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/macros.internal.h"
 .real
-.code16 # ∩ .code32 ∩ .code64
 
 //	Most basic tier of program self-termination.
 //
 //	@mode	long,legacy,real
-abort:	push	%bp
-	mov	%sp,%bp
-	rlcall	__panic
-	int3
+abort:
+#ifdef __x86_64__
+	ud2
+#elif defined(__aarch64__)
+	brk	#1000
+#else
+#error "architecture unsupported"
+#endif
 	.endfn	abort,weak

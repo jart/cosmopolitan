@@ -21,14 +21,10 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/timer.h"
 
-#ifdef DescribeSleepFlags
-#undef DescribeSleepFlags
-#endif
-
 /**
  * Describes clock_nanosleep() flags argument.
  */
-const char *DescribeSleepFlags(char buf[16], int x) {
+const char *(DescribeSleepFlags)(char buf[16], int x) {
   switch (x) {
     case 0:
       return "0";

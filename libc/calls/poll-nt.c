@@ -41,6 +41,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 /*
  * Polls on the New Technology.
  *
@@ -218,3 +220,5 @@ ReturnPath:
   }
   return rc;
 }
+
+#endif /* __x86_64__ */

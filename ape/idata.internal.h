@@ -63,13 +63,10 @@
 	.size	"\dll\().\actual",.-"\dll\().\actual"
 	.previous
 #else
-	.section ".text.nt.\actual","ax",@progbits
-	.globl	"\actual"
-"\actual":
-	ret
 	.section ".data.nt.\actual","aw",@progbits
 	.globl	"\fn"
 	.balign	8
+	.weak	"\actual"
 "\fn":	.quad	"\actual"
 #endif
 .endm

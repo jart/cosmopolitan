@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	API-MS-Win-Core-Synch-l1-2-0,__imp_WakeByAddressSingle,WakeByAddressSingle,116
 
-#ifdef __x86_64__
 	.text.windows
 WakeByAddressSingle:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ WakeByAddressSingle:
 	sub	$32,%rsp
 	call	*__imp_WakeByAddressSingle(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	WakeByAddressSingle,globl
 	.previous
-#endif

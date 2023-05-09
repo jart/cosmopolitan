@@ -39,7 +39,6 @@ setjmp:
 	mov	(%rsp),%rax
 	mov	%rax,56(%rdi)
 	xor	%eax,%eax
-	ret
 #elif defined(__aarch64__)
 	stp	x19,x20,[x0,#0]
 	stp	x21,x22,[x0,#16]
@@ -54,7 +53,7 @@ setjmp:
 	stp	d12,d13,[x0,#144]
 	stp	d14,d15,[x0,#160]
 	mov	x0,#0
-	ret
 #endif
+	ret
 	.endfn	setjmp,globl
 	.alias	setjmp,_setjmp

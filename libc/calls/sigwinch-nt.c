@@ -32,6 +32,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
 
+#ifdef __x86_64__
+
 static struct winsize __ws;
 
 textwindows void _check_sigwinch(struct Fd *fd) {
@@ -58,3 +60,5 @@ textwindows void _check_sigwinch(struct Fd *fd) {
   }
   errno = e;
 }
+
+#endif /* __x86_64__ */

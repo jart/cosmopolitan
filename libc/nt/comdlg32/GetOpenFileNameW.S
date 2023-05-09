@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	comdlg32,__imp_GetOpenFileNameW,GetOpenFileNameW,114
 
-#ifdef __x86_64__
 	.text.windows
 GetOpenFileName:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ GetOpenFileName:
 	sub	$32,%rsp
 	call	*__imp_GetOpenFileNameW(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	GetOpenFileName,globl
 	.previous
-#endif

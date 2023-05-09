@@ -23,6 +23,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
+#ifdef __x86_64__
 .text.startup
 
 //	Cosmopolitan runtime.
@@ -215,3 +216,5 @@ cosmo:	push	%rbp
 1:	.init.end 307,_init_printargs
 #endif
 #endif
+
+#endif /* __x86_64__ */

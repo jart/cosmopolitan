@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	user32,__imp_GetDC,GetDC,1830
 
-#ifdef __x86_64__
 	.text.windows
 GetDC:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ GetDC:
 	sub	$32,%rsp
 	call	*__imp_GetDC(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	GetDC,globl
 	.previous
-#endif

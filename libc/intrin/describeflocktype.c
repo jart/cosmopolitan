@@ -19,11 +19,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/sysv/consts/f.h"
 
-#ifdef DescribeFlockType
-#undef DescribeFlockType
-#endif
-
-const char *DescribeFlockType(char buf[12], int x) {
+const char *(DescribeFlockType)(char buf[12], int x) {
   if (x == F_RDLCK) return "F_RDLCK";
   if (x == F_WRLCK) return "F_WRLCK";
   if (x == F_UNLCK) return "F_UNLCK";

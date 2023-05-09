@@ -19,13 +19,9 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 
-#ifdef DescribeClockName
-#undef DescribeClockName
-#endif
-
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *DescribeClockName(char buf[32], int x) {
+const char *(DescribeClockName)(char buf[32], int x) {
   return DescribeMagnum(buf, kClockNames, "CLOCK_", x);
 }

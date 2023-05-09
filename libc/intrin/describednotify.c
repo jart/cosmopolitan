@@ -21,10 +21,6 @@
 #include "libc/nt/enum/processaccess.h"
 #include "libc/sysv/consts/dn.h"
 
-#ifdef DescribeDnotifyFlags
-#undef DescribeDnotifyFlags
-#endif
-
 static const struct DescribeFlags kDnotifyFlags[] = {
     {DN_ACCESS, "ACCESS"},        //
     {DN_MODIFY, "MODIFY"},        //
@@ -35,7 +31,7 @@ static const struct DescribeFlags kDnotifyFlags[] = {
     {DN_MULTISHOT, "MULTISHOT"},  //
 };
 
-const char *DescribeDnotifyFlags(char buf[80], int x) {
+const char *(DescribeDnotifyFlags)(char buf[80], int x) {
   return DescribeFlags(buf, 80, kDnotifyFlags, ARRAYLEN(kDnotifyFlags), "DN_",
                        x);
 }

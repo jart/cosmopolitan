@@ -22,15 +22,11 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 
-#ifdef DescribeStat
-#undef DescribeStat
-#endif
-
 #define N 300
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *DescribeStat(char buf[N], int rc, const struct stat *st) {
+const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
   int o = 0;
 
   if (rc == -1) return "n/a";

@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	ws2_32,__imp_WSAResetEvent,WSAResetEvent,95
 
-#ifdef __x86_64__
 	.text.windows
 WSAResetEvent:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ WSAResetEvent:
 	sub	$32,%rsp
 	call	*__imp_WSAResetEvent(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	WSAResetEvent,globl
 	.previous
-#endif

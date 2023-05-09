@@ -32,6 +32,8 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
+#ifdef __x86_64__
+
 /**
  * Checks to see if SIGCHLD should be raised on Windows.
  * @return true if a signal was raised
@@ -67,3 +69,5 @@ void _check_sigchld(void) {
   __fds_unlock();
   __sig_add(0, SIGCHLD, CLD_EXITED);
 }
+
+#endif /* __x86_64__ */

@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/lockxadd.h"
 #include "libc/nt/process.h"
 
 static textwindows char16_t *UintToChar16Array(char16_t p[21], uint64_t x) {
@@ -44,7 +43,7 @@ textwindows char16_t *CreatePipeName(char16_t *a) {
   while (*q) *p++ = *q++;
   p = UintToChar16Array(p, GetCurrentProcessId());
   *p++ = '-';
-  p = UintToChar16Array(p, _lockxadd(&x, 1));
+  p = UintToChar16Array(p, (x += 1));
   *p = 0;
   return a;
 }

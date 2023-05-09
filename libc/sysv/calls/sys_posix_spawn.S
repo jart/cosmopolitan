@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_posix_spawn,0x1daffffff20f4fff,globl,hidden
+.scall sys_posix_spawn,0x1daffffff20f4fff,0xfff,globl,hidden

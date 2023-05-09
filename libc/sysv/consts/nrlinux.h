@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_
+#ifdef __x86_64__
 
 #define __NR_linux_exit                    0x003c
 #define __NR_linux_exit_group              0x00e7
@@ -347,4 +348,5 @@
 #define __NR_linux_futex_waitv             0x01c1
 #define __NR_linux_set_mempolicy_home_node 0x01c2
 
+#endif /* __x86_64__ */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_ */

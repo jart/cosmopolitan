@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_sigwait,0xffffff1ad214afff,globl
+.scall sys_sigwait,0xffffff1ad214afff,0xfff,globl

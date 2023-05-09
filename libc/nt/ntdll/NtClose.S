@@ -1,9 +1,9 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	NtClose,NtClose
 
-#ifdef __x86_64__
 	.text.windows
 NtClose:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ NtClose:
 	sub	$32,%rsp
 	call	*__imp_NtClose(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	NtClose,globl
 	.previous
-#endif

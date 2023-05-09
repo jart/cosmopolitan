@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	kernel32,__imp_FatalExit,FatalExit,364
 
-#ifdef __x86_64__
 	.text.windows
 FatalExit:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ FatalExit:
 	sub	$32,%rsp
 	call	*__imp_FatalExit(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	FatalExit,globl
 	.previous
-#endif

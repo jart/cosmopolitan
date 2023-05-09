@@ -21,10 +21,6 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/thread/thread.h"
 
-#ifdef pthread_spin_lock
-#undef pthread_spin_lock
-#endif
-
 /**
  * Acquires spin lock, e.g.
  *
@@ -43,7 +39,7 @@
  * @see pthread_spin_unlock
  * @see pthread_spin_init
  */
-errno_t pthread_spin_lock(pthread_spinlock_t *spin) {
+errno_t(pthread_spin_lock)(pthread_spinlock_t *spin) {
   int x;
 #if defined(SYSDEBUG) && _LOCKTRACE
   for (;;) {

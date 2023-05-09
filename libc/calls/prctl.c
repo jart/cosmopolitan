@@ -66,7 +66,7 @@ privileged int prctl(int operation, ...) {
                : "=r"(res_x0)
                : "i"(167), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
                : "x8", "memory");
-  rc = _sysret32(res_x0);
+  rc = _sysret(res_x0);
 #else
 #error "arch unsupported"
 #endif

@@ -35,6 +35,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
+#ifdef __x86_64__
+
 int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   int fd;
   struct MetalFile *state;
@@ -61,3 +63,5 @@ int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   g_fds.p[fd].handle = (intptr_t)state;
   return fd;
 }
+
+#endif /* __x86_64__ */

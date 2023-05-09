@@ -23,16 +23,12 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/sol.h"
 
-#ifdef DescribeOpenFlags
-#undef DescribeOpenFlags
-#endif
-
 #define N (PAGESIZE / 2 / sizeof(struct DescribeFlags))
 
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *DescribeOpenFlags(char buf[128], int x) {
+const char *(DescribeOpenFlags)(char buf[128], int x) {
   char *s;
   int i, n;
   struct DescribeFlags d[N];

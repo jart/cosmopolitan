@@ -23,6 +23,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/vga/vga.internal.h"
 
+#ifdef __x86_64__
+
 ssize_t sys_writev_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
   switch (fd->kind) {
     case kFdConsole:
@@ -34,3 +36,5 @@ ssize_t sys_writev_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
       return ebadf();
   }
 }
+
+#endif /* __x86_64__ */

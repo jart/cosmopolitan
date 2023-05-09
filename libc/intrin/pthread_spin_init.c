@@ -19,10 +19,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
-#ifdef pthread_spin_init
-#undef pthread_spin_init
-#endif
-
 /**
  * Initializes spin lock.
  *
@@ -32,7 +28,7 @@
  * @see pthread_spin_destroy
  * @see pthread_spin_lock
  */
-errno_t pthread_spin_init(pthread_spinlock_t *spin, int pshared) {
+errno_t(pthread_spin_init)(pthread_spinlock_t *spin, int pshared) {
   atomic_store_explicit(&spin->_lock, 0, memory_order_relaxed);
   return 0;
 }

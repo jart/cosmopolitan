@@ -26,5 +26,9 @@ CRT_SRCS = libc/crt/crt.S
 CRT_OBJS = o/$(MODE)/libc/crt/crt.o
 $(CRT_OBJS): $(BUILD_FILES) libc/crt/crt.mk
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/crt/crt.o: libc/crt/crt.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 .PHONY: o/$(MODE)/libc/crt
 o/$(MODE)/libc/crt: $(CRT)

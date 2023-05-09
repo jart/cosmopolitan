@@ -48,6 +48,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
+#ifdef __x86_64__
+
 #define OFF(f) offsetof(struct seccomp_data, f)
 
 #define UNVEIL_READ                                             \
@@ -400,3 +402,5 @@ int unveil(const char *path, const char *permissions) {
   STRACE("unveil(%#s, %#s) → %d% m", path, permissions, rc);
   return rc;
 }
+
+#endif /* __x86_64__ */

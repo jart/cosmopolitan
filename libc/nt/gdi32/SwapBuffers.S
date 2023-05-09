@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	gdi32,__imp_SwapBuffers,SwapBuffers,1929
 
-#ifdef __x86_64__
 	.text.windows
 SwapBuffers:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ SwapBuffers:
 	sub	$32,%rsp
 	call	*__imp_SwapBuffers(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	SwapBuffers,globl
 	.previous
-#endif

@@ -1,9 +1,9 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	RtlFreeUnicodeString,RtlFreeUnicodeString
 
-#ifdef __x86_64__
 	.text.windows
 RtlFreeUnicodeString:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ RtlFreeUnicodeString:
 	sub	$32,%rsp
 	call	*__imp_RtlFreeUnicodeString(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	RtlFreeUnicodeString,globl
 	.previous
-#endif

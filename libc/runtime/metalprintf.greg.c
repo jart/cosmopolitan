@@ -20,6 +20,8 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 
+#ifdef __x86_64__
+
 #define PUTC(C)                                      \
   do {                                               \
     while (!(inb(0x3F8 + UART_LSR) & UART_TTYTXR)) { \
@@ -78,3 +80,5 @@ _Hide textreal void(MetalPrintf)(const char *fmt, ...) {
     }
   }
 }
+
+#endif /* __x86_64__ */

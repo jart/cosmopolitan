@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_lremovexattr,0x181ffffffffff0c6,globl
+.scall sys_lremovexattr,0x181ffffffffff0c6,0x00f,globl

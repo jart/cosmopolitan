@@ -21,10 +21,6 @@
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/ipc.h"
 
-#ifdef DescribeNtPipeModeFlags
-#undef DescribeNtPipeModeFlags
-#endif
-
 static const struct DescribeFlags kPipeModeFlags[] = {
     {kNtPipeNowait, "Nowait"},                            // 0x0000000001
     {kNtPipeReadmodeMessage, "ReadmodeMessage"},          // 0x0000000002
@@ -36,7 +32,7 @@ static const struct DescribeFlags kPipeModeFlags[] = {
     //{kNtPipeTypeByte, "TypeByte"},                        // 0x00000000
 };
 
-const char *DescribeNtPipeModeFlags(char buf[64], uint32_t x) {
+const char *(DescribeNtPipeModeFlags)(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kPipeModeFlags, ARRAYLEN(kPipeModeFlags),
                        "kNtPipe", x);
 }

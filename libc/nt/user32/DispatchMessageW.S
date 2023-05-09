@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	user32,__imp_DispatchMessageW,DispatchMessageW,1698
 
-#ifdef __x86_64__
 	.text.windows
 DispatchMessage:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ DispatchMessage:
 	sub	$32,%rsp
 	call	*__imp_DispatchMessageW(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	DispatchMessage,globl
 	.previous
-#endif

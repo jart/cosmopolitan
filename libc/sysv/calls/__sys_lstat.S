@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall __sys_lstat,0x1b90280282154006,globl,hidden
+.scall __sys_lstat,0x1b90280282154006,0xfff,globl,hidden

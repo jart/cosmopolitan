@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,38 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
+#ifndef __x86_64__
 
-	.globl	_start
-	.type	_start,%function
-_start:	mov	x29,#0
-	mov	x30,#0
-	mov	x0,sp
-	and	sp,x0,#-16
-	b	_start_c
-	.size	_start,.-_start
+char **__envp;
 
-	.section .initprologue
-	.global	_init
-	.type	_init,%function
-_init:	stp	x29,x30,[sp,-16]!
-	mov	x29,sp
-	.previous/*
-	...
-	decentralized content
-	...
-	*/.section .initepilogue
-	ldp	x29,x30,[sp],#16
-	ret
-
-	.section .finiprologue
-	.global	_fini
-	.type	_fini,%function
-_fini:	stp	x29,x30,[sp,-16]!
-	mov	x29,sp
-	.previous/*
-	...
-	decentralized content
-	...
-	*/.section .finiepilogue
-	ldp	x29,x30,[sp],#16
-	ret
+#endif /* __x86_64__ */

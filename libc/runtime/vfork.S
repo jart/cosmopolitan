@@ -53,6 +53,9 @@
 //	@threadsafe
 //	@vforksafe
 vfork:
+
+#ifdef __x86_64__
+
 #if !IsTiny()
 	push	%rbp
 	mov	%rsp,%rbp
@@ -124,6 +127,19 @@ vfork:
 	pop	%r9
 	pop	%rbp
 	jmp	1b
+#endif
+
+#elif defined(__aarch64__)
+
+	mov	x8,#220			// __NR_clone
+	mov	x0,#0x4111		// SIGCHLD | CLONE_VM | CLONE_VFORK
+	mov	x1,#0
+	svc	0
+	.hidden	_sysret
+	b	_sysret
+
+#else
+#error "architecture unsupported"
 #endif
 	.endfn	vfork,globl
 

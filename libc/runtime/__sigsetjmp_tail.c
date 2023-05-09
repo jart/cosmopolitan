@@ -20,6 +20,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
+#ifdef __x86_64__
 
 // kudos rich felker for the brilliant design
 _Hide int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
@@ -30,3 +31,5 @@ _Hide int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
   _npassert(!sigprocmask(SIG_SETMASK, rc ? p : 0, rc ? 0 : p));
   return rc;
 }
+
+#endif /* __x86_64__ */

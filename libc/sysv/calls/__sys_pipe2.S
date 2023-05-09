@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall __sys_pipe2,0x1c506521effff125,globl,hidden
+.scall __sys_pipe2,0x1c506521effff125,0x03b,globl,hidden

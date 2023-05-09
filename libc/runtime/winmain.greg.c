@@ -41,6 +41,8 @@
 #include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
 
+#ifdef __x86_64__
+
 #if IsTiny()
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
@@ -245,3 +247,5 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   if (_weaken(WinMainForked)) _weaken(WinMainForked)();
   WinMainNew(cmdline);
 }
+
+#endif /* __x86_64__ */

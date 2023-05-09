@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	ws2_32,__imp_WSAInstallServiceClassW,WSAInstallServiceClassW,77
 
-#ifdef __x86_64__
 	.text.windows
 WSAInstallServiceClass:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ WSAInstallServiceClass:
 	sub	$32,%rsp
 	call	*__imp_WSAInstallServiceClassW(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	WSAInstallServiceClass,globl
 	.previous
-#endif

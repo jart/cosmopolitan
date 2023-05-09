@@ -17,7 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
+#ifndef __x86_64__
 
-#ifdef __aarch64__
 char **environ;
-#endif
+
+#endif /* __x86_64__ */

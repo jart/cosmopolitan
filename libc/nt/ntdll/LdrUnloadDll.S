@@ -1,9 +1,9 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	LdrUnloadDll,LdrUnloadDll
 
-#ifdef __x86_64__
 	.text.windows
 LdrUnloadDll:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ LdrUnloadDll:
 	sub	$32,%rsp
 	call	*__imp_LdrUnloadDll(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	LdrUnloadDll,globl
 	.previous
-#endif

@@ -39,14 +39,12 @@ __imp_\fn:
 	.asciz	"\fn"
 	.previous
 #elif defined(__aarch64__)
-	.section .text.nt.\fn,"ax",@progbits
-	.globl	\name
-\name:	ret
 	.section .data.nt.\fn,"aw",@progbits
 	.globl	__imp_\fn
 	.balign	8
 __imp_\fn:
 	.quad	\name
+	.weak	\name
 #endif
 .endm
 

@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	gdi32,__imp_SaveDC,SaveDC,1815
 
-#ifdef __x86_64__
 	.text.windows
 SaveDC:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ SaveDC:
 	sub	$32,%rsp
 	call	*__imp_SaveDC(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	SaveDC,globl
 	.previous
-#endif

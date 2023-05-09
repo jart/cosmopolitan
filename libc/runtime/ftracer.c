@@ -25,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/thread/tls.h"
@@ -75,6 +76,7 @@ privileged void ftracer(void) {
   struct CosmoTib *tib;
   struct StackFrame *sf;
   struct CosmoFtrace *ft;
+  if (__ftrace <= 0) return;
   if (__tls_enabled) {
     tib = __get_tls_privileged();
     if (tib->tib_ftrace <= 0) return;

@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_swapon,0xffffff05520550a7,globl
+.scall sys_swapon,0xffffff05520550a7,0x0e0,globl

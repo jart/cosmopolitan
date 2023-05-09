@@ -65,19 +65,8 @@ privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
     res = enosys();
   }
 #elif defined(__aarch64__)
-  long res;
-  register long r0 asm("x0") = (long)p;
-  register long r1 asm("x1") = (long)n;
-  register long r2 asm("x2") = (long)m;
-  register long r3 asm("x3") = (long)f;
-  register long r4 asm("x4") = (long)q;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(216), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
-               : "x8", "memory");
-  res = _sysret64(res_x0);
+  void *res;
+  res = __sys_mremap(p, n, m, f, q);
 #else
 #error "arch unsupported"
 #endif

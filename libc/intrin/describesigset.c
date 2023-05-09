@@ -26,15 +26,11 @@
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sig.h"
 
-#ifdef DescribeSigset
-#undef DescribeSigset
-#endif
-
 #define N 128
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *DescribeSigset(char buf[N], int rc, const sigset_t *ss) {
+const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
   bool gotsome;
   const char *s;
   int sig, o = 0;

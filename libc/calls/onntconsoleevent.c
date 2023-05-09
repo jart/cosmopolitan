@@ -28,6 +28,8 @@
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
 
+#ifdef __x86_64__
+
 textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
   struct CosmoTib tib;
   struct StackFrame *fr;
@@ -60,3 +62,5 @@ textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
       return false;
   }
 }
+
+#endif /* __x86_64__ */

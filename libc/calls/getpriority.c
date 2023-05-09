@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asmflag.h"
@@ -74,21 +75,10 @@ privileged int getpriority(int which, unsigned who) {
   } else {
     rc = sys_getpriority_nt(which, who);
   }
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)which;
-  register long r1 asm("x1") = (long)who;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(141), "r"(r0), "r"(r1)
-               : "x8", "memory");
-  rc = res_x0;
-  if (rc >= 0) {
+#else
+  rc = sys_getpriority(which, who);
+  if (rc != -1) {
     rc = NZERO - rc;
-  } else {
-    errno = -rc;
-    rc = -1;
   }
 #endif
   STRACE("getpriority(%s, %u) → %d% m", DescribeWhichPrio(which), who, rc);

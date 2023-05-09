@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 
-long _sysret(long res) {
-  if ((unsigned long)res >= (unsigned long)-4095) {
+/**
+ * Handles return path of system call on Linux.
+ */
+unsigned long _sysret(unsigned long res) {
+  if (res > -4096) {
     errno = -res;
     res = -1;
   }

@@ -26,15 +26,11 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 
-#ifdef DescribeSiginfo
-#undef DescribeSiginfo
-#endif
-
 #define N 300
 
 #define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
 
-const char *DescribeSiginfo(char buf[N], int rc, const siginfo_t *si) {
+const char *(DescribeSiginfo)(char buf[N], int rc, const siginfo_t *si) {
   int i = 0;
 
   if (rc == -1) return "n/a";

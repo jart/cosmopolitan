@@ -1,9 +1,9 @@
 #include "libc/nt/codegen.h"
 .imp	user32,__imp_RegisterClassExW,RegisterClassExW,2250
 
-#ifdef __x86_64__
 	.text.windows
 RegisterClassEx:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ RegisterClassEx:
 	sub	$32,%rsp
 	call	*__imp_RegisterClassExW(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	RegisterClassEx,globl
 	.previous
-#endif

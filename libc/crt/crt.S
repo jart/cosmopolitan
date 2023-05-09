@@ -30,6 +30,7 @@
 //	@note	ape.S and ape-loader both set RCX to XNU on Darwin
 //	@noreturn
 _start:
+#ifdef __x86_64__
 
 #if SupportsXnu()
 //	Hack for detecting M1 Rosetta environment.
@@ -63,9 +64,9 @@ _start:
 	mov	%edx,4(%rbx)
 
 //	translates arguments from old stack abi
-	mov	(%rsp),%ebx			# argc
-	lea	8(%rsp),%rsi			# argv
-	lea	16(%rsp,%rbx,8),%rdx		# envp
+	mov	(%rsp),%ebx			// argc
+	lea	8(%rsp),%rsi			// argv
+	lea	16(%rsp,%rbx,8),%rdx		// envp
 	mov	%rsp,__oldstack(%rip)
 	and	$-16,%rsp
 	xor	%ebp,%ebp
@@ -87,19 +88,33 @@ _start:
 	or	$-1,%ecx
 	mov	%rdx,%rdi
 	repnz scasq
-	mov	%rdi,%rcx			# auxv
+	mov	%rdi,%rcx			// auxv
 
 #if SupportsXnu()
 //	xnu doesn't have auxiliary values
 	testb	IsXnu()
-	jz	1f				# polyfill xnu auxv
-	push	$0				# auxv[1][1]=0
-	push	$0				# auxv[1][0]=0
-	mov	%rsp,%rcx			# auxv
+	jz	1f				// polyfill xnu auxv
+	push	$0				// auxv[1][1]=0
+	push	$0				// auxv[1][0]=0
+	mov	%rsp,%rcx			// auxv
 #endif
 
 //	enter cosmopolitan runtime
 1:	mov	%ebx,%edi
 	call	cosmo
 9:	.unreachable
+
+////////////////////////////////////////////////////////////////////////////////
+#elif defined(__aarch64__)
+
+	mov	x29,#0
+	mov	x30,#0
+	mov	x0,sp
+	and	sp,x0,#-16
+	b	cosmo
+
+////////////////////////////////////////////////////////////////////////////////
+#else
+#error "architecture unsupported"
+#endif /* __x86_64__ */
 	.endfn	_start,weak,hidden

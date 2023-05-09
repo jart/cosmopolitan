@@ -1,14 +1,17 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	NtCreateTimer,NtCreateTimer
 
-#ifdef __x86_64__
 	.text.windows
 NtCreateTimer:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_NtCreateTimer(%rip),%rax
 	jmp	__sysv2nt
+#elif defined(__aarch64__)
+	mov	x0,#0
+	ret
+#endif
 	.endfn	NtCreateTimer,globl
 	.previous
-#endif

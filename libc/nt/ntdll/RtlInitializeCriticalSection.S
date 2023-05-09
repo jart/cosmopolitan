@@ -1,9 +1,9 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	RtlInitializeCriticalSection,RtlInitializeCriticalSection
 
-#ifdef __x86_64__
 	.text.windows
 RtlInitializeCriticalSection:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ RtlInitializeCriticalSection:
 	sub	$32,%rsp
 	call	*__imp_RtlInitializeCriticalSection(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	RtlInitializeCriticalSection,globl
 	.previous
-#endif

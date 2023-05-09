@@ -61,43 +61,48 @@ imp() {
 
 thunk() {
   printf '
-#ifdef __x86_64__
 	.text.windows
 %s:
+#ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
 	.profilable
 	mov	__imp_%s(%%rip),%%rax
 	jmp	%s
+#elif defined(__aarch64__)
+	mov	x0,#0
+	ret
+#endif
 	.endfn	%s,globl
 	.previous
-#endif
 ' "$@"
 }
 
 thunk0() {
   printf '
-#ifdef __x86_64__
 	.text.windows
 %s:
+#ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
 	.profilable
 	sub	$32,%%rsp
 	call	*__imp_%s(%%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	%s,globl
 	.previous
-#endif
 ' "$@"
 }
 
 thunk1() {
   printf '
-#ifdef __x86_64__
 	.text.windows
 %s:
+#ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
 	.profilable
@@ -105,9 +110,11 @@ thunk1() {
 	sub	$32,%%rsp
 	call	*__imp_%s(%%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	%s,globl
 	.previous
-#endif
 ' "$@"
 }

@@ -1,9 +1,9 @@
 #include "libc/nt/ntdllimport.h"
 .ntimp	NtDeleteKey,NtDeleteKey
 
-#ifdef __x86_64__
 	.text.windows
 NtDeleteKey:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,7 +11,9 @@ NtDeleteKey:
 	sub	$32,%rsp
 	call	*__imp_NtDeleteKey(%rip)
 	leave
+#elif defined(__aarch64__)
+	mov	x0,#0
+#endif
 	ret
 	.endfn	NtDeleteKey,globl
 	.previous
-#endif

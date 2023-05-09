@@ -26,6 +26,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/vga/vga.internal.h"
 
+#ifdef __x86_64__
+
 ssize_t sys_readv_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
   int i;
   size_t got, toto;
@@ -56,3 +58,5 @@ ssize_t sys_readv_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
       return ebadf();
   }
 }
+
+#endif /* __x86_64__ */

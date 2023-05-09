@@ -10,9 +10,6 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § syscalls » system five » structless synthetic jump slots  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int _sysret32(long) asm("_sysret");
-long _sysret64(long) asm("_sysret");
-
 axdx_t __sys_fork(void) _Hide;
 axdx_t __sys_pipe(i32[hasatleast 2], i32) _Hide;
 axdx_t sys_getpid(void) _Hide;
@@ -65,6 +62,7 @@ i32 sys_getresgid(u32 *, u32 *, u32 *) _Hide;
 i32 sys_getresuid(u32 *, u32 *, u32 *) _Hide;
 i32 sys_getsid(i32) _Hide;
 i32 sys_gettid(void) _Hide;
+i32 sys_ioctl(i32, u64, ...) _Hide;
 i32 sys_ioctl_cp(i32, u64, ...) _Hide;
 i32 sys_issetugid(void) _Hide;
 i32 sys_kill(i32, i32, i32) _Hide;
@@ -133,53 +131,17 @@ i64 sys_readlink(const char *, char *, u64) _Hide;
 i64 sys_readlinkat(i32, const char *, char *, u64) _Hide;
 i64 sys_sendfile(i32, i32, i64 *, u64) _Hide;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) _Hide;
+i64 sys_write(i32, const void *, u64) _Hide;
 u32 sys_getegid(void) _Hide;
 u32 sys_geteuid(void) _Hide;
 u32 sys_getgid(void) _Hide;
 u32 sys_getuid(void) _Hide;
 u32 sys_umask(u32) _Hide;
+unsigned long _sysret(unsigned long) _Hide;
 void *__sys_mmap(void *, u64, u32, u32, i64, i64, i64) _Hide;
+void *__sys_mremap(void *, u64, u64, i32, void *) _Hide;
 void *sys_mremap(void *, u64, u64, i32, void *) _Hide;
 void sys_exit(i32) _Hide;
-
-#ifdef __x86_64__
-i64 sys_write(i32, const void *, u64) _Hide;
-#elif defined(__aarch64__)
-static inline ssize_t sys_write(int f, const void *b, size_t c) {
-  register long r0 asm("x0") = (long)f;
-  register long r1 asm("x1") = (long)b;
-  register long r2 asm("x2") = (long)c;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(64), "r"(r0), "r"(r1), "r"(r2)
-               : "x8", "memory");
-  return _sysret64(res_x0);
-}
-#endif
-
-#ifdef __x86_64__
-i32 sys_ioctl(i32, u64, ...) _Hide;
-#elif defined(__aarch64__)
-static inline int sys_ioctl(int d, int r, ...) {
-  void *a;
-  va_list va;
-  va_start(va, r);
-  a = va_arg(va, void *);
-  va_end(va);
-  register long r0 asm("x0") = (long)d;
-  register long r1 asm("x1") = (long)r;
-  register long r2 asm("x2") = (long)a;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(29), "r"(r0), "r"(r1), "r"(r2)
-               : "x8", "memory");
-  return _sysret32(res_x0);
-}
-#endif
 
 #undef i32
 #undef i64

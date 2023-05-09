@@ -31,6 +31,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
+#ifdef __x86_64__
+
 /* TODO: Why can't we change CR3? Could it really need PML5T? */
 /* TODO: Why does QEMU in UEFI mode take ten seconds to boot? */
 
@@ -257,3 +259,5 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   _EfiPostboot(mm, pml4t, Args, ArgBlock->Args);
   unreachable;
 }
+
+#endif /* __x86_64__ */

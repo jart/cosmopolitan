@@ -112,3 +112,5 @@ long double nowl_setup(void) {
   }
   return nowl();
 }
+
+long double (*nowl)(void) = nowl_setup;

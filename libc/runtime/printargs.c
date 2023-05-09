@@ -63,6 +63,8 @@
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
+#ifdef __x86_64__
+
 STATIC_YOINK("strerror");   // for kprintf()
 STATIC_YOINK("strsignal");  // for kprintf()
 
@@ -711,3 +713,5 @@ textstartup void __printargs(const char *prologue) {
   ftrace_enabled(+1);
   errno = e;
 }
+
+#endif /* __x86_64__ */

@@ -21,11 +21,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
 
-#ifdef DescribeFutexOp
-#undef DescribeFutexOp
-#endif
-
-const char *DescribeFutexOp(char buf[64], int x) {
+const char *(DescribeFutexOp)(char buf[64], int x) {
 
   bool priv = false;
   if (x & FUTEX_PRIVATE_FLAG) {
