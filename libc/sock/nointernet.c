@@ -45,6 +45,8 @@
 #include "libc/sysv/errfuns.h"
 #include "net/http/ip.h"
 
+#ifdef __x86_64__
+
 #define ORIG_RAX 120
 #define RAX      80
 #define RDI      112
@@ -337,3 +339,5 @@ int nointernet(void) {
     HandleSeccompTrace(act);
   }
 }
+
+#endif /* __x86_64__ */

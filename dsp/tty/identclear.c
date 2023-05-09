@@ -26,7 +26,7 @@ static void ttyidentfree(struct TtyIdent *ti) {
   if (ti) {
     assert(ti != ti->next);
     ttyidentfree(ti->next);
-    free_s(&ti);
+    free(ti);
   }
 }
 

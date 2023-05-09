@@ -16,20 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-
-STATIC_YOINK("_init_stdin");
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/thread/thread.h"
 
 /**
  * Pointer to standard input stream.
  */
 FILE *stdin;
 
-_Hide FILE __stdin;
+static FILE __stdin;
 
-static textstartup void __stdin_init() {
+__attribute__((__constructor__)) static void __stdin_init(void) {
+  stdin = &__stdin;
+  stdin->fd = STDIN_FILENO;
+  stdin->iomode = O_RDONLY;
+  stdin->buf = stdin->mem;
+  stdin->size = sizeof(stdin->mem);
+  ((pthread_mutex_t *)stdin->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
   __fflush_register(stdin);
 }
-
-const void *const __stdin_ctor[] initarray = {__stdin_init};

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,17 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/mem/hook.internal.h"
+#include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
-	.initbss 202,_init_realloc_in_place
-hook_realloc_in_place:
-	.quad	0
-	.endobj	hook_realloc_in_place,globl,hidden
-	.previous
+void *(*hook_malloc)(size_t) = dlmalloc;
 
-	.init.start 202,_init_realloc_in_place
-	.hidden	dlrealloc_in_place
-	ezlea	dlrealloc_in_place,ax
-	stosq
-	.yoink	free
-	.init.end 202,_init_realloc_in_place
+/**
+ * Allocates uninitialized memory.
+ *
+ * Returns a pointer to a newly allocated chunk of at least n bytes, or
+ * null if no space is available, in which case errno is set to ENOMEM
+ * on ANSI C systems.
+ *
+ * If n is zero, malloc returns a minimum-sized chunk. (The minimum size
+ * is 32 bytes on 64bit systems.) Note that size_t is an unsigned type,
+ * so calls with arguments that would be negative if signed are
+ * interpreted as requests for huge amounts of space, which will often
+ * fail. The maximum supported value of n differs across systems, but is
+ * in all cases less than the maximum representable value of a size_t.
+ *
+ * @param rdi is number of bytes needed, coerced to 1+
+ * @return new memory, or NULL w/ errno
+ * @threadsafe
+ */
+void *malloc(size_t n) {
+  return hook_malloc(n);
+}

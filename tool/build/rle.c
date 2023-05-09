@@ -114,7 +114,7 @@ void GetOpts(int argc, char *argv[]) {
         test_ = true;
         break;
       case 'o':
-        fclose_s(&fout_);
+        fclose(fout_);
         if (!(fout_ = fopen((hint_ = optarg), "w"))) {
           PrintIoErrorMessage();
           exit(1);
@@ -191,9 +191,11 @@ int Run(char **paths, size_t count) {
     hint_ = "/dev/stdin";
     if (!fout_) fout_ = stdout;
     rc = RunLengthCode();
-    rc |= fclose_s(&fin_);
+    rc |= fclose(fin_);
+    fin_ = 0;
   } else {
-    rc = fclose_s(&fin_);
+    rc = fclose(fin_);
+    fin_ = 0;
     for (i = 0; i < count && rc != -1; ++i) {
       rc = -1;
       if ((fin_ = fopen((hint_ = paths[i]), "r"))) {
@@ -219,18 +221,21 @@ int Run(char **paths, size_t count) {
             if (rc != -1 && !decompress_) {
               rc = RunLengthEncode2();
             }
-            if ((rc |= fclose_s(&fout_)) != -1) {
+            if ((rc |= fclose(fout_)) != -1) {
               unlink(paths[i]);
             }
+            fout_ = 0;
           }
         }
-        rc |= fclose_s(&fin_);
+        rc |= fclose(fin_);
+        fin_ = 0;
       }
     }
   }
   if (rc != -1 && fout_) {
     rc = RunLengthEncode2();
-    rc |= fclose_s(&fout_);
+    rc |= fclose(fout_);
+    fout_ = 0;
   }
   return rc;
 }

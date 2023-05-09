@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/decode/lib/bitabuilder.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/check.h"
@@ -24,7 +25,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "tool/decode/lib/bitabuilder.h"
 
 /**
  * @fileoverview Sparse bit array builder.
@@ -41,8 +41,9 @@ struct BitaBuilder *bitabuilder_new(void) {
 
 void bitabuilder_free(struct BitaBuilder **bbpp) {
   if (*bbpp) {
-    free_s(&(*bbpp)->p);
-    free_s(bbpp);
+    free((*bbpp)->p);
+    free(*bbpp);
+    *bbpp = 0;
   }
 }
 

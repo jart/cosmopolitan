@@ -36,6 +36,8 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
+#ifdef __x86_64__
+
 int systemfive_cancel(void);
 
 extern const char systemfive_cancellable[];
@@ -292,6 +294,8 @@ errno_t pthread_cancel(pthread_t thread) {
   }
   return rc;
 }
+
+#endif /* __x86_64__ */
 
 /**
  * Creates cancellation point in calling thread.

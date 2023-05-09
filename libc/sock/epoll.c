@@ -73,6 +73,8 @@
 #include "libc/sysv/consts/epoll.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview epoll
  *
@@ -1530,3 +1532,5 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
          timeoutms, rc);
   return rc;
 }
+
+#endif /* __x86_64__ */

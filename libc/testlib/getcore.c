@@ -20,7 +20,11 @@
 #include "libc/testlib/ezbench.h"
 
 int __testlib_getcore(void) {
+#ifdef __x86__
   long tscaux;
   tscaux = rdpid();
   return TSC_AUX_CORE(tscaux);
+#else
+  return 0;
+#endif
 }

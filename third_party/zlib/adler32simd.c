@@ -58,6 +58,8 @@ asm(".include \"libc/disclaimer.inc\"");
 /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
 #define NMAX 5552
 
+#ifdef ADLER32_SIMD_SSSE3
+
 uint32_t adler32_simd_(uint32_t adler, const unsigned char *buf, size_t len) {
   /*
    * Split Adler-32 into component sums.
@@ -192,3 +194,5 @@ uint32_t adler32_simd_(uint32_t adler, const unsigned char *buf, size_t len) {
    */
   return s1 | (s2 << 16);
 }
+
+#endif /* ADLER32_SIMD_SSSE3 */

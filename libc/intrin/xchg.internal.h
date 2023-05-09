@@ -7,7 +7,6 @@
  * Exchanges *MEMORY into *LOCALVAR.
  *
  * @return *MEMORY
- * @see lockcmpxchg()
  * todo(jart): what's the point of this?
  */
 #define xchg(MEMORY, LOCALVAR)              \

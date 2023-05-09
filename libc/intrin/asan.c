@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#ifdef __x86_64__
 #include "libc/calls/state.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -33,7 +32,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/hook/hook.internal.h"
+#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
@@ -1087,7 +1086,7 @@ size_t __asan_get_heap_size(const void *p) {
   return 0;
 }
 
-static size_t __asan_malloc_usable_size(const void *p) {
+static size_t __asan_malloc_usable_size(void *p) {
   size_t n, c;
   struct AsanExtra *e;
   if ((e = __asan_get_extra(p, &c)) && __asan_read48(e->size, &n)) {
@@ -1498,5 +1497,3 @@ __attribute__((__constructor__)) void __asan_init(int argc, char **argv,
   STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
-
-#endif /* __x86_64__ */

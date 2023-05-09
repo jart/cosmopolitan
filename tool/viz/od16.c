@@ -102,8 +102,10 @@ int main(int argc, char *argv[]) {
   for (i = optind; i < argc; ++i) {
     CHECK_NOTNULL((in_ = fopen((inpath_ = argv[i]), "r")));
     ProcessFile();
-    CHECK_NE(-1, fclose_s(&in_));
+    CHECK_NE(-1, fclose(in_));
+    in_ = 0;
   }
-  CHECK_NE(-1, fclose_s(&out_));
+  CHECK_NE(-1, fclose(out_));
+  out_ = 0;
   return 0;
 }

@@ -90,7 +90,8 @@ int ttyident(struct TtyIdent *ti, int ttyinfd, int ttyoutfd) {
                            : _weaken(malloc)(sizeof(struct TtyIdent))))) {
           memcpy(ti->next, &outer, sizeof(outer));
         } else {
-          free_s(&ti->next);
+          free(ti->next);
+          ti->next = 0;
         }
       }
       ttyrestore(ttyinfd, &old);

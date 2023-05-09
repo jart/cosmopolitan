@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/resolvconf.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -24,7 +25,8 @@
  */
 void FreeResolvConf(struct ResolvConf **rvp) {
   if (*rvp) {
-    free_s(&(*rvp)->nameservers.p);
-    free_s(rvp);
+    free((*rvp)->nameservers.p);
+    free(*rvp);
+    *rvp = 0;
   }
 }

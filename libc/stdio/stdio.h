@@ -74,7 +74,6 @@ FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
 size_t fread(void *, size_t, size_t, FILE *) paramsnonnull((4));
 size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4));
 int fclose(FILE *);
-int fclose_s(FILE **) paramsnonnull();
 int fseek(FILE *, long, int) paramsnonnull();
 long ftell(FILE *) paramsnonnull();
 int fseeko(FILE *, int64_t, int) paramsnonnull();

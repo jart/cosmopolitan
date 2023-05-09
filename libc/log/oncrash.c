@@ -348,7 +348,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
     } else {
       // somehow __minicrash() crashed not possible
       for (;;) {
-        asm("ud2");
+        __builtin_trap();
       }
     }
   } else {

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/notice.inc"
+#include "libc/mem/hook.internal.h"
+#include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
-//	Returns the number of bytes you can actually use in
-//	an allocated chunk, which may be more than you requested
-//	(although often not) due to alignment and minimum size
-//	constraints.
-//
-//	You can use this many bytes without worrying about overwriting
-//	other allocated objects. This is not a particularly great
-//	programming practice. malloc_usable_size can be more useful in
-//	debugging and assertions, for example:
-//
-//	    p = malloc(n)
-//	    assert(malloc_usable_size(p) >= 256)
-//
-//	@param	rdi is address of allocation
-//	@return	rax is total number of bytes
-//	@see	dlmalloc_usable_size()
-//	@threadsafe
-malloc_usable_size:
-	jmp	*hook_malloc_usable_size(%rip)
-	.endfn	malloc_usable_size,globl
+size_t (*hook_bulk_free)(void *[], size_t) = dlbulk_free;
+
+/**
+ * Frees and clears (sets to NULL) each non-null pointer in given array.
+ *
+ * This is twice as fast as freeing them one-by-one. If footers are
+ * used, pointers that have been allocated in different mspaces are
+ * not freed or cleared, and the count of all such pointers is returned.
+ * For large arrays of pointers with poor locality, it may be worthwhile
+ * to sort this array before calling bulk_free.
+ */
+size_t bulk_free(void **p, size_t n) {
+  return hook_bulk_free(p, n);
+}

@@ -20,7 +20,9 @@
 #include "libc/macros.internal.h"
 .privileged
 
-_futex:	push	%rbp
+_futex:
+#ifdef __x86_64__
+	push	%rbp
 	mov	%rsp,%rbp
 	mov	%rcx,%r10
 	mov	__NR_futex,%eax
@@ -29,5 +31,11 @@ _futex:	push	%rbp
 	jnc	1f
 	neg	%eax
 1:	pop	%rbp
+#elif defined(__aarch64__)
+	mov	x8,#0x062
+	svc	#0
+#else
+#error "unsupported architecture"
+#endif /* __x86_64__ */
 	ret
 	.endfn	_futex,globl,hidden

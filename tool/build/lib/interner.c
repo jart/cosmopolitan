@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/interner.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "tool/build/lib/interner.h"
 
 #define kInitialItems 16
 
@@ -50,7 +50,7 @@ static void rehash(struct InternerObject *it) {
     } while (it->p[j].hash);
     memcpy(&it->p[j], &p[i], sizeof(p[i]));
   }
-  free_s(&p);
+  free(p);
 }
 
 /**

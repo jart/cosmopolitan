@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,16 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/notice.inc"
+#include "libc/mem/hook.internal.h"
+#include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
-//	Allocates n * itemsize bytes, initialized to zero.
-//
-//	@param	rdi is number of items (n)
-//	@param	rsi is size of each item (itemsize)
-//	@return	rax is memory address, or NULL w/ errno
-//	@note	overreliance on memalign is a sure way to fragment space
-//	@see	dlcalloc()
-//	@threadsafe
-calloc:	jmp	*hook_calloc(%rip)
-	.endfn	calloc,globl
+void *(*hook_realloc_in_place)(void *, size_t) = dlrealloc_in_place;
+
+/**
+ * Resizes the space allocated for p to size n, only if this can be
+ * done without moving p (i.e., only if there is adjacent space
+ * available if n is greater than p's current allocated size, or n
+ * is less than or equal to p's size). This may be used instead of
+ * plain realloc if an alternative allocation strategy is needed
+ * upon failure to expand space, for example, reallocation of a
+ * buffer that must be memory-aligned or cleared. You can use
+ * realloc_in_place to trigger these alternatives only when needed.
+ *
+ * @param p is address of current allocation
+ * @param n is number of bytes needed
+ * @return rax is result, or NULL w/ errno
+ * @see dlrealloc_in_place()
+ * @threadsafe
+ */
+void *realloc_in_place(void *p, size_t n) {
+  return hook_realloc_in_place(p, n);
+}

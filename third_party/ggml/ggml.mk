@@ -45,12 +45,17 @@ $(THIRD_PARTY_GGML_A_OBJS): private					\
 		OVERRIDE_CFLAGS +=					\
 			-O3						\
 			-ffunction-sections				\
-			-fdata-sections					\
+			-fdata-sections
+
+ifeq ($(ARCH), x86_64)
+$(THIRD_PARTY_GGML_A_OBJS): private					\
+		OVERRIDE_CFLAGS +=					\
 			-msse3						\
 			-mavx						\
 			-mavx2						\
 			-mf16c						\
 			-mfma
+endif
 
 ################################################################################
 # command for running inference on large language models

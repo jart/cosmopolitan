@@ -122,11 +122,13 @@ int main(int argc, char *argv[]) {
     while ((getline(&line_, &linecap_, stdin)) != -1) {
       processarg(_chomp(line_));
     }
-    free_s(&line_);
+    free(line_);
+    line_ = 0;
   }
   if (cleanup_) {
     fprintf(fout_, "%s[0m\n", rawmode_ ? "\e" : "\\e");
   }
-  CHECK_NE(-1, fclose_s(&fout_));
+  CHECK_NE(-1, fclose(fout_));
+  fout_ = 0;
   return 0;
 }

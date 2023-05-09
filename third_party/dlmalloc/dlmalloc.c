@@ -1,3 +1,4 @@
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -16,7 +17,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
-#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/dlmalloc/vespene.internal.h"
 // clang-format off
 
@@ -1418,7 +1418,7 @@ int dlmallopt(int param_number, int value) {
   return change_mparam(param_number, value);
 }
 
-size_t dlmalloc_usable_size(const void* mem) {
+size_t dlmalloc_usable_size(void* mem) {
   mchunkptr p;
   size_t bytes;
   if (mem) {

@@ -189,6 +189,8 @@ o/$(MODE)/libc/intrin/memmove.o: private		\
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/intrin/fenv.o: libc/intrin/fenv.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/futex.o: libc/intrin/futex.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/kclocknames.o: libc/intrin/kclocknames.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/kdos2errno.o: libc/intrin/kdos2errno.S

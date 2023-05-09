@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/hoststxt.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -24,8 +25,9 @@
  */
 void FreeHostsTxt(struct HostsTxt **ht) {
   if (*ht) {
-    free_s(&(*ht)->entries.p);
-    free_s(&(*ht)->strings.p);
-    free_s(ht);
+    free((*ht)->entries.p);
+    free((*ht)->strings.p);
+    free(*ht);
+    *ht = 0;
   }
 }

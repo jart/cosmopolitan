@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,17 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/mem/hook.internal.h"
+#include "libc/mem/mem.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
-	.initbss 202,_init_malloc
-hook_malloc:
-	.quad	0
-	.endobj	hook_malloc,globl,hidden
-	.previous
+size_t (*hook_malloc_usable_size)(void *) = dlmalloc_usable_size;
 
-	.init.start 202,_init_malloc
-	.hidden	dlmalloc
-	ezlea	dlmalloc,ax
-	stosq
-	.yoink	free
-	.init.end 202,_init_malloc
+/**
+ * Returns the number of bytes you can actually use in
+ * an allocated chunk, which may be more than you requested
+ * (although often not) due to alignment and minimum size
+ * constraints.
+ *
+ * You can use this many bytes without worrying about overwriting
+ * other allocated objects. This is not a particularly great
+ * programming practice. malloc_usable_size can be more useful in
+ * debugging and assertions, for example:
+ *
+ *     p = malloc(n)
+ *     assert(malloc_usable_size(p) >= 256)
+ *
+ * @param p is address of allocation
+ * @return total number of bytes
+ * @see dlmalloc_usable_size()
+ * @threadsafe
+ */
+size_t malloc_usable_size(void *p) {
+  return hook_malloc_usable_size(p);
+}

@@ -1,7 +1,5 @@
 // clang-format off
 
-STATIC_YOINK("_init_dlmalloc");
-
 /* ---------------------------- setting mparams -------------------------- */
 
 #if LOCK_AT_FORK
@@ -11,7 +9,7 @@ static void dlmalloc_post_fork_child(void)  { INITIAL_LOCK(&(gm)->mutex); }
 #endif /* LOCK_AT_FORK */
 
 /* Initialize mparams */
-int init_mparams(void) {
+__attribute__((__constructor__)) int init_mparams(void) {
 #ifdef NEED_GLOBAL_LOCK_INIT
   if (malloc_global_mutex_status <= 0)
     init_malloc_global_mutex();

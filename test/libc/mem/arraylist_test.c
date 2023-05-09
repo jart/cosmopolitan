@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/libfatal.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/arraylist.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -48,7 +48,8 @@ TEST(append, worksGreatForScalars) {
   }
   ASSERT_EQ(1024, s.i);
   for (size_t i = 0; i < s.i; ++i) ASSERT_EQ('a', s.p[i]);
-  free_s(&s.p);
+  free(s.p);
+  s.p = 0;
 }
 
 TEST(append, isGenericallyTyped) {
@@ -63,7 +64,8 @@ TEST(append, isGenericallyTyped) {
   for (size_t i = 0; i < s.i; ++i) {
     ASSERT_EQ(0x31337, s.p[i]);
   }
-  free_s(&s.p);
+  free(s.p);
+  s.p = 0;
 }
 
 TEST(concat, worksGreatForStrings) {
@@ -79,7 +81,8 @@ TEST(concat, worksGreatForStrings) {
                "Wir werden wieder auferstehen\n",
                s.p);
   ASSERT_EQ(strlen(ks) * 2 + 1, s.i);
-  free_s(&s.p);
+  free(s.p);
+  s.p = 0;
 }
 
 TEST(concat, isGenericallyTyped) {
@@ -95,5 +98,6 @@ TEST(concat, isGenericallyTyped) {
                u"Unsere schwarzen Seelen bekommt ihr nicht.\n",
                s.p);
   ASSERT_EQ(strlen16(ks) * 2 + 1, s.i);
-  free_s(&s.p);
+  free(s.p);
+  s.p = 0;
 }

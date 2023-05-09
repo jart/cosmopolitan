@@ -106,7 +106,6 @@ void _loadxmm(void *);
 void _peekall(void);
 void _savexmm(void *);
 void _weakfree(void *);
-void free_s(void *) paramsnonnull() libcesque;
 int _OpenExecutable(void);
 int ftrace_install(void);
 int ftrace_enabled(int);

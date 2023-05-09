@@ -18,23 +18,28 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/pushpop.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-
-STATIC_YOINK("_init_stdout");
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/thread/thread.h"
 
 /**
  * Pointer to standard output stream.
  */
 FILE *stdout;
 
-_Hide FILE __stdout;
+static FILE __stdout;
 
-static textstartup void __stdout_init() {
-  struct FILE *sf;
-  sf = stdout;
-  asm("" : "+r"(sf));
+__attribute__((__constructor__)) static void __stdout_init(void) {
+  stdout = &__stdout;
+
+  stdout->fd = STDOUT_FILENO;
+  stdout->iomode = O_WRONLY;
+  stdout->buf = stdout->mem;
+  stdout->size = sizeof(stdout->mem);
+  ((pthread_mutex_t *)stdout->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
+
   /*
    * Unlike other C libraries we don't bother calling fstat() to check
    * if stdio is a character device and we instead choose to always line
@@ -43,8 +48,7 @@ static textstartup void __stdout_init() {
    * value latency more than throughput, and stdio isn't the best api
    * when the goal is throughput.
    */
-  sf->bufmode = _IOLBF;
-  __fflush_register(sf);
-}
+  stdout->bufmode = _IOLBF;
 
-const void *const __stdout_ctor[] initarray = {__stdout_init};
+  __fflush_register(stdout);
+}

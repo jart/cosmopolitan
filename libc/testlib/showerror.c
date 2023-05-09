@@ -25,6 +25,7 @@
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -51,8 +52,8 @@ void testlib_showerror(const char *file, int line, const char *func,
           RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
           g_fixturename, hostname, getpid(), gettid(), code, v1, symbol, v2,
           SUBTLE, strerror(errno), GetProgramExecutableName(), RESET);
-  free_s(&v1);
-  free_s(&v2);
+  free(v1);
+  free(v2);
 }
 
 /* TODO(jart): Pay off tech debt re duplication */
@@ -89,8 +90,8 @@ void testlib_showerror_(int line, const char *wantcode, const char *gotcode,
           "\t%s%s @ %s%s\n",
           SUBTLE, strerror(e), RESET, SUBTLE,
           firstnonnull(program_invocation_name, "unknown"), hostname, RESET);
-  free_s(&FREED_want);
-  free_s(&FREED_got);
+  free(FREED_want);
+  free(FREED_got);
   ++g_testlib_failed;
   if (testlib_showerror_isfatal) {
     testlib_abort();

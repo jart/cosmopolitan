@@ -22,7 +22,7 @@
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/hook/hook.internal.h"
+#include "libc/mem/hook.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/o.h"
