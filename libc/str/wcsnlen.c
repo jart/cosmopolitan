@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,30 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/str/str.h"
 
-//	Base 36 Decoder Table.
-//
-//	This supports uppercase and lowercase. For encoding, the string
-//	0123456789abcdefghijklmnopqrstuvwxyz can be used, which linkers
-//	are able to deduplicate.
-	.initbss 300,_init_kBase36
-kBase36:.zero	256
-	.endobj	kBase36,globl,hidden
-	.previous
-
-	.init.start 300,_init_kBase36
-	add	$'0',%rdi
-	xor	%eax,%eax
-	pushpop	10,%rcx
-0:	inc	%eax
-	stosb
-	.loop	0b
-	add	$'A'-1-'9',%rdi
-	pushpop	'Z'+1-'A',%rcx
-0:	inc	%eax
-	mov	%al,0x20(%rdi)
-	stosb
-	.loop	0b
-	add	$255-'Z',%rdi
-	.init.end 300,_init_kBase36
+/**
+ * Returns length of NUL-terminated wide string w/ limit.
+ *
+ * @param s is wide string
+ * @param n is max length (a count of wide characters, not bytes)
+ * @return length in characters
+ * @asyncsignalsafe
+ */
+size_t wcsnlen(const wchar_t *s, size_t n) {
+  wchar_t *p;
+  if ((p = wmemchr(s, 0, n))) {
+    return p - s;
+  } else {
+    return n;
+  }
+}

@@ -84,8 +84,6 @@ char *strstr(const char *, const char *) strlenesque;
 char *strcasestr(const char *, const char *) strlenesque;
 char16_t *strstr16(const char16_t *, const char16_t *) strlenesque;
 wchar_t *wcsstr(const wchar_t *, const wchar_t *) strlenesque;
-void *rawwmemchr(const void *, wchar_t)
-strlenesque returnsnonnull;
 int strcmp(const char *, const char *) strlenesque;
 int strncmp(const char *, const char *, size_t) strlenesque;
 int strcmp16(const char16_t *, const char16_t *) strlenesque;

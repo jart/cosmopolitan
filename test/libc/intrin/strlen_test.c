@@ -95,6 +95,10 @@ TEST(strnlen_s, null_ReturnsZero) {
   ASSERT_EQ(0, strnlen_s(NULL, 3));
 }
 
+TEST(wcsnlen_s, null_ReturnsZero) {
+  ASSERT_EQ(0, wcsnlen_s(NULL, 3));
+}
+
 TEST(strnlen, nulNotFound_ReturnsSize) {
   int sizes[] = {1, 2, 7, 8, 15, 16, 31, 32, 33};
   for (unsigned i = 0; i < ARRAYLEN(sizes); ++i) {
@@ -108,6 +112,11 @@ TEST(strnlen, nulNotFound_ReturnsSize) {
 TEST(strnlen_s, nulNotFound) {
   char buf[3] = {1, 2, 3};
   ASSERT_EQ(3, strnlen_s(buf, 3));
+}
+
+TEST(wcsnlen_s, nulNotFound) {
+  wchar_t buf[3] = {1, 2, 3};
+  ASSERT_EQ(3, wcsnlen_s(buf, 3));
 }
 
 TEST(strlen, fuzz) {
