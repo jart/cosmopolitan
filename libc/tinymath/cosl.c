@@ -68,5 +68,7 @@ long double cosl(long double x) {
 	default:
 		return __sinl(hi, lo, 1);
 	}
+#else
+#error "architecture unsupported"
 #endif
 }

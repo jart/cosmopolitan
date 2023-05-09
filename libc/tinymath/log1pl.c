@@ -215,4 +215,6 @@ long double log1pl(long double x)
 {
 	return log1p(x);
 }
+#else
+#error "architecture unsupported"
 #endif

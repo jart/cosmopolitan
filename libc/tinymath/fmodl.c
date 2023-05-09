@@ -131,5 +131,7 @@ long double fmodl(long double x, long double y) {
 	} else
 		ux.i.se = ex|sx;
 	return ux.f;
+#else
+#error "architecture unsupported"
 #endif
 }

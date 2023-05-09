@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/fenv.h"
 #include "libc/tinymath/internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -41,8 +42,28 @@ asm(".include \"libc/disclaimer.inc\"");
 #endif
 static const double_t toint = 1/EPS;
 
+/**
+ * Rounds 𝑥 to nearest integer, away from zero.
+ */
 double round(double x)
 {
+#ifdef __aarch64__
+
+	asm("frinta\t%d0,%d1" : "=w"(x) : "w"(x));
+	return x;
+
+#elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
+
+	asm("frin\t%0,%1" : "=d"(x) : "d"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("fidbra\t%0,1,%1,4" : "=f"(x) : "f"(x));
+	return x;
+
+#else
+
 	union {double f; uint64_t i;} u = {x};
 	int e = u.i >> 52 & 0x7ff;
 	double_t y;
@@ -66,4 +87,6 @@ double round(double x)
 	if (u.i >> 63)
 		y = -y;
 	return y;
+
+#endif /* __aarch64__ */
 }

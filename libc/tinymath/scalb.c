@@ -53,6 +53,9 @@ asm(".include \"libc/disclaimer.inc\"");
  * should use scalbn() instead.
  */
 
+/**
+ * Returns 𝑥 × 2ʸ.
+ */
 double scalb(double x, double fn)
 {
 	if (isnan(x) || isnan(fn))

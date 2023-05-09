@@ -30,8 +30,8 @@
 #include "libc/tinymath/ldshape.internal.h"
 
 asm(".ident\t\"\\n\\n\
-exp2l (BSD-2 License)\\n\
-Copyright (c) 2005-2008 David Schultz <das@FreeBSD.ORG>\"");
+FreeBSD libm (BSD-2 License)\\n\
+Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
@@ -654,4 +654,6 @@ exp2l(long double x)
 
 	return scalbnl(r, k.i);
 }
+#else
+#error "architecture unsupported"
 #endif

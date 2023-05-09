@@ -53,13 +53,35 @@ static inline uint64_t mul64(uint64_t a, uint64_t b)
 	return ahi*bhi + (ahi*blo >> 32) + (alo*bhi >> 32);
 }
 
+/**
+ * Returns square root of 𝑥.
+ */
 double sqrt(double x)
 {
-#ifdef __x86__
+#ifdef __SSE2__
 
-	double res;
-	asm("sqrtsd\t%1,%0" : "=x"(res) : "x"(x));
-	return res;
+	asm("sqrtsd\t%1,%0" : "=x"(x) : "x"(x));
+	return x;
+
+#elif defined(__aarch64__)
+
+	asm("fsqrt\t%d0,%d1" : "=w"(x) : "w"(x));
+	return x;
+
+#elif defined(__powerpc64__)
+
+	asm("fsqrt\t%0,%1" : "=d"(x) : "d"(x));
+	return x;
+
+#elif defined(__riscv) && __riscv_flen >= 64
+
+	asm("fsqrt.d\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("sqdbr\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
 
 #else
 
@@ -196,5 +218,5 @@ double sqrt(double x)
 	}
 	return y;
 
-#endif
+#endif /* __SSE2__ */
 }

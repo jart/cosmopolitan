@@ -19,6 +19,9 @@
 #include "libc/math.h"
 #include "libc/runtime/fenv.h"
 
+/**
+ * Rounds to nearest integer.
+ */
 long double nearbyintl(long double x) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
   return nearbyint(x);

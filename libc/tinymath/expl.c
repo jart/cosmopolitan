@@ -162,4 +162,6 @@ long double expl(long double x)
 {
 	return exp(x);
 }
+#else
+#error "architecture unsupported"
 #endif

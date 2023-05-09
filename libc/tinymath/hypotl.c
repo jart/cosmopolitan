@@ -97,4 +97,6 @@ long double hypotl(long double x, long double y)
 	sq(&hy, &ly, y);
 	return z*sqrtl(ly+lx+hy+hx);
 }
+#else
+#error "architecture unsupported"
 #endif

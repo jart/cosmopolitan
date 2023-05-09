@@ -22,5 +22,5 @@
  * Returns 𝑥 × 2ʸ.
  */
 double scalbln(double x, long n) {
-  return ldexp(x, n);
+  return ldexp(x, n > 65536 ? 65536 : n < -65536 ? -65536 : (int)n);
 }

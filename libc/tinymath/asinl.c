@@ -37,7 +37,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_asinl.c */
 /*
@@ -55,11 +55,15 @@ asm(".include \"libc/disclaimer.inc\"");
  * Converted to long double by David Schultz <das@FreeBSD.ORG>.
  */
 
+/**
+ * Returns arc sine of 𝑥.
+ *
+ * @define atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
+ * @domain -1 ≤ 𝑥 ≤ 1
+ */
+long double asinl(long double x) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double asinl(long double x)
-{
 	return asin(x);
-}
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 #if LDBL_MANT_DIG == 64
 #define CLOSETO1(u) (u.i.m>>56 >= 0xf7)
@@ -69,14 +73,6 @@ long double asinl(long double x)
 #define CLEARBOTTOM(u) (u.i.lo = 0)
 #endif
 
-/**
- * Returns arc sine of 𝑥.
- *
- * @define atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
- * @domain -1 ≤ 𝑥 ≤ 1
- */
-long double asinl(long double x)
-{
 	union ldshape u = {x};
 	long double z, r, s;
 	uint16_t e = u.i.se & 0x7fff;
@@ -111,6 +107,8 @@ long double asinl(long double x)
 		x = 0.5*pio2_hi-(2*s*r - (pio2_lo-2*c) - (0.5*pio2_hi-2*f));
 	}
 	return sign ? -x : x;
-}
 
+#else
+#error "architecture unsupported"
 #endif
+}

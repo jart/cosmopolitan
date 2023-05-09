@@ -1,0 +1,25 @@
+README
+
+  This folder provides libm scalar math functions, sourced from Musl
+  Libc, FreeBSD, OpenBSD, and ARM's Optimized Routines project.
+
+LICENSE
+
+  All code is covered by notice licenses (e.g. BSD, MIT) which are
+  documented on a file-by-file basis.
+
+ORIGIN
+
+  git://git.musl-libc.org/musl
+  commit f5f55d6589940fd2c2188d76686efe3a530e64e0
+  Author: Rich Felker <dalias@aerifal.cx>
+  Date:   Mon May 1 23:39:41 2023 -0400
+
+      release 1.2.4
+
+  git@github.com:ARM-software/optimized-routines.git
+  commit f9f58aa37edc3486f18b1dd8701b74b5e3873699
+  Author: Joe Ramsay <Joe.Ramsay@arm.com>
+  Date:   Fri May 5 14:19:06 2023 +0100
+
+      math: Cleanup Neon cos and cosf

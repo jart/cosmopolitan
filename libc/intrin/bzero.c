@@ -26,7 +26,7 @@
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
-static dontinline antiquity void bzero_sse(char *p, size_t n) {
+static void bzero_sse(char *p, size_t n) {
   xmm_t v = {0};
   if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {

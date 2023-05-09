@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/nf32.h"
+#include "libc/math.h"
 
 /**
- * Encodes u32 as ANSI Nf sequence content.
+ * Rounds to nearest integer.
  */
-char *EncodeNf32(char p[hasatleast 12], uint32_t x) {
-  char t;
-  size_t i, a, b;
-  i = 0;
-  do {
-    p[i++] = " ,.-+*#%&$"[x % 10];
-    x = x / 10;
-  } while (x > 0);
-  p[i] = '\0';
-  if (i) {
-    for (a = 0, b = i - 1; a < b; ++a, --b) {
-      t = p[a];
-      p[a] = p[b];
-      p[b] = t;
-    }
-  }
-  return p + i;
+long long llrintf(float x) {
+  long long res;
+#ifdef __x86_64__
+  asm("cvtss2si\t%1,%0" : "=res"(res) : "x"(x));
+#elif defined(__aarch64__)
+  asm("frintx\t%s1,%s1\n\t"
+      "fcvtzs\t%x0,%s1"
+      : "=r"(res), "+w"(x));
+#else
+  res = rintf(x);
+#endif /* __x86_64__ */
+  return res;
 }

@@ -1,5 +1,6 @@
 #ifndef _MM_MALLOC_H_INCLUDED
 #define _MM_MALLOC_H_INCLUDED
+#ifdef __x86_64__
 #include "libc/mem/mem.h"
 
 #ifndef __cplusplus
@@ -24,4 +25,5 @@ static __inline void _mm_free(void *__ptr) {
   free(__ptr);
 }
 
+#endif /* __x86_64__ */
 #endif /* _MM_MALLOC_H_INCLUDED */

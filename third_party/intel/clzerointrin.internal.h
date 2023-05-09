@@ -1,5 +1,6 @@
 #ifndef _CLZEROINTRIN_H_INCLUDED
 #define _CLZEROINTRIN_H_INCLUDED
+#ifdef __x86_64__
 
 #ifndef __CLZERO__
 #pragma GCC push_options
@@ -18,4 +19,5 @@ extern __inline void
 #pragma GCC pop_options
 #endif /* __DISABLE_CLZERO__ */
 
+#endif /* __x86_64__ */
 #endif /* _CLZEROINTRIN_H_INCLUDED */

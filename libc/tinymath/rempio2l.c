@@ -197,4 +197,6 @@ int __rem_pio2l(long double x, long double *y)
 	return n;
 }
 
+#else
+#error "architecture unsupported"
 #endif

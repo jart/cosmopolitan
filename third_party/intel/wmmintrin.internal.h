@@ -1,5 +1,6 @@
 #ifndef _WMMINTRIN_H_INCLUDED
 #define _WMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/emmintrin.internal.h"
 
 #if !defined(__AES__) || !defined(__SSE2__)
@@ -77,4 +78,5 @@ extern __inline __m128i
 #pragma GCC pop_options
 #endif /* __DISABLE_PCLMUL__ */
 
+#endif /* __x86_64__ */
 #endif /* _WMMINTRIN_H_INCLUDED */

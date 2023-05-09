@@ -32,18 +32,16 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
+/**
+ * Returns 𝑥 × 2ʸ.
+ */
+long double scalbnl(long double x, int n) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double scalbnl(long double x, int n)
-{
 	return scalbn(x, n);
-}
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
-long double scalbnl(long double x, int n)
-{
 	union ldshape u;
-
 	if (n > 16383) {
 		x *= 0x1p16383L;
 		n -= 16383;
@@ -66,5 +64,7 @@ long double scalbnl(long double x, int n)
 	u.f = 1.0;
 	u.i.se = 0x3fff + n;
 	return x * u.f;
-}
+#else
+#error "architecture unsupported"
 #endif
+}

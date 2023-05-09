@@ -1,5 +1,6 @@
 #ifndef _EMMINTRIN_H_INCLUDED
 #define _EMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/xmmintrin.internal.h"
 
 #ifndef __SSE2__
@@ -1494,4 +1495,5 @@ extern __inline __m128d
 #pragma GCC pop_options
 #endif /* __DISABLE_SSE2__ */
 
+#endif /* __x86_64__ */
 #endif /* _EMMINTRIN_H_INCLUDED */

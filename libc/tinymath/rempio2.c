@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/likely.h"
 #include "libc/math.h"
+#include "libc/runtime/fenv.h"
 #include "libc/tinymath/kernel.internal.h"
 
 asm(".ident\t\"\\n\\n\

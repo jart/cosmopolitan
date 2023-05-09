@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_INTEL_CPUID_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_INTEL_CPUID_INTERNAL_H_
+#ifdef __x86_64__
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define bit_SSE3       (1 << 0)
@@ -232,4 +233,5 @@ static __inline int __get_cpuid_count(unsigned int __leaf,
 }
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* __x86_64__ */
 #endif /* COSMOPOLITAN_THIRD_PARTY_INTEL_CPUID_INTERNAL_H_ */

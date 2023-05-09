@@ -100,5 +100,7 @@ long double nextafterl(long double x, long double y) {
 	if ((ux.i.se & 0x7fff) == 0)
 		FORCE_EVAL(x*x + ux.f*ux.f);
 	return ux.f;
+#else
+#error "architecture unsupported"
 #endif
 }

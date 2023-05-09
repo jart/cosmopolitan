@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/nexgen32e/x86feature.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -124,6 +125,28 @@ TEST(rint, test) {
   EXPECT_STREQ("2", gc(xdtoa(rint(2.5))));
 }
 
+TEST(lrint, test) {
+  EXPECT_EQ(-2, lrint(-2.5));
+  EXPECT_EQ(-2, lrint(-1.5));
+  EXPECT_EQ(-0, lrint(-.5));
+  EXPECT_EQ(-0, lrint(-.4));
+  EXPECT_EQ(0, lrint(.4));
+  EXPECT_EQ(0, lrint(.5));
+  EXPECT_EQ(2, lrint(1.5));
+  EXPECT_EQ(2, lrint(2.5));
+}
+
+TEST(lrintf, test) {
+  EXPECT_EQ(-2, lrintf(-2.5));
+  EXPECT_EQ(-2, lrintf(-1.5));
+  EXPECT_EQ(-0, lrintf(-.5));
+  EXPECT_EQ(-0, lrintf(-.4));
+  EXPECT_EQ(0, lrintf(.4));
+  EXPECT_EQ(0, lrintf(.5));
+  EXPECT_EQ(2, lrintf(1.5));
+  EXPECT_EQ(2, lrintf(2.5));
+}
+
 TEST(rintf, test) {
   EXPECT_STREQ("-2", gc(xdtoa(rintf(-2.5))));
   EXPECT_STREQ("-2", gc(xdtoa(rintf(-1.5))));
@@ -184,4 +207,23 @@ TEST(lroundl, test) {
   EXPECT_EQ(1, lroundl(.5));
   EXPECT_EQ(2, lroundl(1.5));
   EXPECT_EQ(3, lroundl(2.5));
+}
+
+BENCH(round, bench) {
+  EZBENCH2("double+.5", donothing, EXPROPRIATE(VEIL("x", (double)(-3.5)) + .5));
+  EZBENCH2("float+.5f", donothing, EXPROPRIATE(VEIL("x", (float)(-3.5)) + .5));
+  EZBENCH2("ldbl+.5l", donothing,
+           EXPROPRIATE(VEIL("t", (long double)(-3.5)) + .5));
+  double _round(double) asm("round");
+  float _roundf(float) asm("roundf");
+  long double _roundl(long double) asm("roundl");
+  EZBENCH2("-round", donothing, _round(.7));   /* ~4ns */
+  EZBENCH2("-roundf", donothing, _roundf(.7)); /* ~3ns */
+  EZBENCH2("-roundl", donothing, _roundl(.7)); /* ~8ns */
+  double _lrint(double) asm("lrint");
+  float _lrintf(float) asm("lrintf");
+  long double _lrintl(long double) asm("lrintl");
+  EZBENCH2("-lrint", donothing, _lrint(.7));   /* ~1ns */
+  EZBENCH2("-lrintf", donothing, _lrintf(.7)); /* ~1ns */
+  EZBENCH2("-lrintl", donothing, _lrintl(.7)); /* ~78ns */
 }

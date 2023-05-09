@@ -1,5 +1,6 @@
 #ifndef _SMMINTRIN_H_INCLUDED
 #define _SMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/tmmintrin.internal.h"
 
 #ifndef __SSE4_1__
@@ -702,4 +703,5 @@ extern __inline unsigned long long
 #pragma GCC pop_options
 #endif /* __DISABLE_SSE4_1__ */
 
+#endif /* __x86_64__ */
 #endif /* _SMMINTRIN_H_INCLUDED */

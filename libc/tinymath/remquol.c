@@ -153,5 +153,7 @@ long double remquol(long double x, long double y, int *quo) {
 	q &= 0x7fffffff;
 	*quo = sx^sy ? -(int)q : (int)q;
 	return sx ? -x : x;
+#else
+#error "architecture unsupported"
 #endif
 }

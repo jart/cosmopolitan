@@ -37,7 +37,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_atan2l.c */
 /*
@@ -56,18 +56,13 @@ asm(".include \"libc/disclaimer.inc\"");
  * Converted to long double by David Schultz <das@FreeBSD.ORG>.
  */
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double atan2l(long double y, long double x)
-{
-	return atan2(y, x);
-}
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
-
 /**
  * Returns arc tangent of 𝑦/𝑥.
  */
-long double atan2l(long double y, long double x)
-{
+long double atan2l(long double y, long double x) {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+	return atan2(y, x);
+#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 #ifdef __x86__
 
 	long double res;
@@ -133,7 +128,9 @@ long double atan2l(long double y, long double x)
 	default: /* case 3 */
 		return (z-2*pio2_lo)-2*pio2_hi; /* atan(-,-) */
 	}
-#endif /* __x86__ */
-}
 
+#endif /* __x86__ */
+#else
+#error "architecture unsupported"
 #endif
+}

@@ -1,5 +1,6 @@
 #ifndef _AMMINTRIN_H_INCLUDED
 #define _AMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/pmmintrin.internal.h"
 
 #ifndef __SSE4A__
@@ -63,4 +64,5 @@ extern __inline __m128i
 #pragma GCC pop_options
 #endif /* __DISABLE_SSE4A__ */
 
+#endif /* __x86_64__ */
 #endif /* _AMMINTRIN_H_INCLUDED */

@@ -26,26 +26,18 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/complex.h"
-#include "libc/math.h"
-#include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
-
-
+long double complex casinhl(long double complex z) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double complex casinhl(long double complex z)
-{
 	return casinh(z);
-}
 #else
-long double complex casinhl(long double complex z)
-{
 	z = casinl(CMPLXL(-cimagl(z), creall(z)));
 	return CMPLXL(cimagl(z), -creall(z));
-}
 #endif
+}

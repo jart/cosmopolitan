@@ -1,5 +1,6 @@
 #ifndef _SGXINTRIN_H_INCLUDED
 #define _SGXINTRIN_H_INCLUDED
+#ifdef __x86_64__
 
 #ifndef __SGX__
 #pragma GCC push_options
@@ -216,4 +217,5 @@ extern __inline unsigned int
 #pragma GCC pop_options
 #endif /* __DISABLE_SGX__ */
 
+#endif /* __x86_64__ */
 #endif /* _SGXINTRIN_H_INCLUDED */

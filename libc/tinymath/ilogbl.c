@@ -82,6 +82,8 @@ int ilogbl(long double x) {
 		return u.f ? FP_ILOGBNAN : INT_MAX;
 	}
 	return e - 0x3fff;
+#else
+#error "architecture unsupported"
 #endif
 }
 

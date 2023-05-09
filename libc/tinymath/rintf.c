@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/fenv.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\

@@ -19,6 +19,9 @@
 #include "libc/math.h"
 #include "libc/tinymath/ldshape.internal.h"
 
+/**
+ * Returns absolute value of floating point number.
+ */
 long double fabsl(long double x) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
   return fabs(x);
@@ -26,5 +29,7 @@ long double fabsl(long double x) {
   union ldshape u = {x};
   u.i.se &= 0x7fff;
   return u.f;
+#else
+#error "architecture unsupported"
 #endif
 }

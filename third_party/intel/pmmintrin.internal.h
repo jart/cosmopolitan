@@ -1,5 +1,6 @@
 #ifndef _PMMINTRIN_H_INCLUDED
 #define _PMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/emmintrin.internal.h"
 
 #ifndef __SSE3__
@@ -99,4 +100,5 @@ extern __inline void
 #pragma GCC pop_options
 #endif /* __DISABLE_SSE3__ */
 
+#endif /* __x86_64__ */
 #endif /* _PMMINTRIN_H_INCLUDED */

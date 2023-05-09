@@ -44,13 +44,35 @@ static inline uint32_t mul32(uint32_t a, uint32_t b)
 
 /* see sqrt.c for more detailed comments.  */
 
+/**
+ * Returns square root of 𝑥.
+ */
 float sqrtf(float x)
 {
-#ifdef __x86__
+#ifdef __SSE2__
 
-	float res;
-	asm("sqrtss\t%1,%0" : "=x"(res) : "x"(x));
-	return res;
+	asm("sqrtss\t%1,%0" : "=x"(x) : "x"(x));
+	return x;
+
+#elif defined(__aarch64__)
+
+	asm("fsqrt\t%s0,%s1" : "=w"(x) : "w"(x));
+	return x;
+
+#elif defined(__powerpc64__)
+
+	asm("fsqrts\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__riscv) && __riscv_flen >= 32
+
+	asm("fsqrt.s\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("sqebr\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
 
 #else
 
@@ -121,5 +143,5 @@ float sqrtf(float x)
 	}
 	return y;
 
-#endif
+#endif /* __SSE2__ */
 }

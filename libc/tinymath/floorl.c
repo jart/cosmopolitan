@@ -35,6 +35,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Returns largest integral value not greater than 𝑥.
+ */
 long double floorl(long double x) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 	return floor(x);
@@ -60,5 +63,7 @@ long double floorl(long double x) {
 	if (y > 0)
 		return x + y - 1;
 	return x + y;
+#else
+#error "architecture unsupported"
 #endif
 }

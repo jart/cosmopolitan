@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/libcxx/math.h"
 
+/**
+ * Returns absolute value of floating point number.
+ */
 float fabsf(float x) {
   union {
     float f;

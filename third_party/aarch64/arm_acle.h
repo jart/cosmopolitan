@@ -1,5 +1,6 @@
 #ifndef _GCC_ARM_ACLE_H
 #define _GCC_ARM_ACLE_H
+#ifdef __aarch64__
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
@@ -58,4 +59,5 @@ __crc32d(uint32_t __a, uint64_t __b) {
 
 #pragma GCC pop_options
 
+#endif /* __aarch64__ */
 #endif

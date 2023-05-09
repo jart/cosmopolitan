@@ -1,5 +1,6 @@
 #ifndef _MWAITXINTRIN_H_INCLUDED
 #define _MWAITXINTRIN_H_INCLUDED
+#ifdef __x86_64__
 
 #ifndef __MWAITX__
 #pragma GCC push_options
@@ -24,4 +25,5 @@ extern __inline void
 #pragma GCC pop_options
 #endif /* __DISABLE_MWAITX__ */
 
+#endif /* __x86_64__ */
 #endif /* _MWAITXINTRIN_H_INCLUDED */

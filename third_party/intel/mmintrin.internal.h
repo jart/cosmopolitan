@@ -1,5 +1,6 @@
 #ifndef _MMINTRIN_H_INCLUDED
 #define _MMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 
 #if defined __x86_64__ && !defined __SSE__ || !defined __MMX__
 #pragma GCC push_options
@@ -829,4 +830,5 @@ extern __inline __m64
 #pragma GCC pop_options
 #endif /* __DISABLE_MMX__ */
 
+#endif /* __x86_64__ */
 #endif /* _MMINTRIN_H_INCLUDED */

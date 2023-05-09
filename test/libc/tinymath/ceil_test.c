@@ -59,7 +59,7 @@ BENCH(ceill, bench) {
   double _ceil(double) asm("ceil");
   float _ceilf(float) asm("ceilf");
   long double _ceill(long double) asm("ceill");
-  EZBENCH2("ceil", donothing, _ceil(.7));   /* ~3ns */
+  EZBENCH2("ceil", donothing, _ceil(.7));   /* ~1ns */
   EZBENCH2("ceilf", donothing, _ceilf(.7)); /* ~3ns */
   EZBENCH2("ceill", donothing, _ceill(.7)); /* ~9ns */
 }

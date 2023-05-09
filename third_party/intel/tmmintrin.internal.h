@@ -1,5 +1,6 @@
 #ifndef _TMMINTRIN_H_INCLUDED
 #define _TMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/pmmintrin.internal.h"
 
 #ifndef __SSSE3__
@@ -214,4 +215,5 @@ extern __inline __m64
 #pragma GCC pop_options
 #endif /* __DISABLE_SSSE3__ */
 
+#endif /* __x86_64__ */
 #endif /* _TMMINTRIN_H_INCLUDED */

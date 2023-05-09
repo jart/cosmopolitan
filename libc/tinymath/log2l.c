@@ -217,4 +217,6 @@ long double log2l(long double x)
 {
 	return log2(x);
 }
+#else
+#error "architecture unsupported"
 #endif

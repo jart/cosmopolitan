@@ -103,7 +103,6 @@ TEST(ldexp, stuff) {
   ASSERT_STREQ("100.48", _gc(xasprintf("%.2Lf", ldexpl(pi, twopow))));
   ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalb(pi, twopow))));
   ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbf(pi, twopow))));
-  ASSERT_STREQ("100.48", _gc(xasprintf("%.2Lf", scalbl(pi, twopow))));
   ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbn(pi, twopow))));
   ASSERT_STREQ("100.48", _gc(xasprintf("%.2f", scalbnf(pi, twopow))));
   ASSERT_STREQ("100.48", _gc(xasprintf("%.2Lf", scalbnl(pi, twopow))));

@@ -1,5 +1,6 @@
 #ifndef _XMMINTRIN_H_INCLUDED
 #define _XMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/mm_malloc.internal.h"
 #include "third_party/intel/mmintrin.internal.h"
 
@@ -1087,4 +1088,5 @@ extern __inline void
   __builtin_ia32_pause();
 }
 
+#endif /* __x86_64__ */
 #endif /* _XMMINTRIN_H_INCLUDED */

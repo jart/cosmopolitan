@@ -21,6 +21,8 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 
+#ifdef __x86_64__
+
 /**
  * Determines the pending signals on New Technology.
  *
@@ -41,3 +43,5 @@ textwindows void __sig_pending(sigset_t *pending) {
     __sig_unlock();
   }
 }
+
+#endif /* __x86_64__ */

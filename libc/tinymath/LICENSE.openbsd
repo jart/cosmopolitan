@@ -1,0 +1,394 @@
+OpenBSD Copyright Policy
+https://www.openbsd.org/policy.html
+
+  Goal
+
+   Copyright law is complex, OpenBSD policy is simple — OpenBSD
+   strives to provide code that can be freely used, copied, modified,
+   and distributed by anyone and for any purpose. This maintains the
+   spirit of the original Berkeley Software Distribution. The
+   preferred wording of a license to be applied to new code can be
+   found in the license template.
+
+   OpenBSD can exist as it does today because of the example set by
+   the Computer Systems Research Group at Berkeley and the battles
+   which they and others fought to create a Unix source distribution
+   un-encumbered by proprietary code and commercial licensing.
+
+   The ability of a freely redistributable "Berkeley" Unix to move
+   forward on a competitive basis with other operating systems
+   depends on the willingness of the various development groups to
+   exchange code amongst themselves and with other projects.
+   Understanding the legal issues surrounding copyright is
+   fundamental to the ability to exchange and re-distribute code,
+   while honoring the spirit of the copyright and concept of
+   attribution is fundamental to promoting the cooperation of the
+   people involved.
+
+  The Berkeley Copyright
+
+   The original Berkeley copyright poses no restrictions on private
+   or commercial use of the software and imposes only simple and
+   uniform requirements for maintaining copyright notices in
+   redistributed versions and crediting the originator of the
+   material only in advertising.
+
+   For instance:
+
+  * Copyright (c) 1982, 1986, 1990, 1991, 1993
+  *      The Regents of the University of California.  All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions
+  * are met:
+  * 1. Redistributions of source code must retain the above copyright
+  *    notice, this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright
+  *    notice, this list of conditions and the following disclaimer in the
+  *    documentation and/or other materials provided with the distribution.
+  * 3. All advertising materials mentioning features or use of this software
+  *    must display the following acknowledgement:
+  *      This product includes software developed by the University of
+  *      California, Berkeley and its contributors.
+  * 4. Neither the name of the University nor the names of its contributors
+  *    may be used to endorse or promote products derived from this software
+  *    without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  *
+
+   Berkeley rescinded the 3rd term (the advertising term) on 22 July
+   1999. Verbatim copies of the Berkeley license in the OpenBSD tree
+   have that term removed. In addition, many 3rd-party BSD-style
+   licenses consist solely of the first two terms.
+
+   Because the OpenBSD copyright imposes no conditions beyond those
+   imposed by the Berkeley copyright, OpenBSD can hope to share the
+   same wide distribution and applicability as the Berkeley
+   distributions. It follows however, that OpenBSD cannot include
+   material which includes copyrights which are more restrictive than
+   the Berkeley copyright, or must relegate this material to a
+   secondary status, i.e. OpenBSD as a whole is freely
+   redistributable, but some optional components may not be.
+
+  Copyright Law
+
+   While the overall subject of copyright law is far beyond the scope
+   of this document, some basics are in order. Under the current
+   copyright law, copyrights are implicit in the creation of a new
+   work and reside with the creator. In general the copyright applies
+   only to the new work, not the material the work was derived from,
+   nor those portions of the derivative material included in the new
+   work.
+
+   Copyright law admits to three general categories of works:
+
+   Original Work
+           A new work that is not derived from an existing work.
+
+   Derivative Work
+           Work that is derived from, includes or amends existing
+           works.
+
+   Compilation
+           A work that is a compilation of existing new and
+           derivative works.
+
+   The fundamental concept is that there is primacy of the copyright,
+   that is a copyright of a derivative work does not affect the
+   rights held by the owner of the copyright of the original work,
+   rather only the part added. Likewise the copyright of a
+   compilation does not affect the rights of the owner of the
+   included works, only the compilation as an entity.
+
+   It is vitally important to understand that copyrights are broad
+   protections as defined by national and international copyright
+   law. The "copyright notices" usually included in source files are
+   not copyrights, but rather notices that a party asserts that they
+   hold copyright to the material or to part of the material.
+   Typically these notices are associated with license terms which
+   grant permissions subject to copyright law and with disclaimers
+   that state the position of the copyright holder/distributor with
+   respect to liability surrounding use of the material.
+
+   By international law, specifically the Berne Convention for the
+   Protection of Literary and Artistic Works, part of the author's
+   copyright, the so-called moral rights, are inalienable. This
+   includes the author's right "to claim authorship of the work and
+   to object to any distortion, mutilation or other modification of,
+   or other derogatory action in relation to, the said work, which
+   would be prejudicial to his honor or reputation". In some
+   countries, the law reserves additional inalienable moral rights to
+   the author. On the other hand, the author is free to transfer
+   other parts of his copyright, the so-called economic rights, in
+   particular the rights to use, copy, modify, distribute, and
+   license the work.
+
+  Permissions — the flip side
+
+   Because copyrights arise from the creation of a work, rather than
+   through a registration process, there needs to be a practical way
+   to extend permission to use a work beyond what might be allowed by
+   "fair use" provisions of the copyright laws.
+
+   This permission typically takes the form of a "release" or
+   "license" included in the work, which grants the additional uses
+   beyond those granted by copyright law, usually subject to a
+   variety of conditions. At one extreme sits "public domain" where
+   the originator asserts that he imposes no restrictions on use of
+   the material, at the other restrictive clauses that actually grant
+   no additional rights or impose restrictive, discriminatory or
+   impractical conditions on use of the work.
+
+   Note that a license is not to be confused with a copyright
+   transfer. While a transfer would give the new copyright holder
+   exclusive rights to use the code and take these rights away from
+   the author, a license typically grants additional people
+   non-exclusive rights to use the code, while the authors retain all
+   their rights.
+
+   The above observations regarding moral rights imply that putting
+   code under an ISC or two-clause BSD license essentially makes the
+   code as free as it can possibly get. Modifying the wording of
+   these licenses can only result in one of the three following
+   effects:
+     * making the code less free by adding additional restrictions
+       regarding its use, copying, modification or distribution;
+     * or effectively not changing anything by merely changing the
+       wording, but not changing anything substantial regarding the
+       legal content;
+     * or making the license illegal by attempting to deprive the
+       authors of rights they cannot legally give away.
+
+   Again, an important point to note is that the release and
+   conditions can only apply to the portion of the work that was
+   originated by the copyright holder—the holder of a copyright on a
+   derivative work can neither grant additional permissions for use
+   of the original work, nor impose more restrictive conditions for
+   use of that work.
+
+   Because copyright arises from the creation of a work and not the
+   text or a registration process, removing or altering a copyright
+   notice or associated release terms has no bearing on the existence
+   of the copyright, rather all that is accomplished is to cast doubt
+   upon whatever rights the person making the modifications had to
+   use the material in the first place. Likewise, adding terms and
+   conditions in conflict with the original terms and conditions does
+   not supersede them, rather it casts doubts on the rights of the
+   person making the amendments to use the material and creates
+   confusion as to whether anyone can use the amended version or
+   derivatives thereof.
+
+   Finally, releases are generally binding on the material that they
+   are distributed with. This means that if the originator of a work
+   distributes that work with a release granting certain permissions,
+   those permissions apply as stated, without discrimination, to all
+   persons legitimately possessing a copy of the work. That means
+   that having granted a permission, the copyright holder can not
+   retroactively say that an individual or class of individuals are
+   no longer granted those permissions. Likewise should the copyright
+   holder decide to "go commercial" he can not revoke permissions
+   already granted for the use of the work as distributed, though he
+   may impose more restrictive permissions in his future
+   distributions of that work.
+
+  Specific Cases
+
+   This section attempts to summarize the position of OpenBSD
+   relative to some commonly encountered copyrights.
+
+   Berkeley
+
+           The Berkeley copyright is the model for the OpenBSD
+           copyright. It retains the rights of the copyright holder,
+           while imposing minimal conditions on the use of the
+           copyrighted material. Material with Berkeley copyrights,
+           or copyrights closely adhering to the Berkeley model can
+           generally be included in OpenBSD.
+
+   AT&T
+
+           As part of its settlement with AT&T, Berkeley included an
+           AT&T copyright notice on some of the files in 4.4BSD lite
+           and lite2. The terms of this license are identical to the
+           standard Berkeley license.
+
+           Additionally, OpenBSD includes some other AT&T code with
+           non-restrictive copyrights, such as the reference
+           implementation of awk.
+
+   Caldera
+
+           The original Unix code (AT&T versions 1 through 7 UNIX,
+           including 32V) was freed by Caldera, Inc. on 23 January
+           2002 and is now available under a 4-term BSD-style
+           license. As a result, it would theoretically be possible
+           to incorporate original Unix code into OpenBSD. However,
+           that code is now so old that it does not satisfy today's
+           interface and quality standards.
+
+   DEC, Sun, other manufacturers/software houses.
+
+           In general OpenBSD does not include material copyrighted
+           by manufacturers or software houses. Material may be
+           included where the copyright owner has granted general
+           permission for reuse without conditions, with terms
+           similar to the Berkeley copyright, or where the material
+           is the product of an employee and the employer's copyright
+           notice effectively releases any rights they might have to
+           the work.
+
+   Carnegie-Mellon (CMU, Mach)
+
+           The Carnegie-Mellon copyright is similar to the Berkeley
+           copyright, except that it requests that derivative works
+           be made available to Carnegie-Mellon. Because this is only
+           a request and not a condition, such material can still be
+           included in OpenBSD. It should be noted that existing
+           versions of Mach are still subject to AT&T copyrights,
+           which prevents the general distribution of Mach sources.
+
+   Apache
+
+           The original Apache license was similar to the Berkeley
+           license, but source code published under version 2 of the
+           Apache license is subject to additional restrictions and
+           cannot be included into OpenBSD. In particular, if you use
+           code under the Apache 2 license, some of your rights will
+           terminate if you claim in court that the code violates a
+           patent.
+
+           A license can only be considered fully permissive if it
+           allows use by anyone for all the future without giving up
+           any of their rights. If there are conditions that might
+           terminate any rights in the future, or if you have to give
+           up a right that you would otherwise have, even if
+           exercising that right could reasonably be regarded as
+           morally objectionable, the code is not free.
+
+           In addition, the clause about the patent license is
+           problematic because a patent license cannot be granted
+           under Copyright law, but only under contract law, which
+           drags the whole license into the domain of contract law.
+           But while Copyright law is somewhat standardized by
+           international agreements, contract law differs wildly
+           among jurisdictions. So what the license means in
+           different jurisdictions may vary and is hard to predict.
+
+   ISC
+
+           The ISC copyright is functionally equivalent to a two-term
+           BSD copyright with language removed that is made
+           unnecessary by the Berne convention. This is the preferred
+           license for new code incorporated into OpenBSD. A sample
+           license is available in the file
+           /usr/share/misc/license.template.
+
+   GNU General Public License, GPL, LGPL, copyleft, etc.
+
+           The GNU Public License and licenses modeled on it impose
+           the restriction that source code must be distributed or
+           made available for all works that are derivatives of the
+           GNU copyrighted code.
+
+           While this may superficially look like a noble strategy,
+           it is a condition that is typically unacceptable for
+           commercial use of software. So in practice, it usually
+           ends up hindering free sharing and reuse of code and ideas
+           rather than encouraging it. As a consequence, no
+           additional software bound by the GPL terms will be
+           considered for inclusion into the OpenBSD base system.
+
+           For historical reasons, the OpenBSD base system still
+           includes the following GPL-licensed components: the GNU
+           compiler collection (GCC) with supporting binutils and
+           libraries, GNU CVS, GNU texinfo, the mkhybrid file system
+           creation tool, and the readline library. Replacement by
+           equivalent, more freely licensed tools is a long-term
+           desideratum.
+
+   NetBSD
+
+           Much of OpenBSD is originally based on and evolved from
+           NetBSD, since some of the OpenBSD developers were involved
+           in the NetBSD project. The general NetBSD license terms
+           are compatible with the Berkeley license and permit such
+           use. Material subject only to the general NetBSD license
+           can generally be included in OpenBSD.
+
+           In the past, NetBSD has included material copyrighted by
+           individuals who have imposed license conditions beyond
+           that of the general NetBSD license, but granted the NetBSD
+           Foundation license to distribute the material. Such
+           material can not be included in OpenBSD as long as the
+           conditions imposed are at odds with the OpenBSD license
+           terms or releases from those terms are offered on a
+           discriminatory basis.
+
+   FreeBSD
+
+           Most of FreeBSD is also based on Berkeley licensed
+           material or includes copyright notices based on the
+           Berkeley model. Such material can be included in OpenBSD,
+           while those parts that are subject to GPL or various
+           individual copyright terms that are at odds with the
+           OpenBSD license can not be included in OpenBSD.
+
+   Linux
+
+           Most of Linux is subject to GPL style licensing terms and
+           therefore can not be included in OpenBSD. Individual
+           components may be eligible, subject to the terms of the
+           originator's copyright notices. Note that Linux
+           "distributions" may also be subject to additional
+           copyright claims of the distributing organization, either
+           as a compilation or on material included that is not part
+           of the Linux core.
+
+   X.Org
+
+           The X.Org Foundation maintains and distributes the X
+           Window System under a modified MIT license, which is quite
+           similar to the BSD license and additionally allows
+           sublicensing. Under the name of Xenocara, the OpenBSD base
+           system includes an improved and actively maintained
+           version of the X.Org code.
+
+   Shareware, Charityware, Freeware, etc.
+
+           Most "shareware" copyright notices impose conditions for
+           redistribution, use or visibility that are at conflict
+           with the OpenBSD project goals. Review on a case-by-case
+           basis is required as to whether the wording of the
+           conditions is acceptable in terms of conditions being
+           requested vs. demanded and whether the spirit of the
+           conditions is compatible with goals of the OpenBSD
+           project.
+
+   Public Domain
+
+           While material that is truly entered into the "public
+           domain" can be included in OpenBSD, review is required on
+           a case by case basis. Frequently the "public domain"
+           assertion is made by someone who does not really hold all
+           rights under copyright law to grant that status or there
+           are a variety of conditions imposed on use. For a work to
+           be truly in the "public domain" all rights are abandoned
+           and the material is offered without restrictions.
+
+           In some jurisdictions, it is doubtful whether voluntarily
+           placing one's own work into the public domain is legally
+           possible. For that reason, to make any substantial body of
+           code free, it is preferable to state the copyright and put
+           it under an ISC or BSD license instead of attempting to
+           release it into the public domain.

@@ -1,5 +1,6 @@
 #ifndef _AARCH64_NEON_H_
 #define _AARCH64_NEON_H_
+#ifdef __aarch64__
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
@@ -29328,4 +29329,5 @@ __extension__ extern __inline float32x4_t
 #undef __aarch64_vdupq_laneq_u32
 #undef __aarch64_vdupq_laneq_u64
 
-#endif
+#endif /* __aarch64__ */
+#endif /* _AARCH64_NEON_H_ */

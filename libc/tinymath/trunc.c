@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+#include "third_party/intel/smmintrin.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -39,6 +40,30 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 double trunc(double x)
 {
+#ifdef __aarch64__
+
+	asm("frintz\t%d0,%d1" : "=w"(x) : "w"(x));
+	return x;
+
+#elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
+
+	asm("friz\t%0,%1" : "=d"(x) : "d"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("fidbra\t%0,5,%1,4" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__x86_64__) && defined(__SSE4_1__)
+
+	asm("roundsd\t%2,%1,%0"
+	    : "=x"(x)
+	    : "x"(x), "i"(_MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
+	return x;
+
+#else
+
 	union {double f; uint64_t i;} u = {x};
 	int e = (int)(u.i >> 52 & 0x7ff) - 0x3ff + 12;
 	uint64_t m;
@@ -52,4 +77,6 @@ double trunc(double x)
 	FORCE_EVAL(x + 0x1p120f);
 	u.i &= ~m;
 	return u.f;
+
+#endif /* __aarch64__ */
 }

@@ -74,5 +74,7 @@ long double sinhl(long double x) {
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
 // TODO: broken implementation to make things compile
 	return sinh(x);
+#else
+#error "architecture unsupported"
 #endif
 }

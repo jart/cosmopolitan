@@ -72,4 +72,6 @@ long double atanhl(long double x)
 	return s ? -x : x;
 }
 
+#else
+#error "architecture unsupported"
 #endif

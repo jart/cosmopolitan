@@ -1,5 +1,6 @@
 #ifndef _POPCNTINTRIN_H_INCLUDED
 #define _POPCNTINTRIN_H_INCLUDED
+#ifdef __x86_64__
 
 #ifndef __POPCNT__
 #pragma GCC push_options
@@ -26,4 +27,5 @@ extern __inline long long
 #pragma GCC pop_options
 #endif /* __DISABLE_POPCNT__ */
 
+#endif /* __x86_64__ */
 #endif /* _POPCNTINTRIN_H_INCLUDED */

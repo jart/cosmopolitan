@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+#include "third_party/intel/smmintrin.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -34,8 +35,35 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Returns smallest integral value not less than 𝑥.
+ */
 float ceilf(float x)
 {
+#ifdef __aarch64__
+
+	asm("frintp\t%s0,%s1" : "=w"(x) : "w"(x));
+	return x;
+
+#elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
+
+	asm("frip\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("fiebra\t%0,6,%1,4" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__x86_64__) && defined(__SSE4_1__)
+
+	asm("roundss\t%2,%1,%0"
+	    : "=x"(x)
+	    : "x"(x), "i"(_MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC));
+	return x;
+
+#else
+
 	union {float f; uint32_t i;} u = {x};
 	int e = (int)(u.i >> 23 & 0xff) - 0x7f;
 	uint32_t m;
@@ -58,4 +86,6 @@ float ceilf(float x)
 			u.f = 1.0;
 	}
 	return u.f;
+
+#endif /* __aarch64__ */
 }

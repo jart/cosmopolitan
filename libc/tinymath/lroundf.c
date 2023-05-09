@@ -18,6 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 
+/**
+ * Rounds 𝑥 to nearest integer, away from zero.
+ */
 long lroundf(float x) {
-  return roundf(x);
+  long res;
+#ifdef __aarch64__
+  asm("fcvtas\t%x0,%s1" : "=r"(res) : "w"(x));
+#elif defined(__powerpc64__) && defined(__VSX__)
+  asm("xsrdpi\t%1,%1\n\t"
+      "fctid\t%0,%1"
+      : "=d"(res), "+f"(x));
+#else
+  res = roundf(x);
+#endif
+  return res;
 }

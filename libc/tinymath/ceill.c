@@ -35,6 +35,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Returns smallest integral value not less than 𝑥.
+ */
 long double ceill(long double x) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 	return ceil(x);
@@ -43,7 +46,6 @@ long double ceill(long double x) {
 	union ldshape u = {x};
 	int e = u.i.se & 0x7fff;
 	long double y;
-
 	if (e >= 0x3fff+LDBL_MANT_DIG-1 || x == 0)
 		return x;
 	/* y = int(x) - x, where int(x) is an integer neighbor of x */
@@ -59,5 +61,7 @@ long double ceill(long double x) {
 	if (y < 0)
 		return x + y + 1;
 	return x + y;
+#else
+#error "architecture unsupported"
 #endif
 }

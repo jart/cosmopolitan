@@ -1,5 +1,6 @@
 #ifndef _AARCH64_FP16_H_
 #define _AARCH64_FP16_H_
+#ifdef __aarch64__
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
@@ -456,4 +457,5 @@ vfmsh_f16(float16_t __a, float16_t __b, float16_t __c) {
 
 #pragma GCC pop_options
 
-#endif
+#endif /* __aarch64__ */
+#endif /* _AARCH64_FP16_H_ */

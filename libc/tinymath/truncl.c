@@ -60,5 +60,7 @@ long double truncl(long double x) {
 		y -= 1;
 	x += y;
 	return s ? -x : x;
+#else
+#error "architecture unsupported"
 #endif
 }

@@ -23,8 +23,7 @@
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
-static dontinline antiquity int bcmp_sse(const char *p, const char *q,
-                                         size_t n) {
+static int bcmp_sse(const char *p, const char *q, size_t n) {
   xmm_t a;
   while (n > 32) {
     a = *(const xmm_t *)p ^ *(const xmm_t *)q;

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/fmt/nf32.h"
 #include "libc/str/str.h"
 
-/**
- * Decodes u32 from ANSI Nf sequence.
- */
-uint32_t DecodeNf32(const char *s, char **e) {
-  int diglet;
-  uint32_t x;
-  for (x = 0; (diglet = kNfcimal[*s & 255]) != -1; s++) {
-    if (__builtin_mul_overflow(x, 10, &x) ||
-        __builtin_add_overflow(x, diglet, &x)) {
-      errno = ERANGE;
-      x = -1;
-      break;
-    }
-  }
-  if (e) {
-    *e = (char *)s;
-  }
-  return x;
+int _cescapec2(int c) {
 }

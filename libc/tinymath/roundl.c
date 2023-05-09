@@ -63,5 +63,7 @@ long double roundl(long double x) {
 	if (u.i.se >> 15)
 		y = -y;
 	return y;
+#else
+#error "architecture unsupported"
 #endif
 }

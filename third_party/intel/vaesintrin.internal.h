@@ -1,5 +1,6 @@
 #ifndef __VAESINTRIN_H_INCLUDED
 #define __VAESINTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/x86intrin.internal.h"
 
 #if !defined(__VAES__) || !defined(__AVX__)
@@ -72,4 +73,5 @@ extern __inline __m512i
 #pragma GCC pop_options
 #endif /* __DISABLE_VAES__ */
 
+#endif /* __x86_64__ */
 #endif /* __VAESINTRIN_H_INCLUDED */

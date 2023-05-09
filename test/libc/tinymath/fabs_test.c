@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -55,4 +56,13 @@ TEST(fabs, stuff) {
   EXPECT_EQ(1, !!isnan(fabs(NAN)));
   EXPECT_EQ(1, !!isnan(fabs(-NAN)));
   EXPECT_EQ(0, !!signbit(fabs(-NAN)));
+}
+
+BENCH(fabs, bench) {
+  double _fabs(double) asm("fabs");
+  float _fabsf(float) asm("fabsf");
+  long double _fabsl(long double) asm("fabsl");
+  EZBENCH2("fabs", donothing, _fabs(.7));   /*  ~6ns */
+  EZBENCH2("fabsf", donothing, _fabsf(.7)); /*  ~5ns */
+  EZBENCH2("fabsl", donothing, _fabsl(.7)); /* ~28ns */
 }

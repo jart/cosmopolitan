@@ -35,7 +35,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_log10l.c */
 /*
@@ -152,8 +152,23 @@ static const long double S[4] = {
 
 #define SQRTH 0.70710678118654752440L
 
+/**
+ * Calculates log₁₀𝑥.
+ */
 long double log10l(long double x)
 {
+#ifdef __x86__
+
+	long double lg2;
+	asm("fldlg2" : "=t"(lg2));
+	asm("fyl2x"
+	    : "=t"(x)
+	    : "0"(x), "u"(lg2)
+	    : "st(1)");
+	return x;
+
+#else
+
 	long double y, z;
 	int e;
 
@@ -218,11 +233,16 @@ done:
 	z += x * (L10EA);
 	z += e * (L102A);
 	return z;
+
+#endif /* __x86__ */
 }
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
 // TODO: broken implementation to make things compile
 long double log10l(long double x)
 {
 	return log10(x);
 }
+#else
+#error "architecture unsupported"
 #endif

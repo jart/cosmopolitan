@@ -22,8 +22,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-
 static inline const char *strchr_pure(const char *s, int c) {
   for (;; ++s) {
     if ((*s & 255) == (c & 255)) return s;
@@ -32,6 +30,7 @@ static inline const char *strchr_pure(const char *s, int c) {
 }
 
 #ifdef __x86_64__
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;

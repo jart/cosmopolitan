@@ -53,5 +53,7 @@ long double exp10l(long double x) {
 		return y * p10[(int)n+15];
 	}
 	return powl(10.0, x);
+#else
+#error "architecture unsupported"
 #endif
 }

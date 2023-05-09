@@ -19,6 +19,9 @@
 #include "libc/math.h"
 #include "libc/runtime/fenv.h"
 
+/**
+ * Rounds to nearest integer.
+ */
 float nearbyintf(float x) {
 #ifdef FE_INEXACT
   // #pragma STDC FENV_ACCESS ON

@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/fenv.h"
 #include "libc/tinymath/internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -43,8 +44,18 @@ asm(".include \"libc/disclaimer.inc\"");
 #endif
 static const float_t toint = 1/EPS;
 
+/**
+ * Rounds 𝑥 to nearest integer, away from zero.
+ */
 float roundf(float x)
 {
+#ifdef __aarch64__
+
+	asm("frinta\t%s0,%s1" : "=w"(x) : "w"(x));
+	return x;
+
+#else
+
 	union {float f; uint32_t i;} u = {x};
 	int e = u.i >> 23 & 0xff;
 	float_t y;
@@ -67,4 +78,6 @@ float roundf(float x)
 	if (u.i >> 31)
 		y = -y;
 	return y;
+
+#endif /* __aarch64__ */
 }

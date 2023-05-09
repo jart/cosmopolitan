@@ -36,7 +36,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_acosl.c */
 /*
@@ -54,11 +54,15 @@ asm(".include \"libc/disclaimer.inc\"");
  * Converted to long double by David Schultz <das@FreeBSD.ORG>.
  */
 
+/**
+ * Returns arc cosine of 𝑥.
+ *
+ * @define atan2(fabs(sqrt((1-𝑥)*(1+𝑥))),𝑥)
+ * @domain -1 ≤ 𝑥 ≤ 1
+ */
+long double acosl(long double x) {
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double acosl(long double x)
-{
 	return acos(x);
-}
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 #if LDBL_MANT_DIG == 64
 #define CLEARBOTTOM(u) (u.i.m &= -1ULL << 32)
@@ -66,14 +70,6 @@ long double acosl(long double x)
 #define CLEARBOTTOM(u) (u.i.lo = 0)
 #endif
 
-/**
- * Returns arc cosine of 𝑥.
- *
- * @define atan2(fabs(sqrt((1-𝑥)*(1+𝑥))),𝑥)
- * @domain -1 ≤ 𝑥 ≤ 1
- */
-long double acosl(long double x)
-{
 	union ldshape u = {x};
 	long double z, s, c, f;
 	uint16_t e = u.i.se & 0x7fff;
@@ -106,6 +102,8 @@ long double acosl(long double x)
 	f = u.f;
 	c = (z - f*f)/(s + f);
 	return 2*(__invtrigl_R(z)*s + c + f);
-}
 
+#else
+#error "architecture unsupported"
 #endif
+}

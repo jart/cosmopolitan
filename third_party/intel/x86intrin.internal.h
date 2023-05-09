@@ -1,5 +1,6 @@
 #ifndef _X86INTRIN_H_INCLUDED
 #define _X86INTRIN_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/ia32intrin.internal.h"
 
 #ifndef __iamcu__
@@ -16,4 +17,5 @@
 /* clang-format on */
 #endif /* __iamcu__ */
 
+#endif /* __x86_64__ */
 #endif /* _X86INTRIN_H_INCLUDED */

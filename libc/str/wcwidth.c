@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/likely.h"
+#include "libc/str/str.h"
 #include "libc/str/unicode.h"
 
 extern const uint8_t kEastAsianWidth[];
@@ -28,6 +29,7 @@ extern const uint32_t kCombiningCharsBits;
  * Returns cell width of monospace character.
  */
 int wcwidth(wchar_t c) {
+#ifdef __x86_64__
   if (LIKELY(32 <= c && c < 127)) {
     return 1;
   } else if (!c) {
@@ -42,4 +44,16 @@ int wcwidth(wchar_t c) {
   } else {
     return 1;
   }
+#else
+  if (!c) return 0;
+  if (c < 0 || iswcntrl(c)) return -1;
+  return 1 +
+         (c >= 0x1100 &&
+          (c <= 0x115f || c == 0x2329 || c == 0x232a ||
+           (c >= 0x2e80 && c <= 0xa4cf && c != 0x303f) ||
+           (c >= 0xac00 && c <= 0xd7a3) || (c >= 0xf900 && c <= 0xfaff) ||
+           (c >= 0xfe10 && c <= 0xfe19) || (c >= 0xfe30 && c <= 0xfe6f) ||
+           (c >= 0xff00 && c <= 0xff60) || (c >= 0xffe0 && c <= 0xffe6) ||
+           (c >= 0x20000 && c <= 0x2fffd) || (c >= 0x30000 && c <= 0x3fffd)));
+#endif
 }

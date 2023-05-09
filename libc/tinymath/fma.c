@@ -31,13 +31,17 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 #define ASUINT64(x) ((union {double f; uint64_t i;}){x}).i
 #define ZEROINFNAN (0x7ff-0x3ff-52-1)
 
 static inline int a_clz_64(uint64_t x)
 {
+#ifdef __GNUC__
+	if (!x) return 63;
+	return __builtin_clzll(x);
+#else
 	uint32_t y;
 	int r;
 	if (x>>32) y=x>>32, r=0; else y=x, r=32;
@@ -46,6 +50,7 @@ static inline int a_clz_64(uint64_t x)
 	if (y>>4) y>>=4; else r |= 4;
 	if (y>>2) y>>=2; else r |= 2;
 	return r | !(y>>1);
+#endif
 }
 
 struct num { uint64_t m; int e; int sign; };
@@ -73,7 +78,6 @@ static void mul(uint64_t *hi, uint64_t *lo, uint64_t x, uint64_t y)
 	uint64_t t1,t2,t3;
 	uint64_t xlo = (uint32_t)x, xhi = x>>32;
 	uint64_t ylo = (uint32_t)y, yhi = y>>32;
-
 	t1 = xlo*ylo;
 	t2 = xlo*yhi + xhi*ylo;
 	t3 = xhi*yhi;
@@ -81,8 +85,48 @@ static void mul(uint64_t *hi, uint64_t *lo, uint64_t x, uint64_t y)
 	*hi = t3 + (t2>>32) + (t1 > *lo);
 }
 
+/**
+ * Performs fused multiply add.
+ *
+ * @return `𝑥 * 𝑦 + 𝑧` rounded as one ternary operation
+ */
 double fma(double x, double y, double z)
 {
+#if defined(__x86_64__) && defined(__FMA__)
+
+	// Intel Haswell+ (c. 2013)
+	// AMD Piledriver+ (c. 2011)
+	asm("vfmadd132sd\t%1,%2,%0" : "+x"(x) : "x"(y), "x"(z));
+	return x;
+
+#elif defined(__x86_64__) && defined(__FMA4__)
+
+	// AMD Bulldozer+ (c. 2011)
+	asm("vfmaddsd\t%3,%2,%1,%0" : "=x"(x) : "x"(x), "x"(y), "x"(z));
+	return x;
+
+#elif defined(__aarch64__)
+
+	asm("fmadd\t%d0,%d1,%d2,%d3" : "=w"(x) : "w"(x), "w"(y), "w"(z));
+	return x;
+
+#elif defined(__powerpc64__)
+
+	asm("fmadd\t%0,%1,%2,%3" : "=d"(x) : "d"(x), "d"(y), "d"(z));
+	return x;
+
+#elif defined(__riscv) && __riscv_flen >= 64
+
+	asm("fmadd.d\t%0,%1,%2,%3" : "=f"(x) : "f"(x), "f"(y), "f"(z));
+	return x;
+
+#elif defined(__s390x__)
+
+	asm("madbr\t%0,\t%1,\t%2" : "+f"(z) : "f"(x), "f"(y));
+	return z;
+
+#else
+
 	/* normalize so top 10bits and last bit are 0 */
 	struct num nx, ny, nz;
 	nx = normalize(x);
@@ -220,4 +264,6 @@ double fma(double x, double y, double z)
 		}
 	}
 	return scalbn(r, e);
+
+#endif /* __x86_64__ */
 }

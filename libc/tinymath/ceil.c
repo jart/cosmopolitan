@@ -26,7 +26,9 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/runtime/fenv.h"
 #include "libc/tinymath/internal.h"
+#include "third_party/intel/smmintrin.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -41,8 +43,35 @@ asm(".include \"libc/disclaimer.inc\"");
 #endif
 static const double_t toint = 1/EPS;
 
+/**
+ * Returns smallest integral value not less than 𝑥.
+ */
 double ceil(double x)
 {
+#ifdef __aarch64__
+
+	asm("frintp\t%d0,%d1" : "=w"(x) : "w"(x));
+	return x;
+
+#elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
+
+	asm("frip\t%0,%1" : "=d"(x) : "d"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("fidbra\t%0,6,%1,4" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__x86_64__) && defined(__SSE4_1__)
+
+	asm("roundsd\t%2,%1,%0"
+	    : "=x"(x)
+	    : "x"(x), "i"(_MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC));
+	return x;
+
+#else
+
 	union {double f; uint64_t i;} u = {x};
 	int e = u.i >> 52 & 0x7ff;
 	double_t y;
@@ -62,4 +91,6 @@ double ceil(double x)
 	if (y < 0)
 		return x + y + 1;
 	return x + y;
+
+#endif /* __aarch64__ */
 }

@@ -69,5 +69,7 @@ long double sinl(long double x) {
 	default:
 		return -__cosl(hi, lo);
 	}
+#else
+#error "architecture unsupported"
 #endif
 }

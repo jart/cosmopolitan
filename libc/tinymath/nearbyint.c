@@ -19,7 +19,15 @@
 #include "libc/math.h"
 #include "libc/runtime/fenv.h"
 
+/**
+ * Rounds to nearest integer.
+ */
 double nearbyint(double x) {
+#ifdef __aarch64__
+  asm("frinti\t%d0,%d1" : "=w"(x) : "w"(x));
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+  asm("fidbra\t%0,0,%1,4" : "=f"(x) : "f"(x));
+#else
 #ifdef FE_INEXACT
   // #pragma STDC FENV_ACCESS ON
   int e;
@@ -29,5 +37,6 @@ double nearbyint(double x) {
 #ifdef FE_INEXACT
   if (!e) feclearexcept(FE_INEXACT);
 #endif
+#endif /* __aarch64__ */
   return x;
 }

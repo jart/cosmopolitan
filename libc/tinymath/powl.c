@@ -33,7 +33,9 @@ long double powl(long double x, long double y) {
         if (x) {
           if (y) {
             if (x < 0 && y != truncl(y)) {
+#ifndef __NO_MATH_ERRNO__
               errno = EDOM;
+#endif
               return NAN;
             }
             asm("fyl2x" : "=t"(u) : "0"(fabsl(x)), "u"(y) : "st(1)");
@@ -57,7 +59,9 @@ long double powl(long double x, long double y) {
         } else if (!y) {
           return 1;
         } else {
+#ifndef __NO_MATH_ERRNO__
           errno = ERANGE;
+#endif
           if (y == truncl(y) && ((int64_t)y & 1)) {
             return copysignl(INFINITY, x);
           } else {
@@ -619,6 +623,8 @@ long double powl(long double x, long double y)
 {
 	return pow(x, y);
 }
+#else
+#error "architecture unsupported"
 #endif
 
 #endif /* __x86_64__ */

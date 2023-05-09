@@ -59,7 +59,7 @@ BENCH(floorl, bench) {
   double _floor(double) asm("floor");
   float _floorf(float) asm("floorf");
   long double _floorl(long double) asm("floorl");
-  EZBENCH2("floor", donothing, _floor(.7));   /* ~3ns */
+  EZBENCH2("floor", donothing, _floor(.7));   /* ~1ns */
   EZBENCH2("floorf", donothing, _floorf(.7)); /* ~3ns */
   EZBENCH2("floorl", donothing, _floorl(.7)); /* ~9ns */
 }

@@ -180,4 +180,6 @@ long double __tanl(long double x, long double y, int odd) {
 	s = 1.0 + t * z;
 	return t + a * (s + t * v);
 }
+#else
+#error "architecture unsupported"
 #endif

@@ -25,7 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/limits.h"
 #include "libc/math.h"
+#include "libc/runtime/fenv.h"
 #include "libc/tinymath/expo.internal.h"
 #include "libc/tinymath/feval.internal.h"
 
@@ -33,7 +35,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /*
 If the result cannot be represented (overflow, nan), then
@@ -64,15 +66,9 @@ as a double.
 #elif FLT_EVAL_METHOD==2
 #define EPS LDBL_EPSILON
 #endif
-#ifdef __GNUC__
-/* avoid stack frame in lrint */
-__attribute__((__noinline__))
-#endif
-static long lrint_slow(double x)
-{
+static dontinline long lrint_slow(double x) {
 	// #pragma STDC FENV_ACCESS ON
 	int e;
-
 	e = fetestexcept(FE_INEXACT);
 	x = rint(x);
 	if (!e && (x > LONG_MAX || x < LONG_MIN))
@@ -80,12 +76,33 @@ static long lrint_slow(double x)
 	/* conversion */
 	return x;
 }
+#else
+#define JUST_CALL_RINT
+#endif
 
-long lrint(double x)
-{
+/**
+ * Rounds to nearest integer.
+ */
+long lrint(double x) {
+#ifdef __x86_64__
+	long res;
+	asm("cvtsd2si\t%1,%0" : "=r"(res) : "x"(x));
+	return res;
+#elif defined(__aarch64__)
+	long res;
+	asm("frintx\t%d1,%d1\n\t"
+	    "fcvtzs\t%x0,%d1"
+	    : "=r"(res), "+w"(x));
+	return res;
+#elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
+	long res;
+	asm("fctid\t%0,%1" : "=d"(res) : "d"(x));
+	return res;
+#elif defined(JUST_CALL_RINT)
+	return rint(x);
+#else
 	uint32_t abstop = asuint64(x)>>32 & 0x7fffffff;
 	uint64_t sign = asuint64(x) & (1ULL << 63);
-
 	if (abstop < 0x41dfffff) {
 		/* |x| < 0x7ffffc00, no overflow */
 		double_t toint = asdouble(asuint64(1/EPS) | sign);
@@ -93,10 +110,5 @@ long lrint(double x)
 		return (long)y;
 	}
 	return lrint_slow(x);
+#endif /* __x86_64__ */
 }
-#else
-long lrint(double x)
-{
-	return rint(x);
-}
-#endif

@@ -31,7 +31,19 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+long double modfl(long double x, long double *iptr)
+{
+	double d;
+	long double r;
+
+	r = modf(x, &d);
+	*iptr = d;
+	return r;
+}
+#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 
 static const long double toint = 1/LDBL_EPSILON;
 
@@ -77,3 +89,7 @@ long double modfl(long double x, long double *iptr)
 	*iptr = x + y;
 	return -y;
 }
+
+#else
+#error "architecture unsupported"
+#endif

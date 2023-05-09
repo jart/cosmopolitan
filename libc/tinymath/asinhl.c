@@ -34,21 +34,16 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double asinhl(long double x)
-{
-	return asinh(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+// clang-format off
 
 /**
  * Returns inverse hyperbolic sine of 𝑥.
  * @define asinh(x) = sign(x)*log(|x|+sqrt(x*x+1)) ~= x - x^3/6 + o(x^5)
  */
-long double asinhl(long double x)
-{
+long double asinhl(long double x) {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+	return asinh(x);
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 	union ldshape u = {x};
 	unsigned e = u.i.se & 0x7fff;
 	unsigned s = u.i.se >> 15;
@@ -71,12 +66,10 @@ long double asinhl(long double x)
 		FORCE_EVAL(x + 0x1p120f);
 	}
 	return s ? -x : x;
-}
-
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
 // TODO: broken implementation to make things compile
-long double asinhl(long double x)
-{
 	return asinh(x);
-}
+#else
+#error "architecture unsupported"
 #endif
+}

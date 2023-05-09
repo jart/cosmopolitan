@@ -34,7 +34,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: FreeBSD /usr/src/lib/msun/src/e_log10f.c */
 /*
@@ -62,6 +62,9 @@ Lg2 = 0xccce13.0p-25, /* 0.40000972152 */
 Lg3 = 0x91e9ee.0p-25, /* 0.28498786688 */
 Lg4 = 0xf89e26.0p-26; /* 0.24279078841 */
 
+/**
+ * Calculates log₁₀𝑥.
+ */
 float log10f(float x)
 {
 	union {float f; uint32_t i;} u = {x};

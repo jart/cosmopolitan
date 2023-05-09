@@ -35,7 +35,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: FreeBSD /usr/src/lib/msun/src/s_fmaf.c */
 /*-
@@ -64,16 +64,53 @@ asm(".include \"libc/disclaimer.inc\"");
  * SUCH DAMAGE.
  */
 
-/*
- * Fused multiply-add: Compute x * y + z with a single rounding error.
+/**
+ * Performs fused multiply add.
  *
- * A double has more than twice as much precision than a float, so
- * direct double-precision arithmetic suffices, except where double
- * rounding occurs.
+ * @return `𝑥 * 𝑦 + 𝑧` with a single rounding error
  */
 float fmaf(float x, float y, float z)
 {
-	// #pragma STDC FENV_ACCESS ON
+#if defined(__x86_64__) && defined(__FMA__)
+
+	// Intel Haswell+ (c. 2013)
+	// AMD Piledriver+ (c. 2011)
+	asm("vfmadd132ss\t%1,%2,%0" : "+x"(x) : "x"(y), "x"(z));
+	return x;
+
+#elif defined(__x86_64__) && defined(__FMA4__)
+
+	// AMD Bulldozer+ (c. 2011)
+	asm("vfmaddss\t%3,%2,%1,%0" : "=x"(x) : "x"(x), "x"(y), "x"(z));
+	return x;
+
+#elif defined(__aarch64__)
+
+	asm("fmadd\t%s0,%s1,%s2,%s3" : "=w"(x) : "w"(x), "w"(y), "w"(z));
+	return x;
+
+#elif defined(__powerpc64__)
+
+	asm("fmadds\t%0,%1,%2,%3" : "=f"(x) : "f"(x), "f"(y), "f"(z));
+	return x;
+
+#elif defined(__riscv) && __riscv_flen >= 32
+
+	asm("fmadd.s\t%0,%1,%2,%3" : "=f"(x) : "f"(x), "f"(y), "f"(z));
+	return x;
+
+#elif defined(__s390x__)
+
+	asm("maebr\t%0,%1,%2" : "+f"(z) : "f"(x), "f"(y));
+	return z;
+
+#else
+
+	/* A double has more than twice as much precision than a float,
+	   so direct double-precision arithmetic suffices, except where
+	   double rounding occurs. */
+
+	/* #pragma STDC FENV_ACCESS ON */
 	double xy, result;
 	union {double f; uint64_t i;} u;
 	int e;
@@ -124,4 +161,6 @@ float fmaf(float x, float y, float z)
 		u.i--;
 	z = u.f;
 	return z;
+
+#endif /* __x86_64__ */
 }

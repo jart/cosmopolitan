@@ -13,6 +13,10 @@
 #define FE_DOWNWARD   0x0400
 #define FE_UPWARD     0x0800
 #define FE_TOWARDZERO 0x0c00
+#define FE_DFL_ENV    ((const fenv_t *)-1)
+typedef void *fenv_t;
+typedef uint16_t fexcept_t;
+
 #elif defined(__aarch64__)
 #define FE_INVALID    1
 #define FE_DIVBYZERO  2
@@ -24,7 +28,36 @@
 #define FE_DOWNWARD   0x800000
 #define FE_UPWARD     0x400000
 #define FE_TOWARDZERO 0xc00000
-#endif
+#define FE_DFL_ENV    ((const fenv_t *)-1)
+typedef void *fenv_t;
+typedef uint32_t fexcept_t;
+
+#elif defined(__powerpc64__)
+#define FE_TONEAREST                  0
+#define FE_TOWARDZERO                 1
+#define FE_UPWARD                     2
+#define FE_DOWNWARD                   3
+#define FE_INEXACT                    0x02000000
+#define FE_DIVBYZERO                  0x04000000
+#define FE_UNDERFLOW                  0x08000000
+#define FE_OVERFLOW                   0x10000000
+#define FE_INVALID                    0x20000000
+#define FE_ALL_EXCEPT                 0x3e000000
+#define FE_INVALID_SNAN               0x01000000
+#define FE_INVALID_ISI                0x00800000
+#define FE_INVALID_IDI                0x00400000
+#define FE_INVALID_ZDZ                0x00200000
+#define FE_INVALID_IMZ                0x00100000
+#define FE_INVALID_COMPARE            0x00080000
+#define FE_INVALID_SOFTWARE           0x00000400
+#define FE_INVALID_SQRT               0x00000200
+#define FE_INVALID_INTEGER_CONVERSION 0x00000100
+#define FE_ALL_INVALID                0x01f80700
+#define FE_DFL_ENV                    ((const fenv_t *)-1)
+typedef unsigned fexcept_t;
+typedef double fenv_t;
+
+#endif /* __x86_64__ */
 
 #ifdef __FLT_EVAL_METHOD__
 #define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
@@ -36,10 +69,6 @@
 COSMOPOLITAN_C_START_
 
 #define FLT_ROUNDS (__flt_rounds())
-#define FE_DFL_ENV ((const fenv_t *)-1)
-
-typedef void *fenv_t;
-typedef uint16_t fexcept_t;
 
 int feclearexcept(int);
 int fegetenv(fenv_t *);

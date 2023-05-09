@@ -54,5 +54,7 @@ long double rintl(long double x) {
 	if (y == 0)
 		return 0*x;
 	return y;
+#else
+#error "architecture unsupported"
 #endif
 }

@@ -18,6 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 
+/**
+ * Rounds to nearest integer.
+ */
 long lrintf(float x) {
-  return rintf(x);
+  long res;
+#ifdef __x86_64__
+  asm("cvtss2si\t%1,%0" : "=res"(res) : "x"(x));
+#elif defined(__aarch64__)
+  asm("frintx\t%s1,%s1\n\t"
+      "fcvtzs\t%x0,%s1"
+      : "=r"(res), "+w"(x));
+#elif defined(__powerpc64__)
+  asm("fctid\t%0,%1" : "=d"(res) : "f"(x));
+#else
+  res = rintf(x);
+#endif /* __x86_64__ */
+  return res;
 }

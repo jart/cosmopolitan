@@ -23,6 +23,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
+#ifdef __x86_64__
+
 #define GetSigBit(x) (1ull << (((x)-1) & 63))
 
 textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
@@ -58,3 +60,5 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
     return einval();
   }
 }
+
+#endif /* __x86_64__ */

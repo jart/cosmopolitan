@@ -205,11 +205,20 @@ static inline u128 mul128_tail(u128 a, u128 b)
 	return lo;
 }
 
-
 /* see sqrt.c for detailed comments.  */
 
+/**
+ * Returns square root of 𝑥.
+ */
 long double sqrtl(long double x)
 {
+#ifdef __x86__
+
+	asm("fsqrt" : "+t"(x));
+	return x;
+
+#else
+
 	u128 ix, ml;
 	uint64_t top;
 
@@ -285,7 +294,10 @@ long double sqrtl(long double x)
 		y += mkldbl(top, (u128){0});
 	}
 	return y;
+
+#endif /* __x86__ */
 }
+
 #else
 #error unsupported long double format
 #endif

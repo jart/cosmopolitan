@@ -209,4 +209,6 @@ long double logl(long double x)
 {
 	return log(x);
 }
+#else
+#error "architecture unsupported"
 #endif

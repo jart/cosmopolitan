@@ -90,5 +90,7 @@ void sincosl(long double x, long double *sin, long double *cos) {
 		*cos = s;
 		break;
 	}
+#else
+#error "architecture unsupported"
 #endif
 }

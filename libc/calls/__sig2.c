@@ -34,6 +34,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
+#ifdef __x86_64__
+
 /**
  * Allocates piece of memory for storing pending signal.
  * @assume lock is held
@@ -304,3 +306,5 @@ textwindows void __sig_check_ignore(const int sig, const unsigned rva) {
     __sig_unlock();
   }
 }
+
+#endif /* __x86_64__ */

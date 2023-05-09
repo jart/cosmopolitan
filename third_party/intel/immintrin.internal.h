@@ -1,5 +1,6 @@
 #ifndef _IMMINTRIN_H_INCLUDED
 #define _IMMINTRIN_H_INCLUDED
+#ifdef __x86_64__
 
 /* clang-format off */
 #include "third_party/intel/mmintrin.internal.h"
@@ -206,4 +207,5 @@ extern __inline void
 #pragma GCC pop_options
 #endif /* __DISABLE_PTWRITE__ */
 
+#endif /* __x86_64__ */
 #endif /* _IMMINTRIN_H_INCLUDED */

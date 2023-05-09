@@ -165,4 +165,6 @@ long double cbrtl(long double x)
 	return t;
 }
 
+#else
+#error "architecture unsupported"
 #endif

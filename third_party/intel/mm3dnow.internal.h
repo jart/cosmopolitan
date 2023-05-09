@@ -1,5 +1,6 @@
 #ifndef _MM3DNOW_H_INCLUDED
 #define _MM3DNOW_H_INCLUDED
+#ifdef __x86_64__
 #include "third_party/intel/mmintrin.internal.h"
 #include "third_party/intel/prfchwintrin.internal.h"
 
@@ -206,4 +207,5 @@ extern __inline __m64
 #pragma GCC pop_options
 #endif /* __DISABLE_3dNOW_A__ */
 
+#endif /* __x86_64__ */
 #endif /* _MM3DNOW_H_INCLUDED */
