@@ -872,10 +872,8 @@ int main(int argc, char ** argv) {
     }
 
     if (is_terminated) {
-        if (params.interactive) {
-            console_cleanup(con_st);
-            printf("\n");
-        }
+        console_cleanup(con_st);
+        printf("\n");
         if (params.verbose) {
             llama_print_timings(ctx);
         }
