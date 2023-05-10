@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "libc/intrin/kprintf.h"
+#include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -131,17 +132,8 @@ privileged static inline bool kistextpointer(const void *p) {
   return _base <= (const unsigned char *)p && (const unsigned char *)p < _etext;
 }
 
-privileged static inline unsigned char *kend(void) {
-  unsigned char *p;
-  if (_weaken(__brk) && (p = _weaken(__brk)->p)) {
-    return p;
-  } else {
-    return _end;
-  }
-}
-
 privileged static inline bool kisimagepointer(const void *p) {
-  return _base <= (const unsigned char *)p && (const unsigned char *)p < kend();
+  return _base <= (const unsigned char *)p && (const unsigned char *)p < _end;
 }
 
 privileged static inline bool kischarmisaligned(const char *p, signed char t) {
@@ -179,6 +171,7 @@ privileged static bool kismapped(int x) {
 
 privileged bool kisdangerous(const void *p) {
   int frame;
+  if (1) return false;
   if (kisimagepointer(p)) return false;
   if (kiskernelpointer(p)) return false;
   if (IsLegalPointer(p)) {
@@ -223,7 +216,7 @@ privileged static void klog(const char *b, size_t n) {
                  : "0"(__NR_write), "1"(2), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
-#else
+#elif defined(__aarch64__)
   register long r0 asm("x0") = (long)2;
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
@@ -233,6 +226,8 @@ privileged static void klog(const char *b, size_t n) {
                : "=r"(res_x0)
                : "i"(64), "r"(r0), "r"(r1), "r"(r2)
                : "x8", "memory");
+#else
+#error "unsupported architecture"
 #endif
 }
 
