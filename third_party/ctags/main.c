@@ -234,21 +234,8 @@ static boolean createTagsFromListFile (const char *const fileName)
 
 #if defined (HAVE_CLOCK)
 # define CLOCK_AVAILABLE
-# ifndef CLOCKS_PER_SEC
-#  define CLOCKS_PER_SEC		1000000
-# endif
-#elif defined (HAVE_TIMES)
-# define CLOCK_AVAILABLE
-# define CLOCKS_PER_SEC	60
-static clock_t clock (void)
-{
-	struct tms buf;
-
-	times (&buf);
-	return (buf.tms_utime + buf.tms_stime);
-}
 #else
-# define clock()  (clock_t)0
+#error wut
 #endif
 
 static void printTotals (const clock_t *const timeStamps)
