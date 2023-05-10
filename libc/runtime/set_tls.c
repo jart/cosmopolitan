@@ -27,6 +27,7 @@
 int sys_set_tls();
 
 void __set_tls(struct CosmoTib *tib) {
+  tib = __adj_tls(tib);
 #ifdef __x86_64__
   // ask the operating system to change the x86 segment register
   int ax, dx;
@@ -58,6 +59,6 @@ void __set_tls(struct CosmoTib *tib) {
                    "d"((uint32_t)(val >> 32)));
   }
 #else
-  asm volatile("msr\ttpidr_el0,%0" : /* no outputs */ : "r"(tib + 1));
+  asm volatile("msr\ttpidr_el0,%0" : /* no outputs */ : "r"(tib));
 #endif
 }

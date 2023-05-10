@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -452,7 +453,12 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
     ctid = (int *)sp;
     sp -= 8;  // experiment
   }
-  sp = sp & -16;  // align the stack
+  // align the stack
+#ifdef __aarch64__
+  sp = sp & -128;  // for kernel 4.6 and earlier
+#else
+  sp = sp & -16;
+#endif
   if ((rc = sys_clone_linux(flags, sp, ptid, ctid, tls, func, arg)) >= 0) {
     // clone() is documented as setting ptid before return
     return 0;
@@ -576,6 +582,10 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
   if (flags & CLONE_THREAD) {
     __enable_threads();
   }
+
+  STRACE("clone(func=%t, stk=%p, stksz=%'zu, flags=%#x, arg=%p, ptid=%p, "
+         "tls=%p, ctid=%p)",
+         func, stk, stksz, flags, arg, ptid, tls, ctid);
 
   if (!func) {
     rc = EINVAL;

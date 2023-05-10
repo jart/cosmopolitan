@@ -57,6 +57,49 @@
 #include "libc/thread/tls2.h"
 #include "libc/vga/vga.internal.h"
 
+#define KGETINT(x, va, t, s)                 \
+  switch (t) {                               \
+    case -3:                                 \
+      x = !!va_arg(va, int);                 \
+      break;                                 \
+    case -2:                                 \
+      if (s) {                               \
+        x = (signed char)va_arg(va, int);    \
+      } else {                               \
+        x = (unsigned char)va_arg(va, int);  \
+      }                                      \
+      break;                                 \
+    case -1:                                 \
+      if (s) {                               \
+        x = (signed short)va_arg(va, int);   \
+      } else {                               \
+        x = (unsigned short)va_arg(va, int); \
+      }                                      \
+      break;                                 \
+    case 0:                                  \
+    default:                                 \
+      if (s) {                               \
+        x = va_arg(va, int);                 \
+      } else {                               \
+        x = va_arg(va, unsigned int);        \
+      }                                      \
+      break;                                 \
+    case 1:                                  \
+      if (s) {                               \
+        x = va_arg(va, long);                \
+      } else {                               \
+        x = va_arg(va, unsigned long);       \
+      }                                      \
+      break;                                 \
+    case 2:                                  \
+      if (s) {                               \
+        x = va_arg(va, long long);           \
+      } else {                               \
+        x = va_arg(va, unsigned long long);  \
+      }                                      \
+      break;                                 \
+  }
+
 extern _Hide struct SymbolTable *__symtab;
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
@@ -78,23 +121,6 @@ privileged static char *kemitquote(char *p, char *e, signed char t,
   }
   ++p;
   return p;
-}
-
-privileged static unsigned long long kgetint(va_list va, signed char t,
-                                             bool s) {
-  int bits;
-  unsigned long long x;
-  x = va_arg(va, unsigned long);
-  if (t <= 0) {
-    bits = 64 - (32 >> MIN(5, -t));
-    x <<= bits;
-    if (s) {
-      x = (signed long)x >> bits;
-    } else {
-      x >>= bits;
-    }
-  }
-  return x;
 }
 
 privileged static inline bool kiskernelpointer(const void *p) {
@@ -363,7 +389,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             s = va_arg(va, int) ? "true" : "false";
             goto FormatString;
           }
-          x = kgetint(va, type, c == 'd');
+          KGETINT(x, va, type, c == 'd');
         FormatDecimal:
           if ((long long)x < 0 && c != 'u') {
             x = -x;
@@ -426,7 +452,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           base = 1;
           if (hash) hash = '0' | 'b' << 8;
         BinaryNumber:
-          x = kgetint(va, type, false);
+          KGETINT(x, va, type, false);
         FormatNumber:
           i = 0;
           m = (1 << base) - 1;

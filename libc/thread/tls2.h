@@ -37,7 +37,7 @@ static noasan inline void __set_tls_win32(void *tls) {
 }
 
 #elif defined(__aarch64__)
-#define __get_tls_privileged() ((struct CosmoTib *)__builtin_thread_pointer())
+#define __get_tls_privileged() __get_tls()
 #define __get_tls_win32()      ((struct CosmoTib *)0)
 #define __set_tls_win32(tls)   (void)0
 #endif /* GNU x86-64 */

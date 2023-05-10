@@ -83,19 +83,19 @@ cosmo:	push	%rbp
 	call	_init
 
 //	call constructors
-	ezlea	__init_array_start,ax		// static ctors in forward order
-	.weak	__init_array_start		// could be called multiple times
-	ezlea	__init_array_end,cx		// idempotency recommended
-	.weak	__init_array_end		// @see ape/ape.lds
+	ezlea	__init_array_end,ax		// static ctors in forward order
+	.weak	__init_array_end		// could be called multiple times
+	ezlea	__init_array_start,cx		// idempotency recommended
+	.weak	__init_array_start		// @see ape/ape.lds
 1:	cmp	%rax,%rcx
 	je	2f
+	sub	$8,%rax
 	push	%rax
 	push	%rcx
 	call	.Largs
 	call	*(%rax)
 	pop	%rcx
 	pop	%rax
-	add	$8,%rax
 	jmp	1b
 
 //	call main()
@@ -141,7 +141,6 @@ cosmo:	push	%rbp
 	push	%rsi
 
 //	allocate stack
-	call	__mmi_init
 	movabs	$ape_stack_vaddr,%rdi
 	mov	$ape_stack_memsz,%esi
 	mov	$ape_stack_prot,%edx

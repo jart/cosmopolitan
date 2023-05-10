@@ -58,7 +58,7 @@ static inline uint64_t mul64(uint64_t a, uint64_t b)
  */
 double sqrt(double x)
 {
-#ifdef __SSE2__
+#if defined(__x86_64__) && defined(__SSE2__)
 
 	asm("sqrtsd\t%1,%0" : "=x"(x) : "x"(x));
 	return x;
@@ -218,5 +218,5 @@ double sqrt(double x)
 	}
 	return y;
 
-#endif /* __SSE2__ */
+#endif /* __x86_64__ */
 }

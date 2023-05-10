@@ -23,17 +23,15 @@
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define _TLSZ ((intptr_t)_tls_size)
-#define _TLDZ ((intptr_t)_tdata_size)
-#define _TIBZ sizeof(struct CosmoTib)
+#define I(x) ((uintptr_t)x)
 
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
@@ -41,19 +39,33 @@ extern unsigned char __tls_add_nt_rax[];
 nsync_dll_list_ _pthread_list;
 pthread_spinlock_t _pthread_lock;
 static struct PosixThread _pthread_main;
-_Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
+_Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
 
 /**
  * Enables thread local storage for main process.
  *
- *                              %fs Linux/BSDs
+ * Here's the TLS memory layout on x86_64:
+ *
+ *                           __get_tls()
  *                               │
- *            _Thread_local      │ __get_tls()
+ *                              %fs Linux/BSDs
+ *            _Thread_local      │
  *     ┌───┬──────────┬──────────┼───┐
  *     │pad│  .tdata  │  .tbss   │tib│
  *     └───┴──────────┴──────────┼───┘
  *                               │
  *                  Windows/Mac %gs
+ *
+ * Here's the TLS memory layout on aarch64:
+ *
+ *         %tpidr_el0
+ *             │
+ *             │    _Thread_local
+ *         ┌───┼───┬──────────┬──────────┐
+ *         │tib│dtv│  .tdata  │  .tbss   │
+ *         ├───┴───┴──────────┴──────────┘
+ *         │
+ *     __get_tls()
  *
  * This function is always called by the core runtime to guarantee TLS
  * is always available to your program. You must build your code using
@@ -81,10 +93,31 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
 void __enable_tls(void) {
   int tid;
   size_t siz;
-  struct CosmoTib *tib;
   char *mem, *tls;
+  struct CosmoTib *tib;
 
-  siz = ROUNDUP(_TLSZ + _TIBZ, _Alignof(__static_tls));
+  // Here's the layout we're currently using:
+  //
+  //         .align PAGESIZE
+  //     _tdata_start:
+  //         .tdata
+  //         _tdata_size = . - _tdata_start
+  //         .align PAGESIZE
+  //     _tbss_start:
+  //     _tdata_start + _tbss_offset:
+  //         .tbss
+  //         .align TLS_ALIGNMENT
+  //         _tbss_size = . - _tbss_start
+  //     _tbss_end:
+  //     _tbss_start + _tbss_size:
+  //     _tdata_start + _tls_size:
+  //
+  _unassert(_tbss_start == _tdata_start + I(_tbss_offset));
+  _unassert(_tbss_start + I(_tbss_size) == _tdata_start + I(_tls_size));
+
+#ifdef __x86_64__
+
+  siz = ROUNDUP(I(_tls_size) + sizeof(*tib), _Alignof(__static_tls));
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
     // which helps avoid a system call for appes with little tls
@@ -103,14 +136,52 @@ void __enable_tls(void) {
 
   if (IsAsan()) {
     // poison the space between .tdata and .tbss
-    __asan_poison(mem + (intptr_t)_tdata_size,
-                  (intptr_t)_tbss_offset - (intptr_t)_tdata_size,
+    __asan_poison(mem + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
                   kAsanProtected);
   }
 
+  tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
+  tls = mem + siz - sizeof(*tib) - I(_tls_size);
+
+#elif defined(__aarch64__)
+
+  siz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *) + I(_tls_size),
+                _Alignof(__static_tls));
+  if (siz <= sizeof(__static_tls)) {
+    mem = __static_tls;
+  } else {
+    _npassert(_weaken(_mapanon));
+    siz = ROUNDUP(siz, FRAMESIZE);
+    mem = _weaken(_mapanon)(siz);
+    _npassert(mem);
+  }
+
+  if (IsAsan()) {
+    // there's a roundup(pagesize) gap between .tdata and .tbss
+    // poison that empty space
+    __asan_poison(mem + sizeof(*tib) + 2 * sizeof(void *) + I(_tdata_size),
+                  I(_tbss_offset) - I(_tdata_size), kAsanProtected);
+  }
+
+  tib = (struct CosmoTib *)mem;
+  tls = mem + sizeof(*tib) + 2 * sizeof(void *);
+
+  // Set the DTV.
+  //
+  // We don't support dynamic shared objects at the moment. The APE
+  // linker script will only produce a single PT_TLS program header
+  // therefore our job is relatively simple.
+  //
+  // @see musl/src/env/__init_tls.c
+  // @see https://chao-tic.github.io/blog/2018/12/25/tls
+  ((uintptr_t *)tls)[-2] = 1;
+  ((void **)tls)[-1] = tls;
+
+#else
+#error "unsupported architecture"
+#endif /* __x86_64__ */
+
   // initialize main thread tls memory
-  tib = (struct CosmoTib *)(mem + siz - _TIBZ);
-  tls = mem + siz - _TIBZ - _TLSZ;
   tib->tib_self = tib;
   tib->tib_self2 = tib;
   tib->tib_errno = __errno;
@@ -135,7 +206,9 @@ void __enable_tls(void) {
   atomic_store_explicit(&_pthread_main.ptid, tid, memory_order_relaxed);
 
   // copy in initialized data section
-  __repmovsb(tls, _tdata_start, _TLDZ);
+  if (I(_tdata_size)) {
+    memcpy(tls, _tdata_start, I(_tdata_size));
+  }
 
   // ask the operating system to change the x86 segment register
   __set_tls(tib);

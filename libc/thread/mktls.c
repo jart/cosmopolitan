@@ -28,18 +28,30 @@
 #include "libc/thread/spawn.h"
 #include "libc/thread/tls.h"
 
-#define I(x) ((intptr_t)x)
+#define I(x) ((uintptr_t)x)
 
 void Bzero(void *, size_t) asm("bzero");  // gcc bug
 
-/**
- * Allocates thread-local storage memory for new thread.
- * @return buffer that must be released with free()
- */
-char *_mktls(struct CosmoTib **out_tib) {
+static char *_mktls_finish(struct CosmoTib **out_tib, char *mem,
+                           struct CosmoTib *tib) {
+  struct CosmoTib *old;
+  old = __get_tls();
+  Bzero(tib, sizeof(*tib));
+  tib->tib_self = tib;
+  tib->tib_self2 = tib;
+  tib->tib_ftrace = old->tib_ftrace;
+  tib->tib_strace = old->tib_strace;
+  tib->tib_sigmask = old->tib_sigmask;
+  atomic_store_explicit(&tib->tib_tid, -1, memory_order_relaxed);
+  if (out_tib) {
+    *out_tib = tib;
+  }
+  return mem;
+}
+
+static char *_mktls_below(struct CosmoTib **out_tib) {
   char *tls;
-  struct CosmoTib *neu, *old;
-  __require_tls();
+  struct CosmoTib *neu;
 
   // allocate memory for tdata, tbss, and tib
   tls = memalign(TLS_ALIGNMENT, I(_tls_size) + sizeof(struct CosmoTib));
@@ -51,22 +63,67 @@ char *_mktls(struct CosmoTib **out_tib) {
                   kAsanProtected);
   }
 
-  // initialize tdata and clear tbss
-  memmove(tls, _tdata_start, I(_tdata_size));
-  Bzero(tls + I(_tbss_offset), I(_tbss_size) + sizeof(struct CosmoTib));
+  // initialize .tdata
+  if (I(_tdata_size)) {
+    memmove(tls, _tdata_start, I(_tdata_size));
+  }
+
+  // clear .tbss
+  Bzero(tls + I(_tbss_offset), I(_tbss_size));
 
   // set up thread information block
-  old = __get_tls();
-  neu = (struct CosmoTib *)(tls + I(_tls_size));
-  neu->tib_self = neu;
-  neu->tib_self2 = neu;
-  neu->tib_ftrace = old->tib_ftrace;
-  neu->tib_strace = old->tib_strace;
-  neu->tib_sigmask = old->tib_sigmask;
-  atomic_store_explicit(&neu->tib_tid, -1, memory_order_relaxed);
+  return _mktls_finish(out_tib, tls, (struct CosmoTib *)(tls + I(_tls_size)));
+}
 
-  if (out_tib) {
-    *out_tib = neu;
+static char *_mktls_above(struct CosmoTib **out_tib) {
+  size_t siz;
+  char *mem, *dtv, *tls;
+  struct CosmoTib *tib, *old;
+
+  // allocate memory for tdata, tbss, and tib
+  siz = ROUNDUP(sizeof(struct CosmoTib) + 2 * sizeof(void *) + I(_tls_size),
+                TLS_ALIGNMENT);
+  mem = memalign(TLS_ALIGNMENT, siz);
+  if (!mem) return 0;
+
+  // poison memory between tdata and tbss
+  if (IsAsan()) {
+    __asan_poison(
+        mem + sizeof(struct CosmoTib) + 2 * sizeof(void *) + I(_tdata_size),
+        I(_tbss_offset) - I(_tdata_size), kAsanProtected);
   }
-  return tls;
+
+  tib = (struct CosmoTib *)mem;
+  dtv = mem + sizeof(*tib);
+  tls = dtv + 2 * sizeof(void *);
+
+  // set dtv
+  ((uintptr_t *)dtv)[0] = 1;
+  ((void **)dtv)[1] = tls;
+
+  // initialize .tdata
+  if (I(_tdata_size)) {
+    memmove(tls, _tdata_start, I(_tdata_size));
+  }
+
+  // clear .tbss
+  if (I(_tbss_size)) {
+    Bzero(tls + I(_tbss_offset), I(_tbss_size));
+  }
+
+  // set up thread information block
+  return _mktls_finish(out_tib, mem, tib);
+}
+
+/**
+ * Allocates thread-local storage memory for new thread.
+ * @return buffer that must be released with free()
+ */
+char *_mktls(struct CosmoTib **out_tib) {
+  __require_tls();
+#ifdef __x86_64__
+  return _mktls_below(out_tib);
+#else
+  return _mktls_above(out_tib);
+#endif
 }

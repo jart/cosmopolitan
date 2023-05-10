@@ -255,9 +255,10 @@ static errno_t pthread_create_impl(pthread_t *thread,
   if ((rc = clone(PosixThread, pt->attr.__stackaddr,
                   pt->attr.__stacksize - (IsOpenbsd() ? 16 : 0),
                   CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
-                      CLONE_SIGHAND | CLONE_SETTLS | CLONE_PARENT_SETTID |
-                      CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
-                  pt, &pt->ptid, pt->tib, &pt->tib->tib_tid))) {
+                      CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_SETTLS |
+                      CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
+                      CLONE_CHILD_CLEARTID,
+                  pt, &pt->ptid, __adj_tls(pt->tib), &pt->tib->tib_tid))) {
     pthread_spin_lock(&_pthread_lock);
     _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
     pthread_spin_unlock(&_pthread_lock);

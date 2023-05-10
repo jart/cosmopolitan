@@ -62,7 +62,9 @@ static privileged dontinline void FixupLockNops(void) {
 
 void __enable_threads(void) {
   if (__threaded) return;
+#ifdef __x86_64__
   STRACE("__enable_threads()");
   FixupLockNops();
+#endif
   __threaded = sys_gettid();
 }

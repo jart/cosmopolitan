@@ -47,69 +47,7 @@ GGML (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
-
-#if defined(_WIN32)
-
-typedef volatile LONG atomic_int;
-typedef atomic_int atomic_bool;
-
-static void atomic_store(atomic_int* ptr, LONG val) {
-    InterlockedExchange(ptr, val);
-}
-static LONG atomic_load(atomic_int* ptr) {
-    return InterlockedCompareExchange(ptr, 0, 0);
-}
-static LONG atomic_fetch_add(atomic_int* ptr, LONG inc) {
-    return InterlockedExchangeAdd(ptr, inc);
-}
-static LONG atomic_fetch_sub(atomic_int* ptr, LONG dec) {
-    return atomic_fetch_add(ptr, -(dec));
-}
-
-typedef HANDLE pthread_t;
-
-typedef DWORD thread_ret_t;
-static int pthread_create(pthread_t* out, void* unused, thread_ret_t(*func)(void*), void* arg) {
-    (void) unused;
-    HANDLE handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, arg, 0, NULL);
-    if (handle == NULL)
-    {
-        return EAGAIN;
-    }
-
-    *out = handle;
-    return 0;
-}
-
-static int pthread_join(pthread_t thread, void* unused) {
-    (void) unused;
-    return (int) WaitForSingleObject(thread, INFINITE);
-}
-
-static int sched_yield (void) {
-    Sleep (0);
-    return 0;
-}
-#else
 typedef void* thread_ret_t;
-#endif
-
-// __FMA__ and __F16C__ are not defined in MSVC, however they are implied with AVX2/AVX512
-#if defined(_MSC_VER) && (defined(__AVX2__) || defined(__AVX512F__))
-#ifndef __FMA__
-#define __FMA__
-#endif
-#ifndef __F16C__
-#define __F16C__
-#endif
-#ifndef __SSE3__
-#define __SSE3__
-#endif
-#endif
-
-#ifdef __HAIKU__
-#define static_assert(cond, msg) _Static_assert(cond, msg)
-#endif
 
 /*#define GGML_PERF*/
 #define GGML_DEBUG 0

@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/runtime/memtrack.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/macros.internal.h"
 
-#ifdef __x86_64__
-STATIC_YOINK("_init__mmi");
-#endif
-
-struct MemoryIntervals _mmi;
-pthread_mutex_t __mmi_lock_obj;  // recursive :'(
+	.init.start 200,_init__mmi
+	movb	$OPEN_MAX,_mmi+8
+	movl	$_mmi+24,_mmi+16
+	movb	$PTHREAD_MUTEX_RECURSIVE,__mmi_lock_obj+4(%rip)
+	.init.end 200,_init__mmi

@@ -1361,7 +1361,6 @@ static privileged void AllowMmapExec(struct Filter *f) {
 // The flags parameter must not have:
 //
 //   - MAP_LOCKED   (0x02000)
-//   - MAP_POPULATE (0x08000)
 //   - MAP_NONBLOCK (0x10000)
 //   - MAP_HUGETLB  (0x40000)
 //

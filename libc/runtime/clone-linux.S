@@ -56,8 +56,6 @@ sys_clone_linux:
 	syscall
 1:	hlt				// ctid was corrupted by program!
 #elif defined(__aarch64__)
-	and	x1,x1,#-16		// align stack
-	stp	x5,x6,[x1,#-16]!	// save func and arg
 	mov	x8,x3			// swap x3 and x4
 	mov	x3,x4			// swap x3 and x4
 	mov	x4,x8			// swap x3 and x4
@@ -65,8 +63,8 @@ sys_clone_linux:
 	svc	#0
 	cbz	x0,2f
 	ret
-2:	ldp	x1,x0,[sp],#16		// child thread
-	blr	x1
+2:	mov	x0,x6			// child thread
+	blr	x5
 	mov	x8,#93			// __NR_exit
 	svc	#0
 #else

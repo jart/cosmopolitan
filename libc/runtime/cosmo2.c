@@ -16,8 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #ifndef __x86_64__
 
 int main(int, char **, char **) __attribute__((__weak__));
@@ -40,35 +47,65 @@ typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
 extern init_f __strace_init;
 extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
+extern uintptr_t ape_idata_iat[] __attribute__((__weak__));
+extern uintptr_t ape_idata_iatend[] __attribute__((__weak__));
+extern pthread_mutex_t __mmi_lock_obj;
+
+struct CosmoTib *tib;
 
 void cosmo(long *sp) {
   int argc;
   init_f **fp;
+  uintptr_t *pp;
   char **argv, **envp;
   unsigned long *auxv;
+
+  // get startup timestamp as early as possible
+  // its used by --strace and also kprintf() %T
+  kStartTsc = rdtsc();
+
+  // extracts arguments from old sysv stack abi
   argc = *sp;
   argv = (char **)(sp + 1);
   envp = (char **)(sp + 1 + argc + 1);
   auxv = (unsigned long *)(sp + 1 + argc + 1);
-  for (;;) {
-    if (!*auxv++) {
-      break;
-    }
+  while (*auxv++) donothing;
+
+  // needed by kisdangerous()
+  __oldstack = (intptr_t)sp;
+
+  // make win32 imps noop
+  for (pp = ape_idata_iat; pp < ape_idata_iatend; ++pp) {
+    *pp = (uintptr_t)_missingno;
   }
+
+  // initialize mmap() manager extremely early
+  _mmi.n = ARRAYLEN(_mmi.s);
+  _mmi.p = _mmi.s;
+  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+
 #ifdef SYSDEBUG
+  // initialize --strace functionality
   argc = __strace_init(argc, argv, envp, auxv);
 #endif
+
+  // set helpful globals
   __argc = argc;
   __argv = argv;
   __envp = envp;
   __auxv = auxv;
   environ = envp;
   if (argc) program_invocation_name = argv[0];
+
+  // run initialization callbacks
   _init();
-  for (fp = __init_array_start; fp < __init_array_end; ++fp) {
+  __enable_tls();
+  for (fp = __init_array_end; fp-- > __init_array_start;) {
     (*fp)(argc, argv, envp, auxv);
   }
+
+  // run program
   exit(main(argc, argv, envp));
 }
 
-#endif /* __aarch64__ */
+#endif /* __x86_64__ */

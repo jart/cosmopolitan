@@ -129,7 +129,7 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                  CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                  CLONE_CHILD_CLEARTID,
-             spawner, &th->ptid, th->tib, &th->tib->tib_tid);
+             spawner, &th->ptid, __adj_tls(th->tib), &th->tib->tib_tid);
   if (rc) {
     errno = rc;
     _freestack(th->stk);
