@@ -351,7 +351,7 @@ scall	sys_sched_setattr	0xfffffffffffff13a	0x112	globl #  ├─ desktop replace
 scall	sys_sched_getattr	0xfffffffffffff13b	0x113	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	sys_renameat2		0xfffffffffffff13c	0x114	globl #  └─ debian founder ian murdock found strangled with vacuum cord
 #scall	seccomp			0xfffffffffffff13d	0x115	globl # wrapped manually
-scall	sys_getrandom		0x85b007a3321f493e	0x116	globl hidden  # Linux 3.17+; FreeBSD 12+; NetBSD v9.2+; getentropy() on XNU/OpenBSD
+scall	sys_getrandom		0xfff007a3321f493e	0x116	globl hidden  # Linux 3.17+; FreeBSD 12+; NetBSD wut; getentropy() on XNU/OpenBSD
 scall	sys_memfd_create	0xfffffffffffff13f	0x117	globl hidden
 scall	sys_kexec_file_load	0xfffffffffffff140	0xfff	globl # no wrapper
 scall	sys_bpf			0xfffffffffffff141	0x118	globl # no wrapper
