@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,22 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/str/utf16.h"
 
 /**
- * Returns number of characters in UTF-16 or UCS-2 string.
+ * Sets memory to zero w/ accompanying non-optimizing macro.
+ *
+ * This is intended for security-conscious applications.
+ *
+ * @param p points to bytes that'll be cleared
+ * @param n is number of bytes to clear
  */
-size_t strclen16(const char16_t *s) {
-  return strnclen16(s, -1ull);
-}
-
-dontinline size_t strnclen16(const char16_t *p, size_t n) {
-  size_t l = 0;
-  if (n) {
-    while (*p) {
-      if ((*p++ & UTF16_MASK) != UTF16_CONT) l++;
-      if (!--n) break;
-    }
-  }
-  return l;
+void explicit_bzero(void *p, size_t n) {
+  bzero(p, n);
 }

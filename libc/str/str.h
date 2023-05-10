@@ -195,11 +195,6 @@ int wctomb(char *, wchar_t);
 int wctob(wint_t);
 wint_t btowc(int);
 
-size_t strclen(const char *) nosideeffect;
-size_t strnclen(const char *, size_t) nosideeffect;
-size_t strclen16(const char16_t *) nosideeffect;
-size_t strnclen16(const char16_t *, size_t) nosideeffect;
-
 typedef unsigned wctype_t;
 wctype_t wctype(const char *) strlenesque;
 int iswctype(wint_t, wctype_t) pureconst;

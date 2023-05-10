@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
+#include "libc/intrin/bits.h"
 #include "libc/testlib/testlib.h"
 
 TEST(strlen16, testEmpty) {
@@ -31,12 +31,10 @@ TEST(strlen16, testUnicode) {
   EXPECT_EQ(28, strlen16(u"αcτµαlly pδrταblε εxεcµταblε"));
 }
 
-TEST(strclen, testAegeanNumberSupplementaryPlane) {
+TEST(len, testAegeanNumberSupplementaryPlane) {
   EXPECT_EQ(36, strlen("𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(18, strlen16(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, wcslen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
-  EXPECT_EQ(9, strclen("𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
-  EXPECT_EQ(9, strclen16(u"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
   EXPECT_EQ(9, wcslen(L"𐄷𐄸𐄹𐄺𐄻𐄼𐄽𐄾𐄿"));
 }
 
