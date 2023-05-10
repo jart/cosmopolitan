@@ -2046,26 +2046,3 @@ int vol_attr_ok( const char *path)
  * Enable by specifying "LOCAL_UNZIP=-DNEED_STRERROR=1" on the "make"
  * command line.
  */
-
-#ifdef NEED_STRERROR
-
-char *strerror( err)
-  int err;
-{
-    extern char *sys_errlist[];
-    extern int sys_nerr;
-
-    static char no_msg[ 64];
-
-    if ((err >= 0) && (err < sys_nerr))
-    {
-        return sys_errlist[ err];
-    }
-    else
-    {
-        sprintf( no_msg, "(no message, code = %d.)", err);
-        return no_msg;
-    }
-}
-
-#endif /* def NEED_STRERROR */
