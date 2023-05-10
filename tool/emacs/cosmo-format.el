@@ -67,7 +67,7 @@
   :type '(repeat string)
   :group 'cosmo-format)
 
-(defcustom cosmo-format-blacklist '("quickjs.c")
+(defcustom cosmo-format-blacklist '("quickjs.c" "ggml.c")
   "List of files to ignore, matched by basename."
   :type '(repeat string)
   :group 'cosmo-format)
