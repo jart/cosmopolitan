@@ -2690,13 +2690,18 @@ int llama_eval(
                          int   n_tokens,
                          int   n_past,
                          int   n_threads) {
+    int64_t start_eval = 0;
+    if (!ctx->has_evaluated_once) {
+        start_eval = ggml_time_us();
+    }
     if (!llama_eval_internal(*ctx, tokens, n_tokens, n_past, n_threads)) {
         fprintf(stderr, "%s: failed to eval\n", __func__);
         return 1;
     }
-    // get a more accurate load time, upon first eval
+    // get a more accurate load time by measuring the first eval
+    // this will take into consideration any page fault slowdown
     if (!ctx->has_evaluated_once) {
-        ctx->t_load_us = ggml_time_us() - ctx->t_start_us;
+        ctx->t_load_us += ggml_time_us() - start_eval;
         ctx->has_evaluated_once = true;
     }
     return 0;
