@@ -27,6 +27,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/ggml/llama.h"
+#include "libc/assert.h"
 #include "libc/intrin/bits.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/ggml/llama_util.h"
@@ -2540,8 +2541,9 @@ size_t llama_copy_state_data(struct llama_context * ctx, uint8_t * dest) {
 
         if (kv_size) {
             const size_t elt_size = ggml_element_size(kv_self.k);
-            char buffer[4096];
-            ggml_context * cpy_ctx = ggml_init({ sizeof(buffer), buffer, /* no_alloc */ true });
+            llama_buffer buffer;
+            buffer.resize(4096);
+            ggml_context * cpy_ctx = ggml_init({ buffer.size, buffer.addr, /* no_alloc */ true });
             ggml_cgraph gf{};
             gf.n_threads = 1;
 
@@ -2644,8 +2646,9 @@ size_t llama_set_state_data(struct llama_context * ctx, const uint8_t * src) {
             LLAMA_ASSERT(kv_self.buf.size == kv_size);
 
             const size_t elt_size = ggml_element_size(kv_self.k);
-            char buffer[4096];
-            ggml_context * cpy_ctx = ggml_init({ sizeof(buffer), buffer, /* no_alloc */ true });
+            llama_buffer buffer;
+            buffer.resize(4096);
+            ggml_context * cpy_ctx = ggml_init({ buffer.size, buffer.addr, /* no_alloc */ true });
             ggml_cgraph gf{};
             gf.n_threads = 1;
 

@@ -377,13 +377,13 @@ struct llama_buffer {
     size_t size = 0;
 
     void resize(size_t size) {
-        delete[] addr;
-        addr = new uint8_t[size];
+        free(addr);
+        addr = (uint8_t *)memalign(32, size);
         this->size = size;
     }
 
     ~llama_buffer() {
-        delete[] addr;
+        free(addr);
     }
 };
 #endif
