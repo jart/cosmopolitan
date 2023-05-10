@@ -27,6 +27,8 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
                   fd_set *exceptfds, struct timeval *timeout,
                   const sigset_t *sigmask) {
@@ -80,3 +82,5 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
 
   return fdcount;
 }
+
+#endif /* __x86_64__ */

@@ -29,6 +29,9 @@
 #define DEFAULT_POLICY SCHED_OTHER
 
 void SetUp(void) {
+  if (IsFreebsd() && getuid() != 0) {
+    exit(0);
+  }
   if (IsXnu() || IsWindows() || IsOpenbsd() || IsWindows()) {
     exit(0);
   }

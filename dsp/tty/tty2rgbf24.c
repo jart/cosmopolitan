@@ -18,6 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
 
-__m128 tty2rgbf24_(struct TtyRgb rgbxt) {
-  return (__m128){(int)rgbxt.r, (int)rgbxt.g, (int)rgbxt.b} / 255;
+ttyrgb_m128 tty2rgbf24_(struct TtyRgb rgbxt) {
+  return (ttyrgb_m128){(int)rgbxt.r, (int)rgbxt.g, (int)rgbxt.b} / 255;
 }

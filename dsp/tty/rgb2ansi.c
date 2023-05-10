@@ -39,9 +39,9 @@ struct TtyRgb tty2rgb_(struct TtyRgb rgbxt) {
   return g_ansi2rgb_[rgbxt.xt];
 }
 
-__m128 tty2rgbf_(struct TtyRgb rgbxt) {
+ttyrgb_m128 tty2rgbf_(struct TtyRgb rgbxt) {
   rgbxt = g_ansi2rgb_[rgbxt.xt];
-  return (__m128){(int)rgbxt.r, (int)rgbxt.g, (int)rgbxt.b} / 255;
+  return (ttyrgb_m128){(int)rgbxt.r, (int)rgbxt.g, (int)rgbxt.b} / 255;
 }
 
 static int rgb2xterm256_(int r, int g, int b) {

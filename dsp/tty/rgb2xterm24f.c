@@ -17,25 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "third_party/intel/xmmintrin.internal.h"
 
-/*
-struct TtyRgb rgb2tty24f_(__m128 rgb) {
-  const __v4si kMax = {255, 255, 255, 255};
-  const __v4si kMin = {0, 0, 0, 0};
-  struct TtyRgb res;
-  __v4si rgb255;
-  rgb255 = _mm_min_ps(_mm_max_ps(_mm_cvtps_epi32(rgb * 255), kMin), kMax);
-  res = (struct TtyRgb){rgb255[0], rgb255[1], rgb255[2], rgb255[3]};
-  return res;
-}
-*/
-
-struct TtyRgb rgb2tty24f_(__m128 rgb) {
-  const __m128 kMax = {1, 1, 1, 1};
-  const __m128 kMin = {0, 0, 0, 0};
+struct TtyRgb rgb2tty24f_(ttyrgb_m128 rgb) {
+#ifdef __x86_64__
+  const ttyrgb_m128 kMax = {1, 1, 1, 1};
+  const ttyrgb_m128 kMin = {0, 0, 0, 0};
   struct TtyRgb res;
   rgb = _mm_min_ps(_mm_max_ps(rgb, kMin), kMax) * 255;
   res = (struct TtyRgb){rgb[0], rgb[1], rgb[2], rgb[3]};
   return res;
+#else
+  return (struct TtyRgb){
+      MAX(0, MIN(1, rgb[0])) * 255,
+      MAX(0, MIN(1, rgb[1])) * 255,
+      MAX(0, MIN(1, rgb[2])) * 255,
+      MAX(0, MIN(1, rgb[3])) * 255,
+  };
+#endif
 }

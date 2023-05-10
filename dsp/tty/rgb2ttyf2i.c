@@ -17,12 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "third_party/intel/xmmintrin.internal.h"
 
-struct TtyRgb rgb2ttyf2i_(__m128 rgb) {
-  __v4si i4;
+typedef int ttyrgb_i4 __attribute__((__vector_size__(16)));
+
+struct TtyRgb rgb2ttyf2i_(ttyrgb_m128 rgb) {
   rgb *= 255;
-  /* i4 = __builtin_ia32_cvtps2dq(rgb); */
-  asm("cvttps2dq\t%0,%1" : "+%x"(rgb), "=x"(i4));
-  return rgb2tty(i4[0], i4[1], i4[2]);
+  ttyrgb_i4 rgbi = {rgb[0], rgb[1], rgb[2], rgb[3]};
+  return rgb2tty(rgbi[0], rgbi[1], rgbi[2]);
 }

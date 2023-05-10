@@ -30,13 +30,17 @@
  * @param ti comes from ttyident() and null means no-op
  */
 int ttysendtitle(int ttyfd, const char *title, const struct TtyIdent *ti) {
+  int res;
   if (ti) {
+    char *p;
     if (ti->id == kTtyIdScreen) {
-      return ttysend(ttyfd, gc(xstrcat("\eP\e]0;", title, "\a\e\\")));
+      res = ttysend(ttyfd, (p = xstrcat("\eP\e]0;", title, "\a\e\\")));
     } else {
-      return ttysend(ttyfd, gc(xstrcat("\e]0;", title, "\a")));
+      res = ttysend(ttyfd, (p = xstrcat("\e]0;", title, "\a")));
     }
+    free(p);
   } else {
-    return 0;
+    res = 0;
   }
+  return res;
 }

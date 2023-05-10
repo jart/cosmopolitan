@@ -481,8 +481,8 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
  *     char *stk = _mapstack();
  *     clone(worker, stk, GetStackSize() - 16,
  *           CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
- *           CLONE_SIGHAND | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
- *           CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+ *           CLONE_SYSVSEM | CLONE_SIGHAND | CLONE_PARENT_SETTID |
+ *           CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
  *           arg, &tid, &tib, &tib.tib_tid);
  *     while (atomic_load(&tid) == 0) sched_yield();
  *     // thread is known
@@ -538,6 +538,7 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
  *     - `CLONE_FS`
  *     - `CLONE_FILES`
  *     - `CLONE_SIGHAND`
+ *     - `CLONE_SYSVSEM`
  *
  *     This system call wrapper is intended for threads, and as such, we
  *     won't polyfill Linux's ability to simulate unrelated calls (e.g.
@@ -583,10 +584,6 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
     __enable_threads();
   }
 
-  STRACE("clone(func=%t, stk=%p, stksz=%'zu, flags=%#x, arg=%p, ptid=%p, "
-         "tls=%p, ctid=%p)",
-         func, stk, stksz, flags, arg, ptid, tls, ctid);
-
   if (!func) {
     rc = EINVAL;
   } else if (!IsTiny() &&
@@ -605,8 +602,8 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
              (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
                         CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID)) !=
                  (CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                  CLONE_SIGHAND)) {
-    STRACE("clone flag unsupported on this platform");
+                  CLONE_SIGHAND | CLONE_SYSVSEM)) {
+    STRACE("cosmo clone() is picky about flags, see clone.c");
     rc = EINVAL;
 #ifdef __x86_64__
   } else if (IsXnu()) {

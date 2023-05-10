@@ -125,7 +125,7 @@ void TestContendedLock(const char *name, int kind) {
   stk = _mapstack();
   rc = clone(Worker, stk, GetStackSize() - 16 /* openbsd:stackbound */,
              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                 CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
+                 CLONE_SYSVSEM | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                  CLONE_CHILD_CLEARTID | CLONE_SETTLS,
              0, &tid, &tib, &tib.tib_tid);
   if (rc) {

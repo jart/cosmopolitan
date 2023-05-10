@@ -151,13 +151,16 @@ void YCbCrComputeCoefficients(int swing, double gamma,
 
 void YCbCrInit(struct YCbCr **ycbcr, bool yonly, int swing, double gamma,
                const double gamut[3], const double illuminant[3]) {
+  int i;
   if (!*ycbcr) *ycbcr = xcalloc(1, sizeof(struct YCbCr));
   (*ycbcr)->yonly = yonly;
   bzero((*ycbcr)->magnums, sizeof((*ycbcr)->magnums));
   bzero((*ycbcr)->lighting, sizeof((*ycbcr)->lighting));
   YCbCrComputeCoefficients(swing, gamma, gamut, illuminant, (*ycbcr)->magnums,
                            (*ycbcr)->lighting, (*ycbcr)->transfer[0]);
-  imapxlatab((*ycbcr)->transfer[1]);
+  for (i = 0; i < 256; ++i) {
+    (*ycbcr)->transfer[1][i] = i;
+  }
 }
 
 void YCbCrFree(struct YCbCr **ycbcr) {

@@ -21,5 +21,5 @@
 #include "libc/macros.internal.h"
 
 struct TtyRgb rgb2ttyi2f_(int r, int g, int b) {
-  return rgb2ttyf((__m128){r, g, b} / 255);
+  return rgb2ttyf((ttyrgb_m128){r, g, b} / 255);
 }

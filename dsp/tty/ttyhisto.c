@@ -45,6 +45,8 @@ void ttyhisto(uint32_t histogram[hasatleast 256],
       histogram[xtcolors[i * 8]]++;
     }
   }
-  imapxlatab(dominant);
+  for (i = 0; i < 256; ++i) {
+    dominant[i] = i;
+  }
   qsort_r(dominant, 256, 1, (void *)histcmp, histogram);
 }

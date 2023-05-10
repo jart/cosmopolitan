@@ -127,8 +127,8 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
   spawner->arg = arg;
   rc = clone(Spawner, th->stk, GetStackSize() - 16 /* openbsd:stackbound */,
              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
-                 CLONE_CHILD_CLEARTID,
+                 CLONE_SYSVSEM | CLONE_SETTLS | CLONE_PARENT_SETTID |
+                 CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
              spawner, &th->ptid, __adj_tls(th->tib), &th->tib->tib_tid);
   if (rc) {
     errno = rc;
