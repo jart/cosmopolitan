@@ -19,6 +19,7 @@
 #include "dsp/tty/quant.h"
 #include "libc/calls/calls.h"
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

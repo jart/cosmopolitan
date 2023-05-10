@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/viz/lib/bilinearscale.h"
 #include "libc/log/log.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-#include "tool/viz/lib/bilinearscale.h"
 #include "tool/viz/lib/graphic.h"
 
 TEST(BilinearScale, testWindmill_1x1_to_2x2) {

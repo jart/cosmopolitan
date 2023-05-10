@@ -162,7 +162,7 @@ extern const long __NR_setfsgid;
 extern const long __NR_capget;
 extern const long __NR_capset;
 extern const long __NR_sigtimedwait;
-extern const long __NR_rt_sigqueueinfo;
+extern const long __NR_sigqueueinfo;
 extern const long __NR_personality;
 extern const long __NR_ustat;
 extern const long __NR_sysfs;
@@ -285,7 +285,7 @@ extern const long __NR_epoll_pwait;
 extern const long __NR_epoll_create1;
 extern const long __NR_perf_event_open;
 extern const long __NR_inotify_init1;
-extern const long __NR_rt_tgsigqueueinfo;
+extern const long __NR_tgsigqueueinfo;
 extern const long __NR_signalfd;
 extern const long __NR_signalfd4;
 extern const long __NR_eventfd;
@@ -498,7 +498,7 @@ COSMOPOLITAN_C_END_
 #define __NR_capget                 SYMBOLIC(__NR_capget)
 #define __NR_capset                 SYMBOLIC(__NR_capset)
 #define __NR_sigtimedwait           SYMBOLIC(__NR_sigtimedwait)
-#define __NR_rt_sigqueueinfo        SYMBOLIC(__NR_rt_sigqueueinfo)
+#define __NR_sigqueueinfo           SYMBOLIC(__NR_sigqueueinfo)
 #define __NR_personality            SYMBOLIC(__NR_personality)
 #define __NR_ustat                  SYMBOLIC(__NR_ustat)
 #define __NR_sysfs                  SYMBOLIC(__NR_sysfs)
@@ -621,7 +621,7 @@ COSMOPOLITAN_C_END_
 #define __NR_epoll_create1          SYMBOLIC(__NR_epoll_create1)
 #define __NR_perf_event_open        SYMBOLIC(__NR_perf_event_open)
 #define __NR_inotify_init1          SYMBOLIC(__NR_inotify_init1)
-#define __NR_rt_tgsigqueueinfo      SYMBOLIC(__NR_rt_tgsigqueueinfo)
+#define __NR_tgsigqueueinfo         SYMBOLIC(__NR_tgsigqueueinfo)
 #define __NR_signalfd               SYMBOLIC(__NR_signalfd)
 #define __NR_signalfd4              SYMBOLIC(__NR_signalfd4)
 #define __NR_eventfd                SYMBOLIC(__NR_eventfd)

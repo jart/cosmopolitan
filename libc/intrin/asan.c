@@ -48,6 +48,8 @@
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
+#ifdef __x86_64__
+
 STATIC_YOINK("_init_asan");
 
 #if IsModeDbg()
@@ -1497,3 +1499,5 @@ __attribute__((__constructor__)) void __asan_init(int argc, char **argv,
   STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
+
+#endif /* __x86_64__ */

@@ -1941,6 +1941,7 @@ __bss_start:
 __bss_end:
 	.previous
 
+#if !IsTiny()
 #ifdef APE_IS_SHELL_SCRIPT
 
 	.section .blink,"a",@progbits
@@ -1960,6 +1961,7 @@ blink_darwin_arm64_size = . - blink_darwin_arm64
 	.previous
 
 #endif /* APE_IS_SHELL_SCRIPT */
+#endif /* !IsTiny() */
 
 .end
 

@@ -22,6 +22,7 @@
 #include "libc/intrin/extend.internal.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
@@ -34,6 +35,7 @@ STATIC_YOINK("_init_g_fds");
 #endif
 
 struct Fds g_fds;
+static struct Fd g_fds_static[8];
 
 static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
   int64_t h;
@@ -50,11 +52,17 @@ textstartup void InitializeFileDescriptors(void) {
   pthread_atfork(_weaken(__fds_lock), _weaken(__fds_unlock),
                  _weaken(__fds_funlock));
   fds = VEIL("r", &g_fds);
-  fds->p = fds->e = (void *)kMemtrackFdsStart;
   fds->n = 4;
   atomic_store_explicit(&fds->f, 3, memory_order_relaxed);
-  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
-                   kMemtrackFdsStart + kMemtrackFdsSize);
+  if (_weaken(_extend)) {
+    fds->p = fds->e = (void *)kMemtrackFdsStart;
+    fds->e =
+        _weaken(_extend)(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
+                         kMemtrackFdsStart + kMemtrackFdsSize);
+  } else {
+    fds->p = g_fds_static;
+    fds->e = g_fds_static + ARRAYLEN(g_fds_static);
+  }
   if (IsMetal()) {
     extern const char vga_console[];
     fds->f = 3;

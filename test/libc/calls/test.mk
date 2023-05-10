@@ -20,6 +20,7 @@ TEST_LIBC_CALLS_BINS =							\
 	$(TEST_LIBC_CALLS_COMS:%=%.dbg)					\
 	o/$(MODE)/test/libc/calls/life-nomod.com			\
 	o/$(MODE)/test/libc/calls/life-classic.com			\
+	o/$(MODE)/test/libc/calls/zipread.com.dbg			\
 	o/$(MODE)/test/libc/calls/zipread.com
 
 TEST_LIBC_CALLS_TESTS =							\
