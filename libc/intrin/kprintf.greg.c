@@ -171,7 +171,6 @@ privileged static bool kismapped(int x) {
 
 privileged bool kisdangerous(const void *p) {
   int frame;
-  if (1) return false;
   if (kisimagepointer(p)) return false;
   if (kiskernelpointer(p)) return false;
   if (IsLegalPointer(p)) {
