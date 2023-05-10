@@ -42,6 +42,7 @@
 #include "third_party/ggml/common.h"
 #include "third_party/ggml/llama.h"
 #include "third_party/ggml/llama_util.h"
+#include "third_party/libcxx/atomic"
 #include "third_party/libcxx/iostream"
 #include "third_party/libcxx/string"
 #include "third_party/libcxx/vector"
@@ -52,26 +53,20 @@ Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-static console_state con_st;
-static llama_context ** g_ctx;
-
-static int g_verbose;
-static bool is_interacting = false;
+static std::atomic<bool> is_interacting;
+static std::atomic<bool> is_terminated;
 
 #define EPHEMERAL(fmt) "\r\e[K\033[1;35m" fmt " \033[0m"
 
-void sigint_handler(int signo) {
-    if (signo == SIGINT) {
-        if (!is_interacting) {
-            is_interacting=true;
-        } else {
-            console_cleanup(con_st);
-            printf("\n");
-            if (g_verbose) {
-                llama_print_timings(*g_ctx);
-            }
-            _exit(128 + signo);
-        }
+static void sigint_handler_batch(int signo) {
+    is_terminated = true;
+}
+
+static void sigint_handler_interactive(int signo) {
+    if (!is_interacting) {
+        is_interacting = true;
+    } else {
+        is_terminated = true;
     }
 }
 
@@ -116,9 +111,9 @@ int main(int argc, char ** argv) {
 
     // save choice to use color for later
     // (note for later: this is a slightly awkward choice)
+    static console_state con_st;
     con_st.use_color = params.use_color;
 
-    g_verbose = params.verbose;
     con_st.multiline_input = params.multiline_input;
     console_init(con_st);
     atexit([]() { console_cleanup(con_st); });
@@ -162,7 +157,6 @@ int main(int argc, char ** argv) {
 
     llama_context * ctx;
     struct stat model_stat;
-    g_ctx = &ctx;
 
     // load the model and apply lora adapter, if any
     ctx = llama_init_from_gpt_params(params);
@@ -280,13 +274,18 @@ int main(int argc, char ** argv) {
         fprintf(stderr, "\n");
     }
 
+    // setup ctrl-c handler
+    struct sigaction sa;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
     if (params.interactive) {
-        struct sigaction sigint_action;
-        sigint_action.sa_handler = sigint_handler;
-        sigemptyset (&sigint_action.sa_mask);
-        sigint_action.sa_flags = 0;
-        sigaction(SIGINT, &sigint_action, NULL);
+        sa.sa_handler = sigint_handler_interactive;
+    } else {
+        sa.sa_handler = sigint_handler_batch;
+    }
+    sigaction(SIGINT, &sa, NULL);
 
+    if (params.interactive) {
         if (params.verbose) {
             fprintf(stderr, "%s: interactive mode on.\n", __func__);
         }
@@ -483,7 +482,7 @@ int main(int argc, char ** argv) {
         fprintf(stderr, EPHEMERAL("loading weights..."));
     }
 
-    while (n_remain != 0 || params.interactive) {
+    while ((n_remain != 0 || params.interactive) && !is_terminated) {
 
         // perform evaluation
         if (embd.size() > 0) {
@@ -870,6 +869,17 @@ int main(int argc, char ** argv) {
             n_remain = params.n_predict;
             is_interacting = true;
         }
+    }
+
+    if (is_terminated) {
+        if (params.interactive) {
+            console_cleanup(con_st);
+            printf("\n");
+        }
+        if (params.verbose) {
+            llama_print_timings(ctx);
+        }
+        _exit(128 + SIGINT);
     }
 
     if (params.verbose) {

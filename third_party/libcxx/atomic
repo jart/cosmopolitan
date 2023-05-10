@@ -731,7 +731,7 @@ void __cxx_atomic_store(__cxx_atomic_base_impl<_Tp>* __a,  _Tp __val,
 }
 
 template <typename _Tp>
-_LIBCPP_INLINE_VISIBILITY
+_LIBCPP_INLINE_VISIBILITY inline
 _Tp __cxx_atomic_load(const volatile __cxx_atomic_base_impl<_Tp>* __a,
                       memory_order __order) {
   _Tp __ret;
@@ -741,7 +741,7 @@ _Tp __cxx_atomic_load(const volatile __cxx_atomic_base_impl<_Tp>* __a,
 }
 
 template <typename _Tp>
-_LIBCPP_INLINE_VISIBILITY
+_LIBCPP_INLINE_VISIBILITY inline
 _Tp __cxx_atomic_load(const __cxx_atomic_base_impl<_Tp>* __a, memory_order __order) {
   _Tp __ret;
   __atomic_load(&__a->__a_value, &__ret,

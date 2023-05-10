@@ -3,6 +3,9 @@
 
 #define PRINTF_NTOA_BUFFER_SIZE 144
 
+#define __FMT_CONSUMED_DOUBLE      1
+#define __FMT_CONSUMED_LONG_DOUBLE 2
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -19,7 +22,7 @@ int __fmt_pad(int (*)(const char *, void *, size_t), void *,
 int __fmt_stoa(int (*)(const char *, void *, size_t), void *, void *,
                unsigned long, unsigned long, unsigned long, unsigned char,
                unsigned char) _Hide;
-int __fmt_ntoa(int (*)(const char *, void *, size_t), void *, va_list,
+int __fmt_ntoa(int (*)(const char *, void *, size_t), void *, uint128_t,
                unsigned char, unsigned long, unsigned long, unsigned long,
                unsigned char, const char *) _Hide;
 int __fmt_dtoa(int (*)(const char *, void *, size_t), void *, int, int, int,

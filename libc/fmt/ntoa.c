@@ -158,12 +158,12 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
                            flags, alphabet);
 }
 
-int __fmt_ntoa(int out(const char *, void *, size_t), void *arg, va_list va,
-               unsigned char signbit, unsigned long log2base,
+int __fmt_ntoa(int out(const char *, void *, size_t), void *arg,
+               uint128_t value, unsigned char signbit, unsigned long log2base,
                unsigned long prec, unsigned long width, unsigned char flags,
                const char *lang) {
   bool neg;
-  uint128_t value, sign;
+  uint128_t sign;
 
   /* ignore '0' flag when prec or minus flag is given */
   if (flags & (FLAGS_PRECISION | FLAGS_LEFT)) {
@@ -173,12 +173,6 @@ int __fmt_ntoa(int out(const char *, void *, size_t), void *arg, va_list va,
   /* no plus / space flag for u, x, X, o, b */
   if (!(flags & FLAGS_ISSIGNED)) {
     flags &= ~(FLAGS_PLUS | FLAGS_SPACE);
-  }
-
-  if (signbit > 63) {
-    value = va_arg(va, uint128_t);
-  } else {
-    value = va_arg(va, uint64_t);
   }
 
   neg = 0;

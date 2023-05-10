@@ -25,7 +25,7 @@ struct gpt_params {
     int32_t n_predict     = 128;  // new tokens to predict
     int32_t n_parts       = -1;   // amount of model parts (-1 = determine from model dimensions)
     int32_t n_ctx         = 512;  // context size
-    int32_t n_batch       = 32;   // batch size for prompt processing (must be >=32 to use BLAS)
+    int32_t n_batch       = 64;   // batch size for prompt processing (must be >=32 to use BLAS)
     int32_t n_keep        = 0;    // number of tokens to keep from initial prompt
 
     // sampling parameters

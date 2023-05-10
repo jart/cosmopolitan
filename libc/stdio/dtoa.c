@@ -237,7 +237,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
   union U u;
   struct FPBits fpb;
   char *s, *q, *se, *s0, special[8];
-  int c, k, i1, ui, bw, bex, sgn, prec1, decpt;
+  int c, k, i1, ui, bw, rc, bex, sgn, prec1, decpt, consumed;
   x = 0;
   switch (d) {
     case 'F':
@@ -245,6 +245,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       if (!(flags & FLAGS_PRECISION)) prec = 6;
       if (!longdouble) {
         x = va_arg(va, double);
+        consumed = __FMT_CONSUMED_DOUBLE;
         s = s0 = dtoa(x, 3, prec, &decpt, &fpb.sign, &se);
         if (decpt == 9999) {
           if (s && s[0] == 'N') {
@@ -255,6 +256,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         }
       } else {
         u.ld = va_arg(va, long double);
+        consumed = __FMT_CONSUMED_LONG_DOUBLE;
         xfpbits(&u, &fpb);
         s = s0 =
             gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt, &se);
@@ -274,7 +276,9 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         memcpy(q, kSpecialFloats[fpb.kind == STRTOG_NaN][d >= 'a'], 4);
         flags &= ~(FLAGS_PRECISION | FLAGS_PLUS | FLAGS_HASH | FLAGS_SPACE);
         prec = 0;
-        return __fmt_stoa(out, arg, s, flags, prec, width, signbit, qchar);
+        rc = __fmt_stoa(out, arg, s, flags, prec, width, signbit, qchar);
+        if (rc == -1) return -1;
+        return consumed;
       }
     FormatReal:
       if (fpb.sign /* && (x || sign) */) sign = '-';
@@ -338,6 +342,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       if (prec < 1) prec = 1;
       if (!longdouble) {
         x = va_arg(va, double);
+        consumed = __FMT_CONSUMED_DOUBLE;
         s = s0 = dtoa(x, 2, prec, &decpt, &fpb.sign, &se);
         if (decpt == 9999) {
           if (s && s[0] == 'N') {
@@ -348,6 +353,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         }
       } else {
         u.ld = va_arg(va, long double);
+        consumed = __FMT_CONSUMED_LONG_DOUBLE;
         xfpbits(&u, &fpb);
         s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0, prec,
                        &decpt, &se);
@@ -379,6 +385,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       if (prec < 0) prec = 0;
       if (!longdouble) {
         x = va_arg(va, double);
+        consumed = __FMT_CONSUMED_DOUBLE;
         s = s0 = dtoa(x, 2, prec + 1, &decpt, &fpb.sign, &se);
         if (decpt == 9999) {
           if (s && s[0] == 'N') {
@@ -389,6 +396,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         }
       } else {
         u.ld = va_arg(va, long double);
+        consumed = __FMT_CONSUMED_LONG_DOUBLE;
         xfpbits(&u, &fpb);
         s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0, prec,
                        &decpt, &se);
@@ -451,9 +459,11 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
     FormatBinary:
       if (longdouble) {
         u.ld = va_arg(va, long double);
+        consumed = __FMT_CONSUMED_LONG_DOUBLE;
         xfpbits(&u, &fpb);
       } else {
         u.d = va_arg(va, double);
+        consumed = __FMT_CONSUMED_DOUBLE;
         dfpbits(&u, &fpb);
       }
       if (fpb.kind == STRTOG_Infinite || fpb.kind == STRTOG_NaN) {
@@ -530,5 +540,5 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
     default:
       unreachable;
   }
-  return 0;
+  return consumed;
 }

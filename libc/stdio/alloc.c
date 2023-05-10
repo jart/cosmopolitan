@@ -19,6 +19,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
@@ -30,9 +31,11 @@ FILE *__stdio_alloc(void) {
   while (f) {
     if (atomic_compare_exchange_weak_explicit(
             &__stdio_freelist, &f,
-            atomic_load_explicit(&f->next, memory_order_acquire),
+            atomic_load_explicit((_Atomic(struct FILE *) *)&f->next,
+                                 memory_order_acquire),
             memory_order_release, memory_order_relaxed)) {
-      atomic_store_explicit(&f->next, 0, memory_order_release);
+      atomic_store_explicit((_Atomic(struct FILE *) *)&f->next, 0,
+                            memory_order_release);
       break;
     }
   }
@@ -50,7 +53,8 @@ void __stdio_free(FILE *f) {
   bzero(f, sizeof(*f));
   g = atomic_load_explicit(&__stdio_freelist, memory_order_acquire);
   for (;;) {
-    atomic_store_explicit(&f->next, g, memory_order_release);
+    atomic_store_explicit((_Atomic(struct FILE *) *)&f->next, g,
+                          memory_order_release);
     if (atomic_compare_exchange_weak_explicit(&__stdio_freelist, &g, f,
                                               memory_order_release,
                                               memory_order_relaxed)) {

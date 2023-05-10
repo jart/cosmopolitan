@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,37 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigset.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
-/**
- * Sets signal mask on thread attributes object.
- *
- * For example, to spawn a thread that won't interfere with signals:
- *
- *     pthread_t id;
- *     sigset_t mask;
- *     pthread_attr_t attr;
- *     sigfillset(&mask);
- *     pthread_attr_init(&attr);
- *     pthread_attr_setsigmask_np(&attr, &mask);
- *     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
- *     pthread_create(&id, &attr, Worker, 0);
- *     pthread_attr_destroy(&attr);
- *
- * @param attr is the thread attributes object
- * @param sigmask will be copied into attributes, or if it's null, then
- *     the existing signal mask presence on the object will be cleared
- * @return 0 on success, or errno on error
- */
-errno_t pthread_attr_setsigmask_np(pthread_attr_t *attr,
-                                   const sigset_t *sigmask) {
-  _Static_assert(sizeof(attr->__sigmask) == sizeof(*sigmask), "");
-  if (sigmask) {
-    attr->__havesigmask = true;
-    memcpy(attr->__sigmask, sigmask, sizeof(*sigmask));
-  } else {
-    attr->__havesigmask = false;
-  }
+sigset_t actual;
+sigset_t golden;
+sigset_t original;
+
+static void *MyThread(void *arg) {
+  ASSERT_EQ(0, sigprocmask(SIG_BLOCK, 0, &actual));
+  ASSERT_EQ(0, memcmp(&golden, &actual, sizeof(sigset_t)));
   return 0;
+}
+
+TEST(pthread_attr_setsigmask_np, getsAppliedToThread) {
+  pthread_t id;
+  pthread_attr_t attr;
+  sigemptyset(&golden);
+  sigaddset(&golden, SIGSYS);
+  sigaddset(&golden, SIGUSR1);
+  ASSERT_EQ(0, sigprocmask(SIG_BLOCK, 0, &original));
+  ASSERT_NE(0, memcmp(&golden, &original, sizeof(sigset_t)));
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setsigmask_np(&attr, &golden));
+  ASSERT_EQ(0, pthread_create(&id, &attr, MyThread, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  ASSERT_EQ(0, pthread_join(id, 0));
+  ASSERT_EQ(0, sigprocmask(SIG_BLOCK, 0, &actual));
+  ASSERT_EQ(0, memcmp(&actual, &original, sizeof(sigset_t)));
 }

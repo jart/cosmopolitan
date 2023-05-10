@@ -328,9 +328,15 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         flags |= FLAGS_ISSIGNED;
         // fallthrough
       case 'u': {
+        uint128_t value;
         flags &= ~FLAGS_HASH;  // no hash for dec format
       FormatNumber:
-        if (__fmt_ntoa(out, arg, va, signbit, log2base, prec, width, flags,
+        if (signbit > 63) {
+          value = va_arg(va, uint128_t);
+        } else {
+          value = va_arg(va, uint64_t);
+        }
+        if (__fmt_ntoa(out, arg, value, signbit, log2base, prec, width, flags,
                        alphabet) == -1) {
           return -1;
         }
@@ -386,19 +392,32 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
       case 'e':
       case 'E':
       case 'a':
-      case 'A':
+      case 'A': {
+        int rc;
         if (!_weaken(__fmt_dtoa)) {
           p = "?";
           prec = 0;
           flags &= ~(FLAGS_PRECISION | FLAGS_PLUS | FLAGS_SPACE);
           goto FormatString;
         }
-        if (_weaken(__fmt_dtoa)(out, arg, d, flags, prec, sign, width,
-                                longdouble, qchar, signbit, alphabet,
-                                va) == -1) {
-          return -1;
+        rc = _weaken(__fmt_dtoa)(out, arg, d, flags, prec, sign, width,
+                                 longdouble, qchar, signbit, alphabet, va);
+        if (rc == -1) return -1;
+#ifdef __aarch64__
+        // huge kludge
+        switch (rc) {
+          case __FMT_CONSUMED_DOUBLE:
+            va_arg(va, double);
+            break;
+          case __FMT_CONSUMED_LONG_DOUBLE:
+            va_arg(va, long double);
+            break;
+          default:
+            unreachable;
         }
+#endif /* __aarch64__ */
         break;
+      }
       case '%':
         __FMT_PUT('%');
         break;
