@@ -48,6 +48,10 @@ $(THIRD_PARTY_COMPILER_RT_A_OBJS): private			\
 			$(OLD_CODE)				\
 			-DCRT_HAS_128BIT
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/third_party/compiler_rt/comprt.o: third_party/compiler_rt/comprt.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 THIRD_PARTY_COMPILER_RT_LIBS = $(foreach x,$(THIRD_PARTY_COMPILER_RT_ARTIFACTS),$($(x)))
 THIRD_PARTY_COMPILER_RT_SRCS = $(foreach x,$(THIRD_PARTY_COMPILER_RT_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_COMPILER_RT_HDRS = $(foreach x,$(THIRD_PARTY_COMPILER_RT_ARTIFACTS),$($(x)_HDRS))

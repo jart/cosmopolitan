@@ -3,7 +3,7 @@
 //	Nop ref this to force pull the license into linkage.
 	.section .yoink
 huge_compiler_rt_license:
-	int3
+	ret
 	.endobj	huge_compiler_rt_license,globl,hidden
 	.previous
 

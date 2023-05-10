@@ -49,8 +49,6 @@ extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 
-struct CosmoTib *tib;
-
 textstartup void cosmo(long *sp) {
   int argc;
   init_f **fp;

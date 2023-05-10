@@ -302,7 +302,7 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
             }
             params.n_parts = std::stoi(argv[i]);
         } else if (arg == "-h" || arg == "--help") {
-            gpt_print_usage(argc, argv, default_params);
+            gpt_print_usage(stdout, argc, argv, default_params);
             exit(0);
         } else if (arg == "--random-prompt") {
             params.random_prompt = true;
@@ -320,13 +320,13 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
             params.input_suffix = argv[i];
         } else {
             fprintf(stderr, "error: unknown argument: %s\n", arg.c_str());
-            gpt_print_usage(argc, argv, default_params);
+            gpt_print_usage(stderr, argc, argv, default_params);
             exit(1);
         }
     }
     if (invalid_param) {
         fprintf(stderr, "error: invalid parameter for argument: %s\n", arg.c_str());
-        gpt_print_usage(argc, argv, default_params);
+        gpt_print_usage(stderr, argc, argv, default_params);
         exit(1);
     }
 
@@ -363,75 +363,75 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
     return true;
 }
 
-void gpt_print_usage(int /*argc*/, char ** argv, const gpt_params & params) {
-    fprintf(stderr, "usage: %s [options]\n", argv[0]);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "options:\n");
-    fprintf(stderr, "  -h, --help            show this help message and exit\n");
-    fprintf(stderr, "  -v, --verbose         print plenty of helpful information, e.g. prompt\n");
-    fprintf(stderr, "  -i, --interactive     run in interactive mode\n");
-    fprintf(stderr, "  --interactive-first   run in interactive mode and wait for input right away\n");
-    fprintf(stderr, "  -ins, --instruct      run in instruction mode (use with Alpaca models)\n");
-    fprintf(stderr, "  --multiline-input     allows you to write or paste multiple lines without ending each in '\\'\n");
-    fprintf(stderr, "  -r PROMPT, --reverse-prompt PROMPT\n");
-    fprintf(stderr, "                        run in interactive mode and poll user input upon seeing PROMPT (can be\n");
-    fprintf(stderr, "                        specified more than once for multiple prompts).\n");
-    fprintf(stderr, "  --color               colorise output to distinguish prompt and user input from generations\n");
-    fprintf(stderr, "  -s SEED, --seed SEED  RNG seed (default: -1, use random seed for < 0)\n");
-    fprintf(stderr, "  -t N, --threads N     number of threads to use during computation (default: %d)\n", params.n_threads);
-    fprintf(stderr, "  -p PROMPT, --prompt PROMPT\n");
-    fprintf(stderr, "                        prompt to start generation with (default: Companion AI)\n");
-    fprintf(stderr, "  --random-prompt       start with a randomized prompt.\n");
-    fprintf(stderr, "  --in-prefix STRING    string to prefix user inputs with (default: empty)\n");
-    fprintf(stderr, "  --in-suffix STRING    string to suffix after user inputs with (default: empty)\n");
-    fprintf(stderr, "  -f FNAME, --file FNAME\n");
-    fprintf(stderr, "                        text file containing prompt (default: Companion AI)\n");
-    fprintf(stderr, "  -C FNAME, --prompt_cache FNAME\n");
-    fprintf(stderr, "                        path of cache for fast prompt reload (default: .prompt.jtlp)\n");
-    fprintf(stderr, "  -n N, --n_predict N   number of tokens to predict (default: %d, -1 = infinity)\n", params.n_predict);
-    fprintf(stderr, "  --top_k N             top-k sampling (default: %d, 0 = disabled)\n", params.top_k);
-    fprintf(stderr, "  --top_p N             top-p sampling (default: %.1f, 1.0 = disabled)\n", (double)params.top_p);
-    fprintf(stderr, "  --tfs N               tail free sampling, parameter z (default: %.1f, 1.0 = disabled)\n", (double)params.tfs_z);
-    fprintf(stderr, "  --typical N           locally typical sampling, parameter p (default: %.1f, 1.0 = disabled)\n", (double)params.typical_p);
-    fprintf(stderr, "  --repeat_last_n N     last n tokens to consider for penalize (default: %d, 0 = disabled, -1 = ctx_size)\n", params.repeat_last_n);
-    fprintf(stderr, "  --repeat_penalty N    penalize repeat sequence of tokens (default: %.1f, 1.0 = disabled)\n", (double)params.repeat_penalty);
-    fprintf(stderr, "  --presence_penalty N  repeat alpha presence penalty (default: %.1f, 0.0 = disabled)\n", (double)params.presence_penalty);
-    fprintf(stderr, "  --frequency_penalty N repeat alpha frequency penalty (default: %.1f, 0.0 = disabled)\n", (double)params.frequency_penalty);
-    fprintf(stderr, "  --mirostat N          use Mirostat sampling.\n");
-    fprintf(stderr, "                        Top K, Nucleus, Tail Free and Locally Typical samplers are ignored if used.\n");
-    fprintf(stderr, "                        (default: %d, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)\n", params.mirostat);
-    fprintf(stderr, "  --mirostat_lr N       Mirostat learning rate, parameter eta (default: %.1f)\n", (double)params.mirostat_eta);
-    fprintf(stderr, "  --mirostat_ent N      Mirostat target entropy, parameter tau (default: %.1f)\n", (double)params.mirostat_tau);
-    fprintf(stderr, "  -l TOKEN_ID(+/-)BIAS, --logit-bias TOKEN_ID(+/-)BIAS\n");
-    fprintf(stderr, "                        modifies the likelihood of token appearing in the completion,\n");
-    fprintf(stderr, "                        i.e. `--logit-bias 15043+1` to increase likelihood of token ' Hello',\n");
-    fprintf(stderr, "                        or `--logit-bias 15043-1` to decrease likelihood of token ' Hello'\n");
-    fprintf(stderr, "  --repeat_last_n N     last n tokens to consider for penalize (default: %d)\n", params.repeat_last_n);
-    fprintf(stderr, "  --repeat_penalty N    penalize repeat sequence of tokens (default: %.1f)\n", (double)params.repeat_penalty);
-    fprintf(stderr, "  -c N, --ctx_size N    size of the prompt context (default: %d)\n", params.n_ctx);
-    fprintf(stderr, "  --ignore-eos          ignore end of stream token and continue generating (implies --logit-bias 2-inf)\n");
-    fprintf(stderr, "  --no-penalize-nl      do not penalize newline token\n");
-    fprintf(stderr, "  --memory_f32          use f32 instead of f16 for memory key+value\n");
-    fprintf(stderr, "  --temp N              temperature (default: %.1f)\n", (double)params.temp);
-    fprintf(stderr, "  --n_parts N           number of model parts (default: -1 = determine from dimensions)\n");
-    fprintf(stderr, "  -b N, --batch_size N  batch size for prompt processing (default: %d)\n", params.n_batch);
-    fprintf(stderr, "  --perplexity          compute perplexity over the prompt\n");
-    fprintf(stderr, "  --keep NUM|STR        number of tokens to keep from the initial prompt, or substring\n");
-    fprintf(stderr, "                        to search for within prompt that divides the actual prompt from\n");
-    fprintf(stderr, "                        its initial example text (default: %d, -1 = all)\n", params.n_keep);
+void gpt_print_usage(FILE *f, int /*argc*/, char ** argv, const gpt_params & params) {
+    fprintf(f, "usage: %s [options]\n", argv[0]);
+    fprintf(f, "\n");
+    fprintf(f, "options:\n");
+    fprintf(f, "  -h, --help            show this help message and exit\n");
+    fprintf(f, "  -v, --verbose         print plenty of helpful information, e.g. prompt\n");
+    fprintf(f, "  -i, --interactive     run in interactive mode\n");
+    fprintf(f, "  --interactive-first   run in interactive mode and wait for input right away\n");
+    fprintf(f, "  -ins, --instruct      run in instruction mode (use with Alpaca models)\n");
+    fprintf(f, "  --multiline-input     allows you to write or paste multiple lines without ending each in '\\'\n");
+    fprintf(f, "  -r PROMPT, --reverse-prompt PROMPT\n");
+    fprintf(f, "                        run in interactive mode and poll user input upon seeing PROMPT (can be\n");
+    fprintf(f, "                        specified more than once for multiple prompts).\n");
+    fprintf(f, "  --color               colorise output to distinguish prompt and user input from generations\n");
+    fprintf(f, "  -s SEED, --seed SEED  RNG seed (default: -1, use random seed for < 0)\n");
+    fprintf(f, "  -t N, --threads N     number of threads to use during computation (default: %d)\n", params.n_threads);
+    fprintf(f, "  -p PROMPT, --prompt PROMPT\n");
+    fprintf(f, "                        prompt to start generation with (default: Companion AI)\n");
+    fprintf(f, "  --random-prompt       start with a randomized prompt.\n");
+    fprintf(f, "  --in-prefix STRING    string to prefix user inputs with (default: empty)\n");
+    fprintf(f, "  --in-suffix STRING    string to suffix after user inputs with (default: empty)\n");
+    fprintf(f, "  -f FNAME, --file FNAME\n");
+    fprintf(f, "                        text file containing prompt (default: Companion AI)\n");
+    fprintf(f, "  -C FNAME, --prompt_cache FNAME\n");
+    fprintf(f, "                        path of cache for fast prompt reload (default: .prompt.jtlp)\n");
+    fprintf(f, "  -n N, --n_predict N   number of tokens to predict (default: %d, -1 = infinity)\n", params.n_predict);
+    fprintf(f, "  --top_k N             top-k sampling (default: %d, 0 = disabled)\n", params.top_k);
+    fprintf(f, "  --top_p N             top-p sampling (default: %.1f, 1.0 = disabled)\n", (double)params.top_p);
+    fprintf(f, "  --tfs N               tail free sampling, parameter z (default: %.1f, 1.0 = disabled)\n", (double)params.tfs_z);
+    fprintf(f, "  --typical N           locally typical sampling, parameter p (default: %.1f, 1.0 = disabled)\n", (double)params.typical_p);
+    fprintf(f, "  --repeat_last_n N     last n tokens to consider for penalize (default: %d, 0 = disabled, -1 = ctx_size)\n", params.repeat_last_n);
+    fprintf(f, "  --repeat_penalty N    penalize repeat sequence of tokens (default: %.1f, 1.0 = disabled)\n", (double)params.repeat_penalty);
+    fprintf(f, "  --presence_penalty N  repeat alpha presence penalty (default: %.1f, 0.0 = disabled)\n", (double)params.presence_penalty);
+    fprintf(f, "  --frequency_penalty N repeat alpha frequency penalty (default: %.1f, 0.0 = disabled)\n", (double)params.frequency_penalty);
+    fprintf(f, "  --mirostat N          use Mirostat sampling.\n");
+    fprintf(f, "                        Top K, Nucleus, Tail Free and Locally Typical samplers are ignored if used.\n");
+    fprintf(f, "                        (default: %d, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)\n", params.mirostat);
+    fprintf(f, "  --mirostat_lr N       Mirostat learning rate, parameter eta (default: %.1f)\n", (double)params.mirostat_eta);
+    fprintf(f, "  --mirostat_ent N      Mirostat target entropy, parameter tau (default: %.1f)\n", (double)params.mirostat_tau);
+    fprintf(f, "  -l TOKEN_ID(+/-)BIAS, --logit-bias TOKEN_ID(+/-)BIAS\n");
+    fprintf(f, "                        modifies the likelihood of token appearing in the completion,\n");
+    fprintf(f, "                        i.e. `--logit-bias 15043+1` to increase likelihood of token ' Hello',\n");
+    fprintf(f, "                        or `--logit-bias 15043-1` to decrease likelihood of token ' Hello'\n");
+    fprintf(f, "  --repeat_last_n N     last n tokens to consider for penalize (default: %d)\n", params.repeat_last_n);
+    fprintf(f, "  --repeat_penalty N    penalize repeat sequence of tokens (default: %.1f)\n", (double)params.repeat_penalty);
+    fprintf(f, "  -c N, --ctx_size N    size of the prompt context (default: %d)\n", params.n_ctx);
+    fprintf(f, "  --ignore-eos          ignore end of stream token and continue generating (implies --logit-bias 2-inf)\n");
+    fprintf(f, "  --no-penalize-nl      do not penalize newline token\n");
+    fprintf(f, "  --memory_f32          use f32 instead of f16 for memory key+value\n");
+    fprintf(f, "  --temp N              temperature (default: %.1f)\n", (double)params.temp);
+    fprintf(f, "  --n_parts N           number of model parts (default: -1 = determine from dimensions)\n");
+    fprintf(f, "  -b N, --batch_size N  batch size for prompt processing (default: %d)\n", params.n_batch);
+    fprintf(f, "  --perplexity          compute perplexity over the prompt\n");
+    fprintf(f, "  --keep NUM|STR        number of tokens to keep from the initial prompt, or substring\n");
+    fprintf(f, "                        to search for within prompt that divides the actual prompt from\n");
+    fprintf(f, "                        its initial example text (default: %d, -1 = all)\n", params.n_keep);
     if (llama_mlock_supported()) {
-        fprintf(stderr, "  --mlock               force system to keep model in RAM rather than swapping or compressing\n");
+        fprintf(f, "  --mlock               force system to keep model in RAM rather than swapping or compressing\n");
     }
     if (llama_mmap_supported()) {
-        fprintf(stderr, "  --no-mmap             do not memory-map model (slower load but may reduce pageouts if not using mlock)\n");
+        fprintf(f, "  --no-mmap             do not memory-map model (slower load but may reduce pageouts if not using mlock)\n");
     }
-    fprintf(stderr, "  --mtest               compute maximum memory usage\n");
-    fprintf(stderr, "  --verbose-prompt      print prompt before generation\n");
-    fprintf(stderr, "  --lora FNAME          apply LoRA adapter (implies --no-mmap)\n");
-    fprintf(stderr, "  --lora-base FNAME     optional model to use as a base for the layers modified by the LoRA adapter\n");
-    fprintf(stderr, "  -m FNAME, --model FNAME\n");
-    fprintf(stderr, "                        model path (default: %s)\n", params.model.c_str());
-    fprintf(stderr, "\n");
+    fprintf(f, "  --mtest               compute maximum memory usage\n");
+    fprintf(f, "  --verbose-prompt      print prompt before generation\n");
+    fprintf(f, "  --lora FNAME          apply LoRA adapter (implies --no-mmap)\n");
+    fprintf(f, "  --lora-base FNAME     optional model to use as a base for the layers modified by the LoRA adapter\n");
+    fprintf(f, "  -m FNAME, --model FNAME\n");
+    fprintf(f, "                        model path (default: %s)\n", params.model.c_str());
+    fprintf(f, "\n");
 }
 
 std::string gpt_random_prompt(std::mt19937 & rng) {
