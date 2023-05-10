@@ -90,7 +90,7 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
  * arch_prctl() function. However, such programs might not be portable
  * and your `errno` variable also won't be thread safe anymore.
  */
-void __enable_tls(void) {
+textstartup void __enable_tls(void) {
   int tid;
   size_t siz;
   char *mem, *tls;

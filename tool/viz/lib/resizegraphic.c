@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/tty/quant.h"
 #include "libc/assert.h"
 #include "libc/runtime/buffer.internal.h"
 #include "tool/viz/lib/graphic.h"
@@ -29,7 +30,7 @@
 struct Graphic *resizegraphic(struct Graphic *g, size_t yn, size_t xn) {
   /* assert(xn % 2 == 0); */ /* todo: ughhh this whole thing is wrong */
   yn &= ~1;
-  balloc(&g->b, 64, yn * xn * sizeof(__m128) + /* wut */ PAGESIZE);
+  balloc(&g->b, 64, yn * xn * sizeof(ttyrgb_m128) + /* wut */ PAGESIZE);
   g->yn = yn;
   g->xn = xn;
   return g;

@@ -20,7 +20,7 @@
 #include "libc/macros.internal.h"
 /* clang-format off */
 
-.macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
+.macro	.syscon	group:req name:req linux:req linux_aarch64:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
 
 #ifdef __x86_64__
 	.yoink	_init_systemfive
@@ -69,7 +69,7 @@
 #else
 	.section .rodata,"a",@progbits
 	.balign	8
-\name:	.quad	\linux
+\name:	.quad	\linux_aarch64
 	.endobj	\name,globl
 	.previous
 #endif /* __x86_64__ */

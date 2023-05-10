@@ -95,13 +95,19 @@ int clock_gettime(int clock, struct timespec *ts) {
   return rc;
 }
 
+#ifdef __aarch64__
+#define CGT_VDSO __vdsosym("LINUX_2.6.39", "__kernel_clock_gettime")
+#else
+#define CGT_VDSO __vdsosym("LINUX_2.6", "__vdso_clock_gettime")
+#endif
+
 /**
  * Returns pointer to fastest clock_gettime().
  */
 clock_gettime_f *__clock_gettime_get(bool *opt_out_isfast) {
   bool isfast;
   clock_gettime_f *res;
-  if (IsLinux() && (res = __vdsosym("LINUX_2.6", "__vdso_clock_gettime"))) {
+  if (IsLinux() && (res = CGT_VDSO)) {
     isfast = true;
   } else if (IsXnu()) {
     isfast = false;

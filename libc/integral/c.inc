@@ -825,6 +825,9 @@ typedef struct {
 #if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
 #define YOINK(SYMBOL) \
   asm(".section .yoink\n\tnopl\t%a0\n\t.previous" : : "X"(SYMBOL))
+#elif defined(__aarch64__)
+#define YOINK(SYMBOL) \
+  asm(".section .yoink\n\tb\t%a0\n\t.previous" : : "X"(SYMBOL))
 #else
 #define YOINK(SYMBOL) (void)0
 #endif
@@ -832,6 +835,9 @@ typedef struct {
 #if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
 #define STATIC_YOINK(SYMBOLSTR) \
   asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
+#elif defined(__aarch64__)
+#define STATIC_YOINK(SYMBOLSTR) \
+  asm(".section .yoink\n\tb\t\"" SYMBOLSTR "\"\n\t.previous")
 #else
 #define STATIC_YOINK(SYMBOLSTR)
 #endif

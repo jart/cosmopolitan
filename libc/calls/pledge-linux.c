@@ -240,7 +240,7 @@ static const struct thatispacked SyscallName {
     {__NR_linux_capget, "capget"},                                    //
     {__NR_linux_capset, "capset"},                                    //
     {__NR_linux_sigtimedwait, "sigtimedwait"},                        //
-    {__NR_linux_rt_sigqueueinfo, "rt_sigqueueinfo"},                  //
+    {__NR_linux_sigqueueinfo, "sigqueueinfo"},                        //
     {__NR_linux_personality, "personality"},                          //
     {__NR_linux_ustat, "ustat"},                                      //
     {__NR_linux_sysfs, "sysfs"},                                      //
@@ -359,7 +359,7 @@ static const struct thatispacked SyscallName {
     {__NR_linux_epoll_create1, "epoll_create1"},                      //
     {__NR_linux_perf_event_open, "perf_event_open"},                  //
     {__NR_linux_inotify_init1, "inotify_init1"},                      //
-    {__NR_linux_rt_tgsigqueueinfo, "rt_tgsigqueueinfo"},              //
+    {__NR_linux_tgsigqueueinfo, "tgsigqueueinfo"},                    //
     {__NR_linux_signalfd, "signalfd"},                                //
     {__NR_linux_signalfd4, "signalfd4"},                              //
     {__NR_linux_eventfd, "eventfd"},                                  //

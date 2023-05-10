@@ -27,6 +27,8 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/xed/x86.h"
 
+#ifdef __x86_64__
+
 static volatile _Thread_local int gotsignal;
 
 static void ContinueOnError(int sig, siginfo_t *si, void *vctx) {
@@ -61,3 +63,5 @@ noasan bool testlib_memoryexists(const void *p) {
   _npassert(!sigaction(SIGSEGV, old + 0, 0));
   return !gotsignal;
 }
+
+#endif /* __x86_64__ */

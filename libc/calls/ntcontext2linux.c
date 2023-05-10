@@ -21,6 +21,8 @@
 #include "libc/nt/struct/context.h"
 #include "libc/str/str.h"
 
+#ifdef __x86_64__
+
 // TODO(jart): uc_sigmask support
 
 privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
@@ -75,3 +77,5 @@ privileged void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
   cr->SegFs = ctx->uc_mcontext.fs;
   __repmovsb(&cr->FltSave, &ctx->__fpustate, sizeof(ctx->__fpustate));
 }
+
+#endif /* __x86_64__ */

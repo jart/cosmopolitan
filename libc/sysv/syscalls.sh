@@ -32,7 +32,7 @@ dir=libc/sysv/calls
 #	                          6.4+│  │ │ │  │
 #	                     NetBSD┐  │  │ │ │  │
 #	                       9.1+│  │  │ │ │  │
-#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      ARM	Directives & Commentary
+#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Arm64	Directives & Commentary
 scall	sys_exit		0x00100100120010e7	0x05e	globl hidden # a.k.a. exit_group
 scall	sys_read		0x8038038032803800	0x03f	globl hidden
 scall	sys_write		0x8048048042804801	0x040	globl hidden
@@ -59,7 +59,7 @@ scall	sys_writev		0x8798798792879814	0x042	globl hidden
 scall	sys_access		0x0210210212021015	0xfff	globl hidden
 scall	__sys_pipe		0x02a10721e202a016	0xfff	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
 scall	sys_select		0x9a184785d285d817	0xfff	globl hidden
-scall	sys_pselect		0x9b486ea0a298a90e	0xfff	globl hidden # pselect6() on gnu/systemd
+scall	sys_pselect		0x9b486ea0a298a90e	0x048	globl hidden # pselect6() on gnu/systemd
 scall	sys_sched_yield		0x15e12a14bf25d018	0x07c	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
 scall	__sys_mremap		0x19bffffffffff019	0x0d8	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	0x0e8	globl hidden
@@ -96,7 +96,7 @@ scall	__sys_fork		0x0020020022002039	0xfff	globl hidden # xnu needs eax&=~-edx b
 #scall	vfork			0x042042042204203a	0xfff	globl        # this syscall is from the moon so we implement it by hand in libc/runtime/vfork.S; probably removed from XNU in 12.5
 scall	sys_posix_spawn		0x1daffffff20f4fff	0xfff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	0x0dd	globl hidden
-scall	__sys_wait4		0x9c180b807280783d	0x0104	globl hidden
+scall	__sys_wait4		0x9c180b807280783d	0x104	globl hidden
 scall	sys_kill		0x02507a025202503e	0x081	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0x092fff092fffffff	0xfff	globl hidden
 scall	sys_clone		0x11fffffffffff038	0x0dc	globl hidden
@@ -267,8 +267,8 @@ scall	sys_clock_settime	0x1ac0580e9ffff0e3	0x070	globl # no wrapper
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	0x071	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	sys_clock_getres	0x1ad0590eaffff0e5	0x072	globl hidden
 scall	sys_mbind		0xfffffffffffff0ed	0x0eb	globl # no wrapper; numa numa yeah
-scall	set_mempolicy		0xfffffffffffff0ee	0xfff	globl
-scall	get_mempolicy		0xfffffffffffff0ef	0xfff	globl
+scall	set_mempolicy		0xfffffffffffff0ee	0x0ed	globl
+scall	get_mempolicy		0xfffffffffffff0ef	0x0ec	globl
 scall	sys_mq_open		0x101ffffffffff0f0	0x0b4	globl # won't polyfill
 scall	sys_mq_unlink		0x103ffffffffff0f1	0x0b5	globl # won't polyfill
 scall	sys_mq_timedsend	0x1b0ffffffffff0f2	0x0b6	globl # won't polyfill
@@ -280,8 +280,8 @@ scall	sys_waitid		0xfffffffff28ad8f7	0x05f	globl # Linux 2.6.9+; no wrapper
 scall	sys_add_key		0xfffffffffffff0f8	0x0d9	globl # no wrapper
 scall	sys_request_key		0xfffffffffffff0f9	0x0da	globl # no wrapper
 scall	sys_keyctl		0xfffffffffffff0fa	0x0db	globl # no wrapper
-scall	ioprio_set		0xfffffffffffff0fb	0xfff	globl
-scall	ioprio_get		0xfffffffffffff0fc	0xfff	globl
+scall	ioprio_set		0xfffffffffffff0fb	0x01e	globl
+scall	ioprio_get		0xfffffffffffff0fc	0x01f	globl
 scall	sys_inotify_init	0xfffffffffffff0fd	0xfff	globl # no wrapper
 scall	sys_inotify_add_watch	0xfffffffffffff0fe	0xfff	globl # no wrapper
 scall	sys_inotify_rm_watch	0xfffffffffffff0ff	0xfff	globl # no wrapper
@@ -322,7 +322,7 @@ scall	sys_epoll_pwait		0xfffffffffffff119	0x016	globl # no wrapper
 scall	sys_epoll_create1	0xfffffffffffff123	0x014	globl hidden
 scall	sys_perf_event_open	0xfffffffffffff12a	0x0f1	globl # no wrapper
 scall	sys_inotify_init1	0xfffffffffffff126	0x01a	globl # no wrapper
-scall	sys_rt_tgsigqueueinfo	0xfffffffffffff129	0x0f0	globl # no wrapper
+scall	sys_tgsigqueueinfo	0xfffffffffffff129	0x0f0	globl # no wrapper; officially rt_tgsigqueueinfo on gnu/systemd
 scall	sys_signalfd		0xfffffffffffff11a	0xfff	globl # no wrapper
 scall	sys_signalfd4		0xfffffffffffff121	0x04a	globl # no wrapper
 scall	sys_eventfd		0xfffffffffffff11c	0xfff	globl # no wrapper
@@ -366,36 +366,36 @@ scall	sys_pkey_mprotect	0xfffffffffffff149	0x120	globl # no wrapper
 scall	sys_pkey_alloc		0xfffffffffffff14a	0x121	globl # no wrapper
 scall	sys_pkey_free		0xfffffffffffff14b	0x122	globl # no wrapper
 scall	sys_statx		0xfffffffffffff14c	0x123	globl # no wrapper; lool https://lkml.org/lkml/2010/7/22/249
-scall	sys_io_pgetevents	0xfffffffffffff14d	0xfff	globl # no wrapper
-scall	sys_rseq		0xfffffffffffff14e	0xfff	globl # no wrapper; Linux 4.18+ (c. 2018)
+scall	sys_io_pgetevents	0xfffffffffffff14d	0x124	globl # no wrapper
+scall	sys_rseq		0xfffffffffffff14e	0x125	globl # no wrapper; Linux 4.18+ (c. 2018)
 #──────────────────────LINUX 4.18 LIMIT────────────────────── # ←┬─ last version of linux kernel buildable with only gplv2
-scall	sys_pidfd_send_signal	0xfffffffffffff1a8	0xfff	globl #  ├─ linux conferences ban linux founder linus torvalds
-scall	sys_io_uring_setup	0xfffffffffffff1a9	0xfff	globl #  └─ gnu founder richard stallman publicly disgraced
-scall	sys_io_uring_enter	0xfffffffffffff1aa	0xfff	globl
-scall	sys_io_uring_register	0xfffffffffffff1ab	0xfff	globl
+scall	sys_pidfd_send_signal	0xfffffffffffff1a8	0x1a8	globl #  ├─ linux conferences ban linux founder linus torvalds
+scall	sys_io_uring_setup	0xfffffffffffff1a9	0x1a9	globl #  └─ gnu founder richard stallman publicly disgraced
+scall	sys_io_uring_enter	0xfffffffffffff1aa	0x1aa	globl
+scall	sys_io_uring_register	0xfffffffffffff1ab	0x1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────── # ←──────┬─ red hat terminates community release of enterprise linux circa 2020
 scall	sys_pledge		0xfff06cffffffffff	0xfff	globl hidden # └─ online linux services ban the president of united states of america
 scall	sys_msyscall		0xfff025ffffffffff	0xfff	globl # no wrapper
 scall	sys_bogus		0x00b5005002500500	0xfff	globl
-scall	sys_open_tree		0xfffffffffffff1ac	0xfff	globl # no wrapper
-scall	sys_move_mount		0xfffffffffffff1ad	0xfff	globl # no wrapper
-scall	sys_fsopen		0xfffffffffffff1ae	0xfff	globl # no wrapper
-scall	sys_fsconfig		0xfffffffffffff1af	0xfff	globl # no wrapper
-scall	sys_fsmount		0xfffffffffffff1b0	0xfff	globl # no wrapper
-scall	sys_fspick		0xfffffffffffff1b1	0xfff	globl # no wrapper
-scall	sys_pidfd_open		0xfffffffffffff1b2	0xfff	globl # no wrapper
-scall	sys_clone3		0xfffffffffffff1b3	0xfff	globl # no wrapper
-scall	sys_close_range		0xffffff23fffff1b4	0xfff	globl hidden # Linux 5.9
-scall	sys_openat2		0xfffffffffffff1b5	0xfff	globl hidden # Linux 5.6
-scall	sys_pidfd_getfd		0xfffffffffffff1b6	0xfff	globl # no wrapper
-scall	sys_faccessat2		0xfffffffffffff1b7	0xfff	globl hidden
-scall	sys_process_madvise	0xfffffffffffff1b8	0xfff	globl # no wrapper
-scall	sys_epoll_pwait2	0xfffffffffffff1b9	0xfff	globl # no wrapper
-scall	sys_mount_setattr	0xfffffffffffff1ba	0xfff	globl # no wrapper
+scall	sys_open_tree		0xfffffffffffff1ac	0x1ac	globl # no wrapper
+scall	sys_move_mount		0xfffffffffffff1ad	0x1ad	globl # no wrapper
+scall	sys_fsopen		0xfffffffffffff1ae	0x1ae	globl # no wrapper
+scall	sys_fsconfig		0xfffffffffffff1af	0x1af	globl # no wrapper
+scall	sys_fsmount		0xfffffffffffff1b0	0x1b0	globl # no wrapper
+scall	sys_fspick		0xfffffffffffff1b1	0x1b1	globl # no wrapper
+scall	sys_pidfd_open		0xfffffffffffff1b2	0x1b2	globl # no wrapper
+scall	sys_clone3		0xfffffffffffff1b3	0x1b3	globl # no wrapper
+scall	sys_close_range		0xffffff23fffff1b4	0x1b4	globl hidden # Linux 5.9
+scall	sys_openat2		0xfffffffffffff1b5	0x1b5	globl hidden # Linux 5.6
+scall	sys_pidfd_getfd		0xfffffffffffff1b6	0x1b6	globl # no wrapper
+scall	sys_faccessat2		0xfffffffffffff1b7	0x1b7	globl hidden
+scall	sys_process_madvise	0xfffffffffffff1b8	0x1b8	globl # no wrapper
+scall	sys_epoll_pwait2	0xfffffffffffff1b9	0x1b9	globl # no wrapper
+scall	sys_mount_setattr	0xfffffffffffff1ba	0x1ba	globl # no wrapper
 scall	sys_quotactl_fd		0xfffffffffffff1bb	0xfff	globl # no wrapper
-scall	sys_landlock_create_ruleset 0xfffffffffffff1bc	0xfff	globl hidden # Linux 5.13+
-scall	sys_landlock_add_rule	0xfffffffffffff1bd	0xfff	globl hidden
-scall	sys_landlock_restrict_self 0xfffffffffffff1be	0xfff	globl hidden
+scall	sys_landlock_create_ruleset 0xfffffffffffff1bc	0x1bc	globl hidden # Linux 5.13+
+scall	sys_landlock_add_rule	0xfffffffffffff1bd	0x1bd	globl hidden
+scall	sys_landlock_restrict_self 0xfffffffffffff1be	0x1be	globl hidden
 scall	sys_memfd_secret	0xfffffffffffff1bf	0xfff	globl # no wrapper
 scall	sys_process_mrelease	0xfffffffffffff1c0	0xfff	globl # no wrapper
 scall	sys_futex_waitv		0xfffffffffffff1c1	0xfff	globl # no wrapper

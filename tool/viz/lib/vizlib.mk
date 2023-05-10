@@ -61,7 +61,6 @@ o/$(MODE)/tool/viz/lib/doublechrominance.o		\
 o/$(MODE)/tool/viz/lib/doublechrominance.o		\
 o/$(MODE)/tool/viz/lib/interlace.o			\
 o/$(MODE)/tool/viz/lib/bilinearscale.o			\
-o/$(MODE)/tool/viz/lib/oldbilinearscale.o		\
 o/$(MODE)/tool/viz/lib/boxblur.o			\
 o/$(MODE)/tool/viz/lib/dither.o				\
 o/$(MODE)/tool/viz/lib/emboss.o				\

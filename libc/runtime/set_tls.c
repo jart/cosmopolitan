@@ -26,7 +26,7 @@
 
 int sys_set_tls();
 
-void __set_tls(struct CosmoTib *tib) {
+textstartup void __set_tls(struct CosmoTib *tib) {
   tib = __adj_tls(tib);
 #ifdef __x86_64__
   // ask the operating system to change the x86 segment register

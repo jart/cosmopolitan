@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall __sys_wait4,0x9c180b807280783d,0x0104,globl,hidden
+.scall __sys_wait4,0x9c180b807280783d,0x104,globl,hidden

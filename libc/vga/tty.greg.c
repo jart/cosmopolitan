@@ -30,6 +30,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/vga/vga.internal.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview ECMA-48 / VT100 video terminal implementation for bare
  * metal VGA.
@@ -1356,3 +1358,5 @@ ssize_t _TtyRead(struct Tty *tty, void *buf, size_t size) {
   tty->input.i -= n;
   return n;
 }
+
+#endif /* __x86_64__ */

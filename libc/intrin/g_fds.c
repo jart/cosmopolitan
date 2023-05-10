@@ -29,7 +29,9 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
 
+#ifdef __x86_64__
 STATIC_YOINK("_init_g_fds");
+#endif
 
 struct Fds g_fds;
 

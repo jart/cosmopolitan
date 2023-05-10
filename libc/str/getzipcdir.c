@@ -39,13 +39,13 @@ typedef long long v2di __attribute__((__vector_size__(16), __aligned__(1)));
 void *GetZipCdir(const uint8_t *p, size_t n) {
   v2di x;
   size_t i, j;
-  v8hi pk = {READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK"),
-             READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
   uint32_t magic;
   i = n - 4;
-  asm("" : "+x"(pk));
   do {
 #ifdef __x86_64__
+    v8hi pk = {READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK"),
+               READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
+    asm("" : "+x"(pk));
     if (i >= 14) {
       x = *(const v2di *)(p + i - 14);
       if (!(__builtin_ia32_pmovmskb128(

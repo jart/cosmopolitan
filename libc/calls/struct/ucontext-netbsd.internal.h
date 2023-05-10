@@ -5,6 +5,8 @@
 COSMOPOLITAN_C_START_
 // clang-format off
 
+#ifdef __x86_64__
+
 #define __UCONTEXT_SIZE 784
 #define _UC_SIGMASK     0x01
 #define _UC_STACK       0x02
@@ -77,6 +79,8 @@ struct ucontext_netbsd {
     char __pad[__UCONTEXT_SIZE];
   };
 };
+
+#endif /* __x86_64__ */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

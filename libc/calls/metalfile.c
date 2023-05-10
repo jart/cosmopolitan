@@ -41,6 +41,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 #define MAP_ANONYMOUS_linux 0x00000020
 #define MAP_FIXED_linux     0x00000010
 #define MAP_SHARED_linux    0x00000001
@@ -73,3 +75,5 @@ textstartup noasan void InitializeMetalFile(void) {
     __ape_com_size = size;
   }
 }
+
+#endif /* __x86_64__ */

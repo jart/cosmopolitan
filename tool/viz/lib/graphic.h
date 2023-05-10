@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_TOOL_VIZ_LIB_GRAPHIC_H_
 #include "dsp/tty/quant.h"
 #include "libc/runtime/buffer.internal.h"
-#include "libc/mem/gc.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -35,15 +34,8 @@ void emboss(struct Graphic *);
 void boxblur(struct Graphic *);
 double perlin3(double, double, double);
 
-void stdgamma(unsigned n, __m128 rgba[n]);
-void lingamma(unsigned n, __m128 rgba[n]);
-
-void OldBilinearScale(size_t dyw, size_t dxw, __v4sf dst[dyw][dxw], size_t syw,
-                      size_t sxw, __v4sf src[syw][sxw], size_t dyn, size_t dxn,
-                      size_t syn, size_t sxn);
-
-int MagicScale(unsigned dyn, unsigned dxn, __v4sf dst[dyn][dxn], unsigned syn,
-               unsigned sxn, __v4sf src[syn][sxn]);
+void stdgamma(unsigned n, ttyrgb_m128 rgba[n]);
+void lingamma(unsigned n, ttyrgb_m128 rgba[n]);
 
 void interlace(size_t dyn, size_t dxn, float dst[dyn][dxn][4], size_t syn,
                size_t sxn, size_t ssw, unsigned char reds[syn][ssw],

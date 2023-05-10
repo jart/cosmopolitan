@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_open_tree,0xfffffffffffff1ac,0xfff,globl
+.scall sys_open_tree,0xfffffffffffff1ac,0x1ac,globl

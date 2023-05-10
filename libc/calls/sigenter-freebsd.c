@@ -32,6 +32,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
+#ifdef __x86_64__
+
 privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
                                    struct ucontext_freebsd *ctx) {
   int rva, flags;
@@ -114,3 +116,5 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
    * function, and 2) calls sys_sigreturn() once this returns.
    */
 }
+
+#endif /* __x86_64__ */

@@ -112,11 +112,11 @@ COSMOPOLITAN_C_START_
 
 #ifdef __x86_64__
 extern const int __hostos;
+bool IsWsl1(void);
 #else
 #define __hostos _HOSTLINUX
+#define IsWsl1() false
 #endif
-
-bool IsWsl1(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

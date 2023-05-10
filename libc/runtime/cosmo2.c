@@ -47,13 +47,11 @@ typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
 extern init_f __strace_init;
 extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
-extern uintptr_t ape_idata_iat[] __attribute__((__weak__));
-extern uintptr_t ape_idata_iatend[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 
 struct CosmoTib *tib;
 
-void cosmo(long *sp) {
+textstartup void cosmo(long *sp) {
   int argc;
   init_f **fp;
   uintptr_t *pp;
@@ -74,15 +72,11 @@ void cosmo(long *sp) {
   // needed by kisdangerous()
   __oldstack = (intptr_t)sp;
 
-  // make win32 imps noop
-  for (pp = ape_idata_iat; pp < ape_idata_iatend; ++pp) {
-    *pp = (uintptr_t)_missingno;
-  }
-
   // initialize mmap() manager extremely early
   _mmi.n = ARRAYLEN(_mmi.s);
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+  InitializeFileDescriptors();
 
 #ifdef SYSDEBUG
   // initialize --strace functionality

@@ -5,6 +5,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#ifdef __x86_64__
+
 struct XmmRegister {
   uint64_t u64[2];
 };
@@ -33,7 +35,10 @@ typedef uint64_t greg_t;
 typedef greg_t gregset_t[23];
 typedef struct FpuState *fpregset_t;
 
-struct MachineContext {
+#endif /* __x86_64__ */
+
+struct sigcontext {
+#ifdef __x86_64__
   union {
     struct {
       uint64_t r8;
@@ -67,18 +72,32 @@ struct MachineContext {
   };
   struct FpuState *fpregs; /* zero when no fpu context */
   uint64_t __pad1[8];
+#elif defined(__aarch64__)
+  uint64_t fault_address;
+  uint64_t regs[31];
+  uint64_t sp;
+  uint64_t pc;
+  uint64_t pstate;
+  uint8_t __reserved[4096] __attribute__((__aligned__(16)));
+#endif /* __x86_64__ */
 };
 
-typedef struct MachineContext mcontext_t;
+typedef struct sigcontext mcontext_t;
 
 struct ucontext {
   uint64_t uc_flags; /* don't use this */
   struct ucontext *uc_link;
   stack_t uc_stack;
-  mcontext_t uc_mcontext; /* use this */
+#ifdef __x86_64__
+  struct sigcontext uc_mcontext;
   sigset_t uc_sigmask;
   uint64_t __pad;
   struct FpuState __fpustate; /* for cosmo on non-linux */
+#elif defined(__aarch64__)
+  sigset_t uc_sigmask;
+  uint8_t __unused[1024 / 8 - sizeof(sigset_t)];
+  struct sigcontext uc_mcontext;
+#endif
 };
 
 typedef struct ucontext ucontext_t;

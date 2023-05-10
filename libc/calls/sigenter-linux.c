@@ -28,6 +28,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
+#ifdef __x86_64__
+
 privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
   int i, rva, flags;
   rva = __sighandrvas[sig & (NSIG - 1)];
@@ -45,3 +47,5 @@ privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
     ((sigaction_f)(_base + rva))(sig, info, ctx);
   }
 }
+
+#endif /* __x86_64__ */

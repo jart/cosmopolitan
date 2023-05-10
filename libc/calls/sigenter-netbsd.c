@@ -32,6 +32,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
+#ifdef __x86_64__
+
 privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
                                   struct ucontext_netbsd *ctx) {
   int rva, flags;
@@ -109,3 +111,5 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
    * function, and 2) calls sys_sigreturn() once this returns.
    */
 }
+
+#endif /* __x86_64__ */

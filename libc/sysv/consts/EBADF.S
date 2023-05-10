@@ -1,3 +1,3 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon errno,EBADF,9,9,9,9,9,6
+.syscon errno,EBADF,9,9,9,9,9,9,6
 .yoink kDos2Errno.EBADF

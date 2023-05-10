@@ -25,6 +25,8 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
+#ifdef __x86_64__
+
 #define GROWSDOWN 0x00000100
 #define ANONYMOUS 0x00000020
 
@@ -32,7 +34,6 @@
  * Returns true if host platform is WSL 1.0.
  */
 bool IsWsl1(void) {
-#ifdef __x86_64__
   static char res;
   if (res) return res & 1;
   if (!IsLinux()) return res = 2, false;
@@ -44,7 +45,6 @@ bool IsWsl1(void) {
   errno = e;
   res = 2 | tmp;
   return tmp;
-#else
-  return false;
-#endif
 }
+
+#endif /* __x86_64__ */
