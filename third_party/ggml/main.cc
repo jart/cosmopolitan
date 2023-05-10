@@ -61,13 +61,12 @@ static bool is_interacting = false;
 #define EPHEMERAL(fmt) "\r\e[K\033[1;35m" fmt " \033[0m"
 
 void sigint_handler(int signo) {
-    set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
-    printf("\n"); // this also force flush stdout.
     if (signo == SIGINT) {
         if (!is_interacting) {
             is_interacting=true;
         } else {
-            set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+            console_cleanup(con_st);
+            printf("\n");
             if (g_verbose) {
                 llama_print_timings(*g_ctx);
             }
@@ -95,6 +94,8 @@ int main(int argc, char ** argv) {
     gpt_params params;
 
     ShowCrashReports();
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
 
     params.model = "models/llama-7B/ggml-model.bin";
@@ -118,6 +119,9 @@ int main(int argc, char ** argv) {
     con_st.use_color = params.use_color;
 
     g_verbose = params.verbose;
+    con_st.multiline_input = params.multiline_input;
+    console_init(con_st);
+    atexit([]() { console_cleanup(con_st); });
 
     if (params.perplexity) {
         printf("\n************\n");
@@ -140,7 +144,7 @@ int main(int argc, char ** argv) {
                 "expect poor results\n", __func__, params.n_ctx);
     }
 
-    if (params.seed <= 0) {
+    if (params.seed < 0) {
         params.seed = time(NULL);
     }
 
@@ -160,25 +164,14 @@ int main(int argc, char ** argv) {
     struct stat model_stat;
     g_ctx = &ctx;
 
-    // load the model
-    {
-        auto lparams = llama_context_default_params();
-
-        lparams.n_ctx      = params.n_ctx;
-        lparams.n_parts    = params.n_parts;
-        lparams.seed       = params.seed;
-        lparams.f16_kv     = params.memory_f16;
-        lparams.use_mmap   = params.use_mmap;
-        lparams.use_mlock  = params.use_mlock;
-
-        ctx = llama_init_from_file(params.model.c_str(), lparams, params.verbose);
-
-        if (ctx == NULL || stat(params.model.c_str(), &model_stat)) {
-            fprintf(stderr, "%s: failed to load model: %s\n",
-                    params.model.c_str(), strerror(errno));
-            return 1;
-        }
+    // load the model and apply lora adapter, if any
+    ctx = llama_init_from_gpt_params(params);
+    if (ctx == NULL) {
+        fprintf(stderr, "%s: error: unable to load model\n", __func__);
+        return 1;
     }
+
+    stat(params.model.c_str(), &model_stat);
 
     if (!params.lora_adapter.empty()) {
         int err = llama_apply_lora_from_file(ctx,
@@ -463,13 +456,13 @@ int main(int argc, char ** argv) {
                                last_n_tokens.end(),
                                toks.begin(),
                                toks.end())) {
-                    set_console_color(con_st, CONSOLE_COLOR_PROMPT);
+                    console_set_color(con_st, CONSOLE_COLOR_PROMPT);
                     printf("%s", antiprompt.c_str());
                     fflush(stdout);
                     break;
                 }
             }
-            set_console_color(con_st, CONSOLE_COLOR_USER_INPUT);
+            console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
         }
   CantReloadPrompt:
         if (map != MAP_FAILED) {
@@ -480,7 +473,7 @@ int main(int argc, char ** argv) {
 
     if (prompt_status == kPromptPending && params.verbose) {
         // the first thing we will do is to output the prompt, so set color accordingly
-        set_console_color(con_st, CONSOLE_COLOR_PROMPT);
+        console_set_color(con_st, CONSOLE_COLOR_PROMPT);
     }
 
     std::vector<llama_token> embd;
@@ -507,7 +500,7 @@ int main(int argc, char ** argv) {
                 }
                 if (llama_eval(ctx, &embd[i], n_eval, n_past, params.n_threads)) {
                     fprintf(stderr, "%s : failed to eval\n", __func__);
-                    set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+                    console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
                     return 1;
                 }
                 n_past += n_eval;
@@ -612,35 +605,87 @@ int main(int argc, char ** argv) {
                     if (last_output.find(antiprompt.c_str(),
                                          last_output.length() - antiprompt.length(),
                                          antiprompt.length()) != std::string::npos) {
-                        set_console_color(con_st, CONSOLE_COLOR_PROMPT);
+                        console_set_color(con_st, CONSOLE_COLOR_PROMPT);
                         printf("%s", antiprompt.c_str());
                         fflush(stdout);
                         break;
                     }
                 }
-                set_console_color(con_st, CONSOLE_COLOR_USER_INPUT);
+                console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
             }
         }
 
         if ((int) embd_inp.size() <= n_consumed && !is_interacting) {
             // out of user input, sample next token
-            const int32_t top_k          = params.top_k;
-            const float   top_p          = params.top_p;
-            const float   temp           = params.temp;
-            const float   repeat_penalty = params.repeat_penalty;
+            const float   temp            = params.temp;
+            const int32_t top_k           = params.top_k <= 0 ? llama_n_vocab(ctx) : params.top_k;
+            const float   top_p           = params.top_p;
+            const float   tfs_z           = params.tfs_z;
+            const float   typical_p       = params.typical_p;
+            const int32_t repeat_last_n   = params.repeat_last_n < 0 ? n_ctx : params.repeat_last_n;
+            const float   repeat_penalty  = params.repeat_penalty;
+            const float   alpha_presence  = params.presence_penalty;
+            const float   alpha_frequency = params.frequency_penalty;
+            const int     mirostat        = params.mirostat;
+            const float   mirostat_tau    = params.mirostat_tau;
+            const float   mirostat_eta    = params.mirostat_eta;
+            const bool    penalize_nl     = params.penalize_nl;
 
             llama_token id = 0;
 
             {
-                auto logits = llama_get_logits(ctx);
+                auto logits  = llama_get_logits(ctx);
+                auto n_vocab = llama_n_vocab(ctx);
 
-                if (params.ignore_eos) {
-                    logits[llama_token_eos()] = 0;
+                // Apply params.logit_bias map
+                for (auto it = params.logit_bias.begin(); it != params.logit_bias.end(); it++) {
+                    logits[it->first] += it->second;
                 }
 
-                id = llama_sample_top_p_top_k(ctx,
-                        last_n_tokens.data() + n_ctx - params.repeat_last_n,
-                        params.repeat_last_n, top_k, top_p, temp, repeat_penalty);
+                std::vector<llama_token_data> candidates;
+                candidates.reserve(n_vocab);
+                for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
+                    candidates.emplace_back(llama_token_data{token_id, logits[token_id], 0.0f});
+                }
+
+                llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
+
+                // Apply penalties
+                float nl_logit = logits[llama_token_nl()];
+                auto last_n_repeat = std::min(std::min((int)last_n_tokens.size(), repeat_last_n), n_ctx);
+                llama_sample_repetition_penalty(ctx, &candidates_p,
+                    last_n_tokens.data() + last_n_tokens.size() - last_n_repeat,
+                    last_n_repeat, repeat_penalty);
+                llama_sample_frequency_and_presence_penalties(ctx, &candidates_p,
+                    last_n_tokens.data() + last_n_tokens.size() - last_n_repeat,
+                    last_n_repeat, alpha_frequency, alpha_presence);
+                if (!penalize_nl) {
+                    logits[llama_token_nl()] = nl_logit;
+                }
+
+                if (temp <= 0) {
+                    // Greedy sampling
+                    id = llama_sample_token_greedy(ctx, &candidates_p);
+                } else {
+                    if (mirostat == 1) {
+                        static float mirostat_mu = 2.0f * mirostat_tau;
+                        const int mirostat_m = 100;
+                        llama_sample_temperature(ctx, &candidates_p, temp);
+                        id = llama_sample_token_mirostat(ctx, &candidates_p, mirostat_tau, mirostat_eta, mirostat_m, &mirostat_mu);
+                    } else if (mirostat == 2) {
+                        static float mirostat_mu = 2.0f * mirostat_tau;
+                        llama_sample_temperature(ctx, &candidates_p, temp);
+                        id = llama_sample_token_mirostat_v2(ctx, &candidates_p, mirostat_tau, mirostat_eta, &mirostat_mu);
+                    } else {
+                        // Temperature sampling
+                        llama_sample_top_k(ctx, &candidates_p, top_k, 1);
+                        llama_sample_tail_free(ctx, &candidates_p, tfs_z, 1);
+                        llama_sample_typical(ctx, &candidates_p, typical_p, 1);
+                        llama_sample_top_p(ctx, &candidates_p, top_p, 1);
+                        llama_sample_temperature(ctx, &candidates_p, temp);
+                        id = llama_sample_token(ctx, &candidates_p);
+                    }
+                }
 
                 last_n_tokens.erase(last_n_tokens.begin());
                 last_n_tokens.push_back(id);
@@ -730,12 +775,12 @@ int main(int argc, char ** argv) {
 
         // reset color to default if we there is no pending user input
         if (params.verbose && !input_noecho && (int)embd_inp.size() == n_consumed) {
-            set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+            console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
         }
 
         if (is_antiprompt) {
             is_interacting = true;
-            set_console_color(con_st, CONSOLE_COLOR_USER_INPUT);
+            console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
             fflush(stdout);
         }
 
@@ -746,7 +791,7 @@ int main(int argc, char ** argv) {
             if (n_past > 0 && is_interacting) {
 
                 // potentially set color to indicate we are taking user input
-                set_console_color(con_st, CONSOLE_COLOR_USER_INPUT);
+                console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
 
                 if (params.instruct) {
                     printf("\n> ");
@@ -768,29 +813,21 @@ int main(int argc, char ** argv) {
                 std::string line;
                 bool another_line = true;
                 do {
-                    fflush(stdout);
-                    if (!std::getline(std::cin, line)) {
-                        // input stream is bad or EOF received
-                        set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
-                        if (g_verbose) {
-                            llama_print_timings(*g_ctx);
-                        }
-                        return 0;
-                    }
-                    if (line.empty() || line.back() != '\\') {
-                        another_line = false;
-                    } else {
-                        line.pop_back(); // Remove the continue character
-                    }
-                    buffer += line + '\n'; // Append the line to the result
+                    another_line = console_readline(con_st, line);
+                    buffer += line;
                 } while (another_line);
 
                 // done taking input, reset color
-                set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+                console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
 
                 // Add tokens to embd only if the input buffer is non-empty
                 // Entering a empty line lets the user pass control back
                 if (buffer.length() > 1) {
+                    // append input suffix if any
+                    if (!params.input_suffix.empty()) {
+                        buffer += params.input_suffix;
+                        printf("%s", params.input_suffix.c_str());
+                    }
 
                     // instruct mode: insert instruction prefix
                     if (params.instruct && !is_antiprompt) {
@@ -840,7 +877,7 @@ int main(int argc, char ** argv) {
     }
     llama_free(ctx);
 
-    set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+    console_set_color(con_st, CONSOLE_COLOR_DEFAULT);
 
     return 0;
 }

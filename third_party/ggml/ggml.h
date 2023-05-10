@@ -1,4 +1,3 @@
-// clang-format off
 #ifndef COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_
 #define COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -198,6 +197,14 @@ COSMOPOLITAN_C_START_
 #define GGML_MAX_OPT           4
 #define GGML_DEFAULT_N_THREADS 4
 
+#define GGML_ASSERT(x) \
+    do { \
+        if (!(x)) { \
+            fprintf(stderr, "GGML_ASSERT: %s:%d: %s\n", __FILE__, __LINE__, #x); \
+            abort(); \
+        } \
+    } while (0)
+
 #ifdef __ARM_NEON
     // we use the built-in 16-bit float type
     typedef __fp16 ggml_fp16_t;
@@ -209,6 +216,9 @@ COSMOPOLITAN_C_START_
     GGML_API float       ggml_fp16_to_fp32(ggml_fp16_t x);
     GGML_API ggml_fp16_t ggml_fp32_to_fp16(float x);
 
+    GGML_API void ggml_fp16_to_fp32_row(const ggml_fp16_t * x, float * y, size_t n);
+    GGML_API void ggml_fp32_to_fp16_row(const float * x, ggml_fp16_t * y, size_t n);
+
     struct ggml_object;
     struct ggml_context;
 
@@ -218,7 +228,7 @@ COSMOPOLITAN_C_START_
         GGML_TYPE_Q4_0 = 2,
         GGML_TYPE_Q4_1 = 3,
         GGML_TYPE_Q4_2 = 4,
-        GGML_TYPE_Q4_3 = 5,
+        // GGML_TYPE_Q4_3 (5) support has been removed
         GGML_TYPE_Q5_0 = 6,
         GGML_TYPE_Q5_1 = 7,
         GGML_TYPE_Q8_0 = 8,
@@ -227,6 +237,20 @@ COSMOPOLITAN_C_START_
         GGML_TYPE_I16,
         GGML_TYPE_I32,
         GGML_TYPE_COUNT,
+    };
+
+    // model file types
+    enum ggml_ftype {
+        GGML_FTYPE_UNKNOWN     = -1,
+        GGML_FTYPE_ALL_F32     = 0,
+        GGML_FTYPE_MOSTLY_F16  = 1,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_0 = 2,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_1 = 3,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q4_1_SOME_F16 = 4, // tok_embeddings.weight and output.weight are F16
+        GGML_FTYPE_MOSTLY_Q4_2 = 5,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q8_0 = 7,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q5_0 = 8,  // except 1d tensors
+        GGML_FTYPE_MOSTLY_Q5_1 = 9,  // except 1d tensors
     };
 
     // available tensor operations:
@@ -266,6 +290,7 @@ COSMOPOLITAN_C_START_
         GGML_OP_DIAG_MASK_INF,
         GGML_OP_SOFT_MAX,
         GGML_OP_ROPE,
+        GGML_OP_ALIBI,
         GGML_OP_CONV_1D_1S,
         GGML_OP_CONV_1D_2S,
 
@@ -321,7 +346,10 @@ COSMOPOLITAN_C_START_
         int64_t perf_time_us;
 
         void * data;
-        char padding[8];
+
+        char name[32];
+
+        char padding[8]; // TODO: remove and add padding to name?
     };
 
     // computation graph
@@ -380,6 +408,9 @@ COSMOPOLITAN_C_START_
     GGML_API size_t  ggml_element_size(const struct ggml_tensor * tensor);
 
     GGML_API bool    ggml_is_quantized(enum ggml_type type);
+
+    // TODO: temporary until model loading of ggml examples is refactored
+    GGML_API enum ggml_type ggml_ftype_to_ggml_type(enum ggml_ftype ftype);
 
     // main
 
@@ -440,6 +471,9 @@ COSMOPOLITAN_C_START_
 
     GGML_API void *  ggml_get_data    (const struct ggml_tensor * tensor);
     GGML_API float * ggml_get_data_f32(const struct ggml_tensor * tensor);
+
+    GGML_API const char * ggml_get_name(const struct ggml_tensor * tensor);
+    GGML_API void         ggml_set_name(struct ggml_tensor * tensor, const char * name);
 
     //
     // operations on tensors with backpropagation
@@ -659,6 +693,14 @@ COSMOPOLITAN_C_START_
             int                   n_dims,
             int                   mode);
 
+    // alibi position embedding
+    // in-place, returns view(a)
+    struct ggml_tensor * ggml_alibi(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * a,
+            int                   n_past,
+            int                   n_head);
+
     // padding = 1
     // TODO: we don't support extra parameters for now
     //       that's why we are hard-coding the stride, padding, and dilation
@@ -689,8 +731,8 @@ COSMOPOLITAN_C_START_
             struct ggml_tensor  * c1);
 
     // Mapping operations
-    GGML_API typedef void (*ggml_unary_op_f32_t)(const int, float *, const float *);
-    GGML_API typedef void (*ggml_binary_op_f32_t)(const int, float *, const float *, const float *);
+    typedef void (*ggml_unary_op_f32_t)(const int, float *, const float *);
+    typedef void (*ggml_binary_op_f32_t)(const int, float *, const float *, const float *);
 
     GGML_API struct ggml_tensor * ggml_map_unary_f32(
             struct ggml_context        * ctx,
@@ -831,7 +873,6 @@ COSMOPOLITAN_C_START_
     GGML_API size_t ggml_quantize_q4_0(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q4_1(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q4_2(const float * src, void * dst, int n, int k, int64_t * hist);
-    GGML_API size_t ggml_quantize_q4_3(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q5_0(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q5_1(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q8_0(const float * src, void * dst, int n, int k, int64_t * hist);
@@ -855,9 +896,10 @@ COSMOPOLITAN_C_START_
     GGML_API int ggml_cpu_has_wasm_simd  (void);
     GGML_API int ggml_cpu_has_blas       (void);
     GGML_API int ggml_cpu_has_cublas     (void);
+    GGML_API int ggml_cpu_has_clblast    (void);
+    GGML_API int ggml_cpu_has_gpublas    (void);
     GGML_API int ggml_cpu_has_sse3       (void);
     GGML_API int ggml_cpu_has_vsx        (void);
-
 
     //
     // Internal types and functions exposed for tests and benchmarks
