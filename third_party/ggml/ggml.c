@@ -11628,6 +11628,8 @@ typedef int ggml_lock_t;
 #define ggml_lock_destroy(x) UNUSED(x)
 #if defined(__x86_64__) || (defined(_MSC_VER) && defined(_M_AMD64))
 #define ggml_lock_lock(x)    _mm_pause()
+#elif defined(__aarch64__)
+#define ggml_lock_lock(x)    asm("yield")
 #else
 #define ggml_lock_lock(x)    UNUSED(x)
 #endif
