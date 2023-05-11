@@ -2997,7 +2997,13 @@ static int on_missing_feature(const char *name) {
 
 int main(int argc, char ** argv) {
     gpt_params params;
-    params.model = "ggml-RedPajama-INCITE-Chat-3B-v1-q8_0.bin";
+    // Models can be freely downloaded from:
+    // https://huggingface.co/ceonlabs/radpajama/tree/main
+    // Preferred one in float16 format, this can be used to generate the quantized one.
+    // ggml-RedPajama-INCITE-Chat-3B-v1-f16.bin 5.55GB
+    // Quantized for faster inference, 8bit integers.
+    // ggml-RedPajama-INCITE-Chat-3B-v1-q8_0.bin 3.13 GB
+    params.model = "ggml-RedPajama-INCITE-Chat-3B-v1-f16.bin";
     
     if (gpt_params_parse(argc, argv, params) == false) {
         return 1;
