@@ -58,6 +58,20 @@ $(THIRD_PARTY_GGML_A_OBJS): private					\
 			-mfma
 endif
 
+o/rel/third_party/ggml/ggml.o						\
+o/opt/third_party/ggml/ggml.o: private					\
+		OVERRIDE_CFLAGS +=					\
+			-fomit-frame-pointer				\
+			-x-no-pg
+
+ifeq ($(ARCH), x86_64)
+o/rel/third_party/ggml/ggml.o						\
+o/opt/third_party/ggml/ggml.o: private					\
+		OVERRIDE_CFLAGS +=					\
+			-fschedule-insns2				\
+			-mred-zone
+endif
+
 ################################################################################
 # command for running inference on large language models
 # make -j8 o//third_party/ggml/llama.com

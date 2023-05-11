@@ -41,6 +41,11 @@
 #include "libc/time/time.h"
 #include "third_party/aarch64/arm_neon.h"
 #include "third_party/intel/immintrin.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/tinymath/magicu.h"
+#include "libc/tinymath/magicu.h"
 #include "third_party/libcxx/math.h"
 
 asm(".ident\t\"\\n\\n\
@@ -7289,10 +7294,15 @@ static void ggml_compute_forward_add_q_f32(
 
     float * wdata = (float *) params->wdata + (ne00 + CACHE_LINE_SIZE_F32) * ith;
 
+    assert(ne01 >= 1);
+    assert(ne02*ne01 >= 1);
+    struct magicu ne01m = __magicu_get(ne01);
+    struct magicu ne021m = __magicu_get(ne02*ne01);
+
     for (int ir = ir0; ir < ir1; ++ir) {
         // src0 indices
-        const int i03 = ir/(ne02*ne01);
-        const int i02 = (ir - i03*ne02*ne01)/ne01;
+        const int i03 = __magicu_div(ir, ne021m);
+        const int i02 = __magicu_div(ir - i03*ne02*ne01, ne01m);
         const int i01 = (ir - i03*ne02*ne01 - i02*ne01);
 
         // src1 and dst are same shape as src0 => same indices
@@ -8422,10 +8432,15 @@ static void ggml_compute_forward_mul_mat_f32(
     const int ir0 = dr*ith;
     const int ir1 = MIN(ir0 + dr, nr);
 
+    assert(ne01 >= 1);
+    assert(ne02*ne01 >= 1);
+    struct magicu ne01m = __magicu_get(ne01);
+    struct magicu ne021m = __magicu_get(ne02*ne01);
+
     for (int ir = ir0; ir < ir1; ++ir) {
         // src0 indices
-        const int i03 = ir/(ne02*ne01);
-        const int i02 = (ir - i03*ne02*ne01)/ne01;
+        const int i03 = __magicu_div(ir, ne021m);
+        const int i02 = __magicu_div(ir - i03*ne02*ne01, ne01m);
         const int i01 = (ir - i03*ne02*ne01 - i02*ne01);
 
         for (int64_t ic = 0; ic < ne11; ++ic) {
@@ -8640,10 +8655,15 @@ static void ggml_compute_forward_mul_mat_f16_f32(
 
     ggml_fp16_t * wdata = params->wdata;
 
+    assert(ne01 >= 1);
+    assert(ne02*ne01 >= 1);
+    struct magicu ne01m = __magicu_get(ne01);
+    struct magicu ne021m = __magicu_get(ne02*ne01);
+
     for (int ir = ir0; ir < ir1; ++ir) {
         // src0 indices
-        const int i03 = ir/(ne02*ne01);
-        const int i02 = (ir - i03*ne02*ne01)/ne01;
+        const int i03 = __magicu_div(ir, ne021m);
+        const int i02 = __magicu_div(ir - i03*ne02*ne01, ne01m);
         const int i01 = (ir - i03*ne02*ne01 - i02*ne01);
 
         const int i13 = i03;
@@ -8852,10 +8872,15 @@ static void ggml_compute_forward_mul_mat_q_f32(
     void * wdata = params->wdata;
     const size_t row_size = ne00*GGML_TYPE_SIZE[vec_dot_type]/GGML_BLCK_SIZE[vec_dot_type];
 
+    assert(ne01 >= 1);
+    assert(ne02*ne01 >= 1);
+    struct magicu ne01m = __magicu_get(ne01);
+    struct magicu ne021m = __magicu_get(ne02*ne01);
+
     for (int ir = ir0; ir < ir1; ++ir) {
         // src0 indices
-        const int i03 = ir/(ne02*ne01);
-        const int i02 = (ir - i03*ne02*ne01)/ne01;
+        const int i03 = __magicu_div(ir, ne021m);
+        const int i02 = __magicu_div(ir - i03*ne02*ne01, ne01m);
         const int i01 = (ir - i03*ne02*ne01 - i02*ne01);
 
         const int i13 = i03;
