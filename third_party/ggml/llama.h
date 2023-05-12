@@ -183,6 +183,9 @@ extern "C" {
     // Token Id -> String. Uses the vocabulary in the provided context
     LLAMA_API const char * llama_token_to_str(const struct llama_context * ctx, llama_token token);
 
+    // Returns number of bytes in the longest token string.
+    LLAMA_API int llama_longest_token(const struct llama_context * ctx);
+
     // Special tokens
     LLAMA_API llama_token llama_token_bos();
     LLAMA_API llama_token llama_token_eos();

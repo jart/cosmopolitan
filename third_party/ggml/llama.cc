@@ -29,6 +29,7 @@
 #include "third_party/ggml/llama.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
+#include "libc/macros.internal.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/algorithm"
@@ -225,6 +226,7 @@ struct llama_vocab {
 
     std::unordered_map<token, id> token_to_id;
     std::vector<token_score> id_to_token;
+    int longest_token;
 };
 
 struct llama_context {
@@ -475,6 +477,7 @@ struct llama_file_loader {
         hparams.ftype = (enum llama_ftype) file.read_u32();
     }
     void read_vocab() {
+        vocab.longest_token = 0;
         vocab.id_to_token.resize(hparams.n_vocab);
 
         for (uint32_t i = 0; i < hparams.n_vocab; i++) {
@@ -487,6 +490,7 @@ struct llama_file_loader {
             }
 
             vocab.token_to_id[word] = i;
+            vocab.longest_token = MAX(vocab.longest_token, word.size());
 
             auto & tok_score = vocab.id_to_token[i];
             tok_score.tok = std::move(word);
@@ -2753,6 +2757,10 @@ const char * llama_token_to_str(const struct llama_context * ctx, llama_token to
     }
 
     return ctx->vocab.id_to_token[token].tok.c_str();
+}
+
+int llama_longest_token(const struct llama_context * ctx) {
+    return ctx->vocab.longest_token;
 }
 
 llama_token llama_token_bos() {

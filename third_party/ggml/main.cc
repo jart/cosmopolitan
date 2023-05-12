@@ -32,6 +32,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
@@ -117,6 +118,7 @@ static void remember_init() {
     for (std::string & antiprompt : params.antiprompt) {
         longest_antiprompt = std::max(longest_antiprompt, antiprompt.size());
     }
+    longest_antiprompt += llama_longest_token(ctx) * 2;
 }
 
 static void remember_token(llama_token tok) {
@@ -284,7 +286,7 @@ int main(int argc, char ** argv) {
     }
 
     // Add a space in front of the first character to match OG llama tokenizer behavior
-    params.prompt.insert(0, 1, ' ');
+    // params.prompt.insert(0, 1, ' ');
 
     // tokenize the prompt
     auto embd_inp = ::llama_tokenize(ctx, params.prompt, true);
@@ -757,17 +759,32 @@ int main(int argc, char ** argv) {
         //       --prompt 'Question: How old are you?\nAnswer: '
         //       --reverse-prompt $'\n'
         //
-        is_antiprompt = has_antiprompt();
+        std::string ap_text;
+        std::string::size_type ap_index;
+        std::string::size_type ap_extra;
+        is_antiprompt = has_antiprompt(&ap_index, &ap_text);
 
         // display text
+        bool got_newline = false;
         if (!input_noecho) {
+            std::string printme;
             for (auto id : embd) {
-                printf("%s", llama_token_to_str(ctx, id));
+                printme.append(llama_token_to_str(ctx, id));
             }
-            fflush(stdout);
+            if (is_antiprompt) {
+                ap_extra = last_output.size() - (ap_index + ap_text.size());
+                printme.erase(printme.size() - MIN(printme.size(), ap_extra));
+            }
+            if (printme.size()) {
+                got_newline = printme[printme.size() - 1] == '\n';
+                printf("%s", printme.c_str());
+                fflush(stdout);
+            }
         }
         if (is_antiprompt && !params.interactive) {
-            printf("\n");
+            if (!got_newline) {
+                printf("\n");
+            }
             break;
         }
         if (prompt_status == kPromptCompleted) {
