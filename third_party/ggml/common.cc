@@ -268,7 +268,7 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
             params.mem_test = true;
         } else if (arg == "--verbose-prompt") {
             params.verbose_prompt = true;
-        } else if (arg == "-r" || arg == "--reverse-prompt") {
+        } else if (arg == "-r" || arg == "--stop" || arg == "--reverse-prompt") {
             if (++i >= argc) {
                 invalid_param = true;
                 break;
@@ -373,10 +373,9 @@ void gpt_print_usage(FILE *f, int /*argc*/, char ** argv, const gpt_params & par
     fprintf(f, "  --interactive-first   run in interactive mode and wait for input right away\n");
     fprintf(f, "  -ins, --instruct      run in instruction mode (use with Alpaca models)\n");
     fprintf(f, "  --multiline-input     allows you to write or paste multiple lines without ending each in '\\'\n");
-    fprintf(f, "  -r PROMPT, --reverse-prompt PROMPT\n");
-    fprintf(f, "                        run in interactive mode and poll user input upon seeing PROMPT (can be\n");
-    fprintf(f, "                        specified more than once for multiple prompts).\n");
-    fprintf(f, "  --color               colorise output to distinguish prompt and user input from generations\n");
+    fprintf(f, "  -r PROMPT, --stop PROMPT, --reverse-prompt PROMPT\n");
+    fprintf(f, "                        stop generating text when the specified text is encountered.\n");
+    fprintf(f, "                        this option may be repeated.\n");
     fprintf(f, "  -s SEED, --seed SEED  RNG seed (default: -1, use random seed for < 0)\n");
     fprintf(f, "  -t N, --threads N     number of threads to use during computation (default: %d)\n", params.n_threads);
     fprintf(f, "  -p PROMPT, --prompt PROMPT\n");

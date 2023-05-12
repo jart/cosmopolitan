@@ -58,10 +58,8 @@ $(THIRD_PARTY_GGML_A_OBJS): private					\
 			-mfma
 endif
 
-o/rel/third_party/ggml/ggml.o						\
 o/opt/third_party/ggml/ggml.o: private					\
 		OVERRIDE_CFLAGS +=					\
-			-fomit-frame-pointer				\
 			-x-no-pg
 
 ifeq ($(ARCH), x86_64)
