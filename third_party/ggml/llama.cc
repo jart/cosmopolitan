@@ -936,7 +936,7 @@ static void llama_model_load_internal(
         hparams.n_ctx = n_ctx;
     }
 
-    if (verbose) {
+    if (verbose > 0) {
         fprintf(stderr, "%s: format     = %s\n",  __func__, llama_file_version_name(file_version));
         fprintf(stderr, "%s: n_vocab    = %u\n",  __func__, hparams.n_vocab);
         fprintf(stderr, "%s: n_ctx      = %u\n",  __func__, hparams.n_ctx);
@@ -959,7 +959,7 @@ static void llama_model_load_internal(
 
     size_t ctx_size, mmapped_size;
     ml->calc_sizes(&ctx_size, &mmapped_size);
-    if (verbose) {
+    if (verbose > 0) {
         fprintf(stderr, "%s: ggml ctx size = %6.2f KB\n", __func__, ctx_size/1024.0);
     }
 
@@ -979,7 +979,7 @@ static void llama_model_load_internal(
         const size_t mem_required_state =
             scale*MEM_REQ_KV_SELF().at(model.type);
 
-        if (verbose) {
+        if (verbose > 0) {
             fprintf(stderr, "%s: mem required  = %7.2f MB (+ %7.2f MB per state)\n", __func__,
                     mem_required / 1024.0 / 1024.0, mem_required_state / 1024.0 / 1024.0);
         }
@@ -2108,7 +2108,7 @@ struct llama_context * llama_init_from_file(
     }
 
     unsigned cur_percentage = 0;
-    if (verbose && params.progress_callback == NULL) {
+    if (verbose > 0 && params.progress_callback == NULL) {
         params.progress_callback_user_data = &cur_percentage;
         params.progress_callback = [](float progress, void * ctx) {
             unsigned * cur_percentage_p = (unsigned *) ctx;
@@ -2146,7 +2146,7 @@ struct llama_context * llama_init_from_file(
             return nullptr;
         }
 
-        if (verbose) {
+        if (verbose > 0) {
             const size_t memory_size = ggml_nbytes(ctx->model.kv_self.k) + ggml_nbytes(ctx->model.kv_self.v);
             fprintf(stderr, "%s: kv self size  = %7.2f MB\n", __func__, memory_size / 1024.0 / 1024.0);
         }

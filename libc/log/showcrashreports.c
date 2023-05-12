@@ -60,6 +60,7 @@ static inline void __oncrash(int sig, struct siginfo *si, void *arg) {
 }
 
 static void __got_sigquit(int sig, struct siginfo *si, void *arg) {
+  write(2, "^\\", 2);
   __oncrash(sig, si, arg);
 }
 static void __got_sigfpe(int sig, struct siginfo *si, void *arg) {

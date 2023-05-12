@@ -109,6 +109,8 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
             params.seed = std::stoi(argv[i]);
         } else if (arg == "-v" || arg == "--verbose") {
             ++params.verbose;
+        } else if (arg == "-q" || arg == "--quiet") {
+            --params.verbose;
         } else if (arg == "-t" || arg == "--threads") {
             if (++i >= argc) {
                 invalid_param = true;
@@ -332,7 +334,7 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
 
     // if no prompt is specified, then use companion ai
     if (params.prompt.empty()) {
-        if (params.verbose) {
+        if (params.verbose > 0) {
             fprintf(stderr, "%s: No prompt specified\n", __func__);
             fprintf(stderr, "%s: Loading CompanionAI\n", __func__);
         }
@@ -368,7 +370,8 @@ void gpt_print_usage(FILE *f, int /*argc*/, char ** argv, const gpt_params & par
     fprintf(f, "\n");
     fprintf(f, "options:\n");
     fprintf(f, "  -h, --help            show this help message and exit\n");
-    fprintf(f, "  -v, --verbose         print plenty of helpful information, e.g. prompt\n");
+    fprintf(f, "  -v, --verbose         print helpful information to stderr [repeatable]\n");
+    fprintf(f, "  -s, --silent          disables ephemeral progress indicators [repeatable]\n");
     fprintf(f, "  -i, --interactive     run in interactive mode\n");
     fprintf(f, "  --interactive-first   run in interactive mode and wait for input right away\n");
     fprintf(f, "  -ins, --instruct      run in instruction mode (use with Alpaca models)\n");
