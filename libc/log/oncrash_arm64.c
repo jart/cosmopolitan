@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/struct/siginfo.h"
@@ -54,6 +55,10 @@ struct Buffer {
   int n;
   int i;
 };
+
+static bool IsCode(uintptr_t p) {
+  return _base <= (uint8_t *)p && (uint8_t *)p < _etext;
+}
 
 static void Append(struct Buffer *b, const char *fmt, ...) {
   va_list va;
@@ -224,18 +229,19 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       Append(b, "\n");
 
       // PRINT LINKED LOCATION
-      pc = ctx->uc_mcontext.regs[30];
-      Append(b, " %016lx sp %lx lr", ctx->uc_mcontext.sp, pc);
-      if (pc && (symbol = __get_symbol(st, pc))) {
-        addend = pc - st->addr_base;
-        addend -= st->symbols[symbol].x;
-        Append(b, " ");
-        if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-          Append(b, "%s", __get_symbol_name(st, symbol));
-          if (addend) Append(b, "%+d", addend);
+      if (IsCode((pc = ctx->uc_mcontext.regs[30]))) {
+        Append(b, " %016lx sp %lx lr", ctx->uc_mcontext.sp, pc);
+        if (pc && (symbol = __get_symbol(st, pc))) {
+          addend = pc - st->addr_base;
+          addend -= st->symbols[symbol].x;
+          Append(b, " ");
+          if (!AppendFileLine(b, addr2line, debugbin, pc)) {
+            Append(b, "%s", __get_symbol_name(st, symbol));
+            if (addend) Append(b, "%+d", addend);
+          }
         }
+        Append(b, "\n");
       }
-      Append(b, "\n");
 
       // PRINT FRAME POINTERS
       fp = (struct StackFrame *)ctx->uc_mcontext.regs[29];

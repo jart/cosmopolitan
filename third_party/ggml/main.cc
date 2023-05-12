@@ -492,7 +492,7 @@ int main(int argc, char ** argv) {
                             last_n_tokens.end() - (n_past - n_keep) / 2 - embd.size(),
                             last_n_tokens.end() - embd.size());
             }
-            for (int i = 0; i < (int) embd.size(); i += params.n_batch) {
+            for (int i = 0; i < (int) embd.size() && !is_terminated; i += params.n_batch) {
                 int n_eval = (int) embd.size() - i;
                 if (n_eval > params.n_batch) {
                     n_eval = params.n_batch;
@@ -508,6 +508,9 @@ int main(int argc, char ** argv) {
                     fprintf(stderr, EPHEMERAL("loading prompt %d%% ..."),
                             (int)(n_consumed / (double)embd_inp.size() * 100));
                 }
+            }
+            if (is_terminated) {
+                break;
             }
             embd.clear();
         }
