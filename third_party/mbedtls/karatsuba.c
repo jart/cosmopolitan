@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/bignum_internal.h"
+#include "third_party/mbedtls/math.h"
 #include "third_party/mbedtls/platform.h"
 
 forceinline int Cmp(uint64_t *a, uint64_t *b, size_t n) {
@@ -37,6 +39,7 @@ forceinline int Cmp(uint64_t *a, uint64_t *b, size_t n) {
 forceinline bool Sub(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
   bool cf;
   uint64_t c, i;
+#ifdef __x86_64__
   asm volatile("xor\t%1,%1\n\t"
                ".align\t16\n1:\t"
                "mov\t(%5,%3,8),%1\n\t"
@@ -48,12 +51,18 @@ forceinline bool Sub(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
                : "=@ccb"(cf), "=&r"(c), "+c"(n), "=r"(i)
                : "r"(C), "r"(A), "r"(B), "3"(0)
                : "cc", "memory");
+#else
+  for (cf = false, c = i = 0; i < n; ++i) {
+    SBB(C[i], A[i], B[i], cf, cf);
+  }
+#endif
   return cf;
 }
 
 forceinline bool Add(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
   bool cf;
   uint64_t c, i;
+#ifdef __x86_64__
   asm volatile("xor\t%1,%1\n\t"
                ".align\t16\n1:\t"
                "mov\t(%5,%3,8),%1\n\t"
@@ -65,6 +74,11 @@ forceinline bool Add(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
                : "=@ccc"(cf), "=&r"(c), "+c"(n), "=r"(i)
                : "r"(C), "r"(A), "r"(B), "3"(0)
                : "cc", "memory");
+#else
+  for (cf = false, c = i = 0; i < n; ++i) {
+    ADC(C[i], A[i], B[i], cf, cf);
+  }
+#endif
   return cf;
 }
 
@@ -80,7 +94,13 @@ void Karatsuba(uint64_t *C, uint64_t *A, uint64_t *B, size_t n, uint64_t *K) {
   uint64_t c, t;
   uint64_t *x, *y;
   if (n == 8) {
-    Mul8x8Adx(C, A, B);
+#ifdef __x86_64__
+    if (X86_HAVE(BMI2) && X86_HAVE(ADX)) {
+      Mul8x8Adx(C, A, B);
+      return;
+    }
+#endif
+    Mul(C, A, 8, B, 8);
     return;
   }
   switch (Cmp(A, A + n / 2, n / 2) * 3 + Cmp(B + n / 2, B, n / 2)) {

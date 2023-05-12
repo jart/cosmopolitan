@@ -79,7 +79,6 @@ static textexit void LogStackUse(void) {
 }
 
 static textstartup void LogStackUseInit(void) {
-  if (IsTiny()) return;
   if (!PLEDGED(WPATH)) return;
   if (isdirectory("o/" MODE) &&
       getcwd(stacklog, sizeof(stacklog) - strlen("/o/" MODE "/stack.log"))) {

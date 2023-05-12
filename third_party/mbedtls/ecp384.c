@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/asan.internal.h"
-#include "libc/mem/gc.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -187,10 +186,20 @@ mbedtls_p384_mul( uint64_t X[12],
     }
     else
     {
-        if( A == X ) A = _gc( memcpy( malloc( 6 * 8 ), A, 6 * 8 ) );
-        if( B == X ) B = _gc( memcpy( malloc( 6 * 8 ), B, 6 * 8 ) );
+        void *f = 0;
+        if( A == X )
+        {
+            A = memcpy( malloc( 6 * 8 ), A, 6 * 8 );
+            f = A;
+        }
+        else if( B == X )
+        {
+            B = memcpy( malloc( 6 * 8 ), B, 6 * 8 );
+            f = B;
+        }
         Mul( X, A, n, B, m );
         mbedtls_platform_zeroize( X + n + m, (12 - n - m) * 8 );
+        free( f );
     }
     mbedtls_p384_mod( X );
 }

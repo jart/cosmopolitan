@@ -15,12 +15,11 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/des.h"
 #include "libc/mem/mem.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
-#include "third_party/mbedtls/des.h"
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/platform.h"
 
@@ -831,14 +830,11 @@ static const unsigned char des3_test_cbc_enc[3][8] =
 };
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
-/*
- * Checkup routine
- */
-int mbedtls_des_self_test( int verbose )
+static int mbedtls_des_self_test_impl( int verbose,
+                                       mbedtls_des_context *ctx,
+                                       mbedtls_des3_context *ctx3 )
 {
     int i, j, u, v, ret = 0;
-    mbedtls_des_context *ctx = gc(malloc(sizeof(mbedtls_des_context)));
-    mbedtls_des3_context *ctx3 = gc(malloc(sizeof(mbedtls_des3_context)));
     unsigned char buf[8];
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
     unsigned char prv[8];
@@ -1021,6 +1017,19 @@ exit:
     mbedtls_des3_free( ctx3 );
 
     return( ret );
+}
+
+int mbedtls_des_self_test( int verbose )
+{
+    int rc;
+    mbedtls_des_context *ctx;
+    mbedtls_des3_context *ctx3;
+    ctx = malloc( sizeof( mbedtls_des_context ) );
+    ctx3 = malloc( sizeof( mbedtls_des3_context ) );
+    rc = mbedtls_des_self_test_impl( verbose, ctx, ctx3 );
+    free( ctx3 );
+    free( ctx );
+    return( rc );
 }
 
 #endif /* MBEDTLS_SELF_TEST */

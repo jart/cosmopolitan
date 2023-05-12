@@ -61,13 +61,11 @@ o/$(MODE)/third_party/mbedtls/bigmul6.o: private			\
 			OVERRIDE_CFLAGS +=				\
 				-O2
 
+ifeq ($(ARCH), x86_64)
 o/$(MODE)/third_party/mbedtls/shiftright-avx.o: private			\
 			OVERRIDE_CFLAGS +=				\
 				-O3 -mavx
-
-o/$(MODE)/third_party/mbedtls/shiftright2-avx.o: private		\
-			OVERRIDE_CFLAGS +=				\
-				-O3 -mavx
+endif
 
 o/$(MODE)/third_party/mbedtls/zeroize.o: private			\
 			OVERRIDE_CFLAGS +=				\

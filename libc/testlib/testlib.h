@@ -62,11 +62,19 @@ COSMOPOLITAN_C_START_
 #define EXPECT_LE(C, X) _TEST2("EXPECT_LE", C, <=, (X), #C, " ≤ ", #X, 0)
 #define EXPECT_LT(C, X) _TEST2("EXPECT_LT", C, <, (X), #C, " < ", #X, 0)
 
-#define __TEST_ARRAY(S) \
-  _Section(".piro.relo.sort.testcase.2." #S ",\"aw\",@init_array #")
+#ifdef __aarch64__
+#define _TESTLIB_ASM_COMMENT "//"
+#else
+#define _TESTLIB_ASM_COMMENT "#"
+#endif
 
-#define __BENCH_ARRAY(S) \
-  _Section(".piro.relo.sort.bench.2." #S ",\"aw\",@init_array #")
+#define __TEST_ARRAY(S)                     \
+  _Section(".piro.relo.sort.testcase.2." #S \
+           ",\"aw\",@init_array "_TESTLIB_ASM_COMMENT)
+
+#define __BENCH_ARRAY(S)                 \
+  _Section(".piro.relo.sort.bench.2." #S \
+           ",\"aw\",@init_array "_TESTLIB_ASM_COMMENT)
 
 #define __TEST_PROTOTYPE(S, N, A, K)               \
   void S##_##N(void);                              \

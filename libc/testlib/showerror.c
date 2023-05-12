@@ -218,3 +218,18 @@ void testlib_showerror_expect_false(int line,              //
   testlib_showerror_(line, wantcode, gotcode, FREED_want, FREED_got, fmt, va);
   va_end(va);
 }
+
+void testlib_showerror_expect_matrixeq(int line,              //
+                                       const char *wantcode,  //
+                                       const char *gotcode,   //
+                                       char *FREED_want,      //
+                                       char *FREED_got,       //
+                                       const char *fmt,       //
+                                       ...) {
+  va_list va;
+  testlib_showerror_macro = "EXPECT_MATRIXEQ";
+  testlib_showerror_symbol = "=";
+  va_start(va, fmt);
+  testlib_showerror_(line, wantcode, gotcode, FREED_want, FREED_got, fmt, va);
+  va_end(va);
+}

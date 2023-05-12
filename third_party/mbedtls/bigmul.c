@@ -273,6 +273,7 @@ int mbedtls_mpi_mul_mpi(mbedtls_mpi *X, const mbedtls_mpi *A,
         return 0;
     }
 
+#ifdef __x86_64__
     if (!IsTiny() && i == j) {
         if (X->n < i * 2) {
             if ((ret = mbedtls_mpi_grow(X, i * 2))) return ret;
@@ -293,6 +294,7 @@ int mbedtls_mpi_mul_mpi(mbedtls_mpi *X, const mbedtls_mpi *A,
             return 0;
         }
     }
+#endif /* __x86_64__ */
 
     mbedtls_mpi_init( &TA );
     mbedtls_mpi_init( &TB );
@@ -310,9 +312,8 @@ int mbedtls_mpi_mul_mpi(mbedtls_mpi *X, const mbedtls_mpi *A,
         B = &TB;
     }
     if (!IsTiny() &&
-        i >= 16 && i == j && !(i & (i - 1)) &&
-        X86_HAVE(BMI2) && X86_HAVE(ADX) &&
-         (K = malloc(i * 4 * sizeof(*K)))) {
+          i >= 16 && i == j && !(i & (i - 1)) &&
+          (K = malloc(i * 4 * sizeof(*K)))) {
         Karatsuba(X->p, A->p, B->p, i, K);
         free(K);
     } else {

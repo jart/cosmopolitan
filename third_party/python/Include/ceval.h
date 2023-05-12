@@ -113,17 +113,15 @@ int _Py_CheckRecursiveCall(const char *);
   ({                                                                    \
     int rc = 0;                                                         \
     intptr_t rsp, bot;                                                  \
-    if (!IsTiny()) {                                                    \
-      if (IsModeDbg()) {                                                \
-        PyThreadState_GET()->recursion_depth++;                         \
-        rc = _Py_CheckRecursiveCall(where);                             \
-      } else {                                                          \
-        rsp = (intptr_t)__builtin_frame_address(0);                     \
-        bot = GetStackAddr() + 32768;                                   \
-        if (UNLIKELY(rsp < bot)) {                                      \
-          PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);   \
-          rc = -1;                                                      \
-        }                                                               \
+    if (IsModeDbg()) {                                                  \
+      PyThreadState_GET()->recursion_depth++;                           \
+      rc = _Py_CheckRecursiveCall(where);                               \
+    } else {                                                            \
+      rsp = (intptr_t)__builtin_frame_address(0);                       \
+      bot = GetStackAddr() + 32768;                                     \
+      if (UNLIKELY(rsp < bot)) {                                        \
+        PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);     \
+        rc = -1;                                                        \
       }                                                                 \
     }                                                                   \
     rc;                                                                 \

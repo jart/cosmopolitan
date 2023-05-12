@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_TEST_LIB_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_TEST_LIB_H_
-#include "libc/mem/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"

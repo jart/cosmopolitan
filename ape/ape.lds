@@ -184,10 +184,19 @@
 #include "ape/ape.internal.h"
 #include "libc/zip.h"
 
+/* uncomment if .com.dbg won't execute on your kernel (will break .com file) */
+/* #define APE_FIX_COM_DBG */
+
 #ifdef __x86__
 #define CODE_GRANULE 1
 #else
 #define CODE_GRANULE 4
+#endif
+
+#ifdef APE_FIX_COM_DBG
+#define SKEW SIZEOF_HEADERS
+#else
+#define SKEW 0
 #endif
 
 ENTRY(_start)
@@ -208,7 +217,7 @@ SECTIONS {
 /*BEGIN: linux addressability guarantee */
 /*BEGIN: bsd addressability guarantee */
 
-  .head SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) : AT(IMAGE_BASE_REAL) {
+  .head SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) + SKEW : AT(IMAGE_BASE_REAL) {
     HIDDEN(_base = .);
 
     /* Real Mode */

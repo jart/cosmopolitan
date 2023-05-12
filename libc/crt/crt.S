@@ -68,7 +68,13 @@ _start:
 	lea	8(%rsp),%rsi			// argv
 	lea	16(%rsp,%rbx,8),%rdx		// envp
 	mov	%rsp,__oldstack(%rip)
-	and	$-16,%rsp
+
+//	setup a stack frame
+//	align stack to GetStackSize() so GetStackAddr() is fast
+	.weak	ape_stack_memsz
+	mov	$ape_stack_memsz,%r8d
+	neg	%r8
+	and	%r8,%rsp
 	xor	%ebp,%ebp
 //	bofram	9f
 
@@ -107,10 +113,23 @@ _start:
 ////////////////////////////////////////////////////////////////////////////////
 #elif defined(__aarch64__)
 
+//	save original stack pointer
+//	this is the first argument to cosmo() below
+	mov	x0,sp
+
+//	setup stack frame
 	mov	x29,#0
 	mov	x30,#0
-	mov	x0,sp
-	and	sp,x0,#-16
+
+//	align stack to GetStackSize() so GetStackAddr() is fast
+	mov	x1,sp
+	.weak	ape_stack_memsz
+	ldr	x2,=ape_stack_memsz
+	neg	x2,x2
+	and	x1,x2,x1
+	mov	sp,x1
+
+//	switch to c start function
 	b	cosmo
 
 ////////////////////////////////////////////////////////////////////////////////

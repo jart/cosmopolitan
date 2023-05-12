@@ -103,7 +103,7 @@
  * Hardens against against sbox side channels
  */
 #define MBEDTLS_AESNI_C
-#ifndef TINY
+#if defined(__x86_64__) && !defined(TINY)
 #define MBEDTLS_HAVE_X86_64
 #define MBEDTLS_HAVE_SSE2
 #endif
