@@ -24,61 +24,69 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define roundl(x) roundl(VEIL("t", (long double)(x)))
-#define round(x)  round(VEIL("x", (double)(x)))
-#define roundf(x) roundf(VEIL("x", (float)(x)))
+double _round(double) asm("round");
+float _roundf(float) asm("roundf");
+long double _roundl(long double) asm("roundl");
+
+long _lround(double) asm("lround");
+long _lroundf(float) asm("lroundf");
+long _lroundl(long double) asm("lroundl");
+
+long _lrint(double) asm("lrint");
+long _lrintf(float) asm("lrintf");
+long _lrintl(long double) asm("lrintl");
 
 FIXTURE(intrin, disableHardwareExtensions) {
   memset((/*unconst*/ void *)kCpuids, 0, sizeof(kCpuids));
 }
 
 TEST(round, testCornerCases) {
-  EXPECT_STREQ("-0", gc(xdtoa(round(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(round(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(round(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(round(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(round(-INFINITY))));
+  EXPECT_STREQ("-0", gc(xdtoa(_round(-0.0))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_round(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(_round(-NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_round(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_round(-INFINITY))));
 }
 
 TEST(roundl, testCornerCases) {
-  EXPECT_STREQ("-0", gc(xdtoa(roundl(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(roundl(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(roundl(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(roundl(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(roundl(-INFINITY))));
+  EXPECT_STREQ("-0", gc(xdtoa(_roundl(-0.0))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_roundl(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(_roundl(-NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_roundl(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_roundl(-INFINITY))));
 }
 
 TEST(round, test) {
-  EXPECT_STREQ("-3", gc(xdtoa(round(-2.5))));
-  EXPECT_STREQ("-2", gc(xdtoa(round(-1.5))));
-  EXPECT_STREQ("-1", gc(xdtoa(round(-.5))));
-  EXPECT_STREQ("-0", gc(xdtoa(round(-.4))));
-  EXPECT_STREQ("0", gc(xdtoa(round(.4))));
-  EXPECT_STREQ("1", gc(xdtoa(round(.5))));
-  EXPECT_STREQ("2", gc(xdtoa(round(1.5))));
-  EXPECT_STREQ("3", gc(xdtoa(round(2.5))));
+  EXPECT_STREQ("-3", gc(xdtoa(_round(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(_round(-1.5))));
+  EXPECT_STREQ("-1", gc(xdtoa(_round(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(_round(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(_round(.4))));
+  EXPECT_STREQ("1", gc(xdtoa(_round(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(_round(1.5))));
+  EXPECT_STREQ("3", gc(xdtoa(_round(2.5))));
 }
 
 TEST(roundf, test) {
-  EXPECT_STREQ("-3", gc(xdtoa(roundf(-2.5))));
-  EXPECT_STREQ("-2", gc(xdtoa(roundf(-1.5))));
-  EXPECT_STREQ("-1", gc(xdtoa(roundf(-.5))));
-  EXPECT_STREQ("-0", gc(xdtoa(roundf(-.4))));
-  EXPECT_STREQ("0", gc(xdtoa(roundf(.4))));
-  EXPECT_STREQ("1", gc(xdtoa(roundf(.5))));
-  EXPECT_STREQ("2", gc(xdtoa(roundf(1.5))));
-  EXPECT_STREQ("3", gc(xdtoa(roundf(2.5))));
+  EXPECT_STREQ("-3", gc(xdtoa(_roundf(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(_roundf(-1.5))));
+  EXPECT_STREQ("-1", gc(xdtoa(_roundf(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(_roundf(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(_roundf(.4))));
+  EXPECT_STREQ("1", gc(xdtoa(_roundf(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(_roundf(1.5))));
+  EXPECT_STREQ("3", gc(xdtoa(_roundf(2.5))));
 }
 
 TEST(roundl, test) {
-  EXPECT_STREQ("-3", gc(xdtoa(roundl(-2.5))));
-  EXPECT_STREQ("-2", gc(xdtoa(roundl(-1.5))));
-  EXPECT_STREQ("-1", gc(xdtoa(roundl(-.5))));
-  EXPECT_STREQ("-0", gc(xdtoa(roundl(-.4))));
-  EXPECT_STREQ("0", gc(xdtoa(roundl(.4))));
-  EXPECT_STREQ("1", gc(xdtoa(roundl(.5))));
-  EXPECT_STREQ("2", gc(xdtoa(roundl(1.5))));
-  EXPECT_STREQ("3", gc(xdtoa(roundl(2.5))));
+  EXPECT_STREQ("-3", gc(xdtoa(_roundl(-2.5))));
+  EXPECT_STREQ("-2", gc(xdtoa(_roundl(-1.5))));
+  EXPECT_STREQ("-1", gc(xdtoa(_roundl(-.5))));
+  EXPECT_STREQ("-0", gc(xdtoa(_roundl(-.4))));
+  EXPECT_STREQ("0", gc(xdtoa(_roundl(.4))));
+  EXPECT_STREQ("1", gc(xdtoa(_roundl(.5))));
+  EXPECT_STREQ("2", gc(xdtoa(_roundl(1.5))));
+  EXPECT_STREQ("3", gc(xdtoa(_roundl(2.5))));
 }
 
 TEST(nearbyint, test) {
@@ -126,25 +134,25 @@ TEST(rint, test) {
 }
 
 TEST(lrint, test) {
-  EXPECT_EQ(-2, lrint(-2.5));
-  EXPECT_EQ(-2, lrint(-1.5));
-  EXPECT_EQ(-0, lrint(-.5));
-  EXPECT_EQ(-0, lrint(-.4));
-  EXPECT_EQ(0, lrint(.4));
-  EXPECT_EQ(0, lrint(.5));
-  EXPECT_EQ(2, lrint(1.5));
-  EXPECT_EQ(2, lrint(2.5));
+  EXPECT_EQ(-2, _lrint(-2.5));
+  EXPECT_EQ(-2, _lrint(-1.5));
+  EXPECT_EQ(-0, _lrint(-.5));
+  EXPECT_EQ(-0, _lrint(-.4));
+  EXPECT_EQ(0, _lrint(.4));
+  EXPECT_EQ(0, _lrint(.5));
+  EXPECT_EQ(2, _lrint(1.5));
+  EXPECT_EQ(2, _lrint(2.5));
 }
 
 TEST(lrintf, test) {
-  EXPECT_EQ(-2, lrintf(-2.5));
-  EXPECT_EQ(-2, lrintf(-1.5));
-  EXPECT_EQ(-0, lrintf(-.5));
-  EXPECT_EQ(-0, lrintf(-.4));
-  EXPECT_EQ(0, lrintf(.4));
-  EXPECT_EQ(0, lrintf(.5));
-  EXPECT_EQ(2, lrintf(1.5));
-  EXPECT_EQ(2, lrintf(2.5));
+  EXPECT_EQ(-2, _lrintf(-2.5));
+  EXPECT_EQ(-2, _lrintf(-1.5));
+  EXPECT_EQ(-0, _lrintf(-.5));
+  EXPECT_EQ(-0, _lrintf(-.4));
+  EXPECT_EQ(0, _lrintf(.4));
+  EXPECT_EQ(0, _lrintf(.5));
+  EXPECT_EQ(2, _lrintf(1.5));
+  EXPECT_EQ(2, _lrintf(2.5));
 }
 
 TEST(rintf, test) {
@@ -170,43 +178,43 @@ TEST(rintl, test) {
 }
 
 TEST(roundf, testCornerCases) {
-  EXPECT_STREQ("-0", gc(xdtoa(roundf(-0.0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(roundf(NAN))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(roundf(-NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(roundf(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(roundf(-INFINITY))));
+  EXPECT_STREQ("-0", gc(xdtoa(_roundf(-0.0))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_roundf(NAN))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(_roundf(-NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_roundf(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_roundf(-INFINITY))));
 }
 
 TEST(lroundf, test) {
-  EXPECT_EQ(-3, lroundf(-2.5));
-  EXPECT_EQ(-2, lroundf(-1.5));
-  EXPECT_EQ(-1, lroundf(-.5));
-  EXPECT_EQ(0, lroundf(-.0));
-  EXPECT_EQ(1, lroundf(.5));
-  EXPECT_EQ(2, lroundf(1.5));
-  EXPECT_EQ(3, lroundf(2.5));
+  EXPECT_EQ(-3, _lroundf(-2.5));
+  EXPECT_EQ(-2, _lroundf(-1.5));
+  EXPECT_EQ(-1, _lroundf(-.5));
+  EXPECT_EQ(0, _lroundf(-.0));
+  EXPECT_EQ(1, _lroundf(.5));
+  EXPECT_EQ(2, _lroundf(1.5));
+  EXPECT_EQ(3, _lroundf(2.5));
 }
 
 TEST(lround, test) {
-  EXPECT_EQ(-3, lround(-2.5));
-  EXPECT_EQ(-2, lround(-1.5));
-  EXPECT_EQ(-1, lround(-.5));
-  EXPECT_EQ(-0, lround(-.4));
-  EXPECT_EQ(0, lround(.4));
-  EXPECT_EQ(1, lround(.5));
-  EXPECT_EQ(2, lround(1.5));
-  EXPECT_EQ(3, lround(2.5));
+  EXPECT_EQ(-3, _lround(-2.5));
+  EXPECT_EQ(-2, _lround(-1.5));
+  EXPECT_EQ(-1, _lround(-.5));
+  EXPECT_EQ(-0, _lround(-.4));
+  EXPECT_EQ(0, _lround(.4));
+  EXPECT_EQ(1, _lround(.5));
+  EXPECT_EQ(2, _lround(1.5));
+  EXPECT_EQ(3, _lround(2.5));
 }
 
 TEST(lroundl, test) {
-  EXPECT_EQ(-3, lroundl(-2.5));
-  EXPECT_EQ(-2, lroundl(-1.5));
-  EXPECT_EQ(-1, lroundl(-.5));
-  EXPECT_EQ(-0, lroundl(-.4));
-  EXPECT_EQ(0, lroundl(.4));
-  EXPECT_EQ(1, lroundl(.5));
-  EXPECT_EQ(2, lroundl(1.5));
-  EXPECT_EQ(3, lroundl(2.5));
+  EXPECT_EQ(-3, _lroundl(-2.5));
+  EXPECT_EQ(-2, _lroundl(-1.5));
+  EXPECT_EQ(-1, _lroundl(-.5));
+  EXPECT_EQ(-0, _lroundl(-.4));
+  EXPECT_EQ(0, _lroundl(.4));
+  EXPECT_EQ(1, _lroundl(.5));
+  EXPECT_EQ(2, _lroundl(1.5));
+  EXPECT_EQ(3, _lroundl(2.5));
 }
 
 BENCH(round, bench) {
@@ -214,16 +222,10 @@ BENCH(round, bench) {
   EZBENCH2("float+.5f", donothing, EXPROPRIATE(VEIL("x", (float)(-3.5)) + .5));
   EZBENCH2("ldbl+.5l", donothing,
            EXPROPRIATE(VEIL("t", (long double)(-3.5)) + .5));
-  double _round(double) asm("round");
-  float _roundf(float) asm("roundf");
-  long double _roundl(long double) asm("roundl");
-  EZBENCH2("-round", donothing, _round(.7));   /* ~4ns */
-  EZBENCH2("-roundf", donothing, _roundf(.7)); /* ~3ns */
-  EZBENCH2("-roundl", donothing, _roundl(.7)); /* ~8ns */
-  double _lrint(double) asm("lrint");
-  float _lrintf(float) asm("lrintf");
-  long double _lrintl(long double) asm("lrintl");
-  EZBENCH2("-lrint", donothing, _lrint(.7));   /* ~1ns */
-  EZBENCH2("-lrintf", donothing, _lrintf(.7)); /* ~1ns */
-  EZBENCH2("-lrintl", donothing, _lrintl(.7)); /* ~78ns */
+  EZBENCH2("round", donothing, _round(.7));   /* ~4ns */
+  EZBENCH2("roundf", donothing, _roundf(.7)); /* ~3ns */
+  EZBENCH2("roundl", donothing, _roundl(.7)); /* ~8ns */
+  EZBENCH2("lrint", donothing, _lrint(.7));   /* ~1ns */
+  EZBENCH2("lrintf", donothing, _lrintf(.7)); /* ~1ns */
+  EZBENCH2("lrintl", donothing, _lrintl(.7)); /* ~78ns */
 }

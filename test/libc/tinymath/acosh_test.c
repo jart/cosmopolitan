@@ -21,36 +21,36 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define acoshl(x) acoshl(VEIL("t", (long double)(x)))
-#define acosh(x)  acosh(VEIL("x", (double)(x)))
-#define acoshf(x) acoshf(VEIL("x", (float)(x)))
+double _acosh(double) asm("acosh");
+float _acoshf(float) asm("acoshf");
+long double _acoshl(long double) asm("acoshl");
 
 TEST(acosh, test) {
-  EXPECT_STREQ(".962423650119207", gc(xdtoa(acosh(1.5))));
-  EXPECT_STREQ("0", gc(xdtoa(acosh(1))));
-  EXPECT_TRUE(isnan(acosh(NAN)));
-  EXPECT_TRUE(isnan(acosh(.5)));
-  EXPECT_TRUE(isnan(acosh(-.5)));
-  EXPECT_TRUE(isnan(acosh(-1.5)));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(acosh(INFINITY))));
+  EXPECT_STREQ(".962423650119207", gc(xdtoa(_acosh(1.5))));
+  EXPECT_STREQ("0", gc(xdtoa(_acosh(1))));
+  EXPECT_TRUE(isnan(_acosh(NAN)));
+  EXPECT_TRUE(isnan(_acosh(.5)));
+  EXPECT_TRUE(isnan(_acosh(-.5)));
+  EXPECT_TRUE(isnan(_acosh(-1.5)));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_acosh(INFINITY))));
 }
 
 TEST(acoshf, test) {
-  EXPECT_STREQ(".962424", gc(xdtoaf(acoshf(1.5))));
-  EXPECT_STREQ("0", gc(xdtoaf(acoshf(1))));
-  EXPECT_TRUE(isnan(acoshf(NAN)));
-  EXPECT_TRUE(isnan(acoshf(.5)));
-  EXPECT_TRUE(isnan(acoshf(-.5)));
-  EXPECT_TRUE(isnan(acoshf(-1.5)));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(acoshf(INFINITY))));
+  EXPECT_STREQ(".962424", gc(xdtoaf(_acoshf(1.5))));
+  EXPECT_STREQ("0", gc(xdtoaf(_acoshf(1))));
+  EXPECT_TRUE(isnan(_acoshf(NAN)));
+  EXPECT_TRUE(isnan(_acoshf(.5)));
+  EXPECT_TRUE(isnan(_acoshf(-.5)));
+  EXPECT_TRUE(isnan(_acoshf(-1.5)));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_acoshf(INFINITY))));
 }
 
 TEST(acoshl, test) {
-  EXPECT_STREQ(".9624236501192069", gc(xdtoal(acoshl(1.5))));
-  EXPECT_STREQ("0", gc(xdtoal(acoshl(1))));
-  EXPECT_TRUE(isnan(acoshl(NAN)));
-  EXPECT_TRUE(isnan(acoshl(.5)));
-  EXPECT_TRUE(isnan(acoshl(-.5)));
-  EXPECT_TRUE(isnan(acoshl(-1.5)));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(acoshl(INFINITY))));
+  EXPECT_STREQ(".9624236501192069", gc(xdtoal(_acoshl(1.5))));
+  EXPECT_STREQ("0", gc(xdtoal(_acoshl(1))));
+  EXPECT_TRUE(isnan(_acoshl(NAN)));
+  EXPECT_TRUE(isnan(_acoshl(.5)));
+  EXPECT_TRUE(isnan(_acoshl(-.5)));
+  EXPECT_TRUE(isnan(_acoshl(-1.5)));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_acoshl(INFINITY))));
 }

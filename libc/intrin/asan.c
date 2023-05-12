@@ -49,8 +49,8 @@
 #include "third_party/dlmalloc/dlmalloc.h"
 
 #ifdef __x86_64__
-
 STATIC_YOINK("_init_asan");
+#endif
 
 #if IsModeDbg()
 // MODE=dbg
@@ -158,6 +158,11 @@ static struct AsanMorgue {
   _Atomic(unsigned) i;
   _Atomic(void *) p[ASAN_MORGUE_ITEMS];
 } __asan_morgue;
+
+int __asan_option_detect_stack_use_after_return = 0;
+
+void __asan_version_mismatch_check_v8(void) {
+}
 
 static bool __asan_once(void) {
   bool want = false;
@@ -1463,8 +1468,7 @@ static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_poison((void *)GetStackAddr(), GUARDSIZE, kAsanStackOverflow);
 }
 
-__attribute__((__constructor__)) void __asan_init(int argc, char **argv,
-                                                  char **envp, intptr_t *auxv) {
+void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   static bool once;
   if (!_cmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
@@ -1499,5 +1503,3 @@ __attribute__((__constructor__)) void __asan_init(int argc, char **argv,
   STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
-
-#endif /* __x86_64__ */

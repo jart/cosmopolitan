@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.text.unlikely
-testlib_showerror_assert_true:
-	push	$TRUE
-	pushstr	"ASSERT_TRUE"
-	pushstr	""
-	jmp	testlib_showerror_jump
-	.endfn	testlib_showerror_assert_true,globl,hidden
-	.previous
+	.init.start 303,_init_asan
+	push	%rdi
+	push	%rsi
+	mov	%r12,%rdi
+	mov	%r13,%rsi
+	mov	%r14,%rdx
+	mov	%r15,%rcx
+	call	__asan_init
+	pop	%rsi
+	pop	%rdi
+	.init.end 303,_init_asan

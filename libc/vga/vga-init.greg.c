@@ -29,6 +29,8 @@
 #include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"
 
+#ifdef __x86_64__
+
 struct Tty _vga_tty;
 
 void _vga_reinit(struct Tty *tty, unsigned short starty, unsigned short startx,
@@ -70,3 +72,5 @@ textstartup void _vga_init(void) {
     _vga_reinit(&_vga_tty, starty, startx, 0);
   }
 }
+
+#endif /* __x86_64__ */

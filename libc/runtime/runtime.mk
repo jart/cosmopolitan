@@ -71,6 +71,7 @@ o/$(MODE)/libc/runtime/ftracer.o: private		\
 			-ffreestanding			\
 			-fno-sanitize=all
 
+o/$(MODE)/libc/runtime/cosmo2.o				\
 o/$(MODE)/libc/runtime/fork-nt.o			\
 o/$(MODE)/libc/runtime/printmemoryintervals.o		\
 o/$(MODE)/libc/runtime/arememoryintervalsok.o		\

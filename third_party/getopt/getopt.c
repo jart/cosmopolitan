@@ -40,8 +40,6 @@ getopt (BSD-3)\\n\
 Copyright 1987, 1993, 1994 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-STATIC_YOINK("_init_getopt");
-
 #define BADCH  (int)'?'
 #define BADARG (int)':'
 
@@ -75,8 +73,8 @@ int optreset;
  */
 char *optarg;
 
-_Hide char *getopt_place;
-_Hide char kGetoptEmsg[1];
+char *getopt_place;
+static char kGetoptEmsg[1];
 
 static void getopt_print_badch(const char *s) {
   char b1[512];
@@ -117,6 +115,13 @@ static void getopt_print_badch(const char *s) {
  */
 int getopt(int nargc, char *const nargv[], const char *ostr) {
   char *oli; /* option letter list index */
+  static bool once;
+  if (!once) {
+    opterr = 1;
+    optind = 1;
+    getopt_place = kGetoptEmsg;
+    once = true;
+  }
   /*
    * Some programs like cvs expect optind = 0 to trigger
    * a reset of getopt.

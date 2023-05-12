@@ -21,42 +21,42 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define sinhl(x) sinhl(VEIL("t", (long double)(x)))
-#define sinh(x)  sinh(VEIL("x", (double)(x)))
-#define sinhf(x) sinhf(VEIL("x", (float)(x)))
+double _sinh(double) asm("sinh");
+float _sinhf(float) asm("sinhf");
+long double _sinhl(long double) asm("sinhl");
 
 TEST(sinh, test) {
-  EXPECT_STREQ(".521095305493747", gc(xdtoa(sinh(+.5))));
-  EXPECT_STREQ("-.521095305493747", gc(xdtoa(sinh(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(sinh(30000))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(sinh(-30000))));
-  EXPECT_STREQ("0", gc(xdtoa(sinh(0))));
-  EXPECT_STREQ("-0", gc(xdtoa(sinh(-0.))));
-  EXPECT_STREQ("NAN", gc(xdtoa(sinh(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(sinh(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(sinh(-INFINITY))));
+  EXPECT_STREQ(".521095305493747", gc(xdtoa(_sinh(+.5))));
+  EXPECT_STREQ("-.521095305493747", gc(xdtoa(_sinh(-.5))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_sinh(30000))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_sinh(-30000))));
+  EXPECT_STREQ("0", gc(xdtoa(_sinh(0))));
+  EXPECT_STREQ("-0", gc(xdtoa(_sinh(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_sinh(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_sinh(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(_sinh(-INFINITY))));
 }
 
 TEST(sinhl, test) {
-  EXPECT_STREQ(".5210953054937474", gc(xdtoal(sinhl(+.5))));
-  EXPECT_STREQ("-.5210953054937474", gc(xdtoal(sinhl(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(sinhl(30000))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(sinhl(-30000))));
-  EXPECT_STREQ("0", gc(xdtoal(sinhl(0))));
-  EXPECT_STREQ("-0", gc(xdtoal(sinhl(-0.))));
-  EXPECT_STREQ("NAN", gc(xdtoal(sinhl(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(sinhl(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(sinhl(-INFINITY))));
+  EXPECT_STREQ(".5210953054937474", gc(xdtoal(_sinhl(+.5))));
+  EXPECT_STREQ("-.5210953054937474", gc(xdtoal(_sinhl(-.5))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_sinhl(30000))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(_sinhl(-30000))));
+  EXPECT_STREQ("0", gc(xdtoal(_sinhl(0))));
+  EXPECT_STREQ("-0", gc(xdtoal(_sinhl(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_sinhl(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_sinhl(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(_sinhl(-INFINITY))));
 }
 
 TEST(sinhf, test) {
-  EXPECT_STREQ(".521095", gc(xdtoaf(sinhf(+.5))));
-  EXPECT_STREQ("-.521095", gc(xdtoaf(sinhf(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(sinhf(30000))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoaf(sinhf(-30000))));
-  EXPECT_STREQ("0", gc(xdtoaf(sinhf(0))));
-  EXPECT_STREQ("-0", gc(xdtoaf(sinhf(-0.))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(sinhf(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(sinhf(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoaf(sinhf(-INFINITY))));
+  EXPECT_STREQ(".521095", gc(xdtoaf(_sinhf(+.5))));
+  EXPECT_STREQ("-.521095", gc(xdtoaf(_sinhf(-.5))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_sinhf(30000))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(_sinhf(-30000))));
+  EXPECT_STREQ("0", gc(xdtoaf(_sinhf(0))));
+  EXPECT_STREQ("-0", gc(xdtoaf(_sinhf(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_sinhf(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_sinhf(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(_sinhf(-INFINITY))));
 }

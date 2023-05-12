@@ -22,46 +22,43 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define fabsl(x) fabsl(VEIL("t", (long double)(x)))
-#define fabs(x)  fabs(VEIL("x", (double)(x)))
-#define fabsf(x) fabsf(VEIL("x", (float)(x)))
+double _fabs(double) asm("fabs");
+float _fabsf(float) asm("fabsf");
+long double _fabsl(long double) asm("fabsl");
 
 TEST(fabsl, test) {
-  EXPECT_STREQ("0", gc(xdtoal(fabsl(-0.))));
-  EXPECT_STREQ("0", gc(xdtoal(fabsl(-0.))));
-  EXPECT_STREQ("NAN", gc(xdtoal(fabsl(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(fabsl(INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(fabsl(-INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoal(_fabsl(-0.))));
+  EXPECT_STREQ("0", gc(xdtoal(_fabsl(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_fabsl(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_fabsl(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_fabsl(-INFINITY))));
 }
 
 TEST(fabs, test) {
-  EXPECT_STREQ("0", gc(xdtoa(fabs(-0.))));
-  EXPECT_STREQ("0", gc(xdtoa(fabs(-0.))));
-  EXPECT_STREQ("NAN", gc(xdtoa(fabs(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(fabs(INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(fabs(-INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(_fabs(-0.))));
+  EXPECT_STREQ("0", gc(xdtoa(_fabs(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_fabs(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_fabs(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_fabs(-INFINITY))));
 }
 
 TEST(fabsf, test) {
-  EXPECT_STREQ("0", gc(xdtoaf(fabsf(-0.))));
-  EXPECT_STREQ("0", gc(xdtoaf(fabsf(-0.))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(fabsf(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(fabsf(INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(fabsf(-INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoaf(_fabsf(-0.))));
+  EXPECT_STREQ("0", gc(xdtoaf(_fabsf(-0.))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_fabsf(NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_fabsf(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_fabsf(-INFINITY))));
 }
 
 TEST(fabs, stuff) {
-  EXPECT_LDBL_EQ(3.14, fabs(3.14));
-  EXPECT_LDBL_EQ(3.14, fabs(-3.14));
-  EXPECT_EQ(1, !!isnan(fabs(NAN)));
-  EXPECT_EQ(1, !!isnan(fabs(-NAN)));
-  EXPECT_EQ(0, !!signbit(fabs(-NAN)));
+  EXPECT_LDBL_EQ(3.14, _fabs(3.14));
+  EXPECT_LDBL_EQ(3.14, _fabs(-3.14));
+  EXPECT_EQ(1, !!isnan(_fabs(NAN)));
+  EXPECT_EQ(1, !!isnan(_fabs(-NAN)));
+  EXPECT_EQ(0, !!signbit(_fabs(-NAN)));
 }
 
 BENCH(fabs, bench) {
-  double _fabs(double) asm("fabs");
-  float _fabsf(float) asm("fabsf");
-  long double _fabsl(long double) asm("fabsl");
   EZBENCH2("fabs", donothing, _fabs(.7));   /*  ~6ns */
   EZBENCH2("fabsf", donothing, _fabsf(.7)); /*  ~5ns */
   EZBENCH2("fabsl", donothing, _fabsl(.7)); /* ~28ns */

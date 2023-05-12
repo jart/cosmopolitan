@@ -54,6 +54,16 @@ float roundf(float x)
 	asm("frinta\t%s0,%s1" : "=w"(x) : "w"(x));
 	return x;
 
+#elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
+
+	asm("frin\t%0,%1" : "=f"(x) : "f"(x));
+	return x;
+
+#elif defined(__s390x__) && (defined(__HTM__) || __ARCH__ >= 9)
+
+	asm("fiebra\t%0,1,%1,4" : "=f"(x) : "f"(x));
+	return x;
+
 #else
 
 	union {float f; uint32_t i;} u = {x};

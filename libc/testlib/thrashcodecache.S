@@ -21,6 +21,7 @@
 
 //	Empties L1 instruction cache.
 thrashcodecache:
+#ifdef __x86_64__
 	.leafprologue
 	push	%rbx
 	xor	%eax,%eax
@@ -42,4 +43,7 @@ thrashcodecache:
 	cpuid
 	pop	%rbx
 	.leafepilogue
+#else
+	ret
+#endif
 	.endfn	thrashcodecache,globl

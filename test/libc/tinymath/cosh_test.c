@@ -21,42 +21,42 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define coshl(x) coshl(VEIL("t", (long double)(x)))
-#define cosh(x)  cosh(VEIL("x", (double)(x)))
-#define coshf(x) coshf(VEIL("x", (float)(x)))
+double _cosh(double) asm("cosh");
+float _coshf(float) asm("coshf");
+long double _coshl(long double) asm("coshl");
 
 TEST(coshl, test) {
-  EXPECT_STREQ("1.127625965206381", gc(xdtoal(coshl(+.5))));
-  EXPECT_STREQ("1.127625965206381", gc(xdtoal(coshl(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(coshl(30000))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(coshl(-30000))));
-  EXPECT_STREQ("1", gc(xdtoal(coshl(+0.))));
-  EXPECT_STREQ("1", gc(xdtoal(coshl(-0.))));
-  EXPECT_TRUE(isnan(coshl(NAN)));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(coshl(INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(coshl(-INFINITY))));
+  EXPECT_STREQ("1.127625965206381", gc(xdtoal(_coshl(+.5))));
+  EXPECT_STREQ("1.127625965206381", gc(xdtoal(_coshl(-.5))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_coshl(30000))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_coshl(-30000))));
+  EXPECT_STREQ("1", gc(xdtoal(_coshl(+0.))));
+  EXPECT_STREQ("1", gc(xdtoal(_coshl(-0.))));
+  EXPECT_TRUE(isnan(_coshl(NAN)));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_coshl(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_coshl(-INFINITY))));
 }
 
 TEST(cosh, test) {
-  EXPECT_STREQ("1.12762596520638", gc(xdtoa(cosh(+.5))));
-  EXPECT_STREQ("1.12762596520638", gc(xdtoa(cosh(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(cosh(30000))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(cosh(-30000))));
-  EXPECT_STREQ("1", gc(xdtoa(cosh(+0.))));
-  EXPECT_STREQ("1", gc(xdtoa(cosh(-0.))));
-  EXPECT_TRUE(isnan(cosh(NAN)));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(cosh(INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(cosh(-INFINITY))));
+  EXPECT_STREQ("1.12762596520638", gc(xdtoa(_cosh(+.5))));
+  EXPECT_STREQ("1.12762596520638", gc(xdtoa(_cosh(-.5))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_cosh(30000))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_cosh(-30000))));
+  EXPECT_STREQ("1", gc(xdtoa(_cosh(+0.))));
+  EXPECT_STREQ("1", gc(xdtoa(_cosh(-0.))));
+  EXPECT_TRUE(isnan(_cosh(NAN)));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_cosh(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_cosh(-INFINITY))));
 }
 
 TEST(coshf, test) {
-  EXPECT_STREQ("1.12763", gc(xdtoaf(coshf(+.5))));
-  EXPECT_STREQ("1.12763", gc(xdtoaf(coshf(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(coshf(30000))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(coshf(-30000))));
-  EXPECT_STREQ("1", gc(xdtoaf(coshf(+0.))));
-  EXPECT_STREQ("1", gc(xdtoaf(coshf(-0.))));
-  EXPECT_TRUE(isnan(coshf(NAN)));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(coshf(INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(coshf(-INFINITY))));
+  EXPECT_STREQ("1.12763", gc(xdtoaf(_coshf(+.5))));
+  EXPECT_STREQ("1.12763", gc(xdtoaf(_coshf(-.5))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_coshf(30000))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_coshf(-30000))));
+  EXPECT_STREQ("1", gc(xdtoaf(_coshf(+0.))));
+  EXPECT_STREQ("1", gc(xdtoaf(_coshf(-0.))));
+  EXPECT_TRUE(isnan(_coshf(NAN)));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_coshf(INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_coshf(-INFINITY))));
 }

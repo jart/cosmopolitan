@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -79,6 +80,10 @@ textstartup void cosmo(long *sp) {
 #ifdef SYSDEBUG
   // initialize --strace functionality
   argc = __strace_init(argc, argv, envp, auxv);
+#endif
+
+#if IsAsan()
+  __asan_init(argc, argv, envp, auxv);
 #endif
 
   // set helpful globals

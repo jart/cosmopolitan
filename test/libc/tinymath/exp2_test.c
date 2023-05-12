@@ -22,44 +22,41 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define exp2l(x) exp2l(VEIL("t", (long double)(x)))
-#define exp2(x)  exp2(VEIL("x", (double)(x)))
-#define exp2f(x) exp2f(VEIL("x", (float)(x)))
+double _exp2(double) asm("exp2");
+float _exp2f(float) asm("exp2f");
+long double _exp2l(long double) asm("exp2l");
 
 TEST(exp2l, test) {
-  EXPECT_STREQ("1", gc(xdtoal(exp2l(0))));
-  EXPECT_STREQ("1", gc(xdtoal(exp2l(-0.))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(exp2l(INFINITY))));
-  EXPECT_STREQ("0", gc(xdtoal(exp2l(-INFINITY))));
-  EXPECT_STREQ("NAN", gc(xdtoal(exp2l(NAN))));
-  EXPECT_STREQ("0", gc(xdtoal(exp2l(-132098844872390))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(exp2l(132098844872390))));
+  EXPECT_STREQ("1", gc(xdtoal(_exp2l(0))));
+  EXPECT_STREQ("1", gc(xdtoal(_exp2l(-0.))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_exp2l(INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoal(_exp2l(-INFINITY))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_exp2l(NAN))));
+  EXPECT_STREQ("0", gc(xdtoal(_exp2l(-132098844872390))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_exp2l(132098844872390))));
 }
 
 TEST(exp2, test) {
-  EXPECT_STREQ("1", gc(xdtoa(exp2(0))));
-  EXPECT_STREQ("1", gc(xdtoa(exp2(-0.))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(exp2(INFINITY))));
-  EXPECT_STREQ("0", gc(xdtoa(exp2(-INFINITY))));
-  EXPECT_STREQ("NAN", gc(xdtoa(exp2(NAN))));
-  EXPECT_STREQ("0", gc(xdtoa(exp2(-132098844872390))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(exp2(132098844872390))));
+  EXPECT_STREQ("1", gc(xdtoa(_exp2(0))));
+  EXPECT_STREQ("1", gc(xdtoa(_exp2(-0.))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_exp2(INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(_exp2(-INFINITY))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_exp2(NAN))));
+  EXPECT_STREQ("0", gc(xdtoa(_exp2(-132098844872390))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_exp2(132098844872390))));
 }
 
 TEST(exp2f, test) {
-  EXPECT_STREQ("1", gc(xdtoaf(exp2f(0))));
-  EXPECT_STREQ("1", gc(xdtoaf(exp2f(-0.))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(exp2f(INFINITY))));
-  EXPECT_STREQ("0", gc(xdtoaf(exp2f(-INFINITY))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(exp2f(NAN))));
-  EXPECT_STREQ("0", gc(xdtoaf(exp2f(-132098844872390))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(exp2f(132098844872390))));
+  EXPECT_STREQ("1", gc(xdtoaf(_exp2f(0))));
+  EXPECT_STREQ("1", gc(xdtoaf(_exp2f(-0.))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_exp2f(INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoaf(_exp2f(-INFINITY))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_exp2f(NAN))));
+  EXPECT_STREQ("0", gc(xdtoaf(_exp2f(-132098844872390))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_exp2f(132098844872390))));
 }
 
-BENCH(exp2l, bench) {
-  double _exp2(double) asm("exp2");
-  float _exp2f(float) asm("exp2f");
-  long double _exp2l(long double) asm("exp2l");
+BENCH(_exp2l, bench) {
   EZBENCH2("exp2", donothing, _exp2(.7));   /*  ~6ns */
   EZBENCH2("exp2f", donothing, _exp2f(.7)); /*  ~5ns */
   EZBENCH2("exp2l", donothing, _exp2l(.7)); /* ~30ns */

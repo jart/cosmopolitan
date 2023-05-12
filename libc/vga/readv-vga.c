@@ -29,6 +29,8 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/vga/vga.internal.h"
 
+#ifdef __x86_64__
+
 ssize_t sys_readv_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
   /*
    * NOTE: this routine is always non-blocking.
@@ -52,3 +54,5 @@ ssize_t sys_readv_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
   if (!redd) return res;
   return redd;
 }
+
+#endif /* __x86_64__ */

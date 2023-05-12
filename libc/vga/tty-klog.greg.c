@@ -30,6 +30,8 @@
 #include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"
 
+#ifdef __x86_64__
+
 /*
  * @fileoverview Instantiation of routines for emergency or system console
  * output in graphical video modes.
@@ -95,3 +97,5 @@ privileged void _klog_vga(const char *b, size_t n) {
   klog_y = _TtyGetY(&tty);
   klog_x = _TtyGetX(&tty);
 }
+
+#endif /* __x86_64__ */

@@ -22,39 +22,36 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define sqrtl(x) sqrtl(VEIL("t", (long double)(x)))
-#define sqrt(x)  sqrt(VEIL("x", (double)(x)))
-#define sqrtf(x) sqrtf(VEIL("x", (float)(x)))
+double _sqrt(double) asm("sqrt");
+float _sqrtf(float) asm("sqrtf");
+long double _sqrtl(long double) asm("sqrtl");
 
 TEST(sqrtl, test) {
-  EXPECT_STREQ("7", gc(xdtoal(sqrtl(7 * 7))));
-  EXPECT_STREQ("NAN", gc(xdtoal(sqrtl(NAN))));
-  EXPECT_STREQ("0", gc(xdtoal(sqrtl(0))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(sqrtl(INFINITY))));
-  EXPECT_STREQ("-NAN", gc(xdtoal(sqrtl(-1))));
+  EXPECT_STREQ("7", gc(xdtoal(_sqrtl(7 * 7))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_sqrtl(NAN))));
+  EXPECT_STREQ("0", gc(xdtoal(_sqrtl(0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_sqrtl(INFINITY))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(_sqrtl(-1))));
 }
 
 TEST(sqrt, test) {
-  EXPECT_STREQ("7", gc(xdtoa(sqrt(7 * 7))));
-  EXPECT_STREQ("NAN", gc(xdtoa(sqrt(NAN))));
-  EXPECT_STREQ("0", gc(xdtoa(sqrt(0))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(sqrt(INFINITY))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(sqrt(-1))));
+  EXPECT_STREQ("7", gc(xdtoa(_sqrt(7 * 7))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_sqrt(NAN))));
+  EXPECT_STREQ("0", gc(xdtoa(_sqrt(0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_sqrt(INFINITY))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(_sqrt(-1))));
 }
 
 TEST(sqrtf, test) {
-  EXPECT_STREQ("7", gc(xdtoaf(sqrtf(7 * 7))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(sqrtf(NAN))));
-  EXPECT_STREQ("0", gc(xdtoaf(sqrtf(0))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(sqrtf(INFINITY))));
-  EXPECT_STREQ("-NAN", gc(xdtoaf(sqrtf(-1))));
+  EXPECT_STREQ("7", gc(xdtoaf(_sqrtf(7 * 7))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_sqrtf(NAN))));
+  EXPECT_STREQ("0", gc(xdtoaf(_sqrtf(0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_sqrtf(INFINITY))));
+  EXPECT_STREQ("-NAN", gc(xdtoaf(_sqrtf(-1))));
 }
 
-BENCH(sqrt, bench) {
-  double _sqrt(double) asm("sqrt");
-  float _sqrtf(float) asm("sqrtf");
-  long double _sqrtl(long double) asm("sqrtl");
-  EZBENCH2("sqrt", donothing, _sqrt(.7));   /*  ~5ns */
-  EZBENCH2("sqrtf", donothing, _sqrtf(.7)); /*  ~5ns */
-  EZBENCH2("sqrtl", donothing, _sqrtl(.7)); /* ~28ns */
+BENCH(_sqrt, bench) {
+  EZBENCH2("sqrt", donothing, _sqrt(.7));   /* ~2ns */
+  EZBENCH2("sqrtf", donothing, _sqrtf(.7)); /* ~1ns */
+  EZBENCH2("sqrtl", donothing, _sqrtl(.7)); /* ~9ns */
 }

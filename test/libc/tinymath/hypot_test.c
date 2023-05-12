@@ -22,106 +22,106 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define hypotl(x, y) \
-  hypotl(VEIL("t", (long double)(x)), VEIL("t", (long double)(y)))
-#define hypot(x, y)  hypot(VEIL("x", (double)(x)), VEIL("x", (double)(y)))
-#define hypotf(x, y) hypotf(VEIL("x", (float)(x)), VEIL("x", (float)(y)))
+double _hypot(double, double) asm("hypot");
+float _hypotf(float, float) asm("hypotf");
+long double _hypotl(long double, long double) asm("hypotl");
 
 TEST(hypot, test) {
-  EXPECT_STREQ("0", gc(xdtoa(hypot(0, 0))));
-  EXPECT_STREQ("3", gc(xdtoa(hypot(3, 0))));
-  EXPECT_STREQ("3", gc(xdtoa(hypot(0, 3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(3, 4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(4, 3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(3, -4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(-4, 3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(-3, 4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(4, -3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(-3, -4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypot(-4, -3))));
-  EXPECT_STREQ("1.4142135623731", gc(xdtoa(hypot(1, 1))));
-  EXPECT_STREQ("1.4142135623731", gc(xdtoa(hypot(1, -1))));
-  EXPECT_STREQ("1.4142135623731", gc(xdtoa(hypot(-1, 1))));
-  EXPECT_STREQ("1.41421362601271", gc(xdtoa(hypot(1.0000001, .99999999))));
-  EXPECT_STREQ("1.41421362601271", gc(xdtoa(hypot(.99999999, 1.0000001))));
-  EXPECT_STREQ("1.4142135623731e+154", gc(xdtoa(hypot(1e154, 1e154))));
-  EXPECT_STREQ("NAN", gc(xdtoa(hypot(0, NAN))));
-  EXPECT_STREQ("NAN", gc(xdtoa(hypot(NAN, 0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(hypot(NAN, NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(hypot(INFINITY, 0))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(hypot(0, INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(hypot(INFINITY, NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(hypot(NAN, INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(hypot(INFINITY, INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(_hypot(0, 0))));
+  EXPECT_STREQ("3", gc(xdtoa(_hypot(3, 0))));
+  EXPECT_STREQ("3", gc(xdtoa(_hypot(0, 3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(3, 4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(4, 3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(3, -4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(-4, 3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(-3, 4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(4, -3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(-3, -4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypot(-4, -3))));
+  EXPECT_STREQ("1.4142135623731", gc(xdtoa(_hypot(1, 1))));
+  EXPECT_STREQ("1.4142135623731", gc(xdtoa(_hypot(1, -1))));
+  EXPECT_STREQ("1.4142135623731", gc(xdtoa(_hypot(-1, 1))));
+  EXPECT_STREQ("1.41421362601271", gc(xdtoa(_hypot(1.0000001, .99999999))));
+  EXPECT_STREQ("1.41421362601271", gc(xdtoa(_hypot(.99999999, 1.0000001))));
+  EXPECT_STREQ("1.4142135623731e+154", gc(xdtoa(_hypot(1e154, 1e154))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_hypot(0, NAN))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_hypot(NAN, 0))));
+  EXPECT_STREQ("NAN", gc(xdtoa(_hypot(NAN, NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_hypot(INFINITY, 0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_hypot(0, INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_hypot(INFINITY, NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_hypot(NAN, INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(_hypot(INFINITY, INFINITY))));
 }
 
 TEST(hypotf, test) {
-  EXPECT_STREQ("0", gc(xdtoa(hypotf(0, 0))));
-  EXPECT_STREQ("3", gc(xdtoa(hypotf(3, 0))));
-  EXPECT_STREQ("3", gc(xdtoa(hypotf(0, 3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(3, 4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(4, 3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(3, -4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(-4, 3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(-3, 4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(4, -3))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(-3, -4))));
-  EXPECT_STREQ("5", gc(xdtoa(hypotf(-4, -3))));
-  EXPECT_STREQ("1.41421", gc(xdtoaf(hypotf(1, 1))));
-  EXPECT_STREQ("1.41421", gc(xdtoaf(hypotf(1, -1))));
-  EXPECT_STREQ("1.41421", gc(xdtoaf(hypotf(-1, 1))));
-  EXPECT_STREQ("1.41421", gc(xdtoaf(hypotf(1.000001, 0.999999))));
-  EXPECT_STREQ("1.41421", gc(xdtoaf(hypotf(0.999999, 1.000001))));
-  EXPECT_STREQ("1.41421e+38", gc(xdtoaf(hypotf(1e38, 1e38))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(hypotf(0, NAN))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(hypotf(NAN, 0))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(hypotf(NAN, NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(hypotf(INFINITY, 0))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(hypotf(0, INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(hypotf(INFINITY, NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(hypotf(NAN, INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(hypotf(INFINITY, INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoa(_hypotf(0, 0))));
+  EXPECT_STREQ("3", gc(xdtoa(_hypotf(3, 0))));
+  EXPECT_STREQ("3", gc(xdtoa(_hypotf(0, 3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(3, 4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(4, 3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(3, -4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(-4, 3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(-3, 4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(4, -3))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(-3, -4))));
+  EXPECT_STREQ("5", gc(xdtoa(_hypotf(-4, -3))));
+  EXPECT_STREQ("1.41421", gc(xdtoaf(_hypotf(1, 1))));
+  EXPECT_STREQ("1.41421", gc(xdtoaf(_hypotf(1, -1))));
+  EXPECT_STREQ("1.41421", gc(xdtoaf(_hypotf(-1, 1))));
+  EXPECT_STREQ("1.41421", gc(xdtoaf(_hypotf(1.000001, 0.999999))));
+  EXPECT_STREQ("1.41421", gc(xdtoaf(_hypotf(0.999999, 1.000001))));
+  EXPECT_STREQ("1.41421e+38", gc(xdtoaf(_hypotf(1e38, 1e38))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_hypotf(0, NAN))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_hypotf(NAN, 0))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(_hypotf(NAN, NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_hypotf(INFINITY, 0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_hypotf(0, INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_hypotf(INFINITY, NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_hypotf(NAN, INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(_hypotf(INFINITY, INFINITY))));
 }
 
 TEST(hypotll, test) {
-  EXPECT_STREQ("0", gc(xdtoal(hypotl(0, 0))));
-  EXPECT_STREQ("3", gc(xdtoal(hypotl(3, 0))));
-  EXPECT_STREQ("3", gc(xdtoal(hypotl(0, 3))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(3, 4))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(4, 3))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(3, -4))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(-4, 3))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(-3, 4))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(4, -3))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(-3, -4))));
-  EXPECT_STREQ("5", gc(xdtoal(hypotl(-4, -3))));
-  EXPECT_STREQ("1.414213562373095", gc(xdtoal(hypotl(1, 1))));
-  EXPECT_STREQ("1.414213562373095", gc(xdtoal(hypotl(1, -1))));
-  EXPECT_STREQ("1.414213562373095", gc(xdtoal(hypotl(-1, 1))));
-  EXPECT_STREQ("1.414213626012708", gc(xdtoal(hypotl(1.0000001, .99999999))));
-  EXPECT_STREQ("1.414213626012708", gc(xdtoal(hypotl(.99999999, 1.0000001))));
-  EXPECT_STREQ("1.414213562373095e+4931", gc(xdtoal(hypotl(1e4931L, 1e4931L))));
-  EXPECT_STREQ("NAN", gc(xdtoal(hypotl(0, NAN))));
-  EXPECT_STREQ("NAN", gc(xdtoal(hypotl(NAN, 0))));
-  EXPECT_STREQ("NAN", gc(xdtoal(hypotl(NAN, NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(hypotl(INFINITY, 0))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(hypotl(0, INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(hypotl(INFINITY, NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(hypotl(NAN, INFINITY))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(hypotl(INFINITY, INFINITY))));
+  EXPECT_STREQ("0", gc(xdtoal(_hypotl(0, 0))));
+  EXPECT_STREQ("3", gc(xdtoal(_hypotl(3, 0))));
+  EXPECT_STREQ("3", gc(xdtoal(_hypotl(0, 3))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(3, 4))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(4, 3))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(3, -4))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(-4, 3))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(-3, 4))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(4, -3))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(-3, -4))));
+  EXPECT_STREQ("5", gc(xdtoal(_hypotl(-4, -3))));
+  EXPECT_STREQ("1.414213562373095", gc(xdtoal(_hypotl(1, 1))));
+  EXPECT_STREQ("1.414213562373095", gc(xdtoal(_hypotl(1, -1))));
+  EXPECT_STREQ("1.414213562373095", gc(xdtoal(_hypotl(-1, 1))));
+  EXPECT_STREQ("1.414213626012708", gc(xdtoal(_hypotl(1.0000001, .99999999))));
+  EXPECT_STREQ("1.414213626012708", gc(xdtoal(_hypotl(.99999999, 1.0000001))));
+  EXPECT_STREQ("1.414213562373095e+4931",
+               gc(xdtoal(_hypotl(1e4931L, 1e4931L))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_hypotl(0, NAN))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_hypotl(NAN, 0))));
+  EXPECT_STREQ("NAN", gc(xdtoal(_hypotl(NAN, NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_hypotl(INFINITY, 0))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_hypotl(0, INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_hypotl(INFINITY, NAN))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_hypotl(NAN, INFINITY))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(_hypotl(INFINITY, INFINITY))));
 }
 
 /*
-hypot (musl)               l:        53𝑐        17𝑛𝑠   m:        85𝑐        27𝑛𝑠
-hypot                      l:        39𝑐        13𝑛𝑠   m:        66𝑐        21𝑛𝑠
-hypotf                     l:        25𝑐         8𝑛𝑠   m:        55𝑐        18𝑛𝑠
-hypotl                     l:        43𝑐        14𝑛𝑠   m:        74𝑐        24𝑛𝑠
+_hypot (musl)               l:        53𝑐        17𝑛𝑠   m:        85𝑐 27𝑛𝑠
+_hypot                      l:        39𝑐        13𝑛𝑠   m:        66𝑐 21𝑛𝑠
+_hypotf                     l:        25𝑐         8𝑛𝑠   m:        55𝑐 18𝑛𝑠
+_hypotl                     l:        43𝑐        14𝑛𝑠   m:        74𝑐 24𝑛𝑠
 */
 
-BENCH(hypot, bench) {
+BENCH(_hypot, bench) {
   volatile double a = 2;
   volatile double b = 3;
-  EZBENCH2("hypotf", donothing, EXPROPRIATE(hypotf(a, b)));
-  EZBENCH2("hypot", donothing, EXPROPRIATE(hypot(a, b)));
-  EZBENCH2("hypotl", donothing, EXPROPRIATE(hypotl(a, b)));
+  EZBENCH2("hypotf", donothing, EXPROPRIATE(_hypotf(a, b)));
+  EZBENCH2("hypot", donothing, EXPROPRIATE(_hypot(a, b)));
+  EZBENCH2("hypotl", donothing, EXPROPRIATE(_hypotl(a, b)));
 }

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/log/log.h"
 
-	.text.unlikely
-testlib_showerror_expect_true:
-	push	$FALSE
-	pushstr	"EXPECT_TRUE"
-	pushstr	""
-	jmp	testlib_showerror_jump
-	.endfn	testlib_showerror_expect_true,globl,hidden
-	.previous
+unsigned __log_level = kLogInfo;

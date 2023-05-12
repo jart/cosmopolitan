@@ -35,6 +35,7 @@ void __enable_threads(void) _Hide;
 void *__cxa_finalize(void *) _Hide;
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated _Hide;
+void __asan_init(int, char **, char **, intptr_t *) _Hide;
 void _jmpstack(void *, void *, ...) _Hide wontreturn;
 long _setstack(void *, void *, ...) _Hide;
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);

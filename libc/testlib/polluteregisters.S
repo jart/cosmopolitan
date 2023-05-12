@@ -20,6 +20,7 @@
 #include "libc/macros.internal.h"
 
 __polluteregisters:
+#ifdef __x86_64__
 	.leafprologue
 	xor	%eax,%eax
 	xor	%ecx,%ecx
@@ -48,6 +49,9 @@ __polluteregisters:
 	xorps	%xmm6,%xmm6
 	xorps	%xmm7,%xmm7
 	.leafepilogue
+#else
+	ret
+#endif
 	.endfn	__polluteregisters,globl
 
 	.end
