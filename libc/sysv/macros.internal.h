@@ -32,8 +32,13 @@
 	ret
   .endif
 #elif defined(__aarch64__)
-\name:	mov	x8,#\arm
+\name:
+  .ifc \arm,0xfff
+	mov	x0,#-38		// -ENOSYS
+  .else
+	mov	x8,#\arm
 	svc	#0
+  .endif
 	b	_sysret
 	.hidden	_sysret
 #else

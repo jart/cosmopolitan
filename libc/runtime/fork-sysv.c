@@ -18,8 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/consts/sig.h"
 
 int sys_fork(void) {
+#ifdef __x86_64__
+
   axdx_t ad;
   int ax, dx;
   ad = __sys_fork();
@@ -31,4 +34,26 @@ int sys_fork(void) {
     ax &= dx - 1;
   }
   return ax;
+
+#elif defined(__aarch64__)
+
+  int flags = 17;  // SIGCHLD;
+  void *child_stack = 0;
+  void *parent_tidptr = 0;
+  void *newtls = 0;
+  void *child_tidptr = 0;
+  register long r0 asm("x0") = (long)flags;
+  register long r1 asm("x1") = (long)child_stack;
+  register long r2 asm("x2") = (long)parent_tidptr;
+  register long r3 asm("x3") = (long)newtls;
+  register long r4 asm("x4") = (long)child_tidptr;
+  register long res_x0 asm("x0");
+  asm volatile("mov\tx8,%1\n\t"
+               "svc\t0"
+               : "=r"(res_x0)
+               : "i"(220), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
+               : "x8", "memory");
+  return _sysret(res_x0);
+
+#endif
 }

@@ -41,7 +41,7 @@ scall	sys_close		0x0060060062006003	0x039	globl hidden
 scall	__sys_stat		0x1b7026fff2152004	0x04f	globl hidden # FreeBSD 11→12 fumble; use sys_fstatat(); blocked on Android
 scall	__sys_fstat		0x1b80352272153005	0x050	globl hidden # needs __stat2linux()
 scall	__sys_lstat		0x1b90280282154006	0xfff	globl hidden # needs __stat2linux(); blocked on Android
-scall	sys_poll		0x8d18fc8d128e6807	0xfff	globl hidden
+scall	__sys_poll		0x8d18fc8d128e6807	0xfff	globl hidden
 scall	sys_ppoll		0xfff86da21ffff90f	0x049	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
 scall	sys_lseek		0x0c70c71de20c7008	0x03e	globl hidden # netbsd+openbsd:evilpad
 scall	__sys_mmap		0x0c50c51dd20c5009	0x0de	globl hidden # netbsd+openbsd:pad
@@ -57,7 +57,7 @@ scall	sys_pwrite		0x8ae8ae9dc289a812	0x044	globl hidden # a.k.a. pwrite64; netbs
 scall	sys_readv		0x8788788782878813	0x041	globl hidden
 scall	sys_writev		0x8798798792879814	0x042	globl hidden
 scall	sys_access		0x0210210212021015	0xfff	globl hidden
-scall	__sys_pipe		0x02a10721e202a016	0xfff	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
+scall	__sys_pipe		0x02a10721e202a016	0x03b	globl hidden # NOTE: pipe2() on FreeBSD and Linux Aarch64; XNU is pipe(void)→eax:edx
 scall	sys_select		0x9a184785d285d817	0xfff	globl hidden
 scall	sys_pselect		0x9b486ea0a298a90e	0x048	globl hidden # pselect6() on gnu/systemd
 scall	sys_sched_yield		0x15e12a14bf25d018	0x07c	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
@@ -68,7 +68,7 @@ scall	sys_shmget		0x0e71210e7210901d	0x0c2	globl # no wrapper
 scall	sys_shmat		0x0e40e40e4210601e	0x0c4	globl # no wrapper
 scall	sys_shmctl		0x1bb128200210701f	0x0c3	globl # no wrapper
 scall	sys_dup			0x0290290292029020	0x017	globl hidden
-scall	sys_dup2		0x05a05a05a205a021	0xfff	globl hidden
+scall	sys_dup2		0x05a05a05a205a021	0x018	globl hidden # dup3() on linux aarch64 (doesn't behave same if oldfd==newfd)
 scall	sys_pause		0xfffffffffffff022	0xfff	globl hidden
 scall	sys_nanosleep		0x9ae85b8f0ffff823	0x065	globl hidden
 scall	__sys_clock_nanosleep	0x9ddfff8f4ffff8e6	0x073	globl hidden
@@ -125,19 +125,9 @@ scall	sys_ftruncate		0x8c98c99e028c984d	0x02e	globl hidden # netbsd+openbsd:pad
 scall	sys_getcwd		0x128130146ffff04f	0x011	globl hidden
 scall	sys_chdir		0x00c00c00c200c050	0x031	globl hidden
 scall	sys_fchdir		0x00d00d00d200d051	0x032	globl hidden
-scall	sys_rename		0x0800800802080052	0xfff	globl hidden
-scall	sys_mkdir		0x0880880882088053	0xfff	globl hidden
-scall	sys_rmdir		0x0890890892089054	0xfff	globl hidden
-scall	sys_creat		0x008fff008ffff055	0xfff	globl hidden
-scall	sys_link		0x0090090092009056	0xfff	globl hidden
 scall	sys_unlink		0x00a00a00a200a057	0x0b5	globl hidden
-scall	sys_symlink		0x0390390392039058	0xfff	globl hidden
-scall	sys_readlink		0x03a03a03a203a059	0xfff	globl hidden # usually an anti-pattern
-scall	sys_chmod		0x00f00f00f200f05a	0xfff	globl hidden
 scall	sys_fchmod		0x07c07c07c207c05b	0x034	globl hidden
-scall	sys_chown		0x010010010201005c	0xfff	globl hidden # impl. w/ fchownat() @asyncsignalsafe
 scall	sys_fchown		0x07b07b07b207b05d	0x037	globl hidden # @asyncsignalsafe
-scall	sys_lchown		0x1130fe0fe216c05e	0xfff	globl hidden # impl. w/ fchownat()
 scall	sys_umask		0x03c03c03c203c05f	0x0a6	globl hidden
 scall	sys_gettimeofday	0x1a20430742074060	0x0a9	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	0x0a3	globl hidden
@@ -149,7 +139,6 @@ scall	sys_syslog		0xfffffffffffff067	0x074	globl hidden
 scall	sys_getuid		0x0180180182018066	0x0ae	globl hidden
 scall	sys_getgid		0x02f02f02f202f068	0x0b0	globl hidden
 scall	sys_getppid		0xfff027027202706e	0x0ad	globl hidden # see sys_getpid()→edx for netbsd
-scall	sys_getpgrp		0x051051051205106f	0xfff	globl hidden
 scall	sys_setsid		0x0930930932093070	0x09d	globl hidden
 scall	sys_getsid		0x11e0ff136213607c	0x09c	globl hidden
 scall	sys_getpgid		0x0cf0cf0cf2097079	0x09b	globl hidden
@@ -291,7 +280,6 @@ scall	sys_mkdirat		0x1cd13e1f021db102	0x022	globl hidden
 scall	sys_fchownat		0x1d013b1eb21d4104	0x036	globl hidden # @asyncsignalsafe
 scall	sys_utime		0xfffffffffffff084	0x062	globl hidden
 scall	sys_utimes		0x1a404c08a208a0eb	0x058	globl hidden
-scall	sys_futimesat		0xffffff1eeffff105	0xfff	globl hidden # @asyncsignalsafe
 scall	sys_futimes		0x1a704d0ce208bfff	0xfff	globl hidden
 scall	sys_futimens		0x1d8055222fffffff	0xfff	globl hidden
 scall	__sys_fstatat		0x1d202a22821d6106	0x04f	globl hidden # a.k.a. newfstatat(); FreeBSD 12+; needs __stat2linux()

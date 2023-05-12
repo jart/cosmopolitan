@@ -19,9 +19,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/ipc.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 
@@ -35,13 +37,20 @@
  */
 int mkfifo(const char *pathname, unsigned mode) {
   // TODO(jart): Windows?
-  int rc;
+  int e, rc;
   if (IsAsan() && !__asan_is_valid_str(pathname)) {
     rc = efault();
-  } else if (IsLinux()) {
-    rc = sys_mknod(pathname, mode | S_IFIFO, 0);
   } else {
+    e = errno;
     rc = sys_mkfifo(pathname, mode);
+    if (rc == -1 && rc == ENOSYS) {
+      errno = e;
+      rc = sys_mknod(pathname, mode | S_IFIFO, 0);
+      if (rc == -1 && rc == ENOSYS) {
+        errno = e;
+        rc = sys_mknodat(AT_FDCWD, pathname, mode | S_IFIFO, 0);
+      }
+    }
   }
   STRACE("mkfifo(%#s, %#o) → %d% m", pathname, mode, rc);
   return rc;

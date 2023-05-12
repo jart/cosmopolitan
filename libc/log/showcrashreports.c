@@ -25,6 +25,8 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
@@ -34,8 +36,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
-#ifdef __x86_64__
-
 STATIC_YOINK("zipos");                       // for symtab
 STATIC_YOINK("__die");                       // for backtracing
 STATIC_YOINK("ShowBacktrace");               // for backtracing
@@ -44,44 +44,80 @@ STATIC_YOINK("PrintBacktraceUsingSymbols");  // for backtracing
 STATIC_YOINK("malloc_inspect_all");          // for asan memory origin
 STATIC_YOINK("GetSymbolByAddr");             // for asan memory origin
 
-static struct sigaction g_oldcrashacts[8];
-extern const unsigned char __oncrash_thunks[8][11];
+struct CrashHandler {
+  int sig;
+  struct sigaction old;
+};
 
-static void InstallCrashHandlers(int extraflags) {
-  int e;
-  size_t i;
-  struct sigaction sa;
-  bzero(&sa, sizeof(sa));
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    sigdelset(&sa.sa_mask, kCrashSigs[i]);
-  }
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i]) {
-      sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
-      e = errno;
-      sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
-      errno = e;
-    }
-  }
+static inline void __oncrash(int sig, struct siginfo *si, void *arg) {
+#ifdef __x86_64__
+  __oncrash_amd64(sig, si, arg);
+#elif defined(__aarch64__)
+  __oncrash_arm64(sig, si, arg);
+#else
+  abort();
+#endif
 }
 
-relegated void RestoreDefaultCrashSignalHandlers(void) {
+static void __got_sigquit(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigfpe(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigill(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigsegv(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigtrap(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigabrt(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigbus(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+static void __got_sigurg(int sig, struct siginfo *si, void *arg) {
+  __oncrash(sig, si, arg);
+}
+
+static void RemoveCrashHandler(void *arg) {
   int e;
-  size_t i;
-  sigset_t ss;
+  struct CrashHandler *ch = arg;
   strace_enabled(-1);
-  sigemptyset(&ss);
-  sigprocmask(SIG_SETMASK, &ss, NULL);
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i]) {
-      e = errno;
-      sigaction(kCrashSigs[i], &g_oldcrashacts[i], NULL);
-      errno = e;
+  e = errno;
+  sigaction(ch->sig, &ch->old, NULL);
+  errno = e;
+  free(ch);
+  strace_enabled(+1);
+}
+
+static void InstallCrashHandler(int sig, sigaction_f thunk, int extraflags) {
+  int e;
+  struct sigaction sa;
+  struct CrashHandler *ch;
+  e = errno;
+  if ((ch = malloc(sizeof(*ch)))) {
+    ch->sig = sig;
+    sa.sa_sigaction = thunk;
+    sigfillset(&sa.sa_mask);
+    sigdelset(&sa.sa_mask, SIGQUIT);
+    sigdelset(&sa.sa_mask, SIGFPE);
+    sigdelset(&sa.sa_mask, SIGILL);
+    sigdelset(&sa.sa_mask, SIGSEGV);
+    sigdelset(&sa.sa_mask, SIGTRAP);
+    sigdelset(&sa.sa_mask, SIGABRT);
+    sigdelset(&sa.sa_mask, SIGBUS);
+    sigdelset(&sa.sa_mask, SIGURG);
+    sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
+    if (!sigaction(sig, &sa, &ch->old)) {
+      __cxa_atexit(RemoveCrashHandler, ch, 0);
     }
   }
-  strace_enabled(+1);
+  errno = e;
 }
 
 /**
@@ -100,33 +136,25 @@ relegated void RestoreDefaultCrashSignalHandlers(void) {
  * useful, for example, if a program is caught in an infinite loop.
  */
 void ShowCrashReports(void) {
+  int ef = 0;
   struct sigaltstack ss;
   _wantcrashreports = true;
-  /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
-  kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
-  kCrashSigs[1] = SIGFPE;  /* 1 / 0 */
-  kCrashSigs[2] = SIGILL;  /* illegal instruction */
-  kCrashSigs[3] = SIGSEGV; /* bad memory access */
-  kCrashSigs[4] = SIGTRAP; /* bad system call */
-  kCrashSigs[5] = SIGABRT; /* abort() called */
-  kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
-  kCrashSigs[7] = SIGURG;  /* placeholder */
-  /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   if (!IsWindows()) {
+    ef = SA_ONSTACK;
     ss.ss_flags = 0;
     ss.ss_size = GetStackSize();
     // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
     // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
     _npassert((ss.ss_sp = _mapanon(GetStackSize())));
     _npassert(!sigaltstack(&ss, 0));
-    InstallCrashHandlers(SA_ONSTACK);
-  } else {
-    InstallCrashHandlers(0);
   }
+  InstallCrashHandler(SIGQUIT, __got_sigquit, ef);  // ctrl+\ aka ctrl+break
+  InstallCrashHandler(SIGFPE, __got_sigfpe, ef);    // 1 / 0
+  InstallCrashHandler(SIGILL, __got_sigill, ef);    // illegal instruction
+  InstallCrashHandler(SIGSEGV, __got_sigsegv, ef);  // bad memory access
+  InstallCrashHandler(SIGTRAP, __got_sigtrap, ef);  // bad system call
+  InstallCrashHandler(SIGABRT, __got_sigabrt, ef);  // abort() called
+  InstallCrashHandler(SIGBUS, __got_sigbus, ef);    // misalign, mmap i/o failed
+  InstallCrashHandler(SIGURG, __got_sigurg, ef);    // placeholder
   GetSymbolTable();
 }
-
-#else
-void ShowCrashReports(void) {
-}
-#endif /* __x86_64__ */

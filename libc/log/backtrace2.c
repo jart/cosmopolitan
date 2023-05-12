@@ -117,13 +117,13 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   if (sys_pipe2(pipefds, O_CLOEXEC) == -1) {
     return -1;
   }
-  if ((pid = __sys_fork().ax) == -1) {
+  if ((pid = sys_fork()) == -1) {
     sys_close(pipefds[0]);
     sys_close(pipefds[1]);
     return -1;
   }
   if (!pid) {
-    sys_dup2(pipefds[1], 1);
+    sys_dup2(pipefds[1], 1, 0);
     sys_execve(addr2line, argv, environ);
     _Exit(127);
   }

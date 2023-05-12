@@ -77,7 +77,8 @@ o/$(MODE)/libc/log/checkaligned.o			\
 o/$(MODE)/libc/log/checkfail.o				\
 o/$(MODE)/libc/log/checkfail_ndebug.o			\
 o/$(MODE)/libc/log/restoretty.o				\
-o/$(MODE)/libc/log/oncrash.o				\
+o/$(MODE)/libc/log/oncrash_amd64.o			\
+o/$(MODE)/libc/log/oncrash_arm64.o			\
 o/$(MODE)/libc/log/onkill.o				\
 o/$(MODE)/libc/log/startfatal.o				\
 o/$(MODE)/libc/log/startfatal_ndebug.o			\

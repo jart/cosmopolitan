@@ -255,11 +255,11 @@ static int Cd(void) {
     if (!chdir(s)) {
       return 0;
     } else {
-      Log("chdir: ", s, ": ", _strerdoc(errno), 0);
+      Log("chdir: ", s, ": ", _strerdoc(errno), NULL);
       return 1;
     }
   } else {
-    Log("chdir: missing argument", 0);
+    Log("chdir: missing argument", NULL);
     return 1;
   }
 }
@@ -270,7 +270,7 @@ static int Mkdir(void) {
   if (n >= 3 && !strcmp(args[1], "-p")) ++i, f = makedirs;
   for (; i < n; ++i) {
     if (f(args[i], 0755)) {
-      Log("mkdir: ", args[i], ": ", _strerdoc(errno), 0);
+      Log("mkdir: ", args[i], ": ", _strerdoc(errno), NULL);
       return errno;
     }
   }
@@ -287,7 +287,7 @@ static int Kill(void) {
   }
   for (; i < n; ++i) {
     if (kill(atoi(args[i]), sig)) {
-      Log("kill: ", args[i], ": ", _strerdoc(errno), 0);
+      Log("kill: ", args[i], ": ", _strerdoc(errno), NULL);
       rc = 1;
     }
   }
@@ -345,7 +345,7 @@ static int Rm(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (unlink(args[i])) {
-        Log("rm: ", args[i], ": ", _strerdoc(errno), 0);
+        Log("rm: ", args[i], ": ", _strerdoc(errno), NULL);
         return 1;
       }
     }
@@ -360,7 +360,7 @@ static int Rmdir(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (rmdir(args[i])) {
-        Log("rmdir: ", args[i], ": ", _strerdoc(errno), 0);
+        Log("rmdir: ", args[i], ": ", _strerdoc(errno), NULL);
         return 1;
       }
     }
@@ -375,7 +375,7 @@ static int Touch(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (touch(args[i], 0644)) {
-        Log("touch: ", args[i], ": ", _strerdoc(errno), 0);
+        Log("touch: ", args[i], ": ", _strerdoc(errno), NULL);
         return 1;
       }
     }

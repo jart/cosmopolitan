@@ -29,7 +29,7 @@
 int getpgrp(void) {
   int rc;
   if (!IsWindows()) {
-    rc = sys_getpgrp();
+    rc = sys_getpgid(0);
   } else {
     rc = getpid();
   }

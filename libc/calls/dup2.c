@@ -51,8 +51,14 @@ int dup2(int oldfd, int newfd) {
   int rc;
   if (__isfdkind(oldfd, kFdZip)) {
     rc = enotsup();
+#ifdef __aarch64__
+  } else if (oldfd == newfd) {
+    // linux aarch64 defines dup3() but not dup2(), which wasn't such a
+    // great decision, since the two syscalls don't behave the same way
+    if (!(rc = read(oldfd, 0, 0))) rc = oldfd;
+#endif
   } else if (!IsWindows()) {
-    rc = sys_dup2(oldfd, newfd);
+    rc = sys_dup2(oldfd, newfd, 0);
   } else if (newfd < 0) {
     rc = ebadf();
   } else if (oldfd == newfd) {

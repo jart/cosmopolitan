@@ -46,16 +46,10 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/libcxx/math.h"
-
 #ifdef __x86_64__
 
-/**
- * @fileoverview Abnormal termination handling & GUI debugging.
- * @see libc/onkill.c
- */
-
-STATIC_YOINK("strerror_wr"); /* for kprintf %m */
-STATIC_YOINK("strsignal");   /* for kprintf %G */
+STATIC_YOINK("strerror_wr");  // for kprintf %m
+STATIC_YOINK("strsignal_r");  // for kprintf %G
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
@@ -68,8 +62,6 @@ static const char kGregNames[17][4] forcealign(1) = {
 
 static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
-
-int kCrashSigs[8];
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;
@@ -298,11 +290,12 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
  * @threadsafe
  * @vforksafe
  */
-relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
+relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
   int bZero;
   intptr_t rip;
   int me, owner;
   int gdbpid, err;
+  ucontext_t *ctx = arg;
   static atomic_int once;
   static atomic_int once2;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
@@ -321,7 +314,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
       } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
       } else if (!IsTiny() && IsLinux() && FindDebugBinary() && !__isworker) {
-        RestoreDefaultCrashSignalHandlers();
+        // RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(
             ((sig == SIGTRAP || sig == SIGQUIT) &&
              (rip >= (intptr_t)&_base && rip < (intptr_t)&_etext))

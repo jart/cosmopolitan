@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
@@ -70,6 +71,7 @@ textstartup void cosmo(long *sp) {
 
   // needed by kisdangerous()
   __oldstack = (intptr_t)sp;
+  __pid = sys_getpid().ax;
 
   // initialize mmap() manager extremely early
   _mmi.n = ARRAYLEN(_mmi.s);

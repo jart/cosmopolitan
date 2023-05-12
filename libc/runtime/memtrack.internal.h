@@ -126,8 +126,11 @@ forceinline pureconst bool IsOldStackFrame(int x) {
   /* openbsd uses 4mb stack by default */
   /* freebsd uses 512mb stack by default */
   /* most systems use 8mb stack by default */
-  intptr_t old = ROUNDDOWN(__oldstack, GetStackSize());
-  return (old >> 16) <= x && x <= ((old + (GetStackSize() - FRAMESIZE)) >> 16);
+  size_t foss_stack_size = 4ul * 1024 * 1024;
+  uintptr_t top = ROUNDUP(__oldstack, FRAMESIZE);
+  uintptr_t bot = top - foss_stack_size;
+  uintptr_t old = ROUNDDOWN(__oldstack, foss_stack_size);
+  return (int)(bot >> 16) <= x && x <= (int)((top >> 16) - 1);
 }
 
 forceinline pureconst bool IsFixedFrame(int x) {

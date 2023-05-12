@@ -16,8 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+
+static const char *TryMonoRepoPath(const char *var, const char *path) {
+  const char buf[PATH_MAX];
+  if (getenv(var)) return 0;
+  if (!isexecutable(path)) return 0;
+  if (*path != '/') {
+    if (getcwd(buf, sizeof(buf)) <= 0) return 0;
+    strlcat(buf, "/", sizeof(buf));
+    strlcat(buf, path, sizeof(buf));
+    path = buf;
+  }
+  setenv(var, path, false);
+  return getenv(var);
+}
 
 const char *GetAddr2linePath(void) {
-  return commandvenv("ADDR2LINE", "addr2line");
+  const char *s = 0;
+#ifdef __x86_64__
+  s = TryMonoRepoPath("ADDR2LINE",
+                      "o/third_party/gcc/bin/x86_64-linux-musl-addr2line");
+#elif defined(__aarch64__)
+  s = TryMonoRepoPath("ADDR2LINE",
+                      "o/third_party/gcc/bin/aarch64-linux-musl-addr2line");
+#endif
+  if (!s) s = commandvenv("ADDR2LINE", "addr2line");
+  return s;
 }

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sock/select.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -67,7 +68,19 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
               (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))))) {
     rc = efault();
   } else if (!IsWindows()) {
+#ifdef __aarch64__
+    struct timespec ts, *tsp;
+    if (timeout) {
+      ts.tv_sec = timeout->tv_sec;
+      ts.tv_nsec = timeout->tv_usec * 1000;
+      tsp = &ts;
+    } else {
+      tsp = 0;
+    }
+    rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, 0);
+#else
     rc = sys_select(nfds, readfds, writefds, exceptfds, tvp);
+#endif
   } else {
     rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, 0);
   }

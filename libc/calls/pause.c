@@ -61,7 +61,11 @@ int pause(void) {
     //      function shall block until interrupted by a signal." ──Quoth
     //      IEEE 1003.1-2017 §functions/select
     //
+#ifdef __aarch64__
+    rc = sys_pselect(0, 0, 0, 0, 0, 0);
+#else
     rc = sys_select(0, 0, 0, 0, 0);
+#endif
   } else {
     rc = sys_pause_nt();
   }
