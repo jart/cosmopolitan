@@ -117,10 +117,6 @@ _start:
 //	this is the first argument to cosmo() below
 	mov	x0,sp
 
-//	setup stack frame
-	mov	x29,#0
-	mov	x30,#0
-
 //	align stack to GetStackSize() so GetStackAddr() is fast
 	mov	x1,sp
 	.weak	ape_stack_memsz
@@ -129,8 +125,12 @@ _start:
 	and	x1,x2,x1
 	mov	sp,x1
 
-//	switch to c start function
-	b	cosmo
+//	setup backtraces
+	mov	x29,#0
+
+//	switch to c code
+	bl	cosmo
+	.unreachable
 
 ////////////////////////////////////////////////////////////////////////////////
 #else
