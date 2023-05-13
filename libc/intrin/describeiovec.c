@@ -24,16 +24,12 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 
-#ifdef DescribeIovec
-#undef DescribeIovec
-#endif
-
 #define N 300
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *DescribeIovec(char buf[N], ssize_t rc, const struct iovec *iov,
-                          int iovlen) {
+const char *(DescribeIovec)(char buf[N], ssize_t rc, const struct iovec *iov,
+                            int iovlen) {
   const char *d;
   int i, j, o = 0;
 

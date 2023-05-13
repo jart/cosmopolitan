@@ -338,7 +338,11 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
             fprintf(stderr, "%s: No prompt specified\n", __func__);
             fprintf(stderr, "%s: Loading CompanionAI\n", __func__);
         }
-        append_file_to_prompt("/zip/companionai.txt", params);
+        if (fileexists("third_party/ggml/companionai.txt")) {
+            append_file_to_prompt("third_party/ggml/companionai.txt", params);
+        } else {
+            append_file_to_prompt("/zip/companionai.txt", params);
+        }
         const char *user;
         user = getenv("USER");
         if (!user || !*user) {
