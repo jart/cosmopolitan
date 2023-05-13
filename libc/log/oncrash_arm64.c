@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/struct/siginfo.h"
@@ -110,7 +111,7 @@ static const char *ColorRegister(int r) {
 static bool AppendFileLine(struct Buffer *b, const char *addr2line,
                            const char *debugbin, long addr) {
   ssize_t rc;
-  char buf[128];
+  char *p, *q, buf[128];
   int j, k, ws, pid, pfd[2];
   if (!debugbin || !*debugbin) return false;
   if (!addr2line || !*addr2line) return false;
@@ -139,6 +140,14 @@ static bool AppendFileLine(struct Buffer *b, const char *addr2line,
   while ((rc = sys_read(pfd[0], buf, sizeof(buf))) > 0) {
     Append(b, "%.*s", (int)rc, buf);
   }
+  // remove the annoying `foo.c:123 (discriminator 3)` suffixes, because
+  // they break emacs, and who on earth knows what those things mean lol
+  while ((p = memmem(b->p + k, b->i - k, " (discriminator ", 16)) &&
+         (q = memchr(p + 16, '\n', (b->p + b->i) - (p + 16)))) {
+    memmove(p, q, (b->p + b->i) - q);
+    b->i -= q - p;
+  }
+  // mop up after the process and sanity check captured text
   sys_close(pfd[0]);
   if (sys_wait4(pid, &ws, 0, 0) != -1 && !ws && b->p[k] != ':' &&
       b->p[k] != '?' && b->p[b->i - 1] == '\n') {

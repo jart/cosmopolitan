@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/q.h"
 #include "libc/intrin/pmulhrsw.h"
+#include "dsp/core/q.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
@@ -39,7 +39,9 @@
   }
 
 FIXTURE(pmulhrsw, disableHardwareExtensions) {
+#ifdef __x86_64__
   memset((/*unconst*/ void *)kCpuids, 0, sizeof(kCpuids));
+#endif
 }
 
 TEST(pmulhrsw, testLimits) {

@@ -76,6 +76,7 @@ typedef char __intrin_xmm_t _Vector_size(16) forcealign(16) mayalias;
 #define INTRIN_SSEVEX_X_X_X_(PURE, ISA, OP, FLAGS, A, B, C) PURE(A, B, C)
 #define INTRIN_SSEVEX_X_X_I_(PURE, ISA, OP, A, B, I)        PURE(A, B, I)
 #define INTRIN_SSEVEX_X_I_(PURE, ISA, OP, A, B, I)          PURE(A, B, I)
+#define INTRIN_SSEVEX_X_X_(PURE, ISA, OP, A, B)             PURE(A, B)
 #endif /* X86 && !ANSI */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

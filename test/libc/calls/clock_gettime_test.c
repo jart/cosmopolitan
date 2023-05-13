@@ -42,11 +42,14 @@ TEST(clock_gettime, test) {
   ASSERT_EQ(0, clock_gettime(0, &ts));
   ASSERT_NE(0, ts.tv_sec);
   ASSERT_NE(0, ts.tv_nsec);
+#ifndef __aarch64__
+  // we support vdso on aarch64 but qemu-aarch64 won't let us test it
   if (__is_linux_2_6_23()) {
     ASSERT_GT((intptr_t)__clock_gettime_get(&isfast),
               getauxval(AT_SYSINFO_EHDR));
     ASSERT_TRUE(isfast);
   }
+#endif
 }
 
 BENCH(clock_gettime, bench) {

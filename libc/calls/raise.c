@@ -64,9 +64,12 @@ int raise(int sig) {
   if (sig == SIGTRAP) {
     DebugBreak();
     rc = 0;
+#ifndef __aarch64__
   } else if (sig == SIGFPE) {
+    // TODO(jart): Why doesn't AARCH64 raise SIGFPE?
     RaiseSigFpe();
     rc = 0;
+#endif
   } else if (!IsWindows() && !IsMetal()) {
     rc = sys_tkill(gettid(), sig, 0);
   } else {

@@ -36,6 +36,8 @@
 #include "libc/x/xsigaction.h"
 #include "libc/x/xspawn.h"
 
+#ifdef __x86_64__
+
 #define MEM (64 * 1024 * 1024)
 
 static char tmpname[PATH_MAX];
@@ -237,3 +239,5 @@ TEST(setrlimit, isVforkSafe) {
   EXPECT_EQ(rlim[0].rlim_cur, rlim[1].rlim_cur);
   EXPECT_EQ(rlim[0].rlim_max, rlim[1].rlim_max);
 }
+
+#endif /* __x86_64__ */

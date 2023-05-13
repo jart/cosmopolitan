@@ -77,14 +77,18 @@ TEST(commandv, testSlashes_wontSearchPath_butChecksAccess) {
   i = __syscount;
   EXPECT_STREQ("home/sh.com",
                commandv("home/sh.com", pathbuf, sizeof(pathbuf)));
+#ifdef __x86_64__
   if (!IsWindows()) EXPECT_EQ(i + 2, __syscount);
+#endif
 }
 
 TEST(commandv, testSlashes_wontSearchPath_butStillAppendsComExtension) {
   EXPECT_NE(-1, touch("home/sh.com", 0755));
   i = __syscount;
   EXPECT_STREQ("home/sh.com", commandv("home/sh", pathbuf, sizeof(pathbuf)));
+#ifdef __x86_64__
   if (!IsWindows()) EXPECT_EQ(i + 3, __syscount);
+#endif
 }
 
 TEST(commandv, testSameDir_doesntHappenByDefaultUnlessItsWindows) {

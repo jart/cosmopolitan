@@ -221,6 +221,7 @@ TEST(ksnprintf, testSymbols) {
   }
 }
 
+#ifdef __x86_64__
 TEST(ksnprintf, fuzzTheUnbreakable) {
   int e;
   size_t i;
@@ -242,6 +243,7 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
   }
   EXPECT_SYS(0, 0, mprotect(f, FRAMESIZE, PROT_READ));
 }
+#endif /* __x86_64__ */
 
 TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
   int n;

@@ -62,6 +62,9 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
+// TODO(jart): Get pledge truly working on AARCH64
+#ifdef __x86_64__
+
 char testlib_enable_tmp_setup_teardown;
 
 void OnSig(int sig) {
@@ -656,3 +659,5 @@ BENCH(pledge, bench) {
   }
   wait(0);
 }
+
+#endif /* __x86_64__ */

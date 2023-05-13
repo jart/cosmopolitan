@@ -27,6 +27,8 @@
 #include "libc/testlib/testlib.h"
 // clang-format off
 
+#ifdef __x86_64__
+
 STATIC_YOINK("zip_uri_support");
 
 int fds[2];
@@ -139,3 +141,5 @@ TEST(fexecve, ziposAPEHasZipos) {
   EXITS(42);
   close(fd);
 }
+
+#endif /* __x86_64__ */

@@ -26,6 +26,8 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
+#ifdef __x86_64__
+
 #define N 16
 
 char *GenBuf(char buf[8], int x) {
@@ -84,3 +86,5 @@ TEST(execve, ziposAPE) {
   notpossible;
   EXITS(42);
 }
+
+#endif

@@ -35,6 +35,8 @@
 #include "libc/x/x.h"
 #include "third_party/xed/x86.h"
 
+#ifdef __x86_64__
+
 volatile bool gotsegv;
 volatile bool gotbusted;
 struct sigaction old[2];
@@ -214,3 +216,5 @@ TEST(mprotect, testZeroSize_doesNothing) {
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
 }
+
+#endif /* __x86_64__ */

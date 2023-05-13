@@ -64,6 +64,7 @@ sys_clone_linux:
 	cbz	x0,2f
 	ret
 2:	mov	x0,x6			// child thread
+	ldr	w1,[x4]			// arg2 = *ctid
 	blr	x5
 	mov	x8,#93			// __NR_exit
 	svc	#0

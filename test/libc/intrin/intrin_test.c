@@ -132,7 +132,9 @@ dontinline void RngSet(void *mem, size_t size) {
 }
 
 FIXTURE(intrin, disableHardwareExtensions) {
+#ifdef __x86_64__
   memset((/*unconst*/ void *)kCpuids, 0, sizeof(kCpuids));
+#endif
 }
 
 TEST(punpcklwd, test) {

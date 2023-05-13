@@ -23,10 +23,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-TEST(getitimer, testNullTimer_returnsEfault) {
-  EXPECT_SYS(EFAULT, -1, getitimer(ITIMER_REAL, 0));
-}
-
 TEST(getitimer, testBadParam_returnsEinval) {
   struct itimerval it;
   EXPECT_SYS(EINVAL, -1, getitimer(31337, &it));

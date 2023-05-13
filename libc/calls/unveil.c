@@ -96,10 +96,12 @@ static const struct sock_filter kUnveilBlacklistLatestAbi[] = {
 };
 
 static int landlock_abi_version;
+static int landlock_abi_errno;
 
 __attribute__((__constructor__)) void init_landlock_version() {
   landlock_abi_version =
       landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION);
+  landlock_abi_errno = errno;
 }
 
 /**
@@ -153,6 +155,7 @@ static int unveil_init(void) {
   int rc, fd;
   State.fs_mask = UNVEIL_READ | UNVEIL_WRITE | UNVEIL_EXEC | UNVEIL_CREATE;
   if (landlock_abi_version == -1) {
+    errno = landlock_abi_errno;
     if (errno == EOPNOTSUPP) {
       errno = ENOSYS;
     }

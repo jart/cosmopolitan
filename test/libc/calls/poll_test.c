@@ -38,7 +38,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "third_party/chibicc/test/test.h"
 #include "tool/decode/lib/flagger.h"
 
 bool gotsig;

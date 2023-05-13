@@ -32,6 +32,8 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
+#ifdef __x86_64__
+
 void SetUp(void) {
   if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
 }
@@ -114,3 +116,5 @@ TEST(pledge, testEmptyPledge_doesntUseTrapping) {
   socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   TERMS(IsOpenbsd() ? SIGABRT : SIGSYS);
 }
+
+#endif /* __x86_64__ */

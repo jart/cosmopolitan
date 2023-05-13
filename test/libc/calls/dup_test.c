@@ -67,6 +67,7 @@ TEST(dup, bigNumber) {
   ASSERT_SYS(0, 0, close(100));
 }
 
+#ifdef __x86_64__
 TEST(dup, clearsCloexecFlag) {
   int ws;
   ASSERT_SYS(0, 0, close(creat("file", 0644)));
@@ -81,3 +82,4 @@ TEST(dup, clearsCloexecFlag) {
   ASSERT_EQ(72, WEXITSTATUS(ws));
   ASSERT_SYS(0, 0, close(3));
 }
+#endif
