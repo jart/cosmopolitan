@@ -40,7 +40,7 @@ STATIC_YOINK("strerror_wr");
 // digits not used: 0123456789
 // puncts not used: !"#$%&'()*+,-./;<=>@[\]^_`{|}~
 // letters duplicated: none
-#define GETOPTS "em"
+#define GETOPTS "fem"
 
 #define USAGE \
   "\

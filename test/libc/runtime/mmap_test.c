@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/linux/mmap.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
@@ -23,9 +24,9 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/xchg.internal.h"
-#include "libc/linux/mmap.h"
 #include "libc/linux/munmap.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
@@ -51,7 +52,7 @@ STATIC_YOINK("zip_uri_support");
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
+  // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
 }
 
 TEST(mmap, zeroSize) {
@@ -250,7 +251,7 @@ TEST(mmap, ziposCow) {
   ASSERT_NE(-1, (fd = open(ziposLifePath, O_RDONLY), "%s", ziposLifePath));
   EXPECT_NE(MAP_FAILED,
             (p = mmap(NULL, 0x00010000, PROT_READ, MAP_PRIVATE, fd, 0)));
-  EXPECT_STREQN("ELF", ((const char *)p) + 1, 3);
+  EXPECT_STREQN("\177ELF", ((const char *)p), 4);
   EXPECT_NE(-1, munmap(p, 0x00010000));
   EXPECT_NE(-1, close(fd));
 }

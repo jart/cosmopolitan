@@ -87,7 +87,7 @@ static void getopt_print_badch(const char *s) {
   strlcat(b1, s, sizeof(b1));
   b2[4] = optopt;
   b2[5] = '\n';
-  b2[5] = 0;
+  b2[6] = 0;
   strlcat(b1, b2, sizeof(b1));
   write(2, b1, strlen(b1));
 }

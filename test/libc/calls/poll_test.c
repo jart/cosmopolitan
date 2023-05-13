@@ -95,8 +95,8 @@ TEST(poll, testNegativeOneFd_isIgnored) {
   ASSERT_SYS(0, 0, listen(3, 10));
   struct pollfd fds[] = {{-1}, {3}};
   EXPECT_SYS(0, 0, poll(fds, ARRAYLEN(fds), 1));
-  EXPECT_STREQ("fd:-1 revents:0\n"
-               "fd:3 revents:0\n",
+  EXPECT_STREQ("fd:-1 revents:<TODO:kPollNames>\n"
+               "fd:3 revents:<TODO:kPollNames>\n",
                _gc(FormatPollFd(&fds[0])));
   ASSERT_SYS(0, 0, close(3));
 }

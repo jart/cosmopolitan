@@ -90,8 +90,8 @@ static void testlib_showerror_(int line,              //
           "\t%s%s @ %s%s\n",
           SUBTLE, strerror(e), RESET, SUBTLE,
           firstnonnull(program_invocation_name, "unknown"), hostname, RESET);
-  free(FREED_want);
-  free(FREED_got);
+  /* free(FREED_want); */
+  /* free(FREED_got); */
   ++g_testlib_failed;
 }
 

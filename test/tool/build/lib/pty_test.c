@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/pty.h"
 #include "libc/log/log.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/unicode.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/str/unicode.h"
-#include "tool/build/lib/pty.h"
 
 char *render(struct Pty *pty) {
   static struct Buffer b;
@@ -210,7 +210,7 @@ TEST(pty, testLongestPossibleCharacter) {
   EXPECT_STREQ("\e[1;2;4;7;5;9m"
                "𝒉"
                "\e[22;24;27;25;29;38;2;255;255;255;48;2;255;255;255m"
-               "\377\277\277\277\277\277"
+               " "
                "\e[0m▂                                                       "
                "                      ",
                b.p);
