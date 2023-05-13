@@ -16,58 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/relocations.h"
-#include "ape/relocations.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
 
-	.Lrows = 0			# w/ 2 cols
-
-	.macro	.tab	sym:req str
-	.section .rodata.str1.1,"aSM",@progbits,1
-.L\@:	.asciz	"\str"
+	.macro	.e e s
+	.long	\e - kPollNames
+	.long	.L\@ - kPollNames
+	.rodata.str1.1
+.L\@:	.string	"\s"
 	.previous
-	.long	RVA(\sym)
-	.long	RVA(.L\@)
-	.Lrows = .Lrows + 1
 	.endm
 
-	.initro 301,_init_kPollNames
-kPollNamesRo:
-        .tab	POLLNVAL	"POLLNVAL"
-	.tab	POLLWRNORM	"POLLWRNORM"
-	.tab	POLLWRBAND	"POLLWRBAND"
-	.tab	POLLRDNORM	"POLLRDNORM"
-	.tab	POLLRDHUP	"POLLRDHUP"
-	.tab	POLLRDBAND	"POLLRDBAND"
-	.tab	POLLHUP		"POLLHUP"
-	.tab	POLLERR		"POLLERR"
-	.tab	POLLPRI		"POLLPRI"
-	.tab	POLLOUT		"POLLOUT"
-	.tab	POLLIN		"POLLIN"
-	.endobj	kPollNamesRo,globl,hidden
-	.previous
-
-//	Mapping of poll() flags to their string names.
-//	@see	RecreateFlags()
-	.initbss 301,_init_kPollNames
+	.section .rodata,"a",@progbits
+	.balign	4
+	.underrun
 kPollNames:
-	.rept	.Lrows
-	.quad	0			# unsigned long id
-	.quad	0			# const char *const name
-	.endr
-	.quad	0,0			# terminator row
-	.endobj	kPollNames,globl
-	.previous
-
-	.init.start 301,_init_kPollNames
-	pushpop	.Lrows,%rcx		# relocate RO→BSS b/c -fPIE crap
-0:	lodsl
-	.weak	_base
-	mov	_base(%rax),%rax	# read what systemfive.S decoded
-	stosq
-	lodsl
-	add	$_base,%rax
-	stosq
-	.loop	0b
-	add	$16,%rdi
-	.init.end 301,_init_kPollNames
+        .e	POLLNVAL	"POLLNVAL"
+	.e	POLLWRNORM	"POLLWRNORM"
+	.e	POLLWRBAND	"POLLWRBAND"
+	.e	POLLRDNORM	"POLLRDNORM"
+	.e	POLLRDHUP	"POLLRDHUP"
+	.e	POLLRDBAND	"POLLRDBAND"
+	.e	POLLHUP		"POLLHUP"
+	.e	POLLERR		"POLLERR"
+	.e	POLLPRI		"POLLPRI"
+	.e	POLLOUT		"POLLOUT"
+	.e	POLLIN		"POLLIN"
+	.endobj	kPollNames,globl,hidden
+	.overrun

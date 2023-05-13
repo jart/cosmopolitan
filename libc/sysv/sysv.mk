@@ -70,6 +70,11 @@ $(LIBC_SYSV_A).pkg:					\
 		$(LIBC_SYSV_A_OBJS)			\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/sysv/errno.o				\
+o/$(MODE)/libc/sysv/sysret.o: private			\
+		OVERRIDE_CFLAGS +=			\
+			$(NO_MAGIC)
+
 #───────────────────────────────────────────────────────────────────────────────
 
 LIBC_SYSV_CALLS =					\
@@ -128,6 +133,8 @@ $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 
 # let aarch64 compile these
 o/$(MODE)/libc/sysv/errfun.o: libc/sysv/errfun.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/libc/sysv/syscount.o: libc/sysv/syscount.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/restorert.o: libc/sysv/restorert.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<

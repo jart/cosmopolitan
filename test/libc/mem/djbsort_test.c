@@ -50,6 +50,7 @@ void insertionsort(int32_t *a, size_t n) {
   }
 }
 
+#ifdef __x86_64__
 TEST(djbsort, test4) {
   static const int kA[] = {4, 3, 2, 1};
   n = ARRAYLEN(kA);
@@ -62,6 +63,7 @@ TEST(djbsort, test4) {
   ASSERT_EQ(0, memcmp(a, b, n * 4));
   ASSERT_EQ(0, memcmp(a, c, n * 4));
 }
+#endif /* __x86_64__ */
 
 TEST(djbsort, test64) {
   static const int kA[64] = {
@@ -86,10 +88,12 @@ TEST(djbsort, test64) {
   insertionsort(a, n);
   djbsort(c, n);
   ASSERT_EQ(0, memcmp(a, c, n * 4));
+#ifdef __x86_64__
   if (X86_HAVE(AVX2)) {
     djbsort_avx2(b, n);
     ASSERT_EQ(0, memcmp(a, b, n * 4));
   }
+#endif /* __x86_64__ */
 }
 
 static int CompareInt(const void *a, const void *b) {

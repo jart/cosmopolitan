@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
-#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -112,6 +112,8 @@ TEST(sigaction, testPingPongParentChildWithSigint) {
   EXPECT_SYS(0, 0, sigprocmask(SIG_BLOCK, &oldmask, 0));
 }
 
+#ifdef __x86_64__
+
 ////////////////////////////////////////////////////////////////////////////////
 // test int3 crash
 // we expect this to be recoverable by default
@@ -163,6 +165,8 @@ noubsan void ubsanTrumpsSystemsEngineering(void) {
 TEST(sigaction, sigFpe_handlerCanEditProcessStateAndRecoverExecution) {
   ubsanTrumpsSystemsEngineering();
 }
+
+#endif /* __x86_64__ */
 
 static unsigned OnSignalCnt = 0;
 void OnSignal(int sig, siginfo_t *si, void *ctx) {

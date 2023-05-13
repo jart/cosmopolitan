@@ -15,6 +15,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview Demo of program crash reporting with Bare Metal VGA TTY.
  *
@@ -35,5 +37,8 @@ int main(int argc, char *argv[]) {
     printf("argv[%d] = \"%s\"\n", i, argv[i]);
   }
   printf("\e[92;44mHello World!\e[0m %d\n", 1 / (x + y - 3));
-  for (;;);
+  for (;;)
+    ;
 }
+
+#endif /* __x86_64__ */

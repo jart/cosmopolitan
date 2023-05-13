@@ -26,6 +26,7 @@ _Hide extern const struct MagnumStr kRlimitNames[];
 _Hide extern const struct MagnumStr kSignalNames[];
 _Hide extern const struct MagnumStr kSockOptnames[];
 _Hide extern const struct MagnumStr kTcpOptnames[];
+_Hide extern const struct MagnumStr kPollNames[];
 
 char *GetMagnumStr(const struct MagnumStr *, int);
 char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);

@@ -87,13 +87,15 @@ o/$(MODE)/test/libc/mem/prog/life.com.dbg:			\
 
 o/$(MODE)/test/libc/mem/prog/life.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
-		o/$(MODE)/test/libc/mem/prog/life.com
+		o/$(MODE)/test/libc/mem/prog/life.com		\
+		$(VM)
 	@$(COMPILE) -wACP -T$@					\
 		build/bootstrap/cp.com				\
 		o/$(MODE)/test/libc/mem/prog/life.com		\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 	@$(COMPILE) -wAASSIMILATE -T$@				\
-		o/$(MODE)/tool/build/assimilate.com		\
+		$(VM)						\
+		o/$(MODE)/tool/build/assimilate.com -f		\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 
 o/$(MODE)/test/libc/mem/prog/life.elf.zip.o: private		\
@@ -112,13 +114,15 @@ o/$(MODE)/test/libc/mem/prog/sock.com.dbg:			\
 
 o/$(MODE)/test/libc/mem/prog/sock.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
-		o/$(MODE)/test/libc/mem/prog/sock.com
+		o/$(MODE)/test/libc/mem/prog/sock.com		\
+		$(VM)
 	@$(COMPILE) -wACP -T$@					\
 		build/bootstrap/cp.com				\
 		o/$(MODE)/test/libc/mem/prog/sock.com		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 	@$(COMPILE) -wAASSIMILATE -T$@				\
-		o/$(MODE)/tool/build/assimilate.com		\
+		$(VM)						\
+		o/$(MODE)/tool/build/assimilate.com -f		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 
 o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o: private		\

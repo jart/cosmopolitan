@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,9 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/runtime/utmp.h"
+#include "libc/errno.h"
+#include "libc/runtime/utmpx.h"
 
-getutent:
-	xor	%eax,%eax
-	ret
-	.endfn	getutent,globl
+void setutent(void) {
+}
+
+void endutent(void) {
+}
+
+void endutxent(void) {
+}
+
+struct utmp *getutent(void) {
+  return 0;
+}
+
+void updwtmp(const char *x, const struct utmp *y) {
+}
+
+void updwtmpx(const char *x, const struct utmpx *y) {
+}
+
+void setutxent(void) {
+}
+
+struct utmp *getutid(const struct utmp *x) {
+  return 0;
+}
+
+struct utmpx *getutxent(void) {
+  return 0;
+}
+
+struct utmpx *getutxid(const struct utmpx *x) {
+  return 0;
+}
+
+struct utmpx *getutxline(const struct utmpx *x) {
+  return 0;
+}
+
+int __utmpxname() {
+  errno = ENOTSUP;
+  return -1;
+}
+
+int utmpname(const char *x) {
+  return __utmpxname();
+}
+
+int utmpxname(const char *x) {
+  return __utmpxname();
+}

@@ -68,9 +68,11 @@ $(TOOL_BUILD_LIB_A).pkg:				\
 		$(TOOL_BUILD_LIB_A_OBJS)		\
 		$(foreach x,$(TOOL_BUILD_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
+ifeq ($(ARCH), x86_64)
 o/$(MODE)/tool/build/lib/ssefloat.o: private		\
 		TARGET_ARCH +=				\
 			-msse3
+endif
 
 o/$(MODE)/tool/build/lib/apetest.com.dbg:		\
 		$(TOOL_BUILD_LIB_A_DEPS)		\
@@ -94,6 +96,10 @@ o/$(MODE)/tool/build/lib/apetest2.com.zip.o: private	\
 o/$(MODE)/tool/build/lib/apetest.o:			\
 		tool/build/lib/apetest.c		\
 		libc/calls/calls.h
+
+# these assembly files are safe to build on aarch64
+o/$(MODE)/tool/build/lib/errnos.o: tool/build/lib/errnos.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 TOOL_BUILD_LIB_LIBS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)))
 TOOL_BUILD_LIB_SRCS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_SRCS))

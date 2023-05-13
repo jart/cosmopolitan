@@ -34,7 +34,7 @@ static textstartup void BZ2_crc32Table_init() {
     BZ2_crc32Table[i] = u;
   }
   if (BZ2_crc32Table[0] || BZ2_crc32Table[255] != 0xb1f740b4) {
-    asm("hlt");
+    __builtin_trap();
   }
 }
 

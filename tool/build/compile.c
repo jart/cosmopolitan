@@ -479,7 +479,7 @@ void AddArg(char *s) {
   AddStr(&args, s);
 }
 
-int GetBaseCpuFreqMhz(void) {
+static int GetBaseCpuFreqMhz(void) {
   return KCPUIDS(16H, EAX) & 0x7fff;
 }
 
@@ -488,6 +488,7 @@ void SetCpuLimit(int secs) {
   struct rlimit rlim;
   if (secs <= 0) return;
   if (IsWindows()) return;
+#ifdef __x86_64__
   if (!(mhz = GetBaseCpuFreqMhz())) return;
   lim = ceil(3100. / mhz * secs);
   rlim.rlim_cur = lim;
@@ -499,6 +500,7 @@ void SetCpuLimit(int secs) {
       setrlimit(RLIMIT_CPU, &rlim);
     }
   }
+#endif
 }
 
 void SetFszLimit(long n) {

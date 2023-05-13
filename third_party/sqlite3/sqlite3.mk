@@ -58,6 +58,7 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	LIBC_TIME							\
 	LIBC_TINYMATH							\
 	LIBC_ZIPOS							\
+	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_LINENOISE						\
 	THIRD_PARTY_MUSL						\
@@ -79,7 +80,8 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 o/$(MODE)/third_party/sqlite3/sqlite3.com:				\
 		o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg		\
 		o/$(MODE)/third_party/zip/zip.com			\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com				\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

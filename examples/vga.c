@@ -15,6 +15,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview Bare Metal VGA TTY demo.
  *
@@ -58,3 +60,5 @@ int main(int argc, char *argv[]) {
     }
   }
 }
+
+#endif /* __x86_64__ */

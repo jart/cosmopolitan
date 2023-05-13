@@ -10,6 +10,8 @@
 #   This makefile compiles and runs each test twice. The first with
 #   GCC-built chibicc, and a second time with chibicc-built chibicc
 
+ifeq ($(ARCH), x86_64)
+
 PKGS += THIRD_PARTY_CHIBICC_TEST
 
 THIRD_PARTY_CHIBICC_TEST_A = o/$(MODE)/third_party/chibicc/test/test.a
@@ -74,6 +76,8 @@ o/$(MODE)/third_party/chibicc/test/%.o:						\
 	@$(COMPILE) -wAOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<
 
 o/$(MODE)/third_party/chibicc/test/int128_test.o: private QUOTA = -M1024m
+
+endif
 
 .PHONY: o/$(MODE)/third_party/chibicc/test
 o/$(MODE)/third_party/chibicc/test:						\

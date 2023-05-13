@@ -69,7 +69,11 @@
 #include "third_party/zlib/zlib.h"
 
 static int Rdpid(void) {
+#ifdef __x86_64__
   return rdpid();
+#else
+  return -1;
+#endif
 }
 
 int LuaHex(lua_State *L) {

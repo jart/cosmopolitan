@@ -16,6 +16,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "third_party/xed/x86.h"
 
+#ifdef __x86_64__
+
 /**
  * @fileoverview How to change CPU state on signal delivery
  *
@@ -43,3 +45,5 @@ int main(int argc, char *argv[]) {
   printf("123/0 = %ld\n", 123 / x);
   return 0;
 }
+
+#endif /* __x86_64__ */

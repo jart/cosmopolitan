@@ -54,8 +54,15 @@ $(DSP_TTY_A).pkg:				\
 		$(foreach x,$(DSP_TTY_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/dsp/tty/ttyraster.o: private		\
-		OVERRIDE_CFLAGS +=	\
+		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
+
+ifeq ($(ARCH), aarch64)
+# takes 14 seconds to compile with aarch64 gcc
+o/$(MODE)/dsp/tty/ttyraster.o: private		\
+		OVERRIDE_CFLAGS +=		\
+			-O1
+endif
 
 DSP_TTY_LIBS = $(foreach x,$(DSP_TTY_ARTIFACTS),$($(x)))
 DSP_TTY_SRCS = $(foreach x,$(DSP_TTY_ARTIFACTS),$($(x)_SRCS))

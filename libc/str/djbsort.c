@@ -33,10 +33,14 @@ void djbsort(int32_t *a, size_t n) {
     __asan_verify(a, m);
   }
   if (n > 1) {
+#ifdef __x86_64__
     if (X86_HAVE(AVX2)) {
       djbsort_avx2(a, n);
     } else {
       _intsort(a, n);
     }
+#else
+    _intsort(a, n);
+#endif /* __x86_64__ */
   }
 }

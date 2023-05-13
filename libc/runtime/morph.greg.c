@@ -45,12 +45,12 @@ static inline int __morph_rt_sigprocmask(int h, const sigset_t *s, sigset_t *o,
   register long r1 asm("x1") = (long)s;
   register long r2 asm("x2") = (long)o;
   register long r3 asm("x3") = (long)c;
+  register long r8 asm("x8") = (long)__NR_sigprocmask;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
+  asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "i"(135), "r"(r0), "r"(r1), "r"(r2), "r"(r3)
-               : "x8", "memory");
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r8)
+               : "memory");
   return res_x0;
 #else
   return 0;
@@ -89,12 +89,12 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
   register long r0 asm("x0") = (long)addr;
   register long r1 asm("x1") = (long)size;
   register long r2 asm("x2") = (long)prot;
+  register long r8 asm("x8") = (long)__NR_mprotect;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
+  asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "i"(226), "r"(r0), "r"(r1), "r"(r2)
-               : "x8", "memory");
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "memory");
   _npassert(!res_x0);
 #endif
 }

@@ -106,7 +106,7 @@ TOOL_NET_REDBEAN_STANDARD_ASSETS =						\
 
 TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP =						\
 	$(COMPILE) -AZIP -T$@							\
-	o/$(MODE)/third_party/zip/zip.com -b$(TMPDIR) -9qj $@			\
+	$(VM) o/$(MODE)/third_party/zip/zip.com -b$(TMPDIR) -9qj $@		\
 	$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
 
 o/$(MODE)/tool/net/redbean.com.dbg:						\
@@ -122,7 +122,8 @@ o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/redbean.com.dbg				\
 		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com					\
-		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)				\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
@@ -234,7 +235,8 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 o/$(MODE)/tool/net/redbean-demo.com:						\
 		o/$(MODE)/tool/net/redbean-demo.com.dbg				\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
@@ -256,7 +258,8 @@ o/$(MODE)/tool/net/redbean-static.com:						\
 		o/$(MODE)/tool/net/redbean-static.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com					\
-		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)				\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
@@ -281,7 +284,8 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 		o/$(MODE)/tool/net/redbean-unsecure.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com					\
-		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)				\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
@@ -305,7 +309,8 @@ o/$(MODE)/tool/net/redbean-original.com:					\
 		o/$(MODE)/tool/net/redbean-original.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com					\
-		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)				\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

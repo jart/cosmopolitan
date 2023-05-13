@@ -56,7 +56,6 @@ scall	sys_pread		0x8ad8ad9db2899811	0x043	globl hidden # a.k.a. pread64; netbsd+
 scall	sys_pwrite		0x8ae8ae9dc289a812	0x044	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
 scall	sys_readv		0x8788788782878813	0x041	globl hidden
 scall	sys_writev		0x8798798792879814	0x042	globl hidden
-scall	sys_access		0x0210210212021015	0xfff	globl hidden
 scall	__sys_pipe		0x02a10721e202a016	0x03b	globl hidden # NOTE: pipe2() on FreeBSD and Linux Aarch64; XNU is pipe(void)→eax:edx
 scall	sys_select		0x9a184785d285d817	0xfff	globl hidden
 scall	sys_pselect		0x9b486ea0a298a90e	0x048	globl hidden # pselect6() on gnu/systemd

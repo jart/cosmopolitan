@@ -88,21 +88,21 @@ o/$(MODE)/%.pkg:
 	$(file >$(TMPSAFE).args,$(filter %.o,$^))
 	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPSAFE).args
 
-o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
-	@$(COMPILE) -wAPYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
+o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com $(VM)
+	@$(COMPILE) -wAPYOBJ $(VM) o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
 
-o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp.com
-	@$(COMPILE) -wAPYCOMP o/$(MODE)/third_party/python/pycomp.com $(PYCFLAGS) -o $@ $<
+o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp.com $(VM)
+	@$(COMPILE) -wAPYCOMP $(VM) o/$(MODE)/third_party/python/pycomp.com $(PYCFLAGS) -o $@ $<
 
-o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
-	@$(COMPILE) -wALUAC o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
+o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com $(VM)
+	@$(COMPILE) -wALUAC $(VM) o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
 
-o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
-	@$(COMPILE) -wALUA -tT$@ o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
+o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com $(VM)
+	@$(COMPILE) -wALUA -tT$@ $(VM) o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
 
-o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com
-	@$(COMPILE) -wACP -T$@ o/$(MODE)/tool/build/cp.com $< $@
-	@$(COMPILE) -wAASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
+o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com $(VM)
+	@$(COMPILE) -wACP -T$@ $(VM) o/$(MODE)/tool/build/cp.com $< $@
+	@$(COMPILE) -wAASSIMILATE -T$@ $(VM) o/$(MODE)/tool/build/assimilate.com $@
 
 ################################################################################
 # LOCAL UNIT TESTS
@@ -205,12 +205,14 @@ MAKE_OBJCOPY =					\
 
 MAKE_SYMTAB_CREATE =				\
 	$(COMPILE) -wASYMTAB			\
+	$(VM)					\
 	o/$(MODE)/tool/build/symtab.com		\
 	-o $(TMPSAFE)/.symtab			\
 	$<
 
 MAKE_SYMTAB_ZIP =				\
 	$(COMPILE) -AZIP -T$@			\
+	$(VM)					\
 	o/$(MODE)/third_party/zip/zip.com	\
 	-b$(TMPDIR)				\
 	-9qj					\

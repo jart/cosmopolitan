@@ -27,6 +27,8 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/testlib/testlib.h"
 
+#ifdef __x86_64__
+
 #define Z 0x5555555555555555
 
 #define FLAGS_cf 0
@@ -137,3 +139,5 @@ TEST(diagnose_syscall, testWriteFailed) {
     ASSERT_STREQ("rax rcx r11", _gc(DiffContexts(&x, &y)));
   }
 }
+
+#endif /* __x86_64__ */

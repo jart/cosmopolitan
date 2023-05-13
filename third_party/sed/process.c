@@ -68,7 +68,7 @@ static __inline int	 regexec_e(regex_t *, const char *, int, int, size_t);
 static void		 regsub(SPACE *, char *, char *);
 static int		 substitute(struct s_command *);
 
-struct s_appends *appends;	/* Array of pointers to strings to append. */
+struct s_appends *appends_;	/* Array of pointers to strings to append. */
 static size_t appendx;		/* Index into appends array. */
 size_t appendnum;			/* Size of appends array. */
 
@@ -111,12 +111,12 @@ redirect:
 				goto redirect;
 			case 'a':
 				if (appendx >= appendnum)
-					appends = xrealloc(appends,
+					appends_ = xrealloc(appends_,
 					    sizeof(struct s_appends) *
 					    (appendnum *= 2));
-				appends[appendx].type = AP_STRING;
-				appends[appendx].s = cp->t;
-				appends[appendx].len = strlen(cp->t);
+				appends_[appendx].type = AP_STRING;
+				appends_[appendx].s = cp->t;
+				appends_[appendx].len = strlen(cp->t);
 				appendx++;
 				break;
 			case 'b':
@@ -204,12 +204,12 @@ redirect:
 				exit(0);
 			case 'r':
 				if (appendx >= appendnum)
-					appends = xrealloc(appends,
+					appends_ = xrealloc(appends_,
 					    sizeof(struct s_appends) *
 					    (appendnum *= 2));
-				appends[appendx].type = AP_FILE;
-				appends[appendx].s = cp->t;
-				appends[appendx].len = strlen(cp->t);
+				appends_[appendx].type = AP_FILE;
+				appends_[appendx].s = cp->t;
+				appends_[appendx].len = strlen(cp->t);
 				appendx++;
 				break;
 			case 's':
@@ -541,9 +541,9 @@ flush_appends(void)
 	char *buf = gc(malloc(8 * 1024));
 
 	for (i = 0; i < appendx; i++)
-		switch (appends[i].type) {
+		switch (appends_[i].type) {
 		case AP_STRING:
-			fwrite(appends[i].s, sizeof(char), appends[i].len,
+			fwrite(appends_[i].s, sizeof(char), appends_[i].len,
 			    outfile);
 			break;
 		case AP_FILE:
@@ -555,7 +555,7 @@ flush_appends(void)
 			 * would be truly bizarre, but possible.  It's probably
 			 * not that big a performance win, anyhow.
 			 */
-			if ((f = fopen(appends[i].s, "r")) == NULL)
+			if ((f = fopen(appends_[i].s, "r")) == NULL)
 				break;
 			while ((count = fread(buf, sizeof(char), sizeof(buf), f)))
 				(void)fwrite(buf, sizeof(char), count, outfile);

@@ -78,6 +78,14 @@ o/$(MODE)/libc/intrin/asan.o: private			\
 			-finline			\
 			-finline-functions
 
+o/$(MODE)/libc/intrin/asanthunk.o: private		\
+		OVERRIDE_CFLAGS +=			\
+			-x-no-pg			\
+			$(MNO_FENTRY)			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-fno-stack-protector
+
 # we can't use compiler magic because:
 #   kprintf() is mission critical to error reporting
 o/$(MODE)/libc/intrin/getmagnumstr.greg.o		\

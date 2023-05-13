@@ -63,8 +63,6 @@
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
-#ifdef __x86_64__
-
 STATIC_YOINK("strerror");   // for kprintf()
 STATIC_YOINK("strsignal");  // for kprintf()
 
@@ -203,6 +201,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT("");
   PRINT("MICROPROCESSOR");
   kprintf(prologue);
+#ifdef __x86_64__
   kprintf("  %.*s%.*s%.*s", 4, &KCPUIDS(0H, EBX), 4, &KCPUIDS(0H, EDX), 4,
           &KCPUIDS(0H, ECX));
   if (getx86processormodel(kX86ProcessorModelKey)) {
@@ -272,6 +271,9 @@ textstartup void __printargs(const char *prologue) {
   if (X86_HAVE(RDPID)) kprintf(" RDPID");
   if (X86_HAVE(LA57)) kprintf(" LA57");
   if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
+#elif defined(__aarch64__)
+  PRINT("  AARCH64\n");
+#endif
   kprintf("\n");
 
   PRINT("");
@@ -424,8 +426,10 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %d", "getgid()", getgid());
   PRINT(" ☼ %s = %d", "getegid()", getegid());
   PRINT(" ☼ %s = %#s", "kTmpPath", kTmpPath);
+#ifdef __x86_64__
   PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
+#endif
   PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());
   PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
         GetInterpreterExecutableName(u.path, sizeof(u.path)));
@@ -713,5 +717,3 @@ textstartup void __printargs(const char *prologue) {
   ftrace_enabled(+1);
   errno = e;
 }
-
-#endif /* __x86_64__ */

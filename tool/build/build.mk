@@ -83,8 +83,9 @@ o/$(MODE)/tool/build/build.pkg:				\
 
 o/$(MODE)/%.ctest.ok:					\
 		%.ctest					\
-		$(TOOL_BUILD_CALCULATOR)
-	@$(COMPILE) -AMKWIDES -wtT$@ $(TOOL_BUILD_CALCULATOR) $<
+		$(TOOL_BUILD_CALCULATOR)		\
+		$(VM)
+	@$(COMPILE) -AMKWIDES -wtT$@ $(VM) $(TOOL_BUILD_CALCULATOR) $<
 
 o/$(MODE)/tool/build/%.com.dbg:				\
 		$(TOOL_BUILD_DEPS)			\
@@ -97,7 +98,8 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 o/$(MODE)/tool/build/blinkenlights.com:				\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com		\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com			\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

@@ -18,11 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 
-asm(".weak\t__asan_init");
-asm(".weak\t__asan_register_globals");
-asm(".weak\t__asan_unregister_globals");
-asm(".weak\t__asan_version_mismatch_check_v8");
-
 /**
  * Global variable for last error.
  *

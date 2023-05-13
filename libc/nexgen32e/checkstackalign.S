@@ -22,6 +22,8 @@
 //
 //	This function crashes if called with a misaligned stack.
 CheckStackIsAligned:
+#ifdef __x86_64__
+
 	push	%rbp
 	mov	%rsp,%rbp
 
@@ -35,4 +37,14 @@ CheckStackIsAligned:
 
 	leave
 	ret
+
+#elif defined(__aarch64__)
+
+//	TODO: support me
+	mov	x0,#1
+	ret
+
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	CheckStackIsAligned,globl

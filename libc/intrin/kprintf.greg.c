@@ -48,6 +48,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
@@ -173,11 +174,15 @@ privileged bool kisdangerous(const void *p) {
   int frame;
   if (kisimagepointer(p)) return false;
   if (kiskernelpointer(p)) return false;
+  if (IsOldStack(p)) return false;
   if (IsLegalPointer(p)) {
-    frame = (intptr_t)p >> 16;
+    frame = (uintptr_t)p >> 16;
     if (IsStackFrame(frame)) return false;
-    if (IsOldStackFrame(frame)) return false;
     if (kismapped(frame)) return false;
+  }
+  if (GetStackAddr() + GUARDSIZE <= (uintptr_t)p &&
+      (uintptr_t)p < GetStackAddr() + GetStackSize()) {
+    return false;
   }
   return true;
 }
@@ -219,12 +224,12 @@ privileged static void klog(const char *b, size_t n) {
   register long r0 asm("x0") = (long)2;
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
+  register long r8 asm("x8") = (long)__NR_write;
   register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
+  asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "i"(64), "r"(r0), "r"(r1), "r"(r2)
-               : "x8", "memory");
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "memory");
 #else
 #error "unsupported architecture"
 #endif

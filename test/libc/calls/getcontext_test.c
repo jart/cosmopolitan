@@ -22,6 +22,8 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
+#ifdef __x86_64__
+
 int x;
 bool ok1;
 bool ok2;
@@ -62,3 +64,5 @@ void SetGetContext(void) {
 BENCH(getcontext, bench) {
   EZBENCH2("get/setcontext", donothing, SetGetContext());
 }
+
+#endif /* __x86_64__ */

@@ -210,14 +210,18 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
     if ((zipos = __zipos_get())) {
       if ((cf = __zipos_find(zipos, name)) != -1) {
         rc = __zipos_load(zipos, cf, flags, mode);
+        assert(rc != 0);
       } else {
         rc = enoent();
+        assert(rc != 0);
       }
     } else {
       rc = enoexec();
+      assert(rc != 0);
     }
   } else {
     rc = einval();
+    assert(rc != 0);
   }
   ALLOW_SIGNALS;
   return rc;

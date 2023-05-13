@@ -1254,23 +1254,21 @@ static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
 
 static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   bool found;
-  char ord[17], rip[17];
+  char ord[17];
   int i, ok, mode = si->si_errno;
   ucontext_t *ctx = vctx;
   ctx->uc_mcontext.MCONTEXT_SYSCALL_RESULT_REGISTER = -Eperm;
   FixCpy(ord, si->si_syscall, 12);
-  HexCpy(rip, ctx->uc_mcontext.MCONTEXT_INSTRUCTION_POINTER);
   for (found = i = 0; i < ARRAYLEN(kPledge); ++i) {
     if (HasSyscall(kPledge + i, si->si_syscall)) {
       Log("error: pledge ", kPledge[i].name, " for ",
-          GetSyscallName(si->si_syscall), " (ord=", ord, " rip=", rip, ")\n",
-          NULL);
+          GetSyscallName(si->si_syscall), " (ord=", ord, ")\n", NULL);
       found = true;
     }
   }
   if (!found) {
     Log("error: bad syscall (", GetSyscallName(si->si_syscall), " ord=", ord,
-        " rip=", rip, ")\n", NULL);
+        ")\n", NULL);
   }
   switch (mode & PLEDGE_PENALTY_MASK) {
     case PLEDGE_PENALTY_KILL_PROCESS:

@@ -42,8 +42,8 @@ privileged int prctl(int operation, ...) {
   d = va_arg(va, intptr_t);
   va_end(va);
 
-#ifdef __x86_64__
   if (IsLinux()) {
+#ifdef __x86_64__
     asm volatile("mov\t%5,%%r10\n\t"
                  "mov\t%6,%%r8\n\t"
                  "syscall"
@@ -51,25 +51,25 @@ privileged int prctl(int operation, ...) {
                  : "0"(157), "D"(operation), "S"(a), "d"(b), "g"(c), "g"(d)
                  : "rcx", "r8", "r10", "r11", "memory");
     if (rc > -4096u) errno = -rc, rc = -1;
-  } else {
-    rc = enosys();
-  }
 #elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)operation;
-  register long r1 asm("x1") = (long)a;
-  register long r2 asm("x2") = (long)b;
-  register long r3 asm("x3") = (long)c;
-  register long r4 asm("x4") = (long)d;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(167), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
-               : "x8", "memory");
-  rc = _sysret(res_x0);
+    register long r0 asm("x0") = (long)operation;
+    register long r1 asm("x1") = (long)a;
+    register long r2 asm("x2") = (long)b;
+    register long r3 asm("x3") = (long)c;
+    register long r4 asm("x4") = (long)d;
+    register long res_x0 asm("x0");
+    asm volatile("mov\tx8,%1\n\t"
+                 "svc\t0"
+                 : "=r"(res_x0)
+                 : "i"(167), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
+                 : "x8", "memory");
+    rc = _sysret(res_x0);
 #else
 #error "arch unsupported"
 #endif
+  } else {
+    rc = enosys();
+  }
 
 #ifdef SYSDEBUG
   if (operation == PR_CAPBSET_READ || operation == PR_CAPBSET_DROP) {

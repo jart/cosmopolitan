@@ -318,16 +318,20 @@ int SetLimit(int r, long lo, long hi) {
   return setrlimit(r, &lim);
 }
 
-int GetBaseCpuFreqMhz(void) {
+static int GetBaseCpuFreqMhz(void) {
   return KCPUIDS(16H, EAX) & 0x7fff;
 }
 
 int SetCpuLimit(int secs) {
+#ifdef __x86_64__
   int mhz, lim;
   if (secs <= 0) return 0;
   if (!(mhz = GetBaseCpuFreqMhz())) return eopnotsupp();
   lim = ceil(3100. / mhz * secs);
   return SetLimit(RLIMIT_CPU, lim, lim);
+#else
+  return 0;
+#endif
 }
 
 bool PathExists(const char *path) {
@@ -772,7 +776,8 @@ int main(int argc, char *argv[]) {
   if (!(~ipromises & (1ul << PROMISE_EXEC))) {
     g_promises = xstrcat(g_promises, ' ', "exec");
     if (!g_qflag) {
-      __pledge_mode |= PLEDGE_STDERR_LOGGING;
+      // TODO(jart): Fix me.
+      // __pledge_mode |= PLEDGE_STDERR_LOGGING;
     }
   }
   if (isdynamic) {

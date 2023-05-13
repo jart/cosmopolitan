@@ -41,6 +41,6 @@
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
-  asm("int3"); /* cf. __die(), perror("msg"), abort(), exit(1), _Exit(1) */
+  __builtin_trap();
   return 0;
 }

@@ -49,6 +49,12 @@
 #include "libc/thread/tls.h"
 
 #ifdef __x86_64__
+#define ARCHITECTURE AUDIT_ARCH_X86_64
+#elif defined(__aarch64__)
+#define ARCHITECTURE AUDIT_ARCH_AARCH64
+#else
+#error "unsupported architecture"
+#endif
 
 #define OFF(f) offsetof(struct seccomp_data, f)
 
@@ -70,7 +76,7 @@
 
 static const struct sock_filter kUnveilBlacklistAbiVersionBelow3[] = {
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(arch)),
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, ARCHITECTURE, 1, 0),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_truncate, 1, 0),
@@ -81,7 +87,7 @@ static const struct sock_filter kUnveilBlacklistAbiVersionBelow3[] = {
 
 static const struct sock_filter kUnveilBlacklistLatestAbi[] = {
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(arch)),
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, ARCHITECTURE, 1, 0),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setxattr, 0, 1),
@@ -402,5 +408,3 @@ int unveil(const char *path, const char *permissions) {
   STRACE("unveil(%#s, %#s) → %d% m", path, permissions, rc);
   return rc;
 }
-
-#endif /* __x86_64__ */

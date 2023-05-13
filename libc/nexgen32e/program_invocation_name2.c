@@ -18,4 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 
+#ifndef __x86_64__
+
 char *program_invocation_name;
+
+#endif /* __x86_64__ */

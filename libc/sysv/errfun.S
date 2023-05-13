@@ -33,6 +33,7 @@ __errfun:
 	str	w19,[x0]
 	mov	x0,#-1
 	ldp	x19,x30,[sp],#16
+	ret
 #else
 #error "unsupported architecture"
 #endif

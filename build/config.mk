@@ -130,6 +130,12 @@ TARGET_ARCH ?= -msse3
 OVERRIDE_CCFLAGS += -fno-pie
 endif
 
+ifeq ($(MODE), aarch64-dbg)
+CONFIG_CPPFLAGS += -DMODE_DBG
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O -fno-inline
+CONFIG_COPTS += -fsanitize=undefined
+endif
+
 # System Five Mode
 #
 #   - `make MODE=sysv`

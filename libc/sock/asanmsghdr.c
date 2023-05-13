@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sock/struct/msghdr.h"
+#if IsAsan()
 
 bool __asan_is_valid_msghdr(const struct msghdr *msg) {
   if (!__asan_is_valid(msg, sizeof(struct msghdr))) return false;
@@ -29,3 +31,5 @@ bool __asan_is_valid_msghdr(const struct msghdr *msg) {
   }
   return __asan_is_valid_iov(msg->msg_iov, msg->msg_iovlen);
 }
+
+#endif

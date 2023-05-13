@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#ifdef __x86_64__
 
 void __asan_report_load(void *, int);
 void __asan_report_store(void *, int);
@@ -171,3 +172,5 @@ void __asan_store16() {
 void __asan_store32() {
   __builtin_trap();
 }
+
+#endif /* __x86_64__ */

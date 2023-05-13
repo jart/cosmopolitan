@@ -96,6 +96,10 @@ $(EXAMPLES_PACKAGE_LIB_A).pkg:					\
 # Invalidates objects in package when makefile is edited.
 $(EXAMPLES_PACKAGE_LIB_A_OBJS): examples/package/lib/build.mk
 
+# let these assembly objects build on aarch64
+o/$(MODE)/examples/package/lib/myasm.o: examples/package/lib/myasm.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 EXAMPLES_PACKAGE_LIB_LIBS = $(foreach x,$(EXAMPLES_PACKAGE_LIB_ARTIFACTS),$($(x)))
 EXAMPLES_PACKAGE_LIB_SRCS = $(foreach x,$(EXAMPLES_PACKAGE_LIB_ARTIFACTS),$($(x)_SRCS))
 EXAMPLES_PACKAGE_LIB_HDRS = $(foreach x,$(EXAMPLES_PACKAGE_LIB_ARTIFACTS),$($(x)_HDRS))

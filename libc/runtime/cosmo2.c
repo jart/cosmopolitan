@@ -31,19 +31,6 @@
 
 int main(int, char **, char **) __attribute__((__weak__));
 
-#if 0
-static inline long sys_set_tid_address(int *t) {
-  register long res asm("x0");
-  register long arg asm("x0") = (long)t;
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res)
-               : "i"(96), "r"(arg)
-               : "x8", "memory");
-  return res;
-}
-#endif
-
 typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
 
 extern init_f __strace_init;
@@ -77,16 +64,19 @@ textstartup void cosmo(long *sp) {
   _mmi.n = ARRAYLEN(_mmi.s);
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
-  InitializeFileDescriptors();
 
 #ifdef SYSDEBUG
   // initialize --strace functionality
   argc = __strace_init(argc, argv, envp, auxv);
 #endif
 
+#if 0
 #if IsAsan()
   __asan_init(argc, argv, envp, auxv);
 #endif
+#endif
+
+  InitializeFileDescriptors();
 
   // set helpful globals
   __argc = argc;

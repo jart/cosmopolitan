@@ -31,6 +31,7 @@
 //	@threadsafe
 //	@noreturn
 _gclongjmp:
+#ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -59,4 +60,9 @@ _gclongjmp:
 2:	pop	%rsi
 	pop	%rdi
 	jmp	0b
+#elif defined(__aarch64__)
+	b	longjmp
+#else
+#error "unsupported architecture"
+#endif /* __x86_64__ */
 	.endfn	_gclongjmp,globl

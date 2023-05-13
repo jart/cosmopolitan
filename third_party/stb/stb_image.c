@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/stb/stb_image.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
@@ -31,19 +32,32 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "third_party/stb/internal.h"
-#include "third_party/stb/stb_image.h"
-
-#define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
+#include "third_party/aarch64/arm_neon.h"
+#include "third_party/intel/ammintrin.internal.h"
 
 asm(".ident\t\"\\n\\n\
 stb_image (Public Domain)\\n\
 Credit: Sean Barrett, et al.\\n\
 http://nothings.org/stb\"");
 
+#ifdef __x86_64__
+#define STBI_SSE2
+#define idct_block_kernel stbi__idct_simd
+#elif defined(__aarch64__)
+#define STBI_NEON
+#define idct_block_kernel stbi__idct_simd
+#else
+#define idct_block_kernel stbi__idct_block
+#endif
+
+#define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
+
 #ifndef STBI_REALLOC_SIZED
 #define STBI_REALLOC_SIZED(p, oldsz, newsz) realloc(p, newsz)
 #endif
+
+typedef unsigned char stbi_uc;
+typedef unsigned short stbi_us;
 
 // stbi__context structure is our basic context used by all images, so it
 // contains all the IO context, plus some basic image information
@@ -1219,6 +1233,556 @@ forceinline unsigned char stbi__clamp(int x) {
   return (unsigned char)x;
 }
 
+#define stbi__f2f(x) ((int)(((x)*4096 + 0.5)))
+#define stbi__fsh(x) ((x)*4096)
+
+// derived from jidctint -- DCT_ISLOW
+#define STBI__IDCT_1D(s0, s1, s2, s3, s4, s5, s6, s7)     \
+  int t0, t1, t2, t3, p1, p2, p3, p4, p5, x0, x1, x2, x3; \
+  p2 = s2;                                                \
+  p3 = s6;                                                \
+  p1 = (p2 + p3) * stbi__f2f(0.5411961f);                 \
+  t2 = p1 + p3 * stbi__f2f(-1.847759065f);                \
+  t3 = p1 + p2 * stbi__f2f(0.765366865f);                 \
+  p2 = s0;                                                \
+  p3 = s4;                                                \
+  t0 = stbi__fsh(p2 + p3);                                \
+  t1 = stbi__fsh(p2 - p3);                                \
+  x0 = t0 + t3;                                           \
+  x3 = t0 - t3;                                           \
+  x1 = t1 + t2;                                           \
+  x2 = t1 - t2;                                           \
+  t0 = s7;                                                \
+  t1 = s5;                                                \
+  t2 = s3;                                                \
+  t3 = s1;                                                \
+  p3 = t0 + t2;                                           \
+  p4 = t1 + t3;                                           \
+  p1 = t0 + t3;                                           \
+  p2 = t1 + t2;                                           \
+  p5 = (p3 + p4) * stbi__f2f(1.175875602f);               \
+  t0 = t0 * stbi__f2f(0.298631336f);                      \
+  t1 = t1 * stbi__f2f(2.053119869f);                      \
+  t2 = t2 * stbi__f2f(3.072711026f);                      \
+  t3 = t3 * stbi__f2f(1.501321110f);                      \
+  p1 = p5 + p1 * stbi__f2f(-0.899976223f);                \
+  p2 = p5 + p2 * stbi__f2f(-2.562915447f);                \
+  p3 = p3 * stbi__f2f(-1.961570560f);                     \
+  p4 = p4 * stbi__f2f(-0.390180644f);                     \
+  t3 += p1 + p4;                                          \
+  t2 += p2 + p3;                                          \
+  t1 += p2 + p4;                                          \
+  t0 += p1 + p3;
+
+static void stbi__idct_block(stbi_uc *out, int out_stride, short data[64]) {
+  int i, val[64], *v = val;
+  stbi_uc *o;
+  short *d = data;
+
+  // columns
+  for (i = 0; i < 8; ++i, ++d, ++v) {
+    // if all zeroes, shortcut -- this avoids dequantizing 0s and IDCTing
+    if (d[8] == 0 && d[16] == 0 && d[24] == 0 && d[32] == 0 && d[40] == 0 &&
+        d[48] == 0 && d[56] == 0) {
+      //    no shortcut                 0     seconds
+      //    (1|2|3|4|5|6|7)==0          0     seconds
+      //    all separate               -0.047 seconds
+      //    1 && 2|3 && 4|5 && 6|7:    -0.047 seconds
+      int dcterm = d[0] * 4;
+      v[0] = v[8] = v[16] = v[24] = v[32] = v[40] = v[48] = v[56] = dcterm;
+    } else {
+      STBI__IDCT_1D(d[0], d[8], d[16], d[24], d[32], d[40], d[48], d[56])
+      // constants scaled things up by 1<<12; let's bring them back
+      // down, but keep 2 extra bits of precision
+      x0 += 512;
+      x1 += 512;
+      x2 += 512;
+      x3 += 512;
+      v[0] = (x0 + t3) >> 10;
+      v[56] = (x0 - t3) >> 10;
+      v[8] = (x1 + t2) >> 10;
+      v[48] = (x1 - t2) >> 10;
+      v[16] = (x2 + t1) >> 10;
+      v[40] = (x2 - t1) >> 10;
+      v[24] = (x3 + t0) >> 10;
+      v[32] = (x3 - t0) >> 10;
+    }
+  }
+
+  for (i = 0, v = val, o = out; i < 8; ++i, v += 8, o += out_stride) {
+    // no fast case since the first 1D IDCT spread components out
+    STBI__IDCT_1D(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7])
+    // constants scaled things up by 1<<12, plus we had 1<<2 from first
+    // loop, plus horizontal and vertical each scale by sqrt(8) so together
+    // we've got an extra 1<<3, so 1<<17 total we need to remove.
+    // so we want to round that, which means adding 0.5 * 1<<17,
+    // aka 65536. Also, we'll end up with -128 to 127 that we want
+    // to encode as 0..255 by adding 128, so we'll add that before the shift
+    x0 += 65536 + (128 << 17);
+    x1 += 65536 + (128 << 17);
+    x2 += 65536 + (128 << 17);
+    x3 += 65536 + (128 << 17);
+    // tried computing the shifts into temps, or'ing the temps to see
+    // if any were out of range, but that was slower
+    o[0] = stbi__clamp((x0 + t3) >> 17);
+    o[7] = stbi__clamp((x0 - t3) >> 17);
+    o[1] = stbi__clamp((x1 + t2) >> 17);
+    o[6] = stbi__clamp((x1 - t2) >> 17);
+    o[2] = stbi__clamp((x2 + t1) >> 17);
+    o[5] = stbi__clamp((x2 - t1) >> 17);
+    o[3] = stbi__clamp((x3 + t0) >> 17);
+    o[4] = stbi__clamp((x3 - t0) >> 17);
+  }
+}
+
+#ifdef STBI_SSE2
+// sse2 integer IDCT. not the fastest possible implementation but it
+// produces bit-identical results to the generic C version so it's
+// fully "transparent".
+static void stbi__idct_simd(stbi_uc *out, int out_stride, short data[64]) {
+  // This is constructed to match our regular (generic) integer IDCT exactly.
+  __m128i row0, row1, row2, row3, row4, row5, row6, row7;
+  __m128i tmp;
+
+// dot product constant: even elems=x, odd elems=y
+#define dct_const(x, y) _mm_setr_epi16((x), (y), (x), (y), (x), (y), (x), (y))
+
+// out(0) = c0[even]*x + c0[odd]*y   (c0, x, y 16-bit, out 32-bit)
+// out(1) = c1[even]*x + c1[odd]*y
+#define dct_rot(out0, out1, x, y, c0, c1)        \
+  __m128i c0##lo = _mm_unpacklo_epi16((x), (y)); \
+  __m128i c0##hi = _mm_unpackhi_epi16((x), (y)); \
+  __m128i out0##_l = _mm_madd_epi16(c0##lo, c0); \
+  __m128i out0##_h = _mm_madd_epi16(c0##hi, c0); \
+  __m128i out1##_l = _mm_madd_epi16(c0##lo, c1); \
+  __m128i out1##_h = _mm_madd_epi16(c0##hi, c1)
+
+// out = in << 12  (in 16-bit, out 32-bit)
+#define dct_widen(out, in)                                              \
+  __m128i out##_l =                                                     \
+      _mm_srai_epi32(_mm_unpacklo_epi16(_mm_setzero_si128(), (in)), 4); \
+  __m128i out##_h =                                                     \
+      _mm_srai_epi32(_mm_unpackhi_epi16(_mm_setzero_si128(), (in)), 4)
+
+// wide add
+#define dct_wadd(out, a, b)                      \
+  __m128i out##_l = _mm_add_epi32(a##_l, b##_l); \
+  __m128i out##_h = _mm_add_epi32(a##_h, b##_h)
+
+// wide sub
+#define dct_wsub(out, a, b)                      \
+  __m128i out##_l = _mm_sub_epi32(a##_l, b##_l); \
+  __m128i out##_h = _mm_sub_epi32(a##_h, b##_h)
+
+// butterfly a/b, add bias, then shift by "s" and pack
+#define dct_bfly32o(out0, out1, a, b, bias, s)                               \
+  {                                                                          \
+    __m128i abiased_l = _mm_add_epi32(a##_l, bias);                          \
+    __m128i abiased_h = _mm_add_epi32(a##_h, bias);                          \
+    dct_wadd(sum, abiased, b);                                               \
+    dct_wsub(dif, abiased, b);                                               \
+    out0 =                                                                   \
+        _mm_packs_epi32(_mm_srai_epi32(sum_l, s), _mm_srai_epi32(sum_h, s)); \
+    out1 =                                                                   \
+        _mm_packs_epi32(_mm_srai_epi32(dif_l, s), _mm_srai_epi32(dif_h, s)); \
+  }
+
+// 8-bit interleave step (for transposes)
+#define dct_interleave8(a, b)  \
+  tmp = a;                     \
+  a = _mm_unpacklo_epi8(a, b); \
+  b = _mm_unpackhi_epi8(tmp, b)
+
+// 16-bit interleave step (for transposes)
+#define dct_interleave16(a, b)  \
+  tmp = a;                      \
+  a = _mm_unpacklo_epi16(a, b); \
+  b = _mm_unpackhi_epi16(tmp, b)
+
+#define dct_pass(bias, shift)                        \
+  {                                                  \
+    /* even part */                                  \
+    dct_rot(t2e, t3e, row2, row6, rot0_0, rot0_1);   \
+    __m128i sum04 = _mm_add_epi16(row0, row4);       \
+    __m128i dif04 = _mm_sub_epi16(row0, row4);       \
+    dct_widen(t0e, sum04);                           \
+    dct_widen(t1e, dif04);                           \
+    dct_wadd(x0, t0e, t3e);                          \
+    dct_wsub(x3, t0e, t3e);                          \
+    dct_wadd(x1, t1e, t2e);                          \
+    dct_wsub(x2, t1e, t2e);                          \
+    /* odd part */                                   \
+    dct_rot(y0o, y2o, row7, row3, rot2_0, rot2_1);   \
+    dct_rot(y1o, y3o, row5, row1, rot3_0, rot3_1);   \
+    __m128i sum17 = _mm_add_epi16(row1, row7);       \
+    __m128i sum35 = _mm_add_epi16(row3, row5);       \
+    dct_rot(y4o, y5o, sum17, sum35, rot1_0, rot1_1); \
+    dct_wadd(x4, y0o, y4o);                          \
+    dct_wadd(x5, y1o, y5o);                          \
+    dct_wadd(x6, y2o, y5o);                          \
+    dct_wadd(x7, y3o, y4o);                          \
+    dct_bfly32o(row0, row7, x0, x7, bias, shift);    \
+    dct_bfly32o(row1, row6, x1, x6, bias, shift);    \
+    dct_bfly32o(row2, row5, x2, x5, bias, shift);    \
+    dct_bfly32o(row3, row4, x3, x4, bias, shift);    \
+  }
+
+  __m128i rot0_0 = dct_const(stbi__f2f(0.5411961f),
+                             stbi__f2f(0.5411961f) + stbi__f2f(-1.847759065f));
+  __m128i rot0_1 = dct_const(stbi__f2f(0.5411961f) + stbi__f2f(0.765366865f),
+                             stbi__f2f(0.5411961f));
+  __m128i rot1_0 = dct_const(stbi__f2f(1.175875602f) + stbi__f2f(-0.899976223f),
+                             stbi__f2f(1.175875602f));
+  __m128i rot1_1 =
+      dct_const(stbi__f2f(1.175875602f),
+                stbi__f2f(1.175875602f) + stbi__f2f(-2.562915447f));
+  __m128i rot2_0 = dct_const(stbi__f2f(-1.961570560f) + stbi__f2f(0.298631336f),
+                             stbi__f2f(-1.961570560f));
+  __m128i rot2_1 =
+      dct_const(stbi__f2f(-1.961570560f),
+                stbi__f2f(-1.961570560f) + stbi__f2f(3.072711026f));
+  __m128i rot3_0 = dct_const(stbi__f2f(-0.390180644f) + stbi__f2f(2.053119869f),
+                             stbi__f2f(-0.390180644f));
+  __m128i rot3_1 =
+      dct_const(stbi__f2f(-0.390180644f),
+                stbi__f2f(-0.390180644f) + stbi__f2f(1.501321110f));
+
+  // rounding biases in column/row passes, see stbi__idct_block for explanation.
+  __m128i bias_0 = _mm_set1_epi32(512);
+  __m128i bias_1 = _mm_set1_epi32(65536 + (128 << 17));
+
+  // load
+  row0 = _mm_load_si128((const __m128i *)(data + 0 * 8));
+  row1 = _mm_load_si128((const __m128i *)(data + 1 * 8));
+  row2 = _mm_load_si128((const __m128i *)(data + 2 * 8));
+  row3 = _mm_load_si128((const __m128i *)(data + 3 * 8));
+  row4 = _mm_load_si128((const __m128i *)(data + 4 * 8));
+  row5 = _mm_load_si128((const __m128i *)(data + 5 * 8));
+  row6 = _mm_load_si128((const __m128i *)(data + 6 * 8));
+  row7 = _mm_load_si128((const __m128i *)(data + 7 * 8));
+
+  // column pass
+  dct_pass(bias_0, 10);
+
+  {
+    // 16bit 8x8 transpose pass 1
+    dct_interleave16(row0, row4);
+    dct_interleave16(row1, row5);
+    dct_interleave16(row2, row6);
+    dct_interleave16(row3, row7);
+
+    // transpose pass 2
+    dct_interleave16(row0, row2);
+    dct_interleave16(row1, row3);
+    dct_interleave16(row4, row6);
+    dct_interleave16(row5, row7);
+
+    // transpose pass 3
+    dct_interleave16(row0, row1);
+    dct_interleave16(row2, row3);
+    dct_interleave16(row4, row5);
+    dct_interleave16(row6, row7);
+  }
+
+  // row pass
+  dct_pass(bias_1, 17);
+
+  {
+    // pack
+    __m128i p0 = _mm_packus_epi16(row0, row1);  // a0a1a2a3...a7b0b1b2b3...b7
+    __m128i p1 = _mm_packus_epi16(row2, row3);
+    __m128i p2 = _mm_packus_epi16(row4, row5);
+    __m128i p3 = _mm_packus_epi16(row6, row7);
+
+    // 8bit 8x8 transpose pass 1
+    dct_interleave8(p0, p2);  // a0e0a1e1...
+    dct_interleave8(p1, p3);  // c0g0c1g1...
+
+    // transpose pass 2
+    dct_interleave8(p0, p1);  // a0c0e0g0...
+    dct_interleave8(p2, p3);  // b0d0f0h0...
+
+    // transpose pass 3
+    dct_interleave8(p0, p2);  // a0b0c0d0...
+    dct_interleave8(p1, p3);  // a4b4c4d4...
+
+    // store
+    _mm_storel_epi64((__m128i *)out, p0);
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, _mm_shuffle_epi32(p0, 0x4e));
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, p2);
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, _mm_shuffle_epi32(p2, 0x4e));
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, p1);
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, _mm_shuffle_epi32(p1, 0x4e));
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, p3);
+    out += out_stride;
+    _mm_storel_epi64((__m128i *)out, _mm_shuffle_epi32(p3, 0x4e));
+  }
+
+#undef dct_const
+#undef dct_rot
+#undef dct_widen
+#undef dct_wadd
+#undef dct_wsub
+#undef dct_bfly32o
+#undef dct_interleave8
+#undef dct_interleave16
+#undef dct_pass
+}
+
+#endif  // STBI_SSE2
+
+#ifdef STBI_NEON
+
+// NEON integer IDCT. should produce bit-identical
+// results to the generic C version.
+static void stbi__idct_simd(stbi_uc *out, int out_stride, short data[64]) {
+  int16x8_t row0, row1, row2, row3, row4, row5, row6, row7;
+
+  int16x4_t rot0_0 = vdup_n_s16(stbi__f2f(0.5411961f));
+  int16x4_t rot0_1 = vdup_n_s16(stbi__f2f(-1.847759065f));
+  int16x4_t rot0_2 = vdup_n_s16(stbi__f2f(0.765366865f));
+  int16x4_t rot1_0 = vdup_n_s16(stbi__f2f(1.175875602f));
+  int16x4_t rot1_1 = vdup_n_s16(stbi__f2f(-0.899976223f));
+  int16x4_t rot1_2 = vdup_n_s16(stbi__f2f(-2.562915447f));
+  int16x4_t rot2_0 = vdup_n_s16(stbi__f2f(-1.961570560f));
+  int16x4_t rot2_1 = vdup_n_s16(stbi__f2f(-0.390180644f));
+  int16x4_t rot3_0 = vdup_n_s16(stbi__f2f(0.298631336f));
+  int16x4_t rot3_1 = vdup_n_s16(stbi__f2f(2.053119869f));
+  int16x4_t rot3_2 = vdup_n_s16(stbi__f2f(3.072711026f));
+  int16x4_t rot3_3 = vdup_n_s16(stbi__f2f(1.501321110f));
+
+#define dct_long_mul(out, inq, coeff)                      \
+  int32x4_t out##_l = vmull_s16(vget_low_s16(inq), coeff); \
+  int32x4_t out##_h = vmull_s16(vget_high_s16(inq), coeff)
+
+#define dct_long_mac(out, acc, inq, coeff)                          \
+  int32x4_t out##_l = vmlal_s16(acc##_l, vget_low_s16(inq), coeff); \
+  int32x4_t out##_h = vmlal_s16(acc##_h, vget_high_s16(inq), coeff)
+
+#define dct_widen(out, inq)                               \
+  int32x4_t out##_l = vshll_n_s16(vget_low_s16(inq), 12); \
+  int32x4_t out##_h = vshll_n_s16(vget_high_s16(inq), 12)
+
+// wide add
+#define dct_wadd(out, a, b)                    \
+  int32x4_t out##_l = vaddq_s32(a##_l, b##_l); \
+  int32x4_t out##_h = vaddq_s32(a##_h, b##_h)
+
+// wide sub
+#define dct_wsub(out, a, b)                    \
+  int32x4_t out##_l = vsubq_s32(a##_l, b##_l); \
+  int32x4_t out##_h = vsubq_s32(a##_h, b##_h)
+
+// butterfly a/b, then shift using "shiftop" by "s" and pack
+#define dct_bfly32o(out0, out1, a, b, shiftop, s)              \
+  {                                                            \
+    dct_wadd(sum, a, b);                                       \
+    dct_wsub(dif, a, b);                                       \
+    out0 = vcombine_s16(shiftop(sum_l, s), shiftop(sum_h, s)); \
+    out1 = vcombine_s16(shiftop(dif_l, s), shiftop(dif_h, s)); \
+  }
+
+#define dct_pass(shiftop, shift)                     \
+  {                                                  \
+    /* even part */                                  \
+    int16x8_t sum26 = vaddq_s16(row2, row6);         \
+    dct_long_mul(p1e, sum26, rot0_0);                \
+    dct_long_mac(t2e, p1e, row6, rot0_1);            \
+    dct_long_mac(t3e, p1e, row2, rot0_2);            \
+    int16x8_t sum04 = vaddq_s16(row0, row4);         \
+    int16x8_t dif04 = vsubq_s16(row0, row4);         \
+    dct_widen(t0e, sum04);                           \
+    dct_widen(t1e, dif04);                           \
+    dct_wadd(x0, t0e, t3e);                          \
+    dct_wsub(x3, t0e, t3e);                          \
+    dct_wadd(x1, t1e, t2e);                          \
+    dct_wsub(x2, t1e, t2e);                          \
+    /* odd part */                                   \
+    int16x8_t sum15 = vaddq_s16(row1, row5);         \
+    int16x8_t sum17 = vaddq_s16(row1, row7);         \
+    int16x8_t sum35 = vaddq_s16(row3, row5);         \
+    int16x8_t sum37 = vaddq_s16(row3, row7);         \
+    int16x8_t sumodd = vaddq_s16(sum17, sum35);      \
+    dct_long_mul(p5o, sumodd, rot1_0);               \
+    dct_long_mac(p1o, p5o, sum17, rot1_1);           \
+    dct_long_mac(p2o, p5o, sum35, rot1_2);           \
+    dct_long_mul(p3o, sum37, rot2_0);                \
+    dct_long_mul(p4o, sum15, rot2_1);                \
+    dct_wadd(sump13o, p1o, p3o);                     \
+    dct_wadd(sump24o, p2o, p4o);                     \
+    dct_wadd(sump23o, p2o, p3o);                     \
+    dct_wadd(sump14o, p1o, p4o);                     \
+    dct_long_mac(x4, sump13o, row7, rot3_0);         \
+    dct_long_mac(x5, sump24o, row5, rot3_1);         \
+    dct_long_mac(x6, sump23o, row3, rot3_2);         \
+    dct_long_mac(x7, sump14o, row1, rot3_3);         \
+    dct_bfly32o(row0, row7, x0, x7, shiftop, shift); \
+    dct_bfly32o(row1, row6, x1, x6, shiftop, shift); \
+    dct_bfly32o(row2, row5, x2, x5, shiftop, shift); \
+    dct_bfly32o(row3, row4, x3, x4, shiftop, shift); \
+  }
+
+  // load
+  row0 = vld1q_s16(data + 0 * 8);
+  row1 = vld1q_s16(data + 1 * 8);
+  row2 = vld1q_s16(data + 2 * 8);
+  row3 = vld1q_s16(data + 3 * 8);
+  row4 = vld1q_s16(data + 4 * 8);
+  row5 = vld1q_s16(data + 5 * 8);
+  row6 = vld1q_s16(data + 6 * 8);
+  row7 = vld1q_s16(data + 7 * 8);
+
+  // add DC bias
+  row0 = vaddq_s16(row0, vsetq_lane_s16(1024, vdupq_n_s16(0), 0));
+
+  // column pass
+  dct_pass(vrshrn_n_s32, 10);
+
+  // 16bit 8x8 transpose
+  {
+// these three map to a single VTRN.16, VTRN.32, and VSWP, respectively.
+// whether compilers actually get this is another story, sadly.
+#define dct_trn16(x, y)              \
+  {                                  \
+    int16x8x2_t t = vtrnq_s16(x, y); \
+    x = t.val[0];                    \
+    y = t.val[1];                    \
+  }
+#define dct_trn32(x, y)                                                \
+  {                                                                    \
+    int32x4x2_t t =                                                    \
+        vtrnq_s32(vreinterpretq_s32_s16(x), vreinterpretq_s32_s16(y)); \
+    x = vreinterpretq_s16_s32(t.val[0]);                               \
+    y = vreinterpretq_s16_s32(t.val[1]);                               \
+  }
+#define dct_trn64(x, y)                                     \
+  {                                                         \
+    int16x8_t x0 = x;                                       \
+    int16x8_t y0 = y;                                       \
+    x = vcombine_s16(vget_low_s16(x0), vget_low_s16(y0));   \
+    y = vcombine_s16(vget_high_s16(x0), vget_high_s16(y0)); \
+  }
+
+    // pass 1
+    dct_trn16(row0, row1);  // a0b0a2b2a4b4a6b6
+    dct_trn16(row2, row3);
+    dct_trn16(row4, row5);
+    dct_trn16(row6, row7);
+
+    // pass 2
+    dct_trn32(row0, row2);  // a0b0c0d0a4b4c4d4
+    dct_trn32(row1, row3);
+    dct_trn32(row4, row6);
+    dct_trn32(row5, row7);
+
+    // pass 3
+    dct_trn64(row0, row4);  // a0b0c0d0e0f0g0h0
+    dct_trn64(row1, row5);
+    dct_trn64(row2, row6);
+    dct_trn64(row3, row7);
+
+#undef dct_trn16
+#undef dct_trn32
+#undef dct_trn64
+  }
+
+  // row pass
+  // vrshrn_n_s32 only supports shifts up to 16, we need
+  // 17. so do a non-rounding shift of 16 first then follow
+  // up with a rounding shift by 1.
+  dct_pass(vshrn_n_s32, 16);
+
+  {
+    // pack and round
+    uint8x8_t p0 = vqrshrun_n_s16(row0, 1);
+    uint8x8_t p1 = vqrshrun_n_s16(row1, 1);
+    uint8x8_t p2 = vqrshrun_n_s16(row2, 1);
+    uint8x8_t p3 = vqrshrun_n_s16(row3, 1);
+    uint8x8_t p4 = vqrshrun_n_s16(row4, 1);
+    uint8x8_t p5 = vqrshrun_n_s16(row5, 1);
+    uint8x8_t p6 = vqrshrun_n_s16(row6, 1);
+    uint8x8_t p7 = vqrshrun_n_s16(row7, 1);
+
+    // again, these can translate into one instruction, but often don't.
+#define dct_trn8_8(x, y)           \
+  {                                \
+    uint8x8x2_t t = vtrn_u8(x, y); \
+    x = t.val[0];                  \
+    y = t.val[1];                  \
+  }
+#define dct_trn8_16(x, y)                                                      \
+  {                                                                            \
+    uint16x4x2_t t = vtrn_u16(vreinterpret_u16_u8(x), vreinterpret_u16_u8(y)); \
+    x = vreinterpret_u8_u16(t.val[0]);                                         \
+    y = vreinterpret_u8_u16(t.val[1]);                                         \
+  }
+#define dct_trn8_32(x, y)                                                      \
+  {                                                                            \
+    uint32x2x2_t t = vtrn_u32(vreinterpret_u32_u8(x), vreinterpret_u32_u8(y)); \
+    x = vreinterpret_u8_u32(t.val[0]);                                         \
+    y = vreinterpret_u8_u32(t.val[1]);                                         \
+  }
+
+    // sadly can't use interleaved stores here since we only write
+    // 8 bytes to each scan line!
+
+    // 8x8 8-bit transpose pass 1
+    dct_trn8_8(p0, p1);
+    dct_trn8_8(p2, p3);
+    dct_trn8_8(p4, p5);
+    dct_trn8_8(p6, p7);
+
+    // pass 2
+    dct_trn8_16(p0, p2);
+    dct_trn8_16(p1, p3);
+    dct_trn8_16(p4, p6);
+    dct_trn8_16(p5, p7);
+
+    // pass 3
+    dct_trn8_32(p0, p4);
+    dct_trn8_32(p1, p5);
+    dct_trn8_32(p2, p6);
+    dct_trn8_32(p3, p7);
+
+    // store
+    vst1_u8(out, p0);
+    out += out_stride;
+    vst1_u8(out, p1);
+    out += out_stride;
+    vst1_u8(out, p2);
+    out += out_stride;
+    vst1_u8(out, p3);
+    out += out_stride;
+    vst1_u8(out, p4);
+    out += out_stride;
+    vst1_u8(out, p5);
+    out += out_stride;
+    vst1_u8(out, p6);
+    out += out_stride;
+    vst1_u8(out, p7);
+
+#undef dct_trn8_8
+#undef dct_trn8_16
+#undef dct_trn8_32
+  }
+
+#undef dct_long_mul
+#undef dct_long_mac
+#undef dct_widen
+#undef dct_wadd
+#undef dct_wsub
+#undef dct_bfly32o
+#undef dct_pass
+}
+
+#endif  // STBI_NEON
+
 #define STBI__MARKER_none 0xff
 // if there's a pending marker from the entropy stream, return that
 // otherwise, fetch from the stream and get a marker. if there's no
@@ -1275,7 +1839,7 @@ static int stbi__parse_entropy_coded_data(stbi__jpeg *z) {
                                        z->huff_ac + ha, z->fast_ac[ha], n,
                                        z->dequant[z->img_comp[n].tq]))
             return 0;
-          stbi__idct_simd$sse(
+          idct_block_kernel(
               z->img_comp[n].data + z->img_comp[n].w2 * j * 8 + i * 8,
               z->img_comp[n].w2, data);
           // every data block is an MCU, so countdown the restart interval
@@ -1309,7 +1873,7 @@ static int stbi__parse_entropy_coded_data(stbi__jpeg *z) {
                                              z->huff_ac + ha, z->fast_ac[ha], n,
                                              z->dequant[z->img_comp[n].tq]))
                   return 0;
-                stbi__idct_simd$sse(
+                idct_block_kernel(
                     z->img_comp[n].data + z->img_comp[n].w2 * y2 + x2,
                     z->img_comp[n].w2, data);
               }
@@ -1411,7 +1975,7 @@ static void stbi__jpeg_finish(stbi__jpeg *z) {
           short *data =
               z->img_comp[n].coeff + 64 * (i + j * z->img_comp[n].coeff_w);
           stbi__jpeg_dequantize(data, z->dequant[z->img_comp[n].tq]);
-          stbi__idct_simd$sse(
+          idct_block_kernel(
               z->img_comp[n].data + z->img_comp[n].w2 * j * 8 + i * 8,
               z->img_comp[n].w2, data);
         }
@@ -1904,6 +2468,203 @@ static unsigned char *stbi__resample_row_nearest(unsigned char *out,
   }
   return out;
 }
+
+// this is a reduced-precision calculation of YCbCr-to-RGB introduced
+// to make sure the code produces the same results in both SIMD and scalar
+#define stbi__float2fixed(x) (((int)((x)*4096.0f + 0.5f)) << 8)
+static void stbi__YCbCr_to_RGB_row(stbi_uc *out, const stbi_uc *y,
+                                   const stbi_uc *pcb, const stbi_uc *pcr,
+                                   int count, int step) {
+  int i;
+  for (i = 0; i < count; ++i) {
+    int y_fixed = (y[i] << 20) + (1 << 19);  // rounding
+    int r, g, b;
+    int cr = pcr[i] - 128;
+    int cb = pcb[i] - 128;
+    r = y_fixed + cr * stbi__float2fixed(1.40200f);
+    g = y_fixed + (cr * -stbi__float2fixed(0.71414f)) +
+        ((cb * -stbi__float2fixed(0.34414f)) & 0xffff0000);
+    b = y_fixed + cb * stbi__float2fixed(1.77200f);
+    r >>= 20;
+    g >>= 20;
+    b >>= 20;
+    if ((unsigned)r > 255) {
+      if (r < 0)
+        r = 0;
+      else
+        r = 255;
+    }
+    if ((unsigned)g > 255) {
+      if (g < 0)
+        g = 0;
+      else
+        g = 255;
+    }
+    if ((unsigned)b > 255) {
+      if (b < 0)
+        b = 0;
+      else
+        b = 255;
+    }
+    out[0] = (stbi_uc)r;
+    out[1] = (stbi_uc)g;
+    out[2] = (stbi_uc)b;
+    out[3] = 255;
+    out += step;
+  }
+}
+
+#if defined(STBI_SSE2) || defined(STBI_NEON)
+static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y,
+                                    stbi_uc const *pcb, stbi_uc const *pcr,
+                                    int count, int step) {
+  int i = 0;
+
+#ifdef STBI_SSE2
+  // step == 3 is pretty ugly on the final interleave, and i'm not convinced
+  // it's useful in practice (you wouldn't use it for textures, for example).
+  // so just accelerate step == 4 case.
+  if (step == 4) {
+    // this is a fairly straightforward implementation and not super-optimized.
+    __m128i signflip = _mm_set1_epi8(-0x80);
+    __m128i cr_const0 = _mm_set1_epi16((short)(1.40200f * 4096.0f + 0.5f));
+    __m128i cr_const1 = _mm_set1_epi16(-(short)(0.71414f * 4096.0f + 0.5f));
+    __m128i cb_const0 = _mm_set1_epi16(-(short)(0.34414f * 4096.0f + 0.5f));
+    __m128i cb_const1 = _mm_set1_epi16((short)(1.77200f * 4096.0f + 0.5f));
+    __m128i y_bias = _mm_set1_epi8((char)(unsigned char)128);
+    __m128i xw = _mm_set1_epi16(255);  // alpha channel
+
+    for (; i + 7 < count; i += 8) {
+      // load
+      __m128i y_bytes = _mm_loadl_epi64((__m128i *)(y + i));
+      __m128i cr_bytes = _mm_loadl_epi64((__m128i *)(pcr + i));
+      __m128i cb_bytes = _mm_loadl_epi64((__m128i *)(pcb + i));
+      __m128i cr_biased = _mm_xor_si128(cr_bytes, signflip);  // -128
+      __m128i cb_biased = _mm_xor_si128(cb_bytes, signflip);  // -128
+
+      // unpack to short (and left-shift cr, cb by 8)
+      __m128i yw = _mm_unpacklo_epi8(y_bias, y_bytes);
+      __m128i crw = _mm_unpacklo_epi8(_mm_setzero_si128(), cr_biased);
+      __m128i cbw = _mm_unpacklo_epi8(_mm_setzero_si128(), cb_biased);
+
+      // color transform
+      __m128i yws = _mm_srli_epi16(yw, 4);
+      __m128i cr0 = _mm_mulhi_epi16(cr_const0, crw);
+      __m128i cb0 = _mm_mulhi_epi16(cb_const0, cbw);
+      __m128i cb1 = _mm_mulhi_epi16(cbw, cb_const1);
+      __m128i cr1 = _mm_mulhi_epi16(crw, cr_const1);
+      __m128i rws = _mm_add_epi16(cr0, yws);
+      __m128i gwt = _mm_add_epi16(cb0, yws);
+      __m128i bws = _mm_add_epi16(yws, cb1);
+      __m128i gws = _mm_add_epi16(gwt, cr1);
+
+      // descale
+      __m128i rw = _mm_srai_epi16(rws, 4);
+      __m128i bw = _mm_srai_epi16(bws, 4);
+      __m128i gw = _mm_srai_epi16(gws, 4);
+
+      // back to byte, set up for transpose
+      __m128i brb = _mm_packus_epi16(rw, bw);
+      __m128i gxb = _mm_packus_epi16(gw, xw);
+
+      // transpose to interleave channels
+      __m128i t0 = _mm_unpacklo_epi8(brb, gxb);
+      __m128i t1 = _mm_unpackhi_epi8(brb, gxb);
+      __m128i o0 = _mm_unpacklo_epi16(t0, t1);
+      __m128i o1 = _mm_unpackhi_epi16(t0, t1);
+
+      // store
+      _mm_storeu_si128((__m128i *)(out + 0), o0);
+      _mm_storeu_si128((__m128i *)(out + 16), o1);
+      out += 32;
+    }
+  }
+#endif
+
+#ifdef STBI_NEON
+  // in this version, step=3 support would be easy to add. but is there demand?
+  if (step == 4) {
+    // this is a fairly straightforward implementation and not super-optimized.
+    uint8x8_t signflip = vdup_n_u8(0x80);
+    int16x8_t cr_const0 = vdupq_n_s16((short)(1.40200f * 4096.0f + 0.5f));
+    int16x8_t cr_const1 = vdupq_n_s16(-(short)(0.71414f * 4096.0f + 0.5f));
+    int16x8_t cb_const0 = vdupq_n_s16(-(short)(0.34414f * 4096.0f + 0.5f));
+    int16x8_t cb_const1 = vdupq_n_s16((short)(1.77200f * 4096.0f + 0.5f));
+
+    for (; i + 7 < count; i += 8) {
+      // load
+      uint8x8_t y_bytes = vld1_u8(y + i);
+      uint8x8_t cr_bytes = vld1_u8(pcr + i);
+      uint8x8_t cb_bytes = vld1_u8(pcb + i);
+      int8x8_t cr_biased = vreinterpret_s8_u8(vsub_u8(cr_bytes, signflip));
+      int8x8_t cb_biased = vreinterpret_s8_u8(vsub_u8(cb_bytes, signflip));
+
+      // expand to s16
+      int16x8_t yws = vreinterpretq_s16_u16(vshll_n_u8(y_bytes, 4));
+      int16x8_t crw = vshll_n_s8(cr_biased, 7);
+      int16x8_t cbw = vshll_n_s8(cb_biased, 7);
+
+      // color transform
+      int16x8_t cr0 = vqdmulhq_s16(crw, cr_const0);
+      int16x8_t cb0 = vqdmulhq_s16(cbw, cb_const0);
+      int16x8_t cr1 = vqdmulhq_s16(crw, cr_const1);
+      int16x8_t cb1 = vqdmulhq_s16(cbw, cb_const1);
+      int16x8_t rws = vaddq_s16(yws, cr0);
+      int16x8_t gws = vaddq_s16(vaddq_s16(yws, cb0), cr1);
+      int16x8_t bws = vaddq_s16(yws, cb1);
+
+      // undo scaling, round, convert to byte
+      uint8x8x4_t o;
+      o.val[0] = vqrshrun_n_s16(rws, 4);
+      o.val[1] = vqrshrun_n_s16(gws, 4);
+      o.val[2] = vqrshrun_n_s16(bws, 4);
+      o.val[3] = vdup_n_u8(255);
+
+      // store, interleaving r/g/b/a
+      vst4_u8(out, o);
+      out += 8 * 4;
+    }
+  }
+#endif
+
+  for (; i < count; ++i) {
+    int y_fixed = (y[i] << 20) + (1 << 19);  // rounding
+    int r, g, b;
+    int cr = pcr[i] - 128;
+    int cb = pcb[i] - 128;
+    r = y_fixed + cr * stbi__float2fixed(1.40200f);
+    g = y_fixed + cr * -stbi__float2fixed(0.71414f) +
+        ((cb * -stbi__float2fixed(0.34414f)) & 0xffff0000);
+    b = y_fixed + cb * stbi__float2fixed(1.77200f);
+    r >>= 20;
+    g >>= 20;
+    b >>= 20;
+    if ((unsigned)r > 255) {
+      if (r < 0)
+        r = 0;
+      else
+        r = 255;
+    }
+    if ((unsigned)g > 255) {
+      if (g < 0)
+        g = 0;
+      else
+        g = 255;
+    }
+    if ((unsigned)b > 255) {
+      if (b < 0)
+        b = 0;
+      else
+        b = 255;
+    }
+    out[0] = (stbi_uc)r;
+    out[1] = (stbi_uc)g;
+    out[2] = (stbi_uc)b;
+    out[3] = 255;
+    out += step;
+  }
+}
+#endif
 
 // set up the kernels
 static void stbi__setup_jpeg(stbi__jpeg *j) {

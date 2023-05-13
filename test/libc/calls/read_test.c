@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
@@ -44,12 +46,25 @@ TEST(read, eof) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static long Read(long fd, void *buf, unsigned long size) {
+#ifdef __x86_64__
   long ax, di, si, dx;
   asm volatile("syscall"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
                : "0"(__NR_read), "1"(fd), "2"(buf), "3"(size)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   return ax;
+#elif defined(__aarch64__)
+  register long r0 asm("x0") = (long)fd;
+  register long r1 asm("x1") = (long)buf;
+  register long r2 asm("x2") = (long)size;
+  register long r8 asm("x8") = (long)__NR_read;
+  register long res_x0 asm("x0");
+  asm volatile("svc\t0"
+               : "=r"(res_x0)
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "memory");
+  return res_x0;
+#endif
 }
 
 BENCH(read, bench) {
