@@ -13,7 +13,8 @@ extern ggml_fp16_t table_silu_f16[1 << 16];
 extern ggml_fp16_t table_exp_f16[1 << 16];
 extern float table_f32_f16[1 << 16];
 #if defined(__ARM_NEON) || defined(__wasm_simd128__)
-extern const uint64_t table_b2b_u[1 << 8];
+extern const uint64_t table_b2b_0[1 << 8];
+extern const uint64_t table_b2b_1[1 << 8];
 #endif
 
 inline static void ggml_vec_gelu_f16(const int n, ggml_fp16_t* y,

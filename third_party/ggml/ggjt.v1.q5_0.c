@@ -179,10 +179,10 @@ void ggml_vec_dot_v1_q5_0_q8_0(const int n, float * restrict s, const void * res
         uint32_t qh;
         memcpy(&qh, x0->qh, sizeof(qh));
 
-        tmp[0] = table_b2b_u[(qh >>  0) & 0xFF];
-        tmp[1] = table_b2b_u[(qh >>  8) & 0xFF];
-        tmp[2] = table_b2b_u[(qh >> 16) & 0xFF];
-        tmp[3] = table_b2b_u[(qh >> 24)       ];
+        tmp[0] = table_b2b_0[(qh >>  0) & 0xFF];
+        tmp[1] = table_b2b_0[(qh >>  8) & 0xFF];
+        tmp[2] = table_b2b_0[(qh >> 16) & 0xFF];
+        tmp[3] = table_b2b_0[(qh >> 24)       ];
 
         const int8x16_t qhl = vld1q_s8((const int8_t *)(tmp + 0));
         const int8x16_t qhh = vld1q_s8((const int8_t *)(tmp + 2));
@@ -241,10 +241,10 @@ void ggml_vec_dot_v1_q5_0_q8_0(const int n, float * restrict s, const void * res
         uint32_t qh;
         memcpy(&qh, x0->qh, sizeof(qh));
 
-        tmp[0] = table_b2b_u[(qh >>  0) & 0xFF];
-        tmp[1] = table_b2b_u[(qh >>  8) & 0xFF];
-        tmp[2] = table_b2b_u[(qh >> 16) & 0xFF];
-        tmp[3] = table_b2b_u[(qh >> 24)       ];
+        tmp[0] = table_b2b_0[(qh >>  0) & 0xFF];
+        tmp[1] = table_b2b_0[(qh >>  8) & 0xFF];
+        tmp[2] = table_b2b_0[(qh >> 16) & 0xFF];
+        tmp[3] = table_b2b_0[(qh >> 24)       ];
 
         const v128_t qhl = wasm_v128_load(tmp + 0);
         const v128_t qhh = wasm_v128_load(tmp + 2);

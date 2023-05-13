@@ -45,8 +45,10 @@ asm(".include \"libc/disclaimer.inc\"");
 #define B6(c,s,n) B5(c,s,n ## c), B5(c,s,n ## s)
 #define B7(c,s,n) B6(c,s,n ## c), B6(c,s,n ## s)
 #define B8(c,s  ) B7(c,s,     c), B7(c,s,     s)
-// precomputed tables for expanding 8bits to 8 bytes (shl 4)
-const uint64_t table_b2b_u[1 << 8] = { B8(00, 10) };
+
+// precomputed tables for expanding 8bits to 8 bytes:
+const uint64_t table_b2b_0[1 << 8] = { B8(00, 10) }; // ( b) << 4
+const uint64_t table_b2b_1[1 << 8] = { B8(10, 00) }; // (!b) << 4
 #endif
 
 //
