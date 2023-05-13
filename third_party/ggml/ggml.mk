@@ -10,11 +10,34 @@ PKGS += THIRD_PARTY_GGML
 THIRD_PARTY_GGML_ARTIFACTS += THIRD_PARTY_GGML_A
 THIRD_PARTY_GGML = $(THIRD_PARTY_GGML_A_DEPS) $(THIRD_PARTY_GGML_A)
 THIRD_PARTY_GGML_A = o/$(MODE)/third_party/ggml/ggml.a
-THIRD_PARTY_GGML_A_HDRS = third_party/ggml/ggml.h
-THIRD_PARTY_GGML_A_SRCS = third_party/ggml/ggml.c
 THIRD_PARTY_GGML_A_OBJS = $(THIRD_PARTY_GGML_A_SRCS:%.c=o/$(MODE)/%.o)
 THIRD_PARTY_GGML_A_FILES = $(THIRD_PARTY_GGML_A_SRCS) $(THIRD_PARTY_GGML_A_HDRS)
 THIRD_PARTY_GGML_A_CHECKS = $(THIRD_PARTY_GGML_A).pkg $(THIRD_PARTY_GGML_A_HDRS:%=o/$(MODE)/%.ok)
+
+THIRD_PARTY_GGML_A_HDRS =						\
+	third_party/ggml/fp16.h						\
+	third_party/ggml/ggml.h						\
+	third_party/ggml/ggjt.v1.q4_0.h					\
+	third_party/ggml/ggjt.v1.q4_1.h					\
+	third_party/ggml/ggjt.v1.q4_2.h					\
+	third_party/ggml/ggjt.v1.q5_0.h					\
+	third_party/ggml/ggjt.v1.q5_1.h					\
+	third_party/ggml/ggjt.v1.q8_0.h					\
+	third_party/ggml/ggjt.v1.q8_1.h					\
+	third_party/ggml/fp16.internal.h				\
+	third_party/ggml/ggjt.v1.internal.h
+
+THIRD_PARTY_GGML_A_SRCS =						\
+	third_party/ggml/fp16.c						\
+	third_party/ggml/ggml.c						\
+	third_party/ggml/ggjt.v1.c					\
+	third_party/ggml/ggjt.v1.q4_0.c					\
+	third_party/ggml/ggjt.v1.q4_1.c					\
+	third_party/ggml/ggjt.v1.q4_2.c					\
+	third_party/ggml/ggjt.v1.q5_0.c					\
+	third_party/ggml/ggjt.v1.q5_1.c					\
+	third_party/ggml/ggjt.v1.q8_0.c					\
+	third_party/ggml/ggjt.v1.q8_1.c
 
 THIRD_PARTY_GGML_A_DIRECTDEPS =						\
 	LIBC_CALLS							\

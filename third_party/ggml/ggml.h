@@ -205,20 +205,6 @@ COSMOPOLITAN_C_START_
         } \
     } while (0)
 
-#ifdef __ARM_NEON
-    // we use the built-in 16-bit float type
-    typedef __fp16 ggml_fp16_t;
-#else
-    typedef uint16_t ggml_fp16_t;
-#endif
-
-    // convert FP16 <-> FP32
-    GGML_API float       ggml_fp16_to_fp32(ggml_fp16_t x);
-    GGML_API ggml_fp16_t ggml_fp32_to_fp16(float x);
-
-    GGML_API void ggml_fp16_to_fp32_row(const ggml_fp16_t * x, float * y, size_t n);
-    GGML_API void ggml_fp32_to_fp16_row(const float * x, ggml_fp16_t * y, size_t n);
-
     struct ggml_object;
     struct ggml_context;
 
@@ -384,6 +370,13 @@ COSMOPOLITAN_C_START_
         void * mem_buffer; // if NULL, memory will be allocated internally
         bool   no_alloc;   // don't allocate memory for the tensor data
     };
+
+    //
+    // compatibilty
+    //
+
+    GGML_API void ggjt_v2(void);
+    GGML_API void ggjt_v1(void);
 
     // misc
 
@@ -925,6 +918,12 @@ COSMOPOLITAN_C_START_
     } quantize_fns_t;
 
     quantize_fns_t ggml_internal_get_quantize_fn(size_t i);
+
+    extern const int *GGML_BLCK_SIZE;
+    extern const size_t *GGML_TYPE_SIZE;
+    extern const bool *GGML_IS_QUANTIZED;
+    extern const char *const *GGML_TYPE_NAME;
+    extern const quantize_fns_t *quantize_fns;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

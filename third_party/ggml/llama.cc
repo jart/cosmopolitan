@@ -30,6 +30,8 @@
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/ggml/fp16.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/algorithm"
@@ -431,7 +433,8 @@ struct llama_load_tensors_map {
 enum llama_file_version {
     LLAMA_FILE_VERSION_GGML,
     LLAMA_FILE_VERSION_GGMF_V1, // added version field and scores in vocab
-    LLAMA_FILE_VERSION_GGJT_V1, // added padding
+    LLAMA_FILE_VERSION_GGJT_V1, // adopted unified aligned mappable layout
+    LLAMA_FILE_VERSION_GGJT_V2, // changed quantization format
 };
 
 struct llama_file_loader {
@@ -458,10 +461,16 @@ struct llama_file_loader {
 
         if (magic == READ32BE("ggml") && version == 0) {
             file_version = LLAMA_FILE_VERSION_GGML;
+            ggjt_v1();
         } else if (magic == READ32BE("ggmf") && version == 1) {
             file_version = LLAMA_FILE_VERSION_GGMF_V1;
+            ggjt_v1();
         } else if (magic == READ32BE("ggjt") && version == 1) {
             file_version = LLAMA_FILE_VERSION_GGJT_V1;
+            ggjt_v1();
+        } else if (magic == READ32BE("ggjt") && version == 2) {
+            file_version = LLAMA_FILE_VERSION_GGJT_V2;
+            ggjt_v2();
         } else {
             Die("unknown (magic, version) combination: %08x, %08x; is this really a GGML file?",
                 magic, version);
@@ -870,8 +879,9 @@ bool llama_mlock_supported() {
 static const char *llama_file_version_name(llama_file_version version) {
     switch (version) {
         case LLAMA_FILE_VERSION_GGML: return "'ggml' (old version with low tokenizer quality and no mmap support)";
-        case LLAMA_FILE_VERSION_GGMF_V1: return "ggmf v1 (old version with no mmap support)";
-        case LLAMA_FILE_VERSION_GGJT_V1: return "ggjt v1 (latest)";
+        case LLAMA_FILE_VERSION_GGMF_V1: return "ggmf v1 (pre #613 with sharded files and no mmap support)";
+        case LLAMA_FILE_VERSION_GGJT_V1: return "ggjt v1 (pre #1405)";
+        case LLAMA_FILE_VERSION_GGJT_V2: return "ggjt v2 (latest)";
         default: LLAMA_ASSERT(false);
     }
 }
@@ -949,6 +959,19 @@ static void llama_model_load_internal(
         fprintf(stderr, "%s: n_ff       = %u\n",  __func__, n_ff);
         fprintf(stderr, "%s: n_parts    = %zu\n", __func__, ml->file_loaders.size());
         fprintf(stderr, "%s: model size = %s\n",  __func__, llama_model_type_name(model.type));
+    }
+
+    // check for consistency between ftype and version. for example,
+    // Q4_2 was removed when GGJT v2 was introduced, so we reject it
+    // unless the file is using an earlier version number.
+    if (((unsigned)hparams.ftype >= GGML_TYPE_COUNT ||
+         !GGML_BLCK_SIZE[hparams.ftype] ||
+         !GGML_TYPE_SIZE[hparams.ftype] ||
+         !GGML_TYPE_NAME[hparams.ftype])) {
+        fprintf(stderr, "%s: error: '%s' isn't specified by '%s'\n",
+                __func__, llama_ftype_name(hparams.ftype),
+                llama_file_version_name(file_version));
+        exit(1);
     }
 
     if (vocab_only) {
