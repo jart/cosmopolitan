@@ -1027,10 +1027,12 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     }
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
+#ifdef __x86_64__
       if (addr == (uintptr_t)_weaken(__gc) && (uintptr_t)_weaken(__gc)) {
         do --gi;
         while ((addr = garbage->p[gi].ret) == (uintptr_t)_weaken(__gc));
       }
+#endif
       bt->p[i] = addr;
     } else {
       break;

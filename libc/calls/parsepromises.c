@@ -20,8 +20,6 @@
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
-#ifdef __x86_64__
-
 static int FindPromise(const char *name) {
   int i;
   for (i = 0; i < ARRAYLEN(kPledge); ++i) {
@@ -66,5 +64,3 @@ int ParsePromises(const char *promises, unsigned long *out) {
   }
   return rc;
 }
-
-#endif /* __x86_64__ */

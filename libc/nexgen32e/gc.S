@@ -33,11 +33,11 @@
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
 //	@threadsafe
-__gc:	mov	%fs:0,%rcx			# __get_tls()
-	mov	0x18(%rcx),%rcx			# tls::garbages
-	decl	(%rcx)				# ++g->i
-	mov	(%rcx),%r8d			# r8 = g->i
-	mov	8(%rcx),%r9			# r9 = g->p
+__gc:	mov	%fs:0,%rcx			// __get_tls()
+	mov	0x18(%rcx),%rcx			// tls::garbages
+	decl	(%rcx)				// ++g->i
+	mov	(%rcx),%r8d			// r8 = g->i
+	mov	8(%rcx),%r9			// r9 = g->p
 	js	9f
 	shl	$5,%r8
 	lea	(%r9,%r8),%r8

@@ -46,6 +46,8 @@ TEST(_longsort, test) {
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(long)));
 }
 
+#ifdef __x86_64__
+
 TEST(vqsort_int64_avx2, test) {
   if (!X86_HAVE(AVX2)) return;
   size_t n = 5000;
@@ -93,6 +95,8 @@ TEST(vqsort_int64_sse2, test) {
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(long)));
 }
 
+#endif /* __x86_64__ */
+
 TEST(radix_sort_int64, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
@@ -111,6 +115,7 @@ BENCH(_longsort, bench) {
   long *p2 = gc(malloc(n * sizeof(long)));
   rngset(p1, n * sizeof(long), 0, 0);
   EZBENCH2("_longsort", memcpy(p2, p1, n * sizeof(long)), _longsort(p2, n));
+#ifdef __x86_64__
   if (X86_HAVE(AVX2)) {
     EZBENCH2("vqsort_int64_avx2", memcpy(p2, p1, n * sizeof(long)),
              vqsort_int64_avx2(p2, n));
@@ -125,6 +130,7 @@ BENCH(_longsort, bench) {
   }
   EZBENCH2("vqsort_int64_sse2", memcpy(p2, p1, n * sizeof(long)),
            vqsort_int64_sse2(p2, n));
+#endif /* __x86_64__ */
   EZBENCH2("radix_sort_int64", memcpy(p2, p1, n * sizeof(long)),
            radix_sort_int64(p2, n));
   EZBENCH2("qsort(long)", memcpy(p2, p1, n * sizeof(long)),
@@ -149,6 +155,8 @@ TEST(_intsort, test) {
   _intsort(b, n);
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(int)));
 }
+
+#ifdef __x86_64__
 
 TEST(vqsort_int32_avx2, test) {
   if (!X86_HAVE(AVX2)) return;
@@ -197,6 +205,8 @@ TEST(vqsort_int32_sse2, test) {
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(int)));
 }
 
+#endif /* __x86_64__ */
+
 TEST(radix_sort_int32, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
@@ -215,6 +225,7 @@ BENCH(_intsort, bench) {
   int *p2 = gc(malloc(n * sizeof(int)));
   rngset(p1, n * sizeof(int), 0, 0);
   EZBENCH2("_intsort", memcpy(p2, p1, n * sizeof(int)), _intsort(p2, n));
+#ifdef __x86_64__
   if (X86_HAVE(AVX2)) {
     EZBENCH2("vqsort_int32_avx2", memcpy(p2, p1, n * sizeof(int)),
              vqsort_int32_avx2(p2, n));
@@ -229,6 +240,7 @@ BENCH(_intsort, bench) {
   }
   EZBENCH2("vqsort_int32_sse2", memcpy(p2, p1, n * sizeof(int)),
            vqsort_int32_sse2(p2, n));
+#endif /* __x86_64__ */
   EZBENCH2("djbsort", memcpy(p2, p1, n * sizeof(int)), djbsort(p2, n));
   EZBENCH2("radix_sort_int32", memcpy(p2, p1, n * sizeof(int)),
            radix_sort_int32(p2, n));

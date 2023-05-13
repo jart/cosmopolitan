@@ -28,7 +28,7 @@ static const uint16_t kTpEnc[32 - 7] = {
     5 | 0374 << 8, 5 | 0374 << 8, 5 | 0374 << 8, 5 | 0374 << 8, 5 | 0374 << 8,
 };
 
-uint64_t _tpenc(int32_t c) {
+uint64_t _tpenc(uint32_t c) {
   int e, n;
   uint64_t w;
   if (0 <= c && c <= 127) return c;

@@ -67,11 +67,13 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
       break;
     }
     addr = frame->addr;
+#ifdef __x86_64__
     if (addr == (intptr_t)_weaken(__gc)) {
       do {
         --gi;
       } while ((addr = garbage->p[gi].ret) == (intptr_t)_weaken(__gc));
     }
+#endif
     if (addr) {
       if (
 #ifdef __x86_64__

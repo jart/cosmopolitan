@@ -26,6 +26,9 @@
 TEST(wcwidth, test) {
   ASSERT_EQ(0, wcwidth(0));
   ASSERT_EQ(-1, wcwidth(1));
+  ASSERT_EQ(-1, wcwidth(-7));
+  ASSERT_EQ(1, wcwidth(0x10FFFD));
+  ASSERT_EQ(-1, wcwidth(0x10FFFD + 1));
 }
 
 TEST(strwidth, testCjkWidesAndCombiningLowLines_withThompsonPikeEncoding) {

@@ -68,6 +68,8 @@ o/$(MODE)/libc/nexgen32e/setjmp.o: libc/nexgen32e/setjmp.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/missingno.o: libc/nexgen32e/missingno.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/nexgen32e/khalfcache3.o: libc/nexgen32e/khalfcache3.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_NEXGEN32E_LIBS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)))
 LIBC_NEXGEN32E_SRCS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)_SRCS))

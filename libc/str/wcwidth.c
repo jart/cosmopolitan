@@ -19,6 +19,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
+#include "libc/str/wcwidth_osx.internal.h"
 
 extern const uint8_t kEastAsianWidth[];
 extern const uint32_t kEastAsianWidthBits;
@@ -34,7 +35,9 @@ int wcwidth(wchar_t c) {
     return 1;
   } else if (!c) {
     return 0;
-  } else if ((0 < c && c < 32) || (0x7f <= c && c < 0xA0)) {
+  } else if ((uint32_t)c > 0x10FFFD ||  //
+             (0 < c && c < 32) ||       //
+             (0x7f <= c && c < 0xA0)) {
     return -1;
   } else if ((0 <= c && c < kCombiningCharsBits) &&
              !!(kCombiningChars[c >> 3] & (1 << (c & 7)))) {
@@ -45,15 +48,17 @@ int wcwidth(wchar_t c) {
     return 1;
   }
 #else
-  if (!c) return 0;
-  if (c < 0 || iswcntrl(c)) return -1;
-  return 1 +
-         (c >= 0x1100 &&
-          (c <= 0x115f || c == 0x2329 || c == 0x232a ||
-           (c >= 0x2e80 && c <= 0xa4cf && c != 0x303f) ||
-           (c >= 0xac00 && c <= 0xd7a3) || (c >= 0xf900 && c <= 0xfaff) ||
-           (c >= 0xfe10 && c <= 0xfe19) || (c >= 0xfe30 && c <= 0xfe6f) ||
-           (c >= 0xff00 && c <= 0xff60) || (c >= 0xffe0 && c <= 0xffe6) ||
-           (c >= 0x20000 && c <= 0x2fffd) || (c >= 0x30000 && c <= 0x3fffd)));
+  int res;
+  if (LIKELY(32 <= c && c < 127)) return 1;
+  if (VERY_UNLIKELY((uint32_t)c >= 0x100000)) {
+    if ((uint32_t)c <= 0x10FFFD) return 1;
+    return -1;
+  }
+  res = _wcwidth_osx(c);
+  if (VERY_UNLIKELY(!res)) {
+    if (!c) return 0;
+    if (iswcntrl(c)) return -1;
+  }
+  return res;
 #endif
 }

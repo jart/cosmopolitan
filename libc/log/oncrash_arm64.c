@@ -184,7 +184,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
            " %s %s %s %s\n",
            strong, reset, sig, kind, host, getpid(), gettid(),
            program_invocation_name, names.sysname, names.version,
-           names.nodename, names.release, "yo");
+           names.nodename, names.release);
     if (ctx) {
       long pc;
       char line[256];

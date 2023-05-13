@@ -28,8 +28,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
-#ifdef __x86_64__
-
 /**
  * Permits system operations, e.g.
  *
@@ -278,5 +276,3 @@ int pledge(const char *promises, const char *execpromises) {
   STRACE("pledge(%#s, %#s) → %d% m", promises, execpromises, rc);
   return rc;
 }
-
-#endif /* __x86_64__ */

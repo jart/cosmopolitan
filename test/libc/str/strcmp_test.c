@@ -472,6 +472,8 @@ TEST(wcscmp, testTwosComplementBane) {
 TEST(wcsncmp, testTwosComplementBane) {
   wchar_t *B1 = malloc(4);
   wchar_t *B2 = malloc(4);
+  B1[1] = L'\0';
+  B2[1] = L'\0';
   EXPECT_EQ(wcsncmp(memcpy(B1, "\x00\x00\x00\x80", 4),
                     memcpy(B2, "\x00\x00\x00\x80", 4), 1),
             0);

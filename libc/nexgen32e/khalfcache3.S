@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
+#ifdef __x86_64__
+
 	.initbss 202,_init_kHalfCache3
 //	Half size of level 3 cache in bytes.
 kHalfCache3:
@@ -60,3 +62,14 @@ kHalfCache3:
 4:	shr	%eax
 	stosq
 	.init.end 202,_init_kHalfCache3
+
+#else
+
+	.rodata
+	.align	8
+kHalfCache3:
+	.quad	4 * 1024 * 1024
+	.endobj	kHalfCache3,globl
+	.previous
+
+#endif /* __x86_64__ */

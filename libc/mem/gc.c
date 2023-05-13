@@ -25,8 +25,6 @@
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
 
-#ifdef __x86_64__
-
 forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
                                                    struct StackFrame *parent,
                                                    void *ptr) {
@@ -88,7 +86,9 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
   g->p[g->i].arg = (intptr_t)arg;
   g->p[g->i].ret = frame->addr;
   g->i++;
+#ifdef __x86_64__
   frame->addr = (intptr_t)__gc;
+#endif
 }
 
 // the gnu extension macros for _gc / _defer point here
@@ -146,5 +146,3 @@ void *(_defer)(void *fn, void *arg) {
   DeferFunction(frame->next, fn, arg);
   return arg;
 }
-
-#endif /* __x86_64__ */
