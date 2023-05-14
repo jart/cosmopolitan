@@ -36,10 +36,6 @@ long _lrint(double) asm("lrint");
 long _lrintf(float) asm("lrintf");
 long _lrintl(long double) asm("lrintl");
 
-FIXTURE(intrin, disableHardwareExtensions) {
-  memset((/*unconst*/ void *)kCpuids, 0, sizeof(kCpuids));
-}
-
 TEST(round, testCornerCases) {
   EXPECT_STREQ("-0", gc(xdtoa(_round(-0.0))));
   EXPECT_STREQ("NAN", gc(xdtoa(_round(NAN))));
@@ -218,10 +214,12 @@ TEST(lroundl, test) {
 }
 
 BENCH(round, bench) {
+#ifdef __x86_64__
   EZBENCH2("double+.5", donothing, EXPROPRIATE(VEIL("x", (double)(-3.5)) + .5));
   EZBENCH2("float+.5f", donothing, EXPROPRIATE(VEIL("x", (float)(-3.5)) + .5));
   EZBENCH2("ldbl+.5l", donothing,
            EXPROPRIATE(VEIL("t", (long double)(-3.5)) + .5));
+#endif
   EZBENCH2("round", donothing, _round(.7));   /* ~4ns */
   EZBENCH2("roundf", donothing, _roundf(.7)); /* ~3ns */
   EZBENCH2("roundl", donothing, _roundl(.7)); /* ~8ns */

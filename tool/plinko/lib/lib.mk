@@ -1,6 +1,8 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
+ifeq ($(ARCH), x86_64)
+
 PKGS += TOOL_PLINKO_LIB
 
 TOOL_PLINKO_LIB_ARTIFACTS += TOOL_PLINKO_LIB_A
@@ -67,6 +69,8 @@ TOOL_PLINKO_LIB_BINS = $(foreach x,$(TOOL_PLINKO_LIB_ARTIFACTS),$($(x)_BINS))
 TOOL_PLINKO_LIB_CHECKS = $(foreach x,$(TOOL_PLINKO_LIB_ARTIFACTS),$($(x)_CHECKS))
 TOOL_PLINKO_LIB_OBJS = $(foreach x,$(TOOL_PLINKO_LIB_ARTIFACTS),$($(x)_OBJS))
 TOOL_PLINKO_LIB_TESTS = $(foreach x,$(TOOL_PLINKO_LIB_ARTIFACTS),$($(x)_TESTS))
+
+endif
 
 .PHONY: o/$(MODE)/tool/plinko/lib
 o/$(MODE)/tool/plinko/lib: $(TOOL_PLINKO_LIB_CHECKS)

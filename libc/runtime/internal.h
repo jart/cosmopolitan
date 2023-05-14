@@ -48,6 +48,7 @@ noasan void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
                    int64_t off) _Hide;
 noasan int _Munmap(char *, size_t) _Hide;
 void InitializeFileDescriptors(void);
+void __on_arithmetic_overflow(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

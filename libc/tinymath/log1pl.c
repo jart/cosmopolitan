@@ -30,7 +30,7 @@
 #include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
-OpenBSD libm (MIT License)\\n\
+OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -88,12 +88,6 @@ asm(".include \"libc/disclaimer.inc\"");
  *    IEEE     -1.0, 9.0    100000      8.2e-20    2.5e-20
  */
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double log1pl(long double x)
-{
-	return log1p(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 /* Coefficients for log(1+x) = x - x^2 / 2 + x^3 P(x)/Q(x)
  * 1/sqrt(2) <= x < sqrt(2)
  * Theoretical peak relative error = 2.32e-20
@@ -144,6 +138,12 @@ static const long double C2 = 1.4286068203094172321215E-6L;
  */
 long double log1pl(long double xm1)
 {
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
+	return log1p(xm1);
+
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+
 	long double x, y, z;
 	int e;
 
@@ -208,13 +208,13 @@ long double log1pl(long double xm1)
 	z = z + x;
 	z = z + e * C1;
 	return z;
-}
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-// TODO: broken implementation to make things compile
-long double log1pl(long double x)
-{
-	return log1p(x);
-}
+
+	long double __log1plq(long double);
+	return __log1plq(xm1);
+
 #else
 #error "architecture unsupported"
 #endif
+}

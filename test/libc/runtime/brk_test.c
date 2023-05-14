@@ -52,6 +52,8 @@ TEST(sbrk, underflowsEnd_returnsEinval) {
   ASSERT_SYS(EINVAL, MAP_FAILED, sbrk(-GUARDSIZE));
 }
 
+#ifndef __aarch64__
+// not sure if qemu-aarch64 supports this
 TEST(sbrk, giantDelta_returnsEnomem) {
   if (IsXnu()) return;   // mmap polyfills this but brk doesn't right now
   if (IsWsl1()) return;  // WSL1 setrlimit() is busted
@@ -61,6 +63,7 @@ TEST(sbrk, giantDelta_returnsEnomem) {
   ASSERT_SYS(ENOMEM, MAP_FAILED, sbrk(1024 * 1024 * 4));
   EXITS(0);
 }
+#endif
 
 TEST(sbrk, overlapsExistingMapping_failsWithEexist) {
   char *p = (char *)ROUNDUP((intptr_t)_end, FRAMESIZE);

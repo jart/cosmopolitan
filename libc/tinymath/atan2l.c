@@ -59,20 +59,21 @@ asm(".include \"libc/disclaimer.inc\"");
 /**
  * Returns arc tangent of 𝑦/𝑥.
  */
-long double atan2l(long double y, long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return atan2(y, x);
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
+long double atan2l(long double y, long double x)
+{
 #ifdef __x86__
 
-	long double res;
-	asm("fpatan" 
-	    : "=t" (res)
-	    : "0"(x), "u"(y) 
+	asm("fpatan"
+	    : "=t"(x)
+	    : "0"(x), "u"(y)
 	    : "st(1)");
-	return res;
+	return x;
 
-#else
+#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
+	return atan2(y, x);
+
+#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 
 	union ldshape ux, uy;
 	long double z;
@@ -129,7 +130,6 @@ long double atan2l(long double y, long double x) {
 		return (z-2*pio2_lo)-2*pio2_hi; /* atan(-,-) */
 	}
 
-#endif /* __x86__ */
 #else
 #error "architecture unsupported"
 #endif

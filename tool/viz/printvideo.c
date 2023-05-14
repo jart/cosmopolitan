@@ -1409,7 +1409,9 @@ static void OnExit(void) {
 }
 
 static void MakeLatencyLittleLessBad(void) {
+#ifdef __x86_64__
   _peekall();
+#endif
   LOGIFNEG1(sys_mlockall(MCL_CURRENT));
   LOGIFNEG1(nice(-5));
 }

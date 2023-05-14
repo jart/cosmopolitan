@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -79,6 +80,8 @@ int sys_setsockopt(int, int, int, const void *, uint32_t) _Hide;
 int32_t sys_epoll_create(int32_t) _Hide;
 int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *) _Hide;
 int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t) _Hide;
+int32_t sys_epoll_pwait(int32_t, void *, int32_t, int32_t, const sigset_t *,
+                        size_t);
 
 int sys_socket_nt(int, int, int) _Hide;
 

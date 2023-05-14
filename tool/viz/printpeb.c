@@ -42,6 +42,7 @@
 #include "libc/time/time.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/idname.h"
+#ifdef __x86_64__
 
 char *GetString(struct NtUnicodeString *s) {
   static char buf[1024];
@@ -537,3 +538,5 @@ int main(int argc, char *argv[]) {
   PrintModulesMemoryOrder();
   return 0;
 }
+
+#endif /* __x86_64__ */

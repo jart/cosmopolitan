@@ -16,8 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
@@ -26,17 +31,7 @@ double _tanh(double) asm("tanh");
 float _tanhf(float) asm("tanhf");
 long double _tanhl(long double) asm("tanhl");
 
-TEST(_tanhl, test) {
-  EXPECT_STREQ(".09966799462495582", _gc(xdtoal(_tanhl(+.1))));
-  EXPECT_STREQ("-.09966799462495582", _gc(xdtoal(_tanhl(-.1))));
-  EXPECT_STREQ("0", _gc(xdtoal(_tanhl(0))));
-  EXPECT_STREQ("-0", _gc(xdtoal(_tanhl(-0.))));
-  EXPECT_TRUE(isnan(_tanhl(NAN)));
-  EXPECT_STREQ("1", _gc(xdtoal(_tanhl(INFINITY))));
-  EXPECT_STREQ("-1", _gc(xdtoal(_tanhl(-INFINITY))));
-}
-
-TEST(_tanh, test) {
+TEST(tanh, test) {
   EXPECT_STREQ("0", _gc(xasprintf("%.15g", _tanh(0.))));
   EXPECT_STREQ("-0", _gc(xasprintf("%.15g", _tanh(-0.))));
   EXPECT_STREQ("0.0996679946249558", _gc(xasprintf("%.15g", _tanh(.1))));
@@ -61,7 +56,7 @@ TEST(_tanh, test) {
                _gc(xasprintf("%.15g", _tanh(-2.1073424255447e-08))));
 }
 
-TEST(_tanhf, test) {
+TEST(tanhf, test) {
   EXPECT_STREQ(".099668", _gc(xdtoaf(_tanhf(+.1))));
   EXPECT_STREQ("-.099668", _gc(xdtoaf(_tanhf(-.1))));
   EXPECT_STREQ("0", _gc(xdtoaf(_tanhf(0))));
@@ -70,3 +65,56 @@ TEST(_tanhf, test) {
   EXPECT_STREQ("1", _gc(xdtoaf(_tanhf(INFINITY))));
   EXPECT_STREQ("-1", _gc(xdtoaf(_tanhf(-INFINITY))));
 }
+
+TEST(tanhl, test) {
+  EXPECT_STREQ(".09966799462495582", _gc(xdtoal(_tanhl(+.1))));
+  EXPECT_STREQ("-.09966799462495582", _gc(xdtoal(_tanhl(-.1))));
+  EXPECT_STREQ("0", _gc(xdtoal(_tanhl(0))));
+  EXPECT_STREQ("-0", _gc(xdtoal(_tanhl(-0.))));
+  EXPECT_TRUE(isnan(_tanhl(NAN)));
+  EXPECT_STREQ("1", _gc(xdtoal(_tanhl(INFINITY))));
+  EXPECT_STREQ("-1", _gc(xdtoal(_tanhl(-INFINITY))));
+}
+
+BENCH(tanhl, bench) {
+  EZBENCH2("-tanh", donothing, _tanh(.7));    // ~27ns
+  EZBENCH2("-tanhf", donothing, _tanhf(.7));  // ~15ns
+  EZBENCH2("-tanhl", donothing, _tanhl(.7));  // ~42ns
+}
+
+static inline float i2f(uint32_t i) {
+  union {
+    uint32_t i;
+    float f;
+  } u = {i};
+  return u.f;
+}
+
+static inline uint32_t f2i(float f) {
+  union {
+    float f;
+    uint32_t i;
+  } u = {f};
+  return u.i;
+}
+
+#if 0
+TEST(tanhf, brute) {
+  long i;
+  int lim = 100;
+  uint32_t x, y;
+  for (i = 0; i <= 0x100000000; i += 7) {
+    x = f2i(tanhf(i2f(i)));
+    y = f2i(tanhf2(i2f(i)));
+    if (abs(x - y) > 2) {
+      kprintf("bah %#lx %s %d\n", i, _gc(xdtoaf(i2f(i))), abs(x - y));
+      kprintf(" %-12s %#x\n", _gc(xdtoaf(i2f(x))), x);
+      kprintf(" %-12s %#x\n", _gc(xdtoaf(i2f(y))), y);
+      if (!--lim) break;
+    }
+  }
+  if (lim != 100) {
+    exit(1);
+  }
+}
+#endif

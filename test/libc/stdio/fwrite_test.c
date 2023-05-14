@@ -173,7 +173,7 @@ TEST(fwrite, signalStorm) {
   if (!pid) {
     do {
       ASSERT_NE(-1, kill(getppid(), SIGINT));
-      usleep(1);
+      usleep(25);
     } while (!gotsigint);
     _exit(0);
   }

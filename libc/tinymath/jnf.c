@@ -49,6 +49,9 @@ asm(".include \"libc/disclaimer.inc\"");
  * ====================================================
  */
 
+/**
+ * Returns Bessel function of 𝑥 of first kind of order 𝑛.
+ */
 float jnf(int n, float x)
 {
 	uint32_t ix;
@@ -192,6 +195,9 @@ float jnf(int n, float x)
 	return sign ? -b : b;
 }
 
+/**
+ * Returns Bessel function of 𝑥 of second kind of order 𝑛.
+ */
 float ynf(int n, float x)
 {
 	uint32_t ix, ib;

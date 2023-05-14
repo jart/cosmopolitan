@@ -305,7 +305,7 @@ scall	posix_fallocate		0x9dffffa12fffffff	0xfff	globl hidden #  └─ cosmopoli
 scall	__sys_accept4		0xfff85da1dffff920	0x0f2	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	0x018	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	0x03b	globl hidden # Linux 2.6.27+
-scall	sys_epoll_pwait		0xfffffffffffff119	0x016	globl # no wrapper
+scall	sys_epoll_pwait		0xfffffffffffff919	0x016	globl hidden
 scall	sys_epoll_create1	0xfffffffffffff123	0x014	globl hidden
 scall	sys_perf_event_open	0xfffffffffffff12a	0x0f1	globl # no wrapper
 scall	sys_inotify_init1	0xfffffffffffff126	0x01a	globl # no wrapper

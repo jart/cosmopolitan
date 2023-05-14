@@ -44,7 +44,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "net/http/ip.h"
-
 #ifdef __x86_64__
 
 #define ORIG_RAX 120

@@ -145,6 +145,7 @@ TEST(mmap, testMapFixed_destroysEverythingInItsPath) {
   EXPECT_NE(-1, munmap((void *)kFixedmapStart, FRAMESIZE * 3));
 }
 
+#ifdef __x86_64__
 TEST(mmap, customStackMemory_isAuthorized) {
   char *stack;
   uintptr_t w, r;
@@ -160,6 +161,7 @@ TEST(mmap, customStackMemory_isAuthorized) {
   ASSERT_EQ(123, r);
   EXPECT_SYS(0, 0, munmap(stack, STACKSIZE));
 }
+#endif /* __x86_64__ */
 
 TEST(mmap, fileOffset) {
   int fd;

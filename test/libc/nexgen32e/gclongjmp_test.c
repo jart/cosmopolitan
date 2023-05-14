@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -29,6 +29,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
+#ifdef __x86_64__
+// TODO(jart): get garbage collector working properly on aarch64
 
 #define GC(x) _defer(Free, x)
 
@@ -136,3 +138,5 @@ BENCH(gc, bench) {
   EZBENCH2("gc(malloc(16))", donothing, F1p());
   EZBENCH2("free(malloc(16))", donothing, F2p());
 }
+
+#endif /* __x86_64__ */

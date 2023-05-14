@@ -39,13 +39,17 @@ asm(".include \"libc/disclaimer.inc\"");
 /**
  * Returns sine and cosine of 𝑥.
  */
-void sincosl(long double x, long double *sin, long double *cos) {
+void sincosl(long double x, long double *sin, long double *cos)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
 	double sind, cosd;
 	sincos(x, &sind, &cosd);
 	*sin = sind;
 	*cos = cosd;
+
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
+
 	union ldshape u = {x};
 	unsigned n;
 	long double y[2], s, c;
@@ -90,6 +94,7 @@ void sincosl(long double x, long double *sin, long double *cos) {
 		*cos = s;
 		break;
 	}
+
 #else
 #error "architecture unsupported"
 #endif

@@ -205,7 +205,7 @@ typedef unsigned short UShort;
 
 #ifdef Bad_float_h
 
-#else /* ifndef Bad_float_h */
+#else  /* ifndef Bad_float_h */
 #endif /* Bad_float_h */
 
 #ifdef IEEE_Arith
@@ -354,6 +354,7 @@ _Hide extern const double __gdtoa_tinytens[];
 _Hide extern const unsigned char __gdtoa_hexdig[];
 _Hide extern const char *const __gdtoa_InfName[6];
 _Hide extern const char *const __gdtoa_NanName[3];
+_Hide extern const ULong __gdtoa_NanDflt_Q[4];
 
 Bigint *__gdtoa_Balloc(int, ThInfo **);
 void __gdtoa_Bfree(Bigint *, ThInfo **);

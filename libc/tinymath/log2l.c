@@ -30,7 +30,7 @@
 #include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
-OpenBSD libm (MIT License)\\n\
+OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -92,12 +92,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * [-10000, +10000].
  */
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double log2l(long double x)
-{
-	return log2(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 /* Coefficients for ln(1+x) = x - x**2/2 + x**3 P(x)/Q(x)
  * 1/sqrt(2) <= x < sqrt(2)
  * Theoretical peak relative error = 6.2e-22
@@ -144,8 +138,29 @@ static const long double S[4] = {
 
 #define SQRTH 0.70710678118654752440L
 
+/**
+ * Calculates log₂𝑥.
+ */
 long double log2l(long double x)
 {
+#ifdef __x86__
+
+	// asm improves performance 39ns → 21ns
+	// measurement made on an intel core i9
+	long double one;
+	asm("fld1" : "=t"(one));
+	asm("fyl2x"
+	    : "=t"(x)
+	    : "0"(x), "u"(one)
+	    : "st(1)");
+	return x;
+
+#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
+	return log2(x);
+
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+
 	long double y, z;
 	int e;
 
@@ -210,13 +225,13 @@ done:
 	z += x;
 	z += e;
 	return z;
-}
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-// TODO: broken implementation to make things compile
-long double log2l(long double x)
-{
-	return log2(x);
-}
+
+	long double __log2lq(long double);
+	return __log2lq(x);
+
 #else
 #error "architecture unsupported"
 #endif
+}

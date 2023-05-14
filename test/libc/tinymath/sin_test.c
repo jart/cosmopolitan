@@ -29,8 +29,8 @@ long double _sinl(long double) asm("sinl");
 
 TEST(sinl, test) {
   EXPECT_STREQ("NAN", _gc(xdtoal(_sinl(NAN))));
-  EXPECT_STREQ("-NAN", _gc(xdtoal(_sinl(+INFINITY))));
-  EXPECT_STREQ("-NAN", _gc(xdtoal(_sinl(-INFINITY))));
+  EXPECT_TRUE(isnan(_sinl(+INFINITY)));
+  EXPECT_TRUE(isnan(_sinl(-INFINITY)));
   EXPECT_STREQ(".479425538604203", _gc(xdtoal(_sinl(.5))));
   EXPECT_STREQ("-.479425538604203", _gc(xdtoal(_sinl(-.5))));
   EXPECT_STREQ(".8414709794048734", _gc(xdtoal(_sinl(.99999999))));

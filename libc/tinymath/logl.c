@@ -29,13 +29,13 @@
 #include "libc/tinymath/internal.h"
 
 asm(".ident\t\"\\n\\n\
-OpenBSD libm (MIT License)\\n\
+OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_logl.c */
 /*
@@ -91,12 +91,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * [-10000, +10000].
  */
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double logl(long double x)
-{
-	return log(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 /* Coefficients for log(1+x) = x - x**2/2 + x**3 P(x)/Q(x)
  * 1/sqrt(2) <= x < sqrt(2)
  * Theoretical peak relative error = 2.32e-20
@@ -142,8 +136,27 @@ static const long double C2 = 1.4286068203094172321215E-6L;
 
 #define SQRTH 0.70710678118654752440L
 
+/**
+ * Returns natural logarithm of 𝑥.
+ */
 long double logl(long double x)
 {
+#ifdef __x86__
+
+	long double ln2;
+	asm("fldln2" : "=t"(ln2));
+	asm("fyl2x"
+	    : "=t"(x)
+	    : "0"(x), "u"(ln2)
+	    : "st(1)");
+	return x;
+
+#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
+	return log(x);
+
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+
 	long double y, z;
 	int e;
 
@@ -202,13 +215,13 @@ long double logl(long double x)
 	z = z + x;
 	z = z + e * C1; /* This sum has an error of 1/2 lsb. */
 	return z;
-}
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-// TODO: broken implementation to make things compile
-long double logl(long double x)
-{
-	return log(x);
-}
+
+	long double __loglq(long double);
+	return __loglq(x);
+
 #else
 #error "architecture unsupported"
 #endif
+}

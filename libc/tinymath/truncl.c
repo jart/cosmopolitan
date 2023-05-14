@@ -35,9 +35,15 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-long double truncl(long double x) {
+/**
+ * Rounds to integer, towards zero.
+ */
+long double truncl(long double x)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
 	return trunc(x);
+
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 	static const long double toint = 1/LDBL_EPSILON;
 
@@ -60,6 +66,7 @@ long double truncl(long double x) {
 		y -= 1;
 	x += y;
 	return s ? -x : x;
+
 #else
 #error "architecture unsupported"
 #endif

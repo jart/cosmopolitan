@@ -28,6 +28,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
+#ifdef __x86_64__
 
 int pfds[2];
 pthread_cond_t cv;
@@ -206,6 +207,7 @@ void KeyDestructor(void *arg) {
   key_destructor_was_run = true;
 }
 
+#ifdef __x86_64__
 void TortureStack(void) {
   asm("sub\t$4,%rsp\n\t"
       "pause\n\t"
@@ -213,6 +215,7 @@ void TortureStack(void) {
       "pause\n\t"
       "add\t$6,%rsp");
 }
+#endif
 
 void *CpuBoundWorker(void *arg) {
   char *volatile wontleak1;
@@ -224,12 +227,15 @@ void *CpuBoundWorker(void *arg) {
   wontleak2 = _gc(malloc(123));
   ASSERT_EQ(0, pthread_setspecific(key, (void *)31337));
   ASSERT_EQ(0, pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0));
+#ifdef __x86_64__
   for (;;) {
     TortureStack();
     is_in_infinite_loop = true;
   }
+#endif
   pthread_cleanup_pop(1);
   free(wouldleak);
+  return 0;
 }
 
 TEST(pthread_cancel, async) {
@@ -275,3 +281,5 @@ TEST(pthread_cancel, self_asynchronous_takesImmediateEffect) {
   ASSERT_SYS(0, 0, close(pfds[1]));
   ASSERT_SYS(0, 0, close(pfds[0]));
 }
+
+#endif /* __x86_64__ */

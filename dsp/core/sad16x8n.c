@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
+#include "dsp/core/core.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
+#include "third_party/aarch64/arm_neon.h"
+#include "third_party/intel/emmintrin.internal.h"
 
 /**
- * Returns absolute value of 32-bit integer.
- * @note `labs(LONG_MIN)` returns `LONG_MIN` unless `-ftrapv`
- * @note consider ABS() to avoid narrowing
+ * Mixes audio.
+ *
+ * This function performs saturated addition on an array of shorts.
+ *
+ * @param x needs to be 16-byte aligned
+ * @param y needs to be 16-byte aligned
  */
-int abs(int x) {
-  return 0 < x ? x : -x;
+void sad16x8n(size_t n, short x[n][8], const short y[n][8]) {
+  size_t i, j;
+  for (i = 0; i < n; ++i) {
+#ifdef __x86_64__
+    *(__m128i *)x[i] = _mm_adds_epi16(*(__m128i *)x[i], *(__m128i *)y[i]);
+#elif defined(__aarch64__)
+    *(int16x4_t *)x[i] = vqadd_s16(*(int16x4_t *)x[i], *(int16x4_t *)y[i]);
+#else
+    for (j = 0; j < 8; ++j) {
+      x[i][j] = MIN(MAX(x[i][j] + y[i][j], INT16_MIN), INT16_MAX);
+    }
+#endif
+  }
 }

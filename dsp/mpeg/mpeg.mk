@@ -37,7 +37,8 @@ DSP_MPEG_A_DIRECTDEPS =				\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_TIME				\
-	LIBC_TINYMATH
+	LIBC_TINYMATH				\
+	THIRD_PARTY_COMPILER_RT
 
 DSP_MPEG_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_MPEG_A_DIRECTDEPS),$($(x))))

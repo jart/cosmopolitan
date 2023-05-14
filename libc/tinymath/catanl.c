@@ -30,7 +30,7 @@
 #include "libc/tinymath/complex.internal.h"
 
 asm(".ident\t\"\\n\\n\
-OpenBSD libm (MIT License)\\n\
+OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\

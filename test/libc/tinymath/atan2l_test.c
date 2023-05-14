@@ -27,7 +27,10 @@ TEST(atan2l, test) {
   volatile double b = -.1908585813741899;
   EXPECT_STREQ("-2.95", _gc(xasprintf("%.2f", atan2f(b, a))));
   EXPECT_STREQ("-2.95", _gc(xasprintf("%.2f", atan2(b, a))));
+#ifndef __aarch64__
+  // TODO: implement quad floating point into printf
   EXPECT_STREQ("-2.95", _gc(xasprintf("%.2Lf", atan2l(b, a))));
+#endif
 }
 
 TEST(atan2, testSpecialCases) {

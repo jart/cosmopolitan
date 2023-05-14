@@ -34,6 +34,4 @@ unsigned short _Py_get_387controlword(void) {
 void _Py_set_387controlword(unsigned short cw) {
     __asm__ __volatile__ ("fldcw %0" : : "m" (cw));
 }
-#else
-#error wut
 #endif

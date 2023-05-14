@@ -36,6 +36,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+#ifdef __x86_64__
 
 FILE *f;
 char buf[32];
@@ -162,3 +163,5 @@ TEST(popen, torture) {
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
   CheckForFdLeaks();
 }
+
+#endif /* __x86_64__ */

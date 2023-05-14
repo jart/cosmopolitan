@@ -31,6 +31,7 @@
 #include "libc/x/xasprintf.h"
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
+#ifdef __x86_64__
 
 #define CANIUSE(FEATURE) caniuse(#FEATURE, X86_HAVE(FEATURE))
 #define SHOW(CONSTANT)   show(#CONSTANT, CONSTANT)
@@ -333,3 +334,5 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+#endif /* __x86_64__ */

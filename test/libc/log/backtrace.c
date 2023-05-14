@@ -24,6 +24,7 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#ifdef __x86_64__
 
 int StackOverflow(int f(), int n) {
   if (n < INT_MAX) {
@@ -131,3 +132,5 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 }
+
+#endif /* __x86_64__ */

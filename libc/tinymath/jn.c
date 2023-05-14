@@ -72,6 +72,9 @@ asm(".include \"libc/disclaimer.inc\"");
 
 static const double invsqrtpi = 5.64189583547756279280e-01; /* 0x3FE20DD7, 0x50429B6D */
 
+/**
+ * Returns Bessel function of 𝑥 of first kind of order 𝑛.
+ */
 double jn(int n, double x)
 {
 	uint32_t ix, lx;
@@ -245,7 +248,9 @@ double jn(int n, double x)
 	return sign ? -b : b;
 }
 
-
+/**
+ * Returns Bessel function of 𝑥 of second kind of order 𝑛.
+ */
 double yn(int n, double x)
 {
 	uint32_t ix, lx, ib;

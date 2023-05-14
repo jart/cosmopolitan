@@ -22,30 +22,31 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 
+double _tan(double) asm("tan");
+float _tanf(float) asm("tanf");
+long double _tanl(long double) asm("tanl");
+
 TEST(tan, test) {
-  EXPECT_STREQ("0", _gc(xasprintf("%.15g", tan(0.))));
-  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", tan(-0.))));
-  EXPECT_STREQ("0.54630248984379", _gc(xasprintf("%.15g", tan(.5))));
-  EXPECT_STREQ("-0.54630248984379", _gc(xasprintf("%.15g", tan(-.5))));
-  EXPECT_STREQ("1.5574077246549", _gc(xasprintf("%.15g", tan(1.))));
-  EXPECT_STREQ("-1.5574077246549", _gc(xasprintf("%.15g", tan(-1.))));
-  EXPECT_STREQ("14.1014199471717", _gc(xasprintf("%.15g", tan(1.5))));
-  EXPECT_STREQ("-14.1014199471717", _gc(xasprintf("%.15g", tan(-1.5))));
-  EXPECT_STREQ("nan", _gc(xasprintf("%.15g", tan(NAN))));
-  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", tan(-NAN))));
-  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", tan(INFINITY))));
-  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", tan(-INFINITY))));
+  EXPECT_STREQ("0", _gc(xasprintf("%.15g", _tan(0.))));
+  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", _tan(-0.))));
+  EXPECT_STREQ("0.54630248984379", _gc(xasprintf("%.15g", _tan(.5))));
+  EXPECT_STREQ("-0.54630248984379", _gc(xasprintf("%.15g", _tan(-.5))));
+  EXPECT_STREQ("1.5574077246549", _gc(xasprintf("%.15g", _tan(1.))));
+  EXPECT_STREQ("-1.5574077246549", _gc(xasprintf("%.15g", _tan(-1.))));
+  EXPECT_STREQ("14.1014199471717", _gc(xasprintf("%.15g", _tan(1.5))));
+  EXPECT_STREQ("-14.1014199471717", _gc(xasprintf("%.15g", _tan(-1.5))));
+  EXPECT_STREQ("nan", _gc(xasprintf("%.15g", _tan(NAN))));
+  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", _tan(-NAN))));
+  EXPECT_TRUE(isnan(_tan(INFINITY)));
+  EXPECT_TRUE(isnan(_tan(-INFINITY)));
   EXPECT_STREQ("2.2250738585072e-308",
-               _gc(xasprintf("%.15g", tan(__DBL_MIN__))));
+               _gc(xasprintf("%.15g", _tan(__DBL_MIN__))));
   EXPECT_STREQ("-0.0049620158744449",
-               _gc(xasprintf("%.15g", tan(__DBL_MAX__))));
+               _gc(xasprintf("%.15g", _tan(__DBL_MAX__))));
 }
 
 BENCH(tan, bench) {
-  double _tan(double) asm("tan");
-  float _tanf(float) asm("tanf");
-  long double _tanl(long double) asm("tanl");
-  EZBENCH2("tan", donothing, _tan(.7));   /* ~19ns */
-  EZBENCH2("tanf", donothing, _tanf(.7)); /* ~32ns */
-  EZBENCH2("tanl", donothing, _tanl(.7)); /* ~28ns */
+  EZBENCH2("tan", donothing, _tan(.7));    // ~18ns
+  EZBENCH2("tanf", donothing, _tanf(.7));  //  ~6ns
+  EZBENCH2("tanl", donothing, _tanl(.7));  // ~39ns
 }

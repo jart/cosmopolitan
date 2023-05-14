@@ -35,7 +35,6 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-
 #ifdef __x86_64__
 
 int systemfive_cancel(void);

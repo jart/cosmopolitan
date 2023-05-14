@@ -31,6 +31,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
+#ifdef __x86_64__
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -84,3 +85,5 @@ TEST(nointernet, sendmsgPublicNetwork_raisesEnosys_whichPreemptsEbadf) {
   ASSERT_SYS(ENOSYS, -1, sendmsg(3, &msg, 0));
   ASSERT_SYS(0, 0, close(3));
 }
+
+#endif /* __x86_64__ */

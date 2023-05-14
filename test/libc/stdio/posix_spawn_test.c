@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/posix_spawn.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
@@ -28,7 +29,6 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/o.h"
@@ -36,6 +36,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+#ifdef __x86_64__
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -193,3 +194,5 @@ const char kTinyLinuxExit[128] = {
 /*     unlink("/tmp/tiny64"); */
 /*   } */
 /* } */
+
+#endif /* __x86_64__ */

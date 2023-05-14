@@ -36,10 +36,17 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-long double tanl(long double x) {
+/**
+ * Returns tangent of x.
+ */
+long double tanl(long double x)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
 	return tan(x);
+
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
+
 	union ldshape u = {x};
 	long double y[2];
 	unsigned n;
@@ -57,6 +64,7 @@ long double tanl(long double x) {
 	}
 	n = __rem_pio2l(x, y);
 	return __tanl(y[0], y[1], n&1);
+
 #else
 #error "architecture unsupported"
 #endif

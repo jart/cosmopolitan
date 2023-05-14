@@ -34,7 +34,7 @@ asm(".ident\t\"\\n\\n\
 Optimized Routines (MIT License)\\n\
 Copyright 2022 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /*
  * Single-precision log function.
@@ -57,6 +57,9 @@ Relative error: 1.957 * 2^-26 (before rounding.)
 #define N (1 << LOGF_TABLE_BITS)
 #define OFF 0x3f330000
 
+/**
+ * Returns natural logarithm of 𝑥.
+ */
 float logf(float x)
 {
 	double_t z, r, r2, y, y0, invc, logc;

@@ -6,13 +6,16 @@
 
 #define STDC_HEADERS                    1
 #define HAVE_LONG_DOUBLE                1
-#define HAVE_GCC_ASM_FOR_X64            1
-#define HAVE_GCC_ASM_FOR_X87            1
 #define HAVE_GCC_UINT128_T              1
 #define HAVE_STDARG_PROTOTYPES          1
 #define HAVE_BUILTIN_ATOMIC             1
 #define HAVE_COMPUTED_GOTOS             1
 #define DOUBLE_IS_LITTLE_ENDIAN_IEEE754 1
+
+#ifdef __x86_64__
+#define HAVE_GCC_ASM_FOR_X64 1
+#define HAVE_GCC_ASM_FOR_X87 1
+#endif
 
 #define HAVE_ACOSH         1
 #define HAVE_ASINH         1
@@ -100,7 +103,7 @@
 #define HAVE_DECL_RTLD_NOW      1
 
 #define HAVE_GETSID        1
-#define HAVE_GETEUID        1
+#define HAVE_GETEUID       1
 #define HAVE_GETTIMEOFDAY  1
 #define HAVE_GETUID        1
 #define HAVE_GETNAMEINFO   1

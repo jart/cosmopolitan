@@ -29,7 +29,7 @@
 #include "libc/tinymath/internal.h"
 
 asm(".ident\t\"\\n\\n\
-OpenBSD libm (MIT License)\\n\
+OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -96,12 +96,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * log domain:       x < 0; returns MINLOG
  */
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double log10l(long double x)
-{
-	return log10(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 /* Coefficients for log(1+x) = x - x**2/2 + x**3 P(x)/Q(x)
  * 1/sqrt(2) <= x < sqrt(2)
  * Theoretical peak relative error = 6.2e-22
@@ -159,6 +153,8 @@ long double log10l(long double x)
 {
 #ifdef __x86__
 
+	// asm improves performance 41ns → 21ns
+	// measurement made on an intel core i9
 	long double lg2;
 	asm("fldlg2" : "=t"(lg2));
 	asm("fyl2x"
@@ -167,7 +163,11 @@ long double log10l(long double x)
 	    : "st(1)");
 	return x;
 
-#else
+#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
+	return log10(x);
+
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 	long double y, z;
 	int e;
@@ -234,15 +234,12 @@ done:
 	z += e * (L102A);
 	return z;
 
-#endif /* __x86__ */
-}
-
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-// TODO: broken implementation to make things compile
-long double log10l(long double x)
-{
-	return log10(x);
-}
+
+	long double __log10lq(long double);
+	return __log10lq(x);
+
 #else
 #error "architecture unsupported"
 #endif
+}

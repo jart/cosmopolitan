@@ -45,15 +45,20 @@ $(LIBC_TINYMATH_A).pkg:					\
 o/$(MODE)/libc/tinymath/cpow.o				\
 o/$(MODE)/libc/tinymath/cpowf.o				\
 o/$(MODE)/libc/tinymath/cpowl.o				\
-o/$(MODE)/libc/tinymath/powfin.o : private		\
+o/$(MODE)/libc/tinymath/powfin.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-ffast-math
 
 o/$(MODE)/libc/tinymath/lround.o			\
 o/$(MODE)/libc/tinymath/lroundf.o			\
-o/$(MODE)/libc/tinymath/lroundl.o : private		\
+o/$(MODE)/libc/tinymath/lroundl.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fno-builtin
+
+o/$(MODE)/libc/tinymath/expl.o				\
+o/$(MODE)/libc/tinymath/loglq.o: private		\
+		OVERRIDE_CFLAGS +=			\
+			-ffunction-sections
 
 LIBC_TINYMATH_LIBS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)))
 LIBC_TINYMATH_HDRS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)_HDRS))

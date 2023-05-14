@@ -23,32 +23,30 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 
-double acos_(double) asm("acos");
-#define acos acos_
+double _acos(double) asm("acos");
+float _acosf(float) asm("acosf");
+long double _acosl(long double) asm("acosl");
 
 TEST(acos, test) {
-  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", acos(0.))));
-  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", acos(-0.))));
-  EXPECT_STREQ("1.0471975511966", _gc(xasprintf("%.15g", acos(.5))));
-  EXPECT_STREQ("2.0943951023932", _gc(xasprintf("%.15g", acos(-.5))));
-  EXPECT_STREQ("0", _gc(xasprintf("%.15g", acos(1.))));
-  EXPECT_STREQ("3.14159265358979", _gc(xasprintf("%.15g", acos(-1.))));
-  EXPECT_TRUE(isnan(acos(1.5)));
-  EXPECT_TRUE(isnan(acos(-1.5)));
-  EXPECT_TRUE(isnan(acos(2.)));
-  EXPECT_TRUE(isnan(acos(NAN)));
-  EXPECT_TRUE(isnan(acos(-NAN)));
-  EXPECT_TRUE(isnan(acos(INFINITY)));
-  EXPECT_TRUE(isnan(acos(-INFINITY)));
-  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", acos(__DBL_MIN__))));
-  EXPECT_TRUE(isnan(acos(__DBL_MAX__)));
+  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", _acos(0.))));
+  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", _acos(-0.))));
+  EXPECT_STREQ("1.0471975511966", _gc(xasprintf("%.15g", _acos(.5))));
+  EXPECT_STREQ("2.0943951023932", _gc(xasprintf("%.15g", _acos(-.5))));
+  EXPECT_STREQ("0", _gc(xasprintf("%.15g", _acos(1.))));
+  EXPECT_STREQ("3.14159265358979", _gc(xasprintf("%.15g", _acos(-1.))));
+  EXPECT_TRUE(isnan(_acos(1.5)));
+  EXPECT_TRUE(isnan(_acos(-1.5)));
+  EXPECT_TRUE(isnan(_acos(2.)));
+  EXPECT_TRUE(isnan(_acos(NAN)));
+  EXPECT_TRUE(isnan(_acos(-NAN)));
+  EXPECT_TRUE(isnan(_acos(INFINITY)));
+  EXPECT_TRUE(isnan(_acos(-INFINITY)));
+  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", _acos(__DBL_MIN__))));
+  EXPECT_TRUE(isnan(_acos(__DBL_MAX__)));
 }
 
-BENCH(acosl, bench) {
-  double _acos(double) asm("acos");
-  float _acosf(float) asm("acosf");
-  long double _acosl(long double) asm("acosl");
-  EZBENCH2("-acos", donothing, _acos(.7));   /* ~17ns */
-  EZBENCH2("-acosf", donothing, _acosf(.7)); /* ~11ns */
-  EZBENCH2("-acosl", donothing, _acosl(.7)); /* ~40ns */
+BENCH(acos, bench) {
+  EZBENCH2("acos", donothing, _acos(.7));   /* ~13ns */
+  EZBENCH2("acosf", donothing, _acosf(.7)); /* ~10ns */
+  EZBENCH2("acosl", donothing, _acosl(.7)); /* ~26ns */
 }

@@ -28,6 +28,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#ifdef __x86_64__
 
 STATIC_YOINK("glob");
 
@@ -212,3 +213,5 @@ TEST(system, glob) {
   ASSERT_EQ(0, WEXITSTATUS(system("./ec*.com aaa")));
   ASSERT_EQ(0, WEXITSTATUS(system("./ec?o.com aaa")));
 }
+
+#endif /* __x86_64__ */

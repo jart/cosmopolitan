@@ -34,7 +34,7 @@ asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
 Copyright 2018 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /*
  * Double-precision e^x function.

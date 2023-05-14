@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_SYNCHRONIZATION_H_
 #define COSMOPOLITAN_LIBC_NT_SYNCHRONIZATION_H_
+#include "libc/intrin/atomic.h"
 #include "libc/nt/struct/criticalsection.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/struct/linkedlist.h"
@@ -33,20 +34,13 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § new technology » synchronization                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define InterlockedAdd(PTR, VAL)                                           \
-  ({                                                                       \
-    typeof(*(PTR)) Res;                                                    \
-    typeof(Res) Val = (VAL);                                               \
-    asm volatile("lock xadd\t%0,%1" : "=r"(Res), "+m"(*(PTR)) : "0"(Val)); \
-    Res + Val;                                                             \
-  })
+static inline int32_t InterlockedAdd(int32_t volatile *p, int32_t x) {
+  return atomic_fetch_add((_Atomic(int32_t) *)p, x) + x;
+}
 
-#define InterlockedExchange(PTR, VAL)                      \
-  ({                                                       \
-    typeof(*(PTR)) Res = (VAL);                            \
-    asm volatile("xchg\t%0,%1" : "+r"(Res), "+m"(*(PTR))); \
-    Res;                                                   \
-  })
+static inline int32_t InterlockedExchange(int32_t volatile *p, int32_t x) {
+  return atomic_exchange((_Atomic(int32_t) *)p, x);
+}
 
 typedef void (*NtTimerapcroutine)(void *lpArgToCompletionRoutine,
                                   uint32_t dwTimerLowValue,

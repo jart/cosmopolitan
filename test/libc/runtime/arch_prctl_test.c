@@ -24,11 +24,12 @@
 #include "libc/intrin/fsgsbase.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/segmentation.h"
-#include "libc/thread/tls.h"
 #include "libc/nt/version.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/tls.h"
+#ifdef __x86_64__
 
 void SetUpOnce(void) {
   __tls_enabled = false;
@@ -126,3 +127,5 @@ TEST(fsgsbase, gs) {
   TriggerSignal();
   ASSERT_EQ(0xdeadbeef, gs((int64_t *)0));
 }
+
+#endif /* __x86_64__ */

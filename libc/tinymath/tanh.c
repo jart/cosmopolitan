@@ -32,14 +32,10 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /**
  * Returns hyperbolic tangent of 𝑥.
- *
- *     tanh(x) = (exp(x) - exp(-x))/(exp(x) + exp(-x))
- *             = (exp(2*x) - 1)/(exp(2*x) - 1 + 2)
- *             = (1 - exp(-2*x))/(exp(-2*x) - 1 + 2)
  */
 double tanh(double x)
 {

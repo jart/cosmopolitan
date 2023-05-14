@@ -31,7 +31,7 @@ TEST(sqrtl, test) {
   EXPECT_STREQ("NAN", gc(xdtoal(_sqrtl(NAN))));
   EXPECT_STREQ("0", gc(xdtoal(_sqrtl(0))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(_sqrtl(INFINITY))));
-  EXPECT_STREQ("-NAN", gc(xdtoal(_sqrtl(-1))));
+  EXPECT_TRUE(isnan(_sqrtl(-1)));
 }
 
 TEST(sqrt, test) {
@@ -39,7 +39,7 @@ TEST(sqrt, test) {
   EXPECT_STREQ("NAN", gc(xdtoa(_sqrt(NAN))));
   EXPECT_STREQ("0", gc(xdtoa(_sqrt(0))));
   EXPECT_STREQ("INFINITY", gc(xdtoa(_sqrt(INFINITY))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(_sqrt(-1))));
+  EXPECT_TRUE(isnan(_sqrt(-1)));
 }
 
 TEST(sqrtf, test) {
@@ -47,7 +47,7 @@ TEST(sqrtf, test) {
   EXPECT_STREQ("NAN", gc(xdtoaf(_sqrtf(NAN))));
   EXPECT_STREQ("0", gc(xdtoaf(_sqrtf(0))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(_sqrtf(INFINITY))));
-  EXPECT_STREQ("-NAN", gc(xdtoaf(_sqrtf(-1))));
+  EXPECT_TRUE(isnan(_sqrtf(-1)));
 }
 
 BENCH(_sqrt, bench) {

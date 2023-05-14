@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -95,6 +96,5 @@ TEST(grow, testOverflow_returnsFalseAndDoesNotFree) {
     EXPECT_EQ(1, p[0]);
     EXPECT_EQ(2, p[1]);
     EXPECT_EQ(3, p[2]);
-    free(p);
   }
 }

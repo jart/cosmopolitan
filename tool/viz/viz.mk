@@ -43,6 +43,7 @@ TOOL_VIZ_DIRECTDEPS =				\
 	LIBC_X					\
 	LIBC_ZIPOS				\
 	NET_HTTP				\
+	THIRD_PARTY_COMPILER_RT			\
 	THIRD_PARTY_DLMALLOC			\
 	THIRD_PARTY_GDTOA			\
 	THIRD_PARTY_GETOPT			\
@@ -81,7 +82,8 @@ o/$(MODE)/tool/viz/printimage.com.dbg:		\
 o/$(MODE)/tool/viz/printimage.com:			\
 		o/$(MODE)/tool/viz/printimage.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com	\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com		\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
@@ -89,7 +91,8 @@ o/$(MODE)/tool/viz/printimage.com:			\
 o/$(MODE)/tool/viz/printvideo.com:			\
 		o/$(MODE)/tool/viz/printvideo.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com	\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com		\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

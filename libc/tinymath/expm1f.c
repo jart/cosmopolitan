@@ -1,103 +1,152 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  Optimized Routines                                                          │
-│  Copyright (c) 1999-2022, Arm Limited.                                       │
+│ FreeBSD lib/msun/src/s_expm1f.c                                              │
 │                                                                              │
-│  Permission is hereby granted, free of charge, to any person obtaining       │
-│  a copy of this software and associated documentation files (the             │
-│  "Software"), to deal in the Software without restriction, including         │
-│  without limitation the rights to use, copy, modify, merge, publish,         │
-│  distribute, sublicense, and/or sell copies of the Software, and to          │
-│  permit persons to whom the Software is furnished to do so, subject to       │
-│  the following conditions:                                                   │
+│ Copyright (c) 1992-2023 The FreeBSD Project.                                 │
 │                                                                              │
-│  The above copyright notice and this permission notice shall be              │
-│  included in all copies or substantial portions of the Software.             │
+│ Redistribution and use in source and binary forms, with or without           │
+│ modification, are permitted provided that the following conditions           │
+│ are met:                                                                     │
+│ 1. Redistributions of source code must retain the above copyright            │
+│    notice, this list of conditions and the following disclaimer.             │
+│ 2. Redistributions in binary form must reproduce the above copyright         │
+│    notice, this list of conditions and the following disclaimer in the       │
+│    documentation and/or other materials provided with the distribution.      │
 │                                                                              │
-│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
-│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
-│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
-│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
-│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
-│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
-│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND       │
+│ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE        │
+│ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE   │
+│ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE      │
+│ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL   │
+│ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS      │
+│ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)        │
+│ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT   │
+│ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY    │
+│ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF       │
+│ SUCH DAMAGE.                                                                 │
+│                                                                              │
+│ Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.            │
+│ Developed at SunPro, a Sun Microsystems, Inc. business.                      │
+│ Permission to use, copy, modify, and distribute this                         │
+│ software is freely granted, provided that this notice                        │
+│ is preserved.                                                                │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/tinymath/hornerf.internal.h"
-#include "libc/tinymath/internal.h"
-#include "third_party/libcxx/math.h"
+#include "libc/tinymath/freebsd.internal.h"
 
 asm(".ident\t\"\\n\\n\
-Optimized Routines (MIT License)\\n\
-Copyright 2022 ARM Limited\"");
+FreeBSD libm (BSD-2 License)\\n\
+Copyright (c) 2005-2011, Bruce D. Evans, Steven G. Kargl, David Schultz.\"");
+asm(".ident\t\"\\n\\n\
+fdlibm (fdlibm license)\\n\
+Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-#define Shift (0x1.8p23f)
-#define InvLn2 (0x1.715476p+0f)
-#define Ln2hi (0x1.62e4p-1f)
-#define Ln2lo (0x1.7f7d1cp-20f)
-#define AbsMask (0x7fffffff)
-#define InfLimit                                                               \
-  (0x1.644716p6) /* Smallest value of x for which expm1(x) overflows.  */
-#define NegLimit                                                               \
-  (-0x1.9bbabcp+6) /* Largest value of x for which expm1(x) rounds to 1.  */
+static const float
+one		= 1.0,
+tiny		= 1.0e-30,
+o_threshold	= 8.8721679688e+01,/* 0x42b17180 */
+ln2_hi		= 6.9313812256e-01,/* 0x3f317180 */
+ln2_lo		= 9.0580006145e-06,/* 0x3717f7d1 */
+invln2		= 1.4426950216e+00,/* 0x3fb8aa3b */
+/*
+ * Domain [-0.34568, 0.34568], range ~[-6.694e-10, 6.696e-10]:
+ * |6 / x * (1 + 2 * (1 / (exp(x) - 1) - 1 / x)) - q(x)| < 2**-30.04
+ * Scaled coefficients: Qn_here = 2**n * Qn_for_q (see s_expm1.c):
+ */
+Q1 = -3.3333212137e-2,		/* -0x888868.0p-28 */
+Q2 =  1.5807170421e-3;		/*  0xcf3010.0p-33 */
 
-#define C(i) __expm1f_poly[i]
+static volatile float huge = 1.0e+30;
 
-/* Generated using fpminimax, see tools/expm1f.sollya for details.  */
-const float __expm1f_poly[] = {0x1.fffffep-2, 0x1.5554aep-3, 0x1.555736p-5,
-			       0x1.12287cp-7, 0x1.6b55a2p-10};
-
-/* Approximation for exp(x) - 1 using polynomial on a reduced interval.
-   The maximum error is 1.51 ULP:
-   expm1f(0x1.8baa96p-2) got 0x1.e2fb9p-2
-			want 0x1.e2fb94p-2.  */
+/**
+ * Returns 𝑒^𝑥-𝟷.
+ */
 float
-expm1f (float x)
+expm1f(float x)
 {
-  uint32_t ix = asuint (x);
-  uint32_t ax = ix & AbsMask;
+	float y,hi,lo,c,t,e,hxs,hfx,r1,twopk;
+	int32_t k,xsb;
+	uint32_t hx;
 
-  /* Tiny: |x| < 0x1p-23. expm1(x) is closely approximated by x.
-     Inf:  x == +Inf => expm1(x) = x.  */
-  if (ax <= 0x34000000 || (ix == 0x7f800000))
-    return x;
+	GET_FLOAT_WORD(hx,x);
+	xsb = hx&0x80000000;		/* sign bit of x */
+	hx &= 0x7fffffff;		/* high word of |x| */
 
-  /* +/-NaN.  */
-  if (ax > 0x7f800000)
-    return __math_invalidf (x);
+	/* filter out huge and non-finite argument */
+	if(hx >= 0x4195b844) {			/* if |x|>=27*ln2 */
+	    if(hx >= 0x42b17218) {		/* if |x|>=88.721... */
+                if(hx>0x7f800000)
+		    return x+x; 	 /* NaN */
+		if(hx==0x7f800000)
+		    return (xsb==0)? x:-1.0;/* exp(+-inf)={inf,-1} */
+	        if(x > o_threshold) return huge*huge; /* overflow */
+	    }
+	    if(xsb!=0) { /* x < -27*ln2, return -1.0 with inexact */
+		if(x+tiny<(float)0.0)	/* raise inexact */
+		return tiny-one;	/* return -1 */
+	    }
+	}
 
-  if (x >= InfLimit)
-    return __math_oflowf (0);
+	/* argument reduction */
+	if(hx > 0x3eb17218) {		/* if  |x| > 0.5 ln2 */
+	    if(hx < 0x3F851592) {	/* and |x| < 1.5 ln2 */
+		if(xsb==0)
+		    {hi = x - ln2_hi; lo =  ln2_lo;  k =  1;}
+		else
+		    {hi = x + ln2_hi; lo = -ln2_lo;  k = -1;}
+	    } else {
+		k  = invln2*x+((xsb==0)?(float)0.5:(float)-0.5);
+		t  = k;
+		hi = x - t*ln2_hi;	/* t*ln2_hi is exact here */
+		lo = t*ln2_lo;
+	    }
+	    STRICT_ASSIGN(float, x, hi - lo);
+	    c  = (hi-x)-lo;
+	}
+	else if(hx < 0x33000000) {  	/* when |x|<2**-25, return x */
+	    t = huge+x;	/* return x with inexact flags when x!=0 */
+	    return x - (t-(huge+x));
+	}
+	else k = 0;
 
-  if (x <= NegLimit || ix == 0xff800000)
-    return -1;
-
-  /* Reduce argument to smaller range:
-     Let i = round(x / ln2)
-     and f = x - i * ln2, then f is in [-ln2/2, ln2/2].
-     exp(x) - 1 = 2^i * (expm1(f) + 1) - 1
-     where 2^i is exact because i is an integer.  */
-  float j = fmaf (InvLn2, x, Shift) - Shift;
-  int32_t i = j;
-  float f = fmaf (j, -Ln2hi, x);
-  f = fmaf (j, -Ln2lo, f);
-
-  /* Approximate expm1(f) using polynomial.
-     Taylor expansion for expm1(x) has the form:
-	 x + ax^2 + bx^3 + cx^4 ....
-     So we calculate the polynomial P(f) = a + bf + cf^2 + ...
-     and assemble the approximation expm1(f) ~= f + f^2 * P(f).  */
-  float p = fmaf (f * f, HORNER_4 (f, C), f);
-  /* Assemble the result, using a slight rearrangement to achieve acceptable
-     accuracy.
-     expm1(x) ~= 2^i * (p + 1) - 1
-     Let t = 2^(i - 1).  */
-  float t = ldexpf (0.5f, i);
-  /* expm1(x) ~= 2 * (p * t + (t - 1/2)).  */
-  return 2 * fmaf (p, t, t - 0.5f);
+	/* x is now in primary range */
+	hfx = (float)0.5*x;
+	hxs = x*hfx;
+	r1 = one+hxs*(Q1+hxs*Q2);
+	t  = (float)3.0-r1*hfx;
+	e  = hxs*((r1-t)/((float)6.0 - x*t));
+	if(k==0) return x - (x*e-hxs);		/* c is 0 */
+	else {
+	    SET_FLOAT_WORD(twopk,((uint32_t)(0x7f+k))<<23);	/* 2^k */
+	    e  = (x*(e-c)-c);
+	    e -= hxs;
+	    if(k== -1) return (float)0.5*(x-e)-(float)0.5;
+	    if(k==1) {
+	       	if(x < (float)-0.25) return -(float)2.0*(e-(x+(float)0.5));
+	       	else 	      return  one+(float)2.0*(x-e);
+	    }
+	    if (k <= -2 || k>56) {   /* suffice to return exp(x)-1 */
+	        y = one-(e-x);
+		if (k == 128) y = y*2.0F*0x1p127F;
+		else y = y*twopk;
+	        return y-one;
+	    }
+	    t = one;
+	    if(k<23) {
+	        SET_FLOAT_WORD(t,0x3f800000 - (0x1000000>>k)); /* t=1-2^-k */
+	       	y = t-(e-x);
+		y = y*twopk;
+	   } else {
+		SET_FLOAT_WORD(t,((0x7f-k)<<23));	/* 2^-k */
+	       	y = x-(e+t);
+	       	y += one;
+		y = y*twopk;
+	    }
+	}
+	return y;
 }

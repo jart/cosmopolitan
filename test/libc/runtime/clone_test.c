@@ -95,25 +95,25 @@ atomic_int sysbarrier;
 int CloneTestSys(void *arg, int tid) {
   int i, id = (intptr_t)arg;
   CheckStackIsAligned();
-  while (!sysbarrier) asm("pause");
+  while (!sysbarrier) donothing;
   for (i = 0; i < 20; ++i) {
     switch (id % 3) {
       case 0:
         errno = 123;
         open(0, 0);
-        asm("pause");
+        donothing;
         ASSERT_EQ(EFAULT, errno);
         break;
       case 1:
         errno = 123;
         dup(-1);
-        asm("pause");
+        donothing;
         ASSERT_EQ(EBADF, errno);
         break;
       case 2:
         errno = 123;
         dup3(0, 0, 0);
-        asm("pause");
+        donothing;
         ASSERT_EQ(EINVAL, errno);
         break;
       default:

@@ -76,6 +76,8 @@ TEST(tmpfile, test) {
   EXPECT_TRUE(IsDirectoryEmpty(kTmpPath));
 }
 
+#ifndef __aarch64__
+// TODO(jart): Find way to detect qemu-aarch64
 TEST(tmpfile, renameToRealFile) {
   if (!IsLinux() || !__is_linux_2_6_23()) return;
   FILE *f;
@@ -90,3 +92,4 @@ TEST(tmpfile, renameToRealFile) {
   ASSERT_EQ('i', fgetc(f));
   ASSERT_EQ(0, fclose(f));
 }
+#endif

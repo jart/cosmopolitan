@@ -22,17 +22,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-TEST(logl, test) {
-  EXPECT_STREQ("1", gc(xdtoal(logl(2.71828182845904523536L))));
-  EXPECT_STREQ("NAN", gc(xdtoal(logl(NAN))));
-  EXPECT_STREQ("0", gc(xdtoal(logl(1))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(logl(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(logl(0))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(logl(-0.))));
-  EXPECT_STREQ("-NAN", gc(xdtoal(logl(-1))));
-  EXPECT_STREQ("-NAN", gc(xdtoal(logl(-2))));
-}
-
 TEST(log, test) {
   EXPECT_STREQ("1", gc(xdtoa(log(M_E))));
   EXPECT_STREQ("2", gc(xdtoa(log(M_E * M_E))));
@@ -41,8 +30,8 @@ TEST(log, test) {
   EXPECT_STREQ("INFINITY", gc(xdtoa(log(INFINITY))));
   EXPECT_STREQ("-INFINITY", gc(xdtoa(log(0))));
   EXPECT_STREQ("-INFINITY", gc(xdtoa(log(-0.))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(log(-1))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(log(-2))));
+  EXPECT_TRUE(isnan(log(-1)));
+  EXPECT_TRUE(isnan(log(-2)));
 }
 
 TEST(logf, test) {
@@ -52,15 +41,26 @@ TEST(logf, test) {
   EXPECT_STREQ("INFINITY", gc(xdtoaf(logf(INFINITY))));
   EXPECT_STREQ("-INFINITY", gc(xdtoaf(logf(0))));
   EXPECT_STREQ("-INFINITY", gc(xdtoaf(logf(-0.))));
-  EXPECT_STREQ("-NAN", gc(xdtoaf(logf(-1))));
-  EXPECT_STREQ("-NAN", gc(xdtoaf(logf(-2))));
+  EXPECT_TRUE(isnan(logf(-1)));
+  EXPECT_TRUE(isnan(logf(-2)));
+}
+
+TEST(logl, test) {
+  EXPECT_STREQ("1", gc(xdtoal(logl(2.71828182845904523536L))));
+  EXPECT_STREQ("NAN", gc(xdtoal(logl(NAN))));
+  EXPECT_STREQ("0", gc(xdtoal(logl(1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(logl(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(logl(0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(logl(-0.))));
+  EXPECT_TRUE(isnan(logl(-1)));
+  EXPECT_TRUE(isnan(logl(-2)));
 }
 
 BENCH(logl, bench) {
   double _log(double) asm("log");
   float _logf(float) asm("logf");
   long double _logl(long double) asm("logl");
-  EZBENCH2("log", donothing, _log(.7));   /*  ~9ns */
-  EZBENCH2("logf", donothing, _logf(.7)); /* ~20ns */
-  EZBENCH2("logl", donothing, _logl(.7)); /* ~20ns */
+  EZBENCH2("log", donothing, _log(.7));    //  ~8ns
+  EZBENCH2("logf", donothing, _logf(.7));  //  ~6ns
+  EZBENCH2("logl", donothing, _logl(.7));  // ~21ns
 }

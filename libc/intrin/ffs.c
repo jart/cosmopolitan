@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.privileged
-.alignfunc
+#include "libc/intrin/intrin.h"
 
-//	Returns 𝑥-𝑦, aborting on overflow.
-//
-//	@param	edi is int32 𝑥
-//	@param	esi is int32 𝑦
-//	@see	-ftrapv
-__subvsi3:
-	mov	%edi,%eax
-	sub	%esi,%eax
-	jo	1f
-	ret
-1:	push	%rbp
-	mov	%rsp,%rbp
-	call	__on_arithmetic_overflow
-	pop	%rbp
-	ret
-	.endfn	__subvsi3,globl
+/**
+ * Finds lowest set bit in word.
+ */
+int ffs(int x) {
+  return __builtin_ffs(x);
+}
+
+/**
+ * Finds lowest set bit in word.
+ */
+long ffsl(long x) {
+  return __builtin_ffsl(x);
+}
+
+/**
+ * Finds lowest set bit in word.
+ */
+long long ffsll(long long x) {
+  return __builtin_ffsll(x);
+}

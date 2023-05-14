@@ -88,9 +88,9 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
                                  &millis)) {
         millis = -1;
       }
-      if (sigmask) sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
       rc = poll(fds, nfds, millis);
-      if (sigmask) sigprocmask(SIG_SETMASK, &oldmask, 0);
+      if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
     if (!timeout || __builtin_add_overflow(

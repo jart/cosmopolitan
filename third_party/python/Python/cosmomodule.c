@@ -53,9 +53,11 @@ PYTHON_PROVIDE("cosmo.crc32c");
 PYTHON_PROVIDE("cosmo.syscount");
 PYTHON_PROVIDE("cosmo.popcount");
 PYTHON_PROVIDE("cosmo.decimate");
+PYTHON_PROVIDE("cosmo.ftrace");
+#ifdef __x86_64__
 PYTHON_PROVIDE("cosmo.getcpucore");
 PYTHON_PROVIDE("cosmo.getcpunode");
-PYTHON_PROVIDE("cosmo.ftrace");
+#endif /* __x86_64__ */
 
 PyDoc_STRVAR(cosmo_doc,
 "Cosmopolitan Libc Module\n\
@@ -103,6 +105,8 @@ PyDoc_STRVAR(getcpucore_doc,
 --\n\n\
 Returns 0-indexed CPU core on which process is currently scheduled.");
 
+#ifdef __x86_64__
+
 static PyObject *
 cosmo_getcpucore(PyObject *self, PyObject *noargs)
 {
@@ -119,6 +123,8 @@ cosmo_getcpunode(PyObject *self, PyObject *noargs)
 {
     return PyLong_FromUnsignedLong(TSC_AUX_NODE(rdpid()));
 }
+
+#endif /* __x86_64__ */
 
 PyDoc_STRVAR(crc32c_doc,
 "crc32c($module, bytes, init=0)\n\
@@ -332,8 +338,10 @@ static PyMethodDef cosmo_methods[] = {
     {"syscount", cosmo_syscount, METH_NOARGS, syscount_doc},
     {"popcount", cosmo_popcount, METH_VARARGS, popcount_doc},
     {"decimate", cosmo_decimate, METH_VARARGS, decimate_doc},
+#ifdef __x86_64__
     {"getcpucore", cosmo_getcpucore, METH_NOARGS, getcpucore_doc},
     {"getcpunode", cosmo_getcpunode, METH_NOARGS, getcpunode_doc},
+#endif /* __x86_64__ */
 #ifdef __PG__
     {"ftrace", cosmo_ftrace, METH_NOARGS, ftrace_doc},
 #endif

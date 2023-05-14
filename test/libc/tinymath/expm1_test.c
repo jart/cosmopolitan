@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/mem/gc.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
@@ -72,4 +73,10 @@ TEST(expm1f, test) {
   EXPECT_STREQ("INFINITY", _gc(xdtoaf(_expm1f(INFINITY))));
   /* EXPECT_STREQ("-INFINITY", _gc(xdtoaf(_expm1f(-132098844872390)))); */
   /* EXPECT_STREQ("INFINITY", _gc(xdtoaf(_expm1f(132098844872390)))); */
+}
+
+BENCH(expm1, bench) {
+  EZBENCH2("expm1", donothing, _expm1(.7));    // ~17ns
+  EZBENCH2("expm1f", donothing, _expm1f(.7));  // ~13ns
+  EZBENCH2("expm1l", donothing, _expm1l(.7));  // ~33ns
 }

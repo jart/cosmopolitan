@@ -38,9 +38,12 @@ asm(".include \"libc/disclaimer.inc\"");
 /**
  * Returns largest integral value not greater than 𝑥.
  */
-long double floorl(long double x) {
+long double floorl(long double x)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
 	return floor(x);
+
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 	static const long double toint = 1/LDBL_EPSILON;
 
@@ -63,6 +66,7 @@ long double floorl(long double x) {
 	if (y > 0)
 		return x + y - 1;
 	return x + y;
+
 #else
 #error "architecture unsupported"
 #endif

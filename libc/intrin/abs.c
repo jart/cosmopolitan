@@ -17,11 +17,33 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/macros.internal.h"
 
 /**
- * Returns absolute value of x.
+ * Returns absolute value of 𝑥.
+ *
+ * This function is a footgun since your argument may be narrrowed.
+ * Consider using labs(), llabs(), or better yet a macro like this:
+ *
+ *     #define ABS(X) ((X) >= 0 ? (X) : -(X))
+ *
+ * Note that passing `x` as `INT_MIN` is undefined behavior, which
+ * depends on whether or not your c library as well as the objects
+ * that call it were built using the `-fwrapv` or `-ftrapv` flags.
  */
 int abs(int x) {
-  return ABS(x);
+  return x < 0 ? -x : x;
+}
+
+/**
+ * Returns absolute value of 𝑥.
+ */
+long labs(long x) {
+  return x < 0 ? -x : x;
+}
+
+/**
+ * Returns absolute value of 𝑥.
+ */
+long long llabs(long long x) {
+  return x < 0 ? -x : x;
 }

@@ -32,7 +32,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
-
+#ifndef __aarch64__
+// TODO(jart): Make this test less resource intensive.
 // TODO(jart): Why can EINTR happen on Windows?
 
 atomic_int done;
@@ -96,3 +97,5 @@ TEST(getentropy, test) {
   ASSERT_EQ(0, pthread_join(child, 0));
   if (!IsWindows()) ASSERT_GT(gotsome, 0);
 }
+
+#endif /* __aarch64__ */

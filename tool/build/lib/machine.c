@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/machine.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/abp.h"
 #include "tool/build/lib/address.h"
@@ -35,7 +36,6 @@
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/fpu.h"
 #include "tool/build/lib/ioports.h"
-#include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/op101.h"
@@ -600,11 +600,11 @@ static void OpSax(struct Machine *m, uint32_t rde) {
 
 static void OpConvert(struct Machine *m, uint32_t rde) {
   if (Rexw(rde)) {
-    Write64(m->dx, Read64(m->ax) & 0x8000000000000000 ? 0xffffffffffffffff : 0);
+    Write64(m->dx, (uint64_t)((int64_t)Read64(m->ax) >> 63));
   } else if (!Osz(rde)) {
-    Write64(m->dx, Read32(m->ax) & 0x80000000 ? 0xffffffff : 0);
+    Write64(m->dx, (uint32_t)((int32_t)Read32(m->ax) >> 31));
   } else {
-    Write16(m->dx, Read16(m->ax) & 0x8000 ? 0xffff : 0);
+    Write16(m->dx, (uint16_t)((int16_t)Read16(m->ax) >> 15));
   }
 }
 

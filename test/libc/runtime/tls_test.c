@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/tls.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 #define A TLS_ALIGNMENT
 
@@ -43,6 +43,8 @@ TEST(tls, test) {
   ASSERT_EQ(A, _Alignof(a));
   ASSERT_EQ(0, sizeof(struct CosmoTib) % A);
   ASSERT_EQ(0, (intptr_t)__get_tls() & (A - 1));
+  EXPECT_EQ(2, z);
+  EXPECT_EQ(40, y[0]);
   EXPECT_EQ(42, x + y[0] + z);
   y[0] = 666;
   ASSERT_EQ(0, (intptr_t)&a & (A - 1));

@@ -142,6 +142,9 @@ S02 =  1.16926784663337450260e-04, /* 0x3F1EA6D2, 0xDD57DBF4 */
 S03 =  5.13546550207318111446e-07, /* 0x3EA13B54, 0xCE84D5A9 */
 S04 =  1.16614003333790000205e-09; /* 0x3E1408BC, 0xF4745D8F */
 
+/**
+ * Returns Bessel function of 𝑥 of first kind of order 0.
+ */
 double j0(double x)
 {
 	double z,r,s;
@@ -190,6 +193,9 @@ v02  =  7.60068627350353253702e-05, /* 0x3F13ECBB, 0xF578C6C1 */
 v03  =  2.59150851840457805467e-07, /* 0x3E91642D, 0x7FF202FD */
 v04  =  4.41110311332675467403e-10; /* 0x3DFE5018, 0x3BD6D9EF */
 
+/**
+ * Returns Bessel function of 𝑥 of second kind of order 0.
+ */
 double y0(double x)
 {
 	double z,u,v;

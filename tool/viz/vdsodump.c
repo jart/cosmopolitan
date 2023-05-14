@@ -25,6 +25,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/xed/x86.h"
+#ifdef __x86_64__
 
 #define OUTPATH "vdso.elf"
 
@@ -80,3 +81,5 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+#endif /* __x86_64__ */

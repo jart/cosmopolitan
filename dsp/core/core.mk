@@ -8,16 +8,8 @@ DSP_CORE = $(DSP_CORE_A_DEPS) $(DSP_CORE_A)
 DSP_CORE_A = o/$(MODE)/dsp/core/core.a
 DSP_CORE_A_FILES := $(wildcard dsp/core/*)
 DSP_CORE_A_HDRS = $(filter %.h,$(DSP_CORE_A_FILES))
-DSP_CORE_A_SRCS_S = $(filter %.S,$(DSP_CORE_A_FILES))
-DSP_CORE_A_SRCS_C = $(filter %.c,$(DSP_CORE_A_FILES))
-
-DSP_CORE_A_SRCS =				\
-	$(DSP_CORE_A_SRCS_S)			\
-	$(DSP_CORE_A_SRCS_C)
-
-DSP_CORE_A_OBJS =				\
-	$(DSP_CORE_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(DSP_CORE_A_SRCS_C:%.c=o/$(MODE)/%.o)
+DSP_CORE_A_SRCS = $(filter %.c,$(DSP_CORE_A_FILES))
+DSP_CORE_A_OBJS = $(DSP_CORE_A_SRCS:%.c=o/$(MODE)/%.o)
 
 DSP_CORE_A_CHECKS =				\
 	$(DSP_CORE_A).pkg			\

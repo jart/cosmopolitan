@@ -139,7 +139,9 @@
 STATIC_STACK_SIZE(0x40000);
 STATIC_YOINK("zip_uri_support");
 #if !IsTiny()
+#ifdef __x86_64__
 STATIC_YOINK("ShowCrashReportsEarly");
+#endif
 #endif
 
 /**
@@ -171,8 +173,8 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define MONITOR_MICROS   150000
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define WRITE(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
-#define LockInc(P)       asm volatile("lock incq\t%0" : "=m"(*(P)))
-#define LockDec(P)       asm volatile("lock decq\t%0" : "=m"(*(P)))
+#define LockInc(P)       (*(_Atomic(typeof(*(P))) *)(P))++
+#define LockDec(P)       (*(_Atomic(typeof(*(P))) *)(P))--
 #define AppendCrlf(P)    mempcpy(P, "\r\n", 2)
 #define HasHeader(H)     (!!cpm.msg.headers[H].a)
 #define HeaderData(H)    (inbuf.p + cpm.msg.headers[H].a)

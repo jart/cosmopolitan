@@ -126,6 +126,14 @@ o/$(MODE)/libc/intrin/restorewintty.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all
 
+# we can't use -ftrapv because:
+#   this file implements it
+o/$(MODE)/libc/intrin/ftrapv.o: private			\
+		OVERRIDE_CFLAGS +=			\
+			-ffunction-sections		\
+			-ffreestanding			\
+			-fwrapv
+
 # we can't use asan because:
 #   sys_mmap() calls these which sets up shadow memory
 o/$(MODE)/libc/intrin/describeflags.o			\

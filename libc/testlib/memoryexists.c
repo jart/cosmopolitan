@@ -27,17 +27,21 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/xed/x86.h"
 
-#ifdef __x86_64__
-
 static volatile _Thread_local int gotsignal;
 
 static void ContinueOnError(int sig, siginfo_t *si, void *vctx) {
-  struct XedDecodedInst xedd;
   struct ucontext *ctx = vctx;
+  gotsignal = sig;
+#ifdef __aarch64__
+  ctx->uc_mcontext.pc += 4;
+#elif defined(__x86_64__)
+  struct XedDecodedInst xedd;
   xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
   xed_instruction_length_decode(&xedd, (void *)ctx->uc_mcontext.rip, 15);
   ctx->uc_mcontext.rip += xedd.length;
-  gotsignal = sig;
+#else
+#error "unsupported architecture"
+#endif /* __x86_64__ */
 }
 
 /**
@@ -63,5 +67,3 @@ noasan bool testlib_memoryexists(const void *p) {
   _npassert(!sigaction(SIGSEGV, old + 0, 0));
   return !gotsignal;
 }
-
-#endif /* __x86_64__ */

@@ -22,12 +22,18 @@
 #include "third_party/gdtoa/gdtoa.h"
 
 /**
- * Converts double to string the easy way.
+ * Converts long double to string the easy way.
  *
  * @return string that needs to be free'd
  */
 char *xdtoal(long double d) {
-  char *p = xmalloc(32);
+  char *p;
+#if LDBL_MANT_DIG == 113
+  p = xmalloc(64);
+  g_Qfmt_p(p, &d, 16, 64, NIK(2, 0, 0));
+#else
+  p = xmalloc(32);
   g_xfmt_p(p, &d, 16, 32, NIK(2, 0, 0));
+#endif
   return p;
 }

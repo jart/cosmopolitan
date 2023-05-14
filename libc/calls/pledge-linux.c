@@ -608,6 +608,7 @@ static const uint16_t kPledgeStdio[] = {
 #endif                             //
     __NR_linux_msync,              //
     __NR_linux_mmap | NOEXEC,      //
+    __NR_linux_mlock,              //
     __NR_linux_mremap,             //
     __NR_linux_munmap,             //
     __NR_linux_mincore,            //

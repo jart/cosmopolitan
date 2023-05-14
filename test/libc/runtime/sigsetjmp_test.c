@@ -25,6 +25,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#ifdef __x86_64__
 
 sigjmp_buf jb;
 volatile int sigs;
@@ -54,3 +55,5 @@ TEST(sigsetjmp, test) {
   ASSERT_EQ(1000, jumps);
   ASSERT_EQ(1000, sigs);
 }
+
+#endif /* __x86_64__ */

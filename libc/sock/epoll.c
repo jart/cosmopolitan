@@ -36,7 +36,9 @@
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -71,9 +73,8 @@
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/epoll.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-
-#ifdef __x86_64__
 
 /**
  * @fileoverview epoll
@@ -1520,10 +1521,15 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
  */
 int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
                int timeoutms) {
-  int rc;
+  int e, rc;
   BEGIN_CANCELLATION_POINT;
   if (!IsWindows()) {
+    e = errno;
     rc = sys_epoll_wait(epfd, events, maxevents, timeoutms);
+    if (rc == -1 && errno == ENOSYS) {
+      errno = e;
+      rc = sys_epoll_pwait(epfd, events, maxevents, timeoutms, 0, 0);
+    }
   } else {
     rc = sys_epoll_wait_nt(epfd, events, maxevents, timeoutms);
   }
@@ -1533,4 +1539,39 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
   return rc;
 }
 
-#endif /* __x86_64__ */
+/**
+ * Receives socket events.
+ *
+ * @param events will receive information about what happened
+ * @param maxevents is array length of events
+ * @param timeoutms is milliseconds, 0 to not block, or -1 for forever
+ * @param sigmask is an optional sigprocmask() to use during call
+ * @return number of events stored, 0 on timeout, or -1 w/ errno
+ * @cancellationpoint
+ * @norestart
+ */
+int epoll_pwait(int epfd, struct epoll_event *events, int maxevents,
+                int timeoutms, const sigset_t *sigmask) {
+  int e, rc;
+  sigset_t oldmask;
+  BEGIN_CANCELLATION_POINT;
+  if (!IsWindows()) {
+    e = errno;
+    rc = sys_epoll_pwait(epfd, events, maxevents, timeoutms, sigmask,
+                         sizeof(*sigmask));
+    if (rc == -1 && errno == ENOSYS) {
+      errno = e;
+      if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      rc = sys_epoll_wait(epfd, events, maxevents, timeoutms);
+      if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
+    }
+  } else {
+    if (sigmask) __sig_mask(SIG_SETMASK, sigmask, &oldmask);
+    rc = sys_epoll_wait_nt(epfd, events, maxevents, timeoutms);
+    if (sigmask) __sig_mask(SIG_SETMASK, &oldmask, 0);
+  }
+  END_CANCELLATION_POINT;
+  STRACE("epoll_pwait(%d, %p, %d, %d) → %d% m", epfd, events, maxevents,
+         timeoutms, DescribeSigset(0, sigmask), rc);
+  return rc;
+}

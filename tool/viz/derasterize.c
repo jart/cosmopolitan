@@ -47,6 +47,7 @@
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/stb/stb_image_resize.h"
+#ifdef __x86_64__
 
 #define HELPTEXT \
   "\n\
@@ -616,3 +617,5 @@ int main(int argc, char *argv[]) {
   munmap(rgb, ROUNDUP(size, FRAMESIZE));
   return 0;
 }
+
+#endif /* __x86_64__ */

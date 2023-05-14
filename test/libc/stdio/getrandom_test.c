@@ -41,6 +41,8 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+#ifndef __aarch64__
+// TODO(jart): Make this test less CPU intensive.
 
 atomic_int done;
 atomic_int ready;
@@ -340,3 +342,5 @@ TEST(getrandom, sanityTest) {
 TEST(getrandom, badflags_einval) {
   ASSERT_SYS(EINVAL, -1, getrandom(0, 0, -1));
 }
+
+#endif /* __aarch64__ */

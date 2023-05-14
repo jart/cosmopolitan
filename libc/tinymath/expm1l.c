@@ -1,41 +1,19 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
-╚──────────────────────────────────────────────────────────────────────────────╝
-│                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
-│                                                                              │
-│  Permission is hereby granted, free of charge, to any person obtaining       │
-│  a copy of this software and associated documentation files (the             │
-│  "Software"), to deal in the Software without restriction, including         │
-│  without limitation the rights to use, copy, modify, merge, publish,         │
-│  distribute, sublicense, and/or sell copies of the Software, and to          │
-│  permit persons to whom the Software is furnished to do so, subject to       │
-│  the following conditions:                                                   │
-│                                                                              │
-│  The above copyright notice and this permission notice shall be              │
-│  included in all copies or substantial portions of the Software.             │
-│                                                                              │
-│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
-│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
-│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
-│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
-│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
-│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
-│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
-│                                                                              │
-╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+// clang-format off
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+
+long double expm1l(long double x) {
+	return expm1(x);
+}
+
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 asm(".ident\t\"\\n\\n\
-OpenBSD libm (MIT License)\\n\
+OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_expm1l.c */
 /*
@@ -53,6 +31,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
 /*
  *      Exponential function, minus 1
  *      Long double precision
@@ -85,13 +64,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * arithmetic   domain     # trials      peak         rms
  *    IEEE    -45,+maxarg   200,000     1.2e-19     2.5e-20
  */
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double expm1l(long double x)
-{
-	return expm1(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 /* exp(x) - 1 = x + 0.5 x^2 + x^3 P(x)/Q(x)
    -.5 ln 2  <  x  <  .5 ln 2
@@ -151,12 +123,11 @@ long double expm1l(long double x)
 	x = px * qx + (px - 1.0);
 	return x;
 }
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-// TODO: broken implementation to make things compile
-long double expm1l(long double x)
-{
-	return expm1(x);
-}
+
+// see expl.c
+
 #else
 #error "architecture unsupported"
 #endif
