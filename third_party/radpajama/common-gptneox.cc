@@ -1,42 +1,45 @@
-#include "common-gptneox.h"
-
-#include <cassert>
-#include <cstring>
-#include <fstream>
-#include <string>
-#include <iterator>
-#include <algorithm>
-#include <sstream>
-#include <iostream>
-
-#if defined (_WIN32)
-#include <fcntl.h>
-#include <io.h>
-#pragma comment(lib,"kernel32.lib")
-extern "C" __declspec(dllimport) void* __stdcall GetStdHandle(unsigned long nStdHandle);
-extern "C" __declspec(dllimport) int __stdcall GetConsoleMode(void* hConsoleHandle, unsigned long* lpMode);
-extern "C" __declspec(dllimport) int __stdcall SetConsoleMode(void* hConsoleHandle, unsigned long dwMode);
-extern "C" __declspec(dllimport) int __stdcall SetConsoleCP(unsigned int wCodePageID);
-extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int wCodePageID);
-extern "C" __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int CodePage, unsigned long dwFlags,
-                                                                   const wchar_t * lpWideCharStr, int cchWideChar,
-                                                                   char * lpMultiByteStr, int cbMultiByte,
-                                                                   const char * lpDefaultChar, bool * lpUsedDefaultChar);
-#define CP_UTF8 65001
-#endif
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-│
+│vi: set net ft=c++ ts=4 sts=4 sw=4 fenc=utf-8                              :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  radpajama.com                                                               │
+│  Copyright (c) 2023 Ariel Núñez                                              │
+│  Copyright (c) 2023 Georgi Gerganov                                          │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/radpajama/common-gptneox.h"
+#include "third_party/ggml/llama_util.h"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/cassert"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/fstream"
+#include "third_party/libcxx/iostream"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/sstream"
+#include "third_party/libcxx/string"
+// clang-format off
 
 bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
-    // determine sensible default number of threads.
-    // std::thread::hardware_concurrency may not be equal to the number of cores, or may return 0.
-#ifdef __linux__
-    std::ifstream cpuinfo("/proc/cpuinfo");
-    params.n_threads = std::count(std::istream_iterator<std::string>(cpuinfo),
-                                  std::istream_iterator<std::string>(),
-                                  std::string("processor"));
-#endif
-    if (params.n_threads == 0) {
-        params.n_threads = std::max(1, (int32_t) std::thread::hardware_concurrency());
-    }
+    params.n_threads = std::min(20, std::max(1, (int)(_getcpucount() * 0.75)));
 
     bool invalid_param = false;
     std::string arg;
@@ -238,16 +241,12 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
                 break;
             }
             std::stringstream ss(argv[i]);
-            gptneox_token key;
-            char sign;
+            gptneox_token key = 0;
+            char sign = 0;
             std::string value_str;
-            try {
-                if (ss >> key && ss >> sign && std::getline(ss, value_str) && (sign == '+' || sign == '-')) {
-                    params.logit_bias[key] = std::stof(value_str) * ((sign == '-') ? -1.0f : 1.0f);
-                } else {
-                    throw std::exception();
-                }
-            } catch (const std::exception &e) {
+            if (ss >> key && ss >> sign && std::getline(ss, value_str) && (sign == '+' || sign == '-')) {
+                params.logit_bias[key] = std::stof(value_str) * ((sign == '-') ? -1.0f : 1.0f);
+            } else {
                 invalid_param = true;
                 break;
             }
@@ -393,37 +392,3 @@ void set_console_color(console_state & con_st, console_color_t color) {
         con_st.color = color;
     }
 }
-
-#if defined (_WIN32)
-void win32_console_init(bool enable_color) {
-    unsigned long dwMode = 0;
-    void* hConOut = GetStdHandle((unsigned long)-11); // STD_OUTPUT_HANDLE (-11)
-    if (!hConOut || hConOut == (void*)-1 || !GetConsoleMode(hConOut, &dwMode)) {
-        hConOut = GetStdHandle((unsigned long)-12); // STD_ERROR_HANDLE (-12)
-        if (hConOut && (hConOut == (void*)-1 || !GetConsoleMode(hConOut, &dwMode))) {
-            hConOut = 0;
-        }
-    }
-    if (hConOut) {
-        // Enable ANSI colors on Windows 10+
-        if (enable_color && !(dwMode & 0x4)) {
-            SetConsoleMode(hConOut, dwMode | 0x4); // ENABLE_VIRTUAL_TERMINAL_PROCESSING (0x4)
-        }
-        // Set console output codepage to UTF8
-        SetConsoleOutputCP(CP_UTF8);
-    }
-    void* hConIn = GetStdHandle((unsigned long)-10); // STD_INPUT_HANDLE (-10)
-    if (hConIn && hConIn != (void*)-1 && GetConsoleMode(hConIn, &dwMode)) {
-        // Set console input codepage to UTF16
-        _setmode(_fileno(stdin), _O_WTEXT);
-    }
-}
-
-// Convert a wide Unicode string to an UTF8 string
-void win32_utf8_encode(const std::wstring & wstr, std::string & str) {
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    str = strTo;
-}
-#endif

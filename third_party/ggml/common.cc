@@ -60,20 +60,20 @@ static bool is_integer_str(const char *s) {
 static std::string replace_all(std::string const& original,
                                std::string const& before,
                                std::string const& after) {
-  // https://stackoverflow.com/a/7724536/1653720
-  std::string retval;
-  std::string::const_iterator end = original.end();
-  std::string::const_iterator current = original.begin();
-  std::string::const_iterator next =
-      std::search(current, end, before.begin(), before.end());
-  while (next != end) {
+    // https://stackoverflow.com/a/7724536/1653720
+    std::string retval;
+    std::string::const_iterator end = original.end();
+    std::string::const_iterator current = original.begin();
+    std::string::const_iterator next =
+            std::search(current, end, before.begin(), before.end());
+    while (next != end) {
+        retval.append(current, next);
+        retval.append(after);
+        current = next + before.size();
+        next = std::search(current, end, before.begin(), before.end());
+    }
     retval.append(current, next);
-    retval.append(after);
-    current = next + before.size();
-    next = std::search(current, end, before.begin(), before.end());
-  }
-  retval.append(current, next);
-  return retval;
+    return retval;
 }
 
 static bool append_file_to_prompt(const char *path, gpt_params & params) {

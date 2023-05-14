@@ -1,14 +1,16 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_RADPAJAMA_COMMON_GPTNEOX_H_
+#define COSMOPOLITAN_THIRD_PARTY_RADPAJAMA_COMMON_GPTNEOX_H_
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "third_party/libcxx/random"
+#include "third_party/libcxx/string"
+#include "third_party/libcxx/thread"
+#include "third_party/libcxx/unordered_map"
+#include "third_party/libcxx/vector"
+#include "third_party/radpajama/gptneox.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+// clang-format off
 // Various helper functions and utilities
-
-#pragma once
-
-#include "gptneox.h"
-
-#include <string>
-#include <vector>
-#include <random>
-#include <thread>
-#include <unordered_map>
 
 //
 // CLI argument parsing
@@ -16,7 +18,7 @@
 
 struct gpt_params {
     int32_t seed          = -1;   // RNG seed
-    int32_t n_threads     = std::min(4, (int32_t) std::thread::hardware_concurrency());
+    int32_t n_threads     = MIN(4, (int32_t) _getcpucount() * 0.75);
     int32_t n_predict     = 128;  // new tokens to predict
     int32_t n_parts       = -1;   // amount of model parts (-1 = determine from model dimensions)
     int32_t n_ctx         = 512;  // context size
@@ -106,3 +108,6 @@ void set_console_color(console_state & con_st, console_color_t color);
 void win32_console_init(bool enable_color);
 void win32_utf8_encode(const std::wstring & wstr, std::string & str);
 #endif
+
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_RADPAJAMA_COMMON_GPTNEOX_H_ */

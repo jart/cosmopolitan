@@ -87,6 +87,15 @@ static const bool ggjt_v1_is_quantized[GGML_TYPE_COUNT] = {
     [GGML_TYPE_I32]  = false,
 };
 
+static const quantize_chunk_f *const ggjt_v2_quantize_chunk[GGML_TYPE_COUNT] = {
+    [GGML_TYPE_Q4_0] = (void *)ggml_quantize_v1_q4_0,
+    [GGML_TYPE_Q4_1] = (void *)ggml_quantize_v1_q4_1,
+    [GGML_TYPE_Q4_2] = (void *)ggml_quantize_v1_q4_2,
+    [GGML_TYPE_Q5_0] = (void *)ggml_quantize_v1_q5_0,
+    [GGML_TYPE_Q5_1] = (void *)ggml_quantize_v1_q5_1,
+    [GGML_TYPE_Q8_0] = (void *)ggml_quantize_v1_q8_0,
+};
+
 static const quantize_fns_t ggjt_v1_quantize_fns[GGML_TYPE_COUNT] = {
     [GGML_TYPE_Q4_0] = {
         .dequantize_row_q         = dequantize_row_v1_q4_0,
@@ -152,4 +161,5 @@ void ggjt_v1(void) {
     GGML_TYPE_NAME = ggjt_v1_type_name;
     GGML_IS_QUANTIZED = ggjt_v1_is_quantized;
     quantize_fns = ggjt_v1_quantize_fns;
+    GGML_QUANTIZE_CHUNK = ggjt_v2_quantize_chunk;
 }

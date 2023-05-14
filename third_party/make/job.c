@@ -1810,7 +1810,7 @@ unveil_variable (const struct variable *var)
   return -1;
 }
 
-int
+static int
 get_base_cpu_freq_mhz (void)
 {
   return KCPUIDS(16H, EAX) & 0x7fff;
@@ -1830,7 +1830,7 @@ set_limit (int r, long lo, long hi)
   return setrlimit (r, &lim);
 }
 
-int
+static int
 set_cpu_limit (int secs)
 {
   int mhz, lim;
@@ -1954,6 +1954,7 @@ child_execute_job (struct childbase *child,
        strict ? " in .STRICT mode" : "",
        internet ? " with internet access" : ""));
 
+#ifdef __x86_64__
   /* [jart] Set cpu seconds quota.  */
   if (RLIMIT_CPU < RLIM_NLIMITS &&
       (s = get_target_variable (STRING_SIZE_TUPLE (".CPU"),
@@ -1966,6 +1967,7 @@ child_execute_job (struct childbase *child,
       else
         DB (DB_JOBS, (_("Failed to set CPU limit: %s\n"), strerror (errno)));
     }
+#endif /* __x86_64__ */
 
   /* [jart] Set virtual memory quota.  */
   if (RLIMIT_AS < RLIM_NLIMITS &&

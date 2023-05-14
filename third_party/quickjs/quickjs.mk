@@ -137,13 +137,15 @@ THIRD_PARTY_QUICKJS_CHECKS =							\
 
 o/$(MODE)/third_party/quickjs/qjscalc.c:					\
 		third_party/quickjs/qjscalc.js					\
-		o/$(MODE)/third_party/quickjs/qjsc.com
-	@$(COMPILE) -wAQJSC o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
+		o/$(MODE)/third_party/quickjs/qjsc.com				\
+		$(VM)
+	@$(COMPILE) -wAQJSC $(VM) o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
 
 o/$(MODE)/third_party/quickjs/repl.c:						\
 		third_party/quickjs/repl.js					\
-		o/$(MODE)/third_party/quickjs/qjsc.com
-	@$(COMPILE) -wAQJSC o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
+		o/$(MODE)/third_party/quickjs/qjsc.com				\
+		$(VM)
+	@$(COMPILE) -wAQJSC $(VM) o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
 
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 		$(THIRD_PARTY_QUICKJS)						\
@@ -157,7 +159,8 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 o/$(MODE)/third_party/quickjs/qjs.com:						\
 		o/$(MODE)/third_party/quickjs/qjs.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

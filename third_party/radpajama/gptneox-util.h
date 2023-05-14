@@ -1,41 +1,48 @@
-// Internal header to be included only by llama.cpp.
-// Contains wrappers around OS interfaces.
-
 #ifndef GPTNEOX_UTIL_H
 #define GPTNEOX_UTIL_H
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/madv.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mfd.h"
+#include "libc/sysv/consts/mlock.h"
+#include "libc/sysv/consts/mremap.h"
+#include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/ggml/llama_util.h"
+#include "third_party/libcxx/cerrno"
+#include "third_party/libcxx/climits"
+#include "third_party/libcxx/cstdarg"
+#include "third_party/libcxx/cstdint"
+#include "third_party/libcxx/cstdio"
+#include "third_party/libcxx/cstdlib"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/string"
+#include "third_party/libcxx/vector"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"
+// clang-format off
 
-#include <cstdio>
-#include <cstdint>
-#include <cerrno>
-#include <cstring>
-#include <cstdarg>
-#include <cstdlib>
-#include <climits>
-
-#include <string>
-#include <vector>
-
-#ifdef __has_include
-    #if __has_include(<unistd.h>)
-        #include <unistd.h>
-        #if defined(_POSIX_MAPPED_FILES)
-            #include <sys/mman.h>
-        #endif
-        #if defined(_POSIX_MEMLOCK_RANGE)
-            #include <sys/resource.h>
-        #endif
-    #endif
-#endif
-
-#if defined(_WIN32)
-    #define WIN32_LEAN_AND_MEAN
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-    #include <windows.h>
-    #include <io.h>
-    #include <stdio.h> // for _fseeki64
-#endif
+// Internal header to be included only by llama.cpp.
+// Contains wrappers around OS interfaces.
 
 #define GPTNEOX_ASSERT(x) \
     do { \
@@ -74,7 +81,7 @@ struct gptneox_file {
     gptneox_file(const char * fname, const char * mode) {
         fp = std::fopen(fname, mode);
         if (fp == NULL) {
-            throw format("failed to open %s: %s", fname, std::strerror(errno));
+            Die("failed to open %s: %s", fname, std::strerror(errno));
         }
         seek(0, SEEK_END);
         size = tell();
@@ -107,10 +114,10 @@ struct gptneox_file {
         errno = 0;
         std::size_t ret = std::fread(ptr, size, 1, fp);
         if (ferror(fp)) {
-            throw format("read error: %s", strerror(errno));
+            Die("read error: %s", strerror(errno));
         }
         if (ret != 1) {
-            throw std::string("unexpectedly reached end of file");
+            Die("unexpectedly reached end of file");
         }
     }
 
@@ -133,7 +140,7 @@ struct gptneox_file {
         errno = 0;
         size_t ret = std::fwrite(ptr, size, 1, fp);
         if (ret != 1) {
-            throw format("write error: %s", strerror(errno));
+            Die("write error: %s", strerror(errno));
         }
     }
 
@@ -180,7 +187,7 @@ struct gptneox_mmap {
 #endif
         addr = mmap(NULL, file->size, PROT_READ, flags, fd, 0);
         if (addr == MAP_FAILED) {
-            throw format("mmap failed: %s", strerror(errno));
+            Die("mmap failed: %s", strerror(errno));
         }
 
         if (prefetch) {
@@ -207,7 +214,7 @@ struct gptneox_mmap {
         DWORD error = GetLastError();
 
         if (hMapping == NULL) {
-            throw format("CreateFileMappingA failed: %s", gptneox_format_win_err(error).c_str());
+            Die("CreateFileMappingA failed: %s", gptneox_format_win_err(error).c_str());
         }
 
         addr = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
@@ -215,7 +222,7 @@ struct gptneox_mmap {
         CloseHandle(hMapping);
 
         if (addr == NULL) {
-            throw format("MapViewOfFile failed: %s", gptneox_format_win_err(error).c_str());
+            Die("MapViewOfFile failed: %s", gptneox_format_win_err(error).c_str());
         }
 
         #if _WIN32_WINNT >= _WIN32_WINNT_WIN8
@@ -244,7 +251,7 @@ struct gptneox_mmap {
     static constexpr bool SUPPORTED = false;
 
     gptneox_mmap(struct gptneox_file *) {
-        throw std::string("mmap not supported");
+        Die("mmap not supported");
     }
 #endif
 };
@@ -407,7 +414,7 @@ struct gptneox_buffer {
 };
 
 #ifdef GGML_USE_CUBLAS
-#include "ggml-cuda.h"
+// MISSING #include "ggml-cuda.h"
 struct gptneox_ctx_buffer {
     uint8_t * addr = NULL;
     size_t size = 0;

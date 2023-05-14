@@ -1,29 +1,64 @@
-// Defines sigaction on msys:
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-#include "common-gptneox.h"
-#include "gptneox.h"
-
-#include <cassert>
-#include <cinttypes>
-#include <cmath>
-#include <cstdio>
-#include <cstring>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
-
-#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
-#include <signal.h>
-#include <unistd.h>
-#elif defined (_WIN32)
-#include <signal.h>
-#endif
+/*-*-mode:c++;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8-*-│
+│vi: set net ft=c++ ts=4 sts=4 sw=4 fenc=utf-8                              :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  radpajama.com                                                               │
+│  Copyright (c) 2023 Ariel Núñez                                              │
+│  Copyright (c) 2023 Georgi Gerganov                                          │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/sigtimedwait.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/ss.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/cassert"
+#include "third_party/libcxx/cinttypes"
+#include "third_party/libcxx/cmath"
+#include "third_party/libcxx/cstdio"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/ctime"
+#include "third_party/libcxx/fstream"
+#include "third_party/libcxx/iostream"
+#include "third_party/libcxx/string"
+#include "third_party/libcxx/vector"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"
+#include "third_party/radpajama/common-gptneox.h"
+#include "third_party/radpajama/gptneox.h"
+// clang-format off
 
 static console_state con_st;
 static gptneox_context ** g_ctx;

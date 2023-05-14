@@ -863,14 +863,15 @@ COSMOPOLITAN_C_START_
     // quantization
     //
 
+    GGML_API size_t ggml_quantize_chunk(enum ggml_type type, const float * src, void * dst, int start, int n, int64_t * hist);
+
+    // NOTE: These quant APIs will always use the newest version (even if ggjt_v1() was called)
     GGML_API size_t ggml_quantize_q4_0(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q4_1(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q4_2(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q5_0(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q5_1(const float * src, void * dst, int n, int k, int64_t * hist);
     GGML_API size_t ggml_quantize_q8_0(const float * src, void * dst, int n, int k, int64_t * hist);
-
-    GGML_API size_t ggml_quantize_chunk(enum ggml_type type, const float * src, void * dst, int start, int n, int64_t * hist);
 
     //
     // system info
@@ -904,9 +905,10 @@ COSMOPOLITAN_C_START_
 #else
 #define GGML_RESTRICT restrict
 #endif
-    typedef void (*dequantize_row_q_t)(const void * GGML_RESTRICT x, float * GGML_RESTRICT y, int k);
-    typedef void (*quantize_row_q_t)  (const float * GGML_RESTRICT x, void * GGML_RESTRICT y, int k);
-    typedef void (*vec_dot_q_t)       (const int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT x, const void * GGML_RESTRICT y);
+    typedef void   (*dequantize_row_q_t)(const void * GGML_RESTRICT x, float * GGML_RESTRICT y, int k);
+    typedef void   (*quantize_row_q_t)  (const float * GGML_RESTRICT x, void * GGML_RESTRICT y, int k);
+    typedef size_t quantize_chunk_f     (const float * src, void * dst, int n, int k, int64_t * hist);
+    typedef void   (*vec_dot_q_t)       (const int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT x, const void * GGML_RESTRICT y);
 
     typedef struct {
         dequantize_row_q_t dequantize_row_q;
@@ -924,6 +926,7 @@ COSMOPOLITAN_C_START_
     extern const bool *GGML_IS_QUANTIZED;
     extern const char *const *GGML_TYPE_NAME;
     extern const quantize_fns_t *quantize_fns;
+    extern const quantize_chunk_f *const *GGML_QUANTIZE_CHUNK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -1,3 +1,4 @@
+// clang-format off
 # Convert Hugging Face fine-tuned gpt-neox-like models to ggml format
 
 import io

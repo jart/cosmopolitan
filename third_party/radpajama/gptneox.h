@@ -1,9 +1,6 @@
 #ifndef GPTNEOX_H
 #define GPTNEOX_H
-
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
+// clang-format off
 
 #ifdef GPTNEOX_SHARED
 #    if defined(_WIN32) && !defined(__MINGW32__)
@@ -264,8 +261,8 @@ extern "C" {
 // Internal API to be implemented by llama.cpp and used by tests/benchmarks only
 #ifdef GPTNEOX_API_INTERNAL
 
-#include <vector>
-#include <string>
+#include "third_party/libcxx/vector"
+#include "third_party/libcxx/string"
 struct ggml_tensor;
 
 std::vector<std::pair<std::string, struct ggml_tensor *>>& gptneox_internal_get_tensor_map(struct gptneox_context * ctx);

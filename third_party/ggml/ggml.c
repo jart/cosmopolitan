@@ -46,6 +46,8 @@
 #include "third_party/ggml/fp16.h"
 #include "third_party/ggml/fp16.internal.h"
 #include "libc/assert.h"
+#include "libc/assert.h"
+#include "third_party/ggml/ggml.h"
 #include "third_party/libcxx/math.h"
 
 asm(".ident\t\"\\n\\n\
@@ -2809,14 +2811,6 @@ const bool ggjt_v2_is_quantized[GGML_TYPE_COUNT] = {
 };
 const bool *GGML_IS_QUANTIZED;
 static_assert(GGML_TYPE_COUNT == 13, "GGML_IS_QUANTIZED is outdated");
-
-void ggjt_v2(void) {
-  GGML_BLCK_SIZE = ggjt_v2_blck_size;
-  GGML_TYPE_SIZE = ggjt_v2_type_size;
-  GGML_TYPE_NAME = ggjt_v2_type_name;
-  GGML_IS_QUANTIZED = ggjt_v2_is_quantized;
-  quantize_fns = ggjt_v2_quantize_fns;
-}
 
 static const char * GGML_OP_LABEL[GGML_OP_COUNT] = {
     "NONE",
@@ -11919,43 +11913,40 @@ size_t ggml_quantize_q8_0(const float * src, void * dst, int n, int k, int64_t *
     return (n/QK8_0*sizeof(block_q8_0));
 }
 
+static const quantize_chunk_f *const ggjt_v2_quantize_chunk[GGML_TYPE_COUNT] = {
+    [GGML_TYPE_Q4_0] = ggml_quantize_q4_0,
+    [GGML_TYPE_Q4_1] = ggml_quantize_q4_1,
+    [GGML_TYPE_Q5_0] = ggml_quantize_q5_0,
+    [GGML_TYPE_Q5_1] = ggml_quantize_q5_1,
+    [GGML_TYPE_Q8_0] = ggml_quantize_q8_0,
+};
+const quantize_chunk_f *const *GGML_QUANTIZE_CHUNK;
+static_assert(GGML_TYPE_COUNT == 13, "GGML_QUANTIZE_CHUNK is outdated");
+
 size_t ggml_quantize_chunk(enum ggml_type type, const float * src, void * dst, int start, int n, int64_t * hist) {
-    size_t result = 0;
-    switch (type) {
-        case GGML_TYPE_Q4_0:
-            {
-                GGML_ASSERT(start % QK4_0 == 0);
-                block_q4_0 * block = (block_q4_0*)dst + start / QK4_0;
-                result = ggml_quantize_q4_0(src + start, block, n, n, hist);
-            } break;
-        case GGML_TYPE_Q4_1:
-            {
-                GGML_ASSERT(start % QK4_1 == 0);
-                block_q4_1 * block = (block_q4_1*)dst + start / QK4_1;
-                result = ggml_quantize_q4_1(src + start, block, n, n, hist);
-            } break;
-        case GGML_TYPE_Q5_0:
-            {
-                GGML_ASSERT(start % QK5_0 == 0);
-                block_q5_0 * block = (block_q5_0*)dst + start / QK5_0;
-                result = ggml_quantize_q5_0(src + start, block, n, n, hist);
-            } break;
-        case GGML_TYPE_Q5_1:
-            {
-                GGML_ASSERT(start % QK5_1 == 0);
-                block_q5_1 * block = (block_q5_1*)dst + start / QK5_1;
-                result = ggml_quantize_q5_1(src + start, block, n, n, hist);
-            } break;
-        case GGML_TYPE_Q8_0:
-            {
-                GGML_ASSERT(start % QK8_0 == 0);
-                block_q8_0 * block = (block_q8_0*)dst + start / QK8_0;
-                result = ggml_quantize_q8_0(src + start, block, n, n, hist);
-            } break;
-        default:
-            assert(false);
-    }
-    return result;
+    void *block;
+    int blcksize, typesize;
+    GGML_ASSERT(GGML_QUANTIZE_CHUNK);
+    GGML_ASSERT((unsigned)type < GGML_TYPE_COUNT);
+    GGML_ASSERT(GGML_QUANTIZE_CHUNK[type]);
+    GGML_ASSERT(GGML_BLCK_SIZE[type]);
+    GGML_ASSERT(GGML_TYPE_SIZE[type]);
+    GGML_ASSERT(start % GGML_BLCK_SIZE[type] == 0);
+    blcksize = GGML_BLCK_SIZE[type];
+    typesize = GGML_TYPE_SIZE[type];
+    block = (char *)dst + start / blcksize * typesize;
+    return GGML_QUANTIZE_CHUNK[type](src + start, block, n, n, hist);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ggjt_v2(void) {
+    GGML_BLCK_SIZE = ggjt_v2_blck_size;
+    GGML_TYPE_SIZE = ggjt_v2_type_size;
+    GGML_TYPE_NAME = ggjt_v2_type_name;
+    GGML_IS_QUANTIZED = ggjt_v2_is_quantized;
+    quantize_fns = ggjt_v2_quantize_fns;
+    GGML_QUANTIZE_CHUNK = ggjt_v2_quantize_chunk;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

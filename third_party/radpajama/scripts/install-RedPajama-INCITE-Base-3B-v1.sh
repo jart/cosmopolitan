@@ -1,3 +1,4 @@
+// clang-format off
 #!/bin/bash
 
 # cd to scripts dir

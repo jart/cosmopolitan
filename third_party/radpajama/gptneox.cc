@@ -2,8 +2,8 @@
 │vi: set net ft=c++ ts=4 sts=4 sw=4 fenc=utf-8                              :vi│
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
-│  llama.com                                                                   │
-│  Copyright (c) 2023 Justine Alexandra Roberts Tunney                         │
+│  radpajama.com                                                               │
+│  Copyright (c) 2023 Ariel Núñez                                              │
 │  Copyright (c) 2023 Georgi Gerganov                                          │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
@@ -26,43 +26,41 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/stat.h"
+#include "third_party/radpajama/gptneox.h"
 #include "libc/intrin/bits.h"
-#include "libc/log/log.h"
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/msync.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
-#include "third_party/libcxx/map"
+#include "third_party/ggml/fp16.h"
+#include "third_party/ggml/ggml.h"
+#include "third_party/ggml/llama_util.h"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/array"
 #include "third_party/libcxx/atomic"
-#include "third_party/libcxx/iostream"
-#include "third_party/libcxx/string"
-#include "third_party/libcxx/vector"
-#include "third_party/radpajama/ggml.h"
-#include "third_party/radpajama/common.h"
-
-asm(".ident\t\"\\n\\n\
-llama.cpp (MIT License)\\n\
-Copyright (c) 2023 Georgi Gerganov\"");
-asm(".include \"libc/disclaimer.inc\"");
+#include "third_party/libcxx/cassert"
+#include "third_party/libcxx/cinttypes"
+#include "third_party/libcxx/climits"
+#include "third_party/libcxx/cstdint"
+#include "third_party/libcxx/cstdio"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/ctime"
+#include "third_party/libcxx/fstream"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/map"
+#include "third_party/libcxx/memory"
+#include "third_party/libcxx/mutex"
+#include "third_party/libcxx/queue"
+#include "third_party/libcxx/random"
+#include "third_party/libcxx/sstream"
+#include "third_party/libcxx/thread"
+#include "third_party/libcxx/unordered_map"
+#include "third_party/radpajama/gptneox-util.h"
 // clang-format off
-
-
+// Defines fileno on msys:
 
 // TODO: Add back in n_ctx (max_position_embeddings) to ggml model, it is currently hard-coded to 2048 max for llama
 
 #define GPTNEOX_USE_SCRATCH
 #define GPTNEOX_MAX_SCRATCH_BUFFERS 16
 
-// available open-assistant based gptneox models
-// OpenAssistant/stablelm-7b-sft-v7-epoch-3
-// OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5
+
 enum e_model {
     MODEL_UNKNOWN,
     MODEL_3B, // StabilityAI Base Alpha 3B
@@ -72,21 +70,6 @@ enum e_model {
 };
 
 static const size_t MiB = 1024*1024;
-static console_state con_st;
-static gptneox_context ** g_ctx;
-
-void sigint_handler(int signo) {
-    set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
-    printf("\n"); // this also force flush stdout.
-    if (signo == SIGINT) {
-        if (!is_interacting) {
-            is_interacting=true;
-        } else {
-            gptneox_print_timings(*g_ctx);
-            _exit(130);
-        }
-    }
-}
 
 // computed for n_ctx == 2048
 // TODO: dynamically determine these sizes
@@ -332,7 +315,7 @@ template <typename T>
 static T checked_mul(T a, T b) {
     T ret = a * b;
     if (a != 0 && ret / a != b) {
-        throw format("overflow multiplying %llu * %llu",
+        Die("overflow multiplying %llu * %llu",
                      (unsigned long long) a, (unsigned long long) b);
     }
     return ret;
@@ -340,7 +323,7 @@ static T checked_mul(T a, T b) {
 
 static size_t checked_div(size_t a, size_t b) {
     if (b == 0 || a % b != 0) {
-        throw format("error dividing %zu / %zu", a, b);
+        Die("error dividing %zu / %zu", a, b);
     }
     return a / b;
 }
@@ -404,7 +387,7 @@ struct gptneox_load_tensor {
         const auto & first_shard = shards.at(0);
         for (const auto & shard : shards) {
             if (shard.type != first_shard.type) {
-                throw format("inconsistent tensor shard type in '%s'", name.c_str());
+                Die("inconsistent tensor shard type in '%s'", name.c_str());
             }
         }
         type = first_shard.type;
@@ -427,7 +410,7 @@ struct gptneox_load_tensor {
         const auto & first_shard = shards.at(0);
         for (const auto & shard : shards) {
             if (shard.ne != first_shard.ne) {
-                throw format("inconsistent tensor shard shape in '%s': first was %s, other was %s",
+                Die("inconsistent tensor shard shape in '%s': first was %s, other was %s",
                              name.c_str(), gptneox_format_tensor_shape(first_shard.ne).c_str(), gptneox_format_tensor_shape(shard.ne).c_str());
             }
         }
@@ -484,18 +467,18 @@ struct gptneox_file_loader {
         uint32_t magic = file.read_u32();
         uint32_t version = 0;
 
-        if (magic != 'ggml') {
+        if (magic != READ32BE("ggml")) {
             version = file.read_u32();
         }
 
-        if (magic == 'ggml' && version == 0) {
+        if (magic == READ32BE("ggml") && version == 0) {
             file_version = GPTNEOX_FILE_VERSION_GGML;
-        } else if (magic == 'ggmf' && version == 1) {
+        } else if (magic == READ32BE("ggmf") && version == 1) {
             file_version = GPTNEOX_FILE_VERSION_GGMF_V1;
-        } else if (magic == 'ggjt' && version == 1) {
+        } else if (magic == READ32BE("ggjt") && version == 1) {
             file_version = GPTNEOX_FILE_VERSION_GGJT_V1;
         } else {
-            throw format("unknown (magic, version) combination: %08x, %08x; is this really a GGML file?",
+            Die("unknown (magic, version) combination: %08x, %08x; is this really a GGML file?",
                          magic, version);
         }
     }
@@ -539,7 +522,7 @@ struct gptneox_file_loader {
             file.read_raw(shard.ne.data(), sizeof(shard.ne[0]) * n_dims);
             std::string name = file.read_string(name_len);
             if (n_dims < 1 || n_dims > 2) {
-                throw format("gptneox.cpp: tensor '%s' should not be %u-dimensional", name.c_str(), n_dims);
+                Die("gptneox.cpp: tensor '%s' should not be %u-dimensional", name.c_str(), n_dims);
             }
             switch (shard.type) {
                 case GGML_TYPE_F32:
@@ -552,7 +535,7 @@ struct gptneox_file_loader {
                 case GGML_TYPE_Q8_0:
                     break;
                 default: {
-                    throw format("unrecognized tensor type %u\n", shard.type);
+                    Die("unrecognized tensor type %u\n", shard.type);
                 }
             }
 
@@ -586,12 +569,13 @@ struct gptneox_file_saver {
     gptneox_file_saver(const char * fname, gptneox_file_loader * any_file_loader, enum gptneox_ftype new_ftype)
         : file(fname, "wb"), any_file_loader(any_file_loader) {
         fprintf(stderr, "gptneox.cpp: saving model to %s\n", fname);
+        ggjt_v1();
         write_magic();
         write_hparams(new_ftype);
         write_vocab();
     }
     void write_magic() {
-        file.write_u32('ggjt'); // magic
+        file.write_u32(READ32BE("ggjt")); // magic
         file.write_u32(1); // version
     }
     void write_hparams(enum gptneox_ftype new_ftype) {
@@ -659,7 +643,7 @@ struct gptneox_model_loader {
             auto ith_file = new gptneox_file_loader(fname.c_str(), i, tensors_map);
             file_loaders.emplace_back(ith_file);
             if (ith_file->hparams != first_file->hparams) {
-                throw format("gptneox.cpp: hparams inconsistent between files");
+                Die("gptneox.cpp: hparams inconsistent between files");
             }
         }
         if (!gptneox_mmap::SUPPORTED) {
@@ -689,7 +673,7 @@ struct gptneox_model_loader {
     uint32_t guess_n_parts() const {
         auto it = tensors_map.name_to_idx.find("gpt_neox.embed_in.weight");
         if (it == tensors_map.name_to_idx.end()) {
-            throw std::string("missing gpt_neox.embed_in.weight");
+            Die("missing gpt_neox.embed_in.weight");
         }
         const gptneox_load_tensor & lt = tensors_map.tensors.at(it->second);
         return file_loaders.at(0)->hparams.n_embd / lt.shards.at(0).ne.at(0);
@@ -706,11 +690,11 @@ struct gptneox_model_loader {
     struct ggml_tensor * get_tensor(const std::string & name, std::vector<uint32_t> ne) {
         auto it = tensors_map.name_to_idx.find(name);
         if (it == tensors_map.name_to_idx.end()) {
-            throw format("gptneox.cpp: tensor '%s' is missing from model", name.c_str());
+            Die("gptneox.cpp: tensor '%s' is missing from model", name.c_str());
         }
         gptneox_load_tensor & lt = tensors_map.tensors.at(it->second);
         if (lt.ne != ne) {
-            throw format("gptneox.cpp: tensor '%s' has wrong shape; expected %s, got %s",
+            Die("gptneox.cpp: tensor '%s' has wrong shape; expected %s, got %s",
                          name.c_str(), gptneox_format_tensor_shape(ne).c_str(), gptneox_format_tensor_shape(lt.ne).c_str());
         }
 
@@ -733,7 +717,7 @@ struct gptneox_model_loader {
 
     void done_getting_tensors() {
         if (num_ggml_tensors_created != tensors_map.tensors.size()) {
-            throw std::string("gptneox.cpp: file contained more tensors than expected");
+            Die("gptneox.cpp: file contained more tensors than expected");
         }
     }
 
@@ -1046,7 +1030,7 @@ static void gptneox_model_load_internal(
 
         model.ctx = ggml_init(params);
         if (!model.ctx) {
-            throw format("ggml_init() failed");
+            Die("ggml_init() failed");
         }
     }
 
@@ -1115,14 +1099,14 @@ static bool gptneox_model_load(
         bool vocab_only,
         gptneox_progress_callback progress_callback,
         void *progress_callback_user_data) {
-    try {
+    // try {
         gptneox_model_load_internal(fname, lctx, n_ctx, memory_type, use_mmap, use_mlock,
                                   vocab_only, progress_callback, progress_callback_user_data);
         return true;
-    } catch (const std::string & err) {
-        fprintf(stderr, "error loading model: %s\n", err.c_str());
-        return false;
-    }
+    // } catch (const std::string & err) {
+    //     fprintf(stderr, "error loading model: %s\n", err.c_str());
+    //     return false;
+    // }
 }
 
 // evaluate the transformer
@@ -2096,13 +2080,13 @@ int gptneox_model_copy(
         const char * fname_inp,
         const char * fname_out,
   enum gptneox_ftype   ftype) {
-    try {
+    // try {
         gptneox_model_copy_internal(fname_inp, fname_out, ftype);
         return 0;
-    } catch (const std::string & err) {
-        fprintf(stderr, "%s: failed to copy: %s\n", __func__, err.c_str());
-        return 1;
-    }
+    // } catch (const std::string & err) {
+    //     fprintf(stderr, "%s: failed to copy: %s\n", __func__, err.c_str());
+    //     return 1;
+    // }
 }
 
 
@@ -2115,7 +2099,7 @@ static void gptneox_model_quantize_internal(const std::string & fname_inp, const
         case GPTNEOX_FTYPE_MOSTLY_Q5_0: quantized_type = GGML_TYPE_Q5_0; break;
         case GPTNEOX_FTYPE_MOSTLY_Q5_1: quantized_type = GGML_TYPE_Q5_1; break;
         case GPTNEOX_FTYPE_MOSTLY_Q8_0: quantized_type = GGML_TYPE_Q8_0; break;
-        default: throw format("invalid output file type %d\n", ftype);
+        default: Die("invalid output file type %d\n", ftype);
     };
 
     if (nthread <= 0) {
@@ -2181,7 +2165,7 @@ static void gptneox_model_quantize_internal(const std::string & fname_inp, const
                     f32_data[i] = ggml_fp16_to_fp32(f16_data[i]);
                 }
             } else {
-                throw format("type %s unsupported for integer quantization", ggml_type_name(tensor.type));
+                Die("type %s unsupported for integer quantization", ggml_type_name(tensor.type));
             }
 
             printf("quantizing .. ");
@@ -2327,7 +2311,7 @@ struct gptneox_context * gptneox_init_from_file(
             ctx->embedding.resize(hparams.n_embd);
         }
 
-        //ctx->buf_compute.resize(MEM_REQ_EVAL().at(ctx->model.type));
+        ctx->buf_compute.resize(MEM_REQ_EVAL().at(ctx->model.type));
 
         ctx->buf_scratch[0].resize(MEM_REQ_SCRATCH0().at(ctx->model.type));
         ctx->buf_scratch[1].resize(MEM_REQ_SCRATCH1().at(ctx->model.type));
@@ -2345,13 +2329,13 @@ int gptneox_model_quantize(
         const char * fname_out,
   enum gptneox_ftype   ftype,
         int          nthread) {
-    try {
+    // try {
         gptneox_model_quantize_internal(fname_inp, fname_out, ftype, nthread);
         return 0;
-    } catch (const std::string & err) {
-        fprintf(stderr, "%s: failed to quantize: %s\n", __func__, err.c_str());
-        return 1;
-    }
+    // } catch (const std::string & err) {
+    //     fprintf(stderr, "%s: failed to quantize: %s\n", __func__, err.c_str());
+    //     return 1;
+    // }
 }
 
 int gptneox_apply_lora_from_file_internal(struct gptneox_context * ctx, const char * path_lora, const char * path_base_model, int n_threads) {
@@ -2371,7 +2355,7 @@ int gptneox_apply_lora_from_file_internal(struct gptneox_context * ctx, const ch
     {
         uint32_t magic;
         fin.read((char *) &magic, sizeof(magic));
-        if (magic != 'ggla') {
+        if (magic != READ32BE("ggla")) {
             fprintf(stderr, "%s: bad file magic\n", __func__);
             return 1;
         }
@@ -2396,7 +2380,7 @@ int gptneox_apply_lora_from_file_internal(struct gptneox_context * ctx, const ch
     // create a temporary ggml context to store the lora tensors
     // todo: calculate size from biggest possible tensor
     std::vector<uint8_t> lora_buf(1024ull * 1024ull * 1024ull);
-    struct gml_init_params params;
+    struct ggml_init_params params;
     params.mem_size   = lora_buf.size();
     params.mem_buffer = lora_buf.data();
     params.no_alloc   = false;
@@ -2594,12 +2578,12 @@ int gptneox_apply_lora_from_file_internal(struct gptneox_context * ctx, const ch
 }
 
 int gptneox_apply_lora_from_file(struct gptneox_context * ctx, const char * path_lora, const char * path_base_model, int n_threads) {
-    try {
+    // try {
         return gptneox_apply_lora_from_file_internal(ctx, path_lora, path_base_model, n_threads);
-    } catch (const std::string & err) {
-        fprintf(stderr, "%s: failed to apply lora adapter: %s\n", __func__, err.c_str());
-        return 1;
-    }
+    // } catch (const std::string & err) {
+    //     fprintf(stderr, "%s: failed to apply lora adapter: %s\n", __func__, err.c_str());
+    //     return 1;
+    // }
 }
 
 int gptneox_get_kv_cache_token_count(struct gptneox_context * ctx) {
@@ -2902,6 +2886,27 @@ void gptneox_reset_timings(struct gptneox_context * ctx) {
     ctx->t_p_eval_us = ctx->n_p_eval = 0;
 }
 
+const char * gptneox_print_system_info(void) {
+    static std::string s;
+
+    s  = "";
+    s += "AVX = "         + std::to_string(ggml_cpu_has_avx())         + " | ";
+    s += "AVX2 = "        + std::to_string(ggml_cpu_has_avx2())        + " | ";
+    s += "AVX512 = "      + std::to_string(ggml_cpu_has_avx512())      + " | ";
+    s += "AVX512_VBMI = " + std::to_string(ggml_cpu_has_avx512_vbmi()) + " | ";
+    s += "AVX512_VNNI = " + std::to_string(ggml_cpu_has_avx512_vnni()) + " | ";
+    s += "FMA = "         + std::to_string(ggml_cpu_has_fma())         + " | ";
+    s += "NEON = "        + std::to_string(ggml_cpu_has_neon())        + " | ";
+    s += "ARM_FMA = "     + std::to_string(ggml_cpu_has_arm_fma())     + " | ";
+    s += "F16C = "        + std::to_string(ggml_cpu_has_f16c())        + " | ";
+    s += "FP16_VA = "     + std::to_string(ggml_cpu_has_fp16_va())     + " | ";
+    s += "WASM_SIMD = "   + std::to_string(ggml_cpu_has_wasm_simd())   + " | ";
+    s += "BLAS = "        + std::to_string(ggml_cpu_has_blas())        + " | ";
+    s += "SSE3 = "        + std::to_string(ggml_cpu_has_sse3())        + " | ";
+    s += "VSX = "         + std::to_string(ggml_cpu_has_vsx())         + " | ";
+
+    return s.c_str();
+}
 
 // For internal test use
 std::vector<std::pair<std::string, struct ggml_tensor *>>& gptneox_internal_get_tensor_map(struct gptneox_context * ctx) {
@@ -2914,7 +2919,7 @@ size_t gptneox_load_session_file(struct gptneox_context * ctx, const char * path
     const uint32_t magic = file.read_u32();
     const uint32_t version = file.read_u32();
 
-    if (!(magic == 'ggsn' && version == 0)) {
+    if (!(magic == READ32BE("ggsn") && version == 0)) {
         fprintf(stderr, "%s : unknown (magic, version) for session file: %08x, %08x\n", __func__, magic, version);
         return 0;
     }
@@ -2951,7 +2956,7 @@ size_t gptneox_save_session_file(struct gptneox_context * ctx, const char * path
     std::unique_ptr<uint8_t[]> state_data(new uint8_t[n_state_size]);
     gptneox_copy_state_data(ctx, state_data.get());
 
-    file.write_u32('ggsn'); // magic
+    file.write_u32(READ32BE("ggsn")); // magic
     file.write_u32(0); // version
     file.write_raw(&ctx->model.hparams, sizeof(gptneox_hparams));
 
@@ -2962,434 +2967,3 @@ size_t gptneox_save_session_file(struct gptneox_context * ctx, const char * path
     return n_state_size; // REVIEW
 }
 
-
-static std::atomic<bool> is_interacting;
-static std::atomic<bool> is_terminated;
-
-#define EPHEMERAL(fmt) "\r\e[K\033[1;35m" fmt " \033[0m"
-
-static void sigint_handler_batch(int signo) {
-    is_terminated = true;
-}
-
-static void sigint_handler_interactive(int signo) {
-    if (!is_interacting) {
-        is_interacting = true;
-    } else {
-        is_terminated = true;
-    }
-}
-
-static int CompareTime(struct timespec a, struct timespec b) {
-  int cmp;
-  if (!(cmp = (a.tv_sec > b.tv_sec) - (a.tv_sec < b.tv_sec))) {
-    cmp = (a.tv_nsec > b.tv_nsec) - (a.tv_nsec < b.tv_nsec);
-  }
-  return cmp;
-}
-
-static int on_missing_feature(const char *name) {
-    fprintf(stderr, "%s: error: cpuid %s not detected\n", __func__, name);
-    fprintf(stderr, "%s: amd microprocessors made after 2017 usually work\n", __func__);
-    fprintf(stderr, "%s: intel microprocessors made after 2013 usually work\n", __func__);
-    return 1;
-}
-
-int main(int argc, char ** argv) {
-    gpt_params params;
-    // Models can be freely downloaded from:
-    // https://huggingface.co/ceonlabs/radpajama/tree/main
-    // Preferred one in float16 format, this can be used to generate the quantized one.
-    // ggml-RedPajama-INCITE-Chat-3B-v1-f16.bin 5.55GB
-    // Quantized for faster inference, 8bit integers.
-    // ggml-RedPajama-INCITE-Chat-3B-v1-q8_0.bin 3.13 GB
-    params.model = "ggml-RedPajama-INCITE-Chat-3B-v1-f16.bin";
-    
-    if (gpt_params_parse(argc, argv, params) == false) {
-        return 1;
-    }
-
-
-
-    ShowCrashReports();
-    setvbuf(stdin, NULL, _IONBF, 0);
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-
-
-#ifdef __x86_64__
-    if (!X86_HAVE(AVX2)) return on_missing_feature("avx2");
-    if (!X86_HAVE(AVX)) return on_missing_feature("avx");
-    if (!X86_HAVE(FMA)) return on_missing_feature("fma");
-    if (!X86_HAVE(SSE3)) return on_missing_feature("sse3");
-    if (!X86_HAVE(F16C)) {
-        fprintf(stderr, "%s: warning: cpuid f16c not detected; inference might crash\n", __func__);
-    }
-#endif /* __x86_64__ */
-
-    gptneox_context * ctx;
-    g_ctx = &ctx;
-
-       // load the model
-    {
-        auto lparams = gptneox_context_default_params();
-
-        lparams.n_ctx      = params.n_ctx;
-        lparams.n_parts    = params.n_parts;
-        lparams.seed       = params.seed;
-        lparams.f16_kv     = params.memory_f16;
-        lparams.use_mmap   = params.use_mmap;
-        lparams.use_mlock  = params.use_mlock;
-
-        ctx = gptneox_init_from_file(params.model.c_str(), lparams);
-
-        if (ctx == NULL) {
-            fprintf(stderr, "%s: error: failed to load model '%s'\n", __func__, params.model.c_str());
-            return 1;
-        }
-    }
-
-   if (!params.lora_adapter.empty()) {
-        int err = gptneox_apply_lora_from_file(ctx,
-                                               params.lora_adapter.c_str(),
-                                               params.lora_base.empty() ? NULL : params.lora_base.c_str(),
-                                               params.n_threads);
-        if (err != 0) {
-            fprintf(stderr, "%s: error: failed to apply lora adapter\n", __func__);
-            return 1;
-        }
-    }
-    
-    // print system information
-    {
-        fprintf(stderr, "\n");
-        fprintf(stderr, "system_info: n_threads = %d / %d | \n",
-                params.n_threads, std::thread::hardware_concurrency());
-    }
-    
-    // determine the maximum memory usage needed to do inference for the given n_batch and n_predict parameters
-    // uncomment the "used_mem" line in llama.cpp to see the results
-    if (params.mem_test) {
-        {
-            const std::vector<gptneox_token> tmp(params.n_batch, 0);
-            gptneox_eval(ctx, tmp.data(), tmp.size(), 0, params.n_threads);
-        }
-        
-        {
-            const std::vector<gptneox_token> tmp = { 0, };
-            gptneox_eval(ctx, tmp.data(), tmp.size(), params.n_predict - 1, params.n_threads);
-        }
-        
-        gptneox_print_timings(ctx);
-        gptneox_free(ctx);
-        
-        return 0;
-    }
-
-    
-    // Always interactive in Open-Assistant
-    params.interactive = true;
-    
-    if (params.interactive) {
-#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
-        struct sigaction sigint_action;
-        sigint_action.sa_handler = sigint_handler;
-        sigemptyset (&sigint_action.sa_mask);
-        sigint_action.sa_flags = 0;
-        sigaction(SIGINT, &sigint_action, NULL);
-#elif defined (_WIN32)
-        signal(SIGINT, sigint_handler);
-#endif
-    }
-    fprintf(stderr, "sampling: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n",
-        params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
-    fprintf(stderr, "generate: n_ctx = %d, n_batch = %d, n_predict = %d, n_keep = %d\n", params.n_ctx, params.n_batch, params.n_predict, params.n_keep);
-    fprintf(stderr, "\n\n");
-    
-    // TODO: replace with ring-buffer
-    std::vector<gptneox_token> last_n_tokens = std::vector<gptneox_token>();
-    //std::fill(last_n_tokens.begin(), last_n_tokens.end(), 0);
-    
-    
-    if (params.interactive) {
-        printf("== Running in interactive mode. ==\n"
-#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__)) || defined (_WIN32)
-               " - Press Ctrl+C to interject at any time.\n"
-#endif
-               " - Press Return to return control to LLaMa.\n"
-               " - If you want to submit another line, end your input in '\\'.\n\n");
-    }
-    
-    const int32_t top_k          = params.top_k;
-    const float   top_p          = params.top_p;
-    const float   temp           = params.temp;
-    const float   repeat_penalty = params.repeat_penalty;
-    
-    // Chat loop
-    while (true) {
-        is_interacting = true;
-        
-        int n_past = 0;
-        
-        // Get input
-        
-        // potentially set color to indicate we are taking user input
-        
-#if defined (_WIN32)
-        // Windows: must reactivate sigint handler after each signal
-        signal(SIGINT, sigint_handler);
-#endif
-
-        if (params.instruct) {
-            printf("\n<human>: ");
-        }
-
-        std::string buffer;
-        if (!params.input_prefix.empty()) {
-            buffer += params.input_prefix;
-            printf("%s", buffer.c_str());
-        }
-
-        std::string line;
-        bool another_line = true;
-        do {
-#if defined(_WIN32)
-            std::wstring wline;
-            if (!std::getline(std::wcin, wline)) {
-                // input stream is bad or EOF received
-                return 0;
-            }
-            win32_utf8_encode(wline, line);
-#else
-            if (!std::getline(std::cin, line)) {
-                // input stream is bad or EOF received
-                return 0;
-            }
-#endif
-            if (line.empty() || line.back() != '\\') {
-                another_line = false;
-            } else {
-                line.pop_back(); // Remove the continue character
-            }
-            buffer += line;
-            if (another_line) {
-                buffer += '\n';
-            }
-        } while (another_line);
-        
-        is_interacting = false;
-        
-        // done taking input, reset color
-        
-        // Check for input
-        if (buffer.length() <= 0) {
-            continue; // Restart loop for input
-        }
-        
-        // Tokenize prompt with oasst special tokens
-
-        auto prompt_embd = ::gptneox_tokenize(ctx, buffer, false);
-        auto embd_inp = std::vector<gptneox_token>();
-
-        // Redpajama: insert special tokens for OA. (prefix)
-        embd_inp.push_back(gptneox_str_to_token(ctx, "<"));
-        embd_inp.push_back(gptneox_str_to_token(ctx, "human"));
-        embd_inp.push_back(gptneox_str_to_token(ctx, ">:"));
-        
-        embd_inp.insert(embd_inp.end(), prompt_embd.begin(), prompt_embd.end());
-
-        // Redpajama: insert special tokens for OA. (postfix)
-        embd_inp.push_back(gptneox_str_to_token(ctx, "<"));
-        embd_inp.push_back(gptneox_str_to_token(ctx, "bot"));
-        embd_inp.push_back(gptneox_str_to_token(ctx, ">:"));
-       
-        
-        // Verbose prompt
-        if (params.verbose_prompt) {
-            fprintf(stderr, "\n");
-            fprintf(stderr, "%s: prompt: '%s'\n", __func__, buffer.c_str());
-            fprintf(stderr, "%s: number of tokens in prompt = %zu\n", __func__, embd_inp.size());
-            for (int i = 0; i < (int) embd_inp.size(); i++) {
-                fprintf(stderr, "%6d -> '%s'\n", embd_inp[i], gptneox_token_to_str(ctx, embd_inp[i]));
-            }
-            /*if (params.n_keep > 0) {
-            fprintf(stderr, "%s: static prompt based on n_keep: '", __func__);
-                for (int i = 0; i < params.n_keep; i++) {
-                    fprintf(stderr, "%s", gptneox_token_to_str(ctx, embd_inp[i]));
-                }
-                fprintf(stderr, "'\n");
-            }
-             */
-            fprintf(stderr, "\n");
-        }
-        
-        // How many tokens to generate - check if theres space in context for atleast one token (or batch size tokens?)
-        auto inp_size = embd_inp.size();
-        auto space = params.n_ctx - inp_size;
-        if(space <= 0) {
-            fprintf(stderr, "%s : input too long\n", __func__);
-            continue;
-        }
-        // Send batches to eval
-        while (n_past < inp_size) {
-            auto remaining = inp_size - n_past;
-            int n_eval = params.n_batch < remaining ? params.n_batch : remaining;
-            if (gptneox_eval(ctx, &embd_inp[n_past], n_eval, n_past, params.n_threads)) {
-                fprintf(stderr, "<bot>: %s : failed to eval\n", __func__);
-                return 1;
-            }
-            n_past += n_eval;
-        }
-        
-        const int n_ctx = gptneox_n_ctx(ctx);
-        const int n_vocab = gptneox_n_vocab(ctx);
-        
-        const float   temp            = params.temp;
-        const int32_t top_k           = params.top_k <= 0 ? gptneox_n_vocab(ctx) : params.top_k;
-        const float   top_p           = params.top_p;
-        const float   tfs_z           = params.tfs_z;
-        const float   typical_p       = params.typical_p;
-        const int32_t repeat_last_n   = params.repeat_last_n < 0 ? n_ctx : params.repeat_last_n;
-        const float   repeat_penalty  = params.repeat_penalty;
-        const float   alpha_presence  = params.presence_penalty;
-        const float   alpha_frequency = params.frequency_penalty;
-        const int     mirostat        = params.mirostat;
-        const float   mirostat_tau    = params.mirostat_tau;
-        const float   mirostat_eta    = params.mirostat_eta;
-        const bool    penalize_nl     = params.penalize_nl;
-        
-        // Eval until space runs out
-        auto out_count = 0;
-        
-        printf("<bot>:");
-        while (space > 0) {
-            // Get token
-            gptneox_token id = 0;
-            
-            {
-                auto logits = gptneox_get_logits(ctx);
-                
-                // Apply params.logit_bias map
-                for (auto it = params.logit_bias.begin(); it != params.logit_bias.end(); it++) {
-                    logits[it->first] += it->second;
-                }
-
-                std::vector<gptneox_token_data> candidates;
-                candidates.reserve(n_vocab);
-                for (gptneox_token token_id = 0; token_id < n_vocab; token_id++) {
-                    candidates.emplace_back(gptneox_token_data{token_id, logits[token_id], 0.0f});
-                }
-
-                gptneox_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
-
-                // Apply penalties
-                gptneox_token nl_token = gptneox_str_to_token(ctx, "\n");
-                float nl_logit = logits[nl_token];
-                auto last_n_repeat = std::min(std::min((int)last_n_tokens.size(), repeat_last_n), n_ctx);
-                gptneox_sample_repetition_penalty(ctx, &candidates_p,
-                    last_n_tokens.data() + last_n_tokens.size() - last_n_repeat,
-                    last_n_repeat, repeat_penalty);
-                gptneox_sample_frequency_and_presence_penalties(ctx, &candidates_p,
-                    last_n_tokens.data() + last_n_tokens.size() - last_n_repeat,
-                    last_n_repeat, alpha_frequency, alpha_presence);
-                if (!penalize_nl) {
-                    logits[nl_token] = nl_logit;
-                }
-
-                if (temp <= 0) {
-                    // Greedy sampling
-                    id = gptneox_sample_token_greedy(ctx, &candidates_p);
-                } else {
-                    if (mirostat == 1) {
-                        static float mirostat_mu = 2.0f * mirostat_tau;
-                        const int mirostat_m = 100;
-                        gptneox_sample_temperature(ctx, &candidates_p, temp);
-                        id = gptneox_sample_token_mirostat(ctx, &candidates_p, mirostat_tau, mirostat_eta, mirostat_m, &mirostat_mu);
-                    } else if (mirostat == 2) {
-                        static float mirostat_mu = 2.0f * mirostat_tau;
-                        gptneox_sample_temperature(ctx, &candidates_p, temp);
-                        id = gptneox_sample_token_mirostat_v2(ctx, &candidates_p, mirostat_tau, mirostat_eta, &mirostat_mu);
-                    } else {
-                        // Temperature sampling
-                        gptneox_sample_top_k(ctx, &candidates_p, top_k, 1);
-                        gptneox_sample_tail_free(ctx, &candidates_p, tfs_z, 1);
-                        gptneox_sample_typical(ctx, &candidates_p, typical_p, 1);
-                        gptneox_sample_top_p(ctx, &candidates_p, top_p, 1);
-                        gptneox_sample_temperature(ctx, &candidates_p, temp);
-                        id = gptneox_sample_token(ctx, &candidates_p);
-                    }
-                }
-            }
-            
-            // Inc out count and dec space
-            out_count += 1;
-            space -= 1;
-            // Repeat tokens update
-            last_n_tokens.push_back(id);
-            if (last_n_tokens.size() > params.repeat_last_n) {
-                last_n_tokens.erase(last_n_tokens.begin());
-            }
-            // Redpajama: check if the interactive is done. 
-            //std::cout<<" last_n_tokens.size: "<< last_n_tokens[0] <<" "<< last_n_tokens[1] <<" "<< last_n_tokens[2] << std::endl;
-            if (last_n_tokens.size()==3 && last_n_tokens[0]==gptneox_str_to_token(ctx, "<") 
-            && last_n_tokens[1]==gptneox_str_to_token(ctx, "human") && last_n_tokens[2]==gptneox_str_to_token(ctx, ">:")){
-                space = 0;
-                continue;
-            }
-
-            // Check for eos - end early - check eos before bos in case they are the same
-            if (id == gptneox_token_eos()) {
-                space = 0;
-                continue;
-            }
-            // Check for bos - skip callback if so
-            if (id == gptneox_token_bos()) {
-                continue;
-            }
-            // Convert token to string and display
-            // printf("%s(%d)", gptneox_token_to_str(ctx, id), id);
-            
-            
-            if (last_n_tokens[2]==gptneox_str_to_token(ctx, "<")){
-                ;
-            }
-            else if (last_n_tokens[2]==gptneox_str_to_token(ctx, "human")){
-                if (last_n_tokens[1]==gptneox_str_to_token(ctx, "<")){
-                    ;
-                }
-                else{
-                    printf("%s", gptneox_token_to_str(ctx, id));
-                }
-            }
-            else if (last_n_tokens[1]==gptneox_str_to_token(ctx, "<")){
-                    printf("<");
-                    printf("%s", gptneox_token_to_str(ctx, id));
-                }
-            else{
-                printf("%s", gptneox_token_to_str(ctx, id));
-            }
-            fflush(stdout);
-            // Check if we need to run another eval
-            if (space > 0) {
-                // Send generated token back into model for next generation
-                if (gptneox_eval(ctx, &id, 1, n_past, params.n_threads)) {
-                    fprintf(stderr, "%s : failed to eval\n", __func__);
-                    return 1;
-                }
-                // Increment past count
-                n_past += 1;
-            }
-            // Check for user interrupt
-            if (is_interacting) { space = 0; }
-        }
-        printf("\n"); 
-        //printf("\n %d", space);
-        fflush(stdout);
-     }
-
-    gptneox_print_timings(ctx);
-    gptneox_free(ctx);
-
-
-    return 0;
-}
