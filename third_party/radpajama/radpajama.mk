@@ -20,9 +20,7 @@ THIRD_PARTY_RADPAJAMA_A_HDRS =						\
 
 THIRD_PARTY_RADPAJAMA_A_SRCS =						\
 	third_party/radpajama/common-gptneox.cc				\
-	third_party/radpajama/copy-gptneox.cc				\
 	third_party/radpajama/gptneox.cc				\
-	third_party/radpajama/quantize-gptneox.cc
 
 THIRD_PARTY_RADPAJAMA_A_DIRECTDEPS =					\
 	LIBC_CALLS							\
@@ -58,6 +56,8 @@ $(THIRD_PARTY_RADPAJAMA_A).pkg:						\
 #
 #     make -j8 o//third_party/radpajama/radpajama.com
 #     make -j8 o//third_party/radpajama/radpajama-chat.com
+#     make -j8 o//third_party/radpajama/radpajama-copy.com
+#     make -j8 o//third_party/radpajama/radpajama-quantize.com
 
 THIRD_PARTY_RADPAJAMA_ARTIFACTS += THIRD_PARTY_RADPAJAMA_MAIN
 THIRD_PARTY_RADPAJAMA_MAIN_OBJS = $(THIRD_PARTY_RADPAJAMA_MAIN_SRCS:%.cc=o/$(MODE)/%.o)
@@ -65,20 +65,26 @@ THIRD_PARTY_RADPAJAMA_MAIN_BINS = $(THIRD_PARTY_RADPAJAMA_COMS) $(THIRD_PARTY_RA
 
 THIRD_PARTY_RADPAJAMA_MAIN_COMS =					\
 	o/$(MODE)/third_party/radpajama/radpajama.com			\
-	o/$(MODE)/third_party/radpajama/radpajama-chat.com
+	o/$(MODE)/third_party/radpajama/radpajama-chat.com		\
+	o/$(MODE)/third_party/radpajama/radpajama-copy.com		\
+	o/$(MODE)/third_party/radpajama/radpajama-quantize.com
 
 THIRD_PARTY_RADPAJAMA_MAIN_SRCS =					\
 	third_party/radpajama/main-redpajama.cc				\
-	third_party/radpajama/main-redpajama-chat.cc
+	third_party/radpajama/main-redpajama-chat.cc			\
+	third_party/radpajama/copy-gptneox.cc				\
+	third_party/radpajama/quantize-gptneox.cc
 
 THIRD_PARTY_RADPAJAMA_MAIN_DIRECTDEPS =					\
 	LIBC_CALLS							\
+	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_NEXGEN32E							\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_STUBS							\
+	THIRD_PARTY_GGML						\
 	THIRD_PARTY_RADPAJAMA						\
 	THIRD_PARTY_LIBCXX
 
@@ -101,6 +107,22 @@ o/$(MODE)/third_party/radpajama/radpajama-chat.com.dbg:			\
 		o/$(MODE)/third_party/radpajama/main.pkg		\
 		$(THIRD_PARTY_RADPAJAMA_MAIN_DEPS)			\
 		o/$(MODE)/third_party/radpajama/main-redpajama-chat.o	\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/third_party/radpajama/radpajama-copy.com.dbg:			\
+		o/$(MODE)/third_party/radpajama/main.pkg		\
+		$(THIRD_PARTY_RADPAJAMA_MAIN_DEPS)			\
+		o/$(MODE)/third_party/radpajama/copy-gptneox.o		\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/third_party/radpajama/radpajama-quantize.com.dbg:		\
+		o/$(MODE)/third_party/radpajama/main.pkg		\
+		$(THIRD_PARTY_RADPAJAMA_MAIN_DEPS)			\
+		o/$(MODE)/third_party/radpajama/quantize-gptneox.o	\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)

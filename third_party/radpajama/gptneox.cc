@@ -2247,6 +2247,7 @@ static void gptneox_model_quantize_internal(const std::string & fname_inp, const
 struct gptneox_context * gptneox_init_from_file(
                              const char * path_model,
             struct gptneox_context_params   params) {
+    ggjt_v1();
     ggml_time_init();
 
     gptneox_context * ctx = new gptneox_context;
