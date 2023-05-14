@@ -185,12 +185,13 @@ static int LuaFetch(lua_State *L) {
     if (lua_isinteger(L, -1)) {
       sock = lua_tointeger(L, -1);
       keepalive = lua_toboolean(L, -2) ? kaCLOSE : kaKEEP;
+      // remove host mapping, as the socket is ether being closed
+      // (so needs to be removed) or will be added after the request is done;
+      // this also helps to keep the mapping clean in case of an error
+      lua_pushnil(L); // aft: -4=tbl, -3=close, -2=hosthdr, -1=nil
+      lua_setfield(L, -4, hosthdr);
       VERBOSEF("(ftch) reuse socket %d for host %s (and %s)",
                sock, hosthdr, keepalive == kaCLOSE ? "close" : "keep");
-      if (keepalive == kaCLOSE) { // remove socket being closed
-        lua_pushnil(L); // aft: -4=tbl, -3=close, -2=hosthdr, -1=nil
-        lua_setfield(L, -4, hosthdr);
-      }
     }
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   }
