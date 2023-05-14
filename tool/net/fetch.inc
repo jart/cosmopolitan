@@ -63,14 +63,19 @@ static int LuaFetch(lua_State *L) {
     maxredirects = luaL_optinteger(L, -1, maxredirects);
     lua_getfield(L, 2, "numredirects");
     numredirects = luaL_optinteger(L, -1, numredirects);
-    lua_getfield(L, 2, "keepalive");  // accept keepalive=true|num
-    if (lua_isboolean(L, -1)) keepalive = lua_toboolean(L, -1) ? kaOPEN : kaNONE;
-    if (lua_isinteger(L, -1)) {
-      keepalive = kaKEEP;
-      sock = lua_tointeger(L, -1);
-      if (sock < 0) {
-        sock = -sock;
-        keepalive = kaCLOSE;
+    lua_getfield(L, 2, "keepalive");
+    if (!lua_isnil(L, -1)) {
+      if (lua_istable(L, -1)) {
+        keepalive = kaOPEN; // will be updated based on host later
+      } else if (lua_isboolean(L, -1)) {
+        keepalive = lua_toboolean(L, -1) ? kaOPEN : kaNONE;
+        if (keepalive) {
+          lua_createtable(L, 0, 1);
+          lua_setfield(L, 2, "keepalive");
+        }
+      } else {
+        return luaL_argerror(L, 2, "invalid keepalive value;"
+                                   " boolean or table expected");
       }
     }
     lua_getfield(L, 2, "headers");
@@ -172,6 +177,24 @@ static int LuaFetch(lua_State *L) {
   }
   if (!hosthdr) hosthdr = _gc(xasprintf("%s:%s", host, port));
 
+  // check if hosthdr is in keepalive table
+  if (keepalive && lua_istable(L, 2)) {
+    lua_getfield(L, 2, "keepalive");
+    lua_getfield(L, -1, "close"); // aft: -2=tbl, -1=close
+    lua_getfield(L, -2, hosthdr); // aft: -3=tbl, -2=close, -1=hosthdr
+    if (lua_isinteger(L, -1)) {
+      sock = lua_tointeger(L, -1);
+      keepalive = lua_toboolean(L, -2) ? kaCLOSE : kaKEEP;
+      VERBOSEF("(ftch) reuse socket %d for host %s (and %s)",
+               sock, hosthdr, keepalive == kaCLOSE ? "close" : "keep");
+      if (keepalive == kaCLOSE) { // remove socket being closed
+        lua_pushnil(L); // aft: -4=tbl, -3=close, -2=hosthdr, -1=nil
+        lua_setfield(L, -4, hosthdr);
+      }
+    }
+    lua_settop(L, 2);  // drop all added elements to keep the stack balanced
+  }
+
   url.fragment.p = 0, url.fragment.n = 0;
   url.scheme.p = 0, url.scheme.n = 0;
   url.user.p = 0, url.user.n = 0;
@@ -197,7 +220,7 @@ static int LuaFetch(lua_State *L) {
           "%s%s"
           "\r\n",
           method, _gc(EncodeUrl(&url, 0)), hosthdr,
-          keepalive == kaNONE || keepalive == kaCLOSE ? "close"
+          (keepalive == kaNONE || keepalive == kaCLOSE) ? "close"
             : (connhdr ? connhdr : "keep-alive"),
           agenthdr, conlenhdr, headers ? headers : "");
   appendd(&request, body, bodylen);
@@ -425,6 +448,14 @@ Finished:
   VERBOSEF("(ftch) completed %s HTTP%02d %d %s %`'.*s", method, msg.version,
            msg.status, urlarg, FetchHeaderLength(kHttpServer),
            FetchHeaderData(kHttpServer));
+
+  // need to save updated sock for keepalive
+  if (keepalive && keepalive != kaCLOSE && lua_istable(L, 2)) {
+    lua_getfield(L, 2, "keepalive");
+    lua_pushinteger(L, sock);
+    lua_setfield(L, -2, hosthdr);
+    lua_pop(L, 1);
+  }
   if (followredirect && FetchHasHeader(kHttpLocation) &&
       (msg.status == 301 || msg.status == 308 ||  // permanent redirects
        msg.status == 302 || msg.status == 307 ||  // temporary redirects
@@ -447,13 +478,6 @@ Finished:
     lua_pushstring(L, method);
     lua_setfield(L, -2, "method");
 
-    // since the connection is going to be closed on redirect,
-    // make sure that keepalive socket is reset
-    if (keepalive) {
-      lua_pushboolean(L, true);
-      lua_setfield(L, -2, "keepalive");
-    }
-
     lua_pushinteger(L, numredirects + 1);
     lua_setfield(L, -2, "numredirects");
     // replace URL with Location header
@@ -463,14 +487,9 @@ Finished:
 
     DestroyHttpMessage(&msg);
     free(inbuf.p);
-    close(sock);
+    if (!keepalive || keepalive == kaCLOSE) close(sock);
     return LuaFetch(L);
   } else {
-    if (keepalive && keepalive != kaCLOSE && lua_istable(L, 2)) {
-      lua_pushinteger(L, sock);
-      lua_setfield(L, -2, "keepalive");
-    }
-
     lua_pushinteger(L, msg.status);
     LuaPushHeaders(L, &msg, inbuf.p);
     lua_pushlstring(L, inbuf.p + hdrsize, paylen);
