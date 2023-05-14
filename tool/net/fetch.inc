@@ -227,7 +227,7 @@ static int LuaFetch(lua_State *L) {
   requestlen = appendz(request).i;
   _gc(request);
 
-  if (keepalive != kaKEEP && keepalive != kaCLOSE) {
+  if (keepalive == kaNONE || keepalive == kaOPEN) {
     /*
      * Perform DNS lookup.
      */
@@ -448,6 +448,15 @@ Finished:
   VERBOSEF("(ftch) completed %s HTTP%02d %d %s %`'.*s", method, msg.version,
            msg.status, urlarg, FetchHeaderLength(kHttpServer),
            FetchHeaderData(kHttpServer));
+
+  // check if the server has requested to close the connection
+  // https://www.rfc-editor.org/rfc/rfc2616#section-14.10
+  if (keepalive && keepalive != kaCLOSE
+                && FetchHasHeader(kHttpConnection)
+                && FetchHeaderEqualCase(kHttpConnection, "close")) {
+    VERBOSEF("(ftch) close keepalive on server request");
+    keepalive = kaCLOSE;
+  }
 
   // need to save updated sock for keepalive
   if (keepalive && keepalive != kaCLOSE && lua_istable(L, 2)) {
