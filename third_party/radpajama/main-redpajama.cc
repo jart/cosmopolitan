@@ -31,6 +31,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/log/log.h"
 #include "libc/runtime/pathconf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
@@ -82,6 +83,8 @@ void sigint_handler(int signo) {
 int main(int argc, char ** argv) {
     gpt_params params;
     params.model = "./examples/redpajama/models/pythia/ggml-RedPajama-INCITE-Instruct-3B-v1-f16.bin";
+
+    ShowCrashReports();
 
     if (gpt_params_parse(argc, argv, params) == false) {
         return 1;

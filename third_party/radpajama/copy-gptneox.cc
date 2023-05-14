@@ -26,6 +26,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/log.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/libcxx/cstdio"
 #include "third_party/libcxx/map"
@@ -47,6 +48,8 @@ static const std::map<std::string, enum gptneox_ftype> GPTNEOX_FTYPE_MAP = {
 //  ./quantize models/llama/ggml-model.bin models/llama/ggml-model-quant.bin type
 //
 int main(int argc, char ** argv) {
+    ShowCrashReports();
+
     ggjt_v1();
     ggml_time_init();
 
