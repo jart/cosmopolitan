@@ -14,14 +14,9 @@
 #include "third_party/zlib/gz/gzguts.inc"
 #include "third_party/zlib/zlib.h"
 #include "third_party/zlib/zutil.internal.h"
+// clang-format off
 
 #define LSEEK lseek
-
-asm(".ident\t\"\\n\\n\
-zlib (zlib License)\\n\
-Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /* Local functions */
 static void gz_reset(gz_statep);

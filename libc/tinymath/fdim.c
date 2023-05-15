@@ -22,6 +22,6 @@
  * Returns positive difference.
  */
 double fdim(double x, double y) {
-  if (isnan(x) || isnan(y)) return NAN;
+  if (isunordered(x, y)) return NAN;
   return x > y ? x - y : 0;
 }

@@ -687,8 +687,6 @@ ulg crc32(crc, buf, len)
    pointer, then initialize the crc shift register contents instead.
    Return the current crc in either case. */
 {
-  return crc32_z(crc,buf,len);
-
   register z_uint4 c;
   register ZCONST ulg near *crc_32_tab;
 

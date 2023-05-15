@@ -31,7 +31,6 @@
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/extend.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/f.h"
@@ -159,11 +158,6 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
   h->pos = 0;
   h->cfile = cf;
   h->size = size;
-  if (!IsTiny() && h->mem &&
-      crc32_z(0, h->mem, h->size) != ZIP_LFILE_CRC32(zipos->map + lf)) {
-    h->mem = 0;
-    eio();
-  }
   if (h->mem) {
     minfd = 3;
     __fds_lock();

@@ -34,7 +34,7 @@ asm(".ident\t\"\\n\\n\
 OpenBSD libm (ISC License)\\n\
 Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /* origin: OpenBSD /usr/src/lib/libm/src/polevll.c */
 /*

@@ -1,3 +1,4 @@
+// -*- c++ -*-
 #ifndef GPTNEOX_H
 #define GPTNEOX_H
 // clang-format off

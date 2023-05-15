@@ -73,6 +73,13 @@ IMAGE_BASE_VIRTUAL ?= 0x400000
 IGNORE := $(shell $(ECHO) -2 ♥cosmo)
 IGNORE := $(shell $(MKDIR) o/tmp)
 
+ifeq ($(MODE), dbg)
+# be generous about resources in debug mode
+# let commands use  64 seconds  cpu time max
+# let commands use 300 seconds wall time max
+QUOTA ?= -C64 -L300
+endif
+
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
 VM = o/third_party/qemu/qemu-aarch64

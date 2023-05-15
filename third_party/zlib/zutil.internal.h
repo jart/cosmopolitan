@@ -128,6 +128,12 @@ typedef unsigned long ulg;
 #endif
 #endif
 
+#ifdef _MSC_VER
+#define zalign(x) __declspec(align(x))
+#else
+#define zalign(x) __attribute__((aligned((x))))
+#endif
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* ZUTIL_H */

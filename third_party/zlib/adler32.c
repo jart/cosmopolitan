@@ -1,22 +1,15 @@
+// clang-format off
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
+// clang-format off
 /* adler32.c -- compute the Adler-32 checksum of a data stream
  * Copyright (C) 1995-2011, 2016 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
-#include "libc/nexgen32e/x86feature.h"
-#include "third_party/zlib/macros.internal.h"
-#include "third_party/zlib/zconf.h"
+
 #include "third_party/zlib/zutil.internal.h"
-
-asm(".ident\t\"\\n\\n\
-zlib (zlib License)\\n\
-Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
-
-/* @(#) $Id$ */
+#include "third_party/zlib/macros.internal.h"
 
 local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 
@@ -70,7 +63,10 @@ local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 #  define MOD63(a) a %= BASE
 #endif
 
-uint32_t ZLIB_INTERNAL adler32_simd_(uint32_t, const unsigned char *, z_size_t);
+#include "third_party/zlib/cpu_features.internal.h"
+#if defined(ADLER32_SIMD_SSSE3) || defined(ADLER32_SIMD_NEON)
+#include "third_party/zlib/adler32_simd.inc"
+#endif
 
 /* ========================================================================= */
 uLong ZEXPORT adler32_z(adler, buf, len)
@@ -82,7 +78,7 @@ uLong ZEXPORT adler32_z(adler, buf, len)
     unsigned n;
 
 #if defined(ADLER32_SIMD_SSSE3)
-    if (buf != Z_NULL && len >= 64 && X86_HAVE(SSSE3))
+    if (buf != Z_NULL && len >= 64 && x86_cpu_enable_ssse3)
         return adler32_simd_(adler, buf, len);
 #elif defined(ADLER32_SIMD_NEON)
     if (buf != Z_NULL && len >= 64)
@@ -104,9 +100,24 @@ uLong ZEXPORT adler32_z(adler, buf, len)
         return adler | (sum2 << 16);
     }
 
+#if defined(ADLER32_SIMD_SSSE3)
+    /*
+     * Use SSSE3 to compute the adler32. Since this routine can be
+     * freely used, check CPU features here. zlib convention is to
+     * call adler32(0, NULL, 0), before making calls to adler32().
+     * So this is a good early (and infrequent) place to cache CPU
+     * features for those later, more interesting adler32() calls.
+     */
+    if (buf == Z_NULL) {
+        if (!len) /* Assume user is calling adler32(0, NULL, 0); */
+            cpu_check_features();
+        return 1L;
+    }
+#else
     /* initial Adler-32 value (deferred check for len == 1 speed) */
     if (buf == Z_NULL)
         return 1L;
+#endif
 
     /* in case short lengths are provided, keep it somewhat fast */
     if (len < 16) {

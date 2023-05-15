@@ -36,7 +36,11 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-long double sinl(long double x) {
+/**
+ * Returns sine of 𝑥.
+ */
+long double sinl(long double x)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 	return sin(x);
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384

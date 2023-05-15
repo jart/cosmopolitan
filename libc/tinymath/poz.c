@@ -121,9 +121,9 @@ double pochisq(
     	    e = (even ? 0.0 : LOG_SQRT_PI);
     	    c = log(a);
     	    while (z <= x) {
-		e = log(z) + e;
-		s += ex(c * z - a - e);
-		z += 1.0;
+				e = log(z) + e;
+				s += ex(c * z - a - e);
+				z += 1.0;
     	    }
     	    return (s);
     	} else {

@@ -79,7 +79,7 @@ long double atan2l(long double y, long double x)
 	long double z;
 	int m, ex, ey;
 
-	if (isnan(x) || isnan(y))
+	if (isunordered(x, y))
 		return x+y;
 	if (x == 1)
 		return atanl(y);

@@ -8,11 +8,6 @@
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zlib.h"
-
-asm(".ident\t\"\\n\\n\
-zlib (zlib License)\\n\
-Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
-asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 /* @(#) $Id$ */

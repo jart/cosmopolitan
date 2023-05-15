@@ -32,7 +32,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 double nextafter(double x, double y)
 {
@@ -40,7 +40,7 @@ double nextafter(double x, double y)
 	uint64_t ax, ay;
 	int e;
 
-	if (isnan(x) || isnan(y))
+	if (isunordered(x, y))
 		return x + y;
 	if (ux.i == uy.i)
 		return y;

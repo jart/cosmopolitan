@@ -20,6 +20,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#ifndef __aarch64__
 
 #define PMOVMSKB(x) __builtin_ia32_pmovmskb128(x)
 
@@ -129,7 +130,9 @@ microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
  *     memcmp n=32768                      29 ps/byte         32,851 mb/s
  *     memcmp n=131072                     33 ps/byte         28,983 mb/s
  *
- * @return unsigned char subtraction at stop index
+ * @return an integer that's (1) equal to zero if `a` is equal to `b`,
+ *     (2) less than zero if `a` is less than `b`, or (3) greater than
+ *     zero if `a` is greater than `b`
  * @asyncsignalsafe
  */
 int memcmp(const void *a, const void *b, size_t n) {
@@ -200,3 +203,5 @@ int memcmp(const void *a, const void *b, size_t n) {
   }
   return 0;
 }
+
+#endif /* __aarch64__ */

@@ -11,23 +11,9 @@ ORIGIN
   The zlib sources were obtained from Chromium's zlib fork.
 
     https://chromium.googlesource.com/chromium/src/third_party/zlib
-    commit 8f22e90f007a7dd466b426513725c13191248315
-    Author: Hans Wennborg <hans@chromium.org>
-    Date:   Fri Sep 16 16:14:51 2022 +0000
-
-    [zlib][fuzz] Cap the input size for zlib_inflate_with_header_fuzzer
-    
-    To prevent timeouts when processing large inputs with small chunk sizes.
-    
-    Bug: 1362206
-    Change-Id: Ie21ea48abf85ee49897243857bf84b0f32d24bd5
-    Reviewed-on: https://chromium-review.googlesource.com/c/chromium/src/+/3899099
-    Reviewed-by: Adenilson Cavalcanti <cavalcantii@chromium.org>
-    Auto-Submit: Hans Wennborg <hans@chromium.org>
-    Commit-Queue: Adenilson Cavalcanti <cavalcantii@chromium.org>
-    Cr-Commit-Position: refs/heads/main@{#1048044}
-    NOKEYCHECK=True
-    GitOrigin-RevId: fd75b8c2768e7cc3a3e7a06bc563bb03c5ba0ec2
+    commit 14dd4c4455602c9b71a1a89b5cafd1f4030d2e3f
+    Author: Adenilson Cavalcanti <cavalcantii@chromium.org>
+    Date:   Tue Apr 11 17:40:40 2023 +0000
 
   The source code for puff was obtained from zlib itself:
 
@@ -42,7 +28,7 @@ LOCAL CHANGES
 
   - Changed Trace(stderr) calls to use kprintf()
 
-  - We use our own crc32() implementation from LIBC_STR
+  - Made the type signature of crc32_z() less obnoxious
 
   - Fix a Chromium Zlib regression where malloc() failures inside
     deflateInit2() will result in a segmentation fault

@@ -15,15 +15,16 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/highwayhash64.h"
 #include "libc/inttypes.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/highwayhash64.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "third_party/zlib/zlib.h"
 
 #define kMaxSize 64
 

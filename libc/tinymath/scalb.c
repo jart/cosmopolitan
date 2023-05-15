@@ -58,7 +58,7 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 double scalb(double x, double fn)
 {
-	if (isnan(x) || isnan(fn))
+	if (isunordered(x, fn))
 		return x*fn;
 	if (!isfinite(fn)) {
 		if (fn > 0.0)

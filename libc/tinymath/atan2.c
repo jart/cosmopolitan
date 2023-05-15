@@ -4,6 +4,13 @@
 │                                                                              │
 │ FreeBSD lib/msun/src/e_atan2.c                                               │
 │                                                                              │
+│ Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.            │
+│                                                                              │
+│ Developed at SunPro, a Sun Microsystems, Inc. business.                      │
+│ Permission to use, copy, modify, and distribute this                         │
+│ software is freely granted, provided that this notice                        │
+│ is preserved.                                                                │
+│                                                                              │
 │ Copyright (c) 1992-2023 The FreeBSD Project.                                 │
 │                                                                              │
 │ Redistribution and use in source and binary forms, with or without           │
@@ -26,12 +33,6 @@
 │ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY    │
 │ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF       │
 │ SUCH DAMAGE.                                                                 │
-│                                                                              │
-│ Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.            │
-│ Developed at SunPro, a Sun Microsystems, Inc. business.                      │
-│ Permission to use, copy, modify, and distribute this                         │
-│ software is freely granted, provided that this notice                        │
-│ is preserved.                                                                │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"

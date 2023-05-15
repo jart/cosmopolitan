@@ -9,11 +9,6 @@
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "third_party/zlib/gz/gzguts.inc"
-
-asm(".ident\t\"\\n\\n\
-zlib (zlib License)\\n\
-Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
-asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 /* Local functions */

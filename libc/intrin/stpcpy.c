@@ -17,6 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#ifndef __aarch64__
+
+// TODO(jart): ASAN support here is important.
 
 typedef char xmm_u __attribute__((__vector_size__(16), __aligned__(1)));
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
@@ -63,3 +66,5 @@ char *stpcpy(char *d, const char *s) {
     ++i;
   }
 }
+
+#endif /* __aarch64__ */

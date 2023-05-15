@@ -36,7 +36,11 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-long double cosl(long double x) {
+/**
+ * Returns cosine of 𝑥.
+ */
+long double cosl(long double x)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 	return cos(x);
 #elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384

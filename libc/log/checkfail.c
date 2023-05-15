@@ -36,10 +36,16 @@ STATIC_YOINK("strerror_wr");
 /**
  * Handles failure of CHECK_xx() macros.
  */
-relegated void __check_fail(const char *suffix, const char *opstr,
-                            uint64_t want, const char *wantstr, uint64_t got,
-                            const char *gotstr, const char *file, int line,
-                            const char *fmt, ...) {
+relegated void __check_fail(const char *suffix,   //
+                            const char *opstr,    //
+                            uint64_t want,        //
+                            const char *wantstr,  //
+                            uint64_t got,         //
+                            const char *gotstr,   //
+                            const char *file,     //
+                            int line,             //
+                            const char *fmt,      //
+                            ...) {
   int e;
   char *p;
   size_t i;

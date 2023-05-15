@@ -83,7 +83,8 @@ static dontinline long lrint_slow(double x) {
 /**
  * Rounds to nearest integer.
  */
-long lrint(double x) {
+long lrint(double x)
+{
 #ifdef __x86_64__
 	long res;
 	asm("cvtsd2si\t%1,%0" : "=r"(res) : "x"(x));

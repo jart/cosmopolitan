@@ -33,21 +33,69 @@
  *
  * @see libc/log/thunks/__check_fail_ndebug.S
  */
-relegated wontreturn void __check_fail_ndebug(uint64_t want, uint64_t got,
-                                              const char *file, int line,
-                                              const char *opchar,
-                                              const char *fmt, ...) {
-  va_list va;
+static relegated wontreturn void __check_fail_ndebug(uint64_t want,       //
+                                                     uint64_t got,        //
+                                                     const char *file,    //
+                                                     int line,            //
+                                                     const char *opchar,  //
+                                                     const char *fmt,     //
+                                                     va_list va) {
   __restore_tty();
   kprintf("%rerror:%s:%d: check failed: %'ld %s %'ld% m", file, line, want,
           opchar, got);
-  if (*fmt) {
+  if (fmt && *fmt) {
     kprintf(": ");
-    va_start(va, fmt);
     kvprintf(fmt, va);
-    va_end(va);
   }
   kprintf("\n");
   if (_weaken(__die)) _weaken(__die)();
   _Exitr(68);
+}
+
+void __check_fail_eq(uint64_t want, uint64_t got, const char *file, int line,
+                     const char *opchar, const char *fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  __check_fail_ndebug(want, got, file, line, opchar, fmt, va);
+  va_end(va);
+}
+
+void __check_fail_ne(uint64_t want, uint64_t got, const char *file, int line,
+                     const char *opchar, const char *fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  __check_fail_ndebug(want, got, file, line, opchar, fmt, va);
+  va_end(va);
+}
+
+void __check_fail_le(uint64_t want, uint64_t got, const char *file, int line,
+                     const char *opchar, const char *fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  __check_fail_ndebug(want, got, file, line, opchar, fmt, va);
+  va_end(va);
+}
+
+void __check_fail_lt(uint64_t want, uint64_t got, const char *file, int line,
+                     const char *opchar, const char *fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  __check_fail_ndebug(want, got, file, line, opchar, fmt, va);
+  va_end(va);
+}
+
+void __check_fail_ge(uint64_t want, uint64_t got, const char *file, int line,
+                     const char *opchar, const char *fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  __check_fail_ndebug(want, got, file, line, opchar, fmt, va);
+  va_end(va);
+}
+
+void __check_fail_gt(uint64_t want, uint64_t got, const char *file, int line,
+                     const char *opchar, const char *fmt, ...) {
+  va_list va;
+  va_start(va, fmt);
+  __check_fail_ndebug(want, got, file, line, opchar, fmt, va);
+  va_end(va);
 }

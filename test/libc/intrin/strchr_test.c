@@ -190,9 +190,11 @@ BENCH(strchr, bench2) {
   char *strlen_(const char *) asm("strlen");
   char *rawmemchr_(const char *, int) asm("rawmemchr");
   EZBENCH2("strchr z", donothing, strchr_(kHyperion, 'z'));
-  EZBENCH2("rawmemchr z", donothing, rawmemchr_(kHyperion, 'z'));
-  EZBENCH2("memchr z", donothing, memchr_(kHyperion, 'z', kHyperionSize));
   EZBENCH2("strchr Z", donothing, strchr_(kHyperion, 'Z'));
+  EZBENCH2("memchr z", donothing, memchr_(kHyperion, 'z', kHyperionSize));
+  EZBENCH2("memchr Z", donothing, memchr_(kHyperion, 'Z', kHyperionSize));
+  EZBENCH2("rawmemchr z", donothing, rawmemchr_(kHyperion, 'z'));
+  EZBENCH2("rawmemchr Z", donothing, rawmemchr_(kHyperion, 'z'));
   EZBENCH2("rawmemchr \\0", donothing, rawmemchr_(kHyperion, 0));
   EZBENCH2("strlen", donothing, strlen_(kHyperion));
   EZBENCH2("memchr Z", donothing, memchr_(kHyperion, 'Z', kHyperionSize));

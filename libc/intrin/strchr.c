@@ -21,17 +21,18 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#ifndef __aarch64__
 
-static inline const char *strchrnul_pure(const char *s, int c) {
+static inline const char *strchr_pure(const char *s, int c) {
   for (;; ++s) {
     if ((*s & 255) == (c & 255)) return s;
-    if (!*s) return s;
+    if (!*s) return 0;
   }
 }
 
 #ifdef __x86_64__
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
+noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
   xmm_t v, *p;
@@ -47,11 +48,14 @@ noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
     v = *++p;
     m = __builtin_ia32_pmovmskb128((v == z) | (v == n));
   }
-  return (const char *)p + __builtin_ctzl(m);
+  m = __builtin_ctzl(m);
+  s = (const char *)p + m;
+  if (c && !*s) s = 0;
+  return s;
 }
 #endif
 
-noasan static const char *strchrnul_x64(const char *p, uint64_t c) {
+static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
@@ -68,14 +72,13 @@ noasan static const char *strchrnul_x64(const char *p, uint64_t c) {
           if (a <= b) {
             return p + (a >> 3);
           } else {
-            return p + (b >> 3);
+            return 0;
           }
         } else {
           return p + (a >> 3);
         }
       } else {
-        b = __builtin_ctzll(y);
-        return p + (b >> 3);
+        return 0;
       }
     }
   }
@@ -84,32 +87,34 @@ noasan static const char *strchrnul_x64(const char *p, uint64_t c) {
 /**
  * Returns pointer to first instance of character.
  *
- * If c is not found then a pointer to the nul byte is returned.
- *
  * @param s is a NUL-terminated string
  * @param c is masked with 255 as byte to search for
- * @return pointer to first instance of c, or pointer to
- *     NUL terminator if c is not found
+ * @return pointer to first instance of c or NULL if not found
+ *     noting that if c is NUL we return pointer to terminator
+ * @asyncsignalsafe
+ * @vforksafe
  */
-char *strchrnul(const char *s, int c) {
+char *strchr(const char *s, int c) {
 #ifdef __x86_64__
   const char *r;
   if (X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, 1);
-    r = strchrnul_sse(s, c);
+    r = strchr_sse(s, c);
   } else {
-    r = strchrnul_pure(s, c);
+    r = strchr_pure(s, c);
   }
-  _unassert((*r & 255) == (c & 255) || !*r);
+  _unassert(!r || *r || !(c & 255));
   return (char *)r;
 #else
   char *r;
   for (c &= 255; (uintptr_t)s & 7; ++s) {
-    if ((*s & 0xff) == c) return s;
-    if (!*s) return s;
+    if ((*s & 255) == c) return s;
+    if (!*s) return NULL;
   }
-  r = strchrnul_x64(s, c);
-  assert((*r & 255) == c || !*r);
+  r = strchr_x64(s, c);
+  _unassert(!r || *r || !c);
   return r;
 #endif
 }
+
+#endif /* __aarch64__ */

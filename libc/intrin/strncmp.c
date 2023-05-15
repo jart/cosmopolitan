@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,15 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.text.unlikely
+#include "libc/str/str.h"
+#ifndef __aarch64__
 
-//	Code-size saving thunk for CHECK_NE() in NDEBUG mode.
-__check_fail_ne:
-	lea	.Lop(%rip),%r8
-	jmp	__check_fail_ndebug
-	.endfn	__check_fail_ne,globl
+/**
+ * Compares NUL-terminated strings w/ limit.
+ *
+ * @param a is first non-null NUL-terminated string pointer
+ * @param b is second non-null NUL-terminated string pointer
+ * @return is <0, 0, or >0 based on uint8_t comparison
+ * @asyncsignalsafe
+ */
+int strncmp(const char *a, const char *b, size_t n) {
+  size_t i = 0;
+  if (!n-- || a == b) return 0;
+  while (i < n && a[i] == b[i] && b[i]) ++i;
+  return (a[i] & 0xff) - (b[i] & 0xff);
+}
 
-	.rodata.str1.1
-.Lop:	.asciz	"!="
-	.previous
+#endif /* __aarch64__ */

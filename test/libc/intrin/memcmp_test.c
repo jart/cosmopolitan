@@ -61,6 +61,17 @@ TEST(memcmp, hug) {
   }
 }
 
+static int coerce(int result) {
+#ifdef __aarch64__
+  // arm's strcmp assembly is nuts and unpredictable, but it's legal
+  if (result < 0) return -1;
+  if (result > 0) return +1;
+  return 0;
+#else
+  return result;
+#endif
+}
+
 TEST(memcmp, fuzz) {
   int i, o, n, g;
   char a[256], b[256];
@@ -79,8 +90,18 @@ TEST(memcmp, fuzz) {
     }
     o = rand() & 31;
     n = rand() % (sizeof(a) - o);
-    g = golden(a + o, b + o, n);
-    ASSERT_EQ(g, memcmp(a + o, b + o, n), "n=%d o=%d", n, o);
+    g = coerce(golden(a + o, b + o, n));
+#if 0
+    if (memcmp(a + o, b + o, n) != g) {
+      kprintf("const size_t g = %d;\n", g);
+      kprintf("const size_t n = %d;\n", n);
+      kprintf("const char a[] = unbingstr(%#.*hhhs); /* %p */\n", n, a + o,
+              a + o);
+      kprintf("const char b[] = unbingstr(%#.*hhhs); /* %p */\n", n, b + o,
+              b + o);
+    }
+#endif
+    ASSERT_EQ(g, coerce(memcmp(a + o, b + o, n)), "n=%d o=%d", n, o);
     ASSERT_EQ(!!g, !!bcmp(a + o, b + o, n), "n=%d o=%d", n, o);
     ASSERT_EQ(!!g, !!timingsafe_bcmp(a + o, b + o, n), "n=%d o=%d", n, o);
     ASSERT_EQ(MAX(-1, MIN(1, g)), timingsafe_memcmp(a + o, b + o, n),

@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,15 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.text.unlikely
+#include "libc/str/str.h"
+#ifndef __aarch64__
 
-//	Code-size saving thunk for CHECK_LT() in NDEBUG mode.
-__check_fail_lt:
-	lea	.Lop(%rip),%r8
-	jmp	__check_fail_ndebug
-	.endfn	__check_fail_lt,globl
+/**
+ * Searches for last instance of character in string.
+ *
+ * @param s is NUL-terminated string to search
+ * @param c is treated as unsigned char
+ * @return address of last c in s, or NULL if not found
+ * @asyncsignalsafe
+ */
+char *strrchr(const char *s, int c) {
+  return memrchr(s, c, strlen(s));
+}
 
-	.rodata.str1.1
-.Lop:	.asciz	"<"
-	.previous
+#endif /* __aarch64__ */

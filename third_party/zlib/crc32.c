@@ -13,11 +13,6 @@
 #include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/macros.internal.h"
-
-asm(".ident\t\"\\n\\n\
-zlib (zlib License)\\n\
-Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
-asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 /* @(#) $Id$ */
@@ -33,8 +28,19 @@ asm(".include \"libc/disclaimer.inc\"");
   produced, so that this one source file can be compiled to an executable.
  */
 
+#ifdef MAKECRCH
+//#  include <stdio.h>
+#  ifndef DYNAMIC_CRC_TABLE
+#    define DYNAMIC_CRC_TABLE
+#  endif /* !DYNAMIC_CRC_TABLE */
+#endif /* MAKECRCH */
+
+#include "third_party/zlib/deflate.internal.h"
+#include "third_party/zlib/cpu_features.internal.h"
+#include "third_party/zlib/zutil.internal.h"      /* for Z_U4, Z_U8, z_crc_t, and FAR definitions */
+
 #if defined(CRC32_SIMD_SSE42_PCLMUL) || defined(CRC32_ARMV8_CRC32)
-#  include "crc32_simd.h"
+#include "third_party/zlib/crc32_simd.internal.h"
 #endif
 
  /*
@@ -106,14 +112,23 @@ asm(".include \"libc/disclaimer.inc\"");
 #  endif
 #endif
 
-/* Local functions. */
-local z_crc_t multmodp OF((z_crc_t a, z_crc_t b));
-local z_crc_t x2nmodp OF((z_off64_t n, unsigned k));
-
 /* If available, use the ARM processor CRC32 instruction. */
 #if defined(__aarch64__) && defined(__ARM_FEATURE_CRC32) && W == 8 \
     && defined(USE_CANONICAL_ARMV8_CRC32)
 #  define ARMCRC32_CANONICAL_ZLIB
+#endif
+
+/* Local functions. */
+local z_crc_t multmodp OF((z_crc_t a, z_crc_t b));
+local z_crc_t x2nmodp OF((z_off64_t n, unsigned k));
+
+#if defined(W) && (!defined(ARMCRC32_CANONICAL_ZLIB) || defined(DYNAMIC_CRC_TABLE))
+    local z_word_t byte_swap OF((z_word_t word));
+#endif
+
+#if defined(W) && !defined(ARMCRC32_CANONICAL_ZLIB)
+    local z_crc_t crc_word OF((z_word_t data));
+    local z_word_t crc_word_big OF((z_word_t data));
 #endif
 
 #if defined(W) && (!defined(ARMCRC32_CANONICAL_ZLIB) || defined(DYNAMIC_CRC_TABLE))
@@ -149,7 +164,6 @@ local z_word_t byte_swap(word)
 /* CRC polynomial. */
 #define POLY 0xedb88320         /* p(x) reflected, with x^32 implied */
 
-#define DYNAMIC_CRC_TABLE
 #ifdef DYNAMIC_CRC_TABLE
 
 local z_crc_t FAR crc_table[256];
@@ -534,7 +548,7 @@ local void braid(ltl, big, n, w)
  * Tables for byte-wise and braided CRC-32 calculations, and a table of powers
  * of x for combining CRC-32s, all made by make_crc_table().
  */
-# include "crc32.h"
+#include "third_party/zlib/crc32.inc"
 #endif /* DYNAMIC_CRC_TABLE */
 
 /* ========================================================================
@@ -617,15 +631,15 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 #define Z_BATCH_ZEROS 0xa10d3d0c    /* computed from Z_BATCH = 3990 */
 #define Z_BATCH_MIN 800             /* fewest words in a final batch */
 
-#error this is arm?
-unsigned long ZEXPORT crc32_z(crc, buf, len)
-    unsigned long crc;
-    const unsigned char FAR *buf;
-    z_size_t len;
+uint32_t ZEXPORT crc32_z(crc, buf_, len)
+    uint32_t crc;
+    const void FAR *buf_;
+    size_t len;
 {
     z_crc_t val;
     z_word_t crc1, crc2;
     const z_word_t *word;
+    const unsigned char FAR *buf = buf_;
     z_word_t val0, val1, val2;
     z_size_t last, last2, i;
     z_size_t num;
@@ -743,13 +757,13 @@ local z_word_t crc_word_big(data)
 
 #endif
 
-#if 0 /* [jart] favor LIBC_STR crc32() */
 /* ========================================================================= */
-unsigned long ZEXPORT crc32_z(crc, buf, len)
-    unsigned long crc;
-    const unsigned char FAR *buf;
-    z_size_t len;
+uint32_t ZEXPORT crc32_z(crc, buf_, len)
+    uint32_t crc;
+    const void FAR *buf_;
+    size_t len;
 {
+    const unsigned char FAR *buf = buf_;
     /*
      * zlib convention is to call crc32(0, NULL, 0); before making
      * calls to crc32(). So this is a good, early (and infrequent)
@@ -767,7 +781,19 @@ unsigned long ZEXPORT crc32_z(crc, buf, len)
     }
 
 #endif
-#if defined(CRC32_SIMD_SSE42_PCLMUL)
+#if defined(CRC32_SIMD_AVX512_PCLMUL)
+    if (x86_cpu_enable_avx512 && len >= Z_CRC32_AVX512_MINIMUM_LENGTH) {
+        /* crc32 64-byte chunks */
+        z_size_t chunk_size = len & ~Z_CRC32_AVX512_CHUNKSIZE_MASK;
+        crc = ~crc32_avx512_simd_(buf, chunk_size, ~(uint32_t)crc);
+        /* check remaining data */
+        len -= chunk_size;
+        if (!len)
+            return crc;
+        /* Fall into the default crc32 for the remaining data. */
+        buf += chunk_size;
+    }
+#elif defined(CRC32_SIMD_SSE42_PCLMUL)
     if (x86_cpu_enable_simd && len >= Z_CRC32_SSE42_MINIMUM_LENGTH) {
         /* crc32 16-byte chunks */
         z_size_t chunk_size = len & ~Z_CRC32_SSE42_CHUNKSIZE_MASK;
@@ -1114,11 +1140,9 @@ unsigned long ZEXPORT crc32_z(crc, buf, len)
     /* Return the CRC, post-conditioned. */
     return crc ^ 0xffffffff;
 }
-#endif
 
 #endif
 
-#if 0 /* [jart] favor LIBC_STR crc32() */
 /* ========================================================================= */
 unsigned long ZEXPORT crc32(crc, buf, len)
     unsigned long crc;
@@ -1162,7 +1186,6 @@ unsigned long ZEXPORT crc32(crc, buf, len)
 #endif
     return crc32_z(crc, buf, len); /* Armv7 or Armv8 w/o crypto extensions. */
 }
-#endif
 
 /* ========================================================================= */
 uLong ZEXPORT crc32_combine64(crc1, crc2, len2)

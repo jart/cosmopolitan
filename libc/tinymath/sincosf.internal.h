@@ -3,7 +3,7 @@
 #include "libc/tinymath/internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
+// clang-format off
 
 /*
  * Header for sinf, cosf and sincosf.

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/mem/gc.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
@@ -50,4 +51,10 @@ TEST(asinhl, test) {
   EXPECT_STREQ("0", _gc(xdtoal(_asinhl(0))));
   EXPECT_STREQ("NAN", _gc(xdtoal(_asinhl(NAN))));
   EXPECT_STREQ("INFINITY", _gc(xdtoal(_asinhl(INFINITY))));
+}
+
+BENCH(asinh, bench) {
+  EZBENCH2("asinh", donothing, _asinh(.7));    // ~26ns
+  EZBENCH2("asinhf", donothing, _asinhf(.7));  // ~17ns
+  EZBENCH2("asinhl", donothing, _asinhl(.7));  // ~48ns
 }

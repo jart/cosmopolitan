@@ -1,11 +1,13 @@
-#ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_INSERT_STRING_H_
-#define COSMOPOLITAN_THIRD_PARTY_ZLIB_INSERT_STRING_H_
-#include "libc/nexgen32e/x86feature.h"
-#include "third_party/zlib/deflate.internal.h"
-#include "third_party/zlib/zutil.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-/* clang-format off */
+// clang-format off
+/* insert_string.h
+ *
+ * Copyright 2019 The Chromium Authors
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the Chromium source repository LICENSE file.
+ */
+
+#ifndef INSERT_STRING_H
+#define INSERT_STRING_H
 
 #ifndef INLINE
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -15,9 +17,11 @@ COSMOPOLITAN_C_START_
 #endif
 #endif
 
+#include "third_party/zlib/cpu_features.internal.h"
+
 // clang-format off
 #if defined(CRC32_SIMD_SSE42_PCLMUL)
-//  #include <smmintrin.h>  /* Required to make MSVC bot build pass. */
+#include "third_party/intel/smmintrin.internal.h"  /* Required to make MSVC bot build pass. */
 
   #if defined(__clang__) || defined(__GNUC__)
     #define TARGET_CPU_WITH_CRC __attribute__((target("sse4.2")))
@@ -51,19 +55,17 @@ COSMOPOLITAN_C_START_
 
 #if defined(TARGET_CPU_WITH_CRC)
 
-// TODO(jart): Why does this fail alignment check?
-noubsan local INLINE Pos insert_string_simd(deflate_state* const s,
-                                            const Pos str) {
+TARGET_CPU_WITH_CRC
+local INLINE Pos insert_string_simd(deflate_state* const s, const Pos str) {
   Pos ret;
-  unsigned *ip, val, h = 0;
+  unsigned val, h = 0;
 
-  ip = (unsigned*)&s->window[str];
-  val = *ip;
+  zmemcpy(&val, &s->window[str], sizeof(val));
 
   if (s->level >= 6) val &= 0xFFFFFF;
 
   /* Compute hash from the CRC32C of |val|. */
-  asm("crc32l\t%1,%0" : "+r"(h) : "rm"(val));
+  h = _cpu_crc32c_hash_u32(h, val);
 
   ret = s->head[h & s->hash_mask];
   s->head[h & s->hash_mask] = str;
@@ -131,13 +133,11 @@ local INLINE Pos insert_string(deflate_state* const s, const Pos str) {
  * the Rabin-Karp hash instead.
  */ /* FALLTHROUGH Rabin-Karp */
 #elif defined(TARGET_CPU_WITH_CRC) && defined(CRC32_SIMD_SSE42_PCLMUL)
-  if (X86_HAVE(SSE4_2)) return insert_string_simd(s, str);
+  if (x86_cpu_enable_simd) return insert_string_simd(s, str);
 #elif defined(TARGET_CPU_WITH_CRC) && defined(CRC32_ARMV8_CRC32)
   if (arm_cpu_enable_crc32) return insert_string_simd(s, str);
 #endif
   return insert_string_c(s, str); /* Rabin-Karp */
 }
 
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_INSERT_STRING_H_ */
+#endif /* INSERT_STRING_H */

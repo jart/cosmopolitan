@@ -6,9 +6,7 @@ PKGS += LIBC_LOG
 LIBC_LOG_ARTIFACTS += LIBC_LOG_A
 LIBC_LOG = $(LIBC_LOG_A_DEPS) $(LIBC_LOG_A)
 LIBC_LOG_A = o/$(MODE)/libc/log/log.a
-LIBC_LOG_A_FILES :=					\
-	$(wildcard libc/log/thunks/*)			\
-	$(wildcard libc/log/*)
+LIBC_LOG_A_FILES := $(wildcard libc/log/*)
 LIBC_LOG_A_HDRS = $(filter %.h,$(LIBC_LOG_A_FILES))
 LIBC_LOG_A_SRCS_C = $(filter %.c,$(LIBC_LOG_A_FILES))
 LIBC_LOG_A_SRCS_S = $(filter %.S,$(LIBC_LOG_A_FILES))

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.text.unlikely
+#include "libc/assert.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/str/str.h"
+#ifndef __aarch64__
 
-//	Code-size saving thunk for CHECK_GT() in NDEBUG mode.
-__check_fail_gt:
-	lea	.Lop(%rip),%r8
-	jmp	__check_fail_ndebug
-	.endfn	__check_fail_gt,globl
+static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
+  uint64_t w;
+  for (; i + 8 < n; i += 8) {
+    w = *(uint64_t *)(s + i);
+    if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
+      i += (unsigned)__builtin_ctzll(w) >> 3;
+      break;
+    }
+  }
+  return i;
+}
 
-	.rodata.str1.1
-.Lop:	.asciz	">"
-	.previous
+/**
+ * Returns length of NUL-terminated string w/ limit.
+ *
+ * @param s is string
+ * @param n is max length
+ * @return byte length
+ * @asyncsignalsafe
+ */
+noasan size_t strnlen(const char *s, size_t n) {
+  size_t i;
+  if (IsAsan() && n) __asan_verify(s, 1);
+  for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
+    if (i == n || !s[i]) return i;
+  }
+  i = strnlen_x64(s, n, i);
+  for (;; ++i) {
+    if (i == n || !s[i]) break;
+  }
+  _unassert(i == n || (i < n && !s[i]));
+  if (IsAsan()) __asan_verify(s, i);
+  return i;
+}
+
+#endif /* __aarch64__ */

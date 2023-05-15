@@ -32,14 +32,14 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 float nextafterf(float x, float y)
 {
 	union {float f; uint32_t i;} ux={x}, uy={y};
 	uint32_t ax, ay, e;
 
-	if (isnan(x) || isnan(y))
+	if (isunordered(x, y))
 		return x + y;
 	if (ux.i == uy.i)
 		return y;

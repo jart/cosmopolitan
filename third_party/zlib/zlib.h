@@ -1697,6 +1697,11 @@ uLong adler32_combine(uLong adler1, uLong adler2, int64_t len2);
 uLong crc32(uLong crc, const Bytef *buf, uInt len);
 
 /**
+ * Same as crc32(), but with a size_t length.
+ */
+uint32_t crc32_z(uint32_t crc, const void *buf, size_t len);
+
+/**
  * Combine two CRC-32 check values into one. For two sequences of bytes,
  * seq1 and seq2 with lengths len1 and len2, CRC-32 check values were
  * calculated for each, crc1 and crc2. crc32_combine() returns the

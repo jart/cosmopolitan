@@ -1,3 +1,4 @@
+// -*- c++ -*-
 #ifndef GPTNEOX_UTIL_H
 #define GPTNEOX_UTIL_H
 #include "libc/calls/calls.h"

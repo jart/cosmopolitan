@@ -16,43 +16,73 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/bits.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#ifndef __aarch64__
 
-static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
-  uint64_t w;
-  for (; i + 8 < n; i += 8) {
-    w = *(uint64_t *)(s + i);
-    if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
-      i += (unsigned)__builtin_ctzll(w) >> 3;
-      break;
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+
+static inline const unsigned char *memchr_pure(const unsigned char *s,
+                                               unsigned char c, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if (s[i] == c) {
+      return s + i;
     }
   }
-  return i;
+  return 0;
 }
 
+#ifdef __x86_64__
+noasan static inline const unsigned char *memchr_sse(const unsigned char *s,
+                                                     unsigned char c,
+                                                     size_t n) {
+  size_t i;
+  unsigned k;
+  unsigned m;
+  xmm_t v, *p;
+  xmm_t t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  for (; n >= 16; n -= 16, s += 16) {
+    v = *(const xmm_t *)s;
+    m = __builtin_ia32_pmovmskb128(v == t);
+    if (m) {
+      m = __builtin_ctzll(m);
+      return s + m;
+    }
+  }
+  for (i = 0; i < n; ++i) {
+    if (s[i] == c) {
+      return s + i;
+    }
+  }
+  return 0;
+}
+#endif
+
 /**
- * Returns length of NUL-terminated string w/ limit.
+ * Returns pointer to first instance of character.
  *
- * @param s is string
- * @param n is max length
- * @return byte length
+ * @param s is memory to search
+ * @param c is search byte which is masked with 255
+ * @param n is byte length of p
+ * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-noasan size_t strnlen(const char *s, size_t n) {
-  size_t i;
-  if (IsAsan() && n) __asan_verify(s, 1);
-  for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
-    if (i == n || !s[i]) return i;
+void *memchr(const void *s, int c, size_t n) {
+#ifdef __x86_64__
+  const void *r;
+  if (!IsTiny() && X86_HAVE(SSE)) {
+    if (IsAsan()) __asan_verify(s, n);
+    r = memchr_sse(s, c, n);
+  } else {
+    r = memchr_pure(s, c, n);
   }
-  i = strnlen_x64(s, n, i);
-  for (;; ++i) {
-    if (i == n || !s[i]) break;
-  }
-  _unassert(i == n || (i < n && !s[i]));
-  if (IsAsan()) __asan_verify(s, i);
-  return i;
+  return (void *)r;
+#else
+  return memchr_pure(s, c, n);
+#endif
 }
+
+#endif /* __aarch64__ */

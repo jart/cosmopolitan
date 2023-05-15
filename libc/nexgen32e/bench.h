@@ -43,8 +43,22 @@
     Ticks;                                               \
   })
 #else
-#define __startbench() rdtsc()
-#define __endbench()   rdtsc()
+#define __startbench()                \
+  ({                                  \
+    uint64_t _ts;                     \
+    asm volatile("isb" ::: "memory"); \
+    _ts = rdtsc();                    \
+    asm volatile("isb" ::: "memory"); \
+    _ts;                              \
+  })
+#define __endbench()                  \
+  ({                                  \
+    uint64_t _ts;                     \
+    asm volatile("isb" ::: "memory"); \
+    _ts = rdtsc();                    \
+    asm volatile("isb" ::: "memory"); \
+    _ts;                              \
+  })
 #endif
 
 #define __startbench_m() mfence_lfence_rdtsc_lfence()

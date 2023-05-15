@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
+#ifndef __aarch64__
 
 /**
  * Returns length of NUL-terminated string.
@@ -61,3 +62,5 @@ noasan size_t strlen(const char *s) {
   return n;
 #endif
 }
+
+#endif /* __aarch64__ */

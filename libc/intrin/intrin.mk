@@ -6,6 +6,7 @@ PKGS += LIBC_INTRIN
 LIBC_INTRIN_ARTIFACTS += LIBC_INTRIN_A
 LIBC_INTRIN = $(LIBC_INTRIN_A_DEPS) $(LIBC_INTRIN_A)
 LIBC_INTRIN_A = o/$(MODE)/libc/intrin/intrin.a
+LIBC_INTRIN_A_FILES := $(wildcard libc/intrin/*)
 LIBC_INTRIN_A_HDRS = $(filter %.h,$(LIBC_INTRIN_A_FILES))
 LIBC_INTRIN_A_INCS = $(filter %.inc,$(LIBC_INTRIN_A_FILES))
 LIBC_INTRIN_A_SRCS_S = $(filter %.S,$(LIBC_INTRIN_A_FILES))
@@ -13,8 +14,9 @@ LIBC_INTRIN_A_SRCS_C = $(filter %.c,$(LIBC_INTRIN_A_FILES))
 LIBC_INTRIN_A_SRCS = $(LIBC_INTRIN_A_SRCS_S) $(LIBC_INTRIN_A_SRCS_C)
 LIBC_INTRIN_A_CHECKS = $(LIBC_INTRIN_A).pkg
 
-LIBC_INTRIN_A_FILES :=					\
-	$(wildcard libc/intrin/*)
+ifeq ($(ARCH), aarch64)
+LIBC_INTRIN_A_SRCS_S += $(wildcard libc/intrin/aarch64/*.S)
+endif
 
 LIBC_INTRIN_A_OBJS =					\
 	$(LIBC_INTRIN_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
@@ -203,6 +205,8 @@ o/$(MODE)/libc/intrin/memmove.o: private		\
 			-fpie
 
 # these assembly files are safe to build on aarch64
+o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/fenv.o: libc/intrin/fenv.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/futex.o: libc/intrin/futex.S

@@ -22,6 +22,7 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
+#ifndef __aarch64__
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
@@ -168,3 +169,5 @@ void *memset(void *p, int c, size_t n) {
     return memset_sse(b, c, n);
   }
 }
+
+#endif /* __aarch64__ */

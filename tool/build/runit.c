@@ -32,7 +32,6 @@
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
 #include "libc/stdio/stdio.h"
@@ -245,7 +244,7 @@ bool SendRequest(int tmpfd) {
   CHECK_LE((namesize = strlen((name = basename(g_prog)))), PATH_MAX);
   CHECK_LE((progsize = st.st_size), INT_MAX);
   CHECK_NOTNULL((hdr = _gc(calloc(1, (hdrsize = 17 + namesize)))));
-  crc = crc32_z(0, p, st.st_size);
+  crc = crc32_z(0, (unsigned char *)p, st.st_size);
   q = hdr;
   q = WRITE32BE(q, RUNITD_MAGIC);
   *q++ = kRunitExecute;

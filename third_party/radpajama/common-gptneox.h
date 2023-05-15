@@ -1,3 +1,4 @@
+// -*- c++ -*-
 #ifndef COSMOPOLITAN_THIRD_PARTY_RADPAJAMA_COMMON_GPTNEOX_H_
 #define COSMOPOLITAN_THIRD_PARTY_RADPAJAMA_COMMON_GPTNEOX_H_
 #include "libc/macros.internal.h"

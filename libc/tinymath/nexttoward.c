@@ -32,14 +32,14 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 double nexttoward(double x, long double y)
 {
 	union {double f; uint64_t i;} ux = {x};
 	int e;
 
-	if (isnan(x) || isnan(y))
+	if (isunordered(x, y))
 		return x + y;
 	if (x == y)
 		return y;

@@ -38,7 +38,8 @@ asm(".include \"libc/disclaimer.inc\"");
 
 float scalbf(float x, float fn)
 {
-	if (isnan(x) || isnan(fn)) return x*fn;
+	if (isunordered(x, fn))
+		return x*fn;
 	if (!isfinite(fn)) {
 		if (fn > 0.0f)
 			return x*fn;

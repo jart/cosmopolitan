@@ -36,13 +36,14 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-long double nextafterl(long double x, long double y) {
+long double nextafterl(long double x, long double y)
+{
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 	return nextafter(x, y);
 #elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 	union ldshape ux, uy;
 
-	if (isnan(x) || isnan(y))
+	if (isunordered(x, y))
 		return x + y;
 	if (x == y)
 		return y;
@@ -75,7 +76,7 @@ long double nextafterl(long double x, long double y) {
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
 	union ldshape ux, uy;
 
-	if (isnan(x) || isnan(y))
+	if (isunordered(x, y))
 		return x + y;
 	if (x == y)
 		return y;
