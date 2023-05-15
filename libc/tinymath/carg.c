@@ -22,3 +22,7 @@
 double carg(double complex z) {
   return atan2(cimag(z), creal(z));
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(carg, cargl);
+#endif

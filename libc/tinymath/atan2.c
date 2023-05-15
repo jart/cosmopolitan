@@ -153,3 +153,7 @@ atan2(double y, double x)
 	    	    return  (z-pi_lo)-pi;/* atan(-,-) */
 	}
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(atan2, atan2l);
+#endif

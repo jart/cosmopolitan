@@ -685,7 +685,7 @@ int put_codepoint(console_state & con_st, const char* utf8_codepoint, size_t len
     if (width < 0) {
         // Calculate the width considering text wrapping
         struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+        tcgetwinsize(STDOUT_FILENO, &w);
         width += w.ws_col;
     }
     return width;

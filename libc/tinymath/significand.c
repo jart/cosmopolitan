@@ -18,6 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 
+/**
+ * Return mantissa of 𝑥 scaled to range [1,2).
+ */
 double significand(double x) {
   return scalbn(x, -ilogb(x));
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(significand, significandl);
+#endif

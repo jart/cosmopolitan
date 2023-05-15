@@ -48,7 +48,7 @@ THIRD_PARTY_NSYNC_MEM_LIBS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(
 THIRD_PARTY_NSYNC_MEM_SRCS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_NSYNC_MEM_CHECKS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_NSYNC_MEM_OBJS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)_OBJS))
-$(THIRD_PARTY_NSYNC_MEM_OBJS): third_party/nsync/mem/nsync.mk
+$(THIRD_PARTY_NSYNC_MEM_OBJS): third_party/nsync/mem/mem.mk
 
 .PHONY: o/$(MODE)/third_party/nsync/mem
 o/$(MODE)/third_party/nsync/mem: $(THIRD_PARTY_NSYNC_MEM_CHECKS)

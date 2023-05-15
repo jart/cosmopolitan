@@ -1,14 +1,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 // clang-format off
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-long double expm1l(long double x) {
-	return expm1(x);
-}
-
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 OpenBSD libm (ISC License)\\n\
@@ -88,6 +81,9 @@ minarg = -4.5054566736396445112120088E1L,
 /* ln 2^16384 */
 maxarg = 1.1356523406294143949492E4L;
 
+/**
+ * Returns 𝑒ˣ-1.
+ */
 long double expm1l(long double x)
 {
 	long double px, qx, xx;
@@ -124,10 +120,4 @@ long double expm1l(long double x)
 	return x;
 }
 
-#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-
-// see expl.c
-
-#else
-#error "architecture unsupported"
-#endif
+#endif /* long double is long */

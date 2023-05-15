@@ -29,6 +29,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -64,3 +65,5 @@ frexpl(long double x, int *ex)
 	}
 	return (u.e);
 }
+
+#endif /* long double is long */

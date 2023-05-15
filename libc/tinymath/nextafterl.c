@@ -29,6 +29,7 @@
 #include "libc/tinymath/feval.internal.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -38,9 +39,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 long double nextafterl(long double x, long double y)
 {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return nextafter(x, y);
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 	union ldshape ux, uy;
 
 	if (isunordered(x, y))
@@ -101,7 +100,7 @@ long double nextafterl(long double x, long double y)
 	if ((ux.i.se & 0x7fff) == 0)
 		FORCE_EVAL(x*x + ux.f*ux.f);
 	return ux.f;
-#else
-#error "architecture unsupported"
 #endif
 }
+
+#endif /* long double is long */

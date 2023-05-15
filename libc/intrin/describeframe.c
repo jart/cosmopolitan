@@ -26,10 +26,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/winargs.internal.h"
 
-#ifdef DescribeFrame
-#undef DescribeFrame
-#endif
-
 #define ADDR(x)     ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
 #define FRAME(x)    ((int)((x) >> 16))
@@ -78,7 +74,7 @@ static const char *GetFrameName(int x) {
   }
 }
 
-const char *DescribeFrame(char buf[32], int x) {
+const char *(DescribeFrame)(char buf[32], int x) {
   char *p;
   if (IsShadowFrame(x)) {
     ksnprintf(buf, 32, "%s %s %.8x", GetFrameName(x),

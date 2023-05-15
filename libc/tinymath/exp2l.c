@@ -28,6 +28,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -65,12 +66,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * SUCH DAMAGE.
  */
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double exp2l(long double x)
-{
-	return exp2(x);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 #define TBLBITS 7
 #define TBLSIZE (1 << TBLBITS)
 
@@ -235,6 +230,10 @@ static const double tbl[TBLSIZE * 2] = {
  *   The table entries each have 104 bits of accuracy, encoded as
  *   a pair of double precision values.
  */
+
+/**
+ * Returns 2^𝑥.
+ */
 long double exp2l(long double x)
 {
 	union ldshape u = {x};
@@ -289,6 +288,7 @@ long double exp2l(long double x)
 
 	return scalbnl(r, k.i);
 }
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
 #define TBLBITS 7
 #define TBLSIZE (1 << TBLBITS)
@@ -600,6 +600,10 @@ static const float eps[TBLSIZE] = {
  *	Gal, S. and Bachelis, B.  An Accurate Elementary Mathematical Library
  *	for the IEEE Floating Point Standard.  TOMS 17(1), 26-46 (1991).
  */
+
+/**
+ * Returns 2^𝑥.
+ */
 long double
 exp2l(long double x)
 {
@@ -654,6 +658,5 @@ exp2l(long double x)
 
 	return scalbnl(r, k.i);
 }
-#else
-#error "architecture unsupported"
+
 #endif

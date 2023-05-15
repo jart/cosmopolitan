@@ -848,5 +848,11 @@ typedef struct {
 #define STATIC_YOINK_SOURCE(PATH)
 #endif
 
+#define __strong_reference(sym, aliassym) \
+  extern typeof(sym) aliassym __attribute__((__alias__(#sym)))
+#define __weak_reference(sym, alias) \
+  asm(".weak\t" #alias "\n\t"        \
+      ".equ\t" #alias ", " #sym)
+
 #define MACHINE_CODE_ANALYSIS_BEGIN_
 #define MACHINE_CODE_ANALYSIS_END_

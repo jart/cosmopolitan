@@ -99,3 +99,7 @@ double hypot(double x, double y)
 	sq(&hy, &ly, y);
 	return z*sqrt(ly+lx+hy+hx);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(hypot, hypotl);
+#endif

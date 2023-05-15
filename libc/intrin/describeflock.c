@@ -24,15 +24,11 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/f.h"
 
-#ifdef DescribeFlock
-#undef DescribeFlock
-#endif
-
 #define N 300
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *DescribeFlock(char buf[N], int cmd, const struct flock *l) {
+const char *(DescribeFlock)(char buf[N], int cmd, const struct flock *l) {
   int o = 0;
 
   if (!l) return "NULL";

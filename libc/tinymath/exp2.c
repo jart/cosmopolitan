@@ -155,3 +155,7 @@ double exp2(double x)
 	   is no spurious underflow here even without fma.  */
 	return eval_as_double(scale + scale * tmp);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(exp2, exp2l);
+#endif

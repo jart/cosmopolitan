@@ -21,11 +21,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/str/str.h"
 
-#ifdef DescribeFcntlCmd
-#undef DescribeFcntlCmd
-#endif
-
-const char *DescribeFcntlCmd(char buf[20], int x) {
+const char *(DescribeFcntlCmd)(char buf[20], int x) {
   const char *s;
   if (x >= 0 && (s = GetMagnumStr(kFcntlCmds, x))) {
     buf[0] = 'F';

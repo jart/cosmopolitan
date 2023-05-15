@@ -544,32 +544,32 @@ BENCH(bench_00_strcmp, bench) {
 
   EZBENCH2("strcmp [2 diff]", donothing,
            EXPROPRIATE(strcmp(VEIL("r", "hi"), VEIL("r", "there"))));
-  EZBENCH2("strcmp_pure [2 diff]", donothing,
+  EZBENCH2("scmppure [2 diff]", donothing,
            EXPROPRIATE(strcmp_pure(VEIL("r", "hi"), VEIL("r", "there"))));
 
   EZBENCH2("strcmp [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp_pure [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
+  EZBENCH2("scmp_pure [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
            EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   EZBENCH2("strcmp [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp_pure [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
+  EZBENCH2("scmp_pure [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
            EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   EZBENCH2("strcmp [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp_pure [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
+  EZBENCH2("scmp_pure [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
            EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   EZBENCH2("strcmp [sdupe]", randomize_buf2str_dupe(size, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
+  EZBENCH2("scmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
            EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   EZBENCH2("strcmp [ldupe]", longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
+  EZBENCH2("scmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
 }
 
@@ -580,17 +580,17 @@ BENCH(bench_01_strcasecmp, bench) {
   data = gc(malloc(size));
   dupe = gc(malloc(size));
 
-  EZBENCH2("strcasecmp [identity]", longstringislong(size, data),
+  EZBENCH2("strcasecmp [iden]", longstringislong(size, data),
            EXPROPRIATE(strcasecmp(VEIL("r", data), data)));
 
   EZBENCH2("strcasecmp [sdupe]", randomize_buf2str_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcasecmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
+  EZBENCH2("sccmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
 
   EZBENCH2("strcasecmp [ldupe]", longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("strcasecmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
+  EZBENCH2("sccmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
            EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
 }
 
@@ -602,3 +602,49 @@ BENCH(memcmp, bench) {
   EZBENCH2("memcmp 18", donothing,
            EXPROPRIATE(memcmp("tough little ship", copy, 18)));
 }
+
+/* jart
+ *     strcmp [identity]   l:         3c         1ns   m:        30c        10ns
+ *     strcmp [2 diff]     l:         4c         1ns   m:        30c        10ns
+ *     scmppure [2 diff]   l:         3c         1ns   m:        31c        10ns
+ *     strcmp [2 dupe]     l:         8c         3ns   m:        39c        13ns
+ *     scmp_pure [2 dupe]  l:         6c         2ns   m:        34c        11ns
+ *     strcmp [4 dupe]     l:         9c         3ns   m:        40c        13ns
+ *     scmp_pure [4 dupe]  l:         9c         3ns   m:        38c        12ns
+ *     strcmp [8 dupe]     l:        10c         3ns   m:        40c        13ns
+ *     scmp_pure [8 dupe]  l:        11c         4ns   m:        41c        13ns
+ *     strcmp [sdupe]      l:        87c        28ns   m:       121c        39ns
+ *     scmp_pure [sdupe]   l:       188c        61ns   m:       294c        95ns
+ *     strcmp [ldupe]      l:     3,458c     1,117ns   m:     3,486c     1,126ns
+ *     scmp_pure [ldupe]   l:    11,441c     3,695ns   m:    11,520c     3,721ns
+ *     strcasecmp [iden]   l:         3c         1ns   m:        30c        10ns
+ *     strcasecmp [sdupe]  l:       105c        34ns   m:       156c        50ns
+ *     sccmp_pure [sdupe]  l:       644c       208ns   m:       963c       311ns
+ *     strcasecmp [ldupe]  l:    36,527c    11,798ns   m:    36,582c    11,816ns
+ *     sccmp_pure [ldupe]  l:   365,880c   118,177ns   m:   365,721c   118,125ns
+ *     memcmp big          l:     2,050c       662ns   m:     2,093c       676ns
+ *     memcmp 18           l:         6c         2ns   m:        35c        11ns
+ */
+
+/* jart+intel
+ *     strcmp [identity]   l:         1c         0ns   m:        28c         9ns
+ *     strcmp [2 diff]     l:         2c         1ns   m:        29c         9ns
+ *     scmppure [2 diff]   l:         2c         1ns   m:        29c         9ns
+ *     strcmp [2 dupe]     l:         8c         3ns   m:        40c        13ns
+ *     scmp_pure [2 dupe]  l:         5c         2ns   m:        32c        10ns
+ *     strcmp [4 dupe]     l:         9c         3ns   m:        41c        13ns
+ *     scmp_pure [4 dupe]  l:         7c         2ns   m:        34c        11ns
+ *     strcmp [8 dupe]     l:        10c         3ns   m:        40c        13ns
+ *     scmp_pure [8 dupe]  l:        10c         3ns   m:        39c        13ns
+ *     strcmp [sdupe]      l:        57c        18ns   m:        87c        28ns
+ *     scmp_pure [sdupe]   l:       191c        62ns   m:       224c        72ns
+ *     strcmp [ldupe]      l:     1,667c       538ns   m:     1,708c       552ns
+ *     scmp_pure [ldupe]   l:    10,988c     3,549ns   m:    11,055c     3,571ns
+ *     strcasecmp [iden]   l:         2c         1ns   m:        31c        10ns
+ *     strcasecmp [sdupe]  l:       121c        39ns   m:       160c        52ns
+ *     sccmp_pure [sdupe]  l:       684c       221ns   m:       702c       227ns
+ *     strcasecmp [ldupe]  l:    34,325c    11,087ns   m:    35,954c    11,613ns
+ *     sccmp_pure [ldupe]  l:   361,449c   116,746ns   m:   366,022c   118,223ns
+ *     memcmp big          l:     2,040c       659ns   m:     2,083c       673ns
+ *     memcmp 18           l:         5c         2ns   m:        35c        11ns
+ */

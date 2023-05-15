@@ -342,7 +342,6 @@ void *memmove(void *dst, const void *src, size_t n) {
   }
 }
 
-asm("memcpy = memmove\n\t"
-    ".globl\tmemcpy");
+__strong_reference(memmove, memcpy);
 
 #endif /* __aarch64__ */

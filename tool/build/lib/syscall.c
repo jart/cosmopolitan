@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/syscall.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
@@ -88,10 +89,8 @@
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/pml4t.h"
 #include "tool/build/lib/signal.h"
-#include "tool/build/lib/syscall.h"
 #include "tool/build/lib/throw.h"
 #include "tool/build/lib/xlat.h"
-#include "tool/build/lib/xlaterrno.h"
 
 #define TIOCGWINSZ_LINUX   0x5413
 #define TCGETS_LINUX       0x5401

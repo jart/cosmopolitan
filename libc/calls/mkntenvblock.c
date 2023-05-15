@@ -23,7 +23,6 @@
 #include "libc/mem/alloca.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"

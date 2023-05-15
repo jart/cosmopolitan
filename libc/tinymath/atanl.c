@@ -28,6 +28,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
@@ -53,13 +54,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * See comments in atan.c.
  * Converted to long double by David Schultz <das@FreeBSD.ORG>.
  */
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double atanl(long double x)
-{
-	return atan(x);
-}
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 
 #if LDBL_MANT_DIG == 64
 #define EXPMAN(u) ((u.i.se & 0x7fff)<<8 | (u.i.m>>55 & 0xff))
@@ -231,6 +225,4 @@ long double atanl(long double x)
 	return sign ? -z : z;
 }
 
-#else
-#error "architecture unsupported"
-#endif
+#endif /* long double is long */

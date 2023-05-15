@@ -141,3 +141,7 @@ double log10(double x)
 
 	return val_lo + val_hi;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(log10, log10l);
+#endif

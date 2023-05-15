@@ -24,15 +24,11 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/st.h"
 
-#ifdef DescribeStatfs
-#undef DescribeStatfs
-#endif
-
 #define N 300
 
 #define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
 
-const char *DescribeStatfs(char buf[N], int rc, const struct statfs *f) {
+const char *(DescribeStatfs)(char buf[N], int rc, const struct statfs *f) {
   int i = 0;
   char ibuf[21];
   int64_t flags;

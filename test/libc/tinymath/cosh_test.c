@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -59,4 +60,10 @@ TEST(coshf, test) {
   EXPECT_TRUE(isnan(_coshf(NAN)));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(_coshf(INFINITY))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(_coshf(-INFINITY))));
+}
+
+BENCH(cosh, bench) {
+  EZBENCH2("cosh", donothing, _cosh(.7));    //  ~6ns
+  EZBENCH2("coshf", donothing, _coshf(.7));  //  ~5ns
+  EZBENCH2("coshl", donothing, _coshl(.7));  // ~25ns
 }

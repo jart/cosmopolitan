@@ -378,3 +378,8 @@ double pow(double x, double y)
 #endif
 	return exp_inline(ehi, elo, sign_bias);
 }
+
+__weak_reference(pow, __pow_finite);
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(pow, powl);
+#endif

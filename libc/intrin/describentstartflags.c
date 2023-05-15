@@ -21,10 +21,6 @@
 #include "libc/nt/enum/startf.h"
 #include "libc/sysv/consts/prot.h"
 
-#ifdef DescribeNtStartFlags
-#undef DescribeNtStartFlags
-#endif
-
 static const struct DescribeFlags kNtStartFlags[] = {
     {kNtStartfUseshowwindow, "Useshowwindow"},        //
     {kNtStartfUsesize, "Usesize"},                    //
@@ -42,7 +38,7 @@ static const struct DescribeFlags kNtStartFlags[] = {
     {kNtStartfUntrustedsource, "Untrustedsource"},    //
 };
 
-const char *DescribeNtStartFlags(char buf[128], uint32_t x) {
+const char *(DescribeNtStartFlags)(char buf[128], uint32_t x) {
   return DescribeFlags(buf, 128, kNtStartFlags, ARRAYLEN(kNtStartFlags),
                        "kNtStartf", x);
 }

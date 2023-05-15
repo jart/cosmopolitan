@@ -20,10 +20,6 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/consolemodeflags.h"
 
-#ifdef DescribeNtConsoleOutFlags
-#undef DescribeNtConsoleOutFlags
-#endif
-
 static const struct DescribeFlags kConsoleModeOutputFlags[] = {
     {kNtEnableProcessedOutput, "EnableProcessedOutput"},                      //
     {kNtEnableWrapAtEolOutput, "EnableWrapAtEolOutput"},                      //
@@ -32,7 +28,7 @@ static const struct DescribeFlags kConsoleModeOutputFlags[] = {
     {kNtEnableLvbGridWorldwide, "EnableLvbGridWorldwide"},                    //
 };
 
-const char *DescribeNtConsoleOutFlags(char buf[128], uint32_t x) {
+const char *(DescribeNtConsoleOutFlags)(char buf[128], uint32_t x) {
   return DescribeFlags(buf, 128, kConsoleModeOutputFlags,
                        ARRAYLEN(kConsoleModeOutputFlags), "kNt", x);
 }

@@ -113,3 +113,7 @@ double tan(double x)
 	n = __rem_pio2(x, y);
 	return __tan(y[0], y[1], n&1);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(tan, tanl);
+#endif

@@ -20,19 +20,11 @@
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
-#ifdef __fds_lock
-#undef __fds_lock
-#endif
-
-#ifdef __fds_unlock
-#undef __fds_unlock
-#endif
-
-void __fds_lock(void) {
+void(__fds_lock)(void) {
   pthread_mutex_lock(&__fds_lock_obj);
 }
 
-void __fds_unlock(void) {
+void(__fds_unlock)(void) {
   pthread_mutex_unlock(&__fds_lock_obj);
 }
 

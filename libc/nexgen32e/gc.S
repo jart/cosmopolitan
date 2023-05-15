@@ -33,7 +33,11 @@
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
 //	@threadsafe
-__gc:	mov	%fs:0,%rcx			// __get_tls()
+__gc:
+
+#ifdef __x86_64__
+
+	mov	%fs:0,%rcx			// __get_tls()
 	mov	0x18(%rcx),%rcx			// tls::garbages
 	decl	(%rcx)				// ++g->i
 	mov	(%rcx),%r8d			// r8 = g->i
@@ -58,4 +62,22 @@ __gc:	mov	%fs:0,%rcx			// __get_tls()
 	ret
 9:	ud2
 	nop
+
+#elif defined(__aarch64__)
+
+	stp	x29,x30,[sp,-80]!
+	mov	x29,sp
+	stp	x0,x1,[sp,16]
+	stp	x2,x3,[sp,32]
+	stp	x4,x5,[sp,48]
+	stp	x6,x7,[sp,64]
+//	todo jart
+	ldp	x0,x1,[sp,16]
+	ldp	x2,x3,[sp,32]
+	ldp	x4,x5,[sp,48]
+	ldp	x6,x7,[sp,64]
+	ldp	x29,x30,[sp],80
+
+#endif /* __x86_64__ */
+
 	.endfn	__gc,globl,hidden

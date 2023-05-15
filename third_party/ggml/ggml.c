@@ -48,6 +48,7 @@
 #include "libc/assert.h"
 #include "libc/assert.h"
 #include "third_party/ggml/ggml.h"
+#include "libc/intrin/bsr.h"
 #include "third_party/libcxx/math.h"
 
 asm(".ident\t\"\\n\\n\
@@ -8096,10 +8097,10 @@ static void ggml_compute_forward_alibi_f32(
     assert(ne1 + n_past == ne0); (void) n_past;
 
     // add alibi to src0 (KQ_scaled)
-    const int n_heads_log2_floor = 1 << (int) floor(log2(n_head));
+    const int n_heads_log2_floor = 1 << _bsr(n_head);
 
-    const float m0 = powf(2.0f, -8.0f / n_heads_log2_floor);
-    const float m1 = powf(2.0f, -4.0f / n_heads_log2_floor);
+    const float m0 = exp2f(-8.0f / n_heads_log2_floor);
+    const float m1 = exp2f(-4.0f / n_heads_log2_floor);
 
     for (int i = 0; i < ne0; i++) {
         for (int j = 0; j < ne1; j++) {
@@ -8157,10 +8158,10 @@ static void ggml_compute_forward_alibi_f16(
     assert(ne1 + n_past == ne0); (void) n_past;
 
     // add alibi to src0 (KQ_scaled)
-    const int n_heads_log2_floor = 1 << (int) floor(log2(n_head));
+    const int n_heads_log2_floor = 1 << _bsr(n_head);
 
-    const float m0 = powf(2.0f, -8.0f / n_heads_log2_floor);
-    const float m1 = powf(2.0f, -4.0f / n_heads_log2_floor);
+    const float m0 = exp2f(-8.0f / n_heads_log2_floor);
+    const float m1 = exp2f(-4.0f / n_heads_log2_floor);
 
     for (int i = 0; i < ne0; i++) {
         for (int j = 0; j < ne1; j++) {

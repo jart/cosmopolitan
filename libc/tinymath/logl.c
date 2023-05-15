@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 asm(".ident\t\"\\n\\n\
 OpenBSD libm (ISC License)\\n\
@@ -151,11 +152,7 @@ long double logl(long double x)
 	    : "st(1)");
 	return x;
 
-#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	return log(x);
-
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+#else
 
 	long double y, z;
 	int e;
@@ -216,12 +213,7 @@ long double logl(long double x)
 	z = z + e * C1; /* This sum has an error of 1/2 lsb. */
 	return z;
 
-#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-
-	long double __loglq(long double);
-	return __loglq(x);
-
-#else
-#error "architecture unsupported"
 #endif
 }
+
+#endif /* 80-bit floating point */

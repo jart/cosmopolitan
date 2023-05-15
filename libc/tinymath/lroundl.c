@@ -17,7 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 long lroundl(long double x) {
   return roundl(x);
 }
+
+#endif /* long double is long */

@@ -30,6 +30,7 @@
 #include "libc/runtime/fenv.h"
 #include "libc/tinymath/expo.internal.h"
 #include "libc/tinymath/feval.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -37,10 +38,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-long lrintl(long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return lrint(x);
-#elif defined(FE_INEXACT)
+long lrintl(long double x)
+{
+#ifdef FE_INEXACT
 /*
 see comments in lrint.c
 
@@ -61,3 +61,5 @@ raises inexact (with tonearest or upward rounding mode)
 	return rintl(x);
 #endif
 }
+
+#endif /* long double is long */

@@ -20,11 +20,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/ipproto.h"
 
-#ifdef DescribeSocketProtocol
-#undef DescribeSocketProtocol
-#endif
-
-const char *DescribeSocketProtocol(char buf[12], int family) {
+const char *(DescribeSocketProtocol)(char buf[12], int family) {
   if (family == IPPROTO_IP) return "IPPROTO_IP";
   if (family == IPPROTO_ICMP) return "IPPROTO_ICMP";
   if (family == IPPROTO_TCP) return "IPPROTO_TCP";

@@ -20,11 +20,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/ptrace.h"
 
-#ifdef DescribePtrace
-#undef DescribePtrace
-#endif
-
-const char *DescribePtrace(char buf[12], int x) {
+const char *(DescribePtrace)(char buf[12], int x) {
   if (x == -1) return "-1";
   if (x == PTRACE_TRACEME) return "PTRACE_TRACEME";
   if (x == PTRACE_PEEKDATA) return "PTRACE_PEEKDATA";

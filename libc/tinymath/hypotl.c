@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -34,12 +35,6 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double hypotl(long double x, long double y)
-{
-	return hypot(x, y);
-}
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 #if LDBL_MANT_DIG == 64
 #define SPLIT (0x1p32L+1)
 #elif LDBL_MANT_DIG == 113
@@ -56,6 +51,9 @@ static void sq(long double *hi, long double *lo, long double x)
 	*lo = xh*xh - *hi + 2*xh*xl + xl*xl;
 }
 
+/**
+ * Returns euclidean distance.
+ */
 long double hypotl(long double x, long double y)
 {
 	union ldshape ux = {x}, uy = {y};
@@ -97,6 +95,5 @@ long double hypotl(long double x, long double y)
 	sq(&hy, &ly, y);
 	return z*sqrtl(ly+lx+hy+hx);
 }
-#else
-#error "architecture unsupported"
-#endif
+
+#endif /* long double is long */

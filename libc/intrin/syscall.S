@@ -56,10 +56,10 @@ __syscall__:
 
 	.bss
 	.balign	8
-.Lrcx:	.quad	0			# clobbered by syscall
-.Lrdi:	.quad	0			# just in case
-.Lrsi:	.quad	0			# just in case
-.Lr8:	.quad	0			# freebsd bug?
-.Lr9:	.quad	0			# just in case
-.Lr10:	.quad	0			# just in case
-.Lr11:	.quad	0			# clobbered by syscall
+.Lrcx:	.quad	0			// clobbered by syscall
+.Lrdi:	.quad	0			// just in case
+.Lrsi:	.quad	0			// just in case
+.Lr8:	.quad	0			// freebsd bug?
+.Lr9:	.quad	0			// just in case
+.Lr10:	.quad	0			// just in case
+.Lr11:	.quad	0			// clobbered by syscall

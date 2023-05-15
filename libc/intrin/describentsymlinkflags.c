@@ -20,16 +20,12 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/symboliclink.h"
 
-#ifdef DescribeNtSymlinkFlags
-#undef DescribeNtSymlinkFlags
-#endif
-
 static const struct DescribeFlags kSymbolicLinkflags[] = {
     {kNtSymbolicLinkFlagDirectory, "Directory"},                              //
     {kNtSymbolicLinkFlagAllowUnprivilegedCreate, "AllowUnprivilegedCreate"},  //
 };
 
-const char *DescribeNtSymlinkFlags(char buf[64], uint32_t x) {
+const char *(DescribeNtSymlinkFlags)(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kSymbolicLinkflags,
                        ARRAYLEN(kSymbolicLinkflags), "kNtSymbolicLinkFlag", x);
 }

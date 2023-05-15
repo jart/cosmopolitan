@@ -19,6 +19,8 @@
 #include "libc/errno.h"
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
+
 #ifdef __x86_64__
 
 /**
@@ -93,7 +95,7 @@ long double powl(long double x, long double y) {
   }
 }
 
-#else
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 asm(".ident\t\"\\n\\n\
 OpenBSD libm (ISC License)\\n\
@@ -172,13 +174,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * pow domain      x<0 and y noninteger  0.0
  *
  */
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double powl(long double x, long double y)
-{
-	return pow(x, y);
-}
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 /* Table size */
 #define NXT 32
@@ -617,6 +612,7 @@ static long double powil(long double x, int nn)
 		y = 1.0/y;
 	return y;
 }
+
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
 #include "libc/tinymath/freebsd.internal.h"
 
@@ -1060,8 +1056,8 @@ powl(long double x, long double y)
   return s * z;
 }
 
-#else
-#error "architecture unsupported"
-#endif
-
 #endif /* __x86_64__ */
+
+__weak_reference(powl, __powl_finite);
+
+#endif /* long double is long */

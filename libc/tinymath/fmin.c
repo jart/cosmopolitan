@@ -33,3 +33,7 @@ double fmin(double x, double y) {
   }
   return x < y ? x : y;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(fmin, fminl);
+#endif

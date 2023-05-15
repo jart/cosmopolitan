@@ -20,11 +20,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 
-#ifdef DescribeDirfd
-#undef DescribeDirfd
-#endif
-
-const char *DescribeDirfd(char buf[12], int dirfd) {
+const char *(DescribeDirfd)(char buf[12], int dirfd) {
   if (dirfd == AT_FDCWD) return "AT_FDCWD";
   FormatInt32(buf, dirfd);
   return buf;

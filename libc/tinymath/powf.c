@@ -221,3 +221,5 @@ float powf(float x, float y)
 	}
 	return exp2_inline(ylogx, sign_bias);
 }
+
+__weak_reference(powf, __powf_finite);

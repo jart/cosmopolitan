@@ -28,19 +28,13 @@
 #include "libc/math.h"
 #include "libc/tinymath/feval.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double atanhl(long double x)
-{
-	return atanh(x);
-}
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
+// clang-format off
 
 /**
  * Returns inverse hyperbolic tangent of 𝑥.
@@ -72,6 +66,4 @@ long double atanhl(long double x)
 	return s ? -x : x;
 }
 
-#else
-#error "architecture unsupported"
-#endif
+#endif /* long double is long */

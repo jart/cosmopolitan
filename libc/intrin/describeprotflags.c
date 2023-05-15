@@ -20,16 +20,12 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/prot.h"
 
-#ifdef DescribeProtFlags
-#undef DescribeProtFlags
-#endif
-
 static const struct DescribeFlags kProtFlags[] = {
     {PROT_READ, "READ"},    //
     {PROT_WRITE, "WRITE"},  //
     {PROT_EXEC, "EXEC"},    //
 };
 
-const char *DescribeProtFlags(char buf[48], int x) {
+const char *(DescribeProtFlags)(char buf[48], int x) {
   return DescribeFlags(buf, 48, kProtFlags, ARRAYLEN(kProtFlags), "PROT_", x);
 }

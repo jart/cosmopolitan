@@ -121,3 +121,7 @@ double sin(double x)
 		return -__cos(y[0], y[1]);
 	}
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(sin, sinl);
+#endif

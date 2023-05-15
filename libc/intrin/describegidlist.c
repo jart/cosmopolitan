@@ -24,14 +24,10 @@
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
-#ifdef DescribeGidList
-#undef DescribeGidList
-#endif
-
 #define N 128
 
-const char *DescribeGidList(char buf[N], int rc, int size,
-                            const uint32_t list[]) {
+const char *(DescribeGidList)(char buf[N], int rc, int size,
+                              const uint32_t list[]) {
   if ((rc == -1) || (size < 0)) return "n/a";
   if (!size) return "{}";
   if (!list) return "NULL";

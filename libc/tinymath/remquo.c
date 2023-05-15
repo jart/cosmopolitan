@@ -115,3 +115,7 @@ end:
 	*quo = sx^sy ? -(int)q : (int)q;
 	return sx ? -x : x;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(remquo, remquol);
+#endif

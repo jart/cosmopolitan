@@ -18,14 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/complex.h"
 #include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 /**
  * Returns absolute value of complex number.
  */
 long double cabsl(long double complex z) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-  return cabs(z);
-#else
   return hypotl(creall(z), cimagl(z));
-#endif
 }
+
+#endif /* long double is long */

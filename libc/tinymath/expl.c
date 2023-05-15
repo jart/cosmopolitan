@@ -18,13 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-long double expl(long double x) {
-  return exp(x);
-}
-
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 #include "libc/tinymath/internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -120,6 +114,9 @@ LN2HI = 6.9314575195312500000000E-1L,
 LN2LO = 1.4286068203094172321215E-6L,
 LOG2E = 1.4426950408889634073599E0L;
 
+/**
+ * Returns 𝑒ˣ.
+ */
 long double expl(long double x)
 {
 	long double px, xx;
@@ -211,6 +208,45 @@ o_threshold =  11356.523406294143949491931077970763428L,
 /* log(2**(-16381-64-1)) rounded towards zero: */
 u_threshold = -11433.462743336297878837243843452621503L;
 
+static const double
+/*
+ * ln2/INTERVALS = L1+L2 (hi+lo decomposition for multiplication).  L1 must
+ * have at least 22 (= log2(|LDBL_MIN_EXP-extras|) + log2(INTERVALS)) lowest
+ * bits zero so that multiplication of it by n is exact.
+ */
+INV_L = 1.8466496523378731e+2,		/*  0x171547652b82fe.0p-45 */
+L2 = -1.0253670638894731e-29;		/* -0x1.9ff0342542fc3p-97 */
+static const long double
+/* 0x1.62e42fefa39ef35793c768000000p-8 */
+L1 =  5.41521234812457272982212595914567508e-3L;
+
+/*
+ * XXX values in hex in comments have been lost (or were never present)
+ * from here.
+ */
+static const long double
+/*
+ * Domain [-0.002708, 0.002708], range ~[-2.4021e-38, 2.4234e-38]:
+ * |exp(x) - p(x)| < 2**-124.9
+ * (0.002708 is ln2/(2*INTERVALS) rounded up a little).
+ *
+ * XXX the coeffs aren't very carefully rounded, and I get 3.6 more bits.
+ */
+A2  =  0.5,
+A3  =  1.66666666666666666666666666651085500e-1L,
+A4  =  4.16666666666666666666666666425885320e-2L,
+A5  =  8.33333333333333333334522877160175842e-3L,
+A6  =  1.38888888888888888889971139751596836e-3L;
+
+static const double
+A7  =  1.9841269841269470e-4,		/*  0x1.a01a01a019f91p-13 */
+A8  =  2.4801587301585286e-5,		/*  0x1.71de3ec75a967p-19 */
+A9  =  2.7557324277411235e-6,		/*  0x1.71de3ec75a967p-19 */
+A10 =  2.7557333722375069e-7;		/*  0x1.27e505ab56259p-22 */
+
+/**
+ * Returns 𝑒ˣ.
+ */
 long double
 expl(long double x)
 {
@@ -354,6 +390,9 @@ D15 =  7.6478532249581686e-13,		/*  0x1.ae892e3D16fcep-41 */
 D16 =  4.7628892832607741e-14,		/*  0x1.ad00Dfe41feccp-45 */
 D17 =  3.0524857220358650e-15;		/*  0x1.D7e8d886Df921p-49 */
 
+/**
+ * Returns 𝑒ˣ-1.
+ */
 long double
 expm1l(long double x)
 {
@@ -440,30 +479,30 @@ expm1l(long double x)
 
 	/*
 	 * Evaluate lower terms of
-	 * expl(endpoint[n2] + r1 + r2) = tbl[n2] * expl(r1 + r2).
+	 * expl(endpoint[n2] + r1 + r2) = kExplData[n2] * expl(r1 + r2).
 	 */
 	dr = r;
 	q = r2 + r * r * (A2 + r * (A3 + r * (A4 + r * (A5 + r * (A6 +
 	    dr * (A7 + dr * (A8 + dr * (A9 + dr * A10))))))));
 
-	t = tbl[n2].lo + tbl[n2].hi;
+	t = kExplData[n2].lo + kExplData[n2].hi;
 
 	if (k == 0) {
-		t = SUM2P(tbl[n2].hi - 1, tbl[n2].lo * (r1 + 1) + t * q +
-		    tbl[n2].hi * r1);
+		t = SUM2P(kExplData[n2].hi - 1, kExplData[n2].lo * (r1 + 1) + t * q +
+		    kExplData[n2].hi * r1);
 		RETURNI(t);
 	}
 	if (k == -1) {
-		t = SUM2P(tbl[n2].hi - 2, tbl[n2].lo * (r1 + 1) + t * q +
-		    tbl[n2].hi * r1);
+		t = SUM2P(kExplData[n2].hi - 2, kExplData[n2].lo * (r1 + 1) + t * q +
+		    kExplData[n2].hi * r1);
 		RETURNI(t / 2);
 	}
 	if (k < -7) {
-		t = SUM2P(tbl[n2].hi, tbl[n2].lo + t * (q + r1));
+		t = SUM2P(kExplData[n2].hi, kExplData[n2].lo + t * (q + r1));
 		RETURNI(t * twopk - 1);
 	}
 	if (k > 2 * LDBL_MANT_DIG - 1) {
-		t = SUM2P(tbl[n2].hi, tbl[n2].lo + t * (q + r1));
+		t = SUM2P(kExplData[n2].hi, kExplData[n2].lo + t * (q + r1));
 		if (k == LDBL_MAX_EXP)
 			RETURNI(t * 2 * 0x1p16383L - 1);
 		RETURNI(t * twopk - 1);
@@ -473,12 +512,10 @@ expm1l(long double x)
 	twomk = v.e;
 
 	if (k > LDBL_MANT_DIG - 1)
-		t = SUM2P(tbl[n2].hi, tbl[n2].lo - twomk + t * (q + r1));
+		t = SUM2P(kExplData[n2].hi, kExplData[n2].lo - twomk + t * (q + r1));
 	else
-		t = SUM2P(tbl[n2].hi - twomk, tbl[n2].lo + t * (q + r1));
+		t = SUM2P(kExplData[n2].hi - twomk, kExplData[n2].lo + t * (q + r1));
 	RETURNI(t * twopk);
 }
 
-#else
-#error "architecture unsupported"
 #endif

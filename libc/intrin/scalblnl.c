@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -35,13 +36,11 @@ asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 long double scalblnl(long double x, long n) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return scalbln(x, n);
-#else
 	if (n > INT_MAX)
 		n = INT_MAX;
 	else if (n < INT_MIN)
 		n = INT_MIN;
 	return scalbnl(x, n);
-#endif
 }
+
+#endif /* long double is long */

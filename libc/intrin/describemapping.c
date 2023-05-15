@@ -21,10 +21,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-#ifdef DescribeMapping
-#undef DescribeMapping
-#endif
-
 static char DescribeMapType(int flags) {
   switch (flags & MAP_TYPE) {
     case MAP_FILE:
@@ -48,7 +44,7 @@ char *DescribeProt(char p[4], int prot) {
   return p;
 }
 
-const char *DescribeMapping(char p[8], int prot, int flags) {
+const char *(DescribeMapping)(char p[8], int prot, int flags) {
   /* asan runtime depends on this function */
   DescribeProt(p, prot);
   p[3] = DescribeMapType(flags);

@@ -21,10 +21,6 @@
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/runtime/runtime.h"
 
-#ifdef DescribeNtFileFlagAttr
-#undef DescribeNtFileFlagAttr
-#endif
-
 static const struct DescribeFlags kFileFlags[] = {
     {kNtFileAttributeReadonly, "AttributeReadonly"},                    //
     {kNtFileAttributeHidden, "AttributeHidden"},                        //
@@ -54,7 +50,7 @@ static const struct DescribeFlags kFileFlags[] = {
     {kNtFileFlagFirstPipeInstance, "FlagFirstPipeInstance"},            //
 };
 
-const char *DescribeNtFileFlagAttr(char buf[256], uint32_t x) {
+const char *(DescribeNtFileFlagAttr)(char buf[256], uint32_t x) {
   if (x == -1u) return "-1u";
   return DescribeFlags(buf, 256, kFileFlags, ARRAYLEN(kFileFlags), "kNtFile",
                        x);

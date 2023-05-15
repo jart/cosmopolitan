@@ -29,6 +29,7 @@
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/invtrigl.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
@@ -55,16 +56,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * Converted to long double by David Schultz <das@FreeBSD.ORG>.
  */
 
-/**
- * Returns arc sine of 𝑥.
- *
- * @define atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
- * @domain -1 ≤ 𝑥 ≤ 1
- */
-long double asinl(long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return asin(x);
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 #if LDBL_MANT_DIG == 64
 #define CLOSETO1(u) (u.i.m>>56 >= 0xf7)
 #define CLEARBOTTOM(u) (u.i.m &= -1ULL << 32)
@@ -73,6 +64,14 @@ long double asinl(long double x) {
 #define CLEARBOTTOM(u) (u.i.lo = 0)
 #endif
 
+/**
+ * Returns arc sine of 𝑥.
+ *
+ * @define atan2(𝑥,sqrt((1-𝑥)*(1+𝑥)))
+ * @domain -1 ≤ 𝑥 ≤ 1
+ */
+long double asinl(long double x)
+{
 	union ldshape u = {x};
 	long double z, r, s;
 	uint16_t e = u.i.se & 0x7fff;
@@ -108,7 +107,6 @@ long double asinl(long double x) {
 	}
 	return sign ? -x : x;
 
-#else
-#error "architecture unsupported"
-#endif
 }
+
+#endif /* long double is long */

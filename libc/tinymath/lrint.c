@@ -113,3 +113,7 @@ long lrint(double x)
 	return lrint_slow(x);
 #endif /* __x86_64__ */
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(lrint, lrintl);
+#endif

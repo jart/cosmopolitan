@@ -23,14 +23,10 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sched.h"
 
-#ifdef DescribeSchedPolicy
-#undef DescribeSchedPolicy
-#endif
-
 /**
  * Describes clock_gettime() clock argument.
  */
-const char *DescribeSchedPolicy(char buf[48], int x) {
+const char *(DescribeSchedPolicy)(char buf[48], int x) {
   char *p = buf;
   if (x == -1) {
     goto DoNumber;

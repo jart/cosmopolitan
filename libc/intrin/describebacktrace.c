@@ -20,15 +20,11 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/nexgen32e/stackframe.h"
 
-#ifdef DescribeBacktrace
-#undef DescribeBacktrace
-#endif
-
 #define N 64
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *DescribeBacktrace(char buf[N], struct StackFrame *fr) {
+const char *(DescribeBacktrace)(char buf[N], struct StackFrame *fr) {
   int o = 0;
   bool gotsome = false;
   while (fr) {

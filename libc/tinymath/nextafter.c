@@ -63,3 +63,7 @@ double nextafter(double x, double y)
 		feval(x*x + ux.f*ux.f);
 	return ux.f;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(nextafter, nextafterl);
+#endif

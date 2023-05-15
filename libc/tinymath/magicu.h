@@ -17,7 +17,7 @@ struct magicu __magicu_get(uint32_t);
  * @param d should be `__magicu_get(y)` if computing `x / y`
  * @return result of unsigned integer division
  */
-static inline optimizesize uint32_t __magicu_div(uint32_t x, struct magicu d) {
+forceinline uint32_t __magicu_div(uint32_t x, struct magicu d) {
   return ((((uint64_t)x * d.M) >> 32) + ((d.s & 64) ? x : 0)) >> (d.s & 63);
 }
 

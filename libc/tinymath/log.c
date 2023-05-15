@@ -140,3 +140,7 @@ double log(double x)
 	    r * r2 * (A[1] + r * A[2] + r2 * (A[3] + r * A[4])) + hi;
 	return eval_as_double(y);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(log, logl);
+#endif

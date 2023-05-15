@@ -20,10 +20,6 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/processaccess.h"
 
-#ifdef DescribeNtProcAccessFlags
-#undef DescribeNtProcAccessFlags
-#endif
-
 static const struct DescribeFlags kProcessAccessflags[] = {
     {kNtProcessAllAccess, "AllAccess"},                              //
     {kNtProcessCreateProcess, "CreateProcess"},                      //
@@ -41,7 +37,7 @@ static const struct DescribeFlags kProcessAccessflags[] = {
     {kNtProcessSynchronize, "Synchronize"},                          //
 };
 
-const char *DescribeNtProcAccessFlags(char buf[256], uint32_t x) {
+const char *(DescribeNtProcAccessFlags)(char buf[256], uint32_t x) {
   return DescribeFlags(buf, 256, kProcessAccessflags,
                        ARRAYLEN(kProcessAccessflags), "kNtProcess", x);
 }

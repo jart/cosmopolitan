@@ -563,8 +563,11 @@ logl(long double x)
 	RETURN2(rp, val_hi, val_lo);
 }
 
+/**
+ * Returns log(𝟷+𝑥).
+ */
 long double
-__log1plq(long double x)
+log1pl(long double x)
 {
 	long double d, d_hi, f_lo, val_hi, val_lo;
 	long double f_hi, twopminusk;
@@ -674,8 +677,11 @@ __log1plq(long double x)
 
 #ifdef STRUCT_RETURN
 
+/**
+ * Returns natural logarithm of 𝑥.
+ */
 long double
-__loglq(long double x)
+logl(long double x)
 {
 	struct ld r;
 
@@ -701,8 +707,11 @@ invln2_lo =  6.33178418956604368501892137426645911e-10L,	/*  0x15c17f0bbbe87fed0
 invln10_lo_plus_hi = invln10_lo + invln10_hi,
 invln2_lo_plus_hi = invln2_lo + invln2_hi;
 
+/**
+ * Calculates log₁₀𝑥.
+ */
 long double
-__log10lq(long double x)
+log10l(long double x)
 {
 	struct ld r;
 	long double hi, lo;
@@ -719,8 +728,11 @@ __log10lq(long double x)
 	    invln10_lo_plus_hi * lo + invln10_lo * hi);
 }
 
+/**
+ * Calculates log₂𝑥.
+ */
 long double
-__log2lq(long double x)
+log2l(long double x)
 {
 	struct ld r;
 	long double hi, lo;

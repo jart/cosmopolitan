@@ -20,17 +20,13 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filesharemode.h"
 
-#ifdef DescribeNtFileShareFlags
-#undef DescribeNtFileShareFlags
-#endif
-
 static const struct DescribeFlags kFileShareflags[] = {
     {kNtFileShareRead, "Read"},      //
     {kNtFileShareWrite, "Write"},    //
     {kNtFileShareDelete, "Delete"},  //
 };
 
-const char *DescribeNtFileShareFlags(char buf[64], uint32_t x) {
+const char *(DescribeNtFileShareFlags)(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kFileShareflags, ARRAYLEN(kFileShareflags),
                        "kNtFileShare", x);
 }

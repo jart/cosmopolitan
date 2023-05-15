@@ -33,7 +33,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /*
 "A Precision Approximation of the Gamma Function" - Cornelius Lanczos (1964)
@@ -141,6 +141,9 @@ static double S(double x)
 	return num/den;
 }
 
+/**
+ * Calculates gamma function of 𝑥.
+ */
 double tgamma(double x)
 {
 	union {double f; uint64_t i;} u = {x};

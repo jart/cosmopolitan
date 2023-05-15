@@ -21,10 +21,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
-#ifdef pthread_spin_trylock
-#undef pthread_spin_trylock
-#endif
-
 /**
  * Acquires spin lock if available.
  *
@@ -34,7 +30,7 @@
  * @return 0 on success, or errno on error
  * @raise EBUSY if lock is already held
  */
-errno_t pthread_spin_trylock(pthread_spinlock_t *spin) {
+errno_t(pthread_spin_trylock)(pthread_spinlock_t *spin) {
   int x;
   x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
   if (!x) return 0;

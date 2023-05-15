@@ -18,14 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/fenv.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 /**
  * Rounds to nearest integer.
  */
 long double nearbyintl(long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-  return nearbyint(x);
-#else
 #ifdef FE_INEXACT
   // #pragma STDC FENV_ACCESS ON
   int e;
@@ -36,5 +34,6 @@ long double nearbyintl(long double x) {
   if (!e) feclearexcept(FE_INEXACT);
 #endif
   return x;
-#endif
 }
+
+#endif /* long double is long */

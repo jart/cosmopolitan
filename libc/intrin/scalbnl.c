@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -38,9 +39,6 @@ asm(".include \"libc/disclaimer.inc\"");
  * Returns 𝑥 × 2ʸ.
  */
 long double scalbnl(long double x, int n) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return scalbn(x, n);
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 	union ldshape u;
 	if (n > 16383) {
 		x *= 0x1p16383L;
@@ -64,7 +62,8 @@ long double scalbnl(long double x, int n) {
 	u.f = 1.0;
 	u.i.se = 0x3fff + n;
 	return x * u.f;
-#else
-#error "architecture unsupported"
-#endif
 }
+
+__strong_reference(scalbnl, ldexpl);
+
+#endif /* long double is long */

@@ -17,7 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
+/**
+ * Return mantissa of 𝑥 scaled to range [1,2).
+ */
 long double significandl(long double x) {
   return scalbnl(x, -ilogbl(x));
 }
+
+#endif /* long double is long */

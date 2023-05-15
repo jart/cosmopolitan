@@ -99,11 +99,22 @@ endif
 
 THIRD_PARTY_GGML_ARTIFACTS += THIRD_PARTY_GGML_LLAMA
 THIRD_PARTY_GGML_LLAMA = o/$(MODE)/third_party/ggml/llama.com
-THIRD_PARTY_GGML_LLAMA_HDRS = third_party/ggml/llama.h third_party/ggml/llama_util.h third_party/ggml/common.h
-THIRD_PARTY_GGML_LLAMA_SRCS = third_party/ggml/main.cc third_party/ggml/llama.cc third_party/ggml/common.cc
 THIRD_PARTY_GGML_LLAMA_OBJS = $(THIRD_PARTY_GGML_LLAMA_SRCS:%.cc=o/$(MODE)/%.o)
 THIRD_PARTY_GGML_LLAMA_FILES := $(THIRD_PARTY_GGML_LLAMA_SRCS) $(THIRD_PARTY_GGML_LLAMA_HDRS)
 THIRD_PARTY_GGML_LLAMA_CHECKS = $(THIRD_PARTY_GGML_LLAMA).pkg $(THIRD_PARTY_GGML_LLAMA_HDRS:%=o/$(MODE)/%.okk)
+
+THIRD_PARTY_GGML_LLAMA_HDRS =						\
+	third_party/ggml/common.cc					\
+	third_party/ggml/llama.h					\
+	third_party/ggml/llama_util.h					\
+	third_party/ggml/common.h
+
+THIRD_PARTY_GGML_LLAMA_SRCS =						\
+	third_party/ggml/main.cc					\
+	third_party/ggml/llama.cc					\
+	third_party/ggml/common.cc					\
+	third_party/ggml/quantize.cc					\
+	third_party/ggml/perplexity.cc
 
 THIRD_PARTY_GGML_LLAMA_DIRECTDEPS =					\
 	LIBC_CALLS							\
@@ -137,6 +148,26 @@ $(THIRD_PARTY_GGML_LLAMA).dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/ggml/quantize.com.dbg:				\
+		$(THIRD_PARTY_GGML_LLAMA).pkg				\
+		$(THIRD_PARTY_GGML_LLAMA_DEPS)				\
+		o/$(MODE)/third_party/ggml/common.o			\
+		o/$(MODE)/third_party/ggml/llama.o			\
+		o/$(MODE)/third_party/ggml/quantize.o			\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/third_party/ggml/perplexity.com.dbg:				\
+		$(THIRD_PARTY_GGML_LLAMA).pkg				\
+		$(THIRD_PARTY_GGML_LLAMA_DEPS)				\
+		o/$(MODE)/third_party/ggml/common.o			\
+		o/$(MODE)/third_party/ggml/llama.o			\
+		o/$(MODE)/third_party/ggml/perplexity.o			\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 $(THIRD_PARTY_GGML_LLAMA).pkg:						\
 		$(THIRD_PARTY_GGML_LLAMA_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_GGML_LLAMA_DIRECTDEPS),$($(x)_A).pkg)
@@ -147,7 +178,10 @@ o/$(MODE)/third_party/ggml/companionai.txt.zip.o: private		\
 
 ################################################################################
 
-THIRD_PARTY_GGML_COMS = $(THIRD_PARTY_GGML_LLAMA)
+THIRD_PARTY_GGML_COMS =							\
+	$(THIRD_PARTY_GGML_LLAMA)					\
+	o/$(MODE)/third_party/ggml/perplexity.com
+
 THIRD_PARTY_GGML_BINS = $(THIRD_PARTY_GGML_COMS) $(THIRD_PARTY_GGML_COMS:%=%.dbg)
 THIRD_PARTY_GGML_LIBS = $(foreach x,$(THIRD_PARTY_GGML_ARTIFACTS),$($(x)))
 THIRD_PARTY_GGML_SRCS = $(foreach x,$(THIRD_PARTY_GGML_ARTIFACTS),$($(x)_SRCS))

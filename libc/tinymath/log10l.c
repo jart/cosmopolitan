@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 asm(".ident\t\"\\n\\n\
 OpenBSD libm (ISC License)\\n\
@@ -163,11 +164,7 @@ long double log10l(long double x)
 	    : "st(1)");
 	return x;
 
-#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	return log10(x);
-
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+#else
 
 	long double y, z;
 	int e;
@@ -234,12 +231,7 @@ done:
 	z += e * (L102A);
 	return z;
 
-#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-
-	long double __log10lq(long double);
-	return __log10lq(x);
-
-#else
-#error "architecture unsupported"
 #endif
 }
+
+#endif /* ieee80 */

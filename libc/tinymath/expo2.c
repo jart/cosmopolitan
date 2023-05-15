@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/tinymath/expo.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/kntprioritycombos.internal.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"

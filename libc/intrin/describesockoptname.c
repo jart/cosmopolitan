@@ -22,14 +22,10 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sol.h"
 
-#ifdef DescribeSockOptname
-#undef DescribeSockOptname
-#endif
-
 /**
  * Describes setsockopt() optname arguments.
  */
-const char *DescribeSockOptname(char buf[32], int l, int x) {
+const char *(DescribeSockOptname)(char buf[32], int l, int x) {
   int i;
   char *s, *p;
   const struct MagnumStr *ms;

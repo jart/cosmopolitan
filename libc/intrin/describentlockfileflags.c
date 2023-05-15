@@ -20,16 +20,12 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filelockflags.h"
 
-#ifdef DescribeNtLockFileFlags
-#undef DescribeNtLockFileFlags
-#endif
-
 static const struct DescribeFlags kNtLockFileFlags[] = {
     {kNtLockfileFailImmediately, "FailImmediately"},  //
     {kNtLockfileExclusiveLock, "ExclusiveLock"},      //
 };
 
-const char *DescribeNtLockFileFlags(char buf[64], uint32_t x) {
+const char *(DescribeNtLockFileFlags)(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kNtLockFileFlags, ARRAYLEN(kNtLockFileFlags),
                        "kNtLockfile", x);
 }

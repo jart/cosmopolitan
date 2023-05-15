@@ -28,6 +28,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -40,11 +41,6 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 long double floorl(long double x)
 {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	return floor(x);
-
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 	static const long double toint = 1/LDBL_EPSILON;
 
 	union ldshape u = {x};
@@ -66,8 +62,6 @@ long double floorl(long double x)
 	if (y > 0)
 		return x + y - 1;
 	return x + y;
-
-#else
-#error "architecture unsupported"
-#endif
 }
+
+#endif /* long double is long */

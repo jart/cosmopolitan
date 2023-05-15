@@ -154,3 +154,7 @@ double atan(double x)
 	z = atanhi[id] - (x*(s1+s2) - atanlo[id] - x);
 	return sign ? -z : z;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(atan, atanl);
+#endif

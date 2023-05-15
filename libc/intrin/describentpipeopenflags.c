@@ -21,17 +21,13 @@
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/ipc.h"
 
-#ifdef DescribeNtPipeOpenFlags
-#undef DescribeNtPipeOpenFlags
-#endif
-
 static const struct DescribeFlags kPipeOpenFlags[] = {
     {kNtPipeAccessDuplex, "Duplex"},      // 0x00000003
     {kNtPipeAccessOutbound, "Outbound"},  // 0x00000002
     {kNtPipeAccessInbound, "Inbound"},    // 0x00000001
 };
 
-const char *DescribeNtPipeOpenFlags(char buf[64], uint32_t x) {
+const char *(DescribeNtPipeOpenFlags)(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kPipeOpenFlags, ARRAYLEN(kPipeOpenFlags),
                        "kNtPipeAccess", x);
 }

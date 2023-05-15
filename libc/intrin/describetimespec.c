@@ -23,11 +23,8 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
 
-#ifdef DescribeTimespec
-#undef DescribeTimespec
-#endif
-
-const char *DescribeTimespec(char buf[45], int rc, const struct timespec *ts) {
+const char *(DescribeTimespec)(char buf[45], int rc,
+                               const struct timespec *ts) {
   if (rc == -1) return "n/a";
   if (!ts) return "NULL";
   if ((!IsAsan() && kisdangerous(ts)) ||

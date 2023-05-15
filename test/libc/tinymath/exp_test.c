@@ -64,7 +64,7 @@ TEST(exp, fun) {
   ASSERT_STREQ("6.389056", _gc(xasprintf("%f", _exp(2.0) - 1.0)));
 }
 
-BENCH(_expl, bench) {
+BENCH(expl, bench) {
   EZBENCH2("exp", donothing, _exp(.7));   /*  ~6ns */
   EZBENCH2("expf", donothing, _expf(.7)); /*  ~5ns */
   EZBENCH2("expl", donothing, _expl(.7)); /* ~20ns */

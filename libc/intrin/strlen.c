@@ -38,7 +38,7 @@ noasan size_t strlen(const char *s) {
   m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
   while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
   return (const char *)p + __builtin_ctzl(m) - s;
-#elif defined(__GNUC__) || defined(__llvm__)
+#else
 #define ONES ((word)-1 / 255)
 #define BANE (ONES * (255 / 2 + 1))
   typedef unsigned long mayalias word;
@@ -56,10 +56,6 @@ noasan size_t strlen(const char *s) {
     w = ~w & (w - ONES) & BANE;
   }
   return (const char *)p + (__builtin_ctzl(w) >> 3) - s;
-#else
-  size_t n = 0;
-  while (*s++) ++n;
-  return n;
 #endif
 }
 

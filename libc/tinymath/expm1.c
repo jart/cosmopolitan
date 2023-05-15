@@ -236,3 +236,7 @@ double expm1(double x)
 		y = (x-(e+u.f)+1)*twopk;
 	return y;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(expm1, expm1l);
+#endif

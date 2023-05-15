@@ -20,10 +20,6 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/movefileexflags.h"
 
-#ifdef DescribeNtMovFileInpFlags
-#undef DescribeNtMovFileInpFlags
-#endif
-
 static const struct DescribeFlags kMoveFileInputFlags[] = {
     {kNtMovefileReplaceExisting, "ReplaceExisting"},        //
     {kNtMovefileCopyAllowed, "CopyAllowed"},                //
@@ -33,7 +29,7 @@ static const struct DescribeFlags kMoveFileInputFlags[] = {
     {kNtMovefileFailIfNotTrackable, "FailIfNotTrackable"},  //
 };
 
-const char *DescribeNtMovFileInpFlags(char buf[256], uint32_t x) {
+const char *(DescribeNtMovFileInpFlags)(char buf[256], uint32_t x) {
   return DescribeFlags(buf, 256, kMoveFileInputFlags,
                        ARRAYLEN(kMoveFileInputFlags), "kNtMovefile", x);
 }

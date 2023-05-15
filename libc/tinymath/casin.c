@@ -33,9 +33,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
-
-
+// clang-format off
 
 // FIXME
 
@@ -52,3 +50,7 @@ double complex casin(double complex z)
 	double complex r = clog(CMPLX(-y, x) + csqrt(w));
 	return CMPLX(cimag(r), -creal(r));
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(casin, casinl);
+#endif

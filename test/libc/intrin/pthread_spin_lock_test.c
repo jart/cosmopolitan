@@ -19,7 +19,6 @@
 #include "libc/atomic.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/intrin.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"

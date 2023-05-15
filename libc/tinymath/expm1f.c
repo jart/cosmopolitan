@@ -65,7 +65,7 @@ Q2 =  1.5807170421e-3;		/*  0xcf3010.0p-33 */
 static volatile float huge = 1.0e+30;
 
 /**
- * Returns 𝑒^𝑥-𝟷.
+ * Returns 𝑒ˣ-1.
  */
 float
 expm1f(float x)

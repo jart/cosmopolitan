@@ -31,7 +31,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /**
  * Splits number normalized fraction and exponent.
@@ -56,3 +56,7 @@ double frexp(double x, int *e)
 	y.i |= 0x3fe0000000000000ull;
 	return y.d;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(frexp, frexpl);
+#endif

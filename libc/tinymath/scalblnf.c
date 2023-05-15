@@ -22,5 +22,5 @@
  * Returns 𝑥 × 2ʸ.
  */
 float scalblnf(float x, long n) {
-  return ldexpf(x, n);
+  return scalbnf(x, n);
 }

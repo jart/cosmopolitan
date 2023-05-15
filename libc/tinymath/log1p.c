@@ -159,3 +159,7 @@ double log1p(double x)
 	dk = k;
 	return s*(hfsq+R) + (dk*ln2_lo+c) - hfsq + f + dk*ln2_hi;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(log1p, log1pl);
+#endif

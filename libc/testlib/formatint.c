@@ -34,5 +34,5 @@ dontdiscard char *testlib_formatint(intptr_t x) {
   }
   *p++ = ')';
   *p++ = '\0';
-  return str;
+  return strdup(str);
 }

@@ -22,5 +22,9 @@
  * Returns 𝑥 × 2ʸ.
  */
 double scalbln(double x, long n) {
-  return ldexp(x, n > 65536 ? 65536 : n < -65536 ? -65536 : (int)n);
+  return scalbn(x, n > 65536 ? 65536 : n < -65536 ? -65536 : (int)n);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(scalbln, scalblnl);
+#endif

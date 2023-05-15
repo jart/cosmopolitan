@@ -18,18 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 /**
  * Returns absolute value of floating point number.
  */
 long double fabsl(long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-  return fabs(x);
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
   union ldshape u = {x};
   u.i.se &= 0x7fff;
   return u.f;
-#else
-#error "architecture unsupported"
-#endif
 }
+
+#endif /* long double is long */

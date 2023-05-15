@@ -29,6 +29,7 @@
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/kernel.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -41,15 +42,6 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 void sincosl(long double x, long double *sin, long double *cos)
 {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	double sind, cosd;
-	sincos(x, &sind, &cosd);
-	*sin = sind;
-	*cos = cosd;
-
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
-
 	union ldshape u = {x};
 	unsigned n;
 	long double y[2], s, c;
@@ -94,8 +86,6 @@ void sincosl(long double x, long double *sin, long double *cos)
 		*cos = s;
 		break;
 	}
-
-#else
-#error "architecture unsupported"
-#endif
 }
+
+#endif /* long double is long */

@@ -29,6 +29,7 @@
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/kernel.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -41,12 +42,6 @@ asm(".include \"libc/disclaimer.inc\"");
  */
 long double tanl(long double x)
 {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	return tan(x);
-
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
-
 	union ldshape u = {x};
 	long double y[2];
 	unsigned n;
@@ -64,8 +59,6 @@ long double tanl(long double x)
 	}
 	n = __rem_pio2l(x, y);
 	return __tanl(y[0], y[1], n&1);
-
-#else
-#error "architecture unsupported"
-#endif
 }
+
+#endif /* long double is long */

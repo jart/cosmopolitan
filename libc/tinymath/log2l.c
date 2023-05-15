@@ -28,6 +28,7 @@
 #include "libc/complex.h"
 #include "libc/math.h"
 #include "libc/tinymath/complex.internal.h"
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 asm(".ident\t\"\\n\\n\
 OpenBSD libm (ISC License)\\n\
@@ -155,11 +156,7 @@ long double log2l(long double x)
 	    : "st(1)");
 	return x;
 
-#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	return log2(x);
-
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+#else
 
 	long double y, z;
 	int e;
@@ -226,12 +223,7 @@ done:
 	z += e;
 	return z;
 
-#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-
-	long double __log2lq(long double);
-	return __log2lq(x);
-
-#else
-#error "architecture unsupported"
 #endif
 }
+
+#endif /* 80-bit floating point */

@@ -20,16 +20,12 @@
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/mremap.h"
 
-#ifdef DescribeRemapFlags
-#undef DescribeRemapFlags
-#endif
-
 static const struct DescribeFlags kRemapFlags[] = {
     {MREMAP_MAYMOVE, "MAYMOVE"},  //
     {MREMAP_FIXED, "FIXED"},      //
 };
 
-const char *DescribeRemapFlags(char buf[48], int x) {
+const char *(DescribeRemapFlags)(char buf[48], int x) {
   return DescribeFlags(buf, 48, kRemapFlags, ARRAYLEN(kRemapFlags), "MREMAP_",
                        x);
 }

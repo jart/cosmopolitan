@@ -33,6 +33,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Returns 10ˣ.
+ */
 double exp10(double x)
 {
 	static const double p10[] = {
@@ -51,3 +54,8 @@ double exp10(double x)
 	}
 	return pow(10.0, x);
 }
+
+__strong_reference(exp10, pow10);
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(exp10, exp10l);
+#endif

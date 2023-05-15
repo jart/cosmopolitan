@@ -19,16 +19,12 @@
 #include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
-#ifdef pthread_spin_destroy
-#undef pthread_spin_destroy
-#endif
-
 /**
  * Destroys spin lock.
  *
  * @return 0 on success, or errno on error
  */
-errno_t pthread_spin_destroy(pthread_spinlock_t *spin) {
+errno_t(pthread_spin_destroy)(pthread_spinlock_t *spin) {
   atomic_store_explicit(&spin->_lock, -1, memory_order_relaxed);
   return 0;
 }

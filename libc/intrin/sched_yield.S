@@ -70,15 +70,15 @@ sched_yield:
 //	 a signal." ──Quoth IEEE 1003.1-2017 §functions/select
 //
 //	On other platforms, sched_yield() takes no arguments.
-	push	$0				# timeout.tv_usec
-	push	$0				# timeout.tv_sec
-	xor	%edi,%edi			# nfds
-	xor	%esi,%esi			# readfds
-	xor	%edx,%edx			# writefds
-	xor	%r10d,%r10d			# exceptfds
-	mov	%rsp,%r8			# timeout
-	mov	__NR_sched_yield,%eax		# ordinal
-	clc					# linux
+	push	$0				// timeout.tv_usec
+	push	$0				// timeout.tv_sec
+	xor	%edi,%edi			// nfds
+	xor	%esi,%esi			// readfds
+	xor	%edx,%edx			// writefds
+	xor	%r10d,%r10d			// exceptfds
+	mov	%rsp,%r8			// timeout
+	mov	__NR_sched_yield,%eax		// ordinal
+	clc					// linux
 	syscall
 //	It should not be possible for this to fail so we don't
 //	bother going through the errno ritual. If this somehow

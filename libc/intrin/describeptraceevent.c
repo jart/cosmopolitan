@@ -20,11 +20,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/ptrace.h"
 
-#ifdef DescribePtraceEvent
-#undef DescribePtraceEvent
-#endif
-
-const char *DescribePtraceEvent(char buf[32], int x) {
+const char *(DescribePtraceEvent)(char buf[32], int x) {
   if (x == PTRACE_EVENT_FORK) return "PTRACE_EVENT_FORK";
   if (x == PTRACE_EVENT_VFORK) return "PTRACE_EVENT_VFORK";
   if (x == PTRACE_EVENT_CLONE) return "PTRACE_EVENT_CLONE";

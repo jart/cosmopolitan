@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/intrin.h"
 #ifndef __x86_64__
 
 static const uint16_t kTpEnc[32 - 7] = {

@@ -25,3 +25,7 @@ double fdim(double x, double y) {
   if (isunordered(x, y)) return NAN;
   return x > y ? x - y : 0;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(fdim, fdiml);
+#endif

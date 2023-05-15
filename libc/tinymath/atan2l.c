@@ -29,6 +29,7 @@
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/invtrigl.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
@@ -69,11 +70,7 @@ long double atan2l(long double y, long double x)
 	    : "st(1)");
 	return x;
 
-#elif LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-
-	return atan2(y, x);
-
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
+#else
 
 	union ldshape ux, uy;
 	long double z;
@@ -130,7 +127,7 @@ long double atan2l(long double y, long double x)
 		return (z-2*pio2_lo)-2*pio2_hi; /* atan(-,-) */
 	}
 
-#else
-#error "architecture unsupported"
 #endif
 }
+
+#endif /* long double is long */

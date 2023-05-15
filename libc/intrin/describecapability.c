@@ -22,10 +22,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/cap.h"
 
-#ifdef DescribeCapability
-#undef DescribeCapability
-#endif
-
 static const struct thatispacked {
   unsigned char x;
   const char *s;
@@ -73,7 +69,7 @@ static const struct thatispacked {
     {CAP_CHECKPOINT_RESTORE, "CHECKPOINT_RESTORE"},  //
 };
 
-const char *DescribeCapability(char buf[32], int x) {
+const char *(DescribeCapability)(char buf[32], int x) {
   int i;
   for (i = 0; i < ARRAYLEN(kCapabilityName); ++i) {
     if (kCapabilityName[i].x == x) {

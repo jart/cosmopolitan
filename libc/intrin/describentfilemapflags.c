@@ -20,10 +20,6 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 
-#ifdef DescribeNtFileMapFlags
-#undef DescribeNtFileMapFlags
-#endif
-
 static const struct DescribeFlags kFileMapFlags[] = {
     {kNtFileMapCopy, "Copy"},                      //
     {kNtFileMapWrite, "Write"},                    //
@@ -34,7 +30,7 @@ static const struct DescribeFlags kFileMapFlags[] = {
     {kNtFileMapLargePages, "LargePages"},          //
 };
 
-const char *DescribeNtFileMapFlags(char buf[64], uint32_t x) {
+const char *(DescribeNtFileMapFlags)(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kFileMapFlags, ARRAYLEN(kFileMapFlags),
                        "kNtFileMap", x);
 }

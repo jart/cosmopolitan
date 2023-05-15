@@ -18,11 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/complex.h"
 #include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 long double cargl(long double complex z) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-  return carg(z);
-#else
   return atan2l(cimagl(z), creall(z));
-#endif
 }
+
+#endif /* long double is long */

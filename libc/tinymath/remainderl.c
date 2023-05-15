@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
+/**
+ * Returns remainder of dividing 𝑥 by 𝑦.
+ */
 long double remainderl(long double x, long double y) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-  return remainder(x, y);
-#else
   int q;
   return remquol(x, y, &q);
-#endif
 }
+
+#endif /* long double is long */

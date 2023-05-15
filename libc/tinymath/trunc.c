@@ -80,3 +80,7 @@ double trunc(double x)
 
 #endif /* __aarch64__ */
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(trunc, truncl);
+#endif

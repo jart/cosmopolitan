@@ -29,19 +29,13 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-long double sqrtl(long double x)
-{
-	return sqrt(x);
-}
-#elif (LDBL_MANT_DIG == 113 || LDBL_MANT_DIG == 64) && LDBL_MAX_EXP == 16384
 
 #define FENV_SUPPORT 1
 
@@ -298,6 +292,4 @@ long double sqrtl(long double x)
 #endif /* __x86__ */
 }
 
-#else
-#error unsupported long double format
-#endif
+#endif /* long double is long */

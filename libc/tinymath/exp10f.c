@@ -33,6 +33,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Returns 10ˣ.
+ */
 float exp10f(float x)
 {
 	static const float p10[] = {
@@ -49,3 +52,5 @@ float exp10f(float x)
 	}
 	return exp2(3.32192809488736234787031942948939 * x);
 }
+
+__strong_reference(exp10f, pow10f);

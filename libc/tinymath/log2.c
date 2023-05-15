@@ -35,7 +35,7 @@ asm(".ident\t\"\\n\\n\
 Double-precision math functions (MIT License)\\n\
 Copyright 2018 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 /*
  * Double-precision log2(x) function.
@@ -157,3 +157,7 @@ double log2(double x)
 	y = lo + r2 * p + hi;
 	return eval_as_double(y);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(log2, log2l);
+#endif

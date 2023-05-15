@@ -18,7 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 
+/**
+ * Returns remainder of dividing 𝑥 by 𝑦.
+ */
 double remainder(double x, double y) {
   int q;
   return remquo(x, y, &q);
 }
+
+__strong_reference(remainder, drem);
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(remainder, remainderl);
+#endif

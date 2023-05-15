@@ -21,15 +21,11 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
-#ifdef DescribeStringList
-#undef DescribeStringList
-#endif
-
 #define N 300
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *DescribeStringList(char buf[N], char *const list[]) {
+const char *(DescribeStringList)(char buf[N], char *const list[]) {
   int i, o = 0;
 
   if (!list) return "NULL";

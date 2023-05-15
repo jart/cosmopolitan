@@ -29,3 +29,7 @@ double fabs(double x) {
   u.i &= -1ULL / 2;
   return u.f;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(fabs, fabsl);
+#endif
