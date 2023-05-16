@@ -27,6 +27,18 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/vqsort/vqsort.h"
 
+void InsertionSort(int *A, int n) {
+  for (int i = 1; i < n; i++) {
+    int key = A[i];
+    int j = i - 1;
+    while (j >= 0 && A[j] > key) {
+      A[j + 1] = A[j];
+      j--;
+    }
+    A[j + 1] = key;
+  }
+}
+
 int CompareLong(const void *a, const void *b) {
   const long *x = a;
   const long *y = b;
@@ -145,14 +157,14 @@ int CompareInt(const void *a, const void *b) {
   return 0;
 }
 
-TEST(_intsort, test) {
+TEST(InsertionSort, test) {
   size_t n = 5000;
   int *a = gc(calloc(n, sizeof(int)));
   int *b = gc(calloc(n, sizeof(int)));
   rngset(a, n * sizeof(int), 0, 0);
   memcpy(b, a, n * sizeof(int));
   qsort(a, n, sizeof(int), CompareInt);
-  _intsort(b, n);
+  InsertionSort(b, n);
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(int)));
 }
 
@@ -218,13 +230,14 @@ TEST(radix_sort_int32, test) {
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(int)));
 }
 
-BENCH(_intsort, bench) {
+BENCH(InsertionSort, bench) {
   printf("\n");
   size_t n = 10000;
   int *p1 = gc(malloc(n * sizeof(int)));
   int *p2 = gc(malloc(n * sizeof(int)));
   rngset(p1, n * sizeof(int), 0, 0);
-  EZBENCH2("_intsort", memcpy(p2, p1, n * sizeof(int)), _intsort(p2, n));
+  EZBENCH2("InsertionSort", memcpy(p2, p1, n * sizeof(int)),
+           InsertionSort(p2, n));
 #ifdef __x86_64__
   if (X86_HAVE(AVX2)) {
     EZBENCH2("vqsort_int32_avx2", memcpy(p2, p1, n * sizeof(int)),

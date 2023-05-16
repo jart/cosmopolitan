@@ -28,6 +28,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "third_party/ggml/ggml.h"
+#include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/cstdio"
 #include "third_party/libcxx/map"
 #include "third_party/libcxx/string"
@@ -35,13 +36,14 @@
 // clang-format off
 
 static const std::map<std::string, enum gptneox_ftype> GPTNEOX_FTYPE_MAP = {
-  {"q4_0", GPTNEOX_FTYPE_MOSTLY_Q4_0},
-  {"q4_1", GPTNEOX_FTYPE_MOSTLY_Q4_1},
-  {"q4_2", GPTNEOX_FTYPE_MOSTLY_Q4_2},
-  //{"q4_3", GPTNEOX_FTYPE_MOSTLY_Q4_3},
-  {"q5_0", GPTNEOX_FTYPE_MOSTLY_Q5_0},
-  {"q5_1", GPTNEOX_FTYPE_MOSTLY_Q5_1},
-  {"q8_0", GPTNEOX_FTYPE_MOSTLY_Q8_0},
+    {"f16", GPTNEOX_FTYPE_MOSTLY_F16},
+    {"q4_0", GPTNEOX_FTYPE_MOSTLY_Q4_0},
+    {"q4_1", GPTNEOX_FTYPE_MOSTLY_Q4_1},
+    {"q4_2", GPTNEOX_FTYPE_MOSTLY_Q4_2},
+    //{"q4_3", GPTNEOX_FTYPE_MOSTLY_Q4_3},
+    {"q5_0", GPTNEOX_FTYPE_MOSTLY_Q5_0},
+    {"q5_1", GPTNEOX_FTYPE_MOSTLY_Q5_1},
+    {"q8_0", GPTNEOX_FTYPE_MOSTLY_Q8_0},
 };
 
 // usage:
@@ -50,7 +52,7 @@ static const std::map<std::string, enum gptneox_ftype> GPTNEOX_FTYPE_MAP = {
 int main(int argc, char ** argv) {
     ShowCrashReports();
 
-    ggjt_v1();
+    ggjt_v2();
     ggml_time_init();
 
     if (argc < 4) {
@@ -71,8 +73,13 @@ int main(int argc, char ** argv) {
     const std::string fname_inp = argv[1];
     const std::string fname_out = argv[2];
 
+    if (fname_inp == fname_out) {
+        fprintf(stderr, "%s: input and output names are same\n", fname_inp.c_str());
+        exit(1);
+    }
+
     enum gptneox_ftype ftype;
-    if (argv[3][0] == 'q') {
+    if (!is_integer_str(argv[3])) {
         auto it = GPTNEOX_FTYPE_MAP.find(argv[3]);
         if (it == GPTNEOX_FTYPE_MAP.end()) {
             fprintf(stderr, "%s: unknown ftype '%s'\n", __func__, argv[3]);

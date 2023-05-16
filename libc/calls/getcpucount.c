@@ -95,6 +95,6 @@ __attribute__((__constructor__)) static void _getcpucount_init(void) {
  *
  * @return cpu count or 0 if it couldn't be determined
  */
-unsigned _getcpucount(void) {
+int _getcpucount(void) {
   return g_cpucount;
 }

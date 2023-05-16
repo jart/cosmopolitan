@@ -18,10 +18,18 @@ __funline float _cvtsh_ss(unsigned short __S) {
   return __builtin_ia32_vec_ext_v4sf(__A, 0);
 }
 
+/**
+ * Converts four half-precision (16-bit) floating point values to
+ * single-precision floating point values.
+ */
 __funline __m128 _mm_cvtph_ps(__m128i __A) {
   return (__m128)__builtin_ia32_vcvtph2ps((__v8hi)__A);
 }
 
+/**
+ * Converts eight half-precision (16-bit) floating point values to
+ * single-precision floating point values.
+ */
 __funline __m256 _mm256_cvtph_ps(__m128i __A) {
   return (__m256)__builtin_ia32_vcvtph2ps256((__v8hi)__A);
 }
@@ -37,6 +45,10 @@ __funline __m128i _mm_cvtps_ph(__m128 __A, const int __I) {
   return (__m128i)__builtin_ia32_vcvtps2ph((__v4sf)__A, __I);
 }
 
+/**
+ * Converts eight single-precision floating point values to
+ * half-precision (16-bit) floating point values.
+ */
 __funline __m128i _mm256_cvtps_ph(__m256 __A, const int __I) {
   return (__m128i)__builtin_ia32_vcvtps2ph256((__v8sf)__A, __I);
 }

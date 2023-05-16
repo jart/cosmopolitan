@@ -145,3 +145,7 @@ double complex catan(double complex z)
 	w = CMPLX(w, 0.25 * log(a));
 	return w;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(catan, catanl);
+#endif

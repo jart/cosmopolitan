@@ -99,7 +99,7 @@ void _intsort(int *, size_t);
 void _longsort(long *, size_t);
 bool _isheap(void *);
 int NtGetVersion(void) pureconst;
-unsigned _getcpucount(void) pureconst;
+int _getcpucount(void) pureconst;
 long _missingno();
 void __oom_hook(size_t);
 void _loadxmm(void *);

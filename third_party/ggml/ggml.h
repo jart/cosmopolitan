@@ -1,3 +1,4 @@
+// -*- c; c-basic-offset:4 -*-
 #ifndef COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_
 #define COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

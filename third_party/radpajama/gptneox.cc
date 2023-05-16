@@ -28,6 +28,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/radpajama/gptneox.h"
 #include "libc/intrin/bits.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/posix.h"
 #include "third_party/ggml/fp16.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/ggml/llama_util.h"
@@ -77,7 +79,7 @@ static const size_t MiB = 1024*1024;
 //       needs modifications in ggml
 
 // TODO: Modify for gptneox, how are these values actually determined?
-// TODO: This is now priority, 
+// TODO: This is now priority,
 static const std::map<e_model, size_t> & MEM_REQ_SCRATCH0()
 {
     static std::map<e_model, size_t> _MEM_REQ_SCRATCH0 = {
@@ -446,7 +448,8 @@ struct gptneox_load_tensors_map {
 enum gptneox_file_version {
     GPTNEOX_FILE_VERSION_GGML,
     GPTNEOX_FILE_VERSION_GGMF_V1, // added version field and scores in vocab
-    GPTNEOX_FILE_VERSION_GGJT_V1, // added padding
+    GPTNEOX_FILE_VERSION_GGJT_V1, // adopted unified aligned mappable layout
+    GPTNEOX_FILE_VERSION_GGJT_V2, // changed quantization format
 };
 
 struct gptneox_file_loader {
@@ -473,10 +476,16 @@ struct gptneox_file_loader {
 
         if (magic == READ32BE("ggml") && version == 0) {
             file_version = GPTNEOX_FILE_VERSION_GGML;
+            ggjt_v1();
         } else if (magic == READ32BE("ggmf") && version == 1) {
             file_version = GPTNEOX_FILE_VERSION_GGMF_V1;
+            ggjt_v1();
         } else if (magic == READ32BE("ggjt") && version == 1) {
             file_version = GPTNEOX_FILE_VERSION_GGJT_V1;
+            ggjt_v1();
+        } else if (magic == READ32BE("ggjt") && version == 2) {
+            file_version = GPTNEOX_FILE_VERSION_GGJT_V2;
+            ggjt_v2();
         } else {
             Die("unknown (magic, version) combination: %08x, %08x; is this really a GGML file?",
                          magic, version);
@@ -566,17 +575,20 @@ struct gptneox_file_loader {
 struct gptneox_file_saver {
     gptneox_file file;
     gptneox_file_loader * any_file_loader;
-    gptneox_file_saver(const char * fname, gptneox_file_loader * any_file_loader, enum gptneox_ftype new_ftype)
-        : file(fname, "wb"), any_file_loader(any_file_loader) {
+    gptneox_file_saver(const char * fname,
+                       gptneox_file_loader * any_file_loader,
+                       enum gptneox_ftype new_ftype)
+            : file(fname, "wb"),
+              any_file_loader(any_file_loader) {
         fprintf(stderr, "gptneox.cpp: saving model to %s\n", fname);
-        ggjt_v1();
         write_magic();
         write_hparams(new_ftype);
         write_vocab();
     }
     void write_magic() {
+        ggjt_v2();
         file.write_u32(READ32BE("ggjt")); // magic
-        file.write_u32(1); // version
+        file.write_u32(2); // version
     }
     void write_hparams(enum gptneox_ftype new_ftype) {
         const gptneox_hparams & hparams = any_file_loader->hparams;
@@ -887,7 +899,8 @@ static const char *gptneox_file_version_name(gptneox_file_version version) {
     switch (version) {
         case GPTNEOX_FILE_VERSION_GGML: return "'ggml' (old version with low tokenizer quality and no mmap support)";
         case GPTNEOX_FILE_VERSION_GGMF_V1: return "ggmf v1 (old version with no mmap support)";
-        case GPTNEOX_FILE_VERSION_GGJT_V1: return "ggjt v1 (latest)";
+        case GPTNEOX_FILE_VERSION_GGJT_V1: return "ggjt v1 (pre #1405)";
+        case GPTNEOX_FILE_VERSION_GGJT_V2: return "ggjt v2 (latest)";
         default: GPTNEOX_ASSERT(false);
     }
 }
@@ -940,7 +953,7 @@ static void gptneox_model_load_internal(
     model.hparams = ml->file_loaders.at(0)->hparams;
     gptneox_file_version file_version = ml->file_loaders.at(0)->file_version;
     auto & hparams = model.hparams;
-    
+
     {
         switch (hparams.n_layer) {
             case 16: {
@@ -951,7 +964,7 @@ static void gptneox_model_load_internal(
                 }
                 break;
             }
-            // # <RedPajama>: we extend the model type settings for RedPajama models.  
+            // # <RedPajama>: we extend the model type settings for RedPajama models.
             case 32:{
                 if (hparams.n_embd == 2560) {
                     model.type = e_model::MODEL_3B;
@@ -1195,7 +1208,7 @@ static bool gptneox_eval_internal(
                                     model.layers[il].c_attn_attn_b, cur),
                         cur);
             }
-             
+
             // Split QKV and make contiguous
             struct ggml_tensor * Qcur = ggml_view_3d(ctx0, cur,
                                             n_embd/n_head,
@@ -1225,7 +1238,7 @@ static bool gptneox_eval_internal(
                         ggml_new_tensor_3d(ctx0, GGML_TYPE_F32, n_embd/n_head, n_head, N));
             Vcur = ggml_cpy(ctx0, Vcur,
                         ggml_new_tensor_3d(ctx0, GGML_TYPE_F32, n_embd/n_head, n_head, N));
-            
+
             // MARK: gptneox RoPE Q and K, before cache
             // Bit 2 for gptneox style (2)
             // Bit 1 is zero for dont skip n_past +(0), use (2+1) = (3) if rope is applied to cache of k (after cache only)
@@ -1241,7 +1254,7 @@ static bool gptneox_eval_internal(
                             ggml_element_size(Vcur) * n_embd,
                             0);
                 Vcur = ggml_transpose(ctx0, Vcur);
-            
+
                 struct ggml_tensor * k = ggml_view_1d(ctx0, kv_self.k,
                                             n_embd * N, // num elements in current context (up to n_embd*n_ctx but usually less)
                                             ggml_element_size(kv_self.k) * n_embd * (il * n_ctx + n_past));
@@ -1250,12 +1263,12 @@ static bool gptneox_eval_internal(
                                             n_embd,
                                             ggml_element_size(kv_self.v) * n_ctx,
                                             ggml_element_size(kv_self.v) * ((il * n_ctx * n_embd) + n_past));
-            
+
                 // important: storing RoPE-ed version of K in the KV cache!
                 ggml_build_forward_expand(&gf, ggml_cpy(ctx0, Kcur, k));
                 ggml_build_forward_expand(&gf, ggml_cpy(ctx0, Vcur, v));
             //}
-            
+
             // Q = Qcur.contiguous().view(n_embd/n_head, n_head, N).permute(0, 2, 1, 3)
             struct ggml_tensor * Q =
                 ggml_permute(ctx0,
@@ -1284,7 +1297,7 @@ static bool gptneox_eval_internal(
             struct ggml_tensor * KQ_masked = ggml_diag_mask_inf(ctx0, KQ_scaled, n_past);
             // KQ = soft_max(KQ_masked)
             struct ggml_tensor * KQ_soft_max = ggml_soft_max(ctx0, KQ_masked);
-            
+
             // V_trans = Vmem.view(n_embd/n_head, n_head, n_past + N).permute(1, 2, 0, 3).contiguous()
             struct ggml_tensor * V_trans = ggml_view_3d(ctx0, kv_self.v,
                                                 n_past + N,
@@ -1312,10 +1325,10 @@ static bool gptneox_eval_internal(
         }
 
         lctx.use_buf(ctx0, 1);
-        
+
         if (hparams.use_parallel_residual == 1) {
             //printf("use_parallel_residual == 1\n");
-            
+
             // This is independent of the self-attention result, so it could be done in parallel to the self-attention
             struct ggml_tensor * outAttn = cur;
 
@@ -1359,7 +1372,7 @@ static bool gptneox_eval_internal(
             inpL = ggml_add(ctx0, inpL, cur);
         } else if (hparams.use_parallel_residual == 0) {
             //printf("use_parallel_residual == 0\n");
-            
+
             // This takes the self-attention residual output as input to Feedforward
             struct ggml_tensor * outAttn = cur;
             struct ggml_tensor * inpFF = ggml_add(ctx0, outAttn, inpL);
@@ -2093,6 +2106,7 @@ int gptneox_model_copy(
 static void gptneox_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, enum gptneox_ftype ftype, int nthread) {
     ggml_type quantized_type;
     switch (ftype) {
+        case GPTNEOX_FTYPE_MOSTLY_F16:  quantized_type = GGML_TYPE_F16;  break;
         case GPTNEOX_FTYPE_MOSTLY_Q4_0: quantized_type = GGML_TYPE_Q4_0; break;
         case GPTNEOX_FTYPE_MOSTLY_Q4_1: quantized_type = GGML_TYPE_Q4_1; break;
         case GPTNEOX_FTYPE_MOSTLY_Q4_2: quantized_type = GGML_TYPE_Q4_2; break;
@@ -2124,21 +2138,17 @@ static void gptneox_model_quantize_internal(const std::string & fname_inp, const
         tensor.data = read_data.addr;
         model_loader->load_data_for(tensor);
 
-        printf("[%4zu/%4zu] %36s - %16s, type = %6s, ",
+        printf("[%4zu/%4zu] %50s - %16s, type = %6s, ",
                ++idx, model_loader->tensors_map.tensors.size(),
                tensor.name.c_str(), gptneox_format_tensor_shape(tensor.ne).c_str(),
                ggml_type_name(tensor.type));
 
-        // This used to be a regex, but <regex> has an extreme cost to compile times.
-        bool quantize = tensor.name.rfind("weight") == tensor.name.size() - 6; // ends with 'weight'?
-
-        // quantize only 2D tensors
-        quantize &= (tensor.ne.size() == 2);
-
-        // uncomment this to keep the output layer in FP16
-        //if (tensor.name == "output.weight") {
-        //    quantize = false;
-        //}
+        // only quantize 2d weights that aren't the output layer
+        bool quantize =
+                tensor.ne.size() == 2 &&
+                tensor.type != quantized_type &&
+                _endswith(tensor.name.c_str(), "weight") &&
+                tensor.name != "output.weight";
 
         enum ggml_type new_type;
         void * new_data;
@@ -2150,6 +2160,14 @@ static void gptneox_model_quantize_internal(const std::string & fname_inp, const
             new_data = tensor.data;
             new_size = tensor.size;
             printf("size = %8.3f MiB\n", tensor.size/1024.0/1024.0);
+        } else if (quantized_type == GGML_TYPE_F16) {
+            GPTNEOX_ASSERT(tensor.type == GGML_TYPE_F32);
+            size_t nelements = tensor.ne.at(0) * tensor.ne.at(1);
+            new_type = quantized_type;
+            new_size = nelements * 2;
+            work.resize(new_size);
+            new_data = work.addr;
+            ggml_fp32_to_fp16_row((const float *)tensor.data, (ggml_fp16_t *)new_data, nelements);
         } else {
             new_type = quantized_type;
             float * f32_data;

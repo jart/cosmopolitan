@@ -3,9 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define GGML_GELU_FP16
-#define GGML_SILU_FP16
-
 #ifdef __ARM_NEON
 // we use the built-in 16-bit float type
 typedef __fp16 ggml_fp16_t;

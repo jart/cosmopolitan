@@ -26,10 +26,10 @@
  * signed zeroes.
  */
 double fmin(double x, double y) {
-  if (__builtin_isnan(x)) return y;
-  if (__builtin_isnan(y)) return x;
-  if (__builtin_signbit(x) != __builtin_signbit(y)) {
-    return __builtin_signbit(x) ? x : y; /* C99 Annex F.9.9.2 */
+  if (isnan(x)) return y;
+  if (isnan(y)) return x;
+  if (signbit(x) != signbit(y)) {
+    return signbit(x) ? x : y; /* C99 Annex F.9.9.2 */
   }
   return x < y ? x : y;
 }

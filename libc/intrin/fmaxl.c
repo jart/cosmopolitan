@@ -27,10 +27,10 @@
  * signed zeroes.
  */
 long double fmaxl(long double x, long double y) {
-  if (__builtin_isnan(x)) return y;
-  if (__builtin_isnan(y)) return x;
-  if (__builtin_signbitl(x) != __builtin_signbitl(y)) {
-    return __builtin_signbitl(x) ? y : x; /* C99 Annex F.9.9.2 */
+  if (isnan(x)) return y;
+  if (isnan(y)) return x;
+  if (signbit(x) != signbit(y)) {
+    return signbit(x) ? y : x; /* C99 Annex F.9.9.2 */
   }
   return x < y ? y : x;
 }

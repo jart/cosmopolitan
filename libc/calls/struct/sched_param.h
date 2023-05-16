@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_SCHED_PARAM_H_
 #include "libc/calls/struct/timespec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 struct sched_param {
   int32_t sched_priority;
@@ -15,5 +16,6 @@ int sched_rr_get_interval(int, struct timespec *);
 int sched_setparam(int, const struct sched_param *);
 int sched_setscheduler(int, int, const struct sched_param *);
 
+COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SCHED_PARAM_H_ */

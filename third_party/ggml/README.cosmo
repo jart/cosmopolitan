@@ -27,3 +27,5 @@ LOCAL CHANGES
   - Refactor headers per cosmo convention
   - Replace code like 'ggjt' with READ32BE("ggjt")
   - Remove C++ exceptions; use Die() function instead
+  - Removed division from matrix multiplication.
+  - Let quantizer convert between ggmt formats

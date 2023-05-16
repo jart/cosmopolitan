@@ -28,6 +28,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/invtrigl.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\
@@ -54,22 +55,20 @@ asm(".include \"libc/disclaimer.inc\"");
  * Converted to long double by David Schultz <das@FreeBSD.ORG>.
  */
 
-/**
- * Returns arc cosine of 𝑥.
- *
- * @define atan2(fabs(sqrt((1-𝑥)*(1+𝑥))),𝑥)
- * @domain -1 ≤ 𝑥 ≤ 1
- */
-long double acosl(long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return acos(x);
-#elif (LDBL_MANT_DIG == 64 || LDBL_MANT_DIG == 113) && LDBL_MAX_EXP == 16384
 #if LDBL_MANT_DIG == 64
 #define CLEARBOTTOM(u) (u.i.m &= -1ULL << 32)
 #elif LDBL_MANT_DIG == 113
 #define CLEARBOTTOM(u) (u.i.lo = 0)
 #endif
 
+/**
+ * Returns arc cosine of 𝑥.
+ *
+ * @define atan2(fabs(sqrt((1-𝑥)*(1+𝑥))),𝑥)
+ * @domain -1 ≤ 𝑥 ≤ 1
+ */
+long double acosl(long double x)
+{
 	union ldshape u = {x};
 	long double z, s, c, f;
 	uint16_t e = u.i.se & 0x7fff;
@@ -102,8 +101,6 @@ long double acosl(long double x) {
 	f = u.f;
 	c = (z - f*f)/(s + f);
 	return 2*(__invtrigl_R(z)*s + c + f);
-
-#else
-#error "architecture unsupported"
-#endif
 }
+
+#endif /* long double is long */

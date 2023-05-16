@@ -72,6 +72,7 @@
            "__builtin_extract_return_addr"
            "__builtin_isnan"
            "__builtin_signbit"
+           "__builtin_signbitf"
            "__builtin_signbitl"
            "__builtin_ffs"
            "__builtin_ffsl"

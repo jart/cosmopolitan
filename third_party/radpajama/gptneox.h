@@ -1,4 +1,4 @@
-// -*- c++ -*-
+// -*- c++; c-basic-offset:4 -*-
 #ifndef GPTNEOX_H
 #define GPTNEOX_H
 // clang-format off

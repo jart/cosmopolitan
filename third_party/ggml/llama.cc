@@ -31,6 +31,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/posix.h"
 #include "third_party/ggml/fp16.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/ggml/llama_util.h"
@@ -443,8 +444,9 @@ struct llama_file_loader {
     llama_hparams hparams;
     llama_vocab vocab;
 
-    llama_file_loader(const char * fname, size_t file_idx, llama_load_tensors_map & tensors_map)
-        : file(fname, "rb") {
+    llama_file_loader(const char * fname, size_t file_idx,
+                      llama_load_tensors_map & tensors_map)
+            : file(fname, "rb") {
         // fprintf(stderr, "llama.cpp: loading model from %s\n", fname);
         read_magic();
         read_hparams();
@@ -568,8 +570,9 @@ struct llama_file_saver {
         write_vocab();
     }
     void write_magic() {
+        ggjt_v2();
         file.write_u32(READ32BE("ggjt")); // magic
-        file.write_u32(1); // version
+        file.write_u32(2); // version
     }
     void write_hparams(enum llama_ftype new_ftype) {
         const llama_hparams & hparams = any_file_loader->hparams;
@@ -2003,16 +2006,12 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
                tensor.name.c_str(), llama_format_tensor_shape(tensor.ne).c_str(),
                ggml_type_name(tensor.type));
 
-        // This used to be a regex, but <regex> has an extreme cost to compile times.
-        bool quantize = tensor.name.rfind("weight") == tensor.name.size() - 6; // ends with 'weight'?
-
-        // quantize only 2D tensors
-        quantize &= (tensor.ne.size() == 2);
-
-        // uncomment this to keep the output layer in FP16
-        //if (tensor.name == "output.weight") {
-        //    quantize = false;
-        //}
+        // only quantize 2d weights that aren't the output layer
+        bool quantize =
+                tensor.ne.size() == 2 &&
+                tensor.type != quantized_type &&
+                _endswith(tensor.name.c_str(), "weight") &&
+                tensor.name != "output.weight";
 
         enum ggml_type new_type;
         void * new_data;
@@ -2024,6 +2023,14 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             new_data = tensor.data;
             new_size = tensor.size;
             printf("size = %8.3f MB\n", tensor.size/1024.0/1024.0);
+        } else if (quantized_type == GGML_TYPE_F16) {
+            GGML_ASSERT(tensor.type == GGML_TYPE_F32);
+            size_t nelements = tensor.ne.at(0) * tensor.ne.at(1);
+            new_type = quantized_type;
+            new_size = nelements * 2;
+            work.resize(new_size);
+            new_data = work.addr;
+            ggml_fp32_to_fp16_row((const float *)tensor.data, (ggml_fp16_t *)new_data, nelements);
         } else {
             new_type = quantized_type;
             float * f32_data;

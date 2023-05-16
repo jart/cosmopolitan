@@ -24,7 +24,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/tinymath/tinymath.h"
 #include "libc/x/x.h"
 
 float remainderf2(float, float);

@@ -28,6 +28,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/fmt.h"
@@ -37,9 +38,11 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/ioprio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/ggml/common.h"
@@ -66,7 +69,6 @@ static int n_past;
 static int n_remain;
 static int n_consumed;
 static bool input_noecho;
-static bool is_antiprompt;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -103,7 +105,7 @@ static int CompareTime(struct timespec a, struct timespec b) {
 ////////////////////////////////////////////////////////////////////////////////
 // ux explanatory logging for llama.com developers
 
-#if 1
+#if 0
 #define DEVLOG(...) (void)0
 #else
 #define DEVLOG(...) if (g_devlog) fprintf(g_devlog, __VA_ARGS__)
@@ -187,16 +189,16 @@ static bool has_antiprompt(std::string::size_type *out_index = nullptr,
 static void finish_initializing_prompt() {
     prompt_status = kPromptFinished;
     if (params.interactive) {
-        std::string::size_type pos;
+        std::string::size_type ap_index;
         is_interacting = true;
-        if (has_antiprompt(&pos)) {
+        if (has_antiprompt(&ap_index)) {
             console_set_color(con_st, CONSOLE_COLOR_PROMPT);
-            printf("%s", last_output.substr(pos).c_str());
-            last_output.clear();
+            printf("%s", last_output.substr(ap_index).c_str());
             fflush(stdout);
         }
         console_set_color(con_st, CONSOLE_COLOR_USER_INPUT);
     }
+    last_output.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,8 +210,16 @@ static int on_missing_feature(const char *name) {
     return 1;
 }
 
+void MakeProcessNice(void) {
+    setpriority(PRIO_PROCESS, 0, 10);
+    ioprio_set(IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
+    struct sched_param param = {sched_get_priority_min(SCHED_IDLE)};
+    sched_setscheduler(0, SCHED_IDLE, &param);
+}
+
 int main(int argc, char ** argv) {
 
+    MakeProcessNice();
     ShowCrashReports();
     setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -439,8 +449,7 @@ int main(int argc, char ** argv) {
 
     remember_init();
 
-    is_antiprompt = false;
-    input_noecho  = params.verbose <= 0;
+    input_noecho = params.verbose <= 0;
 
     n_past     = 0;
     n_remain   = params.n_predict;
@@ -561,6 +570,9 @@ int main(int argc, char ** argv) {
         fprintf(stderr, EPHEMERAL("loading weights..."));
     }
 
+    // tracks if last character written to stdout was newline
+    bool got_newline = false;
+
     while ((n_remain != 0 || params.interactive) && !is_terminated) {
 
         // perform evaluation
@@ -678,7 +690,8 @@ int main(int argc, char ** argv) {
             finish_initializing_prompt();
         }
 
-        if ((int) embd_inp.size() <= n_consumed && !is_interacting) {
+        if (prompt_status == kPromptFinished &&
+            (int) embd_inp.size() <= n_consumed && !is_interacting) {
             // out of user input, sample next token
             DEVLOG("out of user input, sample next token w/ embd_inp.size()=%d n_consumed=%d\n",
                    (int)embd_inp.size(), n_consumed);
@@ -808,21 +821,25 @@ int main(int argc, char ** argv) {
         //       --prompt 'Question: How old are you?\nAnswer: '
         //       --reverse-prompt $'\n'
         //
+        bool is_antiprompt;
         std::string ap_text;
-        std::string::size_type ap_index;
         std::string::size_type ap_extra;
-        is_antiprompt = has_antiprompt(&ap_index, &ap_text);
+        std::string::size_type ap_index;
+        if (prompt_status == kPromptFinished) {
+            is_antiprompt = has_antiprompt(&ap_index, &ap_text);
+        } else {
+            is_antiprompt = false;
+        }
 
         // display text
-        bool got_newline = false;
-        if (!input_noecho) {
+        if (!input_noecho && embd.size()) {
             std::string printme;
             for (auto id : embd) {
                 printme.append(llama_token_to_str(ctx, id));
             }
             if (is_antiprompt) {
-                ap_extra = last_output.size() - (ap_index + ap_text.size());
-                printme.erase(printme.size() - MIN(printme.size(), ap_extra));
+                ap_extra = last_output.size() - ap_index;
+                printme.erase(std::max(0, (int)(printme.size() - ap_extra)));
             }
             if (printme.size()) {
                 got_newline = printme[printme.size() - 1] == '\n';
@@ -832,6 +849,7 @@ int main(int argc, char ** argv) {
         }
         if (is_antiprompt) {
             if (!params.interactive) {
+                DEVLOG("exiting due to antiprompt\n");
                 if (!got_newline) {
                     printf("\n");
                 }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/tinymath/freebsd.internal.h"
 
 /**
  * Returns minimum of two floats.
@@ -26,10 +27,10 @@
  * signed zeroes.
  */
 float fminf(float x, float y) {
-  if (__builtin_isnan(x)) return y;
-  if (__builtin_isnan(y)) return x;
-  if (__builtin_signbitf(x) != __builtin_signbitf(y)) {
-    return __builtin_signbitf(x) ? x : y; /* C99 Annex F.9.9.2 */
+  if (isnan(x)) return y;
+  if (isnan(y)) return x;
+  if (signbit(x) != signbit(y)) {
+    return signbit(x) ? x : y; /* C99 Annex F.9.9.2 */
   }
   return x < y ? x : y;
 }

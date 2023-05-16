@@ -128,6 +128,7 @@ THIRD_PARTY_GGML_LLAMA_DIRECTDEPS =					\
 	LIBC_STR							\
 	LIBC_STUBS							\
 	LIBC_SYSV							\
+	LIBC_SYSV_CALLS							\
 	LIBC_THREAD							\
 	LIBC_TINYMATH							\
 	LIBC_ZIPOS							\
@@ -180,6 +181,7 @@ o/$(MODE)/third_party/ggml/companionai.txt.zip.o: private		\
 
 THIRD_PARTY_GGML_COMS =							\
 	$(THIRD_PARTY_GGML_LLAMA)					\
+	o/$(MODE)/third_party/ggml/quantize.com				\
 	o/$(MODE)/third_party/ggml/perplexity.com
 
 THIRD_PARTY_GGML_BINS = $(THIRD_PARTY_GGML_COMS) $(THIRD_PARTY_GGML_COMS:%=%.dbg)

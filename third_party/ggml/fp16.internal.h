@@ -8,6 +8,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define GGML_GELU_FP16
+#define GGML_SILU_FP16
+
 extern ggml_fp16_t table_gelu_f16[1 << 16];
 extern ggml_fp16_t table_silu_f16[1 << 16];
 extern ggml_fp16_t table_exp_f16[1 << 16];

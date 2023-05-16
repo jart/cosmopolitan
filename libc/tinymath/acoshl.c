@@ -38,6 +38,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -61,8 +62,6 @@ asm(".include \"libc/disclaimer.inc\"");
 /* We also require the usual expsign encoding. */
 #error "Unsupported long double format"
 #endif
-
-#define	BIAS	(LDBL_MAX_EXP - 1)
 
 static const double
 one	= 1.0;
@@ -108,3 +107,5 @@ acoshl(long double x)
 	    RETURNI(log1pl(t+sqrtl(2.0*t+t*t)));
 	}
 }
+
+#endif /* long double is long */

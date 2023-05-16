@@ -1,4 +1,4 @@
-// -*- c++ -*-
+// -*- c++; c-basic-offset:4 -*-
 #ifndef LLAMA_H
 #define LLAMA_H
 #include "libc/intrin/bits.h"

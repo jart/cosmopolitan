@@ -141,3 +141,7 @@ double acos(double x)
 	w = R(z)*s+c;
 	return 2*(df+w);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(acos, acosl);
+#endif

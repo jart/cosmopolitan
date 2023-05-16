@@ -1,4 +1,4 @@
-// -*- c++ -*-
+// -*- c++; c-basic-offset:4 -*-
 #ifndef GPTNEOX_UTIL_H
 #define GPTNEOX_UTIL_H
 #include "libc/calls/calls.h"

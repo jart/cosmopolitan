@@ -1784,9 +1784,7 @@ static void ggml_vec_dot_q4_0_q8_0(const int n, float * restrict s, const void *
     // Initialize accumulator with zeros
     __m256 acc = _mm256_setzero_ps();
 
-    //
     // Main loop
-    //
 #define WORK(I) \
     /* Compute combined scale for the block */ \
     const __m256 d = _mm256_mul_ps( _mm256_broadcast_ss( &x[I].d ), _mm256_broadcast_ss( &y[I].d ) ); \
@@ -2702,9 +2700,15 @@ inline static void ggml_vec_silu_f32(const int n, float * y, const float * x) {
 
 inline static void ggml_vec_sum_f32(const int n, float * s, const float * x) {
 #ifndef GGML_USE_ACCELERATE
-    ggml_float sum = 0.0;
-    for (int i = 0; i < n; ++i) {
-        sum += (ggml_float)x[i];
+    int i = 0;
+    ggml_float sum = 0;
+#if __AVX__ || __AVX2__ || __AVX512F__
+    for (; i + 8 <= n; i += 8) {
+        sum += hsum_float_8(_mm256_loadu_ps(x + i));
+    }
+#endif
+    for (; i < n; ++i) {
+        sum += x[i];
     }
     *s = sum;
 #else
@@ -2802,6 +2806,7 @@ const char *const ggjt_v2_type_name[GGML_TYPE_COUNT] = {
     [GGML_TYPE_F16]  = "f16",
     [GGML_TYPE_Q4_0] = "q4_0",
     [GGML_TYPE_Q4_1] = "q4_1",
+    [GGML_TYPE_Q4_2] = "q4_2",
     [GGML_TYPE_Q5_0] = "q5_0",
     [GGML_TYPE_Q5_1] = "q5_1",
     [GGML_TYPE_Q8_0] = "q8_0",
@@ -8113,7 +8118,7 @@ static void ggml_compute_forward_alibi_f32(
     assert(ne1 + n_past == ne0); (void) n_past;
 
     // add alibi to src0 (KQ_scaled)
-    const int n_heads_log2_floor = 1 << _bsr(n_head);
+    const int n_heads_log2_floor = 1 << _bsr(n_head); // [jart]
 
     const float m0 = exp2f(-8.0f / n_heads_log2_floor);
     const float m1 = exp2f(-4.0f / n_heads_log2_floor);

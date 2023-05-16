@@ -78,7 +78,15 @@ ggml_fp16_t ggml_fp32_to_fp16(float x) {
 }
 
 void ggml_fp16_to_fp32_row(const ggml_fp16_t * x, float * y, size_t n) {
-    for (size_t i = 0; i < n; i++) {
+    size_t i = 0;
+#ifdef __F16C__
+    for (; i + 7 < n; i += 8) {
+        __m128i x_vec = _mm_loadu_si128((const __m128i *)(x + i));
+        __m256 y_vec = _mm256_cvtph_ps(x_vec);
+        _mm256_storeu_ps(y + i, y_vec);
+    }
+#endif
+    for (; i < n; i++) {
         y[i] = GGML_FP16_TO_FP32(x[i]);
     }
 }

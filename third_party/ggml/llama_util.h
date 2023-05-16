@@ -1,12 +1,11 @@
-// Internal header to be included only by llama.cpp.
-// Contains wrappers around OS interfaces.
-
+// -*- c++; c-basic-offset:4 -*-
 #ifndef LLAMA_UTIL_H
 #define LLAMA_UTIL_H
 #include "libc/calls/struct/rlimit.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -21,6 +20,9 @@
 #include "third_party/libcxx/string"
 #include "third_party/libcxx/vector"
 // clang-format off
+
+// Internal header to be included only by llama.cpp.
+// Contains wrappers around OS interfaces.
 
 #define LLAMA_ASSERT(x) \
     do { \
@@ -45,6 +47,13 @@ static void Die(const char *fmt, ...) {
     va_end(va);
     fputc('\n', stderr);
     exit(1);
+}
+
+static inline bool is_integer_str(const char *s) {
+    if (*s == '-') ++s;
+    if (!*s) return false;
+    while (isdigit(*s)) ++s;
+    return !*s;
 }
 
 struct llama_file {

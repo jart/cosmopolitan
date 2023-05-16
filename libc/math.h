@@ -88,7 +88,6 @@ typedef double double_t;
 #define isnan(x)             __builtin_isnan(x)
 #define isfinite(x)          __builtin_isfinite(x)
 #define isnormal(x)          __builtin_isnormal(x)
-#define signbit(x)           __builtin_signbit(x)
 #define isgreater(x, y)      __builtin_isgreater(x, y)
 #define isgreaterequal(x, y) __builtin_isgreaterequal(x, y)
 #define isless(x, y)         __builtin_isless(x, y)
@@ -98,6 +97,11 @@ typedef double double_t;
 
 #define fpclassify(x) \
   __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL, FP_ZERO, x)
+
+#define signbit(x)                                      \
+  (sizeof(x) == sizeof(double)  ? __builtin_signbit(x)  \
+   : sizeof(x) == sizeof(float) ? __builtin_signbitf(x) \
+                                : __builtin_signbitl(x))
 
 extern int signgam;
 
@@ -305,7 +309,7 @@ void sincos(double, double *, double *);
 void sincosf(float, float *, float *);
 void sincosl(long double, long double *, long double *);
 
-float fsumf(const float *, size_t);
+double fsumf(const float *, size_t);
 double fsum(const double *, size_t);
 
 double j0(double);

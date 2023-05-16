@@ -34,6 +34,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
+#include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/algorithm"
 #include "third_party/libcxx/cassert"
 #include "third_party/libcxx/cstring"
@@ -49,13 +50,6 @@ llama.cpp (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
-
-static bool is_integer_str(const char *s) {
-    if (*s == '-') ++s;
-    if (!*s) return false;
-    while (isdigit(*s)) ++s;
-    return !*s;
-}
 
 static std::string replace_all(std::string const& original,
                                std::string const& before,
@@ -92,7 +86,7 @@ static bool append_file_to_prompt(const char *path, gpt_params & params) {
 }
 
 bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
-    params.n_threads = std::min(20, std::max(1, (int)(_getcpucount() * 0.75)));
+    params.n_threads = std::min(20, std::max(1, _getcpucount() >> 1));
 
     bool invalid_param = false;
     std::string arg;
