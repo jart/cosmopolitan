@@ -24,8 +24,14 @@
  */
 double fsum(const double *p, size_t n) {
   size_t i;
-  double s;
-  if (n > 8) return fsum(p, n / 2) + fsum(p + n / 2, n - n / 2);
-  for (s = i = 0; i < n; ++i) s += p[i];
-  return s;
+  double err, sum, t, y;
+
+  sum = err = 0;
+  for (i = 0; i < n; ++i) {
+    y = p[i] - err;
+    t = sum + y;
+    err = (t - sum) - y;
+    sum = t;
+  }
+  return sum;
 }

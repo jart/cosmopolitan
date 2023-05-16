@@ -31,21 +31,21 @@ double D[N];
 void SetUp(void) {
   int i;
   for (i = 0; i < N / 2; ++i) {
-    D[i * 2 + 0] = 1000000000.1;
+    D[i * 2 + 0] = 10000000000.1;
     D[i * 2 + 1] = 1.1;
   }
   for (i = 0; i < N / 2; ++i) {
-    F[i * 2 + 0] = 1000.1;
+    F[i * 2 + 0] = 10000.1;
     F[i * 2 + 1] = 1.1;
   }
 }
 
 TEST(fsum, test) {
-  EXPECT_STREQ("500000000.6", _gc(xasprintf("%.15g", fsum(D, N) / N)));
+  EXPECT_STREQ("5000000000.6", _gc(xasprintf("%.16g", fsum(D, N) / N)));
 }
 
 TEST(fsumf, test) {
-  EXPECT_STREQ("500.6", _gc(xasprintf("%.7g", fsumf(F, N) / N)));
+  EXPECT_STREQ("5000.5996", _gc(xasprintf("%.8g", fsumf(F, N) / N)));
 }
 
 BENCH(fsum, bench) {
