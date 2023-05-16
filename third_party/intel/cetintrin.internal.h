@@ -12,22 +12,16 @@
 #endif /* __SHSTK__ */
 
 #ifdef __x86_64__
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _get_ssp(void) {
+__funline unsigned long long _get_ssp(void) {
   return __builtin_ia32_rdsspq();
 }
 #else
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _get_ssp(void) {
+__funline unsigned int _get_ssp(void) {
   return __builtin_ia32_rdsspd();
 }
 #endif
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _inc_ssp(unsigned int __B) {
+__funline void _inc_ssp(unsigned int __B) {
 #ifdef __x86_64__
   __builtin_ia32_incsspq((unsigned long long)__B);
 #else
@@ -35,55 +29,39 @@ extern __inline void
 #endif
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _saveprevssp(void) {
+__funline void _saveprevssp(void) {
   __builtin_ia32_saveprevssp();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _rstorssp(void *__B) {
+__funline void _rstorssp(void *__B) {
   __builtin_ia32_rstorssp(__B);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wrssd(unsigned int __B, void *__C) {
+__funline void _wrssd(unsigned int __B, void *__C) {
   __builtin_ia32_wrssd(__B, __C);
 }
 
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wrssq(unsigned long long __B, void *__C) {
+__funline void _wrssq(unsigned long long __B, void *__C) {
   __builtin_ia32_wrssq(__B, __C);
 }
 #endif
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wrussd(unsigned int __B, void *__C) {
+__funline void _wrussd(unsigned int __B, void *__C) {
   __builtin_ia32_wrussd(__B, __C);
 }
 
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wrussq(unsigned long long __B, void *__C) {
+__funline void _wrussq(unsigned long long __B, void *__C) {
   __builtin_ia32_wrussq(__B, __C);
 }
 #endif
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _setssbsy(void) {
+__funline void _setssbsy(void) {
   __builtin_ia32_setssbsy();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _clrssbsy(void *__B) {
+__funline void _clrssbsy(void *__B) {
   __builtin_ia32_clrssbsy(__B);
 }
 

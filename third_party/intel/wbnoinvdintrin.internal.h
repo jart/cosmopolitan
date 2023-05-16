@@ -11,9 +11,7 @@
 #define __DISABLE_WBNOINVD__
 #endif /* __WBNOINVD__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wbnoinvd(void) {
+__funline void _wbnoinvd(void) {
   __builtin_ia32_wbnoinvd();
 }
 

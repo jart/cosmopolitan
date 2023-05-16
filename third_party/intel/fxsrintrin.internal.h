@@ -11,28 +11,20 @@
 #define __DISABLE_FXSR__
 #endif /* __FXSR__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _fxsave(void *__P) {
+__funline void _fxsave(void *__P) {
   __builtin_ia32_fxsave(__P);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _fxrstor(void *__P) {
+__funline void _fxrstor(void *__P) {
   __builtin_ia32_fxrstor(__P);
 }
 
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _fxsave64(void *__P) {
+__funline void _fxsave64(void *__P) {
   __builtin_ia32_fxsave64(__P);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _fxrstor64(void *__P) {
+__funline void _fxrstor64(void *__P) {
   __builtin_ia32_fxrstor64(__P);
 }
 #endif

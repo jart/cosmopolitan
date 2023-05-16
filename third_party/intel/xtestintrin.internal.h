@@ -11,9 +11,7 @@
 #define __DISABLE_RTM__
 #endif /* __RTM__ */
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xtest(void) {
+__funline int _xtest(void) {
   return __builtin_ia32_xtest();
 }
 

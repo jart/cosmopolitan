@@ -26,6 +26,7 @@
 
         (cosmo
          '("__msabi"
+           "__funline"
            "function"
            "offsetof"
            "microarchitecture"

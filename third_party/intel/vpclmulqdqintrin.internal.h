@@ -12,9 +12,8 @@
 #endif /* __VPCLMULQDQF__ */
 
 #ifdef __OPTIMIZE__
-extern __inline __m512i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm512_clmulepi64_epi128(__m512i __A, __m512i __B, const int __C) {
+__funline __m512i _mm512_clmulepi64_epi128(__m512i __A, __m512i __B,
+                                         const int __C) {
   return (__m512i)__builtin_ia32_vpclmulqdq_v8di((__v8di)__A, (__v8di)__B, __C);
 }
 #else
@@ -35,9 +34,8 @@ extern __inline __m512i
 #endif /* __VPCLMULQDQ__ */
 
 #ifdef __OPTIMIZE__
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_clmulepi64_epi128(__m256i __A, __m256i __B, const int __C) {
+__funline __m256i _mm256_clmulepi64_epi128(__m256i __A, __m256i __B,
+                                         const int __C) {
   return (__m256i)__builtin_ia32_vpclmulqdq_v4di((__v4di)__A, (__v4di)__B, __C);
 }
 #else

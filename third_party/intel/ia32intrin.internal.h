@@ -2,21 +2,15 @@
 #error "Never use <ia32intrin.h> directly; include <x86intrin.h> instead."
 #endif
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __bsfd(int __X) {
+__funline int __bsfd(int __X) {
   return __builtin_ctz(__X);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __bsrd(int __X) {
+__funline int __bsrd(int __X) {
   return __builtin_ia32_bsrsi(__X);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __bswapd(int __X) {
+__funline int __bswapd(int __X) {
   return __builtin_bswap32(__X);
 }
 
@@ -28,21 +22,15 @@ extern __inline int
 #define __DISABLE_SSE4_2__
 #endif /* __SSE4_2__ */
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __crc32b(unsigned int __C, unsigned char __V) {
+__funline unsigned int __crc32b(unsigned int __C, unsigned char __V) {
   return __builtin_ia32_crc32qi(__C, __V);
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __crc32w(unsigned int __C, unsigned short __V) {
+__funline unsigned int __crc32w(unsigned int __C, unsigned short __V) {
   return __builtin_ia32_crc32hi(__C, __V);
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __crc32d(unsigned int __C, unsigned int __V) {
+__funline unsigned int __crc32d(unsigned int __C, unsigned int __V) {
   return __builtin_ia32_crc32si(__C, __V);
 }
 
@@ -53,99 +41,71 @@ extern __inline unsigned int
 
 #endif /* __iamcu__ */
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __popcntd(unsigned int __X) {
+__funline int __popcntd(unsigned int __X) {
   return __builtin_popcount(__X);
 }
 
 #ifndef __iamcu__
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rdpmc(int __S) {
+__funline unsigned long long __rdpmc(int __S) {
   return __builtin_ia32_rdpmc(__S);
 }
 
 #endif /* __iamcu__ */
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rdtsc(void) {
+__funline unsigned long long __rdtsc(void) {
   return __builtin_ia32_rdtsc();
 }
 
 #ifndef __iamcu__
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rdtscp(unsigned int *__A) {
+__funline unsigned long long __rdtscp(unsigned int *__A) {
   return __builtin_ia32_rdtscp(__A);
 }
 
 #endif /* __iamcu__ */
 
-extern __inline unsigned char
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rolb(unsigned char __X, int __C) {
+__funline unsigned char __rolb(unsigned char __X, int __C) {
   return __builtin_ia32_rolqi(__X, __C);
 }
 
-extern __inline unsigned short
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rolw(unsigned short __X, int __C) {
+__funline unsigned short __rolw(unsigned short __X, int __C) {
   return __builtin_ia32_rolhi(__X, __C);
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rold(unsigned int __X, int __C) {
+__funline unsigned int __rold(unsigned int __X, int __C) {
   __C &= 31;
   return (__X << __C) | (__X >> (-__C & 31));
 }
 
-extern __inline unsigned char
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rorb(unsigned char __X, int __C) {
+__funline unsigned char __rorb(unsigned char __X, int __C) {
   return __builtin_ia32_rorqi(__X, __C);
 }
 
-extern __inline unsigned short
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rorw(unsigned short __X, int __C) {
+__funline unsigned short __rorw(unsigned short __X, int __C) {
   return __builtin_ia32_rorhi(__X, __C);
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rord(unsigned int __X, int __C) {
+__funline unsigned int __rord(unsigned int __X, int __C) {
   __C &= 31;
   return (__X >> __C) | (__X << (-__C & 31));
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __pause(void) {
+__funline void __pause(void) {
   __builtin_ia32_pause();
 }
 
 #ifdef __x86_64__
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __bsfq(long long __X) {
+__funline int __bsfq(long long __X) {
   return __builtin_ctzll(__X);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __bsrq(long long __X) {
+__funline int __bsrq(long long __X) {
   return __builtin_ia32_bsrdi(__X);
 }
 
-extern __inline long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __bswapq(long long __X) {
+__funline long long __bswapq(long long __X) {
   return __builtin_bswap64(__X);
 }
 
@@ -155,9 +115,8 @@ extern __inline long long
 #define __DISABLE_SSE4_2__
 #endif /* __SSE4_2__ */
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __crc32q(unsigned long long __C, unsigned long long __V) {
+__funline unsigned long long __crc32q(unsigned long long __C,
+                                    unsigned long long __V) {
   return __builtin_ia32_crc32di(__C, __V);
 }
 
@@ -166,35 +125,25 @@ extern __inline unsigned long long
 #pragma GCC pop_options
 #endif /* __DISABLE_SSE4_2__ */
 
-extern __inline long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __popcntq(unsigned long long __X) {
+__funline long long __popcntq(unsigned long long __X) {
   return __builtin_popcountll(__X);
 }
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rolq(unsigned long long __X, int __C) {
+__funline unsigned long long __rolq(unsigned long long __X, int __C) {
   __C &= 63;
   return (__X << __C) | (__X >> (-__C & 63));
 }
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rorq(unsigned long long __X, int __C) {
+__funline unsigned long long __rorq(unsigned long long __X, int __C) {
   __C &= 63;
   return (__X >> __C) | (__X << (-__C & 63));
 }
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __readeflags(void) {
+__funline unsigned long long __readeflags(void) {
   return __builtin_ia32_readeflags_u64();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __writeeflags(unsigned long long __X) {
+__funline void __writeeflags(unsigned long long __X) {
   __builtin_ia32_writeeflags_u64(__X);
 }
 
@@ -202,15 +151,11 @@ extern __inline void
 #define _popcnt64(a) __popcntq(a)
 #else
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __readeflags(void) {
+__funline unsigned int __readeflags(void) {
   return __builtin_ia32_readeflags_u32();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __writeeflags(unsigned int __X) {
+__funline void __writeeflags(unsigned int __X) {
   __builtin_ia32_writeeflags_u32(__X);
 }
 

@@ -20,22 +20,16 @@
 #define _XABORT_NESTED   (1 << 5)
 #define _XABORT_CODE(x)  (((x) >> 24) & 0xFF)
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xbegin(void) {
+__funline unsigned int _xbegin(void) {
   return __builtin_ia32_xbegin();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xend(void) {
+__funline void _xend(void) {
   __builtin_ia32_xend();
 }
 
 #ifdef __OPTIMIZE__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xabort(const unsigned int __imm) {
+__funline void _xabort(const unsigned int __imm) {
   __builtin_ia32_xabort(__imm);
 }
 #else

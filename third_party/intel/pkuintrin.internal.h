@@ -11,15 +11,11 @@
 #define __DISABLE_PKU__
 #endif /* __PKU__ */
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _rdpkru_u32(void) {
+__funline unsigned int _rdpkru_u32(void) {
   return __builtin_ia32_rdpkru();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wrpkru(unsigned int __key) {
+__funline void _wrpkru(unsigned int __key) {
   __builtin_ia32_wrpkru(__key);
 }
 

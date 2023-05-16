@@ -11,28 +11,20 @@
 #define __DISABLE_XSAVES__
 #endif /* __XSAVES__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xsaves(void *__P, long long __M) {
+__funline void _xsaves(void *__P, long long __M) {
   __builtin_ia32_xsaves(__P, __M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xrstors(void *__P, long long __M) {
+__funline void _xrstors(void *__P, long long __M) {
   __builtin_ia32_xrstors(__P, __M);
 }
 
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xrstors64(void *__P, long long __M) {
+__funline void _xrstors64(void *__P, long long __M) {
   __builtin_ia32_xrstors64(__P, __M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xsaves64(void *__P, long long __M) {
+__funline void _xsaves64(void *__P, long long __M) {
   __builtin_ia32_xsaves64(__P, __M);
 }
 #endif

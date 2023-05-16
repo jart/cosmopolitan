@@ -9,40 +9,28 @@
 #define __DISABLE_AES__
 #endif /* __AES__ */
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_aesdec_si128(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_aesdec_si128(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_aesdec128((__v2di)__X, (__v2di)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_aesdeclast_si128(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_aesdeclast_si128(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_aesdeclast128((__v2di)__X, (__v2di)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_aesenc_si128(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_aesenc_si128(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_aesenc128((__v2di)__X, (__v2di)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_aesenclast_si128(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_aesenclast_si128(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_aesenclast128((__v2di)__X, (__v2di)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_aesimc_si128(__m128i __X) {
+__funline __m128i _mm_aesimc_si128(__m128i __X) {
   return (__m128i)__builtin_ia32_aesimc128((__v2di)__X);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_aeskeygenassist_si128(__m128i __X, const int __C) {
+__funline __m128i _mm_aeskeygenassist_si128(__m128i __X, const int __C) {
   return (__m128i)__builtin_ia32_aeskeygenassist128((__v2di)__X, __C);
 }
 #else
@@ -62,9 +50,7 @@ extern __inline __m128i
 #endif /* __PCLMUL__ */
 
 #ifdef __OPTIMIZE__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_clmulepi64_si128(__m128i __X, __m128i __Y, const int __I) {
+__funline __m128i _mm_clmulepi64_si128(__m128i __X, __m128i __Y, const int __I) {
   return (__m128i)__builtin_ia32_pclmulqdq128((__v2di)__X, (__v2di)__Y, __I);
 }
 #else

@@ -6,9 +6,7 @@
 #ifndef _PRFCHWINTRIN_H_INCLUDED
 #define _PRFCHWINTRIN_H_INCLUDED
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _m_prefetchw(void *__P) {
+__funline void _m_prefetchw(void *__P) {
   __builtin_prefetch(__P, 1, 3 /* _MM_HINT_T0 */);
 }
 

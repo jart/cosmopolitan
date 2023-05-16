@@ -854,5 +854,9 @@ typedef struct {
   asm(".weak\t" #alias "\n\t"        \
       ".equ\t" #alias ", " #sym)
 
+#define __funline \
+  extern __inline \
+      __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+
 #define MACHINE_CODE_ANALYSIS_BEGIN_
 #define MACHINE_CODE_ANALYSIS_END_

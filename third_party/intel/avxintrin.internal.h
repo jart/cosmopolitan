@@ -66,64 +66,44 @@ typedef double __m256d_u
 #define _CMP_GT_OQ    0x1e
 #define _CMP_TRUE_US  0x1f
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_add_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_add_pd(__m256d __A, __m256d __B) {
   return (__m256d)((__v4df)__A + (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_add_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_add_ps(__m256 __A, __m256 __B) {
   return (__m256)((__v8sf)__A + (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_addsub_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_addsub_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_addsubpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_addsub_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_addsub_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_addsubps256((__v8sf)__A, (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_and_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_and_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_andpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_and_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_and_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_andps256((__v8sf)__A, (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_andnot_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_andnot_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_andnpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_andnot_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_andnot_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_andnps256((__v8sf)__A, (__v8sf)__B);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_blend_pd(__m256d __X, __m256d __Y, const int __M) {
+__funline __m256d _mm256_blend_pd(__m256d __X, __m256d __Y, const int __M) {
   return (__m256d)__builtin_ia32_blendpd256((__v4df)__X, (__v4df)__Y, __M);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_blend_ps(__m256 __X, __m256 __Y, const int __M) {
+__funline __m256 _mm256_blend_ps(__m256 __X, __m256 __Y, const int __M) {
   return (__m256)__builtin_ia32_blendps256((__v8sf)__X, (__v8sf)__Y, __M);
 }
 #else
@@ -136,36 +116,26 @@ extern __inline __m256
                                      (int)(M)))
 #endif
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_blendv_pd(__m256d __X, __m256d __Y, __m256d __M) {
+__funline __m256d _mm256_blendv_pd(__m256d __X, __m256d __Y, __m256d __M) {
   return (__m256d)__builtin_ia32_blendvpd256((__v4df)__X, (__v4df)__Y,
                                              (__v4df)__M);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_blendv_ps(__m256 __X, __m256 __Y, __m256 __M) {
+__funline __m256 _mm256_blendv_ps(__m256 __X, __m256 __Y, __m256 __M) {
   return (__m256)__builtin_ia32_blendvps256((__v8sf)__X, (__v8sf)__Y,
                                             (__v8sf)__M);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_div_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_div_pd(__m256d __A, __m256d __B) {
   return (__m256d)((__v4df)__A / (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_div_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_div_ps(__m256 __A, __m256 __B) {
   return (__m256)((__v8sf)__A / (__v8sf)__B);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_dp_ps(__m256 __X, __m256 __Y, const int __M) {
+__funline __m256 _mm256_dp_ps(__m256 __X, __m256 __Y, const int __M) {
   return (__m256)__builtin_ia32_dpps256((__v8sf)__X, (__v8sf)__Y, __M);
 }
 #else
@@ -174,88 +144,60 @@ extern __inline __m256
                                   (int)(M)))
 #endif
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_hadd_pd(__m256d __X, __m256d __Y) {
+__funline __m256d _mm256_hadd_pd(__m256d __X, __m256d __Y) {
   return (__m256d)__builtin_ia32_haddpd256((__v4df)__X, (__v4df)__Y);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_hadd_ps(__m256 __X, __m256 __Y) {
+__funline __m256 _mm256_hadd_ps(__m256 __X, __m256 __Y) {
   return (__m256)__builtin_ia32_haddps256((__v8sf)__X, (__v8sf)__Y);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_hsub_pd(__m256d __X, __m256d __Y) {
+__funline __m256d _mm256_hsub_pd(__m256d __X, __m256d __Y) {
   return (__m256d)__builtin_ia32_hsubpd256((__v4df)__X, (__v4df)__Y);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_hsub_ps(__m256 __X, __m256 __Y) {
+__funline __m256 _mm256_hsub_ps(__m256 __X, __m256 __Y) {
   return (__m256)__builtin_ia32_hsubps256((__v8sf)__X, (__v8sf)__Y);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_max_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_max_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_maxpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_max_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_max_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_maxps256((__v8sf)__A, (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_min_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_min_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_minpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_min_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_min_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_minps256((__v8sf)__A, (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_mul_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_mul_pd(__m256d __A, __m256d __B) {
   return (__m256d)((__v4df)__A * (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_mul_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_mul_ps(__m256 __A, __m256 __B) {
   return (__m256)((__v8sf)__A * (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_or_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_or_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_orpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_or_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_or_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_orps256((__v8sf)__A, (__v8sf)__B);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_shuffle_pd(__m256d __A, __m256d __B, const int __mask) {
+__funline __m256d _mm256_shuffle_pd(__m256d __A, __m256d __B, const int __mask) {
   return (__m256d)__builtin_ia32_shufpd256((__v4df)__A, (__v4df)__B, __mask);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_shuffle_ps(__m256 __A, __m256 __B, const int __mask) {
+__funline __m256 _mm256_shuffle_ps(__m256 __A, __m256 __B, const int __mask) {
   return (__m256)__builtin_ia32_shufps256((__v8sf)__A, (__v8sf)__B, __mask);
 }
 #else
@@ -268,64 +210,44 @@ extern __inline __m256
                                     (int)(N)))
 #endif
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_sub_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_sub_pd(__m256d __A, __m256d __B) {
   return (__m256d)((__v4df)__A - (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_sub_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_sub_ps(__m256 __A, __m256 __B) {
   return (__m256)((__v8sf)__A - (__v8sf)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_xor_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_xor_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_xorpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_xor_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_xor_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_xorps256((__v8sf)__A, (__v8sf)__B);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmp_pd(__m128d __X, __m128d __Y, const int __P) {
+__funline __m128d _mm_cmp_pd(__m128d __X, __m128d __Y, const int __P) {
   return (__m128d)__builtin_ia32_cmppd((__v2df)__X, (__v2df)__Y, __P);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmp_ps(__m128 __X, __m128 __Y, const int __P) {
+__funline __m128 _mm_cmp_ps(__m128 __X, __m128 __Y, const int __P) {
   return (__m128)__builtin_ia32_cmpps((__v4sf)__X, (__v4sf)__Y, __P);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cmp_pd(__m256d __X, __m256d __Y, const int __P) {
+__funline __m256d _mm256_cmp_pd(__m256d __X, __m256d __Y, const int __P) {
   return (__m256d)__builtin_ia32_cmppd256((__v4df)__X, (__v4df)__Y, __P);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cmp_ps(__m256 __X, __m256 __Y, const int __P) {
+__funline __m256 _mm256_cmp_ps(__m256 __X, __m256 __Y, const int __P) {
   return (__m256)__builtin_ia32_cmpps256((__v8sf)__X, (__v8sf)__Y, __P);
 }
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmp_sd(__m128d __X, __m128d __Y, const int __P) {
+__funline __m128d _mm_cmp_sd(__m128d __X, __m128d __Y, const int __P) {
   return (__m128d)__builtin_ia32_cmpsd((__v2df)__X, (__v2df)__Y, __P);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmp_ss(__m128 __X, __m128 __Y, const int __P) {
+__funline __m128 _mm_cmp_ss(__m128 __X, __m128 __Y, const int __P) {
   return (__m128)__builtin_ia32_cmpss((__v4sf)__X, (__v4sf)__Y, __P);
 }
 #else
@@ -354,110 +276,76 @@ extern __inline __m128
                                 (int)(P)))
 #endif
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtepi32_pd(__m128i __A) {
+__funline __m256d _mm256_cvtepi32_pd(__m128i __A) {
   return (__m256d)__builtin_ia32_cvtdq2pd256((__v4si)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtepi32_ps(__m256i __A) {
+__funline __m256 _mm256_cvtepi32_ps(__m256i __A) {
   return (__m256)__builtin_ia32_cvtdq2ps256((__v8si)__A);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtpd_ps(__m256d __A) {
+__funline __m128 _mm256_cvtpd_ps(__m256d __A) {
   return (__m128)__builtin_ia32_cvtpd2ps256((__v4df)__A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtps_epi32(__m256 __A) {
+__funline __m256i _mm256_cvtps_epi32(__m256 __A) {
   return (__m256i)__builtin_ia32_cvtps2dq256((__v8sf)__A);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtps_pd(__m128 __A) {
+__funline __m256d _mm256_cvtps_pd(__m128 __A) {
   return (__m256d)__builtin_ia32_cvtps2pd256((__v4sf)__A);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvttpd_epi32(__m256d __A) {
+__funline __m128i _mm256_cvttpd_epi32(__m256d __A) {
   return (__m128i)__builtin_ia32_cvttpd2dq256((__v4df)__A);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtpd_epi32(__m256d __A) {
+__funline __m128i _mm256_cvtpd_epi32(__m256d __A) {
   return (__m128i)__builtin_ia32_cvtpd2dq256((__v4df)__A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvttps_epi32(__m256 __A) {
+__funline __m256i _mm256_cvttps_epi32(__m256 __A) {
   return (__m256i)__builtin_ia32_cvttps2dq256((__v8sf)__A);
 }
 
-extern __inline double
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtsd_f64(__m256d __A) {
+__funline double _mm256_cvtsd_f64(__m256d __A) {
   return __A[0];
 }
 
-extern __inline float
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtss_f32(__m256 __A) {
+__funline float _mm256_cvtss_f32(__m256 __A) {
   return __A[0];
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extractf128_pd(__m256d __X, const int __N) {
+__funline __m128d _mm256_extractf128_pd(__m256d __X, const int __N) {
   return (__m128d)__builtin_ia32_vextractf128_pd256((__v4df)__X, __N);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extractf128_ps(__m256 __X, const int __N) {
+__funline __m128 _mm256_extractf128_ps(__m256 __X, const int __N) {
   return (__m128)__builtin_ia32_vextractf128_ps256((__v8sf)__X, __N);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extractf128_si256(__m256i __X, const int __N) {
+__funline __m128i _mm256_extractf128_si256(__m256i __X, const int __N) {
   return (__m128i)__builtin_ia32_vextractf128_si256((__v8si)__X, __N);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extract_epi32(__m256i __X, int const __N) {
+__funline int _mm256_extract_epi32(__m256i __X, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 2);
   return _mm_extract_epi32(__Y, __N % 4);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extract_epi16(__m256i __X, int const __N) {
+__funline int _mm256_extract_epi16(__m256i __X, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 3);
   return _mm_extract_epi16(__Y, __N % 8);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extract_epi8(__m256i __X, int const __N) {
+__funline int _mm256_extract_epi8(__m256i __X, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 4);
   return _mm_extract_epi8(__Y, __N % 16);
 }
 
 #ifdef __x86_64__
-extern __inline long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_extract_epi64(__m256i __X, const int __N) {
+__funline long long _mm256_extract_epi64(__m256i __X, const int __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 1);
   return _mm_extract_epi64(__Y, __N % 2);
 }
@@ -499,64 +387,44 @@ extern __inline long long
 #endif
 #endif
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_zeroall(void) {
+__funline void _mm256_zeroall(void) {
   __builtin_ia32_vzeroall();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_zeroupper(void) {
+__funline void _mm256_zeroupper(void) {
   __builtin_ia32_vzeroupper();
 }
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_permutevar_pd(__m128d __A, __m128i __C) {
+__funline __m128d _mm_permutevar_pd(__m128d __A, __m128i __C) {
   return (__m128d)__builtin_ia32_vpermilvarpd((__v2df)__A, (__v2di)__C);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permutevar_pd(__m256d __A, __m256i __C) {
+__funline __m256d _mm256_permutevar_pd(__m256d __A, __m256i __C) {
   return (__m256d)__builtin_ia32_vpermilvarpd256((__v4df)__A, (__v4di)__C);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_permutevar_ps(__m128 __A, __m128i __C) {
+__funline __m128 _mm_permutevar_ps(__m128 __A, __m128i __C) {
   return (__m128)__builtin_ia32_vpermilvarps((__v4sf)__A, (__v4si)__C);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permutevar_ps(__m256 __A, __m256i __C) {
+__funline __m256 _mm256_permutevar_ps(__m256 __A, __m256i __C) {
   return (__m256)__builtin_ia32_vpermilvarps256((__v8sf)__A, (__v8si)__C);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_permute_pd(__m128d __X, const int __C) {
+__funline __m128d _mm_permute_pd(__m128d __X, const int __C) {
   return (__m128d)__builtin_ia32_vpermilpd((__v2df)__X, __C);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permute_pd(__m256d __X, const int __C) {
+__funline __m256d _mm256_permute_pd(__m256d __X, const int __C) {
   return (__m256d)__builtin_ia32_vpermilpd256((__v4df)__X, __C);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_permute_ps(__m128 __X, const int __C) {
+__funline __m128 _mm_permute_ps(__m128 __X, const int __C) {
   return (__m128)__builtin_ia32_vpermilps((__v4sf)__X, __C);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permute_ps(__m256 __X, const int __C) {
+__funline __m256 _mm256_permute_ps(__m256 __X, const int __C) {
   return (__m256)__builtin_ia32_vpermilps256((__v8sf)__X, __C);
 }
 #else
@@ -574,22 +442,18 @@ extern __inline __m256
 #endif
 
 #ifdef __OPTIMIZE__
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permute2f128_pd(__m256d __X, __m256d __Y, const int __C) {
+__funline __m256d _mm256_permute2f128_pd(__m256d __X, __m256d __Y,
+                                       const int __C) {
   return (__m256d)__builtin_ia32_vperm2f128_pd256((__v4df)__X, (__v4df)__Y,
                                                   __C);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permute2f128_ps(__m256 __X, __m256 __Y, const int __C) {
+__funline __m256 _mm256_permute2f128_ps(__m256 __X, __m256 __Y, const int __C) {
   return (__m256)__builtin_ia32_vperm2f128_ps256((__v8sf)__X, (__v8sf)__Y, __C);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_permute2f128_si256(__m256i __X, __m256i __Y, const int __C) {
+__funline __m256i _mm256_permute2f128_si256(__m256i __X, __m256i __Y,
+                                          const int __C) {
   return (__m256i)__builtin_ia32_vperm2f128_si256((__v8si)__X, (__v8si)__Y,
                                                   __C);
 }
@@ -607,86 +471,63 @@ extern __inline __m256i
                                             (__v8si)(__m256i)(Y), (int)(C)))
 #endif
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_broadcast_ss(float const *__X) {
+__funline __m128 _mm_broadcast_ss(float const *__X) {
   return (__m128)__builtin_ia32_vbroadcastss(__X);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_broadcast_sd(double const *__X) {
+__funline __m256d _mm256_broadcast_sd(double const *__X) {
   return (__m256d)__builtin_ia32_vbroadcastsd256(__X);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_broadcast_ss(float const *__X) {
+__funline __m256 _mm256_broadcast_ss(float const *__X) {
   return (__m256)__builtin_ia32_vbroadcastss256(__X);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_broadcast_pd(__m128d const *__X) {
+__funline __m256d _mm256_broadcast_pd(__m128d const *__X) {
   return (__m256d)__builtin_ia32_vbroadcastf128_pd256(__X);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_broadcast_ps(__m128 const *__X) {
+__funline __m256 _mm256_broadcast_ps(__m128 const *__X) {
   return (__m256)__builtin_ia32_vbroadcastf128_ps256(__X);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insertf128_pd(__m256d __X, __m128d __Y, const int __O) {
+__funline __m256d _mm256_insertf128_pd(__m256d __X, __m128d __Y, const int __O) {
   return (__m256d)__builtin_ia32_vinsertf128_pd256((__v4df)__X, (__v2df)__Y,
                                                    __O);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insertf128_ps(__m256 __X, __m128 __Y, const int __O) {
+__funline __m256 _mm256_insertf128_ps(__m256 __X, __m128 __Y, const int __O) {
   return (__m256)__builtin_ia32_vinsertf128_ps256((__v8sf)__X, (__v4sf)__Y,
                                                   __O);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insertf128_si256(__m256i __X, __m128i __Y, const int __O) {
+__funline __m256i _mm256_insertf128_si256(__m256i __X, __m128i __Y,
+                                        const int __O) {
   return (__m256i)__builtin_ia32_vinsertf128_si256((__v8si)__X, (__v4si)__Y,
                                                    __O);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insert_epi32(__m256i __X, int __D, int const __N) {
+__funline __m256i _mm256_insert_epi32(__m256i __X, int __D, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 2);
   __Y = _mm_insert_epi32(__Y, __D, __N % 4);
   return _mm256_insertf128_si256(__X, __Y, __N >> 2);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insert_epi16(__m256i __X, int __D, int const __N) {
+__funline __m256i _mm256_insert_epi16(__m256i __X, int __D, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 3);
   __Y = _mm_insert_epi16(__Y, __D, __N % 8);
   return _mm256_insertf128_si256(__X, __Y, __N >> 3);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insert_epi8(__m256i __X, int __D, int const __N) {
+__funline __m256i _mm256_insert_epi8(__m256i __X, int __D, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 4);
   __Y = _mm_insert_epi8(__Y, __D, __N % 16);
   return _mm256_insertf128_si256(__X, __Y, __N >> 4);
 }
 
 #ifdef __x86_64__
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_insert_epi64(__m256i __X, long long __D, int const __N) {
+__funline __m256i _mm256_insert_epi64(__m256i __X, long long __D, int const __N) {
   __m128i __Y = _mm256_extractf128_si256(__X, __N >> 1);
   __Y = _mm_insert_epi64(__Y, __D, __N % 2);
   return _mm256_insertf128_si256(__X, __Y, __N >> 1);
@@ -736,203 +577,137 @@ extern __inline __m256i
 #endif
 #endif
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_load_pd(double const *__P) {
+__funline __m256d _mm256_load_pd(double const *__P) {
   return *(__m256d *)__P;
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_store_pd(double *__P, __m256d __A) {
+__funline void _mm256_store_pd(double *__P, __m256d __A) {
   *(__m256d *)__P = __A;
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_load_ps(float const *__P) {
+__funline __m256 _mm256_load_ps(float const *__P) {
   return *(__m256 *)__P;
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_store_ps(float *__P, __m256 __A) {
+__funline void _mm256_store_ps(float *__P, __m256 __A) {
   *(__m256 *)__P = __A;
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_loadu_pd(double const *__P) {
+__funline __m256d _mm256_loadu_pd(double const *__P) {
   return *(__m256d_u *)__P;
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_storeu_pd(double *__P, __m256d __A) {
+__funline void _mm256_storeu_pd(double *__P, __m256d __A) {
   *(__m256d_u *)__P = __A;
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_loadu_ps(float const *__P) {
+__funline __m256 _mm256_loadu_ps(float const *__P) {
   return *(__m256_u *)__P;
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_storeu_ps(float *__P, __m256 __A) {
+__funline void _mm256_storeu_ps(float *__P, __m256 __A) {
   *(__m256_u *)__P = __A;
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_load_si256(__m256i const *__P) {
+__funline __m256i _mm256_load_si256(__m256i const *__P) {
   return *__P;
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_store_si256(__m256i *__P, __m256i __A) {
+__funline void _mm256_store_si256(__m256i *__P, __m256i __A) {
   *__P = __A;
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_loadu_si256(__m256i_u const *__P) {
+__funline __m256i _mm256_loadu_si256(__m256i_u const *__P) {
   return *__P;
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_storeu_si256(__m256i_u *__P, __m256i __A) {
+__funline void _mm256_storeu_si256(__m256i_u *__P, __m256i __A) {
   *__P = __A;
 }
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_maskload_pd(double const *__P, __m128i __M) {
+__funline __m128d _mm_maskload_pd(double const *__P, __m128i __M) {
   return (__m128d)__builtin_ia32_maskloadpd((const __v2df *)__P, (__v2di)__M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_maskstore_pd(double *__P, __m128i __M, __m128d __A) {
+__funline void _mm_maskstore_pd(double *__P, __m128i __M, __m128d __A) {
   __builtin_ia32_maskstorepd((__v2df *)__P, (__v2di)__M, (__v2df)__A);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_maskload_pd(double const *__P, __m256i __M) {
+__funline __m256d _mm256_maskload_pd(double const *__P, __m256i __M) {
   return (__m256d)__builtin_ia32_maskloadpd256((const __v4df *)__P,
                                                (__v4di)__M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_maskstore_pd(double *__P, __m256i __M, __m256d __A) {
+__funline void _mm256_maskstore_pd(double *__P, __m256i __M, __m256d __A) {
   __builtin_ia32_maskstorepd256((__v4df *)__P, (__v4di)__M, (__v4df)__A);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_maskload_ps(float const *__P, __m128i __M) {
+__funline __m128 _mm_maskload_ps(float const *__P, __m128i __M) {
   return (__m128)__builtin_ia32_maskloadps((const __v4sf *)__P, (__v4si)__M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_maskstore_ps(float *__P, __m128i __M, __m128 __A) {
+__funline void _mm_maskstore_ps(float *__P, __m128i __M, __m128 __A) {
   __builtin_ia32_maskstoreps((__v4sf *)__P, (__v4si)__M, (__v4sf)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_maskload_ps(float const *__P, __m256i __M) {
+__funline __m256 _mm256_maskload_ps(float const *__P, __m256i __M) {
   return (__m256)__builtin_ia32_maskloadps256((const __v8sf *)__P, (__v8si)__M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_maskstore_ps(float *__P, __m256i __M, __m256 __A) {
+__funline void _mm256_maskstore_ps(float *__P, __m256i __M, __m256 __A) {
   __builtin_ia32_maskstoreps256((__v8sf *)__P, (__v8si)__M, (__v8sf)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_movehdup_ps(__m256 __X) {
+__funline __m256 _mm256_movehdup_ps(__m256 __X) {
   return (__m256)__builtin_ia32_movshdup256((__v8sf)__X);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_moveldup_ps(__m256 __X) {
+__funline __m256 _mm256_moveldup_ps(__m256 __X) {
   return (__m256)__builtin_ia32_movsldup256((__v8sf)__X);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_movedup_pd(__m256d __X) {
+__funline __m256d _mm256_movedup_pd(__m256d __X) {
   return (__m256d)__builtin_ia32_movddup256((__v4df)__X);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_lddqu_si256(__m256i const *__P) {
+__funline __m256i _mm256_lddqu_si256(__m256i const *__P) {
   return (__m256i)__builtin_ia32_lddqu256((char const *)__P);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_stream_si256(__m256i *__A, __m256i __B) {
+__funline void _mm256_stream_si256(__m256i *__A, __m256i __B) {
   __builtin_ia32_movntdq256((__v4di *)__A, (__v4di)__B);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_stream_pd(double *__A, __m256d __B) {
+__funline void _mm256_stream_pd(double *__A, __m256d __B) {
   __builtin_ia32_movntpd256(__A, (__v4df)__B);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_stream_ps(float *__P, __m256 __A) {
+__funline void _mm256_stream_ps(float *__P, __m256 __A) {
   __builtin_ia32_movntps256(__P, (__v8sf)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_rcp_ps(__m256 __A) {
+__funline __m256 _mm256_rcp_ps(__m256 __A) {
   return (__m256)__builtin_ia32_rcpps256((__v8sf)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_rsqrt_ps(__m256 __A) {
+__funline __m256 _mm256_rsqrt_ps(__m256 __A) {
   return (__m256)__builtin_ia32_rsqrtps256((__v8sf)__A);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_sqrt_pd(__m256d __A) {
+__funline __m256d _mm256_sqrt_pd(__m256d __A) {
   return (__m256d)__builtin_ia32_sqrtpd256((__v4df)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_sqrt_ps(__m256 __A) {
+__funline __m256 _mm256_sqrt_ps(__m256 __A) {
   return (__m256)__builtin_ia32_sqrtps256((__v8sf)__A);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_round_pd(__m256d __V, const int __M) {
+__funline __m256d _mm256_round_pd(__m256d __V, const int __M) {
   return (__m256d)__builtin_ia32_roundpd256((__v4df)__V, __M);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_round_ps(__m256 __V, const int __M) {
+__funline __m256 _mm256_round_ps(__m256 __V, const int __M) {
   return (__m256)__builtin_ia32_roundps256((__v8sf)__V, __M);
 }
 #else
@@ -948,211 +723,151 @@ extern __inline __m256
 #define _mm256_ceil_ps(V)  _mm256_round_ps((V), _MM_FROUND_CEIL)
 #define _mm256_floor_ps(V) _mm256_round_ps((V), _MM_FROUND_FLOOR)
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_unpackhi_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_unpackhi_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_unpckhpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_unpacklo_pd(__m256d __A, __m256d __B) {
+__funline __m256d _mm256_unpacklo_pd(__m256d __A, __m256d __B) {
   return (__m256d)__builtin_ia32_unpcklpd256((__v4df)__A, (__v4df)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_unpackhi_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_unpackhi_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_unpckhps256((__v8sf)__A, (__v8sf)__B);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_unpacklo_ps(__m256 __A, __m256 __B) {
+__funline __m256 _mm256_unpacklo_ps(__m256 __A, __m256 __B) {
   return (__m256)__builtin_ia32_unpcklps256((__v8sf)__A, (__v8sf)__B);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testz_pd(__m128d __M, __m128d __V) {
+__funline int _mm_testz_pd(__m128d __M, __m128d __V) {
   return __builtin_ia32_vtestzpd((__v2df)__M, (__v2df)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testc_pd(__m128d __M, __m128d __V) {
+__funline int _mm_testc_pd(__m128d __M, __m128d __V) {
   return __builtin_ia32_vtestcpd((__v2df)__M, (__v2df)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testnzc_pd(__m128d __M, __m128d __V) {
+__funline int _mm_testnzc_pd(__m128d __M, __m128d __V) {
   return __builtin_ia32_vtestnzcpd((__v2df)__M, (__v2df)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testz_ps(__m128 __M, __m128 __V) {
+__funline int _mm_testz_ps(__m128 __M, __m128 __V) {
   return __builtin_ia32_vtestzps((__v4sf)__M, (__v4sf)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testc_ps(__m128 __M, __m128 __V) {
+__funline int _mm_testc_ps(__m128 __M, __m128 __V) {
   return __builtin_ia32_vtestcps((__v4sf)__M, (__v4sf)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testnzc_ps(__m128 __M, __m128 __V) {
+__funline int _mm_testnzc_ps(__m128 __M, __m128 __V) {
   return __builtin_ia32_vtestnzcps((__v4sf)__M, (__v4sf)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testz_pd(__m256d __M, __m256d __V) {
+__funline int _mm256_testz_pd(__m256d __M, __m256d __V) {
   return __builtin_ia32_vtestzpd256((__v4df)__M, (__v4df)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testc_pd(__m256d __M, __m256d __V) {
+__funline int _mm256_testc_pd(__m256d __M, __m256d __V) {
   return __builtin_ia32_vtestcpd256((__v4df)__M, (__v4df)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testnzc_pd(__m256d __M, __m256d __V) {
+__funline int _mm256_testnzc_pd(__m256d __M, __m256d __V) {
   return __builtin_ia32_vtestnzcpd256((__v4df)__M, (__v4df)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testz_ps(__m256 __M, __m256 __V) {
+__funline int _mm256_testz_ps(__m256 __M, __m256 __V) {
   return __builtin_ia32_vtestzps256((__v8sf)__M, (__v8sf)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testc_ps(__m256 __M, __m256 __V) {
+__funline int _mm256_testc_ps(__m256 __M, __m256 __V) {
   return __builtin_ia32_vtestcps256((__v8sf)__M, (__v8sf)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testnzc_ps(__m256 __M, __m256 __V) {
+__funline int _mm256_testnzc_ps(__m256 __M, __m256 __V) {
   return __builtin_ia32_vtestnzcps256((__v8sf)__M, (__v8sf)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testz_si256(__m256i __M, __m256i __V) {
+__funline int _mm256_testz_si256(__m256i __M, __m256i __V) {
   return __builtin_ia32_ptestz256((__v4di)__M, (__v4di)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testc_si256(__m256i __M, __m256i __V) {
+__funline int _mm256_testc_si256(__m256i __M, __m256i __V) {
   return __builtin_ia32_ptestc256((__v4di)__M, (__v4di)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_testnzc_si256(__m256i __M, __m256i __V) {
+__funline int _mm256_testnzc_si256(__m256i __M, __m256i __V) {
   return __builtin_ia32_ptestnzc256((__v4di)__M, (__v4di)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_movemask_pd(__m256d __A) {
+__funline int _mm256_movemask_pd(__m256d __A) {
   return __builtin_ia32_movmskpd256((__v4df)__A);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_movemask_ps(__m256 __A) {
+__funline int _mm256_movemask_ps(__m256 __A) {
   return __builtin_ia32_movmskps256((__v8sf)__A);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_undefined_pd(void) {
+__funline __m256d _mm256_undefined_pd(void) {
   __m256d __Y = __Y;
   return __Y;
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_undefined_ps(void) {
+__funline __m256 _mm256_undefined_ps(void) {
   __m256 __Y = __Y;
   return __Y;
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_undefined_si256(void) {
+__funline __m256i _mm256_undefined_si256(void) {
   __m256i __Y = __Y;
   return __Y;
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setzero_pd(void) {
+__funline __m256d _mm256_setzero_pd(void) {
   return __extension__(__m256d){0.0, 0.0, 0.0, 0.0};
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setzero_ps(void) {
+__funline __m256 _mm256_setzero_ps(void) {
   return __extension__(__m256){0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setzero_si256(void) {
+__funline __m256i _mm256_setzero_si256(void) {
   return __extension__(__m256i)(__v4di){0, 0, 0, 0};
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_pd(double __A, double __B, double __C, double __D) {
+__funline __m256d _mm256_set_pd(double __A, double __B, double __C, double __D) {
   return __extension__(__m256d){__D, __C, __B, __A};
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_ps(float __A, float __B, float __C, float __D, float __E,
-                  float __F, float __G, float __H) {
+__funline __m256 _mm256_set_ps(float __A, float __B, float __C, float __D,
+                             float __E, float __F, float __G, float __H) {
   return __extension__(__m256){__H, __G, __F, __E, __D, __C, __B, __A};
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_epi32(int __A, int __B, int __C, int __D, int __E, int __F,
-                     int __G, int __H) {
+__funline __m256i _mm256_set_epi32(int __A, int __B, int __C, int __D, int __E,
+                                 int __F, int __G, int __H) {
   return __extension__(__m256i)(__v8si){__H, __G, __F, __E, __D, __C, __B, __A};
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_epi16(short __q15, short __q14, short __q13, short __q12,
-                     short __q11, short __q10, short __q09, short __q08,
-                     short __q07, short __q06, short __q05, short __q04,
-                     short __q03, short __q02, short __q01, short __q00) {
+__funline __m256i _mm256_set_epi16(short __q15, short __q14, short __q13,
+                                 short __q12, short __q11, short __q10,
+                                 short __q09, short __q08, short __q07,
+                                 short __q06, short __q05, short __q04,
+                                 short __q03, short __q02, short __q01,
+                                 short __q00) {
   return __extension__(__m256i)(__v16hi){
       __q00, __q01, __q02, __q03, __q04, __q05, __q06, __q07,
       __q08, __q09, __q10, __q11, __q12, __q13, __q14, __q15};
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_epi8(char __q31, char __q30, char __q29, char __q28, char __q27,
-                    char __q26, char __q25, char __q24, char __q23, char __q22,
-                    char __q21, char __q20, char __q19, char __q18, char __q17,
-                    char __q16, char __q15, char __q14, char __q13, char __q12,
-                    char __q11, char __q10, char __q09, char __q08, char __q07,
-                    char __q06, char __q05, char __q04, char __q03, char __q02,
-                    char __q01, char __q00) {
+__funline __m256i _mm256_set_epi8(char __q31, char __q30, char __q29, char __q28,
+                                char __q27, char __q26, char __q25, char __q24,
+                                char __q23, char __q22, char __q21, char __q20,
+                                char __q19, char __q18, char __q17, char __q16,
+                                char __q15, char __q14, char __q13, char __q12,
+                                char __q11, char __q10, char __q09, char __q08,
+                                char __q07, char __q06, char __q05, char __q04,
+                                char __q03, char __q02, char __q01,
+                                char __q00) {
   return __extension__(__m256i)(__v32qi){
       __q00, __q01, __q02, __q03, __q04, __q05, __q06, __q07,
       __q08, __q09, __q10, __q11, __q12, __q13, __q14, __q15,
@@ -1160,91 +875,72 @@ extern __inline __m256i
       __q24, __q25, __q26, __q27, __q28, __q29, __q30, __q31};
 }
 
-extern __inline __m256i __attribute__((__gnu_inline__, __always_inline__,
-                                       __artificial__))
-_mm256_set_epi64x(long long __A, long long __B, long long __C, long long __D) {
+__funline __m256i _mm256_set_epi64x(long long __A, long long __B, long long __C,
+                                  long long __D) {
   return __extension__(__m256i)(__v4di){__D, __C, __B, __A};
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set1_pd(double __A) {
+__funline __m256d _mm256_set1_pd(double __A) {
   return __extension__(__m256d){__A, __A, __A, __A};
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set1_ps(float __A) {
+__funline __m256 _mm256_set1_ps(float __A) {
   return __extension__(__m256){__A, __A, __A, __A, __A, __A, __A, __A};
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set1_epi32(int __A) {
+__funline __m256i _mm256_set1_epi32(int __A) {
   return __extension__(__m256i)(__v8si){__A, __A, __A, __A, __A, __A, __A, __A};
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set1_epi16(short __A) {
+__funline __m256i _mm256_set1_epi16(short __A) {
   return _mm256_set_epi16(__A, __A, __A, __A, __A, __A, __A, __A, __A, __A, __A,
                           __A, __A, __A, __A, __A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set1_epi8(char __A) {
+__funline __m256i _mm256_set1_epi8(char __A) {
   return _mm256_set_epi8(__A, __A, __A, __A, __A, __A, __A, __A, __A, __A, __A,
                          __A, __A, __A, __A, __A, __A, __A, __A, __A, __A, __A,
                          __A, __A, __A, __A, __A, __A, __A, __A, __A, __A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set1_epi64x(long long __A) {
+__funline __m256i _mm256_set1_epi64x(long long __A) {
   return __extension__(__m256i)(__v4di){__A, __A, __A, __A};
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_pd(double __A, double __B, double __C, double __D) {
+__funline __m256d _mm256_setr_pd(double __A, double __B, double __C, double __D) {
   return _mm256_set_pd(__D, __C, __B, __A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_ps(float __A, float __B, float __C, float __D, float __E,
-                   float __F, float __G, float __H) {
+__funline __m256 _mm256_setr_ps(float __A, float __B, float __C, float __D,
+                              float __E, float __F, float __G, float __H) {
   return _mm256_set_ps(__H, __G, __F, __E, __D, __C, __B, __A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_epi32(int __A, int __B, int __C, int __D, int __E, int __F,
-                      int __G, int __H) {
+__funline __m256i _mm256_setr_epi32(int __A, int __B, int __C, int __D, int __E,
+                                  int __F, int __G, int __H) {
   return _mm256_set_epi32(__H, __G, __F, __E, __D, __C, __B, __A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_epi16(short __q15, short __q14, short __q13, short __q12,
-                      short __q11, short __q10, short __q09, short __q08,
-                      short __q07, short __q06, short __q05, short __q04,
-                      short __q03, short __q02, short __q01, short __q00) {
+__funline __m256i _mm256_setr_epi16(short __q15, short __q14, short __q13,
+                                  short __q12, short __q11, short __q10,
+                                  short __q09, short __q08, short __q07,
+                                  short __q06, short __q05, short __q04,
+                                  short __q03, short __q02, short __q01,
+                                  short __q00) {
   return _mm256_set_epi16(__q00, __q01, __q02, __q03, __q04, __q05, __q06,
                           __q07, __q08, __q09, __q10, __q11, __q12, __q13,
                           __q14, __q15);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_epi8(char __q31, char __q30, char __q29, char __q28, char __q27,
-                     char __q26, char __q25, char __q24, char __q23, char __q22,
-                     char __q21, char __q20, char __q19, char __q18, char __q17,
-                     char __q16, char __q15, char __q14, char __q13, char __q12,
-                     char __q11, char __q10, char __q09, char __q08, char __q07,
-                     char __q06, char __q05, char __q04, char __q03, char __q02,
-                     char __q01, char __q00) {
+__funline __m256i _mm256_setr_epi8(char __q31, char __q30, char __q29, char __q28,
+                                 char __q27, char __q26, char __q25, char __q24,
+                                 char __q23, char __q22, char __q21, char __q20,
+                                 char __q19, char __q18, char __q17, char __q16,
+                                 char __q15, char __q14, char __q13, char __q12,
+                                 char __q11, char __q10, char __q09, char __q08,
+                                 char __q07, char __q06, char __q05, char __q04,
+                                 char __q03, char __q02, char __q01,
+                                 char __q00) {
   return _mm256_set_epi8(__q00, __q01, __q02, __q03, __q04, __q05, __q06, __q07,
                          __q08, __q09, __q10, __q11, __q12, __q13, __q14, __q15,
                          __q16, __q17, __q18, __q19, __q20, __q21, __q22, __q23,
@@ -1252,117 +948,80 @@ extern __inline __m256i
                          __q31);
 }
 
-extern __inline __m256i __attribute__((__gnu_inline__, __always_inline__,
-                                       __artificial__))
-_mm256_setr_epi64x(long long __A, long long __B, long long __C, long long __D) {
+__funline __m256i _mm256_setr_epi64x(long long __A, long long __B, long long __C,
+                                   long long __D) {
   return _mm256_set_epi64x(__D, __C, __B, __A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castpd_ps(__m256d __A) {
+__funline __m256 _mm256_castpd_ps(__m256d __A) {
   return (__m256)__A;
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castpd_si256(__m256d __A) {
+__funline __m256i _mm256_castpd_si256(__m256d __A) {
   return (__m256i)__A;
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castps_pd(__m256 __A) {
+__funline __m256d _mm256_castps_pd(__m256 __A) {
   return (__m256d)__A;
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castps_si256(__m256 __A) {
+__funline __m256i _mm256_castps_si256(__m256 __A) {
   return (__m256i)__A;
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castsi256_ps(__m256i __A) {
+__funline __m256 _mm256_castsi256_ps(__m256i __A) {
   return (__m256)__A;
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castsi256_pd(__m256i __A) {
+__funline __m256d _mm256_castsi256_pd(__m256i __A) {
   return (__m256d)__A;
 }
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castpd256_pd128(__m256d __A) {
+__funline __m128d _mm256_castpd256_pd128(__m256d __A) {
   return (__m128d)__builtin_ia32_pd_pd256((__v4df)__A);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castps256_ps128(__m256 __A) {
+__funline __m128 _mm256_castps256_ps128(__m256 __A) {
   return (__m128)__builtin_ia32_ps_ps256((__v8sf)__A);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castsi256_si128(__m256i __A) {
+__funline __m128i _mm256_castsi256_si128(__m256i __A) {
   return (__m128i)__builtin_ia32_si_si256((__v8si)__A);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castpd128_pd256(__m128d __A) {
+__funline __m256d _mm256_castpd128_pd256(__m128d __A) {
   return (__m256d)__builtin_ia32_pd256_pd((__v2df)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castps128_ps256(__m128 __A) {
+__funline __m256 _mm256_castps128_ps256(__m128 __A) {
   return (__m256)__builtin_ia32_ps256_ps((__v4sf)__A);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_castsi128_si256(__m128i __A) {
+__funline __m256i _mm256_castsi128_si256(__m128i __A) {
   return (__m256i)__builtin_ia32_si256_si((__v4si)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_m128(__m128 __H, __m128 __L) {
+__funline __m256 _mm256_set_m128(__m128 __H, __m128 __L) {
   return _mm256_insertf128_ps(_mm256_castps128_ps256(__L), __H, 1);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_m128d(__m128d __H, __m128d __L) {
+__funline __m256d _mm256_set_m128d(__m128d __H, __m128d __L) {
   return _mm256_insertf128_pd(_mm256_castpd128_pd256(__L), __H, 1);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_set_m128i(__m128i __H, __m128i __L) {
+__funline __m256i _mm256_set_m128i(__m128i __H, __m128i __L) {
   return _mm256_insertf128_si256(_mm256_castsi128_si256(__L), __H, 1);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_m128(__m128 __L, __m128 __H) {
+__funline __m256 _mm256_setr_m128(__m128 __L, __m128 __H) {
   return _mm256_set_m128(__H, __L);
 }
 
-extern __inline __m256d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_m128d(__m128d __L, __m128d __H) {
+__funline __m256d _mm256_setr_m128d(__m128d __L, __m128d __H) {
   return _mm256_set_m128d(__H, __L);
 }
 
-extern __inline __m256i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_setr_m128i(__m128i __L, __m128i __H) {
+__funline __m256i _mm256_setr_m128i(__m128i __L, __m128i __H) {
   return _mm256_set_m128i(__H, __L);
 }
 

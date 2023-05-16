@@ -25,21 +25,15 @@
 #define _MM_FROUND_RINT      (_MM_FROUND_CUR_DIRECTION | _MM_FROUND_RAISE_EXC)
 #define _MM_FROUND_NEARBYINT (_MM_FROUND_CUR_DIRECTION | _MM_FROUND_NO_EXC)
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testz_si128(__m128i __M, __m128i __V) {
+__funline int _mm_testz_si128(__m128i __M, __m128i __V) {
   return __builtin_ia32_ptestz128((__v2di)__M, (__v2di)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testc_si128(__m128i __M, __m128i __V) {
+__funline int _mm_testc_si128(__m128i __M, __m128i __V) {
   return __builtin_ia32_ptestc128((__v2di)__M, (__v2di)__V);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_testnzc_si128(__m128i __M, __m128i __V) {
+__funline int _mm_testnzc_si128(__m128i __M, __m128i __V) {
   return __builtin_ia32_ptestnzc128((__v2di)__M, (__v2di)__V);
 }
 
@@ -50,15 +44,11 @@ extern __inline int
 #define _mm_test_mix_ones_zeros(M, V) _mm_testnzc_si128((M), (V))
 
 #ifdef __OPTIMIZE__
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_round_pd(__m128d __V, const int __M) {
+__funline __m128d _mm_round_pd(__m128d __V, const int __M) {
   return (__m128d)__builtin_ia32_roundpd((__v2df)__V, __M);
 }
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_round_sd(__m128d __D, __m128d __V, const int __M) {
+__funline __m128d _mm_round_sd(__m128d __D, __m128d __V, const int __M) {
   return (__m128d)__builtin_ia32_roundsd((__v2df)__D, (__v2df)__V, __M);
 }
 #else
@@ -71,15 +61,11 @@ extern __inline __m128d
 #endif
 
 #ifdef __OPTIMIZE__
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_round_ps(__m128 __V, const int __M) {
+__funline __m128 _mm_round_ps(__m128 __V, const int __M) {
   return (__m128)__builtin_ia32_roundps((__v4sf)__V, __M);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_round_ss(__m128 __D, __m128 __V, const int __M) {
+__funline __m128 _mm_round_ss(__m128 __D, __m128 __V, const int __M) {
   return (__m128)__builtin_ia32_roundss((__v4sf)__D, (__v4sf)__V, __M);
 }
 #else
@@ -104,9 +90,7 @@ extern __inline __m128
 #define _mm_floor_ss(D, V) _mm_round_ss((D), (V), _MM_FROUND_FLOOR)
 
 #ifdef __OPTIMIZE__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_blend_epi16(__m128i __X, __m128i __Y, const int __M) {
+__funline __m128i _mm_blend_epi16(__m128i __X, __m128i __Y, const int __M) {
   return (__m128i)__builtin_ia32_pblendw128((__v8hi)__X, (__v8hi)__Y, __M);
 }
 #else
@@ -115,17 +99,13 @@ extern __inline __m128i
                                       (__v8hi)(__m128i)(Y), (int)(M)))
 #endif
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_blendv_epi8(__m128i __X, __m128i __Y, __m128i __M) {
+__funline __m128i _mm_blendv_epi8(__m128i __X, __m128i __Y, __m128i __M) {
   return (__m128i)__builtin_ia32_pblendvb128((__v16qi)__X, (__v16qi)__Y,
                                              (__v16qi)__M);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_blend_ps(__m128 __X, __m128 __Y, const int __M) {
+__funline __m128 _mm_blend_ps(__m128 __X, __m128 __Y, const int __M) {
   return (__m128)__builtin_ia32_blendps((__v4sf)__X, (__v4sf)__Y, __M);
 }
 #else
@@ -134,16 +114,12 @@ extern __inline __m128
                                   (int)(M)))
 #endif
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_blendv_ps(__m128 __X, __m128 __Y, __m128 __M) {
+__funline __m128 _mm_blendv_ps(__m128 __X, __m128 __Y, __m128 __M) {
   return (__m128)__builtin_ia32_blendvps((__v4sf)__X, (__v4sf)__Y, (__v4sf)__M);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_blend_pd(__m128d __X, __m128d __Y, const int __M) {
+__funline __m128d _mm_blend_pd(__m128d __X, __m128d __Y, const int __M) {
   return (__m128d)__builtin_ia32_blendpd((__v2df)__X, (__v2df)__Y, __M);
 }
 #else
@@ -152,23 +128,17 @@ extern __inline __m128d
                                    (int)(M)))
 #endif
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_blendv_pd(__m128d __X, __m128d __Y, __m128d __M) {
+__funline __m128d _mm_blendv_pd(__m128d __X, __m128d __Y, __m128d __M) {
   return (__m128d)__builtin_ia32_blendvpd((__v2df)__X, (__v2df)__Y,
                                           (__v2df)__M);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_dp_ps(__m128 __X, __m128 __Y, const int __M) {
+__funline __m128 _mm_dp_ps(__m128 __X, __m128 __Y, const int __M) {
   return (__m128)__builtin_ia32_dpps((__v4sf)__X, (__v4sf)__Y, __M);
 }
 
-extern __inline __m128d
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_dp_pd(__m128d __X, __m128d __Y, const int __M) {
+__funline __m128d _mm_dp_pd(__m128d __X, __m128d __Y, const int __M) {
   return (__m128d)__builtin_ia32_dppd((__v2df)__X, (__v2df)__Y, __M);
 }
 #else
@@ -181,76 +151,52 @@ extern __inline __m128d
                                 (int)(M)))
 #endif
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpeq_epi64(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_cmpeq_epi64(__m128i __X, __m128i __Y) {
   return (__m128i)((__v2di)__X == (__v2di)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_min_epi8(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_min_epi8(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pminsb128((__v16qi)__X, (__v16qi)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_max_epi8(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_max_epi8(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pmaxsb128((__v16qi)__X, (__v16qi)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_min_epu16(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_min_epu16(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pminuw128((__v8hi)__X, (__v8hi)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_max_epu16(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_max_epu16(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pmaxuw128((__v8hi)__X, (__v8hi)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_min_epi32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_min_epi32(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pminsd128((__v4si)__X, (__v4si)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_max_epi32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_max_epi32(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pmaxsd128((__v4si)__X, (__v4si)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_min_epu32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_min_epu32(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pminud128((__v4si)__X, (__v4si)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_max_epu32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_max_epu32(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pmaxud128((__v4si)__X, (__v4si)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_mullo_epi32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_mullo_epi32(__m128i __X, __m128i __Y) {
   return (__m128i)((__v4su)__X * (__v4su)__Y);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_mul_epi32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_mul_epi32(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_pmuldq128((__v4si)__X, (__v4si)__Y);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_insert_ps(__m128 __D, __m128 __S, const int __N) {
+__funline __m128 _mm_insert_ps(__m128 __D, __m128 __S, const int __N) {
   return (__m128)__builtin_ia32_insertps128((__v4sf)__D, (__v4sf)__S, __N);
 }
 #else
@@ -262,9 +208,7 @@ extern __inline __m128
 #define _MM_MK_INSERTPS_NDX(S, D, M) (((S) << 6) | ((D) << 4) | (M))
 
 #ifdef __OPTIMIZE__
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_extract_ps(__m128 __X, const int __N) {
+__funline int _mm_extract_ps(__m128 __X, const int __N) {
   union {
     int i;
     float f;
@@ -291,22 +235,16 @@ extern __inline int
   _mm_insert_ps(_mm_setzero_ps(), (X), _MM_MK_INSERTPS_NDX((N), 0, 0x0e))
 
 #ifdef __OPTIMIZE__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_insert_epi8(__m128i __D, int __S, const int __N) {
+__funline __m128i _mm_insert_epi8(__m128i __D, int __S, const int __N) {
   return (__m128i)__builtin_ia32_vec_set_v16qi((__v16qi)__D, __S, __N);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_insert_epi32(__m128i __D, int __S, const int __N) {
+__funline __m128i _mm_insert_epi32(__m128i __D, int __S, const int __N) {
   return (__m128i)__builtin_ia32_vec_set_v4si((__v4si)__D, __S, __N);
 }
 
 #ifdef __x86_64__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_insert_epi64(__m128i __D, long long __S, const int __N) {
+__funline __m128i _mm_insert_epi64(__m128i __D, long long __S, const int __N) {
   return (__m128i)__builtin_ia32_vec_set_v2di((__v2di)__D, __S, __N);
 }
 #endif
@@ -327,22 +265,16 @@ extern __inline __m128i
 #endif
 
 #ifdef __OPTIMIZE__
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_extract_epi8(__m128i __X, const int __N) {
+__funline int _mm_extract_epi8(__m128i __X, const int __N) {
   return (unsigned char)__builtin_ia32_vec_ext_v16qi((__v16qi)__X, __N);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_extract_epi32(__m128i __X, const int __N) {
+__funline int _mm_extract_epi32(__m128i __X, const int __N) {
   return __builtin_ia32_vec_ext_v4si((__v4si)__X, __N);
 }
 
 #ifdef __x86_64__
-extern __inline long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_extract_epi64(__m128i __X, const int __N) {
+__funline long long _mm_extract_epi64(__m128i __X, const int __N) {
   return __builtin_ia32_vec_ext_v2di((__v2di)__X, __N);
 }
 #endif
@@ -359,94 +291,64 @@ extern __inline long long
 #endif
 #endif
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_minpos_epu16(__m128i __X) {
+__funline __m128i _mm_minpos_epu16(__m128i __X) {
   return (__m128i)__builtin_ia32_phminposuw128((__v8hi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepi8_epi32(__m128i __X) {
+__funline __m128i _mm_cvtepi8_epi32(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovsxbd128((__v16qi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepi16_epi32(__m128i __X) {
+__funline __m128i _mm_cvtepi16_epi32(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovsxwd128((__v8hi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepi8_epi64(__m128i __X) {
+__funline __m128i _mm_cvtepi8_epi64(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovsxbq128((__v16qi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepi32_epi64(__m128i __X) {
+__funline __m128i _mm_cvtepi32_epi64(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovsxdq128((__v4si)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepi16_epi64(__m128i __X) {
+__funline __m128i _mm_cvtepi16_epi64(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovsxwq128((__v8hi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepi8_epi16(__m128i __X) {
+__funline __m128i _mm_cvtepi8_epi16(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovsxbw128((__v16qi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepu8_epi32(__m128i __X) {
+__funline __m128i _mm_cvtepu8_epi32(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovzxbd128((__v16qi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepu16_epi32(__m128i __X) {
+__funline __m128i _mm_cvtepu16_epi32(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovzxwd128((__v8hi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepu8_epi64(__m128i __X) {
+__funline __m128i _mm_cvtepu8_epi64(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovzxbq128((__v16qi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepu32_epi64(__m128i __X) {
+__funline __m128i _mm_cvtepu32_epi64(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovzxdq128((__v4si)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepu16_epi64(__m128i __X) {
+__funline __m128i _mm_cvtepu16_epi64(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovzxwq128((__v8hi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtepu8_epi16(__m128i __X) {
+__funline __m128i _mm_cvtepu8_epi16(__m128i __X) {
   return (__m128i)__builtin_ia32_pmovzxbw128((__v16qi)__X);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_packus_epi32(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_packus_epi32(__m128i __X, __m128i __Y) {
   return (__m128i)__builtin_ia32_packusdw128((__v4si)__X, (__v4si)__Y);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_mpsadbw_epu8(__m128i __X, __m128i __Y, const int __M) {
+__funline __m128i _mm_mpsadbw_epu8(__m128i __X, __m128i __Y, const int __M) {
   return (__m128i)__builtin_ia32_mpsadbw128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 #else
@@ -455,9 +357,7 @@ extern __inline __m128i
                                       (__v16qi)(__m128i)(Y), (int)(M)))
 #endif
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_stream_load_si128(__m128i *__X) {
+__funline __m128i _mm_stream_load_si128(__m128i *__X) {
   return (__m128i)__builtin_ia32_movntdqa((__v2di *)__X);
 }
 
@@ -489,28 +389,22 @@ extern __inline __m128i
 #define _SIDD_UNIT_MASK 0x40
 
 #ifdef __OPTIMIZE__
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistrm(__m128i __X, __m128i __Y, const int __M) {
+__funline __m128i _mm_cmpistrm(__m128i __X, __m128i __Y, const int __M) {
   return (__m128i)__builtin_ia32_pcmpistrm128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistri(__m128i __X, __m128i __Y, const int __M) {
+__funline int _mm_cmpistri(__m128i __X, __m128i __Y, const int __M) {
   return __builtin_ia32_pcmpistri128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestrm(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline __m128i _mm_cmpestrm(__m128i __X, int __LX, __m128i __Y, int __LY,
+                             const int __M) {
   return (__m128i)__builtin_ia32_pcmpestrm128((__v16qi)__X, __LX, (__v16qi)__Y,
                                               __LY, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestri(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline int _mm_cmpestri(__m128i __X, int __LX, __m128i __Y, int __LY,
+                         const int __M) {
   return __builtin_ia32_pcmpestri128((__v16qi)__X, __LX, (__v16qi)__Y, __LY,
                                      __M);
 }
@@ -533,67 +427,52 @@ extern __inline int
 #endif
 
 #ifdef __OPTIMIZE__
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistra(__m128i __X, __m128i __Y, const int __M) {
+__funline int _mm_cmpistra(__m128i __X, __m128i __Y, const int __M) {
   return __builtin_ia32_pcmpistria128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistrc(__m128i __X, __m128i __Y, const int __M) {
+__funline int _mm_cmpistrc(__m128i __X, __m128i __Y, const int __M) {
   return __builtin_ia32_pcmpistric128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistro(__m128i __X, __m128i __Y, const int __M) {
+__funline int _mm_cmpistro(__m128i __X, __m128i __Y, const int __M) {
   return __builtin_ia32_pcmpistrio128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistrs(__m128i __X, __m128i __Y, const int __M) {
+__funline int _mm_cmpistrs(__m128i __X, __m128i __Y, const int __M) {
   return __builtin_ia32_pcmpistris128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpistrz(__m128i __X, __m128i __Y, const int __M) {
+__funline int _mm_cmpistrz(__m128i __X, __m128i __Y, const int __M) {
   return __builtin_ia32_pcmpistriz128((__v16qi)__X, (__v16qi)__Y, __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestra(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline int _mm_cmpestra(__m128i __X, int __LX, __m128i __Y, int __LY,
+                         const int __M) {
   return __builtin_ia32_pcmpestria128((__v16qi)__X, __LX, (__v16qi)__Y, __LY,
                                       __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestrc(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline int _mm_cmpestrc(__m128i __X, int __LX, __m128i __Y, int __LY,
+                         const int __M) {
   return __builtin_ia32_pcmpestric128((__v16qi)__X, __LX, (__v16qi)__Y, __LY,
                                       __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestro(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline int _mm_cmpestro(__m128i __X, int __LX, __m128i __Y, int __LY,
+                         const int __M) {
   return __builtin_ia32_pcmpestrio128((__v16qi)__X, __LX, (__v16qi)__Y, __LY,
                                       __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestrs(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline int _mm_cmpestrs(__m128i __X, int __LX, __m128i __Y, int __LY,
+                         const int __M) {
   return __builtin_ia32_pcmpestris128((__v16qi)__X, __LX, (__v16qi)__Y, __LY,
                                       __M);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpestrz(__m128i __X, int __LX, __m128i __Y, int __LY, const int __M) {
+__funline int _mm_cmpestrz(__m128i __X, int __LX, __m128i __Y, int __LY,
+                         const int __M) {
   return __builtin_ia32_pcmpestriz128((__v16qi)__X, __LX, (__v16qi)__Y, __LY,
                                       __M);
 }
@@ -636,9 +515,7 @@ extern __inline int
                                      (int)(M)))
 #endif
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cmpgt_epi64(__m128i __X, __m128i __Y) {
+__funline __m128i _mm_cmpgt_epi64(__m128i __X, __m128i __Y) {
   return (__m128i)((__v2di)__X > (__v2di)__Y);
 }
 
@@ -667,28 +544,21 @@ extern __inline __m128i
 #endif /* __SSE4_1__ */
 
 /* Accumulate CRC32 (polynomial 0x11EDC6F41) value.  */
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_crc32_u8(unsigned int __C, unsigned char __V) {
+__funline unsigned int _mm_crc32_u8(unsigned int __C, unsigned char __V) {
   return __builtin_ia32_crc32qi(__C, __V);
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_crc32_u16(unsigned int __C, unsigned short __V) {
+__funline unsigned int _mm_crc32_u16(unsigned int __C, unsigned short __V) {
   return __builtin_ia32_crc32hi(__C, __V);
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_crc32_u32(unsigned int __C, unsigned int __V) {
+__funline unsigned int _mm_crc32_u32(unsigned int __C, unsigned int __V) {
   return __builtin_ia32_crc32si(__C, __V);
 }
 
 #ifdef __x86_64__
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_crc32_u64(unsigned long long __C, unsigned long long __V) {
+__funline unsigned long long _mm_crc32_u64(unsigned long long __C,
+                                         unsigned long long __V) {
   return __builtin_ia32_crc32di(__C, __V);
 }
 #endif

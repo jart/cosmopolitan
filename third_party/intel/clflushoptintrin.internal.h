@@ -11,9 +11,7 @@
 #define __DISABLE_CLFLUSHOPT__
 #endif /* __CLFLUSHOPT__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_clflushopt(void *__A) {
+__funline void _mm_clflushopt(void *__A) {
   __builtin_ia32_clflushopt(__A);
 }
 

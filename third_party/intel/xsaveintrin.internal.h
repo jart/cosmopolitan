@@ -11,40 +11,28 @@
 #define __DISABLE_XSAVE__
 #endif /* __XSAVE__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xsave(void *__P, long long __M) {
+__funline void _xsave(void *__P, long long __M) {
   __builtin_ia32_xsave(__P, __M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xrstor(void *__P, long long __M) {
+__funline void _xrstor(void *__P, long long __M) {
   __builtin_ia32_xrstor(__P, __M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xsetbv(unsigned int __A, long long __V) {
+__funline void _xsetbv(unsigned int __A, long long __V) {
   __builtin_ia32_xsetbv(__A, __V);
 }
 
-extern __inline long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xgetbv(unsigned int __A) {
+__funline long long _xgetbv(unsigned int __A) {
   return __builtin_ia32_xgetbv(__A);
 }
 
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xsave64(void *__P, long long __M) {
+__funline void _xsave64(void *__P, long long __M) {
   __builtin_ia32_xsave64(__P, __M);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _xrstor64(void *__P, long long __M) {
+__funline void _xrstor64(void *__P, long long __M) {
   __builtin_ia32_xrstor64(__P, __M);
 }
 #endif

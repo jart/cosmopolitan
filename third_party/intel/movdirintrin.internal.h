@@ -11,15 +11,11 @@
 #define __DISABLE_MOVDIRI__
 #endif /* __MOVDIRI__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _directstoreu_u32(void *__P, unsigned int __A) {
+__funline void _directstoreu_u32(void *__P, unsigned int __A) {
   __builtin_ia32_directstoreu_u32((unsigned int *)__P, __A);
 }
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _directstoreu_u64(void *__P, unsigned long long __A) {
+__funline void _directstoreu_u64(void *__P, unsigned long long __A) {
   __builtin_ia32_directstoreu_u64((unsigned long long *)__P, __A);
 }
 #endif
@@ -35,9 +31,7 @@ extern __inline void
 #define __DISABLE_MOVDIR64B__
 #endif /* __MOVDIR64B__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _movdir64b(void *__P, const void *__Q) {
+__funline void _movdir64b(void *__P, const void *__Q) {
   __builtin_ia32_movdir64b(__P, __Q);
 }
 

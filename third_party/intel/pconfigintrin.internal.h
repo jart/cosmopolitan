@@ -24,9 +24,7 @@
                        : "a"(leaf), "b"(b), "c"(c), "d"(d)       \
                        : "cc")
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _pconfig_u32(const unsigned int __L, size_t __D[]) {
+__funline unsigned int _pconfig_u32(const unsigned int __L, size_t __D[]) {
   enum __pconfig_type {
     __PCONFIG_KEY_PROGRAM = 0x01,
   };

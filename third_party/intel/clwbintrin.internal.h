@@ -11,9 +11,7 @@
 #define __DISABLE_CLWB__
 #endif /* __CLWB__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_clwb(void *__A) {
+__funline void _mm_clwb(void *__A) {
   __builtin_ia32_clwb(__A);
 }
 

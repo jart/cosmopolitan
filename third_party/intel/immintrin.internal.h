@@ -65,9 +65,7 @@
 #include "third_party/intel/pkuintrin.internal.h"
 /* clang-format on */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _wbinvd(void) {
+__funline void _wbinvd(void) {
   __builtin_ia32_wbinvd();
 }
 
@@ -76,15 +74,11 @@ extern __inline void
 #pragma GCC target("rdrnd")
 #define __DISABLE_RDRND__
 #endif /* __RDRND__ */
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _rdrand16_step(unsigned short *__P) {
+__funline int _rdrand16_step(unsigned short *__P) {
   return __builtin_ia32_rdrand16_step(__P);
 }
 
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _rdrand32_step(unsigned int *__P) {
+__funline int _rdrand32_step(unsigned int *__P) {
   return __builtin_ia32_rdrand32_step(__P);
 }
 #ifdef __DISABLE_RDRND__
@@ -97,9 +91,7 @@ extern __inline int
 #pragma GCC target("rdpid")
 #define __DISABLE_RDPID__
 #endif /* __RDPID__ */
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _rdpid_u32(void) {
+__funline unsigned int _rdpid_u32(void) {
   return __builtin_ia32_rdpid();
 }
 #ifdef __DISABLE_RDPID__
@@ -114,51 +106,35 @@ extern __inline unsigned int
 #pragma GCC target("fsgsbase")
 #define __DISABLE_FSGSBASE__
 #endif /* __FSGSBASE__ */
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _readfsbase_u32(void) {
+__funline unsigned int _readfsbase_u32(void) {
   return __builtin_ia32_rdfsbase32();
 }
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _readfsbase_u64(void) {
+__funline unsigned long long _readfsbase_u64(void) {
   return __builtin_ia32_rdfsbase64();
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _readgsbase_u32(void) {
+__funline unsigned int _readgsbase_u32(void) {
   return __builtin_ia32_rdgsbase32();
 }
 
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _readgsbase_u64(void) {
+__funline unsigned long long _readgsbase_u64(void) {
   return __builtin_ia32_rdgsbase64();
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _writefsbase_u32(unsigned int __B) {
+__funline void _writefsbase_u32(unsigned int __B) {
   __builtin_ia32_wrfsbase32(__B);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _writefsbase_u64(unsigned long long __B) {
+__funline void _writefsbase_u64(unsigned long long __B) {
   __builtin_ia32_wrfsbase64(__B);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _writegsbase_u32(unsigned int __B) {
+__funline void _writegsbase_u32(unsigned int __B) {
   __builtin_ia32_wrgsbase32(__B);
 }
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _writegsbase_u64(unsigned long long __B) {
+__funline void _writegsbase_u64(unsigned long long __B) {
   __builtin_ia32_wrgsbase64(__B);
 }
 #ifdef __DISABLE_FSGSBASE__
@@ -171,9 +147,7 @@ extern __inline void
 #pragma GCC target("rdrnd")
 #define __DISABLE_RDRND__
 #endif /* __RDRND__ */
-extern __inline int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _rdrand64_step(unsigned long long *__P) {
+__funline int _rdrand64_step(unsigned long long *__P) {
   return __builtin_ia32_rdrand64_step(__P);
 }
 #ifdef __DISABLE_RDRND__
@@ -190,16 +164,12 @@ extern __inline int
 #endif
 
 #ifdef __x86_64__
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _ptwrite64(unsigned long long __B) {
+__funline void _ptwrite64(unsigned long long __B) {
   __builtin_ia32_ptwrite64(__B);
 }
 #endif /* __x86_64__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _ptwrite32(unsigned __B) {
+__funline void _ptwrite32(unsigned __B) {
   __builtin_ia32_ptwrite32(__B);
 }
 #ifdef __DISABLE_PTWRITE__

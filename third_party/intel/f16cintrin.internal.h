@@ -12,44 +12,32 @@
 #define __DISABLE_F16C__
 #endif /* __F16C__ */
 
-extern __inline float
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _cvtsh_ss(unsigned short __S) {
+__funline float _cvtsh_ss(unsigned short __S) {
   __v8hi __H = __extension__(__v8hi){(short)__S, 0, 0, 0, 0, 0, 0, 0};
   __v4sf __A = __builtin_ia32_vcvtph2ps(__H);
   return __builtin_ia32_vec_ext_v4sf(__A, 0);
 }
 
-extern __inline __m128
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtph_ps(__m128i __A) {
+__funline __m128 _mm_cvtph_ps(__m128i __A) {
   return (__m128)__builtin_ia32_vcvtph2ps((__v8hi)__A);
 }
 
-extern __inline __m256
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtph_ps(__m128i __A) {
+__funline __m256 _mm256_cvtph_ps(__m128i __A) {
   return (__m256)__builtin_ia32_vcvtph2ps256((__v8hi)__A);
 }
 
 #ifdef __OPTIMIZE__
-extern __inline unsigned short
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _cvtss_sh(float __F, const int __I) {
+__funline unsigned short _cvtss_sh(float __F, const int __I) {
   __v4sf __A = __extension__(__v4sf){__F, 0, 0, 0};
   __v8hi __H = __builtin_ia32_vcvtps2ph(__A, __I);
   return (unsigned short)__builtin_ia32_vec_ext_v8hi(__H, 0);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_cvtps_ph(__m128 __A, const int __I) {
+__funline __m128i _mm_cvtps_ph(__m128 __A, const int __I) {
   return (__m128i)__builtin_ia32_vcvtps2ph((__v4sf)__A, __I);
 }
 
-extern __inline __m128i
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm256_cvtps_ph(__m256 __A, const int __I) {
+__funline __m128i _mm256_cvtps_ph(__m256 __A, const int __I) {
   return (__m128i)__builtin_ia32_vcvtps2ph256((__v8sf)__A, __I);
 }
 #else

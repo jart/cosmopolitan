@@ -80,9 +80,7 @@
                        : "a"(leaf), "b"(b), "c"(c), "d"(d)       \
                        : "cc")
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _encls_u32(const unsigned int __L, size_t __D[]) {
+__funline unsigned int _encls_u32(const unsigned int __L, size_t __D[]) {
   enum __encls_type {
     __SGX_ECREATE = 0x00,
     __SGX_EADD = 0x01,
@@ -145,9 +143,7 @@ extern __inline unsigned int
   return __R;
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _enclu_u32(const unsigned int __L, size_t __D[]) {
+__funline unsigned int _enclu_u32(const unsigned int __L, size_t __D[]) {
   enum __enclu_type {
     __SGX_EREPORT = 0x00,
     __SGX_EGETKEY = 0x01,
@@ -186,9 +182,7 @@ extern __inline unsigned int
   return __R;
 }
 
-extern __inline unsigned int
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _enclv_u32(const unsigned int __L, size_t __D[]) {
+__funline unsigned int _enclv_u32(const unsigned int __L, size_t __D[]) {
   enum __enclv_type {
     __SGX_EDECVIRTCHILD = 0x00,
     __SGX_EINCVIRTCHILD = 0x01,

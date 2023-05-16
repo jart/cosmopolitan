@@ -8,9 +8,7 @@
 #define __DISABLE_CLZERO__
 #endif /* __CLZERO__ */
 
-extern __inline void
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    _mm_clzero(void* __I) {
+__funline void _mm_clzero(void* __I) {
   __builtin_ia32_clzero(__I);
 }
 
