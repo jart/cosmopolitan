@@ -574,14 +574,6 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   }
 #endif
 
-  if (relocated) {
-    int ax;
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(1), "D"(1), "S"("hello\n"), "d"(6)
-                 : "rcx", "r11", "memory");
-  }
-
   Close(fd, os);
 
   // authorize only the loaded program to issue system calls. if this

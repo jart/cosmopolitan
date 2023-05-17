@@ -4,6 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern const struct IdName kMachoArchitectures[];
 extern const struct IdName kMachoFileTypeNames[];
 extern const struct IdName kMachoFlagNames[];
 extern const struct IdName kMachoSegmentFlagNames[];

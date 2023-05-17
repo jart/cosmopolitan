@@ -59,9 +59,8 @@ o/$(MODE)/dsp/tty/ttyraster.o: private		\
 
 ifeq ($(ARCH), aarch64)
 # takes 14 seconds to compile with aarch64 gcc
-o/$(MODE)/dsp/tty/ttyraster.o: private		\
-		OVERRIDE_CFLAGS +=		\
-			-O1
+o/$(MODE)/dsp/tty/ttyraster.o: private OVERRIDE_CFLAGS += -O1
+o/$(MODE)/dsp/tty/ttyraster.o: private QUOTA += -C128
 endif
 
 DSP_TTY_LIBS = $(foreach x,$(DSP_TTY_ARTIFACTS),$($(x)))

@@ -16,8 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macho.internal.h"
 #include "tool/decode/lib/machoidnames.h"
+#include "libc/macho.internal.h"
+
+const struct IdName kMachoArchitectures[] = {
+    {MAC_CPU_MC680x0, "MAC_CPU_MC680x0"},              //
+    {MAC_CPU_NEXGEN32E, "MAC_CPU_NEXGEN32E"},          //
+    {MAC_CPU_I386, "MAC_CPU_I386"},                    //
+    {MAC_CPU_X86, "MAC_CPU_X86"},                      //
+    {MAC_CPU_MC98000, "MAC_CPU_MC98000"},              //
+    {MAC_CPU_HPPA, "MAC_CPU_HPPA"},                    //
+    {MAC_CPU_ARM64, "MAC_CPU_ARM64"},                  //
+    {MAC_CPU_ARM64_32, "MAC_CPU_ARM64_32"},            //
+    {MAC_CPU_ARM, "MAC_CPU_ARM"},                      //
+    {MAC_CPU_MC88000, "MAC_CPU_MC88000"},              //
+    {MAC_CPU_SPARC, "MAC_CPU_SPARC"},                  //
+    {MAC_CPU_I860, "MAC_CPU_I860"},                    //
+    {MAC_CPU_POWERPC64, "MAC_CPU_POWERPC64"},          //
+    {MAC_CPU_POWERPC, "MAC_CPU_POWERPC"},              //
+    {MAC_ARCH_ABI64, "MAC_ARCH_ABI64"},                // flaggy
+    {MAC_ARCH_ABI64_32, "MAC_ARCH_ABI64_32"},          //
+    {MAC_CPU_NEXGEN32E_ALL, "MAC_CPU_NEXGEN32E_ALL"},  // subtypes
+    {0, 0},
+};
 
 const struct IdName kMachoFileTypeNames[] = {
     {MAC_OBJECT, "MAC_OBJECT"},
@@ -47,6 +68,12 @@ const struct IdName kMachoFlagNames[] = {
     {MAC_ALLMODSBOUND, "MAC_ALLMODSBOUND"},
     {MAC_SUBSECTIONS_VIA_SYMBOLS, "MAC_SUBSECTIONS_VIA_SYMBOLS"},
     {MAC_CANONICAL, "MAC_CANONICAL"},
+    {MAC_ALLOW_STACK_EXECUTION, "MAC_ALLOW_STACK_EXECUTION"},
+    {MAC_ROOT_SAFE, "MAC_ROOT_SAFE"},
+    {MAC_SETUID_SAFE, "MAC_SETUID_SAFE"},
+    {MAC_PIE, "MAC_PIE"},
+    {MAC_HAS_TLV_DESCRIPTORS, "MAC_HAS_TLV_DESCRIPTORS"},
+    {MAC_NO_HEAP_EXECUTION, "MAC_NO_HEAP_EXECUTION"},
     {0, 0},
 };
 
@@ -77,7 +104,7 @@ const struct IdName kMachoSectionTypeNames[] = {
 };
 
 const struct IdName kMachoSectionAttributeNames[] = {
-    {MAC_SECTION_ATTRIBUTES_USR, "MAC_SECTION_ATTRIBUTES_USR"},
+    {MAC_S_ATTRIBUTES_USR, "MAC_S_ATTRIBUTES_USR"},
     {MAC_S_ATTR_PURE_INSTRUCTIONS, "MAC_S_ATTR_PURE_INSTRUCTIONS"},
     {MAC_S_ATTR_NO_TOC, "MAC_S_ATTR_NO_TOC"},
     {MAC_S_ATTR_STRIP_STATIC_SYMS, "MAC_S_ATTR_STRIP_STATIC_SYMS"},
@@ -85,7 +112,7 @@ const struct IdName kMachoSectionAttributeNames[] = {
     {MAC_S_ATTR_LIVE_SUPPORT, "MAC_S_ATTR_LIVE_SUPPORT"},
     {MAC_S_ATTR_SELF_MODIFYING_CODE, "MAC_S_ATTR_SELF_MODIFYING_CODE"},
     {MAC_S_ATTR_DEBUG, "MAC_S_ATTR_DEBUG"},
-    {MAC_SECTION_ATTRIBUTES_SYS, "MAC_SECTION_ATTRIBUTES_SYS"},
+    {MAC_S_ATTRIBUTES_SYS, "MAC_S_ATTRIBUTES_SYS"},
     {MAC_S_ATTR_SOME_INSTRUCTIONS, "MAC_S_ATTR_SOME_INSTRUCTIONS"},
     {MAC_S_ATTR_EXT_RELOC, "MAC_S_ATTR_EXT_RELOC"},
     {MAC_S_ATTR_LOC_RELOC, "MAC_S_ATTR_LOC_RELOC"},
@@ -93,7 +120,6 @@ const struct IdName kMachoSectionAttributeNames[] = {
 };
 
 const struct IdName kMachoLoadCommandNames[] = {
-    {MAC_LC_REQ_DYLD, "MAC_LC_REQ_DYLD"},
     {MAC_LC_SEGMENT, "MAC_LC_SEGMENT"},
     {MAC_LC_SYMTAB, "MAC_LC_SYMTAB"},
     {MAC_LC_SYMSEG, "MAC_LC_SYMSEG"},
@@ -126,6 +152,7 @@ const struct IdName kMachoLoadCommandNames[] = {
     {MAC_LC_LAZY_LOAD_DYLIB, "MAC_LC_LAZY_LOAD_DYLIB"},
     {MAC_LC_ENCRYPTION_INFO, "MAC_LC_ENCRYPTION_INFO"},
     {MAC_LC_DYLD_INFO, "MAC_LC_DYLD_INFO"},
+    {MAC_LC_DYLD_INFO_ONLY, "MAC_LC_DYLD_INFO_ONLY"},
     {MAC_LC_VERSION_MIN_MACOSX, "MAC_LC_VERSION_MIN_MACOSX"},
     {MAC_LC_VERSION_MIN_IPHONEOS, "MAC_LC_VERSION_MIN_IPHONEOS"},
     {MAC_LC_FUNCTION_STARTS, "MAC_LC_FUNCTION_STARTS"},
@@ -134,6 +161,18 @@ const struct IdName kMachoLoadCommandNames[] = {
     {MAC_LC_SOURCE_VERSION, "MAC_LC_SOURCE_VERSION"},
     {MAC_LC_RPATH, "MAC_LC_RPATH"},
     {MAC_LC_MAIN, "MAC_LC_MAIN"},
+    {MAC_LC_DYLIB_CODE_SIGN_DRS, "MAC_LC_DYLIB_CODE_SIGN_DRS"},
+    {MAC_LC_ENCRYPTION_INFO_64, "MAC_LC_ENCRYPTION_INFO_64"},
+    {MAC_LC_LINKER_OPTION, "MAC_LC_LINKER_OPTION"},
+    {MAC_LC_LINKER_OPTIMIZATION_HINT, "MAC_LC_LINKER_OPTIMIZATION_HINT"},
+    {MAC_LC_VERSION_MIN_TVOS, "MAC_LC_VERSION_MIN_TVOS"},
+    {MAC_LC_VERSION_MIN_WATCHOS, "MAC_LC_VERSION_MIN_WATCHOS"},
+    {MAC_LC_NOTE, "MAC_LC_NOTE"},
+    {MAC_LC_BUILD_VERSION, "MAC_LC_BUILD_VERSION"},
+    {MAC_LC_DYLD_EXPORTS_TRIE, "MAC_LC_DYLD_EXPORTS_TRIE"},
+    {MAC_LC_DYLD_CHAINED_FIXUPS, "MAC_LC_DYLD_CHAINED_FIXUPS"},
+    {MAC_LC_FILESET_ENTRY, "MAC_LC_FILESET_ENTRY"},
+    {MAC_LC_REEXPORT_DYLIB, "MAC_LC_REEXPORT_DYLIB"},
     {0, 0},
 };
 

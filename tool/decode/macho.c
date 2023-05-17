@@ -24,6 +24,8 @@
 #include "libc/macho.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -56,7 +58,10 @@ static void showmachoheader(void) {
   showtitle(basename(path), "macho", "header", NULL, NULL);
   printf("\n");
   showinthex(macho->magic);
-  showinthex(macho->arch);
+  show(".long",
+       firstnonnull(findnamebyid(kMachoArchitectures, macho->arch),
+                    format(b1, "%#x", macho->arch)),
+       "macho->arch");
   showinthex(macho->arch2);
   show(".long",
        firstnonnull(findnamebyid(kMachoFileTypeNames, macho->filetype),
@@ -157,9 +162,39 @@ static void showmacholoaduuid(struct MachoLoadUuid *lu) {
         printf(",");
       }
     }
-    printf("%#hhx", lu->uuid[i]);
+    printf("%#02hhx", lu->uuid[i]);
   }
   printf("\n");
+}
+
+#define COLS 8
+
+static void showmacholoadgeneric(struct MachoLoadCommand *lc) {
+  int i, c, col = 0;
+  int need_newline = 0;
+  char16_t glyphs[COLS + 1];
+  const unsigned char *p, *pe;
+  p = (const unsigned char *)(lc + 1);
+  pe = p + (lc->size - sizeof(*lc));
+  while (p < pe) {
+    c = *p++;
+    if (!col) {
+      need_newline = 1;
+      printf("\t.byte\t");
+      bzero(glyphs, sizeof(glyphs));
+    }
+    glyphs[col] = kCp437[c];
+    if (col) putchar(',');
+    printf("0x%02x", c);
+    if (++col == COLS) {
+      col = 0;
+      printf("\t//%hs\n", glyphs);
+      need_newline = 0;
+    }
+  }
+  if (need_newline) {
+    printf("\n");
+  }
 }
 
 static void showmacholoadsourceversion(
@@ -192,10 +227,22 @@ static void showmacholoadcommand(struct MachoLoadCommand *lc, unsigned i) {
 #endif
   showorg((intptr_t)lc - (intptr_t)macho);
   printf("%d:", (i + 1) * 10);
-  show(".long",
-       firstnonnull(findnamebyid(kMachoLoadCommandNames, lc->command),
-                    format(b1, "%#x", lc->command)),
-       "lc->command");
+  char buf[256];
+  buf[0] = 0;
+  const char *name;
+  uint32_t command = lc->command;
+  if (!(name = findnamebyid(kMachoLoadCommandNames, command)) &&
+      (command & MAC_LC_REQ_DYLD)) {
+    command &= ~MAC_LC_REQ_DYLD;
+    strcpy(buf, "MAC_LC_REQ_DYLD|");
+    name = findnamebyid(kMachoLoadCommandNames, command);
+  }
+  if (name) {
+    strlcat(buf, name, sizeof(buf));
+  } else {
+    strlcat(buf, format(b1, "%#x", command), sizeof(buf));
+  }
+  show(".long", buf, "lc->command");
   showinthex(lc->size);
   switch (lc->command) {
     case MAC_LC_SEGMENT_64:
@@ -207,13 +254,53 @@ static void showmacholoadcommand(struct MachoLoadCommand *lc, unsigned i) {
     case MAC_LC_UUID:
       showmacholoaduuid((struct MachoLoadUuid *)lc);
       break;
+#if 0
     case MAC_LC_SOURCE_VERSION:
       showmacholoadsourceversion((struct MachoLoadSourceVersionCommand *)lc);
       break;
+#endif
     case MAC_LC_UNIXTHREAD:
       showmacholoadunixthread((struct MachoLoadThreadCommand *)lc);
       break;
+    case MAC_LC_DYLD_INFO:
+    case MAC_LC_DYLD_INFO_ONLY: {
+      const struct MachoDyldInfoCommand *di =
+          (const struct MachoDyldInfoCommand *)lc;
+      showinthex(di->rebase_off);
+      showinthex(di->rebase_size);
+      showinthex(di->bind_off);
+      showinthex(di->bind_size);
+      showinthex(di->weak_bind_off);
+      showinthex(di->weak_bind_size);
+      showinthex(di->lazy_bind_off);
+      showinthex(di->lazy_bind_size);
+      showinthex(di->export_off);
+      showinthex(di->export_size);
+      break;
+    }
+    case MAC_LC_CODE_SIGNATURE:
+    case MAC_LC_SEGMENT_SPLIT_INFO:
+    case MAC_LC_FUNCTION_STARTS:
+    case MAC_LC_DATA_IN_CODE:
+    case MAC_LC_DYLIB_CODE_SIGN_DRS:
+    case MAC_LC_LINKER_OPTIMIZATION_HINT:
+    case MAC_LC_DYLD_EXPORTS_TRIE:
+    case MAC_LC_DYLD_CHAINED_FIXUPS: {
+      const struct MachoLinkeditDataCommand *ld =
+          (const struct MachoLinkeditDataCommand *)lc;
+      showint64hex(ld->dataoff);
+      showint64hex(ld->datasize);
+      break;
+    }
+    case MAC_LC_MAIN: {
+      const struct MachoEntryPointCommand *main =
+          (const struct MachoEntryPointCommand *)lc;
+      showint64hex(main->entryoff);
+      showint64hex(main->stacksize);
+      break;
+    }
     default:
+      showmacholoadgeneric(lc);
       break;
   }
   printf("\n");

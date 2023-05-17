@@ -151,6 +151,7 @@
     "FLT_MIN_EXP"
     "HLF_MAX"
     "HLF_MIN"
+    "FLT_EVAL_METHOD"
     "LDBL_DECIMAL_DIG"
     "LDBL_DIG"
     "LDBL_EPSILON"

@@ -24,21 +24,25 @@
 
 int main(int argc, char *argv[]) {
   int c, col = 0;
-  unsigned char ch;
+  int need_newline = 0;
   char16_t glyphs[COLS + 1];
   while ((c = getchar()) != -1) {
-    if (col == 0) {
+    if (!col) {
+      need_newline = 1;
       printf("\t.byte\t");
       bzero(glyphs, sizeof(glyphs));
     }
-    ch = c & 0xff;
-    glyphs[col] = kCp437[ch];
+    glyphs[col] = kCp437[c];
     if (col) putchar(',');
-    printf("0x%02x", ch);
+    printf("0x%02x", c);
     if (++col == COLS) {
       col = 0;
-      printf("\t#%hs\n", glyphs);
+      printf("\t//%hs\n", glyphs);
+      need_newline = 0;
     }
+  }
+  if (need_newline) {
+    printf("\n");
   }
   return 0;
 }

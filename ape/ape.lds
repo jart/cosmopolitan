@@ -199,6 +199,11 @@
 #define SKEW 0
 #endif
 
+#ifdef __aarch64__
+#undef PAGESIZE
+#define PAGESIZE 16384
+#endif
+
 ENTRY(_start)
 
 PHDRS {

@@ -10,10 +10,10 @@ COSMOPOLITAN_C_START_
 #define showint64(x)    show(".quad", format(b1, "%ld", x), #x)
 #define showbyte(x)     show(".byte", format(b1, "%hhu", x), #x)
 #define showshort(x)    show(".short", format(b1, "%hu", x), #x)
-#define showshorthex(x) show(".short", format(b1, "%#-6hX", x), #x)
-#define showinthex(x)   show(".long", format(b1, "%#X", x), #x)
-#define showint64hex(x) show(".quad", format(b1, "%#lX", x), #x)
-#define showorg(x)      show(".org", format(b1, "%#lX", x), #x)
+#define showshorthex(x) show(".short", format(b1, "%#-6hx", x), #x)
+#define showinthex(x)   show(".long", format(b1, "%#x", x), #x)
+#define showint64hex(x) show(".quad", format(b1, "%#lx", x), #x)
+#define showorg(x)      show(".org", format(b1, "%#lx", x), #x)
 
 extern char b1[BUFSIZ];
 extern char b2[BUFSIZ];
