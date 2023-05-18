@@ -2447,7 +2447,7 @@ static char *CommitOutput(char *p) {
   size_t outbuflen;
   if (!cpm.contentlength) {
     outbuflen = appendz(cpm.outbuf).i;
-    if (cpm.istext && outbuflen >= 100) {
+    if (cpm.istext && !cpm.isyielding && outbuflen >= 100) {
       if (!IsTiny() && !IsSslCompressed()) {
         p = stpcpy(p, "Vary: Accept-Encoding\r\n");
       }
@@ -2610,7 +2610,6 @@ static int LuaCallWithYield(lua_State *L) {
     YL = co;
     cpm.generator = YieldGenerator;
     if (!cpm.isyielding) cpm.isyielding = 1;
-    cpm.istext = false;  // reset istext flag to avoid zipping yielded chunk
     status = LUA_OK;
   }
   return status;
@@ -6185,9 +6184,10 @@ static char *SetStatus(unsigned code, const char *reason) {
   }
   cpm.statuscode = code;
   cpm.hascontenttype = false;
-  // reset, as the headers are reset
-  // istext is -1 by default to interpret as true when not set
-  cpm.istext = -1;
+  // reset, as the headers are reset.
+  // istext is `true`, as the default content type
+  // is text/html, which will be set later
+  cpm.istext = true;
   cpm.gotxcontenttypeoptions = 0;
   cpm.gotcachecontrol = 0;
   cpm.referrerpolicy = 0;
