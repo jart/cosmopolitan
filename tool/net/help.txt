@@ -1054,6 +1054,16 @@ FUNCTIONS
             - maxredirects (default = 5): sets the number of allowed redirects
               to minimize looping due to misconfigured servers. When the number
               is exceeded, the last response is returned.
+            - keepalive (default = false): configures each request to keep the
+              connection open (unless closed by the server) and reuse for the
+              next request to the same host. This option is disabled when SSL
+              connection is used.
+              The mapping of hosts and their sockets is stored in a table
+              assigned to the `keepalive` field itself, so it can be passed to
+              the next call.
+              If the table includes the `close` field set to a true value,
+              then the connection is closed after the request is made and the
+              host is removed from the mapping table.
           When the redirect is being followed, the same method and body values
           are being sent in all cases except when 303 status is returned. In
           that case the method is set to GET and the body is removed before the

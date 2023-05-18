@@ -4,6 +4,11 @@
 #define FetchHeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), FetchHeaderData(H), FetchHeaderLength(H))
 
+#define kaNONE 0
+#define kaOPEN 1
+#define kaKEEP 2
+#define kaCLOSE 3
+
 static int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
   char *p;
@@ -11,7 +16,7 @@ static int LuaFetch(lua_State *L) {
   bool usingssl;
   uint32_t ip;
   struct Url url;
-  int t, ret, sock, methodidx, hdridx;
+  int t, ret, sock = -1, methodidx, hdridx;
   char *host, *port, *request;
   struct TlsBio *bio;
   struct addrinfo *addr;
@@ -22,11 +27,13 @@ static int LuaFetch(lua_State *L) {
   char *conlenhdr = "";
   char *headers = 0;
   char *hosthdr = 0;
+  char *connhdr = 0;
   char *agenthdr = brand;
   char *key, *val, *hdr;
   size_t keylen, vallen;
   size_t urlarglen, requestlen, paylen, bodylen;
   size_t i, g, n, hdrsize;
+  int keepalive = kaNONE;
   int imethod, numredirects = 0, maxredirects = 5;
   bool followredirect = true;
   struct addrinfo hints = {.ai_family = AF_INET,
@@ -56,6 +63,21 @@ static int LuaFetch(lua_State *L) {
     maxredirects = luaL_optinteger(L, -1, maxredirects);
     lua_getfield(L, 2, "numredirects");
     numredirects = luaL_optinteger(L, -1, numredirects);
+    lua_getfield(L, 2, "keepalive");
+    if (!lua_isnil(L, -1)) {
+      if (lua_istable(L, -1)) {
+        keepalive = kaOPEN; // will be updated based on host later
+      } else if (lua_isboolean(L, -1)) {
+        keepalive = lua_toboolean(L, -1) ? kaOPEN : kaNONE;
+        if (keepalive) {
+          lua_createtable(L, 0, 1);
+          lua_setfield(L, 2, "keepalive");
+        }
+      } else {
+        return luaL_argerror(L, 2, "invalid keepalive value;"
+                                   " boolean or table expected");
+      }
+    }
     lua_getfield(L, 2, "headers");
     if (!lua_isnil(L, -1)) {
       if (!lua_istable(L, -1))
@@ -72,15 +94,16 @@ static int LuaFetch(lua_State *L) {
           if (!(hdr = _gc(EncodeHttpHeaderValue(val, vallen, 0))))
             return LuaNilError(L, "invalid header %s value encoding", key);
 
-          // Content-Length and Connection will be overwritten;
-          // skip them to avoid duplicates;
+          // Content-Length will be overwritten; skip it to avoid duplicates;
           // also allow unknown headers
           if ((hdridx = GetHttpHeader(key, keylen)) == -1 ||
-              hdridx != kHttpContentLength && hdridx != kHttpConnection) {
+              hdridx != kHttpContentLength) {
             if (hdridx == kHttpUserAgent) {
               agenthdr = hdr;
             } else if (hdridx == kHttpHost) {
               hosthdr = hdr;
+            } else if (hdridx == kHttpConnection) {
+              connhdr = hdr;
             } else {
               appendd(&headers, key, keylen);
               appendw(&headers, READ16LE(": "));
@@ -128,6 +151,7 @@ static int LuaFetch(lua_State *L) {
   }
 
 #ifndef UNSECURE
+  if (usingssl) keepalive = kaNONE;
   if (usingssl && !sslinitialized) TlsInit();
 #endif
 
@@ -153,6 +177,25 @@ static int LuaFetch(lua_State *L) {
   }
   if (!hosthdr) hosthdr = _gc(xasprintf("%s:%s", host, port));
 
+  // check if hosthdr is in keepalive table
+  if (keepalive && lua_istable(L, 2)) {
+    lua_getfield(L, 2, "keepalive");
+    lua_getfield(L, -1, "close"); // aft: -2=tbl, -1=close
+    lua_getfield(L, -2, hosthdr); // aft: -3=tbl, -2=close, -1=hosthdr
+    if (lua_isinteger(L, -1)) {
+      sock = lua_tointeger(L, -1);
+      keepalive = lua_toboolean(L, -2) ? kaCLOSE : kaKEEP;
+      // remove host mapping, as the socket is ether being closed
+      // (so needs to be removed) or will be added after the request is done;
+      // this also helps to keep the mapping clean in case of an error
+      lua_pushnil(L); // aft: -4=tbl, -3=close, -2=hosthdr, -1=nil
+      lua_setfield(L, -4, hosthdr);
+      VERBOSEF("(ftch) reuse socket %d for host %s (and %s)",
+               sock, hosthdr, keepalive == kaCLOSE ? "close" : "keep");
+    }
+    lua_settop(L, 2);  // drop all added elements to keep the stack balanced
+  }
+
   url.fragment.p = 0, url.fragment.n = 0;
   url.scheme.p = 0, url.scheme.n = 0;
   url.user.p = 0, url.user.n = 0;
@@ -173,39 +216,43 @@ static int LuaFetch(lua_State *L) {
   appendf(&request,
           "%s %s HTTP/1.1\r\n"
           "Host: %s\r\n"
-          "Connection: close\r\n"
+          "Connection: %s\r\n"
           "User-Agent: %s\r\n"
           "%s%s"
           "\r\n",
-          method, _gc(EncodeUrl(&url, 0)), hosthdr, agenthdr, conlenhdr,
-          headers ? headers : "");
+          method, _gc(EncodeUrl(&url, 0)), hosthdr,
+          (keepalive == kaNONE || keepalive == kaCLOSE) ? "close"
+            : (connhdr ? connhdr : "keep-alive"),
+          agenthdr, conlenhdr, headers ? headers : "");
   appendd(&request, body, bodylen);
   requestlen = appendz(request).i;
   _gc(request);
 
-  /*
-   * Perform DNS lookup.
-   */
-  DEBUGF("(ftch) client resolving %s", host);
-  if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
-    return LuaNilError(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
-                       gai_strerror(rc), strerror(errno));
-  }
+  if (keepalive == kaNONE || keepalive == kaOPEN) {
+    /*
+     * Perform DNS lookup.
+     */
+    DEBUGF("(ftch) client resolving %s", host);
+    if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
+      return LuaNilError(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
+                         gai_strerror(rc), strerror(errno));
+    }
 
-  /*
-   * Connect to server.
-   */
-  ip = ntohl(((struct sockaddr_in *)addr->ai_addr)->sin_addr.s_addr);
-  DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16,
-         ip >> 8, ip, ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
-  CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
-                                  addr->ai_protocol, false, &timeout)));
-  rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
-  freeaddrinfo(addr), addr = 0;
-  if (rc == -1) {
-    close(sock);
-    return LuaNilError(L, "connect(%s:%s) error: %s", host, port,
-                       strerror(errno));
+    /*
+     * Connect to server.
+     */
+    ip = ntohl(((struct sockaddr_in *)addr->ai_addr)->sin_addr.s_addr);
+    DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16,
+           ip >> 8, ip, ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
+    CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
+                                    addr->ai_protocol, false, &timeout)));
+    rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
+    freeaddrinfo(addr), addr = 0;
+    if (rc == -1) {
+      close(sock);
+      return LuaNilError(L, "connect(%s:%s) error: %s", host, port,
+                         strerror(errno));
+    }
   }
 
 #ifndef UNSECURE
@@ -402,6 +449,23 @@ Finished:
   VERBOSEF("(ftch) completed %s HTTP%02d %d %s %`'.*s", method, msg.version,
            msg.status, urlarg, FetchHeaderLength(kHttpServer),
            FetchHeaderData(kHttpServer));
+
+  // check if the server has requested to close the connection
+  // https://www.rfc-editor.org/rfc/rfc2616#section-14.10
+  if (keepalive && keepalive != kaCLOSE
+                && FetchHasHeader(kHttpConnection)
+                && FetchHeaderEqualCase(kHttpConnection, "close")) {
+    VERBOSEF("(ftch) close keepalive on server request");
+    keepalive = kaCLOSE;
+  }
+
+  // need to save updated sock for keepalive
+  if (keepalive && keepalive != kaCLOSE && lua_istable(L, 2)) {
+    lua_getfield(L, 2, "keepalive");
+    lua_pushinteger(L, sock);
+    lua_setfield(L, -2, hosthdr);
+    lua_pop(L, 1);
+  }
   if (followredirect && FetchHasHeader(kHttpLocation) &&
       (msg.status == 301 || msg.status == 308 ||  // permanent redirects
        msg.status == 302 || msg.status == 307 ||  // temporary redirects
@@ -433,7 +497,7 @@ Finished:
 
     DestroyHttpMessage(&msg);
     free(inbuf.p);
-    close(sock);
+    if (!keepalive || keepalive == kaCLOSE) close(sock);
     return LuaFetch(L);
   } else {
     lua_pushinteger(L, msg.status);
@@ -441,7 +505,7 @@ Finished:
     lua_pushlstring(L, inbuf.p + hdrsize, paylen);
     DestroyHttpMessage(&msg);
     free(inbuf.p);
-    close(sock);
+    if (!keepalive || keepalive == kaCLOSE) close(sock);
     return 3;
   }
 TransportError:
