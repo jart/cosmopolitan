@@ -42,13 +42,6 @@ $(LIBC_TINYMATH_A).pkg:					\
 		$(LIBC_TINYMATH_A_OBJS)			\
 		$(foreach x,$(LIBC_TINYMATH_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/tinymath/cpow.o				\
-o/$(MODE)/libc/tinymath/cpowf.o				\
-o/$(MODE)/libc/tinymath/cpowl.o				\
-o/$(MODE)/libc/tinymath/powfin.o: private		\
-		OVERRIDE_CFLAGS +=			\
-			-ffast-math
-
 o/$(MODE)/libc/tinymath/lround.o			\
 o/$(MODE)/libc/tinymath/lroundf.o			\
 o/$(MODE)/libc/tinymath/lroundl.o: private		\
@@ -59,6 +52,18 @@ o/$(MODE)/libc/tinymath/expl.o				\
 o/$(MODE)/libc/tinymath/loglq.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-ffunction-sections
+
+$(LIBC_TINYMATH_A_OBJS): private			\
+		OVERRIDE_CFLAGS +=			\
+			-fsigned-zeros			\
+			-ftrapping-math			\
+			-frounding-math			\
+			-fsignaling-nans		\
+			-fno-reciprocal-math		\
+			-fno-associative-math		\
+			-fno-finite-math-only		\
+			-fno-cx-limited-range		\
+			-ffp-int-builtin-inexact
 
 LIBC_TINYMATH_LIBS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)))
 LIBC_TINYMATH_HDRS = $(foreach x,$(LIBC_TINYMATH_ARTIFACTS),$($(x)_HDRS))

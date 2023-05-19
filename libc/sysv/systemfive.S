@@ -67,9 +67,6 @@
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 	.initbss 300,_init_systemfive
-__hostos:
-	.quad	0
-	.endobj	__hostos,globl,hidden
 
 //	Performs System Five System Call.
 //
@@ -268,7 +265,7 @@ systemfive_xnu:
 	push	%rbx
 	push	%rsi
 //	Detect the operating system.
-	mov	(%rdi),%eax			# __hostos
+	mov	__hostos(%rip),%eax
 #if SupportsWindows() || SupportsXnu() || SupportsFreebsd()
 //	set by	libc/ape.S		for XNU
 //	set by	libc/crt/crt.S		for XNU/FreeBSD
@@ -296,7 +293,7 @@ systemfive_xnu:
 #endif
 	mov	$_HOSTLINUX,%al
 _init_systemfive_detected:
-	stosq	#→ __hostos
+	mov	%eax,__hostos(%rip)
 	bsr	%eax,%eax
 	mov	$_init_systemfive_jmptab,%ebx
 	movzbl	(%rbx,%rax),%eax
@@ -451,80 +448,6 @@ _init_systemfive_sigsys:
 _init_systemfive_done:
 	nop
 	.init.end 300,_init_systemfive,globl,hidden
-
-//	Sections for varint encoded magic numbers.
-//
-//	These sections are all ordered by (group_name, constant_name).
-//	They're populated by modules simply referencing the symbols.
-//
-//	@see libc/sysv/consts.sh
-//	@see libc/sysv/consts/syscon_h
-	.section .piro.bss.sort.syscon.1,"aw",@nobits
-	.balign	8
-syscon_start:/*
-	...decentralized quadwords...
-	*/.previous
-	.section .piro.bss.sort.syscon.3,"aw",@nobits
-syscon_end:
-	.previous
-	.type	syscon_start,@object
-	.type	syscon_end,@object
-	.globl	syscon_start
-	.globl	syscon_end
-#if SupportsLinux() || SupportsMetal()
-	.section .sort.rodata.syscon.linux.1,"a",@progbits
-	.balign	1
-syscon_linux:/*
-	...decentralized leb128...
-	*/.previous
-	.type	syscon_linux,@object
-	.globl	syscon_linux
-#endif
-#if SupportsXnu()
-	.section .sort.rodata.syscon.xnu.1,"a",@progbits
-	.balign	1
-syscon_xnu:/*
-	...decentralized leb128...
-	*/.previous
-	.type	syscon_xnu,@object
-	.globl	syscon_xnu
-#endif
-#if SupportsFreebsd()
-	.section .sort.rodata.syscon.freebsd.1,"a",@progbits
-	.balign	1
-syscon_freebsd:/*
-	...decentralized leb128...
-	*/.previous
-	.type	syscon_freebsd,@object
-	.globl	syscon_freebsd
-#endif
-#if SupportsOpenbsd()
-	.section .sort.rodata.syscon.openbsd.1,"a",@progbits
-	.balign	1
-syscon_openbsd:/*
-	...decentralized leb128...
-	*/.previous
-	.type	syscon_openbsd,@object
-	.globl	syscon_openbsd
-#endif
-#if SupportsNetbsd()
-	.section .sort.rodata.syscon.netbsd.1,"a",@progbits
-	.balign	1
-syscon_netbsd:/*
-	...decentralized leb128...
-	*/.previous
-	.type	syscon_netbsd,@object
-	.globl	syscon_netbsd
-#endif
-#if SupportsWindows()
-	.section .sort.rodata.syscon.windows.1,"a",@progbits
-	.balign	1
-syscon_windows:/*
-	...decentralized leb128...
-	*/.previous
-	.type	syscon_windows,@object
-	.globl	syscon_windows
-#endif
 
 #ifdef SYSDEBUG
 	.rodata.str1.1

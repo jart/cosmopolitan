@@ -29,7 +29,7 @@
 
 #define __strchrnul_aarch64 strchrnul
 
-.ident "\n\
+.ident "\n\n\
 Optimized Routines (MIT License)\n\
 Copyright 2022 ARM Limited\n"
 .include "libc/disclaimer.inc"

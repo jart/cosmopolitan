@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_HWAP_H_
-#define COSMOPOLITAN_LIBC_SYSV_CONSTS_HWAP_H_
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_HWCAP_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_HWCAP_H_
 #ifdef __aarch64__
 
 // Feature bits for getauxval(AT_HWCAP) on AARCH64 GNU/SystemD.
@@ -58,4 +58,4 @@
 #define HWCAP2_MTE        (1 << 18)
 
 #endif /* __aarch64__ */
-#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_HWAP_H_ */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_HWCAP_H_ */

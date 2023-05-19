@@ -9,7 +9,7 @@ eremchg:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EREMCHG
-	ldr	w0,[x1,#:lo12:EREMCHG]
+	ldrsw	x0,[x1,#:lo12:EREMCHG]
 	b	__errfun
 #else
 #error "unsupported architecture"

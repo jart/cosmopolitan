@@ -9,7 +9,7 @@ enobufs:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOBUFS
-	ldr	w0,[x1,#:lo12:ENOBUFS]
+	ldrsw	x0,[x1,#:lo12:ENOBUFS]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -30,6 +30,7 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 #define rdmsr(msr)                                         \
   ({                                                       \
@@ -238,3 +239,5 @@ int arch_prctl(int code, int64_t addr) {
 #endif
   return rc;
 }
+
+#endif /* __x86_64__ */

@@ -9,7 +9,7 @@ eafnosupport:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EAFNOSUPPORT
-	ldr	w0,[x1,#:lo12:EAFNOSUPPORT]
+	ldrsw	x0,[x1,#:lo12:EAFNOSUPPORT]
 	b	__errfun
 #else
 #error "unsupported architecture"

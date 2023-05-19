@@ -9,7 +9,7 @@ erange:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ERANGE
-	ldr	w0,[x1,#:lo12:ERANGE]
+	ldrsw	x0,[x1,#:lo12:ERANGE]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -9,7 +9,7 @@ el2hlt:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EL2HLT
-	ldr	w0,[x1,#:lo12:EL2HLT]
+	ldrsw	x0,[x1,#:lo12:EL2HLT]
 	b	__errfun
 #else
 #error "unsupported architecture"

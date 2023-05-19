@@ -9,7 +9,7 @@ etimedout:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ETIMEDOUT
-	ldr	w0,[x1,#:lo12:ETIMEDOUT]
+	ldrsw	x0,[x1,#:lo12:ETIMEDOUT]
 	b	__errfun
 #else
 #error "unsupported architecture"

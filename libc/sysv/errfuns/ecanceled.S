@@ -9,7 +9,7 @@ ecanceled:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ECANCELED
-	ldr	w0,[x1,#:lo12:ECANCELED]
+	ldrsw	x0,[x1,#:lo12:ECANCELED]
 	b	__errfun
 #else
 #error "unsupported architecture"

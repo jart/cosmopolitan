@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/macros.internal.h"
-.real
-.code16 # ∩ .code32 ∩ .code64
+#include "libc/macros.internal.h"
 
-//	Lightweight universal overridable assert() macro support.
-//
-//	@see	libc/log/__assert_fail.c
-//	@mode	long,legacy,real
-//	@noreturn
-__assert_fail:
-	int3
-	push	%bp
-	mov	%sp,%bp
-	rlcall	__panic
-	int3
-	.endfn	__assert_fail,weak
+	.bss
+	.balign	8
+__hostos:
+	.quad	0
+	.endfn	__hostos,globl

@@ -9,7 +9,7 @@ enoexec:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOEXEC
-	ldr	w0,[x1,#:lo12:ENOEXEC]
+	ldrsw	x0,[x1,#:lo12:ENOEXEC]
 	b	__errfun
 #else
 #error "unsupported architecture"

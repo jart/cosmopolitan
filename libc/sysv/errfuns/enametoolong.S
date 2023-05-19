@@ -9,7 +9,7 @@ enametoolong:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENAMETOOLONG
-	ldr	w0,[x1,#:lo12:ENAMETOOLONG]
+	ldrsw	x0,[x1,#:lo12:ENAMETOOLONG]
 	b	__errfun
 #else
 #error "unsupported architecture"

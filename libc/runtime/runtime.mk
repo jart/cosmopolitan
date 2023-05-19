@@ -64,6 +64,9 @@ $(LIBC_RUNTIME_A).pkg:					\
 #   asan and ubsan can be function traced
 # we can't use function tracing because:
 #   this is the function tracing runtime
+o/$(MODE)/libc/runtime/cosmo2.o: private		\
+		OVERRIDE_CFLAGS += -O0
+
 o/$(MODE)/libc/runtime/ftracer.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-x-no-pg			\
@@ -113,6 +116,13 @@ o//libc/runtime/memtrack.greg.o				\
 o//libc/runtime/opensymboltable.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-Os
+
+ifeq ($(ARCH), aarch64)
+o/$(MODE)/libc/runtime/mmap.o				\
+o/$(MODE)/libc/runtime/enable_tls.o: private		\
+		OVERRIDE_CFLAGS +=			\
+			-mcmodel=large
+endif
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/runtime/init.o: libc/runtime/init.S

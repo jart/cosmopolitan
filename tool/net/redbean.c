@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
@@ -6616,8 +6617,8 @@ static int MemoryMonitor(void *arg, int tid) {
       intervals = atomic_load_explicit(&_mmi.i, memory_order_relaxed);
       if ((mi2 = realloc(mi, (intervals += 3) * sizeof(*mi)))) {
         mi = mi2;
-        mi[0].x = (intptr_t)_base >> 16;
-        mi[0].size = _etext - _base;
+        mi[0].x = (intptr_t)__executable_start >> 16;
+        mi[0].size = _etext - __executable_start;
         mi[0].flags = 0;
         mi[1].x = (intptr_t)_etext >> 16;
         mi[1].size = _edata - _etext;

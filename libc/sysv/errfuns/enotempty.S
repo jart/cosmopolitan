@@ -9,7 +9,7 @@ enotempty:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTEMPTY
-	ldr	w0,[x1,#:lo12:ENOTEMPTY]
+	ldrsw	x0,[x1,#:lo12:ENOTEMPTY]
 	b	__errfun
 #else
 #error "unsupported architecture"

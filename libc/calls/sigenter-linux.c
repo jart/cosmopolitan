@@ -44,7 +44,7 @@ privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
         memcpy(ctx->__fpustate.st + i, &nan, 16);
       }
     }
-    ((sigaction_f)(_base + rva))(sig, info, ctx);
+    ((sigaction_f)(__executable_start + rva))(sig, info, ctx);
   }
 }
 

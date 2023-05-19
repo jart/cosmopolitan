@@ -9,7 +9,7 @@ enoent:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOENT
-	ldr	w0,[x1,#:lo12:ENOENT]
+	ldrsw	x0,[x1,#:lo12:ENOENT]
 	b	__errfun
 #else
 #error "unsupported architecture"

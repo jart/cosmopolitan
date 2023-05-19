@@ -9,7 +9,7 @@ eprotonosupport:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EPROTONOSUPPORT
-	ldr	w0,[x1,#:lo12:EPROTONOSUPPORT]
+	ldrsw	x0,[x1,#:lo12:EPROTONOSUPPORT]
 	b	__errfun
 #else
 #error "unsupported architecture"

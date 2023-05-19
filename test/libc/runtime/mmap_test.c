@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/linux/mmap.h"
+#include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
@@ -77,7 +78,7 @@ TEST(mmap, outOfAutomapRange) {
 
 TEST(mmap, noreplaceImage) {
   ASSERT_SYS(EEXIST, MAP_FAILED,
-             mmap(_base, FRAMESIZE, PROT_READ,
+             mmap(__executable_start, FRAMESIZE, PROT_READ,
                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED_NOREPLACE, -1, 0));
 }
 

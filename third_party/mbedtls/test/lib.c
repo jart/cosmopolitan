@@ -14,6 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+#include "third_party/mbedtls/test/lib.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -42,7 +43,6 @@
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/test/lib.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\

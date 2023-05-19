@@ -40,7 +40,7 @@ COSMOPOLITAN_C_START_
     t2_ = stop();                                               \
     TiCkS = t2_ >= t1_ ? t2_ - t1_ : ~t1_ + t2_ + 1;            \
     asm(".section .rodata.str1.1,\"aMS\",@progbits,1\n\t"       \
-        ".align\t1\n"                                           \
+        ".balign\t1\n"                                          \
         "31340:\t.asciz\t" file "\n\t"                          \
         "31338:\t.asciz\t" code "\n"                            \
         "31332:\t.asciz\t" macro "\n"                           \
@@ -49,7 +49,7 @@ COSMOPOLITAN_C_START_
         "nopl\tcountexpr_data(%%rip)\n\t"                       \
         ".previous\n\t"                                         \
         ".section .sort.data.countexpr.2,\"a\",@progbits\n\t"   \
-        ".align\t8\n31337:\t"                                   \
+        ".balign\t8\n31337:\t"                                  \
         ".quad\t" #line "\n\t"                                  \
         ".quad\t31340b\n\t"                                     \
         ".quad\t31338b\n\t"                                     \

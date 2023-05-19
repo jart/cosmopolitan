@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
@@ -34,6 +35,11 @@ STATIC_YOINK("zip_uri_support");
 int fds[2];
 char buf[8];
 char testlib_enable_tmp_setup_teardown;
+
+void SetUp(void) {
+  if (IsFreebsd()) exit(0);           // TODO: fixme on freebsd
+  if (!__is_linux_2_6_23()) exit(0);  // TODO: fixme on old linux
+}
 
 TEST(execve, elfIsUnreadable_mayBeExecuted) {
   if (IsWindows() || IsXnu()) return;

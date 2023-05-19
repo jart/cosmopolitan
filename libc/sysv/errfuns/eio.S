@@ -9,7 +9,7 @@ eio:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EIO
-	ldr	w0,[x1,#:lo12:EIO]
+	ldrsw	x0,[x1,#:lo12:EIO]
 	b	__errfun
 #else
 #error "unsupported architecture"

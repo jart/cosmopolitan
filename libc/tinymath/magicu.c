@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/magicu.h"
+#include "libc/assert.h"
 
 /**
  * Precomputes magic numbers for unsigned division by constant.
@@ -27,7 +28,7 @@
  *     assert(77 / 7 == __magicu_div(77, __magicu_get(7)));
  *
  * @param d is intended divisor, which must not be zero
- * @return magic divisor
+ * @return magic divisor (never zero)
  */
 struct magicu __magicu_get(uint32_t d) {
   // From Hacker's Delight by Henry S. Warren Jr., 9780321842688
@@ -35,6 +36,7 @@ struct magicu __magicu_get(uint32_t d) {
   int a, p;
   struct magicu magu;
   uint32_t p32, q, r, delta;
+  _npassert(d);            // Can't divide by zero.
   p32 = 0;                 // Avoid compiler warning.
   a = 0;                   // Initialize "add" indicator.
   p = 31;                  // Initialize p.
@@ -58,8 +60,9 @@ struct magicu __magicu_get(uint32_t d) {
     }
     delta = d - 1 - r;
   } while (p < 64 && p32 < delta);
-  magu.M = q + 1;       // Magic number and
-  magu.s = p - 32;      // Shift amount to return
-  if (a) magu.s |= 64;  // Sets "add" indicator
+  magu.M = q + 1;               // Magic number and
+  magu.s = p - 32;              // Shift amount to return
+  if (a) magu.s |= 64;          // Sets "add" indicator
+  _npassert(magu.M || magu.s);  // Never returns zero.
   return magu;
 }

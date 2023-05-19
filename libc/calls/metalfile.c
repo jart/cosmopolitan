@@ -63,7 +63,7 @@ textstartup noasan void InitializeMetalFile(void) {
      * The zipos code will automatically arrange to do this.  Alternatively,
      * user code can STATIC_YOINK this symbol.
      */
-    size_t size = ROUNDUP(_ezip - _base, 4096);
+    size_t size = ROUNDUP(_ezip - __executable_start, 4096);
     void *copied_base;
     struct DirectMap dm;
     dm = sys_mmap_metal(NULL, size, PROT_READ | PROT_WRITE,

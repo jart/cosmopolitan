@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_sem_close,0x0fafff190210dfff,0xfff,globl
+.scall sys_sem_close,0x0fafff190210dfff,4095,269,globl

@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #ifndef __x86_64__
@@ -33,15 +33,27 @@ int main(int, char **, char **) __attribute__((__weak__));
 
 typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
 
+extern long syscon_start[];
+extern long syscon_end[];
+extern long syscon_linux[];
+extern long syscon_xnu[];
+extern long syscon_freebsd[];
+extern long syscon_openbsd[];
+extern long syscon_netbsd[];
+extern long syscon_windows[];
 extern init_f __strace_init;
+extern init_f *__preinit_array_start[] __attribute__((__weak__));
+extern init_f *__preinit_array_end[] __attribute__((__weak__));
 extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
+extern int hostos asm("__hostos");
 
-textstartup void cosmo(long *sp) {
+textstartup void cosmo(long *sp, struct Syslib *m1) {
   int argc;
   init_f **fp;
   uintptr_t *pp;
+  long *mp, *magnums;
   char **argv, **envp;
   unsigned long *auxv;
 
@@ -56,6 +68,20 @@ textstartup void cosmo(long *sp) {
   auxv = (unsigned long *)(sp + 1 + argc + 1);
   while (*auxv++) donothing;
 
+  // detect apple m1 environment
+  if ((__syslib = m1)) {
+    hostos = _HOSTXNU;
+    magnums = syscon_xnu;
+  } else {
+    hostos = _HOSTLINUX;
+    magnums = syscon_linux;
+  }
+
+  // setup system magic numbers
+  for (mp = syscon_start; mp < syscon_end; ++mp) {
+    *mp = *magnums++;
+  }
+
   // needed by kisdangerous()
   __oldstack = (intptr_t)sp;
   __pid = sys_getpid().ax;
@@ -64,11 +90,6 @@ textstartup void cosmo(long *sp) {
   _mmi.n = ARRAYLEN(_mmi.s);
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
-
-#ifdef SYSDEBUG
-  // initialize --strace functionality
-  argc = __strace_init(argc, argv, envp, auxv);
-#endif
 
 #if 0
 #if IsAsan()
@@ -89,6 +110,9 @@ textstartup void cosmo(long *sp) {
   // run initialization callbacks
   _init();
   __enable_tls();
+#ifdef SYSDEBUG
+  argc = __strace_init(argc, argv, envp, auxv);
+#endif
   for (fp = __init_array_end; fp-- > __init_array_start;) {
     (*fp)(argc, argv, envp, auxv);
   }

@@ -62,9 +62,11 @@ struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
   register long res_x0 asm("x0");
   long res;
   asm volatile("mov\tx8,%1\n\t"
+               "mov\tx16,%2\n\t"
                "svc\t0"
                : "=r"(res_x0)
-               : "i"(222), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4), "r"(r5)
+               : "i"(222), "i"(197), "r"(r0), "r"(r1), "r"(r2), "r"(r3),
+                 "r"(r4), "r"(r5)
                : "x8", "memory");
   res = res_x0;
   if ((unsigned long)res >= (unsigned long)-4095) {

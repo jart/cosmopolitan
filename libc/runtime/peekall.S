@@ -22,7 +22,7 @@
 //	Loads all pages from program image into memory.
 _peekall:
 	.leafprologue
-	ezlea	_base,si
+	ezlea	__executable_start,si
 	ezlea	_etext,cx
 	add	$0x1000,%rsi
 0:	xor	(%rsi),%eax
@@ -39,3 +39,7 @@ _peekall:
 	jb	0b
 	.leafepilogue
 	.endfn	_peekall,globl
+
+	.weak	__executable_start
+	.weak	_etext
+	.weak	_end

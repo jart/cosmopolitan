@@ -20,6 +20,7 @@
 #include "libc/atomic.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
@@ -38,7 +39,7 @@ relegated void __assert_fail(const char *expr, const char *file, int line) {
     owner = 0;
     me = sys_gettid();
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
-    kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
+    kprintf("%s:%d: assert(%s) failed (tid %d) %m\n", file, line, expr, me);
     if (__vforked ||
         atomic_compare_exchange_strong_explicit(
             &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {

@@ -66,7 +66,7 @@ kHalfCache3:
 #else
 
 	.rodata
-	.align	8
+	.balign	8
 kHalfCache3:
 	.quad	4 * 1024 * 1024
 	.endobj	kHalfCache3,globl

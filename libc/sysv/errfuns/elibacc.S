@@ -9,7 +9,7 @@ elibacc:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ELIBACC
-	ldr	w0,[x1,#:lo12:ELIBACC]
+	ldrsw	x0,[x1,#:lo12:ELIBACC]
 	b	__errfun
 #else
 #error "unsupported architecture"

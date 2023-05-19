@@ -317,7 +317,7 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
         // RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(
             ((sig == SIGTRAP || sig == SIGQUIT) &&
-             (rip >= (intptr_t)&_base && rip < (intptr_t)&_etext))
+             (rip >= (intptr_t)&__executable_start && rip < (intptr_t)&_etext))
                 ? rip
                 : 0);
       }

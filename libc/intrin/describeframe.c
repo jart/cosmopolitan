@@ -66,7 +66,7 @@ static const char *GetFrameName(int x) {
                      sizeof(struct WinArgs) - 1) >>
                     16))) {
     return "winargs";
-  } else if ((int)((intptr_t)_base >> 16) <= x &&
+  } else if ((int)((intptr_t)__executable_start >> 16) <= x &&
              x <= (int)(((intptr_t)_end - 1) >> 16)) {
     return "image";
   } else {

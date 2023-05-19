@@ -9,7 +9,7 @@ erestart:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ERESTART
-	ldr	w0,[x1,#:lo12:ERESTART]
+	ldrsw	x0,[x1,#:lo12:ERESTART]
 	b	__errfun
 #else
 #error "unsupported architecture"

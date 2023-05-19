@@ -9,7 +9,7 @@ eownerdead:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EOWNERDEAD
-	ldr	w0,[x1,#:lo12:EOWNERDEAD]
+	ldrsw	x0,[x1,#:lo12:EOWNERDEAD]
 	b	__errfun
 #else
 #error "unsupported architecture"

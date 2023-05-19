@@ -9,7 +9,7 @@ etxtbsy:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ETXTBSY
-	ldr	w0,[x1,#:lo12:ETXTBSY]
+	ldrsw	x0,[x1,#:lo12:ETXTBSY]
 	b	__errfun
 #else
 #error "unsupported architecture"

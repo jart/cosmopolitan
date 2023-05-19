@@ -9,7 +9,7 @@ enotdir:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTDIR
-	ldr	w0,[x1,#:lo12:ENOTDIR]
+	ldrsw	x0,[x1,#:lo12:ENOTDIR]
 	b	__errfun
 #else
 #error "unsupported architecture"

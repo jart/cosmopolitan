@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaction.h"
+#include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
@@ -168,9 +169,11 @@ static int __sigaction(int sig, const struct sigaction *act,
     rva = (int32_t)(intptr_t)SIG_DFL;
   } else if ((intptr_t)act->sa_handler < kSigactionMinRva) {
     rva = (int)(intptr_t)act->sa_handler;
-  } else if ((intptr_t)act->sa_handler >= (intptr_t)&_base + kSigactionMinRva &&
-             (intptr_t)act->sa_handler < (intptr_t)&_base + INT_MAX) {
-    rva = (int)((uintptr_t)act->sa_handler - (uintptr_t)&_base);
+  } else if ((intptr_t)act->sa_handler >=
+                 (intptr_t)&__executable_start + kSigactionMinRva &&
+             (intptr_t)act->sa_handler <
+                 (intptr_t)&__executable_start + INT_MAX) {
+    rva = (int)((uintptr_t)act->sa_handler - (uintptr_t)&__executable_start);
   } else {
     return efault();
   }
@@ -249,8 +252,9 @@ static int __sigaction(int sig, const struct sigaction *act,
     if (oldact) {
       oldrva = __sighandrvas[sig];
       oldact->sa_sigaction =
-          (sigaction_f)(oldrva < kSigactionMinRva ? oldrva
-                                                  : (intptr_t)&_base + oldrva);
+          (sigaction_f)(oldrva < kSigactionMinRva
+                            ? oldrva
+                            : (intptr_t)&__executable_start + oldrva);
     }
     if (act) {
       __sighandrvas[sig] = rva;

@@ -102,7 +102,7 @@ static struct {
     PY_TIMEOUT_T timeout_us;   /* timeout in microseconds */
     int repeat;
     PyInterpreterState *interp;
-    int exit;
+    int exit_;
     char *header;
     size_t header_len;
     /* The main thread always holds this lock. It is only released when
@@ -622,7 +622,7 @@ faulthandler_thread(void *unused)
         errmsg = _Py_DumpTracebackThreads(thread.fd, thread.interp, NULL);
         ok = (errmsg == NULL);
 
-        if (thread.exit)
+        if (thread.exit_)
             _exit(1);
     } while (ok && thread.repeat);
 
@@ -729,7 +729,7 @@ faulthandler_dump_traceback_later(PyObject *self,
     thread.timeout_us = timeout_us;
     thread.repeat = repeat;
     thread.interp = tstate->interp;
-    thread.exit = exit;
+    thread.exit_ = exit;
     thread.header = header;
     thread.header_len = header_len;
 

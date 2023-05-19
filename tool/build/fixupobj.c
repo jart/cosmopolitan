@@ -26,9 +26,9 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -50,6 +50,10 @@ Usage: fixupobj.com [-h] ARGS...\n\
   -h          show help\n\
 "
 
+#define COSMO_TLS_REG     28
+#define MRS_TPIDR_EL0     0xd53bd040u
+#define MOV_REG(DST, SRC) (0xaa0003e0u | (SRC) << 16 | (DST))
+
 void Write(const char *s, ...) {
   va_list va;
   va_start(va, s);
@@ -67,7 +71,7 @@ wontreturn void SysExit(int rc, const char *call, const char *thing) {
   FormatInt32(ibuf, err);
   estr = _strerdoc(err);
   if (!estr) estr = "EUNKNOWN";
-  Write(thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
+  Write(thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", NULL);
   exit(rc);
 }
 
@@ -86,10 +90,29 @@ static void GetOpts(int argc, char *argv[]) {
   }
 }
 
+// Modify ARM64 code to use x28 for TLS rather than tpidr_el0.
+void RewriteTlsCode(Elf64_Ehdr *elf, size_t elfsize) {
+  int i, dest;
+  Elf64_Shdr *shdr;
+  uint32_t *p, *pe;
+  for (i = 0; i < elf->e_shnum; ++i) {
+    shdr = GetElfSectionHeaderAddress(elf, elfsize, i);
+    if (shdr->sh_type == SHT_PROGBITS &&     //
+        (shdr->sh_flags & SHF_ALLOC) &&      //
+        (shdr->sh_flags & SHF_EXECINSTR) &&  //
+        (p = GetElfSectionAddress(elf, elfsize, shdr))) {
+      for (pe = p + shdr->sh_size / 4; p <= pe; ++p) {
+        if ((*p & -32) == MRS_TPIDR_EL0) {
+          *p = MOV_REG(*p & 31, COSMO_TLS_REG);
+        }
+      }
+    }
+  }
+}
+
 void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
   char *strs;
   Elf64_Half i;
-  struct Op *op;
   Elf64_Sym *syms;
   Elf64_Rela *rela;
   Elf64_Xword symcount;
@@ -107,7 +130,7 @@ void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
       CHECK_NOTNULL((code = GetElfSectionAddress(elf, elfsize, shdrcode)));
       for (rela = GetElfSectionAddress(elf, elfsize, shdr);
            ((uintptr_t)rela + shdr->sh_entsize <=
-            min((uintptr_t)elf + elfsize,
+            MIN((uintptr_t)elf + elfsize,
                 (uintptr_t)elf + shdr->sh_offset + shdr->sh_size));
            ++rela) {
 
@@ -166,7 +189,12 @@ void RewriteObject(const char *path) {
                     0)) == MAP_FAILED) {
       SysExit(__COUNTER__ + 1, "mmap", path);
     }
-    OptimizeRelocations(elf, st.st_size);
+    if (elf->e_machine == EM_NEXGEN32E) {
+      OptimizeRelocations(elf, st.st_size);
+    }
+    if (elf->e_machine == EM_AARCH64) {
+      RewriteTlsCode(elf, st.st_size);
+    }
     if (msync(elf, st.st_size, MS_ASYNC | MS_INVALIDATE)) {
       SysExit(__COUNTER__ + 1, "msync", path);
     }

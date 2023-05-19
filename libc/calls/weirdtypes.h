@@ -43,7 +43,7 @@
 #define nlink_t   uint64_t
 #elif defined(__aarch64__)
 #define blksize_t int32_t
-#define nlink_t   uint32_t
+#define nlink_t   uint32_t /* uint16_t on xnu */
 #endif
 
 #define TIME_T_MAX __INT64_MAX__

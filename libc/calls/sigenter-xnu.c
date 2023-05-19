@@ -31,7 +31,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
-#ifdef __x86_64__
 
 /**
  * @fileoverview XNU kernel callback normalization.
@@ -345,10 +344,37 @@ struct __darwin_mcontext_avx512_64_full {
   struct __darwin_x86_avx512_state64 __fs;
 };
 
+struct __darwin_arm_exception_state64 {
+  uint64_t far;
+  uint32_t esr;
+  uint32_t exception;
+};
+
+struct __darwin_arm_thread_state64 {
+  uint64_t __x[29];
+  uint64_t __fp;
+  uint64_t __lr;
+  uint64_t __sp;
+  uint64_t __pc;
+  uint32_t __cpsr;
+  uint32_t __pad;
+};
+
+struct __darwin_arm_vfp_state {
+  uint32_t __r[64];
+  uint32_t __fpscr;
+};
+
 struct __darwin_mcontext64 {
+#ifdef __x86_64__
   struct __darwin_x86_exception_state64 __es;
   struct __darwin_x86_thread_state64 __ss;
   struct __darwin_x86_float_state64 __fs;
+#elif defined(__aarch64__)
+  struct __darwin_arm_exception_state64 __es;
+  struct __darwin_arm_thread_state64 __ss;
+  struct __darwin_arm_vfp_state __fs;
+#endif
 };
 
 struct __darwin_ucontext {
@@ -359,6 +385,8 @@ struct __darwin_ucontext {
   uint64_t uc_mcsize;
   struct __darwin_mcontext64 *uc_mcontext;
 };
+
+#ifdef __x86_64__
 
 static privileged void xnuexceptionstate2linux(
     mcontext_t *mc, struct __darwin_x86_exception_state64 *xnues) {
@@ -455,6 +483,8 @@ static privileged void linuxssefpustate2xnu(
   CopyFpXmmRegs(&xnufs->__fpu_stmm0, fs->st);
 }
 
+#endif /* __x86_64__ */
+
 privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
                                struct siginfo_xnu *xnuinfo,
                                struct __darwin_ucontext *xnuctx) {
@@ -468,15 +498,17 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
   if (rva >= kSigactionMinRva) {
     flags = __sighandflags[sig & (NSIG - 1)];
     if (~flags & SA_SIGINFO) {
-      ((sigaction_f)(_base + rva))(sig, 0, 0);
+      ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {
       __repstosb(&g, 0, sizeof(g));
+
       if (xnuctx) {
         g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
         g.uc.uc_sigmask.__bits[1] = 0;
         g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
         g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
         g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
+#ifdef __x86_64__
         g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
         if (xnuctx->uc_mcontext) {
           if (xnuctx->uc_mcsize >=
@@ -493,16 +525,24 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
             xnussefpustate2linux(&g.uc.__fpustate, &xnuctx->uc_mcontext->__fs);
           }
         }
+#elif defined(__aarch64__)
+        if (xnuctx->uc_mcontext) {
+          memcpy(g.uc.uc_mcontext.regs, &xnuctx->uc_mcontext->__ss.__x, 33 * 8);
+        }
+#endif /* __x86_64__ */
       }
+
       if (xnuinfo) {
         __siginfo2cosmo(&g.si, (void *)xnuinfo);
       }
-      ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+      ((sigaction_f)(__executable_start + rva))(sig, &g.si, &g.uc);
+
       if (xnuctx) {
         xnuctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
         xnuctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
         xnuctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
         xnuctx->uc_sigmask = g.uc.uc_sigmask.__bits[0];
+#ifdef __x86_64__
         if (xnuctx->uc_mcontext) {
           if (xnuctx->uc_mcsize >=
               sizeof(struct __darwin_x86_exception_state64)) {
@@ -519,14 +559,29 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
             linuxssefpustate2xnu(&xnuctx->uc_mcontext->__fs, &g.uc.__fpustate);
           }
         }
+#elif defined(__aarch64__)
+        if (xnuctx->uc_mcontext) {
+          memcpy(&xnuctx->uc_mcontext->__ss.__x, g.uc.uc_mcontext.regs, 33 * 8);
+        }
+#endif /* __x86_64__ */
       }
     }
   }
+
+#ifdef __x86_64__
   asm volatile("syscall"
                : "=a"(ax)
                : "0"(0x20000b8 /* sigreturn */), "D"(xnuctx), "S"(infostyle)
                : "rcx", "r11", "memory", "cc");
+#else
+  register long r0 asm("x0") = (long)xnuctx;
+  register long r1 asm("x1") = (long)infostyle;
+  asm volatile("mov\tx16,%0\n\t"
+               "svc\t0"
+               : /* no outputs */
+               : "i"(0x0b8 /* sigreturn */), "r"(r0), "r"(r1)
+               : "x16", "memory");
+#endif /* __x86_64__ */
+
   notpossible;
 }
-
-#endif

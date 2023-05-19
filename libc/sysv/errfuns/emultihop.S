@@ -9,7 +9,7 @@ emultihop:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EMULTIHOP
-	ldr	w0,[x1,#:lo12:EMULTIHOP]
+	ldrsw	x0,[x1,#:lo12:EMULTIHOP]
 	b	__errfun
 #else
 #error "unsupported architecture"

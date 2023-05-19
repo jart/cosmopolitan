@@ -9,7 +9,7 @@ enfile:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENFILE
-	ldr	w0,[x1,#:lo12:ENFILE]
+	ldrsw	x0,[x1,#:lo12:ENFILE]
 	b	__errfun
 #else
 #error "unsupported architecture"

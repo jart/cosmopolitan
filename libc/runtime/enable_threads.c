@@ -53,9 +53,9 @@ static privileged dontinline void FixupLockNops(void) {
    * binary the offsets of all the instructions we need to change.
    */
   for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
-    _base[*p + 0] = 0x67;
-    _base[*p + 1] = 0x67;
-    _base[*p + 2] = 0xe8;
+    __executable_start[*p + 0] = 0x67;
+    __executable_start[*p + 1] = 0x67;
+    __executable_start[*p + 2] = 0xe8;
   }
   __morph_end(&mask);
 }

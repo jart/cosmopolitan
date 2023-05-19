@@ -97,7 +97,7 @@ static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
                                            bool32 (*fn)(), const char *sf,
                                            bool ischild) {
   ssize_t rc = ForkIo(h, buf, n, fn);
-  if (ischild) __tls_enabled = false;  // prevent tls crash in kprintf
+  if (ischild) __tls_enabled_set(false);  // prevent tls crash in kprintf
   NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
   return rc != -1;
 }
@@ -211,7 +211,7 @@ textwindows void WinMainForked(void) {
   kStartTsc = savetsc;
   __threaded = false;
   __tls_index = 0;
-  __tls_enabled = false;
+  __tls_enabled_set(false);
 
   // apply fixups and reapply memory protections
   _mmi.p = maps;
@@ -352,7 +352,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     if (tib && _weaken(__set_tls) && _weaken(__morph_tls)) {
       _weaken(__set_tls)(tib);
       _weaken(__morph_tls)();
-      __tls_enabled = true;
+      __tls_enabled_set(true);
     }
     if (threaded && !__threaded && _weaken(__enable_threads)) {
       _weaken(__enable_threads)();

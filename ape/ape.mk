@@ -19,8 +19,9 @@ APE_FILES := $(wildcard ape/*.*)
 APE_HDRS = $(filter %.h,$(APE_FILES))
 APE_INCS = $(filter %.inc,$(APE_FILES))
 
-APE =	o/$(MODE)/ape/ape.o			\
-	o/$(MODE)/ape/ape.lds
+ifeq ($(ARCH), aarch64)
+
+APE = o/$(MODE)/ape/aarch64.lds
 
 APELINK =					\
 	$(COMPILE)				\
@@ -28,8 +29,6 @@ APELINK =					\
 	$(LINK)					\
 	$(LINKARGS)				\
 	$(OUTPUT_OPTION)
-
-ifeq ($(ARCH), aarch64)
 
 APE_SRCS = ape/ape.S
 APE_OBJS = o/$(MODE)/ape/ape.o
@@ -39,7 +38,25 @@ APE_COPY_SELF = $(APE)
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape: $(APE)
 
+o/$(MODE)/ape/aarch64.lds:			\
+	ape/aarch64.lds				\
+	libc/zip.h				\
+	libc/intrin/bits.h			\
+	libc/calls/struct/timespec.h		\
+	libc/macros.internal.h			\
+	libc/str/str.h
+
 else
+
+APE =	o/$(MODE)/ape/ape.o			\
+	o/$(MODE)/ape/ape.lds
+
+APELINK =					\
+	$(COMPILE)				\
+	-ALINK.ape				\
+	$(LINK)					\
+	$(LINKARGS)				\
+	$(OUTPUT_OPTION)
 
 APE_NO_MODIFY_SELF =				\
 	o/$(MODE)/ape/ape.lds			\

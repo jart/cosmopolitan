@@ -9,7 +9,7 @@ enomedium:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOMEDIUM
-	ldr	w0,[x1,#:lo12:ENOMEDIUM]
+	ldrsw	x0,[x1,#:lo12:ENOMEDIUM]
 	b	__errfun
 #else
 #error "unsupported architecture"

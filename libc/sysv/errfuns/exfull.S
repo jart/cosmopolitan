@@ -9,7 +9,7 @@ exfull:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EXFULL
-	ldr	w0,[x1,#:lo12:EXFULL]
+	ldrsw	x0,[x1,#:lo12:EXFULL]
 	b	__errfun
 #else
 #error "unsupported architecture"

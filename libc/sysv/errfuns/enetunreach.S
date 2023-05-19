@@ -9,7 +9,7 @@ enetunreach:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENETUNREACH
-	ldr	w0,[x1,#:lo12:ENETUNREACH]
+	ldrsw	x0,[x1,#:lo12:ENETUNREACH]
 	b	__errfun
 #else
 #error "unsupported architecture"

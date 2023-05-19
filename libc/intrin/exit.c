@@ -68,10 +68,11 @@ wontreturn void _Exit(int exitcode) {
 #elif defined(__aarch64__)
   register long x0 asm("x0") = exitcode;
   asm volatile("mov\tx8,%0\n\t"
+               "mov\tx16,%1\n\t"
                "svc\t0"
                : /* no outputs */
-               : "i"(94), "r"(x0)
-               : "x8", "memory");
+               : "i"(94), "i"(1), "r"(x0)
+               : "x8", "x16", "memory");
   notpossible;
 #else
 #error "arch unsupported"

@@ -412,7 +412,7 @@ static bool __asan_is_mapped(int x) {
 }
 
 static bool __asan_is_image(const unsigned char *p) {
-  return _base <= p && p < _end;
+  return __executable_start <= p && p < _end;
 }
 
 static bool __asan_exists(const void *x) {
@@ -823,7 +823,7 @@ static void __asan_report_memory_origin(const unsigned char *addr, int size,
     default:
       break;
   }
-  if (_base <= addr && addr < _end) {
+  if (__executable_start <= addr && addr < _end) {
     __asan_report_memory_origin_image((intptr_t)addr, size);
   } else if (IsAutoFrame((intptr_t)addr >> 16)) {
     __asan_report_memory_origin_heap(addr, size);
@@ -898,7 +898,7 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
     }
     *p++ = '\n';
   }
-  p = __asan_format_section(p, _base, _etext, ".text", addr);
+  p = __asan_format_section(p, __executable_start, _etext, ".text", addr);
   p = __asan_format_section(p, _etext, _edata, ".data", addr);
   p = __asan_format_section(p, _end, _edata, ".bss", addr);
   __mmi_lock();
@@ -1487,7 +1487,7 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
     REQUIRE(dlmalloc_usable_size);
   }
   __asan_shadow_existing_mappings();
-  __asan_map_shadow((uintptr_t)_base, _end - _base);
+  __asan_map_shadow((uintptr_t)__executable_start, _end - __executable_start);
   __asan_map_shadow(0, 4096);
   __asan_poison(0, GUARDSIZE, kAsanNullPage);
   if (!IsWindows()) {

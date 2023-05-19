@@ -9,7 +9,7 @@ eoverflow:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EOVERFLOW
-	ldr	w0,[x1,#:lo12:EOVERFLOW]
+	ldrsw	x0,[x1,#:lo12:EOVERFLOW]
 	b	__errfun
 #else
 #error "unsupported architecture"

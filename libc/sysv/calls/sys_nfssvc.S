@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_nfssvc,0x09b09b09b209bfff,0xfff,globl
+.scall sys_nfssvc,0x09b09b09b209bfff,4095,155,globl

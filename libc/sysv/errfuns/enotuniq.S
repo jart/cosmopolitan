@@ -9,7 +9,7 @@ enotuniq:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTUNIQ
-	ldr	w0,[x1,#:lo12:ENOTUNIQ]
+	ldrsw	x0,[x1,#:lo12:ENOTUNIQ]
 	b	__errfun
 #else
 #error "unsupported architecture"

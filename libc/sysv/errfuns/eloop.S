@@ -9,7 +9,7 @@ eloop:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ELOOP
-	ldr	w0,[x1,#:lo12:ELOOP]
+	ldrsw	x0,[x1,#:lo12:ELOOP]
 	b	__errfun
 #else
 #error "unsupported architecture"

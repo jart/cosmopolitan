@@ -20,7 +20,7 @@
 #define _NOPL_PROLOGUE(SECTION)                    \
   ".section \".sort.rodata." SECTION ".1"          \
   "\",\"aG\",@progbits,\"" SECTION "\",comdat\n\t" \
-  ".align\t4\n\t"                                  \
+  ".balign\t4\n\t"                                 \
   ".type\t\"" SECTION "_start\",@object\n\t"       \
   ".globl\t\"" SECTION "_start\"\n\t"              \
   ".equ\t\"" SECTION "_start\",.\n\t"              \
@@ -29,7 +29,7 @@
 #define _NOPL_EPILOGUE(SECTION)                    \
   ".section \".sort.rodata." SECTION ".3"          \
   "\",\"aG\",@progbits,\"" SECTION "\",comdat\n\t" \
-  ".align\t4\n\t"                                  \
+  ".balign\t4\n\t"                                 \
   ".type\"" SECTION "_end\",@object\n\t"           \
   ".globl\t\"" SECTION "_end\"\n\t"                \
   ".equ\t\"" SECTION "_end\",.\n\t"                \
@@ -40,7 +40,7 @@
     asm volatile(_NOPL_PROLOGUE(SECTION) /*                                 */ \
                  _NOPL_EPILOGUE(SECTION) /*                                 */ \
                  ".section \".sort.rodata." SECTION ".2\",\"a\",@progbits\n\t" \
-                 ".align\t4\n\t"                                               \
+                 ".balign\t4\n\t"                                              \
                  ".long\t353f-%a1\n\t"                                         \
                  ".previous\n353:\t"                                           \
                  "nopl\t%a0"                                                   \
@@ -57,7 +57,7 @@
     asm volatile(_NOPL_PROLOGUE(SECTION) /*                                 */ \
                  _NOPL_EPILOGUE(SECTION) /*                                 */ \
                  ".section \".sort.rodata." SECTION ".2\",\"a\",@progbits\n\t" \
-                 ".align\t4\n\t"                                               \
+                 ".balign\t4\n\t"                                              \
                  ".long\t353f-%a2\n\t"                                         \
                  ".previous\n353:\t"                                           \
                  "nopl\t%a1"                                                   \

@@ -192,6 +192,7 @@ PYFLAGS +=				\
 endif
 
 ifeq ($(MODE), aarch64-tiny)
+# TODO(jart): -mcmodel=tiny
 CONFIG_CPPFLAGS +=			\
 	-DTINY				\
 	-DNDEBUG			\
@@ -203,7 +204,7 @@ CONFIG_CCFLAGS +=			\
 	-fno-align-labels		\
 	-fno-align-loops		\
 	-fschedule-insns2		\
-	-fomit-frame-pointer		\
+	-fno-omit-frame-pointer		\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS

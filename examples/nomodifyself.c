@@ -20,7 +20,7 @@
  */
 
 int main(int argc, char *argv[]) {
-  if (_base[0] == 'M' && _base[1] == 'Z') {
+  if (__executable_start[0] == 'M' && __executable_start[1] == 'Z') {
     printf("success: %s spawned without needing to modify its "
            "executable header",
            argv[0]);

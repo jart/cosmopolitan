@@ -9,7 +9,7 @@ espipe:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ESPIPE
-	ldr	w0,[x1,#:lo12:ESPIPE]
+	ldrsw	x0,[x1,#:lo12:ESPIPE]
 	b	__errfun
 #else
 #error "unsupported architecture"

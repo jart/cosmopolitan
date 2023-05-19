@@ -9,7 +9,7 @@ exdev:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EXDEV
-	ldr	w0,[x1,#:lo12:EXDEV]
+	ldrsw	x0,[x1,#:lo12:EXDEV]
 	b	__errfun
 #else
 #error "unsupported architecture"

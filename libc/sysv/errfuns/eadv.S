@@ -9,7 +9,7 @@ eadv:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EADV
-	ldr	w0,[x1,#:lo12:EADV]
+	ldrsw	x0,[x1,#:lo12:EADV]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -39,8 +39,15 @@ struct CosmoTib {
 };
 
 extern int __threaded;
-extern bool __tls_enabled;
 extern unsigned __tls_index;
+
+#ifdef __x86_64__
+extern bool __tls_enabled;
+#define __tls_enabled_set(x) __tls_enabled = x
+#else
+#define __tls_enabled        true
+#define __tls_enabled_set(x) (void)0
+#endif
 
 void __require_tls(void);
 void __set_tls(struct CosmoTib *);

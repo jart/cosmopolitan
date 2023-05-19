@@ -174,14 +174,15 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
       (0x7e000 - 0x79000 + sizeof(struct EfiArgs) + 4095) / 4096, &Address);
   Address = IMAGE_BASE_PHYSICAL;
   SystemTable->BootServices->AllocatePages(
-      AllocateAddress, EfiRuntimeServicesData, ((_end - _base) + 4095) / 4096,
-      &Address);
+      AllocateAddress, EfiRuntimeServicesData,
+      ((_end - __executable_start) + 4095) / 4096, &Address);
   mm = (struct mman *)0x0500;
   SystemTable->BootServices->SetMem(mm, sizeof(*mm), 0);
   SystemTable->BootServices->SetMem(
       (void *)0x79000, 0x7e000 - 0x79000 + sizeof(struct EfiArgs), 0);
-  SystemTable->BootServices->CopyMem((void *)IMAGE_BASE_PHYSICAL, _base,
-                                     _end - _base);
+  SystemTable->BootServices->CopyMem((void *)IMAGE_BASE_PHYSICAL,
+                                     __executable_start,
+                                     _end - __executable_start);
 
   /*
    * Converts UEFI shell arguments to argv.

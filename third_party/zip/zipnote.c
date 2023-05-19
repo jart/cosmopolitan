@@ -72,10 +72,6 @@ void zipnoteerr(int c, ZCONST char *h);
 void zipnotewarn(ZCONST char *a, ZCONST char *b);
 #endif
 
-#ifdef QDOS
-#define exit(p1) QDOSexit()
-#endif
-
 int set_filetype(out_path)
   char *out_path;
 {

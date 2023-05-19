@@ -9,7 +9,7 @@ einval:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EINVAL
-	ldr	w0,[x1,#:lo12:EINVAL]
+	ldrsw	x0,[x1,#:lo12:EINVAL]
 	b	__errfun
 #else
 #error "unsupported architecture"

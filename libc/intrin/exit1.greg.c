@@ -76,9 +76,10 @@ privileged wontreturn void _Exit1(int rc) {
 #elif defined(__aarch64__)
   register long r0 asm("x0") = rc;
   asm volatile("mov\tx8,%0\n\t"
+               "mov\tx16,%1\n\t"
                "svc\t0"
                : /* no outputs */
-               : "i"(93), "r"(r0)
+               : "i"(93), "i"(0x169), "r"(r0)
                : "x8", "memory");
   notpossible;
 #else

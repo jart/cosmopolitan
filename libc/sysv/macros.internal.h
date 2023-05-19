@@ -15,11 +15,11 @@
  * risk of slowing down builds too much with complicated headers.
  */
 
-.macro	.scall	name:req amd:req arm:req kw1 kw2
+.macro	.scall	name:req amd:req arm_linux:req arm_xnu:req kw1 kw2
 	.section .text.syscall,"ax",@progbits
 #ifdef __x86_64__
   .ifnb	\kw2
-	.align	16
+	.balign	16
 \name:	movabs	$\amd,%rax
 	jmp	*__systemfive(%rip)
   .else
@@ -31,20 +31,56 @@
 	pop	%rbp
 	ret
   .endif
+	.endfn	\name,\kw1,\kw2
 #elif defined(__aarch64__)
-\name:
-  .ifc \arm,0xfff
-	mov	x0,#-38		// -ENOSYS
+  .ifc \arm_linux,4095
+    .ifc \arm_xnu,4095
+//	return enosys();
+\name:	b	enosys
+	.endfn	\name,\kw1,\kw2
   .else
-	mov	x8,#\arm
-	svc	#0
-  .endif
+//	return IsXnu() ? syscall(x16, ...) : syscall(x8, ...);
+\name:	adrp	x9,__hostos
+	ldr	w9,[x9,#:lo12:__hostos]
+	tbz	x9,#3,1f			// !IsXnu()
+	mov	x16,#\arm_xnu			// apple ordinal
+	svc	#0				// issue system call
+	bcs	1f
+	b	_sysret
+1:	neg	x0,x0
 	b	_sysret
 	.hidden	_sysret
+	.endfn	\name,\kw1,\kw2
+    .endif
+  .else
+    .ifc \arm_xnu,4095
+//	return IsLinux() ? syscall(x8, ...) : enosys();
+\name:	adrp	x9,__hostos
+	ldr	w9,[x9,#:lo12:__hostos]
+	tbz	x9,#0,1f			// !IsLinux()
+	mov	x8,#\arm_linux			// systemd ordinal
+	svc	#0				// issue system call
+	mov	x1,#\arm_linux
+	b	_sysret
+	.hidden	_sysret
+1:	b	enosys
+	.endfn	\name,\kw1,\kw2
+  .else
+\name:	mov	x16,#\arm_xnu			// apple ordinal
+	mov	x8,#\arm_linux			// systemd ordinal
+	eor	x9,x9,x9			// clear carry flag
+	svc	#0				// issue system call
+	bcs	1f
+	b	_sysret
+1:	neg	x0,x0
+	b	_sysret
+	.hidden	_sysret
+	.endfn	\name,\kw1,\kw2
+    .endif
+  .endif
 #else
 #error "architecture unsupported"
 #endif
-	.endfn	\name,\kw1,\kw2
 	.previous
 .endm
 

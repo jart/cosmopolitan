@@ -18,60 +18,61 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-/* clang-format off */
+// clang-format off
+
+#ifdef __x86_64__
+#define ENCODE .uleb128
+.yoink	_init_systemfive
+#else
+#define ENCODE .balign 8 ; .quad
+#endif
 
 .macro	.syscon	group:req name:req linux:req linux_aarch64:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
 
-#ifdef __x86_64__
-	.yoink	_init_systemfive
-
 	.section .piro.bss.sort.syscon.2.\group\().\name,"aw",@nobits
+	.balign	8
 \name:	.quad	0
 	.endobj	\name,globl
 	.previous
 
 #if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.2.\group\().\name,"a",@progbits
-	.uleb128 \linux
+#ifdef __aarch64__
+	ENCODE	\linux_aarch64
+#else
+	ENCODE	\linux
+#endif
 	.previous
 #endif
 
 #if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.2.\group\().\name,"a",@progbits
-	.uleb128 \xnu
+	ENCODE	\xnu
 	.previous
 #endif
 
 #if SupportsFreebsd()
 	.section .sort.rodata.syscon.freebsd.2.\group\().\name,"a",@progbits
-	.uleb128 \freebsd
+	ENCODE	\freebsd
 	.previous
 #endif
 
 #if SupportsOpenbsd()
 	.section .sort.rodata.syscon.openbsd.2.\group\().\name,"a",@progbits
-	.uleb128 \openbsd
+	ENCODE	\openbsd
 	.previous
 #endif
 
 #if SupportsNetbsd()
 	.section .sort.rodata.syscon.netbsd.2.\group\().\name,"a",@progbits
-	.uleb128 \netbsd
+	ENCODE	\netbsd
 	.previous
 #endif
 
 #if SupportsWindows()
 	.section .sort.rodata.syscon.windows.2.\group\().\name,"a",@progbits
-	.uleb128 \windows
+	ENCODE	\windows
 	.previous
 #endif
-
-#else
-	.section .rodata,"a",@progbits
-	.balign	8
-\name:	.quad	\linux_aarch64
-	.endobj	\name,globl
-	.previous
-#endif /* __x86_64__ */
 
 .endm

@@ -188,6 +188,10 @@ o/$(MODE)/libc/calls/unveil.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
+ifeq ($(ARCH), aarch64)
+o/$(MODE)/libc/calls/sigaction.o: private OVERRIDE_CFLAGS += -mcmodel=large
+endif
+
 # we want -Os because:
 #   it makes a big difference
 # we need pic because:

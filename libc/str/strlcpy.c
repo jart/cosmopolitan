@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>                │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/macros.internal.h"
 #include "libc/str/str.h"
+// clang-format off
+// $OpenBSD: strlcpy.c,v 1.16 2019/01/25 00:19:25 millert Exp $
+
+asm(".ident\t\"\\n\\n\
+OpenBSD Strings (ISC)\\n\
+Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 /**
  * Copies string, the BSD way.
  *
- * @param d is buffer which needn't be initialized
- * @param s is a NUL-terminated string
- * @param n is byte capacity of d
- * @return strlen(s)
- * @note d and s can't overlap
- * @note we prefer memccpy()
+ * Copy string src to buffer `dst` of size `dsize`. At most `dsize-1`
+ * chars will be copied. Always NUL terminates (unless `dsize == 0`).
+ * Returns `strlen(src)`; if `retval >= dsize`, truncation occurred.
  */
-size_t strlcpy(char *d, const char *s, size_t n) {
-  size_t slen, actual;
-  slen = strlen(s);
-  if (n) {
-    actual = MIN(n - 1, slen);
-    memcpy(d, s, actual);
-    d[actual] = '\0';
-  }
-  return slen;
+size_t
+strlcpy(char *dst, const char *src, size_t dsize)
+{
+	const char *osrc = src;
+	size_t nleft = dsize;
+
+	/* Copy as many bytes as will fit. */
+	if (nleft != 0) {
+		while (--nleft != 0) {
+			if ((*dst++ = *src++) == '\0')
+				break;
+		}
+	}
+
+	/* Not enough room in dst, add NUL and traverse rest of src. */
+	if (nleft == 0) {
+		if (dsize != 0)
+			*dst = '\0';		/* NUL-terminate dst */
+		while (*src++)
+			;
+	}
+
+	return(src - osrc - 1);	/* count does not include NUL */
 }

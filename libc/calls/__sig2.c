@@ -134,7 +134,7 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
   }
 
   // handover control to user
-  ((sigaction_f)(_base + rva))(sig, infop, ctx);
+  ((sigaction_f)(__executable_start + rva))(sig, infop, ctx);
 
   if ((~flags & SA_NODEFER) && (~flags & SA_RESETHAND)) {
     // it's now safe to reenter the signal so we need to restore it.

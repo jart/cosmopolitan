@@ -9,7 +9,7 @@ enosys:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOSYS
-	ldr	w0,[x1,#:lo12:ENOSYS]
+	ldrsw	x0,[x1,#:lo12:ENOSYS]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -43,8 +43,6 @@ $(LIBC_STUBS_A).pkg:					\
 		$(foreach x,$(LIBC_STUBS_A_DIRECTDEPS),$($(x)_A).pkg)
 
 # these assembly files are safe to build on aarch64
-o/$(MODE)/libc/stubs/ld.o: libc/stubs/ld.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/stubs/abort.o: libc/stubs/abort.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 

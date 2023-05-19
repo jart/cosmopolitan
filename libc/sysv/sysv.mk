@@ -33,6 +33,9 @@ LIBC_SYSV_A_DIRECTDEPS =				\
 LIBC_SYSV_A_FILES :=					\
 	libc/sysv/macros.internal.h			\
 	libc/sysv/errfuns.h				\
+	libc/sysv/hostos.S				\
+	libc/sysv/syscon.S				\
+	libc/sysv/syslib.S				\
 	libc/sysv/syscount.S				\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
@@ -41,6 +44,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/sysret.c				\
 	libc/sysv/errno.c				\
 	libc/sysv/errfun.S				\
+	libc/sysv/errfun2.c				\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\
@@ -71,6 +75,8 @@ $(LIBC_SYSV_A).pkg:					\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/sysv/errno.o				\
+o/$(MODE)/libc/sysv/sysret.o				\
+o/$(MODE)/libc/sysv/errfun2.o				\
 o/$(MODE)/libc/sysv/sysret.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
@@ -132,7 +138,11 @@ $(LIBC_SYSV_MACHCALLS_A).pkg:				\
 #───────────────────────────────────────────────────────────────────────────────
 
 # let aarch64 compile these
-o/$(MODE)/libc/sysv/errfun.o: libc/sysv/errfun.S
+o/$(MODE)/libc/sysv/syscon.o: libc/sysv/syscon.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/libc/sysv/hostos.o: libc/sysv/hostos.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/libc/sysv/syslib.o: libc/sysv/syslib.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/syscount.o: libc/sysv/syscount.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<

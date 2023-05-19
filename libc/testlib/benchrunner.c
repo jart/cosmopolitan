@@ -38,13 +38,13 @@ void testlib_benchwarmup(void) {
         "vmovdqa\t%%ymm0,%0\n\t"
         "vzeroall"
         : "=m"(g_avx2_juiceup_quadwords_)
-        : "m"(g_avx2_juiceup_quadwords_), "r"(&_base[0]));
+        : "m"(g_avx2_juiceup_quadwords_), "r"(&__executable_start[0]));
     asm("vmovapd\t%1,%%ymm1\n\t"
         "vfmadd132pd\t(%2),%%ymm1,%%ymm1\n\t"
         "vmovapd\t%%ymm1,%0\n\t"
         "vzeroall"
         : "=m"(g_avx2_juiceup_doubles_)
-        : "m"(g_avx2_juiceup_doubles_), "r"(&_base[32]));
+        : "m"(g_avx2_juiceup_doubles_), "r"(&__executable_start[32]));
   }
 }
 

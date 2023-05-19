@@ -9,7 +9,7 @@ eisconn:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EISCONN
-	ldr	w0,[x1,#:lo12:EISCONN]
+	ldrsw	x0,[x1,#:lo12:EISCONN]
 	b	__errfun
 #else
 #error "unsupported architecture"

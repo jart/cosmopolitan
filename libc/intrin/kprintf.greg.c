@@ -130,11 +130,13 @@ privileged static inline bool kiskernelpointer(const void *p) {
 }
 
 privileged static inline bool kistextpointer(const void *p) {
-  return _base <= (const unsigned char *)p && (const unsigned char *)p < _etext;
+  return __executable_start <= (const unsigned char *)p &&
+         (const unsigned char *)p < _etext;
 }
 
 privileged static inline bool kisimagepointer(const void *p) {
-  return _base <= (const unsigned char *)p && (const unsigned char *)p < _end;
+  return __executable_start <= (const unsigned char *)p &&
+         (const unsigned char *)p < _end;
 }
 
 privileged static inline bool kischarmisaligned(const char *p, signed char t) {
@@ -224,11 +226,12 @@ privileged static void klog(const char *b, size_t n) {
   register long r0 asm("x0") = (long)2;
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
-  register long r8 asm("x8") = (long)__NR_write;
+  register long r8 asm("x8") = (long)__NR_write & 0x7ff;
+  register long r16 asm("x16") = (long)__NR_write & 0x7ff;
   register long res_x0 asm("x0");
   asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
 #else
 #error "unsupported architecture"

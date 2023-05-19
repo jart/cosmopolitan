@@ -9,7 +9,7 @@ ekeyexpired:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EKEYEXPIRED
-	ldr	w0,[x1,#:lo12:EKEYEXPIRED]
+	ldrsw	x0,[x1,#:lo12:EKEYEXPIRED]
 	b	__errfun
 #else
 #error "unsupported architecture"

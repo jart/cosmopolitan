@@ -9,7 +9,7 @@ emsgsize:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EMSGSIZE
-	ldr	w0,[x1,#:lo12:EMSGSIZE]
+	ldrsw	x0,[x1,#:lo12:EMSGSIZE]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -9,7 +9,7 @@ elibmax:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ELIBMAX
-	ldr	w0,[x1,#:lo12:ELIBMAX]
+	ldrsw	x0,[x1,#:lo12:ELIBMAX]
 	b	__errfun
 #else
 #error "unsupported architecture"

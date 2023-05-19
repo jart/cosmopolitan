@@ -9,7 +9,7 @@ eshutdown:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ESHUTDOWN
-	ldr	w0,[x1,#:lo12:ESHUTDOWN]
+	ldrsw	x0,[x1,#:lo12:ESHUTDOWN]
 	b	__errfun
 #else
 #error "unsupported architecture"

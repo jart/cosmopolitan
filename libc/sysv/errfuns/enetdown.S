@@ -9,7 +9,7 @@ enetdown:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENETDOWN
-	ldr	w0,[x1,#:lo12:ENETDOWN]
+	ldrsw	x0,[x1,#:lo12:ENETDOWN]
 	b	__errfun
 #else
 #error "unsupported architecture"

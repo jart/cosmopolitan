@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/hwap.h"
+#include "libc/sysv/consts/hwcap.h"
 #include "third_party/zlib/cpu_features.internal.h"
 #include "third_party/zlib/zlib.h"
 

@@ -12,7 +12,7 @@
  */
 #define SUPPORT_VECTOR 255
 #else
-#define SUPPORT_VECTOR _HOSTLINUX
+#define SUPPORT_VECTOR (_HOSTLINUX | _HOSTXNU)
 #endif
 #endif
 
@@ -110,11 +110,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#ifdef __x86_64__
 extern const int __hostos;
+
+#ifdef __x86_64__
 bool IsWsl1(void);
 #else
-#define __hostos _HOSTLINUX
 #define IsWsl1() false
 #endif
 

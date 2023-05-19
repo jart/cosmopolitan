@@ -21,6 +21,15 @@ forceinline uint32_t __magicu_div(uint32_t x, struct magicu d) {
   return ((((uint64_t)x * d.M) >> 32) + ((d.s & 64) ? x : 0)) >> (d.s & 63);
 }
 
+/**
+ * Checks if 𝑑 contains a valid initialized divisor.
+ */
+static inline bool __magicu_valid(struct magicu d) {
+  if (!d.M && !d.s) return false;     /* uninitialized */
+  if (d.s & ~(64 | 63)) return false; /* corrupted */
+  return true;
+}
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_MAGICU_H_ */

@@ -16,18 +16,21 @@
 
 MAKEFLAGS += --no-builtin-rules
 
+ifneq ($(ARCH), aarch64)
+MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+else
+MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S $< $@
+endif
+
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
-o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%: o/$(MODE)/%.dbg       ; @$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+o/$(MODE)/%: o/$(MODE)/%.dbg       ; @$(MAKE_OBJCOPY)
 o/$(MODE)/%.o: %.f                 ; @$(COMPILE) -AOBJECTIFY.f $(OBJECTIFY.f) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.F                 ; @$(COMPILE) -AOBJECTIFY.F $(OBJECTIFY.F) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.h: %.c                 ; @$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
 o/$(MODE)/%.h: o/$(MODE)/%.c       ; @$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
 o/$(MODE)/%.o: %.cc                ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.greg.o: %.greg.c       ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.initabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
@@ -74,6 +77,18 @@ o/$(MODE)/%.o: o/$(MODE)/%.c
 
 o/$(MODE)/%.o: o/$(MODE)/%.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
+
+o/%.greg.o: %.greg.c
+	@$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
+
+o/$(MODE)/%.o: %.greg.c
+	@$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
+
+o/$(MODE)/%.greg.o: %.greg.c
+	@$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
 
 o/%.a:
@@ -198,10 +213,6 @@ o/$(MODE)/%.okk: %
 
 ################################################################################
 # EXECUTABLE HELPERS
-
-MAKE_OBJCOPY =					\
-	$(COMPILE) -AOBJCOPY -T$@		\
-	$(OBJCOPY) -S -O binary $< $@
 
 MAKE_SYMTAB_CREATE =				\
 	$(COMPILE) -wASYMTAB			\

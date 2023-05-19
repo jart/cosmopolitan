@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall ioprio_get,0xfffffffffffff0fc,0x01f,globl
+.scall ioprio_get,0xfffffffffffff0fc,31,4095,globl

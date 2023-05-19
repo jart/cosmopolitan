@@ -9,7 +9,7 @@ eremoteio:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EREMOTEIO
-	ldr	w0,[x1,#:lo12:EREMOTEIO]
+	ldrsw	x0,[x1,#:lo12:EREMOTEIO]
 	b	__errfun
 #else
 #error "unsupported architecture"

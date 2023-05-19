@@ -128,6 +128,11 @@ _start:
 //	setup backtraces
 	mov	x29,#0
 
+//	second arg shall be struct Syslib passed by ape-m1.c
+//	used to talk to apple's authoritarian libraries
+//	should be set to zero on other platforms
+	mov	x1,x15
+
 //	switch to c code
 	bl	cosmo
 	.unreachable

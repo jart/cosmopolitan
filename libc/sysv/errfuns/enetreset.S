@@ -9,7 +9,7 @@ enetreset:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENETRESET
-	ldr	w0,[x1,#:lo12:ENETRESET]
+	ldrsw	x0,[x1,#:lo12:ENETRESET]
 	b	__errfun
 #else
 #error "unsupported architecture"

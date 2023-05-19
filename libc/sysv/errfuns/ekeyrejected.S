@@ -9,7 +9,7 @@ ekeyrejected:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EKEYREJECTED
-	ldr	w0,[x1,#:lo12:EKEYREJECTED]
+	ldrsw	x0,[x1,#:lo12:EKEYREJECTED]
 	b	__errfun
 #else
 #error "unsupported architecture"

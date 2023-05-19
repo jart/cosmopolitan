@@ -9,7 +9,7 @@ eilseq:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EILSEQ
-	ldr	w0,[x1,#:lo12:EILSEQ]
+	ldrsw	x0,[x1,#:lo12:EILSEQ]
 	b	__errfun
 #else
 #error "unsupported architecture"

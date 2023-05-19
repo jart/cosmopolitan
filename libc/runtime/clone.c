@@ -192,7 +192,7 @@ XnuThreadMain(void *pthread,                    // rdi
                "syscall\n\t"             // __bsdthread_terminate()
                "ud2"
                : "=m"(*wt->ztid)
-               : "a"(0x2000000 | 361), "D"(0), "S"(0), "d"(0)
+               : "a"(0x2000000 | 361), "D"(0), "S"(0), "d"(0L)
                : "rcx", "r10", "r11", "memory");
   notpossible;
 }

@@ -9,7 +9,7 @@ esocktnosupport:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ESOCKTNOSUPPORT
-	ldr	w0,[x1,#:lo12:ESOCKTNOSUPPORT]
+	ldrsw	x0,[x1,#:lo12:ESOCKTNOSUPPORT]
 	b	__errfun
 #else
 #error "unsupported architecture"

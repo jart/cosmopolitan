@@ -45,7 +45,7 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
   if (rva >= kSigactionMinRva) {
     flags = __sighandflags[sig & (NSIG - 1)];
     if (~flags & SA_SIGINFO) {
-      ((sigaction_f)(_base + rva))(sig, 0, 0);
+      ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {
       __repstosb(&g, 0, sizeof(g));
       g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
@@ -78,7 +78,7 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       g.uc.uc_mcontext.trapno = ctx->uc_mcontext.mc_trapno;
       __repmovsb(&g.uc.__fpustate, &ctx->uc_mcontext.mc_fpstate, 512);
       __siginfo2cosmo(&g.si, (void *)freebsdinfo);
-      ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+      ((sigaction_f)(__executable_start + rva))(sig, &g.si, &g.uc);
       ctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
       ctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
       ctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;

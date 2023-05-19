@@ -9,7 +9,7 @@ enokey:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOKEY
-	ldr	w0,[x1,#:lo12:ENOKEY]
+	ldrsw	x0,[x1,#:lo12:ENOKEY]
 	b	__errfun
 #else
 #error "unsupported architecture"

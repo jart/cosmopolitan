@@ -48,8 +48,8 @@ kNtdllProcRvas:
 0:	lodsq
 	test	%rax,%rax
 	jz	1f
-	.weak	_base
-	lea	_base(%rax),%rdx
+	.weak	__executable_start
+	lea	__executable_start(%rax),%rdx
 	mov	%r12,%rcx
 	call	*__imp_GetProcAddress(%rip)
 	test	%rax,%rax

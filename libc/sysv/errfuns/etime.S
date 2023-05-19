@@ -9,7 +9,7 @@ etime:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ETIME
-	ldr	w0,[x1,#:lo12:ETIME]
+	ldrsw	x0,[x1,#:lo12:ETIME]
 	b	__errfun
 #else
 #error "unsupported architecture"

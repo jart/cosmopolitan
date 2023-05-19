@@ -9,7 +9,7 @@ enonet:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENONET
-	ldr	w0,[x1,#:lo12:ENONET]
+	ldrsw	x0,[x1,#:lo12:ENONET]
 	b	__errfun
 #else
 #error "unsupported architecture"

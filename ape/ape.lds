@@ -199,9 +199,8 @@
 #define SKEW 0
 #endif
 
-#ifdef __aarch64__
-#undef PAGESIZE
-#define PAGESIZE 16384
+#if IMAGE_BASE_VIRTUAL > 0xffffffff
+#error "please use 32-bit addresses for image data"
 #endif
 
 ENTRY(_start)
@@ -223,7 +222,7 @@ SECTIONS {
 /*BEGIN: bsd addressability guarantee */
 
   .head SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) + SKEW : AT(IMAGE_BASE_REAL) {
-    HIDDEN(_base = .);
+    HIDDEN(__executable_start = .);
 
     /* Real Mode */
     KEEP(*(.head))
@@ -649,6 +648,7 @@ TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 
 /* ZIP End of Central Directory header */
 #define ZIPCONST(NAME, VAL) HIDDEN(NAME = DEFINED(__zip_start) ? VAL : 0);
+ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
 ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
 ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
 ASSERT(v_zip_cdirsize % kZipCdirHdrLinkableSize == 0, "bad zip cdir");

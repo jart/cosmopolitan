@@ -9,7 +9,7 @@ ehostunreach:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EHOSTUNREACH
-	ldr	w0,[x1,#:lo12:EHOSTUNREACH]
+	ldrsw	x0,[x1,#:lo12:EHOSTUNREACH]
 	b	__errfun
 #else
 #error "unsupported architecture"

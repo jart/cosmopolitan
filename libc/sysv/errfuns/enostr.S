@@ -9,7 +9,7 @@ enostr:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOSTR
-	ldr	w0,[x1,#:lo12:ENOSTR]
+	ldrsw	x0,[x1,#:lo12:ENOSTR]
 	b	__errfun
 #else
 #error "unsupported architecture"

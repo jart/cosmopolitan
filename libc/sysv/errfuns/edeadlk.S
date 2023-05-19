@@ -9,7 +9,7 @@ edeadlk:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EDEADLK
-	ldr	w0,[x1,#:lo12:EDEADLK]
+	ldrsw	x0,[x1,#:lo12:EDEADLK]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -233,7 +233,7 @@ textstartup void __printargs(const char *prologue) {
         "mov\t%%ebx,%1\n\t"
         "pop\t%%rbx"
         : "=a"(eax), "=rm"(ebx), "=c"(ecx), "=d"(edx)
-        : "0"(0x40000000), "2"(0));
+        : "0"(0x40000000), "2"(0L));
     PRINT("  Running inside %.4s%.4s%.4s (eax=%#x)", &ebx, &ecx, &edx, eax);
   }
   CPUID4_ITERATE(i, {
@@ -272,9 +272,8 @@ textstartup void __printargs(const char *prologue) {
   if (X86_HAVE(LA57)) kprintf(" LA57");
   if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
 #elif defined(__aarch64__)
-  PRINT("  AARCH64\n");
+  PRINT("  AARCH64");
 #endif
-  kprintf("\n");
 
   PRINT("");
   PRINT("FILE DESCRIPTORS");
@@ -366,21 +365,33 @@ textstartup void __printargs(const char *prologue) {
 
   PRINT("");
   PRINT("RESOURCE LIMITS");
-  for (i = 0; i < RLIM_NLIMITS; ++i) {
+  for (gotsome = i = 0; i < RLIM_NLIMITS; ++i) {
     if (!getrlimit(i, &rlim)) {
       char buf[20];
       if (rlim.rlim_cur == RLIM_INFINITY) rlim.rlim_cur = -1;
       if (rlim.rlim_max == RLIM_INFINITY) rlim.rlim_max = -1;
       PRINT(" ☼ %-20s %,16ld %,16ld", (DescribeRlimitName)(buf, i),
             rlim.rlim_cur, rlim.rlim_max);
+      gotsome = true;
     }
   }
+  if (!gotsome) {
+    PRINT(" ☼ %s", "none");
+  }
+
+  PRINT("");
+  PRINT("STACK");
+  size_t foss_stack_size = 4ul * 1024 * 1024;
+  PRINT(" ☼ %p __oldstack top", ROUNDUP(__oldstack + 1, foss_stack_size));
+  PRINT(" ☼ %p __oldstack ptr", __oldstack);
+  PRINT(" ☼ %p __oldstack bot", ROUNDDOWN(__oldstack, foss_stack_size));
+  PRINT(" ☼ %p __builtin_frame_address(0)", __builtin_frame_address(0));
 
   PRINT("");
   PRINT("ARGUMENTS (%p)", __argv);
   if (*__argv) {
     for (i = 0; i < __argc; ++i) {
-      PRINT(" ☼ %s", __argv[i]);
+      PRINT(" ☼ %p %s", __argv[i], __argv[i]);
     }
   } else {
     PRINT("  none");
@@ -390,7 +401,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT("ENVIRONMENT (%p)", __envp);
   if (*__envp) {
     for (env = __envp; *env; ++env) {
-      PRINT(" ☼ %s", *env);
+      PRINT(" ☼ %p %s", *env, *env);
     }
   } else {
     PRINT("  none");
@@ -403,9 +414,9 @@ textstartup void __printargs(const char *prologue) {
       for (auxp = __auxv; *auxp; auxp += 2) {
         if ((auxinfo = DescribeAuxv(auxp[0]))) {
           ksnprintf(u.path, sizeof(u.path), auxinfo->fmt, auxp[1]);
-          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], u.path);
+          PRINT(" ☼ %p %16s[%4ld] = %s", auxp, auxinfo->name, auxp[0], u.path);
         } else {
-          PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
+          PRINT(" ☼ %p %16s[%4ld] = %014p", auxp, "unknown", auxp[0], auxp[1]);
         }
       }
     }

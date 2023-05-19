@@ -9,7 +9,7 @@ eacces:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EACCES
-	ldr	w0,[x1,#:lo12:EACCES]
+	ldrsw	x0,[x1,#:lo12:EACCES]
 	b	__errfun
 #else
 #error "unsupported architecture"

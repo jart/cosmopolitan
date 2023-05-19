@@ -67,7 +67,7 @@ as a double.
 #define EPS LDBL_EPSILON
 #endif
 static dontinline long lrint_slow(double x) {
-	// #pragma STDC FENV_ACCESS ON
+// #pragma STDC FENV_ACCESS ON
 	int e;
 	e = fetestexcept(FE_INEXACT);
 	x = rint(x);

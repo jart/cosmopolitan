@@ -19,6 +19,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
 
 privileged void __stracef(const char *fmt, ...) {

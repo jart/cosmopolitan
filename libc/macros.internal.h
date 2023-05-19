@@ -124,7 +124,7 @@
 //	@note	therefore no section relative addressing
 .macro	.rodata.str1.1
 	.section .rodata.str1.1,"aMS",@progbits,1
-	.align	1
+	.balign	1
 .endm
 
 //	Locates unreferenced code invulnerable to --gc-sections.
@@ -149,6 +149,12 @@
 	.equ	\canonical,\implement
 	.weak	\canonical
 .endm
+
+#ifdef __aarch64__
+.macro	jmp	dest:req
+	b	\dest
+.endm
+#endif
 
 //	Pulls unrelated module into linkage.
 //
@@ -195,31 +201,31 @@
 //	@note	therefore no section relative addressing
 .macro	.rodata.cst4
 	.section .rodata.cst4,"aM",@progbits,4
-	.align	4
+	.balign	4
 .endm
 .macro	.rodata.cst8
 	.section .rodata.cst8,"aM",@progbits,8
-	.align	8
+	.balign	8
 .endm
 .macro	.rodata.cst16
 	.section .rodata.cst16,"aM",@progbits,16
-	.align	16
+	.balign	16
 .endm
 .macro	.rodata.cst32
 	.section .rodata.cst32,"aM",@progbits,32
-	.align	32
+	.balign	32
 .endm
 .macro	.rodata.cst64
 	.section .rodata.cst64,"aM",@progbits,64
-	.align	64
+	.balign	64
 .endm
 .macro	.tdata
 	.section .tdata,"awT",@progbits
-	.align	4
+	.balign	4
 .endm
 .macro	.tbss
 	.section .tdata,"awT",@nobits
-	.align	4
+	.balign	4
 .endm
 
 //	Loads address of errno into %rcx
@@ -242,11 +248,11 @@
 //	@see	libc/runtime/_init.S
 .macro	.initro number:req name:req
 	.section ".initro.\number\().\name","a",@progbits
-	.align	8
+	.balign	8
 .endm
 .macro	.initbss number:req name:req
 	.section ".piro.bss.init.2.\number\().\name","aw",@nobits
-	.align	8
+	.balign	8
 .endm
 .macro	.init.start number:req name:req
 	.section ".init.\number\().\name","ax",@progbits

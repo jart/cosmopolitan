@@ -9,7 +9,7 @@ eopnotsupp:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EOPNOTSUPP
-	ldr	w0,[x1,#:lo12:EOPNOTSUPP]
+	ldrsw	x0,[x1,#:lo12:EOPNOTSUPP]
 	b	__errfun
 #else
 #error "unsupported architecture"

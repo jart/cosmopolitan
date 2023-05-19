@@ -58,7 +58,7 @@ struct Buffer {
 };
 
 static bool IsCode(uintptr_t p) {
-  return _base <= (uint8_t *)p && (uint8_t *)p < _etext;
+  return __executable_start <= (uint8_t *)p && (uint8_t *)p < _etext;
 }
 
 static void Append(struct Buffer *b, const char *fmt, ...) {
@@ -97,8 +97,9 @@ static const char *ColorRegister(int r) {
     case 25:  // saved
     case 26:  // saved
     case 27:  // saved
-    case 28:  // saved
       return MAGENTA;
+    case 18:  // platform register
+    case 28:  // our tls register
     case 29:  // frame pointer
     case 30:  // return pointer
     case 31:  // stack pointer

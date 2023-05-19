@@ -180,9 +180,12 @@ struct ElfPhdr {
 extern char ehdr[];
 extern char _end[];
 static void *syscall_;
-static char relocated;
 static struct PathSearcher ps;
 extern char __syscall_loader[];
+
+#if SET_EXE_FILE
+static char relocated;
+#endif
 
 static int ToLower(int c) {
   return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;

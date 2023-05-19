@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_fallocate,0xfffffffffffff91d,0x02f,globl
+.scall sys_fallocate,0xfffffffffffff91d,47,4095,globl

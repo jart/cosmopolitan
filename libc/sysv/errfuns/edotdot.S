@@ -9,7 +9,7 @@ edotdot:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EDOTDOT
-	ldr	w0,[x1,#:lo12:EDOTDOT]
+	ldrsw	x0,[x1,#:lo12:EDOTDOT]
 	b	__errfun
 #else
 #error "unsupported architecture"

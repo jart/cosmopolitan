@@ -33,6 +33,9 @@ void SetUp(void) {
   if (!IsLinux() && !IsFreebsd() && !IsWindows()) {
     exit(0);
   }
+  if (IsFreebsd() && getuid() != 0) {
+    exit(0);
+  }
 }
 
 TEST(sched_getaffinity, firstOnly) {

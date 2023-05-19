@@ -41,28 +41,28 @@ _EfiPostboot:
 	mov	%rdi,rMm
 	mov	%rdx,rArgc
 	lea	(rBane,%rcx),rArgv
-	mov	$PHYSICAL(.Ltmpstk),%rax	# switch to temporary stack
-	and	$-16,%al			# in physical space
+	mov	$PHYSICAL(.Ltmpstk),%rax	// switch to temporary stack
+	and	$-16,%al			// in physical space
 	xchg	%rax,%rsp
-	mov	$PHYSICAL(0f),%eax		# resume execution in copied
-	jmp	*%rax				# image
-0:	mov	$EFER,%ecx			# enable syscall/sysret & nx
+	mov	$PHYSICAL(0f),%eax		// resume execution in copied
+	jmp	*%rax				// image
+0:	mov	$EFER,%ecx			// enable syscall/sysret & nx
 	rdmsr
 	or	$EFER_SCE|EFER_NXE,%eax
 	wrmsr
-	mov	%rsi,%cr3			# load new page table
-	add	rBane,%rsp			# we can now switch stack to
-	add	rBane,rMm			# negative address space
-	mov	$1024*1024,%edx			# set up virtual memory
-	mov	$1024*1024+_end,%ecx		# mapping
-	sub	$_base,%ecx
+	mov	%rsi,%cr3			// load new page table
+	add	rBane,%rsp			// we can now switch stack to
+	add	rBane,rMm			// negative address space
+	mov	$1024*1024,%edx			// set up virtual memory
+	mov	$1024*1024+_end,%ecx		// mapping
+	sub	$__executable_start,%ecx
 	call	__map_phdrs
-	mov	$1f,%eax			# switch rip to virtual
-	jmp	*%rax				# address space
+	mov	$1f,%eax			// switch rip to virtual
+	jmp	*%rax				// address space
 1:	push	$0x037f
 	fldcw	(%rsp)
 	.weak	_gdtr
-	lgdt	_gdtr				# switch to our own GDT
+	lgdt	_gdtr				// switch to our own GDT
 	mov	$GDT_LONG_DATA,%ax
 	mov	%ax,%ds
 	mov	%ax,%ss
@@ -71,34 +71,34 @@ _EfiPostboot:
 	mov	%ax,%gs
 	.weak	ape_stack_vaddr
 	.weak	ape_stack_memsz
-	movabs	$ape_stack_vaddr,%rsp		# switch to final stack in
-	add	$ape_stack_memsz,%rsp		# virtual address space
-	movl	$0,0x7b000			# unmap null 2mb
+	movabs	$ape_stack_vaddr,%rsp		// switch to final stack in
+	add	$ape_stack_memsz,%rsp		// virtual address space
+	movl	$0,0x7b000			// unmap null 2mb
 	mov	rMm,%rdi
-	xor	%esi,%esi			# free up now-unused pages
+	xor	%esi,%esi			// free up now-unused pages
 	xor	%edx,%edx
 	call	__reclaim_boot_pages
-	push	.Lenv0(%rip)			# envp[0][0]
+	push	.Lenv0(%rip)			// envp[0][0]
 	mov	%rsp,%rbp
-	push	$0				# auxv[1][1]
-	push	$0				# auxv[1][0]
+	push	$0				// auxv[1][1]
+	push	$0				// auxv[1][0]
 	mov	(rArgv),%rax
 	add	rBane,%rax
-	push	%rax				# auxv[0][1]
-	push	$31				# auxv[0][0] AT_EXECFN
-	push	$0				# envp[1]
-	push	%rbp				# envp[0]
-	push	$0				# argv[argc] NULL
-	lea	-8(rArgv,rArgc,8),%rsi		# push rest of argv, &
-	mov	rArgc,%rcx			# adjust pointers to point to
-	std					# negative space
+	push	%rax				// auxv[0][1]
+	push	$31				// auxv[0][0] AT_EXECFN
+	push	$0				// envp[1]
+	push	%rbp				// envp[0]
+	push	$0				// argv[argc] NULL
+	lea	-8(rArgv,rArgc,8),%rsi		// push rest of argv, &
+	mov	rArgc,%rcx			// adjust pointers to point to
+	std					// negative space
 2:	lodsq
 	add	rBane,%rax
 	push	%rax
 	loop	2b
 	cld
-	push	rArgc				# argc
-	pushpop	_HOSTMETAL,%rcx			# sets __hostos in crt.S
+	push	rArgc				// argc
+	pushpop	_HOSTMETAL,%rcx			// sets __hostos in crt.S
 	xor	%ebp,%ebp
 	xor	%eax,%eax
 	xor	%ebx,%ebx
@@ -124,3 +124,6 @@ _EfiPostboot:
 	.space	0x1000
 .Ltmpstk:
 	.previous
+
+	.weak	__executable_start
+	.weak	_end

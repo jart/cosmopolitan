@@ -123,6 +123,7 @@ TEST(setrlimit, testMemoryLimit) {
   char *p;
   bool gotsome;
   int i, wstatus;
+  if (IsXnu()) return;
   if (IsAsan()) return; /* b/c we use sys_mmap */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {

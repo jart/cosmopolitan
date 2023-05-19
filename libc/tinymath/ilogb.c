@@ -61,3 +61,7 @@ int ilogb(double x)
 	}
 	return e - 0x3ff;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__strong_reference(ilogb, ilogbl);
+#endif

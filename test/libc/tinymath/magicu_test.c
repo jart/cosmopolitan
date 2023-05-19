@@ -17,9 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/magicu.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+#include "libc/tinymath/magicu.h"
 
 #define T    uint32_t
 #define TBIT (sizeof(T) * CHAR_BIT - 1)
@@ -43,10 +47,10 @@ TEST(magicu, test) {
   }
 }
 
-BENCH(cog, bench) {
-  struct magicu d = __magicu_get(7);
-  EZBENCH2("__magicu_get", donothing, __magicu_get(VEIL("r", 77)));
+BENCH(magicu, bench) {
+  struct magicu d = __magicu_get(UINT32_MAX);
+  EZBENCH2("__magicu_get", donothing, __magicu_get(VEIL("r", UINT32_MAX)));
   EZBENCH2("__magicu_div", donothing,
-           EXPROPRIATE(__magicu_div(VEIL("r", 77), d)));
-  EZBENCH2("/", donothing, EXPROPRIATE(VEIL("r", 77) / VEIL("r", 7)));
+           EXPROPRIATE(__magicu_div(VEIL("r", 77u), d)));
+  EZBENCH2("/", donothing, EXPROPRIATE(VEIL("r", 77u) / VEIL("r", UINT32_MAX)));
 }

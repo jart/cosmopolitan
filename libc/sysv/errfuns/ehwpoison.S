@@ -9,7 +9,7 @@ ehwpoison:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EHWPOISON
-	ldr	w0,[x1,#:lo12:EHWPOISON]
+	ldrsw	x0,[x1,#:lo12:EHWPOISON]
 	b	__errfun
 #else
 #error "unsupported architecture"

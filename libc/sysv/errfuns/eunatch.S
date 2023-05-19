@@ -9,7 +9,7 @@ eunatch:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EUNATCH
-	ldr	w0,[x1,#:lo12:EUNATCH]
+	ldrsw	x0,[x1,#:lo12:EUNATCH]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -296,7 +296,7 @@ scall	sys_sync_file_range	0xfffffffffffff115	0x054	globl hidden # Linux 2.6.17+
 scall	sys_vmsplice		0xfffffffffffff116	0x04b	globl hidden
 scall	sys_migrate_pages	0xfffffffffffff100	0x0ee	globl        # no wrapper; numa numa yay
 scall	sys_move_pages		0xfffffffffffff117	0x0ef	globl        # no wrapper; NOTE: We view Red Hat versions as "epochs" for all distros.
-#──────────────────────RHEL 5.0 LIMIT────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
+#──────────────────────RHEL 5.0 LIMIT────────────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
 scall	sys_preadv		0x92190b9212a1c927	0x045	globl hidden #  ├─ last distro with system v shell script init
 scall	sys_pwritev		0x92290c9222a1d928	0x046	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	0x058	globl hidden #  ├─ python modules need this due to pep513
@@ -317,7 +317,7 @@ scall	sys_eventfd2		0xfffffffffffff122	0x013	globl # no wrapper
 scall	sys_timerfd_create	0xfffffffffffff11b	0x055	globl # no wrapper
 scall	sys_timerfd_settime	0xfffffffffffff11e	0x056	globl # no wrapper
 scall	sys_timerfd_gettime	0xfffffffffffff11f	0x057	globl # no wrapper
-#──────────────────────RHEL 6.0 LIMIT──────────────────────── # ←┬─ modern glibc needs rhel6+ c. 2011
+#──────────────────────RHEL 6.0 LIMIT──────────────────────────────── # ←┬─ modern glibc needs rhel6+ c. 2011
 scall	sys_recvmmsg		0x1dbffffffffff12b	0x0f3	globl #  ├─ end of life 2024-06-30 (extended)
 scall	sys_fanotify_init	0xfffffffffffff12c	0x106	globl #  ├─ last distro with the original gnome desktop
 scall	sys_fanotify_mark	0xfffffffffffff12d	0x107	globl #  └─ apple and google condemn the gplv3/gccrtev3
@@ -333,7 +333,7 @@ scall	sys_process_vm_readv	0xfffffffffffff136	0x10e	globl # no wrapper
 scall	sys_process_vm_writev	0xfffffffffffff137	0x10f	globl # no wrapper
 scall	sys_kcmp		0xfffffffffffff138	0x110	globl # no wrapper
 scall	sys_finit_module	0xfffffffffffff139	0x111	globl # no wrapper
-#──────────────────────RHEL 7.0 LIMIT──────────────────────── # ←┬─ anything that links or uses c++11 code needs rhel7+ c. 2014
+#──────────────────────RHEL 7.0 LIMIT──────────────────────────────── # ←┬─ anything that links or uses c++11 code needs rhel7+ c. 2014
 scall	sys_sched_setattr	0xfffffffffffff13a	0x112	globl #  ├─ desktop replaced with tablet-first gui inspired by mac os x
 scall	sys_sched_getattr	0xfffffffffffff13b	0x113	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	sys_renameat2		0xfffffffffffff13c	0x114	globl #  └─ debian founder ian murdock found strangled with vacuum cord
@@ -355,12 +355,12 @@ scall	sys_pkey_free		0xfffffffffffff14b	0x122	globl # no wrapper
 scall	sys_statx		0xfffffffffffff14c	0x123	globl # no wrapper; lool https://lkml.org/lkml/2010/7/22/249
 scall	sys_io_pgetevents	0xfffffffffffff14d	0x124	globl # no wrapper
 scall	sys_rseq		0xfffffffffffff14e	0x125	globl # no wrapper; Linux 4.18+ (c. 2018)
-#──────────────────────LINUX 4.18 LIMIT────────────────────── # ←┬─ last version of linux kernel buildable with only gplv2
+#──────────────────────LINUX 4.18 LIMIT────────────────────────────── # ←┬─ last version of linux kernel buildable with only gplv2
 scall	sys_pidfd_send_signal	0xfffffffffffff1a8	0x1a8	globl #  ├─ linux conferences ban linux founder linus torvalds
 scall	sys_io_uring_setup	0xfffffffffffff1a9	0x1a9	globl #  └─ gnu founder richard stallman publicly disgraced
 scall	sys_io_uring_enter	0xfffffffffffff1aa	0x1aa	globl
 scall	sys_io_uring_register	0xfffffffffffff1ab	0x1ab	globl
-#────────────────────────RHEL CLOUD────────────────────────── # ←──────┬─ red hat terminates community release of enterprise linux circa 2020
+#────────────────────────RHEL CLOUD────────────────────────────────── # ←──────┬─ red hat terminates community release of enterprise linux circa 2020
 scall	sys_pledge		0xfff06cffffffffff	0xfff	globl hidden # └─ online linux services ban the president of united states of america
 scall	sys_msyscall		0xfff025ffffffffff	0xfff	globl # no wrapper
 scall	sys_bogus		0x00b5005002500500	0xfff	globl
@@ -395,7 +395,7 @@ scall	sys_set_mempolicy_home_node 0xfffffffffffff1c2	0xfff	globl # no wrapper
 #	                          FreeBSD┐   │  │
 #	                       OpenBSD┐  │ ┌─│──│── XnuClass{1:Mach,2:Unix}
 #	                     NetBSD┐  │  │ │ │  │
-#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Directives & Commentary
+#	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Arm64	Type	Directives & Commentary
 scall	sys_ktrace		0x02d02d02dfffffff	0xfff	globl # no wrapper
 scall	sys_kqueue		0x15810d16a216afff	0xfff	globl # no wrapper
 scall	sys_kevent		0x1b30482302171fff	0xfff	globl # no wrapper
@@ -415,7 +415,7 @@ scall	sys_issetugid		0xfff0fd0fd2147fff	0xfff	globl hidden
 scall	sys_minherit		0x1110fa0fa20fafff	0xfff	globl # no wrapper
 scall	sys_pathconf		0x0bf0bf0bf20bffff	0xfff	globl # no wrapper
 scall	sys_sysctl		0x0ca0ca0ca20cafff	0xfff	globl # no wrapper
-#──────────────────XNU & FREEBSD & NETBSD────────────────────
+#──────────────────XNU & FREEBSD & NETBSD────────────────────────────────────
 scall	sys_sem_init		0x0f7fff194fffffff	0xfff	globl
 scall	sys_sem_destroy		0x0fffff198fffffff	0xfff	globl
 scall	sys_sem_open		0x0f8fff195210cfff	0xfff	globl
@@ -427,7 +427,7 @@ scall	sys_sem_trywait		0x0fdfff1932110fff	0xfff	globl
 scall	sys_sem_timedwait	0x900fff9b9fffffff	0xfff	globl
 scall	sys_sem_wait_nocancel	0xfffffffff21a4fff	0xfff	globl # no wrapper
 scall	sys_sem_getvalue	0x0fefff197fffffff	0xfff	globl
-#───────────────────────XNU & FREEBSD────────────────────────
+#───────────────────────XNU & FREEBSD────────────────────────────────────────
 scall	sys_ntp_adjtime		0x0b0fff0b0220ffff	0xfff	globl # no wrapper
 scall	sys_ntp_gettime		0x1c0fff0f82210fff	0xfff	globl # no wrapper
 scall	sys_shm_unlink		0xffffff1e3210bfff	0xfff	globl # no wrapper
@@ -458,14 +458,14 @@ scall	sys_semsys		0xffffff0a920fbfff	0xfff	globl # no wrapper
 scall	sys_auditon		0xffffff1be215ffff	0xfff	globl # no wrapper
 scall	sys_msgsys		0xffffff0aa20fcfff	0xfff	globl # no wrapper
 scall	sys_shmsys		0xffffff0ab20fdfff	0xfff	globl # no wrapper
-#─────────────────────FREEBSD & OPENBSD──────────────────────
+#─────────────────────FREEBSD & OPENBSD──────────────────────────────────────
 scall	sys_fhstat		0x1c3126229fffffff	0xfff	globl # no wrapper
 scall	sys_chflagsat		0xfff06b21cfffffff	0xfff	globl # no wrapper
 scall	sys_profil		0x02c02c02cfffffff	0xfff	globl # no wrapper
 scall	sys_fhstatfs		0xfff04122efffffff	0xfff	globl # no wrapper
 scall	sys_utrace		0x1320d114ffffffff	0xfff	globl # no wrapper
 scall	sys_closefrom		0xfff11f1fdfffffff	0xfff	globl hidden
-#───────────────────────────XNU──────────────────────────────
+#───────────────────────────XNU──────────────────────────────────────────────
 #scall	__pthread_markcancel	0xfffffffff214cfff	0xfff	globl
 #scall	__pthread_kill		0xfffffffff2148fff	0xfff	globl
 #scall	__pthread_fchdir	0xfffffffff215dfff	0xfff	globl
@@ -634,7 +634,7 @@ scall	sys_bsdthread_register	0xfffffffff216efff	0xfff	globl hidden
 #scall	workq_open		0xfffffffff216ffff	0xfff	globl
 #scall	write_nocancel		0xfffffffff218dfff	0xfff	globl
 #scall	writev_nocancel		0xfffffffff219cfff	0xfff	globl
-#──────────────────────────FREEBSD───────────────────────────
+#──────────────────────────FREEBSD───────────────────────────────────────────
 #scall	sys_umtx_op		0xffffff1c6fffffff	0xfff	globl
 #scall	abort2			0xffffff1cffffffff	0xfff	globl
 #scall	afs3_syscall		0xffffff179fffffff	0xfff	globl
@@ -762,7 +762,7 @@ scall	sys_rtprio_thread	0xffffff1d2fffffff	0xfff	globl # no wrapper
 #scall	wait			0xffffff054fffffff	0xfff	globl
 #scall	wait6			0x1e1fff214fffffff	0xfff	globl
 #scall	yield			0xffffff141fffffff	0xfff	globl
-#──────────────────────────OPENBSD───────────────────────────
+#──────────────────────────OPENBSD───────────────────────────────────────────
 #scall	__thrsleep		0xfff05effffffffff	0xfff	globl
 #scall	__thrwakeup		0xfff12dffffffffff	0xfff	globl
 #scall	__threxit		0xfff12effffffffff	0xfff	globl
@@ -782,7 +782,7 @@ scall	sys_rtprio_thread	0xffffff1d2fffffff	0xfff	globl # no wrapper
 #scall	swapctl			0x10f0c1ffffffffff	0xfff	globl
 #scall	thrkill			0xfff077ffffffffff	0xfff	globl
 scall	sys_unveil		0xfff072ffffffffff	0xfff	globl hidden
-#──────────────────────────NETBSD────────────────────────────
+#──────────────────────────NETBSD────────────────────────────────────────────
 #scall	_lwp_create		0x135fffffffffffff	0xfff	globl # int _lwp_create(const struct ucontext_netbsd *ucp, uint64_t flags, int *new_lwp)
 #scall	_lwp_exit		0x136fffffffffffff	0xfff	globl # int _lwp_exit(void)
 #scall	_lwp_self		0x137fffffffffffff	0xfff	globl # int _lwp_self(void)

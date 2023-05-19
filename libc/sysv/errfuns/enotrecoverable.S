@@ -9,7 +9,7 @@ enotrecoverable:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTRECOVERABLE
-	ldr	w0,[x1,#:lo12:ENOTRECOVERABLE]
+	ldrsw	x0,[x1,#:lo12:ENOTRECOVERABLE]
 	b	__errfun
 #else
 #error "unsupported architecture"

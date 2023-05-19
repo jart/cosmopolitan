@@ -68,7 +68,6 @@ COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
 
 COMMA := ,
 PWD := $(shell build/bootstrap/pwd.com)
-IMAGE_BASE_VIRTUAL ?= 0x400000
 
 IGNORE := $(shell $(ECHO) -2 ♥cosmo)
 IGNORE := $(shell $(MKDIR) o/tmp)
@@ -126,6 +125,12 @@ ifneq ($(ARCH), aarch64)
 MNO_FENTRY = -mno-fentry
 endif
 
+ifeq ($(ARCH), aarch64)
+IMAGE_BASE_VIRTUAL ?= 0x010000000000
+else
+IMAGE_BASE_VIRTUAL ?= 0x400000
+endif
+
 FTRACE =								\
 	-pg
 
@@ -169,7 +174,6 @@ DEFAULT_OFLAGS =							\
 
 DEFAULT_COPTS =								\
 	-fno-math-errno							\
-	-fno-fp-int-builtin-inexact					\
 	-fno-ident							\
 	-fno-common							\
 	-fno-gnu-unique							\
@@ -177,10 +181,23 @@ DEFAULT_COPTS =								\
 	-fstrict-overflow						\
 	-fno-semantic-interposition
 
-ifneq ($(ARCH), aarch64)
+ifeq ($(ARCH), x86_64)
 DEFAULT_COPTS +=							\
 	-mno-red-zone							\
 	-mno-tls-direct-seg-refs
+endif
+
+ifeq ($(ARCH), aarch64)
+#
+# - Apple says in "Writing ARM64 code for Apple platforms" that we're
+#   not allowed to use the x18 register.
+#
+# - Cosmopolitan Libc uses x28 for thread-local storage because Apple
+#   forbids us from using tpidr_el0 too.
+#
+DEFAULT_COPTS +=							\
+	-ffixed-x18							\
+	-ffixed-x28
 endif
 
 MATHEMATICAL =								\
@@ -217,8 +234,18 @@ DEFAULT_LDFLAGS =							\
 	-nostdlib							\
 	--gc-sections							\
 	--build-id=none							\
-	--no-dynamic-linker						\
-	-zmax-page-size=0x1000 #--cref -Map=$@.map
+	--no-dynamic-linker #--cref -Map=$@.map
+
+ifeq ($(ARCH), aarch64)
+DEFAULT_LDFLAGS +=							\
+	-zmax-page-size=0x4000						\
+	-zcommon-page-size=0x4000					\
+	-znorelro
+else
+DEFAULT_LDFLAGS +=							\
+	-zmax-page-size=0x1000						\
+	-zcommon-page-size=0x1000
+endif
 
 ZIPOBJ_FLAGS =								\
 	 -b$(IMAGE_BASE_VIRTUAL)

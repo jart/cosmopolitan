@@ -9,7 +9,7 @@ enotsock:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTSOCK
-	ldr	w0,[x1,#:lo12:ENOTSOCK]
+	ldrsw	x0,[x1,#:lo12:ENOTSOCK]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -29,6 +29,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -39,11 +40,10 @@ asm(".include \"libc/disclaimer.inc\"");
 /**
  * Returns log₂𝑥 exponent part of double.
  */
-int ilogbl(long double x) {
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-	return ilogb(x);
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
-	// #pragma STDC FENV_ACCESS ON
+int ilogbl(long double x)
+{
+#if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
+// #pragma STDC FENV_ACCESS ON
 	union ldshape u = {x};
 	uint64_t m = u.i.m;
 	int e = u.i.se & 0x7fff;
@@ -63,7 +63,7 @@ int ilogbl(long double x) {
 	}
 	return e - 0x3fff;
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
-	// #pragma STDC FENV_ACCESS ON
+// #pragma STDC FENV_ACCESS ON
 	union ldshape u = {x};
 	int e = u.i.se & 0x7fff;
 
@@ -82,8 +82,7 @@ int ilogbl(long double x) {
 		return u.f ? FP_ILOGBNAN : INT_MAX;
 	}
 	return e - 0x3fff;
-#else
-#error "architecture unsupported"
 #endif
 }
 
+#endif /* long double is long */

@@ -9,7 +9,7 @@ ebadr:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EBADR
-	ldr	w0,[x1,#:lo12:EBADR]
+	ldrsw	x0,[x1,#:lo12:EBADR]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -9,7 +9,7 @@ e2big:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,E2BIG
-	ldr	w0,[x1,#:lo12:E2BIG]
+	ldrsw	x0,[x1,#:lo12:E2BIG]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -9,7 +9,7 @@ enolck:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOLCK
-	ldr	w0,[x1,#:lo12:ENOLCK]
+	ldrsw	x0,[x1,#:lo12:ENOLCK]
 	b	__errfun
 #else
 #error "unsupported architecture"

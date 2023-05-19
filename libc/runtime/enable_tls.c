@@ -58,6 +58,7 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
  *
  * Here's the TLS memory layout on aarch64:
  *
+ *            x28
  *         %tpidr_el0
  *             │
  *             │    _Thread_local
@@ -82,7 +83,7 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
  * can disable it as follows:
  *
  *     int main() {
- *       __tls_enabled = false;
+ *       __tls_enabled_set(false);
  *       // do stuff
  *     }
  *
@@ -98,15 +99,15 @@ textstartup void __enable_tls(void) {
 
   // Here's the layout we're currently using:
   //
-  //         .align PAGESIZE
+  //         .balign PAGESIZE
   //     _tdata_start:
   //         .tdata
   //         _tdata_size = . - _tdata_start
-  //         .align PAGESIZE
+  //         .balign PAGESIZE
   //     _tbss_start:
   //     _tdata_start + _tbss_offset:
   //         .tbss
-  //         .align TLS_ALIGNMENT
+  //         .balign TLS_ALIGNMENT
   //         _tbss_size = . - _tbss_start
   //     _tbss_end:
   //     _tbss_start + _tbss_size:
@@ -219,5 +220,5 @@ textstartup void __enable_tls(void) {
 #endif
 
   // we are now allowed to use tls
-  __tls_enabled = true;
+  __tls_enabled_set(true);
 }

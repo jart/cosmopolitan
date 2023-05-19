@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_acct,0x03303303320330a3,0x059,globl
+.scall sys_acct,0x03303303320330a3,89,51,globl

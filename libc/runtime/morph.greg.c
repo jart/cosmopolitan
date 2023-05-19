@@ -129,8 +129,8 @@ privileged void __morph_begin(sigset_t *save) {
 #else
   __morph_sigprocmask(SIG_BLOCK, &ss, save);
 #endif
-  __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_WRITE,
-                   kNtPageWritecopy);
+  __morph_mprotect(__executable_start, __privileged_addr - __executable_start,
+                   PROT_READ | PROT_WRITE, kNtPageWritecopy);
 }
 
 /**
@@ -140,8 +140,8 @@ privileged void __morph_end(sigset_t *save) {
   int ax;
   long dx;
   bool cf;
-  __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_EXEC,
-                   kNtPageExecuteRead);
+  __morph_mprotect(__executable_start, __privileged_addr - __executable_start,
+                   PROT_READ | PROT_EXEC, kNtPageExecuteRead);
 #ifdef __x86_64__
   if (IsOpenbsd()) {
     asm volatile(CFLAG_ASM("syscall")
@@ -153,7 +153,7 @@ privileged void __morph_end(sigset_t *save) {
     asm volatile("mov\t$8,%%r10d\n\t"
                  "syscall"
                  : "=a"(ax), "=d"(dx)
-                 : "0"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(save), "1"(0)
+                 : "0"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(save), "1"(0L)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
     _npassert(!ax);
   }

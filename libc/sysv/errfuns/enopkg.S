@@ -9,7 +9,7 @@ enopkg:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOPKG
-	ldr	w0,[x1,#:lo12:ENOPKG]
+	ldrsw	x0,[x1,#:lo12:ENOPKG]
 	b	__errfun
 #else
 #error "unsupported architecture"

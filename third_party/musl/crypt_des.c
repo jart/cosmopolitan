@@ -25,9 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
+#include "libc/mem/alg.h"
 #include "libc/str/str.h"
 #include "third_party/musl/crypt.internal.h"
 #include "third_party/musl/crypt_des.internal.h"
@@ -813,7 +813,7 @@ void __do_des(uint32_t l_in, uint32_t r_in,
 		unsigned int round = 16;
 		const uint32_t *kl = ekey->l;
 		const uint32_t *kr = ekey->r;
-		uint32_t f;
+		uint32_t f = 0;
 		while (round--) {
 			uint32_t r48l, r48r;
 			/*

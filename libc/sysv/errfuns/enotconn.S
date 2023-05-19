@@ -9,7 +9,7 @@ enotconn:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTCONN
-	ldr	w0,[x1,#:lo12:ENOTCONN]
+	ldrsw	x0,[x1,#:lo12:ENOTCONN]
 	b	__errfun
 #else
 #error "unsupported architecture"

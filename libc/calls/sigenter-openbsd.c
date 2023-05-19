@@ -45,7 +45,7 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
   if (rva >= kSigactionMinRva) {
     flags = __sighandflags[sig & (NSIG - 1)];
     if (~flags & SA_SIGINFO) {
-      ((sigaction_f)(_base + rva))(sig, 0, 0);
+      ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {
       __repstosb(&g.uc, 0, sizeof(g.uc));
       __siginfo2cosmo(&g.si, (void *)openbsdinfo);
@@ -76,7 +76,7 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
       if (ctx->sc_fpstate) {
         *g.uc.uc_mcontext.fpregs = *ctx->sc_fpstate;
       }
-      ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+      ((sigaction_f)(__executable_start + rva))(sig, &g.si, &g.uc);
       ctx->sc_mask = g.uc.uc_sigmask.__bits[0];
       ctx->sc_rdi = g.uc.uc_mcontext.rdi;
       ctx->sc_rsi = g.uc.uc_mcontext.rsi;

@@ -41,6 +41,7 @@ asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 static const std::map<std::string, llama_ftype> LLAMA_FTYPE_MAP = {
+    {"f32",  LLAMA_FTYPE_ALL_F32 },
     {"f16",  LLAMA_FTYPE_MOSTLY_F16 },
     {"q4_0", LLAMA_FTYPE_MOSTLY_Q4_0},
     {"q4_1", LLAMA_FTYPE_MOSTLY_Q4_1},

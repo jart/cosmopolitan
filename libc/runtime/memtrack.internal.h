@@ -126,18 +126,16 @@ forceinline pureconst bool IsOldStack(const void *x) {
   /* openbsd uses 4mb stack by default */
   /* freebsd uses 512mb stack by default */
   /* most systems use 8mb stack by default */
-  size_t foss_stack_size = 4ul * 1024 * 1024;
-  uintptr_t top = ROUNDUP(__oldstack, FRAMESIZE);
-  uintptr_t bot = top - foss_stack_size;
-  uintptr_t old = ROUNDDOWN(__oldstack, foss_stack_size);
+  size_t foss_stack_size = 1ul * 1024 * 1024;
+  uintptr_t top = ROUNDUP(__oldstack + 1, foss_stack_size);
+  uintptr_t bot = ROUNDDOWN(__oldstack, foss_stack_size);
   return bot <= (uintptr_t)x && (uintptr_t)x < top;
 }
 
 forceinline pureconst bool IsOldStackFrame(int x) {
-  size_t foss_stack_size = 4ul * 1024 * 1024;
-  uintptr_t top = ROUNDUP(__oldstack, FRAMESIZE);
-  uintptr_t bot = top - foss_stack_size;
-  uintptr_t old = ROUNDDOWN(__oldstack, foss_stack_size);
+  size_t foss_stack_size = 1ul * 1024 * 1024;
+  uintptr_t top = ROUNDUP(__oldstack + 1, foss_stack_size);
+  uintptr_t bot = ROUNDDOWN(__oldstack, foss_stack_size);
   return (int)(bot >> 16) <= x && x <= (int)((top >> 16) - 1);
 }
 
@@ -151,7 +149,7 @@ forceinline pureconst bool OverlapsImageSpace(const void *p, size_t n) {
   if (n) {
     BegA = p;
     EndA = BegA + (n - 1);
-    BegB = _base;
+    BegB = __executable_start;
     EndB = _end - 1;
     return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {

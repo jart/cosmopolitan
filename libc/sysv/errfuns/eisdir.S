@@ -9,7 +9,7 @@ eisdir:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EISDIR
-	ldr	w0,[x1,#:lo12:EISDIR]
+	ldrsw	x0,[x1,#:lo12:EISDIR]
 	b	__errfun
 #else
 #error "unsupported architecture"

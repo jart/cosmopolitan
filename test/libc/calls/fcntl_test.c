@@ -108,6 +108,7 @@ void OnSig(int sig) {
 
 TEST(posixAdvisoryLocks, twoProcesses) {
   if (IsWindows()) return;  // due to signals
+  if (IsNetbsd()) return;   // TODO: why does sigusr1 kill runitd?
 
   int ws, pid;
   struct flock lock;

@@ -9,7 +9,7 @@ eidrm:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EIDRM
-	ldr	w0,[x1,#:lo12:EIDRM]
+	ldrsw	x0,[x1,#:lo12:EIDRM]
 	b	__errfun
 #else
 #error "unsupported architecture"

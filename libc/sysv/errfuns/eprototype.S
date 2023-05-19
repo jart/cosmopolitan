@@ -9,7 +9,7 @@ eprototype:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EPROTOTYPE
-	ldr	w0,[x1,#:lo12:EPROTOTYPE]
+	ldrsw	x0,[x1,#:lo12:EPROTOTYPE]
 	b	__errfun
 #else
 #error "unsupported architecture"

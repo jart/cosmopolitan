@@ -9,7 +9,7 @@ einprogress:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EINPROGRESS
-	ldr	w0,[x1,#:lo12:EINPROGRESS]
+	ldrsw	x0,[x1,#:lo12:EINPROGRESS]
 	b	__errfun
 #else
 #error "unsupported architecture"

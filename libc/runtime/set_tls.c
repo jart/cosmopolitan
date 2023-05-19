@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/msr.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/thread/tls.h"
+#include "libc/thread/tls2.h"
 
 int sys_set_tls();
 
@@ -59,6 +61,9 @@ textstartup void __set_tls(struct CosmoTib *tib) {
                    "d"((uint32_t)(val >> 32)));
   }
 #else
-  asm volatile("msr\ttpidr_el0,%0" : /* no outputs */ : "r"(tib));
+  asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(tib));
+  if (!IsXnu()) {
+    asm volatile("msr\ttpidr_el0,%0" : /* no outputs */ : "r"(tib));
+  }
 #endif
 }

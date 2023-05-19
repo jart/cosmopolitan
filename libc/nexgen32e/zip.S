@@ -38,7 +38,8 @@ __zip_end:
 	.short	v_zip_records		// number of records on disk
 	.short	v_zip_records		// records
 	.long	v_zip_cdirsize		// size of central directory
-	.long	RVA(__zip_start)	// central directory offset
+	.weak	v_zip_cdoffset
+	.long	v_zip_cdoffset		// central directory offset
 	.short	v_zip_commentsize	// comment size
 	.endobj	__zip_end,globl,hidden
 	.weak	v_zip_records

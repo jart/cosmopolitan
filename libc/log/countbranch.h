@@ -12,7 +12,7 @@ COSMOPOLITAN_C_START_
     bool Cond;                                                  \
     struct countbranch *Info;                                   \
     asm(".section .rodata.str1.1,\"aMS\",@progbits,1\n\t"       \
-        ".align\t1\n"                                           \
+        ".balign\t1\n"                                          \
         "31338:\t"                                              \
         ".asciz\t" xs "\n"                                      \
         "31339:\t"                                              \
@@ -24,7 +24,7 @@ COSMOPOLITAN_C_START_
         "nopl\tcountbranch_data(%%rip)\n\t"                     \
         ".previous\n\t"                                         \
         ".section .sort.data.countbranch.2,\"a\",@progbits\n\t" \
-        ".align\t8\n31337:\t"                                   \
+        ".balign\t8\n31337:\t"                                  \
         ".quad\t0\n\t"                                          \
         ".quad\t0\n\t"                                          \
         ".quad\t31338b\n\t"                                     \

@@ -19,12 +19,13 @@ forceinline long __sysv_exit(long rc) {
                : "memory", "cc");
 #elif defined(__aarch64__)
   register long r0 asm("x0") = rc;
-  register long r8 asm("x8") = __NR_exit_group;
+  register long r8 asm("x8") = __NR_exit_group & 0x7ff;
+  register long r16 asm("x16") = __NR_exit_group & 0x7ff;
   register long res_x0 asm("x0");
-  asm volatile("svc\t0" : "=r"(res_x0) : "r"(r0), "r"(r8) : "memory");
+  asm volatile("svc\t0" : "=r"(res_x0) : "r"(r0), "r"(r8), "r"(r16) : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_exit_group, rc);
+  ax = syscall(__NR_exit_group & 0x7ff, rc);
 #endif
   return ax;
 }
@@ -38,16 +39,17 @@ forceinline int __sysv_close(long fd) {
                : "rdx", "memory", "cc");
 #elif defined(__aarch64__)
   register long r0 asm("x0") = fd;
-  register long r8 asm("x8") = __NR_close;
+  register long r8 asm("x8") = __NR_close & 0x7ff;
+  register long r16 asm("x16") = __NR_close & 0x7ff;
   register long res_x0 asm("x0");
   asm volatile("mov\tx8,%1\n\t"
                "svc\t0"
                : "=r"(res_x0)
-               : "r"(r0), "r"(r8)
+               : "r"(r0), "r"(r8), "r"(r16)
                : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_close, fd);
+  ax = syscall(__NR_close & 0x7ff, fd);
 #endif
   return ax;
 }
@@ -64,15 +66,16 @@ forceinline int __sysv_open(const char *path, long flags, long mode) {
   register long r1 asm("x1") = (long)path;
   register long r2 asm("x2") = (long)flags;
   register long r3 asm("x3") = (long)mode;
-  register long r8 asm("x8") = (long)__NR_open;
+  register long r8 asm("x8") = (long)__NR_open & 0x7ff;
+  register long r16 asm("x16") = (long)__NR_open & 0x7ff;
   register long res_x0 asm("x0");
   asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r8)
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r8), "r"(r16)
                : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_open, path, flags, mode);
+  ax = syscall(__NR_open & 0x7ff, path, flags, mode);
 #endif
   return ax;
 }
@@ -88,15 +91,16 @@ forceinline long __sysv_read(long fd, void *data, unsigned long size) {
   register long r0 asm("x0") = (long)fd;
   register long r1 asm("x1") = (long)data;
   register long r2 asm("x2") = (long)size;
-  register long r8 asm("x8") = (long)__NR_read;
+  register long r8 asm("x8") = (long)__NR_read & 0x7ff;
+  register long r16 asm("x16") = (long)__NR_read & 0x7ff;
   register long res_x0 asm("x0");
   asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_read, fd, data, size);
+  ax = syscall(__NR_read & 0x7ff, fd, data, size);
 #endif
   return ax;
 }
@@ -112,15 +116,16 @@ forceinline long __sysv_write(long fd, const void *data, unsigned long size) {
   register long r0 asm("x0") = (long)fd;
   register long r1 asm("x1") = (long)data;
   register long r2 asm("x2") = (long)size;
-  register long r8 asm("x8") = (long)__NR_write;
+  register long r8 asm("x8") = (long)__NR_write & 0x7ff;
+  register long r16 asm("x16") = (long)__NR_write & 0x7ff;
   register long res_x0 asm("x0");
   asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "i"(64), "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "i"(64), "r"(r0), "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_write, fd, data, size);
+  ax = syscall(__NR_write & 0x7ff, fd, data, size);
 #endif
   return ax;
 }
@@ -136,15 +141,16 @@ forceinline long __sysv_mprotect(void *addr, size_t size, long prot) {
   register long r0 asm("x0") = (long)addr;
   register long r1 asm("x1") = (long)size;
   register long r2 asm("x2") = (long)prot;
-  register long r8 asm("x8") = (long)__NR_mprotect;
+  register long r8 asm("x8") = (long)__NR_mprotect & 0x7ff;
+  register long r16 asm("x16") = (long)__NR_mprotect & 0x7ff;
   register long res_x0 asm("x0");
   asm volatile("svc\t0"
                : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "r"(r0), "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_mprotect, addr, size, prot);
+  ax = syscall(__NR_mprotect & 0x7ff, addr, size, prot);
 #endif
   return ax;
 }
@@ -157,12 +163,13 @@ forceinline int __sysv_getpid(void) {
                : "0"(__NR_getpid)
                : "rdx", "memory", "cc");
 #elif defined(__aarch64__)
-  register long r8 asm("x8") = (long)__NR_getpid;
+  register long r8 asm("x8") = (long)__NR_getpid & 0x7ff;
+  register long r16 asm("x16") = (long)__NR_getpid & 0x7ff;
   register long res_x0 asm("x0");
-  asm volatile("svc\t0" : "=r"(res_x0) : "r"(r8) : "memory");
+  asm volatile("svc\t0" : "=r"(res_x0) : "r"(r8), "r"(r16) : "memory");
   ax = res_x0;
 #else
-  ax = syscall(__NR_getpid);
+  ax = syscall(__NR_getpid & 0x7ff);
 #endif
   return ax;
 }

@@ -9,7 +9,7 @@ edestaddrreq:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EDESTADDRREQ
-	ldr	w0,[x1,#:lo12:EDESTADDRREQ]
+	ldrsw	x0,[x1,#:lo12:EDESTADDRREQ]
 	b	__errfun
 #else
 #error "unsupported architecture"

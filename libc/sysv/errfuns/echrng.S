@@ -9,7 +9,7 @@ echrng:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ECHRNG
-	ldr	w0,[x1,#:lo12:ECHRNG]
+	ldrsw	x0,[x1,#:lo12:ECHRNG]
 	b	__errfun
 #else
 #error "unsupported architecture"

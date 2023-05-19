@@ -29,7 +29,7 @@
 
 #define __strnlen_aarch64 strnlen
 
-.ident "\n\
+.ident "\n\n\
 Optimized Routines (MIT License)\n\
 Copyright 2022 ARM Limited\n"
 .include "libc/disclaimer.inc"

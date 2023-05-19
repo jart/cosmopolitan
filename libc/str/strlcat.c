@@ -21,7 +21,7 @@
 // $OpenBSD: strlcat.c,v 1.19 2019/01/25 00:19:25 millert Exp $
 
 asm(".ident\t\"\\n\\n\
-strlcat (ISC)\\n\
+OpenBSD Strings (ISC)\\n\
 Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>\"");
 asm(".include \"libc/disclaimer.inc\"");
 

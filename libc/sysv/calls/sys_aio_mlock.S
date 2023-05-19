@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_aio_mlock,0xffffff21ffffffff,0xfff,globl
+.scall sys_aio_mlock,0xffffff21ffffffff,4095,4095,globl

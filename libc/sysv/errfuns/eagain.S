@@ -9,7 +9,7 @@ eagain:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EAGAIN
-	ldr	w0,[x1,#:lo12:EAGAIN]
+	ldrsw	x0,[x1,#:lo12:EAGAIN]
 	b	__errfun
 #else
 #error "unsupported architecture"

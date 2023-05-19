@@ -9,7 +9,7 @@ enodata:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENODATA
-	ldr	w0,[x1,#:lo12:ENODATA]
+	ldrsw	x0,[x1,#:lo12:ENODATA]
 	b	__errfun
 #else
 #error "unsupported architecture"

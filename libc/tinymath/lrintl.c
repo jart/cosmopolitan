@@ -38,6 +38,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Rounds to nearest integer.
+ */
 long lrintl(long double x)
 {
 #ifdef FE_INEXACT
@@ -48,7 +51,7 @@ Note that if LONG_MAX == 0x7fffffffffffffff && LDBL_MANT_DIG == 64
 then x == 2**63 - 0.5 is the only input that overflows and
 raises inexact (with tonearest or upward rounding mode)
 */
-	// #pragma STDC FENV_ACCESS ON
+// #pragma STDC FENV_ACCESS ON
 	int e;
 
 	e = fetestexcept(FE_INEXACT);

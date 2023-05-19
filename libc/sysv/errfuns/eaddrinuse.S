@@ -9,7 +9,7 @@ eaddrinuse:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,EADDRINUSE
-	ldr	w0,[x1,#:lo12:EADDRINUSE]
+	ldrsw	x0,[x1,#:lo12:EADDRINUSE]
 	b	__errfun
 #else
 #error "unsupported architecture"

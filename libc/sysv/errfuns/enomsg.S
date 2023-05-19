@@ -9,7 +9,7 @@ enomsg:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOMSG
-	ldr	w0,[x1,#:lo12:ENOMSG]
+	ldrsw	x0,[x1,#:lo12:ENOMSG]
 	b	__errfun
 #else
 #error "unsupported architecture"

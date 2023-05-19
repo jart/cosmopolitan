@@ -29,7 +29,7 @@
 
 #define __memchr_aarch64 memchr
 
-.ident "\n\
+.ident "\n\n\
 Optimized Routines (MIT License)\n\
 Copyright 2022 ARM Limited\n"
 .include "libc/disclaimer.inc"

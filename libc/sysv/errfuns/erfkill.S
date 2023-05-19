@@ -9,7 +9,7 @@ erfkill:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ERFKILL
-	ldr	w0,[x1,#:lo12:ERFKILL]
+	ldrsw	x0,[x1,#:lo12:ERFKILL]
 	b	__errfun
 #else
 #error "unsupported architecture"

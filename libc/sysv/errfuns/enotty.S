@@ -9,7 +9,7 @@ enotty:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOTTY
-	ldr	w0,[x1,#:lo12:ENOTTY]
+	ldrsw	x0,[x1,#:lo12:ENOTTY]
 	b	__errfun
 #else
 #error "unsupported architecture"

@@ -9,7 +9,7 @@ enomem:
 	jmp	__errfun
 #elif defined(__aarch64__)
 	adrp	x1,ENOMEM
-	ldr	w0,[x1,#:lo12:ENOMEM]
+	ldrsw	x0,[x1,#:lo12:ENOMEM]
 	b	__errfun
 #else
 #error "unsupported architecture"
