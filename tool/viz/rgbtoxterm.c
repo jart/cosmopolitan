@@ -107,7 +107,7 @@ void processarg(const char *arg) {
     return;
   }
   fprintf(fout_, "%s[%s%d;5;%hhum%s", rawmode_ ? "\e" : "\\e",
-          emphasis_ ? "1;" : "", background_ ? 48 : 38, rgb2tty(r, g, b),
+          emphasis_ ? "1;" : "", background_ ? 48 : 38, rgb2tty(r, g, b).xt,
           &"\n"[rawmode_]);
 }
 
