@@ -73,6 +73,9 @@ _start:
 //	align stack to GetStackSize() so GetStackAddr() is fast
 	.weak	ape_stack_memsz
 	mov	$ape_stack_memsz,%r8d
+	mov	$ape_stack_align,%r9d
+	cmp	$_HOSTMETAL,%cl
+	cmove	%r9d,%r8d
 	neg	%r8
 	and	%r8,%rsp
 	xor	%ebp,%ebp
