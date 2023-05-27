@@ -61,7 +61,7 @@ noasan texthead uint64_t __new_page(struct mman *mm) {
     struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
     _unassert(p == (p & PAGE_TA));
     q = rp->next;
-    _unassert(q == (q & PAGE_TA));
+    _unassert(q == (q & PAGE_TA) || q == NOPAGE);
     mm->frp = q;
     return p;
   }
