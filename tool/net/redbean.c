@@ -1076,6 +1076,22 @@ static bool HasString(struct Strings *l, const char *s, size_t n) {
   return false;
 }
 
+static void UpdateLuaPath(const char *s) {
+#ifndef STATIC
+  lua_State *L = GL;
+  int n = lua_gettop(L);
+  lua_getglobal(L, "package");
+  if (lua_istable(L, -1)) {
+    lua_getfield(L, -1, "path");
+    lua_pushstring(L, _gc(xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua",
+                                    luaL_optstring(L, -1, ""), s, s)));
+    lua_setfield(L, -3, "path");
+  }
+  lua_settop(L, n);
+#endif
+}
+
+
 static void ProgramDirectory(const char *path) {
   char *s;
   size_t n;
@@ -1087,6 +1103,7 @@ static void ProgramDirectory(const char *path) {
   n = strlen(s);
   INFOF("(cfg) program directory: %s", s);
   AddString(&stagedirs, s, n);
+  UpdateLuaPath(s);
 }
 
 static void ProgramHeader(const char *s) {
