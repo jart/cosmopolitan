@@ -153,6 +153,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   uint64_t Address;
   uintptr_t Args, MapKey, DescSize;
   uint64_t p, pe, cr4, *m, *pd, *sp, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
+  const char16_t *CmdLine;
 
   /*
    * Allocates and clears PC-compatible memory and copies image.  Marks the
@@ -190,7 +191,9 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   ArgBlock = (struct EfiArgs *)0x7e000;
   SystemTable->BootServices->HandleProtocol(ImageHandle,
                                             &kEfiLoadedImageProtocol, &ImgInfo);
-  Args = GetDosArgv(ImgInfo->LoadOptions, ArgBlock->ArgBlock,
+  CmdLine = (const char16_t *)ImgInfo->LoadOptions;
+  if (!CmdLine || !CmdLine[0]) CmdLine = u"BOOTX64.EFI";
+  Args = GetDosArgv(CmdLine, ArgBlock->ArgBlock,
                     sizeof(ArgBlock->ArgBlock), ArgBlock->Args,
                     ARRAYLEN(ArgBlock->Args));
 
