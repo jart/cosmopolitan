@@ -166,10 +166,16 @@ static char *__ubsan_itpcpy(char *p, struct UbsanTypeDescriptor *t,
   }
 }
 
+static size_t __ubsan_strlen(const char *s) {
+  size_t i = 0;
+  while (s[i]) ++i;
+  return i;
+}
+
 static const char *__ubsan_dubnul(const char *s, unsigned i) {
   size_t n;
   while (i--) {
-    if ((n = __strlen(s))) {
+    if ((n = __ubsan_strlen(s))) {
       s += n + 1;
     } else {
       return NULL;

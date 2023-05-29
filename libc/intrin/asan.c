@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
@@ -249,17 +250,13 @@ static void __asan_memset(void *p, char c, size_t n) {
       __builtin_memcpy(b + n - 8, &x, 8);
       break;
     default:
-      if (n <= 64) {
-        i = 0;
-        do {
-          __builtin_memcpy(b + i, &x, 8);
-          asm volatile("" ::: "memory");
-          __builtin_memcpy(b + i + 8, &x, 8);
-        } while ((i += 16) + 16 <= n);
-        for (; i < n; ++i) b[i] = x;
-      } else {
-        __repstosb(p, c, n);
-      }
+      i = 0;
+      do {
+        __builtin_memcpy(b + i, &x, 8);
+        asm volatile("" ::: "memory");
+        __builtin_memcpy(b + i + 8, &x, 8);
+      } while ((i += 16) + 16 <= n);
+      for (; i < n; ++i) b[i] = x;
       break;
   }
 }
@@ -317,18 +314,14 @@ static void *__asan_mempcpy(void *dst, const void *src, size_t n) {
       __builtin_memcpy(d + n - 8, &b, 8);
       return d + n;
     default:
-      if (n <= 64) {
-        i = 0;
-        do {
-          __builtin_memcpy(&a, s + i, 8);
-          asm volatile("" ::: "memory");
-          __builtin_memcpy(d + i, &a, 8);
-        } while ((i += 8) + 8 <= n);
-        for (; i < n; ++i) d[i] = s[i];
-        return d + i;
-      } else {
-        return __repmovsb(d, s, n);
-      }
+      i = 0;
+      do {
+        __builtin_memcpy(&a, s + i, 8);
+        asm volatile("" ::: "memory");
+        __builtin_memcpy(d + i, &a, 8);
+      } while ((i += 8) + 8 <= n);
+      for (; i < n; ++i) d[i] = s[i];
+      return d + i;
   }
 }
 
@@ -1426,8 +1419,14 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
   __asan_unpoison((char *)p, n);
 }
 
+static size_t __asan_strlen(const char *s) {
+  size_t i = 0;
+  while (s[i]) ++i;
+  return i;
+}
+
 static textstartup void __asan_shadow_string(char *s) {
-  __asan_map_shadow((intptr_t)s, __strlen(s) + 1);
+  __asan_map_shadow((intptr_t)s, __asan_strlen(s) + 1);
 }
 
 static textstartup void __asan_shadow_auxv(intptr_t *auxv) {
@@ -1469,6 +1468,10 @@ static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_poison((void *)GetStackAddr(), GUARDSIZE, kAsanStackOverflow);
 }
 
+forceinline ssize_t __write_str(const char *s) {
+  return sys_write(2, s, __asan_strlen(s));
+}
+
 void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   static bool once;
   if (!_cmpxchg(&once, false, true)) return;
@@ -1491,7 +1494,7 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   __asan_map_shadow(0, 4096);
   __asan_poison(0, GUARDSIZE, kAsanNullPage);
   if (!IsWindows()) {
-    __sysv_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
+    sys_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
   }
   __asan_shadow_string_list(argv);
   __asan_shadow_string_list(envp);

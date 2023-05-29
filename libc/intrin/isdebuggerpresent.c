@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/promises.internal.h"
@@ -23,6 +24,7 @@
 #include "libc/log/log.h"
 #include "libc/nt/struct/teb.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 
 #define kBufSize 1024
@@ -48,15 +50,15 @@ int IsDebuggerPresent(bool force) {
   if (!PLEDGED(RPATH)) return false;
   res = 0;
   e = errno;
-  if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
-    if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {
+  if ((fd = __sys_openat(AT_FDCWD, "/proc/self/status", O_RDONLY, 0)) >= 0) {
+    if ((got = sys_read(fd, buf, sizeof(buf) - 1)) > 0) {
       buf[got] = '\0';
       if ((p = __strstr(buf, kPid))) {
         p += sizeof(kPid) - 1;
         res = __atoul(p);
       }
     }
-    __sysv_close(fd);
+    sys_close(fd);
   }
   errno = e;
   return res;

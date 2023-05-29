@@ -20,7 +20,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/termios.h"
 
@@ -38,6 +37,12 @@
 
 static bool __isrestorable;
 static union metatermios __oldtermios;
+
+static size_t __strlen(const char *s) {
+  size_t i = 0;
+  while (s[i]) ++i;
+  return i;
+}
 
 // called weakly by libc/calls/ioctl_tcsets.c to avoid pledge("tty")
 void __on_ioctl_tcsets(int fd) {

@@ -17,27 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/nr.h"
-
-static inline unsigned sys_umask(unsigned newmask) {
-#ifdef __x86_64__
-  unsigned res;
-  asm volatile("syscall"
-               : "=a"(res)
-               : "0"(__NR_umask), "D"(newmask)
-               : "memory", "cc");
-#elif defined(__aarch64__)
-  // xnu m1 doesn't manage carry flag
-  register long r0 asm("x0") = newmask;
-  register long r8 asm("x8") = __NR_umask & 0x7ff;
-  register long r16 asm("x16") = __NR_umask & 0x7ff;
-  register unsigned res asm("x0");
-  asm volatile("svc\t0" : "=r"(res) : "r"(r0), "r"(r8), "r"(r16) : "memory");
-#endif
-  return res;
-}
 
 /**
  * Sets file mode creation mask.
