@@ -173,6 +173,7 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   uint64_t Address;
   uintptr_t Args, MapKey, DescSize;
   uint64_t *pd, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
+  const char16_t *CmdLine;
 
   extern char os asm("__hostos");
   os = _HOSTMETAL;
@@ -213,7 +214,9 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   ArgBlock = (struct EfiArgs *)0x7e000;
   SystemTable->BootServices->HandleProtocol(ImageHandle,
                                             &kEfiLoadedImageProtocol, &ImgInfo);
-  Args = GetDosArgv(ImgInfo->LoadOptions, ArgBlock->ArgBlock,
+  CmdLine = (const char16_t *)ImgInfo->LoadOptions;
+  if (!CmdLine || !CmdLine[0]) CmdLine = u"BOOTX64.EFI";
+  Args = GetDosArgv(CmdLine, ArgBlock->ArgBlock,
                     sizeof(ArgBlock->ArgBlock), ArgBlock->Args,
                     ARRAYLEN(ArgBlock->Args));
 
