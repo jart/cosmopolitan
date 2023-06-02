@@ -1279,14 +1279,15 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   FixCpy(ord, si->si_syscall, 12);
   for (found = i = 0; i < ARRAYLEN(kPledge); ++i) {
     if (HasSyscall(kPledge + i, si->si_syscall)) {
-      Log("error: pledge ", kPledge[i].name, " for ",
-          GetSyscallName(si->si_syscall), " (ord=", ord, ")\n", NULL);
+      Log("error: protected syscall ", GetSyscallName(si->si_syscall),
+          " (ord=", ord, "); pledge promise '", kPledge[i].name, "' to allow\n",
+          NULL);
       found = true;
     }
   }
   if (!found) {
-    Log("error: bad syscall (", GetSyscallName(si->si_syscall), " ord=", ord,
-        ")\n", NULL);
+    Log("error: bad syscall ", GetSyscallName(si->si_syscall),
+        " (ord=", ord, ")\n", NULL);
   }
   switch (mode & PLEDGE_PENALTY_MASK) {
     case PLEDGE_PENALTY_KILL_PROCESS:
