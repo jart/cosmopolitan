@@ -7401,12 +7401,12 @@ void RedBean(int argc, char *argv[]) {
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);
   SetDefaults();
-  LuaStart();
-  GetOpts(argc, argv);
   // this can fail with EPERM if we're running under pledge()
   if (!interpretermode && !(interfaces = GetHostIps())) {
     WARNF("(srvr) failed to query system network interface addresses: %m");
   }
+  LuaStart();
+  GetOpts(argc, argv);
 #ifndef STATIC
   if (selfmodifiable) {
     MakeExecutableModifiable();
