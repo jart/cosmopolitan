@@ -7182,7 +7182,8 @@ static int WindowsReplThread(void *arg, int tid) {
 
 static void InstallSignalHandler(int sig, void *handler) {
   struct sigaction sa = {.sa_sigaction = handler};
-  CHECK_NE(-1, sigaction(sig, &sa, 0));
+  if (sigaction(sig, &sa, 0) == -1)
+    WARNF("(srvr) failed to set signal handler #%d: %m", sig);
 }
 
 static void SigInit(void) {
