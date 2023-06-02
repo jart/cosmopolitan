@@ -143,6 +143,9 @@
  * - "inet" allows socket(AF_INET), listen, bind, connect, accept,
  *   accept4, getpeername, getsockname, setsockopt, getsockopt, sendto.
  *
+ * - "anet" allows socket(AF_INET), listen, bind, accept,
+ *   accept4, getpeername, getsockname, setsockopt, getsockopt, sendto.
+ *
  * - "unix" allows socket(AF_UNIX), listen, bind, connect, accept,
  *   accept4, getpeername, getsockname, setsockopt, getsockopt.
  *

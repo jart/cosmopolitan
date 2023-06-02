@@ -4347,6 +4347,11 @@ UNIX MODULE
       Allows socket (AF_INET), listen, bind, connect, accept,
       getpeername, getsockname, setsockopt, getsockopt.
 
+    anet
+
+      Allows socket (AF_INET), listen, bind, accept,
+      getpeername, getsockname, setsockopt, getsockopt.
+
     unix
 
       Allows socket (AF_UNIX), listen, bind, connect, accept,
