@@ -7182,7 +7182,8 @@ static int WindowsReplThread(void *arg, int tid) {
 
 static void InstallSignalHandler(int sig, void *handler) {
   struct sigaction sa = {.sa_sigaction = handler};
-  CHECK_NE(-1, sigaction(sig, &sa, 0));
+  if (sigaction(sig, &sa, 0) == -1)
+    WARNF("(srvr) failed to set signal handler #%d: %m", sig);
 }
 
 static void SigInit(void) {
@@ -7400,12 +7401,12 @@ void RedBean(int argc, char *argv[]) {
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);
   SetDefaults();
-  LuaStart();
-  GetOpts(argc, argv);
   // this can fail with EPERM if we're running under pledge()
   if (!interpretermode && !(interfaces = GetHostIps())) {
     WARNF("(srvr) failed to query system network interface addresses: %m");
   }
+  LuaStart();
+  GetOpts(argc, argv);
 #ifndef STATIC
   if (selfmodifiable) {
     MakeExecutableModifiable();

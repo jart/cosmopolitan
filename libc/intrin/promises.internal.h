@@ -23,7 +23,8 @@
 #define PROMISE_VMINFO    19
 #define PROMISE_TMPPATH   20
 #define PROMISE_CHOWN     21
-#define PROMISE_LEN_      22
+#define PROMISE_ANET      22
+#define PROMISE_LEN_      23
 
 #define PLEDGED(x) ((~__promises >> PROMISE_##x) & 1)
 

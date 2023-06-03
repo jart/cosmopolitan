@@ -615,7 +615,7 @@ TEST(pledge, everything) {
     // contains 591 bpf instructions [2022-07-24]
     ASSERT_SYS(0, 0,
                pledge("stdio rpath wpath cpath dpath "
-                      "flock fattr inet unix dns tty "
+                      "flock fattr inet anet unix dns tty "
                       "recvfd sendfd proc exec id "
                       "unveil settime prot_exec "
                       "vminfo tmppath",

@@ -811,6 +811,22 @@ static const uint16_t kPledgeInet[] = {
     __NR_linux_getsockname,            //
 };
 
+// anet is similar to init, but without connect;
+// this allows to accept, but not initiate socket connections
+static const uint16_t kPledgeAnet[] = {
+    __NR_linux_socket | INET,          //
+    __NR_linux_listen,                 //
+    __NR_linux_bind,                   //
+    __NR_linux_sendto,                 //
+    __NR_linux_accept,                 //
+    __NR_linux_accept4,                //
+    __NR_linux_ioctl | INET,           //
+    __NR_linux_getsockopt | RESTRICT,  //
+    __NR_linux_setsockopt | RESTRICT,  //
+    __NR_linux_getpeername,            //
+    __NR_linux_getsockname,            //
+};
+
 static const uint16_t kPledgeUnix[] = {
     __NR_linux_socket | UNIX,          //
     __NR_linux_listen,                 //
@@ -955,6 +971,7 @@ const struct Pledges kPledge[PROMISE_LEN_] = {
     [PROMISE_FLOCK] = {"flock", PLEDGE(kPledgeFlock)},             //
     [PROMISE_FATTR] = {"fattr", PLEDGE(kPledgeFattr)},             //
     [PROMISE_INET] = {"inet", PLEDGE(kPledgeInet)},                //
+    [PROMISE_ANET] = {"anet", PLEDGE(kPledgeAnet)},                //
     [PROMISE_UNIX] = {"unix", PLEDGE(kPledgeUnix)},                //
     [PROMISE_DNS] = {"dns", PLEDGE(kPledgeDns)},                   //
     [PROMISE_TTY] = {"tty", PLEDGE(kPledgeTty)},                   //
@@ -1262,14 +1279,15 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   FixCpy(ord, si->si_syscall, 12);
   for (found = i = 0; i < ARRAYLEN(kPledge); ++i) {
     if (HasSyscall(kPledge + i, si->si_syscall)) {
-      Log("error: pledge ", kPledge[i].name, " for ",
-          GetSyscallName(si->si_syscall), " (ord=", ord, ")\n", NULL);
+      Log("error: protected syscall ", GetSyscallName(si->si_syscall),
+          " (ord=", ord, "); pledge promise '", kPledge[i].name, "' to allow\n",
+          NULL);
       found = true;
     }
   }
   if (!found) {
-    Log("error: bad syscall (", GetSyscallName(si->si_syscall), " ord=", ord,
-        ")\n", NULL);
+    Log("error: bad syscall ", GetSyscallName(si->si_syscall),
+        " (ord=", ord, ")\n", NULL);
   }
   switch (mode & PLEDGE_PENALTY_MASK) {
     case PLEDGE_PENALTY_KILL_PROCESS:
