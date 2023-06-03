@@ -19,20 +19,27 @@
 #include "libc/math.h"
 
 /**
- * Rounds to nearest integer.
+ * Rounds to integer in current rounding mode.
+ *
+ * The floating-point exception `FE_INEXACT` is raised if the result is
+ * different from the input.
  */
 long lrintf(float x) {
-  long res;
+  long i;
 #ifdef __x86_64__
-  asm("cvtss2si\t%1,%0" : "=res"(res) : "x"(x));
+  asm("cvtss2si\t%1,%0" : "=r"(i) : "x"(x));
 #elif defined(__aarch64__)
   asm("frintx\t%s1,%s1\n\t"
       "fcvtzs\t%x0,%s1"
-      : "=r"(res), "+w"(x));
+      : "=r"(i), "+w"(x));
 #elif defined(__powerpc64__)
-  asm("fctid\t%0,%1" : "=d"(res) : "f"(x));
+  asm("fctid\t%0,%1" : "=d"(i) : "f"(x));
 #else
-  res = rintf(x);
+  i = rintf(x);
 #endif /* __x86_64__ */
-  return res;
+  return i;
 }
+
+#if __SIZEOF_LONG__ == __SIZEOF_LONG_LONG__
+__weak_reference(lrintf, llrintf);
+#endif

@@ -32,7 +32,7 @@
 #ifdef __x86_64__
 
 void SetUpOnce(void) {
-  __tls_enabled = false;
+  __tls_enabled_set(false);
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 

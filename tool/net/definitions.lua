@@ -1196,6 +1196,10 @@ function GetHost() end
 ---@nodiscard
 function GetHostOs() end
 
+---@return "X86_64"|"AARCH64"|"POWERPC64"|"S390X" isaname string that describes the host instruction set architecture
+---@nodiscard
+function GetHostIsa() end
+
 ---@param str string|integer monospace display width of string.
 --- This is useful for fixed-width formatting. For example, CJK characters
 --- typically take up two cells. This function takes into consideration combining

@@ -43,6 +43,12 @@ asm(".include \"libc/disclaimer.inc\"");
 #endif
 static const float_t toint = 1/EPS;
 
+/**
+ * Rounds to integer in current rounding mode.
+ *
+ * The floating-point exception `FE_INEXACT` is raised if the result is
+ * different from the input.
+ */
 float rintf(float x)
 {
 	union {float f; uint32_t i;} u = {x};

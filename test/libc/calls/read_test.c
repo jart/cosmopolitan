@@ -45,28 +45,6 @@ TEST(read, eof) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static long Read(long fd, void *buf, unsigned long size) {
-#ifdef __x86_64__
-  long ax, di, si, dx;
-  asm volatile("syscall"
-               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"(__NR_read), "1"(fd), "2"(buf), "3"(size)
-               : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-  return ax;
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)fd;
-  register long r1 asm("x1") = (long)buf;
-  register long r2 asm("x2") = (long)size;
-  register long r8 asm("x8") = (long)__NR_read;
-  register long res_x0 asm("x0");
-  asm volatile("svc\t0"
-               : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
-               : "memory");
-  return res_x0;
-#endif
-}
-
 BENCH(read, bench) {
   char buf[16];
   ASSERT_SYS(0, 3, open("/dev/zero", O_RDONLY));
@@ -80,7 +58,5 @@ BENCH(read, bench) {
            preadv(3, (struct iovec[]){{buf, 1}, {buf + 1, 4}}, 2, 0));
   EZBENCH2("sys_read", donothing, sys_read(3, buf, 5));
   EZBENCH2("sys_readv", donothing, sys_readv(3, &(struct iovec){buf, 5}, 1));
-  EZBENCH2("Read", donothing, Read(3, buf, 5));
-  EZBENCH2("Read", donothing, Read(3, buf, 5));
   ASSERT_SYS(0, 0, close(3));
 }

@@ -221,14 +221,13 @@ TEST(ksnprintf, testSymbols) {
   }
 }
 
-#ifdef __x86_64__
 TEST(ksnprintf, fuzzTheUnbreakable) {
   int e;
   size_t i;
   uint64_t x;
   char *f, b[32];
   _Alignas(FRAMESIZE) static const char weasel[FRAMESIZE];
-  asm("mov\t%1,%0" : "=r"(f) : "g"(weasel));
+  f = VEIL("r", weasel);
   EXPECT_SYS(0, 0, mprotect(f, FRAMESIZE, PROT_READ | PROT_WRITE));
   strcpy(f, "hello %s\n");
   EXPECT_EQ(12, ksnprintf(b, sizeof(b), f, "world"));
@@ -243,7 +242,6 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
   }
   EXPECT_SYS(0, 0, mprotect(f, FRAMESIZE, PROT_READ));
 }
-#endif /* __x86_64__ */
 
 TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
   int n;

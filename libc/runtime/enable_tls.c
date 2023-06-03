@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
@@ -93,7 +94,7 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
  */
 textstartup void __enable_tls(void) {
   int tid;
-  size_t siz;
+  size_t hiz, siz;
   char *mem, *tls;
   struct CosmoTib *tib;
 
@@ -146,8 +147,8 @@ textstartup void __enable_tls(void) {
 
 #elif defined(__aarch64__)
 
-  siz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *) + I(_tls_size),
-                _Alignof(__static_tls));
+  hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));
+  siz = hiz + I(_tls_size);
   if (siz <= sizeof(__static_tls)) {
     mem = __static_tls;
   } else {
@@ -160,12 +161,12 @@ textstartup void __enable_tls(void) {
   if (IsAsan()) {
     // there's a roundup(pagesize) gap between .tdata and .tbss
     // poison that empty space
-    __asan_poison(mem + sizeof(*tib) + 2 * sizeof(void *) + I(_tdata_size),
-                  I(_tbss_offset) - I(_tdata_size), kAsanProtected);
+    __asan_poison(mem + hiz + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
+                  kAsanProtected);
   }
 
   tib = (struct CosmoTib *)mem;
-  tls = mem + sizeof(*tib) + 2 * sizeof(void *);
+  tls = mem + hiz;
 
   // Set the DTV.
   //

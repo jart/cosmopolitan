@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/alu.h"
 #include "libc/assert.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
@@ -23,9 +24,9 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "test/tool/build/lib/optest.h"
-#include "tool/build/lib/alu.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/flags.h"
+#ifdef __x86_64__
 
 #define ALU_TEST 8
 
@@ -134,3 +135,5 @@ int64_t RunOpTest(char w, int h, uint64_t x, uint64_t y, uint32_t *f) {
 TEST(alu, test) {
   RunOpTests(kAluOps, ARRAYLEN(kAluOps), kAluNames);
 }
+
+#endif /* __x86_64__ */

@@ -37,6 +37,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/uart.internal.h"
@@ -174,6 +175,7 @@ privileged static bool kismapped(int x) {
 
 privileged bool kisdangerous(const void *p) {
   int frame;
+  if (IsTiny()) return false;
   if (kisimagepointer(p)) return false;
   if (kiskernelpointer(p)) return false;
   if (IsOldStack(p)) return false;
@@ -189,7 +191,7 @@ privileged bool kisdangerous(const void *p) {
   return true;
 }
 
-privileged static void klog(const char *b, size_t n) {
+privileged dontinline void klog(const char *b, size_t n) {
 #ifdef __x86_64__
   int e;
   bool cf;

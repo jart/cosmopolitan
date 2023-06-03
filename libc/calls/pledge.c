@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.internal.h"
+#include "libc/calls/prctl.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -26,6 +27,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -42,8 +44,10 @@
  * across execve() if permitted). Root access is not required. Support
  * is limited to Linux 2.6.23+ (c. RHEL6) and OpenBSD. If your kernel
  * isn't supported, then pledge() will return 0 and do nothing rather
- * than raising ENOSYS. We don't consider lack of system support to be
- * an error, because the specified operations will be permitted.
+ * than raising ENOSYS. This implementation doesn't consider lack of
+ * system support to be an error by default. To perform a functionality
+ * check, use `pledge(0,0)` which is a no-op that'll fail appropriately
+ * when the necessary system support isn't available for restrictions.
  *
  * The promises you give pledge() define which system calls are allowed.
  * Error messages are logged when sandbox violations occur, but how that
@@ -234,6 +238,7 @@
  *   subprocesses can't inherit the `SIGSYS` handler this installs.
  *
  * @return 0 on success, or -1 w/ errno
+ * @raise ENOSYS if `pledge(0, 0)` was used and security is not possible
  * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`
  * @raise EINVAL if `promises` allows exec and `execpromises` is null
  * @threadsafe
@@ -242,8 +247,24 @@
 int pledge(const char *promises, const char *execpromises) {
   int e, rc;
   unsigned long ipromises, iexecpromises;
-  if (IsGenuineBlink()) {
-    rc = 0;  // blink doesn't support seccomp
+  if (!promises) {
+    // OpenBSD says NULL argument means it doesn't change, i.e.
+    // pledge(0,0) on OpenBSD does nothing. The Cosmopolitan Libc
+    // implementation defines pledge(0,0) as a no-op feature check.
+    // Cosmo pledge() is currently implemented to succeed silently if
+    // the necessary kernel features aren't supported by the host. Apps
+    // may use pledge(0,0) to perform a support check, to determine if
+    // pledge() will be able to impose the restrictions it advertises
+    // within the host environment.
+    if (execpromises) return einval();
+    if (IsGenuineBlink()) return enosys();
+    if (IsOpenbsd()) return sys_pledge(0, 0);
+    if (!IsLinux()) return enosys();
+    if (!(rc = sys_prctl(PR_GET_SECCOMP, 0, 0, 0, 0))) return 0;
+    errno = -rc;
+    return -1;
+  } else if (!IsTiny() && IsGenuineBlink()) {
+    rc = 0;  // blink doesn't support seccomp; avoid noisy log warnings
   } else if (!ParsePromises(promises, &ipromises) &&
              !ParsePromises(execpromises, &iexecpromises)) {
     if (IsLinux()) {

@@ -51,25 +51,26 @@ char testlib_enable_tmp_setup_teardown;
 
 struct stat st;
 
-static bool SupportsLandlock(void) {
-  int e = errno;
-  bool r = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION) >= 0;
-  errno = e;
-  return r;
+bool HasUnveilSupport(void) {
+  return unveil("", 0) >= 0;
+}
+
+bool UnveilCanSecureTruncate(void) {
+  int abi = unveil("", 0);
+  return abi == 0 || abi >= 3;
 }
 
 void SetUpOnce(void) {
   __enable_threads();
-  if (!(IsLinux() && SupportsLandlock()) && !IsOpenbsd()) exit(0);
+  if (!HasUnveilSupport()) {
+    fprintf(stderr, "warning: unveil() not supported on this system: %m\n");
+    exit(0);
+  }
 }
 
 void SetUp(void) {
   // make sure zipos maps executable into memory early
   ASSERT_SYS(0, 0, stat("/zip/life.elf", &st));
-}
-
-bool HasTruncateSupport(void) {
-  return IsOpenbsd() || landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION) >= 3;
 }
 
 TEST(unveil, api_differences) {
@@ -249,7 +250,7 @@ TEST(unveil, truncate_isForbiddenBySeccomp) {
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
   ASSERT_SYS(0, 0, unveil("jail", "rw"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(!HasTruncateSupport() ? EPERM : EACCES_OR_ENOENT, -1,
+  ASSERT_SYS(!UnveilCanSecureTruncate() ? EPERM : EACCES_OR_ENOENT, -1,
              truncate("garden/secret.txt", 0));
   if (IsLinux()) {
     ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));

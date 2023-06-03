@@ -162,7 +162,8 @@ o/$(MODE)/examples/nesemu1.com.dbg:						\
 o/$(MODE)/examples/symtab.com:							\
 		o/$(MODE)/examples/symtab.com.dbg				\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(VM)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

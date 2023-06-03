@@ -555,7 +555,7 @@ static Token *thing_attributes(Token *tok, void *arg) {
   if (consume_attribute(&tok, tok, "noinline") ||
       consume_attribute(&tok, tok, "const") ||
       consume_attribute(&tok, tok, "pure") ||
-      consume_attribute(&tok, tok, "noclone") ||
+      consume_attribute(&tok, tok, "dontclone") ||
       consume_attribute(&tok, tok, "may_alias") ||
       consume_attribute(&tok, tok, "warn_unused_result") ||
       consume_attribute(&tok, tok, "flatten") ||

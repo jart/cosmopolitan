@@ -76,7 +76,7 @@ static void Refresh(void) {
   memcpy(&g_now, &now, sizeof(now));
 }
 
-long double ConvertTicksToNanos(uint64_t ticks) {
+long double ConvertTicksToNanos(double ticks) {
   if (!g_now.once) Refresh();
   return ticks * g_now.cpn; /* pico scale */
 }

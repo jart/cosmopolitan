@@ -26,6 +26,7 @@
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/thread/posixthread.internal.h"
@@ -50,7 +51,7 @@ static errno_t pthread_setname_impl(pthread_t thread, const char *name) {
       p = stpcpy(p, "/proc/self/task/");
       p = FormatUint32(p, tid);
       p = stpcpy(p, "/comm");
-      if ((fd = sys_open(path, O_WRONLY | O_CLOEXEC, 0)) == -1) {
+      if ((fd = sys_openat(AT_FDCWD, path, O_WRONLY | O_CLOEXEC, 0)) == -1) {
         rc = errno;
         errno = e;
         return rc;

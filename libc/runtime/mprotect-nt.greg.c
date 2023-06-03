@@ -21,8 +21,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
-#define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
-
 textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
   int rc = 0;
   unsigned i;
@@ -31,7 +29,7 @@ textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
   __mmi_lock();
   p = addr;
   i = FindMemoryInterval(&_mmi, (intptr_t)p >> 16);
-  if (i == _mmi.i || (!i && p + size <= ADDR(_mmi.p[0].x))) {
+  if (i == _mmi.i || (!i && p + size <= (char *)ADDR_32_TO_48(_mmi.p[0].x))) {
     // memory isn't in memtrack
     // let's just trust the user then
     // it's probably part of the executable
@@ -42,7 +40,7 @@ textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
     // memory is in memtrack, so use memtrack, to do dimensioning
     // we unfortunately must do something similar to this for cow
     for (; i < _mmi.i; ++i) {
-      x = ADDR(_mmi.p[i].x);
+      x = (char *)ADDR_32_TO_48(_mmi.p[i].x);
       y = x + _mmi.p[i].size;
       if ((x <= p && p < y) || (x < p + size && p + size <= y) ||
           (p < x && y < p + size)) {

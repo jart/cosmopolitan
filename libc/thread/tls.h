@@ -66,7 +66,11 @@ void __set_tls(struct CosmoTib *);
   })
 #define __adj_tls(tib) (tib)
 #elif defined(__aarch64__)
-#define __get_tls()    ((struct CosmoTib *)__builtin_thread_pointer() - 1)
+#define __get_tls()                          \
+  ({                                         \
+    register struct CosmoTib *_t asm("x28"); \
+    _t - 1;                                  \
+  })
 #define __adj_tls(tib) ((struct CosmoTib *)(tib) + 1)
 #endif
 

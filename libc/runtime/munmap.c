@@ -37,7 +37,6 @@
 
 #define IP(X)      (intptr_t)(X)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
-#define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
 static noasan void MunmapShadow(char *p, size_t n) {
@@ -97,9 +96,9 @@ static noasan void MunmapImpl(char *p, size_t n) {
     }
     // openbsd even requires that if we mapped, for instance a 5 byte
     // file, that we be sure to call munmap(file, 5). let's abstract!
-    a = ADDR(beg);
-    b = ADDR(end) + FRAMESIZE;
-    c = ADDR(_mmi.p[i].x) + _mmi.p[i].size;
+    a = ADDR_32_TO_48(beg);
+    b = ADDR_32_TO_48(end) + FRAMESIZE;
+    c = ADDR_32_TO_48(_mmi.p[i].x) + _mmi.p[i].size;
     q = (char *)a;
     m = MIN(b, c) - a;
     if (!IsWindows()) {
@@ -119,23 +118,23 @@ noasan int _Munmap(char *p, size_t n) {
   intptr_t a, b, x, y;
   _unassert(!__vforked);
   if (UNLIKELY(!n)) {
-    STRACE("n=0");
+    STRACE("munmap n is 0");
     return einval();
   }
   if (UNLIKELY(!IsLegalSize(n))) {
-    STRACE("n isn't 48-bit");
+    STRACE("munmap n isn't 48-bit");
     return einval();
   }
   if (UNLIKELY(!IsLegalPointer(p))) {
-    STRACE("p isn't 48-bit");
+    STRACE("munmap p isn't 48-bit");
     return einval();
   }
   if (UNLIKELY(!IsLegalPointer(p + (n - 1)))) {
-    STRACE("p+(n-1) isn't 48-bit");
+    STRACE("munmap p+(n-1) isn't 48-bit");
     return einval();
   }
   if (UNLIKELY(!ALIGNED(p))) {
-    STRACE("p isn't 64kb aligned");
+    STRACE("munmap(%p) isn't 64kb aligned", p);
     return einval();
   }
   MunmapImpl(p, n);

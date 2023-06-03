@@ -36,7 +36,6 @@
 #define IP(X)      (intptr_t)(X)
 #define VIP(X)     (void *)IP(X)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
-#define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
@@ -53,8 +52,8 @@ static size_t GetMapSize(size_t i, size_t *j) {
 }
 
 static bool MustMoveMap(intptr_t y, size_t j) {
-  return ADDR(_mmi.p[j].y) + FRAMESIZE > y ||
-         (j + 1 < _mmi.i && ADDR(_mmi.p[j + 1].x) < y);
+  return ADDR_32_TO_48(_mmi.p[j].y) + FRAMESIZE > y ||
+         (j + 1 < _mmi.i && ADDR_32_TO_48(_mmi.p[j + 1].x) < y);
 }
 
 /**
@@ -178,9 +177,9 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
       return VIP(enomem());
     }
     q = sys_mremap((void *)p, n, m, MREMAP_MAYMOVE | MREMAP_FIXED,
-                   (void *)ADDR(a));
+                   (void *)ADDR_32_TO_48(a));
     KERNTRACE("sys_mremap(%p, %'zu, %'zu, %#b, %p) → %p", p, n, m,
-           MREMAP_MAYMOVE | MREMAP_FIXED, ADDR(a), q);
+           MREMAP_MAYMOVE | MREMAP_FIXED, ADDR_32_TO_48(a), q);
     if (q == MAP_FAILED) return 0;
     if (ReleaseMemoryIntervals(&_mmi, (uintptr_t)p >> 16,
                                ((uintptr_t)p + n - FRAMESIZE) >> 16, 0) != -1 &&
@@ -194,7 +193,7 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
           _weaken(__asan_map_shadow)((intptr_t)q, m);
         }
       }
-      return (void *)ADDR(a);
+      return (void *)ADDR_32_TO_48(a);
     } else {
       abort();
     }

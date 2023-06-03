@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 
+// TODO(jart): DELETE
+
 /**
  * Returns seconds since epoch w/ high-precision.
  * @param clockid can be CLOCK_{REALTIME,MONOTONIC}, etc.
@@ -27,7 +29,7 @@ long double dtime(int clockid) {
   struct timespec tv;
   clock_gettime(clockid, &tv);
   secs = tv.tv_nsec;
-  secs *= 1 / 1e9;
+  secs *= 1e-9;
   secs += tv.tv_sec;
   return secs;
 }

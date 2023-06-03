@@ -118,25 +118,20 @@ o/$(MODE)/test/libc/calls/ioctl_siocgifconf_test.com.runs:		\
 o/$(MODE)/test/libc/calls/poll_test.com.runs:				\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
-o/$(MODE)/test/libc/calls/fcntl_test.com.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
-
-o/$(MODE)/test/libc/calls/lock_test.com.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
-
-o/$(MODE)/test/libc/calls/lock2_test.com.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
-
+o/$(MODE)/test/libc/calls/fcntl_test.com.runs				\
+o/$(MODE)/test/libc/calls/lock_test.com.runs				\
+o/$(MODE)/test/libc/calls/lock2_test.com.runs				\
 o/$(MODE)/test/libc/calls/lock_ofd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
 
+o/$(MODE)/test/libc/calls/unveil_test.com.runs				\
 o/$(MODE)/test/libc/calls/openbsd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc unveil
 
 o/$(MODE)/test/libc/calls/fexecve_test.com.runs:			\
 		private .UNSANDBOXED = 1  # for memfd_create()
 
-o/$(MODE)/test/libc/calls/execve_test.com.runs:			\
+o/$(MODE)/test/libc/calls/execve_test.com.runs:				\
 		private .UNSANDBOXED = 1  # for memfd_create()
 
 o/$(MODE)/test/libc/calls/read_test.com.runs:				\

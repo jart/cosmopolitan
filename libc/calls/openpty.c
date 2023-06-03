@@ -32,6 +32,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/rop.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pty.h"
 #include "libc/sysv/consts/termios.h"
@@ -55,7 +56,7 @@ static int openpty_impl(int *mfd, int *sfd, char *name,
     RETURN_ON_ERROR(grantpt(m));
     RETURN_ON_ERROR(unlockpt(m));
     RETURN_ON_ERROR(_ptsname(m, t.sname, sizeof(t.sname)));
-    RETURN_ON_ERROR((s = sys_open(t.sname, O_RDWR, 0)));
+    RETURN_ON_ERROR((s = sys_openat(AT_FDCWD, t.sname, O_RDWR, 0)));
   } else {
     RETURN_ON_ERROR(sys_ioctl(m, PTMGET, &t));
     close(m);

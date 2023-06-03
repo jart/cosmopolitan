@@ -1,6 +1,8 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
+ifeq ($(ARCH), x86_64)
+
 PKGS += TEST_TOOL_PLINKO
 
 TEST_TOOL_PLINKO = $(TOOL_PLINKO_A_DEPS) $(TOOL_PLINKO_A)
@@ -86,3 +88,8 @@ o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
 o/$(MODE)/test/tool/plinko:					\
 		$(TEST_TOOL_PLINKO_BINS)			\
 		$(TEST_TOOL_PLINKO_CHECKS)
+
+else
+.PHONY: o/$(MODE)/test/tool/plinko
+o/$(MODE)/test/tool/plinko:
+endif

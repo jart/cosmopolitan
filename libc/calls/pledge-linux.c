@@ -19,6 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.internal.h"
+#include "libc/calls/prctl.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
@@ -1098,33 +1099,6 @@ static privileged void Log(const char *s, ...) {
 #endif
   } while ((s = va_arg(va, const char *)));
   va_end(va);
-}
-
-static privileged int Prctl(int op, long a, void *b, long c, long d) {
-  int rc;
-#ifdef __x86_64__
-  asm volatile("mov\t%5,%%r10\n\t"
-               "mov\t%6,%%r8\n\t"
-               "syscall"
-               : "=a"(rc)
-               : "0"(__NR_linux_prctl), "D"(op), "S"(a), "d"(b), "g"(c), "g"(d)
-               : "rcx", "r8", "r10", "r11", "memory");
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)op;
-  register long r1 asm("x1") = (long)a;
-  register long r2 asm("x2") = (long)b;
-  register long r3 asm("x3") = (long)c;
-  register long r4 asm("x4") = (long)d;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(__NR_linux_prctl), "r"(r0), "r"(r1), "r"(r2), "r"(r3),
-                 "r"(r4)
-               : "x8", "memory");
-  rc = res_x0;
-#endif
-  return rc;
 }
 
 static privileged int SigAction(int sig, struct sigaction *act,
@@ -2353,18 +2327,18 @@ privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
   // PR_SET_SECCOMP (Linux 2.6.23+) will refuse to work if
   // PR_SET_NO_NEW_PRIVS (Linux 3.5+) wasn't called so we punt the error
   // detection to the seccomp system call below.
-  Prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+  sys_prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
 
   // register our seccomp filter with the kernel
   struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
-  rc = Prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox, 0, 0);
+  rc = sys_prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, (long)&sandbox, 0, 0);
 
   // the EINVAL error could mean a lot of things. it could mean the bpf
   // code is broken. it could also mean we're running on RHEL5 which
   // doesn't have SECCOMP support. since we don't consider lack of
   // system support for security to be an error, we distinguish these
   // two cases by running a simpler SECCOMP operation.
-  if (rc == -Einval && Prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == -Einval) {
+  if (rc == -Einval && sys_prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == -Einval) {
     rc = 0;  // -Enosys
   }
 

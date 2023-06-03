@@ -213,6 +213,23 @@ int LuaGetHostOs(lua_State *L) {
   return 1;
 }
 
+int LuaGetHostIsa(lua_State *L) {
+  const char *s;
+#ifdef __x86_64__
+  s = "X86_64";
+#elif defined(__aarch64__)
+  s = "AARCH64";
+#elif defined(__powerpc64__)
+  s = "POWERPC64";
+#elif defined(__s390x__)
+  s = "S390X";
+#else
+#error "unsupported architecture"
+#endif
+  lua_pushstring(L, s);
+  return 1;
+}
+
 int LuaFormatIp(lua_State *L) {
   char b[16];
   uint32_t ip;

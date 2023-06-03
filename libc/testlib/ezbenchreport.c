@@ -26,17 +26,17 @@
 
 STATIC_YOINK("strnwidth");
 
-void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {
-  uint64_t ns1, ns2;
+void __testlib_ezbenchreport(const char *form, double c1, double c2) {
+  long ns1, ns2;
   __warn_if_powersave();
-  ns1 = rintl(ConvertTicksToNanos(c1));
-  ns2 = rintl(ConvertTicksToNanos(c2));
+  ns1 = lrintl(ConvertTicksToNanos(c1));
+  ns2 = lrintl(ConvertTicksToNanos(c2));
   (fprintf)(stderr,
             VEIL("r", " *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n"),
-            form, c1, ns1, c2, ns2);
+            form, lrint(c1), ns1, lrint(c2), ns2);
 }
 
-void __testlib_ezbenchreport_n(const char *form, char z, size_t n, uint64_t c) {
+void __testlib_ezbenchreport_n(const char *form, char z, size_t n, double c) {
   char msg[128];
   uint64_t bps;
   long double cn, lat;

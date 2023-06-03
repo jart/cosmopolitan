@@ -32,9 +32,9 @@ thrashcodecache:
 	i = 0xdeadbeef
 0:	.rept	32768/(3+7)
 	rex.wrb
-	.byte	0001|(i&030)			# ADD/OR/... Evqp Gvqp
-	.byte	0300|(i&033)			# %r8-%r11 to %r8-%r11
-	.byte	0x49,0x81,0360|(i&003)		# XOR immed32,%r8-%r11
+	.byte	0001|(i&030)			// ADD/OR/... Evqp Gvqp
+	.byte	0300|(i&033)			// %r8-%r11 to %r8-%r11
+	.byte	0x49,0x81,0360|(i&003)		// XOR immed32,%r8-%r11
 	.long	i
 	i = ((i * 1103515245 + 12345) >> 16) & 0xffffffff
 	.endr

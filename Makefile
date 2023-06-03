@@ -66,7 +66,7 @@ MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 .DELETE_ON_ERROR:
 .FEATURES: output-sync
-.PHONY: all o bins check test depend tags
+.PHONY: all o bins check test depend tags aarch64
 
 ifneq ($(m),)
 ifeq ($(MODE),)
@@ -267,7 +267,7 @@ CHECKS	 = $(foreach x,$(PKGS),$($(x)_CHECKS))
 
 bins:	$(BINS)
 check:	$(CHECKS)
-test:	$(TESTS)
+test:	$(TESTS) aarch64
 depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 
@@ -423,6 +423,10 @@ toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a			\
 		o/$(MODE)/third_party/libcxx/libcxx.a
+
+aarch64: private .UNSANDBOXED = true
+aarch64:
+	$(MAKE) m=aarch64
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

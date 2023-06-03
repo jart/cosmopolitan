@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
   TestContendedLock("PTHREAD_MUTEX_ERRORCHECK RAW TLS",
                     PTHREAD_MUTEX_ERRORCHECK);
 
-  __tls_enabled = 0;
+  __tls_enabled_set(false);
 
   TestUncontendedLock("PTHREAD_MUTEX_NORMAL RAW", PTHREAD_MUTEX_NORMAL);
   TestUncontendedLock("PTHREAD_MUTEX_RECURSIVE RAW", PTHREAD_MUTEX_RECURSIVE);

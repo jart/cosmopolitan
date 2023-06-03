@@ -36,7 +36,6 @@ dir=libc/sysv/calls
 scall	sys_exit		0x00100100120010e7	0x05e	globl hidden # a.k.a. exit_group
 scall	sys_read		0x8038038032803800	0x03f	globl hidden
 scall	sys_write		0x8048048042804801	0x040	globl hidden
-scall	sys_open		0x8058058052805802	0x0b4	globl hidden
 scall	sys_close		0x0060060062006003	0x039	globl hidden
 scall	__sys_stat		0x1b7026fff2152004	0x04f	globl hidden # FreeBSD 11→12 fumble; use sys_fstatat(); blocked on Android
 scall	__sys_fstat		0x1b80352272153005	0x050	globl hidden # needs __stat2linux()
@@ -363,7 +362,7 @@ scall	sys_io_uring_register	0xfffffffffffff1ab	0x1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────────────── # ←──────┬─ red hat terminates community release of enterprise linux circa 2020
 scall	sys_pledge		0xfff06cffffffffff	0xfff	globl hidden # └─ online linux services ban the president of united states of america
 scall	sys_msyscall		0xfff025ffffffffff	0xfff	globl # no wrapper
-scall	sys_bogus		0x00b5005002500500	0xfff	globl
+scall	sys_bogus		0x00b5005002500500	0x500	globl
 scall	sys_open_tree		0xfffffffffffff1ac	0x1ac	globl # no wrapper
 scall	sys_move_mount		0xfffffffffffff1ad	0x1ad	globl # no wrapper
 scall	sys_fsopen		0xfffffffffffff1ae	0x1ae	globl # no wrapper

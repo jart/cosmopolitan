@@ -1202,6 +1202,15 @@ FUNCTIONS
           - `"FREEBSD"`
           - `"OPENBSD"`
 
+  GetHostIsa() → str
+          Returns string describing host instruction set architecture.
+
+          This can return:
+
+          - `"X86_64"` for Intel and AMD systems
+          - `"AARCH64"` for ARM64, M1, and Raspberry Pi systems
+          - `"POWERPC64"` for OpenPOWER Raptor Computing Systems
+
   GetMonospaceWidth(str|char) → int
           Returns monospace display width of string. This is useful for
           fixed-width formatting. For example, CJK characters typically take
@@ -4296,6 +4305,16 @@ UNIX MODULE
     OpenBSD should ignore the chown functions without crashing. Linux
     will just EPERM.
 
+    Root access isn't required. Support is limited to OpenBSD and Linux
+    2.6.23+ (i.e. RHEL6 c. 2012) so long as Redbean is running directly
+    on the host system, i.e. not running in a userspace emulator like
+    Blink or Qemu. If your environment isn't supported, then pledge()
+    will return 0 and do nothing, rather than raising ENOSYS, so the
+    apps you share with others will err on the side of not breaking. If
+    a functionality check is needed, please use `unix.pledge(nil, nil)`
+    which is a no-op that will fail appropriately when the necessary
+    system support isn't available to impose security restrictions.
+
     `promises` is a string that may include any of the following groups
     delimited by spaces. This list has been curated to focus on the
     system calls for which this module provides wrappers. See the
@@ -4501,6 +4520,18 @@ UNIX MODULE
 
     This system call is supported natively on OpenBSD and polyfilled on
     Linux using the Landlock LSM[1].
+
+    This function requires OpenBSD or Linux 5.13+ (2022+). If the kernel
+    support isn't available (or we're in an emulator like Qemu or Blink)
+    then zero is returned and nothing happens (instead of raising
+    ENOSYS) because the files are still unveiled. Use `unix.unveil("",
+    nil)` to feature check the host system, which is defined as a no-op
+    that'll fail if the host system doesn't have the necessary features
+    that allow unix.unveil() impose bona-fide security restrictions.
+    Otherwise, if everything is good, a return value `>=0` is returned,
+    where `0` means OpenBSD, and `>=1` means Linux with Landlock LSM, in
+    which case the return code shall be the maximum supported Landlock
+    ABI version.
 
     `path` is the file or directory to unveil
 

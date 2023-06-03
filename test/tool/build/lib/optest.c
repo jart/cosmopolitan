@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "test/tool/build/lib/optest.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "test/tool/build/lib/numbers.h"
-#include "test/tool/build/lib/optest.h"
 #include "tool/build/lib/flags.h"
+#ifdef __x86_64__
 
 const char kOpSuffix[] = {'b', 'w', 'l', 'q'};
 
@@ -91,3 +92,5 @@ void(RunOpTests)(const uint8_t *ops, size_t n, const char *const *opnames,
     exit(1);
   }
 }
+
+#endif /* __x86_64__ */

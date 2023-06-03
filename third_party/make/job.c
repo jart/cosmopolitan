@@ -2118,6 +2118,7 @@ child_execute_job (struct childbase *child,
   else if (!(~ipromises & (1ul << PROMISE_INET)) &&
            !(~ipromises & (1ul << PROMISE_DNS)))
     DB (DB_JOBS, (_("Internet access will be blocked by pledge\n")));
+#ifdef __x86_64__
   else
     {
       e = errno;
@@ -2143,6 +2144,7 @@ child_execute_job (struct childbase *child,
             }
         }
     }
+#endif
 
   /* [jart] Resolve command into executable path.  */
   if (!strict || !sandboxed)

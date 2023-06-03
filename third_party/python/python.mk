@@ -28,10 +28,15 @@ THIRD_PARTY_PYTHON_CHECKS =						\
 	$(THIRD_PARTY_PYTHON_STAGE1_A).pkg 				\
 	$(THIRD_PARTY_PYTHON_STAGE2_A).pkg				\
 	$(THIRD_PARTY_PYTHON_PYTEST_A).pkg				\
-	$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS:%=o/$(MODE)/%.runs)		\
 	$(THIRD_PARTY_PYTHON_HDRS:%=o/$(MODE)/%.ok)			\
 	o/$(MODE)/third_party/python/python.pkg				\
 	o/$(MODE)/third_party/python/freeze.pkg
+
+# TODO: Deal with aarch64 under qemu not making execve() easy.
+ifeq ($(ARCH), x86_64)
+THIRD_PARTY_PYTHON_CHECKS +=						\
+	$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS:%=o/$(MODE)/%.runs)
+endif
 
 ################################################################################
 # STAGE ONE - BOOTSTRAPPING PYTHON
@@ -4187,7 +4192,7 @@ $(THIRD_PARTY_PYTHON_HELLO_OBJS): private PYFLAGS += -C2 -m
 # this directory entry is at the tip of the tree
 # therefore building it requires special care
 o/$(MODE)/third_party/python/Lib/.zip.o: third_party/python/.python
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) -C2 $(OUTPUT_OPTION) third_party/python/.python
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) -b$(IMAGE_BASE_VIRTUAL) -C2 $(OUTPUT_OPTION) third_party/python/.python
 
 # these need to be explictly defined because landlock make won't sandbox
 # prerequisites with a trailing slash.

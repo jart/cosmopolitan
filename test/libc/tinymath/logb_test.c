@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/math.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
 TEST(ilogb, yolo) {

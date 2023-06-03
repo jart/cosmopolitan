@@ -42,6 +42,7 @@ o/$(MODE)/ape/aarch64.lds:			\
 	ape/aarch64.lds				\
 	libc/zip.h				\
 	libc/intrin/bits.h			\
+	libc/thread/tls.h			\
 	libc/calls/struct/timespec.h		\
 	libc/macros.internal.h			\
 	libc/str/str.h

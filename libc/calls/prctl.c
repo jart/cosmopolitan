@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/prctl.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -43,30 +44,11 @@ privileged int prctl(int operation, ...) {
   va_end(va);
 
   if (IsLinux()) {
-#ifdef __x86_64__
-    asm volatile("mov\t%5,%%r10\n\t"
-                 "mov\t%6,%%r8\n\t"
-                 "syscall"
-                 : "=a"(rc)
-                 : "0"(157), "D"(operation), "S"(a), "d"(b), "g"(c), "g"(d)
-                 : "rcx", "r8", "r10", "r11", "memory");
-    if (rc > -4096u) errno = -rc, rc = -1;
-#elif defined(__aarch64__)
-    register long r0 asm("x0") = (long)operation;
-    register long r1 asm("x1") = (long)a;
-    register long r2 asm("x2") = (long)b;
-    register long r3 asm("x3") = (long)c;
-    register long r4 asm("x4") = (long)d;
-    register long res_x0 asm("x0");
-    asm volatile("mov\tx8,%1\n\t"
-                 "svc\t0"
-                 : "=r"(res_x0)
-                 : "i"(167), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
-                 : "x8", "memory");
-    rc = _sysret(res_x0);
-#else
-#error "arch unsupported"
-#endif
+    rc = sys_prctl(operation, a, b, c, d);
+    if (rc < 0) {
+      errno = -rc;
+      rc = -1;
+    }
   } else {
     rc = enosys();
   }

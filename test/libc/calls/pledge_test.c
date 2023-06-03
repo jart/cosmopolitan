@@ -62,9 +62,6 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
-// TODO(jart): Get pledge truly working on AARCH64
-#ifdef __x86_64__
-
 char testlib_enable_tmp_setup_teardown;
 
 void OnSig(int sig) {
@@ -75,7 +72,10 @@ int sys_memfd_secret(unsigned int);  // our ENOSYS threshold
 
 void SetUp(void) {
   __enable_threads();
-  if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
+  if (pledge(0, 0) == -1) {
+    fprintf(stderr, "warning: pledge() not supported on this system\n");
+    exit(0);
+  }
   testlib_extract("/zip/life.elf", "life.elf", 0755);
   testlib_extract("/zip/sock.elf", "sock.elf", 0755);
   __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
@@ -659,5 +659,3 @@ BENCH(pledge, bench) {
   }
   wait(0);
 }
-
-#endif /* __x86_64__ */

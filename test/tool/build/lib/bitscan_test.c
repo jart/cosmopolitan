@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/bitscan.h"
 #include "libc/macros.internal.h"
 #include "libc/testlib/testlib.h"
 #include "test/tool/build/lib/numbers.h"
-#include "tool/build/lib/bitscan.h"
 #include "tool/build/lib/flags.h"
+#ifdef __x86_64__
 
 #define OSZ  00000000040
 #define REXW 00000000100
@@ -103,3 +104,5 @@ TEST(bsf16, test) {
     if (!zf) ASSERT_EQ(a, b, "%#lx", x);
   }
 }
+
+#endif /* __x86_64__ */

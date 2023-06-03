@@ -29,6 +29,7 @@
 #include "libc/fmt/internal.h"
 #include "libc/intrin/bsr.h"
 #include "libc/macros.internal.h"
+#include "libc/math.h"
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 
@@ -53,22 +54,22 @@ union U {
   double d;
   uint64_t q;
   long double ld;
-  unsigned int ui[4];
-  unsigned short us[5];
+  uint32_t ui[4];
+  uint16_t us[5];
 };
 
 static const FPI kFpiDbl = {
-    .nbits = 53,
-    .emin = 1 - 1023 - 53 + 1,
-    .emax = 2046 - 1023 - 53 + 1,
+    .nbits = DBL_MANT_DIG,
+    .emin = 3 - DBL_MAX_EXP - DBL_MANT_DIG,
+    .emax = DBL_MAX_EXP - DBL_MANT_DIG,
     .rounding = FPI_Round_near,
     .sudden_underflow = 0,
 };
 
 static const FPI kFpiLdbl = {
-    .nbits = 64,
-    .emin = 1 - 16383 - 64 + 1,
-    .emax = 32766 - 16383 - 64 + 1,
+    .nbits = LDBL_MANT_DIG,
+    .emin = 3 - LDBL_MAX_EXP - LDBL_MANT_DIG,
+    .emax = LDBL_MAX_EXP - LDBL_MANT_DIG,
     .rounding = FPI_Round_near,
     .sudden_underflow = 0,
 };
@@ -80,21 +81,20 @@ static const char kSpecialFloats[2][2][4] = {
 
 static void dfpbits(union U *u, struct FPBits *b) {
   int ex, i;
-  uint32_t *bits;
   b->fpi = &kFpiDbl;
   b->sign = u->ui[1] & 0x80000000L;
-  bits = b->bits;
-  bits[1] = u->ui[1] & 0xfffff;
-  bits[0] = u->ui[0];
+  b->bits[1] = u->ui[1] & 0xfffff;
+  b->bits[0] = u->ui[0];
   if ((ex = (u->ui[1] & 0x7ff00000L) >> 20) != 0) {
-    if (ex == 0x7ff) {
-      // Infinity or NaN
-      i = bits[0] | bits[1] ? STRTOG_NaN : STRTOG_Infinite;
-    } else {
+    if (ex != 0x7ff) {
       i = STRTOG_Normal;
-      bits[1] |= 0x100000;
+      b->bits[1] |= 1 << (52 - 32);  // set lowest exponent bit
+    } else if (b->bits[0] | b->bits[1]) {
+      i = STRTOG_NaN;
+    } else {
+      i = STRTOG_Infinite;
     }
-  } else if (bits[0] | bits[1]) {
+  } else if (b->bits[0] | b->bits[1]) {
     i = STRTOG_Denormal;
     ex = 1;
   } else {
@@ -104,26 +104,49 @@ static void dfpbits(union U *u, struct FPBits *b) {
   b->ex = ex - (0x3ff + 52);
 }
 
-static void xfpbits(union U *u, struct FPBits *b) {
-  uint32_t *bits;
+static void ldfpbits(union U *u, struct FPBits *b) {
+#if LDBL_MANT_DIG == 53
+  dfpbits(u, b);
+#else
   int ex, i;
+  uint16_t sex;
+#if LDBL_MANT_DIG == 64
+  b->bits[3] = 0;
+  b->bits[2] = 0;
+  b->bits[1] = ((unsigned)u->us[3] << 16) | u->us[2];
+  b->bits[0] = ((unsigned)u->us[1] << 16) | u->us[0];
+  sex = u->us[4];
+#elif LDBL_MANT_DIG == 113
+  b->bits[3] = u->ui[3] & 0xffff;
+  b->bits[2] = u->ui[2];
+  b->bits[1] = u->ui[1];
+  b->bits[0] = u->ui[0];
+  sex = u->ui[3] >> 16;
+#else
+#error "unsupported architecture"
+#endif
   b->fpi = &kFpiLdbl;
-  b->sign = u->us[4] & 0x8000;
-  bits = b->bits;
-  bits[1] = ((unsigned)u->us[3] << 16) | u->us[2];
-  bits[0] = ((unsigned)u->us[1] << 16) | u->us[0];
-  if ((ex = u->us[4] & 0x7fff) != 0) {
-    i = STRTOG_Normal;
-    if (ex == 0x7fff)  // Infinity or NaN
-      i = bits[0] | bits[1] ? STRTOG_NaN : STRTOG_Infinite;
-  } else if (bits[0] | bits[1]) {
+  b->sign = sex & 0x8000;
+  if ((ex = sex & 0x7fff) != 0) {
+    if (ex != 0x7fff) {
+      i = STRTOG_Normal;
+#if LDBL_MANT_DIG == 113
+      b->bits[3] |= 1 << (112 - 32 * 3);  // set lowest exponent bit
+#endif
+    } else if (b->bits[0] | b->bits[1] | b->bits[2] | b->bits[3]) {
+      i = STRTOG_NaN;
+    } else {
+      i = STRTOG_Infinite;
+    }
+  } else if (b->bits[0] | b->bits[1] | b->bits[2] | b->bits[3]) {
     i = STRTOG_Denormal;
     ex = 1;
   } else {
     i = STRTOG_Zero;
   }
   b->kind = i;
-  b->ex = ex - (0x3fff + 63);
+  b->ex = ex - (0x3fff + (LDBL_MANT_DIG - 1));
+#endif
 }
 
 // returns number of hex digits minus 1, or 0 for zero
@@ -257,7 +280,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       } else {
         u.ld = va_arg(va, long double);
         consumed = __FMT_CONSUMED_LONG_DOUBLE;
-        xfpbits(&u, &fpb);
+        ldfpbits(&u, &fpb);
         s = s0 =
             gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt, &se);
       }
@@ -354,7 +377,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       } else {
         u.ld = va_arg(va, long double);
         consumed = __FMT_CONSUMED_LONG_DOUBLE;
-        xfpbits(&u, &fpb);
+        ldfpbits(&u, &fpb);
         s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0, prec,
                        &decpt, &se);
       }
@@ -397,7 +420,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       } else {
         u.ld = va_arg(va, long double);
         consumed = __FMT_CONSUMED_LONG_DOUBLE;
-        xfpbits(&u, &fpb);
+        ldfpbits(&u, &fpb);
         s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0, prec,
                        &decpt, &se);
       }
@@ -460,7 +483,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       if (longdouble) {
         u.ld = va_arg(va, long double);
         consumed = __FMT_CONSUMED_LONG_DOUBLE;
-        xfpbits(&u, &fpb);
+        ldfpbits(&u, &fpb);
       } else {
         u.d = va_arg(va, double);
         consumed = __FMT_CONSUMED_DOUBLE;

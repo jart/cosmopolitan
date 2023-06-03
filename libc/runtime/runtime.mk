@@ -127,6 +127,8 @@ endif
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/runtime/init.o: libc/runtime/init.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/runtime/wipe.o: libc/runtime/wipe.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/runtime/vfork.o: libc/runtime/vfork.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/runtime/clone-linux.o: libc/runtime/clone-linux.S

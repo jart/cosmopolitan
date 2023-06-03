@@ -96,30 +96,6 @@ TEST(write, rlimitFsizeExceeded_raisesEfbig) {
   EXITS(0);
 }
 
-static long Write(long fd, const void *data, unsigned long size) {
-#ifdef __x86_64__
-  long ax, di, si, dx;
-  asm volatile("syscall"
-               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"(__NR_write), "1"(fd), "2"(data), "3"(size)
-               : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-  return ax;
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)fd;
-  register long r1 asm("x1") = (long)data;
-  register long r2 asm("x2") = (long)size;
-  register long r8 asm("x8") = (long)__NR_write;
-  register long res_x0 asm("x0");
-  asm volatile("svc\t0"
-               : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
-               : "memory");
-  return res_x0;
-#else
-#error "unsupported architecture"
-#endif
-}
-
 BENCH(write, bench) {
   ASSERT_SYS(0, 3, open("/dev/null", O_WRONLY));
   EZBENCH2("write", donothing, write(3, "hello", 5));
@@ -127,7 +103,5 @@ BENCH(write, bench) {
   EZBENCH2("sys_write", donothing, sys_write(3, "hello", 5));
   EZBENCH2("sys_writev", donothing,
            sys_writev(3, &(struct iovec){"hello", 5}, 1));
-  EZBENCH2("Write", donothing, Write(3, "hello", 5));
-  EZBENCH2("Write", donothing, Write(3, "hello", 5));
   ASSERT_SYS(0, 0, close(3));
 }

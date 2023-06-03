@@ -25,6 +25,7 @@
 #include "tool/build/lib/alu.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/machine.h"
+#ifdef __x86_64__
 
 #define NATIVE_ALU2(MODE, INSTRUCTION)              \
   asm("pushf\n\t"                                   \
@@ -324,3 +325,5 @@ TEST(shld64, smoke) {
     }
   }
 }
+
+#endif /* __x86_64__ */

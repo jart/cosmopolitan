@@ -16,21 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
+#include "libc/runtime/fenv.h"
 
 /**
- * Rounds to nearest integer.
+ * Restores floating point environment and raises exceptions.
  */
-long long llrintf(float x) {
-  long long res;
-#ifdef __x86_64__
-  asm("cvtss2si\t%1,%0" : "=res"(res) : "x"(x));
-#elif defined(__aarch64__)
-  asm("frintx\t%s1,%s1\n\t"
-      "fcvtzs\t%x0,%s1"
-      : "=r"(res), "+w"(x));
-#else
-  res = rintf(x);
-#endif /* __x86_64__ */
-  return res;
+int feupdateenv(const fenv_t *envp) {
+  int ex = fetestexcept(FE_ALL_EXCEPT);
+  fesetenv(envp);
+  feraiseexcept(ex);
+  return 0;
 }

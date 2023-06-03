@@ -1091,7 +1091,6 @@ static void UpdateLuaPath(const char *s) {
 #endif
 }
 
-
 static void ProgramDirectory(const char *path) {
   char *s;
   size_t n;
@@ -5163,6 +5162,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetHeader", LuaGetHeader},                                //
     {"GetHeaders", LuaGetHeaders},                              //
     {"GetHost", LuaGetHost},                                    //
+    {"GetHostIsa", LuaGetHostIsa},                              //
     {"GetHostOs", LuaGetHostOs},                                //
     {"GetHttpReason", LuaGetHttpReason},                        //
     {"GetHttpVersion", LuaGetHttpVersion},                      //
@@ -6905,6 +6905,7 @@ static int HandleConnection(size_t i) {
 }
 
 static void MakeExecutableModifiable(void) {
+#ifdef __x86_64__
   int ft;
   size_t n;
   extern char ape_rom_vaddr[] __attribute__((__weak__));
@@ -6923,6 +6924,9 @@ static void MakeExecutableModifiable(void) {
     ftrace_install();
     ftrace_enabled(ft);
   }
+#else
+  // TODO
+#endif
 }
 
 static int HandleReadline(void) {

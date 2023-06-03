@@ -170,6 +170,31 @@
 	.previous
 .endm
 
+//	Begins definition of frameless function that calls no functions.
+.macro	.leafprologue
+#if !(defined(TINY) && !defined(__PG__))
+#ifdef __x86_64__
+	push	%rbp
+	mov	%rsp,%rbp
+#elif defined(__aarch64__)
+	stp	x29,x30,[sp,#-16]!
+	mov	x29,sp
+#endif
+#endif
+.endm
+
+//	Ends definition of frameless function that calls no functions.
+.macro	.leafepilogue
+#if !(defined(TINY) && !defined(__PG__))
+#ifdef __x86_64__
+	pop	%rbp
+#elif defined(__aarch64__)
+	ldp	x29,x30,[sp],#16
+#endif
+#endif
+	ret
+.endm
+
 //	Documents unreachable assembly code.
 .macro	.unreachable
 #if !defined(NDEBUG) && defined(__x86_64__)
@@ -388,22 +413,6 @@
 //	Custom emulator instruction for bottom stack frame.
 .macro	bofram	endfunc:req
 	.byte	0x0f,0x1f,0105,\endfunc-.	# nopl disp8(%rbp)
-.endm
-
-//	Begins definition of frameless function that calls no functions.
-.macro	.leafprologue
-#if !(defined(TINY) && !defined(__PG__))
-	push	%rbp
-	mov	%rsp,%rbp
-#endif
-.endm
-
-//	Ends definition of frameless function that calls no functions.
-.macro	.leafepilogue
-#if !(defined(TINY) && !defined(__PG__))
-	pop	%rbp
-#endif
-	ret
 .endm
 
 //	Good alignment for functions where alignment actually helps.

@@ -26,6 +26,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -158,4 +159,6 @@ void ShowCrashReports(void) {
   InstallCrashHandler(SIGBUS, __got_sigbus, ef);    // misalign, mmap i/o failed
   InstallCrashHandler(SIGURG, __got_sigurg, ef);    // placeholder
   GetSymbolTable();
+  void __wipe(uintptr_t);
+  return __wipe(0);
 }

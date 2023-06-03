@@ -26,12 +26,11 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/winargs.internal.h"
 
-#define ADDR(x)     ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
 #define FRAME(x)    ((int)((x) >> 16))
 
 forceinline pureconst bool IsBrkFrame(int x) {
-  unsigned char *p = (unsigned char *)((intptr_t)((uintptr_t)x << 32) >> 16);
+  unsigned char *p = (unsigned char *)ADDR_32_TO_48(x);
   return _weaken(__brk) && p >= _end && p < _weaken(__brk)->p;
 }
 
@@ -78,7 +77,8 @@ const char *(DescribeFrame)(char buf[32], int x) {
   char *p;
   if (IsShadowFrame(x)) {
     ksnprintf(buf, 32, "%s %s %.8x", GetFrameName(x),
-              GetFrameName(FRAME(UNSHADOW(ADDR(x)))), FRAME(UNSHADOW(ADDR(x))));
+              GetFrameName(FRAME(UNSHADOW(ADDR_32_TO_48(x)))),
+              FRAME(UNSHADOW(ADDR_32_TO_48(x))));
     return buf;
   } else {
     return GetFrameName(x);

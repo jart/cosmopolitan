@@ -1,119 +1,52 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
-╚──────────────────────────────────────────────────────────────────────────────╝
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
-│  Musl Libc                                                                   │
-│  Copyright © 2005-2014 Rich Felker, et al.                                   │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
 │                                                                              │
-│  Permission is hereby granted, free of charge, to any person obtaining       │
-│  a copy of this software and associated documentation files (the             │
-│  "Software"), to deal in the Software without restriction, including         │
-│  without limitation the rights to use, copy, modify, merge, publish,         │
-│  distribute, sublicense, and/or sell copies of the Software, and to          │
-│  permit persons to whom the Software is furnished to do so, subject to       │
-│  the following conditions:                                                   │
-│                                                                              │
-│  The above copyright notice and this permission notice shall be              │
-│  included in all copies or substantial portions of the Software.             │
-│                                                                              │
-│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
-│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
-│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
-│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
-│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
-│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
-│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
-│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/limits.h"
 #include "libc/math.h"
-#include "libc/runtime/fenv.h"
-#include "libc/tinymath/expo.internal.h"
-#include "libc/tinymath/feval.internal.h"
-
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
-
-/*
-If the result cannot be represented (overflow, nan), then
-lrint raises the invalid exception.
-
-Otherwise if the input was not an integer then the inexact
-exception is raised.
-
-C99 is a bit vague about whether inexact exception is
-allowed to be raised when invalid is raised.
-(F.9 explicitly allows spurious inexact exceptions, F.9.6.5
-does not make it clear if that rule applies to lrint, but
-IEEE 754r 7.8 seems to forbid spurious inexact exception in
-the ineger conversion functions)
-
-So we try to make sure that no spurious inexact exception is
-raised in case of an overflow.
-
-If the bit size of long > precision of double, then there
-cannot be inexact rounding in case the result overflows,
-otherwise LONG_MAX and LONG_MIN can be represented exactly
-as a double.
-*/
-
-#if LONG_MAX < 1U<<53 && defined(FE_INEXACT)
-#if FLT_EVAL_METHOD==0 || FLT_EVAL_METHOD==1
-#define EPS DBL_EPSILON
-#elif FLT_EVAL_METHOD==2
-#define EPS LDBL_EPSILON
-#endif
-static dontinline long lrint_slow(double x) {
-// #pragma STDC FENV_ACCESS ON
-	int e;
-	e = fetestexcept(FE_INEXACT);
-	x = rint(x);
-	if (!e && (x > LONG_MAX || x < LONG_MIN))
-		feclearexcept(FE_INEXACT);
-	/* conversion */
-	return x;
-}
-#else
-#define JUST_CALL_RINT
-#endif
 
 /**
- * Rounds to nearest integer.
+ * Rounds to integer in current rounding mode.
+ *
+ * The floating-point exception `FE_INEXACT` is raised if the result is
+ * different from the input.
  */
-long lrint(double x)
-{
+long lrint(double x) {
+  long i;
 #ifdef __x86_64__
-	long res;
-	asm("cvtsd2si\t%1,%0" : "=r"(res) : "x"(x));
-	return res;
+  asm("cvtsd2si\t%1,%0" : "=r"(i) : "x"(x));
 #elif defined(__aarch64__)
-	long res;
-	asm("frintx\t%d1,%d1\n\t"
-	    "fcvtzs\t%x0,%d1"
-	    : "=r"(res), "+w"(x));
-	return res;
+  asm("frintx\t%d1,%d1\n\t"
+      "fcvtzs\t%x0,%d1"
+      : "=r"(i), "+w"(x));
 #elif defined(__powerpc64__) && defined(_ARCH_PWR5X)
-	long res;
-	asm("fctid\t%0,%1" : "=d"(res) : "d"(x));
-	return res;
-#elif defined(JUST_CALL_RINT)
-	return rint(x);
+  asm("fctid\t%0,%1" : "=d"(i) : "d"(x));
 #else
-	uint32_t abstop = asuint64(x)>>32 & 0x7fffffff;
-	uint64_t sign = asuint64(x) & (1ULL << 63);
-	if (abstop < 0x41dfffff) {
-		/* |x| < 0x7ffffc00, no overflow */
-		double_t toint = asdouble(asuint64(1/EPS) | sign);
-		double_t y = x + toint - toint;
-		return (long)y;
-	}
-	return lrint_slow(x);
+  i = rint(x);
 #endif /* __x86_64__ */
+  return i;
 }
+
+#if __SIZEOF_LONG__ == __SIZEOF_LONG_LONG__
+__weak_reference(lrint, llrint);
+#endif
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 __strong_reference(lrint, lrintl);
+#if __SIZEOF_LONG__ == __SIZEOF_LONG_LONG__
+__strong_reference(lrint, llrintl);
+#endif
 #endif

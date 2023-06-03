@@ -24,11 +24,14 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #ifndef __x86_64__
 
+void __wipe(uintptr_t);
 int main(int, char **, char **) __attribute__((__weak__));
 
 typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
@@ -46,6 +49,9 @@ extern init_f *__preinit_array_start[] __attribute__((__weak__));
 extern init_f *__preinit_array_end[] __attribute__((__weak__));
 extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
+extern char ape_stack_vaddr[] __attribute__((__weak__));
+extern char ape_stack_memsz[] __attribute__((__weak__));
+extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
 
@@ -86,10 +92,20 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   __oldstack = (intptr_t)sp;
   __pid = sys_getpid().ax;
 
-  // initialize mmap() manager extremely early
+  // initialize memory manager
   _mmi.n = ARRAYLEN(_mmi.s);
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+
+  if (!IsTiny()) {
+    // record system-provided stack to memory manager
+    _mmi.i = 1;
+    _mmi.p->x = (uintptr_t)GetStackAddr() >> 16;
+    _mmi.p->y =
+        (uintptr_t)(GetStackAddr() + (GetStackSize() - FRAMESIZE)) >> 16;
+    _mmi.p->size = GetStackSize();
+    _mmi.p->prot = PROT_READ | PROT_WRITE;
+  }
 
 #if 0
 #if IsAsan()
@@ -118,6 +134,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   }
 
   // run program
+  if (!IsTiny()) __wipe(0);
   exit(main(argc, argv, envp));
 }
 

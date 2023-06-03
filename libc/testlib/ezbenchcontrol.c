@@ -21,9 +21,9 @@
 #include "libc/testlib/testlib.h"
 
 static bool once;
-static int64_t g_ezbenchcontrol;
+static double g_ezbenchcontrol;
 
-int64_t __testlib_ezbenchcontrol(void) {
+double __testlib_ezbenchcontrol(void) {
   if (!once) {
     int Core, Tries, Interrupts;
     Tries = 0;
@@ -38,7 +38,7 @@ int64_t __testlib_ezbenchcontrol(void) {
     if (Tries == 10) {
       fputs("warning: failed to accurately benchmark control\n", stderr);
     }
-    fprintf(stderr, "will subtract benchmark overhead of %ld cycles\n\n",
+    fprintf(stderr, "will subtract benchmark overhead of %g cycles\n\n",
             g_ezbenchcontrol);
     once = true;
   }

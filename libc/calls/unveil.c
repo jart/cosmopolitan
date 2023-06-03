@@ -27,8 +27,10 @@
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -99,9 +101,11 @@ static int landlock_abi_version;
 static int landlock_abi_errno;
 
 __attribute__((__constructor__)) void init_landlock_version() {
+  int e = errno;
   landlock_abi_version =
       landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION);
   landlock_abi_errno = errno;
+  errno = e;
 }
 
 /**
@@ -170,7 +174,7 @@ static int unveil_init(void) {
   const struct landlock_ruleset_attr attr = {
       .handled_access_fs = State.fs_mask,
   };
-  // [undocumented] landlock_create_ruleset() always returns o_cloexec
+  // [undocumented] landlock_create_ruleset() always returns O_CLOEXEC
   //                assert(__sys_fcntl(rc, F_GETFD, 0) == FD_CLOEXEC);
   if ((rc = landlock_create_ruleset(&attr, sizeof(attr), 0)) < 0) return -1;
   // grant file descriptor a higher number that's less likely to interfere
@@ -274,7 +278,7 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 
   // now we can open the path
   BLOCK_CANCELLATIONS;
-  rc = sys_open(path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
+  rc = sys_openat(AT_FDCWD, path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
   ALLOW_CANCELLATIONS;
   if (rc == -1) return rc;
 
@@ -308,9 +312,16 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  * should become unhidden. When you're finished, you call `unveil(0,0)`
  * which commits your policy.
  *
- * This function requires OpenBSD or Linux 5.13+. We don't consider lack
- * of system support to be an ENOSYS error, because the files will still
- * become unveiled. Therefore we return 0 in such cases.
+ * This function requires OpenBSD or Linux 5.13+ (2022+). If the kernel
+ * support isn't available (or we're in an emulator like Qemu or Blink)
+ * then zero is returned and nothing happens (instead of raising ENOSYS)
+ * because the files are still unveiled. Use `unveil("", 0)` to feature
+ * check the host system, which is defined as a no-op that'll fail if
+ * the host system doesn't have the necessary features that allow
+ * unveil() impose bona-fide security restrictions. Otherwise, if
+ * everything is good, a return value `>=0` is returned, where `0` means
+ * OpenBSD, and `>=1` means Linux with Landlock LSM, in which case the
+ * return code shall be the maximum supported Landlock ABI version.
  *
  * There are some differences between unveil() on Linux versus OpenBSD.
  *
@@ -338,10 +349,10 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *    possible to use opendir() and go fishing for paths which weren't
  *    previously known.
  *
- * 5. Use ftruncate() rather than truncate() if you wish for portability to
- *    Linux kernels versions released before February 2022. One issue
- *    Landlock hadn't addressed as of ABI version 2 was restrictions over
- *    truncate() and setxattr() which could permit certain kinds of
+ * 5. Use ftruncate() rather than truncate() if you wish for portability
+ *    to Linux kernels versions released before February 2022. One issue
+ *    Landlock hadn't addressed as of ABI version 2 was restrictions
+ *    over truncate() and setxattr() which could permit certain kinds of
  *    modifications to files outside the sandbox. When your policy is
  *    committed, we install a SECCOMP BPF filter to disable those calls,
  *    however similar trickery may be possible through other unaddressed
@@ -349,8 +360,8 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *    unveil() will solve this, since it installs a strong system call
  *    access policy. Linux 6.2 has improved this situation with Landlock
  *    ABI v3, which added the ability to control truncation operations -
- *    this means the SECCOMP BPF filter will only disable
- *    truncate() on Linux 6.1 or older
+ *    this means the SECCOMP BPF filter will only disable truncate() on
+ *    Linux 6.1 or older.
  *
  * 6. Set your process-wide policy at startup from the main thread. On
  *    OpenBSD unveil() will apply process-wide even when called from a
@@ -385,10 +396,14 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *     - `c` allows `path` to be created and removed, corresponding to
  *       the pledge promise "cpath".
  *
- * @return 0 on success, or -1 w/ errno
+ * @return 0 on success, or -1 w/ errno; note: if `unveil("",0)` is used
+ *     to perform a feature check, then on Linux a value greater than 0
+ *     shall be returned which is the supported Landlock ABI version
+ * @raise EPERM if unveil() is called after locking
  * @raise EINVAL if one argument is set and the other is not
  * @raise EINVAL if an invalid character in `permissions` was found
- * @raise EPERM if unveil() is called after locking
+ * @raise ENOSYS if `unveil("",0)` was used and security isn't possible
+ * @raise EOPNOTSUPP if `unveil("",0)` was used and Landlock LSM is disabled
  * @note on Linux this function requires Linux Kernel 5.13+ and version 6.2+
  *     to properly support truncation operations
  * @see [1] https://docs.kernel.org/userspace-api/landlock.html
@@ -397,8 +412,24 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 int unveil(const char *path, const char *permissions) {
   int e, rc;
   e = errno;
-  if (IsGenuineBlink()) {
-    rc = 0;  // blink doesn't support landlock
+  if (path && !*path) {
+    // OpenBSD will always fail on both unveil("",0) and unveil("",""),
+    // since an empty `path` is invalid and `permissions` is mandatory.
+    // Cosmopolitan Libc uses it as a feature check convention, to test
+    // if the host environment enables unveil() to impose true security
+    // restrictions because the default behavior is to silently succeed
+    // so that programs will err on the side of working if distributed.
+    if (IsOpenbsd()) return 0;
+    if (landlock_abi_version != -1) {
+      _unassert(landlock_abi_version >= 1);
+      return landlock_abi_version;
+    } else {
+      _unassert(landlock_abi_errno);
+      errno = landlock_abi_errno;
+      return -1;
+    }
+  } else if (!IsTiny() && IsGenuineBlink()) {
+    rc = 0;  // blink doesn't support landlock; avoid noisy log warnings
   } else if (IsLinux()) {
     rc = sys_unveil_linux(path, permissions);
   } else {

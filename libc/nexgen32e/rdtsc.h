@@ -46,6 +46,20 @@ COSMOPOLITAN_C_START_
     asm volatile("mrs\t%0,cntvct_el0" : "=r"(_Ts)); \
     _Ts * 48; /* the fudge factor */                \
   })
+#elif defined(__powerpc64__)
+#define __RDTSC(ASM)                           \
+  ({                                           \
+    uint64_t _Ts;                              \
+    asm volatile("mfspr\t%0,268" : "=r"(_Ts)); \
+    _Ts;                                       \
+  })
+#elif defined(__riscv)
+#define __RDTSC(ASM)                         \
+  ({                                         \
+    uint64_t _Ts;                            \
+    asm volatile("rdcycle\t%0" : "=r"(_Ts)); \
+    _Ts;                                     \
+  })
 #endif
 
 COSMOPOLITAN_C_END_

@@ -1,6 +1,5 @@
 #!/bin/sh
-for last; do true; done
-if printf '%s\n' "$last" | grep aarch64 >/dev/null 2>&1; then
+if printf '%s\n' "$*" | grep aarch64 >/dev/null 2>&1; then
   exec o/third_party/gcc/bin/aarch64-linux-musl-objdump "$@"
 else
   exec o/third_party/gcc/bin/x86_64-linux-musl-objdump "$@"

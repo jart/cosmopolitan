@@ -416,7 +416,6 @@ SECTIONS {
 /*BEGIN: Post-Initialization Read-Only */
     . = ALIGN(__SIZEOF_POINTER__);
     KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
-    PROVIDE_HIDDEN(__relo_end = .);
     . = ALIGN(__SIZEOF_POINTER__);
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
@@ -518,6 +517,7 @@ HIDDEN(_tdata_size = _tdata_end - _tdata_start);
 HIDDEN(_tbss_size = _tbss_end - _tbss_start);
 HIDDEN(_tbss_offset = _tbss_start - _tdata_start);
 HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
+HIDDEN(_tls_align = 1);
 
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -

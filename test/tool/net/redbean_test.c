@@ -39,6 +39,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "third_party/regex/regex.h"
+#ifdef __x86_64__
 
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("o/" MODE "/test/tool/net/redbean-tester.com");
@@ -285,3 +286,5 @@ Z\n",
   EXPECT_NE(-1, wait(0));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
 }
+
+#endif /* __x86_64__ */

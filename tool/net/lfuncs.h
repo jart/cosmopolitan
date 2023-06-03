@@ -41,6 +41,7 @@ int LuaGetCpuCore(lua_State *);
 int LuaGetCpuCount(lua_State *);
 int LuaGetCpuNode(lua_State *);
 int LuaGetCryptoHash(lua_State *);
+int LuaGetHostIsa(lua_State *);
 int LuaGetHostOs(lua_State *);
 int LuaGetHttpReason(lua_State *);
 int LuaGetLogLevel(lua_State *);

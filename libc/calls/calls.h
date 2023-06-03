@@ -50,11 +50,11 @@
 #define MAP_HUGE_2MB (21 << MAP_HUGE_SHIFT)
 #define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
-#define WCOREDUMP(s)    (0x80 & (s))
+#define WCOREDUMP(s)    (128 & (s))
 #define WEXITSTATUS(s)  ((0xff00 & (s)) >> 8)
 #define WIFCONTINUED(s) ((s) == 0xffff)
 #define WIFEXITED(s)    (!WTERMSIG(s))
-#define WIFSIGNALED(s)  ((0xffff & (s)) - 1u < 0xffu)
+#define WIFSIGNALED(s)  (((signed char)((127 & (s)) + 1) >> 1) > 0)
 #define WIFSTOPPED(s)   ((255 & (s)) == 127)
 #define WSTOPSIG(s)     WEXITSTATUS(s)
 #define WTERMSIG(s)     (127 & (s))

@@ -68,7 +68,8 @@
   .else
 \name:	mov	x16,#\arm_xnu			// apple ordinal
 	mov	x8,#\arm_linux			// systemd ordinal
-	eor	x9,x9,x9			// clear carry flag
+	mov	x9,#0				// clear carry flag
+	adds	x9,x9,#0			// clear carry flag
 	svc	#0				// issue system call
 	bcs	1f
 	b	_sysret

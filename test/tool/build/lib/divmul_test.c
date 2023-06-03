@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/divmul.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -25,10 +26,10 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xsigaction.h"
 #include "third_party/xed/x86.h"
-#include "tool/build/lib/divmul.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/machine.h"
+#ifdef __x86_64__
 
 #define CX     1
 #define OSZ    00000000040
@@ -551,3 +552,5 @@ TEST(div64, test) {
     }
   }
 }
+
+#endif /* __x86_64__ */

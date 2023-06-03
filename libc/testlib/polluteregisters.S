@@ -25,6 +25,8 @@ __polluteregisters:
 	xor	%eax,%eax
 	xor	%ecx,%ecx
 	xor	%edx,%edx
+	xor	%edi,%edi
+	xor	%esi,%esi
 	xor	%r8d,%r8d
 	xor	%r9d,%r9d
 	xor	%r10d,%r10d
@@ -49,6 +51,31 @@ __polluteregisters:
 	xorps	%xmm6,%xmm6
 	xorps	%xmm7,%xmm7
 	.leafepilogue
+#elif defined(__aarch64__)
+	mov	x0,#0
+	mov	x1,#0
+	mov	x2,#0
+	mov	x3,#0
+	mov	x4,#0
+	mov	x5,#0
+	mov	x6,#0
+	mov	x7,#0
+	mov	x9,#0
+	mov	x10,#0
+	mov	x11,#0
+	mov	x12,#0
+	mov	x13,#0
+	mov	x14,#0
+	mov	x15,#0
+	movi	v0.16b,#0
+	movi	v1.16b,#0
+	movi	v2.16b,#0
+	movi	v3.16b,#0
+	movi	v4.16b,#0
+	movi	v5.16b,#0
+	movi	v6.16b,#0
+	movi	v7.16b,#0
+	ret
 #else
 	ret
 #endif
@@ -58,7 +85,7 @@ __polluteregisters:
 //	Fill registers with junk data to create false dependencies.
 //	Which shall create the problem that happens w/o vzeroupper.
 //	Or the Core Architecture errata regarding BSR/BSF w/ 64bit.
-__polluteregisters:
+__polluteregisters_old:
 	.leafprologue
 	mov	$-1,%rax
 	mov	%rax,%rcx
@@ -96,4 +123,4 @@ __polluteregisters:
 	punpcklqdq %xmm0,%xmm6
 	punpcklqdq %xmm0,%xmm7
 	.leafepilogue
-	.endfn	__polluteregisters,globl
+	.endfn	__polluteregisters_old,globl

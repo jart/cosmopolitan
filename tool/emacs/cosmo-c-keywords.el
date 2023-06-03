@@ -51,7 +51,7 @@
            "forceinline"
            "nocallersavedregisters"
            "dontthrow"
-           "nooptimize"
+           "dontoptimize"
            "optimizesize"
            "optimizespeed"
            "alignof"

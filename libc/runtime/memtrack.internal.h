@@ -70,11 +70,45 @@ size_t GetMemtrackSize(struct MemoryIntervals *);
 #define __mmi_unlock() (__threaded ? __mmi_unlock() : 0)
 #endif
 
+#ifdef __x86_64__
+/*
+ * AMD64 has 48-bit signed pointers (PML4T)
+ * AMD64 is trying to go bigger, i.e. 57-bit (PML5T)
+ * LINUX forbids userspace from leveraging negative pointers
+ * Q-EMU may impose smaller vaspaces emulating AMD on non-AMD
+ *
+ * Having "signed pointers" means these top sixteen bits
+ *
+ *     0x0000000000000000
+ *       ^^^^
+ *
+ * must be
+ *
+ *   - 0000 for positive pointers
+ *   - FFFF for negative pointers
+ *
+ * otherwise the instruction using the faulty pointer will fault.
+ */
 #define IsLegalPointer(p) \
   (-0x800000000000 <= (intptr_t)(p) && (intptr_t)(p) <= 0x7fffffffffff)
+#define ADDR_32_TO_48(x) (intptr_t)((uint64_t)(int)(x) << 16)
+#elif defined(__aarch64__)
+/*
+ * ARM64 has 48-bit unsigned pointers (Armv8.0-A)
+ * ARM64 can possibly go bigger, i.e. 52-bit (Armv8.2-A)
+ * ARM64 can impose arbitrarily smaller vaspaces, e.g. 40/44-bit
+ * APPLE in their limitless authoritarianism forbids 32-bit pointers
+ */
+#define IsLegalPointer(p) ((uintptr_t)(p) <= 0xffffffffffff)
+#define ADDR_32_TO_48(x)  (uintptr_t)((uint64_t)(uint32_t)(x) << 16)
+#else
+/* RISC-V Sipeed Nezha has 39-bit vaspace */
+#error "unsupported architecture"
+#endif
 
-forceinline pureconst bool IsLegalSize(size_t n) {
-  return n <= 0x7fffffffffff;
+forceinline pureconst bool IsLegalSize(uint64_t n) {
+  /* subtract frame size so roundup is safe */
+  return n <= 0x800000000000 - FRAMESIZE;
 }
 
 forceinline pureconst bool IsAutoFrame(int x) {

@@ -108,8 +108,8 @@ TEST(strncmp, testInequality) {
   char *s1 = strcpy(malloc(2), "1");
   char *s2 = strcpy(malloc(1), "");
   ASSERT_EQ(0, strncmp(s1, s2, 0));
-  ASSERT_EQ('1', strncmp(s1, s2, 1));
-  ASSERT_EQ(-'1', strncmp(s2, s1, 1));
+  ASSERT_GT(strncmp(s1, s2, 1), 0);
+  ASSERT_LT(strncmp(s2, s1, 1), 0);
   free(s2);
   free(s1);
 }

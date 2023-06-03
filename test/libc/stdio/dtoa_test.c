@@ -101,6 +101,8 @@ TEST(printf, double) {
   }
 }
 
+#if LDBL_MANT_DIG == 64
+
 static const struct {
   const char *s;
   const char *f;
@@ -155,3 +157,5 @@ TEST(printf, longdouble) {
     }
   }
 }
+
+#endif  // LDBL_MANT_DIG == 64

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/lua/lunix.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
@@ -112,7 +113,6 @@
 #include "third_party/lua/lgc.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
-#include "third_party/lua/lunix.h"
 #include "third_party/nsync/futex.internal.h"
 #include "tool/net/luacheck.h"
 
@@ -1488,7 +1488,7 @@ static int LuaUnixPledge(lua_State *L) {
   int olderr = errno;
   __pledge_mode = luaL_optinteger(L, 3, 0);
   return SysretBool(L, "pledge", olderr,
-                    pledge(luaL_checkstring(L, 1), luaL_optstring(L, 2, 0)));
+                    pledge(luaL_optstring(L, 1, 0), luaL_optstring(L, 2, 0)));
 }
 
 // sandbox.unveil([path:str[, permissions:str]])

@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/stdio/rand.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -83,7 +83,7 @@ TEST(memmove, bighug) {
 
 BENCH(memmove, bench) {
   volatile char *r;
-  int n, max = 8 * 1024 * 1024;
+  int n, max = 128 * 1024 * 1024;
   char *volatile p = gc(calloc(max, 1));
   char *volatile q = gc(calloc(max, 1));
   EZBENCH_N("memmove", 0, memmove(p, q, 0));

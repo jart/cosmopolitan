@@ -61,11 +61,10 @@
 #define IP(X)      (intptr_t)(X)
 #define VIP(X)     (void *)IP(X)
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
-#define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
-static unsigned long RoundDownTwoPow(unsigned long x) {
+static pureconst unsigned long RoundDownTwoPow(unsigned long x) {
   return x ? 1ul << _bsrl(x) : 0;
 }
 
@@ -247,62 +246,49 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
   size_t virtualused, virtualneed;
 
   if (VERY_UNLIKELY(!size)) {
-    STRACE("size=0");
-    return VIP(einval());
-  }
-
-  if (VERY_UNLIKELY(!IsLegalPointer(p))) {
-    STRACE("p isn't 48-bit");
+    STRACE("can't mmap zero bytes");
     return VIP(einval());
   }
 
   if (VERY_UNLIKELY(!ALIGNED(p))) {
-    STRACE("p isn't 64kb aligned");
-    return VIP(einval());
-  }
-
-  if (VERY_UNLIKELY(fd < -1)) {
-    STRACE("mmap(%.12p, %'zu, fd=%d) EBADF", p, size, fd);
-    return VIP(ebadf());
-  }
-
-  if (VERY_UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
-    STRACE("fd anonymous mismatch");
-    return VIP(einval());
-  }
-
-  if (VERY_UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
-    STRACE("MAP_SHARED ^ MAP_PRIVATE");
-    return VIP(einval());
-  }
-
-  if (VERY_UNLIKELY(off < 0)) {
-    STRACE("neg off");
-    return VIP(einval());
-  }
-
-  if (VERY_UNLIKELY(!ALIGNED(off))) {
-    STRACE("p isn't 64kb aligned");
-    return VIP(einval());
-  }
-
-  if (fd == -1) {
-    size = ROUNDUP(size, FRAMESIZE);
-    if (IsWindows()) {
-      prot |= PROT_WRITE; /* kludge */
-    }
-  } else if (__isfdkind(fd, kFdZip)) {
-    STRACE("fd is zipos handle");
+    STRACE("cosmo mmap is 64kb aligned");
     return VIP(einval());
   }
 
   if (VERY_UNLIKELY(!IsLegalSize(size))) {
-    STRACE("size isn't 48-bit");
+    STRACE("mmap size isn't legal");
     return VIP(einval());
   }
 
-  if (VERY_UNLIKELY(INT64_MAX - size < off)) {
-    STRACE("too large");
+  if (VERY_UNLIKELY(!IsLegalPointer(p))) {
+    STRACE("mmap addr isn't 48-bit");
+    return VIP(einval());
+  }
+
+  if ((flags & (MAP_SHARED | MAP_PRIVATE)) == (MAP_SHARED | MAP_PRIVATE)) {
+    flags = MAP_SHARED;  // cf. MAP_SHARED_VALIDATE
+  }
+
+  if (flags & MAP_ANONYMOUS) {
+    fd = -1;
+    off = 0;
+    size = ROUNDUP(size, FRAMESIZE);
+    if (IsWindows()) prot |= PROT_WRITE;  // kludge
+    if ((flags & MAP_TYPE) == MAP_FILE) {
+      STRACE("need MAP_PRIVATE or MAP_SHARED");
+      return VIP(einval());
+    }
+  } else if (__isfdkind(fd, kFdZip)) {
+    STRACE("mmap fd is zipos handle");
+    return VIP(einval());
+  } else if (VERY_UNLIKELY(off < 0)) {
+    STRACE("mmap negative offset");
+    return VIP(einval());
+  } else if (VERY_UNLIKELY(!ALIGNED(off))) {
+    STRACE("mmap off isn't 64kb aligned");
+    return VIP(einval());
+  } else if (VERY_UNLIKELY(INT64_MAX - size < off)) {
+    STRACE("mmap too large");
     return VIP(einval());
   }
 
@@ -310,26 +296,25 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
       (__builtin_add_overflow((virtualused = GetMemtrackSize(&_mmi)), size,
                               &virtualneed) ||
        virtualneed > __virtualmax)) {
-    STRACE("%'zu size + %'zu inuse exceeds virtual memory limit %'zu", size,
-           virtualused, __virtualmax);
+    STRACE("mmap %'zu size + %'zu inuse exceeds virtual memory limit %'zu",
+           size, virtualused, __virtualmax);
     return VIP(enomem());
   }
 
   clashes = OverlapsImageSpace(p, size) || OverlapsExistingMapping(p, size);
 
   if ((flags & MAP_FIXED_NOREPLACE) == MAP_FIXED_NOREPLACE && clashes) {
-    STRACE("noreplace overlaps existing");
+    STRACE("mmap noreplace overlaps existing");
     return VIP(eexist());
   }
 
   if (__builtin_add_overflow((int)(size >> 16), (int)!!(size & (FRAMESIZE - 1)),
                              &n)) {
-    STRACE("memory range overflows");
+    STRACE("mmap range overflows");
     return VIP(einval());
   }
 
-  a = max(1, RoundDownTwoPow(size) >> 16);
-
+  a = MAX(1, RoundDownTwoPow(size) >> 16);
   f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {
     x = FRAME(p);
@@ -347,7 +332,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
   }
 
   needguard = false;
-  p = (char *)ADDR(x);
+  p = (char *)ADDR_32_TO_48(x);
   if ((f & MAP_TYPE) == MAP_STACK) {
     if (~f & MAP_ANONYMOUS) {
       STRACE("MAP_STACK must be anonymous");
@@ -446,7 +431,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
  *     is specified
  * @param prot can have PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE/etc.
  * @param flags should have one of the following masked by `MAP_TYPE`
- *     - `MAP_FILE` in which case `fd != -1` should be the case
+ *     - `MAP_FILE` in which case `MAP_ANONYMOUS` shouldn't be used
  *     - `MAP_PRIVATE` for copy-on-write behavior of writeable pages
  *     - `MAP_SHARED` to create shared memory between processes
  *     - `MAP_STACK` to create a grows-down alloc, where a guard page
@@ -460,7 +445,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
  *       compile-time checks to ensure some char[8192] vars will not
  *       create an undetectable overflow into another thread's stack
  *     Your `flags` may optionally bitwise or any of the following:
- *     - `MAP_ANONYMOUS` in which case `fd == -1` should be the case
+ *     - `MAP_ANONYMOUS` in which case `fd` and `off` are ignored
  *     - `MAP_FIXED` in which case `addr` becomes more than a hint
  *     - `MAP_FIXED_NOREPLACE` to protect existing mappings; this is
  *       always polyfilled by mmap() which tracks its own memory and
@@ -476,8 +461,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
  *     - `MAP_INHERIT` is NetBSD-only
  *     - `MAP_LOCKED` is Linux-only
  * @param fd is an open()'d file descriptor, whose contents shall be
- *     made available w/ automatic reading at the chosen address and
- *     must be -1 if MAP_ANONYMOUS is specified
+ *     made available w/ automatic reading at the chosen address
  * @param off specifies absolute byte index of fd's file for mapping,
  *     should be zero if MAP_ANONYMOUS is specified, and sadly needs
  *     to be 64kb aligned too

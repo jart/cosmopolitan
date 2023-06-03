@@ -27,6 +27,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
+//	Clears floating point exception status, e.g.
+//
+//	    feclearexcept(FE_ALL_EXCEPT);
+//
+//	@param excepts may bitwise-or the following:
+//		- `FE_INVALID`
+//		- `FE_DIVBYZERO`
+//		- `FE_OVERFLOW`
+//		- `FE_UNDERFLOW`
+//		- `FE_INEXACT`
+//		- `FE_ALL_EXCEPT` (all of the above)
+//	@return	0 on success, or nonzero on error
 feclearexcept:
 #ifdef __x86_64__
 //	maintain exceptions in the sse mxcsr, clear x87 exceptions
@@ -53,8 +65,46 @@ feclearexcept:
 	msr	fpsr,x1
 	mov	w0,#0
 	ret
+#else
+#error "unsupported architecture"
 #endif
 	.endfn	feclearexcept,globl
+
+//	Checks for floating point exception.
+//
+//	This function may be used to check the thread-local
+//	floating-point exception status bits, e.g.
+//
+//	    feclearexcept(FE_ALL_EXCEPT);
+//	    volatile double x = 0, y = 1 / x;
+//	    assert(fetestexcept(FE_ALL_EXCEPT) == FE_DIVBYZERO);
+//
+//	@param excepts may bitwise-or the following:
+//		- `FE_INVALID`
+//		- `FE_DIVBYZERO`
+//		- `FE_OVERFLOW`
+//		- `FE_UNDERFLOW`
+//		- `FE_INEXACT`
+//		- `FE_ALL_EXCEPT` (all of the above)
+//	@return	mask of which exception status codes are currently set,
+//		or zero if there aren't any floating point exceptions
+fetestexcept:
+#ifdef __x86_64__
+	and	$0x3f,%edi
+	push	%rax
+	stmxcsr	(%rsp)
+	pop	%rsi
+	fnstsw	%ax
+	or	%esi,%eax
+	and	%edi,%eax
+	ret
+#elif defined(__aarch64__)
+	and	w0,w0,#0x1f
+	mrs	x1,fpsr
+	and	w0,w0,w1
+	ret
+#endif
+	.endfn	fetestexcept,globl
 
 feraiseexcept:
 #ifdef __x86_64__
@@ -159,21 +209,3 @@ fesetenv:
 	ret
 #endif
 	.endfn	fesetenv,globl
-
-fetestexcept:
-#ifdef __x86_64__
-	and	$0x3f,%edi
-	push	%rax
-	stmxcsr	(%rsp)
-	pop	%rsi
-	fnstsw	%ax
-	or	%esi,%eax
-	and	%edi,%eax
-	ret
-#elif defined(__aarch64__)
-	and	w0,w0,#0x1f
-	mrs	x1,fpsr
-	and	w0,w0,w1
-	ret
-#endif
-	.endfn	fetestexcept,globl

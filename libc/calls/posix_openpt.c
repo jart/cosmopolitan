@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -37,9 +38,9 @@ int posix_openpt(int flags) {
   if ((flags & O_ACCMODE) != O_RDWR) {
     rc = einval();
   } else if (IsLinux() || IsXnu() || IsNetbsd()) {
-    rc = sys_open("/dev/ptmx", flags, 0);
+    rc = sys_openat(AT_FDCWD, "/dev/ptmx", flags, 0);
   } else if (IsOpenbsd()) {
-    rc = sys_open("/dev/ptm", flags, 0);
+    rc = sys_openat(AT_FDCWD, "/dev/ptm", flags, 0);
   } else if (IsFreebsd()) {
     rc = sys_posix_openpt(flags);
     if (rc == -1 && errno == ENOSPC) errno = EAGAIN;

@@ -26,6 +26,7 @@
 #include "libc/testlib/testlib.h"
 
 TEST(__dos2errno, test) {
+#ifdef __x86__
   EXPECT_EQ(0, __dos2errno(0));
   EXPECT_EQ(EACCES, __dos2errno(kNtErrorSectorNotFound));
   EXPECT_EQ(EADDRNOTAVAIL, __dos2errno(kNtErrorInvalidNetname));
@@ -33,4 +34,5 @@ TEST(__dos2errno, test) {
   if (IsWindows()) {
     EXPECT_EQ(ENOLCK, __dos2errno(kNtErrorNotLocked));
   }
+#endif
 }

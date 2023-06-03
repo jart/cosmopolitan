@@ -25,6 +25,7 @@
 #include "libc/intrin/promises.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sig.h"
@@ -32,10 +33,11 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-#ifdef __x86_64__
-
 void SetUp(void) {
-  if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
+  if (pledge(0, 0) == -1) {
+    fprintf(stderr, "warning: pledge() not supported on this system\n");
+    exit(0);
+  }
 }
 
 TEST(pledge, testSoftError) {
@@ -116,5 +118,3 @@ TEST(pledge, testEmptyPledge_doesntUseTrapping) {
   socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   TERMS(IsOpenbsd() ? SIGABRT : SIGSYS);
 }
-
-#endif /* __x86_64__ */

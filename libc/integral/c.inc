@@ -53,16 +53,18 @@
 #endif
 
 #ifdef _MSC_VER
-#define __builtin_unreachable() __assume(0)
+#define __builtin_unreachable() __assume(false)
 #elif defined(__STRICT_ANSI__) ||                           \
     !((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405 || \
-      defined(__clang__) || defined(__INTEL_COMPILER))
+      defined(__clang__) || defined(__INTEL_COMPILER) ||    \
+      __has_builtin(__builtin_unreachable))
 #define __builtin_unreachable() \
   for (;;) {                    \
   }
 #endif
 
-#if defined(__STRICT_ANSI__) || (!defined(__llvm__) && !__has_builtin(assume))
+#if defined(__STRICT_ANSI__) || \
+    (!defined(__llvm__) && !__has_builtin(__builtin_assume))
 #define __builtin_assume(x)            \
   do {                                 \
     if (!(x)) __builtin_unreachable(); \
@@ -248,13 +250,13 @@ typedef struct {
 #endif
 #endif
 
-#ifndef noclone
+#ifndef dontclone
 #if !defined(__STRICT_ANSI__) &&     \
     (__has_attribute(__noclone__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405)
-#define noclone __attribute__((__noclone__))
+#define dontclone __attribute__((__noclone__))
 #else
-#define noclone
+#define dontclone
 #endif
 #endif
 
@@ -417,16 +419,16 @@ typedef struct {
 #endif
 #endif
 
-#ifndef nooptimize
+#ifndef dontoptimize
 #ifndef __STRICT_ANSI__
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+#if defined(__llvm__) || __has_attribute(__optnone__)
+#define dontoptimize __attribute__((__optnone__))
+#elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
     __has_attribute(__optimize__)
-#define nooptimize __attribute__((__optimize__(1)))
-#elif defined(__llvm__) || __has_attribute(__optnone__)
-#define nooptimize __attribute__((__optnone__))
+#define dontoptimize __attribute__((__optimize__(0)))
 #endif
 #else
-#define nooptimize
+#define dontoptimize
 #endif
 #endif
 
@@ -570,7 +572,7 @@ typedef struct {
 
 #if __cplusplus + 0 >= 201103L
 #define autotype(x) auto
-#elif ((__has_builtin(auto_type) || defined(__llvm__) ||       \
+#elif ((__has_builtin(__auto_type) || defined(__llvm__) ||     \
         (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 409) && \
        !defined(__chibicc__))
 #define autotype(x) __auto_type
@@ -588,38 +590,41 @@ typedef struct {
 #define nocallersavedregisters
 #endif
 
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
-    __has_attribute(__no_sanitize_address__)
+#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
+     __has_attribute(__no_sanitize_address__)) &&          \
+    !defined(__STRICT_ANSI__)
 #define noasan __attribute__((__no_sanitize_address__))
 #else
 #define noasan
 #endif
 
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
-    __has_attribute(__no_sanitize_undefined__)
+#if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
+     __has_attribute(__no_sanitize_undefined__)) &&        \
+    !defined(__STRICT_ANSI__)
 #define noubsan __attribute__((__no_sanitize_undefined__))
 #else
 #define noubsan
 #endif
 
 #ifndef unreachable
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define unreachable __builtin_unreachable()
-#else
-#define unreachable \
-  do {              \
-  } while (1)
-#endif
 #endif
 
+#ifdef __STRICT_ANSI__
+void abort(void) wontreturn;
+#define notpossible abort()
+#else
 #ifdef __x86_64__
-#define notpossible           \
-  do {                        \
-    asm("nop\n\tud2\n\tnop"); \
-    unreachable;              \
+#define notpossible \
+  do {              \
+    asm("nop\n\t"   \
+        "ud2\n\t"   \
+        "nop");     \
+    unreachable;    \
   } while (0)
 #else
 #define notpossible __builtin_trap()
+#endif
 #endif
 
 #define donothing \

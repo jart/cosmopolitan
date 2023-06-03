@@ -26,7 +26,7 @@ int64_t clock(void);
 int64_t posix2time(int64_t) pureconst;
 int64_t time(int64_t *);
 int64_t time2posix(int64_t) pureconst;
-long double ConvertTicksToNanos(uint64_t);
+long double ConvertTicksToNanos(double);
 long double dsleep(long double);
 long double dtime(int);
 unsigned alarm(unsigned);

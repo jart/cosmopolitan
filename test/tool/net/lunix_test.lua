@@ -70,28 +70,20 @@ function UnixTest()
    -- 1. fork off a process
    -- 2. sandbox the process
    -- 3. then violate its security
-   if GetHostOs() == "LINUX" then
-      reader, writer = assert(unix.pipe())
-      if assert(unix.fork()) == 0 then
-         assert(unix.dup(writer, 2))
-         assert(unix.pledge("stdio"))
-         unix.socket()
-         unix.exit(0)
-      end
-      unix.close(writer)
-      unix.close(reader)
-      pid, ws = assert(unix.wait())
-      assert(unix.WIFSIGNALED(ws))
-      assert(unix.WTERMSIG(ws) == unix.SIGSYS)
-   elseif GetHostOs() == "OPENBSD" then
-      if assert(unix.fork()) == 0 then
-         assert(unix.pledge("stdio"))
-         unix.socket()
-         unix.exit(1)
-      end
-      pid, ws = assert(unix.wait())
-      assert(unix.WIFSIGNALED(ws))
-      assert(unix.WTERMSIG(ws) == unix.SIGABRT)
+   if unix.pledge(nil, nil) then
+       reader, writer = assert(unix.pipe())
+       if assert(unix.fork()) == 0 then
+           assert(unix.dup(writer, 2))
+           assert(unix.pledge("stdio"))
+           unix.socket()
+           unix.exit(0)
+       end
+       unix.close(writer)
+       unix.close(reader)
+       pid, ws = assert(unix.wait())
+       assert(unix.WIFSIGNALED(ws))
+       assert(unix.WTERMSIG(ws) == unix.SIGSYS or  -- Linux
+              unix.WTERMSIG(ws) == unix.SIGABRT)   -- OpenBSD
    end
 
    -- sigaction

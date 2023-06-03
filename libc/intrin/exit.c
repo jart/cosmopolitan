@@ -39,7 +39,6 @@
 wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
-#ifdef __x86_64__
   if (!IsWindows() && !IsMetal()) {
     // On Linux _Exit1 (exit) must be called in pledge("") mode. If we
     // call _Exit (exit_group) when we haven't used pledge("stdio") then
@@ -47,34 +46,48 @@ wontreturn void _Exit(int exitcode) {
     // _Exit1 (__threxit) because only _Exit (exit) is whitelisted when
     // operating in pledge("") mode.
     if (!(IsLinux() && !PLEDGED(STDIO))) {
+#ifdef __x86_64__
       asm volatile("syscall"
                    : /* no outputs */
                    : "a"(__NR_exit_group), "D"(exitcode)
                    : "rcx", "r11", "memory");
+#elif defined(__aarch64__)
+      register long x0 asm("x0") = exitcode;
+      asm volatile("mov\tx8,%0\n\t"
+                   "mov\tx16,%1\n\t"
+                   "svc\t0"
+                   : /* no outputs */
+                   : "i"(94), "i"(1), "r"(x0)
+                   : "x8", "x16", "memory");
+#else
+#error "unsupported architecture"
+#endif
     }
     // Inline _Exit1() just in case _Exit() isn't allowed by pledge()
+#ifdef __x86_64__
     asm volatile("syscall"
                  : /* no outputs */
                  : "a"(__NR_exit), "D"(exitcode)
                  : "rcx", "r11", "memory");
+#else
+    register long r0 asm("x0") = exitcode;
+    asm volatile("mov\tx8,%0\n\t"
+                 "mov\tx16,%1\n\t"
+                 "svc\t0"
+                 : /* no outputs */
+                 : "i"(93), "i"(0x169), "r"(r0)
+                 : "x8", "memory");
+#endif
   } else if (IsWindows()) {
     ExitProcess(exitcode);
   }
+#ifdef __x86_64__
   asm("push\t$0\n\t"
       "push\t$0\n\t"
       "cli\n\t"
       "lidt\t(%rsp)");
   for (;;) asm("ud2");
-#elif defined(__aarch64__)
-  register long x0 asm("x0") = exitcode;
-  asm volatile("mov\tx8,%0\n\t"
-               "mov\tx16,%1\n\t"
-               "svc\t0"
-               : /* no outputs */
-               : "i"(94), "i"(1), "r"(x0)
-               : "x8", "x16", "memory");
-  notpossible;
 #else
-#error "arch unsupported"
+  unreachable;
 #endif
 }

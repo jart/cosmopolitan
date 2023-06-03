@@ -35,6 +35,12 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Rounds to integer in current rounding mode.
+ *
+ * The floating-point exception `FE_INEXACT` is raised if the result is
+ * different from the input.
+ */
 long double rintl(long double x)
 {
 	static const long double toint = 1/LDBL_EPSILON;

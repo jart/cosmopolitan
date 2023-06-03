@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
@@ -76,26 +77,25 @@ static char *_mktls_below(struct CosmoTib **out_tib) {
 }
 
 static char *_mktls_above(struct CosmoTib **out_tib) {
-  size_t siz;
+  size_t hiz, siz;
   char *mem, *dtv, *tls;
   struct CosmoTib *tib, *old;
 
   // allocate memory for tdata, tbss, and tib
-  siz = ROUNDUP(sizeof(struct CosmoTib) + 2 * sizeof(void *) + I(_tls_size),
-                TLS_ALIGNMENT);
+  hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));
+  siz = hiz + I(_tls_size);
   mem = memalign(TLS_ALIGNMENT, siz);
   if (!mem) return 0;
 
   // poison memory between tdata and tbss
   if (IsAsan()) {
-    __asan_poison(
-        mem + sizeof(struct CosmoTib) + 2 * sizeof(void *) + I(_tdata_size),
-        I(_tbss_offset) - I(_tdata_size), kAsanProtected);
+    __asan_poison(mem + hiz + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
+                  kAsanProtected);
   }
 
   tib = (struct CosmoTib *)mem;
   dtv = mem + sizeof(*tib);
-  tls = dtv + 2 * sizeof(void *);
+  tls = mem + hiz;
 
   // set dtv
   ((uintptr_t *)dtv)[0] = 1;

@@ -57,36 +57,36 @@ forceinline long double tau(void) {
   return pi() * 2;
 }
 
-forceinline void sincosl(long double x, long double *sin, long double *cos) {
+forceinline void sincosl_(long double x, long double *sin, long double *cos) {
   asm("fsincos" : "=t"(*sin), "=u"(*cos) : "0"(x));
 }
 
-forceinline long double atan2l(long double x, long double y) {
+forceinline long double atan2l_(long double x, long double y) {
   asm("fpatan" : "+t"(x) : "u"(y) : "st(1)");
   return x;
 }
 
-forceinline long lrintl(long double x) {
+forceinline long lrintl_(long double x) {
   long i;
   asm("fistp%z0\t%0" : "=m"(i) : "t"(x) : "st");
   return i;
 }
 
-forceinline long double truncl(long double x) {
+forceinline long double truncl_(long double x) {
   asm("frndint" : "+t"(x));
   return x;
 }
 
-forceinline long double fabsl(long double x) {
+forceinline long double fabsl_(long double x) {
   asm("fabs" : "+t"(x));
   return x;
 }
 
-forceinline long lroundl(long double x) {
+forceinline long lroundl_(long double x) {
   int s = signbit(x);
-  x = truncl(fabsl(x) + .5);
+  x = truncl_(fabsl_(x) + .5);
   if (s) x = -x;
-  return lrintl(x);
+  return lrintl_(x);
 }
 
 static unsigned short GetFpuControlWord(void) {
@@ -111,13 +111,13 @@ static void spiral(unsigned char p[25][80][2], unsigned char B[25][80], int g) {
   int i, x, y;
   long double a, b, u, v, h;
   for (a = b = i = 0; i < 1000; ++i) {
-    sincosl(a, &u, &v);
-    h = atan2l(u, v) - .333L * g;
-    x = lroundl(80 + u * b);
-    y = lroundl(25 + v * b * (1. / ((266 / 64.) * (900 / 1600.))));
+    sincosl_(a, &u, &v);
+    h = atan2l_(u, v) - .333L * g;
+    x = lroundl_(80 + u * b);
+    y = lroundl_(25 + v * b * (1. / ((266 / 64.) * (900 / 1600.))));
     B[y >> 1][x >> 1] |= 1 << ((y & 1) << 1 | (x & 1));
     POKE(p[y >> 1][x >> 1][0], kBlocks[B[y >> 1][x >> 1]]);
-    POKE(p[y >> 1][x >> 1][1], (lrintl((h + tau()) * (8 / tau())) & 7) + 8);
+    POKE(p[y >> 1][x >> 1][1], (lrintl_((h + tau()) * (8 / tau())) & 7) + 8);
     a += .05;
     b += .05;
   }

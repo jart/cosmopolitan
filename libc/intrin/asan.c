@@ -1400,7 +1400,7 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
       }
     }
     size = (size_t)i << 16;
-    addr = (void *)(intptr_t)((int64_t)((uint64_t)a << 32) >> 16);
+    addr = (void *)ADDR_32_TO_48(a);
     prot = PROT_READ | PROT_WRITE;
     flag = MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS;
     sm = _weaken(sys_mmap)(addr, size, prot, flag, -1, 0);
@@ -1413,8 +1413,7 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
       __asan_die()();
       __asan_unreachable();
     }
-    __repstosb((void *)(intptr_t)((int64_t)((uint64_t)a << 32) >> 16),
-               kAsanUnmapped, size);
+    __repstosb(addr, kAsanUnmapped, size);
   }
   __asan_unpoison((char *)p, n);
 }

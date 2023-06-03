@@ -23,8 +23,6 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
-#define ADDR(x) ((intptr_t)((int64_t)((uint64_t)(x) << 32) >> 16))
-
 static bool IsNoteworthyHole(unsigned i, const struct MemoryIntervals *mm) {
   // gaps between shadow frames aren't interesting
   // the chasm from heap to stack ruins statistics

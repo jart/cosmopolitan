@@ -1,56 +1,42 @@
 /*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
 │vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
-╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
-│                                                                              │
-│ Permission to use, copy, modify, and/or distribute this software for         │
-│ any purpose with or without fee is hereby granted, provided that the         │
-│ above copyright notice and this permission notice appear in all copies.      │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
-│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
-│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
-│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
-│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
-│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/tls.h"
 #include "libc/zip.h"
 
 ENTRY(_start)
 OUTPUT_ARCH(aarch64)
 OUTPUT_FORMAT("elf64-littleaarch64",
-	      "elf64-bigaarch64",
-	      "elf64-littleaarch64")
+              "elf64-bigaarch64",
+              "elf64-littleaarch64")
 
 SECTIONS {
 
   PROVIDE(__executable_start = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL));
   . = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) + SIZEOF_HEADERS;
 
-  .interp		: { *(.interp) }
-  .note.gnu.build-id	: { *(.note.gnu.build-id) }
-  .hash			: { *(.hash) }
-  .gnu.hash		: { *(.gnu.hash) }
-  .dynsym		: { *(.dynsym) }
-  .dynstr		: { *(.dynstr) }
-  .gnu.version		: { *(.gnu.version) }
-  .gnu.version_d	: { *(.gnu.version_d) }
-  .gnu.version_r	: { *(.gnu.version_r) }
-  .rela.init		: { *(.rela.init) }
-  .rela.text		: { *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*) }
-  .rela.fini		: { *(.rela.fini) }
-  .rela.rodata		: { *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*) }
-  .rela.data.rel.ro	: { *(.rela.data.rel.ro .rela.data.rel.ro.* .rela.gnu.linkonce.d.rel.ro.*) }
-  .rela.data		: { *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*) }
-  .rela.tdata		: { *(.rela.tdata .rela.tdata.* .rela.gnu.linkonce.td.*) }
-  .rela.tbss		: { *(.rela.tbss .rela.tbss.* .rela.gnu.linkonce.tb.*) }
-  .rela.ctors		: { *(.rela.ctors) }
-  .rela.dtors		: { *(.rela.dtors) }
-  .rela.got		: { *(.rela.got) }
-  .rela.bss		: { *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*) }
-  .rela.ifunc		: { *(.rela.ifunc) }
+  .interp            : { *(.interp) }
+  .note.gnu.build-id : { *(.note.gnu.build-id) }
+  .hash              : { *(.hash) }
+  .gnu.hash          : { *(.gnu.hash) }
+  .dynsym            : { *(.dynsym) }
+  .dynstr            : { *(.dynstr) }
+  .gnu.version       : { *(.gnu.version) }
+  .gnu.version_d     : { *(.gnu.version_d) }
+  .gnu.version_r     : { *(.gnu.version_r) }
+  .rela.init         : { *(.rela.init) }
+  .rela.text         : { *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*) }
+  .rela.fini         : { *(.rela.fini) }
+  .rela.rodata       : { *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*) }
+  .rela.data.rel.ro  : { *(.rela.data.rel.ro .rela.data.rel.ro.* .rela.gnu.linkonce.d.rel.ro.*) }
+  .rela.data         : { *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*) }
+  .rela.tdata        : { *(.rela.tdata .rela.tdata.* .rela.gnu.linkonce.td.*) }
+  .rela.tbss         : { *(.rela.tbss .rela.tbss.* .rela.gnu.linkonce.tb.*) }
+  .rela.ctors        : { *(.rela.ctors) }
+  .rela.dtors        : { *(.rela.dtors) }
+  .rela.got          : { *(.rela.got) }
+  .rela.bss          : { *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*) }
+  .rela.ifunc        : { *(.rela.ifunc) }
 
   .rela.plt : {
     *(.rela.plt)
@@ -102,9 +88,9 @@ SECTIONS {
   }
 
   .comment : {
-    KEEP(*(.commentprologue))
+    PROVIDE_HIDDEN(kLegalNotices = .);
     KEEP(*(.comment))
-    KEEP(*(.commentepilogue))
+    BYTE(0);
   }
 
   .eh_frame_hdr : {
@@ -153,7 +139,7 @@ SECTIONS {
     *(.exception_ranges*)
   }
 
-  .tdata : ONLY_IF_RW {
+  .tdata : {
     PROVIDE_HIDDEN(_tdata_start = .);
     PROVIDE_HIDDEN(__tdata_start = .);
     *(.tdata .tdata.* .gnu.linkonce.td.*)
@@ -184,6 +170,8 @@ SECTIONS {
   .data.rel.ro : {
     *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*)
     *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*)
+    . = ALIGN(__SIZEOF_POINTER__);
+    KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
   }
 
   .dynamic : {
@@ -204,6 +192,8 @@ SECTIONS {
 
   .data : {
     PROVIDE(__data_start = .);
+    . = ALIGN(__SIZEOF_POINTER__);
+    KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     *(.data .data.* .gnu.linkonce.d.*)
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
     SORT(CONSTRUCTORS)
@@ -212,7 +202,7 @@ SECTIONS {
   _edata = .;
   PROVIDE(edata = .);
 
-  .data : {
+  .zip : {
     KEEP(*(SORT_BY_NAME(.zip.*)))
     HIDDEN(_ezip = .);
   }
@@ -239,36 +229,36 @@ SECTIONS {
 
   . = DATA_SEGMENT_END(.);
 
-  .stab			0 : { *(.stab) }
-  .stabstr		0 : { *(.stabstr) }
-  .stab.excl		0 : { *(.stab.excl) }
-  .stab.exclstr		0 : { *(.stab.exclstr) }
-  .stab.index		0 : { *(.stab.index) }
-  .stab.indexstr	0 : { *(.stab.indexstr) }
+  .stab               0 : { *(.stab) }
+  .stabstr            0 : { *(.stabstr) }
+  .stab.excl          0 : { *(.stab.excl) }
+  .stab.exclstr       0 : { *(.stab.exclstr) }
+  .stab.index         0 : { *(.stab.index) }
+  .stab.indexstr      0 : { *(.stab.indexstr) }
   .gnu.build.attributes : { *(.gnu.build.attributes .gnu.build.attributes.*) }
-  .debug		0 : { *(.debug) }
-  .line			0 : { *(.line) }
-  .debug_srcinfo	0 : { *(.debug_srcinfo) }
-  .debug_sfnames	0 : { *(.debug_sfnames) }
-  .debug_aranges	0 : { *(.debug_aranges) }
-  .debug_pubnames	0 : { *(.debug_pubnames) }
-  .debug_info		0 : { *(.debug_info .gnu.linkonce.wi.*) }
-  .debug_abbrev		0 : { *(.debug_abbrev) }
-  .debug_line		0 : { *(.debug_line .debug_line.* .debug_line_end) }
-  .debug_frame		0 : { *(.debug_frame) }
-  .debug_str		0 : { *(.debug_str) }
-  .debug_loc		0 : { *(.debug_loc) }
-  .debug_macinfo	0 : { *(.debug_macinfo) }
-  .debug_weaknames	0 : { *(.debug_weaknames) }
-  .debug_funcnames	0 : { *(.debug_funcnames) }
-  .debug_typenames	0 : { *(.debug_typenames) }
-  .debug_varnames	0 : { *(.debug_varnames) }
-  .debug_pubtypes	0 : { *(.debug_pubtypes) }
-  .debug_ranges		0 : { *(.debug_ranges) }
-  .debug_macro		0 : { *(.debug_macro) }
-  .debug_addr		0 : { *(.debug_addr) }
-  .ARM.attributes	0 : { KEEP(*(.ARM.attributes)) KEEP(*(.gnu.attributes)) }
-  .note.gnu.arm.ident	0 : { KEEP(*(.note.gnu.arm.ident)) }
+  .debug              0 : { *(.debug) }
+  .line               0 : { *(.line) }
+  .debug_srcinfo      0 : { *(.debug_srcinfo) }
+  .debug_sfnames      0 : { *(.debug_sfnames) }
+  .debug_aranges      0 : { *(.debug_aranges) }
+  .debug_pubnames     0 : { *(.debug_pubnames) }
+  .debug_info         0 : { *(.debug_info .gnu.linkonce.wi.*) }
+  .debug_abbrev       0 : { *(.debug_abbrev) }
+  .debug_line         0 : { *(.debug_line .debug_line.* .debug_line_end) }
+  .debug_frame        0 : { *(.debug_frame) }
+  .debug_str          0 : { *(.debug_str) }
+  .debug_loc          0 : { *(.debug_loc) }
+  .debug_macinfo      0 : { *(.debug_macinfo) }
+  .debug_weaknames    0 : { *(.debug_weaknames) }
+  .debug_funcnames    0 : { *(.debug_funcnames) }
+  .debug_typenames    0 : { *(.debug_typenames) }
+  .debug_varnames     0 : { *(.debug_varnames) }
+  .debug_pubtypes     0 : { *(.debug_pubtypes) }
+  .debug_ranges       0 : { *(.debug_ranges) }
+  .debug_macro        0 : { *(.debug_macro) }
+  .debug_addr         0 : { *(.debug_addr) }
+  .ARM.attributes     0 : { KEEP(*(.ARM.attributes)) KEEP(*(.gnu.attributes)) }
+  .note.gnu.arm.ident 0 : { KEEP(*(.note.gnu.arm.ident)) }
 
   /DISCARD/ : {
     *(.GCC.command.line)
@@ -287,6 +277,7 @@ PROVIDE_HIDDEN(_tdata_size = _tdata_end - _tdata_start);
 PROVIDE_HIDDEN(_tbss_size = _tbss_end - _tbss_start);
 PROVIDE_HIDDEN(_tbss_offset = _tbss_start - _tdata_start);
 PROVIDE_HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
+PROVIDE_HIDDEN(_tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)));
 PROVIDE_HIDDEN(__zip_start_rva = DEFINED(__zip_start) ? __zip_start - __executable_start : 0);
 
 /* ZIP End of Central Directory header */
@@ -296,3 +287,6 @@ ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
 ASSERT(v_zip_cdirsize % kZipCdirHdrLinkableSize == 0, "bad zip cdir");
 ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
 ZIPCONST(v_zip_commentsize, _ezip - __zip_end - kZipCdirHdrMinSize);
+
+ASSERT(ALIGNOF(.tdata) <= TLS_ALIGNMENT && ALIGNOF(.tbss) <= TLS_ALIGNMENT,
+       "_Thread_local _Alignof can't exceed TLS_ALIGNMENT");
