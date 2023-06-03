@@ -97,15 +97,12 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
 
-  if (!IsTiny()) {
-    // record system-provided stack to memory manager
-    _mmi.i = 1;
-    _mmi.p->x = (uintptr_t)GetStackAddr() >> 16;
-    _mmi.p->y =
-        (uintptr_t)(GetStackAddr() + (GetStackSize() - FRAMESIZE)) >> 16;
-    _mmi.p->size = GetStackSize();
-    _mmi.p->prot = PROT_READ | PROT_WRITE;
-  }
+  // record system-provided stack to memory manager
+  _mmi.i = 1;
+  _mmi.p->x = (uintptr_t)GetStackAddr() >> 16;
+  _mmi.p->y = (uintptr_t)(GetStackAddr() + (GetStackSize() - FRAMESIZE)) >> 16;
+  _mmi.p->size = GetStackSize();
+  _mmi.p->prot = PROT_READ | PROT_WRITE;
 
 #if 0
 #if IsAsan()
