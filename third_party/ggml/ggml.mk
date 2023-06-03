@@ -24,8 +24,15 @@ THIRD_PARTY_GGML_A_HDRS =						\
 	third_party/ggml/ggjt.v1.q5_1.h					\
 	third_party/ggml/ggjt.v1.q8_0.h					\
 	third_party/ggml/ggjt.v1.q8_1.h					\
+	third_party/ggml/ggjt.v2.q4_0.h					\
+	third_party/ggml/ggjt.v2.q4_1.h					\
+	third_party/ggml/ggjt.v2.q5_0.h					\
+	third_party/ggml/ggjt.v2.q5_1.h					\
+	third_party/ggml/ggjt.v2.q8_0.h					\
+	third_party/ggml/ggjt.v2.q8_1.h					\
 	third_party/ggml/fp16.internal.h				\
-	third_party/ggml/ggjt.v1.internal.h
+	third_party/ggml/ggjt.v1.internal.h				\
+	third_party/ggml/ggjt.v2.internal.h
 
 THIRD_PARTY_GGML_A_SRCS =						\
 	third_party/ggml/fp16.c						\
@@ -37,11 +44,19 @@ THIRD_PARTY_GGML_A_SRCS =						\
 	third_party/ggml/ggjt.v1.q5_0.c					\
 	third_party/ggml/ggjt.v1.q5_1.c					\
 	third_party/ggml/ggjt.v1.q8_0.c					\
-	third_party/ggml/ggjt.v1.q8_1.c
+	third_party/ggml/ggjt.v1.q8_1.c					\
+	third_party/ggml/ggjt.v2.c					\
+	third_party/ggml/ggjt.v2.q4_0.c					\
+	third_party/ggml/ggjt.v2.q4_1.c					\
+	third_party/ggml/ggjt.v2.q5_0.c					\
+	third_party/ggml/ggjt.v2.q5_1.c					\
+	third_party/ggml/ggjt.v2.q8_0.c					\
+	third_party/ggml/ggjt.v2.q8_1.c
 
 THIRD_PARTY_GGML_A_DIRECTDEPS =						\
 	LIBC_CALLS							\
 	LIBC_INTRIN							\
+	LIBC_FMT							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_RUNTIME							\

@@ -34,6 +34,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
+#include "third_party/ggml/llama.h"
 #include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/algorithm"
 #include "third_party/libcxx/cassert"
@@ -258,6 +259,17 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
             params.use_color = true;
         } else if (arg == "--mlock") {
             params.use_mlock = true;
+        } else if (arg == "--gpu-layers" || arg == "-ngl" || arg == "--n-gpu-layers") {
+            if (++i >= argc) {
+                invalid_param = true;
+                break;
+            }
+#ifdef LLAMA_SUPPORTS_GPU_OFFLOAD
+            params.n_gpu_layers = std::stoi(argv[i]);
+#else
+            fprintf(stderr, "warning: not compiled with GPU offload support, --n-gpu-layers option will be ignored\n");
+            fprintf(stderr, "warning: see main README.md for information on enabling GPU BLAS support\n");
+#endif
         } else if (arg == "--no-mmap") {
             params.use_mmap = false;
         } else if (arg == "--mtest") {
@@ -425,6 +437,10 @@ void gpt_print_usage(FILE *f, int /*argc*/, char ** argv, const gpt_params & par
     if (llama_mmap_supported()) {
         fprintf(f, "  --no-mmap             do not memory-map model (slower load but may reduce pageouts if not using mlock)\n");
     }
+#ifdef LLAMA_SUPPORTS_GPU_OFFLOAD
+    fprintf(stderr, "  -ngl N, --n-gpu-layers N\n");
+    fprintf(stderr, "                        number of layers to store in VRAM\n");
+#endif
     fprintf(f, "  --mtest               compute maximum memory usage\n");
     fprintf(f, "  --verbose-prompt      print prompt before generation\n");
     fprintf(f, "  --lora FNAME          apply LoRA adapter (implies --no-mmap)\n");

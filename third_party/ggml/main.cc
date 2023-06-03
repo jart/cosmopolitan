@@ -210,17 +210,11 @@ static int on_missing_feature(const char *name) {
     return 1;
 }
 
-void MakeProcessNice(void) {
-    setpriority(PRIO_PROCESS, 0, 10);
-    ioprio_set(IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
-    struct sched_param param = {sched_get_priority_min(SCHED_IDLE)};
-    sched_setscheduler(0, SCHED_IDLE, &param);
-}
-
 int main(int argc, char ** argv) {
 
     MakeProcessNice();
     ShowCrashReports();
+
     setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -232,9 +226,7 @@ int main(int argc, char ** argv) {
     if (!X86_HAVE(AVX)) return on_missing_feature("avx");
     if (!X86_HAVE(FMA)) return on_missing_feature("fma");
     if (!X86_HAVE(SSE3)) return on_missing_feature("sse3");
-    if (!X86_HAVE(F16C)) {
-        fprintf(stderr, "%s: warning: cpuid f16c not detected; inference might crash\n", __func__);
-    }
+    if (!X86_HAVE(F16C)) return on_missing_feature("f16c");
 #endif /* __x86_64__ */
 
     if (gpt_params_parse(argc, argv, params) == false) {

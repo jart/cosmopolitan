@@ -55,9 +55,10 @@ static const std::map<std::string, llama_ftype> LLAMA_FTYPE_MAP = {
 //  ./quantize models/llama/ggml-model.bin models/llama/ggml-model-quant.bin type [nthreads]
 //
 int main(int argc, char ** argv) {
+    MakeProcessNice();
     ShowCrashReports();
 
-    ggjt_v2();
+    ggjt_v3();
     ggml_time_init();
 
     if (argc < 3) {
@@ -69,11 +70,7 @@ int main(int argc, char ** argv) {
     }
 
     // needed to initialize f16 tables
-    {
-        struct ggml_init_params params = { 0, NULL, false };
-        struct ggml_context * ctx = ggml_init(params);
-        ggml_free(ctx);
-    }
+    llama_init_backend();
 
     const std::string fname_inp = argv[1];
     const std::string fname_out = argv[2];
@@ -95,7 +92,7 @@ int main(int argc, char ** argv) {
         ftype = (enum llama_ftype)atoi(argv[3]);
     }
 
-    int nthread = argc > 4 ? atoi(argv[4]) : 0;
+    int nthread = argc > 4 ? atoi(argv[4]) : std::min(20, std::max(1, _getcpucount() >> 1));
 
     const int64_t t_main_start_us = ggml_time_us();
 

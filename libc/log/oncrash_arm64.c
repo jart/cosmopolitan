@@ -230,7 +230,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       // simply examining the program counter.
       pc = ctx->uc_mcontext.pc;
       Append(b, " %016lx sp %lx pc", ctx->uc_mcontext.sp, pc);
-      if (pc && (symbol = __get_symbol(st, pc))) {
+      if (pc && st && (symbol = __get_symbol(st, pc))) {
         addend = pc - st->addr_base;
         addend -= st->symbols[symbol].x;
         Append(b, " ");
@@ -251,7 +251,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       fp = (struct StackFrame *)ctx->uc_mcontext.regs[29];
       if (IsCode((pc = ctx->uc_mcontext.regs[30]))) {
         Append(b, " %016lx sp %lx lr", ctx->uc_mcontext.sp, pc);
-        if (pc && (symbol = __get_symbol(st, pc))) {
+        if (pc && st && (symbol = __get_symbol(st, pc))) {
           addend = pc - st->addr_base;
           addend -= st->symbols[symbol].x;
           Append(b, " ");
@@ -282,7 +282,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
           Append(b, " <truncated backtrace>\n");
           break;
         }
-        if ((pc = fp->addr)) {
+        if (st && (pc = fp->addr)) {
           if ((symbol = __get_symbol(st, pc))) {
             addend = pc - st->addr_base;
             addend -= st->symbols[symbol].x;
@@ -294,7 +294,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
           addend = 0;
         }
         Append(b, " %016lx fp %lx lr ", fp, pc);
-        if (!AppendFileLine(b, addr2line, debugbin, pc)) {
+        if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
           Append(b, "%s", __get_symbol_name(st, symbol));
           if (addend) Append(b, "%+d", addend);
         }

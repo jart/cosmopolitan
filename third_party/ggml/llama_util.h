@@ -387,7 +387,7 @@ struct llama_buffer {
 
     void resize(size_t size) {
         free(addr);
-        addr = (uint8_t *)memalign(32, size);
+        addr = (uint8_t *)memalign(32, size); // [jart] always avx align
         this->size = size;
     }
 

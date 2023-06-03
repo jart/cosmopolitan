@@ -9,13 +9,11 @@ LICENSE
 ORIGIN
 
   https://github.com/ggerganov/llama.cpp
-  commit 0b2da20538d01926b77ea237dd1c930c4d20b686
-  Author: Stephan Walter <stephan@walter.name>
-  Date:   Wed Apr 26 20:26:42 2023 +0000
-  ggml : slightly faster AVX2 implementation for Q5 (#1197)
+  d8bd0013e8768aaa3dc9cfc1ff01499419d5348e
 
 LOCAL CHANGES
 
+  - Maintaining support for deprecated file formats
   - Make it possible for loaded prompts to be cached to disk
   - Introduce -v and --verbose flags
   - Reduce batch size from 512 to 32
@@ -25,7 +23,6 @@ LOCAL CHANGES
   - Change --reverse-prompt to no longer imply --interactive
   - Permit --reverse-prompt specifying custom EOS if non-interactive
   - Refactor headers per cosmo convention
-  - Replace code like 'ggjt' with READ32BE("ggjt")
   - Remove C++ exceptions; use Die() function instead
   - Removed division from matrix multiplication.
   - Let quantizer convert between ggmt formats
