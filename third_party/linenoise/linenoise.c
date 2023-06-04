@@ -126,6 +126,7 @@
 │ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.         │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/linenoise/linenoise.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
@@ -169,7 +170,6 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 #include "net/http/escape.h"
-#include "third_party/linenoise/linenoise.h"
 #include "tool/build/lib/case.h"
 
 asm(".ident\t\"\\n\\n\
@@ -290,11 +290,11 @@ static const char *const kUnsupported[] = {"dumb", "cons25", "emacs"};
 static int gotint;
 static int gotcont;
 static int gotwinch;
-static char rawmode = -1;
 static char maskmode;
 static char ispaused;
 static char iscapital;
 static int historylen;
+static signed char rawmode = -1;
 static struct linenoiseRing ring;
 static struct sigaction orig_int;
 static struct sigaction orig_quit;
@@ -2175,11 +2175,11 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
                     default:
                       break;
                   }
-                } else if (rc == 6 && seq[2] == '1' &&
-                           seq[3] == ';' && seq[4] == '5') {
+                } else if (rc == 6 && seq[2] == '1' && seq[3] == ';' &&
+                           seq[4] == '5') {
                   switch (seq[5]) {
-                    CASE('C', linenoiseEditRightWord(l)); // \e[1;5C ctrl-right
-                    CASE('D', linenoiseEditLeftWord(l));  // \e[1;5D ctrl-left
+                    CASE('C', linenoiseEditRightWord(l));  // \e[1;5C ctrl-right
+                    CASE('D', linenoiseEditLeftWord(l));   // \e[1;5D ctrl-left
                     default:
                       break;
                   }

@@ -7490,6 +7490,9 @@ void RedBean(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+#if !IsTiny() && !defined(__x86_64__)
+  ShowCrashReports();
+#endif
   LoadZipArgs(&argc, &argv);
   RedBean(argc, argv);
 
