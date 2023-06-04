@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sysv/consts/clone.h"
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
@@ -36,6 +38,7 @@
 #include "libc/runtime/clone.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
@@ -50,8 +53,6 @@
 #include "libc/thread/tls2.h"
 #include "libc/thread/xnu.internal.h"
 
-#ifdef __x86_64__
-
 #define __NR_thr_new                      455
 #define __NR_clone_linux                  56
 #define __NR__lwp_create                  309
@@ -61,10 +62,6 @@
 #define PTHREAD_START_CUSTOM_XNU          0x01000000
 #define LWP_DETACHED                      0x00000040
 #define LWP_SUSPENDED                     0x00000080
-
-__msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
-__msabi extern typeof(ExitThread) *const __imp_ExitThread;
-__msabi extern typeof(WakeByAddressAll) *const __imp_WakeByAddressAll;
 
 struct CloneArgs {
   union {
@@ -80,8 +77,14 @@ struct CloneArgs {
   void *arg;
 };
 
+#ifdef __x86_64__
+
 ////////////////////////////////////////////////////////////////////////////////
 // THE NEW TECHNOLOGY
+
+__msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
+__msabi extern typeof(ExitThread) *const __imp_ExitThread;
+__msabi extern typeof(WakeByAddressAll) *const __imp_WakeByAddressAll;
 
 int WinThreadLaunch(void *arg,                 // rdi
                     int tid,                   // rsi
@@ -143,12 +146,12 @@ static textwindows errno_t CloneWindows(int (*func)(void *, int), char *stk,
 ////////////////////////////////////////////////////////////////////////////////
 // XNU'S NOT UNIX
 
-void XnuThreadThunk(void *pthread,          // rdi
-                    int machport,           // rsi
-                    void *(*func)(void *),  // rdx
-                    void *arg,              // rcx
-                    intptr_t *stack,        // r8
-                    unsigned xnuflags);     // r9
+void XnuThreadThunk(void *pthread,          // rdi x0
+                    int machport,           // rsi x1
+                    void *(*func)(void *),  // rdx x2
+                    void *arg,              // rcx x3
+                    intptr_t *stack,        // r8  x4
+                    unsigned xnuflags);     // r9  x5
 asm("XnuThreadThunk:\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%r8,%rsp\n\t"
@@ -189,8 +192,7 @@ XnuThreadMain(void *pthread,                    // rdi
   //                                %r10 = uint32_t sem);
   asm volatile("movl\t$0,%0\n\t"         // *wt->ztid = 0
                "xor\t%%r10d,%%r10d\n\t"  // sem = 0
-               "syscall\n\t"             // __bsdthread_terminate()
-               "ud2"
+               "syscall"                 // __bsdthread_terminate()
                : "=m"(*wt->ztid)
                : "a"(0x2000000 | 361), "D"(0), "S"(0), "d"(0L)
                : "rcx", "r10", "r11", "memory");
@@ -430,6 +432,52 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
 
 #endif /* __x86_64__ */
 
+#ifdef __aarch64__
+
+////////////////////////////////////////////////////////////////////////////////
+// APPLE SILICON
+
+static void *SiliconThreadMain(void *arg) {
+  register struct CloneArgs *wt asm("x21") = arg;
+  asm volatile("ldr\tx28,%0" : /* no outputs */ : "m"(wt->tls));
+  int tid = sys_gettid();
+  *wt->ctid = tid;
+  *wt->ptid = tid;
+  register long x0 asm("x0") = (long)wt->arg;
+  register long x1 asm("x1") = (long)tid;
+  asm volatile("mov\tx19,x29\n\t"  // save frame pointer
+               "mov\tx20,sp\n\t"   // save stack pointer
+               "mov\tx29,#0\n\t"   // reset backtrace
+               "mov\tsp,x21\n\t"   // switch stack
+               "blr\t%2\n\t"       // wt->func(wt->arg, tid)
+               "mov\tx29,x19\n\t"  // restore frame pointer
+               "mov\tsp,x20"       // restore stack pointer
+               : "+r"(x0)
+               : "r"(x1), "r"(wt->func)
+               : "x19", "x20", "memory");
+  *wt->ztid = 0;
+  return 0;
+}
+
+static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
+                            int flags, void *arg, void *tls, int *ptid,
+                            int *ctid) {
+  pthread_t th;
+  struct CloneArgs *wt;
+  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
+                             sizeof(struct CloneArgs)) &
+                            -MAX(16, alignof(struct CloneArgs)));
+  wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
+  wt->ptid = flags & CLONE_PARENT_SETTID ? ptid : &wt->tid;
+  wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
+  wt->tls = flags & CLONE_SETTLS ? tls : 0;
+  wt->func = fn;
+  wt->arg = arg;
+  return __syslib->pthread_create(&th, 0, SiliconThreadMain, wt);
+}
+
+#endif /* __aarch64__ */
+
 ////////////////////////////////////////////////////////////////////////////////
 // GNU/SYSTEMD
 
@@ -605,9 +653,15 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
                   CLONE_SIGHAND | CLONE_SYSVSEM)) {
     STRACE("cosmo clone() is picky about flags, see clone.c");
     rc = EINVAL;
-#ifdef __x86_64__
   } else if (IsXnu()) {
+#ifdef __x86_64__
     rc = CloneXnu(func, stk, stksz, flags, arg, tls, ptid, ctid);
+#elif defined(__aarch64__)
+    rc = CloneSilicon(func, stk, stksz, flags, arg, tls, ptid, ctid);
+#else
+#error "unsupported architecture"
+#endif
+#ifdef __x86_64__
   } else if (IsFreebsd()) {
     rc = CloneFreebsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsNetbsd()) {

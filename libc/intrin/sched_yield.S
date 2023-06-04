@@ -89,7 +89,13 @@ sched_yield:
 	ret
 
 #elif defined(__aarch64__)
-	mov	x8,#0x7c
+
+	mov	x0,#0
+	mov	x1,#0
+	mov	x2,#0
+	mov	x3,#0
+	mov	x8,#0x7c			// sched_yield() for linux
+	mov	x16,#0x85d			// select(0,0,0,0) for xnu
 	svc	0
 	ret
 

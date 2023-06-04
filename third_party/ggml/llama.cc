@@ -1128,8 +1128,10 @@ static void llama_model_load_internal(
         const size_t mem_required_state =
             scale*MEM_REQ_KV_SELF().at(model.type);
 
+    if (verbose > 0) {
         fprintf(stderr, "%s: mem required  = %7.2f MB (+ %7.2f MB per state)\n", __func__,
                 mem_required / 1024.0 / 1024.0, mem_required_state / 1024.0 / 1024.0);
+    }
 
 #ifdef GGML_USE_CUBLAS
         const int n_gpu = std::min(n_gpu_layers, int(hparams.n_layer));
