@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/posix_spawn.internal.h"
@@ -85,6 +86,7 @@ int posix_spawn(int *pid, const char *path,
       posix_spawnattr_getflags(attrp, &flags);
       if (flags & POSIX_SPAWN_SETPGROUP) {
         if (setpgid(0, (*attrp)->pgroup)) {
+          STRACE("posix_spawn fail #%d", 1);
           _Exit(127);
         }
       }
@@ -94,12 +96,14 @@ int posix_spawn(int *pid, const char *path,
       }
       if ((flags & POSIX_SPAWN_RESETIDS) &&
           (setgid(getgid()) || setuid(getuid()))) {
+        STRACE("posix_spawn fail #%d", 2);
         _Exit(127);
       }
       if (flags & POSIX_SPAWN_SETSIGDEF) {
         for (s = 1; s < 32; s++) {
           if (sigismember(&(*attrp)->sigdefault, s)) {
             if (sigaction(s, &dfl, 0) == -1) {
+              STRACE("posix_spawn fail #%d", 3);
               _Exit(127);
             }
           }
@@ -108,6 +112,7 @@ int posix_spawn(int *pid, const char *path,
     }
     if (file_actions) {
       if (RunFileActions(*file_actions) == -1) {
+        STRACE("posix_spawn fail #%d", 4);
         _Exit(127);
       }
     }
@@ -116,18 +121,21 @@ int posix_spawn(int *pid, const char *path,
         posix_spawnattr_getschedpolicy(attrp, &policy);
         posix_spawnattr_getschedparam(attrp, &param);
         if (sched_setscheduler(0, policy, &param) == -1) {
+          STRACE("posix_spawn fail #%d", 5);
           _Exit(127);
         }
       }
       if (flags & POSIX_SPAWN_SETSCHEDPARAM) {
         posix_spawnattr_getschedparam(attrp, &param);
         if (sched_setparam(0, &param) == -1) {
+          STRACE("posix_spawn fail #%d", 6);
           _Exit(127);
         }
       }
     }
     if (!envp) envp = environ;
     execve(path, argv, envp);
+    STRACE("posix_spawn fail #%d", 7);
     _Exit(127);
   } else if (child != -1) {
     if (pid) *pid = child;

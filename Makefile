@@ -423,6 +423,7 @@ toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/cosmopolitan.a			\
 		o/$(MODE)/third_party/libcxx/libcxx.a
 
+aarch64: private .INTERNET = true
 aarch64: private .UNSANDBOXED = true
 aarch64:
 	$(MAKE) m=aarch64

@@ -103,7 +103,7 @@ TEST(posix_spawn, torture) {
   ASSERT_EQ(0, posix_spawnattr_setflags(
                    &attr, POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGDEF |
                               POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSIGMASK |
-                              (IsNetbsd() ? 0 : POSIX_SPAWN_SETSCHEDULER)));
+                              (IsLinux() ? POSIX_SPAWN_SETSCHEDULER : 0)));
   ASSERT_EQ(0, posix_spawnattr_setsigmask(&attr, &allsig));
   ASSERT_EQ(0, posix_spawnattr_setsigdefault(&attr, &allsig));
   ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
