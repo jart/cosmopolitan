@@ -35,7 +35,7 @@ struct Tty _vga_tty;
 
 void _vga_reinit(struct Tty *tty, unsigned short starty, unsigned short startx,
                  unsigned init_flags) {
-  struct mman *mm = (struct mman *)(BANE + 0x0500);
+  struct mman *mm = __get_mm();
   unsigned char vid_type = mm->pc_video_type;
   unsigned short height = mm->pc_video_height, width = mm->pc_video_width,
                  stride = mm->pc_video_stride;
@@ -66,7 +66,7 @@ void _vga_reinit(struct Tty *tty, unsigned short starty, unsigned short startx,
 
 textstartup void _vga_init(void) {
   if (IsMetal()) {
-    struct mman *mm = (struct mman *)(BANE + 0x0500);
+    struct mman *mm = __get_mm();
     unsigned short starty = mm->pc_video_curs_info.y,
                    startx = mm->pc_video_curs_info.x;
     _vga_reinit(&_vga_tty, starty, startx, 0);
