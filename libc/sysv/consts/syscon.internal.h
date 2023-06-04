@@ -21,10 +21,7 @@
 // clang-format off
 
 #ifdef __x86_64__
-#define ENCODE .uleb128
 .yoink	_init_systemfive
-#else
-#define ENCODE .balign 8 ; .quad
 #endif
 
 .macro	.syscon	group:req name:req linux:req linux_aarch64:req xnu:req xnu_aarch64:req freebsd:req openbsd:req netbsd:req windows:req
@@ -38,9 +35,9 @@
 #if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.2.\group\().\name,"a",@progbits
 #ifdef __aarch64__
-	ENCODE	\linux_aarch64
+	.uleb128	\linux_aarch64
 #else
-	ENCODE	\linux
+	.uleb128	\linux
 #endif
 	.previous
 #endif
@@ -48,34 +45,34 @@
 #if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.2.\group\().\name,"a",@progbits
 #ifdef __aarch64__
-	ENCODE	\xnu_aarch64
+	.uleb128	\xnu_aarch64
 #else
-	ENCODE	\xnu
+	.uleb128	\xnu
 #endif
 	.previous
 #endif
 
 #if SupportsFreebsd()
 	.section .sort.rodata.syscon.freebsd.2.\group\().\name,"a",@progbits
-	ENCODE	\freebsd
+	.uleb128	\freebsd
 	.previous
 #endif
 
 #if SupportsOpenbsd()
 	.section .sort.rodata.syscon.openbsd.2.\group\().\name,"a",@progbits
-	ENCODE	\openbsd
+	.uleb128	\openbsd
 	.previous
 #endif
 
 #if SupportsNetbsd()
 	.section .sort.rodata.syscon.netbsd.2.\group\().\name,"a",@progbits
-	ENCODE	\netbsd
+	.uleb128	\netbsd
 	.previous
 #endif
 
 #if SupportsWindows()
 	.section .sort.rodata.syscon.windows.2.\group\().\name,"a",@progbits
-	ENCODE	\windows
+	.uleb128	\windows
 	.previous
 #endif
 

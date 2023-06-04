@@ -18,13 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
 int fds[2];
 _Thread_local sig_atomic_t gotsig;
+
+void SetUp(void) {
+  if (IsXnuSilicon()) {
+    fprintf(stderr, "TODO(jart): Get pthread_kill() working on XNU silicon\n");
+    exit(0);
+  }
+}
 
 void OnSig(int sig) {
   gotsig = 1;

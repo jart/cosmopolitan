@@ -82,8 +82,10 @@ endif
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
 VM = o/third_party/qemu/qemu-aarch64
+HOSTS ?= pi silicon
 else
 ARCH = x86_64
+HOSTS ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10
 endif
 
 ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")

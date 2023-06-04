@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/state.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kmalloc.h"
@@ -58,13 +59,15 @@ static void _pthread_onfork(int i) {
 void _pthread_onfork_prepare(void) {
   _pthread_onfork(0);
   pthread_spin_lock(&_pthread_lock);
-  __kmalloc_lock();
+  __fds_lock();
   __mmi_lock();
+  __kmalloc_lock();
 }
 
 void _pthread_onfork_parent(void) {
-  __mmi_unlock();
   __kmalloc_unlock();
+  __mmi_unlock();
+  __fds_unlock();
   pthread_spin_unlock(&_pthread_lock);
   _pthread_onfork(1);
 }
@@ -82,11 +85,12 @@ void _pthread_onfork_child(void) {
   atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
 
   // wipe core runtime locks
+  __kmalloc_unlock();
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);
+  pthread_mutex_init(&__fds_lock_obj, &attr);
   pthread_spin_init(&_pthread_lock, 0);
-  __kmalloc_unlock();
 
   // call user-supplied forked child callbacks
   _pthread_onfork(2);

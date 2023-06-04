@@ -49,8 +49,6 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
-  pthread_atfork(_weaken(__fds_lock), _weaken(__fds_unlock),
-                 _weaken(__fds_funlock));
   fds = VEIL("r", &g_fds);
   fds->n = 4;
   atomic_store_explicit(&fds->f, 3, memory_order_relaxed);

@@ -313,7 +313,7 @@ static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
   sp &= -alignof(struct __tfork);
   tf = (struct __tfork *)sp;
   sp -= sizeof(struct CloneArgs);
-  sp &= -MAX(16, alignof(struct CloneArgs));
+  sp &= -alignof(struct CloneArgs);
   wt = (struct CloneArgs *)sp;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
@@ -442,10 +442,10 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
 
 static void *SiliconThreadMain(void *arg) {
   register struct CloneArgs *wt asm("x21") = arg;
-  asm volatile("ldr\tx28,%0" : /* no outputs */ : "m"(wt->tls));
   *wt->ctid = wt->this;
-  register long x0 asm("x0") = (long)wt->arg;
-  register long x1 asm("x1") = (long)wt->tid;
+  register void *x0 asm("x0") = wt->arg;
+  register int x1 asm("w1") = wt->this;
+  register void *x28 asm("x28") = wt->tls;
   asm volatile("mov\tx19,x29\n\t"  // save frame pointer
                "mov\tx20,sp\n\t"   // save stack pointer
                "mov\tx29,#0\n\t"   // reset backtrace
@@ -454,7 +454,7 @@ static void *SiliconThreadMain(void *arg) {
                "mov\tx29,x19\n\t"  // restore frame pointer
                "mov\tsp,x20"       // restore stack pointer
                : "+r"(x0)
-               : "r"(x1), "r"(wt->func), "r"(wt)
+               : "r"(x1), "r"(wt->func), "r"(wt), "r"(x28)
                : "x19", "x20", "memory");
   *wt->ztid = 0;
   return 0;

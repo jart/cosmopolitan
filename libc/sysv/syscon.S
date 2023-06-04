@@ -19,12 +19,6 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 
-#ifdef __x86_64__
-#define ROALIGN 1
-#else
-#define ROALIGN 8
-#endif
-
 //	Sections for varint encoded magic numbers.
 //
 //	These sections are all ordered by (group_name, constant_name).
@@ -46,7 +40,6 @@ syscon_end:
 	.globl	syscon_end
 #if SupportsLinux() || SupportsMetal()
 	.section .sort.rodata.syscon.linux.1,"a",@progbits
-	.balign	ROALIGN
 syscon_linux:/*
 	...decentralized leb128...
 	*/.previous
@@ -55,7 +48,6 @@ syscon_linux:/*
 #endif
 #if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.1,"a",@progbits
-	.balign	ROALIGN
 syscon_xnu:/*
 	...decentralized leb128...
 	*/.previous
@@ -64,7 +56,6 @@ syscon_xnu:/*
 #endif
 #if SupportsFreebsd()
 	.section .sort.rodata.syscon.freebsd.1,"a",@progbits
-	.balign	ROALIGN
 syscon_freebsd:/*
 	...decentralized leb128...
 	*/.previous
@@ -73,7 +64,6 @@ syscon_freebsd:/*
 #endif
 #if SupportsOpenbsd()
 	.section .sort.rodata.syscon.openbsd.1,"a",@progbits
-	.balign	ROALIGN
 syscon_openbsd:/*
 	...decentralized leb128...
 	*/.previous
@@ -82,7 +72,6 @@ syscon_openbsd:/*
 #endif
 #if SupportsNetbsd()
 	.section .sort.rodata.syscon.netbsd.1,"a",@progbits
-	.balign	ROALIGN
 syscon_netbsd:/*
 	...decentralized leb128...
 	*/.previous
@@ -91,7 +80,6 @@ syscon_netbsd:/*
 #endif
 #if SupportsWindows()
 	.section .sort.rodata.syscon.windows.1,"a",@progbits
-	.balign	ROALIGN
 syscon_windows:/*
 	...decentralized leb128...
 	*/.previous

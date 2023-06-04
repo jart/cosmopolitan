@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -44,12 +45,12 @@ typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
 
 extern long syscon_start[];
 extern long syscon_end[];
-extern long syscon_linux[];
-extern long syscon_xnu[];
-extern long syscon_freebsd[];
-extern long syscon_openbsd[];
-extern long syscon_netbsd[];
-extern long syscon_windows[];
+extern char syscon_linux[];
+extern char syscon_xnu[];
+extern char syscon_freebsd[];
+extern char syscon_openbsd[];
+extern char syscon_netbsd[];
+extern char syscon_windows[];
 extern init_f __strace_init;
 extern init_f *__preinit_array_start[] __attribute__((__weak__));
 extern init_f *__preinit_array_end[] __attribute__((__weak__));
@@ -61,13 +62,24 @@ extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
 
+static const char *DecodeMagnum(const char *p, long *r) {
+  int k = 0;
+  unsigned long c, x = 0;
+  do {
+    c = *p++;
+    x |= (c & 127) << k;
+    k += 7;
+  } while (c & 128);
+  return *r = x, p;
+}
+
 textstartup void cosmo(long *sp, struct Syslib *m1) {
   int argc;
+  long *mp;
   init_f **fp;
   uintptr_t *pp;
-  long *mp, *magnums;
-  char **argv, **envp;
   unsigned long *auxv;
+  char **argv, **envp, *magnums;
 
   // get startup timestamp as early as possible
   // its used by --strace and also kprintf() %T
@@ -93,7 +105,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
 
   // setup system magic numbers
   for (mp = syscon_start; mp < syscon_end; ++mp) {
-    *mp = *magnums++;
+    magnums = DecodeMagnum(magnums, mp);
   }
 
   // check system call abi compatibility
@@ -131,6 +143,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
 #endif
 #endif
 
+  // initialize file system
   InitializeFileDescriptors();
 
   // set helpful globals

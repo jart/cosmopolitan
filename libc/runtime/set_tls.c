@@ -61,9 +61,7 @@ textstartup void __set_tls(struct CosmoTib *tib) {
                    "d"((uint32_t)(val >> 32)));
   }
 #else
-  asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(tib));
-  if (!IsXnu()) {
-    asm volatile("msr\ttpidr_el0,%0" : /* no outputs */ : "r"(tib));
-  }
+  register long x28 asm("x28") = (long)tib;
+  asm volatile("" : "+r"(x28));
 #endif
 }

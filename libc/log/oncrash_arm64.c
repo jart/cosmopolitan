@@ -19,6 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/aarch64.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
@@ -44,6 +45,7 @@ STATIC_YOINK("strerror_wr");  // for kprintf %m
 STATIC_YOINK("strsignal_r");  // for kprintf %G
 
 #define RESET   "\e[0m"
+#define BOLD    "\e[1m"
 #define STRONG  "\e[30;101m"
 #define RED     "\e[31;1m"
 #define GREEN   "\e[32;1m"
@@ -203,6 +205,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       const char *addr2line;
       struct StackFrame *fp;
       struct SymbolTable *st;
+      struct fpsimd_context *vc;
       st = GetSymbolTable();
       debugbin = FindDebugBinary();
       addr2line = GetAddr2linePath();
@@ -217,11 +220,28 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
         for (j = 0; j < 4; ++j) {
           int r = 8 * j + i;
           if (j) Append(b, " ");
-          Append(b, "%s%016lx%s %d%s", ColorRegister(r),
+          Append(b, "%s%016lx%s x%d%s", ColorRegister(r),
                  ctx->uc_mcontext.regs[r], reset, r,
                  r == 8 || r == 9 ? " " : "");
         }
         Append(b, "\n");
+      }
+
+      // PRINT VECTORS
+      vc = (struct fpsimd_context *)ctx->uc_mcontext.__reserved;
+      if (vc->head.magic == FPSIMD_MAGIC) {
+        int n = 16;
+        while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2]) n -= 2;
+        for (i = 0; i * 2 < n; ++i) {
+          Append(b, " ");
+          for (j = 0; j < 2; ++j) {
+            int r = j + 2 * i;
+            if (j) Append(b, " ");
+            Append(b, "%016lx ..%s %016lx v%d%s", (long)(vc->vregs[r] >> 64),
+                   !j ? "" : ".", (long)vc->vregs[r], r, r < 10 ? " " : "");
+          }
+          Append(b, "\n");
+        }
       }
 
       // PRINT CURRENT LOCATION

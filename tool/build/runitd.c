@@ -432,11 +432,20 @@ void HandleClient(void) {
     sigaction(SIGQUIT, &(struct sigaction){0}, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     int i = 0;
-    char *args[4] = {0};
+    const char *exe;
+    char *args[8] = {0};
+    if (!IsXnuSilicon()) {
+      exe = g_exepath;
+    } else {
+      exe = "ape-m1.com";
+      args[i++] = exe;
+      args[i++] = "-";
+      args[i++] = g_exepath;
+    }
     args[i++] = g_exepath;
     if (use_strace) args[i++] = "--strace";
     if (use_ftrace) args[i++] = "--ftrace";
-    execv(g_exepath, args);
+    execvp(exe, args);
     _Exit(127);
   }
   close(pipefds[1]);
