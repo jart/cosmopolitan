@@ -19,7 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/aarch64.h"
+#include "libc/calls/struct/aarch64.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
