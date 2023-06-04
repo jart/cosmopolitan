@@ -110,8 +110,15 @@ clock_gettime_f *__clock_gettime_get(bool *opt_out_isfast) {
   if (IsLinux() && (res = CGT_VDSO)) {
     isfast = true;
   } else if (IsXnu()) {
-    isfast = false;
+#ifdef __x86_64__
     res = sys_clock_gettime_xnu;
+    isfast = false;
+#elif defined(__aarch64__)
+    res = sys_clock_gettime_m1;
+    isfast = true;
+#else
+#error "unsupported architecture"
+#endif
   } else if (IsWindows()) {
     isfast = true;
     res = sys_clock_gettime_nt;

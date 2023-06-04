@@ -56,7 +56,7 @@ int _fork(uint32_t dwCreationFlags) {
     __pid = dx;
     if (__tls_enabled) {
       tib = __get_tls();
-      tid = IsLinux() ? dx : sys_gettid();
+      tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
       atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
       if ((pt = (struct PosixThread *)tib->tib_pthread)) {
         atomic_store_explicit(&pt->ptid, tid, memory_order_relaxed);

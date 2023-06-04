@@ -63,14 +63,15 @@ privileged int sys_gettid(void) {
   }
   return tid;
 #elif defined(__aarch64__)
-  register long res_x0 asm("x0");
+  // this can't be used on xnu
+  if (!IsLinux()) notpossible;
+  register long res asm("x0");
   asm volatile("mov\tx8,%1\n\t"
-               "mov\tx16,%2\n\t"
                "svc\t0"
-               : "=r"(res_x0)
-               : "i"(178), "i"(186)
+               : "=r"(res)
+               : "i"(178)
                : "x8", "memory");
-  return res_x0;
+  return res;
 #else
 #error "arch unsupported"
 #endif

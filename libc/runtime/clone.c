@@ -27,7 +27,6 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -53,6 +52,9 @@
 #include "libc/thread/tls2.h"
 #include "libc/thread/xnu.internal.h"
 
+#define kMaxThreadIds 32768
+#define kMinThreadId  262144
+
 #define __NR_thr_new                      455
 #define __NR_clone_linux                  56
 #define __NR__lwp_create                  309
@@ -64,8 +66,11 @@
 #define LWP_SUSPENDED                     0x00000080
 
 struct CloneArgs {
-  union {
-    int tid;
+  _Alignas(16) union {
+    struct {
+      int tid;
+      int this;
+    };
     uint32_t utid;
     int64_t tid64;
   };
@@ -76,6 +81,12 @@ struct CloneArgs {
   int (*func)(void *, int);
   void *arg;
 };
+
+static struct CloneArgs *AllocateCloneArgs(char *stk, size_t stksz) {
+  return (struct CloneArgs *)(((uintptr_t)(stk + stksz) -
+                               sizeof(struct CloneArgs)) &
+                              -16);
+}
 
 #ifdef __x86_64__
 
@@ -108,7 +119,7 @@ WinThreadEntry(int rdi,                                 // rcx
   int rc;
   if (wt->tls) __set_tls_win32(wt->tls);
   *wt->ctid = wt->tid;
-  rc = WinThreadLaunch(wt->arg, wt->tid, wt->func, (intptr_t)wt & -16);
+  rc = WinThreadLaunch(wt->arg, wt->tid, wt->func, (intptr_t)wt);
   // we can now clear ctid directly since we're no longer using our own
   // stack memory, which can now be safely free'd by the parent thread.
   *wt->ztid = 0;
@@ -124,9 +135,7 @@ static textwindows errno_t CloneWindows(int (*func)(void *, int), char *stk,
                                         void *tls, int *ptid, int *ctid) {
   int64_t h;
   struct CloneArgs *wt;
-  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
-                             sizeof(struct CloneArgs)) &
-                            -alignof(struct CloneArgs));
+  wt = AllocateCloneArgs(stk, stksz);
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->func = func;
@@ -155,7 +164,6 @@ void XnuThreadThunk(void *pthread,          // rdi x0
 asm("XnuThreadThunk:\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%r8,%rsp\n\t"
-    "and\t$-16,%rsp\n\t"
     "push\t%rax\n\t"
     "jmp\tXnuThreadMain\n\t"
     ".size\tXnuThreadThunk,.-XnuThreadThunk");
@@ -209,9 +217,7 @@ static errno_t CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
     _npassert(sys_bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) != -1);
     once = true;
   }
-  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
-                             sizeof(struct CloneArgs)) &
-                            -alignof(struct CloneArgs));
+  wt = AllocateCloneArgs(stk, stksz);
   wt->ptid = flags & CLONE_PARENT_SETTID ? ptid : &wt->tid;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
@@ -248,9 +254,7 @@ static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
   bool failed;
   int64_t tid;
   struct CloneArgs *wt;
-  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
-                             sizeof(struct CloneArgs)) &
-                            -alignof(struct CloneArgs));
+  wt = AllocateCloneArgs(stk, stksz);
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = tls;
@@ -260,7 +264,7 @@ static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
       .start_func = FreebsdThreadMain,
       .arg = wt,
       .stack_base = stk,
-      .stack_size = (((intptr_t)wt - (intptr_t)stk) & -16) - 8,
+      .stack_size = (uintptr_t)wt - (uintptr_t)stk,
       .tls_base = flags & CLONE_SETTLS ? tls : 0,
       .tls_size = 64,
       .child_tid = &wt->tid64,
@@ -346,8 +350,7 @@ static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
   // we no longer use the stack after this point
   // %eax = int __lwp_exit(void);
   asm volatile("movl\t$0,%2\n\t"  // *wt->ztid = 0
-               "syscall\n\t"      // __lwp_exit()
-               "ud2"
+               "syscall"          // __lwp_exit()
                : "=a"(ax), "=d"(dx), "=m"(*ztid)
                : "0"(310)
                : "rcx", "r11", "memory");
@@ -440,20 +443,18 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
 static void *SiliconThreadMain(void *arg) {
   register struct CloneArgs *wt asm("x21") = arg;
   asm volatile("ldr\tx28,%0" : /* no outputs */ : "m"(wt->tls));
-  int tid = sys_gettid();
-  *wt->ctid = tid;
-  *wt->ptid = tid;
+  *wt->ctid = wt->this;
   register long x0 asm("x0") = (long)wt->arg;
-  register long x1 asm("x1") = (long)tid;
+  register long x1 asm("x1") = (long)wt->tid;
   asm volatile("mov\tx19,x29\n\t"  // save frame pointer
                "mov\tx20,sp\n\t"   // save stack pointer
                "mov\tx29,#0\n\t"   // reset backtrace
-               "mov\tsp,x21\n\t"   // switch stack
+               "mov\tsp,%3\n\t"    // switch stack
                "blr\t%2\n\t"       // wt->func(wt->arg, tid)
                "mov\tx29,x19\n\t"  // restore frame pointer
                "mov\tsp,x20"       // restore stack pointer
                : "+r"(x0)
-               : "r"(x1), "r"(wt->func)
+               : "r"(x1), "r"(wt->func), "r"(wt)
                : "x19", "x20", "memory");
   *wt->ztid = 0;
   return 0;
@@ -462,18 +463,24 @@ static void *SiliconThreadMain(void *arg) {
 static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
                             int flags, void *arg, void *tls, int *ptid,
                             int *ctid) {
+  errno_t res;
+  unsigned tid;
   pthread_t th;
   struct CloneArgs *wt;
-  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
-                             sizeof(struct CloneArgs)) &
-                            -MAX(16, alignof(struct CloneArgs)));
+  static atomic_uint tids;
+  wt = AllocateCloneArgs(stk, stksz);
+  tid = atomic_fetch_add_explicit(&tids, 1, memory_order_acq_rel);
+  wt->this = tid = (tid & (kMaxThreadIds - 1)) + kMinThreadId;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
-  wt->ptid = flags & CLONE_PARENT_SETTID ? ptid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
   wt->func = fn;
   wt->arg = arg;
-  return __syslib->pthread_create(&th, 0, SiliconThreadMain, wt);
+  if (!(res = __syslib->pthread_create(&th, 0, SiliconThreadMain, wt)) &&
+      (flags & CLONE_PARENT_SETTID)) {
+    *ptid = tid;
+  }
+  return res;
 }
 
 #endif /* __aarch64__ */

@@ -270,7 +270,7 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
           "\n",
           kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
           ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0, __pid,
-          sys_gettid());
+          __tls_enabled ? __get_tls()->tib_tid : sys_gettid());
   _Exitr(119);
 }
 
@@ -302,7 +302,7 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
   ftrace_enabled(-1);
   strace_enabled(-1);
   owner = 0;
-  me = sys_gettid();
+  me = __tls_enabled ? __get_tls()->tib_tid : sys_gettid();
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
   if (atomic_compare_exchange_strong_explicit(
           &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {

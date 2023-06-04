@@ -27,7 +27,7 @@
 #define ENCODE .balign 8 ; .quad
 #endif
 
-.macro	.syscon	group:req name:req linux:req linux_aarch64:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
+.macro	.syscon	group:req name:req linux:req linux_aarch64:req xnu:req xnu_aarch64:req freebsd:req openbsd:req netbsd:req windows:req
 
 	.section .piro.bss.sort.syscon.2.\group\().\name,"aw",@nobits
 	.balign	8
@@ -47,7 +47,11 @@
 
 #if SupportsXnu()
 	.section .sort.rodata.syscon.xnu.2.\group\().\name,"a",@progbits
+#ifdef __aarch64__
+	ENCODE	\xnu_aarch64
+#else
 	ENCODE	\xnu
+#endif
 	.previous
 #endif
 

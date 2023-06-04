@@ -23,12 +23,11 @@
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
-
-asm(".ident\t\"\\n\\n\
-*NSYNC (Apache 2.0)\\n\
-Copyright 2016 Google, Inc.\\n\
-https://github.com/google/nsync\"");
 // clang-format off
+
+/**
+ * @fileoverview Semaphores w/ Linux Futexes API.
+ */
 
 #define ASSERT(x) _npassert(x)
 

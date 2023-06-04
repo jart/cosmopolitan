@@ -16,86 +16,79 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include <time.h>
-#include <fcntl.h>
+#include <dispatch/dispatch.h>
 #include <errno.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <signal.h>
+#include <fcntl.h>
+#include <libkern/OSCacheControl.h>
 #include <limits.h>
 #include <pthread.h>
-#include <sys/uio.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <sys/mman.h>
-#include <libkern/OSCacheControl.h>
+#include <sys/random.h>
+#include <sys/uio.h>
+#include <time.h>
+#include <unistd.h>
 
-#define SYSLIB_MAGIC ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 0
+#define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
+#define SYSLIB_VERSION 1
 
 struct Syslib {
   int magic;
   int version;
-  void (*exit)(int) __attribute__((__noreturn__));
   long (*fork)(void);
-  long (*read)(int, void *, size_t);
-  long (*pread)(int, void *, size_t, off_t);
-  long (*readv)(int, const struct iovec *, int);
-  long (*write)(int, const void *, size_t);
-  long (*pwrite)(int, const void *, size_t, off_t);
-  long (*writev)(int, const struct iovec *, int);
-  long (*openat)(int, const char *, int, ...);
   long (*pipe)(int[2]);
-  long (*close)(int);
   long (*clock_gettime)(int, struct timespec *);
   long (*nanosleep)(const struct timespec *, struct timespec *);
   long (*mmap)(void *, size_t, int, int, int, off_t);
-  long (*sigaction)(int, const struct sigaction *restrict, struct sigaction *restrict);
   int (*pthread_jit_write_protect_supported_np)(void);
   void (*pthread_jit_write_protect_np)(int);
   void (*sys_icache_invalidate)(void *, size_t);
-  pthread_t (*pthread_self)(void);
-  int (*pthread_create)(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *);
-  int (*pthread_detach)(pthread_t);
-  int (*pthread_join)(pthread_t, void **);
+  int (*pthread_create)(pthread_t *, const pthread_attr_t *, void *(*)(void *),
+                        void *);
   void (*pthread_exit)(void *);
   int (*pthread_kill)(pthread_t, int);
   int (*pthread_sigmask)(int, const sigset_t *restrict, sigset_t *restrict);
   int (*pthread_setname_np)(const char *);
-  int (*pthread_key_create)(pthread_key_t *, void (*)(void *));
-  int (*pthread_setspecific)(pthread_key_t, const void *);
-  void *(*pthread_getspecific)(pthread_key_t);
+  dispatch_semaphore_t (*dispatch_semaphore_create)(long);
+  long (*dispatch_semaphore_signal)(dispatch_semaphore_t);
+  long (*dispatch_semaphore_wait)(dispatch_semaphore_t, dispatch_time_t);
+  dispatch_time_t (*dispatch_walltime)(const struct timespec *, int64_t);
 };
 
 #define TROUBLESHOOT 0
 
-#define ELFCLASS64    2
-#define ELFDATA2LSB   1
-#define EM_AARCH64    183
-#define ET_EXEC       2
-#define PT_LOAD       1
-#define PT_DYNAMIC    2
-#define EI_CLASS      4
-#define EI_DATA       5
-#define PF_X          1
-#define PF_W          2
-#define PF_R          4
-#define AT_PHDR       3
-#define AT_PHENT      4
-#define AT_PHNUM      5
-#define AT_PAGESZ     6
-#define AT_BASE       7
-#define AT_ENTRY      9
-#define AT_UID        11
-#define AT_EUID       12
-#define AT_GID        13
-#define AT_EGID       14
-#define AT_HWCAP      16
-#define AT_HWCAP2     16
-#define AT_SECURE     23
-#define AT_RANDOM     25
-#define AT_EXECFN     31
+#define ELFCLASS64  2
+#define ELFDATA2LSB 1
+#define EM_AARCH64  183
+#define ET_EXEC     2
+#define PT_LOAD     1
+#define PT_DYNAMIC  2
+#define EI_CLASS    4
+#define EI_DATA     5
+#define PF_X        1
+#define PF_W        2
+#define PF_R        4
+#define AT_PHDR     3
+#define AT_PHENT    4
+#define AT_PHNUM    5
+#define AT_PAGESZ   6
+#define AT_BASE     7
+#define AT_ENTRY    9
+#define AT_UID      11
+#define AT_EUID     12
+#define AT_GID      13
+#define AT_EGID     14
+#define AT_HWCAP    16
+#define AT_HWCAP2   16
+#define AT_SECURE   23
+#define AT_RANDOM   25
+#define AT_EXECFN   31
 
+#define STACK_SIZE  (8ul * 1024 * 1024)
 #define STACK_ALIGN (sizeof(long) * 2)
-#define AUXV_BYTES  (sizeof(long) * 2 * 14)
+#define AUXV_BYTES  (sizeof(long) * 2 * 15)
 
 // from the xnu codebase
 #define _COMM_PAGE_START_ADDRESS      0x0000000FFFFFC000ul
@@ -104,14 +97,12 @@ struct Syslib {
 #define _COMM_PAGE_APRR_WRITE_DISABLE (_COMM_PAGE_START_ADDRESS + 0x118)
 
 #define Min(X, Y)       ((Y) > (X) ? (X) : (Y))
-#define Roundup(X, K)   (((X) + (K) - 1) & -(K))
+#define Roundup(X, K)   (((X) + (K)-1) & -(K))
 #define Rounddown(X, K) ((X) & -(K))
 
-#define Read32(S)                    \
-  ((unsigned)(255 & (S)[3]) << 030 | \
-   (unsigned)(255 & (S)[2]) << 020 | \
-   (unsigned)(255 & (S)[1]) << 010 | \
-   (unsigned)(255 & (S)[0]) << 000)
+#define Read32(S)                                                      \
+  ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
+   (unsigned)(255 & (S)[1]) << 010 | (unsigned)(255 & (S)[0]) << 000)
 
 #define Read64(S)                         \
   ((unsigned long)(255 & (S)[7]) << 070 | \
@@ -122,13 +113,6 @@ struct Syslib {
    (unsigned long)(255 & (S)[2]) << 020 | \
    (unsigned long)(255 & (S)[1]) << 010 | \
    (unsigned long)(255 & (S)[0]) << 000)
-
-struct PathSearcher {
-  unsigned long namelen;
-  const char *name;
-  const char *syspath;
-  char path[1024];
-};
 
 struct ElfEhdr {
   unsigned char e_ident[16];
@@ -168,8 +152,42 @@ union ElfPhdrBuf {
   char buf[0x1000];
 };
 
+struct PathSearcher {
+  unsigned long namelen;
+  const char *name;
+  const char *syspath;
+  char path[1024];
+};
+
+struct ApeLoader {
+  union ElfEhdrBuf ehdr;
+  struct PathSearcher ps;
+  // this memory shall be discarded by the guest
+  //////////////////////////////////////////////
+  // this memory shall be known to guest program
+  union {
+    char argblock[ARG_MAX];
+    long numblock[ARG_MAX / sizeof(long)];
+  };
+  union ElfPhdrBuf phdr;
+  struct Syslib lib;
+  char rando[16];
+};
+
 static int ToLower(int c) {
   return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;
+}
+
+static unsigned long StrLen(const char *s) {
+  unsigned long n = 0;
+  while (*s++) ++n;
+  return n;
+}
+
+static int StrCmp(const char *l, const char *r) {
+  unsigned long i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 255) - (r[i] & 255);
 }
 
 static void *MemSet(void *a, int c, unsigned long n) {
@@ -195,12 +213,6 @@ static void *MemMove(void *a, const void *b, unsigned long n) {
     }
   }
   return d;
-}
-
-static unsigned long StrLen(const char *s) {
-  unsigned long n = 0;
-  while (*s++) ++n;
-  return n;
 }
 
 static const char *MemChr(const char *s, unsigned char c, unsigned long n) {
@@ -267,6 +279,7 @@ static void Perror(const char *c, int failed, const char *s) {
   Emit(": ");
   Emit(s);
   if (failed) {
+#include <sys/random.h>
     Emit(" failed errno=");
     Itoa(ibuf, errno);
     Emit(ibuf);
@@ -274,16 +287,10 @@ static void Perror(const char *c, int failed, const char *s) {
   Emit("\n");
 }
 
-__attribute__((__noreturn__))
-static void Pexit(const char *c, int failed, const char *s) {
+__attribute__((__noreturn__)) static void Pexit(const char *c, int failed,
+                                                const char *s) {
   Perror(c, failed, s);
   _exit(127);
-}
-
-static int StrCmp(const char *l, const char *r) {
-  unsigned long i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
-  return (l[i] & 255) - (r[i] & 255);
 }
 
 static char EndsWithIgnoreCase(const char *p, unsigned long n, const char *s) {
@@ -347,8 +354,7 @@ static char FindCommand(struct PathSearcher *ps, const char *suffix) {
   return SearchPath(ps, suffix);
 }
 
-static char *Commandv(struct PathSearcher *ps,
-                      const char *name,
+static char *Commandv(struct PathSearcher *ps, const char *name,
                       const char *syspath) {
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
   if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
@@ -365,9 +371,9 @@ static void pthread_jit_write_protect_np_workaround(int enabled) {
   volatile int count = count_start;
   unsigned long *addr, *other, val, val2, reread = -1;
   addr = (unsigned long *)(!enabled ? _COMM_PAGE_APRR_WRITE_ENABLE
-                           : _COMM_PAGE_APRR_WRITE_DISABLE);
+                                    : _COMM_PAGE_APRR_WRITE_DISABLE);
   other = (unsigned long *)(enabled ? _COMM_PAGE_APRR_WRITE_ENABLE
-                            : _COMM_PAGE_APRR_WRITE_DISABLE);
+                                    : _COMM_PAGE_APRR_WRITE_DISABLE);
   switch (*(volatile unsigned char *)_COMM_PAGE_APRR_SUPPORT) {
     case 1:
       do {
@@ -416,15 +422,14 @@ static void pthread_jit_write_protect_np_workaround(int enabled) {
   Pexit("ape-m1", 0, "failed to set jit write protection");
 }
 
-__attribute__((__noreturn__))
-static void Spawn(const char *exe,
-                  int fd, long *sp,
-                  struct ElfEhdr *e,
-                  struct ElfPhdr *p,
-                  struct Syslib *lib) {
+__attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
+                                                long *sp, struct ElfEhdr *e,
+                                                struct ElfPhdr *p,
+                                                struct Syslib *lib) {
   int prot, flags;
   long code, codesize;
   unsigned long a, b, i;
+
   code = 0;
   codesize = 0;
   for (i = e->e_phnum; i--;) {
@@ -460,8 +465,8 @@ static void Spawn(const char *exe,
       codesize = p[i].p_filesz;
     }
     if (p[i].p_filesz) {
-      if (mmap((char *)p[i].p_vaddr, p[i].p_filesz, prot,
-               flags, fd, p[i].p_offset) == MAP_FAILED) {
+      if (mmap((char *)p[i].p_vaddr, p[i].p_filesz, prot, flags, fd,
+               p[i].p_offset) == MAP_FAILED) {
         Pexit(exe, -1, "image mmap()");
       }
       if ((a = Min(-p[i].p_filesz & 0x3fff, p[i].p_memsz - p[i].p_filesz))) {
@@ -470,8 +475,8 @@ static void Spawn(const char *exe,
     }
     if ((b = Roundup(p[i].p_memsz, 0x4000)) >
         (a = Roundup(p[i].p_filesz, 0x4000))) {
-      if (mmap((char *)p[i].p_vaddr + a, b - a,
-               prot, flags | MAP_ANONYMOUS, -1, 0) == MAP_FAILED) {
+      if (mmap((char *)p[i].p_vaddr + a, b - a, prot, flags | MAP_ANONYMOUS, -1,
+               0) == MAP_FAILED) {
         Pexit(exe, -1, "bss mmap()");
       }
     }
@@ -521,41 +526,41 @@ static void Spawn(const char *exe,
   __builtin_unreachable();
 }
 
-static void TryElf(const char *exe, int fd, long *sp, long *bp, char *execfn,
-                   union ElfEhdrBuf *ehdr, union ElfPhdrBuf *phdr, struct Syslib *lib) {
+static void TryElf(struct ApeLoader *M, const char *exe, int fd, long *sp,
+                   long *bp, char *execfn) {
   unsigned long n;
-  if (Read32(ehdr->buf) == Read32("\177ELF") &&
-      ehdr->ehdr.e_type == ET_EXEC &&
-      ehdr->ehdr.e_machine == EM_AARCH64 &&
-      ehdr->ehdr.e_ident[EI_CLASS] == ELFCLASS64 &&
-      ehdr->ehdr.e_ident[EI_DATA] == ELFDATA2LSB &&
-      (n = ehdr->ehdr.e_phnum * sizeof(phdr->phdr)) <= sizeof(phdr->buf) &&
-      pread(fd, phdr->buf, n, ehdr->ehdr.e_phoff) == n) {
+  if (Read32(M->ehdr.buf) == Read32("\177ELF") &&
+      M->ehdr.ehdr.e_type == ET_EXEC && M->ehdr.ehdr.e_machine == EM_AARCH64 &&
+      M->ehdr.ehdr.e_ident[EI_CLASS] == ELFCLASS64 &&
+      M->ehdr.ehdr.e_ident[EI_DATA] == ELFDATA2LSB &&
+      (n = M->ehdr.ehdr.e_phnum * sizeof(M->phdr.phdr)) <=
+          sizeof(M->phdr.buf) &&
+      pread(fd, M->phdr.buf, n, M->ehdr.ehdr.e_phoff) == n) {
     long auxv[][2] = {
-        {AT_PHDR, (long)&phdr->phdr},       //
-        {AT_PHENT, ehdr->ehdr.e_phentsize}, //
-        {AT_PHNUM, ehdr->ehdr.e_phnum},     //
-        {AT_ENTRY, ehdr->ehdr.e_entry},     //
-        {AT_PAGESZ, 0x4000},                //
-        {AT_UID, getuid()},                 //
-        {AT_EUID, geteuid()},               //
-        {AT_GID, getgid()},                 //
-        {AT_EGID, getegid()},               //
-        {AT_HWCAP, 0xffb3ffffu},            //
-        {AT_HWCAP2, 0x181},                 //
-        {AT_SECURE, issetugid()},           //
-        {AT_EXECFN, (long)execfn},          //
-        {0, 0},                             //
+        {AT_PHDR, (long)&M->phdr.phdr},        //
+        {AT_PHENT, M->ehdr.ehdr.e_phentsize},  //
+        {AT_PHNUM, M->ehdr.ehdr.e_phnum},      //
+        {AT_ENTRY, M->ehdr.ehdr.e_entry},      //
+        {AT_PAGESZ, 0x4000},                   //
+        {AT_UID, getuid()},                    //
+        {AT_EUID, geteuid()},                  //
+        {AT_GID, getgid()},                    //
+        {AT_EGID, getegid()},                  //
+        {AT_HWCAP, 0xffb3ffffu},               //
+        {AT_HWCAP2, 0x181},                    //
+        {AT_SECURE, issetugid()},              //
+        {AT_RANDOM, (long)M->rando},           //
+        {AT_EXECFN, (long)execfn},             //
+        {0, 0},                                //
     };
     _Static_assert(sizeof(auxv) == AUXV_BYTES,
                    "Please update the AUXV_BYTES constant");
     MemMove(bp, auxv, sizeof(auxv));
-    Spawn(exe, fd, sp, &ehdr->ehdr, &phdr->phdr, lib);
+    Spawn(exe, fd, sp, &M->ehdr.ehdr, &M->phdr.phdr, &M->lib);
   }
 }
 
-__attribute__((__noinline__))
-static long sysret(long rc) {
+__attribute__((__noinline__)) static long sysret(long rc) {
   return rc == -1 ? -errno : rc;
 }
 
@@ -563,45 +568,8 @@ static long sys_fork(void) {
   return sysret(fork());
 }
 
-static long sys_read(int fd, void *p, size_t n) {
-  return sysret(read(fd, p, n));
-}
-
-static long sys_pread(int fd, void *p, size_t n, off_t o) {
-  return sysret(pread(fd, p, n, o));
-}
-
-static long sys_readv(int fd, const struct iovec *p, int n) {
-  return sysret(readv(fd, p, n));
-}
-
-static long sys_write(int fd, const void *p, size_t n) {
-  return sysret(write(fd, p, n));
-}
-
-static long sys_pwrite(int fd, const void *p, size_t n, off_t o) {
-  return sysret(pwrite(fd, p, n, o));
-}
-
-static long sys_writev(int fd, const struct iovec *p, int n) {
-  return sysret(writev(fd, p, n));
-}
-
-static long sys_openat(int dirfd, const char *path, int oflag, ...) {
-  va_list va;
-  unsigned mode;
-  va_start(va, oflag);
-  mode = va_arg(va, unsigned);
-  va_end(va);
-  return sysret(openat(dirfd, path, oflag, mode));
-}
-
 static long sys_pipe(int pfds[2]) {
   return sysret(pipe(pfds));
-}
-
-static long sys_close(int fd) {
-  return sysret(close(fd));
 }
 
 static long sys_clock_gettime(int clock, struct timespec *ts) {
@@ -612,69 +580,62 @@ static long sys_nanosleep(const struct timespec *req, struct timespec *rem) {
   return sysret(nanosleep(req, rem));
 }
 
-static long sys_mmap(void *addr, size_t size, int prot, int flags, int fd, off_t off) {
+static long sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
+                     off_t off) {
   return sysret((long)mmap(addr, size, prot, flags, fd, off));
 }
 
-static long sys_sigaction(int sig, const struct sigaction *restrict act,
-                          struct sigaction *restrict oact) {
-  return sysret(sigaction(sig, act, oact));
-}
-
-int loader(int argc, char **argv, char **envp) {
+int main(int argc, char **argv, char **envp) {
+  long z;
+  void *map;
   long *sp, *bp, *ip;
   int c, i, n, fd, rc;
+  struct ApeLoader *M;
+  unsigned char rando[24];
   char *p, *tp, *exe, *prog, *execfn;
 
-  struct {
-    union ElfEhdrBuf ehdr;
-    struct PathSearcher ps;
-    // this memory shall be discarded by the guest
-    //////////////////////////////////////////////
-    // this memory shall be known to guest program
-    union {
-      char argblock[ARG_MAX];
-      long numblock[ARG_MAX / sizeof(long)];
-    };
-    union ElfPhdrBuf phdr;
-    struct Syslib lib;
-  } M;
+  // generate some hard random data
+  if (getentropy(rando, sizeof(rando))) {
+    Pexit(argv[0], -1, "getentropy");
+  }
 
-  // expose some apple libraries
-  M.lib.magic = SYSLIB_MAGIC;
-  M.lib.version = SYSLIB_VERSION;
-  M.lib.exit = _exit;
-  M.lib.fork = sys_fork;
-  M.lib.read = sys_read;
-  M.lib.pread = sys_pread;
-  M.lib.readv = sys_readv;
-  M.lib.write = sys_write;
-  M.lib.pwrite = sys_pwrite;
-  M.lib.writev = sys_writev;
-  M.lib.openat = sys_openat;
-  M.lib.close = sys_close;
-  M.lib.clock_gettime = sys_clock_gettime;
-  M.lib.nanosleep = sys_nanosleep;
-  M.lib.mmap = sys_mmap;
-  M.lib.sigaction = sys_sigaction;
-  M.lib.pthread_jit_write_protect_supported_np =
+  // make the stack look like a linux one
+  map = mmap((void *)(0x7f0000000000 | (long)rando[23] << 32), STACK_SIZE,
+             PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  if (map == MAP_FAILED) {
+    Pexit(argv[0], -1, "stack mmap");
+  }
+
+  // put argument block at top of allocated stack
+  z = (long)map;
+  z += STACK_SIZE - sizeof(struct ApeLoader);
+  z &= -_Alignof(struct ApeLoader);
+  M = (struct ApeLoader *)z;
+
+  // expose screwy apple libs
+  M->lib.magic = SYSLIB_MAGIC;
+  M->lib.version = SYSLIB_VERSION;
+  M->lib.fork = sys_fork;
+  M->lib.pipe = sys_pipe;
+  M->lib.clock_gettime = sys_clock_gettime;
+  M->lib.nanosleep = sys_nanosleep;
+  M->lib.mmap = sys_mmap;
+  M->lib.pthread_jit_write_protect_supported_np =
       pthread_jit_write_protect_supported_np;
-  M.lib.pthread_jit_write_protect_np =
-      pthread_jit_write_protect_np_workaround;
-  M.lib.pthread_self = pthread_self;
-  M.lib.pthread_create = pthread_create;
-  M.lib.pthread_join = pthread_join;
-  M.lib.pthread_exit = pthread_exit;
-  M.lib.pthread_kill = pthread_kill;
-  M.lib.pthread_sigmask = pthread_sigmask;
-  M.lib.pthread_setname_np = pthread_setname_np;
-  M.lib.pthread_key_create = pthread_key_create;
-  M.lib.pthread_getspecific = pthread_getspecific;
-  M.lib.pthread_setspecific = pthread_setspecific;
+  M->lib.pthread_jit_write_protect_np = pthread_jit_write_protect_np_workaround;
+  M->lib.pthread_create = pthread_create;
+  M->lib.pthread_exit = pthread_exit;
+  M->lib.pthread_kill = pthread_kill;
+  M->lib.pthread_sigmask = pthread_sigmask;
+  M->lib.pthread_setname_np = pthread_setname_np;
+  M->lib.dispatch_semaphore_create = dispatch_semaphore_create;
+  M->lib.dispatch_semaphore_signal = dispatch_semaphore_signal;
+  M->lib.dispatch_semaphore_wait = dispatch_semaphore_wait;
+  M->lib.dispatch_walltime = dispatch_walltime;
 
   // copy system provided argument block
-  bp = M.numblock;
-  tp = M.argblock + sizeof(M.argblock);
+  bp = M->numblock;
+  tp = M->argblock + sizeof(M->argblock);
   *bp++ = argc;
   for (i = 0; i < argc; ++i) {
     tp -= (n = StrLen(argv[i]) + 1);
@@ -690,7 +651,7 @@ int loader(int argc, char **argv, char **envp) {
   *bp++ = 0;
 
   // get arguments that point into our block
-  sp = M.numblock;
+  sp = M->numblock;
   argc = *sp;
   argv = (char **)(sp + 1);
   envp = (char **)(sp + 1 + argc + 1);
@@ -734,14 +695,18 @@ int loader(int argc, char **argv, char **envp) {
   bp = ip + n;
   sp = ip;
 
+  // relocate the guest's random numbers
+  MemMove(M->rando, rando, sizeof(M->rando));
+  MemSet(rando, 0, sizeof(rando));
+
   // search for executable
-  if (!(exe = Commandv(&M.ps, prog, GetEnv(envp, "PATH")))) {
+  if (!(exe = Commandv(&M->ps, prog, GetEnv(envp, "PATH")))) {
     Pexit(prog, 0, "not found (maybe chmod +x)");
   } else if ((fd = openat(AT_FDCWD, exe, O_RDONLY)) < 0) {
     Pexit(exe, -1, "open");
-  } else if ((rc = read(fd, M.ehdr.buf, sizeof(M.ehdr.buf))) < 0) {
+  } else if ((rc = read(fd, M->ehdr.buf, sizeof(M->ehdr.buf))) < 0) {
     Pexit(exe, -1, "read");
-  } else if (rc != sizeof(M.ehdr.buf)) {
+  } else if (rc != sizeof(M->ehdr.buf)) {
     Pexit(exe, 0, "too small");
   }
 
@@ -759,13 +724,14 @@ int loader(int argc, char **argv, char **envp) {
   // 3. shell script may have multiple lines producing elf headers
   // 4. all elf printf lines must exist in the first 4096 bytes of file
   // 5. elf program headers may appear anywhere in the binary
-  if (Read64(M.ehdr.buf) == Read64("MZqFpD='") ||
-      Read64(M.ehdr.buf) == Read64("jartsr='")) {
-    for (p = M.ehdr.buf; p < M.ehdr.buf + sizeof(M.ehdr.buf); ++p) {
+  if (Read64(M->ehdr.buf) == Read64("MZqFpD='") ||
+      Read64(M->ehdr.buf) == Read64("jartsr='")) {
+    for (p = M->ehdr.buf; p < M->ehdr.buf + sizeof(M->ehdr.buf); ++p) {
       if (Read64(p) != Read64("printf '")) {
         continue;
       }
-      for (i = 0, p += 8; p + 3 < M.ehdr.buf + sizeof(M.ehdr.buf) && (c = *p++) != '\'';) {
+      for (i = 0, p += 8;
+           p + 3 < M->ehdr.buf + sizeof(M->ehdr.buf) && (c = *p++) != '\'';) {
         if (c == '\\') {
           if ('0' <= *p && *p <= '7') {
             c = *p++ - '0';
@@ -779,22 +745,13 @@ int loader(int argc, char **argv, char **envp) {
             }
           }
         }
-        M.ehdr.buf[i++] = c;
+        M->ehdr.buf[i++] = c;
       }
-      if (i >= sizeof(M.ehdr.ehdr)) {
-        TryElf(exe, fd, sp, bp, execfn, &M.ehdr, &M.phdr, &M.lib);
+      if (i >= sizeof(M->ehdr.ehdr)) {
+        TryElf(M, exe, fd, sp, bp, execfn);
       }
     }
   }
-  TryElf(exe, fd, sp, bp, execfn, &M.ehdr, &M.phdr, &M.lib);
+  TryElf(M, exe, fd, sp, bp, execfn);
   Pexit(exe, 0, "Not an acceptable APE/ELF executable for AARCH64");
 }
-
-asm(".globl\t_main\n_main:\t"
-    "stp\tx29,x30,[sp,#-16]!\n\t"
-    "mov\tx29,sp\n\t"
-    "mov\tx9,sp\n\t"
-    "and\tsp,x9,#-(2*1024*1024)\n\t"
-    "bl\t_loader\n\t"
-    "ldp\tx29,x30,[sp],#16\n\t"
-    "ret");

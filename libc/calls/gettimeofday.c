@@ -82,8 +82,15 @@ gettimeofday_f *__gettimeofday_get(bool *opt_out_isfast) {
     isfast = true;
     res = sys_gettimeofday_nt;
   } else if (IsXnu()) {
-    isfast = false;
+#ifdef __x86_64__
     res = sys_gettimeofday_xnu;
+    isfast = false;
+#elif defined(__aarch64__)
+    res = sys_gettimeofday_m1;
+    isfast = true;
+#else
+#error "unsupported architecture"
+#endif
   } else if (IsMetal()) {
     isfast = false;
     res = sys_gettimeofday_metal;

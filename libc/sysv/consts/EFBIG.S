@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon errno,EFBIG,27,27,27,27,27,27,223
+.syscon errno,EFBIG,27,27,27,27,27,27,27,223

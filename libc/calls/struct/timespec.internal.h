@@ -12,6 +12,7 @@ int __utimens(int, const char *, const struct timespec[2], int) _Hide;
 int sys_clock_getres(int, struct timespec *) _Hide;
 int sys_clock_gettime(int, struct timespec *) _Hide;
 int sys_clock_gettime_nt(int, struct timespec *) _Hide;
+int sys_clock_gettime_m1(int, struct timespec *) _Hide;
 int sys_clock_gettime_xnu(int, struct timespec *) _Hide;
 int sys_clock_nanosleep_nt(int, int, const struct timespec *, struct timespec *) _Hide;
 int sys_clock_nanosleep_openbsd(int, int, const struct timespec *, struct timespec *) _Hide;

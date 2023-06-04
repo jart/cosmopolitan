@@ -227,8 +227,8 @@ privileged dontinline void klog(const char *b, size_t n) {
   register long r0 asm("x0") = (long)2;
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
-  register long r8 asm("x8") = (long)__NR_write & 0x7ff;
-  register long r16 asm("x16") = (long)__NR_write & 0x7ff;
+  register long r8 asm("x8") = (long)__NR_write;
+  register long r16 asm("x16") = (long)__NR_write;
   register long res_x0 asm("x0");
   asm volatile("svc\t0"
                : "=r"(res_x0)

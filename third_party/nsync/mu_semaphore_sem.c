@@ -29,6 +29,10 @@
 #include "third_party/nsync/time.h"
 // clang-format off
 
+/**
+ * @fileoverview Semaphores w/ POSIX Semaphores API.
+ */
+
 #define ASSERT(x) _npassert(x)
 
 struct sem {

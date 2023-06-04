@@ -66,5 +66,5 @@ void __enable_threads(void) {
   STRACE("__enable_threads()");
   FixupLockNops();
 #endif
-  __threaded = sys_gettid();
+  __threaded = __tls_enabled ? __get_tls()->tib_tid : sys_gettid();
 }

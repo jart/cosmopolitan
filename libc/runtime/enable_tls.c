@@ -190,7 +190,7 @@ textstartup void __enable_tls(void) {
   tib->tib_strace = __strace;
   tib->tib_ftrace = __ftrace;
   tib->tib_pthread = (pthread_t)&_pthread_main;
-  if (IsLinux()) {
+  if (IsLinux() || IsXnuSilicon()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
     tid = __pid;

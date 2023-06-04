@@ -20,6 +20,7 @@
 #include "libc/intrin/asmflag.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/thread/tls.h"
 
@@ -74,13 +75,16 @@ privileged wontreturn void _Exit1(int rc) {
   }
   notpossible;
 #elif defined(__aarch64__)
-  register long r0 asm("x0") = rc;
-  asm volatile("mov\tx8,%0\n\t"
-               "mov\tx16,%1\n\t"
-               "svc\t0"
-               : /* no outputs */
-               : "i"(93), "i"(0x169), "r"(r0)
-               : "x8", "memory");
+  if (IsLinux()) {
+    register long r0 asm("x0") = rc;
+    asm volatile("mov\tx8,%0\n\t"
+                 "svc\t0"
+                 : /* no outputs */
+                 : "i"(93), "r"(r0)
+                 : "x8", "memory");
+  } else if (IsXnu()) {
+    __syslib->pthread_exit(0);
+  }
   notpossible;
 #else
 #error "arch unsupported"

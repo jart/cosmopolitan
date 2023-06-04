@@ -9,6 +9,7 @@ axdx_t sys_gettimeofday(struct timeval *, struct timezone *, void *) _Hide;
 int sys_futimes(int, const struct timeval *) _Hide;
 int sys_lutimes(const char *, const struct timeval *) _Hide;
 int sys_utimes(const char *, const struct timeval *) _Hide;
+axdx_t sys_gettimeofday_m1(struct timeval *, struct timezone *, void *) _Hide;
 axdx_t sys_gettimeofday_xnu(struct timeval *, struct timezone *, void *) _Hide;
 axdx_t sys_gettimeofday_nt(struct timeval *, struct timezone *, void *) _Hide;
 int sys_utimes_nt(const char *, const struct timeval[2]) _Hide;

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
@@ -27,11 +28,16 @@
 #include "libc/runtime/stack.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #ifndef __x86_64__
 
-void __wipe(uintptr_t);
+/**
+ * @fileoverview Cosmopolitan C Runtime, Second Edition
+ */
+
+void __wipe(uintptr_t) _Hide;
 int main(int, char **, char **) __attribute__((__weak__));
 
 typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
@@ -75,17 +81,31 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   while (*auxv++) donothing;
 
   // detect apple m1 environment
-  if ((__syslib = m1)) {
+  if (SupportsXnu() && (__syslib = m1)) {
     hostos = _HOSTXNU;
     magnums = syscon_xnu;
-  } else {
+  } else if (SupportsLinux()) {
     hostos = _HOSTLINUX;
     magnums = syscon_linux;
+  } else {
+    notpossible;
   }
 
   // setup system magic numbers
   for (mp = syscon_start; mp < syscon_end; ++mp) {
     *mp = *magnums++;
+  }
+
+  // check system call abi compatibility
+  if (SupportsXnu() && __syslib && __syslib->version < SYSLIB_VERSION) {
+    sys_write(2, "need newer ape loader\n", 22);
+    _Exit(127);
+  }
+
+  // disable enosys trapping
+  if (IsBsd()) {
+    void *act[6] = {SIG_IGN};
+    sys_sigaction(SIGSYS, act, 0, 8, 0);
   }
 
   // needed by kisdangerous()
@@ -97,7 +117,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
 
-  // record system-provided stack to memory manager
+  // record provided stack to memory manager
   _mmi.i = 1;
   _mmi.p->x = (uintptr_t)GetStackAddr() >> 16;
   _mmi.p->y = (uintptr_t)(GetStackAddr() + (GetStackSize() - FRAMESIZE)) >> 16;
@@ -106,6 +126,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
 
 #if 0
 #if IsAsan()
+  // TODO(jart): Figure out ASAN data model on AARCH64.
   __asan_init(argc, argv, envp, auxv);
 #endif
 #endif

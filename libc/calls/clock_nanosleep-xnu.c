@@ -16,10 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
@@ -27,23 +30,38 @@
 
 int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
                             struct timespec *rem) {
-  int res;
-  struct timeval now, abs, rel;
+#ifdef __x86_64__
+  struct timeval abs, now, rel;
   if (clock == CLOCK_REALTIME) {
     if (flags & TIMER_ABSTIME) {
       abs = timespec_totimeval(*req);
       sys_gettimeofday_xnu(&now, 0, 0);
       if (timeval_cmp(abs, now) > 0) {
         rel = timeval_sub(abs, now);
-        res = sys_select(0, 0, 0, 0, &rel);
+        return sys_select(0, 0, 0, 0, &rel);
       } else {
-        res = 0;
+        return 0;
       }
     } else {
-      res = sys_nanosleep_xnu(req, rem);
+      return sys_nanosleep_xnu(req, rem);
     }
   } else {
-    res = enotsup();
+    return enotsup();
   }
-  return res;
+#else
+  long res;
+  struct timespec abs, now, rel;
+  if (flags & TIMER_ABSTIME) {
+    abs = *req;
+    if (!(res = __syslib->clock_gettime(clock, &now))) {
+      if (timespec_cmp(abs, now) > 0) {
+        rel = timespec_sub(abs, now);
+        res = __syslib->nanosleep(&rel, 0);
+      }
+    }
+  } else {
+    res = __syslib->nanosleep(req, rem);
+  }
+  return _sysret(res);
+#endif
 }

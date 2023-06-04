@@ -90,13 +90,18 @@ sched_yield:
 
 #elif defined(__aarch64__)
 
-	mov	x0,#0
-	mov	x1,#0
-	mov	x2,#0
-	mov	x3,#0
-	mov	x8,#0x7c			// sched_yield() for linux
-	mov	x16,#0x85d			// select(0,0,0,0) for xnu
+	stp	x29,x30,[sp,-32]!
+	mov	x29,sp
+	mov	x3,0
+	mov	x2,0
+	add	x4,sp,16
+	mov	x1,0
+	mov	w0,0
+	stp	xzr,xzr,[sp,16]
+	mov	x8,#0x7c			// sched_yield() for gnu/systemd
+	mov	x16,#0x5d			// select(0,0,0,0,&blah) for xnu
 	svc	0
+	ldp	x29,x30,[sp],32
 	ret
 
 #else

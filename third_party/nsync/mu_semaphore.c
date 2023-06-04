@@ -15,8 +15,8 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "third_party/nsync/mu_semaphore.h"
+#include "libc/dce.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
 
 asm(".ident\t\"\\n\\n\
@@ -27,7 +27,9 @@ https://github.com/google/nsync\"");
 
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init (nsync_semaphore *s) {
-	if (IsNetbsd ()) {
+	if (IsXnuSilicon ()) {
+		return nsync_mu_semaphore_init_gcd (s);
+	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_init_sem (s);
 	} else {
 		return nsync_mu_semaphore_init_futex (s);
@@ -36,7 +38,9 @@ void nsync_mu_semaphore_init (nsync_semaphore *s) {
 
 /* Wait until the count of *s exceeds 0, and decrement it. */
 errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
-	if (IsNetbsd ()) {
+	if (IsXnuSilicon ()) {
+		return nsync_mu_semaphore_p_gcd (s);
+	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_p_sem (s);
 	} else {
 		return nsync_mu_semaphore_p_futex (s);
@@ -47,7 +51,9 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
    the count of *s is non-zero, in which case decrement *s and return 0;
    or abs_deadline expires, in which case return ETIMEDOUT. */
 errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
-	if (IsNetbsd ()) {
+	if (IsXnuSilicon ()) {
+		return nsync_mu_semaphore_p_with_deadline_gcd (s, abs_deadline);
+	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_p_with_deadline_sem (s, abs_deadline);
 	} else {
 		return nsync_mu_semaphore_p_with_deadline_futex (s, abs_deadline);
@@ -56,7 +62,9 @@ errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_d
 
 /* Ensure that the count of *s is at least 1. */
 void nsync_mu_semaphore_v (nsync_semaphore *s) {
-	if (IsNetbsd ()) {
+	if (IsXnuSilicon ()) {
+		return nsync_mu_semaphore_v_gcd (s);
+	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_v_sem (s);
 	} else {
 		return nsync_mu_semaphore_v_futex (s);

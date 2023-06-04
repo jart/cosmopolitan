@@ -66,6 +66,12 @@
 #define IsAsan() 0
 #endif
 
+#ifdef __aarch64__
+#define IsXnuSilicon() IsXnu()
+#else
+#define IsXnuSilicon() 0
+#endif
+
 #if defined(__PIE__) || defined(__PIC__)
 #define IsPositionIndependent() 1
 #else

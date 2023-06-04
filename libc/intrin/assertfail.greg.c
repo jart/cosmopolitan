@@ -29,6 +29,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 relegated void __assert_fail(const char *expr, const char *file, int line) {
   int me, owner;
@@ -37,7 +38,7 @@ relegated void __assert_fail(const char *expr, const char *file, int line) {
     strace_enabled(-1);
     ftrace_enabled(-1);
     owner = 0;
-    me = sys_gettid();
+    me = __tls_enabled ? __get_tls()->tib_tid : sys_gettid();
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
     kprintf("%s:%d: assert(%s) failed (tid %d) %m\n", file, line, expr, me);
     if (__vforked ||

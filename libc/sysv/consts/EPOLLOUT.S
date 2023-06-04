@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon epoll,EPOLLOUT,4,4,4,4,4,4,4
+.syscon epoll,EPOLLOUT,4,4,4,4,4,4,4,4

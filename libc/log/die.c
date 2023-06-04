@@ -45,7 +45,7 @@ relegated wontreturn void __die(void) {
   int me, owner;
   static atomic_int once;
   owner = 0;
-  me = sys_gettid();
+  me = __tls_enabled ? __get_tls()->tib_tid : sys_gettid();
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
   if (__vforked ||
       atomic_compare_exchange_strong_explicit(

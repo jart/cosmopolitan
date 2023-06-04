@@ -39,28 +39,29 @@ int sys_fork(void) {
 
 #elif defined(__aarch64__)
 
-  int flags = 17;  // SIGCHLD
-  void *child_stack = 0;
-  void *parent_tidptr = 0;
-  void *newtls = 0;
-  void *child_tidptr = 0;
-  register long r0 asm("x0") = (long)flags;
-  register long r1 asm("x1") = (long)child_stack;
-  register long r2 asm("x2") = (long)parent_tidptr;
-  register long r3 asm("x3") = (long)newtls;
-  register long r4 asm("x4") = (long)child_tidptr;
-  register int res_x0 asm("x0");
-  register int res_x1 asm("x1");
-  asm volatile("mov\tx8,%2\n\t"
-               "mov\tx16,%3\n\t"
-               "svc\t0"
-               : "=r"(res_x0), "=r"(res_x1)
-               : "i"(220), "i"(2), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
-               : "x8", "x16", "memory");
-  if (IsXnu() && res_x0 != -1) {
-    res_x0 &= res_x1 - 1;
+  if (IsLinux()) {
+    int flags = 17;  // SIGCHLD
+    void *child_stack = 0;
+    void *parent_tidptr = 0;
+    void *newtls = 0;
+    void *child_tidptr = 0;
+    register long r0 asm("x0") = (long)flags;
+    register long r1 asm("x1") = (long)child_stack;
+    register long r2 asm("x2") = (long)parent_tidptr;
+    register long r3 asm("x3") = (long)newtls;
+    register long r4 asm("x4") = (long)child_tidptr;
+    register int res_x0 asm("x0");
+    asm volatile("mov\tx8,%1\n\t"
+                 "svc\t0"
+                 : "=r"(res_x0)
+                 : "i"(220), "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r4)
+                 : "x8", "x16", "memory");
+    return _sysret(res_x0);
+  } else if (__syslib) {
+    return _sysret(__syslib->fork());
+  } else {
+    return enosys();
   }
-  return _sysret(res_x0);
 
 #else
 
