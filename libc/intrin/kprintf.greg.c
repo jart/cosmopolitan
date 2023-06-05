@@ -237,7 +237,7 @@ privileged void _klog(const char *b, size_t n) {
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 #elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)h;
+  register long r0 asm("x0") = (long)kloghandle();
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
   register long r8 asm("x8") = (long)__NR_write;
