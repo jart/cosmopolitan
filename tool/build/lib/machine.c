@@ -210,7 +210,7 @@ static relegated int GetDescriptor(struct Machine *m, int selector,
   uint8_t buf[8];
   DCHECK(m->gdt_base + m->gdt_limit <= m->real.n);
   selector &= -8;
-  if (8 <= selector && selector + 8 <= m->gdt_limit) {
+  if (8 <= selector && selector + 8 <= m->gdt_limit + 1) {
     SetReadAddr(m, m->gdt_base + selector, 8);
     *out_descriptor = Read64(m->real.p + m->gdt_base + selector);
     return 0;
