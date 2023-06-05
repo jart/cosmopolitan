@@ -16,7 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
 #include "libc/macros.internal.h"
+
+#ifdef __aarch64__
+#define jmp b
+#endif
 
 nsync_time_now:
 	jmp	timespec_real

@@ -94,6 +94,7 @@ o/$(MODE):			\
 	rwc:/dev/shm		\
 	rx:build/bootstrap	\
 	rx:o/third_party/gcc	\
+	r:build/portcosmo.h	\
 	/proc/stat		\
 	rw:/dev/null		\
 	w:o/stack.log		\

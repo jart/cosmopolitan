@@ -88,11 +88,15 @@ ARCH = x86_64
 HOSTS ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10
 endif
 
+PORTCOSMO_CCFLAGS = -fportcosmo -include build/portcosmo.h
+
 ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
 PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
+DEFAULT_CPPFLAGS += $(PORTCOSMO_CCFLAGS)
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
+DEFAULT_CPPFLAGS += $(PORTCOSMO_CCFLAGS)
 endif
 ifeq ($(ARCH), aarch64)
 PREFIX = o/third_party/gcc/bin/aarch64-linux-musl-
@@ -163,7 +167,7 @@ TRADITIONAL =								\
 	-Wno-return-type						\
 	-Wno-pointer-sign
 
-DEFAULT_CCFLAGS =							\
+DEFAULT_CCFLAGS +=							\
 	-Wall								\
 	-Werror								\
 	-fdebug-prefix-map='$(PWD)'=					\
@@ -206,7 +210,7 @@ MATHEMATICAL =								\
 	-O3								\
 	-fwrapv
 
-DEFAULT_CPPFLAGS =							\
+DEFAULT_CPPFLAGS +=							\
 	-DCOSMO								\
 	-DMODE='"$(MODE)"'						\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\

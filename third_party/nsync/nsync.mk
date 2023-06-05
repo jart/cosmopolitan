@@ -54,6 +54,10 @@ $(THIRD_PARTY_NSYNC_A_OBJS): private			\
 			-ffunction-sections		\
 			-fdata-sections
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/third_party/nsync/compat.o: third_party/nsync/compat.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 THIRD_PARTY_NSYNC_LIBS = $(foreach x,$(THIRD_PARTY_NSYNC_ARTIFACTS),$($(x)))
 THIRD_PARTY_NSYNC_SRCS = $(foreach x,$(THIRD_PARTY_NSYNC_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_NSYNC_CHECKS = $(foreach x,$(THIRD_PARTY_NSYNC_ARTIFACTS),$($(x)_CHECKS))
