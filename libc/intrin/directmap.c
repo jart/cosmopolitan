@@ -37,7 +37,6 @@
  */
 struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off) {
-#ifdef __x86_64__
   struct DirectMap d;
   if (!IsWindows() && !IsMetal()) {
     d.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
@@ -52,29 +51,4 @@ struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
             DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, d.addr,
             d.maphandle);
   return d;
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)addr;
-  register long r1 asm("x1") = (long)size;
-  register long r2 asm("x2") = (long)prot;
-  register long r3 asm("x3") = (long)flags;
-  register long r4 asm("x4") = (long)fd;
-  register long r5 asm("x5") = (long)off;
-  register long res_x0 asm("x0");
-  long res;
-  asm volatile("mov\tx8,%1\n\t"
-               "mov\tx16,%2\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(222), "i"(197), "r"(r0), "r"(r1), "r"(r2), "r"(r3),
-                 "r"(r4), "r"(r5)
-               : "x8", "memory");
-  res = res_x0;
-  if ((unsigned long)res >= (unsigned long)-4095) {
-    errno = (int)-res;
-    res = -1;
-  }
-  return (struct DirectMap){(void *)res, kNtInvalidHandleValue};
-#else
-#error "arch unsupported"
-#endif
 }

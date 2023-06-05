@@ -9,6 +9,7 @@
 #define timeval_frommillis __timeval_frommillis
 #define timeval_add        __timeval_add
 #define timeval_sub        __timeval_sub
+#define timespec_totimeval __timespec_totimeval
 #define timeval_totimespec __timeval_totimespec
 #endif /* COSMO */
 

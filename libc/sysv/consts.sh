@@ -205,8 +205,8 @@ syscon	open	O_NOFOLLOW_ANY				0			0			0x20000000		0x20000000		0			0			0			0			#
 syscon	open	O_SYNC					0x00101000		0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0x00000080		0			# bsd consensus
 syscon	open	O_NOCTTY				0x00000100		0x00000100		0x00020000		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
 syscon	open	O_NOATIME				0x00040000		0x00040000		0			0			0			0			0			0			# optimize away access time update
-syscon	open	O_EXEC					0x00200000		0x00200000		0			0			0x00040000		0			0x04000000		0			# open only for executing (POSIX.1 hack for when file mode is 0111); see fexecve(); O_PATH on Linux
-syscon	open	O_SEARCH				0			0			0			0			0x00040000		0			0x00800000		0			# it's specified by posix what does it mean
+syscon	open	O_EXEC					0x00200000		0x00200000		0			0x40000000		0x00040000		0			0x04000000		0			# open only for executing (POSIX.1 hack for when file mode is 0111); see fexecve(); O_PATH on Linux
+syscon	open	O_SEARCH				0			0			0			0x40100000		0x00040000		0			0x00800000		0			# it's specified by posix what does it mean
 syscon	open	O_DSYNC					0x00001000		0x00001000		0x00400000		0x00400000		0			0x00000080		0x00010000		0			#
 syscon	open	O_RSYNC					0x00101000		0x00101000		0			0			0			0x00000080		0x00020000		0			#
 syscon	open	O_PATH					0x00200000		0x00200000		0			0			0			0			0			0			# Linux 2.6.39+
@@ -246,7 +246,7 @@ syscon	compat	MAP_NOCORE				0			0			0			0			0x00020000		0x00008000		0x00008000		
 syscon	compat	MAP_ANON				0x00000020		0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
 syscon	compat	MAP_EXECUTABLE				0x00001000		0x00001000		0			0			0			0			0			0			# ignored
 syscon	compat	MAP_DENYWRITE				0x00000800		0x00000800		0			0			0			0			0			0
-syscon	compat	MAP_32BIT				0x00000040		0x00000040		0			0			0x00080000		0			0			0			# iffy
+syscon	compat	MAP_32BIT				0x00000040		0x00000040		0			0x00008000		0x00080000		0			0			0			# iffy
 
 #	madvise() flags
 #
@@ -402,8 +402,8 @@ syscon	fcntl	F_SETSIG				10			10			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_GETSIG				11			11			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_SETOWN_EX				15			15			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_GETOWN_EX				0x10			0x10			-1			-1			-1			-1			-1			-1
-syscon	fcntl	F_SETLEASE				0x0400			0x0400			-1			-1			-1			-1			-1			-1
-syscon	fcntl	F_GETLEASE				0x0401			0x0401			-1			-1			-1			-1			-1			-1
+syscon	fcntl	F_SETLEASE				0x0400			0x0400			-1			106			-1			-1			-1			-1
+syscon	fcntl	F_GETLEASE				0x0401			0x0401			-1			107			-1			-1			-1			-1
 
 syscon	ioctl	FIONBIO					0x5421			0x5421			0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		# BSD-The New Technology consensus; FIONBIO is traditional O_NONBLOCK; see F_SETFL for re-imagined api
 syscon	ioctl	FIOASYNC				0x5452			0x5452			0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		# BSD-The New Technology consensus
@@ -426,8 +426,8 @@ syscon	at	AT_EMPTY_PATH				0x1000			0x1000			0			0			0			0			0			0			# linux 2.6
 #	utimensat() special values
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	utime	UTIME_NOW				0x3fffffff		0x3fffffff		0x3fffffff		0x3fffffff		-1			-2			0x3fffffff		-2			# timespec::tv_sec may be this; polyfilled xnu/nt
-syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		0x3ffffffe		0x3ffffffe		-2			-1			0x3ffffffe		-1			# timespec::tv_nsec may be this; polyfilled xnu/nt
+syscon	utime	UTIME_NOW				0x3fffffff		0x3fffffff		-1			-1			-1			-2			0x3fffffff		-2			# timespec::tv_sec may be this; polyfilled xnu/nt
+syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-2			-2			-1			0x3ffffffe		-1			# timespec::tv_nsec may be this; polyfilled xnu/nt
 
 #	getauxval() keys
 #
@@ -716,6 +716,7 @@ syscon	so	SO_TIMESTAMPING				37			37			0			0			0			0			0			0
 syscon	so	SO_TIMESTAMPNS				35			35			0			0			0			0			0			0
 syscon	so	SO_WIFI_STATUS				41			41			0			0			0			0			0			0
 
+# these are IPPROTO_* on non-Linux
 syscon	sol	SOL_IP					0			0			0			0			0			0			0			0			# consensus
 syscon	sol	SOL_SOCKET				1			1			0xffff			0xffff			0xffff			0xffff			0xffff			0xffff			# yes it's actually 0xffff; bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
 syscon	sol	SOL_TCP					6			6			6			6			6			6			6			6			# consensus
@@ -745,6 +746,42 @@ syscon	sol	SOL_RXRPC				272			272			-1			-1			-1			-1			-1			-1
 syscon	sol	SOL_TIPC				271			271			-1			-1			-1			-1			-1			-1
 syscon	sol	SOL_X25					262			262			-1			-1			-1			-1			-1			-1
 
+#	IPPROTO_*
+#
+#	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	iproto	IPPROTO_IP				0			0			0			0			0			0			0			0			# consensus
+syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			1			1			1			# consensus
+syscon	iproto	IPPROTO_TCP				6			6			6			6			6			6			6			6			# consensus
+syscon	iproto	IPPROTO_UDP				17			17			17			17			17			17			17			17			# consensus
+syscon	iproto	IPPROTO_RAW				255			255			255			255			255			255			255			255			# consensus
+syscon	iproto	IPPROTO_HOPOPTS				0			0			0			0			0			0			0			-1			# consensus
+syscon	iproto	IPPROTO_IDP				22			22			22			22			22			22			22			22			# consensus
+syscon	iproto	IPPROTO_IGMP				2			2			2			2			2			2			2			2			# consensus
+syscon	iproto	IPPROTO_PUP				12			12			12			12			12			12			12			12			# consensus
+syscon	iproto	IPPROTO_AH				51			51			51			51			51			51			51			-1			# unix consensus
+syscon	iproto	IPPROTO_DSTOPTS				60			60			60			60			60			60			60			-1			# unix consensus
+syscon	iproto	IPPROTO_EGP				8			8			8			8			8			8			8			-1			# unix consensus
+syscon	iproto	IPPROTO_ENCAP				98			98			98			98			98			98			98			-1			# unix consensus
+syscon	iproto	IPPROTO_ESP				50			50			50			50			50			50			50			-1			# unix consensus
+syscon	iproto	IPPROTO_FRAGMENT			44			44			44			44			44			44			44			-1			# unix consensus
+syscon	iproto	IPPROTO_GRE				47			47			47			47			47			47			47			-1			# unix consensus
+syscon	iproto	IPPROTO_ICMPV6				58			58			58			58			58			58			58			-1			# unix consensus
+syscon	iproto	IPPROTO_IPIP				4			4			4			4			4			4			4			-1			# unix consensus
+syscon	iproto	IPPROTO_IPV6				41			41			41			41			41			41			41			-1			# unix consensus
+syscon	iproto	IPPROTO_NONE				59			59			59			59			59			59			59			-1			# unix consensus
+syscon	iproto	IPPROTO_PIM				103			103			103			103			103			103			103			-1			# unix consensus
+syscon	iproto	IPPROTO_ROUTING				43			43			43			43			43			43			43			-1			# unix consensus
+syscon	iproto	IPPROTO_RSVP				46			46			46			46			46			46			46			-1			# unix consensus
+syscon	iproto	IPPROTO_TP				29			29			29			29			29			29			29			-1			# unix consensus
+syscon	iproto	IPPROTO_MPLS				137			137			-1			-1			137			137			137			-1
+syscon	iproto	IPPROTO_MTP				92			92			92			92			92			-1			-1			-1
+syscon	iproto	IPPROTO_SCTP				132			132			132			132			132			-1			-1			-1
+syscon	iproto	IPPROTO_MH				135			135			-1			-1			135			-1			-1			-1
+syscon	iproto	IPPROTO_UDPLITE				136			136			-1			-1			136			-1			-1			-1
+syscon	iproto	IPPROTO_BEETPH				94			94			-1			-1			-1			-1			-1			-1
+syscon	iproto	IPPROTO_COMP				108			108			-1			-1			-1			-1			-1			-1
+syscon	iproto	IPPROTO_DCCP				33			33			-1			-1			-1			-1			-1			-1
+
 syscon	alg	ALG_SET_KEY				1			1			0			0			0			0			0			0
 syscon	alg	ALG_SET_IV				2			2			0			0			0			0			0			0
 syscon	alg	ALG_SET_OP				3			3			0			0			0			0			0			0
@@ -762,7 +799,7 @@ syscon	alg	ALG_SET_DRBG_ENTROPY			6			6			0			0			0			0			0			0
 syscon	tcp	TCP_NODELAY				1			1			1			1			1			1			1			1			# strong consensus for disabling nagle's algorithm; so be sure to disable it by turning this on
 syscon	tcp	TCP_CORK				3			3			4			4			4			16			4			0			# nagle's algorithm strikes again; TCP_NOPUSH on BSD; be sure to turn it off; protip: mmap+writev vs. write+sendfile; see also /proc/sys/net/ipv4/tcp_autocorking; netbsd is 4 but not implemented
 syscon	tcp	TCP_MAXSEG				2			2			2			2			2			2			2			0			# reduces tcp segment size; see also tcp offloading
-syscon	tcp	TCP_FASTOPEN				23			23			0			0			0x0401			0			0			15			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
+syscon	tcp	TCP_FASTOPEN				23			23			0x105			0x105			0x0401			0			0			15			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
 syscon	tcp	TCP_FASTOPEN_CONNECT			30			30			0			0			0			0			0			0			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
 syscon	tcp	TCP_KEEPIDLE				4			4			0			0			0x100			0			3			0			# start keepalives after this period
 syscon	tcp	TCP_KEEPINTVL				5			5			0x101			0x101			0x200			0			5			0			# interval between keepalives
@@ -912,42 +949,6 @@ syscon	ptrace	PTRACE_EVENT_STOP			128			128			-1			-1			-1			-1			-1			-1
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	clone	CLONE_VM				0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		# intentionally symbolic so we can tell if clone() is being used to create threads
-
-#	IPPROTO_*
-#
-#	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	iproto	IPPROTO_IP				0			0			0			0			0			0			0			0			# consensus
-syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			1			1			1			# consensus
-syscon	iproto	IPPROTO_TCP				6			6			6			6			6			6			6			6			# consensus
-syscon	iproto	IPPROTO_UDP				17			17			17			17			17			17			17			17			# consensus
-syscon	iproto	IPPROTO_RAW				255			255			255			255			255			255			255			255			# consensus
-syscon	iproto	IPPROTO_HOPOPTS				-1			-1			-1			-1			-1			-1			-1			-1			# consensus
-syscon	iproto	IPPROTO_IDP				22			22			22			22			22			22			22			22			# consensus
-syscon	iproto	IPPROTO_IGMP				2			2			2			2			2			2			2			2			# consensus
-syscon	iproto	IPPROTO_PUP				12			12			12			12			12			12			12			12			# consensus
-syscon	iproto	IPPROTO_AH				51			51			51			51			51			51			51			-1			# unix consensus
-syscon	iproto	IPPROTO_DSTOPTS				60			60			60			60			60			60			60			-1			# unix consensus
-syscon	iproto	IPPROTO_EGP				8			8			8			8			8			8			8			-1			# unix consensus
-syscon	iproto	IPPROTO_ENCAP				98			98			98			98			98			98			98			-1			# unix consensus
-syscon	iproto	IPPROTO_ESP				50			50			50			50			50			50			50			-1			# unix consensus
-syscon	iproto	IPPROTO_FRAGMENT			44			44			44			44			44			44			44			-1			# unix consensus
-syscon	iproto	IPPROTO_GRE				47			47			47			47			47			47			47			-1			# unix consensus
-syscon	iproto	IPPROTO_ICMPV6				58			58			58			58			58			58			58			-1			# unix consensus
-syscon	iproto	IPPROTO_IPIP				4			4			4			4			4			4			4			-1			# unix consensus
-syscon	iproto	IPPROTO_IPV6				41			41			41			41			41			41			41			-1			# unix consensus
-syscon	iproto	IPPROTO_NONE				59			59			59			59			59			59			59			-1			# unix consensus
-syscon	iproto	IPPROTO_PIM				103			103			103			103			103			103			103			-1			# unix consensus
-syscon	iproto	IPPROTO_ROUTING				43			43			43			43			43			43			43			-1			# unix consensus
-syscon	iproto	IPPROTO_RSVP				46			46			46			46			46			46			46			-1			# unix consensus
-syscon	iproto	IPPROTO_TP				29			29			29			29			29			29			29			-1			# unix consensus
-syscon	iproto	IPPROTO_MPLS				137			137			-1			-1			137			137			137			-1
-syscon	iproto	IPPROTO_MTP				92			92			92			92			92			-1			-1			-1
-syscon	iproto	IPPROTO_SCTP				132			132			132			132			132			-1			-1			-1
-syscon	iproto	IPPROTO_MH				135			135			-1			-1			135			-1			-1			-1
-syscon	iproto	IPPROTO_UDPLITE				136			136			-1			-1			136			-1			-1			-1
-syscon	iproto	IPPROTO_BEETPH				94			94			-1			-1			-1			-1			-1			-1
-syscon	iproto	IPPROTO_COMP				108			108			-1			-1			-1			-1			-1			-1
-syscon	iproto	IPPROTO_DCCP				33			33			-1			-1			-1			-1			-1			-1
 
 #	socket ioctl()
 #

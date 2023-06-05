@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/spawn.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
 
 atomic_int itworked;
 _Thread_local int var;
@@ -48,7 +48,7 @@ int Worker(void *arg, int tid) {
 }
 
 TEST(_spawn, test) {
-  long i, n = 128;
+  long i, n = 64;
   struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, (void *)i, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));

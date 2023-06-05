@@ -95,7 +95,7 @@ const char *FindDebugBinary(void) {
   if (!once) {
     p = GetProgramExecutableName();
     n = strlen(p);
-    if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg") ||
+    if ((n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) ||
         IsMyDebugBinary(p)) {
       res = p;
     } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
