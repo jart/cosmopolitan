@@ -61,7 +61,8 @@ static bool IsMyDebugBinaryImpl(const char *path) {
     // which is currently running in memory.
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
         (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-      if (GetElfSymbolValue(map, size, "_etext", &value)) {
+      if (IsElf64Binary(map, size) &&
+          GetElfSymbolValue(map, size, "_etext", &value)) {
         res = !_etext || value == (uintptr_t)_etext;
       }
       munmap(map, size);
@@ -94,7 +95,8 @@ const char *FindDebugBinary(void) {
   if (!once) {
     p = GetProgramExecutableName();
     n = strlen(p);
-    if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
+    if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg") ||
+        IsMyDebugBinary(p)) {
       res = p;
     } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
                n + 4 < ARRAYLEN(buf)) {

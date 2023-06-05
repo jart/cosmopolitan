@@ -304,7 +304,6 @@ SECTIONS {
     KEEP(*(.keep.text))
     *(.text .stub .text.*)
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
-    *(.subrs)
 
     KEEP(*(.ape.pad.test));
     *(.test.unlikely)
@@ -402,6 +401,7 @@ SECTIONS {
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
     *(.data .data.*)
+    *(.subrs) /* for emacs */
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
     . += . > 0 ? CODE_GRANULE : 0;
 

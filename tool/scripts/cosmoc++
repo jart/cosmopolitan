@@ -30,7 +30,7 @@ exit 0
 fi
 
 CXX="/opt/cosmo/o/third_party/gcc/bin/x86_64-linux-musl-g++"
-CCFLAGS="-g -O2 -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs -fportcosmo -include /opt/cosmo/build/portcosmo.h"
+CCFLAGS="-g -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs -fportcosmo -include /opt/cosmo/build/portcosmo.h"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
 CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem /opt/cosmos/include -isystem /opt/cosmo/libc/isystem -include libc/integral/normalize.inc"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L/opt/cosmos/lib -Wl,-T,/opt/cosmo/o/ape/public/ape.lds /opt/cosmo/o/ape/ape-no-modify-self.o /opt/cosmo/o/libc/crt/crt.o"

@@ -235,11 +235,11 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     p = ShowGeneralRegisters(p, ctx);
     p = ShowSseRegisters(p, ctx);
     *p++ = '\n';
-    write(2, buf, p - buf);
+    _klog(buf, p - buf);
     ShowFunctionCalls(ctx);
   } else {
     *p++ = '\n';
-    write(2, buf, p - buf);
+    _klog(buf, p - buf);
   }
   kprintf("\n");
   if (!IsWindows()) __print_maps();

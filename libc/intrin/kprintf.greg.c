@@ -103,6 +103,7 @@
       break;                                 \
   }
 
+_Hide long __klog_handle;
 extern _Hide struct SymbolTable *__symtab;
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
@@ -190,18 +191,30 @@ privileged bool kisdangerous(const void *p) {
   return true;
 }
 
-privileged dontinline void klog(const char *b, size_t n) {
+privileged static long kloghandle(void) {
+  if (__klog_handle) {
+    return __klog_handle;
+  } else if (!IsWindows()) {
+    return 2;
+  } else {
+    return __imp_GetStdHandle(kNtStdErrorHandle);
+  }
+}
+
+privileged void _klog(const char *b, size_t n) {
 #ifdef __x86_64__
   int e;
+  long h;
   bool cf;
   size_t i;
   uint16_t dx;
   uint32_t wrote;
   unsigned char al;
   long rax, rdi, rsi, rdx;
+  h = kloghandle();
   if (IsWindows()) {
     e = __imp_GetLastError();
-    __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), b, n, &wrote, 0);
+    __imp_WriteFile(h, b, n, &wrote, 0);
     __imp_SetLastError(e);
   } else if (IsMetal()) {
     if (_weaken(_klog_vga)) _weaken(_klog_vga)(b, n);
@@ -220,11 +233,11 @@ privileged dontinline void klog(const char *b, size_t n) {
   } else {
     asm volatile("syscall"
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
-                 : "0"(__NR_write), "1"(2), "2"(b), "3"(n)
+                 : "0"(__NR_write), "1"(h), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 #elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)2;
+  register long r0 asm("x0") = (long)h;
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
   register long r8 asm("x8") = (long)__NR_write;
@@ -840,7 +853,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
   size_t n;
   char b[4000];
   n = kformat(b, sizeof(b), fmt, v);
-  klog(b, MIN(n, sizeof(b) - 1));
+  _klog(b, MIN(n, sizeof(b) - 1));
 }
 
 /**

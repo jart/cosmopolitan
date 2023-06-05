@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sock/select.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/struct/itimerval.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"

@@ -8,6 +8,7 @@ size_t ksnprintf(char *, size_t, const char *, ...);
 void kvprintf(const char *, va_list);
 size_t kvsnprintf(char *, size_t, const char *, va_list);
 bool kisdangerous(const void *);
+void _klog(const char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -33,7 +33,7 @@ exit 0
 fi
 
 CC="/opt/cosmo/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
-CFLAGS="-g -O2 -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs -fportcosmo -include /opt/cosmo/build/portcosmo.h"
+CFLAGS="-g -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs -fportcosmo -include /opt/cosmo/build/portcosmo.h"
 CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem $COSMOS/include -isystem /opt/cosmo/libc/isystem -include libc/integral/normalize.inc"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -Wl,-z,max-page-size=0x1000 -L$COSMOS/lib -Wl,-T,/opt/cosmo/o/ape/public/ape.lds /opt/cosmo/o/ape/ape-no-modify-self.o /opt/cosmo/o/libc/crt/crt.o"
 LDLIBS="/opt/cosmo/o/cosmopolitan.a"

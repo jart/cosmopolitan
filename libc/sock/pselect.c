@@ -17,7 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/struct/itimerval.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -25,6 +28,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
+#include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -99,7 +103,7 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 
   END_CANCELLATION_POINT;
   POLLTRACE("pselect(%d, %p, %p, %p, %s, %s) → %d% m", nfds, readfds, writefds,
-            exceptfds, DescribeTimeval(0, timeout), DescribeSigset(0, sigmask),
+            exceptfds, DescribeTimespec(0, timeout), DescribeSigset(0, sigmask),
             rc);
   return rc;
 }

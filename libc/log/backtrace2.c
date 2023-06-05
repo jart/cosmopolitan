@@ -148,11 +148,11 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
         if (p3 > p2 && p3[-1] == '\r') --p3;
-        sys_write(2, p1, p2 - p1);
+        _klog(p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
-        sys_write(2, p1, got);
+        _klog(p1, got);
         break;
       }
     }
