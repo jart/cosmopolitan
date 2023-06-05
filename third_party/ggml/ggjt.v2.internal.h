@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V2_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V2_INTERNAL_H_
 #include "libc/str/str.h"
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/immintrin.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

@@ -190,6 +190,7 @@ o/$(MODE)/libc/calls/unveil.o: private			\
 
 ifeq ($(ARCH), aarch64)
 o/$(MODE)/libc/calls/sigaction.o: private OVERRIDE_CFLAGS += -mcmodel=large
+o/$(MODE)/libc/calls/getloadavg-nt.o: private OVERRIDE_CFLAGS += -ffreestanding
 endif
 
 # we want -Os because:

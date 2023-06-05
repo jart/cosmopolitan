@@ -32,7 +32,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/ammintrin.internal.h"
 
 asm(".ident\t\"\\n\\n\

@@ -192,6 +192,8 @@ o/$(MODE)/third_party/ggml/companionai.txt.zip.o: private		\
 		ZIPOBJ_FLAGS +=						\
 			-B
 
+o/$(MODE)/third_party/ggml/ggml.o: private QUOTA = -C64
+
 ################################################################################
 
 THIRD_PARTY_GGML_COMS =							\

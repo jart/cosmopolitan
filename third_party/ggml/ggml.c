@@ -39,7 +39,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/thread/thread.h"
 #include "libc/time/time.h"
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/tinymath/magicu.h"

@@ -29,7 +29,7 @@
 #include "libc/assert.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/ggml/ggjt.v1.internal.h"
 #include "third_party/ggml/ggjt.v1.q8_0.h"
 #include "third_party/intel/immintrin.internal.h"

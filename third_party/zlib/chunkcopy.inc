@@ -28,7 +28,7 @@
 #endif
 
 #if defined(INFLATE_CHUNK_SIMD_NEON)
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 typedef uint8x16_t z_vec128i_t;
 #elif defined(INFLATE_CHUNK_SIMD_SSE2)
 #include "third_party/intel/emmintrin.internal.h"

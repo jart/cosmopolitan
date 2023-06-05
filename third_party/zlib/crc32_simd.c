@@ -10,6 +10,7 @@ Chromium (BSD-3 License)\\n\
 Copyright 2017 The Chromium Authors\"");
 // clang-format off
 
+#include "third_party/intel/x86gprintrin.internal.h"
 #include "third_party/zlib/crc32_simd.internal.h"
 #if defined(CRC32_SIMD_AVX512_PCLMUL)
 
@@ -358,8 +359,8 @@ uint32_t ZLIB_INTERNAL crc32_sse42_simd_(  /* SSE4.2+PCLMUL */
 /* We need some extra types for using PMULL.
  */
 #if defined(__aarch64__)
-#include "third_party/aarch64/arm_neon.h"
-#include "third_party/aarch64/arm_acle.h"
+#include "third_party/aarch64/arm_neon.internal.h"
+#include "third_party/aarch64/arm_acle.internal.h"
 #endif
 
 /* CRC32 intrinsics are #ifdef'ed out of arm_acle.h unless we build with an
@@ -400,8 +401,8 @@ uint32_t ZLIB_INTERNAL crc32_sse42_simd_(  /* SSE4.2+PCLMUL */
 /* For GCC, we are setting CRC extensions at module level, so ThinLTO is not
  * allowed. We can just include arm_acle.h.
  */
-#include "third_party/aarch64/arm_neon.h"
-#include "third_party/aarch64/arm_acle.h"
+#include "third_party/aarch64/arm_neon.internal.h"
+#include "third_party/aarch64/arm_acle.internal.h"
 #define TARGET_ARMV8_WITH_CRC
 #else  // !defined(__GNUC__) && !defined(_aarch64__)
 #error ARM CRC32 SIMD extensions only supported for Clang and GCC

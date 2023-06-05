@@ -41,7 +41,7 @@ typedef __m128i z_vec128i_u16x8_t;
 
 #elif defined(DEFLATE_SLIDE_HASH_NEON)
 
-#include "third_party/aarch64/arm_neon.h"  /* NEON */
+#include "third_party/aarch64/arm_neon.internal.h"  /* NEON */
 
 #define Z_SLIDE_INIT_SIMD(wsize) vdupq_n_u16((ush)(wsize))
 

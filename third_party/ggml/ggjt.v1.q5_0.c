@@ -28,7 +28,7 @@
 #include "third_party/ggml/ggjt.v1.q5_0.h"
 #include "libc/assert.h"
 #include "libc/macros.internal.h"
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/ggml/fp16.internal.h"
 #include "third_party/ggml/ggjt.v1.internal.h"
 #include "third_party/ggml/ggjt.v1.q8_0.h"

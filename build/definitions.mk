@@ -203,7 +203,8 @@ ifeq ($(ARCH), aarch64)
 #
 DEFAULT_COPTS +=							\
 	-ffixed-x18							\
-	-ffixed-x28
+	-ffixed-x28							\
+	-mno-outline-atomics
 endif
 
 MATHEMATICAL =								\

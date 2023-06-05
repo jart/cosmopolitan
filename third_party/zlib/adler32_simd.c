@@ -203,7 +203,7 @@ uint32_t ZLIB_INTERNAL adler32_simd_(  /* SSSE3 */
 
 #elif defined(ADLER32_SIMD_NEON)
 
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 
 uint32_t ZLIB_INTERNAL adler32_simd_(  /* NEON */
     uint32_t adler,

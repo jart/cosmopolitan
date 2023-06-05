@@ -19,7 +19,7 @@
 #include "third_party/ggml/ggjt.v1.q8_1.h"
 #include "libc/assert.h"
 #include "libc/macros.internal.h"
-#include "third_party/aarch64/arm_neon.h"
+#include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/ggml/ggml.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/libcxx/math.h"

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ARCH=${1:-x86_64}
+ARCH=${1:-aarch64}
 IMPORT=${2:-/opt/cross11portcosmo}
 PREFIX=third_party/gcc/
 OLDVERSION=9.2.0
