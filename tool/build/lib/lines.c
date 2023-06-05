@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/lines.h"
+#include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "tool/build/lib/lines.h"
 
 struct Lines *NewLines(void) {
   return calloc(1, sizeof(struct Lines));
@@ -46,7 +47,8 @@ void AppendLines(struct Lines *lines, const char *s) {
       s = p + 1;
     } else {
       if (*s) {
-        AppendLine(lines, s, -1);
+        // gcc11 whines about SIZE_MAX > PTRDIFF_MAX
+        AppendLine(lines, s, PTRDIFF_MAX);
       }
       break;
     }

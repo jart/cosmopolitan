@@ -726,6 +726,7 @@ void abort(void) wontreturn;
 #if __GNUC__ + 0 >= 9
 #pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
 #if __GNUC__ >= 11
+#pragma GCC diagnostic ignored /* annoying */ "-Wattributes"
 #pragma GCC diagnostic ignored /* orwellian */ "-Wold-style-definition"
 #endif /* GCC11+ */
 #endif /* GCC9+ */

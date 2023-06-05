@@ -24,6 +24,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -505,14 +506,16 @@ dontinline int strcasecmp_pure(const char *a, const char *b) {
   return tolower(*a & 0xff) - tolower(*b & 0xff);
 }
 
-char *randomize_buf2str(size_t size, char data[size]) {
+char *randomize_buf2str(size_t size, char *data) {
+  assert(data);
   rngset(data, size, _rand64, -1);
   data[size - 1] = '\0';
   return data;
 }
 
-char *longstringislong(size_t size, char data[size]) {
+char *longstringislong(size_t size, char *data) {
   unsigned i;
+  assert(data);
   randomize_buf2str(size, data);
   for (i = 0; i < size; ++i) {
     data[i] |= 1u << (i & 5);

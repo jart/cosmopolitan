@@ -25,8 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "third_party/musl/rand48.h"
+#include "libc/str/str.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -87,7 +87,7 @@ long mrand48(void)
 	return jrand48(__seed48);
 }
 
-unsigned short *seed48(unsigned short *s)
+unsigned short *seed48(unsigned short s[3])
 {
 	static unsigned short p[3];
 	memcpy(p, __seed48, sizeof p);

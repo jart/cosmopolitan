@@ -91,7 +91,7 @@ void log_analyzer( void *ctx, int level,
 
 /* Invalid minor version used when not specifying a min/max version or expecting a test to fail */
 #define TEST_SSL_MINOR_VERSION_NONE -1
-
+s
 typedef struct handshake_test_options
 {
     const char *cipher;
@@ -2269,6 +2269,8 @@ void test_ssl_mock_sanity( )
     unsigned char message[MSGLEN];
     unsigned char received[MSGLEN];
     mbedtls_mock_socket socket;
+
+    memset(message, 0, sizeof(message));
 
     mbedtls_mock_socket_init( &socket );
     TEST_ASSERT( mbedtls_mock_tcp_send_b( &socket, message, MSGLEN ) < 0 );
