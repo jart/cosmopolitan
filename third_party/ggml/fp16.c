@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/ggml/fp16.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/ggml/fp16.internal.h"
 #include "third_party/libcxx/math.h"
@@ -124,6 +125,7 @@ inline static float ggml_silu_f32(float x) {
 
 void ggml_fp16_init(void) {
     ggml_fp16_t ii;
+    ftrace_enabled(-1);
     for (int i = 0; i < (1 << 16); ++i) {
         uint16_t ui = i;
         memcpy(&ii, &ui, sizeof(ii));
@@ -132,4 +134,5 @@ void ggml_fp16_init(void) {
         table_silu_f16[i] = GGML_FP32_TO_FP16(ggml_silu_f32(f));
         table_exp_f16[i]  = GGML_FP32_TO_FP16(expf(f));
     }
+    ftrace_enabled(+1);
 }

@@ -471,7 +471,7 @@ ifeq ($(ARCH), x86_64)
 #       jmp -7             # 2 bytes
 #       ...
 #
-CONFIG_CCFLAGS += -fpatchable-function-entry=11,9
+CONFIG_CCFLAGS += -fpatchable-function-entry=18,16
 endif
 ifeq ($(ARCH), aarch64)
 # this flag causes gcc to generate functions like this
