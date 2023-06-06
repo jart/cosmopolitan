@@ -1,10 +1,11 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+	.ftrace1
 erange:
+	.ftrace2
 #ifdef __x86_64__
 	.leafprologue
-	.profilable
 	mov	ERANGE(%rip),%ecx
 	jmp	__errfun
 #elif defined(__aarch64__)

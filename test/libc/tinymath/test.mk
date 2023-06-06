@@ -58,7 +58,7 @@ o/$(MODE)/test/libc/tinymath/%.com.dbg:				\
 	@$(APELINK)
 
 $(TEST_LIBC_TINYMATH_OBJS): private				\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/tinymath

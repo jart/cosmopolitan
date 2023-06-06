@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_RegEnumKeyExW,RegEnumKeyExW,0
 
 	.text.windows
+        .ftrace1
 RegEnumKeyEx:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_RegEnumKeyExW(%rip),%rax
 	jmp	__sysv2nt8
 #elif defined(__aarch64__)

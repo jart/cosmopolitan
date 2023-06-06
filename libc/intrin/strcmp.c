@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
+#ifndef __aarch64__
 
 /**
  * Compares NUL-terminated strings.
@@ -28,7 +29,7 @@
  * @return is <0, 0, or >0 based on uint8_t comparison
  * @asyncsignalsafe
  */
-noasan int strcmp(const char *a, const char *b) {
+int strcmp(const char *a, const char *b) {
   int c;
   size_t i = 0;
   uint64_t v, w, d;
@@ -58,3 +59,5 @@ noasan int strcmp(const char *a, const char *b) {
   }
   return (a[i] & 255) - (b[i] & 255);
 }
+
+#endif /* __aarch64__ */

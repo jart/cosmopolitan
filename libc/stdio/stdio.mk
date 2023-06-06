@@ -50,17 +50,17 @@ $(LIBC_STDIO_A).pkg:					\
 		$(foreach x,$(LIBC_STDIO_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/stdio/fputc.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-O3
 
 o//libc/stdio/appendw.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os
 
 o/$(MODE)/libc/stdio/posix_spawnattr.o			\
 o/$(MODE)/libc/stdio/posix_spawn_file_actions.o		\
 o/$(MODE)/libc/stdio/mt19937.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-ffunction-sections
 
 LIBC_STDIO_LIBS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)))

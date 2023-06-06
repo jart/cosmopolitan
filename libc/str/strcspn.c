@@ -16,15 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pcmpeqb.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/pshufd.h"
-#include "libc/intrin/punpcklbw.h"
-#include "libc/intrin/punpcklwd.h"
-#include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
-
-#define V(p) (void *)(p)
 
 /**
  * Returns prefix length, consisting of chars not in reject.
@@ -35,28 +27,24 @@
  * @asyncsignalsafe
  */
 size_t strcspn(const char *s, const char *reject) {
-  size_t i, n;
-  unsigned m;
-  char cv[16], sv[16];
-  if ((n = strlen(reject)) < 16) {
-    bzero(sv, 16);
-    memcpy(sv, reject, n);
-    for (i = 0;; ++i) {
-      cv[0] = s[i];
-      punpcklbw(V(cv), V(cv), V(cv));
-      punpcklwd(V(cv), V(cv), V(cv));
-      pshufd(V(cv), V(cv), 0);
-      pcmpeqb(V(cv), V(cv), V(sv));
-      if ((m = pmovmskb(V(cv)))) {
-        break;
-      }
-    }
-    return i;
+  int c;
+  size_t i;
+  bool lut[256];
+#ifndef TINY
+  if (!reject[0]) {
+    return strlen(s);
   }
-  for (i = 0; s[i]; ++i) {
-    if (HasCharacter(s[i], reject)) {
-      break;
+  if (!reject[1]) {
+    return strchrnul(s, reject[0]) - s;
+  }
+#endif
+  bzero(lut, sizeof(lut));
+  do {
+    lut[(c = *reject++ & 255)] = true;
+  } while (c);
+  for (i = 0;; i++) {
+    if (lut[s[i] & 255]) {
+      return i;
     }
   }
-  return i;
 }

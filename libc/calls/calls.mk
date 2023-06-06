@@ -69,21 +69,21 @@ $(LIBC_CALLS_A).pkg:					\
 # we can't use asan because:
 #   siginfo_t memory is owned by kernels
 o/$(MODE)/libc/calls/siginfo2cosmo.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-ffreestanding			\
 			-fno-sanitize=address
 
 # we can't use asan because:
 #   ucontext_t memory is owned by xnu kernel
 o/$(MODE)/libc/calls/sigenter-xnu.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-ffreestanding			\
 			-fno-sanitize=address
 
 # we can't use asan because:
 #   vdso memory is owned by linux kernel
 o/$(MODE)/libc/calls/vdsofunc.greg.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-ffreestanding			\
 			-fno-sanitize=address
 
@@ -92,7 +92,7 @@ o/$(MODE)/libc/calls/vdsofunc.greg.o: private		\
 o/$(MODE)/libc/calls/ntspawn.o				\
 o/$(MODE)/libc/calls/mkntcmdline.o			\
 o/$(MODE)/libc/calls/mkntenvblock.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-ffreestanding			\
 			-fno-sanitize=address
 
@@ -100,7 +100,7 @@ o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 #   windows owns the data structure
 o/$(MODE)/libc/calls/wincrash.o				\
 o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-fno-sanitize=all
 
 # we always want -O3 because:
@@ -111,7 +111,7 @@ o/$(MODE)/libc/calls/sigenter-netbsd.o			\
 o/$(MODE)/libc/calls/sigenter-openbsd.o			\
 o/$(MODE)/libc/calls/sigenter-xnu.o			\
 o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-O3
 
 # we must disable static stack safety because:
@@ -125,14 +125,14 @@ o/$(MODE)/libc/calls/execve-sysv.o			\
 o/$(MODE)/libc/calls/readlinkat-nt.o			\
 o/$(MODE)/libc/calls/execve-nt.greg.o			\
 o/$(MODE)/libc/calls/mkntenvblock.o: private		\
-		OVERRIDE_CPPFLAGS +=			\
+		CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
 # we must segregate codegen because:
 #   file contains multiple independently linkable apis
 o/$(MODE)/libc/calls/ioctl-siocgifconf.o		\
 o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o: private	\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-ffunction-sections		\
 			-fdata-sections
 
@@ -156,7 +156,7 @@ o//libc/calls/ioctl_tiocgwinsz.o			\
 o//libc/calls/ioctl_tiocswinsz-nt.o			\
 o//libc/calls/ioctl_tiocswinsz.o			\
 o//libc/calls/fcntl.o: private				\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os
 
 # we always want -Os because:
@@ -165,7 +165,7 @@ o//libc/calls/getcwd.greg.o				\
 o//libc/calls/getcwd-nt.greg.o				\
 o//libc/calls/getcwd-xnu.greg.o				\
 o//libc/calls/statfs2cosmo.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os
 
 # we always want -O2 because:
@@ -180,17 +180,17 @@ o/$(MODE)/libc/calls/timespec_frommicros.o		\
 o/$(MODE)/libc/calls/timeval_tomillis.o			\
 o/$(MODE)/libc/calls/timeval_frommillis.o		\
 o/$(MODE)/libc/calls/timeval_frommicros.o: private	\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-O2
 
 o/$(MODE)/libc/calls/pledge-linux.o			\
 o/$(MODE)/libc/calls/unveil.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
 ifeq ($(ARCH), aarch64)
-o/$(MODE)/libc/calls/sigaction.o: private OVERRIDE_CFLAGS += -mcmodel=large
-o/$(MODE)/libc/calls/getloadavg-nt.o: private OVERRIDE_CFLAGS += -ffreestanding
+o/$(MODE)/libc/calls/sigaction.o: private CFLAGS += -mcmodel=large
+o/$(MODE)/libc/calls/getloadavg-nt.o: private CFLAGS += -ffreestanding
 endif
 
 # we want -Os because:
@@ -198,7 +198,7 @@ endif
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
 o/$(MODE)/libc/calls/pledge-linux.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os				\
 			-fPIC
 

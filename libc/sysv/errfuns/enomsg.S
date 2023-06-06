@@ -1,10 +1,11 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+	.ftrace1
 enomsg:
+	.ftrace2
 #ifdef __x86_64__
 	.leafprologue
-	.profilable
 	mov	ENOMSG(%rip),%ecx
 	jmp	__errfun
 #elif defined(__aarch64__)

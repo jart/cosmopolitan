@@ -27,9 +27,10 @@
 //	@param	%rsi is char[edi/16][16] output and %rsi==%rdx is OK
 //	@param	%rdx is char[edi/16][8] input
 //	@return	%rax is %rsi
+	.ftrace1
 doublechrominance:
+	.ftrace2
 	.leafprologue
-	.profilable
 	shr	$1,%edi			# backwards algorithm
 	jbe	1f			# do nothing if !n || n%2
 	mov	%edi,%ecx

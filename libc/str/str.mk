@@ -51,7 +51,7 @@ o/$(MODE)/libc/str/wow.o: private				\
 o/$(MODE)/libc/str/wmemset.o					\
 o/$(MODE)/libc/str/memset16.o					\
 o/$(MODE)/libc/str/dosdatetimetounix.o: private			\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-O3
 
 o/$(MODE)/libc/str/getzipcdir.o					\
@@ -66,14 +66,14 @@ o/$(MODE)/libc/str/getzipcfileuncompressedsize.o		\
 o/$(MODE)/libc/str/getziplfilecompressedsize.o			\
 o/$(MODE)/libc/str/getziplfileuncompressedsize.o		\
 o/$(MODE)/libc/str/getzipcfiletimestamps.o: private		\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-Os
 
 o/$(MODE)/libc/str/iswpunct.o					\
 o/$(MODE)/libc/str/iswupper.o					\
 o/$(MODE)/libc/str/iswlower.o					\
 o/$(MODE)/libc/str/iswseparator.o: private			\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-fno-jump-tables
 
 o/$(MODE)/libc/str/bcmp.o					\
@@ -84,13 +84,13 @@ o/$(MODE)/libc/str/timevaltowindowstime.o			\
 o/$(MODE)/libc/str/timespectowindowstime.o			\
 o/$(MODE)/libc/str/windowstimetotimeval.o			\
 o/$(MODE)/libc/str/windowstimetotimespec.o: private		\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-O2
 
 # we can't use compiler magic because:
 #   kprintf() depends on these functions
 o/$(MODE)/libc/fmt/strsignal.greg.o: private			\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-fpie					\
 			-ffreestanding				\
 			$(NO_MAGIC)

@@ -77,7 +77,7 @@ o/$(MODE)/test/libc/runtime/getenv_test.com.runs:		\
 	@HELLO=THERE build/runit $@ $<
 
 o/$(MODE)/test/libc/runtime/itsatrap_test.o: private		\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-fno-sanitize=all			\
 			-ftrapv
 

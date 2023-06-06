@@ -135,7 +135,7 @@ o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/tes
 	@$(COMPILE) -ACHECK -wtT$@ $(VM) $< $(TESTARGS)
 
 o/$(MODE)/third_party/mbedtls/test/lib.o: private								\
-			OVERRIDE_CFLAGS +=									\
+			CFLAGS +=										\
 				-fdata-sections									\
 				-ffunction-sections
 

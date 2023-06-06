@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSALookupServiceEnd,WSALookupServiceEnd,82
 
 	.text.windows
+        .ftrace1
 WSALookupServiceEnd:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%rdi,%rcx
 	sub	$32,%rsp
 	call	*__imp_WSALookupServiceEnd(%rip)

@@ -18,14 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "ape/sections.internal.h"
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
@@ -38,29 +36,21 @@
 
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
-static inline int __morph_rt_sigprocmask(int h, const sigset_t *s, sigset_t *o,
-                                         size_t c) {
 #ifdef __aarch64__
-  register long r0 asm("x0") = (long)h;
-  register long r1 asm("x1") = (long)s;
-  register long r2 asm("x2") = (long)o;
-  register long r3 asm("x3") = (long)c;
-  register long r8 asm("x8") = (long)__NR_sigprocmask;
-  register long res_x0 asm("x0");
+static privileged void __aarch64_sigprocmask(int how, const sigset_t *set,
+                                             sigset_t *oldset) {
+  register int r0 asm("x0") = how;
+  register long r1 asm("x1") = (long)set;
+  register long r2 asm("x2") = (long)oldset;
+  register long r3 asm("x3") = 8;
+  register long r8 asm("x8") = __NR_sigprocmask;
+  register long r16 asm("x16") = __NR_sigprocmask;
   asm volatile("svc\t0"
-               : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r3), "r"(r8)
+               : "+r"(r0)
+               : "r"(r1), "r"(r2), "r"(r3), "r"(r8), "r"(r16)
                : "memory");
-  return res_x0;
-#else
-  return 0;
+}
 #endif
-}
-
-static inline int __morph_sigprocmask(int how, const sigset_t *set,
-                                      sigset_t *oldset) {
-  return __morph_rt_sigprocmask(how, set, oldset, sizeof(*set));
-}
 
 static privileged void __morph_mprotect(void *addr, size_t size, int prot,
                                         int ntprot) {
@@ -81,7 +71,7 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
       _Exit(26);
     }
 #endif
-    _npassert(!ax);
+    if (ax) notpossible;
   } else {
     __imp_VirtualProtect(addr, size, ntprot, &op);
   }
@@ -90,12 +80,11 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
   register long r1 asm("x1") = (long)size;
   register long r2 asm("x2") = (long)prot;
   register long r8 asm("x8") = (long)__NR_mprotect;
-  register long res_x0 asm("x0");
+  register long r16 asm("x16") = (long)__NR_mprotect;
   asm volatile("svc\t0"
-               : "=r"(res_x0)
-               : "r"(r0), "r"(r1), "r"(r2), "r"(r8)
+               : "+r"(r0)
+               : "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
-  _npassert(!res_x0);
 #endif
 }
 
@@ -109,7 +98,6 @@ privileged void __morph_begin(sigset_t *save) {
   bool cf;
   intptr_t dx;
   sigset_t ss = {{-1, -1}};
-  STRACE("__morph_begin()");
 #ifdef __x86_64__
   if (IsOpenbsd()) {
     asm volatile(CFLAG_ASM("syscall")
@@ -117,17 +105,19 @@ privileged void __morph_begin(sigset_t *save) {
                  : "1"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(-1u)
                  : "rcx", "r8", "r9", "r10", "r11", "memory");
     save->__bits[0] = ax & 0xffffffff;
-    _npassert(!cf);
+    if (cf) notpossible;
   } else if (!IsWindows() && !IsMetal()) {
     asm volatile("mov\t$8,%%r10d\n\t"
                  "syscall"
                  : "=a"(ax), "=d"(dx)
                  : "0"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(&ss), "1"(save)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-    _npassert(!ax);
+    if (ax) notpossible;
   }
+#elif defined(__aarch64__)
+  __aarch64_sigprocmask(SIG_BLOCK, &ss, save);
 #else
-  __morph_sigprocmask(SIG_BLOCK, &ss, save);
+#error "unsupported architecture"
 #endif
   __morph_mprotect(__executable_start, __privileged_addr - __executable_start,
                    PROT_READ | PROT_WRITE, kNtPageWritecopy);
@@ -148,17 +138,18 @@ privileged void __morph_end(sigset_t *save) {
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                  : "1"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(save->__bits[0])
                  : "rcx", "r8", "r9", "r10", "r11", "memory");
-    _npassert(!cf);
+    if (cf) notpossible;
   } else if (!IsWindows() && !IsMetal()) {
     asm volatile("mov\t$8,%%r10d\n\t"
                  "syscall"
                  : "=a"(ax), "=d"(dx)
                  : "0"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(save), "1"(0L)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-    _npassert(!ax);
+    if (ax) notpossible;
   }
+#elif defined(__aarch64__)
+  __aarch64_sigprocmask(SIG_SETMASK, save, 0);
 #else
-  __morph_sigprocmask(SIG_SETMASK, save, 0);
+#error "unsupported architecture"
 #endif
-  STRACE("__morph_end()");
 }

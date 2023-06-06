@@ -2,11 +2,12 @@
 .imp	user32,__imp_MessageBoxExW,MessageBoxExW,2165
 
 	.text.windows
+        .ftrace1
 MessageBoxEx:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_MessageBoxExW(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

@@ -77,10 +77,11 @@ Tim Chen <tim.c.chen@linux.intel.com>\n"
 //	@param	%rsi points to input data
 //	@param	%rdx is number of 64-byte blocks to process
 //	@see	X86_HAVE(SHA)
+	.ftrace1
 sha1_transform_ni:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$FRAME_SIZE,%rsp
 	shl	$6,NUM_BLKS		# convert to bytes
 	jz	.Ldone_hash

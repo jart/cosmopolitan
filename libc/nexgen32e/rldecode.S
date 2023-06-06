@@ -24,9 +24,10 @@
 //	@param	di points to output buffer
 //	@param	si points to uint8_t {len₁,byte₁}, ..., {0,0}
 //	@mode	long,legacy,real
+	.ftrace1
 rldecode:
+	.ftrace2
 	.leafprologue
-	.profilable
 	xor	%ecx,%ecx
 0:	lodsb
 	xchg	%al,%cl

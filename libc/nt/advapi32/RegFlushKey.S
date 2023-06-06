@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_RegFlushKey,RegFlushKey,0
 
 	.text.windows
+        .ftrace1
 RegFlushKey:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%rdi,%rcx
 	sub	$32,%rsp
 	call	*__imp_RegFlushKey(%rip)

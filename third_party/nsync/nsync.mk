@@ -50,7 +50,7 @@ $(THIRD_PARTY_NSYNC_A).pkg:				\
 		$(foreach x,$(THIRD_PARTY_NSYNC_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_NSYNC_A_OBJS): private			\
-		OVERRIDE_CCFLAGS +=			\
+		CCFLAGS +=				\
 			-ffunction-sections		\
 			-fdata-sections
 

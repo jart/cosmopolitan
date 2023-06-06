@@ -26,7 +26,8 @@
 //	@assume	system five nexgen32e abi conformant
 //	@note	code built w/ microsoft abi compiler can't call this
 //	@see	longjmp(), _gclongjmp()
-setjmp:
+	.ftrace1
+setjmp:	.ftrace2
 #ifdef __x86_64__
 	lea	8(%rsp),%rax
 	mov	%rax,(%rdi)

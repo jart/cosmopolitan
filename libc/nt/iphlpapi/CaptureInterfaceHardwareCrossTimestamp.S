@@ -2,11 +2,12 @@
 .imp	iphlpapi,__imp_CaptureInterfaceHardwareCrossTimestamp,CaptureInterfaceHardwareCrossTimestamp,0
 
 	.text.windows
+        .ftrace1
 CaptureInterfaceHardwareCrossTimestamp:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_CaptureInterfaceHardwareCrossTimestamp(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

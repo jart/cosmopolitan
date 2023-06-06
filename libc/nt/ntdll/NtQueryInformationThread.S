@@ -2,11 +2,12 @@
 .ntimp	NtQueryInformationThread,NtQueryInformationThread
 
 	.text.windows
+        .ftrace1
 NtQueryInformationThread:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtQueryInformationThread(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

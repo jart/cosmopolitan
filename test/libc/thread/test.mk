@@ -56,7 +56,7 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 	@$(APELINK)
 
 o/$(MODE)/test/libc/thread/pthread_create_test.o:	\
-		private OVERRIDE_CPPFLAGS +=		\
+		private CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
 .PHONY: o/$(MODE)/test/libc/thread

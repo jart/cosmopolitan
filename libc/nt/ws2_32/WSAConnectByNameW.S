@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSAConnectByNameW,WSAConnectByNameW,49
 
 	.text.windows
+        .ftrace1
 WSAConnectByName:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_WSAConnectByNameW(%rip),%rax
 	jmp	__sysv2nt10
 #elif defined(__aarch64__)

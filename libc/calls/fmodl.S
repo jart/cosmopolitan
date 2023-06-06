@@ -26,9 +26,10 @@
 //	@return	remainder ∈ (-|𝑦|,|𝑦|) in %st
 //	@define	𝑥-truncl(𝑥/𝑦)*𝑦
 //	@see	emod()
-fmodl:	push	%rbp
+	.ftrace1
+fmodl:	.ftrace2
+	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	fldt	32(%rbp)
 	fldt	16(%rbp)
 1:	fprem

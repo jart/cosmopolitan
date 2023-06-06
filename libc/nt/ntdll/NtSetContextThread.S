@@ -2,11 +2,12 @@
 .ntimp	NtSetContextThread,NtSetContextThread
 
 	.text.windows
+        .ftrace1
 NtSetContextThread:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtSetContextThread(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

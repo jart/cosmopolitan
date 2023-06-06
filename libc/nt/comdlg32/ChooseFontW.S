@@ -2,11 +2,12 @@
 .imp	comdlg32,__imp_ChooseFontW,ChooseFontW,105
 
 	.text.windows
+        .ftrace1
 ChooseFont:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%rdi,%rcx
 	sub	$32,%rsp
 	call	*__imp_ChooseFontW(%rip)

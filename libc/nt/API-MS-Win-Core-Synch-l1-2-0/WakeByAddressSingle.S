@@ -2,11 +2,12 @@
 .imp	API-MS-Win-Core-Synch-l1-2-0,__imp_WakeByAddressSingle,WakeByAddressSingle,116
 
 	.text.windows
+        .ftrace1
 WakeByAddressSingle:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%rdi,%rcx
 	sub	$32,%rsp
 	call	*__imp_WakeByAddressSingle(%rip)

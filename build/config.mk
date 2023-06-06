@@ -12,13 +12,15 @@
 #   - Reasonably small
 #
 ifeq ($(MODE),)
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2
+ENABLE_FTRACE = 1
+CONFIG_CCFLAGS += $(BACKTRACES) -O2
 CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
 
 ifeq ($(MODE), aarch64)
-CONFIG_CCFLAGS += -O2 $(BACKTRACES) #$(FTRACE)
+ENABLE_FTRACE = 1
+CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 
@@ -33,7 +35,8 @@ endif
 #   - Compiles 28% faster
 #
 ifeq ($(MODE), fastbuild)
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O
+ENABLE_FTRACE = 1
+CONFIG_CCFLAGS += $(BACKTRACES) -O
 CONFIG_CPPFLAGS += -DSYSDEBUG -DDWARFLESS
 CONFIG_OFLAGS += -g0
 CONFIG_LDFLAGS += -S
@@ -53,8 +56,9 @@ endif
 #   - GCC 8+ hoists check fails into .text.cold, thus minimizing impact
 #
 ifeq ($(MODE), opt)
+ENABLE_FTRACE = 1
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -msse2avx -Wa,-msse2avx
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O3 -fmerge-all-constants
+CONFIG_CCFLAGS += $(BACKTRACES) -O3 -fmerge-all-constants
 TARGET_ARCH ?= -march=native
 endif
 
@@ -123,16 +127,18 @@ endif
 #   - Enormous binaries
 #
 ifeq ($(MODE), dbg)
+ENABLE_FTRACE = 1
 CONFIG_CPPFLAGS += -DMODE_DBG
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O -fno-inline
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O -fno-inline
 CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
 TARGET_ARCH ?= -msse3
 OVERRIDE_CCFLAGS += -fno-pie
 endif
 
 ifeq ($(MODE), aarch64-dbg)
+ENABLE_FTRACE = 1
 CONFIG_CPPFLAGS += -DMODE_DBG
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O -fno-inline
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O -fno-inline
 CONFIG_COPTS += -fsanitize=undefined
 endif
 
@@ -147,7 +153,8 @@ endif
 #   - No Windows bloat!
 #
 ifeq ($(MODE), sysv)
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2
+ENABLE_FTRACE = 1
+CONFIG_CCFLAGS += $(BACKTRACES) -O2
 CONFIG_CPPFLAGS += -DSYSDEBUG -DSUPPORT_VECTOR=121
 TARGET_ARCH ?= -msse3
 endif
@@ -363,8 +370,9 @@ endif
 # GCC11 Mode
 # https://justine.lol/compilers/x86_64-linux-musl__x86_64-linux-musl__g++-11.2.0.tar.xz
 ifeq ($(MODE), gcc11)
+ENABLE_FTRACE = 1
 .UNVEIL += rx:/opt/gcc11
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O2
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O2
 AS = /opt/gcc11/bin/x86_64-linux-musl-as
 CC = /opt/gcc11/bin/x86_64-linux-musl-gcc
 CXX = /opt/gcc11/bin/x86_64-linux-musl-g++
@@ -376,7 +384,7 @@ STRIP = /opt/gcc11/bin/x86_64-linux-musl-strip
 OBJCOPY = /opt/gcc11/bin/x86_64-linux-musl-objcopy
 OBJDUMP = /opt/gcc11/bin/x86_64-linux-musl-objdump
 ADDR2LINE = /opt/gcc11/bin/x86_64-linux-musl-addr2line
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2 -Wno-stringop-overread
+CONFIG_CCFLAGS += $(BACKTRACES) -O2 -Wno-stringop-overread
 CONFIG_CFLAGS += -Wno-old-style-definition
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG
 TARGET_ARCH ?= -msse3
@@ -385,7 +393,7 @@ endif
 # LLVM Mode
 ifeq ($(MODE), llvm)
 TARGET_ARCH ?= -msse3
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O2
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O2
 AS = clang
 CC = clang
 CXX = clang++
@@ -431,4 +439,60 @@ CONFIG_CFLAGS += -std=c11
 CONFIG_CXXFLAGS += -std=c++11
 TARGET_ARCH ?= -msse3
 
+endif
+
+ifneq ($(ENABLE_FTRACE),)
+CONFIG_CPPFLAGS += -DFTRACE
+FTRACE_CCFLAGS = -fno-inline-functions-called-once
+OVERRIDE_CFLAGS += $(FTRACE_CCFLAGS)
+OVERRIDE_CXXFLAGS += $(FTRACE_CCFLAGS)
+# function prologue nops for --ftrace
+ifeq ($(ARCH), x86_64)
+# this flag causes gcc to generate functions like this
+#
+#       nop nop nop nop nop nop nop nop nop
+#     func:
+#       nop nop
+#       ...
+#
+# which tool/build/fixupobj.c improves at build time like this
+#
+#       nop nop nop nop nop nop nop nop nop
+#     func:
+#       xchg %ax,%ax
+#       ...
+#
+# which --ftrace morphs at runtime like this
+#
+#       ud2                # 2 bytes
+#       call ftrace_hook   # 5 bytes
+#       jmp +2             # 2 bytes
+#     func:
+#       jmp -7             # 2 bytes
+#       ...
+#
+CONFIG_CCFLAGS += -fpatchable-function-entry=11,9
+endif
+ifeq ($(ARCH), aarch64)
+# this flag causes gcc to generate functions like this
+#
+#       nop nop nop nop nop nop
+#     func:
+#       nop
+#       ...
+#
+# which --ftrace morphs at runtime like this
+#
+#       brk #31337
+#       stp x29,x30,[sp,#-16]!
+#       mov x29,sp
+#       bl  ftrace_hook
+#       ldp x29,x30,[sp],#16
+#       b   +1
+#     func:
+#       b   -5
+#       ...
+#
+CONFIG_CCFLAGS += -fpatchable-function-entry=7,6
+endif
 endif

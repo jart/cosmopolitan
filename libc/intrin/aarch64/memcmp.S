@@ -25,7 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/aarch64/asmdefs.h"
+#include "libc/intrin/aarch64/asmdefs.internal.h"
 
 #define __memcmp_aarch64 memcmp
 

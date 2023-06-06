@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_GetVolumeInformationByHandleW,GetVolumeInformationByHandleW,0
 
 	.text.windows
+        .ftrace1
 GetVolumeInformationByHandle:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetVolumeInformationByHandleW(%rip),%rax
 	jmp	__sysv2nt8
 #elif defined(__aarch64__)

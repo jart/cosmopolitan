@@ -103,7 +103,7 @@ o/$(MODE)/examples/examples.pkg:						\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/examples/unbourne.o: private						\
-		OVERRIDE_CPPFLAGS +=						\
+		CPPFLAGS +=							\
 			-DSTACK_FRAME_UNLIMITED					\
 			-fpie
 
@@ -169,7 +169,7 @@ o/$(MODE)/examples/symtab.com:							\
 	@$(MAKE_SYMTAB_ZIP)
 
 o/$(MODE)/examples/picol.o: private				\
-		OVERRIDE_CPPFLAGS +=				\
+		CPPFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/examples/picol.com.dbg:				\

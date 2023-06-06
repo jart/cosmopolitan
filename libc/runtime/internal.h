@@ -29,8 +29,9 @@ extern unsigned char _tls_size[] __attribute__((__weak__));
 extern unsigned char _tls_content[] __attribute__((__weak__));
 
 void _init(void) _Hide;
-void __morph_tls(void);
-void __enable_tls(void);
+int ftrace_init(void) _Hide;
+void __morph_tls(void) _Hide;
+void __enable_tls(void) _Hide;
 void __enable_threads(void) _Hide;
 void *__cxa_finalize(void *) _Hide;
 void __stack_chk_fail(void) wontreturn relegated;

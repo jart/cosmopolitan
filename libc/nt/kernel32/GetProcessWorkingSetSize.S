@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_GetProcessWorkingSetSize,GetProcessWorkingSetSize,708
 
 	.text.windows
+        .ftrace1
 GetProcessWorkingSetSize:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetProcessWorkingSetSize(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

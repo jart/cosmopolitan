@@ -62,11 +62,12 @@ imp() {
 thunk() {
   printf '
 	.text.windows
+        .ftrace1
 %s:
+        .ftrace2
 #ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
-	.profilable
 	mov	__imp_%s(%%rip),%%rax
 	jmp	%s
 #elif defined(__aarch64__)
@@ -81,11 +82,12 @@ thunk() {
 thunk0() {
   printf '
 	.text.windows
+        .ftrace1
 %s:
+        .ftrace2
 #ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
-	.profilable
 	sub	$32,%%rsp
 	call	*__imp_%s(%%rip)
 	leave
@@ -101,11 +103,12 @@ thunk0() {
 thunk1() {
   printf '
 	.text.windows
+        .ftrace1
 %s:
+        .ftrace2
 #ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
-	.profilable
 	mov	%%rdi,%%rcx
 	sub	$32,%%rsp
 	call	*__imp_%s(%%rip)

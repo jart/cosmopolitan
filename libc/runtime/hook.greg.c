@@ -18,99 +18,114 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/morph.h"
-#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+
+#ifdef __x86_64__
+typedef uint8_t code_t;
+#elif defined(__aarch64__)
+typedef uint32_t code_t;
+#else
+#error "unsupported architecture"
+#endif
+
+static privileged bool IsVirginFunction(const code_t *func) {
+#ifdef __x86_64__
+  long i;
+  // function must be preceeded by 9 nops
+  for (i = -9; i < 0; ++i) {
+    if (func[i] != 0x90) return false;
+  }
+  // function must start with `nop nop` or `xchg %ax,%ax`
+  if (func[0] == 0x90 && func[1] == 0x90) return true;
+  if (func[0] == 0x66 && func[1] == 0x90) return true;
+  return false;
+#elif defined(__aarch64__)
+  long i;
+  // function must be preceeded by 6 nops
+  for (i = -6; i < 0; ++i) {
+    if (func[i] != 0xd503201f) return false;
+  }
+  // function must start with one nop
+  return func[0] == 0xd503201f;
+#endif
+}
+
+static privileged void HookFunction(code_t *func, void *dest) {
+  long dp;
+#ifdef __x86_64__
+  dp = (intptr_t)dest - (intptr_t)(func - 7 + 5);
+  if (!(INT32_MIN <= dp && dp <= INT32_MAX)) return;
+  // emit `ud2` signature for safety and checkability
+  func[-9] = 0x0f;
+  func[-8] = 0x0b;
+  // emit `call dest` instruction
+  func[-7] = 0xe8;
+  func[-6] = dp;
+  func[-5] = dp >> 8;
+  func[-4] = dp >> 16;
+  func[-3] = dp >> 24;
+  // emit `jmp +2` instruction to re-enter hooked function
+  func[-2] = 0xeb;
+  func[-1] = 0x02;
+  // emit `jmp -2` instruction to enter detour
+  func[+0] = 0xeb;
+  func[+1] = -7 - 2;
+#elif defined(__aarch64__)
+  dp = (code_t *)dest - (func - 3);
+  if (!(-33554432 <= dp && dp <= +33554431)) return;
+  func[-6] = 0xd4200000 | (31337 << 5);       // brk #31337
+  func[-5] = 0xa9bf7bfd;                      // stp x29,x30,[sp, #-16]!
+  func[-4] = 0x910003fd;                      // mov x29,sp
+  func[-3] = 0x94000000 | (dp & 0x03ffffff);  // bl  dest
+  func[-2] = 0xa8c17bfd;                      // ldp x29,x30,[sp], #16
+  func[-1] = 0x14000000 | (+2 & 0x03ffffff);  // b  +1
+  func[+0] = 0x14000000 | (-5 & 0x03ffffff);  // b  -5
+#endif
+}
 
 /**
  * Rewrites code in memory to hook function calls.
  *
- * We do this by searching each function for the nop instruction
- * inserted by GCC when we use the -pg -mnop-mcount flags. There's no
- * risk of corrupting data since the linker scripts won't mix code and
- * data.
+ * On x86_64 you need the compiler flag:
  *
- * Modules built with -O3 and without the profiling flags might have
- * these same nop instructions, but that shouldn't be problematic since
- * they're only there for the puposes of aligning jumps, and therefore
- * aren't actually executed. However codebases that use huge function
- * alignments with wide-nop slides could pose minor issues. Further note
- * that Cosmopolitan sources are almost never intentionally written to
- * use code alignment, since we've only seen a few cases where it helps.
+ *     -fpatchable-function-entry=11,9
  *
+ * On Aarch64 you need the compiler flag:
+ *
+ *     -fpatchable-function-entry=7,6
+ *
+ * This function can currently only be called once.
+ *
+ * @param dest is the address of the target function, which all hookable
+ *     functions shall be reprogrammed to call from their epilogues; and
+ *     must be sufficiently close in memory to the the program image, in
+ *     order to meet ISA displacement requirements
+ * @param st can be obtained using `GetSymbolTable()`
  * @see ape/ape.lds
  */
-privileged noinstrument noasan int __hook(void *ifunc,
-                                          struct SymbolTable *symbols) {
-  int rc;
-  size_t i;
-  char *p, *pe;
-  intptr_t addr;
+privileged noinstrument noasan int __hook(void *dest, struct SymbolTable *st) {
+  long i;
   sigset_t mask;
-  uint64_t code, mcode;
-  intptr_t kMcount = (intptr_t)&mcount;
-  intptr_t kProgramCodeStart = (intptr_t)_ereal;
-  intptr_t kPrivilegedStart = (intptr_t)__privileged_addr;
-  if (!symbols) return -1;
+  code_t *p, *pe;
+  intptr_t lowest;
+  if (!st) return -1;
   __morph_begin(&mask);
-  for (i = 0; i < symbols->count; ++i) {
-    if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {
-      continue;
-    }
-    if (symbols->addr_base + symbols->symbols[i].y >= kPrivilegedStart) {
-      break;
-    }
-    for (p = (char *)symbols->addr_base + symbols->symbols[i].x,
-        pe = (char *)symbols->addr_base + symbols->symbols[i].y;
-         p + 8 - 1 <= pe; ++p) {
-      code = ((uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
-              (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
-              (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
-              (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000);
-
-      /*
-       * Test for -mrecord-mcount (w/ -fpie or -fpic)
-       *
-       *   nopw 0x00(%rax,%rax,1)  ← morphed by package.com
-       *   call *mcount(%rip)      ← linked w/o -static
-       *   addr32 call mcount      ← relaxed w/ -static
-       *   addr32 call mcount      ← relaxed w/ -static
-       *
-       * Note that gcc refuses to insert the six byte nop.
-       */
-      if ((code & 0x0000FFFFFFFFFFFF) == 0x0000441F0F66 ||
-          (code & 0x0000FFFFFFFFFFFF) ==
-              ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xE867) &
-               0x0000FFFFFFFFFFFF) ||
-          (code & 0x0000FFFFFFFFFFFF) ==
-              ((((kMcount - ((intptr_t)&p[2] + 4)) << 16) | 0xFF15) &
-               0x0000FFFFFFFFFFFF)) {
-        p[0] = 0x67;
-        p[1] = 0xE8;
-        addr = (intptr_t)ifunc - ((intptr_t)&p[2] + 4);
-        p[2] = (addr & 0x000000ff) >> 000;
-        p[3] = (addr & 0x0000ff00) >> 010;
-        p[4] = (addr & 0x00ff0000) >> 020;
-        p[5] = (addr & 0xff000000) >> 030;
-        break;
-      }
-
-      /*
-       * Test for -mnop-mcount (w/ -fno-pie)
-       */
-      mcode = code & 0x000000FFFFFFFFFF;
-      if ((mcode == 0x00441F0F /*   nopl 0x00(%eax,%eax,1) [canonical] */) ||
-          (mcode == 0x00041F0F67 /* nopl (%eax,%eax,1)     [older gcc] */)) {
-        if (p[-1] != 0x66 /*        nopw 0x0(%rax,%rax,1)  [donotwant] */) {
-          p[0] = 0xE8 /* call Jvds */;
-          addr = (intptr_t)ifunc - ((intptr_t)&p[1] + 4);
-          p[1] = (addr & 0x000000ff) >> 000;
-          p[2] = (addr & 0x0000ff00) >> 010;
-          p[3] = (addr & 0x00ff0000) >> 020;
-          p[4] = (addr & 0xff000000) >> 030;
-        }
-        break;
-      }
+  lowest = MAX((intptr_t)__executable_start, (intptr_t)_ereal);
+  for (i = 0; i < st->count; ++i) {
+    if (st->symbols[i].x < 9) continue;
+    if (st->addr_base + st->symbols[i].x < lowest) continue;
+    if (st->addr_base + st->symbols[i].y >= (intptr_t)__privileged_addr) break;
+    p = (code_t *)((char *)st->addr_base + st->symbols[i].x);
+    pe = (code_t *)((char *)st->addr_base + st->symbols[i].y);
+    if (pe - p < 2) continue;
+    if (IsVirginFunction(p)) {
+      // kprintf("hooking %t\n", p);
+      HookFunction(p, dest);
+    } else {
+      // kprintf("can't hook %t at %lx\n", p, p);
     }
   }
   __morph_end(&mask);

@@ -2,11 +2,12 @@
 .imp	gdi32,__imp_CreateDIBSection,CreateDIBSection,1069
 
 	.text.windows
+        .ftrace1
 CreateDIBSection:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_CreateDIBSection(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

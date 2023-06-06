@@ -23,8 +23,9 @@
 //	@param	edi is int to encode
 //	@return	rax is word-encoded byte buffer
 //	@note	invented on a napkin in a new jersey diner
-_tpenc:	.leafprologue
-	.profilable
+	.ftrace1
+_tpenc:	.ftrace2
+	.leafprologue
 	mov	%edi,%edi
 	xor	%eax,%eax
 	cmp	$127,%edi
@@ -47,20 +48,20 @@ _tpenc:	.leafprologue
 	.rodata
 	.balign	4
 	.underrun
-kTpenc:	.rept	4			# MSB≤10 (0x7FF)
-	.byte	1,0b11000000		# len,mark
+kTpenc:	.rept	4			// MSB≤10 (0x7FF)
+	.byte	1,0b11000000		// len,mark
 	.endr
-	.rept	5			# MSB≤15 (0xFFFF)
-	.byte	2,0b11100000		# len,mark
+	.rept	5			// MSB≤15 (0xFFFF)
+	.byte	2,0b11100000		// len,mark
 	.endr
-	.rept	5			# MSB≤20 (0x1FFFFF)
-	.byte	3,0b11110000		# len,mark
+	.rept	5			// MSB≤20 (0x1FFFFF)
+	.byte	3,0b11110000		// len,mark
 	.endr
-	.rept	5			# MSB≤25 (0x3FFFFFF)
-	.byte	4,0b11111000		# len,mark
+	.rept	5			// MSB≤25 (0x3FFFFFF)
+	.byte	4,0b11111000		// len,mark
 	.endr
-	.rept	6			# MSB≤31 (0xffffffff)
-	.byte	5,0b11111100		# len,mark
+	.rept	6			// MSB≤31 (0xffffffff)
+	.byte	5,0b11111100		// len,mark
 	.endr
 	.zero	2
 	.endobj	kTpenc

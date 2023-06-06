@@ -24,7 +24,7 @@
 
 __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
-privileged int sys_gettid(void) {
+int sys_gettid(void) {
 #ifdef __x86_64__
   int tid;
   int64_t wut;

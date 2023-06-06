@@ -2,11 +2,12 @@
 .imp	user32,__imp_CreateMenu,CreateMenu,1621
 
 	.text.windows
+        .ftrace1
 CreateMenu:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$32,%rsp
 	call	*__imp_CreateMenu(%rip)
 	leave

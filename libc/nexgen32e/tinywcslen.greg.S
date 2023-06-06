@@ -23,9 +23,10 @@
 //	@param	RDI is wchar_t *s
 //	@param	EAX is unsigned length
 //	@see	libc/nexgen32e/strsak32.S
+	.ftrace1
 tinywcslen:
+	.ftrace2
 	.leafprologue
-	.profilable
 	xor	%eax,%eax
 1:	cmpl	$0,(%rdi,%rax,4)
 	jz	2f

@@ -2,11 +2,12 @@
 .imp	iphlpapi,__imp_GetBestRoute,GetBestRoute,0
 
 	.text.windows
+        .ftrace1
 GetBestRoute:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetBestRoute(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

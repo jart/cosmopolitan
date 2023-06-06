@@ -98,12 +98,12 @@ o/$(MODE)/tool/viz/printvideo.com:			\
 	@$(MAKE_SYMTAB_ZIP)
 
 o/$(MODE)/tool/viz/derasterize.o: private	\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED	\
 			$(MATHEMATICAL)
 
 o/$(MODE)/tool/viz/magikarp.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			$(MATHEMATICAL)
 
 $(TOOL_VIZ_OBJS):				\

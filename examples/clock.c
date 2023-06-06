@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/struct/timespec.h"
+#include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 #include "libc/time/time.h"
 
@@ -16,6 +17,7 @@
  */
 
 int main(int argc, char *argv[]) {
+  ShowCrashReports();
   unsigned long i;
   volatile unsigned long x;
   struct timespec now, start, next, interval;

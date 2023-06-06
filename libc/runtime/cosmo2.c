@@ -154,7 +154,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   environ = envp;
   if (argc) program_invocation_name = argv[0];
 
-  // run initialization callbacks
+  // initialize program
   _init();
   __enable_tls();
 #ifdef SYSDEBUG
@@ -163,6 +163,9 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   for (fp = __init_array_end; fp-- > __init_array_start;) {
     (*fp)(argc, argv, envp, auxv);
   }
+#ifdef FTRACE
+  argc = ftrace_init();
+#endif
 
   // run program
   if (!IsTiny()) __wipe(0);

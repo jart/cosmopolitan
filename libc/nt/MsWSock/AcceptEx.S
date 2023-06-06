@@ -2,11 +2,12 @@
 .imp	MsWSock,__imp_AcceptEx,AcceptEx,0
 
 	.text.windows
+        .ftrace1
 AcceptEx:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_AcceptEx(%rip),%rax
 	jmp	__sysv2nt8
 #elif defined(__aarch64__)

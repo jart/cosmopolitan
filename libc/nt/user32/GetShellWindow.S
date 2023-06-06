@@ -2,11 +2,12 @@
 .imp	user32,__imp_GetShellWindow,GetShellWindow,1950
 
 	.text.windows
+        .ftrace1
 GetShellWindow:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$32,%rsp
 	call	*__imp_GetShellWindow(%rip)
 	leave

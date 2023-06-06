@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_GetHandleInformation,GetHandleInformation,0
 
 	.text.windows
+        .ftrace1
 GetHandleInformation:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetHandleInformation(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

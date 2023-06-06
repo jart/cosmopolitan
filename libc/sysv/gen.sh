@@ -66,10 +66,11 @@ errfun() {
   ERRNO="$2"
   {
     printf '#include "libc/macros.internal.h"\n.text.unlikely\n\n'
+    printf '\t.ftrace1\n'
     printf '%s:\n' "$NAME"
+    printf '\t.ftrace2\n'
     printf '#ifdef __x86_64__
 	.leafprologue
-	.profilable
 	mov	%s(%%rip),%%ecx
 	jmp	__errfun
 #elif defined(__aarch64__)

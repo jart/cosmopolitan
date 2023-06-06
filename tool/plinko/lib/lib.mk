@@ -53,14 +53,14 @@ $(TOOL_PLINKO_LIB_A).pkg:				\
 		$(foreach x,$(TOOL_PLINKO_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
 ifeq ($(MODE),)
-$(TOOL_PLINKO_LIB_A_OBJS): private OVERRIDE_CFLAGS += -fno-inline
+$(TOOL_PLINKO_LIB_A_OBJS): private CFLAGS += -fno-inline
 endif
 
 ifeq ($(MODE),dbg)
-$(TOOL_PLINKO_LIB_A_OBJS): private OVERRIDE_CFLAGS += -fno-inline
+$(TOOL_PLINKO_LIB_A_OBJS): private CFLAGS += -fno-inline
 endif
 
-$(TOOL_PLINKO_LIB_A_OBJS): private OVERRIDE_CFLAGS += -ffast-math -foptimize-sibling-calls -O2
+$(TOOL_PLINKO_LIB_A_OBJS): private CFLAGS += -ffast-math -foptimize-sibling-calls -O2
 
 TOOL_PLINKO_LIB_LIBS = $(foreach x,$(TOOL_PLINKO_LIB_ARTIFACTS),$($(x)))
 TOOL_PLINKO_LIB_SRCS = $(foreach x,$(TOOL_PLINKO_LIB_ARTIFACTS),$($(x)_SRCS))

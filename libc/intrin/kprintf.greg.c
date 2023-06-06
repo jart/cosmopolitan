@@ -382,7 +382,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             if (tib) {
               x = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
             } else {
-              x = sys_gettid();
+              x = __pid;
             }
             if (!__nocolor && p + 7 <= e) {
               *p++ = '\e';

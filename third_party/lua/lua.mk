@@ -148,15 +148,15 @@ $(THIRD_PARTY_LUA_A).pkg:						\
 
 o/$(MODE)/third_party/lua/lmathlib.o					\
 o//third_party/lua/lgc.o: private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-O2
 
 o/$(MODE)/third_party/lua/lvm.o: private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fno-gcse
 
 $(THIRD_PARTY_LUA_A_OBJS): private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-ffunction-sections				\
 			-fdata-sections
 

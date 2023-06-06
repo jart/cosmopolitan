@@ -105,7 +105,7 @@ o/$(MODE)/tool/build/blinkenlights.com:				\
 	@$(MAKE_SYMTAB_ZIP)
 
 o/$(MODE)/tool/build/emulator.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-fno-sanitize=pointer-overflow
 
 o/$(MODE)/tool/build/dso/sandbox.so.zip.o		\
@@ -127,7 +127,7 @@ o/$(MODE)/tool/build/dd.zip.o: private			\
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
 o/$(MODE)/tool/build/dso/sandbox.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fPIC
 
 o/$(MODE)/tool/build/dso/sandbox.o:			\

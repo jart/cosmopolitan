@@ -2,11 +2,12 @@
 .imp	user32,__imp_GetWindowRect,GetWindowRect,1997
 
 	.text.windows
+        .ftrace1
 GetWindowRect:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetWindowRect(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

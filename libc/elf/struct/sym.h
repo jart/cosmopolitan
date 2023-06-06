@@ -12,7 +12,9 @@ typedef struct Elf64_Sym {
   uint8_t st_other;
   /* SHN_UNDEF, <section index>, SHN_ABS, SHN_COMMON, etc. */
   Elf64_Section st_shndx;
+  /* byte offset into GetElfSectionAddress(st_shndx) */
   Elf64_Addr st_value;
+  /* byte length optionally set by .size directive */
   Elf64_Xword st_size;
 } Elf64_Sym;
 

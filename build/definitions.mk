@@ -137,9 +137,6 @@ else
 IMAGE_BASE_VIRTUAL ?= 0x400000
 endif
 
-FTRACE =								\
-	-pg
-
 BACKTRACES =								\
 	-fno-omit-frame-pointer						\
 	-fno-optimize-sibling-calls					\

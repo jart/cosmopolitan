@@ -34,7 +34,7 @@ THIRD_PARTY_XED_A_DEPS :=				\
 
 ifneq ($(ARCH), aarch64)
 o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-mstringop-strategy=unrolled_loop
 endif
 
@@ -48,7 +48,7 @@ $(THIRD_PARTY_XED_A).pkg:				\
 		$(foreach x,$(THIRD_PARTY_XED_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-O3
 
 HIRD_PARTY_XED_LIBS = $(foreach x,$(THIRD_PARTY_XED_ARTIFACTS),$($(x)))

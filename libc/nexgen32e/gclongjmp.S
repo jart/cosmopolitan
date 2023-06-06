@@ -30,11 +30,12 @@
 //	@see	examples/ctrlc.c
 //	@threadsafe
 //	@noreturn
+	.ftrace1
 _gclongjmp:
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%fs:0,%r12			# __get_tls()
 	mov	0x18(%r12),%r12			# Tls::garbages
 	test	%r12,%r12

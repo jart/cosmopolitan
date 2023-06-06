@@ -19,10 +19,11 @@
 #include "libc/macros.internal.h"
 
 //	Re-initializes FPU.
+	.ftrace1
 fpreset:
 _fpreset:
+	.ftrace2
 	.leafprologue
-	.profilable
 	finit
 	.leafepilogue
 	.endfn	_fpreset,globl

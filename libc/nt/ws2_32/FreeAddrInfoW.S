@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_FreeAddrInfoW,FreeAddrInfoW,27
 
 	.text.windows
+        .ftrace1
 FreeAddrInfo:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%rdi,%rcx
 	sub	$32,%rsp
 	call	*__imp_FreeAddrInfoW(%rip)

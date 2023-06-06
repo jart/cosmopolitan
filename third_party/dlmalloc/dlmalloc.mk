@@ -46,7 +46,7 @@ ifneq ($(MODE),tinylinux)
 # README file recommends -O3
 # It does double performance in default mode
 o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-O3
 endif
 endif
@@ -54,14 +54,14 @@ endif
 # we can't use address sanitizer because:
 #   address sanitizer depends on dlmalloc
 o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-ffreestanding				\
 			-fno-sanitize=address
 
 # we must segregate codegen because:
 #   file contains multiple independently linkable apis
 o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-ffunction-sections			\
 			-fdata-sections
 

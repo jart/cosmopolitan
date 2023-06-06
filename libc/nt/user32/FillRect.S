@@ -2,11 +2,12 @@
 .imp	user32,__imp_FillRect,FillRect,1780
 
 	.text.windows
+        .ftrace1
 FillRect:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_FillRect(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

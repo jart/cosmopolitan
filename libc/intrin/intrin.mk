@@ -16,6 +16,7 @@ LIBC_INTRIN_A_CHECKS = $(LIBC_INTRIN_A).pkg
 
 ifeq ($(ARCH), aarch64)
 LIBC_INTRIN_A_SRCS_S += $(wildcard libc/intrin/aarch64/*.S)
+LIBC_INTRIN_A_HDRS += libc/intrin/aarch64/asmdefs.internal.h
 endif
 
 LIBC_INTRIN_A_OBJS =					\
@@ -49,39 +50,39 @@ $(LIBC_INTRIN_A).pkg:					\
 # we can't use asan because:
 #   __strace_init() calls this before asan is initialized
 o/$(MODE)/libc/intrin/strace_enabled.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-fno-sanitize=address
 
 # we can't use asan because:
 #   asan guard pages haven't been allocated yet
 o/$(MODE)/libc/intrin/directmap.o			\
 o/$(MODE)/libc/intrin/directmap-nt.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-ffreestanding			\
 			-fno-sanitize=address
 
 # we want small code size because:
 #   to keep .text.head under 4096 bytes
 o/$(MODE)/libc/intrin/mman.greg.o: private		\
-		OVERRIDE_COPTS +=			\
+		COPTS +=				\
 			-Os
 
 # we can't use asan and ubsan because:
 #   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
 o/$(MODE)/libc/intrin/asan.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-O2				\
 			-finline			\
 			-finline-functions
 
 o/$(MODE)/libc/intrin/asanthunk.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-x-no-pg			\
 			$(MNO_FENTRY)			\
 			-ffreestanding			\
@@ -95,7 +96,7 @@ o/$(MODE)/libc/intrin/strerrno.greg.o			\
 o/$(MODE)/libc/intrin/strerrdoc.greg.o			\
 o/$(MODE)/libc/intrin/strerror_wr.greg.o		\
 o/$(MODE)/libc/intrin/kprintf.greg.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fpie				\
 			-fwrapv				\
 			-x-no-pg			\
@@ -109,10 +110,9 @@ o/$(MODE)/libc/intrin/kprintf.greg.o: private		\
 o/$(MODE)/libc/intrin/futex_wait.o			\
 o/$(MODE)/libc/intrin/futex_wake.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
-o/$(MODE)/libc/intrin/sys_gettid.greg.o			\
 o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
 o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fwrapv				\
 			-x-no-pg			\
 			$(MNO_FENTRY)			\
@@ -125,13 +125,13 @@ o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
 #   global gone could be raised
 o/$(MODE)/libc/intrin/exit.o				\
 o/$(MODE)/libc/intrin/restorewintty.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fno-sanitize=all
 
 # we can't use -ftrapv because:
 #   this file implements it
 o/$(MODE)/libc/intrin/ftrapv.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-ffunction-sections		\
 			-ffreestanding			\
 			-fwrapv
@@ -142,7 +142,7 @@ o/$(MODE)/libc/intrin/describeflags.o			\
 o/$(MODE)/libc/intrin/describeframe.o			\
 o/$(MODE)/libc/intrin/describemapflags.o		\
 o/$(MODE)/libc/intrin/describeprotflags.o: private	\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fno-sanitize=address
 
 o/$(MODE)/libc/intrin/exit1.greg.o			\
@@ -180,7 +180,7 @@ o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
 o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
 o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
 o/$(MODE)/libc/intrin/wsawaitformultipleevents.o: private\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os				\
 			-fwrapv				\
 			-ffreestanding			\
@@ -188,20 +188,20 @@ o/$(MODE)/libc/intrin/wsawaitformultipleevents.o: private\
 			-fno-sanitize=all
 
 o//libc/intrin/memmove.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fno-toplevel-reorder
 
 o//libc/intrin/bzero.o					\
 o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
 o//libc/intrin/memmove.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-O2 -finline
 
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\
 o/$(MODE)/libc/intrin/memmove.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fpie
 
 # these assembly files are safe to build on aarch64

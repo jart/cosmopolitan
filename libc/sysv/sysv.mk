@@ -78,7 +78,7 @@ o/$(MODE)/libc/sysv/errno.o				\
 o/$(MODE)/libc/sysv/sysret.o				\
 o/$(MODE)/libc/sysv/errfun2.o				\
 o/$(MODE)/libc/sysv/sysret.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			$(NO_MAGIC)
 
 #───────────────────────────────────────────────────────────────────────────────

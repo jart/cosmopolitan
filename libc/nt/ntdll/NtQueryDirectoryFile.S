@@ -2,11 +2,12 @@
 .ntimp	NtQueryDirectoryFile,NtQueryDirectoryFile
 
 	.text.windows
+        .ftrace1
 NtQueryDirectoryFile:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtQueryDirectoryFile(%rip),%rax
 	jmp	__sysv2nt12
 #elif defined(__aarch64__)

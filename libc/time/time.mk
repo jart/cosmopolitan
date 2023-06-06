@@ -55,11 +55,11 @@ $(LIBC_TIME_A).pkg:				\
 		$(foreach x,$(LIBC_TIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/time/strftime.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-fno-jump-tables
 
 o/$(MODE)/libc/time/localtime.o: private	\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-fdata-sections		\
 			-ffunction-sections
 
@@ -67,7 +67,7 @@ o/$(MODE)/libc/time/localtime.o: private	\
 #   we're dividing by constants
 o/$(MODE)/libc/time/iso8601.o			\
 o/$(MODE)/libc/time/iso8601us.o: private	\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-O3
 
 o/$(MODE)/usr/share/zoneinfo/.zip.o:		\

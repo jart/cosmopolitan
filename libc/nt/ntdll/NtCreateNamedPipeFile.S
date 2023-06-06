@@ -2,11 +2,12 @@
 .ntimp	NtCreateNamedPipeFile,NtCreateNamedPipeFile
 
 	.text.windows
+        .ftrace1
 NtCreateNamedPipeFile:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtCreateNamedPipeFile(%rip),%rax
 	jmp	__sysv2nt14
 #elif defined(__aarch64__)

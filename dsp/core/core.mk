@@ -40,15 +40,15 @@ o/$(MODE)/dsp/core/magikarp.o			\
 o/$(MODE)/dsp/core/c93654369.o			\
 o/$(MODE)/dsp/core/float2short.o		\
 o/$(MODE)/dsp/core/scalevolume.o: private	\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			$(MATHEMATICAL)
 
 o/tiny/dsp/core/scalevolume.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-Os
 
 o/$(MODE)/dsp/core/det3.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-ffast-math
 
 DSP_CORE_LIBS = $(foreach x,$(DSP_CORE_ARTIFACTS),$($(x)))

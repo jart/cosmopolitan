@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_CreateProcessW,CreateProcessW,0
 
 	.text.windows
+        .ftrace1
 __CreateProcess:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_CreateProcessW(%rip),%rax
 	jmp	__sysv2nt10
 #elif defined(__aarch64__)

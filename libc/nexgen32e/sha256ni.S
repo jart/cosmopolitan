@@ -80,9 +80,10 @@ Tim Chen <tim.c.chen@linux.intel.com>\n"
 //	@param	%rsi points to input data
 //	@param	%rdx is number of blocks to process
 //	@see	X86_HAVE(SHA)
+	.ftrace1
 sha256_transform_ni:
+	.ftrace2
 	.leafprologue
-	.profilable
 	shl	$6,NUM_BLKS			# convert to bytes
 	jz	.Ldone_hash
 	add	DATA_PTR,NUM_BLKS		# pointer to end of data

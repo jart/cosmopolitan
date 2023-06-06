@@ -2,11 +2,12 @@
 .ntimp	RtlReAllocateHeap,RtlReAllocateHeap
 
 	.text.windows
+        .ftrace1
 RtlReAllocateHeap:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_RtlReAllocateHeap(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

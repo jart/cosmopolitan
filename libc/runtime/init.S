@@ -48,11 +48,12 @@
 	.section .initprologue,"ax",@progbits
 	.type	_init,@function
 	.globl	_init
+	.ftrace1
 _init:
+	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	ezlea	__init_bss_start,di
 	ezlea	__init_rodata_start,si
 #elif defined(__aarch64__)

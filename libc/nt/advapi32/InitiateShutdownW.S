@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_InitiateShutdownW,InitiateShutdownW,1403
 
 	.text.windows
+        .ftrace1
 InitiateShutdown:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_InitiateShutdownW(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

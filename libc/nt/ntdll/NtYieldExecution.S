@@ -2,11 +2,12 @@
 .ntimp	NtYieldExecution,NtYieldExecution
 
 	.text.windows
+        .ftrace1
 NtYieldExecution:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$32,%rsp
 	call	*__imp_NtYieldExecution(%rip)
 	leave

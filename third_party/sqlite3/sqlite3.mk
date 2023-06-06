@@ -138,12 +138,12 @@ THIRD_PARTY_SQLITE3_CPPFLAGS_DEBUG = -DSQLITE_DEBUG
 endif
 
 $(THIRD_PARTY_SQLITE3_A_OBJS): private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			$(THIRD_PARTY_SQLITE3_FLAGS)			\
 			$(THIRD_PARTY_SQLITE3_CPPFLAGS_DEBUG)		\
 
 $(THIRD_PARTY_SQLITE3_SHELL_OBJS): private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			$(THIRD_PARTY_SQLITE3_FLAGS)			\
 			$(THIRD_PARTY_SQLITE3_CPPFLAGS_DEBUG)		\
 			-DHAVE_READLINE=0				\
@@ -170,16 +170,16 @@ o//third_party/sqlite3/parse.o						\
 o//third_party/sqlite3/select.o						\
 o//third_party/sqlite3/pragma.o						\
 o//third_party/sqlite3/vdbe.o: private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-Os
 
 o/$(MODE)/third_party/sqlite3/shell.o: private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED
 
 $(THIRD_PARTY_SQLITE3_A_OBJS)						\
 $(THIRD_PARTY_SQLITE3_SHELL_OBJS): private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fdata-sections					\
 			-ffunction-sections
 
@@ -187,7 +187,7 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS): private				\
 o/$(MODE)/third_party/sqlite3/expr.o					\
 o/$(MODE)/third_party/sqlite3/printf.o					\
 o/$(MODE)/third_party/sqlite3/parse.o: private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fpie
 
 o/$(MODE)/third_party/sqlite3/shell.o: private QUOTA = -M512m -C16 -L180

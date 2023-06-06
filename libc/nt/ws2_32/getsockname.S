@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_getsockname,getsockname,6
 
 	.text.windows
+        .ftrace1
 __sys_getsockname_nt:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_getsockname(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

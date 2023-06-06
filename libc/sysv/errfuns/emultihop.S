@@ -1,10 +1,11 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+	.ftrace1
 emultihop:
+	.ftrace2
 #ifdef __x86_64__
 	.leafprologue
-	.profilable
 	mov	EMULTIHOP(%rip),%ecx
 	jmp	__errfun
 #elif defined(__aarch64__)

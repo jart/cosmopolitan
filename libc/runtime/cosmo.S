@@ -191,7 +191,7 @@ cosmo:	push	%rbp
 	.init.end 305,_init_symbols
 #endif
 
-#ifdef __PG__
+#ifdef FTRACE
 	.init.start 306,_init_ftrace
 	push	%rdi
 	push	%rsi

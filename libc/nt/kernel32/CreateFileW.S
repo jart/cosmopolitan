@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_CreateFileW,CreateFileW,0
 
 	.text.windows
+        .ftrace1
 __CreateFile:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_CreateFileW(%rip),%rax
 	jmp	__sysv2nt8
 #elif defined(__aarch64__)

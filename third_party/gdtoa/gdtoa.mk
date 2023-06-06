@@ -39,7 +39,7 @@ $(THIRD_PARTY_GDTOA_A).pkg:				\
 		$(foreach x,$(THIRD_PARTY_GDTOA_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_GDTOA_A_OBJS): private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-ffunction-sections		\
 			-fdata-sections
 

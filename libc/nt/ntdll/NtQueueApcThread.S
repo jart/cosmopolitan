@@ -2,11 +2,12 @@
 .ntimp	NtQueueApcThread,NtQueueApcThread
 
 	.text.windows
+        .ftrace1
 NtQueueApcThread:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtQueueApcThread(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

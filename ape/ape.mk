@@ -89,7 +89,7 @@ APE_SRCS = $(APE_SRCS_C) $(APE_SRCS_S)
 APE_OBJS = $(APE_SRCS_S:%.S=o/$(MODE)/%.o)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
-o/$(MODE)/ape/public/ape.lds: OVERRIDE_CPPFLAGS += -UCOSMO
+o/$(MODE)/ape/public/ape.lds: CPPFLAGS += -UCOSMO
 o/$(MODE)/ape/public/ape.lds:			\
 		ape/public/ape.lds		\
 		ape/ape.lds			\

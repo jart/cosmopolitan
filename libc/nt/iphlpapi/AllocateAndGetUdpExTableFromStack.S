@@ -2,11 +2,12 @@
 .imp	iphlpapi,__imp_AllocateAndGetUdpExTableFromStack,AllocateAndGetUdpExTableFromStack,0
 
 	.text.windows
+        .ftrace1
 AllocateAndGetUdpExTableFromStack:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_AllocateAndGetUdpExTableFromStack(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

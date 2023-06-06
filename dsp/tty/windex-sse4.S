@@ -23,10 +23,11 @@
 //	@param	rdi points to nonempty array
 //	@param	esi is 16-byte aligned 8+ / 8 multiple array item count
 //	@note	needs sse4 (nehalem+)
+	.ftrace1
 windex_sse4:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	$8,%eax
 	sub	$32,%rsp
 	movdqa	(%rdi),%xmm2

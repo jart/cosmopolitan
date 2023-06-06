@@ -45,7 +45,7 @@ o/$(MODE)/third_party/zlib/crc32_simd.o: private	\
 			-msse4.2			\
 			-mpclmul
 $(THIRD_PARTY_ZLIB_A_OBJS): private			\
-		OVERRIDE_CPPFLAGS +=			\
+		CPPFLAGS +=				\
 			-DADLER32_SIMD_SSSE3		\
 			-DCRC32_SIMD_SSE42_PCLMUL	\
 			-DDEFLATE_SLIDE_HASH_SSE2	\
@@ -59,7 +59,7 @@ o/$(MODE)/third_party/zlib/crc32_simd.o: private	\
 		TARGET_ARCH +=				\
 			-march=armv8-a+aes+crc
 $(THIRD_PARTY_ZLIB_A_OBJS): private			\
-		OVERRIDE_CPPFLAGS +=			\
+		CPPFLAGS +=				\
 			-DADLER32_SIMD_NEON		\
 			-DCRC32_ARMV8_CRC32		\
 			-DDEFLATE_SLIDE_HASH_NEON	\
@@ -68,7 +68,7 @@ $(THIRD_PARTY_ZLIB_A_OBJS): private			\
 endif
 
 $(THIRD_PARTY_ZLIB_A_OBJS): private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-ffunction-sections		\
 			-fdata-sections
 

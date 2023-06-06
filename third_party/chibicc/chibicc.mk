@@ -103,7 +103,7 @@ o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/third_party/chibicc/chibicc.o: private			\
-		OVERRIDE_CPPFLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
+		CPPFLAGS += $(THIRD_PARTY_CHIBICC_DEFINES	)
 
 THIRD_PARTY_CHIBICC_LIBS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)))
 THIRD_PARTY_CHIBICC_SRCS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_SRCS))

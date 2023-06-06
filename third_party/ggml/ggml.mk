@@ -81,14 +81,14 @@ $(THIRD_PARTY_GGML_A).pkg:						\
 		$(foreach x,$(THIRD_PARTY_GGML_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_GGML_A_OBJS): private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-O3						\
 			-ffunction-sections				\
 			-fdata-sections
 
 ifeq ($(ARCH), x86_64)
 $(THIRD_PARTY_GGML_A_OBJS): private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-msse3						\
 			-mavx						\
 			-mavx2						\
@@ -97,13 +97,13 @@ $(THIRD_PARTY_GGML_A_OBJS): private					\
 endif
 
 o/opt/third_party/ggml/ggml.o: private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-x-no-pg
 
 ifeq ($(ARCH), x86_64)
 o/rel/third_party/ggml/ggml.o						\
 o/opt/third_party/ggml/ggml.o: private					\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fschedule-insns2				\
 			-mred-zone
 endif

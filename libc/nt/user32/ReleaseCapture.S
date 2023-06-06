@@ -2,11 +2,12 @@
 .imp	user32,__imp_ReleaseCapture,ReleaseCapture,2279
 
 	.text.windows
+        .ftrace1
 ReleaseCapture:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$32,%rsp
 	call	*__imp_ReleaseCapture(%rip)
 	leave

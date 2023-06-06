@@ -54,6 +54,17 @@ Usage: fixupobj.com [-h] ARGS...\n\
 #define MRS_TPIDR_EL0     0xd53bd040u
 #define MOV_REG(DST, SRC) (0xaa0003e0u | (SRC) << 16 | (DST))
 
+static const unsigned char kFatNops[8][8] = {
+    {},                                          //
+    {0x90},                                      // nop
+    {0x66, 0x90},                                // xchg %ax,%ax
+    {0x0f, 0x1f, 0x00},                          // nopl (%rax)
+    {0x0f, 0x1f, 0x40, 0x00},                    // nopl 0x00(%rax)
+    {0x0f, 0x1f, 0x44, 0x00, 0x00},              // nopl 0x00(%rax,%rax,1)
+    {0x66, 0x0f, 0x1f, 0x44, 0x00, 0x00},        // nopw 0x00(%rax,%rax,1)
+    {0x0f, 0x1f, 0x80, 0x00, 0x00, 0x00, 0x00},  // nopl 0x00000000(%rax)
+};
+
 void Write(const char *s, ...) {
   va_list va;
   va_start(va, s);
@@ -108,6 +119,44 @@ void RewriteTlsCode(Elf64_Ehdr *elf, size_t elfsize) {
       }
     }
   }
+}
+
+/**
+ * Improve GCC11 `-fpatchable-function-entry` codegen.
+ *
+ * When using flags like `-fpatchable-function-entry=9,7` GCC v11 will
+ * insert two `nop` instructions, rather than merging them into faster
+ * "fat" nops.
+ *
+ * In order for this to work, the function symbol must be declared as
+ * `STT_FUNC` and `st_size` must have the function's byte length.
+ */
+void OptimizePatchableFunctionEntries(Elf64_Ehdr *elf, size_t elfsize) {
+#ifdef __x86_64__
+  long i, n;
+  int nopcount;
+  Elf64_Sym *syms;
+  Elf64_Shdr *shdr;
+  Elf64_Xword symcount;
+  unsigned char *p, *pe;
+  CHECK_NOTNULL((syms = GetElfSymbolTable(elf, elfsize, &symcount)));
+  for (i = 0; i < symcount; ++i) {
+    if (ELF64_ST_TYPE(syms[i].st_info) == STT_FUNC && syms[i].st_size) {
+      shdr = GetElfSectionHeaderAddress(elf, elfsize, syms[i].st_shndx);
+      p = GetElfSectionAddress(elf, elfsize, shdr);
+      p += syms[i].st_value;
+      pe = p + syms[i].st_size;
+      for (; p + 1 < pe; p += n) {
+        if (p[0] != 0x90) break;
+        if (p[1] != 0x90) break;
+        for (n = 2; p + n < pe && n < ARRAYLEN(kFatNops); ++n) {
+          if (p[n] != 0x90) break;
+        }
+        memcpy(p, kFatNops[n], n);
+      }
+    }
+  }
+#endif /* __x86_64__ */
 }
 
 void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
@@ -191,6 +240,7 @@ void RewriteObject(const char *path) {
     }
     if (elf->e_machine == EM_NEXGEN32E) {
       OptimizeRelocations(elf, st.st_size);
+      OptimizePatchableFunctionEntries(elf, st.st_size);
     }
     if (elf->e_machine == EM_AARCH64) {
       RewriteTlsCode(elf, st.st_size);

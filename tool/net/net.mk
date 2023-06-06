@@ -131,7 +131,7 @@ o/$(MODE)/tool/net/redbean.com:							\
 	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
 o/$(MODE)/tool/net/lsqlite3.o: private						\
-		OVERRIDE_CFLAGS +=						\
+		CFLAGS +=							\
 			-DSQLITE_ENABLE_SESSION
 
 # REDBEAN-DEMO.COM

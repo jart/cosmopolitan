@@ -41,7 +41,7 @@ $(THIRD_PARTY_ZLIB_GZ_A).pkg:			\
 		$(foreach x,$(THIRD_PARTY_ZLIB_GZ_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_ZLIB_GZ_OBJS): private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-ffunction-sections	\
 			-fdata-sections
 

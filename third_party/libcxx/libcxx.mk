@@ -209,7 +209,7 @@ $(THIRD_PARTY_LIBCXX_A).pkg:					\
 		$(foreach x,$(THIRD_PARTY_LIBCXX_A_DIRECTDEPS),$($(x)_A).pkg)
 
 $(THIRD_PARTY_LIBCXX_A_OBJS): private				\
-		OVERRIDE_CXXFLAGS +=				\
+		CXXFLAGS +=					\
 			-ffunction-sections			\
 			-fdata-sections
 

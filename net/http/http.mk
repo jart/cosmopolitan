@@ -50,13 +50,13 @@ o/$(MODE)/net/http/isloopbackip.o		\
 o/$(MODE)/net/http/ismulticastip.o		\
 o/$(MODE)/net/http/isripeip.o			\
 o/$(MODE)/net/http/istestnetip.o: private	\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-Os
 
 # we need -O3 because:
 #   we're dividing by constants
 o/$(MODE)/net/http/formathttpdatetime.o: private\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-O3
 
 NET_HTTP_LIBS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)))

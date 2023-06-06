@@ -45,16 +45,16 @@ $(LIBC_TINYMATH_A).pkg:					\
 o/$(MODE)/libc/tinymath/lround.o			\
 o/$(MODE)/libc/tinymath/lroundf.o			\
 o/$(MODE)/libc/tinymath/lroundl.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fno-builtin
 
 o/$(MODE)/libc/tinymath/expl.o				\
 o/$(MODE)/libc/tinymath/loglq.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-ffunction-sections
 
 $(LIBC_TINYMATH_A_OBJS): private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fsigned-zeros			\
 			-ftrapping-math			\
 			-frounding-math			\

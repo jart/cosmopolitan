@@ -530,10 +530,11 @@ STACK_SIZE	= _RSP      + _RSP_SIZE
 ########################################################################
 .text
 .balign 32
+	.ftrace1
 sha256_transform_rorx:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	pushq	%rbx
 	pushq	%r12
 	pushq	%r13

@@ -2,11 +2,12 @@
 .imp	pdh,__imp_PdhAddEnglishCounterW,PdhAddEnglishCounterW,0
 
 	.text.windows
+        .ftrace1
 PdhAddEnglishCounter:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_PdhAddEnglishCounterW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

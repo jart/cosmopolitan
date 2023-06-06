@@ -2,11 +2,12 @@
 .imp	user32,__imp_SetWindowsHookW,SetWindowsHookW,2410
 
 	.text.windows
+        .ftrace1
 SetWindowsHook:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_SetWindowsHookW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

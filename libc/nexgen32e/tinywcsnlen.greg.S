@@ -24,9 +24,10 @@
 //	@param	RSI is size_t n
 //	@param	EAX is unsigned length
 //	@see	libc/nexgen32e/strsak32.S
+	.ftrace1
 tinywcsnlen:
+	.ftrace2
 	.leafprologue
-	.profilable
 	xor	%eax,%eax
 1:	cmp	%esi,%eax
 	jae	2f

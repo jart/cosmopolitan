@@ -1,10 +1,11 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+	.ftrace1
 el2nsync:
+	.ftrace2
 #ifdef __x86_64__
 	.leafprologue
-	.profilable
 	mov	EL2NSYNC(%rip),%ecx
 	jmp	__errfun
 #elif defined(__aarch64__)

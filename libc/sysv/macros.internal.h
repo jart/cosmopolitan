@@ -19,14 +19,16 @@
 	.section .text.syscall,"ax",@progbits
 #ifdef __x86_64__
   .ifnb	\kw2
-	.balign	16
-\name:	movabs	$\amd,%rax
+	.ftrace1
+\name:	.ftrace2
+	movabs	$\amd,%rax
 	jmp	*__systemfive(%rip)
   .else
-\name:	push	%rbp
+	.ftrace1
+\name:	.ftrace2
+	push	%rbp
 	mov	%rsp,%rbp
 	movabs	$\amd,%rax
-	.hookable
 	call	*__systemfive(%rip)
 	pop	%rbp
 	ret
@@ -36,11 +38,15 @@
   .ifc \arm_linux,4095
     .ifc \arm_xnu,4095
 //	return enosys();
-\name:	b	enosys
+	.ftrace1
+\name:	.ftrace2
+	b	enosys
 	.endfn	\name,\kw1,\kw2
   .else
 //	return IsXnu() ? syscall(x16, ...) : syscall(x8, ...);
-\name:	adrp	x9,__hostos
+	.ftrace1
+\name:	.ftrace2
+	adrp	x9,__hostos
 	ldr	w9,[x9,#:lo12:__hostos]
 	tbz	x9,#3,1f			// !IsXnu()
 	mov	x16,#\arm_xnu			// apple ordinal
@@ -55,7 +61,9 @@
   .else
     .ifc \arm_xnu,4095
 //	return IsLinux() ? syscall(x8, ...) : enosys();
-\name:	adrp	x9,__hostos
+	.ftrace1
+\name:	.ftrace2
+	adrp	x9,__hostos
 	ldr	w9,[x9,#:lo12:__hostos]
 	tbz	x9,#0,1f			// !IsLinux()
 	mov	x8,#\arm_linux			// systemd ordinal
@@ -66,7 +74,9 @@
 1:	b	enosys
 	.endfn	\name,\kw1,\kw2
   .else
-\name:	mov	x16,#\arm_xnu			// apple ordinal
+	.ftrace1
+\name:	.ftrace2
+	mov	x16,#\arm_xnu			// apple ordinal
 	mov	x8,#\arm_linux			// systemd ordinal
 	mov	x9,#0				// clear carry flag
 	adds	x9,x9,#0			// clear carry flag

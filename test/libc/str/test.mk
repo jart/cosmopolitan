@@ -63,7 +63,7 @@ o/$(MODE)/test/libc/str/str.pkg:					\
 		$(foreach x,$(TEST_LIBC_STR_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/test/libc/str/tpenc_test.o: private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			$(TRADITIONAL)
 
 o/$(MODE)/test/libc/str/%.com.dbg:					\
@@ -80,7 +80,7 @@ $(TEST_LIBC_STR_OBJS): private						\
 			-fno-builtin
 
 o/$(MODE)/test/libc/str/memmove_test.o: private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-O2 -D_FORTIFY_SOURCE=2
 
 .PHONY: o/$(MODE)/test/libc/str

@@ -342,7 +342,7 @@ static PyMethodDef cosmo_methods[] = {
     {"getcpucore", cosmo_getcpucore, METH_NOARGS, getcpucore_doc},
     {"getcpunode", cosmo_getcpunode, METH_NOARGS, getcpunode_doc},
 #endif /* __x86_64__ */
-#ifdef __PG__
+#ifdef FTRACE
     {"ftrace", cosmo_ftrace, METH_NOARGS, ftrace_doc},
 #endif
     {0},

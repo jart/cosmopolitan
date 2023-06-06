@@ -29,12 +29,13 @@
 //	@return	%rax,%xmm0
 //	@note	slower than __sysv2nt
 //	@see	NT2SYSV() macro
+	.ftrace1
 __nt2sysv:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
 //	TODO(jart): We should probably find some way to use our own
 //	            stack when Windows delivers signals ;_;
-	.profilable
 	sub	$0x100,%rsp
 	push	%rbx
 	push	%rdi

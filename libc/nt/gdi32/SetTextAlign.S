@@ -2,11 +2,12 @@
 .imp	gdi32,__imp_SetTextAlign,SetTextAlign,1910
 
 	.text.windows
+        .ftrace1
 SetTextAlign:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_SetTextAlign(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

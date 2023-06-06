@@ -52,7 +52,7 @@ o/$(MODE)/dsp/scale/cdecimate2xuint8x8.o	\
 o/$(MODE)/dsp/scale/gyarados.o			\
 o/$(MODE)/dsp/scale/magikarp.o			\
 o/$(MODE)/dsp/scale/scale.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			$(MATHEMATICAL)
 
 DSP_SCALE_LIBS = $(foreach x,$(DSP_SCALE_ARTIFACTS),$($(x)))

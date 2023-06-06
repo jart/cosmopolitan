@@ -54,12 +54,12 @@ $(DSP_TTY_A).pkg:				\
 		$(foreach x,$(DSP_TTY_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/dsp/tty/ttyraster.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			$(MATHEMATICAL)
 
 ifeq ($(ARCH), aarch64)
 # takes 14 seconds to compile with aarch64 gcc
-o/$(MODE)/dsp/tty/ttyraster.o: private OVERRIDE_CFLAGS += -O1
+o/$(MODE)/dsp/tty/ttyraster.o: private CFLAGS += -O1
 o/$(MODE)/dsp/tty/ttyraster.o: private QUOTA += -C128
 endif
 

@@ -65,10 +65,10 @@ $(LIBC_RUNTIME_A).pkg:					\
 # we can't use function tracing because:
 #   this is the function tracing runtime
 o/$(MODE)/libc/runtime/cosmo2.o: private		\
-		OVERRIDE_CFLAGS += -O0
+		CFLAGS += -O0
 
 o/$(MODE)/libc/runtime/ftracer.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-x-no-pg			\
 			$(MNO_FENTRY)			\
 			-ffreestanding			\
@@ -94,7 +94,7 @@ o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
 o/$(MODE)/libc/runtime/winmain.greg.o			\
 o/$(MODE)/libc/runtime/opensymboltable.o: private	\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os				\
 			-ffreestanding			\
 			$(NO_MAGIC)
@@ -102,11 +102,11 @@ o/$(MODE)/libc/runtime/opensymboltable.o: private	\
 # must use alloca()
 # can't use asan or any runtime services
 o/$(MODE)/libc/runtime/fork-nt.o: private		\
-		OVERRIDE_CPPFLAGS +=			\
+		CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/libc/runtime/qsort.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Og
 
 # make always linked runtimes less huge when it's profitable
@@ -114,13 +114,13 @@ o//libc/runtime/mmap.o					\
 o//libc/runtime/munmap.o				\
 o//libc/runtime/memtrack.greg.o				\
 o//libc/runtime/opensymboltable.greg.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-Os
 
 ifeq ($(ARCH), aarch64)
 o/$(MODE)/libc/runtime/mmap.o				\
 o/$(MODE)/libc/runtime/enable_tls.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-mcmodel=large
 endif
 

@@ -2,11 +2,12 @@
 .imp	psapi,__imp_GetProcessMemoryInfo,GetProcessMemoryInfo,0
 
 	.text.windows
+        .ftrace1
 GetProcessMemoryInfo:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetProcessMemoryInfo(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

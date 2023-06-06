@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSAGetQOSByName,WSAGetQOSByName,69
 
 	.text.windows
+        .ftrace1
 WSAGetQOSByName:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_WSAGetQOSByName(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

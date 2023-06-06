@@ -2,11 +2,12 @@
 .imp	gdi32,__imp_ChoosePixelFormat,ChoosePixelFormat,1040
 
 	.text.windows
+        .ftrace1
 ChoosePixelFormat:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_ChoosePixelFormat(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

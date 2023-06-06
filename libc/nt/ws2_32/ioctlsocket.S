@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_ioctlsocket,ioctlsocket,10
 
 	.text.windows
+        .ftrace1
 __sys_ioctlsocket_nt:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_ioctlsocket(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

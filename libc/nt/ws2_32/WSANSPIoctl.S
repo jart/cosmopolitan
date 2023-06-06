@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSANSPIoctl,WSANSPIoctl,85
 
 	.text.windows
+        .ftrace1
 WSANSPIoctl:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_WSANSPIoctl(%rip),%rax
 	jmp	__sysv2nt8
 #elif defined(__aarch64__)

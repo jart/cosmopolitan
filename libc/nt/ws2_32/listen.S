@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_listen,listen,13
 
 	.text.windows
+        .ftrace1
 __sys_listen_nt:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_listen(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

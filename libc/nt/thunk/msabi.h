@@ -20,7 +20,7 @@
  * Returns true if header should provide MS-ABI overrides.
  */
 #ifndef ShouldUseMsabiAttribute
-#if defined(__msabi) && defined(NDEBUG) && !defined(__PG__)
+#if defined(__msabi) && defined(NDEBUG) && !defined(__PG__) && !defined(FTRACE)
 #define ShouldUseMsabiAttribute() 1
 #else
 #define ShouldUseMsabiAttribute() 0

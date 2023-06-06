@@ -1,10 +1,11 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+	.ftrace1
 econnaborted:
+	.ftrace2
 #ifdef __x86_64__
 	.leafprologue
-	.profilable
 	mov	ECONNABORTED(%rip),%ecx
 	jmp	__errfun
 #elif defined(__aarch64__)

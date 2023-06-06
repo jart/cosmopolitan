@@ -47,7 +47,7 @@ o/$(MODE)/tool/lambda/%.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/tool/lambda/tromp.o: private				\
-		OVERRIDE_CFLAGS +=				\
+		CFLAGS +=					\
 			-w
 
 $(TOOL_LAMBDA_OBJS):						\

@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSAWaitForMultipleEvents,WSAWaitForMultipleEvents,124
 
 	.text.windows
+        .ftrace1
 __WSAWaitForMultipleEvents:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_WSAWaitForMultipleEvents(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

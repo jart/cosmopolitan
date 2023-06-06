@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_CreateWaitableTimerW,CreateWaitableTimerW,0
 
 	.text.windows
+        .ftrace1
 CreateWaitableTimer:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_CreateWaitableTimerW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

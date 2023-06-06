@@ -2,11 +2,12 @@
 .ntimp	NtFlushInstructionCache,NtFlushInstructionCache
 
 	.text.windows
+        .ftrace1
 NtFlushInstructionCache:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtFlushInstructionCache(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

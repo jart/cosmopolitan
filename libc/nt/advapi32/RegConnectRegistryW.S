@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_RegConnectRegistryW,RegConnectRegistryW,1608
 
 	.text.windows
+        .ftrace1
 RegConnectRegistry:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_RegConnectRegistryW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

@@ -71,6 +71,8 @@ SECTIONS {
     KEEP(*(SORT_NONE(.fini)))
   } =0x1f2003d5
 
+  . = ALIGN(__privileged_end > __privileged_start ? 0x4000 : 1);
+
   .privileged : {
     PROVIDE_HIDDEN(__privileged_start = .);
     *(.privileged*)
@@ -270,6 +272,10 @@ SECTIONS {
     *(.head)
   }
 }
+
+HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
+HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
+                            ROUNDDOWN(__privileged_start, PAGESIZE)));
 
 PROVIDE(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
 PROVIDE_HIDDEN(_tls_size = _tbss_end - _tdata_start);

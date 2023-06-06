@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSAGetLastError,WSAGetLastError,111
 
 	.text.windows
+        .ftrace1
 WSAGetLastError:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$32,%rsp
 	call	*__imp_WSAGetLastError(%rip)
 	leave

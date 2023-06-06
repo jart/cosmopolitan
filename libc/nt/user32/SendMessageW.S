@@ -2,11 +2,12 @@
 .imp	user32,__imp_SendMessageW,SendMessageW,2306
 
 	.text.windows
+        .ftrace1
 SendMessage:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_SendMessageW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

@@ -51,7 +51,7 @@ o/$(MODE)/third_party/unzip/unzip.com.dbg:					\
 	@$(APELINK)
 
 $(THIRD_PARTY_UNZIP_A_OBJS): private						\
-		OVERRIDE_CPPFLAGS +=						\
+		CPPFLAGS +=							\
 			-DUSE_BZIP2						\
 			-DUNICODE_SUPPORT					\
 			-DHAVE_UNLINK						\
@@ -60,7 +60,7 @@ $(THIRD_PARTY_UNZIP_A_OBJS): private						\
 			-DNO_LCHMOD
 
 $(THIRD_PARTY_UNZIP_A_OBJS): private						\
-		OVERRIDE_CFLAGS +=						\
+		CFLAGS +=							\
 			$(OLD_CODE)
 
 THIRD_PARTY_UNZIP_COMS = o/$(MODE)/third_party/unzip/unzip.com

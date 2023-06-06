@@ -2,11 +2,12 @@
 .ntimp	NtQueryFullAttributesFile,NtQueryFullAttributesFile
 
 	.text.windows
+        .ftrace1
 NtQueryFullAttributesFile:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_NtQueryFullAttributesFile(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

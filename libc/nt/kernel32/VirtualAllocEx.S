@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_VirtualAllocEx,VirtualAllocEx,0
 
 	.text.windows
+        .ftrace1
 VirtualAllocEx:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_VirtualAllocEx(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

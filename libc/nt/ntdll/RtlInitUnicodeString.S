@@ -2,11 +2,12 @@
 .ntimp	RtlInitUnicodeString,RtlInitUnicodeString
 
 	.text.windows
+        .ftrace1
 RtlInitUnicodeString:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_RtlInitUnicodeString(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

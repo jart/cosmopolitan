@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_RegUnLoadKeyW,RegUnLoadKeyW,0
 
 	.text.windows
+        .ftrace1
 RegUnLoadKey:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_RegUnLoadKeyW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

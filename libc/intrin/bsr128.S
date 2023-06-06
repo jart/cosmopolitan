@@ -33,9 +33,10 @@
 //	@param	rsi:rdi is 128-bit unsigned 𝑥 value
 //	@return	eax number in range [0,128) or undef if 𝑥 is 0
 //	@see	also treasure trove of nearly identical functions
+	.ftrace1
 _bsr128:
+	.ftrace2
 	.leafprologue
-	.profilable
 	bsr	%rsi,%rax
 	jnz	2f
 	bsr	%rdi,%rax

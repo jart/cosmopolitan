@@ -2,11 +2,12 @@
 .imp	user32,__imp_GetDesktopWindow,GetDesktopWindow,1833
 
 	.text.windows
+        .ftrace1
 GetDesktopWindow:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$32,%rsp
 	call	*__imp_GetDesktopWindow(%rip)
 	leave

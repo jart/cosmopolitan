@@ -3375,7 +3375,7 @@ o/$(MODE)/third_party/python/Modules/posixmodule.o:			\
 
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS): private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fwrapv						\
 			-ffunction-sections				\
 			-fdata-sections
@@ -3384,7 +3384,7 @@ o/$(MODE)/third_party/python/Python/ceval.o				\
 o/$(MODE)/third_party/python/Objects/object.o				\
 o/$(MODE)/third_party/python/Python/graminit.o				\
 o/$(MODE)/third_party/python/Objects/abstract.o: private		\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fno-function-sections				\
 			-fno-data-sections
 
@@ -3402,7 +3402,7 @@ o/$(MODE)/third_party/python/Objects/memoryobject.o			\
 o/$(MODE)/third_party/python/Objects/unicodeobject.o			\
 o/$(MODE)/third_party/python/Python/ast.o				\
 o/$(MODE)/third_party/python/Python/compile.o: private			\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fpie
 
 o//third_party/python/Modules/_decimal/libmpdec/basearith.o		\
@@ -3431,38 +3431,38 @@ o//third_party/python/Objects/obmalloc.o				\
 o//third_party/python/Objects/funcobject.o				\
 o//third_party/python/Objects/pyhash.o					\
 o//third_party/python/Python/ceval.o: private				\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-O2
 
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS): private				\
-		OVERRIDE_CPPFLAGS +=					\
+		CPPFLAGS +=						\
 			-DPy_BUILD_CORE					\
 			-DMULTIARCH='"x86_64-cosmo"'
 
 ifneq ($(MODE),dbg)
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
 $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS): private				\
-		OVERRIDE_CPPFLAGS +=					\
+		CPPFLAGS +=						\
 			-DNDEBUG
 endif
 
 o/$(MODE)/third_party/python/Python/sysmodule.o: private		\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-DABIFLAGS='"m"'
 
 # NOTE: Care must be taken that the compiler doesn't try to "optimize"
 #       the indirect jumps by sharing them between all opcodes. Such
 #       optimizations can be disabled on gcc by using -fno-gcse.
 o/$(MODE)/third_party/python/Python/ceval.o: private			\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fno-gcse
 
 # Issue #23654: Turn off ICC's tail call optimization for the
 #               stack_overflow generator. ICC turns the recursive tail
 #               call into a loop. [Let's do GCC too, just to be safe.]
 o/$(MODE)/third_party/python/Modules/faulthandler.o: private		\
-		OVERRIDE_CFLAGS +=					\
+		CFLAGS +=						\
 			-fno-optimize-sibling-calls
 
 o/$(MODE)/third_party/python/Lib/mimetypes.o: private PYFLAGS += -Y.python/mime.types

@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_ReadConsoleOutputAttribute,ReadConsoleOutputAttribute,0
 
 	.text.windows
+        .ftrace1
 ReadConsoleOutputAttribute:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_ReadConsoleOutputAttribute(%rip),%rax
 	jmp	__sysv2nt6
 #elif defined(__aarch64__)

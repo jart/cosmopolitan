@@ -2,11 +2,12 @@
 .imp	pdh,__imp_PdhOpenQueryW,PdhOpenQueryW,0
 
 	.text.windows
+        .ftrace1
 PdhOpenQuery:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_PdhOpenQueryW(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

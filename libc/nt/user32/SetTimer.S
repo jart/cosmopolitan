@@ -2,11 +2,12 @@
 .imp	user32,__imp_SetTimer,SetTimer,2384
 
 	.text.windows
+        .ftrace1
 SetTimer:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_SetTimer(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

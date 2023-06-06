@@ -31,8 +31,6 @@
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
 
-#define MAX_NESTING 512
-
 /**
  * @fileoverview Plain-text function call logging.
  *
@@ -40,6 +38,14 @@
  * bottlenecked by system call overhead. Log size is reasonable if piped
  * into gzip.
  */
+
+#define MAX_NESTING 512
+
+#ifdef __x86_64__
+#define DETOUR_SKEW 2
+#elif defined(__aarch64__)
+#define DETOUR_SKEW 8
+#endif
 
 void ftrace_hook(void);
 
@@ -72,6 +78,7 @@ static privileged inline int GetNestingLevel(struct CosmoFtrace *ft,
  * according to the System Five NexGen32e ABI.
  */
 privileged void ftracer(void) {
+  uintptr_t fn;
   long stackuse;
   struct CosmoTib *tib;
   struct StackFrame *sf;
@@ -91,11 +98,12 @@ privileged void ftracer(void) {
   if (_cmpxchg(&ft->ft_noreentry, false, true)) {
     sf = __builtin_frame_address(0);
     sf = sf->next;
-    if (sf->addr != ft->ft_lastaddr) {
+    fn = sf->addr + DETOUR_SKEW;
+    if (fn != ft->ft_lastaddr) {
       stackuse = GetStackAddr() + GetStackSize() - (intptr_t)sf;
       kprintf("%rFUN %6P %'13T %'*ld %*s%t\n", g_stackdigs, stackuse,
-              GetNestingLevel(ft, sf) * 2, "", sf->addr);
-      ft->ft_lastaddr = sf->addr;
+              GetNestingLevel(ft, sf) * 2, "", fn);
+      ft->ft_lastaddr = fn;
     }
     ft->ft_noreentry = false;
   }

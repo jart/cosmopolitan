@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_AARCH64_ASMDEFS_H_
 #define COSMOPOLITAN_LIBC_INTRIN_AARCH64_ASMDEFS_H_
+#include "libc/macros.internal.h"
 #ifdef __ASSEMBLER__
 // clang-format off
 
@@ -44,7 +45,9 @@ GNU_PROPERTY (FEATURE_1_AND, FEATURE_1_BTI|FEATURE_1_PAC)
   .global name;		\
   .type name,%function;	\
   .align alignment;		\
+  .ftrace1;                     \
   name:			\
+  .ftrace2;		\
   .cfi_startproc;	\
   BTI_C;
 

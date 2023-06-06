@@ -61,7 +61,7 @@ o/tiny/tool/build/emubin/mdatest.bin.dbg:		\
 	@$(ELFLINK) -z max-page-size=0x10 -T tool/build/emucrt/real.lds
 
 $(TOOL_BUILD_EMUBIN_OBJS): private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			$(NO_MAGIC)
 
 .PHONY: o/$(MODE)/tool/build/emubin

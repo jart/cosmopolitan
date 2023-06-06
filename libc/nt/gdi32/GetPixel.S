@@ -2,11 +2,12 @@
 .imp	gdi32,__imp_GetPixel,GetPixel,1691
 
 	.text.windows
+        .ftrace1
 GetPixel:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetPixel(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

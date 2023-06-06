@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/hascharacter.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -27,11 +26,28 @@
  * @asyncsignalsafe
  */
 size_t strspn(const char *s, const char *accept) {
+  int c;
   size_t i;
-  for (i = 0; s[i]; ++i) {
-    if (!HasCharacter(s[i], accept)) {
-      break;
+  bool lut[256];
+#ifndef TINY
+  if (!accept[0]) {
+    return 0;
+  }
+  if (!accept[1]) {
+    for (i = 0;; i++) {
+      if (s[i] != accept[0]) {
+        return i;
+      }
     }
   }
-  return i;
+#endif
+  bzero(lut, sizeof(lut));
+  while ((c = *accept++ & 255)) {
+    lut[c] = true;
+  }
+  for (i = 0;; i++) {
+    if (!lut[s[i] & 255]) {
+      return i;
+    }
+  }
 }

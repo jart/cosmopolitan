@@ -33,10 +33,11 @@
 //	@param	%rsi,%rdx,%rcx,%r8,%r9 may supply parameters 1 through 5
 //	@param	sixth is optionally pushed on the stack before call
 //	@return	%rax has result, or -1 w/ errno on failure
+	.ftrace1
 syscall:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 
 //	slide arguments into their right places
 	mov	%rdi,%rax		// nr

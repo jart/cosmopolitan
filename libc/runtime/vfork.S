@@ -52,14 +52,15 @@
 //	@returnstwice
 //	@threadsafe
 //	@vforksafe
+	.ftrace1
 vfork:
+	.ftrace2
 
 #ifdef __x86_64__
 
 #if !IsTiny()
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	call	__require_tls
 #ifdef SYSDEBUG
 	ezlea	.Llog,di

@@ -613,10 +613,11 @@ BSWAP_SHUFB_CTL:
 //	@param	%rsi points to input data
 //	@param	%rdx is number of 64-byte blocks to process
 //	@see	X86_HAVE(SHA)
+	.ftrace1
 sha1_transform_avx2:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	push	%rbx
 	push	%r12
 	push	%r13

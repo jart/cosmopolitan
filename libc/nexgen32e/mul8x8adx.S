@@ -32,10 +32,11 @@
 //	@param	rdx is right hand side which must have 8 quadwords
 //	@note	words are host endian while array is little endian
 //	@mayalias
+	.ftrace1
 Mul8x8Adx:
+	.ftrace2
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	sub	$104,%rsp
 	mov	%r15,-8(%rbp)
 	mov	%r14,-16(%rbp)

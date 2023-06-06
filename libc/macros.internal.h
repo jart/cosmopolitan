@@ -213,6 +213,36 @@
  .org	1347b+\fieldsize,0x00
 .endm
 
+//	Inserts --ftrace pre-prologue.
+//	This goes immediately before the function symbol.
+//	@see	.ftrace2
+.macro	.ftrace1
+#ifdef FTRACE
+#ifdef __x86_64__
+	.rept	9
+	nop
+	.endr
+#elif defined(__aarch64__)
+	.rept	6
+	nop
+	.endr
+#endif /* __x86_64__ */
+#endif /* FTRACE */
+.endm
+
+//	Inserts --ftrace prologue.
+//	This goes immediately after the function symbol.
+//	@see	.ftrace1
+.macro	.ftrace2
+#ifdef FTRACE
+#ifdef __x86_64__
+	xchg	%ax,%ax
+#elif defined(__aarch64__)
+	nop
+#endif /* __x86_64__ */
+#endif /* FTRACE */
+.endm
+
 #ifdef __x86_64__
 
 #if __MNO_VZEROUPPER__ + 0
@@ -346,7 +376,7 @@
 
 //	Pads function prologue unconditionally for runtime hooking.
 //	@cost	≥0.3 cycles, 5 bytes
-//	@see	.profilable
+//	@see	.ftrace1
 .macro	.hookable
 	.byte	0x0f
 	.byte	0x1f
@@ -470,31 +500,6 @@
 	call	*\symbol\()@gotpcrel(%rip)
 #else
 	call	\symbol\()@plt
-#endif
-.endm
-
-//	Inserts profiling hook in prologue if cc wants it.
-//
-//	Cosmopolitan does this in a slightly different way from normal
-//	GNU toolchains. We always use the -mnop-mcount behavior, since
-//	the runtime is able to morph the binary at runtime. It is good
-//	since we can put hooks for profiling and function tracing into
-//	most builds, without any impact on performance.
-//
-//	@cost	≥0.3 cycles, 5 bytes
-//	@see	build/compile
-.macro	.profilable
-#ifdef __PG__
-1382:
-#if defined(__MFENTRY__)
-	call	__fentry__
-#elif defined(__PIC__) || defined(__PIE__)
-//	nopw 0x00(%rax,%rax,1)
-	.byte	0x66,0x0f,0x1f,0x44,0x00,0x00
-#else
-//	nopl 0x00(%rax,%rax,1)
-	.byte	0x0f,0x1f,0x44,0x00,0x00
-#endif
 #endif
 .endm
 

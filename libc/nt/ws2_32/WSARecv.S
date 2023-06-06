@@ -2,11 +2,12 @@
 .imp	ws2_32,__imp_WSARecv,WSARecv,91
 
 	.text.windows
+        .ftrace1
 __WSARecv:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_WSARecv(%rip),%rax
 	jmp	__sysv2nt8
 #elif defined(__aarch64__)

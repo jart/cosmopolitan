@@ -91,7 +91,7 @@ void log_analyzer( void *ctx, int level,
 
 /* Invalid minor version used when not specifying a min/max version or expecting a test to fail */
 #define TEST_SSL_MINOR_VERSION_NONE -1
-s
+
 typedef struct handshake_test_options
 {
     const char *cipher;

@@ -194,18 +194,18 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
 	@$(APELINK)
 
 $(THIRD_PARTY_QUICKJS_OBJS): private						\
-		OVERRIDE_CPPFLAGS +=						\
+		CPPFLAGS +=							\
 			-DCONFIG_BIGNUM						\
 			-DCONFIG_VERSION=\"2021-03-27\"
 
 o/tiny/third_party/quickjs/call.o: private					\
-		OVERRIDE_CFLAGS +=						\
+		CFLAGS +=							\
 			-O2
 
 # TODO(jart): Replace alloca() calls with malloc().
 o/$(MODE)/third_party/quickjs/libregexp.o					\
 o/$(MODE)/third_party/quickjs/quickjs.o: private				\
-		OVERRIDE_CPPFLAGS +=						\
+		CPPFLAGS +=							\
 			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/third_party/quickjs/call.o: private QUOTA = -M1024m -C32 -L180

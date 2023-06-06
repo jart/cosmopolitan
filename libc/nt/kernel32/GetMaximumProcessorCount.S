@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_GetMaximumProcessorCount,GetMaximumProcessorCount,627
 
 	.text.windows
+        .ftrace1
 GetMaximumProcessorCount:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	%rdi,%rcx
 	sub	$32,%rsp
 	call	*__imp_GetMaximumProcessorCount(%rip)

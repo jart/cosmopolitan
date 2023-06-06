@@ -2,11 +2,12 @@
 .imp	kernel32,__imp_SetProcessAffinityMask,SetProcessAffinityMask,1347
 
 	.text.windows
+        .ftrace1
 SetProcessAffinityMask:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_SetProcessAffinityMask(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

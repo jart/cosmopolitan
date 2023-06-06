@@ -25,7 +25,9 @@
 //	@noreturn
 //	@see	_gclongjmp()
 //	@see	siglongjmp()
+	.ftrace1
 longjmp:
+	.ftrace2
 #ifdef __x86_64__
 	mov	%esi,%eax
 	test	%eax,%eax

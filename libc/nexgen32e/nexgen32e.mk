@@ -56,7 +56,7 @@ o/$(MODE)/libc/nexgen32e/ktoupper.o			\
 o/$(MODE)/libc/nexgen32e/pid.o				\
 o/$(MODE)/libc/nexgen32e/program_invocation_name2.o	\
 o/$(MODE)/libc/nexgen32e/threaded.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			$(NO_MAGIC)
 
 # these assembly files are safe to build on aarch64

@@ -2,11 +2,12 @@
 .imp	user32,__imp_GetClientRect,GetClientRect,1815
 
 	.text.windows
+        .ftrace1
 GetClientRect:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_GetClientRect(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)

@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_RegCreateKeyExW,RegCreateKeyExW,0
 
 	.text.windows
+        .ftrace1
 RegCreateKeyEx:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_RegCreateKeyExW(%rip),%rax
 	jmp	__sysv2nt10
 #elif defined(__aarch64__)

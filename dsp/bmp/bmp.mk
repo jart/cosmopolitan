@@ -41,11 +41,11 @@ $(DSP_BMP_A).pkg:				\
 
 o/$(MODE)/dsp/bmp/float2short.o			\
 o/$(MODE)/dsp/bmp/scalevolume.o: private	\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			$(MATHEMATICAL)
 
 o/tiny/dsp/bmp/scalevolume.o: private		\
-		OVERRIDE_CFLAGS +=		\
+		CFLAGS +=			\
 			-Os
 
 DSP_BMP_LIBS = $(foreach x,$(DSP_BMP_ARTIFACTS),$($(x)))

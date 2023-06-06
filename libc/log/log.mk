@@ -58,15 +58,15 @@ $(LIBC_LOG_A).pkg:					\
 
 o/$(MODE)/libc/log/backtrace2.o				\
 o/$(MODE)/libc/log/backtrace3.o: private		\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-fno-sanitize=all
 
 o/$(MODE)/libc/log/checkfail.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-mgeneral-regs-only
 
 o/$(MODE)/libc/log/watch.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			-ffreestanding
 
 o/$(MODE)/libc/log/watch.o				\
@@ -82,7 +82,7 @@ o/$(MODE)/libc/log/startfatal.o				\
 o/$(MODE)/libc/log/startfatal_ndebug.o			\
 o/$(MODE)/libc/log/ubsan.o				\
 o/$(MODE)/libc/log/die.o: private			\
-		OVERRIDE_CFLAGS +=			\
+		CFLAGS +=				\
 			$(NO_MAGIC)
 
 LIBC_LOG_LIBS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)))

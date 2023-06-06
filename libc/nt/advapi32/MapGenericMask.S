@@ -2,11 +2,12 @@
 .imp	advapi32,__imp_MapGenericMask,MapGenericMask,0
 
 	.text.windows
+        .ftrace1
 MapGenericMask:
+        .ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	mov	__imp_MapGenericMask(%rip),%rax
 	jmp	__sysv2nt
 #elif defined(__aarch64__)
