@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,59 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-ftrace_hook:
+char testlib_enable_tmp_setup_teardown;
+
+TEST(ftrace, test) {
+  const char *ftraceasm;
+  testlib_extract("/zip/ftraceasm.txt", "ftraceasm.txt", 0755);
+  ftraceasm = _gc(xslurp("ftraceasm.txt", 0));
 #ifdef __x86_64__
-
-	cmp	$0,__ftrace(%rip)
-	jg	1f
-	ret
-1:	push	%rbp
-	mov	%rsp,%rbp
-	push	%rax
-	push	%rax
-	push	%rdi
-	push	%rsi
-	push	%rdx
-	push	%rcx
-	push	%r8
-	push	%r9
-	call	ftracer
-	pop	%r9
-	pop	%r8
-	pop	%rcx
-	pop	%rdx
-	pop	%rsi
-	pop	%rdi
-	pop	%rax
-	pop	%rax
-	pop	%rbp
-	ret
-
+  if (strstr(ftraceasm, "%xmm") || strstr(ftraceasm, "%ymm")) {
 #elif defined(__aarch64__)
-
-	adrp	x9,__ftrace
-	ldr	w9,[x9,#:lo12:__ftrace]
-	cmp	w9,1
-	bge	1f
-	ret
-1:	stp	x29,x30,[sp,-96]!
-	mov	x29,sp
-	stp	x0,x1,[sp,16]
-	stp	x2,x3,[sp,32]
-	stp	x4,x5,[sp,48]
-	stp	x6,x7,[sp,64]
-	str	x8,[sp,80]
-	bl	ftracer
-	ldr	x8,[sp,80]
-	ldp	x6,x7,[sp,64]
-	ldp	x4,x5,[sp,48]
-	ldp	x2,x3,[sp,32]
-	ldp	x0,x1,[sp,16]
-	ldp	x29,x30,[sp],96
-	ret
-
-#endif /* __x86_64__ */
-	.endfn	ftrace_hook,globl
+  if (strstr(ftraceasm, " d0,") || strstr(ftraceasm, " v0.")) {
+#else
+  if (0) {
+#endif
+    fprintf(stderr,
+            "error: ftrace_hook() depends on floating point code\n"
+            "you need to objdump o//test/libc/runtime/ftraceasm.elf\n"
+            "then compile the guilty module with -mgeneral-regs-only\n");
+    exit(1);
+  }
+}

@@ -4,12 +4,12 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/parsetok.h"
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/graminit.h"
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/node.h"
 #include "third_party/python/Include/objimpl.h"
-#include "third_party/python/Include/parsetok.h"
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Parser/parser.h"
@@ -184,7 +184,7 @@ warn(const char *msg, const char *filename, int lineno)
 /* Parse input coming from the given tokenizer structure.
    Return error code. */
 
-static optimizespeed node *
+static node *
 parsetok(struct tok_state *tok, grammar *g, int start, perrdetail *err_ret,
          int *flags)
 {

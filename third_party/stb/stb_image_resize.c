@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/stb/stb_image_resize.h"
 #include "libc/assert.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/stb/stb_image_resize.h"
 
 asm(".ident\t\"\\n\\n\
 stb_image_resize (Public Domain)\\n\
@@ -853,8 +853,7 @@ static float* stbir__get_decode_buffer(stbir__info* stbir_info) {
 #define STBIR__DECODE(type, colorspace) \
   ((type) * (STBIR_MAX_COLORSPACES) + (colorspace))
 
-static optimizespeed void stbir__decode_scanline(stbir__info* stbir_info,
-                                                 int n) {
+static void stbir__decode_scanline(stbir__info* stbir_info, int n) {
   int c;
   int channels = stbir_info->channels;
   int alpha_channel = stbir_info->alpha_channel;

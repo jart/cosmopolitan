@@ -2868,7 +2868,7 @@ char *str2oem(dst, src)
 /* Function memset() */
 /*********************/
 
-zvoid *memset(buf, init, len)
+zvoid *memset_(buf, init, len)
     register zvoid *buf;        /* buffer location */
     register int init;          /* initializer character */
     register unsigned int len;  /* length of the buffer */

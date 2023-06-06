@@ -1031,11 +1031,9 @@ static const unsigned char stbi__jpeg_dezigzag[64 + 15] = {
     63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63};
 
 // decode one 64-entry block
-static optimizespeed int stbi__jpeg_decode_block(stbi__jpeg *j, short data[64],
-                                                 stbi__huffman *hdc,
-                                                 stbi__huffman *hac,
-                                                 int16_t *fac, int b,
-                                                 uint16_t *dequant) {
+static int stbi__jpeg_decode_block(stbi__jpeg *j, short data[64],
+                                   stbi__huffman *hdc, stbi__huffman *hac,
+                                   int16_t *fac, int b, uint16_t *dequant) {
   unsigned int zig;
   int diff, dc, k, t, c, r, s, rs;
   if (j->code_bits < 16) stbi__grow_buffer_unsafe(j);

@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Include/unicodeobject.h"
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
@@ -39,7 +40,6 @@
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/ucnhash.h"
-#include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/unicodedata.h"
@@ -4902,7 +4902,7 @@ PyUnicode_DecodeUTF8(const char *s,
 # error C 'long' size should be either 4 or 8!
 #endif
 
-static optimizespeed Py_ssize_t
+static Py_ssize_t
 ascii_decode(const char *start, const char *end, Py_UCS1 *dest)
 {
     const char *p = start;

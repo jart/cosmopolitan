@@ -446,6 +446,7 @@ typedef struct {
 #endif
 
 #ifndef optimizespeed
+/* warning: corrupts frame pointer; only use on leaf functions */
 #if !defined(__STRICT_ANSI__) &&                           \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
      __has_attribute(__optimize__))

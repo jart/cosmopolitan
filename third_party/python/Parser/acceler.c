@@ -66,7 +66,7 @@ fixdfa(grammar *g, dfa *d)
         fixstate(g, s);
 }
 
-static optimizespeed void
+static void
 fixstate(grammar *g, state *s)
 {
     arc *a;
