@@ -24,3 +24,5 @@
 int iswalnum(wint_t c) {
   return iswdigit(c) || iswalpha(c);
 }
+
+__weak_reference(iswalnum, iswalnum_l);

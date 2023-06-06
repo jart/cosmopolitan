@@ -21,10 +21,11 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
+#include "libc/x/x.h"
 #include "third_party/make/hash.h"
 /* clang-format off */
 
-#define CALLOC(t, n) ((t *) xcalloc (sizeof (t) * (n)))
+#define CALLOC(t, n) ((t *) xcalloc (1, sizeof (t) * (n)))
 #define MALLOC(t, n) ((t *) xmalloc (sizeof (t) * (n)))
 #define REALLOC(o, t, n) ((t *) xrealloc ((o), sizeof (t) * (n)))
 #define CLONE(o, t, n) ((t *) memcpy (MALLOC (t, (n)), (o), sizeof (t) * (n)))

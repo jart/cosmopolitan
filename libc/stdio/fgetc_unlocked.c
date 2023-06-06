@@ -34,3 +34,5 @@ int fgetc_unlocked(FILE *f) {
     return b[0];
   }
 }
+
+__strong_reference(fgetc_unlocked, getc_unlocked);

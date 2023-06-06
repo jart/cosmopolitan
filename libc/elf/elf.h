@@ -7,6 +7,7 @@
 #include "libc/runtime/ezmap.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+#ifdef COSMO
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § executable & linkable format                              ─╬─│┼
@@ -29,6 +30,7 @@ const char *GetElfSectionName(const Elf64_Ehdr *, size_t, Elf64_Shdr *);
 Elf64_Sym *GetElfDynSymbolTable(const Elf64_Ehdr *, size_t, Elf64_Xword *);
 char *GetElfDynStringTable(const Elf64_Ehdr *, size_t);
 
+#endif /* COSMO */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_H_ */

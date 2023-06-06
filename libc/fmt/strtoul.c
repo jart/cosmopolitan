@@ -58,3 +58,7 @@ unsigned long strtoul(const char *s, char **endptr, int base) {
   if (t && endptr) *endptr = s;
   return d > 0 ? x : -x;
 }
+
+__weak_reference(strtoul, strtoumax);
+__weak_reference(strtoul, strtoull);
+__weak_reference(strtoul, strtoull_l);

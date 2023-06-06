@@ -17,6 +17,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/makeint.inc"
 /**/
 #include "libc/calls/struct/dirent.h"
+#include "libc/x/x.h"
 #include "third_party/make/dep.h"
 #include "third_party/make/filedef.h"
 #include "third_party/make/hash.h"
@@ -584,7 +585,7 @@ void file_impossible(const char *filename) {
   if (dir->contents == 0)
     /* The directory could not be stat'd.  We allocate a contents
        structure for it, but leave it out of the contents hash table.  */
-    dir->contents = xcalloc(sizeof(struct directory_contents));
+    dir->contents = xcalloc(1, sizeof(struct directory_contents));
 
   if (dir->contents->dirfiles.ht_vec == 0) {
     hash_init(&dir->contents->dirfiles, DIRFILE_BUCKETS, dirfile_hash_1,

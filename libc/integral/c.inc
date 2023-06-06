@@ -859,9 +859,10 @@ void abort(void) wontreturn;
 
 #define __strong_reference(sym, aliassym) \
   extern typeof(sym) aliassym __attribute__((__alias__(#sym)))
-#define __weak_reference(sym, alias) \
-  asm(".weak\t" #alias "\n\t"        \
-      ".equ\t" #alias ", " #sym)
+#define __weak_reference(sym, alias)   \
+  asm(".weak\t" #alias "\n\t"          \
+      ".equ\t" #alias ", " #sym "\n\t" \
+      ".type\t" #alias ",@notype")
 
 #define __funline \
   extern __inline \

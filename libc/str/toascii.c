@@ -21,3 +21,5 @@
 int toascii(int c) {
   return c & 127;
 }
+
+__weak_reference(toascii, toascii_l);

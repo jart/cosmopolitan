@@ -45,3 +45,5 @@ size_t strxfrm(char *dest, const char *src, size_t count) {
   _unassert(dest == NULL ? count == 0 : 1);
   return strlcpy(dest, src, count);
 }
+
+__weak_reference(strxfrm, strxfrm_l);

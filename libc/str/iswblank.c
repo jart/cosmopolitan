@@ -24,3 +24,5 @@
 int iswblank(wint_t c) {
   return c == ' ' || c == '\t';
 }
+
+__weak_reference(iswblank, iswblank_l);

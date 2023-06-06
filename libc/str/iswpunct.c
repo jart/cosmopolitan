@@ -539,3 +539,5 @@ int iswpunct(wint_t c) {
       return 0;
   }
 }
+
+__weak_reference(iswpunct, iswpunct_l);

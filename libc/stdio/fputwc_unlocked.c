@@ -40,3 +40,5 @@ wint_t fputwc_unlocked(wchar_t wc, FILE *f) {
     return -1;
   }
 }
+
+__strong_reference(fputwc_unlocked, putwc_unlocked);

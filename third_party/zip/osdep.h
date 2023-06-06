@@ -33,7 +33,6 @@
 #include "libc/thread/thread.h"
 #include "libc/calls/typedef/u.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/intrin/newbie.h"
 #include "libc/sock/select.h"
 #include "libc/sysv/consts/endian.h"
 #include "libc/calls/calls.h"

@@ -232,3 +232,5 @@ wint_t towlower(wint_t c) {
     }
   }
 }
+
+__weak_reference(towlower, towlower_l);

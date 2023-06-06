@@ -95,10 +95,10 @@ TEST(LengthInt64Thousands, test) {
 }
 
 BENCH(LengthInt64, bench) {
-  unsigned LengthInt64_(int64_t) asm("LengthInt64");
-  unsigned LengthUint64_(uint64_t) asm("LengthUint64");
-  unsigned LengthInt64Thousands_(int64_t) asm("LengthInt64Thousands");
-  unsigned LengthUint64Thousands_(uint64_t) asm("LengthUint64Thousands");
+  unsigned LengthInt64_(int64_t) asm("__LengthInt64");
+  unsigned LengthUint64_(uint64_t) asm("__LengthUint64");
+  unsigned LengthInt64Thousands_(int64_t) asm("__LengthInt64Thousands");
+  unsigned LengthUint64Thousands_(uint64_t) asm("__LengthUint64Thousands");
   EZBENCH2("LengthInt64", donothing, LengthInt64_(INT64_MIN));
   EZBENCH2("LengthUint64", donothing, LengthUint64_(UINT64_MAX));
   EZBENCH2("LengthInt64Thousands", donothing, LengthInt64Thousands_(INT64_MIN));

@@ -19,8 +19,6 @@ struct tm {
 
 char *asctime(const struct tm *);
 char *asctime_r(const struct tm *, char[hasatleast 26]);
-char *iso8601(char[hasatleast 20], struct tm *);
-char *iso8601us(char[hasatleast 27], struct tm *, long);
 char *strptime(const char *, const char *, struct tm *);
 int64_t mktime(struct tm *);
 int64_t timegm(struct tm *);
@@ -33,6 +31,13 @@ struct tm *gmtime(const int64_t *);
 struct tm *gmtime_r(const int64_t *, struct tm *);
 struct tm *localtime(const int64_t *);
 struct tm *localtime_r(const int64_t *, struct tm *);
+
+#ifdef COSMO
+#define iso8601   __iso8601
+#define iso8601us __iso8601us
+char *iso8601(char[hasatleast 20], struct tm *);
+char *iso8601us(char[hasatleast 27], struct tm *, long);
+#endif /* COSMO */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -29,3 +29,5 @@ size_t wcsxfrm(wchar_t *d, const wchar_t *s, size_t n) {
   }
   return m;
 }
+
+__weak_reference(wcsxfrm, wcsxfrm_l);

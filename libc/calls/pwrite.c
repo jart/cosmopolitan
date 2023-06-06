@@ -80,3 +80,5 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;
 }
+
+__strong_reference(pwrite, pwrite64);

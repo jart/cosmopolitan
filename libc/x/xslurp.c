@@ -23,6 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/x/x.h"
 
 /**
  * Reads entire file into memory.

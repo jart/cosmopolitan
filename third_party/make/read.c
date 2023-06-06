@@ -3121,7 +3121,7 @@ parse_file_seq (char **stringp, size_t size, int stopmap,
   struct nameseq **newp = &new;
 #define NEWELT(_n)  do { \
                         const char *__n = (_n); \
-                        *newp = xcalloc (size); \
+                        *newp = xcalloc (1, size);                       \
                         (*newp)->name = (cachep ? strcache_add (__n) : xstrdup (__n)); \
                         newp = &(*newp)->next; \
                     } while(0)

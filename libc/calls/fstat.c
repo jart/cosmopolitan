@@ -53,3 +53,5 @@ int fstat(int fd, struct stat *st) {
   STRACE("fstat(%d, [%s]) → %d% m", fd, DescribeStat(rc, st), rc);
   return rc;
 }
+
+__strong_reference(fstat, fstat64);

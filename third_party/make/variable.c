@@ -47,7 +47,7 @@ struct pattern_var *
 create_pattern_var (const char *target, const char *suffix)
 {
   size_t len = strlen (target);
-  struct pattern_var *p = xcalloc (sizeof (struct pattern_var));
+  struct pattern_var *p = xcalloc (1, sizeof (struct pattern_var));
 
   if (pattern_vars != 0)
     {
@@ -235,7 +235,7 @@ define_variable_in_set (const char *name, size_t length,
 
   /* Create a new variable definition and add it to the hash table.  */
 
-  v = xcalloc (sizeof (struct variable));
+  v = xcalloc (1, sizeof (struct variable));
   v->name = xstrndup (name, length);
   v->length = (unsigned int) length;
   hash_insert_at (&set->table, v, var_slot);

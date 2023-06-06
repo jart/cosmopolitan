@@ -9,10 +9,10 @@ COSMOPOLITAN_C_START_
 #define INET_ADDRSTRLEN 22
 #define IFHWADDRLEN     6
 
-uint16_t htons(uint16_t);
-uint16_t ntohs(uint16_t);
-uint32_t htonl(uint32_t);
-uint32_t ntohl(uint32_t);
+uint16_t htons(uint16_t) pureconst;
+uint16_t ntohs(uint16_t) pureconst;
+uint32_t htonl(uint32_t) pureconst;
+uint32_t ntohl(uint32_t) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define htons(x) __builtin_bswap16(x)

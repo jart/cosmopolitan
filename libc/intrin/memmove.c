@@ -342,6 +342,6 @@ void *memmove(void *dst, const void *src, size_t n) {
   }
 }
 
-__strong_reference(memmove, memcpy);
+__weak_reference(memmove, memcpy);
 
 #endif /* __aarch64__ */

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,9 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/locale.h"
-#include "libc/str/str.h"
+#include "libc/intrin/bswap.h"
+#include "libc/intrin/newbie.h"
+#include "libc/sock/sock.h"
 
-int islower_l(int c, locale_t l) {
-  return islower(c);
+uint16_t(bswap_16)(uint16_t x) {
+  return (0x00ff & x) << 010 | (0xff00 & x) >> 010;
+}
+
+__strong_reference(bswap_16, ntohs);
+__strong_reference(bswap_16, htons);
+
+uint32_t(bswap_32)(uint32_t x) {
+  return (0x000000ffu & x) << 030 | (0x0000ff00u & x) << 010 |
+         (0x00ff0000u & x) >> 010 | (0xff000000u & x) >> 030;
+}
+
+__strong_reference(bswap_32, ntohl);
+__strong_reference(bswap_32, htonl);
+
+uint64_t(bswap_64)(uint64_t x) {
+  return (0x00000000000000ffull & x) << 070 |
+         (0x000000000000ff00ull & x) << 050 |
+         (0x0000000000ff0000ull & x) << 030 |
+         (0x00000000ff000000ull & x) << 010 |
+         (0x000000ff00000000ull & x) >> 010 |
+         (0x0000ff0000000000ull & x) >> 030 |
+         (0x00ff000000000000ull & x) >> 050 |
+         (0xff00000000000000ull & x) >> 070;
 }

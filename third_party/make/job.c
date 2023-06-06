@@ -1315,7 +1315,7 @@ new_job (struct file *file)
   /* Start the command sequence, record it in a new
      'struct child', and add that to the chain.  */
 
-  c = xcalloc (sizeof (struct child));
+  c = xcalloc (1, sizeof (struct child));
   output_init (&c->output);
 
   c->file = file;

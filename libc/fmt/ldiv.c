@@ -18,6 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 
+/**
+ * Divides integers yielding numerator and denominator.
+ */
 ldiv_t(ldiv)(long num, long den) {
-  return ldiv(num, den);
+  ldiv_t retval;
+  retval.quot = num / den;
+  retval.rem = num % den;
+#if __STDC_VERSION__ + 0 < 199901L
+  // satisfy quot*denominator+rem == numerator
+  if (n > 0 && retval.rem < 0) {
+    retval.quot += 1;
+    retval.rem -= d;
+  }
+#endif
+  return retval;
 }
+
+__weak_reference(ldiv, lldiv);
+__weak_reference(ldiv, imaxdiv);

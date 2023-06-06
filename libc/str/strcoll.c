@@ -24,3 +24,5 @@
 int strcoll(const char *p, const char *q) {
   return strcmp(p, q);
 }
+
+__weak_reference(strcoll, strcoll_l);

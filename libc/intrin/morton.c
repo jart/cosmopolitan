@@ -23,7 +23,7 @@
  * @see https://en.wikipedia.org/wiki/Z-order_curve
  * @see unmorton()
  */
-unsigned long(morton)(unsigned long y, unsigned long x) {
+unsigned long morton(unsigned long y, unsigned long x) {
   x = (x | x << 020) & 0x0000FFFF0000FFFF;
   x = (x | x << 010) & 0x00FF00FF00FF00FF;
   x = (x | x << 004) & 0x0F0F0F0F0F0F0F0F;

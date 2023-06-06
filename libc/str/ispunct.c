@@ -25,3 +25,5 @@ int ispunct(int c) {
   return (0x21 <= c && c <= 0x7E) && !('0' <= c && c <= '9') &&
          !('A' <= c && c <= 'Z') && !('a' <= c && c <= 'z');
 }
+
+__weak_reference(ispunct, ispunct_l);

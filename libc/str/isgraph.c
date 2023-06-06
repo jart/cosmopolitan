@@ -24,3 +24,5 @@
 int isgraph(int c) {
   return 0x21 <= c && c <= 0x7E;
 }
+
+__weak_reference(isgraph, isgraph_l);

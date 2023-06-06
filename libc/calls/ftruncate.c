@@ -87,3 +87,5 @@ int ftruncate(int fd, int64_t length) {
   STRACE("ftruncate(%d, %'ld) → %d% m", fd, length, rc);
   return rc;
 }
+
+__strong_reference(ftruncate, ftruncate64);

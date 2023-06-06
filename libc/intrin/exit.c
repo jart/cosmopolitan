@@ -91,3 +91,5 @@ wontreturn void _Exit(int exitcode) {
   unreachable;
 #endif
 }
+
+__strong_reference(_Exit, _exit);

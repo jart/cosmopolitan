@@ -57,6 +57,7 @@
            "gottpoff"
            "function"
            "object"
+           "notype"
            "got"
            "size"
            "gotoff"

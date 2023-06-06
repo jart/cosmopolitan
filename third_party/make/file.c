@@ -130,7 +130,7 @@ enter_file (const char *name)
       return f;
     }
 
-  new = xcalloc (sizeof (struct file));
+  new = xcalloc (1, sizeof (struct file));
   new->name = new->hname = name;
   new->update_status = us_none;
 

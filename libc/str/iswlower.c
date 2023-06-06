@@ -516,3 +516,5 @@ int iswlower(wint_t c) {
     }
   }
 }
+
+__weak_reference(iswlower, iswlower_l);

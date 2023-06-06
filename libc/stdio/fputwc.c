@@ -34,3 +34,5 @@ wint_t fputwc(wchar_t wc, FILE *f) {
   funlockfile(f);
   return rc;
 }
+
+__strong_reference(fputwc, putwc);

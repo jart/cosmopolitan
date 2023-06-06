@@ -24,3 +24,5 @@
 int isascii(int c) {
   return 0x00 <= c && c <= 0x7F;
 }
+
+__weak_reference(isascii, isascii_l);

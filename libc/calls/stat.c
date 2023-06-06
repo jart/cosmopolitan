@@ -38,3 +38,5 @@
 int stat(const char *path, struct stat *st) {
   return fstatat(AT_FDCWD, path, st, 0);
 }
+
+__strong_reference(stat, stat64);

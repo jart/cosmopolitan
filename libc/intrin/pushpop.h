@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_BITS_PUSHPOP_H_
 #include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef COSMO
 
 #if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__)
 #define pushpop(x) (x)
@@ -51,5 +52,6 @@
   })
 #endif
 
+#endif /* COSMO */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_PUSHPOP_H_ */

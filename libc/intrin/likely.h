@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_LIKELY_H_
 #define COSMOPOLITAN_LIBC_BITS_LIKELY_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef COSMO
 
 #define LIKELY(x)   __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
@@ -17,5 +18,6 @@
 #define VERY_UNLIKELY(x) UNLIKELY(x)
 #endif
 
+#endif /* COSMO */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_LIKELY_H_ */

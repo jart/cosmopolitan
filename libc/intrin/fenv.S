@@ -39,7 +39,9 @@
 //		- `FE_INEXACT`
 //		- `FE_ALL_EXCEPT` (all of the above)
 //	@return	0 on success, or nonzero on error
+	.ftrace1
 feclearexcept:
+	.ftrace2
 #ifdef __x86_64__
 //	maintain exceptions in the sse mxcsr, clear x87 exceptions
 	mov	%edi,%ecx
@@ -79,6 +81,7 @@ feclearexcept:
 //	    volatile double x = 0, y = 1 / x;
 //	    assert(fetestexcept(FE_ALL_EXCEPT) == FE_DIVBYZERO);
 //
+	.ftrace1
 //	@param excepts may bitwise-or the following:
 //		- `FE_INVALID`
 //		- `FE_DIVBYZERO`
@@ -88,7 +91,9 @@ feclearexcept:
 //		- `FE_ALL_EXCEPT` (all of the above)
 //	@return	mask of which exception status codes are currently set,
 //		or zero if there aren't any floating point exceptions
+	.ftrace1
 fetestexcept:
+	.ftrace2
 #ifdef __x86_64__
 	and	$0x3f,%edi
 	push	%rax
@@ -106,7 +111,9 @@ fetestexcept:
 #endif
 	.endfn	fetestexcept,globl
 
+	.ftrace1
 feraiseexcept:
+	.ftrace2
 #ifdef __x86_64__
 	and	$0x3f,%edi
 	stmxcsr	-8(%rsp)
@@ -124,7 +131,9 @@ feraiseexcept:
 #endif
 	.endfn	feraiseexcept,globl
 
+	.ftrace1
 __fesetround:
+	.ftrace2
 #ifdef __x86_64__
 	push	%rax
 	xor	%eax,%eax
@@ -150,7 +159,9 @@ __fesetround:
 #endif
 	.endfn	__fesetround,globl,hidden
 
+	.ftrace1
 fegetround:
+	.ftrace2
 #ifdef __x86_64__
 	push	%rax
 	stmxcsr	(%rsp)
@@ -165,7 +176,9 @@ fegetround:
 #endif
 	.endfn	fegetround,globl
 
+	.ftrace1
 fegetenv:
+	.ftrace2
 #ifdef __x86_64__
 	xor	%eax,%eax
 	fnstenv	(%rdi)
@@ -180,7 +193,9 @@ fegetenv:
 #endif
 	.endfn	fegetenv,globl
 
+	.ftrace1
 fesetenv:
+	.ftrace2
 #ifdef __x86_64__
 	xor	%eax,%eax
 	inc	%rdi

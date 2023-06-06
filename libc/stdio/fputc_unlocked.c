@@ -36,3 +36,5 @@ int fputc_unlocked(int c, FILE *f) {
     return b;
   }
 }
+
+__strong_reference(fputc_unlocked, putc_unlocked);

@@ -165,3 +165,5 @@ void bzero(void *p, size_t n) {
     bzero128(b, n);
   }
 }
+
+__weak_reference(bzero, explicit_bzero);

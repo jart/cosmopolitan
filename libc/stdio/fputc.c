@@ -33,3 +33,5 @@ int fputc(int c, FILE *f) {
   funlockfile(f);
   return rc;
 }
+
+__strong_reference(fputc, putc);

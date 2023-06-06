@@ -2,6 +2,44 @@
 #define COSMOPOLITAN_LIBC_X_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+#ifdef COSMO
+
+#define xwrite        __xwrite
+#define xdie          __xdie
+#define xdtoa         __xdtoa
+#define xdtoaf        __xdtoaf
+#define xdtoal        __xdtoal
+#define xmalloc       __xmalloc
+#define xrealloc      __xrealloc
+#define xcalloc       __xcalloc
+#define xvalloc       __xvalloc
+#define xmemalign     __xmemalign
+#define xmemalignzero __xmemalignzero
+#define xstrdup       __xstrdup
+#define xstrndup      __xstrndup
+#define xstrmul       __xstrmul
+#define xinet_ntop    __xinet_ntop
+#define xunbinga      __xunbinga
+#define xunbing       __xunbing
+#define utf8to16      __utf8to16
+#define utf16to8      __utf16to8
+#define utf8to32      __utf8to32
+#define utf16to32     __utf16to32
+#define utf32to8      __utf32to8
+#define xhomedir      __xhomedir
+#define xstripext     __xstripext
+#define xstripexts    __xstripexts
+#define xload         __xload
+#define xloadzd       __xloadzd
+#define rmrf          __rmrf
+#define xbasename     __xbasename
+#define xdirname      __xdirname
+#define xjoinpaths    __xjoinpaths
+#define xreadlink     __xreadlink
+#define xreadlinkat   __xreadlinkat
+#define xfixpath      __xfixpath
+#define xslurp        __xslurp
+#define xbarf         __xbarf
 
 int xwrite(int, const void *, uint64_t);
 void xdie(void) wontreturn;
@@ -68,6 +106,7 @@ void *xslurp(const char *, size_t *)
     returnsaligned((PAGESIZE)) dontdiscard;
 int xbarf(const char *, const void *, size_t);
 
+#endif /* COSMO */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_X_H_ */

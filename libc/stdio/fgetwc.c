@@ -34,3 +34,5 @@ wint_t fgetwc(FILE *f) {
   funlockfile(f);
   return wc;
 }
+
+__strong_reference(fgetwc, getwc);

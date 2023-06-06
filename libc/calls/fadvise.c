@@ -65,3 +65,5 @@ int fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
   STRACE("fadvise(%d, %'lu, %'lu, %d) → %d% m", fd, offset, len, advice, rc);
   return rc;
 }
+
+__strong_reference(fadvise, fadvise64);

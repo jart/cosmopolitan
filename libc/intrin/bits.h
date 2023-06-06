@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_BITS_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+#ifdef COSMO
 
 #define CheckUnsigned(x) ((x) / !((typeof(x))(-1) < 0))
 
@@ -11,8 +12,6 @@ COSMOPOLITAN_C_START_
 
 extern const uint8_t kReverseBits[256];
 
-uint32_t gray(uint32_t) pureconst;
-uint32_t ungray(uint32_t) pureconst;
 int _bitreverse8(int) libcesque pureconst;
 int _bitreverse16(int) libcesque pureconst;
 uint32_t _bitreverse32(uint32_t)
@@ -22,7 +21,6 @@ libcesque pureconst;
 unsigned long _roundup2pow(unsigned long) libcesque pureconst;
 unsigned long _roundup2log(unsigned long) libcesque pureconst;
 unsigned long _rounddown2pow(unsigned long) libcesque pureconst;
-unsigned long _hamming(unsigned long, unsigned long) pureconst;
 unsigned _bextra(const unsigned *, size_t, char);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -157,6 +155,7 @@ unsigned _bextra(const unsigned *, size_t, char);
   })
 
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
+#endif /* COSMO */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_H_ */

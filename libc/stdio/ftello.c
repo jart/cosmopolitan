@@ -55,3 +55,5 @@ int64_t ftello(FILE *f) {
   funlockfile(f);
   return rc;
 }
+
+__strong_reference(ftello, ftell);

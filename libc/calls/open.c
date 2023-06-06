@@ -43,3 +43,5 @@ int open(const char *file, int flags, ...) {
   va_end(va);
   return openat(AT_FDCWD, file, flags, mode);
 }
+
+__strong_reference(open, open64);

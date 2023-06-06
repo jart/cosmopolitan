@@ -702,7 +702,6 @@ char *d;                /* directory to delete */
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__386BSD__) || \
     defined(__OpenBSD__) || defined(__bsdi__)
-#include "libc/intrin/newbie.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"

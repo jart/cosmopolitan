@@ -41,9 +41,5 @@ long labs(long x) {
   return x < 0 ? -x : x;
 }
 
-/**
- * Returns absolute value of 𝑥.
- */
-long long llabs(long long x) {
-  return x < 0 ? -x : x;
-}
+__weak_reference(labs, llabs);
+__weak_reference(labs, imaxabs);

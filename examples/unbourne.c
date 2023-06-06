@@ -1744,14 +1744,14 @@ static char *sstrdup(const char *p) {
   return memcpy(stalloc(len), p, len);
 }
 
-int xwrite(int, const void *, uint64_t);
+int __xwrite(int, const void *, uint64_t);
 
 static void flushout(struct output *dest) {
   unsigned len;
   len = dest->nextc - dest->buf;
   if (!len || dest->fd < 0) return;
   dest->nextc = dest->buf;
-  if ((xwrite(dest->fd, dest->buf, len))) dest->flags |= OUTPUT_ERR;
+  if ((__xwrite(dest->fd, dest->buf, len))) dest->flags |= OUTPUT_ERR;
 }
 
 static void flushall(void) {
@@ -1817,7 +1817,7 @@ static void outmem(const char *p, unsigned len, struct output *dest) {
   }
   nleft = dest->end - dest->nextc;
   if (nleft > len) goto buffered;
-  if ((xwrite(dest->fd, p, len))) {
+  if ((__xwrite(dest->fd, p, len))) {
     dest->flags |= OUTPUT_ERR;
   }
 }
@@ -9179,7 +9179,7 @@ static int64_t openhere(union node *redir) {
   }
   len = strlen(p);
   if (len <= PIPESIZE) {
-    xwrite(pip[1], p, len);
+    __xwrite(pip[1], p, len);
     goto out;
   }
   if (forkshell((struct job *)NULL, (union node *)NULL, FORK_NOJOB) == 0) {
@@ -9188,7 +9188,7 @@ static int64_t openhere(union node *redir) {
     signal(SIGQUIT, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_DFL);
-    xwrite(pip[1], p, len);
+    __xwrite(pip[1], p, len);
     _exit(0);
   }
 out:

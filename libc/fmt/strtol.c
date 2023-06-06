@@ -70,3 +70,7 @@ long strtol(const char *s, char **endptr, int base) {
   if (t && endptr) *endptr = s;
   return x;
 }
+
+__weak_reference(strtol, strtoimax);
+__weak_reference(strtol, strtoll);
+__weak_reference(strtol, strtoll_l);

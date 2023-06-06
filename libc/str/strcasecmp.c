@@ -63,3 +63,5 @@ noasan int strcasecmp(const char *a, const char *b) {
     return x - y;
   }
 }
+
+__weak_reference(strcasecmp, strcasecmp_l);

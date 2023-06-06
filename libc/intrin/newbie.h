@@ -2,11 +2,6 @@
 #define COSMOPOLITAN_LIBC_BITS_NEWBIE_H_
 #include "libc/intrin/bswap.h"
 
-/*
- * Macros for newbies.
- * https://justine.lol/endian.html
- */
-
 #define BYTE_ORDER    __BYTE_ORDER__
 #define LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
 #define BIG_ENDIAN    __ORDER_BIG_ENDIAN__

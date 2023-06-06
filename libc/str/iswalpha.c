@@ -24,3 +24,5 @@
 int iswalpha(wint_t c) {
   return iswupper(c) || iswlower(c);
 }
+
+__weak_reference(iswalpha, iswalpha_l);

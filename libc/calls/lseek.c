@@ -90,3 +90,5 @@ int64_t lseek(int fd, int64_t offset, int whence) {
          rc);
   return rc;
 }
+
+__strong_reference(lseek, lseek64);

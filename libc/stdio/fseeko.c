@@ -44,3 +44,5 @@ int fseeko(FILE *f, int64_t offset, int whence) {
   funlockfile(f);
   return rc;
 }
+
+__strong_reference(fseeko, fseek);

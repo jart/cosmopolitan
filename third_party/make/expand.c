@@ -21,6 +21,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/job.h"
 #include "third_party/make/commands.h"
 #include "third_party/make/variable.h"
+#include "libc/x/x.h"
 #include "third_party/make/rule.h"
 
 /* Initially, any errors reported when expanding strings will be reported

@@ -31,9 +31,4 @@ long ffsl(long x) {
   return __builtin_ffsl(x);
 }
 
-/**
- * Finds lowest set bit in word.
- */
-long long ffsll(long long x) {
-  return __builtin_ffsll(x);
-}
+__weak_reference(ffsl, ffsll);

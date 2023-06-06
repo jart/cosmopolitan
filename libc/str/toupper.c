@@ -24,3 +24,5 @@
 int toupper(int c) {
   return 'a' <= c && c <= 'z' ? c - ('a' - 'A') : c;
 }
+
+__weak_reference(toupper, toupper_l);

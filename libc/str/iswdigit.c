@@ -24,3 +24,5 @@
 int iswdigit(wint_t c) {
   return '0' <= c && c <= '9';
 }
+
+__weak_reference(iswdigit, iswdigit_l);

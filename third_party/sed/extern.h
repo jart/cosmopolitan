@@ -9,7 +9,7 @@ COSMOPOLITAN_C_START_
 // clang-format off
 
 extern struct s_command *prog;
-extern struct s_appends *appends;
+extern struct s_appends *appends_;
 extern regmatch_t *g_match;
 extern size_t maxnsub;
 extern u_long linenum;

@@ -48,3 +48,5 @@ long atol(const char *s) {
   }
   return x;
 }
+
+__weak_reference(atol, atoll);

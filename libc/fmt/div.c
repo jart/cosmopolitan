@@ -18,6 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 
+/**
+ * Divides integers yielding numerator and denominator.
+ */
 div_t(div)(int num, int den) {
-  return div(num, den);
+  div_t retval;
+  retval.quot = num / den;
+  retval.rem = num % den;
+#if __STDC_VERSION__ + 0 < 199901L
+  // satisfy quot*denominator+rem == numerator
+  if (n > 0 && retval.rem < 0) {
+    retval.quot += 1;
+    retval.rem -= d;
+  }
+#endif
+  return retval;
 }

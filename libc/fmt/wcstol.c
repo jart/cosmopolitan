@@ -58,3 +58,7 @@ long wcstol(const wchar_t *s, wchar_t **endptr, int base) {
   if (t && endptr) *endptr = s;
   return x;
 }
+
+__weak_reference(wcstol, wcstoimax);
+__weak_reference(wcstol, wcstoll);
+__weak_reference(wcstol, wcstoll_l);

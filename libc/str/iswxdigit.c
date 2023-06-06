@@ -25,3 +25,5 @@ int iswxdigit(wint_t c) {
   return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
          ('a' <= c && c <= 'f');
 }
+
+__weak_reference(iswxdigit, iswxdigit_l);

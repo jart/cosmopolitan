@@ -34,3 +34,5 @@ int fgetc(FILE *f) {
   funlockfile(f);
   return rc;
 }
+
+__strong_reference(fgetc, getc);

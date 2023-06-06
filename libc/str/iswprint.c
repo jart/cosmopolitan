@@ -25,3 +25,5 @@ int iswprint(wint_t c) {
   return !((0x00 <= c && c <= 0x1F) || (0x7F <= c && c <= 0x9F) ||
            (0xFFF9 <= c && c <= 0xFFFB) || c == 0x2028 || c == 0x2029);
 }
+
+__weak_reference(iswprint, iswprint_l);

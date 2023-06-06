@@ -28,6 +28,7 @@
 #include "libc/intrin/aarch64/asmdefs.internal.h"
 
 #define __strchr_aarch64 strchr
+#define __index_aarch64 index
 
 .ident "\n\n\
 Optimized Routines (MIT License)\n\
@@ -77,6 +78,7 @@ Copyright 2022 ARM Limited\n"
 
 /* Locals and temporaries.  */
 
+ENTRY_ALIAS (__strchr_aarch64, __index_aarch64)
 ENTRY (__strchr_aarch64)
 	PTR_ARG (0)
 	/* Magic constant 0xc0300c03 to allow us to identify which lane

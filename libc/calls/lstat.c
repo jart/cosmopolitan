@@ -26,3 +26,5 @@
 int lstat(const char *pathname, struct stat *st) {
   return fstatat(AT_FDCWD, pathname, st, AT_SYMLINK_NOFOLLOW);
 }
+
+__strong_reference(lstat, lstat64);

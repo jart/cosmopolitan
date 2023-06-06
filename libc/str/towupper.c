@@ -195,3 +195,5 @@ wint_t towupper(wint_t c) {
     }
   }
 }
+
+__weak_reference(towupper, towupper_l);

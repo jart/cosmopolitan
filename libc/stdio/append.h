@@ -1,8 +1,19 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_APPEND_H_
 #define COSMOPOLITAN_LIBC_STDIO_APPEND_H_
 #include "libc/fmt/pflink.h"
+#ifdef COSMO
 
 #define APPEND_COOKIE 21578
+
+#define appendz   __appendz
+#define appendr   __appendr
+#define appendd   __appendd
+#define appendw   __appendw
+#define appends   __appends
+#define appendf   __appendf
+#define vappendf  __vappendf
+#define kappendf  __kappendf
+#define kvappendf __kvappendf
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -22,11 +33,7 @@ ssize_t vappendf(char **, const char *, va_list);
 ssize_t kappendf(char **, const char *, ...);
 ssize_t kvappendf(char **, const char *, va_list);
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define appendf(BUF, FMT, ...) appendf(BUF, PFLINK(FMT), ##__VA_ARGS__)
-#define vappendf(BUF, FMT, VA) vappendf(BUF, PFLINK(FMT), VA)
-#endif
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMO */
 #endif /* COSMOPOLITAN_LIBC_STDIO_APPEND_H_ */

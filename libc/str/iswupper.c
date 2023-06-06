@@ -160,3 +160,5 @@ int iswupper(wint_t c) {
     }
   }
 }
+
+__weak_reference(iswupper, iswupper_l);

@@ -21,6 +21,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/x/x.h"
 
 /**
  * Writes data to file.

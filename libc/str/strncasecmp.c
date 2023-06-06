@@ -37,3 +37,5 @@ int strncasecmp(const char *a, const char *b, size_t n) {
   }
   return x - y;
 }
+
+__weak_reference(strncasecmp, strncasecmp_l);

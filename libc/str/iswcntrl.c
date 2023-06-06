@@ -24,3 +24,5 @@
 int iswcntrl(wint_t c) {
   return (0x00 <= c && c <= 0x1F) || (0x7F <= c && c <= 0x9F);
 }
+
+__weak_reference(iswcntrl, iswcntrl_l);

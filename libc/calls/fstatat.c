@@ -75,3 +75,5 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
          DescribeStat(rc, st), __strace_fstatat_flags(alloca(12), flags), rc);
   return rc;
 }
+
+__strong_reference(fstatat, fstatat64);

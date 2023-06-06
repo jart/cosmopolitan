@@ -193,7 +193,7 @@ ar_glob_match (int desc UNUSED, const char *mem, int truncated UNUSED,
   if (fnmatch (state->pattern, mem, FNM_PATHNAME|FNM_PERIOD) == 0)
     {
       /* We have a match.  Add it to the chain.  */
-      struct nameseq *new = xcalloc (state->size);
+      struct nameseq *new = xcalloc (1, state->size);
         new->name = strcache_add(concat(4, state->arname, "(", mem, ")"));
       new->next = state->chain;
       state->chain = new;

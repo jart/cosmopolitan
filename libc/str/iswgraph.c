@@ -24,3 +24,5 @@
 int iswgraph(wint_t c) {
   return iswprint(c) && !iswspace(c);
 }
+
+__weak_reference(iswgraph, iswgraph_l);

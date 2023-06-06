@@ -28,3 +28,5 @@ int isxdigit(int c) {
   return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') ||
          ('a' <= c && c <= 'f');
 }
+
+__weak_reference(isxdigit, isxdigit_l);

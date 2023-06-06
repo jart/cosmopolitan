@@ -164,7 +164,7 @@ compile(void)
 	fixuplabel(prog, NULL);
 	uselabel();
 	if (appendnum > 0)
-		appends = xmalloc(sizeof(struct s_appends) * appendnum);
+		appends_ = xmalloc(sizeof(struct s_appends) * appendnum);
 	g_match = xmalloc((maxnsub + 1) * sizeof(regmatch_t));
 }
 

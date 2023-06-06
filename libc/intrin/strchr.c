@@ -117,4 +117,6 @@ char *strchr(const char *s, int c) {
 #endif
 }
 
+__strong_reference(strchr, index);
+
 #endif /* __aarch64__ */

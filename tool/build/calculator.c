@@ -155,6 +155,19 @@ struct History history;
 struct Value stack[128];
 int sp, comment, line, column, interactive;
 
+uint32_t gray(uint32_t x) {
+  return x ^ (x >> 1);
+}
+
+uint32_t ungray(uint32_t x) {
+  x ^= x >> 16;
+  x ^= x >> 8;
+  x ^= x >> 4;
+  x ^= x >> 2;
+  x ^= x >> 1;
+  return x;
+}
+
 INT Popcnt(INT x) {
   uint128_t word = x;
   return popcnt(word >> 64) + popcnt(word);

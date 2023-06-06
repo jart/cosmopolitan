@@ -54,3 +54,5 @@ int iswspace(wint_t c) {
       return 0;
   }
 }
+
+__weak_reference(iswspace, iswspace_l);

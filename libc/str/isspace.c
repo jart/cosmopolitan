@@ -26,3 +26,5 @@ int isspace(int c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' ||
          c == '\v';
 }
+
+__weak_reference(isspace, isspace_l);

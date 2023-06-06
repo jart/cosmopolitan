@@ -24,3 +24,5 @@
 int isupper(int c) {
   return 'A' <= c && c <= 'Z';
 }
+
+__weak_reference(isupper, isupper_l);

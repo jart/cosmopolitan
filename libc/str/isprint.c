@@ -24,3 +24,5 @@
 int isprint(int c) {
   return 0x20 <= c && c <= 0x7E;
 }
+
+__weak_reference(isprint, isprint_l);

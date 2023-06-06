@@ -24,3 +24,5 @@
 int isblank(int c) {
   return c == ' ' || c == '\t';
 }
+
+__weak_reference(isblank, isblank_l);

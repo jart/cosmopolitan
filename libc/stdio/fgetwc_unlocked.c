@@ -49,3 +49,5 @@ wint_t fgetwc_unlocked(FILE *f) {
   }
   return x;
 }
+
+__strong_reference(fgetwc_unlocked, getwc_unlocked);

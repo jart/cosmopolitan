@@ -24,3 +24,5 @@
 int tolower(int c) {
   return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;
 }
+
+__weak_reference(tolower, tolower_l);

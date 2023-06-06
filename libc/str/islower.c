@@ -24,3 +24,5 @@
 int islower(int c) {
   return 'a' <= c && c <= 'z';
 }
+
+__weak_reference(islower, islower_l);

@@ -57,3 +57,7 @@ unsigned long wcstoul(const wchar_t *s, wchar_t **endptr, int base) {
   if (t && endptr) *endptr = s;
   return d > 0 ? x : -x;
 }
+
+__weak_reference(wcstoul, wcstoumax);
+__weak_reference(wcstoul, wcstoull);
+__weak_reference(wcstoul, wcstoull_l);

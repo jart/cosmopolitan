@@ -15,6 +15,7 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#include "libc/x/x.h"
 
 /* Structure used in chains of names, for parsing and globbing.  */
 
@@ -98,7 +99,7 @@ struct nameseq *ar_glob (const char *arname, const char *member_pattern, size_t 
 
 #define dep_name(d)        ((d)->name ? (d)->name : (d)->file->name)
 
-#define alloc_seq_elt(_t)   xcalloc (sizeof (_t))
+#define alloc_seq_elt(_t)   xcalloc (1, sizeof (_t))
 void free_ns_chain (struct nameseq *n);
 
 #if defined(MAKE_MAINTAINER_MODE) && defined(__GNUC__) && !defined(__STRICT_ANSI__)

@@ -28,6 +28,7 @@
 #include "libc/intrin/aarch64/asmdefs.internal.h"
 
 #define __strrchr_aarch64 strrchr
+#define __rindex_aarch64 rindex
 
 .ident "\n\n\
 Optimized Routines (MIT License)\n\
@@ -81,6 +82,7 @@ Copyright 2022 ARM Limited\n"
    in the original string a count_trailing_zeros() operation will
    identify exactly which byte is causing the termination, and why.  */
 
+ENTRY_ALIAS (__strrchr_aarch64, __rindex_aarch64)
 ENTRY (__strrchr_aarch64)
 	PTR_ARG (0)
 	/* Magic constant 0x40100401 to allow us to identify which lane

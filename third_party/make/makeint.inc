@@ -50,7 +50,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/w.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/musl/glob.h"
 /* clang-format off */
@@ -395,8 +394,6 @@ void pfatal_with_name (const char *) NORETURN;
 void perror_with_name (const char *, const char *);
 #define xstrlen(_s) ((_s)==NULL ? 0 : strlen (_s))
 void *xmalloc (size_t);
-// void *xcalloc (size_t);
-#define xcalloc(size) ((xcalloc)(1, (size)))
 void *xrealloc (void *, size_t);
 char *xstrdup (const char *);
 char *xstrndup (const char *, size_t);
