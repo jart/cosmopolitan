@@ -35,18 +35,36 @@
 #include "libc/x/x.h"
 #include "third_party/xed/x86.h"
 
-#ifdef __x86_64__
-
 volatile bool gotsegv;
 volatile bool gotbusted;
 struct sigaction old[2];
 char testlib_enable_tmp_setup_teardown;
 
+#ifdef __x86_64__
+static const char kRet31337[] = {
+    0xb8, 0x69, 0x7a, 0x00, 0x00,  // mov $31337,%eax
+    0xc3,                          // ret
+};
+#elif defined(__aarch64__)
+static const uint32_t kRet31337[] = {
+    0x528f4d20,  // mov	w0,#31337
+    0xd65f03c0,  // ret
+};
+#else
+#error "unsupported architecture"
+#endif
+
 void SkipOverFaultingInstruction(struct ucontext *ctx) {
+#ifdef __x86_64__
   struct XedDecodedInst xedd;
   xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
   xed_instruction_length_decode(&xedd, (void *)ctx->uc_mcontext.rip, 15);
   ctx->uc_mcontext.rip += xedd.length;
+#elif defined(__aarch64__)
+  ctx->uc_mcontext.pc += 4;
+#else
+#error "unsupported architecture"
+#endif
 }
 
 void OnSigSegv(int sig, struct siginfo *si, void *vctx) {
@@ -125,7 +143,7 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
 TEST(mprotect, testExecOnly_canExecute) {
   char *p = _mapanon(FRAMESIZE);
   void (*f)(void) = (void *)p;
-  p[0] = 0xC3;  // RET
+  memcpy(p, kRet31337, sizeof(kRet31337));
   ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_EXEC | PROT_READ));
   f();
   // On all supported platforms, PROT_EXEC implies PROT_READ. There is
@@ -146,11 +164,6 @@ TEST(mprotect, testProtNone_cantEvenRead) {
   EXPECT_NE(-1, mprotect(p, GUARDSIZE, PROT_READ | PROT_WRITE));
 }
 
-static const char kRet31337[] = {
-    0xb8, 0x69, 0x7a, 0x00, 0x00,  // mov $31337,%eax
-    0xc3,                          // ret
-};
-
 TEST(mprotect, testExecJit_actuallyWorks) {
   int (*p)(void) = gc(memalign(GUARDSIZE, GUARDSIZE));
   memcpy(p, kRet31337, sizeof(kRet31337));
@@ -162,7 +175,8 @@ TEST(mprotect, testExecJit_actuallyWorks) {
 }
 
 TEST(mprotect, testRwxMap_vonNeumannRules) {
-  if (IsOpenbsd()) return;  // boo
+  if (IsOpenbsd()) return;     // boo
+  if (IsXnuSilicon()) return;  // boo
   int (*p)(void) = gc(memalign(GUARDSIZE, GUARDSIZE));
   memcpy(p, kRet31337, sizeof(kRet31337));
   EXPECT_NE(-1, mprotect(p, GUARDSIZE, PROT_READ | PROT_WRITE | PROT_EXEC));
@@ -216,5 +230,3 @@ TEST(mprotect, testZeroSize_doesNothing) {
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
 }
-
-#endif /* __x86_64__ */

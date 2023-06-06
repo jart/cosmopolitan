@@ -21,7 +21,7 @@
 /**
  * Returns monospace display width of wide character string.
  */
-int wcsnwidth(const wchar_t *pwcs, size_t n, int o) {
+int wcsnwidth(const wchar_t *pwcs, size_t n, size_t o) {
   int w, width = 0;
   for (; *pwcs && n-- > 0; pwcs++) {
     if ((w = wcwidth(*pwcs)) < 0) {

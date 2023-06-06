@@ -38,11 +38,11 @@
 
 signed char g_magikarp[8];
 const signed char kMagikarp[8][8] = {
-    {-1, -3, 3, 17, 17, 3, -3, -1}, /* 1331+161 derived w/ one off cas */
-    {-1, -3, 6, 28, 6, -3, -1, 0},  /* no due to the convolution theorem? */
-    {0, 0, -11, 53, -11, 0, 0, 0},  /* no plus, some random experimenting */
-    {-2, -6, 2, 22, 22, 2, -6, -2}, /* one a line please clang-format? */
-    {-3, -9, 1, 27, 27, 1, -9, -3},
+    {-1, -1, 3, 15, 15, 3, -1, -1},  // magic kernel sharp
+    {-1, -3, 6, 28, 6, -3, -1, 0},   //
+    {0, 0, -11, 53, -11, 0, 0, 0},   //
+    {-2, -6, 2, 22, 22, 2, -6, -2},  //
+    {-3, -9, 1, 27, 27, 1, -9, -3},  //
 };
 
 signed char g_magkern[8];

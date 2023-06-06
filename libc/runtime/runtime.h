@@ -70,7 +70,7 @@ int __cxa_atexit(void *, void *, void *) libcesque;
 int atfork(void *, void *) libcesque;
 int atexit(void (*)(void)) libcesque;
 char *getenv(const char *) nosideeffect libcesque;
-int putenv(char *) paramsnonnull();
+int putenv(char *);
 int setenv(const char *, const char *, int);
 int unsetenv(const char *);
 int clearenv(void);

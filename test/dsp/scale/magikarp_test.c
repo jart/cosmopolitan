@@ -23,9 +23,9 @@
 #include "libc/fmt/bing.internal.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -124,21 +124,21 @@ TEST(magikarp, testHalfYX) {
   Magikarp2xX(32, 61, M, 16, 61);
   EXPECT_STREQ(u"\n\
 nooppppqqqqqqqqqqqqqqqqqpppooon\n\
-opppqqqqqppppoppoppppqqqqqppppo\n\
-ppqqqqpppooooommmoooopppqqqqppp\n\
-pqqqppponmmllllllllmmmnpppqqqqp\n\
-qqqppoomllllllllllllllmnoppqqqq\n\
-qqppoomlllllllmmmllllllmnoppqqq\n\
-qppponlllllmoqttspnlllllmnoppqq\n\
-qpponmllllmosyzz{vqnllllmmoppqq\n\
-qpponmllllmorwzzyupnllllmmoppqq\n\
-qqpponlllllloprrqomlllllmnoppqq\n\
+opppqqqqqpppppoooppppqqqqqppppo\n\
+ppqqqqpppoooonnnnnooopppqqqqppp\n\
+pqqqppponnmllllllllmnnnoppqqqqp\n\
+qqqppoommlllllllllllllmnoppqqqq\n\
+qqpponmllllllmmmmllllllmnoppqqq\n\
+qppponlllllmoqttspolllllmnoppqq\n\
+qpponmllllmosxzzyvqnllllmmoppqq\n\
+qpponmllllmorwyyyupnllllmmoppqq\n\
+qqpponllllllnprrqomlllllmnoppqq\n\
 qqpponnmlllllllllllllllmnnppqqq\n\
-qqqppponmlllllllllllllnooppqqqp\n\
-pqqqqpppoommmlllllmmmoopppqqqpp\n\
-pppqqqqpppooooooooooppppqqqqppp\n\
+qqqppponmllllllllllllmmooppqqqp\n\
+pqqqqppoonmmmlllllmmnoopppqqqpp\n\
+pppqqqqpppooooooooooopppqqqqppp\n\
 oopppqqqqqqpppppppppqqqqqqpppoo\n\
-noopopppqqqqqqqqqqqqqqqppoooonn",
+noooopppqqqqqqqqqqqqqqqppoooonn",
                gc(bingblit(32, 61, M, 16, 31)));
 }
 

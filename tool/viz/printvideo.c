@@ -1533,6 +1533,7 @@ static void TryToOpenFrameBuffer(void) {
 
 int main(int argc, char *argv[]) {
   sigset_t wut;
+  const char *s;
   gamma_ = 2.4;
   volscale_ -= 2;
   dither_ = true;
@@ -1546,8 +1547,17 @@ int main(int argc, char *argv[]) {
   if (!tuned_) PickDefaults();
   if (optind == argc) PrintUsage(EX_USAGE, stderr);
   patharg_ = argv[optind];
-  sox_ = strdup(commandvenv("SOX", "sox"));
-  ffplay_ = strdup(commandvenv("FFPLAY", "ffplay"));
+  s = commandvenv("SOX", "sox");
+  sox_ = s ? strdup(s) : 0;
+  s = commandvenv("FFPLAY", "ffplay");
+  ffplay_ = s ? strdup(s) : 0;
+  if (!sox_ && !ffplay_) {
+    fprintf(stderr, "please install either the "
+                    "`play` (sox) or "
+                    "`ffplay` (ffmpeg) "
+                    "commands, so printvideo.com can play audio\n");
+    usleep(10000);
+  }
   infd_ = STDIN_FILENO;
   outfd_ = STDOUT_FILENO;
   if (!setjmp(jb_)) {

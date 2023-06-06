@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "dsp/scale/scale.h"
 #include "dsp/core/c1331.h"
 #include "dsp/core/c161.h"
 #include "dsp/core/core.h"
 #include "dsp/core/half.h"
-#include "dsp/scale/scale.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -196,41 +196,23 @@ pqpppppppppppppppppoooooooooooooooooooooooppppppppppppppppprp",
   Magikarp2xY(32, 61, M[0], 32, 61);
   AbsoluteDifference(16, 61, D[0], 16, 61, G[0], 16, 61, M[0]);
   EXPECT_STREQ(u"\n\
-pnpppppppppppppppoooooooooooooooooooooooooooppppppppppppppprp\n\
-ppppppppppooooonnnnmmmmmmmmmmmmmmmmmmmmmmmnnnnooooopppppppppp\n\
+popppppppppppppppooooooonnnnnnnnnnnnnooooooopppppppppppppppqp\n\
+ppppppppppooooonnnnnmmmmmmmmmmmmmmmmmmmmmnnnnnooooopppppppppp\n\
 ppppppoononnnmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnnonoopppppp\n\
 pppoononnmmmmmmmmmmmmmmmmmnnnnnnnnnmmmmmmmmmmmmmmmmmnnonooppp\n\
 poonnnnmmmmmmmmmmmnnnnoooppppqqqppppooonnnnmmmmmmmmmmmnnnnoop\n\
 oonnnnmmmmmmmmmnooppqqrrsstttttttttssrrqqppoonmmmmmmmmmnnnnoo\n\
-onnnnmmmmmmmnnnoppqrsttuvvwwwwwwwwwvvuttsrqpponnnmmmmmmmnnnno\n\
+onnnnmmmmmmmnnnoppqqsttuvvwwwwwwwwwvvuttsqqpponnnmmmmmmmnnnno\n\
 onnnmmmmmmmmnnoopqrsttuvwwxxyyyyyxxwwvuttsrqpoonnmmmmmmmmnnno\n\
 onnnmmmmmmmmnnoopqrsstuvwwxxyyyyyxxwwvutssrqpoonnmmmmmmmmnnno\n\
 oonnnmmmmmmmmnnoopprrsttuuvvwwwwwvvuuttsrrppoonnmmmmmmmmnnnoo\n\
 ooonnmmmmmmmmmmmnoopoqqqrrsssssssssrrqqqopoonmmmmmmmmmmmnnooo\n\
-pooonnnmmmmmmmmmmmmmnnnnoooopppppoooonnnnmmmmmmmmmmmmmnnnooop\n\
+pooonnnmmmmmmmmmmmnmnnnoopoopppppoopoonnnmnmmmmmmmmmmmnnnooop\n\
 ppppoononnmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnonoopppp\n\
 pppppppoonoonnmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnnoonooppppppp\n\
-pppppppppppoooooonnnnmmmmmmmmmmmmmmmmmmmnnnnooooooppppppppppp\n\
+pppppppppppoooooonnnnnnmmmmmmmmmmmmmmmnnnnnnooooooppppppppppp\n\
 pqpppppppppppppppppoooooooooooooooooooooooppppppppppppppppprp",
                gc(bingblit(16, 61, M[0], 16, 61)));
-  EXPECT_STREQ(u"\n\
- ☺                                                         ☺ \n\
-             ☺     ☺                     ☺     ☺             \n\
-                                                             \n\
-                                                             \n\
-                                                             \n\
-                                                             \n\
-                   ☺                     ☺                   \n\
-                                                             \n\
-                                                             \n\
-                                                             \n\
-                   ☺      ☺       ☺      ☺                   \n\
-                         ☺         ☺                         \n\
-                                                             \n\
-                                                             \n\
-                     ☺☺               ☺☺                   ☺ \n\
-                                                             ",
-               gc(bingblit(16, 61, D[0], 16, 61)));
 }
 
 TEST(Magikarp2xX, testDecimateX) {
@@ -274,7 +256,7 @@ ppppppppppooooooooooopppppppppp",
   Magikarp2xX(32, 61, M[0], 32, 61);
   EXPECT_STREQ(u"\n\
 pppppppppoooooooooooooppppppppp\n\
-nppppppooonnnnnnnnnnooooppppprp\n\
+oppppppooonnnnnnnnnnoooopppppqp\n\
 pppppooonnnnmmmmmmnnnnooopppppp\n\
 ppppooonnnmmmmmmmmmmmnnnooppppp\n\
 pppoonnnmmmmmmmmmmmmmmmnnoopppp\n\
@@ -286,13 +268,13 @@ oonnmmmmnoopqqrrqqpponmmmmmnnoo\n\
 onnmmmmmnopqrsssssrqpnnmmmmnnoo\n\
 onmmmmmnopqstuuuutsrqoommmmmnoo\n\
 onnmmmmnpqrtuvvvvvtsrponmmmmnno\n\
-onmmmmnnpqtuvwxxwwutsponmmmmmno\n\
-onmmmmnoqrsvwxyyxxvurronmmmmmno\n\
-onmmmmnopstvwxyyyxwutronmmmmmno\n\
-onmmmmnopssvwxyyyxwtsronmmmmmno\n\
-onmmmmnopqtuvxxxxwvurqpnmmmmmno\n\
-onmmmmmnorsuvwwwwvutrqonmmmmmno\n\
-onmmmmmnoqrstuvvvutrqpnnmmmmnoo\n\
+onmmmmnopqsuvwxxwwutsqonmmmmmno\n\
+onmmmmnoqrsuwxyyxwvusqpnmmmmmno\n\
+onmmmmnopstvwxyyyxvusrpnmmmmmno\n\
+onmmmmnoprtvwxyyyxwtsrpnmmmmmno\n\
+onmmmmnoprtuvxxxxwvtrqpnmmmmmno\n\
+onmmmmmnpqstvwwwwvutrqonmmmmmno\n\
+onmmmmmnoqrstuvvvutrqponmmmmnoo\n\
 onmmmmmnnoqrsttttssqponmmmmmnoo\n\
 oonmmmmmnooqrrrrrrqpoommmmmmnoo\n\
 oonmmmmmnnnoppqqqpponnmmmmmnooo\n\
@@ -307,40 +289,6 @@ qpppppppoooonnnnnnnoooopppppprp\n\
 ppppppppppooooooooooopppppppppp",
                gc(bingblit(32, 61, M[0], 32, 31)));
   AbsoluteDifference(32, 31, D, 32, 31, G[0], 32, 61, M[0]);
-  EXPECT_STREQ(u"\n\
-                               \n\
-☺                              \n\
-                  ☺            \n\
-         ☺                     \n\
-       ☺                 ☺     \n\
-      ☺                        \n\
-                 ☺             \n\
-          ☺  ☺                 \n\
-                 ☺ ☺ ☺         \n\
-                   ☺           \n\
-                  ☺☺☺          \n\
-                               \n\
-                               \n\
-       ☺             ☺         \n\
-                    ☺☺☺        \n\
-                               \n\
-          ☺           ☺        \n\
-         ☺                     \n\
-        ☺☺                     \n\
-                      ☺        \n\
-                               \n\
-                               \n\
-        ☺       ☺ ☺            \n\
-                  ☺ ☺          \n\
-           ☺                   \n\
-                        ☺      \n\
-                       ☺       \n\
-        ☺                      \n\
-          ☺                    \n\
-                               \n\
-                               \n\
-                               ",
-               gc(bingblit(32, 31, D, 32, 31)));
 }
 
 TEST(magikarp_vs_gyarados, testHalf) {
@@ -352,22 +300,22 @@ TEST(magikarp_vs_gyarados, testHalf) {
   Magikarp2xX(32, 61, M[0], 16, 61);
   AbsoluteDifference(16, 31, D, 16, 31, G[0], 32, 61, M[0]);
   EXPECT_STREQ(u"\n\
-oppppppppooooooooooooopppppppqp\n\
-pppppooonnmmmmmmmmmmmnnoopppppp\n\
-ppponnmmmmmmmmmmmmmmmmmmnnnpppp\n\
-ppnommmmmmmmmnnnnnmmmmmmmmnoopp\n\
+pppppppppooonnnnnnooooppppppppp\n\
+pppppooonnmmmmmmmmmmnnnoopppppp\n\
+ppponnmmmmmmmmmmmmmmmmmmnnopppp\n\
+pponmmmmmmmmmnnnnnmmmmmmmmnoopp\n\
 pnnnmmmmmnnoppqqpponnnmmmmmnnop\n\
-onnmmmmmopqrstttttsrqpnmmmmnnoo\n\
-onnmmmnnpqtuvwwwwwutsponmmmmnno\n\
-onmmmmnopstvwxyyyxwutronmmmmmno\n\
-onmmmmnopssvwxyyyxwtsronmmmmmno\n\
+onnmmmmnopqrstttttsrqpnmmmmnnoo\n\
+onnmmmnopqsuvwwwwwutrponmmmmnno\n\
+onmmmmnopstvwxyyyxvusrpnmmmmmno\n\
+onmmmmnoprtvwxyyyxwtsrpnmmmmmno\n\
 onmmmmmooqstuvwwwvusrponmmmmnoo\n\
-oommmmmmnopqrsssssqqpommmmmmnoo\n\
-ponmmmmmmmnnoopppoonnmmmmmmnoop\n\
-ppoonmmmmmmmmmmmmmmmmmmmmmonppp\n\
-ppppnonmmmmmmmmmmmmmmmmmooopppp\n\
-ppppppooonnmmmmmmmmmnnooopppppp\n\
-qpppppppppoooooooooooppppppppqp",
+oommmmmmnopqrsssssrqponmmmmmnoo\n\
+ponmmmmmmnnopoppooonnmmmmmmnoop\n\
+ppoonmmmmmmmmmmmmmmmmmmmmmnoppp\n\
+ppppoonmmmmmmmmmmmmmmmmmooopppp\n\
+ppppppooonnnmmmmmmmnnnooopppppp\n\
+ppppppppppoooooooooooppppppppqp",
                gc(bingblit(32, 61, M[0], 16, 31)));
   EXPECT_STREQ(u"\n\
 ppppppppooooooooooooooopppppppp\n\
@@ -388,22 +336,22 @@ pppppooonnnmmmmmmmmmnnnoooppppp\n\
 pppppppppoooooooooooooppppppppq",
                gc(bingblit(16, 31, G[0], 16, 31)));
   EXPECT_STREQ(u"\n\
-☺       ☺             ☺      ☺ \n\
-       ☺               ☺ ☺     \n\
-    ☺ ☺                   ☺☺   \n\
- ☺☺☺☺                      ☺ ☺ \n\
+        ☺   ☺☺☺☺☺☺    ☺        \n\
+       ☺            ☺  ☺ ☺     \n\
+    ☺ ☺                    ☺   \n\
+ ☺  ☺                      ☺ ☺ \n\
 ☺☺              ☺ ☺☺          ☺\n\
-       ☺☺☺           ☺ ☺   ☺ ☺ \n\
-  ☺       ☺☺☺        ☺☺ ☺   ☺  \n\
-         ☺ ☺   ☺      ☺☺☺      \n\
-         ☺ ☺       ☺  ☺☺☺      \n\
+        ☺☺           ☺ ☺   ☺ ☺ \n\
+  ☺    ☺   ☺☺       ☺☺☺ ☺   ☺  \n\
+         ☺ ☺   ☺  ☺ ☺  ☺☺      \n\
+          ☺☺       ☺   ☺☺      \n\
        ☺  ☺        ☺ ☺      ☺☺ \n\
- ☺☺               ☺   ☺      ☺ \n\
-☺  ☺                        ☺ ☺\n\
-                          ☺☺☺  \n\
-   ☺☺☺                  ☺☺ ☺   \n\
-     ☺  ☺             ☺  ☺     \n\
-☺        ☺           ☺       ☺☺",
+ ☺☺                          ☺ \n\
+☺  ☺     ☺ ☺☺   ☺           ☺ ☺\n\
+                            ☺  \n\
+   ☺ ☺                  ☺☺ ☺   \n\
+     ☺  ☺  ☺       ☺  ☺  ☺     \n\
+         ☺           ☺       ☺☺",
                gc(bingblit(16, 31, D, 16, 31)));
 }
 

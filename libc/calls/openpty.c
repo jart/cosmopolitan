@@ -99,7 +99,7 @@ int openpty(int *mfd, int *sfd, char *name,  //
     return efault();
   }
   BLOCK_CANCELLATIONS;
-  rc = openpty(mfd, sfd, name, tio, wsz);
+  rc = openpty_impl(mfd, sfd, name, tio, wsz);
   ALLOW_CANCELLATIONS;
   return rc;
 }

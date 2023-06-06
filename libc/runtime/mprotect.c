@@ -35,8 +35,8 @@
  */
 int mprotect(void *addr, size_t size, int prot) {
   int64_t rc;
-  if (SupportsWindows() && (prot & ~(PROT_READ | PROT_WRITE | PROT_EXEC |
-                                     PROT_GROWSDOWN | PROT_GROWSUP))) {
+  if (prot &
+      ~(PROT_READ | PROT_WRITE | PROT_EXEC | PROT_GROWSDOWN | PROT_GROWSUP)) {
     errno = EINVAL;  // unix checks prot before checking size
     rc = -1;
   } else if (!size) {

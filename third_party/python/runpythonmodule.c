@@ -215,7 +215,10 @@ Complete(const char *p, linenoiseCompletions *c)
 static void
 TerminalCompletion(const char *p, linenoiseCompletions *c)
 {
-    // Complete(p, c);
+    PyGILState_STATE gilstate;
+    gilstate = PyGILState_Ensure();
+    Complete(p, c);
+    PyGILState_Release(gilstate);
     if (PyErr_Occurred()) {
         PyErr_Clear();
     }

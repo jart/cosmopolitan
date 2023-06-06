@@ -32,7 +32,7 @@ struct lconv {
 
 int wcwidth(wchar_t) pureconst;
 int wcswidth(const wchar_t *, size_t) strlenesque;
-int wcsnwidth(const wchar_t *, size_t, int) strlenesque;
+int wcsnwidth(const wchar_t *, size_t, size_t) strlenesque;
 struct lconv *localeconv(void);
 
 COSMOPOLITAN_C_END_
