@@ -78,7 +78,7 @@ Copyright 2022 ARM Limited\n"
    The loop tail is handled by always copying 64 bytes from the end.
 */
 
-ENTRY_ALIAS (__memmove_aarch64_simd)
+ENTRY_ALIAS (__memcpy_aarch64_simd, __memmove_aarch64_simd)
 ENTRY (__memcpy_aarch64_simd)
 	PTR_ARG (0)
 	PTR_ARG (1)

@@ -53,10 +53,10 @@ GNU_PROPERTY (FEATURE_1_AND, FEATURE_1_BTI|FEATURE_1_PAC)
 
 #define ENTRY(name)	ENTRY_ALIGN(name, 6)
 
-#define ENTRY_ALIAS(name)	\
-  .global name;		\
-  .type name,%function;	\
-  name:
+/* [jart] alias the proper way */
+#define ENTRY_ALIAS(sym, alias) \
+  .global alias;		\
+  .equ alias,sym
 
 #define END(name)	\
   .cfi_endproc;		\
