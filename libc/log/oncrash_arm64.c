@@ -254,10 +254,8 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
         addend = pc - st->addr_base;
         addend -= st->symbols[symbol].x;
         Append(b, " ");
-        if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-          Append(b, "%s", __get_symbol_name(st, symbol));
-          if (addend) Append(b, "%+d", addend);
-        }
+        Append(b, "%s", __get_symbol_name(st, symbol));
+        if (addend) Append(b, "%+d", addend);
       }
       Append(b, "\n");
 

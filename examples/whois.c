@@ -70,7 +70,7 @@ asm(".include \"libc/disclaimer.inc\"");
 #define	RNICHOST	"whois.ripe.net"
 #define	VNICHOST	"whois.verisign-grs.com"
 
-#define	DEFAULT_PORT	"whois"
+#define	DEFAULT_PORT	"43"  // IANA abolished WHOIS lool; avoid /etc/services
 
 #define WHOIS_RECURSE	0x01
 #define WHOIS_QUICK	0x02
