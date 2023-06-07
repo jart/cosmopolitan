@@ -48,9 +48,7 @@
 	.section .initprologue,"ax",@progbits
 	.type	_init,@function
 	.globl	_init
-	.ftrace1
 _init:
-	.ftrace2
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp

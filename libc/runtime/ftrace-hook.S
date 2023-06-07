@@ -23,9 +23,8 @@ ftrace_hook:
 #ifdef __x86_64__
 
 	cmp	$0,__ftrace(%rip)
-	jg	1f
-	ret
-1:	push	%rbp
+	jle	1f
+	push	%rbp
 	mov	%rsp,%rbp
 	push	%rax
 	push	%rax
@@ -45,16 +44,15 @@ ftrace_hook:
 	pop	%rax
 	pop	%rax
 	pop	%rbp
-	ret
+1:	ret
 
 #elif defined(__aarch64__)
 
 	adrp	x9,__ftrace
 	ldr	w9,[x9,#:lo12:__ftrace]
-	cmp	w9,1
-	bge	1f
-	ret
-1:	stp	x29,x30,[sp,-96]!
+	cmp	w9,0
+	ble	1f
+	stp	x29,x30,[sp,-96]!
 	mov	x29,sp
 	stp	x0,x1,[sp,16]
 	stp	x2,x3,[sp,32]
@@ -68,7 +66,7 @@ ftrace_hook:
 	ldp	x2,x3,[sp,32]
 	ldp	x0,x1,[sp,16]
 	ldp	x29,x30,[sp],96
-	ret
+1:	ret
 
 #endif /* __x86_64__ */
 	.endfn	ftrace_hook,globl
