@@ -36,27 +36,27 @@ _gclongjmp:
 #ifdef __x86_64__
 	push	%rbp
 	mov	%rsp,%rbp
-	mov	%fs:0,%r12			# __get_tls()
-	mov	0x18(%r12),%r12			# Tls::garbages
+	mov	%fs:0,%r12			// __get_tls()
+	mov	0x18(%r12),%r12			// Tls::garbages
 	test	%r12,%r12
 	jz	0f
-	movl	(%r12),%r13d			# garbages.i
+	movl	(%r12),%r13d			// garbages.i
 	test	%r13d,%r13d
 	jnz	.L.unwind.destructors
 0:	jmp	longjmp
 .L.unwind.destructors:
 	push	%rdi
 	push	%rsi
-	mov	8(%r12),%r14			# garbages.p
-	mov	(%rdi),%r15			# jmp_buf[0] is new %rsp
-	shl	$5,%r13				# log2(sizeof(struct Garbage))
-1:	sub	$32,%r13			# 𝑖--
+	mov	8(%r12),%r14			// garbages.p
+	mov	(%rdi),%r15			// jmp_buf[0] is new %rsp
+	shl	$5,%r13				// log2(sizeof(struct Garbage))
+1:	sub	$32,%r13			// 𝑖--
 	js	2f
-	cmp	(%r14,%r13),%r15		# new %rsp > garbages.p[𝑖].frame
+	cmp	(%r14,%r13),%r15		// new %rsp > garbages.p[𝑖].frame
 	jbe	2f
-	mov	16(%r14,%r13),%rdi		# garbages.p[𝑖].arg
-	callq	*8(%r14,%r13)			# garbages.p[𝑖].fn
-	decl	(%r12)				# garbages.i--
+	mov	16(%r14,%r13),%rdi		// garbages.p[𝑖].arg
+	callq	*8(%r14,%r13)			// garbages.p[𝑖].fn
+	decl	(%r12)				// garbages.i--
 	jmp	1b
 2:	pop	%rsi
 	pop	%rdi

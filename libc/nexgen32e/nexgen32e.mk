@@ -60,6 +60,8 @@ o/$(MODE)/libc/nexgen32e/threaded.o: private		\
 			$(NO_MAGIC)
 
 # these assembly files are safe to build on aarch64
+o/$(MODE)/libc/nexgen32e/gc.o: libc/nexgen32e/gc.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/zip.o: libc/nexgen32e/zip.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/mcount.o: libc/nexgen32e/mcount.S

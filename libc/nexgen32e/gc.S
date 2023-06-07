@@ -33,13 +33,14 @@
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
 //	@threadsafe
-__gc:
+	.ftrace1
+__gc:	.ftrace2
 
 #ifdef __x86_64__
 
 	mov	%fs:0,%rcx			// __get_tls()
 	mov	0x18(%rcx),%rcx			// tls::garbages
-	decl	(%rcx)				// ++g->i
+	decl	(%rcx)				// --g->i
 	mov	(%rcx),%r8d			// r8 = g->i
 	mov	8(%rcx),%r9			// r9 = g->p
 	js	9f
@@ -65,18 +66,40 @@ __gc:
 
 #elif defined(__aarch64__)
 
-	stp	x29,x30,[sp,-80]!
+	sub	x8,x28,#1152			// __get_tls()
+	ldr	x9,[x8,0x18]			// tib::garbages
+	ldr	x10,[x9]			// g->i
+	ldr	x8,[x9,8]			// g->p
+	sub	x10,x10,#1			//
+	str	x10,[x9]			//
+	sbfiz	x10,x10,5,32			//
+	add	x8,x8,x10			// g->p+i
+	ldr	x9,[x8,#8]			// g->p[i].fn
+	ldr	x10,[x8,#16]			// g->p[i].arg
+	ldr	x11,[x8,#24]			// g->p[i].ret
+	stp	x29,x11,[sp,-208]!
 	mov	x29,sp
 	stp	x0,x1,[sp,16]
 	stp	x2,x3,[sp,32]
 	stp	x4,x5,[sp,48]
 	stp	x6,x7,[sp,64]
-//	todo jart
-	ldp	x0,x1,[sp,16]
-	ldp	x2,x3,[sp,32]
-	ldp	x4,x5,[sp,48]
+	stp	q0,q1,[sp,80]
+	stp	q2,q3,[sp,112]
+	stp	q4,q5,[sp,144]
+	stp	q6,q7,[sp,176]
+	mov	x1,x10
+	bl	CheckStackIsAligned
+	blr	x9
+	ldp	q6,q7,[sp,176]
+	ldp	q4,q5,[sp,144]
+	ldp	q2,q3,[sp,112]
+	ldp	q0,q1,[sp,80]
 	ldp	x6,x7,[sp,64]
-	ldp	x29,x30,[sp],80
+	ldp	x4,x5,[sp,48]
+	ldp	x2,x3,[sp,32]
+	ldp	x0,x1,[sp,16]
+	ldp	x29,x30,[sp],208
+	ret
 
 #endif /* __x86_64__ */
 

@@ -30,7 +30,7 @@
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 #ifdef __x86_64__
-// TODO(jart): get garbage collector working properly on aarch64
+// TODO(jart): get gclongjmp() working properly on aarch64
 
 #define GC(x) _defer(Free, x)
 

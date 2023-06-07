@@ -86,9 +86,7 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
   g->p[g->i].arg = (intptr_t)arg;
   g->p[g->i].ret = frame->addr;
   g->i++;
-#ifdef __x86_64__
   frame->addr = (intptr_t)__gc;
-#endif
 }
 
 // the gnu extension macros for _gc / _defer point here

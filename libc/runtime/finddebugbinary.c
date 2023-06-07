@@ -18,10 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/elf/def.h"
-#include "libc/elf/elf.h"
-#include "libc/elf/struct/ehdr.h"
-#include "libc/elf/struct/sym.h"
+#include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
@@ -31,23 +28,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-
-static bool GetElfSymbolValue(const Elf64_Ehdr *ehdr, size_t esize,
-                              const char *name, uint64_t *res) {
-  Elf64_Xword i, n;
-  const char *stab;
-  const Elf64_Sym *st;
-  if ((stab = GetElfStringTable(ehdr, esize)) &&
-      (st = GetElfSymbolTable(ehdr, esize, &n))) {
-    for (i = 0; i < n; ++i) {
-      if (!strcmp(stab + st[i].st_name, name)) {
-        *res = st[i].st_value;
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 static bool IsMyDebugBinaryImpl(const char *path) {
   int fd;
@@ -61,8 +41,8 @@ static bool IsMyDebugBinaryImpl(const char *path) {
     // which is currently running in memory.
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
         (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-      if (IsElf64Binary(map, size) &&
-          GetElfSymbolValue(map, size, "_etext", &value)) {
+      if (READ32LE(map) == READ32LE("\177ELF") &&
+          GetElfSymbolValue(map, "_etext", &value)) {
         res = !_etext || value == (uintptr_t)_etext;
       }
       munmap(map, size);

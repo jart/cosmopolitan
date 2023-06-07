@@ -164,6 +164,7 @@ static bool AppendFileLine(struct Buffer *b, const char *addr2line,
 
 relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
   char buf[10000];
+  ucontext_t *ctx = arg;
   static _Thread_local bool once;
   struct Buffer b[1] = {{buf, sizeof(buf)}};
   b->p[b->i++] = '\n';
@@ -172,7 +173,6 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
     const char *kind;
     const char *reset;
     const char *strong;
-    ucontext_t *ctx = arg;
     char host[64] = "unknown";
     struct utsname names = {0};
     once = true;
@@ -320,7 +320,8 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       }
     }
   } else {
-    Append(b, "got %G while crashing!\n", sig);
+    Append(b, "got %G while crashing! pc %lx lr %lx\n", sig,
+           ctx->uc_mcontext.pc, ctx->uc_mcontext.regs[30]);
   }
   sys_write(2, b->p, MIN(b->i, b->n));
   __print_maps();
