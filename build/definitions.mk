@@ -69,6 +69,7 @@ CP = build/bootstrap/cp.com
 RM = build/bootstrap/rm.com -f
 GZIP = build/bootstrap/gzip.com
 ECHO = build/bootstrap/echo.com
+CHMOD = build/bootstrap/chmod.com
 TOUCH = build/bootstrap/touch.com
 PKG = build/bootstrap/package.com
 MKDEPS = build/bootstrap/mkdeps.com

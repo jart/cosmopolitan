@@ -5,3 +5,4 @@ o/third_party/qemu/qemu-aarch64:				\
 		third_party/qemu/qemu-aarch64.gz
 	@$(MKDIR) $(@D)
 	@$(GZIP) $(ZFLAGS) -cd <$< >$@
+	@$(CHMOD) 0755 $@

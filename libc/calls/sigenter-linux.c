@@ -24,6 +24,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
 #include "libc/intrin/likely.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/math.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
@@ -41,7 +42,7 @@ privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
       ctx->uc_mcontext.fpregs = &ctx->__fpustate;
       for (i = 0; i < 8; ++i) {
         long double nan = NAN;
-        __builtin_memcpy(ctx->__fpustate.st + i, &nan, 16);
+        __memcpy(ctx->__fpustate.st + i, &nan, 16);
       }
     }
     ((sigaction_f)(__executable_start + rva))(sig, info, ctx);

@@ -453,7 +453,7 @@ static privileged void linuxthreadstate2xnu(
 static privileged void CopyFpXmmRegs(void *d, const void *s) {
   size_t i;
   for (i = 0; i < (8 + 16) * 16; i += 16) {
-    __builtin_memcpy((char *)d + i, (const char *)s + i, 16);
+    __memcpy((char *)d + i, (const char *)s + i, 16);
   }
 }
 
@@ -527,7 +527,8 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
         }
 #elif defined(__aarch64__)
         if (xnuctx->uc_mcontext) {
-          memcpy(g.uc.uc_mcontext.regs, &xnuctx->uc_mcontext->__ss.__x, 33 * 8);
+          __memcpy(g.uc.uc_mcontext.regs, &xnuctx->uc_mcontext->__ss.__x,
+                   33 * 8);
         }
 #endif /* __x86_64__ */
       }
@@ -561,7 +562,8 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
         }
 #elif defined(__aarch64__)
         if (xnuctx->uc_mcontext) {
-          memcpy(&xnuctx->uc_mcontext->__ss.__x, g.uc.uc_mcontext.regs, 33 * 8);
+          __memcpy(&xnuctx->uc_mcontext->__ss.__x, g.uc.uc_mcontext.regs,
+                   33 * 8);
         }
 #endif /* __x86_64__ */
       }

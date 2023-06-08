@@ -17,14 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/dirent.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/exit.h"
 #include "third_party/getopt/getopt.h"
 
 #define USAGE \
@@ -42,78 +38,58 @@ FLAGS\n\
 
 const char *prog;
 
-wontreturn void PrintUsage(int rc, FILE *f) {
-  fputs("usage: ", f);
-  fputs(prog, f);
-  fputs(USAGE, f);
+static void Print(int fd, const char *s, ...) {
+  va_list va;
+  char buf[2048];
+  va_start(va, s);
+  buf[0] = 0;
+  do {
+    strlcat(buf, s, sizeof(buf));
+  } while ((s = va_arg(va, const char *)));
+  write(fd, buf, strlen(buf));
+  va_end(va);
+}
+
+static wontreturn void SysExit(const char *path, const char *func) {
+  const char *errstr;
+  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  Print(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
+  exit(1);
+}
+
+static wontreturn void PrintUsage(int fd, int rc) {
+  Print(fd, "USAGE\n\n  ", program_invocation_name, USAGE, NULL);
   exit(rc);
 }
 
-void GetOpts(int argc, char *argv[]) {
+static void GetOpts(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv, "?h")) != -1) {
     switch (opt) {
       case 'h':
       case '?':
-        PrintUsage(EXIT_SUCCESS, stdout);
+        PrintUsage(1, 0);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        PrintUsage(2, 1);
     }
   }
 }
 
 int main(int argc, char *argv[]) {
   int i, mode;
-  char buf[PATH_MAX];
-
-  {
-    printf("curdir %s\n", getcwd(buf, sizeof(buf)));
-    printf("tmp:");
-    struct dirent *e;
-    DIR *d;
-    if ((d = opendir("tmp"))) {
-      while ((e = readdir(d))) {
-        printf(" %s", e->d_name);
-      }
-      closedir(d);
-    } else {
-      printf(" dir not found");
-    }
-    printf("\n");
-  }
-
-  {
-    printf("curdir %s\n", getcwd(buf, sizeof(buf)));
-    printf("bin:");
-    struct dirent *e;
-    DIR *d;
-    if ((d = opendir("bin"))) {
-      while ((e = readdir(d))) {
-        printf(" %s", e->d_name);
-      }
-      closedir(d);
-    } else {
-      printf(" dir not found");
-    }
-    printf("\n");
-  }
-
-  prog = argc > 0 ? argv[0] : "mv.com";
+  char buf[PATH_MAX], *endptr;
   GetOpts(argc, argv);
   if (argc - optind < 2) {
-    PrintUsage(EX_USAGE, stderr);
+    PrintUsage(2, 1);
   }
-  mode = strtol(argv[optind], 0, 8) & 07777;
+  mode = strtol(argv[optind], &endptr, 8) & 07777;
+  if (*endptr) {
+    Print(2, "chmod: invalid mode octal\n", NULL);
+    exit(1);
+  }
   for (i = optind + 1; i < argc; ++i) {
     if (chmod(argv[i], mode) == -1) {
-      const char *s = _strerdoc(errno);
-      fputs(prog, stderr);
-      fputs(": ", stderr);
-      fputs(argv[i], stderr);
-      fputs(": ", stderr);
-      fputs(s, stderr);
-      fputs("\n", stderr);
-      exit(1);
+      SysExit(argv[i], "chmod");
     }
   }
   return 0;

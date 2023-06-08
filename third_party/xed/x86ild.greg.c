@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -1227,7 +1228,7 @@ privileged static void xed_decode_instruction_length(
  */
 privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
     struct XedDecodedInst *p, int mmode) {
-  __builtin_memset(p, 0, sizeof(*p));
+  __memset(p, 0, sizeof(*p));
   xed_operands_set_mode(&p->op, mmode);
   return p;
 }
@@ -1244,7 +1245,7 @@ privileged struct XedDecodedInst *xed_decoded_inst_zero_set_mode(
  */
 privileged int xed_instruction_length_decode(struct XedDecodedInst *xedd,
                                              const void *itext, size_t bytes) {
-  __builtin_memcpy(xedd->bytes, itext, MIN(15, bytes));
+  __memcpy(xedd->bytes, itext, MIN(15, bytes));
   xedd->op.max_bytes = MIN(15, bytes);
   xed_decode_instruction_length(xedd);
   if (!xedd->op.out_of_bytes) {

@@ -86,7 +86,6 @@ void Print(int fd, const char *s, ...) {
   do {
     strlcat(buf, s, sizeof(buf));
   } while ((s = va_arg(va, const char *)));
-  strlcat(buf, "\n", sizeof(buf));
   write(fd, buf, strlen(buf));
   va_end(va);
 }
