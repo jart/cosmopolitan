@@ -34,6 +34,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/termios.h"
 #include "third_party/ggml/llama.h"
 #include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/algorithm"

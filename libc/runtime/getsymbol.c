@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.real
-.code16 # ∩ .code32 ∩ .code64
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 
-//	Function entry hook stub.
-//
-//	@note	cc -pg -mfentry adds this to the start of every function
-//	@see	libc/log/shadowargs.ncabi.c
-//	@mode	long,legacy,real
-__fentry__:
-	ret
-	.endfn	__fentry__,weak
+extern _Hide struct SymbolTable *__symtab;
+
+/**
+ * Returns low index into symbol table for address.
+ *
+ * @param t if null will be auto-populated only if already open
+ * @return index or -1 if nothing found
+ */
+noinstrument privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
+  // we need privileged because:
+  //   kprintf is privileged and it depends on this
+  // we don't want function tracing because:
+  //   function tracing depends on this function via kprintf
+  unsigned l, m, r, n, k;
+  if (!t && __symtab) {
+    t = __symtab;
+  }
+  if (t) {
+    l = 0;
+    r = n = t->count;
+    k = a - t->addr_base;
+    while (l < r) {
+      m = (l + r) >> 1;
+      if (t->symbols[m].y < k) {
+        l = m + 1;
+      } else {
+        r = m;
+      }
+    }
+    if (l < n && t->symbols[l].x <= k && k <= t->symbols[l].y) {
+      return l;
+    }
+  }
+  return -1;
+}

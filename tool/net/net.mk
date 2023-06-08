@@ -249,6 +249,7 @@ o/$(MODE)/tool/net/redbean-demo.com:						\
 
 o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)					\
 		o/$(MODE)/tool/net/redbean-static.o				\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
@@ -300,6 +301,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 
 o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)					\
 		o/$(MODE)/tool/net/redbean-original.o				\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\

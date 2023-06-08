@@ -90,7 +90,7 @@
 
 static unsigned short klog_y = 0, klog_x = 0;
 
-privileged void _klog_vga(const char *b, size_t n) {
+void _klog_vga(const char *b, size_t n) {
   struct Tty tty;
   _vga_reinit(&tty, klog_y, klog_x, kTtyKlog);
   _TtyWrite(&tty, b, n);

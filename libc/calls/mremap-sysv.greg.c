@@ -34,7 +34,7 @@
  * C library runtime won't have any awareness of this memory, so certain
  * features like ASAN memory safety and kprintf() won't work as well.
  */
-privileged void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
+void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
 #ifdef __x86_64__
   bool cf;
   uintptr_t res, rdi, rsi, rdx;

@@ -287,6 +287,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
     cols = 0;
     zero = 0;
     uppr = 0;
+    ansi = 0;
     abet = "0123456789abcdef";
     for (;;) {
       switch ((c = *f++)) {
@@ -392,7 +393,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
               *p++ = '3';
               *p++ = '0' + x % 8;
               *p++ = 'm';
-              ansi = true;
+              ansi = 1;
             }
           } else {
             x = 666;
@@ -527,10 +528,10 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           unixerr = errno;
           winerr = 0;
           if (IsWindows()) {
-            if (type == 1 && _weaken(WSAGetLastError)) {
-              winerr = _weaken(WSAGetLastError)();
-            } else if (_weaken(GetLastError)) {
-              winerr = _weaken(GetLastError)();
+            if (type == 1 && _weaken(__imp_WSAGetLastError)) {
+              winerr = (*_weaken(__imp_WSAGetLastError))();
+            } else if (_weaken(__imp_GetLastError)) {
+              winerr = (*_weaken(__imp_GetLastError))();
             }
           }
           if (!unixerr && sign == ' ') {
@@ -777,7 +778,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           *p++ = '0';
           *p++ = 'm';
         }
-        ansi = false;
+        ansi = 0;
       }
       break;
     }

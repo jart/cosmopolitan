@@ -17,10 +17,28 @@ CONFIG_CCFLAGS += $(BACKTRACES) -O2
 CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
-
 ifeq ($(MODE), aarch64)
 ENABLE_FTRACE = 1
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
+CONFIG_CPPFLAGS += -DSYSDEBUG
+endif
+
+# Zero Optimization Mode
+#
+#   - Goes 2x slower
+#   - Supports --strace
+#   - Unsupports --ftrace
+#   - Better GDB debugging
+#
+ifeq ($(MODE), zero)
+OVERRIDE_CFLAGS += -O0
+OVERRIDE_CXXFLAGS += -O0
+OVERRIDE_CCFLAGS = -fno-omit-frame-pointer
+CONFIG_CPPFLAGS += -DSYSDEBUG
+endif
+ifeq ($(MODE), aarch64-zero)
+OVERRIDE_CFLAGS += -O0
+OVERRIDE_CXXFLAGS += -O0
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 
@@ -74,7 +92,7 @@ endif
 ifeq ($(MODE), optlinux)
 CONFIG_CPPFLAGS += -DNDEBUG -msse2avx -Wa,-msse2avx -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
-DEFAULT_COPTS += -mred-zone
+CONFIG_COPTS += -mred-zone
 TARGET_ARCH ?= -march=native
 endif
 
@@ -121,24 +139,23 @@ endif
 #   - `make MODE=dbg`
 #   - Backtraces
 #   - Enables asan
-#   - Enables ubsan (TODO)
+#   - Enables ubsan
 #   - Stack canaries
-#   - No optimization (TODO)
+#   - No optimization
 #   - Enormous binaries
 #
 ifeq ($(MODE), dbg)
 ENABLE_FTRACE = 1
 CONFIG_CPPFLAGS += -DMODE_DBG
-CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O -fno-inline
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
 TARGET_ARCH ?= -msse3
 OVERRIDE_CCFLAGS += -fno-pie
 endif
-
 ifeq ($(MODE), aarch64-dbg)
 ENABLE_FTRACE = 1
 CONFIG_CPPFLAGS += -DMODE_DBG
-CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O -fno-inline
+CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=undefined
 endif
 
@@ -197,7 +214,6 @@ PYFLAGS +=				\
 	-O2				\
 	-B
 endif
-
 ifeq ($(MODE), aarch64-tiny)
 # TODO(jart): -mcmodel=tiny
 CONFIG_CPPFLAGS +=			\
@@ -244,8 +260,6 @@ CONFIG_CPPFLAGS +=			\
 	-DTRUSTWORTHY			\
 	-DSUPPORT_VECTOR=1		\
 	-DDWARFLESS
-DEFAULT_COPTS +=			\
-	-mred-zone
 CONFIG_OFLAGS +=			\
 	-g0
 CONFIG_LDFLAGS +=			\
@@ -281,8 +295,6 @@ CONFIG_CPPFLAGS +=		\
 	-DTRUSTWORTHY		\
 	-DSUPPORT_VECTOR=113	\
 	-DDWARFLESS
-DEFAULT_COPTS +=		\
-	-mred-zone
 CONFIG_OFLAGS +=		\
 	-g0
 CONFIG_LDFLAGS +=		\
@@ -317,8 +329,6 @@ CONFIG_CPPFLAGS +=		\
 	-DTRUSTWORTHY		\
 	-DSUPPORT_VECTOR=121	\
 	-DDWARFLESS
-DEFAULT_COPTS +=		\
-	-mred-zone
 CONFIG_CCFLAGS +=		\
 	-Os			\
 	-fno-align-functions	\

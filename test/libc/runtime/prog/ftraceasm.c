@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
 void ftrace_hook(void);
-void _start(void) {
+
+privileged void _start(void) {
   ftrace_hook();
 }

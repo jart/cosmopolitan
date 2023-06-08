@@ -24,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/files.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows int sys_tcdrain_nt(int fd) {

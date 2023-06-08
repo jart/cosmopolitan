@@ -17,14 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/elf/elf.h"
+#include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
+#include "libc/errno.h"
 #include "libc/intrin/bswap.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/log/check.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
@@ -36,7 +40,8 @@
 #include "third_party/getopt/getopt.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/getargs.h"
-#include "tool/build/lib/persist.h"
+
+STATIC_YOINK("realloc");
 
 /**
  * @fileoverview Build Package Script.
@@ -67,7 +72,21 @@
  */
 
 #define PACKAGE_MAGIC bswap_32(0xBEEFBEEFu)
-#define PACKAGE_ABI   1
+#define PACKAGE_ABI   2
+
+struct ObjectArrayParam {
+  size_t len;
+  size_t size;
+  void *pp;
+};
+
+struct ObjectParam {
+  size_t size;
+  void *p;
+  uint32_t *magic;
+  int32_t *abi;
+  struct ObjectArrayParam *arrays;
+};
 
 struct Packages {
   size_t i, n;
@@ -77,7 +96,7 @@ struct Packages {
     uint32_t path;  // pkg->strings.p[path]
     int64_t fd;     // not persisted
     void *addr;     // not persisted
-    size_t size;    // not persisted
+    ssize_t size;   // not persisted
     struct Strings {
       size_t i, n;
       char *p;  // persisted as pkg+RVA
@@ -86,28 +105,29 @@ struct Packages {
       size_t i, n;
       struct Object {
         uint32_t path;           // pkg->strings.p[path]
-        unsigned mode;           // not persisted
         struct Elf64_Ehdr *elf;  // not persisted
         size_t size;             // not persisted
         char *strs;              // not persisted
         Elf64_Sym *syms;         // not persisted
         Elf64_Xword symcount;    // not persisted
-        struct Sections {
-          size_t i, n;
-          struct Section {
-            enum SectionKind {
-              kUndef,
-              kText,
-              kData,
-              kPiroRelo,
-              kPiroData,
-              kPiroBss,
-              kBss,
-            } kind;
-          } * p;
-        } sections;  // not persisted
-      } * p;         // persisted as pkg+RVA
+        int section_offset;
+        int section_count;
+      } * p;
     } objects;
+    struct Sections {
+      size_t i, n;
+      struct Section {
+        int name;
+        enum SectionKind {
+          kUndef,
+          kText,
+          kPrivilegedText,
+          kData,
+          kBss,
+          kOther,
+        } kind;
+      } * p;
+    } sections;
     struct Symbols {
       size_t i, n;
       struct Symbol {
@@ -115,80 +135,223 @@ struct Packages {
         enum SectionKind kind : 8;
         uint8_t bind_ : 4;
         uint8_t type : 4;
-        uint16_t object;  // pkg->objects.p[object]
-      } * p;              // persisted as pkg+RVA
-    } symbols, undefs;    // TODO(jart): hash undefs?
-  } * *p;                 // persisted across multiple files
+        uint16_t object;   // pkg->objects.p[object]
+        uint16_t section;  // pkg->sections.p[section]
+      } * p;               // persisted as pkg+RVA
+    } symbols, undefs;     // TODO(jart): hash undefs?
+  } * *p;                  // persisted across multiple files
 };
 
-int CompareSymbolName(const struct Symbol *a, const struct Symbol *b,
-                      const char *tab) {
+struct Relas {
+  size_t i, n;
+  struct Strings s;
+  struct Rela {
+    const char *symbol_name;
+    const char *object_path;
+  } * p;
+} prtu;
+
+nullterminated() static void Print(int fd, const char *s, ...) {
+  va_list va;
+  char buf[2048];
+  va_start(va, s);
+  buf[0] = 0;
+  do {
+    strlcat(buf, s, sizeof(buf));
+  } while ((s = va_arg(va, const char *)));
+  write(fd, buf, strlen(buf));
+  va_end(va);
+}
+
+static wontreturn void SysExit(const char *path, const char *func) {
+  const char *errstr;
+  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  Print(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
+  exit(1);
+}
+
+static int CompareSymbolName(const struct Symbol *a, const struct Symbol *b,
+                             const char *tab) {
   return strcmp(tab + a->name, tab + b->name);
 }
 
-struct Package *LoadPackage(const char *path) {
+static void PrintSymbols(struct Package *pkg, struct Symbols *syms,
+                         const char *name) {
+  int i;
+  kprintf("  - %s=%d\n", name, syms->i);
+  for (i = 0; i < syms->i; ++i) {
+    kprintf("    - id=%d\n", i);
+    kprintf("      name=%d [%s]\n", syms->p[i].name,
+            pkg->strings.p + syms->p[i].name);
+    kprintf("      kind=%d\n", syms->p[i].kind);
+    kprintf("      bind=%d\n", syms->p[i].bind_);
+    kprintf("      type=%d\n", syms->p[i].type);
+    kprintf("      object=%d [%s]\n", syms->p[i].object,
+            pkg->strings.p + pkg->objects.p[syms->p[i].object].path);
+    kprintf("      section=%d [%s]\n", syms->p[i].section,
+            syms->p[i].section == SHN_ABS
+                ? "SHN_ABS"
+                : pkg->strings.p + pkg->sections.p[syms->p[i].section].name);
+  }
+}
+
+static void PrintObject(struct Package *pkg, struct Object *obj) {
+  int i, o;
+  kprintf("    path=%d [%s]\n", obj->path, pkg->strings.p + obj->path);
+  kprintf("    sections=%d\n", obj->section_count);
+  for (i = 0; i < obj->section_count; ++i) {
+    o = obj->section_offset;
+    kprintf("    - id=%d %p (%d+%d)\n", i, pkg->sections.p, o, i);
+    kprintf("      name=%d [%s]\n", pkg->sections.p[o + i].name,
+            pkg->strings.p + pkg->sections.p[o + i].name);
+    kprintf("      kind=%d\n", pkg->sections.p[o + i].kind);
+  }
+}
+
+static void PrintPackage(struct Package *pkg) {
+  int i, j, o;
+  kprintf("- %s\n", pkg->strings.p + pkg->path);
+  kprintf("  objects=%d\n", pkg->objects.i);
+  for (i = 0; i < pkg->objects.i; ++i) {
+    kprintf("  - id=%d\n", i);
+    PrintObject(pkg, pkg->objects.p + i);
+  }
+  PrintSymbols(pkg, &pkg->symbols, "symbols");
+  PrintSymbols(pkg, &pkg->undefs, "undefs");
+}
+
+static void PrintPackages(struct Package *p, int n) {
+  int i;
+  for (i = 0; i < n; ++i) {
+    PrintPackage(p + i);
+  }
+}
+
+static struct Package *LoadPackage(const char *path) {
   int fd;
-  ssize_t i;
-  struct stat st;
+  ssize_t i, size;
   struct Package *pkg;
-  CHECK(fileexists(path), "%s: %s: %s\n", "error", path, "not found");
-  CHECK_NE(-1, (fd = open(path, O_RDONLY)), "%s", path);
-  CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NE(MAP_FAILED,
-           (pkg = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
-                       fd, 0)),
-           "path=%s", path);
-  CHECK_NE(-1, close(fd));
-  CHECK_EQ(PACKAGE_MAGIC, pkg->magic, "corrupt package: %`'s", path);
-  pkg->strings.p = (char *)((intptr_t)pkg->strings.p + (intptr_t)pkg);
-  pkg->objects.p = (struct Object *)((intptr_t)pkg->objects.p + (intptr_t)pkg);
-  pkg->symbols.p = (struct Symbol *)((intptr_t)pkg->symbols.p + (intptr_t)pkg);
+  if ((fd = open(path, O_RDONLY)) == -1) {
+    SysExit(path, "open");
+  }
+  if ((size = lseek(fd, 0, SEEK_END)) == -1) {
+    SysExit(path, "lseek");
+  }
+  if ((pkg = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) ==
+      MAP_FAILED) {
+    SysExit(path, "mmap");
+  }
+  close(fd);
+  if (pkg->magic != PACKAGE_MAGIC) {
+    Print(2, path, ": not a cosmo .pkg file\n", NULL);
+    exit(1);
+  }
+  if (pkg->abi < PACKAGE_ABI) {
+    Print(2, path, ": package has old abi try running make clean\n", NULL);
+    exit(1);
+  }
+  pkg->strings.p = (void *)((uintptr_t)pkg->strings.p + (uintptr_t)pkg);
+  pkg->objects.p = (void *)((uintptr_t)pkg->objects.p + (uintptr_t)pkg);
+  pkg->symbols.p = (void *)((uintptr_t)pkg->symbols.p + (uintptr_t)pkg);
+  pkg->sections.p = (void *)((uintptr_t)pkg->sections.p + (uintptr_t)pkg);
   pkg->addr = pkg;
-  pkg->size = st.st_size;
-  CHECK_NE(-1, mprotect(pkg, st.st_size, PROT_READ));
+  pkg->size = size;
+  if (mprotect(pkg, size, PROT_READ)) {
+    SysExit(path, "mprotect");
+  }
   return pkg;
 }
 
-void AddDependency(struct Packages *deps, const char *path) {
+static void AddDependency(struct Packages *deps, const char *path) {
   struct Package *pkg;
   pkg = LoadPackage(path);
-  CHECK_NE(-1, append(deps, &pkg));
+  append(deps, &pkg);
 }
 
-void WritePackage(struct Package *pkg) {
-  CHECK_NE(0, PACKAGE_MAGIC);
+static void WritePackage(struct Package *pkg) {
+  int fd;
+  size_t n;
+  int64_t o;
+  const char *path;
   pkg->magic = PACKAGE_MAGIC;
   pkg->abi = PACKAGE_ABI;
-  DEBUGF("%s has %,ld objects, %,ld symbols, and a %,ld byte string table",
-         &pkg->strings.p[pkg->path], pkg->objects.i, pkg->symbols.i,
-         pkg->strings.i);
-  PersistObject(
-      &pkg->strings.p[pkg->path], 64,
-      &(struct ObjectParam){
-          sizeof(struct Package),
-          pkg,
-          &pkg->magic,
-          &pkg->abi,
-          (struct ObjectArrayParam[]){
-              {pkg->strings.i, sizeof(pkg->strings.p[0]), &pkg->strings.p},
-              {pkg->objects.i, sizeof(pkg->objects.p[0]), &pkg->objects.p},
-              {pkg->symbols.i, sizeof(pkg->symbols.p[0]), &pkg->symbols.p},
-              {0},
-          },
-      });
+  path = pkg->strings.p + pkg->path;
+  if ((fd = creat(path, 0644)) == -1) {
+    SysExit(path, "creat");
+  }
+  o = sizeof(*pkg);
+  // write objects
+  n = pkg->objects.i * sizeof(*pkg->objects.p);
+  if (pwrite(fd, pkg->objects.p, n, o) != n) {
+    SysExit(path, "pwrite");
+  }
+  pkg->objects.p = (void *)o;
+  o += n;
+  // write symbols
+  n = pkg->symbols.i * sizeof(*pkg->symbols.p);
+  if (pwrite(fd, pkg->symbols.p, n, o) != n) {
+    SysExit(path, "pwrite");
+  }
+  pkg->symbols.p = (void *)o;
+  o += n;
+  // write sections
+  n = pkg->sections.i * sizeof(*pkg->sections.p);
+  if (pwrite(fd, pkg->sections.p, n, o) != n) {
+    SysExit(path, "pwrite");
+  }
+  pkg->sections.p = (void *)o;
+  o += n;
+  // write strings
+  n = pkg->strings.i * sizeof(*pkg->strings.p);
+  pwrite(fd, pkg->strings.p, n, o);
+  pkg->strings.p = (void *)o;
+  // write header
+  if (pwrite(fd, pkg, sizeof(*pkg), 0) != sizeof(*pkg)) {
+    SysExit(path, "pwrite");
+  }
+  // we're done
+  if (close(fd) == -1) {
+    SysExit(path, "close");
+  }
 }
 
-void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
-             char *argv[]) {
+static wontreturn void PrintUsage(int fd, int exitcode) {
+  Print(fd, "\
+NAME\n\
+\n\
+  Cosmopolitan Monorepo Packager\n\
+\n\
+SYNOPSIS\n\
+\n\
+  ",
+        program_invocation_name, " [FLAGS] OBJECT...\n\
+\n\
+DESCRIPTION\n\
+\n\
+  This program verifies the well-formedness of symbolic references\n\
+  and package dependencies in the cosmopolitan monolithic repository.\n\
+  Validation happens incrementally and is granular to static libraries.\n\
+  Each .a file should have its own .pkg file too, created by this tool.\n\
+\n\
+FLAGS\n\
+\n\
+  -h            show this help\n\
+  -o PATH       package output path\n\
+  -d PATH       package dependency path [repeatable]\n\
+\n\
+",
+        NULL);
+  exit(exitcode);
+}
+
+static void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
+                    char *argv[]) {
   long i, si, opt;
   const char *arg;
   struct GetArgs ga;
   pkg->path = -1;
-  while ((opt = getopt(argc, argv, "vho:d:")) != -1) {
+  while ((opt = getopt(argc, argv, "ho:d:")) != -1) {
     switch (opt) {
-      case 'v':
-        __log_level = kLogDebug;
-        break;
       case 'o':
         pkg->path = concat(&pkg->strings, optarg, strlen(optarg) + 1);
         break;
@@ -196,72 +359,74 @@ void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
         AddDependency(deps, optarg);
         break;
       case 'h':
-        exit(0);
+        PrintUsage(1, 0);
       default:
-        fprintf(stderr, "%s: %s [%s %s] [%s %s] %s\n", "Usage",
-                program_invocation_name, "-o", "OUTPACKAGE", "-d", "DEPPACKAGE",
-                "OBJECT...");
-        exit(1);
+        PrintUsage(2, 1);
     }
   }
-  CHECK_NE(-1, pkg->path, "no packages passed to package.com");
-  CHECK_LT(optind, argc,
-           "no objects passed to package.com; "
-           "is your foo.mk $(FOO_OBJS) glob broken?");
+  if (pkg->path == -1) {
+    Print(2, "error: no packages passed to package.com\n", NULL);
+    exit(1);
+  }
+  if (optind == argc) {
+    Print(2,
+          "no objects passed to package.com; is your foo.mk $(FOO_OBJS) glob "
+          "broken?\n",
+          NULL);
+    exit(1);
+  }
   getargs_init(&ga, argv + optind);
   while ((arg = getargs_next(&ga))) {
-    CHECK_NE(-1, (si = concat(&pkg->strings, arg, strlen(arg) + 1)));
-    CHECK_NE(-1, append(&pkg->objects, (&(struct Object){si})));
+    struct Object obj = {0};
+    obj.path = concat(&pkg->strings, arg, strlen(arg) + 1);
+    append(&pkg->objects, &obj);
   }
   getargs_destroy(&ga);
 }
 
-void IndexSections(struct Object *obj) {
-  size_t i;
+static void IndexSections(struct Package *pkg, struct Object *obj) {
+  int i;
   const char *name;
   const uint8_t *code;
   struct Section sect;
   const Elf64_Shdr *shdr;
   struct XedDecodedInst xedd;
+  obj->section_offset = pkg->sections.i;
   for (i = 0; i < obj->elf->e_shnum; ++i) {
     bzero(&sect, sizeof(sect));
-    CHECK_NOTNULL((shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)));
-    if (shdr->sh_type != SHT_NULL) {
-      CHECK_NOTNULL((name = GetElfSectionName(obj->elf, obj->size, shdr)));
-      if (_startswith(name, ".sort.")) name += 5;
-      if ((strcmp(name, ".piro.relo") == 0 ||
-           _startswith(name, ".piro.relo.")) ||
-          (strcmp(name, ".data.rel.ro") == 0 ||
-           _startswith(name, ".data.rel.ro."))) {
-        sect.kind = kPiroRelo;
-      } else if (strcmp(name, ".piro.data") == 0 ||
-                 _startswith(name, ".piro.data.")) {
-        sect.kind = kPiroData;
-      } else if (strcmp(name, ".piro.bss") == 0 ||
-                 _startswith(name, ".piro.bss.")) {
-        sect.kind = kPiroBss;
-      } else if (strcmp(name, ".data") == 0 || _startswith(name, ".data.")) {
-        sect.kind = kData;
-      } else if (strcmp(name, ".bss") == 0 || _startswith(name, ".bss.")) {
-        sect.kind = kBss;
-      } else {
+    shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i);
+    name = GetElfSectionName(obj->elf, obj->size, shdr);
+    if (shdr->sh_type == SHT_NULL) {
+      sect.kind = kUndef;
+    } else if (shdr->sh_type == SHT_NOBITS) {
+      sect.kind = kBss;
+    } else if (shdr->sh_type == SHT_PROGBITS &&
+               !(shdr->sh_flags & SHF_EXECINSTR)) {
+      sect.kind = kData;
+    } else if (shdr->sh_type == SHT_PROGBITS &&
+               (shdr->sh_flags & SHF_EXECINSTR)) {
+      if (strcmp(name, ".privileged")) {
         sect.kind = kText;
+      } else {
+        sect.kind = kPrivilegedText;
       }
     } else {
-      sect.kind = kUndef; /* should always and only be section #0 */
+      sect.kind = kOther;
     }
-    CHECK_NE(-1, append(&obj->sections, &sect));
+    sect.name = concat(&pkg->strings, name, strlen(name) + 1);
+    append(&pkg->sections, &sect);
+    ++obj->section_count;
   }
 }
 
-enum SectionKind ClassifySection(struct Object *obj, uint8_t type,
-                                 Elf64_Section shndx) {
+static enum SectionKind ClassifySection(struct Package *pkg, struct Object *obj,
+                                        uint8_t type, Elf64_Section shndx) {
+  if (shndx == SHN_ABS) return kOther;
   if (type == STT_COMMON) return kBss;
-  if (!obj->sections.i) return kText;
-  return obj->sections.p[min(max(0, shndx), obj->sections.i - 1)].kind;
+  return pkg->sections.p[obj->section_offset + shndx].kind;
 }
 
-void LoadSymbols(struct Package *pkg, uint32_t object) {
+static void LoadSymbols(struct Package *pkg, uint32_t object) {
   Elf64_Xword i;
   const char *name;
   struct Object *obj;
@@ -269,57 +434,104 @@ void LoadSymbols(struct Package *pkg, uint32_t object) {
   obj = &pkg->objects.p[object];
   symbol.object = object;
   for (i = 0; i < obj->symcount; ++i) {
+    symbol.section = obj->section_offset + obj->syms[i].st_shndx;
     symbol.bind_ = ELF64_ST_BIND(obj->syms[i].st_info);
     symbol.type = ELF64_ST_TYPE(obj->syms[i].st_info);
     if (symbol.bind_ != STB_LOCAL &&
         (symbol.type == STT_OBJECT || symbol.type == STT_FUNC ||
          symbol.type == STT_COMMON || symbol.type == STT_NOTYPE)) {
       name = GetElfString(obj->elf, obj->size, obj->strs, obj->syms[i].st_name);
-      DEBUGF("%s", name);
-      if (strcmp(name, "_GLOBAL_OFFSET_TABLE_") != 0) {
-        symbol.kind = ClassifySection(obj, symbol.type, obj->syms[i].st_shndx);
-        CHECK_NE(-1,
-                 (symbol.name = concat(&pkg->strings, name, strlen(name) + 1)));
-        CHECK_NE(-1,
-                 append(symbol.kind != kUndef ? &pkg->symbols : &pkg->undefs,
-                        &symbol));
+      if (strcmp(name, "_GLOBAL_OFFSET_TABLE_")) {
+        symbol.kind =
+            ClassifySection(pkg, obj, symbol.type, obj->syms[i].st_shndx);
+        symbol.name = concat(&pkg->strings, name, strlen(name) + 1);
+        append(symbol.kind != kUndef ? &pkg->symbols : &pkg->undefs, &symbol);
       }
     }
   }
 }
 
-void OpenObject(struct Package *pkg, struct Object *obj, int mode, int prot,
-                int flags) {
+static Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *elf, size_t esize,
+                                        const char *name) {
+  long i;
+  Elf64_Shdr *shdr;
+  for (i = 0; i < elf->e_shnum; ++i) {
+    shdr = GetElfSectionHeaderAddress(elf, esize, i);
+    if (!strcmp(GetElfSectionName(elf, esize, shdr), name)) {
+      return shdr;
+    }
+  }
+  return 0;
+}
+
+static void LoadPriviligedRefsToUndefs(struct Package *pkg,
+                                       struct Object *obj) {
+  long x;
+  struct Rela r;
+  const char *s;
+  Elf64_Shdr *shdr;
+  Elf64_Rela *rela, *erela;
+  if ((shdr = FindElfSectionByName(obj->elf, obj->size, ".rela.privileged"))) {
+    rela = GetElfSectionAddress(obj->elf, obj->size, shdr);
+    erela = rela + shdr->sh_size / sizeof(*rela);
+    for (; rela < erela; ++rela) {
+      if (!ELF64_R_TYPE(rela->r_info)) continue;
+      if (!(x = ELF64_R_SYM(rela->r_info))) continue;
+      if (obj->syms[x].st_shndx) continue;  // symbol is defined
+      if (ELF64_ST_BIND(obj->syms[x].st_info) != STB_WEAK &&
+          ELF64_ST_BIND(obj->syms[x].st_info) != STB_GLOBAL) {
+        Print(2, "warning: undefined symbol not global\n", NULL);
+        continue;
+      }
+      r.symbol_name = strdup(
+          GetElfString(obj->elf, obj->size, obj->strs, obj->syms[x].st_name));
+      r.object_path = strdup(pkg->strings.p + obj->path);
+      append(&prtu, &r);
+    }
+  }
+}
+
+static void OpenObject(struct Package *pkg, struct Object *obj, int oid) {
   int fd;
-  struct stat st;
-  CHECK_NE(-1, (fd = open(&pkg->strings.p[obj->path], (obj->mode = mode))),
-           "path=%`'s", &pkg->strings.p[obj->path]);
-  CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NE(
-      MAP_FAILED,
-      (obj->elf = mmap(NULL, (obj->size = st.st_size), prot, flags, fd, 0)),
-      "path=%`'s", &pkg->strings.p[obj->path]);
-  CHECK_NE(-1, close(fd));
-  CHECK(IsElf64Binary(obj->elf, obj->size), "path=%`'s",
-        &pkg->strings.p[obj->path]);
-  CHECK_NOTNULL((obj->strs = GetElfStringTable(obj->elf, obj->size)), "on %s",
-                &pkg->strings.p[obj->path]);
-  CHECK_NOTNULL(
-      (obj->syms = GetElfSymbolTable(obj->elf, obj->size, &obj->symcount)));
-  CHECK_NE(0, obj->symcount);
-  IndexSections(obj);
+  const char *path;
+  path = pkg->strings.p + obj->path;
+  if ((fd = open(path, O_RDONLY)) == -1) {
+    SysExit(path, "open");
+  }
+  if ((obj->size = lseek(fd, 0, SEEK_END)) == -1) {
+    SysExit(path, "lseek");
+  }
+  if ((obj->elf = mmap(0, obj->size, PROT_READ, MAP_SHARED, fd, 0)) ==
+      MAP_FAILED) {
+    SysExit(path, "mmap");
+  }
+  close(fd);
+  if (!IsElf64Binary(obj->elf, obj->size)) {
+    Print(2, path, ": not an elf64 binary\n", NULL);
+    exit(1);
+  }
+  if (!(obj->strs = GetElfStringTable(obj->elf, obj->size))) {
+    Print(2, path, ": missing elf string table\n", NULL);
+    exit(1);
+  }
+  if (!(obj->syms = GetElfSymbolTable(obj->elf, obj->size, &obj->symcount))) {
+    Print(2, path, ": missing elf symbol table\n", NULL);
+    exit(1);
+  }
+  IndexSections(pkg, obj);
+  LoadPriviligedRefsToUndefs(pkg, obj);
 }
 
-void CloseObject(struct Object *obj) {
-  CHECK_NE(-1, munmap(obj->elf, obj->size));
+static void CloseObject(struct Object *obj) {
+  if (munmap(obj->elf, obj->size)) notpossible;
 }
 
-void LoadObjects(struct Package *pkg) {
+static void LoadObjects(struct Package *pkg) {
   size_t i;
   struct Object *obj;
   for (i = 0; i < pkg->objects.i; ++i) {
     obj = pkg->objects.p + i;
-    OpenObject(pkg, obj, O_RDONLY, PROT_READ, MAP_SHARED);
+    OpenObject(pkg, obj, i);
     LoadSymbols(pkg, i);
     CloseObject(obj);
   }
@@ -327,7 +539,7 @@ void LoadObjects(struct Package *pkg) {
           (void *)CompareSymbolName, pkg->strings.p);
 }
 
-struct Symbol *BisectSymbol(struct Package *pkg, const char *name) {
+static struct Symbol *BisectSymbol(struct Package *pkg, const char *name) {
   int c;
   long m, l, r;
   l = 0;
@@ -346,9 +558,9 @@ struct Symbol *BisectSymbol(struct Package *pkg, const char *name) {
   return NULL;
 }
 
-bool FindSymbol(const char *name, struct Package *pkg,
-                struct Packages *directdeps, struct Package **out_pkg,
-                struct Symbol **out_sym) {
+static bool FindSymbol(const char *name, struct Package *pkg,
+                       struct Packages *directdeps, struct Package **out_pkg,
+                       struct Symbol **out_sym) {
   size_t i, j;
   struct Symbol *sym;
   if ((sym = BisectSymbol(pkg, name))) {
@@ -366,7 +578,7 @@ bool FindSymbol(const char *name, struct Package *pkg,
   return false;
 }
 
-void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
+static void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
   size_t i, j;
   struct Package *dep;
   struct Symbol *undef;
@@ -374,15 +586,13 @@ void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
     undef = &pkg->undefs.p[i];
     if (undef->bind_ == STB_WEAK) continue;
     if (!FindSymbol(pkg->strings.p + undef->name, pkg, deps, NULL, NULL)) {
-      fprintf(stderr, "%s: %`'s (%s) %s %s\n", "error",
-              pkg->strings.p + undef->name,
-              pkg->strings.p + pkg->objects.p[undef->object].path,
-              "not defined by direct deps of", pkg->strings.p + pkg->path);
+      Print(2, pkg->strings.p + pkg->path, ": undefined symbol '",
+            pkg->strings.p + undef->name, "' (",
+            pkg->strings.p + pkg->objects.p[undef->object].path,
+            ") not defined by direct dependencies:\n", NULL);
       for (j = 0; j < deps->i; ++j) {
         dep = deps->p[j];
-        fputc('\t', stderr);
-        fputs(dep->strings.p + dep->path, stderr);
-        fputc('\n', stderr);
+        Print(2, "\t", dep->strings.p + dep->path, "\n", NULL);
       }
       exit(1);
     }
@@ -391,43 +601,53 @@ void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
   bzero(&pkg->undefs, sizeof(pkg->undefs));
 }
 
-forceinline bool IsRipRelativeModrm(uint8_t modrm) {
-  return (modrm & 0b11000111) == 0b00000101;
+static void CheckYourPrivilege(struct Package *pkg, struct Packages *deps) {
+  int i, j, o, f;
+  const char *name;
+  struct Symbol *sym;
+  struct Package *dep;
+  for (f = i = 0; i < prtu.i; ++i) {
+    name = prtu.p[i].symbol_name;
+    if (FindSymbol(name, pkg, deps, &dep, &sym) &&
+        dep->sections.p[sym->section].kind == kText) {
+      Print(2, prtu.p[i].object_path,
+            ": privileged code referenced unprivileged symbol '", name,
+            "' in section '",
+            dep->strings.p + dep->sections.p[sym->section].name, "'\n", NULL);
+      ++f;
+    }
+  }
+  if (f) exit(1);
 }
 
-forceinline uint8_t ChangeRipToRbx(uint8_t modrm) {
-  return (modrm & 0b00111000) | 0b10000011;
+static bool IsSymbolDirectlyReachable(struct Package *pkg,
+                                      struct Packages *deps,
+                                      const char *symbol) {
+  return FindSymbol(symbol, pkg, deps, 0, 0);
 }
 
-bool IsSymbolDirectlyReachable(struct Package *pkg, struct Packages *deps,
-                               const char *symbol) {
-  return FindSymbol(symbol, pkg, deps, NULL, NULL);
-}
-
-void Package(int argc, char *argv[], struct Package *pkg,
-             struct Packages *deps) {
+static void Package(int argc, char *argv[], struct Package *pkg,
+                    struct Packages *deps) {
   size_t i, j;
   GetOpts(pkg, deps, argc, argv);
   LoadObjects(pkg);
   CheckStrictDeps(pkg, deps);
+  CheckYourPrivilege(pkg, deps);
   WritePackage(pkg);
   for (i = 0; i < deps->i; ++i) {
-    CHECK_NE(-1, munmap(deps->p[i]->addr, deps->p[i]->size));
+    if (munmap(deps->p[i]->addr, deps->p[i]->size)) notpossible;
   }
-  for (i = 0; i < pkg->objects.i; ++i) {
-    free(pkg->objects.p[i].sections.p);
-  }
-  free(pkg->strings.p);
-  free(pkg->objects.p);
-  free(pkg->symbols.p);
-  free(deps->p);
 }
 
 int main(int argc, char *argv[]) {
   struct Package pkg;
   struct Packages deps;
-  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
-  if (IsModeDbg()) ShowCrashReports();
+  if (argc == 2 && !strcmp(argv[1], "-n")) {
+    exit(0);
+  }
+  if (!IsOptimized()) {
+    ShowCrashReports();
+  }
   bzero(&pkg, sizeof(pkg));
   bzero(&deps, sizeof(deps));
   Package(argc, argv, &pkg, &deps);

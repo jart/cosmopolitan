@@ -33,14 +33,25 @@
 #
 # VARIABLES
 #
-#     CCFLAGS      gcc frontend flags (.i, .c, .cc, .f, .S, .lds, etc.)
+#   Our configuration variables, ordered by increasing preference:
+#
+#     CCFLAGS      frontend flags (.i, .c, .cc, .f, .S, .lds, etc.)
+#     OFLAGS       objectify flags (precludes -S and -E)
 #     CPPFLAGS     preprocessor flags (.h, .c, .cc, .S, .inc, .lds, etc.)
+#     TARGET_ARCH  microarchitecture flags (e.g. -march=native)
+#     COPTS        c/c++ flags (.c, .cc)
 #     CFLAGS       c flags (.c only)
 #     CXXFLAGS     c++ flags (.cc only)
-#     COPTS        c/c++ flags (.c, .cc)
 #     LDFLAGS      linker flags (don't use -Wl, frontend prefix)
 #     ASFLAGS      assembler flags (don't use -Wa, frontend prefix)
-#     TARGET_ARCH  microarchitecture flags (e.g. -march=native)
+#
+#   For each FOO above, there exists (by increasing preference)
+#
+#     DEFAULT_FOO  see build/definitions.mk
+#     CONFIG_FOO   see build/config.mk
+#     FOO          set ~/.cosmo.mk and target-specific
+#     OVERRIDE_FOO set ~/.cosmo.mk and target-specific (use rarely)
+#
 
 LC_ALL = C
 SOURCE_DATE_EPOCH = 0
@@ -88,18 +99,18 @@ ARCH = x86_64
 HOSTS ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10
 endif
 
-PORTCOSMO_CCFLAGS = -fportcosmo -include build/portcosmo.h
-
+ifeq ($(PREFIX),)
+ifeq ($(USE_SYSTEM_TOOLCHAIN),)
 ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
 PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
-DEFAULT_CPPFLAGS += $(PORTCOSMO_CCFLAGS)
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
-DEFAULT_CPPFLAGS += $(PORTCOSMO_CCFLAGS)
 endif
 ifeq ($(ARCH), aarch64)
 PREFIX = o/third_party/gcc/bin/aarch64-linux-musl-
+endif
+endif
 endif
 
 AS = $(PREFIX)as
@@ -112,7 +123,7 @@ GCC = $(PREFIX)gcc
 STRIP = $(PREFIX)strip
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
-ADDR2LINE = $(PWD)/$(PREFIX)addr2line
+ADDR2LINE = $(join $(PWD),$(PREFIX))addr2line
 
 export ADDR2LINE
 export LC_ALL
@@ -122,13 +133,9 @@ export SOURCE_DATE_EPOCH
 export TMPDIR
 
 ifeq ($(LANDLOCKMAKE_VERSION),)
-TMPSAFE = $(TMPDIR)/$(subst /,_,$@).tmp
+TMPSAFE = $(join $(TMPDIR),$(subst /,_,$@)).tmp
 else
 TMPSAFE = $(TMPDIR)/
-endif
-
-ifneq ($(ARCH), aarch64)
-MNO_FENTRY = -mno-fentry
 endif
 
 ifeq ($(ARCH), aarch64)
@@ -150,7 +157,6 @@ SANITIZER =								\
 	-fsanitize=address
 
 NO_MAGIC =								\
-	$(MNO_FENTRY)							\
 	-fno-stack-protector						\
 	-fwrapv								\
 	-fno-sanitize=all
@@ -170,19 +176,22 @@ DEFAULT_CCFLAGS +=							\
 	-fdebug-prefix-map='$(PWD)'=					\
 	-frecord-gcc-switches
 
-DEFAULT_OFLAGS =							\
+DEFAULT_OFLAGS ?=							\
 	-g								\
 	-gdwarf-4							\
 	-gdescribe-dies
 
-DEFAULT_COPTS =								\
+DEFAULT_COPTS ?=							\
 	-fno-math-errno							\
 	-fno-ident							\
 	-fno-common							\
 	-fno-gnu-unique							\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
-	-fno-semantic-interposition
+	-fno-semantic-interposition					\
+	-fno-dwarf2-cfi-asm						\
+	-fno-unwind-tables						\
+	-fno-asynchronous-unwind-tables
 
 ifeq ($(ARCH), x86_64)
 DEFAULT_COPTS +=							\
@@ -334,19 +343,19 @@ LD.libs =								\
 	$(CONFIG_LIBS)							\
 	$(LIBS)
 
-COMPILE.c.flags = $(cc.flags) $(cpp.flags) $(copt.flags) $(c.flags)
-COMPILE.cxx.flags = $(cc.flags) $(cpp.flags) $(copt.flags) $(cxx.flags)
+COMPILE.c.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(c.flags)
+COMPILE.cxx.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(cxx.flags)
 COMPILE.f.flags = $(cc.flags) $(copt.flags) $(f.flags)
-COMPILE.F.flags = $(cc.flags) $(cpp.flags) $(copt.flags) $(f.flags)
+COMPILE.F.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(f.flags)
 COMPILE.i.flags = $(cc.flags) $(copt.flags) $(c.flags)
 COMPILE.ii.flags = $(cc.flags) $(copt.flags) $(cxx.flags)
 LINK.flags = $(DEFAULT_LDFLAGS) $(CONFIG_LDFLAGS) $(LDFLAGS)
-OBJECTIFY.c.flags = $(OBJECTIFY.S.flags) $(copt.flags) $(c.flags)
-OBJECTIFY.cxx.flags = $(OBJECTIFY.S.flags) $(copt.flags) $(cxx.flags)
+OBJECTIFY.c.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(c.flags)
+OBJECTIFY.cxx.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(cxx.flags)
 OBJECTIFY.s.flags = $(ASONLYFLAGS) $(s.flags)
-OBJECTIFY.S.flags = $(copt.flags) $(cc.flags) $(o.flags) $(cpp.flags) $(S.flags)
-OBJECTIFY.f.flags = $(copt.flags) $(cc.flags) $(o.flags) $(copt.flags) $(S.flags) $(f.flags)
-OBJECTIFY.F.flags = $(OBJECTIFY.f.flags) $(cpp.flags)
+OBJECTIFY.S.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags)
+OBJECTIFY.f.flags = $(cc.flags) $(o.flags) $(S.flags) $(f.flags)
+OBJECTIFY.F.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(f.flags)
 PREPROCESS.flags = -E $(copt.flags) $(cc.flags) $(cpp.flags)
 PREPROCESS.lds.flags = -D__LINKER__ $(filter-out -g%,$(PREPROCESS.flags)) -P -xc
 
@@ -382,7 +391,6 @@ OBJECTIFY.greg.c =							\
 	-fno-optimize-sibling-calls					\
 	-fno-sanitize=all						\
 	-ffreestanding							\
-	$(MNO_FENTRY)							\
 	-fwrapv								\
 	-c
 
@@ -422,7 +430,6 @@ OBJECTIFY.ncabi.c =							\
 	$(OBJECTIFY.c.flags)						\
 	-mno-sse							\
 	-mfpmath=387							\
-	$(MNO_FENTRY)							\
 	-fno-stack-protector						\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\
@@ -441,7 +448,6 @@ OBJECTIFY.ncabi.c =							\
 OBJECTIFY.initabi.c =							\
 	$(GCC)								\
 	$(OBJECTIFY.c.flags)						\
-	$(MNO_FENTRY)							\
 	-fno-stack-protector						\
 	-fno-instrument-functions					\
 	-fno-optimize-sibling-calls					\

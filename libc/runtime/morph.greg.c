@@ -68,7 +68,6 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
     if (cf) ax = -ax;
     if (ax == -EPERM) {
       kprintf("error: need pledge(prot_exec) permission to code morph\n");
-      _Exit(26);
     }
 #endif
     if (ax) notpossible;

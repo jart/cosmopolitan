@@ -30,6 +30,7 @@
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"

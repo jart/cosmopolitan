@@ -1214,6 +1214,7 @@ rescan:
 		}
 		break;
 	}
+	return 0; /* [jart] why wasn't this here? */
 }
 
 int cgoto(fa *f, int s, int c)

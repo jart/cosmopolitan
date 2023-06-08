@@ -86,7 +86,10 @@ o/$(MODE):			\
 	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
+ifneq ($(USE_SYSTEM_TOOLCHAIN),)
 .STRICT = 1
+endif
+
 .PLEDGE = stdio rpath wpath cpath fattr proc
 .UNVEIL =			\
 	libc/integral		\

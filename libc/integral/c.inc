@@ -729,6 +729,7 @@ void abort(void) wontreturn;
 #if __GNUC__ >= 11
 #pragma GCC diagnostic ignored /* annoying */ "-Wattributes"
 #pragma GCC diagnostic ignored /* orwellian */ "-Wold-style-definition"
+#pragma GCC diagnostic ignored /* what? */ "-Wformat-overflow"
 #endif /* GCC11+ */
 #endif /* GCC9+ */
 #endif /* !C++ */
@@ -834,10 +835,10 @@ void abort(void) wontreturn;
 
 #if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
 #define YOINK(SYMBOL) \
-  asm(".section .yoink\n\tnopl\t%a0\n\t.previous" : : "X"(SYMBOL))
+  asm(".section .yoink\n\tnopl\t%0\n\t.previous" : : "m"(SYMBOL))
 #elif defined(__aarch64__)
 #define YOINK(SYMBOL) \
-  asm(".section .yoink\n\tb\t%a0\n\t.previous" : : "X"(SYMBOL))
+  asm(".section .yoink\n\tb\t%0\n\t.previous" : : "m"(SYMBOL))
 #else
 #define YOINK(SYMBOL) (void)0
 #endif

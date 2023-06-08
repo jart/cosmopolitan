@@ -5,9 +5,11 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Modules/posixmodule.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/iovec.h"
@@ -56,6 +58,7 @@
 #include "libc/sysv/consts/sf.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/st.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/consts/waitid.h"
 #include "libc/sysv/errfuns.h"
@@ -87,7 +90,6 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
-#include "third_party/python/Modules/posixmodule.h"
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
 

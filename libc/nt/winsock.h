@@ -6,6 +6,7 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/struct/timeval.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 /* ░▓█████████████████████████████████████████████▓▒
@@ -513,6 +514,9 @@ void GetAcceptExSockaddrs(
 bool32 DisconnectEx(int64_t s, struct NtOverlapped *inout_opt_lpOverlapped,
                     uint32_t dwFlags, uint32_t dwReserved);
 
+#if ShouldUseMsabiAttribute()
+#include "libc/nt/thunk/winsock.inc"
+#endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_WINSOCK_H_ */

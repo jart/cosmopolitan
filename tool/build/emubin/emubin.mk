@@ -48,17 +48,17 @@ o/$(MODE)/tool/build/emubin/%.bin.dbg:			\
 		$(TOOL_BUILD_EMUBIN_A)			\
 		o/$(MODE)/tool/build/emubin/%.o		\
 		$(TOOL_BUILD_EMUBIN_A).pkg
-	@$(ELFLINK) -e emucrt -z max-page-size=0x10
+	@$(ELFLINK) -e emucrt -z common-page-size=0x10 -z max-page-size=0x10
 
 o/tiny/tool/build/emubin/spiral.bin.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\
 		o/tiny/tool/build/emubin/spiral.real.o
-	@$(ELFLINK) -z max-page-size=0x10 -T tool/build/emucrt/real.lds
+	@$(ELFLINK) -z common-page-size=0x10 -z max-page-size=0x10 -T tool/build/emucrt/real.lds
 
 o/tiny/tool/build/emubin/mdatest.bin.dbg:		\
 		$(TOOL_BUILD_EMUBIN_DEPS)		\
 		o/tiny/tool/build/emubin/mdatest.real.o
-	@$(ELFLINK) -z max-page-size=0x10 -T tool/build/emucrt/real.lds
+	@$(ELFLINK) -z common-page-size=0x10 -z max-page-size=0x10 -T tool/build/emucrt/real.lds
 
 $(TOOL_BUILD_EMUBIN_OBJS): private			\
 		CFLAGS +=				\

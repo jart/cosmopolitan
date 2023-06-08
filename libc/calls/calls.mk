@@ -183,6 +183,18 @@ o/$(MODE)/libc/calls/timeval_frommicros.o: private	\
 		CFLAGS +=				\
 			-O2
 
+# privileged functions
+o/$(MODE)/libc/calls/sigenter-freebsd.o			\
+o/$(MODE)/libc/calls/sigenter-netbsd.o			\
+o/$(MODE)/libc/calls/sigenter-openbsd.o			\
+o/$(MODE)/libc/calls/sigenter-linux.o			\
+o/$(MODE)/libc/calls/sigenter-xnu.o			\
+o/$(MODE)/libc/calls/pledge-linux.o			\
+o/$(MODE)/libc/calls/siginfo2cosmo.o: private		\
+		CFLAGS +=				\
+			-ffreestanding			\
+			-fno-sanitize=all
+
 o/$(MODE)/libc/calls/pledge-linux.o			\
 o/$(MODE)/libc/calls/unveil.o: private			\
 		CFLAGS +=				\

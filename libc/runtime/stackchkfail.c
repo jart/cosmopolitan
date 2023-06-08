@@ -17,9 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
-#include "libc/runtime/internal.h"
 
 privileged noasan noinstrument void __stack_chk_fail(void) {
   kprintf("stack smashed\n");
-  _Exitr(207);
+  __builtin_trap();
 }

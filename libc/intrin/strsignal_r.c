@@ -36,7 +36,7 @@
  * @asyncsignalsafe
  * @threadsafe
  */
-char *strsignal_r(int sig, char buf[hasatleast 15]) {
+privileged char *strsignal_r(int sig, char buf[hasatleast 15]) {
   int i;
   char *p;
   const char *s;

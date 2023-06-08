@@ -72,6 +72,7 @@ o/$(MODE)/libc/intrin/mman.greg.o: private		\
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o: private			\
 		CFLAGS +=				\
+			-ffreestanding			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
@@ -84,7 +85,6 @@ o/$(MODE)/libc/intrin/asan.o: private			\
 o/$(MODE)/libc/intrin/asanthunk.o: private		\
 		CFLAGS +=				\
 			-x-no-pg			\
-			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
@@ -100,7 +100,6 @@ o/$(MODE)/libc/intrin/kprintf.greg.o: private		\
 			-fpie				\
 			-fwrapv				\
 			-x-no-pg			\
-			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
@@ -115,7 +114,6 @@ o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
 		CFLAGS +=				\
 			-fwrapv				\
 			-x-no-pg			\
-			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
 			-mgeneral-regs-only		\
@@ -185,6 +183,17 @@ o/$(MODE)/libc/intrin/wsawaitformultipleevents.o: private\
 			-fwrapv				\
 			-ffreestanding			\
 			-fno-stack-protector		\
+			-fno-sanitize=all
+
+# privileged functions
+o/$(MODE)/libc/intrin/dos2errno.o			\
+o/$(MODE)/libc/intrin/have_fsgsbase.o			\
+o/$(MODE)/libc/intrin/getmagnumstr.o			\
+o/$(MODE)/libc/intrin/formatint32.o			\
+o/$(MODE)/libc/intrin/strsignal_r.o			\
+o/$(MODE)/libc/intrin/strerror_wr.o: private		\
+		CFLAGS +=				\
+			-ffreestanding			\
 			-fno-sanitize=all
 
 o//libc/intrin/memmove.o: private			\

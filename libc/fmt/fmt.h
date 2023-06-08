@@ -14,14 +14,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int snprintf(char *, size_t, const char *, ...) printfesque(3)
-    paramsnonnull((3)) dontthrow nocallback;
+int snprintf(char *, size_t, const char *, ...)
+    printfesque(3) dontthrow nocallback;
 int vsnprintf(char *, size_t, const char *, va_list)
-    paramsnonnull((3)) dontthrow nocallback;
-int sprintf(char *, const char *, ...) printfesque(2)
-    paramsnonnull((2)) dontthrow nocallback frownedupon(snprintf);
+dontthrow nocallback;
+int sprintf(char *, const char *, ...) printfesque(2) dontthrow nocallback;
 int vsprintf(char *, const char *, va_list)
-    paramsnonnull((2)) dontthrow nocallback frownedupon(vsnprintf);
+dontthrow nocallback;
 int sscanf(const char *, const char *, ...) scanfesque(2);
 int vsscanf(const char *, const char *, va_list);
 int vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,

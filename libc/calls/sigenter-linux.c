@@ -41,7 +41,7 @@ privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
       ctx->uc_mcontext.fpregs = &ctx->__fpustate;
       for (i = 0; i < 8; ++i) {
         long double nan = NAN;
-        memcpy(ctx->__fpustate.st + i, &nan, 16);
+        __builtin_memcpy(ctx->__fpustate.st + i, &nan, 16);
       }
     }
     ((sigaction_f)(__executable_start + rva))(sig, info, ctx);

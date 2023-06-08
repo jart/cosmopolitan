@@ -19,6 +19,6 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 
-privileged wontreturn void _log_exit(int exitcode) {
+wontreturn void _log_exit(int exitcode) {
   _Exitr(exitcode);
 }

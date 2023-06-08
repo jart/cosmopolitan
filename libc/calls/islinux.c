@@ -21,7 +21,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/pr.h"
 
-privileged bool __is_linux_2_6_23(void) {
+bool __is_linux_2_6_23(void) {
 #ifdef __x86_64__
   int rc;
   if (!IsLinux()) return false;

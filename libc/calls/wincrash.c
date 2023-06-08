@@ -36,7 +36,7 @@
 
 #ifdef __x86_64__
 
-privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
+unsigned __wincrash(struct NtExceptionPointers *ep) {
   int64_t rip;
   int sig, code;
   ucontext_t ctx;

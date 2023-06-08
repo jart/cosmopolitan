@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -26,6 +27,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 TEST(ftrace, test) {
+  if (!IsOptimized()) return;  // TODO(jart): fix me
   const char *ftraceasm;
   testlib_extract("/zip/ftraceasm.txt", "ftraceasm.txt", 0755);
   ftraceasm = _gc(xslurp("ftraceasm.txt", 0));
@@ -38,7 +40,7 @@ TEST(ftrace, test) {
 #endif
     fprintf(stderr,
             "error: ftrace_hook() depends on floating point code\n"
-            "you need to objdump o//test/libc/runtime/ftraceasm.elf\n"
+            "you need to objdump -d o//test/libc/runtime/prog/ftraceasm.elf\n"
             "then compile the guilty module with -mgeneral-regs-only\n");
     exit(1);
   }

@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 
-privileged void PrintSystemMappings(int outfd) {
+void PrintSystemMappings(int outfd) {
   int infd;
   ssize_t rc;
   char buf[64];

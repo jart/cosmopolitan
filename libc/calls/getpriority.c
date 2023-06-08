@@ -48,7 +48,7 @@
  * @raise ESRCH if no such process existed
  * @see setpriority()
  */
-privileged int getpriority(int which, unsigned who) {
+int getpriority(int which, unsigned who) {
   int rc;
 #ifdef __x86_64__
   char cf;

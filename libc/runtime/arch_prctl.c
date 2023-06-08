@@ -127,7 +127,7 @@ static int arch_prctl_xnu(int code, int64_t addr) {
   }
 }
 
-static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
+static dontinline int arch_prctl_openbsd(int code, int64_t addr) {
   bool failed;
   int64_t rax;
   switch (code) {

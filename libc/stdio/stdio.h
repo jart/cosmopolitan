@@ -166,16 +166,6 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define getc(f)     fgetc(f)
-#define getwc(f)    fgetwc(f)
-#define putc(c, f)  fputc(c, f)
-#define putwc(c, f) fputwc(c, f)
-
-#define getc_unlocked(f)     fgetc_unlocked(f)
-#define getwc_unlocked(f)    fgetwc_unlocked(f)
-#define putc_unlocked(c, f)  fputc_unlocked(c, f)
-#define putwc_unlocked(c, f) fputwc_unlocked(c, f)
-
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 /* clang-format off */
 #define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)

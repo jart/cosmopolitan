@@ -100,14 +100,6 @@ o/opt/third_party/ggml/ggml.o: private					\
 		CFLAGS +=						\
 			-x-no-pg
 
-ifeq ($(ARCH), x86_64)
-o/rel/third_party/ggml/ggml.o						\
-o/opt/third_party/ggml/ggml.o: private					\
-		CFLAGS +=						\
-			-fschedule-insns2				\
-			-mred-zone
-endif
-
 ################################################################################
 # command for running inference on large language models
 # make -j8 o//third_party/ggml/llama.com

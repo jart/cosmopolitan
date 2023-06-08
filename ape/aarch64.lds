@@ -263,6 +263,7 @@ SECTIONS {
   .note.gnu.arm.ident 0 : { KEEP(*(.note.gnu.arm.ident)) }
 
   /DISCARD/ : {
+    *(__patchable_function_entries)
     *(.GCC.command.line)
     *(.note.GNU-stack)
     *(.gnu_debuglink)

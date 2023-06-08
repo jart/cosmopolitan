@@ -142,37 +142,3 @@ struct SymbolTable *GetSymbolTable(void) {
   pthread_spin_unlock(&g_lock);
   return __symtab;
 }
-
-/**
- * Returns low index into symbol table for address.
- *
- * @param t if null will be auto-populated only if already open
- * @return index or -1 if nothing found
- */
-noinstrument privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
-  // we need privileged because:
-  //   kprintf is privileged and it depends on this
-  // we don't want function tracing because:
-  //   function tracing depends on this function via kprintf
-  unsigned l, m, r, n, k;
-  if (!t && __symtab) {
-    t = __symtab;
-  }
-  if (t) {
-    l = 0;
-    r = n = t->count;
-    k = a - t->addr_base;
-    while (l < r) {
-      m = (l + r) >> 1;
-      if (t->symbols[m].y < k) {
-        l = m + 1;
-      } else {
-        r = m;
-      }
-    }
-    if (l < n && t->symbols[l].x <= k && k <= t->symbols[l].y) {
-      return l;
-    }
-  }
-  return -1;
-}

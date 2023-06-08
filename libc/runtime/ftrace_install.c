@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,12 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bswap.h"
-#include "libc/sock/sock.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
 
-/**
- * Converts network to host short.
- */
-uint16_t(ntohs)(uint16_t x) {
-  return bswap_16(x);
+void ftrace_hook(void);
+
+_Hide int ftrace_stackdigs;
+
+textstartup int ftrace_install(void) {
+  if (GetSymbolTable()) {
+    ftrace_stackdigs = LengthInt64Thousands(GetStackSize());
+    return __hook(ftrace_hook, GetSymbolTable());
+  } else {
+    kprintf("error: --ftrace failed to open symbol table\n");
+    return -1;
+  }
 }

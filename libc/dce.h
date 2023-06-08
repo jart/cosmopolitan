@@ -36,12 +36,6 @@
 #define IsModeDbg() 0
 #endif
 
-#ifdef __MFENTRY__
-#define HaveFentry() 1
-#else
-#define HaveFentry() 0
-#endif
-
 #ifdef TRUSTWORTHY
 #define IsTrustworthy() 1
 #else
@@ -70,12 +64,6 @@
 #define IsXnuSilicon() IsXnu()
 #else
 #define IsXnuSilicon() 0
-#endif
-
-#if defined(__PIE__) || defined(__PIC__)
-#define IsPositionIndependent() 1
-#else
-#define IsPositionIndependent() 0
 #endif
 
 #define SupportsLinux()   ((SUPPORT_VECTOR & _HOSTLINUX) == _HOSTLINUX)

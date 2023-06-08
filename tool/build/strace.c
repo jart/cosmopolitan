@@ -1052,7 +1052,9 @@ wontreturn void StraceMain(int argc, char *argv[]) {
     exit(1);
   }
 
-  if (IsModeDbg()) ShowCrashReports();
+  if (!IsOptimized()) {
+    ShowCrashReports();
+  }
 
   if (argc < 2) {
     kprintf("Usage: %s PROGRAM [ARGS...]%n", argv[0]);

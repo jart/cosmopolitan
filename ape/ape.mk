@@ -191,13 +191,13 @@ o/$(MODE)/ape/ape.elf.dbg:			\
 		o/$(MODE)/ape/loader.o		\
 		o/$(MODE)/ape/loader-elf.o	\
 		ape/loader.lds
-	@$(ELFLINK) -z max-page-size=0x10
+	@$(ELFLINK) -z common-page-size=0x10 -z max-page-size=0x10
 
 o/$(MODE)/ape/ape.macho.dbg:			\
 		o/$(MODE)/ape/loader-xnu.o	\
 		o/$(MODE)/ape/loader-macho.o	\
 		ape/loader-macho.lds
-	@$(ELFLINK) -z max-page-size=0x10
+	@$(ELFLINK) -z common-page-size=0x10 -z max-page-size=0x10
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE_CHECKS)			\

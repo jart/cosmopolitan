@@ -17,15 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 
 void CheckElfAddress(const Elf64_Ehdr *elf, size_t mapsize, intptr_t addr,
                      size_t addrsize) {
 #if !(TRUSTWORTHY + ELF_TRUSTWORTHY + 0) || ELF_UNTRUSTWORTHY + 0
   if (addr < (intptr_t)elf || addr + addrsize > (intptr_t)elf + mapsize) {
-    /* kprintf("%p-%p falls outside interval %p-%p",  // */
-    /*         addr, addr + addrsize,                 // */
-    /*         elf, (char *)elf + mapsize);           // */
+    kprintf("%p-%p falls outside interval %p-%p",  //
+            addr, addr + addrsize,                 //
+            elf, (char *)elf + mapsize);           //
     abort();
   }
 #endif

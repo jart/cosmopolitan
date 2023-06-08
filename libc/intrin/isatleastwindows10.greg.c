@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/nt/version.h"
 
@@ -26,6 +25,5 @@
  * This function may only be called if IsWindows() is true.
  */
 privileged bool(IsAtLeastWindows10)(void) {
-  _unassert(IsWindows());
   return IsAtLeastWindows10();
 }

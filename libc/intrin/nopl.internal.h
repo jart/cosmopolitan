@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_INTRIN_NOPL_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0) && defined(__x86_64__) &&         \
     defined(__GNUC__) && !defined(__llvm__) && !defined(__chibicc__) && \
-    !defined(__STRICT_ANSI__)
+    defined(__MNO_RED_ZONE__) && !defined(__STRICT_ANSI__)
 
 /**
  * @fileoverview Turns CALLs into NOPs that are fixupable at runtime.
@@ -35,34 +35,39 @@
   ".equ\t\"" SECTION "_end\",.\n\t"                \
   ".previous\n\t"
 
-#define _NOPL0(SECTION, FUNC)                                                  \
+#define _NOPL0(SECTION, FUNC)          __NOPL0(SECTION, FUNC, IMAGE_BASE_VIRTUAL)
+#define __NOPL0(SECTION, FUNC, GARDEN) ___NOPL0(SECTION, FUNC, GARDEN)
+#define ___NOPL0(SECTION, FUNC, GARDEN)                                        \
   ({                                                                           \
     asm volatile(_NOPL_PROLOGUE(SECTION) /*                                 */ \
                  _NOPL_EPILOGUE(SECTION) /*                                 */ \
                  ".section \".sort.rodata." SECTION ".2\",\"a\",@progbits\n\t" \
                  ".balign\t4\n\t"                                              \
-                 ".long\t353f-%a1\n\t"                                         \
+                 ".long\t353f-" #GARDEN "\n\t"                                 \
                  ".previous\n353:\t"                                           \
-                 "nopl\t%a0"                                                   \
+                 "nopl\t" #FUNC "(%%rip)"                                      \
                  : /* no inputs */                                             \
-                 : "X"(FUNC), "X"(IMAGE_BASE_VIRTUAL)                          \
+                 : /* no outputs */                                            \
                  : "rax", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10",       \
                    "r11", "memory", "cc");                                     \
     (void)0;                                                                   \
   })
 
-#define _NOPL1(SECTION, FUNC, ARG)                                             \
+#define _NOPL1(SECTION, FUNC, ARG) \
+  __NOPL1(SECTION, FUNC, ARG, IMAGE_BASE_VIRTUAL)
+#define __NOPL1(SECTION, FUNC, ARG, GARDEN) ___NOPL1(SECTION, FUNC, ARG, GARDEN)
+#define ___NOPL1(SECTION, FUNC, ARG, GARDEN)                                   \
   ({                                                                           \
     register autotype(ARG) __arg asm("rdi") = ARG;                             \
     asm volatile(_NOPL_PROLOGUE(SECTION) /*                                 */ \
                  _NOPL_EPILOGUE(SECTION) /*                                 */ \
                  ".section \".sort.rodata." SECTION ".2\",\"a\",@progbits\n\t" \
                  ".balign\t4\n\t"                                              \
-                 ".long\t353f-%a2\n\t"                                         \
+                 ".long\t353f-" #GARDEN "\n\t"                                 \
                  ".previous\n353:\t"                                           \
-                 "nopl\t%a1"                                                   \
+                 "nopl\t" #FUNC "(%%rip)"                                      \
                  : "+D"(__arg)                                                 \
-                 : "X"(FUNC), "X"(IMAGE_BASE_VIRTUAL)                          \
+                 : /* no inputs */                                             \
                  : "rax", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11",       \
                    "memory", "cc");                                            \
     (void)0;                                                                   \

@@ -3,20 +3,18 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-enum FdKind {
-  kFdEmpty,
-  kFdFile,
-  kFdSocket,
-  kFdProcess,
-  kFdConsole,
-  kFdSerial,
-  kFdZip,
-  kFdEpoll,
-  kFdReserved
-};
+#define kFdEmpty    0
+#define kFdFile     1
+#define kFdSocket   2
+#define kFdProcess  3
+#define kFdConsole  4
+#define kFdSerial   5
+#define kFdZip      6
+#define kFdEpoll    7
+#define kFdReserved 8
 
 struct Fd {
-  enum FdKind kind;
+  int kind;
   unsigned flags;
   unsigned mode;
   int64_t handle;

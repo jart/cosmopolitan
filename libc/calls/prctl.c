@@ -31,7 +31,7 @@
  *
  * @raise ENOSYS on non-Linux
  */
-privileged int prctl(int operation, ...) {
+int prctl(int operation, ...) {
   int rc;
   va_list va;
   intptr_t a, b, c, d;

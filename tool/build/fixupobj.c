@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
@@ -26,9 +27,11 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -41,20 +44,21 @@
  * @fileoverview GCC Codegen Fixer-Upper.
  */
 
-#define GETOPTS "h"
+#define GETOPTS "ch"
 
 #define USAGE \
   "\
 Usage: fixupobj.com [-h] ARGS...\n\
   -?\n\
   -h          show help\n\
+  -c          check-only mode\n\
 "
 
 #define COSMO_TLS_REG     28
 #define MRS_TPIDR_EL0     0xd53bd040u
 #define MOV_REG(DST, SRC) (0xaa0003e0u | (SRC) << 16 | (DST))
 
-static const unsigned char kFatNops[8][8] = {
+const unsigned char kFatNops[8][8] = {
     {},                                          //
     {0x90},                                      // nop
     {0x66, 0x90},                                // xchg %ax,%ax
@@ -65,31 +69,43 @@ static const unsigned char kFatNops[8][8] = {
     {0x0f, 0x1f, 0x80, 0x00, 0x00, 0x00, 0x00},  // nopl 0x00000000(%rax)
 };
 
-void Write(const char *s, ...) {
+int mode;
+char *symstrs;
+char *secstrs;
+ssize_t esize;
+Elf64_Sym *syms;
+const char *epath;
+Elf64_Xword symcount;
+const Elf64_Ehdr *elf;
+
+void Print(int fd, const char *s, ...) {
   va_list va;
+  char buf[2048];
   va_start(va, s);
+  buf[0] = 0;
   do {
-    write(2, s, strlen(s));
+    strlcat(buf, s, sizeof(buf));
   } while ((s = va_arg(va, const char *)));
+  strlcat(buf, "\n", sizeof(buf));
+  write(fd, buf, strlen(buf));
   va_end(va);
 }
 
-wontreturn void SysExit(int rc, const char *call, const char *thing) {
-  int err;
-  char ibuf[12];
-  const char *estr;
-  err = errno;
-  FormatInt32(ibuf, err);
-  estr = _strerdoc(err);
-  if (!estr) estr = "EUNKNOWN";
-  Write(thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", NULL);
-  exit(rc);
+wontreturn void SysExit(const char *func) {
+  const char *errstr;
+  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  Print(2, epath, ": ", func, " failed with ", errstr, "\n", NULL);
+  exit(1);
 }
 
-static void GetOpts(int argc, char *argv[]) {
+void GetOpts(int argc, char *argv[]) {
   int opt;
+  mode = O_RDWR;
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
+      case 'c':
+        mode = O_RDONLY;
+        break;
       case 'h':
       case '?':
         write(1, USAGE, sizeof(USAGE) - 1);
@@ -101,17 +117,56 @@ static void GetOpts(int argc, char *argv[]) {
   }
 }
 
+Elf64_Shdr *FindElfSectionByName(const char *name) {
+  long i;
+  Elf64_Shdr *shdr;
+  for (i = 0; i < elf->e_shnum; ++i) {
+    shdr = GetElfSectionHeaderAddress(elf, esize, i);
+    if (!strcmp(GetElfString(elf, esize, secstrs, shdr->sh_name), name)) {
+      return shdr;
+    }
+  }
+  return 0;
+}
+
+void CheckPrivilegedCrossReferences(void) {
+  long i, x;
+  Elf64_Shdr *shdr;
+  const char *secname;
+  Elf64_Rela *rela, *erela;
+  if (!(shdr = FindElfSectionByName(".rela.privileged"))) return;
+  rela = GetElfSectionAddress(elf, esize, shdr);
+  erela = rela + shdr->sh_size / sizeof(*rela);
+  for (; rela < erela; ++rela) {
+    if (!ELF64_R_TYPE(rela->r_info)) continue;
+    if (!(x = ELF64_R_SYM(rela->r_info))) continue;
+    if (syms[x].st_shndx == SHN_ABS) continue;
+    if (!syms[x].st_shndx) continue;
+    shdr = GetElfSectionHeaderAddress(elf, esize, syms[x].st_shndx);
+    if (~shdr->sh_flags & SHF_EXECINSTR) continue;  // data reference
+    secname = GetElfString(elf, esize, secstrs, shdr->sh_name);
+    if (strcmp(".privileged", secname)) {
+      Print(2, epath,
+            ": code in .privileged section "
+            "references symbol '",
+            GetElfString(elf, esize, symstrs, syms[x].st_name),
+            "' in unprivileged code section '", secname, "'\n", NULL);
+      exit(1);
+    }
+  }
+}
+
 // Modify ARM64 code to use x28 for TLS rather than tpidr_el0.
-void RewriteTlsCode(Elf64_Ehdr *elf, size_t elfsize) {
+void RewriteTlsCode(void) {
   int i, dest;
   Elf64_Shdr *shdr;
   uint32_t *p, *pe;
   for (i = 0; i < elf->e_shnum; ++i) {
-    shdr = GetElfSectionHeaderAddress(elf, elfsize, i);
+    shdr = GetElfSectionHeaderAddress(elf, esize, i);
     if (shdr->sh_type == SHT_PROGBITS &&     //
         (shdr->sh_flags & SHF_ALLOC) &&      //
         (shdr->sh_flags & SHF_EXECINSTR) &&  //
-        (p = GetElfSectionAddress(elf, elfsize, shdr))) {
+        (p = GetElfSectionAddress(elf, esize, shdr))) {
       for (pe = p + shdr->sh_size / 4; p <= pe; ++p) {
         if ((*p & -32) == MRS_TPIDR_EL0) {
           *p = MOV_REG(*p & 31, COSMO_TLS_REG);
@@ -131,19 +186,16 @@ void RewriteTlsCode(Elf64_Ehdr *elf, size_t elfsize) {
  * In order for this to work, the function symbol must be declared as
  * `STT_FUNC` and `st_size` must have the function's byte length.
  */
-void OptimizePatchableFunctionEntries(Elf64_Ehdr *elf, size_t elfsize) {
+void OptimizePatchableFunctionEntries(void) {
 #ifdef __x86_64__
   long i, n;
   int nopcount;
-  Elf64_Sym *syms;
   Elf64_Shdr *shdr;
-  Elf64_Xword symcount;
   unsigned char *p, *pe;
-  CHECK_NOTNULL((syms = GetElfSymbolTable(elf, elfsize, &symcount)));
   for (i = 0; i < symcount; ++i) {
     if (ELF64_ST_TYPE(syms[i].st_info) == STT_FUNC && syms[i].st_size) {
-      shdr = GetElfSectionHeaderAddress(elf, elfsize, syms[i].st_shndx);
-      p = GetElfSectionAddress(elf, elfsize, shdr);
+      shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx);
+      p = GetElfSectionAddress(elf, esize, shdr);
       p += syms[i].st_value;
       pe = p + syms[i].st_size;
       for (; p + 1 < pe; p += n) {
@@ -159,27 +211,22 @@ void OptimizePatchableFunctionEntries(Elf64_Ehdr *elf, size_t elfsize) {
 #endif /* __x86_64__ */
 }
 
-void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
-  char *strs;
+void OptimizeRelocations(void) {
   Elf64_Half i;
-  Elf64_Sym *syms;
   Elf64_Rela *rela;
-  Elf64_Xword symcount;
   unsigned char *code, *p;
   Elf64_Shdr *shdr, *shdrcode;
-  CHECK_NOTNULL((strs = GetElfStringTable(elf, elfsize)));
-  CHECK_NOTNULL((syms = GetElfSymbolTable(elf, elfsize, &symcount)));
   for (i = 0; i < elf->e_shnum; ++i) {
-    shdr = GetElfSectionHeaderAddress(elf, elfsize, i);
+    shdr = GetElfSectionHeaderAddress(elf, esize, i);
     if (shdr->sh_type == SHT_RELA) {
       CHECK_EQ(sizeof(struct Elf64_Rela), shdr->sh_entsize);
       CHECK_NOTNULL(
-          (shdrcode = GetElfSectionHeaderAddress(elf, elfsize, shdr->sh_info)));
+          (shdrcode = GetElfSectionHeaderAddress(elf, esize, shdr->sh_info)));
       if (!(shdrcode->sh_flags & SHF_EXECINSTR)) continue;
-      CHECK_NOTNULL((code = GetElfSectionAddress(elf, elfsize, shdrcode)));
-      for (rela = GetElfSectionAddress(elf, elfsize, shdr);
+      CHECK_NOTNULL((code = GetElfSectionAddress(elf, esize, shdrcode)));
+      for (rela = GetElfSectionAddress(elf, esize, shdr);
            ((uintptr_t)rela + shdr->sh_entsize <=
-            MIN((uintptr_t)elf + elfsize,
+            MIN((uintptr_t)elf + esize,
                 (uintptr_t)elf + shdr->sh_offset + shdr->sh_size));
            ++rela) {
 
@@ -189,7 +236,7 @@ void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
          * Then libc/runtime/ftrace.greg.c morphs it back at runtime.
          */
         if (ELF64_R_TYPE(rela->r_info) == R_X86_64_GOTPCRELX &&
-            strcmp(GetElfString(elf, elfsize, strs,
+            strcmp(GetElfString(elf, esize, symstrs,
                                 syms[ELF64_R_SYM(rela->r_info)].st_name),
                    "mcount") == 0) {
           rela->r_info = R_X86_64_NONE;
@@ -207,7 +254,7 @@ void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
          */
         if ((ELF64_R_TYPE(rela->r_info) == R_X86_64_PC32 ||
              ELF64_R_TYPE(rela->r_info) == R_X86_64_PLT32) &&
-            strcmp(GetElfString(elf, elfsize, strs,
+            strcmp(GetElfString(elf, esize, symstrs,
                                 syms[ELF64_R_SYM(rela->r_info)].st_name),
                    "mcount") == 0) {
           rela->r_info = R_X86_64_NONE;
@@ -223,45 +270,65 @@ void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
   }
 }
 
-void RewriteObject(const char *path) {
+void FixupObject(void) {
   int fd;
-  struct stat st;
-  Elf64_Ehdr *elf;
-  if ((fd = open(path, O_RDWR)) == -1) {
-    SysExit(__COUNTER__ + 1, "open", path);
+  if ((fd = open(epath, mode)) == -1) {
+    SysExit("open");
   }
-  if (fstat(fd, &st) == -1) {
-    SysExit(__COUNTER__ + 1, "fstat", path);
+  if ((esize = lseek(fd, 0, SEEK_END)) == -1) {
+    SysExit("lseek");
   }
-  if (st.st_size >= 64) {
-    if ((elf = mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                    0)) == MAP_FAILED) {
-      SysExit(__COUNTER__ + 1, "mmap", path);
+  if (esize) {
+    if ((elf = mmap(0, esize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) ==
+        MAP_FAILED) {
+      SysExit("mmap");
     }
-    if (elf->e_machine == EM_NEXGEN32E) {
-      OptimizeRelocations(elf, st.st_size);
-      OptimizePatchableFunctionEntries(elf, st.st_size);
+    if (!IsElf64Binary(elf, esize)) {
+      Print(2, epath, ": not an elf64 binary\n", NULL);
+      exit(1);
     }
-    if (elf->e_machine == EM_AARCH64) {
-      RewriteTlsCode(elf, st.st_size);
+    if (!(syms = GetElfSymbolTable(elf, esize, &symcount))) {
+      Print(2, epath, ": missing elf symbol table\n", NULL);
+      exit(1);
     }
-    if (msync(elf, st.st_size, MS_ASYNC | MS_INVALIDATE)) {
-      SysExit(__COUNTER__ + 1, "msync", path);
+    if (!(secstrs = GetElfSectionNameStringTable(elf, esize))) {
+      Print(2, epath, ": missing elf section string table\n", NULL);
+      exit(1);
     }
-    if (munmap(elf, st.st_size)) {
-      SysExit(__COUNTER__ + 1, "munmap", path);
+    if (!(symstrs = GetElfStringTable(elf, esize))) {
+      Print(2, epath, ": missing elf symbol string table\n", NULL);
+      exit(1);
+    }
+    CheckPrivilegedCrossReferences();
+    if (mode == O_RDWR) {
+      if (elf->e_machine == EM_NEXGEN32E) {
+        OptimizeRelocations();
+        OptimizePatchableFunctionEntries();
+      }
+      if (elf->e_machine == EM_AARCH64) {
+        RewriteTlsCode();
+      }
+      if (msync(elf, esize, MS_ASYNC | MS_INVALIDATE)) {
+        SysExit("msync");
+      }
+    }
+    if (munmap(elf, esize)) {
+      SysExit("munmap");
     }
   }
   if (close(fd)) {
-    SysExit(__COUNTER__ + 1, "close", path);
+    SysExit("close");
   }
 }
 
 int main(int argc, char *argv[]) {
   int i, opt;
-  if (IsModeDbg()) ShowCrashReports();
+  if (!IsOptimized()) {
+    ShowCrashReports();
+  }
   GetOpts(argc, argv);
   for (i = optind; i < argc; ++i) {
-    RewriteObject(argv[i]);
+    epath = argv[i];
+    FixupObject();
   }
 }

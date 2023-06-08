@@ -31,7 +31,7 @@
  */
 int ttyconfig(int ttyfd, ttyconf_f fn, int64_t arg,
               struct termios *opt_out_oldconf) {
-  struct termios conf[2];
+  struct termios conf[2] = {0};
   if (tcgetattr(ttyfd, &conf[0]) != -1 &&
       fn(memcpy(&conf[1], &conf[0], sizeof(conf[0])), arg) != -1 &&
       tcsetattr(ttyfd, TCSAFLUSH, &conf[1]) != -1) {

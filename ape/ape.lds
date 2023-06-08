@@ -498,6 +498,7 @@ SECTIONS {
   .GCC.command.line  0 : { *(.GCC.command.line) }
 
   /DISCARD/ : {
+    *(__patchable_function_entries)
     *(__mcount_loc)
     *(.discard)
     *(.yoink)

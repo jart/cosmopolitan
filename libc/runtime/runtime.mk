@@ -70,7 +70,6 @@ o/$(MODE)/libc/runtime/cosmo2.o: private		\
 o/$(MODE)/libc/runtime/ftracer.o: private		\
 		CFLAGS +=				\
 			-x-no-pg			\
-			$(MNO_FENTRY)			\
 			-ffreestanding			\
 			-fno-sanitize=all
 
@@ -123,6 +122,14 @@ o/$(MODE)/libc/runtime/enable_tls.o: private		\
 		CFLAGS +=				\
 			-mcmodel=large
 endif
+
+# privileged functions
+o/$(MODE)/libc/runtime/getsymbol.o			\
+o/$(MODE)/libc/runtime/enable_threads.o			\
+o/$(MODE)/libc/runtime/morph_tls.o: private		\
+		CFLAGS +=				\
+			-ffreestanding			\
+			-fno-sanitize=all
 
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/runtime/init.o: libc/runtime/init.S

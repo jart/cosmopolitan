@@ -35,7 +35,7 @@
  *
  * @raise ENOSYS on non-Linux.
  */
-privileged int seccomp(unsigned operation, unsigned flags, void *args) {
+int seccomp(unsigned operation, unsigned flags, void *args) {
   int rc;
   if (IsLinux()) {
 #ifdef __x86_64__

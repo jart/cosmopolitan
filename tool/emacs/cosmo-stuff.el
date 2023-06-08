@@ -25,6 +25,7 @@
 (require 'ld-script)
 (require 'make-mode)
 
+(setq cosmo-dbg-mode "zero")
 (setq c-doc-comment-style 'javadown)
 
 (add-to-list 'auto-mode-alist '("\\.x$" . c-mode))  ;; -aux-info
@@ -162,13 +163,13 @@
   (cond ((eq arg 1) "tiny")
         ((eq arg 2) "opt")
         ((eq arg 3) "rel")
-        ((eq arg 4) "dbg")
+        ((eq arg 4) cosmo-dbg-mode)
         ((eq arg 5) "")
         ((eq arg 6) "llvm")
         ((eq arg 7) "aarch64")
         ((eq arg 8) "aarch64-tiny")
         (default default)
-        ((cosmo-intest) "dbg")
+        ((cosmo-intest) cosmo-dbg-mode)
         (t "fastbuild")))
 
 (defun cosmo--make-suffix (arg)
@@ -684,7 +685,7 @@
   (let* ((this (or (buffer-file-name) dired-directory))
          (root (locate-dominating-file this "Makefile")))
     (when root
-      (let* ((mode (cosmo--make-mode arg "dbg"))
+      (let* ((mode (cosmo--make-mode arg cosmo-dbg-mode))
              (name (file-relative-name this root))
              (next (file-name-sans-extension name))
              (exec (format "o/%s/%s.com.dbg" mode next))

@@ -78,7 +78,7 @@ void fpreset(void);
 void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
 void *mremap(void *, size_t, size_t, int, ...);
 int munmap(void *, uint64_t);
-int mprotect(void *, uint64_t, int) privileged;
+int mprotect(void *, uint64_t, int);
 int msync(void *, size_t, int);
 int mlock(const void *, size_t);
 int munlock(const void *, size_t);

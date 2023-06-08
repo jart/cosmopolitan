@@ -55,6 +55,7 @@ o/$(MODE)/test/libc/runtime/%.com.dbg:					\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.txt.zip.o	\
 		o/$(MODE)/test/libc/runtime/%.o				\
 		o/$(MODE)/test/libc/runtime/runtime.pkg			\
+		o/$(MODE)/test/libc/runtime/runtime.pkg			\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
@@ -86,7 +87,7 @@ o/$(MODE)/test/libc/runtime/prog/ftraceasm.elf:				\
 		$(TEST_LIBC_RUNTIME_DEPS)				\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.o		\
 		o/$(MODE)/test/libc/runtime/runtime.pkg
-	@$(ELFLINK)
+	@$(ELFLINK) --gc-sections
 o/$(MODE)/test/libc/runtime/prog/ftraceasm.txt:				\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.elf
 	@$(OBJDUMP) -d $< >$@
