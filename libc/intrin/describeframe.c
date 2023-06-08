@@ -21,18 +21,12 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/brk.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/winargs.internal.h"
 
 #define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
 #define FRAME(x)    ((int)((x) >> 16))
-
-forceinline pureconst bool IsBrkFrame(int x) {
-  unsigned char *p = (unsigned char *)ADDR_32_TO_48(x);
-  return _weaken(__brk) && p >= _end && p < _weaken(__brk)->p;
-}
 
 static const char *GetFrameName(int x) {
   if (!x) {
@@ -47,8 +41,6 @@ static const char *GetFrameName(int x) {
     return "arena";
   } else if (IsStaticStackFrame(x)) {
     return "stack";
-  } else if (IsBrkFrame(x)) {
-    return "brk";
   } else if (IsGfdsFrame(x)) {
     return "g_fds";
   } else if (IsZiposFrame(x)) {

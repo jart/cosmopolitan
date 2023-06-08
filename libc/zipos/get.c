@@ -81,7 +81,7 @@ struct Zipos *__zipos_get(void) {
       fd = open(progpath, O_RDONLY);
     }
     if (fd != -1) {
-      if ((size = getfiledescriptorsize(fd)) != -1ul &&
+      if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
           (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         if ((base = FindEmbeddedApe(map, size))) {
           size -= base - map;

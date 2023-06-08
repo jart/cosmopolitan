@@ -68,13 +68,7 @@ COSMOPOLITAN_C_START_
 
 typedef int sig_atomic_t;
 
-bool fileexists(const char *);
-bool isdirectory(const char *);
-bool isexecutable(const char *);
-bool isregularfile(const char *);
-bool issymlink(const char *);
 bool32 isatty(int) nosideeffect;
-bool32 ischardev(int) nosideeffect;
 char *commandv(const char *, char *, size_t);
 char *get_current_dir_name(void) dontdiscard;
 char *getcwd(char *, size_t);
@@ -82,7 +76,6 @@ char *realpath(const char *, char *);
 char *replaceuser(const char *) dontdiscard;
 char *ttyname(int);
 int access(const char *, int) dontthrow;
-int arch_prctl();
 int chdir(const char *);
 int chmod(const char *, unsigned);
 int chown(const char *, unsigned, unsigned);
@@ -166,7 +159,6 @@ int reboot(int);
 int remove(const char *);
 int rename(const char *, const char *);
 int renameat(int, const char *, int, const char *);
-int renameat2(long, const char *, long, const char *, int);
 int rmdir(const char *);
 int sched_yield(void);
 int seccomp(unsigned, unsigned, void *);
@@ -214,11 +206,8 @@ int usleep(unsigned);
 int vfork(void) returnstwice;
 int wait(int *);
 int waitpid(int, int *, int);
-intptr_t syscall(int, ...);
 long ptrace(int, ...);
 ssize_t copy_file_range(int, long *, int, long *, size_t, unsigned);
-ssize_t copyfd(int, int64_t *, int, int64_t *, size_t, unsigned);
-ssize_t getfiledescriptorsize(int);
 ssize_t lseek(int, int64_t, int);
 ssize_t pread(int, void *, size_t, int64_t);
 ssize_t pwrite(int, const void *, size_t, int64_t);
@@ -234,6 +223,23 @@ unsigned getgid(void) nosideeffect;
 unsigned getuid(void) libcesque;
 unsigned umask(unsigned);
 void sync(void);
+
+#ifdef COSMO
+#define fileexists    __fileexists
+#define isdirectory   __isdirectory
+#define isexecutable  __isexecutable
+#define isregularfile __isregularfile
+#define issymlink     __issymlink
+#define ischardev     __ischardev
+#define copyfd        __copyfd
+bool fileexists(const char *);
+bool isdirectory(const char *);
+bool isexecutable(const char *);
+bool isregularfile(const char *);
+bool issymlink(const char *);
+bool32 ischardev(int) nosideeffect;
+ssize_t copyfd(int, int64_t *, int, int64_t *, size_t, unsigned);
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -29,7 +29,9 @@
  */
 char *setlocale(int category, const char *locale) {
   if (!locale || (*locale == '\0')) return "C";
-  if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
+  if (!strcmp(locale, "C") ||      //
+      !strcmp(locale, "POSIX") ||  //
+      !strcmp(locale, "C.UTF-8")) {
     return locale;
   } else {
     return NULL;

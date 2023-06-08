@@ -31,7 +31,7 @@
 _Hide int MapFileRead(const char *filename, struct MappedFile *mf) {
   mf->addr = MAP_FAILED;
   if ((mf->fd = open(filename, O_RDONLY)) != -1 &&
-      (mf->size = getfiledescriptorsize(mf->fd)) < INT_MAX &&
+      (mf->size = lseek(mf->fd, 0, SEEK_END)) < INT_MAX &&
       (mf->addr = mf->size ? mmap(NULL, mf->size, PROT_READ,
                                   MAP_PRIVATE | MAP_POPULATE, mf->fd, 0)
                            : NULL) != MAP_FAILED) {

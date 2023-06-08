@@ -51,7 +51,7 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   ptrdiff_t names_offset, name_base_offset, stp_offset;
   map = MAP_FAILED;
   if ((fd = open(filename, O_RDONLY)) == -1) return 0;
-  if ((filesize = getfiledescriptorsize(fd)) == -1) goto SystemError;
+  if ((filesize = lseek(fd, 0, SEEK_END)) == -1) goto SystemError;
   if (filesize > INT_MAX) goto RaiseE2big;
   if (filesize < 64) goto RaiseEnoexec;
   elf = map = mmap(0, filesize, PROT_READ, MAP_PRIVATE, fd, 0);

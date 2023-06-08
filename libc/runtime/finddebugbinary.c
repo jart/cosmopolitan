@@ -78,8 +78,7 @@ const char *FindDebugBinary(void) {
     if ((n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) ||
         IsMyDebugBinary(p)) {
       res = p;
-    } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
-               n + 4 < ARRAYLEN(buf)) {
+    } else if (n + 4 < ARRAYLEN(buf)) {
       mempcpy(mempcpy(buf, p, n), ".dbg", 5);
       if (IsMyDebugBinary(buf)) {
         res = buf;

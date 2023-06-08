@@ -50,12 +50,12 @@ static struct timespec vflogf_ts;
 static void vflogf_onfail(FILE *f) {
   errno_t err;
   int64_t size;
+  struct stat st;
   if (IsTiny()) return;
   err = ferror_unlocked(f);
   if (fileno_unlocked(f) != -1 &&
       (err == ENOSPC || err == EDQUOT || err == EFBIG) &&
-      ((size = getfiledescriptorsize(fileno_unlocked(f))) == -1 ||
-       size > kNontrivialSize)) {
+      (fstat(fileno_unlocked(f), &st) == -1 || st.st_size > kNontrivialSize)) {
     ftruncate(fileno_unlocked(f), 0);
     fseeko_unlocked(f, SEEK_SET, 0);
     f->beg = f->end = 0;

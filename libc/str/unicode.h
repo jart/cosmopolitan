@@ -32,8 +32,11 @@ struct lconv {
 
 int wcwidth(wchar_t) pureconst;
 int wcswidth(const wchar_t *, size_t) strlenesque;
-int wcsnwidth(const wchar_t *, size_t, size_t) strlenesque;
 struct lconv *localeconv(void);
+
+#ifdef COSMO
+int wcsnwidth(const wchar_t *, size_t, size_t) strlenesque;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

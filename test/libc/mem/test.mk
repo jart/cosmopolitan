@@ -73,7 +73,6 @@ o/$(MODE)/test/libc/mem/prog/sock.o:					\
 		libc/sock/sock.h				\
 		libc/intrin/bswap.h				\
 		libc/sysv/consts/af.h				\
-		libc/runtime/symbolic.h				\
 		libc/sysv/consts/sock.h
 
 ################################################################################

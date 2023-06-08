@@ -8,7 +8,6 @@
  * Reads scalar from memory, offset by segment.
  *
  * @return *(MEM) relative to segment
- * @see arch_prctl()
  * @see pushpop()
  */
 #define fs(MEM) __peek("fs", MEM)

@@ -130,7 +130,6 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/runtime/e820.internal.h	\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
-		libc/runtime/symbolic.h		\
 		libc/sysv/consts/prot.h		\
 		ape/blink-aarch64.gz		\
 		ape/blink-darwin-arm64.gz	\
@@ -160,7 +159,6 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/runtime/e820.internal.h	\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
-		libc/runtime/symbolic.h		\
 		libc/sysv/consts/prot.h		\
 		ape/blink-aarch64.gz		\
 		ape/blink-darwin-arm64.gz

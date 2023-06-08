@@ -38,7 +38,7 @@ void *xslurp(const char *path, size_t *opt_out_size) {
   ssize_t rc, size;
   res = NULL;
   if ((fd = open(path, O_RDONLY)) != -1) {
-    if ((size = getfiledescriptorsize(fd)) != -1 &&
+    if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
         (res = memalign(PAGESIZE, size + 1))) {
       if (size > 2 * 1024 * 1024) {
         fadvise(fd, 0, size, MADV_SEQUENTIAL);
@@ -47,7 +47,7 @@ void *xslurp(const char *path, size_t *opt_out_size) {
       TryAgain:
         if ((rc = pread(fd, res + i, size - i, i)) != -1) {
           if (!(got = rc)) {
-            if (getfiledescriptorsize(fd) == -1) {
+            if (lseek(fd, 0, SEEK_CUR) == -1) {
               abort();  // TODO(jart): what is this
             }
           }
