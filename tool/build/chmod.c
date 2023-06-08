@@ -38,7 +38,7 @@ FLAGS\n\
 
 const char *prog;
 
-static void Print(int fd, const char *s, ...) {
+nullterminated() static void Print(int fd, const char *s, ...) {
   va_list va;
   char buf[2048];
   va_start(va, s);

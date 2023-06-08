@@ -19,6 +19,9 @@
 #     make install
 #
 
+COSMO=/opt/cosmo
+COSMOS=/opt/cosmos
+
 if [ "$1" = "--version" ]; then
 cat <<'EOF'
 x86_64-unknown-cosmo-g++ (GCC) 11.2.0
@@ -29,70 +32,115 @@ EOF
 exit 0
 fi
 
-CXX="/opt/cosmo/o/third_party/gcc/bin/x86_64-linux-musl-g++"
-CCFLAGS="-g -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs -fportcosmo -include /opt/cosmo/build/portcosmo.h"
+CXX="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
+OBJCOPY="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-objcopy"
+CCFLAGS="-g -fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo -include $COSMO/build/portcosmo.h"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
-CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem /opt/cosmos/include -isystem /opt/cosmo/libc/isystem -include libc/integral/normalize.inc"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L/opt/cosmos/lib -Wl,-T,/opt/cosmo/o/ape/public/ape.lds /opt/cosmo/o/ape/ape-no-modify-self.o /opt/cosmo/o/libc/crt/crt.o"
-LDLIBS="/opt/cosmo/o/third_party/libcxx/libcxx.a /opt/cosmo/o/cosmopolitan.a"
+CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem $COSMOS/include -isystem $COSMO/libc/isystem -include libc/integral/normalize.inc"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/ape/public/ape.lds $COSMO/o/ape/ape-no-modify-self.o $COSMO/o/libc/crt/crt.o"
+LDLIBS="$COSMO/o/third_party/libcxx/libcxx.a $COSMO/o/cosmopolitan.a"
 
-if [ ! -d $COSMO ]; then
-  echo you need to checkout cosmopolitan to your $COSMO directory >&2
+if [ ! -d "$COSMO" ]; then
+  echo "you need to checkout cosmopolitan to your $COSMO directory" >&2
   exit 1
 fi
 
-if [ ! -d $COSMOS ]; then
-  echo you need to create your $COSMOS directory >&2
+if [ ! -d "$COSMOS" ]; then
+  echo "you need to create your $COSMOS directory" >&2
   exit 1
 fi
 
 # auto-install some shell libraries
-if [ ! -d $COSMOS/lib ]; then
-  mkdir $COSMOS/lib
+if [ ! -d "$COSMOS/lib" ]; then
+  mkdir "$COSMOS/lib"
   for lib in c dl gcc_s m pthread resolv rt z stdc++; do
-    printf '\041\074\141\162\143\150\076\012' >$COSMOS/lib/lib$lib.a
+    printf '\041\074\141\162\143\150\076\012' >"$COSMOS/lib/lib$lib.a"
   done
 fi
 
+OPT=
 HAS_C=0
 HAS_O=0
 HAS_E=0
 FIRST=1
+OUTPUT=
+NEED_OUTPUT=
+FRAME=-fno-omit-frame-pointer
 for x; do
   if [ $FIRST -eq 1 ]; then
     set --
     FIRST=0
   fi
-  if [ "$x" = "-Werror" ]; then
+  if [ x"$x" = x"-Werror" ]; then
     # this toolchain is intended for building other people's code
     # elevating warnings into errors, should only be done by devs
     continue
-  fi
-  if [ "$x" = "-pedantic" ]; then
+  elif [ x"$x" = x"-pedantic" ]; then
     # this toolchain is intended for building other people's code
     # we don't need the compiler's assistance to be more portable
     continue
-  fi
-  if [ "$x" = "-c" ]; then
+  elif [ x"$x" != x"${x#-O}" ]; then
+    OPT=$x
+  elif [ x"$x" = x"-c" ]; then
     HAS_C=1
-  fi
-  if [ "$x" = "-E" ]; then
+  elif [ x"$x" = x"-E" ]; then
     HAS_E=1
-  fi
-  if [ "$x" = "-o" ] || [ "${x#-o}" != "$x" ]; then
+  elif [ x"$x" = x"-o" ]; then
     HAS_O=1
+    NEED_OUTPUT=1
+  elif [ x"$x" != x"${x#-o}" ]; then
+    HAS_O=1
+    OUTPUT=${x#-o}
+  elif [ -n "$NEED_OUTPUT" ]; then
+    NEED_OUTPUT=
+    OUTPUT=$x
+  elif [ x"$x" = x"-fpic" ]; then
+    continue
+  elif [ x"$x" = x"-fPIC" ]; then
+    continue
+  elif [ x"$x" = x"-shared" ]; then
+    echo "error: cosmocc -shared isn't supported" >&2
+    exit 1
+  elif [ x"$x" = x"-fomit-frame-pointer" ] || [ x"$x" = x"-fno-omit-frame-pointer" ]; then
+    FRAME=$x
+    continue
   fi
   set -- "$@" "$x"
 done
 
+if [ x"$OPT" != x"-Os" ]; then
+  # support --ftrace unless optimizing for size
+  CXXFLAGS="$CXXFLAGS -fpatchable-function-entry=18,16"
+fi
+
+LINKING=
 if [ "$HAS_E" = "1" ]; then
   set -- $CCFLAGS $CPPFLAGS "$@"
 elif [ "$HAS_C" = "1" ]; then
-  set -- $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
+  set -- $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" $FRAME
 else
-  set -- $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=65536 -Wl,-z,max-page-size=65536
+  LINKING=1
+  set -- $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=65536 -Wl,-z,max-page-size=65536 $FRAME
 fi
 
 set -- "$CXX" "$@"
 printf '(cd %s; %s)\n' "$PWD" "$*" >>/tmp/build.log
-exec "$@"
+"$@" || exit
+
+if [ -n "$LINKING" ] && [ x"$OUTPUT" != x"" ]; then
+  if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
+     [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
+    # cosmocc -o foo.com ...
+    # -> foo.com (ape)
+    # -> foo.com.dbg (elf)
+    mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
+    "$OBJCOPY" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
+  else
+    # cosmocc -o foo ...
+    # -> foo (elf)
+    # -> foo.com (ape)
+    # -> foo.com.dbg (elf)
+    cp -f "$OUTPUT" "$OUTPUT.com.dbg" || exit
+    "$OBJCOPY" -S -O binary "$OUTPUT" "$OUTPUT.com" || exit
+  fi
+fi

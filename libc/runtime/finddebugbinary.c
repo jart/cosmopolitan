@@ -83,11 +83,6 @@ const char *FindDebugBinary(void) {
       if (IsMyDebugBinary(buf)) {
         res = buf;
       }
-    } else if (n + 8 < ARRAYLEN(buf)) {
-      mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
-      if (IsMyDebugBinary(buf)) {
-        res = buf;
-      }
     }
     if (!res) {
       res = getenv("COMDBG");

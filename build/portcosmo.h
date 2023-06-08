@@ -357,5 +357,25 @@ static const unsigned int __tmpcosmo_B600 = 15823554;
 static const unsigned int __tmpcosmo_B75 = 15823536;
 static const unsigned int __tmpcosmo_B9600 = 15823504;
 static const unsigned short __tmpcosmo_AF_INET6 = 58236;
+static const unsigned __tmpcosmo_RLIMIT_AS = 1377206941;
+static const unsigned __tmpcosmo_RLIMIT_CORE = -671407877;
+static const unsigned __tmpcosmo_RLIMIT_CPU = 628127131;
+static const unsigned __tmpcosmo_RLIMIT_DATA = -808550207;
+static const unsigned __tmpcosmo_RLIMIT_FSIZE = -961275389;
+static const unsigned __tmpcosmo_RLIMIT_LOCKS = -606515345;
+static const unsigned __tmpcosmo_RLIMIT_MEMLOCK = -638383635;
+static const unsigned __tmpcosmo_RLIMIT_MSGQUEUE = -200712823;
+static const unsigned __tmpcosmo_RLIMIT_NICE = -1263433607;
+static const unsigned __tmpcosmo_RLIMIT_NOFILE = -974136242;
+static const unsigned __tmpcosmo_RLIMIT_NPROC = 1234964928;
+static const unsigned __tmpcosmo_RLIMIT_NPTS = 1890977319;
+static const unsigned __tmpcosmo_RLIMIT_RSS = 1507822220;
+static const unsigned __tmpcosmo_RLIMIT_RTPRIO = 343598136;
+static const unsigned __tmpcosmo_RLIMIT_RTTIME = 1950976769;
+static const unsigned __tmpcosmo_RLIMIT_SBSIZE = 914114957;
+static const unsigned __tmpcosmo_RLIMIT_SIGPENDING = 1652182385;
+static const unsigned __tmpcosmo_RLIMIT_STACK = 1324847124;
+static const unsigned __tmpcosmo_RLIMIT_SWAP = 1231678046;
+static const unsigned __tmpcosmo_RLIMIT_VMEM = 119083983;
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* ACTUALLY_MODS */

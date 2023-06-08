@@ -27,8 +27,6 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
@@ -58,7 +56,7 @@ Usage: fixupobj.com [-h] ARGS...\n\
 #define MRS_TPIDR_EL0     0xd53bd040u
 #define MOV_REG(DST, SRC) (0xaa0003e0u | (SRC) << 16 | (DST))
 
-const unsigned char kFatNops[8][8] = {
+static const unsigned char kFatNops[8][8] = {
     {},                                          //
     {0x90},                                      // nop
     {0x66, 0x90},                                // xchg %ax,%ax
@@ -69,16 +67,16 @@ const unsigned char kFatNops[8][8] = {
     {0x0f, 0x1f, 0x80, 0x00, 0x00, 0x00, 0x00},  // nopl 0x00000000(%rax)
 };
 
-int mode;
-char *symstrs;
-char *secstrs;
-ssize_t esize;
-Elf64_Sym *syms;
-const char *epath;
-Elf64_Xword symcount;
-const Elf64_Ehdr *elf;
+static int mode;
+static char *symstrs;
+static char *secstrs;
+static ssize_t esize;
+static Elf64_Sym *syms;
+static const char *epath;
+static Elf64_Xword symcount;
+static const Elf64_Ehdr *elf;
 
-void Print(int fd, const char *s, ...) {
+nullterminated() static void Print(int fd, const char *s, ...) {
   va_list va;
   char buf[2048];
   va_start(va, s);
@@ -90,14 +88,14 @@ void Print(int fd, const char *s, ...) {
   va_end(va);
 }
 
-wontreturn void SysExit(const char *func) {
+static wontreturn void SysExit(const char *func) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
   Print(2, epath, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
 
-void GetOpts(int argc, char *argv[]) {
+static void GetOpts(int argc, char *argv[]) {
   int opt;
   mode = O_RDWR;
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
@@ -116,7 +114,7 @@ void GetOpts(int argc, char *argv[]) {
   }
 }
 
-Elf64_Shdr *FindElfSectionByName(const char *name) {
+static Elf64_Shdr *FindElfSectionByName(const char *name) {
   long i;
   Elf64_Shdr *shdr;
   for (i = 0; i < elf->e_shnum; ++i) {
@@ -128,7 +126,7 @@ Elf64_Shdr *FindElfSectionByName(const char *name) {
   return 0;
 }
 
-void CheckPrivilegedCrossReferences(void) {
+static void CheckPrivilegedCrossReferences(void) {
   long i, x;
   Elf64_Shdr *shdr;
   const char *secname;
@@ -156,7 +154,7 @@ void CheckPrivilegedCrossReferences(void) {
 }
 
 // Modify ARM64 code to use x28 for TLS rather than tpidr_el0.
-void RewriteTlsCode(void) {
+static void RewriteTlsCode(void) {
   int i, dest;
   Elf64_Shdr *shdr;
   uint32_t *p, *pe;
@@ -185,7 +183,7 @@ void RewriteTlsCode(void) {
  * In order for this to work, the function symbol must be declared as
  * `STT_FUNC` and `st_size` must have the function's byte length.
  */
-void OptimizePatchableFunctionEntries(void) {
+static void OptimizePatchableFunctionEntries(void) {
 #ifdef __x86_64__
   long i, n;
   int nopcount;
@@ -210,7 +208,7 @@ void OptimizePatchableFunctionEntries(void) {
 #endif /* __x86_64__ */
 }
 
-void OptimizeRelocations(void) {
+static void OptimizeRelocations(void) {
   Elf64_Half i;
   Elf64_Rela *rela;
   unsigned char *code, *p;
@@ -218,11 +216,9 @@ void OptimizeRelocations(void) {
   for (i = 0; i < elf->e_shnum; ++i) {
     shdr = GetElfSectionHeaderAddress(elf, esize, i);
     if (shdr->sh_type == SHT_RELA) {
-      CHECK_EQ(sizeof(struct Elf64_Rela), shdr->sh_entsize);
-      CHECK_NOTNULL(
-          (shdrcode = GetElfSectionHeaderAddress(elf, esize, shdr->sh_info)));
+      shdrcode = GetElfSectionHeaderAddress(elf, esize, shdr->sh_info);
       if (!(shdrcode->sh_flags & SHF_EXECINSTR)) continue;
-      CHECK_NOTNULL((code = GetElfSectionAddress(elf, esize, shdrcode)));
+      code = GetElfSectionAddress(elf, esize, shdrcode);
       for (rela = GetElfSectionAddress(elf, esize, shdr);
            ((uintptr_t)rela + shdr->sh_entsize <=
             MIN((uintptr_t)elf + esize,
@@ -269,7 +265,7 @@ void OptimizeRelocations(void) {
   }
 }
 
-void FixupObject(void) {
+static void FixupObject(void) {
   int fd;
   if ((fd = open(epath, mode)) == -1) {
     SysExit("open");

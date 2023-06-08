@@ -88,7 +88,6 @@ __gc:	.ftrace2
 	stp	q4,q5,[sp,144]
 	stp	q6,q7,[sp,176]
 	mov	x1,x10
-	bl	CheckStackIsAligned
 	blr	x9
 	ldp	q6,q7,[sp,176]
 	ldp	q4,q5,[sp,144]
