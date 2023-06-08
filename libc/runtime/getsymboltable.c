@@ -32,6 +32,8 @@
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/puff/puff.h"
 
+STATIC_YOINK("__get_symbol");
+
 static pthread_spinlock_t g_lock;
 _Hide struct SymbolTable *__symtab;  // for kprintf
 
