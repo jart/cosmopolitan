@@ -10,6 +10,8 @@
 #   This makefile compiles and runs each test twice. The first with
 #   GCC-built chibicc, and a second time with chibicc-built chibicc
 
+ifneq ($(MODE), dbg)
+ifneq ($(MODE), asan)
 ifeq ($(ARCH), x86_64)
 
 CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com
@@ -113,6 +115,8 @@ THIRD_PARTY_CHIBICC_CHECKS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)
 THIRD_PARTY_CHIBICC_OBJS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_OBJS))
 $(THIRD_PARTY_CHIBICC_OBJS): $(BUILD_FILES) third_party/chibicc/chibicc.mk
 
+endif
+endif
 endif
 
 .PHONY: o/$(MODE)/third_party/chibicc

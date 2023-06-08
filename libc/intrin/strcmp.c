@@ -29,11 +29,13 @@
  * @return is <0, 0, or >0 based on uint8_t comparison
  * @asyncsignalsafe
  */
-int strcmp(const char *a, const char *b) {
+noasan int strcmp(const char *a, const char *b) {
   int c;
   size_t i = 0;
   uint64_t v, w, d;
   if (a == b) return 0;
+  if (IsAsan()) __asan_verify_str(a);
+  if (IsAsan()) __asan_verify_str(b);
   if ((c = (*a & 255) - (*b & 255))) return c;
   if (!IsTiny() && ((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {
@@ -52,10 +54,6 @@ int strcmp(const char *a, const char *b) {
     }
   } else {
     while (a[i] == b[i] && b[i]) ++i;
-  }
-  if (IsAsan()) {
-    __asan_verify(a, i + 1);
-    __asan_verify(b, i + 1);
   }
   return (a[i] & 255) - (b[i] & 255);
 }

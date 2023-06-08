@@ -190,11 +190,11 @@ o/$(MODE)/third_party/sqlite3/parse.o: private				\
 		CFLAGS +=						\
 			-fpie
 
-o/$(MODE)/third_party/sqlite3/shell.o: private QUOTA = -M512m -C16 -L180
+o/$(MODE)/third_party/sqlite3/shell.o: private QUOTA = -M512m -C32 -L180
 o/$(MODE)/third_party/sqlite3/vdbe.o: private QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/vdbe.shell.o: private QUOTA = -M1024m
-o/$(MODE)/third_party/sqlite3/fts5.o: private QUOTA = -M512m -C16
-o/$(MODE)/third_party/sqlite3/fts5.shell.o: private QUOTA = -M512m -C16 -L180
+o/$(MODE)/third_party/sqlite3/fts5.o: private QUOTA = -M512m -C32
+o/$(MODE)/third_party/sqlite3/fts5.shell.o: private QUOTA = -M512m -C32 -L180
 
 o/$(MODE)/third_party/sqlite3/rtree.o:					\
 		third_party/sqlite3/rtree.c				\

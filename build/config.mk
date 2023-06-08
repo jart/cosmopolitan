@@ -33,7 +33,6 @@ endif
 ifeq ($(MODE), zero)
 OVERRIDE_CFLAGS += -O0
 OVERRIDE_CXXFLAGS += -O0
-OVERRIDE_CCFLAGS = -fno-omit-frame-pointer
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 ifeq ($(MODE), aarch64-zero)
@@ -132,6 +131,7 @@ ifeq ($(MODE), asan)
 CONFIG_CCFLAGS += $(BACKTRACES) -O2 -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=address
 TARGET_ARCH ?= -msse3
+QUOTA ?= -C64 -L300
 endif
 
 # Debug Mode
@@ -151,12 +151,14 @@ CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
 TARGET_ARCH ?= -msse3
 OVERRIDE_CCFLAGS += -fno-pie
+QUOTA ?= -C64 -L300
 endif
 ifeq ($(MODE), aarch64-dbg)
 ENABLE_FTRACE = 1
 CONFIG_CPPFLAGS += -DMODE_DBG
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=undefined
+QUOTA ?= -C64 -L300
 endif
 
 # System Five Mode
@@ -200,7 +202,6 @@ CONFIG_CCFLAGS +=			\
 	-fno-align-labels		\
 	-fno-align-loops		\
 	-fschedule-insns2		\
-	-fomit-frame-pointer		\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS
@@ -227,7 +228,6 @@ CONFIG_CCFLAGS +=			\
 	-fno-align-labels		\
 	-fno-align-loops		\
 	-fschedule-insns2		\
-	-fno-omit-frame-pointer		\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS

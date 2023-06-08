@@ -1,6 +1,8 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
+ifneq ($(MODE), dbg)
+ifneq ($(MODE), asan)
 ifeq ($(ARCH), x86_64)
 
 o/$(MODE)/test/libc/release/cosmopolitan.zip: private .UNSANDBOXED = 1
@@ -197,6 +199,8 @@ o/$(MODE)/test/libc/release:						\
 		o/$(MODE)/test/libc/release/smokeansi.com		\
 		o/$(MODE)/test/libc/release/smokeansi.com.runs
 
+endif
+endif
 endif
 
 .PHONY: o/$(MODE)/test/libc/release

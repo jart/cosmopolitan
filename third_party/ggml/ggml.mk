@@ -185,6 +185,7 @@ o/$(MODE)/third_party/ggml/companionai.txt.zip.o: private		\
 			-B
 
 o/$(MODE)/third_party/ggml/ggml.o: private QUOTA = -C64
+o/$(MODE)/third_party/ggml/llama.o: private QUOTA = -C64
 
 ################################################################################
 

@@ -84,13 +84,6 @@ PWD := $(shell build/bootstrap/pwd.com)
 IGNORE := $(shell $(ECHO) -2 ♥cosmo)
 IGNORE := $(shell $(MKDIR) o/tmp)
 
-ifeq ($(MODE), dbg)
-# be generous about resources in debug mode
-# let commands use  64 seconds  cpu time max
-# let commands use 300 seconds wall time max
-QUOTA ?= -C64 -L300
-endif
-
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
 VM = o/third_party/qemu/qemu-aarch64
@@ -124,7 +117,11 @@ GCC = $(PREFIX)gcc
 STRIP = $(PREFIX)strip
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
-ADDR2LINE = $(join $(PWD),$(PREFIX))addr2line
+ifneq ($(wildcard $(PWD)/$(PREFIX)addr2line), )
+ADDR2LINE = $(PWD)/$(PREFIX)addr2line
+else
+ADDR2LINE = $(PREFIX)addr2line
+endif
 
 export ADDR2LINE
 export LC_ALL
@@ -146,7 +143,6 @@ IMAGE_BASE_VIRTUAL ?= 0x400000
 endif
 
 BACKTRACES =								\
-	-fno-omit-frame-pointer						\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
 
@@ -174,6 +170,7 @@ TRADITIONAL =								\
 DEFAULT_CCFLAGS +=							\
 	-Wall								\
 	-Werror								\
+	-fno-omit-frame-pointer						\
 	-fdebug-prefix-map='$(PWD)'=					\
 	-frecord-gcc-switches
 

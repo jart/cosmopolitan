@@ -34,13 +34,11 @@ noasan int strcasecmp(const char *a, const char *b) {
   size_t i = 0;
   uint64_t v, w, d;
   if (a == b) return 0;
+  if (IsAsan()) __asan_verify_str(a);
+  if (IsAsan()) __asan_verify_str(b);
   if (((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {
     CheckEm:
-      if (IsAsan()) {
-        __asan_verify(a, i + 1);
-        __asan_verify(b, i + 1);
-      }
       if ((x = kToLower[a[i] & 255]) != (y = kToLower[b[i] & 255]) || !y) {
         return x - y;
       }
@@ -56,10 +54,6 @@ noasan int strcasecmp(const char *a, const char *b) {
     }
   } else {
     while ((x = kToLower[a[i] & 255]) == (y = kToLower[b[i] & 255]) && y) ++i;
-    if (IsAsan()) {
-      __asan_verify(a, i + 1);
-      __asan_verify(b, i + 1);
-    }
     return x - y;
   }
 }

@@ -2660,13 +2660,14 @@ size_t llama_copy_state_data(struct llama_context * ctx, uint8_t * dst) {
         rng_ss << ctx->rng;
 
         const size_t rng_size = rng_ss.str().size();
-        char rng_buf[LLAMA_MAX_RNG_STATE];
+        llama_buffer rng_buf;
+        rng_buf.resize(LLAMA_MAX_RNG_STATE);
 
-        memset(&rng_buf[0], 0, LLAMA_MAX_RNG_STATE);
-        memcpy(&rng_buf[0], rng_ss.str().data(), rng_ss.str().size());
+        memset(&rng_buf.addr[0], 0, LLAMA_MAX_RNG_STATE);
+        memcpy(&rng_buf.addr[0], rng_ss.str().data(), rng_ss.str().size());
 
         memcpy(out, &rng_size,   sizeof(rng_size));    out += sizeof(rng_size);
-        memcpy(out, &rng_buf[0], LLAMA_MAX_RNG_STATE); out += LLAMA_MAX_RNG_STATE;
+        memcpy(out, &rng_buf.addr[0], LLAMA_MAX_RNG_STATE); out += LLAMA_MAX_RNG_STATE;
     }
 
     // copy logits
@@ -2759,13 +2760,14 @@ size_t llama_set_state_data(struct llama_context * ctx, const uint8_t * src) {
     // set rng
     {
         size_t rng_size;
-        char   rng_buf[LLAMA_MAX_RNG_STATE];
+        llama_buffer rng_buf;
+        rng_buf.resize(LLAMA_MAX_RNG_STATE);
 
-        memcpy(&rng_size,   in, sizeof(rng_size));    in += sizeof(rng_size);
-        memcpy(&rng_buf[0], in, LLAMA_MAX_RNG_STATE); in += LLAMA_MAX_RNG_STATE;
+        memcpy(&rng_size,        in, sizeof(rng_size));    in += sizeof(rng_size);
+        memcpy(&rng_buf.addr[0], in, LLAMA_MAX_RNG_STATE); in += LLAMA_MAX_RNG_STATE;
 
         std::stringstream rng_ss;
-        rng_ss.str(std::string(&rng_buf[0], rng_size));
+        rng_ss.str(std::string((char *)&rng_buf.addr[0], rng_size));
         rng_ss >> ctx->rng;
 
         LLAMA_ASSERT(rng_ss.fail() == false);
