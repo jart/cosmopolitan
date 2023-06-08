@@ -25,7 +25,7 @@
 (require 'ld-script)
 (require 'make-mode)
 
-(setq cosmo-dbg-mode "zero")
+(setq cosmo-dbg-mode "asan")
 (setq c-doc-comment-style 'javadown)
 
 (add-to-list 'auto-mode-alist '("\\.x$" . c-mode))  ;; -aux-info

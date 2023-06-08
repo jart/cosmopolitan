@@ -165,15 +165,16 @@ void __asan_version_mismatch_check_v8(void) {
 }
 
 static bool __asan_once(void) {
-  bool want = false;
+  int want = false;
   static atomic_int once;
   return atomic_compare_exchange_strong_explicit(
       &once, &want, true, memory_order_relaxed, memory_order_relaxed);
 }
 
-#define __asan_unreachable()   \
-  do {                         \
-    for (;;) __builtin_trap(); \
+#define __asan_unreachable()                                      \
+  do {                                                            \
+    kprintf("%s:%d: __asan_unreachable()\n", __FILE__, __LINE__); \
+    for (;;) __builtin_trap();                                    \
   } while (0)
 
 static int __asan_bsf(uint64_t x) {
@@ -1309,16 +1310,16 @@ void __asan_report_load(uint8_t *addr, int size) {
   __asan_evil(addr, size, "load");
   if (!__vforked && __asan_once()) {
     __asan_report_memory_fault(addr, size, "load")();
-    __asan_unreachable();
   }
+  __asan_unreachable();
 }
 
 void __asan_report_store(uint8_t *addr, int size) {
   __asan_evil(addr, size, "store");
   if (!__vforked && __asan_once()) {
     __asan_report_memory_fault(addr, size, "store")();
-    __asan_unreachable();
   }
+  __asan_unreachable();
 }
 
 void __asan_poison_stack_memory(char *addr, size_t size) {

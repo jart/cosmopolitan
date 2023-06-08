@@ -128,6 +128,7 @@ endif
 #   - Larger binaries
 #
 ifeq ($(MODE), asan)
+ENABLE_FTRACE = 1
 CONFIG_CCFLAGS += $(BACKTRACES) -O2 -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=address
 TARGET_ARCH ?= -msse3
