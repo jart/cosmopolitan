@@ -9,9 +9,8 @@ COSMOPOLITAN_C_START_
  * @define (3*a + 3*b + 1*c) / 7
  * @see C1331()
  */
-static inline pureconst artificial unsigned char C331(unsigned char al,
-                                                      unsigned char bl,
-                                                      unsigned char cl) {
+__funline unsigned char C331(unsigned char al, unsigned char bl,
+                             unsigned char cl) {
   unsigned eax, ebx, ecx;
   eax = al;
   ebx = bl;

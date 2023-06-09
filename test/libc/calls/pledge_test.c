@@ -38,6 +38,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
@@ -352,6 +353,9 @@ TEST(pledge, inet_forbidsOtherSockets) {
     ASSERT_SYS(EPERM, -1, setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, &yes, 4));
     struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
     ASSERT_SYS(0, 0, bind(4, (struct sockaddr *)&sin, sizeof(sin)));
+    struct sockaddr_in6 sin6 = {.sin6_family = AF_INET6,
+                                .sin6_addr.s6_addr[15] = 1};
+    ASSERT_SYS(0, 0, bind(6, (struct sockaddr *)&sin6, sizeof(sin6)));
     uint32_t az = sizeof(sin);
     ASSERT_SYS(0, 0, getsockname(4, (struct sockaddr *)&sin, &az));
     ASSERT_SYS(0, 5,

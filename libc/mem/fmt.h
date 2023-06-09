@@ -8,7 +8,7 @@ int asprintf(char **, const char *, ...) printfesque(2)
     paramsnonnull((1, 2)) libcesque;
 int vasprintf(char **, const char *, va_list) paramsnonnull() libcesque;
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(COSMO) && !defined(__cplusplus)
 #define asprintf(SP, FMT, ...) (asprintf)(SP, PFLINK(FMT), ##__VA_ARGS__)
 #define vasprintf(SP, FMT, VA) (vasprintf)(SP, PFLINK(FMT), VA)
 #endif

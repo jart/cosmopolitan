@@ -6,9 +6,8 @@ COSMOPOLITAN_C_START_
 /**
  * 8-bit linear interpolation kernel.
  */
-static inline pureconst artificial unsigned char twixt8(unsigned char al,
-                                                        unsigned char bl,
-                                                        unsigned char p) {
+__funline unsigned char twixt8(unsigned char al, unsigned char bl,
+                               unsigned char p) {
   short bx;
   bx = bl;
   bx -= al;

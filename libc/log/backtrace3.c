@@ -45,9 +45,8 @@
  * @param st is open symbol table for current executable
  * @return -1 w/ errno if error happened
  */
-noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
-                                                   const struct StackFrame *bp,
-                                                   struct SymbolTable *st) {
+dontinstrument noasan int PrintBacktraceUsingSymbols(
+    int fd, const struct StackFrame *bp, struct SymbolTable *st) {
   bool ok;
   size_t gi;
   intptr_t addr;

@@ -38,8 +38,8 @@ static int bcmp_sse(const char *p, const char *q, size_t n) {
 }
 
 #ifdef __x86_64__
-microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
-                                             size_t n) {
+_Microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
+                                              size_t n) {
   xmm_t a, b, c, d;
   if (n > 32) {
     if (n >= 16 + 64) {

@@ -41,9 +41,9 @@ noasan static unsigned timingsafe_bcmp_sse(const char *p, const char *q,
 }
 
 #ifdef __x86_64__
-noasan static microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
-                                                               const char *q,
-                                                               size_t n) {
+noasan static _Microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
+                                                                const char *q,
+                                                                size_t n) {
   uint64_t w;
   xmm_t a = {0};
   if (n > 32) {

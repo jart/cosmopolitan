@@ -19,6 +19,6 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 
-noinstrument void _log_retrace(void) {
+dontinstrument void _log_retrace(void) {
   ftrace_enabled(+1);
 }

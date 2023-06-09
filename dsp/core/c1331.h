@@ -9,10 +9,8 @@
  * @see C161() afterward for superior sin(𝑥)/𝑥
  * @limit [0,255] → [0..2,044] → [0..255]
  */
-forceinline pureconst artificial unsigned char C1331(unsigned char al,
-                                                     unsigned char bl,
-                                                     unsigned char cl,
-                                                     unsigned char dl) {
+__funline unsigned char C1331(unsigned char al, unsigned char bl,
+                              unsigned char cl, unsigned char dl) {
   short ax, bx;
   bx = bl;
   bx += cl;

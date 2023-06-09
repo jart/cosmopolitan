@@ -27,7 +27,7 @@ static inline pureconst bool IsControl(int c) {
   return (0 <= c && c <= 0x1F) || (0x7F <= c && c <= 0x9F);
 }
 
-static noinstrument pureconst inline int ToUpper(int c) {
+static dontinstrument pureconst inline int ToUpper(int c) {
   return 'a' <= c && c <= 'z' ? 'A' - 'a' + c : c;
 }
 

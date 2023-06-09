@@ -208,13 +208,13 @@ typedef struct {
 #endif
 #endif
 
-#ifndef noinstrument
+#ifndef dontinstrument
 #if !defined(__STRICT_ANSI__) &&                    \
     (__has_attribute(__no_instrument_function__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 204)
-#define noinstrument __attribute__((__no_instrument_function__))
+#define dontinstrument __attribute__((__no_instrument_function__))
 #else
-#define noinstrument
+#define dontinstrument
 #endif
 #endif
 
@@ -485,32 +485,13 @@ typedef struct {
 #endif
 #endif
 
-#ifndef artificial
-#if !defined(__STRICT_ANSI__) &&        \
-    (__has_attribute(__artificial__) || \
-     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 403)
-#define artificial __attribute__((__artificial__))
-#else
-#define artificial
-#endif
-#endif
-
-#ifndef microarchitecture
+#ifndef _Microarchitecture
 #if !defined(__STRICT_ANSI__) &&    \
     (__has_attribute(__target__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 404)
-#define microarchitecture(march) __attribute__((__target__(march)))
+#define _Microarchitecture(march) __attribute__((__target__(march)))
 #else
-#define microarchitecture(march)
-#endif
-#endif
-
-#ifndef targetclones
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__target_clones__) || __GNUC__ >= 6)
-#define targetclones(archs) __attribute__((__target_clones__(archs)))
-#else
-#define targetclones(archs)
+#define _Microarchitecture(march)
 #endif
 #endif
 
@@ -629,8 +610,8 @@ void abort(void) wontreturn;
   } while (0)
 
 #ifndef __STRICT_ANSI__
-#define textstartup _Section(".text.startup") noinstrument
-#define textexit    _Section(".text.exit") noinstrument
+#define textstartup _Section(".text.startup") dontinstrument
+#define textexit    _Section(".text.exit") dontinstrument
 #define textreal    _Section(".text.real")
 #define texthead    _Section(".text.head")
 #define textwindows _Section(".text.windows")

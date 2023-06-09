@@ -12,9 +12,8 @@
  * @limit [0..255] → [-510..1,532] → [-127..383] → [0..255]
  * @see C1331()
  */
-forceinline pureconst artificial unsigned char C161(unsigned char al,
-                                                    unsigned char bl,
-                                                    unsigned char cl) {
+__funline unsigned char C161(unsigned char al, unsigned char bl,
+                             unsigned char cl) {
   short ax, bx, cx;
   ax = al;
   bx = bl;

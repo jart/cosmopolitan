@@ -22,8 +22,8 @@
 │                                                                              │
 │  Mark Adler    madler@alumni.caltech.edu                                     │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/runtime.h"
 #include "third_party/puff/puff.h"
+#include "libc/runtime/runtime.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -158,7 +158,7 @@ struct state {
  *   buffer, using shift right, and new bytes are appended to the top of the
  *   bit buffer, using shift left.
  */
-local noinstrument int bits(struct state *s, int need)
+local dontinstrument int bits(struct state *s, int need)
 {
     long val;           /* bit accumulator (can use up to 20 bits) */
 

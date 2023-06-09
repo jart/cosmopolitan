@@ -11,11 +11,11 @@
  *
  * @see round(), rint()
  */
-static inline pureconst artificial long ituround(double x) {
+__funline long ituround(double x) {
   return floor(x + .5);
 }
 
-static inline pureconst artificial int ituroundf(float x) {
+__funline int ituroundf(float x) {
   return floorf(x + .5f);
 }
 

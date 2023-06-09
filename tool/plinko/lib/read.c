@@ -32,7 +32,7 @@
 static int Read1(int);
 static int Read2(int);
 
-noinstrument int ReadSpaces(int fd) {
+dontinstrument int ReadSpaces(int fd) {
   size_t n;
   ssize_t rc;
   for (;;) {
@@ -64,13 +64,13 @@ noinstrument int ReadSpaces(int fd) {
   }
 }
 
-noinstrument int ReadByte(int fd) {
+dontinstrument int ReadByte(int fd) {
   int c;
   if ((c = g_buffer[fd][bp[fd]++] & 255)) return c;
   return ReadSpaces(fd);
 }
 
-noinstrument int ReadChar(int fd) {
+dontinstrument int ReadChar(int fd) {
   int b, a = dx;
   for (;;) {
     dx = ReadByte(fd);

@@ -8,10 +8,8 @@
  * @define (1*(a-128)+3*(a-128)+3*(a-128)+1*(a-128))/(1+3+3+1)+128
  * @see C1331(), Y420CbCr2RgbScale()
  */
-forceinline pureconst artificial signed char C1331S(signed char al,
-                                                    signed char bl,
-                                                    signed char cl,
-                                                    signed char dl) {
+__funline signed char C1331S(signed char al, signed char bl, signed char cl,
+                             signed char dl) {
   short ax, bx;
   bx = bl;
   bx += cl;

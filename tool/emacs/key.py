@@ -347,7 +347,7 @@ cosmo_kws = frozenset([
   "nodebuginfo",
   "dontdiscard",
   "dontinline",
-  "noinstrument",
+  "dontinstrument",
   "nointerpose",
   "dontoptimize",
   "noprune",

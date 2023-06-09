@@ -4,9 +4,7 @@
 #include "libc/macros.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-forceinline pureconst artificial signed char C161S(signed char al,
-                                                   signed char bl,
-                                                   signed char cl) {
+__funline signed char C161S(signed char al, signed char bl, signed char cl) {
   short ax, bx, cx;
   ax = al;
   bx = bl;

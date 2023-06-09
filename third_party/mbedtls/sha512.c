@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/sha512.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/literal.h"
 #include "libc/macros.internal.h"
@@ -27,7 +28,6 @@
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/sha512.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
@@ -419,12 +419,12 @@ cleanup:
     return( ret );
 }
 
-noinstrument int mbedtls_sha512_ret_384( const void *input, size_t ilen, unsigned char *output )
+dontinstrument int mbedtls_sha512_ret_384( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha512_ret( input, ilen, output, true );
 }
 
-noinstrument int mbedtls_sha512_ret_512( const void *input, size_t ilen, unsigned char *output )
+dontinstrument int mbedtls_sha512_ret_512( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha512_ret( input, ilen, output, false );
 }

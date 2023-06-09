@@ -44,7 +44,7 @@ static void bzero128(char *p, size_t n) {
 }
 
 #ifdef __x86_64__
-microarchitecture("avx") static void bzero_avx(char *p, size_t n) {
+_Microarchitecture("avx") static void bzero_avx(char *p, size_t n) {
   xmm_t v = {0};
   if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {

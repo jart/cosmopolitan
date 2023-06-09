@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef COSMO
 
 /**
  * @fileoverview builtin+preprocessor+linker tricks for printf/scanf.
@@ -59,5 +60,12 @@
 #pragma GCC diagnostic ignored "-Wformat-security"
 #endif /* __GNUC__ + 0 < 6 */
 
+#else
+STATIC_YOINK("strerror");
+STATIC_YOINK("strnwidth");
+STATIC_YOINK("__fmt_dtoa");
+STATIC_YOINK("strnwidth16");
+STATIC_YOINK("wcsnwidth");
+#endif /* COSMO */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_PFLINK_H_ */

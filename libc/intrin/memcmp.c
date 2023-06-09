@@ -57,9 +57,9 @@ static dontinline antiquity int memcmp_sse(const unsigned char *p,
   }
 }
 
-microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
-                                               const unsigned char *q,
-                                               size_t n) {
+_Microarchitecture("avx") static int memcmp_avx(const unsigned char *p,
+                                                const unsigned char *q,
+                                                size_t n) {
   uint64_t w;
   unsigned u;
   if (n > 32) {

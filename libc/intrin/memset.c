@@ -46,7 +46,7 @@ static void *memset_sse(char *p, char c, size_t n) {
 }
 
 #ifdef __x86_64__
-microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
+_Microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
   char *t;
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   if (IsAsan()) __asan_verify(p, n);

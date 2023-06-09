@@ -67,7 +67,7 @@ getcontext:
 
 	.end
 ////////////////////////////////////////////////////////////////////////////////
-noasan noubsan noinstrument int getcontext(ucontext_t *uc) {
+noasan noubsan dontinstrument int getcontext(ucontext_t *uc) {
   asm volatile("movaps\t%%xmm0,%0" : /* no outputs */ : "m"(uc->__fpustate.xmm[0]));
   asm volatile("movaps\t%%xmm1,%0" : /* no outputs */ : "m"(uc->__fpustate.xmm[1]));
   asm volatile("movaps\t%%xmm2,%0" : /* no outputs */ : "m"(uc->__fpustate.xmm[2]));

@@ -111,11 +111,11 @@ int WinThreadLaunch(void *arg,                 // rdi
 //   2. windows owns the stack memory right now
 // we need win32 raw imports because:
 //   1. generated thunks are function logged
-noasan noinstrument static textwindows wontreturn void  //
-WinThreadEntry(int rdi,                                 // rcx
-               int rsi,                                 // rdx
-               int rdx,                                 // r8
-               struct CloneArgs *wt) {                  // r9
+noasan dontinstrument static textwindows wontreturn void  //
+WinThreadEntry(int rdi,                                   // rcx
+               int rsi,                                   // rdx
+               int rdx,                                   // r8
+               struct CloneArgs *wt) {                    // r9
   int rc;
   if (wt->tls) __set_tls_win32(wt->tls);
   *wt->ctid = wt->tid;

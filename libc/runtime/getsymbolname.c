@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/symbols.internal.h"
 
-privileged noinstrument noasan noubsan char *__get_symbol_name(
+privileged dontinstrument noasan noubsan char *__get_symbol_name(
     struct SymbolTable *t, int s) {
   /* asan runtime depends on this function */
   if (t && s != -1) {

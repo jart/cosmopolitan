@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/sha256.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
@@ -26,7 +27,6 @@
 #include "third_party/mbedtls/endian.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
-#include "third_party/mbedtls/sha256.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
@@ -476,12 +476,12 @@ exit:
     return( ret );
 }
 
-noinstrument int mbedtls_sha256_ret_224( const void *input, size_t ilen, unsigned char *output )
+dontinstrument int mbedtls_sha256_ret_224( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha256_ret( input, ilen, output, true );
 }
 
-noinstrument int mbedtls_sha256_ret_256( const void *input, size_t ilen, unsigned char *output )
+dontinstrument int mbedtls_sha256_ret_256( const void *input, size_t ilen, unsigned char *output )
 {
     return mbedtls_sha256_ret( input, ilen, output, false );
 }

@@ -9,7 +9,7 @@ char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1))
 char *xvasprintf(const char *, va_list) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(COSMO) && !defined(__cplusplus)
 #define xasprintf(FMT, ...) (xasprintf)(PFLINK(FMT), ##__VA_ARGS__)
 #define xvasprintf(FMT, VA) (xvasprintf)(PFLINK(FMT), VA)
 #endif

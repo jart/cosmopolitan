@@ -19,6 +19,6 @@
 #include "libc/errno.h"
 #include "libc/log/log.h"
 
-noinstrument int _log_get_errno(void) {
+dontinstrument int _log_get_errno(void) {
   return errno;
 }

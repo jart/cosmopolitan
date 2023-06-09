@@ -7,8 +7,7 @@
  *
  * @define (a + b) / 2
  */
-static inline pureconst artificial unsigned char C11(unsigned char al,
-                                                     unsigned char bl) {
+__funline unsigned char C11(unsigned char al, unsigned char bl) {
   short ax;
   ax = al;
   ax += bl;

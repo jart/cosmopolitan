@@ -60,7 +60,7 @@ C1  =  0x155553e1053a42.0p-57, /*  0.0416666233237390631894 */
 C2  = -0x16c087e80f1e27.0p-62, /* -0.00138867637746099294692 */
 C3  =  0x199342e0ee5069.0p-68; /*  0.0000243904487962774090654 */
 
-noinstrument float __cosdf(double x)
+dontinstrument float __cosdf(double x)
 {
 	double_t r, w, z;
 

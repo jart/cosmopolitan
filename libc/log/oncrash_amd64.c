@@ -254,10 +254,10 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   kprintf("\n");
 }
 
-static wontreturn relegated noinstrument void __minicrash(int sig,
-                                                          struct siginfo *si,
-                                                          ucontext_t *ctx,
-                                                          const char *kind) {
+static wontreturn relegated dontinstrument void __minicrash(int sig,
+                                                            struct siginfo *si,
+                                                            ucontext_t *ctx,
+                                                            const char *kind) {
   kprintf("\n"
           "\n"
           "CRASHED %s WITH %G\n"

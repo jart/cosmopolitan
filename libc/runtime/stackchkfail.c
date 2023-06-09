@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 
-privileged noasan noinstrument void __stack_chk_fail(void) {
+void __stack_chk_fail(void) {
   kprintf("stack smashed\n");
   __builtin_trap();
 }

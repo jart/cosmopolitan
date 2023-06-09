@@ -312,8 +312,8 @@ static unsigned combinecolors(unsigned char bf[1u << MC][2],
     return r;                                                     \
   }
 
-ADJUDICATE(adjudicate_avx2, microarchitecture("avx2,fma"))
-ADJUDICATE(adjudicate_avx, microarchitecture("avx"))
+ADJUDICATE(adjudicate_avx2, _Microarchitecture("avx2,fma"))
+ADJUDICATE(adjudicate_avx, _Microarchitecture("avx"))
 ADJUDICATE(adjudicate_default, )
 
 static float (*adjudicate_hook)(unsigned, unsigned, unsigned,

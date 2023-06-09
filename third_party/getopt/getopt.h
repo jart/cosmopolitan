@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GETOPT_GETOPT_H_
 #define COSMOPOLITAN_THIRD_PARTY_GETOPT_GETOPT_H_
+#ifdef COSMO
 
 #define no_argument       0
 #define required_argument 1
@@ -27,4 +28,5 @@ int getopt_long_only(int, char *const *, const char *, const struct option *,
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMO */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GETOPT_GETOPT_H_ */

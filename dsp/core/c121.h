@@ -3,9 +3,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-forceinline pureconst artificial unsigned char C121(unsigned char al,
-                                                    unsigned char bl,
-                                                    unsigned char cl) {
+__funline unsigned char C121(unsigned char al, unsigned char bl,
+                             unsigned char cl) {
   unsigned short ax, bx;
   ax = al;
   ax += bl;

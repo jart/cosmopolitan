@@ -166,7 +166,7 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(COSMO) && !defined(__cplusplus)
 /* clang-format off */
 #define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
 #define vprintf(FMT, VA)     (vprintf)(PFLINK(FMT), VA)
