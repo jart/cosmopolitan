@@ -27,5 +27,6 @@
 #define IN_OPEN          0x20
 #define IN_Q_OVERFLOW    0x4000
 #define IN_UNMOUNT       0x2000
+#define IN_CLASSA_NSHIFT 24
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_IN_H_ */

@@ -401,6 +401,7 @@ SECTIONS {
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
     *(.data .data.*)
+    *(.PyRuntime) /* for python */
     *(.subrs) /* for emacs */
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
     . += . > 0 ? CODE_GRANULE : 0;

@@ -5,6 +5,7 @@
 #include "libc/sock/struct/ip_mreq.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr6.h"
+#include "libc/sysv/consts/in.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/inet6.h"
 #include "libc/sysv/consts/ip.h"
