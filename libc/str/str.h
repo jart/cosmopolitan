@@ -210,8 +210,6 @@ int strerror_r(int, char *, size_t)
 dontthrow nocallback;
 int strerror_wr(int, uint32_t, char *, size_t)
 dontthrow nocallback;
-char *_strerrno(int) nosideeffect libcesque;
-char *_strerdoc(int) nosideeffect libcesque;
 int __xpg_strerror_r(int, char *, size_t)
 dontthrow nocallback;
 

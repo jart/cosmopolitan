@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
 

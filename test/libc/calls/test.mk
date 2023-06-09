@@ -65,12 +65,50 @@ o/$(MODE)/test/libc/calls/calls.pkg:					\
 o/$(MODE)/test/libc/calls/%.com.dbg:					\
 		$(TEST_LIBC_CALLS_DEPS)					\
 		o/$(MODE)/test/libc/calls/%.o				\
-		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
-		o/$(MODE)/test/libc/calls/life-classic.com.zip.o	\
-		o/$(MODE)/test/libc/calls/tiny64.elf.zip.o		\
+		o/$(MODE)/test/libc/calls/calls.pkg			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/stat_test.com.dbg:				\
+		$(TEST_LIBC_CALLS_DEPS)					\
+		o/$(MODE)/test/libc/calls/stat_test.o			\
+		o/$(MODE)/third_party/python/Lib/test/tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt.zip.o	\
+		o/$(MODE)/test/libc/calls/calls.pkg			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/unveil_test.com.dbg:				\
+		$(TEST_LIBC_CALLS_DEPS)					\
+		o/$(MODE)/test/libc/calls/unveil_test.o			\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
-		o/$(MODE)/third_party/python/Lib/test/tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt.zip.o	\
+		o/$(MODE)/test/libc/calls/calls.pkg			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/pledge_test.com.dbg:				\
+		$(TEST_LIBC_CALLS_DEPS)					\
+		o/$(MODE)/test/libc/calls/pledge_test.o			\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
+		o/$(MODE)/test/libc/calls/calls.pkg			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/execve_test.com.dbg:				\
+		$(TEST_LIBC_CALLS_DEPS)					\
+		o/$(MODE)/test/libc/calls/execve_test.o			\
+		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/test/libc/calls/calls.pkg			\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\

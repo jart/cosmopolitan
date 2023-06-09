@@ -17,15 +17,3 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/magnumstrs.internal.h"
-
-/**
- * Converts errno value to symbolic name.
- * @return non-null rodata string or null if not found
- */
-privileged char *_strerrno(int x) {
-  if (x) {
-    return GetMagnumStr(kErrnoNames, x);
-  } else {
-    return 0;
-  }
-}

@@ -26,6 +26,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
@@ -522,37 +523,13 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           goto EmitChar;
 
         case 'm': {
-          int unixerr;
-          uint32_t winerr;
-          unixerr = tib ? tib->tib_errno : __errno;
-          winerr = 0;
-          if (IsWindows()) {
-            if (type == 1 && _weaken(__imp_WSAGetLastError)) {
-              winerr = (*_weaken(__imp_WSAGetLastError))();
-            } else if (_weaken(__imp_GetLastError)) {
-              winerr = (*_weaken(__imp_GetLastError))();
-            }
-          }
-          if (!unixerr && sign == ' ') {
+          int e;
+          if (!(e = tib ? tib->tib_errno : __errno) && sign == ' ') {
             break;
-          } else if (_weaken(strerror_wr) &&
-                     !_weaken(strerror_wr)(unixerr, winerr, z, sizeof(z))) {
-            s = z;
-            type = 0;
-            goto FormatString;
           } else {
-            if (p + 7 <= e) {
-              *p++ = ' ';
-              *p++ = 'e';
-              *p++ = 'r';
-              *p++ = 'r';
-              *p++ = 'n';
-              *p++ = 'o';
-              *p++ = '=';
-            }
             type = 0;
-            x = unixerr;
-            goto FormatDecimal;
+            s = _strerrno(e);
+            goto FormatString;
           }
         }
 

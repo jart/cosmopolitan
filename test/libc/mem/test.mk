@@ -60,14 +60,12 @@ o/$(MODE)/test/libc/mem/%.com.dbg:				\
 		$(TEST_LIBC_MEM_DEPS)				\
 		o/$(MODE)/test/libc/mem/%.o			\
 		o/$(MODE)/test/libc/mem/mem.pkg			\
-		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
-		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o	\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/mem/prog/sock.o:					\
+o/$(MODE)/test/libc/mem/prog/sock.o:				\
 		test/libc/mem/prog/sock.c			\
 		libc/errno.h					\
 		libc/sock/sock.h				\

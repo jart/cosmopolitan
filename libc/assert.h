@@ -44,9 +44,6 @@ void __assert_fail(const char *, const char *, int) _Hide relegated;
   })
 #endif
 
-#ifdef __GNUC__
-#endif
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ASSERT_H_ */

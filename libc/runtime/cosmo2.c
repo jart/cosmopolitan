@@ -135,6 +135,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   _mmi.p->y = (uintptr_t)(GetStackAddr() + (GetStackSize() - FRAMESIZE)) >> 16;
   _mmi.p->size = GetStackSize();
   _mmi.p->prot = PROT_READ | PROT_WRITE;
+  __virtualmax = -1;
 
 #if 0
 #if IsAsan()

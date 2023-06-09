@@ -9,6 +9,7 @@
 #endif
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"

@@ -19,6 +19,6 @@
 #include "libc/runtime/runtime.h"
 #ifndef __x86_64__
 
-size_t __virtualmax = -1;
+size_t __virtualmax;
 
 #endif /* __x86_64__ */

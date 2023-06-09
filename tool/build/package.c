@@ -25,6 +25,7 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bswap.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
@@ -165,7 +166,7 @@ nullterminated() static void Print(int fd, const char *s, ...) {
 
 static wontreturn void SysExit(const char *path, const char *func) {
   const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  if (!(errstr = _strerrno(errno))) errstr = "EUNKNOWN";
   Print(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }

@@ -22,6 +22,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"

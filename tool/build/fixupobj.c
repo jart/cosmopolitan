@@ -27,6 +27,7 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"

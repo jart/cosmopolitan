@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"

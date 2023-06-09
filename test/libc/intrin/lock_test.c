@@ -21,6 +21,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"

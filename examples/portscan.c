@@ -13,6 +13,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"

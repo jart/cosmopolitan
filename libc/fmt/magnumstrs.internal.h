@@ -28,8 +28,41 @@ _Hide extern const struct MagnumStr kSockOptnames[];
 _Hide extern const struct MagnumStr kTcpOptnames[];
 _Hide extern const struct MagnumStr kPollNames[];
 
-char *GetMagnumStr(const struct MagnumStr *, int);
 char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
+
+__funline char *GetMagnumStr(const struct MagnumStr *ms, int x) {
+  int i;
+  for (i = 0; ms[i].x != MAGNUM_TERMINATOR; ++i) {
+    if (x == MAGNUM_NUMBER(ms, i)) {
+      return MAGNUM_STRING(ms, i);
+    }
+  }
+  return 0;
+}
+
+/**
+ * Converts errno value to descriptive sentence.
+ * @return non-null rodata string or null if not found
+ */
+__funline char *_strerdoc(int x) {
+  if (x) {
+    return GetMagnumStr(kErrnoDocs, x);
+  } else {
+    return 0;
+  }
+}
+
+/**
+ * Converts errno value to symbolic name.
+ * @return non-null rodata string or null if not found
+ */
+__funline char *_strerrno(int x) {
+  if (x) {
+    return GetMagnumStr(kErrnoNames, x);
+  } else {
+    return 0;
+  }
+}
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

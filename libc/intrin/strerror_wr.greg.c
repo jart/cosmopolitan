@@ -19,6 +19,7 @@
 #define ShouldUseMsabiAttribute() 1
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/formatmessageflags.h"
@@ -32,7 +33,7 @@
  * @param err is error number or zero if unknown
  * @return 0 on success, or error code
  */
-privileged int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
+int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
   /* kprintf() weakly depends on this function */
   int c, n;
   bool wanting;

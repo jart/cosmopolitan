@@ -29,6 +29,7 @@
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/log/bsd.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

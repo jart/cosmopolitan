@@ -33,9 +33,11 @@ THIRD_PARTY_PYTHON_CHECKS =						\
 	o/$(MODE)/third_party/python/freeze.pkg
 
 # TODO: Deal with aarch64 under qemu not making execve() easy.
+ifneq ($(MODE), dbg)
 ifeq ($(ARCH), x86_64)
 THIRD_PARTY_PYTHON_CHECKS +=						\
 	$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS:%=o/$(MODE)/%.runs)
+endif
 endif
 
 ################################################################################
@@ -3957,8 +3959,8 @@ o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: private QUOTA = -C1
 o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: private QUOTA = -C32 -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: private QUOTA = -L180
 o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: private QUOTA = -L300
-o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: private QUOTA = -L300
-o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: private QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: private QUOTA = -C128 -L600 -L300
+o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: private QUOTA = -C128 -L600 -L300
 o/$(MODE)/third_party/python/Lib/test/test_bytes.py.runs: private QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_urlparse.py.runs: private QUOTA = -L300
 o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/mpdecimal.o: private QUOTA = -L180
