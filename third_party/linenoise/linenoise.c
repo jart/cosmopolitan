@@ -591,7 +591,7 @@ static size_t GetMonospaceWidth(const char *p, size_t n, char *out_haswides) {
         }
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   if (out_haswides) {
@@ -2262,7 +2262,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
       }
     }
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

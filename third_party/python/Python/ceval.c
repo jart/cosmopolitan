@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_LOCAL_AGGRESSIVE
+#include "third_party/python/Include/ceval.h"
 #include "libc/errno.h"
 #include "libc/intrin/likely.h"
 #include "libc/runtime/stack.h"
@@ -12,7 +13,6 @@
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/cellobject.h"
-#include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/classobject.h"
 #include "third_party/python/Include/code.h"
 #include "third_party/python/Include/descrobject.h"
@@ -3623,7 +3623,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 
         /* This should never be reached. Every opcode should end with DISPATCH()
            or goto error. */
-        unreachable;
+        __builtin_unreachable();
 
 error:
         COLD_LABEL;

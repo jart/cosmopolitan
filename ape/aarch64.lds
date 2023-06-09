@@ -12,7 +12,7 @@ OUTPUT_FORMAT("elf64-littleaarch64",
 
 SECTIONS {
 
-  PROVIDE(__executable_start = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL));
+  __executable_start = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL);
   . = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) + SIZEOF_HEADERS;
 
   .interp            : { *(.interp) }
@@ -40,12 +40,13 @@ SECTIONS {
 
   .rela.plt : {
     *(.rela.plt)
-    PROVIDE_HIDDEN(__rela_iplt_start = .);
+    __rela_iplt_start = .;
     *(.rela.iplt)
-    PROVIDE_HIDDEN(__rela_iplt_end = .);
+    __rela_iplt_end = .;
   }
 
   .init : {
+    *(.start)
     KEEP(*(.initprologue))
     KEEP(*(SORT_NONE(.init)))
     KEEP(*(.initepilogue))
@@ -71,13 +72,10 @@ SECTIONS {
     KEEP(*(SORT_NONE(.fini)))
   } =0x1f2003d5
 
-  . = ALIGN(__privileged_end > __privileged_start ? 0x4000 : 1);
-
-  .privileged : {
-    PROVIDE_HIDDEN(__privileged_start = .);
+  .privileged ALIGN(CONSTANT(MAXPAGESIZE)) : {
+    __privileged_start = .;
     *(.privileged*)
-    PROVIDE_HIDDEN(__privileged_end = .);
-  }
+  } =0x1f2003d6
 
   .rodata : {
     KEEP(*(.rodata.pytab.0));
@@ -90,7 +88,7 @@ SECTIONS {
   }
 
   .comment : {
-    PROVIDE_HIDDEN(kLegalNotices = .);
+    __comment_start = .;
     KEEP(*(.comment))
     BYTE(0);
   }
@@ -117,11 +115,11 @@ SECTIONS {
     *(.exception_ranges*)
   }
 
-  PROVIDE(__etext = .);
-  PROVIDE(_etext = .);
+  __etext = .;
+  _etext = .;
   PROVIDE(etext = .);
 
-  . = ALIGN(0x4000);
+  . = ALIGN(CONSTANT(MAXPAGESIZE));
   . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
 
   .eh_frame : ONLY_IF_RW {
@@ -142,38 +140,37 @@ SECTIONS {
   }
 
   .tdata : {
-    PROVIDE_HIDDEN(_tdata_start = .);
-    PROVIDE_HIDDEN(__tdata_start = .);
+    _tdata_start = .;
+    __tdata_start = .;
     *(.tdata .tdata.* .gnu.linkonce.td.*)
-    PROVIDE_HIDDEN(_tdata_end = .);
+    _tdata_end = .;
   }
 
   .tbss : {
-    PROVIDE_HIDDEN(_tbss_start = .);
+    _tbss_start = .;
     *(.tbss .tbss.* .gnu.linkonce.tb.*)
     *(.tcommon)
-    PROVIDE_HIDDEN(_tbss_end = .);
+    _tbss_end = .;
   }
 
   .init_array : {
-    PROVIDE_HIDDEN(__init_array_start = .);
+    __init_array_start = .;
     KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
     KEEP(*(.init_array EXCLUDE_FILE(*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
-    PROVIDE_HIDDEN(__init_array_end = .);
+    __init_array_end = .;
   }
 
   .fini_array : {
-    PROVIDE_HIDDEN(__fini_array_start = .);
+    __fini_array_start = .;
     KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
     KEEP(*(.fini_array EXCLUDE_FILE(*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
-    PROVIDE_HIDDEN(__fini_array_end = .);
+    __fini_array_end = .;
   }
 
   .data.rel.ro : {
+    KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
     *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*)
     *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*)
-    . = ALIGN(__SIZEOF_POINTER__);
-    KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
   }
 
   .dynamic : {
@@ -193,8 +190,7 @@ SECTIONS {
   }
 
   .data : {
-    PROVIDE(__data_start = .);
-    . = ALIGN(__SIZEOF_POINTER__);
+    __data_start = .;
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     *(.data .data.* .gnu.linkonce.d.*)
     KEEP(*(SORT_BY_NAME(.sort.data.*)))
@@ -269,27 +265,24 @@ SECTIONS {
     *(.gnu_debuglink)
     *(.text.windows)
     *(.gnu.lto_*)
+    *(.eh_frame)
     *(.idata.*)
     *(.head)
   }
 }
 
-HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
-HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
-                            ROUNDDOWN(__privileged_start, PAGESIZE)));
-
-PROVIDE(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
-PROVIDE_HIDDEN(_tls_size = _tbss_end - _tdata_start);
-PROVIDE_HIDDEN(_tdata_size = _tdata_end - _tdata_start);
-PROVIDE_HIDDEN(_tbss_size = _tbss_end - _tbss_start);
-PROVIDE_HIDDEN(_tbss_offset = _tbss_start - _tdata_start);
-PROVIDE_HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
-PROVIDE_HIDDEN(_tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)));
-PROVIDE_HIDDEN(__zip_start_rva = DEFINED(__zip_start) ? __zip_start - __executable_start : 0);
+ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE;
+_tls_size = _tbss_end - _tdata_start;
+_tdata_size = _tdata_end - _tdata_start;
+_tbss_size = _tbss_end - _tbss_start;
+_tbss_offset = _tbss_start - _tdata_start;
+_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start);
+_tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss));
+__zip_start_rva = DEFINED(__zip_start) ? __zip_start - __executable_start : 0;
 
 /* ZIP End of Central Directory header */
-#define ZIPCONST(NAME, VAL) HIDDEN(NAME = DEFINED(__zip_start) ? VAL : 0);
-ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
+#define ZIPCONST(NAME, VAL) NAME = DEFINED(__zip_start) ? VAL : 0;
+ZIPCONST(v_zip_cdoffset, __zip_start - __executable_start);
 ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
 ASSERT(v_zip_cdirsize % kZipCdirHdrLinkableSize == 0, "bad zip cdir");
 ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);

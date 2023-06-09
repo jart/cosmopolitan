@@ -2188,7 +2188,7 @@ static bool OpenZip(bool force) {
         } else {
           b = m;
         }
-        if ((d = GetZipCdir(b, n))) {
+        if ((d = GetZipEocd(b, n, 0))) {
           if (zmap) {
             LOGIFNEG1(munmap(zmap, zbase + zsize - zmap));
           }
@@ -2196,8 +2196,8 @@ static bool OpenZip(bool force) {
           zbase = b;
           zsize = n;
           zcdir = d;
-          DCHECK(IsZipCdir32(zbase, zsize, zcdir - zbase) ||
-                 IsZipCdir64(zbase, zsize, zcdir - zbase));
+          DCHECK(IsZipEocd32(zbase, zsize, zcdir - zbase) == kZipOk ||
+                 IsZipEocd64(zbase, zsize, zcdir - zbase) == kZipOk);
           memcpy(&zst, &st, sizeof(st));
           IndexAssets();
           return true;
@@ -3331,7 +3331,7 @@ static const char *LuaCheckPath(lua_State *L, int idx, size_t *pathlen) {
     if (!IsReasonablePath(path, *pathlen)) {
       WARNF("(srvr) bad path %`'.*s", *pathlen, path);
       luaL_argerror(L, idx, "bad path");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   return path;
@@ -3347,7 +3347,7 @@ static const char *LuaCheckHost(lua_State *L, int idx, size_t *hostlen) {
     if (!IsAcceptableHost(host, *hostlen)) {
       WARNF("(srvr) bad host %`'.*s", *hostlen, host);
       luaL_argerror(L, idx, "bad host");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   return host;
@@ -3357,7 +3357,7 @@ static void OnlyCallFromInitLua(lua_State *L, const char *api) {
   if (isinitialized) {
     luaL_error(L, "%s() should be called %s", api,
                "from the global scope of .init.lua");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -3365,7 +3365,7 @@ static void OnlyCallFromMainProcess(lua_State *L, const char *api) {
   if (__isworker) {
     luaL_error(L, "%s() should be called %s", api,
                "from .init.lua or the repl");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -3373,7 +3373,7 @@ static void OnlyCallDuringConnection(lua_State *L, const char *api) {
   if (!ishandlingconnection) {
     luaL_error(L, "%s() can only be called %s", api,
                "while handling a connection");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -3381,7 +3381,7 @@ static void OnlyCallDuringRequest(lua_State *L, const char *api) {
   if (!ishandlingrequest) {
     luaL_error(L, "%s() can only be called %s", api,
                "while handling a request");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -3432,7 +3432,7 @@ static int LuaServeRedirect(lua_State *L) {
   code = luaL_checkinteger(L, 1);
   if (!(300 <= code && code <= 399)) {
     luaL_argerror(L, 1, "bad status code");
-    unreachable;
+    __builtin_unreachable();
   }
   location = luaL_checklstring(L, 2, &loclen);
   if (cpm.msg.version < 10) {
@@ -3441,7 +3441,7 @@ static int LuaServeRedirect(lua_State *L) {
   } else {
     if (!(eval = EncodeHttpHeaderValue(location, loclen, 0))) {
       luaL_argerror(L, 2, "invalid location");
-      unreachable;
+      __builtin_unreachable();
     }
     VERBOSEF("(rsp) %d redirect to %`'s", code, location);
     cpm.luaheaderp =
@@ -3489,11 +3489,11 @@ static int LuaProgramTrustedIp(lua_State *L) {
   cidr = luaL_optinteger(L, 2, 32);
   if (!(0 <= ip && ip <= 0xffffffff)) {
     luaL_argerror(L, 1, "ip out of range");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(0 <= cidr && cidr <= 32)) {
     luaL_argerror(L, 2, "cidr should be 0 .. 32");
-    unreachable;
+    __builtin_unreachable();
   }
   ip32 = ip;
   imask = ~(0xffffffffu << (32 - cidr));
@@ -3501,7 +3501,7 @@ static int LuaProgramTrustedIp(lua_State *L) {
     luaL_argerror(L, 1,
                   "ip address isn't the network address; "
                   "it has bits masked by the cidr");
-    unreachable;
+    __builtin_unreachable();
   }
   ProgramTrustedIp(ip, cidr);
   return 0;
@@ -3512,7 +3512,7 @@ static int LuaIsTrusted(lua_State *L) {
   ip = luaL_checkinteger(L, 1);
   if (!(0 <= ip && ip <= 0xffffffff)) {
     luaL_argerror(L, 1, "ip out of range");
-    unreachable;
+    __builtin_unreachable();
   }
   lua_pushboolean(L, IsTrustedIp(ip));
   return 1;
@@ -3527,7 +3527,7 @@ static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
   code = luaL_checkinteger(L, 1);
   if (!(100 <= code && code <= 999)) {
     luaL_argerror(L, 1, "bad status code");
-    unreachable;
+    __builtin_unreachable();
   }
   if (lua_isnoneornil(L, 2)) {
     cpm.luaheaderp = R(code, GetHttpReason(code));
@@ -3538,7 +3538,7 @@ static int LuaRespond(lua_State *L, char *R(unsigned, const char *)) {
       free(p);
     } else {
       luaL_argerror(L, 2, "invalid");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   return 0;
@@ -4234,12 +4234,12 @@ static int LuaSetHeader(lua_State *L) {
   if ((h = GetHttpHeader(key, keylen)) == -1) {
     if (!IsValidHttpToken(key, keylen)) {
       luaL_argerror(L, 1, "invalid");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   if (!(eval = EncodeHttpHeaderValue(val, vallen, &evallen))) {
     luaL_argerror(L, 2, "invalid");
-    unreachable;
+    __builtin_unreachable();
   }
   p = GetLuaResponse();
   while (p - hdrbuf.p + keylen + 2 + evallen + 2 + 512 > hdrbuf.n) {
@@ -4313,11 +4313,11 @@ static int LuaSetCookie(lua_State *L) {
 
   if (!IsValidHttpToken(key, keylen)) {
     luaL_argerror(L, 1, "invalid");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!IsValidCookieValue(val, vallen)) {
     luaL_argerror(L, 2, "invalid");
-    unreachable;
+    __builtin_unreachable();
   }
 
   ishostpref = keylen > strlen(hostpref) &&
@@ -4329,7 +4329,7 @@ static int LuaSetCookie(lua_State *L) {
     luaL_argerror(
         L, 1,
         _gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
-    unreachable;
+    __builtin_unreachable();
   }
 
   appends(&buf, key);
@@ -4346,7 +4346,7 @@ static int LuaSetCookie(lua_State *L) {
         expires = lua_tostring(L, -1);
         if (!ParseHttpDateTime(expires, -1)) {
           luaL_argerror(L, 3, "invalid data format in Expires");
-          unreachable;
+          __builtin_unreachable();
         }
       }
       appends(&buf, "; Expires=");
@@ -4587,7 +4587,7 @@ static int LuaProgramSslPresharedKey(lua_State *L) {
   p2 = luaL_checklstring(L, 2, &n2);
   if (!n1 || n1 > MBEDTLS_PSK_MAX_LEN || !n2) {
     luaL_argerror(L, 1, "bad preshared key length");
-    unreachable;
+    __builtin_unreachable();
   }
   psk.key = memcpy(malloc(n1), p1, n1);
   psk.key_len = n1;
@@ -4613,7 +4613,7 @@ static int LuaProgramSslCiphersuite(lua_State *L) {
   OnlyCallFromInitLua(L, "ProgramSslCiphersuite");
   if (!(suite = GetCipherSuite(luaL_checkstring(L, 1)))) {
     luaL_argerror(L, 1, "unsupported or unknown ciphersuite");
-    unreachable;
+    __builtin_unreachable();
   }
   suites.p = realloc(suites.p, (++suites.n + 1) * sizeof(*suites.p));
   suites.p[suites.n - 1] = suite->id;
@@ -4813,7 +4813,7 @@ static int LuaBlackhole(lua_State *L) {
   ip = luaL_checkinteger(L, 1);
   if (!(0 <= ip && ip <= 0xffffffff)) {
     luaL_argerror(L, 1, "ip out of range");
-    unreachable;
+    __builtin_unreachable();
   }
   lua_pushboolean(L, Blackhole(ip));
   return 1;
@@ -4845,7 +4845,7 @@ static int LuaAcquireToken(lua_State *L) {
   uint32_t ip;
   if (!tokenbucket.cidr) {
     luaL_error(L, "ProgramTokenBucket() needs to be called first");
-    unreachable;
+    __builtin_unreachable();
   }
   GetClientAddr(&ip, 0);
   lua_pushinteger(L, AcquireToken(tokenbucket.b, luaL_optinteger(L, 1, ip),
@@ -4857,7 +4857,7 @@ static int LuaCountTokens(lua_State *L) {
   uint32_t ip;
   if (!tokenbucket.cidr) {
     luaL_error(L, "ProgramTokenBucket() needs to be called first");
-    unreachable;
+    __builtin_unreachable();
   }
   GetClientAddr(&ip, 0);
   lua_pushinteger(L, CountTokens(tokenbucket.b, luaL_optinteger(L, 1, ip),
@@ -4868,7 +4868,7 @@ static int LuaCountTokens(lua_State *L) {
 static int LuaProgramTokenBucket(lua_State *L) {
   if (tokenbucket.cidr) {
     luaL_error(L, "ProgramTokenBucket() can only be called once");
-    unreachable;
+    __builtin_unreachable();
   }
   lua_Number replenish = luaL_optnumber(L, 1, 1);  // per second
   lua_Integer cidr = luaL_optinteger(L, 2, 24);
@@ -4877,31 +4877,31 @@ static int LuaProgramTokenBucket(lua_State *L) {
   lua_Integer ban = luaL_optinteger(L, 5, MIN(ignore / 10, 1));
   if (!(1 / 3600. <= replenish && replenish <= 1e6)) {
     luaL_argerror(L, 1, "require 1/3600 <= replenish <= 1e6");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(8 <= cidr && cidr <= 32)) {
     luaL_argerror(L, 2, "require 8 <= cidr <= 32");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(-1 <= reject && reject <= 126)) {
     luaL_argerror(L, 3, "require -1 <= reject <= 126");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(-1 <= ignore && ignore <= 126)) {
     luaL_argerror(L, 4, "require -1 <= ignore <= 126");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(-1 <= ban && ban <= 126)) {
     luaL_argerror(L, 5, "require -1 <= ban <= 126");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(ignore <= reject)) {
     luaL_argerror(L, 4, "require ignore <= reject");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!(ban <= ignore)) {
     luaL_argerror(L, 5, "require ban <= ignore");
-    unreachable;
+    __builtin_unreachable();
   }
   VERBOSEF("(token) deploying %,ld buckets "
            "(one for every %ld ips) "

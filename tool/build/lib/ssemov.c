@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/ssemov.h"
 #include "libc/intrin/pmovmskb.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/address.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
-#include "tool/build/lib/ssemov.h"
 #include "tool/build/lib/throw.h"
 
 static void MovdquVdqWdq(struct Machine *m, uint32_t rde) {
@@ -314,7 +314,7 @@ void OpMovWpsVps(struct Machine *m, uint32_t rde) {
       MovssWpsVps(m, rde);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -404,7 +404,7 @@ void OpMov0f10(struct Machine *m, uint32_t rde) {
       MovssVpsWps(m, rde);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -443,7 +443,7 @@ void OpMov0f12(struct Machine *m, uint32_t rde) {
       MovsldupVqWq(m, rde);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

@@ -36,6 +36,6 @@ char *sys_xinet_ntop(int af, const void *src) {
   } else {
     if (_weaken(__die)) _weaken(__die)();
     abort();
-    unreachable;
+    __builtin_unreachable();
   }
 }

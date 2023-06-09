@@ -71,7 +71,7 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Shr64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     case BSU_SAL:
     case BSU_SHL:
@@ -85,7 +85,7 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Shl64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     case BSU_SAR:
       switch (w) {
@@ -98,7 +98,7 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Sar64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     case BSU_ROL:
       switch (w) {
@@ -111,7 +111,7 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Rol64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     case BSU_ROR:
       switch (w) {
@@ -124,7 +124,7 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Ror64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     case BSU_RCR:
       switch (w) {
@@ -137,7 +137,7 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Rcr64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     case BSU_RCL:
       switch (w) {
@@ -150,10 +150,10 @@ int64_t Bsu(int w, int h, uint64_t x, uint64_t y, uint32_t *f) {
         case 3:
           return Rcl64(x, y, f);
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/xed/x86.h"
 #include "tool/build/lib/address.h"
+#include "third_party/xed/x86.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
@@ -44,7 +44,7 @@ uint8_t *GetSegment(struct Machine *m, uint32_t rde, int s) {
     case 7:
       OpUd(m, rde);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -69,7 +69,7 @@ uint64_t AddressSi(struct Machine *m, uint32_t rde) {
     case XED_MODE_LEGACY:
       return DataSegment(m, rde, Read32(m->si));
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -83,6 +83,6 @@ uint64_t AddressDi(struct Machine *m, uint32_t rde) {
     case XED_MODE_LEGACY:
       return i + Read32(m->di);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }

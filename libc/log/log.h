@@ -83,7 +83,7 @@ extern unsigned __log_level; /* log level for runtime check */
   do {                                                                \
     if (!_LOG_TINY) _log_untrace();                                   \
     ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    unreachable;                                                      \
+    __builtin_unreachable();                                          \
   } while (0)
 
 #define ERRORF(FMT, ...)                   \

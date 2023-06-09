@@ -31,7 +31,7 @@ void __assert_fail(const char *, const char *, int) _Hide relegated;
 #define _unassert(x)                 \
   ({                                 \
     if (__builtin_expect(!(x), 0)) { \
-      unreachable;                   \
+      __builtin_unreachable();       \
     }                                \
     (void)0;                         \
   })

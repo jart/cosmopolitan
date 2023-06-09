@@ -86,7 +86,7 @@ void dzd(const char *s, void *p, size_t n, size_t z) {
     } else if (z == 4) {
       x = ((const uint32_t *)p)[i];
     } else {
-      unreachable;
+      __builtin_unreachable();
     }
     appendd(&r, t, zleb64(t, x - y) - t);
     y = x;

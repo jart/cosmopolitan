@@ -4,9 +4,9 @@
 #define FetchHeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), FetchHeaderData(H), FetchHeaderLength(H))
 
-#define kaNONE 0
-#define kaOPEN 1
-#define kaKEEP 2
+#define kaNONE  0
+#define kaOPEN  1
+#define kaKEEP  2
 #define kaCLOSE 3
 
 static int LuaFetch(lua_State *L) {
@@ -66,7 +66,7 @@ static int LuaFetch(lua_State *L) {
     lua_getfield(L, 2, "keepalive");
     if (!lua_isnil(L, -1)) {
       if (lua_istable(L, -1)) {
-        keepalive = kaOPEN; // will be updated based on host later
+        keepalive = kaOPEN;  // will be updated based on host later
       } else if (lua_isboolean(L, -1)) {
         keepalive = lua_toboolean(L, -1) ? kaOPEN : kaNONE;
         if (keepalive) {
@@ -74,8 +74,9 @@ static int LuaFetch(lua_State *L) {
           lua_setfield(L, 2, "keepalive");
         }
       } else {
-        return luaL_argerror(L, 2, "invalid keepalive value;"
-                                   " boolean or table expected");
+        return luaL_argerror(L, 2,
+                             "invalid keepalive value;"
+                             " boolean or table expected");
       }
     }
     lua_getfield(L, 2, "headers");
@@ -180,18 +181,18 @@ static int LuaFetch(lua_State *L) {
   // check if hosthdr is in keepalive table
   if (keepalive && lua_istable(L, 2)) {
     lua_getfield(L, 2, "keepalive");
-    lua_getfield(L, -1, "close"); // aft: -2=tbl, -1=close
-    lua_getfield(L, -2, hosthdr); // aft: -3=tbl, -2=close, -1=hosthdr
+    lua_getfield(L, -1, "close");  // aft: -2=tbl, -1=close
+    lua_getfield(L, -2, hosthdr);  // aft: -3=tbl, -2=close, -1=hosthdr
     if (lua_isinteger(L, -1)) {
       sock = lua_tointeger(L, -1);
       keepalive = lua_toboolean(L, -2) ? kaCLOSE : kaKEEP;
       // remove host mapping, as the socket is ether being closed
       // (so needs to be removed) or will be added after the request is done;
       // this also helps to keep the mapping clean in case of an error
-      lua_pushnil(L); // aft: -4=tbl, -3=close, -2=hosthdr, -1=nil
+      lua_pushnil(L);  // aft: -4=tbl, -3=close, -2=hosthdr, -1=nil
       lua_setfield(L, -4, hosthdr);
-      VERBOSEF("(ftch) reuse socket %d for host %s (and %s)",
-               sock, hosthdr, keepalive == kaCLOSE ? "close" : "keep");
+      VERBOSEF("(ftch) reuse socket %d for host %s (and %s)", sock, hosthdr,
+               keepalive == kaCLOSE ? "close" : "keep");
     }
     lua_settop(L, 2);  // drop all added elements to keep the stack balanced
   }
@@ -221,8 +222,9 @@ static int LuaFetch(lua_State *L) {
           "%s%s"
           "\r\n",
           method, _gc(EncodeUrl(&url, 0)), hosthdr,
-          (keepalive == kaNONE || keepalive == kaCLOSE) ? "close"
-            : (connhdr ? connhdr : "keep-alive"),
+          (keepalive == kaNONE || keepalive == kaCLOSE)
+              ? "close"
+              : (connhdr ? connhdr : "keep-alive"),
           agenthdr, conlenhdr, headers ? headers : "");
   appendd(&request, body, bodylen);
   requestlen = appendz(request).i;
@@ -242,8 +244,9 @@ static int LuaFetch(lua_State *L) {
      * Connect to server.
      */
     ip = ntohl(((struct sockaddr_in *)addr->ai_addr)->sin_addr.s_addr);
-    DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24, ip >> 16,
-           ip >> 8, ip, ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
+    DEBUGF("(ftch) client connecting %hhu.%hhu.%hhu.%hhu:%d", ip >> 24,
+           ip >> 16, ip >> 8, ip,
+           ntohs(((struct sockaddr_in *)addr->ai_addr)->sin_port));
     CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
                                     addr->ai_protocol, false, &timeout)));
     rc = connect(sock, addr->ai_addr, addr->ai_addrlen);
@@ -440,7 +443,7 @@ static int LuaFetch(lua_State *L) {
         if (rc) goto Finished;
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 
@@ -452,9 +455,8 @@ Finished:
 
   // check if the server has requested to close the connection
   // https://www.rfc-editor.org/rfc/rfc2616#section-14.10
-  if (keepalive && keepalive != kaCLOSE
-                && FetchHasHeader(kHttpConnection)
-                && FetchHeaderEqualCase(kHttpConnection, "close")) {
+  if (keepalive && keepalive != kaCLOSE && FetchHasHeader(kHttpConnection) &&
+      FetchHeaderEqualCase(kHttpConnection, "close")) {
     VERBOSEF("(ftch) close keepalive on server request");
     keepalive = kaCLOSE;
   }

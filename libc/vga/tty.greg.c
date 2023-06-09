@@ -1299,7 +1299,7 @@ ssize_t _TtyWrite(struct Tty *tty, const void *data, size_t n) {
         }
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   TtyUpdate(tty);

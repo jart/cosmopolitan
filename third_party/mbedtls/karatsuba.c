@@ -155,7 +155,7 @@ void Karatsuba(uint64_t *C, uint64_t *A, uint64_t *B, size_t n, uint64_t *K) {
       c += Add(C + n / 2, C + n / 2, K + n, n);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
   for (i = n / 2 + n; c && i < n + n; i++) {
     t = C[i];

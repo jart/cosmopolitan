@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/string.h"
 #include "libc/assert.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -29,7 +30,6 @@
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
-#include "tool/build/lib/string.h"
 #include "tool/build/lib/throw.h"
 
 static uint64_t ReadInt(uint8_t p[8], unsigned long w) {
@@ -43,7 +43,7 @@ static uint64_t ReadInt(uint8_t p[8], unsigned long w) {
     case 3:
       return Read64(p);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -62,7 +62,7 @@ static void WriteInt(uint8_t p[8], uint64_t x, unsigned long w) {
       Write64(p, x);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -78,7 +78,7 @@ static void AddDi(struct Machine *m, uint32_t rde, uint64_t x) {
       Write16(m->di, Read16(m->di) + x);
       return;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -94,7 +94,7 @@ static void AddSi(struct Machine *m, uint32_t rde, uint64_t x) {
       Write16(m->si, Read16(m->si) + x);
       return;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -107,7 +107,7 @@ static uint64_t ReadCx(struct Machine *m, uint32_t rde) {
     case XED_MODE_REAL:
       return Read16(m->cx);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

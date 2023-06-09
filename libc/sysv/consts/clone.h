@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_CLONE_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_CLONE_H_
+#ifdef COSMO
 
 #define CSIGNAL              0x000000ff
 #define CLONE_VM             0x00000100
@@ -27,4 +28,5 @@
 #define CLONE_NEWNET         0x40000000
 #define CLONE_IO             0x80000000
 
+#endif /* COSMO */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_CLONE_H_ */

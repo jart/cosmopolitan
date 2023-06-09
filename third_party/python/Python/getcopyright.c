@@ -4,8 +4,8 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/weaken.h"
 #include "libc/stdio/append.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/pylifecycle.h"
@@ -22,19 +22,18 @@ All Rights Reserved.\\n\
 Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.\\n\
 All Rights Reserved.\"");
 
-extern const char kLegalNotices[];
-
 const char *
 Py_GetCopyright(void)
 {
-    const char *p;
-    static bool once;
     static char *res;
-    if (_cmpxchg(&once, 0, 1)) {
-        appends(&res, "");
-        for (p = *_weaken(kLegalNotices); *p; p += strlen(p) + 1) {
-            appends(&res, p);
+    if (!res) {
+        char *r = 0;
+        const char *p;
+        appends(&r, "");
+        for (p = __comment_start; *p; p += strlen(p) + 1) {
+            appends(&r, p);
         }
+        res = r;
     }
     return res;
 }

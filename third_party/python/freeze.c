@@ -48,6 +48,8 @@ main(int argc, char *argv[])
     PyObject *code = NULL, *marshalled = NULL;
     int is_bootstrap = 1;
 
+    ShowCrashReports();
+
     if (argc == 2 && !strcmp(argv[1], "-n")) return 0;
 
     if (argc != 3) {

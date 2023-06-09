@@ -210,7 +210,7 @@ const char *zerr(int rc) {
     case Z_VERSION_ERROR:
       return "zlib version mismatch!";
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

@@ -144,7 +144,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
 #endif
 
   // initialize file system
-  InitializeFileDescriptors();
+  __init_fds();
 
   // set helpful globals
   __argc = argc;

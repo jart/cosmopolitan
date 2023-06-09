@@ -21,7 +21,7 @@
 //	Decentralized section for test fixture registration.
 //
 //	@see	ape/ape.lds
-	.section .piro.relo.sort.fixture.1,"aw",@nobits
+	.section .piro.relo.sort.fixture.1,"aw",@progbits
 	.type	__fixture_start,@object
 	.type	__fixture_end,@object
 	.globl	__fixture_start,__fixture_end
@@ -34,7 +34,7 @@ __fixture_start:
 	...
 	decentralized content
 	...
-	*/.section .piro.relo.sort.fixture.3,"aw",@nobits
+	*/.section .piro.relo.sort.fixture.3,"aw",@progbits
 __fixture_end:
 	.quad	0
 	.overrun

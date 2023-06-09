@@ -543,10 +543,10 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
               goto StringFailureWithReason;
 
             default:
-              unreachable;
+              __builtin_unreachable();
           }
         }
-        unreachable;
+        __builtin_unreachable();
       StringFailureWithReason:
         luaL_pushresultsize(&b, 0);
         lua_pop(L, 1);

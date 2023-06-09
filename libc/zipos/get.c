@@ -64,7 +64,7 @@ static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
 struct Zipos *__zipos_get(void) {
   int fd = -1;
   ssize_t size;
-  const char *msg;
+  int err, msg;
   static bool once;
   struct Zipos *res;
   const char *progpath;
@@ -88,24 +88,25 @@ struct Zipos *__zipos_get(void) {
         } else {
           base = map;
         }
-        if ((cdir = GetZipCdir(base, size)) && _cmpxchg(&zipos.map, 0, base)) {
+        if ((cdir = GetZipEocd(base, size, &err)) &&
+            _cmpxchg(&zipos.map, 0, base)) {
           __zipos_munmap_unneeded(base, cdir, map);
           zipos.cdir = cdir;
-          msg = "ok";
+          msg = kZipOk;
         } else {
           munmap(map, size);
-          msg = "eocd not found";
+          msg = !cdir ? err : kZipErrorRaceCondition;
         }
       } else {
-        msg = "map failed";
+        msg = kZipErrorMapFailed;
       }
       close(fd);
     } else {
-      msg = "open failed";
+      msg = kZipErrorOpenFailed;
     }
     once = true;
     __zipos_unlock();
-    STRACE("__zipos_get(%#s) → %s% m", progpath, msg);
+    STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
   }
   if (zipos.cdir) {
     res = &zipos;

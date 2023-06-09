@@ -1498,7 +1498,7 @@ static reg_errcode_t tre_add_tags(tre_mem_t mem, tre_stack_t *stack,
       }
 
       default:
-        unreachable;
+        __builtin_unreachable();
 
     } /* end switch(symbol) */
   }   /* end while(tre_stack_num_objects(stack) > bottom) */
@@ -1649,7 +1649,7 @@ static reg_errcode_t tre_copy_ast(tre_mem_t mem, tre_stack_t *stack,
             break;
           }
           default:
-            unreachable;
+            __builtin_unreachable();
         }
         break;
     }
@@ -1724,7 +1724,7 @@ static reg_errcode_t tre_expand_ast(tre_mem_t mem, tre_stack_t *stack,
             break;
           }
           default:
-            unreachable;
+            __builtin_unreachable();
         }
         break;
       case EXPAND_AFTER_ITER: {
@@ -1798,7 +1798,7 @@ static reg_errcode_t tre_expand_ast(tre_mem_t mem, tre_stack_t *stack,
         break;
       }
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 
@@ -1960,7 +1960,7 @@ static reg_errcode_t tre_match_empty(tre_stack_t *stack, tre_ast_node_t *node,
           case EMPTY:
             break;
           default:
-            unreachable;
+            __builtin_unreachable();
         }
         break;
 
@@ -1974,7 +1974,7 @@ static reg_errcode_t tre_match_empty(tre_stack_t *stack, tre_ast_node_t *node,
         else if (uni->right->nullable)
           STACK_PUSHX(stack, voidptr, uni->right)
         else
-          unreachable;
+          __builtin_unreachable();
         break;
 
       case CATENATION:
@@ -1994,7 +1994,7 @@ static reg_errcode_t tre_match_empty(tre_stack_t *stack, tre_ast_node_t *node,
         break;
 
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 
@@ -2182,7 +2182,7 @@ static reg_errcode_t tre_compute_nfl(tre_mem_t mem, tre_stack_t *stack,
       }
 
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 

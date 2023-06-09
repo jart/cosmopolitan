@@ -48,6 +48,11 @@ PYTHON_PROVIDE("gc.isenabled");
 PYTHON_PROVIDE("gc.set_debug");
 PYTHON_PROVIDE("gc.set_threshold");
 
+#ifdef unreachable
+#define __unreachable unreachable
+#undef unreachable
+#endif
+
 /*
 
   Reference Cycle Garbage Collection
@@ -72,11 +77,6 @@ PYTHON_PROVIDE("gc.set_threshold");
   function.
 
 */
-
-#ifdef unreachable
-#define __unreachable unreachable
-#undef unreachable
-#endif
 
 /* Get an object's GC head */
 #define AS_GC(o) ((PyGC_Head *)(o)-1)

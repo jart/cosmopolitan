@@ -4,12 +4,12 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/ast.h"
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "third_party/python/Include/Python-ast.h"
 #include "third_party/python/Include/abstract.h"
-#include "third_party/python/Include/ast.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/compile.h"
 #include "third_party/python/Include/complexobject.h"
@@ -741,7 +741,7 @@ num_stmts(const node *n)
             Py_FatalError(buf);
         }
     }
-    unreachable;
+    __builtin_unreachable();
 }
 
 /* Transform the CST rooted at node * to the appropriate AST

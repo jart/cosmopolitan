@@ -4,8 +4,8 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/likely.h"
 #include "libc/log/countbranch.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
@@ -720,7 +720,7 @@ lookdict_index(PyDictKeysObject *k, Py_hash_t hash, Py_ssize_t index)
             return DKIX_EMPTY;
         }
     }
-    unreachable;
+    __builtin_unreachable();
 }
 
 /*
@@ -858,7 +858,7 @@ top:
             }
         }
     }
-    unreachable;
+    __builtin_unreachable();
 }
 
 /* Specialized version for string-only keys */
@@ -931,7 +931,7 @@ lookdict_unicode(PyDictObject *mp, PyObject *key,
             return ix;
         }
     }
-    unreachable;
+    __builtin_unreachable();
 }
 
 /* Faster version of lookdict_unicode when it is known that no <dummy> keys
@@ -995,7 +995,7 @@ lookdict_unicode_nodummy(PyDictObject *restrict mp, PyObject *restrict key,
             return ix;
         }
     }
-    unreachable;
+    __builtin_unreachable();
 }
 
 /* Version of lookdict for split tables.
@@ -1061,7 +1061,7 @@ lookdict_split(PyDictObject *mp, PyObject *key,
             return ix;
         }
     }
-    unreachable;
+    __builtin_unreachable();
 }
 
 int

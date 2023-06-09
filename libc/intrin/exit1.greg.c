@@ -67,11 +67,11 @@ privileged wontreturn void _Exit1(int rc) {
                    : /* no outputs */
                    : "a"(__NR_exit_group), "D"(rc)
                    : "rcx", "r11", "memory");
-      unreachable;
+      __builtin_unreachable();
     }
   } else if (IsWindows()) {
     __imp_ExitThread(rc);
-    unreachable;
+    __builtin_unreachable();
   }
   notpossible;
 #elif defined(__aarch64__)

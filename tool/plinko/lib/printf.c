@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/plinko/lib/printf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
@@ -24,7 +25,6 @@
 #include "tool/plinko/lib/char.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/print.h"
-#include "tool/plinko/lib/printf.h"
 
 static inline long GetVarInt(va_list va, signed char t) {
   if (t <= 0) return va_arg(va, int);
@@ -118,7 +118,7 @@ int Vfnprintf(const char *f, va_list va, int fd, int n) {
           }
           break;
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     EmitFormatByte:
       PrintChar(fd, c);

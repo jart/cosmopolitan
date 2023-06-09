@@ -146,7 +146,7 @@ struct Asmdown *ParseAsmdown(const char *code, size_t size) {
         }
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   return ad;

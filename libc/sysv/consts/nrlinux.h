@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_
+#ifdef COSMO
 
 #ifdef __x86_64__
 
@@ -656,4 +657,5 @@
 
 #endif /* __x86_64__ */
 
+#endif /* COSMO */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_ */

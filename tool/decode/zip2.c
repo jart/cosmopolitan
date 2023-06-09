@@ -255,7 +255,7 @@ void ShowLocalFileHeader(uint8_t *lf, uint16_t idx) {
 void DisassembleZip(const char *path, uint8_t *p, size_t n) {
   size_t i, records;
   uint8_t *eocd, *cdir, *cf, *lf;
-  CHECK_NOTNULL((eocd = GetZipCdir(p, n)));
+  CHECK_NOTNULL((eocd = GetZipEocd(p, n, 0)));
   records = GetZipCdirRecords(eocd);
   cdir = p + GetZipCdirOffset(eocd);
   for (i = 0, cf = cdir; i < records; ++i, cf += ZIP_CFILE_HDRSIZE(cf)) {

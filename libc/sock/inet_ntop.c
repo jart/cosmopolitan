@@ -78,7 +78,7 @@ const char *inet_ntop(int af, const void *src, char *dst, uint32_t size) {
               *p++ = ':';
               break;
             default:
-              unreachable;
+              __builtin_unreachable();
           }
           a = (ip[i + 0] & 0xF0) >> 4;
           b = (ip[i + 0] & 0x0F) >> 0;

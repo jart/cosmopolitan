@@ -121,7 +121,7 @@ noasan bool _isutf8(const void *data, size_t size) {
           return false;  // missing cont
         }
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   return true;

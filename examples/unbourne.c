@@ -570,9 +570,9 @@
 #define CD_PHYSICAL 1
 #define CD_PRINT    2
 
-#define EMPTY         -2
-#define CLOSED        -1
-#define PIPESIZE      4096
+#define EMPTY    -2
+#define CLOSED   -1
+#define PIPESIZE 4096
 
 #define rootshell (!shlvl)
 
@@ -626,9 +626,12 @@
 #define is_digit(c)   ((unsigned)((c) - '0') <= 9)
 #define is_in_name(c) ((c) == '_' || isalnum((unsigned char)(c)))
 #define is_name(c)    ((c) == '_' || isalpha((unsigned char)(c)))
-#define is_special(c) ((is_type + SYNBASE)[(signed char)(c)] & (ISSPECL | ISDIGIT))
+#define is_special(c) \
+  ((is_type + SYNBASE)[(signed char)(c)] & (ISSPECL | ISDIGIT))
 
-#define uninitialized_var(x) x = x /* suppress uninitialized warning w/o code */
+#define uninitialized_var(x)                       \
+  x = x /* suppress uninitialized warning w/o code \
+         */
 
 /*
  * Shell variables.
@@ -1101,10 +1104,11 @@ static struct tblentry *cmdtable[CMDTABLESIZE];
 static struct Var *vartab[VTABSIZE];
 static union node *redirnode;
 static union yystype yylval;
-static unsigned closed_redirs; /* Bit map of currently closed file descriptors. */
+static unsigned
+    closed_redirs; /* Bit map of currently closed file descriptors. */
 static unsigned expdir_max;
-static unsigned njobs; /* size of array */
-static volatile sig_atomic_t gotsigchld;  /* received SIGCHLD */
+static unsigned njobs;                   /* size of array */
+static volatile sig_atomic_t gotsigchld; /* received SIGCHLD */
 static volatile sig_atomic_t intpending;
 static volatile sig_atomic_t pending_sig; /* last pending signal */
 static struct alias *atab[ATABSIZE];
@@ -1137,19 +1141,22 @@ static struct output *out2 = &errout;
 
 /* Array indicating which tokens mark the end of a list */
 static const char tokendlist[] = {
-    1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
 };
 
 static const char *const tokname[] = {
-    "end of file", "newline",   "\";\"",     "\"&\"",   "\"&&\"",   "\"||\"",
-    "\"|\"",       "\"(\"",     "\")\"",     "\";;\"",  "\"`\"",    "redirection",
-    "word",        "\"!\"",     "\"case\"",  "\"do\"",  "\"done\"", "\"elif\"",
-    "\"else\"",    "\"esac\"",  "\"fi\"",    "\"for\"", "\"if\"",   "\"in\"",
-    "\"then\"",    "\"until\"", "\"while\"", "\"{\"",   "\"}\"",
+    "end of file", "newline",     "\";\"",    "\"&\"",    "\"&&\"",
+    "\"||\"",      "\"|\"",       "\"(\"",    "\")\"",    "\";;\"",
+    "\"`\"",       "redirection", "word",     "\"!\"",    "\"case\"",
+    "\"do\"",      "\"done\"",    "\"elif\"", "\"else\"", "\"esac\"",
+    "\"fi\"",      "\"for\"",     "\"if\"",   "\"in\"",   "\"then\"",
+    "\"until\"",   "\"while\"",   "\"{\"",    "\"}\"",
 };
 
-static const char *const parsekwd[] = {"!",   "case", "do", "done", "elif",  "else",  "esac", "fi",
-                                       "for", "if",   "in", "then", "until", "while", "{",    "}"};
+static const char *const parsekwd[] = {
+    "!",   "case", "do", "done", "elif",  "else",  "esac", "fi",
+    "for", "if",   "in", "then", "until", "while", "{",    "}"};
 
 static const char defpathvar[] =
     "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
@@ -1161,7 +1168,8 @@ static const char *const optnames[NOPTS] = {
 };
 
 static const char optletters[NOPTS] = {
-    'e', 'f', 'I', 'i', 'm', 'n', 's', 'x', 'v', 'V', 'E', 'C', 'a', 'b', 'u', 0, 0,
+    'e', 'f', 'I', 'i', 'm', 'n', 's', 'x', 'v',
+    'V', 'E', 'C', 'a', 'b', 'u', 0,   0,
 };
 
 static const char spcstr[] = " ";
@@ -1169,7 +1177,8 @@ static const char snlfmt[] = "%s\n";
 static const char qchars[] = {CTLESC, CTLQUOTEMARK, 0};
 static const char illnum[] = "Illegal number: %s";
 static const char homestr[] = "HOME";
-static const char dolatstr[] = {CTLQUOTEMARK, CTLVAR, VSNORMAL, '@', '=', CTLQUOTEMARK, '\0'};
+static const char dolatstr[] = {CTLQUOTEMARK, CTLVAR,       VSNORMAL, '@',
+                                '=',          CTLQUOTEMARK, '\0'};
 
 /* TODO(jart): What's wrong with varinit? */
 #if defined(__GNUC__) || defined(__llvm__)
@@ -1584,7 +1593,8 @@ static int pstrcmp(const void *a, const void *b) {
 /*
  * Find a string is in a sorted array.
  */
-static const char *const *findstring(const char *s, const char *const *array, unsigned nmemb) {
+static const char *const *findstring(const char *s, const char *const *array,
+                                     unsigned nmemb) {
   return bsearch(&s, array, nmemb, sizeof(const char *), pstrcmp);
 }
 
@@ -1667,8 +1677,9 @@ static pointer ckrealloc(pointer p, unsigned nbytes) {
     if (l > m) (p) = makestrspace(l, q); \
     0;                                   \
   })
-#define USTPUTC(c, p)        (*p++ = (c))
-#define STACKSTRNUL(p)       ((p) == sstrend ? (p = growstackstr(), *p = '\0') : (*p = '\0'))
+#define USTPUTC(c, p) (*p++ = (c))
+#define STACKSTRNUL(p) \
+  ((p) == sstrend ? (p = growstackstr(), *p = '\0') : (*p = '\0'))
 #define STUNPUTC(p)          (--p)
 #define STTOPC(p)            p[-1]
 #define STADJUST(amount, p)  (p += (amount))
@@ -1768,7 +1779,8 @@ static void flushall(void) {
                 via malloc, rather than doing a fork and reading the
                 output of the command via a pipe. */
 
-static int xvsnprintf(char *outbuf, unsigned length, const char *fmt, va_list ap) {
+static int xvsnprintf(char *outbuf, unsigned length, const char *fmt,
+                      va_list ap) {
   int ret;
   INTOFF;
   ret = vsnprintf(outbuf, length, fmt, ap);
@@ -1833,7 +1845,8 @@ static void outcslow(int c, struct output *dest) {
   outmem(&buf, 1, dest);
 }
 
-printfesque(3) static int fmtstr(char *outbuf, unsigned length, const char *fmt, ...) {
+printfesque(3) static int fmtstr(char *outbuf, unsigned length, const char *fmt,
+                                 ...) {
   va_list ap;
   int ret;
   va_start(ap, fmt);
@@ -1954,14 +1967,16 @@ wontreturn static void yyerror(const char *s) {
 wontreturn static void synexpect(int token) {
   char msg[64];
   if (token >= 0) {
-    fmtstr(msg, 64, "%s unexpected (expecting %s)", tokname[lasttoken], tokname[token]);
+    fmtstr(msg, 64, "%s unexpected (expecting %s)", tokname[lasttoken],
+           tokname[token]);
   } else {
     fmtstr(msg, 64, "%s unexpected", tokname[lasttoken]);
   }
   synerror(msg);
 }
 
-wontreturn static void varunset(const char *end, const char *var_, const char *umsg, int varflags) {
+wontreturn static void varunset(const char *end, const char *var_,
+                                const char *umsg, int varflags) {
   const char *msg;
   const char *tail;
   tail = nullstr;
@@ -2105,7 +2120,8 @@ static char *stputs(const char *s, char *p) {
   return stnputs(s, strlen(s), p);
 }
 
-static char *nodesavestr(s) char *s;
+static char *nodesavestr(s)
+char *s;
 {
   char *rtn = funcstring;
   funcstring = stpcpy(funcstring, s) + 1;
@@ -2194,7 +2210,8 @@ static struct alias *freealias(struct alias *);
 static struct alias *lookupalias(const char *, int);
 static struct funcnode *copyfunc(union node *);
 static struct job *makejob(union node *, int);
-static struct job *vforkexec(union node *n, char **argv, const char *path, int idx);
+static struct job *vforkexec(union node *n, char **argv, const char *path,
+                             int idx);
 static struct localvar_list *pushlocalvars(int push);
 static struct nodelist *copynodelist(struct nodelist *);
 static struct redirtab *pushredir(union node *redir);
@@ -2777,12 +2794,14 @@ static int64_t binop2(int64_t a, int op, int prec, int noeval) {
     val = yylval;
     b = primary(token, &val, shlex(), noeval);
     op2 = last_token;
-    if (op2 >= ARITH_BINOP_MIN && op2 < ARITH_BINOP_MAX && higher_prec(op2, op)) {
+    if (op2 >= ARITH_BINOP_MIN && op2 < ARITH_BINOP_MAX &&
+        higher_prec(op2, op)) {
       b = binop2(b, op2, arith_prec(op), noeval);
       op2 = last_token;
     }
     a = noeval ? b : do_binop(op, a, b);
-    if (op2 < ARITH_BINOP_MIN || op2 >= ARITH_BINOP_MAX || arith_prec(op2) >= prec) {
+    if (op2 < ARITH_BINOP_MIN || op2 >= ARITH_BINOP_MAX ||
+        arith_prec(op2) >= prec) {
       return a;
     }
     op = op2;
@@ -2842,7 +2861,10 @@ static int64_t assignment(int var_, int noeval) {
   result = assignment(shlex(), noeval);
   if (noeval) return result;
   return setvarint(
-      val.name, (op == ARITH_ASS ? result : do_binop(op - 11, lookupvarint(val.name), result)), 0);
+      val.name,
+      (op == ARITH_ASS ? result
+                       : do_binop(op - 11, lookupvarint(val.name), result)),
+      0);
 }
 
 static int64_t arith(const char *s) {
@@ -2926,7 +2948,7 @@ step6:
   goto docd;
 err:
   sh_error("can't cd to %s", dest);
-  unreachable;
+  __builtin_unreachable();
 out:
   if (flags & CD_PRINT) out1fmt(snlfmt, curdir);
   return 0;
@@ -3154,7 +3176,8 @@ static int evaltree(union node *n, int flags) {
     case NOR:
     case NSEMI:
       isor = n->type - NAND;
-      status = evaltree(n->nbinary.ch1, (flags | ((isor >> 1) - 1)) & EV_TESTED);
+      status =
+          evaltree(n->nbinary.ch1, (flags | ((isor >> 1) - 1)) & EV_TESTED);
       if ((!status) == isor || evalskip) break;
       n = n->nbinary.ch2;
     evaln:
@@ -3489,17 +3512,18 @@ static void evalbackcmd(union node *n, struct backcmd *result) {
     }
     ifsfree();
     evaltreenr(n, EV_EXIT);
-    unreachable;
+    __builtin_unreachable();
   }
   close(pip[1]);
   result->fd = pip[0];
   result->jp = jp;
 out:
-  TRACE(("evalbackcmd done: fd=%d buf=0x%x nleft=%d jp=0x%x\n", result->fd, result->buf,
-         result->nleft, result->jp));
+  TRACE(("evalbackcmd done: fd=%d buf=0x%x nleft=%d jp=0x%x\n", result->fd,
+         result->buf, result->nleft, result->jp));
 }
 
-static struct strlist *fill_arglist(struct arglist *arglist, union node **argpp) {
+static struct strlist *fill_arglist(struct arglist *arglist,
+                                    union node **argpp) {
   struct strlist **lastp = arglist->lastp;
   union node *argp;
   while ((argp = *argpp)) {
@@ -3510,7 +3534,8 @@ static struct strlist *fill_arglist(struct arglist *arglist, union node **argpp)
   return *lastp;
 }
 
-static int parse_command_args(struct arglist *arglist, union node **argpp, const char **path) {
+static int parse_command_args(struct arglist *arglist, union node **argpp,
+                              const char **path) {
   struct strlist *sp = arglist->list;
   char *cp, c;
   for (;;) {
@@ -3587,7 +3612,8 @@ static int evalcommand(union node *cmd, int flags) {
   if ((osp = fill_arglist(&arglist, &argp))) {
     int pseudovarflag = 0;
     for (;;) {
-      find_command(arglist.list->text, &cmdentry, cmd_flag | DO_REGBLTIN, pathval());
+      find_command(arglist.list->text, &cmdentry, cmd_flag | DO_REGBLTIN,
+                   pathval());
       vlocal++;
       /* implement bltin and command here */
       if (cmdentry.cmdtype != CMDBUILTIN) break;
@@ -3602,9 +3628,10 @@ static int evalcommand(union node *cmd, int flags) {
       if (!cmd_flag) break;
     }
     for (; argp; argp = argp->narg.next) {
-      expandarg(
-          argp, &arglist,
-          (pseudovarflag && isassignment(argp->narg.text)) ? EXP_VARTILDE : EXP_FULL | EXP_TILDE);
+      expandarg(argp, &arglist,
+                (pseudovarflag && isassignment(argp->narg.text))
+                    ? EXP_VARTILDE
+                    : EXP_FULL | EXP_TILDE);
     }
     for (sp = arglist.list; sp; sp = sp->next) argc++;
     if (execcmd && argc > 1) vflags = VEXPORT;
@@ -3654,7 +3681,8 @@ static int evalcommand(union node *cmd, int flags) {
     outcslow('\n', out);
   }
   /* Now locate the command. */
-  if (cmdentry.cmdtype != CMDBUILTIN || !(cmdentry.u.cmd->flags & BUILTIN_REGULAR)) {
+  if (cmdentry.cmdtype != CMDBUILTIN ||
+      !(cmdentry.u.cmd->flags & BUILTIN_REGULAR)) {
     path = unlikely(path != NULL) ? path : pathval(); /* wut */
     find_command(argv[0], &cmdentry, cmd_flag | DO_ERR, path);
   }
@@ -3672,7 +3700,7 @@ static int evalcommand(union node *cmd, int flags) {
         break;
       }
       shellexec(argv, path, cmdentry.u.index);
-      unreachable;
+      __builtin_unreachable();
     case CMDBUILTIN:
       if (evalbltin(cmdentry.u.cmd, argc, argv, flags) &&
           !(exception == EXERROR && spclbltin <= 0)) {
@@ -3701,7 +3729,8 @@ out:
   return status;
 }
 
-static int evalbltin(const struct builtincmd *cmd, int argc, char **argv, int flags) {
+static int evalbltin(const struct builtincmd *cmd, int argc, char **argv,
+                     int flags) {
   char *volatile savecmdname;
   struct jmploc *volatile savehandler;
   struct jmploc jmploc;
@@ -3909,9 +3938,12 @@ wontreturn static void shellexec(char **argv, const char *path, int idx) {
     }
   }
   /* Map to POSIX errors */
-  exerrno = (e == ELOOP || e == ENAMETOOLONG || e == ENOENT || e == ENOTDIR) ? 127 : 126;
+  exerrno = (e == ELOOP || e == ENAMETOOLONG || e == ENOENT || e == ENOTDIR)
+                ? 127
+                : 126;
   exitstatus = exerrno;
-  TRACE(("shellexec failed for %s, errno %d, suppressint %d\n", argv[0], e, suppressint));
+  TRACE(("shellexec failed for %s, errno %d, suppressint %d\n", argv[0], e,
+         suppressint));
   exerror(EXEND, "%s: %s", argv[0], errmsg(e, E_EXEC));
 }
 
@@ -4019,8 +4051,8 @@ static int hashcmd(int argc, char **argv) {
   while ((name = *argptr) != NULL) {
     if ((cmdp = cmdlookup(name, 0)) &&
         (cmdp->cmdtype == CMDNORMAL ||
-         (cmdp->cmdtype == CMDBUILTIN && !(cmdp->param.cmd->flags & BUILTIN_REGULAR) &&
-          builtinloc > 0))) {
+         (cmdp->cmdtype == CMDBUILTIN &&
+          !(cmdp->param.cmd->flags & BUILTIN_REGULAR) && builtinloc > 0))) {
       delete_cmd_entry();
     }
     find_command(name, &entry, DO_ERR, pathval());
@@ -4059,7 +4091,8 @@ static void readcmdfile(char *name) {
  * Search the table of builtin commands.
  */
 static struct builtincmd *find_builtin(const char *name) {
-  return bsearch(&name, kBuiltinCmds, sizeof(kBuiltinCmds) / sizeof(kBuiltinCmds[0]),
+  return bsearch(&name, kBuiltinCmds,
+                 sizeof(kBuiltinCmds) / sizeof(kBuiltinCmds[0]),
                  sizeof(kBuiltinCmds[0]), pstrcmp);
 }
 
@@ -4067,7 +4100,8 @@ static struct builtincmd *find_builtin(const char *name) {
  * Resolve a command name.  If you change this routine, you may have to
  * change the shellexec routine as well.
  */
-static void find_command(char *name, struct cmdentry *entry, int act, const char *path) {
+static void find_command(char *name, struct cmdentry *entry, int act,
+                         const char *path) {
   char *fullname;
   struct stat statb;
   struct tblentry *cmdp;
@@ -4112,7 +4146,8 @@ static void find_command(char *name, struct cmdentry *entry, int act, const char
   }
   /* If %builtin not in path, check for builtin next */
   bcmd = find_builtin(name);
-  if (bcmd && ((bcmd->flags & BUILTIN_REGULAR) | (act & DO_ALTPATH) | (builtinloc <= 0))) {
+  if (bcmd && ((bcmd->flags & BUILTIN_REGULAR) | (act & DO_ALTPATH) |
+               (builtinloc <= 0))) {
     goto builtin_success;
   }
   if (act & DO_REGBLTIN) goto fail;
@@ -4209,8 +4244,8 @@ static void hashcd(void) {
   for (pp = cmdtable; pp < &cmdtable[CMDTABLESIZE]; pp++) {
     for (cmdp = *pp; cmdp; cmdp = cmdp->next) {
       if (cmdp->cmdtype == CMDNORMAL ||
-          (cmdp->cmdtype == CMDBUILTIN && !(cmdp->param.cmd->flags & BUILTIN_REGULAR) &&
-           builtinloc > 0)) {
+          (cmdp->cmdtype == CMDBUILTIN &&
+           !(cmdp->param.cmd->flags & BUILTIN_REGULAR) && builtinloc > 0)) {
         cmdp->rehash = 1;
       }
     }
@@ -4257,8 +4292,8 @@ static void clearcmdentry(void) {
     pp = tblp;
     while ((cmdp = *pp) != NULL) {
       if (cmdp->cmdtype == CMDNORMAL ||
-          (cmdp->cmdtype == CMDBUILTIN && !(cmdp->param.cmd->flags & BUILTIN_REGULAR) &&
-           builtinloc > 0)) {
+          (cmdp->cmdtype == CMDBUILTIN &&
+           !(cmdp->param.cmd->flags & BUILTIN_REGULAR) && builtinloc > 0)) {
         *pp = cmdp->next;
         ckfree(cmdp);
       } else {
@@ -4358,7 +4393,8 @@ static int typecmd(int argc, char **argv) {
   return err;
 }
 
-static int describe_command(struct output *out, char *command, const char *path, int verbose) {
+static int describe_command(struct output *out, char *command, const char *path,
+                            int verbose) {
   struct cmdentry entry;
   struct tblentry *cmdp;
   const struct alias *ap;
@@ -4442,7 +4478,8 @@ out:
   return 0;
 }
 
-static int commandcmd(argc, argv) int argc;
+static int commandcmd(argc, argv)
+int argc;
 char **argv;
 {
   char *cmd;
@@ -4540,8 +4577,9 @@ out:
  */
 static char *argstr(char *p, int flag) {
   static const int DOLATSTRLEN = 6;
-  static const char spclchars[] = {'=',    ':',      CTLQUOTEMARK, CTLENDVAR, CTLESC,
-                                   CTLVAR, CTLBACKQ, CTLARI,       CTLENDARI, 0};
+  static const char spclchars[] = {'=',       ':',    CTLQUOTEMARK, CTLENDVAR,
+                                   CTLESC,    CTLVAR, CTLBACKQ,     CTLARI,
+                                   CTLENDARI, 0};
   const char *reject = spclchars;
   int c;
   int breakall = (flag & (EXP_WORD | EXP_QUOTED)) == EXP_WORD;
@@ -4782,13 +4820,16 @@ static void expbackq(union node *cmd, int flag) {
   if (!(flag & EXP_QUOTED)) {
     recordregion(startloc, dest - (char *)stackblock(), 0);
   }
-  TRACE(("evalbackq: size=%d: \"%.*s\"\n", (dest - (char *)stackblock()) - startloc,
-         (dest - (char *)stackblock()) - startloc, (char *)stackblock() + startloc));
+  TRACE(("evalbackq: size=%d: \"%.*s\"\n",
+         (dest - (char *)stackblock()) - startloc,
+         (dest - (char *)stackblock()) - startloc,
+         (char *)stackblock() + startloc));
 out:
   argbackq = argbackq->next;
 }
 
-static char *scanleft(char *startp, char *rmesc, char *rmescend, char *str, int quotes, int zero) {
+static char *scanleft(char *startp, char *rmesc, char *rmescend, char *str,
+                      int quotes, int zero) {
   char *loc;
   char *loc2;
   char c;
@@ -4812,7 +4853,8 @@ static char *scanleft(char *startp, char *rmesc, char *rmescend, char *str, int 
   return 0;
 }
 
-static char *scanright(char *startp, char *rmesc, char *rmescend, char *str, int quotes, int zero) {
+static char *scanright(char *startp, char *rmesc, char *rmescend, char *str,
+                       int quotes, int zero) {
   int esc = 0;
   char *loc;
   char *loc2;
@@ -4841,7 +4883,8 @@ static char *scanright(char *startp, char *rmesc, char *rmescend, char *str, int
   return 0;
 }
 
-static char *subevalvar(char *start, char *str, int strloc, int startloc, int varflags, int flag) {
+static char *subevalvar(char *start, char *str, int strloc, int startloc,
+                        int varflags, int flag) {
   int subtype = varflags & VSTYPE;
   int quotes = flag & QUOTES_ESC;
   char *startp;
@@ -4861,7 +4904,7 @@ static char *subevalvar(char *start, char *str, int strloc, int startloc, int va
       goto out;
     case VSQUESTION:
       varunset(start, str, startp, varflags);
-      unreachable;
+      __builtin_unreachable();
   }
   subtype -= VSTRIMRIGHT;
   rmesc = startp;
@@ -4930,7 +4973,8 @@ again:
       goto record;
     case VSASSIGN:
     case VSQUESTION:
-      p = subevalvar(p, var_, 0, startloc, varflags, (flag & ~QUOTES_ESC) | (discard ^ EXP_DISCARD));
+      p = subevalvar(p, var_, 0, startloc, varflags,
+                     (flag & ~QUOTES_ESC) | (discard ^ EXP_DISCARD));
       if ((flag | ~discard) & EXP_DISCARD) goto record;
       varflags &= ~VSNUL;
       subtype = VSNORMAL;
@@ -5007,7 +5051,8 @@ static long varvalue(char *name, int varflags, int flags, int quoted) {
   char sepc;
   char **ap;
   int subtype = varflags & VSTYPE;
-  int discard = (subtype == VSPLUS || subtype == VSLENGTH) | (flags & EXP_DISCARD);
+  int discard =
+      (subtype == VSPLUS || subtype == VSLENGTH) | (flags & EXP_DISCARD);
   long len = 0;
   char c;
   if (!subtype) {
@@ -5445,12 +5490,18 @@ static int ccmatch(const char *p, int chr, const char **r) {
   static const struct class {
     char name[10];
     int (*fn)(int);
-  } classes[] = {{.name = ":alnum:]", .fn = isalnum}, {.name = ":cntrl:]", .fn = iscntrl},
-                 {.name = ":lower:]", .fn = islower}, {.name = ":space:]", .fn = isspace},
-                 {.name = ":alpha:]", .fn = isalpha}, {.name = ":digit:]", .fn = isdigit},
-                 {.name = ":print:]", .fn = isprint}, {.name = ":upper:]", .fn = isupper},
-                 {.name = ":blank:]", .fn = isblank}, {.name = ":graph:]", .fn = isgraph},
-                 {.name = ":punct:]", .fn = ispunct}, {.name = ":xdigit:]", .fn = isxdigit}};
+  } classes[] = {{.name = ":alnum:]", .fn = isalnum},
+                 {.name = ":cntrl:]", .fn = iscntrl},
+                 {.name = ":lower:]", .fn = islower},
+                 {.name = ":space:]", .fn = isspace},
+                 {.name = ":alpha:]", .fn = isalpha},
+                 {.name = ":digit:]", .fn = isdigit},
+                 {.name = ":print:]", .fn = isprint},
+                 {.name = ":upper:]", .fn = isupper},
+                 {.name = ":blank:]", .fn = isblank},
+                 {.name = ":graph:]", .fn = isgraph},
+                 {.name = ":punct:]", .fn = ispunct},
+                 {.name = ":xdigit:]", .fn = isxdigit}};
   const struct class *class, *end;
   end = classes + sizeof(classes) / sizeof(classes[0]);
   for (class = classes; class < end; class ++) {
@@ -5667,7 +5718,8 @@ static void AddUniqueCompletion(linenoiseCompletions *c, char *s) {
   c->cvec[c->len - 1] = s;
 }
 
-static void CompleteCommand(const char *p, const char *q, const char *b, linenoiseCompletions *c) {
+static void CompleteCommand(const char *p, const char *q, const char *b,
+                            linenoiseCompletions *c) {
   DIR *d;
   size_t i;
   struct dirent *e;
@@ -5700,7 +5752,8 @@ static void CompleteCommand(const char *p, const char *q, const char *b, linenoi
   }
 }
 
-static void CompleteFilename(const char *p, const char *q, const char *b, linenoiseCompletions *c) {
+static void CompleteFilename(const char *p, const char *q, const char *b,
+                             linenoiseCompletions *c) {
   DIR *d;
   char *buf;
   const char *g;
@@ -5717,7 +5770,8 @@ static void CompleteFilename(const char *p, const char *q, const char *b, lineno
         if (!strcmp(e->d_name, ".")) continue;
         if (!strcmp(e->d_name, "..")) continue;
         if (!strncmp(e->d_name, p, q - p)) {
-          snprintf(buf, 512, "%.*s%s%s", p - b, b, e->d_name, e->d_type == DT_DIR ? "/" : "");
+          snprintf(buf, 512, "%.*s%s%s", p - b, b, e->d_name,
+                   e->d_type == DT_DIR ? "/" : "");
           AddUniqueCompletion(c, strdup(buf));
         }
       }
@@ -5733,8 +5787,9 @@ static void ShellCompletion(const char *p, linenoiseCompletions *c) {
   struct tblentry **pp, *cmdp;
   for (slashed = false, b = p, q = (p += strlen(p)); p > b; --p) {
     if (p[-1] == '/' && p[-1] == '\\') slashed = true;
-    if (!isalnum(p[-1]) && (p[-1] != '.' && p[-1] != '_' && p[-1] != '-' && p[-1] != '+' &&
-                            p[-1] != '[' && p[-1] != '/' && p[-1] != '\\')) {
+    if (!isalnum(p[-1]) &&
+        (p[-1] != '.' && p[-1] != '_' && p[-1] != '-' && p[-1] != '+' &&
+         p[-1] != '[' && p[-1] != '/' && p[-1] != '\\')) {
       break;
     }
   }
@@ -5810,7 +5865,8 @@ static int preadbuffer(void) {
     popstring();
     return pgetc_nofree();
   }
-  if (unlikely(parsefile->nleft == EOF_NLEFT || parsefile->buf == NULL)) return PEOF;
+  if (unlikely(parsefile->nleft == EOF_NLEFT || parsefile->buf == NULL))
+    return PEOF;
   flushall();
   more = parsefile->lleft;
   if (more <= 0) {
@@ -6119,7 +6175,8 @@ static int decode_signum(const char *string) {
   return signo;
 }
 
-static int killcmd(argc, argv) int argc;
+static int killcmd(argc, argv)
+int argc;
 char **argv;
 {
   int signo = -1;
@@ -6600,7 +6657,7 @@ static void forkparent(struct job *jp, union node *n, int mode, int pid) {
     TRACE(("Fork failed, errno=%d", errno));
     if (jp) freejob(jp);
     sh_error("Cannot fork");
-    unreachable;
+    __builtin_unreachable();
   }
   TRACE(("In parent shell:  child = %d\n", pid));
   if (!jp) return;
@@ -6638,7 +6695,8 @@ static int forkshell(struct job *jp, union node *n, int mode) {
   return pid;
 }
 
-static struct job *vforkexec(union node *n, char **argv, const char *path, int idx) {
+static struct job *vforkexec(union node *n, char **argv, const char *path,
+                             int idx) {
   struct job *jp;
   int pid;
   jp = makejob(n, 1);
@@ -6649,7 +6707,7 @@ static struct job *vforkexec(union node *n, char **argv, const char *path, int i
     forkchild(jp, n, FORK_FG);
     sigclearmask();
     shellexec(argv, path, idx);
-    unreachable;
+    __builtin_unreachable();
   }
   vforked = 0;
   sigclearmask();
@@ -6722,8 +6780,8 @@ static int waitone(int block, struct job *job) {
     sp = jp->ps;
     do {
       if (sp->pid == pid) {
-        TRACE(("Job %d: changing status of proc %d from 0x%x to 0x%x\n", jobno(jp), pid, sp->status,
-               status));
+        TRACE(("Job %d: changing status of proc %d from 0x%x to 0x%x\n",
+               jobno(jp), pid, sp->status, status));
         sp->status = status;
         thisjob = jp;
       }
@@ -6741,7 +6799,8 @@ gotjob:
   if (state != JOBRUNNING) {
     thisjob->changed = 1;
     if (thisjob->state != state) {
-      TRACE(("Job %d: changing state from %d to %d\n", jobno(thisjob), thisjob->state, state));
+      TRACE(("Job %d: changing state from %d to %d\n", jobno(thisjob),
+             thisjob->state, state));
       thisjob->state = state;
       if (state == JOBSTOPPED) {
         set_curjob(thisjob, CUR_STOPPED);
@@ -7105,8 +7164,8 @@ static int getstatus(struct job *job) {
     }
     retval += 128;
   }
-  TRACE(("getstatus: job %d, nproc %d, status %x, retval %x\n", jobno(job), job->nprocs, status,
-         retval));
+  TRACE(("getstatus: job %d, nproc %d, status %x, retval %x\n", jobno(job),
+         job->nprocs, status, retval));
   return retval;
 }
 
@@ -7346,7 +7405,8 @@ static int umaskcmd(int argc, char **argv) {
 
 enum limtype { SOFT = 0x1, HARD = 0x2 };
 
-static void printlim(enum limtype how, const struct rlimit *limit, const struct limits *l) {
+static void printlim(enum limtype how, const struct rlimit *limit,
+                     const struct limits *l) {
   uint64_t val;
   val = limit->rlim_max;
   if (how & SOFT) val = limit->rlim_cur;
@@ -7413,7 +7473,8 @@ static int ulimitcmd(int argc, char **argv) {
   if (set) {
     if (how & HARD) limit.rlim_max = val;
     if (how & SOFT) limit.rlim_cur = val;
-    if (setrlimit(l->cmd, &limit) < 0) sh_error("error setting limit (%s)", strerror(errno));
+    if (setrlimit(l->cmd, &limit) < 0)
+      sh_error("error setting limit (%s)", strerror(errno));
   } else {
     printlim(how, &limit, l);
   }
@@ -7517,7 +7578,7 @@ static void setoption(int flag, int val) {
       return;
     }
   sh_error("Illegal option -%c", flag);
-  unreachable;
+  __builtin_unreachable();
 }
 
 /*
@@ -7967,7 +8028,7 @@ static union node *command(void) {
   switch (readtoken()) {
     default:
       synexpect(-1);
-      unreachable;
+      __builtin_unreachable();
     case TIF:
       n1 = (union node *)stalloc(sizeof(struct nif));
       n1->type = NIF;
@@ -7998,7 +8059,8 @@ static union node *command(void) {
       n1->type = (lasttoken == TWHILE) ? NWHILE : NUNTIL;
       n1->nbinary.ch1 = list(0);
       if ((got = readtoken()) != TDO) {
-        TRACE(("expecting DO got %s %s\n", tokname[got], got == TWORD ? wordtext : ""));
+        TRACE(("expecting DO got %s %s\n", tokname[got],
+               got == TWORD ? wordtext : ""));
         synexpect(TDO);
       }
       n1->nbinary.ch2 = list(0);
@@ -8174,7 +8236,8 @@ static union node *simplecmd(void) {
           /* We have a function */
           if (readtoken() != TRP) synexpect(TRP);
           name = n->narg.text;
-          if (!goodname(name) || ((bcmd = find_builtin(name)) && bcmd->flags & BUILTIN_SPECIAL))
+          if (!goodname(name) ||
+              ((bcmd = find_builtin(name)) && bcmd->flags & BUILTIN_SPECIAL))
             synerror("Bad function name");
           n->type = NDEFUN;
           checkkwd = CHKNL | CHKKWD | CHKALIAS;
@@ -8414,7 +8477,8 @@ static int pgetc_top(struct synstack *stack) {
   return stack->syntax == SQSYNTAX ? pgetc() : pgetc_eatbnl();
 }
 
-static void synstack_push(struct synstack **stack, struct synstack *next, const char *syntax) {
+static void synstack_push(struct synstack **stack, struct synstack *next,
+                          const char *syntax) {
   memset(next, 0, sizeof(*next));
   next->syntax = syntax;
   next->next = *stack;
@@ -8471,7 +8535,8 @@ static void synstack_pop(struct synstack **stack) {
   parsearith_return:; \
   }
 
-static int readtoken1(int firstc, char const *syntax, char *eofmark, int striptabs) {
+static int readtoken1(int firstc, char const *syntax, char *eofmark,
+                      int striptabs) {
   int c = firstc;
   char *out;
   unsigned len;
@@ -8501,7 +8566,8 @@ loop : {                   /* for each line, until end of word */
         USTPUTC(c, out);
         break;
       case CCTL:
-        if ((!eofmark) | synstack->dblquote | synstack->varnest) USTPUTC(CTLESC, out);
+        if ((!eofmark) | synstack->dblquote | synstack->varnest)
+          USTPUTC(CTLESC, out);
         USTPUTC(c, out);
         break;
       /* backslash */
@@ -8602,7 +8668,8 @@ loop : {                   /* for each line, until end of word */
 }
 endword:
   if (synstack->syntax == ARISYNTAX) synerror("Missing '))'");
-  if (synstack->syntax != BASESYNTAX && eofmark == NULL) synerror("Unterminated quoted string");
+  if (synstack->syntax != BASESYNTAX && eofmark == NULL)
+    synerror("Unterminated quoted string");
   if (synstack->varnest != 0) {
     /* { */
     synerror("Missing '}'");
@@ -8611,7 +8678,8 @@ endword:
   len = out - (char *)stackblock();
   out = stackblock();
   if (eofmark == NULL) {
-    if ((c == '>' || c == '<') && quotef == 0 && len <= 2 && (*out == '\0' || is_digit(*out))) {
+    if ((c == '>' || c == '<') && quotef == 0 && len <= 2 &&
+        (*out == '\0' || is_digit(*out))) {
       PARSEREDIR();
       return lasttoken = TREDIR;
     } else {
@@ -8733,7 +8801,8 @@ parsesub : {
   char *p;
   static const char types[] = "}-+?=";
   c = pgetc_eatbnl();
-  if ((checkkwd & CHKEOFMARK) || (c != '(' && c != '{' && !is_name(c) && !is_special(c))) {
+  if ((checkkwd & CHKEOFMARK) ||
+      (c != '(' && c != '{' && !is_name(c) && !is_special(c))) {
     USTPUTC('$', out);
     pungetc();
   } else if (c == '(') { /* $(command) or $((arith)) */
@@ -8815,8 +8884,10 @@ parsesub : {
       pungetc();
     }
     if (newsyn == ARISYNTAX) newsyn = DQSYNTAX;
-    if ((newsyn != synstack->syntax || synstack->innerdq) && subtype != VSNORMAL) {
-      synstack_push(&synstack, synstack->prev ?: alloca(sizeof(*synstack)), newsyn);
+    if ((newsyn != synstack->syntax || synstack->innerdq) &&
+        subtype != VSNORMAL) {
+      synstack_push(&synstack, synstack->prev ?: alloca(sizeof(*synstack)),
+                    newsyn);
       synstack->varpushed++;
       synstack->dblquote = newsyn != BASESYNTAX;
     }
@@ -8867,7 +8938,8 @@ parsebackq : {
           goto done;
         case '\\':
           pc = pgetc();
-          if (pc != '\\' && pc != '`' && pc != '$' && (!synstack->dblquote || pc != '"'))
+          if (pc != '\\' && pc != '`' && pc != '$' &&
+              (!synstack->dblquote || pc != '"'))
             STPUTC('\\', pout);
           break;
         case PEOF:
@@ -8928,7 +9000,8 @@ parsebackq : {
  * Parse an arithmetic expansion (indicate start of one and set state)
  */
 parsearith : {
-  synstack_push(&synstack, synstack->prev ?: alloca(sizeof(*synstack)), ARISYNTAX);
+  synstack_push(&synstack, synstack->prev ?: alloca(sizeof(*synstack)),
+                ARISYNTAX);
   synstack->dblquote = 1;
   USTPUTC(CTLARI, out);
   goto parsearith_return;
@@ -9059,7 +9132,8 @@ static void redirect(union node *redir, int flags) {
     dupredirect(n, newfd);
   } while ((n = n->nfile.next));
   INTON;
-  if (flags & REDIR_SAVEFD2 && sv->renamed[2] >= 0) preverrout.fd = sv->renamed[2];
+  if (flags & REDIR_SAVEFD2 && sv->renamed[2] >= 0)
+    preverrout.fd = sv->renamed[2];
 }
 
 wontreturn static int sh_open_fail(const char *pathname, int flags, int e) {
@@ -9097,14 +9171,14 @@ static int openredirect(union node *redir) {
       f = sh_open(redir->nfile.expfname, flags, 0);
       break;
     case NFROMTO:
-      flags = O_RDWR|O_CREAT;
+      flags = O_RDWR | O_CREAT;
       goto do_open;
     case NTO:
       /* Take care of noclobber mode. */
       if (Cflag) {
         fname = redir->nfile.expfname;
         if (stat(fname, &sb) < 0) {
-          flags = O_WRONLY|O_CREAT|O_EXCL;
+          flags = O_WRONLY | O_CREAT | O_EXCL;
           goto do_open;
         }
         if (S_ISREG(sb.st_mode)) goto ecreate;
@@ -9117,10 +9191,10 @@ static int openredirect(union node *redir) {
       }
       /* FALLTHROUGH */
     case NCLOBBER:
-      flags = O_WRONLY|O_CREAT|O_TRUNC;
+      flags = O_WRONLY | O_CREAT | O_TRUNC;
       goto do_open;
     case NAPPEND:
-      flags = O_WRONLY|O_CREAT|O_APPEND;
+      flags = O_WRONLY | O_CREAT | O_APPEND;
       goto do_open;
     case NTOFD:
     case NFROMFD:
@@ -9931,7 +10005,8 @@ eval:
   t_wp = argv;
   res ^= oexpr(n);
   argv = t_wp;
-  if (argv[0] != NULL && argv[1] != NULL) syntax(argv[0], "unexpected operator");
+  if (argv[0] != NULL && argv[1] != NULL)
+    syntax(argv[0], "unexpected operator");
   return res;
 }
 
@@ -10091,7 +10166,8 @@ static enum token t_lex(char **tp) {
     return EOI;
   }
   op = getop(s);
-  if (op && !(op->op_type == UNOP && isoperand(tp)) && !(op->op_num == LPAREN && !tp[1])) {
+  if (op && !(op->op_type == UNOP && isoperand(tp)) &&
+      !(op->op_num == LPAREN && !tp[1])) {
     t_wp_op = op;
     return op->op_num;
   }
@@ -10112,14 +10188,16 @@ static int newerf(const char *f1, const char *f2) {
   struct stat b1, b2;
   return (stat(f1, &b1) == 0 && stat(f2, &b2) == 0 &&
           (b1.st_mtim.tv_sec > b2.st_mtim.tv_sec ||
-           (b1.st_mtim.tv_sec == b2.st_mtim.tv_sec && (b1.st_mtim.tv_nsec > b2.st_mtim.tv_nsec))));
+           (b1.st_mtim.tv_sec == b2.st_mtim.tv_sec &&
+            (b1.st_mtim.tv_nsec > b2.st_mtim.tv_nsec))));
 }
 
 static int olderf(const char *f1, const char *f2) {
   struct stat b1, b2;
   return (stat(f1, &b1) == 0 && stat(f2, &b2) == 0 &&
           (b1.st_mtim.tv_sec < b2.st_mtim.tv_sec ||
-           (b1.st_mtim.tv_sec == b2.st_mtim.tv_sec && (b1.st_mtim.tv_nsec < b2.st_mtim.tv_nsec))));
+           (b1.st_mtim.tv_sec == b2.st_mtim.tv_sec &&
+            (b1.st_mtim.tv_nsec < b2.st_mtim.tv_nsec))));
 }
 
 static int equalf(const char *f1, const char *f2) {
@@ -10272,8 +10350,8 @@ static struct Var *setvareq(char *s, int flags) {
     if (flags & VNOSET) goto out;
     if (vp->func && (flags & VNOFUNC) == 0) (*vp->func)(strchrnul(s, '=') + 1);
     if ((vp->flags & (VTEXTFIXED | VSTACK)) == 0) ckfree(vp->text);
-    if (((flags & (VEXPORT | VREADONLY | VSTRFIXED | VUNSET)) | (vp->flags & VSTRFIXED)) ==
-        VUNSET) {
+    if (((flags & (VEXPORT | VREADONLY | VSTRFIXED | VUNSET)) |
+         (vp->flags & VSTRFIXED)) == VUNSET) {
       *vpp = vp->next;
       ckfree(vp);
     out_free:
@@ -10283,7 +10361,8 @@ static struct Var *setvareq(char *s, int flags) {
     flags |= vp->flags & ~(VTEXTFIXED | VSTACK | VNOSAVE | VUNSET);
   } else {
     if (flags & VNOSET) goto out;
-    if ((flags & (VEXPORT | VREADONLY | VSTRFIXED | VUNSET)) == VUNSET) goto out_free;
+    if ((flags & (VEXPORT | VREADONLY | VSTRFIXED | VUNSET)) == VUNSET)
+      goto out_free;
     /* not found */
     vp = ckmalloc(sizeof(*vp));
     vp->next = *vpp;
@@ -10566,8 +10645,8 @@ static void init() {
     setvareq(ppid, VTEXTFIXED);
     p = lookupvar("PWD");
     if (p) {
-      if (*p != '/' || stat(p, &st1) || stat(".", &st2) || st1.st_dev != st2.st_dev ||
-          st1.st_ino != st2.st_ino) {
+      if (*p != '/' || stat(p, &st1) || stat(".", &st2) ||
+          st1.st_dev != st2.st_dev || st1.st_ino != st2.st_ino) {
         p = 0;
       }
     }
@@ -10584,7 +10663,8 @@ static void exitreset() {
   /* from eval.c: */
   {
     if (savestatus >= 0) {
-      if (exception == EXEXIT || evalskip == SKIPFUNCDEF) exitstatus = savestatus;
+      if (exception == EXEXIT || evalskip == SKIPFUNCDEF)
+        exitstatus = savestatus;
       savestatus = -1;
     }
     evalskip = 0;
@@ -10615,19 +10695,15 @@ static void forkreset() {
     }
   }
   /* from main.c: */
-  {
-    handler = &main_handler;
-  }
+  { handler = &main_handler; }
   /* from redir.c: */
-  {
-    redirlist = NULL;
-  }
+  { redirlist = NULL; }
   /* from trap.c: */
   {
     char **tp;
     INTOFF;
-    for (tp = trap ; tp < &trap[NSIG] ; tp++) {
-      if (*tp && **tp) {  /* trap not NULL or SIG_IGN */
+    for (tp = trap; tp < &trap[NSIG]; tp++) {
+      if (*tp && **tp) { /* trap not NULL or SIG_IGN */
         ckfree(*tp);
         *tp = NULL;
         if (tp != &trap[0]) setsignal(tp - trap);
@@ -10651,9 +10727,7 @@ static void reset() {
     popallfiles();
   }
   /* from var.c: */
-  {
-    unwindlocalvars(0);
-  }
+  { unwindlocalvars(0); }
 }
 
 static void calcsize(union node *n) {
@@ -10939,7 +11013,8 @@ static char *find_dot_file(char *basename) {
   if (strchr(basename, '/')) return basename;
   while ((len = padvance(&path, basename)) >= 0) {
     fullname = stackblock();
-    if ((!pathopt || *pathopt == 'f') && !stat(fullname, &statb) && S_ISREG(statb.st_mode)) {
+    if ((!pathopt || *pathopt == 'f') && !stat(fullname, &statb) &&
+        S_ISREG(statb.st_mode)) {
       /* This will be freed by the caller. */
       return stalloc(len);
     }

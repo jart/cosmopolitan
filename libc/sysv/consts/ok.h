@@ -1,11 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_OK_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_OK_H_
-#include "libc/runtime/symbolic.h"
 
-#define F_OK SYMBOLIC(F_OK)
-#define R_OK SYMBOLIC(R_OK)
-#define W_OK SYMBOLIC(W_OK)
-#define X_OK SYMBOLIC(X_OK)
+#define F_OK F_OK
+#define R_OK R_OK
+#define W_OK W_OK
+#define X_OK X_OK
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

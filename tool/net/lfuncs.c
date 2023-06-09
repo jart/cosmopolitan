@@ -298,7 +298,7 @@ int LuaParseParams(lua_State *L) {
       return 1;
     } else {
       luaL_error(L, "out of memory");
-      unreachable;
+      __builtin_unreachable();
     }
   } else {
     return lua_gettop(L);
@@ -321,7 +321,7 @@ int LuaParseHost(lua_State *L) {
       return 1;
     } else {
       luaL_error(L, "out of memory");
-      unreachable;
+      __builtin_unreachable();
     }
   } else {
     return lua_gettop(L);
@@ -340,7 +340,7 @@ int LuaBsr(lua_State *L) {
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -351,7 +351,7 @@ int LuaBsf(lua_State *L) {
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -381,7 +381,7 @@ int LuaIndentLines(lua_State *L) {
     j = luaL_optinteger(L, 2, 1);
     if (!(0 <= j && j <= 65535)) {
       luaL_argerror(L, 2, "not in range 0..65535");
-      unreachable;
+      __builtin_unreachable();
     }
     p = IndentLines(p, n, &n, j);
     lua_pushlstring(L, p, n);
@@ -400,7 +400,7 @@ int LuaGetMonospaceWidth(lua_State *L) {
     w = strwidth(luaL_checkstring(L, 1), luaL_optinteger(L, 2, 0) & 7);
   } else {
     luaL_argerror(L, 1, "not integer or string");
-    unreachable;
+    __builtin_unreachable();
   }
   lua_pushinteger(L, w);
   return 1;
@@ -490,7 +490,7 @@ int LuaBarf(lua_State *L) {
     offset = luaL_checkinteger(L, 5);
     if (offset < 1) {
       luaL_error(L, "offset must be >= 1");
-      unreachable;
+      __builtin_unreachable();
     }
     --offset;
   }
@@ -498,11 +498,11 @@ int LuaBarf(lua_State *L) {
   flags = O_WRONLY | O_SEQUENTIAL | luaL_optinteger(L, 4, O_TRUNC | O_CREAT);
   if (flags & O_NONBLOCK) {
     luaL_error(L, "O_NONBLOCK not allowed");
-    unreachable;
+    __builtin_unreachable();
   }
   if ((flags & O_APPEND) && offset) {
     luaL_error(L, "O_APPEND with offset not possible");
-    unreachable;
+    __builtin_unreachable();
   }
   if ((fd = open(luaL_checkstring(L, 1), flags, mode)) == -1) {
     return LuaUnixSysretErrno(L, "open", olderr);
@@ -555,7 +555,7 @@ static int LuaCheckControlFlags(lua_State *L, int idx) {
   int f = luaL_optinteger(L, idx, 0);
   if (f & ~(kControlWs | kControlC0 | kControlC1)) {
     luaL_argerror(L, idx, "invalid control flags");
-    unreachable;
+    __builtin_unreachable();
   }
   return f;
 }
@@ -582,7 +582,7 @@ int LuaEncodeLatin1(lua_State *L) {
     return 1;
   } else {
     luaL_error(L, "out of memory");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -592,7 +592,7 @@ int LuaGetRandomBytes(lua_State *L) {
   n = luaL_optinteger(L, 1, 16);
   if (!(n > 0 && n <= 256)) {
     luaL_argerror(L, 1, "not in range 1..256");
-    unreachable;
+    __builtin_unreachable();
   }
   CHECK_EQ(n, getrandom(luaL_buffinitsize(L, &buf, n), n, 0));
   luaL_pushresultsize(&buf, n);
@@ -664,7 +664,7 @@ static dontinline int LuaCoderImpl(lua_State *L,
       free(p);
     } else {
       luaL_error(L, "out of memory");
-      unreachable;
+      __builtin_unreachable();
     }
     return 1;
   } else {
@@ -739,7 +739,7 @@ int LuaEscapeLiteral(lua_State *L) {
     return 1;
   } else {
     luaL_error(L, "out of memory");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -856,7 +856,7 @@ int LuaBenchmark(lua_State *L) {
       break;
     } else if (attempts >= maxattempts) {
       luaL_error(L, "system is under too much load to run benchmark");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   overhead = avgticks;
@@ -878,7 +878,7 @@ int LuaBenchmark(lua_State *L) {
       break;
     } else if (attempts >= maxattempts) {
       luaL_error(L, "system is under too much load to run benchmark");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   avgticks = MAX(avgticks - overhead, 0);
@@ -898,12 +898,12 @@ static void LuaCompress2(lua_State *L, void *dest, size_t *destLen,
       break;
     case Z_BUF_ERROR:
       luaL_error(L, "out of memory");
-      unreachable;
+      __builtin_unreachable();
     case Z_STREAM_ERROR:
       luaL_error(L, "invalid level");
-      unreachable;
+      __builtin_unreachable();
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -948,7 +948,7 @@ int LuaUncompress(lua_State *L) {
   if (lua_isnoneornil(L, 2)) {
     if ((rc = unuleb64(p, n, &m)) == -1 || n < rc + 4) {
       luaL_error(L, "compressed value too short to be valid");
-      unreachable;
+      __builtin_unreachable();
     }
     len = m;
     crc = READ32LE(p + rc);
@@ -956,14 +956,14 @@ int LuaUncompress(lua_State *L) {
     if (uncompress((void *)q, &m, (unsigned char *)p + rc + 4, n) != Z_OK ||
         m != len || crc32_z(0, q, m) != crc) {
       luaL_error(L, "compressed value is corrupted");
-      unreachable;
+      __builtin_unreachable();
     }
   } else {
     len = m = luaL_checkinteger(L, 2);
     q = luaL_buffinitsize(L, &buf, m);
     if (uncompress((void *)q, &m, (void *)p, n) != Z_OK || m != len) {
       luaL_error(L, "compressed value is corrupted");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   luaL_pushresultsize(&buf, m);

@@ -706,7 +706,7 @@ static void LoadRanges(void) {
           }
           break;
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     }
   }

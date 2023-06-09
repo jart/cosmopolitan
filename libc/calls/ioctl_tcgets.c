@@ -53,7 +53,7 @@ static int ioctl_tcgets_sysv(int fd, struct termios *tio) {
       } else if (IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
         COPY_TERMIOS(tio, &mt.bsd);
       } else {
-        unreachable;
+        __builtin_unreachable();
       }
     }
     return rc;

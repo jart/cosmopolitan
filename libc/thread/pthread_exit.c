@@ -125,7 +125,7 @@ wontreturn void pthread_exit(void *rc) {
         transition = kPosixThreadZombie;
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   } while (!atomic_compare_exchange_weak_explicit(
       &pt->status, &status, transition, memory_order_release,

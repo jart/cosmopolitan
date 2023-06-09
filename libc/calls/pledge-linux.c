@@ -1260,8 +1260,8 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
     }
   }
   if (!found) {
-    Log("error: bad syscall ", GetSyscallName(si->si_syscall),
-        " (ord=", ord, ")\n", NULL);
+    Log("error: bad syscall ", GetSyscallName(si->si_syscall), " (ord=", ord,
+        ")\n", NULL);
   }
   switch (mode & PLEDGE_PENALTY_MASK) {
     case PLEDGE_PENALTY_KILL_PROCESS:
@@ -1362,24 +1362,6 @@ static privileged void AllowMonitor(struct Filter *f) {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sigreturn, 1, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sigprocmask, 0, 1),
       BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-  };
-  AppendFilter(f, PLEDGE(fragment));
-}
-
-// SYSCALL is only allowed in the .privileged section
-// We assume program image is loaded in 32-bit spaces
-static privileged void AppendOriginVerification(struct Filter *f) {
-  long x = (long)__privileged_start;
-  long y = (long)__privileged_end;
-  struct sock_filter fragment[] = {
-      /*L0*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(instruction_pointer) + 4),
-      /*L1*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 2),
-      /*L2*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(instruction_pointer)),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, x, 0, 5 - 4),
-      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, y, 0, 6 - 5),
-      /*L5*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL),
-      /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L7*/ /* next filter */
   };
   AppendFilter(f, PLEDGE(fragment));
 }
@@ -1615,7 +1597,6 @@ static privileged void AllowGetsockoptRestrict(struct Filter *f) {
 //   - MAP_HUGETLB  (0x40000)
 //
 static privileged void AllowMmapExec(struct Filter *f) {
-  long y = (long)__privileged_end;
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags

@@ -383,7 +383,7 @@ static int GetXmmTypeCellCount(int r) {
     case kXmmDouble:
       return 2;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -849,7 +849,7 @@ static int GetRegHexWidth(void) {
         return 4;
       }
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -866,7 +866,7 @@ static int GetAddrHexWidth(void) {
         return 6;
       }
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -1281,7 +1281,7 @@ static void DrawXmm(struct Panel *p, long i, long r) {
         }
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
     buf[cellwidth] = '\0';
     AppendPanel(p, i, buf);
@@ -1532,7 +1532,7 @@ static int GetPreferredStackAlignmentMask(void) {
     case XED_MODE_REAL:
       return 3;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -1961,7 +1961,7 @@ static int OnPtyFdPoll(struct pollfd *fds, size_t nfds, int ms) {
               ++t;
               break;
             default:
-              unreachable;
+              __builtin_unreachable();
           }
         }
       }

@@ -280,7 +280,7 @@ static char *DisBis(struct Dis *d, uint32_t rde, char *p) {
         base = "bx";
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   if (base || index) {

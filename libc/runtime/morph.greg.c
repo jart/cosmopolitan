@@ -118,7 +118,7 @@ privileged void __morph_begin(sigset_t *save) {
 #else
 #error "unsupported architecture"
 #endif
-  __morph_mprotect(__executable_start, __privileged_addr - __executable_start,
+  __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_WRITE, kNtPageWritecopy);
 }
 
@@ -129,7 +129,7 @@ privileged void __morph_end(sigset_t *save) {
   int ax;
   long dx;
   bool cf;
-  __morph_mprotect(__executable_start, __privileged_addr - __executable_start,
+  __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_EXEC, kNtPageExecuteRead);
 #ifdef __x86_64__
   if (IsOpenbsd()) {

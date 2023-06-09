@@ -313,9 +313,9 @@ SECTIONS {
     KEEP(*(.ape.pad.privileged));
     . = ALIGN(__privileged_end > __privileged_start ? PAGESIZE : 1);
 /*END: morphable code */
-    HIDDEN(__privileged_start = .);
+    __privileged_start = .;
     *(.privileged)
-    HIDDEN(__privileged_end = .);
+    __privileged_end = .;
     . += . > 0 ? CODE_GRANULE : 0;
 
 /*BEGIN: Read Only Data */
@@ -502,7 +502,6 @@ SECTIONS {
     *(__mcount_loc)
     *(.discard)
     *(.yoink)
-    *(.*)
   }
 }
 
@@ -519,10 +518,6 @@ HIDDEN(_tbss_size = _tbss_end - _tbss_start);
 HIDDEN(_tbss_offset = _tbss_start - _tdata_start);
 HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
 HIDDEN(_tls_align = 1);
-
-HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
-HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
-                            ROUNDDOWN(__privileged_start, PAGESIZE)));
 
 HIDDEN(ape_rom_offset = 0);
 HIDDEN(ape_rom_vaddr = ADDR(.head));

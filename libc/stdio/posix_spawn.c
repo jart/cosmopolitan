@@ -51,7 +51,7 @@ static int RunFileActions(struct _posix_faction *a) {
       }
       return 0;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

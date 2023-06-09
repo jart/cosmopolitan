@@ -402,7 +402,8 @@ uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
   if (n >= kZipCdirHdrMinSize) {
     i = n - kZipCdirHdrMinSize;
     do {
-      if (READ32LE(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
+      if (READ32LE(p + i) == kZipCdirHdrMagic &&
+          IsZipEocd32(p, n, i) == kZipOk) {
         return (/*unconst*/ uint8_t *)(p + i);
       }
     } while (i--);

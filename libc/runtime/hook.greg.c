@@ -117,7 +117,7 @@ privileged noinstrument noasan int __hook(void *dest, struct SymbolTable *st) {
   for (i = 0; i < st->count; ++i) {
     if (st->symbols[i].x < 9) continue;
     if (st->addr_base + st->symbols[i].x < lowest) continue;
-    if (st->addr_base + st->symbols[i].y >= (intptr_t)__privileged_addr) break;
+    if (st->addr_base + st->symbols[i].y >= (intptr_t)__privileged_start) break;
     p = (code_t *)((char *)st->addr_base + st->symbols[i].x);
     pe = (code_t *)((char *)st->addr_base + st->symbols[i].y);
     if (pe - p < 2) continue;

@@ -29,7 +29,7 @@ COSMOPOLITAN_C_START_
     if (((uintptr_t)VAR & ((BYTES)-1u))) {                            \
       __check_fail_aligned(BYTES, (uintptr_t)VAR, __FILE__, __LINE__, \
                            "" __VA_ARGS__);                           \
-      unreachable;                                                    \
+      __builtin_unreachable();                                        \
     }                                                                 \
     VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES);          \
   } while (0)
@@ -38,7 +38,7 @@ COSMOPOLITAN_C_START_
   do {                                                       \
     if (((uintptr_t)VAR & ((BYTES)-1u))) {                   \
       __DCHK_ALIGNED(BYTES, (uintptr_t)VAR, "" __VA_ARGS__); \
-      unreachable;                                           \
+      __builtin_unreachable();                               \
     }                                                        \
     VAR = (typeof(VAR))__builtin_assume_aligned(VAR, BYTES); \
   } while (0)
@@ -55,7 +55,7 @@ COSMOPOLITAN_C_START_
         __check_fail_##SUFFIX((uint64_t)Want, (uint64_t)Got, __FILE__,       \
                               __LINE__, 0, __VA_ARGS__);                     \
       }                                                                      \
-      unreachable;                                                           \
+      __builtin_unreachable();                                               \
     }                                                                        \
   } while (0)
 
@@ -65,7 +65,7 @@ COSMOPOLITAN_C_START_
     autotype(GOT) Got = (GOT);                      \
     autotype(WANT) Want = (WANT);                   \
     if (!(Want OP Got)) {                           \
-      unreachable;                                  \
+      __builtin_unreachable();                      \
     }                                               \
   } while (0)
 #else

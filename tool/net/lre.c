@@ -87,7 +87,7 @@ static int LuaReSearch(lua_State *L) {
   if (f & ~(REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB |
             REG_NOTBOL << 8 | REG_NOTEOL << 8)) {
     luaL_argerror(L, 3, "invalid flags");
-    unreachable;
+    __builtin_unreachable();
   }
   if ((r = LuaReCompileImpl(L, p, f))) {
     return LuaReSearchImpl(L, r, s, f);
@@ -104,7 +104,7 @@ static int LuaReCompile(lua_State *L) {
   f = luaL_optinteger(L, 2, 0);
   if (f & ~(REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB)) {
     luaL_argerror(L, 2, "invalid flags");
-    unreachable;
+    __builtin_unreachable();
   }
   if ((r = LuaReCompileImpl(L, p, f))) {
     return 1;
@@ -125,7 +125,7 @@ static int LuaReRegexSearch(lua_State *L) {
   f = luaL_optinteger(L, 3, 0);
   if (f & ~(REG_NOTBOL << 8 | REG_NOTEOL << 8)) {
     luaL_argerror(L, 3, "invalid flags");
-    unreachable;
+    __builtin_unreachable();
   }
   return LuaReSearchImpl(L, r, s, f);
 }

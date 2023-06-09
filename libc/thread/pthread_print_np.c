@@ -41,7 +41,7 @@ static const char *DescribeStatus(enum PosixThreadStatus status) {
     case kPosixThreadZombie:
       return "ZOMBIE";
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

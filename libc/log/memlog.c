@@ -149,7 +149,7 @@ static void __memlog_update(void *p2, void *p) {
       return;
     }
   }
-  unreachable;
+  __builtin_unreachable();
 }
 
 static void __memlog_log(struct StackFrame *frame, const char *op, void *res,

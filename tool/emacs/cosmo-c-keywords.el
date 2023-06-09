@@ -65,7 +65,6 @@
            "noprune"
            "reallocesque"
            "nullterminated"
-           "unreachable"
            "notpossible"
            "_Hide"
            "privileged"

@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
   uint8_t *m;
   CHECK_NE(MAP_FAILED, (m = mmap(0, n, PROT_READ, MAP_PRIVATE, fd, 0)));
 
+  int err;
   uint8_t *b, *d, *p;
   if ((p = FindEmbeddedApe(m, n))) {
     b = p;
@@ -49,8 +50,9 @@ int main(int argc, char *argv[]) {
   } else {
     b = m;
   }
-  if (!(d = GetZipCdir(b, n))) {
-    fprintf(stderr, "%s: couldn't locate central directory\n", argv[1]);
+  if (!(d = GetZipEocd(b, n, &err))) {
+    fprintf(stderr, "%s: couldn't locate central directory [zip error %d]\n",
+            argv[1], err);
     exit(1);
   }
 
@@ -58,8 +60,8 @@ int main(int argc, char *argv[]) {
   uint8_t *zmap = m;
   uint8_t *zbase = b;
   uint8_t *zcdir = d;
-  DCHECK(IsZipCdir32(zbase, zsize, zcdir - zbase) ||
-         IsZipCdir64(zbase, zsize, zcdir - zbase));
+  DCHECK(IsZipEocd32(zbase, zsize, zcdir - zbase) == kZipOk ||
+         IsZipEocd64(zbase, zsize, zcdir - zbase) == kZipOk);
 
   uint64_t cf;
   uint64_t lf;

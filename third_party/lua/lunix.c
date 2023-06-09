@@ -146,7 +146,7 @@ static void *LuaAllocOrDie(lua_State *L, size_t n) {
     return p;
   } else {
     luaL_error(L, "out of memory");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -253,7 +253,7 @@ static int MakeSockaddr(lua_State *L, int i, struct sockaddr_storage *ss,
     if (!memccpy(((struct sockaddr_un *)ss)->sun_path, luaL_checkstring(L, i),
                  0, sizeof(((struct sockaddr_un *)ss)->sun_path))) {
       luaL_error(L, "unix path too long");
-      unreachable;
+      __builtin_unreachable();
     }
     *salen = sizeof(struct sockaddr_un);
     return i + 1;
@@ -278,7 +278,7 @@ static int PushSockaddr(lua_State *L, const struct sockaddr_storage *ss) {
     return 1;
   } else {
     luaL_error(L, "bad family");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 
@@ -1738,7 +1738,7 @@ static int LuaUnixSigaction(lua_State *L) {
   sig = luaL_checkinteger(L, 1);
   if (!(1 <= sig && sig <= NSIG)) {
     luaL_argerror(L, 1, "signal number invalid");
-    unreachable;
+    __builtin_unreachable();
   }
   if (lua_isnoneornil(L, 2)) {
     // if handler/flags/mask aren't passed,
@@ -1766,7 +1766,7 @@ static int LuaUnixSigaction(lua_State *L) {
     lua_pop(L, 1);
   } else {
     luaL_argerror(L, 2, "sigaction handler not integer or function");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!lua_isnoneornil(L, 4)) {
     mask = luaL_checkudata(L, 4, "unix.Sigset");
@@ -2685,7 +2685,7 @@ static int LuaUnixMemoryRead(lua_State *L) {
     // extracts nul-terminated string
     if (i > m->size) {
       luaL_error(L, "out of range");
-      unreachable;
+      __builtin_unreachable();
     }
     n = strnlen(m->u.bytes + i, m->size - i);
   } else {
@@ -2694,7 +2694,7 @@ static int LuaUnixMemoryRead(lua_State *L) {
     n = luaL_checkinteger(L, 3);
     if (i > m->size || n >= m->size || i + n > m->size) {
       luaL_error(L, "out of range");
-      unreachable;
+      __builtin_unreachable();
     }
   }
   pthread_mutex_lock(m->lock);
@@ -2723,7 +2723,7 @@ static int LuaUnixMemoryWrite(lua_State *L) {
   }
   if (i > m->size) {
     luaL_error(L, "out of range");
-    unreachable;
+    __builtin_unreachable();
   }
   if (lua_isnoneornil(L, b)) {
     // unix.Memory:write(data:str[, offset:int])
@@ -2743,13 +2743,13 @@ static int LuaUnixMemoryWrite(lua_State *L) {
     j = luaL_checkinteger(L, b);
     if (j > n) {
       luaL_argerror(L, b, "bytes is more than what's in data");
-      unreachable;
+      __builtin_unreachable();
     }
     n = j;
   }
   if (i + n > m->size) {
     luaL_error(L, "out of range");
-    unreachable;
+    __builtin_unreachable();
   }
   pthread_mutex_lock(m->lock);
   memcpy(m->u.bytes + i, s, n);
@@ -2764,7 +2764,7 @@ static atomic_long *GetWord(lua_State *L) {
   i = luaL_checkinteger(L, 2);
   if (i >= m->size / sizeof(*m->u.words)) {
     luaL_error(L, "out of range");
-    unreachable;
+    __builtin_unreachable();
   }
   return m->u.words + i;
 }
@@ -2840,7 +2840,7 @@ static int LuaUnixMemoryWait(lua_State *L) {
   expect = luaL_checkinteger(L, 3);
   if (!(INT32_MIN <= expect && expect <= INT32_MAX)) {
     luaL_argerror(L, 3, "must be an int32_t");
-    unreachable;
+    __builtin_unreachable();
   }
   if (lua_isnoneornil(L, 4)) {
     deadline = 0;  // wait forever
@@ -2927,15 +2927,15 @@ static int LuaUnixMapshared(lua_State *L) {
   n = luaL_checkinteger(L, 1);
   if (!n) {
     luaL_error(L, "can't map empty region");
-    unreachable;
+    __builtin_unreachable();
   }
   if (n % sizeof(long)) {
     luaL_error(L, "size must be multiple of word size");
-    unreachable;
+    __builtin_unreachable();
   }
   if (!IsLegalSize(n)) {
     luaL_error(L, "map size too big");
-    unreachable;
+    __builtin_unreachable();
   }
   c = n;
   c += sizeof(*m->lock);
@@ -2943,7 +2943,7 @@ static int LuaUnixMapshared(lua_State *L) {
   c = ROUNDUP(c, g);
   if (!(p = _mapshared(c))) {
     luaL_error(L, "out of memory");
-    unreachable;
+    __builtin_unreachable();
   }
   m = lua_newuserdatauv(L, sizeof(*m), 1);
   luaL_setmetatable(L, "unix.Memory");
@@ -3094,7 +3094,7 @@ static DIR *GetDirOrDie(lua_State *L) {
   dirp = GetUnixDirSelf(L);
   if (*dirp) return *dirp;
   luaL_argerror(L, 1, "unix.UnixDir is closed");
-  unreachable;
+  __builtin_unreachable();
 }
 
 // unix.Dir:close()

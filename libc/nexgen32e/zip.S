@@ -38,11 +38,12 @@ __zip_end:
 	.short	v_zip_records		// number of records on disk
 	.short	v_zip_records		// records
 	.long	v_zip_cdirsize		// size of central directory
-	.weak	v_zip_cdoffset
 	.long	v_zip_cdoffset		// central directory offset
 	.short	v_zip_commentsize	// comment size
 	.endobj	__zip_end,globl,hidden
+	.previous
+
 	.weak	v_zip_records
 	.weak	v_zip_cdirsize
+	.weak	v_zip_cdoffset
 	.weak	v_zip_commentsize
-	.previous

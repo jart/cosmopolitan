@@ -35,7 +35,7 @@ STATIC_YOINK("_init_g_fds");
 #endif
 
 struct Fds g_fds;
-static struct Fd g_fds_static[8];
+static struct Fd g_fds_static[OPEN_MAX];
 
 static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
   int64_t h;
@@ -46,7 +46,7 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
   atomic_store_explicit(&fds->f, i + 1, memory_order_relaxed);
 }
 
-textstartup void InitializeFileDescriptors(void) {
+textstartup void __init_fds(void) {
   struct Fds *fds;
   __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
   fds = VEIL("r", &g_fds);
@@ -59,7 +59,7 @@ textstartup void InitializeFileDescriptors(void) {
                          kMemtrackFdsStart + kMemtrackFdsSize);
   } else {
     fds->p = g_fds_static;
-    fds->e = g_fds_static + ARRAYLEN(g_fds_static);
+    fds->e = g_fds_static + OPEN_MAX;
   }
   if (IsMetal()) {
     extern const char vga_console[];

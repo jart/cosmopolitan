@@ -274,6 +274,6 @@ int LuaEncodeJsonData(lua_State *L, char **buf, int idx,
     return rc;
   } else {
     luaL_error(L, "can't set stack depth");
-    unreachable;
+    __builtin_unreachable();
   }
 }

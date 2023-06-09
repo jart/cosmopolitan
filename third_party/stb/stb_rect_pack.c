@@ -25,10 +25,10 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
+#include "third_party/stb/stb_rect_pack.h"
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "third_party/stb/stb_rect_pack.h"
+#include "libc/mem/alg.h"
 
 asm(".ident\t\"\\n\\n\
 stb_rect_pack (MIT License)\\n\
@@ -108,7 +108,7 @@ void stbrp_setup_heuristic(stbrp_context *context, int heuristic)
          context->heuristic = heuristic;
          break;
       default:
-         unreachable;
+         __builtin_unreachable();
    }
 }
 

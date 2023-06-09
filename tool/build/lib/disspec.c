@@ -862,7 +862,7 @@ const char *DisSpecMap1(struct XedDecodedInst *x, char *p) {
         case 3:
           return "movsldup %Vq Wq";
         default:
-          unreachable;
+          __builtin_unreachable();
       }
       break;
     case 0x13:

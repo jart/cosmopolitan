@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_EPOLL_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_EPOLL_H_
-#include "libc/runtime/symbolic.h"
 #include "libc/sysv/consts/o.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -27,29 +26,28 @@ extern const uint32_t EPOLLWAKEUP;
 extern const uint32_t EPOLLONESHOT;
 extern const uint32_t EPOLLET;
 
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
 #define EPOLL_CLOEXEC O_CLOEXEC
 
-#define EPOLL_CTL_ADD LITERALLY(1)
-#define EPOLL_CTL_DEL LITERALLY(2)
-#define EPOLL_CTL_MOD LITERALLY(3)
+#define EPOLL_CTL_ADD 1
+#define EPOLL_CTL_DEL 2
+#define EPOLL_CTL_MOD 3
 
-#define EPOLLIN        LITERALLY(1)
-#define EPOLLPRI       LITERALLY(2)
-#define EPOLLOUT       LITERALLY(4)
-#define EPOLLERR       LITERALLY(8)
-#define EPOLLHUP       LITERALLY(0x10)
-#define EPOLLRDNORM    LITERALLY(0x40)
-#define EPOLLRDBAND    LITERALLY(0x80)
-#define EPOLLWRNORM    LITERALLY(0x0100)
-#define EPOLLWRBAND    LITERALLY(0x0200)
-#define EPOLLMSG       LITERALLY(0x0400)
-#define EPOLLRDHUP     LITERALLY(0x2000)
-#define EPOLLEXCLUSIVE LITERALLY(0x10000000)
-#define EPOLLWAKEUP    LITERALLY(0x20000000)
-#define EPOLLONESHOT   LITERALLY(0x40000000)
-#define EPOLLET        LITERALLY(0x80000000)
+#define EPOLLIN        1
+#define EPOLLPRI       2
+#define EPOLLOUT       4
+#define EPOLLERR       8
+#define EPOLLHUP       0x10
+#define EPOLLRDNORM    0x40
+#define EPOLLRDBAND    0x80
+#define EPOLLWRNORM    0x0100
+#define EPOLLWRBAND    0x0200
+#define EPOLLMSG       0x0400
+#define EPOLLRDHUP     0x2000
+#define EPOLLEXCLUSIVE 0x10000000
+#define EPOLLWAKEUP    0x20000000
+#define EPOLLONESHOT   0x40000000
+#define EPOLLET        0x80000000
 
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_EPOLL_H_ */

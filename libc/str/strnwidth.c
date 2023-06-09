@@ -83,7 +83,7 @@ int strnwidth(const char *s, size_t n, size_t o) {
           }
           break;
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     } else {
       break;

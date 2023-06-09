@@ -983,7 +983,7 @@ static textwindows int sock_update(struct PortState *port_state,
     sock_state->poll_status = kPollPending;
     sock_state->pending_events = sock_state->user_events;
   } else {
-    unreachable;
+    __builtin_unreachable();
   }
   port_cancel_socket_update(port_state, sock_state);
   return 0;

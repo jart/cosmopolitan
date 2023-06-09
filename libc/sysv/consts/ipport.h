@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_IPPORT_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_IPPORT_H_
-#include "libc/runtime/symbolic.h"
 
 /**
  * ARPA network ports.
@@ -30,7 +29,7 @@
 #define IPPORT_WHOSERVER    513
 #define IPPORT_ROUTESERVER  520
 #define IPPORT_RESERVED     1024
-#define IPPORT_USERRESERVED SYMBOLIC(IPPORT_USERRESERVED)
+#define IPPORT_USERRESERVED IPPORT_USERRESERVED
 
 /**
  * Modern network ports.

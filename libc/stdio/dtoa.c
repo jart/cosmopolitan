@@ -561,7 +561,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       while (--width >= 0) __FMT_PUT(' ');
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
   return consumed;
 }

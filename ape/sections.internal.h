@@ -3,7 +3,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern const char __comment_start[] __attribute__((__weak__));
 extern unsigned char __executable_start[] __attribute__((__weak__));
+extern unsigned char __privileged_start[] __attribute__((__weak__));
 extern unsigned char _ehead[] __attribute__((__weak__));
 extern unsigned char _etext[] __attribute__((__weak__));
 extern unsigned char _edata[] __attribute__((__weak__));
@@ -15,10 +17,6 @@ extern unsigned char _tdata_end[] __attribute__((__weak__));
 extern unsigned char _tbss_start[] __attribute__((__weak__));
 extern unsigned char _tbss_end[] __attribute__((__weak__));
 extern unsigned char _tls_align[] __attribute__((__weak__));
-extern unsigned char __privileged_start[] __attribute__((__weak__));
-extern unsigned char __privileged_addr[] __attribute__((__weak__));
-extern unsigned char __privileged_size[] __attribute__((__weak__));
-extern unsigned char __privileged_end[] __attribute__((__weak__));
 extern unsigned char __test_start[] __attribute__((__weak__));
 extern unsigned char __ro[] __attribute__((__weak__));
 extern uint8_t __zip_start[] __attribute__((__weak__));

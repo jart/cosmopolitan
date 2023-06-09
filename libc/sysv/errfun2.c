@@ -19,7 +19,7 @@
 #include "libc/errno.h"
 #ifndef __x86_64__
 
-long __errfun(int e) {
+relegated long __errfun(int e) {
   errno = e;
   return -1;
 }

@@ -47,8 +47,8 @@ int sys_mprotect_nt(void *, size_t, int) _Hide;
 int __inflate(void *, size_t, const void *, size_t);
 noasan void *_Mmap(void *, size_t, int, int, int, int64_t) _Hide;
 noasan int _Munmap(char *, size_t) _Hide;
-void InitializeFileDescriptors(void);
 void __on_arithmetic_overflow(void);
+void __init_fds(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

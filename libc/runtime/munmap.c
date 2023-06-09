@@ -92,7 +92,7 @@ static noasan void MunmapImpl(char *p, size_t n) {
       beg = MAX(_mmi.p[i].x, l);
       end = _mmi.p[i].y;
     } else {
-      unreachable;
+      __builtin_unreachable();
     }
     // openbsd even requires that if we mapped, for instance a 5 byte
     // file, that we be sure to call munmap(file, 5). let's abstract!

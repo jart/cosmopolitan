@@ -54,7 +54,7 @@ o/$(MODE)/libc/str/dosdatetimetounix.o: private			\
 		CFLAGS +=					\
 			-O3
 
-o/$(MODE)/libc/str/getzipcdir.o					\
+o/$(MODE)/libc/str/getzipeocd.o					\
 o/$(MODE)/libc/str/getzipcdircomment.o				\
 o/$(MODE)/libc/str/getzipcdircommentsize.o			\
 o/$(MODE)/libc/str/getzipcdiroffset.o				\

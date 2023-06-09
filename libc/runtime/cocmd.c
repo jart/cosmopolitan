@@ -650,7 +650,7 @@ static char *Tokenize(void) {
         break;
 
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 }

@@ -72,7 +72,7 @@ static int LuaMaxmindOpen(lua_State *L) {
   if ((err = MMDB_open(p, 0, &db->mmdb)) != MMDB_SUCCESS) {
     free(db);
     luaL_error(L, "MMDB_open(%s) → MMDB_%s", p, GetMmdbError(err));
-    unreachable;
+    __builtin_unreachable();
   }
   db->refs = 1;
   udb = lua_newuserdatauv(L, sizeof(db), 1);
@@ -88,7 +88,7 @@ static wontreturn void LuaThrowMaxmindIpError(lua_State *L,
              (ip & 0xff000000) >> 030, (ip & 0x00ff0000) >> 020,
              (ip & 0x0000ff00) >> 010, (ip & 0x000000ff) >> 000,
              GetMmdbError(err));
-  unreachable;
+  __builtin_unreachable();
 }
 
 static int LuaMaxmindDbLookup(lua_State *L) {

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/stack.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
@@ -23,7 +24,6 @@
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
-#include "tool/build/lib/stack.h"
 #include "tool/build/lib/throw.h"
 
 static const uint8_t kStackOsz[2][3] = {
@@ -76,7 +76,7 @@ static void PushN(struct Machine *m, uint32_t rde, uint64_t x, unsigned osz) {
       Write64(m->sp, v);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
   WriteStackWord(AccessRam(m, v, osz, p, b, false), rde, osz, x);
   EndStore(m, v, osz, p, b);
@@ -113,7 +113,7 @@ static uint64_t PopN(struct Machine *m, uint32_t rde, uint16_t extra,
       v += Read64(m->ss);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
   return ReadStackWord(AccessRam(m, v, osz, p, b, true), osz);
 }
@@ -136,7 +136,7 @@ void OpPopZvq(struct Machine *m, uint32_t rde) {
       Write16(RegRexbSrm(m, rde), x);
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -185,7 +185,7 @@ void OpLeave(struct Machine *m, uint32_t rde) {
       Write16(m->bp, Pop(m, rde, 0));
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -276,7 +276,7 @@ relegated void OpPusha(struct Machine *m, uint32_t rde) {
     case XED_MODE_LONG:
       OpUd(m, rde);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 
@@ -291,7 +291,7 @@ relegated void OpPopa(struct Machine *m, uint32_t rde) {
     case XED_MODE_LONG:
       OpUd(m, rde);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

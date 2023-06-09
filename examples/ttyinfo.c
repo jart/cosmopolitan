@@ -113,7 +113,7 @@ const char *describemouseevent(int e) {
         strcat(buf, " right");
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
     if (e & 0x20) {
       strcat(buf, " drag");

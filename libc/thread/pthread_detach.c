@@ -51,7 +51,7 @@ errno_t pthread_detach(pthread_t thread) {
     } else if (status == kPosixThreadTerminated) {
       transition = kPosixThreadZombie;
     } else {
-      unreachable;
+      __builtin_unreachable();
     }
     if (atomic_compare_exchange_weak_explicit(&pt->status, &status, transition,
                                               memory_order_release,

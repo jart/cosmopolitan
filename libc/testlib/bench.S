@@ -22,7 +22,7 @@
 //	Decentralized section for benchmark registration.
 //
 //	@see	ape/ape.lds
-	.section .piro.relo.sort.bench.1,"aw",@nobits
+	.section .piro.relo.sort.bench.1,"aw",@progbits
 	.type	__bench_start,@object
 	.type	__bench_end,@object
 	.globl	__bench_start,__bench_end
@@ -35,7 +35,7 @@ __bench_start:
 	...
 	decentralized content
 	...
-	*/.section .piro.relo.sort.bench.3,"aw",@nobits
+	*/.section .piro.relo.sort.bench.3,"aw",@progbits
 __bench_end:
 	.quad	0
 	.overrun

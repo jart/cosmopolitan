@@ -270,7 +270,7 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
         }
         return ebadmsg();
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   if (r->i < LIMIT) {

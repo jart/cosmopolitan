@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_
-#include "libc/runtime/symbolic.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -43,41 +42,51 @@ extern const unsigned O_WRONLY;
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define O_RDONLY  LITERALLY(0)
-#define O_WRONLY  LITERALLY(1)
-#define O_RDWR    LITERALLY(2)
-#define O_ACCMODE LITERALLY(3)
+#define O_RDONLY  0
+#define O_WRONLY  1
+#define O_RDWR    2
+#define O_ACCMODE 3
 
-#define O_APPEND       SYMBOLIC(O_APPEND)
-#define O_ASYNC        SYMBOLIC(O_ASYNC)
-#define O_CLOEXEC      SYMBOLIC(O_CLOEXEC)
-#define O_COMPRESSED   SYMBOLIC(O_COMPRESSED)
-#define O_CREAT        SYMBOLIC(O_CREAT)
-#define O_DIRECT       SYMBOLIC(O_DIRECT)
-#define O_DIRECTORY    SYMBOLIC(O_DIRECTORY)
-#define O_DSYNC        SYMBOLIC(O_DSYNC)
-#define O_EXCL         SYMBOLIC(O_EXCL)
-#define O_EXEC         SYMBOLIC(O_EXEC)
-#define O_EXLOCK       SYMBOLIC(O_EXLOCK)
-#define O_INDEXED      SYMBOLIC(O_INDEXED)
-#define O_LARGEFILE    SYMBOLIC(O_LARGEFILE)
-#define O_NDELAY       SYMBOLIC(O_NDELAY)
-#define O_NOATIME      SYMBOLIC(O_NOATIME)
-#define O_NOCTTY       SYMBOLIC(O_NOCTTY)
-#define O_NOFOLLOW     SYMBOLIC(O_NOFOLLOW)
-#define O_NOFOLLOW_ANY SYMBOLIC(O_NOFOLLOW_ANY)
-#define O_NONBLOCK     SYMBOLIC(O_NONBLOCK)
-#define O_PATH         SYMBOLIC(O_PATH)
-#define O_RANDOM       SYMBOLIC(O_RANDOM)
-#define O_RSYNC        SYMBOLIC(O_RSYNC)
-#define O_SEARCH       SYMBOLIC(O_SEARCH)
-#define O_SEQUENTIAL   SYMBOLIC(O_SEQUENTIAL)
-#define O_SHLOCK       SYMBOLIC(O_SHLOCK)
-#define O_SPARSE       SYMBOLIC(O_SPARSE)
-#define O_SYNC         SYMBOLIC(O_SYNC)
-#define O_TMPFILE      SYMBOLIC(O_TMPFILE)
-#define O_TRUNC        SYMBOLIC(O_TRUNC)
-#define O_TTY_INIT     SYMBOLIC(O_TTY_INIT)
-#define O_VERIFY       SYMBOLIC(O_VERIFY)
+#define O_APPEND     O_APPEND
+#define O_ASYNC      O_ASYNC
+#define O_CLOEXEC    O_CLOEXEC
+#define O_COMPRESSED O_COMPRESSED
+#define O_CREAT      O_CREAT
+#define O_DIRECT     O_DIRECT
+#define O_DIRECTORY  O_DIRECTORY
+#define O_EXCL       O_EXCL
+#define O_EXEC       O_EXEC
+#define O_INDEXED    O_INDEXED
+#define O_LARGEFILE  O_LARGEFILE
+#define O_NDELAY     O_NDELAY
+#define O_NOATIME    O_NOATIME
+#define O_NOCTTY     O_NOCTTY
+#define O_NOFOLLOW   O_NOFOLLOW
+#define O_NONBLOCK   O_NONBLOCK
+#define O_RANDOM     O_RANDOM
+#define O_SEQUENTIAL O_SEQUENTIAL
+#define O_SYNC       O_SYNC
+#define O_TRUNC      O_TRUNC
+
+#define __tmpcosmo_O_APPEND     -801373305
+#define __tmpcosmo_O_ASYNC      -957973766
+#define __tmpcosmo_O_CLOEXEC    1580591778
+#define __tmpcosmo_O_COMPRESSED 1922797055
+#define __tmpcosmo_O_CREAT      -796151748
+#define __tmpcosmo_O_DIRECT     -1042229894
+#define __tmpcosmo_O_DIRECTORY  -614889241
+#define __tmpcosmo_O_EXCL       1874611659
+#define __tmpcosmo_O_EXEC       -727286831
+#define __tmpcosmo_O_INDEXED    -234653513
+#define __tmpcosmo_O_LARGEFILE  -1307734823
+#define __tmpcosmo_O_NDELAY     -923014394
+#define __tmpcosmo_O_NOATIME    1127867239
+#define __tmpcosmo_O_NOCTTY     -107116141
+#define __tmpcosmo_O_NOFOLLOW   795975523
+#define __tmpcosmo_O_NONBLOCK   549686796
+#define __tmpcosmo_O_RANDOM     -2052765995
+#define __tmpcosmo_O_SEQUENTIAL 854419792
+#define __tmpcosmo_O_SYNC       -282123817
+#define __tmpcosmo_O_TRUNC      924355570
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_ */

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/pty.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -28,7 +29,6 @@
 #include "libc/str/unicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
-#include "tool/build/lib/pty.h"
 
 /**
  * @fileoverview Pseudoteletypewriter
@@ -1158,7 +1158,7 @@ ssize_t PtyWrite(struct Pty *pty, const void *data, size_t n) {
         }
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   return n;

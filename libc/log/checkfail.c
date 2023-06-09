@@ -78,5 +78,5 @@ relegated void __check_fail(const char *suffix,   //
   }
   kprintf("%s\n", RESET);
   __die();
-  unreachable;
+  __builtin_unreachable();
 }

@@ -1442,6 +1442,20 @@ tzset(void)
 }
 
 static void
+gmtcheck(void)
+{
+	static bool gmt_is_set;
+	localtime_lock();
+	if (! gmt_is_set) {
+		gmtptr = malloc(sizeof *gmtptr);
+		if (gmtptr)
+			gmtload(gmtptr);
+		gmt_is_set = true;
+	}
+	localtime_unlock();
+}
+
+static void
 FreeGmt(void *p) {
 	free(p);
 }
@@ -2178,6 +2192,29 @@ mktime(struct tm *tmp)
 	t = mktime_tzname(lclptr, tmp, true);
 	localtime_unlock();
 	return t;
+}
+
+time_t
+timelocal(struct tm *tmp)
+{
+	if (tmp != NULL)
+		tmp->tm_isdst = -1;	/* in case it wasn't initialized */
+	return mktime(tmp);
+}
+
+time_t
+timegm(struct tm *tmp)
+{
+	return timeoff(tmp, 0);
+}
+
+time_t
+timeoff(struct tm *tmp, long offset)
+{
+	if (tmp)
+		tmp->tm_isdst = 0;
+	gmtcheck();
+	return localtime_time1(tmp, gmtsub, gmtptr, offset);
 }
 
 static int_fast32_t

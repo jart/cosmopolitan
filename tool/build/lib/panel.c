@@ -157,7 +157,7 @@ ssize_t PrintPanels(int fd, long pn, struct Panel *p, long tyn, long txn) {
                 }
                 break;
               default:
-                unreachable;
+                __builtin_unreachable();
             }
             if (x > p[i].right) {
               break;

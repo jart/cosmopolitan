@@ -1,13 +1,28 @@
 #ifndef COSMOPOLITAN_LIBC_ZIP_H_
 #define COSMOPOLITAN_LIBC_ZIP_H_
-#include "libc/intrin/bits.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 /**
  * @fileoverview PKZIP Data Structures.
  */
+
+#define kZipOk                       0
+#define kZipErrorEocdNotFound        -1
+#define kZipErrorEocdOffsetOverflow  -2
+#define kZipErrorEocdMagicNotFound   -3
+#define kZipErrorEocdSizeOverflow    -4
+#define kZipErrorEocdDiskMismatch    -5
+#define kZipErrorCdirRecordsMismatch -6
+#define kZipErrorCdirRecordsOverflow -7
+#define kZipErrorCdirOffsetPastEocd  -8
+#define kZipErrorCdirLocatorMagic    -9
+#define kZipErrorCdirLocatorOffset   -10
+#define kZipErrorRaceCondition       -11
+#define kZipErrorMapFailed           -12
+#define kZipErrorOpenFailed          -13
 
 #define kZipAlign 2
 
@@ -184,10 +199,10 @@
 #define ZIP_EXTRA_CONTENT(P)     ((P) + 4)
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
-void *GetZipCdir(const uint8_t *, size_t);
+void *GetZipEocd(const uint8_t *, size_t, int *);
 uint8_t *FindEmbeddedApe(const uint8_t *, size_t);
-bool IsZipCdir32(const uint8_t *, size_t, size_t);
-bool IsZipCdir64(const uint8_t *, size_t, size_t);
+int IsZipEocd32(const uint8_t *, size_t, size_t);
+int IsZipEocd64(const uint8_t *, size_t, size_t);
 int GetZipCfileMode(const uint8_t *);
 uint64_t GetZipCdirOffset(const uint8_t *);
 uint64_t GetZipCdirRecords(const uint8_t *);

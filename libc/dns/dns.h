@@ -65,7 +65,7 @@ struct addrinfo {
 };
 
 int getaddrinfo(const char *, const char *, const struct addrinfo *,
-                struct addrinfo **) paramsnonnull((4));
+                struct addrinfo **);
 void freeaddrinfo(struct addrinfo *);
 int getnameinfo(const struct sockaddr *, socklen_t, char *, socklen_t, char *,
                 socklen_t, int);

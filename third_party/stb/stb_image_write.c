@@ -118,6 +118,7 @@
  *
  *   Public Domain (www.unlicense.org)
  */
+#include "third_party/stb/stb_image_write.h"
 #include "dsp/core/core.h"
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
@@ -129,7 +130,6 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/stb/stb_image_write.h"
 #include "third_party/zlib/zlib.h"
 
 #define STBIW_UCHAR(x)                       (unsigned char)((x)&0xff)
@@ -201,7 +201,7 @@ static void stbiw__writefv(stbi__write_context *s, const char *fmt, va_list v) {
         break;
       }
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 }

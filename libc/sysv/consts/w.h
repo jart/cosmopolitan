@@ -7,11 +7,13 @@ extern const int WNOHANG;
 extern const int WUNTRACED;
 extern const int WCONTINUED;
 
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
 #define WNOHANG    1
 #define WUNTRACED  WUNTRACED
 #define WCONTINUED WCONTINUED
 
+#define __tmpcosmo_WCONTINUED 936005225
+#define __tmpcosmo_WUNTRACED  -1820879514
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_W_H_ */

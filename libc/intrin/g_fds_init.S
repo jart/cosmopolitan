@@ -21,7 +21,7 @@
 	.init.start 305,_init_g_fds
 	push	%rdi
 	push	%rsi
-	call	InitializeFileDescriptors
+	call	__init_fds
 	pop	%rsi
 	pop	%rdi
 	.init.end 305,_init_g_fds

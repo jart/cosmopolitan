@@ -27,13 +27,13 @@
 │ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,            │
 │ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "libc/math.h"
 #include "third_party/python/Modules/_decimal/libmpdec/basearith.h"
 #include "third_party/python/Modules/_decimal/libmpdec/bits.h"
 #include "third_party/python/Modules/_decimal/libmpdec/convolute.h"
 #include "third_party/python/Modules/_decimal/libmpdec/crt.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpalloc.h"
-#include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
 #include "third_party/python/Modules/_decimal/libmpdec/umodarith.h"
 /* clang-format off */
@@ -3450,7 +3450,7 @@ mpd_qdivint(mpd_t *q, const mpd_t *a, const mpd_t *b,
             _settriple(q, sign, 0, 0);
             return;
         }
-        unreachable;
+        __builtin_unreachable();
     }
     if (mpd_iszerocoeff(b)) {
         if (mpd_iszerocoeff(a)) {

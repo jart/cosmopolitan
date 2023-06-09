@@ -300,7 +300,7 @@ scall	sys_preadv		0x92190b9212a1c927	0x045	globl hidden #  ├─ last distro wi
 scall	sys_pwritev		0x92290c9222a1d928	0x046	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	0x058	globl hidden #  ├─ python modules need this due to pep513
 scall	sys_fallocate		0xfffffffffffff91d	0x02f	globl        #  ├─ end of life 2020-11-30 (extended)
-scall	posix_fallocate		0x9dffffa12fffffff	0xfff	globl hidden #  └─ cosmopolitan supports rhel5+
+scall	sys_posix_fallocate	0x9dffffa12fffffff	0xfff	globl hidden #  └─ cosmopolitan supports rhel5+
 scall	__sys_accept4		0xfff85da1dffff920	0x0f2	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	0x018	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	0x03b	globl hidden # Linux 2.6.27+

@@ -896,7 +896,7 @@ privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
     case 0b111:
       return READ64LE(p);
     default:
-      unreachable;
+      __builtin_unreachable();
   }
 }
 

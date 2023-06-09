@@ -106,7 +106,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
             pipefds[pn].events = fds[i].events & (POLLIN | POLLOUT);
             break;
           default:
-            unreachable;
+            __builtin_unreachable();
         }
         ++pn;
       } else {

@@ -184,10 +184,10 @@ void GetOpts(int argc, char *argv[]) {
         break;
       case 'h':
         ShowUsage(stdout, EXIT_SUCCESS);
-        unreachable;
+        __builtin_unreachable();
       default:
         ShowUsage(stderr, EX_USAGE);
-        unreachable;
+        __builtin_unreachable();
     }
   }
 }

@@ -8,7 +8,7 @@ forceinline wontreturn long LinuxExit(long rc) {
                : /* no outputs */
                : "a"(0xE7), "D"(rc)
                : "memory");
-  unreachable;
+  __builtin_unreachable();
 }
 
 COSMOPOLITAN_C_END_

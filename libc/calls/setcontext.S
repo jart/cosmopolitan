@@ -106,5 +106,5 @@ noasan noubsan int setcontext(const ucontext_t *uc) {
                "ret"
                : /* no outputs */
                : "m"(uc->uc_mcontext.rip), "m"(uc->uc_mcontext.rdi));
-  unreachable;
+  __builtin_unreachable();
 }

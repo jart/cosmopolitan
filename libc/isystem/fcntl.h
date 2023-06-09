@@ -9,4 +9,5 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/splice.h"
 #endif

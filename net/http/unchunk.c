@@ -109,7 +109,7 @@ ssize_t Unchunk(struct HttpUnchunker *u, char *p, size_t n, size_t *l) {
         return u->i;
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   return 0;

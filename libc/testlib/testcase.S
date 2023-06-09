@@ -21,7 +21,7 @@
 //	Decentralized section for test testcase registration.
 //
 //	@see	ape/ape.lds
-	.section .piro.relo.sort.testcase.1,"aw",@nobits
+	.section .piro.relo.sort.testcase.1,"aw",@progbits
 	.type	__testcase_start,@object
 	.type	__testcase_end,@object
 	.globl	__testcase_start,__testcase_end
@@ -34,7 +34,7 @@ __testcase_start:
 	...
 	decentralized content
 	...
-	*/.section .piro.relo.sort.testcase.3,"aw",@nobits
+	*/.section .piro.relo.sort.testcase.3,"aw",@progbits
 __testcase_end:
 	.quad	0
 	.overrun

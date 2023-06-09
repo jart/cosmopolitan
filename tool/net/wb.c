@@ -309,7 +309,7 @@ SendAnother:
         if (rc) goto Finished;
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
 

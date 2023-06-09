@@ -28,7 +28,7 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_PARAM_FAILED(cond) \
   mbedtls_param_failed(#cond, __FILE__, __LINE__)
 #else
-#define MBEDTLS_PARAM_FAILED(cond) unreachable
+#define MBEDTLS_PARAM_FAILED(cond) __builtin_unreachable()
 #endif
 
 #define MBEDTLS_INTERNAL_VALIDATE_RET(cond, ret) \

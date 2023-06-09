@@ -145,7 +145,7 @@ char *EscapeJsStringLiteral(char **r, size_t *y, const char *p, size_t n,
           } while ((w >>= 16));
           break;
         default:
-          unreachable;
+          __builtin_unreachable();
       }
     }
     if (z) *z = q - *r;

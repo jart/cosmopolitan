@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/modrm.h"
 #include "libc/log/check.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/address.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
-#include "tool/build/lib/modrm.h"
 #include "tool/build/lib/throw.h"
 
 /**
@@ -106,7 +106,7 @@ struct AddrSeg LoadEffectiveAddress(const struct Machine *m, uint32_t rde) {
         i += Read16(m->bx);
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
     i &= 0xffff;
   }

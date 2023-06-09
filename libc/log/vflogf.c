@@ -137,7 +137,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
               "exiting due to aforementioned error (host %s pid %d tid %d)\n",
               buf32, getpid(), gettid());
     __die();
-    unreachable;
+    __builtin_unreachable();
   }
 
   ALLOW_CANCELLATIONS;

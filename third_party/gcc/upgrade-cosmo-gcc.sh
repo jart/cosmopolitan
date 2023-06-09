@@ -2,14 +2,16 @@
 
 ARCH=${1:-aarch64}
 IMPORT=${2:-/opt/cross11portcosmo}
-PREFIX=third_party/gcc/
-OLDVERSION=9.2.0
+PREFIX=third_party/gcc
+OLDVERSION=11.2.0
 NEWVERSION=11.2.0
 
 rm -rf o/third_party/gcc
-mv $PREFIX/libexec/gcc/$ARCH-linux-musl/$OLDVERSION $PREFIX/libexec/gcc/$ARCH-linux-musl/$NEWVERSION
-mv $PREFIX/lib/gcc/$ARCH-linux-musl/$OLDVERSION $PREFIX/lib/gcc/$ARCH-linux-musl/$NEWVERSION
-sed -i -e "s/$OLDVERSION/$NEWVERSION/g" $(find $PREFIX -name \*.sym | grep $ARCH)
+if [ $OLDVERSION != $NEWVERSION ]; then
+  mv $PREFIX/libexec/gcc/$ARCH-linux-musl/$OLDVERSION $PREFIX/libexec/gcc/$ARCH-linux-musl/$NEWVERSION
+  mv $PREFIX/lib/gcc/$ARCH-linux-musl/$OLDVERSION $PREFIX/lib/gcc/$ARCH-linux-musl/$NEWVERSION
+  sed -i -e "s/$OLDVERSION/$NEWVERSION/g" $(find $PREFIX -name \*.sym | grep $ARCH)
+fi
 
 FILES="
 $ARCH-linux-musl/bin/ld.bfd
@@ -42,5 +44,6 @@ bin/$ARCH-linux-musl-gcc-ar
 "
 
 for f in $FILES; do
-  gzip -9 <$IMPORT/$f >$PREFIX/$f.gz || exit
+  cp -f $IMPORT/$f $PREFIX/$f || exit
+  gzip -f9 $PREFIX/$f || exit
 done

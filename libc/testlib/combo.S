@@ -21,7 +21,7 @@
 //	Decentralized section for test combo registration.
 //
 //	@see	ape/ape.lds
-	.section .piro.relo.sort.combo.1,"aw",@nobits
+	.section .piro.relo.sort.combo.1,"aw",@progbits
 	.type	__combo_start,@object
 	.type	__combo_end,@object
 	.globl	__combo_start,__combo_end
@@ -34,7 +34,7 @@ __combo_start:
 	...
 	decentralized content
 	...
-	*/.section .piro.relo.sort.combo.3,"aw",@nobits
+	*/.section .piro.relo.sort.combo.3,"aw",@progbits
 __combo_end:
 	.quad	0
 	.overrun

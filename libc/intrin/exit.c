@@ -88,7 +88,7 @@ wontreturn void _Exit(int exitcode) {
       "lidt\t(%rsp)");
   for (;;) asm("ud2");
 #else
-  unreachable;
+  __builtin_unreachable();
 #endif
 }
 

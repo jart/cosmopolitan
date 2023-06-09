@@ -413,7 +413,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
             va_arg(va, long double);
             break;
           default:
-            unreachable;
+            __builtin_unreachable();
         }
 #endif /* __aarch64__ */
         break;

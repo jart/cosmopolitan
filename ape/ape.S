@@ -1863,10 +1863,10 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.type	__test_end,@object
 
 	.section .commentprologue,"a",@progbits
-	.globl	kLegalNotices
-	.type	kLegalNotices,@object
-	.hidden	kLegalNotices
-kLegalNotices:/*
+	.globl	__comment_start
+	.type	__comment_start,@object
+	.hidden	__comment_start
+__comment_start:/*
 	...
 	decentralized content
 	...

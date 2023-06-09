@@ -4048,6 +4048,7 @@ THIRD_PARTY_PYTHON_FREEZE_DIRECTDEPS =					\
 	LIBC_STDIO							\
 	LIBC_MEM							\
 	LIBC_STR							\
+	LIBC_LOG							\
 	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_X								\
@@ -4086,7 +4087,6 @@ o/$(MODE)/third_party/python/chibicc.inc:				\
 		libc/mem/mem.h						\
 		libc/nexgen32e/kcpuids.h				\
 		libc/runtime/runtime.h					\
-		libc/runtime/symbolic.h					\
 		libc/stdio/stdio.h					\
 		libc/str/str.h						\
 		libc/str/unicode.h					\

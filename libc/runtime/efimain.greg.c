@@ -258,7 +258,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
    * Switches to copied image and launches program.
    */
   _EfiPostboot(mm, pml4t, Args, ArgBlock->Args);
-  unreachable;
+  __builtin_unreachable();
 }
 
 #endif /* __x86_64__ */

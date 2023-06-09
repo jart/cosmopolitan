@@ -60,7 +60,7 @@ errno_t pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
       attr->__detachstate = PTHREAD_CREATE_DETACHED;
       break;
     default:
-      unreachable;
+      __builtin_unreachable();
   }
   return 0;
 }

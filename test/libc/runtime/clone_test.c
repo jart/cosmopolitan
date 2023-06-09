@@ -117,7 +117,7 @@ int CloneTestSys(void *arg, int tid) {
         ASSERT_EQ(EINVAL, errno);
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   }
   return 0;

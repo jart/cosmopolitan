@@ -607,21 +607,17 @@ typedef struct {
 #define noubsan
 #endif
 
-#ifndef unreachable
-#define unreachable __builtin_unreachable()
-#endif
-
 #ifdef __STRICT_ANSI__
 void abort(void) wontreturn;
 #define notpossible abort()
 #else
 #ifdef __x86_64__
-#define notpossible \
-  do {              \
-    asm("nop\n\t"   \
-        "ud2\n\t"   \
-        "nop");     \
-    unreachable;    \
+#define notpossible          \
+  do {                       \
+    asm("nop\n\t"            \
+        "ud2\n\t"            \
+        "nop");              \
+    __builtin_unreachable(); \
   } while (0)
 #else
 #define notpossible __builtin_trap()

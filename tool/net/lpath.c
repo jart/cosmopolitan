@@ -106,7 +106,7 @@ static int LuaPathJoin(lua_State *L) {
     return 1;
   } else {
     luaL_error(L, "missing argument");
-    unreachable;
+    __builtin_unreachable();
   }
 }
 

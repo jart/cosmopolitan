@@ -255,7 +255,7 @@ ssize_t readansi(int fd, char *p, size_t n) {
         }
         break;
       default:
-        unreachable;
+        __builtin_unreachable();
     }
   } while (t != kDone);
   errno = e;

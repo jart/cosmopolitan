@@ -26,10 +26,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
 
-extern int __threadcalls_end[];
-extern int __threadcalls_start[];
-#pragma weak __threadcalls_start
-#pragma weak __threadcalls_end
+extern int __threadcalls_end[] __attribute__((__weak__));
+extern int __threadcalls_start[] __attribute__((__weak__));
 
 static privileged dontinline void FixupLockNops(void) {
   sigset_t mask;
