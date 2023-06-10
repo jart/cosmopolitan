@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -47,7 +46,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
 
   if (offset != -1) {
     // windows changes the file pointer even if overlapped is passed
-    _npassert(SetFilePointerEx(h, 0, &p, SEEK_CUR));
+    SetFilePointerEx(h, 0, &p, SEEK_CUR);
   }
 
   ok = WriteFile(h, data, _clampio(size), &sent,
@@ -55,7 +54,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
 
   if (offset != -1) {
     // windows clobbers file pointer even on error
-    _npassert(SetFilePointerEx(h, p, 0, SEEK_SET));
+    SetFilePointerEx(h, p, 0, SEEK_SET);
   }
 
   if (ok) {

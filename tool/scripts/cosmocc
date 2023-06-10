@@ -2,22 +2,49 @@
 #
 # cosmopolitan c compiler
 #
-# we assume you run the following beforehand
+# getting started
 #
 #     sudo chmod 1777 /opt
-#     cd /opt
-#     git clone https://github.com/jart/cosmopolitan cosmo
-#     cd cosmo
-#     make -j
+#     git clone https://github.com/jart/cosmopolitan /opt/cosmo
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     sudo ln -sf /opt/cosmo/tool/scripts/cosmocc /usr/local/bin/cosmocc
+#     sudo ln -sf /opt/cosmo/tool/scripts/cosmoc++ /usr/local/bin/cosmoc++
+#     cosmocc -o hello.com hello.c
+#     ./foo.com
+#     ./foo.com.dbg
 #
-# you can then use it to build open source projects, e.g.
+# building open source projects
 #
 #     export CC=cosmocc
 #     export CXX=cosmoc++
-#     export LD=cosmoc++
 #     ./configure --prefix=/opt/cosmos
 #     make -j
 #     make install
+#
+# cosmopolitan runtime flags
+#
+#     ./hello.com --strace
+#     ./hello.com --ftrace
+#
+# cosmpolitan runtime libraries
+#
+#     #include <cosmo.h>
+#     int main() {
+#       ShowCrashReports();
+#       __builtin_trap();
+#     }
+#
+# building programs in tiny mode
+#
+#     export MODE=tiny
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     cosmocc -Os -o foo.com foo.c
+#
+# hardening programs with memory safety
+#
+#     export MODE=asan
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     cosmocc -o foo.com foo.c
 #
 
 MODE=${MODE:-$m}
@@ -36,14 +63,14 @@ fi
 
 PLATFORM="-D__COSMOPOLITAN__"
 PREDEF="-include libc/integral/normalize.inc"
-CCFLAGS="-g -fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
+CCFLAGS="-fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
 CFLAGS=
 CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
-CC="$COSMO/o/$MODE/third_party/gcc/bin/x86_64-linux-musl-gcc"
-OBJCOPY="$COSMO/o/$MODE/third_party/gcc/bin/x86_64-linux-musl-objcopy"
+CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
+OBJCOPY="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-objcopy"
 FIXUPOBJ="$COSMO/o/$MODE/tool/build/fixupobj.com"
 ZIPCOPY="$COSMO/o/$MODE/tool/build/zipcopy.com"
 
@@ -54,6 +81,16 @@ fi
 
 if [ ! -d "$COSMOS" ]; then
   echo "you need to create your $COSMOS directory" >&2
+  exit 1
+fi
+
+if [ ! -f "$CC" ] ||
+   [ ! -f "$OBJCOPY" ] ||
+   [ ! -f "$FIXUPOBJ" ] ||
+   [ ! -f "$ZIPCOPY" ]; then
+  echo "error: cosmopolitan artifacts missing; please run" >&2
+  echo "  cd $COSMOS" >&2
+  echo "  make -j8 m=$MODE toolchain" >&2
   exit 1
 fi
 
@@ -128,24 +165,19 @@ set -- "$CC" "$@"
 printf '(cd %s; %s)\n' "$PWD" "$*" >>/tmp/build.log
 "$@" || exit
 
-if [ $INTENT = cc ] && [ -n "$OUTPUT" ]; then
-  "$FIXUPOBJ" "$OUTPUT" || exit
-elif [ $INTENT = ld ] && [ -n "$OUTPUT" ]; then
-  if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
-     [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
-    # cosmocc -o foo.com ...
-    # -> foo.com (ape)
-    # -> foo.com.dbg (elf)
-    mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
-    "$OBJCOPY" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
-    "$ZIPCOPY" "$OUTPUT.dbg" "$OUTPUT" || exit
-  else
-    # cosmocc -o foo ...
-    # -> foo (elf)
-    # -> foo.com (ape)
-    # -> foo.com.dbg (elf)
-    cp -f "$OUTPUT" "$OUTPUT.com.dbg" || exit
-    "$OBJCOPY" -S -O binary "$OUTPUT" "$OUTPUT.com" || exit
-    "$ZIPCOPY" "$OUTPUT" "$OUTPUT.com" || exit
+if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
+  if [ $INTENT = cc ] || [ $INTENT = ld ]; then
+    "$FIXUPOBJ" "$OUTPUT" || exit
+  fi
+  if [ $INTENT = ld ]; then
+    if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
+       [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
+      # cosmocc -o foo.com ...
+      # -> foo.com (ape)
+      # -> foo.com.dbg (elf)
+      mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
+      "$OBJCOPY" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
+      "$ZIPCOPY" "$OUTPUT.dbg" "$OUTPUT" || exit
+    fi
   fi
 fi

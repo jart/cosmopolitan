@@ -18,49 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/weaken.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/log/internal.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
-relegated void __assert_fail(const char *expr, const char *file, int line) {
-  int me, owner;
-  static atomic_int once;
+privileged void __assert_fail(const char *expr, const char *file, int line) {
+  static atomic_bool once;
   if (!__assert_disable) {
-    strace_enabled(-1);
-    ftrace_enabled(-1);
-    owner = 0;
-    me = __tls_enabled ? __get_tls()->tib_tid : __pid;
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
-    kprintf("%s:%d: assert(%s) failed (tid %d) %m\n", file, line, expr, me);
-    if (__vforked ||
-        atomic_compare_exchange_strong_explicit(
-            &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
-      __restore_tty();
-      if (_weaken(ShowBacktrace)) {
-        _weaken(ShowBacktrace)(2, __builtin_frame_address(0));
-      } else if (_weaken(PrintBacktraceUsingSymbols) &&
-                 _weaken(GetSymbolTable)) {
-        _weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
-                                            _weaken(GetSymbolTable)());
-      } else {
-        kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
-      }
-      _Exitr(23);
-    } else if (owner == me) {
-      kprintf("assert failed while failing\n");
-      _Exitr(24);
-    } else {
-      _Exit1(25);
+    if (!atomic_exchange(&once, true)) {
+      kprintf("%s:%d: assert(%s) failed (tid %P) %m\n", file, line, expr);
     }
+    __builtin_trap();
   }
 }

@@ -55,7 +55,7 @@ void *xrealloc(void *, size_t)
     attributeallocsize((2)) dontthrow nocallback dontdiscard;
 void *xcalloc(size_t, size_t) attributeallocsize((1, 2))
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
-void *xvalloc(size_t) attributeallocsize((1)) returnsaligned((FRAMESIZE))
+void *xvalloc(size_t) attributeallocsize((1)) returnsaligned((APE_PAGESIZE))
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 void *xmemalign(size_t, size_t) attributeallocalign((1)) attributeallocsize((2))
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;

@@ -120,7 +120,7 @@ long _missingno();
 void _weakfree(void *);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
-void *_mapstack(void) returnsaligned((FRAMESIZE)) mallocesque;
+void *_mapstack(void) returnsaligned((APE_PAGESIZE)) mallocesque;
 int _freestack(void *);
 void __oom_hook(size_t);
 void _peekall(void);

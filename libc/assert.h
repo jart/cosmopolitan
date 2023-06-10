@@ -23,22 +23,22 @@ void __assert_fail(const char *, const char *, int) _Hide relegated;
   ({                                        \
     if (__builtin_expect(!(x), 0)) {        \
       __assert_fail(s, __FILE__, __LINE__); \
-      notpossible;                          \
+      __builtin_trap();                     \
     }                                       \
     (void)0;                                \
   })
 #else
+#define _npassert(x)                 \
+  ({                                 \
+    if (__builtin_expect(!(x), 0)) { \
+      __builtin_trap();              \
+    }                                \
+    (void)0;                         \
+  })
 #define _unassert(x)                 \
   ({                                 \
     if (__builtin_expect(!(x), 0)) { \
       __builtin_unreachable();       \
-    }                                \
-    (void)0;                         \
-  })
-#define _npassert(x)                 \
-  ({                                 \
-    if (__builtin_expect(!(x), 0)) { \
-      notpossible;                   \
     }                                \
     (void)0;                         \
   })
