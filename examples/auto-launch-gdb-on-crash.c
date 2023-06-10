@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Automatically launches GDB Debugger TUI during crash.

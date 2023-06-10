@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "ape/relocations.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 //	ZIP Central Directory.
 	.section .zip.3,"",@progbits

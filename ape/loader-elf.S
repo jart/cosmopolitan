@@ -32,57 +32,57 @@ ehdr:	.ascii	"\177ELF"
 	.byte	1
 	.byte	ELFOSABI_FREEBSD
 	.quad	0
-	.word	ET_EXEC			# e_type
-	.word	EM_NEXGEN32E		# e_machine
-	.long	1			# e_version
-	.quad	_start			# e_entry
-	.quad	phdrs - ehdr		# e_phoff
-	.quad	0			# e_shoff
-	.long	0			# e_flags
-	.word	64			# e_ehsize
-	.word	56			# e_phentsize
-	.word	4			# e_phnum
-	.word	0			# e_shentsize
-	.word	0			# e_shnum
-	.word	0			# e_shstrndx
+	.word	ET_EXEC			// e_type
+	.word	EM_NEXGEN32E		// e_machine
+	.long	1			// e_version
+	.quad	_start			// e_entry
+	.quad	phdrs - ehdr		// e_phoff
+	.quad	0			// e_shoff
+	.long	0			// e_flags
+	.word	64			// e_ehsize
+	.word	56			// e_phentsize
+	.word	4			// e_phnum
+	.word	0			// e_shentsize
+	.word	0			// e_shnum
+	.word	0			// e_shstrndx
 	.endobj	ehdr,globl
 
 	.balign	8
-phdrs:	.long	PT_LOAD			# p_type
-	.long	PF_R|PF_X		# p_flags
-	.quad	0			# p_offset
-	.quad	ehdr			# p_vaddr
-	.quad	ehdr			# p_paddr
-	.quad	filesz			# p_filesz
-	.quad	filesz			# p_memsz
-	.quad	PAGESIZE		# p_align
+phdrs:	.long	PT_LOAD			// p_type
+	.long	PF_R|PF_X		// p_flags
+	.quad	0			// p_offset
+	.quad	ehdr			// p_vaddr
+	.quad	ehdr			// p_paddr
+	.quad	filesz			// p_filesz
+	.quad	filesz			// p_memsz
+	.quad	4096			// p_align
 
-	.long	PT_LOAD			# p_type
-	.long	PF_R|PF_W		# p_flags
-	.quad	0			# p_offset
-	.quad	bss			# p_vaddr
-	.quad	bss			# p_paddr
-	.quad	0			# p_filesz
-	.quad	bsssize			# p_memsz
-	.quad	PAGESIZE		# p_align
+	.long	PT_LOAD			// p_type
+	.long	PF_R|PF_W		// p_flags
+	.quad	0			// p_offset
+	.quad	bss			// p_vaddr
+	.quad	bss			// p_paddr
+	.quad	0			// p_filesz
+	.quad	bsssize			// p_memsz
+	.quad	4096			// p_align
 
-	.long	PT_GNU_STACK		# p_type
-	.long	PF_R|PF_W		# p_flags
-	.quad	0			# p_offset
-	.quad	0			# p_vaddr
-	.quad	0			# p_paddr
-	.quad	0			# p_filesz
-	.quad	0			# p_memsz
-	.quad	16			# p_align
+	.long	PT_GNU_STACK		// p_type
+	.long	PF_R|PF_W		// p_flags
+	.quad	0			// p_offset
+	.quad	0			// p_vaddr
+	.quad	0			// p_paddr
+	.quad	0			// p_filesz
+	.quad	0			// p_memsz
+	.quad	16			// p_align
 
-	.long	PT_NOTE			# p_type
-	.long	PF_R			# p_flags
-	.quad	note - ehdr		# p_offset
-	.quad	note			# p_vaddr
-	.quad	note			# p_paddr
-	.quad	notesize		# p_filesz
-	.quad	notesize		# p_memsz
-	.quad	8			# p_align
+	.long	PT_NOTE			// p_type
+	.long	PF_R			// p_flags
+	.quad	note - ehdr		// p_offset
+	.quad	note			// p_vaddr
+	.quad	note			// p_paddr
+	.quad	notesize		// p_filesz
+	.quad	notesize		// p_memsz
+	.quad	8			// p_align
 	.endobj	phdrs
 
 note:	.long	2f-1f
@@ -100,8 +100,8 @@ note:	.long	2f-1f
 4:	.endobj	note
 	notesize = . - note
 
-	.balign	64,0				# for ape.S dd
-	.org	0x180				# for ape.S dd
+	.balign	64,0				// for ape.S dd
+	.org	0x180				// for ape.S dd
 
 //	APE Loader XNU Header
 //
@@ -113,92 +113,92 @@ macho:	.long	0xFEEDFACE+1
 	.long	MAC_CPU_NEXGEN32E
 	.long	MAC_CPU_NEXGEN32E_ALL
 	.long	MAC_EXECUTE
-	.long	5				# number of load commands
-	.long	60f-10f				# size of all load commands
-	.long	MAC_NOUNDEFS			# flags
-	.long	0				# reserved
+	.long	5				// number of load commands
+	.long	60f-10f				// size of all load commands
+	.long	MAC_NOUNDEFS			// flags
+	.long	0				// reserved
 10:	.long	MAC_LC_SEGMENT_64
-	.long	20f-10b				# unmaps first page dir
-	.ascin	"__PAGEZERO",16			# consistent with linux
-	.quad	0,0x200000,0,0			# which forbids mem <2m
+	.long	20f-10b				// unmaps first page dir
+	.ascin	"__PAGEZERO",16			// consistent with linux
+	.quad	0,0x200000,0,0			// which forbids mem <2m
 	.long	0,0,0,0
 20:	.long	MAC_LC_SEGMENT_64
 	.long	30f-20b
 	.ascin	"__TEXT",16
-	.quad	ehdr				# vaddr
-	.quad	4096				# memsz
-	.quad	0				# file offset
-	.quad	filesz				# file size
-	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
-	.long	PROT_EXEC|PROT_READ		# initprot
-	.long	1				# segment section count
-	.long	0				# flags
-210:	.ascin	"__text",16			# section name (.text)
+	.quad	ehdr				// vaddr
+	.quad	4096				// memsz
+	.quad	0				// file offset
+	.quad	filesz				// file size
+	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
+	.long	PROT_EXEC|PROT_READ		// initprot
+	.long	1				// segment section count
+	.long	0				// flags
+210:	.ascin	"__text",16			// section name (.text)
 	.ascin	"__TEXT",16
-	.quad	_start				# vaddr
-	.quad	textsz				# memsz
-	.long	textoff				# offset
-	.long	6				# align 2**6 = 64
-	.long	0				# reloc table offset
-	.long	0				# relocation count
-	.long	MAC_S_ATTR_SOME_INSTRUCTIONS	# section type & attributes
-	.long	0,0,0				# reserved
+	.quad	_start				// vaddr
+	.quad	textsz				// memsz
+	.long	textoff				// offset
+	.long	6				// align 2**6 = 64
+	.long	0				// reloc table offset
+	.long	0				// relocation count
+	.long	MAC_S_ATTR_SOME_INSTRUCTIONS	// section type & attributes
+	.long	0,0,0				// reserved
 30:	.long	MAC_LC_SEGMENT_64
 	.long	40f-30b
 	.ascin	"__DATA",16
-	.quad	bss				# vaddr
-	.quad	bsssize				# memsz
-	.quad	0				# offset
-	.quad	0				# file size
-	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
-	.long	PROT_READ|PROT_WRITE		# initprot
-	.long	1				# segment section count
-	.long	0				# flags
-310:	.ascin	"__bss",16			# section name (.bss)
+	.quad	bss				// vaddr
+	.quad	bsssize				// memsz
+	.quad	0				// offset
+	.quad	0				// file size
+	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
+	.long	PROT_READ|PROT_WRITE		// initprot
+	.long	1				// segment section count
+	.long	0				// flags
+310:	.ascin	"__bss",16			// section name (.bss)
 	.ascin	"__DATA",16
-	.quad	bss				# vaddr
-	.quad	bsssize				# memsz
-	.long	0				# offset
-	.long	12				# align 2**12 = 4096
-	.long	0				# reloc table offset
-	.long	0				# relocation count
-	.long	MAC_S_ZEROFILL			# section type & attributes
-	.long	0,0,0				# reserved
+	.quad	bss				// vaddr
+	.quad	bsssize				// memsz
+	.long	0				// offset
+	.long	12				// align 2**12 = 4096
+	.long	0				// reloc table offset
+	.long	0				// relocation count
+	.long	MAC_S_ZEROFILL			// section type & attributes
+	.long	0,0,0				// reserved
 40:	.long	MAC_LC_UUID
 	.long	50f-40b
-	.quad	0x3fb29ee4ac6c87aa		# uuid1
-	.quad	0xdd2c9bb866d9eef8		# uuid2
+	.quad	0x3fb29ee4ac6c87aa		// uuid1
+	.quad	0xdd2c9bb866d9eef8		// uuid2
 50:	.long	MAC_LC_UNIXTHREAD
-	.long	60f-50b				# cmdsize
-	.long	MAC_THREAD_NEXGEN32E		# flavaflav
-	.long	(520f-510f)/4			# count
-510:	.quad	0				# rax
-	.quad	0				# rbx
-	.quad	0				# rcx
-	.quad	_HOSTXNU			# rdx
-	.quad	0				# rdi
-	.quad	0				# rsi
-	.quad	0				# rbp
-	.quad	0				# rsp
-	.quad	0				# r8
-	.quad	0				# r9
-	.quad	0				# r10
-	.quad	0				# r11
-	.quad	0				# r12
-	.quad	0				# r13
-	.quad	0				# r14
-	.quad	0				# r15
-	.quad	_start				# rip
-	.quad	0				# rflags
-	.quad	0				# cs
-	.quad	0				# fs
-	.quad	0				# gs
+	.long	60f-50b				// cmdsize
+	.long	MAC_THREAD_NEXGEN32E		// flavaflav
+	.long	(520f-510f)/4			// count
+510:	.quad	0				// rax
+	.quad	0				// rbx
+	.quad	0				// rcx
+	.quad	_HOSTXNU			// rdx
+	.quad	0				// rdi
+	.quad	0				// rsi
+	.quad	0				// rbp
+	.quad	0				// rsp
+	.quad	0				// r8
+	.quad	0				// r9
+	.quad	0				// r10
+	.quad	0				// r11
+	.quad	0				// r12
+	.quad	0				// r13
+	.quad	0				// r14
+	.quad	0				// r15
+	.quad	_start				// rip
+	.quad	0				// rflags
+	.quad	0				// cs
+	.quad	0				// fs
+	.quad	0				// gs
 520:
 60:
 	.endobj	macho
 
-	.balign	64,0				# for ape.S dd
-	.org	0x400				# for ape.S dd
+	.balign	64,0				// for ape.S dd
+	.org	0x400				// for ape.S dd
 
 //	Ape Loader Entrpoint
 //

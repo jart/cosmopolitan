@@ -184,7 +184,7 @@ privileged bool kisdangerous(const void *p) {
     if (IsStackFrame(frame)) return false;
     if (kismapped(frame)) return false;
   }
-  if (GetStackAddr() + GUARDSIZE <= (uintptr_t)p &&
+  if (GetStackAddr() + APE_GUARDSIZE <= (uintptr_t)p &&
       (uintptr_t)p < GetStackAddr() + GetStackSize()) {
     return false;
   }

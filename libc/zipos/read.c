@@ -21,7 +21,7 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "libc/zipos/zipos.internal.h"
 
 static size_t GetIovSize(const struct iovec *iov, size_t iovlen) {

@@ -8,6 +8,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"

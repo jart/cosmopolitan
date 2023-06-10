@@ -20,7 +20,7 @@
 #include "libc/assert.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "libc/zipos/zipos.internal.h"
 
 // TODO(jart): improve time complexity here

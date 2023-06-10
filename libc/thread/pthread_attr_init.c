@@ -27,7 +27,7 @@
 errno_t pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){
       .__stacksize = GetStackSize(),
-      .__guardsize = GUARDSIZE,
+      .__guardsize = APE_GUARDSIZE,
   };
   return 0;
 }

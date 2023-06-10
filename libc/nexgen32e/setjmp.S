@@ -27,7 +27,8 @@
 //	@note	code built w/ microsoft abi compiler can't call this
 //	@see	longjmp(), _gclongjmp()
 	.ftrace1
-setjmp:	.ftrace2
+setjmp:
+	.ftrace2
 #ifdef __x86_64__
 	lea	8(%rsp),%rax
 	mov	%rax,(%rdi)
@@ -40,6 +41,7 @@ setjmp:	.ftrace2
 	mov	(%rsp),%rax
 	mov	%rax,56(%rdi)
 	xor	%eax,%eax
+	ret
 #elif defined(__aarch64__)
 	stp	x19,x20,[x0,#0]
 	stp	x21,x22,[x0,#16]
@@ -54,7 +56,9 @@ setjmp:	.ftrace2
 	stp	d12,d13,[x0,#144]
 	stp	d14,d15,[x0,#160]
 	mov	x0,#0
-#endif
 	ret
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	setjmp,globl
 	.alias	setjmp,_setjmp

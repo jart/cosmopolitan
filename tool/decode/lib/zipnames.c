@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "tool/decode/lib/zipnames.h"
 
 const struct IdName kZipCompressionNames[] = {

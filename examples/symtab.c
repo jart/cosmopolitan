@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/intrin/kprintf.h"
-#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * @fileoverview example of how to embed symbol table in .com file

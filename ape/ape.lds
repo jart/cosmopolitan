@@ -182,7 +182,7 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/thread/tls.h"
 #include "ape/ape.internal.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 /* uncomment if .com.dbg won't execute on your kernel (will break .com file) */
 /* #define APE_FIX_COM_DBG */
@@ -257,7 +257,7 @@ SECTIONS {
     HIDDEN(ape_macho_end = .);
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(SupportsWindows() || SupportsMetal() ? PAGESIZE : 16);
+    . = ALIGN(SupportsWindows() || SupportsMetal() ? 4096 : 16);
     HIDDEN(_ehead = .);
   } :Head
 
@@ -311,7 +311,7 @@ SECTIONS {
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
-    . = ALIGN(__privileged_end > __privileged_start ? PAGESIZE : 1);
+    . = ALIGN(__privileged_end > __privileged_start ? 4096 : 1);
 /*END: morphable code */
     __privileged_start = .;
     *(.privileged)
@@ -367,7 +367,7 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.rodata.*)))
 
     KEEP(*(.ape.pad.text))
-    . = ALIGN(PAGESIZE);
+    . = ALIGN(4096);
     HIDDEN(_etext = .);
     PROVIDE_HIDDEN(etext = .);
 /*END: Read Only Data (only needed for initialization) */
@@ -380,7 +380,7 @@ SECTIONS {
     *(SORT_BY_ALIGNMENT(.tdata))
     *(SORT_BY_ALIGNMENT(.tdata.*))
     _tdata_end = .;
-    . = ALIGN(PAGESIZE);
+    . = ALIGN(4096);
   } :Tls :Rom
 /*END: Read Only Data */
 
@@ -395,7 +395,7 @@ SECTIONS {
     _tbss_end = .;
   } :Tls
 
-  .data ALIGN(PAGESIZE) : {
+  .data ALIGN(4096) : {
 /*BEGIN: Read/Write Data */
     KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
 /*BEGIN: NT FORK COPYING */
@@ -426,7 +426,7 @@ SECTIONS {
     PROVIDE_HIDDEN(edata = .);
     KEEP(*(SORT_BY_NAME(.zip.*)))
     HIDDEN(_ezip = .);
-    . = ALIGN(PAGESIZE);
+    . = ALIGN(4096);
   } :Ram
 
 /*END:   file content that's loaded by o/s */
@@ -452,7 +452,7 @@ SECTIONS {
 
     KEEP(*(.bssepilogue))
 /*END: NT FORK COPYING */
-    . = ALIGN(PAGESIZE);
+    . = ALIGN(4096);
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
   } :Bss
@@ -525,7 +525,7 @@ HIDDEN(ape_rom_vaddr = ADDR(.head));
 HIDDEN(ape_rom_paddr = LOADADDR(.head));
 HIDDEN(ape_rom_filesz = LOADADDR(.data) - ape_rom_paddr);
 HIDDEN(ape_rom_memsz = ADDR(.data) - ADDR(.head));
-HIDDEN(ape_rom_align = PAGESIZE);
+HIDDEN(ape_rom_align = 4096);
 HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
@@ -533,7 +533,7 @@ HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
 HIDDEN(ape_ram_filesz = SIZEOF(.data));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
-HIDDEN(ape_ram_align = PAGESIZE);
+HIDDEN(ape_ram_align = 4096);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
 HIDDEN(ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W);
@@ -542,7 +542,7 @@ HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
 HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000);
 HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
 HIDDEN(ape_stack_filesz = 0);
-HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
+HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : APE_STACKSIZE);
 HIDDEN(ape_stack_align = 16);
 
 HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
@@ -557,7 +557,7 @@ HIDDEN(ape_text_paddr = LOADADDR(.text));
 HIDDEN(ape_text_vaddr = ADDR(.text));
 HIDDEN(ape_text_filesz = SIZEOF(.text) + SIZEOF(.tdata));
 HIDDEN(ape_text_memsz = SIZEOF(.text) + SIZEOF(.tdata));
-HIDDEN(ape_text_align = PAGESIZE);
+HIDDEN(ape_text_align = 4096);
 HIDDEN(ape_text_rva = RVA(ape_text_vaddr));
 
 HIDDEN(ape_data_offset = ape_ram_offset + LOADADDR(.data) - ape_ram_paddr);
@@ -565,7 +565,7 @@ HIDDEN(ape_data_paddr = LOADADDR(.data));
 HIDDEN(ape_data_vaddr = ADDR(.data));
 HIDDEN(ape_data_filesz = SIZEOF(.data));
 HIDDEN(ape_data_memsz = SIZEOF(.data));
-HIDDEN(ape_data_align = PAGESIZE);
+HIDDEN(ape_data_align = 4096);
 HIDDEN(ape_data_rva = RVA(ape_data_vaddr));
 
 HIDDEN(ape_bss_offset = ape_ram_offset + LOADADDR(.bss) - ape_ram_paddr);
@@ -573,7 +573,7 @@ HIDDEN(ape_bss_paddr = LOADADDR(.bss));
 HIDDEN(ape_bss_vaddr = ADDR(.bss));
 HIDDEN(ape_bss_filesz = 0);
 HIDDEN(ape_bss_memsz = SIZEOF(.bss));
-HIDDEN(ape_bss_align = PAGESIZE);
+HIDDEN(ape_bss_align = 4096);
 
 /* we roundup here because xnu wants the file load segments page-aligned */
 /* but we don't want to add the nop padding to the ape program, so we'll */
@@ -581,7 +581,7 @@ HIDDEN(ape_bss_align = PAGESIZE);
 SHSTUB2(ape_loader_dd_skip, DEFINED(ape_loader) ? RVA(ape_loader) / 64 : 0);
 SHSTUB2(ape_loader_dd_count,
         DEFINED(ape_loader_end)
-            ? ROUNDUP(ape_loader_end - ape_loader, PAGESIZE) / 64
+            ? ROUNDUP(ape_loader_end - ape_loader, 4096) / 64
             : 0);
 
 #if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()

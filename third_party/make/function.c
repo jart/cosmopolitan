@@ -24,7 +24,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/os.h"
 #include "third_party/make/commands.h"
 #include "libc/mem/critbit0.h"
-#include "libc/log/rop.h"
+#include "libc/log/rop.internal.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/make/debug.h"
 

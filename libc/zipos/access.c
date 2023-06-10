@@ -20,7 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "libc/zipos/zipos.internal.h"
 
 // TODO: this should check parent directory components

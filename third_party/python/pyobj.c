@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"

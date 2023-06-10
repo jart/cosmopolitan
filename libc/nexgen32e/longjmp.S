@@ -57,6 +57,8 @@ longjmp:
 	cmp	w1,0
 	csinc	w0,w1,wzr,ne
 	br	x30
+#else
+#error "unsupported architecture"
 #endif
 	.endfn	longjmp,globl
 	.alias	longjmp,_longjmp

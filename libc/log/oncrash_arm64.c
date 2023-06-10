@@ -184,7 +184,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
     gethostname(host, sizeof(host));
     reset = !__nocolor ? RESET : "";
     strong = !__nocolor ? STRONG : "";
-    if (ctx && (ctx->uc_mcontext.sp & (GetStackSize() - 1)) <= GUARDSIZE) {
+    if (ctx && (ctx->uc_mcontext.sp & (GetStackSize() - 1)) <= APE_GUARDSIZE) {
       kind = "Stack Overflow";
     } else {
       kind = GetSiCodeName(sig, si->si_code);

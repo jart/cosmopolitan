@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 typedef char v16qi __attribute__((__vector_size__(16)));
 typedef short v8hi __attribute__((__vector_size__(16)));

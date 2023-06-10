@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/rop.h"
+#include "libc/log/rop.internal.h"
 #include "libc/stdio/append.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lua.h"

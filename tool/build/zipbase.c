@@ -16,7 +16,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 int main(int argc, char *argv[]) {
 

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_APPEND_H_
 #define COSMOPOLITAN_LIBC_STDIO_APPEND_H_
-#include "libc/fmt/pflink.h"
 #ifdef COSMO
 
 #define APPEND_COOKIE 21578

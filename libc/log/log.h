@@ -43,8 +43,6 @@ const char *commandvenv(const char *, const char *);
 int LogKprintfToFile(const char *);
 const char *GetAddr2linePath(void);
 const char *GetGdbPath(void);
-void ShowCrashReports(void);
-int MakeProcessNice(void);
 bool32 IsDebuggerPresent(bool);
 bool IsRunningUnderMake(void);
 const char *GetSiCodeName(int, int);

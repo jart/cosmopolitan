@@ -152,8 +152,9 @@ typedef struct {
 #define libcesque   dontthrow nocallback
 #define memcpyesque libcesque
 #define strlenesque libcesque nosideeffect paramsnonnull()
-#define vallocesque \
-  libcesque dontdiscard returnsaligned((GUARDSIZE)) returnspointerwithnoaliases
+#define vallocesque                                    \
+  libcesque dontdiscard returnsaligned((APE_PAGESIZE)) \
+      returnspointerwithnoaliases
 #define reallocesque libcesque returnsaligned((16))
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer

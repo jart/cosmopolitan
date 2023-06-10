@@ -1,24 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMESPEC_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMESPEC_H_
-
-#ifdef COSMO
-#define timespec_get         __timespec_get
-#define timespec_getres      __timespec_getres
-#define timespec_cmp         __timespec_cmp
-#define timespec_tomicros    __timespec_tomicros
-#define timespec_tomillis    __timespec_tomillis
-#define timespec_tonanos     __timespec_tonanos
-#define timespec_add         __timespec_add
-#define timespec_fromnanos   __timespec_fromnanos
-#define timespec_frommicros  __timespec_frommicros
-#define timespec_frommillis  __timespec_frommillis
-#define timespec_real        __timespec_real
-#define timespec_mono        __timespec_mono
-#define timespec_sleep       __timespec_sleep
-#define timespec_sleep_until __timespec_sleep_until
-#define timespec_sub         __timespec_sub
-#endif /* COSMO */
-
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -32,7 +13,6 @@ int clock_gettime(int, struct timespec *);
 int clock_nanosleep(int, int, const struct timespec *, struct timespec *);
 int futimens(int, const struct timespec[2]);
 int nanosleep(const struct timespec *, struct timespec *);
-int sys_futex(int *, int, int, const struct timespec *, int *);
 int utimensat(int, const char *, const struct timespec[2], int);
 
 #ifdef COSMO
@@ -55,6 +35,7 @@ struct timespec timespec_mono(void);
 struct timespec timespec_sleep(struct timespec);
 int timespec_sleep_until(struct timespec);
 struct timespec timespec_sub(struct timespec, struct timespec) pureconst;
+int sys_futex(int *, int, int, const struct timespec *, int *);
 #endif /* COSMO */
 
 COSMOPOLITAN_C_END_

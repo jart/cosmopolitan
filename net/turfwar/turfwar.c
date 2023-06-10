@@ -73,7 +73,7 @@
 #include "libc/time/struct/tm.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"

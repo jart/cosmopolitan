@@ -8,8 +8,8 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/intrin/kprintf.h"
-#include "libc/log/log.h"
 #include "libc/math.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
 /**

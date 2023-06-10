@@ -25,7 +25,7 @@ struct sigaction { /* cosmo abi */
 sighandler_t signal(int, sighandler_t);
 int sigaction(int, const struct sigaction *, struct sigaction *);
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(COSMO)
 
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);

@@ -23,7 +23,7 @@
 #include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
-#include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/seccomp.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -371,24 +371,6 @@ int UnveilIfExists(const char *path, const char *perm) {
     }
   }
   return -1;
-}
-
-void MakeProcessNice(void) {
-  if (!g_nice) return;
-  if (setpriority(PRIO_PROCESS, 0, 19) == -1) {
-    kprintf("error: setpriority(PRIO_PROCESS, 0, 19) failed: %m\n");
-    exit(23);
-  }
-  if (ioprio_set(IOPRIO_WHO_PROCESS, 0,
-                 IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0)) == -1) {
-    kprintf("error: ioprio_set() failed: %m\n");
-    exit(23);
-  }
-  struct sched_param p = {sched_get_priority_min(SCHED_IDLE)};
-  if (sched_setscheduler(0, SCHED_IDLE, &p) == -1) {
-    kprintf("error: sched_setscheduler(SCHED_IDLE) failed: %m\n");
-    exit(23);
-  }
 }
 
 void ApplyFilesystemPolicy(unsigned long ipromises) {

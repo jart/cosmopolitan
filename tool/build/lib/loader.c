@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/loader.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/elf.h"
@@ -34,7 +35,6 @@
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/argv.h"
 #include "tool/build/lib/endian.h"
-#include "tool/build/lib/loader.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 
@@ -105,7 +105,7 @@ static void LoadBin(struct Machine *m, intptr_t base, const char *prog,
       .p_vaddr = base,
       .p_paddr = base,
       .p_filesz = codesize,
-      .p_memsz = ROUNDUP(codesize + FRAMESIZE, BIGPAGESIZE),
+      .p_memsz = ROUNDUP(codesize + FRAMESIZE, 0x200000),
       .p_align = PAGESIZE,
   };
   LoadElfLoadSegment(m, code, codesize, &phdr);

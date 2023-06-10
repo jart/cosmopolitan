@@ -48,9 +48,6 @@ getsubopt(char **optionp, char * const *tokens, char **valuep)
 
 	suboptarg = *valuep = NULL;
 
-	if (!optionp || !*optionp)
-		return(-1);
-
 	/* skip leading white-space, commas */
 	for (p = *optionp; *p && (*p == ',' || *p == ' ' || *p == '\t'); ++p);
 

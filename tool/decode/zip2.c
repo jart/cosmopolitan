@@ -30,7 +30,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xiso8601.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "tool/decode/lib/asmcodegen.h"
 #include "tool/decode/lib/disassemblehex.h"
 #include "tool/decode/lib/zipnames.h"

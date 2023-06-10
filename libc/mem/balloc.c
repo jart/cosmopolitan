@@ -21,9 +21,6 @@
 
 /* TODO(jart): delete */
 
-#define kGuard GUARDSIZE
-#define kGrain FRAMESIZE
-
 /**
  * Allocates page-guarded buffer.
  *

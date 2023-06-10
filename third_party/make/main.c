@@ -28,9 +28,9 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/rule.h"
 /**/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/bpf.h"
-#include "libc/calls/struct/filter.h"
-#include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/bpf.internal.h"
+#include "libc/calls/struct/filter.internal.h"
+#include "libc/calls/struct/seccomp.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/limits.h"

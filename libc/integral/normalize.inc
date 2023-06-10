@@ -66,27 +66,26 @@
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
 
-/* TODO(jart): Remove this in favor of GetStackSize() */
 #ifdef COSMO
-#define STACKSIZE 262144 /* 256kb stack */
+/* Programs should call GetStackSize() */
+#define APE_STACKSIZE 262144 /* default 256kb stack */
+#define FRAMESIZE     0x10000
+#define PAGESIZE      0x1000 /* i386+ */
 #else
-#define STACKSIZE 8388608 /* 8mb stack */
+#define APE_STACKSIZE 8388608 /* default 8mb stack */
 #endif
+#define APE_PAGESIZE  0x10000 /* i386+ */
+#define APE_GUARDSIZE 0x4000  /* b/c apple m1 */
 
-#define BIGPAGESIZE 0x200000
-#define FRAMESIZE   0x10000 /* 8086 */
-#define GUARDSIZE   0x4000  /* b/c apple m1 */
-#define PAGESIZE    0x1000  /* i386+ */
-#define BUFSIZ      0x1000  /* best stdio default */
-#define CACHELINE   0x40    /* nexgen32e */
-#define CHAR_BIT    8       /* b/c von neumann */
-#define ARG_MAX     0xfffe  /* for argv and envp; see CreateProcess (32767*2) */
-#define PATH_MAX    1024    /* b/c _XOPEN_PATH_MAX */
-#define NAME_MAX    255     /* 511 on netbsd */
-#define CHILD_MAX   16      /* only if malloc isn't linked */
-#define OPEN_MAX    16      /* only if malloc isn't linked */
-#define ATEXIT_MAX  32      /* only if malloc isn't linked */
-#define NSIG        128     /* b/c freebsd */
+#define BUFSIZ     0x1000 /* best stdio default */
+#define CHAR_BIT   8      /* b/c von neumann */
+#define ARG_MAX    0xfffe /* for argv and envp; see CreateProcess (32767*2) */
+#define PATH_MAX   1024   /* b/c _XOPEN_PATH_MAX */
+#define NAME_MAX   255    /* 511 on netbsd */
+#define CHILD_MAX  16     /* only if malloc isn't linked */
+#define OPEN_MAX   16     /* only if malloc isn't linked */
+#define ATEXIT_MAX 32     /* only if malloc isn't linked */
+#define NSIG       128    /* b/c freebsd */
 
 #if defined(__LP64__) && !defined(__INT64_TYPE__)
 #include "libc/integral/lp64.inc"

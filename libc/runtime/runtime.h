@@ -41,19 +41,10 @@ extern bool __isworker;
 
 void mcount(void);
 int daemon(int, int);
-int _freestack(void *);
-void _bt(const char *, ...);
-int _cocmd(int, char **, char **);
 unsigned long getauxval(unsigned long);
-void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
-void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
-void *_mapstack(void) returnsaligned((FRAMESIZE)) mallocesque;
 int setjmp(jmp_buf)
 libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
-axdx_t setlongerjmp(jmp_buf)
-libcesque returnstwice paramsnonnull();
-void longerjmp(jmp_buf, intptr_t) libcesque wontreturn paramsnonnull();
 int _setjmp(jmp_buf)
 libcesque returnstwice paramsnonnull();
 int sigsetjmp(sigjmp_buf, int) libcesque returnstwice paramsnonnull();
@@ -62,8 +53,6 @@ void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 void exit(int) wontreturn;
 void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
-void _Exitr(int) libcesque wontreturn;
-void _Exit1(int) libcesque wontreturn;
 void quick_exit(int) wontreturn;
 void abort(void) wontreturn;
 int __cxa_atexit(void *, void *, void *) libcesque;
@@ -92,38 +81,61 @@ int vhangup(void);
 int getdtablesize(void);
 int sethostname(const char *, size_t);
 int acct(const char *);
+
+#ifdef COSMO
+/* utilities */
 void _intsort(int *, size_t);
 void _longsort(long *, size_t);
-bool _isheap(void *);
-int NtGetVersion(void) pureconst;
+/* diagnostics */
+void ShowCrashReports(void);
+void __printargs(const char *);
 int _getcpucount(void) pureconst;
-long _missingno();
-void __oom_hook(size_t);
-void _loadxmm(void *);
-void _peekall(void);
-void _savexmm(void *);
-void _weakfree(void *);
-int _OpenExecutable(void);
 int ftrace_install(void);
 int ftrace_enabled(int);
 int strace_enabled(int);
-long _GetResourceLimit(int);
+void _bt(const char *, ...);
+void __print_maps(void);
 long _GetMaxFd(void);
+/* builtin shell language */
+int _cocmd(int, char **, char **);
+/* executable program */
 char *GetProgramExecutableName(void);
 char *GetInterpreterExecutableName(char *, size_t);
-void __printargs(const char *);
-void __paginate(int, const char *);
-int __arg_max(void);
-void __print_maps(void);
-void __warn_if_powersave(void);
-const char *__describe_os(void);
+int _OpenExecutable(void);
 bool _IsDynamicExecutable(const char *);
+/* execution control */
+int MakeProcessNice(void);
+axdx_t setlongerjmp(jmp_buf)
+libcesque returnstwice paramsnonnull();
+void longerjmp(jmp_buf, intptr_t) libcesque wontreturn paramsnonnull();
+void __warn_if_powersave(void);
+void _Exitr(int) libcesque wontreturn;
+void _Exit1(int) libcesque wontreturn;
 void _restorewintty(void);
+void __paginate(int, const char *);
+void _loadxmm(void *);
+void _savexmm(void *);
+long _missingno();
+/* memory management */
+void _weakfree(void *);
+void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
+void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
+void *_mapstack(void) returnsaligned((FRAMESIZE)) mallocesque;
+int _freestack(void *);
+void __oom_hook(size_t);
+void _peekall(void);
+bool _isheap(void *);
+/* portability */
+int NtGetVersion(void) pureconst;
+bool IsGenuineBlink(void);
+bool IsCygwin(void);
 const char *GetCpuidOs(void);
 const char *GetCpuidEmulator(void);
 void GetCpuidBrand(char[13], uint32_t);
-bool IsGenuineBlink(void);
-bool IsCygwin(void);
+long _GetResourceLimit(int);
+const char *__describe_os(void);
+int __arg_max(void);
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

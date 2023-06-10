@@ -21,7 +21,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "libc/zipos/zipos.internal.h"
 
 int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {

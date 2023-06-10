@@ -41,7 +41,7 @@
 #include "libc/time/time.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xsigaction.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/libcxx/vector"

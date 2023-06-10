@@ -2,7 +2,7 @@
 │vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/tls.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 ENTRY(_start)
 OUTPUT_ARCH(aarch64)
@@ -12,8 +12,9 @@ OUTPUT_FORMAT("elf64-littleaarch64",
 
 SECTIONS {
 
-  __executable_start = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL);
-  . = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) + SIZEOF_HEADERS;
+  . = SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL);
+  __executable_start = .;
+  . += SIZEOF_HEADERS;
 
   .interp            : { *(.interp) }
   .note.gnu.build-id : { *(.note.gnu.build-id) }
@@ -271,7 +272,7 @@ SECTIONS {
   }
 }
 
-ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE;
+ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : APE_STACKSIZE;
 _tls_size = _tbss_end - _tdata_start;
 _tdata_size = _tdata_end - _tdata_start;
 _tbss_size = _tbss_end - _tbss_start;

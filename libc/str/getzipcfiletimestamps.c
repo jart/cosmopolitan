@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 static inline int pop(int x) {
   return !!(x & 1) + !!(x & 2) + !!(x & 4);

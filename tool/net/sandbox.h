@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_TOOL_NET_SANDBOX_H_
 #define COSMOPOLITAN_TOOL_NET_SANDBOX_H_
-#include "libc/calls/struct/bpf.h"
-#include "libc/calls/struct/filter.h"
-#include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/bpf.internal.h"
+#include "libc/calls/struct/filter.internal.h"
+#include "libc/calls/struct/seccomp.internal.h"
 #include "libc/sysv/consts/audit.h"
 // clang-format off
 

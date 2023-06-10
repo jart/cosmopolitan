@@ -24,7 +24,7 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
 #include "libc/calls/pledge.h"
-#include "libc/calls/struct/bpf.h"
+#include "libc/calls/struct/bpf.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/itimerval.h"

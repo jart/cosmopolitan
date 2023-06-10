@@ -415,7 +415,7 @@ _init_systemfive_pid:
 	mov	(%rdi),%eax
 	testb	$_HOSTWINDOWS|_HOSTMETAL,(%rcx)
 	jnz	1f
-	mov	__NR_getpid,%eax
+	mov	__NR_getpid(%rip),%eax
 	syscall
 1:	stosq
 	.endfn	_init_systemfive_pid
@@ -433,7 +433,7 @@ _init_systemfive_sigsys:
 	push	%rax
 	push	%rax
 	push	$SIG_IGN				// sigaction_meta size 48
-	mov	__NR_sigaction,%eax			// mag
+	mov	__NR_sigaction(%rip),%eax		// mag
 	mov	SIGSYS,%edi				// sig
 	mov	%rsp,%rsi				// new
 	xor	%edx,%edx				// old

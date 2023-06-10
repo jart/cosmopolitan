@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 
 static int ConvertWindowsToUnixMode(int x) {
   int m;

@@ -9,7 +9,7 @@
 #endif
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
 /**

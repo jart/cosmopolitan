@@ -36,7 +36,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/elfwriter.h"
 #include "tool/build/lib/stripcomponents.h"

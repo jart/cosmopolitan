@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dos.h"
+#include "libc/dos.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
@@ -29,7 +29,7 @@
 #include "libc/time/struct/tm.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "libc/zip.h"
+#include "libc/zip.internal.h"
 #include "net/http/http.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/elfwriter.h"

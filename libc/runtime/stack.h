@@ -1,18 +1,15 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
-#include "ape/config.h"
-#include "libc/dce.h"
-#include "libc/nt/version.h"
-#include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef COSMO
 
 /**
  * Tunes APE stack maximum size.
  *
- * This defaults to `STACKSIZE`. The bottom-most page will be protected
- * to ensure your stack does not magically grow beyond this value. It's
- * possible to detect stack overflows, by calling `ShowCrashReports()`.
- * Your stack size must be a power of two; the linker will check this.
+ * The bottom-most page will be protected to ensure your stack does not
+ * magically grow beyond this value. It's possible to detect stack
+ * overflows, by calling `ShowCrashReports()`. Your stack size must be a
+ * power of two; the linker will check this.
  *
  * If you want to know how much stack your programs needs, then
  *
@@ -24,7 +21,7 @@
  * @see ape/ape.lds
  */
 #define STATIC_STACK_SIZE(BYTES) \
-  STATIC_SYMBOL("ape_stack_memsz", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
+  _STACK_SYMBOL("ape_stack_memsz", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
 
 /**
  * Tunes APE stack virtual address.
@@ -46,7 +43,7 @@
  * @see ape/ape.lds
  */
 #define STATIC_STACK_ADDR(ADDR) \
-  STATIC_SYMBOL("ape_stack_vaddr", _STACK_STRINGIFY(ADDR))
+  _STACK_SYMBOL("ape_stack_vaddr", _STACK_STRINGIFY(ADDR))
 
 /**
  * Makes program stack executable if declared, e.g.
@@ -63,11 +60,14 @@
  *       printf("result %d should be 7\n", func());
  *     }
  */
-#define STATIC_EXEC_STACK() STATIC_SYMBOL("ape_stack_pf", "7")
+#define STATIC_EXEC_STACK() _STACK_SYMBOL("ape_stack_pf", "7")
 
 #define _STACK_STRINGIFY(ADDR) #ADDR
+#define _STACK_SYMBOL(NAME, VALUE)   \
+  asm(".equ\t" NAME "," VALUE "\n\t" \
+      ".globl\t" NAME)
 
-#if IsAsan()
+#ifdef __SANITIZE_ADDRESS__
 #define _STACK_EXTRA "*2"
 #else
 #define _STACK_EXTRA ""
@@ -125,7 +125,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * Returns true if at least `n` bytes of stack are available.
  */
 #define HaveStackMemory(n) \
-  ((intptr_t)__builtin_frame_address(0) >= GetStackAddr() + GUARDSIZE + (n))
+  ((intptr_t)__builtin_frame_address(0) >= GetStackAddr() + APE_GUARDSIZE + (n))
 
 forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
   for (; n > 0; n -= 4096) {
@@ -133,6 +133,7 @@ forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
   }
 }
 
+#endif /* COSMO */
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
