@@ -65,7 +65,7 @@ PLATFORM="-D__COSMOPOLITAN__"
 PREDEF="-include libc/integral/normalize.inc"
 CCFLAGS="-fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
-CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
+CPPFLAGS="-DNDEBUG -nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $COSMO/o/$MODE/cosmopolitan.a"
 
