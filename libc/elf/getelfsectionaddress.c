@@ -17,12 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
+#include "libc/stdckdint.h"
 
-void *GetElfSectionAddress(const Elf64_Ehdr *elf, size_t mapsize,
-                           const Elf64_Shdr *shdr) {
-  intptr_t addr, size;
-  addr = (intptr_t)elf + (intptr_t)shdr->sh_offset;
-  size = (intptr_t)shdr->sh_size;
-  CheckElfAddress(elf, mapsize, addr, size);
+// note: should not be used on bss section
+void *GetElfSectionAddress(const Elf64_Ehdr *elf,     // validated
+                           size_t mapsize,            // validated
+                           const Elf64_Shdr *shdr) {  // foreign
+  uint64_t addr, last;
+  if (!shdr) return 0;
+  if (ckd_add(&addr, (uintptr_t)elf, shdr->sh_offset)) return 0;
+  if (ckd_add(&last, addr, shdr->sh_size)) return 0;
+  if (last > (uintptr_t)elf + mapsize) return 0;
   return (void *)addr;
 }

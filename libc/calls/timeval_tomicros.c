@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 
 /**
  * Converts timeval to scalar.
@@ -30,8 +31,7 @@
  */
 int64_t timeval_tomicros(struct timeval x) {
   int64_t ns;
-  if (!__builtin_mul_overflow(x.tv_sec, 1000000ul, &ns) &&
-      !__builtin_add_overflow(ns, x.tv_usec, &ns)) {
+  if (!ckd_mul(&ns, x.tv_sec, 1000000ul) && !ckd_add(&ns, ns, x.tv_usec)) {
     return ns;
   } else if (x.tv_sec < 0) {
     return INT64_MIN;

@@ -59,10 +59,18 @@
 #define kZipCompressionNone    0
 #define kZipCompressionDeflate 8
 
-#define kZipCdirHdrMagic        0x06054b50 /* PK♣♠ "PK\5\6" */
-#define kZipCdirHdrMinSize      22
-#define kZipCdirAlign           kZipAlign
-#define kZipCdirHdrLinkableSize 294
+#define kZipCdirHdrMagic            0x06054b50 /* PK♣♠ "PK\5\6" */
+#define kZipCdirHdrMagicTodo        0x19184b50 /* PK♣♠ "PK\30\31" */
+#define kZipCdirHdrMinSize          22
+#define kZipCdirAlign               kZipAlign
+#define kZipCdirHdrLinkableSize     294
+#define kZipCdirDiskOffset          4
+#define kZipCdirStartingDiskOffset  6
+#define kZipCdirRecordsOnDiskOffset 8
+#define kZipCdirRecordsOffset       10
+#define kZipCdirSizeOffset          12
+#define kZipCdirOffsetOffset        16
+#define kZipCdirCommentSizeOffset   20
 
 #define kZipCdir64HdrMagic     0x06064b50 /* PK♣♠ "PK\6\6" */
 #define kZipCdir64HdrMinSize   56
@@ -106,13 +114,13 @@
 
 /* end of central directory record */
 #define ZIP_CDIR_MAGIC(P)         READ32LE(P)
-#define ZIP_CDIR_DISK(P)          READ16LE((P) + 4)
-#define ZIP_CDIR_STARTINGDISK(P)  READ16LE((P) + 6)
-#define ZIP_CDIR_RECORDSONDISK(P) READ16LE((P) + 8)
-#define ZIP_CDIR_RECORDS(P)       READ16LE((P) + 10)
-#define ZIP_CDIR_SIZE(P)          READ32LE((P) + 12)
-#define ZIP_CDIR_OFFSET(P)        READ32LE((P) + 16)
-#define ZIP_CDIR_COMMENTSIZE(P)   READ16LE((P) + 20)
+#define ZIP_CDIR_DISK(P)          READ16LE((P) + kZipCdirDiskOffset)
+#define ZIP_CDIR_STARTINGDISK(P)  READ16LE((P) + kZipCdirStartingDiskOffset)
+#define ZIP_CDIR_RECORDSONDISK(P) READ16LE((P) + kZipCdirRecordsOnDiskOffset)
+#define ZIP_CDIR_RECORDS(P)       READ16LE((P) + kZipCdirRecordsOffset)
+#define ZIP_CDIR_SIZE(P)          READ32LE((P) + kZipCdirSizeOffset)
+#define ZIP_CDIR_OFFSET(P)        READ32LE((P) + kZipCdirOffsetOffset)
+#define ZIP_CDIR_COMMENTSIZE(P)   READ16LE((P) + kZipCdirCommentSizeOffset)
 #define ZIP_CDIR_COMMENT(P)       ((P) + 22) /* recommend stopping at nul */
 #define ZIP_CDIR_HDRSIZE(P)       (ZIP_CDIR_COMMENTSIZE(P) + kZipCdirHdrMinSize)
 
@@ -199,7 +207,7 @@
 #define ZIP_EXTRA_CONTENT(P)     ((P) + 4)
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
-void *GetZipEocd(const uint8_t *, size_t, int *);
+void *GetZipEocd(const void *, size_t, int *);
 uint8_t *FindEmbeddedApe(const uint8_t *, size_t);
 int IsZipEocd32(const uint8_t *, size_t, size_t);
 int IsZipEocd64(const uint8_t *, size_t, size_t);

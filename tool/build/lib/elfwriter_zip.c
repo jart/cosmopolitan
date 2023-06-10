@@ -34,8 +34,7 @@
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/elfwriter.h"
 
-#define ZIP_LOCALFILE_SECTION ".zip.2."
-#define ZIP_DIRECTORY_SECTION ".zip.4."
+#define ZIP_CFILE_HDR_SIZE (kZipCfileHdrMinSize + 36)
 
 static bool ShouldCompress(const char *name, size_t namesize,
                            const unsigned char *data, size_t datasize,
@@ -103,7 +102,6 @@ static void EmitZipCdirHdr(unsigned char *p, const void *name, size_t namesize,
   p = WRITE32LE(p, compsize);
   p = WRITE32LE(p, uncompsize);
   p = WRITE16LE(p, namesize);
-#define CFILE_HDR_SIZE (kZipCfileHdrMinSize + 36)
   p = WRITE16LE(p, 36); /* extra size */
   /* 32 */
   p = WRITE16LE(p, commentsize);
@@ -134,8 +132,7 @@ static void EmitZipCdirHdr(unsigned char *p, const void *name, size_t namesize,
 void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
                    size_t namesize, const void *data, size_t size,
                    uint32_t mode, struct timespec mtim, struct timespec atim,
-                   struct timespec ctim, bool nocompress, uint64_t imagebase,
-                   size_t kZipCdirHdrLinkableSizeBootstrap) {
+                   struct timespec ctim, bool nocompress) {
   z_stream zs;
   uint8_t era;
   uint32_t crc;
@@ -149,6 +146,7 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   gflags = 0;
   iattrs = 0;
   compsize = size;
+  commentsize = 0;
   uncompsize = size;
   CHECK_LE(uncompsize, UINT32_MAX);
   lfilehdrsize = kZipLfileHdrMinSize + namesize;
@@ -158,7 +156,6 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   if (S_ISREG(mode) && _istext(data, size)) {
     iattrs |= kZipIattrText;
   }
-  commentsize = kZipCdirHdrLinkableSizeBootstrap - (CFILE_HDR_SIZE + namesize);
   dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
   method = ShouldCompress(name, namesize, data, size, nocompress)
                ? kZipCompressionDeflate
@@ -166,9 +163,7 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
 
   /* emit embedded file content w/ pkzip local file header */
   elfwriter_align(elf, 1, 0);
-  elfwriter_startsection(elf,
-                         _gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)),
-                         SHT_PROGBITS, SHF_ALLOC);
+  elfwriter_startsection(elf, ".zip.file", SHT_PROGBITS, 0);
   if (method == kZipCompressionDeflate) {
     CHECK_EQ(Z_OK, deflateInit2(memset(&zs, 0, sizeof(zs)),
                                 Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS,
@@ -205,18 +200,16 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
 
   /* emit central directory record */
   elfwriter_align(elf, 1, 0);
-  elfwriter_startsection(elf,
-                         _gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)),
-                         SHT_PROGBITS, SHF_ALLOC);
+  elfwriter_startsection(elf, ".zip.cdir", SHT_PROGBITS, 0);
   EmitZipCdirHdr(
-      (cfile = elfwriter_reserve(elf, kZipCdirHdrLinkableSizeBootstrap)), name,
+      (cfile = elfwriter_reserve(elf, ZIP_CFILE_HDR_SIZE + namesize)), name,
       namesize, crc, era, gflags, method, mtime, mdate, iattrs, dosmode, mode,
       compsize, uncompsize, commentsize, mtim, atim, ctim);
   elfwriter_appendsym(elf, _gc(xasprintf("%s%s", "zip+cdir:", name)),
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
-                      kZipCdirHdrLinkableSizeBootstrap);
+                      ZIP_CFILE_HDR_SIZE + namesize);
   elfwriter_appendrela(elf, kZipCfileOffsetOffset, lfilesym,
-                       elfwriter_relatype_abs32(elf), -imagebase);
-  elfwriter_commit(elf, kZipCdirHdrLinkableSizeBootstrap);
+                       elfwriter_relatype_pc32(elf), 0);
+  elfwriter_commit(elf, ZIP_CFILE_HDR_SIZE + namesize);
   elfwriter_finishsection(elf);
 }

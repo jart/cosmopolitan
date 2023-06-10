@@ -155,6 +155,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
+#include "libc/stdckdint.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -2011,8 +2012,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
               itemlen = linenoiseMaxCompletionWidth(&l->lc) + 4;
               xn = MAX(1, (l->ws.ws_col - 1) / itemlen);
               yn = (l->lc.len + (xn - 1)) / xn;
-              if (!__builtin_mul_overflow(xn, yn, &xy) &&
-                  (p = calloc(xy, sizeof(char *)))) {
+              if (!ckd_mul(&xy, xn, yn) && (p = calloc(xy, sizeof(char *)))) {
                 // arrange in column major order
                 for (i = x = 0; x < xn; ++x) {
                   for (y = 0; y < yn; ++y) {

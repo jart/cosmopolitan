@@ -26,7 +26,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 STATIC_YOINK("libc/testlib/hyperion.txt");
 STATIC_YOINK("inflate");
 STATIC_YOINK("inflateInit2");

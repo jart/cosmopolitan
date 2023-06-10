@@ -2,9 +2,10 @@
 #define COSMOPOLITAN_LIBC_ELF_STRUCT_EHDR_H_
 #include "libc/elf/def.h"
 #include "libc/elf/scalar.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define EI_NIDENT 16
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 typedef struct Elf64_Ehdr {
   unsigned char e_ident[EI_NIDENT];

@@ -19,6 +19,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
+#include "libc/stdckdint.h"
 
 /**
  * Manages array memory, the BSD way.
@@ -30,7 +31,7 @@
  */
 void *reallocarray(void *ptr, size_t nmemb, size_t itemsize) {
   size_t n;
-  if (!__builtin_mul_overflow(nmemb, itemsize, &n)) {
+  if (!ckd_mul(&n, nmemb, itemsize)) {
     return realloc(ptr, n);
   } else {
     errno = ENOMEM;

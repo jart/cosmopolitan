@@ -26,6 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/newbie.h"
 #include "libc/macros.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"
 
@@ -53,8 +54,8 @@ static COLOR MAPCOLOR(struct Tty *tty, TtyCanvasColor ic) {
   return ic;
 }
 
-static void DIRTY(struct Tty *tty, size_t gy1, size_t gx1,
-                                   size_t gy2, size_t gx2) {
+static void DIRTY(struct Tty *tty, size_t gy1, size_t gx1, size_t gy2,
+                  size_t gx2) {
   if (tty->updy1 > gy1) tty->updy1 = gy1;
   if (tty->updx1 > gx1) tty->updx1 = gx1;
   if (tty->updy2 < gy2) tty->updy2 = gy2;
@@ -66,14 +67,12 @@ static void RESETDIRTY(struct Tty *tty) {
 }
 
 unrollloops void _TtyBgr565Update(struct Tty *tty) {
-  size_t gy1 = tty->updy1, gy2 = tty->updy2,
-         gx1 = tty->updx1, gx2 = tty->updx2,
+  size_t gy1 = tty->updy1, gy2 = tty->updy2, gx1 = tty->updx1, gx2 = tty->updx2,
          xsfb = tty->xsfb, xs = tty->xs;
   if (gy1 < gy2 && gx1 < gx2) {
     size_t yleft = gy2 - gy1, xleft;
     char *cplotter = tty->fb + gy1 * xsfb + gx1 * sizeof(TtyBgr565Color);
-    const char *creader = tty->canvas + gy1 * xs
-                                      + gx1 * sizeof(TtyCanvasColor);
+    const char *creader = tty->canvas + gy1 * xs + gx1 * sizeof(TtyCanvasColor);
     RESETDIRTY(tty);
     while (yleft-- != 0) {
       TtyBgr565Color *plotter = (TtyBgr565Color *)cplotter;
@@ -94,14 +93,12 @@ unrollloops void _TtyBgr565Update(struct Tty *tty) {
 }
 
 unrollloops void _TtyBgr555Update(struct Tty *tty) {
-  size_t gy1 = tty->updy1, gy2 = tty->updy2,
-         gx1 = tty->updx1, gx2 = tty->updx2,
+  size_t gy1 = tty->updy1, gy2 = tty->updy2, gx1 = tty->updx1, gx2 = tty->updx2,
          xsfb = tty->xsfb, xs = tty->xs;
   if (gy1 < gy2 && gx1 < gx2) {
     size_t yleft = gy2 - gy1, xleft;
     char *cplotter = tty->fb + gy1 * xsfb + gx1 * sizeof(TtyBgr555Color);
-    const char *creader = tty->canvas + gy1 * xs
-                                      + gx1 * sizeof(TtyCanvasColor);
+    const char *creader = tty->canvas + gy1 * xs + gx1 * sizeof(TtyCanvasColor);
     RESETDIRTY(tty);
     while (yleft-- != 0) {
       TtyBgr555Color *plotter = (TtyBgr555Color *)cplotter;
@@ -122,14 +119,12 @@ unrollloops void _TtyBgr555Update(struct Tty *tty) {
 }
 
 unrollloops void _TtyBgrxUpdate(struct Tty *tty) {
-  size_t gy1 = tty->updy1, gy2 = tty->updy2,
-         gx1 = tty->updx1, gx2 = tty->updx2,
+  size_t gy1 = tty->updy1, gy2 = tty->updy2, gx1 = tty->updx1, gx2 = tty->updx2,
          xsfb = tty->xsfb, xs = tty->xs;
   if (gy1 < gy2 && gx1 < gx2) {
     size_t yleft = gy2 - gy1, xleft;
     char *cplotter = tty->fb + gy1 * xsfb + gx1 * sizeof(TtyBgrxColor);
-    const char *creader = tty->canvas + gy1 * xs
-                                      + gx1 * sizeof(TtyCanvasColor);
+    const char *creader = tty->canvas + gy1 * xs + gx1 * sizeof(TtyCanvasColor);
     RESETDIRTY(tty);
     while (yleft-- != 0) {
       TtyBgrxColor *plotter = (TtyBgrxColor *)cplotter;
@@ -147,14 +142,12 @@ unrollloops void _TtyBgrxUpdate(struct Tty *tty) {
 }
 
 unrollloops void _TtyRgbxUpdate(struct Tty *tty) {
-  size_t gy1 = tty->updy1, gy2 = tty->updy2,
-         gx1 = tty->updx1, gx2 = tty->updx2,
+  size_t gy1 = tty->updy1, gy2 = tty->updy2, gx1 = tty->updx1, gx2 = tty->updx2,
          xsfb = tty->xsfb, xs = tty->xs;
   if (gy1 < gy2 && gx1 < gx2) {
     size_t yleft = gy2 - gy1, xleft;
     char *cplotter = tty->fb + gy1 * xsfb + gx1 * sizeof(TtyRgbxColor);
-    const char *creader = tty->canvas + gy1 * xs
-                                      + gx1 * sizeof(TtyCanvasColor);
+    const char *creader = tty->canvas + gy1 * xs + gx1 * sizeof(TtyCanvasColor);
     RESETDIRTY(tty);
     while (yleft-- != 0) {
       TtyRgbxColor *plotter = (TtyRgbxColor *)cplotter;
@@ -165,8 +158,10 @@ unrollloops void _TtyRgbxUpdate(struct Tty *tty) {
       while (xleft-- != 0) {
         ic.w = reader->w;
         ++reader;
-        oc = (TtyRgbxColor){.rgb.r = ic.bgr.r, .rgb.g = ic.bgr.g,
-                            .rgb.b = ic.bgr.b, .rgb.x = 0xff};
+        oc = (TtyRgbxColor){.rgb.r = ic.bgr.r,
+                            .rgb.g = ic.bgr.g,
+                            .rgb.b = ic.bgr.b,
+                            .rgb.x = 0xff};
         plotter->w = oc.w;
         ++plotter;
       }
@@ -188,15 +183,15 @@ static COLOR MAPCOLOR(struct Tty *tty, TtyCanvasColor ic) {
   if (tty->type == PC_VIDEO_BGRX8888)
     return ic.w;
   else {
-    TtyRgbxColor oc = (TtyRgbxColor){.rgb.r = ic.bgr.r, .rgb.g = ic.bgr.g,
-                                     .rgb.b = ic.bgr.b, .rgb.x = 0xff};
+    TtyRgbxColor oc = (TtyRgbxColor){
+        .rgb.r = ic.bgr.r, .rgb.g = ic.bgr.g, .rgb.b = ic.bgr.b, .rgb.x = 0xff};
     return oc.w;
   }
 #endif
 }
 
-static void DIRTY(struct Tty *tty, size_t gy1, size_t gx1,
-                                   size_t gy2, size_t gx2) {
+static void DIRTY(struct Tty *tty, size_t gy1, size_t gx1, size_t gy2,
+                  size_t gx2) {
 }
 
 static void RESETDIRTY(struct Tty *tty) {
@@ -207,9 +202,9 @@ void UPDATE(struct Tty *tty) {
 
 #endif /* KLOGTTY */
 
-static void DRAWBITMAP(struct Tty *tty, size_t gy, size_t gx,
-                       COLOR fg, COLOR bg, const uint8_t *bitmap,
-                       size_t bm_ht, size_t bm_wid) {
+static void DRAWBITMAP(struct Tty *tty, size_t gy, size_t gx, COLOR fg,
+                       COLOR bg, const uint8_t *bitmap, size_t bm_ht,
+                       size_t bm_wid) {
   size_t xs = tty->xs;
   char *cplotter = tty->canvas + gy * xs + gx * sizeof(COLOR);
   size_t yleft = bm_ht, xleft;
@@ -218,39 +213,39 @@ static void DRAWBITMAP(struct Tty *tty, size_t gy, size_t gx,
     xleft = bm_wid;
     while (xleft >= 8) {
       uint8_t bits = *bitmap++;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
-      *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
+      *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
       xleft -= 8;
     }
     if (xleft) {
       uint8_t bits = *bitmap++;
       switch (xleft) {
         default:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
           /* fall through */
         case 6:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
           /* fall through */
         case 5:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
           /* fall through */
         case 4:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
           /* fall through */
         case 3:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
           /* fall through */
         case 2:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
           /* fall through */
         case 1:
-          *plotter++ = __builtin_add_overflow(bits, bits, &bits) ? fg : bg;
+          *plotter++ = ckd_add(&bits, bits, bits) ? fg : bg;
       }
     }
     cplotter += xs;
@@ -259,23 +254,21 @@ static void DRAWBITMAP(struct Tty *tty, size_t gy, size_t gx,
 }
 
 static MAYUNROLLLOOPS void FILLRECT(struct Tty *tty, size_t gy, size_t gx,
-                                    size_t fill_ht, size_t fill_wid,
-                                    COLOR bg) {
+                                    size_t fill_ht, size_t fill_wid, COLOR bg) {
   size_t xs = tty->xs;
   char *cplotter = tty->canvas + gy * xs + gx * sizeof(COLOR);
   size_t yleft = fill_ht, xleft;
   while (yleft-- != 0) {
     COLOR *plotter = (COLOR *)cplotter;
     size_t i;
-    for (i = 0; i < fill_wid; ++i)
-      *plotter++ = bg;
+    for (i = 0; i < fill_wid; ++i) *plotter++ = bg;
     cplotter += xs;
   }
   DIRTY(tty, gy, gx, gy + fill_ht, gx + fill_wid);
 }
 
-static void MOVERECT(struct Tty *tty, size_t dgy, size_t dgx,
-                     size_t sgy, size_t sgx, size_t ht, size_t wid) {
+static void MOVERECT(struct Tty *tty, size_t dgy, size_t dgx, size_t sgy,
+                     size_t sgx, size_t ht, size_t wid) {
   size_t xs = tty->xs, xm = wid * sizeof(COLOR);
   char *canvas = tty->canvas;
   DIRTY(tty, dgy, dgx, dgy + ht, dgx + wid);
@@ -298,8 +291,7 @@ void DRAWCHAR(struct Tty *tty, size_t y, size_t x, wchar_t wc) {
   const uint8_t *glyph;
   const size_t glyph_ht = ARRAYLEN(_vga_font_default_direct[0]);
   COLOR fg = MAPCOLOR(tty, tty->fg), bg = MAPCOLOR(tty, tty->bg);
-  if ((tty->pr & kTtyFlip) != 0)
-    fg = bg, bg = MAPCOLOR(tty, tty->fg);
+  if ((tty->pr & kTtyFlip) != 0) fg = bg, bg = MAPCOLOR(tty, tty->fg);
   if (wc < L' ' || wc >= L' ' + ARRAYLEN(_vga_font_default_direct))
     glyph = _vga_font_default_direct[0];
   else
@@ -323,8 +315,8 @@ void ERASELINECELLS(struct Tty *tty, size_t y, size_t x, size_t n) {
   FILLRECT(tty, y * yc, x * xc, yc, n * xc, MAPCOLOR(tty, tty->bg));
 }
 
-void MOVELINECELLS(struct Tty *tty, size_t dsty, size_t dstx,
-                   size_t srcy, size_t srcx, size_t n) {
+void MOVELINECELLS(struct Tty *tty, size_t dsty, size_t dstx, size_t srcy,
+                   size_t srcx, size_t n) {
   size_t yc = tty->yc, xc = tty->xc;
   MOVERECT(tty, dsty * yc, dstx * xc, srcy * yc, srcx * xc, yc, n * xc);
 }

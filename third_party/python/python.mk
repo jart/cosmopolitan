@@ -4194,7 +4194,7 @@ $(THIRD_PARTY_PYTHON_HELLO_OBJS): private PYFLAGS += -C2 -m
 # this directory entry is at the tip of the tree
 # therefore building it requires special care
 o/$(MODE)/third_party/python/Lib/.zip.o: third_party/python/.python
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) -b$(IMAGE_BASE_VIRTUAL) -C2 $(OUTPUT_OPTION) third_party/python/.python
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) -C2 $(OUTPUT_OPTION) third_party/python/.python
 
 # these need to be explictly defined because landlock make won't sandbox
 # prerequisites with a trailing slash.

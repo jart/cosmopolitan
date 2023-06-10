@@ -30,7 +30,7 @@
 
 #ifdef __x86_64__
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 int fds[2];
 char buf[8];

@@ -234,7 +234,6 @@ static bool nocompress;
 static bool isunittest;
 static bool insertrunner;
 static bool insertlauncher;
-static uint64_t image_base;
 static int strip_components;
 static struct ElfWriter *elf;
 static const char *path_prefix;
@@ -246,7 +245,6 @@ static void
 GetOpts(int argc, char *argv[])
 {
     int opt;
-    image_base = IMAGE_BASE_VIRTUAL;
     path_prefix = ".python";
     while ((opt = getopt(argc, argv, "hnmtr0Bb:O:o:C:P:Y:")) != -1) {
         switch (opt) {
@@ -278,9 +276,6 @@ GetOpts(int argc, char *argv[])
             break;
         case 'C':
             strip_components = atoi(optarg);
-            break;
-        case 'b':
-            image_base = strtoul(optarg, NULL, 0);
             break;
         case 'Y':
             yoinks.p = realloc(yoinks.p, ++yoinks.n * sizeof(*yoinks.p));
@@ -656,22 +651,18 @@ Objectify(void)
     if (ispkg) {
         elfwriter_zip(elf, zipdir, zipdir, strlen(zipdir),
                       pydata, 0, 040755, timestamp, timestamp,
-                      timestamp, nocompress, image_base,
-                      kZipCdirHdrLinkableSize);
+                      timestamp, nocompress);
     }
     if (!binonly) {
         elfwriter_zip(elf, gc(xstrcat("py:", modname)), zipfile,
                       strlen(zipfile), pydata, pysize, st.st_mode, timestamp,
-                      timestamp, timestamp, nocompress, image_base,
-                      kZipCdirHdrLinkableSize);
+                      timestamp, timestamp, nocompress);
     }
     elfwriter_zip(elf, gc(xstrcat("pyc:", modname)), gc(xstrcat(zipfile, 'c')),
                   strlen(zipfile) + 1, pycdata, pycsize, st.st_mode, timestamp,
-                  timestamp, timestamp, nocompress, image_base,
-                  kZipCdirHdrLinkableSize);
+                  timestamp, timestamp, nocompress);
     elfwriter_align(elf, 1, 0);
-    elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
-                           SHF_ALLOC | SHF_EXECINSTR);
+    elfwriter_startsection(elf, ".yoink", SHT_PROGBITS, 0);
     if (!(rc = AnalyzeModule(modname))) {
         if (*path_prefix && !IsDot()) {
             elfwriter_yoink(elf, gc(xstrcat(path_prefix, "/")), STB_GLOBAL);

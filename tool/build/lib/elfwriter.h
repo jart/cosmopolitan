@@ -64,6 +64,7 @@ void elfwriter_commit(struct ElfWriter *, size_t);
 void elfwriter_finishsection(struct ElfWriter *);
 void elfwriter_appendrela(struct ElfWriter *, uint64_t, struct ElfWriterSymRef,
                           uint32_t, int64_t);
+uint32_t elfwriter_relatype_pc32(const struct ElfWriter *);
 uint32_t elfwriter_relatype_abs32(const struct ElfWriter *);
 struct ElfWriterSymRef elfwriter_linksym(struct ElfWriter *, const char *, int,
                                          int);
@@ -73,7 +74,7 @@ void elfwriter_yoink(struct ElfWriter *, const char *, int);
 void elfwriter_setsection(struct ElfWriter *, struct ElfWriterSymRef, uint16_t);
 void elfwriter_zip(struct ElfWriter *, const char *, const char *, size_t,
                    const void *, size_t, uint32_t, struct timespec,
-                   struct timespec, struct timespec, bool, uint64_t, size_t);
+                   struct timespec, struct timespec, bool);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

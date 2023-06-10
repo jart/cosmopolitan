@@ -20,6 +20,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/strtol.internal.h"
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 
@@ -47,8 +48,7 @@ int128_t wcstoi128(const wchar_t *s, wchar_t **endptr, int base) {
   if ((c = kBase36[c & 255]) && --c < base) {
     if (!((t |= 1) & 2)) {
       do {
-        if (__builtin_mul_overflow(x, base, &x) ||
-            __builtin_add_overflow(x, c * d, &x)) {
+        if (ckd_mul(&x, x, base) || ckd_add(&x, x, c * d)) {
           x = d > 0 ? INT128_MAX : INT128_MIN;
           errno = ERANGE;
           t |= 2;

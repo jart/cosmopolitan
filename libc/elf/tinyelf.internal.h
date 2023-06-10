@@ -16,14 +16,14 @@ COSMOPOLITAN_C_START_
 #define GetSectionName(e, s) GetStr(GetShstrtab(e), (s)->sh_name)
 #define GetPhdr(e, i)                            \
   ((Elf64_Phdr *)((intptr_t)(e) + (e)->e_phoff + \
-                  (size_t)(e)->e_phentsize * (i)))
+                  (unsigned)(e)->e_phentsize * (i)))
 #define GetShdr(e, i)                            \
   ((Elf64_Shdr *)((intptr_t)(e) + (e)->e_shoff + \
-                  (size_t)(e)->e_shentsize * (i)))
+                  (unsigned)(e)->e_shentsize * (i)))
 
 static inline char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
+  int i;
   char *name;
-  Elf64_Half i;
   Elf64_Shdr *shdr;
   for (i = 0; i < e->e_shnum; ++i) {
     shdr = GetShdr(e, i);
@@ -39,13 +39,12 @@ static inline char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
 }
 
 static inline Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
-  Elf64_Half i;
+  int i;
   Elf64_Shdr *shdr;
-  for (i = e->e_shnum; i > 0; --i) {
-    shdr = GetShdr(e, i - 1);
+  for (i = e->e_shnum; i-- > 0;) {
+    shdr = GetShdr(e, i);
     if (shdr->sh_type == SHT_SYMTAB) {
-      if (shdr->sh_entsize != sizeof(Elf64_Sym)) continue;
-      if (n) *n = shdr->sh_size / shdr->sh_entsize;
+      if (n) *n = shdr->sh_size / sizeof(Elf64_Sym);
       return GetSection(e, shdr);
     }
   }

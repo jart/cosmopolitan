@@ -1,5 +1,6 @@
 #!/bin/sh
-# replacement for c++ command
+#
+# cosmopolitan c++ compiler
 #
 # we assume you run the following beforehand
 #
@@ -19,8 +20,9 @@
 #     make install
 #
 
-COSMO=/opt/cosmo
-COSMOS=/opt/cosmos
+MODE=${MODE:-$m}
+COSMO=${COSMO:-/opt/cosmo}
+COSMOS=${COSMOS:-/opt/cosmos}
 
 if [ "$1" = "--version" ]; then
 cat <<'EOF'
@@ -32,15 +34,18 @@ EOF
 exit 0
 fi
 
-UNDEF="-D__COSMOPOLITAN__"
+PLATFORM="-D__COSMOPOLITAN__"
 PREDEF="-include libc/integral/normalize.inc"
-CXX="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
-OBJCOPY="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-objcopy"
 CCFLAGS="-g -fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
 CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/ape/public/ape.lds $COSMO/o/ape/ape-no-modify-self.o $COSMO/o/libc/crt/crt.o"
-LDLIBS="$COSMO/o/third_party/libcxx/libcxx.a $COSMO/o/cosmopolitan.a"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
+LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $COSMO/o/$MODE/cosmopolitan.a"
+
+CXX="$COSMO/o/$MODE/third_party/gcc/bin/x86_64-linux-musl-g++"
+OBJCOPY="$COSMO/o/$MODE/third_party/gcc/bin/x86_64-linux-musl-objcopy"
+FIXUPOBJ="$COSMO/o/$MODE/tool/build/fixupobj.com"
+ZIPCOPY="$COSMO/o/$MODE/tool/build/zipcopy.com"
 
 if [ ! -d "$COSMO" ]; then
   echo "you need to checkout cosmopolitan to your $COSMO directory" >&2
@@ -61,11 +66,9 @@ if [ ! -d "$COSMOS/lib" ]; then
 fi
 
 OPT=
-HAS_C=0
-HAS_O=0
-HAS_E=0
 FIRST=1
 OUTPUT=
+INTENT=ld
 NEED_OUTPUT=
 FRAME=-fno-omit-frame-pointer
 for x; do
@@ -84,14 +87,12 @@ for x; do
   elif [ x"$x" != x"${x#-O}" ]; then
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
-    HAS_C=1
+    INTENT=cc
   elif [ x"$x" = x"-E" ]; then
-    HAS_E=1
+    INTENT=cpp
   elif [ x"$x" = x"-o" ]; then
-    HAS_O=1
     NEED_OUTPUT=1
   elif [ x"$x" != x"${x#-o}" ]; then
-    HAS_O=1
     OUTPUT=${x#-o}
   elif [ -n "$NEED_OUTPUT" ]; then
     NEED_OUTPUT=
@@ -110,26 +111,26 @@ for x; do
   set -- "$@" "$x"
 done
 
-if [ x"$OPT" != x"-Os" ]; then
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
   # support --ftrace unless optimizing for size
   CXXFLAGS="$CXXFLAGS -fpatchable-function-entry=18,16"
 fi
 
-LINKING=
-if [ "$HAS_E" = "1" ]; then
-  set -- $UNDEF $CCFLAGS $CPPFLAGS "$@"
-elif [ "$HAS_C" = "1" ]; then
-  set -- $UNDEF $PREDEF $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" $FRAME
+if [ $INTENT = cpp ]; then
+  set -- $PLATFORM $CCFLAGS $CPPFLAGS "$@"
+elif [ $INTENT = cc ]; then
+  set -- $PLATFORM $PREDEF $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" $FRAME
 else
-  LINKING=1
-  set -- $UNDEF $PREDEF $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=65536 -Wl,-z,max-page-size=65536 $FRAME
+  set -- $PLATFORM $PREDEF $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=65536 -Wl,-z,max-page-size=65536 $FRAME
 fi
 
 set -- "$CXX" "$@"
 printf '(cd %s; %s)\n' "$PWD" "$*" >>/tmp/build.log
 "$@" || exit
 
-if [ -n "$LINKING" ] && [ x"$OUTPUT" != x"" ]; then
+if [ $INTENT = cc ] && [ -n "$OUTPUT" ]; then
+  "$FIXUPOBJ" "$OUTPUT" || exit
+elif [ $INTENT = ld ] && [ -n "$OUTPUT" ]; then
   if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
      [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
     # cosmocc -o foo.com ...
@@ -137,6 +138,7 @@ if [ -n "$LINKING" ] && [ x"$OUTPUT" != x"" ]; then
     # -> foo.com.dbg (elf)
     mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
     "$OBJCOPY" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
+    "$ZIPCOPY" "$OUTPUT.dbg" "$OUTPUT" || exit
   else
     # cosmocc -o foo ...
     # -> foo (elf)
@@ -144,5 +146,6 @@ if [ -n "$LINKING" ] && [ x"$OUTPUT" != x"" ]; then
     # -> foo.com.dbg (elf)
     cp -f "$OUTPUT" "$OUTPUT.com.dbg" || exit
     "$OBJCOPY" -S -O binary "$OUTPUT" "$OUTPUT.com" || exit
+    "$ZIPCOPY" "$OUTPUT" "$OUTPUT.com" || exit
   fi
 fi

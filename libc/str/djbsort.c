@@ -20,6 +20,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 
 void djbsort_avx2(int32_t *, long);
 
@@ -29,7 +30,7 @@ void djbsort_avx2(int32_t *, long);
 void djbsort(int32_t *a, size_t n) {
   size_t m;
   if (IsAsan()) {
-    if (__builtin_mul_overflow(n, 4, &m)) m = -1;
+    if (ckd_mul(&m, n, 4)) m = -1;
     __asan_verify(a, m);
   }
   if (n > 1) {

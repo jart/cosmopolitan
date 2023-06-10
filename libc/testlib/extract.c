@@ -21,7 +21,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 /**
  * Extracts zip asset to filesystem.

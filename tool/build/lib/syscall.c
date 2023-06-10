@@ -48,6 +48,7 @@
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
@@ -177,7 +178,7 @@ static int AppendIovsGuest(struct Machine *m, struct Iovs *iv, int64_t iovaddr,
   int rc;
   size_t i, iovsize;
   struct iovec *guestiovs;
-  if (!__builtin_mul_overflow(iovlen, sizeof(struct iovec), &iovsize) &&
+  if (!ckd_mul(&iovsize, iovlen, sizeof(struct iovec)) &&
       (0 <= iovsize && iovsize <= 0x7ffff000)) {
     if ((guestiovs = malloc(iovsize))) {
       VirtualSendRead(m, guestiovs, iovaddr, iovsize);
@@ -1136,7 +1137,7 @@ static int OpPoll(struct Machine *m, int64_t fdsaddr, uint64_t nfds,
   struct pollfd_bits *gfds;
   int64_t wait, elapsed, timeout;
   timeout = timeout_ms * 1000L;
-  if (!__builtin_mul_overflow(nfds, sizeof(struct pollfd_bits), &gfdssize) &&
+  if (!ckd_mul(&gfdssize, nfds, sizeof(struct pollfd_bits)) &&
       gfdssize <= 0x7ffff000) {
     if ((gfds = malloc(gfdssize))) {
       rc = 0;

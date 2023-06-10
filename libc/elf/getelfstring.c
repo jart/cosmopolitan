@@ -17,15 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
-char *GetElfString(const Elf64_Ehdr *elf, size_t mapsize, const char *strtab,
-                   Elf64_Word rva) {
-  intptr_t addr = (intptr_t)strtab + rva;
-#if !(TRUSTWORTHY + ELF_TRUSTWORTHY + 0)
-  CheckElfAddress(elf, mapsize, addr, 0);
-  CheckElfAddress(elf, mapsize, addr,
-                  strnlen((char *)addr, (intptr_t)elf + mapsize - addr) + 1);
-#endif
+char *GetElfString(const Elf64_Ehdr *elf,  // validated
+                   size_t mapsize,         // validated
+                   const char *strtab,     // validated
+                   Elf64_Word rva) {       // foreign
+  uintptr_t addr;
+  if (!strtab) return 0;
+  if (ckd_add(&addr, (uintptr_t)strtab, rva)) return 0;
+  if (addr >= (uintptr_t)elf + mapsize) return 0;
+  if (!memchr((char *)addr, 0, (uintptr_t)elf + mapsize - addr)) return 0;
   return (char *)addr;
 }

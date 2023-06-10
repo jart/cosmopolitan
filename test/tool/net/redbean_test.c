@@ -41,7 +41,7 @@
 #include "third_party/regex/regex.h"
 #ifdef __x86_64__
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 STATIC_YOINK("o/" MODE "/test/tool/net/redbean-tester.com");
 
 char testlib_enable_tmp_setup_teardown_once;

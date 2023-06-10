@@ -24,6 +24,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 
@@ -55,8 +56,7 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // convert the wait time to a word
-  if (!timeout || __builtin_add_overflow(timeout->tv_sec,
-                                         timeout->tv_usec / 1000, &millis)) {
+  if (!timeout || ckd_add(&millis, timeout->tv_sec, timeout->tv_usec / 1000)) {
     millis = -1;
   }
 

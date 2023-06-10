@@ -28,7 +28,12 @@ APELINK =					\
 	-ALINK.ape				\
 	$(LINK)					\
 	$(LINKARGS)				\
-	$(OUTPUT_OPTION)
+	$(OUTPUT_OPTION) &&			\
+	$(COMPILE)				\
+	-AFIXUP.ape				\
+	-wT$@					\
+	$(FIXUPOBJ)				\
+	$@
 
 APE_SRCS = ape/ape.S
 APE_OBJS = o/$(MODE)/ape/ape.o
@@ -40,7 +45,7 @@ o/$(MODE)/ape: $(APE)
 
 o/$(MODE)/ape/aarch64.lds:			\
 	ape/aarch64.lds				\
-	libc/zip.h				\
+	libc/zip.internal.h			\
 	libc/intrin/bits.h			\
 	libc/thread/tls.h			\
 	libc/calls/struct/timespec.h		\
@@ -57,7 +62,12 @@ APELINK =					\
 	-ALINK.ape				\
 	$(LINK)					\
 	$(LINKARGS)				\
-	$(OUTPUT_OPTION)
+	$(OUTPUT_OPTION) &&			\
+	$(COMPILE)				\
+	-AFIXUP.ape				\
+	-wT$@					\
+	$(FIXUPOBJ)				\
+	$@
 
 APE_NO_MODIFY_SELF =				\
 	o/$(MODE)/ape/ape.lds			\
@@ -106,7 +116,7 @@ o/$(MODE)/ape/public/ape.lds:			\
 		libc/macros.internal.h		\
 		libc/nt/pedef.internal.h	\
 		libc/str/str.h			\
-		libc/zip.h
+		libc/zip.internal.h
 
 o/ape/idata.inc:				\
 		ape/idata.internal.h		\
@@ -185,17 +195,25 @@ o/$(MODE)/ape/loader-xnu-clang.asm: ape/loader.c
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
 o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.macho.dbg
 
+o/$(MODE)/ape/ape.elf.dbg: private		\
+	LDFLAGS +=				\
+		-z common-page-size=0x10	\
+		-z max-page-size=0x10
 o/$(MODE)/ape/ape.elf.dbg:			\
 		o/$(MODE)/ape/loader.o		\
 		o/$(MODE)/ape/loader-elf.o	\
 		ape/loader.lds
-	@$(ELFLINK) -z common-page-size=0x10 -z max-page-size=0x10
+	@$(ELFLINK)
 
+o/$(MODE)/ape/ape.macho.dbg: private		\
+	LDFLAGS +=				\
+		-z common-page-size=0x10	\
+		-z max-page-size=0x10
 o/$(MODE)/ape/ape.macho.dbg:			\
 		o/$(MODE)/ape/loader-xnu.o	\
 		o/$(MODE)/ape/loader-macho.o	\
 		ape/loader-macho.lds
-	@$(ELFLINK) -z common-page-size=0x10 -z max-page-size=0x10
+	@$(ELFLINK)
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE_CHECKS)			\
@@ -232,4 +250,4 @@ o/$(MODE)/ape/ape.lds:				\
 		libc/macros.internal.h		\
 		libc/nt/pedef.internal.h	\
 		libc/str/str.h			\
-		libc/zip.h
+		libc/zip.internal.h

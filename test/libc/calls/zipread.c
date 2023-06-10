@@ -20,7 +20,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 int main(int argc, char *argv[]) {
   int fd = open("/zip/life.elf", O_RDONLY);

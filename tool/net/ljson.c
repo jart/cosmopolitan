@@ -22,6 +22,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/stack.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
@@ -199,8 +200,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         for (x = (c - '0') * d; p < e; ++p) {
           c = *p & 255;
           if (isdigit(c)) {
-            if (__builtin_mul_overflow(x, 10, &x) ||
-                __builtin_add_overflow(x, (c - '0') * d, &x)) {
+            if (ckd_mul(&x, x, 10) || ckd_add(&x, x, (c - '0') * d)) {
               goto UseDubble;
             }
           } else if (c == '.') {

@@ -29,7 +29,7 @@
 #include "libc/x/xasprintf.h"
 #include "libc/x/xiso8601.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 STATIC_YOINK("usr/share/zoneinfo/New_York");
 
 char testlib_enable_tmp_setup_teardown;
@@ -61,20 +61,20 @@ TEST(opendir, enotdir) {
 TEST(opendir, zipTest_fake) {
   ASSERT_NE(NULL, (dir = opendir("/zip")));
   EXPECT_NE(NULL, (ent = readdir(dir)));
-  EXPECT_STREQ(".cosmo", ent->d_name);
-  EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("echo", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("usr", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".cosmo", ent->d_name);
   EXPECT_EQ(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
   ASSERT_NE(NULL, (dir = opendir("/zip/")));
   EXPECT_NE(NULL, (ent = readdir(dir)));
-  EXPECT_STREQ(".cosmo", ent->d_name);
-  EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("echo", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("usr", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".cosmo", ent->d_name);
   EXPECT_EQ(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
   ASSERT_NE(NULL, (dir = opendir("/zip/usr")));

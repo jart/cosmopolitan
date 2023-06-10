@@ -164,6 +164,11 @@ nullterminated() static void Print(int fd, const char *s, ...) {
   va_end(va);
 }
 
+static wontreturn void Die(const char *path, const char *reason) {
+  Print(2, path, ": ", reason, "\n", NULL);
+  exit(1);
+}
+
 static wontreturn void SysExit(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerrno(errno))) errstr = "EUNKNOWN";
@@ -244,12 +249,10 @@ static struct Package *LoadPackage(const char *path) {
   }
   close(fd);
   if (pkg->magic != PACKAGE_MAGIC) {
-    Print(2, path, ": not a cosmo .pkg file\n", NULL);
-    exit(1);
+    Die(path, "not a cosmo .pkg file");
   }
   if (pkg->abi < PACKAGE_ABI) {
-    Print(2, path, ": package has old abi try running make clean\n", NULL);
-    exit(1);
+    Die(path, "package has old abi try running make clean");
   }
   pkg->strings.p = (void *)((uintptr_t)pkg->strings.p + (uintptr_t)pkg);
   pkg->objects.p = (void *)((uintptr_t)pkg->objects.p + (uintptr_t)pkg);
@@ -317,7 +320,7 @@ static void WritePackage(struct Package *pkg) {
 }
 
 static wontreturn void PrintUsage(int fd, int exitcode) {
-  Print(fd, "\
+  Print(fd, "\n\
 NAME\n\
 \n\
   Cosmopolitan Monorepo Packager\n\
@@ -395,8 +398,10 @@ static void IndexSections(struct Package *pkg, struct Object *obj) {
   obj->section_offset = pkg->sections.i;
   for (i = 0; i < obj->elf->e_shnum; ++i) {
     bzero(&sect, sizeof(sect));
-    shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i);
-    name = GetElfSectionName(obj->elf, obj->size, shdr);
+    if (!(shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)) ||
+        !(name = GetElfSectionName(obj->elf, obj->size, shdr))) {
+      Die("error", "elf overflow");
+    }
     if (shdr->sh_type == SHT_NULL) {
       sect.kind = kUndef;
     } else if (shdr->sh_type == SHT_NOBITS) {
@@ -441,7 +446,10 @@ static void LoadSymbols(struct Package *pkg, uint32_t object) {
     if (symbol.bind_ != STB_LOCAL &&
         (symbol.type == STT_OBJECT || symbol.type == STT_FUNC ||
          symbol.type == STT_COMMON || symbol.type == STT_NOTYPE)) {
-      name = GetElfString(obj->elf, obj->size, obj->strs, obj->syms[i].st_name);
+      if (!(name = GetElfString(obj->elf, obj->size, obj->strs,
+                                obj->syms[i].st_name))) {
+        Die("error", "elf overflow");
+      }
       if (strcmp(name, "_GLOBAL_OFFSET_TABLE_")) {
         symbol.kind =
             ClassifySection(pkg, obj, symbol.type, obj->syms[i].st_shndx);
@@ -456,9 +464,11 @@ static Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *elf, size_t esize,
                                         const char *name) {
   long i;
   Elf64_Shdr *shdr;
+  const char *secname;
   for (i = 0; i < elf->e_shnum; ++i) {
-    shdr = GetElfSectionHeaderAddress(elf, esize, i);
-    if (!strcmp(GetElfSectionName(elf, esize, shdr), name)) {
+    if ((secname = GetElfSectionName(
+             elf, esize, (shdr = GetElfSectionHeaderAddress(elf, esize, i)))) &&
+        !strcmp(secname, name)) {
       return shdr;
     }
   }
@@ -473,19 +483,25 @@ static void LoadPriviligedRefsToUndefs(struct Package *pkg,
   Elf64_Shdr *shdr;
   Elf64_Rela *rela, *erela;
   if ((shdr = FindElfSectionByName(obj->elf, obj->size, ".rela.privileged"))) {
-    rela = GetElfSectionAddress(obj->elf, obj->size, shdr);
+    if (!(rela = GetElfSectionAddress(obj->elf, obj->size, shdr))) {
+      Die("error", "elf overflow");
+    }
     erela = rela + shdr->sh_size / sizeof(*rela);
     for (; rela < erela; ++rela) {
       if (!ELF64_R_TYPE(rela->r_info)) continue;
       if (!(x = ELF64_R_SYM(rela->r_info))) continue;
+      if (x > obj->symcount) Die("error", "elf overflow");
       if (obj->syms[x].st_shndx) continue;  // symbol is defined
       if (ELF64_ST_BIND(obj->syms[x].st_info) != STB_WEAK &&
           ELF64_ST_BIND(obj->syms[x].st_info) != STB_GLOBAL) {
         Print(2, "warning: undefined symbol not global\n", NULL);
         continue;
       }
-      r.symbol_name = strdup(
-          GetElfString(obj->elf, obj->size, obj->strs, obj->syms[x].st_name));
+      if (!(s = GetElfString(obj->elf, obj->size, obj->strs,
+                             obj->syms[x].st_name))) {
+        Die("error", "elf overflow");
+      }
+      r.symbol_name = strdup(s);
       r.object_path = strdup(pkg->strings.p + obj->path);
       append(&prtu, &r);
     }
@@ -508,16 +524,13 @@ static void OpenObject(struct Package *pkg, struct Object *obj, int oid) {
   }
   close(fd);
   if (!IsElf64Binary(obj->elf, obj->size)) {
-    Print(2, path, ": not an elf64 binary\n", NULL);
-    exit(1);
+    Die(path, "not an elf64 binary");
   }
   if (!(obj->strs = GetElfStringTable(obj->elf, obj->size))) {
-    Print(2, path, ": missing elf string table\n", NULL);
-    exit(1);
+    Die(path, "missing elf string table");
   }
   if (!(obj->syms = GetElfSymbolTable(obj->elf, obj->size, &obj->symcount))) {
-    Print(2, path, ": missing elf symbol table\n", NULL);
-    exit(1);
+    Die(path, "missing elf symbol table");
   }
   IndexSections(pkg, obj);
   LoadPriviligedRefsToUndefs(pkg, obj);

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
 
@@ -44,16 +45,16 @@ bool ParseHttpRange(const char *p, size_t n, long resourcelength,
     ++p, --n;
     length = 0;
     while (n && '0' <= *p && *p <= '9') {
-      if (__builtin_mul_overflow(length, 10, &length)) return false;
-      if (__builtin_add_overflow(length, *p - '0', &length)) return false;
+      if (ckd_mul(&length, length, 10)) return false;
+      if (ckd_add(&length, length, *p - '0')) return false;
       ++p, --n;
     }
-    if (__builtin_sub_overflow(resourcelength, length, &start)) return false;
+    if (ckd_sub(&start, resourcelength, length)) return false;
   } else {
     start = 0;
     while (n && '0' <= *p && *p <= '9') {
-      if (__builtin_mul_overflow(start, 10, &start)) return false;
-      if (__builtin_add_overflow(start, *p - '0', &start)) return false;
+      if (ckd_mul(&start, start, 10)) return false;
+      if (ckd_add(&start, start, *p - '0')) return false;
       ++p, --n;
     }
     if (n && *p == '-') {
@@ -63,14 +64,14 @@ bool ParseHttpRange(const char *p, size_t n, long resourcelength,
       } else {
         length = 0;
         while (n && '0' <= *p && *p <= '9') {
-          if (__builtin_mul_overflow(length, 10, &length)) return false;
-          if (__builtin_add_overflow(length, *p - '0', &length)) return false;
+          if (ckd_mul(&length, length, 10)) return false;
+          if (ckd_add(&length, length, *p - '0')) return false;
           ++p, --n;
         }
-        if (__builtin_add_overflow(length, 1, &length)) return false;
-        if (__builtin_sub_overflow(length, start, &length)) return false;
+        if (ckd_add(&length, length, 1)) return false;
+        if (ckd_sub(&length, length, start)) return false;
       }
-    } else if (__builtin_sub_overflow(resourcelength, start, &length)) {
+    } else if (ckd_sub(&length, resourcelength, start)) {
       return false;
     }
   }
@@ -78,7 +79,7 @@ bool ParseHttpRange(const char *p, size_t n, long resourcelength,
   if (start < 0) return false;
   if (length < 1) return false;
   if (start > resourcelength) return false;
-  if (__builtin_add_overflow(start, length, &ending)) return false;
+  if (ckd_add(&ending, start, length)) return false;
   if (ending > resourcelength) {
     length = resourcelength - start;
   }

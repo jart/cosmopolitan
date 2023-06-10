@@ -21,19 +21,15 @@
 #include "libc/str/str.h"
 
 char *GetElfStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
+  int i;
   char *name;
-  Elf64_Half i;
   Elf64_Shdr *shdr;
-  if (elf->e_shentsize) {
-    for (i = 0; i < elf->e_shnum; ++i) {
-      shdr = GetElfSectionHeaderAddress(elf, mapsize, i);
-      if (shdr->sh_type == SHT_STRTAB) {
-        name = GetElfSectionName(elf, mapsize,
-                                 GetElfSectionHeaderAddress(elf, mapsize, i));
-        if (name && !strcmp(name, ".strtab")) {
-          return GetElfSectionAddress(elf, mapsize, shdr);
-        }
-      }
+  for (i = 0; i < elf->e_shnum; ++i) {
+    if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&
+        shdr->sh_type == SHT_STRTAB &&
+        (name = GetElfSectionName(elf, mapsize, shdr)) &&
+        !strcmp(name, ".strtab")) {
+      return GetElfSectionAddress(elf, mapsize, shdr);
     }
   }
   return NULL;

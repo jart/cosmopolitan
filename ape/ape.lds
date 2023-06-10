@@ -182,7 +182,6 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/thread/tls.h"
 #include "ape/ape.internal.h"
-#include "libc/zip.internal.h"
 
 /* uncomment if .com.dbg won't execute on your kernel (will break .com file) */
 /* #define APE_FIX_COM_DBG */
@@ -373,6 +372,8 @@ SECTIONS {
 /*END: Read Only Data (only needed for initialization) */
   } :Rom
 
+  . = DATA_SEGMENT_ALIGN(4096, 4096);
+
 /* initialization image for thread-local storage, this is copied */
 /* out to actual TLS areas at runtime, so just make it read-only */
   .tdata . : {
@@ -424,8 +425,7 @@ SECTIONS {
 /*END: NT FORK COPYING */
     HIDDEN(_edata = .);
     PROVIDE_HIDDEN(edata = .);
-    KEEP(*(SORT_BY_NAME(.zip.*)))
-    HIDDEN(_ezip = .);
+    HIDDEN(_ezip = .); /* <-- very deprecated */
     . = ALIGN(4096);
   } :Ram
 
@@ -456,6 +456,8 @@ SECTIONS {
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
   } :Bss
+
+  . = DATA_SEGMENT_END(.);
 
 /*END: nt addressability guarantee */
 /*END: bsd addressability guarantee */
@@ -497,6 +499,14 @@ SECTIONS {
   .debug_addr        0 : { *(.debug_addr) }
   .gnu.attributes    0 : { KEEP(*(.gnu.attributes)) }
   .GCC.command.line  0 : { *(.GCC.command.line) }
+
+  .zip 0 : {
+    KEEP(*(.zip.file))
+    __zip_cdir_start = .;
+    KEEP(*(.zip.cdir))
+    __zip_cdir_size = . - __zip_cdir_start;
+    KEEP(*(.zip.eocd))
+  }
 
   /DISCARD/ : {
     *(__patchable_function_entries)
@@ -642,15 +652,6 @@ HIDDEN(v_ape_allbytes = v_ape_allsectors * 512);
 HIDDEN(v_ape_highsectors = MIN(0xffff, v_ape_allsectors - v_ape_realsectors));
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
-
-/* ZIP End of Central Directory header */
-#define ZIPCONST(NAME, VAL) HIDDEN(NAME = DEFINED(__zip_start) ? VAL : 0);
-ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
-ZIPCONST(v_zip_cdoffset, __zip_start - IMAGE_BASE_VIRTUAL);
-ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
-ASSERT(v_zip_cdirsize % kZipCdirHdrLinkableSize == 0, "bad zip cdir");
-ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
-ZIPCONST(v_zip_commentsize, _ezip - __zip_end - kZipCdirHdrMinSize);
 
 #if SupportsXnu()
 /* Generates deterministic ID. */

@@ -11,6 +11,7 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/stdckdint.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -829,7 +830,7 @@ void dlfree(void* mem) {
 void* dlcalloc(size_t n_elements, size_t elem_size) {
   void* mem;
   size_t req = 0;
-  if (__builtin_mul_overflow(n_elements, elem_size, &req)) req = -1;
+  if (ckd_mul(&req, n_elements, elem_size)) req = -1;
   mem = dlmalloc(req);
   if (mem != 0 && calloc_must_clear(mem2chunk(mem)))
     bzero(mem, req);

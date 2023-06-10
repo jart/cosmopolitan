@@ -23,6 +23,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -48,8 +49,7 @@ bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   p2 = NULL;
   n1 = *capacity;
   n2 = (*p ? n1 + (n1 >> 1) : MAX(4, INITIAL_CAPACITY / itemsize)) + extra;
-  if (!__builtin_mul_overflow(n1, itemsize, &t1) &&
-      !__builtin_mul_overflow(n2, itemsize, &t2)) {
+  if (!ckd_mul(&t1, n1, itemsize) && !ckd_mul(&t2, n2, itemsize)) {
     if (_weaken(realloc) && (p2 = _weaken(realloc)(p1, ROUNDUP(t2, 32)))) {
       if (!p1 && *p) memcpy(p2, *p, t1);
       bzero((char *)p2 + t1, t2 - t1);

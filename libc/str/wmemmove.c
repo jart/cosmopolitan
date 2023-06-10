@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
 wchar_t *wmemmove(wchar_t *dest, const wchar_t *src, size_t count) {
   size_t bytes;
-  if (__builtin_mul_overflow(count, sizeof(wchar_t), &bytes)) bytes = -1;
+  if (ckd_mul(&bytes, count, sizeof(wchar_t))) bytes = -1;
   return memmove(dest, src, bytes);
 }

@@ -20,6 +20,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/strtol.internal.h"
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 
@@ -46,8 +47,7 @@ unsigned long wcstoul(const wchar_t *s, wchar_t **endptr, int base) {
   if ((c = kBase36[c & 255]) && --c < base) {
     t |= 1;
     do {
-      if (__builtin_mul_overflow(x, base, &x) ||
-          __builtin_add_overflow(x, c, &x)) {
+      if (ckd_mul(&x, x, base) || ckd_add(&x, x, c)) {
         if (endptr) *endptr = s + 1;
         errno = ERANGE;
         return ULONG_MAX;

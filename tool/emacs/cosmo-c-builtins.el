@@ -203,6 +203,8 @@
            "STATIC_YOINK"
            "PYTHON_YOINK"
            "PYTHON_PROVIDE"
+           "STATIC_STACK_ADDR"
+           "STATIC_STACK_SIZE"
            "STRINGIFY"))
 
 )

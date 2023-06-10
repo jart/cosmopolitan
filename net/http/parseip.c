@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "net/http/ip.h"
 
@@ -36,8 +37,8 @@ int64_t ParseIp(const char *s, size_t n) {
   for (b = x = j = i = 0; i < n; ++i) {
     c = s[i] & 255;
     if (isdigit(c)) {
-      if (__builtin_mul_overflow(b, 10, &b) ||       //
-          __builtin_add_overflow(b, c - '0', &b) ||  //
+      if (ckd_mul(&b, b, 10) ||       //
+          ckd_add(&b, b, c - '0') ||  //
           (b > 255 && dotted)) {
         return -1;
       }

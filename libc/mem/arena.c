@@ -30,6 +30,7 @@
 #include "libc/mem/hook.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -151,7 +152,7 @@ static void *__arena_malloc(size_t n) {
 
 static void *__arena_calloc(size_t n, size_t z) {
   __arena_check();
-  if (__builtin_mul_overflow(n, z, &n)) n = -1;
+  if (ckd_mul(&n, n, z)) n = -1;
   return __arena_alloc(16, n);
 }
 

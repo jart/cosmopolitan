@@ -21,6 +21,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 
@@ -119,14 +120,14 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
     } while (it->p[i].hash);
   }
   off = it->pool.i;
-  if (__builtin_add_overflow(off, size, &need)) abort();
-  if (__builtin_add_overflow(need, 1, &need)) abort();
+  if (ckd_add(&need, off, size)) abort();
+  if (ckd_add(&need, need, 1)) abort();
   if (need > it->pool.n) {
-    if (__builtin_add_overflow(it->pool.n, 1, &n2)) abort();
+    if (ckd_add(&n2, it->pool.n, 1)) abort();
     do {
-      if (__builtin_add_overflow(n2, n2 >> 1, &n2)) abort();
+      if (ckd_add(&n2, n2, n2 >> 1)) abort();
     } while (need > n2);
-    if (__builtin_mul_overflow(n2, sizeof(*it->pool.p), &bytes)) abort();
+    if (ckd_mul(&bytes, n2, sizeof(*it->pool.p))) abort();
     if (!(p2 = realloc(it->pool.p, bytes))) abort();
     it->pool.p = p2;
     it->pool.n = n2;

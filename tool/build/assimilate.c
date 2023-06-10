@@ -25,6 +25,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
@@ -181,8 +182,7 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
   bs = atoi(script + rm[1].rm_so);
   skip = atoi(script + rm[2].rm_so);
   count = atoi(script + rm[3].rm_so);
-  if (__builtin_mul_overflow(skip, bs, &offset) ||
-      __builtin_mul_overflow(count, bs, &size)) {
+  if (ckd_mul(&offset, skip, bs) || ckd_mul(&size, count, bs)) {
     kprintf("%s: integer overflow parsing macho\n");
     exit(8);
   }

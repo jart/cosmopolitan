@@ -187,11 +187,13 @@
 #define R_PPC_ADDR32 1
 #define R_PPC_ADDR24 2
 #define R_PPC_ADDR16 3
+#define R_PPC_REL32  26
 
 #define R_PPC64_NONE   R_PPC_NONE
 #define R_PPC64_ADDR32 R_PPC_ADDR32
 #define R_PPC64_ADDR24 R_PPC_ADDR24
 #define R_PPC64_ADDR16 R_PPC_ADDR16
+#define R_PPC64_REL32  R_PPC_REL32
 
 #define R_RISCV_NONE     0
 #define R_RISCV_32       1

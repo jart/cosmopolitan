@@ -22,6 +22,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -69,8 +70,8 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
   uint64_t millis;
   BEGIN_CANCELLATION_POINT;
 
-  if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
-                   !__asan_is_valid(fds, n))) {
+  if (IsAsan() &&
+      (ckd_mul(&n, nfds, sizeof(struct pollfd)) || !__asan_is_valid(fds, n))) {
     rc = efault();
   } else if (!IsWindows()) {
     if (!IsMetal()) {

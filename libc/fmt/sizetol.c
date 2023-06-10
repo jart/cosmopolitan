@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -89,8 +90,7 @@ long sizetol(const char *s, long b) {
   }
   x = 0;
   do {
-    if (__builtin_mul_overflow(x, 10, &x) ||
-        __builtin_add_overflow(x, (c - '0') * d, &x)) {
+    if (ckd_mul(&x, x, 10) || ckd_add(&x, x, (c - '0') * d)) {
       return eoverflow();
     }
   } while (isdigit((c = *s++)));
@@ -98,7 +98,7 @@ long sizetol(const char *s, long b) {
     return einval();
   }
   while (e--) {
-    if (__builtin_mul_overflow(x, b, &x)) {
+    if (ckd_mul(&x, x, b)) {
       return eoverflow();
     }
   }

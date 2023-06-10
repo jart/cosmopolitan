@@ -74,6 +74,7 @@ TOUCH = build/bootstrap/touch.com
 PKG = build/bootstrap/package.com
 MKDEPS = build/bootstrap/mkdeps.com
 ZIPOBJ = build/bootstrap/zipobj.com
+ZIPCOPY = build/bootstrap/zipcopy.com
 FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
 COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
@@ -258,12 +259,6 @@ DEFAULT_LDFLAGS +=							\
 	-zcommon-page-size=0x1000
 endif
 
-ZIPOBJ_FLAGS =								\
-	 -b$(IMAGE_BASE_VIRTUAL)
-
-PYFLAGS =								\
-	 -b$(IMAGE_BASE_VIRTUAL)
-
 ASONLYFLAGS =								\
 	-c								\
 	-g								\
@@ -372,7 +367,7 @@ PREPROCESS = $(CC) $(PREPROCESS.flags)
 PREPROCESS.lds = $(CC) $(PREPROCESS.lds.flags)
 LINK = $(LD) $(LINK.flags)
 ELF = o/libc/elf/elf.lds
-ELFLINK = $(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION)
+ELFLINK = $(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) && $(COMPILE) -AFIXUP.ape -T$@ $(FIXUPOBJ) $@
 LINKARGS = $(patsubst %.lds,-T %.lds,$(call uniqr,$(LD.libs) $(filter-out %.pkg,$^)))
 LOLSAN = build/lolsan -b $(IMAGE_BASE_VIRTUAL)
 

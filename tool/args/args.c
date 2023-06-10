@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 static struct ZipArgs {
   bool initialized;

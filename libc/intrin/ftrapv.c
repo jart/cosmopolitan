@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
 #include "libc/runtime/internal.h"
+#include "libc/stdckdint.h"
 
 /**
  * Returns -𝑥, aborting on overflow.
@@ -66,7 +67,7 @@ int128_t __negvti2(int128_t x) {
  */
 int __addvsi3(int x, int y) {
   int z;
-  if (__builtin_add_overflow(x, y, &z)) {
+  if (ckd_add(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -80,7 +81,7 @@ int __addvsi3(int x, int y) {
  */
 long __addvdi3(long x, long y) {
   long z;
-  if (__builtin_add_overflow(x, y, &z)) {
+  if (ckd_add(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -94,7 +95,7 @@ long __addvdi3(long x, long y) {
  */
 int128_t __addvti3(int128_t x, int128_t y) {
   int128_t z;
-  if (__builtin_add_overflow(x, y, &z)) {
+  if (ckd_add(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -108,7 +109,7 @@ int128_t __addvti3(int128_t x, int128_t y) {
  */
 int __subvsi3(int x, int y) {
   int z;
-  if (__builtin_sub_overflow(x, y, &z)) {
+  if (ckd_sub(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -122,7 +123,7 @@ int __subvsi3(int x, int y) {
  */
 long __subvdi3(long x, long y) {
   long z;
-  if (__builtin_sub_overflow(x, y, &z)) {
+  if (ckd_sub(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -136,7 +137,7 @@ long __subvdi3(long x, long y) {
  */
 int128_t __subvti3(int128_t x, int128_t y) {
   int128_t z;
-  if (__builtin_sub_overflow(x, y, &z)) {
+  if (ckd_sub(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -150,7 +151,7 @@ int128_t __subvti3(int128_t x, int128_t y) {
  */
 int __mulvsi3(int x, int y) {
   int z;
-  if (__builtin_mul_overflow(x, y, &z)) {
+  if (ckd_mul(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -164,7 +165,7 @@ int __mulvsi3(int x, int y) {
  */
 long __mulvdi3(long x, long y) {
   long z;
-  if (__builtin_mul_overflow(x, y, &z)) {
+  if (ckd_mul(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;
@@ -178,7 +179,7 @@ long __mulvdi3(long x, long y) {
  */
 int128_t __mulvti3(int128_t x, int128_t y) {
   int128_t z;
-  if (__builtin_mul_overflow(x, y, &z)) {
+  if (ckd_mul(&z, x, y)) {
     __on_arithmetic_overflow();
   }
   return z;

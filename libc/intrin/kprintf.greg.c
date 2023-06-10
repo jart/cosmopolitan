@@ -51,6 +51,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
@@ -108,7 +109,7 @@ extern _Hide struct SymbolTable *__symtab;
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;
-  if (__builtin_add_overflow(t, n, &t)) t = (intptr_t)e;
+  if (ckd_add(&t, t, n)) t = (intptr_t)e;
   return (char *)t;
 }
 

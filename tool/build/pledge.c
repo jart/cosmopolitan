@@ -69,7 +69,7 @@
 //
 
 STATIC_YOINK("strerror_wr");
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 #define USAGE \
   "\

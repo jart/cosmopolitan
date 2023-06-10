@@ -64,6 +64,7 @@ textstartup noasan void InitializeMetalFile(void) {
      * user code can STATIC_YOINK this symbol.
      */
     size_t size = ROUNDUP(_ezip - __executable_start, 4096);
+    // TODO(jart): Restore support for ZIPOS on metal.
     void *copied_base;
     struct DirectMap dm;
     dm = sys_mmap_metal(NULL, size, PROT_READ | PROT_WRITE,

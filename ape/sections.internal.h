@@ -19,8 +19,6 @@ extern unsigned char _tbss_end[] __attribute__((__weak__));
 extern unsigned char _tls_align[] __attribute__((__weak__));
 extern unsigned char __test_start[] __attribute__((__weak__));
 extern unsigned char __ro[] __attribute__((__weak__));
-extern uint8_t __zip_start[] __attribute__((__weak__));
-extern uint8_t __zip_end[] __attribute__((__weak__));
 extern uint8_t __data_start[] __attribute__((__weak__));
 extern uint8_t __data_end[] __attribute__((__weak__));
 extern uint8_t __bss_start[] __attribute__((__weak__));

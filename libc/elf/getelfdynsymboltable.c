@@ -21,17 +21,15 @@
 
 Elf64_Sym *GetElfDynSymbolTable(const Elf64_Ehdr *elf, size_t mapsize,
                                 Elf64_Xword *out_count) {
-  Elf64_Half i;
+  int i;
   Elf64_Shdr *shdr;
-  if (elf->e_shentsize) {
-    for (i = elf->e_shnum; i > 0; --i) {
-      shdr = GetElfSectionHeaderAddress(elf, mapsize, i - 1);
-      if (shdr->sh_type == SHT_DYNSYM) {
-        if (shdr->sh_entsize != sizeof(Elf64_Sym)) continue;
-        if (out_count) *out_count = shdr->sh_size / shdr->sh_entsize;
-        return GetElfSectionAddress(elf, mapsize, shdr);
-      }
+  for (i = elf->e_shnum; i-- > 0;) {
+    if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&  //
+        shdr->sh_type == SHT_DYNSYM &&                           //
+        shdr->sh_entsize == sizeof(Elf64_Sym)) {
+      if (out_count) *out_count = shdr->sh_size / sizeof(Elf64_Sym);
+      return GetElfSectionAddress(elf, mapsize, shdr);
     }
   }
-  return NULL;
+  return 0;
 }

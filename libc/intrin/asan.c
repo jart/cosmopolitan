@@ -41,6 +41,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/str/tab.internal.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
@@ -594,8 +595,7 @@ bool __asan_is_valid_strlist(char *const *p) {
 bool __asan_is_valid_iov(const struct iovec *iov, int iovlen) {
   int i;
   size_t size;
-  if (iovlen >= 0 &&
-      !__builtin_mul_overflow(iovlen, sizeof(struct iovec), &size) &&
+  if (iovlen >= 0 && !ckd_mul(&size, iovlen, sizeof(struct iovec)) &&
       __asan_is_valid(iov, size)) {
     for (i = 0; i < iovlen; ++i) {
       if (!__asan_is_valid(iov[i].iov_base, iov[i].iov_len)) {
@@ -1067,7 +1067,7 @@ static struct AsanExtra *__asan_get_extra(const void *p, size_t *c) {
   struct AsanExtra *e;
   f = (intptr_t)p >> 16;
   if (!kisdangerous(p) && (n = _weaken(dlmalloc_usable_size)(p)) > sizeof(*e) &&
-      !__builtin_add_overflow((intptr_t)p, n, &x) && x <= 0x800000000000 &&
+      !ckd_add(&x, (intptr_t)p, n) && x <= 0x800000000000 &&
       (LIKELY(f == (int)((x - 1) >> 16)) || !kisdangerous((void *)(x - 1))) &&
       (LIKELY(f == (int)((x = x - sizeof(*e)) >> 16)) ||
        __asan_is_mapped(x >> 16)) &&
@@ -1237,7 +1237,7 @@ void *__asan_calloc(size_t n, size_t m) {
   char *p;
   struct AsanTrace bt;
   __asan_trace(&bt, RBP);
-  if (__builtin_mul_overflow(n, m, &n)) n = -1;
+  if (ckd_mul(&n, n, m)) n = -1;
   return __asan_allocate(16, n, &bt, kAsanHeapUnderrun, kAsanHeapOverrun, 0x00);
 }
 

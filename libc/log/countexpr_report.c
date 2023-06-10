@@ -24,6 +24,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
 
 #ifdef __x86_64__
@@ -32,7 +33,7 @@ static long GetLongSum(const long *h, size_t n) {
   long t;
   size_t i;
   for (t = i = 0; i < n; ++i) {
-    if (__builtin_add_overflow(t, h[i], &t)) {
+    if (ckd_add(&t, t, h[i])) {
       t = LONG_MAX;
       break;
     }

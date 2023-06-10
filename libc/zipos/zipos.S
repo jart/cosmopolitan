@@ -22,8 +22,6 @@
 	zipos = 0
 	.globl	zipos
 
-	.yoink	__zip_end
-	.yoink	__zip_start
 	.yoink	__zipos_close
 	.yoink	__zipos_fcntl
 	.yoink	__zipos_fstat

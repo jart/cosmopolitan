@@ -27,6 +27,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
@@ -67,10 +68,10 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
   struct timespec ts, *tsp;
   BEGIN_CANCELLATION_POINT;
 
-  if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
-                   !__asan_is_valid(fds, n) ||
-                   (timeout && !__asan_is_valid(timeout, sizeof(timeout))) ||
-                   (sigmask && !__asan_is_valid(sigmask, sizeof(sigmask))))) {
+  if (IsAsan() &&
+      (ckd_mul(&n, nfds, sizeof(struct pollfd)) || !__asan_is_valid(fds, n) ||
+       (timeout && !__asan_is_valid(timeout, sizeof(timeout))) ||
+       (sigmask && !__asan_is_valid(sigmask, sizeof(sigmask))))) {
     rc = efault();
   } else if (!IsWindows()) {
     e = errno;
@@ -84,8 +85,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     if (rc == -1 && errno == ENOSYS) {
       errno = e;
       if (!timeout ||
-          __builtin_add_overflow(timeout->tv_sec, timeout->tv_nsec / 1000000,
-                                 &millis)) {
+          ckd_add(&millis, timeout->tv_sec, timeout->tv_nsec / 1000000)) {
         millis = -1;
       }
       if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
@@ -93,8 +93,8 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
       if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
-    if (!timeout || __builtin_add_overflow(
-                        timeout->tv_sec, timeout->tv_nsec / 1000000, &millis)) {
+    if (!timeout ||
+        ckd_add(&millis, timeout->tv_sec, timeout->tv_nsec / 1000000)) {
       millis = -1;
     }
     rc = sys_poll_nt(fds, nfds, &millis, sigmask);

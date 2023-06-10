@@ -44,7 +44,7 @@
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 STATIC_YOINK("libc/testlib/hyperion.txt");
 
 #define THREADS 8

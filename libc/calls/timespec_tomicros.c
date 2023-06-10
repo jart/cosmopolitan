@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 
 /**
  * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
@@ -45,8 +46,7 @@ int64_t timespec_tomicros(struct timespec ts) {
     }
   }
   // convert to scalar result
-  if (!__builtin_mul_overflow(ts.tv_sec, 1000000ul, &us) &&
-      !__builtin_add_overflow(us, ts.tv_nsec, &us)) {
+  if (!ckd_mul(&us, ts.tv_sec, 1000000ul) && !ckd_add(&us, us, ts.tv_nsec)) {
     return us;
   } else if (ts.tv_sec < 0) {
     return INT64_MIN;

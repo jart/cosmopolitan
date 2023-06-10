@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_PLINKO_LIB_CONS_H_
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_CONS_H_
+#include "libc/stdckdint.h"
 #include "tool/plinko/lib/error.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/types.h"
@@ -26,7 +27,7 @@ forceinline void Set(int i, dword t) {
 
 forceinline int Alloc(dword t) {
   int c = cx;
-  if (!__builtin_sub_overflow(c, 1, &c)) {
+  if (!ckd_sub(&c, c, 1)) {
     Set(c, t);
     return cx = c;
   }

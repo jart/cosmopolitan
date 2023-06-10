@@ -36,6 +36,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
@@ -149,7 +150,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
     len = INT64_MAX - off;
   }
 
-  if (off < 0 || len < 0 || __builtin_add_overflow(off, len, &end)) {
+  if (off < 0 || len < 0 || ckd_add(&end, off, len)) {
     return einval();
   }
 

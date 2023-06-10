@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "net/https/https.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 STATIC_YOINK("usr/share/ssl/root/");
 STATIC_YOINK("usr/share/ssl/root/amazon.pem");
 STATIC_YOINK("usr/share/ssl/root/certum.pem");

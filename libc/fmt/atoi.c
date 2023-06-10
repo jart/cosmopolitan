@@ -19,6 +19,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
 /**
@@ -46,8 +47,7 @@ int atoi(const char *s) {
   d = c == '-' ? -1 : 1;
   if (c == '-' || c == '+') c = *s++;
   for (x = 0; isdigit(c); c = *s++) {
-    if (__builtin_mul_overflow(x, 10, &x) ||
-        __builtin_add_overflow(x, (c - '0') * d, &x)) {
+    if (ckd_mul(&x, x, 10) || ckd_add(&x, x, (c - '0') * d)) {
       errno = ERANGE;
       if (d > 0) {
         return INT_MAX;

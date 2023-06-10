@@ -32,16 +32,18 @@ typedef long long v2di __attribute__((__vector_size__(16), __aligned__(1)));
  * caller needs to check the first four bytes of the returned value to
  * determine whether to use ZIP_CDIR_xxx() or ZIP_CDIR64_xxx() macros.
  *
- * @param p points to file memory
+ * @param f points to file memory
  * @param n is byte size of file
  * @param e may receive error code when null is returned
  * @return pointer to EOCD64 or EOCD, otherwise null
  */
-void *GetZipEocd(const uint8_t *p, size_t n, int *e) {
+void *GetZipEocd(const void *f, size_t n, int *e) {
   v2di x;
   int err;
   size_t i, j;
   uint32_t magic;
+  const uint8_t *p;
+  p = f;
   i = n - 4;
   err = kZipErrorEocdNotFound;
   do {

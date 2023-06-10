@@ -49,7 +49,7 @@
 #include "libc/x/xspawn.h"
 #include "third_party/xed/x86.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 char testlib_enable_tmp_setup_teardown;
 

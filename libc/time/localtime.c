@@ -17,7 +17,7 @@
 #include "libc/time/tz.internal.h"
 #include "libc/time/tzfile.internal.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 STATIC_YOINK("usr/share/zoneinfo/");
 STATIC_YOINK("usr/share/zoneinfo/Anchorage");
 STATIC_YOINK("usr/share/zoneinfo/Beijing");

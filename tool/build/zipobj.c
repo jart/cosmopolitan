@@ -47,25 +47,46 @@ char *symbol_;
 char *outpath_;
 bool nocompress_;
 bool basenamify_;
-int64_t image_base_;
 int strip_components_;
 const char *path_prefix_;
 struct timespec timestamp;
-size_t kZipCdirHdrLinkableSizeBootstrap;
 
 wontreturn void PrintUsage(int rc) {
-  kprintf("%s%s%s\n", "Usage: ", program_invocation_name,
-          " [-n] [-B] [-C INT] [-P PREFIX] [-o FILE] [-s SYMBOL] [-y YOINK] "
-          "[FILE...]");
+  kprintf("\n\
+NAME\n\
+\n\
+  Cosmpolitan Zip File Compiler\n\
+\n\
+SYNOPSIS\n\
+\n\
+  %s [FLAGS] FILE...\n\
+\n\
+DESCRIPTION\n\
+\n\
+  This program may be used to turn arbitrary files into .zip.o files\n\
+  which can be incrementally linked into binaries, without quadratic\n\
+  compression complexity.\n\
+\n\
+FLAGS\n\
+\n\
+  -h              show help\n\
+  -o PATH         output path\n\
+  -0              disable compression\n\
+  -B              basename-ify zip filename\n\
+  -N ZIPPATH      zip filename (defaults to input arg)\n\
+  -P ZIPPATH      prepend path zip filename using join\n\
+  -C INTEGER      strips leading path components from zip filename\n\
+  -y SYMBOL       generate yoink for symbol (default __zip_eocd)\n\
+\n\
+",
+          program_invocation_name);
   exit(rc);
 }
 
 void GetOpts(int *argc, char ***argv) {
   int opt;
-  yoink_ = "__zip_start";
-  image_base_ = IMAGE_BASE_VIRTUAL;
-  kZipCdirHdrLinkableSizeBootstrap = kZipCdirHdrLinkableSize;
-  while ((opt = getopt(*argc, *argv, "?0nhBL:N:C:P:o:s:y:b:")) != -1) {
+  yoink_ = "__zip_eocd";
+  while ((opt = getopt(*argc, *argv, "?0nhBN:C:P:o:s:y:")) != -1) {
     switch (opt) {
       case 'o':
         outpath_ = optarg;
@@ -90,14 +111,8 @@ void GetOpts(int *argc, char ***argv) {
       case 'B':
         basenamify_ = true;
         break;
-      case 'b':
-        image_base_ = strtol(optarg, NULL, 0);
-        break;
       case '0':
         nocompress_ = true;
-        break;
-      case 'L':
-        kZipCdirHdrLinkableSizeBootstrap = strtoul(optarg, NULL, 0);
         break;
       case '?':
       case 'h':
@@ -108,7 +123,12 @@ void GetOpts(int *argc, char ***argv) {
   }
   *argc -= optind;
   *argv += optind;
-  CHECK_NOTNULL(outpath_);
+  if (!outpath_) {
+    kprintf("error: no output path specified\n"
+            "run %s -h for usage\n",
+            program_invocation_name);
+    exit(1);
+  }
 }
 
 void ProcessFile(struct ElfWriter *elf, const char *path) {
@@ -143,23 +163,20 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
     }
   }
   elfwriter_zip(elf, name, name, strlen(name), map, st.st_size, st.st_mode,
-                timestamp, timestamp, timestamp, nocompress_, image_base_,
-                kZipCdirHdrLinkableSizeBootstrap);
+                timestamp, timestamp, timestamp, nocompress_);
   if (st.st_size) CHECK_NE(-1, munmap(map, st.st_size));
   close(fd);
 }
 
 void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
   elfwriter_align(elf, 1, 0);
-  elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
-                         SHF_ALLOC | SHF_EXECINSTR);
+  elfwriter_startsection(elf, ".yoink", SHT_PROGBITS, SHF_EXECINSTR);
   elfwriter_yoink(elf, yoink_, STB_GLOBAL);
   elfwriter_finishsection(elf);
 }
 
 void CheckFilenameKosher(const char *path) {
-  CHECK_LE(kZipCfileHdrMinSize + strlen(path),
-           kZipCdirHdrLinkableSizeBootstrap);
+  CHECK_LE(kZipCfileHdrMinSize + strlen(path), 65535);
   CHECK(!_startswith(path, "/"));
   CHECK(!strstr(path, ".."));
 }

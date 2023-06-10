@@ -17,13 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 #include "tool/plinko/lib/histo.h"
 
 long GetLongSum(const long *h, size_t n) {
   long t;
   size_t i;
   for (t = i = 0; i < n; ++i) {
-    if (__builtin_add_overflow(t, h[i], &t)) {
+    if (ckd_add(&t, t, h[i])) {
       t = LONG_MAX;
       break;
     }

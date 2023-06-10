@@ -300,3 +300,20 @@ uint32_t elfwriter_relatype_abs32(const struct ElfWriter *elf) {
       notpossible;
   }
 }
+
+uint32_t elfwriter_relatype_pc32(const struct ElfWriter *elf) {
+  switch (elf->ehdr->e_machine) {
+    case EM_NEXGEN32E:
+      return R_X86_64_PC32;
+    case EM_AARCH64:
+      return R_AARCH64_PREL32;
+    case EM_PPC64:
+      return R_PPC64_REL32;
+    case EM_RISCV:
+      return R_RISCV_RELATIVE;
+    case EM_S390:
+      return R_390_PC32;
+    default:
+      notpossible;
+  }
+}

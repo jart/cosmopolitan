@@ -16,10 +16,11 @@
 
 MAKEFLAGS += --no-builtin-rules
 
+MAKE_ZIPCOPY = $(COMPILE) -AZIPCOPY -wT$@ $(ZIPCOPY) $< $@
 ifneq ($(ARCH), aarch64)
-MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@ && $(MAKE_ZIPCOPY)
 else
-MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S $< $@
+MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S $< $@ && $(MAKE_ZIPCOPY)
 endif
 
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<

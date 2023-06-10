@@ -26,6 +26,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/stdckdint.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -51,7 +52,7 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
     f->state = errno = EBADF;
     return 0;
   }
-  if (__builtin_mul_overflow(stride, count, &n)) {
+  if (ckd_mul(&n, stride, count)) {
     f->state = errno = EOVERFLOW;
     return 0;
   }

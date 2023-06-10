@@ -19,7 +19,7 @@
 #include "libc/elf/elf.h"
 
 char *GetElfSectionNameStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
-  if (!elf->e_shoff || !elf->e_shentsize) return NULL;
+  if (!elf->e_shoff || !elf->e_shentsize) return 0;
   return GetElfSectionAddress(
       elf, mapsize, GetElfSectionHeaderAddress(elf, mapsize, elf->e_shstrndx));
 }

@@ -55,7 +55,7 @@
 STATIC_STACK_SIZE(0x100000);
 
 STATIC_YOINK("__die");
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 PYTHON_YOINK("cosmo");
 PYTHON_YOINK("_locale");

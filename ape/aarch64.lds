@@ -2,7 +2,6 @@
 │vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/tls.h"
-#include "libc/zip.internal.h"
 
 ENTRY(_start)
 OUTPUT_ARCH(aarch64)
@@ -201,11 +200,6 @@ SECTIONS {
   _edata = .;
   PROVIDE(edata = .);
 
-  .zip : {
-    KEEP(*(SORT_BY_NAME(.zip.*)))
-    HIDDEN(_ezip = .);
-  }
-
   . = .;
   __bss_start = .;
   __bss_start__ = .;
@@ -259,6 +253,14 @@ SECTIONS {
   .ARM.attributes     0 : { KEEP(*(.ARM.attributes)) KEEP(*(.gnu.attributes)) }
   .note.gnu.arm.ident 0 : { KEEP(*(.note.gnu.arm.ident)) }
 
+  .zip 0 : {
+    KEEP(*(.zip.file))
+    __zip_cdir_start = .;
+    KEEP(*(.zip.cdir))
+    __zip_cdir_size = . - __zip_cdir_start;
+    KEEP(*(.zip.eocd))
+  }
+
   /DISCARD/ : {
     *(__patchable_function_entries)
     *(.GCC.command.line)
@@ -279,15 +281,6 @@ _tbss_size = _tbss_end - _tbss_start;
 _tbss_offset = _tbss_start - _tdata_start;
 _tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start);
 _tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss));
-__zip_start_rva = DEFINED(__zip_start) ? __zip_start - __executable_start : 0;
-
-/* ZIP End of Central Directory header */
-#define ZIPCONST(NAME, VAL) NAME = DEFINED(__zip_start) ? VAL : 0;
-ZIPCONST(v_zip_cdoffset, __zip_start - __executable_start);
-ZIPCONST(v_zip_cdirsize, __zip_end - __zip_start);
-ASSERT(v_zip_cdirsize % kZipCdirHdrLinkableSize == 0, "bad zip cdir");
-ZIPCONST(v_zip_records, v_zip_cdirsize / kZipCdirHdrLinkableSize);
-ZIPCONST(v_zip_commentsize, _ezip - __zip_end - kZipCdirHdrMinSize);
 
 ASSERT(ALIGNOF(.tdata) <= TLS_ALIGNMENT && ALIGNOF(.tbss) <= TLS_ALIGNMENT,
        "_Thread_local _Alignof can't exceed TLS_ALIGNMENT");

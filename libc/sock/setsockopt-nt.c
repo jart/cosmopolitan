@@ -23,6 +23,7 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/linger.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
@@ -48,9 +49,9 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
     } else if ((optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) && optval &&
                optlen == sizeof(struct timeval)) {
       tv = optval;
-      if (__builtin_mul_overflow(tv->tv_sec, 1000, &ms) ||
-          __builtin_add_overflow(tv->tv_usec, 999, &micros) ||
-          __builtin_add_overflow(ms, micros / 1000, &ms) ||
+      if (ckd_mul(&ms, tv->tv_sec, 1000) ||      //
+          ckd_add(&micros, tv->tv_usec, 999) ||  //
+          ckd_add(&ms, ms, micros / 1000) ||     //
           (ms < 0 || ms > 0xffffffff)) {
         u.millis = 0xffffffff;
       } else {

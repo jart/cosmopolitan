@@ -17,11 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
+#include "libc/stdckdint.h"
 
-Elf64_Phdr *GetElfSegmentHeaderAddress(const Elf64_Ehdr *elf, size_t mapsize,
-                                       unsigned i) {
-  intptr_t addr =
-      ((intptr_t)elf + (intptr_t)elf->e_phoff + (intptr_t)elf->e_phentsize * i);
-  CheckElfAddress(elf, mapsize, addr, elf->e_phentsize);
+Elf64_Phdr *GetElfSegmentHeaderAddress(const Elf64_Ehdr *elf,  //
+                                       size_t mapsize,         //
+                                       Elf64_Half i) {         //
+  uint64_t last, addr;
+  if (i >= elf->e_phnum) return 0;
+  if (ckd_add(&addr, (uintptr_t)elf, elf->e_phoff)) return 0;
+  if (ckd_add(&addr, addr, (unsigned)i * elf->e_phentsize)) return 0;
+  if (ckd_add(&last, addr, elf->e_phentsize)) return 0;
+  if (last > (uintptr_t)elf + mapsize) return 0;
   return (Elf64_Phdr *)addr;
 }

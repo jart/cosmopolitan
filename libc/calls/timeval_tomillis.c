@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
 #include "libc/limits.h"
+#include "libc/stdckdint.h"
 
 /**
  * Reduces `ts` from 1e-6 to 1e-3 granularity w/ ceil rounding.
@@ -45,8 +46,7 @@ int64_t timeval_tomillis(struct timeval ts) {
     }
   }
   // convert to scalar result
-  if (!__builtin_mul_overflow(ts.tv_sec, 1000ul, &ms) &&
-      !__builtin_add_overflow(ms, ts.tv_usec, &ms)) {
+  if (!ckd_mul(&ms, ts.tv_sec, 1000ul) && !ckd_add(&ms, ms, ts.tv_usec)) {
     return ms;
   } else if (ts.tv_sec < 0) {
     return INT64_MIN;

@@ -138,7 +138,7 @@
 #include "tool/net/sandbox.h"
 
 STATIC_STACK_SIZE(0x40000);
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 #if !IsTiny()
 #ifdef __x86_64__
 STATIC_YOINK("ShowCrashReportsEarly");

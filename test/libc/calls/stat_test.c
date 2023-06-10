@@ -34,7 +34,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 char testlib_enable_tmp_setup_teardown;
 

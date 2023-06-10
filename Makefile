@@ -426,7 +426,9 @@ toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/ape/ape-copy-self.o			\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a			\
-		o/$(MODE)/third_party/libcxx/libcxx.a
+		o/$(MODE)/third_party/libcxx/libcxx.a		\
+		o/$(MODE)/tool/build/fixupobj.com		\
+		o/$(MODE)/tool/build/zipcopy.com
 
 aarch64: private .INTERNET = true
 aarch64: private .UNSANDBOXED = true

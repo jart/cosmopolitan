@@ -87,7 +87,7 @@ o/$(MODE)/test/libc/runtime/prog/ftraceasm.elf:				\
 		$(TEST_LIBC_RUNTIME_DEPS)				\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.o		\
 		o/$(MODE)/test/libc/runtime/runtime.pkg
-	@$(ELFLINK) --gc-sections
+	@$(ELFLINK)
 o/$(MODE)/test/libc/runtime/prog/ftraceasm.txt:				\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.elf
 	@$(OBJDUMP) -d $< >$@

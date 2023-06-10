@@ -22,6 +22,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -34,8 +35,8 @@
 int getgroups(int size, uint32_t list[]) {
   int rc;
   size_t n;
-  if (IsAsan() && (__builtin_mul_overflow(size, sizeof(list[0]), &n) ||
-                   !__asan_is_valid(list, n))) {
+  if (IsAsan() &&
+      (ckd_mul(&n, size, sizeof(list[0])) || !__asan_is_valid(list, n))) {
     rc = efault();
   } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
     rc = sys_getgroups(size, list);

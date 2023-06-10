@@ -43,6 +43,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -99,9 +100,9 @@ static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
     if (i < _mmi.i) {
 
       // check to see if there's space available before the first entry
-      if (!__builtin_add_overflow(x, align - 1, &start)) {
+      if (!ckd_add(&start, x, align - 1)) {
         start &= -align;
-        if (!__builtin_add_overflow(start, n - 1, &end)) {
+        if (!ckd_add(&end, start, n - 1)) {
           if (end < _mmi.p[i].x) {
             *res = start;
             return true;
@@ -111,10 +112,10 @@ static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
 
       // check to see if there's space available between two entries
       while (++i < _mmi.i) {
-        if (!__builtin_add_overflow(_mmi.p[i - 1].y, 1, &start) &&
-            !__builtin_add_overflow(start, align - 1, &start)) {
+        if (!ckd_add(&start, _mmi.p[i - 1].y, 1) &&
+            !ckd_add(&start, start, align - 1)) {
           start &= -align;
-          if (!__builtin_add_overflow(start, n - 1, &end)) {
+          if (!ckd_add(&end, start, n - 1)) {
             if (end < _mmi.p[i].x) {
               *res = start;
               return true;
@@ -125,10 +126,10 @@ static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
     }
 
     // otherwise append after the last entry if space is available
-    if (!__builtin_add_overflow(_mmi.p[i - 1].y, 1, &start) &&
-        !__builtin_add_overflow(start, align - 1, &start)) {
+    if (!ckd_add(&start, _mmi.p[i - 1].y, 1) &&
+        !ckd_add(&start, start, align - 1)) {
       start &= -align;
-      if (!__builtin_add_overflow(start, n - 1, &end)) {
+      if (!ckd_add(&end, start, n - 1)) {
         *res = start;
         return true;
       }
@@ -137,9 +138,9 @@ static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
   } else {
     // if memtrack is empty, then just assign the requested address
     // assuming it doesn't overflow
-    if (!__builtin_add_overflow(x, align - 1, &start)) {
+    if (!ckd_add(&start, x, align - 1)) {
       start &= -align;
-      if (!__builtin_add_overflow(start, n - 1, &end)) {
+      if (!ckd_add(&end, start, n - 1)) {
         *res = start;
         return true;
       }
@@ -293,8 +294,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
   }
 
   if (__virtualmax < LONG_MAX &&
-      (__builtin_add_overflow((virtualused = GetMemtrackSize(&_mmi)), size,
-                              &virtualneed) ||
+      (ckd_add(&virtualneed, (virtualused = GetMemtrackSize(&_mmi)), size) ||
        virtualneed > __virtualmax)) {
     STRACE("mmap %'zu size + %'zu inuse exceeds virtual memory limit %'zu",
            size, virtualused, __virtualmax);
@@ -308,8 +308,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
     return VIP(eexist());
   }
 
-  if (__builtin_add_overflow((int)(size >> 16), (int)!!(size & (FRAMESIZE - 1)),
-                             &n)) {
+  if (ckd_add(&n, (int)(size >> 16), (int)!!(size & (FRAMESIZE - 1)))) {
     STRACE("mmap range overflows");
     return VIP(einval());
   }
