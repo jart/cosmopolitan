@@ -21,6 +21,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
+#include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
 #include "third_party/make/hash.h"
 /* clang-format off */

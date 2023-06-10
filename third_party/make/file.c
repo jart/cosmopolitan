@@ -25,6 +25,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/debug.h"
 #include "libc/assert.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/make/hash.h"
 
 

@@ -26,12 +26,14 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lua_c
+#include "third_party/lua/lua.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
@@ -45,7 +47,6 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lrepl.h"
-#include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
 #include "tool/args/args.h"

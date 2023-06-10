@@ -21,6 +21,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/commands.h"
 #include "third_party/make/dep.h"
 #include "third_party/make/variable.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/make/debug.h"
 
 /* The test for circular dependencies is based on the 'updating' bit in

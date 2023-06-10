@@ -396,7 +396,8 @@ o/cosmopolitan.h:							\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))	\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_INCS))
 	$(file >$(TMPDIR)/$(subst /,_,$@),libc/integral/normalize.inc $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS)))
-	@$(COMPILE) -AROLLUP -T$@ o/$(MODE)/tool/build/rollup.com @$(TMPDIR)/$(subst /,_,$@) >$@
+	@$(ECHO) '#define COSMO' >$@
+	@$(COMPILE) -AROLLUP -T$@ o/$(MODE)/tool/build/rollup.com @$(TMPDIR)/$(subst /,_,$@) >>$@
 
 o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\

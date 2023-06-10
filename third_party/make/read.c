@@ -25,6 +25,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/rule.h"
 #include "third_party/make/debug.h"
 #include "third_party/musl/passwd.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/make/hash.h"
 
 # define GLOB_ALTDIRFUNC (1 << 9)/* Use gl_opendir et al functions.  */

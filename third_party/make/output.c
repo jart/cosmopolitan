@@ -18,6 +18,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/makeint.inc"
 #include "third_party/make/os.h"
 #include "third_party/make/output.h"
+#include "libc/runtime/runtime.h"
 #include "libc/calls/struct/flock.h"
 
 /* GNU make no longer supports pre-ANSI89 environments.  */
