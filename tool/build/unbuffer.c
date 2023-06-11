@@ -96,8 +96,8 @@ int main(int argc, char *argv[]) {
   wsz.ws_col = 80;
   wsz.ws_row = 45;
 
-  if (ioctl(1, TCGETS, &tio)) {
-    perror("tcgets");
+  if (tcgetattr(1, &tio)) {
+    perror("tcgetattr");
     return __COUNTER__ + 1;
   }
 

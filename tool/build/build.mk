@@ -95,19 +95,6 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/build/blinkenlights.com:				\
-		o/$(MODE)/tool/build/blinkenlights.com.dbg	\
-		o/$(MODE)/third_party/zip/zip.com		\
-		o/$(MODE)/tool/build/symtab.com			\
-		$(VM)
-	@$(MAKE_OBJCOPY)
-	@$(MAKE_SYMTAB_CREATE)
-	@$(MAKE_SYMTAB_ZIP)
-
-o/$(MODE)/tool/build/emulator.o: private		\
-		COPTS +=				\
-			-fno-sanitize=pointer-overflow
-
 o/$(MODE)/tool/build/dso/sandbox.so.zip.o		\
 o/$(MODE)/tool/build/mkdir.zip.o			\
 o/$(MODE)/tool/build/chmod.zip.o			\
@@ -165,8 +152,6 @@ o/$(MODE)/tool/build/pledge.com.dbg:			\
 
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\
-		o/$(MODE)/tool/build/emucrt		\
-		o/$(MODE)/tool/build/emubin		\
 		o/$(MODE)/tool/build/lib		\
 		$(TOOL_BUILD_BINS)			\
 		$(TOOL_BUILD_CHECKS)
