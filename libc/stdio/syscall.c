@@ -32,7 +32,8 @@
 long syscall(long number, ...) {
   switch (number) {
     default:
-      return -ENOSYS;
+      errno = ENOSYS;
+      return -1;
     case SYS_gettid:
       return gettid();
     case SYS_getrandom: {
@@ -43,7 +44,7 @@ long syscall(long number, ...) {
       unsigned flags = va_arg(va, unsigned);
       va_end(va);
       ssize_t rc = getrandom(buf, buflen, flags);
-      return rc == -1 ? -errno : rc;
+      return rc;
     }
   }
 }
