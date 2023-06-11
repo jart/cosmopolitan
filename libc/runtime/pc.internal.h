@@ -225,5 +225,8 @@ forceinline void outb(unsigned short port, unsigned char byte) {
     (uint64_t *)(BANE + cr3);         \
   })
 
+#define __get_mm()     ((struct mman *)(BANE + 0x0500))
+#define __get_mm_phy() ((struct mman *)0x0500)
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_PC_H_ */

@@ -176,7 +176,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   SystemTable->BootServices->AllocatePages(
       AllocateAddress, EfiRuntimeServicesData,
       ((_end - __executable_start) + 4095) / 4096, &Address);
-  mm = (struct mman *)0x0500;
+  mm = __get_mm_phy();
   SystemTable->BootServices->SetMem(mm, sizeof(*mm), 0);
   SystemTable->BootServices->SetMem(
       (void *)0x79000, 0x7e000 - 0x79000 + sizeof(struct EfiArgs), 0);

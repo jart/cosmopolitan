@@ -46,7 +46,7 @@ noasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
   struct mman *mm;
   struct DirectMap res;
   uint64_t addr, faddr = 0, page, e, *pte, *fdpte, *pml4t;
-  mm = (struct mman *)(BANE + 0x0500);
+  mm = __get_mm();
   pml4t = __get_pml4t();
   size = ROUNDUP(size, 4096);
   addr = (uint64_t)vaddr;
