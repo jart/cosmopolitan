@@ -30,7 +30,6 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/arraylist2.internal.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -322,8 +321,8 @@ int main(int argc, char *argv[]) {
       goto fail;
     }
     outsize += (remain = sizes.p[i]);
-    if (_copyfd(fd, outfd, remain) == -1) {
-      reason = "copy_file_range failed";
+    if (copyfd(fd, outfd, remain) == -1) {
+      reason = "copy failed";
       goto fail;
     }
     close(fd);

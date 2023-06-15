@@ -33,7 +33,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
-
 #ifdef __x86_64__
 
 /**

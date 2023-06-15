@@ -103,3 +103,7 @@ double fmod(double x, double y)
 	ux.i = uxi;
 	return ux.f;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(fmod, fmodl);
+#endif

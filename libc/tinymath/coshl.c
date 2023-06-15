@@ -38,6 +38,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -155,3 +156,5 @@ coshl(long double x)
     /* |x| > o_threshold, cosh(x) overflow */
 	RETURNI(huge*huge);
 }
+
+#endif /* long double is long */

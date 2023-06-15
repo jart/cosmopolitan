@@ -35,5 +35,5 @@ double fmax(double x, double y) {
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(fmax, fmaxl);
+__weak_reference(fmax, fmaxl);
 #endif

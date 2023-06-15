@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,67 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/limits.h"
+#include "libc/calls/calls.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/x/x.h"
-#include "libc/x/xasprintf.h"
 
-float b32;
-double b64;
-long double b80;
-uint32_t u32;
-uint64_t u64;
-int128_t x;
-
-void int2float(const char *s) {
-  x = strtoi128(s, NULL, 0);
-  if ((0 <= x && x <= UINT32_MAX) && !_startswith(s, "-") &&
-      (!_endswith(s, "l") && !_endswith(s, "L"))) {
-    u32 = x;
-    memcpy(&b32, &u32, 4);
-    s = _gc(xdtoa(b32));
-    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
-    s = _gc(xasprintf("%sf", s));
-    puts(s);
-  } else if ((0 <= x && x <= UINT64_MAX) && !_startswith(s, "-")) {
-    u64 = x;
-    memcpy(&b64, &u64, 8);
-    s = _gc(xdtoa(b64));
-    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
-    puts(s);
-  } else if ((INT32_MIN <= x && x <= 0) &&
-             (!_endswith(s, "l") && !_endswith(s, "L"))) {
-    u32 = ABS(x);
-    memcpy(&b32, &u32, 4);
-    b32 = -b32;
-    s = _gc(xdtoa(b32));
-    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
-    s = _gc(xasprintf("%sf", s));
-    puts(s);
-  } else if (INT64_MIN <= x && x <= 0) {
-    u64 = ABS(x);
-    memcpy(&b64, &u64, 8);
-    b64 = -b64;
-    s = _gc(xdtoa(b64));
-    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
-    puts(s);
-  } else {
-    memcpy(&b80, &x, 16);
-    s = _gc(xdtoa(b80));
-    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
-    s = _gc(xasprintf("%sL", s));
-    puts(s);
+/**
+ * Copies data between file descriptors the old fashioned way.
+ *
+ * This function is intended for simple programs without signals. If
+ * signals are in play, then `SA_RESTART` needs to be used.
+ *
+ * @param in is input file descriptor
+ * @param out is input file descriptor
+ * @param n is number of bytes to exchange, or -1 for until eof
+ * @return bytes successfully exchanged, or -1 w/ errno
+ */
+ssize_t copyfd(int in, int out, size_t n) {
+  size_t i;
+  char buf[512];
+  ssize_t dr, dw;
+  for (i = 0; i < n; i += dr) {
+    dr = read(in, buf, MIN(n - i, sizeof(buf)));
+    if (dr == -1) return -1;
+    if (!dr) break;
+    dw = write(out, buf, dr);
+    if (dw == -1) return -1;
+    if (dw != dr) {
+      // POSIX requires atomic IO up to PIPE_BUF
+      // The minimum permissible PIPE_BUF is 512
+      __builtin_trap();
+    }
   }
-}
-
-int main(int argc, char *argv[]) {
-  int i;
-  for (i = 1; i < argc; ++i) {
-    int2float(argv[i]);
-  }
-  return 0;
+  return i;
 }

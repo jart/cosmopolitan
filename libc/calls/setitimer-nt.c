@@ -16,120 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/itimerval.h"
-#include "libc/calls/struct/siginfo.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/log/check.h"
-#include "libc/math.h"
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/nexgen32e/nt2sysv.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/thread.h"
-#include "libc/str/str.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
-
 #ifdef __x86_64__
 
-/**
- * @fileoverview Heartbreaking polyfill for SIGALRM on NT.
- *
- * Threads are used to trigger the SIGALRM handler, which should
- * hopefully be an unfancy function like this:
- *
- *   void OnAlarm(int sig, struct siginfo *si, struct ucontext *uc) {
- *     g_alarmed = true;
- *   }
- *
- * This is needed because WIN32 provides no obvious solutions for
- * interrupting i/o operations on the standard input handle.
- */
-
-static bool __hastimer;
-static bool __singleshot;
-static long double __lastalrm;
-static long double __interval;
+static struct itimerval g_setitimer;
 
 textwindows void _check_sigalrm(void) {
-  // TODO(jart): use a different timing source
-  // TODO(jart): synchronize across intervals?
-  long double now, elapsed;
-  if (!__hastimer) return;
-  now = nowl();
-  elapsed = now - __lastalrm;
-  if (elapsed > __interval) {
-    __sig_add(0, SIGALRM, SI_TIMER);
-    if (__singleshot) {
-      __hastimer = false;
-    } else {
-      __lastalrm = now;
-    }
+  struct timeval now;
+  if (timeval_iszero(g_setitimer.it_value)) return;
+  now = timeval_real();
+  if (timeval_cmp(now, g_setitimer.it_value) < 0) return;
+  if (timeval_iszero(g_setitimer.it_interval)) {
+    g_setitimer.it_value = timeval_zero;
+  } else {
+    do {
+      g_setitimer.it_value =
+          timeval_add(g_setitimer.it_value, g_setitimer.it_interval);
+    } while (timeval_cmp(now, g_setitimer.it_value) > 0);
   }
+  __sig_add(0, SIGALRM, SI_TIMER);
 }
 
-textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
-                                 struct itimerval *out_opt_oldvalue) {
-  long double elapsed, untilnext;
-
-  if (which != ITIMER_REAL ||
-      (newvalue && (!(0 <= newvalue->it_value.tv_usec &&
-                      newvalue->it_value.tv_usec < 1000000) ||
-                    !(0 <= newvalue->it_interval.tv_usec &&
-                      newvalue->it_interval.tv_usec < 1000000)))) {
+textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
+                                 struct itimerval *old) {
+  if (which != ITIMER_REAL || (neu && (!timeval_isvalid(neu->it_value) ||
+                                       !timeval_isvalid(neu->it_interval)))) {
     return einval();
   }
-
-  if (out_opt_oldvalue) {
-    if (__hastimer) {
-      elapsed = nowl() - __lastalrm;
-      if (elapsed > __interval) {
-        untilnext = 0;
-      } else {
-        untilnext = __interval - elapsed;
-      }
-      out_opt_oldvalue->it_interval.tv_sec = __interval;
-      out_opt_oldvalue->it_interval.tv_usec = 1 / 1e6 * fmodl(__interval, 1);
-      out_opt_oldvalue->it_value.tv_sec = untilnext;
-      out_opt_oldvalue->it_value.tv_usec = 1 / 1e6 * fmodl(untilnext, 1);
-    } else {
-      out_opt_oldvalue->it_interval.tv_sec = 0;
-      out_opt_oldvalue->it_interval.tv_usec = 0;
-      out_opt_oldvalue->it_value.tv_sec = 0;
-      out_opt_oldvalue->it_value.tv_usec = 0;
-    }
+  if (old) {
+    old->it_interval = g_setitimer.it_interval;
+    old->it_value = timeval_subz(g_setitimer.it_value, timeval_real());
   }
-
-  if (newvalue) {
-    if (newvalue->it_interval.tv_sec || newvalue->it_interval.tv_usec ||
-        newvalue->it_value.tv_sec || newvalue->it_value.tv_usec) {
-      __hastimer = true;
-      if (newvalue->it_interval.tv_sec || newvalue->it_interval.tv_usec) {
-        __singleshot = false;
-        __interval = newvalue->it_interval.tv_sec +
-                     1 / 1e6 * newvalue->it_interval.tv_usec;
-      } else {
-        __singleshot = true;
-        __interval =
-            newvalue->it_value.tv_sec + 1 / 1e6 * newvalue->it_value.tv_usec;
-      }
-      __lastalrm = nowl();
-    } else {
-      __hastimer = false;
-    }
+  if (neu) {
+    g_setitimer.it_interval = neu->it_interval;
+    g_setitimer.it_value = timeval_iszero(neu->it_value)
+                               ? timeval_zero
+                               : timeval_add(timeval_real(), neu->it_value);
   }
-
   return 0;
 }
 

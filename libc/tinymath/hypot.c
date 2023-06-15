@@ -101,5 +101,5 @@ double hypot(double x, double y)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(hypot, hypotl);
+__weak_reference(hypot, hypotl);
 #endif

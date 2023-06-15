@@ -142,5 +142,5 @@ double log(double x)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(log, logl);
+__weak_reference(log, logl);
 #endif

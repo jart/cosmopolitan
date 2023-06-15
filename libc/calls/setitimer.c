@@ -20,6 +20,7 @@
 #include "libc/calls/struct/itimerval.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
@@ -66,7 +67,6 @@
 int setitimer(int which, const struct itimerval *newvalue,
               struct itimerval *oldvalue) {
   int rc;
-
   if (IsAsan() &&
       ((newvalue && !__asan_is_valid(newvalue, sizeof(*newvalue))) ||
        (oldvalue && !__asan_is_valid(oldvalue, sizeof(*oldvalue))))) {
@@ -80,28 +80,7 @@ int setitimer(int which, const struct itimerval *newvalue,
   } else {
     rc = sys_setitimer_nt(which, newvalue, oldvalue);
   }
-
-#ifdef SYSDEBUG
-  if (newvalue && oldvalue) {
-    STRACE("setitimer(%d, "
-           "{{%'ld, %'ld}, {%'ld, %'ld}}, "
-           "[{{%'ld, %'ld}, {%'ld, %'ld}}]) → %d% m",
-           which, newvalue->it_interval.tv_sec, newvalue->it_interval.tv_usec,
-           newvalue->it_value.tv_sec, newvalue->it_value.tv_usec,
-           oldvalue->it_interval.tv_sec, oldvalue->it_interval.tv_usec,
-           oldvalue->it_value.tv_sec, oldvalue->it_value.tv_usec, rc);
-  } else if (newvalue) {
-    STRACE("setitimer(%d, {{%'ld, %'ld}, {%'ld, %'ld}}, NULL) → %d% m", which,
-           newvalue->it_interval.tv_sec, newvalue->it_interval.tv_usec,
-           newvalue->it_value.tv_sec, newvalue->it_value.tv_usec, rc);
-  } else if (oldvalue) {
-    STRACE("setitimer(%d, NULL, [{{%'ld, %'ld}, {%'ld, %'ld}}]) → %d% m", which,
-           oldvalue->it_interval.tv_sec, oldvalue->it_interval.tv_usec,
-           oldvalue->it_value.tv_sec, oldvalue->it_value.tv_usec, rc);
-  } else {
-    STRACE("setitimer(%d, NULL, NULL) → %d% m", which, rc);
-  }
-#endif
-
+  STRACE("setitimer(%s, %s, [%s]) → %d% m", DescribeItimer(which),
+         DescribeItimerval(0, newvalue), DescribeItimerval(rc, oldvalue), rc);
   return rc;
 }

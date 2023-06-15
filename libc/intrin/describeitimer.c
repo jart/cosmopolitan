@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/sysv/consts/itimer.h"
 
-double logb(double x) {
-  if (!isfinite(x)) return x * x;
-  if (!x) return -1 / (x * x);
-  return ilogb(x);
+const char *(DescribeItimer)(char buf[12], int which) {
+  if (which == ITIMER_REAL) return "ITIMER_REAL";
+  if (which == ITIMER_VIRTUAL) return "ITIMER_VIRTUAL";
+  if (which == ITIMER_PROF) return "ITIMER_PROF";
+  FormatInt32(buf, which);
+  return buf;
 }
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__weak_reference(logb, logbl);
-#endif

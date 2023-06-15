@@ -26,5 +26,5 @@ double significand(double x) {
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(significand, significandl);
+__weak_reference(significand, significandl);
 #endif

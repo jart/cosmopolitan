@@ -222,5 +222,5 @@ double sqrt(double x)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(sqrt, sqrtl);
+__weak_reference(sqrt, sqrtl);
 #endif

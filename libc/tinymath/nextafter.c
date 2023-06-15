@@ -65,5 +65,5 @@ double nextafter(double x, double y)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(nextafter, nextafterl);
+__weak_reference(nextafter, nextafterl);
 #endif

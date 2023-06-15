@@ -117,5 +117,5 @@ end:
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(remquo, remquol);
+__weak_reference(remquo, remquol);
 #endif

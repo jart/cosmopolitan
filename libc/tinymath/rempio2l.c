@@ -29,6 +29,7 @@
 #include "libc/math.h"
 #include "libc/tinymath/kernel.internal.h"
 #include "libc/tinymath/ldshape.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -200,3 +201,5 @@ int __rem_pio2l(long double x, long double *y)
 #else
 #error "architecture unsupported"
 #endif
+
+#endif /* long double is long */

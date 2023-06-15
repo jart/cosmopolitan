@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/nexgen32e/msr.internal.h"
 #include "libc/nt/thread.h"
+#include "libc/sysv/consts/arch.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
 
@@ -60,8 +61,10 @@ textstartup void __set_tls(struct CosmoTib *tib) {
                  : "c"(MSR_IA32_FS_BASE), "a"((uint32_t)val),
                    "d"((uint32_t)(val >> 32)));
   }
-#else
+#elif defined(__aarch64__)
   register long x28 asm("x28") = (long)tib;
   asm volatile("" : "+r"(x28));
+#else
+#error "unsupported architecture"
 #endif
 }

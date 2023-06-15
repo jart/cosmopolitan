@@ -39,6 +39,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -185,3 +186,5 @@ tanhl(long double x)
 	if (jx<0) s = -1;
 	RETURNI(s*z);
 }
+
+#endif /* long double is long */

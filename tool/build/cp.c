@@ -23,7 +23,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -176,7 +175,7 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
     close(fdin);
     return false;
   }
-  res = _copyfd(fdin, fdout, -1) != -1;
+  res = copyfd(fdin, fdout, -1) != -1;
   close(fdin);
   close(fdout);
   return res;

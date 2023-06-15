@@ -28,5 +28,5 @@ double remainder(double x, double y) {
 
 __strong_reference(remainder, drem);
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(remainder, remainderl);
+__weak_reference(remainder, remainderl);
 #endif

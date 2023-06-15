@@ -24,7 +24,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"

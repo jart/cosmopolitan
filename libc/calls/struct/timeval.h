@@ -19,13 +19,23 @@ int utimes(const char *, const struct timeval[2]);
 #ifdef COSMO
 /* cosmopolitan libc's non-posix timevals library
    removed by default due to emacs codebase clash */
+#define timeval_zero ((struct timeval){0})
+#define timeval_max  ((struct timeval){0x7fffffffffffffff, 999999})
 int timeval_cmp(struct timeval, struct timeval) pureconst;
+struct timeval timeval_real(void);
 struct timeval timeval_frommicros(int64_t) pureconst;
 struct timeval timeval_frommillis(int64_t) pureconst;
 struct timeval timeval_add(struct timeval, struct timeval) pureconst;
 struct timeval timeval_sub(struct timeval, struct timeval) pureconst;
+struct timeval timeval_subz(struct timeval, struct timeval) pureconst;
 struct timeval timespec_totimeval(struct timespec) pureconst;
 struct timespec timeval_totimespec(struct timeval) pureconst;
+static inline bool timeval_iszero(struct timeval __tv) {
+  return !(__tv.tv_sec | __tv.tv_usec);
+}
+static inline bool timeval_isvalid(struct timeval __tv) {
+  return __tv.tv_sec >= 0 && __tv.tv_usec < 1000000ull;
+}
 #endif /* COSMO */
 
 COSMOPOLITAN_C_END_

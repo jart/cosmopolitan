@@ -42,14 +42,6 @@
 
 #define MAP_FAILED ((void *)-1)
 
-#define ARCH_SET_GS 0x1001
-#define ARCH_SET_FS 0x1002
-#define ARCH_GET_FS 0x1003
-#define ARCH_GET_GS 0x1004
-
-#define MAP_HUGE_2MB (21 << MAP_HUGE_SHIFT)
-#define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
-
 #define WCOREDUMP(s)    (128 & (s))
 #define WEXITSTATUS(s)  ((0xff00 & (s)) >> 8)
 #define WIFCONTINUED(s) ((s) == 0xffff)
@@ -69,11 +61,9 @@ COSMOPOLITAN_C_START_
 typedef int sig_atomic_t;
 
 bool32 isatty(int) nosideeffect;
-char *commandv(const char *, char *, size_t);
 char *get_current_dir_name(void) dontdiscard;
 char *getcwd(char *, size_t);
 char *realpath(const char *, char *);
-char *replaceuser(const char *) dontdiscard;
 char *ttyname(int);
 int access(const char *, int) dontthrow;
 int chdir(const char *);
@@ -122,7 +112,6 @@ int getpriority(int, unsigned);
 int getresgid(unsigned *, unsigned *, unsigned *);
 int getresuid(unsigned *, unsigned *, unsigned *);
 int getsid(int) nosideeffect libcesque;
-int gettid(void) libcesque;
 int ioprio_get(int, int);
 int ioprio_set(int, int, int);
 int issetugid(void);
@@ -133,8 +122,6 @@ int lchown(const char *, unsigned, unsigned);
 int link(const char *, const char *) dontthrow;
 int linkat(int, const char *, int, const char *, int);
 int madvise(void *, uint64_t, int);
-int makedirs(const char *, unsigned);
-int memfd_create(const char *, unsigned int);
 int mincore(void *, size_t, unsigned char *);
 int mkdir(const char *, unsigned);
 int mkdirat(int, const char *, unsigned);
@@ -146,14 +133,10 @@ int nice(int);
 int open(const char *, int, ...);
 int openat(int, const char *, int, ...);
 int pause(void);
-int personality(uint64_t);
 int pipe(int[hasatleast 2]);
 int pipe2(int[hasatleast 2], int);
-int pivot_root(const char *, const char *);
-int pledge(const char *, const char *);
 int posix_fadvise(int, int64_t, int64_t, int);
 int posix_madvise(void *, uint64_t, int);
-int prctl(int, ...);
 int raise(int);
 int reboot(int);
 int remove(const char *);
@@ -161,7 +144,6 @@ int rename(const char *, const char *);
 int renameat(int, const char *, int, const char *);
 int rmdir(const char *);
 int sched_yield(void);
-int seccomp(unsigned, unsigned, void *);
 int setegid(unsigned);
 int seteuid(unsigned);
 int setfsgid(unsigned);
@@ -182,37 +164,21 @@ int siginterrupt(int, int);
 int symlink(const char *, const char *);
 int symlinkat(const char *, int, const char *);
 int sync_file_range(int, int64_t, int64_t, unsigned);
-int sys_iopl(int);
-int sys_mlock(const void *, size_t);
-int sys_mlock2(const void *, size_t, int);
-int sys_mlockall(int);
-int sys_munlock(const void *, size_t);
-int sys_munlockall(void);
-int sys_ptrace(int, ...);
-int sys_sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
 int tcgetpgrp(int);
 int tcsetpgrp(int, int);
-int tgkill(int, int, int);
-int tkill(int, int);
-int tmpfd(void);
-int touch(const char *, unsigned);
 int truncate(const char *, int64_t);
 int ttyname_r(int, char *, size_t);
 int unlink(const char *);
-int unlink_s(const char **);
 int unlinkat(int, const char *, int);
-int unveil(const char *, const char *);
 int usleep(unsigned);
 int vfork(void) returnstwice;
 int wait(int *);
 int waitpid(int, int *, int);
-long ptrace(int, ...);
 ssize_t copy_file_range(int, long *, int, long *, size_t, unsigned);
 ssize_t lseek(int, int64_t, int);
 ssize_t pread(int, void *, size_t, int64_t);
 ssize_t pwrite(int, const void *, size_t, int64_t);
 ssize_t read(int, void *, size_t);
-ssize_t readansi(int, char *, size_t);
 ssize_t readlink(const char *, char *, size_t);
 ssize_t readlinkat(int, const char *, char *, size_t);
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned);
@@ -225,20 +191,38 @@ unsigned umask(unsigned);
 void sync(void);
 
 #ifdef COSMO
-#define fileexists    __fileexists
-#define isdirectory   __isdirectory
-#define isexecutable  __isexecutable
-#define isregularfile __isregularfile
-#define issymlink     __issymlink
-#define ischardev     __ischardev
-#define copyfd        __copyfd
 bool fileexists(const char *);
 bool isdirectory(const char *);
 bool isexecutable(const char *);
 bool isregularfile(const char *);
 bool issymlink(const char *);
-bool32 ischardev(int) nosideeffect;
-ssize_t copyfd(int, int64_t *, int, int64_t *, size_t, unsigned);
+bool32 ischardev(int);
+char *commandv(const char *, char *, size_t);
+char *replaceuser(const char *) dontdiscard;
+int gettid(void) libcesque;
+int makedirs(const char *, unsigned);
+int memfd_create(const char *, unsigned int);
+int personality(uint64_t);
+int pivot_root(const char *, const char *);
+int pledge(const char *, const char *);
+int prctl(int, ...);
+int seccomp(unsigned, unsigned, void *);
+int sys_iopl(int);
+int sys_mlock(const void *, size_t);
+int sys_mlock2(const void *, size_t, int);
+int sys_mlockall(int);
+int sys_munlock(const void *, size_t);
+int sys_munlockall(void);
+int sys_ptrace(int, ...);
+int sys_sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
+int tgkill(int, int, int);
+int tkill(int, int);
+int tmpfd(void);
+int touch(const char *, unsigned);
+int unveil(const char *, const char *);
+long ptrace(int, ...);
+ssize_t copyfd(int, int, size_t);
+ssize_t readansi(int, char *, size_t);
 #endif
 
 COSMOPOLITAN_C_END_

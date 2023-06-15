@@ -82,5 +82,5 @@ double trunc(double x)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(trunc, truncl);
+__weak_reference(trunc, truncl);
 #endif

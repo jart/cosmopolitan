@@ -20,24 +20,9 @@ typedef unsigned long jmp_buf[26];
 
 typedef long sigjmp_buf[12];
 
-extern char **environ;                      /* CRT */
-extern int __argc;                          /* CRT */
-extern char **__argv;                       /* CRT */
-extern char **__envp;                       /* CRT */
-extern unsigned long *__auxv;               /* CRT */
-extern intptr_t __oldstack;                 /* CRT */
-extern uint64_t __nosync;                   /* SYS */
-extern int __strace;                        /* SYS */
-extern int __ftrace;                        /* SYS */
-extern char *program_invocation_name;       /* RII */
-extern char *program_invocation_short_name; /* RII */
-extern uint64_t __syscount;                 /* RII */
-extern uint64_t kStartTsc;                  /* RII */
-extern char kTmpPath[];                     /* RII */
-extern const char kNtSystemDirectory[];     /* RII */
-extern const char kNtWindowsDirectory[];    /* RII */
-extern size_t __virtualmax;
-extern bool __isworker;
+extern char **environ;
+extern char *program_invocation_name;
+extern char *program_invocation_short_name;
 
 void mcount(void);
 int daemon(int, int);
@@ -83,6 +68,21 @@ int sethostname(const char *, size_t);
 int acct(const char *);
 
 #ifdef COSMO
+extern int __argc;
+extern char **__argv;
+extern char **__envp;
+extern unsigned long *__auxv;
+extern intptr_t __oldstack;
+extern uint64_t __nosync;
+extern int __strace;
+extern int __ftrace;
+extern uint64_t __syscount;
+extern uint64_t kStartTsc;
+extern char kTmpPath[];
+extern const char kNtSystemDirectory[];
+extern const char kNtWindowsDirectory[];
+extern size_t __virtualmax;
+extern bool __isworker;
 /* utilities */
 void _intsort(int *, size_t);
 void _longsort(long *, size_t);

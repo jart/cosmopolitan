@@ -6,9 +6,6 @@ COSMOPOLITAN_C_START_
 
 #define xwrite        __xwrite
 #define xdie          __xdie
-#define xdtoa         __xdtoa
-#define xdtoaf        __xdtoaf
-#define xdtoal        __xdtoal
 #define xmalloc       __xmalloc
 #define xrealloc      __xrealloc
 #define xcalloc       __xcalloc

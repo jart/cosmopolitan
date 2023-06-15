@@ -103,6 +103,7 @@ o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		COPTS +=				\
 			-fno-sanitize=all
 
+ifneq ($(ARCH), aarch64)
 # we always want -O3 because:
 #   it makes the code size smaller too
 # we need -mstringop-strategy=loop because:
@@ -116,6 +117,7 @@ o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		COPTS +=				\
 			-O3				\
 			-mstringop-strategy=loop
+endif
 
 # we must disable static stack safety because:
 #   these functions use alloca(n)

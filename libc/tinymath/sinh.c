@@ -75,3 +75,7 @@ double sinh(double x)
 	t = __expo2(absx, 2*h);
 	return t;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(sinh, sinhl);
+#endif

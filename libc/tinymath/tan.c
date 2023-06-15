@@ -115,5 +115,5 @@ double tan(double x)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(tan, tanl);
+__weak_reference(tan, tanl);
 #endif

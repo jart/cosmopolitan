@@ -52,5 +52,5 @@ double complex casin(double complex z)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(casin, casinl);
+__weak_reference(casin, casinl);
 #endif

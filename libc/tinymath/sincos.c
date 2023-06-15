@@ -114,5 +114,5 @@ void sincos(double x, double *sin, double *cos)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(sincos, sincosl);
+__weak_reference(sincos, sincosl);
 #endif

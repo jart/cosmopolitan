@@ -46,11 +46,14 @@ feclearexcept:
 //	maintain exceptions in the sse mxcsr, clear x87 exceptions
 	mov	%edi,%ecx
 	and	$0x3f,%ecx
+#ifndef NOX87
 	fnstsw	%ax
 	test	%eax,%ecx
 	jz	1f
 	fnclex
-1:	stmxcsr	-8(%rsp)
+1:
+#endif
+	stmxcsr	-8(%rsp)
 	and	$0x3f,%eax
 	or	%eax,-8(%rsp)
 	test	%ecx,-8(%rsp)
@@ -96,12 +99,16 @@ fetestexcept:
 	.ftrace2
 #ifdef __x86_64__
 	and	$0x3f,%edi
-	push	%rax
+	push	$0
 	stmxcsr	(%rsp)
+#ifdef NOX87
+	pop	%rax
+#else
 	pop	%rsi
 	fnstsw	%ax
 	or	%esi,%eax
 	and	%edi,%eax
+#endif
 	ret
 #elif defined(__aarch64__)
 	and	w0,w0,#0x1f
@@ -138,10 +145,12 @@ __fesetround:
 	push	%rax
 	xor	%eax,%eax
 	mov	%edi,%ecx
+#ifndef NOX87
 	fnstcw	(%rsp)
 	andb	$0xf3,1(%rsp)
 	or	%ch,1(%rsp)
 	fldcw	(%rsp)
+#endif
 	stmxcsr	(%rsp)
 	shl	$3,%ch
 	andb	$0x9f,1(%rsp)
@@ -181,7 +190,9 @@ fegetenv:
 	.ftrace2
 #ifdef __x86_64__
 	xor	%eax,%eax
+#ifndef NOX87
 	fnstenv	(%rdi)
+#endif
 	stmxcsr	28(%rdi)
 	ret
 #elif defined(__aarch64__)
@@ -200,14 +211,18 @@ fesetenv:
 	xor	%eax,%eax
 	inc	%rdi
 	jz	1f
+#ifndef NOX87
 	fldenv	-1(%rdi)
+#endif
 	ldmxcsr	27(%rdi)
 	ret
 1:	push	%rax
 	push	%rax
 	pushq	$0xffff
 	pushq	$0x37f
+#ifndef NOX87
 	fldenv	(%rsp)
+#endif
 	pushq	$0x1f80
 	ldmxcsr	(%rsp)
 	add	$40,%rsp

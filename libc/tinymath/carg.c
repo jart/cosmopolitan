@@ -24,5 +24,5 @@ double carg(double complex z) {
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(carg, cargl);
+__weak_reference(carg, cargl);
 #endif

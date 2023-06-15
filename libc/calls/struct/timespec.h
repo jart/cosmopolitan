@@ -14,14 +14,14 @@ int clock_nanosleep(int, int, const struct timespec *, struct timespec *);
 int futimens(int, const struct timespec[2]);
 int nanosleep(const struct timespec *, struct timespec *);
 int utimensat(int, const char *, const struct timespec[2], int);
+int timespec_getres(struct timespec *, int);
+int timespec_get(struct timespec *, int);
 
 #ifdef COSMO
 /* cosmopolitan libc's non-posix timespec library
    removed by default due to emacs codebase clash */
 #define timespec_zero ((struct timespec){0})
 #define timespec_max  ((struct timespec){0x7fffffffffffffff, 999999999})
-int timespec_get(struct timespec *, int);
-int timespec_getres(struct timespec *, int);
 int timespec_cmp(struct timespec, struct timespec) pureconst;
 int64_t timespec_tomicros(struct timespec) pureconst;
 int64_t timespec_tomillis(struct timespec) pureconst;
@@ -35,7 +35,14 @@ struct timespec timespec_mono(void);
 struct timespec timespec_sleep(struct timespec);
 int timespec_sleep_until(struct timespec);
 struct timespec timespec_sub(struct timespec, struct timespec) pureconst;
+struct timespec timespec_subz(struct timespec, struct timespec) pureconst;
 int sys_futex(int *, int, int, const struct timespec *, int *);
+static inline bool timespec_iszero(struct timespec __ts) {
+  return !(__ts.tv_sec | __ts.tv_nsec);
+}
+static inline bool timespec_isvalid(struct timespec __ts) {
+  return __ts.tv_sec >= 0 && __ts.tv_nsec < 1000000000ull;
+}
 #endif /* COSMO */
 
 COSMOPOLITAN_C_END_

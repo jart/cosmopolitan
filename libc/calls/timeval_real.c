@@ -16,14 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
+#include "libc/assert.h"
+#include "libc/calls/struct/timeval.h"
 
-double logb(double x) {
-  if (!isfinite(x)) return x * x;
-  if (!x) return -1 / (x * x);
-  return ilogb(x);
+/**
+ * Returns current time w/ microsecond precision.
+ *
+ * @see timespec_real()
+ */
+struct timeval timeval_real(void) {
+  struct timeval tv;
+  _npassert(!gettimeofday(&tv, 0));
+  return tv;
 }
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__weak_reference(logb, logbl);
-#endif

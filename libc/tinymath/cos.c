@@ -122,5 +122,5 @@ double cos(double x)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(cos, cosl);
+__weak_reference(cos, cosl);
 #endif

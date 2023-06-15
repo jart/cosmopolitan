@@ -69,6 +69,6 @@ double scalbn(double x, int n)
 
 __strong_reference(scalbn, ldexp);
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(scalbn, ldexpl);
-__strong_reference(scalbn, scalbnl);
+__weak_reference(scalbn, ldexpl);
+__weak_reference(scalbn, scalbnl);
 #endif

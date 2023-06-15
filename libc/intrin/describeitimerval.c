@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,30 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/pc.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/calls/struct/itimerval.internal.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/timeval.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 
-//	fmod [sic] does (𝑥 rem 𝑦) w/ round()-style rounding.
-//
-//	@param	𝑥 is an 80-bit long double passed on stack in 16-bytes
-//	@param	𝑦 is the power, also pushed on stack, in reverse order
-//	@return	remainder ∈ (-|𝑦|,|𝑦|) in %st
-//	@define	𝑥-truncl(𝑥/𝑦)*𝑦
-//	@see	emod()
-	.ftrace1
-fmodl:	.ftrace2
-	push	%rbp
-	mov	%rsp,%rbp
-	fldt	32(%rbp)
-	fldt	16(%rbp)
-1:	fprem
-	fnstsw
-	test	$FPU_C2>>8,%ah
-	jnz	1b
-	fstp	%st(1)
-	pop	%rbp
-	ret
-1:	int3
-	pop	%rbp
-	ret
-	.endfn	fmodl,globl
+#define N 90
+
+const char *(DescribeItimerval)(char buf[N], int rc,
+                                const struct itimerval *it) {
+  if (!it) return "NULL";
+  if (rc == -1) return "n/a";
+  if ((!IsAsan() && kisdangerous(it)) ||
+      (IsAsan() && !__asan_is_valid(it, sizeof(*it)))) {
+    ksnprintf(buf, N, "%p", it);
+  } else {
+    ksnprintf(buf, N, "{%s, %s}", DescribeTimeval(0, &it->it_interval),
+              DescribeTimeval(0, &it->it_value));
+  }
+  return buf;
+}

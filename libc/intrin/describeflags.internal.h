@@ -24,6 +24,7 @@ const char *DescribeFrame(char[32], int);
 const char *DescribeFutexOp(char[64], int);
 const char *DescribeHow(char[12], int);
 const char *DescribeInOutInt64(char[23], ssize_t, int64_t *);
+const char *DescribeItimer(char[12], int);
 const char *DescribeMapFlags(char[64], int);
 const char *DescribeMapping(char[8], int, int);
 const char *DescribeNtConsoleInFlags(char[256], uint32_t);
@@ -77,6 +78,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeFutexOp(x)           DescribeFutexOp(alloca(64), x)
 #define DescribeHow(x)               DescribeHow(alloca(12), x)
 #define DescribeInOutInt64(rc, x)    DescribeInOutInt64(alloca(23), rc, x)
+#define DescribeItimer(x)            DescribeItimer(alloca(12), x)
 #define DescribeMapFlags(x)          DescribeMapFlags(alloca(64), x)
 #define DescribeMapping(x, y)        DescribeMapping(alloca(8), x, y)
 #define DescribeNtConsoleInFlags(x)  DescribeNtConsoleInFlags(alloca(256), x)

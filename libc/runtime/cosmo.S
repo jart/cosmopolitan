@@ -45,6 +45,7 @@ cosmo:	push	%rbp
 	mov	%eax,%r12d
 #endif /* SYSDEBUG */
 
+#ifndef NOX87
 //	Windows always initializes FPU to douuble precision.
 //	WSL breaks Linux ABI by initializing FPU to double precision.
 //	This code makes long double long again.
@@ -70,6 +71,7 @@ cosmo:	push	%rbp
 //	                          d││││rr││││││
 1:	.short	0b00000000000000000001101111111
 	.previous
+#endif
 
 #ifdef __FAST_MATH__
 	push	%rax

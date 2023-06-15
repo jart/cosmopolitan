@@ -202,11 +202,7 @@ static struct timespec *nsync_futex_timeout_ (struct timespec *memory,
 		return memory;
 	} else {
 		now = timespec_real ();
-		if (timespec_cmp (now, *abstime) > 0) {
-			*memory = (struct timespec){0};
-		} else {
-			*memory = timespec_sub (*abstime, now);
-		}
+		*memory = timespec_subz (*abstime, now);
 		return memory;
 	}
 }

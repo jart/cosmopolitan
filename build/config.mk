@@ -364,6 +364,28 @@ TARGET_ARCH ?=			\
 	-msse3
 endif
 
+# no x87 instructions mode
+#
+#     export MODE=nox87
+#     make -j8 toolchain
+#     cosmocc -o /tmp/hello.com hello.c
+#
+# lets you shave ~23kb off blink
+#
+#     git clone https://github.com/jart/blink
+#     cd blink
+#     ./configure --disable-x87
+#     make -j8
+#     o//blink/blink /tmp/hello.com
+#
+ifeq ($(MODE), nox87)
+ENABLE_FTRACE = 1
+CONFIG_COPTS += -mlong-double-64
+CONFIG_CCFLAGS += $(BACKTRACES) -O2
+CONFIG_CPPFLAGS += -DSYSDEBUG -DNOX87
+TARGET_ARCH ?= -msse3
+endif
+
 # LLVM Mode
 ifeq ($(MODE), llvm)
 TARGET_ARCH ?= -msse3

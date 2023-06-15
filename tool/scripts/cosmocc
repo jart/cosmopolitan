@@ -154,6 +154,10 @@ for x; do
   set -- "$@" "$x"
 done
 
+if [ x"$MODE" = x"nox87" ]; then
+  CCFLAGS="$CCFLAGS -mlong-double-64"
+fi
+
 if [ x"$OPT" != x"-Os" ] && [ x"${MODE#tiny}" != x"${MODE}" ]; then
   # support --ftrace unless optimizing for size
   CFLAGS="$CFLAGS -fpatchable-function-entry=18,16"

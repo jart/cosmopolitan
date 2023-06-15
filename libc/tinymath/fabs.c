@@ -31,5 +31,5 @@ double fabs(double x) {
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(fabs, fabsl);
+__weak_reference(fabs, fabsl);
 #endif

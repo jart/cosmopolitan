@@ -19,10 +19,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/macros.internal.h"
 
-#ifdef __aarch64__
-#define jmp b
-#endif
-
 nsync_time_now:
 	jmp	timespec_real
 	.endfn	nsync_time_now,globl

@@ -147,5 +147,5 @@ double complex catan(double complex z)
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(catan, catanl);
+__weak_reference(catan, catanl);
 #endif

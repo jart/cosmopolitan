@@ -16,14 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
+#include "libc/calls/struct/timespec.h"
 
-double logb(double x) {
-  if (!isfinite(x)) return x * x;
-  if (!x) return -1 / (x * x);
-  return ilogb(x);
+/**
+ * Subtracts two nanosecond timestamps.
+ *
+ * Unlike `timespec_sub()` this function will return zero if `x < y`.
+ */
+struct timespec timespec_subz(struct timespec x, struct timespec y) {
+  if (timespec_cmp(x, y) > 0) {
+    return timespec_sub(x, y);
+  } else {
+    return timespec_zero;
+  }
 }
-
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__weak_reference(logb, logbl);
-#endif

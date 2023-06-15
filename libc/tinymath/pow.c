@@ -381,5 +381,5 @@ double pow(double x, double y)
 
 __weak_reference(pow, __pow_finite);
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(pow, powl);
+__weak_reference(pow, powl);
 #endif

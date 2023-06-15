@@ -9,8 +9,8 @@ int sys_getitimer(int, struct itimerval *) _Hide;
 int sys_setitimer(int, const struct itimerval *, struct itimerval *) _Hide;
 int sys_setitimer_nt(int, const struct itimerval *, struct itimerval *) _Hide;
 
-const char *DescribeTimeval(char[45], int, const struct timeval *);
-#define DescribeTimeval(rc, ts) DescribeTimeval(alloca(45), rc, ts)
+const char *DescribeItimerval(char[90], int, const struct itimerval *);
+#define DescribeItimerval(rc, ts) DescribeItimerval(alloca(90), rc, ts)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

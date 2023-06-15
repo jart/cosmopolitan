@@ -11,6 +11,8 @@
  * This file implements __divxc3 for the compiler_rt library.
  *
  */
+#include "libc/math.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 STATIC_YOINK("huge_compiler_rt_license");
 
@@ -64,3 +66,5 @@ __divxc3(long double __a, long double __b, long double __c, long double __d)
 }
 
 #endif
+
+#endif /* long double is long */

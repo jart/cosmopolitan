@@ -21,7 +21,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -58,7 +57,7 @@ void SetUpOnce(void) {
   ASSERT_NE(-1, mkdir("bin", 0755));
   ASSERT_NE(-1, (fdin = open("/zip/plinko.com", O_RDONLY)));
   ASSERT_NE(-1, (fdout = creat("bin/plinko.com", 0755)));
-  ASSERT_NE(-1, _copyfd(fdin, fdout, -1));
+  ASSERT_NE(-1, copyfd(fdin, fdout, -1));
   EXPECT_EQ(0, close(fdout));
   EXPECT_EQ(0, close(fdin));
 }
@@ -100,7 +99,7 @@ TEST(plinko, worksOrPrintsNiceError) {
   close(pfds[1][1]);
   for (i = 0; i < ARRAYLEN(kSauces); ++i) {
     EXPECT_NE(-1, (fdin = open(kSauces[i], O_RDONLY)));
-    rc = _copyfd(fdin, pfds[0][1], -1);
+    rc = copyfd(fdin, pfds[0][1], -1);
     if (rc == -1) EXPECT_EQ(EPIPE, errno);
     EXPECT_NE(-1, close(fdin));
   }

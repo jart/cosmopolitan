@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kmalloc.h"
@@ -437,10 +438,7 @@ static struct AsanFault __asan_checka(const signed char *s, long ndiv8) {
     if (UNLIKELY(!((intptr_t)s & (FRAMESIZE - 1))) && kisdangerous(s)) {
       return (struct AsanFault){kAsanUnmapped, s};
     }
-    if ((w = ((uint64_t)(255 & s[0]) << 000 | (uint64_t)(255 & s[1]) << 010 |
-              (uint64_t)(255 & s[2]) << 020 | (uint64_t)(255 & s[3]) << 030 |
-              (uint64_t)(255 & s[4]) << 040 | (uint64_t)(255 & s[5]) << 050 |
-              (uint64_t)(255 & s[6]) << 060 | (uint64_t)(255 & s[7]) << 070))) {
+    if ((w = READ64LE(s))) {
       s += __asan_bsf(w) >> 3;
       return __asan_fault(s, kAsanHeapOverrun);
     }

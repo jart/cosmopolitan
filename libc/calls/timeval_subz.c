@@ -16,60 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/mem/mem.h"
-
-#define CHUNK 32768
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Copies data between fds the old fashioned way.
- *
- * @return bytes successfully exchanged
+ * Subtracts two nanosecond timestamps.
  */
-ssize_t _copyfd(int infd, int outfd, size_t n) {
-  int e;
-  char *buf;
-  ssize_t rc;
-  size_t i, j, got, sent;
-  rc = 0;
-  if (n) {
-    if ((buf = malloc(CHUNK))) {
-      for (e = errno, i = 0; i < n; i += j) {
-        rc = read(infd, buf, CHUNK);
-        if (rc == -1) {
-          // eintr may interrupt the read operation
-          if (i && errno == EINTR) {
-            // suppress error if partially completed
-            errno = e;
-            rc = i;
-          }
-          break;
-        }
-        got = rc;
-        if (!got) {
-          rc = i;
-          break;
-        }
-        // write operation must complete
-        for (j = 0; j < got; j += sent) {
-          rc = write(outfd, buf + j, got - j);
-          if (rc != -1) {
-            sent = rc;
-          } else if (errno == EINTR) {
-            // write operation must be uninterruptible
-            errno = e;
-            sent = 0;
-          } else {
-            break;
-          }
-        }
-        if (rc == -1) break;
-      }
-      free(buf);
-    } else {
-      rc = -1;
-    }
+struct timeval timeval_subz(struct timeval x, struct timeval y) {
+  if (timeval_cmp(x, y) > 0) {
+    return timeval_sub(x, y);
+  } else {
+    return timeval_zero;
   }
-  return rc;
 }

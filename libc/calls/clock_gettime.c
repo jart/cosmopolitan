@@ -42,7 +42,6 @@
  * time. Among the more popular is CLOCK_MONOTONIC. This function has a
  * zero syscall implementation of that on modern x86.
  *
- *     nowl                l:        45𝑐        15𝑛𝑠
  *     rdtsc               l:        13𝑐         4𝑛𝑠
  *     gettimeofday        l:        44𝑐        14𝑛𝑠
  *     clock_gettime       l:        40𝑐        13𝑛𝑠

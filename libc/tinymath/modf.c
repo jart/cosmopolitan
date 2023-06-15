@@ -33,6 +33,9 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Returns fractional part of 𝑥.
+ */
 double modf(double x, double *iptr)
 {
 	union {double f; uint64_t i;} u = {x};
@@ -65,3 +68,7 @@ double modf(double x, double *iptr)
 	*iptr = u.f;
 	return x - u.f;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(modf, modfl);
+#endif

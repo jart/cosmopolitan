@@ -31,3 +31,7 @@ char *xdtoa(double d) {
   g_dfmt_p(p, &d, DBL_DIG, 32, 2);
   return p;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(xdtoa, xdtoal);
+#endif

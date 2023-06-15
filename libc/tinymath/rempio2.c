@@ -225,3 +225,7 @@ medium:
 	y[1] = ty[1];
 	return n;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(__rem_pio2, __rem_pio2l);
+#endif

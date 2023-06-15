@@ -39,6 +39,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/math.h"
 #include "libc/tinymath/freebsd.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -154,3 +155,5 @@ sinhl(long double x)
     /* |x| > o_threshold, sinh(x) overflow */
 	return x*shuge;
 }
+
+#endif /* long double is long */

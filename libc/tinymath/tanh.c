@@ -76,3 +76,7 @@ double tanh(double x)
 	}
 	return sign ? -t : t;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(tanh, tanhl);
+#endif

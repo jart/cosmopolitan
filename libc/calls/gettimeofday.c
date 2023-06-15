@@ -38,13 +38,13 @@ static gettimeofday_f *__gettimeofday = __gettimeofday_init;
  * Returns system wall time in microseconds, e.g.
  *
  *     int64_t t;
- *     char p[30];
+ *     char p[20];
  *     struct tm tm;
  *     struct timeval tv;
  *     gettimeofday(&tv, 0);
  *     t = tv.tv_sec;
  *     gmtime_r(&t, &tm);
- *     FormatHttpDateTime(p, &tm);
+ *     iso8601(p, &tm);
  *     printf("%s\n", p);
  *
  * @param tv points to timeval that receives result if non-NULL

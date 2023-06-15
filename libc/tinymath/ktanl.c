@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/kernel.internal.h"
+#if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
 asm(".ident\t\"\\n\\n\
 FreeBSD libm (BSD-2 License)\\n\
@@ -183,3 +184,5 @@ long double __tanl(long double x, long double y, int odd) {
 #else
 #error "architecture unsupported"
 #endif
+
+#endif /* long double is long */

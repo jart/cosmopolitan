@@ -43,7 +43,6 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -769,7 +768,7 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
         res = false;
         break;
       }
-      res = _copyfd(fdin, fdout, -1) != -1;
+      res = copyfd(fdin, fdout, -1) != -1;
       break;
     } else {
       res = false;

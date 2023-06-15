@@ -32,5 +32,5 @@ double copysign(double x, double y) {
 }
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(copysign, copysignl);
+__weak_reference(copysign, copysignl);
 #endif

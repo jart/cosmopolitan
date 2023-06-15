@@ -39,7 +39,6 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -523,7 +522,7 @@ int Extract(const char *from, const char *to, int mode) {
     close(fdin);
     return -1;
   }
-  if (_copyfd(fdin, fdout, -1) == -1) {
+  if (copyfd(fdin, fdout, -1) == -1) {
     close(fdout);
     close(fdin);
     return -1;

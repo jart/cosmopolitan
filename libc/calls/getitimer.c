@@ -21,6 +21,7 @@
 #include "libc/calls/struct/itimerval.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -41,12 +42,7 @@ int getitimer(int which, struct itimerval *curvalue) {
   } else {
     rc = sys_setitimer_nt(which, 0, curvalue);
   }
-  if (curvalue) {
-    STRACE("getitimer(%d, [{{%'ld, %'ld}, {%'ld, %'ld}}]) → %d% m", which,
-           curvalue->it_interval.tv_sec, curvalue->it_interval.tv_usec,
-           curvalue->it_value.tv_sec, curvalue->it_value.tv_usec, rc);
-  } else {
-    STRACE("getitimer(%d, 0) → %d% m", which, rc);
-  }
+  STRACE("getitimer(%s, [%s]) → %d% m", DescribeItimer(which),
+         DescribeItimerval(rc, curvalue), rc);
   return rc;
 }

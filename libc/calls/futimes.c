@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/asan.internal.h"
-#include "libc/calls/struct/itimerval.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/timeval.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"

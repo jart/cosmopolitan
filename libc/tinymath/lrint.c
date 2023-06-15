@@ -45,8 +45,8 @@ __weak_reference(lrint, llrint);
 #endif
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
-__strong_reference(lrint, lrintl);
+__weak_reference(lrint, lrintl);
 #if __SIZEOF_LONG__ == __SIZEOF_LONG_LONG__
-__strong_reference(lrint, llrintl);
+__weak_reference(lrint, llrintl);
 #endif
 #endif

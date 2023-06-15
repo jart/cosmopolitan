@@ -76,3 +76,7 @@ double cosh(double x)
 	t = __expo2(x, 1.0);
 	return t;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(cosh, coshl);
+#endif
