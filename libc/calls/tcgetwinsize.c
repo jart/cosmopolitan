@@ -34,7 +34,6 @@
 int tcgetwinsize(int fd, struct winsize *ws) {
   int rc;
   if (IsAsan() && !__asan_is_valid(ws, sizeof(*ws))) {
-    ws = 0;
     rc = efault();
   } else if (fd >= 0) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
