@@ -25,9 +25,11 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-extern const unsigned FIODGNAME;
 extern const unsigned TIOCPTSNAME;
-extern const unsigned TIOCPTYGNAME;
+
+#define TIOCPTYGNAME 0x40807453  // xnu
+#define TIOCPTSNAME  0x48087448  // netbsd
+#define FIODGNAME    0x80106678  // freebsd
 
 struct fiodgname_arg {
   int len;

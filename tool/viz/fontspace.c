@@ -19,6 +19,7 @@
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bsr.h"
 #include "libc/log/libfatal.internal.h"
@@ -69,7 +70,7 @@ int main(int argc, char *argv[]) {
   unsigned char *intotal;
   int w, h, i, j, c, arg, opt, errs, line, count, maxcode, s = 40 * 4, rc = 0;
   ShowCrashReports();
-  ioctl(0, TIOCGWINSZ, &ws);
+  tcgetwinsize(0, &ws);
   while ((opt = getopt(argc, argv, "vs:e:")) != -1) {
     switch (opt) {
       case 'v':

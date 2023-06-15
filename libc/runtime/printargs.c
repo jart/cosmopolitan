@@ -162,9 +162,9 @@ textstartup void __printargs(const char *prologue) {
   char **env;
   sigset_t ss;
   bool gotsome;
-  unsigned i, n;
   int e, x, flags;
   uintptr_t *auxp;
+  unsigned i, n, b;
   struct rlimit rlim;
   struct utsname uts;
   struct sigaction sa;
@@ -391,7 +391,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT("ARGUMENTS (%p)", __argv);
   if (*__argv) {
     for (i = 0; i < __argc; ++i) {
-      PRINT(" ☼ %p %s", __argv[i], __argv[i]);
+      PRINT(" ☼ %s", __argv[i]);
     }
   } else {
     PRINT("  none");
@@ -401,7 +401,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT("ENVIRONMENT (%p)", __envp);
   if (*__envp) {
     for (env = __envp; *env; ++env) {
-      PRINT(" ☼ %p %s", *env, *env);
+      PRINT(" ☼ %s", *env);
     }
   } else {
     PRINT("  none");
@@ -414,9 +414,9 @@ textstartup void __printargs(const char *prologue) {
       for (auxp = __auxv; *auxp; auxp += 2) {
         if ((auxinfo = DescribeAuxv(auxp[0]))) {
           ksnprintf(u.path, sizeof(u.path), auxinfo->fmt, auxp[1]);
-          PRINT(" ☼ %p %16s[%4ld] = %s", auxp, auxinfo->name, auxp[0], u.path);
+          PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], u.path);
         } else {
-          PRINT(" ☼ %p %16s[%4ld] = %014p", auxp, "unknown", auxp[0], auxp[1]);
+          PRINT(" ☼ %16s[%4ld] = %014p", "unknown", auxp[0], auxp[1]);
         }
       }
     }
@@ -558,63 +558,65 @@ textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_cflag & CSIZE) == CS8) {
         kprintf(" CS8");
       }
-      if ((termios.c_cflag & CBAUD) == B0) {
+
+      b = cfgetospeed(&termios);
+      if (b == B0) {
         kprintf(" B0");
-      } else if ((termios.c_cflag & CBAUD) == B50) {
+      } else if (b == B50) {
         kprintf(" B50");
-      } else if ((termios.c_cflag & CBAUD) == B75) {
+      } else if (b == B75) {
         kprintf(" B75");
-      } else if ((termios.c_cflag & CBAUD) == B110) {
+      } else if (b == B110) {
         kprintf(" B110");
-      } else if ((termios.c_cflag & CBAUD) == B134) {
+      } else if (b == B134) {
         kprintf(" B134");
-      } else if ((termios.c_cflag & CBAUD) == B150) {
+      } else if (b == B150) {
         kprintf(" B150");
-      } else if ((termios.c_cflag & CBAUD) == B200) {
+      } else if (b == B200) {
         kprintf(" B200");
-      } else if ((termios.c_cflag & CBAUD) == B300) {
+      } else if (b == B300) {
         kprintf(" B300");
-      } else if ((termios.c_cflag & CBAUD) == B600) {
+      } else if (b == B600) {
         kprintf(" B600");
-      } else if ((termios.c_cflag & CBAUD) == B1200) {
+      } else if (b == B1200) {
         kprintf(" B1200");
-      } else if ((termios.c_cflag & CBAUD) == B1800) {
+      } else if (b == B1800) {
         kprintf(" B1800");
-      } else if ((termios.c_cflag & CBAUD) == B2400) {
+      } else if (b == B2400) {
         kprintf(" B2400");
-      } else if ((termios.c_cflag & CBAUD) == B4800) {
+      } else if (b == B4800) {
         kprintf(" B4800");
-      } else if ((termios.c_cflag & CBAUD) == B9600) {
+      } else if (b == B9600) {
         kprintf(" B9600");
-      } else if ((termios.c_cflag & CBAUD) == B19200) {
+      } else if (b == B19200) {
         kprintf(" B19200");
-      } else if ((termios.c_cflag & CBAUD) == B38400) {
+      } else if (b == B38400) {
         kprintf(" B38400");
-      } else if ((termios.c_cflag & CBAUD) == B57600) {
+      } else if (b == B57600) {
         kprintf(" B57600");
-      } else if ((termios.c_cflag & CBAUD) == B115200) {
+      } else if (b == B115200) {
         kprintf(" B115200");
-      } else if ((termios.c_cflag & CBAUD) == B230400) {
+      } else if (b == B230400) {
         kprintf(" B230400");
-      } else if ((termios.c_cflag & CBAUD) == B500000) {
+      } else if (b == B500000) {
         kprintf(" B500000");
-      } else if ((termios.c_cflag & CBAUD) == B576000) {
+      } else if (b == B576000) {
         kprintf(" B576000");
-      } else if ((termios.c_cflag & CBAUD) == B1000000) {
+      } else if (b == B1000000) {
         kprintf(" B1000000");
-      } else if ((termios.c_cflag & CBAUD) == B1152000) {
+      } else if (b == B1152000) {
         kprintf(" B1152000");
-      } else if ((termios.c_cflag & CBAUD) == B1500000) {
+      } else if (b == B1500000) {
         kprintf(" B1500000");
-      } else if ((termios.c_cflag & CBAUD) == B2000000) {
+      } else if (b == B2000000) {
         kprintf(" B2000000");
-      } else if ((termios.c_cflag & CBAUD) == B2500000) {
+      } else if (b == B2500000) {
         kprintf(" B2500000");
-      } else if ((termios.c_cflag & CBAUD) == B3000000) {
+      } else if (b == B3000000) {
         kprintf(" B3000000");
-      } else if ((termios.c_cflag & CBAUD) == B3500000) {
+      } else if (b == B3500000) {
         kprintf(" B3500000");
-      } else if ((termios.c_cflag & CBAUD) == B4000000) {
+      } else if (b == B4000000) {
         kprintf(" B4000000");
       }
       kprintf("\n");
@@ -636,8 +638,8 @@ textstartup void __printargs(const char *prologue) {
       if (termios.c_lflag & PENDIN) kprintf(" PENDIN");
       if (termios.c_lflag & XCASE) kprintf(" XCASE");
       kprintf("\n");
-      PRINT("    c_ispeed = %u", cfgetispeed(&termios));
-      PRINT("    c_ospeed = %u", cfgetospeed(&termios));
+      PRINT("    cfgetispeed()  = %u", cfgetispeed(&termios));
+      PRINT("    cfgetospeed()  = %u", cfgetospeed(&termios));
       PRINT("    c_cc[VMIN]     = %d", termios.c_cc[VMIN]);
       PRINT("    c_cc[VTIME]    = %d", termios.c_cc[VTIME]);
       PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));

@@ -27,8 +27,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
@@ -63,6 +61,30 @@ char linkbuf[PATH_MAX];
 
 void Mv(char *, char *);
 
+nullterminated() void Print(int fd, const char *s, ...) {
+  va_list va;
+  char buf[2048];
+  va_start(va, s);
+  buf[0] = 0;
+  do {
+    strlcat(buf, s, sizeof(buf));
+  } while ((s = va_arg(va, const char *)));
+  write(fd, buf, strlen(buf));
+  va_end(va);
+}
+
+wontreturn void Die(const char *path, const char *reason) {
+  Print(2, path, ": ", reason, "\n", NULL);
+  exit(1);
+}
+
+wontreturn void SysExit(const char *path, const char *func) {
+  const char *errstr;
+  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
+  Print(2, path, ": ", func, "() failed with ", errstr, "\n", NULL);
+  exit(1);
+}
+
 bool IsDirectory(const char *path) {
   int e;
   bool res;
@@ -84,10 +106,8 @@ bool IsSymlink(const char *path) {
   return res;
 }
 
-wontreturn void PrintUsage(int rc, FILE *f) {
-  fputs("usage: ", f);
-  fputs(prog, f);
-  fputs(USAGE, f);
+wontreturn void PrintUsage(int rc, int fd) {
+  Print(fd, "usage: ", prog, USAGE, NULL);
   exit(rc);
 }
 
@@ -104,9 +124,9 @@ void GetOpts(int argc, char *argv[]) {
         break;
       case 'h':
       case '?':
-        PrintUsage(EXIT_SUCCESS, stdout);
+        PrintUsage(0, 1);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        PrintUsage(1, 2);
     }
   }
 }
@@ -131,9 +151,7 @@ int Visit(const char *fpath, const struct stat *sb, int tflag,
       Mv(srcfile, dstfile);
       return 0;
     default:
-      fputs(fpath, stderr);
-      fputs(": can't handle file type\n", stderr);
-      exit(1);
+      Die(fpath, "can't handle file type");
   }
 }
 
@@ -142,7 +160,7 @@ char *Join(const char *a, const char *b) {
   n = strlen(a);
   m = strlen(b);
   if (n + 1 + m + 1 > sizeof(dstfile)) {
-    fputs("error: mv: path too long\n", stderr);
+    Print(2, "error: mv: path too long\n", NULL);
     exit(1);
   }
   stpcpy(stpcpy(stpcpy(dstfile, a), "/"), b);
@@ -151,16 +169,14 @@ char *Join(const char *a, const char *b) {
 
 void Mv(char *src, char *dst) {
   ssize_t rc;
-  const char *s;
+  const char *s, *d;
   if (strlen(src) + 1 > PATH_MAX) _Exit(2);
   if (strlen(dst) + 1 > PATH_MAX) _Exit(2);
   basename(src);
   basename(dst);
   if (IsDirectory(src)) {
     if (!recursive) {
-      fputs(prog, stderr);
-      fputs(": won't move directory without -r flag.\n", stderr);
-      exit(1);
+      Die(prog, "won't move directory without -r flag.");
     }
     strcpy(dstdir, dst);
     if (IsDirectory(dst)) {
@@ -175,46 +191,40 @@ void Mv(char *src, char *dst) {
       strcpy(srcdir, "");
     }
     if (nftw(src, Visit, 20, 0) == -1) {
-      fputs(prog, stderr);
-      fputs(": nftw failed: ", stderr);
-      fputs(_strerdoc(errno), stderr);
-      fputs("\n", stderr);
-      exit(1);
+      SysExit(src, "nftw");
     }
     return;
   }
   if (IsDirectory(dst)) {
     dst = Join(dst, basename(src));
   }
-  if (!force && access(dst, W_OK) == -1 && errno != ENOENT) goto OnFail;
-  strcpy(mkbuf, dst);
-  if (makedirs(dirname(mkbuf), 0755) == -1) goto OnFail;
-  if (IsSymlink(src)) {
-    if ((rc = readlink(src, linkbuf, sizeof(linkbuf) - 1)) == -1) goto OnFail;
-    linkbuf[rc] = 0;
-    if (symlink(linkbuf, dst) == -1) goto OnFail;
-  } else {
-    if (rename(src, dst) == -1) goto OnFail;
+  if (!force && access(dst, W_OK) == -1 && errno != ENOENT) {
+    SysExit(dst, "access");
   }
-  return;
-OnFail:
-  s = _strerdoc(errno);
-  fputs(prog, stderr);
-  fputs(": ", stderr);
-  fputs(src, stderr);
-  fputs(" ", stderr);
-  fputs(dst, stderr);
-  fputs(": ", stderr);
-  fputs(s, stderr);
-  fputs("\n", stderr);
-  exit(1);
+  strcpy(mkbuf, dst);
+  if (makedirs((d = dirname(mkbuf)), 0755) == -1) {
+    SysExit(d, "makedirs");
+  }
+  if (IsSymlink(src)) {
+    if ((rc = readlink(src, linkbuf, sizeof(linkbuf) - 1)) == -1) {
+      SysExit(src, "readlink");
+    }
+    linkbuf[rc] = 0;
+    if (symlink(linkbuf, dst)) {
+      SysExit(dst, "symlink");
+    }
+  } else {
+    if (rename(src, dst)) {
+      SysExit(src, "rename");
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
   int i;
   prog = argc > 0 ? argv[0] : "mv.com";
   GetOpts(argc, argv);
-  if (argc - optind < 2) PrintUsage(EX_USAGE, stderr);
+  if (argc - optind < 2) PrintUsage(1, 2);
   for (i = optind; i < argc - 1; ++i) {
     Mv(argv[i], argv[argc - 1]);
   }

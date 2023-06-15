@@ -16,13 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/struct/winsize.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/termios.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Gets terminal window size.
  */
 int tcgetwinsize(int fd, struct winsize *ws) {
-  return ioctl_tiocgwinsz(fd, ws);
+  int rc;
+  if (IsAsan() && !__asan_is_valid(ws, sizeof(*ws))) {
+    ws = 0;
+    rc = efault();
+  } else if (fd >= 0) {
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = enotty();
+    } else if (IsWindows()) {
+      rc = tcgetwinsize_nt(g_fds.p + fd, ws);
+    } else {
+      rc = sys_ioctl(fd, TIOCGWINSZ, ws);
+    }
+  } else {
+    rc = einval();
+  }
+  STRACE("tcgetwinsize(%d, [%s]) → %d% m", fd, DescribeWinsize(rc, ws), rc);
+  return rc;
 }

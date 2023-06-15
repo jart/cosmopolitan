@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 .privileged
 
@@ -36,12 +37,12 @@ _OpenExecutable:
 	pushq	__NR_open(%rip)			// -0x08(%rbp)
 	pushq	__NR_mmap(%rip)			// -0x10(%rbp)
 	pushq	__NR_munmap(%rip)		// -0x18(%rbp)
-	pushq	O_RDWR(%rip)			// -0x20(%rbp)
+	pushq	$O_RDWR				// -0x20(%rbp)
 	pushq	MAP_ANONYMOUS(%rip)		// -0x28(%rbp)
 	pushq	MAP_PRIVATE(%rip)		// -0x30(%rbp)
 	pushq	MAP_FIXED(%rip)			// -0x38(%rbp)
 	pushq	__NR_mprotect(%rip)		// -0x40(%rbp)
-	pushq	O_RDONLY(%rip)			// -0x48(%rbp)
+	pushq	$O_RDONLY			// -0x48(%rbp)
 	push	%rbx				// code buffer
 	push	%r12				// data buffer
 	push	%r14				// filename

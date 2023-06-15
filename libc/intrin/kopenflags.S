@@ -31,10 +31,6 @@
 	.balign	4
 	.underrun
 kOpenFlags:
-	.e	O_RDWR,"RDWR"			// order matters
-	.e	O_RDONLY,"RDONLY"		//
-	.e	O_WRONLY,"WRONLY"		//
-	.e	O_ACCMODE,"ACCMODE"		// mask of prev three
 	.e	O_CREAT,"CREAT"			//
 	.e	O_EXCL,"EXCL"			//
 	.e	O_TRUNC,"TRUNC"			//

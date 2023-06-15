@@ -355,7 +355,7 @@ int getCursorPosition(int64_t ifd, int64_t ofd, int *rows, int *cols) {
  * Returns 0 on success, -1 on error. */
 int getWindowSize(int64_t ifd, int64_t ofd, int *rows, int *cols) {
   struct winsize ws;
-  if (_getttysize(1, &ws) == -1 || ws.ws_col == 0) {
+  if (tcgetwinsize(1, &ws) == -1 || ws.ws_col == 0) {
     /* ioctl() failed. Try to query the terminal itself. */
     int orig_row, orig_col, retval;
 

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,69 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
-#include "libc/calls/ttydefaults.h"
-#include "libc/nt/console.h"
-#include "libc/nt/enum/consolemodeflags.h"
-#include "libc/nt/struct/consolescreenbufferinfoex.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/termios.h"
+#include "libc/errno.h"
+#include "libc/log/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/sysv/errfuns.h"
 
-textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
-  int64_t in, out;
-  bool32 inok, outok;
-  uint32_t inmode, outmode;
-  inok = GetConsoleMode((in = __getfdhandleactual(0)), &inmode);
-  outok = GetConsoleMode((out = __getfdhandleactual(1)), &outmode);
-  if (inok | outok) {
-    bzero(tio, sizeof(*tio));
+/**
+ * @fileoverview Terminal Restoration Helper for System Five.
+ *
+ * This is used by the crash reporting functions, e.g. __die(), to help
+ * ensure the terminal is in an unborked state after a crash happens.
+ */
 
-    tio->c_cflag |= CS8;
+#define RESET_COLOR   "\e[0m"
+#define SHOW_CURSOR   "\e[?25h"
+#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
+#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
 
-    tio->c_cc[VINTR] = CTRL('C');
-    tio->c_cc[VQUIT] = CTRL('\\');
-    tio->c_cc[VERASE] = CTRL('?');
-    tio->c_cc[VKILL] = CTRL('U');
-    tio->c_cc[VEOF] = CTRL('D');
-    tio->c_cc[VMIN] = CTRL('A');
-    tio->c_cc[VSTART] = CTRL('Q');
-    tio->c_cc[VSTOP] = CTRL('S');
-    tio->c_cc[VSUSP] = CTRL('Z');
-    tio->c_cc[VREPRINT] = CTRL('R');
-    tio->c_cc[VDISCARD] = CTRL('O');
-    tio->c_cc[VWERASE] = CTRL('W');
-    tio->c_cc[VLNEXT] = CTRL('V');
+static bool __isrestorable;
+static struct termios __oldtermios;
 
-    if (inok) {
-      if (inmode & kNtEnableLineInput) {
-        tio->c_lflag |= ICANON;
-      }
-      if (inmode & kNtEnableEchoInput) {
-        tio->c_lflag |= ECHO;
-      }
-      if (inmode & kNtEnableProcessedInput) {
-        tio->c_lflag |= IEXTEN | ISIG;
-        if (tio->c_lflag | ECHO) {
-          tio->c_lflag |= ECHOE;
-        }
-      }
-    }
+static size_t __strlen(const char *s) {
+  size_t i = 0;
+  while (s[i]) ++i;
+  return i;
+}
 
-    if (outok) {
-      if (outmode & kNtEnableProcessedOutput) {
-        tio->c_oflag |= OPOST;
-      }
-      if (!(outmode & kNtDisableNewlineAutoReturn)) {
-        tio->c_oflag |= OPOST | ONLCR;
-      }
-    }
+// called weakly by libc/calls/tcsetattr.c to avoid pledge("tty")
+void __on_tcsetattr(int fd) {
+  int e;
+  e = errno;
+  if (tcgetattr(fd, &__oldtermios) != -1) {
+    __isrestorable = true;
+  }
+  errno = e;
+}
 
-    return 0;
-  } else {
-    return enotty();
+void __restore_tty(void) {
+  int e;
+  if (__isrestorable && !__isworker && !__nocolor) {
+    e = errno;
+    sys_write(0, ANSI_RESTORE, __strlen(ANSI_RESTORE));
+    tcsetattr(0, TCSAFLUSH, &__oldtermios);
+    errno = e;
   }
 }

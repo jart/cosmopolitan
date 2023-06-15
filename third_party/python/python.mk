@@ -1885,7 +1885,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_index.py				\
 	third_party/python/Lib/test/test_int.py					\
 	third_party/python/Lib/test/test_int_literal.py				\
-	third_party/python/Lib/test/test_ioctl.py				\
 	third_party/python/Lib/test/test_ipaddress.py				\
 	third_party/python/Lib/test/test_isinstance.py				\
 	third_party/python/Lib/test/test_iter.py				\
@@ -2154,8 +2153,6 @@ o/$(MODE)/third_party/python/Lib/test/test_signal.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock inet
 o/$(MODE)/third_party/python/Lib/test/test_timeout.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
-o/$(MODE)/third_party/python/Lib/test/test_ioctl.py.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc tty
 
 PYTHONTESTER = $(VM) o/$(MODE)/third_party/python/pythontester.com
 

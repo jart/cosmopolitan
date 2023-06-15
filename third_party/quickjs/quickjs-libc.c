@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include "third_party/quickjs/quickjs-libc.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -51,7 +52,6 @@
 #include "libc/time/time.h"
 #include "third_party/quickjs/cutils.h"
 #include "third_party/quickjs/list.h"
-#include "third_party/quickjs/quickjs-libc.h"
 
 asm(".ident\t\"\\n\\n\
 QuickJS (MIT License)\\n\
@@ -1696,7 +1696,7 @@ static JSValue js_os_ttyGetWinSize(JSContext *ctx, JSValueConst this_val,
     
     if (JS_ToInt32(ctx, &fd, argv[0]))
         return JS_EXCEPTION;
-    if (ioctl(fd, TIOCGWINSZ, &ws) == 0 &&
+    if (tcgetwinsize(fd, &ws) == 0 &&
         ws.ws_col >= 4 && ws.ws_row >= 4) {
         obj = JS_NewArray(ctx);
         if (JS_IsException(obj))

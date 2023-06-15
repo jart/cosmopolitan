@@ -428,7 +428,9 @@ static void DimensionDisplay(void) {
       wsize_.ws_row = 25;
       wsize_.ws_col = 80;
       wsize_ = (struct winsize){.ws_row = 40, .ws_col = 80};
-      if (_getttysize(outfd_, &wsize_) == -1) _getttysize(0, &wsize_);
+      if (tcgetwinsize(outfd_, &wsize_) == -1) {
+        tcgetwinsize(0, &wsize_);
+      }
       dh_ = wsize_.ws_row * 2;
       dw_ = wsize_.ws_col * 2;
     }

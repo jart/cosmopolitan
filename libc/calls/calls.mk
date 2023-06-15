@@ -105,6 +105,8 @@ o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 
 # we always want -O3 because:
 #   it makes the code size smaller too
+# we need -mstringop-strategy=loop because:
+#   privileged code might generate memcpy call
 o/$(MODE)/libc/calls/termios2host.o			\
 o/$(MODE)/libc/calls/sigenter-freebsd.o			\
 o/$(MODE)/libc/calls/sigenter-netbsd.o			\
@@ -112,7 +114,8 @@ o/$(MODE)/libc/calls/sigenter-openbsd.o			\
 o/$(MODE)/libc/calls/sigenter-xnu.o			\
 o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		COPTS +=				\
-			-O3
+			-O3				\
+			-mstringop-strategy=loop
 
 # we must disable static stack safety because:
 #   these functions use alloca(n)
@@ -147,14 +150,6 @@ o//libc/calls/ioctl_fioclex-nt.o			\
 o//libc/calls/ioctl_fioclex.o				\
 o//libc/calls/ioctl_siocgifconf-nt.o			\
 o//libc/calls/ioctl_siocgifconf.o			\
-o//libc/calls/ioctl_tcgets-nt.o				\
-o//libc/calls/ioctl_tcgets.o				\
-o//libc/calls/ioctl_tcsets-nt.o				\
-o//libc/calls/ioctl_tcsets.o				\
-o//libc/calls/ioctl_tiocgwinsz-nt.o			\
-o//libc/calls/ioctl_tiocgwinsz.o			\
-o//libc/calls/ioctl_tiocswinsz-nt.o			\
-o//libc/calls/ioctl_tiocswinsz.o			\
 o//libc/calls/fcntl.o: private				\
 		CFLAGS +=				\
 			-Os

@@ -158,7 +158,7 @@ int fcntl(int fd, int cmd, ...) {
     STRACE("fcntl(%d, %s, %s) → %d% m", fd, DescribeFcntlCmd(cmd),
            DescribeDnotifyFlags(arg), rc);
   } else {
-    STRACE("fcntl(%d, %s, %ld) → %#x% m", fd, DescribeFcntlCmd(cmd), arg, rc);
+    STRACE("fcntl(%d, %s, %ld) → %d% m", fd, DescribeFcntlCmd(cmd), arg, rc);
   }
 #endif
 

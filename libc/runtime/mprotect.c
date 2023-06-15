@@ -24,6 +24,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Modifies restrictions on virtual memory address range.
@@ -37,13 +38,11 @@ int mprotect(void *addr, size_t size, int prot) {
   int64_t rc;
   if (prot &
       ~(PROT_READ | PROT_WRITE | PROT_EXEC | PROT_GROWSDOWN | PROT_GROWSUP)) {
-    errno = EINVAL;  // unix checks prot before checking size
-    rc = -1;
+    rc = einval();  // unix checks prot before checking size
   } else if (!size) {
     return 0;  // make new technology consistent with unix
   } else if (UNLIKELY((intptr_t)addr & 4095)) {
-    errno = EINVAL;  // unix checks prot before checking size
-    rc = -1;
+    rc = einval();  // unix checks prot before checking size
   } else if (!IsWindows()) {
     rc = sys_mprotect(addr, size, prot);
   } else {

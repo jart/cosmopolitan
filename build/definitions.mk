@@ -175,11 +175,6 @@ DEFAULT_CCFLAGS +=							\
 	-fdebug-prefix-map='$(PWD)'=					\
 	-frecord-gcc-switches
 
-DEFAULT_OFLAGS ?=							\
-	-g								\
-	-gdwarf-4							\
-	-gdescribe-dies
-
 DEFAULT_COPTS ?=							\
 	-fno-math-errno							\
 	-fno-ident							\
@@ -246,7 +241,7 @@ DEFAULT_LDFLAGS =							\
 	-nostdlib							\
 	--gc-sections							\
 	--build-id=none							\
-	--no-dynamic-linker #--cref -Map=$@.map
+	--no-dynamic-linker --cref -Map=$@.map
 
 ifeq ($(ARCH), aarch64)
 DEFAULT_LDFLAGS +=							\

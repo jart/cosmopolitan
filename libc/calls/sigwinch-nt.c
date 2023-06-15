@@ -45,7 +45,7 @@ textwindows void _check_sigwinch(struct Fd *fd) {
   old = __ws;
   e = errno;
   if (old.ws_row != 0xffff) {
-    if (ioctl_tiocgwinsz_nt(fd, &ws) != -1) {
+    if (tcgetwinsize_nt(fd, &ws) != -1) {
       if (old.ws_col != ws.ws_col || old.ws_row != ws.ws_row) {
         __ws = ws;
         if (old.ws_col | old.ws_row) {

@@ -21,7 +21,7 @@
 #include "libc/dns/hoststxt.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/pushpop.h"
+#include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

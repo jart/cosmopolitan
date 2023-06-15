@@ -16,10 +16,76 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/calls/termios.internal.h"
+#include "libc/dce.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/mem/alloca.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+
+#define TCSETS    0x5402
+#define TCSETSW   0x5403
+#define TCSETSF   0x5404
+#define TIOCSETA  0x80487414
+#define TIOCSETAW 0x80487415
+#define TIOCSETAF 0x80487416
+
+void __on_tcsetattr(int);
+int tcsetattr_nt(int, int, const struct termios *);
+
+static const char *DescribeTcsa(char buf[12], int opt) {
+  if (opt == TCSANOW) return "TCSANOW";
+  if (opt == TCSADRAIN) return "TCSADRAIN";
+  if (opt == TCSAFLUSH) return "TCSAFLUSH";
+  FormatInt32(buf, opt);
+  return buf;
+}
+
+static int tcsetattr_impl(int fd, int opt, const struct termios *tio) {
+  if (fd < 0) {
+    return einval();
+  }
+
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    return enotty();
+  }
+
+  if (0 <= fd && fd <= 2 && _weaken(__on_tcsetattr)) {
+    static bool once;
+    if (!once) {
+      _weaken(__on_tcsetattr)(fd);
+      once = true;
+    }
+  }
+
+  if (IsAsan() && !__asan_is_valid(tio, sizeof(*tio))) {
+    return efault();
+  }
+
+  if (IsMetal()) {
+    return 0;
+  }
+
+  if (IsWindows()) {
+    return tcsetattr_nt(fd, opt, tio);
+  }
+
+  if (IsLinux() || IsBsd()) {
+    union metatermios mt;
+    return sys_ioctl(fd, (IsLinux() ? TCSETS : TIOCSETA) + opt,
+                     __termios2host(&mt, tio));
+  }
+
+  return enosys();
+}
 
 /**
  * Sets struct on teletypewriter w/ drains and flushes.
@@ -32,15 +98,10 @@
  * @return 0 on success, -1 w/ errno
  * @asyncsignalsafe
  */
-int(tcsetattr)(int fd, int opt, const struct termios *tio) {
-  switch (opt) {
-    case TCSANOW:
-      return ioctl(fd, TCSETS, (void *)tio);
-    case TCSADRAIN:
-      return ioctl(fd, TCSETSW, (void *)tio);
-    case TCSAFLUSH:
-      return ioctl(fd, TCSETSF, (void *)tio);
-    default:
-      return einval();
-  }
+int tcsetattr(int fd, int opt, const struct termios *tio) {
+  int rc;
+  rc = tcsetattr_impl(fd, opt, tio);
+  STRACE("tcsetattr(%d, %s, %p) → %d% m", fd, DescribeTcsa(alloca(12), opt),
+         tio, rc);
+  return rc;
 }

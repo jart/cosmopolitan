@@ -10,8 +10,6 @@ struct winsize {
   uint16_t ws_ypixel;
 };
 
-int _getttysize(int, struct winsize *);
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_WINSIZE_H_ */

@@ -29,8 +29,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
-                                const struct termios *tio) {
+textwindows int tcsetattr_nt(int ignored, int opt, const struct termios *tio) {
   int64_t in, out;
   bool32 ok, inok, outok;
   uint32_t inmode, outmode;
@@ -39,7 +38,7 @@ textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
   if (inok | outok) {
 
     if (inok) {
-      if (request == TCSETSF) {
+      if (opt == TCSAFLUSH) {
         FlushConsoleInputBuffer(in);
       }
       inmode &=

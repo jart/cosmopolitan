@@ -59,15 +59,12 @@ PYTHON_PROVIDE("termios.BRKINT");
 PYTHON_PROVIDE("termios.BS0");
 PYTHON_PROVIDE("termios.BS1");
 PYTHON_PROVIDE("termios.BSDLY");
-PYTHON_PROVIDE("termios.CBAUD");
-PYTHON_PROVIDE("termios.CBAUDEX");
 PYTHON_PROVIDE("termios.CDSUSP");
 PYTHON_PROVIDE("termios.CEOF");
 PYTHON_PROVIDE("termios.CEOL");
 PYTHON_PROVIDE("termios.CEOT");
 PYTHON_PROVIDE("termios.CERASE");
 PYTHON_PROVIDE("termios.CFLUSH");
-PYTHON_PROVIDE("termios.CIBAUD");
 PYTHON_PROVIDE("termios.CINTR");
 PYTHON_PROVIDE("termios.CKILL");
 PYTHON_PROVIDE("termios.CLNEXT");
@@ -146,8 +143,6 @@ PYTHON_PROVIDE("termios.TAB1");
 PYTHON_PROVIDE("termios.TAB2");
 PYTHON_PROVIDE("termios.TAB3");
 PYTHON_PROVIDE("termios.TABDLY");
-PYTHON_PROVIDE("termios.TCFLSH");
-PYTHON_PROVIDE("termios.TCGETS");
 PYTHON_PROVIDE("termios.TCIFLUSH");
 PYTHON_PROVIDE("termios.TCIOFF");
 PYTHON_PROVIDE("termios.TCIOFLUSH");
@@ -158,15 +153,9 @@ PYTHON_PROVIDE("termios.TCOON");
 PYTHON_PROVIDE("termios.TCSADRAIN");
 PYTHON_PROVIDE("termios.TCSAFLUSH");
 PYTHON_PROVIDE("termios.TCSANOW");
-PYTHON_PROVIDE("termios.TCSBRK");
-PYTHON_PROVIDE("termios.TCSETS");
-PYTHON_PROVIDE("termios.TCSETSF");
-PYTHON_PROVIDE("termios.TCSETSW");
 PYTHON_PROVIDE("termios.TCXONC");
 PYTHON_PROVIDE("termios.TIOCCONS");
 PYTHON_PROVIDE("termios.TIOCGETD");
-PYTHON_PROVIDE("termios.TIOCGPGRP");
-PYTHON_PROVIDE("termios.TIOCGWINSZ");
 PYTHON_PROVIDE("termios.TIOCMBIC");
 PYTHON_PROVIDE("termios.TIOCMBIS");
 PYTHON_PROVIDE("termios.TIOCMGET");
@@ -187,10 +176,6 @@ PYTHON_PROVIDE("termios.TIOCNXCL");
 PYTHON_PROVIDE("termios.TIOCOUTQ");
 PYTHON_PROVIDE("termios.TIOCPKT");
 PYTHON_PROVIDE("termios.TIOCSCTTY");
-PYTHON_PROVIDE("termios.TIOCSERGETLSR");
-PYTHON_PROVIDE("termios.TIOCSERGETMULTI");
-PYTHON_PROVIDE("termios.TIOCSERSETMULTI");
-PYTHON_PROVIDE("termios.TIOCSER_TEMT");
 PYTHON_PROVIDE("termios.TIOCSETD");
 PYTHON_PROVIDE("termios.TIOCSPGRP");
 PYTHON_PROVIDE("termios.TIOCSTI");
@@ -573,7 +558,6 @@ PyInit_termios(void)
     if (B3000000) PyModule_AddIntConstant(m, "B3000000", B3000000);
     if (B3500000) PyModule_AddIntConstant(m, "B3500000", B3500000);
     if (B4000000) PyModule_AddIntConstant(m, "B4000000", B4000000);
-    if (CBAUDEX) PyModule_AddIntConstant(m, "CBAUDEX", CBAUDEX);
     /* TODO(jart): B460800 */
     /* TODO(jart): B921600 */
     /* TODO(jart): B460800 */
@@ -641,7 +625,6 @@ PyInit_termios(void)
     if (PARODD) PyModule_AddIntConstant(m, "PARODD", PARODD);
     if (HUPCL) PyModule_AddIntConstant(m, "HUPCL", HUPCL);
     if (CLOCAL) PyModule_AddIntConstant(m, "CLOCAL", CLOCAL);
-    if (CIBAUD) PyModule_AddIntConstant(m, "CIBAUD", CIBAUD);
     PyModule_AddIntConstant(m, "CS5", CS5);
     if (CS6) PyModule_AddIntConstant(m, "CS6", CS6);
     if (CS7) PyModule_AddIntConstant(m, "CS7", CS7);
@@ -682,7 +665,6 @@ PyInit_termios(void)
     PyModule_AddIntConstant(m, "VWERASE", VWERASE);
     PyModule_AddIntConstant(m, "VLNEXT", VLNEXT);
     PyModule_AddIntConstant(m, "VEOL2", VEOL2);
-    if (CBAUD) PyModule_AddIntConstant(m, "CBAUD", CBAUD);
 
     /* <sys/ttydefaults.h> */
     PyModule_AddIntConstant(m, "CEOF", CEOF);
@@ -721,28 +703,18 @@ PyInit_termios(void)
     /* TODO(jart): SLIP */
     /* TODO(jart): STRIP */
     /* TODO(jart): TTY */
-    if (TCFLSH) PyModule_AddIntConstant(m, "TCFLSH", TCFLSH);
     /* TODO(jart): TCGETA */
-    if (TCGETS) PyModule_AddIntConstant(m, "TCGETS", TCGETS);
-    if (TCSBRK) PyModule_AddIntConstant(m, "TCSBRK", TCSBRK);
     /* TODO(jart): TCSBRKP */
     /* TODO(jart): TCSETA */
     /* TODO(jart): TCSETAF */
     /* TODO(jart): TCSETAW */
-    if (TCSETS) PyModule_AddIntConstant(m, "TCSETS", TCSETS);
-    if (TCSETSF) PyModule_AddIntConstant(m, "TCSETSF", TCSETSF);
-    if (TCSETSW) PyModule_AddIntConstant(m, "TCSETSW", TCSETSW);
-    if (TCXONC) PyModule_AddIntConstant(m, "TCXONC", TCXONC);
     if (TIOCCONS) PyModule_AddIntConstant(m, "TIOCCONS", TIOCCONS);
     /* TODO(jart): TIOCEXCL */
     if (TIOCGETD) PyModule_AddIntConstant(m, "TIOCGETD", TIOCGETD);
     /* TODO(jart): TIOCGICOUNT */
     /* TODO(jart): TIOCGLCKTRMIOS */
-    if (TIOCGPGRP) PyModule_AddIntConstant(m, "TIOCGPGRP", TIOCGPGRP);
     /* TODO(jart): TIOCGSERIAL */
     /* TODO(jart): TIOCGSOFTCAR */
-    PyModule_AddIntConstant(m, "TIOCGWINSZ", TIOCGWINSZ);
-    PyModule_AddIntConstant(m, "TIOCSWINSZ", TIOCSWINSZ);
     /* TODO(jart): TIOCINQ */
     /* TODO(jart): TIOCLINUX */
     if (TIOCMBIC) PyModule_AddIntConstant(m, "TIOCMBIC", TIOCMBIC);
@@ -774,13 +746,9 @@ PyInit_termios(void)
     /* TODO(jart): STOP */
     if (TIOCSCTTY) PyModule_AddIntConstant(m, "TIOCSCTTY", TIOCSCTTY);
     /* TODO(jart): TIOCSERCONFIG */
-    if (TIOCSERGETLSR) PyModule_AddIntConstant(m, "TIOCSERGETLSR", TIOCSERGETLSR);
-    if (TIOCSERGETMULTI) PyModule_AddIntConstant(m, "TIOCSERGETMULTI", TIOCSERGETMULTI);
     /* TODO(jart): TIOCSERGSTRUCT */
     /* TODO(jart): TIOCSERGWILD */
-    if (TIOCSERSETMULTI) PyModule_AddIntConstant(m, "TIOCSERSETMULTI", TIOCSERSETMULTI);
     /* TODO(jart): TIOCSERSWILD */
-    if (TIOCSER_TEMT) PyModule_AddIntConstant(m, "TIOCSER_TEMT", TIOCSER_TEMT);
     if (TIOCSETD) PyModule_AddIntConstant(m, "TIOCSETD", TIOCSETD);
     /* TODO(jart): TIOCSLCKTRMIOS */
     if (TIOCSPGRP) PyModule_AddIntConstant(m, "TIOCSPGRP", TIOCSPGRP);

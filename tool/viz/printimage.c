@@ -25,6 +25,7 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
@@ -177,8 +178,8 @@ static void GetOpts(int *argc, char *argv[]) {
   g_winsize.ws_col = 80;
   g_winsize.ws_row = 24;
   if (!g_flags.full && (!g_flags.width || !g_flags.height)) {
-    ioctl(STDIN_FILENO, TIOCGWINSZ, &g_winsize) != -1 ||
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &g_winsize);
+    tcgetwinsize(STDIN_FILENO, &g_winsize) != -1 ||
+        tcgetwinsize(STDOUT_FILENO, &g_winsize);
   }
   ttyquantsetup(g_flags.quant, kTtyQuantRgb, g_flags.blocks);
 }

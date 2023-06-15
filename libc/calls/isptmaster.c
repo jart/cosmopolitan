@@ -22,6 +22,8 @@
 #include "libc/errno.h"
 #include "libc/sysv/consts/termios.h"
 
+#define TIOCPTMASTER 0x2000741c
+
 int _isptmaster(int fd) {
   if (IsFreebsd()) {
     if (!sys_ioctl(fd, TIOCPTMASTER)) {

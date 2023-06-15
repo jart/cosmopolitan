@@ -528,7 +528,7 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
 /**
  * Creates thread without malloc being linked.
  *
- * If you use clone() you're on you're own, e.g.
+ * If you use clone() you're on your own. Example:
  *
  *     int worker(void *arg) { return 0; }
  *     struct CosmoTib tib = {.tib_self = &tib, .tib_tid = -1};

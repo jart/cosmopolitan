@@ -56,7 +56,7 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   if (filesize < 64) goto RaiseEnoexec;
   elf = map = mmap(0, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
   if (map == MAP_FAILED) goto SystemError;
-  if (READ32LE(map) != READ32LE("\177ELF")) goto RaiseEnoexec;
+  if (READ32LE((char *)map) != READ32LE("\177ELF")) goto RaiseEnoexec;
   if (!(name_base = GetStrtab(map, &m))) goto RaiseEnobufs;
   if (!(symtab = GetSymtab(map, &n))) goto RaiseEnobufs;
   tsz = 0;

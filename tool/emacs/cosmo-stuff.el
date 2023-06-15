@@ -26,6 +26,7 @@
 (require 'make-mode)
 
 (setq cosmo-dbg-mode "dbg")
+(setq cosmo-default-mode "")
 (setq c-doc-comment-style 'javadown)
 
 (add-to-list 'auto-mode-alist '("\\.x$" . c-mode))  ;; -aux-info
@@ -170,7 +171,7 @@
         ((eq arg 8) "aarch64-tiny")
         (default default)
         ((cosmo-intest) cosmo-dbg-mode)
-        (t "fastbuild")))
+        (t cosmo-default-mode)))
 
 (defun cosmo--make-suffix (arg)
   (cond ((eq arg 9) ".chibicc")
@@ -637,7 +638,7 @@
       (let ((default-directory root))
         (save-buffer)
         (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
-               (let* ((mode (cosmo--make-mode arg "fastbuild"))
+               (let* ((mode (cosmo--make-mode arg cosmo-default-mode))
                       (compile-command (cosmo--compile-command this root 'test mode "" "" ".ok")))
                  (compile compile-command)))
               ('t
@@ -653,7 +654,7 @@
       (let ((default-directory root))
         (save-buffer)
         (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
-               (let* ((mode (cosmo--make-mode arg "fastbuild"))
+               (let* ((mode (cosmo--make-mode arg cosmo-default-mode))
                       (compile-command (cosmo--compile-command this root 'run-win10 mode "" "" "")))
                  (compile compile-command)))
               ('t

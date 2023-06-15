@@ -38,6 +38,8 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
+#define PTMGET 0x40287401  // openbsd
+
 struct IoctlPtmGet {
   int m;
   int s;
@@ -49,7 +51,6 @@ static int openpty_impl(int *mfd, int *sfd, char *name,
                         const struct termios *tio,  //
                         const struct winsize *wsz) {
   int m, s, p;
-  union metatermios mt;
   struct IoctlPtmGet t;
   RETURN_ON_ERROR((m = posix_openpt(O_RDWR | O_NOCTTY)));
   if (!IsOpenbsd()) {
@@ -66,8 +67,8 @@ static int openpty_impl(int *mfd, int *sfd, char *name,
   *mfd = m;
   *sfd = s;
   if (name) strcpy(name, t.sname);
-  if (tio) _npassert(!sys_ioctl(s, TCSETSF, __termios2host(&mt, tio)));
-  if (wsz) _npassert(!sys_ioctl(s, TIOCGWINSZ, wsz));
+  if (tio) _npassert(!tcsetattr(s, TCSAFLUSH, tio));
+  if (wsz) _npassert(!tcgetwinsize(s, wsz));
   return 0;
 OnError:
   if (m != -1) sys_close(m);

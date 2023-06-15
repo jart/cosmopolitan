@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/pushpop.h"
+#include "libc/intrin/pushpop.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

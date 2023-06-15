@@ -20,12 +20,14 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/comms.h"
-#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+
+#define TCSBRK   0x5409      // linux
+#define TIOCSBRK 0x2000747b  // bsd
+#define TIOCCBRK 0x2000747a  // bsd
 
 static int sys_tcsendbreak_bsd(int fd) {
   if (sys_ioctl(fd, TIOCSBRK, 0) == -1) return -1;
@@ -55,14 +57,14 @@ static textwindows int sys_tcsendbreak_nt(int fd) {
  */
 int tcsendbreak(int fd, int duration) {
   int rc;
-  if (IsMetal()) {
-    rc = enosys();
+  if (IsLinux()) {
+    rc = sys_ioctl(fd, TCSBRK, 0);
   } else if (IsBsd()) {
     rc = sys_tcsendbreak_bsd(fd);
-  } else if (!IsWindows()) {
-    rc = sys_ioctl(fd, TCSBRK, 0);
-  } else {
+  } else if (IsWindows()) {
     rc = sys_tcsendbreak_nt(fd);
+  } else {
+    rc = enosys();
   }
   STRACE("tcsendbreak(%d, %u) → %d% m", fd, duration, rc);
   return rc;

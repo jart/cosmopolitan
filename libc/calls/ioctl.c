@@ -20,6 +20,8 @@
 #undef __STRICT_ANSI__
 #endif
 #include "libc/calls/ioctl.h"
+#include "libc/calls/termios.h"
+#include "libc/sysv/consts/termios.h"
 
 #define EQUAL(X, Y) ((X) == (Y))
 
@@ -34,5 +36,7 @@ int(ioctl)(int fd, uint64_t request, ...) {
   va_start(va, request);
   arg = va_arg(va, void *);
   va_end(va);
+  if (request == TIOCGWINSZ) return tcgetwinsize(fd, arg);
+  if (request == TIOCSWINSZ) return tcsetwinsize(fd, arg);
   return __IOCTL_DISPATCH(EQUAL, -1, fd, request, arg);
 }

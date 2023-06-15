@@ -34,11 +34,17 @@
 #       __builtin_trap();
 #     }
 #
-# building programs in tiny mode
+# building in tiny mode
 #
 #     export MODE=tiny
 #     (cd /opt/cosmo; make -j8 toolchain)
 #     cosmoc++ -Os -o foo.com foo.cc
+#
+# building in tiniest mode (linux only)
+#
+#     export MODE=tinylinux
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     cosmoc++ -Os -o foo.com foo.c
 #
 # hardening programs with memory safety
 #
@@ -65,7 +71,7 @@ PLATFORM="-D__COSMOPOLITAN__"
 PREDEF="-include libc/integral/normalize.inc"
 CCFLAGS="-fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
-CPPFLAGS="-DNDEBUG -nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
+CPPFLAGS="-nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $COSMO/o/$MODE/cosmopolitan.a"
 
@@ -148,7 +154,7 @@ for x; do
   set -- "$@" "$x"
 done
 
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
+if [ x"$OPT" != x"-Os" ] && [ x"${MODE#tiny}" != x"${MODE}" ]; then
   # support --ftrace unless optimizing for size
   CXXFLAGS="$CXXFLAGS -fpatchable-function-entry=18,16"
 fi
@@ -158,7 +164,7 @@ if [ $INTENT = cpp ]; then
 elif [ $INTENT = cc ]; then
   set -- $PLATFORM $PREDEF $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" $FRAME
 else
-  set -- $PLATFORM $PREDEF $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=65536 -Wl,-z,max-page-size=65536 $FRAME
+  set -- $PLATFORM $PREDEF $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 $FRAME
 fi
 
 set -- "$CXX" "$@"

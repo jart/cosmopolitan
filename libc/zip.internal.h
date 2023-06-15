@@ -9,6 +9,12 @@
  * @fileoverview PKZIP Data Structures.
  */
 
+#ifdef __ASSEMBLER__
+#define ZM_(x) x
+#else
+#define ZM_(x) ~VEIL("r", ~x) /* prevent magic from appearing in binary */
+#endif
+
 #define kZipOk                       0
 #define kZipErrorEocdNotFound        -1
 #define kZipErrorEocdOffsetOverflow  -2
@@ -23,8 +29,6 @@
 #define kZipErrorRaceCondition       -11
 #define kZipErrorMapFailed           -12
 #define kZipErrorOpenFailed          -13
-
-#define kZipAlign 2
 
 #define kZipCosmopolitanVersion kZipEra2001
 
@@ -59,10 +63,9 @@
 #define kZipCompressionNone    0
 #define kZipCompressionDeflate 8
 
-#define kZipCdirHdrMagic            0x06054b50 /* PK♣♠ "PK\5\6" */
-#define kZipCdirHdrMagicTodo        0x19184b50 /* PK♣♠ "PK\30\31" */
+#define kZipCdirHdrMagic            ZM_(0x06054b50) /* PK♣♠ "PK\5\6" */
+#define kZipCdirHdrMagicTodo        ZM_(0x19184b50) /* PK♣♠ "PK\30\31" */
 #define kZipCdirHdrMinSize          22
-#define kZipCdirAlign               kZipAlign
 #define kZipCdirHdrLinkableSize     294
 #define kZipCdirDiskOffset          4
 #define kZipCdirStartingDiskOffset  6
@@ -72,12 +75,12 @@
 #define kZipCdirOffsetOffset        16
 #define kZipCdirCommentSizeOffset   20
 
-#define kZipCdir64HdrMagic     0x06064b50 /* PK♣♠ "PK\6\6" */
+#define kZipCdir64HdrMagic     ZM_(0x06064b50) /* PK♣♠ "PK\6\6" */
 #define kZipCdir64HdrMinSize   56
-#define kZipCdir64LocatorMagic 0x07064b50 /* PK♠• "PK\6\7" */
+#define kZipCdir64LocatorMagic ZM_(0x07064b50) /* PK♠• "PK\6\7" */
 #define kZipCdir64LocatorSize  20
 
-#define kZipCfileHdrMagic                 0x02014b50 /* PK☺☻ "PK\1\2" */
+#define kZipCfileHdrMagic                 ZM_(0x02014b50) /* PK☺☻ "PK\1\2" */
 #define kZipCfileHdrMinSize               46
 #define kZipCfileOffsetGeneralflag        8
 #define kZipCfileOffsetCompressionmethod  10
@@ -89,7 +92,7 @@
 #define kZipCfileOffsetExternalattributes 38
 #define kZipCfileOffsetOffset             42
 
-#define kZipLfileHdrMagic                0x04034b50 /* PK♥♦ "PK\3\4" */
+#define kZipLfileHdrMagic                ZM_(0x04034b50) /* PK♥♦ "PK\3\4" */
 #define kZipLfileHdrMinSize              30
 #define kZipLfileOffsetGeneralflag       6
 #define kZipLfileOffsetCompressionmethod 8

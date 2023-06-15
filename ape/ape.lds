@@ -356,6 +356,7 @@ SECTIONS {
     PROVIDE_HIDDEN(__fini_array_start = .);
     KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
            SORT_BY_INIT_PRIORITY(.dtors.*)))
+    KEEP(*(.fini_array))
     KEEP(*(.dtors))
     PROVIDE_HIDDEN(__fini_array_end = .);
 
@@ -376,7 +377,7 @@ SECTIONS {
 
 /* initialization image for thread-local storage, this is copied */
 /* out to actual TLS areas at runtime, so just make it read-only */
-  .tdata . : {
+  .tdata : {
     _tdata_start = .;
     *(SORT_BY_ALIGNMENT(.tdata))
     *(SORT_BY_ALIGNMENT(.tdata.*))
@@ -387,7 +388,7 @@ SECTIONS {
 
 /* this only tells the linker about the layout of uninitialized */
 /* TLS data, and does not advance the linker's location counter */
-  .tbss . : {
+  .tbss : {
     _tbss_start = .;
     *(SORT_BY_ALIGNMENT(.tbss))
     *(SORT_BY_ALIGNMENT(.tbss.*))

@@ -13,12 +13,14 @@
 #
 ifeq ($(MODE),)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += $(BACKTRACES) -O2
 CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
 ifeq ($(MODE), aarch64)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
@@ -31,11 +33,13 @@ endif
 #   - Better GDB debugging
 #
 ifeq ($(MODE), zero)
+CONFIG_OFLAGS ?= -g
 OVERRIDE_CFLAGS += -O0
 OVERRIDE_CXXFLAGS += -O0
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
 ifeq ($(MODE), aarch64-zero)
+CONFIG_OFLAGS ?= -g
 OVERRIDE_CFLAGS += -O0
 OVERRIDE_CXXFLAGS += -O0
 CONFIG_CPPFLAGS += -DSYSDEBUG
@@ -55,7 +59,6 @@ ifeq ($(MODE), fastbuild)
 ENABLE_FTRACE = 1
 CONFIG_CCFLAGS += $(BACKTRACES) -O
 CONFIG_CPPFLAGS += -DSYSDEBUG -DDWARFLESS
-CONFIG_OFLAGS += -g0
 CONFIG_LDFLAGS += -S
 TARGET_ARCH ?= -msse3
 endif
@@ -74,9 +77,10 @@ endif
 #
 ifeq ($(MODE), opt)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -msse2avx -Wa,-msse2avx
 CONFIG_CCFLAGS += $(BACKTRACES) -O3 -fmerge-all-constants
-TARGET_ARCH ?= -march=native
+TARGET_ARCH ?= -march=skylake
 endif
 
 # Optimized Linux Mode
@@ -89,6 +93,7 @@ endif
 #   - Turns off support for other operating systems
 #
 ifeq ($(MODE), optlinux)
+CONFIG_OFLAGS ?= -g
 CONFIG_CPPFLAGS += -DNDEBUG -msse2avx -Wa,-msse2avx -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
@@ -103,6 +108,7 @@ endif
 #   - More optimized
 #   - Reasonably small
 #   - Numeric backtraces
+#   - No DWARF data bloat
 #   - Toilsome debuggability
 #   - assert() statements removed
 #   - DCHECK_xx() statements removed
@@ -129,6 +135,7 @@ endif
 #
 ifeq ($(MODE), asan)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += $(BACKTRACES) -O2 -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=address
 TARGET_ARCH ?= -msse3
@@ -147,6 +154,7 @@ endif
 #
 ifeq ($(MODE), dbg)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CPPFLAGS += -DMODE_DBG
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
@@ -156,6 +164,7 @@ QUOTA ?= -C64 -L300
 endif
 ifeq ($(MODE), aarch64-dbg)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CPPFLAGS += -DMODE_DBG
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O0 -fno-inline
 CONFIG_COPTS += -fsanitize=undefined
@@ -174,6 +183,7 @@ endif
 #
 ifeq ($(MODE), sysv)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += $(BACKTRACES) -O2
 CONFIG_CPPFLAGS += -DSYSDEBUG -DSUPPORT_VECTOR=121
 TARGET_ARCH ?= -msse3
@@ -206,10 +216,6 @@ CONFIG_CCFLAGS +=			\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS
-CONFIG_OFLAGS +=			\
-	-g0
-CONFIG_LDFLAGS +=			\
-	-S
 TARGET_ARCH ?=				\
 	-msse3
 PYFLAGS +=				\
@@ -232,10 +238,6 @@ CONFIG_CCFLAGS +=			\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls	\
 	-DDWARFLESS
-CONFIG_OFLAGS +=			\
-	-g0
-CONFIG_LDFLAGS +=			\
-	-S
 PYFLAGS +=				\
 	-O2				\
 	-B
@@ -261,10 +263,6 @@ CONFIG_CPPFLAGS +=			\
 	-DTRUSTWORTHY			\
 	-DSUPPORT_VECTOR=1		\
 	-DDWARFLESS
-CONFIG_OFLAGS +=			\
-	-g0
-CONFIG_LDFLAGS +=			\
-	-S
 CONFIG_CCFLAGS +=			\
 	-Os				\
 	-fno-align-functions		\
@@ -296,10 +294,6 @@ CONFIG_CPPFLAGS +=		\
 	-DTRUSTWORTHY		\
 	-DSUPPORT_VECTOR=113	\
 	-DDWARFLESS
-CONFIG_OFLAGS +=		\
-	-g0
-CONFIG_LDFLAGS +=		\
-	-S
 CONFIG_CCFLAGS +=		\
 	-Os			\
 	-fno-align-functions	\
@@ -336,10 +330,6 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
-CONFIG_OFLAGS +=		\
-	-g0
-CONFIG_LDFLAGS +=		\
-	-S
 TARGET_ARCH ?=			\
 	-msse3
 endif
@@ -370,35 +360,8 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
-CONFIG_OFLAGS +=		\
-	-g0
-CONFIG_LDFLAGS +=		\
-	-S
 TARGET_ARCH ?=			\
 	-msse3
-endif
-
-# GCC11 Mode
-# https://justine.lol/compilers/x86_64-linux-musl__x86_64-linux-musl__g++-11.2.0.tar.xz
-ifeq ($(MODE), gcc11)
-ENABLE_FTRACE = 1
-.UNVEIL += rx:/opt/gcc11
-CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O2
-AS = /opt/gcc11/bin/x86_64-linux-musl-as
-CC = /opt/gcc11/bin/x86_64-linux-musl-gcc
-CXX = /opt/gcc11/bin/x86_64-linux-musl-g++
-CXXFILT = /opt/gcc11/bin/x86_64-linux-musl-c++filt
-LD = /opt/gcc11/bin/x86_64-linux-musl-ld.bfd
-NM = /opt/gcc11/bin/x86_64-linux-musl-nm
-GCC = /opt/gcc11/bin/x86_64-linux-musl-gcc
-STRIP = /opt/gcc11/bin/x86_64-linux-musl-strip
-OBJCOPY = /opt/gcc11/bin/x86_64-linux-musl-objcopy
-OBJDUMP = /opt/gcc11/bin/x86_64-linux-musl-objdump
-ADDR2LINE = /opt/gcc11/bin/x86_64-linux-musl-addr2line
-CONFIG_CCFLAGS += $(BACKTRACES) -O2 -Wno-stringop-overread
-CONFIG_CFLAGS += -Wno-old-style-definition
-CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG
-TARGET_ARCH ?= -msse3
 endif
 
 # LLVM Mode
@@ -442,14 +405,11 @@ endif
 # such as MSVC or XCode. You can run your binary objects through a tool
 # like objconv to convert them to COFF or MachO. Then use ANSI mode to
 # rollup one header file that'll enable linkage with minimal issues.
-
 ifeq ($(MODE), ansi)
-
 CONFIG_CFLAGS += -std=c11
 #CONFIG_CPPFLAGS += -ansi
 CONFIG_CXXFLAGS += -std=c++11
 TARGET_ARCH ?= -msse3
-
 endif
 
 ifneq ($(ENABLE_FTRACE),)

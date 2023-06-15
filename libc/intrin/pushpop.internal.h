@@ -4,7 +4,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifdef COSMO
 
-#if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__)
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__) || \
+    !defined(__MNO_RED_ZONE__)
 #define pushpop(x) (x)
 #else
 /**
@@ -32,7 +33,8 @@
   })
 #endif
 
-#if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__)
+#if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__) || \
+    !defined(__MNO_RED_ZONE__)
 #define pushmov(d, x) (*(d) = (x))
 #else
 #define pushmov(d, x)                                       \

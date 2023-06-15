@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 
@@ -28,12 +29,17 @@
  * "You can have any locale you want as long as it's C." -- Henry Ford
  */
 char *setlocale(int category, const char *locale) {
-  if (!locale || (*locale == '\0')) return "C";
-  if (!strcmp(locale, "C") ||      //
-      !strcmp(locale, "POSIX") ||  //
-      !strcmp(locale, "C.UTF-8")) {
-    return locale;
+  char *res;
+  if (!locale || (*locale == '\0')) {
+    res = "C";
+  } else if (!strcmp(locale, "C") ||        //
+             !strcmp(locale, "POSIX") ||    //
+             !strcmp(locale, "C.UTF-8") ||  //
+             !strcmp(locale, "en_US.UTF-8")) {
+    res = locale;
   } else {
-    return NULL;
+    res = NULL;
   }
+  STRACE("setlocale(%d, %#s) → %s", category, locale, res);
+  return res;
 }

@@ -3368,12 +3368,18 @@ int LuaUnix(lua_State *L) {
   lua_setglobal(L, "__signal_handlers");
 
   LoadMagnums(L, kErrnoNames, "");
-  LoadMagnums(L, kOpenFlags, "O_");
   LoadMagnums(L, kSignalNames, "");
   LoadMagnums(L, kIpOptnames, "IP_");
   LoadMagnums(L, kTcpOptnames, "TCP_");
   LoadMagnums(L, kSockOptnames, "SO_");
   LoadMagnums(L, kClockNames, "CLOCK_");
+
+  // open()
+  LuaSetIntField(L, "O_RDONLY", O_RDONLY);
+  LuaSetIntField(L, "O_WRONLY", O_WRONLY);
+  LuaSetIntField(L, "O_RDWR", O_RDWR);
+  LuaSetIntField(L, "O_ACCMODE", O_ACCMODE);
+  LoadMagnums(L, kOpenFlags, "O_");
 
   // seek() whence
   LuaSetIntField(L, "SEEK_SET", SEEK_SET);

@@ -18,10 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
+#define TIOCGSID (IsLinux() ? 0x5429 : 0x40047463)
+
+/**
+ * Returns session id controlling terminal.
+ */
 int tcgetsid(int fd) {
-  int sid;
-  if (sys_ioctl(fd, TIOCGSID, &sid) < 0) return -1;
-  return sid;
+  int rc, sid;
+  rc = sys_ioctl(fd, TIOCGSID, &sid);
+  STRACE("tcgetsid(%d) → %d% m", fd, rc);
+  return rc != -1 ? sid : -1;
 }

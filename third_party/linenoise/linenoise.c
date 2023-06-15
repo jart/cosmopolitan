@@ -821,7 +821,7 @@ struct winsize linenoiseGetTerminalSize(struct winsize ws, int ifd, int ofd) {
   int x;
   ssize_t n;
   char *p, *s, b[16];
-  ioctl(ofd, TIOCGWINSZ, &ws);
+  tcgetwinsize(ofd, &ws);
   if ((!ws.ws_row && (s = getenv("ROWS")) && (x = ParseUnsigned(s, 0)))) {
     ws.ws_row = x;
   }

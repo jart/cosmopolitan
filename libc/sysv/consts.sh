@@ -180,10 +180,7 @@ syscon	compat	SIGIOT					6			6			6			6			6			6			6			6			# PDP-11 feature; same 
 #	open() flags
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			Windoze			Commentary
-syscon	open	O_RDONLY				0			0			0			0			0			0			0			0			# consensus
-syscon	open	O_WRONLY				1			1			1			1			1			1			1			1			# consensus
 syscon	open	O_RDWR					2			2			2			2			2			2			2			2			# consensus
-syscon	open	O_ACCMODE				3			3			3			3			3			3			3			3			# O_RDONLY|O_WRONLY|O_RDWR
 syscon	open	O_APPEND				0x00000400		0x00000400		8			8			8			8			8			0x00000400		# bsd consensus & kNtFileAppendData; won't pose issues w/ mknod(S_IFIFO) [SYNC libc/calls/open-nt.c]
 syscon	open	O_CREAT					0x00000040		0x00000040		0x00000200		0x00000200		0x00000200		0x00000200		0x00000200		0x00000040		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
 syscon	open	O_EXCL					0x00000080		0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
@@ -1324,29 +1321,11 @@ syscon	sched	SCHED_RESET_ON_FORK			0x40000000		0x40000000		0			0			0			0			0			0
 #		= TIOCSETA → About  3,110 results (0.41 seconds)
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	termios	TCGETS					0x5401			0x5401			0x40487413		0x40487413		0x402c7413		0x402c7413		0x402c7413		0			# Gets console settings; tcgetattr(tty, argp) → ioctl(tty, TCGETS, struct termios *argp); polyfilled NT
-syscon	compat	TIOCGETA				0x5401			0x5401			0x40487413		0x40487413		0x402c7413		0x402c7413		0x402c7413		0			# Gets console settings; = tcgetattr(tty, struct termios *argp)
-#syscon	compat	TCGETA					0x5405			0x5405			0			0			0			0			0			0			# Gets console settings; ≈ ioctl(fd, TCGETA, struct termio *argp)
-syscon	termios	TCSANOW					0			0			0			0			0			0			0			0			# Sets console settings; tcsetattr(fd, TCSANOW, argp); polyfilled NT
-syscon	termios	TCSETS					0x5402			0x5402			0x80487414		0x80487414		0x802c7414		0x802c7414		0x802c7414		0x5402			# Sets console settings; = ioctl(tty, TCSETS, const struct termios *argp); polyfilled NT
-syscon	compat	TIOCSETA				0x5402			0x5402			0x80487414		0x80487414		0x802c7414		0x802c7414		0x802c7414		0x5402			# Sets console settings; = ioctl(tty, TIOCSETA, const struct termios *argp); polyfilled NT
-#syscon	compat	TCSETA					0x5402			0x5402			0x80487414		0x80487414		0x802c7414		0x802c7414		0x802c7414		0x5402			# Sets console settings; ≈ ioctl(tty, TCSETA, const struct termio *argp); polyfilled NT
-syscon	termios	TCSADRAIN				1			1			1			1			1			1			1			1			# Drains output & sets console settings; tcsetawttr(fd, TCSADRAIN, argp); polyfilled NT
-syscon	termios	TCSETSW					0x5403			0x5403			0x80487415		0x80487415		0x802c7415		0x802c7415		0x802c7415		0x5403			# Drains output & sets console settings; = ioctl(tty, TCSETSW, const struct termios *argp); polyfilled NT
-syscon	compat	TIOCSETAW				0x5403			0x5403			0x80487415		0x80487415		0x802c7415		0x802c7415		0x802c7415		0x5403			# Drains output & sets console settings; = ioctl(tty, TIOCSETAW, const struct termios *argp); polyfilled NT
-#syscon	compat	TCSETAW					0x5403			0x5403			0x80487415		0x80487415		0x802c7415		0x802c7415		0x802c7415		0x5403			# Drains output & sets console settings; ≈ ioctl(tty, TCSETAW, const struct termio *argp); polyfilled NT
-syscon	termios	TCSAFLUSH				2			2			2			2			2			2			2			2			# Drops input & drains output & sets console settings; tcsetafttr(fd, TCSAFLUSH, argp); polyfilled NT
-syscon	termios	TCSETSF					0x5404			0x5404			0x80487416		0x80487416		0x802c7416		0x802c7416		0x802c7416		0x5404			# Drops input & drains output & sets console settings; = ioctl(tty, TCSETSF, const struct termios *argp); polyfilled NT
-syscon	compat	TIOCSETAF				0x5404			0x5404			0x80487416		0x80487416		0x802c7416		0x802c7416		0x802c7416		0x5402			# Drops input & drains output & sets console settings; = ioctl(tty, TIOCSETAF, const struct termios *argp); polyfilled NT
-#syscon	compat	TCSETAF					0x5404			0x5404			0x80487416		0x80487416		0x802c7416		0x802c7416		0x802c7416		0x5402			# Drops input & drains output & sets console settings; ≈ ioctl(tty, TCSETAF, const struct termio *argp); polyfilled NT
 syscon	termios	TIOCGWINSZ				0x5413			0x5413			1074295912		1074295912		1074295912		1074295912		1074295912		0x5413			# ioctl(tty, TIOCGWINSZ, struct winsize *argp); polyfilled NT
 syscon	termios	TIOCSWINSZ				0x5414			0x5414			0x80087467		0x80087467		0x80087467		0x80087467		0x80087467		0x5414			# ioctl(tty, TIOCSWINSZ, const struct winsize *argp) (faked NT)
 syscon	termios	TIOCINQ					0x541b			0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# [Linuxism] same as FIONREAD
 syscon	termios	TIOCOUTQ				0x5411			0x5411			0x40047473		0x40047473		0x40047473		0x40047473		0x40047473		0			# get # bytes queued in TTY's output buffer ioctl(tty, TIOCSWINSZ, const struct winsize *argp)
-syscon	termios	TIOCGPGRP				0x540f			0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0x40047477		0			# tcgetpgrp(): get pgrp of tty
 syscon	termios	TIOCSPGRP				0x5410			0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0x80047476		0			# tcsetpgrp(): set pgrp of tty
-syscon	termios	TIOCSBRK				0x5427			0x5427			0x2000747b		0x2000747b		0x2000747b		0x2000747b		0x2000747b		0			# set break bit
-syscon	termios	TIOCCBRK				0x5428			0x5428			0x2000747a		0x2000747a		0x2000747a		0x2000747a		0x2000747a		0			# boop
 syscon	termios	TIOCCONS				0x541d			0x541d			0x80047462		0x80047462		0x80047462		0x80047462		0x80047462		0			# boop
 syscon	termios	TIOCGETD				0x5424			0x5424			0x4004741a		0x4004741a		0x4004741a		0x4004741a		0x4004741a		0			# boop
 syscon	termios	TIOCNOTTY				0x5422			0x5422			0x20007471		0x20007471		0x20007471		0x20007471		0x20007471		0			# boop
@@ -1354,44 +1333,7 @@ syscon	termios	TIOCNXCL				0x540d			0x540d			0x2000740e		0x2000740e		0x2000740e	
 syscon	termios	TIOCSCTTY				0x540e			0x540e			0x20007461		0x20007461		0x20007461		0x20007461		0x20007461		0			# makes terminal controlling terminal of calling process (see login_tty)
 syscon	termios	TIOCSETD				0x5423			0x5423			0x8004741b		0x8004741b		0x8004741b		0x8004741b		0x8004741b		0			# boop
 syscon	termios	TIOCSIG					0x40045436		0x40045436		0x2000745f		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
-syscon	termios	TIOCSTI					0x5412			0x5412			0x80017472		0x80017472		0x80017472		0			0			0			# boop
-syscon	termios	TIOCGSID				0x5429			0x5429			0x40047463		0x40047463		0x40047463		0x40047463		0x40047463		0			# boop
-syscon	termios	TABLDISC				0			0			0x3			0x3			0			0x3			0x3			0			# boop
-syscon	termios	SLIPDISC				0			0			0x4			0x4			0x4			0x4			0x4			0			# boop
-syscon	termios	PPPDISC					0			0			0x5			0x5			0x5			0x5			0x5			0			# boop
-syscon	termios	TCSBRK					0x5409			0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TIOCDRAIN on BSD; TIOCDRAIN on BSD
-syscon	termios	TIOCSTAT				0			0			0x20007465		0x20007465		0x20007465		0x20007465		0x20007465		0			# boop
-syscon	termios	TIOCSTART				0			0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# boop
-syscon	termios	TIOCCDTR				0			0			0x20007478		0x20007478		0x20007478		0x20007478		0x20007478		0			# clear data terminal ready
-syscon	termios	TIOCSDTR				0			0			0x20007479		0x20007479		0x20007479		0x20007479		0x20007479		0			# boop
-syscon	termios	TIOCEXT					0			0			0x80047460		0x80047460		0x80047460		0x80047460		0x80047460		0			# boop
-syscon	termios	TIOCGDRAINWAIT				0			0			0x40047456		0x40047456		0x40047456		0			0			0			# boop
-syscon	termios	TIOCTIMESTAMP				0			0			0x40107459		0x40107459		0x40107459		0			0			0			# boop
-syscon	termios	TIOCSDRAINWAIT				0			0			0x80047457		0x80047457		0x80047457		0			0			0			# boop
-syscon	termios	TIOCREMOTE				0			0			0x80047469		0x80047469		0			0x80047469		0x80047469		0			# boop
-syscon	termios	TTYDISC					0			0			0			0			0			0			0			0			# boop
-syscon	termios	TIOCFLAG_SOFTCAR			0			0			0			0			0			0x1			0x1			0			# boop
-syscon	termios	TIOCFLAG_PPS				0			0			0			0			0			0x10			0x10			0			# boop
-syscon	termios	TIOCFLAG_CLOCAL				0			0			0			0			0			0x2			0x2			0			# boop
-syscon	termios	TIOCCHKVERAUTH				0			0			0			0			0			0x2000741e		0x2000741e		0			# boop
-syscon	termios	TIOCGFLAGS				0			0			0			0			0			0x4004745d		0x4004745d		0			# boop
-syscon	termios	TIOCGTSTAMP				0			0			0			0			0			0x4010745b		0x4010745b		0			# boop
-syscon	termios	STRIPDISC				0			0			0			0			0			0x6			0x6			0			# boop
-syscon	termios	NMEADISC				0			0			0			0			0			0x7			0x7			0			# boop
-syscon	termios	TIOCUCNTL_CBRK				0			0			0			0			0			0x7a			0x7a			0			# boop
-syscon	termios	TIOCFLAG_MDMBUF				0			0			0			0			0			0x8			0x8			0			# boop
-syscon	termios	TIOCSETVERAUTH				0			0			0			0			0			0x8004741c		0x8004741c		0			# boop
-syscon	termios	TIOCSFLAGS				0			0			0			0			0			0x8004745c		0x8004745c		0			# boop
-syscon	termios	TIOCSTSTAMP				0			0			0			0			0			0x8008745a		0x8008745a		0			# boop
-syscon	termios	ENDRUNDISC				0			0			0			0			0			0x9			0x9			0			# boop
-syscon	termios	TIOCPTMASTER				0			0			0			0			0x2000741c		0			0			0			# boop
-syscon	termios	TIOCPTYGRANT				0			0			0x20007454		0x20007454		0			0			0			0			# xnu grantpt()
-syscon	termios	TIOCPTYUNLK				0			0			0x20007452		0x20007452		0			0			0			0			# xnu unlockpt()
-syscon	termios	TIOCPTYGNAME				0			0			0x40807453		0x40807453		0			0			0			0			# xnu ptyname()
-syscon	termios	TIOCPTSNAME				0			0			0			0			0			0			0x48087448		0			# netbsd ptyname()
-syscon	termios	FIODGNAME				0			0			0			0			0x80106678		0			0			0			# freebsd ptsname_r()
-syscon	termios	NETGRAPHDISC				0			0			0			0			0x6			0			0			0			# boop
-syscon	termios	H4DISC					0			0			0			0			0x7			0			0			0			# boop
+syscon	termios	TIOCSTI					0x5412			0x5412			0x80017472		0x80017472		0x80017472		0			0x80017472		0			# boop
 
 #	Teletypewriter Control Modes
 #
@@ -1406,7 +1348,9 @@ syscon	termios	CREAD					0b0000000010000000	0b0000000010000000	0b000000100000000
 syscon	termios	PARENB					0b0000000100000000	0b0000000100000000	0b000001000000000000	0b000001000000000000	0b000001000000000000	0b0001000000000000	0b0001000000000000	0b0000000100000000	# termios.c_cflag
 syscon	termios	PARODD					0b0000001000000000	0b0000001000000000	0b000010000000000000	0b000010000000000000	0b000010000000000000	0b0010000000000000	0b0010000000000000	0b0000001000000000	# termios.c_cflag
 syscon	termios	HUPCL					0b0000010000000000	0b0000010000000000	0b000100000000000000	0b000100000000000000	0b000100000000000000	0b0100000000000000	0b0100000000000000	0b0000010000000000	# termios.c_cflag; bsd consensus
-syscon	termios	CLOCAL					0b0000100000000000	0b0000100000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b0000100000000000	# termios.c_cflag; consensus
+syscon	termios	CLOCAL					0b0000100000000000	0b0000100000000000	0b001000000000000000	0b001000000000000000	0b001000000000000000	0b1000000000000000	0b1000000000000000	0b0000100000000000	# termios.c_cflag; consensus
+syscon	termios	CMSPAR					0x40000000		0x40000000		0			0			0			0			0			0			# termios.c_cflag; not in POSIX
+syscon	termios	CRTSCTS					0x80000000		0x80000000		0x00030000		0x00030000		0x00030000		0x00010000		0x00010000		0x80000000		# termios.c_cflag
 
 #	Teletypewriter Local Modes
 #
@@ -1459,29 +1403,23 @@ syscon	termios	ONLRET					0b0000000000100000	0b0000000000100000	0b00000000000100
 syscon	termios	OFILL					0b0000000001000000	0b0000000001000000	0b000000000010000000	0b000000000010000000	0			0			0			0b0000000001000000	# termios.c_oflag
 syscon	termios	OFDEL					0b0000000010000000	0b0000000010000000	0b100000000000000000	0b100000000000000000	0			0			0			0b0000000010000000	# termios.c_oflag
 syscon	termios	NLDLY					0b0000000100000000	0b0000000100000000	0b000000001100000000	0b000000001100000000	0b000000001100000000	0			0			0b0000000100000000	# (termios.c_oflag & NLDLY) ∈ {NL0,NL1,NL2,NL3}
-syscon	termios	  NL0					0b0000000000000000	0b0000000000000000	0b000000000000000000	0b000000000000000000	0b000000000000000000	0			0b000000000000000000	0b0000000000000000	# (termios.c_oflag & NLDLY) == NL0
 syscon	termios	  NL1					0b0000000100000000	0b0000000100000000	0b000000000100000000	0b000000000100000000	0b000000000100000000	0			0b000000000100000000	0b0000000100000000	# (termios.c_oflag & NLDLY) == NL1
 syscon	termios	  NL2					0			0			0b000000001000000000	0b000000001000000000	0b000000001000000000	0			0b000000001000000000	0			# (termios.c_oflag & NLDLY) == NL2
 syscon	termios	  NL3					0			0			0b000000001100000000	0b000000001100000000	0b000000001100000000	0			0b000000001100000000	0			# (termios.c_oflag & NLDLY) == NL3
 syscon	termios	CRDLY					0b0000011000000000	0b0000011000000000	0b000011000000000000	0b000011000000000000	0b000011000000000000	0			0			0b0000011000000000	# (termios.c_oflag & CRDLY) ∈ {CR0,CR1,CR2,CR3}
-syscon	termios	  CR0					0b0000000000000000	0b0000000000000000	0b000000000000000000	0b000000000000000000	0b000000000000000000	0			0b000000000000000000	0b0000000000000000	# (termios.c_oflag & CRDLY) == CR0
 syscon	termios	  CR1					0b0000001000000000	0b0000001000000000	0b000001000000000000	0b000001000000000000	0b000001000000000000	0			0b000001000000000000	0b0000001000000000	# (termios.c_oflag & CRDLY) == CR1
 syscon	termios	  CR2					0b0000010000000000	0b0000010000000000	0b000010000000000000	0b000010000000000000	0b000010000000000000	0			0b000000010000000000	0b0000010000000000	# (termios.c_oflag & CRDLY) == CR2
 syscon	termios	  CR3					0b0000011000000000	0b0000011000000000	0b000011000000000000	0b000011000000000000	0b000011000000000000	0			0b000000011000000000	0b0000011000000000	# (termios.c_oflag & CRDLY) == CR3
 syscon	termios	TABDLY					0b0001100000000000	0b0001100000000000	0b000000110000000100	0b000000110000000100	0b000000000000000100	0			0			0b0001100000000000	# (termios.c_oflag & TABDLY) ∈ {TAB0,TAB1,TAB2,TAB3,XTABS}
-syscon	termios	  TAB0					0b0000000000000000	0b0000000000000000	0b000000000000000000	0b000000000000000000	0b000000000000000000	0			0b000000000000000000	0b0000000000000000	# (termios.c_oflag & TABDLY) == TAB0
 syscon	termios	  TAB1					0b0000100000000000	0b0000100000000000	0b000000010000000000	0b000000010000000000	0b000000010000000000	0			0b000000010000000000	0b0000100000000000	# (termios.c_oflag & TABDLY) == TAB1
 syscon	termios	  TAB2					0b0001000000000000	0b0001000000000000	0b000000100000000000	0b000000100000000000	0b000000100000000000	0			0b000000100000000000	0b0001000000000000	# (termios.c_oflag & TABDLY) == TAB2
 syscon	termios	  TAB3					0b0001100000000000	0b0001100000000000	0b000000000000000100	0b000000000000000100	0b000000000000000100	0			0b000000000000000100	0b0001100000000000	# (termios.c_oflag & TABDLY) == TAB3
 syscon	termios	  XTABS					0b0001100000000000	0b0001100000000000	0b000000110000000000	0b000000110000000000	0b000000110000000000	0			0b000000110000000000	0b0001100000000000	# (termios.c_oflag & TABDLY) == XTABS
 syscon	termios	BSDLY					0b0010000000000000	0b0010000000000000	0b001000000000000000	0b001000000000000000	0b001000000000000000	0			0			0b0010000000000000	# termios.c_oflag
-syscon	termios	  BS0					0b0000000000000000	0b0000000000000000	0b000000000000000000	0b000000000000000000	0b000000000000000000	0			0			0b0000000000000000	# termios.c_oflag
 syscon	termios	  BS1					0b0010000000000000	0b0010000000000000	0b001000000000000000	0b001000000000000000	0b001000000000000000	0			0			0b0010000000000000	# termios.c_oflag
 syscon	termios	VTDLY					0b0100000000000000	0b0100000000000000	0b010000000000000000	0b010000000000000000	0b010000000000000000	0			0			0b0100000000000000	# termios.c_oflag
-syscon	termios	  VT0					0b0000000000000000	0b0000000000000000	0b000000000000000000	0b000000000000000000	0b000000000000000000	0			0			0b0000000000000000	# termios.c_oflag
 syscon	termios	  VT1					0b0100000000000000	0b0100000000000000	0b010000000000000000	0b010000000000000000	0b010000000000000000	0			0			0b0100000000000000	# termios.c_oflag
 syscon	termios	FFDLY					0b1000000000000000	0b1000000000000000	0b000100000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
-syscon	termios	  FF0					0b0000000000000000	0b0000000000000000	0b000000000000000000	0b000000000000000000	0b000000000000000000	0			0			0b0000000000000000	# termios.c_oflag
 syscon	termios	  FF1					0b1000000000000000	0b1000000000000000	0b000100000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
 
 #	Teletypewriter Special Control Character Assignments
@@ -1489,7 +1427,6 @@ syscon	termios	  FF1					0b1000000000000000	0b1000000000000000	0b000100000000000
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	VMIN					6+1			6+1			16			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
 syscon	termios	VTIME					5+1			5+1			17			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
-syscon	termios	NCCS					20			20			20			20			20			20			20			20			# ARRAYLEN(termios.c_cc); we schlep c_line into c_cc on linux
 syscon	termios	VINTR					0+1			0+1			8			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
 syscon	termios	VQUIT					1+1			1+1			9			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
 syscon	termios	VERASE					2+1			2+1			3			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
@@ -1505,35 +1442,11 @@ syscon	termios	VDISCARD				13+1			13+1			15			15			15			15			15			13			# termios
 syscon	termios	VWERASE					14+1			14+1			4			4			4			4			4			14			# termios.c_cc[VWERASE]=𝑥
 syscon	termios	VLNEXT					15+1			15+1			14			14			14			14			14			15			# termios.c_cc[VLNEXT]=𝑥
 syscon	termios	VEOL2					16+1			16+1			2			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
+syscon	termios	_POSIX_VDISABLE				0			0			255			255			255			255			255			0			# termios.c_cc tombstone value
 
-syscon	termios	TIOCSERGETLSR				0x5459			0x5459			0			0			0			0			0			0			#
-syscon	termios	TIOCSERGETMULTI				0x545a			0x545a			0			0			0			0			0			0			#
-syscon	termios	TIOCSERSETMULTI				0x545b			0x545b			0			0			0			0			0			0			#
-syscon	termios	TIOCSER_TEMT				1			1			0			0			0			0			0			0			#
-syscon	termios	VERIFY					47			47			0			0			0			0			0			0
-syscon	termios	CIBAUD					0x100f0000		0x100f0000		0			0			0			0			0			0
-syscon	termios	CMSPAR					0x40000000		0x40000000		0			0			0			0			0			0
-syscon	termios	BUSY					4			4			0			0			0			0			0			0
-syscon	termios	CBAUD					0x100f			0x100f			0			0			0			0			0			0
-syscon	termios	CBAUDEX					0x1000			0x1000			0			0			0			0			0			0
-syscon	termios	EXTA					14			14			0x4b00			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd consensus
-syscon	termios	EXTB					15			15			0x9600			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
-syscon	termios	ERA					0x02002c		0x02002c		45			45			45			0			0			0
-syscon	termios	EMPTY					0			0			0			0			0			0			0			0			# consensus
-
-syscon	termios	TCFLSH					0x540b			0x540b			0x80047410		0x80047410		0x80047410		0x80047410		0x80047410		0			# see tcflush; TIOCFLUSH on BSD
-syscon	termios	TIOCFLUSH				0x540b			0x540b			0x80047410		0x80047410		0x80047410		0x80047410		0x80047410		0			# see tcflush; TCFLSH on Linux
-syscon	termios	TCIFLUSH				0			0			1			1			1			1			1			0			# see tcflush; bsd consensus; faked nt
-syscon	termios	TCOFLUSH				1			1			2			2			2			2			2			1			# see tcflush; bsd consensus; faked nt
-syscon	termios	TCIOFLUSH				2			2			3			3			3			3			3			2			# see tcflush; bsd consensus; faked nt
-
-syscon	termios	TCXONC					0x540A			0x540A			0			0			0			0			0			0			# see tcflow
-syscon	termios	TIOCSTOP				0x540A			0x540A			0x2000746f		0x2000746f		0x2000746f		0x2000746f		0x2000746f		0			# see tcflow
-syscon	termios	TIOCSTART				0x540A			0x540A			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# see tcflow
-syscon	termios	TCOOFF					0			0			1			1			1			1			1			0			# see tcflow; bsd consensus
-syscon	termios	TCOON					1			1			2			2			2			2			2			1			# see tcflow; bsd consensus
-syscon	termios	TCIOFF					2			2			3			3			3			3			3			2			# see tcflow; bsd consensus
-syscon	termios	TCION					3			3			4			4			4			4			4			3			# see tcflow; bsd consensus
+syscon	termios	TCIFLUSH				0			0			1			1			1			1			1			0			# see tcflush; FREAD on BSD; faked nt
+syscon	termios	TCOFLUSH				1			1			2			2			2			2			2			1			# see tcflush; FWRITE on BSD; faked nt
+syscon	termios	TCIOFLUSH				2			2			3			3			3			3			3			2			# see tcflush; FREAD|FWRITE on BSD; faked nt
 
 syscon	termios	CSTART					17			17			17			17			17			17			17			0			# unix consensus
 syscon	termios	CSTOP					19			19			19			19			19			19			19			0			# unix consensus
@@ -1552,7 +1465,6 @@ syscon	pty	TIOCPKT_START				8			8			8			8			8			8			8			8			# unix consensus
 syscon	pty	TIOCPKT_NOSTOP				16			16			16			16			16			16			16			16			# unix consensus
 syscon	pty	TIOCPKT_DOSTOP				32			32			32			32			32			32			32			32			# unix consensus
 syscon	pty	TIOCPKT_IOCTL				64			64			64			64			64			64			64			64			# unix consensus
-syscon	pty	PTMGET					0			0			0			0			0			0x40287401		0x40287401		-1			# for /dev/ptm
 
 #	Modem Control
 #

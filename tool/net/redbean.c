@@ -31,6 +31,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
@@ -6606,7 +6607,7 @@ static int MemoryMonitor(void *arg, int tid) {
   pthread_spin_lock(&shared->montermlock);
   if (!id) {
     if ((tty = open(monitortty, O_RDWR | O_NOCTTY)) != -1) {
-      ioctl(tty, TCGETS, &oldterm);
+      tcgetattr(tty, &oldterm);
       term = oldterm;
       term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
       term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
@@ -6615,7 +6616,7 @@ static int MemoryMonitor(void *arg, int tid) {
       term.c_cflag |= CS8;
       term.c_cc[VMIN] = 1;
       term.c_cc[VTIME] = 0;
-      ioctl(tty, TCSETS, &term);
+      tcsetattr(tty, TCSANOW, &term);
       WRITE(tty, "\e[?25l", 6);
     }
   }
@@ -6658,7 +6659,7 @@ static int MemoryMonitor(void *arg, int tid) {
 
         ws.ws_col = 80;
         ws.ws_row = 40;
-        _getttysize(tty, &ws);
+        tcgetwinsize(tty, &ws);
 
         appendr(&b, 0);
         appends(&b, "\e[H\e[1m");
@@ -6718,7 +6719,7 @@ static int MemoryMonitor(void *arg, int tid) {
       appendr(&b, 0);
       appends(&b, "\e[H\e[J\e[?25h");
       WRITE(tty, b, appendz(b).i);
-      ioctl(tty, TCSETS, &oldterm);
+      tcsetattr(tty, TCSANOW, &oldterm);
     }
 
     DEBUGF("(memv) exiting...");

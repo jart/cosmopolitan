@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/argon2/argon2.h"
 #include "libc/dce.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "net/https/https.h"
-#include "third_party/argon2/argon2.h"
 
 TEST(argon2, testArgon2ReadmeExample) {
   uint8_t hash[24];

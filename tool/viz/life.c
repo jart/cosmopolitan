@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
@@ -712,7 +713,7 @@ static void GetTtySize(void) {
   struct winsize wsize;
   wsize.ws_row = tyn + 1;
   wsize.ws_col = txn;
-  _getttysize(out, &wsize);
+  tcgetwinsize(out, &wsize);
   tyn = wsize.ws_row - 1;
   txn = wsize.ws_col;
   right = left + txn;
@@ -729,14 +730,14 @@ static void EnableRaw(void) {
   term.c_cflag &= ~(CSIZE | PARENB);
   term.c_cflag |= CS8;
   term.c_iflag |= IUTF8;
-  ioctl(out, TCSETS, &term);
+  tcsetattr(out, TCSANOW, &term);
 }
 
 static void OnExit(void) {
   LeaveScreen();
   ShowTtyCursor();
   DisableMouse();
-  ioctl(out, TCSETS, &oldterm);
+  tcsetattr(out, TCSANOW, &oldterm);
 }
 
 static void OnSigInt(int sig) {
@@ -1101,7 +1102,7 @@ static bool ShouldDraw(void) {
 static void Tui(void) {
   GetTtySize();
   Dimension();
-  ioctl(out, TCGETS, &oldterm);
+  tcgetattr(out, &oldterm);
   HideTtyCursor();
   EnableRaw();
   EnableMouse();

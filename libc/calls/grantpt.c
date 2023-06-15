@@ -22,7 +22,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 
-extern const unsigned TIOCPTYGRANT;
+#define TIOCPTYGRANT 0x20007454
 
 /**
  * Grants access to subordinate pseudoteletypewriter.

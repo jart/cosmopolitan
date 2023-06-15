@@ -20,7 +20,7 @@
 #include "libc/dce.h"
 
 void *__termios2host(union metatermios *mt, const struct termios *lt) {
-  if (!IsXnu() && !IsFreebsd() && !IsOpenbsd() && !IsNetbsd()) {
+  if (!IsBsd()) {
     return (/*unconst*/ void *)lt;
   } else if (IsXnu()) {
     COPY_TERMIOS(&mt->xnu, lt);

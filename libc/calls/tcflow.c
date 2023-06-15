@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -32,6 +33,13 @@
 #define kNtPurgeTxabort 1
 #define kNtPurgeRxabort 2
 
+#define TCXONC    0x0000540A  // linux
+#define TIOCGETA  0x40487413  // bsd
+#define TIOCSTOP  0x2000746f  // bsd
+#define TIOCSTART 0x2000746e  // bsd
+#define TIOCIXON  0x20007481  // xnu
+#define TIOCIXOFF 0x20007480  // xnu
+
 static const char *DescribeFlow(char buf[12], int action) {
   if (action == TCOOFF) return "TCOOFF";
   if (action == TCOON) return "TCOON";
@@ -41,18 +49,41 @@ static const char *DescribeFlow(char buf[12], int action) {
   return buf;
 }
 
-static int sys_tcflow_bsd(int fd, int action) {
-  int rc;
-  uint8_t c;
-  struct termios t;
-  if (action == TCOOFF) return sys_ioctl(fd, TIOCSTOP, 0);
-  if (action == TCOON) return sys_ioctl(fd, TIOCSTART, 0);
-  if (action != TCIOFF && action != TCION) return einval();
-  if (sys_ioctl(fd, TCGETS, &t) == -1) return -1;
-  c = t.c_cc[action == TCIOFF ? VSTOP : VSTART];
-  if (c == 255) return 0;  // code is disabled
-  if (sys_write(fd, &c, 1) == -1) return -1;
+static int sys_tcflow_bsd_write(int fd, int cc) {
+  unsigned char c;
+  struct termios_bsd term;
+  if (sys_ioctl(fd, TIOCGETA, &term) == -1) {
+    return -1;
+  }
+  if ((c = term.c_cc[cc]) != _POSIX_VDISABLE &&
+      sys_write(fd, &c, sizeof(c)) == -1) {
+    return -1;
+  }
   return 0;
+}
+
+static int sys_tcflow_bsd(int fd, int action) {
+  switch (action) {
+    case TCOOFF:
+      return sys_ioctl(fd, TIOCSTOP, 0);
+    case TCOON:
+      return sys_ioctl(fd, TIOCSTART, 0);
+    case TCION:
+      if (IsXnu()) {
+        return sys_ioctl(fd, TIOCIXON, 0);
+      } else {
+        return sys_tcflow_bsd_write(fd, VSTART);
+      }
+    case TCIOFF:
+      if (IsXnu()) {
+        return sys_ioctl(fd, TIOCIXOFF, 0);
+      } else {
+        return sys_tcflow_bsd_write(fd, VSTOP);
+      }
+      return 0;
+    default:
+      return einval();
+  }
 }
 
 static dontinline textwindows int sys_tcflow_nt(int fd, int action) {
@@ -60,14 +91,19 @@ static dontinline textwindows int sys_tcflow_nt(int fd, int action) {
   int64_t h;
   if (!__isfdopen(fd)) return ebadf();
   h = g_fds.p[fd].handle;
-  if (action == TCOOFF) {
-    ok = PurgeComm(h, kNtPurgeTxabort);
-  } else if (action == TCIOFF) {
-    ok = PurgeComm(h, kNtPurgeRxabort);
-  } else if (action == TCOON || action == TCION) {
-    ok = ClearCommBreak(h);
-  } else {
-    return einval();
+  switch (action) {
+    case TCOON:
+    case TCION:
+      ok = ClearCommBreak(h);
+      break;
+    case TCOOFF:
+      ok = PurgeComm(h, kNtPurgeTxabort);
+      break;
+    case TCIOFF:
+      ok = PurgeComm(h, kNtPurgeRxabort);
+      break;
+    default:
+      return einval();
   }
   return ok ? 0 : __winerr();
 }
@@ -92,14 +128,14 @@ static dontinline textwindows int sys_tcflow_nt(int fd, int action) {
  */
 int tcflow(int fd, int action) {
   int rc;
-  if (IsMetal()) {
-    rc = enosys();
+  if (IsLinux()) {
+    rc = sys_ioctl(fd, TCXONC, action);
   } else if (IsBsd()) {
-    rc = sys_ioctl(fd, TCXONC, action);
-  } else if (!IsWindows()) {
-    rc = sys_ioctl(fd, TCXONC, action);
-  } else {
+    rc = sys_tcflow_bsd(fd, action);
+  } else if (IsWindows()) {
     rc = sys_tcflow_nt(fd, action);
+  } else {
+    rc = enosys();
   }
   STRACE("tcflow(%d, %s) → %d% m", fd, DescribeFlow(alloca(12), action), rc);
   return rc;

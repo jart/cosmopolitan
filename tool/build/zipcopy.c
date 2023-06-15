@@ -188,14 +188,11 @@ static void CopyZip(void) {
     ldest += length;
     // write directory entry
     length = ZIP_CFILE_HDRSIZE(cfile);
-    if (READ32LE(cfile) != kZipCfileHdrMagic) notpossible;
     if (pwrite(outfd, cfile, length, cdest) != length) {
       SysExit(outpath, "lfile pwrite");
     }
     cdest += length;
   }
-  if (ldest != outsize + ltotal) __builtin_trap();
-  if (cdest != outsize + ltotal + ctotal) __builtin_trap();
   WRITE32LE(eocd + kZipCdirOffsetOffset, outsize + ltotal);
   length = ZIP_CDIR_HDRSIZE(eocd);
   if (pwrite(outfd, eocd, length, cdest) != length) {

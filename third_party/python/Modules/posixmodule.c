@@ -10479,7 +10479,7 @@ get_terminal_size(PyObject *self, PyObject *args)
      */
     if (!PyArg_ParseTuple(args, "|i", &fd))
         return NULL;
-    if (ioctl(fd, TIOCGWINSZ, &w))
+    if (tcgetwinsize(fd, &w))
         return PyErr_SetFromErrno(PyExc_OSError);
     columns = w.ws_col;
     lines = w.ws_row;

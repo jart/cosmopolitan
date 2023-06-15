@@ -27,7 +27,10 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows int sys_tcdrain_nt(int fd) {
+#define TCSBRK    0x5409      // linux
+#define TIOCDRAIN 0x2000745e  // xnu, freebsd, openbsd, netbsd
+
+static dontinline textwindows int sys_tcdrain_nt(int fd) {
   if (!__isfdopen(fd)) return ebadf();
   if (_check_interrupts(false, g_fds.p)) return -1;
   if (!FlushFileBuffers(g_fds.p[fd].handle)) return __winerr();
@@ -40,7 +43,7 @@ static textwindows int sys_tcdrain_nt(int fd) {
  * @param fd is file descriptor of tty
  * @raise EBADF if `fd` isn't an open file descriptor
  * @raise ENOTTY if `fd` is open but not a teletypewriter
- * @raise EIO if process group of writer is orphoned, calling thread is
+ * @raise EIO if process group of writer is orphaned, calling thread is
  *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
@@ -51,12 +54,14 @@ static textwindows int sys_tcdrain_nt(int fd) {
 int tcdrain(int fd) {
   int rc;
   BEGIN_CANCELLATION_POINT;
-  if (IsMetal()) {
-    rc = enosys();
-  } else if (!IsWindows()) {
-    rc = sys_ioctl_cp(fd, TCSBRK, (void *)(intptr_t)1);
-  } else {
+  if (IsLinux()) {
+    rc = sys_ioctl_cp(fd, TCSBRK, (uintptr_t)1);
+  } else if (IsBsd()) {
+    rc = sys_ioctl_cp(fd, TIOCDRAIN, 0);
+  } else if (IsWindows()) {
     rc = sys_tcdrain_nt(fd);
+  } else {
+    rc = enosys();
   }
   END_CANCELLATION_POINT;
   STRACE("tcdrain(%d) → %d% m", fd, rc);

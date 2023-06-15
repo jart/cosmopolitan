@@ -32,6 +32,8 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+#define FIODGNAME 0x80106678  // freebsd
+
 static textwindows dontinline int sys_ttyname_nt(int fd, char *buf,
                                                  size_t size) {
   uint32_t mode;
@@ -49,7 +51,6 @@ static textwindows dontinline int sys_ttyname_nt(int fd, char *buf,
 }
 
 static int ttyname_freebsd(int fd, char *buf, size_t size) {
-  const unsigned FIODGNAME = 2148558456;
   struct fiodgname_arg {
     int len;
     void *buf;

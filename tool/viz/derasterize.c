@@ -453,8 +453,8 @@ static void GetTermSize(unsigned out_rows[1], unsigned out_cols[1]) {
   struct winsize ws;
   ws.ws_row = 24;
   ws.ws_col = 80;
-  if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) == -1) {
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+  if (tcgetwinsize(STDIN_FILENO, &ws) == -1) {
+    tcgetwinsize(STDOUT_FILENO, &ws);
   }
   out_rows[0] = ws.ws_row;
   out_cols[0] = ws.ws_col;

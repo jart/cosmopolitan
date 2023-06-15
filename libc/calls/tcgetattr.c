@@ -16,21 +16,56 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ioctl.h"
-#include "libc/calls/termios.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/termios.internal.h"
+#include "libc/calls/ttydefaults.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
+
+#define TCGETS   0x00005401  // linux
+#define TIOCGETA 0x40487413  // bsd
+
+int tcgetattr_nt(int, struct termios *);
+
+static int tcgetattr_metal(int fd, struct termios *tio) {
+  bzero(tio, sizeof(*tio));
+  tio->c_iflag = TTYDEF_IFLAG;
+  tio->c_oflag = TTYDEF_OFLAG;
+  tio->c_lflag = TTYDEF_LFLAG;
+  tio->c_cflag = TTYDEF_CFLAG;
+  return 0;
+}
+
+static int tcgetattr_bsd(int fd, struct termios *tio) {
+  int rc;
+  union metatermios mt;
+  if ((rc = sys_ioctl(fd, TIOCGETA, &mt)) != -1) {
+    if (IsXnu()) {
+      COPY_TERMIOS(tio, &mt.xnu);
+    } else {
+      COPY_TERMIOS(tio, &mt.bsd);
+    }
+  }
+  return rc;
+}
 
 /**
  * Obtains the termios struct.
  *
- * Here are the general defaults you can expect across platforms:
+ * Here are the approximate defaults you can expect across platforms:
  *
  *     c_iflag        = ICRNL IXON
  *     c_oflag        = OPOST ONLCR NL0 CR0 TAB0 BS0 VT0 FF0
  *     c_cflag        = ISIG CREAD CS8
  *     c_lflag        = ISIG ICANON ECHO ECHOE ECHOK IEXTEN ECHOCTL ECHOKE
- *     c_ispeed       = 38400
- *     c_ospeed       = 38400
+ *     cfgetispeed()  = B38400
+ *     cfgetospeed()  = B38400
  *     c_cc[VINTR]    = CTRL-C
  *     c_cc[VQUIT]    = CTRL-\   # ignore this comment
  *     c_cc[VERASE]   = CTRL-?
@@ -54,6 +89,25 @@
  * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
  */
-int(tcgetattr)(int fd, struct termios *tio) {
-  return ioctl(fd, TCGETS, tio);
+int tcgetattr(int fd, struct termios *tio) {
+  int rc;
+  if (fd < 0) {
+    rc = einval();
+  } else if (!tio || (IsAsan() && !__asan_is_valid(tio, sizeof(*tio)))) {
+    rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsLinux()) {
+    rc = sys_ioctl(fd, TCGETS, tio);
+  } else if (IsBsd()) {
+    rc = tcgetattr_bsd(fd, tio);
+  } else if (IsMetal()) {
+    rc = tcgetattr_metal(fd, tio);
+  } else if (IsWindows()) {
+    rc = tcgetattr_nt(fd, tio);
+  } else {
+    rc = enosys();
+  }
+  STRACE("tcgetattr(%d, %p) → %d% m", fd, tio, rc);
+  return rc;
 }

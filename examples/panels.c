@@ -12,6 +12,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/log/check.h"
 #include "libc/log/gdb.h"
@@ -77,7 +78,7 @@ void GetTtySize(void) {
   struct winsize wsize;
   wsize.ws_row = tyn;
   wsize.ws_col = txn;
-  _getttysize(1, &wsize);
+  tcgetwinsize(1, &wsize);
   tyn = wsize.ws_row;
   txn = wsize.ws_col;
 }
@@ -87,7 +88,7 @@ int Write(const char *s) {
 }
 
 void Setup(void) {
-  CHECK_NE(-1, ioctl(1, TCGETS, &oldterm));
+  CHECK_NE(-1, tcgetattr(1, &oldterm));
 }
 
 void Enter(void) {
@@ -100,13 +101,13 @@ void Enter(void) {
   term.c_cflag &= ~(CSIZE | PARENB);
   term.c_cflag |= CS8;
   term.c_iflag |= IUTF8;
-  CHECK_NE(-1, ioctl(1, TCSETS, &term));
+  CHECK_NE(-1, tcsetattr(1, TCSANOW, &term));
   Write("\e[?25l");
 }
 
 void Leave(void) {
   Write(gc(xasprintf("\e[?25h\e[%d;%dH\e[S\r\n", tyn, txn)));
-  ioctl(1, TCSETS, &oldterm);
+  tcsetattr(1, TCSANOW, &oldterm);
 }
 
 void Clear(void) {

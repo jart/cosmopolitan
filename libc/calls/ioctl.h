@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
 #define COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
+#include "libc/calls/termios.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/termios.h"
@@ -12,7 +13,7 @@ COSMOPOLITAN_C_START_
 
 int ioctl(int, uint64_t, ...);
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(COSMO)
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » ioctl » undiamonding                       ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -26,19 +27,7 @@ int ioctl(int, uint64_t, ...);
 #define __IOCTL_DISPATCH(CMP, DEFAULT, FD, REQUEST, ...) \
   ({                                                     \
     int ReZ;                                             \
-    if (CMP(REQUEST, TIOCGWINSZ)) {                      \
-      ReZ = ioctl_tiocgwinsz(FD, ##__VA_ARGS__);         \
-    } else if (CMP(REQUEST, TIOCSWINSZ)) {               \
-      ReZ = ioctl_tiocswinsz(FD, ##__VA_ARGS__);         \
-    } else if (CMP(REQUEST, TCGETS)) {                   \
-      ReZ = ioctl_tcgets(FD, ##__VA_ARGS__);             \
-    } else if (CMP(REQUEST, TCSETS)) {                   \
-      ReZ = ioctl_tcsets(FD, REQUEST, ##__VA_ARGS__);    \
-    } else if (CMP(REQUEST, TCSETSW)) {                  \
-      ReZ = ioctl_tcsets(FD, REQUEST, ##__VA_ARGS__);    \
-    } else if (CMP(REQUEST, TCSETSF)) {                  \
-      ReZ = ioctl_tcsets(FD, REQUEST, ##__VA_ARGS__);    \
-    } else if (CMP(REQUEST, SIOCGIFCONF)) {              \
+    if (CMP(REQUEST, SIOCGIFCONF)) {                     \
       ReZ = ioctl_siocgifconf(FD, ##__VA_ARGS__);        \
     } else if (CMP(REQUEST, SIOCGIFADDR)) {              \
       ReZ = ioctl_siocgifaddr(FD, ##__VA_ARGS__);        \
@@ -70,10 +59,6 @@ int ioctl_siocgifconf(int, ...);
 int ioctl_siocgifdstaddr(int, ...);
 int ioctl_siocgifflags(int, ...);
 int ioctl_siocgifnetmask(int, ...);
-int ioctl_tcgets(int, ...);
-int ioctl_tcsets(int, uint64_t, ...);
-int ioctl_tiocgwinsz(int, ...);
-int ioctl_tiocswinsz(int, ...);
 
 #endif /* GNUC && !ANSI */
 COSMOPOLITAN_C_END_

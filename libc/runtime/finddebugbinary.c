@@ -41,7 +41,7 @@ static bool IsMyDebugBinaryImpl(const char *path) {
     // which is currently running in memory.
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
         (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-      if (READ32LE(map) == READ32LE("\177ELF") &&
+      if (READ32LE((char *)map) == READ32LE("\177ELF") &&
           GetElfSymbolValue(map, "_etext", &value)) {
         res = !_etext || value == (uintptr_t)_etext;
       }

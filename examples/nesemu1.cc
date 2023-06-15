@@ -14,6 +14,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
@@ -287,7 +288,7 @@ void GetTermSize(void) {
   struct winsize wsize_;
   wsize_.ws_row = 25;
   wsize_.ws_col = 80;
-  _getttysize(0, &wsize_);
+  tcgetwinsize(0, &wsize_);
   FreeSamplingSolution(ssy_);
   FreeSamplingSolution(ssx_);
   tyn_ = wsize_.ws_row * 2;

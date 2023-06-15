@@ -1,9 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_
+
+#define O_RDONLY  0
+#define O_WRONLY  1
+#define O_RDWR    2
+#define O_ACCMODE 3
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const unsigned O_ACCMODE;
 extern const unsigned O_APPEND;
 extern const unsigned O_ASYNC;
 extern const unsigned O_CLOEXEC;
@@ -25,8 +30,6 @@ extern const unsigned O_NOFOLLOW_ANY;
 extern const unsigned O_NONBLOCK;
 extern const unsigned O_PATH;
 extern const unsigned O_RANDOM;
-extern const unsigned O_RDONLY;
-extern const unsigned O_RDWR;
 extern const unsigned O_RSYNC;
 extern const unsigned O_SEARCH;
 extern const unsigned O_SEQUENTIAL;
@@ -37,15 +40,6 @@ extern const unsigned O_TMPFILE;
 extern const unsigned O_TRUNC;
 extern const unsigned O_TTY_INIT;
 extern const unsigned O_VERIFY;
-extern const unsigned O_WRONLY;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-#define O_RDONLY  0
-#define O_WRONLY  1
-#define O_RDWR    2
-#define O_ACCMODE 3
 
 #define O_APPEND     O_APPEND
 #define O_ASYNC      O_ASYNC
@@ -89,4 +83,6 @@ COSMOPOLITAN_C_END_
 #define __tmpcosmo_O_SYNC       -282123817
 #define __tmpcosmo_O_TRUNC      924355570
 
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_ */

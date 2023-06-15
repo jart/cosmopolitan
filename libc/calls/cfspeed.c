@@ -17,18 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+
+#define CBAUD   0x100f
+#define CBAUDEX 0x1000
 
 /**
  * Returns input baud rate.
  * @asyncsignalsafe
  */
 uint32_t cfgetispeed(const struct termios *t) {
-  if (CBAUD) {
+  if (IsLinux()) {
     return t->c_cflag & CBAUD;
   } else {
-    return t->c_ispeed;
+    return t->_c_ispeed;
   }
 }
 
@@ -37,43 +41,23 @@ uint32_t cfgetispeed(const struct termios *t) {
  * @asyncsignalsafe
  */
 uint32_t cfgetospeed(const struct termios *t) {
-  if (CBAUD) {
+  if (IsLinux()) {
     return t->c_cflag & CBAUD;
   } else {
-    return t->c_ospeed;
+    return t->_c_ospeed;
   }
-}
-
-/**
- * Sets input baud rate.
- *
- * @return 0 on success, or -1 w/ errno
- * @asyncsignalsafe
- */
-int cfsetispeed(struct termios *t, unsigned speed) {
-  if (speed) {
-    if (CBAUD) {
-      if (!(speed & ~CBAUD)) {
-        t->c_cflag &= ~CBAUD;
-        t->c_cflag |= speed;
-      } else {
-        return einval();
-      }
-    } else {
-      t->c_ispeed = speed;
-    }
-  }
-  return 0;
 }
 
 /**
  * Sets output baud rate.
  *
+ * @param speed can be `B0`, `B50`, `B38400`, `B4000000`, etc.
  * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `speed` isn't valid
  * @asyncsignalsafe
  */
-int cfsetospeed(struct termios *t, unsigned speed) {
-  if (CBAUD) {
+int cfsetospeed(struct termios *t, uint32_t speed) {
+  if (IsLinux()) {
     if (!(speed & ~CBAUD)) {
       t->c_cflag &= ~CBAUD;
       t->c_cflag |= speed;
@@ -82,7 +66,28 @@ int cfsetospeed(struct termios *t, unsigned speed) {
       return einval();
     }
   } else {
-    t->c_ospeed = speed;
+    t->_c_ospeed = speed;
+    return 0;
+  }
+}
+
+/**
+ * Sets input baud rate.
+ *
+ * @param speed can be `B0`, `B50`, `B38400`, `B4000000`, etc.
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `speed` isn't valid
+ * @asyncsignalsafe
+ */
+int cfsetispeed(struct termios *t, uint32_t speed) {
+  if (IsLinux()) {
+    if (speed) {
+      return cfsetospeed(t, speed);
+    } else {
+      return 0;
+    }
+  } else {
+    t->_c_ispeed = speed;
     return 0;
   }
 }

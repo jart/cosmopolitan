@@ -4359,7 +4359,7 @@ UNIX MODULE
 
     tty
 
-      Allows isatty, tiocgwinsz, tcgets, tcsets, tcsetsw, tcsetsf.
+      Allows isatty, tcgetwinsize, tcgets, tcsets, tcsetsw, tcsetsf.
 
     inet
 
@@ -4683,7 +4683,7 @@ UNIX MODULE
 
     No other error numbers are possible.
 
-  unix.tiocgwinsz(fd:int)
+  unix.tcgetwinsize(fd:int)
       ├─→ rows:int, cols:int
       └─→ nil, unix.Errno
 

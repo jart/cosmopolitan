@@ -201,8 +201,6 @@ include tool/build/lib/buildlib.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk
 include third_party/python/python.mk
-include tool/build/emucrt/emucrt.mk
-include tool/build/emubin/emubin.mk
 include tool/build/build.mk
 include tool/curl/curl.mk
 include third_party/qemu/qemu.mk

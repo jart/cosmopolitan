@@ -27,6 +27,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -334,7 +335,7 @@ int GetTerminalWidth(void) {
     return atoi(s);
   } else {
     ws.ws_col = 0;
-    ioctl(2, TIOCGWINSZ, &ws);
+    tcgetwinsize(2, &ws);
     return ws.ws_col;
   }
 }
@@ -348,7 +349,7 @@ int GetLineWidth(bool *isineditor) {
   }
   if (s) {
     return atoi(s);
-  } else if (ioctl(2, TIOCGWINSZ, &ws) != -1) {
+  } else if (tcgetwinsize(2, &ws) != -1) {
     if (ws.ws_col && ws.ws_row) {
       return ws.ws_col * ws.ws_row / 3;
     } else {

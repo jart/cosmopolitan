@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/nt/console.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/struct/winsize.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
 
-textwindows int ioctl_tiocswinsz_nt(int fd, const struct winsize *ws) {
-  uint32_t mode;
-  struct NtCoord coord;
-  if (!ws) return efault();
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
-  if (!GetConsoleMode(__getfdhandleactual(fd), &mode)) return enotty();
-  coord.X = ws->ws_col;
-  coord.Y = ws->ws_row;
-  if (!SetConsoleScreenBufferSize(__getfdhandleactual(fd), coord))
-    return __winerr();
-  return 0;
+#define N 64
+
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
+
+const char *(DescribeWinsize)(char buf[N], int rc, struct winsize *ws) {
+  char b64[64];
+  const char *d;
+  int i, j, o = 0;
+
+  if (!ws) return "NULL";
+  if (rc == -1) return "n/a";
+  if ((!IsAsan() && kisdangerous(ws)) ||
+      (IsAsan() && !__asan_is_valid(ws, sizeof(*ws)))) {
+    ksnprintf(buf, N, "%p", ws);
+    return buf;
+  }
+
+  append("{.ws_row=%d, .ws_col=%d", ws->ws_row, ws->ws_col);
+  if (ws->ws_xpixel | ws->ws_ypixel) {
+    append(", .ws_xpixel=%d, .ws_ypixel=%d", ws->ws_xpixel, ws->ws_ypixel);
+  }
+  append("}");
+
+  return buf;
 }

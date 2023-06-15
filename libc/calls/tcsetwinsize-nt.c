@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,50 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/metatermios.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/errno.h"
-#include "libc/log/internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/nt/console.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-/**
- * @fileoverview Terminal Restoration Helper for System Five.
- *
- * This is used by the crash reporting functions, e.g. __die(), to help
- * ensure the terminal is in an unborked state after a crash happens.
- */
-
-#define RESET_COLOR   "\e[0m"
-#define SHOW_CURSOR   "\e[?25h"
-#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
-#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
-
-static bool __isrestorable;
-static union metatermios __oldtermios;
-
-static size_t __strlen(const char *s) {
-  size_t i = 0;
-  while (s[i]) ++i;
-  return i;
-}
-
-// called weakly by libc/calls/ioctl_tcsets.c to avoid pledge("tty")
-void __on_ioctl_tcsets(int fd) {
-  int e;
-  e = errno;
-  if (sys_ioctl(fd, TCGETS, &__oldtermios) != -1) {
-    __isrestorable = true;
-  }
-  errno = e;
-}
-
-void __restore_tty(void) {
-  int e;
-  if (__isrestorable && !__isworker && !__nocolor) {
-    e = errno;
-    sys_write(0, ANSI_RESTORE, __strlen(ANSI_RESTORE));
-    sys_ioctl(0, TCSETSF, &__oldtermios);
-    errno = e;
-  }
+textwindows int tcsetwinsize_nt(int fd, const struct winsize *ws) {
+  uint32_t mode;
+  struct NtCoord coord;
+  if (!ws) return efault();
+  if (!__isfdkind(fd, kFdFile)) return ebadf();
+  if (!GetConsoleMode(__getfdhandleactual(fd), &mode)) return enotty();
+  coord.X = ws->ws_col;
+  coord.Y = ws->ws_row;
+  if (!SetConsoleScreenBufferSize(__getfdhandleactual(fd), coord))
+    return __winerr();
+  return 0;
 }

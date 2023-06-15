@@ -26,6 +26,7 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
@@ -174,8 +175,8 @@ static void GetOpts(int *argc, char *argv[]) {
   if (!g_flags.full && (!g_flags.width || !g_flags.width)) {
     ws.ws_col = 80;
     ws.ws_row = 24;
-    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 ||
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != -1) {
+    if (tcgetwinsize(STDIN_FILENO, &ws) != -1 ||
+        tcgetwinsize(STDOUT_FILENO, &ws) != -1) {
       g_flags.width = ws.ws_col * (1 + !g_flags.half);
       g_flags.height = ws.ws_row * 2;
     }

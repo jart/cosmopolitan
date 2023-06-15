@@ -29,6 +29,9 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
+#define TCFLSH    0x0000540b
+#define TIOCFLUSH 0x80047410
+
 #define kNtPurgeTxclear 4
 #define kNtPurgeRxclear 8
 
@@ -73,12 +76,14 @@ static dontinline textwindows int sys_tcflush_nt(int fd, int queue) {
  */
 int tcflush(int fd, int queue) {
   int rc;
-  if (IsMetal()) {
-    rc = enosys();
-  } else if (!IsWindows()) {
+  if (IsLinux()) {
     rc = sys_ioctl(fd, TCFLSH, queue);
-  } else {
+  } else if (IsBsd()) {
+    rc = sys_ioctl(fd, TIOCFLUSH, &queue);
+  } else if (IsWindows()) {
     rc = sys_tcflush_nt(fd, queue);
+  } else {
+    rc = enosys();
   }
   STRACE("tcflush(%d, %s) → %d% m", fd, DescribeFlush(alloca(12), queue), rc);
   return rc;
