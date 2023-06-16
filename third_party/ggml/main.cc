@@ -212,7 +212,7 @@ static int on_missing_feature(const char *name) {
 
 int main(int argc, char ** argv) {
 
-    MakeProcessNice();
+    verynice();
     ShowCrashReports();
 
     setvbuf(stdin, NULL, _IONBF, 0);

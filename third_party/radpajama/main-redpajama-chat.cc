@@ -99,7 +99,7 @@ int main(int argc, char ** argv) {
     params.instruct = true;
     params.interactive = true;
 
-    MakeProcessNice();
+    verynice();
     ShowCrashReports();
 
     if (gpt_params_parse(argc, argv, params) == false) {  return 1; }
@@ -137,7 +137,7 @@ int main(int argc, char ** argv) {
         }
     }
 
-    MakeProcessNice();
+    verynice();
     ShowCrashReports();
 
     // Always interactive for RedPajama chat model

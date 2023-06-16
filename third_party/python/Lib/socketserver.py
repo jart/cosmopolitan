@@ -359,6 +359,14 @@ class BaseServer:
         """
         pass
 
+    def forked_request(self, request, client_address):
+        """Called in child after os.fork() is called.
+
+        May be overridden.
+
+        """
+        pass
+
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
         self.RequestHandlerClass(request, client_address, self)
@@ -617,6 +625,7 @@ if hasattr(os, "fork"):
                 # This must never return, hence os._exit()!
                 status = 1
                 try:
+                    self.forked_request(request, client_address)
                     self.finish_request(request, client_address)
                     status = 0
                 except Exception:

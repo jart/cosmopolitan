@@ -104,7 +104,7 @@ char *GetInterpreterExecutableName(char *, size_t);
 int _OpenExecutable(void);
 bool _IsDynamicExecutable(const char *);
 /* execution control */
-int MakeProcessNice(void);
+int verynice(void);
 axdx_t setlongerjmp(jmp_buf)
 libcesque returnstwice paramsnonnull();
 void longerjmp(jmp_buf, intptr_t) libcesque wontreturn paramsnonnull();

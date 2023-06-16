@@ -84,7 +84,7 @@ int main(int argc, char ** argv) {
     gpt_params params;
     params.model = "./examples/redpajama/models/pythia/ggml-RedPajama-INCITE-Instruct-3B-v1-f16.bin";
 
-    MakeProcessNice();
+    verynice();
     ShowCrashReports();
 
     if (gpt_params_parse(argc, argv, params) == false) {

@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/errno.h"
-#include "libc/log/log.h"
 #include "libc/sysv/consts/ioprio.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/sched.h"
@@ -30,7 +29,7 @@
  * @return 0 on success, or -1 w/ errno
  * @note error reporting currently not implemented
  */
-int MakeProcessNice(void) {
+int verynice(void) {
   int e = errno;
   setpriority(PRIO_PROCESS, 0, 10);
   ioprio_set(IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));

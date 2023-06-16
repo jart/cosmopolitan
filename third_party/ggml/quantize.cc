@@ -55,7 +55,7 @@ static const std::map<std::string, llama_ftype> LLAMA_FTYPE_MAP = {
 //  ./quantize models/llama/ggml-model.bin models/llama/ggml-model-quant.bin type [nthreads]
 //
 int main(int argc, char ** argv) {
-    MakeProcessNice();
+    verynice();
     ShowCrashReports();
 
     ggjt_v3();

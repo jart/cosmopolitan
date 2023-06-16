@@ -576,8 +576,9 @@ int main(int argc, char *argv[]) {
     NormalizeFileDescriptors();
   }
 
-  // set resource limits
-  MakeProcessNice();
+  if (g_nice) {
+    verynice();
+  }
 
   if (SetCpuLimit(g_cpuquota) == -1) {
     kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_CPU");

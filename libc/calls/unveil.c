@@ -419,6 +419,7 @@ int unveil(const char *path, const char *permissions) {
     // if the host environment enables unveil() to impose true security
     // restrictions because the default behavior is to silently succeed
     // so that programs will err on the side of working if distributed.
+    if (permissions) return einval();
     if (IsOpenbsd()) return 0;
     if (landlock_abi_version != -1) {
       _unassert(landlock_abi_version >= 1);
