@@ -17,6 +17,8 @@
     unsigned long:      "unsigned long",      \
     long long:          "long long",          \
     unsigned long long: "unsigned long long", \
+    __int128:           "__int128",           \
+    unsigned __int128:  "unsigned __int128",  \
     float:              "float",              \
     double:             "double",             \
     long double:        "long double")

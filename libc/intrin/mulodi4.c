@@ -13,8 +13,6 @@
  * ===----------------------------------------------------------------------===
  */
 
-STATIC_YOINK("huge_compiler_rt_license");
-
 #include "third_party/compiler_rt/int_lib.h"
 
 /* Returns: a * b */
@@ -25,10 +23,10 @@ COMPILER_RT_ABI di_int
 __mulodi4(di_int a, di_int b, int* overflow)
 {
     const int N = (int)(sizeof(di_int) * CHAR_BIT);
-    const di_int MIN = (di_int)1 << (N-1);
+    const di_int MIN = (du_int)1 << (N-1);
     const di_int MAX = ~MIN;
     *overflow = 0; 
-    di_int result = a * b;
+    di_int result = (du_int)a * (du_int)b;
     if (a == MIN)
     {
         if (b != 0 && b != 1)
