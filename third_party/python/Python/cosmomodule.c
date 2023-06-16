@@ -356,7 +356,7 @@ static PyMethodDef cosmo_methods[] = {
     {"syscount", cosmo_syscount, METH_NOARGS, syscount_doc},
     {"popcount", cosmo_popcount, METH_VARARGS, popcount_doc},
     {"decimate", cosmo_decimate, METH_VARARGS, decimate_doc},
-    {"verynice", cosmo_verynice, METH_VARARGS, verynice_doc},
+    {"verynice", cosmo_verynice, METH_NOARGS, verynice_doc},
 #ifdef __x86_64__
     {"getcpucore", cosmo_getcpucore, METH_NOARGS, getcpucore_doc},
     {"getcpunode", cosmo_getcpunode, METH_NOARGS, getcpunode_doc},

@@ -685,6 +685,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/mmapmodule.c				\
 	third_party/python/Modules/parsermodule.c			\
 	third_party/python/Modules/posixmodule.c			\
+	third_party/python/Modules/tokenbucket.c			\
 	third_party/python/Modules/pwdmodule.c				\
 	third_party/python/Modules/pyexpat.c				\
 	third_party/python/Modules/resource.c				\
@@ -1177,6 +1178,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	LIBC_TINYMATH							\
 	LIBC_X								\
 	LIBC_ZIPOS							\
+	NET_HTTP							\
 	NET_HTTPS							\
 	THIRD_PARTY_BZIP2						\
 	THIRD_PARTY_GDTOA						\

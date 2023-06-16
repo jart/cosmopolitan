@@ -101,6 +101,7 @@
            "__builtin_ia32_movntdq"
            "__has_attribute"
            "__has_builtin"
+           "__has_include"
            "__has_cpp_attribute"
            "__has_feature"
            "__ATOMIC_RELAXED"
