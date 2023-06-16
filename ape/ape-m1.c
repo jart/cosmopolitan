@@ -687,6 +687,24 @@ int main(int argc, char **argv, char **envp) {
     argv = (char **)((sp += 1) + 1);
   }
 
+  // search for executable
+  if (!(exe = Commandv(&M->ps, prog, GetEnv(envp, "PATH")))) {
+    Pexit(prog, 0, "not found (maybe chmod +x)");
+  } else if ((fd = openat(AT_FDCWD, exe, O_RDONLY)) < 0) {
+    Pexit(exe, -1, "open");
+  } else if ((rc = read(fd, M->ehdr.buf, sizeof(M->ehdr.buf))) < 0) {
+    Pexit(exe, -1, "read");
+  } else if (rc != sizeof(M->ehdr.buf)) {
+    Pexit(exe, 0, "too small");
+  }
+
+  // resolve argv[0] to reflect path search
+  if (argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) {
+    tp -= (n = StrLen(exe) + 1);
+    MemMove(tp, exe, n);
+    argv[0] = tp;
+  }
+
   // squeeze and align the argument block
   ip = (long *)(((long)tp - AUXV_BYTES) & -sizeof(long));
   ip -= (n = bp - sp);
@@ -698,17 +716,6 @@ int main(int argc, char **argv, char **envp) {
   // relocate the guest's random numbers
   MemMove(M->rando, rando, sizeof(M->rando));
   MemSet(rando, 0, sizeof(rando));
-
-  // search for executable
-  if (!(exe = Commandv(&M->ps, prog, GetEnv(envp, "PATH")))) {
-    Pexit(prog, 0, "not found (maybe chmod +x)");
-  } else if ((fd = openat(AT_FDCWD, exe, O_RDONLY)) < 0) {
-    Pexit(exe, -1, "open");
-  } else if ((rc = read(fd, M->ehdr.buf, sizeof(M->ehdr.buf))) < 0) {
-    Pexit(exe, -1, "read");
-  } else if (rc != sizeof(M->ehdr.buf)) {
-    Pexit(exe, 0, "too small");
-  }
 
 #if TROUBLESHOOT
   for (i = 0; i < argc; ++i) {

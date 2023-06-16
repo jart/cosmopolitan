@@ -123,6 +123,11 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
       return;
     }
   }
+
+  // otherwise give up and just copy argv[0] into it
+  if (!*p && __argv[0] && strlen(__argv[0]) < e - p) {
+    strcpy(p, __argv[0]);
+  }
 }
 
 /**
