@@ -390,7 +390,7 @@ PyInit_resource(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_resource = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_resource = {
     "resource",
     PyInit_resource,
 };

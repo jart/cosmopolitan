@@ -495,7 +495,7 @@ PyInit_tls(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_tls = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_tls = {
     "tls",
     PyInit_tls,
 };

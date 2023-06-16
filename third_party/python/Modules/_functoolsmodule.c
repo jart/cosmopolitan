@@ -1349,7 +1349,7 @@ PyInit__functools(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__functools = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__functools = {
     "_functools",
     PyInit__functools,
 };

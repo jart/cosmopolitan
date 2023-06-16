@@ -582,7 +582,7 @@ PyInit__hashlib(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__hashlib = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__hashlib = {
     "_hashlib",
     PyInit__hashlib,
 };

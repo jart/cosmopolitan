@@ -1713,7 +1713,7 @@ PyInit_audioop(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_audioop = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_audioop = {
     "audioop",
     PyInit_audioop,
 };

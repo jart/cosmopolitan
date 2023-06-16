@@ -5218,7 +5218,7 @@ PyInit__testcapi(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__testcapi = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__testcapi = {
     "_testcapi",
     PyInit__testcapi,
 };

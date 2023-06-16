@@ -284,7 +284,7 @@ PyInit__bisect(void)
     return PyModule_Create(&_bisectmodule);
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__bisect = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__bisect = {
     "_bisect",
     PyInit__bisect,
 };

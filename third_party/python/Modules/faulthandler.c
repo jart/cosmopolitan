@@ -1434,7 +1434,7 @@ void _PyFaulthandler_Fini(void)
 #endif
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_faulthandler = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_faulthandler = {
     "faulthandler",
     PyInit_faulthandler,
 };

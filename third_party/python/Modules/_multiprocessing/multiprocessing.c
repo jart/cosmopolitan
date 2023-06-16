@@ -225,7 +225,7 @@ PyInit__multiprocessing(void)
     return module;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__multiprocessing = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__multiprocessing = {
     "_multiprocessing",
     PyInit__multiprocessing,
 };

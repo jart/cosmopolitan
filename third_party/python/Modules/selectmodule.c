@@ -2605,7 +2605,7 @@ PyInit_select(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_select = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_select = {
     "select",
     PyInit_select,
 };

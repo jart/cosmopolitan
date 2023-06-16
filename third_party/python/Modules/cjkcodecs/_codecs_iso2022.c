@@ -1080,7 +1080,7 @@ END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(iso2022)
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_iso2022 = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__codecs_iso2022 = {
     "_codecs_iso2022",
     PyInit__codecs_iso2022,
 };

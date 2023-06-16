@@ -1305,7 +1305,7 @@ PyInit__operator(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__operator = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__operator = {
     "_operator",
     PyInit__operator,
 };

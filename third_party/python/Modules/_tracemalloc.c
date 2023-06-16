@@ -1613,7 +1613,7 @@ PyInit__tracemalloc(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__tracemalloc = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__tracemalloc = {
     "_tracemalloc",
     PyInit__tracemalloc,
 };

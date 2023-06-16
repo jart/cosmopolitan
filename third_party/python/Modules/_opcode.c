@@ -94,7 +94,7 @@ PyInit__opcode(void)
     return PyModule_Create(&opcodemodule);
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__opcode = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__opcode = {
     "_opcode",
     PyInit__opcode,
 };

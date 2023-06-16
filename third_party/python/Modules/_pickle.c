@@ -7499,7 +7499,7 @@ PyInit__pickle(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__pickle = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__pickle = {
     "_pickle",
     PyInit__pickle,
 };

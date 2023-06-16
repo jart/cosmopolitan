@@ -2041,7 +2041,7 @@ dump buffer
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=524ce2e021e4eba6]*/
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_pyexpat = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_pyexpat = {
     "pyexpat",
     PyInit_pyexpat,
 };

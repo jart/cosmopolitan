@@ -1978,7 +1978,7 @@ PyInit__json(void)
     return NULL;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__json = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__json = {
     "_json",
     PyInit__json,
 };

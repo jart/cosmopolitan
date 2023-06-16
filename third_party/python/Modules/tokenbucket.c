@@ -236,7 +236,7 @@ PyInit_tokenbucket(void)
     return !PyErr_Occurred() ? m : 0;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_tokenbucket = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_tokenbucket = {
     "tokenbucket",
     PyInit_tokenbucket,
 };

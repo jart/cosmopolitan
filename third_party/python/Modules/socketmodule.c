@@ -7200,7 +7200,7 @@ PyInit__socket(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__socket = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__socket = {
     "_socket",
     PyInit__socket,
 };

@@ -646,7 +646,7 @@ PyInit_unicodedata(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_unicodedata = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_unicodedata = {
     "unicodedata",
     PyInit_unicodedata,
 };

@@ -2411,7 +2411,7 @@ PyInit__struct(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__struct = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__struct = {
     "_struct",
     PyInit__struct,
 };

@@ -1597,7 +1597,7 @@ pysleep(_PyTime_t secs)
     return 0;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_time = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_time = {
     "time",
     PyInit_time,
 };

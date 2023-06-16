@@ -266,7 +266,7 @@ PyInit_pwd(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_pwd = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_pwd = {
     "pwd",
     PyInit_pwd,
 };

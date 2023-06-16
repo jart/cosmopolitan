@@ -6041,7 +6041,7 @@ PyInit__datetime(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__datetime = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__datetime = {
     "_datetime",
     PyInit__datetime,
 };

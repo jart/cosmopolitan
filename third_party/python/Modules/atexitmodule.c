@@ -373,7 +373,7 @@ PyInit_atexit(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_atexit = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_atexit = {
     "atexit",
     PyInit_atexit,
 };

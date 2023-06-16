@@ -1569,7 +1569,7 @@ void *_PyOS_SigintEvent(void)
 }
 #endif
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__signal = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__signal = {
     "_signal",
     PyInit__signal,
 };

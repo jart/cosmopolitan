@@ -1911,7 +1911,7 @@ PyInit__multibytecodec(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__multibytecodec = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__multibytecodec = {
     "_multibytecodec",
     PyInit__multibytecodec,
 };

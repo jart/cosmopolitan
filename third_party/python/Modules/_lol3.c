@@ -7980,7 +7980,7 @@ error:
   return 0;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__sha3 = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__sha3 = {
     "_sha3",
     PyInit__sha3,
 };

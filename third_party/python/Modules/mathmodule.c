@@ -2229,7 +2229,7 @@ PyInit_math(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_math = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_math = {
     "math",
     PyInit_math,
 };

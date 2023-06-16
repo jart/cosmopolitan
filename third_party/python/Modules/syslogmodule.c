@@ -404,7 +404,7 @@ PyInit_syslog(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_syslog = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_syslog = {
     "syslog",
     PyInit_syslog,
 };

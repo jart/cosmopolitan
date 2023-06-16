@@ -2997,7 +2997,7 @@ PyInit__sre(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__sre = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__sre = {
     "_sre",
     PyInit__sre,
 };

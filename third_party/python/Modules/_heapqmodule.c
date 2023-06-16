@@ -678,7 +678,7 @@ PyInit__heapq(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__heapq = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__heapq = {
     "_heapq",
     PyInit__heapq,
 };

@@ -628,7 +628,7 @@ PyInit__stat(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__stat = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__stat = {
     "_stat",
     PyInit__stat,
 };

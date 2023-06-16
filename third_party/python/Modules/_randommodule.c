@@ -565,7 +565,7 @@ PyInit__random(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__random = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__random = {
     "_random",
     PyInit__random,
 };

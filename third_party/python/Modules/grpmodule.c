@@ -278,7 +278,7 @@ PyInit_grp(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_grp = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_grp = {
     "grp",
     PyInit_grp,
 };

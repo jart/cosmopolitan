@@ -4092,7 +4092,7 @@ PyInit__elementtree(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__elementtree = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__elementtree = {
     "_elementtree",
     PyInit__elementtree,
 };

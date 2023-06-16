@@ -236,7 +236,7 @@ END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(hk)
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__codecs_hk = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__codecs_hk = {
     "_codecs_hk",
     PyInit__codecs_hk,
 };

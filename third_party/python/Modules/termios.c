@@ -760,7 +760,7 @@ PyInit_termios(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_termios = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_termios = {
     "termios",
     PyInit_termios,
 };

@@ -777,7 +777,7 @@ indent-tabs-mode: nil
 End:
 */
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__locale = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__locale = {
     "_locale",
     PyInit__locale,
 };

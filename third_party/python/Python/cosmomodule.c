@@ -412,7 +412,7 @@ PyInit_cosmo(void)
     return !PyErr_Occurred() ? m : 0;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_cosmo = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_cosmo = {
     "cosmo",
     PyInit_cosmo,
 };

@@ -75,7 +75,7 @@ PyInit_xed(void)
     return PyModule_Create(&xedmodule);
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_xed = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_xed = {
     "xed",
     PyInit_xed,
 };

@@ -89,7 +89,7 @@ PyInit_xterm(void)
     return PyModule_Create(&xtermmodule);
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_xterm = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_xterm = {
     "xterm",
     PyInit_xterm,
 };

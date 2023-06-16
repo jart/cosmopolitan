@@ -1601,7 +1601,7 @@ PyInit_zipimport(void)
     return mod;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab_zipimport = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_zipimport = {
     "zipimport",
     PyInit_zipimport,
 };

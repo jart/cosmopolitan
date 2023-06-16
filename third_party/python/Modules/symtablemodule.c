@@ -135,7 +135,7 @@ PyInit__symtable(void)
     return m;
 }
 
-_Section(".rodata.pytab.1") const struct _inittab _PyImport_Inittab__symtable = {
+_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__symtable = {
     "_symtable",
     PyInit__symtable,
 };
