@@ -103,9 +103,12 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
   if (service != NULL && servicelen != 0) {
     if ((flags & NI_NUMERICSERV) ||
         LookupServicesByPort(port, ((flags & NI_DGRAM) ? "udp" : "tcp"), 4,
-                             info, sizeof(info), NULL) == -1)
-      itoa(port, info, 10);
-    if (strlen(info) + 1 > servicelen) return EAI_OVERFLOW;
+                             info, sizeof(info), NULL) == -1) {
+      FormatInt32(info, port);
+    }
+    if (strlen(info) + 1 > servicelen) {
+      return EAI_OVERFLOW;
+    }
     strcpy(service, info);
   }
 

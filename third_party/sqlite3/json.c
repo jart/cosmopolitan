@@ -22,8 +22,9 @@
 ** how JSONB might improve on that.)
 */
 #ifndef SQLITE_OMIT_JSON
+#include "libc/fmt/conv.h"
 #include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/gdtoa/gdtoa.h"
+// clang-format off
 
 /*
 ** Growing our own isspace() routine this way is twice as fast as

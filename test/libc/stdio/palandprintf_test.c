@@ -611,8 +611,6 @@ TEST(snprintf, twosBaneWithTypePromotion) {
 }
 
 TEST(snprintf, formatStringLiteral) {
-  EXPECT_EQ('\\' | 'n' << 8, _cescapec('\n'));
-  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, _cescapec('\377'));
   EXPECT_STREQ("\"hi\\n\"", Format("%`'s", "hi\n"));
   EXPECT_STREQ("\"\\000\"", Format("%`'.*s", 1, "\0"));
 }

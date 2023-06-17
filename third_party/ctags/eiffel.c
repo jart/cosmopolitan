@@ -19,7 +19,7 @@
 
 #ifdef TYPE_REFERENCE_TOOL
 #include "libc/calls/calls.h"
-#include "libc/calls/dprintf.h"
+#include "libc/stdio/dprintf.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/fmt.h"

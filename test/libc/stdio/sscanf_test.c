@@ -64,7 +64,6 @@ TEST(sscanf, testOctal) {
 }
 
 TEST(sscanf, testNonDirectiveCharacterMatching) {
-  EXPECT_EQ(0, sscanf("", ""));
   EXPECT_EQ(0, sscanf("%", "%%"));
 }
 

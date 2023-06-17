@@ -26,3 +26,5 @@ long double wcstold(const wchar_t *nptr, wchar_t **endptr) {
   assert(!"not implemented");
   abort();
 }
+
+__weak_reference(strtold, strtold_l);

@@ -29,6 +29,7 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
 /* clang-format off */
@@ -66,3 +67,5 @@ strtof(const char *s, char **sp)
 		u.L[0] |= 0x80000000L;
 	return u.f;
 }
+
+__weak_reference(strtof, strtof_l);

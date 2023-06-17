@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
@@ -25,7 +26,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 #include "third_party/double-conversion/wrapper.h"
-#include "third_party/gdtoa/gdtoa.h"
 
 #define HEX(d) (union Pun){d}.i
 

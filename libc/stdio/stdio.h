@@ -1,6 +1,5 @@
 #ifndef _STDIO_H
 #define _STDIO_H
-#include "libc/fmt/pflink.h"
 
 #define L_ctermid    20
 #define FILENAME_MAX PATH_MAX
@@ -161,25 +160,6 @@ int fprintf_unlocked(FILE *, const char *, ...) printfesque(2)
     paramsnonnull((1, 2)) dontthrow nocallback;
 int vfprintf_unlocked(FILE *, const char *, va_list)
     paramsnonnull() dontthrow nocallback;
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#if defined(COSMO) && !defined(__cplusplus)
-/* clang-format off */
-#define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
-#define vprintf(FMT, VA)     (vprintf)(PFLINK(FMT), VA)
-#define fprintf(F, FMT, ...) (fprintf)(F, PFLINK(FMT), ##__VA_ARGS__)
-#define vfprintf(F, FMT, VA) (vfprintf)(F, PFLINK(FMT),  VA)
-#define fprintf_unlocked(F, FMT, ...) (fprintf_unlocked)(F, PFLINK(FMT), ##__VA_ARGS__)
-#define vfprintf_unlocked(F, FMT, VA) (vfprintf_unlocked)(F, PFLINK(FMT), VA)
-#define vscanf(FMT, VA)      (vscanf)(SFLINK(FMT), VA)
-#define scanf(FMT, ...)      (scanf)(SFLINK(FMT), ##__VA_ARGS__)
-#define fscanf(F, FMT, ...)  (fscanf)(F, SFLINK(FMT), ##__VA_ARGS__)
-#define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
-/* clang-format on */
-#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

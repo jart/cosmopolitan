@@ -257,7 +257,7 @@ SECTIONS {
     HIDDEN(ape_macho_end = .);
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(SupportsWindows() || SupportsMetal() ? 4096 : 16);
+    . = ALIGN(SupportsWindows() || SupportsMetal() ? CONSTANT(COMMONPAGESIZE) : 16);
     HIDDEN(_ehead = .);
   } :Head
 
@@ -311,7 +311,7 @@ SECTIONS {
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
-    . = ALIGN(__privileged_end > __privileged_start ? 4096 : 1);
+    . = ALIGN(__privileged_end > __privileged_start ? CONSTANT(COMMONPAGESIZE) : 1);
 /*END: morphable code */
     __privileged_start = .;
     *(.privileged)
@@ -368,13 +368,13 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.rodata.*)))
 
     KEEP(*(.ape.pad.text))
-    . = ALIGN(4096);
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
     HIDDEN(_etext = .);
     PROVIDE_HIDDEN(etext = .);
 /*END: Read Only Data (only needed for initialization) */
   } :Rom
 
-  . = DATA_SEGMENT_ALIGN(4096, 4096);
+  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
 
 /* initialization image for thread-local storage, this is copied */
 /* out to actual TLS areas at runtime, so just make it read-only */
@@ -383,7 +383,7 @@ SECTIONS {
     *(SORT_BY_ALIGNMENT(.tdata))
     *(SORT_BY_ALIGNMENT(.tdata.*))
     _tdata_end = .;
-    . = ALIGN(4096);
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
   } :Tls :Rom
 /*END: Read Only Data */
 
@@ -398,7 +398,9 @@ SECTIONS {
     _tbss_end = .;
   } :Tls
 
-  .data ALIGN(4096) : {
+  . = DATA_SEGMENT_RELRO_END(0, .);
+
+  .data : {
 /*BEGIN: Read/Write Data */
     KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
 /*BEGIN: NT FORK COPYING */
@@ -428,7 +430,7 @@ SECTIONS {
     HIDDEN(_edata = .);
     PROVIDE_HIDDEN(edata = .);
     HIDDEN(_ezip = .); /* <-- very deprecated */
-    . = ALIGN(4096);
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
   } :Ram
 
 /*END:   file content that's loaded by o/s */
@@ -454,7 +456,7 @@ SECTIONS {
 
     KEEP(*(.bssepilogue))
 /*END: NT FORK COPYING */
-    . = ALIGN(4096);
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
   } :Bss
@@ -537,7 +539,7 @@ HIDDEN(ape_rom_vaddr = ADDR(.head));
 HIDDEN(ape_rom_paddr = LOADADDR(.head));
 HIDDEN(ape_rom_filesz = LOADADDR(.data) - ape_rom_paddr);
 HIDDEN(ape_rom_memsz = ADDR(.data) - ADDR(.head));
-HIDDEN(ape_rom_align = 4096);
+HIDDEN(ape_rom_align = CONSTANT(COMMONPAGESIZE));
 HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
@@ -545,7 +547,7 @@ HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
 HIDDEN(ape_ram_filesz = SIZEOF(.data));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
-HIDDEN(ape_ram_align = 4096);
+HIDDEN(ape_ram_align = CONSTANT(COMMONPAGESIZE));
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 
 HIDDEN(ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W);
@@ -569,7 +571,7 @@ HIDDEN(ape_text_paddr = LOADADDR(.text));
 HIDDEN(ape_text_vaddr = ADDR(.text));
 HIDDEN(ape_text_filesz = SIZEOF(.text) + SIZEOF(.tdata));
 HIDDEN(ape_text_memsz = SIZEOF(.text) + SIZEOF(.tdata));
-HIDDEN(ape_text_align = 4096);
+HIDDEN(ape_text_align = CONSTANT(COMMONPAGESIZE));
 HIDDEN(ape_text_rva = RVA(ape_text_vaddr));
 
 HIDDEN(ape_data_offset = ape_ram_offset + LOADADDR(.data) - ape_ram_paddr);
@@ -577,7 +579,7 @@ HIDDEN(ape_data_paddr = LOADADDR(.data));
 HIDDEN(ape_data_vaddr = ADDR(.data));
 HIDDEN(ape_data_filesz = SIZEOF(.data));
 HIDDEN(ape_data_memsz = SIZEOF(.data));
-HIDDEN(ape_data_align = 4096);
+HIDDEN(ape_data_align = CONSTANT(COMMONPAGESIZE));
 HIDDEN(ape_data_rva = RVA(ape_data_vaddr));
 
 HIDDEN(ape_bss_offset = ape_ram_offset + LOADADDR(.bss) - ape_ram_paddr);
@@ -585,7 +587,7 @@ HIDDEN(ape_bss_paddr = LOADADDR(.bss));
 HIDDEN(ape_bss_vaddr = ADDR(.bss));
 HIDDEN(ape_bss_filesz = 0);
 HIDDEN(ape_bss_memsz = SIZEOF(.bss));
-HIDDEN(ape_bss_align = 4096);
+HIDDEN(ape_bss_align = CONSTANT(COMMONPAGESIZE));
 
 /* we roundup here because xnu wants the file load segments page-aligned */
 /* but we don't want to add the nop padding to the ape program, so we'll */
@@ -593,7 +595,7 @@ HIDDEN(ape_bss_align = 4096);
 SHSTUB2(ape_loader_dd_skip, DEFINED(ape_loader) ? RVA(ape_loader) / 64 : 0);
 SHSTUB2(ape_loader_dd_count,
         DEFINED(ape_loader_end)
-            ? ROUNDUP(ape_loader_end - ape_loader, 4096) / 64
+            ? ROUNDUP(ape_loader_end - ape_loader, CONSTANT(COMMONPAGESIZE)) / 64
             : 0);
 
 #if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()

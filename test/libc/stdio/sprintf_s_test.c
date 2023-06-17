@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Gabriel Ravier                                                │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/mem/gc.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
-// We specifically avoid the test framework because otherwise __fmt_dtoa is
-// always automatically pulled in from code in there - and this is what we're
-// testing for here
-int main() {
-  char buffer[30];
+static char buffer[128];
 
-  int snprintf_result = snprintf(buffer, sizeof(buffer), "%E", .0);
-  if (strcmp(buffer, "0.000000E+00")) {
-    kprintf(
-        "error: snprintf gave us '%s' instead of the expected '0.000000E+00'\n",
-        buffer);
-    abort();
-  }
-  if (snprintf_result != 12) {
-    kprintf("error: snprintf returned %d instead of 12\n", snprintf_result);
-    abort();
-  }
-}
+#define Format(...) _gc(xasprintf(__VA_ARGS__))
+
+/**
+ * @fileoverview String formatting tests.
+ *
+ * We use textual includes here to test UTF-8, UTF-16, and UTF-32 at the
+ * same time, since Cosmopolitan is designed to support them all without
+ * conditions.
+ */
+
+#define SUITE(NAME) NAME##s
+#define FORMAT(STR) STR "s"
+#define STRING(STR) STR
+#include "test/libc/stdio/sprintf_s.inc"
+#undef SUITE
+#undef FORMAT
+#undef STRING
+
+#define SUITE(NAME) NAME##hs
+#define FORMAT(STR) STR "hs"
+#define STRING(STR) u##STR
+#include "test/libc/stdio/sprintf_s.inc"
+#undef SUITE
+#undef FORMAT
+#undef STRING
+
+#define SUITE(NAME) NAME##ls
+#define FORMAT(STR) STR "ls"
+#define STRING(STR) L##STR
+#include "test/libc/stdio/sprintf_s.inc"
+#undef SUITE
+#undef FORMAT
+#undef STRING

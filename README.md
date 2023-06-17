@@ -27,7 +27,9 @@ contains your non-monorepo artifacts.
 sudo mkdir -p /opt
 sudo chmod 1777 /opt
 git clone https://github.com/jart/cosmopolitan /opt/cosmo
-(cd /opt/cosmo; make -j8 toolchain)
+cd /opt/cosmo
+make -j8 toolchain
+ape/apeinstall.sh  # optional
 mkdir -p /opt/cosmos/bin
 export PATH="/opt/cosmos/bin:$PATH"
 echo 'PATH="/opt/cosmos/bin:$PATH"' >>~/.profile

@@ -19,7 +19,7 @@
 #include "libc/sock/syslog.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/dprintf.h"
+#include "libc/stdio/dprintf.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"

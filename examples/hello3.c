@@ -8,10 +8,10 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
+#include "libc/math.h"
 #include "libc/stdio/stdio.h"
 
 int main() {
-  printf("%`'s\n", "hello\1\2world→→");
+  printf("%g %`'s\n", M_PI, "hello\1\2world→→");
   return errno;
 }

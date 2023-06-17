@@ -37,7 +37,7 @@
 #include "libc/sysv/consts/ss.h"
 #ifndef NO_STDLIB_H
 #include "libc/calls/calls.h"
-#include "libc/calls/dprintf.h"
+#include "libc/stdio/dprintf.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"

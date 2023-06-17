@@ -143,8 +143,8 @@ include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
 include third_party/nsync/mem/mem.mk		# │  You can now use stdio
 include libc/thread/thread.mk			# │  You can finally call malloc()
 include libc/zipos/zipos.mk			# │
-include libc/time/time.mk			# │
 include libc/stdio/stdio.mk			# │
+include libc/time/time.mk			# │
 include third_party/libcxx/libcxx.mk		# │
 include net/net.mk				# │
 include third_party/vqsort/vqsort.mk		# │

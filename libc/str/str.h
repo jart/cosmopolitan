@@ -26,7 +26,6 @@ int ispunct(int);
 int toupper(int);
 int toascii(int);
 int hextoint(int);
-int _cescapec(int);
 
 int iswalnum(wint_t);
 int iswalpha(wint_t);

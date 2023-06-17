@@ -30,6 +30,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/runtime/fenv.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
 /* clang-format off */
@@ -685,3 +686,5 @@ ret:
 		*se = (char *)s;
 	return sign ? -dval(&rv) : dval(&rv);
 }
+
+__weak_reference(strtod, strtod_l);

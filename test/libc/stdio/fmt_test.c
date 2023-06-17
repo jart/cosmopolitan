@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
-
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/math.h"

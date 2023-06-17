@@ -29,6 +29,7 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 /**
@@ -39,3 +40,5 @@ long double strtold(const char *s, char **endptr) {
   strtorx(s, endptr, FPI_Round_near, &x);
   return x;
 }
+
+__weak_reference(strtold, strtold_l);

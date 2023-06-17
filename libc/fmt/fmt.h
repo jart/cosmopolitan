@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_FMT_H_
 #define COSMOPOLITAN_LIBC_FMT_FMT_H_
-#include "libc/fmt/pflink.h"
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § string formatting                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -30,19 +29,6 @@ char *itoa(int, char *, int) compatfn;
 char *fcvt(double, int, int *, int *);
 char *ecvt(double, int, int *, int *);
 char *gcvt(double, int, char *);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § string formatting » optimizations                         ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#if defined(COSMO) && !defined(__cplusplus)
-#define sprintf(BUF, FMT, ...)        (sprintf)(BUF, PFLINK(FMT), ##__VA_ARGS__)
-#define vsprintf(BUF, FMT, VA)        (vsprintf)(BUF, PFLINK(FMT), VA)
-#define snprintf(B, Z, F, ...)        (snprintf)(B, Z, PFLINK(F), ##__VA_ARGS__)
-#define vsnprintf(BUF, SIZE, FMT, VA) (vsnprintf)(BUF, SIZE, PFLINK(FMT), VA)
-#define sscanf(STR, FMT, ...)         (sscanf)(STR, SFLINK(FMT), ##__VA_ARGS__)
-#define vsscanf(STR, FMT, VA)         (vsscanf)(STR, SFLINK(FMT), VA)
-#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

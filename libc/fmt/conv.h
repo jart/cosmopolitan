@@ -40,6 +40,14 @@ unsigned long long wcstoull(const wchar_t *, wchar_t **, int);
 int wcscoll(const wchar_t *, const wchar_t *);
 size_t wcsxfrm(wchar_t *, const wchar_t *, size_t);
 
+double atof(const char *);
+float strtof(const char *, char **);
+double strtod(const char *, char **);
+long double strtold(const char *, char **);
+float wcstof(const wchar_t *, wchar_t **);
+double wcstod(const wchar_t *, wchar_t **);
+long double wcstold(const wchar_t *, wchar_t **);
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
