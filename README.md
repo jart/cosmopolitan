@@ -19,8 +19,241 @@ libc](https://justine.lol/cosmopolitan/index.html) website. We also have
 
 ## Getting Started
 
-If you're doing your development work on Linux or BSD then you need just
-five files to get started. Here's what you do on Linux:
+It's recommended that Cosmopolitan be installed to `/opt/cosmo` and
+`/opt/cosmos` on your computer. The first has the monorepo. The second
+contains your non-monorepo artifacts.
+
+```
+sudo mkdir -p /opt
+sudo chmod 1777 /opt
+git clone https://github.com/jart/cosmopolitan /opt/cosmo
+(cd /opt/cosmo; make -j8 toolchain)
+mkdir -p /opt/cosmos/bin
+export PATH="/opt/cosmos/bin:$PATH"
+echo 'PATH="/opt/cosmos/bin:$PATH"' >>~/.profile
+sudo ln -sf /opt/cosmo/tool/scripts/cosmocc /opt/cosmos/bin/cosmocc
+sudo ln -sf /opt/cosmo/tool/scripts/cosmoc++ /opt/cosmos/bin/cosmoc++
+```
+
+You've now successfully installed your very own cosmos. Now let's build
+an example program, which demonstrates the crash reporting feature:
+
+```c
+// hello.c
+#include <stdio.h>
+#include <cosmo.h>
+
+int main() {
+  ShowCrashReports();
+  printf("hello world\n");
+  __builtin_trap();
+}
+```
+
+To compile the program, you can run the `cosmocc` command. It's
+important to give it an output path that ends with `.com` so the output
+format will be Actually Portable Executable. When this happens, a
+concomitant debug binary is created automatically too.
+
+```
+cosmocc -o hello.com hello.c
+./hello.com
+./hello.com.dbg
+```
+
+You can use the `cosmocc` toolchain to build conventional open source
+projects which use autotools. This strategy normally works:
+
+```
+export CC=cosmocc
+export CXX=cosmoc++
+./configure --prefix=/opt/cosmos
+make -j
+make install
+```
+
+The Cosmopolitan Libc runtime links some heavyweight troubleshooting
+features by default, which are very useful for developers and admins.
+Here's how you can log system calls:
+
+```
+./hello.com --strace
+```
+
+Here's how you can get a much more verbose log of function calls:
+
+```
+./hello.com --ftrace
+```
+
+If you want to cut out the bloat and instead make your executables as
+tiny as possible, then the monorepo supports numerous build modes. You
+can select one of the predefined ones by looking at
+[build/config.mk](build/config.mk). One of the most popular modes is
+`MODE=tiny`. It can be used with the `cosmocc` toolchain as follows:
+
+```
+cd /opt/cosmo
+make -j8 MODE=tiny toolchain
+```
+
+Now that we have our toolchain, let's write a program that links less
+surface area than the program above. The executable that this program
+produces will run on platforms like Linux, Windows, MacOS, etc., even
+though it's directly using POSIX APIs, which Cosmopolitan polyfills.
+
+```c
+// hello2.c
+#include <unistd.h>
+int main() {
+  write(1, "hello world\n", 12);
+}
+```
+
+Now let's compile our tiny actually portable executable, which should be
+on the order of 20kb in size.
+
+```
+export MODE=tiny
+cosmocc -Os -o hello2.com hello2.c
+./hello2.com
+```
+
+Let's say you only care about Linux and would rather have simpler tinier
+binaries, similar to what Musl Libc would produce. In that case, try
+using the `MODE=tinylinux` build mode, which can produce binaries more
+on the order of 4kb.
+
+```
+export MODE=tinylinux
+(cd /opt/cosmo; make -j8 toolchain)
+cosmocc -Os -o hello2.com hello2.c
+./hello2.com  # <-- actually an ELF executable
+```
+
+## ARM
+
+Cosmo supports cross-compiling binaries for machines with ARM
+microprocessors. There are two options available for doing this.
+
+The first option is to embed the [blink virtual
+machine](https://github.com/jart/blink) by adding the following to the
+top of your main.c file:
+
+```c
+STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
+STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
+```
+
+The benefit is you'll have single file executables that'll run on both
+x86_64 and arm64 platforms. The tradeoff is Blink's JIT is slower than
+running natively, but tends to go fast enough, unless you're doing
+scientific computing (e.g. running LLMs with
+`o//third_party/ggml/llama.com`).
+
+Therefore, the second option is to cross compile aarch64 executables,
+by using build modes like the following:
+
+```
+make -j8 m=aarch64 o/aarch64/third_party/ggml/llama.com
+make -j8 m=aarch64-tiny o/aarch64-tiny/third_party/ggml/llama.com
+```
+
+That'll produce ELF executables that run natively on two operating
+systems: Linux Arm64 (e.g. Raspberry Pi) and MacOS Arm64 (i.e. Apple
+Silicon), thus giving you full performance. The catch is you have to
+compile these executables on an x86_64-linux machine. The second catch
+is that MacOS needs a little bit of help understanding the ELF format.
+To solve that, we provide a tiny APE loader you can use on M1 machines.
+
+```
+scp ape/ape-m1.c macintosh:
+scp o/aarch64/third_party/ggml/llama.com macintosh:
+ssh macintosh
+xcode-install
+cc -o ape ape-m1.c
+sudo cp ape /usr/local/bin/ape
+```
+
+You can run your ELF AARCH64 executable on Apple Silicon as follows:
+
+```
+ape ./llama.com
+```
+
+## Source Builds
+
+Cosmopolitan can be compiled from source on any Linux distro. First, you
+need to download or clone the repository.
+
+```sh
+wget https://justine.lol/cosmopolitan/cosmopolitan.tar.gz
+tar xf cosmopolitan.tar.gz  # see releases page
+cd cosmopolitan
+```
+
+This will build the entire repository and run all the tests:
+
+```sh
+build/bootstrap/make.com
+o//examples/hello.com
+find o -name \*.com | xargs ls -rShal | less
+```
+
+If you get an error running make.com then it's probably because you have
+WINE installed to `binfmt_misc`. You can fix that by installing the the
+APE loader as an interpreter. It'll improve build performance too!
+
+```sh
+ape/apeinstall.sh
+```
+
+Since the Cosmopolitan repository is very large, you might only want to
+build a particular thing. Cosmopolitan's build config does a good job at
+having minimal deterministic builds. For example, if you wanted to build
+only hello.com then you could do that as follows:
+
+```sh
+build/bootstrap/make.com o//examples/hello.com
+```
+
+Sometimes it's desirable to build a subset of targets, without having to
+list out each individual one. You can do that by asking make to build a
+directory name. For example, if you wanted to build only the targets and
+subtargets of the chibicc package including its tests, you would say:
+
+```sh
+build/bootstrap/make.com o//third_party/chibicc
+o//third_party/chibicc/chibicc.com --help
+```
+
+Cosmopolitan provides a variety of build modes. For example, if you want
+really tiny binaries (as small as 12kb in size) then you'd say:
+
+```sh
+build/bootstrap/make.com m=tiny
+```
+
+Here's some other build modes you can try:
+
+```sh
+build/bootstrap/make.com m=dbg       # asan + ubsan + debug
+build/bootstrap/make.com m=asan      # production memory safety
+build/bootstrap/make.com m=opt       # -march=native optimizations
+build/bootstrap/make.com m=rel       # traditional release binaries
+build/bootstrap/make.com m=optlinux  # optimal linux-only performance
+build/bootstrap/make.com m=fastbuild # build 28% faster w/o debugging
+build/bootstrap/make.com m=tinylinux # tiniest linux-only 4kb binaries
+```
+
+For further details, see [//build/config.mk](build/config.mk).
+
+## Cosmopolitan Amalgamation
+
+Another way to use Cosmopolitan is via our amalgamated release, where
+we've combined everything into a single static archive and a single
+header file. If you're doing your development work on Linux or BSD then
+you need just five files to get started. Here's what you do on Linux:
 
 ```sh
 wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-2.2.zip
@@ -112,6 +345,39 @@ from 60kb in size to about 16kb. There's also a prebuilt amalgamation
 online <https://justine.lol/cosmopolitan/cosmopolitan-tiny.zip> hosted
 on our download page <https://justine.lol/cosmopolitan/download.html>.
 
+## GDB
+
+Here's the recommended `~/.gdbinit` config:
+
+```gdb
+set host-charset UTF-8
+set target-charset UTF-8
+set target-wide-charset UTF-8
+set osabi none
+set complaints 0
+set confirm off
+set history save on
+set history filename ~/.gdb_history
+define asm
+  layout asm
+  layout reg
+end
+define src
+  layout src
+  layout reg
+end
+src
+```
+
+You normally run the `.com.dbg` file under gdb. If you need to debug the
+`.com` file itself, then you can load the debug symbols independently as
+
+```
+gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
+```
+
+## Alternative Development Environments
+
 ### MacOS
 
 If you're developing on MacOS you can install the GNU compiler
@@ -143,104 +409,6 @@ wget https://justine.lol/linux-compiler-on-windows/cross9.zip
 unzip cross9.zip
 mv cross9 o/third_party/gcc
 build/bootstrap/make.com
-```
-
-## Source Builds
-
-Cosmopolitan can be compiled from source on any Linux distro. First, you
-need to download or clone the repository.
-
-```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan.tar.gz
-tar xf cosmopolitan.tar.gz  # see releases page
-cd cosmopolitan
-```
-
-This will build the entire repository and run all the tests:
-
-```sh
-build/bootstrap/make.com
-o//examples/hello.com
-find o -name \*.com | xargs ls -rShal | less
-```
-
-If you get an error running make.com then it's probably because you have
-WINE installed to `binfmt_misc`. You can fix that by installing the the
-APE loader as an interpreter. It'll improve build performance too!
-
-```sh
-ape/apeinstall.sh
-```
-
-Since the Cosmopolitan repository is very large, you might only want to
-build a particular thing. Cosmopolitan's build config does a good job at
-having minimal deterministic builds. For example, if you wanted to build
-only hello.com then you could do that as follows:
-
-```sh
-build/bootstrap/make.com o//examples/hello.com
-```
-
-Sometimes it's desirable to build a subset of targets, without having to
-list out each individual one. You can do that by asking make to build a
-directory name. For example, if you wanted to build only the targets and
-subtargets of the chibicc package including its tests, you would say:
-
-```sh
-build/bootstrap/make.com o//third_party/chibicc
-o//third_party/chibicc/chibicc.com --help
-```
-
-Cosmopolitan provides a variety of build modes. For example, if you want
-really tiny binaries (as small as 12kb in size) then you'd say:
-
-```sh
-build/bootstrap/make.com m=tiny
-```
-
-Here's some other build modes you can try:
-
-```sh
-build/bootstrap/make.com m=dbg       # asan + ubsan + debug
-build/bootstrap/make.com m=asan      # production memory safety
-build/bootstrap/make.com m=opt       # -march=native optimizations
-build/bootstrap/make.com m=rel       # traditional release binaries
-build/bootstrap/make.com m=optlinux  # optimal linux-only performance
-build/bootstrap/make.com m=fastbuild # build 28% faster w/o debugging
-build/bootstrap/make.com m=tinylinux # tiniest linux-only 4kb binaries
-```
-
-For further details, see [//build/config.mk](build/config.mk).
-
-## GDB
-
-Here's the recommended `~/.gdbinit` config:
-
-```gdb
-set host-charset UTF-8
-set target-charset UTF-8
-set target-wide-charset UTF-8
-set osabi none
-set complaints 0
-set confirm off
-set history save on
-set history filename ~/.gdb_history
-define asm
-  layout asm
-  layout reg
-end
-define src
-  layout src
-  layout reg
-end
-src
-```
-
-You normally run the `.com.dbg` file under gdb. If you need to debug the
-`.com` file itself, then you can load the debug symbols independently as
-
-```
-gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 ```
 
 ## Discord Chatroom
