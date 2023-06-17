@@ -15,9 +15,10 @@
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-#include "third_party/python/Modules/clinic/pwdmodule.inc"
 #include "third_party/python/Modules/posixmodule.h"
 /* clang-format off */
+
+#include "third_party/python/Modules/clinic/pwdmodule.inc"
 
 PYTHON_PROVIDE("pwd");
 PYTHON_PROVIDE("pwd.getpwall");
@@ -266,7 +267,12 @@ PyInit_pwd(void)
     return m;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_pwd = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_pwd = {
     "pwd",
     PyInit_pwd,
 };

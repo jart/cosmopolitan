@@ -3058,7 +3058,12 @@ PyInit_array(void)
     return PyModuleDef_Init(&arraymodule);
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_array = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_array = {
     "array",
     PyInit_array,
 };

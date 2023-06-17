@@ -1717,7 +1717,12 @@ PyInit__csv(void)
     return module;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__csv = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__csv = {
     "_csv",
     PyInit__csv,
 };

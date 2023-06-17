@@ -1569,7 +1569,12 @@ void *_PyOS_SigintEvent(void)
 }
 #endif
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__signal = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__signal = {
     "_signal",
     PyInit__signal,
 };

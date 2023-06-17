@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/codecs.h"
 #include "third_party/python/Include/descrobject.h"
@@ -19,7 +20,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/yoink.h"
-#include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
 /* clang-format off */
 
 PYTHON_PROVIDE("_multibytecodec");
@@ -1911,7 +1911,12 @@ PyInit__multibytecodec(void)
     return m;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__multibytecodec = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__multibytecodec = {
     "_multibytecodec",
     PyInit__multibytecodec,
 };

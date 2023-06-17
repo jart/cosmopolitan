@@ -4,9 +4,9 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/intrin/bits.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
@@ -1601,7 +1601,12 @@ PyInit_zipimport(void)
     return mod;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_zipimport = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_zipimport = {
     "zipimport",
     PyInit_zipimport,
 };

@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
+#include "third_party/python/Modules/unicodedata.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/nexgen32e/kompressor.h"
@@ -20,7 +21,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/ucnhash.h"
 #include "third_party/python/Include/yoink.h"
-#include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
 /* clang-format off */
 
@@ -646,7 +646,12 @@ PyInit_unicodedata(void)
     return m;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_unicodedata = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_unicodedata = {
     "unicodedata",
     PyInit_unicodedata,
 };

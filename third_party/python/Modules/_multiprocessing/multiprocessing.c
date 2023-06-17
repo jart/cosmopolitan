@@ -4,8 +4,8 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
+#include "third_party/python/Include/yoink.h"
 /* clang-format off */
 
 PYTHON_PROVIDE("_multiprocessing");
@@ -225,7 +225,12 @@ PyInit__multiprocessing(void)
     return module;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__multiprocessing = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__multiprocessing = {
     "_multiprocessing",
     PyInit__multiprocessing,
 };

@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/pyexpat.h"
 #include "libc/fmt/fmt.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
@@ -16,7 +17,6 @@
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pycapsule.h"
-#include "third_party/python/Include/pyexpat.h"
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/sysmodule.h"
@@ -2041,7 +2041,12 @@ dump buffer
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=524ce2e021e4eba6]*/
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_pyexpat = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_pyexpat = {
     "pyexpat",
     PyInit_pyexpat,
 };

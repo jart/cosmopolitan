@@ -7,9 +7,9 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/efi.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/sock/epoll.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
@@ -2605,7 +2605,12 @@ PyInit_select(void)
     return m;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_select = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_select = {
     "select",
     PyInit_select,
 };

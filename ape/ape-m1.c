@@ -344,12 +344,9 @@ static char SearchPath(struct PathSearcher *ps, const char *suffix) {
 }
 
 static char FindCommand(struct PathSearcher *ps, const char *suffix) {
-  if (MemChr(ps->name, '/', ps->namelen) ||
-      MemChr(ps->name, '\\', ps->namelen)) {
+  if (MemChr(ps->name, '/', ps->namelen)) {
     ps->path[0] = 0;
     return AccessCommand(ps, suffix, 0);
-  } else {
-    if (AccessCommand(ps, suffix, 0)) return 1;
   }
   return SearchPath(ps, suffix);
 }

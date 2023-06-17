@@ -703,7 +703,12 @@ END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(jp)
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__codecs_jp = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__codecs_jp = {
     "_codecs_jp",
     PyInit__codecs_jp,
 };

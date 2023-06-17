@@ -1476,7 +1476,12 @@ PyInit_binascii(void)
     return m;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab_binascii = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab_binascii = {
     "binascii",
     PyInit_binascii,
 };

@@ -62,52 +62,59 @@ static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
  * @threadsafe
  */
 struct Zipos *__zipos_get(void) {
-  int fd = -1;
+  char *endptr;
   ssize_t size;
-  int err, msg;
+  int fd, err, msg;
   static bool once;
   struct Zipos *res;
   const char *progpath;
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
-  progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
-  if (progpath) {
-    fd = atoi(progpath);
-  }
-  if (!once && ((fd != -1) || PLEDGED(RPATH))) {
-    __zipos_lock();
-    if (fd == -1) {
-      progpath = GetProgramExecutableName();
-      fd = open(progpath, O_RDONLY);
-    }
-    if (fd != -1) {
-      if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-          (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-        if ((base = FindEmbeddedApe(map, size))) {
-          size -= base - map;
-        } else {
-          base = map;
-        }
-        if ((cdir = GetZipEocd(base, size, &err)) &&
-            _cmpxchg(&zipos.map, 0, base)) {
-          __zipos_munmap_unneeded(base, cdir, map);
-          zipos.cdir = cdir;
-          msg = kZipOk;
-        } else {
-          munmap(map, size);
-          msg = !cdir ? err : kZipErrorRaceCondition;
-        }
-      } else {
-        msg = kZipErrorMapFailed;
-      }
-      close(fd);
+  __zipos_lock();
+  if (!once) {
+    progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
+    if (progpath) {
+      fd = strtol(progpath, &endptr, 10);
+      if (*endptr) fd = -1;
     } else {
-      msg = kZipErrorOpenFailed;
+      fd = -1;
     }
-    once = true;
-    __zipos_unlock();
+    if (fd != -1 || PLEDGED(RPATH)) {
+      if (fd == -1) {
+        progpath = GetProgramExecutableName();
+        fd = open(progpath, O_RDONLY);
+      }
+      if (fd != -1) {
+        if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
+            (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
+          if ((base = FindEmbeddedApe(map, size))) {
+            size -= base - map;
+          } else {
+            base = map;
+          }
+          if ((cdir = GetZipEocd(base, size, &err)) &&
+              _cmpxchg(&zipos.map, 0, base)) {
+            __zipos_munmap_unneeded(base, cdir, map);
+            zipos.cdir = cdir;
+            msg = kZipOk;
+          } else {
+            munmap(map, size);
+            msg = !cdir ? err : kZipErrorRaceCondition;
+          }
+        } else {
+          msg = kZipErrorMapFailed;
+        }
+        close(fd);
+      } else {
+        msg = kZipErrorOpenFailed;
+      }
+    } else {
+      msg = -666;
+    }
     STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
+    once = true;
   }
+  __zipos_unlock();
   if (zipos.cdir) {
     res = &zipos;
   } else {

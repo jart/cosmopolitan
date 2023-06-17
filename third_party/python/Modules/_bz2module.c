@@ -804,7 +804,12 @@ PyInit__bz2(void)
     return m;
 }
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__bz2 = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__bz2 = {
     "_bz2",
     PyInit__bz2,
 };

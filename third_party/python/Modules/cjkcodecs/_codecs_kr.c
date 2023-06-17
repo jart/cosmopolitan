@@ -482,7 +482,12 @@ END_CODECS_LIST
 
 I_AM_A_MODULE_FOR(kr)
 
-_Section(".rodata.pytab.1 //") const struct _inittab _PyImport_Inittab__codecs_kr = {
+#ifdef __aarch64__
+_Section(".rodata.pytab.1 //")
+#else
+_Section(".rodata.pytab.1")
+#endif
+ const struct _inittab _PyImport_Inittab__codecs_kr = {
     "_codecs_kr",
     PyInit__codecs_kr,
 };
