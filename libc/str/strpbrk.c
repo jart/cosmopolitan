@@ -28,7 +28,7 @@ char *strpbrk(const char *s, const char *accept) {
     if (!accept[1]) {
       return strchr(s, accept[0]);
     } else {
-      memset(lut, 0, sizeof(lut));
+      bzero(lut, sizeof(lut));
       while (*accept) {
         lut[*accept++ & 255] = true;
       }

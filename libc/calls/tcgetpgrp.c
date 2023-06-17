@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
@@ -41,6 +42,8 @@ int tcgetpgrp(int fd) {
     rc = sys_ioctl(fd, TIOCGPGRP_linux, &pgrp);
   } else if (IsBsd()) {
     rc = sys_ioctl(fd, TIOCGPGRP_bsd, &pgrp);
+  } else if (IsWindows()) {
+    rc = getpid();
   } else {
     rc = enosys();
   }

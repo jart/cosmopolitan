@@ -20,6 +20,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Sets current directory based on file descriptor.
@@ -30,9 +31,12 @@
  * @asyncsignalsafe
  */
 int fchdir(int dirfd) {
+  int rc;
   if (!IsWindows()) {
-    return sys_fchdir(dirfd);
+    rc = sys_fchdir(dirfd);
   } else {
-    return sys_fchdir_nt(dirfd);
+    rc = sys_fchdir_nt(dirfd);
   }
+  STRACE("fchdir(%d) → %d% m", dirfd, rc);
+  return rc;
 }

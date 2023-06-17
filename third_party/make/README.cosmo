@@ -15,6 +15,7 @@ LICENSE
 
 LOCAL CHANGES
 
+  - Introduce $(uniq token...) native function
   - .INTERNET variable to allow internet access
   - .PLEDGE variable which restricts system calls
   - .UNVEIL variable which controls Landlock LSM

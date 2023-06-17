@@ -69,6 +69,7 @@
            "__builtin_ctzll"
            "__builtin_expect"
            "__builtin_memcpy"
+           "__builtin_memset"
            "__builtin_expect_with_probability"
            "__builtin_extract_return_addr"
            "__builtin_isnan"
