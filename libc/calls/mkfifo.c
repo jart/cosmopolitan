@@ -33,6 +33,7 @@
  * Creates named pipe.
  *
  * @param mode is octal, e.g. 0600 for owner-only read/write
+ * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
  */
 int mkfifo(const char *pathname, unsigned mode) {
@@ -40,17 +41,10 @@ int mkfifo(const char *pathname, unsigned mode) {
   int e, rc;
   if (IsAsan() && !__asan_is_valid_str(pathname)) {
     rc = efault();
+  } else if (IsLinux()) {
+    rc = sys_mknodat(AT_FDCWD, pathname, mode | S_IFIFO, 0);
   } else {
-    e = errno;
     rc = sys_mkfifo(pathname, mode);
-    if (rc == -1 && rc == ENOSYS) {
-      errno = e;
-      rc = sys_mknod(pathname, mode | S_IFIFO, 0);
-      if (rc == -1 && rc == ENOSYS) {
-        errno = e;
-        rc = sys_mknodat(AT_FDCWD, pathname, mode | S_IFIFO, 0);
-      }
-    }
   }
   STRACE("mkfifo(%#s, %#o) → %d% m", pathname, mode, rc);
   return rc;
