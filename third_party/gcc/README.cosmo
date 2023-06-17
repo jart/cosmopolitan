@@ -14,11 +14,16 @@ ORIGIN
   https://github.com/ahgamut/musl-cross-make/
   e58abc1110b335a3341e8ad5821ad8e3880d9bb2
 
+  the changes to gcc 11.2.0 are available at
+  https://github.com/ahgamut/gcc/tree/portcosmo-11.2
+  5f1b1d2f5e99a5f20ccb127b2d46774aef1baf5a
+
 MODIFICATIONS
 
   ahgamut's musl-cross-make fork includes a 2kLOC patch that modifies
   GCC so it'll compile C code like `switch(errno){case EINVAL: etc.}`
-  see third_party/gcc/portcosmo.patch for GCC 11.2.0 for our changes
+  see third_party/gcc/portcosmo.patch for GCC 11.2.0 for our changes.
+  The changes in portcosmo.patch are provided under the ISC License.
 
 NOTES
 
