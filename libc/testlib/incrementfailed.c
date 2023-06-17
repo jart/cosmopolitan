@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
 void testlib_incrementfailed(void) {
   if (++g_testlib_failed > 23) {
-    fprintf(stderr, "too many failures, aborting\n");
+    kprintf("too many failures, aborting\n");
     testlib_abort();
   }
 }

@@ -27,6 +27,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
@@ -55,8 +56,7 @@ static pthread_mutex_t testlib_error_lock;
 
 void testlib_finish(void) {
   if (g_testlib_failed) {
-    fprintf(stderr, "%u / %u %s\n", g_testlib_failed, g_testlib_ran,
-            "tests failed");
+    kprintf("%u / %u %s\n", g_testlib_failed, g_testlib_ran, "tests failed");
   }
 }
 
@@ -163,7 +163,7 @@ static void CheckForFileDescriptors(void) {
     for (i = 0; i < ARRAYLEN(pfds); ++i) {
       if (pfds[i].revents & POLLNVAL) continue;
       ++g_testlib_failed;
-      fprintf(stderr, "error: test failed to close() fd %d\n", pfds[i].fd);
+      kprintf("error: test failed to close() fd %d\n", pfds[i].fd);
     }
   }
 #endif
@@ -182,7 +182,7 @@ static void CheckForZombies(void) {
       break;
     } else {
       ++g_testlib_failed;
-      fprintf(stderr, "error: test failed to reap zombies %d\n", pid);
+      kprintf("error: test failed to reap zombies %d\n", pid);
     }
   }
 #endif

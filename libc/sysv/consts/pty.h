@@ -12,7 +12,6 @@ extern const int TIOCPKT_IOCTL;
 extern const int TIOCPKT_NOSTOP;
 extern const int TIOCPKT_START;
 extern const int TIOCPKT_STOP;
-extern const int TIOCSPTLCK;
 
 #define TIOCPKT_DATA       0x00
 #define TIOCPKT_DOSTOP     0x01
@@ -23,11 +22,9 @@ extern const int TIOCSPTLCK;
 #define TIOCPKT_START      0x20
 #define TIOCPKT_STOP       0x40
 
-#define TIOCPKT    TIOCPKT
-#define TIOCSPTLCK TIOCSPTLCK
+#define TIOCPKT TIOCPKT
 
-#define __tmpcosmo_TIOCPKT    -1036987649
-#define __tmpcosmo_TIOCSPTLCK 372918192
+#define __tmpcosmo_TIOCPKT -1036987649
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

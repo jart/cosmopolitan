@@ -241,7 +241,7 @@ DEFAULT_LDFLAGS =							\
 	-nostdlib							\
 	--gc-sections							\
 	--build-id=none							\
-	--no-dynamic-linker #--cref -Map=$@.map
+	--no-dynamic-linker --cref -Map=$@.map
 
 ifeq ($(ARCH), aarch64)
 DEFAULT_LDFLAGS +=							\

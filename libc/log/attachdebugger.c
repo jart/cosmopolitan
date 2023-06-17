@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/gdb.h"
@@ -31,9 +33,11 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/w.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Launches GDB debugger GUI for current process.
@@ -54,14 +58,18 @@
 relegated int(AttachDebugger)(intptr_t continuetoaddr) {
   int pid, ttyfd;
   struct StackFrame *bp;
-  char pidstr[11], breakcmd[40];
+  char pidstr[12], breakcmd[40];
   const char *se, *elf, *gdb, *rewind, *layout;
   __restore_tty();
-  if (IsGenuineBlink() || !(gdb = GetGdbPath()) || !isatty(0) || !isatty(1) ||
-      (ttyfd = open(_PATH_TTY, O_RDWR | O_CLOEXEC)) == -1) {
-    return -1;
+  if (!IsLinux() ||             //
+      IsGenuineBlink() ||       //
+      !(gdb = GetGdbPath()) ||  //
+      !isatty(0) ||             //
+      !isatty(1) ||             //
+      (ttyfd = sys_openat(AT_FDCWD, _PATH_TTY, O_RDWR | O_CLOEXEC, 0)) == -1) {
+    return enosys();
   }
-  ksnprintf(pidstr, sizeof(pidstr), "%u", getpid());
+  FormatUint32(pidstr, getpid());
   layout = "layout asm";
   if ((elf = FindDebugBinary())) {
     se = "-se";
@@ -76,29 +84,31 @@ relegated int(AttachDebugger)(intptr_t continuetoaddr) {
       continuetoaddr = bp->addr;
     }
     rewind = "-ex";
-    ksnprintf(breakcmd, sizeof(breakcmd), "%s *%#p", "break", continuetoaddr);
+    FormatHex64(stpcpy(breakcmd, "break *"), continuetoaddr, 1);
   } else {
     rewind = NULL;
     breakcmd[0] = '\0';
   }
   if (!(pid = fork())) {
-    dup2(ttyfd, 0);
-    dup2(ttyfd, 1);
-    execv(gdb, (char *const[]){
-                   "gdb",    "--tui",
-                   "-p",     pidstr,
-                   se,       elf,
-                   "-ex",    "set osabi GNU/Linux",
-                   "-ex",    "set complaints 0",
-                   "-ex",    "set confirm off",
-                   "-ex",    layout,
-                   "-ex",    "layout reg",
-                   "-ex",    "set var g_gdbsync = 1",
-                   "-q",     rewind,
-                   breakcmd, "-ex",
-                   "c",      NULL,
-               });
-    abort();
+    sys_dup2(ttyfd, 0, 0);
+    sys_dup2(ttyfd, 1, 0);
+    __sys_execve(gdb,
+                 (char *const[]){
+                     "gdb",    "--tui",
+                     "-p",     pidstr,
+                     se,       elf,
+                     "-ex",    "set osabi GNU/Linux",
+                     "-ex",    "set complaints 0",
+                     "-ex",    "set confirm off",
+                     "-ex",    layout,
+                     "-ex",    "layout reg",
+                     "-ex",    "set var g_gdbsync = 1",
+                     "-q",     rewind,
+                     breakcmd, "-ex",
+                     "c",      NULL,
+                 },
+                 environ);
+    __builtin_trap();
   }
   return pid;
 }

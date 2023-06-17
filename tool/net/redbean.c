@@ -139,7 +139,14 @@
 #include "tool/net/sandbox.h"
 
 STATIC_STACK_SIZE(0x40000);
+
 STATIC_YOINK("zipos");
+
+#ifndef TINY
+STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
+STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
+#endif
+
 #if !IsTiny()
 #ifdef __x86_64__
 STATIC_YOINK("ShowCrashReportsEarly");

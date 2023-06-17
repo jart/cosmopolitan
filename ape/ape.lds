@@ -226,7 +226,6 @@ SECTIONS {
     /* Real Mode */
     KEEP(*(.head))
     KEEP(*(.apesh))
-    KEEP(*(.head2))
     KEEP(*(.text.head))
 
     /* Executable & Linkable Format */
@@ -235,7 +234,9 @@ SECTIONS {
     KEEP(*(.elf.phdrs))
     HIDDEN(ape_phdrs_end = .);
 
+    KEEP(*(.emushprologue))
     KEEP(*(.emush))
+    KEEP(*(.emushepilogue))
 
     /* OpenBSD */
     . = ALIGN(__SIZEOF_POINTER__);
@@ -597,49 +598,24 @@ SHSTUB2(ape_loader_dd_count,
 
 #if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()
 
-HIDDEN(blink_aarch64_b0 = RVA(blink_aarch64) % 10 + 48);
-HIDDEN(blink_aarch64_b1 = RVA(blink_aarch64) < 10 ? 32 : RVA(blink_aarch64) / 10 % 10 + 48);
-HIDDEN(blink_aarch64_b2 = RVA(blink_aarch64) < 100 ? 32 : RVA(blink_aarch64) / 100 % 10 + 48);
-HIDDEN(blink_aarch64_b3 = RVA(blink_aarch64) < 1000 ? 32 : RVA(blink_aarch64) / 1000 % 10 + 48);
-HIDDEN(blink_aarch64_b4 = RVA(blink_aarch64) < 10000 ? 32 : RVA(blink_aarch64) / 10000 % 10 + 48);
-HIDDEN(blink_aarch64_b5 = RVA(blink_aarch64) < 100000 ? 32 : RVA(blink_aarch64) / 100000 % 10 + 48);
-HIDDEN(blink_aarch64_b6 = RVA(blink_aarch64) < 1000000 ? 32 : RVA(blink_aarch64) / 1000000 % 10 + 48);
-HIDDEN(blink_aarch64_b7 = RVA(blink_aarch64) < 10000000 ? 32 : RVA(blink_aarch64) / 10000000 % 10 + 48);
-HIDDEN(blink_aarch64_b8 = RVA(blink_aarch64) < 100000000 ? 32 : RVA(blink_aarch64) / 100000000 % 10 + 48);
-HIDDEN(blink_aarch64_b9 = RVA(blink_aarch64) < 1000000000 ? 32 : RVA(blink_aarch64) / 1000000000 % 10 + 48);
+#define IDENTITY(X) X
 
-HIDDEN(blink_aarch64_size_b0 = blink_aarch64_size % 10 + 48);
-HIDDEN(blink_aarch64_size_b1 = blink_aarch64_size < 10 ? 32 : blink_aarch64_size / 10 % 10 + 48);
-HIDDEN(blink_aarch64_size_b2 = blink_aarch64_size < 100 ? 32 : blink_aarch64_size / 100 % 10 + 48);
-HIDDEN(blink_aarch64_size_b3 = blink_aarch64_size < 1000 ? 32 : blink_aarch64_size / 1000 % 10 + 48);
-HIDDEN(blink_aarch64_size_b4 = blink_aarch64_size < 10000 ? 32 : blink_aarch64_size / 10000 % 10 + 48);
-HIDDEN(blink_aarch64_size_b5 = blink_aarch64_size < 100000 ? 32 : blink_aarch64_size / 100000 % 10 + 48);
-HIDDEN(blink_aarch64_size_b6 = blink_aarch64_size < 1000000 ? 32 : blink_aarch64_size / 1000000 % 10 + 48);
-HIDDEN(blink_aarch64_size_b7 = blink_aarch64_size < 10000000 ? 32 : blink_aarch64_size / 10000000 % 10 + 48);
-HIDDEN(blink_aarch64_size_b8 = blink_aarch64_size < 100000000 ? 32 : blink_aarch64_size / 100000000 % 10 + 48);
-HIDDEN(blink_aarch64_size_b9 = blink_aarch64_size < 1000000000 ? 32 : blink_aarch64_size / 1000000000 % 10 + 48);
+#define APE_DECLARE_FIXED_DECIMAL(F, X)                                                             \
+    HIDDEN(X##_quad = DEFINED(X) ? ((F(X) < 1000000000 ? 32 : F(X) / 1000000000 % 10 + 48) << 000 | \
+                                    (F(X) < 100000000 ? 32 : F(X) / 100000000 % 10 + 48) << 010 |   \
+                                    (F(X) < 10000000 ? 32 : F(X) / 10000000 % 10 + 48) << 020 |     \
+                                    (F(X) < 1000000 ? 32 : F(X) / 1000000 % 10 + 48) << 030 |       \
+                                    (F(X) < 100000 ? 32 : F(X) / 100000 % 10 + 48) << 040 |         \
+                                    (F(X) < 10000 ? 32 : F(X) / 10000 % 10 + 48) << 050 |           \
+                                    (F(X) < 1000 ? 32 : F(X) / 1000 % 10 + 48) << 060 |             \
+                                    (F(X) < 100 ? 32 : F(X) / 100 % 10 + 48) << 070) : 0);          \
+    HIDDEN(X##_short = DEFINED(X) ? ((F(X) < 10 ? 32 : F(X) / 10 % 10 + 48) << 000 |                \
+                                     (F(X) % 10 + 48) << 010) : 0)
 
-HIDDEN(blink_darwin_arm64_b0 = RVA(blink_darwin_arm64) % 10 + 48);
-HIDDEN(blink_darwin_arm64_b1 = RVA(blink_darwin_arm64) < 10 ? 32 : RVA(blink_darwin_arm64) / 10 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b2 = RVA(blink_darwin_arm64) < 100 ? 32 : RVA(blink_darwin_arm64) / 100 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b3 = RVA(blink_darwin_arm64) < 1000 ? 32 : RVA(blink_darwin_arm64) / 1000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b4 = RVA(blink_darwin_arm64) < 10000 ? 32 : RVA(blink_darwin_arm64) / 10000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b5 = RVA(blink_darwin_arm64) < 100000 ? 32 : RVA(blink_darwin_arm64) / 100000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b6 = RVA(blink_darwin_arm64) < 1000000 ? 32 : RVA(blink_darwin_arm64) / 1000000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b7 = RVA(blink_darwin_arm64) < 10000000 ? 32 : RVA(blink_darwin_arm64) / 10000000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b8 = RVA(blink_darwin_arm64) < 100000000 ? 32 : RVA(blink_darwin_arm64) / 100000000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_b9 = RVA(blink_darwin_arm64) < 1000000000 ? 32 : RVA(blink_darwin_arm64) / 1000000000 % 10 + 48);
-
-HIDDEN(blink_darwin_arm64_size_b0 = blink_darwin_arm64_size % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b1 = blink_darwin_arm64_size < 10 ? 32 : blink_darwin_arm64_size / 10 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b2 = blink_darwin_arm64_size < 100 ? 32 : blink_darwin_arm64_size / 100 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b3 = blink_darwin_arm64_size < 1000 ? 32 : blink_darwin_arm64_size / 1000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b4 = blink_darwin_arm64_size < 10000 ? 32 : blink_darwin_arm64_size / 10000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b5 = blink_darwin_arm64_size < 100000 ? 32 : blink_darwin_arm64_size / 100000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b6 = blink_darwin_arm64_size < 1000000 ? 32 : blink_darwin_arm64_size / 1000000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b7 = blink_darwin_arm64_size < 10000000 ? 32 : blink_darwin_arm64_size / 10000000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b8 = blink_darwin_arm64_size < 100000000 ? 32 : blink_darwin_arm64_size / 100000000 % 10 + 48);
-HIDDEN(blink_darwin_arm64_size_b9 = blink_darwin_arm64_size < 1000000000 ? 32 : blink_darwin_arm64_size / 1000000000 % 10 + 48);
+APE_DECLARE_FIXED_DECIMAL(RVA,      blink_linux_aarch64);
+APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_linux_aarch64_size);
+APE_DECLARE_FIXED_DECIMAL(RVA,      blink_xnu_aarch64);
+APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_xnu_aarch64_size);
 
 #endif /* APE_IS_SHELL_SCRIPT */
 

@@ -141,8 +141,8 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
 		libc/sysv/consts/prot.h		\
-		ape/blink-aarch64.gz		\
-		ape/blink-darwin-arm64.gz	\
+		ape/blink-linux-aarch64.gz	\
+		ape/blink-xnu-aarch64.gz	\
 		o/$(MODE)/ape/ape.elf
 	@$(COMPILE)				\
 		-AOBJECTIFY.S			\
@@ -170,8 +170,8 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/runtime/mman.internal.h	\
 		libc/runtime/pc.internal.h	\
 		libc/sysv/consts/prot.h		\
-		ape/blink-aarch64.gz		\
-		ape/blink-darwin-arm64.gz
+		ape/blink-linux-aarch64.gz	\
+		ape/blink-xnu-aarch64.gz
 	@$(COMPILE)				\
 		-AOBJECTIFY.S			\
 		$(OBJECTIFY.S)			\
@@ -232,8 +232,8 @@ o/$(MODE)/ape/ape.o: ape/ape.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 o/$(MODE)/ape/ape.o:				\
-		ape/blink-aarch64.gz		\
-		ape/blink-darwin-arm64.gz
+		ape/blink-linux-aarch64.gz	\
+		ape/blink-xnu-aarch64.gz
 
 o/$(MODE)/ape/ape.lds:				\
 		ape/ape.lds			\

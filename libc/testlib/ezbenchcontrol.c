@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -38,7 +39,7 @@ double __testlib_ezbenchcontrol(void) {
     if (Tries == 10) {
       fputs("warning: failed to accurately benchmark control\n", stderr);
     }
-    fprintf(stderr, "will subtract benchmark overhead of %g cycles\n\n",
+    kprintf("will subtract benchmark overhead of %g cycles\n\n",
             g_ezbenchcontrol);
     once = true;
   }

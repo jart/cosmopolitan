@@ -598,40 +598,40 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	modify the binary to follow the local system's convention.
 //	There isn't a one-size-fits-all approach for this, thus we
 //	present two choices.
-	.ascii	"o=\"$(command -v \"$0\")\"\n"
+	.ascii	  "o=\"$(command -v \"$0\")\"\n"
 //	Try to use a system-wide APE loader.
-	.ascii	"[ x\"$1\" != x--assimilate ] && "
-	.ascii	  "type ape >/dev/null 2>&1 && "
-	.ascii	    "exec ape \"$o\" \"$@\"\n"
+	.ascii	  "[ x\"$1\" != x--assimilate ] && "
+	.ascii	    "type ape >/dev/null 2>&1 && "
+	.ascii	      "exec ape \"$o\" \"$@\"\n"
 #ifdef APE_LOADER
 //	There is no system-wide APE loader, but there is one
 //	embedded inside the APE. So if the system is not MacOs,
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
-	.ascii	"[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/.ape\"\n"
-	.ascii	  "[ -x \"$t\" ] || {\n"
-	.ascii	    "mkdir -p \"${t%/*}\" &&\n"
-	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip="
-	.shstub	      ape_loader_dd_skip,2
-	.ascii	      " count="
-	.shstub	      ape_loader_dd_count,2
-	.ascii	      " bs=64 2>/dev/null\n"
+	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape\"\n"
+	.ascii	    "[ -x \"$t\" ] || {\n"
+	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
+	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
+	.shstub	        ape_loader_dd_skip,2
+	.ascii	        " count="
+	.shstub	        ape_loader_dd_count,2
+	.ascii	        " bs=64 2>/dev/null\n"
 #if SupportsXnu()
-	.ascii	    "[ -d /Applications ] && "
-	.ascii	      "dd if=\"$t.$$\""
-	.ascii	        " of=\"$t.$$\""
-	.ascii	        " skip=6"
-	.ascii	        " count=10"
-	.ascii	        " bs=64"
-	.ascii	        " conv=notrunc"
-	.ascii	        " 2>/dev/null\n"
+	.ascii	      "[ -d /Applications ] && "
+	.ascii	        "dd if=\"$t.$$\""
+	.ascii	          " of=\"$t.$$\""
+	.ascii	          " skip=6"
+	.ascii	          " count=10"
+	.ascii	          " bs=64"
+	.ascii	          " conv=notrunc"
+	.ascii	          " 2>/dev/null\n"
 #endif /* SupportsXnu() */
-	.ascii	    "chmod 755 \"$t.$$\"\n"
-	.ascii	    "mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	      "chmod 755 \"$t.$$\"\n"
+	.ascii	      "mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	    "}\n"
+	.ascii	    "exec \"$t\" \"$o\" \"$@\"\n"
 	.ascii	  "}\n"
-	.ascii	  "exec \"$t\" \"$o\" \"$@\"\n"
-	.ascii	"}\n"
 #endif /* APE_LOADER */
 #ifndef APE_NO_MODIFY_SELF
 //	The default behavior is: to overwrite the header in place.
@@ -641,155 +641,91 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	The alternative behavior is to copy to $TMPDIR or $HOME or
 //	the current directory. We like TMPDIR because it's part of
 //	the IEEE POSIX standard whereas alternatives (XDG) aren't.
-	.ascii	"t=\"${TMPDIR:-${HOME:-.}}/$0\"\n"
-	.ascii	"[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
-	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "mkdir -p \"${t%/*}\" 2>/dev/null\n"
-	.ascii	    "cp -f \"$o\" \"$t.$$\" &&\n"
-	.ascii	    "mv -f \"$t.$$\" \"$t\" || exit 120\n"
-	.ascii	    "o=\"$t\"\n"
-	.ascii	  "}\n"
+	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/$0\"\n"
+	.ascii	  "[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
+	.ascii	    "[ x\"$1\" != x--assimilate ] && {\n"
+	.ascii	      "mkdir -p \"${t%/*}\" 2>/dev/null\n"
+	.ascii	      "cp -f \"$o\" \"$t.$$\" &&\n"
+	.ascii	      "mv -f \"$t.$$\" \"$t\" || exit 120\n"
+	.ascii	      "o=\"$t\"\n"
+	.ascii	    "}\n"
 #endif /* APE_NO_MODIFY_SELF */
-	.ascii	"exec 7<> \"$o\" || exit 121\n"
-	.ascii	"printf '"
-	.ascii	  "\\177ELF"			// 0x0: ⌂ELF
-	.ascii	  "\\2"				//   4: long mode
-	.ascii	  "\\1"				//   5: little endian
-	.ascii	  "\\1"				//   6: elf v1.o
-	.ascii	  "\\011"			//   7: FreeBSD
-	.ascii	  "\\0"				//   8: os/abi ver.
-	.ascii	  "\\0\\0\\0"			//   9: padding 3/7
-	.ascii	  "\\0\\0\\0\\0"		//      padding 4/7
-	.ascii	  "\\2\\0"			//  10: εxεcµταblε
-	.ascii	  "\\076\\0"			//  12: NexGen32e
-	.ascii	  "\\1\\0\\0\\0"		//  14: elf v1.o
-	.shstub	  ape_elf_entry,8		//  18: e_entry
-	.shstub	  ape_elf_phoff,8		//  20: e_phoff
-	.shstub	  ape_elf_shoff,8		//  28: e_shoff
-	.ascii	  "\\0\\0\\0\\0"		//  30: e_flags
-	.ascii	  "\\100\\0"			//  34: e_ehsize
-	.ascii	  "\\070\\0"			//  36: e_phentsize
-	.shstub	  ape_elf_phnum,2		//  38: e_phnum
-	.ascii	  "\\0\\0"			//  3a: e_shentsize
-	.shstub	  ape_elf_shnum,2		//  3c: e_shnum
-	.shstub	  ape_elf_shstrndx,2		//  3e: e_shstrndx
-	.ascii	  "' >&7\n"
-	.ascii	"exec 7<&-\n"
+	.ascii	  "exec 7<> \"$o\" || exit 121\n"
+	.ascii	  "printf '"
+	.ascii	    "\\177ELF"			// 0x0: ⌂ELF
+	.ascii	    "\\2"			//   4: long mode
+	.ascii	    "\\1"			//   5: little endian
+	.ascii	    "\\1"			//   6: elf v1.o
+	.ascii	    "\\011"			//   7: FreeBSD
+	.ascii	    "\\0"			//   8: os/abi ver.
+	.ascii	    "\\0\\0\\0"			//   9: padding 3/7
+	.ascii	    "\\0\\0\\0\\0"		//      padding 4/7
+	.ascii	    "\\2\\0"			//  10: εxεcµταblε
+	.ascii	    "\\076\\0"			//  12: NexGen32e
+	.ascii	    "\\1\\0\\0\\0"		//  14: elf v1.o
+	.shstub	    ape_elf_entry,8		//  18: e_entry
+	.shstub	    ape_elf_phoff,8		//  20: e_phoff
+	.shstub	    ape_elf_shoff,8		//  28: e_shoff
+	.ascii	    "\\0\\0\\0\\0"		//  30: e_flags
+	.ascii	    "\\100\\0"			//  34: e_ehsize
+	.ascii	    "\\070\\0"			//  36: e_phentsize
+	.shstub	    ape_elf_phnum,2		//  38: e_phnum
+	.ascii	    "\\0\\0"			//  3a: e_shentsize
+	.shstub	    ape_elf_shnum,2		//  3c: e_shnum
+	.shstub	    ape_elf_shstrndx,2		//  3e: e_shstrndx
+	.ascii	    "' >&7\n"
+	.ascii	  "exec 7<&-\n"
 #if SupportsXnu()
-	.ascii	"[ -d /Applications ] && "
-	.ascii	  "dd if=\"$o\""
-	.ascii	    " of=\"$o\""
-	.ascii	    " bs=8"
-	.ascii	    " skip="
-	.shstub	    ape_macho_dd_skip,2
-	.ascii	    " count="
-	.shstub	    ape_macho_dd_count,2
-	.ascii	    " conv=notrunc 2>/dev/null\n"
+	.ascii	  "[ -d /Applications ] && "
+	.ascii	    "dd if=\"$o\""
+	.ascii	      " of=\"$o\""
+	.ascii	      " bs=8"
+	.ascii	      " skip="
+	.shstub	      ape_macho_dd_skip,2
+	.ascii	      " count="
+	.shstub	      ape_macho_dd_count,2
+	.ascii	      " conv=notrunc 2>/dev/null\n"
 #endif /* XNU */
-	.ascii	"[ x\"$1\" = x--assimilate ] && exit 0\n"
+	.ascii	  "[ x\"$1\" = x--assimilate ] && exit 0\n"
 #ifndef APE_NO_MODIFY_SELF
-	.ascii	"exec \"$0\" \"$@\"\n"		// try to preserve argv[0]
+	.ascii	  "exec \"$0\" \"$@\"\n"	// try to preserve argv[0]
 #else
-	.ascii	"}\n"
-	.ascii	"o=\"$t\"\n"
-	.ascii	"exec \"$o\" \"$@\"\n"
+	.ascii	  "}\n"
+	.ascii	  "o=\"$t\"\n"
+	.ascii	  "exec \"$o\" \"$@\"\n"
 #endif /* APE_NO_MODIFY_SELF */
-	.ascii	"exit $?\n"
-	.ascii	"fi\n"
-
+	.ascii	  "exit $?\n"
+	.ascii	"fi\n"				// x86_64
+//	...
+//	decentralized section (.apesh)
+//	...
 	.ascii	"PHDRS='' <<'@'\n"
 	.endobj	apesh
 
-#if !IsTiny()
 //	elf program headers get inserted here
 //	because they need to be in the first 4096 bytes
-        .section .emush,"a",@progbits
+        .section .emushprologue,"a",@progbits
 emush:	.ascii	"\n@\n#'\"\n"
 	.ascii	"s=\"$(uname -s)\"\n"
-
 //	our script is running on a non-x86_64 architecture
 //	1. `dd` out the appropriate blink vm blob
 //	2. gunzip the blink virtual machine executable
 //	3. relaunch this program inside the blink vm
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 	.ascii	"e=\"${TMPDIR:-${HOME:-.}}/.ape-blink-1.0.0\"\n"
-
-//	Blink for Apple Silicon, e.g. M1 Macbook
-	.ascii	"if [ \"$s\" = Darwin ] && [ \"$m\" = arm64 ]; then\n"
-	.ascii	"if ! [ -x \"$e\" ]; then\n"
-	.ascii	"echo \"extracting blink-darwin-arm64 to ${e}\" >&2\n"
-	.ascii	"dd if=\"$o\" bs=1 skip=$(("
-	.byte	blink_darwin_arm64_b9
-	.byte	blink_darwin_arm64_b8
-	.byte	blink_darwin_arm64_b7
-	.byte	blink_darwin_arm64_b6
-	.byte	blink_darwin_arm64_b5
-	.byte	blink_darwin_arm64_b4
-	.byte	blink_darwin_arm64_b3
-	.byte	blink_darwin_arm64_b2
-	.byte	blink_darwin_arm64_b1
-	.byte	blink_darwin_arm64_b0
-	.ascii	")) count=$(("
-	.byte	blink_darwin_arm64_size_b9
-	.byte	blink_darwin_arm64_size_b8
-	.byte	blink_darwin_arm64_size_b7
-	.byte	blink_darwin_arm64_size_b6
-	.byte	blink_darwin_arm64_size_b5
-	.byte	blink_darwin_arm64_size_b4
-	.byte	blink_darwin_arm64_size_b3
-	.byte	blink_darwin_arm64_size_b2
-	.byte	blink_darwin_arm64_size_b1
-	.byte	blink_darwin_arm64_size_b0
-	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
-	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
-	.ascii	"chmod +x \"$e\"\n"
-	.ascii	"fi\n"
-	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
-	.ascii	"fi\n"
-
-//	Blink for Aarch64 Linux, e.g. Raspberry Pi
-	.ascii	"if [ \"$s\" = Linux ]; then\n"
-	.ascii	"if [ \"$m\" = aarch64 ] || [ \"$m\" = arm64 ]; then\n"
-	.ascii	"if ! [ -x \"$e\" ]; then\n"
-	.ascii	"echo \"extracting blink-aarch64 to ${e}\" >&2\n"
-	.ascii	"dd if=\"$o\" bs=1 skip=$(("
-	.byte	blink_aarch64_b9
-	.byte	blink_aarch64_b8
-	.byte	blink_aarch64_b7
-	.byte	blink_aarch64_b6
-	.byte	blink_aarch64_b5
-	.byte	blink_aarch64_b4
-	.byte	blink_aarch64_b3
-	.byte	blink_aarch64_b2
-	.byte	blink_aarch64_b1
-	.byte	blink_aarch64_b0
-	.ascii	")) count=$(("
-	.byte	blink_aarch64_size_b9
-	.byte	blink_aarch64_size_b8
-	.byte	blink_aarch64_size_b7
-	.byte	blink_aarch64_size_b6
-	.byte	blink_aarch64_size_b5
-	.byte	blink_aarch64_size_b4
-	.byte	blink_aarch64_size_b3
-	.byte	blink_aarch64_size_b2
-	.byte	blink_aarch64_size_b1
-	.byte	blink_aarch64_size_b0
-	.ascii	")) conv=notrunc 2>/dev/null | gunzip >\"$e.$$\"\n"
-	.ascii	"mv -f \"$e.$$\" \"$e\"\n"
-	.ascii	"chmod +x \"$e\"\n"
-	.ascii	"fi\n"
-	.ascii	"exec \"$e\" \"$o\" \"$@\"\n"
-	.ascii	"fi\n"
-	.ascii	"fi\n"
-
-	.ascii	"echo unsupported architecture >&2\n"
+	.previous
+//	...
+//	decentralized section (.emush)
+//	- STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
+//	- STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
+//	...
+        .section .emushepilogue,"a",@progbits
+	.ascii	"echo \"$0: this ape binary lacks $m support\" >&2\n"
 	.rept	16
 	.ascii	"exit 127\n"
 	.endr
-
 	.ascii	"exit 1\n"
-	.endobj	emush
-#endif /* !IsTiny() */
+	.previous
 
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits
@@ -1940,28 +1876,6 @@ __bss_start:
 	.hidden	__bss_end
 __bss_end:
 	.previous
-
-#if !IsTiny()
-#ifdef APE_IS_SHELL_SCRIPT
-
-	.section .blink,"a",@progbits
-	.globl	blink_aarch64_size
-blink_aarch64:
-	.incbin	"ape/blink-aarch64.gz"
-	.endobj	blink_aarch64,globl
-blink_aarch64_size = . - blink_aarch64
-	.previous
-
-	.section .blink,"a",@progbits
-	.globl	blink_darwin_arm64_size
-blink_darwin_arm64:
-	.incbin	"ape/blink-darwin-arm64.gz"
-	.endobj	blink_darwin_arm64,globl
-blink_darwin_arm64_size = . - blink_darwin_arm64
-	.previous
-
-#endif /* APE_IS_SHELL_SCRIPT */
-#endif /* !IsTiny() */
 
 .end
 

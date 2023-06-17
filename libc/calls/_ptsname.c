@@ -25,8 +25,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-extern const unsigned TIOCPTSNAME;
-
+#define TIOCGPTN     0x80045430  // linux
 #define TIOCPTYGNAME 0x40807453  // xnu
 #define TIOCPTSNAME  0x48087448  // netbsd
 #define FIODGNAME    0x80106678  // freebsd

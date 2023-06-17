@@ -1451,8 +1451,6 @@ syscon	termios	CSTOP					19			19			19			19			19			19			19			0			# unix consensus
 #	Pseudoteletypewriter Control
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	pty	TIOCGPTN				0x80045430		0x80045430		0			0			0x4004740f		0			0			0			# boop
-syscon	pty	TIOCSPTLCK				0x40045431		0x40045431		0			0			0			0			0			0			# boop
 syscon	pty	TIOCPKT					0x5420			0x5420			0x80047470		0x80047470		0x80047470		0x80047470		0x80047470		-1			# boop
 syscon	pty	TIOCPKT_DATA				0			0			0			0			0			0			0			0			# consensus
 syscon	pty	TIOCPKT_FLUSHREAD			1			1			1			1			1			1			1			1			# unix consensus

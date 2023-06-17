@@ -81,7 +81,6 @@ extern const int TCSAFLUSH;
 extern const int TCSANOW;
 extern const uint64_t TIOCCONS;
 extern const uint64_t TIOCGETD;
-extern const uint64_t TIOCGPTN;
 extern const uint64_t TIOCGWINSZ;
 extern const uint64_t TIOCNOTTY;
 extern const uint64_t TIOCNXCL;
@@ -211,7 +210,6 @@ extern const uint32_t CRTSCTS;
 #define TCSANOW    0
 #define TIOCCONS   TIOCCONS
 #define TIOCGETD   TIOCGETD
-#define TIOCGPTN   TIOCGPTN
 #define TIOCGWINSZ TIOCGWINSZ
 #define TIOCNOTTY  TIOCNOTTY
 #define TIOCNXCL   TIOCNXCL
@@ -308,7 +306,6 @@ extern const uint32_t CRTSCTS;
 #define __tmpcosmo_TCOFLUSH   659539281
 #define __tmpcosmo_TIOCCONS   1455144588
 #define __tmpcosmo_TIOCGETD   470897144
-#define __tmpcosmo_TIOCGPTN   67701595
 #define __tmpcosmo_TIOCGWINSZ 965491756
 #define __tmpcosmo_TIOCNOTTY  1073131930
 #define __tmpcosmo_TIOCNXCL   1210582499
