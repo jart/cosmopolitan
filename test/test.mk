@@ -4,5 +4,6 @@
 .PHONY:		o/$(MODE)/test
 o/$(MODE)/test:	o/$(MODE)/test/dsp	\
 		o/$(MODE)/test/libc	\
+		o/$(MODE)/test/portcosmo \
 		o/$(MODE)/test/net	\
 		o/$(MODE)/test/tool

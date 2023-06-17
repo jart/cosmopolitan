@@ -239,6 +239,7 @@ include test/libc/stdio/test.mk
 include test/libc/zipos/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
+include test/portcosmo/test.mk
 include test/net/http/test.mk
 include test/net/https/test.mk
 include test/net/finger/test.mk
