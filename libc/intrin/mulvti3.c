@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,35 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
+#include "libc/runtime/internal.h"
 
-#define TRIES 8
+int128_t __muloti4(int128_t, int128_t, int *);
 
 /**
- * Returns offset of binary embedded inside binary.
+ * Returns 𝑥*𝑦, aborting on overflow.
  *
- * This can be used to load zip assets from an executable that hasn't
- * gone through the `objcopy -S -O binary` step. We make the assumption
- * that an x86_64-pc-linux-gnu toolchain is being used. This routine
- * would need to be changed to accommodate binaries built locally on
- * Apple, FreeBSD, etc.
- *
- * @param p needs to be page aligned
- * @param n is byte length of p
- * @return base address of image or NULL if not found
+ * @see __on_arithmetic_overflow()
+ * @see -ftrapv to enable
  */
-uint8_t *FindEmbeddedApe(const uint8_t *p, size_t n) {
-  size_t i;
-  uint64_t w;
-  n = MIN(n, TRIES * PAGESIZE);
-  for (i = 0; i + 8 <= n; i += PAGESIZE) {
-    w = READ64LE(p + i);
-    if (w == READ64LE("MZqFpD='") || w == READ64LE("\177ELF\2\1\1\11")) {
-      return (/*unconst*/ uint8_t *)(p + i);
-    }
-  }
-  return 0;
+int128_t __mulvti3(int128_t x, int128_t y) {
+  int o;
+  int128_t z;
+  z = __muloti4(x, y, &o);
+  if (o) __on_arithmetic_overflow();
+  return z;
 }

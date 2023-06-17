@@ -430,10 +430,6 @@ void DisassembleZip(const char *path, uint8_t *p, size_t n) {
   uint16_t i;
   static int records;
   uint8_t *eocd32, *eocd64, *cdir, *cf, *lf, *q;
-  if (_endswith(path, ".com.dbg") && (q = memmem(p, n, "MZqFpD", 6))) {
-    n -= q - p;
-    p += q - p;
-  }
   eocd32 = GetZipCdir32(p, n);
   eocd64 = GetZipCdir64(p, n);
   CHECK(eocd32 || eocd64);

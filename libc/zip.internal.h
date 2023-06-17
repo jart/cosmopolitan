@@ -15,20 +15,27 @@
 #define ZM_(x) ~VEIL("r", ~x) /* prevent magic from appearing in binary */
 #endif
 
-#define kZipOk                       0
-#define kZipErrorEocdNotFound        -1
-#define kZipErrorEocdOffsetOverflow  -2
-#define kZipErrorEocdMagicNotFound   -3
-#define kZipErrorEocdSizeOverflow    -4
-#define kZipErrorEocdDiskMismatch    -5
-#define kZipErrorCdirRecordsMismatch -6
-#define kZipErrorCdirRecordsOverflow -7
-#define kZipErrorCdirOffsetPastEocd  -8
-#define kZipErrorCdirLocatorMagic    -9
-#define kZipErrorCdirLocatorOffset   -10
-#define kZipErrorRaceCondition       -11
-#define kZipErrorMapFailed           -12
-#define kZipErrorOpenFailed          -13
+#ifdef TINY
+#define _ZE(x) -1
+#else
+#define _ZE(x) x
+#endif
+
+#define kZipOk                          0
+#define kZipErrorEocdNotFound           _ZE(-1)
+#define kZipErrorEocdOffsetOverflow     _ZE(-2)
+#define kZipErrorEocdMagicNotFound      _ZE(-3)
+#define kZipErrorEocdSizeOverflow       _ZE(-4)
+#define kZipErrorEocdDiskMismatch       _ZE(-5)
+#define kZipErrorEocdOffsetSizeOverflow _ZE(-6)
+#define kZipErrorEocdRecordsMismatch    _ZE(-7)
+#define kZipErrorEocdRecordsOverflow    _ZE(-8)
+#define kZipErrorCdirOffsetPastEocd     _ZE(-9)
+#define kZipErrorEocdLocatorMagic       _ZE(-10)
+#define kZipErrorEocdLocatorOffset      _ZE(-11)
+#define kZipErrorRaceCondition          _ZE(-12)
+#define kZipErrorMapFailed              _ZE(-13)
+#define kZipErrorOpenFailed             _ZE(-14)
 
 #define kZipCosmopolitanVersion kZipEra2001
 
@@ -75,7 +82,7 @@
 #define kZipCdirOffsetOffset        16
 #define kZipCdirCommentSizeOffset   20
 
-#define kZipCdir64HdrMagic     ZM_(0x06064b50) /* PK♣♠ "PK\6\6" */
+#define kZipCdir64HdrMagic     ZM_(0x06064b50) /* PK♠♠ "PK\6\6" */
 #define kZipCdir64HdrMinSize   56
 #define kZipCdir64LocatorMagic ZM_(0x07064b50) /* PK♠• "PK\6\7" */
 #define kZipCdir64LocatorSize  20
@@ -211,7 +218,6 @@
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
 void *GetZipEocd(const void *, size_t, int *);
-uint8_t *FindEmbeddedApe(const uint8_t *, size_t);
 int IsZipEocd32(const uint8_t *, size_t, size_t);
 int IsZipEocd64(const uint8_t *, size_t, size_t);
 int GetZipCfileMode(const uint8_t *);

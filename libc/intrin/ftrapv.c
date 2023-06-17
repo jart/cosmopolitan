@@ -39,8 +39,8 @@ int __negvsi2(int x) {
  * @see __on_arithmetic_overflow()
  * @see -ftrapv to enable
  */
-long __negvdi2(long x) {
-  if (x == LONG_MIN) {
+long long __negvdi2(long long x) {
+  if (x == LLONG_MIN) {
     __on_arithmetic_overflow();
   }
   return -x;
@@ -79,8 +79,8 @@ int __addvsi3(int x, int y) {
  * @see __on_arithmetic_overflow()
  * @see -ftrapv to enable
  */
-long __addvdi3(long x, long y) {
-  long z;
+long long __addvdi3(long long x, long long y) {
+  long long z;
   if (ckd_add(&z, x, y)) {
     __on_arithmetic_overflow();
   }
@@ -121,8 +121,8 @@ int __subvsi3(int x, int y) {
  * @see __on_arithmetic_overflow()
  * @see -ftrapv to enable
  */
-long __subvdi3(long x, long y) {
-  long z;
+long long __subvdi3(long long x, long long y) {
+  long long z;
   if (ckd_sub(&z, x, y)) {
     __on_arithmetic_overflow();
   }
@@ -163,22 +163,8 @@ int __mulvsi3(int x, int y) {
  * @see __on_arithmetic_overflow()
  * @see -ftrapv to enable
  */
-long __mulvdi3(long x, long y) {
-  long z;
-  if (ckd_mul(&z, x, y)) {
-    __on_arithmetic_overflow();
-  }
-  return z;
-}
-
-/**
- * Returns 𝑥*𝑦, aborting on overflow.
- *
- * @see __on_arithmetic_overflow()
- * @see -ftrapv to enable
- */
-int128_t __mulvti3(int128_t x, int128_t y) {
-  int128_t z;
+long long __mulvdi3(long long x, long long y) {
+  long long z;
   if (ckd_mul(&z, x, y)) {
     __on_arithmetic_overflow();
   }

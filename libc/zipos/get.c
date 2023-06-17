@@ -67,9 +67,9 @@ struct Zipos *__zipos_get(void) {
   int fd, err, msg;
   static bool once;
   struct Zipos *res;
+  uint8_t *map, *cdir;
   const char *progpath;
   static struct Zipos zipos;
-  uint8_t *map, *base, *cdir;
   __zipos_lock();
   if (!once) {
     progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
@@ -86,15 +86,11 @@ struct Zipos *__zipos_get(void) {
       }
       if (fd != -1) {
         if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-            (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-          if ((base = FindEmbeddedApe(map, size))) {
-            size -= base - map;
-          } else {
-            base = map;
-          }
-          if ((cdir = GetZipEocd(base, size, &err)) &&
-              _cmpxchg(&zipos.map, 0, base)) {
-            __zipos_munmap_unneeded(base, cdir, map);
+            (map = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
+                MAP_FAILED) {
+          if ((cdir = GetZipEocd(map, size, &err))) {
+            __zipos_munmap_unneeded(map, cdir, map);
+            zipos.map = map;
             zipos.cdir = cdir;
             msg = kZipOk;
           } else {

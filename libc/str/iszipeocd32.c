@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdckdint.h"
 #include "libc/zip.internal.h"
 
 /**
  * Determines if ZIP EOCD record seems legit.
  */
 int IsZipEocd32(const uint8_t *p, size_t n, size_t i) {
+  size_t offset;
   if (i > n || n - i < kZipCdirHdrMinSize) {
     return kZipErrorEocdOffsetOverflow;
   }
@@ -35,12 +37,15 @@ int IsZipEocd32(const uint8_t *p, size_t n, size_t i) {
     return kZipErrorEocdDiskMismatch;
   }
   if (ZIP_CDIR_RECORDSONDISK(p + i) != ZIP_CDIR_RECORDS(p + i)) {
-    return kZipErrorCdirRecordsMismatch;
+    return kZipErrorEocdRecordsMismatch;
   }
   if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i)) {
-    return kZipErrorCdirRecordsOverflow;
+    return kZipErrorEocdRecordsOverflow;
   }
-  if (ZIP_CDIR_OFFSET(p + i) + ZIP_CDIR_SIZE(p + i) > i) {
+  if (ckd_add(&offset, ZIP_CDIR_OFFSET(p + i), ZIP_CDIR_SIZE(p + i))) {
+    return kZipErrorEocdOffsetSizeOverflow;
+  }
+  if (offset > i) {
     return kZipErrorCdirOffsetPastEocd;
   }
   return kZipOk;

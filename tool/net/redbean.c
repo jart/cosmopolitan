@@ -482,7 +482,6 @@ static size_t zsize;
 static lua_State *GL;
 static lua_State *YL;
 static uint8_t *zmap;
-static uint8_t *zbase;
 static uint8_t *zcdir;
 static size_t hdrsize;
 static size_t amtread;
@@ -2089,11 +2088,11 @@ static int64_t GetGmtOffset(int64_t t) {
 
 forceinline bool IsCompressed(struct Asset *a) {
   return !a->file &&
-         ZIP_LFILE_COMPRESSIONMETHOD(zbase + a->lf) == kZipCompressionDeflate;
+         ZIP_LFILE_COMPRESSIONMETHOD(zmap + a->lf) == kZipCompressionDeflate;
 }
 
 forceinline int GetMode(struct Asset *a) {
-  return a->file ? a->file->st.st_mode : GetZipCfileMode(zbase + a->cf);
+  return a->file ? a->file->st.st_mode : GetZipCfileMode(zmap + a->cf);
 }
 
 forceinline bool IsCompressionMethodSupported(int method) {
@@ -2140,26 +2139,25 @@ static void IndexAssets(void) {
   n = GetZipCdirRecords(zcdir);
   m = _roundup2pow(MAX(1, n) * HASH_LOAD_FACTOR);
   p = xcalloc(m, sizeof(struct Asset));
-  for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zbase + cf)) {
-    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zbase + cf));
-    if (!IsCompressionMethodSupported(
-            ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf))) {
+  for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
+    CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
+    if (!IsCompressionMethodSupported(ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf))) {
       WARNF("(zip) don't understand zip compression method %d used by %`'.*s",
-            ZIP_CFILE_COMPRESSIONMETHOD(zbase + cf),
-            ZIP_CFILE_NAMESIZE(zbase + cf), ZIP_CFILE_NAME(zbase + cf));
+            ZIP_CFILE_COMPRESSIONMETHOD(zmap + cf),
+            ZIP_CFILE_NAMESIZE(zmap + cf), ZIP_CFILE_NAME(zmap + cf));
       continue;
     }
-    hash = Hash(ZIP_CFILE_NAME(zbase + cf), ZIP_CFILE_NAMESIZE(zbase + cf));
+    hash = Hash(ZIP_CFILE_NAME(zmap + cf), ZIP_CFILE_NAMESIZE(zmap + cf));
     step = 0;
     do {
       i = (hash + (step * (step + 1)) >> 1) & (m - 1);
       ++step;
     } while (p[i].hash);
-    GetZipCfileTimestamps(zbase + cf, &lm, 0, 0, gmtoff);
+    GetZipCfileTimestamps(zmap + cf, &lm, 0, 0, gmtoff);
     p[i].hash = hash;
     p[i].cf = cf;
-    p[i].lf = GetZipCfileOffset(zbase + cf);
-    p[i].istext = !!(ZIP_CFILE_INTERNALATTRIBUTES(zbase + cf) & kZipIattrText);
+    p[i].lf = GetZipCfileOffset(zmap + cf);
+    p[i].istext = !!(ZIP_CFILE_INTERNALATTRIBUTES(zmap + cf) & kZipIattrText);
     p[i].lastmodified = lm.tv_sec;
     p[i].lastmodifiedstr = FormatUnixHttpDateTime(xmalloc(30), lm.tv_sec);
   }
@@ -2171,7 +2169,7 @@ static bool OpenZip(bool force) {
   int fd;
   size_t n;
   struct stat st;
-  uint8_t *m, *b, *d, *p;
+  uint8_t *m, *d, *p;
   if (stat(zpath, &st) != -1) {
     if (force || st.st_ino != zst.st_ino || st.st_size > zst.st_size) {
       if (st.st_ino == zst.st_ino) {
@@ -2183,22 +2181,15 @@ static bool OpenZip(bool force) {
       if ((m = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
           MAP_FAILED) {
         n = st.st_size;
-        if ((p = FindEmbeddedApe(m, n))) {
-          b = p;
-          n -= p - m;
-        } else {
-          b = m;
-        }
-        if ((d = GetZipEocd(b, n, 0))) {
+        if ((d = GetZipEocd(m, n, 0))) {
           if (zmap) {
-            LOGIFNEG1(munmap(zmap, zbase + zsize - zmap));
+            LOGIFNEG1(munmap(zmap, zsize));
           }
           zmap = m;
-          zbase = b;
           zsize = n;
           zcdir = d;
-          DCHECK(IsZipEocd32(zbase, zsize, zcdir - zbase) == kZipOk ||
-                 IsZipEocd64(zbase, zsize, zcdir - zbase) == kZipOk);
+          DCHECK(IsZipEocd32(zmap, zsize, zcdir - zmap) == kZipOk ||
+                 IsZipEocd64(zmap, zsize, zcdir - zmap) == kZipOk);
           memcpy(&zst, &st, sizeof(st));
           IndexAssets();
           return true;
@@ -2228,8 +2219,8 @@ static struct Asset *GetAssetZip(const char *path, size_t pathlen) {
     i = (hash + (step * (step + 1)) >> 1) & (assets.n - 1);
     if (!assets.p[i].hash) return NULL;
     if (hash == assets.p[i].hash &&
-        pathlen == ZIP_CFILE_NAMESIZE(zbase + assets.p[i].cf) &&
-        memcmp(path, ZIP_CFILE_NAME(zbase + assets.p[i].cf), pathlen) == 0) {
+        pathlen == ZIP_CFILE_NAMESIZE(zmap + assets.p[i].cf) &&
+        memcmp(path, ZIP_CFILE_NAME(zmap + assets.p[i].cf), pathlen) == 0) {
       return &assets.p[i];
     }
   }
@@ -2378,18 +2369,18 @@ static void *LoadAsset(struct Asset *a, size_t *out_size) {
     return NULL;
   }
   if (!a->file) {
-    size = GetZipLfileUncompressedSize(zbase + a->lf);
+    size = GetZipLfileUncompressedSize(zmap + a->lf);
     if (size == SIZE_MAX || !(data = malloc(size + 1))) return NULL;
     if (IsCompressed(a)) {
-      if (!Inflate(data, size, ZIP_LFILE_CONTENT(zbase + a->lf),
-                   GetZipCfileCompressedSize(zbase + a->cf))) {
+      if (!Inflate(data, size, ZIP_LFILE_CONTENT(zmap + a->lf),
+                   GetZipCfileCompressedSize(zmap + a->cf))) {
         free(data);
         return NULL;
       }
     } else {
-      memcpy(data, ZIP_LFILE_CONTENT(zbase + a->lf), size);
+      memcpy(data, ZIP_LFILE_CONTENT(zmap + a->lf), size);
     }
-    if (!Verify(data, size, ZIP_LFILE_CRC32(zbase + a->lf))) {
+    if (!Verify(data, size, ZIP_LFILE_CRC32(zmap + a->lf))) {
       free(data);
       return NULL;
     }
@@ -2536,10 +2527,10 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
     cpm.content = FreeLater(xslurp(a->file->path.s, &cpm.contentlength));
     return AppendContentType(p, "text/html; charset=utf-8");
   } else {
-    cpm.content = (char *)ZIP_LFILE_CONTENT(zbase + a->lf);
-    cpm.contentlength = GetZipCfileCompressedSize(zbase + a->cf);
+    cpm.content = (char *)ZIP_LFILE_CONTENT(zmap + a->lf);
+    cpm.contentlength = GetZipCfileCompressedSize(zmap + a->cf);
     if (IsCompressed(a)) {
-      n = GetZipLfileUncompressedSize(zbase + a->lf);
+      n = GetZipLfileUncompressedSize(zmap + a->lf);
       if ((s = FreeLater(malloc(n))) &&
           Inflate(s, n, cpm.content, cpm.contentlength)) {
         cpm.content = s;
@@ -2548,8 +2539,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
         return ServeDefaultErrorPage(p, code, reason, details);
       }
     }
-    if (Verify(cpm.content, cpm.contentlength,
-               ZIP_LFILE_CRC32(zbase + a->lf))) {
+    if (Verify(cpm.content, cpm.contentlength, ZIP_LFILE_CRC32(zmap + a->lf))) {
       return AppendContentType(p, "text/html; charset=utf-8");
     } else {
       return ServeDefaultErrorPage(p, code, reason, details);
@@ -2747,7 +2737,7 @@ static ssize_t InflateGenerator(struct iovec v[3]) {
     dg.t = dg.s.avail_out ? 1 : 2;
   } else if (rc == Z_STREAM_END) {
     CHECK_EQ(Z_OK, inflateEnd(&dg.s));
-    CHECK_EQ(ZIP_CFILE_CRC32(zbase + dg.a->cf), dg.c);
+    CHECK_EQ(ZIP_CFILE_CRC32(zmap + dg.a->cf), dg.c);
     dg.t = 3;
   }
   return v[0].iov_len + v[1].iov_len + v[2].iov_len;
@@ -2759,7 +2749,7 @@ static char *ServeAssetDecompressed(struct Asset *a) {
   uint32_t crc;
   LockInc(&shared->c.inflates);
   LockInc(&shared->c.decompressedresponses);
-  size = GetZipCfileUncompressedSize(zbase + a->cf);
+  size = GetZipCfileUncompressedSize(zmap + a->cf);
   DEBUGF("(srvr) ServeAssetDecompressed(%ld)→%ld", cpm.contentlength, size);
   if (cpm.msg.method == kHttpHead) {
     cpm.content = 0;
@@ -2777,7 +2767,7 @@ static char *ServeAssetDecompressed(struct Asset *a) {
     return SetStatus(200, "OK");
   } else if ((p = FreeLater(malloc(size))) &&
              Inflate(p, size, cpm.content, cpm.contentlength) &&
-             Verify(p, size, ZIP_CFILE_CRC32(zbase + a->cf))) {
+             Verify(p, size, ZIP_CFILE_CRC32(zmap + a->cf))) {
     cpm.content = p;
     cpm.contentlength = size;
     return SetStatus(200, "OK");
@@ -2797,8 +2787,8 @@ static inline char *ServeAssetPrecompressed(struct Asset *a) {
   uint32_t crc;
   DEBUGF("(srvr) ServeAssetPrecompressed()");
   LockInc(&shared->c.precompressedresponses);
-  crc = ZIP_CFILE_CRC32(zbase + a->cf);
-  size = GetZipCfileUncompressedSize(zbase + a->cf);
+  crc = ZIP_CFILE_CRC32(zmap + a->cf);
+  size = GetZipCfileUncompressedSize(zmap + a->cf);
   cpm.gzipped = size;
   WRITE32LE(gzip_footer + 0, crc);
   WRITE32LE(gzip_footer + 4, size);
@@ -3005,7 +2995,7 @@ td { padding-right: 3em; }\r\n\
           GetZipCdirComment(zcdir));
   bzero(w, sizeof(w));
   n = GetZipCdirRecords(zcdir);
-  for (zcf = zbase + GetZipCdirOffset(zcdir); n--;
+  for (zcf = zmap + GetZipCdirOffset(zcdir); n--;
        zcf += ZIP_CFILE_HDRSIZE(zcf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zcf));
     path = GetAssetPath(zcf, &pathlen);
@@ -3017,7 +3007,7 @@ td { padding-right: 3em; }\r\n\
     free(path);
   }
   n = GetZipCdirRecords(zcdir);
-  for (zcf = zbase + GetZipCdirOffset(zcdir); n--;
+  for (zcf = zmap + GetZipCdirOffset(zcdir); n--;
        zcf += ZIP_CFILE_HDRSIZE(zcf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zcf));
     path = GetAssetPath(zcf, &pathlen);
@@ -3590,9 +3580,9 @@ static int LuaLoadAsset(lua_State *L) {
   if ((a = GetAsset(path, pathlen))) {
     if (!a->file && !IsCompressed(a)) {
       /* fast path: this avoids extra copy */
-      data = ZIP_LFILE_CONTENT(zbase + a->lf);
-      size = GetZipLfileUncompressedSize(zbase + a->lf);
-      if (Verify(data, size, ZIP_LFILE_CRC32(zbase + a->lf))) {
+      data = ZIP_LFILE_CONTENT(zmap + a->lf);
+      size = GetZipLfileUncompressedSize(zmap + a->lf);
+      if (Verify(data, size, ZIP_LFILE_CRC32(zmap + a->lf))) {
         lua_pushlstring(L, data, size);
         return 1;
       }
@@ -3711,15 +3701,15 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   if (a) {
     // to remove an existing asset,
     // first copy the central directory part before its record
-    v[4].iov_base = zbase + oldcdiroffset;
+    v[4].iov_base = zmap + oldcdiroffset;
     v[4].iov_len = a->cf - oldcdiroffset;
     // and then the rest of the central directory
-    v[5].iov_base = zbase + oldcdiroffset +
-                    (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
+    v[5].iov_base =
+        zmap + oldcdiroffset + (v[4].iov_len + ZIP_CFILE_HDRSIZE(zmap + a->cf));
     v[5].iov_len =
-        oldcdirsize - (v[4].iov_len + ZIP_CFILE_HDRSIZE(zbase + a->cf));
+        oldcdirsize - (v[4].iov_len + ZIP_CFILE_HDRSIZE(zmap + a->cf));
   } else {
-    v[4].iov_base = zbase + oldcdiroffset;
+    v[4].iov_base = zmap + oldcdiroffset;
     v[4].iov_len = oldcdirsize;
     v[5].iov_base = 0;
     v[5].iov_len = 0;
@@ -3807,7 +3797,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   p = WRITE32LE(p, MIN(cdirsize, 0xffffffff));
   p = WRITE32LE(p, MIN(cdiroffset, 0xffffffff));
   p = WRITE16LE(p, v[12].iov_len);
-  CHECK_NE(-1, lseek(zfd, zbase + zsize - zmap, SEEK_SET));
+  CHECK_NE(-1, lseek(zfd, zmap + zsize - zmap, SEEK_SET));
   CHECK_NE(-1, WritevAll(zfd, v, 13));
   CHECK_NE(-1, fcntl(zfd, F_SETLK, &(struct flock){F_UNLCK}));
   //////////////////////////////////////////////////////////////////////////////
@@ -4718,7 +4708,7 @@ static int LuaGetZipPaths(lua_State *L) {
   lua_newtable(L);
   i = 0;
   n = GetZipCdirRecords(zcdir);
-  for (zcf = zbase + GetZipCdirOffset(zcdir); n--;
+  for (zcf = zmap + GetZipCdirOffset(zcdir); n--;
        zcf += ZIP_CFILE_HDRSIZE(zcf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zcf));
     path = GetAssetPath(zcf, &pathlen);
@@ -4755,7 +4745,7 @@ static int LuaGetAssetLastModifiedTime(lua_State *L) {
     if (a->file) {
       zuluseconds = a->file->st.st_mtim.tv_sec;
     } else {
-      GetZipCfileTimestamps(zbase + a->cf, &lm, 0, 0, gmtoff);
+      GetZipCfileTimestamps(zmap + a->cf, &lm, 0, 0, gmtoff);
       zuluseconds = lm.tv_sec;
     }
     lua_pushinteger(L, zuluseconds);
@@ -4774,7 +4764,7 @@ static int LuaGetAssetSize(lua_State *L) {
     if (a->file) {
       lua_pushinteger(L, a->file->st.st_size);
     } else {
-      lua_pushinteger(L, GetZipLfileUncompressedSize(zbase + a->lf));
+      lua_pushinteger(L, GetZipLfileUncompressedSize(zmap + a->lf));
     }
   } else {
     lua_pushnil(L);
@@ -5004,9 +4994,9 @@ static int LuaGetAssetComment(lua_State *L) {
   size_t pathlen, m;
   path = LuaCheckPath(L, 1, &pathlen);
   if ((a = GetAssetZip(path, pathlen)) &&
-      (m = strnlen(ZIP_CFILE_COMMENT(zbase + a->cf),
-                   ZIP_CFILE_COMMENTSIZE(zbase + a->cf)))) {
-    lua_pushlstring(L, ZIP_CFILE_COMMENT(zbase + a->cf), m);
+      (m = strnlen(ZIP_CFILE_COMMENT(zmap + a->cf),
+                   ZIP_CFILE_COMMENTSIZE(zmap + a->cf)))) {
+    lua_pushlstring(L, ZIP_CFILE_COMMENT(zmap + a->cf), m);
   } else {
     lua_pushnil(L);
   }
@@ -6094,8 +6084,8 @@ static inline bool IsLua(struct Asset *a) {
           ('.' | 'l' << 8 | 'u' << 16 | 'a' << 24)) {
     return true;
   }
-  p = ZIP_CFILE_NAME(zbase + a->cf);
-  n = ZIP_CFILE_NAMESIZE(zbase + a->cf);
+  p = ZIP_CFILE_NAME(zmap + a->cf);
+  n = ZIP_CFILE_NAMESIZE(zmap + a->cf);
   return n > 4 &&
          READ32LE(p + n - 4) == ('.' | 'l' << 8 | 'u' << 16 | 'a' << 24);
 }
@@ -6124,8 +6114,8 @@ static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
   }
   return firstnonnull(
       GetContentTypeExt(path, n),
-      firstnonnull(GetContentTypeExt(ZIP_CFILE_NAME(zbase + a->cf),
-                                     ZIP_CFILE_NAMESIZE(zbase + a->cf)),
+      firstnonnull(GetContentTypeExt(ZIP_CFILE_NAME(zmap + a->cf),
+                                     ZIP_CFILE_NAMESIZE(zmap + a->cf)),
                    a->istext ? "text/plain" : "application/octet-stream"));
 }
 
@@ -6147,8 +6137,8 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
     p = SetStatus(304, "Not Modified");
   } else {
     if (!a->file) {
-      cpm.content = (char *)ZIP_LFILE_CONTENT(zbase + a->lf);
-      cpm.contentlength = GetZipCfileCompressedSize(zbase + a->cf);
+      cpm.content = (char *)ZIP_LFILE_CONTENT(zmap + a->lf);
+      cpm.contentlength = GetZipCfileCompressedSize(zmap + a->cf);
     } else if ((p = OpenAsset(a))) {
       return p;
     }
@@ -6164,7 +6154,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       LockInc(&shared->c.identityresponses);
       DEBUGF("(zip) ServeAssetZipIdentity(%`'s)", ct);
       if (Verify(cpm.content, cpm.contentlength,
-                 ZIP_LFILE_CRC32(zbase + a->lf))) {
+                 ZIP_LFILE_CRC32(zmap + a->lf))) {
         p = SetStatus(200, "OK");
       } else {
         return ServeError(500, "Internal Server Error");

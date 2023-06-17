@@ -16,34 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdckdint.h"
 #include "libc/zip.internal.h"
 
 /**
  * Returns kZipOk if zip64 end of central directory header seems legit.
  */
 int IsZipEocd64(const uint8_t *p, size_t n, size_t i) {
-  if (i + kZipCdir64HdrMinSize > n) {
+  size_t off, loc;
+  uint64_t cdsize;
+  if (i > n || i + kZipCdir64HdrMinSize > n) {
     return kZipErrorEocdOffsetOverflow;
   }
   if (READ32LE(p + i) != kZipCdir64HdrMagic) {
     return kZipErrorEocdMagicNotFound;
   }
-  if (i + ZIP_CDIR64_HDRSIZE(p + i) + kZipCdir64LocatorSize > n) {
+  if (ckd_add(&loc, i, ZIP_CDIR64_HDRSIZE(p + i)) ||  //
+      ckd_add(&off, loc, kZipCdir64LocatorSize) ||    //
+      off > n) {                                      //
     return kZipErrorEocdSizeOverflow;
   }
-  if (ZIP_LOCATE64_MAGIC(p + i + ZIP_CDIR64_HDRSIZE(p + i)) !=
-      kZipCdir64LocatorMagic) {
-    return kZipErrorCdirLocatorMagic;
+  if (ZIP_LOCATE64_MAGIC(p + loc) != kZipCdir64LocatorMagic) {
+    return kZipErrorEocdLocatorMagic;
   }
-  if (ZIP_LOCATE64_OFFSET(p + i + ZIP_CDIR64_HDRSIZE(p + i)) != i) {
-    return kZipErrorCdirLocatorOffset;
+  if (ZIP_LOCATE64_OFFSET(p + loc) != i) {
+    return kZipErrorEocdLocatorOffset;
   }
-  if (ZIP_CDIR64_RECORDS(p + i) * kZipCfileHdrMinSize >
-      ZIP_CDIR64_SIZE(p + i)) {
-    return kZipErrorCdirRecordsOverflow;
+  if (ckd_add(&off, ZIP_CDIR64_OFFSET(p + i), ZIP_CDIR64_SIZE(p + i))) {
+    return kZipErrorEocdOffsetSizeOverflow;
   }
-  if (ZIP_CDIR64_OFFSET(p + i) + ZIP_CDIR64_SIZE(p + i) > i) {
+  if (off > i) {
     return kZipErrorCdirOffsetPastEocd;
+  }
+  if (ckd_mul(&cdsize, ZIP_CDIR64_RECORDS(p + i), kZipCfileHdrMinSize) ||
+      cdsize > ZIP_CDIR64_SIZE(p + i)) {
+    return kZipErrorEocdRecordsOverflow;
   }
   return kZipOk;
 }

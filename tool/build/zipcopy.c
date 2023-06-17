@@ -123,12 +123,15 @@ static void CopyZip(void) {
   unsigned char *ineof, *stop, *eocd, *cdir, *lfile, *cfile;
 
   // find zip eocd header
-  ineof = (unsigned char *)inmap + insize;
+  ineof = inmap + insize;
   eocd = ineof - kZipCdirHdrMinSize;
   stop = MAX(eocd - 65536, inmap);
   for (;; --eocd) {
     if (eocd < stop) return;
     if (READ32LE(eocd) == kZipCdirHdrMagic) {
+      if (IsZipEocd32(inmap, insize, eocd - inmap) != kZipOk) {
+        Die(inpath, "found bad eocd record");
+      }
       break;
     }
   }
