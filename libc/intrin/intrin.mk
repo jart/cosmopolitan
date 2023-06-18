@@ -28,12 +28,11 @@ LIBC_INTRIN_A_CHECKS =					\
 	$(LIBC_INTRIN_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_INTRIN_A_DIRECTDEPS =				\
-	LIBC_STUBS					\
-	LIBC_SYSV					\
-	LIBC_SYSV_CALLS					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32				\
-	LIBC_NT_WS2_32
+	LIBC_NT_WS2_32					\
+	LIBC_SYSV					\
+	LIBC_SYSV_CALLS
 
 LIBC_INTRIN_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x))))
@@ -218,7 +217,11 @@ o/$(MODE)/libc/intrin/aarch64/%.o: libc/intrin/aarch64/%.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/fenv.o: libc/intrin/fenv.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/gcov.o: libc/intrin/gcov.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/futex.o: libc/intrin/futex.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/typeinfo.o: libc/intrin/typeinfo.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/kclocknames.o: libc/intrin/kclocknames.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

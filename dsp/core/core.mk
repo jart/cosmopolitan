@@ -20,8 +20,7 @@ DSP_CORE_A_DIRECTDEPS =				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
 	LIBC_STR				\
-	LIBC_TINYMATH				\
-	LIBC_STUBS
+	LIBC_TINYMATH
 
 DSP_CORE_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_CORE_A_DIRECTDEPS),$($(x))))

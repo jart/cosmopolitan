@@ -1,3 +1,3 @@
-#ifndef LIBC_ISYSTEM_STDDEF_H_
-#define LIBC_ISYSTEM_STDDEF_H_
-#endif
+#ifndef _STDDEF_H
+#define _STDDEF_H
+#endif /* _STDDEF_H */

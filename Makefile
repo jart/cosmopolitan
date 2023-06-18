@@ -113,8 +113,7 @@ include build/functions.mk			#─┐
 include build/definitions.mk			# ├──META
 include build/config.mk				# │  You can build
 include build/rules.mk				# │  You can topologically order
-include build/online.mk				# │
-include libc/stubs/stubs.mk			#─┘
+include build/online.mk				#─┘
 include libc/nexgen32e/nexgen32e.mk		#─┐
 include libc/sysv/sysv.mk			# ├──SYSTEM SUPPORT
 include libc/nt/nt.mk				# │  You can do math
@@ -214,7 +213,6 @@ include tool/lambda/lambda.mk
 include tool/plinko/lib/lib.mk
 include tool/plinko/plinko.mk
 include test/tool/plinko/test.mk
-include tool/hash/hash.mk
 include tool/net/net.mk
 include tool/viz/viz.mk
 include tool/tool.mk

@@ -18,9 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/shdr.h"
 #include "libc/str/str.h"
 
-char *GetElfStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
+/**
+ * Returns pointer to elf string table.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param section_name is usually `".strtab"`, `".dynstr"`, or null
+ * @return pointer to double-nul terminated string list or null on error
+ */
+char *GetElfStringTable(const Elf64_Ehdr *elf,  //
+                        size_t mapsize,         //
+                        const char *section_name) {
   int i;
   char *name;
   Elf64_Shdr *shdr;
@@ -28,9 +40,9 @@ char *GetElfStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
     if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&
         shdr->sh_type == SHT_STRTAB &&
         (name = GetElfSectionName(elf, mapsize, shdr)) &&
-        !strcmp(name, ".strtab")) {
+        (!section_name || !strcmp(name, section_name))) {
       return GetElfSectionAddress(elf, mapsize, shdr);
     }
   }
-  return NULL;
+  return 0;
 }

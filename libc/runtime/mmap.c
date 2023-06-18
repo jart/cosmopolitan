@@ -28,6 +28,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"

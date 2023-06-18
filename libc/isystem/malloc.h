@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_MALLOC_H_
-#define LIBC_ISYSTEM_MALLOC_H_
+#ifndef _MALLOC_H
+#define _MALLOC_H
 #include "libc/mem/mem.h"
-#endif
+#endif /* _MALLOC_H */

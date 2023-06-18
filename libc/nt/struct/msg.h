@@ -5,10 +5,10 @@
 
 struct NtMsg {
   int64_t hwnd;
-  uint32_t message;
+  uint32_t dwMessage;
   uint64_t wParam;
   int64_t lParam;
-  uint32_t time;
+  uint32_t dwTime;
   struct NtPoint pt;
 };
 

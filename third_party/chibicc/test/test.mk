@@ -10,8 +10,6 @@
 #   This makefile compiles and runs each test twice. The first with
 #   GCC-built chibicc, and a second time with chibicc-built chibicc
 
-ifneq ($(MODE), dbg)
-ifneq ($(MODE), asan)
 ifeq ($(ARCH), x86_64)
 
 PKGS += THIRD_PARTY_CHIBICC_TEST
@@ -46,7 +44,6 @@ THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS =						\
 	LIBC_RUNTIME								\
 	LIBC_STDIO								\
 	LIBC_STR								\
-	LIBC_STUBS								\
 	LIBC_TINYMATH								\
 	LIBC_X									\
 	THIRD_PARTY_CHIBICC							\
@@ -79,8 +76,6 @@ o/$(MODE)/third_party/chibicc/test/%.o:						\
 
 o/$(MODE)/third_party/chibicc/test/int128_test.o: private QUOTA = -M1024m
 
-endif
-endif
 endif
 
 .PHONY: o/$(MODE)/third_party/chibicc/test

@@ -1,5 +1,5 @@
-#ifndef _STDIO_H
-#define _STDIO_H
+#ifndef COSMOPOLITAN_LIBC_STDIO_H_
+#define COSMOPOLITAN_LIBC_STDIO_H_
 
 #define L_ctermid    20
 #define FILENAME_MAX PATH_MAX
@@ -126,6 +126,14 @@ int wscanf(const wchar_t *, ...);
 int fwide(FILE *, int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § standard i/o » allocating                                 ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+int asprintf(char **, const char *, ...) printfesque(2)
+    paramsnonnull((1, 2)) libcesque;
+int vasprintf(char **, const char *, va_list) paramsnonnull() libcesque;
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » without mutexes                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
@@ -163,4 +171,4 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* _STDIO_H */
+#endif /* COSMOPOLITAN_LIBC_STDIO_H_ */

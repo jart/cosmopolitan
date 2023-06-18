@@ -1,6 +1,6 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_FTW_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_FTW_H_
+#ifndef _FTW_H
+#define _FTW_H
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "third_party/musl/ftw.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_FTW_H_ */
+#endif /* _FTW_H */

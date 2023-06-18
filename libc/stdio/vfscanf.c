@@ -23,6 +23,6 @@
  * Stream decoder.
  * @see libc/fmt/vcscanf.h
  */
-int(vfscanf)(FILE *stream, const char *fmt, va_list ap) {
-  return (vcscanf)((void *)fgetc, (void *)ungetc, stream, fmt, ap);
+int vfscanf(FILE *stream, const char *fmt, va_list ap) {
+  return __vcscanf((void *)fgetc, (void *)ungetc, stream, fmt, ap);
 }

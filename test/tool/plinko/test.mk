@@ -48,7 +48,6 @@ TEST_TOOL_PLINKO_DIRECTDEPS =					\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\
 	LIBC_X							\

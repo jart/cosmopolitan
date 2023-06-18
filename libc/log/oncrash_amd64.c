@@ -45,6 +45,7 @@
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "libc/str/str.h"
 #include "third_party/libcxx/math.h"
 #ifdef __x86_64__
 
@@ -222,14 +223,14 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
       p, n,
       "\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
       "  %s\n"
-      "  %m\n"
+      "  %s\n"
       "  %s %s %s %s\n",
       !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
       (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
                ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + APE_GUARDSIZE))
           ? "Stack Overflow"
           : GetSiCodeName(sig, si->si_code),
-      host, getpid(), gettid(), program_invocation_name, names.sysname,
+      host, getpid(), gettid(), program_invocation_name, strerror(err), names.sysname,
       names.version, names.nodename, names.release);
   if (ctx) {
     p = ShowGeneralRegisters(p, ctx);
@@ -343,7 +344,7 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
     } else {
       // somehow __minicrash() crashed not possible
       for (;;) {
-        __builtin_trap();
+        abort();
       }
     }
   } else {

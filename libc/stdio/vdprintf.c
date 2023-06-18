@@ -58,7 +58,7 @@ static int vdprintf_putc(const char *s, struct VdprintfState *t, size_t n) {
  * @asyncsignalsafe
  * @vforksafe
  */
-int(vdprintf)(int fd, const char *fmt, va_list va) {
+int vdprintf(int fd, const char *fmt, va_list va) {
   struct iovec iov[1];
   struct VdprintfState t;
   t.n = 0;

@@ -34,7 +34,6 @@ TEST_LIBC_NEXGEN32E_DIRECTDEPS =				\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_THREAD						\
 	LIBC_TESTLIB						\

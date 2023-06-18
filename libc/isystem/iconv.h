@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_ICONV_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_ICONV_H_
+#ifndef _ICONV_H
+#define _ICONV_H
 #include "libc/stdio/iconv.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_ICONV_H_ */
+#endif /* _ICONV_H */

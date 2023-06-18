@@ -1002,7 +1002,7 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
             tty->pr &= ~kTtyTrue;
             break;
           default:
-            abort();
+            __builtin_trap();
         }
         break;
       default:

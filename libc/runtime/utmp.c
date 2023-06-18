@@ -39,6 +39,10 @@ void updwtmp(const char *x, const struct utmp *y) {
 void updwtmpx(const char *x, const struct utmpx *y) {
 }
 
+struct utmpx *pututxline(const struct utmpx *p) {
+  return 0;
+}
+
 void setutxent(void) {
 }
 

@@ -27,9 +27,6 @@ LIBC_NEXGEN32E_A_CHECKS =				\
 	$(LIBC_NEXGEN32E_A).pkg				\
 	$(LIBC_NEXGEN32E_A_HDRS:%=o/$(MODE)/%.ok)
 
-LIBC_NEXGEN32E_A_DIRECTDEPS =				\
-	LIBC_STUBS
-
 LIBC_NEXGEN32E_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_NEXGEN32E_A_DIRECTDEPS),$($(x))))
 

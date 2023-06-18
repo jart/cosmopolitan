@@ -1,6 +1,6 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_LANGINFO_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_LANGINFO_H_
+#ifndef _LANGINFO_H
+#define _LANGINFO_H
 #include "libc/str/langinfo.h"
 #include "libc/str/locale.h"
 #include "libc/str/nltypes.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_LANGINFO_H_ */
+#endif /* _LANGINFO_H */

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,4 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/macros.internal.h"
-.real
-.code16 # ∩ .code32 ∩ .code64
-
-/**
- * @fileoverview Overridable stubs for synthetic stack protector calls.
- */
-
-__stack_chk_fail_local:
-	nop
-//	fallthrough
-	.endfn	__stack_chk_fail_local,weak,hidden
-
-__stack_chk_fail:
-	push	%bp
-	mov	%sp,%bp
-	rlcall	abort
-	nop
-	.endfn	__stack_chk_fail,weak
-
-	.bss
-	.balign	8
-__stack_chk_guard:
-	.quad	0
-	.endobj	__stack_chk_guard,weak
-	.previous
+#include "libc/runtime/runtime.h"

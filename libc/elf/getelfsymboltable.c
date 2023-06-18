@@ -18,20 +18,32 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/elf/scalar.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/sym.h"
 
-Elf64_Sym *GetElfSymbolTable(const Elf64_Ehdr *elf, size_t mapsize,
+/**
+ * Returns pointer to elf symbol table.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param section_type is usually `SHT_SYMTAB` or `SHT_DYNSYM`
+ * @param out_count optionally receives number of elements in res
+ * @return pointer to symbol array, or null on error
+ */
+Elf64_Sym *GetElfSymbolTable(const Elf64_Ehdr *elf,  //
+                             size_t mapsize,         //
+                             int section_type,       //
                              Elf64_Xword *out_count) {
   int i;
   Elf64_Shdr *shdr;
-  if (elf->e_shentsize) {
-    for (i = elf->e_shnum; i > 0; --i) {
-      shdr = GetElfSectionHeaderAddress(elf, mapsize, i - 1);
-      if (shdr->sh_type == SHT_SYMTAB) {
-        if (shdr->sh_entsize != sizeof(Elf64_Sym)) __builtin_trap();
-        if (out_count) *out_count = shdr->sh_size / sizeof(Elf64_Sym);
-        return GetElfSectionAddress(elf, mapsize, shdr);
-      }
+  for (i = elf->e_shnum; i > 0; --i) {
+    if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i - 1)) &&  //
+        shdr->sh_entsize == sizeof(Elf64_Sym) &&                     //
+        shdr->sh_type == section_type) {
+      if (out_count) *out_count = shdr->sh_size / sizeof(Elf64_Sym);
+      return GetElfSectionAddress(elf, mapsize, shdr);
     }
   }
-  return NULL;
+  return 0;
 }

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/fmt.h"
+#include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 
@@ -26,8 +26,8 @@
  * @return fully formatted string, which must be free()'d
  * @see xasprintf()
  */
-char *(xvasprintf)(const char *fmt, va_list va) {
+char *xvasprintf(const char *fmt, va_list va) {
   char *buf;
-  if ((vasprintf)(&buf, fmt, va) == -1) xdie();
+  if (vasprintf(&buf, fmt, va) == -1) xdie();
   return buf;
 }

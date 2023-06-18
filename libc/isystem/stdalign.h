@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_STDALIGN_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_STDALIGN_H_
+#ifndef _STDALIGN_H
+#define _STDALIGN_H
 #include "libc/stdalign.internal.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_STDALIGN_H_ */
+#endif /* _STDALIGN_H */

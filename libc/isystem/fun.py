@@ -1,4 +1,0 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_FUN_PY_
-#define COSMOPOLITAN_LIBC_ISYSTEM_FUN_PY_
-#include "third_party/intel/fun.py"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_FUN_PY_ */

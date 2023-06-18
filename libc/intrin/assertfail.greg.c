@@ -20,6 +20,7 @@
 #include "libc/atomic.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 
 privileged void __assert_fail(const char *expr, const char *file, int line) {
   static atomic_bool once;

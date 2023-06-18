@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -32,7 +33,6 @@
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/time/time.h"
 #include "third_party/quickjs/cutils.h"
 #include "third_party/quickjs/quickjs-libc.h"
 #include "tool/args/args.h"

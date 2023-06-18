@@ -31,7 +31,6 @@ TEST_LIBC_STDIO_DIRECTDEPS =					\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TINYMATH						\
 	LIBC_TESTLIB						\

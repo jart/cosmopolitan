@@ -526,10 +526,11 @@ static void OpenObject(struct Package *pkg, struct Object *obj, int oid) {
   if (!IsElf64Binary(obj->elf, obj->size)) {
     Die(path, "not an elf64 binary");
   }
-  if (!(obj->strs = GetElfStringTable(obj->elf, obj->size))) {
+  if (!(obj->strs = GetElfStringTable(obj->elf, obj->size, ".strtab"))) {
     Die(path, "missing elf string table");
   }
-  if (!(obj->syms = GetElfSymbolTable(obj->elf, obj->size, &obj->symcount))) {
+  if (!(obj->syms = GetElfSymbolTable(obj->elf, obj->size, SHT_SYMTAB,
+                                      &obj->symcount))) {
     Die(path, "missing elf symbol table");
   }
   IndexSections(pkg, obj);

@@ -171,7 +171,7 @@ typedef z_stream *z_streamp;
  */
 typedef struct gz_header_s {
   int text;       /* true if compressed data believed to be text */
-  uLong time;     /* modification time */
+  uLong time_;    /* modification time */
   int xflags;     /* extra flags (not used when writing a gzip file) */
   int os;         /* operating system */
   Bytef *extra;   /* pointer to extra field or Z_NULL if none */

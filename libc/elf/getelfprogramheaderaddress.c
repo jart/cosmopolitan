@@ -16,22 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
-#include "libc/str/str.h"
+#include "libc/elf/scalar.h"
+#include "libc/elf/struct/phdr.h"
 
-char *GetElfStrs(const Elf64_Ehdr *elf, size_t mapsize, size_t *out_size) {
-  int i;
-  char *name;
-  Elf64_Shdr *shdr;
-  for (i = 0; i < elf->e_shnum; ++i) {
-    if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&
-        shdr->sh_type == SHT_STRTAB &&
-        (name = GetElfSectionName(elf, mapsize, shdr)) &&
-        !strcmp(name, ".strtab")) {
-      if (out_size) *out_size = shdr->sh_size;
-      return GetElfSectionAddress(elf, mapsize, shdr);
-    }
-  }
-  return 0;
+/**
+ * Returns program header at `elf.phdr[i]`.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param i is the program header index, starting at zero
+ * @return program header pointer, or null on error
+ */
+Elf64_Phdr *GetElfProgramHeaderAddress(const Elf64_Ehdr *elf,  //
+                                       size_t mapsize,         //
+                                       Elf64_Half i) {         //
+  uint64_t off;
+  if (i >= elf->e_phnum) return 0;
+  if (elf->e_phoff <= 0) return 0;
+  if (elf->e_phoff >= mapsize) return 0;
+  if (elf->e_phentsize < sizeof(Elf64_Phdr)) return 0;
+  if ((off = elf->e_phoff + (unsigned)i * elf->e_phentsize) > mapsize) return 0;
+  return (Elf64_Phdr *)((char *)elf + off);
 }

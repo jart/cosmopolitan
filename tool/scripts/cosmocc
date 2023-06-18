@@ -102,11 +102,13 @@ fi
 
 # auto-install some shell libraries
 if [ ! -d "$COSMOS/lib" ]; then
-  mkdir "$COSMOS/lib"
-  for lib in c dl gcc_s m pthread resolv rt z stdc++; do
-    printf '\041\074\141\162\143\150\076\012' >"$COSMOS/lib/lib$lib.a"
-  done
+  mkdir -p "$COSMOS/lib"
 fi
+for lib in c dl gcc_s m pthread resolv rt dl z stdc++; do
+  if [ ! -f "$COSMOS/lib/lib$lib.a" ]; then
+    printf '\041\074\141\162\143\150\076\012' >"$COSMOS/lib/lib$lib.a"
+  fi
+done
 
 OPT=
 FIRST=1

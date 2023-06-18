@@ -25,14 +25,14 @@
  * @see xasprintf() for a better API
  * @threadsafe
  */
-int(vasprintf)(char **strp, const char *fmt, va_list va) {
+int vasprintf(char **strp, const char *fmt, va_list va) {
   va_list vb;
   size_t size;
   char *p, *p2;
   int wrote, rc = -1;
   if ((p = malloc((size = 512)))) {
     va_copy(vb, va);
-    wrote = (vsnprintf)(p, size, fmt, va);
+    wrote = vsnprintf(p, size, fmt, va);
     if (wrote < size) {
       if ((p2 = realloc(p, wrote + 1))) {
         p = p2;
@@ -42,7 +42,7 @@ int(vasprintf)(char **strp, const char *fmt, va_list va) {
       size = wrote + 1;
       if ((p2 = realloc(p, size))) {
         p = p2;
-        wrote = (vsnprintf)(p, size, fmt, vb);
+        wrote = vsnprintf(p, size, fmt, vb);
         _unassert(wrote == size - 1);
         rc = wrote;
       }

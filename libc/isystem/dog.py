@@ -1,4 +1,0 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_DOG_PY_
-#define COSMOPOLITAN_LIBC_ISYSTEM_DOG_PY_
-#include "third_party/intel/dog.py"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_DOG_PY_ */

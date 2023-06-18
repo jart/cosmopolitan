@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_SYS_DLFCN_H_
-#define LIBC_ISYSTEM_SYS_DLFCN_H_
+#ifndef _DLFCN_H
+#define _DLFCN_H
 #include "libc/runtime/dlfcn.h"
-#endif
+#endif /* _DLFCN_H */

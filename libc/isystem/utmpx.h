@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_UTMPX_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_UTMPX_H_
+#ifndef _UTMPX_H
+#define _UTMPX_H
 #include "libc/runtime/utmpx.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_UTMPX_H_ */
+#endif /* _UTMPX_H */

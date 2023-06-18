@@ -23,11 +23,11 @@
  * Standard input decoder.
  * @see libc/fmt/vcscanf.h
  */
-int(scanf)(const char *fmt, ...) {
+int scanf(const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vcscanf)((int (*)(void *))fgetc, NULL, stdin, fmt, va);
+  rc = __vcscanf((int (*)(void *))fgetc, NULL, stdin, fmt, va);
   va_end(va);
   return rc;
 }

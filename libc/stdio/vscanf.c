@@ -23,6 +23,6 @@
  * String decoder.
  * @see libc/fmt/vcscanf.h
  */
-int(vscanf)(const char *fmt, va_list ap) {
-  return (vcscanf)((int (*)(void *))fgetc, (void *)ungetc, stdin, fmt, ap);
+int vscanf(const char *fmt, va_list ap) {
+  return __vcscanf((int (*)(void *))fgetc, (void *)ungetc, stdin, fmt, ap);
 }

@@ -15,8 +15,6 @@
 
 #include "third_party/compiler_rt/int_lib.h"
 
-#ifdef CRT_HAS_128BIT
-
 /* Returns: a << b */
 
 /* Precondition:  0 <= b < bits_in_tword */
@@ -42,5 +40,3 @@ __ashlti3(ti_int a, si_int b)
     }
     return result.all;
 }
-
-#endif /* CRT_HAS_128BIT */

@@ -30,7 +30,6 @@ TEST_LIBC_ZIPOS_DIRECTDEPS =					\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_THREAD						\
 	LIBC_SYSV						\
 	LIBC_ZIPOS						\

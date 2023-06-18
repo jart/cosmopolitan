@@ -1,6 +1,6 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_WAIT_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_WAIT_H_
+#ifndef _WAIT_H
+#define _WAIT_H
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/w.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_WAIT_H_ */
+#endif /* _WAIT_H */

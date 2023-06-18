@@ -42,7 +42,6 @@ TOOL_NET_DIRECTDEPS =								\
 	LIBC_SOCK								\
 	LIBC_STDIO								\
 	LIBC_STR								\
-	LIBC_STUBS								\
 	LIBC_SYSV								\
 	LIBC_SYSV_CALLS								\
 	LIBC_TIME								\

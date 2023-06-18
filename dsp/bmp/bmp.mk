@@ -25,8 +25,7 @@ DSP_BMP_A_CHECKS =				\
 
 DSP_BMP_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E				\
-	LIBC_TINYMATH				\
-	LIBC_STUBS
+	LIBC_TINYMATH
 
 DSP_BMP_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_BMP_A_DIRECTDEPS),$($(x))))

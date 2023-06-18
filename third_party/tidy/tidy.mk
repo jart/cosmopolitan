@@ -26,8 +26,7 @@ THIRD_PARTY_TIDY_A_DIRECTDEPS =							\
 	LIBC_CALLS								\
 	LIBC_STDIO								\
 	LIBC_SYSV								\
-	LIBC_STR								\
-	LIBC_STUBS
+	LIBC_STR
 
 THIRD_PARTY_TIDY_A_DEPS :=							\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_TIDY_A_DIRECTDEPS),$($(x))))

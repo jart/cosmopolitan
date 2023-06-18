@@ -104,9 +104,9 @@ static void printelfehdr(void) {
 }
 
 static void printelfsegmentheader(int i) {
-  Elf64_Phdr *phdr = GetElfSegmentHeaderAddress(elf, st->st_size, i);
+  Elf64_Phdr *phdr = GetElfProgramHeaderAddress(elf, st->st_size, i);
   if (!phdr) return;
-  printf("/\tElf64_Phdr *phdr = GetElfSegmentHeaderAddress(elf, st->st_size, "
+  printf("/\tElf64_Phdr *phdr = GetElfProgramHeaderAddress(elf, st->st_size, "
          "%d)\n",
          i);
   printf(".Lph%d:", i);
@@ -272,9 +272,10 @@ static void printelfsymbol(Elf64_Sym *sym, char *strtab, char *shstrtab) {
 
 static void printelfsymboltable(void) {
   size_t i, symcount = 0;
-  Elf64_Sym *symtab = GetElfSymbolTable(elf, st->st_size, &symcount);
+  Elf64_Sym *symtab =
+      GetElfSymbolTable(elf, st->st_size, SHT_SYMTAB, &symcount);
   if (!symtab) return;
-  char *strtab = GetElfStringTable(elf, st->st_size);
+  char *strtab = GetElfStringTable(elf, st->st_size, ".strtab");
   char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   printf("\n\n");
   printf("\t.org\t%#x\n", (intptr_t)symtab - (intptr_t)elf);
@@ -288,9 +289,10 @@ static void printelfsymboltable(void) {
 
 static void printelfdynsymboltable(void) {
   size_t i, symcount = 0;
-  Elf64_Sym *symtab = GetElfDynSymbolTable(elf, st->st_size, &symcount);
+  Elf64_Sym *symtab =
+      GetElfSymbolTable(elf, st->st_size, SHT_DYNSYM, &symcount);
   if (!symtab) return;
-  char *strtab = GetElfDynStringTable(elf, st->st_size);
+  char *strtab = GetElfStringTable(elf, st->st_size, ".dynstr");
   char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   printf("\n\n");
   printf("\t.org\t%#x\n", (intptr_t)symtab - (intptr_t)elf);
@@ -326,7 +328,7 @@ static void printelfrelocations(void) {
   const Elf64_Rela *rela;
   char *strtab, *shstrtab, *symbolname;
   const Elf64_Shdr *shdr, *shdr2, *symtab;
-  strtab = GetElfStringTable(elf, st->st_size);
+  strtab = GetElfStringTable(elf, st->st_size, ".strtab");
   shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   for (i = 0; i < elf->e_shnum; ++i) {
     if ((shdr = GetElfSectionHeaderAddress(elf, st->st_size, i)) &&

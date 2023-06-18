@@ -1,5 +1,5 @@
-#ifndef LIBC_ISYSTEM_SYS_FCNTL_H_
-#define LIBC_ISYSTEM_SYS_FCNTL_H_
+#ifndef _FCNTL_H
+#define _FCNTL_H
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/weirdtypes.h"
@@ -10,4 +10,4 @@
 #include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/splice.h"
-#endif
+#endif /* _FCNTL_H */

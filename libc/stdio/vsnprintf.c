@@ -56,7 +56,7 @@ static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
  * @asyncsignalsafe
  * @vforksafe
  */
-int(vsnprintf)(char *buf, size_t size, const char *fmt, va_list va) {
+int vsnprintf(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};
   __fmt(vsnprintfputchar, &str, fmt, va);
   if (str.n) str.p[MIN(str.i, str.n - 1)] = '\0';

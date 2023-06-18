@@ -26,7 +26,7 @@ __mulosi4(si_int a, si_int b, int* overflow)
     const si_int MIN = (su_int)1 << (N-1);
     const si_int MAX = ~MIN;
     *overflow = 0; 
-    si_int result = (su_int)a * (su_int)b;
+    si_int result = (su_int)a * b;
     if (a == MIN)
     {
         if (b != 0 && b != 1)

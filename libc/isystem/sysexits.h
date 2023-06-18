@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SYSEXITS_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_SYSEXITS_H_
+#ifndef _SYSEXITS_H
+#define _SYSEXITS_H
 #include "libc/sysv/consts/ex.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SYSEXITS_H_ */
+#endif /* _SYSEXITS_H */

@@ -176,7 +176,7 @@ static bool __asan_once(void) {
 #define __asan_unreachable()                                      \
   do {                                                            \
     kprintf("%s:%d: __asan_unreachable()\n", __FILE__, __LINE__); \
-    for (;;) __builtin_trap();                                    \
+    __builtin_trap();                                             \
   } while (0)
 
 static int __asan_bsf(uint64_t x) {

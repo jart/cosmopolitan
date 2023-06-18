@@ -20,8 +20,8 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
@@ -56,7 +56,7 @@ static char *xiso8601_impl(struct timespec *opt_ts, int sswidth) {
   localtime_r(&sec, &tm);
   strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S", &tm);
   strftime(zonebuf, sizeof(zonebuf), "%z", &tm);
-  (asprintf)(&p, "%s.%0*ld%s", timebuf, sswidth, subsec, zonebuf);
+  asprintf(&p, "%s.%0*ld%s", timebuf, sswidth, subsec, zonebuf);
   return p;
 }
 

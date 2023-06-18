@@ -1,5 +1,5 @@
-#ifndef LIBC_ISYSTEM_GRP_H_
-#define LIBC_ISYSTEM_GRP_H_
+#ifndef _GRP_H
+#define _GRP_H
 #include "libc/calls/calls.h"
 #include "third_party/musl/passwd.h"
-#endif
+#endif /* _GRP_H */

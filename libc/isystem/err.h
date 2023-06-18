@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_ERR_H_
-#define LIBC_ISYSTEM_ERR_H_
+#ifndef _ERR_H
+#define _ERR_H
 #include "libc/log/bsd.h"
-#endif
+#endif /* _ERR_H */

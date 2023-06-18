@@ -27,7 +27,6 @@ LIBC_ELF_A_DIRECTDEPS =				\
 	LIBC_INTRIN				\
 	LIBC_NEXGEN32E				\
 	LIBC_STR				\
-	LIBC_STUBS
 
 LIBC_ELF_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_ELF_A_DIRECTDEPS),$($(x))))

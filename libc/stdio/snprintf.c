@@ -28,11 +28,11 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-int(snprintf)(char* buf, size_t count, const char* fmt, ...) {
+int snprintf(char* buf, size_t count, const char* fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vsnprintf)(buf, count, fmt, va);
+  rc = vsnprintf(buf, count, fmt, va);
   va_end(va);
   return rc;
 }

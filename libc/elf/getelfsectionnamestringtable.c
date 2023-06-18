@@ -17,9 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
+#include "libc/elf/struct/shdr.h"
 
+/**
+ * Returns section name string table.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @return double-nul terminated string list, or null on error
+ */
 char *GetElfSectionNameStringTable(const Elf64_Ehdr *elf, size_t mapsize) {
-  if (!elf->e_shoff || !elf->e_shentsize) return 0;
   return GetElfSectionAddress(
       elf, mapsize, GetElfSectionHeaderAddress(elf, mapsize, elf->e_shstrndx));
 }

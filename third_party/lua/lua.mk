@@ -194,7 +194,6 @@ THIRD_PARTY_LUA_UNIX_DIRECTDEPS =					\
 	LIBC_SOCK							\
 	LIBC_STDIO							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_THREAD							\
 	LIBC_TIME							\

@@ -1,5 +1,5 @@
-#ifndef LIBC_ISYSTEM_STDLIB_H_
-#define LIBC_ISYSTEM_STDLIB_H_
+#ifndef _STDLIB_H
+#define _STDLIB_H
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
@@ -15,4 +15,4 @@
 #include "third_party/getopt/getopt.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"
-#endif
+#endif /* _STDLIB_H */

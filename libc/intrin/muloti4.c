@@ -28,7 +28,7 @@ __muloti4(ti_int a, ti_int b, int* overflow)
     const ti_int MIN = (tu_int)1 << (N-1);
     const ti_int MAX = ~MIN;
     *overflow = 0;
-    ti_int result = (tu_int)a * (tu_int)b;
+    ti_int result = (tu_int)a * b;
     if (a == MIN)
     {
         if (b != 0 && b != 1)

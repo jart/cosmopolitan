@@ -1,6 +1,6 @@
-#ifndef LIBC_ISYSTEM_STDINT_H_
-#define LIBC_ISYSTEM_STDINT_H_
+#ifndef _STDINT_H
+#define _STDINT_H
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
-#endif
+#endif /* _STDINT_H */

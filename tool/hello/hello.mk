@@ -14,8 +14,7 @@ TOOL_HELLO_DIRECTDEPS =				\
 	LIBC_NEXGEN32E				\
 	LIBC_RUNTIME				\
 	LIBC_STR				\
-	LIBC_SYSV				\
-	LIBC_STUBS
+	LIBC_SYSV
 
 TOOL_HELLO_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_HELLO_DIRECTDEPS),$($(x))))

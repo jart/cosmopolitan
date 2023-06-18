@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_NETDB_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_NETDB_H_
+#ifndef _NETDB_H
+#define _NETDB_H
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_NETDB_H_ */
+#endif /* _NETDB_H */

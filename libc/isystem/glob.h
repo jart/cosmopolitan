@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_GLOB_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_GLOB_H_
+#ifndef _GLOB_H
+#define _GLOB_H
 #include "third_party/musl/glob.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_GLOB_H_ */
+#endif /* _GLOB_H */

@@ -25,6 +25,6 @@
  * @see __fmt() and printf() for detailed documentation
  * @see vsnprintf() for modern alternative w/ buf size param
  */
-int(vsprintf)(char *buf, const char *fmt, va_list va) {
-  return (vsnprintf)(buf, INT_MAX, fmt, va);
+int vsprintf(char *buf, const char *fmt, va_list va) {
+  return vsnprintf(buf, INT_MAX, fmt, va);
 }

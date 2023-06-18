@@ -108,7 +108,7 @@ relegated int(AttachDebugger)(intptr_t continuetoaddr) {
                      "c",      NULL,
                  },
                  environ);
-    __builtin_trap();
+    abort();
   }
   return pid;
 }

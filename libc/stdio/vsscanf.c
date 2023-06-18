@@ -44,7 +44,7 @@ static int vsscanfcb(void *arg) {
  *     needing vsscanf() won't need sscanf() too; and as such, there's
  *     a small code size penalty to using both
  */
-int(vsscanf)(const char *str, const char *fmt, va_list va) {
+int vsscanf(const char *str, const char *fmt, va_list va) {
   struct StringScannerState state = {(const unsigned char *)str, 0};
-  return vcscanf(vsscanfcb, NULL, &state, fmt, va);
+  return __vcscanf(vsscanfcb, NULL, &state, fmt, va);
 }

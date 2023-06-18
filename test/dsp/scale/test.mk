@@ -30,7 +30,6 @@ TEST_DSP_SCALE_DIRECTDEPS =				\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_STUBS					\
 	LIBC_TINYMATH					\
 	LIBC_X						\
 	TOOL_VIZ_LIB					\

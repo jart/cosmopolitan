@@ -23,10 +23,10 @@
  * Formats and writes text to stream.
  * @see printf() for further documentation
  */
-int(vfprintf)(FILE *f, const char *fmt, va_list va) {
+int vfprintf(FILE *f, const char *fmt, va_list va) {
   int rc;
   flockfile(f);
-  rc = (vfprintf_unlocked)(f, fmt, va);
+  rc = vfprintf_unlocked(f, fmt, va);
   funlockfile(f);
   return rc;
 }

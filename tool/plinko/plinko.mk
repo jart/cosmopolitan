@@ -26,7 +26,6 @@ TOOL_PLINKO_DIRECTDEPS =					\
 	LIBC_SYSV						\
 	LIBC_STDIO						\
 	LIBC_X							\
-	LIBC_STUBS						\
 	LIBC_NEXGEN32E						\
 	LIBC_ZIPOS						\
 	TOOL_PLINKO_LIB

@@ -10,8 +10,6 @@
 #   This makefile compiles and runs each test twice. The first with
 #   GCC-built chibicc, and a second time with chibicc-built chibicc
 
-ifneq ($(MODE), dbg)
-ifneq ($(MODE), asan)
 ifeq ($(ARCH), x86_64)
 
 CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com
@@ -51,13 +49,11 @@ THIRD_PARTY_CHIBICC_A_DIRECTDEPS =					\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_LOG							\
-	LIBC_LOG							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_TIME							\
 	LIBC_X								\
@@ -115,8 +111,6 @@ THIRD_PARTY_CHIBICC_CHECKS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)
 THIRD_PARTY_CHIBICC_OBJS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)_OBJS))
 $(THIRD_PARTY_CHIBICC_OBJS): $(BUILD_FILES) third_party/chibicc/chibicc.mk
 
-endif
-endif
 endif
 
 .PHONY: o/$(MODE)/third_party/chibicc

@@ -957,10 +957,10 @@ int ZEXPORT deflate(strm, flush)
                      (s->gzhead->name == Z_NULL ? 0 : 8) +
                      (s->gzhead->comment == Z_NULL ? 0 : 16)
                      );
-            put_byte(s, (Byte)(s->gzhead->time & 0xff));
-            put_byte(s, (Byte)((s->gzhead->time >> 8) & 0xff));
-            put_byte(s, (Byte)((s->gzhead->time >> 16) & 0xff));
-            put_byte(s, (Byte)((s->gzhead->time >> 24) & 0xff));
+            put_byte(s, (Byte)(s->gzhead->time_ & 0xff));
+            put_byte(s, (Byte)((s->gzhead->time_ >> 8) & 0xff));
+            put_byte(s, (Byte)((s->gzhead->time_ >> 16) & 0xff));
+            put_byte(s, (Byte)((s->gzhead->time_ >> 24) & 0xff));
             put_byte(s, s->level == 9 ? 2 :
                      (s->strategy >= Z_HUFFMAN_ONLY || s->level < 2 ?
                       4 : 0));

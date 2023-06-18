@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_FEATURES_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_FEATURES_H_
+#ifndef _FEATURES_H
+#define _FEATURES_H
 
 #if defined(_ALL_SOURCE) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE 1
@@ -35,4 +35,4 @@
 #define _Noreturn
 #endif
 
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_FEATURES_H_ */
+#endif /* _FEATURES_H */

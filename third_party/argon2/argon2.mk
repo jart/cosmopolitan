@@ -25,8 +25,7 @@ THIRD_PARTY_ARGON2_A_DIRECTDEPS =				\
 	LIBC_STDIO						\
 	LIBC_RUNTIME						\
 	LIBC_SYSV_CALLS						\
-	LIBC_STR						\
-	LIBC_STUBS
+	LIBC_STR
 
 THIRD_PARTY_ARGON2_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_ARGON2_A_DIRECTDEPS),$($(x))))

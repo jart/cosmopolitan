@@ -28,11 +28,11 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-int(sprintf)(char *buf, const char *fmt, ...) {
+int sprintf(char *buf, const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vsnprintf)(buf, INT_MAX, fmt, va);
+  rc = vsnprintf(buf, INT_MAX, fmt, va);
   va_end(va);
   return rc;
 }

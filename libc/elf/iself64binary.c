@@ -16,12 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
-#include "libc/str/str.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/intrin/bits.h"
 
+/**
+ * Returns true if `elf` is a 64-bit elf executable.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @return true if elf header looks legit
+ */
 bool IsElf64Binary(const Elf64_Ehdr *elf, size_t mapsize) {
   if (mapsize < sizeof(Elf64_Ehdr)) return false;
-  if (memcmp(elf->e_ident, ELFMAG, 4)) return false;
-  return (elf->e_ident[EI_CLASS] == ELFCLASSNONE ||
-          elf->e_ident[EI_CLASS] == ELFCLASS64);
+  if (READ32LE(elf->e_ident) != READ32LE(ELFMAG)) return false;
+  return elf->e_ident[EI_CLASS] != ELFCLASS32;
 }

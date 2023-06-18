@@ -23,11 +23,11 @@
  * String decoder.
  * @see libc/fmt/vcscanf.h (for docs and implementation)
  */
-int(sscanf)(const char *str, const char *fmt, ...) {
+int sscanf(const char *str, const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vsscanf)(str, fmt, va);
+  rc = vsscanf(str, fmt, va);
   va_end(va);
   return rc;
 }

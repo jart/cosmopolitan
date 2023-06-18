@@ -17,17 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
-#include "libc/stdckdint.h"
+#include "libc/elf/scalar.h"
+#include "libc/elf/struct/ehdr.h"
 #include "libc/str/str.h"
 
+/**
+ * Returns `strtab + i` from elf string table.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param strtab is double-nul string list from GetElfStringTable()
+ * @param i is byte index into strtab where needed string starts
+ * @return pointer to nul terminated string, or null on error
+ */
 char *GetElfString(const Elf64_Ehdr *elf,  // validated
                    size_t mapsize,         // validated
                    const char *strtab,     // validated
-                   Elf64_Word rva) {       // foreign
-  uintptr_t addr;
-  if (!strtab) return 0;
-  if (ckd_add(&addr, (uintptr_t)strtab, rva)) return 0;
-  if (addr >= (uintptr_t)elf + mapsize) return 0;
-  if (!memchr((char *)addr, 0, (uintptr_t)elf + mapsize - addr)) return 0;
-  return (char *)addr;
+                   Elf64_Word i) {         // foreign
+  const char *e;
+  e = (const char *)elf;
+  if (strtab < e) return 0;
+  if (strtab >= e + mapsize) return 0;
+  if (strtab + i >= e + mapsize) return 0;
+  if (!memchr(strtab + i, 0, (e + mapsize) - (strtab + i))) return 0;
+  return (char *)strtab + i;
 }

@@ -32,7 +32,6 @@ TEST_LIBC_SOCK_DIRECTDEPS =					\
 	LIBC_SOCK						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_LOG						\
 	LIBC_SYSV_CALLS						\

@@ -29,13 +29,13 @@ COMPILER_RT_ABI ti_int __divmodti4(ti_int a, ti_int b, tu_int *opt_out_rem) {
   }
   sa = a >> k;                 // sa = a < 0 ? -1 : 0
   sb = b >> k;                 // sb = b < 0 ? -1 : 0
-  x = (a ^ sa) - sa;           // negate if sa == -1
-  y = (b ^ sb) - sb;           // negate if sb == -1
+  x = (tu_int)(a ^ sa) - sa;   // negate if sa == -1
+  y = (tu_int)(b ^ sb) - sb;   // negate if sb == -1
   sq = sa ^ sb;                // sign of quotient
   sr = sa;                     // sign of remainder
   q = __udivmodti4(x, y, &r);  // unsigned divide
-  q = (q ^ sq) - sq;           // fix quotient sign
-  r = (r ^ sr) - sr;           // fix remainder sign
+  q = (tu_int)(q ^ sq) - sq;   // fix quotient sign
+  r = (tu_int)(r ^ sr) - sr;   // fix remainder sign
   if (opt_out_rem) *opt_out_rem = r;
   return q;
 }

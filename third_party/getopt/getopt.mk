@@ -19,8 +19,7 @@ THIRD_PARTY_GETOPT_A_DIRECTDEPS =				\
 	LIBC_CALLS						\
 	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
-	LIBC_STR						\
-	LIBC_STUBS
+	LIBC_STR
 
 THIRD_PARTY_GETOPT_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_GETOPT_A_DIRECTDEPS),$($(x))))

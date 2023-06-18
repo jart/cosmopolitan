@@ -69,10 +69,9 @@ EXAMPLES_PACKAGE_LIB_A_CHECKS =					\
 # Lists packages whose symbols are or may be directly referenced here.
 # Note that linking stubs is always a good idea due to synthetic code.
 EXAMPLES_PACKAGE_LIB_A_DIRECTDEPS =				\
-	LIBC_STDIO						\
 	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
-	LIBC_STUBS
+	LIBC_STDIO
 
 # Evaluates variable as set of transitive package dependencies.
 EXAMPLES_PACKAGE_LIB_A_DEPS :=					\

@@ -38,7 +38,6 @@ TEST_TOOL_BUILD_LIB_DIRECTDEPS =				\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\
 	LIBC_X							\

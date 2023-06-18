@@ -51,7 +51,7 @@ static int vfprintfputchar(const char *s, struct state *t, size_t n) {
  * Formats and writes text to stream.
  * @see printf() for further documentation
  */
-int(vfprintf_unlocked)(FILE *f, const char *fmt, va_list va) {
+int vfprintf_unlocked(FILE *f, const char *fmt, va_list va) {
   int rc;
   struct state st[1] = {{f, 0}};
   if ((rc = __fmt(vfprintfputchar, st, fmt, va)) != -1) {

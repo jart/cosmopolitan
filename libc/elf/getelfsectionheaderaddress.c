@@ -17,16 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
-#include "libc/stdckdint.h"
+#include "libc/elf/struct/shdr.h"
 
+/**
+ * Returns section header object at `elf.section[i]`.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param i is the section header index, starting at zero
+ * @return section header pointer, or null on error
+ */
 Elf64_Shdr *GetElfSectionHeaderAddress(const Elf64_Ehdr *elf,  //
                                        size_t mapsize,         //
                                        Elf64_Half i) {         //
-  uint64_t addr, last;
+  uint64_t off;
   if (i >= elf->e_shnum) return 0;
-  if (ckd_add(&addr, (uintptr_t)elf, elf->e_shoff)) return 0;
-  if (ckd_add(&addr, addr, (unsigned)i * elf->e_shentsize)) return 0;
-  if (ckd_add(&last, addr, elf->e_shentsize)) return 0;
-  if (last > (uintptr_t)elf + mapsize) return 0;
-  return (Elf64_Shdr *)addr;
+  if (elf->e_shoff <= 0) return 0;
+  if (elf->e_shoff >= mapsize) return 0;
+  if (elf->e_shentsize < sizeof(Elf64_Shdr)) return 0;
+  if ((off = elf->e_shoff + (unsigned)i * elf->e_shentsize) > mapsize) return 0;
+  return (Elf64_Shdr *)((char *)elf + off);
 }

@@ -39,7 +39,6 @@ TEST_TOOL_NET_DIRECTDEPS =					\
 	LIBC_SOCK						\
 	LIBC_STDIO						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\
 	LIBC_THREAD						\

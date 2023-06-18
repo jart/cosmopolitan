@@ -41,7 +41,6 @@ TEST_LIBC_STR_DIRECTDEPS =						\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_TESTLIB							\

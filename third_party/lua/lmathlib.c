@@ -27,9 +27,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lmathlib_c
 #define LUA_LIB
+#include "libc/calls/calls.h"
 #include "libc/math.h"
 #include "libc/nt/struct/msg.h"
-#include "libc/time/time.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"

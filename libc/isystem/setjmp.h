@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_SETJMP_H_
-#define LIBC_ISYSTEM_SETJMP_H_
+#ifndef _SETJMP_H
+#define _SETJMP_H
 #include "libc/runtime/runtime.h"
-#endif
+#endif /* _SETJMP_H */

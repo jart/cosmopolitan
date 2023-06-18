@@ -26,7 +26,7 @@ __mulodi4(di_int a, di_int b, int* overflow)
     const di_int MIN = (du_int)1 << (N-1);
     const di_int MAX = ~MIN;
     *overflow = 0; 
-    di_int result = (du_int)a * (du_int)b;
+    di_int result = (du_int)a * b;
     if (a == MIN)
     {
         if (b != 0 && b != 1)

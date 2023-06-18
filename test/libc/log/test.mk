@@ -36,7 +36,6 @@ TEST_LIBC_LOG_DIRECTDEPS =					\
 	LIBC_NEXGEN32E						\
 	LIBC_LOG						\
 	LIBC_STR						\
-	LIBC_STUBS						\
 	LIBC_TESTLIB						\
 	LIBC_SYSV						\
 	LIBC_LOG						\

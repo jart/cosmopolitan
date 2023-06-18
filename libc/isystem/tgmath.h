@@ -1,5 +1,5 @@
-#ifndef LIBC_ISYSTEM_TGMATH_H_
-#define LIBC_ISYSTEM_TGMATH_H_
+#ifndef _TGMATH_H
+#define _TGMATH_H
 #include "libc/complex.h"
 #include "libc/imag.internal.h"
 #include "libc/math.h"
@@ -329,4 +329,4 @@
 
 #endif /* C11 */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* LIBC_ISYSTEM_TGMATH_H_ */
+#endif /* _TGMATH_H */

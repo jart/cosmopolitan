@@ -44,7 +44,6 @@ TEST_LIBC_CALLS_DIRECTDEPS =						\
 	LIBC_SYSV_CALLS							\
 	LIBC_RUNTIME							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_THREAD							\
 	LIBC_TIME							\

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Arithmetic overflow handler.
@@ -31,5 +32,5 @@
  */
 __attribute__((__weak__)) void __on_arithmetic_overflow(void) {
   kprintf("error: -ftrapv caught arithmetic overflow\n");
-  __builtin_trap();
+  abort();
 }

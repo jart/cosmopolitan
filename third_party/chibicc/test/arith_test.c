@@ -1,6 +1,7 @@
 #include "third_party/chibicc/test/test.h"
 
 int main() {
+
   ASSERT(0, 0);
   ASSERT(42, 42);
   ASSERT(21, 5 + 20 - 4);

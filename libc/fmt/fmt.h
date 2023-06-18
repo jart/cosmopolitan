@@ -22,13 +22,16 @@ int vsprintf(char *, const char *, va_list)
 dontthrow nocallback;
 int sscanf(const char *, const char *, ...) scanfesque(2);
 int vsscanf(const char *, const char *, va_list);
-int vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
-            va_list);
-int __fmt(void *, void *, const char *, va_list) _Hide;
 char *itoa(int, char *, int) compatfn;
 char *fcvt(double, int, int *, int *);
 char *ecvt(double, int, int *, int *);
 char *gcvt(double, int, char *);
+
+#ifdef COSMO
+int __vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
+              va_list);
+int __fmt(void *, void *, const char *, va_list) _Hide;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

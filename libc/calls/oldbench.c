@@ -31,6 +31,8 @@
 #include "libc/thread/tls.h"
 #include "libc/time/time.h"
 
+// TODO(jart): DELETE
+
 static struct Now {
   bool once;
   uint64_t k0;

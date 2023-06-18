@@ -21,11 +21,11 @@
 /**
  * Formats string directly to file descriptor.
  */
-int(dprintf)(int fd, const char *fmt, ...) {
+int dprintf(int fd, const char *fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vdprintf)(fd, fmt, va);
+  rc = vdprintf(fd, fmt, va);
   va_end(va);
   return rc;
 }

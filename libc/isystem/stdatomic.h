@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_STDATOMIC_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_STDATOMIC_H_
+#ifndef _STDATOMIC_H
+#define _STDATOMIC_H
 #include "libc/intrin/atomic.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_STDATOMIC_H_ */
+#endif /* _STDATOMIC_H */

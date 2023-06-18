@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SYSLOG_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_SYSLOG_H_
+#ifndef _SYSLOG_H
+#define _SYSLOG_H
 #include "libc/sock/syslog.h"
 #include "libc/sysv/consts/log.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SYSLOG_H_ */
+#endif /* _SYSLOG_H */

@@ -30,7 +30,6 @@ NET_HTTPS_A_DIRECTDEPS =			\
 	LIBC_RUNTIME				\
 	LIBC_STDIO				\
 	LIBC_STR				\
-	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_TIME				\
 	LIBC_X					\

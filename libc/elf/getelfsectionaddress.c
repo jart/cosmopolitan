@@ -19,14 +19,23 @@
 #include "libc/elf/elf.h"
 #include "libc/stdckdint.h"
 
-// note: should not be used on bss section
+/**
+ * Returns pointer to elf section file content.
+ *
+ * This function shouldn't be used on the bss section.
+ *
+ * @param elf points to the start of the executable image
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param shdr is from GetElfSectionHeaderAddress() and null-propagating
+ * @return pointer to content bytes, or null on error
+ */
 void *GetElfSectionAddress(const Elf64_Ehdr *elf,     // validated
                            size_t mapsize,            // validated
                            const Elf64_Shdr *shdr) {  // foreign
-  uint64_t addr, last;
+  uint64_t last;
   if (!shdr) return 0;
-  if (ckd_add(&addr, (uintptr_t)elf, shdr->sh_offset)) return 0;
-  if (ckd_add(&last, addr, shdr->sh_size)) return 0;
-  if (last > (uintptr_t)elf + mapsize) return 0;
-  return (void *)addr;
+  if (shdr->sh_size <= 0) return 0;
+  if (ckd_add(&last, shdr->sh_offset, shdr->sh_size)) return 0;
+  if (last > mapsize) return 0;
+  return (char *)elf + shdr->sh_offset;
 }

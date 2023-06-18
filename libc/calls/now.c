@@ -33,6 +33,8 @@
 #include "libc/thread/tls.h"
 #include "libc/time/time.h"
 
+// TODO(jart): DELETE
+
 static clock_gettime_f *__gettime;
 
 static struct Now {

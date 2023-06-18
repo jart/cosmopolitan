@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_ISO646_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_ISO646_H_
+#ifndef _ISO646_H
+#define _ISO646_H
 #include "libc/iso646.internal.h"
-#endif
+#endif /* _ISO646_H */

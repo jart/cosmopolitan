@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_ASSERT_H_
-#define LIBC_ISYSTEM_ASSERT_H_
+#ifndef _ASSERT_H
+#define _ASSERT_H
 #include "libc/assert.h"
-#endif
+#endif /* _ASSERT_H */

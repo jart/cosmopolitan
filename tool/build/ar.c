@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -247,8 +248,9 @@ int main(int argc, char *argv[]) {
     CHECK_NE(MAP_FAILED,
              (elf = mmap(0, st->st_size, PROT_READ, MAP_PRIVATE, fd, 0)));
     CHECK(IsElf64Binary(elf, st->st_size), "%s", arg);
-    CHECK_NOTNULL((strs = GetElfStringTable(elf, st->st_size)));
-    CHECK_NOTNULL((syms = GetElfSymbolTable(elf, st->st_size, &symcount)));
+    CHECK_NOTNULL((strs = GetElfStringTable(elf, st->st_size, ".strtab")));
+    CHECK_NOTNULL(
+        (syms = GetElfSymbolTable(elf, st->st_size, SHT_SYMTAB, &symcount)));
     for (j = 0; j < symcount; ++j) {
       if (syms[j].st_shndx == SHN_UNDEF) continue;
       if (syms[j].st_other == STV_INTERNAL) continue;

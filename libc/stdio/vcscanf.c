@@ -44,8 +44,11 @@
  * @param va points to the variadic argument state
  * @see libc/fmt/pflink.h (dynamic memory is not a requirement)
  */
-int vcscanf(int callback(void *), int unget(int, void *), void *arg,
-            const char *fmt, va_list va) {
+int __vcscanf(int callback(void *),    //
+              int unget(int, void *),  //
+              void *arg,               //
+              const char *fmt,         //
+              va_list va) {
   struct FreeMe {
     struct FreeMe *next;
     void *ptr;

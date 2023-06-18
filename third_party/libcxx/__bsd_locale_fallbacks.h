@@ -14,7 +14,6 @@
 #define _LIBCPP_BSD_LOCALE_FALLBACKS_DEFAULTS_H
 
 #include "third_party/libcxx/stdlib.h"
-#include "libc/mem/fmt.h"
 #include "libc/str/unicode.h"
 #include "libc/fmt/fmt.h"
 #include "libc/str/locale.h"

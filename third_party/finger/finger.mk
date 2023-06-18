@@ -21,7 +21,6 @@ THIRD_PARTY_FINGER_A_DIRECTDEPS =			\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_STUBS					\
 	LIBC_SYSV					\
 	LIBC_DNS					\
 	LIBC_SOCK					\

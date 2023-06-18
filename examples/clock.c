@@ -7,10 +7,10 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/time/time.h"
 
 /**
  * @fileoverview clock() function demo

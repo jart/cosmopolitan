@@ -22,6 +22,6 @@
  * Formats and writes text to stdout.
  * @see printf() for further documentation
  */
-int(vprintf)(const char* fmt, va_list va) {
-  return (vfprintf)(stdout, fmt, va);
+int vprintf(const char* fmt, va_list va) {
+  return vfprintf(stdout, fmt, va);
 }

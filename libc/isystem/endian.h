@@ -1,5 +1,5 @@
-#ifndef LIBC_ISYSTEM_ENDIAN_H_
-#define LIBC_ISYSTEM_ENDIAN_H_
+#ifndef _ENDIAN_H
+#define _ENDIAN_H
 #include "libc/intrin/newbie.h"
 #include "libc/sysv/consts/endian.h"
-#endif /* LIBC_ISYSTEM_ENDIAN_H_ */
+#endif /* _ENDIAN_H */

@@ -35,7 +35,6 @@ LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_STUBS					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
 	LIBC_TIME					\

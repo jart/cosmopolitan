@@ -350,13 +350,13 @@ static void FixupObject(void) {
     if (!IsElf64Binary(elf, esize)) {
       Die("not an elf64 binary");
     }
-    if (!(syms = GetElfSymbolTable(elf, esize, &symcount))) {
+    if (!(syms = GetElfSymbolTable(elf, esize, SHT_SYMTAB, &symcount))) {
       Die("missing elf symbol table");
     }
     if (!(secstrs = GetElfSectionNameStringTable(elf, esize))) {
       Die("missing elf section string table");
     }
-    if (!(symstrs = GetElfStringTable(elf, esize))) {
+    if (!(symstrs = GetElfStringTable(elf, esize, ".strtab"))) {
       Die("missing elf symbol string table");
     }
     CheckPrivilegedCrossReferences();

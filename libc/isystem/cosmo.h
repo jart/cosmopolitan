@@ -30,6 +30,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/elf/elf.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/bsf.h"

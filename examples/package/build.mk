@@ -43,7 +43,6 @@ EXAMPLES_PACKAGE_DIRECTDEPS =				\
 	EXAMPLES_PACKAGE_LIB				\
 	LIBC_INTRIN					\
 	LIBC_STDIO					\
-	LIBC_STUBS					\
 	LIBC_TINYMATH
 
 # Evaluates the set of transitive package dependencies.

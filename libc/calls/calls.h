@@ -40,6 +40,8 @@
 #define SIG_DFL ((void (*)(int))0)
 #define SIG_IGN ((void (*)(int))1)
 
+#define CLOCKS_PER_SEC 1000000L
+
 #define MAP_FAILED ((void *)-1)
 
 #define WCOREDUMP(s)    (128 & (s))
@@ -174,6 +176,8 @@ int usleep(unsigned);
 int vfork(void) returnstwice;
 int wait(int *);
 int waitpid(int, int *, int);
+int64_t clock(void);
+int64_t time(int64_t *);
 ssize_t copy_file_range(int, long *, int, long *, size_t, unsigned);
 ssize_t lseek(int, int64_t, int);
 ssize_t pread(int, void *, size_t, int64_t);
@@ -183,10 +187,12 @@ ssize_t readlink(const char *, char *, size_t);
 ssize_t readlinkat(int, const char *, char *, size_t);
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned);
 ssize_t write(int, const void *, size_t);
+unsigned alarm(unsigned);
 unsigned getegid(void) nosideeffect;
 unsigned geteuid(void) nosideeffect;
 unsigned getgid(void) nosideeffect;
 unsigned getuid(void) libcesque;
+unsigned sleep(unsigned);
 unsigned umask(unsigned);
 void sync(void);
 

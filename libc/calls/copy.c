@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Copies data between file descriptors the old fashioned way.
@@ -43,7 +44,7 @@ ssize_t copyfd(int in, int out, size_t n) {
     if (dw != dr) {
       // POSIX requires atomic IO up to PIPE_BUF
       // The minimum permissible PIPE_BUF is 512
-      __builtin_trap();
+      abort();
     }
   }
   return i;

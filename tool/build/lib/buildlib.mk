@@ -33,7 +33,6 @@ TOOL_BUILD_LIB_A_OBJS =					\
 
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_CALLS					\
-	LIBC_ELF					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
@@ -43,7 +42,6 @@ TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_SOCK					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_STUBS					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
 	LIBC_TIME					\
@@ -108,6 +106,8 @@ TOOL_BUILD_LIB_BINS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_BINS))
 TOOL_BUILD_LIB_CHECKS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_CHECKS))
 TOOL_BUILD_LIB_OBJS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_OBJS))
 TOOL_BUILD_LIB_TESTS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_TESTS))
+
+$(TOOL_BUILD_LIB_OBJS): tool/build/lib/buildlib.mk
 
 .PHONY: o/$(MODE)/tool/build/lib
 o/$(MODE)/tool/build/lib:				\

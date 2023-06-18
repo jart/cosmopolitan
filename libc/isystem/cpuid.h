@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CPUID_INTERNAL_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_CPUID_INTERNAL_H_
+#ifndef _CPUID_H
+#define _CPUID_H
 #include "third_party/intel/cpuid.internal.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CPUID_INTERNAL_H_ */
+#endif /* _CPUID_H */

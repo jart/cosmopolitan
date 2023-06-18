@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_UTMP_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_UTMP_H_
+#ifndef _UTMP_H
+#define _UTMP_H
 #include "libc/runtime/utmp.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_UTMP_H_ */
+#endif /* _UTMP_H */

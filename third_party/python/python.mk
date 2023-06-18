@@ -460,7 +460,6 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_THREAD							\
 	LIBC_STDIO							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_TIME							\
@@ -1171,7 +1170,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	LIBC_SOCK							\
 	LIBC_STDIO							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_TIME							\
@@ -3998,7 +3996,6 @@ THIRD_PARTY_PYTHON_PYTHON_DIRECTDEPS =					\
 	LIBC_STDIO							\
 	LIBC_MEM							\
 	LIBC_STR							\
-	LIBC_STUBS							\
 	LIBC_LOG							\
 	LIBC_SYSV							\
 	LIBC_X								\
@@ -4050,7 +4047,6 @@ THIRD_PARTY_PYTHON_FREEZE_DIRECTDEPS =					\
 	LIBC_MEM							\
 	LIBC_STR							\
 	LIBC_LOG							\
-	LIBC_STUBS							\
 	LIBC_SYSV							\
 	LIBC_X								\
 	THIRD_PARTY_GETOPT						\

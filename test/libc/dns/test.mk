@@ -34,7 +34,6 @@ TEST_LIBC_DNS_DIRECTDEPS =				\
 	LIBC_SOCK					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_STUBS					\
 	LIBC_SYSV					\
 	LIBC_TESTLIB					\
 	LIBC_X

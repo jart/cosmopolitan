@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/fmt.h"
+#include "libc/stdio/stdio.h"
 
 /**
  * Formats string, allocating needed memory.
@@ -28,11 +28,11 @@
  * @see xasprintf() for a better API
  * @threadsafe
  */
-int(asprintf)(char **strp, const char *fmt, ...) {
+int asprintf(char **strp, const char *fmt, ...) {
   int res;
   va_list va;
   va_start(va, fmt);
-  res = (vasprintf)(strp, fmt, va);
+  res = vasprintf(strp, fmt, va);
   va_end(va);
   return res;
 }

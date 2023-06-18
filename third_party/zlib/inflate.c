@@ -331,7 +331,6 @@ struct inflate_state FAR *state;
 #include "libc/stdio/dprintf.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/fmt.h"
-#include "libc/mem/fmt.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "third_party/musl/tempnam.h"
@@ -751,7 +750,7 @@ int flush;
         case TIME:
             NEEDBITS(32);
             if (state->head != Z_NULL)
-                state->head->time = hold;
+                state->head->time_ = hold;
             if ((state->flags & 0x0200) && (state->wrap & 4))
                 CRC4(state->check, hold);
             INITBITS();

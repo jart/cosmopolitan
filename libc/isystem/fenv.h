@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_FENV_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_FENV_H_
+#ifndef _FENV_H
+#define _FENV_H
 #include "libc/runtime/fenv.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_FENV_H_ */
+#endif /* _FENV_H */

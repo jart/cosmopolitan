@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CRYPT_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_CRYPT_H_
+#ifndef _CRYPT_H
+#define _CRYPT_H
 #include "third_party/musl/crypt.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CRYPT_H_ */
+#endif /* _CRYPT_H */

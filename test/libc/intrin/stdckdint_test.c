@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdckdint.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+
+#define FAIL ++failed < 100
 
 #define uintmax_t uint128_t
 
@@ -77,11 +79,11 @@ void test_ckd_add(void) {
       int z1, z2, o1, o2, y = Vint[i];
       o1 = ckd_add(&z1, x, y);
       o2 = __builtin_add_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("add %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "add %d + %d = %d vs. %d\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("add %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "add %d + %d overflow disagreement\n", x, y);
       }
     }
   }
@@ -94,11 +96,11 @@ void test_ckd_sub(void) {
       int z1, z2, o1, o2, y = Vint[i];
       o1 = ckd_sub(&z1, x, y);
       o2 = __builtin_sub_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("sub %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "sub %d - %d = %d vs. %d\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("sub %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "sub %d - %d overflow disagreement\n", x, y);
       }
     }
   }
@@ -111,11 +113,11 @@ void test_ckd_mul(void) {
       int z1, z2, o1, o2, y = Vint[i];
       o1 = ckd_mul(&z1, x, y);
       o2 = __builtin_mul_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("mul %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "mul %d * %d = %d vs. %d\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("mul %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "mul %d * %d overflow disagreement\n", x, y);
       }
     }
   }
@@ -128,11 +130,11 @@ void test_ckd_add_long(void) {
       long z1, z2, o1, o2, y = Vlong[i];
       o1 = ckd_add(&z1, x, y);
       o2 = __builtin_add_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("add %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "add %ld + %ld = %ld vs. %ld\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("add %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "add %ld + %ld overflow disagreement\n", x, y);
       }
     }
   }
@@ -145,11 +147,11 @@ void test_ckd_sub_long(void) {
       long z1, z2, o1, o2, y = Vlong[i];
       o1 = ckd_sub(&z1, x, y);
       o2 = __builtin_sub_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("sub %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "sub %ld - %ld = %ld vs. %ld\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("sub %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "sub %ld - %ld overflow disagreement\n", x, y);
       }
     }
   }
@@ -162,11 +164,11 @@ void test_ckd_mul_long(void) {
       long z1, z2, o1, o2, y = Vlong[i];
       o1 = ckd_mul(&z1, x, y);
       o2 = __builtin_mul_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("mul %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "mul %ld * %ld = %ld vs. %ld\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("mul %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "mul %ld * %ld overflow disagreement\n", x, y);
       }
     }
   }
@@ -179,11 +181,11 @@ void test_ckd_add_int128(void) {
       int128_t z1, z2, o1, o2, y = Vint128[i];
       o1 = ckd_add(&z1, x, y);
       o2 = __builtin_add_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("add %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "add %jjd * %jjd = %jjd vs. %jjd\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("add %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "add %jjd * %jjd overflow disagreement\n", x, y);
       }
     }
   }
@@ -196,11 +198,11 @@ void test_ckd_sub_int128(void) {
       int128_t z1, z2, o1, o2, y = Vint128[i];
       o1 = ckd_sub(&z1, x, y);
       o2 = __builtin_sub_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("sub %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "sub %jjd * %jjd = %jjd vs. %jjd\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("sub %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "sub %jjd * %jjd overflow disagreement\n", x, y);
       }
     }
   }
@@ -213,11 +215,164 @@ void test_ckd_mul_int128(void) {
       int128_t z1, z2, o1, o2, y = Vint128[i];
       o1 = ckd_mul(&z1, x, y);
       o2 = __builtin_mul_overflow(x, y, &z2);
-      if (z1 != z2 && ++failed < 100) {
-        kprintf("mul %d * %d = %d vs. %d\n", x, y, z1, z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "mul %jjd * %jjd = %jjd vs. %jjd\n", x, y, z1, z2);
       }
-      if (o1 != o2 && ++failed < 100) {
-        kprintf("mul %d * %d overflow disagreement\n", x, y);
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "mul %jjd * %jjd overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_addu(void) {
+  for (int i = 0; i < ARRAYLEN(Vint); ++i) {
+    unsigned int x = Vint[i];
+    for (int j = 0; j < ARRAYLEN(Vint); ++j) {
+      unsigned int z1, z2, o1, o2, y = Vint[i];
+      o1 = ckd_add(&z1, x, y);
+      o2 = __builtin_add_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "unsigned add %u + %u = %u vs. %u\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "unsigned add %u + %u overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_subu(void) {
+  for (int i = 0; i < ARRAYLEN(Vint); ++i) {
+    unsigned int x = Vint[i];
+    for (int j = 0; j < ARRAYLEN(Vint); ++j) {
+      unsigned int z1, z2, o1, o2, y = Vint[i];
+      o1 = ckd_sub(&z1, x, y);
+      o2 = __builtin_sub_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "unsigned sub %u - %u = %u vs. %u\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "unsigned sub %u - %u overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_mulu(void) {
+  for (int i = 0; i < ARRAYLEN(Vint); ++i) {
+    unsigned int x = Vint[i];
+    for (int j = 0; j < ARRAYLEN(Vint); ++j) {
+      unsigned int z1, z2, o1, o2, y = Vint[i];
+      o1 = ckd_mul(&z1, x, y);
+      o2 = __builtin_mul_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "unsigned mul %u * %u = %u vs. %u\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "unsigned mul %u * %u overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_addul(void) {
+  for (int i = 0; i < ARRAYLEN(Vlong); ++i) {
+    unsigned long x = Vlong[i];
+    for (int j = 0; j < ARRAYLEN(Vlong); ++j) {
+      unsigned long z1, z2, o1, o2, y = Vlong[i];
+      o1 = ckd_add(&z1, x, y);
+      o2 = __builtin_add_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "ulong add %lu + %lu = %lu vs. %lu\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "ulong add %lu + %lu overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_subul(void) {
+  for (int i = 0; i < ARRAYLEN(Vlong); ++i) {
+    unsigned long x = Vlong[i];
+    for (int j = 0; j < ARRAYLEN(Vlong); ++j) {
+      unsigned long z1, z2, o1, o2, y = Vlong[i];
+      o1 = ckd_sub(&z1, x, y);
+      o2 = __builtin_sub_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "ulong sub %lu - %lu = %lu vs. %lu\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "ulong sub %lu - %lu overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_mulul(void) {
+  for (int i = 0; i < ARRAYLEN(Vlong); ++i) {
+    unsigned long x = Vlong[i];
+    for (int j = 0; j < ARRAYLEN(Vlong); ++j) {
+      unsigned long z1, z2, o1, o2, y = Vlong[i];
+      o1 = ckd_mul(&z1, x, y);
+      o2 = __builtin_mul_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "ulong mul %lu * %lu = %lu vs. %lu\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "ulong mul %lu * %lu overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_addull(void) {
+  for (int i = 0; i < ARRAYLEN(Vint128); ++i) {
+    uint128_t x = Vint128[i];
+    for (int j = 0; j < ARRAYLEN(Vint128); ++j) {
+      uint128_t z1, z2, o1, o2, y = Vint128[i];
+      o1 = ckd_add(&z1, x, y);
+      o2 = __builtin_add_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "u128 add %jju + %jju = %jju vs. %jju\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "u128 add %jju + %jju overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_subull(void) {
+  for (int i = 0; i < ARRAYLEN(Vint128); ++i) {
+    uint128_t x = Vint128[i];
+    for (int j = 0; j < ARRAYLEN(Vint128); ++j) {
+      uint128_t z1, z2, o1, o2, y = Vint128[i];
+      o1 = ckd_sub(&z1, x, y);
+      o2 = __builtin_sub_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "u128 sub %jju - %jju = %jju vs. %jju\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "u128 sub %jju - %jju overflow disagreement\n", x, y);
+      }
+    }
+  }
+}
+
+void test_ckd_mulull(void) {
+  for (int i = 0; i < ARRAYLEN(Vint128); ++i) {
+    uint128_t x = Vint128[i];
+    for (int j = 0; j < ARRAYLEN(Vint128); ++j) {
+      uint128_t z1, z2, o1, o2, y = Vint128[i];
+      o1 = ckd_mul(&z1, x, y);
+      o2 = __builtin_mul_overflow(x, y, &z2);
+      if (z1 != z2 && FAIL) {
+        fprintf(stderr, "u128 mul %jju * %jju = %jju vs. %jju\n", x, y, z1, z2);
+      }
+      if (o1 != o2 && FAIL) {
+        fprintf(stderr, "u128 mul %jju * %jju overflow disagreement\n", x, y);
       }
     }
   }
@@ -233,5 +388,14 @@ int main(int argc, char *argv[]) {
   test_ckd_add_int128();
   test_ckd_sub_int128();
   test_ckd_mul_int128();
+  test_ckd_addu();
+  test_ckd_subu();
+  test_ckd_mulu();
+  test_ckd_addul();
+  test_ckd_subul();
+  test_ckd_mulul();
+  test_ckd_addull();
+  test_ckd_subull();
+  test_ckd_mulull();
   return failed ? 1 : 0;
 }

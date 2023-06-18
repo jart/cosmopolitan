@@ -57,11 +57,11 @@
  * @see __fmt() for intuitive reference documentation
  * @see {,v}{,s{,n},{,{,x}as},f,d}printf
  */
-int(printf)(const char* fmt, ...) {
+int printf(const char* fmt, ...) {
   int rc;
   va_list va;
   va_start(va, fmt);
-  rc = (vfprintf)(stdout, fmt, va);
+  rc = vfprintf(stdout, fmt, va);
   va_end(va);
   return rc;
 }

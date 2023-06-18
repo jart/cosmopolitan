@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_BYTESWAP_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_BYTESWAP_H_
+#ifndef _BYTESWAP_H
+#define _BYTESWAP_H
 #include "libc/intrin/bswap.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_BYTESWAP_H_ */
+#endif /* _BYTESWAP_H */

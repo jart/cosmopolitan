@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 
 void __cxa_pure_virtual(void) {
 #ifndef NDEBUG
   kprintf("__cxa_pure_virtual() called\n"
           "Did you call a virtual method from a destructor?\n");
 #endif
-  __builtin_trap();
+  abort();
 }

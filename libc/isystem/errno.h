@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_ERRNO_H_
-#define LIBC_ISYSTEM_ERRNO_H_
+#ifndef _ERRNO_H
+#define _ERRNO_H
 #include "libc/errno.h"
-#endif
+#endif /* _ERRNO_H */

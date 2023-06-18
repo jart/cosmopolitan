@@ -16,20 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/elf/def.h"
-#include "libc/elf/elf.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 
-Elf64_Sym *GetElfDynSymbolTable(const Elf64_Ehdr *elf, size_t mapsize,
-                                Elf64_Xword *out_count) {
-  int i;
-  Elf64_Shdr *shdr;
-  for (i = elf->e_shnum; i-- > 0;) {
-    if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&  //
-        shdr->sh_type == SHT_DYNSYM &&                           //
-        shdr->sh_entsize == sizeof(Elf64_Sym)) {
-      if (out_count) *out_count = shdr->sh_size / sizeof(Elf64_Sym);
-      return GetElfSectionAddress(elf, mapsize, shdr);
-    }
-  }
-  return 0;
+__attribute__((__weak__)) void __stack_chk_fail(void) {
+  kprintf("%s: stack smashed\n", program_invocation_name);
+  __builtin_trap();
 }

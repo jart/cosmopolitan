@@ -1,4 +1,4 @@
-#ifndef LIBC_ISYSTEM_GETOPT_H_
-#define LIBC_ISYSTEM_GETOPT_H_
+#ifndef _GETOPT_H
+#define _GETOPT_H
 #include "third_party/getopt/getopt.h"
-#endif
+#endif /* _GETOPT_H */

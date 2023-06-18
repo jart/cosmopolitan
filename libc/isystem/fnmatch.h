@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_FNMATCH_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_FNMATCH_H_
+#ifndef _FNMATCH_H
+#define _FNMATCH_H
 #include "third_party/musl/fnmatch.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_FNMATCH_H_ */
+#endif /* _FNMATCH_H */
