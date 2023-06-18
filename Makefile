@@ -65,7 +65,7 @@ MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 .DELETE_ON_ERROR:
 .FEATURES: output-sync
-.PHONY: all o bins check test depend tags aarch64
+.PHONY: all o bins check test depend tags aarch64 clean
 
 ifneq ($(m),)
 ifeq ($(MODE),)
@@ -430,6 +430,9 @@ aarch64: private .INTERNET = true
 aarch64: private .UNSANDBOXED = true
 aarch64:
 	$(MAKE) m=aarch64
+
+clean:
+	rm -rf o
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #
