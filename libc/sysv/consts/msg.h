@@ -64,32 +64,6 @@ extern const int MSG_WAITFORONE;
 #define MSG_WAITALL      MSG_WAITALL
 #define MSG_WAITFORONE   MSG_WAITFORONE
 
-#define __tmpcosmo_MSG_BATCH        -1134416743
-#define __tmpcosmo_MSG_BCAST        370853917
-#define __tmpcosmo_MSG_CMSG_CLOEXEC -1745056044
-#define __tmpcosmo_MSG_CONFIRM      -1373446954
-#define __tmpcosmo_MSG_CTRUNC       -1111700304
-#define __tmpcosmo_MSG_DONTWAIT     -667086557
-#define __tmpcosmo_MSG_EOF          -602741896
-#define __tmpcosmo_MSG_EOR          -91925267
-#define __tmpcosmo_MSG_ERRQUEUE     1651845516
-#define __tmpcosmo_MSG_EXCEPT       460132348
-#define __tmpcosmo_MSG_FASTOPEN     -394051246
-#define __tmpcosmo_MSG_FIN          1618968310
-#define __tmpcosmo_MSG_INFO         -1121675098
-#define __tmpcosmo_MSG_MCAST        -782610984
-#define __tmpcosmo_MSG_MORE         1239285605
-#define __tmpcosmo_MSG_NOERROR      -1816652550
-#define __tmpcosmo_MSG_NOSIGNAL     -1026018855
-#define __tmpcosmo_MSG_NOTIFICATION -1641797121
-#define __tmpcosmo_MSG_PARITY_ERROR 742069756
-#define __tmpcosmo_MSG_PROXY        -2048250956
-#define __tmpcosmo_MSG_RST          -1659007642
-#define __tmpcosmo_MSG_STAT         -1766577788
-#define __tmpcosmo_MSG_SYN          -105011009
-#define __tmpcosmo_MSG_TRUNC        1248152008
-#define __tmpcosmo_MSG_WAITALL      -209697144
-#define __tmpcosmo_MSG_WAITFORONE   -583987704
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

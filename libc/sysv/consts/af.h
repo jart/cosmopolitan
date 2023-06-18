@@ -95,49 +95,6 @@ extern const int AF_X25;
 #define AF_WANPIPE    AF_WANPIPE
 #define AF_X25        AF_X25
 
-#define __tmpcosmo_AF_ALG        -15823936
-#define __tmpcosmo_AF_APPLETALK  -15823820
-#define __tmpcosmo_AF_ASH        -15823924
-#define __tmpcosmo_AF_ATMPVC     -15824070
-#define __tmpcosmo_AF_ATMSVC     -15824056
-#define __tmpcosmo_AF_AX25       -15824014
-#define __tmpcosmo_AF_BLUETOOTH  -15823992
-#define __tmpcosmo_AF_BRIDGE     -15823812
-#define __tmpcosmo_AF_CAIF       -15823850
-#define __tmpcosmo_AF_CAN        -15823868
-#define __tmpcosmo_AF_ECONET     -15823852
-#define __tmpcosmo_AF_FILE       -15824118
-#define __tmpcosmo_AF_IB         -15823966
-#define __tmpcosmo_AF_IEEE802154 -15823906
-#define __tmpcosmo_AF_IPX        -15824002
-#define __tmpcosmo_AF_IRDA       -15823860
-#define __tmpcosmo_AF_ISDN       -15823978
-#define __tmpcosmo_AF_IUCV       -15824106
-#define __tmpcosmo_AF_KCM        -15824024
-#define __tmpcosmo_AF_KEY        -15823948
-#define __tmpcosmo_AF_LINK       -15823878
-#define __tmpcosmo_AF_LLC        -15823824
-#define __tmpcosmo_AF_LOCAL      -15823928
-#define __tmpcosmo_AF_MAX        -15824082
-#define __tmpcosmo_AF_MPLS       -15824026
-#define __tmpcosmo_AF_NETBEUI    -15824124
-#define __tmpcosmo_AF_NETLINK    -15824004
-#define __tmpcosmo_AF_NETROM     -15823886
-#define __tmpcosmo_AF_NFC        -15824142
-#define __tmpcosmo_AF_PACKET     -15824028
-#define __tmpcosmo_AF_PHONET     -15823830
-#define __tmpcosmo_AF_PPPOX      -15823876
-#define __tmpcosmo_AF_ROSE       -15824016
-#define __tmpcosmo_AF_ROUTE      -15824100
-#define __tmpcosmo_AF_RXRPC      -15823926
-#define __tmpcosmo_AF_SECURITY   -15824136
-#define __tmpcosmo_AF_SNA        -15823950
-#define __tmpcosmo_AF_TIPC       -15824034
-#define __tmpcosmo_AF_VSOCK      -15824146
-#define __tmpcosmo_AF_WANPIPE    -15823960
-#define __tmpcosmo_AF_X25        -15823864
-#define __tmpcosmo_AF_INET6      1498323847
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_AF_H_ */

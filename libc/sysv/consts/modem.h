@@ -37,10 +37,6 @@ extern const int TIOCM_ST;
 #define TIOCMBIC TIOCMBIC
 #define TIOCMBIS TIOCMBIS
 
-#define __tmpcosmo_TIOCMGET -1558289563
-#define __tmpcosmo_TIOCMSET 1411834535
-#define __tmpcosmo_TIOCMBIC 1398206874
-#define __tmpcosmo_TIOCMBIS 522158367
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

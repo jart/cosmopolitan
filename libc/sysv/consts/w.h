@@ -11,8 +11,6 @@ extern const int WCONTINUED;
 #define WUNTRACED  WUNTRACED
 #define WCONTINUED WCONTINUED
 
-#define __tmpcosmo_WCONTINUED 936005225
-#define __tmpcosmo_WUNTRACED  -1820879514
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

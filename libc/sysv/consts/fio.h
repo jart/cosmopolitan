@@ -15,12 +15,6 @@ extern const uint32_t FIONREAD;
 #define FIONCLEX FIONCLEX
 #define FIONREAD FIONREAD
 
-#define __tmpcosmo_FIOASYNC -484047213
-#define __tmpcosmo_FIOCLEX  -1198942590
-#define __tmpcosmo_FIONBIO  2035363853
-#define __tmpcosmo_FIONCLEX -25760400
-#define __tmpcosmo_FIONREAD 1333957726
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_FIO_H_ */

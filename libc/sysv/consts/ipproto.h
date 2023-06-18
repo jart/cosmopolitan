@@ -72,33 +72,6 @@ extern const int IPPROTO_UDPLITE;
 #define IPPROTO_TP       IPPROTO_TP
 #define IPPROTO_UDPLITE  IPPROTO_UDPLITE
 
-#define __tmpcosmo_IPPROTO_AH       -1870674383
-#define __tmpcosmo_IPPROTO_BEETPH   -88002196
-#define __tmpcosmo_IPPROTO_COMP     -1180207155
-#define __tmpcosmo_IPPROTO_DCCP     -1414939404
-#define __tmpcosmo_IPPROTO_DSTOPTS  -301626931
-#define __tmpcosmo_IPPROTO_EGP      1981296310
-#define __tmpcosmo_IPPROTO_ENCAP    -1186890893
-#define __tmpcosmo_IPPROTO_ESP      1912922673
-#define __tmpcosmo_IPPROTO_FRAGMENT 815526741
-#define __tmpcosmo_IPPROTO_GRE      -1086664412
-#define __tmpcosmo_IPPROTO_HOPOPTS  288110026
-#define __tmpcosmo_IPPROTO_ICMPV6   -517548243
-#define __tmpcosmo_IPPROTO_IDP      -33178791
-#define __tmpcosmo_IPPROTO_IGMP     1855375045
-#define __tmpcosmo_IPPROTO_IPIP     -1399362390
-#define __tmpcosmo_IPPROTO_IPV6     -710044241
-#define __tmpcosmo_IPPROTO_MH       1137562059
-#define __tmpcosmo_IPPROTO_MPLS     -796619090
-#define __tmpcosmo_IPPROTO_MTP      -1938822508
-#define __tmpcosmo_IPPROTO_NONE     -1481051745
-#define __tmpcosmo_IPPROTO_PIM      1072180675
-#define __tmpcosmo_IPPROTO_PUP      1814067734
-#define __tmpcosmo_IPPROTO_ROUTING  -1022888846
-#define __tmpcosmo_IPPROTO_RSVP     -568010455
-#define __tmpcosmo_IPPROTO_SCTP     -1561155298
-#define __tmpcosmo_IPPROTO_TP       -1222369418
-#define __tmpcosmo_IPPROTO_UDPLITE  -444852753
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

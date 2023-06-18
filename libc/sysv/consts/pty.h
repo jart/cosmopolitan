@@ -24,7 +24,6 @@ extern const int TIOCPKT_STOP;
 
 #define TIOCPKT TIOCPKT
 
-#define __tmpcosmo_TIOCPKT -1036987649
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

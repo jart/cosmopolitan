@@ -95,28 +95,6 @@ COSMOPOLITAN_C_END_
 #define SIG_SETMASK SIG_SETMASK
 #define SIG_UNBLOCK SIG_UNBLOCK
 
-#define __tmpcosmo_SIGBUS    -15824132
-#define __tmpcosmo_SIGCHLD   -15824036
-#define __tmpcosmo_SIGCONT   -15823836
-#define __tmpcosmo_SIGEMT    -15823972
-#define __tmpcosmo_SIGINFO   -15824086
-#define __tmpcosmo_SIGIO     -15823912
-#define __tmpcosmo_SIGPOLL   -15823854
-#define __tmpcosmo_SIGPWR    -15824114
-#define __tmpcosmo_SIGRTMAX  -15824040
-#define __tmpcosmo_SIGRTMIN  -15824134
-#define __tmpcosmo_SIGSTKFLT -15823934
-#define __tmpcosmo_SIGSTOP   -15824158
-#define __tmpcosmo_SIGSYS    -15823922
-#define __tmpcosmo_SIGTHR    -15823902
-#define __tmpcosmo_SIGTSTP   -15823988
-#define __tmpcosmo_SIGUNUSED -15823970
-#define __tmpcosmo_SIGURG    -15823952
-#define __tmpcosmo_SIGUSR1   -15824018
-#define __tmpcosmo_SIGUSR2   -15823998
 
-#define __tmpcosmo_SIG_BLOCK   -15823800
-#define __tmpcosmo_SIG_SETMASK -15824090
-#define __tmpcosmo_SIG_UNBLOCK -15824078
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SIG_H_ */

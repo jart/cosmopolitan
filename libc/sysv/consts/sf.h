@@ -18,9 +18,6 @@ extern const int SF_SYNC;
 #define SF_NODISKIO SF_NODISKIO
 #define SF_SYNC     SF_SYNC
 
-#define __tmpcosmo_SF_MNOWAIT  94253741
-#define __tmpcosmo_SF_NODISKIO -1853614906
-#define __tmpcosmo_SF_SYNC     53385170
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

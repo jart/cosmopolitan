@@ -13,10 +13,6 @@ extern const uint64_t RLIM_SAVED_MAX;
 #define RLIM_SAVED_CUR RLIM_SAVED_CUR
 #define RLIM_SAVED_MAX RLIM_SAVED_MAX
 
-#define __tmpcosmo_RLIM_INFINITY  413930584
-#define __tmpcosmo_RLIM_NLIMITS   -1892777248
-#define __tmpcosmo_RLIM_SAVED_CUR -904980492
-#define __tmpcosmo_RLIM_SAVED_MAX -380354156
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

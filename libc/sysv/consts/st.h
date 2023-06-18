@@ -29,18 +29,6 @@ extern const int ST_WRITE;
 #define ST_SYNCHRONOUS ST_SYNCHRONOUS
 #define ST_WRITE       ST_WRITE
 
-#define __tmpcosmo_ST_APPEND      -1388286836
-#define __tmpcosmo_ST_IMMUTABLE   1267544033
-#define __tmpcosmo_ST_MANDLOCK    -2094813813
-#define __tmpcosmo_ST_NOATIME     771964228
-#define __tmpcosmo_ST_NODEV       -836140326
-#define __tmpcosmo_ST_NODIRATIME  152697025
-#define __tmpcosmo_ST_NOEXEC      315123377
-#define __tmpcosmo_ST_NOSUID      -1060040535
-#define __tmpcosmo_ST_RDONLY      237934379
-#define __tmpcosmo_ST_RELATIME    -1170584536
-#define __tmpcosmo_ST_SYNCHRONOUS 1353832369
-#define __tmpcosmo_ST_WRITE       -317138758
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -67,36 +67,6 @@ extern const int TCP_WINDOW_CLAMP;
 #define TCP_USER_TIMEOUT         TCP_USER_TIMEOUT
 #define TCP_WINDOW_CLAMP         TCP_WINDOW_CLAMP
 
-#define __tmpcosmo_TCP_CC_INFO              8361104
-#define __tmpcosmo_TCP_CONGESTION           372467383
-#define __tmpcosmo_TCP_COOKIE_TRANSACTIONS  1651367691
-#define __tmpcosmo_TCP_CORK                 -1349156951
-#define __tmpcosmo_TCP_DEFER_ACCEPT         -1542762903
-#define __tmpcosmo_TCP_FASTOPEN             684735969
-#define __tmpcosmo_TCP_FASTOPEN_CONNECT     -955771783
-#define __tmpcosmo_TCP_INFO                 -1828641436
-#define __tmpcosmo_TCP_KEEPCNT              -1493518283
-#define __tmpcosmo_TCP_KEEPIDLE             1644196464
-#define __tmpcosmo_TCP_KEEPINTVL            -1302451218
-#define __tmpcosmo_TCP_LINGER2              2018829991
-#define __tmpcosmo_TCP_MAXSEG               -597390935
-#define __tmpcosmo_TCP_MD5SIG               563016186
-#define __tmpcosmo_TCP_MD5SIG_MAXKEYLEN     -133830736
-#define __tmpcosmo_TCP_NOTSENT_LOWAT        -2088313237
-#define __tmpcosmo_TCP_QUEUE_SEQ            1778827934
-#define __tmpcosmo_TCP_QUICKACK             602576474
-#define __tmpcosmo_TCP_REPAIR               1790031809
-#define __tmpcosmo_TCP_REPAIR_OPTIONS       144244650
-#define __tmpcosmo_TCP_REPAIR_QUEUE         1799003915
-#define __tmpcosmo_TCP_SAVED_SYN            1886200148
-#define __tmpcosmo_TCP_SAVE_SYN             1349318664
-#define __tmpcosmo_TCP_SYNCNT               2092611841
-#define __tmpcosmo_TCP_THIN_DUPACK          1467229918
-#define __tmpcosmo_TCP_THIN_LINEAR_TIMEOUTS 690546238
-#define __tmpcosmo_TCP_TIMESTAMP            176258895
-#define __tmpcosmo_TCP_ULP                  1811889822
-#define __tmpcosmo_TCP_USER_TIMEOUT         -466589242
-#define __tmpcosmo_TCP_WINDOW_CLAMP         -845861568
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -25,11 +25,5 @@ COSMOPOLITAN_C_END_
 #define AT_EACCESS          AT_EACCESS
 #define AT_EMPTY_PATH       AT_EMPTY_PATH
 
-#define __tmpcosmo_AT_FDCWD            1179405227
-#define __tmpcosmo_AT_SYMLINK_FOLLOW   2095634819
-#define __tmpcosmo_AT_SYMLINK_NOFOLLOW -527548073
-#define __tmpcosmo_AT_REMOVEDIR        -1645201444
-#define __tmpcosmo_AT_EACCESS          1250381332
-#define __tmpcosmo_AT_EMPTY_PATH       -905338016
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_AT_H_ */

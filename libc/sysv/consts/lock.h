@@ -17,8 +17,5 @@ COSMOPOLITAN_C_END_
 #define LOCK_SH LOCK_SH
 #define LOCK_UN LOCK_UN
 
-#define __tmpcosmo_LOCK_NB -453005435
-#define __tmpcosmo_LOCK_SH 1639584913
-#define __tmpcosmo_LOCK_UN 17921936
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_LOCK_H_ */

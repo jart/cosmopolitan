@@ -65,30 +65,5 @@ COSMOPOLITAN_C_END_
 #define SOL_TIPC      SOL_TIPC
 #define SOL_X25       SOL_X25
 
-#define __tmpcosmo_SOL_AAL       -15823976
-#define __tmpcosmo_SOL_ALG       -15823956
-#define __tmpcosmo_SOL_ATM       -15823914
-#define __tmpcosmo_SOL_BLUETOOTH -15824062
-#define __tmpcosmo_SOL_CAIF      -15823904
-#define __tmpcosmo_SOL_DCCP      -15823814
-#define __tmpcosmo_SOL_DECNET    -15823842
-#define __tmpcosmo_SOL_ICMPV6    -15823908
-#define __tmpcosmo_SOL_IPV6      -15823808
-#define __tmpcosmo_SOL_IRDA      -15823880
-#define __tmpcosmo_SOL_IUCV      -15824156
-#define __tmpcosmo_SOL_KCM       -15824092
-#define __tmpcosmo_SOL_LLC       -15823930
-#define __tmpcosmo_SOL_NETBEUI   -15823894
-#define __tmpcosmo_SOL_NETLINK   -15824012
-#define __tmpcosmo_SOL_NFC       -15823942
-#define __tmpcosmo_SOL_PACKET    -15823806
-#define __tmpcosmo_SOL_PNPIPE    -15823968
-#define __tmpcosmo_SOL_PPPOL2TP  -15823816
-#define __tmpcosmo_SOL_RAW       -15824044
-#define __tmpcosmo_SOL_RDS       -15824020
-#define __tmpcosmo_SOL_RXRPC     -15823984
-#define __tmpcosmo_SOL_SOCKET    -15824050
-#define __tmpcosmo_SOL_TIPC      -15823940
-#define __tmpcosmo_SOL_X25       -15823856
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SOL_H_ */

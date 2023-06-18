@@ -40,17 +40,5 @@ COSMOPOLITAN_C_END_
 #define IFF_RUNNING     IFF_RUNNING
 #define IFF_SLAVE       IFF_SLAVE
 
-#define __tmpcosmo_IFF_ALLMULTI    -15824140
-#define __tmpcosmo_IFF_AUTOMEDIA   -15823962
-#define __tmpcosmo_IFF_DYNAMIC     -15823848
-#define __tmpcosmo_IFF_MASTER      -15823900
-#define __tmpcosmo_IFF_MULTICAST   -15824000
-#define __tmpcosmo_IFF_NOARP       -15823802
-#define __tmpcosmo_IFF_NOTRAILERS  -15824130
-#define __tmpcosmo_IFF_POINTOPOINT -15824138
-#define __tmpcosmo_IFF_PORTSEL     -15824150
-#define __tmpcosmo_IFF_PROMISC     -15824010
-#define __tmpcosmo_IFF_RUNNING     -15824080
-#define __tmpcosmo_IFF_SLAVE       -15824022
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_IFF_H_ */

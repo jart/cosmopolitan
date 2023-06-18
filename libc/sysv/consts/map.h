@@ -43,11 +43,5 @@ COSMOPOLITAN_C_END_
 #define MAP_ANON   MAP_ANONYMOUS
 #define MAP_NOCORE MAP_CONCEAL
 
-#define __tmpcosmo_MAP_ANONYMOUS       582365471
-#define __tmpcosmo_MAP_CONCEAL         -155176713
-#define __tmpcosmo_MAP_EXECUTABLE      140777257
-#define __tmpcosmo_MAP_FIXED_NOREPLACE -1715515271
-#define __tmpcosmo_MAP_HASSEMAPHORE    674508674
-#define __tmpcosmo_MAP_POPULATE        -2076654178
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_MAP_H_ */

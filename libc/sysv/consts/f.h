@@ -71,27 +71,5 @@ COSMOPOLITAN_C_END_
 #define F_UNLCK         F_UNLCK
 #define F_WRLCK         F_WRLCK
 
-#define __tmpcosmo_F_DUPFD_CLOEXEC -15823938
-#define __tmpcosmo_F_GETLEASE      -15823862
-#define __tmpcosmo_F_GETLK         -15823916
-#define __tmpcosmo_F_GETLK64       -15823846
-#define __tmpcosmo_F_GETOWN        -15824116
-#define __tmpcosmo_F_GETPATH       -15824128
-#define __tmpcosmo_F_GETPIPE_SZ    -15824006
-#define __tmpcosmo_F_GETSIG        -15824112
-#define __tmpcosmo_F_MAXFD         -15823896
-#define __tmpcosmo_F_NOCACHE       -15824048
-#define __tmpcosmo_F_NOTIFY        -15823898
-#define __tmpcosmo_F_RDLCK         -15823826
-#define __tmpcosmo_F_SETLEASE      -15823884
-#define __tmpcosmo_F_SETLK         -15824088
-#define __tmpcosmo_F_SETLK64       -15824154
-#define __tmpcosmo_F_SETLKW        -15824096
-#define __tmpcosmo_F_SETLKW64      -15824104
-#define __tmpcosmo_F_SETOWN        -15823874
-#define __tmpcosmo_F_SETPIPE_SZ    -15823958
-#define __tmpcosmo_F_SETSIG        -15823832
-#define __tmpcosmo_F_UNLCK         -15824148
-#define __tmpcosmo_F_WRLCK         -15824058
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_F_H_ */

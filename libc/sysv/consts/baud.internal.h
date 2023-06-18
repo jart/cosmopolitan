@@ -63,34 +63,6 @@ extern const uint32_t B4000000;
 #define B3500000 B3500000
 #define B4000000 B4000000
 
-#define __tmpcosmo_B50      -953383397
-#define __tmpcosmo_B75      1130536802
-#define __tmpcosmo_B110     -659509311
-#define __tmpcosmo_B134     -131437328
-#define __tmpcosmo_B150     -1673428193
-#define __tmpcosmo_B200     2138567959
-#define __tmpcosmo_B300     -1445271060
-#define __tmpcosmo_B600     1252327384
-#define __tmpcosmo_B1200    -389937088
-#define __tmpcosmo_B1800    773974105
-#define __tmpcosmo_B2400    -1936595377
-#define __tmpcosmo_B4800    -1608072774
-#define __tmpcosmo_B9600    -1161161922
-#define __tmpcosmo_B19200   91389144
-#define __tmpcosmo_B38400   239735293
-#define __tmpcosmo_B57600   -1507679301
-#define __tmpcosmo_B115200  217987560
-#define __tmpcosmo_B230400  -1641848795
-#define __tmpcosmo_B500000  1083827308
-#define __tmpcosmo_B576000  1010987036
-#define __tmpcosmo_B1000000 -1265517687
-#define __tmpcosmo_B1152000 1805492829
-#define __tmpcosmo_B1500000 1858564109
-#define __tmpcosmo_B2000000 -597557560
-#define __tmpcosmo_B2500000 1415439593
-#define __tmpcosmo_B3000000 907032447
-#define __tmpcosmo_B3500000 -610258643
-#define __tmpcosmo_B4000000 -1412738484
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

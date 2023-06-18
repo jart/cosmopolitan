@@ -93,48 +93,6 @@ extern const int MNT_SNAPSHOT;
 #define MNT_NOCLUSTERW  MNT_NOCLUSTERW
 #define MNT_SNAPSHOT    MNT_SNAPSHOT
 
-#define __tmpcosmo_MS_NOSUID       -1606122789
-#define __tmpcosmo_MNT_NOSUID      -1447475041
-#define __tmpcosmo_MS_NODEV        1395530069
-#define __tmpcosmo_MNT_NODEV       1936393733
-#define __tmpcosmo_MS_NOEXEC       617413422
-#define __tmpcosmo_MNT_NOEXEC      -306506772
-#define __tmpcosmo_MS_SYNCHRONOUS  957465984
-#define __tmpcosmo_MNT_SYNCHRONOUS 934826893
-#define __tmpcosmo_MS_REMOUNT      413574493
-#define __tmpcosmo_MNT_UPDATE      920970183
-#define __tmpcosmo_MS_MANDLOCK     -831013869
-#define __tmpcosmo_MS_DIRSYNC      -1479267152
-#define __tmpcosmo_MS_NOATIME      1168305905
-#define __tmpcosmo_MNT_NOATIME     765975990
-#define __tmpcosmo_MS_NODIRATIME   259117157
-#define __tmpcosmo_MS_BIND         731286897
-#define __tmpcosmo_MS_MOVE         -808863326
-#define __tmpcosmo_MS_REC          -888579348
-#define __tmpcosmo_MS_SILENT       1518034597
-#define __tmpcosmo_MS_POSIXACL     -1836436617
-#define __tmpcosmo_MS_UNBINDABLE   -1064128266
-#define __tmpcosmo_MS_PRIVATE      -869857793
-#define __tmpcosmo_MS_SLAVE        -1484401575
-#define __tmpcosmo_MS_SHARED       1527550647
-#define __tmpcosmo_MS_RELATIME     -1251574211
-#define __tmpcosmo_MNT_RELATIME    1860322269
-#define __tmpcosmo_MS_KERNMOUNT    -2091601207
-#define __tmpcosmo_MS_I_VERSION    -323807485
-#define __tmpcosmo_MS_STRICTATIME  -1587037133
-#define __tmpcosmo_MNT_STRICTATIME -1140691829
-#define __tmpcosmo_MS_LAZYTIME     1112443532
-#define __tmpcosmo_MS_ACTIVE       -2142880216
-#define __tmpcosmo_MS_NOUSER       1270935574
-#define __tmpcosmo_MS_RMT_MASK     376610379
-#define __tmpcosmo_MS_MGC_VAL      -1272539746
-#define __tmpcosmo_MS_MGC_MSK      1522806541
-#define __tmpcosmo_MNT_ASYNC       -1141454736
-#define __tmpcosmo_MNT_RELOAD      814423179
-#define __tmpcosmo_MNT_SUIDDIR     -1859059495
-#define __tmpcosmo_MNT_NOCLUSTERR  -1032466906
-#define __tmpcosmo_MNT_NOCLUSTERW  203320937
-#define __tmpcosmo_MNT_SNAPSHOT    -1441878956
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

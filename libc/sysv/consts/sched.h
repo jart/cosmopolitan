@@ -20,14 +20,6 @@ extern const int SCHED_RR;
 #define SCHED_RESET_ON_FORK SCHED_RESET_ON_FORK
 #define SCHED_RR            SCHED_RR
 
-#define __tmpcosmo_SCHED_BATCH         -394281437
-#define __tmpcosmo_SCHED_DEADLINE      2088435783
-#define __tmpcosmo_SCHED_FIFO          -1450130825
-#define __tmpcosmo_SCHED_IDLE          -501938008
-#define __tmpcosmo_SCHED_NORMAL        -679334447
-#define __tmpcosmo_SCHED_OTHER         -1797889952
-#define __tmpcosmo_SCHED_RESET_ON_FORK -1017505393
-#define __tmpcosmo_SCHED_RR            -1204010265
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

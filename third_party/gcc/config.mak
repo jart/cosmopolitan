@@ -33,7 +33,7 @@ OUTPUT = /opt/cross11portcosmo
 # Setting a blank version for linux will suppress installation of kernel
 # headers, which are not needed unless compiling programs that use them.
 
-# BINUTILS_VER = 2.25.1
+BINUTILS_VER = 2.35.2
 GCC_VER = 11.2.0
 # MUSL_VER = git-master
 # GMP_VER =

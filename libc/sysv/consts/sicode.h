@@ -106,33 +106,6 @@ extern const int32_t SYS_USER_DISPATCH;
 #define SYS_SECCOMP       SYS_SECCOMP
 #define SYS_USER_DISPATCH SYS_USER_DISPATCH
 
-#define __tmpcosmo_SI_USER           -1926503818
-#define __tmpcosmo_SI_QUEUE          -228293765
-#define __tmpcosmo_SI_TIMER          1203180061
-#define __tmpcosmo_SI_MESGQ          -1084511784
-#define __tmpcosmo_SI_ASYNCIO        1487411924
-#define __tmpcosmo_SI_TKILL          1634610739
-#define __tmpcosmo_SI_ASYNCNL        -1530073305
-#define __tmpcosmo_SI_KERNEL         -267010337
-#define __tmpcosmo_SI_NOINFO         63879642
-#define __tmpcosmo_SEGV_PKUERR       -1319250782
-#define __tmpcosmo_FPE_INTDIV        1306644255
-#define __tmpcosmo_FPE_INTOVF        898517272
-#define __tmpcosmo_FPE_FLTDIV        -1040603884
-#define __tmpcosmo_FPE_FLTOVF        1518847196
-#define __tmpcosmo_FPE_FLTUND        -554070357
-#define __tmpcosmo_FPE_FLTRES        1214968898
-#define __tmpcosmo_FPE_FLTINV        -545262120
-#define __tmpcosmo_FPE_FLTSUB        -261967855
-#define __tmpcosmo_ILL_ILLOPN        489604315
-#define __tmpcosmo_ILL_ILLADR        -493364773
-#define __tmpcosmo_ILL_ILLTRP        -419421824
-#define __tmpcosmo_ILL_PRVOPC        1693076639
-#define __tmpcosmo_BUS_OOMERR        -970295856
-#define __tmpcosmo_BUS_MCEERR_AR     1943789513
-#define __tmpcosmo_BUS_MCEERR_AO     -1385003784
-#define __tmpcosmo_SYS_SECCOMP       983549433
-#define __tmpcosmo_SYS_USER_DISPATCH 570515398
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

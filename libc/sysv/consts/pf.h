@@ -95,51 +95,6 @@ extern const int PF_X25;
 #define PF_WANPIPE    PF_WANPIPE
 #define PF_X25        PF_X25
 
-#define __tmpcosmo_PF_ALG        -1167318959
-#define __tmpcosmo_PF_APPLETALK  1352627627
-#define __tmpcosmo_PF_ASH        -1469433340
-#define __tmpcosmo_PF_ATMPVC     -1573973598
-#define __tmpcosmo_PF_ATMSVC     -1896919644
-#define __tmpcosmo_PF_AX25       2047319632
-#define __tmpcosmo_PF_BLUETOOTH  -2059948473
-#define __tmpcosmo_PF_BRIDGE     1226413197
-#define __tmpcosmo_PF_CAIF       348719180
-#define __tmpcosmo_PF_CAN        1956565481
-#define __tmpcosmo_PF_ECONET     -590876500
-#define __tmpcosmo_PF_FILE       -2117897689
-#define __tmpcosmo_PF_IB         -1143185526
-#define __tmpcosmo_PF_IEEE802154 644075298
-#define __tmpcosmo_PF_INET       -965498803
-#define __tmpcosmo_PF_INET6      -605664230
-#define __tmpcosmo_PF_IPX        -812984923
-#define __tmpcosmo_PF_IRDA       -845910457
-#define __tmpcosmo_PF_ISDN       -2124176331
-#define __tmpcosmo_PF_IUCV       -223080277
-#define __tmpcosmo_PF_KCM        -625322398
-#define __tmpcosmo_PF_KEY        -1338823775
-#define __tmpcosmo_PF_LLC        1643083644
-#define __tmpcosmo_PF_LOCAL      -1878383051
-#define __tmpcosmo_PF_MAX        1429755554
-#define __tmpcosmo_PF_MPLS       859672223
-#define __tmpcosmo_PF_NETBEUI    -1279572811
-#define __tmpcosmo_PF_NETLINK    -904019371
-#define __tmpcosmo_PF_NETROM     -1202450843
-#define __tmpcosmo_PF_NFC        1879738902
-#define __tmpcosmo_PF_PACKET     -754919290
-#define __tmpcosmo_PF_PHONET     1932009977
-#define __tmpcosmo_PF_PPPOX      2066783213
-#define __tmpcosmo_PF_RDS        350205681
-#define __tmpcosmo_PF_ROSE       -183721473
-#define __tmpcosmo_PF_ROUTE      -2010441155
-#define __tmpcosmo_PF_RXRPC      1253344453
-#define __tmpcosmo_PF_SECURITY   -2074690212
-#define __tmpcosmo_PF_SNA        543851053
-#define __tmpcosmo_PF_TIPC       -1469649195
-#define __tmpcosmo_PF_UNIX       523231587
-#define __tmpcosmo_PF_UNSPEC     -8069898
-#define __tmpcosmo_PF_VSOCK      1746452212
-#define __tmpcosmo_PF_WANPIPE    -1066851141
-#define __tmpcosmo_PF_X25        880954619
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

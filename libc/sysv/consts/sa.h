@@ -23,15 +23,6 @@ extern const uint64_t SA_SIGINFO;
 #define SA_RESTART   SA_RESTART
 #define SA_SIGINFO   SA_SIGINFO
 
-#define __tmpcosmo_SA_NOCLDSTOP -1925907945
-#define __tmpcosmo_SA_NOCLDWAIT 1554343779
-#define __tmpcosmo_SA_NODEFER   -1448019280
-#define __tmpcosmo_SA_NOMASK    906478413
-#define __tmpcosmo_SA_ONESHOT   -1992944743
-#define __tmpcosmo_SA_ONSTACK   -1798112676
-#define __tmpcosmo_SA_RESETHAND -1800631408
-#define __tmpcosmo_SA_RESTART   724955366
-#define __tmpcosmo_SA_SIGINFO   -1160286589
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

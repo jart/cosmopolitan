@@ -62,26 +62,6 @@ extern const unsigned O_VERIFY;
 #define O_SYNC       O_SYNC
 #define O_TRUNC      O_TRUNC
 
-#define __tmpcosmo_O_APPEND     -801373305
-#define __tmpcosmo_O_ASYNC      -957973766
-#define __tmpcosmo_O_CLOEXEC    1580591778
-#define __tmpcosmo_O_COMPRESSED 1922797055
-#define __tmpcosmo_O_CREAT      -796151748
-#define __tmpcosmo_O_DIRECT     -1042229894
-#define __tmpcosmo_O_DIRECTORY  -614889241
-#define __tmpcosmo_O_EXCL       1874611659
-#define __tmpcosmo_O_EXEC       -727286831
-#define __tmpcosmo_O_INDEXED    -234653513
-#define __tmpcosmo_O_LARGEFILE  -1307734823
-#define __tmpcosmo_O_NDELAY     -923014394
-#define __tmpcosmo_O_NOATIME    1127867239
-#define __tmpcosmo_O_NOCTTY     -107116141
-#define __tmpcosmo_O_NOFOLLOW   795975523
-#define __tmpcosmo_O_NONBLOCK   549686796
-#define __tmpcosmo_O_RANDOM     -2052765995
-#define __tmpcosmo_O_SEQUENTIAL 854419792
-#define __tmpcosmo_O_SYNC       -282123817
-#define __tmpcosmo_O_TRUNC      924355570
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

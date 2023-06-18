@@ -84,43 +84,5 @@ COSMOPOLITAN_C_END_
 #define AT_UCACHEBSIZE   AT_UCACHEBSIZE
 #define AT_UID           AT_UID
 
-#define __tmpcosmo_AT_BASE          -1855992398
-#define __tmpcosmo_AT_BASE_PLATFORM 1808921239
-#define __tmpcosmo_AT_CANARY        970484702
-#define __tmpcosmo_AT_CANARYLEN     -1519746688
-#define __tmpcosmo_AT_CLKTCK        1992240562
-#define __tmpcosmo_AT_DCACHEBSIZE   863586363
-#define __tmpcosmo_AT_EGID          1532201139
-#define __tmpcosmo_AT_EHDRFLAGS     1117498191
-#define __tmpcosmo_AT_ENTRY         -881318004
-#define __tmpcosmo_AT_EUID          -94994583
-#define __tmpcosmo_AT_EXECFD        1401411855
-#define __tmpcosmo_AT_EXECFN        -1457019650
-#define __tmpcosmo_AT_EXECPATH      887479731
-#define __tmpcosmo_AT_FLAGS         1235860257
-#define __tmpcosmo_AT_GID           -9520266
-#define __tmpcosmo_AT_HWCAP         -1179314026
-#define __tmpcosmo_AT_HWCAP2        -1420265774
-#define __tmpcosmo_AT_ICACHEBSIZE   1580363101
-#define __tmpcosmo_AT_MINSIGSTKSZ   -75267465
-#define __tmpcosmo_AT_NCPUS         -995438071
-#define __tmpcosmo_AT_NOTELF        1219739005
-#define __tmpcosmo_AT_NO_AUTOMOUNT  -76603664
-#define __tmpcosmo_AT_OSRELDATE     1821203372
-#define __tmpcosmo_AT_PAGESIZES     569939040
-#define __tmpcosmo_AT_PAGESIZESLEN  164991034
-#define __tmpcosmo_AT_PAGESZ        712839957
-#define __tmpcosmo_AT_PHDR          -392168925
-#define __tmpcosmo_AT_PHENT         1997583295
-#define __tmpcosmo_AT_PHNUM         965878207
-#define __tmpcosmo_AT_PLATFORM      -1302967068
-#define __tmpcosmo_AT_RANDOM        41281473
-#define __tmpcosmo_AT_SECURE        -197675851
-#define __tmpcosmo_AT_STACKBASE     -1736872741
-#define __tmpcosmo_AT_STACKPROT     217825885
-#define __tmpcosmo_AT_SYSINFO_EHDR  -473176894
-#define __tmpcosmo_AT_TIMEKEEP      -1193655847
-#define __tmpcosmo_AT_UCACHEBSIZE   1555124849
-#define __tmpcosmo_AT_UID           1722564595
 
 #endif /* COSMOPOLITAN_LIBC_CALLS_AUXV_H_ */

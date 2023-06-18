@@ -45,26 +45,6 @@ extern const unsigned RLIMIT_VMEM;
 #define RLIMIT_SWAP       RLIMIT_SWAP
 #define RLIMIT_VMEM       RLIMIT_VMEM
 
-#define __tmpcosmo_RLIMIT_AS         1377206941
-#define __tmpcosmo_RLIMIT_CORE       -671407877
-#define __tmpcosmo_RLIMIT_CPU        628127131
-#define __tmpcosmo_RLIMIT_DATA       -808550207
-#define __tmpcosmo_RLIMIT_FSIZE      -961275389
-#define __tmpcosmo_RLIMIT_LOCKS      -606515345
-#define __tmpcosmo_RLIMIT_MEMLOCK    -638383635
-#define __tmpcosmo_RLIMIT_MSGQUEUE   -200712823
-#define __tmpcosmo_RLIMIT_NICE       -1263433607
-#define __tmpcosmo_RLIMIT_NOFILE     -974136242
-#define __tmpcosmo_RLIMIT_NPROC      1234964928
-#define __tmpcosmo_RLIMIT_NPTS       1890977319
-#define __tmpcosmo_RLIMIT_RSS        1507822220
-#define __tmpcosmo_RLIMIT_RTPRIO     343598136
-#define __tmpcosmo_RLIMIT_RTTIME     1950976769
-#define __tmpcosmo_RLIMIT_SBSIZE     914114957
-#define __tmpcosmo_RLIMIT_SIGPENDING 1652182385
-#define __tmpcosmo_RLIMIT_STACK      1324847124
-#define __tmpcosmo_RLIMIT_SWAP       1231678046
-#define __tmpcosmo_RLIMIT_VMEM       119083983
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
