@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -23,13 +23,17 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/timer.h"
 #include "net/http/tokenbucket.h"
 #include "third_party/libcxx/math.h"
@@ -45,9 +49,10 @@
 // clang-format off
 
 PYTHON_PROVIDE("tokenbucket");
-PYTHON_PROVIDE("tokenbucket.program");
 PYTHON_PROVIDE("tokenbucket.acquire");
+PYTHON_PROVIDE("tokenbucket.blackhole");
 PYTHON_PROVIDE("tokenbucket.count");
+PYTHON_PROVIDE("tokenbucket.program");
 
 struct TokenBucket {
     int pid;
@@ -213,10 +218,46 @@ tokenbucket_count(PyObject *self, PyObject *args)
                                        g_tokenbucket.cidr));
 }
 
+PyDoc_STRVAR(blackhole_doc,
+"blackhole($module, ip)\n\
+--\n\n\
+Blackholes token for IP address.\n\
+\n\
+Bans IP address by sending it to blackholed.com. Returns 0 on success\n\
+or errno on error. To test if blackholed is running, ban 0.0.0.0.");
+
+static PyObject *
+tokenbucket_blackhole(PyObject *self, PyObject *args)
+{
+    int fd;
+    char buf[4];
+    uint32_t ip;
+    const char *ipstr;
+    struct sockaddr_un addr = {AF_UNIX, "/var/run/blackhole.sock"};
+    if (!PyArg_ParseTuple(args, "s:blackhole", &ipstr)) {
+        return 0;
+    }
+    if ((ip = ntohl(inet_addr(ipstr))) == -1u) {
+        PyErr_SetString(PyExc_ValueError, "bad ipv4 address");
+        return 0;
+    }
+    if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
+        return PyLong_FromLong(errno);
+    }
+    WRITE32BE(buf, ip);
+    if (sendto(fd, buf, 4, 0, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        close(fd);
+        return PyLong_FromLong(errno);
+    }
+    close(fd);
+    return PyLong_FromLong(0);
+}
+
 static PyMethodDef tokenbucket_methods[] = {
     {"config", tokenbucket_config, METH_VARARGS, config_doc},
     {"acquire", tokenbucket_acquire, METH_VARARGS, acquire_doc},
     {"count", tokenbucket_count, METH_VARARGS, count_doc},
+    {"blackhole", tokenbucket_blackhole, METH_VARARGS, blackhole_doc},
     {0},
 };
 
