@@ -86,9 +86,6 @@ libcesque nosideeffect;
 │ cosmopolitan § conversion » manipulation                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-char *dirname(char *);
-char *basename(char *);
-
 #ifdef COSMO
 char *stripext(char *);
 char *stripexts(char *);

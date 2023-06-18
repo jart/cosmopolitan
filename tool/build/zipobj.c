@@ -20,6 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/libgen.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"

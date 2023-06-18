@@ -67,6 +67,7 @@ EOF
 exit 0
 fi
 
+ORIGINAL="$0 $*"
 PLATFORM="-D__COSMOPOLITAN__"
 PREDEF="-include libc/integral/normalize.inc"
 CCFLAGS="-fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
@@ -131,6 +132,8 @@ for x; do
     # this toolchain is intended for building other people's code
     # we don't need the compiler's assistance to be more portable
     continue
+  elif [ x"$x" = x"-static-libgcc" ]; then
+    continue
   elif [ x"$x" != x"${x#-O}" ]; then
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
@@ -161,7 +164,7 @@ for x; do
 done
 
 if [ $RELOCATABLE -eq 1 ]; then
-  APEFLAGS=
+  APEFLAGS="-r"
 fi
 
 if [ x"$MODE" = x"nox87" ]; then
@@ -183,7 +186,7 @@ else
 fi
 
 set -- "$CC" "$@"
-printf '(cd %s; %s)\n' "$PWD" "$*" >>/tmp/build.log
+printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>/tmp/build.log
 "$@" || exit
 
 if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then

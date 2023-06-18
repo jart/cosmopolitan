@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/libgen.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"

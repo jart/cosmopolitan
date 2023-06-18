@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macho.internal.h"
 #include "libc/runtime/runtime.h"

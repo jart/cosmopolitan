@@ -24,7 +24,6 @@ o/$(MODE)/libc:	o/$(MODE)/libc/calls		\
 		o/$(MODE)/libc/sock		\
 		o/$(MODE)/libc/stdio		\
 		o/$(MODE)/libc/str		\
-		o/$(MODE)/libc/stubs		\
 		o/$(MODE)/libc/sysv		\
 		o/$(MODE)/libc/testlib		\
 		o/$(MODE)/libc/thread		\

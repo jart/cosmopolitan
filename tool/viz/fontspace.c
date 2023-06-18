@@ -21,6 +21,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/libgen.h"
 #include "libc/intrin/bsr.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"

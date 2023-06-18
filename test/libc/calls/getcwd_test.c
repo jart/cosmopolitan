@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/libgen.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"

@@ -37,6 +37,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/libgen.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"

@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
-#include "libc/log/log.h"
-#include "libc/mem/mem.h"
+#include "libc/fmt/libgen.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 
 TEST(dirname, test) {

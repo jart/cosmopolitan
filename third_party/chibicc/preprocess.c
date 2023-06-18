@@ -22,6 +22,7 @@
 // standard's wording:
 // https://github.com/rui314/chibicc/wiki/cpp.algo.pdf
 
+#include "libc/fmt/libgen.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/mem/arena.h"
 #include "libc/runtime/runtime.h"

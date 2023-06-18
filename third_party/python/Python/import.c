@@ -4,10 +4,12 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/import.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/libgen.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
@@ -27,7 +29,6 @@
 #include "third_party/python/Include/eval.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/frameobject.h"
-#include "third_party/python/Include/import.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/marshal.h"

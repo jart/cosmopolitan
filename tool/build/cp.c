@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"

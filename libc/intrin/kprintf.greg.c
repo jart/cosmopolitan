@@ -396,6 +396,13 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
               *p++ = 'm';
               ansi = 1;
             }
+#ifdef __x86_64__
+          } else if (IsLinux()) {
+            asm volatile("syscall"
+                         : "=a"(x)
+                         : "0"(__NR_getpid)
+                         : "rcx", "rdx", "r11", "memory");
+#endif
           } else {
             x = 666;
           }
