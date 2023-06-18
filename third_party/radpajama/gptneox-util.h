@@ -183,7 +183,7 @@ struct gptneox_mmap {
         size = file->size;
         int fd = fileno(file->fp);
         int flags = MAP_SHARED;
-#ifdef __linux__
+#if defined(__linux__) || defined(__COSMOPOLITAN__)
         flags |= MAP_POPULATE;
 #endif
         addr = mmap(NULL, file->size, PROT_READ, flags, fd, 0);

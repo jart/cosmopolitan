@@ -250,7 +250,7 @@ scall	sys_ktimer_delete	0xffffff0ecfffffff	0xfff	globl # no wrapper
 scall	sys_ktimer_getoverrun	0xffffff0effffffff	0xfff	globl # no wrapper
 scall	sys_ktimer_gettime	0xffffff0eefffffff	0xfff	globl # no wrapper
 scall	sys_ktimer_settime	0xffffff0edfffffff	0xfff	globl # no wrapper
-scall	sys_clock_settime	0x1ac0580e9ffff0e3	0x070	globl # no wrapper
+scall	sys_clock_settime	0x1ac0580e9ffff0e3	0x070	globl hidden # no wrapper
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	0x071	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	sys_clock_getres	0x1ad0590eaffff0e5	0x072	globl hidden
 scall	sys_mbind		0xfffffffffffff0ed	0x0eb	globl # no wrapper; numa numa yeah

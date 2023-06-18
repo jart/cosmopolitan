@@ -33,7 +33,7 @@
 #endif
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
-#include <type_traits>
+#include "third_party/libcxx/type_traits"
 #define __ckd_is_unsigned(res) std::is_unsigned<decltype(*(res))>::value
 #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #define __ckd_is_unsigned(res)                                              \

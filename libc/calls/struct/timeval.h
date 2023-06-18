@@ -13,6 +13,7 @@ struct timeval {
 int futimes(int, const struct timeval[2]);
 int futimesat(int, const char *, const struct timeval[2]);
 int gettimeofday(struct timeval *, struct timezone *);
+int settimeofday(const struct timeval *, const struct timezone *);
 int lutimes(const char *, const struct timeval[2]);
 int utimes(const char *, const struct timeval[2]);
 

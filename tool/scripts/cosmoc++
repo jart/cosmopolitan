@@ -72,7 +72,8 @@ PREDEF="-include libc/integral/normalize.inc"
 CCFLAGS="-fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
 CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
 CPPFLAGS="-nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64"
+APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $COSMO/o/$MODE/cosmopolitan.a"
 
 CXX="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
@@ -115,6 +116,7 @@ FIRST=1
 OUTPUT=
 INTENT=ld
 NEED_OUTPUT=
+RELOCATABLE=0
 FRAME=-fno-omit-frame-pointer
 for x; do
   if [ $FIRST -eq 1 ]; then
@@ -133,6 +135,8 @@ for x; do
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
     INTENT=cc
+  elif [ x"$x" = x"-r" ]; then
+    RELOCATABLE=1
   elif [ x"$x" = x"-E" ]; then
     INTENT=cpp
   elif [ x"$x" = x"-o" ]; then
@@ -156,6 +160,10 @@ for x; do
   set -- "$@" "$x"
 done
 
+if [ $RELOCATABLE -eq 0 ]; then
+  APEFLAGS=
+fi
+
 if [ x"$MODE" = x"nox87" ]; then
   CCFLAGS="$CCFLAGS -mlong-double-64"
 fi
@@ -170,14 +178,15 @@ if [ $INTENT = cpp ]; then
 elif [ $INTENT = cc ]; then
   set -- $PLATFORM $PREDEF $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" $FRAME
 else
-  set -- $PLATFORM $PREDEF $LDFLAGS $CXXFLAGS $CPPFLAGS "$@" $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 $FRAME
+  set -- $PLATFORM $PREDEF $LDFLAGS $APEFLAGS $CXXFLAGS $CPPFLAGS "$@" \
+         $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 $FRAME
 fi
 
 set -- "$CXX" "$@"
 printf '(cd %s; %s)\n' "$PWD" "$*" >>/tmp/build.log
 "$@" || exit
 
-if [ -n "$OUTPUT" ]; then
+if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
   if [ $INTENT = cc ] || [ $INTENT = ld ]; then
     "$FIXUPOBJ" "$OUTPUT" || exit
   fi
@@ -190,14 +199,6 @@ if [ -n "$OUTPUT" ]; then
       mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
       "$OBJCOPY" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
       "$ZIPCOPY" "$OUTPUT.dbg" "$OUTPUT" || exit
-    else
-      # cosmocc -o foo ...
-      # -> foo (elf)
-      # -> foo.com (ape)
-      # -> foo.com.dbg (elf)
-      cp -f "$OUTPUT" "$OUTPUT.com.dbg" || exit
-      "$OBJCOPY" -S -O binary "$OUTPUT" "$OUTPUT.com" || exit
-      "$ZIPCOPY" "$OUTPUT" "$OUTPUT.com" || exit
     fi
   fi
 fi

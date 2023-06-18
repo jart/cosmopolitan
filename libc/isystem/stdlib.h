@@ -5,6 +5,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/dprintf.h"

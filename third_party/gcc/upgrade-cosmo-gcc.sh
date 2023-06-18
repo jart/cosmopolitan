@@ -19,6 +19,7 @@ libexec/gcc/$ARCH-linux-musl/$NEWVERSION/collect2
 libexec/gcc/$ARCH-linux-musl/$NEWVERSION/cc1
 libexec/gcc/$ARCH-linux-musl/$NEWVERSION/cc1plus
 bin/$ARCH-linux-musl-as
+bin/$ARCH-linux-musl-ar
 bin/$ARCH-linux-musl-gcc
 bin/$ARCH-linux-musl-g++
 bin/$ARCH-linux-musl-nm

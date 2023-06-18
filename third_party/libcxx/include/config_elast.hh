@@ -20,7 +20,7 @@
 // No _LIBCPP_ELAST needed on Fuchsia
 #elif defined(__wasi__)
 // No _LIBCPP_ELAST needed on WASI
-#elif defined(__linux__) || defined(_LIBCPP_HAS_MUSL_LIBC)
+#elif defined(__linux__) || defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__COSMOPOLITAN__)
 #define _LIBCPP_ELAST 4095
 #elif defined(__APPLE__)
 // No _LIBCPP_ELAST needed on Apple

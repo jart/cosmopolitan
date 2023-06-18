@@ -131,7 +131,6 @@ include ape/ape.mk				# │
 include libc/fmt/fmt.mk				# │
 include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
-include third_party/getopt/getopt.mk		# │
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
 include tool/hello/hello.mk			# │
@@ -148,6 +147,7 @@ include third_party/libcxx/libcxx.mk		# │
 include net/net.mk				# │
 include third_party/vqsort/vqsort.mk		# │
 include libc/log/log.mk				# │
+include third_party/getopt/getopt.mk		# │
 include third_party/ggml/ggml.mk		# │
 include third_party/radpajama/radpajama.mk	# │
 include third_party/bzip2/bzip2.mk		# │

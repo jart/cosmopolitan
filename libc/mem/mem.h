@@ -28,6 +28,7 @@ void *aligned_alloc(size_t, size_t) attributeallocalign((1))
 int posix_memalign(void **, size_t, size_t);
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
+int mallopt(int, int);
 int malloc_trim(size_t);
 size_t bulk_free(void **, size_t);
 size_t malloc_usable_size(void *);

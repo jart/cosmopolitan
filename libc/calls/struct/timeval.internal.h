@@ -7,6 +7,7 @@
 COSMOPOLITAN_C_START_
 
 axdx_t sys_gettimeofday(struct timeval *, struct timezone *, void *) _Hide;
+int sys_settimeofday(const struct timeval *, const struct timezone *) _Hide;
 int sys_futimes(int, const struct timeval *) _Hide;
 int sys_lutimes(const char *, const struct timeval *) _Hide;
 int sys_utimes(const char *, const struct timeval *) _Hide;

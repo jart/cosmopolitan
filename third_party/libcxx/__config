@@ -292,6 +292,9 @@
 #    define _LIBCPP_HAS_QUICK_EXIT
 #    define _LIBCPP_HAS_TIMESPEC_GET
 #    define _LIBCPP_HAS_C11_FEATURES
+#  elif defined(__COSMOPOLITAN__)
+#    define _LIBCPP_HAS_TIMESPEC_GET
+#    define _LIBCPP_HAS_C11_FEATURES
 #  elif defined(__linux__)
 #    if !defined(_LIBCPP_HAS_MUSL_LIBC)
 #      if _LIBCPP_GLIBC_PREREQ(2, 15) || defined(__BIONIC__)
@@ -1039,6 +1042,7 @@ extern "C" _LIBCPP_FUNC_VIS  void __sanitizer_annotate_contiguous_container(
       defined(__APPLE__) || \
       defined(__CloudABI__) || \
       defined(__sun__) || \
+      defined(__COSMOPOLITAN__) || \
       (defined(__MINGW32__) && __has_include(<pthread.h>))
 #    define _LIBCPP_HAS_THREAD_API_PTHREAD
 #  elif defined(_LIBCPP_WIN32API)

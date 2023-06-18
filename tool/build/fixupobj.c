@@ -244,8 +244,16 @@ static void OptimizePatchableFunctionEntries(void) {
     if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
       Die("elf header overflow");
     }
-    p += syms[i].st_value - shdr->sh_addr;
-    pe = p + syms[i].st_size;
+    if (syms[i].st_value < shdr->sh_addr) {
+      Die("elf symbol beneath section");
+    }
+    if ((syms[i].st_value - shdr->sh_addr > esize ||
+         (p += syms[i].st_value - shdr->sh_addr) >=
+             (unsigned char *)elf + esize) ||
+        (syms[i].st_size >= esize ||
+         (pe = p + syms[i].st_size) >= (unsigned char *)elf + esize)) {
+      Die("elf symbol overflow");
+    };
     for (; p + 1 < pe; p += n) {
       if (p[0] != 0x90) break;
       if (p[1] != 0x90) break;
