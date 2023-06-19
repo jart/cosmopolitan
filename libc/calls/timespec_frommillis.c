@@ -23,7 +23,11 @@
  */
 struct timespec timespec_frommillis(int64_t x) {
   struct timespec ts;
-  ts.tv_sec = x / 1000;
-  ts.tv_nsec = x % 1000 * 1000000;
+  if (x >= 0) {
+    ts.tv_sec = x / 1000;
+    ts.tv_nsec = x % 1000 * 1000000;
+  } else {
+    ts = timespec_max;
+  }
   return ts;
 }
