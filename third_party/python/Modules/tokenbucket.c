@@ -32,6 +32,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/timer.h"
@@ -55,6 +56,7 @@ PYTHON_PROVIDE("tokenbucket.count");
 PYTHON_PROVIDE("tokenbucket.program");
 
 struct TokenBucket {
+    int fd;
     int pid;
     signed char cidr;
     struct timespec replenish;
@@ -229,7 +231,7 @@ or errno on error. To test if blackholed is running, ban 0.0.0.0.");
 static PyObject *
 tokenbucket_blackhole(PyObject *self, PyObject *args)
 {
-    int fd;
+    int fd, fd2;
     char buf[4];
     uint32_t ip;
     const char *ipstr;
@@ -241,15 +243,21 @@ tokenbucket_blackhole(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "bad ipv4 address");
         return 0;
     }
-    if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
-        return PyLong_FromLong(errno);
+    if (!(fd = g_tokenbucket.fd)) {
+        if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
+            return PyLong_FromLong(errno);
+        }
+        fd2 = fcntl(fd, F_DUPFD_CLOEXEC, 10);
+        close(fd);
+        if (fd2 == -1) {
+            return PyLong_FromLong(errno);
+        }
+        g_tokenbucket.fd = fd = fd2;
     }
     WRITE32BE(buf, ip);
     if (sendto(fd, buf, 4, 0, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-        close(fd);
         return PyLong_FromLong(errno);
     }
-    close(fd);
     return PyLong_FromLong(0);
 }
 

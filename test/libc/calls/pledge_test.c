@@ -365,6 +365,23 @@ TEST(pledge, inet_forbidsOtherSockets) {
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
 }
 
+TEST(pledge, anet_forbidsUdpSocketsAndConnect) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid, yes = 1;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio anet", 0));
+    ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+    ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+    ASSERT_SYS(EPERM, -1, setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, &yes, 4));
+    struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
+    ASSERT_SYS(EPERM, -1, connect(4, (struct sockaddr *)&sin, sizeof(sin)));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_EQ(0, ws);
+}
+
 TEST(pledge, mmap) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   char *p;

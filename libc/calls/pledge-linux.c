@@ -60,6 +60,7 @@
 #define SELF      0x8000
 #define ADDRLESS  0x2000
 #define INET      0x2000
+#define ANET      0x8000
 #define LOCK      0x4000
 #define NOEXEC    0x8000
 #define EXEC      0x4000
@@ -815,7 +816,7 @@ static const uint16_t kPledgeInet[] = {
 // anet is similar to init, but without connect;
 // this allows to accept, but not initiate socket connections
 static const uint16_t kPledgeAnet[] = {
-    __NR_linux_socket | INET,          //
+    __NR_linux_socket | ANET,          //
     __NR_linux_listen,                 //
     __NR_linux_bind,                   //
     __NR_linux_sendto,                 //
@@ -1955,6 +1956,45 @@ static privileged void AllowSocketInet(struct Filter *f) {
 
 // The family parameter of socket() must be one of:
 //
+//   - AF_INET  (0x02)
+//   - AF_INET6 (0x0a)
+//
+// The type parameter of socket() will ignore:
+//
+//   - SOCK_CLOEXEC  (0x80000)
+//   - SOCK_NONBLOCK (0x00800)
+//
+// The type parameter of socket() must be one of:
+//
+//   - SOCK_STREAM (0x01)
+//
+// The protocol parameter of socket() must be one of:
+//
+//   - 0
+//   - IPPROTO_ICMP (0x01)
+//   - IPPROTO_TCP  (0x06)
+//
+static privileged void AllowSocketAnet(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 12),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 1, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0a, 0, 8),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~0x80800),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 0, 5),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x00, 2, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 1, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 0, 1),
+      BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+  };
+  AppendFilter(f, PLEDGE(fragment));
+}
+
+// The family parameter of socket() must be one of:
+//
 //   - AF_UNIX (1)
 //   - AF_LOCAL (1)
 //
@@ -2208,6 +2248,9 @@ static privileged void AppendPledge(struct Filter *f,   //
         break;
       case __NR_linux_socket | INET:
         AllowSocketInet(f);
+        break;
+      case __NR_linux_socket | ANET:
+        AllowSocketAnet(f);
         break;
       case __NR_linux_socket | UNIX:
         AllowSocketUnix(f);
