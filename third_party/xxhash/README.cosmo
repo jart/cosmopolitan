@@ -1,0 +1,14 @@
+DESCRIPTION
+
+  Extremely fast non-cryptographic hash algorithm
+
+SOURCE
+
+  https://github.com/Cyan4973/xxHash
+
+  commit 5b45185d0419f63eb5911133f3dc578a163d162f
+  Author: Yann Collet <yann.collet.73@gmail.com>
+  Date:   Mon Jun 19 23:58:07 2023 -0700
+
+      fix minor typo in comment
+
