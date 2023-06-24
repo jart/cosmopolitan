@@ -182,6 +182,7 @@ include net/finger/finger.mk
 include third_party/double-conversion/test/test.mk
 include third_party/lua/lua.mk
 include third_party/tr/tr.mk
+include third_party/tbb/tbb.mk
 include third_party/sed/sed.mk
 include third_party/awk/awk.mk
 include third_party/hiredis/hiredis.mk

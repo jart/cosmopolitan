@@ -1,0 +1,17 @@
+// clang-format off
+DESCRIPTION
+
+  oneAPI Threading Building Blocks (oneTBB)
+
+  oneTBB is a flexible C++ library that simplifies the work of adding parallelism to complex applications,
+  even if you are not a threading expert.
+
+SOURCE
+
+  https://github.com/oneapi-src/oneTBB
+
+  commit e813596ba3a1bee0ffa06fb66b5e30b7ea801319
+  Author: Alexandra <alexandra.epanchinzeva@intel.com>
+  Date:   Wed Jun 21 18:46:54 2023 +0200
+
+      Documentation for std::invoke (#1112)
