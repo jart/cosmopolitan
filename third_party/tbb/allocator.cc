@@ -15,16 +15,16 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/version.h"
+#include "third_party/tbb/version.hh"
 
-#include "third_party/tbb/detail/_exception.h"
-#include "third_party/tbb/detail/_assert.h"
-#include "third_party/tbb/detail/_utils.h"
-#include "third_party/tbb/tbb_allocator.h" // Is this OK?
-#include "third_party/tbb/cache_aligned_allocator.h"
+#include "third_party/tbb/detail/_exception.hh"
+#include "third_party/tbb/detail/_assert.hh"
+#include "third_party/tbb/detail/_utils.hh"
+#include "third_party/tbb/tbb_allocator.hh" // Is this OK?
+#include "third_party/tbb/cache_aligned_allocator.hh"
 
-#include "third_party/tbb/dynamic_link.h"
-#include "third_party/tbb/misc.h"
+#include "third_party/tbb/dynamic_link.hh"
+#include "third_party/tbb/misc.hh"
 
 #include "third_party/libcxx/cstdlib"
 

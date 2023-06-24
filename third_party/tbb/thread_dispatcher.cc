@@ -15,8 +15,8 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/thread_dispatcher.h"
-#include "third_party/tbb/threading_control.h"
+#include "third_party/tbb/thread_dispatcher.hh"
+#include "third_party/tbb/threading_control.hh"
 
 namespace tbb {
 namespace detail {

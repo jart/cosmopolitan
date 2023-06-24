@@ -15,14 +15,14 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_config.h"
-#include "third_party/tbb/tbb_allocator.h"
-#include "third_party/tbb/task_group.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/thread_data.h"
-#include "third_party/tbb/scheduler_common.h"
-#include "third_party/tbb/itt_notify.h"
-#include "third_party/tbb/task_dispatcher.h"
+#include "third_party/tbb/detail/_config.hh"
+#include "third_party/tbb/tbb_allocator.hh"
+#include "third_party/tbb/task_group.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/thread_data.hh"
+#include "third_party/tbb/scheduler_common.hh"
+#include "third_party/tbb/itt_notify.hh"
+#include "third_party/tbb/task_dispatcher.hh"
 
 #include "third_party/libcxx/type_traits"
 

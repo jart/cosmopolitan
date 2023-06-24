@@ -18,11 +18,11 @@
 // Source file for miscellaneous entities that are infrequently referenced by
 // an executing program, and implementation of which requires dynamic linking.
 
-#include "third_party/tbb/misc.h"
+#include "third_party/tbb/misc.hh"
 
 #if !defined(__TBB_HardwareConcurrency)
 
-#include "third_party/tbb/dynamic_link.h"
+#include "third_party/tbb/dynamic_link.hh"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/fmt.h"

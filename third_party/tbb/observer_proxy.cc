@@ -15,13 +15,13 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_config.h"
-#include "third_party/tbb/detail/_utils.h"
+#include "third_party/tbb/detail/_config.hh"
+#include "third_party/tbb/detail/_utils.hh"
 
-#include "third_party/tbb/observer_proxy.h"
-#include "third_party/tbb/arena.h"
-#include "third_party/tbb/main.h"
-#include "third_party/tbb/thread_data.h"
+#include "third_party/tbb/observer_proxy.hh"
+#include "third_party/tbb/arena.hh"
+#include "third_party/tbb/main.hh"
+#include "third_party/tbb/thread_data.hh"
 
 #include "third_party/libcxx/atomic"
 

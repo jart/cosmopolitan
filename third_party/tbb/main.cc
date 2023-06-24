@@ -15,15 +15,15 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_config.h"
+#include "third_party/tbb/detail/_config.hh"
 
-#include "third_party/tbb/main.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/threading_control.h"
-#include "third_party/tbb/environment.h"
-#include "third_party/tbb/market.h"
-#include "third_party/tbb/misc.h"
-#include "third_party/tbb/itt_notify.h"
+#include "third_party/tbb/main.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/threading_control.hh"
+#include "third_party/tbb/environment.hh"
+#include "third_party/tbb/market.hh"
+#include "third_party/tbb/misc.hh"
+#include "third_party/tbb/itt_notify.hh"
 
 namespace tbb {
 namespace detail {

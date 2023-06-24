@@ -18,15 +18,15 @@
 // Source file for miscellaneous entities that are infrequently referenced by
 // an executing program.
 
-#include "third_party/tbb/detail/_exception.h"
-#include "third_party/tbb/detail/_machine.h"
+#include "third_party/tbb/detail/_exception.hh"
+#include "third_party/tbb/detail/_machine.hh"
 
-#include "third_party/tbb/version.h"
+#include "third_party/tbb/version.hh"
 
-#include "third_party/tbb/misc.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/assert_impl.h" // Out-of-line TBB assertion handling routines are instantiated here.
-#include "third_party/tbb/concurrent_monitor_mutex.h"
+#include "third_party/tbb/misc.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/assert_impl.hh" // Out-of-line TBB assertion handling routines are instantiated here.
+#include "third_party/tbb/concurrent_monitor_mutex.hh"
 
 #include "third_party/libcxx/cstdio"
 #include "third_party/libcxx/cstdlib"

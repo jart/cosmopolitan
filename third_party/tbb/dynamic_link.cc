@@ -15,11 +15,11 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/dynamic_link.h"
-#include "third_party/tbb/environment.h"
+#include "third_party/tbb/dynamic_link.hh"
+#include "third_party/tbb/environment.hh"
 
-#include "third_party/tbb/detail/_template_helpers.h"
-#include "third_party/tbb/detail/_utils.h"
+#include "third_party/tbb/detail/_template_helpers.hh"
+#include "third_party/tbb/detail/_utils.hh"
 
 /*
     This file is used by both TBB and OpenMP RTL. Do not use __TBB_ASSERT() macro

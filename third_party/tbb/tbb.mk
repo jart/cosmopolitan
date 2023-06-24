@@ -7,8 +7,8 @@ THIRD_PARTY_TBB_ARTIFACTS += THIRD_PARTY_TBB_A
 THIRD_PARTY_TBB = $(THIRD_PARTY_TBB_A_DEPS) $(THIRD_PARTY_TBB_A)
 THIRD_PARTY_TBB_A = o/$(MODE)/third_party/tbb/tbb.a
 THIRD_PARTY_TBB_FILES := $(wildcard third_party/tbb/*) $(wildcard third_party/tbb/detail/*)
-THIRD_PARTY_TBB_HDRS = $(filter %.h,$(THIRD_PARTY_TBB_FILES))
-THIRD_PARTY_TBB_SRCS = $(filter %.cpp,$(THIRD_PARTY_TBB_FILES))
+THIRD_PARTY_TBB_HDRS = $(filter %.hh,$(THIRD_PARTY_TBB_FILES))
+THIRD_PARTY_TBB_SRCS = $(filter %.cc,$(THIRD_PARTY_TBB_FILES))
 THIRD_PARTY_TBB_OBJS = $(THIRD_PARTY_TBB_SRCS:%.cpp=o/$(MODE)/%.o)
 
 # Use this to debug
@@ -19,6 +19,7 @@ THIRD_PARTY_TBB_CHECKS =				\
 	$(THIRD_PARTY_TBB_HDRS:%=o/$(MODE)/%.ok)
 
 THIRD_PARTY_TBB_A_DIRECTDEPS =				\
+	LIBC_CALLS								\
 	THIRD_PARTY_LIBCXX
 
 THIRD_PARTY_TBB_A_DEPS :=				\

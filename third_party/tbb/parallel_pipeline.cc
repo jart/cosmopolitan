@@ -15,14 +15,14 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/parallel_pipeline.h"
-#include "third_party/tbb/spin_mutex.h"
-#include "third_party/tbb/tbb_allocator.h"
-#include "third_party/tbb/cache_aligned_allocator.h"
-#include "third_party/tbb/itt_notify.h"
-#include "third_party/tbb/tls.h"
-#include "third_party/tbb/detail/_exception.h"
-#include "third_party/tbb/detail/_small_object_pool.h"
+#include "third_party/tbb/parallel_pipeline.hh"
+#include "third_party/tbb/spin_mutex.hh"
+#include "third_party/tbb/tbb_allocator.hh"
+#include "third_party/tbb/cache_aligned_allocator.hh"
+#include "third_party/tbb/itt_notify.hh"
+#include "third_party/tbb/tls.hh"
+#include "third_party/tbb/detail/_exception.hh"
+#include "third_party/tbb/detail/_small_object_pool.hh"
 
 namespace tbb {
 namespace detail {

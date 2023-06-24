@@ -15,7 +15,7 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/version.h"
+#include "third_party/tbb/version.hh"
 
 extern "C" int TBB_runtime_interface_version() {
     return TBB_INTERFACE_VERSION;

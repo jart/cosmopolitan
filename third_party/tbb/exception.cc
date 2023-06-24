@@ -15,9 +15,9 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_exception.h"
-#include "third_party/tbb/detail/_assert.h"
-#include "third_party/tbb/detail/_template_helpers.h"
+#include "third_party/tbb/detail/_exception.hh"
+#include "third_party/tbb/detail/_assert.hh"
+#include "third_party/tbb/detail/_template_helpers.hh"
 
 #include "third_party/libcxx/cstring"
 #include "third_party/libcxx/cstdio"

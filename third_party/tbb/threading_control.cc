@@ -15,12 +15,12 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/threading_control.h"
-#include "third_party/tbb/permit_manager.h"
-#include "third_party/tbb/market.h"
-#include "third_party/tbb/thread_dispatcher.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/thread_dispatcher_client.h"
+#include "third_party/tbb/threading_control.hh"
+#include "third_party/tbb/permit_manager.hh"
+#include "third_party/tbb/market.hh"
+#include "third_party/tbb/thread_dispatcher.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/thread_dispatcher_client.hh"
 
 namespace tbb {
 namespace detail {

@@ -15,11 +15,11 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_assert.h"
-#include "third_party/tbb/detail/_rtm_mutex.h"
-#include "third_party/tbb/itt_notify.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/misc.h"
+#include "third_party/tbb/detail/_assert.hh"
+#include "third_party/tbb/detail/_rtm_mutex.hh"
+#include "third_party/tbb/itt_notify.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/misc.hh"
 
 #include "third_party/libcxx/atomic"
 

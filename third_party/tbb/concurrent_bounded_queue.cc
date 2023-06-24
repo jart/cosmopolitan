@@ -15,10 +15,10 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_utils.h"
-#include "third_party/tbb/concurrent_queue.h"
-#include "third_party/tbb/cache_aligned_allocator.h"
-#include "third_party/tbb/concurrent_monitor.h"
+#include "third_party/tbb/detail/_utils.hh"
+#include "third_party/tbb/concurrent_queue.hh"
+#include "third_party/tbb/cache_aligned_allocator.hh"
+#include "third_party/tbb/concurrent_monitor.hh"
 
 namespace tbb {
 namespace detail {

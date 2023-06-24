@@ -15,13 +15,13 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_config.h"
-#include "third_party/tbb/detail/_template_helpers.h"
+#include "third_party/tbb/detail/_config.hh"
+#include "third_party/tbb/detail/_template_helpers.hh"
 
-#include "third_party/tbb/main.h"
-#include "third_party/tbb/itt_notify.h"
+#include "third_party/tbb/main.hh"
+#include "third_party/tbb/itt_notify.hh"
 
-#include "third_party/tbb/profiling.h"
+#include "third_party/tbb/profiling.hh"
 
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
@@ -47,7 +47,7 @@ struct resource_string {
 //
 #define TBB_STRING_RESOURCE( index_name, str ) { str, nullptr },
 static resource_string strings_for_itt[] = {
-    #include "third_party/tbb/detail/_string_resource.h"
+    #include "third_party/tbb/detail/_string_resource.hh"
     { "num_resource_strings", nullptr }
 };
 #undef TBB_STRING_RESOURCE

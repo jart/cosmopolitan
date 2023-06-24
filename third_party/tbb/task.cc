@@ -16,17 +16,17 @@
 */
 
 // Do not include task.h directly. Use scheduler_common.h instead
-#include "third_party/tbb/scheduler_common.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/arena.h"
-#include "third_party/tbb/thread_data.h"
-#include "third_party/tbb/task_dispatcher.h"
-#include "third_party/tbb/waiters.h"
-#include "third_party/tbb/itt_notify.h"
+#include "third_party/tbb/scheduler_common.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/arena.hh"
+#include "third_party/tbb/thread_data.hh"
+#include "third_party/tbb/task_dispatcher.hh"
+#include "third_party/tbb/waiters.hh"
+#include "third_party/tbb/itt_notify.hh"
 
-#include "third_party/tbb/detail/_task.h"
-#include "third_party/tbb/partitioner.h"
-#include "third_party/tbb/task.h"
+#include "third_party/tbb/detail/_task.hh"
+#include "third_party/tbb/partitioner.hh"
+#include "third_party/tbb/task.hh"
 
 #include "third_party/libcxx/cstring"
 

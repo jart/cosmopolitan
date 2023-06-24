@@ -15,10 +15,10 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_utils.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/concurrent_monitor.h"
-#include "third_party/tbb/detail/_waitable_atomic.h"
+#include "third_party/tbb/detail/_utils.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/concurrent_monitor.hh"
+#include "third_party/tbb/detail/_waitable_atomic.hh"
 
 #include "third_party/libcxx/type_traits"
 

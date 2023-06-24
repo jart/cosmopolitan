@@ -15,12 +15,12 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/cache_aligned_allocator.h"
-#include "third_party/tbb/detail/_small_object_pool.h"
-#include "third_party/tbb/detail/_task.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/thread_data.h"
-#include "third_party/tbb/task_dispatcher.h"
+#include "third_party/tbb/cache_aligned_allocator.hh"
+#include "third_party/tbb/detail/_small_object_pool.hh"
+#include "third_party/tbb/detail/_task.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/thread_data.hh"
+#include "third_party/tbb/task_dispatcher.hh"
 
 #include "third_party/libcxx/cstddef"
 

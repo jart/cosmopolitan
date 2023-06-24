@@ -15,9 +15,9 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/semaphore.h"
+#include "third_party/tbb/semaphore.hh"
 #if __TBB_USE_SRWLOCK
-#include "third_party/tbb/dynamic_link.h" // Refers to src/tbb, not include/tbb
+#include "third_party/tbb/dynamic_link.hh" // Refers to src/tbb, not include/tbb
 // MISSING #include "tbb_misc.h"
 #endif
 

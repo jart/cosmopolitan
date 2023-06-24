@@ -15,8 +15,8 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/task_dispatcher.h"
-#include "third_party/tbb/waiters.h"
+#include "third_party/tbb/task_dispatcher.hh"
+#include "third_party/tbb/waiters.hh"
 
 namespace tbb {
 namespace detail {

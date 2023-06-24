@@ -19,10 +19,10 @@
     with SPIN tool using <TBB directory>/tools/spin_models/ReaderWriterMutex.pml.
     There could be some code looking as "can be restructured" but its structure does matter! */
 
-#include "third_party/tbb/queuing_rw_mutex.h"
-#include "third_party/tbb/detail/_assert.h"
-#include "third_party/tbb/detail/_utils.h"
-#include "third_party/tbb/itt_notify.h"
+#include "third_party/tbb/queuing_rw_mutex.hh"
+#include "third_party/tbb/detail/_assert.hh"
+#include "third_party/tbb/detail/_utils.hh"
+#include "third_party/tbb/itt_notify.hh"
 
 namespace tbb {
 namespace detail {

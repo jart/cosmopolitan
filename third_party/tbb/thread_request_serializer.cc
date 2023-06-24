@@ -15,8 +15,8 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/misc.h"
-#include "third_party/tbb/thread_request_serializer.h"
+#include "third_party/tbb/misc.hh"
+#include "third_party/tbb/thread_request_serializer.hh"
 
 namespace tbb {
 namespace detail {

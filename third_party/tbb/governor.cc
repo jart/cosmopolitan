@@ -15,22 +15,22 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/threading_control.h"
-#include "third_party/tbb/main.h"
-#include "third_party/tbb/thread_data.h"
-#include "third_party/tbb/market.h"
-#include "third_party/tbb/arena.h"
-#include "third_party/tbb/dynamic_link.h"
-#include "third_party/tbb/concurrent_monitor.h"
-#include "third_party/tbb/thread_dispatcher.h"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/threading_control.hh"
+#include "third_party/tbb/main.hh"
+#include "third_party/tbb/thread_data.hh"
+#include "third_party/tbb/market.hh"
+#include "third_party/tbb/arena.hh"
+#include "third_party/tbb/dynamic_link.hh"
+#include "third_party/tbb/concurrent_monitor.hh"
+#include "third_party/tbb/thread_dispatcher.hh"
 
-#include "third_party/tbb/task_group.h"
-#include "third_party/tbb/global_control.h"
-#include "third_party/tbb/tbb_allocator.h"
-#include "third_party/tbb/info.h"
+#include "third_party/tbb/task_group.hh"
+#include "third_party/tbb/global_control.hh"
+#include "third_party/tbb/tbb_allocator.hh"
+#include "third_party/tbb/info.hh"
 
-#include "third_party/tbb/task_dispatcher.h"
+#include "third_party/tbb/task_dispatcher.hh"
 
 #include "third_party/libcxx/cstdio"
 #include "third_party/libcxx/cstdlib"

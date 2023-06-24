@@ -15,9 +15,9 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/arena_slot.h"
-#include "third_party/tbb/arena.h"
-#include "third_party/tbb/thread_data.h"
+#include "third_party/tbb/arena_slot.hh"
+#include "third_party/tbb/arena.hh"
+#include "third_party/tbb/thread_data.hh"
 
 namespace tbb {
 namespace detail {

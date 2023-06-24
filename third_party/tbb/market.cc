@@ -15,8 +15,8 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/arena.h"
-#include "third_party/tbb/market.h"
+#include "third_party/tbb/arena.hh"
+#include "third_party/tbb/market.hh"
 
 #include "third_party/libcxx/algorithm" // std::find
 

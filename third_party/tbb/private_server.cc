@@ -15,15 +15,15 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/cache_aligned_allocator.h"
-#include "third_party/tbb/mutex.h"
+#include "third_party/tbb/cache_aligned_allocator.hh"
+#include "third_party/tbb/mutex.hh"
 
-#include "third_party/tbb/rml_tbb.h"
-#include "third_party/tbb/rml_thread_monitor.h"
+#include "third_party/tbb/rml_tbb.hh"
+#include "third_party/tbb/rml_thread_monitor.hh"
 
-#include "third_party/tbb/scheduler_common.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/misc.h"
+#include "third_party/tbb/scheduler_common.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/misc.hh"
 
 #include "third_party/libcxx/atomic"
 

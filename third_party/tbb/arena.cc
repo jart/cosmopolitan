@@ -15,16 +15,16 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/task_dispatcher.h"
-#include "third_party/tbb/governor.h"
-#include "third_party/tbb/threading_control.h"
-#include "third_party/tbb/arena.h"
-#include "third_party/tbb/itt_notify.h"
-#include "third_party/tbb/semaphore.h"
-#include "third_party/tbb/waiters.h"
-#include "third_party/tbb/detail/_task.h"
-#include "third_party/tbb/info.h"
-#include "third_party/tbb/tbb_allocator.h"
+#include "third_party/tbb/task_dispatcher.hh"
+#include "third_party/tbb/governor.hh"
+#include "third_party/tbb/threading_control.hh"
+#include "third_party/tbb/arena.hh"
+#include "third_party/tbb/itt_notify.hh"
+#include "third_party/tbb/semaphore.hh"
+#include "third_party/tbb/waiters.hh"
+#include "third_party/tbb/detail/_task.hh"
+#include "third_party/tbb/info.hh"
+#include "third_party/tbb/tbb_allocator.hh"
 
 #include "third_party/libcxx/atomic"
 #include "third_party/libcxx/cstring"
@@ -454,7 +454,7 @@ arena& arena::create(threading_control* control, unsigned num_slots, unsigned nu
 } // namespace tbb
 
 // Enable task_arena.h
-#include "third_party/tbb/task_arena.h" // task_arena_base
+#include "third_party/tbb/task_arena.hh" // task_arena_base
 
 namespace tbb {
 namespace detail {

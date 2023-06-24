@@ -15,10 +15,10 @@
     limitations under the License.
 */
 
-#include "third_party/tbb/detail/_assert.h"
+#include "third_party/tbb/detail/_assert.hh"
 
-#include "third_party/tbb/rml_tbb.h"
-#include "third_party/tbb/dynamic_link.h"
+#include "third_party/tbb/rml_tbb.hh"
+#include "third_party/tbb/dynamic_link.hh"
 
 namespace tbb {
 namespace detail {
