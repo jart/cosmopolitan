@@ -108,8 +108,8 @@ FIO_display_prefs_t g_display_prefs = {2, FIO_ps_auto};
 UTIL_time_t g_displayClock = UTIL_TIME_INITIALIZER;
 
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_magicNumber, ZSTD_frameHeaderSize_max */
-#include "third_party/zstd/lib/zstd.h"
-#include "third_party/zstd/lib/zstd_errors.h"  /* ZSTD_error_frameParameter_windowTooLarge */
+#include "third_party/zstd/zstd.h"
+#include "third_party/zstd/zstd_errors.h"  /* ZSTD_error_frameParameter_windowTooLarge */
 
 #if defined(ZSTD_GZCOMPRESS) || defined(ZSTD_GZDECOMPRESS)
 // MISSING #include <zlib.h>

@@ -19,7 +19,7 @@ extern "C" {
 
 #include "third_party/zstd/lib/common/zstd_deps.h"
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_customMem */
-#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/zstd.h"
 #include "libc/assert.h"
 
 typedef struct POOL_ctx_s POOL_ctx;

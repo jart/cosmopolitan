@@ -56,7 +56,7 @@
 #include "third_party/zstd/programs/timefn.h"         /* UTIL_time_t, UTIL_clockSpanMicro, UTIL_getTime */
 #include "third_party/zstd/lib/common/debug.h" /* assert */
 #include "third_party/zstd/lib/common/mem.h"  /* read */
-#include "third_party/zstd/lib/zstd_errors.h"
+#include "third_party/zstd/zstd_errors.h"
 #include "third_party/zstd/programs/dibio.h"
 
 

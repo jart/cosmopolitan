@@ -1,4 +1,3 @@
-// clang-format off
 v1.5.5 (Apr 2023)
 fix: fix rare corruption bug affecting the high compression mode, reported by @danlark1 (#3517, @terrelln)
 perf: improve mid-level compression speed (#3529, #3533, #3543, @yoniko and #3552, @terrelln)

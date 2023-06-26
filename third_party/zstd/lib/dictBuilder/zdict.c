@@ -83,7 +83,7 @@
 #include "third_party/zstd/lib/common/zstd_internal.h" /* includes zstd.h */
 #include "third_party/zstd/lib/common/xxhash.h"        /* XXH64 */
 #include "third_party/zstd/lib/compress/zstd_compress_internal.h" /* ZSTD_loadCEntropy() */
-#include "third_party/zstd/lib/zdict.h"
+#include "third_party/zstd/zdict.h"
 #include "third_party/zstd/lib/dictBuilder/divsufsort.h"
 #include "third_party/zstd/lib/common/bits.h"          /* ZSTD_NbCommonBytes */
 

@@ -40,7 +40,7 @@
 #include "third_party/zstd/programs/util.h"
 
 #define ZSTD_STATIC_LINKING_ONLY
-#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/zstd.h"
 /* We depend on the trace header to avoid duplicating the ZSTD_trace struct.
  * But, we check the version so it is compatible with dynamic linking.
  */

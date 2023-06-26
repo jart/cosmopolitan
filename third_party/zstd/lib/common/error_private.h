@@ -22,7 +22,7 @@ extern "C" {
 /* ****************************************
 *  Dependencies
 ******************************************/
-#include "third_party/zstd/lib/zstd_errors.h"  /* enum list */
+#include "third_party/zstd/zstd_errors.h"  /* enum list */
 #include "third_party/zstd/lib/common/compiler.h"
 #include "third_party/zstd/lib/common/debug.h"
 #include "third_party/zstd/lib/common/zstd_deps.h"       /* size_t */

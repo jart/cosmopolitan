@@ -58,15 +58,8 @@ o/$(MODE)/third_party/zstd/zstd.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/zstd/zstd.com:			\
-		$(THIRD_PARTY_ZSTD)			\
-		o/$(MODE)/third_party/zstd/programs/zstdcli.o		\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
 
-
-THIRD_PARTY_ZSTD_BINS = $(THIRD_PARTY_SED_COMS) $(THIRD_PARTY_SED_COMS:%=%.dbg)
+THIRD_PARTY_ZSTD_BINS = $(THIRD_PARTY_ZSTD_COMS) $(THIRD_PARTY_ZSTD_COMS:%=%.dbg)
 THIRD_PARTY_ZSTD_COMS = o/$(MODE)/third_party/zstd/zstd.com
 THIRD_PARTY_ZSTD_LIBS = $(THIRD_PARTY_ZSTD_A)
 

@@ -26,7 +26,7 @@
 #include "third_party/zstd/lib/common/debug.h"                 /* assert, DEBUGLOG, RAWLOG, g_debuglevel */
 #include "third_party/zstd/lib/common/error_private.h"
 #define ZSTD_STATIC_LINKING_ONLY
-#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/zstd.h"
 #define FSE_STATIC_LINKING_ONLY
 #include "third_party/zstd/lib/common/fse.h"
 #include "third_party/zstd/lib/common/huf.h"

@@ -17,7 +17,7 @@
 
 #include "third_party/zstd/lib/common/compiler.h" /* MEM_STATIC */
 #define ZSTD_STATIC_LINKING_ONLY
-#include "third_party/zstd/lib/zstd.h" /* ZSTD_customMem */
+#include "third_party/zstd/zstd.h" /* ZSTD_customMem */
 
 #ifndef ZSTD_ALLOCATIONS_H
 #define ZSTD_ALLOCATIONS_H

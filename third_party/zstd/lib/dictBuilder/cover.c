@@ -67,7 +67,7 @@
 #include "third_party/zstd/lib/common/threading.h"
 #include "third_party/zstd/lib/common/zstd_internal.h" /* includes zstd.h */
 #include "third_party/zstd/lib/common/bits.h" /* ZSTD_highbit32 */
-#include "third_party/zstd/lib/zdict.h"
+#include "third_party/zstd/zdict.h"
 #include "third_party/zstd/lib/dictBuilder/cover.h"
 
 /*-*************************************

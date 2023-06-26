@@ -16,7 +16,7 @@
 #include "third_party/zstd/programs/fileio_types.h"
 #include "third_party/zstd/programs/util.h"                  /* FileNamesTable */
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_compressionParameters */
-#include "third_party/zstd/lib/zstd.h"           /* ZSTD_* */
+#include "third_party/zstd/zstd.h"           /* ZSTD_* */
 
 #if defined (__cplusplus)
 extern "C" {

@@ -58,14 +58,14 @@
 #ifndef ZSTD_STATIC_LINKING_ONLY
 #define ZSTD_STATIC_LINKING_ONLY
 #endif
-#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/zstd.h"
 #include "third_party/zstd/programs/datagen.h"     /* RDG_genBuffer */
 #ifndef XXH_INLINE_ALL
 #define XXH_INLINE_ALL
 #endif
 #include "third_party/zstd/lib/common/xxhash.h"
 #include "third_party/zstd/programs/benchzstd.h"
-#include "third_party/zstd/lib/zstd_errors.h"
+#include "third_party/zstd/zstd_errors.h"
 
 
 /* *************************************

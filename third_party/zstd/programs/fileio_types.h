@@ -13,7 +13,7 @@
 #define FILEIO_TYPES_HEADER
 
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_compressionParameters */
-#include "third_party/zstd/lib/zstd.h"           /* ZSTD_* */
+#include "third_party/zstd/zstd.h"           /* ZSTD_* */
 
 /*-*************************************
 *  Parameters: FIO_prefs_t

@@ -69,7 +69,7 @@
 #ifndef ZSTD_NOTRACE
 #include "third_party/zstd/programs/zstdcli_trace.h"
 #endif
-#include "third_party/zstd/lib/zstd.h"  /* ZSTD_VERSION_STRING, ZSTD_minCLevel, ZSTD_maxCLevel */
+#include "third_party/zstd/zstd.h"  /* ZSTD_VERSION_STRING, ZSTD_minCLevel, ZSTD_maxCLevel */
 #include "third_party/zstd/programs/fileio_asyncio.h"
 
 

@@ -57,7 +57,7 @@
 #include "third_party/zstd/lib/common/threading.h"
 #include "third_party/zstd/lib/common/zstd_internal.h" /* includes zstd.h */
 #include "third_party/zstd/lib/compress/zstd_compress_internal.h" /* ZSTD_hash*() */
-#include "third_party/zstd/lib/zdict.h"
+#include "third_party/zstd/zdict.h"
 #include "third_party/zstd/lib/dictBuilder/cover.h"
 
 

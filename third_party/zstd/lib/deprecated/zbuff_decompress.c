@@ -15,7 +15,7 @@
 *  Dependencies
 ***************************************/
 #define ZSTD_DISABLE_DEPRECATE_WARNINGS  /* suppress warning on ZSTD_initDStream_usingDict */
-#include "third_party/zstd/lib/zstd.h"        /* ZSTD_CStream, ZSTD_DStream, ZSTDLIB_API */
+#include "third_party/zstd/zstd.h"        /* ZSTD_CStream, ZSTD_DStream, ZSTDLIB_API */
 #define ZBUFF_STATIC_LINKING_ONLY
 #include "third_party/zstd/lib/deprecated/zbuff.h"
 

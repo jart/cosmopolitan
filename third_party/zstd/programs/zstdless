@@ -1,4 +1,3 @@
-// clang-format off
 #!/bin/sh
 
 zstd=${ZSTD:-zstd}

@@ -17,7 +17,7 @@
  *  Dependencies
  *********************************************************/
 #include "third_party/zstd/lib/common/zstd_deps.h"   /* size_t */
-#include "third_party/zstd/lib/zstd.h"     /* ZSTD_DDict, and several public functions */
+#include "third_party/zstd/zstd.h"     /* ZSTD_DDict, and several public functions */
 
 
 /*-*******************************************************

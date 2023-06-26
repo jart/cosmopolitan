@@ -20,7 +20,7 @@
 *  Dependencies
 ***************************************/
 #define ZDICT_STATIC_LINKING_ONLY
-#include "third_party/zstd/lib/zdict.h"     /* ZDICT_params_t */
+#include "third_party/zstd/zdict.h"     /* ZDICT_params_t */
 
 
 /*-*************************************

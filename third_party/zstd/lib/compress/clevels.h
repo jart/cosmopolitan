@@ -13,7 +13,7 @@
 #define ZSTD_CLEVELS_H
 
 #define ZSTD_STATIC_LINKING_ONLY  /* ZSTD_compressionParameters  */
-#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/zstd.h"
 
 /*-=====  Pre-defined compression levels  =====-*/
 

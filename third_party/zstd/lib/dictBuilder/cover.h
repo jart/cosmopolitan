@@ -52,7 +52,7 @@
 #include "third_party/zstd/lib/common/pool.h"
 #include "third_party/zstd/lib/common/threading.h"
 #include "third_party/zstd/lib/common/zstd_internal.h" /* includes zstd.h */
-#include "third_party/zstd/lib/zdict.h"
+#include "third_party/zstd/zdict.h"
 
 /**
  * COVER_best_t is used for two purposes:
