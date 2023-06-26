@@ -199,6 +199,7 @@ include third_party/zip/zip.mk
 include third_party/xxhash/xxhash.mk
 include third_party/unzip/unzip.mk
 include tool/build/lib/buildlib.mk
+include third_party/mold/mold.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk
 include third_party/python/python.mk

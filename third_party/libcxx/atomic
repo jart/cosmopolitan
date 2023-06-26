@@ -803,7 +803,7 @@ bool __cxx_atomic_compare_exchange_weak(
 }
 
 template <typename _Tp>
-_LIBCPP_INLINE_VISIBILITY
+_LIBCPP_INLINE_VISIBILITY inline
 bool __cxx_atomic_compare_exchange_weak(
     __cxx_atomic_base_impl<_Tp>* __a, _Tp* __expected, _Tp __value, memory_order __success,
     memory_order __failure) {
