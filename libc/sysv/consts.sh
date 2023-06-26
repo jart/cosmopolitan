@@ -833,8 +833,8 @@ syscon	scm	SCM_TIMESTAMPNS				35			35			0			0			0			0			0			0
 syscon	scm	SCM_WIFI_STATUS				41			41			0			0			0			0			0			0
 
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ip	IP_TOS					1			1			3			3			3			3			3			8			# bsd consensus
-syscon	ip	IP_TTL					2			2			4			4			4			4			4			7			# bsd consensus
+syscon	ip	IP_TOS					1			1			3			3			3			3			3			3			# bsd consensus
+syscon	ip	IP_TTL					2			2			4			4			4			4			4			4			# bsd consensus
 syscon	ip	IP_HDRINCL				3			3			2			2			2			2			2			2			# bsd consensus
 syscon	ip	IP_DEFAULT_MULTICAST_LOOP		1			1			1			1			1			1			1			1			# consensus
 syscon	ip	IP_DEFAULT_MULTICAST_TTL		1			1			1			1			1			1			1			1			# consensus
@@ -842,18 +842,18 @@ syscon	ip	IP_PMTUDISC_DONT			0			0			0			0			0			0			0			0			# consensus
 syscon	ip	IP_MAX_MEMBERSHIPS			20			20			0x0fff			0x0fff			0x0fff			0x0fff			0x0fff			20			# bsd consensus
 syscon	ip	IP_OPTIONS				4			4			1			1			1			1			1			1			# bsd consensus
 syscon	ip	IP_RECVTTL				12			12			24			24			65			31			23			21
-syscon	ip	IP_ADD_MEMBERSHIP			35			35			12			12			12			12			12			5			# bsd consensus
-syscon	ip	IP_DROP_MEMBERSHIP			36			36			13			13			13			13			13			6			# bsd consensus
-syscon	ip	IP_MULTICAST_IF				0x20			0x20			9			9			9			9			9			2			# bsd consensus
-syscon	ip	IP_MULTICAST_LOOP			34			34			11			11			11			11			11			4			# bsd consensus
-syscon	ip	IP_MULTICAST_TTL			33			33			10			10			10			10			10			3			# bsd consensus
+syscon	ip	IP_ADD_MEMBERSHIP			35			35			12			12			12			12			12			12			# bsd consensus
+syscon	ip	IP_DROP_MEMBERSHIP			36			36			13			13			13			13			13			13			# bsd consensus
+syscon	ip	IP_MULTICAST_IF				0x20			0x20			9			9			9			9			9			9			# bsd consensus
+syscon	ip	IP_MULTICAST_LOOP			34			34			11			11			11			11			11			11			# bsd consensus
+syscon	ip	IP_MULTICAST_TTL			33			33			10			10			10			10			10			10			# bsd consensus
 syscon	ip	IP_RECVOPTS				6			6			5			5			5			5			5			0			# bsd consensus
 syscon	ip	IP_RECVRETOPTS				7			7			6			6			6			6			6			0			# bsd consensus
 syscon	ip	IP_RECVDSTADDR				0			0			7			7			7			7			7			0			# bsd consensus
 syscon	ip	IP_RETOPTS				7			7			8			8			8			8			8			0			# bsd consensus
 syscon	ip	IP_ADD_SOURCE_MEMBERSHIP		39			39			70			70			70			0			0			15
 syscon	ip	IP_BLOCK_SOURCE				38			38			72			72			72			0			0			17
-syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			40			71			71			71			0			0			0x10
+syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			40			71			71			71			0			0			16
 syscon	ip	IP_UNBLOCK_SOURCE			37			37			73			73			73			0			0			18
 syscon	ip	IP_IPSEC_POLICY				0x10			0x10			21			21			21			0			0			0
 syscon	ip	IP_MINTTL				21			21			0			0			66			32			24			0			# minimum ttl for packet or drop
