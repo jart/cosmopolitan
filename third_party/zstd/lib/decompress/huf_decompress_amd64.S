@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,7 +9,7 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "../common/portability_macros.h"
+#include "third_party/zstd/lib/common/portability_macros.h"
 
 /* Stack marking
  * ref: https://wiki.gentoo.org/wiki/Hardened/GNU_stack_quickstart

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -10,10 +11,10 @@
 
 
 /* ======   Dependencies   ======= */
-#include "../common/allocations.h"  /* ZSTD_customCalloc, ZSTD_customFree */
-#include "zstd_deps.h" /* size_t */
-#include "debug.h"     /* assert */
-#include "pool.h"
+#include "third_party/zstd/lib/common/allocations.h"  /* ZSTD_customCalloc, ZSTD_customFree */
+#include "third_party/zstd/lib/common/zstd_deps.h" /* size_t */
+#include "third_party/zstd/lib/common/debug.h"     /* assert */
+#include "third_party/zstd/lib/common/pool.h"
 
 /* ======   Compiler specifics   ====== */
 #if defined(_MSC_VER)
@@ -23,7 +24,7 @@
 
 #ifdef ZSTD_MULTITHREAD
 
-#include "threading.h"   /* pthread adaptation */
+#include "third_party/zstd/lib/common/threading.h"   /* pthread adaptation */
 
 /* A job is a function and an opaque argument */
 typedef struct POOL_job_s {

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,19 +9,47 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "platform.h"
-#include <stdio.h>      /* fprintf, open, fdopen, fread, _fileno, stdin, stdout */
-#include <stdlib.h>     /* malloc, free */
-#include <assert.h>
-#include <errno.h>      /* errno */
+#include "third_party/zstd/programs/platform.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"      /* fprintf, open, fdopen, fread, _fileno, stdin, stdout */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"     /* malloc, free */
+#include "libc/assert.h"
+#include "libc/errno.h"      /* errno */
 
 #if defined (_MSC_VER)
-#  include <sys/stat.h>
-#  include <io.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/time/time.h"
+// MISSING #include <io.h>
 #endif
 
-#include "fileio_asyncio.h"
-#include "fileio_common.h"
+#include "third_party/zstd/programs/fileio_asyncio.h"
+#include "third_party/zstd/programs/fileio_common.h"
 
 /* **********************************************************************
  *  Sparse write

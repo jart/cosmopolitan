@@ -1,3 +1,4 @@
+// clang-format off
 /**
  * Copyright (c) 2016 Tino Reichardt
  * All rights reserved.
@@ -14,7 +15,7 @@
 #ifndef THREADING_H_938743
 #define THREADING_H_938743
 
-#include "debug.h"
+#include "third_party/zstd/lib/common/debug.h"
 
 #if defined (__cplusplus)
 extern "C" {
@@ -40,7 +41,25 @@ extern "C" {
 #endif
 
 #undef ERROR   /* reported already defined on VS 2015 (Rich Geldreich) */
-#include <windows.h>
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
 #undef ERROR
 #define ERROR(name) ZSTD_ERROR(name)
 
@@ -75,7 +94,10 @@ int ZSTD_pthread_join(ZSTD_pthread_t thread);
 
 #elif defined(ZSTD_MULTITHREAD)    /* posix assumed ; need a better detection method */
 /* ===   POSIX Systems   === */
-#  include <pthread.h>
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread2.h"
 
 #if DEBUGLEVEL < 1
 

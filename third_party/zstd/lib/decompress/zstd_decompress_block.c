@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,18 +15,18 @@
 /*-*******************************************************
 *  Dependencies
 *********************************************************/
-#include "../common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memmove, ZSTD_memset */
-#include "../common/compiler.h"    /* prefetch */
-#include "../common/cpu.h"         /* bmi2 */
-#include "../common/mem.h"         /* low level memory routines */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memmove, ZSTD_memset */
+#include "third_party/zstd/lib/common/compiler.h"    /* prefetch */
+#include "third_party/zstd/lib/common/cpu.h"         /* bmi2 */
+#include "third_party/zstd/lib/common/mem.h"         /* low level memory routines */
 #define FSE_STATIC_LINKING_ONLY
-#include "../common/fse.h"
-#include "../common/huf.h"
-#include "../common/zstd_internal.h"
-#include "zstd_decompress_internal.h"   /* ZSTD_DCtx */
-#include "zstd_ddict.h"  /* ZSTD_DDictDictContent */
-#include "zstd_decompress_block.h"
-#include "../common/bits.h"  /* ZSTD_highbit32 */
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/common/zstd_internal.h"
+#include "third_party/zstd/lib/decompress/zstd_decompress_internal.h"   /* ZSTD_DCtx */
+#include "third_party/zstd/lib/decompress/zstd_ddict.h"  /* ZSTD_DDictDictContent */
+#include "third_party/zstd/lib/decompress/zstd_decompress_block.h"
+#include "third_party/zstd/lib/common/bits.h"  /* ZSTD_highbit32 */
 
 /*_*******************************************************
 *  Macros

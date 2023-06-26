@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -16,10 +17,16 @@
 
 
 /*===   Dependencies   ===*/
-#include <stdio.h>     // printf
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"     // printf
 #define ZSTD_STATIC_LINKING_ONLY
-#include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+// MISSING #include <zstd.h>      // presumes zstd library is installed
+#include "third_party/zstd/examples/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
 
 
 /*===   functions   ===*/

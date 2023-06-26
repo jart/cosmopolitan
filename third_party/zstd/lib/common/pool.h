@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -16,9 +17,10 @@ extern "C" {
 #endif
 
 
-#include "zstd_deps.h"
+#include "third_party/zstd/lib/common/zstd_deps.h"
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_customMem */
-#include "../zstd.h"
+#include "third_party/zstd/lib/zstd.h"
+#include "libc/assert.h"
 
 typedef struct POOL_ctx_s POOL_ctx;
 

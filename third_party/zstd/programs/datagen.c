@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -13,12 +14,35 @@
 /*-************************************
 *  Dependencies
 **************************************/
-#include "datagen.h"
-#include "platform.h"  /* SET_BINARY_MODE */
-#include <stdlib.h>    /* malloc, free */
-#include <stdio.h>     /* FILE, fwrite, fprintf */
-#include <string.h>    /* memcpy */
-#include "../lib/common/mem.h"  /* U32 */
+#include "third_party/zstd/programs/datagen.h"
+#include "third_party/zstd/programs/platform.h"  /* SET_BINARY_MODE */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"    /* malloc, free */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"     /* FILE, fwrite, fprintf */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"    /* memcpy */
+#include "third_party/zstd/lib/common/mem.h"  /* U32 */
 
 
 /*-************************************

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -20,14 +21,14 @@
 
 
 /* ======   Dependencies   ====== */
-#include "../common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customCalloc, ZSTD_customFree */
-#include "../common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memset, INT_MAX, UINT_MAX */
-#include "../common/mem.h"         /* MEM_STATIC */
-#include "../common/pool.h"        /* threadpool */
-#include "../common/threading.h"   /* mutex */
-#include "zstd_compress_internal.h"  /* MIN, ERROR, ZSTD_*, ZSTD_highbit32 */
-#include "zstd_ldm.h"
-#include "zstdmt_compress.h"
+#include "third_party/zstd/lib/common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customCalloc, ZSTD_customFree */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memset, INT_MAX, UINT_MAX */
+#include "third_party/zstd/lib/common/mem.h"         /* MEM_STATIC */
+#include "third_party/zstd/lib/common/pool.h"        /* threadpool */
+#include "third_party/zstd/lib/common/threading.h"   /* mutex */
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"  /* MIN, ERROR, ZSTD_*, ZSTD_highbit32 */
+#include "third_party/zstd/lib/compress/zstd_ldm.h"
+#include "third_party/zstd/lib/compress/zstdmt_compress.h"
 
 /* Guards code to support resizing the SeqPool.
  * We will want to resize the SeqPool to save memory in the future.
@@ -40,9 +41,29 @@
     && !defined(_MSC_VER) \
     && !defined(__MINGW32__)
 
-#  include <stdio.h>
-#  include <unistd.h>
-#  include <sys/times.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/tms.h"
+#include "libc/calls/weirdtypes.h"
 
 #  define DEBUG_PRINTHEX(l,p,n) {            \
     unsigned debug_u;                        \

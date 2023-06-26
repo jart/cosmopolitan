@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -19,7 +20,7 @@
 *  Dependencies
 ***************************************/
 #define ZDICT_STATIC_LINKING_ONLY
-#include "../lib/zdict.h"     /* ZDICT_params_t */
+#include "third_party/zstd/lib/zdict.h"     /* ZDICT_params_t */
 
 
 /*-*************************************

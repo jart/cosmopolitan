@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -18,18 +19,33 @@ extern "C" {
 /*-****************************************
 *  Dependencies
 ******************************************/
-#include <stddef.h>  /* size_t, ptrdiff_t */
-#include "compiler.h"  /* __has_builtin */
-#include "debug.h"  /* DEBUG_STATIC_ASSERT */
-#include "zstd_deps.h"  /* ZSTD_memcpy */
+  /* size_t, ptrdiff_t */
+#include "third_party/zstd/lib/common/compiler.h"  /* __has_builtin */
+#include "third_party/zstd/lib/common/debug.h"  /* DEBUG_STATIC_ASSERT */
+#include "third_party/zstd/lib/common/zstd_deps.h"  /* ZSTD_memcpy */
 
 
 /*-****************************************
 *  Compiler specifics
 ******************************************/
 #if defined(_MSC_VER)   /* Visual Studio */
-#   include <stdlib.h>  /* _byteswap_ulong */
-#   include <intrin.h>  /* _byteswap_* */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"  /* _byteswap_ulong */
+// MISSING #include <intrin.h>  /* _byteswap_* */
 #endif
 
 /*-**************************************************************
@@ -37,9 +53,14 @@ extern "C" {
 *****************************************************************/
 #if  !defined (__VMS) && (defined (__cplusplus) || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */) )
 #  if defined(_AIX)
-#    include <inttypes.h>
+#include "libc/fmt/conv.h"
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
 #  else
-#    include <stdint.h> /* intptr_t */
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h" /* intptr_t */
 #  endif
   typedef   uint8_t BYTE;
   typedef   uint8_t U8;
@@ -51,7 +72,12 @@ extern "C" {
   typedef  uint64_t U64;
   typedef   int64_t S64;
 #else
-# include <limits.h>
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/iov.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/xopen.h"
+#include "libc/thread/thread.h"
 #if CHAR_BIT != 8
 #  error "this implementation requires char to be exactly 8-bit type"
 #endif

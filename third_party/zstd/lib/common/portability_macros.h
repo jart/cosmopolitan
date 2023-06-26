@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -144,7 +145,7 @@
 #if defined(__ELF__) && (defined(__x86_64__) || defined(__i386__)) \
     && defined(__has_include)
 # if __has_include(<cet.h>)
-#  include <cet.h>
+// MISSING #include <cet.h>
 #  define ZSTD_CET_ENDBRANCH _CET_ENDBR
 # endif
 #endif

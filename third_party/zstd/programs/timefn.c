@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,9 +12,17 @@
 
 /* ===  Dependencies  === */
 
-#include "timefn.h"
-#include "platform.h" /* set _POSIX_C_SOURCE */
-#include <time.h>     /* CLOCK_MONOTONIC, TIME_UTC */
+#include "third_party/zstd/programs/timefn.h"
+#include "third_party/zstd/programs/platform.h" /* set _POSIX_C_SOURCE */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"     /* CLOCK_MONOTONIC, TIME_UTC */
 
 /*-****************************************
 *  Time functions
@@ -21,9 +30,48 @@
 
 #if defined(_WIN32)   /* Windows */
 
-#include <windows.h>  /* LARGE_INTEGER */
-#include <stdlib.h>   /* abort */
-#include <stdio.h>    /* perror */
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"  /* LARGE_INTEGER */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"   /* abort */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"    /* perror */
 
 UTIL_time_t UTIL_getTime(void)
 {
@@ -47,7 +95,7 @@ UTIL_time_t UTIL_getTime(void)
 
 #elif defined(__APPLE__) && defined(__MACH__)
 
-#include <mach/mach_time.h> /* mach_timebase_info_data_t, mach_timebase_info, mach_absolute_time */
+// MISSING #include <mach/mach_time.h> /* mach_timebase_info_data_t, mach_timebase_info, mach_absolute_time */
 
 UTIL_time_t UTIL_getTime(void)
 {
@@ -66,8 +114,29 @@ UTIL_time_t UTIL_getTime(void)
 /* POSIX.1-2001 (optional) */
 #elif defined(CLOCK_MONOTONIC)
 
-#include <stdlib.h>   /* abort */
-#include <stdio.h>    /* perror */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"   /* abort */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"    /* perror */
 
 UTIL_time_t UTIL_getTime(void)
 {
@@ -93,8 +162,29 @@ UTIL_time_t UTIL_getTime(void)
 #elif (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) /* C11 */) \
     && defined(TIME_UTC) && !defined(__ANDROID__)
 
-#include <stdlib.h>   /* abort */
-#include <stdio.h>    /* perror */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"   /* abort */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"    /* perror */
 
 UTIL_time_t UTIL_getTime(void)
 {

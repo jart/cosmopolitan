@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * debug
  * Part of FSE library
@@ -19,6 +20,6 @@
  * such as DEBUGLOG and RAWLOG
  */
 
-#include "debug.h"
+#include "third_party/zstd/lib/common/debug.h"
 
 int g_debuglevel = DEBUGLEVEL;

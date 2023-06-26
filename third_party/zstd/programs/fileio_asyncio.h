@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -26,12 +27,12 @@
 extern "C" {
 #endif
 
-#include "../lib/common/mem.h"     /* U32, U64 */
-#include "fileio_types.h"
-#include "platform.h"
-#include "util.h"
-#include "../lib/common/pool.h"
-#include "../lib/common/threading.h"
+#include "third_party/zstd/lib/common/mem.h"     /* U32, U64 */
+#include "third_party/zstd/programs/fileio_types.h"
+#include "third_party/zstd/programs/platform.h"
+#include "third_party/zstd/programs/util.h"
+#include "third_party/zstd/lib/common/pool.h"
+#include "third_party/zstd/lib/common/threading.h"
 
 #define MAX_IO_JOBS          (10)
 

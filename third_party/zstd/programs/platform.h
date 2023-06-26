@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -83,9 +84,33 @@ extern "C" {
 /* try to determine posix version through official unistd.h's _POSIX_VERSION (https://pubs.opengroup.org/onlinepubs/7908799/xsh/unistd.h.html).
  * note : there is no simple way to know in advance if <unistd.h> is present or not on target system,
  * Posix specification mandates its presence and its content, but target system must respect this spec.
- * It's necessary to _not_ #include <unistd.h> whenever target OS is not unix-like
+ * It's necessary to _not_ #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h" whenever target OS is not unix-like
  * otherwise it will block preprocessing stage.
- * The following list of build macros tries to "guess" if target OS is likely unix-like, and therefore can #include <unistd.h>
+ * The following list of build macros tries to "guess" if target OS is likely unix-like, and therefore can #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"
  */
 #  elif !defined(_WIN32) \
      && ( defined(__unix__) || defined(__unix) \
@@ -96,7 +121,19 @@ extern "C" {
 #        define _POSIX_C_SOURCE 200809L  /* feature test macro : https://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html */
 #      endif
 #    endif
-#    include <unistd.h>  /* declares _POSIX_VERSION */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"  /* declares _POSIX_VERSION */
 #    if defined(_POSIX_VERSION)  /* POSIX compliant */
 #      define PLATFORM_POSIX_VERSION _POSIX_VERSION
 #    else
@@ -135,16 +172,58 @@ extern "C" {
 #if (defined(__linux__) && (PLATFORM_POSIX_VERSION > 1)) \
  || (PLATFORM_POSIX_VERSION >= 200112L) \
  || defined(__DJGPP__)
-#  include <unistd.h>   /* isatty */
-#  include <stdio.h>    /* fileno */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"   /* isatty */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"    /* fileno */
 #  define IS_CONSOLE(stdStream) isatty(fileno(stdStream))
 #elif defined(MSDOS) || defined(OS2)
-#  include <io.h>       /* _isatty */
+// MISSING #include <io.h>       /* _isatty */
 #  define IS_CONSOLE(stdStream) _isatty(_fileno(stdStream))
 #elif defined(WIN32) || defined(_WIN32)
-#  include <io.h>      /* _isatty */
-#  include <windows.h> /* DeviceIoControl, HANDLE, FSCTL_SET_SPARSE */
-#  include <stdio.h>   /* FILE */
+// MISSING #include <io.h>      /* _isatty */
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h" /* DeviceIoControl, HANDLE, FSCTL_SET_SPARSE */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"   /* FILE */
 static __inline int IS_CONSOLE(FILE* stdStream) {
     DWORD dummy;
     return _isatty(_fileno(stdStream)) && GetConsoleMode((HANDLE)_get_osfhandle(_fileno(stdStream)), &dummy);
@@ -158,11 +237,38 @@ static __inline int IS_CONSOLE(FILE* stdStream) {
 *  OS-specific IO behaviors
 ******************************/
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32)
-#  include <fcntl.h>   /* _O_BINARY */
-#  include <io.h>      /* _setmode, _fileno, _get_osfhandle */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/splice.h"   /* _O_BINARY */
+// MISSING #include <io.h>      /* _setmode, _fileno, _get_osfhandle */
 #  if !defined(__DJGPP__)
-#    include <windows.h> /* DeviceIoControl, HANDLE, FSCTL_SET_SPARSE */
-#    include <winioctl.h> /* FSCTL_SET_SPARSE */
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h" /* DeviceIoControl, HANDLE, FSCTL_SET_SPARSE */
+// MISSING #include <winioctl.h> /* FSCTL_SET_SPARSE */
 #    define SET_BINARY_MODE(file) { int const unused=_setmode(_fileno(file), _O_BINARY); (void)unused; }
 #    define SET_SPARSE_FILE_MODE(file) { DWORD dw; DeviceIoControl((HANDLE) _get_osfhandle(_fileno(file)), FSCTL_SET_SPARSE, 0, 0, 0, 0, &dw, 0); }
 #  else

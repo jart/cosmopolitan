@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,13 +12,13 @@
  /*-*************************************
  *  Dependencies
  ***************************************/
-#include "zstd_compress_superblock.h"
+#include "third_party/zstd/lib/compress/zstd_compress_superblock.h"
 
-#include "../common/zstd_internal.h"  /* ZSTD_getSequenceLength */
-#include "hist.h"                     /* HIST_countFast_wksp */
-#include "zstd_compress_internal.h"   /* ZSTD_[huf|fse|entropy]CTablesMetadata_t */
-#include "zstd_compress_sequences.h"
-#include "zstd_compress_literals.h"
+#include "third_party/zstd/lib/common/zstd_internal.h"  /* ZSTD_getSequenceLength */
+#include "third_party/zstd/lib/compress/hist.h"                     /* HIST_countFast_wksp */
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"   /* ZSTD_[huf|fse|entropy]CTablesMetadata_t */
+#include "third_party/zstd/lib/compress/zstd_compress_sequences.h"
+#include "third_party/zstd/lib/compress/zstd_compress_literals.h"
 
 /** ZSTD_compressSubBlock_literal() :
  *  Compresses literals section for a sub-block.

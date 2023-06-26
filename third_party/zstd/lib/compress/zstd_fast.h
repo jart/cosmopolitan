@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,8 +16,8 @@
 extern "C" {
 #endif
 
-#include "../common/mem.h"      /* U32 */
-#include "zstd_compress_internal.h"
+#include "third_party/zstd/lib/common/mem.h"      /* U32 */
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"
 
 void ZSTD_fillHashTable(ZSTD_matchState_t* ms,
                         void const* end, ZSTD_dictTableLoadMethod_e dtlm,

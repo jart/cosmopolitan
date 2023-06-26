@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,7 +16,7 @@
 extern "C" {
 #endif
 
-#include "zstd_compress_internal.h"
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"
 
 #if !defined(ZSTD_EXCLUDE_BTLAZY2_BLOCK_COMPRESSOR) \
  || !defined(ZSTD_EXCLUDE_BTOPT_BLOCK_COMPRESSOR) \

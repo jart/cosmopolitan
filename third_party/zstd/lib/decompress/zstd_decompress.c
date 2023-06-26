@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -55,21 +56,21 @@
 /*-*******************************************************
 *  Dependencies
 *********************************************************/
-#include "../common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customCalloc, ZSTD_customFree */
-#include "../common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memmove, ZSTD_memset */
-#include "../common/mem.h"         /* low level memory routines */
+#include "third_party/zstd/lib/common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customCalloc, ZSTD_customFree */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memmove, ZSTD_memset */
+#include "third_party/zstd/lib/common/mem.h"         /* low level memory routines */
 #define FSE_STATIC_LINKING_ONLY
-#include "../common/fse.h"
-#include "../common/huf.h"
-#include "../common/xxhash.h" /* XXH64_reset, XXH64_update, XXH64_digest, XXH64 */
-#include "../common/zstd_internal.h"  /* blockProperties_t */
-#include "zstd_decompress_internal.h"   /* ZSTD_DCtx */
-#include "zstd_ddict.h"  /* ZSTD_DDictDictContent */
-#include "zstd_decompress_block.h"   /* ZSTD_decompressBlock_internal */
-#include "../common/bits.h"  /* ZSTD_highbit32 */
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/common/xxhash.h" /* XXH64_reset, XXH64_update, XXH64_digest, XXH64 */
+#include "third_party/zstd/lib/common/zstd_internal.h"  /* blockProperties_t */
+#include "third_party/zstd/lib/decompress/zstd_decompress_internal.h"   /* ZSTD_DCtx */
+#include "third_party/zstd/lib/decompress/zstd_ddict.h"  /* ZSTD_DDictDictContent */
+#include "third_party/zstd/lib/decompress/zstd_decompress_block.h"   /* ZSTD_decompressBlock_internal */
+#include "third_party/zstd/lib/common/bits.h"  /* ZSTD_highbit32 */
 
 #if defined(ZSTD_LEGACY_SUPPORT) && (ZSTD_LEGACY_SUPPORT>=1)
-#  include "../legacy/zstd_legacy.h"
+#include "third_party/zstd/lib/legacy/zstd_legacy.h"
 #endif
 
 

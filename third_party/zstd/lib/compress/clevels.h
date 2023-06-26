@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -12,7 +13,7 @@
 #define ZSTD_CLEVELS_H
 
 #define ZSTD_STATIC_LINKING_ONLY  /* ZSTD_compressionParameters  */
-#include "../zstd.h"
+#include "third_party/zstd/lib/zstd.h"
 
 /*-=====  Pre-defined compression levels  =====-*/
 

@@ -1,3 +1,4 @@
+// clang-format off
 Command Line Interface for Zstandard library
 ============================================
 

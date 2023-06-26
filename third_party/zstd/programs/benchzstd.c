@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -20,28 +21,51 @@
 /* *************************************
 *  Includes
 ***************************************/
-#include "platform.h"    /* Large Files support */
-#include "util.h"        /* UTIL_getFileSize, UTIL_sleep */
-#include <stdlib.h>      /* malloc, free */
-#include <string.h>      /* memset, strerror */
-#include <stdio.h>       /* fprintf, fopen */
-#include <errno.h>
-#include <assert.h>      /* assert */
+#include "third_party/zstd/programs/platform.h"    /* Large Files support */
+#include "third_party/zstd/programs/util.h"        /* UTIL_getFileSize, UTIL_sleep */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"      /* malloc, free */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"      /* memset, strerror */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"       /* fprintf, fopen */
+#include "libc/errno.h"
+#include "libc/assert.h"      /* assert */
 
-#include "timefn.h"      /* UTIL_time_t */
-#include "benchfn.h"
-#include "../lib/common/mem.h"
+#include "third_party/zstd/programs/timefn.h"      /* UTIL_time_t */
+#include "third_party/zstd/programs/benchfn.h"
+#include "third_party/zstd/lib/common/mem.h"
 #ifndef ZSTD_STATIC_LINKING_ONLY
 #define ZSTD_STATIC_LINKING_ONLY
 #endif
-#include "../lib/zstd.h"
-#include "datagen.h"     /* RDG_genBuffer */
+#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/programs/datagen.h"     /* RDG_genBuffer */
 #ifndef XXH_INLINE_ALL
 #define XXH_INLINE_ALL
 #endif
-#include "../lib/common/xxhash.h"
-#include "benchzstd.h"
-#include "../lib/zstd_errors.h"
+#include "third_party/zstd/lib/common/xxhash.h"
+#include "third_party/zstd/programs/benchzstd.h"
+#include "third_party/zstd/lib/zstd_errors.h"
 
 
 /* *************************************

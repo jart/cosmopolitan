@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,10 +16,10 @@
 extern "C" {
 #endif
 
-#include "../lib/common/mem.h"     /* U32, U64 */
-#include "fileio_types.h"
-#include "platform.h"
-#include "timefn.h"     /* UTIL_getTime, UTIL_clockSpanMicro */
+#include "third_party/zstd/lib/common/mem.h"     /* U32, U64 */
+#include "third_party/zstd/programs/fileio_types.h"
+#include "third_party/zstd/programs/platform.h"
+#include "third_party/zstd/programs/timefn.h"     /* UTIL_getTime, UTIL_clockSpanMicro */
 
 /*-*************************************
 *  Macros
@@ -90,7 +91,25 @@ extern UTIL_time_t g_displayClock;
 #   define LONG_SEEK fseeko64
 #   define LONG_TELL ftello64
 #elif defined(_WIN32) && !defined(__DJGPP__)
-#   include <windows.h>
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
     static int LONG_SEEK(FILE* file, __int64 offset, int origin) {
         LARGE_INTEGER off;
         DWORD method;

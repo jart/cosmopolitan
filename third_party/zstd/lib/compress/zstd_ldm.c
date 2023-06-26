@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,13 +9,13 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "zstd_ldm.h"
+#include "third_party/zstd/lib/compress/zstd_ldm.h"
 
-#include "../common/debug.h"
-#include "../common/xxhash.h"
-#include "zstd_fast.h"          /* ZSTD_fillHashTable() */
-#include "zstd_double_fast.h"   /* ZSTD_fillDoubleHashTable() */
-#include "zstd_ldm_geartab.h"
+#include "third_party/zstd/lib/common/debug.h"
+#include "third_party/zstd/lib/common/xxhash.h"
+#include "third_party/zstd/lib/compress/zstd_fast.h"          /* ZSTD_fillHashTable() */
+#include "third_party/zstd/lib/compress/zstd_double_fast.h"   /* ZSTD_fillDoubleHashTable() */
+#include "third_party/zstd/lib/compress/zstd_ldm_geartab.h"
 
 #define LDM_BUCKET_SIZE_LOG 3
 #define LDM_MIN_MATCH_LENGTH 64

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,8 +12,8 @@
 /*-*************************************
 *  Dependencies
 ***************************************/
-#include "../common/error_private.h"
-#include "zbuff.h"
+#include "third_party/zstd/lib/common/error_private.h"
+#include "third_party/zstd/lib/deprecated/zbuff.h"
 
 /*-****************************************
 *  ZBUFF Error Management  (deprecated)

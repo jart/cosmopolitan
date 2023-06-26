@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,7 +16,7 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
+
 
 /* weak symbol support
  * For now, enable conservatively:

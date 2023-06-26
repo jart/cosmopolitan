@@ -1,3 +1,4 @@
+// clang-format off
 /**
  * Copyright (c) 2016 Tino Reichardt
  * All rights reserved.
@@ -15,7 +16,7 @@
  * This file will hold wrapper for systems, which do not support pthreads
  */
 
-#include "threading.h"
+#include "third_party/zstd/lib/common/threading.h"
 
 /* create fake symbol to avoid empty translation unit warning */
 int g_ZSTD_threading_useless_symbol;
@@ -28,8 +29,8 @@ int g_ZSTD_threading_useless_symbol;
 
 
 /* ===  Dependencies  === */
-#include <process.h>
-#include <errno.h>
+// MISSING #include <process.h>
+#include "libc/errno.h"
 
 
 /* ===  Implementation  === */
@@ -135,7 +136,7 @@ int ZSTD_pthread_join(ZSTD_pthread_t thread)
 #if defined(ZSTD_MULTITHREAD) && DEBUGLEVEL >= 1 && !defined(_WIN32)
 
 #define ZSTD_DEPS_NEED_MALLOC
-#include "zstd_deps.h"
+#include "third_party/zstd/lib/common/zstd_deps.h"
 
 int ZSTD_pthread_mutex_init(ZSTD_pthread_mutex_t* mutex, pthread_mutexattr_t const* attr)
 {

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,23 +12,23 @@
 /*-*************************************
 *  Dependencies
 ***************************************/
-#include "../common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customCalloc, ZSTD_customFree */
-#include "../common/zstd_deps.h"  /* INT_MAX, ZSTD_memset, ZSTD_memcpy */
-#include "../common/mem.h"
-#include "hist.h"           /* HIST_countFast_wksp */
+#include "third_party/zstd/lib/common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customCalloc, ZSTD_customFree */
+#include "third_party/zstd/lib/common/zstd_deps.h"  /* INT_MAX, ZSTD_memset, ZSTD_memcpy */
+#include "third_party/zstd/lib/common/mem.h"
+#include "third_party/zstd/lib/compress/hist.h"           /* HIST_countFast_wksp */
 #define FSE_STATIC_LINKING_ONLY   /* FSE_encodeSymbol */
-#include "../common/fse.h"
-#include "../common/huf.h"
-#include "zstd_compress_internal.h"
-#include "zstd_compress_sequences.h"
-#include "zstd_compress_literals.h"
-#include "zstd_fast.h"
-#include "zstd_double_fast.h"
-#include "zstd_lazy.h"
-#include "zstd_opt.h"
-#include "zstd_ldm.h"
-#include "zstd_compress_superblock.h"
-#include  "../common/bits.h"      /* ZSTD_highbit32, ZSTD_rotateRight_U64 */
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"
+#include "third_party/zstd/lib/compress/zstd_compress_sequences.h"
+#include "third_party/zstd/lib/compress/zstd_compress_literals.h"
+#include "third_party/zstd/lib/compress/zstd_fast.h"
+#include "third_party/zstd/lib/compress/zstd_double_fast.h"
+#include "third_party/zstd/lib/compress/zstd_lazy.h"
+#include "third_party/zstd/lib/compress/zstd_opt.h"
+#include "third_party/zstd/lib/compress/zstd_ldm.h"
+#include "third_party/zstd/lib/compress/zstd_compress_superblock.h"
+#include "third_party/zstd/lib/common/bits.h"      /* ZSTD_highbit32, ZSTD_rotateRight_U64 */
 
 /* ***************************************************************
 *  Tuning parameters
@@ -6940,7 +6941,7 @@ size_t ZSTD_endStream(ZSTD_CStream* zcs, ZSTD_outBuffer* output)
 
 
 /*-=====  Pre-defined compression levels  =====-*/
-#include "clevels.h"
+#include "third_party/zstd/lib/compress/clevels.h"
 
 int ZSTD_maxCLevel(void) { return ZSTD_MAX_CLEVEL; }
 int ZSTD_minCLevel(void) { return (int)-ZSTD_TARGETLENGTH_MAX; }

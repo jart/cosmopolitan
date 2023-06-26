@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,8 +15,8 @@
 *  Dependencies
 ***************************************/
 #define ZSTD_DEPS_NEED_MALLOC
-#include "error_private.h"
-#include "zstd_internal.h"
+#include "third_party/zstd/lib/common/error_private.h"
+#include "third_party/zstd/lib/common/zstd_internal.h"
 
 
 /*-****************************************

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -27,26 +28,49 @@
 /*-************************************
 *  Dependencies
 **************************************/
-#include "platform.h" /* PLATFORM_POSIX_VERSION */
-#include "util.h"     /* UTIL_HAS_CREATEFILELIST, UTIL_createFileList, UTIL_isConsole */
-#include <stdlib.h>   /* getenv */
-#include <string.h>   /* strcmp, strlen */
-#include <stdio.h>    /* fprintf(), stdin, stdout, stderr */
-#include <errno.h>    /* errno */
-#include <assert.h>   /* assert */
+#include "third_party/zstd/programs/platform.h" /* PLATFORM_POSIX_VERSION */
+#include "third_party/zstd/programs/util.h"     /* UTIL_HAS_CREATEFILELIST, UTIL_createFileList, UTIL_isConsole */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"   /* getenv */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"   /* strcmp, strlen */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"    /* fprintf(), stdin, stdout, stderr */
+#include "libc/errno.h"    /* errno */
+#include "libc/assert.h"   /* assert */
 
-#include "fileio.h"   /* stdinmark, stdoutmark, ZSTD_EXTENSION */
+#include "third_party/zstd/programs/fileio.h"   /* stdinmark, stdoutmark, ZSTD_EXTENSION */
 #ifndef ZSTD_NOBENCH
-#  include "benchzstd.h"  /* BMK_benchFilesAdvanced */
+#include "third_party/zstd/programs/benchzstd.h"  /* BMK_benchFilesAdvanced */
 #endif
 #ifndef ZSTD_NODICT
-#  include "dibio.h"  /* ZDICT_cover_params_t, DiB_trainFromFiles() */
+#include "third_party/zstd/programs/dibio.h"  /* ZDICT_cover_params_t, DiB_trainFromFiles() */
 #endif
 #ifndef ZSTD_NOTRACE
-#  include "zstdcli_trace.h"
+#include "third_party/zstd/programs/zstdcli_trace.h"
 #endif
-#include "../lib/zstd.h"  /* ZSTD_VERSION_STRING, ZSTD_minCLevel, ZSTD_maxCLevel */
-#include "fileio_asyncio.h"
+#include "third_party/zstd/lib/zstd.h"  /* ZSTD_VERSION_STRING, ZSTD_minCLevel, ZSTD_maxCLevel */
+#include "third_party/zstd/programs/fileio_asyncio.h"
 
 
 /*-************************************

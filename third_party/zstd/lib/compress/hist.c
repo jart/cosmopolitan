@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * hist : Histogram functions
  * part of Finite State Entropy project
@@ -14,10 +15,10 @@
 ****************************************************************** */
 
 /* --- dependencies --- */
-#include "../common/mem.h"             /* U32, BYTE, etc. */
-#include "../common/debug.h"           /* assert, DEBUGLOG */
-#include "../common/error_private.h"   /* ERROR */
-#include "hist.h"
+#include "third_party/zstd/lib/common/mem.h"             /* U32, BYTE, etc. */
+#include "third_party/zstd/lib/common/debug.h"           /* assert, DEBUGLOG */
+#include "third_party/zstd/lib/common/error_private.h"   /* ERROR */
+#include "third_party/zstd/lib/compress/hist.h"
 
 
 /* --- Error management --- */

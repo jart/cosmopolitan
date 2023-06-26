@@ -1,3 +1,4 @@
+// clang-format off
 Zstandard library files
 ================================
 

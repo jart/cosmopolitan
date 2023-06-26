@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -12,15 +13,46 @@
 #  define ZDICT_STATIC_LINKING_ONLY
 #endif
 
-#include <stdio.h>  /* fprintf */
-#include <stdlib.h> /* malloc, free, qsort */
-#include <string.h> /* memset */
-#include <time.h>   /* clock */
-#include "../common/mem.h" /* read */
-#include "../common/pool.h"
-#include "../common/threading.h"
-#include "../common/zstd_internal.h" /* includes zstd.h */
-#include "../zdict.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"  /* fprintf */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h" /* malloc, free, qsort */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h" /* memset */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"   /* clock */
+#include "third_party/zstd/lib/common/mem.h" /* read */
+#include "third_party/zstd/lib/common/pool.h"
+#include "third_party/zstd/lib/common/threading.h"
+#include "third_party/zstd/lib/common/zstd_internal.h" /* includes zstd.h */
+#include "third_party/zstd/lib/zdict.h"
 
 /**
  * COVER_best_t is used for two purposes:

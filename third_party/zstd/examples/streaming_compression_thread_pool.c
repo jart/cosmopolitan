@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Martin Liska, SUSE, Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -9,12 +10,38 @@
  */
 
 
-#include <stdio.h>     // printf
-#include <stdlib.h>    // free
-#include <string.h>    // memset, strcat, strlen
-#include <zstd.h>      // presumes zstd library is installed
-#include "common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
-#include <pthread.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"     // printf
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"    // free
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"    // memset, strcat, strlen
+// MISSING #include <zstd.h>      // presumes zstd library is installed
+#include "third_party/zstd/examples/common.h"    // Helper functions, CHECK(), and CHECK_ZSTD()
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread2.h"
 
 typedef struct compress_args
 {

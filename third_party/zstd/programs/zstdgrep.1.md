@@ -1,3 +1,4 @@
+// clang-format off
 zstdgrep(1) -- print lines matching a pattern in zstandard-compressed files
 ============================================================================
 

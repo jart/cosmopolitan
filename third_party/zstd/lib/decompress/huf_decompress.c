@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * huff0 huffman decoder,
  * part of Finite State Entropy library
@@ -15,14 +16,14 @@
 /* **************************************************************
 *  Dependencies
 ****************************************************************/
-#include "../common/zstd_deps.h"  /* ZSTD_memcpy, ZSTD_memset */
-#include "../common/compiler.h"
-#include "../common/bitstream.h"  /* BIT_* */
-#include "../common/fse.h"        /* to compress headers */
-#include "../common/huf.h"
-#include "../common/error_private.h"
-#include "../common/zstd_internal.h"
-#include "../common/bits.h"       /* ZSTD_highbit32, ZSTD_countTrailingZeros64 */
+#include "third_party/zstd/lib/common/zstd_deps.h"  /* ZSTD_memcpy, ZSTD_memset */
+#include "third_party/zstd/lib/common/compiler.h"
+#include "third_party/zstd/lib/common/bitstream.h"  /* BIT_* */
+#include "third_party/zstd/lib/common/fse.h"        /* to compress headers */
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/common/error_private.h"
+#include "third_party/zstd/lib/common/zstd_internal.h"
+#include "third_party/zstd/lib/common/bits.h"       /* ZSTD_highbit32, ZSTD_countTrailingZeros64 */
 
 /* **************************************************************
 *  Constants

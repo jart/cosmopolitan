@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,8 +12,8 @@
 #ifndef ZSTD_COMPRESS_SEQUENCES_H
 #define ZSTD_COMPRESS_SEQUENCES_H
 
-#include "../common/fse.h" /* FSE_repeat, FSE_CTable */
-#include "../common/zstd_internal.h" /* symbolEncodingType_e, ZSTD_strategy */
+#include "third_party/zstd/lib/common/fse.h" /* FSE_repeat, FSE_CTable */
+#include "third_party/zstd/lib/common/zstd_internal.h" /* symbolEncodingType_e, ZSTD_strategy */
 
 typedef enum {
     ZSTD_defaultDisallowed = 0,

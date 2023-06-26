@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -12,7 +13,7 @@
 #define FILEIO_TYPES_HEADER
 
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_compressionParameters */
-#include "../lib/zstd.h"           /* ZSTD_* */
+#include "third_party/zstd/lib/zstd.h"           /* ZSTD_* */
 
 /*-*************************************
 *  Parameters: FIO_prefs_t

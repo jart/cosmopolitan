@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -19,11 +20,25 @@ extern "C" {
 /*-****************************************
 *  Dependencies
 ******************************************/
-#include "platform.h"     /* PLATFORM_POSIX_VERSION, ZSTD_NANOSLEEP_SUPPORT, ZSTD_SETPRIORITY_SUPPORT */
-#include <stddef.h>       /* size_t, ptrdiff_t */
-#include <sys/types.h>    /* stat, utime */
-#include <sys/stat.h>     /* stat, chmod */
-#include "../lib/common/mem.h"          /* U64 */
+#include "third_party/zstd/programs/platform.h"     /* PLATFORM_POSIX_VERSION, ZSTD_NANOSLEEP_SUPPORT, ZSTD_SETPRIORITY_SUPPORT */
+       /* size_t, ptrdiff_t */
+#include "libc/calls/makedev.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/thread/thread.h"
+#include "libc/calls/typedef/u.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/intrin/newbie.h"
+#include "libc/sock/select.h"
+#include "libc/sysv/consts/endian.h"    /* stat, utime */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/time/time.h"     /* stat, chmod */
+#include "third_party/zstd/lib/common/mem.h"          /* U64 */
 
 
 /*-************************************************************
@@ -44,13 +59,43 @@ extern "C" {
 *  Sleep & priority functions: Windows - Posix - others
 ***************************************************/
 #if defined(_WIN32)
-#  include <windows.h>
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
 #  define SET_REALTIME_PRIORITY SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS)
 #  define UTIL_sleep(s) Sleep(1000*s)
 #  define UTIL_sleepMilli(milli) Sleep(milli)
 
 #elif PLATFORM_POSIX_VERSION > 0 /* Unix-like operating system */
-#  include <unistd.h>   /* sleep */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"   /* sleep */
 #  define UTIL_sleep(s) sleep(s)
 #  if ZSTD_NANOSLEEP_SUPPORT   /* necessarily defined in platform.h */
 #      define UTIL_sleepMilli(milli) { struct timespec t; t.tv_sec=0; t.tv_nsec=milli*1000000ULL; nanosleep(&t, NULL); }
@@ -58,7 +103,14 @@ extern "C" {
 #      define UTIL_sleepMilli(milli) /* disabled */
 #  endif
 #  if ZSTD_SETPRIORITY_SUPPORT
-#    include <sys/resource.h> /* setpriority */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h" /* setpriority */
 #    define SET_REALTIME_PRIORITY setpriority(PRIO_PROCESS, 0, -20)
 #  else
 #    define SET_REALTIME_PRIORITY /* disabled */
@@ -118,7 +170,7 @@ int UTIL_requireUserConfirmation(const char* prompt, const char* abortMsg, const
 #define STRDUP(s) _strdup(s)
 #else
 #define PATH_SEP '/'
-#include <libgen.h>
+#include "libc/fmt/libgen.h"
 #define STRDUP(s) strdup(s)
 #endif
 

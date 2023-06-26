@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,8 +16,8 @@
 extern "C" {
 #endif
 
-#include "zstd_compress_internal.h"   /* ldmParams_t, U32 */
-#include "../zstd.h"   /* ZSTD_CCtx, size_t */
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"   /* ldmParams_t, U32 */
+#include "third_party/zstd/lib/zstd.h"   /* ZSTD_CCtx, size_t */
 
 /*-*************************************
 *  Long distance matching

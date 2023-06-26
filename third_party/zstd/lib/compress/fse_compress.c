@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * FSE : Finite State Entropy encoder
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -15,18 +16,18 @@
 /* **************************************************************
 *  Includes
 ****************************************************************/
-#include "../common/compiler.h"
-#include "../common/mem.h"        /* U32, U16, etc. */
-#include "../common/debug.h"      /* assert, DEBUGLOG */
-#include "hist.h"       /* HIST_count_wksp */
-#include "../common/bitstream.h"
+#include "third_party/zstd/lib/common/compiler.h"
+#include "third_party/zstd/lib/common/mem.h"        /* U32, U16, etc. */
+#include "third_party/zstd/lib/common/debug.h"      /* assert, DEBUGLOG */
+#include "third_party/zstd/lib/compress/hist.h"       /* HIST_count_wksp */
+#include "third_party/zstd/lib/common/bitstream.h"
 #define FSE_STATIC_LINKING_ONLY
-#include "../common/fse.h"
-#include "../common/error_private.h"
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/error_private.h"
 #define ZSTD_DEPS_NEED_MALLOC
 #define ZSTD_DEPS_NEED_MATH64
-#include "../common/zstd_deps.h"  /* ZSTD_malloc, ZSTD_free, ZSTD_memcpy, ZSTD_memset */
-#include "../common/bits.h" /* ZSTD_highbit32 */
+#include "third_party/zstd/lib/common/zstd_deps.h"  /* ZSTD_malloc, ZSTD_free, ZSTD_memcpy, ZSTD_memset */
+#include "third_party/zstd/lib/common/bits.h" /* ZSTD_highbit32 */
 
 
 /* **************************************************************

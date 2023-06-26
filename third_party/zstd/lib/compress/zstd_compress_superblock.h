@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,7 +16,7 @@
 *  Dependencies
 ***************************************/
 
-#include "../zstd.h" /* ZSTD_CCtx */
+#include "third_party/zstd/lib/zstd.h" /* ZSTD_CCtx */
 
 /*-*************************************
 *  Target Compressed Block Size

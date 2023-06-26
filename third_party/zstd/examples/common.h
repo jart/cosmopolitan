@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,12 +15,42 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <stdlib.h>    // malloc, free, exit
-#include <stdio.h>     // fprintf, perror, fopen, etc.
-#include <string.h>    // strerror
-#include <errno.h>     // errno
-#include <sys/stat.h>  // stat
-#include <zstd.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"    // malloc, free, exit
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"     // fprintf, perror, fopen, etc.
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"    // strerror
+#include "libc/errno.h"     // errno
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/time/time.h"  // stat
+// MISSING #include <zstd.h>
 
 
 /* UNUSED_ATTR tells the compiler it is okay if the function is unused. */

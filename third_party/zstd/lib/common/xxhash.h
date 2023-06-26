@@ -1,3 +1,4 @@
+// clang-format off
 /*
  *  xxHash - Fast Hash algorithm
  *  Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -84,7 +85,7 @@ extern "C" {
  *
  * Usage:
  *     #define XXH_INLINE_ALL
- *     #include "xxhash.h"
+ *     #include "third_party/zstd/lib/common/xxhash.h"
  *
  * Do not compile and link xxhash.o as a separate object, as it is not useful.
  */
@@ -328,7 +329,7 @@ XXH_PUBLIC_API unsigned XXH_versionNumber (void);
 /* ****************************
 *  Common basic types
 ******************************/
-#include <stddef.h>   /* size_t */
+   /* size_t */
 typedef enum { XXH_OK=0, XXH_ERROR } XXH_errorcode;
 
 
@@ -346,11 +347,18 @@ typedef uint32_t XXH32_hash_t;
 #elif !defined (__VMS) \
   && (defined (__cplusplus) \
   || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */) )
-#   include <stdint.h>
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
     typedef uint32_t XXH32_hash_t;
 
 #else
-#   include <limits.h>
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/iov.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/xopen.h"
+#include "libc/thread/thread.h"
 #   if UINT_MAX == 0xFFFFFFFFUL
       typedef unsigned int XXH32_hash_t;
 #   else
@@ -427,8 +435,14 @@ XXH_PUBLIC_API XXH32_hash_t XXH32 (const void* input, size_t length, XXH32_hash_
  *
  * Example code for incrementally hashing a file:
  * @code{.c}
- *    #include <stdio.h>
- *    #include <xxhash.h>
+ *    #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
+ *    // MISSING #include <xxhash.h>
  *    #define BUFFER_SIZE 256
  *
  *    // Note: XXH64 and XXH3 use the same interface.
@@ -644,10 +658,17 @@ typedef uint64_t XXH64_hash_t;
 #elif !defined (__VMS) \
   && (defined (__cplusplus) \
   || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */) )
-#  include <stdint.h>
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
    typedef uint64_t XXH64_hash_t;
 #else
-#  include <limits.h>
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/iov.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/xopen.h"
+#include "libc/thread/thread.h"
 #  if defined(__LP64__) && ULONG_MAX == 0xFFFFFFFFFFFFFFFFULL
      /* LP64 ABI says uint64_t is unsigned long */
      typedef unsigned long XXH64_hash_t;
@@ -1000,7 +1021,7 @@ struct XXH64_state_s {
 #ifndef XXH_NO_XXH3
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) /* >= C11 */
-#  include <stdalign.h>
+#include "libc/stdalign.internal.h"
 #  define XXH_ALIGN(n)      alignas(n)
 #elif defined(__cplusplus) && (__cplusplus >= 201103L) /* >= C++11 */
 /* In C++ alignas() is a keyword */
@@ -1451,7 +1472,7 @@ XXH3_128bits_reset_withSecretandSeed(XXH3_state_t* statePtr,
 /* Modify the local functions below should you wish to use some other memory routines */
 /* for ZSTD_malloc(), ZSTD_free() */
 #define ZSTD_DEPS_NEED_MALLOC
-#include "zstd_deps.h"  /* size_t, ZSTD_malloc, ZSTD_free, ZSTD_memcpy */
+#include "third_party/zstd/lib/common/zstd_deps.h"  /* size_t, ZSTD_malloc, ZSTD_free, ZSTD_memcpy */
 static void* XXH_malloc(size_t s) { return ZSTD_malloc(s); }
 static void  XXH_free  (void* p)  { ZSTD_free(p); }
 static void* XXH_memcpy(void* dest, const void* src, size_t size) { return ZSTD_memcpy(dest,src,size); }
@@ -1509,7 +1530,7 @@ static void* XXH_memcpy(void* dest, const void* src, size_t size) { return ZSTD_
 #endif
 
 #if (XXH_DEBUGLEVEL>=1)
-#  include <assert.h>   /* note: can still be disabled with NDEBUG */
+#include "libc/assert.h"   /* note: can still be disabled with NDEBUG */
 #  define XXH_ASSERT(c)   assert(c)
 #else
 #  define XXH_ASSERT(c)   ((void)0)
@@ -1518,7 +1539,7 @@ static void* XXH_memcpy(void* dest, const void* src, size_t size) { return ZSTD_
 /* note: use after variable declarations */
 #ifndef XXH_STATIC_ASSERT
 #  if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)    /* C11 */
-#    include <assert.h>
+#include "libc/assert.h"
 #    define XXH_STATIC_ASSERT_WITH_MESSAGE(c,m) do { static_assert((c),m); } while(0)
 #  elif defined(__cplusplus) && (__cplusplus >= 201103L)            /* C++11 */
 #    define XXH_STATIC_ASSERT_WITH_MESSAGE(c,m) do { static_assert((c),m); } while(0)
@@ -1556,7 +1577,9 @@ static void* XXH_memcpy(void* dest, const void* src, size_t size) { return ZSTD_
 #if !defined (__VMS) \
  && (defined (__cplusplus) \
  || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */) )
-# include <stdint.h>
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
   typedef uint8_t xxh_u8;
 #else
   typedef unsigned char xxh_u8;
@@ -2681,17 +2704,17 @@ XXH_PUBLIC_API XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canonical_t* src
    || defined(__aarch64__)  || defined(_M_ARM) \
    || defined(_M_ARM64)     || defined(_M_ARM64EC)
 #    define inline __inline__  /* circumvent a clang bug */
-#    include <arm_neon.h>
+// MISSING #include <arm_neon.h>
 #    undef inline
 #  elif defined(__AVX2__)
-#    include <immintrin.h>
+#include "third_party/intel/immintrin.internal.h"
 #  elif defined(__SSE2__)
-#    include <emmintrin.h>
+#include "third_party/intel/emmintrin.internal.h"
 #  endif
 #endif
 
 #if defined(_MSC_VER)
-#  include <intrin.h>
+// MISSING #include <intrin.h>
 #endif
 
 /*
@@ -3067,7 +3090,7 @@ enum XXH_VECTOR_TYPE /* fake enum */ {
  */
 #if XXH_VECTOR == XXH_VSX
 #  if defined(__s390x__)
-#    include <s390intrin.h>
+// MISSING #include <s390intrin.h>
 #  else
 /* gcc's altivec.h can have the unwanted consequence to unconditionally
  * #define bool, vector, and pixel keywords,
@@ -3080,7 +3103,7 @@ enum XXH_VECTOR_TYPE /* fake enum */ {
 #    if defined(__GNUC__) && !defined(__APPLE_ALTIVEC__)
 #      define __APPLE_ALTIVEC__
 #    endif
-#    include <altivec.h>
+// MISSING #include <altivec.h>
 #  endif
 
 typedef __vector unsigned long long xxh_u64x2;
@@ -3167,7 +3190,7 @@ XXH_FORCE_INLINE xxh_u64x2 XXH_vec_mule(xxh_u32x4 a, xxh_u32x4 b)
 #  define XXH_PREFETCH(ptr)  (void)(ptr)  /* disabled */
 #else
 #  if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86)) && !defined(_M_ARM64EC)  /* _mm_prefetch() not defined outside of x86/x64 */
-#    include <mmintrin.h>   /* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
+#include "third_party/intel/mmintrin.internal.h"   /* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
 #    define XXH_PREFETCH(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T0)
 #  elif defined(__GNUC__) && ( (__GNUC__ >= 4) || ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) )
 #    define XXH_PREFETCH(ptr)  __builtin_prefetch((ptr), 0 /* rw==read */, 3 /* locality */)
@@ -5543,7 +5566,9 @@ XXH_PUBLIC_API XXH128_hash_t XXH3_128bits_digest (const XXH3_state_t* state)
 
 /* 128-bit utility functions */
 
-#include <string.h>   /* memcmp, memcpy */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"   /* memcmp, memcpy */
 
 /* return : 1 is equal, 0 if different */
 /*! @ingroup xxh3_family */

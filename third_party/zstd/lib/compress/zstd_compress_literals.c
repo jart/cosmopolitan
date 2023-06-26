@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,7 +12,7 @@
  /*-*************************************
  *  Dependencies
  ***************************************/
-#include "zstd_compress_literals.h"
+#include "third_party/zstd/lib/compress/zstd_compress_literals.h"
 
 
 /* **************************************************************

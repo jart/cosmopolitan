@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -26,9 +27,9 @@
  */
 
 /* ===   Dependencies   === */
-#include "../common/zstd_deps.h"   /* size_t */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* size_t */
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_parameters */
-#include "../zstd.h"            /* ZSTD_inBuffer, ZSTD_outBuffer, ZSTDLIB_API */
+#include "third_party/zstd/lib/zstd.h"            /* ZSTD_inBuffer, ZSTD_outBuffer, ZSTDLIB_API */
 
 
 /* ===   Constants   === */

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,7 +12,8 @@
 #ifndef ZSTD_BITS_H
 #define ZSTD_BITS_H
 
-#include "mem.h"
+#include "third_party/zstd/lib/common/mem.h"
+#include "libc/assert.h"
 
 MEM_STATIC unsigned ZSTD_countTrailingZeros32_fallback(U32 val)
 {

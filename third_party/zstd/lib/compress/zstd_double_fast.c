@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,8 +9,8 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "zstd_compress_internal.h"
-#include "zstd_double_fast.h"
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"
+#include "third_party/zstd/lib/compress/zstd_double_fast.h"
 
 #ifndef ZSTD_EXCLUDE_DFAST_BLOCK_COMPRESSOR
 

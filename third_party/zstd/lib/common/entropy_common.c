@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * Common functions of New Generation Entropy library
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -15,12 +16,12 @@
 /* *************************************
 *  Dependencies
 ***************************************/
-#include "mem.h"
-#include "error_private.h"       /* ERR_*, ERROR */
+#include "third_party/zstd/lib/common/mem.h"
+#include "third_party/zstd/lib/common/error_private.h"       /* ERR_*, ERROR */
 #define FSE_STATIC_LINKING_ONLY  /* FSE_MIN_TABLELOG */
-#include "fse.h"
-#include "huf.h"
-#include "bits.h"                /* ZSDT_highbit32, ZSTD_countTrailingZeros32 */
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/common/bits.h"                /* ZSDT_highbit32, ZSTD_countTrailingZeros32 */
 
 
 /*===   Version   ===*/

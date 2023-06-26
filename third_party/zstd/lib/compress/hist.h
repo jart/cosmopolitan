@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * hist : Histogram functions
  * part of Finite State Entropy project
@@ -14,7 +15,8 @@
 ****************************************************************** */
 
 /* --- dependencies --- */
-#include "../common/zstd_deps.h"   /* size_t */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* size_t */
+#include "libc/assert.h"
 
 
 /* --- simple histogram functions --- */

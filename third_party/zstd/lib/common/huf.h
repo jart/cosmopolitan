@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * huff0 huffman codec,
  * part of Finite State Entropy library
@@ -20,10 +21,10 @@ extern "C" {
 #define HUF_H_298734234
 
 /* *** Dependencies *** */
-#include "zstd_deps.h"    /* size_t */
-#include "mem.h"          /* U32 */
+#include "third_party/zstd/lib/common/zstd_deps.h"    /* size_t */
+#include "third_party/zstd/lib/common/mem.h"          /* U32 */
 #define FSE_STATIC_LINKING_ONLY
-#include "fse.h"
+#include "third_party/zstd/lib/common/fse.h"
 
 
 /* ***   Tool functions *** */

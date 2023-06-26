@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -11,7 +12,7 @@
 #ifndef ZSTD_COMPILER_H
 #define ZSTD_COMPILER_H
 
-#include "portability_macros.h"
+#include "third_party/zstd/lib/common/portability_macros.h"
 
 /*-*******************************************************
 *  Compiler specifics
@@ -134,7 +135,7 @@
 #  define PREFETCH_L2(ptr)  (void)(ptr)  /* disabled */
 #else
 #  if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_I86)) && !defined(_M_ARM64EC)  /* _mm_prefetch() is not defined outside of x86/x64 */
-#    include <mmintrin.h>   /* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
+#include "third_party/intel/mmintrin.internal.h"   /* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
 #    define PREFETCH_L1(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T0)
 #    define PREFETCH_L2(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T1)
 #  elif defined(__GNUC__) && ( (__GNUC__ >= 4) || ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) )
@@ -194,7 +195,7 @@
 
 /* disable warnings */
 #ifdef _MSC_VER    /* Visual Studio */
-#  include <intrin.h>                    /* For Visual 2005 */
+// MISSING #include <intrin.h>                    /* For Visual 2005 */
 #  pragma warning(disable : 4100)        /* disable: C4100: unreferenced formal parameter */
 #  pragma warning(disable : 4127)        /* disable: C4127: conditional expression is constant */
 #  pragma warning(disable : 4204)        /* disable: C4204: non-constant aggregate initializer */
@@ -227,9 +228,9 @@
 #  endif
 #
 #  if defined(ZSTD_ARCH_X86_SSE2)
-#    include <emmintrin.h>
+#include "third_party/intel/emmintrin.internal.h"
 #  elif defined(ZSTD_ARCH_ARM_NEON)
-#    include <arm_neon.h>
+// MISSING #include <arm_neon.h>
 #  endif
 #endif
 
@@ -288,7 +289,7 @@
 
 # elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 /* C11 support */
-#  include <stdalign.h>
+#include "libc/stdalign.internal.h"
 #  define ZSTD_ALIGNOF(T) alignof(T)
 
 # else
@@ -317,9 +318,9 @@
 /* Not all platforms that support msan provide sanitizers/msan_interface.h.
  * We therefore declare the functions we need ourselves, rather than trying to
  * include the header file... */
-#include <stddef.h>  /* size_t */
+  /* size_t */
 #define ZSTD_DEPS_NEED_STDINT
-#include "zstd_deps.h"  /* intptr_t */
+#include "third_party/zstd/lib/common/zstd_deps.h"  /* intptr_t */
 
 /* Make memory region fully initialized (without changing its contents). */
 void __msan_unpoison(const volatile void *a, size_t size);
@@ -342,7 +343,7 @@ void __msan_print_shadow(const volatile void *x, size_t size);
 /* Not all platforms that support asan provide sanitizers/asan_interface.h.
  * We therefore declare the functions we need ourselves, rather than trying to
  * include the header file... */
-#include <stddef.h>  /* size_t */
+  /* size_t */
 
 /**
  * Marks a memory region (<c>[addr, addr+size)</c>) as unaddressable.

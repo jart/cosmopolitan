@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * Huffman encoder, part of New Generation Entropy library
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -23,15 +24,15 @@
 /* **************************************************************
 *  Includes
 ****************************************************************/
-#include "../common/zstd_deps.h"     /* ZSTD_memcpy, ZSTD_memset */
-#include "../common/compiler.h"
-#include "../common/bitstream.h"
-#include "hist.h"
+#include "third_party/zstd/lib/common/zstd_deps.h"     /* ZSTD_memcpy, ZSTD_memset */
+#include "third_party/zstd/lib/common/compiler.h"
+#include "third_party/zstd/lib/common/bitstream.h"
+#include "third_party/zstd/lib/compress/hist.h"
 #define FSE_STATIC_LINKING_ONLY   /* FSE_optimalTableLog_internal */
-#include "../common/fse.h"        /* header compression */
-#include "../common/huf.h"
-#include "../common/error_private.h"
-#include "../common/bits.h"       /* ZSTD_highbit32 */
+#include "third_party/zstd/lib/common/fse.h"        /* header compression */
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/common/error_private.h"
+#include "third_party/zstd/lib/common/bits.h"       /* ZSTD_highbit32 */
 
 
 /* **************************************************************

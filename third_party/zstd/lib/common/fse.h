@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * FSE : Finite State Entropy codec
  * Public Prototypes declaration
@@ -23,7 +24,7 @@ extern "C" {
 /*-*****************************************
 *  Dependencies
 ******************************************/
-#include "zstd_deps.h"    /* size_t, ptrdiff_t */
+#include "third_party/zstd/lib/common/zstd_deps.h"    /* size_t, ptrdiff_t */
 
 
 /*-*****************************************
@@ -233,7 +234,7 @@ If there is an error, the function will return an error code, which can be teste
 #define FSE_H_FSE_STATIC_LINKING_ONLY
 
 /* *** Dependency *** */
-#include "bitstream.h"
+#include "third_party/zstd/lib/common/bitstream.h"
 
 
 /* *****************************************

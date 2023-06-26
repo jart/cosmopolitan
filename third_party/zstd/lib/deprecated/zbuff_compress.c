@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,8 +15,8 @@
 *  Dependencies
 ***************************************/
 #define ZBUFF_STATIC_LINKING_ONLY
-#include "zbuff.h"
-#include "../common/error_private.h"
+#include "third_party/zstd/lib/deprecated/zbuff.h"
+#include "third_party/zstd/lib/common/error_private.h"
 
 
 /*-***********************************************************

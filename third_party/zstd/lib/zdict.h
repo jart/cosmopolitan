@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -16,7 +17,7 @@ extern "C" {
 #define ZSTD_ZDICT_H
 
 /*======  Dependencies  ======*/
-#include <stddef.h>  /* size_t */
+  /* size_t */
 
 
 /* =====   ZDICTLIB_API : control library symbols visibility   ===== */

@@ -1,3 +1,4 @@
+// clang-format off
 cxx_binary(
     name='zstd',
     headers=glob(['*.h'], excludes=['datagen.h', 'platform.h', 'util.h']),

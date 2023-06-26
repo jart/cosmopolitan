@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * divsufsort.h for libdivsufsort-lite
  * Copyright (c) 2003-2008 Yuta Mori All Rights Reserved.

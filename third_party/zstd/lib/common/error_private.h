@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -21,10 +22,10 @@ extern "C" {
 /* ****************************************
 *  Dependencies
 ******************************************/
-#include "../zstd_errors.h"  /* enum list */
-#include "compiler.h"
-#include "debug.h"
-#include "zstd_deps.h"       /* size_t */
+#include "third_party/zstd/lib/zstd_errors.h"  /* enum list */
+#include "third_party/zstd/lib/common/compiler.h"
+#include "third_party/zstd/lib/common/debug.h"
+#include "third_party/zstd/lib/common/zstd_deps.h"       /* size_t */
 
 
 /* ****************************************

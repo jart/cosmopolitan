@@ -1,3 +1,4 @@
+// clang-format off
 # ZSTD Windows binary package
 
 ## The package contents

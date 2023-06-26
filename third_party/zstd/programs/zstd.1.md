@@ -1,3 +1,4 @@
+// clang-format off
 zstd(1) -- zstd, zstdmt, unzstd, zstdcat - Compress or decompress .zst files
 ============================================================================
 

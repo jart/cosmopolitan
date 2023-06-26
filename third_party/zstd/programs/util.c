@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -16,33 +17,96 @@ extern "C" {
 /*-****************************************
 *  Dependencies
 ******************************************/
-#include "util.h"       /* note : ensure that platform.h is included first ! */
-#include <stdlib.h>     /* malloc, realloc, free */
-#include <stdio.h>      /* fprintf */
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC, nanosleep */
-#include <errno.h>
-#include <assert.h>
+#include "third_party/zstd/programs/util.h"       /* note : ensure that platform.h is included first ! */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"     /* malloc, realloc, free */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"      /* fprintf */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"       /* clock_t, clock, CLOCKS_PER_SEC, nanosleep */
+#include "libc/errno.h"
+#include "libc/assert.h"
 
 #if defined(_WIN32)
-#  include <sys/utime.h>  /* utime */
-#  include <io.h>         /* _chmod */
+// MISSING #include <sys/utime.h>  /* utime */
+// MISSING #include <io.h>         /* _chmod */
 #else
-#  include <unistd.h>     /* chown, stat */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h"     /* chown, stat */
 #  if PLATFORM_POSIX_VERSION < 200809L || !defined(st_mtime)
-#    include <utime.h>    /* utime */
+#include "libc/time/struct/utimbuf.h"
+#include "libc/time/time.h"    /* utime */
 #  else
-#    include <fcntl.h>    /* AT_FDCWD */
-#    include <sys/stat.h> /* utimensat */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/splice.h"    /* AT_FDCWD */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/time/time.h" /* utimensat */
 #  endif
 #endif
 
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined (__MSVCRT__)
-#include <direct.h>     /* needed for _mkdir in windows */
+// MISSING #include <direct.h>     /* needed for _mkdir in windows */
 #endif
 
 #if defined(__linux__) || (PLATFORM_POSIX_VERSION >= 200112L)  /* opendir, readdir require POSIX.1-2001 */
-#  include <dirent.h>       /* opendir, readdir */
-#  include <string.h>       /* strerror, memcpy */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/dt.h"       /* opendir, readdir */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"       /* strerror, memcpy */
 #endif /* #ifdef _WIN32 */
 
 /*-****************************************
@@ -1352,7 +1416,25 @@ FileNamesTable* UTIL_createFNT_fromROTable(const char** filenames, size_t nbFile
 
 #if defined(_WIN32) || defined(WIN32)
 
-#include <windows.h>
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
 
 typedef BOOL(WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 
@@ -1448,7 +1530,7 @@ failed:
 
 #elif defined(__APPLE__)
 
-#include <sys/sysctl.h>
+// MISSING #include <sys/sysctl.h>
 
 /* Use apple-provided syscall
  * see: man 3 sysctl */
@@ -1546,8 +1628,19 @@ failed:
 
 #elif defined(__FreeBSD__)
 
-#include <sys/param.h>
-#include <sys/sysctl.h>
+#include "libc/intrin/newbie.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/sysparam.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/endian.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h"
+// MISSING #include <sys/sysctl.h>
 
 /* Use physical core sysctl when available
  * see: man 4 smp, man 3 sysctl */

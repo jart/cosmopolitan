@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,9 +15,9 @@
 /*-*************************************
 *  Dependencies
 ***************************************/
-#include "../common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customFree */
-#include "../common/zstd_internal.h"
-#include "../common/portability_macros.h"
+#include "third_party/zstd/lib/common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customFree */
+#include "third_party/zstd/lib/common/zstd_internal.h"
+#include "third_party/zstd/lib/common/portability_macros.h"
 
 #if defined (__cplusplus)
 extern "C" {

@@ -1,3 +1,4 @@
+// clang-format off
 @ECHO OFF
 MKDIR bin\dll bin\static bin\example bin\include
 COPY tests\fullbench.c bin\example\

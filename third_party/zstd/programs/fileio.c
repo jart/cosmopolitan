@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -23,51 +24,109 @@
 /*-*************************************
 *  Includes
 ***************************************/
-#include "platform.h"   /* Large Files support, SET_BINARY_MODE */
-#include "util.h"       /* UTIL_getFileSize, UTIL_isRegularFile, UTIL_isSameFile */
-#include <stdio.h>      /* fprintf, open, fdopen, fread, _fileno, stdin, stdout */
-#include <stdlib.h>     /* malloc, free */
-#include <string.h>     /* strcmp, strlen */
-#include <time.h>       /* clock_t, to measure process time */
-#include <fcntl.h>      /* O_WRONLY */
-#include <assert.h>
-#include <errno.h>      /* errno */
-#include <limits.h>     /* INT_MAX */
-#include <signal.h>
-#include "timefn.h"     /* UTIL_getTime, UTIL_clockSpanMicro */
+#include "third_party/zstd/programs/platform.h"   /* Large Files support, SET_BINARY_MODE */
+#include "third_party/zstd/programs/util.h"       /* UTIL_getFileSize, UTIL_isRegularFile, UTIL_isSameFile */
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"      /* fprintf, open, fdopen, fread, _fileno, stdin, stdout */
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"     /* malloc, free */
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"     /* strcmp, strlen */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"       /* clock_t, to measure process time */
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/splice.h"      /* O_WRONLY */
+#include "libc/assert.h"
+#include "libc/errno.h"      /* errno */
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/iov.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/xopen.h"
+#include "libc/thread/thread.h"     /* INT_MAX */
+#include "libc/calls/calls.h"
+#include "libc/calls/sigtimedwait.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/ss.h"
+#include "third_party/zstd/programs/timefn.h"     /* UTIL_getTime, UTIL_clockSpanMicro */
 
 #if defined (_MSC_VER)
-#  include <sys/stat.h>
-#  include <io.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/time/time.h"
+// MISSING #include <io.h>
 #endif
 
-#include "fileio.h"
-#include "fileio_asyncio.h"
-#include "fileio_common.h"
+#include "third_party/zstd/programs/fileio.h"
+#include "third_party/zstd/programs/fileio_asyncio.h"
+#include "third_party/zstd/programs/fileio_common.h"
 
 FIO_display_prefs_t g_display_prefs = {2, FIO_ps_auto};
 UTIL_time_t g_displayClock = UTIL_TIME_INITIALIZER;
 
 #define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_magicNumber, ZSTD_frameHeaderSize_max */
-#include "../lib/zstd.h"
-#include "../lib/zstd_errors.h"  /* ZSTD_error_frameParameter_windowTooLarge */
+#include "third_party/zstd/lib/zstd.h"
+#include "third_party/zstd/lib/zstd_errors.h"  /* ZSTD_error_frameParameter_windowTooLarge */
 
 #if defined(ZSTD_GZCOMPRESS) || defined(ZSTD_GZDECOMPRESS)
-#  include <zlib.h>
+// MISSING #include <zlib.h>
 #  if !defined(z_const)
 #    define z_const
 #  endif
 #endif
 
 #if defined(ZSTD_LZMACOMPRESS) || defined(ZSTD_LZMADECOMPRESS)
-#  include <lzma.h>
+// MISSING #include <lzma.h>
 #endif
 
 #define LZ4_MAGICNUMBER 0x184D2204
 #if defined(ZSTD_LZ4COMPRESS) || defined(ZSTD_LZ4DECOMPRESS)
 #  define LZ4F_ENABLE_OBSOLETE_ENUMS
-#  include <lz4frame.h>
-#  include <lz4.h>
+// MISSING #include <lz4frame.h>
+// MISSING #include <lz4.h>
 #endif
 
 char const* FIO_zlibVersion(void)
@@ -185,7 +244,7 @@ static void clearHandler(void)
 
 #if BACKTRACE_ENABLE
 
-#include <execinfo.h>   /* backtrace, backtrace_symbols */
+// MISSING #include <execinfo.h>   /* backtrace, backtrace_symbols */
 
 #define MAX_STACK_FRAMES    50
 
@@ -740,7 +799,17 @@ static size_t FIO_setDictBufferMalloc(FIO_Dict_t* dict, const char* fileName, FI
 }
 
 #if (PLATFORM_POSIX_VERSION > 0)
-#include <sys/mman.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mlock.h"
+#include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/madv.h"
+#include "libc/sysv/consts/mfd.h"
+#include "libc/sysv/consts/mremap.h"
 static void FIO_munmap(FIO_Dict_t* dict)
 {
     munmap(dict->dictBuffer, dict->dictBufferSize);
@@ -782,7 +851,25 @@ static size_t FIO_setDictBufferMMap(FIO_Dict_t* dict, const char* fileName, FIO_
     return (size_t)fileSize;
 }
 #elif defined(_MSC_VER) || defined(_WIN32)
-#include <windows.h>
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
 static void FIO_munmap(FIO_Dict_t* dict)
 {
     UnmapViewOfFile(dict->dictBuffer);

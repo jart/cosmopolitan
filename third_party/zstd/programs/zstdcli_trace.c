@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,22 +9,44 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "zstdcli_trace.h"
+#include "third_party/zstd/programs/zstdcli_trace.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "libc/calls/calls.h"
+#include "libc/assert.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"
 
-#include "timefn.h"
-#include "util.h"
+#include "third_party/zstd/programs/timefn.h"
+#include "third_party/zstd/programs/util.h"
 
 #define ZSTD_STATIC_LINKING_ONLY
-#include "../lib/zstd.h"
+#include "third_party/zstd/lib/zstd.h"
 /* We depend on the trace header to avoid duplicating the ZSTD_trace struct.
  * But, we check the version so it is compatible with dynamic linking.
  */
-#include "../lib/common/zstd_trace.h"
+#include "third_party/zstd/lib/common/zstd_trace.h"
 /* We only use macros from threading.h so it is compatible with dynamic linking */
-#include "../lib/common/threading.h"
+#include "third_party/zstd/lib/common/threading.h"
 
 #if ZSTD_TRACE
 

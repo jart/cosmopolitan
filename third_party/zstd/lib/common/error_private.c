@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -10,7 +11,7 @@
 
 /* The purpose of this file is to have a single list of error strings embedded in binary */
 
-#include "error_private.h"
+#include "third_party/zstd/lib/common/error_private.h"
 
 const char* ERR_getErrorString(ERR_enum code)
 {

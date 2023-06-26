@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,8 +9,8 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "zstd_compress_internal.h"  /* ZSTD_hashPtr, ZSTD_count, ZSTD_storeSeq */
-#include "zstd_fast.h"
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"  /* ZSTD_hashPtr, ZSTD_count, ZSTD_storeSeq */
+#include "third_party/zstd/lib/compress/zstd_fast.h"
 
 static void ZSTD_fillHashTableForCDict(ZSTD_matchState_t* ms,
                         const void* const end,

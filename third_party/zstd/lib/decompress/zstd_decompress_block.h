@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,10 +16,10 @@
 /*-*******************************************************
  *  Dependencies
  *********************************************************/
-#include "../common/zstd_deps.h"   /* size_t */
-#include "../zstd.h"    /* DCtx, and some public functions */
-#include "../common/zstd_internal.h"  /* blockProperties_t, and some public functions */
-#include "zstd_decompress_internal.h"  /* ZSTD_seqSymbol */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* size_t */
+#include "third_party/zstd/lib/zstd.h"    /* DCtx, and some public functions */
+#include "third_party/zstd/lib/common/zstd_internal.h"  /* blockProperties_t, and some public functions */
+#include "third_party/zstd/lib/decompress/zstd_decompress_internal.h"  /* ZSTD_seqSymbol */
 
 
 /* ===   Prototypes   === */

@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -12,11 +13,11 @@
  */
 
 #define ZSTD_DEPS_NEED_MALLOC
-#include "zstd_deps.h"   /* ZSTD_malloc, ZSTD_calloc, ZSTD_free, ZSTD_memset */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* ZSTD_malloc, ZSTD_calloc, ZSTD_free, ZSTD_memset */
 
-#include "compiler.h" /* MEM_STATIC */
+#include "third_party/zstd/lib/common/compiler.h" /* MEM_STATIC */
 #define ZSTD_STATIC_LINKING_ONLY
-#include "../zstd.h" /* ZSTD_customMem */
+#include "third_party/zstd/lib/zstd.h" /* ZSTD_customMem */
 
 #ifndef ZSTD_ALLOCATIONS_H
 #define ZSTD_ALLOCATIONS_H

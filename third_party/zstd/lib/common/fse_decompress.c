@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * FSE : Finite State Entropy decoder
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -16,15 +17,15 @@
 /* **************************************************************
 *  Includes
 ****************************************************************/
-#include "debug.h"      /* assert */
-#include "bitstream.h"
-#include "compiler.h"
+#include "third_party/zstd/lib/common/debug.h"      /* assert */
+#include "third_party/zstd/lib/common/bitstream.h"
+#include "third_party/zstd/lib/common/compiler.h"
 #define FSE_STATIC_LINKING_ONLY
-#include "fse.h"
-#include "error_private.h"
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/error_private.h"
 #define ZSTD_DEPS_NEED_MALLOC
-#include "zstd_deps.h"
-#include "bits.h"       /* ZSTD_highbit32 */
+#include "third_party/zstd/lib/common/zstd_deps.h"
+#include "third_party/zstd/lib/common/bits.h"       /* ZSTD_highbit32 */
 
 
 /* **************************************************************

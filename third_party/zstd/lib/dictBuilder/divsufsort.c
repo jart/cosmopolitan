@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * divsufsort.c for libdivsufsort-lite
  * Copyright (c) 2003-2008 Yuta Mori All Rights Reserved.
@@ -36,11 +37,32 @@
 
 
 /*- Dependencies -*/
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"
 
-#include "divsufsort.h"
+#include "third_party/zstd/lib/dictBuilder/divsufsort.h"
 
 /*- Constants -*/
 #if defined(INLINE)

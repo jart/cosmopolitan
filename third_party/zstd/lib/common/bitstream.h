@@ -1,3 +1,4 @@
+// clang-format off
 /* ******************************************************************
  * bitstream
  * Part of FSE library
@@ -26,11 +27,11 @@ extern "C" {
 /*-****************************************
 *  Dependencies
 ******************************************/
-#include "mem.h"            /* unaligned access routines */
-#include "compiler.h"       /* UNLIKELY() */
-#include "debug.h"          /* assert(), DEBUGLOG(), RAWLOG() */
-#include "error_private.h"  /* error codes and messages */
-#include "bits.h"           /* ZSTD_highbit32 */
+#include "third_party/zstd/lib/common/mem.h"            /* unaligned access routines */
+#include "third_party/zstd/lib/common/compiler.h"       /* UNLIKELY() */
+#include "third_party/zstd/lib/common/debug.h"          /* assert(), DEBUGLOG(), RAWLOG() */
+#include "third_party/zstd/lib/common/error_private.h"  /* error codes and messages */
+#include "third_party/zstd/lib/common/bits.h"           /* ZSTD_highbit32 */
 
 
 /*=========================================
@@ -38,9 +39,9 @@ extern "C" {
 =========================================*/
 #ifndef ZSTD_NO_INTRINSICS
 #  if (defined(__BMI__) || defined(__BMI2__)) && defined(__GNUC__)
-#    include <immintrin.h>   /* support for bextr (experimental)/bzhi */
+#include "third_party/intel/immintrin.internal.h"   /* support for bextr (experimental)/bzhi */
 #  elif defined(__ICCARM__)
-#    include <intrinsics.h>
+// MISSING #include <intrinsics.h>
 #  endif
 #endif
 

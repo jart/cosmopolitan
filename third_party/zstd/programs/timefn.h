@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -23,9 +24,14 @@ extern "C" {
 
 #if !defined (__VMS) && (defined (__cplusplus) || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 */) )
 # if defined(_AIX)
-#  include <inttypes.h>
+#include "libc/fmt/conv.h"
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
 # else
-#  include <stdint.h> /* uint64_t */
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h" /* uint64_t */
 # endif
   typedef uint64_t           PTime;  /* Precise Time */
 #else

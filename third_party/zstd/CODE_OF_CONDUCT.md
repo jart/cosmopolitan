@@ -1,3 +1,4 @@
+// clang-format off
 # Code of Conduct
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to.

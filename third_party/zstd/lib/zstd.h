@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -15,8 +16,13 @@ extern "C" {
 #define ZSTD_H_235446
 
 /* ======   Dependencies   ======*/
-#include <limits.h>   /* INT_MAX */
-#include <stddef.h>   /* size_t */
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/iov.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/xopen.h"
+#include "libc/thread/thread.h"   /* INT_MAX */
+   /* size_t */
 
 
 /* =====   ZSTDLIB_API : control library symbols visibility   ===== */

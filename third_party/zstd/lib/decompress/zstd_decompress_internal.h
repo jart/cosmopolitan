@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -19,8 +20,8 @@
 /*-*******************************************************
  *  Dependencies
  *********************************************************/
-#include "../common/mem.h"             /* BYTE, U16, U32 */
-#include "../common/zstd_internal.h"   /* constants : MaxLL, MaxML, MaxOff, LLFSELog, etc. */
+#include "third_party/zstd/lib/common/mem.h"             /* BYTE, U16, U32 */
+#include "third_party/zstd/lib/common/zstd_internal.h"   /* constants : MaxLL, MaxML, MaxOff, LLFSELog, etc. */
 
 
 

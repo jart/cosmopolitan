@@ -1,9 +1,0 @@
-
-# build artifacts
-zstddeclib.c
-zstdenclib.c
-zstd.c
-zstd.h
-
-# test artifacts
-temp*

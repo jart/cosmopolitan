@@ -1,3 +1,4 @@
+// clang-format off
 zstdless(1) -- view zstandard-compressed files
 ============================================================================
 

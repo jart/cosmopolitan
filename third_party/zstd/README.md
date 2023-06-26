@@ -1,3 +1,4 @@
+// clang-format off
 <p align="center"><img src="https://raw.githubusercontent.com/facebook/zstd/dev/doc/images/zstd_logo86.png" alt="Zstandard"></p>
 
 __Zstandard__, or `zstd` as short version, is a fast lossless compression algorithm,

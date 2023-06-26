@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -18,12 +19,12 @@
 /*-*************************************
 *  Dependencies
 ***************************************/
-#include "../common/zstd_internal.h"
-#include "zstd_cwksp.h"
+#include "third_party/zstd/lib/common/zstd_internal.h"
+#include "third_party/zstd/lib/compress/zstd_cwksp.h"
 #ifdef ZSTD_MULTITHREAD
-#  include "zstdmt_compress.h"
+#include "third_party/zstd/lib/compress/zstdmt_compress.h"
 #endif
-#include "../common/bits.h" /* ZSTD_highbit32, ZSTD_NbCommonBytes */
+#include "third_party/zstd/lib/common/bits.h" /* ZSTD_highbit32, ZSTD_NbCommonBytes */
 
 #if defined (__cplusplus)
 extern "C" {

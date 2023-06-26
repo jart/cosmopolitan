@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,9 +15,9 @@
 *  Dependencies
 ***************************************/
 #define ZSTD_DISABLE_DEPRECATE_WARNINGS  /* suppress warning on ZSTD_initDStream_usingDict */
-#include "../zstd.h"        /* ZSTD_CStream, ZSTD_DStream, ZSTDLIB_API */
+#include "third_party/zstd/lib/zstd.h"        /* ZSTD_CStream, ZSTD_DStream, ZSTDLIB_API */
 #define ZBUFF_STATIC_LINKING_ONLY
-#include "zbuff.h"
+#include "third_party/zstd/lib/deprecated/zbuff.h"
 
 
 ZBUFF_DCtx* ZBUFF_createDCtx(void)

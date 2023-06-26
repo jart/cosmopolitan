@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -19,22 +20,22 @@
 /*-*************************************
 *  Dependencies
 ***************************************/
-#include "compiler.h"
-#include "cpu.h"
-#include "mem.h"
-#include "debug.h"                 /* assert, DEBUGLOG, RAWLOG, g_debuglevel */
-#include "error_private.h"
+#include "third_party/zstd/lib/common/compiler.h"
+#include "third_party/zstd/lib/common/cpu.h"
+#include "third_party/zstd/lib/common/mem.h"
+#include "third_party/zstd/lib/common/debug.h"                 /* assert, DEBUGLOG, RAWLOG, g_debuglevel */
+#include "third_party/zstd/lib/common/error_private.h"
 #define ZSTD_STATIC_LINKING_ONLY
-#include "../zstd.h"
+#include "third_party/zstd/lib/zstd.h"
 #define FSE_STATIC_LINKING_ONLY
-#include "fse.h"
-#include "huf.h"
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/huf.h"
 #ifndef XXH_STATIC_LINKING_ONLY
 #  define XXH_STATIC_LINKING_ONLY  /* XXH64_state_t */
 #endif
-#include "xxhash.h"                /* XXH_reset, update, digest */
+#include "third_party/zstd/lib/common/xxhash.h"                /* XXH_reset, update, digest */
 #ifndef ZSTD_NO_TRACE
-#  include "zstd_trace.h"
+#include "third_party/zstd/lib/common/zstd_trace.h"
 #else
 #  define ZSTD_TRACE 0
 #endif

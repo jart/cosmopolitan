@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -16,10 +17,10 @@
  * https://github.com/facebook/folly/blob/master/folly/CpuId.h
  */
 
-#include "mem.h"
+#include "third_party/zstd/lib/common/mem.h"
 
 #ifdef _MSC_VER
-#include <intrin.h>
+// MISSING #include <intrin.h>
 #endif
 
 typedef struct {

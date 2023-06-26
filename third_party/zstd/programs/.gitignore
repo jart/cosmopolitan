@@ -1,3 +1,4 @@
+// clang-format off
 # local binary (Makefile)
 zstd
 zstd32

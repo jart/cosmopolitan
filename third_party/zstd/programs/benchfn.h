@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -23,7 +24,7 @@ extern "C" {
 #define BENCH_FN_H_23876
 
 /* ===  Dependencies  === */
-#include <stddef.h>   /* size_t */
+   /* size_t */
 
 
 /* ====  Benchmark any function, iterated on a set of blocks  ==== */

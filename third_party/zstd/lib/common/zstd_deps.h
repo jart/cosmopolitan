@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -24,9 +25,16 @@
 #ifndef ZSTD_DEPS_COMMON
 #define ZSTD_DEPS_COMMON
 
-#include <limits.h>
-#include <stddef.h>
-#include <string.h>
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/iov.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/xopen.h"
+#include "libc/thread/thread.h"
+
+#include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 #if defined(__GNUC__) && __GNUC__ >= 4
 # define ZSTD_memcpy(d,s,l) __builtin_memcpy((d),(s),(l))
@@ -49,7 +57,22 @@
 #ifndef ZSTD_DEPS_MALLOC
 #define ZSTD_DEPS_MALLOC
 
-#include <stdlib.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"
 
 #define ZSTD_malloc(s) malloc(s)
 #define ZSTD_calloc(n,s) calloc((n), (s))
@@ -79,7 +102,7 @@
 #ifndef ZSTD_DEPS_ASSERT
 #define ZSTD_DEPS_ASSERT
 
-#include <assert.h>
+#include "libc/assert.h"
 
 #endif /* ZSTD_DEPS_ASSERT */
 #endif /* ZSTD_DEPS_NEED_ASSERT */
@@ -91,7 +114,13 @@
 #ifndef ZSTD_DEPS_IO
 #define ZSTD_DEPS_IO
 
-#include <stdio.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/dprintf.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
 #define ZSTD_DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
 
 #endif /* ZSTD_DEPS_IO */
@@ -105,7 +134,9 @@
 #ifndef ZSTD_DEPS_STDINT
 #define ZSTD_DEPS_STDINT
 
-#include <stdint.h>
+#include "libc/inttypes.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
 
 #endif /* ZSTD_DEPS_STDINT */
 #endif /* ZSTD_DEPS_NEED_STDINT */

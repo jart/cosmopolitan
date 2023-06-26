@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -14,18 +15,18 @@
 /*-*******************************************************
 *  Dependencies
 *********************************************************/
-#include "../common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customFree */
-#include "../common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memmove, ZSTD_memset */
-#include "../common/cpu.h"         /* bmi2 */
-#include "../common/mem.h"         /* low level memory routines */
+#include "third_party/zstd/lib/common/allocations.h"  /* ZSTD_customMalloc, ZSTD_customFree */
+#include "third_party/zstd/lib/common/zstd_deps.h"   /* ZSTD_memcpy, ZSTD_memmove, ZSTD_memset */
+#include "third_party/zstd/lib/common/cpu.h"         /* bmi2 */
+#include "third_party/zstd/lib/common/mem.h"         /* low level memory routines */
 #define FSE_STATIC_LINKING_ONLY
-#include "../common/fse.h"
-#include "../common/huf.h"
-#include "zstd_decompress_internal.h"
-#include "zstd_ddict.h"
+#include "third_party/zstd/lib/common/fse.h"
+#include "third_party/zstd/lib/common/huf.h"
+#include "third_party/zstd/lib/decompress/zstd_decompress_internal.h"
+#include "third_party/zstd/lib/decompress/zstd_ddict.h"
 
 #if defined(ZSTD_LEGACY_SUPPORT) && (ZSTD_LEGACY_SUPPORT>=1)
-#  include "../legacy/zstd_legacy.h"
+#include "third_party/zstd/lib/legacy/zstd_legacy.h"
 #endif
 
 

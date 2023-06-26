@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
@@ -8,9 +9,9 @@
  * You may select, at your option, one of the above-listed licenses.
  */
 
-#include "zstd_compress_internal.h"
-#include "hist.h"
-#include "zstd_opt.h"
+#include "third_party/zstd/lib/compress/zstd_compress_internal.h"
+#include "third_party/zstd/lib/compress/hist.h"
+#include "third_party/zstd/lib/compress/zstd_opt.h"
 
 #if !defined(ZSTD_EXCLUDE_BTLAZY2_BLOCK_COMPRESSOR) \
  || !defined(ZSTD_EXCLUDE_BTOPT_BLOCK_COMPRESSOR) \
