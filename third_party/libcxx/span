@@ -1,5 +1,8 @@
 // -*- C++ -*-
+<<<<<<< HEAD
 // clang-format off
+=======
+>>>>>>> 80151924e (wip)
 //===------------------------------ span ---------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -130,10 +133,17 @@ template<class Container>
 */
 
 #include "third_party/libcxx/__config"
+<<<<<<< HEAD
 #include "third_party/libcxx/iterator"     // for iterators
 #include "third_party/libcxx/array"        // for array
 #include "third_party/libcxx/type_traits"  // for remove_cv, etc
 #include "third_party/libcxx/cstddef"      // for byte
+=======
+#include "third_party/libcxx/cstddef"      // for ptrdiff_t
+#include "third_party/libcxx/iterator"     // for iterators
+#include "third_party/libcxx/array"        // for array
+#include "third_party/libcxx/type_traits"  // for remove_cv, etc
+>>>>>>> 80151924e (wip)
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -588,4 +598,8 @@ template<class _Container>
 
 _LIBCPP_END_NAMESPACE_STD
 
+<<<<<<< HEAD
 #endif // _LIBCPP_SPAN
+=======
+#endif // _LIBCPP_SPAN
+>>>>>>> 80151924e (wip)

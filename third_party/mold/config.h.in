@@ -1,0 +1,4 @@
+// clang-format off
+#define MOLD_VERSION "@mold_VERSION@"
+#define MOLD_LIBDIR "@CMAKE_INSTALL_FULL_LIBDIR@"
+#cmakedefine01 MOLD_IS_SOLD
