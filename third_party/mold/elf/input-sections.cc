@@ -2,8 +2,8 @@
 #include "third_party/mold/elf/mold.h"
 
 #include "third_party/libcxx/limits"
-// MISSING #include <zlib.h>
-// MISSING #include <zstd.h>
+#include "third_party/zlib/zlib.h"
+#include "third_party/zstd/zstd.h"
 
 namespace mold::elf {
 

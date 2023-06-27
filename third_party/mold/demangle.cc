@@ -19,9 +19,9 @@ std::string_view demangle(std::string_view name) {
   // Try to demangle as a Rust symbol. Since legacy-style Rust symbols
   // are also valid as a C++ mangled name, we need to call this before
   // cpp_demangle.
-  p = rust_demangle(std::string(name).c_str(), 0);
-  if (p)
-    return p;
+  // p = rust_demangle(std::string(name).c_str(), 0);
+  // if (p)
+    // return p;
 
   // Try to demangle as a C++ symbol.
   if (std::optional<std::string_view> s = cpp_demangle(name))

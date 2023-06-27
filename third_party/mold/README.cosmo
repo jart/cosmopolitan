@@ -16,3 +16,9 @@ SOURCE
   Date:   Mon Jun 19 12:35:20 2023 +0900
 
       Format
+
+CHANGES
+  * removed tbb by including a fake implementation
+  * made the parallel_for effectively single-threaded
+  * changed tbb:enumerable_thread_specific to thread_local
+  * removed rust demangle support

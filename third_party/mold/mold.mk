@@ -3,8 +3,6 @@
 
 PKGS += THIRD_PARTY_MOLD
 
-private CPPFLAGS += -std=c++20
-
 THIRD_PARTY_MOLD_ARTIFACTS += THIRD_PARTY_MOLD_A
 THIRD_PARTY_MOLD = $(THIRD_PARTY_MOLD_A_DEPS) $(THIRD_PARTY_MOLD_A)
 THIRD_PARTY_MOLD_A = o/$(MODE)/third_party/mold/mold.a
@@ -15,7 +13,9 @@ THIRD_PARTY_MOLD_OBJS = $(THIRD_PARTY_MOLD_SRCS:%.cc=o/$(MODE)/%.o)
 
 THIRD_PARTY_MOLD_A_DIRECTDEPS =				\
 	THIRD_PARTY_LIBCXX					\
-	THIRD_PARTY_XXHASH
+	THIRD_PARTY_ZSTD					\
+	THIRD_PARTY_XXHASH					\
+	THIRD_PARTY_ZLIB
 
 THIRD_PARTY_MOLD_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_MOLD_A_DIRECTDEPS),$($(x))))
@@ -42,6 +42,10 @@ $(THIRD_PARTY_MOLD_A):					\
 $(THIRD_PARTY_MOLD_A).pkg:				\
 		$(THIRD_PARTY_MOLD_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_MOLD_A_DIRECTDEPS),$($(x)_A).pkg)
+
+$(THIRD_PARTY_MOLD_A_OBJS): private			\
+		CPPFLAGS +=				\
+			-std=c++20
 
 o/$(MODE)/third_party/mold/mold.com.dbg:				\
 		$(THIRD_PARTY_MOLD)				\

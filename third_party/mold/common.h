@@ -10,6 +10,7 @@
 #include "third_party/libcxx/cassert"
 #include "third_party/libcxx/cstdio"
 #include "third_party/libcxx/cstring"
+#include "third_party/libcxx/unordered_map"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/weirdtypes.h"
@@ -44,8 +45,6 @@
 #include "libc/intrin/newbie.h"
 #include "libc/sock/select.h"
 #include "libc/sysv/consts/endian.h"
-// MISSING #include <tbb/concurrent_vector.h>
-// MISSING #include <tbb/enumerable_thread_specific.h>
 #include "third_party/libcxx/vector"
 
 #ifdef _WIN32
@@ -758,21 +757,22 @@ private:
 // Counter is used to collect statistics numbers.
 class Counter {
 public:
-  Counter(std::string_view name, i64 value = 0) : name(name), values(value) {
+  Counter(std::string_view name, i64 value = 0) : name(name) {
     static std::mutex mu;
     std::scoped_lock lock(mu);
     instances.push_back(this);
+    values[this] = value;
   }
 
   Counter &operator++(int) {
     if (enabled) [[unlikely]]
-      values.local()++;
+      values[this]++;
     return *this;
   }
 
   Counter &operator+=(int delta) {
     if (enabled) [[unlikely]]
-      values.local() += delta;
+      values[this] += delta;
     return *this;
   }
 
@@ -784,7 +784,7 @@ private:
   i64 get_value();
 
   std::string_view name;
-  tbb::enumerable_thread_specific<i64> values;
+  static thread_local std::unordered_map<Counter*, i64> values;
 
   static inline std::vector<Counter *> instances;
 };
@@ -797,7 +797,7 @@ struct TimerRecord {
 
   std::string name;
   TimerRecord *parent;
-  tbb::concurrent_vector<TimerRecord *> children;
+  std::vector<TimerRecord *> children;
   i64 start;
   i64 end;
   i64 user;
@@ -806,7 +806,7 @@ struct TimerRecord {
 };
 
 void
-print_timer_records(tbb::concurrent_vector<std::unique_ptr<TimerRecord>> &);
+print_timer_records(std::vector<std::unique_ptr<TimerRecord>> &);
 
 template <typename Context>
 class Timer {

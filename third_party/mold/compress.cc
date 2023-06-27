@@ -17,9 +17,9 @@
 
 #include "third_party/mold/common.h"
 
-// MISSING #include <tbb/parallel_for_each.h>
-// MISSING #include <zlib.h>
-// MISSING #include <zstd.h>
+#include "third_party/mold/fake_tbb.h"
+#include "third_party/zlib/zlib.h"
+#include "third_party/zstd/zstd.h"
 
 #define CHECK(fn)                               \
   do {                                          \
