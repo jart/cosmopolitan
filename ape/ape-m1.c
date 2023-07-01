@@ -59,7 +59,7 @@ struct Syslib {
 
 #define TROUBLESHOOT 0
 
-#define ELFCLASS64  2
+#define ELFCLASS32  1
 #define ELFDATA2LSB 1
 #define EM_AARCH64  183
 #define ET_EXEC     2
@@ -431,7 +431,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   codesize = 0;
   for (i = e->e_phnum; i--;) {
     if (p[i].p_type == PT_DYNAMIC) {
-      Pexit(exe, 0, "not a real executable");
+      Pexit(exe, 0, "not a static executable");
     }
     if (p[i].p_type != PT_LOAD) {
       continue;
@@ -525,14 +525,15 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 
 static void TryElf(struct ApeLoader *M, const char *exe, int fd, long *sp,
                    long *bp, char *execfn) {
-  unsigned long n;
-  if (Read32(M->ehdr.buf) == Read32("\177ELF") &&
-      M->ehdr.ehdr.e_type == ET_EXEC && M->ehdr.ehdr.e_machine == EM_AARCH64 &&
-      M->ehdr.ehdr.e_ident[EI_CLASS] == ELFCLASS64 &&
-      M->ehdr.ehdr.e_ident[EI_DATA] == ELFDATA2LSB &&
-      (n = M->ehdr.ehdr.e_phnum * sizeof(M->phdr.phdr)) <=
+  unsigned size;
+  if (Read32(M->ehdr.buf) == Read32("\177ELF") &&          //
+      M->ehdr.ehdr.e_type == ET_EXEC &&                    //
+      M->ehdr.ehdr.e_machine == EM_AARCH64 &&              //
+      M->ehdr.ehdr.e_ident[EI_CLASS] != ELFCLASS32 &&      //
+      M->ehdr.ehdr.e_phentsize >= sizeof(M->phdr.phdr) &&  //
+      (size = (unsigned)M->ehdr.ehdr.e_phnum * M->ehdr.ehdr.e_phentsize) <=
           sizeof(M->phdr.buf) &&
-      pread(fd, M->phdr.buf, n, M->ehdr.ehdr.e_phoff) == n) {
+      pread(fd, M->phdr.buf, size, M->ehdr.ehdr.e_phoff) == size) {
     long auxv[][2] = {
         {AT_PHDR, (long)&M->phdr.phdr},        //
         {AT_PHENT, M->ehdr.ehdr.e_phentsize},  //

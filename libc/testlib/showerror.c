@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
@@ -49,9 +50,9 @@ void testlib_showerror(const char *file, int line, const char *func,
           "\t\t got %s\n"
           "\t%s%s\n"
           "\t%s%s\n",
-          RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
-          g_fixturename, hostname, getpid(), gettid(), code, v1, symbol, v2,
-          SUBTLE, strerror(errno), GetProgramExecutableName(), RESET);
+          RED2, UNBOLD, BLUE1, file, line, RESET, method, func, g_fixturename,
+          hostname, getpid(), gettid(), code, v1, symbol, v2, SUBTLE,
+          strerror(errno), GetProgramExecutableName(), RESET);
   free(v1);
   free(v2);
 }

@@ -124,6 +124,6 @@ ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
   END_CANCELLATION_POINT;
   STRACE("copy_file_range(%d, %s, %d, %s, %'zu, %#x) → %'ld% m", infd,
          DescribeInOutInt64(rc, opt_in_out_inoffset), outfd,
-         DescribeInOutInt64(rc, opt_in_out_outoffset), uptobytes, flags);
+         DescribeInOutInt64(rc, opt_in_out_outoffset), uptobytes, flags, rc);
   return rc;
 }

@@ -91,7 +91,7 @@ VM = o/third_party/qemu/qemu-aarch64
 HOSTS ?= pi silicon
 else
 ARCH = x86_64
-HOSTS ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10
+HOSTS ?= freebsd openbsd openbsd73 netbsd rhel7 rhel5 xnu win10
 endif
 
 ifeq ($(PREFIX),)
@@ -241,7 +241,10 @@ DEFAULT_LDFLAGS =							\
 	-nostdlib							\
 	--gc-sections							\
 	--build-id=none							\
-	--no-dynamic-linker #--cref -Map=$@.map
+	--no-dynamic-linker
+
+# # generate linker report files
+# DEFAULT_LDFLAGS += --cref -Map=$@.map
 
 ifeq ($(ARCH), aarch64)
 DEFAULT_LDFLAGS +=							\

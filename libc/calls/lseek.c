@@ -25,6 +25,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
 /**
@@ -79,12 +80,14 @@ int64_t lseek(int fd, int64_t offset, int whence) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = _weaken(__zipos_lseek)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, offset, whence);
-  } else if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd()) {
     rc = sys_lseek(fd, offset, whence, 0);
-  } else if (IsOpenbsd() || IsNetbsd()) {
+  } else if (IsNetbsd()) {
     rc = sys_lseek(fd, offset, offset, whence);
-  } else {
+  } else if (IsWindows()) {
     rc = sys_lseek_nt(fd, offset, whence);
+  } else {
+    rc = enosys();
   }
   STRACE("lseek(%d, %'ld, %s) → %'ld% m", fd, offset, DescribeWhence(whence),
          rc);

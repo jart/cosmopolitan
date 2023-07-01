@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
@@ -49,6 +51,7 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"

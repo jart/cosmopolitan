@@ -20,24 +20,20 @@ ENTRY(_start)
 
 SECTIONS {
   . = 0x200000;
-  .text : {
-    *(.text)
+  .rodata : {
+    KEEP(*(.head))
     *(.rodata .rodata.*)
-    . = ALIGN(64);
-  }
-  filesz = . - ehdr;
-  textsz = . - _start;
-  .bss ALIGN(4096) : {
-    bss = .;
-    *(.bss)
     . = ALIGN(4096);
   }
-  _end = .;
-  memsz = _end - ehdr;
+  .text : {
+    text = .;
+    *(.text)
+  }
   /DISCARD/ : {
     *(.*)
   }
 }
 
-bsssize = SIZEOF(.bss);
-textoff = _start - ehdr;
+textsz = SIZEOF(.text);
+rosize = SIZEOF(.rodata);
+filesz = SIZEOF(.rodata) + SIZEOF(.text);

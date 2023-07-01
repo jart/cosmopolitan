@@ -45,7 +45,10 @@
          '("__builtin_va_list"))
 
         (gcc-builtin-functions
-         '("__builtin_add_overflow"
+         '("__builtin_va_start"
+           "__builtin_va_arg"
+           "__builtin_va_end"
+           "__builtin_add_overflow"
            "__builtin_add_overflow_p"
            "__builtin_alloc"
            "__builtin_alloca"

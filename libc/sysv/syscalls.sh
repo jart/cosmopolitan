@@ -42,8 +42,8 @@ scall	__sys_fstat		0x1b80352272153005	0x050	globl hidden # needs __stat2linux()
 scall	__sys_lstat		0x1b90280282154006	0xfff	globl hidden # needs __stat2linux(); blocked on Android
 scall	__sys_poll		0x8d18fc8d128e6807	0xfff	globl hidden
 scall	sys_ppoll		0xfff86da21ffff90f	0x049	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
-scall	sys_lseek		0x0c70c71de20c7008	0x03e	globl hidden # netbsd+openbsd:evilpad
-scall	__sys_mmap		0x0c50c51dd20c5009	0x0de	globl hidden # netbsd+openbsd:pad
+scall	sys_lseek		0x0c70a61de20c7008	0x03e	globl hidden # netbsd:evilpad, OpenBSD 7.3+
+scall	__sys_mmap		0x0c50311dd20c5009	0x0de	globl hidden # netbsd:pad, OpenBSD 7.3+
 scall	sys_msync		0x915900841284181a	0x0e3	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	0x0e2	globl hidden
 scall	__sys_munmap		0x049049049204900b	0x0d7	globl hidden
@@ -51,8 +51,8 @@ scall	sys_sigaction		0x15402e1a0202e00d	0x086	globl hidden # rt_sigaction on Lun
 scall	__sys_sigprocmask	0x125030154214900e	0x087	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	0x01d	globl hidden
 scall	sys_ioctl_cp		0x8368368362836810	0x01d	globl hidden # intended for TCSBRK
-scall	sys_pread		0x8ad8ad9db2899811	0x043	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
-scall	sys_pwrite		0x8ae8ae9dc289a812	0x044	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
+scall	sys_pread		0x8ad8a99db2899811	0x043	globl hidden # a.k.a. pread64; netbsd:pad, OpenBSD 7.3+
+scall	sys_pwrite		0x8ae8aa9dc289a812	0x044	globl hidden # a.k.a. pwrite64; netbsd:pad, OpenBSD 7.3+
 scall	sys_readv		0x8788788782878813	0x041	globl hidden
 scall	sys_writev		0x8798798792879814	0x042	globl hidden
 scall	__sys_pipe		0x02a10721e202a016	0x03b	globl hidden # NOTE: pipe2() on FreeBSD and Linux Aarch64; XNU is pipe(void)→eax:edx
@@ -118,8 +118,8 @@ scall	__sys_fcntl_cp		0x85c85c85c285c848	0x019	globl hidden # intended for F_SET
 scall	sys_flock		0x8838838832883849	0x020	globl hidden
 scall	sys_fsync		0x85f85f85f285f84a	0x052	globl hidden
 scall	sys_fdatasync		0x8f185fa2628bb84b	0x053	globl hidden # fsync() on openbsd
-scall	sys_truncate		0x8c88c89df28c884c	0x02d	globl hidden # netbsd+openbsd:pad
-scall	sys_ftruncate		0x8c98c99e028c984d	0x02e	globl hidden # netbsd+openbsd:pad
+scall	sys_truncate		0x8c88a79df28c884c	0x02d	globl hidden # netbsd:pad, OpenBSD 7.3+
+scall	sys_ftruncate		0x8c98a89e028c984d	0x02e	globl hidden # netbsd:pad, OpenBSD 7.3+
 scall	sys_getcwd		0x128130146ffff04f	0x011	globl hidden
 scall	sys_chdir		0x00c00c00c200c050	0x031	globl hidden
 scall	sys_fchdir		0x00d00d00d200d051	0x032	globl hidden
@@ -296,8 +296,8 @@ scall	sys_vmsplice		0xfffffffffffff116	0x04b	globl hidden
 scall	sys_migrate_pages	0xfffffffffffff100	0x0ee	globl        # no wrapper; numa numa yay
 scall	sys_move_pages		0xfffffffffffff117	0x0ef	globl        # no wrapper; NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	sys_preadv		0x92190b9212a1c927	0x045	globl hidden #  ├─ last distro with system v shell script init
-scall	sys_pwritev		0x92290c9222a1d928	0x046	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	sys_preadv		0x9218ab9212a1c927	0x045	globl hidden #  ├─ last distro with system v shell script init
+scall	sys_pwritev		0x9228ac9222a1d928	0x046	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	0x058	globl hidden #  ├─ python modules need this due to pep513
 scall	sys_fallocate		0xfffffffffffff91d	0x02f	globl        #  ├─ end of life 2020-11-30 (extended)
 scall	sys_posix_fallocate	0x9dffffa12fffffff	0xfff	globl hidden #  └─ cosmopolitan supports rhel5+
@@ -774,7 +774,7 @@ scall	sys_rtprio_thread	0xffffff1d2fffffff	0xfff	globl # no wrapper
 #scall	getrtable		0xfff137ffffffffff	0xfff	globl
 #scall	getthrid		0xfff12bffffffffff	0xfff	globl
 #scall	kbind			0xfff056ffffffffff	0xfff	globl
-#scall	mquery			0xfff11effffffffff	0xfff	globl # openbsd:pad
+#scall	mquery			0xfff11effffffffff	0xfff	globl # openbsd:pad (todo)
 #scall	obreak			0x011011ffffffffff	0xfff	globl
 #scall	sendsyslog		0xfff070ffffffffff	0xfff	globl
 #scall	setrtable		0xfff136ffffffffff	0xfff	globl

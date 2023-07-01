@@ -50,6 +50,8 @@
 	ldr	w9,[x9,#:lo12:__hostos]
 	tbz	x9,#3,1f			// !IsXnu()
 	mov	x16,#\arm_xnu			// apple ordinal
+	mov	x9,#0				// clear carry flag
+	adds	x9,x9,#0			// clear carry flag
 	svc	#0				// issue system call
 	bcs	1f
 	b	_sysret

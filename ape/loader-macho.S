@@ -23,116 +23,88 @@
 
 //	APE Loader Executable Structure for XNU
 
-	.balign	4096
+	.section .head
+
+	.balign	64
 macho:	.long	0xFEEDFACE+1
 	.long	MAC_CPU_NEXGEN32E
 	.long	MAC_CPU_NEXGEN32E_ALL
 	.long	MAC_EXECUTE
-	.long	5				# number of load commands
-	.long	60f-10f				# size of all load commands
-	.long	MAC_NOUNDEFS			# flags
-	.long	0				# reserved
+	.long	4				// number of load commands
+	.long	50f-10f				// size of all load commands
+	.long	MAC_NOUNDEFS			// flags
+	.long	0				// reserved
 10:	.long	MAC_LC_SEGMENT_64
-	.long	20f-10b				# unmaps first page dir
-	.ascin	"__PAGEZERO",16			# consistent with linux
-	.quad	0,0x200000,0,0			# which forbids mem <2m
+	.long	20f-10b				// unmaps first page dir
+	.ascin	"__PAGEZERO",16			// consistent with linux
+	.quad	0,0x200000,0,0			// which forbids mem <2m
 	.long	0,0,0,0
 20:	.long	MAC_LC_SEGMENT_64
 	.long	30f-20b
 	.ascin	"__TEXT",16
-	.quad	macho				# vaddr
-	.quad	4096				# memsz
-	.quad	0				# file offset
-	.quad	filesz				# file size
-	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
-	.long	PROT_EXEC|PROT_READ		# initprot
-	.long	1				# segment section count
-	.long	0				# flags
-210:	.ascin	"__text",16			# section name (.text)
-	.ascin	"__TEXT",16
-	.quad	_start				# vaddr
-	.quad	textsz				# memsz
-	.long	textoff				# offset
-	.long	6				# align 2**3 = 64
-	.long	0				# reloc table offset
-	.long	0				# relocation count
-	.long	MAC_S_ATTR_SOME_INSTRUCTIONS	# section type & attributes
-	.long	0,0,0				# reserved
-30:	.long	MAC_LC_SEGMENT_64
+	.quad	macho				// vaddr
+	.quad	filesz				// memsz
+	.quad	0				// file offset
+	.quad	filesz				// file size
+	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
+	.long	PROT_EXEC|PROT_READ		// initprot
+	.long	0				// segment section count
+	.long	0				// flags
+30:	.long	MAC_LC_UUID
 	.long	40f-30b
-	.ascin	"__DATA",16
-	.quad	bss				# vaddr
-	.quad	bsssize				# memsz
-	.quad	0				# offset
-	.quad	0				# file size
-	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
-	.long	PROT_READ|PROT_WRITE		# initprot
-	.long	1				# segment section count
-	.long	0				# flags
-310:	.ascin	"__bss",16			# section name (.bss)
-	.ascin	"__DATA",16
-	.quad	bss				# vaddr
-	.quad	bsssize				# memsz
-	.long	0				# offset
-	.long	12				# align 2**12 = 4096
-	.long	0				# reloc table offset
-	.long	0				# relocation count
-	.long	MAC_S_ZEROFILL			# section type & attributes
-	.long	0,0,0				# reserved
-40:	.long	MAC_LC_UUID
-	.long	50f-40b
-	.quad	0x3fb29ee4ac6c87aa		# uuid1
-	.quad	0xdd2c9bb866d9eef8		# uuid2
-50:	.long	MAC_LC_UNIXTHREAD
-	.long	60f-50b				# cmdsize
-	.long	MAC_THREAD_NEXGEN32E		# flavaflav
-	.long	(520f-510f)/4			# count
-510:	.quad	0				# rax
-	.quad	0				# rbx
-	.quad	0				# rcx
-	.quad	_HOSTXNU			# rdx
-	.quad	0				# rdi
-	.quad	0				# rsi
-	.quad	0				# rbp
-	.quad	0				# rsp
-	.quad	0				# r8
-	.quad	0				# r9
-	.quad	0				# r10
-	.quad	0				# r11
-	.quad	0				# r12
-	.quad	0				# r13
-	.quad	0				# r14
-	.quad	0				# r15
-	.quad	_start				# rip
-	.quad	0				# rflags
-	.quad	0				# cs
-	.quad	0				# fs
-	.quad	0				# gs
-520:
-60:
+	.quad	0x3fb29ee4ac6c87aa		// uuid1
+	.quad	0xdd2c9bb866d9eef8		// uuid2
+40:	.long	MAC_LC_UNIXTHREAD
+	.long	50f-40b				// cmdsize
+	.long	MAC_THREAD_NEXGEN32E		// flavaflav
+	.long	(420f-410f)/4			// count
+410:	.quad	0				// rax
+	.quad	0				// rbx
+	.quad	0				// rcx
+	.quad	0				// rdx
+	.quad	0				// rdi
+	.quad	0				// rsi
+	.quad	0				// rbp
+	.quad	0				// rsp
+	.quad	0				// r8
+	.quad	0				// r9
+	.quad	0				// r10
+	.quad	0				// r11
+	.quad	0				// r12
+	.quad	0				// r13
+	.quad	0				// r14
+	.quad	0				// r15
+	.quad	_start				// rip
+	.quad	0				// rflags
+	.quad	0				// cs
+	.quad	0				// fs
+	.quad	0				// gs
+420:
+50:
 	.endobj	macho,globl
 
 	.balign	64
-_start:
-
-//	Hack for detecting M1 Rosetta environment.
-//	https://github.com/jart/cosmopolitan/issues/429#issuecomment-1166704377
-	cmp	$-1,%ebx
-	jne	0f
-	cmp	$+1,%edx
-	jne	0f
-	mov	$_HOSTXNU,%dl
-	xor	%ecx,%ecx
-
-0:	mov	%rsp,%rsi
+_start:	mov	$_HOSTXNU,%dl			// xnu's not unix!
+	mov	%rsp,%rsi			// save real stack
+	sub	$1024*1024,%rsp			// room for allocs
 	jmp	ApeLoader
 	.endfn	_start,globl
 
-__syscall_loader:
+//	Invokes system call.
+//
+//	This function has eight parameters. The first seven are for
+//	arguments passed along to the system call. The eight is for
+//	the magic number that indicates which system call is called
+//
+//	The return value follows the Linux kernel convention, where
+//	errors are returned as `-errno`. BSD systems are normalized
+//	to follow this convention automatically.
+SystemCall:
+	mov	%rcx,%r10
+	mov	16(%rsp),%eax
 	clc
 	syscall
-	jc	1f
-	ret
-1:	neg	%rax
-	ret
-	.endfn	__syscall_loader,globl
+	jnc	1f
+	neg	%rax
+1:	ret
+	.endfn	SystemCall,globl

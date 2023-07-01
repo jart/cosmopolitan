@@ -43,6 +43,7 @@
 #include "libc/nt/pedef.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "ape/ape.internal.h"
+#include "libc/thread/tls.h"
 #include "libc/sysv/consts/prot.h"
 
 #define USE_SYMBOL_HACK 1
@@ -599,7 +600,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	There isn't a one-size-fits-all approach for this, thus we
 //	present two choices.
 	.ascii	  "o=\"$(command -v \"$0\")\"\n"
-//	Try to use a system-wide APE loader.
+//	Try to use system-wide APE loader.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && "
 	.ascii	    "type ape >/dev/null 2>&1 && "
 	.ascii	      "exec ape \"$o\" \"$@\"\n"
@@ -609,7 +610,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape\"\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.1\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
@@ -622,7 +623,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	        "dd if=\"$t.$$\""
 	.ascii	          " of=\"$t.$$\""
 	.ascii	          " skip=6"
-	.ascii	          " count=10"
+	.ascii	          " count=6"
 	.ascii	          " bs=64"
 	.ascii	          " conv=notrunc"
 	.ascii	          " 2>/dev/null\n"
@@ -746,6 +747,15 @@ ape_loader_end:
 
 	.long	PT_LOAD
 	.long	PF_R|PF_X
+	.stub	ape_cod_offset,quad
+	.stub	ape_cod_vaddr,quad
+	.stub	ape_cod_paddr,quad
+	.stub	ape_cod_filesz,quad
+	.stub	ape_cod_memsz,quad
+	.stub	ape_cod_align,quad
+
+	.long	PT_LOAD
+	.long	PF_R
 	.stub	ape_rom_offset,quad
 	.stub	ape_rom_vaddr,quad
 	.stub	ape_rom_paddr,quad
@@ -868,8 +878,8 @@ ape_macho:
 	.long	MAC_CPU_NEXGEN32E
 	.long	MAC_CPU_NEXGEN32E_ALL
 	.long	MAC_EXECUTE
-	.long	5				// number of load commands
-	.long	60f-10f				// size of all load commands
+	.long	6				// number of load commands
+	.long	70f-10f				// size of all load commands
 	.long	MAC_NOUNDEFS			// flags
 	.long	0				// reserved
 10:	.long	MAC_LC_SEGMENT_64
@@ -880,26 +890,27 @@ ape_macho:
 20:	.long	MAC_LC_SEGMENT_64
 	.long	30f-20b
 	.ascin	"__TEXT",16
+	.stub	ape_cod_vaddr,quad
+	.stub	ape_cod_memsz,quad
+	.stub	ape_cod_offset,quad
+	.stub	ape_cod_filesz,quad
+	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
+	.long	PROT_EXEC|PROT_READ		// initprot
+	.long	0				// segment section count
+	.long	0				// flags
+30:	.long	MAC_LC_SEGMENT_64
+	.long	40f-30b
+	.ascin	"__RODATA",16
 	.stub	ape_rom_vaddr,quad
 	.stub	ape_rom_memsz,quad
 	.stub	ape_rom_offset,quad
 	.stub	ape_rom_filesz,quad
 	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
-	.long	PROT_EXEC|PROT_READ		// initprot
-	.long	1				// segment section count
+	.long	PROT_READ			// initprot
+	.long	0				// segment section count
 	.long	0				// flags
-210:	.ascin	"__text",16			// section name (.text)
-	.ascin	"__TEXT",16
-	.stub	ape_text_vaddr,quad
-	.stub	ape_text_memsz,quad
-	.stub	ape_text_offset,long
-	.long	12				// align 2**12 = 4096
-	.long	0				// reloc table offset
-	.long	0				// relocation count
-	.long	MAC_S_ATTR_SOME_INSTRUCTIONS	// section type & attributes
-	.long	0,0,0				// reserved
-30:	.long	MAC_LC_SEGMENT_64
-	.long	40f-30b
+40:	.long	MAC_LC_SEGMENT_64
+	.long	50f-40b
 	.ascin	"__DATA",16
 	.stub	ape_ram_vaddr,quad
 	.stub	ape_ram_memsz,quad
@@ -907,39 +918,19 @@ ape_macho:
 	.stub	ape_ram_filesz,quad
 	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
 	.long	PROT_READ|PROT_WRITE		// initprot
-	.long	2				// segment section count
+	.long	0				// segment section count
 	.long	0				// flags
-310:	.ascin	"__data",16			// section name (.data)
-	.ascin	"__DATA",16
-	.stub	ape_data_vaddr,quad
-	.stub	ape_data_memsz,quad
-	.stub	ape_data_offset,long
-	.long	12				// align 2**12 = 4096
-	.long	0				// reloc table offset
-	.long	0				// relocation count
-	.long	0				// section type & attributes
-	.long	0,0,0				// reserved
-320:	.ascin	"__bss",16			// section name (.bss)
-	.ascin	"__DATA",16
-	.stub	ape_bss_vaddr,quad		// virtual address
-	.stub	ape_bss_memsz,quad		// memory size
-	.long	0				// file offset
-	.long	12				// align 2**12 = 4096
-	.long	0				// reloc table offset
-	.long	0				// relocation count
-	.long	MAC_S_ZEROFILL			// section type & attributes
-	.long	0,0,0				// reserved
-40:	.long	MAC_LC_UUID
-	.long	50f-40b
+50:	.long	MAC_LC_UUID
+	.long	60f-50b
 	.stub	ape_uuid1,quad
 	.stub	ape_uuid2,quad
-50:	.long	MAC_LC_UNIXTHREAD
-	.long	60f-50b				// cmdsize
+60:	.long	MAC_LC_UNIXTHREAD
+	.long	70f-60b				// cmdsize
 	.long	MAC_THREAD_NEXGEN32E		// flavaflav
-	.long	(520f-510f)/4			// count
-510:	.quad	0				// rax
-	.quad	IMAGE_BASE_VIRTUAL		// rbx
-	.quad	_HOSTXNU			// rcx
+	.long	(620f-610f)/4			// count
+610:	.quad	0				// rax
+	.quad	0				// rbx
+	.quad	0				// rcx
 	.quad	0				// rdx
 	.quad	0				// rdi
 	.quad	0				// rsi
@@ -953,13 +944,13 @@ ape_macho:
 	.quad	0				// r13
 	.quad	0				// r14
 	.quad	0				// r15
-	.quad	_start				// rip
+	.quad	_apple				// rip
 	.quad	0				// rflags
 	.quad	0				// cs
 	.quad	0				// fs
 	.quad	0				// gs
-520:
-60:
+620:
+70:
 
 .endobj	ape_macho,globl,hidden
 .previous /* .macho */
@@ -1785,7 +1776,6 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.ldsvar	v_ape_realbytes
 	.ldsvar	v_ape_highsectors
 	.ldsvar	ape_idata_ro
-	.ldsvar	ape_pad_rodata
 	.ldsvar	ape_piro
 	.ldsvar	ape_piro_end
 	.type	ape_macho_end,@object
@@ -1829,12 +1819,6 @@ ape_pad_text:
 ape_pad_privileged:
 	.previous
 
-	.section .ape.pad.rodata,"a",@progbits
-	.type	ape_pad_rodata,@object
-	.hidden	ape_pad_rodata
-ape_pad_rodata:
-	.previous
-
 	.section .ape.pad.data,"a",@progbits
 	.type	ape_pad_data,@object
 	.hidden	ape_pad_data
@@ -1875,6 +1859,10 @@ __bss_start:
 	.globl	__bss_end
 	.hidden	__bss_end
 __bss_end:
+	.previous
+
+	.section .fstls,"awT",@nobits
+	.align	TLS_ALIGNMENT
 	.previous
 
 .end

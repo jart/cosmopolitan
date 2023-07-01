@@ -19,7 +19,9 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -35,9 +37,32 @@
  * @vforksafe
  */
 int execvpe(const char *prog, char *const argv[], char *const *envp) {
-  char *exe;
+  size_t i;
+  char *exe, **argv2;
   char pathbuf[PATH_MAX];
-  if (IsAsan() && !__asan_is_valid_str(prog)) return efault();
-  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) return -1;
+
+  // validate memory
+  if (IsAsan() &&
+      (!__asan_is_valid_str(prog) || !__asan_is_valid_strlist(argv))) {
+    return efault();
+  }
+
+  // resolve path of executable
+  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) {
+    return -1;
+  }
+
+  // change argv[0] to resolved path if it's ambiguous
+  // otherwise the program won't have much luck finding itself
+  if (argv[0] && *prog != '/' && *exe == '/' && !strcmp(prog, argv[0])) {
+    for (i = 0; argv[i++];) (void)0;
+    argv2 = alloca(i * sizeof(*argv));
+    memcpy(argv2, argv, i * sizeof(*argv));
+    argv2[0] = exe;
+    argv = argv2;
+  }
+
+  // execute program
+  // tail call shouldn't be possible
   return execve(exe, argv, envp);
 }

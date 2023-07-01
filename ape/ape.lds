@@ -206,10 +206,10 @@ ENTRY(_start)
 
 PHDRS {
   Head PT_LOAD FLAGS(PF_X|PF_R);
-  Rom PT_LOAD FLAGS(PF_X|PF_R);
-  Ram PT_LOAD FLAGS(PF_W|PF_R);
+  Cod PT_LOAD FLAGS(PF_X|PF_R);
+  Rom PT_LOAD FLAGS(PF_R);
   Tls PT_TLS FLAGS(PF_W|PF_R);
-  Bss PT_LOAD FLAGS(PF_W|PF_R);
+  Ram PT_LOAD FLAGS(PF_W|PF_R);
   stack PT_GNU_STACK FLAGS(PF_W|PF_R);
 }
 
@@ -221,7 +221,7 @@ SECTIONS {
 /*BEGIN: bsd addressability guarantee */
 
   .head SEGMENT_START("text-segment", IMAGE_BASE_VIRTUAL) + SKEW : AT(IMAGE_BASE_REAL) {
-    HIDDEN(__executable_start = .);
+    __executable_start = .;
 
     /* Real Mode */
     KEEP(*(.head))
@@ -230,9 +230,9 @@ SECTIONS {
 
     /* Executable & Linkable Format */
     . = ALIGN(__SIZEOF_POINTER__);
-    HIDDEN(ape_phdrs = .);
+    ape_phdrs = .;
     KEEP(*(.elf.phdrs))
-    HIDDEN(ape_phdrs_end = .);
+    ape_phdrs_end = .;
 
     KEEP(*(.emushprologue))
     KEEP(*(.emush))
@@ -240,25 +240,29 @@ SECTIONS {
 
     /* OpenBSD */
     . = ALIGN(__SIZEOF_POINTER__);
-    HIDDEN(ape_note = .);
+    ape_note = .;
     KEEP(*(.note.openbsd.ident))
     KEEP(*(.note.netbsd.ident))
-    HIDDEN(ape_note_end = .);
+    ape_note_end = .;
 
     /* Portable Executable */
     KEEP(*(.pe.header))
-    HIDDEN(ape_pe_sections = .);
+    ape_pe_sections = .;
     KEEP(*(.pe.sections))
-    HIDDEN(ape_pe_sections_end = .);
+    ape_pe_sections_end = .;
 
     /* Mach-O */
     KEEP(*(.macho))
     . = ALIGN(__SIZEOF_POINTER__);
-    HIDDEN(ape_macho_end = .);
+    ape_macho_end = .;
+
+    /* APE loader */
+    KEEP(*(.ape.loader))
+    . = ALIGN(CODE_GRANULE);
 
     KEEP(*(.ape.pad.head))
     . = ALIGN(SupportsWindows() || SupportsMetal() ? CONSTANT(COMMONPAGESIZE) : 16);
-    HIDDEN(_ehead = .);
+    _ehead = .;
   } :Head
 
 /*BEGIN: nt addressability guarantee */
@@ -268,10 +272,7 @@ SECTIONS {
     /* Code that needs to be addressable in Real Mode */
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
-    /* Code we want earlier in the binary w/o modifications */
-    KEEP(*(.ape.loader))
-    . = ALIGN(CODE_GRANULE);
-    HIDDEN(_ereal = .);
+    _ereal = .;
 /*END: realmode addressability guarantee */
 /*BEGIN: morphable code */
     . += CODE_GRANULE;
@@ -318,9 +319,14 @@ SECTIONS {
     __privileged_end = .;
     . += . > 0 ? CODE_GRANULE : 0;
 
+    KEEP(*(.ape.pad.text))
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
+/*END: Read Only Data (only needed for initialization) */
+  } :Cod
+
 /*BEGIN: Read Only Data */
 
-    KEEP(*(.ape.pad.rodata));
+  .rodata . : {
     KEEP(*(.rodata.pytab.0));
     KEEP(*(.rodata.pytab.1));
     KEEP(*(.rodata.pytab.2));
@@ -329,10 +335,6 @@ SECTIONS {
     *(.ubsan.types)
     *(.ubsan.data)
 
-    /* Unit Test & Fixture Registry */
-
-/*BEGIN: Read only data that needn't be mapped after initialization */
-
     /* Legal Notices */
 #if !defined(IM_FEELING_NAUGHTY) || defined(EMBED_NOTICES)
     KEEP(*(.commentprologue))
@@ -340,26 +342,28 @@ SECTIONS {
     KEEP(*(.commentepilogue))
 #endif
 
+/*BEGIN: read-only data that's only needed for initialization */
+
     /* Windows DLL Import Directory */
     KEEP(*(.idata.ro));
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
 
     . = ALIGN(__SIZEOF_POINTER__);
-    PROVIDE_HIDDEN(__init_array_start = .);
+    __init_array_start = .;
     KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
            SORT_BY_INIT_PRIORITY(.ctors.*)))
     KEEP(*(.ctors))
     KEEP(*(.init_array))
     KEEP(*(.preinit_array))
-    PROVIDE_HIDDEN(__init_array_end = .);
+    __init_array_end = .;
 
     . = ALIGN(__SIZEOF_POINTER__);
-    PROVIDE_HIDDEN(__fini_array_start = .);
+    __fini_array_start = .;
     KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
            SORT_BY_INIT_PRIORITY(.dtors.*)))
     KEEP(*(.fini_array))
     KEEP(*(.dtors))
-    PROVIDE_HIDDEN(__fini_array_end = .);
+    __fini_array_end = .;
 
     /* Encoded Data Structures w/ Linear Initialization Order */
     KEEP(*(.initroprologue))
@@ -367,25 +371,26 @@ SECTIONS {
     KEEP(*(.initroepilogue))
     KEEP(*(SORT_BY_NAME(.sort.rodata.*)))
 
-    KEEP(*(.ape.pad.text))
-    . = ALIGN(CONSTANT(COMMONPAGESIZE));
-    HIDDEN(_etext = .);
-    PROVIDE_HIDDEN(etext = .);
-/*END: Read Only Data (only needed for initialization) */
-  } :Rom
+/*END: read-only data that's only needed for initialization */
 
-  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
+  } :Rom
 
 /* initialization image for thread-local storage, this is copied */
 /* out to actual TLS areas at runtime, so just make it read-only */
-  .tdata : {
+  .tdata . : {
     _tdata_start = .;
     *(SORT_BY_ALIGNMENT(.tdata))
     *(SORT_BY_ALIGNMENT(.tdata.*))
     _tdata_end = .;
+    KEEP(*(.ape.pad.rodata))
     . = ALIGN(CONSTANT(COMMONPAGESIZE));
+    _etext = .;
+    PROVIDE(etext = .);
   } :Tls :Rom
 /*END: Read Only Data */
+
+  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
+  . = DATA_SEGMENT_RELRO_END(0, .);
 
 /* this only tells the linker about the layout of uninitialized */
 /* TLS data, and does not advance the linker's location counter */
@@ -393,14 +398,12 @@ SECTIONS {
     _tbss_start = .;
     *(SORT_BY_ALIGNMENT(.tbss))
     *(SORT_BY_ALIGNMENT(.tbss.*))
-    . = ALIGN(TLS_ALIGNMENT);
+    KEEP(*(.fstls))
     /* the %fs register is based on this location */
     _tbss_end = .;
   } :Tls
 
-  . = DATA_SEGMENT_RELRO_END(0, .);
-
-  .data : {
+  .data . : {
 /*BEGIN: Read/Write Data */
     KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
 /*BEGIN: NT FORK COPYING */
@@ -427,23 +430,22 @@ SECTIONS {
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
 /*END: NT FORK COPYING */
-    HIDDEN(_edata = .);
-    PROVIDE_HIDDEN(edata = .);
-    HIDDEN(_ezip = .); /* <-- very deprecated */
-    . = ALIGN(CONSTANT(COMMONPAGESIZE));
+    _edata = .;
+    PROVIDE(edata = .);
+    _ezip = .; /* <-- very deprecated */
   } :Ram
 
 /*END:   file content that's loaded by o/s */
 /*END:   file content */
 /*BEGIN: bss memory that's addressable */
 
-  .bss ALIGN(64) : {
+  .bss : {
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.bssprologue))
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
-    HIDDEN(__piro_end = .);
+    __piro_end = .;
     . += . > 0 ? CODE_GRANULE : 0;
 /*END: Post-Initialization Read-Only */
 
@@ -455,11 +457,13 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.sort.bss.*)))
 
     KEEP(*(.bssepilogue))
+
+    . = ALIGN(64);
+
 /*END: NT FORK COPYING */
-    . = ALIGN(CONSTANT(COMMONPAGESIZE));
-    HIDDEN(_end = .);
-    PROVIDE_HIDDEN(end = .);
-  } :Bss
+    _end = .;
+    PROVIDE(end = .);
+  } :Ram
 
   . = DATA_SEGMENT_END(.);
 
@@ -527,67 +531,60 @@ PFSTUB4(ape_elf_phnum, (ape_phdrs_end - ape_phdrs) / 56);
 PFSTUB4(ape_elf_shnum, 0);
 PFSTUB4(ape_elf_shstrndx, 0);
 
-HIDDEN(_tls_size = _tbss_end - _tdata_start);
-HIDDEN(_tdata_size = _tdata_end - _tdata_start);
-HIDDEN(_tbss_size = _tbss_end - _tbss_start);
-HIDDEN(_tbss_offset = _tbss_start - _tdata_start);
-HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
-HIDDEN(_tls_align = 1);
+_tls_size = _tbss_end - _tdata_start;
+_tdata_size = _tdata_end - _tdata_start;
+_tbss_size = _tbss_end - _tbss_start;
+_tbss_offset = _tbss_start - _tdata_start;
+_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start);
+_tls_align = 1;
 
-HIDDEN(ape_rom_offset = 0);
-HIDDEN(ape_rom_vaddr = ADDR(.head));
-HIDDEN(ape_rom_paddr = LOADADDR(.head));
-HIDDEN(ape_rom_filesz = LOADADDR(.data) - ape_rom_paddr);
-HIDDEN(ape_rom_memsz = ADDR(.data) - ADDR(.head));
-HIDDEN(ape_rom_align = CONSTANT(COMMONPAGESIZE));
-HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
+ape_cod_offset = 0;
+ape_cod_vaddr = ADDR(.head);
+ape_cod_paddr = LOADADDR(.head);
+ape_cod_filesz = SIZEOF(.head) + SIZEOF(.text);
+ape_cod_memsz = ape_cod_filesz;
+ape_cod_align = CONSTANT(COMMONPAGESIZE);
+ape_cod_rva = RVA(ape_cod_vaddr);
 
-HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
-HIDDEN(ape_ram_vaddr = ADDR(.data));
-HIDDEN(ape_ram_paddr = LOADADDR(.data));
-HIDDEN(ape_ram_filesz = SIZEOF(.data));
-HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
-HIDDEN(ape_ram_align = CONSTANT(COMMONPAGESIZE));
-HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
+ape_rom_offset = ape_cod_offset + ape_cod_filesz;
+ape_rom_vaddr = ADDR(.rodata);
+ape_rom_paddr = LOADADDR(.rodata);
+ape_rom_filesz = SIZEOF(.rodata) + SIZEOF(.tdata);
+ape_rom_memsz = ape_rom_filesz;
+ape_rom_align = CONSTANT(COMMONPAGESIZE);
+ape_rom_rva = RVA(ape_rom_vaddr);
 
-HIDDEN(ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W);
-HIDDEN(ape_stack_prot = _PF2PROT(ape_stack_pf));
-HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
-HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000);
-HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
-HIDDEN(ape_stack_filesz = 0);
-HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : APE_STACKSIZE);
-HIDDEN(ape_stack_align = 16);
+ape_ram_offset = ape_rom_offset + ape_rom_filesz;
+ape_ram_vaddr = ADDR(.data);
+ape_ram_paddr = LOADADDR(.data);
+ape_ram_filesz = SIZEOF(.data);
+ape_ram_memsz = SIZEOF(.data) + SIZEOF(.bss);
+ape_ram_align = CONSTANT(COMMONPAGESIZE);
+ape_ram_rva = RVA(ape_ram_vaddr);
 
-HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
-HIDDEN(ape_note_vaddr = ape_note);
-HIDDEN(ape_note_paddr = ape_rom_paddr + ape_note_offset);
-HIDDEN(ape_note_filesz = ape_note_end - ape_note);
-HIDDEN(ape_note_memsz = ape_note_filesz);
-HIDDEN(ape_note_align = __SIZEOF_POINTER__);
+ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W;
+ape_stack_prot = _PF2PROT(ape_stack_pf);
+ape_stack_offset = 0;
+ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000;
+ape_stack_paddr = ape_ram_paddr + ape_ram_filesz;
+ape_stack_filesz = 0;
+ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : APE_STACKSIZE;
+ape_stack_align = 16;
 
-HIDDEN(ape_text_offset = ape_rom_offset + LOADADDR(.text) - ape_rom_paddr);
-HIDDEN(ape_text_paddr = LOADADDR(.text));
-HIDDEN(ape_text_vaddr = ADDR(.text));
-HIDDEN(ape_text_filesz = SIZEOF(.text) + SIZEOF(.tdata));
-HIDDEN(ape_text_memsz = SIZEOF(.text) + SIZEOF(.tdata));
-HIDDEN(ape_text_align = CONSTANT(COMMONPAGESIZE));
-HIDDEN(ape_text_rva = RVA(ape_text_vaddr));
+ape_note_offset = ape_cod_offset + (ape_note - ape_cod_vaddr);
+ape_note_vaddr = ape_note;
+ape_note_paddr = ape_cod_paddr + ape_note_offset;
+ape_note_filesz = ape_note_end - ape_note;
+ape_note_memsz = ape_note_filesz;
+ape_note_align = __SIZEOF_POINTER__;
 
-HIDDEN(ape_data_offset = ape_ram_offset + LOADADDR(.data) - ape_ram_paddr);
-HIDDEN(ape_data_paddr = LOADADDR(.data));
-HIDDEN(ape_data_vaddr = ADDR(.data));
-HIDDEN(ape_data_filesz = SIZEOF(.data));
-HIDDEN(ape_data_memsz = SIZEOF(.data));
-HIDDEN(ape_data_align = CONSTANT(COMMONPAGESIZE));
-HIDDEN(ape_data_rva = RVA(ape_data_vaddr));
-
-HIDDEN(ape_bss_offset = ape_ram_offset + LOADADDR(.bss) - ape_ram_paddr);
-HIDDEN(ape_bss_paddr = LOADADDR(.bss));
-HIDDEN(ape_bss_vaddr = ADDR(.bss));
-HIDDEN(ape_bss_filesz = 0);
-HIDDEN(ape_bss_memsz = SIZEOF(.bss));
-HIDDEN(ape_bss_align = CONSTANT(COMMONPAGESIZE));
+ape_text_offset = ape_cod_offset + LOADADDR(.text) - ape_cod_paddr;
+ape_text_paddr = LOADADDR(.text);
+ape_text_vaddr = ADDR(.text);
+ape_text_filesz = SIZEOF(.text) + SIZEOF(.rodata) + SIZEOF(.tdata);
+ape_text_memsz = ape_text_filesz;
+ape_text_align = CONSTANT(COMMONPAGESIZE);
+ape_text_rva = RVA(ape_text_vaddr);
 
 /* we roundup here because xnu wants the file load segments page-aligned */
 /* but we don't want to add the nop padding to the ape program, so we'll */
@@ -602,17 +599,17 @@ SHSTUB2(ape_loader_dd_count,
 
 #define IDENTITY(X) X
 
-#define APE_DECLARE_FIXED_DECIMAL(F, X)                                                             \
-    HIDDEN(X##_quad = DEFINED(X) ? ((F(X) < 1000000000 ? 32 : F(X) / 1000000000 % 10 + 48) << 000 | \
-                                    (F(X) < 100000000 ? 32 : F(X) / 100000000 % 10 + 48) << 010 |   \
-                                    (F(X) < 10000000 ? 32 : F(X) / 10000000 % 10 + 48) << 020 |     \
-                                    (F(X) < 1000000 ? 32 : F(X) / 1000000 % 10 + 48) << 030 |       \
-                                    (F(X) < 100000 ? 32 : F(X) / 100000 % 10 + 48) << 040 |         \
-                                    (F(X) < 10000 ? 32 : F(X) / 10000 % 10 + 48) << 050 |           \
-                                    (F(X) < 1000 ? 32 : F(X) / 1000 % 10 + 48) << 060 |             \
-                                    (F(X) < 100 ? 32 : F(X) / 100 % 10 + 48) << 070) : 0);          \
-    HIDDEN(X##_short = DEFINED(X) ? ((F(X) < 10 ? 32 : F(X) / 10 % 10 + 48) << 000 |                \
-                                     (F(X) % 10 + 48) << 010) : 0)
+#define APE_DECLARE_FIXED_DECIMAL(F, X)                                                      \
+    X##_quad = DEFINED(X) ? ((F(X) < 1000000000 ? 32 : F(X) / 1000000000 % 10 + 48) << 000 | \
+                             (F(X) < 100000000 ? 32 : F(X) / 100000000 % 10 + 48) << 010 |   \
+                             (F(X) < 10000000 ? 32 : F(X) / 10000000 % 10 + 48) << 020 |     \
+                             (F(X) < 1000000 ? 32 : F(X) / 1000000 % 10 + 48) << 030 |       \
+                             (F(X) < 100000 ? 32 : F(X) / 100000 % 10 + 48) << 040 |         \
+                             (F(X) < 10000 ? 32 : F(X) / 10000 % 10 + 48) << 050 |           \
+                             (F(X) < 1000 ? 32 : F(X) / 1000 % 10 + 48) << 060 |             \
+                             (F(X) < 100 ? 32 : F(X) / 100 % 10 + 48) << 070) : 0;           \
+    X##_short = DEFINED(X) ? ((F(X) < 10 ? 32 : F(X) / 10 % 10 + 48) << 000 |                \
+                              (F(X) % 10 + 48) << 010) : 0
 
 APE_DECLARE_FIXED_DECIMAL(RVA,      blink_linux_aarch64);
 APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_linux_aarch64_size);
@@ -622,13 +619,12 @@ APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_xnu_aarch64_size);
 #endif /* APE_IS_SHELL_SCRIPT */
 
 #if SupportsMetal()
-HIDDEN(v_ape_realsectors =
-           MIN(0x70000 - IMAGE_BASE_REAL, ROUNDUP(RVA(_ezip), 512)) / 512);
-HIDDEN(v_ape_realbytes = v_ape_realsectors * 512);
-HIDDEN(v_ape_realdwords = v_ape_realsectors * (512 / 4));
-HIDDEN(v_ape_allsectors = ROUNDUP(RVA(_ezip), 512) / 512);
-HIDDEN(v_ape_allbytes = v_ape_allsectors * 512);
-HIDDEN(v_ape_highsectors = MIN(0xffff, v_ape_allsectors - v_ape_realsectors));
+v_ape_realsectors = MIN(0x70000 - IMAGE_BASE_REAL, ROUNDUP(RVA(_ezip), 512)) / 512;
+v_ape_realbytes = v_ape_realsectors * 512;
+v_ape_realdwords = v_ape_realsectors * (512 / 4);
+v_ape_allsectors = ROUNDUP(RVA(_ezip), 512) / 512;
+v_ape_allbytes = v_ape_allsectors * 512;
+v_ape_highsectors = MIN(0xffff, v_ape_allsectors - v_ape_realsectors);
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
 
@@ -650,19 +646,8 @@ TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
   KMH(ape_uuid1, X);      \
   XORSHIFT(ape_uuid2, X); \
   KMH(ape_uuid2, X)
-HIDDEN(ape_uuid1 = 88172645463325252);
-HIDDEN(ape_uuid2 = 88172645463325252);
-CHURN(ape_bss_align);
-CHURN(ape_bss_filesz);
-CHURN(ape_bss_memsz);
-CHURN(ape_bss_offset);
-CHURN(ape_bss_paddr);
-CHURN(ape_data_filesz);
-CHURN(ape_data_memsz);
-CHURN(ape_data_offset);
-CHURN(ape_data_paddr);
-CHURN(ape_data_rva);
-CHURN(ape_data_vaddr);
+ape_uuid1 = 88172645463325252;
+ape_uuid2 = 88172645463325252;
 CHURN(ape_elf_entry);
 CHURN(ape_elf_phnum);
 CHURN(ape_elf_phoff);
@@ -691,7 +676,14 @@ CHURN(ape_rom_memsz);
 CHURN(ape_rom_offset);
 CHURN(ape_rom_paddr);
 CHURN(ape_rom_rva);
-CHURN(ape_rom_vaddr);
+CHURN(ape_cod_vaddr);
+CHURN(ape_cod_align);
+CHURN(ape_cod_filesz);
+CHURN(ape_cod_memsz);
+CHURN(ape_cod_offset);
+CHURN(ape_cod_paddr);
+CHURN(ape_cod_rva);
+CHURN(ape_cod_vaddr);
 CHURN(ape_text_align);
 CHURN(ape_text_filesz);
 CHURN(ape_text_memsz);
@@ -724,22 +716,22 @@ CHURN(WinMain);
 #if SupportsWindows() || SupportsMetal()
 #define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
 PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
-HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
-HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
-HIDDEN(ape_pe_base = IMAGE_BASE_VIRTUAL);
-HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_iat) : 0);
-HIDDEN(ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0);
-HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0);
-HIDDEN(ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0);
-HIDDEN(v_ntversion = LINK_WINDOWS ? 6 : 1);
-HIDDEN(v_ntdllchar = LINK_WINDOWS ? 288 : 0);
-HIDDEN(v_ntsubversion = LINK_WINDOWS ? 6 : 5);
-HIDDEN(v_ntsubsystem = (LINK_WINDOWS
-                        ? (DEFINED(GetMessage)
-                           ? kNtImageSubsystemWindowsGui
-                           : kNtImageSubsystemWindowsCui)
-                        : kNtImageSubsystemEfiApplication));
-HIDDEN(ape_pe_entry = LINK_WINDOWS ? WinMain : EfiMain);
+ape_pe_optsz = ape_pe_sections - (ape_pe + 24);
+ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40;
+ape_pe_base = IMAGE_BASE_VIRTUAL;
+ape_idata = LINK_WINDOWS ? RVA(ape_idata_iat) : 0;
+ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0;
+ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0;
+ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0;
+v_ntversion = LINK_WINDOWS ? 6 : 1;
+v_ntdllchar = LINK_WINDOWS ? 288 : 0;
+v_ntsubversion = LINK_WINDOWS ? 6 : 5;
+v_ntsubsystem = (LINK_WINDOWS
+                 ? (DEFINED(GetMessage)
+                    ? kNtImageSubsystemWindowsGui
+                    : kNtImageSubsystemWindowsCui)
+                 : kNtImageSubsystemEfiApplication);
+ape_pe_entry = LINK_WINDOWS ? WinMain : EfiMain;
 #endif
 
 #if SupportsXnu()

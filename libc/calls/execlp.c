@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -40,10 +41,16 @@ int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
   char **argv;
   va_list va, vb;
   char pathbuf[PATH_MAX];
-  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) return -1;
+
+  // resolve path of executable
+  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) {
+    return -1;
+  }
+
+  // turn varargs into array
   va_copy(vb, va);
   va_start(va, arg);
-  for (i = 0; va_arg(va, const char *); ++i) donothing;
+  for (i = 0; va_arg(va, const char *); ++i) (void)0;
   va_end(va);
   argv = alloca((i + 2) * sizeof(char *));
   va_start(vb, arg);
@@ -52,5 +59,14 @@ int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
     if (!(argv[i] = va_arg(vb, const char *))) break;
   }
   va_end(vb);
+
+  // change argv[0] to resolved path if it's ambiguous
+  // otherwise the program won't have much luck finding itself
+  if (argv[0] && *prog != '/' && *exe == '/' && !strcmp(prog, argv[0])) {
+    argv[0] = exe;
+  }
+
+  // execute program
+  // tail call shouldn't be possible
   return execv(exe, argv);
 }

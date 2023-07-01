@@ -22,6 +22,16 @@
 #include "libc/runtime/internal.h"
 .section .start,"ax",@progbits
 
+#if SupportsXnu() && defined(__x86_64__)
+//	XNU AMD64 Entrypoint
+//
+//	@note	Rosetta barely implements MAC_LC_UNIXTHREAD
+//	@note	Rosetta sets many registers to weird values
+_apple:	mov	$_HOSTXNU,%cl
+	jmp	1f
+	.endfn	_apple,weak,hidden
+#endif
+
 //	System Five userspace program entrypoint.
 //
 //	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
@@ -31,18 +41,6 @@
 //	@noreturn
 _start:
 #ifdef __x86_64__
-
-#if SupportsXnu()
-//	Hack for detecting M1 Rosetta environment.
-//	https://github.com/jart/cosmopolitan/issues/429#issuecomment-1166704377
-	cmp	$-1,%ebx
-	jne	0f
-	cmp	$+1,%edx
-	jne	0f
-	mov	$_HOSTXNU,%cl
-	xor	%edi,%edi
-0:
-#endif
 
 #if SupportsFreebsd()
 //	detect free besiyata dishmaya
@@ -54,7 +52,7 @@ _start:
 #endif
 
 //	set operating system when already detected
-	mov	%cl,__hostos(%rip)
+1:	mov	%cl,__hostos(%rip)
 
 //	get startup timestamp as early as possible
 //	its used by --strace flag and kprintf() %T

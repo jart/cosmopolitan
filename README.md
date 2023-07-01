@@ -264,6 +264,7 @@ printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs -gdwarf-4 \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds -Wl,--gc-sections \
+  -Wl,-z,common-page-size=0x1000 -Wl,-z,max-page-size=0x1000 \
   -include cosmopolitan.h crt.o ape-no-modify-self.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com
 ```
@@ -427,7 +428,7 @@ server. You're welcome to join us! <https://discord.gg/FwAVVu7eJ4>
 | Linux           | 2.6.18      | 2007  |
 | Windows         | 8 [1]       | 2012  |
 | Mac OS X        | 15.6        | 2018  |
-| OpenBSD         | 6.4         | 2018  |
+| OpenBSD         | 7           | 2021  |
 | FreeBSD         | 13          | 2020  |
 | NetBSD          | 9.2         | 2021  |
 

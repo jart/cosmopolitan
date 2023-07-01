@@ -35,8 +35,11 @@ o/$(MODE)/test/libc/release/smoke.o:					\
 		-Os							\
 		-fno-pie						\
 		-nostdinc						\
+		-Wl,--gc-sections					\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\
+		-Wl,-z,max-page-size=0x1000				\
+		-Wl,-z,common-page-size=0x1000				\
 		$<
 
 o/$(MODE)/test/libc/release/smoke.com.dbg:				\
@@ -49,6 +52,9 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:				\
 		-static							\
 		-no-pie							\
 		-nostdlib						\
+		--gc-sections						\
+		-z max-page-size=0x1000					\
+		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/public/ape.lds				\
 		o/$(MODE)/test/libc/release/smoke.o			\
 		o/$(MODE)/libc/crt/crt.o				\
@@ -66,6 +72,9 @@ o/$(MODE)/test/libc/release/smoke-nms.com.dbg:				\
 		-static							\
 		-no-pie							\
 		-nostdlib						\
+		--gc-sections						\
+		-z max-page-size=0x1000					\
+		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/public/ape.lds				\
 		o/$(MODE)/test/libc/release/smoke.o			\
 		o/$(MODE)/libc/crt/crt.o				\
@@ -84,6 +93,9 @@ o/$(MODE)/test/libc/release/smoke-chibicc.com.dbg:			\
 		-static							\
 		-no-pie							\
 		-nostdlib						\
+		--gc-sections						\
+		-z max-page-size=0x1000					\
+		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/public/ape.lds				\
 		o/$(MODE)/test/libc/release/smoke-chibicc.o		\
 		o/$(MODE)/libc/crt/crt.o				\
@@ -121,6 +133,9 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:				\
 		-static							\
 		-no-pie							\
 		-nostdlib						\
+		--gc-sections						\
+		-z max-page-size=0x1000					\
+		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/public/ape.lds				\
 		o/$(MODE)/test/libc/release/smokecxx.o			\
 		o/$(MODE)/libc/crt/crt.o				\
@@ -138,7 +153,10 @@ o/$(MODE)/test/libc/release/smokecxx.o:					\
 		-Os							\
 		-fno-pie						\
 		-nostdinc						\
+		-Wl,--gc-sections					\
 		-fno-omit-frame-pointer					\
+		-z max-page-size=0x1000					\
+		-z common-page-size=0x1000				\
 		-include o/cosmopolitan.h				\
 		test/libc/release/smokecxx.cc
 
@@ -152,6 +170,9 @@ o/$(MODE)/test/libc/release/smokeansi.com.dbg:				\
 		-static							\
 		-no-pie							\
 		-nostdlib						\
+		--gc-sections						\
+		-z max-page-size=0x1000					\
+		-z common-page-size=0x1000				\
 		-T o/$(MODE)/ape/public/ape.lds				\
 		o/$(MODE)/test/libc/release/smokeansi.o			\
 		o/$(MODE)/libc/crt/crt.o				\
@@ -170,8 +191,11 @@ o/$(MODE)/test/libc/release/smokeansi.o:				\
 		-static							\
 		-fno-pie						\
 		-nostdinc						\
+		-Wl,--gc-sections					\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\
+		-Wl,-z,max-page-size=0x1000				\
+		-Wl,-z,common-page-size=0x1000				\
 		test/libc/release/smoke.c
 
 # TODO(jart): Rewrite these shell scripts as C code.
