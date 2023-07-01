@@ -229,6 +229,7 @@ int unveil(const char *, const char *);
 long ptrace(int, ...);
 ssize_t copyfd(int, int, size_t);
 ssize_t readansi(int, char *, size_t);
+ssize_t tinyprint(int, const char *, ...) nullterminated();
 #endif
 
 COSMOPOLITAN_C_END_
