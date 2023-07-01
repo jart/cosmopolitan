@@ -66,8 +66,8 @@ textwindows int WSARecvFrom(
   }
 #else
   rc = __imp_WSARecvFrom(s, inout_lpBuffers, dwBufferCount,
-                         opt_out_lpNumberOfBytesRecvd, opt_out_fromsockaddr,
-                         opt_inout_fromsockaddrlen, inout_lpFlags,
+                         opt_out_lpNumberOfBytesRecvd, inout_lpFlags,
+                         opt_out_fromsockaddr, opt_inout_fromsockaddrlen,
                          opt_inout_lpOverlapped, opt_lpCompletionRoutine);
 #endif
   return rc;
