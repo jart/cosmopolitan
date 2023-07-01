@@ -28,9 +28,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-#define TCGETS   0x00005401  // linux
-#define TIOCGETA 0x40487413  // bsd
-
 int tcgetattr_nt(int, struct termios *);
 
 static int tcgetattr_metal(int fd, struct termios *tio) {
@@ -45,7 +42,7 @@ static int tcgetattr_metal(int fd, struct termios *tio) {
 static int tcgetattr_bsd(int fd, struct termios *tio) {
   int rc;
   union metatermios mt;
-  if ((rc = sys_ioctl(fd, TIOCGETA, &mt)) != -1) {
+  if ((rc = sys_ioctl(fd, TCGETS, &mt)) != -1) {
     if (IsXnu()) {
       COPY_TERMIOS(tio, &mt.xnu);
     } else {

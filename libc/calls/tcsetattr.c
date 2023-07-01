@@ -31,13 +31,6 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-#define TCSETS    0x5402
-#define TCSETSW   0x5403
-#define TCSETSF   0x5404
-#define TIOCSETA  0x80487414
-#define TIOCSETAW 0x80487415
-#define TIOCSETAF 0x80487416
-
 void __on_tcsetattr(int);
 int tcsetattr_nt(int, int, const struct termios *);
 
@@ -80,8 +73,7 @@ static int tcsetattr_impl(int fd, int opt, const struct termios *tio) {
 
   if (IsLinux() || IsBsd()) {
     union metatermios mt;
-    return sys_ioctl(fd, (IsLinux() ? TCSETS : TIOCSETA) + opt,
-                     __termios2host(&mt, tio));
+    return sys_ioctl(fd, TCSETS + opt, __termios2host(&mt, tio));
   }
 
   return enosys();

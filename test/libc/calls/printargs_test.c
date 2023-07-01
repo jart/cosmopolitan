@@ -17,8 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/runtime/internal.h"
-#include "libc/sysv/consts/o.h"
+#include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 

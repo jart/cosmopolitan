@@ -73,12 +73,6 @@ extern const uint32_t TAB1;
 extern const uint32_t TAB2;
 extern const uint32_t TAB3;
 extern const uint32_t TABDLY;
-extern const int TCIFLUSH;
-extern const int TCIOFLUSH;
-extern const int TCOFLUSH;
-extern const int TCSADRAIN;
-extern const int TCSAFLUSH;
-extern const int TCSANOW;
 extern const uint64_t TIOCCONS;
 extern const uint64_t TIOCGETD;
 extern const uint64_t TIOCGWINSZ;
@@ -115,11 +109,6 @@ extern const uint8_t VWERASE;
 extern const uint32_t XCASE;
 extern const uint32_t XTABS;
 extern const uint32_t CRTSCTS;
-
-#define TCOOFF 0
-#define TCOON  1
-#define TCIOFF 2
-#define TCION  3
 
 #define BRKINT  0x02
 #define ICRNL   0x0100
@@ -202,12 +191,6 @@ extern const uint32_t CRTSCTS;
 #define PARENB     PARENB
 #define PARODD     PARODD
 #define PENDIN     PENDIN
-#define TCIFLUSH   TCIFLUSH
-#define TCIOFLUSH  TCIOFLUSH
-#define TCOFLUSH   TCOFLUSH
-#define TCSADRAIN  1
-#define TCSAFLUSH  2
-#define TCSANOW    0
 #define TIOCCONS   TIOCCONS
 #define TIOCGETD   TIOCGETD
 #define TIOCGWINSZ TIOCGWINSZ
@@ -240,8 +223,26 @@ extern const uint32_t CRTSCTS;
 #define VWERASE    VWERASE
 #define XCASE      XCASE
 
+/* tcsetattr() */
+#define TCSANOW   0
+#define TCSAFLUSH 2
+#define TCSADRAIN 1
+extern const unsigned long TCGETS; /* use tcgetattr() */
+extern const unsigned long TCSETS; /* use tcsetattr() */
 
+/* tcflush() */
+extern const int TCIFLUSH;
+extern const int TCOFLUSH;
+extern const int TCIOFLUSH;
+#define TCIFLUSH  TCIFLUSH
+#define TCOFLUSH  TCOFLUSH
+#define TCIOFLUSH TCIOFLUSH
 
+/* tcflow() */
+#define TCOOFF 0
+#define TCOON  1
+#define TCIOFF 2
+#define TCION  3
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

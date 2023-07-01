@@ -1318,6 +1318,8 @@ syscon	sched	SCHED_RESET_ON_FORK			0x40000000		0x40000000		0			0			0			0			0			0
 #		= TIOCSETA → About  3,110 results (0.41 seconds)
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	TCGETS					0x5401			0x5401			0x40487413		0x40487413		0x402c7413		0x402c7413		0x402c7413		0x5401			# Gets console settings; tcgetattr(tty, argp) → ioctl(tty, TCGETS, struct termios *argp); polyfilled NT
+syscon	termios	TCSETS					0x5402			0x5402			0x80487414		0x80487414		0x802c7414		0x802c7414		0x802c7414		0x5402			# Sets console settings; = ioctl(tty, TCSETS, const struct termios *argp); polyfilled NT
 syscon	termios	TIOCGWINSZ				0x5413			0x5413			1074295912		1074295912		1074295912		1074295912		1074295912		0x5413			# ioctl(tty, TIOCGWINSZ, struct winsize *argp); polyfilled NT
 syscon	termios	TIOCSWINSZ				0x5414			0x5414			0x80087467		0x80087467		0x80087467		0x80087467		0x80087467		0x5414			# ioctl(tty, TIOCSWINSZ, const struct winsize *argp) (faked NT)
 syscon	termios	TIOCINQ					0x541b			0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# [Linuxism] same as FIONREAD
@@ -1441,6 +1443,9 @@ syscon	termios	VLNEXT					15+1			15+1			14			14			14			14			14			15			# termios.
 syscon	termios	VEOL2					16+1			16+1			2			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
 syscon	termios	_POSIX_VDISABLE				0			0			255			255			255			255			255			0			# termios.c_cc tombstone value
 
+#	tcflush() magic numbers
+#
+#	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	TCIFLUSH				0			0			1			1			1			1			1			0			# see tcflush; FREAD on BSD; faked nt
 syscon	termios	TCOFLUSH				1			1			2			2			2			2			2			1			# see tcflush; FWRITE on BSD; faked nt
 syscon	termios	TCIOFLUSH				2			2			3			3			3			3			3			2			# see tcflush; FREAD|FWRITE on BSD; faked nt

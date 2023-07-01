@@ -34,7 +34,6 @@
 #define kNtPurgeRxabort 2
 
 #define TCXONC    0x0000540A  // linux
-#define TIOCGETA  0x40487413  // bsd
 #define TIOCSTOP  0x2000746f  // bsd
 #define TIOCSTART 0x2000746e  // bsd
 #define TIOCIXON  0x20007481  // xnu
@@ -52,7 +51,7 @@ static const char *DescribeFlow(char buf[12], int action) {
 static int sys_tcflow_bsd_write(int fd, int cc) {
   unsigned char c;
   struct termios_bsd term;
-  if (sys_ioctl(fd, TIOCGETA, &term) == -1) {
+  if (sys_ioctl(fd, TCGETS, &term) == -1) {
     return -1;
   }
   if ((c = term.c_cc[cc]) != _POSIX_VDISABLE &&

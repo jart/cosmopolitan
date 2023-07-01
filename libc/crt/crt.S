@@ -72,9 +72,9 @@ _start:
 //	setup a stack frame
 //	align stack to GetStackSize() so GetStackAddr() is fast
 	.weak	ape_stack_memsz
-	mov	$ape_stack_memsz,%r8d
-	mov	$ape_stack_align,%r9d
-	cmp	$_HOSTMETAL,%cl
+	mov	$ape_stack_memsz,%r9d
+	mov	$ape_stack_align,%r8d
+	cmp	$_HOSTLINUX,%cl
 	cmove	%r9d,%r8d
 	neg	%r8
 	and	%r8,%rsp
