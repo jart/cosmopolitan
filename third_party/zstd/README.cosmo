@@ -1,0 +1,12 @@
+DESCRIPTION
+
+  Zstandard - Fast real-time compression algorithm
+
+ORIGIN
+
+  https://github.com/facebook/zstd
+  e2cd353473650472a095aa0b50e3bd560b714402
+
+LOCAL CHANGES
+
+  Changed layout of files slightly to better suit Cosmopolitan.

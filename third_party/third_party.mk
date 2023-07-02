@@ -39,4 +39,5 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/vqsort		\
 	o/$(MODE)/third_party/xed		\
 	o/$(MODE)/third_party/zip		\
+	o/$(MODE)/third_party/zstd		\
 	o/$(MODE)/third_party/zlib
