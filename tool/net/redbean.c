@@ -2554,6 +2554,13 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
   }
 }
 
+static char *ServeErrorWithPath(unsigned code, const char *reason,
+                                const char *path, size_t pathlen) {
+  ERRORF("(srvr) server error: %d %s %`'.*s", code, reason,
+         pathlen, path);
+  return ServeErrorImpl(code, reason, NULL);
+}
+
 static char *ServeErrorWithDetail(unsigned code, const char *reason,
                                   const char *details) {
   ERRORF("(srvr) server error: %d %s", code, reason);
@@ -3306,7 +3313,7 @@ static char *HandleFolder(const char *path, size_t pathlen) {
   } else {
     LockInc(&shared->c.forbiddens);
     WARNF("(srvr) directory %`'.*s lacks index page", pathlen, path);
-    return ServeError(403, "Forbidden");
+    return ServeErrorWithPath(403, "Forbidden", path, pathlen);
   }
 }
 
@@ -6025,7 +6032,7 @@ static char *Route(const char *host, size_t hostlen, const char *path,
     return ServeStatusz();
   } else {
     LockInc(&shared->c.notfounds);
-    return ServeError(404, "Not Found");
+    return ServeErrorWithPath(404, "Not Found", path, pathlen);
   }
 }
 
@@ -6048,7 +6055,7 @@ static char *RoutePath(const char *path, size_t pathlen) {
     } else {
       LockInc(&shared->c.forbiddens);
       WARNF("(srvr) asset %`'.*s %#o isn't readable", pathlen, path, m);
-      return ServeError(403, "Forbidden");
+      return ServeErrorWithPath(403, "Forbidden", path, pathlen);
     }
   } else if ((r = FindRedirect(path, pathlen)) != -1) {
     return HandleRedirect(redirects.p + r);
