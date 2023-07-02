@@ -5,6 +5,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#ifdef __x86_64__
+#define SP rsp
+#elif defined(__aarch64__)
+#define SP sp
+#else
+#error "unsupported architecture"
+#endif
+
 void _ntcontext2linux(struct ucontext *, const struct NtContext *) _Hide;
 void _ntlinux2context(struct NtContext *, const ucontext_t *) _Hide;
 

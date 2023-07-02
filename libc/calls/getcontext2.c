@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,70 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
-#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
+#include "libc/sysv/consts/ss.h"
 
-int x;
-bool ok1;
-bool ok2;
-ucontext_t context;
-
-void func(void) {
-  x++;
-  setcontext(&context);
-  abort();
-}
-
-void test(void) {
-  getcontext(&context);
-  if (!x) {
-    ok1 = true;
-    func();
-  } else {
-    ok2 = true;
-  }
-}
-
-TEST(getcontext, test) {
-  test();
-  ASSERT_TRUE(ok1);
-  ASSERT_TRUE(ok2);
-}
-
-TEST(getcontext, canReadAndWriteSignalMask) {
-  sigset_t ss, old;
-  volatile int n = 0;
-  sigemptyset(&ss);
-  sigaddset(&ss, SIGUSR1);
-  sigprocmask(SIG_SETMASK, &ss, &old);
-  ASSERT_EQ(0, getcontext(&context));
-  if (!n) {
-    n = 1;
-    ASSERT_TRUE(sigismember(&context.uc_sigmask, SIGUSR1));
-    sigaddset(&context.uc_sigmask, SIGUSR2);
-    setcontext(&context);
-    abort();
-  }
-  sigprocmask(SIG_SETMASK, 0, &ss);
-  ASSERT_TRUE(sigismember(&ss, SIGUSR2));
-  sigprocmask(SIG_SETMASK, &old, 0);
-}
-
-void SetGetContext(void) {
-  static int a;
-  a = 0;
-  getcontext(&context);
-  if (!a) {
-    a = 1;
-    setcontext(&context);
-  }
-}
-
-BENCH(getcontext, bench) {
-  EZBENCH2("get/setcontext", donothing, SetGetContext());
+// this is tail called by the getcontext() implementation
+int __getcontext(ucontext_t *uc) {
+  uc->uc_flags = 0;
+  uc->uc_link = 0;
+  uc->uc_stack.ss_sp = (void *)uc->uc_mcontext.SP;
+  uc->uc_stack.ss_flags = SS_ONSTACK;
+  uc->uc_stack.ss_size = uc->uc_mcontext.SP - GetStackAddr();
+  return sigprocmask(SIG_SETMASK, 0, &uc->uc_sigmask);
 }

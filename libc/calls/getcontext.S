@@ -22,6 +22,8 @@
 //
 //	@see	setcontext()
 getcontext:
+#ifdef __x86_64__
+
 	pushf
 	pop	176(%rdi)
 	movaps	%xmm0,480(%rdi)
@@ -61,12 +63,39 @@ getcontext:
 	mov	%rax,160(%rdi)
 	mov	(%rsp),%rax
 	mov	%rax,168(%rdi)
-	xor	%eax,%eax
-	ret
+	jmp	__getcontext
+
+#elif defined(__aarch64__)
+
+	stp	x0,x1,[x0,184]
+	stp	x2,x3,[x0,200]
+	stp	x4,x5,[x0,216]
+	stp	x6,x7,[x0,232]
+	stp	x8,x9,[x0,248]
+	stp	x10,x11,[x0,264]
+	stp	x12,x13,[x0,280]
+	stp	x14,x15,[x0,296]
+	stp	x16,x17,[x0,312]
+	stp	x18,x19,[x0,328]
+	stp	x20,x21,[x0,344]
+	stp	x22,x23,[x0,360]
+	stp	x24,x25,[x0,376]
+	stp	x26,x27,[x0,392]
+	stp	x28,x29,[x0,408]
+	str	x30,[x0,424]
+	mov	x1,sp
+	str	x1,[x0,432]		// sp = caller's sp
+	str	x30,[x0,440]		// pc = caller's pc
+	b	__getcontext
+
+#else
+#error "unsupported architecture"
+#endif
 	.endfn	getcontext,globl
 
 	.end
 ////////////////////////////////////////////////////////////////////////////////
+
 noasan noubsan dontinstrument int getcontext(ucontext_t *uc) {
   asm volatile("movaps\t%%xmm0,%0" : /* no outputs */ : "m"(uc->__fpustate.xmm[0]));
   asm volatile("movaps\t%%xmm1,%0" : /* no outputs */ : "m"(uc->__fpustate.xmm[1]));
@@ -110,5 +139,13 @@ noasan noubsan dontinstrument int getcontext(ucontext_t *uc) {
                : "=m"(uc->uc_mcontext.rip)
                : /* no inputs */
                : "rax");
+  return 0;
+}
+
+noasan noubsan dontinstrument int getcontext(ucontext_t *uc) {
+  asm volatile("stp\tx0,x1,%0" : "=m"(uc->uc_mcontext.regs[0]));
+  asm volatile("stp\tx2,x3,%0" : "=m"(uc->uc_mcontext.regs[2]));
+  asm volatile("mov\tx1,sp\n\tstr\tx1,%0" : "=m"(uc->uc_mcontext.sp));
+  asm volatile("str\tx30,%0" : "=m"(uc->uc_mcontext.pc));
   return 0;
 }

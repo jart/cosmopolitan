@@ -211,6 +211,12 @@ o/$(MODE)/libc/calls/pledge-linux.o: private		\
 			-Os				\
 			-fPIC
 
+# these assembly files are safe to build on aarch64
+o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/calls/setcontext2.o: libc/calls/setcontext2.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))
 LIBC_CALLS_HDRS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_HDRS))

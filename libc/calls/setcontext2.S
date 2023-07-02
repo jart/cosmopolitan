@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Sets machine state.
-//
-//	@see	getcontext()
-setcontext:
+//	tailed called by setcontext() implementation
+__setcontext:
+#ifdef __x86_64__
+
 	mov	224(%rdi),%rax
 	test	%rax,%rax
 	je	1f
@@ -43,6 +43,7 @@ setcontext:
 	movaps	400(%rax),%xmm15
 1:	push	176(%rdi)
 	popf
+	mov	%rsi,%rsp
 	mov	40(%rdi),%r8
 	mov	48(%rdi),%r9
 	mov	56(%rdi),%r10
@@ -57,16 +58,41 @@ setcontext:
 	mov	136(%rdi),%rdx
 	mov	144(%rdi),%rax
 	mov	152(%rdi),%rcx
-	mov	160(%rdi),%rsp
 	xor	%rax,%rax
 	push	168(%rdi)
 	mov	104(%rdi),%rdi
 	ret
-	.endfn	setcontext,globl
+
+#elif defined(__aarch64__)
+
+	mov	sp,x1			// sp = second argument
+	ldr	x30,[x0,440]		// return address <- pc
+	ldp	x28,x29,[x0,408]	// x0 and x30 discarded
+	ldp	x26,x27,[x0,392]
+	ldp	x24,x25,[x0,376]
+	ldp	x22,x23,[x0,360]
+	ldp	x20,x21,[x0,344]
+	ldp	x18,x19,[x0,328]
+	ldp	x16,x17,[x0,312]
+	ldp	x14,x15,[x0,296]
+	ldp	x12,x13,[x0,280]
+	ldp	x10,x11,[x0,264]
+	ldp	x8,x9,[x0,248]
+	ldp	x6,x7,[x0,232]
+	ldp	x4,x5,[x0,216]
+	ldp	x2,x3,[x0,200]
+	ldr	x1,[x0,192]
+	mov	w0,0
+	ret
+
+#else
+#error "unsupported architecture"
+#endif
+	.endfn	__setcontext,globl
 
 	.end
 ////////////////////////////////////////////////////////////////////////////////
-noasan noubsan int setcontext(const ucontext_t *uc) {
+noasan noubsan int __setcontext(const ucontext_t *uc) {
   if (uc->uc_mcontext.fpregs) {
     asm volatile("movaps\t%0,%%xmm0" : /* no outputs */ : "m"(uc->uc_mcontext.fpregs->xmm[0]));
     asm volatile("movaps\t%0,%%xmm1" : /* no outputs */ : "m"(uc->uc_mcontext.fpregs->xmm[1]));
