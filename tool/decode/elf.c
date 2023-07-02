@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
+#include "libc/elf/elf.h"
 #include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/errno.h"
@@ -273,8 +274,7 @@ static void printelfsymbol(Elf64_Sym *sym, char *strtab, char *shstrtab) {
 
 static void printelfsymboltable(void) {
   size_t i, symcount = 0;
-  Elf64_Sym *symtab =
-      GetElfSymbolTable(elf, st->st_size, SHT_SYMTAB, &symcount);
+  Elf64_Sym *symtab = GetElfSymbols(elf, st->st_size, SHT_SYMTAB, &symcount);
   if (!symtab) return;
   char *strtab = GetElfStringTable(elf, st->st_size, ".strtab");
   char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
@@ -290,8 +290,7 @@ static void printelfsymboltable(void) {
 
 static void printelfdynsymboltable(void) {
   size_t i, symcount = 0;
-  Elf64_Sym *symtab =
-      GetElfSymbolTable(elf, st->st_size, SHT_DYNSYM, &symcount);
+  Elf64_Sym *symtab = GetElfSymbols(elf, st->st_size, SHT_DYNSYM, &symcount);
   if (!symtab) return;
   char *strtab = GetElfStringTable(elf, st->st_size, ".dynstr");
   char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);

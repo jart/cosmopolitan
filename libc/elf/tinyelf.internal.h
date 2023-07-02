@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_TINYELF_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_ELF_TINYELF_INTERNAL_H_
+#include "libc/elf/def.h"
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/elf/struct/shdr.h"

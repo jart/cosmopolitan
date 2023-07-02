@@ -25,10 +25,16 @@
 /**
  * Returns pointer to elf string table.
  *
- * @param elf points to the start of the executable image
+ * @param elf points to the start of the executable image data
  * @param mapsize is the number of bytes past `elf` we can access
  * @param section_name is usually `".strtab"`, `".dynstr"`, or null
- * @return pointer to double-nul terminated string list or null on error
+ * @return pointer to string table within `elf` image, which should
+ *     normally be a sequence of NUL-terminated strings whose first
+ *     string is the empty string; otherwise NULL is returned, when
+ *     either: (1) `section_name` is not found, (2) it did not have
+ *     the `SHT_STRTAB` section type, (3) the section size was zero
+ *     noting that the ELF spec does consider that legal, or lastly
+ *     (4) an overflow or boundary violation occurred
  */
 char *GetElfStringTable(const Elf64_Ehdr *elf,  //
                         size_t mapsize,         //

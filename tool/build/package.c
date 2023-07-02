@@ -20,6 +20,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
@@ -529,8 +530,8 @@ static void OpenObject(struct Package *pkg, struct Object *obj, int oid) {
   if (!(obj->strs = GetElfStringTable(obj->elf, obj->size, ".strtab"))) {
     Die(path, "missing elf string table");
   }
-  if (!(obj->syms = GetElfSymbolTable(obj->elf, obj->size, SHT_SYMTAB,
-                                      &obj->symcount))) {
+  if (!(obj->syms =
+            GetElfSymbols(obj->elf, obj->size, SHT_SYMTAB, &obj->symcount))) {
     Die(path, "missing elf symbol table");
   }
   IndexSections(pkg, obj);

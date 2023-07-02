@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -27,8 +28,12 @@
 int __fflush_impl(FILE *f) {
   size_t i;
   ssize_t rc;
-  free(f->getln);
-  f->getln = 0;
+  if (f->getln) {
+    if (_weaken(free)) {
+      _weaken(free)(f->getln);
+    }
+    f->getln = 0;
+  }
   if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
     for (i = 0; i < f->beg; i += rc) {
       if ((rc = write(f->fd, f->buf + i, f->beg - i)) == -1) {

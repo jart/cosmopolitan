@@ -16,19 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/elf/def.h"
-#include "libc/str/str.h"
-#include "tool/build/lib/elfwriter.h"
+#include "libc/elf/elf.h"
+#include "libc/elf/scalar.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/sym.h"
 
-void elfwriter_yoink(struct ElfWriter *elf, const char *symbol, int stb) {
-  unsigned char *p;
-  struct ElfWriterSymRef sym;
-  const unsigned char kNopl[8] = "\017\037\004\045\000\000\000\000";
-  p = elfwriter_reserve(elf, 8);
-  memcpy(p, kNopl, sizeof(kNopl));
-  sym = elfwriter_linksym(elf, symbol, ELF64_ST_INFO(stb, STT_OBJECT),
-                          STV_HIDDEN);
-  elfwriter_appendrela(elf, sizeof(kNopl) - 4, sym,
-                       elfwriter_relatype_abs32(elf), 0);
-  elfwriter_commit(elf, sizeof(kNopl));
+/**
+ * Returns pointer to array of elf symbols.
+ *
+ * This is a shortcut composing GetElfSymbolTable() and
+ * GetElfSectionAddress(), that can be used as follows:
+ *
+ *     Elf64_Xword i, n;
+ *     Elf64_Sym *st = GetElfSymbols(map, size, SHT_SYMTAB, &n);
+ *     for (i = 0; st && i < n; ++i) {
+ *       // st[i] holds a symbol
+ *     }
+ *
+ * The above code will iterate over the relocatable and/or
+ * statically-linked symbols defined by an ELF image.
+ *
+ * @param elf points to the start of the executable image data
+ * @param mapsize is the number of bytes past `elf` we can access
+ * @param section_type is usually `SHT_SYMTAB` or `SHT_DYNSYM`
+ * @param out_count optionally receives number of symbols
+ * @return pointer to array of elf symbol array, otherwise null
+ */
+Elf64_Sym *GetElfSymbols(const Elf64_Ehdr *elf,  //
+                         size_t mapsize,         //
+                         int section_type,       //
+                         Elf64_Xword *out_count) {
+  Elf64_Sym *syms;
+  Elf64_Xword count;
+  if ((syms = GetElfSectionAddress(
+           elf, mapsize,
+           GetElfSymbolTable(elf, mapsize, section_type, &count))) &&
+      out_count) {
+    *out_count = count;
+  }
+  return syms;
 }

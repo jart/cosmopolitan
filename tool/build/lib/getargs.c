@@ -16,17 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/getargs.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-#include "tool/build/lib/getargs.h"
 
 /**
  * @fileoverview Fast Command Line Argument Ingestion.
@@ -72,6 +75,13 @@
 
 #define IsSpace(c) ((255 & (c)) <= ' ')
 
+static wontreturn void getargs_fail(const char *path, const char *reason) {
+  const char *errstr;
+  if (!(errstr = _strerdoc(errno))) errstr = "Unknown error";
+  tinyprint(2, path, ": ", reason, ": ", errstr, "\n", NULL);
+  exit(1);
+}
+
 /**
  * Zeroes GetArgs object and sets its fields.
  * @param args is borrowed for the lifetime of the GetArgs object
@@ -86,7 +96,9 @@ void getargs_init(struct GetArgs *ga, char **args) {
  * Releases memory associated with GetArgs object and zeroes it.
  */
 void getargs_destroy(struct GetArgs *ga) {
-  if (ga->map) munmap(ga->map, ga->mapsize);
+  if (ga->map) {
+    if (munmap(ga->map, ga->mapsize)) notpossible;
+  }
   bzero(ga, sizeof(*ga));
 }
 
@@ -106,8 +118,8 @@ const char *getargs_next(struct GetArgs *ga) {
   char *p;
   size_t k;
   unsigned m;
-  struct stat st;
-  do {
+  ssize_t size;
+  for (;;) {
     if (ga->map) {
       for (; ga->j < ga->mapsize; ++ga->j) {
         if (!IsSpace(ga->map[ga->j])) {
@@ -134,36 +146,39 @@ const char *getargs_next(struct GetArgs *ga) {
           break;
         }
       }
-      if (k) {
-        if (ga->j + k < ga->mapsize) {
-          ga->map[ga->j + k] = 0;
-          p = ga->map + ga->j;
-          ga->j += ++k;
-          return p;
-        } else {
-          eio();
-          break;
-        }
+      if (k && ga->j + k < ga->mapsize) {
+        ga->map[ga->j + k] = 0;
+        p = ga->map + ga->j;
+        ga->j += ++k;
+        return p;
       }
-      if (munmap(ga->map, ga->mapsize) == -1) break;
+      if (munmap(ga->map, ga->mapsize)) notpossible;
       ga->map = 0;
       ga->mapsize = 0;
       ga->j = 0;
     }
-    if (!(p = ga->args[ga->i])) return 0;
-    ++ga->i;
-    if (*p != '@') return p;
-    ++p;
-    if ((fd = open((ga->path = p), O_RDONLY)) != -1) {
-      fstat(fd, &st);
-      if ((p = mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd,
-                    0)) != MAP_FAILED) {
-        ga->map = p;
-        ga->mapsize = st.st_size;
-      }
-      close(fd);
+    if (!(p = ga->args[ga->i])) {
+      return 0;
     }
-  } while (ga->map);
-  perror(ga->path);
-  exit(1);
+    ++ga->i;
+    if (*p != '@') {
+      return p;
+    }
+    ++p;
+    if ((fd = open((ga->path = p), O_RDONLY)) == -1) {
+      getargs_fail(ga->path, "open");
+    }
+    if ((size = lseek(fd, 0, SEEK_END)) == -1) {
+      getargs_fail(ga->path, "lseek");
+    }
+    if (size) {
+      p = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+      if (p == MAP_FAILED) {
+        getargs_fail(ga->path, "mmap");
+      }
+      ga->map = p;
+      ga->mapsize = ROUNDUP(size, 4096);
+    }
+    close(fd);
+  }
 }

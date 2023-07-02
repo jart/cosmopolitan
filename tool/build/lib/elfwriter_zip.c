@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dos.internal.h"
+#include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"

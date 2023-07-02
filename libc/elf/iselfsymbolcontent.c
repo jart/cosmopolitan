@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 
 bool IsElfSymbolContent(const Elf64_Sym *sym) {

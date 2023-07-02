@@ -16,25 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/elf/scalar.h"
 #include "libc/stdckdint.h"
 
 /**
- * Returns pointer to elf section file content.
+ * Returns pointer to ELF section file content.
  *
- * This function shouldn't be used on the bss section.
+ * This function computes `elf + sh_offset` with safety checks.
  *
- * @param elf points to the start of the executable image
- * @param mapsize is the number of bytes past `elf` we can access
- * @param shdr is from GetElfSectionHeaderAddress() and null-propagating
- * @return pointer to content bytes, or null on error
+ * @param elf points to the start of the executable image data
+ * @param mapsize is the number of bytes of `elf` we can access
+ * @param shdr is from GetElfSectionHeaderAddress(), or null
+ * @return pointer to section data within image, or null if
+ *     1. `shdr` was null, or
+ *     2. `sh_size` was zero, or
+ *     3, `sh_type` was `SHT_NOBITS`, or
+ *     4. content wasn't contained within `[elf,elf+mapsize)`, or
+ *     5. an arithmetic overflow occurred
  */
 void *GetElfSectionAddress(const Elf64_Ehdr *elf,     // validated
                            size_t mapsize,            // validated
                            const Elf64_Shdr *shdr) {  // foreign
-  uint64_t last;
+  Elf64_Off last;
   if (!shdr) return 0;
   if (shdr->sh_size <= 0) return 0;
+  if (shdr->sh_type == SHT_NOBITS) return 0;
   if (ckd_add(&last, shdr->sh_offset, shdr->sh_size)) return 0;
   if (last > mapsize) return 0;
   return (char *)elf + shdr->sh_offset;

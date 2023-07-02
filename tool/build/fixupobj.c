@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/scalar.h"
 #include "libc/elf/struct/rela.h"
@@ -358,7 +359,7 @@ static void FixupObject(void) {
     if (!IsElf64Binary(elf, esize)) {
       Die("not an elf64 binary");
     }
-    if (!(syms = GetElfSymbolTable(elf, esize, SHT_SYMTAB, &symcount))) {
+    if (!(syms = GetElfSymbols(elf, esize, SHT_SYMTAB, &symcount))) {
       Die("missing elf symbol table");
     }
     if (!(secstrs = GetElfSectionNameStringTable(elf, esize))) {

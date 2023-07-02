@@ -16,21 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/elf/scalar.h"
 #include "libc/elf/struct/shdr.h"
 
 /**
  * Returns section header object at `elf.section[i]`.
  *
- * @param elf points to the start of the executable image
+ * @param elf points to the start of the executable image data
  * @param mapsize is the number of bytes past `elf` we can access
- * @param i is the section header index, starting at zero
- * @return section header pointer, or null on error
+ * @param i is the index of the section header
+ * @return pointer to section header within image, or null if
+ *     1. `i` was a magic number, i.e. `i >= SHN_LORESERVE`, or
+ *     2. `e_shoff` was zero (image has no section headers), or
+ *     3. `e_shentsize` had fewer than the mandatory 60 bytes, or
+ *     4. section header wasn't contained by `[elf,elf+mapsize)`, or
+ *     5. an arithmetic overflow occurred
  */
 Elf64_Shdr *GetElfSectionHeaderAddress(const Elf64_Ehdr *elf,  //
                                        size_t mapsize,         //
                                        Elf64_Half i) {         //
-  uint64_t off;
+  Elf64_Off off;
+  if (i >= SHN_LORESERVE) return 0;
   if (i >= elf->e_shnum) return 0;
   if (elf->e_shoff <= 0) return 0;
   if (elf->e_shoff >= mapsize) return 0;
