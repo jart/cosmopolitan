@@ -83,3 +83,19 @@ void SetGetContext(void) {
 BENCH(getcontext, bench) {
   EZBENCH2("get/setcontext", donothing, SetGetContext());
 }
+
+BENCH(swapcontext, bench) {
+  ucontext_t main, loop;
+  volatile bool ready = false;
+  getcontext(&main);
+  if (ready) {
+    for (;;) {
+      swapcontext(&main, &loop);
+      // kprintf("boom\n");
+    }
+  } else {
+    ready = true;
+    EZBENCH2("x2 swapcontext", donothing, swapcontext(&loop, &main));
+    // kprintf("dollar\n");
+  }
+}

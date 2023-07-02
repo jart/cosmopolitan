@@ -117,7 +117,7 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
 
   // we must use _mapstack() to allocate the stack because OpenBSD has
   // very strict requirements for what's allowed to be used for stacks
-  if (!(th->stk = _mapstack())) {
+  if (!(th->stk = NewCosmoStack())) {
     free(th->tls);
     return -1;
   }
@@ -132,7 +132,7 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
              spawner, &th->ptid, __adj_tls(th->tib), &th->tib->tib_tid);
   if (rc) {
     errno = rc;
-    _freestack(th->stk);
+    FreeCosmoStack(th->stk);
     free(th->tls);
     return -1;
   }

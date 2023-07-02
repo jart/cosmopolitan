@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,48 +16,74 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/macros.internal.h"
 
-/**
- * Allocates stack.
- *
- * The size of your returned stack is always GetStackSize().
- *
- * The bottom 4096 bytes of your stack can't be used, since it's always
- * reserved for a read-only guard page. With ASAN it'll be poisoned too.
- *
- * The top 16 bytes of a stack can't be used due to openbsd:stackbound
- * and those bytes are also poisoned under ASAN build modes.
- *
- * @return stack bottom address on success, or null w/ errno
- */
-void *NewCosmoStack(void) {
-  char *p;
-  if ((p = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
-    if (IsAsan()) {
-      __asan_poison(p + GetStackSize() - 16, 16, kAsanStackOverflow);
-      __asan_poison(p, 4096, kAsanStackOverflow);
-    }
-    return p;
-  } else {
-    return 0;
-  }
-}
+//	tailed called by setcontext() implementation
+__tailcontext:
+#ifdef __x86_64__
 
-/**
- * Frees stack.
- *
- * @param stk was allocated by NewCosmoStack()
- */
-int FreeCosmoStack(void *stk) {
-  return munmap(stk, GetStackSize());
-}
+	lea	608(%rdi),%rax
+	movaps	-0x80(%rax),%xmm0
+	movaps	-0x70(%rax),%xmm1
+	movaps	-0x60(%rax),%xmm2
+	movaps	-0x50(%rax),%xmm3
+	movaps	-0x40(%rax),%xmm4
+	movaps	-0x30(%rax),%xmm5
+	movaps	-0x20(%rax),%xmm6
+	movaps	-0x10(%rax),%xmm7
+	movaps	0x00(%rax),%xmm8
+	movaps	0x10(%rax),%xmm9
+	movaps	0x20(%rax),%xmm10
+	movaps	0x30(%rax),%xmm11
+	movaps	0x40(%rax),%xmm12
+	movaps	0x50(%rax),%xmm13
+	movaps	0x60(%rax),%xmm14
+	movaps	0x70(%rax),%xmm15
+
+	mov	40(%rdi),%r8
+	mov	48(%rdi),%r9
+	mov	56(%rdi),%r10
+	mov	64(%rdi),%r11
+	mov	72(%rdi),%r12
+	mov	80(%rdi),%r13
+	mov	88(%rdi),%r14
+	mov	96(%rdi),%r15
+	mov	112(%rdi),%rsi
+	mov	120(%rdi),%rbp
+	mov	128(%rdi),%rbx
+	mov	136(%rdi),%rdx
+	mov	152(%rdi),%rcx
+	mov	160(%rdi),%rsp
+	push	168(%rdi)
+	mov	104(%rdi),%rdi
+
+	xor	%eax,%eax
+	ret
+
+#elif defined(__aarch64__)
+#define REGS(i) 184+i*8
+
+	ldp	x1,x16,[x0,REGS(31)]		// sp, pc
+	mov	sp,x1
+	ldr	x30,[x0,REGS(30)]
+	ldp	x28,x29,[x0,REGS(28)]
+	ldp	x26,x27,[x0,REGS(26)]
+	ldp	x24,x25,[x0,REGS(24)]
+	ldp	x22,x23,[x0,REGS(22)]
+	ldp	x20,x21,[x0,REGS(20)]
+	ldp	x18,x19,[x0,REGS(18)]
+	ldr	x17,[x0,REGS(17)]
+	ldp	x14,x15,[x0,REGS(14)]
+	ldp	x12,x13,[x0,REGS(12)]
+	ldp	x10,x11,[x0,REGS(10)]
+	ldp	x8,x9,[x0,REGS(8)]
+	ldp	x6,x7,[x0,REGS(6)]
+	ldp	x4,x5,[x0,REGS(4)]
+	ldp	x2,x3,[x0,REGS(2)]
+	ldp	x0,x1,[x0,REGS(0)]
+	br	x16
+
+#else
+#error "unsupported architecture"
+#endif
+	.endfn	__tailcontext,globl

@@ -123,7 +123,7 @@ void TestContendedLock(const char *name, int kind) {
   pthread_mutexattr_destroy(&attr);
   atomic_store(&ready, 0);
   atomic_store(&success, 0);
-  stk = _mapstack();
+  stk = NewCosmoStack();
   rc = clone(Worker, stk, GetStackSize() - 16 /* openbsd:stackbound */,
              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                  CLONE_SYSVSEM | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
@@ -146,7 +146,7 @@ void TestContendedLock(const char *name, int kind) {
   while (tib.tib_tid) donothing;
   ASSERT_EQ(1, atomic_load(&success));
   ASSERT_EQ(0, atomic_load(&counter));
-  _freestack(stk);
+  FreeCosmoStack(stk);
   ASSERT_EQ(0, pthread_mutex_destroy(&mu));
   ns = time2dbl(timespec_sub(t2, t1)) / n;
   kprintf("%s contended took %s\n", name, time2str(ns));

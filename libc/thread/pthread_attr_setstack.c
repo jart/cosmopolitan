@@ -26,13 +26,13 @@
  *
  *     pthread_t id;
  *     pthread_attr_t attr;
- *     char *stk = _mapstack();
+ *     char *stk = NewCosmoStack();
  *     pthread_attr_init(&attr);
  *     pthread_attr_setstack(&attr, stk, GetStackSize());
  *     pthread_create(&id, &attr, func, 0);
  *     pthread_attr_destroy(&attr);
  *     pthread_join(id, 0);
- *     _freestack(stk);
+ *     FreeCosmoStack(stk);
  *
  * Your stack must have at least `PTHREAD_STACK_MIN` bytes, which
  * Cosmpolitan Libc defines as `GetStackSize()`. It's a link-time
@@ -44,7 +44,7 @@
  * (e.g. kprintf) assumes that stack sizes are two-powers and are
  * aligned to that two-power. Conformance isn't required since we
  * say caveat emptor to those who don't maintain these invariants
- * please consider using _mapstack() which always does it perfect
+ * please consider using NewCosmoStack(), which is always perfect
  * or use `mmap(0, GetStackSize() << 1, ...)` for a bigger stack.
  *
  * Unlike pthread_attr_setstacksize(), this function permits just

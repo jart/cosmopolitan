@@ -533,7 +533,7 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
  *     int worker(void *arg) { return 0; }
  *     struct CosmoTib tib = {.tib_self = &tib, .tib_tid = -1};
  *     atomic_int tid;
- *     char *stk = _mapstack();
+ *     char *stk = NewCosmoStack();
  *     clone(worker, stk, GetStackSize() - 16,
  *           CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
  *           CLONE_SYSVSEM | CLONE_SIGHAND | CLONE_PARENT_SETTID |
@@ -545,7 +545,7 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
  *     // thread is running
  *     while (atomic_load(&tib.tib_tid) > 0) sched_yield();
  *     // thread has terminated
- *     _freestack(stk);
+ *     FreeCosmoStack(stk);
  *
  * Threads are created in a detached manner. They currently can't be
  * synchronized using wait() or posix signals. Threads created by this

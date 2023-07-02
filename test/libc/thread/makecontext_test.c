@@ -16,26 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
+#include "libc/limits.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/ss.h"
+#include "libc/testlib/subprocess.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+#include "libc/x/x.h"
+#include "third_party/libcxx/math.h"
 
-int __setcontext(const ucontext_t *, uintptr_t);
+ucontext_t uc;
+char testlib_enable_tmp_setup_teardown;
 
-/**
- * Sets machine context.
- *
- * @see getcontext()
- */
-int setcontext(const ucontext_t *uc) {
-  uintptr_t sp;
-  if (sigprocmask(SIG_SETMASK, &uc->uc_sigmask, 0)) return -1;
-  if (uc->uc_stack.ss_flags & (SS_DISABLE | SS_ONSTACK)) {
-    sp = uc->uc_mcontext.SP;
-  } else {
-    sp = (uintptr_t)uc->uc_stack.ss_sp & -16;
-  }
-  return __setcontext(uc, sp);
+void itsatrap(int x, int y) {
+  *(int *)(intptr_t)x = scalbn(x, y);
+}
+
+TEST(makecontext, test) {
+  SPAWN(fork);
+  getcontext(&uc);
+  uc.uc_link = 0;
+  uc.uc_stack.ss_sp = NewCosmoStack();
+  uc.uc_stack.ss_size = GetStackSize();
+  makecontext(&uc, exit, 1, 42);
+  setcontext(&uc);
+  EXITS(42);
+}
+
+TEST(makecontext, backtrace) {
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, close(2));
+  ASSERT_SYS(0, 2, creat("log", 0644));
+  getcontext(&uc);
+  uc.uc_link = 0;
+  uc.uc_stack.ss_sp = NewCosmoStack();
+  uc.uc_stack.ss_size = GetStackSize();
+  makecontext(&uc, itsatrap, 2, 123, 456);
+  setcontext(&uc);
+  EXITS(128 + SIGSEGV);
+  if (!GetSymbolTable()) return;
+  char *log = gc(xslurp("log", 0));
+  EXPECT_NE(0, strstr(log, "itsatrap"));
+  EXPECT_NE(0, strstr(log, "runcontext"));
+  EXPECT_NE(0, strstr(log, "makecontext_backtrace"));
 }

@@ -214,7 +214,9 @@ o/$(MODE)/libc/calls/pledge-linux.o: private		\
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/calls/getcontext.o: libc/calls/getcontext.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/calls/setcontext2.o: libc/calls/setcontext2.S
+o/$(MODE)/libc/calls/swapcontext.o: libc/calls/swapcontext.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/calls/tailcontext.o: libc/calls/tailcontext.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))

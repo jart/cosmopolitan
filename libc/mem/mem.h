@@ -26,7 +26,6 @@ char *strndup(const char *, size_t) paramsnonnull() mallocesque;
 void *aligned_alloc(size_t, size_t) attributeallocalign((1))
     attributeallocsize((2)) returnspointerwithnoaliases libcesque dontdiscard;
 int posix_memalign(void **, size_t, size_t);
-bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
 int mallopt(int, int);
 int malloc_trim(size_t);
@@ -58,6 +57,10 @@ size_t malloc_footprint_limit(void);
 size_t malloc_set_footprint_limit(size_t);
 void malloc_inspect_all(void (*handler)(void *, void *, size_t, void *),
                         void *);
+
+#ifdef COSMO
+bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

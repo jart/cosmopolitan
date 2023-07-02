@@ -16,21 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/log/log.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 
 /**
  * Writes error messages to standard error.
  */
 void perror(const char *message) {
   int err;
-  err = errno;
-  if (message && *message) {
-    fputs(message, stderr);
-    fputs(": ", stderr);
-  }
-  fputs(strerror(err), stderr);
-  fputc('\n', stderr);
+  const char *estr;
+  estr = _strerdoc(errno);
+  if (!message) message = "";
+  if (!estr) estr = "Unknown error";
+  tinyprint(2, message, *message ? ": " : "", estr, "\n", NULL);
 }

@@ -21,10 +21,10 @@
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
+#include "libc/nt/enum/status.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/str/str.h"
@@ -89,6 +89,10 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
     case kNtSignalAssertionFailure:
       code = SI_USER;
       sig = SIGABRT;
+      break;
+    case kNtStatusIntegerOverflow:
+      code = FPE_INTOVF;
+      sig = SIGFPE;
       break;
     case kNtSignalFltDivideByZero:
       code = FPE_FLTDIV;

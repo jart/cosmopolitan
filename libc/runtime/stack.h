@@ -133,6 +133,9 @@ forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
   }
 }
 
+void *NewCosmoStack(void) vallocesque;
+int FreeCosmoStack(void *) libcesque;
+
 #endif /* COSMO */
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */

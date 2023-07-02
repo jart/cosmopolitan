@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/ucontext.internal.h"
-#include "libc/calls/ucontext.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/ss.h"
+#include "libc/macros.internal.h"
 
-// this is tail called by the getcontext() implementation
-int __getcontext(ucontext_t *uc) {
-  uc->uc_flags = 0;
-  uc->uc_link = 0;
-  uc->uc_stack.ss_sp = (void *)uc->uc_mcontext.SP;
-  uc->uc_stack.ss_flags = SS_ONSTACK;
-  uc->uc_stack.ss_size = uc->uc_mcontext.SP - GetStackAddr();
-  return sigprocmask(SIG_SETMASK, 0, &uc->uc_sigmask);
-}
+//	Saves machine to 𝑥 and activates 𝑦, i.e.
+//
+//	    getcontext(x);
+//	    setcontext(y);
+//
+//	Except using this API is safer and goes 2x faster:
+//
+//	    swapcontext(x, y);
+//
+//	@return	0 on success, or -1 w/ errno
+//	@returnstwice
+//	@threadsafe
+	.ftrace1
+swapcontext:
+	.ftrace2
+#include "libc/calls/getcontext.inc"
+#ifdef __x86_64__
+	push	%rbp
+	mov	%rsp,%rbp
+	push	%rsi
+	push	%rsi
+	call	__swapcontextsig
+	pop	%rdi
+	pop	%rdi
+	pop	%rbp
+	test	%eax,%eax
+	jnz	1f
+#elif defined(__aarch64__)
+	stp	x29,x30,[sp,#-32]!
+	mov	x29,sp
+	str	x1,[sp,16]
+	bl	__swapcontextsig
+	ldr	x1,[sp,16]
+	ldp	x29,x30,[sp],#32
+	cbnz	w0,1f
+	mov	x0,x1
+#endif
+	jmp	__tailcontext
+1:	ret
+	.endfn	swapcontext,globl

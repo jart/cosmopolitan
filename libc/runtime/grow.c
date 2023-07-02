@@ -32,10 +32,6 @@
 #define GUARANTEE_TERMINATOR 1
 #define INITIAL_CAPACITY     (32 - GUARANTEE_TERMINATOR)
 
-/**
- * Grows array.
- * @deprecated favor realloc
- */
 bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   void **p, *p1, *p2;
   size_t n1, n2;

@@ -45,7 +45,6 @@
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/str/str.h"
 #include "third_party/libcxx/math.h"
 #ifdef __x86_64__
 
@@ -230,8 +229,8 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + APE_GUARDSIZE))
           ? "Stack Overflow"
           : GetSiCodeName(sig, si->si_code),
-      host, getpid(), gettid(), program_invocation_name, strerror(err), names.sysname,
-      names.version, names.nodename, names.release);
+      host, getpid(), gettid(), program_invocation_name, strerror(err),
+      names.sysname, names.version, names.nodename, names.release);
   if (ctx) {
     p = ShowGeneralRegisters(p, ctx);
     p = ShowSseRegisters(p, ctx);
@@ -314,6 +313,7 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
         DebugBreak();
       } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
+#if 0
       } else if (!IsTiny() && IsLinux() && FindDebugBinary() && !__isworker) {
         // RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(
@@ -321,6 +321,7 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
              (rip >= (intptr_t)&__executable_start && rip < (intptr_t)&_etext))
                 ? rip
                 : 0);
+#endif
       }
       if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
         __restore_tty();
