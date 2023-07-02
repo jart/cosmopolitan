@@ -24,6 +24,7 @@ It's recommended that Cosmopolitan be installed to `/opt/cosmo` and
 contains your non-monorepo artifacts.
 
 ```
+sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
 sudo mkdir -p /opt
 sudo chmod 1777 /opt
 git clone https://github.com/jart/cosmopolitan /opt/cosmo
