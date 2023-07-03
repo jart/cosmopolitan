@@ -17,21 +17,27 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * @fileoverview Tool for printing current directory.
  */
 
-char path[PATH_MAX];
-
 int main(int argc, char *argv[]) {
-  char *p;
-  if ((p = getcwd(path, sizeof(path)))) {
-    fputs(p, stdout);
-    fputc('\n', stdout);
-    return 0;
-  } else {
-    return 1;
+  char path[PATH_MAX + 2];
+
+  if (!getcwd(path, PATH_MAX)) {
+    perror(argv[0]);
+    exit(1);
   }
+
+  strcat(path, "\n");
+  if (write(1, path, strlen(path)) == -1) {
+    perror("write");
+    exit(1);
+  }
+
+  return 0;
 }

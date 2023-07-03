@@ -23,9 +23,6 @@
 
 /* Aborts after printing the nul-terminated string s[]. */
 void nsync_panic_ (const char *s) {
-	char b[256], *p = b;
-	p = stpcpy (p, "panic: ");
-	p = stpcpy (p, s);
-	write (2, b, p - b);
+	tinyprint (2, "nsync panic: ", s, NULL);
 	notpossible;
 }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/fmt/magnumstrs.internal.h"
-#include "libc/stdio/stdio.h"
 
-/**
- * Writes error messages to standard error.
- */
-void perror(const char *message) {
-  int err;
-  const char *estr;
-  estr = _strerdoc(errno);
-  if (!message) message = "";
-  if (!estr) estr = "Unknown error";
-  tinyprint(2, message, *message ? ": " : "", estr, "\n", NULL);
+// stub version of assert() to keep the build a dag
+__attribute__((__weak__)) void __assert_fail(const char *expr, const char *file,
+                                             int line) {
+  __builtin_trap();
 }

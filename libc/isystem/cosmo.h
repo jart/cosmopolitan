@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_COSMO_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_COSMO_H_
+#ifndef _COSMO_H
+#define _COSMO_H
 
 #ifdef COSMO
 #define COSMO_ALREADY_DEFINED
@@ -65,4 +65,4 @@
 #undef COSMO
 #endif
 
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_COSMO_H_ */
+#endif /* _COSMO_H */

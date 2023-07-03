@@ -1,4 +1,4 @@
-#ifndef COSMOPOLITAN_LIBC_ISYSTEM_ALLOCA_H_
-#define COSMOPOLITAN_LIBC_ISYSTEM_ALLOCA_H_
+#ifndef _ALLOCA_H
+#define _ALLOCA_H
 #include "libc/mem/alloca.h"
-#endif /* COSMOPOLITAN_LIBC_ISYSTEM_ALLOCA_H_ */
+#endif /* _ALLOCA_H */

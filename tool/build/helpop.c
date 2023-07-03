@@ -52,7 +52,7 @@ void PrintUsage(int rc, FILE *f) {
 void GetOpts(int argc, char *argv[]) {
   int opt;
   bits_ = 64;
-  while ((opt = getopt(argc, argv, "?hbs")) != -1) {
+  while ((opt = getopt(argc, argv, "hbs")) != -1) {
     switch (opt) {
       case 's':
         succinct_ = true;
@@ -60,7 +60,6 @@ void GetOpts(int argc, char *argv[]) {
       case 'b':
         bits_ = atoi(optarg);
         break;
-      case '?':
       case 'h':
         PrintUsage(EXIT_SUCCESS, stdout);
       default:

@@ -8,14 +8,9 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/ex.h"
-#include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
 
 #define USAGE \
@@ -30,19 +25,19 @@ FLAGS\n\
 
 const char *prog;
 
-wontreturn void PrintUsage(int rc, FILE *f) {
-  fputs("Usage: ", f);
-  fputs(prog, f);
-  fputs(USAGE, f);
+wontreturn void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
 }
 
 int main(int argc, char *argv[]) {
   int i, mode = 0755;
   int (*mkdirp)(const char *, unsigned) = mkdir;
-  prog = argc > 0 ? argv[0] : "mkdir.com";
 
-  while ((i = getopt(argc, argv, "?hpm:")) != -1) {
+  prog = argv[0];
+  if (!prog) prog = "mkdir";
+
+  while ((i = getopt(argc, argv, "hpm:")) != -1) {
     switch (i) {
       case 'p':
         mkdirp = makedirs;
@@ -50,31 +45,21 @@ int main(int argc, char *argv[]) {
       case 'm':
         mode = strtol(optarg, 0, 8);
         break;
-      case '?':
       case 'h':
-        PrintUsage(0, stdout);
+        PrintUsage(0, 1);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        PrintUsage(1, 2);
     }
   }
 
   if (optind == argc) {
-    fputs(prog, stderr);
-    fputs(": missing argument\n", stderr);
-    fputs("Try '", stderr);
-    fputs(prog, stderr);
-    fputs(" -h' for more information.\n", stderr);
+    tinyprint(2, prog, ": missing operand\n", NULL);
     exit(1);
   }
 
   for (i = optind; i < argc; ++i) {
     if (mkdirp(argv[i], mode) == -1) {
-      fputs(prog, stderr);
-      fputs(": cannot create directory '", stderr);
-      fputs(argv[i], stderr);
-      fputs("' ", stderr);
-      fputs(_strerdoc(errno), stderr);
-      fputc('\n', stderr);
+      perror(argv[i]);
       exit(1);
     }
   }

@@ -62,7 +62,7 @@ COSMOPOLITAN_C_START_
 
 typedef int sig_atomic_t;
 
-bool32 isatty(int) nosideeffect;
+bool32 isatty(int);
 char *get_current_dir_name(void) dontdiscard;
 char *getcwd(char *, size_t);
 char *realpath(const char *, char *);

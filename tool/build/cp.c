@@ -24,6 +24,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -91,16 +92,14 @@ bool IsSymlink(const char *path) {
   return res;
 }
 
-wontreturn void PrintUsage(int rc, FILE *f) {
-  fputs("usage: ", f);
-  fputs(prog, f);
-  fputs(USAGE, f);
+wontreturn void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
 }
 
 void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "?hfnaprR")) != -1) {
+  while ((opt = getopt(argc, argv, "hfnaprR")) != -1) {
     switch (opt) {
       case 'f':
         force = true;
@@ -118,10 +117,9 @@ void GetOpts(int argc, char *argv[]) {
         flags |= COPYFILE_PRESERVE_TIMESTAMPS;
         break;
       case 'h':
-      case '?':
-        PrintUsage(EXIT_SUCCESS, stdout);
+        PrintUsage(0, 1);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        PrintUsage(1, 2);
     }
   }
 }
@@ -146,8 +144,7 @@ int Visit(const char *fpath, const struct stat *sb, int tflag,
       Cp(srcfile, dstfile);
       return 0;
     default:
-      fputs(fpath, stderr);
-      fputs(": can't handle file type\n", stderr);
+      tinyprint(2, fpath, ": bad file type\n", NULL);
       exit(1);
   }
 }
@@ -157,7 +154,7 @@ char *Join(const char *a, const char *b) {
   n = strlen(a);
   m = strlen(b);
   if (n + 1 + m + 1 > sizeof(dstfile)) {
-    fputs("error: cp: path too long\n", stderr);
+    tinyprint(2, prog, ": path too long\n", NULL);
     exit(1);
   }
   stpcpy(stpcpy(stpcpy(dstfile, a), "/"), b);
@@ -191,8 +188,7 @@ void Cp(char *src, char *dst) {
   basename(dst);
   if (IsDirectory(src)) {
     if (!recursive) {
-      fputs(prog, stderr);
-      fputs(": won't copy directory without -r flag.\n", stderr);
+      tinyprint(2, prog, ": won't copy directory without -r flag\n", NULL);
       exit(1);
     }
     strcpy(dstdir, dst);
@@ -208,10 +204,7 @@ void Cp(char *src, char *dst) {
       strcpy(srcdir, "");
     }
     if (nftw(src, Visit, 20, 0) == -1) {
-      fputs(prog, stderr);
-      fputs(": nftw failed: ", stderr);
-      fputs(_strerdoc(errno), stderr);
-      fputs("\n", stderr);
+      perror(src);
       exit(1);
     }
     return;
@@ -219,37 +212,49 @@ void Cp(char *src, char *dst) {
   if (IsDirectory(dst)) {
     dst = Join(dst, basename(src));
   }
-  if (!force && access(dst, W_OK) == -1 && errno != ENOENT) goto OnFail;
-  strcpy(mkbuf, dst);
-  if (makedirs(dirname(mkbuf), 0755) == -1) goto OnFail;
-  if (IsSymlink(src)) {
-    if ((rc = readlink(src, linkbuf, sizeof(linkbuf) - 1)) == -1) goto OnFail;
-    linkbuf[rc] = 0;
-    if (symlink(linkbuf, dst) == -1) goto OnFail;
-  } else {
-    if (!MovePreservingDestinationInode(src, dst)) goto OnFail;
+  if (!force && access(dst, W_OK) == -1 && errno != ENOENT) {
+    perror(dst);
+    exit(1);
   }
-  return;
-OnFail:
-  s = _strerdoc(errno);
-  fputs(prog, stderr);
-  fputs(": ", stderr);
-  fputs(src, stderr);
-  fputs(" ", stderr);
-  fputs(dst, stderr);
-  fputs(": ", stderr);
-  fputs(s, stderr);
-  fputs("\n", stderr);
-  exit(1);
+  strcpy(mkbuf, dst);
+  if (makedirs((s = dirname(mkbuf)), 0755) == -1) {
+    perror(s);
+    exit(1);
+  }
+  if (IsSymlink(src)) {
+    if ((rc = readlink(src, linkbuf, sizeof(linkbuf) - 1)) == -1) {
+      perror(src);
+      exit(1);
+    }
+    linkbuf[rc] = 0;
+    if (symlink(linkbuf, dst) == -1) {
+      perror(dst);
+      exit(1);
+    }
+  } else {
+    if (!MovePreservingDestinationInode(src, dst)) {
+      perror(src);
+      exit(1);
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
   int i;
-  prog = argc > 0 ? argv[0] : "cp.com";
+
+  prog = argv[0];
+  if (!prog) prog = "cp";
+
   GetOpts(argc, argv);
-  if (argc - optind < 2) PrintUsage(EX_USAGE, stderr);
+
+  if (argc - optind < 2) {
+    tinyprint(2, prog, ": missing operand\n", NULL);
+    exit(1);
+  }
+
   for (i = optind; i < argc - 1; ++i) {
     Cp(argv[i], argv[argc - 1]);
   }
+
   return 0;
 }

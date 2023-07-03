@@ -41,56 +41,27 @@ getopt (BSD-3)\\n\
 Copyright 1987, 1993, 1994 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-#define BADCH  (int)'?'
-#define BADARG (int)':'
+#define BADCH  '?'
+#define BADARG ':'
 
-/**
- * If error message should be printed.
- * @see getopt()
- */
-int opterr;
+int opterr;    // If error message should be printed.
+int optind;    // Index into parent argv vector.
+int optopt;    // Character checked for validity.
+int optreset;  // Reset getopt.
+char *optarg;  // Argument associated with option.
 
-/**
- * Index into parent argv vector.
- * @see getopt()
- */
-int optind;
+static struct {
+  char once;
+  char emsg[1];
+  char *place;
+} optglob;
 
-/**
- * Character checked for validity.
- * @see getopt()
- */
-int optopt;
-
-/**
- * Reset getopt.
- * @see getopt()
- */
-int optreset;
-
-/**
- * Argument associated with option.
- * @see getopt()
- */
-char *optarg;
-
-char *getopt_place;
-static char kGetoptEmsg[1];
-
-static void getopt_print_badch(const char *s) {
-  char b1[512];
-  char b2[8] = " -- ";
-  b1[0] = 0;
-  if (program_invocation_name) {
-    strlcat(b1, program_invocation_name, sizeof(b1));
-    strlcat(b1, ": ", sizeof(b1));
-  }
-  strlcat(b1, s, sizeof(b1));
-  b2[4] = optopt;
-  b2[5] = '\n';
-  b2[6] = 0;
-  strlcat(b1, b2, sizeof(b1));
-  write(2, b1, strlen(b1));
+static void getopt_print(const char *s) {
+  const char *prog;
+  char b[8] = " -- ?\n";
+  prog = program_invocation_short_name;
+  b[4] = optopt;
+  tinyprint(2, prog ? prog : "", prog ? ": " : "", s, b, NULL);
 }
 
 /**
@@ -116,69 +87,74 @@ static void getopt_print_badch(const char *s) {
  */
 int getopt(int nargc, char *const nargv[], const char *ostr) {
   char *oli; /* option letter list index */
-  static bool once;
-  if (!once) {
+  if (!optglob.once) {
     opterr = 1;
     optind = 1;
-    getopt_place = kGetoptEmsg;
-    once = true;
+    optglob.place = optglob.emsg;
+    optglob.once = 1;
   }
   /*
    * Some programs like cvs expect optind = 0 to trigger
    * a reset of getopt.
    */
-  if (optind == 0) optind = 1;
-  if (optreset || *getopt_place == 0) { /* update scanning pointer */
+  if (!optind) optind = 1;
+  if (optreset || !*optglob.place) { /* update scanning pointer */
     optreset = 0;
-    getopt_place = nargv[optind];
-    if (optind >= nargc || *getopt_place++ != '-') {
+    optglob.place = nargv[optind];
+    if (optind >= nargc || *optglob.place++ != '-') {
       /* Argument is absent or is not an option */
-      getopt_place = kGetoptEmsg;
+      optglob.place = optglob.emsg;
       return -1;
     }
-    optopt = *getopt_place++;
-    if (optopt == '-' && *getopt_place == 0) {
+    optopt = *optglob.place++;
+    if (optopt == '-' && !*optglob.place) {
       /* "--" => end of options */
       ++optind;
-      getopt_place = kGetoptEmsg;
+      optglob.place = optglob.emsg;
       return -1;
     }
-    if (optopt == 0) {
+    if (!optopt) {
       /* Solitary '-', treat as a '-' option
          if the program (eg su) is looking for it. */
-      getopt_place = kGetoptEmsg;
-      if (strchr(ostr, '-') == NULL) return -1;
+      optglob.place = optglob.emsg;
+      if (!strchr(ostr, '-')) return -1;
       optopt = '-';
     }
   } else {
-    optopt = *getopt_place++;
+    optopt = *optglob.place++;
   }
   /* See if option letter is one the caller wanted... */
-  if (optopt == ':' || (oli = strchr(ostr, optopt)) == NULL) {
-    if (*getopt_place == 0) ++optind;
-    if (opterr && *ostr != ':') getopt_print_badch("illegal option");
+  if (optopt == ':' || !(oli = strchr(ostr, optopt))) {
+    if (!*optglob.place) ++optind;
+    if (opterr && *ostr != ':') {
+      getopt_print("illegal option");
+    }
     return BADCH;
   }
   /* Does this option need an argument? */
   if (oli[1] != ':') {
     /* don't need argument */
-    optarg = NULL;
-    if (*getopt_place == 0) ++optind;
+    optarg = 0;
+    if (!*optglob.place) ++optind;
   } else {
     /* Option-argument is either the rest of this argument or the
        entire next argument. */
-    if (*getopt_place) {
-      optarg = getopt_place;
+    if (*optglob.place) {
+      optarg = optglob.place;
     } else if (nargc > ++optind) {
       optarg = nargv[optind];
     } else {
       /* option-argument absent */
-      getopt_place = kGetoptEmsg;
-      if (*ostr == ':') return BADARG;
-      if (opterr) getopt_print_badch("option requires an argument");
+      optglob.place = optglob.emsg;
+      if (*ostr == ':') {
+        return BADARG;
+      }
+      if (opterr) {
+        getopt_print("option requires an argument");
+      }
       return BADCH;
     }
-    getopt_place = kGetoptEmsg;
+    optglob.place = optglob.emsg;
     ++optind;
   }
   return optopt; /* return option letter */

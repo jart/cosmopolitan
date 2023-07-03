@@ -21,7 +21,6 @@
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -52,15 +51,16 @@ int strip_components_;
 const char *path_prefix_;
 struct timespec timestamp;
 
-wontreturn void PrintUsage(int rc) {
-  kprintf("\n\
+wontreturn void PrintUsage(int fd, int rc) {
+  tinyprint(fd, "\n\
 NAME\n\
 \n\
   Cosmpolitan Zip File Compiler\n\
 \n\
 SYNOPSIS\n\
 \n\
-  %s [FLAGS] FILE...\n\
+  ",
+            program_invocation_name, " [FLAGS] FILE...\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -80,7 +80,7 @@ FLAGS\n\
   -y SYMBOL       generate yoink for symbol (default __zip_eocd)\n\
 \n\
 ",
-          program_invocation_name);
+            NULL);
   exit(rc);
 }
 
@@ -117,17 +117,18 @@ void GetOpts(int *argc, char ***argv) {
         break;
       case '?':
       case 'h':
-        PrintUsage(EXIT_SUCCESS);
+        PrintUsage(1, EXIT_SUCCESS);
       default:
-        PrintUsage(EX_USAGE);
+        PrintUsage(2, EX_USAGE);
     }
   }
   *argc -= optind;
   *argv += optind;
   if (!outpath_) {
-    kprintf("error: no output path specified\n"
-            "run %s -h for usage\n",
-            program_invocation_name);
+    tinyprint(2,
+              "error: no output path specified\n"
+              "run ",
+              program_invocation_name, " -h for usage\n", NULL);
     exit(1);
   }
 }

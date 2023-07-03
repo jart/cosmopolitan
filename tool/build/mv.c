@@ -62,27 +62,15 @@ char linkbuf[PATH_MAX];
 
 void Mv(char *, char *);
 
-nullterminated() void Print(int fd, const char *s, ...) {
-  va_list va;
-  char buf[2048];
-  va_start(va, s);
-  buf[0] = 0;
-  do {
-    strlcat(buf, s, sizeof(buf));
-  } while ((s = va_arg(va, const char *)));
-  write(fd, buf, strlen(buf));
-  va_end(va);
-}
-
 wontreturn void Die(const char *path, const char *reason) {
-  Print(2, path, ": ", reason, "\n", NULL);
+  tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-wontreturn void SysExit(const char *path, const char *func) {
+wontreturn void SysDie(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
-  Print(2, path, ": ", func, "() failed with ", errstr, "\n", NULL);
+  tinyprint(2, path, ": ", func, ": ", errstr, "\n", NULL);
   exit(1);
 }
 
@@ -108,7 +96,7 @@ bool IsSymlink(const char *path) {
 }
 
 wontreturn void PrintUsage(int rc, int fd) {
-  Print(fd, "usage: ", prog, USAGE, NULL);
+  tinyprint(fd, "usage: ", prog, USAGE, NULL);
   exit(rc);
 }
 
@@ -161,7 +149,7 @@ char *Join(const char *a, const char *b) {
   n = strlen(a);
   m = strlen(b);
   if (n + 1 + m + 1 > sizeof(dstfile)) {
-    Print(2, "error: mv: path too long\n", NULL);
+    tinyprint(2, "error: mv: path too long\n", NULL);
     exit(1);
   }
   stpcpy(stpcpy(stpcpy(dstfile, a), "/"), b);
@@ -192,7 +180,7 @@ void Mv(char *src, char *dst) {
       strcpy(srcdir, "");
     }
     if (nftw(src, Visit, 20, 0) == -1) {
-      SysExit(src, "nftw");
+      SysDie(src, "nftw");
     }
     return;
   }
@@ -200,30 +188,31 @@ void Mv(char *src, char *dst) {
     dst = Join(dst, basename(src));
   }
   if (!force && access(dst, W_OK) == -1 && errno != ENOENT) {
-    SysExit(dst, "access");
+    SysDie(dst, "access");
   }
   strcpy(mkbuf, dst);
   if (makedirs((d = dirname(mkbuf)), 0755) == -1) {
-    SysExit(d, "makedirs");
+    SysDie(d, "makedirs");
   }
   if (IsSymlink(src)) {
     if ((rc = readlink(src, linkbuf, sizeof(linkbuf) - 1)) == -1) {
-      SysExit(src, "readlink");
+      SysDie(src, "readlink");
     }
     linkbuf[rc] = 0;
     if (symlink(linkbuf, dst)) {
-      SysExit(dst, "symlink");
+      SysDie(dst, "symlink");
     }
   } else {
     if (rename(src, dst)) {
-      SysExit(src, "rename");
+      SysDie(src, "rename");
     }
   }
 }
 
 int main(int argc, char *argv[]) {
   int i;
-  prog = argc > 0 ? argv[0] : "mv.com";
+  prog = argv[0];
+  if (!prog) prog = "mv";
   GetOpts(argc, argv);
   if (argc - optind < 2) PrintUsage(1, 2);
   for (i = optind; i < argc - 1; ++i) {

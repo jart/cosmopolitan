@@ -6,7 +6,6 @@ PKGS += TOOL_BUILD
 TOOL_BUILD_FILES := $(wildcard tool/build/*)
 TOOL_BUILD_SRCS = $(filter %.c,$(TOOL_BUILD_FILES))
 TOOL_BUILD_HDRS = $(filter %.h,$(TOOL_BUILD_FILES))
-TOOL_BUILD_CTESTS = $(filter %.ctest,$(TOOL_BUILD_FILES))
 
 TOOL_BUILD_BINS =					\
 	$(TOOL_BUILD_COMS)				\
@@ -21,8 +20,6 @@ TOOL_BUILD_BINS =					\
 	o/$(MODE)/tool/build/printf			\
 	o/$(MODE)/tool/build/dd
 
-TOOL_BUILD_CALCULATOR = o/$(MODE)/tool/build/calculator.com
-
 TOOL_BUILD_OBJS =					\
 	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%.o)
 
@@ -31,8 +28,7 @@ TOOL_BUILD_COMS =					\
 
 TOOL_BUILD_CHECKS =					\
 	$(TOOL_BUILD).pkg				\
-	$(TOOL_BUILD_HDRS:%=o/$(MODE)/%.ok)		\
-	$(TOOL_BUILD_CTESTS:%=o/$(MODE)/%.ok)
+	$(TOOL_BUILD_HDRS:%=o/$(MODE)/%.ok)
 
 TOOL_BUILD_DIRECTDEPS =					\
 	DSP_CORE					\
@@ -79,12 +75,6 @@ TOOL_BUILD_DEPS :=					\
 o/$(MODE)/tool/build/build.pkg:				\
 		$(TOOL_BUILD_OBJS)			\
 		$(foreach x,$(TOOL_BUILD_DIRECTDEPS),$($(x)_A).pkg)
-
-o/$(MODE)/%.ctest.ok:					\
-		%.ctest					\
-		$(TOOL_BUILD_CALCULATOR)		\
-		$(VM)
-	@$(COMPILE) -AMKWIDES -wtT$@ $(VM) $(TOOL_BUILD_CALCULATOR) $<
 
 o/$(MODE)/tool/build/%.com.dbg:				\
 		$(TOOL_BUILD_DEPS)			\

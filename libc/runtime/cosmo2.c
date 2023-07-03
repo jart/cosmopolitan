@@ -153,7 +153,7 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   __envp = envp;
   __auxv = auxv;
   environ = envp;
-  if (argc) program_invocation_name = argv[0];
+  program_invocation_name = argv[0];
 
   // initialize program
   _init();

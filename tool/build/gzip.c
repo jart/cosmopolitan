@@ -289,7 +289,8 @@ void Decompress(const char *inpath) {
 
 int main(int argc, char *argv[]) {
   int i;
-  prog = argc > 0 ? argv[0] : "cp.com";
+  prog = argv[0];
+  if (!prog) prog = "gzip";
   GetOpts(argc, argv);
   if (opt_decompress) {
     if (optind == argc) {

@@ -153,27 +153,15 @@ struct Relas {
   } * p;
 } prtu;
 
-nullterminated() static void Print(int fd, const char *s, ...) {
-  va_list va;
-  char buf[2048];
-  va_start(va, s);
-  buf[0] = 0;
-  do {
-    strlcat(buf, s, sizeof(buf));
-  } while ((s = va_arg(va, const char *)));
-  write(fd, buf, strlen(buf));
-  va_end(va);
-}
-
 static wontreturn void Die(const char *path, const char *reason) {
-  Print(2, path, ": ", reason, "\n", NULL);
+  tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
 static wontreturn void SysExit(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerrno(errno))) errstr = "EUNKNOWN";
-  Print(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
+  tinyprint(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
 
@@ -321,7 +309,7 @@ static void WritePackage(struct Package *pkg) {
 }
 
 static wontreturn void PrintUsage(int fd, int exitcode) {
-  Print(fd, "\n\
+  tinyprint(fd, "\n\
 NAME\n\
 \n\
   Cosmopolitan Monorepo Packager\n\
@@ -329,7 +317,7 @@ NAME\n\
 SYNOPSIS\n\
 \n\
   ",
-        program_invocation_name, " [FLAGS] OBJECT...\n\
+            program_invocation_name, " [FLAGS] OBJECT...\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -345,7 +333,7 @@ FLAGS\n\
   -d PATH       package dependency path [repeatable]\n\
 \n\
 ",
-        NULL);
+            NULL);
   exit(exitcode);
 }
 
@@ -370,14 +358,15 @@ static void GetOpts(struct Package *pkg, struct Packages *deps, int argc,
     }
   }
   if (pkg->path == -1) {
-    Print(2, "error: no packages passed to package.com\n", NULL);
+    tinyprint(2, "error: no packages passed to package.com\n", NULL);
     exit(1);
   }
   if (optind == argc) {
-    Print(2,
-          "no objects passed to package.com; is your foo.mk $(FOO_OBJS) glob "
-          "broken?\n",
-          NULL);
+    tinyprint(
+        2,
+        "no objects passed to package.com; is your foo.mk $(FOO_OBJS) glob "
+        "broken?\n",
+        NULL);
     exit(1);
   }
   getargs_init(&ga, argv + optind);
@@ -495,7 +484,7 @@ static void LoadPriviligedRefsToUndefs(struct Package *pkg,
       if (obj->syms[x].st_shndx) continue;  // symbol is defined
       if (ELF64_ST_BIND(obj->syms[x].st_info) != STB_WEAK &&
           ELF64_ST_BIND(obj->syms[x].st_info) != STB_GLOBAL) {
-        Print(2, "warning: undefined symbol not global\n", NULL);
+        tinyprint(2, "warning: undefined symbol not global\n", NULL);
         continue;
       }
       if (!(s = GetElfString(obj->elf, obj->size, obj->strs,
@@ -602,13 +591,13 @@ static void CheckStrictDeps(struct Package *pkg, struct Packages *deps) {
     undef = &pkg->undefs.p[i];
     if (undef->bind_ == STB_WEAK) continue;
     if (!FindSymbol(pkg->strings.p + undef->name, pkg, deps, NULL, NULL)) {
-      Print(2, pkg->strings.p + pkg->path, ": undefined symbol '",
-            pkg->strings.p + undef->name, "' (",
-            pkg->strings.p + pkg->objects.p[undef->object].path,
-            ") not defined by direct dependencies:\n", NULL);
+      tinyprint(2, pkg->strings.p + pkg->path, ": undefined symbol '",
+                pkg->strings.p + undef->name, "' (",
+                pkg->strings.p + pkg->objects.p[undef->object].path,
+                ") not defined by direct dependencies:\n", NULL);
       for (j = 0; j < deps->i; ++j) {
         dep = deps->p[j];
-        Print(2, "\t", dep->strings.p + dep->path, "\n", NULL);
+        tinyprint(2, "\t", dep->strings.p + dep->path, "\n", NULL);
       }
       exit(1);
     }
@@ -626,10 +615,11 @@ static void CheckYourPrivilege(struct Package *pkg, struct Packages *deps) {
     name = prtu.p[i].symbol_name;
     if (FindSymbol(name, pkg, deps, &dep, &sym) &&
         dep->sections.p[sym->section].kind == kText) {
-      Print(2, prtu.p[i].object_path,
-            ": privileged code referenced unprivileged symbol '", name,
-            "' in section '",
-            dep->strings.p + dep->sections.p[sym->section].name, "'\n", NULL);
+      tinyprint(2, prtu.p[i].object_path,
+                ": privileged code referenced unprivileged symbol '", name,
+                "' in section '",
+                dep->strings.p + dep->sections.p[sym->section].name, "'\n",
+                NULL);
       ++f;
     }
   }

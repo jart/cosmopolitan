@@ -240,9 +240,10 @@ static int __fmt_ntoa_format(int out(const char *, void *, size_t), void *arg,
   return 0;
 }
 
-static int ntoa2(int out(const char *, void *, size_t), void *arg,
-                 uint128_t value, bool neg, unsigned log2base, unsigned prec,
-                 unsigned width, unsigned flags, const char *alphabet) {
+static int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
+                       uint128_t value, bool neg, unsigned log2base,
+                       unsigned prec, unsigned width, unsigned flags,
+                       const char *alphabet) {
   uint128_t remainder;
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
@@ -314,7 +315,7 @@ static int __fmt_ntoa(int out(const char *, void *, size_t), void *arg,
     }
   }
 
-  return ntoa2(out, arg, value, neg, log2base, prec, width, flags, lang);
+  return __fmt_ntoa2(out, arg, value, neg, log2base, prec, width, flags, lang);
 }
 
 /**

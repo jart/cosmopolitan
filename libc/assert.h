@@ -3,8 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern bool __assert_disable;
-void __assert_fail(const char *, const char *, int) _Hide relegated;
+void __assert_fail(const char *, const char *, int) relegated;
 
 #ifdef NDEBUG
 #define assert(x) ((void)0)
@@ -16,6 +15,8 @@ void __assert_fail(const char *, const char *, int) _Hide relegated;
 #define static_assert _Static_assert
 #endif
 
+#ifdef COSMO
+extern bool __assert_disable;
 #ifndef NDEBUG
 #define _unassert(x) __assert_macro(x, #x)
 #define _npassert(x) __assert_macro(x, #x)
@@ -42,7 +43,8 @@ void __assert_fail(const char *, const char *, int) _Hide relegated;
     }                                \
     (void)0;                         \
   })
-#endif
+#endif /* NDEBUG */
+#endif /* COSMO */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -119,9 +119,7 @@ int main(int argc, char *argv[]) {
       printf(U(argv[1]), argv[2], argv[3], argv[4], argv[5], argv[6], argv[7]);
       return 0;
     default:
-      if (argc > 0) {
-        fprintf(stderr, "%s: %s format [arguments]\n", argv[0], argv[0]);
-      }
+      fprintf(stderr, "%s: %s format [arguments]\n", argv[0], argv[0]);
       return 1;
   }
 }

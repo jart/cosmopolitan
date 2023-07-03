@@ -38,32 +38,20 @@ static const char *inpath;
 static const char *outpath;
 static unsigned char *inmap;
 
-nullterminated() static void Print(int fd, const char *s, ...) {
-  va_list va;
-  char buf[2048];
-  va_start(va, s);
-  buf[0] = 0;
-  do {
-    strlcat(buf, s, sizeof(buf));
-  } while ((s = va_arg(va, const char *)));
-  write(fd, buf, strlen(buf));
-  va_end(va);
-}
-
 static wontreturn void Die(const char *path, const char *reason) {
-  Print(2, path, ": ", reason, "\n", NULL);
+  tinyprint(2, path, ": ", reason, "\n", NULL);
   exit(1);
 }
 
-static wontreturn void SysExit(const char *path, const char *func) {
+static wontreturn void SysDie(const char *path, const char *func) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
-  Print(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
+  tinyprint(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
 
 static wontreturn void PrintUsage(int fd, int exitcode) {
-  Print(fd, "\
+  tinyprint(fd, "\
 NAME\n\
 \n\
   Cosmopolitan Zip Copier\n\
@@ -71,7 +59,7 @@ NAME\n\
 SYNOPSIS\n\
 \n\
   ",
-        program_invocation_name, " [FLAGS] SRC DST\n\
+            program_invocation_name, " [FLAGS] SRC DST\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -96,7 +84,7 @@ EXAMPLE\n\
 \n\
 \n\
 ",
-        NULL);
+            NULL);
   exit(exitcode);
 }
 
@@ -173,10 +161,10 @@ static void CopyZip(void) {
 
   // write output
   if ((outfd = open(outpath, O_WRONLY | O_CREAT, 0644)) == -1) {
-    SysExit(outpath, "open");
+    SysDie(outpath, "open");
   }
   if ((outsize = lseek(outfd, 0, SEEK_END)) == -1) {
-    SysExit(outpath, "lseek");
+    SysDie(outpath, "lseek");
   }
   ldest = outsize;
   cdest = outsize + ltotal;
@@ -186,23 +174,23 @@ static void CopyZip(void) {
     // write local file
     length = ZIP_LFILE_SIZE(lfile);
     if (pwrite(outfd, lfile, length, ldest) != length) {
-      SysExit(outpath, "lfile pwrite");
+      SysDie(outpath, "lfile pwrite");
     }
     ldest += length;
     // write directory entry
     length = ZIP_CFILE_HDRSIZE(cfile);
     if (pwrite(outfd, cfile, length, cdest) != length) {
-      SysExit(outpath, "lfile pwrite");
+      SysDie(outpath, "lfile pwrite");
     }
     cdest += length;
   }
   WRITE32LE(eocd + kZipCdirOffsetOffset, outsize + ltotal);
   length = ZIP_CDIR_HDRSIZE(eocd);
   if (pwrite(outfd, eocd, length, cdest) != length) {
-    SysExit(outpath, "eocd pwrite");
+    SysDie(outpath, "eocd pwrite");
   }
   if (close(outfd)) {
-    SysExit(outpath, "close");
+    SysDie(outpath, "close");
   }
 }
 
@@ -213,23 +201,23 @@ int main(int argc, char *argv[]) {
   }
   GetOpts(argc, argv);
   if ((infd = open(inpath, O_RDONLY)) == -1) {
-    SysExit(inpath, "open");
+    SysDie(inpath, "open");
   }
   if ((insize = lseek(infd, 0, SEEK_END)) == -1) {
-    SysExit(inpath, "lseek");
+    SysDie(inpath, "lseek");
   }
   if (!insize) {
     Die(inpath, "file is empty");
   }
   if ((inmap = mmap(0, insize, PROT_READ | PROT_WRITE, MAP_PRIVATE, infd, 0)) ==
       MAP_FAILED) {
-    SysExit(inpath, "mmap");
+    SysDie(inpath, "mmap");
   }
   CopyZip();
   if (munmap(inmap, insize)) {
-    SysExit(inpath, "munmap");
+    SysDie(inpath, "munmap");
   }
   if (close(infd)) {
-    SysExit(inpath, "close");
+    SysDie(inpath, "close");
   }
 }

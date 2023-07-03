@@ -73,32 +73,20 @@ static const char *epath;
 static Elf64_Xword symcount;
 static const Elf64_Ehdr *elf;
 
-nullterminated() static void Print(int fd, const char *s, ...) {
-  va_list va;
-  char buf[2048];
-  va_start(va, s);
-  buf[0] = 0;
-  do {
-    strlcat(buf, s, sizeof(buf));
-  } while ((s = va_arg(va, const char *)));
-  write(fd, buf, strlen(buf));
-  va_end(va);
-}
-
 static wontreturn void Die(const char *reason) {
-  Print(2, epath, ": ", reason, "\n", NULL);
+  tinyprint(2, epath, ": ", reason, "\n", NULL);
   exit(1);
 }
 
 static wontreturn void SysExit(const char *func) {
   const char *errstr;
   if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
-  Print(2, epath, ": ", func, " failed with ", errstr, "\n", NULL);
+  tinyprint(2, epath, ": ", func, " failed with ", errstr, "\n", NULL);
   exit(1);
 }
 
 static wontreturn void PrintUsage(int fd, int exitcode) {
-  Print(fd, "\n\
+  tinyprint(fd, "\n\
 NAME\n\
 \n\
   Cosmopolitan Object Fixer\n\
@@ -106,7 +94,7 @@ NAME\n\
 SYNOPSIS\n\
 \n\
   ",
-        program_invocation_name, " [FLAGS] OBJECT...\n\
+            program_invocation_name, " [FLAGS] OBJECT...\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -124,7 +112,7 @@ FLAGS\n\
   -c            checks only mode\n\
 \n\
 ",
-        NULL);
+            NULL);
   exit(exitcode);
 }
 
@@ -143,10 +131,10 @@ static void GetOpts(int argc, char *argv[]) {
     }
   }
   if (optind == argc) {
-    Print(2,
-          "error: no elf object files specified\n"
-          "run ",
-          program_invocation_name, " -h for usage\n", NULL);
+    tinyprint(2,
+              "error: no elf object files specified\n"
+              "run ",
+              program_invocation_name, " -h for usage\n", NULL);
     exit(1);
   }
 }
@@ -184,11 +172,11 @@ static void CheckPrivilegedCrossReferences(void) {
       if (~shdr->sh_flags & SHF_EXECINSTR) continue;  // data reference
       if ((secname = GetElfString(elf, esize, secstrs, shdr->sh_name)) &&
           strcmp(".privileged", secname)) {
-        Print(2, epath,
-              ": code in .privileged section "
-              "references symbol '",
-              GetElfString(elf, esize, symstrs, syms[x].st_name),
-              "' in unprivileged code section '", secname, "'\n", NULL);
+        tinyprint(2, epath,
+                  ": code in .privileged section "
+                  "references symbol '",
+                  GetElfString(elf, esize, symstrs, syms[x].st_name),
+                  "' in unprivileged code section '", secname, "'\n", NULL);
         exit(1);
       }
     }

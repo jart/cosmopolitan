@@ -1,4 +1,3 @@
-(require 'ctest-mode)
 (require 'ld-script)
 (require 'optinfo-mode)
 (require 'protobuf-mode)

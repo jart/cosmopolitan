@@ -22,8 +22,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/ok.h"
 #include "third_party/getopt/getopt.internal.h"
 
@@ -36,63 +34,53 @@ SYNOPSIS\n\
 \n\
 FLAGS\n\
 \n\
-  -?\n\
   -h      help\n\
   -f      force\n\
 \n"
 
-bool force;
-const char *prog;
+static bool force;
+static const char *prog;
 
-wontreturn void PrintUsage(int rc, FILE *f) {
-  fputs("usage: ", f);
-  fputs(prog, f);
-  fputs(USAGE, f);
+static wontreturn void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
 }
 
-void GetOpts(int argc, char *argv[]) {
+static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "?hf")) != -1) {
+  while ((opt = getopt(argc, argv, "hf")) != -1) {
     switch (opt) {
       case 'f':
         force = true;
         break;
       case 'h':
-      case '?':
-        PrintUsage(EXIT_SUCCESS, stdout);
+        PrintUsage(0, 1);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        PrintUsage(1, 2);
     }
   }
 }
 
-void Remove(const char *path) {
-  const char *s;
-  if (!force && access(path, W_OK) == -1) goto OnFail;
-  if (unlink(path) == -1) goto OnFail;
-  return;
-OnFail:
-  if (force && errno == ENOENT) return;
-  s = _strerdoc(errno);
-  fputs(prog, stderr);
-  fputs(": cannot remove '", stderr);
-  fputs(path, stderr);
-  fputs("': ", stderr);
-  fputs(s, stderr);
-  fputs("\n", stderr);
-  exit(1);
+static void Remove(const char *path) {
+  if (!force && access(path, W_OK) == -1) {
+    perror(path);
+    exit(1);
+  }
+  if (unlink(path) == -1) {
+    if (force && errno == ENOENT) return;
+    perror(path);
+    exit(1);
+  }
 }
 
 int main(int argc, char *argv[]) {
   int i;
-  prog = argc > 0 ? argv[0] : "rm.com";
+
+  prog = argv[0];
+  if (!prog) prog = "rm";
 
   if (argc < 2) {
-    fputs(prog, stderr);
-    fputs(": missing operand\n"
-          "Try 'rm -h' for more information.\n",
-          stderr);
+    tinyprint(2, prog, ": missing operand\n", NULL);
     exit(1);
   }
 

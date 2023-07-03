@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-// stub version of abort() for low-dependency apps
+// stub version of abort() to keep the build a dag
 __attribute__((__noreturn__, __weak__)) void abort(void) {
   __builtin_trap();
 }

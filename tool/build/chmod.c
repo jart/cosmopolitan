@@ -21,6 +21,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/getopt/getopt.internal.h"
 
@@ -33,42 +34,21 @@ SYNOPSIS\n\
 \n\
 FLAGS\n\
 \n\
-  -?\n\
   -h      help\n\
 \n"
 
 const char *prog;
 
-nullterminated() static void Print(int fd, const char *s, ...) {
-  va_list va;
-  char buf[2048];
-  va_start(va, s);
-  buf[0] = 0;
-  do {
-    strlcat(buf, s, sizeof(buf));
-  } while ((s = va_arg(va, const char *)));
-  write(fd, buf, strlen(buf));
-  va_end(va);
-}
-
-static wontreturn void SysExit(const char *path, const char *func) {
-  const char *errstr;
-  if (!(errstr = _strerdoc(errno))) errstr = "EUNKNOWN";
-  Print(2, path, ": ", func, " failed with ", errstr, "\n", NULL);
-  exit(1);
-}
-
 static wontreturn void PrintUsage(int fd, int rc) {
-  Print(fd, "USAGE\n\n  ", program_invocation_name, USAGE, NULL);
+  tinyprint(fd, "USAGE\n\n  ", prog, USAGE, NULL);
   exit(rc);
 }
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "?h")) != -1) {
+  while ((opt = getopt(argc, argv, "h")) != -1) {
     switch (opt) {
       case 'h':
-      case '?':
         PrintUsage(1, 0);
       default:
         PrintUsage(2, 1);
@@ -79,18 +59,22 @@ static void GetOpts(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   int i, mode;
   char buf[PATH_MAX], *endptr;
+  prog = argv[0];
+  if (!prog) prog = "chmod";
   GetOpts(argc, argv);
   if (argc - optind < 2) {
-    PrintUsage(2, 1);
+    tinyprint(2, prog, ": missing operand\n", NULL);
+    exit(1);
   }
   mode = strtol(argv[optind], &endptr, 8) & 07777;
   if (*endptr) {
-    Print(2, "chmod: invalid mode octal\n", NULL);
+    tinyprint(2, prog, ": invalid mode octal\n", NULL);
     exit(1);
   }
   for (i = optind + 1; i < argc; ++i) {
     if (chmod(argv[i], mode) == -1) {
-      SysExit(argv[i], "chmod");
+      perror(argv[i]);
+      exit(1);
     }
   }
   return 0;
