@@ -25,7 +25,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/mbedtls/sha256.h"
 
 #define PROG "sha256sum"

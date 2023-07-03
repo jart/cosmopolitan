@@ -93,7 +93,6 @@ extern "C" {
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"   /* sleep */
 #  define UTIL_sleep(s) sleep(s)

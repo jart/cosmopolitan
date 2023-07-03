@@ -33,7 +33,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/stb/stb_truetype.h"
 
 #define MAXCODE

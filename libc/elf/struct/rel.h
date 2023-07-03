@@ -43,7 +43,7 @@ typedef struct Elf64_Rel {
    *
    * Each relocation type specifies a mathematical formula that's used
    * to compute the appropriate value for the fixed-up object code. If
-   * if needs an addend, then this struct doesn't have one, but it can
+   * it needs an addend, then this struct doesn't have one, but it can
    * still be embedded by the compiler in the location to be modified.
    */
   Elf64_Xword r_info;

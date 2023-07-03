@@ -31,7 +31,6 @@ extern "C" {
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"     /* malloc, realloc, free */
 #include "libc/calls/calls.h"
@@ -67,7 +66,7 @@ extern "C" {
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"     /* chown, stat */
 #  if PLATFORM_POSIX_VERSION < 200809L || !defined(st_mtime)

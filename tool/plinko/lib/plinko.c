@@ -39,7 +39,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/clockstonanos.internal.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/case.h"
 #include "tool/plinko/lib/char.h"
 #include "tool/plinko/lib/error.h"

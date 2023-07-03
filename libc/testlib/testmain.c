@@ -56,7 +56,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 #define USAGE \
   " [FLAGS]\n\

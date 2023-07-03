@@ -79,7 +79,7 @@
 #include "net/http/ip.h"
 #include "net/http/tokenbucket.h"
 #include "net/http/url.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/nsync/counter.h"
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/mu.h"

@@ -47,7 +47,7 @@
 #include "libc/time/struct/tm.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/passwd.h"
 
 #define LOG(FMT, ...)                                                \

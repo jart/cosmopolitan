@@ -62,7 +62,6 @@
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
@@ -127,7 +126,7 @@ UTIL_time_t UTIL_getTime(void)
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
@@ -175,7 +174,7 @@ UTIL_time_t UTIL_getTime(void)
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"

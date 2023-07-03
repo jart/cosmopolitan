@@ -41,7 +41,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/stb/stb_image.h"
 #include "tool/viz/lib/bilinearscale.h"
 #include "tool/viz/lib/graphic.h"

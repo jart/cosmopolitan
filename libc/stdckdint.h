@@ -60,9 +60,8 @@
               ? __ckd_##op##ll((__ckd_dword *)(res), (x), (y))           \
               : __ckd_trap()))
 
-__funline int __ckd_trap(void) {
-  volatile int __x = 0;
-  return 1 / __x;
+__funline wontreturn int __ckd_trap(void) {
+  *(volatile int *)0 = 0;
 }
 
 /*

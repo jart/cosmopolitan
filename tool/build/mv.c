@@ -31,7 +31,7 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/ftw.h"
 
 #define USAGE \

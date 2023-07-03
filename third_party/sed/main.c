@@ -42,7 +42,7 @@
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/sed/cmd.h"
 #include "third_party/sed/defs.h"
 #include "third_party/sed/extern.h"

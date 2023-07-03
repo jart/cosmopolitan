@@ -38,7 +38,7 @@
 #include "libc/x/xasprintf.h"
 #include "libc/x/xgetline.h"
 #include "third_party/dlmalloc/dlmalloc.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 /**
  * @fileoverview Pythonic System Call Trace

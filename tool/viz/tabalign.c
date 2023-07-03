@@ -30,7 +30,7 @@
 #include "libc/str/unicode.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 #define kOneTrueTabWidth 8
 

@@ -35,7 +35,7 @@
 #include "libc/sysv/consts/exit.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "tool/viz/lib/formatstringtable.h"
 
 typedef double (*round_f)(double);

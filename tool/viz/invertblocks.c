@@ -21,7 +21,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 static FILE *fi_, *fo_;
 static char *inpath_, *outpath_;

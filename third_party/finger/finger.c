@@ -47,7 +47,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/time/time.h"
 #include "third_party/finger/finger.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/passwd.h"
 // clang-format off
 

@@ -23,7 +23,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 #define USAGE \
   " [-?h] <lambda.txt >binary.txt\n\

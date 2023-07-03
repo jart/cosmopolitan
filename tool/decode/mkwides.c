@@ -25,7 +25,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "tool/decode/lib/bitabuilder.h"
 
 static FILE *fin, *fout;

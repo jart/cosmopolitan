@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/grnd.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/hyperion.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 #define B 4096
 

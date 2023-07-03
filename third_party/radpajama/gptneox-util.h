@@ -27,7 +27,6 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.h"
 #include "third_party/ggml/llama_util.h"
 #include "third_party/libcxx/cerrno"
 #include "third_party/libcxx/climits"

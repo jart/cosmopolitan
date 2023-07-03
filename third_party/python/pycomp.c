@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/compile.h"
 #include "third_party/python/Include/fileutils.h"

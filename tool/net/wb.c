@@ -49,7 +49,7 @@
 #include "net/http/http.h"
 #include "net/http/url.h"
 #include "net/https/https.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/error.h"

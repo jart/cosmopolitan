@@ -64,7 +64,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 #define MANUAL \
   "\

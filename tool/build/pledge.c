@@ -60,7 +60,7 @@
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 // MANUALLY TESTED BY RUNNING
 //

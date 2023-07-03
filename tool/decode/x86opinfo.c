@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/xed/x86.h"
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/xederrors.h"

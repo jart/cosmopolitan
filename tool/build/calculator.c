@@ -35,7 +35,7 @@
 #include "libc/tinymath/emodl.h"
 #include "libc/x/xsigaction.h"
 #include "third_party/gdtoa/gdtoa.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 #define INT     int128_t
 #define FLOAT   long double

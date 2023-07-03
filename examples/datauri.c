@@ -14,7 +14,7 @@
 #include "libc/x/x.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/stb/stb_image.h"
 
 #define USAGE \

@@ -32,7 +32,7 @@
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 
 /**
  * @fileoverview LZ4 content embedder.

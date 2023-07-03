@@ -56,7 +56,7 @@
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 #include "net/https/https.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"

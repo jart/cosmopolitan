@@ -92,7 +92,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "libc/x/xsigaction.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/stb/stb_image_resize.h"
 #include "tool/viz/lib/graphic.h"
 #include "tool/viz/lib/knobs.h"

@@ -53,7 +53,7 @@
 #include "libc/thread/wait0.internal.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/getargs.h"
 
 /**

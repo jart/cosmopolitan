@@ -112,7 +112,7 @@
 #include "net/http/tokenbucket.h"
 #include "net/http/url.h"
 #include "net/https/https.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lrepl.h"

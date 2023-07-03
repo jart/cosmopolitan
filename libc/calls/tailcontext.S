@@ -40,22 +40,23 @@ __tailcontext:
 	movaps	0x60(%rax),%xmm14
 	movaps	0x70(%rax),%xmm15
 
-	mov	40(%rdi),%r8
-	mov	48(%rdi),%r9
-	mov	56(%rdi),%r10
-	mov	64(%rdi),%r11
-	mov	72(%rdi),%r12
-	mov	80(%rdi),%r13
-	mov	88(%rdi),%r14
-	mov	96(%rdi),%r15
-	mov	112(%rdi),%rsi
-	mov	120(%rdi),%rbp
-	mov	128(%rdi),%rbx
-	mov	136(%rdi),%rdx
-	mov	152(%rdi),%rcx
-	mov	160(%rdi),%rsp
-	push	168(%rdi)
-	mov	104(%rdi),%rdi
+	lea	80(%rdi),%rax
+	mov	-40(%rax),%r8
+	mov	-32(%rax),%r9
+	mov	-24(%rax),%r10
+	mov	-16(%rax),%r11
+	mov	-8(%rax),%r12
+	mov	0(%rax),%r13
+	mov	8(%rax),%r14
+	mov	16(%rax),%r15
+	mov	32(%rax),%rsi
+	mov	40(%rax),%rbp
+	mov	48(%rax),%rbx
+	mov	56(%rax),%rdx
+	mov	72(%rax),%rcx
+	mov	80(%rax),%rsp
+	push	88(%rax)
+	mov	24(%rax),%rdi
 
 	xor	%eax,%eax
 	ret

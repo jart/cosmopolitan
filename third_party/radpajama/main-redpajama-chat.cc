@@ -43,7 +43,6 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.h"
 #include "third_party/libcxx/algorithm"
 #include "third_party/libcxx/cassert"
 #include "third_party/libcxx/cinttypes"
