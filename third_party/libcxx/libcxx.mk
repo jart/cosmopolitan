@@ -67,6 +67,7 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/ctype.h				\
 	third_party/libcxx/cwchar				\
 	third_party/libcxx/cwctype				\
+	third_party/libcxx/cxxabi.h				\
 	third_party/libcxx/deque				\
 	third_party/libcxx/errno.h				\
 	third_party/libcxx/exception				\
@@ -143,6 +144,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/chrono.cc				\
 	third_party/libcxx/condition_variable.cc		\
 	third_party/libcxx/condition_variable_destructor.cc	\
+	third_party/libcxx/demangle.cc	\
 	third_party/libcxx/exception.cc				\
 	third_party/libcxx/functional.cc			\
 	third_party/libcxx/future.cc				\
@@ -211,6 +213,16 @@ $(THIRD_PARTY_LIBCXX_A_OBJS): private				\
 		CXXFLAGS +=					\
 			-ffunction-sections			\
 			-fdata-sections
+
+# Super gross! But I found no way to do -fno-error=permissive
+# this steps from the fact that demangle is a C++ file extension
+# but the source I copied was written in C.
+# The fix would be to go through all the casts and make them correct.
+o/$(MODE)/third_party/libcxx/demangle.o: private				\
+		CXXFLAGS +=							\
+			-fpermissive					\
+			-Wno-error
+
 
 THIRD_PARTY_LIBCXX_LIBS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)))
 THIRD_PARTY_LIBCXX_SRCS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_SRCS))
