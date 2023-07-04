@@ -156,7 +156,8 @@ TEST(pthread_create, testCustomStack_withReallySmallSize) {
   ASSERT_EQ(0, pthread_create(&id, &attr, Increment, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   ASSERT_EQ(0, pthread_join(id, 0));
-  // we still own the stack memory
+  free(stk);
+  stk = malloc(siz);
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setstack(&attr, stk, siz));
   ASSERT_EQ(0, pthread_create(&id, &attr, Increment, 0));

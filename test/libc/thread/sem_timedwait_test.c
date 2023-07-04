@@ -51,7 +51,7 @@ TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_post(&sem);
-  EXITS(128 + SIGILL);  // see __assert_fail
+  EXITS(128 + SIGABRT);  // see __assert_fail
 }
 
 TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
@@ -63,7 +63,7 @@ TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_trywait(&sem);
-  EXITS(128 + SIGILL);  // see __assert_fail
+  EXITS(128 + SIGABRT);  // see __assert_fail
 }
 
 TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
@@ -75,7 +75,7 @@ TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_wait(&sem);
-  EXITS(128 + SIGILL);  // see __assert_fail
+  EXITS(128 + SIGABRT);  // see __assert_fail
 }
 
 TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
@@ -87,7 +87,7 @@ TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_timedwait(&sem, 0);
-  EXITS(128 + SIGILL);  // see __assert_fail
+  EXITS(128 + SIGABRT);  // see __assert_fail
 }
 
 void *Worker(void *arg) {

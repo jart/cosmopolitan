@@ -467,6 +467,13 @@ static int __sigaction(int sig, const struct sigaction *act,
  *   spawned your process, happened to call `setrlimit()`. Doing this is
  *   a wonderful idea.
  *
+ * Using signals might make your C runtime slower. Upon successfully
+ * installing its first signal handling function, sigaction() will set
+ * the global variable `__interruptible` to true, to let everything else
+ * know that signals are in play. That way code which would otherwise be
+ * frequently calling sigprocmask() out of an abundance of caution, will
+ * no longer need to pay its outrageous cost.
+ *
  * @return 0 on success or -1 w/ errno
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
@@ -478,6 +485,13 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
     rc = einval();
   } else {
     rc = __sigaction(sig, act, oldact);
+    if (!rc && act && (uintptr_t)act->sa_handler >= kSigactionMinRva) {
+      static bool once;
+      if (!once) {
+        __interruptible = true;
+        once = true;
+      }
+    }
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),
          DescribeSigaction(rc, oldact), rc);

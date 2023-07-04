@@ -177,6 +177,7 @@
  * @file xxhash.h
  * xxHash prototypes and implementation
  */
+#include "third_party/aarch64/arm_neon.internal.h"
 
 #if defined (__cplusplus)
 extern "C" {

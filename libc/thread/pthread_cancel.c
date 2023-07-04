@@ -209,7 +209,7 @@ static void ListenForSigThr(void) {
  *     void *p = _gc(malloc(123));
  *     read(0, p, 123);
  *
- * It's possible to put a thread in asynchronous cancellation mode using
+ * It's possible to put a thread in asynchronous cancellation mode with
  *
  *     pthread_setcancelstate(PTHREAD_CANCEL_ASYNCHRONOUS, 0);
  *     for (;;) donothing;

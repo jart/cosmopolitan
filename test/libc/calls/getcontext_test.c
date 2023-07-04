@@ -54,6 +54,7 @@ TEST(getcontext, test) {
 TEST(getcontext, canReadAndWriteSignalMask) {
   sigset_t ss, old;
   volatile int n = 0;
+  EXPECT_TRUE(__interruptible);
   sigemptyset(&ss);
   sigaddset(&ss, SIGUSR1);
   sigprocmask(SIG_SETMASK, &ss, &old);
@@ -81,7 +82,10 @@ void SetGetContext(void) {
 }
 
 BENCH(getcontext, bench) {
-  EZBENCH2("get/setcontext", donothing, SetGetContext());
+  __interruptible = false;
+  EZBENCH2("getsetcontext nosig", donothing, SetGetContext());
+  __interruptible = true;
+  EZBENCH2("getsetcontext", donothing, SetGetContext());
 }
 
 BENCH(swapcontext, bench) {
@@ -95,7 +99,11 @@ BENCH(swapcontext, bench) {
     }
   } else {
     ready = true;
-    EZBENCH2("x2 swapcontext", donothing, swapcontext(&loop, &main));
+    __interruptible = false;
+    EZBENCH2("swapcontextx2 nosig", donothing, swapcontext(&loop, &main));
+    // kprintf("dollar\n");
+    __interruptible = true;
+    EZBENCH2("swapcontextx2", donothing, swapcontext(&loop, &main));
     // kprintf("dollar\n");
   }
 }

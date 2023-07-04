@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 
 int xspawn(struct rusage *);
-int xvspawn(void (*)(void *), void *, struct rusage *);
+int xvspawn(void (*)(void *), void *, struct rusage *) returnstwice;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -55,6 +55,9 @@
  * allocations, things like page size alignment, shall be handled
  * automatically for compatibility with existing codebases.
  *
+ * The same stack shouldn't be used for two separate threads. Use
+ * fresh stacks for each thread so that ASAN can be much happier.
+ *
  * @param stackaddr is address of stack allocated by caller, and
  *     may be NULL in which case default behavior is restored
  * @param stacksize is size of caller allocated stack

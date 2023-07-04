@@ -39,6 +39,9 @@ void *__asan_memalign(size_t, size_t);
 size_t __asan_get_heap_size(const void *);
 void *__asan_realloc_in_place(void *, size_t);
 
+void __asan_memset(void *, char, size_t);
+void *__asan_memcpy(void *, const void *, size_t);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_ASAN_H_ */

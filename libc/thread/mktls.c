@@ -31,13 +31,11 @@
 
 #define I(x) ((uintptr_t)x)
 
-void Bzero(void *, size_t) asm("bzero");  // gcc bug
-
 static char *_mktls_finish(struct CosmoTib **out_tib, char *mem,
                            struct CosmoTib *tib) {
   struct CosmoTib *old;
   old = __get_tls();
-  Bzero(tib, sizeof(*tib));
+  bzero(tib, sizeof(*tib));
   tib->tib_self = tib;
   tib->tib_self2 = tib;
   tib->tib_ftrace = old->tib_ftrace;
@@ -51,29 +49,37 @@ static char *_mktls_finish(struct CosmoTib **out_tib, char *mem,
 }
 
 static char *_mktls_below(struct CosmoTib **out_tib) {
-  char *tls;
-  struct CosmoTib *neu;
+  size_t siz;
+  char *mem, *tls;
+  struct CosmoTib *tib;
 
-  // allocate memory for tdata, tbss, and tib
-  tls = memalign(TLS_ALIGNMENT, I(_tls_size) + sizeof(struct CosmoTib));
-  if (!tls) return 0;
+  siz = ROUNDUP(I(_tls_size) + sizeof(*tib), _Alignof(struct CosmoTib));
+  siz = ROUNDUP(siz, _Alignof(struct CosmoTib));
+  mem = memalign(_Alignof(struct CosmoTib), siz);
 
-  // poison memory between tdata and tbss
   if (IsAsan()) {
-    __asan_poison(tls + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
+    // poison the space between .tdata and .tbss
+    __asan_poison(mem + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
                   kAsanProtected);
   }
 
-  // initialize .tdata
+  tib = (struct CosmoTib *)(mem + siz - sizeof(*tib));
+  tls = mem + siz - sizeof(*tib) - I(_tls_size);
+
+  // copy in initialized data section
   if (I(_tdata_size)) {
-    memmove(tls, _tdata_start, I(_tdata_size));
+    if (IsAsan()) {
+      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
+    } else {
+      memcpy(tls, _tdata_start, I(_tdata_size));
+    }
   }
 
   // clear .tbss
-  Bzero(tls + I(_tbss_offset), I(_tbss_size));
+  bzero(tls + I(_tbss_offset), I(_tbss_size));
 
   // set up thread information block
-  return _mktls_finish(out_tib, tls, (struct CosmoTib *)(tls + I(_tls_size)));
+  return _mktls_finish(out_tib, mem, tib);
 }
 
 static char *_mktls_above(struct CosmoTib **out_tib) {
@@ -103,12 +109,16 @@ static char *_mktls_above(struct CosmoTib **out_tib) {
 
   // initialize .tdata
   if (I(_tdata_size)) {
-    memmove(tls, _tdata_start, I(_tdata_size));
+    if (IsAsan()) {
+      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
+    } else {
+      memmove(tls, _tdata_start, I(_tdata_size));
+    }
   }
 
   // clear .tbss
   if (I(_tbss_size)) {
-    Bzero(tls + I(_tbss_offset), I(_tbss_size));
+    bzero(tls + I(_tbss_offset), I(_tbss_size));
   }
 
   // set up thread information block

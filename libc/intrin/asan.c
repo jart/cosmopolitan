@@ -103,6 +103,8 @@ STATIC_YOINK("_init_asan");
 
 #define RBP __builtin_frame_address(0)
 
+#define ASAN_LOG(...) (void)0  // kprintf(__VA_ARGS__)
+
 #define HOOK(HOOK, IMPL)     \
   do {                       \
     if (_weaken(HOOK)) {     \
@@ -210,7 +212,7 @@ static char *__asan_stpcpy(char *d, const char *s) {
   }
 }
 
-static void __asan_memset(void *p, char c, size_t n) {
+void __asan_memset(void *p, char c, size_t n) {
   char *b;
   size_t i;
   uint64_t x;
@@ -328,7 +330,7 @@ static void *__asan_mempcpy(void *dst, const void *src, size_t n) {
   }
 }
 
-static void *__asan_memcpy(void *dst, const void *src, size_t n) {
+void *__asan_memcpy(void *dst, const void *src, size_t n) {
   __asan_mempcpy(dst, src, n);
   return dst;
 }
@@ -1263,21 +1265,6 @@ int __asan_malloc_trim(size_t pad) {
   return _weaken(dlmalloc_trim) ? _weaken(dlmalloc_trim)(pad) : 0;
 }
 
-void *__asan_stack_malloc(size_t size, int classid) {
-  struct AsanTrace bt;
-  __asan_trace(&bt, RBP);
-  return __asan_allocate(16, size, &bt, kAsanStackUnderrun, kAsanStackOverrun,
-                         0xf9);
-}
-
-void __asan_stack_free(char *p, size_t size, int classid) {
-  __asan_deallocate(p, kAsanStackFree);
-}
-
-void __asan_handle_no_return(void) {
-  __asan_unpoison((void *)GetStackAddr(), GetStackSize());
-}
-
 void __asan_register_globals(struct AsanGlobal g[], int n) {
   int i;
   __asan_poison(g, sizeof(*g) * n, kAsanProtected);
@@ -1320,35 +1307,65 @@ void __asan_report_store(uint8_t *addr, int size) {
   __asan_unreachable();
 }
 
+void *__asan_stack_malloc(size_t size, int classid) {
+  struct AsanTrace bt;
+  ASAN_LOG("__asan_stack_malloc(%zu, %d)\n", size, classid);
+  __asan_trace(&bt, RBP);
+  return __asan_allocate(16, size, &bt, kAsanStackUnderrun, kAsanStackOverrun,
+                         0xf9);
+}
+
+void __asan_stack_free(char *p, size_t size, int classid) {
+  ASAN_LOG("__asan_stack_free(%p, %zu, %d)\n", p, size, classid);
+  __asan_deallocate(p, kAsanStackFree);
+}
+
+void __asan_handle_no_return(void) {
+  // this check is stupid and has far-reaching toilsome ramifications
+}
+
 void __asan_poison_stack_memory(char *addr, size_t size) {
+  ASAN_LOG("__asan_poison_stack_memory(%p, %zu)\n", addr, size);
   __asan_poison(addr, size, kAsanStackFree);
 }
 
 void __asan_unpoison_stack_memory(char *addr, size_t size) {
+  ASAN_LOG("__asan_unpoison_stack_memory(%p, %zu)\n", addr, size);
   __asan_unpoison(addr, size);
 }
 
 void __asan_alloca_poison(char *addr, uintptr_t size) {
-  __asan_poison(addr - 32, 32, kAsanAllocaUnderrun);
-  __asan_poison(addr + size, 32, kAsanAllocaOverrun);
+  ASAN_LOG("__asan_alloca_poison(%p, %zu)\n", addr, size);
+  size_t rounded_up_size = ROUNDUP(size, 8);
+  size_t padding_size = ROUNDUP(size, 32) - rounded_up_size;
+  size_t rounded_down_size = ROUNDDOWN(size, 8);
+  char *left_redzone = addr - 32;
+  void *right_redzone = addr + rounded_up_size;
+  __asan_unpoison(addr + rounded_down_size, size - rounded_down_size);
+  __asan_poison(left_redzone, 32, kAsanAllocaUnderrun);
+  __asan_poison(right_redzone, padding_size + 32, kAsanAllocaOverrun);
 }
 
 void __asan_allocas_unpoison(uintptr_t x, uintptr_t y) {
+  ASAN_LOG("__asan_allocas_unpoison(%p, %p)\n", x, y);
   if (!x || x > y) return;
-  __asan_memset((void *)((x >> 3) + 0x7fff8000), 0, (y - x) / 8);
+  __asan_unpoison((char *)x, y - x);
 }
 
 void *__asan_addr_is_in_fake_stack(void *fakestack, void *addr, void **beg,
                                    void **end) {
+  ASAN_LOG("__asan_addr_is_in_fake_stack(%p)\n", addr);
   return 0;
 }
 
 void *__asan_get_current_fake_stack(void) {
+  ASAN_LOG("__asan_get_current_fake_stack()\n");
   return 0;
 }
 
 void __sanitizer_annotate_contiguous_container(char *beg, char *end,
                                                char *old_mid, char *new_mid) {
+  ASAN_LOG("__sanitizer_annotate_contiguous_container()\n");
   // the c++ stl uses this
   // TODO(jart): make me faster
   __asan_unpoison(beg, new_mid - beg);
@@ -1356,9 +1373,11 @@ void __sanitizer_annotate_contiguous_container(char *beg, char *end,
 }
 
 void __asan_before_dynamic_init(const char *module_name) {
+  ASAN_LOG("__asan_before_dynamic_init()\n");
 }
 
 void __asan_after_dynamic_init(void) {
+  ASAN_LOG("__asan_after_dynamic_init()\n");
 }
 
 void __asan_install_malloc_hooks(void) {
@@ -1505,5 +1524,8 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
+
+__weak_reference(__asan_poison, __asan_poison_memory_region);
+__weak_reference(__asan_unpoison, __asan_unpoison_memory_region);
 
 #endif /* __x86_64__ */

@@ -21,6 +21,8 @@
 
 const char *DescribePrctlOperation(int x) {
   switch (x) {
+    case PR_GET_NAME:
+      return "PR_GET_NAME";
     case PR_SET_NO_NEW_PRIVS:
       return "PR_SET_NO_NEW_PRIVS";
     case PR_SET_SECCOMP:

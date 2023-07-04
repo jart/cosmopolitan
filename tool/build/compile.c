@@ -834,7 +834,7 @@ int main(int argc, char *argv[]) {
    */
   verbose = 4;
   timeout = 90;                 /* secs */
-  cpuquota = 16;                /* secs */
+  cpuquota = 32;                /* secs */
   proquota = 2048;              /* procs */
   fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */

@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/dce.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
@@ -26,18 +27,18 @@
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
+typedef double vect __attribute__((__vector_size__(16), __aligned__(16)));
+
 struct Gadget {
   void (*func)();
-  int args[6];
+  long longs[6];
+  vect vects[6];
 };
 
 static void runcontext(struct Gadget *call, ucontext_t *link) {
-  call->func(call->args[0],  //
-             call->args[1],  //
-             call->args[2],  //
-             call->args[3],  //
-             call->args[4],  //
-             call->args[5]);
+  call->func(call->longs[0], call->longs[1], call->longs[2], call->longs[3],
+             call->longs[4], call->longs[5], call->vects[0], call->vects[1],
+             call->vects[2], call->vects[3], call->vects[4], call->vects[5]);
   if (link) {
     setcontext(link);
     abort();
@@ -61,46 +62,71 @@ static void runcontext(struct Gadget *call, ucontext_t *link) {
  *
  *     exit(42);
  *
- * @param uc stores processor state; the caller must:
- *     1. initialize it using getcontext()
- *     2. assign new value to `uc->uc_stack.ss_sp`
- *     3. use `uc->uc_link` to define successor context
+ * The safest way to allocate stack memory is to use NewCosmoStack() and
+ * GetStackSize(), which will mmap() a fresh region of memory per a link
+ * time configuration, mprotect() some guard pages at the bottom, poison
+ * them if ASAN is in play, and then tell the OS that it's stack memory.
+ * If that's overkill for your use case, then you could potentially pass
+ * stacks as small as 1024 bytes; however they need to come from a stack
+ * allocation Cosmo granted to your main process and threads. It needn't
+ * be aligned, since this function takes care of that automatically. The
+ * address selected shall be `uc_stack.ss_ip + uc_stack.ss_size` and all
+ * the action happens beneath that address.
+ *
+ * On AMD64 and ARM64 you may pass up to six `long` integer args, and up
+ * to six vectors (e.g. double, floats, __m128i, uint8x16_t). Thou shall
+ * not call code created by Microsoft compilers, even though this should
+ * work perfectly fine on Windows, as it is written in the System V ABI,
+ * which specifies your parameters are always being passed in registers.
+ *
+ * @param uc stores processor state; the caller must have:
+ *     1. initialized it using `getcontext(uc)`
+ *     2. allocated new values for `uc->uc_stack`
+ *     3. specified a successor context in `uc->uc_link`
  * @param func is the function to call when `uc` is activated;
- *     when `func` returns control passes to the linked context
+ *     when `func` returns, control is passed to `uc->uc_link`,
  *     which if null will result in pthread_exit() being called
- * @param argc is number of `int` arguments for `func` (max 6)
+ * @param argc is effectively ignored (see notes above)
+ * @see setcontext(), getcontext(), swapcontext()
  * @threadsafe
  */
 void makecontext(ucontext_t *uc, void func(), int argc, ...) {
-  int i;
   va_list va;
-  uintptr_t sp;
+  long sp, sb;
   struct Gadget *call;
   struct StackFrame *sf;
-  assert(argc <= 6u);
 
   // allocate call
-  sp = (uintptr_t)uc->uc_stack.ss_sp;
+  sp = sb = (long)uc->uc_stack.ss_sp;
   sp += uc->uc_stack.ss_size;
+  sp -= 16;  // openbsd:stackbound
   sp -= sizeof(*call);
   sp &= -alignof(*call);
   call = (struct Gadget *)sp;
 
   // get arguments
-  va_start(va, argc);
   call->func = func;
-  for (i = 0; i < argc; ++i) {
-    call->args[i] = va_arg(va, int);
-  }
+  va_start(va, argc);
+  call->longs[0] = va_arg(va, long);
+  call->longs[1] = va_arg(va, long);
+  call->longs[2] = va_arg(va, long);
+  call->longs[3] = va_arg(va, long);
+  call->longs[4] = va_arg(va, long);
+  call->longs[5] = va_arg(va, long);
+  call->vects[0] = va_arg(va, vect);
+  call->vects[1] = va_arg(va, vect);
+  call->vects[2] = va_arg(va, vect);
+  call->vects[3] = va_arg(va, vect);
+  call->vects[4] = va_arg(va, vect);
+  call->vects[5] = va_arg(va, vect);
   va_end(va);
 
-  // construct fake function call on new stack
+  // constructs fake function call on new stack
   //
   // the location where getcontext() was called shall be the previous
   // entry in the backtrace when runcontext was called, e.g.
   //
-  //     1000800bf160 423024 systemfive_linux+31
-  //     1000800fff90 405299 abort+58
+  //     1000800fff90 405299 func+58
   //     1000800fffb0 40d98c runcontext+42
   //     1000800fffd0 40b308 makecontext_backtrace+20
   //     7fff22a7ff50 40c2d5 testlib_runtestcases+218
@@ -110,12 +136,12 @@ void makecontext(ucontext_t *uc, void func(), int argc, ...) {
   //     7fff22a7fff0 4034e2 _start+137
   //
   // is about what it should look like.
-  sp &= -(sizeof(uintptr_t) * 2);
+  sp &= -(sizeof(long) * 2);
 #ifdef __x86__
-  *(uintptr_t *)(sp -= sizeof(uintptr_t)) = uc->uc_mcontext.PC;
+  *(long *)(sp -= sizeof(long)) = uc->uc_mcontext.PC;
 #elif defined(__aarch64__)
-  *(uintptr_t *)(sp -= sizeof(uintptr_t)) = uc->uc_mcontext.regs[30];
-  *(uintptr_t *)(sp -= sizeof(uintptr_t)) = uc->uc_mcontext.regs[29];
+  *(long *)(sp -= sizeof(long)) = uc->uc_mcontext.regs[30];
+  *(long *)(sp -= sizeof(long)) = uc->uc_mcontext.regs[29];
   uc->uc_mcontext.BP = uc->uc_mcontext.SP;
 #else
 #error "unsupported architecture"
@@ -123,7 +149,7 @@ void makecontext(ucontext_t *uc, void func(), int argc, ...) {
 
   // program context
   uc->uc_mcontext.SP = sp;
-  uc->uc_mcontext.PC = (uintptr_t)runcontext;
-  uc->uc_mcontext.ARG0 = (uintptr_t)call;
-  uc->uc_mcontext.ARG1 = (uintptr_t)uc->uc_link;
+  uc->uc_mcontext.PC = (long)runcontext;
+  uc->uc_mcontext.ARG0 = (long)call;
+  uc->uc_mcontext.ARG1 = (long)uc->uc_link;
 }

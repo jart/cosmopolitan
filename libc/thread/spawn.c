@@ -50,6 +50,8 @@
  * Your spawn library abstracts clone() which also works on all
  * platforms; however our implementation of clone() is significantly
  * complicated so we strongly recommend always favoring this API.
+ *
+ * @deprecated
  */
 
 #define _TLSZ ((intptr_t)_tls_size)
@@ -92,6 +94,7 @@ static int Spawner(void *arg, int tid) {
  *     except when it isn't specified, in which case, the thread is kind
  *     of detached and will (currently) just leak the stack / tls memory
  * @return 0 on success, or -1 w/ errno
+ * @deprecated
  */
 int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
   errno_t rc;
@@ -144,6 +147,8 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
  * Waits for thread created by _spawn() to terminate.
  *
  * This will free your thread's stack and tls memory too.
+ *
+ * @deprecated
  */
 int _join(struct spawn *th) {
   int rc;

@@ -19,6 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
@@ -209,7 +210,11 @@ textstartup void __enable_tls(void) {
 
   // copy in initialized data section
   if (I(_tdata_size)) {
-    memcpy(tls, _tdata_start, I(_tdata_size));
+    if (IsAsan()) {
+      __asan_memcpy(tls, _tdata_start, I(_tdata_size));
+    } else {
+      memcpy(tls, _tdata_start, I(_tdata_size));
+    }
   }
 
   // ask the operating system to change the x86 segment register

@@ -177,7 +177,7 @@ const char *getargs_next(struct GetArgs *ga) {
         getargs_fail(ga->path, "mmap");
       }
       ga->map = p;
-      ga->mapsize = ROUNDUP(size, 4096);
+      ga->mapsize = size;
     }
     close(fd);
   }

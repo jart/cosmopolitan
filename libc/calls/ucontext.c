@@ -18,12 +18,26 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ucontext.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
 
 int __tailcontext(const ucontext_t *);
 
+static int __contextmask(const sigset_t *opt_set, sigset_t *opt_out_oldset) {
+  if (!__interruptible) return 0;
+  // signal handling functions might exist
+  // now context switching needs to go 14x slower
+  return sigprocmask(SIG_SETMASK, opt_set, opt_out_oldset);
+}
+
 /**
  * Sets machine context.
+ *
+ * This function goes 14x slower if sigaction() has ever been used to
+ * install a signal handling function. If you don't care about signal
+ * safety and just want fast fibers, then you may override the global
+ * variable `__interruptible` to disable the sigprocmask() calls, for
+ * pure userspace context switching.
  *
  * @return -1 on error w/ errno, otherwise won't return unless sent back
  * @see swapcontext()
@@ -32,14 +46,14 @@ int __tailcontext(const ucontext_t *);
  * @threadsafe
  */
 int setcontext(const ucontext_t *uc) {
-  if (sigprocmask(SIG_SETMASK, &uc->uc_sigmask, 0)) return -1;
+  if (__contextmask(&uc->uc_sigmask, 0)) return -1;
   return __tailcontext(uc);
 }
 
 int __getcontextsig(ucontext_t *uc) {
-  return sigprocmask(SIG_SETMASK, 0, &uc->uc_sigmask);
+  return __contextmask(0, &uc->uc_sigmask);
 }
 
 int __swapcontextsig(ucontext_t *x, const ucontext_t *y) {
-  return sigprocmask(SIG_SETMASK, &y->uc_sigmask, &x->uc_sigmask);
+  return __contextmask(&y->uc_sigmask, &x->uc_sigmask);
 }

@@ -64,6 +64,47 @@ __tailcontext:
 #elif defined(__aarch64__)
 #define REGS(i) 184+i*8
 
+/*void setfpsimd(const ucontext_t *uc) {
+  struct fpsimd_context *fp;
+  fp = (struct fpsimd_context *)uc->uc_mcontext.__reserved;
+  if (fp[0].head.magic == FPSIMD_MAGIC) {
+    asm("msr\tfpsr,%0" ::"r"(fp->fpsr));
+    asm("msr\tfpcr,%0" ::"r"(fp->fpcr));
+    asm("ldp\tq0,q1,%0" ::"m"(fp->vregs[0]));
+    asm("ldp\tq2,q3,%0" ::"m"(fp->vregs[2]));
+    asm("ldp\tq4,q5,%0" ::"m"(fp->vregs[4]));
+    asm("ldp\tq6,q7,%0" ::"m"(fp->vregs[6]));
+    asm("ldp\tq8,q9,%0" ::"m"(fp->vregs[8]));
+    asm("ldp\tq10,q11,%0" ::"m"(fp->vregs[10]));
+    asm("ldp\tq12,q13,%0" ::"m"(fp->vregs[12]));
+    asm("ldp\tq14,q15,%0" ::"m"(fp->vregs[14]));
+  }
+}*/
+
+	ldr	w14,[x0,464]
+	add	x15,x0,464
+	mov	w13,0x8001
+	movk	w13,0x4650,lsl 16
+	cmp	w14,w13
+	bne	1f
+	ldr	w13,[x15,8]
+	msr	fpsr,x13
+	ldr	w13,[x15,12]
+	msr	fpcr,x13
+	ldp	q0,q1,[x15,16]
+	ldp	q2,q3,[x15,48]
+	ldp	q4,q5,[x15,80]
+	ldp	q6,q7,[x15,112]
+	ldp	q8,q9,[x15,144]
+	ldp	q10,q11,[x15,176]
+	ldp	q12,q13,[x15,208]
+	ldp	q14,q15,[x15,240]
+1:
+
+//	x16 is clobbered
+//	x18 belongs to apple
+//	all other registers are restored
+
 	ldp	x1,x16,[x0,REGS(31)]		// sp, pc
 	mov	sp,x1
 	ldr	x30,[x0,REGS(30)]
@@ -72,7 +113,7 @@ __tailcontext:
 	ldp	x24,x25,[x0,REGS(24)]
 	ldp	x22,x23,[x0,REGS(22)]
 	ldp	x20,x21,[x0,REGS(20)]
-	ldp	x18,x19,[x0,REGS(18)]
+	ldr	x19,[x0,REGS(19)]
 	ldr	x17,[x0,REGS(17)]
 	ldp	x14,x15,[x0,REGS(14)]
 	ldp	x12,x13,[x0,REGS(12)]

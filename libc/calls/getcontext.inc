@@ -63,7 +63,10 @@
 #elif defined(__aarch64__)
 #define REGS(i) 184+i*8
 
-	stp	xzr,x1,[x0,REGS(0)]	// x0 = 0
+//	x14 and x15 are clobbered
+//	all other registers are preserved
+
+	stp	xzr,x1,[x0,REGS(0)]	// context.x0 = 0
 	stp	x2,x3,[x0,REGS(2)]
 	stp	x4,x5,[x0,REGS(4)]
 	stp	x6,x7,[x0,REGS(6)]
@@ -83,6 +86,44 @@
 	stp	x15,x30,[x0,REGS(31)]	// sp, pc = caller sp, ret address
 	str	xzr,[x0,448]		// pstate = 0
 	str	xzr,[x0,456]		// no vectors yet
+
+/*void getfpsimd(ucontext_t *uc) {
+  struct fpsimd_context *fp;
+  fp = (struct fpsimd_context *)uc->uc_mcontext.__reserved;
+  fp[0].head.magic = FPSIMD_MAGIC;
+  fp[0].head.size = sizeof(*fp);
+  fp[1].head.magic = 0;
+  fp[1].head.size = 0;
+  asm("mrs\t%0,fpsr" : "=r"(fp->fpsr));
+  asm("mrs\t%0,fpcr" : "=r"(fp->fpcr));
+  asm("stp\tq0,q1,%0" : "=m"(fp->vregs[0]));
+  asm("stp\tq2,q3,%0" : "=m"(fp->vregs[2]));
+  asm("stp\tq4,q5,%0" : "=m"(fp->vregs[4]));
+  asm("stp\tq6,q7,%0" : "=m"(fp->vregs[6]));
+  asm("stp\tq8,q9,%0" : "=m"(fp->vregs[8]));
+  asm("stp\tq10,q11,%0" : "=m"(fp->vregs[10]));
+  asm("stp\tq12,q13,%0" : "=m"(fp->vregs[12]));
+  asm("stp\tq14,q15,%0" : "=m"(fp->vregs[14]));
+}*/
+
+	add	x15,x0,464
+	mov	x14,0x8001
+	movk	x14,0x4650,lsl 16
+	str	xzr,[x0,992]
+	movk	x14,0x210,lsl 32
+	str	x14,[x0,464]
+	mrs	x14,fpsr
+	str	w14,[x15,8]
+	mrs	x14,fpcr
+	str	w14,[x15,12]
+	stp	q0,q1,[x15,16]
+	stp	q2,q3,[x15,48]
+	stp	q4,q5,[x15,80]
+	stp	q6,q7,[x15,112]
+	stp	q8,q9,[x15,144]
+	stp	q10,q11,[x15,176]
+	stp	q12,q13,[x15,208]
+	stp	q14,q15,[x15,240]
 
 #else
 #error "unsupported architecture"

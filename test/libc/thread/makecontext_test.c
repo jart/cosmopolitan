@@ -31,14 +31,46 @@
 #include "libc/x/x.h"
 #include "third_party/libcxx/math.h"
 
-ucontext_t uc;
+bool gotsome;
+ucontext_t uc, goback;
 char testlib_enable_tmp_setup_teardown;
 
-void itsatrap(int x, int y) {
+void check_args(long x0, long x1, long x2, long x3, long x4, long x5, double f0,
+                double f1, double f2, double f3, double f4, double f5) {
+  EXPECT_EQ(LONG_MIN + 100, x0);
+  EXPECT_EQ(LONG_MIN + 101, x1);
+  EXPECT_EQ(LONG_MIN + 102, x2);
+  EXPECT_EQ(LONG_MIN + 103, x3);
+  EXPECT_EQ(LONG_MIN + 104, x4);
+  EXPECT_EQ(LONG_MIN + 105, x5);
+  EXPECT_TRUE(20. == f0);
+  EXPECT_TRUE(21. == f1);
+  EXPECT_TRUE(22. == f2);
+  EXPECT_TRUE(23. == f3);
+  EXPECT_TRUE(24. == f4);
+  EXPECT_TRUE(25. == f5);
+  gotsome = true;
+}
+
+TEST(makecontext, args) {
+  char stack[1024];
+  __interruptible = false;
+  getcontext(&uc);
+  uc.uc_link = &goback;
+  uc.uc_stack.ss_sp = stack;
+  uc.uc_stack.ss_size = sizeof(stack);
+  makecontext(&uc, check_args, 12, 20., 21., 22., LONG_MIN + 100,
+              LONG_MIN + 101, LONG_MIN + 102, LONG_MIN + 103, LONG_MIN + 104,
+              LONG_MIN + 105, 23., 24., 25.);
+  swapcontext(&goback, &uc);
+  EXPECT_TRUE(gotsome);
+}
+
+noasan noubsan void itsatrap(int x, int y) {
   *(int *)(intptr_t)x = scalbn(x, y);
 }
 
-TEST(makecontext, test) {
+TEST(makecontext, crash) {
   SPAWN(fork);
   getcontext(&uc);
   uc.uc_link = 0;
