@@ -28,15 +28,15 @@
 static inline noasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
                                                const char *src, axdx_t r) {
   uint8_t v1[16], v2[16], vz[16];
-  __builtin_memset(vz, 0, 16);
+  memset(vz, 0, 16);
   while (r.ax + 16 < dstsize) {
-    __builtin_memcpy(v1, src + r.dx, 16);
+    memcpy(v1, src + r.dx, 16);
     pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
     if (pmovmskb(v2) != 0xFFFF) break;
     punpcklbw(v2, v1, vz);
     punpckhbw(v1, v1, vz);
-    __builtin_memcpy(dst + r.ax + 0, v2, 16);
-    __builtin_memcpy(dst + r.ax + 8, v1, 16);
+    memcpy(dst + r.ax + 0, v2, 16);
+    memcpy(dst + r.ax + 8, v1, 16);
     r.ax += 16;
     r.dx += 16;
   }

@@ -5,8 +5,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct nsync_dll_element_s_;
-
 /* An nsync_counter represents an unsigned integer that can count up and down,
    and wake waiters when zero.  */
 typedef struct nsync_counter_s_ *nsync_counter;

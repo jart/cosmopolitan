@@ -24,6 +24,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
@@ -38,7 +39,7 @@
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 
-nsync_dll_list_ _pthread_list;
+struct Dll *_pthread_list;
 pthread_spinlock_t _pthread_lock;
 static struct PosixThread _pthread_main;
 _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
@@ -205,7 +206,6 @@ textstartup void __enable_tls(void) {
   _pthread_main.flags = PT_STATIC;
   _pthread_main.list.prev = _pthread_main.list.next =  //
       _pthread_list = VEIL("r", &_pthread_main.list);
-  _pthread_main.list.container = &_pthread_main;
   atomic_store_explicit(&_pthread_main.ptid, tid, memory_order_relaxed);
 
   // copy in initialized data section

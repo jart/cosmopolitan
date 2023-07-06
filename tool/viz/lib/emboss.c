@@ -26,5 +26,5 @@ void emboss(struct Graphic *g) {
       {-1.0, +1.0, +1.0},
       {+0.0, +1.0, +2.0},
   };
-  convolve(g->yn, g->xn, g->b.p, 3, kEmbossKernel, 1, 0);
+  convolve(g->yn, g->xn, g->b, 3, kEmbossKernel, 1, 0);
 }

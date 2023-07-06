@@ -5,11 +5,11 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/bits.h"
 #include "third_party/python/Include/pyctype.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
+#include "third_party/python/Modules/bextra.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
 /* clang-format off */
@@ -174,7 +174,7 @@ _PyUnicode_GetCode(PyObject *self, const char *name, int namelen, Py_UCS4 *code,
        details */
     h = (unsigned int)_gethash(name, namelen, _PyUnicode_CodeMagic);
     i = ~h & mask;
-    v = _bextra(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
+    v = BitFieldExtract(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
     if (!v)
         return 0;
     if (_cmpname(self, v, name, namelen))
@@ -184,7 +184,7 @@ _PyUnicode_GetCode(PyObject *self, const char *name, int namelen, Py_UCS4 *code,
         incr = mask;
     for (;;) {
         i = (i + incr) & mask;
-        v = _bextra(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
+        v = BitFieldExtract(_PyUnicode_CodeHash, i, _PyUnicode_CodeHashBits);
         if (!v)
             return 0;
         if (_cmpname(self, v, name, namelen))
@@ -247,10 +247,10 @@ _PyUnicode_GetUcName(PyObject *self, Py_UCS4 code, char *buffer, int buflen,
     }
     /* get offset into phrasebook */
     offset = _PyUnicode_PhrasebookOffset1[(code>>_PyUnicode_PhrasebookShift)];
-    offset = _bextra(_PyUnicode_PhrasebookOffset2,
-                     (offset << _PyUnicode_PhrasebookShift) +
-                     (code & ((1 << _PyUnicode_PhrasebookShift) - 1)),
-                     _PyUnicode_PhrasebookOffset2Bits);
+    offset = BitFieldExtract(_PyUnicode_PhrasebookOffset2,
+                             (offset << _PyUnicode_PhrasebookShift) +
+                             (code & ((1 << _PyUnicode_PhrasebookShift) - 1)),
+                             _PyUnicode_PhrasebookOffset2Bits);
     if (!offset)
         return 0;
     i = 0;
@@ -271,8 +271,8 @@ _PyUnicode_GetUcName(PyObject *self, Py_UCS4 code, char *buffer, int buflen,
            word has bit 7 set.  the last word in a string ends with
            0x80 */
         w = (_PyUnicode_Lexicon +
-             _bextra(_PyUnicode_LexiconOffset, word,
-                     _PyUnicode_LexiconOffsetBits));
+             BitFieldExtract(_PyUnicode_LexiconOffset, word,
+                             _PyUnicode_LexiconOffsetBits));
         while (*w < 128) {
             if (i >= buflen)
                 return 0; /* buffer overflow */

@@ -15,11 +15,11 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/nsync/once.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/counter.h"
 #include "third_party/nsync/mu.h"
-#include "third_party/nsync/once.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
@@ -99,7 +99,7 @@ static void test_once_run (testing t) {
         for (i = 0; i != 250; i++) {
                 struct once_test_s *s =
 			(struct once_test_s *) malloc (sizeof (*s));
-                memset ((void *) s, 0, sizeof (*s));
+                bzero ((void *) s, sizeof (*s));
                 s->counter = 0;
                 s->done = nsync_counter_new (N);
                 s->t = t;

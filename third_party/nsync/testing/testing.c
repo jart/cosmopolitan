@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/nsync/testing/testing.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
@@ -25,14 +26,12 @@
 #include "libc/str/str.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/testing/atm_log.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
-#include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
 // clang-format off
 
@@ -55,7 +54,7 @@ struct testing_base_s {
 
 	nsync_mu testing_mu;      /* protects fields below */
 	int is_uniprocessor;      /* whether the system is a uniprocessor */
-	nsync_dll_list_ children; /* list of testing_s structs whose base is this testing_base_s */
+	struct Dll *children; /* list of testing_s structs whose base is this testing_base_s */
 	int child_count;	  /* count of testing_s structs whose base is this testing_base_s */
 	int exit_status;	  /* final exit status */
 };
@@ -70,7 +69,7 @@ struct testing_s {
 	nsync_time stop_time;	 /* when the timer was stopped; for benchmarks */
 	void (*f) (testing);		   /* test function to run */
 	const char *name;		   /* name of test */
-	nsync_dll_element_ siblings;       /* part of list of siblings */
+	struct Dll siblings;       /* part of list of siblings */
 };
 
 /* Output the header for benchmarks. */
@@ -147,7 +146,7 @@ testing_base testing_new (int argc, char *argv[], int flags) {
 	int argn;
 	testing_base tb = (testing_base)malloc (sizeof (*tb));
 	ShowCrashReports ();
-	memset ((void *) tb, 0, sizeof (*tb));
+	bzero ((void *) tb, sizeof (*tb));
 	tb->flags = flags;
 	tb->fp = stderr;
 	tb->argc = argc;
@@ -224,7 +223,7 @@ static void finish_run (testing t) {
 	if (tb->exit_status < t->test_status) {
 		tb->exit_status = t->test_status;
 	}
-	tb->children = nsync_dll_remove_ (tb->children, &t->siblings);
+	dll_remove (&tb->children, &t->siblings);
 	tb->child_count--;
 	nsync_mu_unlock (&tb->testing_mu);
 	free (t);
@@ -358,8 +357,8 @@ void testing_run_ (testing_base tb, void (*f) (testing t), const char *name, int
 	    (tb->include_pat == NULL || match (tb->include_pat, name)) &&
 	    (tb->exclude_pat == NULL || !match (tb->exclude_pat, name))) {
 		testing t = (testing) malloc (sizeof (*t));
-		memset ((void *) t, 0, sizeof (*t));
-		nsync_dll_init_ (&t->siblings, t);
+		bzero ((void *) t, sizeof (*t));
+		dll_init (&t->siblings);
 		t->base = tb;
 		t->f = f;
 		t->name = name;
@@ -378,7 +377,7 @@ void testing_run_ (testing_base tb, void (*f) (testing t), const char *name, int
 			nsync_mu_lock (&tb->testing_mu);
 			nsync_mu_wait (&tb->testing_mu, &spare_thread, tb, NULL);
 			tb->child_count++;
-			tb->children = nsync_dll_make_last_in_list_ (tb->children, &t->siblings);
+			dll_make_last (&tb->children, &t->siblings);
 			nsync_mu_unlock (&tb->testing_mu);
 			closure_fork (closure_testing (&run_test, t));
 		} else {
@@ -394,7 +393,7 @@ void testing_run_ (testing_base tb, void (*f) (testing t), const char *name, int
 			nsync_mu_lock (&tb->testing_mu);
 			nsync_mu_wait (&tb->testing_mu, &spare_thread, tb, NULL);
 			tb->child_count++;
-			tb->children = nsync_dll_make_last_in_list_ (tb->children, &t->siblings);
+			dll_make_last (&tb->children, &t->siblings);
 			nsync_mu_unlock (&tb->testing_mu);
 			closure_fork (closure_testing (&run_benchmark, t));
 		}

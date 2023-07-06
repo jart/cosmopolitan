@@ -166,7 +166,7 @@ void _StartTty(struct Tty *tty, unsigned char type, unsigned short yp,
                void *fb, unsigned init_flags) {
   unsigned short yn, xn, xs = xp * sizeof(TtyCanvasColor);
   struct DirectMap dm;
-  memset(tty, 0, sizeof(struct Tty));
+  bzero(tty, sizeof(struct Tty));
   SetYp(tty, yp);
   SetXp(tty, xp);
   SetXsFb(tty, xsfb);

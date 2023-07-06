@@ -1,10 +1,10 @@
 #ifndef NSYNC_COMMON_H_
 #define NSYNC_COMMON_H_
 #include "libc/assert.h"
+#include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/cv.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/note.h"
@@ -101,9 +101,9 @@ void nsync_panic_(const char *s);
 #define MU_ALL_FALSE                                      \
   ((uint32_t)(1 << 7)) /* all waiter conditions are false \
                         */
-#define MU_RLOCK \
-  ((uint32_t)(   \
-      1 << 8)) /* low-order bit of reader count, which uses rest of word */
+#define MU_RLOCK                                                            \
+  ((uint32_t)(1 << 8)) /* low-order bit of reader count, which uses rest of \
+                          word */
 
 /* The constants below are derived from those above. */
 #define MU_RLOCK_FIELD \
@@ -202,7 +202,7 @@ struct wait_condition_s {
    Remove *w from the relevant queue then:
     ATM_STORE_REL (&w.waiting, 0);
     nsync_mu_semaphore_v (&w.sem); */
-typedef struct {
+typedef struct waiter_s {
   uint32_t tag; /* debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND */
   int flags;    /* see WAITER_* bits below */
   nsync_semaphore sem;       /* Thread waits on this semaphore. */
@@ -212,7 +212,7 @@ typedef struct {
       *l_type; /* Lock type of the mu, or nil if not associated with a mu. */
   nsync_atomic_uint32_ remove_count; /* count of removals from queue */
   struct wait_condition_s cond;      /* A condition on which to acquire a mu. */
-  nsync_dll_element_ same_condition; /* Links neighbours in nw.q with same
+  struct Dll same_condition;         /* Links neighbours in nw.q with same
                                         non-nil condition. */
 } waiter;
 static const uint32_t WAITER_TAG = 0x0590239f;
@@ -222,28 +222,27 @@ static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
   0x1 /* waiter reserved by a thread, even when not in use */
 #define WAITER_IN_USE 0x2 /* waiter in use by a thread */
 
-#define CONTAINER(t_, f_, p_) ((t_ *)(((char *)(p_)) - offsetof(t_, f_)))
-
 #define ASSERT(x) _npassert(x)
 
-/* Return a pointer to the nsync_waiter_s containing nsync_dll_element_ *e. */
+/* Return a pointer to the nsync_waiter_s containing struct Dll *e. */
 #define DLL_NSYNC_WAITER(e)                 \
   (NSYNC_DEBUG ? nsync_dll_nsync_waiter_(e) \
-               : ((struct nsync_waiter_s *)((e)->container)))
-struct nsync_waiter_s *nsync_dll_nsync_waiter_(nsync_dll_element_ *e);
+               : DLL_CONTAINER(struct nsync_waiter_s, q, e))
+struct nsync_waiter_s *nsync_dll_nsync_waiter_(struct Dll *e);
 
 /* Return a pointer to the waiter struct that *e is embedded in, where *e is an
  * nw.q field. */
 #define DLL_WAITER(e)                 \
   (NSYNC_DEBUG ? nsync_dll_waiter_(e) \
-               : CONTAINER(waiter, nw, DLL_NSYNC_WAITER(e)))
-waiter *nsync_dll_waiter_(nsync_dll_element_ *e);
+               : DLL_CONTAINER(waiter, nw, DLL_NSYNC_WAITER(e)))
+waiter *nsync_dll_waiter_(struct Dll *e);
 
 /* Return a pointer to the waiter struct that *e is embedded in, where *e is a
    same_condition field.  */
-#define DLL_WAITER_SAMECOND(e) \
-  (NSYNC_DEBUG ? nsync_dll_waiter_samecond_(e) : ((waiter *)((e)->container)))
-waiter *nsync_dll_waiter_samecond_(nsync_dll_element_ *e);
+#define DLL_WAITER_SAMECOND(e)                 \
+  (NSYNC_DEBUG ? nsync_dll_waiter_samecond_(e) \
+               : DLL_CONTAINER(struct waiter_s, same_condition, e))
+waiter *nsync_dll_waiter_samecond_(struct Dll *e);
 
 /* Return a pointer to an unused waiter struct.
    Ensures that the enclosed timer is stopped and its channel drained. */
@@ -257,8 +256,7 @@ void nsync_waiter_free_(waiter *w);
 /* The internals of an nync_note.  See internal/note.c for details of locking
    discipline.  */
 struct nsync_note_s_ {
-  nsync_dll_element_
-      parent_child_link; /* parent's children, under parent->note_mu  */
+  struct Dll parent_child_link; /* parent's children, under parent->note_mu  */
   int expiry_time_valid; /* whether expiry_time is valid; r/o after init */
   nsync_time
       expiry_time;  /* expiry time, if expiry_time_valid != 0; r/o after init */
@@ -267,8 +265,8 @@ struct nsync_note_s_ {
   uint32_t disconnecting;        /* non-zero => node is being disconnected */
   nsync_atomic_uint32_ notified; /* non-zero if the note has been notified */
   struct nsync_note_s_ *parent;  /* points to parent, if any */
-  nsync_dll_element_ *children;  /* list of children */
-  nsync_dll_element_ *waiters;   /* list of waiters */
+  struct Dll *children;          /* list of children */
+  struct Dll *waiters;           /* list of waiters */
 };
 
 /* ---------- */
@@ -276,10 +274,8 @@ struct nsync_note_s_ {
 void nsync_mu_lock_slow_(nsync_mu *mu, waiter *w, uint32_t clear,
                          lock_type *l_type);
 void nsync_mu_unlock_slow_(nsync_mu *mu, lock_type *l_type);
-nsync_dll_list_ nsync_remove_from_mu_queue_(nsync_dll_list_ mu_queue,
-                                            nsync_dll_element_ *e);
-void nsync_maybe_merge_conditions_(nsync_dll_element_ *p,
-                                   nsync_dll_element_ *n);
+struct Dll *nsync_remove_from_mu_queue_(struct Dll *mu_queue, struct Dll *e);
+void nsync_maybe_merge_conditions_(struct Dll *p, struct Dll *n);
 nsync_time nsync_note_notified_deadline_(nsync_note n);
 int nsync_sem_wait_with_cancel_(waiter *w, nsync_time abs_deadline,
                                 nsync_note cancel_note);

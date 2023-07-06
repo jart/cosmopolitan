@@ -20,6 +20,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/dll.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
@@ -60,7 +61,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   _unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
   if (!(rc = _wait0(&pt->tib->tib_tid, abstime))) {
     pthread_spin_lock(&_pthread_lock);
-    _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+    dll_remove(&_pthread_list, &pt->list);
     pthread_spin_unlock(&_pthread_lock);
     if (value_ptr) {
       *value_ptr = pt->rc;

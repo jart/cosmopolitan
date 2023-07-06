@@ -16,12 +16,12 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
+#include "libc/intrin/dll.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/cv.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 #include "third_party/nsync/waiter.h"
@@ -38,7 +38,7 @@ https://github.com/google/nsync\"");
 
 /* Initialize *cv. */
 void nsync_cv_init (nsync_cv *cv) {
-        memset ((void *) cv, 0, sizeof (*cv));
+        bzero ((void *) cv, sizeof (*cv));
 }
 
 /* Wake the cv waiters in the circular list pointed to by
@@ -46,10 +46,10 @@ void nsync_cv_init (nsync_cv *cv) {
    nsync_mu, the "wakeup" may consist of transferring the waiters to the nsync_mu's
    queue.  Requires that every waiter is associated with the same mutex.
    all_readers indicates whether all the waiters on the list are readers.  */
-static void wake_waiters (nsync_dll_list_ to_wake_list, int all_readers) {
-	nsync_dll_element_ *p = NULL;
-	nsync_dll_element_ *next = NULL;
-	nsync_dll_element_ *first_waiter = nsync_dll_first_ (to_wake_list);
+static void wake_waiters (struct Dll *to_wake_list, int all_readers) {
+	struct Dll *p = NULL;
+	struct Dll *next = NULL;
+	struct Dll *first_waiter = dll_first (to_wake_list);
 	struct nsync_waiter_s *first_nw = DLL_NSYNC_WAITER (first_waiter);
 	waiter *first_w = NULL;
 	nsync_mu *pmu = NULL;
@@ -71,7 +71,7 @@ static void wake_waiters (nsync_dll_list_ to_wake_list, int all_readers) {
 		   */
 		uint32_t old_mu_word = ATM_LOAD (&pmu->word);
 		int first_cant_acquire = ((old_mu_word & first_w->l_type->zero_to_acquire) != 0);
-		next = nsync_dll_next_ (to_wake_list, first_waiter);
+		next = dll_next (to_wake_list, first_waiter);
 		if ((old_mu_word&MU_ANY_LOCK) != 0 &&
 		    (old_mu_word&MU_SPINLOCK) == 0 &&
 		    (first_cant_acquire || (next != NULL && !all_readers)) &&
@@ -88,8 +88,8 @@ static void wake_waiters (nsync_dll_list_ to_wake_list, int all_readers) {
 			int woke_areader = 0;
 			/* Transfer the first waiter iff it can't acquire *pmu. */
 			if (first_cant_acquire) {
-				to_wake_list = nsync_dll_remove_ (to_wake_list, first_waiter);
-				pmu->waiters = nsync_dll_make_last_in_list_ (pmu->waiters, first_waiter);
+				dll_remove (&to_wake_list, first_waiter);
+				dll_make_last (&pmu->waiters, first_waiter);
 				/* tell nsync_cv_wait_with_deadline() that we
 				   moved the waiter to *pmu's queue.  */
 				first_w->cv_mu = NULL;
@@ -107,7 +107,7 @@ static void wake_waiters (nsync_dll_list_ to_wake_list, int all_readers) {
 				if ((p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 					p_w = DLL_WAITER (p);
 				}
-				next = nsync_dll_next_ (to_wake_list, p);
+				next = dll_next (to_wake_list, p);
 				p_is_writer = (p_w != NULL &&
 					       DLL_WAITER (p)->l_type == nsync_writer_type_);
 				/* We transfer this element if any of:
@@ -117,8 +117,8 @@ static void wake_waiters (nsync_dll_list_ to_wake_list, int all_readers) {
 				if (p_w == NULL) {
 					/* wake non-native waiter */
 				} else if (first_cant_acquire || first_is_writer || p_is_writer) {
-					to_wake_list = nsync_dll_remove_ (to_wake_list, p);
-					pmu->waiters = nsync_dll_make_last_in_list_ (pmu->waiters, p);
+					dll_remove (&to_wake_list, p);
+					dll_make_last (&pmu->waiters, p);
 					/* tell nsync_cv_wait_with_deadline()
 					   that we moved the waiter to *pmu's
 					   queue.  */
@@ -147,10 +147,10 @@ static void wake_waiters (nsync_dll_list_ to_wake_list, int all_readers) {
 	}
 
 	/* Wake any waiters we didn't manage to enqueue on the mu. */
-	for (p = nsync_dll_first_ (to_wake_list); p != NULL; p = next) {
+	for (p = dll_first (to_wake_list); p != NULL; p = next) {
 		struct nsync_waiter_s *p_nw = DLL_NSYNC_WAITER (p);
-		next = nsync_dll_next_ (to_wake_list, p);
-		to_wake_list = nsync_dll_remove_ (to_wake_list, p);
+		next = dll_next (to_wake_list, p);
+		dll_remove (&to_wake_list, p);
 		/* Wake the waiter. */
 		ATM_STORE_REL (&p_nw->waiting, 0); /* release store */
 		nsync_mu_semaphore_v (p_nw->sem);
@@ -239,7 +239,7 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 
 	/* acquire spinlock, set non-empty */
 	old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK, CV_SPINLOCK|CV_NON_EMPTY, 0);
-	pcv->waiters = nsync_dll_make_last_in_list_ (pcv->waiters, &w->nw.q);
+	dll_make_last (&pcv->waiters, &w->nw.q);
 	remove_count = ATM_LOAD (&w->remove_count);
 	/* Release the spin lock. */
 	ATM_STORE_REL (&pcv->word, old_word|CV_NON_EMPTY); /* release store */
@@ -277,12 +277,11 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 					   queue, and declare a
 					   timeout/cancellation.  */
 					outcome = sem_outcome;
-					pcv->waiters = nsync_dll_remove_ (pcv->waiters,
-								          &w->nw.q);
+					dll_remove (&pcv->waiters, &w->nw.q);
 					do {    
 						old_value = ATM_LOAD (&w->remove_count);
 					} while (!ATM_CAS (&w->remove_count, old_value, old_value+1));
-					if (nsync_dll_is_empty_ (pcv->waiters)) {
+					if (dll_is_empty (pcv->waiters)) {
 						old_word &= ~(CV_NON_EMPTY);
 					}
 					ATM_STORE_REL (&w->nw.waiting, 0); /* release store */
@@ -328,27 +327,26 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 void nsync_cv_signal (nsync_cv *pcv) {
 	IGNORE_RACES_START ();
 	if ((ATM_LOAD_ACQ (&pcv->word) & CV_NON_EMPTY) != 0) { /* acquire load */
-		nsync_dll_list_ to_wake_list = NULL; /* waiters that we will wake */
+		struct Dll *to_wake_list = NULL; /* waiters that we will wake */
 		int all_readers = 0;
 		/* acquire spinlock */
 		uint32_t old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK,
 							      CV_SPINLOCK, 0);
-		if (!nsync_dll_is_empty_ (pcv->waiters)) {
+		if (!dll_is_empty (pcv->waiters)) {
 			/* Point to first waiter that enqueued itself, and
 			   detach it from all others.  */
 			struct nsync_waiter_s *first_nw;
-			nsync_dll_element_ *first = nsync_dll_first_ (pcv->waiters);
-			pcv->waiters = nsync_dll_remove_ (pcv->waiters, first);
+			struct Dll *first = dll_first (pcv->waiters);
+			dll_remove (&pcv->waiters, first);
 			first_nw = DLL_NSYNC_WAITER (first);
 			if ((first_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 				uint32_t old_value;
 				do {    
-					old_value =
-						ATM_LOAD (&DLL_WAITER (first)->remove_count);
+					old_value = ATM_LOAD (&DLL_WAITER (first)->remove_count);
 				} while (!ATM_CAS (&DLL_WAITER (first)->remove_count,
 						   old_value, old_value+1));
 			}
-			to_wake_list = nsync_dll_make_last_in_list_ (to_wake_list, first);
+			dll_make_last (&to_wake_list, first);
 			if ((first_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0 &&
 			    DLL_WAITER (first)->l_type == nsync_reader_type_) {
 				int woke_writer;
@@ -363,14 +361,14 @@ void nsync_cv_signal (nsync_cv *pcv) {
 				   the condition; the client is expecting only one writer to be
 				   able make use of the wakeup, or he would have called
 				   nsync_cv_broadcast().  */
-				nsync_dll_element_ *p = NULL;
-				nsync_dll_element_ *next = NULL;
+				struct Dll *p = NULL;
+				struct Dll *next = NULL;
 				all_readers = 1;
 				woke_writer = 0;
-				for (p = nsync_dll_first_ (pcv->waiters); p != NULL; p = next) {
+				for (p = dll_first (pcv->waiters); p != NULL; p = next) {
 					struct nsync_waiter_s *p_nw = DLL_NSYNC_WAITER (p);
 					int should_wake;
-					next = nsync_dll_next_ (pcv->waiters, p);
+					next = dll_next (pcv->waiters, p);
 					should_wake = 0;
 					if ((p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0 &&
 					     DLL_WAITER (p)->l_type == nsync_reader_type_) {
@@ -381,7 +379,7 @@ void nsync_cv_signal (nsync_cv *pcv) {
 						should_wake = 1;
 					}
 					if (should_wake) {
-						pcv->waiters = nsync_dll_remove_ (pcv->waiters, p);
+						dll_remove (&pcv->waiters, p);
 						if ((p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 							uint32_t old_value;
 							do {    
@@ -390,18 +388,17 @@ void nsync_cv_signal (nsync_cv *pcv) {
 							} while (!ATM_CAS (&DLL_WAITER (p)->remove_count,
 									   old_value, old_value+1));
 						}
-						to_wake_list = nsync_dll_make_last_in_list_ (
-							to_wake_list, p);
+						dll_make_last (&to_wake_list, p);
 					}
 				}
 			}
-			if (nsync_dll_is_empty_ (pcv->waiters)) {
+			if (dll_is_empty (pcv->waiters)) {
 				old_word &= ~(CV_NON_EMPTY);
 			}
 		}
 		/* Release spinlock. */
 		ATM_STORE_REL (&pcv->word, old_word); /* release store */
-		if (!nsync_dll_is_empty_ (to_wake_list)) {
+		if (!dll_is_empty (to_wake_list)) {
 			wake_waiters (to_wake_list, all_readers);
 		}
 	}
@@ -412,22 +409,22 @@ void nsync_cv_signal (nsync_cv *pcv) {
 void nsync_cv_broadcast (nsync_cv *pcv) {
 	IGNORE_RACES_START ();
 	if ((ATM_LOAD_ACQ (&pcv->word) & CV_NON_EMPTY) != 0) { /* acquire load */
-		nsync_dll_element_ *p;
-		nsync_dll_element_ *next;
+		struct Dll *p;
+		struct Dll *next;
 		int all_readers;
-		nsync_dll_list_ to_wake_list = NULL;   /* waiters that we will wake */
+		struct Dll *to_wake_list = NULL;   /* waiters that we will wake */
 		/* acquire spinlock */
 		nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK, CV_SPINLOCK, 0);
 		p = NULL;
 		next = NULL;
 		all_readers = 1;
 		/* Wake entire waiter list, which we leave empty. */
-		for (p = nsync_dll_first_ (pcv->waiters); p != NULL; p = next) {
+		for (p = dll_first (pcv->waiters); p != NULL; p = next) {
 			struct nsync_waiter_s *p_nw = DLL_NSYNC_WAITER (p);
-			next = nsync_dll_next_ (pcv->waiters, p);
+			next = dll_next (pcv->waiters, p);
 			all_readers = all_readers && (p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0 &&
 				      (DLL_WAITER (p)->l_type == nsync_reader_type_);
-			pcv->waiters = nsync_dll_remove_ (pcv->waiters, p);
+			dll_remove (&pcv->waiters, p);
 			if ((p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 				uint32_t old_value;
 				do {    
@@ -435,11 +432,11 @@ void nsync_cv_broadcast (nsync_cv *pcv) {
 				} while (!ATM_CAS (&DLL_WAITER (p)->remove_count,
 						   old_value, old_value+1));
 			}
-			to_wake_list = nsync_dll_make_last_in_list_ (to_wake_list, p);
+			dll_make_last (&to_wake_list, p);
 		}
 		/* Release spinlock and mark queue empty. */
 		ATM_STORE_REL (&pcv->word, 0); /* release store */
-		if (!nsync_dll_is_empty_ (to_wake_list)) {    /* Wake them. */
+		if (!dll_is_empty (to_wake_list)) {    /* Wake them. */
 			wake_waiters (to_wake_list, all_readers);
 		}
 	}
@@ -477,7 +474,7 @@ static int cv_enqueue (void *v, struct nsync_waiter_s *nw) {
 	nsync_cv *pcv = (nsync_cv *) v;
 	/* acquire spinlock */
 	uint32_t old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK, CV_SPINLOCK, 0);
-	pcv->waiters = nsync_dll_make_last_in_list_ (pcv->waiters, &nw->q);
+	dll_make_last (&pcv->waiters, &nw->q);
 	ATM_STORE (&nw->waiting, 1);
 	/* Release spinlock. */
 	ATM_STORE_REL (&pcv->word, old_word | CV_NON_EMPTY); /* release store */
@@ -490,11 +487,11 @@ static int cv_dequeue (void *v, struct nsync_waiter_s *nw) {
 	/* acquire spinlock */
 	uint32_t old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK, CV_SPINLOCK, 0);
 	if (ATM_LOAD_ACQ (&nw->waiting) != 0) {
-		pcv->waiters = nsync_dll_remove_ (pcv->waiters, &nw->q);
+		dll_remove (&pcv->waiters, &nw->q);
 		ATM_STORE (&nw->waiting, 0);
 		was_queued = 1;
 	}
-	if (nsync_dll_is_empty_ (pcv->waiters)) {
+	if (dll_is_empty (pcv->waiters)) {
 		old_word &= ~(CV_NON_EMPTY);
 	}
 	/* Release spinlock. */

@@ -29,7 +29,6 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/futex.internal.h"
 
 static void CleanupThread(struct PosixThread *pt) {

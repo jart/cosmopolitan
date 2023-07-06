@@ -3,7 +3,6 @@
 #ifndef __STRICT_ANSI__
 #include "libc/dce.h"
 #include "libc/elf/struct/ehdr.h"
-#include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/runtime.h"
 
 #define STACK_CEIL 0x700000000000ul
@@ -40,7 +39,6 @@ void __asan_init(int, char **, char **, intptr_t *) _Hide;
 void _jmpstack(void *, void *, ...) _Hide wontreturn;
 long _setstack(void *, void *, ...) _Hide;
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);
-Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) _Hide;
 int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
 int sys_mprotect_nt(void *, size_t, int) _Hide;

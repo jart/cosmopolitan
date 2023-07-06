@@ -170,7 +170,6 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *, int) paramsnonnull();
 int pthread_mutexattr_settype(pthread_mutexattr_t *, int) paramsnonnull();
 int pthread_once(pthread_once_t *, void (*)(void)) paramsnonnull();
 int pthread_orphan_np(void);
-int pthread_print_np(int, const char *, ...);
 int pthread_rwlock_destroy(pthread_rwlock_t *) paramsnonnull();
 int pthread_rwlock_init(pthread_rwlock_t *, const pthread_rwlockattr_t *) paramsnonnull((1));
 int pthread_rwlock_rdlock(pthread_rwlock_t *) paramsnonnull();

@@ -20,6 +20,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -37,10 +38,10 @@ static struct AtForks {
 } _atforks;
 
 static void _pthread_purge(void) {
-  nsync_dll_element_ *e;
-  while ((e = nsync_dll_first_(_pthread_list))) {
-    _pthread_list = nsync_dll_remove_(_pthread_list, e);
-    _pthread_free(e->container);
+  struct Dll *e;
+  while ((e = dll_first(_pthread_list))) {
+    dll_remove(&_pthread_list, e);
+    _pthread_free(POSIXTHREAD_CONTAINER(e));
   }
 }
 
@@ -97,9 +98,9 @@ void _pthread_onfork_child(void) {
 
   // delete other threads that existed before forking
   // this must come after onfork, since it calls free
-  _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+  dll_remove(&_pthread_list, &pt->list);
   _pthread_purge();
-  _pthread_list = nsync_dll_make_first_in_list_(_pthread_list, &pt->list);
+  dll_make_first(&_pthread_list, &pt->list);
 }
 
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {

@@ -2,10 +2,10 @@
 #define COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/intrin/dll.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/dll.h"
 
 #define PT_OWNSTACK       1
 #define PT_STATIC         2
@@ -64,26 +64,28 @@ enum PosixThreadStatus {
   kPosixThreadZombie,
 };
 
+#define POSIXTHREAD_CONTAINER(e) DLL_CONTAINER(struct PosixThread, list, e)
+
 struct PosixThread {
   int flags;               // 0x00: see PT_* constants
   _Atomic(int) cancelled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) status;
-  _Atomic(int) ptid;        // transitions 0 → tid
-  void *(*start)(void *);   // creation callback
-  void *arg;                // start's parameter
-  void *rc;                 // start's return value
-  char *altstack;           // thread sigaltstack
-  char *tls;                // bottom of tls allocation
-  struct CosmoTib *tib;     // middle of tls allocation
-  nsync_dll_element_ list;  // list of threads
-  jmp_buf exiter;           // for pthread_exit
+  _Atomic(int) ptid;       // transitions 0 → tid
+  void *(*start)(void *);  // creation callback
+  void *arg;               // start's parameter
+  void *rc;                // start's return value
+  char *altstack;          // thread sigaltstack
+  char *tls;               // bottom of tls allocation
+  struct CosmoTib *tib;    // middle of tls allocation
+  struct Dll list;         // list of threads
+  jmp_buf exiter;          // for pthread_exit
   pthread_attr_t attr;
   struct _pthread_cleanup_buffer *cleanup;
 };
 
 typedef void (*atfork_f)(void);
 
-extern nsync_dll_list_ _pthread_list;
+extern struct Dll *_pthread_list;
 extern pthread_spinlock_t _pthread_lock;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] _Hide;
 

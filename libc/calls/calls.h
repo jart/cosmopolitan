@@ -206,6 +206,7 @@ bool issymlink(const char *);
 bool32 ischardev(int);
 char *commandv(const char *, char *, size_t);
 char *replaceuser(const char *) dontdiscard;
+int clone(void *, void *, size_t, int, void *, void *, void *, void *);
 int gettid(void) libcesque;
 int makedirs(const char *, unsigned);
 int memfd_create(const char *, unsigned int);

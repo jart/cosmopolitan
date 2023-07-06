@@ -16,16 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/tty/quant.h"
-#include "libc/macros.internal.h"
-#include "tool/viz/lib/graphic.h"
+#include "libc/calls/calls.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 
-void getxtermcodes(struct TtyRgb *p, const struct Graphic *g) {
-  unsigned y, x;
-  unsigned char(*img)[3][g->yn][g->xn] = g->b;
-  for (y = 0; y < g->yn; ++y) {
-    for (x = 0; x < g->xn; ++x) {
-      *p++ = rgb2tty((*img)[0][y][x], (*img)[1][y][x], (*img)[2][y][x]);
-    }
-  }
+__attribute__((__weak__)) void __stack_chk_fail(void) {
+  tinyprint(2, program_invocation_name, ": stack smashed\n", NULL);
+  __builtin_trap();
 }

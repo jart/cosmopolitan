@@ -47,8 +47,7 @@ const char *GetElfString(const Elf64_Ehdr *elf,  // validated
   if (!i) return "";
   e = (const char *)elf;
   if (!strtab) return 0;
-  if (strtab < e) return 0;
-  if (strtab >= e + mapsize) return 0;
+  if (i >= mapsize) return 0;
   if (strtab + i >= e + mapsize) return 0;
   if (!memchr(strtab + i, 0, (e + mapsize) - (strtab + i))) return 0;
   return (const char *)strtab + i;

@@ -72,7 +72,6 @@ static int exitstatus;
 static char *envs[500];
 static char *args[3000];
 static const char *prog;
-static char errbuf[512];
 static char argbuf[ARG_MAX];
 static bool unsupported[256];
 
@@ -80,35 +79,12 @@ static ssize_t Write(int fd, const char *s) {
   return write(fd, s, strlen(s));
 }
 
-static void Log(const char *s, ...) {
-  va_list va;
-  va_start(va, s);
-  errbuf[0] = 0;
-  do {
-    strlcat(errbuf, s, sizeof(errbuf));
-  } while ((s = va_arg(va, const char *)));
-  strlcat(errbuf, "\n", sizeof(errbuf));
-  Write(2, errbuf);
-  va_end(va);
-}
-
-static wontreturn void Wexit(int rc, const char *s, ...) {
-  va_list va;
-  va_start(va, s);
-  errbuf[0] = 0;
-  do {
-    strlcat(errbuf, s, sizeof(errbuf));
-  } while ((s = va_arg(va, const char *)));
-  Write(2, errbuf);
-  va_end(va);
-  _Exit(rc);
-}
-
 static wontreturn void UnsupportedSyntax(unsigned char c) {
   char ibuf[13], cbuf[2] = {c};
   FormatOctal32(ibuf, c, true);
-  Wexit(4, prog, ": unsupported syntax '", cbuf, "' (", ibuf, "): ", cmd, "\n",
-        0);
+  tinyprint(2, prog, ": unsupported syntax '", cbuf, "' (", ibuf, "): ", cmd,
+            "\n", 0);
+  _Exit(4);
 }
 
 static wontreturn void SysExit(int rc, const char *call, const char *thing) {
@@ -119,7 +95,8 @@ static wontreturn void SysExit(int rc, const char *call, const char *thing) {
   FormatInt32(ibuf, err);
   estr = _strerdoc(err);
   if (!estr) estr = "EUNKNOWN";
-  Wexit(rc, thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
+  tinyprint(2, thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
+  _Exit(rc);
 }
 
 static void Open(const char *path, int fd, int flags) {
@@ -132,7 +109,10 @@ static void Open(const char *path, int fd, int flags) {
 
 static wontreturn void Exec(void) {
   _unassert(args[0][0]);
-  if (!n) Wexit(5, prog, ": error: too few args\n", 0);
+  if (!n) {
+    tinyprint(2, prog, ": error: too few args\n", 0);
+    _Exit(5);
+  }
   execvpe(args[0], args, envs);
   SysExit(127, "execve", args[0]);
 }
@@ -255,11 +235,11 @@ static int Cd(void) {
     if (!chdir(s)) {
       return 0;
     } else {
-      Log("chdir: ", s, ": ", _strerdoc(errno), NULL);
+      tinyprint(2, "chdir: ", s, ": ", _strerdoc(errno), NULL);
       return 1;
     }
   } else {
-    Log("chdir: missing argument", NULL);
+    tinyprint(2, "chdir: missing argument", NULL);
     return 1;
   }
 }
@@ -270,7 +250,7 @@ static int Mkdir(void) {
   if (n >= 3 && !strcmp(args[1], "-p")) ++i, f = makedirs;
   for (; i < n; ++i) {
     if (f(args[i], 0755)) {
-      Log("mkdir: ", args[i], ": ", _strerdoc(errno), NULL);
+      tinyprint(2, "mkdir: ", args[i], ": ", _strerdoc(errno), NULL);
       return errno;
     }
   }
@@ -287,7 +267,7 @@ static int Kill(void) {
   }
   for (; i < n; ++i) {
     if (kill(atoi(args[i]), sig)) {
-      Log("kill: ", args[i], ": ", _strerdoc(errno), NULL);
+      tinyprint(2, "kill: ", args[i], ": ", _strerdoc(errno), NULL);
       rc = 1;
     }
   }
@@ -345,7 +325,7 @@ static int Rm(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (unlink(args[i])) {
-        Log("rm: ", args[i], ": ", _strerdoc(errno), NULL);
+        tinyprint(2, "rm: ", args[i], ": ", _strerdoc(errno), NULL);
         return 1;
       }
     }
@@ -360,7 +340,7 @@ static int Rmdir(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (rmdir(args[i])) {
-        Log("rmdir: ", args[i], ": ", _strerdoc(errno), NULL);
+        tinyprint(2, "rmdir: ", args[i], ": ", _strerdoc(errno), NULL);
         return 1;
       }
     }
@@ -375,7 +355,7 @@ static int Touch(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (touch(args[i], 0644)) {
-        Log("touch: ", args[i], ": ", _strerdoc(errno), NULL);
+        tinyprint(2, "touch: ", args[i], ": ", _strerdoc(errno), NULL);
         return 1;
       }
     }
@@ -614,7 +594,8 @@ static char *Tokenize(void) {
         break;
 
       UnterminatedString:
-        Wexit(6, "cmd: error: unterminated string\n", 0);
+        tinyprint(2, "cmd: error: unterminated string\n", 0);
+        _Exit(6);
 
       case STATE_QUOTED_VAR:
         if (!*p) goto UnterminatedString;
@@ -661,7 +642,8 @@ static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
   } else if ((arg = Tokenize())) {
     return arg;
   } else {
-    Wexit(14, prog, ": error: redirect missing path\n", 0);
+    tinyprint(2, prog, ": error: redirect missing path\n", 0);
+    _Exit(14);
   }
 }
 
@@ -693,16 +675,19 @@ int _cocmd(int argc, char **argv, char **envp) {
   }
 
   if (argc != 3) {
-    Wexit(10, prog, ": error: wrong number of args\n", 0);
+    tinyprint(2, prog, ": error: wrong number of args\n", 0);
+    _Exit(10);
   }
 
   if (strcmp(argv[1], "-c")) {
-    Wexit(11, prog, ": error: argv[1] should -c\n", 0);
+    tinyprint(2, prog, ": error: argv[1] should -c\n", 0);
+    _Exit(11);
   }
 
   p = cmd = argv[2];
   if (strlen(cmd) >= ARG_MAX) {
-    Wexit(12, prog, ": error: cmd too long: ", cmd, "\n", 0);
+    tinyprint(2, prog, ": error: cmd too long: ", cmd, "\n", 0);
+    _Exit(12);
   }
 
   // copy environment variables
@@ -747,7 +732,8 @@ int _cocmd(int argc, char **argv, char **envp) {
               args[n++] = globTheBuilder.gl_pathv[globCount];
             }
           } else if (globrc != GLOB_NOMATCH) {
-            Wexit(16, prog, ": error: with glob\n", 0);
+            tinyprint(2, prog, ": error: with glob\n", 0);
+            _Exit(16);
           }
           globFlags |= GLOB_APPEND;
         }
@@ -757,7 +743,8 @@ int _cocmd(int argc, char **argv, char **envp) {
         args[n] = 0;
       }
     } else {
-      Wexit(13, prog, ": error: too many args\n", 0);
+      tinyprint(2, prog, ": error: too many args\n", 0);
+      _Exit(13);
     }
   }
 

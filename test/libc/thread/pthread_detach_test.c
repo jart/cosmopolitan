@@ -25,7 +25,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/dll.h"
 
 void OnUsr1(int sig, struct siginfo *si, void *vctx) {
   struct ucontext *ctx = vctx;

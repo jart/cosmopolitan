@@ -20,7 +20,6 @@
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
@@ -58,7 +57,7 @@ int nsync_wait_n (void *mu, void (*lock) (void *), void (*unlock) (void *),
 		for (i = 0; i != count && enqueued; i++) {
 			nw[i].tag = NSYNC_WAITER_TAG;
 			nw[i].sem = &w->sem;
-			nsync_dll_init_ (&nw[i].q, &nw[i]);
+			dll_init (&nw[i].q);
 			ATM_STORE (&nw[i].waiting, 0);
 			nw[i].flags = 0;
 			enqueued = (*waitable[i]->funcs->enqueue) (waitable[i]->v, &nw[i]);

@@ -88,7 +88,7 @@ errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, nsync_time
 			struct timespec ts_buf;
 			const struct timespec *ts = NULL;
 			if (nsync_time_cmp (abs_deadline, nsync_time_no_deadline) != 0) {
-				memset (&ts_buf, 0, sizeof (ts_buf));
+				bzero (&ts_buf, sizeof (ts_buf));
 				ts_buf.tv_sec = NSYNC_TIME_SEC (abs_deadline);
 				ts_buf.tv_nsec = NSYNC_TIME_NSEC (abs_deadline);
 				ts = &ts_buf;

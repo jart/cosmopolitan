@@ -38,7 +38,6 @@
  * @fileoverview Cosmopolitan C Runtime, Second Edition
  */
 
-void __wipe(uintptr_t) _Hide;
 int main(int, char **, char **) __attribute__((__weak__));
 
 typedef int init_f(int argc, char **argv, char **envp, unsigned long *auxv);
@@ -169,7 +168,6 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
 #endif
 
   // run program
-  if (!IsTiny()) __wipe(0);
   exit(main(argc, argv, envp));
 }
 

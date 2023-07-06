@@ -15,12 +15,12 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/nsync/cv.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "third_party/nsync/cv.h"
 #include "third_party/nsync/debug.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
@@ -51,7 +51,7 @@ static cv_queue *cv_queue_new (int limit) {
 	cv_queue *q;
 	int size = offsetof (struct cv_queue_s, data) + sizeof (q->data[0]) * limit;
 	q = (cv_queue *) malloc (size);
-	memset ((void *) q, 0, size);
+	bzero ((void *) q, size);
 	q->limit = limit;
 	return (q);
 }
@@ -481,7 +481,7 @@ static void test_cv_debug (testing t) {
 	int buflen;
 	struct debug_state xs;
 	struct debug_state *s = &xs;
-	memset ((void *) s, 0, sizeof (*s));
+	bzero ((void *) s, sizeof (*s));
 
 	/* Use nsync_*_debugger to check that they work. */
 	tmp = nsync_mu_debugger (&s->mu);
@@ -708,7 +708,7 @@ static void test_cv_transfer (testing t) {
 						TEST_LOG (t, ("transfer waiters %d wakeup_type %d  cv_writers %d  ccs_reader %d\n",
 							      waiters, wakeup_type, cv_writers, ccs_reader));
 					}
-					memset ((void *) cvt, 0, sizeof (*cvt));
+					bzero ((void *) cvt, sizeof (*cvt));
 
 					/* Start the waiter threads that use condition variables. */
 					for (i = 0; i < waiters-1; i++) {

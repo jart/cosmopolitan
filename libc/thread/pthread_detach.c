@@ -25,7 +25,6 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/dll.h"
 
 /**
  * Asks POSIX thread to free itself automatically upon termination.

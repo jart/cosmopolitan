@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
+#include "third_party/python/Modules/bextra.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
 /* clang-format off */
@@ -31,7 +32,7 @@ _PyUnicode_GetDecompRecord(PyObject *self,
     }
     /* high byte is number of hex bytes (usually one or two), low byte
        is prefix code (from*/
-    decomp = _bextra(_PyUnicode_Decomp, *index, _PyUnicode_DecompBits);
+    decomp = BitFieldExtract(_PyUnicode_Decomp, *index, _PyUnicode_DecompBits);
     *count = decomp >> 8;
     *prefix = decomp & 255;
     (*index)++;

@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/dll.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "third_party/nsync/dll.h"
 
 void _pthread_zombify(struct PosixThread *pt) {
   pthread_spin_lock(&_pthread_lock);
-  _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
-  _pthread_list = nsync_dll_make_first_in_list_(_pthread_list, &pt->list);
+  dll_remove(&_pthread_list, &pt->list);
+  dll_make_first(&_pthread_list, &pt->list);
   pthread_spin_unlock(&_pthread_lock);
 }

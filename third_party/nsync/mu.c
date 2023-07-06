@@ -16,10 +16,10 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
+#include "libc/intrin/dll.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
@@ -32,7 +32,7 @@ https://github.com/google/nsync\"");
 
 /* Initialize *mu. */
 void nsync_mu_init (nsync_mu *mu) {
-	memset ((void *) mu, 0, sizeof (*mu));
+	bzero ((void *) mu, sizeof (*mu));
 }
 
 /* Release the mutex spinlock. */
@@ -88,12 +88,10 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 			ATM_STORE (&w->nw.waiting, 1);
 			if (wait_count == 0) {
 				/* first wait goes to end of queue */
-				mu->waiters = nsync_dll_make_last_in_list_ (mu->waiters,
-								            &w->nw.q);
+				dll_make_last (&mu->waiters, &w->nw.q);
 			} else {
 				/* subsequent waits go to front of queue */
-				mu->waiters = nsync_dll_make_first_in_list_ (mu->waiters,
-								             &w->nw.q);
+				dll_make_first (&mu->waiters, &w->nw.q);
 			}
 
 			/* Release spinlock.  Cannot use a store here, because
@@ -202,32 +200,32 @@ void nsync_mu_rlock (nsync_mu *mu) {
 
 /* Invoke the condition associated with *p, which is an element of
    a "waiter" list. */
-static int condition_true (nsync_dll_element_ *p) {
+static int condition_true (struct Dll *p) {
 	return ((*DLL_WAITER (p)->cond.f) (DLL_WAITER (p)->cond.v));
 }
 
 /* If *p is an element of waiter_list (a list of "waiter" structs(, return a
    pointer to the next element of the list that has a different condition. */
-static nsync_dll_element_ *skip_past_same_condition (
-	nsync_dll_list_ waiter_list, nsync_dll_element_ *p) {
-	nsync_dll_element_ *next;
-	nsync_dll_element_ *last_with_same_condition =
+static struct Dll *skip_past_same_condition (
+	struct Dll *waiter_list, struct Dll *p) {
+	struct Dll *next;
+	struct Dll *last_with_same_condition =
 		&DLL_WAITER_SAMECOND (DLL_WAITER (p)->same_condition.prev)->nw.q;
 	if (last_with_same_condition != p && last_with_same_condition != p->prev) {
 		/* First in set with same condition, so skip to end.  */
-		next = nsync_dll_next_ (waiter_list, last_with_same_condition);
+		next = dll_next (waiter_list, last_with_same_condition);
 	} else {
-		next = nsync_dll_next_ (waiter_list, p);
+		next = dll_next (waiter_list, p);
 	}
 	return (next);
 }
 
 /* Merge the same_condition lists of *p and *n if they have the same non-NULL
    condition.  */
-void nsync_maybe_merge_conditions_ (nsync_dll_element_ *p, nsync_dll_element_ *n) {
+void nsync_maybe_merge_conditions_ (struct Dll *p, struct Dll *n) {
 	if (p != NULL && n != NULL &&
 	    WAIT_CONDITION_EQ (&DLL_WAITER (p)->cond, &DLL_WAITER (n)->cond)) {
-		nsync_dll_splice_after_ (&DLL_WAITER (p)->same_condition,
+		dll_splice_after (&DLL_WAITER (p)->same_condition,
 				  &DLL_WAITER (n)->same_condition);
 	}
 }
@@ -235,19 +233,19 @@ void nsync_maybe_merge_conditions_ (nsync_dll_element_ *p, nsync_dll_element_ *n
 /* Remove element *e from nsync_mu waiter queue mu_queue, fixing
    up the same_condition list by merging the lists on either side if possible.
    Also increment the waiter's remove_count. */
-nsync_dll_list_ nsync_remove_from_mu_queue_ (nsync_dll_list_ mu_queue, nsync_dll_element_ *e) {
+struct Dll *nsync_remove_from_mu_queue_ (struct Dll *mu_queue, struct Dll *e) {
 	/* Record previous and next elements in the original queue. */
-	nsync_dll_element_ *prev = e->prev;
-	nsync_dll_element_ *next = e->next;
+	struct Dll *prev = e->prev;
+	struct Dll *next = e->next;
 	uint32_t old_value;
 	/* Remove. */
-	mu_queue = nsync_dll_remove_ (mu_queue, e);
+	dll_remove (&mu_queue, e);
         do {    
                 old_value = ATM_LOAD (&DLL_WAITER (e)->remove_count);
         } while (!ATM_CAS (&DLL_WAITER (e)->remove_count, old_value, old_value+1));
-	if (!nsync_dll_is_empty_ (mu_queue)) {
+	if (!dll_is_empty (mu_queue)) {
 		/* Fix up same_condition. */
-		nsync_dll_element_ *e_same_condition = &DLL_WAITER (e)->same_condition;
+		struct Dll *e_same_condition = &DLL_WAITER (e)->same_condition;
 
 		if (e_same_condition->next != e_same_condition) {
 			/* *e is linked to a same_condition neighbour---just remove it. */
@@ -255,7 +253,7 @@ nsync_dll_list_ nsync_remove_from_mu_queue_ (nsync_dll_list_ mu_queue, nsync_dll
 			e_same_condition->prev->next = e_same_condition->next;
 			e_same_condition->next = e_same_condition;
 			e_same_condition->prev = e_same_condition;
-		} else if (prev != nsync_dll_last_ (mu_queue)) {
+		} else if (prev != dll_last (mu_queue)) {
 			/* Merge the new neighbours together if we can. */
 			nsync_maybe_merge_conditions_ (prev, next);
 		}
@@ -301,7 +299,7 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 		} else if ((old_word&MU_SPINLOCK) == 0 &&
 			   ATM_CAS_ACQ (&mu->word, old_word,
 					(old_word-early_release_mu)|MU_SPINLOCK|MU_DESIG_WAKER)) {
-			nsync_dll_list_ wake;
+			struct Dll *wake;
 			lock_type *wake_type;
 			uint32_t clear_on_release;
 			uint32_t set_on_release;
@@ -311,8 +309,8 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 			   there are conditions to check, the mutex itself is
 			   still held.  */
 
-			nsync_dll_element_ *p = NULL;
-			nsync_dll_element_ *next = NULL;
+			struct Dll *p = NULL;
+			struct Dll *next = NULL;
 
 			/* Swap the entire mu->waiters list into the local
 			   "new_waiters" list.  This gives us exclusive access
@@ -321,8 +319,8 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 			   will grab more new waiters that arrived while we
 			   were checking conditions, and terminates only if no
 			   new waiters arrive in one loop iteration.  */
-			nsync_dll_list_ waiters = NULL;
-			nsync_dll_list_ new_waiters = mu->waiters;
+			struct Dll *waiters = NULL;
+			struct Dll *new_waiters = mu->waiters;
 			mu->waiters = NULL;
 
 			/* Remove a waiter from the queue, if possible. */
@@ -330,8 +328,8 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 			wake_type = NULL; /* type of waiter(s) on wake, or NULL if wake is empty. */
 			clear_on_release = MU_SPINLOCK;
 			set_on_release = MU_ALL_FALSE;
-			while (!nsync_dll_is_empty_ (new_waiters)) { /* some new waiters to consider */
-				p = nsync_dll_first_ (new_waiters);
+			while (!dll_is_empty (new_waiters)) { /* some new waiters to consider */
+				p = dll_first (new_waiters);
 				if (testing_conditions) {
 					/* Should we continue to test conditions? */
 					if (wake_type == nsync_writer_type_) {
@@ -357,12 +355,12 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 				}
 
 				/* Process the new waiters picked up in this iteration of the
-				   "while (!nsync_dll_is_empty_ (new_waiters))" loop,
+				   "while (!dll_is_empty (new_waiters))" loop,
 				   and stop looking when we run out of waiters, or we find
 				   a writer to wake up. */
 				while (p != NULL && wake_type != nsync_writer_type_) {
 					int p_has_condition;
-					next = nsync_dll_next_ (new_waiters, p);
+					next = dll_next (new_waiters, p);
 					p_has_condition = (DLL_WAITER (p)->cond.f != NULL);
 					if (p_has_condition && !testing_conditions) {
 						nsync_panic_ ("checking a waiter condition "
@@ -377,7 +375,7 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 						/* Wake this thread. */
 						new_waiters = nsync_remove_from_mu_queue_ (
 							new_waiters, p);
-						wake = nsync_dll_make_last_in_list_ (wake, p);
+						dll_make_last (&wake, p);
 						wake_type = DLL_WAITER (p)->l_type;
 					} else {
 						/* Failing to wake a writer
@@ -403,10 +401,9 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 				}
 
 				/* add the new_waiters to the last of the waiters. */
-				nsync_maybe_merge_conditions_ (nsync_dll_last_ (waiters),
-							       nsync_dll_first_ (new_waiters));
-				waiters = nsync_dll_make_last_in_list_ (waiters,
-								 nsync_dll_last_ (new_waiters));
+				nsync_maybe_merge_conditions_ (dll_last (waiters),
+							       dll_first (new_waiters));
+				dll_make_last (&waiters, dll_last (new_waiters));
 				/* Pick up the next set of new waiters. */
 				new_waiters = mu->waiters;
 				mu->waiters = NULL;
@@ -415,7 +412,7 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 			/* Return the local waiter list to *mu. */
 			mu->waiters = waiters;
 
-			if (nsync_dll_is_empty_ (wake)) {
+			if (dll_is_empty (wake)) {
 				/* not waking a waiter => no designated waker */
 				clear_on_release |= MU_DESIG_WAKER;
 			}
@@ -425,7 +422,7 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 				clear_on_release |= MU_ALL_FALSE;
 			}
 
-			if (nsync_dll_is_empty_ (mu->waiters)) {
+			if (dll_is_empty (mu->waiters)) {
 				/* no waiters left */
 				clear_on_release |= MU_WAITING | MU_WRITER_WAITING |
 						    MU_CONDITION | MU_ALL_FALSE;
@@ -443,9 +440,9 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 				old_word = ATM_LOAD (&mu->word);
 			}
 			/* Wake the waiters. */
-			for (p = nsync_dll_first_ (wake); p != NULL; p = next) {
-				next = nsync_dll_next_ (wake, p);
-				wake = nsync_dll_remove_ (wake, p);
+			for (p = dll_first (wake); p != NULL; p = next) {
+				next = dll_next (wake, p);
+				dll_remove (&wake, p);
 				ATM_STORE_REL (&DLL_NSYNC_WAITER (p)->waiting, 0);
 				nsync_mu_semaphore_v (&DLL_WAITER (p)->sem);
 			}

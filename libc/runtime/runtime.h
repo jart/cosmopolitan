@@ -122,7 +122,6 @@ void _weakfree(void *);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
 void __oom_hook(size_t);
-void _peekall(void);
 bool _isheap(void *);
 /* portability */
 int NtGetVersion(void) pureconst;

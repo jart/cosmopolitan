@@ -82,7 +82,7 @@ errno_t nsync_mu_semaphore_p_with_deadline_gcd (nsync_semaphore *s,
 					 DISPATCH_TIME_FOREVER);
 	} else {
 		struct timespec ts;
-		memset (&ts, 0, sizeof (ts));
+		bzero (&ts, sizeof (ts));
 		ts.tv_sec = NSYNC_TIME_SEC (abs_deadline);
 		ts.tv_nsec = NSYNC_TIME_NSEC (abs_deadline);
 		if (dispatch_semaphore_wait (*(dispatch_semaphore_t *)s,

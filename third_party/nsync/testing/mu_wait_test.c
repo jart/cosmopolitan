@@ -15,10 +15,10 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/nsync/mu_wait.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/mu.h"
-#include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/note.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
@@ -44,7 +44,7 @@ static mu_queue *mu_queue_new (int limit) {
 	mu_queue *q;
 	int size = offsetof (struct mu_queue_s, data) + sizeof (q->data[0]) * limit;
 	q = (mu_queue *) malloc (size);
-	memset ((void *) q, 0, size);
+	bzero ((void *) q, size);
 	q->limit = limit;
 	return (q);
 }

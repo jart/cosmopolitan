@@ -1,5 +1,6 @@
 #ifndef NSYNC_CV_H_
 #define NSYNC_CV_H_
+#include "libc/intrin/dll.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/time.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -8,7 +9,6 @@ COSMOPOLITAN_C_START_
 #define NSYNC_CV_INIT \
   { NSYNC_ATOMIC_UINT32_INIT_, 0 }
 
-struct nsync_dll_element_s_;
 struct nsync_note_s_;
 
 /* An nsync_cv is a condition variable in the style of Mesa, Java,
@@ -92,7 +92,7 @@ typedef struct nsync_cv_s_ {
   /* see bits below */
   nsync_atomic_uint32_ word;
   /* points to tail of list of waiters; under mu. */
-  struct nsync_dll_element_s_ *waiters;
+  struct Dll *waiters;
 } nsync_cv;
 
 /* An nsync_cv should be zeroed to initialize, which can be accomplished

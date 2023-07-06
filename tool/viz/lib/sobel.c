@@ -69,7 +69,7 @@ void sobel(struct Graphic* g) {
            FLIP(BROADCAST(-2), BROADCAST(+0), BROADCAST(+2)),
            FLIP(BROADCAST(-1), BROADCAST(+0), BROADCAST(+1)));
   if (g->yn >= 3 && g->xn >= 3) {
-    ConvolveGradient(g->yn, g->xn, g->b.p, 3, &kSobelEmbossKernelY,
+    ConvolveGradient(g->yn, g->xn, g->b, 3, &kSobelEmbossKernelY,
                      &kSobelEmbossKernelX);
   }
 }

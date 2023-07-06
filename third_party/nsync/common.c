@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/dll.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -23,7 +24,6 @@
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
@@ -122,23 +122,24 @@ uint32_t nsync_spin_test_and_set_ (nsync_atomic_uint32_ *w, uint32_t test,
 
 /* ====================================================================================== */
 
-struct nsync_waiter_s *nsync_dll_nsync_waiter_ (nsync_dll_element_ *e) {
-	struct nsync_waiter_s *nw = (struct nsync_waiter_s *) e->container;
+struct nsync_waiter_s *nsync_dll_nsync_waiter_ (struct Dll *e) {
+	struct nsync_waiter_s *nw = DLL_CONTAINER(struct nsync_waiter_s, q, e);
 	ASSERT (nw->tag == NSYNC_WAITER_TAG);
 	ASSERT (e == &nw->q);
 	return (nw);
 }
-waiter *nsync_dll_waiter_ (nsync_dll_element_ *e) {
+
+waiter *nsync_dll_waiter_ (struct Dll *e) {
 	struct nsync_waiter_s *nw = DLL_NSYNC_WAITER (e);
-	waiter *w = CONTAINER (waiter, nw, nw);
+	waiter *w = DLL_CONTAINER (waiter, nw, nw);
 	ASSERT ((nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0);
 	ASSERT (w->tag == WAITER_TAG);
 	ASSERT (e == &w->nw.q);
 	return (w);
 }
 
-waiter *nsync_dll_waiter_samecond_ (nsync_dll_element_ *e) {
-	waiter *w = (waiter *) e->container;
+waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
+	waiter *w = DLL_CONTAINER (struct waiter_s, same_condition, e);
 	ASSERT (w->tag == WAITER_TAG);
 	ASSERT (e == &w->same_condition);
 	return (w);
@@ -146,7 +147,7 @@ waiter *nsync_dll_waiter_samecond_ (nsync_dll_element_ *e) {
 
 /* -------------------------------- */
 
-static nsync_dll_list_ free_waiters = NULL;
+static struct Dll *free_waiters = NULL;
 
 /* free_waiters points to a doubly-linked list of free waiter structs. */
 static nsync_atomic_uint32_ free_waiters_mu; /* spinlock; protects free_waiters */
@@ -165,7 +166,7 @@ static void waiter_destroy (void *v) {
 	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
 	w->flags &= ~WAITER_RESERVED;
 	nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
-	free_waiters = nsync_dll_make_first_in_list_ (free_waiters, &w->nw.q);
+	dll_make_first (&free_waiters, &w->nw.q);
 	ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
 	IGNORE_RACES_END ();
 }
@@ -173,7 +174,7 @@ static void waiter_destroy (void *v) {
 /* Return a pointer to an unused waiter struct.
    Ensures that the enclosed timer is stopped and its channel drained. */
 waiter *nsync_waiter_new_ (void) {
-	nsync_dll_element_ *q;
+	struct Dll *q;
 	waiter *tw;
 	waiter *w;
 	tw = waiter_for_thread;
@@ -181,9 +182,9 @@ waiter *nsync_waiter_new_ (void) {
 	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
 		w = NULL;
 		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
-		q = nsync_dll_first_ (free_waiters);
+		q = dll_first (free_waiters);
 		if (q != NULL) { /* If free list is non-empty, dequeue an item. */
-			free_waiters = nsync_dll_remove_ (free_waiters, q);
+			dll_remove (&free_waiters, q);
 			w = DLL_WAITER (q);
 		}
 		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
@@ -193,11 +194,11 @@ waiter *nsync_waiter_new_ (void) {
 			w->nw.tag = NSYNC_WAITER_TAG;
 			nsync_mu_semaphore_init (&w->sem);
 			w->nw.sem = &w->sem;
-			nsync_dll_init_ (&w->nw.q, &w->nw);
+			dll_init (&w->nw.q);
 			NSYNC_ATOMIC_UINT32_STORE_ (&w->nw.waiting, 0);
 			w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
 			ATM_STORE (&w->remove_count, 0);
-			nsync_dll_init_ (&w->same_condition, w);
+			dll_init (&w->same_condition);
 			w->flags = 0;
 		}
 		if (tw == NULL) {
@@ -216,7 +217,7 @@ void nsync_waiter_free_ (waiter *w) {
 	w->flags &= ~WAITER_IN_USE;
 	if ((w->flags & WAITER_RESERVED) == 0) {
 		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
-		free_waiters = nsync_dll_make_first_in_list_ (free_waiters, &w->nw.q);
+		dll_make_first (&free_waiters, &w->nw.q);
 		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
 	}
 }

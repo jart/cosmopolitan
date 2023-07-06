@@ -1,10 +1,9 @@
 #ifndef NSYNC_MU_H_
 #define NSYNC_MU_H_
+#include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct nsync_dll_element_s_;
 
 /* An nsync_mu is a lock. If initialized to zero, it's valid and unlocked.
 
@@ -49,9 +48,9 @@ struct nsync_dll_element_s_;
 
 */
 typedef struct nsync_mu_s_ {
-  nsync_atomic_uint32_ word;            /* internal use only */
-  int _zero;                            /* c pthread_mutex_t */
-  struct nsync_dll_element_s_ *waiters; /* internal use only */
+  nsync_atomic_uint32_ word; /* internal use only */
+  int _zero;                 /* c pthread_mutex_t */
+  struct Dll *waiters;       /* internal use only */
 } nsync_mu;
 
 /* An nsync_mu should be zeroed to initialize, which can be accomplished

@@ -60,8 +60,8 @@ static void test_wait_n (testing t) {
 		nsync_time deadline;
 		a_waitable aw;
 		a_pwaitable apw;
-		memset (&aw, 0, sizeof (aw));
-		memset (&apw, 0, sizeof (apw));
+		bzero (&aw, sizeof (aw));
+		bzero (&apw, sizeof (apw));
 		now = nsync_time_now ();
 		deadline = nsync_time_add (now, nsync_time_ms (100));
 		for (j = A_LEN (&aw); A_LEN (&aw) < j+ncounter;) {

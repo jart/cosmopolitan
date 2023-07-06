@@ -19,3 +19,5 @@ LOCAL CHANGES
   - nsync_mu_semaphore uses Cosmopolitan Futexes
   - block pthread cancellations in nsync_mu_lock_slow_
   - support posix thread cancellations in nsync_cv_wait
+  - timespec api was so good that it's now part of libc
+  - linked list api was so good that it's now part of libc

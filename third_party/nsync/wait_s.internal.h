@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_
+#include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
-#include "third_party/nsync/dll.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -13,7 +13,7 @@ COSMOPOLITAN_C_START_
 struct nsync_waiter_s {
   uint32_t tag;                   /* used for debugging */
   uint32_t flags;                 /* see below */
-  nsync_dll_element_ q;           /* used to link children of parent */
+  struct Dll q;                   /* used to link children of parent */
   nsync_atomic_uint32_ waiting;   /* non-zero <=> the waiter is waiting */
   struct nsync_semaphore_s_ *sem; /* *sem will be Ved when waiter is woken */
 };

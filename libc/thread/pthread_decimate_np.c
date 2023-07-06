@@ -17,29 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/dll.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "third_party/nsync/dll.h"
 
 /**
  * Releases memory of detached threads that have terminated.
  */
 void pthread_decimate_np(void) {
-  nsync_dll_element_ *e;
+  struct Dll *e;
   struct PosixThread *pt;
   enum PosixThreadStatus status;
 StartOver:
   pthread_spin_lock(&_pthread_lock);
-  for (e = nsync_dll_first_(_pthread_list); e;
-       e = nsync_dll_next_(_pthread_list, e)) {
-    pt = (struct PosixThread *)e->container;
+  for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
+    pt = POSIXTHREAD_CONTAINER(e);
     if (pt->tib == __get_tls()) continue;
     status = atomic_load_explicit(&pt->status, memory_order_acquire);
     if (status != kPosixThreadZombie) break;
     if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
-      _pthread_list = nsync_dll_remove_(_pthread_list, e);
+      dll_remove(&_pthread_list, e);
       pthread_spin_unlock(&_pthread_lock);
       _pthread_free(pt);
       goto StartOver;

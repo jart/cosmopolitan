@@ -15,11 +15,11 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/nsync/mu.h"
 #include "libc/calls/calls.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/cv.h"
-#include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
@@ -116,7 +116,7 @@ static void test_mu_nthread (testing t) {
 	do {
 		int i;
 		test_data td;
-		memset ((void *) &td, 0, sizeof (td));
+		bzero ((void *) &td, sizeof (td));
 		td.t = t;
 		td.n_threads = 5;
 		td.loop_count = loop_count;
@@ -155,7 +155,7 @@ static void test_mutex_nthread (testing t) {
 	do {
 		int i;
 		test_data td;
-		memset ((void *) &td, 0, sizeof (td));
+		bzero ((void *) &td, sizeof (td));
 		td.t = t;
 		td.n_threads = 5;
 		td.loop_count = loop_count;
@@ -196,7 +196,7 @@ static void test_rwmutex_nthread (testing t) {
 	do {
 		int i;
 		test_data td;
-		memset ((void *) &td, 0, sizeof (td));
+		bzero ((void *) &td, sizeof (td));
 		td.t = t;
 		td.n_threads = 5;
 		td.loop_count = loop_count;
@@ -249,7 +249,7 @@ static void test_try_mu_nthread (testing t) {
 	do {
 		int i;
 		test_data td;
-		memset ((void *) &td, 0, sizeof (td));
+		bzero ((void *) &td, sizeof (td));
 		td.t = t;
 		td.n_threads = 5;
 		td.loop_count = loop_count;
@@ -281,7 +281,7 @@ typedef struct counter_s {
 /* Return a counter with initial value "initial". */
 static counter *counter_new (int initial) {
 	counter *c = (counter *) malloc (sizeof (*c));
-	memset ((void *) c, 0, sizeof (*c));
+	bzero ((void *) c, sizeof (*c));
 	c->value = initial;
 	return (c);
 }
@@ -1023,7 +1023,7 @@ static void contended_state_run_test (contended_state *cs, testing t,
    nsync_mu locks, with small critical sections.  */
 static void benchmark_mu_contended (testing t) {
 	contended_state cs;
-	memset ((void *) &cs, 0, sizeof (cs));
+	bzero ((void *) &cs, sizeof (cs));
 	contended_state_run_test (&cs, t, &cs.mu, (void (*) (void*))&nsync_mu_lock,
 				  (void (*) (void*))&nsync_mu_unlock);
 }
@@ -1032,7 +1032,7 @@ static void benchmark_mu_contended (testing t) {
    pthread_mutex_t locks, with small critical sections.  */
 static void benchmark_mutex_contended (testing t) {
 	contended_state cs;
-	memset ((void *) &cs, 0, sizeof (cs));
+	bzero ((void *) &cs, sizeof (cs));
 	pthread_mutex_init (&cs.mutex, NULL);
 	contended_state_run_test (&cs, t, &cs.mutex, &void_pthread_mutex_lock,
 				  &void_pthread_mutex_unlock);
@@ -1043,7 +1043,7 @@ static void benchmark_mutex_contended (testing t) {
    pthread_rwlock_t locks, with small critical sections.  */
 static void benchmark_wmutex_contended (testing t) {
 	contended_state cs;
-	memset ((void *) &cs, 0, sizeof (cs));
+	bzero ((void *) &cs, sizeof (cs));
 	pthread_rwlock_init (&cs.rwmutex, NULL);
 	contended_state_run_test (&cs, t, &cs.rwmutex, &void_pthread_rwlock_wrlock,
 				  &void_pthread_rwlock_unlock);

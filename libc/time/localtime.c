@@ -529,7 +529,7 @@ localtime_tzloadbody_(char const *name, struct state *sp, bool doextend,
 			sp->chars[i] = *p++;
 		/* Ensure '\0'-terminated, and make it safe to call
 		   ttunspecified later.  */
-		memset(&sp->chars[i], 0, CHARS_EXTRA);
+		bzero(&sp->chars[i], CHARS_EXTRA);
 
 		/* Read leap seconds, discarding those out of time_t range.  */
 		leapcnt = 0;

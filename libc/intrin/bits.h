@@ -4,20 +4,13 @@
 COSMOPOLITAN_C_START_
 #ifdef COSMO
 
-#define CheckUnsigned(x) ((x) / !((typeof(x))(-1) < 0))
-
-extern const uint8_t kReverseBits[256];
-
-int _bitreverse8(int) libcesque pureconst;
-int _bitreverse16(int) libcesque pureconst;
-uint32_t _bitreverse32(uint32_t)
-libcesque pureconst;
-uint64_t _bitreverse64(uint64_t)
-libcesque pureconst;
-unsigned long _roundup2pow(unsigned long) libcesque pureconst;
-unsigned long _roundup2log(unsigned long) libcesque pureconst;
-unsigned long _rounddown2pow(unsigned long) libcesque pureconst;
-unsigned _bextra(const unsigned *, size_t, char);
+int _bitreverse8(int) pureconst;
+int _bitreverse16(int) pureconst;
+uint32_t _bitreverse32(uint32_t) pureconst;
+uint64_t _bitreverse64(uint64_t) pureconst;
+unsigned long _roundup2pow(unsigned long) pureconst;
+unsigned long _roundup2log(unsigned long) pureconst;
+unsigned long _rounddown2pow(unsigned long) pureconst;
 
 #define READ16LE(P)                    \
   (__extension__({                     \

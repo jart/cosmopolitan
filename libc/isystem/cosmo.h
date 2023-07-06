@@ -35,6 +35,7 @@
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bsr.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/tpenc.h"

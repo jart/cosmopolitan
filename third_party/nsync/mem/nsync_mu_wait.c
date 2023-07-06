@@ -16,9 +16,9 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
+#include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
@@ -203,18 +203,16 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 		had_waiters = ((old_word & (MU_DESIG_WAKER | MU_WAITING)) == MU_WAITING);
 		/* Queue the waiter. */
 		if (first_wait) {
-			nsync_maybe_merge_conditions_ (nsync_dll_last_ (mu->waiters),
+			nsync_maybe_merge_conditions_ (dll_last (mu->waiters),
 						       &w->nw.q);
 			/* first wait goes to end of queue */
-			mu->waiters = nsync_dll_make_last_in_list_ (mu->waiters,
-							            &w->nw.q);
+			dll_make_last (&mu->waiters, &w->nw.q);
 			first_wait = 0;
 		} else {
 			nsync_maybe_merge_conditions_ (&w->nw.q,
-						       nsync_dll_first_ (mu->waiters));
+						       dll_first (mu->waiters));
 			/* subsequent waits go to front of queue */
-			mu->waiters = nsync_dll_make_first_in_list_ (mu->waiters,
-							             &w->nw.q);
+			dll_make_first (&mu->waiters, &w->nw.q);
 		}
 		/* Release spinlock and *mu. */
 		do {

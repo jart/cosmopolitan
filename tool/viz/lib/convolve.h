@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLVE_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLVE_H_
 #include "dsp/tty/quant.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "tool/viz/lib/graphic.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -24,7 +25,7 @@ forceinline void convolve(unsigned yn, unsigned xn, ttyrgb_m128 img[yn][xn],
   }
   bzero(&g, sizeof(g));
   resizegraphic(&g, yn, xn);
-  tmp = g.b.p;
+  tmp = g.b;
   for (y = 0; y < yn - KW; ++y) {
     for (x = 0; x < xn - KW; ++x) {
       bzero(&p, sizeof(p));
@@ -37,7 +38,7 @@ forceinline void convolve(unsigned yn, unsigned xn, ttyrgb_m128 img[yn][xn],
     }
   }
   memcpy(img, tmp, yn * xn * sizeof(img[0][0]));
-  bfree(&g.b);
+  free(g.b);
 }
 
 COSMOPOLITAN_C_END_

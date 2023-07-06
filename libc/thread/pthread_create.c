@@ -26,10 +26,10 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/dll.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/clone.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
@@ -43,7 +43,6 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/wait0.internal.h"
-#include "third_party/nsync/dll.h"
 
 STATIC_YOINK("nsync_mu_lock");
 STATIC_YOINK("nsync_mu_unlock");
@@ -246,9 +245,9 @@ static errno_t pthread_create_impl(pthread_t *thread,
 
   // add thread to global list
   // we add it to the end since zombies go at the beginning
-  nsync_dll_init_(&pt->list, pt);
+  dll_init(&pt->list);
   pthread_spin_lock(&_pthread_lock);
-  _pthread_list = nsync_dll_make_last_in_list_(_pthread_list, &pt->list);
+  dll_make_last(&_pthread_list, &pt->list);
   pthread_spin_unlock(&_pthread_lock);
 
   // launch PosixThread(pt) in new thread
@@ -260,7 +259,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
                       CLONE_CHILD_CLEARTID,
                   pt, &pt->ptid, __adj_tls(pt->tib), &pt->tib->tib_tid))) {
     pthread_spin_lock(&_pthread_lock);
-    _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+    dll_remove(&_pthread_list, &pt->list);
     pthread_spin_unlock(&_pthread_lock);
     _pthread_free(pt);
     return rc;

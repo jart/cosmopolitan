@@ -15,9 +15,9 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
@@ -142,9 +142,9 @@ static void emit_word (struct emit_buf *b, const struct bit_name *name, uint32_t
 }
 
 /* Emit the waiter queue *q to *b. */
-static void emit_waiters (struct emit_buf *b, nsync_dll_list_ list) {
-        nsync_dll_element_ *p = nsync_dll_first_ (list);
-        nsync_dll_element_ *next;
+static void emit_waiters (struct emit_buf *b, struct Dll *list) {
+        struct Dll *p = dll_first (list);
+        struct Dll *next;
         if (p != NULL) {
                 emit_print (b, "\nwaiters =\n");
         }
@@ -157,7 +157,7 @@ static void emit_waiters (struct emit_buf *b, nsync_dll_list_ list) {
                         emit_print (b, "bad WAITER_TAG %i",
                                     (uintptr_t) w->tag);
                 } else {
-                        next = nsync_dll_next_ (list, p);
+                        next = dll_next (list, p);
                         if (nw->tag != NSYNC_WAITER_TAG) {
                                 emit_print (b, " bad WAITER_TAG %i",
                                             (uintptr_t) nw->tag);

@@ -66,8 +66,7 @@ o/$(MODE)/tool/viz/lib/dither.o				\
 o/$(MODE)/tool/viz/lib/emboss.o				\
 o/$(MODE)/tool/viz/lib/getxtermcodes.o			\
 o/$(MODE)/tool/viz/lib/lingamma.o			\
-o/$(MODE)/tool/viz/lib/perlin3.o			\
-o/$(MODE)/tool/viz/lib/resizegraphic.o: private		\
+o/$(MODE)/tool/viz/lib/perlin3.o: private		\
 		CFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED		\
 			$(MATHEMATICAL)

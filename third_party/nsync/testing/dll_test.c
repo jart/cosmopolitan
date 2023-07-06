@@ -15,11 +15,12 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/dll.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/dll.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/array.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 // clang-format off
@@ -80,25 +81,25 @@ static char *a_string (const a_int *a) {
 
 /* A list item for use in the tests below */
 struct list_item_s {
-	nsync_dll_element_ e;
+	struct Dll e;
 	int i;
 };
-/* Return a pointer to the struct list_item_s containing nsync_dll_element_ *e_. */
-#define LIST_ITEM(e_)  ((struct list_item_s *) ((e_)->container))
+/* Return a pointer to the struct list_item_s containing struct Dll *e_. */
+#define LIST_ITEM(e_)  DLL_CONTAINER(struct list_item_s, e, e_)
 
 
 /* Check that list l contains elements containing the values in
    expected, by scanning both forwards and backwards through the list.  Also
-   verify that nsync_dll_first_() and nsync_dll_last_() return the first and last element
-   found during those iterations, and that nsync_dll_is_empty_() yields the right value. */
-static void verify_list (testing t, const char *label, nsync_dll_list_ l,
+   verify that dll_first() and dll_last() return the first and last element
+   found during those iterations, and that dll_is_empty() yields the right value. */
+static void verify_list (testing t, const char *label, struct Dll *l,
 			 const a_int *expected, const char *file, int line) {
-	nsync_dll_element_ *first;
-	nsync_dll_element_ *last = NULL;
-	nsync_dll_element_ *p;
+	struct Dll *first;
+	struct Dll *last = NULL;
+	struct Dll *p;
 	int i = 0;
 	char *expected_str = a_string (expected);
-	for (p = nsync_dll_first_ (l); p != NULL; p = nsync_dll_next_ (l, p)) {
+	for (p = dll_first (l); p != NULL; p = dll_next (l, p)) {
 		if (A (expected, i) != LIST_ITEM (p)->i) {
 			TEST_ERROR (t, ("%s:%d; %s:expected=%s: expected %d as "
 				   "value %d in list, but found %d\n",
@@ -108,10 +109,10 @@ static void verify_list (testing t, const char *label, nsync_dll_list_ l,
 		last = p;
 		i++;
 	}
-	if (last != nsync_dll_last_ (l)) {
+	if (last != dll_last (l)) {
 		TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected %p as "
 			   "last item in list, but found %p\n",
-			   file, line, label, expected_str, last, nsync_dll_last_ (l)));
+			   file, line, label, expected_str, last, dll_last (l)));
 	}
 	if (i != A_LEN (expected)) {
 		TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected %d items in "
@@ -120,7 +121,7 @@ static void verify_list (testing t, const char *label, nsync_dll_list_ l,
 	}
 
 	first = NULL;
-	for (p = nsync_dll_last_ (l); p != NULL; p = nsync_dll_prev_ (l, p)) {
+	for (p = dll_last (l); p != NULL; p = dll_prev (l, p)) {
 		i--;
 		if (A (expected, i) != LIST_ITEM (p)->i) {
 			TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected %d as "
@@ -130,10 +131,10 @@ static void verify_list (testing t, const char *label, nsync_dll_list_ l,
 		}
 		first = p;
 	}
-	if (first != nsync_dll_first_ (l)) {
+	if (first != dll_first (l)) {
 		TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected %p as "
 			   "first item in list, but found %p\n",
-			   file, line, label, expected_str, first, nsync_dll_last_ (l)));
+			   file, line, label, expected_str, first, dll_last (l)));
 	}
 	if (i != 0) {
 		TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected %d items "
@@ -142,43 +143,43 @@ static void verify_list (testing t, const char *label, nsync_dll_list_ l,
 			   A_LEN (expected), A_LEN (expected)-i));
 	}
 
-	if ((A_LEN (expected) == 0) != nsync_dll_is_empty_ (l)) {
-		TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected nsync_dll_is_empty_() "
+	if ((A_LEN (expected) == 0) != dll_is_empty (l)) {
+		TEST_ERROR (t, ("%s:%d: %s:expected=%s:  expected dll_is_empty() "
 			   "to yield %d but got %d\n",
 			   file, line, label, expected_str,
-			   (A_LEN (expected) == 0), nsync_dll_is_empty_ (l)));
+			   (A_LEN (expected) == 0), dll_is_empty (l)));
 	}
 	free (expected_str);
 }
 
 /* Return a new list containing the count integers from start to
    start+count-1 by appending successive elements to the list.
-   This exercises nsync_dll_make_last_in_list_() using singleton elements. */
-static nsync_dll_list_ make_list (int start, int count) {
-	nsync_dll_list_ l = NULL;
+   This exercises dll_make_last() using singleton elements. */
+static struct Dll *make_list (int start, int count) {
+	struct Dll *l = NULL;
 	int i;
 	for (i = start; i != start+count; i++) {
 		struct list_item_s *item =
 			(struct list_item_s *) malloc (sizeof (*item));
-		nsync_dll_init_ (&item->e, item);
+		dll_init (&item->e);
 		item->i = i;
-		l = nsync_dll_make_last_in_list_ (l, &item->e);
+		dll_make_last (&l, &item->e);
 	}
 	return (l);
 }
 
 /* Return a new list containing the count integers from start to
    start+count-1 by prefixing the list with elements, starting with the last.
-   It exercises nsync_dll_make_first_in_list_() using singleton elements. */
-static nsync_dll_list_ make_rlist (int start, int count) {
-	nsync_dll_list_ l = NULL;
+   It exercises dll_make_first() using singleton elements. */
+static struct Dll *make_rlist (int start, int count) {
+	struct Dll *l = NULL;
 	int i;
 	for (i = start + count - 1; i != start-1; i--) {
 		struct list_item_s *item =
 			(struct list_item_s *) malloc (sizeof (*item));
-		nsync_dll_init_ (&item->e, item);
+		dll_init (&item->e);
 		item->i = i;
-		l = nsync_dll_make_first_in_list_ (l, &item->e);
+		dll_make_first (&l, &item->e);
 	}
 	return (l);
 }
@@ -190,16 +191,16 @@ static void test_dll (testing t) {
 	a_int expected;
 	struct list_item_s *item;
 
-	nsync_dll_list_ empty = NULL;
-	nsync_dll_list_ list = NULL;
+	struct Dll *empty = NULL;
+	struct Dll *list = NULL;
 
-	nsync_dll_list_ x10 = NULL;
-	nsync_dll_list_ x20 = NULL;
-	nsync_dll_list_ x30 = NULL;
-	nsync_dll_list_ x40 = NULL;
-	nsync_dll_list_ x50 = NULL;
+	struct Dll *x10 = NULL;
+	struct Dll *x20 = NULL;
+	struct Dll *x30 = NULL;
+	struct Dll *x40 = NULL;
+	struct Dll *x50 = NULL;
 
-	memset (&expected, 0, sizeof (expected));
+	bzero (&expected, sizeof (expected));
 
 	/* All lists are initially empty. */
 	verify_list (t, "empty (0)", empty, &a_int_empty, __FILE__, __LINE__);
@@ -223,61 +224,60 @@ static void test_dll (testing t) {
 	verify_list (t, "x50", x50, a_set (&expected, 50, 51, 52, -1), __FILE__, __LINE__);
 
 	/* Check that adding nothing to an empty list leaves it empty. */
-	list = nsync_dll_make_first_in_list_ (list, NULL);
+	dll_make_first (&list, NULL);
 	verify_list (t, "list(1)", list, &a_int_empty, __FILE__, __LINE__);
-	list = nsync_dll_make_first_in_list_ (list, nsync_dll_first_ (empty));
+	dll_make_first (&list, dll_first (empty));
 	verify_list (t, "list(2)", list, &a_int_empty, __FILE__, __LINE__);
-	list = nsync_dll_make_first_in_list_ (list, nsync_dll_last_ (empty));
+	dll_make_first (&list, dll_last (empty));
 	verify_list (t, "list(3)", list, &a_int_empty, __FILE__, __LINE__);
 
 	/* Prefix an empty list with some elements. */
-	list = nsync_dll_make_first_in_list_ (list, nsync_dll_first_ (x10));
+	dll_make_first (&list, dll_first (x10));
 	verify_list (t, "list(4)", list, a_set (&expected, 10, 11, 12, -1),
 		     __FILE__, __LINE__);
 
 	/* Check that adding nothing no a non-empty list leaves it unchanged. */
-	list = nsync_dll_make_first_in_list_ (list, NULL);
+	dll_make_first (&list, NULL);
 	verify_list (t, "list(5)", list, a_set (&expected, 10, 11, 12, -1),
 		     __FILE__, __LINE__);
-	list = nsync_dll_make_first_in_list_ (list, nsync_dll_first_ (empty));
+	dll_make_first (&list, dll_first (empty));
 	verify_list (t, "list(6)", list, a_set (&expected, 10, 11, 12, -1),
 		     __FILE__, __LINE__);
-	list = nsync_dll_make_first_in_list_ (list, nsync_dll_last_ (empty));
+	dll_make_first (&list, dll_last (empty));
 	verify_list (t, "list(7)", list, a_set (&expected, 10, 11, 12, -1),
 		     __FILE__, __LINE__);
 
 	/* Check prefixing the list with some elements. */
-	list = nsync_dll_make_first_in_list_ (list, nsync_dll_first_ (x20));
+	dll_make_first (&list, dll_first (x20));
 	verify_list (t, "list(8)", list,
 		     a_set (&expected, 20, 21, 22, 10, 11, 12, -1),
 		     __FILE__, __LINE__);
 
 	/* Check appending elements to list. */
-	list = nsync_dll_make_last_in_list_ (list, nsync_dll_last_ (x30));
+	dll_make_last (&list, dll_last (x30));
 	verify_list (t, "list(9)", list,
 		     a_set (&expected, 20, 21, 22, 10, 11, 12, 30, 31, 32, -1),
 		     __FILE__, __LINE__);
 
 	/* Remove the first element. */
-	item = (struct list_item_s *) nsync_dll_first_ (list)->container;
-	list = nsync_dll_remove_ (list, &item->e);
+	item = (struct list_item_s *) LIST_ITEM (dll_first (list));
+	dll_remove (&list, &item->e);
 	verify_list (t, "list(10)", list,
 		     a_set (&expected, 21, 22, 10, 11, 12, 30, 31, 32, -1),
 		     __FILE__, __LINE__);
 	free (item);
 
 	/* Remove the last element. */
-	item = (struct list_item_s *) nsync_dll_last_ (list)->container;
-	list = nsync_dll_remove_ (list, &item->e);
+	item = (struct list_item_s *) LIST_ITEM (dll_last (list));
+	dll_remove (&list, &item->e);
 	verify_list (t, "list(11)", list,
 		     a_set (&expected, 21, 22, 10, 11, 12, 30, 31, -1),
 		     __FILE__, __LINE__);
 	free (item);
 
 	/* Remove the third element. */
-	item = (struct list_item_s *) nsync_dll_next_ (list,
-		nsync_dll_next_ (list, nsync_dll_first_ (list)))->container;
-	list = nsync_dll_remove_ (list, &item->e);
+	item = LIST_ITEM (dll_next (list, dll_next (list, dll_first (list))));
+	dll_remove (&list, &item->e);
 	verify_list (t, "list(12)",
 		     list, a_set (&expected, 21, 22, 11, 12, 30, 31, -1),
 		     __FILE__, __LINE__);
@@ -285,10 +285,10 @@ static void test_dll (testing t) {
 
 	/* Remove all elements. */
 	a_set (&expected, 21, 22, 11, 12, 30, 31, -1);
-	for (i = 0; !nsync_dll_is_empty_ (list); i++) {
+	for (i = 0; !dll_is_empty (list); i++) {
 		char buf[32];
-		item = (struct list_item_s *) nsync_dll_first_ (list)->container;
-		list = nsync_dll_remove_ (list, &item->e);
+		item = LIST_ITEM (dll_first (list));
+		dll_remove (&list, &item->e);
 		a_remove_first (&expected);
 		snprintf (buf, sizeof (buf), "list(13.%d)", i);
 		verify_list (t, buf, list, &expected, __FILE__, __LINE__);
@@ -297,22 +297,22 @@ static void test_dll (testing t) {
 	verify_list (t, "list(14)", list, &a_int_empty, __FILE__, __LINE__);
 
 	/* Append some elements to an empty list. */
-	list = nsync_dll_make_last_in_list_ (list, nsync_dll_last_ (x40));
+	dll_make_last (&list, dll_last (x40));
 	verify_list (t, "list(15)", list,
 		     a_set (&expected, 40, 41, 42, -1), __FILE__, __LINE__);
 
-	/* Use nsync_dll_splice_after_() to put {50, 51, 52} just after 41, which is
+	/* Use dll_splice_after() to put {50, 51, 52} just after 41, which is
 	   next (first (list)). */
-	nsync_dll_splice_after_ (nsync_dll_next_ (list, nsync_dll_first_ (list)), nsync_dll_first_ (x50));
+	dll_splice_after (dll_next (list, dll_first (list)), dll_first (x50));
 	verify_list (t, "list(16)", list,
 		     a_set (&expected, 40, 41, 50, 51, 52, 42, -1),
 		     __FILE__, __LINE__);
 
 	A_FREE (&expected);
 
-	while (!nsync_dll_is_empty_ (list)) {
-		item = (struct list_item_s *) nsync_dll_first_ (list)->container;
-		list = nsync_dll_remove_ (list, &item->e);
+	while (!dll_is_empty (list)) {
+		item = LIST_ITEM (dll_first (list));
+		dll_remove (&list, &item->e);
 		free (item);
 	}
 }

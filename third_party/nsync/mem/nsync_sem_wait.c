@@ -16,11 +16,11 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/intrin/dll.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/wait_s.internal.h"
 
@@ -47,7 +47,7 @@ int nsync_sem_wait_with_cancel_ (waiter *w, nsync_time abs_deadline,
 			struct nsync_waiter_s nw;
 			nw.tag = NSYNC_WAITER_TAG;
 			nw.sem = &w->sem;
-			nsync_dll_init_ (&nw.q, &nw);
+			dll_init (&nw.q);
 			ATM_STORE (&nw.waiting, 1);
 			nw.flags = 0;
 			nsync_mu_lock (&cancel_note->note_mu);
@@ -55,8 +55,7 @@ int nsync_sem_wait_with_cancel_ (waiter *w, nsync_time abs_deadline,
 			if (nsync_time_cmp (cancel_time, nsync_time_zero) > 0) {
 				nsync_time local_abs_deadline;
 				int deadline_is_nearer = 0;
-				cancel_note->waiters = nsync_dll_make_last_in_list_ (
-					cancel_note->waiters, &nw.q);
+				dll_make_last (&cancel_note->waiters, &nw.q);
 				local_abs_deadline = cancel_time;
 				if (nsync_time_cmp (abs_deadline, cancel_time) < 0) {
 					local_abs_deadline = abs_deadline;
@@ -73,8 +72,7 @@ int nsync_sem_wait_with_cancel_ (waiter *w, nsync_time abs_deadline,
 				cancel_time = NOTIFIED_TIME (cancel_note);
 				if (nsync_time_cmp (cancel_time,
 						    nsync_time_zero) > 0) {
-					cancel_note->waiters = nsync_dll_remove_ (
-						cancel_note->waiters, &nw.q);
+					dll_remove (&cancel_note->waiters, &nw.q);
 				}
 			}
 			nsync_mu_unlock (&cancel_note->note_mu);

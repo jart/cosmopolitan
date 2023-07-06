@@ -50,7 +50,7 @@ http://nothings.org/stb\"");
 #define idct_block_kernel stbi__idct_block
 #endif
 
-#define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
+#define ROL(w, k) ((w) << (k) | (w) >> (sizeof(w) * CHAR_BIT - (k)))
 
 #ifndef STBI_REALLOC_SIZED
 #define STBI_REALLOC_SIZED(p, oldsz, newsz) realloc(p, newsz)

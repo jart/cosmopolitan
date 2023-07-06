@@ -19,7 +19,6 @@
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/pcmpgtb.h"
 #include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/psubb.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"

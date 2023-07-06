@@ -1,13 +1,12 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_GRAPHIC_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_GRAPHIC_H_
 #include "dsp/tty/quant.h"
-#include "libc/runtime/buffer.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Graphic {
   union {
-    struct GuardedBuffer b;
+    void *b;
     char *bytes;
     float (*lum)[2][8];
     float (*rgba)[2][2];

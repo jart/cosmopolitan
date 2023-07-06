@@ -39,7 +39,7 @@ void a_ensure_ (void *v, int delta, int sz) {
 		} else {
 			na = realloc (a->a_, nmax*sz);
 		}
-		memset (omax *sz + (char *)na, 0, (nmax - omax) * sz);
+		bzero (omax *sz + (char *)na, (nmax - omax) * sz);
 		a->a_ = (void **) na;
 		a->h_.max_ = nmax;
 	}

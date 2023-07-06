@@ -25,5 +25,5 @@ void boxblur(struct Graphic *g) {
       {+1.0, +1.0, +1.0},
       {+1.0, +1.0, +1.0},
   };
-  convolve(g->yn, g->xn, g->b.p, 3, kBoxBlurKernel, 9.0, 0);
+  convolve(g->yn, g->xn, g->b, 3, kBoxBlurKernel, 9.0, 0);
 }

@@ -156,6 +156,7 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Include/unicodeobject.h			\
 	third_party/python/Include/warnings.h				\
 	third_party/python/Include/weakrefobject.h			\
+	third_party/python/Modules/bextra.h				\
 	third_party/python/Modules/unicodedata.h			\
 	third_party/python/Modules/unicodedata_unidata.h		\
 	third_party/python/Modules/_decimal/docstrings.h		\
@@ -417,6 +418,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Python/sysmodule.c				\
 	third_party/python/Python/thread.c				\
 	third_party/python/Python/traceback.c				\
+	third_party/python/Modules/bextra.c				\
 	third_party/python/Modules/unicodedata_3.2.0.c			\
 	third_party/python/Modules/unicodedata_bidirectionalnames.c	\
 	third_party/python/Modules/unicodedata_categorynames.c		\
