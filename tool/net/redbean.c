@@ -2556,8 +2556,7 @@ static char *ServeErrorImpl(unsigned code, const char *reason,
 
 static char *ServeErrorWithPath(unsigned code, const char *reason,
                                 const char *path, size_t pathlen) {
-  ERRORF("(srvr) server error: %d %s %`'.*s", code, reason,
-         pathlen, path);
+  ERRORF("(srvr) server error: %d %s %`'.*s", code, reason, pathlen, path);
   return ServeErrorImpl(code, reason, NULL);
 }
 
@@ -5128,10 +5127,12 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Crc32c", LuaCrc32c},                                      //
     {"Decimate", LuaDecimate},                                  //
     {"DecodeBase64", LuaDecodeBase64},                          //
+    {"DecodeHex", LuaDecodeHex},                                //
     {"DecodeJson", LuaDecodeJson},                              //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
     {"Deflate", LuaDeflate},                                    //
     {"EncodeBase64", LuaEncodeBase64},                          //
+    {"EncodeHex", LuaEncodeHex},                                //
     {"EncodeJson", LuaEncodeJson},                              //
     {"EncodeLatin1", LuaEncodeLatin1},                          //
     {"EncodeLua", LuaEncodeLua},                                //
@@ -5193,6 +5194,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"HasControlCodes", LuaHasControlCodes},                    //
     {"HasParam", LuaHasParam},                                  //
     {"HidePath", LuaHidePath},                                  //
+    {"HighwayHash64", LuaHighwayHash64},                        //
     {"IndentLines", LuaIndentLines},                            //
     {"Inflate", LuaInflate},                                    //
     {"IsAcceptableHost", LuaIsAcceptableHost},                  //

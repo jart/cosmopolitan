@@ -721,13 +721,20 @@ FUNCTIONS
           A granular. It can tell you if traffic originated from private
           networks, ARIN, APNIC, DOD, etc.
 
+  DecodeLatin1(iso-8859-1:str) → utf-8:str
+          Turns ISO-8859-1 string into UTF-8.
+
+  EncodeHex(binary:str) → ascii:str
+          Turns binary into ASCII base-16 hexadecimal lowercase string.
+
+  DecodeHex(ascii:str) → binary:str
+          Turns ASCII base-16 hexadecimal byte string into binary string,
+          case-insensitively. Non-hex characters may not appear in string.
+
   DecodeBase64(ascii:str) → binary:str
           Turns ASCII into binary, in a permissive way that ignores
           characters outside the base64 alphabet, such as whitespace. See
           decodebase64.c.
-
-  DecodeLatin1(iso-8859-1:str) → utf-8:str
-          Turns ISO-8859-1 string into UTF-8.
 
   EncodeBase64(binary:str) → ascii:str
           Turns binary into ASCII. This can be used to create HTML data:

@@ -42,8 +42,10 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/rand.h"
+#include "libc/str/highwayhash64.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
+#include "libc/str/tab.internal.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
@@ -355,6 +357,20 @@ int LuaBsf(lua_State *L) {
   }
 }
 
+int LuaHighwayHash64(lua_State *L) {
+  long i;
+  size_t n;
+  uint64_t k[4];
+  const char *p;
+  p = luaL_checklstring(L, 1, &n);
+  k[0] = luaL_optinteger(L, 2, 0);
+  k[1] = luaL_optinteger(L, 3, 0);
+  k[2] = luaL_optinteger(L, 4, 0);
+  k[3] = luaL_optinteger(L, 5, 0);
+  lua_pushinteger(L, HighwayHash64(p, n, k));
+  return 1;
+}
+
 static int LuaHash(lua_State *L, uint32_t H(uint32_t, const void *, size_t)) {
   long i;
   size_t n;
@@ -584,6 +600,42 @@ int LuaEncodeLatin1(lua_State *L) {
     luaL_error(L, "out of memory");
     __builtin_unreachable();
   }
+}
+
+int LuaEncodeHex(lua_State *L) {
+  char *p;
+  size_t n;
+  const char *s;
+  luaL_Buffer buf;
+  s = luaL_checklstring(L, 1, &n);
+  p = luaL_buffinitsize(L, &buf, n * 2 + 1);
+  hexpcpy(p, s, n);
+  luaL_pushresultsize(&buf, n * 2);
+  return 1;
+}
+
+int LuaDecodeHex(lua_State *L) {
+  char *p;
+  int x, y;
+  size_t i, n;
+  const char *s;
+  luaL_Buffer buf;
+  s = luaL_checklstring(L, 1, &n);
+  if (n & 1) {
+    luaL_argerror(L, 1, "hex string length uneven");
+    __builtin_unreachable();
+  }
+  p = luaL_buffinitsize(L, &buf, n >> 1);
+  for (i = 0; i < n; i += 2) {
+    if ((x = kHexToInt[s[i + 0] & 255]) == -1 ||
+        (y = kHexToInt[s[i + 1] & 255]) == -1) {
+      luaL_argerror(L, 1, "hex string has non-hex character");
+      __builtin_unreachable();
+    }
+    p[i >> 1] = x << 4 | y;
+  }
+  luaL_pushresultsize(&buf, n >> 1);
+  return 1;
 }
 
 int LuaGetRandomBytes(lua_State *L) {

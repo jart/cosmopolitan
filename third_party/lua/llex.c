@@ -27,11 +27,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define llex_c
 #define LUA_CORE
+#include "third_party/lua/llex.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
 #include "third_party/lua/lgc.h"
-#include "third_party/lua/llex.h"
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lparser.h"
 #include "third_party/lua/lprefix.h"

@@ -235,11 +235,11 @@ static int Cd(void) {
     if (!chdir(s)) {
       return 0;
     } else {
-      tinyprint(2, "chdir: ", s, ": ", _strerdoc(errno), NULL);
+      tinyprint(2, "chdir: ", s, ": ", _strerdoc(errno), "\n", NULL);
       return 1;
     }
   } else {
-    tinyprint(2, "chdir: missing argument", NULL);
+    tinyprint(2, "chdir: missing argument\n", NULL);
     return 1;
   }
 }
@@ -250,7 +250,7 @@ static int Mkdir(void) {
   if (n >= 3 && !strcmp(args[1], "-p")) ++i, f = makedirs;
   for (; i < n; ++i) {
     if (f(args[i], 0755)) {
-      tinyprint(2, "mkdir: ", args[i], ": ", _strerdoc(errno), NULL);
+      tinyprint(2, "mkdir: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
       return errno;
     }
   }
@@ -267,7 +267,7 @@ static int Kill(void) {
   }
   for (; i < n; ++i) {
     if (kill(atoi(args[i]), sig)) {
-      tinyprint(2, "kill: ", args[i], ": ", _strerdoc(errno), NULL);
+      tinyprint(2, "kill: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
       rc = 1;
     }
   }
@@ -325,7 +325,7 @@ static int Rm(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (unlink(args[i])) {
-        tinyprint(2, "rm: ", args[i], ": ", _strerdoc(errno), NULL);
+        tinyprint(2, "rm: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
         return 1;
       }
     }
@@ -340,7 +340,7 @@ static int Rmdir(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (rmdir(args[i])) {
-        tinyprint(2, "rmdir: ", args[i], ": ", _strerdoc(errno), NULL);
+        tinyprint(2, "rmdir: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
         return 1;
       }
     }
@@ -355,7 +355,7 @@ static int Touch(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (touch(args[i], 0644)) {
-        tinyprint(2, "touch: ", args[i], ": ", _strerdoc(errno), NULL);
+        tinyprint(2, "touch: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
         return 1;
       }
     }

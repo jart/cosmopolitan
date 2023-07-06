@@ -2020,6 +2020,12 @@ static int LuaUnixSchedYield(lua_State *L) {
   return 0;
 }
 
+// unix.verynice()
+static int LuaUnixVerynice(lua_State *L) {
+  verynice();
+  return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // unix.Stat object
 
@@ -3338,6 +3344,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"unlink", LuaUnixUnlink},            // remove file
     {"unveil", LuaUnixUnveil},            // filesystem sandboxing
     {"utimensat", LuaUnixUtimensat},      // change access/modified time
+    {"verynice", LuaUnixVerynice},        // lowest priority
     {"wait", LuaUnixWait},                // wait for child to change status
     {"write", LuaUnixWrite},              // write to file or socket
     {0},                                  //

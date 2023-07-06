@@ -47,6 +47,9 @@ assert(hex(0x1940efe9d47ae889) == "0x1940efe9d47ae889")
 assert(oct(0x1940efe9d47ae889) == "0145007376472436564211")
 assert(bin(0x1940efe9d47ae889) == "0b0001100101000000111011111110100111010100011110101110100010001001")
 
+assert(EncodeHex("\1\2\3\4\255") == "01020304ff")
+assert(DecodeHex("01020304ff") == "\1\2\3\4\255")
+
 assert(EscapeHtml(nil) == nil)
 assert(EscapeHtml("?hello&there<>") == "?hello&amp;there&lt;&gt;")
 
