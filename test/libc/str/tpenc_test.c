@@ -20,7 +20,6 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 

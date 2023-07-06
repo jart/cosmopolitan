@@ -171,6 +171,7 @@ bool _escapedos(char16_t *, unsigned, const char16_t *, unsigned) libcesque;
 
 typedef unsigned mbstate_t;
 
+uint64_t _tpenc(uint32_t) pureconst;
 axdx_t tprecode8to16(char16_t *, size_t, const char *);
 axdx_t tprecode16to8(char *, size_t, const char16_t *);
 wchar_t *wcsncpy(wchar_t *, const wchar_t *, size_t);

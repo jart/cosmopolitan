@@ -21,7 +21,6 @@
 #include "libc/intrin/pandn.h"
 #include "libc/intrin/pcmpgtw.h"
 #include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 

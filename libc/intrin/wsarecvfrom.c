@@ -69,6 +69,9 @@ textwindows int WSARecvFrom(
                          opt_out_lpNumberOfBytesRecvd, inout_lpFlags,
                          opt_out_fromsockaddr, opt_inout_fromsockaddrlen,
                          opt_inout_lpOverlapped, opt_lpCompletionRoutine);
+  if (rc == -1) {
+    __winerr();
+  }
 #endif
   return rc;
 }

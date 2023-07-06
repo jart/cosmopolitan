@@ -83,7 +83,7 @@ static wontreturn void UnsupportedSyntax(unsigned char c) {
   char ibuf[13], cbuf[2] = {c};
   FormatOctal32(ibuf, c, true);
   tinyprint(2, prog, ": unsupported syntax '", cbuf, "' (", ibuf, "): ", cmd,
-            "\n", 0);
+            "\n", NULL);
   _Exit(4);
 }
 
@@ -95,7 +95,7 @@ static wontreturn void SysExit(int rc, const char *call, const char *thing) {
   FormatInt32(ibuf, err);
   estr = _strerdoc(err);
   if (!estr) estr = "EUNKNOWN";
-  tinyprint(2, thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
+  tinyprint(2, thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", NULL);
   _Exit(rc);
 }
 
@@ -110,7 +110,7 @@ static void Open(const char *path, int fd, int flags) {
 static wontreturn void Exec(void) {
   _unassert(args[0][0]);
   if (!n) {
-    tinyprint(2, prog, ": error: too few args\n", 0);
+    tinyprint(2, prog, ": error: too few args\n", NULL);
     _Exit(5);
   }
   execvpe(args[0], args, envs);
@@ -594,7 +594,7 @@ static char *Tokenize(void) {
         break;
 
       UnterminatedString:
-        tinyprint(2, "cmd: error: unterminated string\n", 0);
+        tinyprint(2, "cmd: error: unterminated string\n", NULL);
         _Exit(6);
 
       case STATE_QUOTED_VAR:
@@ -642,7 +642,7 @@ static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
   } else if ((arg = Tokenize())) {
     return arg;
   } else {
-    tinyprint(2, prog, ": error: redirect missing path\n", 0);
+    tinyprint(2, prog, ": error: redirect missing path\n", NULL);
     _Exit(14);
   }
 }
@@ -675,18 +675,18 @@ int _cocmd(int argc, char **argv, char **envp) {
   }
 
   if (argc != 3) {
-    tinyprint(2, prog, ": error: wrong number of args\n", 0);
+    tinyprint(2, prog, ": error: wrong number of args\n", NULL);
     _Exit(10);
   }
 
   if (strcmp(argv[1], "-c")) {
-    tinyprint(2, prog, ": error: argv[1] should -c\n", 0);
+    tinyprint(2, prog, ": error: argv[1] should -c\n", NULL);
     _Exit(11);
   }
 
   p = cmd = argv[2];
   if (strlen(cmd) >= ARG_MAX) {
-    tinyprint(2, prog, ": error: cmd too long: ", cmd, "\n", 0);
+    tinyprint(2, prog, ": error: cmd too long: ", cmd, "\n", NULL);
     _Exit(12);
   }
 
@@ -732,7 +732,7 @@ int _cocmd(int argc, char **argv, char **envp) {
               args[n++] = globTheBuilder.gl_pathv[globCount];
             }
           } else if (globrc != GLOB_NOMATCH) {
-            tinyprint(2, prog, ": error: with glob\n", 0);
+            tinyprint(2, prog, ": error: with glob\n", NULL);
             _Exit(16);
           }
           globFlags |= GLOB_APPEND;
@@ -743,7 +743,7 @@ int _cocmd(int argc, char **argv, char **envp) {
         args[n] = 0;
       }
     } else {
-      tinyprint(2, prog, ": error: too many args\n", 0);
+      tinyprint(2, prog, ": error: too many args\n", NULL);
       _Exit(13);
     }
   }

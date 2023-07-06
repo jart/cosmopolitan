@@ -25,7 +25,6 @@
 #include "libc/intrin/pmovmskb.h"
 #include "libc/intrin/punpckhbw.h"
 #include "libc/intrin/punpcklbw.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"

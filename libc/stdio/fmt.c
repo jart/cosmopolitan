@@ -48,7 +48,6 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"

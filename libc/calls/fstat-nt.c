@@ -22,7 +22,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"

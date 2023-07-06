@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/tpenc.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * Writes wide character to stream.

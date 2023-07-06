@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pcmpgtb.h"
 #include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"

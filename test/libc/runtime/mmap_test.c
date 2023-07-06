@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/linux/mmap.h"
 #include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
@@ -28,7 +27,6 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/xchg.internal.h"
-#include "libc/linux/munmap.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -460,23 +458,4 @@ void BenchMmapPrivate(void) {
 BENCH(mmap, bench) {
   EZBENCH2("mmap", donothing, BenchMmapPrivate());
   EZBENCH2("munmap", donothing, BenchUnmap());
-}
-
-void BenchUnmapLinux(void) {
-  ASSERT_EQ(0, LinuxMunmap(ptrs[count++], FRAMESIZE));
-}
-
-void BenchMmapPrivateLinux(void) {
-  void *p;
-  p = (void *)LinuxMmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
-                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (p == MAP_FAILED) abort();
-  ptrs[count++] = p;
-}
-
-BENCH(mmap, benchLinux) {
-  void *p;
-  if (!IsLinux()) return;
-  EZBENCH2("mmap (linux)", donothing, BenchMmapPrivateLinux());
-  EZBENCH2("munmap (linux)", donothing, BenchUnmapLinux());
 }

@@ -65,6 +65,9 @@ textwindows int WSARecv(
   rc = __imp_WSARecv(s, inout_lpBuffers, dwBufferCount,
                      opt_out_lpNumberOfBytesRecvd, inout_lpFlags,
                      opt_inout_lpOverlapped, opt_lpCompletionRoutine);
+  if (rc == -1) {
+    __winerr();
+  }
 #endif
   return rc;
 }

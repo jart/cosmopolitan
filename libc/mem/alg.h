@@ -26,13 +26,8 @@ int heapsort_r(void *, size_t, size_t,
 int mergesort(void *, size_t, size_t, int (*)(const void *, const void *));
 int mergesort_r(void *, size_t, size_t,
                 int (*)(const void *, const void *, void *), void *);
-int _tarjan(int, const int (*)[2], int, int[], int[], int *)
-    paramsnonnull((2, 4)) nocallback dontthrow;
 
 #define __algalloc returnspointerwithnoaliases dontthrow nocallback dontdiscard
-
-char *_replacestr(const char *, const char *, const char *)
-    paramsnonnull() __algalloc;
 
 bool radix_sort_int32(int32_t *, size_t);
 bool radix_sort_int64(int64_t *, size_t);

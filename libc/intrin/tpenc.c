@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,37 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/str/path.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/intrin/bsr.h"
 
-char b[PATH_MAX];
+static const uint16_t kTpEnc[32 - 7] = {
+    1 | 0300 << 8, 1 | 0300 << 8, 1 | 0300 << 8, 1 | 0300 << 8, 2 | 0340 << 8,
+    2 | 0340 << 8, 2 | 0340 << 8, 2 | 0340 << 8, 2 | 0340 << 8, 3 | 0360 << 8,
+    3 | 0360 << 8, 3 | 0360 << 8, 3 | 0360 << 8, 3 | 0360 << 8, 4 | 0370 << 8,
+    4 | 0370 << 8, 4 | 0370 << 8, 4 | 0370 << 8, 4 | 0370 << 8, 5 | 0374 << 8,
+    5 | 0374 << 8, 5 | 0374 << 8, 5 | 0374 << 8, 5 | 0374 << 8, 5 | 0374 << 8,
+};
 
-TEST(xjoinpaths, test) {
-  EXPECT_EQ(NULL, _joinpaths(b, sizeof(b), 0, 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), "x", 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), 0, "x"));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", 0));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), 0, ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("b", _joinpaths(b, sizeof(b), "", "b"));
-  EXPECT_STREQ("a/", _joinpaths(b, sizeof(b), "a", ""));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a", "b"));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, sizeof(b), "a", "b/"));
-  EXPECT_STREQ("/b", _joinpaths(b, sizeof(b), "a", "/b"));
-  EXPECT_STREQ("./b", _joinpaths(b, sizeof(b), ".", "b"));
-  EXPECT_STREQ("b/.", _joinpaths(b, sizeof(b), "b", "."));
-  EXPECT_EQ(NULL, _joinpaths(b, 3, "a", "b/"));
-  EXPECT_EQ(NULL, _joinpaths(b, 4, "a", "b/"));
-  EXPECT_STREQ("a/b", _joinpaths(b, 4, "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, 5, "a", "b/"));
-}
-
-BENCH(joinpaths, bench) {
-  EZBENCH2("_joinpaths", donothing, _joinpaths(b, sizeof(b), "care", "bear"));
-  EZBENCH2("xjoinpaths", donothing, free(xjoinpaths("care", "bear")));
+/**
+ * Encodes Thompson-Pike variable-length integer.
+ */
+uint64_t _tpenc(uint32_t c) {
+  int e, n;
+  uint64_t w;
+  if (0 <= c && c <= 127) return c;
+  e = kTpEnc[_bsr(c) - 7];
+  n = e & 0xff;
+  w = 0;
+  do {
+    w |= 0200 | (c & 077);
+    w <<= 8;
+    c >>= 6;
+  } while (--n);
+  return c | w | e >> 8;
 }

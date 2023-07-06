@@ -22,7 +22,6 @@
 #include "libc/calls/struct/statfs.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/fsinformationclass.h"

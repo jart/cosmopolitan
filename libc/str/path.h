@@ -14,7 +14,6 @@ COSMOPOLITAN_C_START_
 int _classifypath(const char *) libcesque nosideeffect;
 bool _isabspath(const char *) libcesque strlenesque;
 bool _isdirsep(int) libcesque pureconst;
-char *_joinpaths(char *, size_t, const char *, const char *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

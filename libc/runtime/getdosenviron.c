@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"

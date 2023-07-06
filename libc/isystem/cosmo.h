@@ -38,7 +38,6 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/tpenc.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"

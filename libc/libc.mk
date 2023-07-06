@@ -15,7 +15,6 @@ o/$(MODE)/libc:	o/$(MODE)/libc/calls		\
 		o/$(MODE)/libc/elf		\
 		o/$(MODE)/libc/fmt		\
 		o/$(MODE)/libc/intrin		\
-		o/$(MODE)/libc/linux		\
 		o/$(MODE)/libc/log		\
 		o/$(MODE)/libc/mem		\
 		o/$(MODE)/libc/nexgen32e	\
