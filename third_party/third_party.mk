@@ -17,6 +17,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/radpajama		\
 	o/$(MODE)/third_party/hiredis		\
 	o/$(MODE)/third_party/libcxx		\
+	o/$(MODE)/third_party/tbb		\
 	o/$(MODE)/third_party/linenoise		\
 	o/$(MODE)/third_party/lua		\
 	o/$(MODE)/third_party/lz4cli		\
