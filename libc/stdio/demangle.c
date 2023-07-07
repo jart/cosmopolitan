@@ -1,39 +1,49 @@
-/*-
- * Copyright (c) 2007 Hyogeol Lee <hyogeollee@gmail.com>
- * Copyright (c) 2015-2017 Kai Wang <kaiwang27@gmail.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer
- *    in this position and unchanged.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * https://github.com/freebsd/freebsd-src/blob/2176c9ab71c85efd90a6c7af4a9e04fe8e3d49ca/contrib/libcxxrt/libelftc_dem_gnu3.c
- */
-#include "third_party/libcxx/cxxabi.h"
-#include "third_party/libcxx/cstdlib"
-#include "third_party/libcxx/cstdio"
-#include "third_party/libcxx/cassert"
-#include "third_party/libcxx/cerrno"
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright (c) 2007 Hyogeol Lee <hyogeollee@gmail.com>                        │
+│ Copyright (c) 2015-2017 Kai Wang <kaiwang27@gmail.com>                       │
+│ All rights reserved.                                                         │
+│                                                                              │
+│ Redistribution and use in source and binary forms, with or without           │
+│ modification, are permitted provided that the following conditions           │
+│ are met:                                                                     │
+│ 1. Redistributions of source code must retain the above copyright            │
+│    notice, this list of conditions and the following disclaimer              │
+│    in this position and unchanged.                                           │
+│ 2. Redistributions in binary form must reproduce the above copyright         │
+│    notice, this list of conditions and the following disclaimer in the       │
+│    documentation and/or other materials provided with the distribution.      │
+│                                                                              │
+│ THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR        │
+│ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES    │
+│ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.      │
+│ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,             │
+│ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT     │
+│ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,    │
+│ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY        │
+│ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT          │
+│ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF     │
+│ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.            │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+
+asm(".ident\t\"\\n\\n\
+C++ Demangle (BSD-2)\\n\
+Copyright (c) 2007 Hyogeol Lee <hyogeollee@gmail.com>\\n\
+Copyright (c) 2015-2017 Kai Wang <kaiwang27@gmail.com>\"");
+asm(".include \"libc/disclaimer.inc\"");
+// https://github.com/freebsd/freebsd-src/blob/2176c9ab71c85efd90a6c7af4a9e04fe8e3d49ca/contrib/libcxxrt/libelftc_dem_gnu3.c
+// clang-format off
 
 /**
- * @file demangle.cc
+ * @file demangle.c
  * @brief Decode IA-64 C++ ABI style implementation.
  *
  * IA-64 standard ABI(Itanium C++ ABI) references.
@@ -4296,7 +4306,7 @@ vector_type_qualifier_init(struct vector_type_qualifier *v)
 
 static int
 vector_type_qualifier_push(struct vector_type_qualifier *v,
-    enum type_qualifier t)
+			   enum type_qualifier t)
 {
 	enum type_qualifier *tmp_ctn;
 	size_t tmp_cap;
@@ -4323,10 +4333,52 @@ vector_type_qualifier_push(struct vector_type_qualifier *v,
 	return (1);
 }
 
-extern "C" char* __cxa_demangle(const char* mangled_name,
-                                char* buf,
-                                size_t* n,
-                                int* status)
+/**
+ * @brief Demangling routine.
+ * ABI-mandated entry point in the C++ runtime library for demangling.
+ *
+ * @param __mangled_name A NUL-terminated character string
+ * containing the name to be demangled.
+ *
+ * @param __output_buffer A region of memory, allocated with
+ * malloc, of @a *__length bytes, into which the demangled name is
+ * stored.  If @a __output_buffer is not long enough, it is
+ * expanded using realloc.  @a __output_buffer may instead be null;
+ * in that case, the demangled name is placed in a region of memory
+ * allocated with malloc.
+ *
+ * @param __length If @a __length is non-null, the length of the
+ * buffer containing the demangled name is placed in @a *__length.
+ *
+ * @param __status If @a __status is non-null, @a *__status is set to
+ * one of the following values:
+ *  0: The demangling operation succeeded.
+ * -1: A memory allocation failure occurred.
+ * -2: @a mangled_name is not a valid name under the C++ ABI mangling rules.
+ * -3: One of the arguments is invalid.
+ *
+ * @return A pointer to the start of the NUL-terminated demangled
+ * name, or a null pointer if the demangling fails.  The caller is
+ * responsible for deallocating this memory using @c free.
+ *
+ * The demangling is performed using the C++ ABI mangling rules,
+ * with GNU extensions. For example, this function is used in
+ * __gnu_cxx::__verbose_terminate_handler.
+ *
+ * See https://gcc.gnu.org/onlinedocs/libstdc++/manual/ext_demangling.html
+ * for other examples of use.
+ *
+ * @note The same demangling functionality is available via
+ * libiberty (@c <libiberty/demangle.h> and @c libiberty.a) in GCC
+ * 3.1 and later, but that requires explicit installation (@c
+ * --enable-install-libiberty) and uses a different API, although
+ * the ABI is unchanged.
+ */
+char *
+__cxa_demangle(const char* mangled_name,
+	       char* buf,
+	       size_t* n,
+	       int* status)
 {
 	// TODO: We should probably just be linking against libelf-tc, rather than
 	// copying their code.  This requires them to do an actual release,
@@ -4339,7 +4391,7 @@ extern "C" char* __cxa_demangle(const char* mangled_name,
 		size_t len = strlen(demangled);
 		if (!buf || (*n < len+1))
 		{
-			buf = static_cast<char*>(realloc(buf, len+1));
+			buf = realloc(buf, len+1);
 		}
 		if (0 != buf)
 		{
