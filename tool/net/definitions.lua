@@ -763,13 +763,6 @@ function DecodeHex(ascii) end
 ---@nodiscard
 function DecodeBase64(ascii) end
 
---- Turns ISO-8859-1 string into UTF-8.
----
----@param iso_8859_1 string
----@return string UTF8
----@nodiscard
-function DecodeLatin1(iso_8859_1) end
-
 --- Turns binary into ASCII. This can be used to create HTML data:
 --- URIs that do things like embed a PNG file in a web page. See
 --- encodebase64.c.
