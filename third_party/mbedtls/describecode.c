@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/thread/thread.h"
+#include "libc/fmt/itoa.h"
+#include "libc/str/str.h"
+#include "third_party/mbedtls/iana.h"
 
-/**
- * Pointer to standard error stream.
- */
-FILE *stderr;
-
-static FILE __stderr;
-
-__attribute__((__constructor__)) static void __stderr_init(void) {
-  stderr = &__stderr;
-  stderr->fd = STDERR_FILENO;
-  stderr->bufmode = _IONBF;
-  stderr->iomode = O_WRONLY;
-  stderr->buf = stderr->mem;
-  stderr->size = sizeof(stderr->mem);
-  ((pthread_mutex_t *)stderr->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
-  __fflush_register(stderr);
+const char *DescribeMbedtlsErrorCode(int ret) {
+  static _Thread_local char sslerr[64];
+  char *p = sslerr;
+  p = stpcpy(p, "mbedtls error code ");
+  if (-ret <= 0xffffu) {
+    *p++ = '-';
+    *p++ = '0';
+    *p++ = 'x';
+    *p++ = "0123456789abcdef"[(-ret & 0xf000) >> 12];
+    *p++ = "0123456789abcdef"[(-ret & 0x0f00) >> 8];
+    *p++ = "0123456789abcdef"[(-ret & 0x00f0) >> 4];
+    *p++ = "0123456789abcdef"[(-ret & 0x000f) >> 0];
+    *p = 0;
+  } else {
+    FormatInt32(p, ret);
+  }
+  return sslerr;
 }

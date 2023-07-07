@@ -6,8 +6,10 @@ COSMOPOLITAN_C_START_
 
 bool IsCipherSuiteGood(uint16_t);
 const char *GetCipherSuiteName(uint16_t);
+const char *DescribeMbedtlsErrorCode(int);
 const char *GetAlertDescription(unsigned char);
 dontdiscard char *FormatSslClientCiphers(const mbedtls_ssl_context *);
+const char *DescribeSslClientHandshakeError(const mbedtls_ssl_context *, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

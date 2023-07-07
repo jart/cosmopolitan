@@ -1,4 +1,4 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:4;coding:utf-8 -*-│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:2;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright The Mbed TLS Contributors                                          │
@@ -24,7 +24,7 @@
  * @see RFC5246 §7.2
  */
 const char *GetAlertDescription(unsigned char x) {
-  static char buf[21];
+  static _Thread_local char buf[21];
   switch (x) {
     case MBEDTLS_SSL_ALERT_MSG_CLOSE_NOTIFY: /* 0 */
       return "close_notify";

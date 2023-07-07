@@ -77,12 +77,14 @@
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/hwcap.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/madv.h"
@@ -7212,8 +7214,8 @@ static void TlsInit(void) {
   int suite;
   if (unsecure) return;
 
-  if (suiteb && !X86_HAVE(AES)) {
-    WARNF("(srvr) requested suite b crypto, but aes-ni is not present");
+  if (suiteb && !mbedtls_aes_uses_hardware()) {
+    WARNF("(srvr) requested suiteb crypto, but hardware aes not present");
   }
 
   if (!sslinitialized) {

@@ -336,7 +336,6 @@ int main(int argc, char *argv[]) {
   struct Args args = {reballoc(0, 4096, sizeof(char *))};
   struct Args names = {reballoc(0, 4096, sizeof(char *))};
   struct Ints modes = {reballoc(0, 4096, sizeof(int))};
-  struct Ints longnames = {reballoc(0, 256, sizeof(int))};
   struct Ints sizes = {reballoc(0, 4096, sizeof(int))};
   struct Ints symnames = {reballoc(0, 16384, sizeof(int))};
   struct Bytes symbols = {reballoc(0, 131072, sizeof(char))};

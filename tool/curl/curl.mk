@@ -26,7 +26,6 @@ TOOL_CURL_DIRECTDEPS =				\
 	LIBC_STR				\
 	LIBC_SYSV				\
 	LIBC_TIME				\
-	LIBC_X					\
 	LIBC_ZIPOS				\
 	NET_HTTP				\
 	NET_HTTPS				\

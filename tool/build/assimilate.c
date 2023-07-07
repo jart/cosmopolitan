@@ -89,7 +89,6 @@ void GetOpts(int argc, char *argv[]) {
         g_mode = MODE_MACHO;
         break;
       case 'h':
-      case '?':
         write(1, USAGE, sizeof(USAGE) - 1);
         exit(0);
       default:

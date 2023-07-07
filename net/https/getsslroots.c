@@ -18,54 +18,62 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
-#include "libc/errno.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/x/x.h"
-#include "net/https/https.h"
+#include "libc/thread/thread.h"
 #include "third_party/mbedtls/x509_crt.h"
 
 STATIC_YOINK("ssl_root_support");
 
-static void FreeSslRoots(mbedtls_x509_crt *c) {
-  mbedtls_x509_crt_free(c);
-  free(c);
+#define SSL_ROOT_DIR "/zip/usr/share/ssl/root"
+
+static struct {
+  pthread_once_t once;
+  mbedtls_x509_crt chain;
+} g_ssl_roots;
+
+static void FreeSslRoots(void) {
+  mbedtls_x509_crt_free(&g_ssl_roots.chain);
+}
+
+static void InitSslRoots(void) {
+  DIR *dir;
+  if (!(dir = opendir(SSL_ROOT_DIR))) {
+    perror(SSL_ROOT_DIR);
+    return;
+  }
+  struct dirent *ent;
+  while ((ent = readdir(dir))) {
+    if (ent->d_type != DT_REG &&  //
+        ent->d_type != DT_UNKNOWN) {
+      continue;
+    }
+    char path[PATH_MAX];
+    strlcpy(path, SSL_ROOT_DIR "/", sizeof(path));
+    strlcat(path, ent->d_name, sizeof(path));
+    uint8_t *data;
+    int fd = open(path, O_RDONLY);         // punt error to lseek
+    size_t size = lseek(fd, 0, SEEK_END);  // punt error to calloc
+    if ((data = calloc(1, size + 1)) && pread(fd, data, size, 0) == size) {
+      if (mbedtls_x509_crt_parse(&g_ssl_roots.chain, data, size + 1)) {
+        tinyprint(2, path, ": error loading ssl root\n", NULL);
+      }
+    } else {
+      perror(path);
+    }
+    free(data);
+    close(fd);
+  }
+  closedir(dir);
+  atexit(FreeSslRoots);
 }
 
 /**
  * Returns singleton of SSL roots stored in /zip/usr/share/ssl/root/...
  */
 mbedtls_x509_crt *GetSslRoots(void) {
-  int fd;
-  DIR *d;
-  uint8_t *p;
-  size_t n, m;
-  struct dirent *e;
-  static bool once;
-  char path[PATH_MAX];
-  static mbedtls_x509_crt *c;
-  if (!once) {
-    if ((c = calloc(1, sizeof(*c)))) {
-      m = stpcpy(path, "/zip/usr/share/ssl/root/") - path;
-      if ((d = opendir(path))) {
-        while ((e = readdir(d))) {
-          if (e->d_type != DT_REG) continue;
-          if (m + (n = strlen(e->d_name)) >= ARRAYLEN(path)) continue;
-          memcpy(path + m, e->d_name, n + 1);
-          CHECK((p = xslurp(path, &n)));
-          CHECK_GE(mbedtls_x509_crt_parse(c, p, n + 1), 0, "%s", path);
-          free(p);
-        }
-        closedir(d);
-      }
-      __cxa_atexit(FreeSslRoots, c, 0);
-    }
-    once = true;
-  }
-  return c;
+  pthread_once(&g_ssl_roots.once, InitSslRoots);
+  return &g_ssl_roots.chain;
 }

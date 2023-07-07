@@ -1683,7 +1683,7 @@ int UTIL_countCores(int logical)
     return numCores;
 }
 
-#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__CYGWIN__)
+#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__CYGWIN__) || defined(__COSMOPOLITAN__)
 
 /* Use POSIX sysconf
  * see: man 3 sysconf */

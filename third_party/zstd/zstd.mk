@@ -110,16 +110,17 @@ THIRD_PARTY_ZSTD_A_CHECKS =					\
 	$(THIRD_PARTY_ZSTD_A_HDRS:%=o/$(MODE)/%.ok)
 
 THIRD_PARTY_ZSTD_A_DIRECTDEPS =					\
-	LIBC_INTRIN						\
-	LIBC_NEXGEN32E						\
-	LIBC_STR						\
-	LIBC_MEM						\
-	LIBC_STDIO						\
-	LIBC_TIME						\
 	LIBC_CALLS						\
-	LIBC_RUNTIME						\
 	LIBC_FMT						\
+	LIBC_INTRIN						\
 	LIBC_LOG						\
+	LIBC_MEM						\
+	LIBC_NEXGEN32E						\
+	LIBC_RUNTIME						\
+	LIBC_STDIO						\
+	LIBC_STR						\
+	LIBC_THREAD						\
+	LIBC_TIME						\
 	LIBC_SYSV
 
 THIRD_PARTY_ZSTD_A_DEPS :=					\
@@ -144,12 +145,20 @@ $(THIRD_PARTY_ZSTD_A_OBJS): private				\
 			-Wframe-larger-than=262144		\
 			-Wno-comment
 
+$(THIRD_PARTY_ZSTD_A_OBJS): private				\
+		CPPFLAGS +=					\
+			-DZSTD_MULTITHREAD
+
 o/$(MODE)/third_party/zstd/zstd.com.dbg:			\
 		$(THIRD_PARTY_ZSTD)				\
 		o/$(MODE)/third_party/zstd/programs/zstdcli.o	\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/third_party/zstd/lib/compress/zstd_lazy.o: private	\
+		CFLAGS +=					\
+			-O3
 
 o/$(MODE)/third_party/zstd/lib/compress/zstd_lazy.o:		\
 		QUOTA += -C64

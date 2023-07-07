@@ -15,12 +15,16 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/ssl_ciphersuites.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/hwcap.h"
+#include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/ssl_ciphersuites.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
@@ -1500,7 +1504,7 @@ const uint16_t *mbedtls_ssl_list_ciphersuites( void )
         const uint16_t *p;
         uint16_t *q;
 
-        if( X86_HAVE( AES ) )
+        if( mbedtls_aes_uses_hardware() )
             p = ciphersuite_preference;
         else
             p = ciphersuite_preference_nehalem;

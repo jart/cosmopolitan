@@ -15,10 +15,14 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/aes.h"
 #include "libc/intrin/bits.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "third_party/mbedtls/aes.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/hwcap.h"
+#include "third_party/mbedtls/aesce.h"
 #include "third_party/mbedtls/aesni.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
@@ -471,6 +475,26 @@ static dontinline void aes_gen_tables( void )
 
 #endif /* MBEDTLS_AES_FEWER_TABLES */
 
+int mbedtls_aes_uses_hardware( void )
+{
+#ifdef __x86_64__
+    return( X86_HAVE( AES ) );
+#else
+    static char once;
+    static char result;
+    if( !once )
+    {
+        unsigned long auxval;
+        auxval = getauxval( AT_HWCAP );
+        result = ( !auxval ||
+                   (auxval & ( HWCAP_ASIMD | HWCAP_AES ) ) ==
+                             ( HWCAP_ASIMD | HWCAP_AES ) );
+        once = 1;
+    }
+    return( result );
+#endif
+}
+
 void mbedtls_aes_init( mbedtls_aes_context *ctx )
 {
     AES_VALIDATE( ctx != NULL );
@@ -535,8 +559,12 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 #endif
     ctx->rk = RK = ctx->buf;
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( X86_HAVE( AES ) )
+    if( mbedtls_aes_uses_hardware() )
         return( mbedtls_aesni_setkey_enc( (unsigned char *) ctx->rk, key, keybits ) );
+#endif
+#if defined(MBEDTLS_AESCE_C) && defined(__aarch64__)
+    if( mbedtls_aes_uses_hardware() )
+        return( mbedtls_aesce_setkey_enc( (unsigned char *) RK, key, keybits ) );
 #endif
     for( i = 0; i < ( keybits >> 5 ); i++ )
     {
@@ -603,7 +631,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
  */
 #if !defined(MBEDTLS_AES_SETKEY_DEC_ALT)
 int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
-                    unsigned int keybits )
+                            unsigned int keybits )
 {
     int i, j, ret;
     mbedtls_aes_context cty;
@@ -625,10 +653,18 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
         goto exit;
     ctx->nr = cty.nr;
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( X86_HAVE( AES ) )
+    if( mbedtls_aes_uses_hardware() )
     {
         mbedtls_aesni_inverse_key( (unsigned char *) ctx->rk,
-                           (const unsigned char *) cty.rk, ctx->nr );
+                                   (const unsigned char *) cty.rk, ctx->nr );
+        goto exit;
+    }
+#endif
+#if defined(MBEDTLS_AESCE_C) && defined(__aarch64__)
+    if( mbedtls_aes_uses_hardware() )
+    {
+        mbedtls_aesce_inverse_key( (unsigned char *) ctx->rk,
+                                   (const unsigned char *) cty.rk, ctx->nr );
         goto exit;
     }
 #endif
@@ -887,8 +923,12 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
     AES_VALIDATE_RET( mode == MBEDTLS_AES_ENCRYPT ||
                       mode == MBEDTLS_AES_DECRYPT );
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( X86_HAVE( AES ) )
+    if( mbedtls_aes_uses_hardware() )
         return( mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
+#endif
+#if defined(MBEDTLS_AESCE_C) && defined(__aarch64__)
+    if( mbedtls_aes_uses_hardware() )
+        return mbedtls_aesce_crypt_ecb( ctx, mode, input, output );
 #endif
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_HAVE_X86)
     if( aes_padlock_ace )

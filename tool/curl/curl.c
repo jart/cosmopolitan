@@ -7,18 +7,18 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/dce.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
+#include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
@@ -28,31 +28,20 @@
 #include "libc/str/slice.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/dt.h"
-#include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/ipproto.h"
-#include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
-#include "libc/sysv/consts/tcp.h"
-#include "libc/time/struct/tm.h"
-#include "libc/x/x.h"
-#include "libc/x/xsigaction.h"
 #include "net/http/http.h"
 #include "net/http/url.h"
 #include "net/https/https.h"
-#include "net/https/sslcache.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/pk.h"
+#include "third_party/mbedtls/iana.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
-#include "third_party/mbedtls/ssl_ticket.h"
-#include "tool/curl/cmd.h"
+#include "third_party/mbedtls/x509.h"
 
 /**
  * @fileoverview Downloads HTTP URL to stdout.
@@ -64,31 +53,67 @@
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-int sock;
+static int sock;
+static int outfd;
+static const char *prog;
+static const char *outpath;
 
-static bool TuneSocket(int fd, int a, int b, int x) {
-  if (!b) return false;
-  return setsockopt(fd, a, b, &x, sizeof(x)) != -1;
+static wontreturn void PrintUsage(int fd, int rc) {
+  tinyprint(fd, "usage: ", prog, " [-iksvV] URL\n", NULL);
+  exit(rc);
 }
 
-static void Write(const void *p, size_t n) {
-  ssize_t rc;
-  rc = write(1, p, n);
-  if (rc == -1 && errno == EPIPE) {
-    close(sock);
-    exit(128 + SIGPIPE);
-  }
-  if (rc != n) {
-    fprintf(stderr, "write failed: %m\n");
+static const char *DescribeErrno(void) {
+  const char *reason;
+  if (!(reason = _strerdoc(errno))) reason = "Unknown error";
+  return reason;
+}
+
+static int GetSslEntropy(void *c, unsigned char *p, size_t n) {
+  if (getrandom(p, n, 0) != n) {
+    perror("getrandom");
     exit(1);
+  }
+  return 0;
+}
+
+static void OnSslDebug(void *ctx, int level, const char *file, int line,
+                       const char *message) {
+  char sline[12];
+  char slevel[12];
+  FormatInt32(sline, line);
+  FormatInt32(slevel, level);
+  tinyprint(2, file, ":", sline, ": (", slevel, ") ", message, "\n", NULL);
+}
+
+static void WriteOutput(const void *p, size_t n) {
+  if (!outfd) {
+    if (outpath) {
+      if ((outfd = creat(outpath, 0644)) <= 0) {
+        perror(outpath);
+        exit(1);
+      }
+    } else {
+      outfd = 1;
+      outpath = "<stdout>";
+    }
+  }
+  ssize_t rc;
+  for (size_t i = 0; i < n; i += rc) {
+    rc = write(outfd, p, n);
+    if (rc <= 0) {
+      perror(outpath);
+      exit(1);
+    }
   }
 }
 
 static int TlsSend(void *c, const unsigned char *p, size_t n) {
   int rc;
-  NOISEF("begin send %zu", n);
-  CHECK_NE(-1, (rc = write(*(int *)c, p, n)));
-  NOISEF("end   send %zu", n);
+  if ((rc = write(*(int *)c, p, n)) == -1) {
+    perror("TlsSend");
+    exit(1);
+  }
   return rc;
 }
 
@@ -100,27 +125,35 @@ static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t o) {
   if (a < b) {
     r = MIN(n, b - a);
     memcpy(p, t + a, r);
-    if ((a += r) == b) a = b = 0;
+    if ((a += r) == b) {
+      a = b = 0;
+    }
     return r;
   }
   v[0].iov_base = p;
   v[0].iov_len = n;
   v[1].iov_base = t;
   v[1].iov_len = sizeof(t);
-  NOISEF("begin recv %zu", n + sizeof(t) - b);
-  CHECK_NE(-1, (r = readv(*(int *)c, v, 2)));
-  NOISEF("end   recv %zu", r);
-  if (r > n) b = r - n;
+  if ((r = readv(*(int *)c, v, 2)) == -1) {
+    perror("TlsRecv");
+    exit(1);
+  }
+  if (r > n) {
+    b = r - n;
+  }
   return MIN(n, r);
 }
 
-static wontreturn void PrintUsage(FILE *f, int rc) {
-  fprintf(f, "usage: %s [-iksvV] URL\n", program_invocation_name);
-  exit(rc);
-}
-
 int _curl(int argc, char *argv[]) {
-  if (!NoDebug()) ShowCrashReports();
+
+  if (!NoDebug()) {
+    ShowCrashReports();
+  }
+
+  prog = argv[0];
+  if (!prog) {
+    prog = "curl";
+  }
 
   /*
    * Read flags.
@@ -131,18 +164,18 @@ int _curl(int argc, char *argv[]) {
     char **p;
   } headers = {0};
   int method = 0;
-  bool authmode = MBEDTLS_SSL_VERIFY_REQUIRED;
+  int authmode = MBEDTLS_SSL_VERIFY_REQUIRED;
+  int ciphersuite = MBEDTLS_SSL_PRESET_SUITEC;
   bool includeheaders = false;
   const char *postdata = NULL;
   const char *agent = "hurl/1.o (https://github.com/jart/cosmopolitan)";
-  __log_level = kLogWarn;
-  while ((opt = getopt(argc, argv, "qiksvVIX:H:A:d:")) != -1) {
+  while ((opt = getopt(argc, argv, "qiksvBVIX:H:A:d:o:")) != -1) {
     switch (opt) {
       case 's':
       case 'q':
         break;
-      case 'v':
-        ++__log_level;
+      case 'o':
+        outpath = optarg;
         break;
       case 'i':
         includeheaders = true;
@@ -161,7 +194,10 @@ int _curl(int argc, char *argv[]) {
         postdata = optarg;
         break;
       case 'X':
-        CHECK((method = GetHttpMethod(optarg, strlen(optarg))));
+        if (!(method = GetHttpMethod(optarg, strlen(optarg)))) {
+          tinyprint(2, prog, ": bad http method: ", optarg, "\n", NULL);
+          exit(1);
+        }
         break;
       case 'V':
         ++mbedtls_debug_threshold;
@@ -169,10 +205,13 @@ int _curl(int argc, char *argv[]) {
       case 'k':
         authmode = MBEDTLS_SSL_VERIFY_NONE;
         break;
+      case 'B':
+        ciphersuite = MBEDTLS_SSL_PRESET_SUITEB;
+        break;
       case 'h':
-        PrintUsage(stdout, EXIT_SUCCESS);
+        PrintUsage(1, 0);
       default:
-        PrintUsage(stderr, EX_USAGE);
+        PrintUsage(2, 1);
     }
   }
 
@@ -180,7 +219,10 @@ int _curl(int argc, char *argv[]) {
    * Get argument.
    */
   const char *urlarg;
-  if (optind == argc) PrintUsage(stderr, EX_USAGE);
+  if (optind == argc) {
+    tinyprint(2, prog, ": missing url\n", NULL);
+    PrintUsage(2, 1);
+  }
   urlarg = argv[optind];
 
   /*
@@ -189,20 +231,20 @@ int _curl(int argc, char *argv[]) {
   struct Url url;
   char *host, *port;
   bool usessl = false;
-  _gc(ParseUrl(urlarg, -1, &url, kUrlPlus));
-  _gc(url.params.p);
+  gc(ParseUrl(urlarg, -1, &url, kUrlPlus));
+  gc(url.params.p);
   if (url.scheme.n) {
     if (url.scheme.n == 5 && !memcasecmp(url.scheme.p, "https", 5)) {
       usessl = true;
     } else if (!(url.scheme.n == 4 && !memcasecmp(url.scheme.p, "http", 4))) {
-      fprintf(stderr, "error: not an http/https url: %s\n", urlarg);
+      tinyprint(2, prog, ": not an http/https url: ", urlarg, "\n", NULL);
       exit(1);
     }
   }
   if (url.host.n) {
-    host = _gc(strndup(url.host.p, url.host.n));
+    host = gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
-      port = _gc(strndup(url.port.p, url.port.n));
+      port = gc(strndup(url.port.p, url.port.n));
     } else {
       port = usessl ? "443" : "80";
     }
@@ -211,7 +253,7 @@ int _curl(int argc, char *argv[]) {
     port = usessl ? "443" : "80";
   }
   if (!IsAcceptableHost(host, -1)) {
-    fprintf(stderr, "error: invalid host: %s\n", urlarg);
+    tinyprint(2, prog, ": invalid host: ", urlarg, "\n", NULL);
     exit(1);
   }
   url.fragment.p = 0, url.fragment.n = 0;
@@ -221,7 +263,7 @@ int _curl(int argc, char *argv[]) {
   url.host.p = 0, url.host.n = 0;
   url.port.p = 0, url.port.n = 0;
   if (!url.path.n || url.path.p[0] != '/') {
-    char *p = _gc(xmalloc(1 + url.path.n));
+    char *p = gc(malloc(1 + url.path.n));
     mempcpy(mempcpy(p, "/", 1), url.path.p, url.path.n);
     url.path.p = p;
     ++url.path.n;
@@ -230,34 +272,87 @@ int _curl(int argc, char *argv[]) {
   /*
    * Create HTTP message.
    */
-  if (!method) method = postdata ? kHttpPost : kHttpGet;
+  if (!method) {
+    if (postdata) {
+      method = kHttpPost;
+    } else {
+      method = kHttpGet;
+    }
+  }
 
   char *request = 0;
   appendf(&request,
           "%s %s HTTP/1.1\r\n"
           "Connection: close\r\n"
           "User-Agent: %s\r\n",
-          kHttpMethod[method], _gc(EncodeUrl(&url, 0)), agent);
+          kHttpMethod[method], gc(EncodeUrl(&url, 0)), agent);
 
-  bool senthost = false, sentcontenttype = false, sentcontentlength = false;
+  bool senthost = false;
+  bool sentcontenttype = false;
+  bool sentcontentlength = false;
   for (int i = 0; i < headers.n; ++i) {
-    appendf(&request, "%s\r\n", headers.p[i]);
-    if (!strncasecmp("Host:", headers.p[i], 5))
+    appends(&request, headers.p[i]);
+    appends(&request, "\r\n");
+    if (!strncasecmp("Host:", headers.p[i], 5)) {
       senthost = true;
-    else if (!strncasecmp("Content-Type:", headers.p[i], 13))
+    } else if (!strncasecmp("Content-Type:", headers.p[i], 13)) {
       sentcontenttype = true;
-    else if (!strncasecmp("Content-Length:", headers.p[i], 15))
+    } else if (!strncasecmp("Content-Length:", headers.p[i], 15)) {
       sentcontentlength = true;
+    }
   }
-  if (!senthost) appendf(&request, "Host: %s:%s\r\n", host, port);
+  if (!senthost) {
+    appends(&request, "Host: ");
+    appends(&request, host);
+    appendw(&request, ':');
+    appends(&request, port);
+    appends(&request, "\r\n");
+  }
   if (postdata) {
-    if (!sentcontenttype)
+    if (!sentcontenttype) {
       appends(&request, "Content-Type: application/x-www-form-urlencoded\r\n");
-    if (!sentcontentlength)
-      appendf(&request, "Content-Length: %d\r\n", strlen(postdata));
+    }
+    if (!sentcontentlength) {
+      char ibuf[21];
+      FormatUint64(ibuf, strlen(postdata));
+      appends(&request, "Content-Length: ");
+      appends(&request, ibuf);
+      appends(&request, "\r\n");
+    }
   }
-  appendf(&request, "\r\n");
-  if (postdata) appends(&request, postdata);
+  appends(&request, "\r\n");
+  if (postdata) {
+    appends(&request, postdata);
+  }
+
+  /*
+   * Perform DNS lookup.
+   */
+  struct addrinfo *addr;
+  struct addrinfo hints = {.ai_family = AF_UNSPEC,
+                           .ai_socktype = SOCK_STREAM,
+                           .ai_protocol = IPPROTO_TCP,
+                           .ai_flags = AI_NUMERICSERV};
+  if (getaddrinfo(host, port, &hints, &addr) != EAI_SUCCESS) {
+    tinyprint(2, prog, ": could not resolve host: ", host, "\n", NULL);
+    exit(1);
+  }
+
+  /*
+   * Connect to server.
+   */
+  int ret;
+  if ((sock = GoodSocket(addr->ai_family, addr->ai_socktype, addr->ai_protocol,
+                         false, &(struct timeval){-60})) == -1) {
+    perror("socket");
+    exit(1);
+  }
+  if (connect(sock, addr->ai_addr, addr->ai_addrlen)) {
+    tinyprint(2, prog, ": failed to connect to ", host, " port ", port, ": ",
+              DescribeErrno(), "\n", NULL);
+    exit(1);
+  }
+  freeaddrinfo(addr);
 
   /*
    * Setup crypto.
@@ -269,67 +364,58 @@ int _curl(int argc, char *argv[]) {
     mbedtls_ssl_init(&ssl);
     mbedtls_ctr_drbg_init(&drbg);
     mbedtls_ssl_config_init(&conf);
-    CHECK_EQ(0, mbedtls_ctr_drbg_seed(&drbg, GetEntropy, 0, "justine", 7));
-    CHECK_EQ(0, mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
-                                            MBEDTLS_SSL_TRANSPORT_STREAM,
-                                            MBEDTLS_SSL_PRESET_DEFAULT));
+    _unassert(!mbedtls_ctr_drbg_seed(&drbg, GetSslEntropy, 0, "justine", 7));
+    _unassert(!mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           ciphersuite));
     mbedtls_ssl_conf_authmode(&conf, authmode);
     mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
     mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &drbg);
-    if (!IsTiny()) mbedtls_ssl_conf_dbg(&conf, TlsDebug, 0);
-    CHECK_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
-    CHECK_EQ(0, mbedtls_ssl_set_hostname(&ssl, host));
-  }
-
-  /*
-   * Perform DNS lookup.
-   */
-  struct addrinfo *addr;
-  struct addrinfo hints = {.ai_family = AF_UNSPEC,
-                           .ai_socktype = SOCK_STREAM,
-                           .ai_protocol = IPPROTO_TCP,
-                           .ai_flags = AI_NUMERICSERV};
-  CHECK_EQ(EAI_SUCCESS, getaddrinfo(host, port, &hints, &addr));
-
-  /*
-   * Connect to server.
-   */
-  int ret;
-  CHECK_NE(-1, (sock = GoodSocket(addr->ai_family, addr->ai_socktype,
-                                  addr->ai_protocol, false,
-                                  &(struct timeval){-60})));
-  CHECK_NE(-1, connect(sock, addr->ai_addr, addr->ai_addrlen));
-  freeaddrinfo(addr);
-  if (usessl) {
+#ifndef NDEBUG
+    mbedtls_ssl_conf_dbg(&conf, OnSslDebug, 0);
+#endif
+    _unassert(!mbedtls_ssl_setup(&ssl, &conf));
+    _unassert(!mbedtls_ssl_set_hostname(&ssl, host));
     mbedtls_ssl_set_bio(&ssl, &sock, TlsSend, 0, TlsRecv);
     if ((ret = mbedtls_ssl_handshake(&ssl))) {
-      TlsDie("ssl handshake", ret);
+      tinyprint(2, prog, ": ssl negotiation with ", host,
+                " failed: ", DescribeSslClientHandshakeError(&ssl, ret), "\n",
+                NULL);
+      exit(1);
     }
   }
 
   /*
    * Send HTTP Message.
    */
-  size_t n;
+  ssize_t rc;
+  size_t i, n;
   n = appendz(request).i;
-  if (usessl) {
-    ret = mbedtls_ssl_write(&ssl, request, n);
-    if (ret != n) TlsDie("ssl write", ret);
-  } else {
-    CHECK_EQ(n, write(sock, request, n));
+  for (i = 0; i < n; i += rc) {
+    if (usessl) {
+      rc = mbedtls_ssl_write(&ssl, request + i, n - i);
+      if (rc <= 0) {
+        tinyprint(2, prog, ": ssl send failed: ", DescribeMbedtlsErrorCode(rc),
+                  "\n", NULL);
+        exit(1);
+      }
+    } else {
+      rc = write(sock, request + i, n - i);
+      if (rc <= 0) {
+        tinyprint(2, prog, ": send failed: ", DescribeErrno(), "\n", NULL);
+        exit(1);
+      }
+    }
   }
-
-  xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
 
   /*
    * Handle response.
    */
   int t;
   char *p;
-  ssize_t rc;
   struct HttpMessage msg;
   struct HttpUnchunker u;
-  size_t g, i, hdrlen, paylen;
+  size_t g, hdrlen, paylen;
   InitHttpMessage(&msg, kHttpResponse);
   for (p = 0, hdrlen = paylen = t = i = n = 0;;) {
     if (i == n) {
@@ -342,25 +428,30 @@ int _curl(int argc, char *argv[]) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           rc = 0;
         } else {
-          TlsDie("ssl read", rc);
+          tinyprint(2, prog,
+                    ": ssl recv failed: ", DescribeMbedtlsErrorCode(rc), "\n",
+                    NULL);
+          exit(1);
         }
       }
     } else {
-      CHECK_NE(-1, (rc = read(sock, p + i, n - i)));
+      if ((rc = read(sock, p + i, n - i)) == -1) {
+        tinyprint(2, prog, ": recv failed: ", DescribeErrno(), "\n", NULL);
+        exit(1);
+      }
     }
     g = rc;
     i += g;
     switch (t) {
       case kHttpClientStateHeaders:
-        CHECK(g);
-        CHECK_NE(-1, (rc = ParseHttpMessage(&msg, p, i)));
+        _unassert(g);
+        if ((rc = ParseHttpMessage(&msg, p, i)) == -1) {
+          tinyprint(2, prog, ": ", host, " sent bad http message\n", NULL);
+          exit(1);
+        }
         if (rc) {
           hdrlen = rc;
           if (100 <= msg.status && msg.status <= 199) {
-            CHECK(!HasHeader(kHttpContentLength) ||
-                  HeaderEqualCase(kHttpContentLength, "0"));
-            CHECK(!HasHeader(kHttpTransferEncoding) ||
-                  HeaderEqualCase(kHttpTransferEncoding, "identity"));
             DestroyHttpMessage(&msg);
             InitHttpMessage(&msg, kHttpResponse);
             memmove(p, p + hdrlen, i - hdrlen);
@@ -368,50 +459,65 @@ int _curl(int argc, char *argv[]) {
             break;
           }
           if (method == kHttpHead || includeheaders) {
-            Write(p, hdrlen);
+            WriteOutput(p, hdrlen);
           }
           if (method == kHttpHead || msg.status == 204 || msg.status == 304) {
             goto Finished;
           }
           if (HasHeader(kHttpTransferEncoding) &&
               !HeaderEqualCase(kHttpTransferEncoding, "identity")) {
-            CHECK(HeaderEqualCase(kHttpTransferEncoding, "chunked"));
+            if (!HeaderEqualCase(kHttpTransferEncoding, "chunked")) {
+              tinyprint(2, prog, ": ", host,
+                        " sent unsupported transfer encoding\n", NULL);
+              exit(1);
+            }
             t = kHttpClientStateBodyChunked;
             memset(&u, 0, sizeof(u));
             goto Chunked;
           } else if (HasHeader(kHttpContentLength)) {
-            CHECK_NE(-1, (rc = ParseContentLength(
-                              HeaderData(kHttpContentLength),
-                              HeaderLength(kHttpContentLength))));
+            if ((rc = ParseContentLength(HeaderData(kHttpContentLength),
+                                         HeaderLength(kHttpContentLength))) ==
+                -1) {
+              tinyprint(2, prog, ": ", host, " sent bad content length\n",
+                        NULL);
+              exit(1);
+            }
             t = kHttpClientStateBodyLengthed;
             paylen = rc;
             if (paylen > i - hdrlen) {
-              Write(p + hdrlen, i - hdrlen);
+              WriteOutput(p + hdrlen, i - hdrlen);
             } else {
-              Write(p + hdrlen, paylen);
+              WriteOutput(p + hdrlen, paylen);
               goto Finished;
             }
           } else {
             t = kHttpClientStateBody;
-            Write(p + hdrlen, i - hdrlen);
+            WriteOutput(p + hdrlen, i - hdrlen);
           }
         }
         break;
       case kHttpClientStateBody:
+        WriteOutput(p + i - g, g);
         if (!g) goto Finished;
-        Write(p + i - g, g);
         break;
       case kHttpClientStateBodyLengthed:
-        CHECK(g);
-        if (i - hdrlen > paylen) g = hdrlen + paylen - (i - g);
-        Write(p + i - g, g);
-        if (i - hdrlen >= paylen) goto Finished;
+        _unassert(g);
+        if (i - hdrlen > paylen) {
+          g = hdrlen + paylen - (i - g);
+        }
+        WriteOutput(p + i - g, g);
+        if (i - hdrlen >= paylen) {
+          goto Finished;
+        }
         break;
       case kHttpClientStateBodyChunked:
       Chunked:
-        CHECK_NE(-1, (rc = Unchunk(&u, p + hdrlen, i - hdrlen, &paylen)));
+        if ((rc = Unchunk(&u, p + hdrlen, i - hdrlen, &paylen)) == -1) {
+          tinyprint(2, prog, ": ", host, " sent bad chunk coding\n", NULL);
+          exit(1);
+        }
         if (rc) {
-          Write(p + hdrlen, paylen);
+          WriteOutput(p + hdrlen, paylen);
           goto Finished;
         }
         break;
@@ -424,7 +530,10 @@ int _curl(int argc, char *argv[]) {
  * Close connection.
  */
 Finished:
-  CHECK_NE(-1, close(sock));
+  if (close(sock)) {
+    tinyprint(2, prog, ": close failed: ", DescribeErrno(), "\n", NULL);
+    exit(1);
+  }
 
   /*
    * Free memory.

@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/sha1.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
@@ -26,7 +27,6 @@
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/sha1.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
@@ -115,30 +115,27 @@ int mbedtls_internal_sha1_process( mbedtls_sha1_context *ctx,
     SHA1_VALIDATE_RET( ctx != NULL );
     SHA1_VALIDATE_RET( (const unsigned char *)data != NULL );
 
-    if( !IsTiny() || X86_NEED( SHA ) )
+    if( X86_HAVE( SHA ) )
     {
-        if( X86_HAVE( SHA ) )
+        if( IsAsan() )
         {
-            if( IsAsan() )
-            {
-                __asan_verify( data, 64 );
-                __asan_verify( ctx, sizeof(*ctx) );
-            }
-            sha1_transform_ni( ctx->state, data, 1 );
-            return( 0 );
+            __asan_verify( data, 64 );
+            __asan_verify( ctx, sizeof(*ctx) );
         }
-        if( X86_HAVE( BMI  ) &&
-            X86_HAVE( BMI2 ) &&
-            X86_HAVE( AVX2 ) )
+        sha1_transform_ni( ctx->state, data, 1 );
+        return( 0 );
+    }
+    if( X86_HAVE( BMI  ) &&
+        X86_HAVE( BMI2 ) &&
+        X86_HAVE( AVX2 ) )
+    {
+        if( IsAsan() )
         {
-            if( IsAsan() )
-            {
-                __asan_verify( data, 64 );
-                __asan_verify( ctx, sizeof(*ctx) );
-            }
-            sha1_transform_avx2( ctx->state, data, 1 );
-            return( 0 );
+            __asan_verify( data, 64 );
+            __asan_verify( ctx, sizeof(*ctx) );
         }
+        sha1_transform_avx2( ctx->state, data, 1 );
+        return( 0 );
     }
 
 #ifdef MBEDTLS_SHA1_SMALLER
@@ -413,7 +410,7 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
 
     if( ilen >= 64 )
     {
-        if( ( !IsTiny() || X86_NEED(SHA) ) && X86_HAVE( SHA ) )
+        if( X86_HAVE( SHA ) )
         {
             if( IsAsan() )
                 __asan_verify( input, ilen );
@@ -421,8 +418,7 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
             input += ROUNDDOWN( ilen, 64 );
             ilen  -= ROUNDDOWN( ilen, 64 );
         }
-        else if( !IsTiny() &&
-                 X86_HAVE( BMI  ) &&
+        else if( X86_HAVE( BMI  ) &&
                  X86_HAVE( BMI2 ) &&
                  X86_HAVE( AVX2 ) )
         {

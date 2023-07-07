@@ -56,6 +56,7 @@
 #include "libc/stdio/temp.h"
 #include "third_party/musl/tempnam.h"    /* fprintf(), stdin, stdout, stderr */
 #include "libc/errno.h"    /* errno */
+#include "libc/runtime/runtime.h"
 #include "libc/assert.h"   /* assert */
 
 #include "third_party/zstd/programs/fileio.h"   /* stdinmark, stdoutmark, ZSTD_EXTENSION */
@@ -853,6 +854,10 @@ typedef enum { zom_compress, zom_decompress, zom_test, zom_bench, zom_train, zom
 
 int main(int argCount, const char* argv[])
 {
+#ifndef NDEBUG
+  ShowCrashReports();
+#endif
+
     int argNb,
         followLinks = 0,
         allowBlockDevices = 0,
