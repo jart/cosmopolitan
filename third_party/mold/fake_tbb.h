@@ -3,6 +3,9 @@
 
 namespace tbb {
 
+    template <typename T>
+    using concurrent_vector = std::vector<T>;
+
     template<typename InputIterator, typename Function>
     void parallel_for_each(InputIterator first, InputIterator last, const Function& f) {
     }

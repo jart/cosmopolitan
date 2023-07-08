@@ -1,9 +1,11 @@
 // clang-format off
 #include "third_party/mold/common.h"
+#include "third_party/mold/fake_tbb.h"
 
 #include "third_party/libcxx/functional"
 #include "third_party/libcxx/iomanip"
 #include "third_party/libcxx/ios"
+#include "third_party/libcxx/numeric"
 
 #ifndef _WIN32
 #include "libc/calls/calls.h"
@@ -27,7 +29,9 @@
 namespace mold {
 
 i64 Counter::get_value() {
-  return values.combine(std::plus());
+  return std::accumulate(values.begin(), values.end(), 0, [](i64 a, const std::pair<Counter*, i64>& b) {
+    return a + b.second;
+  });
 }
 
 void Counter::print() {
