@@ -102,8 +102,11 @@
  */
 #define MBEDTLS_AESNI_C
 #define MBEDTLS_AESCE_C
+
+#ifdef __x86_64__
 #define MBEDTLS_HAVE_X86_64
 #define MBEDTLS_HAVE_SSE2
+#endif
 
 #ifndef TINY
 /*
