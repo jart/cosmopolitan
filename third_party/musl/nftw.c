@@ -35,17 +35,13 @@
 #include "libc/thread/thread.h"
 #include "third_party/musl/ftw.h"
 
+#define PATH_MAXIMUS 4096
+
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
-/* no reason to impose windows limit
-   small enough to fit in stack frame
-   should be changed to use realloc */
-#define PATH_MAX2 2048
-
-/* clang-format off */
+// clang-format off
 
 struct history
 {
@@ -56,7 +52,11 @@ struct history
 	int base;
 };
 
-static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags, struct history *h)
+static int do_nftw(char *path,
+		   int fn(const char *, const struct stat *, int, struct FTW *),
+		   int fd_limit,
+		   int flags,
+		   struct history *h)
 {
 	size_t l = strlen(path), j = l && path[l-1]=='/' ? l-1 : l;
 	struct stat st;
@@ -128,7 +128,7 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 				 && (!de->d_name[1]
 				  || (de->d_name[1]=='.'
 				   && !de->d_name[2]))) continue;
-				if (strlen(de->d_name) >= PATH_MAX2-l) {
+				if (strlen(de->d_name) >= PATH_MAXIMUS-l) {
 					errno = ENAMETOOLONG;
 					closedir(d);
 					return -1;
@@ -157,25 +157,33 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 /**
  * Walks file tree.
  *
+ * @return 0 on success, -1 on error, or non-zero `fn` result
  * @see examples/walk.c for example
  */
-int nftw(const char *path, int (*fn)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags)
+int nftw(const char *dirpath,
+	 int fn(const char *fpath,
+		const struct stat *st,
+		int typeflag,
+		struct FTW *ftwbuf),
+	 int fd_limit,
+	 int flags)
 {
 	int r, cs;
 	size_t l;
-	char pathbuf[PATH_MAX2+1];
+	char pathbuf[PATH_MAXIMUS+1];
 
 	if (fd_limit <= 0) return 0;
 
-	l = strlen(path);
-	if (l > PATH_MAX2) {
+	l = strlen(dirpath);
+	if (l > PATH_MAXIMUS) {
 		errno = ENAMETOOLONG;
 		return -1;
 	}
-	memcpy(pathbuf, path, l+1);
+	memcpy(pathbuf, dirpath, l+1);
 
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
 	r = do_nftw(pathbuf, fn, fd_limit, flags, NULL);
 	pthread_setcancelstate(cs, 0);
+
 	return r;
 }

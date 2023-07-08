@@ -27,6 +27,8 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
+STATIC_YOINK("realloc");
+
 TEST(grow, testNull_hasAllocatingBehavior) {
   void *p = NULL;
   size_t capacity = 0;

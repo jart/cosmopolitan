@@ -129,6 +129,7 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		ape/ape.internal.h		\
 		libc/dce.h			\
 		libc/elf/def.h			\
+		libc/thread/tls.h		\
 		libc/intrin/asancodes.h		\
 		libc/macho.internal.h		\
 		libc/macros.internal.h		\
@@ -158,6 +159,7 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		ape/ape.internal.h		\
 		libc/dce.h			\
 		libc/elf/def.h			\
+		libc/thread/tls.h		\
 		libc/intrin/asancodes.h		\
 		libc/macho.internal.h		\
 		libc/macros.internal.h		\

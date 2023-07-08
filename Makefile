@@ -86,7 +86,7 @@ o/$(MODE):			\
 	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
-ifneq ($(USE_SYSTEM_TOOLCHAIN),)
+ifeq ($(USE_SYSTEM_TOOLCHAIN),)
 .STRICT = 1
 endif
 
@@ -100,6 +100,7 @@ endif
 	r:build/portcosmo.h	\
 	/proc/stat		\
 	rw:/dev/null		\
+	rw:/dev/full		\
 	w:o/stack.log		\
 	/etc/hosts		\
 	~/.runit.psk		\
@@ -148,13 +149,13 @@ include libc/log/log.mk				# │
 include third_party/getopt/getopt.mk		# │
 include third_party/bzip2/bzip2.mk		# │
 include dsp/core/core.mk			# │
+include third_party/musl/musl.mk		# │
 include libc/x/x.mk				# │
 include third_party/stb/stb.mk			# │
 include dsp/scale/scale.mk			# │
 include dsp/mpeg/mpeg.mk			# │
 include dsp/dsp.mk				# │
 include third_party/zlib/gz/gz.mk		# │
-include third_party/musl/musl.mk		# │
 include third_party/intel/intel.mk		# │
 include third_party/aarch64/aarch64.mk		# │
 include libc/libc.mk				#─┘
@@ -436,7 +437,7 @@ aarch64:
 	$(MAKE) m=aarch64
 
 clean:
-	rm -rf o
+	$(RM) -r o
 
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #

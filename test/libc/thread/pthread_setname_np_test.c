@@ -101,6 +101,7 @@ TEST(pthread_setname_np, GetNameOfOtherThread) {
   while (!atomic_load(&sync1)) pthread_yield();
   errno_t e = pthread_getname_np(id, me, sizeof(me));
   if (IsLinux() && e == ENOENT) return;  // bah old kernel
+  if (IsLinux() && e == EACCES) return;  // meh landlock
   ASSERT_EQ(0, e);
   EXPECT_STREQ("justine", me);
   ASSERT_EQ(0, pthread_setname_np(id, "tunney"));

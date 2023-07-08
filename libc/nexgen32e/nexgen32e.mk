@@ -85,9 +85,9 @@ o/$(MODE)/libc/nexgen32e/gclongjmp.o: libc/nexgen32e/gclongjmp.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/nexgen32e/checkstackalign.o: libc/nexgen32e/checkstackalign.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/nexgen32e/blink_xnu_aarch64.o: libc/nexgen32e/blink_xnu_aarch64.S
+o/$(MODE)/libc/nexgen32e/blink_xnu_aarch64.o: libc/nexgen32e/blink_xnu_aarch64.S ape/blink-xnu-aarch64.gz
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/nexgen32e/blink_linux_aarch64.o: libc/nexgen32e/blink_linux_aarch64.S
+o/$(MODE)/libc/nexgen32e/blink_linux_aarch64.o: libc/nexgen32e/blink_linux_aarch64.S ape/blink-linux-aarch64.gz
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_NEXGEN32E_LIBS = $(foreach x,$(LIBC_NEXGEN32E_ARTIFACTS),$($(x)))

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/sysv/consts/at.h"
 
 /**
  * Deletes "file" or empty directory associtaed with name.
@@ -26,5 +27,9 @@
  * @see unlink() and rmdir() which this abstracts
  */
 int remove(const char *name) {
-  return unlink(name) != -1 || (errno == EISDIR && rmdir(name) != -1) ? 0 : -1;
+  int e = errno;
+  if (!unlinkat(AT_FDCWD, name, 0)) return 0;
+  if (errno != EISDIR) return -1;
+  errno = e;
+  return unlinkat(AT_FDCWD, name, AT_REMOVEDIR);
 }

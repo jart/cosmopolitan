@@ -31,19 +31,23 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
-/* clang-format off */
+// clang-format off
 
 /**
  * Walks file tree.
  *
+ * @return 0 on success, -1 on error, or non-zero `fn` result
  * @see examples/walk.c for example
  * @see nftw()
  */
-int ftw(const char *path, int (*fn)(const char *, const struct stat *, int), int fd_limit)
+int ftw(const char *dirpath,
+	int fn(const char *fpath,
+	       const struct stat *st,
+	       int typeflag),
+	int fd_limit)
 {
 	/* The following cast assumes that calling a function with one
 	 * argument more than it needs behaves as expected. This is
 	 * actually undefined, but works on all real-world machines. */
-	return nftw(path, (int (*)())fn, fd_limit, FTW_PHYS);
+	return nftw(dirpath, (int (*)())fn, fd_limit, FTW_PHYS);
 }
