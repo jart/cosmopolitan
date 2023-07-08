@@ -9,6 +9,14 @@
 
 #if defined(__need_malloc_and_calloc) || defined(_LIBCPP_STDLIB_INCLUDE_NEXT)
 
+#include "libc/stdio/rand.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
+#include "libc/mem/alg.h"
+#include "libc/stdio/stdio.h"
+#include "libc/fmt/conv.h"
+
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header
 #endif
@@ -16,8 +24,6 @@
 #if defined(_LIBCPP_STDLIB_INCLUDE_NEXT)
 #undef _LIBCPP_STDLIB_INCLUDE_NEXT
 #endif
-
-#include "libc/isystem/stdlib.h"
 
 #elif !defined(_LIBCPP_STDLIB_H)
 #define _LIBCPP_STDLIB_H
@@ -27,8 +33,6 @@
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header
 #endif
-
-#include "libc/isystem/stdlib.h"
 
 #ifdef __cplusplus
 #include "third_party/libcxx/math.h"

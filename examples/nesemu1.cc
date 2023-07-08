@@ -44,6 +44,7 @@
 #include "libc/x/xsigaction.h"
 #include "libc/zip.internal.h"
 #include "libc/zipos/zipos.internal.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/libcxx/vector"
 #include "tool/viz/lib/knobs.h"
 

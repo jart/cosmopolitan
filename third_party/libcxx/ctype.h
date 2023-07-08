@@ -35,7 +35,7 @@ int toupper(int c);
 #pragma GCC system_header
 #endif
 
-#include "libc/isystem/ctype.h"
+#include "libc/str/str.h"
 
 #ifdef __cplusplus
 

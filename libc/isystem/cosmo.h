@@ -12,6 +12,7 @@
  *
  * Users of the `cosmocc` toolchain can say, for example:
  *
+#include "tool/args/args.h"
  *     #include <cosmo.h>
  *
  *     int main(int argc, char *argv[]) {

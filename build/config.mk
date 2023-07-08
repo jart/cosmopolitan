@@ -6,21 +6,18 @@
 #   - `make`
 #   - Optimized
 #   - Backtraces
-#   - Debuggable
 #   - Syscall tracing
 #   - Function tracing
-#   - Reasonably small
+#   - No GDB debugging
 #
 ifeq ($(MODE),)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
-CONFIG_CCFLAGS += $(BACKTRACES) -O2
+CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
 ifeq ($(MODE), aarch64)
 ENABLE_FTRACE = 1
-CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif
@@ -54,7 +51,6 @@ endif
 #   - Function tracing
 #   - Some optimizations
 #   - Limited Backtraces
-#   - Compiles 28% faster
 #
 ifeq ($(MODE), fastbuild)
 ENABLE_FTRACE = 1

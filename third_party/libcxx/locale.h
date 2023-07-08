@@ -39,6 +39,7 @@ Functions:
 #pragma GCC system_header
 #endif
 
-#include "libc/isystem/locale.h"
+#include "libc/str/locale.h"
+#include "libc/str/unicode.h"
 
 #endif // _LIBCPP_LOCALE_H

@@ -11,9 +11,11 @@
 #define _LIBCPP_CTIME
 
 #include "third_party/libcxx/__config"
-#include "libc/calls/weirdtypes.h"
 #include "libc/calls/calls.h"
-#include "libc/isystem/time.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

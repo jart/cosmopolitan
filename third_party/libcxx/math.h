@@ -19,7 +19,7 @@
 #define _LIBCPP_STDLIB_INCLUDE_NEXT
 #include "third_party/libcxx/stdlib.h"
 
-#include "libc/isystem/math.h"
+#include "libc/math.h"
 
 #ifdef __cplusplus
 

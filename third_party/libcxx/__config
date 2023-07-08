@@ -17,6 +17,7 @@
 #define _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 #define _LIBCPP_HAS_TRIVIAL_MUTEX_DESTRUCTION
 #define _LIBCPP_ENABLE_CXX17_REMOVED_RANDOM_SHUFFLE
+#define _LIBCPP_DEPRECATED_ABI_DISABLE_PAIR_TRIVIAL_COPY_CTOR
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -268,7 +269,7 @@
 #endif
 
 #if !defined(_LIBCPP_LITTLE_ENDIAN) && !defined(_LIBCPP_BIG_ENDIAN)
-#include "libc/isystem/endian.h"
+#include "libc/sysv/consts/endian.h"
 #  if __BYTE_ORDER == __LITTLE_ENDIAN
 #    define _LIBCPP_LITTLE_ENDIAN
 #  elif __BYTE_ORDER == __BIG_ENDIAN
@@ -662,10 +663,13 @@ typedef __char32_t char32_t;
 #if __has_attribute(exclude_from_explicit_instantiation)
 #  define _LIBCPP_EXCLUDE_FROM_EXPLICIT_INSTANTIATION __attribute__ ((__exclude_from_explicit_instantiation__))
 #else
+   // TODO(jart): Why is this so horrible broken with GCC?
+   //             Many definitions end up with always_inline but not inline.
+   //
    // Try to approximate the effect of exclude_from_explicit_instantiation
    // (which is that entities are not assumed to be provided by explicit
    // template instantiations in the dylib) by always inlining those entities.
-#  define _LIBCPP_EXCLUDE_FROM_EXPLICIT_INSTANTIATION _LIBCPP_ALWAYS_INLINE
+#  define _LIBCPP_EXCLUDE_FROM_EXPLICIT_INSTANTIATION // _LIBCPP_ALWAYS_INLINE
 #endif
 
 #ifndef _LIBCPP_HIDE_FROM_ABI_PER_TU
