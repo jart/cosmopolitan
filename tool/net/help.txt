@@ -737,6 +737,10 @@ FUNCTIONS
           Turns ASCII base-16 hexadecimal byte string into binary string,
           case-insensitively. Non-hex characters may not appear in string.
 
+  EncodeBase32(binary:str[, alphabet:str]) → ascii:str
+          Turns binary into ASCII using provided alphabet (using Crockford's
+          base32 encoding by default).
+
   DecodeBase64(ascii:str) → binary:str
           Turns ASCII into binary, in a permissive way that ignores
           characters outside the base64 alphabet, such as whitespace. See

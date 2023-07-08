@@ -605,6 +605,21 @@ int LuaEncodeLatin1(lua_State *L) {
   }
 }
 
+int LuaEncodeBase32(lua_State *L) {
+  char *p;
+  size_t sl, al; // source/output and alphabet lengths
+  const char *s = luaL_checklstring(L, 1, &sl);
+  // use an empty string, as EncodeBase32 provides a default value
+  const char *a = luaL_optlstring(L, 2, "", &al);
+  if (al & (al - 1) || al > 128 || al == 1)
+    return luaL_error(L, "alphabet length is not a power of 2 in range 2..128");
+  if (!(p = EncodeBase32(s, sl, a, al, &sl)))
+    return luaL_error(L, "out of memory");
+  lua_pushlstring(L, p, sl);
+  free(p);
+  return 1;
+}
+
 int LuaEncodeHex(lua_State *L) {
   char *p;
   size_t n;

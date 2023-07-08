@@ -24,6 +24,7 @@ int LuaDecodeBase64(lua_State *);
 int LuaDecodeHex(lua_State *);
 int LuaDecodeLatin1(lua_State *);
 int LuaDeflate(lua_State *);
+int LuaEncodeBase32(lua_State *);
 int LuaEncodeBase64(lua_State *);
 int LuaEncodeHex(lua_State *);
 int LuaEncodeLatin1(lua_State *);
