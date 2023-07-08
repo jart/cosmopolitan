@@ -24,7 +24,7 @@ cat <<EOF | $CC -fPIC -c -o $t/a.o -xc -
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"
 

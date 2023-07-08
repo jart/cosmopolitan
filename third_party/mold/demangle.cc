@@ -2,6 +2,7 @@
 #include "third_party/mold/common.h"
 
 #include "third_party/libcxx/cstdlib"
+#include "libc/stdio/stdio.h"
 
 #ifndef _WIN32
 // MISSING #include <cxxabi.h>
@@ -38,7 +39,7 @@ std::optional<std::string_view> cpp_demangle(std::string_view name) {
 #ifndef _WIN32
   if (name.starts_with("_Z")) {
     int status;
-    char *p = abi::__cxa_demangle(std::string(name).c_str(), buf, &buflen, &status);
+    char *p = __cxa_demangle(std::string(name).c_str(), buf, &buflen, &status);
     if (status == 0) {
       buf = p;
       return p;

@@ -70,8 +70,8 @@ COSMOPOLITAN_C_END_
 #define SIGWINCH  28
 #define SIGXCPU   24
 #define SIGXFSZ   25
+#define SIGBUS    7
 
-#define SIGBUS    SIGBUS
 #define SIGTHR    SIGTHR
 #define SIGCHLD   SIGCHLD
 #define SIGCONT   SIGCONT

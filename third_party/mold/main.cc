@@ -1,6 +1,6 @@
 // clang-format off
 #include "third_party/mold/common.h"
-// MISSING #include "config.h"
+#include "third_party/mold/config.h"
 
 #include "third_party/libcxx/cstring"
 #include "third_party/libcxx/filesystem"
@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
 #endif
@@ -167,10 +167,11 @@ void install_signal_handler() {
 #endif
 
 i64 get_default_thread_count() {
+  // TODO(fzakaria): disable tbb callsites
   // mold doesn't scale well above 32 threads.
-  int n = tbb::global_control::active_value(
-    tbb::global_control::max_allowed_parallelism);
-  return std::min(n, 32);
+  // int n = tbb::global_control::active_value(
+    // tbb::global_control::max_allowed_parallelism);
+  return 1;
 }
 
 } // namespace mold

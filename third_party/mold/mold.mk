@@ -15,12 +15,14 @@ THIRD_PARTY_MOLD_A_DIRECTDEPS =				\
 	THIRD_PARTY_LIBCXX					\
 	THIRD_PARTY_ZSTD					\
 	THIRD_PARTY_XXHASH					\
+	THIRD_PARTY_GETOPT					\
 	THIRD_PARTY_ZLIB
 
 THIRD_PARTY_MOLD_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_MOLD_A_DIRECTDEPS),$($(x))))
 
 # https://github.com/rui314/mold/blob/d4d93d7fb72dd19c44aafa4dd5397e35787d33ad/CMakeLists.txt#L62
+# TODO(fzakaria): figure out solution for -Wno-error=class-memaccess 
 $(THIRD_PARTY_MOLD_OBJS): private			\
 		CPPFLAGS +=							\
 			-std=gnu++20					\
