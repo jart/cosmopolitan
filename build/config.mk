@@ -8,16 +8,17 @@
 #   - Backtraces
 #   - Syscall tracing
 #   - Function tracing
-#   - No GDB debugging
 #
 ifeq ($(MODE),)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 TARGET_ARCH ?= -msse3
 endif
 ifeq ($(MODE), aarch64)
 ENABLE_FTRACE = 1
+CONFIG_OFLAGS ?= -g
 CONFIG_CCFLAGS += -O2 $(BACKTRACES)
 CONFIG_CPPFLAGS += -DSYSDEBUG
 endif

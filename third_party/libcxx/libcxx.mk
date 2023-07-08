@@ -75,6 +75,7 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/execution				\
 	third_party/libcxx/experimental/__config		\
 	third_party/libcxx/filesystem				\
+	third_party/libcxx/filesystem_common.hh			\
 	third_party/libcxx/forward_list				\
 	third_party/libcxx/fstream				\
 	third_party/libcxx/functional				\
@@ -144,6 +145,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/chrono.cc				\
 	third_party/libcxx/condition_variable.cc		\
 	third_party/libcxx/condition_variable_destructor.cc	\
+	third_party/libcxx/directory_iterator.cc		\
 	third_party/libcxx/exception.cc				\
 	third_party/libcxx/functional.cc			\
 	third_party/libcxx/future.cc				\
@@ -157,6 +159,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/memory.cc				\
 	third_party/libcxx/mutex.cc				\
 	third_party/libcxx/new.cc				\
+	third_party/libcxx/operations.cc			\
 	third_party/libcxx/optional.cc				\
 	third_party/libcxx/random.cc				\
 	third_party/libcxx/regex.cc				\
@@ -188,6 +191,7 @@ THIRD_PARTY_LIBCXX_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
+	LIBC_SOCK						\
 	LIBC_STR						\
 	LIBC_SYSV						\
 	LIBC_TIME						\

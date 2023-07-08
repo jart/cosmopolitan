@@ -142,13 +142,10 @@ include libc/thread/thread.mk			# │  You can finally call malloc()
 include libc/zipos/zipos.mk			# │
 include libc/stdio/stdio.mk			# │
 include libc/time/time.mk			# │
-include third_party/libcxx/libcxx.mk		# │
 include net/net.mk				# │
 include third_party/vqsort/vqsort.mk		# │
 include libc/log/log.mk				# │
 include third_party/getopt/getopt.mk		# │
-include third_party/ggml/ggml.mk		# │
-include third_party/radpajama/radpajama.mk	# │
 include third_party/bzip2/bzip2.mk		# │
 include dsp/core/core.mk			# │
 include libc/x/x.mk				# │
@@ -166,6 +163,9 @@ include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
 include libc/dns/dns.mk				# │  You can communicate with the network
 include net/http/http.mk			# │
 include third_party/mbedtls/mbedtls.mk		# │
+include third_party/libcxx/libcxx.mk		# │
+include third_party/ggml/ggml.mk		# │
+include third_party/radpajama/radpajama.mk	# │
 include net/https/https.mk			# │
 include third_party/regex/regex.mk		#─┘
 include third_party/tidy/tidy.mk
