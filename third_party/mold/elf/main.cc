@@ -1,9 +1,8 @@
 // clang-format off
 #include "third_party/mold/elf/mold.h"
-// MISSING #include "../common/archive-file.h"
-// MISSING #include "../common/cmdline.h"
-// MISSING #include "../common/output-file.h"
-
+#include "third_party/mold/archive-file.h"
+#include "third_party/mold/cmdline.h"
+#include "third_party/mold/output-file.h"
 #include "third_party/libcxx/cstring"
 #include "third_party/libcxx/functional"
 #include "third_party/libcxx/iomanip"

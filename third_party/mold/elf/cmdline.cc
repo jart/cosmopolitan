@@ -1,6 +1,6 @@
 // clang-format off
 #include "third_party/mold/elf/mold.h"
-// MISSING #include "../common/cmdline.h"
+#include "third_party/mold/cmdline.h"
 
 #include "third_party/libcxx/regex"
 #include "third_party/libcxx/sstream"
@@ -36,7 +36,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
 #endif

@@ -5,9 +5,10 @@
 // For more info, read
 // https://engineering.fb.com/2018/12/13/data-infrastructure/hyperloglog
 
+// TODO(fzakaria): changed from libcxx because pow symbol wasn't present.
 #include "third_party/mold/common.h"
 
-#include "third_party/libcxx/cmath"
+#include "libc/math.h"
 
 namespace mold {
 

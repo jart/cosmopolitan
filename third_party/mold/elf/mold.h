@@ -2,7 +2,7 @@
 #pragma once
 
 #include "third_party/mold/elf/elf.h"
-// MISSING #include "../common/common.h"
+#include "third_party/mold/common.h"
 
 #include "third_party/libcxx/atomic"
 #include "third_party/libcxx/bitset"
@@ -15,16 +15,19 @@
 #include "third_party/libcxx/memory"
 #include "third_party/libcxx/mutex"
 #include "third_party/libcxx/optional"
-// MISSING #include <span>
+#include "third_party/libcxx/span"
 #include "third_party/libcxx/sstream"
 #include "third_party/libcxx/string"
 #include "third_party/libcxx/string_view"
+
+#include "third_party/mold/fake_tbb.h"
 // MISSING #include <tbb/concurrent_hash_map.h>
 // MISSING #include <tbb/concurrent_unordered_map.h>
 // MISSING #include <tbb/concurrent_vector.h>
 // MISSING #include <tbb/enumerable_thread_specific.h>
 // MISSING #include <tbb/spin_mutex.h>
 // MISSING #include <tbb/task_group.h>
+
 #include "third_party/libcxx/type_traits"
 #include "third_party/libcxx/unordered_map"
 #include "third_party/libcxx/unordered_set"
@@ -42,7 +45,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/time/time.h"
-#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
 #endif

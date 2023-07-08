@@ -6,7 +6,7 @@ PKGS += THIRD_PARTY_MOLD
 THIRD_PARTY_MOLD_ARTIFACTS += THIRD_PARTY_MOLD_A
 THIRD_PARTY_MOLD = $(THIRD_PARTY_MOLD_A_DEPS) $(THIRD_PARTY_MOLD_A)
 THIRD_PARTY_MOLD_A = o/$(MODE)/third_party/mold/mold.a
-THIRD_PARTY_MOLD_FILES := $(wildcard third_party/mold/*)
+THIRD_PARTY_MOLD_FILES := $(wildcard third_party/mold/*) $(wildcard third_party/mold/elf/*)
 THIRD_PARTY_MOLD_HDRS = $(filter %.h,$(THIRD_PARTY_MOLD_FILES))
 THIRD_PARTY_MOLD_SRCS = $(filter %.cc,$(THIRD_PARTY_MOLD_FILES))
 THIRD_PARTY_MOLD_OBJS = $(THIRD_PARTY_MOLD_SRCS:%.cc=o/$(MODE)/%.o)
@@ -16,6 +16,9 @@ THIRD_PARTY_MOLD_A_DIRECTDEPS =				\
 	LIBC_STR							\
 	LIBC_INTRIN                 		\
 	LIBC_STDIO							\
+	LIBC_CALLS							\
+	LIBC_TINYMATH						\
+	LIBC_SYSV							\
 	LIBC_RUNTIME              			\
 	THIRD_PARTY_ZSTD					\
 	THIRD_PARTY_XXHASH					\
@@ -35,6 +38,8 @@ $(THIRD_PARTY_MOLD_OBJS): private			\
 			-fno-asynchronous-unwind-tables \
 			-Wno-sign-compare				\
 			-Wno-unused-function			\
+			-DMOLD_X86_64=1					\
+			-DMOLD_TARGET=X86_64
 
 THIRD_PARTY_MOLD_CHECKS =				\
 	$(THIRD_PARTY_MOLD_A).pkg			\
