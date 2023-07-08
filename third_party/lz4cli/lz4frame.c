@@ -82,8 +82,7 @@ You can contact the author at :
 #define LZ4_HC_STATIC_LINKING_ONLY
 #include "third_party/lz4cli/lz4hc.h"
 #define XXH_STATIC_LINKING_ONLY
-#include "third_party/lz4cli/xxhash.h"
-
+#include "third_party/xxhash/xxhash.h"
 
 #define LZ4F_STATIC_ASSERT(c)    { enum { LZ4F_static_assert = 1/(int)(!!(c)) }; }   /* use only *after* variable declarations */
 

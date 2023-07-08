@@ -46,7 +46,7 @@
 #include "libc/runtime/runtime.h"      /* assert */
 
 #include "third_party/lz4cli/datagen.h"     /* RDG_genBuffer */
-#include "third_party/lz4cli/xxhash.h"
+#include "third_party/xxhash/xxhash.h"
 
 
 #include "third_party/lz4cli/lz4.h"
