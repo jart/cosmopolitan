@@ -7,6 +7,7 @@ LIBC_VGA_ARTIFACTS += LIBC_VGA_A
 LIBC_VGA_A = o/$(MODE)/libc/vga/vga.a
 LIBC_VGA_A_FILES := $(wildcard libc/vga/*)
 LIBC_VGA_A_HDRS = $(filter %.h,$(LIBC_VGA_A_FILES))
+LIBC_VGA_A_INCS = $(filter %.inc,$(LIBC_VGA_A_FILES))
 LIBC_VGA_A_SRCS_S = $(filter %.S,$(LIBC_VGA_A_FILES))
 LIBC_VGA_A_SRCS_C = $(filter %.c,$(LIBC_VGA_A_FILES))
 
@@ -47,6 +48,7 @@ $(LIBC_VGA_A).pkg:					\
 LIBC_VGA_LIBS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)))
 LIBC_VGA_SRCS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_SRCS))
 LIBC_VGA_HDRS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_HDRS))
+LIBC_VGA_INCS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_INCS))
 LIBC_VGA_BINS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_BINS))
 LIBC_VGA_CHECKS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_CHECKS))
 LIBC_VGA_OBJS = $(foreach x,$(LIBC_VGA_ARTIFACTS),$($(x)_OBJS))

@@ -1,3 +1,4 @@
+// clang-format off
 /*
 ** 2001 September 15
 **
@@ -4399,7 +4400,7 @@ static void rtreecheck(
 
 /* Conditionally include the geopoly code */
 #ifdef SQLITE_ENABLE_GEOPOLY
-# include "geopoly.inc"
+#include "third_party/sqlite3/geopoly.inc"
 #endif
 
 /*

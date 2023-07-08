@@ -25,9 +25,9 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/math.h"
 #include "libc/tinymath/internal.h"
 #include "third_party/intel/smmintrin.internal.h"
-#include "third_party/libcxx/math.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\

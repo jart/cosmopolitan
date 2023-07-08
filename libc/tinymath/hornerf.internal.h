@@ -11,7 +11,6 @@ COSMOPOLITAN_C_START_
 #endif
 
 #include "libc/tinymath/horner_wrap.internal.h"
-#include "third_party/libcxx/math.h"
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -2,10 +2,11 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/math.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
-#include "third_party/libcxx/math.h"
 
 /**
  * @fileoverview demo code borrowed from Rosetta Code.

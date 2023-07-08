@@ -12,6 +12,9 @@ THIRD_PARTY_ZSTD_A_INCS = $(filter %.inc,$(THIRD_PARTY_ZSTD_A_FILES))
 THIRD_PARTY_ZSTD_A_OBJS = $(THIRD_PARTY_ZSTD_A_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_ZSTD_A_FILES :=					\
+third_party/zstd/zstd.h						\
+third_party/zstd/zdict.h					\
+third_party/zstd/zstd_errors.h					\
 third_party/zstd/lib/common/allocations.h			\
 third_party/zstd/lib/common/bits.h				\
 third_party/zstd/lib/common/bitstream.h				\
@@ -166,9 +169,11 @@ o/$(MODE)/third_party/zstd/lib/compress/zstd_lazy.o:		\
 THIRD_PARTY_ZSTD_BINS = $(THIRD_PARTY_ZSTD_COMS) $(THIRD_PARTY_ZSTD_COMS:%=%.dbg)
 THIRD_PARTY_ZSTD_COMS = o/$(MODE)/third_party/zstd/zstd.com
 THIRD_PARTY_ZSTD_LIBS = $(THIRD_PARTY_ZSTD_A)
-
-THIRD_PARTY_ZSTD_CHECKS = $(foreach x,$(THIRD_PARTY_ZSTD_ARTIFACTS),$($(x)_CHECKS))
+THIRD_PARTY_ZSTD_SRCS = $(foreach x,$(THIRD_PARTY_ZSTD_ARTIFACTS),$($(x)_SRCS))
+THIRD_PARTY_ZSTD_INCS = $(foreach x,$(THIRD_PARTY_ZSTD_ARTIFACTS),$($(x)_INCS))
+THIRD_PARTY_ZSTD_HDRS = $(foreach x,$(THIRD_PARTY_ZSTD_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_ZSTD_OBJS = $(foreach x,$(THIRD_PARTY_ZSTD_ARTIFACTS),$($(x)_OBJS))
+THIRD_PARTY_ZSTD_CHECKS = $(foreach x,$(THIRD_PARTY_ZSTD_ARTIFACTS),$($(x)_CHECKS))
 $(THIRD_PARTY_ZSTD_OBJS): $(BUILD_FILES) third_party/zstd/zstd.mk
 
 .PHONY: o/$(MODE)/third_party/zstd

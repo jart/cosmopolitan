@@ -26,7 +26,7 @@
 #include "third_party/zstd/lib/decompress/zstd_ddict.h"
 
 #if defined(ZSTD_LEGACY_SUPPORT) && (ZSTD_LEGACY_SUPPORT>=1)
-#include "third_party/zstd/lib/legacy/zstd_legacy.h"
+//#include "third_party/zstd/lib/legacy/zstd_legacy.h"
 #endif
 
 

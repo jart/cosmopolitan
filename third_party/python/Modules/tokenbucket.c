@@ -37,7 +37,6 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/timer.h"
 #include "net/http/tokenbucket.h"
-#include "third_party/libcxx/math.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/intrcheck.h"
