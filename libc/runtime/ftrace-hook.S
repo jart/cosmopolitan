@@ -33,10 +33,11 @@ ftrace_hook:
 	and	$-16,%rsp
 	sub	$256,%rsp
 	push	%rax
+	push	%rbx
+	push	%rcx
+	push	%rdx
 	push	%rdi
 	push	%rsi
-	push	%rdx
-	push	%rcx
 	push	%r8
 	push	%r9
 	push	%r10
@@ -56,10 +57,11 @@ ftrace_hook:
 	pop	%r10
 	pop	%r9
 	pop	%r8
-	pop	%rcx
-	pop	%rdx
 	pop	%rsi
 	pop	%rdi
+	pop	%rdx
+	pop	%rcx
+	pop	%rbx
 	pop	%rax
 	leave
 1:	ret
