@@ -22,10 +22,13 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/ffs.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 #include "third_party/chibicc/kw.h"
+
+#define IMPLICIT_FUNCTIONS
 
 typedef struct InitDesg InitDesg;
 typedef struct Initializer Initializer;
@@ -665,7 +668,7 @@ static Type *declspec(Token **rest, Token *tok, VarAttr *attr) {
     INT128 = 1 << 19,
   };
   unsigned char kw;
-  Type *ty = copy_type(ty_int);
+  Type *ty = copy_type(ty_long);  // [jart] use long as implicit type
   int counter = 0;
   bool is_const = false;
   bool is_atomic = false;
@@ -3508,14 +3511,17 @@ static Node *primary(Token **rest, Token *tok) {
   if (tok->kind == TK_IDENT) {
     // Variable or enum constant
     VarScope *sc = find_var(tok);
-    *rest = tok->next;
-#ifdef IMPLICIT_FUNCTIONS
+    // [jart] support implicit function declarations with `long` type
     if (!sc && EQUAL(tok->next, "(")) {
       Type *ty = func_type(ty_long);
       ty->is_variadic = true;
-      return new_var_node(new_gvar(strndup(tok->loc, tok->len), ty), tok);
+      Obj *fn = new_var(strndup(tok->loc, tok->len), ty);
+      fn->next = globals;
+      fn->is_function = true;
+      globals = fn;
+      sc = find_var(tok);
     }
-#endif
+    *rest = tok->next;
     // For "static inline" function
     if (sc && sc->var && sc->var->is_function) {
       if (current_fn) {

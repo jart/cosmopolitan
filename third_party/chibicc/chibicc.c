@@ -689,7 +689,9 @@ static void OnCtrlC(int sig, siginfo_t *si, void *ctx) {
 }
 
 int chibicc(int argc, char **argv) {
+#ifndef NDEBUG
   ShowCrashReports();
+#endif
   atexit(chibicc_cleanup);
   sigaction(SIGINT, &(struct sigaction){.sa_sigaction = OnCtrlC}, NULL);
   for (int i = 1; i < argc; i++) {
