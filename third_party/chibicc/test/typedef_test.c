@@ -31,7 +31,7 @@ int main() {
            x.a = 2;
            x.a;
          }));
-  ASSERT(4, ({
+  ASSERT(8, ({  // [jart] implicit long
            typedef t;
            t x;
            sizeof(x);
