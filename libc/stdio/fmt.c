@@ -727,7 +727,6 @@ haveinc:
  *   - `%e`   double (expo formatting)
  *   - `%f`   double (ugly formatting)
  *   - `%a`   double (hex formatting)
- *   - `%Lg`  long double
  *
  * Size Modifiers
  *
@@ -738,6 +737,7 @@ haveinc:
  *   - `%lx`  unsigned long (64-bit hexadecimal)
  *   - `%jd`  intmax_t (64-bit)
  *   - `%jjd` int128_t (128-bit)
+ *   - `%Lg`  long double
  *
  * Width Modifiers
  *
@@ -1251,19 +1251,23 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         __FMT_PUT(*s++);
         if (prec || (flags & FLAGS_HASH)) __FMT_PUT('.');
         while (--prec >= 0) {
-          if ((c = *s))
+          if ((c = *s)) {
             s++;
-          else
+          } else {
             c = '0';
+          }
           __FMT_PUT(c);
         }
         __FMT_PUT(d);
         if (decpt < 0) {
           __FMT_PUT('-');
           decpt = -decpt;
-        } else
+        } else {
           __FMT_PUT('+');
-        for (c = 2, k = 10; 10 * k <= decpt; c++, k *= 10) donothing;
+        }
+        for (c = 2, k = 10; 10 * k <= decpt; c++, k *= 10) {
+          donothing;
+        }
         for (;;) {
           i1 = decpt / k;
           __FMT_PUT(i1 + '0');
@@ -1271,7 +1275,9 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           decpt -= i1 * k;
           decpt *= 10;
         }
-        while (--width >= 0) __FMT_PUT(' ');
+        while (--width >= 0) {
+          __FMT_PUT(' ');
+        }
         freedtoa(s0);
         break;
 
@@ -1321,7 +1327,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
         if (sign) __FMT_PUT(sign);
         __FMT_PUT('0');
-        __FMT_PUT(alphabet[17]);
+        __FMT_PUT(alphabet[17]);  // x or X
         if ((flags & FLAGS_ZEROPAD) && width > 0 && !(flags & FLAGS_LEFT)) {
           do __FMT_PUT('0');
           while (--width > 0);
@@ -1329,29 +1335,31 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         i1 = prec1 & 7;
         k = prec1 >> 3;
         __FMT_PUT(alphabet[(fpb.bits[k] >> 4 * i1) & 0xf]);
-        if (prec1 > 0 || (flags & FLAGS_HASH)) __FMT_PUT('.');
-        if (prec1 > 0) {
-          prec -= prec1;
-          while (prec1 > 0) {
-            if (--i1 < 0) {
-              if (--k < 0) break;
-              i1 = 7;
-            }
-            __FMT_PUT(alphabet[(fpb.bits[k] >> 4 * i1) & 0xf]);
-            --prec1;
-          }
-          if ((flags & FLAGS_HASH) && prec > 0) {
-            do __FMT_PUT(0);
-            while (--prec > 0);
-          }
+        if (prec1 > 0 || prec > 0) {
+          __FMT_PUT('.');
         }
-        __FMT_PUT(alphabet[16]);
+        while (prec1 > 0) {
+          if (--i1 < 0) {
+            if (--k < 0) break;
+            i1 = 7;
+          }
+          __FMT_PUT(alphabet[(fpb.bits[k] >> 4 * i1) & 0xf]);
+          --prec1;
+          --prec;
+        }
+        while (prec-- > 0) {
+          __FMT_PUT('0');
+        }
+        __FMT_PUT(alphabet[16]);  // p or P
         if (bex < 0) {
           __FMT_PUT('-');
           bex = -bex;
-        } else
+        } else {
           __FMT_PUT('+');
-        for (c = 1; 10 * c <= bex; c *= 10) donothing;
+        }
+        for (c = 1; 10 * c <= bex; c *= 10) {
+          donothing;
+        }
         for (;;) {
           i1 = bex / c;
           __FMT_PUT('0' + i1);
@@ -1359,7 +1367,9 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           bex -= i1 * c;
           bex *= 10;
         }
-        while (--width >= 0) __FMT_PUT(' ');
+        while (--width >= 0) {
+          __FMT_PUT(' ');
+        }
         break;
 
       case '%':

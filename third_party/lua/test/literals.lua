@@ -25,7 +25,7 @@ assert("\099" == '\99')
 assert("\099\n" == 'c\10')
 assert('\0\0\0alo' == '\0' .. '\0\0' .. 'alo')
 
-assert(010 .. 020 .. -030 == "1020-30")
+assert(10 .. 20 .. -30 == "1020-30")  -- [jart] octal extension
 
 -- hexadecimal escapes
 assert("\x00\x05\x10\x1f\x3C\xfF\xe8" == "\0\5\16\31\60\255\232")

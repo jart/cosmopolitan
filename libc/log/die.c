@@ -58,7 +58,7 @@ relegated wontreturn void __die(void) {
     _Exitr(77);
   } else if (owner == me) {
     kprintf("die failed while dying\n");
-    _Exitr(78);
+    _Exitr(79);
   } else {
     _Exit1(79);
   }

@@ -18,7 +18,6 @@ extern char *optarg;
 extern int optind, opterr, optopt, optreset;
 
 int getopt(int, char *const[], const char *) paramsnonnull();
-int getsubopt(char **, char *const *, char **) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

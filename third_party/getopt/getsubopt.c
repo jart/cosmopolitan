@@ -29,7 +29,6 @@
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "third_party/getopt/getopt.internal.h"
 // clang-format off
 
 /*

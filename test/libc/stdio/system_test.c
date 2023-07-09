@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -29,6 +30,7 @@
 #include "libc/x/x.h"
 #ifdef __x86_64__
 
+STATIC_YOINK("_tr");
 STATIC_YOINK("glob");
 
 char testlib_enable_tmp_setup_teardown;
@@ -219,8 +221,28 @@ TEST(system, allowsLoneCloseCurlyBrace) {
 
 TEST(system, glob) {
   testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_EQ(0, WEXITSTATUS(system("./ec*.com aaa")));
-  ASSERT_EQ(0, WEXITSTATUS(system("./ec?o.com aaa")));
+  ASSERT_EQ(0, system("./ec*.com aaa"));
+  ASSERT_EQ(0, system("./ec?o.com aaa"));
+}
+
+TEST(system, env) {
+  ASSERT_EQ(0, system("env - a=b c=d >res"));
+  ASSERT_STREQ("a=b\nc=d\n", gc(xslurp("res", 0)));
+  ASSERT_EQ(0, system("env -i -0 a=b c=d >res"));
+  ASSERT_STREQN("a=b\0c=d\0", gc(xslurp("res", 0)), 8);
+  ASSERT_EQ(0, system("env -i0 a=b c=d >res"));
+  ASSERT_STREQN("a=b\0c=d\0", gc(xslurp("res", 0)), 8);
+  ASSERT_EQ(0, system("env - a=b c=d -u a z=g >res"));
+  ASSERT_STREQ("c=d\nz=g\n", gc(xslurp("res", 0)));
+  ASSERT_EQ(0, system("env - a=b c=d -ua z=g >res"));
+  ASSERT_STREQ("c=d\nz=g\n", gc(xslurp("res", 0)));
+  ASSERT_EQ(0, system("env - dope='show' >res"));
+  ASSERT_STREQ("dope=show\n", gc(xslurp("res", 0)));
+}
+
+TEST(system, tr) {
+  ASSERT_EQ(0, system("echo hello | tr a-z A-Z >res"));
+  ASSERT_STREQ("HELLO\n", gc(xslurp("res", 0)));
 }
 
 #endif /* __x86_64__ */

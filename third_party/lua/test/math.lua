@@ -401,7 +401,7 @@ assert(tonumber("-0x"..string.rep("f", (intbits//4))) == 1)
 
 -- testing 'tonumber' with base
 assert(tonumber('  001010  ', 2) == 10)
-assert(tonumber('  001010  ', 10) == 001010)
+assert(tonumber('  001010  ', 10) == 1010)  -- [jart] octal extension fix
 assert(tonumber('  -1010  ', 2) == -10)
 assert(tonumber('10', 36) == 36)
 assert(tonumber('  -10  ', 36) == -36)

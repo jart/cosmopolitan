@@ -57,7 +57,7 @@ Lua 5.4.3 (MIT License)\\n\
 Copyright 1994–2021 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-STATIC_STACK_SIZE(0x40000);
+STATIC_STACK_SIZE(0x80000);
 
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
@@ -71,7 +71,6 @@ STATIC_STACK_SIZE(0x40000);
 
 
 static lua_State *globalL = NULL;
-static const char *progname = LUA_PROGNAME;
 
 
 static bool lua_stdin_is_tty(void) {
@@ -80,7 +79,7 @@ static bool lua_stdin_is_tty(void) {
 
 
 static void print_usage (const char *badoption) {
-  lua_writestringerror("%s: ", progname);
+  lua_writestringerror("%s: ", lua_progname);
   if (badoption[1] == 'e' || badoption[1] == 'l')
     lua_writestringerror("'%s' needs argument\n", badoption);
   else
@@ -97,7 +96,7 @@ static void print_usage (const char *badoption) {
   "  --       stop handling options\n"
   "  -        stop handling options and execute stdin\n"
   ,
-  progname);
+  lua_progname);
 }
 
 
@@ -304,9 +303,9 @@ static int handle_luainit (lua_State *L) {
 */
 static void doREPL (lua_State *L) {
   int status;
-  const char *oldprogname = progname;
-  progname = NULL;  /* no 'progname' on errors in interactive mode */
-  lua_initrepl(L, LUA_PROGNAME);
+  const char *oldprogname = lua_progname;
+  lua_progname = NULL;  /* no 'progname' on errors in interactive mode */
+  lua_initrepl(L);
   for (;;) {
     if (lua_repl_isterminal)
       linenoiseEnableRawMode(0);
@@ -325,7 +324,7 @@ static void doREPL (lua_State *L) {
       lua_pushfstring(L, "read error: %s", strerror(errno));
       lua_report(L, status);
       lua_freerepl();
-      progname = oldprogname;
+      lua_progname = oldprogname;
       return;
     }
     if (status == LUA_OK)
@@ -338,7 +337,7 @@ static void doREPL (lua_State *L) {
   }
   lua_freerepl();
   lua_settop(L, 0);  /* clear stack */
-  progname = oldprogname;
+  lua_progname = oldprogname;
 }
 
 /* }================================================================== */
@@ -354,7 +353,8 @@ static int pmain (lua_State *L) {
   int script;
   int args = collectargs(argv, &script);
   luaL_checkversion(L);  /* check that interpreter has correct version */
-  if (argv[0] && argv[0][0]) progname = argv[0];
+  lua_progname = LUA_PROGNAME;
+  if (argv[0] && argv[0][0]) lua_progname = argv[0];
   if (args == has_error) {  /* bad arg? */
     print_usage(argv[script]);  /* 'script' has index of bad arg. */
     return 0;

@@ -20,7 +20,7 @@
 #include "libc/errno.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 
 static int rmrf_callback(const char *fpath,      //
                          const struct stat *st,  //

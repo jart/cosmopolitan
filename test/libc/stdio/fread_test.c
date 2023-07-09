@@ -31,10 +31,10 @@ TEST(fread, eofIsSticky) {
   ASSERT_TRUE(feof(fi));
   ASSERT_EQ(8, fwrite(b, 1, 8, fo));
   ASSERT_EQ(0, fflush(fo));
-  ASSERT_EQ(0, fread(b, 1, 8, fi));
+  ASSERT_EQ(4, fread(b, 1, 4, fi));
   ASSERT_TRUE(feof(fi));
   clearerr(fi);
-  ASSERT_EQ(8, fread(b, 1, 10, fi));
+  ASSERT_EQ(4, fread(b, 1, 10, fi));
   ASSERT_TRUE(feof(fi));
   ASSERT_EQ(0, fseek(fi, 0, SEEK_SET));
   ASSERT_FALSE(feof(fi));

@@ -31,6 +31,7 @@ ftrace_hook:
 	push	%rbp
 	mov	%rsp,%rbp
 	and	$-16,%rsp
+	sub	$256,%rsp
 	push	%rax
 	push	%rdi
 	push	%rsi
@@ -44,7 +45,9 @@ ftrace_hook:
 	push	%r13
 	push	%r14
 	push	%r15
+	call	__xmm_save
 	call	ftracer
+	call	__xmm_load
 	pop	%r15
 	pop	%r14
 	pop	%r13
@@ -67,7 +70,7 @@ ftrace_hook:
 	ldr	w16,[x16,#:lo12:__ftrace]
 	cmp	w16,0
 	ble	1f
-	stp	x29,x30,[sp,-256]!
+	stp	x29,x30,[sp,-384]!
 	mov	x29,sp
 
 	stp	x0,x1,[sp,16]
@@ -84,6 +87,10 @@ ftrace_hook:
 	stp	x24,x25,[sp,208]
 	stp	x26,x27,[sp,224]
 	str	x28,[sp,240]
+	stp	q0,q1,[sp,256]
+	stp	q2,q3,[sp,288]
+	stp	q4,q5,[sp,320]
+	stp	q6,q7,[sp,352]
 
 	bl	ftracer
 
@@ -101,8 +108,12 @@ ftrace_hook:
 	ldp	x24,x25,[sp,208]
 	ldp	x26,x27,[sp,224]
 	ldr	x28,[sp,240]
+	ldp	q0,q1,[sp,256]
+	ldp	q2,q3,[sp,288]
+	ldp	q4,q5,[sp,320]
+	ldp	q6,q7,[sp,352]
 
-	ldp	x29,x30,[sp],256
+	ldp	x29,x30,[sp],384
 1:	ret
 
 #endif /* __x86_64__ */

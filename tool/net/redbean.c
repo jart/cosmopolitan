@@ -140,7 +140,7 @@
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
 
-STATIC_STACK_SIZE(0x40000);
+STATIC_STACK_SIZE(0x80000);
 
 STATIC_YOINK("zipos");
 
@@ -5462,7 +5462,7 @@ static int LuaInterpreter(lua_State *L) {
   } else {
     lua_repl_blocking = true;
     lua_repl_completions_callback = HandleCompletions;
-    lua_initrepl(GL, "redbean");
+    lua_initrepl(GL);
     EnableRawMode();
     for (;;) {
       status = lua_loadline(L);
@@ -7159,7 +7159,7 @@ static void ReplEventLoop(void) {
   DEBUGF("ReplEventLoop()");
   polls[0].fd = 0;
   lua_repl_completions_callback = HandleCompletions;
-  lua_initrepl(L, "redbean");
+  lua_initrepl(L);
   EnableRawMode();
   EventLoop(100);
   DisableRawMode();
@@ -7174,7 +7174,7 @@ static int WindowsReplThread(void *arg, int tid) {
   DEBUGF("(repl) started windows thread");
   lua_repl_blocking = true;
   lua_repl_completions_callback = HandleCompletions;
-  lua_initrepl(L, "redbean");
+  lua_initrepl(L);
   EnableRawMode();
   while (!terminated) {
     if (HandleReadline() == -1) {

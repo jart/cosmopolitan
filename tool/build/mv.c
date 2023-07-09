@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 
 #define USAGE \
   " SRC... DST\n\

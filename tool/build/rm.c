@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 
 #define USAGE \
   " FILE...\n\

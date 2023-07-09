@@ -12,6 +12,7 @@
 COSMOPOLITAN_C_START_
 
 extern int __pid;
+extern int ftrace_stackdigs;
 extern uint32_t __ntconsolemode[3];
 extern const char v_ntsubsystem[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_end[] __attribute__((__weak__));

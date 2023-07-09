@@ -27,7 +27,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 
 const char *prog;
 char tmpdir[PATH_MAX];

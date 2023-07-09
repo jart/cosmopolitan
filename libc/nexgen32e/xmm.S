@@ -17,28 +17,48 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+.privileged
 
-//	Loads XMM registers from buffer.
-//
-//	@param	%rdi points to &(forcealign(16) uint8_t[256])[128]
-//	@note	modern cpus have out-of-order execution engines
-_loadxmm:
+__xmm_save:
+	lea	-128(%rbp),%rdi
 	.leafprologue
-	movaps	-0x80(%rdi),%xmm0
-	movaps	-0x70(%rdi),%xmm1
-	movaps	-0x60(%rdi),%xmm2
-	movaps	-0x50(%rdi),%xmm3
-	movaps	-0x40(%rdi),%xmm4
-	movaps	-0x30(%rdi),%xmm5
-	movaps	-0x20(%rdi),%xmm6
-	movaps	-0x10(%rdi),%xmm7
-	movaps	0x00(%rdi),%xmm8
-	movaps	0x10(%rdi),%xmm9
-	movaps	0x20(%rdi),%xmm10
-	movaps	0x30(%rdi),%xmm11
-	movaps	0x40(%rdi),%xmm12
-	movaps	0x50(%rdi),%xmm13
-	movaps	0x60(%rdi),%xmm14
-	movaps	0x70(%rdi),%xmm15
+	movdqu	%xmm0,-0x80(%rdi)
+	movdqu	%xmm1,-0x70(%rdi)
+	movdqu	%xmm2,-0x60(%rdi)
+	movdqu	%xmm3,-0x50(%rdi)
+	movdqu	%xmm4,-0x40(%rdi)
+	movdqu	%xmm5,-0x30(%rdi)
+	movdqu	%xmm6,-0x20(%rdi)
+	movdqu	%xmm7,-0x10(%rdi)
+	movdqu	%xmm8,0x00(%rdi)
+	movdqu	%xmm9,0x10(%rdi)
+	movdqu	%xmm10,0x20(%rdi)
+	movdqu	%xmm11,0x30(%rdi)
+	movdqu	%xmm12,0x40(%rdi)
+	movdqu	%xmm13,0x50(%rdi)
+	movdqu	%xmm14,0x60(%rdi)
+	movdqu	%xmm15,0x70(%rdi)
 	.leafepilogue
-	.endfn	_loadxmm,globl,hidden
+	.endfn	__xmm_save,globl,hidden
+
+__xmm_load:
+	lea	-128(%rbp),%rdi
+	.leafprologue
+	movdqu	-0x80(%rdi),%xmm0
+	movdqu	-0x70(%rdi),%xmm1
+	movdqu	-0x60(%rdi),%xmm2
+	movdqu	-0x50(%rdi),%xmm3
+	movdqu	-0x40(%rdi),%xmm4
+	movdqu	-0x30(%rdi),%xmm5
+	movdqu	-0x20(%rdi),%xmm6
+	movdqu	-0x10(%rdi),%xmm7
+	movdqu	0x00(%rdi),%xmm8
+	movdqu	0x10(%rdi),%xmm9
+	movdqu	0x20(%rdi),%xmm10
+	movdqu	0x30(%rdi),%xmm11
+	movdqu	0x40(%rdi),%xmm12
+	movdqu	0x50(%rdi),%xmm13
+	movdqu	0x60(%rdi),%xmm14
+	movdqu	0x70(%rdi),%xmm15
+	.leafepilogue
+	.endfn	__xmm_load,globl,hidden

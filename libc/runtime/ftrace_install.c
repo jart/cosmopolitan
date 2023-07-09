@@ -18,13 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 
 void ftrace_hook(void);
-
-_Hide int ftrace_stackdigs;
 
 textstartup int ftrace_install(void) {
   if (GetSymbolTable()) {

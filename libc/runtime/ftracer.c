@@ -46,7 +46,6 @@
 #define DETOUR_SKEW 8
 #endif
 
-extern _Hide int ftrace_stackdigs;
 static struct CosmoFtrace g_ftrace;
 
 static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {

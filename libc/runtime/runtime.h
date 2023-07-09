@@ -114,8 +114,6 @@ void _Exitr(int) libcesque wontreturn;
 void _Exit1(int) libcesque wontreturn;
 void _restorewintty(void);
 void __paginate(int, const char *);
-void _loadxmm(void *);
-void _savexmm(void *);
 long _missingno();
 /* memory management */
 void _weakfree(void *);

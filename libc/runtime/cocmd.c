@@ -27,15 +27,19 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/timer.h"
 #include "third_party/awk/cmd.h"
+#include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/glob.h"
 #include "third_party/sed/cmd.h"
 #include "third_party/tr/cmd.h"
@@ -61,7 +65,6 @@
 static char *p;
 static char *q;
 static char *r;
-static int envi;
 static int vari;
 static size_t n;
 static char *cmd;
@@ -75,6 +78,9 @@ static const char *prog;
 static char argbuf[ARG_MAX];
 static bool unsupported[256];
 
+static int ShellSpawn(void);
+static int ShellExec(void);
+
 static ssize_t Write(int fd, const char *s) {
   return write(fd, s, strlen(s));
 }
@@ -87,34 +93,19 @@ static wontreturn void UnsupportedSyntax(unsigned char c) {
   _Exit(4);
 }
 
-static wontreturn void SysExit(int rc, const char *call, const char *thing) {
-  int err;
-  char ibuf[12];
-  const char *estr;
-  err = errno;
-  FormatInt32(ibuf, err);
-  estr = _strerdoc(err);
-  if (!estr) estr = "EUNKNOWN";
-  tinyprint(2, thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", NULL);
-  _Exit(rc);
-}
-
 static void Open(const char *path, int fd, int flags) {
   const char *err;
   close(fd);
   if (open(path, flags, 0644) == -1) {
-    SysExit(7, "open", path);
+    perror(path);
+    _Exit(1);
   }
 }
 
-static wontreturn void Exec(void) {
-  _unassert(args[0][0]);
-  if (!n) {
-    tinyprint(2, prog, ": error: too few args\n", NULL);
-    _Exit(5);
-  }
+static int SystemExec(void) {
   execvpe(args[0], args, envs);
-  SysExit(127, "execve", args[0]);
+  perror(args[0]);
+  return (n = 0), 127;
 }
 
 static int GetSignalByName(const char *s) {
@@ -131,6 +122,18 @@ static void PutEnv(char **p, const char *kv) {
   e = _getenv(p, kv);
   p[e.i] = kv;
   if (!e.s) p[e.i + 1] = 0;
+}
+
+static void UnsetEnv(char **p, const char *k) {
+  int i;
+  struct Env e;
+  if ((e = _getenv(p, k)).s) {
+    p[e.i] = 0;
+    for (i = e.i + 1; p[i]; ++i) {
+      p[i - 1] = p[i];
+      p[i] = 0;
+    }
+  }
 }
 
 static void Append(int c) {
@@ -163,28 +166,53 @@ static wontreturn void Exit(void) {
   _Exit(n > 1 ? atoi(args[1]) : 0);
 }
 
+static int Waiter(int pid) {
+  int ws;
+  n = 0;
+  if (waitpid(pid, &ws, 0) == -1) {
+    perror("wait");
+    return 1;
+  }
+  if (WIFEXITED(ws)) {
+    return WEXITSTATUS(ws);
+  } else {
+    return 128 + WTERMSIG(ws);
+  }
+}
+
 static int Wait(void) {
   char ibuf[12];
-  int e, rc, ws, pid;
+  int e, ws, pid;
   if (n > 1) {
-    if (waitpid(atoi(args[1]), &ws, 0) == -1) {
-      SysExit(22, "waitpid", prog);
+    if ((pid = atoi(args[1])) <= 0) {
+      tinyprint(2, "wait: bad pid\n", NULL);
+      return 1;
     }
-    rc = WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WTERMSIG(ws);
-    exitstatus = rc;
+    return Waiter(pid);
   } else {
-    for (e = errno;;) {
+    for (n = 0, e = errno;;) {
       if (waitpid(-1, &ws, 0) == -1) {
         if (errno == ECHILD) {
           errno = e;
           break;
         }
-        SysExit(22, "waitpid", prog);
+        perror("wait");
+        return 1;
       }
     }
-    rc = 0;
+    return 0;
   }
-  return rc;
+}
+
+static const char *GetOptArg(int c, int *i, int j) {
+  if (args[*i][j] == c) {
+    if (args[*i][j + 1]) {
+      return args[*i] + j + 1;
+    } else if (*i + 1 < n) {
+      return args[++*i];
+    }
+  }
+  return 0;
 }
 
 static int Echo(void) {
@@ -229,29 +257,60 @@ static int Read(void) {
   return rc;
 }
 
+static int NeedArgument(const char *prog) {
+  tinyprint(2, prog, ": missing argument\n", NULL);
+  return 1;
+}
+
 static int Cd(void) {
   const char *s;
   if ((s = n > 1 ? args[1] : _getenv(envs, "HOME").s)) {
     if (!chdir(s)) {
       return 0;
     } else {
-      tinyprint(2, "chdir: ", s, ": ", _strerdoc(errno), "\n", NULL);
+      perror(s);
       return 1;
     }
   } else {
-    tinyprint(2, "chdir: missing argument\n", NULL);
-    return 1;
+    return NeedArgument("cd");
   }
 }
 
 static int Mkdir(void) {
-  int i = 1;
-  int (*f)(const char *, unsigned) = mkdir;
-  if (n >= 3 && !strcmp(args[1], "-p")) ++i, f = makedirs;
+  int i, j;
+  int mode = 0755;
+  const char *arg;
+  int (*mkdir_impl)(const char *, unsigned) = mkdir;
+  for (i = 1; i < n; ++i) {
+    if (args[i][0] == '-' && args[i][1]) {
+      if (args[i][1] == '-' && !args[i][2]) {
+        ++i;  // rm -- terminates option parsing
+        break;
+      }
+      for (j = 1; j < args[i][j]; ++j) {
+        if (args[i][j] == 'p') {
+          mkdir_impl = makedirs;  // mkdir -p creates parents
+          continue;
+        }
+        if ((arg = GetOptArg('m', &i, j))) {
+          mode = strtol(arg, 0, 8);  // mkdir -m OCTAL sets mode
+          break;
+        }
+        char option[2] = {args[i][j]};
+        tinyprint(2, "mkdir", ": illegal option -- ", option, "\n", NULL);
+        return 1;
+      }
+    } else {
+      break;
+    }
+  }
+  if (i == n) {
+    return NeedArgument("mkdir");
+  }
   for (; i < n; ++i) {
-    if (f(args[i], 0755)) {
-      tinyprint(2, "mkdir: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
-      return errno;
+    if (mkdir_impl(args[i], mode)) {
+      perror(args[i]);
+      return 1;
     }
   }
   return 0;
@@ -267,7 +326,7 @@ static int Kill(void) {
   }
   for (; i < n; ++i) {
     if (kill(atoi(args[i]), sig)) {
-      tinyprint(2, "kill: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
+      perror("kill");
       rc = 1;
     }
   }
@@ -321,33 +380,52 @@ static int Test(void) {
 }
 
 static int Rm(void) {
-  int i;
-  if (n > 1 && args[1][0] != '-') {
-    for (i = 1; i < n; ++i) {
-      if (unlink(args[i])) {
-        tinyprint(2, "rm: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
+  int i, j;
+  bool force = false;
+  for (i = 1; i < n; ++i) {
+    if (args[i][0] == '-' && args[i][1]) {
+      if (args[i][1] == '-' && !args[i][2]) {
+        ++i;  // rm -- terminates option parsing
+        break;
+      }
+      for (j = 1; j < args[i][j]; ++j) {
+        if (args[i][j] == 'f') {
+          force = true;  // rm -f forces removal
+          continue;
+        }
+        char option[2] = {args[i][j]};
+        tinyprint(2, "rm", ": illegal option -- ", option, "\n", NULL);
         return 1;
       }
+    } else {
+      break;
     }
-    return 0;
-  } else {
-    return -1;  // fall back to system rm command
   }
+  if (i == n) {
+    return NeedArgument("rm");
+  }
+  for (; i < n; ++i) {
+    struct stat st;
+    if ((!force && (lstat(args[i], &st) ||
+                    (!S_ISLNK(st.st_mode) && access(args[i], W_OK)))) ||
+        unlink(args[i])) {
+      if (force && errno == ENOENT) continue;
+      perror(args[i]);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 static int Rmdir(void) {
   int i;
-  if (n > 1 && args[1][0] != '-') {
-    for (i = 1; i < n; ++i) {
-      if (rmdir(args[i])) {
-        tinyprint(2, "rmdir: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
-        return 1;
-      }
+  for (i = 1; i < n; ++i) {
+    if (rmdir(args[i])) {
+      perror(args[i]);
+      return 1;
     }
-    return 0;
-  } else {
-    return -1;  // fall back to system rmdir command
   }
+  return 0;
 }
 
 static int Touch(void) {
@@ -355,7 +433,7 @@ static int Touch(void) {
   if (n > 1 && args[1][0] != '-') {
     for (i = 1; i < n; ++i) {
       if (touch(args[i], 0644)) {
-        tinyprint(2, "touch: ", args[i], ": ", _strerdoc(errno), "\n", NULL);
+        perror(args[i]);
         return 1;
       }
     }
@@ -365,17 +443,77 @@ static int Touch(void) {
   }
 }
 
+static int Shift(int i) {
+  if (i <= n) {
+    memmove(args, args + i, (n - i + 1) * sizeof(*args));
+    n -= i;
+  }
+  return 0;
+}
+
 static int Fake(int main(int, char **)) {
-  int exitstatus, ws, pid;
-  if ((pid = fork()) == -1) SysExit(21, "vfork", prog);
+  int pid;
+  if ((pid = fork()) == -1) {
+    perror("fork");
+    return 127;
+  }
   if (!pid) {
-    // TODO(jart): Maybe nuke stdio state somehow?
+    // TODO(jart): Maybe nuke stdio too?
+    if (_weaken(optind)) {
+      *_weaken(optind) = 1;
+    }
     environ = envs;
     exit(main(n, args));
   }
-  if (waitpid(pid, &ws, 0) == -1) SysExit(22, "waitpid", prog);
-  exitstatus = WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WTERMSIG(ws);
-  return n = 0, exitstatus;
+  return Waiter(pid);
+}
+
+static int Env(void) {
+  int i, j;
+  const char *arg;
+  char term = '\n';
+  for (i = 1; i < n; ++i) {
+    if (args[i][0] == '-') {
+      if (!args[i][1]) {
+        envs[0] = 0;  // env - clears environment
+        continue;
+      }
+      for (j = 1; j < args[i][j]; ++j) {
+        if (args[i][j] == 'i') {
+          envs[0] = 0;  // env -i clears environment
+          continue;
+        }
+        if (args[i][j] == '0') {
+          term = 0;  // env -0 uses '\0' line separator
+          continue;
+        }
+        if ((arg = GetOptArg('u', &i, j))) {
+          UnsetEnv(envs, arg);  // env -u VAR removes variable
+          break;
+        }
+        char option[2] = {args[i][j]};
+        tinyprint(2, "env", ": illegal option -- ", option, "\n", NULL);
+        return 1;
+      }
+      continue;
+    }
+    if (strchr(args[i], '=')) {
+      PutEnv(envs, args[i]);
+    } else {
+      Shift(i);
+      return ShellSpawn();
+    }
+  }
+  for (i = 0; envs[i]; ++i) {
+    Write(1, envs[i]);
+    write(1, &term, 1);
+  }
+  return 0;
+}
+
+static int Exec(void) {
+  Shift(1);
+  return ShellExec();
 }
 
 static int TryBuiltin(void) {
@@ -384,6 +522,8 @@ static int TryBuiltin(void) {
   if (!strcmp(args[0], "cd")) return Cd();
   if (!strcmp(args[0], "rm")) return Rm();
   if (!strcmp(args[0], "[")) return Test();
+  if (!strcmp(args[0], "env")) return Env();
+  if (!strcmp(args[0], "exec")) return Exec();
   if (!strcmp(args[0], "wait")) return Wait();
   if (!strcmp(args[0], "echo")) return Echo();
   if (!strcmp(args[0], "read")) return Read();
@@ -403,43 +543,64 @@ static int TryBuiltin(void) {
   return -1;
 }
 
-static wontreturn void Launch(void) {
+static int ShellExec(void) {
   int rc;
-  if ((rc = TryBuiltin()) != -1) _Exit(rc);
-  Exec();
+  if ((rc = TryBuiltin()) == -1) {
+    rc = SystemExec();
+  }
+  return (n = 0), rc;
 }
 
 static void Pipe(void) {
   int pid, pfds[2];
-  if (pipe2(pfds, O_CLOEXEC)) SysExit(8, "pipe2", prog);
-  if ((pid = fork()) == -1) SysExit(9, "vfork", prog);
+  if (pipe2(pfds, O_CLOEXEC)) {
+    perror("pipe");
+    _Exit(127);
+  }
+  if ((pid = fork()) == -1) {
+    perror("fork");
+    _Exit(127);
+  }
   if (!pid) {
     _unassert(dup2(pfds[1], 1) == 1);
     // we can't rely on cloexec because builtins
     if (pfds[0] != 1) _unassert(!close(pfds[0]));
     if (pfds[1] != 1) _unassert(!close(pfds[1]));
-    Launch();
+    _Exit(ShellExec());
   }
   _unassert(!dup2(pfds[0], 0));
   if (pfds[1]) _unassert(!close(pfds[1]));
   n = 0;
 }
 
-static int Run(void) {
-  int exitstatus, ws, pid;
-  if ((exitstatus = TryBuiltin()) == -1) {
-    if ((pid = vfork()) == -1) SysExit(21, "vfork", prog);
-    if (!pid) Exec();
-    if (waitpid(pid, &ws, 0) == -1) SysExit(22, "waitpid", prog);
-    exitstatus = WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WTERMSIG(ws);
+static int ShellSpawn(void) {
+  int rc, ws, pid;
+  if ((rc = TryBuiltin()) == -1) {
+    switch ((pid = fork())) {
+      case 0:
+        _Exit(SystemExec());
+      default:
+        rc = Waiter(pid);
+        break;
+      case -1:
+        perror("fork");
+        rc = 127;
+        break;
+    }
   }
-  n = 0;
-  return exitstatus;
+  return (n = 0), rc;
 }
 
-static void Async(void) {
-  if ((lastchild = fork()) == -1) SysExit(21, "vfork", prog);
-  if (!lastchild) Launch();
+static void ShellSpawnAsync(void) {
+  switch ((lastchild = fork())) {
+    case 0:
+      _Exit(ShellExec());
+    default:
+      break;
+    case -1:
+      perror("fork");
+      break;
+  }
   n = 0;
 }
 
@@ -535,7 +696,7 @@ static char *Tokenize(void) {
           if (q > r) {
             return Finish();
           } else if (p[1] == '|') {
-            rc = Run();
+            rc = ShellSpawn();
             if (!rc) {
               _Exit(0);
             } else {
@@ -550,7 +711,7 @@ static char *Tokenize(void) {
           if (q > r) {
             return Finish();
           } else {
-            exitstatus = Run();
+            exitstatus = ShellSpawn();
             t = STATE_WHITESPACE;
           }
         } else if (*p == '>') {
@@ -562,7 +723,7 @@ static char *Tokenize(void) {
           if (q > r) {
             return Finish();
           } else if (p[1] == '&') {
-            rc = Run();
+            rc = ShellSpawn();
             if (!rc) {
               ++p;
               t = STATE_WHITESPACE;
@@ -570,7 +731,7 @@ static char *Tokenize(void) {
               _Exit(rc);
             }
           } else {
-            Async();
+            ShellSpawnAsync();
             t = STATE_WHITESPACE;
           }
         } else {
@@ -691,7 +852,7 @@ int _cocmd(int argc, char **argv, char **envp) {
   }
 
   // copy environment variables
-  envi = 0;
+  int envi = 0;
   if (envp) {
     for (; envp[envi]; ++envi) {
       _npassert(envi + 1 < ARRAYLEN(envs));
@@ -748,5 +909,5 @@ int _cocmd(int argc, char **argv, char **envp) {
     }
   }
 
-  Launch();
+  return ShellExec();
 }

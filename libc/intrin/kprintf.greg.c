@@ -218,7 +218,9 @@ privileged void _klog(const char *b, size_t n) {
     __imp_WriteFile(h, b, n, &wrote, 0);
     __imp_SetLastError(e);
   } else if (IsMetal()) {
-    if (_weaken(_klog_vga)) _weaken(_klog_vga)(b, n);
+    if (_weaken(_klog_vga)) {
+      _weaken(_klog_vga)(b, n);
+    }
     for (i = 0; i < n; ++i) {
       for (;;) {
         dx = 0x3F8 + UART_LSR;

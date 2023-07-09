@@ -36,20 +36,18 @@ __nt2sysv:
 	mov	%rsp,%rbp
 //	TODO(jart): We should probably find some way to use our own
 //	            stack when Windows delivers signals ;_;
-	sub	$0x100,%rsp
+	sub	$256,%rsp
 	push	%rbx
 	push	%rdi
 	push	%rsi
-	pushf					# TODO(jart): Do we need it?
-	lea	-0x80(%rbp),%rdi
-	call	_savexmm
+	pushf					// TODO(jart): Do we need it?
+	call	__xmm_save
 	mov	%rcx,%rdi
 	mov	%rdx,%rsi
 	mov	%r8,%rdx
 	mov	%r9,%rcx
 	call	*%rax
-	lea	-0x80(%rbp),%rdi
-	call	_loadxmm
+	call	__xmm_load
 	popf
 	pop	%rsi
 	pop	%rdi

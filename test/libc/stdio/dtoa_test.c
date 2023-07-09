@@ -133,7 +133,14 @@ static const struct {
     {"1.23000000000000000002e-320", "%.21Lg",
      DUBBLE(3bd8, 9b98, c371, 844c, 3f1a)},
     {"0xap-3", "%.La", DUBBLE(3fff, 9d70, a3d7, a3d, 70a4)},
-    {"0x9.d70a3d70a3d70a4p-3", "%.20La", DUBBLE(3fff, 9d70, a3d7, a3d, 70a4)},
+    //   cosmo prints 0x9.d70a3d70a3d70a400000p-3
+    //   glibc prints 0x9.d70a3d70a3d70a400000p-3
+    // openbsd prints 0x9.d70a3d70a3d70a400000p-3
+    //   apple prints 0x9.d70a3d70a3d70a400000p-3
+    //    musl prints 0x1.3ae147ae147ae1480000p+0
+    // freebsd prints 0x1.3ae147ae147ae1480000p+0
+    {"0x9.d70a3d70a3d70a400000p-3", "%.20La",
+     DUBBLE(3fff, 9d70, a3d7, 0a3d, 70a4)},
     {"0x9.b18ab5df7180b6cp+88", "%La", DUBBLE(405a, 9b18, ab5d, f718, b6c)},
     {"0xa.fc6a015291b4024p+87", "%La", DUBBLE(4059, afc6, a015, 291b, 4024)},
 };
@@ -151,8 +158,8 @@ TEST(printf, longdouble) {
               "TEST FAILED\n"
               "\t{%`'s, %`'s, DUBBLE(%x, %x, %x, %x, %x)}\n"
               "\t→%`'s\n",
-              Vx[i].s, Vx[i].f, Vx[i].u.i[0], Vx[i].u.i[1], Vx[i].u.i[2],
-              Vx[i].u.i[3], Vx[i].u.i[4], buf);
+              Vx[i].s, Vx[i].f, Vx[i].u.i[4], Vx[i].u.i[3], Vx[i].u.i[2],
+              Vx[i].u.i[1], Vx[i].u.i[0], buf);
       testlib_incrementfailed();
     }
   }

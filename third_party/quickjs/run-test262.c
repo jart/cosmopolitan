@@ -33,7 +33,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 #include "third_party/quickjs/cutils.h"
 #include "third_party/quickjs/list.h"
 #include "third_party/quickjs/quickjs-libc.h"

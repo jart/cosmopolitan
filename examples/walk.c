@@ -13,7 +13,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/s.h"
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 
 /**
  * @fileoverview Directory walker example.

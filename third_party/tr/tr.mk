@@ -42,7 +42,7 @@ $(THIRD_PARTY_TR_A).pkg:			\
 
 o/$(MODE)/third_party/tr/tr.com.dbg:		\
 		$(THIRD_PARTY_TR)		\
-		o/$(MODE)/third_party/tr/tr.o	\
+		o/$(MODE)/third_party/tr/cmd.o	\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)

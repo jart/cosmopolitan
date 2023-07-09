@@ -25,7 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/musl/ftw.h"
+#include "libc/stdio/ftw.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\

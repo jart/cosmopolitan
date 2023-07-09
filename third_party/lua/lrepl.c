@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lua_c
+#include "third_party/lua/lrepl.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -44,7 +45,6 @@
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
-#include "third_party/lua/lrepl.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 // clang-format off
@@ -70,8 +70,8 @@ bool lua_repl_blocking;
 bool lua_repl_isterminal;
 linenoiseCompletionCallback *lua_repl_completions_callback;
 struct linenoiseState *lua_repl_linenoise;
+const char *lua_progname;
 static lua_State *globalL;
-static const char *g_progname;
 static const char *g_historypath;
 
 /*
@@ -253,6 +253,7 @@ static ssize_t pushline (lua_State *L, int firstline) {
   } else {
     lua_repl_unlock();
     fputs(prmt, stdout);
+    free(prmt);
     fflush(stdout);
     b = linenoiseGetLine(stdin);
     if (b) {
@@ -328,16 +329,15 @@ static int multiline (lua_State *L) {
 }
 
 
-void lua_initrepl(lua_State *L, const char *progname) {
+void lua_initrepl(lua_State *L) {
   const char *prompt;
   lua_repl_lock();
-  g_progname = progname;
   if ((lua_repl_isterminal = linenoiseIsTerminal())) {
     linenoiseSetCompletionCallback(lua_readline_completions);
     linenoiseSetHintsCallback(lua_readline_hint);
     linenoiseSetFreeHintsCallback(free);
     prompt = get_prompt(L, 1);
-    if ((g_historypath = linenoiseGetHistoryPath(progname))) {
+    if ((g_historypath = linenoiseGetHistoryPath(lua_progname))) {
       if (linenoiseHistoryLoad(g_historypath) == -1) {
         fprintf(stderr, "%r%s: failed to load history: %m%n", g_historypath);
         free(g_historypath);
@@ -469,7 +469,7 @@ void lua_l_print (lua_State *L) {
     lua_getglobal(L, "print");
     lua_insert(L, 1);
     if (lua_pcall(L, n, 0, 0) != LUA_OK)
-      lua_l_message(g_progname, lua_pushfstring(L, "error calling 'print' (%s)",
+      lua_l_message(lua_progname, lua_pushfstring(L, "error calling 'print' (%s)",
                                                 lua_tostring(L, -1)));
   }
 }
@@ -483,7 +483,7 @@ void lua_l_print (lua_State *L) {
 int lua_report (lua_State *L, int status) {
   if (status != LUA_OK) {
     const char *msg = lua_tostring(L, -1);
-    lua_l_message(g_progname, msg);
+    lua_l_message(lua_progname, msg);
     lua_pop(L, 1);  /* remove message */
   }
   return status;

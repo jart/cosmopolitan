@@ -792,9 +792,18 @@ assert(os.date(string.rep("%", 200)) == string.rep("%", 100))
 local function checkDateTable (t)
   _G.D = os.date("*t", t)
   assert(os.time(D) == t)
-  load(os.date([[assert(D.year==%Y and D.month==%m and D.day==%d and
-    D.hour==%H and D.min==%M and D.sec==%S and
-    D.wday==%w+1 and D.yday==%j)]], t))()
+  -- [jart] rewrote test due to octal
+  assert(string.format('%d', D.year) == os.date('%Y', t))
+  assert(string.format('%02d', D.month) == os.date('%m', t))
+  assert(string.format('%02d', D.day) == os.date('%d', t))
+  assert(string.format('%02d', D.hour) == os.date('%H', t))
+  assert(string.format('%02d', D.min) == os.date('%M', t))
+  assert(string.format('%02d', D.sec) == os.date('%S', t))
+  assert(string.format('%d', D.wday - 1) == os.date('%w', t))
+  assert(string.format('%03d', D.yday) == os.date('%j', t))
+  -- load(os.date([[assert(D.year==%Y and D.month==%m and D.day==%d and
+  --   D.hour==%H and D.min==%M and D.sec==%S and
+  --   D.wday==%w+1 and D.yday==%j)]], t))()
   _G.D = nil
 end
 
