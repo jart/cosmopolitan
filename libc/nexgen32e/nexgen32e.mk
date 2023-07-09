@@ -50,6 +50,7 @@ o/$(MODE)/libc/nexgen32e/kbase36.o			\
 o/$(MODE)/libc/nexgen32e/ktens.o			\
 o/$(MODE)/libc/nexgen32e/ktolower.o			\
 o/$(MODE)/libc/nexgen32e/ktoupper.o			\
+o/$(MODE)/libc/nexgen32e/runlevel.o			\
 o/$(MODE)/libc/nexgen32e/pid.o				\
 o/$(MODE)/libc/nexgen32e/program_invocation_name2.o	\
 o/$(MODE)/libc/nexgen32e/threaded.o: private		\

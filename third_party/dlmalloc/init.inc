@@ -96,6 +96,7 @@ __attribute__((__constructor__)) int init_mparams(void) {
 
   // RELEASE_MALLOC_GLOBAL_LOCK();
 
+  __runlevel = RUNLEVEL_MALLOC;
   return 1;
 }
 

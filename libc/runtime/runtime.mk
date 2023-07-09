@@ -130,6 +130,12 @@ o/$(MODE)/libc/runtime/morph_tls.o: private		\
 			-ffreestanding			\
 			-fno-sanitize=all
 
+# TODO(jart): We need a way to avoid WinThreadEntry() being hooked.
+o/$(MODE)/libc/runtime/clone.o: private			\
+		COPTS +=				\
+			-fno-sanitize=all		\
+			-fpatchable-function-entry=0,0
+
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/runtime/init.o: libc/runtime/init.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

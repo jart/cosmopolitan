@@ -100,7 +100,8 @@ o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 o/$(MODE)/libc/calls/wincrash.o				\
 o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		COPTS +=				\
-			-fno-sanitize=all
+			-fno-sanitize=all		\
+			-fpatchable-function-entry=0,0
 
 ifneq ($(ARCH), aarch64)
 # we always want -O3 because:
