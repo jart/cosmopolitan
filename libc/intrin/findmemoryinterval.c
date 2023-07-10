@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/midpoint.h"
 #include "libc/runtime/memtrack.internal.h"
 
 noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
@@ -25,7 +24,7 @@ noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
   l = 0;
   r = mm->i;
   while (l < r) {
-    m = _midpoint(l, r);
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if (mm->p[m].y < x) {
       l = m + 1;
     } else {

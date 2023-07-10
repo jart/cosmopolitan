@@ -119,7 +119,7 @@ static const char *BisectContentType(uint64_t ext) {
   l = 0;
   r = ARRAYLEN(kContentTypeExtension) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     c = CompareInts(READ64BE(kContentTypeExtension[m].ext), ext);
     if (c < 0) {
       l = m + 1;

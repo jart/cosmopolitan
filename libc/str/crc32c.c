@@ -39,7 +39,7 @@ uint32_t crc32c(uint32_t init, const void *data, size_t size) {
   static uint32_t kCrc32cTab[256];
   if (!once) {
     crc32init(kCrc32cTab, 0x82f63b78);
-    once = 0;
+    once = 1;
   }
   p = data;
   pe = p + size;

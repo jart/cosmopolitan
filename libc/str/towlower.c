@@ -201,7 +201,7 @@ wint_t towlower(wint_t c) {
       l = 0;
       r = n = sizeof(kLower) / sizeof(kLower[0]);
       while (l < r) {
-        m = (l + r) >> 1;
+        m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
         if (kLower[m].y < c) {
           l = m + 1;
         } else {
@@ -218,7 +218,7 @@ wint_t towlower(wint_t c) {
     l = 0;
     r = n = sizeof(kAstralLower) / sizeof(kAstralLower[0]);
     while (l < r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (kAstralLower[m][1] < c) {
         l = m + 1;
       } else {

@@ -1894,7 +1894,7 @@ static bool Prefix(struct As *a, const char *p, int n) {
     l = 0;
     r = ARRAYLEN(kPrefix) - 1;
     while (l <= r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       y = READ64BE(kPrefix[m]);
       if (x < y) {
         r = m - 1;
@@ -1919,7 +1919,7 @@ static bool FindReg(const char *p, int n, struct Reg *out_reg) {
     l = 0;
     r = ARRAYLEN(kRegs) - 1;
     while (l <= r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       y = READ64BE(kRegs[m].s);
       if (x < y) {
         r = m - 1;
@@ -3740,7 +3740,7 @@ static bool OnDirective8(struct As *a, struct Slice s) {
     l = 0;
     r = ARRAYLEN(kDirective8) - 1;
     while (l <= r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       y = READ64BE(kDirective8[m].s);
       if (x < y) {
         r = m - 1;
@@ -3763,7 +3763,7 @@ static bool OnDirective16(struct As *a, struct Slice s) {
     l = 0;
     r = ARRAYLEN(kDirective16) - 1;
     while (l <= r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       y = READ128BE(kDirective16[m].s);
       if (x < y) {
         r = m - 1;

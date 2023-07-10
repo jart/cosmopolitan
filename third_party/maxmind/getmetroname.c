@@ -244,7 +244,7 @@ const char *GetMetroName(int code) {
   l = 0;
   r = ARRAYLEN(kMetroNames) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if (kMetroNames[m].code < code) {
       l = m + 1;
     } else if (kMetroNames[m].code > code) {

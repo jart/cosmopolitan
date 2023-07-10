@@ -414,7 +414,7 @@ IsIgnoredModule(const char *s)
     l = 0;
     r = ARRAYLEN(kIgnoredModules) - 1;
     while (l <= r) {
-        m = (l + r) >> 1;
+        m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
         x = strcmp(s, kIgnoredModules[m]);
         if (x < 0) {
             r = m - 1;

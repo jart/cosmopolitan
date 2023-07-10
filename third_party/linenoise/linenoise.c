@@ -313,7 +313,7 @@ static unsigned GetMirror(const unsigned short A[][2], size_t n, unsigned c) {
   l = 0;
   r = n - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if (A[m][0] < c) {
       l = m + 1;
     } else if (A[m][0] > c) {

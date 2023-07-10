@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/midpoint.h"
 #include "libc/macros.internal.h"
 #include "tool/plinko/lib/char.h"
 
@@ -315,7 +314,7 @@ pureconst bool IsWide(int c) {
     l = 0;
     r = n = sizeof(kWides) / sizeof(kWides[0]);
     while (l < r) {
-      m = _midpoint(l, r);
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (kWides[m][1] < c) {
         l = m + 1;
       } else {
@@ -327,7 +326,7 @@ pureconst bool IsWide(int c) {
     l = 0;
     r = n = sizeof(kAstralWides) / sizeof(kAstralWides[0]);
     while (l < r) {
-      m = _midpoint(l, r);
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (kAstralWides[m][1] < c) {
         l = m + 1;
       } else {

@@ -743,7 +743,7 @@ static void __asan_report_memory_origin_image(intptr_t a, int z) {
       r = n = st->count;
       k = a - st->addr_base;
       while (l < r) {
-        m = (l + r) >> 1;
+        m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
         if (st->symbols[m].y < k) {
           l = m + 1;
         } else {

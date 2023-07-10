@@ -20,7 +20,6 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/midpoint.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sched.h"
@@ -67,7 +66,8 @@ TEST(sched_setscheduler, test) {
 
 TEST(sched_setscheduler, testMidpoint) {
   if (!CanTuneRealtimeSchedulers()) return;
-  struct sched_param p = {_midpoint(sched_get_priority_min(SCHED_FIFO),
-                                    sched_get_priority_max(SCHED_FIFO))};
+  struct sched_param p = {(sched_get_priority_min(SCHED_FIFO) +
+                           sched_get_priority_max(SCHED_FIFO)) /
+                          2};
   EXPECT_SYS(0, DEFAULT_POLICY, sched_setscheduler(0, SCHED_FIFO, &p));
 }

@@ -228,6 +228,7 @@ const char *const kGccOnlyFlags[] = {
     "-fdelete-dead-exceptions",
     "-femit-struct-debug-baseonly",
     "-ffp-int-builtin-inexact",
+    "-finline-functions-called-once",
     "-fipa-pta",
     "-fivopts",
     "-flimit-function-alignment",
@@ -241,6 +242,7 @@ const char *const kGccOnlyFlags[] = {
     "-fno-fp-int-builtin-inexact",
     "-fno-gnu-unique",
     "-fno-gnu-unique",
+    "-fno-inline-functions-called-once",
     "-fno-instrument-functions",
     "-fno-schedule-insns2",
     "-fno-whole-program",
@@ -371,7 +373,7 @@ bool IsSafeEnv(const char *s) {
   l = 0;
   r = ARRAYLEN(kSafeEnv) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     x = strncmp(s, kSafeEnv[m], n);
     if (x < 0) {
       r = m - 1;
@@ -389,7 +391,7 @@ bool IsGccOnlyFlag(const char *s) {
   l = 0;
   r = ARRAYLEN(kGccOnlyFlags) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     x = strcmp(s, kGccOnlyFlags[m]);
     if (x < 0) {
       r = m - 1;
@@ -1034,7 +1036,6 @@ int main(int argc, char *argv[]) {
 #ifdef __x86_64__
     } else if (!strcmp(argv[i], "-march=native")) {
       struct X86ProcessorModel *model;
-      if (X86_HAVE(ABM)) AddArg("-mabm");
       if (X86_HAVE(XOP)) AddArg("-mxop");
       if (X86_HAVE(SSE4A)) AddArg("-msse4a");
       if (X86_HAVE(SSE3)) AddArg("-msse3");

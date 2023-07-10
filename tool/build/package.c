@@ -550,7 +550,7 @@ static struct Symbol *BisectSymbol(struct Package *pkg, const char *name) {
   l = 0;
   r = pkg->symbols.i - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     c = strcmp(pkg->strings.p + pkg->symbols.p[m].name, name);
     if (c < 0) {
       l = m + 1;

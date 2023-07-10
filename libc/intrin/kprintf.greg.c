@@ -161,7 +161,7 @@ privileged static bool kismapped(int x) {
   if (kismemtrackhosed()) return false;
   r = _weaken(_mmi)->i;
   while (l < r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if (_weaken(_mmi)->p[m].y < x) {
       l = m + 1;
     } else {

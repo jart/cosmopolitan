@@ -28,7 +28,6 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/midpoint.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/mem/sortedints.internal.h"

@@ -43,7 +43,7 @@ static bool BisectNoCompressExts(uint64_t ext) {
   l = 0;
   r = ARRAYLEN(kNoCompressExts) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if (READ64BE(kNoCompressExts[m]) < ext) {
       l = m + 1;
     } else if (READ64BE(kNoCompressExts[m]) > ext) {

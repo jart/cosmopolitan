@@ -30,7 +30,8 @@ textwindows int sys_closesocket_nt(struct Fd *fd) {
   struct SockFd *sockfd;
   sockfd = (struct SockFd *)fd->extra;
   free(sockfd);
-  if (__sys_closesocket_nt(fd->handle) != -1) {
+  int rc = __sys_closesocket_nt(fd->handle);
+  if (rc != -1) {
     return 0;
   } else {
     return __winsockerr();

@@ -456,7 +456,7 @@ double _PyUnicode_ToNumeric(Py_UCS4 c)
         l = 0;
         r = sizeof(kNumericCodes) / sizeof(kNumericCodes[0]) - 1;
         while (l <= r) {
-            m = (l + r) >> 1;
+            m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
             if (kNumericCodes[m] < c) {
               l = m + 1;
             } else if (kNumericCodes[m] > c) {
@@ -469,7 +469,7 @@ double _PyUnicode_ToNumeric(Py_UCS4 c)
         l = 0;
         r = sizeof(kNumericAstralCodes) / sizeof(kNumericAstralCodes[0]) - 1;
         while (l <= r) {
-            m = (l + r) >> 1;
+            m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
             if (kNumericAstralCodes[m] < c) {
               l = m + 1;
             } else if (kNumericAstralCodes[m] > c) {

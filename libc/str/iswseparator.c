@@ -399,7 +399,7 @@ int iswseparator(wint_t c) {
     l = 0;
     r = n = sizeof(kCodes) / sizeof(kCodes[0]);
     while (l < r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (kCodes[m][1] < c) {
         l = m + 1;
       } else {
@@ -411,7 +411,7 @@ int iswseparator(wint_t c) {
     l = 0;
     r = n = sizeof(kAstralCodes) / sizeof(kAstralCodes[0]);
     while (l < r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (kAstralCodes[m][1] < c) {
         l = m + 1;
       } else {

@@ -669,7 +669,7 @@ static long FindRedirect(const char *s, size_t n) {
   l = 0;
   r = redirects.n - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     c = CompareSlices(redirects.p[m].path.s, redirects.p[m].path.n, s, n);
     if (c < 0) {
       l = m + 1;
@@ -5381,7 +5381,7 @@ static bool ShouldAutocomplete(const char *s) {
   l = 0;
   r = ARRAYLEN(kDontAutoComplete) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     c = strcmp(kDontAutoComplete[m], s);
     if (c < 0) {
       l = m + 1;

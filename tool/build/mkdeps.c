@@ -13,45 +13,24 @@
 │ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
 │ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
 │ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
-│ PERFORMANCE OF THIS SOFTWARE.                                                │
+│ TORTIOUS ACTION, ARISING OUTPATH OF OR IN CONNECTION WITH THE USE OR │ │
+PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/alloca.h"
-#include "libc/mem/arraylist.internal.h"
-#include "libc/mem/arraylist2.internal.h"
-#include "libc/mem/bisectcarleft.internal.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/clone.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/thread/spawn.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
-#include "libc/time/time.h"
-#include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/getargs.h"
 
@@ -73,26 +52,14 @@
  *
  */
 
+#define VERSION                     \
+  "cosmopolitan mkdeps v2.0\n"      \
+  "copyright 2023 justine tunney\n" \
+  "https://github.com/jart/cosmopolitan\n"
+
 #define kIncludePrefix "include \""
 
-#define THREADS 1       // _getcpucount()
-#define LOCK    (void)  // if (__threaded) pthread_spin_lock
-#define UNLOCK  (void)  // pthread_spin_unlock
-
 const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
-
-const char *const kIgnorePrefixes[] = {
-#if 0
-    "libc/sysv/consts/",   "libc/sysv/calls/",  "libc/nt/kernel32/",
-    "libc/nt/KernelBase/", "libc/nt/advapi32/", "libc/nt/gdi32/",
-    "libc/nt/ntdll/",      "libc/nt/user32/",   "libc/nt/shell32/",
-#endif
-};
-
-struct Strings {
-  size_t i, n;
-  char *p;
-};
 
 struct Source {
   unsigned hash;
@@ -120,31 +87,71 @@ struct Edges {
   struct Edge *p;
 };
 
-char *out;
-char **bouts;
-pthread_t *th;
-unsigned counter;
-struct GetArgs ga;
-struct Edges edges;
-struct Sauce *sauces;
-struct Strings strings;
-struct Sources sources;
-const char *buildroot;
-pthread_spinlock_t galock;
-pthread_spinlock_t readlock;
-pthread_spinlock_t writelock;
-pthread_spinlock_t reportlock;
+static char *names;
+static unsigned counter;
+static const char *prog;
+static struct Edges edges;
+static struct Sauce *sauces;
+static struct Sources sources;
+static const char *buildroot;
+static const char *outpath;
 
-unsigned Hash(const void *s, size_t l) {
-  return max(1, crc32c(0, s, l));
+static wontreturn void Die(const char *reason) {
+  tinyprint(2, prog, ": ", reason, "\n", NULL);
+  exit(1);
 }
 
-unsigned FindFirstFromEdge(unsigned id) {
+static wontreturn void DieSys(const char *thing) {
+  perror(thing);
+  exit(1);
+}
+
+static wontreturn void DieOom(void) {
+  Die("out of memory");
+}
+
+static unsigned Hash(const void *s, size_t l) {
+  unsigned h;
+  h = crc32c(0, s, l);
+  if (!h) h = 1;
+  return h;
+}
+
+static void *Malloc(size_t n) {
+  void *p;
+  if (!(p = malloc(n))) DieOom();
+  return p;
+}
+
+static void *Calloc(size_t n, size_t z) {
+  void *p;
+  if (!(p = calloc(n, z))) DieOom();
+  return p;
+}
+
+static void *Realloc(void *p, size_t n) {
+  if (!(p = realloc(p, n))) DieOom();
+  return p;
+}
+
+static void Appendw(char **b, uint64_t w) {
+  if (appendw(b, w) == -1) DieOom();
+}
+
+static void Appends(char **b, const char *s) {
+  if (appends(b, s) == -1) DieOom();
+}
+
+static void Appendd(char **b, const void *p, size_t n) {
+  if (appendd(b, p, n) == -1) DieOom();
+}
+
+static unsigned FindFirstFromEdge(unsigned id) {
   unsigned m, l, r;
   l = 0;
   r = edges.i;
   while (l < r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if (edges.p[m].from < id) {
       l = m + 1;
     } else {
@@ -154,9 +161,18 @@ unsigned FindFirstFromEdge(unsigned id) {
   return l;
 }
 
-void Crunch(void) {
+static void AppendEdge(struct Edges *edges, unsigned to, unsigned from) {
+  if (edges->i + 1 > edges->n) {
+    edges->n += 1;
+    edges->n += edges->n >> 1;
+    edges->p = Realloc(edges->p, edges->n * sizeof(*edges->p));
+  }
+  edges->p[edges->i++] = (struct Edge){to, from};
+}
+
+static void Crunch(void) {
   size_t i, j;
-  sauces = malloc(sizeof(*sauces) * sources.n);
+  sauces = Malloc(sizeof(*sauces) * sources.n);
   for (j = i = 0; i < sources.n; ++i) {
     if (sources.p[i].hash) {
       sauces[j].name = sources.p[i].name;
@@ -167,16 +183,18 @@ void Crunch(void) {
   free(sources.p);
   sources.p = 0;
   sources.i = j;
-  _longsort((const long *)sauces, sources.i);
-  _longsort((const long *)edges.p, edges.i);
+  if (!radix_sort_int64((const long *)sauces, sources.i) ||
+      !radix_sort_int64((const long *)edges.p, edges.i)) {
+    DieOom();
+  }
 }
 
-void Rehash(void) {
+static void Rehash(void) {
   size_t i, j, step;
   struct Sources old;
   memcpy(&old, &sources, sizeof(sources));
   sources.n = sources.n ? sources.n << 1 : 16;
-  sources.p = calloc(sources.n, sizeof(struct Source));
+  sources.p = Calloc(sources.n, sizeof(struct Source));
   for (i = 0; i < old.n; ++i) {
     if (!old.p[i].hash) continue;
     step = 0;
@@ -189,9 +207,9 @@ void Rehash(void) {
   free(old.p);
 }
 
-unsigned GetSourceId(const char *name, size_t len) {
-  size_t i, step;
+static unsigned GetSourceId(const char *name, size_t len) {
   unsigned hash;
+  size_t i, step;
   i = 0;
   hash = Hash(name, len);
   if (sources.n) {
@@ -199,7 +217,7 @@ unsigned GetSourceId(const char *name, size_t len) {
     do {
       i = (hash + step * (step + 1) / 2) & (sources.n - 1);
       if (sources.p[i].hash == hash &&
-          !memcmp(name, &strings.p[sources.p[i].name], len)) {
+          !memcmp(name, names + sources.p[i].name, len)) {
         return sources.p[i].id;
       }
       step++;
@@ -214,142 +232,128 @@ unsigned GetSourceId(const char *name, size_t len) {
     } while (sources.p[i].hash);
   }
   sources.p[i].hash = hash;
-  sources.p[i].name = CONCAT(&strings.p, &strings.i, &strings.n, name, len);
-  strings.p[strings.i++] = '\0';
+  sources.p[i].name = appendz(names).i;
+  Appendd(&names, name, len);
+  Appendw(&names, 0);
   return (sources.p[i].id = counter++);
 }
 
-bool ShouldSkipSource(const char *src) {
-  unsigned j;
-  for (j = 0; j < ARRAYLEN(kIgnorePrefixes); ++j) {
-    if (_startswith(src, kIgnorePrefixes[j])) {
-      return true;
-    }
-  }
-  return false;
-}
-
-wontreturn void OnMissingFile(const char *list, const char *src) {
-  kprintf("%s is missing\n", src);
-  DCHECK_EQ(ENOENT, errno, "%s", src);
-  /*
-   * This code helps GNU Make automatically fix itself when we
-   * delete a source file. It removes o/.../srcs.txt or
-   * o/.../hdrs.txt and exits nonzero. Since we use hyphen
-   * notation on mkdeps related rules, the build will
-   * automatically restart itself.
-   */
-  if (list) {
-    kprintf("%s %s...\n", "Refreshing", list);
-    unlink(list);
-  }
-  exit(1);
-}
-
-void *LoadRelationshipsWorker(void *arg) {
+static void LoadRelationships(int argc, char *argv[]) {
   int fd;
+  char *map;
   ssize_t rc;
-  bool skipme;
-  struct stat st;
-  struct Edge edge;
+  struct GetArgs ga;
   size_t i, n, size, inclen;
   unsigned srcid, dependency;
-  char *buf, srcbuf[PATH_MAX];
   const char *p, *pe, *src, *path, *pathend;
+  getargs_init(&ga, argv + optind);
   inclen = strlen(kIncludePrefix);
-  for (;;) {
-    LOCK(&galock);
-    if ((src = getargs_next(&ga))) strcpy(srcbuf, src);
-    UNLOCK(&galock);
-    if (!src) break;
-    src = srcbuf;
-    if (ShouldSkipSource(src)) continue;
+  while ((src = getargs_next(&ga))) {
     n = strlen(src);
-    LOCK(&readlock);
     srcid = GetSourceId(src, n);
-    UNLOCK(&readlock);
     if ((fd = open(src, O_RDONLY)) == -1) {
-      LOCK(&reportlock);
-      OnMissingFile(ga.path, src);
+      if (errno == ENOENT && ga.path) {
+        // This code helps GNU Make automatically fix itself when we
+        // delete a source file. It removes o/.../srcs.txt or
+        // o/.../hdrs.txt and exits nonzero. Since we use hyphen
+        // notation on mkdeps related rules, the build will
+        // automatically restart itself.
+        tinyprint(2, prog, ": deleting ", ga.path, " to refresh build...\n",
+                  NULL);
+      }
+      DieSys(src);
     }
-    CHECK_NE(-1, fstat(fd, &st));
-    if ((size = st.st_size)) {
-      CHECK_NE(MAP_FAILED, (buf = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)));
-      for (p = buf + 1, pe = buf + size; p < pe; ++p) {
+    if ((rc = lseek(fd, 0, SEEK_END)) == -1) {
+      DieSys(src);
+    }
+    if ((size = rc)) {
+      map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0);
+      if (map == MAP_FAILED) {
+        DieSys(src);
+      }
+      for (p = map + 1, pe = map + size; p < pe; ++p) {
         if (!(p = memmem(p, pe - p, kIncludePrefix, inclen))) break;
         path = p + inclen;
         pathend = memchr(path, '"', pe - path);
         if (pathend &&                          //
             (p[-1] == '#' || p[-1] == '.') &&   //
-            (p - buf == 1 || p[-2] == '\n')) {  //
-          LOCK(&readlock);
+            (p - map == 1 || p[-2] == '\n')) {  //
           dependency = GetSourceId(path, pathend - path);
-          UNLOCK(&readlock);
-          edge.from = srcid;
-          edge.to = dependency;
-          LOCK(&writelock);
-          append(&edges, &edge);
-          UNLOCK(&writelock);
+          AppendEdge(&edges, dependency, srcid);
           p = pathend;
         }
       }
-      munmap(buf, size);
-    }
-    close(fd);
-  }
-  return 0;
-}
-
-void LoadRelationships(int argc, char *argv[]) {
-  int i;
-  getargs_init(&ga, argv + optind);
-  if (THREADS == 1) {
-    LoadRelationshipsWorker((void *)(intptr_t)0);
-  } else {
-    for (i = 0; i < THREADS; ++i) {
-      if (pthread_create(th + i, 0, LoadRelationshipsWorker,
-                         (void *)(intptr_t)i)) {
-        LOCK(&reportlock);
-        kprintf("error: _spawn(%d) failed %m\n", i);
-        exit(1);
+      if (munmap(map, size)) {
+        DieSys(src);
       }
     }
-    for (i = 0; i < THREADS; ++i) {
-      pthread_join(th[i], 0);
+    if (close(fd)) {
+      DieSys(src);
     }
   }
   getargs_destroy(&ga);
 }
 
-void GetOpts(int argc, char *argv[]) {
+static wontreturn void ShowUsage(int rc, int fd) {
+  tinyprint(fd, VERSION,
+            "\n"
+            "USAGE\n"
+            "\n",
+            "  ", prog, " -r o// -o OUTPUT INPUT...\n",
+            "\n"
+            "FLAGS\n"
+            "\n"
+            "  -h         show usage\n"
+            "  -o OUTPUT  set output path\n"
+            "  -r ROOT    set build output prefix, e.g. o//\n"
+            "\n"
+            "ARGUMENTS\n"
+            "\n"
+            "  OUTPUT     shall be makefile code\n"
+            "  INPUT      should be source or @args.txt\n"
+            "\n",
+            NULL);
+  exit(rc);
+}
+
+static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "ho:r:")) != -1) {
+  while ((opt = getopt(argc, argv, "hno:r:")) != -1) {
     switch (opt) {
       case 'o':
-        out = optarg;
+        outpath = optarg;
         break;
       case 'r':
         buildroot = optarg;
         break;
+      case 'n':
+        exit(0);
+      case 'h':
+        ShowUsage(0, 1);
       default:
-        kprintf("%s: %s [-r %s] [-o %s] [%s...]\n", "Usage", argv[0],
-                "BUILDROOT", "OUTPUT", "PATHSFILE");
-        exit(1);
+        ShowUsage(1, 2);
     }
   }
-  if (isempty(out)) kprintf("need -o FILE"), exit(1);
-  if (isempty(buildroot)) kprintf("need -r o/$(MODE)"), exit(1);
+  if (!outpath) {
+    Die("need output path");
+  }
+  if (!buildroot) {
+    Die("need build output prefix");
+  }
+  if (optind == argc) {
+    Die("missing input argument");
+  }
 }
 
-const char *StripExt(char pathbuf[PATH_MAX], const char *s) {
+static const char *StripExt(char pathbuf[PATH_MAX + 1], const char *s) {
   static char *dot;
-  strcpy(pathbuf, s);
+  strlcpy(pathbuf, s, PATH_MAX + 1);
   dot = strrchr(pathbuf, '.');
   if (dot) *dot = '\0';
   return pathbuf;
 }
 
-bool IsObjectSource(const char *name) {
+static bool IsObjectSource(const char *name) {
   int i;
   for (i = 0; i < ARRAYLEN(kSourceExts); ++i) {
     if (_endswith(name, kSourceExts[i])) return true;
@@ -357,7 +361,7 @@ bool IsObjectSource(const char *name) {
   return false;
 }
 
-forceinline bool Bts(uint32_t *p, size_t i) {
+__funline bool Bts(uint32_t *p, size_t i) {
   bool r;
   uint32_t k;
   k = 1u << (i & 31);
@@ -366,95 +370,74 @@ forceinline bool Bts(uint32_t *p, size_t i) {
   return false;
 }
 
-size_t GetFileSizeOrZero(const char *path) {
-  struct stat st;
-  st.st_size = 0;
-  stat(path, &st);
-  return st.st_size;
-}
-
-void Dive(char **bout, uint32_t *visited, unsigned id) {
+static void Dive(char **makefile, uint32_t *visited, unsigned id) {
   int i;
   for (i = FindFirstFromEdge(id); i < edges.i && edges.p[i].from == id; ++i) {
     if (Bts(visited, edges.p[i].to)) continue;
-    appendw(bout, READ32LE(" \\\n\t"));
-    appends(bout, strings.p + sauces[edges.p[i].to].name);
-    Dive(bout, visited, edges.p[i].to);
+    Appendw(makefile, READ32LE(" \\\n\t"));
+    Appends(makefile, names + sauces[edges.p[i].to].name);
+    Dive(makefile, visited, edges.p[i].to);
   }
 }
 
-void *Diver(void *arg) {
-  char *bout = 0;
+static char *Explore(void) {
   const char *path;
-  uint32_t *visited;
+  unsigned *visited;
   size_t i, visilen;
-  char pathbuf[PATH_MAX];
-  int x = (intptr_t)arg;
+  char *makefile = 0;
+  char buf[PATH_MAX + 1];
   visilen = (sources.i + sizeof(*visited) * CHAR_BIT - 1) /
             (sizeof(*visited) * CHAR_BIT);
-  visited = malloc(visilen * sizeof(*visited));
-  for (i = x; i < sources.i; i += THREADS) {
-    path = strings.p + sauces[i].name;
+  visited = Malloc(visilen * sizeof(*visited));
+  for (i = 0; i < sources.i; ++i) {
+    path = names + sauces[i].name;
     if (!IsObjectSource(path)) continue;
-    appendw(&bout, '\n');
+    Appendw(&makefile, '\n');
     if (!_startswith(path, "o/")) {
-      appends(&bout, buildroot);
+      Appends(&makefile, buildroot);
     }
-    appends(&bout, StripExt(pathbuf, path));
-    appendw(&bout, READ64LE(".o: \\\n\t"));
-    appends(&bout, path);
+    Appends(&makefile, StripExt(buf, path));
+    Appendw(&makefile, READ64LE(".o: \\\n\t"));
+    Appends(&makefile, path);
     bzero(visited, visilen * sizeof(*visited));
     Bts(visited, i);
-    Dive(&bout, visited, i);
-    appendw(&bout, '\n');
+    Dive(&makefile, visited, i);
+    Appendw(&makefile, '\n');
   }
+  Appendw(&makefile, '\n');
   free(visited);
-  appendw(&bout, '\n');
-  bouts[x] = bout;
-  return 0;
-}
-
-void Explore(void) {
-  int i;
-  if (THREADS == 1) {
-    Diver((void *)(intptr_t)0);
-  } else {
-    for (i = 0; i < THREADS; ++i) {
-      if (pthread_create(th + i, 0, Diver, (void *)(intptr_t)i)) {
-        LOCK(&reportlock);
-        kprintf("error: _spawn(%d) failed %m\n", i);
-        exit(1);
-      }
-    }
-    for (i = 0; i < THREADS; ++i) {
-      pthread_join(th[i], 0);
-    }
-  }
+  return makefile;
 }
 
 int main(int argc, char *argv[]) {
-  int i, fd;
+  int fd;
+  ssize_t rc;
+  size_t i, n;
+  char *makefile;
+#ifndef NDEBUG
   ShowCrashReports();
-  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
+#endif
+  prog = argv[0];
+  if (!prog) prog = "mkdeps";
   GetOpts(argc, argv);
-  th = calloc(THREADS, sizeof(*th));
-  bouts = calloc(THREADS, sizeof(*bouts));
   LoadRelationships(argc, argv);
   Crunch();
-  Explore();
-  CHECK_NE(-1, (fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644)),
-           "open(%#s)", out);
-  for (i = 0; i < THREADS; ++i) {
-    CHECK_NE(-1, xwrite(fd, bouts[i], appendz(bouts[i]).i));
+  makefile = Explore();
+  if ((fd = open(outpath, O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
+    DieSys(outpath);
   }
-  CHECK_NE(-1, close(fd));
-  for (i = 0; i < THREADS; ++i) {
-    free(bouts[i]);
+  n = appendz(makefile).i;
+  for (i = 0; i < n; i += (size_t)rc) {
+    if ((rc = write(fd, makefile + i, n - i)) == -1) {
+      DieSys(outpath);
+    }
   }
-  free(strings.p);
+  if (close(fd)) {
+    DieSys(outpath);
+  }
+  free(makefile);
   free(edges.p);
   free(sauces);
-  free(bouts);
-  free(th);
+  free(names);
   return 0;
 }

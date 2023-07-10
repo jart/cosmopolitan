@@ -41,7 +41,7 @@ dontinstrument privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
     r = n = t->count;
     k = a - t->addr_base;
     while (l < r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (t->symbols[m].y < k) {
         l = m + 1;
       } else {

@@ -164,7 +164,7 @@ wint_t towupper(wint_t c) {
       l = 0;
       r = n = sizeof(kUpper) / sizeof(kUpper[0]);
       while (l < r) {
-        m = (l + r) >> 1;
+        m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
         if (kUpper[m].y < c) {
           l = m + 1;
         } else {
@@ -181,7 +181,7 @@ wint_t towupper(wint_t c) {
     l = 0;
     r = n = sizeof(kAstralUpper) / sizeof(kAstralUpper[0]);
     while (l < r) {
-      m = (l + r) >> 1;
+      m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
       if (kAstralUpper[m][1] < c) {
         l = m + 1;
       } else {

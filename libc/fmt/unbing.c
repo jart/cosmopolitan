@@ -220,7 +220,7 @@ int unbing(int c) {
   l = 0;
   r = ARRAYLEN(kCp437i) - 1;
   while (l <= r) {
-    m = (l + r) >> 1;
+    m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
     if ((kCp437i[m] >> 8) < c) {
       l = m + 1;
     } else if ((kCp437i[m] >> 8) > c) {
