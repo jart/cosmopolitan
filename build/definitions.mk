@@ -232,8 +232,7 @@ DEFAULT_CXXFLAGS =							\
 DEFAULT_ASFLAGS =							\
 	-W								\
 	-I.								\
-	--noexecstack							\
-	--nocompress-debug-sections
+	--noexecstack
 
 DEFAULT_LDFLAGS =							\
 	-static								\

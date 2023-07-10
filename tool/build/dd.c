@@ -17,10 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -28,17 +25,16 @@
 #include "libc/sysv/consts/o.h"
 
 char buf[65536];
+const char *prog;
 
-wontreturn void SysFail(const char *func, const char *file) {
-  int e = errno;
-  fputs("dd: ", stderr);
-  fputs(func, stderr);
-  fputs(" failed: ", stderr);
-  fputs(file, stderr);
-  fputs(": ", stderr);
-  fputs(nulltoempty(_strerdoc(e)), stderr);
-  fputs("\n", stderr);
-  exit(__COUNTER__ + 1);
+static wontreturn void Die(const char *reason) {
+  tinyprint(2, prog, ": ", reason, "\n", NULL);
+  exit(1);
+}
+
+static wontreturn void DieSys(const char *thing) {
+  perror(thing);
+  exit(1);
 }
 
 int main(int argc, char *argv[]) {
@@ -51,6 +47,9 @@ int main(int argc, char *argv[]) {
   const char *infile = "/dev/stdin";
   const char *oufile = "/dev/stdout";
 
+  prog = argv[0];
+  if (!prog) prog = "dd";
+
   for (i = 1; i < argc; ++i) {
 
     if (argv[i][0] == 'b' &&  //
@@ -58,8 +57,7 @@ int main(int argc, char *argv[]) {
         argv[i][2] == '=') {
       blocksize = strtol(argv[i] + 3 + (argv[i][3] == '"'), 0, 10);
       if (!(0 < blocksize && blocksize <= sizeof(buf))) {
-        fputs("dd: bad block size\n", stderr);
-        return __COUNTER__ + 1;
+        Die("bad block size");
       }
 
     } else if (argv[i][0] == 'i' &&  //
@@ -83,8 +81,7 @@ int main(int argc, char *argv[]) {
                argv[i][4] == '=') {
       count = strtol(argv[i] + 5 + (argv[i][5] == '"'), 0, 10);
       if (!(skip < 0)) {
-        fputs("dd: bad skip\n", stderr);
-        return __COUNTER__ + 1;
+        Die("bad skip");
       }
 
     } else if (argv[i][0] == 'c' &&  //
@@ -95,18 +92,14 @@ int main(int argc, char *argv[]) {
                argv[i][5] == '=') {
       count = strtol(argv[i] + 6 + (argv[i][6] == '"'), 0, 10);
       if (!(count < 0)) {
-        fputs("dd: bad count\n", stderr);
-        return __COUNTER__ + 1;
+        Die("bad count");
       }
 
     } else if (!strcmp(argv[i], "conv=notrunc")) {
       oflags &= ~O_TRUNC;
 
     } else {
-      fputs("dd: unrecognized arg: ", stderr);
-      fputs(argv[i], stderr);
-      fputs("\n", stderr);
-      return __COUNTER__ + 1;
+      Die("unrecognized arg");
     }
   }
 
@@ -114,16 +107,16 @@ int main(int argc, char *argv[]) {
   int fdin, fdout;
 
   if ((fdin = open(infile, O_RDONLY)) == -1) {
-    SysFail("open", infile);
+    DieSys(infile);
   }
 
   if ((fdout = open(oufile, oflags, 0644)) == -1) {
-    SysFail("open", oufile);
+    DieSys(oufile);
   }
 
   if (skip) {
     if (lseek(fdin, skip, SEEK_SET) == -1) {
-      SysFail("lseek", infile);
+      DieSys(infile);
     }
   }
 
@@ -131,31 +124,27 @@ int main(int argc, char *argv[]) {
 
     rc = read(fdin, buf, blocksize);
     if (rc == -1) {
-      SysFail("read", infile);
+      DieSys(infile);
     }
     if (rc != blocksize) {
-      int e = errno;
-      fputs("dd: failed to read blocksize: ", stderr);
-      fputs(infile, stderr);
-      fputs("\n", stderr);
-      return __COUNTER__ + 1;
+      Die("failed to read full blocksize");
     }
 
     rc = write(fdout, buf, blocksize);
     if (rc == -1) {
-      SysFail("write", oufile);
+      DieSys(oufile);
     }
     if (rc != blocksize) {
-      int e = errno;
-      fputs("dd: failed to write blocksize: ", stderr);
-      fputs(infile, stderr);
-      fputs("\n", stderr);
-      return __COUNTER__ + 1;
+      Die("failed to write full blocksize");
     }
   }
 
-  if (close(fdin) == -1) SysFail("close", infile);
-  if (close(fdout) == -1) SysFail("close", oufile);
+  if (close(fdin) == -1) {
+    DieSys(infile);
+  }
+  if (close(fdout) == -1) {
+    DieSys(oufile);
+  }
 
   return 0;
 }

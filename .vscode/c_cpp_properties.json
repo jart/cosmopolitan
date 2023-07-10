@@ -78,7 +78,6 @@
 				"-Wa,-W",
 				"-Wa,-I.",
 				"-Wa,--noexecstack",
-				"-Wa,--nocompress-debug-sections",
 				"-Og",
 				"-g",
 				"-gdescribe-dies",
