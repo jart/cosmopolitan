@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 
@@ -26,5 +27,6 @@
  * @return 0 on success, or error code
  */
 int strerror_r(int err, char *buf, size_t size) {
-  return strerror_wr(err, GetLastError(), buf, size);
+  int winerr = IsWindows() ? GetLastError() : 0;
+  return strerror_wr(err, winerr, buf, size);
 }

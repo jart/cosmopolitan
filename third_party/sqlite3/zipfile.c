@@ -1420,8 +1420,8 @@ static int zipfileGetMode(
 ** Both (const char*) arguments point to nul-terminated strings. Argument
 ** nB is the value of strlen(zB). This function returns 0 if the strings are
 ** identical, ignoring any trailing '/' character in either path.  */
-static int zipfileComparePath(const char *zA, const char *zB, int nB){
-  int nA = (int)strlen(zA);
+static int zipfileComparePath(const char *zA, const char *zB, size_t nB){
+  size_t nA = strlen(zA);
   if( nA>0 && zA[nA-1]=='/' ) nA--;
   if( nB>0 && zB[nB-1]=='/' ) nB--;
   if( nA==nB && memcmp(zA, zB, nA)==0 ) return 0;

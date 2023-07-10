@@ -71,14 +71,15 @@ _start:
 //	align stack to GetStackSize() so GetStackAddr() is fast
 	.weak	ape_stack_memsz
 	mov	$ape_stack_memsz,%r9d
-	mov	$ape_stack_align,%r8d
-	cmp	$_HOSTLINUX,%cl
-	cmove	%r9d,%r8d
+	mov	$16,%r8d
+	test	%r9d,%r9d
+	cmovnz	%r9,%r8
 	neg	%r8
 	and	%r8,%rsp
 	xor	%ebp,%ebp
 //	bofram	9f
 
+#if SupportsWindows()
 //	make win32 imps noop
 	.weak	ape_idata_iat
 	.weak	ape_idata_iatend
@@ -88,6 +89,7 @@ _start:
 	sub	%rdi,%rcx
 	shr	$3,%ecx
 	rep stosq
+#endif
 
 //	scan through environment varis
 //	find start of auxiliary values

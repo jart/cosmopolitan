@@ -1032,6 +1032,11 @@ sys_getwindowsversion(PyObject *self)
     void *verblock;
     uint32_t verblock_size;
 
+    if (!IsWindows()) {
+        PyErr_SetString(PyExc_SystemError, "this is not windows");
+        return 0;
+    }
+
     ver.dwOSVersionInfoSize = sizeof(ver);
     if (!GetVersionEx(&ver))
         return PyErr_SetFromWindowsErr(0);

@@ -317,7 +317,6 @@ SECTIONS {
     __privileged_start = .;
     *(.privileged)
     __privileged_end = .;
-    . += . > 0 ? CODE_GRANULE : 0;
 
     KEEP(*(.ape.pad.text))
     . = ALIGN(CONSTANT(COMMONPAGESIZE));
@@ -344,9 +343,11 @@ SECTIONS {
 
 /*BEGIN: read-only data that's only needed for initialization */
 
+#if SupportsWindows()
     /* Windows DLL Import Directory */
     KEEP(*(.idata.ro));
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
+#endif
 
     . = ALIGN(__SIZEOF_POINTER__);
     __init_array_start = .;
@@ -405,7 +406,9 @@ SECTIONS {
 
   .data . : {
 /*BEGIN: Read/Write Data */
+#if SupportsWindows()
     KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
+#endif
 /*BEGIN: NT FORK COPYING */
     KEEP(*(.dataprologue))
     *(.data .data.*)
@@ -517,6 +520,11 @@ SECTIONS {
   }
 
   /DISCARD/ : {
+#if !SupportsWindows()
+    *(.idata.ro);
+    *(.idata.ro.*)
+    *(.piro.data.sort.iat.*)
+#endif
     *(__patchable_function_entries)
     *(__mcount_loc)
     *(.discard)
@@ -569,6 +577,7 @@ ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000;
 ape_stack_paddr = ape_ram_paddr + ape_ram_filesz;
 ape_stack_filesz = 0;
 ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : APE_STACKSIZE;
+ape_stack_memsz2 = ape_stack_memsz * 2;
 ape_stack_align = 16;
 
 ape_note_offset = ape_cod_offset + (ape_note - ape_cod_vaddr);

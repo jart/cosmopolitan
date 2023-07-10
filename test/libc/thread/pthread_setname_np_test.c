@@ -100,13 +100,14 @@ TEST(pthread_setname_np, GetNameOfOtherThread) {
   ASSERT_EQ(0, pthread_create(&id, 0, GetNameOfOtherThreadWorker, 0));
   while (!atomic_load(&sync1)) pthread_yield();
   errno_t e = pthread_getname_np(id, me, sizeof(me));
-  if (IsLinux() && e == ENOENT) return;  // bah old kernel
-  if (IsLinux() && e == EACCES) return;  // meh landlock
+  if (IsLinux() && e == ENOENT) goto GiveUp;  // bah old kernel
+  if (IsLinux() && e == EACCES) goto GiveUp;  // meh landlock
   ASSERT_EQ(0, e);
   EXPECT_STREQ("justine", me);
   ASSERT_EQ(0, pthread_setname_np(id, "tunney"));
   ASSERT_EQ(0, pthread_getname_np(id, me, sizeof(me)));
   EXPECT_STREQ("tunney", me);
+GiveUp:
   atomic_store(&sync2, 1);
   ASSERT_EQ(0, pthread_join(id, 0));
 }

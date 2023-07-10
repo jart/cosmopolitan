@@ -76,7 +76,7 @@ _init_check_rdi_rsi:
 	jne	1b
 3:	.endfn	_init_check_rdi_rsi
 #endif
-_woot:	leave
+	leave
 #elif defined(__aarch64__)
 	ldp	x29,x30,[sp],#16
 #endif

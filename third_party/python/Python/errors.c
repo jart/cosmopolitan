@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/formatmessageflags.h"
@@ -11,6 +12,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/dictobject.h"
@@ -589,6 +591,10 @@ PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
     PyObject *message;
     PyObject *args, *v;
     uint32_t err = (uint32_t)ierr;
+    if (!IsWindows()) {
+        PyErr_SetString(PyExc_SystemError, "this is not windows");
+        return 0;
+    }
     if (err==0) err = GetLastError();
     len = FormatMessage(
         /* Error API error */

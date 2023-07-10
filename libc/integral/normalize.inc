@@ -80,7 +80,7 @@
 #define FRAMESIZE     0x10000
 #define PAGESIZE      0x1000 /* i386+ */
 #else
-#define APE_STACKSIZE 8388608 /* default 8mb stack */
+#define APE_STACKSIZE 4194304 /* default 4mb stack */
 #endif
 #define APE_PAGESIZE  0x10000 /* i386+ */
 #define APE_GUARDSIZE 0x4000  /* b/c apple m1 */

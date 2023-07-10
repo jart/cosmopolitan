@@ -26,6 +26,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#if defined(__x86_64__) && SupportsWindows()
 
 /**
  * @fileoverview WIN32 Virtual Memory Layout Dump Utility
@@ -73,3 +74,11 @@ int main(int argc, char *argv[]) {
            (DescribeNtPageFlags)(b[4], mi.Protect));
   }
 }
+
+#else
+int main(int argc, char *argv[]) {
+  fprintf(stderr,
+          "virtualquery not supported on this cpu arch or build config\n");
+  return 1;
+}
+#endif /* __x86_64__ && SupportsWindows() */

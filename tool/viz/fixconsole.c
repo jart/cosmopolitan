@@ -22,6 +22,8 @@
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#if defined(__x86_64__) && SupportsWindows()
 
 int main(int argc, char *argv[]) {
   if (!IsWindows()) {
@@ -40,3 +42,11 @@ int main(int argc, char *argv[]) {
                      kNtEnableVirtualTerminalProcessing);
   _Exit(0);
 }
+
+#else
+int main(int argc, char *argv[]) {
+  fprintf(stderr,
+          "fixconsole not supported on this cpu arch or build config\n");
+  return 1;
+}
+#endif /* __x86_64__ && SupportsWindows() */

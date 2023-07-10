@@ -232,7 +232,7 @@ void Assimilate(void) {
     kprintf("%s: fstat() failed: %m\n", prog);
     exit(14);
   }
-  if (st.st_size < 8192) {
+  if (st.st_size < 4096) {
     kprintf("%s: ape binaries must be at least 4096 bytes\n", prog);
     exit(15);
   }

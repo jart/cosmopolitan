@@ -946,6 +946,10 @@ os__getfinalpathname(PyObject *module, PyObject *arg)
     PyObject *return_value = NULL;
     PyObject *path;
 
+    if (!IsWindows()) {
+        Py_RETURN_NONE;
+    }
+
     if (!PyArg_Parse(arg, "U:_getfinalpathname", &path)) {
         goto exit;
     }
@@ -1037,6 +1041,9 @@ os__getvolumepathname_impl(PyObject *module, PyObject *path);
 static PyObject *
 os__getvolumepathname(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
+    if (!IsWindows()) {
+        Py_RETURN_NONE;
+    }
     PyObject *return_value = NULL;
     static const char * const _keywords[] = {"path", NULL};
     static _PyArg_Parser _parser = {"U:_getvolumepathname", _keywords, 0};

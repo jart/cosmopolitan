@@ -82,9 +82,11 @@ extern "C" {
 #  define XXH_X86DISPATCH_ALLOW_AVX
 #endif
 
+#if 0 /* [jart] be quiet */
 #if defined(__AVX__) && !defined(XXH_X86DISPATCH_ALLOW_AVX)
 #  error "Error: if xxh_x86dispatch.c is compiled with AVX enabled, the resulting binary will crash on sse2-only cpus !! " \
          "If you nonetheless want to do that, please enable the XXH_X86DISPATCH_ALLOW_AVX build variable"
+#endif
 #endif
 
 #ifdef __has_include

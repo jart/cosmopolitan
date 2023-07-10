@@ -275,6 +275,7 @@ SECTIONS {
 }
 
 ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : APE_STACKSIZE;
+ape_stack_memsz2 = ape_stack_memsz * 2;
 _tls_size = _tbss_end - _tdata_start;
 _tdata_size = _tdata_end - _tdata_start;
 _tbss_size = _tbss_end - _tbss_start;

@@ -76,12 +76,13 @@ endif
 ifeq ($(MODE), opt)
 ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g
-CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -msse2avx -Wa,-msse2avx
+CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG
 CONFIG_CCFLAGS += $(BACKTRACES) -O3 -fmerge-all-constants
-TARGET_ARCH ?= -march=skylake
+TARGET_ARCH ?= -march=native
 endif
 
 # Optimized Linux Mode
+# The Fastest Mode of All
 #
 #   - `make MODE=optlinux`
 #   - Turns on red zone
@@ -91,8 +92,9 @@ endif
 #   - Turns off support for other operating systems
 #
 ifeq ($(MODE), optlinux)
+ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g
-CONFIG_CPPFLAGS += -DNDEBUG -msse2avx -Wa,-msse2avx -DSUPPORT_VECTOR=1
+CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
 CONFIG_COPTS += -mred-zone
 TARGET_ARCH ?= -march=native
@@ -114,7 +116,7 @@ endif
 #   - CHECK_xx() won't leak strings into binary
 #
 ifeq ($(MODE), rel)
-CONFIG_CPPFLAGS += -DNDEBUG
+CONFIG_CPPFLAGS += -DNDEBUG -DDWARFLESS
 CONFIG_CCFLAGS += $(BACKTRACES) -O2
 TARGET_ARCH ?= -msse3
 PYFLAGS += -O1

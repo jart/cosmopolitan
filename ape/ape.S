@@ -794,7 +794,7 @@ ape_loader_end:
 	.stub	ape_stack_vaddr,quad		// is mmap()'d with MAP_FIXED
 	.stub	ape_stack_paddr,quad		// ignored
 	.stub	ape_stack_filesz,quad		// ignored
-	.stub	ape_stack_memsz,quad		// is mmap(size) argument
+	.stub	ape_stack_memsz2,quad		// is mmap(size) argument
 	.stub	ape_stack_align,quad		// must be 16+
 
 #if SupportsOpenbsd() || SupportsNetbsd()
@@ -1718,7 +1718,7 @@ ape_grub_entry:
 │ αcτµαlly pδrταblε εxεcµταblε § cosmopolitan libc runtime runtime         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 kernel:	movabs	$ape_stack_vaddr,%rsp
-	add	$ape_stack_memsz,%rsp
+	add	$ape_stack_memsz2,%rsp
 	movl	$0,0x7b000			// unmap null 2mb
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			// nop rdi binbase

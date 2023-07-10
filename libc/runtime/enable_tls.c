@@ -222,7 +222,9 @@ textstartup void __enable_tls(void) {
 
 #ifdef __x86_64__
   // rewrite the executable tls opcodes in memory
-  __morph_tls();
+  if (IsWindows() || IsXnu()) {
+    __morph_tls();
+  }
 #endif
 
   // we are now allowed to use tls

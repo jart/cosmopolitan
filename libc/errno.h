@@ -9,7 +9,7 @@ COSMOPOLITAN_C_START_
  */
 
 #if defined(__GNUC__) && defined(__x86_64__) && defined(__MNO_RED_ZONE__) && \
-    !defined(__STRICT_ANSI__)
+    !defined(__STRICT_ANSI__) && !defined(__cplusplus)
 #define errno                                                           \
   (*({                                                                  \
     errno_t *_ep;                                                       \

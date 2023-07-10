@@ -41,7 +41,7 @@
 #include "libc/time/time.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/idname.h"
-#ifdef __x86_64__
+#if defined(__x86_64__) && SupportsWindows()
 
 char *GetString(struct NtUnicodeString *s) {
   static char buf[1024];
@@ -538,4 +538,9 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-#endif /* __x86_64__ */
+#else
+int main(int argc, char *argv[]) {
+  fprintf(stderr, "printpeb not supported on this cpu arch or build config\n");
+  return 1;
+}
+#endif /* __x86_64__ && SupportsWindows() */

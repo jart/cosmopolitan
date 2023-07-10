@@ -205,7 +205,7 @@ int LuaUnixSysretErrno(lua_State *L, const char *call, int olderr) {
   struct UnixErrno *ep;
   int i, unixerr, winerr;
   unixerr = errno;
-  winerr = GetLastError();
+  winerr = IsWindows() ? GetLastError() : 0;
   if (!IsTiny() && !(0 < unixerr && unixerr < (!IsWindows() ? 4096 : 65536))) {
     WARNF("errno should not be %d", unixerr);
   }

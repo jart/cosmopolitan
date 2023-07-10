@@ -55,8 +55,10 @@ static errno_t sys_clock_nanosleep(int clock, int flags,
     rc = sys_clock_nanosleep_xnu(clock, flags, req, rem);
   } else if (IsOpenbsd()) {
     rc = sys_clock_nanosleep_openbsd(clock, flags, req, rem);
-  } else {
+  } else if (IsWindows()) {
     rc = sys_clock_nanosleep_nt(clock, flags, req, rem);
+  } else {
+    rc = enosys();
   }
   if (rc == -1) {
     rc = errno;

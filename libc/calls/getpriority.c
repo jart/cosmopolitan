@@ -25,6 +25,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Returns nice value of thing.
@@ -72,8 +73,10 @@ int getpriority(int which, unsigned who) {
       errno = rc;
       rc = -1;
     }
-  } else {
+  } else if (IsWindows()) {
     rc = sys_getpriority_nt(which, who);
+  } else {
+    rc = enosys();
   }
 #else
   rc = sys_getpriority(which, who);

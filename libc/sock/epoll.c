@@ -1410,6 +1410,7 @@ err:
   return -1;
 }
 
+#if SupportsWindows()
 textwindows int sys_close_epoll_nt(int fd) {
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
@@ -1427,6 +1428,7 @@ err:
   err_check_handle(g_fds.p[fd].handle);
   return -1;
 }
+#endif
 
 /**
  * Creates new epoll instance.

@@ -223,7 +223,9 @@ void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
     if (_weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
     if (_weaken(SetUp)) _weaken(SetUp)();
     errno = 0;
-    SetLastError(0);
+    if (IsWindows()) {
+      SetLastError(0);
+    }
     if (!IsWindows()) sys_getpid();
     if (warmup) warmup();
     testlib_clearxmmregisters();

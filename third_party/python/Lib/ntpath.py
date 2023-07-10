@@ -664,10 +664,7 @@ def commonpath(paths):
 try:
     # GetFinalPathNameByHandle is available starting with Windows 6.0.
     # Windows XP and non-Windows OS'es will mock _getfinalpathname.
-    if sys.getwindowsversion()[:2] >= (6, 0):
-        _getfinalpathname = posix._getfinalpathname
-    else:
-        raise ImportError
+    _getfinalpathname = posix._getfinalpathname
 except (AttributeError, ImportError, OSError):
     # On Windows XP and earlier, two files are the same if their absolute
     # pathnames are the same.
