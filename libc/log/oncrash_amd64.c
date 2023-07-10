@@ -23,6 +23,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
@@ -44,6 +45,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
@@ -292,7 +294,9 @@ static wontreturn relegated dontinstrument void __minicrash(int sig,
  */
 relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
   int bZero;
+#ifdef ATTACH_GDB_ON_CRASH
   intptr_t rip;
+#endif
   int me, owner;
   int gdbpid, err;
   ucontext_t *ctx = arg;
@@ -307,13 +311,15 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
   if (atomic_compare_exchange_strong_explicit(
           &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
     if (!__vforked) {
+#ifdef ATTACH_GDB_ON_CRASH
       rip = ctx ? ctx->uc_mcontext.rip : 0;
+#endif
       err = errno;
       if ((gdbpid = IsDebuggerPresent(true))) {
         DebugBreak();
       } else if (__nocolor || g_isrunningundermake) {
         gdbpid = -1;
-#if 0
+#if ATTACH_GDB_ON_CRASH
       } else if (!IsTiny() && IsLinux() && FindDebugBinary() && !__isworker) {
         // RestoreDefaultCrashSignalHandlers();
         gdbpid = AttachDebugger(

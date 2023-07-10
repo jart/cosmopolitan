@@ -38,7 +38,6 @@ LIBC_TESTLIB_A_SRCS_S =						\
 	libc/testlib/moby.S					\
 	libc/testlib/polluteregisters.S				\
 	libc/testlib/testcase.S					\
-	libc/testlib/thrashcodecache.S				\
 	libc/testlib/viewables.S
 
 LIBC_TESTLIB_A_SRCS_C =						\
@@ -146,8 +145,6 @@ o/$(MODE)/libc/testlib/moby.o: libc/testlib/moby.S
 o/$(MODE)/libc/testlib/polluteregisters.o: libc/testlib/polluteregisters.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/testlib/testcase.o: libc/testlib/testcase.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/testlib/thrashcodecache.o: libc/testlib/thrashcodecache.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/testlib/viewables.o: libc/testlib/viewables.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

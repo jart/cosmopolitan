@@ -25,10 +25,8 @@ struct _posix_spawna {
 struct _posix_faction {
   struct _posix_faction *next;
   int action;
-  union {
-    int fildes;
-    int oflag;
-  };
+  int fildes;
+  int oflag;
   union {
     int newfildes;
     unsigned mode;

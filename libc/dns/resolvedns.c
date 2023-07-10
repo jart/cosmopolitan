@@ -52,7 +52,6 @@
  */
 int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
                struct sockaddr *addr, uint32_t addrsize) {
-  int32_t ttl;
   int rc, fd, n;
   struct DnsQuestion q;
   struct DnsHeader h, h2;
@@ -94,7 +93,7 @@ int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
         if (p + 10 <= pe) {
           rtype = READ16BE(p);
           rclass = READ16BE(p + 2);
-          ttl = READ32BE(p + 4);
+          // ttl = READ32BE(p + 4);
           rdlength = READ16BE(p + 8);
           if (p + 10 + rdlength <= pe && rdlength == 4 &&
               rclass == DNS_CLASS_IN && rtype == DNS_TYPE_A) {

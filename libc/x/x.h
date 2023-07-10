@@ -27,13 +27,10 @@ COSMOPOLITAN_C_START_
 #define xstripext     __xstripext
 #define xstripexts    __xstripexts
 #define xload         __xload
-#define xloadzd       __xloadzd
 #define rmrf          __rmrf
 #define xbasename     __xbasename
 #define xdirname      __xdirname
 #define xjoinpaths    __xjoinpaths
-#define xreadlink     __xreadlink
-#define xreadlinkat   __xreadlinkat
 #define xfixpath      __xfixpath
 #define xslurp        __xslurp
 #define xbarf         __xbarf
@@ -84,18 +81,12 @@ char *xhomedir(void) dontdiscard;
 char *xstripext(const char *) dontdiscard;
 char *xstripexts(const char *) dontdiscard;
 void *xload(_Atomic(void *) *, const void *, size_t, size_t);
-void *xloadzd(_Atomic(void *) *, const void *, size_t, size_t, size_t, size_t,
-              uint32_t);
 int rmrf(const char *);
 char *xbasename(const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 char *xdirname(const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 char *xjoinpaths(const char *, const char *) paramsnonnull()
-    returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
-char *xreadlink(const char *) paramsnonnull()
-    returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
-char *xreadlinkat(int, const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 void xfixpath(void);
 void *xslurp(const char *, size_t *)

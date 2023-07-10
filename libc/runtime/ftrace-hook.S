@@ -26,7 +26,7 @@ ftrace_hook:
 //	like __errno_location which can be called from an inline asm()
 //	statement. It's nice to have the flexibility anyway.
 
-	cmp	$0,__ftrace(%rip)
+	cmpl	$0,__ftrace(%rip)
 	jle	1f
 	push	%rbp
 	mov	%rsp,%rbp

@@ -154,6 +154,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
                 : (DescribeNtConsoleInFlags)(inflagsbuf, kConsoleModes[i]),
               rc);
     }
+    (void)rc;
   }
   _Static_assert(sizeof(struct WinArgs) % FRAMESIZE == 0, "");
   _mmi.p = _mmi.s;

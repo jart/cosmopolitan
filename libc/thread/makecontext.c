@@ -101,7 +101,7 @@ void makecontext(ucontext_t *uc, void func(), int argc, ...) {
   sp += uc->uc_stack.ss_size;
   sp -= 16;  // openbsd:stackbound
   sp -= sizeof(*call);
-  sp &= -alignof(*call);
+  sp &= -alignof(struct Gadget);
   call = (struct Gadget *)sp;
 
   // get arguments

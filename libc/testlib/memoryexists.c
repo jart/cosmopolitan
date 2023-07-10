@@ -63,6 +63,7 @@ noasan bool testlib_memoryexists(const void *p) {
   _npassert(!sigaction(SIGSEGV, &sa, old + 0));
   _npassert(!sigaction(SIGBUS, &sa, old + 1));
   c = atomic_load(mem);
+  (void)c;
   _npassert(!sigaction(SIGBUS, old + 1, 0));
   _npassert(!sigaction(SIGSEGV, old + 0, 0));
   return !gotsignal;

@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"

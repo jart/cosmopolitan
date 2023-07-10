@@ -36,6 +36,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "third_party/awk/awk.h"
 // clang-format off
 

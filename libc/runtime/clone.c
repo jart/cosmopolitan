@@ -169,7 +169,7 @@ asm("XnuThreadThunk:\n\t"
     "push\t%rax\n\t"
     "jmp\tXnuThreadMain\n\t"
     ".size\tXnuThreadThunk,.-XnuThreadThunk");
-__attribute__((__used__, __no_reorder__))
+__attribute__((__used__))
 
 static wontreturn void
 XnuThreadMain(void *pthread,                    // rdi

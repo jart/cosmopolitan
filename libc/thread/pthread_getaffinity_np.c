@@ -38,10 +38,9 @@
  */
 errno_t pthread_getaffinity_np(pthread_t thread, size_t size,
                                cpu_set_t *bitset) {
-  int e, rc, tid;
+  int rc, tid;
 
   if (!(rc = pthread_getunique_np(thread, &tid))) {
-    e = errno;
     if (size != sizeof(cpu_set_t)) {
       rc = einval();
     } else if (IsWindows() || IsMetal() || IsOpenbsd()) {

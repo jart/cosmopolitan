@@ -310,7 +310,14 @@ TEST(fmt, e) {
 TEST(fmt, a) {
   EXPECT_STREQ("0x0p+0", _gc(xasprintf("%a", 0.)));
   EXPECT_STREQ("0x0p+0", _gc(xasprintf("%.a", 0.)));
+  EXPECT_STREQ(" 0x0p+0", _gc(xasprintf("%7.a", 0.)));
   EXPECT_STREQ("0x0.000p+0", _gc(xasprintf("%.3a", 0.)));
+  // EXPECT_STREQ(" 0x0.000p+0\n", _gc(xasprintf("%11.3a\n", 0.))); // TODO
+  EXPECT_STREQ("inf\n", _gc(xasprintf("%g\n", INFINITY)));
+  EXPECT_STREQ("  inf\n", _gc(xasprintf("%5g\n", INFINITY)));
+  EXPECT_STREQ(" +inf\n", _gc(xasprintf("%+5g\n", INFINITY)));
+  EXPECT_STREQ(" inf\n", _gc(xasprintf("% g\n", INFINITY)));
+  EXPECT_STREQ("-inf\n", _gc(xasprintf("% g\n", -INFINITY)));
   EXPECT_STREQ("0x1.921fb54442d18p+1",
                _gc(xasprintf("%a", 0x1.921fb54442d1846ap+1)));
   EXPECT_STREQ("0X1.921FB54442D18P+1",

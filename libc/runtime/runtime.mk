@@ -128,7 +128,8 @@ o/$(MODE)/libc/runtime/enable_threads.o			\
 o/$(MODE)/libc/runtime/morph_tls.o: private		\
 		CFLAGS +=				\
 			-ffreestanding			\
-			-fno-sanitize=all
+			-fno-sanitize=all		\
+			-fno-stack-protector
 
 # TODO(jart): We need a way to avoid WinThreadEntry() being hooked.
 o/$(MODE)/libc/runtime/clone.o: private			\

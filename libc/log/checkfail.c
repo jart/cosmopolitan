@@ -46,14 +46,12 @@ relegated void __check_fail(const char *suffix,   //
                             int line,             //
                             const char *fmt,      //
                             ...) {
-  int e;
   char *p;
   size_t i;
   va_list va;
   char hostname[32];
   strace_enabled(-1);
   ftrace_enabled(-1);
-  e = errno;
   __start_fatal(file, line);
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));

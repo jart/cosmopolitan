@@ -191,7 +191,8 @@ o/$(MODE)/libc/calls/pledge-linux.o			\
 o/$(MODE)/libc/calls/siginfo2cosmo.o: private		\
 		CFLAGS +=				\
 			-ffreestanding			\
-			-fno-sanitize=all
+			-fno-sanitize=all		\
+			-fno-stack-protector
 
 o/$(MODE)/libc/calls/pledge-linux.o			\
 o/$(MODE)/libc/calls/unveil.o: private			\

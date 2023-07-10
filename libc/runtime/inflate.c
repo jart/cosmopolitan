@@ -54,8 +54,6 @@ int __inflate(void *out, size_t outsize, const void *in, size_t insize) {
       rc = 0;
     } else if (rc == Z_OK) {
       rc = Z_STREAM_END;  // coerce to nonzero
-    } else {
-      rc = rc;
     }
   } else {
     rc = _puff(out, &outsize, in, &insize);

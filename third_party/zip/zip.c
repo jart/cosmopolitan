@@ -56,6 +56,7 @@
 #include "third_party/zip/ttyio.h"
 #include "libc/str/str.h"
 #include "libc/errno.h"
+#include "libc/sysv/consts/sig.h"
 #include "third_party/bzip2/bzlib.h"
 
 #ifdef VMS

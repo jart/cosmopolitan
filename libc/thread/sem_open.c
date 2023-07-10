@@ -253,7 +253,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
  * @return 0 on success, or -1 w/ errno
  */
 int sem_close(sem_t *sem) {
-  int rc, prefs;
+  int prefs;
   bool unmap, delete;
   struct Semaphore *s, **p;
   _npassert(sem->sem_magic == SEM_MAGIC_NAMED);
@@ -275,7 +275,7 @@ int sem_close(sem_t *sem) {
     _npassert(!munmap(sem, PAGESIZE));
   }
   if (delete) {
-    rc = unlink(s->path);
+    unlink(s->path);
   }
   if (unmap) {
     free(s->path);

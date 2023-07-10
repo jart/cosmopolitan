@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
@@ -67,7 +68,7 @@ static struct Memlog {
       long size;
     } * p;
   } allocs;
-  long usage;
+  atomic_long usage;
 } __memlog;
 
 static pthread_mutex_t __memlog_lock_obj;

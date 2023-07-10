@@ -47,7 +47,6 @@
  */
 int sigsuspend(const sigset_t *ignore) {
   int rc;
-  long ms, totoms;
   sigset_t save, *arg, mask = {0};
   STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
   BEGIN_CANCELLATION_POINT;
@@ -73,8 +72,10 @@ int sigsuspend(const sigset_t *ignore) {
       rc = sys_sigsuspend(arg, 8);
     } else {
       __sig_mask(SIG_SETMASK, arg, &save);
-      ms = 0;
-      totoms = 0;
+#if defined(SYSDEBUG) && _POLLTRACE
+      long ms = 0;
+      long totoms = 0;
+#endif
       do {
         if ((rc = _check_interrupts(false, g_fds.p))) {
           break;
@@ -83,7 +84,7 @@ int sigsuspend(const sigset_t *ignore) {
           POLLTRACE("IOCP EINTR");
           continue;
         }
-#if defined(SYSDEBUG) && defined(_POLLTRACE)
+#if defined(SYSDEBUG) && _POLLTRACE
         ms += __SIG_POLLING_INTERVAL_MS;
         if (ms >= __SIG_LOGGING_INTERVAL_MS) {
           totoms += ms, ms = 0;

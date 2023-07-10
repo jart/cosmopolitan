@@ -26,6 +26,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
 /* Calculate size of static line buffer used in write (-w) mode. */

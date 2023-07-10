@@ -61,6 +61,7 @@ textwindows int tcsetattr_nt(int ignored, int opt, const struct termios *tio) {
         inmode |= kNtEnableVirtualTerminalInput;
       }
       ok = SetConsoleMode(in, inmode);
+      (void)ok;
       NTTRACE("SetConsoleMode(%p, %s) → %hhhd", in,
               DescribeNtConsoleInFlags(inmode), ok);
     }
@@ -75,6 +76,7 @@ textwindows int tcsetattr_nt(int ignored, int opt, const struct termios *tio) {
         outmode |= kNtEnableVirtualTerminalProcessing;
       }
       ok = SetConsoleMode(out, outmode);
+      (void)ok;
       NTTRACE("SetConsoleMode(%p, %s) → %hhhd", out,
               DescribeNtConsoleOutFlags(outmode), ok);
     }

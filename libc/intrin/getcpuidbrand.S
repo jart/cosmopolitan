@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,33 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.testonly
 
-//	Empties L1 instruction cache.
-thrashcodecache:
-#ifdef __x86_64__
-	.leafprologue
+GetCpuidBrand:
+	mov	%esi,%eax
+	xor	%ecx,%ecx
 	push	%rbx
-	xor	%eax,%eax
-	xor	%ecx,%ecx
 	cpuid
-	add	%r9,%r8
-//	Generate 32kb of junk code clobbering r8,r9,r10,r11
-	i = 0xdeadbeef
-0:	.rept	32768/(3+7)
-	rex.wrb
-	.byte	0001|(i&030)			// ADD/OR/... Evqp Gvqp
-	.byte	0300|(i&033)			// %r8-%r11 to %r8-%r11
-	.byte	0x49,0x81,0360|(i&003)		// XOR immed32,%r8-%r11
-	.long	i
-	i = ((i * 1103515245 + 12345) >> 16) & 0xffffffff
-	.endr
-	xor	%eax,%eax
-	xor	%ecx,%ecx
-	cpuid
+	mov	%ebx,0(%rdi)
+	mov	%ecx,4(%rdi)
+	mov	%edx,8(%rdi)
+	movb	$0,12(%rdi)
 	pop	%rbx
-	.leafepilogue
-#else
+	movb	$0,12(%rdi)
 	ret
-#endif
-	.endfn	thrashcodecache,globl
+	.endfn	GetCpuidBrand,globl

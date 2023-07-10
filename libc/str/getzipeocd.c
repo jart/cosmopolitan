@@ -47,7 +47,8 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
   i = n - 4;
   err = kZipErrorEocdNotFound;
   do {
-#ifdef __x86_64__
+#if defined(__x86_64__) && defined(__GNUC__) && !defined(__llvm__) && \
+    !defined(__chibicc__)
     v8hi pk = {READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK"),
                READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
     asm("" : "+x"(pk));

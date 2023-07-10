@@ -31,13 +31,9 @@ static inline noasan void *GetFrameAddr(int f) {
 }
 
 noasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
-  int i, ok;
-  size_t size;
-  char *addr, *last;
+  int i;
   for (i = l; i <= r; ++i) {
-    addr = GetFrameAddr(mm->p[i].x);
-    last = GetFrameAddr(mm->p[i].y);
-    UnmapViewOfFile(addr);
+    UnmapViewOfFile(GetFrameAddr(mm->p[i].x));
     CloseHandle(mm->p[i].h);
   }
 }

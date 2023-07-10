@@ -35,8 +35,7 @@ LIBC_X_A_DIRECTDEPS =				\
 	LIBC_STR				\
 	LIBC_SYSV				\
 	THIRD_PARTY_GDTOA			\
-	THIRD_PARTY_MUSL			\
-	THIRD_PARTY_ZLIB
+	THIRD_PARTY_MUSL
 
 LIBC_X_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(LIBC_X_A_DIRECTDEPS),$($(x))))

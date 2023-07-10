@@ -382,8 +382,6 @@ void testlib_error_enter(const char *, const char *);
 void testlib_showerror(const char *, int, const char *, const char *,
                        const char *, const char *, char *, char *);
 
-void thrashcodecache(void);
-
 void testlib_finish(void);
 int testlib_geterrno(void);
 void testlib_seterrno(int);

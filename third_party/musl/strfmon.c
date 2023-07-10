@@ -41,7 +41,7 @@ static ssize_t vstrfmon_l(char *s, size_t n, locale_t loc, const char *fmt, va_l
 {
 	size_t l;
 	double x;
-	int fill, nogrp, negpar, nosym, left, intl;
+	int left;
 	int lp, rp, w, fw;
 	char *s0=s;
 	for (; n && *fmt; ) {
@@ -54,25 +54,17 @@ static ssize_t vstrfmon_l(char *s, size_t n, locale_t loc, const char *fmt, va_l
 		fmt++;
 		if (*fmt == '%') goto literal;
 
-		fill = ' ';
-		nogrp = 0;
-		negpar = 0;
-		nosym = 0;
 		left = 0;
 		for (; ; fmt++) {
 			switch (*fmt) {
 			case '=':
-				fill = *++fmt;
 				continue;
 			case '^':
-				nogrp = 1;
 				continue;
 			case '(':
-				negpar = 1;
 			case '+':
 				continue;
 			case '!':
-				nosym = 1;
 				continue;
 			case '-':
 				left = 1;
@@ -89,8 +81,6 @@ static ssize_t vstrfmon_l(char *s, size_t n, locale_t loc, const char *fmt, va_l
 			lp = 10*lp + (*fmt-'0');
 		if (*fmt=='.') for (rp=0, fmt++; isdigit(*fmt); fmt++)
 			rp = 10*rp + (*fmt-'0');
-
-		intl = *fmt++ == 'i';
 
 		w = lp + 1 + rp;
 		if (!left && fw>w) w = fw;

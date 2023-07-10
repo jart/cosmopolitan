@@ -57,6 +57,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"

@@ -26,7 +26,7 @@
  * @see ITU G.711
  */
 int alaw(int x) {
-  int a, b, e, i;
+  int a, b, i;
   if ((a = x) < 0) a = ~a;
   a >>= 4;
   if (a > 15) {
@@ -36,7 +36,6 @@ int alaw(int x) {
       a -= 16;
       a += (b + 1) << 4;
     } else {
-      e = 1;
       a -= 16;
       a += 16;
     }

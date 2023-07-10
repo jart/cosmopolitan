@@ -299,5 +299,6 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
   f->f_namelen = f_namelen;
   f->f_frsize = f_frsize;
   f->f_flags = f_flags;
+  f->f_owner = f_owner;
   memcpy(f->f_fstypename, f_fstypename, 16);
 }

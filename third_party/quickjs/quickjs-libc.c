@@ -47,6 +47,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/time/time.h"

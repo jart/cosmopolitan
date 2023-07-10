@@ -59,7 +59,6 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   char *b, *p, *e;
   char ifcBsd[16];
   struct ifreq *req;
-  struct ifreq *end;
   uint32_t bufLen, ip;
   size_t numReq, bufMax;
   if (IsLinux()) return sys_ioctl(fd, SIOCGIFCONF, ifc);
@@ -77,7 +76,6 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
      */
     memcpy(&bufLen, b, 4);
     req = ifc->ifc_req;
-    end = req + ifc->ifc_len / sizeof(*req);
     for (p = b, e = p + MIN(bufMax, READ32LE(ifcBsd)); p + 16 + 16 <= e;
          p += IsBsd() ? 16 + MAX(16, p[16] & 255) : 40) {
       fam = p[IsBsd() ? 17 : 16] & 255;

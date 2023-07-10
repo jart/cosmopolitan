@@ -69,7 +69,7 @@ static int Spawner(void *arg, int tid) {
   rc = spawner->fun(spawner->arg, tid);
   _pthread_ungarbage();
   free(spawner);
-  return 0;
+  return rc;
 }
 
 /**

@@ -31,7 +31,6 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
-
 #ifdef __x86_64__
 
 static struct winsize __ws;

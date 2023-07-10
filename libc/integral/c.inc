@@ -89,8 +89,10 @@
 #endif
 
 #ifndef __cplusplus
+#if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #define HAVE_STDBOOL_H 1
 #if __STDC_VERSION__ + 0 >= 201112
 typedef _Bool bool;
@@ -102,7 +104,9 @@ typedef _Bool bool;
 typedef __WCHAR_TYPE__ wchar_t;
 typedef __CHAR16_TYPE__ char16_t;
 typedef __CHAR32_TYPE__ char32_t;
+#if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC pop_options
+#endif
 #endif /* __cplusplus */
 
 #define _LIBCPP_STDINT_H

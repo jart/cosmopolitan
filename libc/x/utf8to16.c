@@ -38,7 +38,8 @@ char16_t *utf8to16(const char *p, size_t n, size_t *z) {
   if (n == -1) n = p ? strlen(p) : 0;
   if ((q = r = malloc((n + 16) * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
     for (i = 0; i < n;) {
-#if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__) && \
+    !defined(__llvm__) && !defined(__chibicc__)
       if (i + 16 < n) {
         typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
         xmm_t vi, vz = {0};

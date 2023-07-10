@@ -435,7 +435,7 @@ _rlinit_vesa:
 	mov	$PC_VIDEO_TEXT,%al	# if text mode, simply say so
 	test	$0b00010000,%cl
 	jz	.ok4
-	cmp	$6,%es:0x1b(%di)	# if graphics mode, check if direct
+	cmpl	$6,%es:0x1b(%di)	# if graphics mode, check if direct
 	jnz	.fail4			# color; bail out if not
 	mov	%es:0x19(%di),%cl	# check actual color fields & bits
 	mov	%es:0x1f(%di),%ax	# per pixel, against a list

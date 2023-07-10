@@ -31,7 +31,6 @@
 relegated int(gdbexec)(const char *cmd) {
   struct StackFrame *bp;
   int pid, ttyin, ttyout;
-  intptr_t continuetoaddr;
   const char *se, *elf, *gdb;
   char pidstr[11], breakcmd[40];
   if (!(gdb = GetGdbPath())) return -1;
@@ -43,7 +42,6 @@ relegated int(gdbexec)(const char *cmd) {
     elf = "-q";
   }
   bp = __builtin_frame_address(0);
-  continuetoaddr = bp->addr;
   sprintf(breakcmd, "%s *%#p", "break", bp->addr);
   if (!(pid = vfork())) {
     execv(gdb, (char *const[]){

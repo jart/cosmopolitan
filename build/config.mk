@@ -92,7 +92,6 @@ endif
 #   - Turns off support for other operating systems
 #
 ifeq ($(MODE), optlinux)
-ENABLE_FTRACE = 1
 CONFIG_OFLAGS ?= -g
 CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS += -O3 -fmerge-all-constants
@@ -388,7 +387,15 @@ TARGET_ARCH ?= -msse3
 endif
 
 # LLVM Mode
+#
+# We aim to support:
+#
+#     make -j8 m=llvm o/llvm/libc
+#
+# The rest of the monorepo may not work with llvm.
+#
 ifeq ($(MODE), llvm)
+.STRICT = 0
 TARGET_ARCH ?= -msse3
 CONFIG_CCFLAGS += $(BACKTRACES) -DSYSDEBUG -O2
 AS = clang

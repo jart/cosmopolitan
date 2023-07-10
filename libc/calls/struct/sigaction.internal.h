@@ -63,6 +63,10 @@ void __sigenter_openbsd(int, struct siginfo *, void *) _Hide;
 const char *DescribeSigaction(char[256], int, const struct sigaction *);
 #define DescribeSigaction(rc, sa) DescribeSigaction(alloca(256), rc, sa)
 
+void _init_onntconsoleevent(void);
+void _init_wincrash(void);
+void _check_sigwinch();
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_INTERNAL_H_ */

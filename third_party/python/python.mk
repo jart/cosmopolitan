@@ -188,6 +188,7 @@ THIRD_PARTY_PYTHON_HDRS =						\
 	third_party/python/Modules/_sqlite/row.h			\
 	third_party/python/Modules/_sqlite/statement.h			\
 	third_party/python/Modules/_sqlite/util.h			\
+	third_party/python/Modules/cjkcodecs/xloadzd.h			\
 	third_party/python/Modules/cjkcodecs/cjkcodecs.h		\
 	third_party/python/Modules/cjkcodecs/multibytecodec.h		\
 	third_party/python/Modules/cjkcodecs/somanyencodings.h		\
@@ -586,6 +587,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_SRCS =					\
 	third_party/python/Modules/atexitmodule.c			\
 	third_party/python/Modules/audioop.c				\
 	third_party/python/Modules/binascii.c				\
+	third_party/python/Modules/cjkcodecs/xloadzd.c			\
 	third_party/python/Modules/cjkcodecs/_codecs_cn.c		\
 	third_party/python/Modules/cjkcodecs/_codecs_hk.c		\
 	third_party/python/Modules/cjkcodecs/_codecs_iso2022.c		\

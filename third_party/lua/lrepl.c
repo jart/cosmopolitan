@@ -40,6 +40,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"

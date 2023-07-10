@@ -74,7 +74,8 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
       g.uc.uc_mcontext.rip = ctx->sc_rip;
       g.uc.uc_mcontext.rsp = ctx->sc_rsp;
       if (ctx->sc_fpstate) {
-        *g.uc.uc_mcontext.fpregs = *ctx->sc_fpstate;
+        __repmovsb(g.uc.uc_mcontext.fpregs, ctx->sc_fpstate,
+                   sizeof(*ctx->sc_fpstate));
       }
       ((sigaction_f)(__executable_start + rva))(sig, &g.si, &g.uc);
       ctx->sc_mask = g.uc.uc_sigmask.__bits[0];
@@ -100,7 +101,8 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
       ctx->sc_rip = g.uc.uc_mcontext.rip;
       ctx->sc_rsp = g.uc.uc_mcontext.rsp;
       if (ctx->sc_fpstate) {
-        *ctx->sc_fpstate = *g.uc.uc_mcontext.fpregs;
+        __repmovsb(ctx->sc_fpstate, g.uc.uc_mcontext.fpregs,
+                   sizeof(*ctx->sc_fpstate));
       }
     }
   }

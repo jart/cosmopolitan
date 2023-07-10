@@ -67,9 +67,6 @@
 
 #define PRINTF_NTOA_BUFFER_SIZE 144
 
-#define __FMT_CONSUMED_DOUBLE      1
-#define __FMT_CONSUMED_LONG_DOUBLE 2
-
 #define FLAGS_ZEROPAD   0x01
 #define FLAGS_LEFT      0x02
 #define FLAGS_PLUS      0x04
@@ -423,7 +420,7 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
     } else {
       emit = __fmt_stoa_wide;
     }
-  } else if ((flags & FLAGS_HASH) && kCp437) {
+  } else if (flags & FLAGS_HASH) {
     justdobytes = true;
     emit = __fmt_stoa_bing;
     ignorenul = flags & FLAGS_PRECISION;
@@ -796,7 +793,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
   int (*out)(const char *, void *, size_t);
   char *se, *s0, *s, *q, qchar, special[8];
   int d, w, n, sign, prec, flags, width, lasterr;
-  int c, k, i1, ui, bw, rc, bex, sgn, prec1, decpt, consumed;
+  int c, k, i1, ui, bw, rc, bex, sgn, prec1, decpt;
 
   x = 0;
   lasterr = errno;
@@ -1069,7 +1066,6 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         if (!(flags & FLAGS_PRECISION)) prec = 6;
         if (!longdouble) {
           x = va_arg(va, double);
-          consumed = __FMT_CONSUMED_DOUBLE;
           s = s0 = dtoa(x, 3, prec, &decpt, &fpb.sign, &se);
           if (decpt == 9999) {
             if (s && s[0] == 'N') {
@@ -1080,7 +1076,6 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           }
         } else {
           un.ld = va_arg(va, long double);
-          consumed = __FMT_CONSUMED_LONG_DOUBLE;
           __fmt_ldfpbits(&un, &fpb);
           s = s0 =
               gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, 3, prec, &decpt, &se);
@@ -1102,7 +1097,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           prec = 0;
           rc = __fmt_stoa(out, arg, s, flags, prec, width, signbit, qchar);
           if (rc == -1) return -1;
-          return consumed;
+          break;
         }
       FormatReal:
         if (fpb.sign /* && (x || sign) */) sign = '-';
@@ -1166,7 +1161,6 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         if (prec < 1) prec = 1;
         if (!longdouble) {
           x = va_arg(va, double);
-          consumed = __FMT_CONSUMED_DOUBLE;
           s = s0 = dtoa(x, 2, prec, &decpt, &fpb.sign, &se);
           if (decpt == 9999) {
             if (s && s[0] == 'N') {
@@ -1177,7 +1171,6 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           }
         } else {
           un.ld = va_arg(va, long double);
-          consumed = __FMT_CONSUMED_LONG_DOUBLE;
           __fmt_ldfpbits(&un, &fpb);
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
@@ -1209,7 +1202,6 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
         if (prec < 0) prec = 0;
         if (!longdouble) {
           x = va_arg(va, double);
-          consumed = __FMT_CONSUMED_DOUBLE;
           s = s0 = dtoa(x, 2, prec + 1, &decpt, &fpb.sign, &se);
           if (decpt == 9999) {
             if (s && s[0] == 'N') {
@@ -1220,7 +1212,6 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           }
         } else {
           un.ld = va_arg(va, long double);
-          consumed = __FMT_CONSUMED_LONG_DOUBLE;
           __fmt_ldfpbits(&un, &fpb);
           s = s0 = gdtoa(fpb.fpi, fpb.ex, fpb.bits, &fpb.kind, prec ? 2 : 0,
                          prec, &decpt, &se);
@@ -1289,11 +1280,9 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
       FormatBinary:
         if (longdouble) {
           un.ld = va_arg(va, long double);
-          consumed = __FMT_CONSUMED_LONG_DOUBLE;
           __fmt_ldfpbits(&un, &fpb);
         } else {
           un.d = va_arg(va, double);
-          consumed = __FMT_CONSUMED_DOUBLE;
           __fmt_dfpbits(&un, &fpb);
         }
         if (fpb.kind == STRTOG_Infinite || fpb.kind == STRTOG_NaN) {
@@ -1320,7 +1309,7 @@ _Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
           if (sign) --width;
           if (prec1 || (flags & FLAGS_HASH)) --width;
         }
-        if ((width -= prec1) > 0 && !(flags & FLAGS_LEFT) &&
+        if ((width -= MAX(prec, prec1)) > 0 && !(flags & FLAGS_LEFT) &&
             !(flags & FLAGS_ZEROPAD)) {
           do __FMT_PUT(' ');
           while (--width > 0);

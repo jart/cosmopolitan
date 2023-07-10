@@ -86,6 +86,7 @@ APE_LOADER_FLAGS =				\
 	-Os					\
 	-ffreestanding				\
 	-mgeneral-regs-only			\
+	-fno-stack-protector			\
 	-fno-ident				\
 	-fno-gnu-unique				\
 	-c					\

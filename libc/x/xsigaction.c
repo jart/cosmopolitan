@@ -39,8 +39,8 @@
  * @asyncsignalsafe
  * @vforksafe
  */
-int(xsigaction)(int sig, void *handler, uint64_t flags, uint64_t mask,
-                struct sigaction *old) {
+int xsigaction(int sig, void *handler, uint64_t flags, uint64_t mask,
+               struct sigaction *old) {
   /* This API is superior to sigaction() because (1) it offers feature
      parity; (2) compiler emits 1/3rd as much binary code at call-site;
      and (3) it removes typing that just whines without added safety. */

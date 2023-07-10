@@ -121,7 +121,7 @@ textstartup void __enable_tls(void) {
 
 #ifdef __x86_64__
 
-  siz = ROUNDUP(I(_tls_size) + sizeof(*tib), _Alignof(__static_tls));
+  siz = ROUNDUP(I(_tls_size) + sizeof(*tib), TLS_ALIGNMENT);
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
     // which helps avoid a system call for appes with little tls

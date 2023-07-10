@@ -26,9 +26,6 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_pause_nt(void) {
-  long ms, totoms;
-  ms = 0;
-  totoms = 0;
   for (;;) {
 
     if (_check_interrupts(false, g_fds.p)) {
@@ -40,7 +37,8 @@ textwindows int sys_pause_nt(void) {
       continue;
     }
 
-#if defined(SYSDEBUG) && defined(_POLLTRACE)
+#if defined(SYSDEBUG) && _POLLTRACE
+    long ms = 0, totoms = 0;
     ms += __SIG_POLLING_INTERVAL_MS;
     if (ms >= __SIG_LOGGING_INTERVAL_MS) {
       totoms += ms, ms = 0;

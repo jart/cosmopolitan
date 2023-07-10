@@ -27,7 +27,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/tinymath/internal.h"
+#ifndef __llvm__
 #include "third_party/intel/smmintrin.internal.h"
+#endif
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -55,7 +57,7 @@ float floorf(float x)
 	asm("fiebra\t%0,7,%1,4" : "=f"(x) : "f"(x));
 	return x;
 
-#elif defined(__x86_64__) && defined(__SSE4_1__)
+#elif defined(__x86_64__) && defined(__SSE4_1__) && !defined(__llvm__) && !defined(__chibicc__)
 
 	asm("roundss\t%2,%1,%0"
 	    : "=x"(x)

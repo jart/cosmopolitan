@@ -27,5 +27,5 @@ int sigignore(int sig) {
   struct sigaction sa;
   bzero(&sa, sizeof(sa));
   sa.sa_handler = SIG_IGN;
-  return (sigaction)(sig, &sa, 0);
+  return sigaction(sig, &sa, 0);
 }

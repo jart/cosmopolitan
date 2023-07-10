@@ -39,7 +39,9 @@
  * @see libc/vga/tty-graph.inc
  */
 
+#ifndef __llvm__
 #pragma GCC optimize("s")
+#endif
 
 #define KLOGTTY
 #define MAYUNROLLLOOPS /* do not unroll loops; keep the code small! */

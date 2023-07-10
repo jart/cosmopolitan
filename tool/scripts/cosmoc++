@@ -183,7 +183,7 @@ if [ $INTENT = cpp ]; then
 elif [ $INTENT = cc ]; then
   set -- $PLATFORM $PREDEF $CCFLAGS $CXXFLAGS $CPPFLAGS "$@" $FRAME
 else
-  set -- $PLATFORM $PREDEF $LDFLAGS $APEFLAGS $CXXFLAGS $CPPFLAGS "$@" \
+  set -- $PLATFORM $PREDEF $CCFLAGS $CXXFLAGS $CPPFLAGS $LDFLAGS $APEFLAGS $CXXFLAGS $CPPFLAGS "$@" \
          $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 $FRAME
 fi
 

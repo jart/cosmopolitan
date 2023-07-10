@@ -25,6 +25,7 @@
 #include "libc/calls/struct/seccomp.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/calls/ucontext.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/promises.internal.h"

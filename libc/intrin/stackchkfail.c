@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
 __attribute__((__weak__)) void __stack_chk_fail(void) {
-  tinyprint(2, program_invocation_name, ": stack smashed\n", NULL);
+  kprintf("%s: stack smashed\n", program_invocation_name);
   __builtin_trap();
 }

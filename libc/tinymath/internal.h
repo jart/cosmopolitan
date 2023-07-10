@@ -29,16 +29,19 @@ static inline double eval_as_double(double x) {
 static inline void fp_force_evall(long double x) {
   volatile long double y;
   y = x;
+  (void)y;
 }
 
 static inline void fp_force_evalf(float x) {
   volatile float y;
   y = x;
+  (void)y;
 }
 
 static inline void fp_force_eval(double x) {
   volatile double y;
   y = x;
+  (void)y;
 }
 
 static inline double fp_barrier(double x) {

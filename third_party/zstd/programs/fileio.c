@@ -85,6 +85,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/ss.h"
+#include "libc/sysv/consts/sig.h"
 #include "third_party/zstd/programs/timefn.h"     /* UTIL_getTime, UTIL_clockSpanMicro */
 
 #if defined (_MSC_VER)

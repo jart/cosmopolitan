@@ -24,6 +24,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -51,6 +52,12 @@
 
 #ifdef SYSDEBUG
 STATIC_YOINK("strsignal");  // for kprintf()
+#endif
+
+#if SupportsWindows()
+STATIC_YOINK("_init_onntconsoleevent");
+STATIC_YOINK("_check_sigwinch");
+STATIC_YOINK("_init_wincrash");
 #endif
 
 #define SA_RESTORER 0x04000000

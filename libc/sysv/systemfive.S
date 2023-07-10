@@ -121,7 +121,7 @@ systemfive_cancellable:			// our pthread_cancel() miracle code
 	testb	$PT_INCANCEL,0x00(%r10)
 	jz	5f
 #endif
-	cmp	$0,0x04(%r10)		// PosixThread::cancelled
+	cmpl	$0,0x04(%r10)		// PosixThread::cancelled
 	jne	systemfive_cancel	// we will tail call below
 1:	mov	%rcx,%r10		// move the fourth argument
 	clc				// no cancellable system calls exist
@@ -144,7 +144,7 @@ systemfive_cancellable_end:		// i/o calls park here for long time
 	jz	systemfive_errno	// it's spawn() probably
 	testb	$PT_NOCANCEL,0x00(%rcx)	// PosixThread::flags
 	jnz	systemfive_errno	// cancellation is disabled
-	cmp	$0,0x04(%rcx)		// PosixThread::cancelled
+	cmpl	$0,0x04(%rcx)		// PosixThread::cancelled
 	je	systemfive_errno	// we aren't actually cancelled
 	jmp	4f			// now we are in fact cancelled
 systemfive_cancel:			// SIGTHR will jump here too

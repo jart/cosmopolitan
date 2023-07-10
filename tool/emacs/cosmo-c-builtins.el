@@ -163,7 +163,8 @@
            "__sync_lock_release"))
 
         (gcc-builtin-functions-ia32
-         '("__builtin_ia32_pmovmskb128"))
+         '("__builtin_ia32_pmovmskb128"
+           "__builtin_ia32_pmovmskb256"))
 
         (gxx-builtin-type-traits
          '("__has_nothrow_assign"

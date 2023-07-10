@@ -74,7 +74,8 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       uc.uc_mcontext.err = ctx->uc_mcontext.err;
       uc.uc_mcontext.rip = ctx->uc_mcontext.rip;
       uc.uc_mcontext.rsp = ctx->uc_mcontext.rsp;
-      *uc.uc_mcontext.fpregs = ctx->uc_mcontext.__fpregs;
+      __repmovsb(uc.uc_mcontext.fpregs, &ctx->uc_mcontext.__fpregs,
+                 sizeof(ctx->uc_mcontext.__fpregs));
       ((sigaction_f)(__executable_start + rva))(sig, &si2, &uc);
       ctx->uc_stack.ss_sp = uc.uc_stack.ss_sp;
       ctx->uc_stack.ss_size = uc.uc_stack.ss_size;
@@ -102,7 +103,8 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       ctx->uc_mcontext.err = uc.uc_mcontext.err;
       ctx->uc_mcontext.rip = uc.uc_mcontext.rip;
       ctx->uc_mcontext.rsp = uc.uc_mcontext.rsp;
-      ctx->uc_mcontext.__fpregs = *uc.uc_mcontext.fpregs;
+      __repmovsb(&ctx->uc_mcontext.__fpregs, uc.uc_mcontext.fpregs,
+                 sizeof(ctx->uc_mcontext.__fpregs));
     }
   }
   /*

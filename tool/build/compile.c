@@ -227,6 +227,7 @@ const char *const kGccOnlyFlags[] = {
     "-fcx-limited-range",
     "-fdelete-dead-exceptions",
     "-femit-struct-debug-baseonly",
+    "-ffp-int-builtin-inexact",
     "-fipa-pta",
     "-fivopts",
     "-flimit-function-alignment",
@@ -236,6 +237,7 @@ const char *const kGccOnlyFlags[] = {
     "-fno-align-jumps",
     "-fno-align-labels",
     "-fno-align-loops",
+    "-fno-cx-limited-range",
     "-fno-fp-int-builtin-inexact",
     "-fno-gnu-unique",
     "-fno-gnu-unique",
@@ -1155,11 +1157,13 @@ int main(int argc, char *argv[]) {
     } else if (_startswith(argv[i], "-fsanitize=implicit") &&
                strstr(argv[i], "integer")) {
       if (isgcc) AddArg(argv[i]);
+    } else if (strstr(argv[i], "stack-protector")) {
+      if (isclang || (isgcc && ccversion >= 6)) {
+        AddArg(argv[i]);
+      }
     } else if (_startswith(argv[i], "-fvect-cost") ||
                _startswith(argv[i], "-mstringop") ||
-               _startswith(argv[i], "-gz") ||
-               strstr(argv[i], "stack-protector") ||
-               strstr(argv[i], "sanitize") ||
+               _startswith(argv[i], "-gz") || strstr(argv[i], "sanitize") ||
                _startswith(argv[i], "-fvect-cost") ||
                _startswith(argv[i], "-fvect-cost")) {
       if (isgcc && ccversion >= 6) {

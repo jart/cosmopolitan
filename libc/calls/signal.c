@@ -30,9 +30,9 @@
  * @note this function has BSD semantics, i.e. SA_RESTART
  * @see sigaction() which has more features and docs
  */
-sighandler_t(signal)(int sig, sighandler_t func) {
+sighandler_t signal(int sig, sighandler_t func) {
   struct sigaction old, sa = {.sa_handler = func, .sa_flags = SA_RESTART};
-  if ((sigaction)(sig, &sa, &old) != -1) {
+  if (sigaction(sig, &sa, &old) != -1) {
     return old.sa_handler;
   } else {
     return SIG_ERR;

@@ -41,6 +41,7 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/time/time.h"
 #include "third_party/libcxx/algorithm"
