@@ -735,7 +735,6 @@ void abort(void) wontreturn;
 #pragma GCC diagnostic error "-Wnonnull"
 #pragma GCC diagnostic error "-Wunused-result"
 #pragma GCC diagnostic error "-Wstrict-aliasing"
-#pragma GCC diagnostic error "-Wshift-negative-value"
 #ifndef __cplusplus
 #pragma GCC diagnostic error "-Wimplicit-function-declaration"
 #if __GNUC__ >= 6

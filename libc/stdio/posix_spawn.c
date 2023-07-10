@@ -84,6 +84,12 @@ int posix_spawn(int *pid, const char *path,
   if (!(child = vfork())) {
     if (attrp && *attrp) {
       posix_spawnattr_getflags(attrp, &flags);
+      if (flags & POSIX_SPAWN_SETSID) {
+        if (setsid()) {
+          STRACE("posix_spawn fail #%d", 1);
+          _Exit(127);
+        }
+      }
       if (flags & POSIX_SPAWN_SETPGROUP) {
         if (setpgid(0, (*attrp)->pgroup)) {
           STRACE("posix_spawn fail #%d", 1);

@@ -172,7 +172,6 @@ DEFAULT_CCFLAGS +=							\
 	-Wall								\
 	-Werror								\
 	-fno-omit-frame-pointer						\
-	-fdebug-prefix-map='$(PWD)'=					\
 	-frecord-gcc-switches
 
 DEFAULT_COPTS ?=							\
@@ -259,8 +258,7 @@ endif
 
 ASONLYFLAGS =								\
 	-c								\
-	-g								\
-	--debug-prefix-map='$(PWD)'=
+	-g
 
 DEFAULT_LDLIBS =
 

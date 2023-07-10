@@ -78,6 +78,7 @@ APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.l
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
 CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
+STRIP="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-strip"
 OBJCOPY="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-objcopy"
 FIXUPOBJ="$COSMO/o/$MODE/tool/build/fixupobj.com"
 ZIPCOPY="$COSMO/o/$MODE/tool/build/zipcopy.com"
@@ -115,6 +116,7 @@ done
 OPT=
 FIRST=1
 OUTPUT=
+SFLAG=0
 INTENT=ld
 NEED_OUTPUT=
 RELOCATABLE=0
@@ -138,6 +140,9 @@ for x; do
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
     INTENT=cc
+  elif [ x"$x" = x"-s" ]; then
+    SFLAG=1
+    continue
   elif [ x"$x" = x"-r" ]; then
     RELOCATABLE=1
   elif [ x"$x" = x"-E" ]; then
@@ -202,6 +207,8 @@ if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
       mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
       "$OBJCOPY" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
       "$ZIPCOPY" "$OUTPUT.dbg" "$OUTPUT" || exit
+    elif [ $SFLAG -eq 1 ]; then
+      "$STRIP" "$OUTPUT" || exit
     fi
   fi
 fi

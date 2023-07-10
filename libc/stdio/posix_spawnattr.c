@@ -89,6 +89,7 @@ int posix_spawnattr_getflags(const posix_spawnattr_t *attr, short *flags) {
  *     - `POSIX_SPAWN_SETSIGMASK`
  *     - `POSIX_SPAWN_SETSCHEDPARAM`
  *     - `POSIX_SPAWN_SETSCHEDULER`
+ *     - `POSIX_SPAWN_SETSID`
  * @return 0 on success, or errno on error
  * @raise EINVAL if `flags` has invalid bits
  */
@@ -96,9 +97,10 @@ int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
   if (!(IsLinux() || IsFreebsd() || IsNetbsd())) {
     flags &= ~(POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER);
   }
-  if (flags & ~(POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP |
-                POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK |
-                POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER)) {
+  if (flags &
+      ~(POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSIGDEF |
+        POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSCHEDPARAM |
+        POSIX_SPAWN_SETSCHEDULER | POSIX_SPAWN_SETSID)) {
     return EINVAL;
   }
   (*attr)->flags = flags;

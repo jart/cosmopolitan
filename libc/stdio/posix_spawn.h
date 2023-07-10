@@ -3,12 +3,13 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
 
-#define POSIX_SPAWN_RESETIDS      0x01
-#define POSIX_SPAWN_SETPGROUP     0x02
-#define POSIX_SPAWN_SETSIGDEF     0x04
-#define POSIX_SPAWN_SETSIGMASK    0x08
-#define POSIX_SPAWN_SETSCHEDPARAM 0x10
-#define POSIX_SPAWN_SETSCHEDULER  0x20
+#define POSIX_SPAWN_RESETIDS      1
+#define POSIX_SPAWN_SETPGROUP     2
+#define POSIX_SPAWN_SETSIGDEF     4
+#define POSIX_SPAWN_SETSIGMASK    8
+#define POSIX_SPAWN_SETSCHEDPARAM 16
+#define POSIX_SPAWN_SETSCHEDULER  32
+#define POSIX_SPAWN_SETSID        128
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
