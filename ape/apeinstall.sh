@@ -12,13 +12,8 @@ echo "Author:  Justine Tunney <jtunney@gmail.com>"  >&2
 ################################################################################
 # INSTALL APE LOADER SYSTEMWIDE
 
-if [ -f o/depend ]; then
-  # mkdeps.com build was successfully run so assume we can build
-  echo >&2
-  echo "recompiling ape loader" >&2
-  echo "running: make -j8 o//ape" >&2
-  make -j8 o//ape || exit
-  echo "done" >&2
+if [ -f o/depend ] && make -j8 o//ape; then
+  echo "successfully recompiled ape loader" >&2
 elif [ -d build/bootstrap ]; then
   # if make isn't being used then it's unlikely the user changed the sources
   # in that case the prebuilt binaries should be completely up-to-date

@@ -3,6 +3,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+/*
+ * full set of fcntl() commands
+ * many are only provided by a single platform
+ * will be equal to -1 when not available on host
+ */
 extern const int F_BARRIERFSYNC;
 extern const int F_DUPFD;
 extern const int F_DUPFD_CLOEXEC;
@@ -42,34 +47,28 @@ extern const int F_WRLCK;
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define F_DUPFD 0
-#define F_GETFD 1
-#define F_SETFD 2
-#define F_GETFL 3
-#define F_SETFL 4
-
+/*
+ * portable fcntl() commands
+ */
+#define F_DUPFD         0
+#define F_GETFD         1
+#define F_SETFD         2
+#define F_GETFL         3
+#define F_SETFL         4
 #define F_DUPFD_CLOEXEC F_DUPFD_CLOEXEC
-#define F_GETLEASE      F_GETLEASE
-#define F_GETLK         F_GETLK
-#define F_GETLK64       F_GETLK64
-#define F_GETOWN        F_GETOWN
-#define F_GETPATH       F_GETPATH
-#define F_GETPIPE_SZ    F_GETPIPE_SZ
-#define F_GETSIG        F_GETSIG
-#define F_MAXFD         F_MAXFD
-#define F_NOCACHE       F_NOCACHE
-#define F_NOTIFY        F_NOTIFY
-#define F_RDLCK         F_RDLCK
-#define F_SETLEASE      F_SETLEASE
-#define F_SETLK         F_SETLK
-#define F_SETLK64       F_SETLK64
-#define F_SETLKW        F_SETLKW
-#define F_SETLKW64      F_SETLKW64
-#define F_SETOWN        F_SETOWN
-#define F_SETPIPE_SZ    F_SETPIPE_SZ
-#define F_SETSIG        F_SETSIG
-#define F_UNLCK         F_UNLCK
-#define F_WRLCK         F_WRLCK
 
+/*
+ * posix advisory locks
+ * polyfilled poorly on windows
+ */
+#define F_SETLK    F_SETLK
+#define F_SETLK64  F_SETLK64
+#define F_SETLKW   F_SETLKW
+#define F_SETLKW64 F_SETLKW64
+#define F_GETLK    F_GETLK
+#define F_GETLK64  F_GETLK64
+#define F_RDLCK    F_RDLCK
+#define F_UNLCK    F_UNLCK
+#define F_WRLCK    F_WRLCK
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_F_H_ */

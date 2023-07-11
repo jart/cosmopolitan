@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"

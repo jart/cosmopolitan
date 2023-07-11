@@ -351,6 +351,7 @@ syscon	fcntl2	F_GETFD					1			1			1			1			1			1			1			1			# unix consensus & fak
 syscon	fcntl2	F_SETFD					2			2			2			2			2			2			2			2			# unix consensus & faked nt
 syscon	fcntl2	F_GETFL					3			3			3			3			3			3			3			3			# unix consensus & faked nt
 syscon	fcntl2	F_SETFL					4			4			4			4			4			4			4			4			# unix consensus & faked nt
+syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			0x0406			67			67			17			10			12			0x0406			# Linux 2.6.24+; faked nt
 syscon	fcntl2	F_SETOWN				8			8			6			6			6			6			6			-1			# bsd consensus
 syscon	fcntl2	F_GETOWN				9			9			5			5			5			5			5			-1			# bsd consensus
 syscon	fcntl2	F_SETOWN_EX				15			15			-1			-1			-1			-1			-1			-1			# TODO(jart): polyfill
@@ -362,7 +363,6 @@ syscon	fcntl3	F_SETNOSIGPIPE				-1			-1			73			73			-1			-1			14			-1			#
 syscon	fcntl3	F_GETNOSIGPIPE				-1			-1			74			74			-1			-1			13			-1			# 
 syscon	fcntl3	F_GETPATH				-1			-1			50			50			-1			-1			15			-1			# geth path associated with fd into buffer with PATH_MAX (1024) bytes
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			1			1			# unix consensus & faked nt
-syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			0x0406			67			67			17			10			12			0x0406			# Linux 2.6.24+; faked nt
 syscon	fcntl	F_MAXFD					-1			-1			-1			-1			-1			-1			11			-1			#
 syscon	fcntl	F_NOTIFY				0x0402			0x0402			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_SETPIPE_SZ				0x0407			0x0407			-1			-1			-1			-1			-1			-1
@@ -398,14 +398,6 @@ syscon	fcntl	F_SETOWN_EX				15			15			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_GETOWN_EX				0x10			0x10			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_SETLEASE				0x0400			0x0400			-1			106			-1			-1			-1			-1
 syscon	fcntl	F_GETLEASE				0x0401			0x0401			-1			107			-1			-1			-1			-1
-
-syscon	ioctl	FIONBIO					0x5421			0x5421			0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		# BSD-The New Technology consensus; FIONBIO is traditional O_NONBLOCK; see F_SETFL for re-imagined api
-syscon	ioctl	FIOASYNC				0x5452			0x5452			0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		# BSD-The New Technology consensus
-syscon	ioctl	FIONREAD				0x541b			0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# BSD-The New Technology consensus; bytes waiting in FD's input buffer
-syscon	ioctl	FIOCLEX					0x5451			0x5451			0x20006601		0x20006601		0x20006601		0x20006601		0x20006601		0x5451			# sets "close on exec" on file descriptor the fast way; faked nt
-syscon	ioctl	FIONCLEX				0x5450			0x5450			0x20006602		0x20006602		0x20006602		0x20006602		0x20006602		0x5450			# clears "close on exec" on file descriptor the fast way; faked nt
-#syscon	ioctl	FIONWRITE				0x0			0x0			0x0			0x0			0x40046677		0x0			0x0			-1			# [FreeBSD Generalization] bytes queued in FD's output buffer (same as TIOCOUTQ for TTY FDs; see also SO_SNDBUF)
-#syscon	ioctl	FIONSPACE				0x0			0x0			0x0			0x0			0x40046676		0x0			0x0			-1			# [FreeBSD Generalization] capacity of FD's output buffer, e.g. equivalent to TIOCGSERIAL w/ UART
 
 #	openat(), fstatat(), linkat(), etc. magnums
 #
@@ -944,68 +936,76 @@ syscon	ptrace	PTRACE_EVENT_STOP			128			128			-1			-1			-1			-1			-1			-1
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	clone	CLONE_VM				0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		# intentionally symbolic so we can tell if clone() is being used to create threads
 
-#	socket ioctl()
+#	ioctl() requests
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	sio	SIOCATMARK				0x8905			0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		# use sockatmark(); determines if oob is available; bsd consensus
-syscon	sio	SIOCADDMULTI				0x8931			0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
-syscon	sio	SIOCDELMULTI				0x8932			0x8932			0x80206932		0x80206932		0x80206932		0x80206932		0x80206932		0			# bsd consensus
-syscon	sio	SIOCDIFADDR				0x8936			0x8936			0x80206919		0x80206919		0x80206919		0x80206919		0x80206919		0			# bsd consensus
-syscon	sio	SIOCGIFADDR				0x8915			0x8915			0xc0206921		0xc0206921		0xc0206921		0xc0206921		0xc0206921		0			# bsd consensus
-syscon	sio	SIOCGIFBRDADDR				0x8919			0x8919			0xc0206923		0xc0206923		0xc0206923		0xc0206923		0xc0206923		0			# bsd consensus
-syscon	sio	SIOCGIFDSTADDR				0x8917			0x8917			0xc0206922		0xc0206922		0xc0206922		0xc0206922		0xc0206922		0			# bsd consensus
-syscon	sio	SIOCGIFFLAGS				0x8913			0x8913			0xc0206911		0xc0206911		0xc0206911		0xc0206911		0xc0206911		0			# bsd consensus
-syscon	sio	SIOCGIFMETRIC				0x891d			0x891d			0xc0206917		0xc0206917		0xc0206917		0xc0206917		0xc0206917		0			# bsd consensus
-syscon	sio	SIOCGIFNETMASK				0x891b			0x891b			0xc0206925		0xc0206925		0xc0206925		0xc0206925		0xc0206925		0			# bsd consensus
-syscon	sio	SIOCGPGRP				0x8904			0x8904			0x40047309		0x40047309		0x40047309		0x40047309		0x40047309		0			# bsd consensus
-syscon	sio	SIOCSIFADDR				0x8916			0x8916			0x8020690c		0x8020690c		0x8020690c		0x8020690c		0x8020690c		0			# bsd consensus
-syscon	sio	SIOCSIFBRDADDR				0x891a			0x891a			0x80206913		0x80206913		0x80206913		0x80206913		0x80206913		0			# bsd consensus
-syscon	sio	SIOCSIFDSTADDR				0x8918			0x8918			0x8020690e		0x8020690e		0x8020690e		0x8020690e		0x8020690e		0			# bsd consensus
-syscon	sio	SIOCSIFFLAGS				0x8914			0x8914			0x80206910		0x80206910		0x80206910		0x80206910		0x80206910		0			# bsd consensus
-syscon	sio	SIOCSIFMETRIC				0x891e			0x891e			0x80206918		0x80206918		0x80206918		0x80206918		0x80206918		0			# bsd consensus
-syscon	sio	SIOCSIFNETMASK				0x891c			0x891c			0x80206916		0x80206916		0x80206916		0x80206916		0x80206916		0			# bsd consensus
-syscon	sio	SIOCSPGRP				0x8902			0x8902			0x80047308		0x80047308		0x80047308		0x80047308		0x80047308		0			# bsd consensus
-syscon	sio	SIOCGIFCONF				0x8912			0x8912			0xc00c6924		0xc00c6924		0xc0106924		0xc0106924		0xc0106924		0
-syscon	sio	SIOCGIFMTU				0x8921			0x8921			0xc0206933		0xc0206933		0xc0206933		0xc020697e		0xc020697e		0
-syscon	sio	SIOCSIFMTU				0x8922			0x8922			0x80206934		0x80206934		0x80206934		0x8020697f		0x8020697f		0
-syscon	sio	SIOCGIFINDEX				0x8933			0x8933			0			0			0xc0206920		0			0			0
-syscon	sio	SIOCSIFNAME				0x8923			0x8923			0			0			0x80206928		0			0			0
-syscon	sio	SIOCADDDLCI				0x8980			0x8980			0			0			0			0			0			0
-syscon	sio	SIOCADDRT				0x890b			0x890b			0			0			0			0			0			0
-syscon	sio	SIOCDARP				0x8953			0x8953			0			0			0			0			0			0
-syscon	sio	SIOCDELDLCI				0x8981			0x8981			0			0			0			0			0			0
-syscon	sio	SIOCDELRT				0x890c			0x890c			0			0			0			0			0			0
-syscon	sio	SIOCDEVPRIVATE				0x89f0			0x89f0			0			0			0			0			0			0
-syscon	sio	SIOCDRARP				0x8960			0x8960			0			0			0			0			0			0
-syscon	sio	SIOCGARP				0x8954			0x8954			0			0			0			0			0			0
-syscon	sio	SIOCGIFBR				0x8940			0x8940			0			0			0			0			0			0
-syscon	sio	SIOCGIFCOUNT				0x8938			0x8938			0			0			0			0			0			0
-syscon	sio	SIOCGIFENCAP				0x8925			0x8925			0			0			0			0			0			0
-syscon	sio	SIOCGIFHWADDR				0x8927			0x8927			0			0			0			0			0			0
-syscon	sio	SIOCGIFMAP				0x8970			0x8970			0			0			0			0			0			0
-syscon	sio	SIOCGIFMEM				0x891f			0x891f			0			0			0			0			0			0
-syscon	sio	SIOCGIFNAME				0x8910			0x8910			0			0			0			0			0			0
-syscon	sio	SIOCGIFPFLAGS				0x8935			0x8935			0			0			0			0			0			0
-syscon	sio	SIOCGIFSLAVE				0x8929			0x8929			0			0			0			0			0			0
-syscon	sio	SIOCGIFTXQLEN				0x8942			0x8942			0			0			0			0			0			0
-syscon	sio	SIOCGRARP				0x8961			0x8961			0			0			0			0			0			0
-syscon	sio	SIOCGSTAMP				0x8906			0x8906			0			0			0			0			0			0
-syscon	sio	SIOCGSTAMPNS				0x8907			0x8907			0			0			0			0			0			0
-syscon	sio	SIOCPROTOPRIVATE			0x89e0			0x89e0			0			0			0			0			0			0
-syscon	sio	SIOCRTMSG				0x890d			0x890d			0			0			0			0			0			0
-syscon	sio	SIOCSARP				0x8955			0x8955			0			0			0			0			0			0
-syscon	sio	SIOCSIFBR				0x8941			0x8941			0			0			0			0			0			0
-syscon	sio	SIOCSIFENCAP				0x8926			0x8926			0			0			0			0			0			0
-syscon	sio	SIOCSIFHWADDR				0x8924			0x8924			0			0			0			0			0			0
-syscon	sio	SIOCSIFHWBROADCAST			0x8937			0x8937			0			0			0			0			0			0
-syscon	sio	SIOCSIFLINK				0x8911			0x8911			0			0			0			0			0			0
-syscon	sio	SIOCSIFMAP				0x8971			0x8971			0			0			0			0			0			0
-syscon	sio	SIOCSIFMEM				0x8920			0x8920			0			0			0			0			0			0
-syscon	sio	SIOCSIFPFLAGS				0x8934			0x8934			0			0			0			0			0			0
-syscon	sio	SIOCSIFSLAVE				0x8930			0x8930			0			0			0			0			0			0
-syscon	sio	SIOCSIFTXQLEN				0x8943			0x8943			0			0			0			0			0			0
-syscon	sio	SIOCSRARP				0x8962			0x8962			0			0			0			0			0			0
-syscon	sio	SIOGIFINDEX				0x8933			0x8933			0			0			0			0			0			0
+syscon	ioctl	FIONBIO					0x5421			0x5421			0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		# BSD-The New Technology consensus; FIONBIO is traditional O_NONBLOCK; see F_SETFL for re-imagined api
+syscon	ioctl	FIOASYNC				0x5452			0x5452			0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		# BSD-The New Technology consensus
+syscon	ioctl	FIONREAD				0x541b			0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		0x4004667f		# BSD-The New Technology consensus; bytes waiting in FD's input buffer
+syscon	ioctl	FIOCLEX					0x5451			0x5451			0x20006601		0x20006601		0x20006601		0x20006601		0x20006601		0x5451			# sets "close on exec" on file descriptor the fast way; faked nt
+syscon	ioctl	FIONCLEX				0x5450			0x5450			0x20006602		0x20006602		0x20006602		0x20006602		0x20006602		0x5450			# clears "close on exec" on file descriptor the fast way; faked nt
+#syscon	ioctl	FIONWRITE				0x0			0x0			0x0			0x0			0x40046677		0x0			0x0			-1			# [FreeBSD Generalization] bytes queued in FD's output buffer (same as TIOCOUTQ for TTY FDs; see also SO_SNDBUF)
+#syscon	ioctl	FIONSPACE				0x0			0x0			0x0			0x0			0x40046676		0x0			0x0			-1			# [FreeBSD Generalization] capacity of FD's output buffer, e.g. equivalent to TIOCGSERIAL w/ UART
+syscon	ioctl	SIOCGIFCONF				0x8912			0x8912			0xc00c6924		0xc00c6924		0xc0106924		0xc0106924		0xc0106924		0
+syscon	ioctl	SIOCATMARK				0x8905			0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		# use sockatmark(); determines if oob is available; bsd consensus
+syscon	ioctl	SIOCADDMULTI				0x8931			0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
+syscon	ioctl	SIOCDELMULTI				0x8932			0x8932			0x80206932		0x80206932		0x80206932		0x80206932		0x80206932		0			# bsd consensus
+syscon	ioctl	SIOCDIFADDR				0x8936			0x8936			0x80206919		0x80206919		0x80206919		0x80206919		0x80206919		0			# bsd consensus
+syscon	ioctl	SIOCGIFADDR				0x8915			0x8915			0xc0206921		0xc0206921		0xc0206921		0xc0206921		0xc0206921		0			# bsd consensus
+syscon	ioctl	SIOCGIFBRDADDR				0x8919			0x8919			0xc0206923		0xc0206923		0xc0206923		0xc0206923		0xc0206923		0			# bsd consensus
+syscon	ioctl	SIOCGIFDSTADDR				0x8917			0x8917			0xc0206922		0xc0206922		0xc0206922		0xc0206922		0xc0206922		0			# bsd consensus
+syscon	ioctl	SIOCGIFFLAGS				0x8913			0x8913			0xc0206911		0xc0206911		0xc0206911		0xc0206911		0xc0206911		0			# bsd consensus
+syscon	ioctl	SIOCGIFMETRIC				0x891d			0x891d			0xc0206917		0xc0206917		0xc0206917		0xc0206917		0xc0206917		0			# bsd consensus
+syscon	ioctl	SIOCGIFNETMASK				0x891b			0x891b			0xc0206925		0xc0206925		0xc0206925		0xc0206925		0xc0206925		0			# bsd consensus
+syscon	ioctl	SIOCGPGRP				0x8904			0x8904			0x40047309		0x40047309		0x40047309		0x40047309		0x40047309		0			# bsd consensus
+syscon	ioctl	SIOCSIFADDR				0x8916			0x8916			0x8020690c		0x8020690c		0x8020690c		0x8020690c		0x8020690c		0			# bsd consensus
+syscon	ioctl	SIOCSIFBRDADDR				0x891a			0x891a			0x80206913		0x80206913		0x80206913		0x80206913		0x80206913		0			# bsd consensus
+syscon	ioctl	SIOCSIFDSTADDR				0x8918			0x8918			0x8020690e		0x8020690e		0x8020690e		0x8020690e		0x8020690e		0			# bsd consensus
+syscon	ioctl	SIOCSIFFLAGS				0x8914			0x8914			0x80206910		0x80206910		0x80206910		0x80206910		0x80206910		0			# bsd consensus
+syscon	ioctl	SIOCSIFMETRIC				0x891e			0x891e			0x80206918		0x80206918		0x80206918		0x80206918		0x80206918		0			# bsd consensus
+syscon	ioctl	SIOCSIFNETMASK				0x891c			0x891c			0x80206916		0x80206916		0x80206916		0x80206916		0x80206916		0			# bsd consensus
+syscon	ioctl	SIOCSPGRP				0x8902			0x8902			0x80047308		0x80047308		0x80047308		0x80047308		0x80047308		0			# bsd consensus
+syscon	ioctl	SIOCGIFMTU				0x8921			0x8921			0xc0206933		0xc0206933		0xc0206933		0xc020697e		0xc020697e		0
+syscon	ioctl	SIOCSIFMTU				0x8922			0x8922			0x80206934		0x80206934		0x80206934		0x8020697f		0x8020697f		0
+
+syscon	ioctl	SIOCGIFINDEX				0x8933			0x8933			0			0			0xc0206920		0			0			0
+syscon	ioctl	SIOCSIFNAME				0x8923			0x8923			0			0			0x80206928		0			0			0
+syscon	ioctl	SIOCADDDLCI				0x8980			0x8980			0			0			0			0			0			0
+syscon	ioctl	SIOCADDRT				0x890b			0x890b			0			0			0			0			0			0
+syscon	ioctl	SIOCDARP				0x8953			0x8953			0			0			0			0			0			0
+syscon	ioctl	SIOCDELDLCI				0x8981			0x8981			0			0			0			0			0			0
+syscon	ioctl	SIOCDELRT				0x890c			0x890c			0			0			0			0			0			0
+syscon	ioctl	SIOCDEVPRIVATE				0x89f0			0x89f0			0			0			0			0			0			0
+syscon	ioctl	SIOCDRARP				0x8960			0x8960			0			0			0			0			0			0
+syscon	ioctl	SIOCGARP				0x8954			0x8954			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFBR				0x8940			0x8940			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFCOUNT				0x8938			0x8938			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFENCAP				0x8925			0x8925			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFHWADDR				0x8927			0x8927			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFMAP				0x8970			0x8970			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFMEM				0x891f			0x891f			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFNAME				0x8910			0x8910			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFPFLAGS				0x8935			0x8935			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFSLAVE				0x8929			0x8929			0			0			0			0			0			0
+syscon	ioctl	SIOCGIFTXQLEN				0x8942			0x8942			0			0			0			0			0			0
+syscon	ioctl	SIOCGRARP				0x8961			0x8961			0			0			0			0			0			0
+syscon	ioctl	SIOCGSTAMP				0x8906			0x8906			0			0			0			0			0			0
+syscon	ioctl	SIOCGSTAMPNS				0x8907			0x8907			0			0			0			0			0			0
+syscon	ioctl	SIOCPROTOPRIVATE			0x89e0			0x89e0			0			0			0			0			0			0
+syscon	ioctl	SIOCRTMSG				0x890d			0x890d			0			0			0			0			0			0
+syscon	ioctl	SIOCSARP				0x8955			0x8955			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFBR				0x8941			0x8941			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFENCAP				0x8926			0x8926			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFHWADDR				0x8924			0x8924			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFHWBROADCAST			0x8937			0x8937			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFLINK				0x8911			0x8911			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFMAP				0x8971			0x8971			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFMEM				0x8920			0x8920			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFPFLAGS				0x8934			0x8934			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFSLAVE				0x8930			0x8930			0			0			0			0			0			0
+syscon	ioctl	SIOCSIFTXQLEN				0x8943			0x8943			0			0			0			0			0			0
+syscon	ioctl	SIOCSRARP				0x8962			0x8962			0			0			0			0			0			0
+syscon	ioctl	SIOGIFINDEX				0x8933			0x8933			0			0			0			0			0			0
 
 #	socket() address families
 #

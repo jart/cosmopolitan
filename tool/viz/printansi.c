@@ -23,7 +23,6 @@
 #include "dsp/tty/tty.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"

@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#include "libc/calls/ioctl.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"

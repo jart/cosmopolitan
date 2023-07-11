@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/socketmodule.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"

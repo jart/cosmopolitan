@@ -149,7 +149,7 @@ o/$(MODE)/test/libc/calls/zipread.com.zip.o: private			\
 			-B
 
 # TODO(jart): Have pledge() support SIOCGIFCONF
-o/$(MODE)/test/libc/calls/ioctl_siocgifconf_test.com.runs:		\
+o/$(MODE)/test/libc/calls/ioctl_test.com.runs:				\
 		private .PLEDGE =
 
 o/$(MODE)/test/libc/calls/poll_test.com.runs:				\

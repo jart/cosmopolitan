@@ -117,7 +117,6 @@
 #endif
 
 #if SQLITE_ENABLE_LOCKING_STYLE
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fio.h"

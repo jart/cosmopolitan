@@ -114,6 +114,7 @@ int getpriority(int, unsigned);
 int getresgid(unsigned *, unsigned *, unsigned *);
 int getresuid(unsigned *, unsigned *, unsigned *);
 int getsid(int) nosideeffect libcesque;
+int ioctl(int, unsigned long, ...);
 int ioprio_get(int, int);
 int ioprio_set(int, int, int);
 int issetugid(void);

@@ -19,7 +19,6 @@
 #include "dsp/tty/itoa8.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"

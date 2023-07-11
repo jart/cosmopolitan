@@ -110,7 +110,6 @@
 
 #if (defined(UNZIP) && !defined(FUNZIP) && defined(UNIX) && defined(MORE))
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fio.h"
@@ -160,7 +159,6 @@
 #        ifndef CMS_MVS
 #          if (!defined(MINIX) && !defined(GOT_IOCTL_H))
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fio.h"

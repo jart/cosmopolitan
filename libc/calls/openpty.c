@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"

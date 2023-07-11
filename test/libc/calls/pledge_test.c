@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/bpf.internal.h"
 #include "libc/calls/struct/filter.internal.h"

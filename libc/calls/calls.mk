@@ -136,8 +136,6 @@ o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 
 # we must segregate codegen because:
 #   file contains multiple independently linkable apis
-o/$(MODE)/libc/calls/ioctl-siocgifconf.o		\
-o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o: private	\
 		COPTS +=				\
 			-ffunction-sections		\
 			-fdata-sections
@@ -146,14 +144,7 @@ o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o: private	\
 #   va_arg codegen is very bloated in default mode
 o//libc/calls/open.o					\
 o//libc/calls/openat.o					\
-o//libc/calls/prctl.o					\
-o//libc/calls/ioctl.o					\
-o//libc/calls/ioctl_default.o				\
-o//libc/calls/ioctl_fioclex-nt.o			\
-o//libc/calls/ioctl_fioclex.o				\
-o//libc/calls/ioctl_siocgifconf-nt.o			\
-o//libc/calls/ioctl_siocgifconf.o			\
-o//libc/calls/fcntl.o: private				\
+o//libc/calls/prctl.o:					\
 		CFLAGS +=				\
 			-Os
 

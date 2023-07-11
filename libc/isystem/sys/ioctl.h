@@ -1,7 +1,6 @@
 #ifndef LIBC_ISYSTEM_SYS_IOCTL_H_
 #define LIBC_ISYSTEM_SYS_IOCTL_H_
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fio.h"

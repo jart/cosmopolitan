@@ -155,73 +155,74 @@ extern const uint32_t CRTSCTS;
 #define FF1     FF1
 #define FF2     FF2
 
-#define CLOCAL     CLOCAL
-#define CREAD      CREAD
-#define CS5        CS5
-#define CS6        CS6
-#define CS7        CS7
-#define CS8        CS8
-#define CSIZE      CSIZE
-#define CSTOPB     CSTOPB
-#define ECHO       8
-#define ECHOCTL    ECHOCTL
-#define ECHOE      ECHOE
-#define ECHOK      ECHOK
-#define ECHOKE     ECHOKE
-#define ECHONL     ECHONL
-#define ECHOPRT    ECHOPRT
-#define EXTPROC    EXTPROC
-#define FLUSHO     FLUSHO
-#define HUPCL      HUPCL
-#define ICANON     ICANON
-#define IEXTEN     IEXTEN
-#define ISIG       ISIG
-#define IUCLC      IUCLC
-#define IUTF8      IUTF8
-#define IXOFF      IXOFF
-#define IXON       IXON
-#define NOFLSH     NOFLSH
-#define OCRNL      OCRNL
-#define OFDEL      OFDEL
-#define OFILL      OFILL
-#define OLCUC      OLCUC
-#define ONLCR      ONLCR
-#define ONLRET     ONLRET
-#define ONOCR      ONOCR
-#define PARENB     PARENB
-#define PARODD     PARODD
-#define PENDIN     PENDIN
-#define TIOCCONS   TIOCCONS
-#define TIOCGETD   TIOCGETD
-#define TIOCGWINSZ TIOCGWINSZ
-#define TIOCNOTTY  TIOCNOTTY
-#define TIOCNXCL   TIOCNXCL
-#define TIOCOUTQ   TIOCOUTQ
-#define TIOCSCTTY  TIOCSCTTY
-#define TIOCSETD   TIOCSETD
-#define TIOCSIG    TIOCSIG
-#define TIOCSPGRP  TIOCSPGRP
-#define TIOCSTI    TIOCSTI
-#define TIOCSWINSZ TIOCSWINSZ
-#define TOSTOP     TOSTOP
-#define VDISCARD   VDISCARD
-#define VEOF       VEOF
-#define VEOL       VEOL
-#define VEOL2      VEOL2
-#define VERASE     VERASE
-#define VINTR      VINTR
-#define VKILL      VKILL
-#define VLNEXT     VLNEXT
-#define VMIN       VMIN
-#define VQUIT      VQUIT
-#define VREPRINT   VREPRINT
-#define VSTART     VSTART
-#define VSTOP      VSTOP
-#define VSUSP      VSUSP
-#define VSWTC      VSWTC
-#define VTIME      VTIME
-#define VWERASE    VWERASE
-#define XCASE      XCASE
+#define CLOCAL   CLOCAL
+#define CREAD    CREAD
+#define CS5      CS5
+#define CS6      CS6
+#define CS7      CS7
+#define CS8      CS8
+#define CSIZE    CSIZE
+#define CSTOPB   CSTOPB
+#define ECHO     8
+#define ECHOCTL  ECHOCTL
+#define ECHOE    ECHOE
+#define ECHOK    ECHOK
+#define ECHOKE   ECHOKE
+#define ECHONL   ECHONL
+#define ECHOPRT  ECHOPRT
+#define EXTPROC  EXTPROC
+#define FLUSHO   FLUSHO
+#define HUPCL    HUPCL
+#define ICANON   ICANON
+#define IEXTEN   IEXTEN
+#define ISIG     ISIG
+#define IUCLC    IUCLC
+#define IUTF8    IUTF8
+#define IXOFF    IXOFF
+#define IXON     IXON
+#define NOFLSH   NOFLSH
+#define OCRNL    OCRNL
+#define OFDEL    OFDEL
+#define OFILL    OFILL
+#define OLCUC    OLCUC
+#define ONLCR    ONLCR
+#define ONLRET   ONLRET
+#define ONOCR    ONOCR
+#define PARENB   PARENB
+#define PARODD   PARODD
+#define PENDIN   PENDIN
+#define TOSTOP   TOSTOP
+#define VDISCARD VDISCARD
+#define VEOF     VEOF
+#define VEOL     VEOL
+#define VEOL2    VEOL2
+#define VERASE   VERASE
+#define VINTR    VINTR
+#define VKILL    VKILL
+#define VLNEXT   VLNEXT
+#define VMIN     VMIN
+#define VQUIT    VQUIT
+#define VREPRINT VREPRINT
+#define VSTART   VSTART
+#define VSTOP    VSTOP
+#define VSUSP    VSUSP
+#define VSWTC    VSWTC
+#define VTIME    VTIME
+#define VWERASE  VWERASE
+#define XCASE    XCASE
+
+/* terminal ioctls */
+#define TIOCGWINSZ TIOCGWINSZ /* get tty dimensions */
+#define TIOCSWINSZ TIOCSWINSZ /* set tty dimensions */
+#define TIOCCONS   TIOCCONS   /* redirect terminal */
+#define TIOCGETD   TIOCGETD   /* get line discipline */
+#define TIOCSETD   TIOCSETD   /* set line discipline */
+#define TIOCNOTTY  TIOCNOTTY  /* give up terminal */
+#define TIOCNXCL   TIOCNXCL   /* disable exclusive mode */
+#define TIOCOUTQ   TIOCOUTQ   /* bytes in output buffer */
+#define TIOCSCTTY  TIOCSCTTY  /* make controlling terminal */
+#define TIOCSIG    TIOCSIG    /* generate pty signal */
+#define TIOCSTI    TIOCSTI    /* insert fake tty input */
 
 /* tcsetattr() */
 #define TCSANOW   0

@@ -197,25 +197,25 @@ o/$(MODE)/ape/loader-xnu-clang.asm: ape/loader.c
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
 o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.macho.dbg
 
-o/$(MODE)/ape/ape.elf.dbg: private		\
-	LDFLAGS +=				\
-		-z common-page-size=0x10	\
-		-z max-page-size=0x10
+APE_LOADER_LDFLAGS =				\
+	-static					\
+	-no-pie					\
+	-nostdlib				\
+	--no-dynamic-linker			\
+	-zcommon-page-size=0x1000		\
+	-zmax-page-size=0x1000
+
 o/$(MODE)/ape/ape.elf.dbg:			\
 		o/$(MODE)/ape/loader.o		\
 		o/$(MODE)/ape/loader-elf.o	\
 		ape/loader.lds
-	@$(ELFLINK)
+	@$(COMPILE) -ALINK.elf $(LINK) -T ape/loader.lds $(APE_LOADER_LDFLAGS) -o $@ o/$(MODE)/ape/loader-elf.o o/$(MODE)/ape/loader.o
 
-o/$(MODE)/ape/ape.macho.dbg: private		\
-	LDFLAGS +=				\
-		-z common-page-size=0x10	\
-		-z max-page-size=0x10
 o/$(MODE)/ape/ape.macho.dbg:			\
 		o/$(MODE)/ape/loader-xnu.o	\
 		o/$(MODE)/ape/loader-macho.o	\
 		ape/loader.lds
-	@$(ELFLINK)
+	@$(COMPILE) -ALINK.elf $(LINK) -T ape/loader.lds $(APE_LOADER_LDFLAGS) -o $@ o/$(MODE)/ape/loader-macho.o o/$(MODE)/ape/loader-xnu.o
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE_CHECKS)			\

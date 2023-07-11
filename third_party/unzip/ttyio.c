@@ -33,7 +33,6 @@
 #include "libc/calls/termios.h"
 #include "third_party/unzip/crypt.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "third_party/unzip/globals.h"

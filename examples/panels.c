@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"

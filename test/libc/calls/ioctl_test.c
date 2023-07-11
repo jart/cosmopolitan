@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,37 +16,56 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/ioctl.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/weaken.h"
-#include "libc/nt/winsock.h"
-#include "libc/sock/internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/intrin/bits.h"
+#include "libc/log/check.h"
+#include "libc/log/log.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/struct/ifconf.h"
+#include "libc/sock/struct/ifreq.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/sio.h"
+#include "libc/sysv/consts/sock.h"
+#include "libc/testlib/testlib.h"
 
-int ioctl_default(int fd, uint64_t request, ...) {
-  int rc;
-  void *arg;
-  va_list va;
-  int64_t handle;
-  va_start(va, request);
-  arg = va_arg(va, void *);
-  va_end(va);
-  if (!IsWindows()) {
-    return sys_ioctl(fd, request, arg);
-  } else if (__isfdopen(fd)) {
-    if (g_fds.p[fd].kind == kFdSocket) {
-      handle = __getfdhandleactual(fd);
-      if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, request, arg)) != -1) {
-        return rc;
-      } else {
-        return _weaken(__winsockerr)();
-      }
-    } else {
-      return eopnotsupp();
+TEST(siocgifconf, test) {
+  size_t n;
+  char *data;
+  int socketfd;
+  struct ifreq *ifr;
+  struct ifconf conf;
+  char addrbuf[1024];
+  uint32_t ip, netmask;
+  bool foundloopback = false;
+  data = gc(malloc((n = 4096)));
+  ASSERT_NE(-1, (socketfd = socket(AF_INET, SOCK_DGRAM, 0)));
+  conf.ifc_buf = data;
+  conf.ifc_len = n;
+  ASSERT_NE(-1, ioctl(socketfd, SIOCGIFCONF, &conf));
+  for (ifr = (struct ifreq *)data; (char *)ifr < data + conf.ifc_len; ++ifr) {
+    if (ifr->ifr_addr.sa_family != AF_INET) continue;
+    ip = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
+    EXPECT_NE(-1, ioctl(socketfd, SIOCGIFNETMASK, ifr));
+    netmask = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
+#if 0
+    fprintf(stderr,
+            "%s %x %d\n"
+            "  ip      %hhu.%hhu.%hhu.%hhu\n"
+            "  netmask %hhu.%hhu.%hhu.%hhu\n"
+            "\n",
+            ifr->ifr_name, ip, ifr->ifr_addr.sa_family, ip >> 24, ip >> 16,
+            ip >> 8, ip, netmask >> 24, netmask >> 16, netmask >> 8, netmask);
+#endif
+    if (ip == 0x7f000001) {
+      foundloopback = true;
+      EXPECT_EQ(0xFF000000, netmask);
     }
-  } else {
-    return ebadf();
   }
+  EXPECT_TRUE(foundloopback);
+  ASSERT_NE(-1, close(socketfd));
 }

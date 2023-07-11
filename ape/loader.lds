@@ -19,7 +19,8 @@
 ENTRY(_start)
 
 SECTIONS {
-  . = 0x200000;
+  . = 0x7fff0000;
+  __executable_start = .;
   .rodata : {
     KEEP(*(.head))
     *(.rodata .rodata.*)
@@ -29,6 +30,7 @@ SECTIONS {
     text = .;
     *(.text)
   }
+  _end = .;
   /DISCARD/ : {
     *(.*)
   }

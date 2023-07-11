@@ -13,8 +13,8 @@
 │ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
 │ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
 │ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
-│ TORTIOUS ACTION, ARISING OUTPATH OF OR IN CONNECTION WITH THE USE OR │ │
-PERFORMANCE OF THIS SOFTWARE.                                                │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
@@ -57,9 +57,48 @@ PERFORMANCE OF THIS SOFTWARE.                                                │
   "copyright 2023 justine tunney\n" \
   "https://github.com/jart/cosmopolitan\n"
 
-#define kIncludePrefix "include \""
+#define MANUAL                                           \
+  " -r o// -o OUTPUT INPUT...\n"                         \
+  "\n"                                                   \
+  "DESCRIPTION\n"                                        \
+  "\n"                                                   \
+  "  Generates makefile defining header dependencies.\n" \
+  "\n"                                                   \
+  "  Includes look like this:\n"                         \
+  "\n"                                                   \
+  "    - #include \"root/of/repository/foo.h\"\n"        \
+  "    - .include \"root/of/repository/foo.inc\"\n"      \
+  "\n"                                                   \
+  "  They do NOT look like this:\n"                      \
+  "\n"                                                   \
+  "    - #include <stdio.h>\n"                           \
+  "    -   #include \"foo.h\"\n"                         \
+  "    - #  include \"foo.h\"\n"                         \
+  "    - #include   \"foo.h\"\n"                         \
+  "\n"                                                   \
+  "  Your generated make code looks like this:\n"        \
+  "\n"                                                   \
+  "    o//package/foo.o: \\\n"                           \
+  "      package/foo.c \\\n"                             \
+  "      package/foo.h \\\n"                             \
+  "      package/bar.h\n"                                \
+  "    o//package/bar.o: \\\n"                           \
+  "      package/bar.c \\\n"                             \
+  "      package/bar.h\n"                                \
+  "\n"                                                   \
+  "FLAGS\n"                                              \
+  "\n"                                                   \
+  "  -h         show usage\n"                            \
+  "  -o OUTPUT  set output path\n"                       \
+  "  -r ROOT    set build output prefix, e.g. o//\n"     \
+  "\n"                                                   \
+  "ARGUMENTS\n"                                          \
+  "\n"                                                   \
+  "  OUTPUT     shall be makefile code\n"                \
+  "  INPUT      should be source or @args.txt\n"         \
+  "\n"
 
-const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
+#define kIncludePrefix "include \""
 
 struct Source {
   unsigned hash;
@@ -86,6 +125,8 @@ struct Edges {
   size_t i, n;
   struct Edge *p;
 };
+
+static const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
 
 static char *names;
 static unsigned counter;
@@ -295,24 +336,7 @@ static void LoadRelationships(int argc, char *argv[]) {
 }
 
 static wontreturn void ShowUsage(int rc, int fd) {
-  tinyprint(fd, VERSION,
-            "\n"
-            "USAGE\n"
-            "\n",
-            "  ", prog, " -r o// -o OUTPUT INPUT...\n",
-            "\n"
-            "FLAGS\n"
-            "\n"
-            "  -h         show usage\n"
-            "  -o OUTPUT  set output path\n"
-            "  -r ROOT    set build output prefix, e.g. o//\n"
-            "\n"
-            "ARGUMENTS\n"
-            "\n"
-            "  OUTPUT     shall be makefile code\n"
-            "  INPUT      should be source or @args.txt\n"
-            "\n",
-            NULL);
+  tinyprint(fd, VERSION, "\nUSAGE\n\n  ", prog, MANUAL, NULL);
   exit(rc);
 }
 

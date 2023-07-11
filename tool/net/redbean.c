@@ -20,7 +20,6 @@
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/flock.h"

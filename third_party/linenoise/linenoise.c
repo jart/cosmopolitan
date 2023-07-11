@@ -129,7 +129,6 @@
 #include "third_party/linenoise/linenoise.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"

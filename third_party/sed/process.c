@@ -32,7 +32,6 @@
  * SUCH DAMAGE.
  */
 #include "libc/calls/calls.h"
-#include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
