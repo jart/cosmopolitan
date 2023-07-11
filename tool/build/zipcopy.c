@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/elf/elf.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/shdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/limits.h"
@@ -34,6 +37,7 @@ static int infd;
 static int outfd;
 static ssize_t insize;
 static ssize_t outsize;
+static const char *prog;
 static const char *inpath;
 static const char *outpath;
 static unsigned char *inmap;
@@ -59,7 +63,7 @@ NAME\n\
 SYNOPSIS\n\
 \n\
   ",
-            program_invocation_name, " [FLAGS] SRC DST\n\
+            prog, " [FLAGS] SRC DST\n\
 \n\
 DESCRIPTION\n\
 \n\
@@ -106,11 +110,23 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 static void CopyZip(void) {
+  char *secstrs;
   int rela, recs;
+  Elf64_Ehdr *ehdr;
   unsigned long ldest, cdest, ltotal, ctotal, length;
-  unsigned char *ineof, *stop, *eocd, *cdir, *lfile, *cfile;
+  unsigned char *szip, *ineof, *stop, *eocd, *cdir, *lfile, *cfile;
 
   // find zip eocd header
+  //
+  // if input is an elf file with sections, then the zip artifacts need
+  // to have been linked into a .zip section and then later copied into
+  // the file end by fixupobj.com.
+  //
+  if (IsElf64Binary((ehdr = (Elf64_Ehdr *)inmap), insize) && ehdr->e_shnum &&
+      (secstrs = GetElfSectionNameStringTable(ehdr, insize)) &&
+      !FindElfSectionByName(ehdr, insize, secstrs, ".zip")) {
+    return;  // zip artifacts were never linked into this elf binary
+  }
   ineof = inmap + insize;
   eocd = ineof - kZipCdirHdrMinSize;
   stop = MAX(eocd - 65536, inmap);
@@ -196,9 +212,11 @@ static void CopyZip(void) {
 
 int main(int argc, char *argv[]) {
   int i, opt;
-  if (!IsOptimized()) {
-    ShowCrashReports();
-  }
+#ifndef NDEBUG
+  ShowCrashReports();
+#endif
+  prog = argv[0];
+  if (!prog) prog = "apelink";
   GetOpts(argc, argv);
   if ((infd = open(inpath, O_RDONLY)) == -1) {
     SysDie(inpath, "open");

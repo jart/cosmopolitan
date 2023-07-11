@@ -34,24 +34,6 @@
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/getargs.h"
 
-/**
- * @fileoverview Make dependency generator.
- *
- * This generates Makefile code for source -> header dependencies.
- *
- * Includes look like this:
- *
- *   - #include "root/of/repository/foo.h"
- *   - .include "root/of/repository/foo.inc"
- *
- * They do not look like this:
- *
- *   -   #include "foo.h"
- *   - #  include "foo.h"
- *   - #include   "foo.h"
- *
- */
-
 #define VERSION                     \
   "cosmopolitan mkdeps v2.0\n"      \
   "copyright 2023 justine tunney\n" \

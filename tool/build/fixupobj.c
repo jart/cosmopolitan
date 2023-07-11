@@ -139,28 +139,14 @@ static void GetOpts(int argc, char *argv[]) {
   }
 }
 
-static Elf64_Shdr *FindElfSectionByName(const char *name) {
-  long i;
-  Elf64_Shdr *shdr;
-  const char *secname;
-  for (i = 0; i < elf->e_shnum; ++i) {
-    if ((shdr = GetElfSectionHeaderAddress(elf, esize, i)) &&
-        (secname = GetElfString(elf, esize, secstrs, shdr->sh_name)) &&
-        !strcmp(name, secname)) {
-      return shdr;
-    }
-  }
-  return 0;
-}
-
 static void CheckPrivilegedCrossReferences(void) {
   long i;
   unsigned long x;
   Elf64_Shdr *shdr;
   const char *secname;
   Elf64_Rela *rela, *erela;
-  if (!(shdr = FindElfSectionByName(".rela.privileged"))) return;
-  if (!(rela = GetElfSectionAddress(elf, esize, shdr))) return;
+  shdr = FindElfSectionByName(elf, esize, secstrs, ".rela.privileged");
+  if (!shdr || !(rela = GetElfSectionAddress(elf, esize, shdr))) return;
   erela = rela + shdr->sh_size / sizeof(*rela);
   for (; rela < erela; ++rela) {
     if (!ELF64_R_TYPE(rela->r_info)) continue;

@@ -450,8 +450,8 @@ static void LoadSymbols(struct Package *pkg, uint32_t object) {
   }
 }
 
-static Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *elf, size_t esize,
-                                        const char *name) {
+static Elf64_Shdr *FindElfSection(Elf64_Ehdr *elf, size_t esize,
+                                  const char *name) {
   long i;
   Elf64_Shdr *shdr;
   const char *secname;
@@ -472,7 +472,7 @@ static void LoadPriviligedRefsToUndefs(struct Package *pkg,
   const char *s;
   Elf64_Shdr *shdr;
   Elf64_Rela *rela, *erela;
-  if ((shdr = FindElfSectionByName(obj->elf, obj->size, ".rela.privileged"))) {
+  if ((shdr = FindElfSection(obj->elf, obj->size, ".rela.privileged"))) {
     if (!(rela = GetElfSectionAddress(obj->elf, obj->size, shdr))) {
       Die("error", "elf overflow");
     }

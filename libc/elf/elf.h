@@ -18,6 +18,7 @@ Elf64_Sym *GetElfSymbols(const Elf64_Ehdr *, size_t, int, Elf64_Xword *);
 Elf64_Shdr *GetElfSymbolTable(const Elf64_Ehdr *, size_t, int, Elf64_Xword *);
 Elf64_Phdr *GetElfProgramHeaderAddress(const Elf64_Ehdr *, size_t, Elf64_Half);
 Elf64_Shdr *GetElfSectionHeaderAddress(const Elf64_Ehdr *, size_t, Elf64_Half);
+Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *, size_t, char *, const char *);
 const char *GetElfString(const Elf64_Ehdr *, size_t, const char *, Elf64_Word);
 void *GetElfSectionAddress(const Elf64_Ehdr *, size_t, const Elf64_Shdr *);
 const char *GetElfSectionName(const Elf64_Ehdr *, size_t, Elf64_Shdr *);
