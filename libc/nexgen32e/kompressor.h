@@ -17,6 +17,7 @@ void rldecode(void *dest, const struct RlDecode *) _Hide;
 void rldecode2(void *dest, const struct RlDecode *) _Hide;
 const uint8_t *lz4check(const void *data) _Hide;
 void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) _Hide;
+size_t lz4len(const void *blockdata, size_t blocksize) _Hide;
 void *lz4decode(void *dest, const void *src) _Hide;
 
 COSMOPOLITAN_C_END_
