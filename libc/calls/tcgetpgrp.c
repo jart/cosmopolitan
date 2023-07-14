@@ -43,7 +43,7 @@ int tcgetpgrp(int fd) {
   } else if (IsBsd()) {
     rc = sys_ioctl(fd, TIOCGPGRP_bsd, &pgrp);
   } else if (IsWindows()) {
-    rc = getpid();
+    pgrp = rc = getpid();
   } else {
     rc = enosys();
   }
