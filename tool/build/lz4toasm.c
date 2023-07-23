@@ -116,8 +116,7 @@ int main(int argc, char *argv[]) {
     if (LZ4_FRAME_BLOCKCONTENTSIZEFLAG(frame)) {
       extractedsize = LZ4_FRAME_BLOCKCONTENTSIZE(frame);
     } else {
-      fprintf(stderr, "error: need extractedsize\n");
-      exit(1);
+      extractedsize = lz4len(data, size);
     }
   }
 
