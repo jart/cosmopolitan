@@ -45,6 +45,7 @@ int raise(int sig);
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sicode.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
