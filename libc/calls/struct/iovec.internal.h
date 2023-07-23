@@ -13,7 +13,7 @@ int64_t sys_vmsplice(int, const struct iovec *, int64_t, uint32_t) _Hide;
 int64_t sys_writev(int32_t, const struct iovec *, int32_t) _Hide;
 size_t __iovec_size(const struct iovec *, size_t) _Hide;
 ssize_t WritevUninterruptible(int, struct iovec *, int);
-ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, ssize_t) _Hide;
+ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, int64_t) _Hide;
 ssize_t sys_readv_metal(struct Fd *, const struct iovec *, int) _Hide;
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) _Hide;
 ssize_t sys_readv_serial(struct Fd *, const struct iovec *, int) _Hide;

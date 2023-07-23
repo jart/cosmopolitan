@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "ape/sections.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
@@ -36,24 +37,7 @@
 
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
-#ifdef __aarch64__
-static privileged void __aarch64_sigprocmask(int how, const sigset_t *set,
-                                             sigset_t *oldset) {
-  register int r0 asm("x0") = how;
-  register long r1 asm("x1") = (long)set;
-  register long r2 asm("x2") = (long)oldset;
-  register long r3 asm("x3") = 8;
-  register long r8 asm("x8") = __NR_sigprocmask;
-  register long r16 asm("x16") = __NR_sigprocmask;
-  asm volatile("svc\t0"
-               : "+r"(r0)
-               : "r"(r1), "r"(r2), "r"(r3), "r"(r8), "r"(r16)
-               : "memory");
-}
-#endif
-
-static privileged void __morph_mprotect(void *addr, size_t size, int prot,
-                                        int ntprot) {
+__funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
 #ifdef __x86_64__
   bool cf;
   int ax, dx;
@@ -69,8 +53,11 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
     if (ax == -EPERM) {
       kprintf("error: need pledge(prot_exec) permission to code morph\n");
     }
+    if (ax < 0) {
+      kprintf("error: __morph_mprotect(%p, %#zx, %d) failed: errno=%d\n", addr,
+              size, prot, -ax);
+    }
 #endif
-    if (ax) notpossible;
   } else {
     __imp_VirtualProtect(addr, size, ntprot, &op);
   }
@@ -97,27 +84,6 @@ privileged void __morph_begin(sigset_t *save) {
   bool cf;
   intptr_t dx;
   sigset_t ss = {{-1, -1}};
-#ifdef __x86_64__
-  if (IsOpenbsd()) {
-    asm volatile(CFLAG_ASM("syscall")
-                 : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
-                 : "1"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(-1u)
-                 : "rcx", "r8", "r9", "r10", "r11", "memory");
-    save->__bits[0] = ax & 0xffffffff;
-    if (cf) notpossible;
-  } else if (!IsWindows() && !IsMetal()) {
-    asm volatile("mov\t$8,%%r10d\n\t"
-                 "syscall"
-                 : "=a"(ax), "=d"(dx)
-                 : "0"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(&ss), "1"(save)
-                 : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-    if (ax) notpossible;
-  }
-#elif defined(__aarch64__)
-  __aarch64_sigprocmask(SIG_BLOCK, &ss, save);
-#else
-#error "unsupported architecture"
-#endif
   __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_WRITE, kNtPageWritecopy);
 }
@@ -131,24 +97,4 @@ privileged void __morph_end(sigset_t *save) {
   bool cf;
   __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_EXEC, kNtPageExecuteRead);
-#ifdef __x86_64__
-  if (IsOpenbsd()) {
-    asm volatile(CFLAG_ASM("syscall")
-                 : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
-                 : "1"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(save->__bits[0])
-                 : "rcx", "r8", "r9", "r10", "r11", "memory");
-    if (cf) notpossible;
-  } else if (!IsWindows() && !IsMetal()) {
-    asm volatile("mov\t$8,%%r10d\n\t"
-                 "syscall"
-                 : "=a"(ax), "=d"(dx)
-                 : "0"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(save), "1"(0L)
-                 : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-    if (ax) notpossible;
-  }
-#elif defined(__aarch64__)
-  __aarch64_sigprocmask(SIG_SETMASK, save, 0);
-#else
-#error "unsupported architecture"
-#endif
 }

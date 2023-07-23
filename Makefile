@@ -269,7 +269,7 @@ CHECKS	 = $(foreach x,$(PKGS),$($(x)_CHECKS))
 
 bins:	$(BINS)
 check:	$(CHECKS)
-test:	$(TESTS) aarch64
+test:	$(TESTS)
 depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 

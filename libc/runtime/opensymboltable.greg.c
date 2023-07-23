@@ -100,8 +100,14 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   for (j = i = 0; i < m; ++i) {
     sym = symtab + (stp[i] & 0x7fffffff);
     x = stp[i] >> 32;
-    if (j && x == t->symbols[j - 1].x) --j;
-    if (j && t->symbols[j - 1].y >= x) t->symbols[j - 1].y = x - 1;
+    if (j && x == t->symbols[j - 1].x) {
+      // when two symbols have an identical address value, favor the
+      // symbol that was defined earlier in the elf data structures.
+      continue;
+    }
+    if (j && t->symbols[j - 1].y >= x) {
+      t->symbols[j - 1].y = x - 1;
+    }
     t->names[j] = sym->st_name;
     t->symbols[j].x = x;
     if (sym->st_size) {

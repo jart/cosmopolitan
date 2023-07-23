@@ -16,20 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/internal.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
@@ -37,26 +37,31 @@
 
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
+
+  // perform the write i/o operation
   bool32 ok;
-  int64_t h, p;
-  uint32_t err, sent;
-  struct NtOverlapped overlap;
-
-  h = g_fds.p[fd].handle;
-
-  if (offset != -1) {
-    // windows changes the file pointer even if overlapped is passed
-    SetFilePointerEx(h, 0, &p, SEEK_CUR);
+  uint32_t sent;
+  int64_t handle;
+  handle = g_fds.p[fd].handle;
+  size = MIN(size, 0x7ffff000);
+  if (offset == -1) {
+    // perform simple blocking write
+    ok = WriteFile(handle, data, size, &sent, 0);
+  } else {
+    // perform pwrite()-style write at particular file offset
+    int64_t position;
+    // save file pointer which windows clobbers, even for overlapped i/o
+    if (!SetFilePointerEx(handle, 0, &position, SEEK_CUR)) {
+      return __winerr();  // fd probably isn't seekable?
+    }
+    struct NtOverlapped overlap = {0};
+    overlap.Pointer = (void *)(uintptr_t)offset;
+    ok = WriteFile(handle, data, size, 0, &overlap);
+    if (!ok && GetLastError() == kNtErrorIoPending) ok = true;
+    if (ok) ok = GetOverlappedResult(handle, &overlap, &sent, true);
+    // restore file pointer which windows clobbers, even on error
+    _unassert(SetFilePointerEx(handle, position, 0, SEEK_SET));
   }
-
-  ok = WriteFile(h, data, _clampio(size), &sent,
-                 _offset2overlap(h, offset, &overlap));
-
-  if (offset != -1) {
-    // windows clobbers file pointer even on error
-    SetFilePointerEx(h, p, 0, SEEK_SET);
-  }
-
   if (ok) {
     return sent;
   }
@@ -86,8 +91,6 @@ textwindows ssize_t sys_write_nt(int fd, const struct iovec *iov, size_t iovlen,
                                  ssize_t opt_offset) {
   ssize_t rc;
   size_t i, total;
-  uint32_t size, wrote;
-  struct NtOverlapped overlap;
   if (opt_offset < -1) return einval();
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {

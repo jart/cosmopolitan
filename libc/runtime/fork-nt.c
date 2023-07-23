@@ -51,6 +51,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -349,13 +350,19 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     }
   } else {
     rc = 0;
+    // re-apply code morphing for thread-local storage
     if (tib && _weaken(__set_tls) && _weaken(__morph_tls)) {
       _weaken(__set_tls)(tib);
       _weaken(__morph_tls)();
       __tls_enabled_set(true);
     }
+    // re-apply code morphing for synchronization nops
     if (threaded && !__threaded && _weaken(__enable_threads)) {
       _weaken(__enable_threads)();
+    }
+    // re-apply code morphing for function tracing
+    if (ftrace_stackdigs) {
+      _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
     }
   }
   if (untrackpid != -1) {

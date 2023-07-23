@@ -23,8 +23,6 @@
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 
-void ftrace_hook(void);
-
 textstartup int ftrace_install(void) {
   if (GetSymbolTable()) {
     ftrace_stackdigs = LengthInt64Thousands(GetStackSize());

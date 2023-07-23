@@ -26,6 +26,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -37,13 +38,10 @@
 #include "libc/sysv/errfuns.h"
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
-                                            size_t size, ssize_t offset) {
-  bool32 ok;
-  int64_t p;
-  uint32_t got, avail;
-  struct NtOverlapped overlap;
+                                            size_t size, int64_t offset) {
 
-  // our terrible polling mechanism
+  // try to poll rather than block
+  uint32_t avail;
   if (GetFileType(fd->handle) == kNtFileTypePipe) {
     for (;;) {
       if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
@@ -63,19 +61,28 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     POLLTRACE("sys_read_nt ready to read");
   }
 
-  if (offset != -1) {
-    // windows changes the file pointer even if overlapped is passed
-    _npassert(SetFilePointerEx(fd->handle, 0, &p, SEEK_CUR));
+  // perform the read i/o operation
+  bool32 ok;
+  uint32_t got;
+  size = MIN(size, 0x7ffff000);
+  if (offset == -1) {
+    // perform simple blocking read
+    ok = ReadFile(fd->handle, data, size, &got, 0);
+  } else {
+    // perform pread()-style read at particular file offset
+    int64_t position;
+    // save file pointer which windows clobbers, even for overlapped i/o
+    if (!SetFilePointerEx(fd->handle, 0, &position, SEEK_CUR)) {
+      return __winerr();  // fd probably isn't seekable?
+    }
+    struct NtOverlapped overlap = {0};
+    overlap.Pointer = (void *)(uintptr_t)offset;
+    ok = ReadFile(fd->handle, data, size, 0, &overlap);
+    if (!ok && GetLastError() == kNtErrorIoPending) ok = true;
+    if (ok) ok = GetOverlappedResult(fd->handle, &overlap, &got, true);
+    // restore file pointer which windows clobbers, even on error
+    _unassert(SetFilePointerEx(fd->handle, position, 0, SEEK_SET));
   }
-
-  ok = ReadFile(fd->handle, data, _clampio(size), &got,
-                _offset2overlap(fd->handle, offset, &overlap));
-
-  if (offset != -1) {
-    // windows clobbers file pointer even on error
-    _npassert(SetFilePointerEx(fd->handle, p, 0, SEEK_SET));
-  }
-
   if (ok) {
     return got;
   }
@@ -93,7 +100,7 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
 }
 
 textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
-                                size_t iovlen, ssize_t opt_offset) {
+                                size_t iovlen, int64_t opt_offset) {
   ssize_t rc;
   uint32_t size;
   size_t i, total;

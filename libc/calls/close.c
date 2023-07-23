@@ -91,6 +91,6 @@ int close(int fd) {
       __releasefd(fd);
     }
   }
-  STRACE("%s(%d) → %d% m", "close", fd, rc);
+  STRACE("close(%d) → %d% m", fd, rc);
   return rc;
 }

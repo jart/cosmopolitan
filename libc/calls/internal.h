@@ -34,14 +34,6 @@ forceinline bool __isfdkind(int fd, int kind) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind == kind;
 }
 
-forceinline size_t _clampio(size_t size) {
-  if (!IsTrustworthy()) {
-    return MIN(size, 0x7ffff000);
-  } else {
-    return size;
-  }
-}
-
 int sys_close_nt(struct Fd *, int) _Hide;
 int _check_interrupts(bool, struct Fd *) _Hide;
 int sys_openat_metal(int, const char *, int, unsigned);

@@ -40,7 +40,6 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
-	libc/sysv/errno_location.greg.c			\
 	libc/sysv/sysret.c				\
 	libc/sysv/errno.c				\
 	libc/sysv/errfun.S				\

@@ -119,4 +119,4 @@ ftrace_hook:
 1:	ret
 
 #endif /* __x86_64__ */
-	.endfn	ftrace_hook,globl
+	.endfn	ftrace_hook,globl,hidden

@@ -33,6 +33,7 @@ extern unsigned char _tls_content[] __attribute__((__weak__));
 
 void _init(void) _Hide;
 int ftrace_init(void) _Hide;
+void ftrace_hook(void) _Hide;
 void __morph_tls(void) _Hide;
 void __enable_tls(void) _Hide;
 void __enable_threads(void) _Hide;

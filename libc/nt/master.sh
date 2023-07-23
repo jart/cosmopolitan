@@ -3298,6 +3298,7 @@ imp	'WSCWriteNameSpaceOrder32'				WSCWriteNameSpaceOrder32				ws2_32		162
 imp	'WSCWriteProviderOrder'					WSCWriteProviderOrder					ws2_32		163
 imp	'WSCWriteProviderOrder32'				WSCWriteProviderOrder32					ws2_32		164
 imp	'WSCWriteProviderOrderEx'				WSCWriteProviderOrderEx					ws2_32		165
+imp	'__sys_socket_nt'					socket							ws2_32		0	3
 imp	'__sys_accept_nt'					accept							ws2_32		1	3	# we're using WSAAccept()
 imp	'__sys_bind_nt'						bind							ws2_32		2	3
 imp	'__sys_closesocket_nt'					closesocket						ws2_32		3	1

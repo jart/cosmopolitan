@@ -176,7 +176,7 @@ void *Worker(void *id) {
       // inherited by the accepted sockets, but using them also has the
       // side-effect that the listening socket fails with EAGAIN, every
       // several seconds. we can use that to our advantage to check for
-      // the ctrl-c shutdowne event; otherwise, we retry the accept call
+      // the ctrl-c shutdowne event; otherwise we retry the accept call
       continue;
     }
 
