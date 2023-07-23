@@ -20,6 +20,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr6.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/limits.h"
@@ -90,4 +91,30 @@ TEST(ipv6, test) {
   EXPECT_NE(-1, wait(&ws));
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(getsockname, defaultsToZero) {
+  struct sockaddr_in addr;
+  uint32_t addrsize = sizeof(struct sockaddr_in);
+  memset(&addr, -1, sizeof(addr));
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_EQ(sizeof(struct sockaddr_in), addrsize);
+  ASSERT_EQ(AF_INET, addr.sin_family);
+  ASSERT_EQ(0, addr.sin_addr.s_addr);
+  ASSERT_EQ(0, addr.sin_port);
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(getsockname, copiesSafely_givesFullSize) {
+  struct sockaddr_in addr;
+  uint32_t addrsize = 2;
+  memset(&addr, -1, sizeof(addr));
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
+  ASSERT_EQ(sizeof(struct sockaddr_in), addrsize);
+  ASSERT_EQ(AF_INET, addr.sin_family);
+  ASSERT_EQ(0xffffffff, addr.sin_addr.s_addr);
+  ASSERT_EQ(0xffff, addr.sin_port);
+  EXPECT_SYS(0, 0, close(3));
 }

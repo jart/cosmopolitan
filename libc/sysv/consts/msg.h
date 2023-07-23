@@ -33,37 +33,14 @@ extern const int MSG_TRUNC;
 extern const int MSG_WAITALL;
 extern const int MSG_WAITFORONE;
 
-#define MSG_DONTROUTE 4
 #define MSG_OOB       1
 #define MSG_PEEK      2
-
-#define MSG_BATCH        MSG_BATCH
-#define MSG_BCAST        MSG_BCAST
-#define MSG_CMSG_CLOEXEC MSG_CMSG_CLOEXEC
-#define MSG_CONFIRM      MSG_CONFIRM
-#define MSG_CTRUNC       MSG_CTRUNC
-#define MSG_DONTWAIT     MSG_DONTWAIT
-#define MSG_EOF          MSG_EOF
-#define MSG_EOR          MSG_EOR
-#define MSG_ERRQUEUE     MSG_ERRQUEUE
-#define MSG_EXCEPT       MSG_EXCEPT
-#define MSG_FASTOPEN     MSG_FASTOPEN
-#define MSG_FIN          MSG_FIN
-#define MSG_INFO         MSG_INFO
-#define MSG_MCAST        MSG_MCAST
-#define MSG_MORE         MSG_MORE
-#define MSG_NOERROR      MSG_NOERROR
-#define MSG_NOSIGNAL     MSG_NOSIGNAL
-#define MSG_NOTIFICATION MSG_NOTIFICATION
-#define MSG_PARITY_ERROR MSG_PARITY_ERROR
-#define MSG_PROXY        MSG_PROXY
-#define MSG_RST          MSG_RST
-#define MSG_STAT         MSG_STAT
-#define MSG_SYN          MSG_SYN
-#define MSG_TRUNC        MSG_TRUNC
-#define MSG_WAITALL      MSG_WAITALL
-#define MSG_WAITFORONE   MSG_WAITFORONE
-
+#define MSG_DONTROUTE 4
+#define MSG_DONTWAIT  MSG_DONTWAIT
+#define MSG_FASTOPEN  MSG_FASTOPEN
+#define MSG_WAITALL   MSG_WAITALL
+#define MSG_TRUNC     MSG_TRUNC
+#define MSG_CTRUNC    MSG_CTRUNC
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

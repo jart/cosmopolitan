@@ -59,6 +59,10 @@ o/$(MODE)/test/libc/sock/%.com.dbg:				\
 o/$(MODE)/test/libc/sock/unix_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc unix
 
+o/$(MODE)/test/libc/sock/recvfrom_test.com.runs			\
+o/$(MODE)/test/libc/sock/recvmsg_test.com.runs			\
+o/$(MODE)/test/libc/sock/sendrecvmsg_test.com.runs		\
+o/$(MODE)/test/libc/sock/nointernet_test.com.runs		\
 o/$(MODE)/test/libc/sock/nonblock_test.com.runs			\
 o/$(MODE)/test/libc/sock/socket_test.com.runs			\
 o/$(MODE)/test/libc/sock/shutdown_test.com.runs			\
@@ -68,17 +72,11 @@ o/$(MODE)/test/libc/sock/poll_test.com.runs			\
 o/$(MODE)/test/libc/sock/pollfd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
-o/$(MODE)/test/libc/sock/sendrecvmsg_test.com.runs		\
-o/$(MODE)/test/libc/sock/nointernet_test.com.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
-
 o/$(MODE)/test/libc/sock/socket_test.com.runs:			\
 		private .INTERNET = 1  # todo: ipv6 filtering
 
 o/$(MODE)/test/libc/sock/recvmsg_test.com.runs:			\
 		private .INTERNET = 1  # need to bind to 0.0.0.0
-o/$(MODE)/test/libc/sock/recvmsg_test.com.runs:			\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
 
 $(TEST_LIBC_SOCK_OBJS): test/libc/sock/test.mk
 

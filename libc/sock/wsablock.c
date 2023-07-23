@@ -40,7 +40,7 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
                            uint32_t *flags, bool restartable,
                            uint32_t timeout) {
   int e, rc;
-  uint32_t i, got = -666;
+  uint32_t i, got;
   if (WSAGetLastError() != kNtErrorIoPending) {
     NTTRACE("sock i/o failed %s", strerror(errno));
     return __winsockerr();

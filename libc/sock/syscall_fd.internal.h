@@ -3,10 +3,11 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/sock/struct/sockaddr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int sys_accept_nt(struct Fd *, void *, uint32_t *, int) _Hide;
+int sys_accept_nt(struct Fd *, struct sockaddr_storage *, int) _Hide;
 int sys_bind_nt(struct Fd *, const void *, uint32_t);
 int sys_closesocket_nt(struct Fd *) _Hide;
 int sys_connect_nt(struct Fd *, const void *, uint32_t) _Hide;

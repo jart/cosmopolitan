@@ -44,18 +44,24 @@
 int accept4(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize,
             int flags) {
   int rc;
-  char addrbuf[72];
+  struct sockaddr_storage ss = {0};
   BEGIN_CANCELLATION_POINT;
 
-  if (!out_addr || !inout_addrsize ||
-      (IsAsan() && !__asan_is_valid(out_addr, *inout_addrsize))) {
-    rc = efault();
-  } else if (!IsWindows()) {
-    rc = sys_accept4(fd, out_addr, inout_addrsize, flags);
-  } else if (__isfdkind(fd, kFdSocket)) {
-    rc = sys_accept_nt(&g_fds.p[fd], out_addr, inout_addrsize, flags);
+  if (IsWindows()) {
+    if (__isfdkind(fd, kFdSocket)) {
+      rc = sys_accept_nt(g_fds.p + fd, &ss, flags);
+    } else {
+      rc = ebadf();
+    }
   } else {
-    rc = ebadf();
+    rc = sys_accept4(fd, &ss, flags);
+  }
+
+  if (rc != -1) {
+    if (IsBsd()) {
+      __convert_bsd_to_sockaddr(&ss);
+    }
+    __write_sockaddr(&ss, out_addr, inout_addrsize);
   }
 
   END_CANCELLATION_POINT;

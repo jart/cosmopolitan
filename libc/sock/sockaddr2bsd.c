@@ -23,6 +23,8 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/errfuns.h"
 
+// TODO(jart): DELETE
+
 /**
  * Converts sockaddr (Linux/Windows) → sockaddr_bsd (XNU/BSD).
  */

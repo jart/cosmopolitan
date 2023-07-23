@@ -32,10 +32,9 @@ textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
                                 size_t iovlen, uint32_t flags) {
   int err;
   ssize_t rc;
-  uint32_t got = -666;
+  uint32_t got;
   struct SockFd *sockfd;
   struct NtIovec iovnt[16];
-  if (_check_interrupts(true, g_fds.p)) return -1;
   struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   err = errno;
   if (!WSARecv(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), 0, &flags,

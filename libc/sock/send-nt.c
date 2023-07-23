@@ -27,10 +27,9 @@
 textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
   ssize_t rc;
-  uint32_t sent = -666;
+  uint32_t sent;
   struct SockFd *sockfd;
   struct NtIovec iovnt[16];
-  if (_check_interrupts(true, g_fds.p)) return -1;
   struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   if (!WSASend(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen), 0,
                flags, &overlapped, NULL)) {

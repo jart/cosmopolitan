@@ -53,43 +53,36 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
                  struct sockaddr *opt_out_srcaddr,
                  uint32_t *opt_inout_srcaddrsize) {
   ssize_t rc;
-  uint32_t sz;
-  union sockaddr_storage_bsd bsd;
+  struct sockaddr_storage addr = {0};
+  uint32_t addrsize = sizeof(addr);
   BEGIN_CANCELLATION_POINT;
 
-  if (IsAsan() &&
-      (!__asan_is_valid(buf, size) ||
-       (opt_out_srcaddr &&
-        (!__asan_is_valid(opt_inout_srcaddrsize,
-                          sizeof(*opt_inout_srcaddrsize)) ||
-         !__asan_is_valid(opt_out_srcaddr, *opt_inout_srcaddrsize))))) {
+  if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
   } else if (!IsWindows()) {
-    if (!IsBsd() || !opt_out_srcaddr) {
-      rc = sys_recvfrom(fd, buf, size, flags, opt_out_srcaddr,
-                        opt_inout_srcaddrsize);
-    } else {
-      sz = sizeof(bsd);
-      if ((rc = sys_recvfrom(fd, buf, size, flags, &bsd, &sz)) != -1) {
-        sockaddr2linux(&bsd, sz, (void *)opt_out_srcaddr,
-                       opt_inout_srcaddrsize);
-      }
-    }
+    rc = sys_recvfrom(fd, buf, size, flags, &addr, &addrsize);
   } else if (__isfdopen(fd)) {
     if (__isfdkind(fd, kFdSocket)) {
       rc = sys_recvfrom_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1,
-                           flags, opt_out_srcaddr, opt_inout_srcaddrsize);
+                           flags, &addr, &addrsize);
     } else if (__isfdkind(fd, kFdFile) && !opt_out_srcaddr) { /* socketpair */
-      if (flags) {
-        rc = einval();
-      } else {
+      if (!flags) {
         rc = sys_read_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, -1);
+      } else {
+        rc = einval();
       }
     } else {
       rc = enotsock();
     }
   } else {
     rc = ebadf();
+  }
+
+  if (rc != -1) {
+    if (IsBsd()) {
+      __convert_bsd_to_sockaddr(&addr);
+    }
+    __write_sockaddr(&addr, opt_out_srcaddr, opt_inout_srcaddrsize);
   }
 
   END_CANCELLATION_POINT;

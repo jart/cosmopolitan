@@ -44,6 +44,11 @@ union sockaddr_storage_linux {
 const char *DescribeSockaddr(char[128], const struct sockaddr *, size_t);
 #define DescribeSockaddr(sa, sz) DescribeSockaddr(alloca(128), sa, sz)
 
+void __convert_bsd_to_sockaddr(struct sockaddr_storage *);
+void __convert_sockaddr_to_bsd(struct sockaddr_storage *);
+uint8_t __get_sockaddr_len(const struct sockaddr_storage *);
+void __write_sockaddr(const struct sockaddr_storage *, void *, uint32_t *);
+
 int sockaddr2bsd(const void *, uint32_t, union sockaddr_storage_bsd *,
                  uint32_t *);
 void sockaddr2linux(const union sockaddr_storage_bsd *, uint32_t,

@@ -132,7 +132,7 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
-  ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0));
+  ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, connect(4, (void *)&addr, len));
   ASSERT_SYS(0, 5, write(4, "hello", 5));
   ASSERT_SYS(0, 5, read(3, buf, 8));
@@ -151,7 +151,7 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
                            errno == EDESTADDRREQ));
   errno = 0;
   ASSERT_SYS(0, 0, close(4));
-  ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0));
+  ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, connect(4, (void *)&addr, len));
   ASSERT_SYS(0, 5, write(4, "hello", 5));
   ASSERT_SYS(0, 5, read(3, buf, 8));
@@ -168,7 +168,7 @@ TEST(unix, serverGoesDown_usingSendTo_unlink) {  // much easier
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
-  ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0));
+  ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 5, sendto(4, "hello", 5, 0, (void *)&addr, len));
   ASSERT_SYS(0, 5, read(3, buf, 8));
   ASSERT_SYS(0, 0, close(3));

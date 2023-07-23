@@ -27,23 +27,20 @@
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/sysv/errfuns.h"
 
-int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
+int sys_accept4(int server, struct sockaddr_storage *addr, int flags) {
+  uint32_t size = sizeof(*addr);
   int olderr, client, file_mode;
-  union sockaddr_storage_bsd bsd;
-  uint32_t size = sizeof(bsd);
-  void *out_addr = !IsBsd() ? addr : &bsd;
-  uint32_t *out_addrsize = !IsBsd() ? addrsize : &size;
-  static bool demodernize;
-  if (demodernize) goto TriedAndTrue;
   olderr = errno;
-  client = __sys_accept4(server, out_addr, out_addrsize, flags);
+  client = __sys_accept4(server, addr, &size, flags);
   if (client == -1 && errno == ENOSYS) {
+    // XNU/RHEL5/etc. don't support accept4(), but it's easilly polyfilled
     errno = olderr;
-    demodernize = true;
-  TriedAndTrue:
-    if ((client = __sys_accept(server, out_addr, out_addrsize, 0)) != -1) {
+    if (flags & ~(SOCK_CLOEXEC | SOCK_NONBLOCK)) return einval();
+    if ((client = __sys_accept(server, addr, &size, 0)) != -1) {
       // __sys_accept() has inconsistent flag inheritence across platforms
+      // this is one of the issues that accept4() was invented for solving
       _unassert((file_mode = __sys_fcntl(client, F_GETFD)) != -1);
       _unassert(!__sys_fcntl(client, F_SETFD,
                              ((file_mode & ~FD_CLOEXEC) |
@@ -53,9 +50,6 @@ int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
                              ((file_mode & ~O_NONBLOCK) |
                               (flags & SOCK_NONBLOCK ? O_NONBLOCK : 0))));
     }
-  }
-  if (client != -1 && IsBsd()) {
-    sockaddr2linux(&bsd, size, addr, addrsize);
   }
   return client;
 }

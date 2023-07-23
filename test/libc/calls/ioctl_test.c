@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"
@@ -52,7 +53,7 @@ TEST(siocgifconf, test) {
     ip = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
     EXPECT_NE(-1, ioctl(socketfd, SIOCGIFNETMASK, ifr));
     netmask = ntohl(((struct sockaddr_in *)&ifr->ifr_addr)->sin_addr.s_addr);
-#if 0
+#if 1
     fprintf(stderr,
             "%s %x %d\n"
             "  ip      %hhu.%hhu.%hhu.%hhu\n"

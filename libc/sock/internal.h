@@ -45,7 +45,7 @@ int32_t __sys_getsockname(int32_t, void *, uint32_t *) _Hide;
 int32_t __sys_socket(int32_t, int32_t, int32_t) _Hide;
 int32_t __sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]) _Hide;
 
-int32_t sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard _Hide;
+int32_t sys_accept4(int32_t, struct sockaddr_storage *, int) dontdiscard _Hide;
 int32_t sys_bind(int32_t, const void *, uint32_t) _Hide;
 int32_t sys_connect(int32_t, const void *, uint32_t) _Hide;
 int32_t sys_getsockopt(int32_t, int32_t, int32_t, void *, uint32_t *) _Hide;
