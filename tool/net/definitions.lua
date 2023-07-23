@@ -52,8 +52,6 @@ FLAGS
   -b        log message bodies
   -a        log resource usage
   -g        log handler latency
-  -e        eval Lua code in arg
-  -F        eval Lua code in file
   -E        show crash reports to public ips
   -j        enable ssl client verify
   -k        disable ssl fetch verify
@@ -68,6 +66,8 @@ FLAGS
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
   -S        increase pledge sandboxing        [repeatable]
+  -e CODE   eval Lua code in arg              [repeatable]
+  -F PATH   eval Lua code in file             [repeatable]
   -H K:V    sets http header globally         [repeatable]
   -D DIR    overlay assets in local directory [repeatable]
   -r /X=/Y  redirect X to Y                   [repeatable]
@@ -644,6 +644,8 @@ function OnWorkerStop() end
 
 ---@alias uint32 integer Unsigned 32-bit integer
 ---@alias uint16 integer Unsigned 16-bit integer
+---@alias uint8 integer Unsigned 8-bit integer
+---@alias int8 integer Signed 8-bit integer
 
 ---@class EncoderOptions
 ---@field useoutput boolean? defaults to `false`. Encodes the result directly to the output buffer and returns `nil` value. This option is ignored if used outside of request handling code.
@@ -733,6 +735,23 @@ function LaunchBrowser(path) end
 ---@nodiscard
 function CategorizeIp(ip) end
 
+--- Turns ISO-8859-1 string into UTF-8.
+---@param iso_8859_1 string
+---@return string UTF8
+---@nodiscard
+function DecodeLatin1(iso_8859_1) end
+
+--- Turns binary into ASCII base-16 hexadecimal lowercase string.
+---@param binary string
+---@return string ascii
+function EncodeHex(binary) end
+
+--- Turns ASCII base-16 hexadecimal byte string into binary string,
+--- case-insensitively. Non-hex characters may not appear in string.
+---@param ascii string
+---@return string binary
+function DecodeHex(ascii) end
+
 --- Decodes binary data encoded as base64.
 ---
 --- This turns ASCII into binary, in a permissive way that ignores
@@ -743,13 +762,6 @@ function CategorizeIp(ip) end
 ---@return string binary
 ---@nodiscard
 function DecodeBase64(ascii) end
-
---- Turns ISO-8859-1 string into UTF-8.
----
----@param iso_8859_1 string
----@return string UTF8
----@nodiscard
-function DecodeLatin1(iso_8859_1) end
 
 --- Turns binary into ASCII. This can be used to create HTML data:
 --- URIs that do things like embed a PNG file in a web page. See
@@ -992,13 +1004,13 @@ function EncodeLatin1(utf8, flags) end
 --- and everything else gets `%XX` encoded. Please note that `'&` can still break
 --- HTML and that `'()` can still break CSS URLs. This function is charset agnostic
 --- and will not canonicalize overlong encodings. It is assumed that a UTF-8 string
---- will be supplied. See `kescapefragment.c`.
+--- will be supplied. See `kescapefragment.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
 function EscapeFragment(str) end
 
---- Escapes URL host. See `kescapeauthority.c`.
+--- Escapes URL host. See `kescapeauthority.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
@@ -1022,13 +1034,13 @@ function EscapeLiteral(str) end
 --- Escapes URL parameter name or value. The allowed characters are `-.*_0-9A-Za-z`
 --- and everything else gets `%XX` encoded. This function is charset agnostic and
 --- will not canonicalize overlong encodings. It is assumed that a UTF-8 string
---- will be supplied. See `kescapeparam.c`.
+--- will be supplied. See `kescapeparam.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
 function EscapeParam(str) end
 
---- Escapes URL password. See `kescapeauthority.c`.
+--- Escapes URL password. See `kescapeauthority.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
@@ -1039,7 +1051,7 @@ function EscapePass(str) end
 --- gets `%XX` encoded. Please note that `'&` can still break HTML, so the output
 --- may need EscapeHtml too. Also note that `'()` can still break CSS URLs. This
 --- function is charset agnostic and will not canonicalize overlong encodings.
---- It is assumed that a UTF-8 string will be supplied. See `kescapepath.c`.
+--- It is assumed that a UTF-8 string will be supplied. See `kescapepath.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
@@ -1050,13 +1062,13 @@ function EscapePath(str) end
 --- else gets `%XX` encoded. Please note that `'&` can still break HTML, so the
 --- output may need EscapeHtml too. Also note that `'()` can still break CSS URLs.
 --- This function is charset agnostic and will not canonicalize overlong encodings.
---- It is assumed that a UTF-8 string will be supplied. See `kescapesegment.c`.
+--- It is assumed that a UTF-8 string will be supplied. See `kescapesegment.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
 function EscapeSegment(str) end
 
---- Escapes URL username. See `kescapeauthority.c`.
+--- Escapes URL username. See `kescapeauthority.S`.
 ---@param str string
 ---@return string
 ---@nodiscard
@@ -1082,6 +1094,16 @@ function EvadeDragnetSurveillance(bool) end
 --- - `maxredirects` (default: `5`): sets the number of allowed redirects to
 ---   minimize looping due to misconfigured servers. When the number is exceeded,
 ---   the result of the last redirect is returned.
+--- - `keepalive` (default = `false`): configures each request to keep the
+---   connection open (unless closed by the server) and reuse for the
+---   next request to the same host. This option is disabled when SSL
+---   connection is used.
+---   The mapping of hosts and their sockets is stored in a table
+---   assigned to the `keepalive` field itself, so it can be passed to
+---   the next call.
+---   If the table includes the `close` field set to a true value,
+---   then the connection is closed after the request is made and the
+---   host is removed from the mapping table.
 ---
 --- When the redirect is being followed, the same method and body values are being
 --- sent in all cases except when 303 status is returned. In that case the method
@@ -1089,10 +1111,10 @@ function EvadeDragnetSurveillance(bool) end
 --- that if these (method/body) values are provided as table fields, they will be
 --- modified in place.
 ---@param url string
----@param body? string|{ headers: table<string,string>, value: string, method: string, body: string, maxredirects: integer? }
+---@param body? string|{ headers: table<string,string>, value: string, method: string, body: string, maxredirects: integer?, keepalive: boolean? }
 ---@return integer status, table<string,string> headers, string body/
 ---@nodiscard
----@overload fun(url:string, body?: string|{ headers: table<string,string>, value: string, method: string, body: string, maxredirects?: integer }): nil, error: string
+---@overload fun(url:string, body?: string|{ headers: table<string,string>, value: string, method: string, body: string, maxredirects?: integer, keepalive: boolean? }): nil, error: string
 function Fetch(url, body) end
 
 --- Converts UNIX timestamp to an RFC1123 string that looks like this:
@@ -1196,7 +1218,14 @@ function GetHost() end
 ---@nodiscard
 function GetHostOs() end
 
----@return "X86_64"|"AARCH64"|"POWERPC64"|"S390X" isaname string that describes the host instruction set architecture
+--- Returns string describing host instruction set architecture.
+---
+--- This can return:
+---
+--- - `"X86_64"` for Intel and AMD systems
+--- - `"AARCH64"` for ARM64, M1, and Raspberry Pi systems
+--- - `"POWERPC64"` for OpenPOWER Raptor Computing Systems
+---@return "X86_64"|"AARCH64"|"POWERPC64"
 ---@nodiscard
 function GetHostIsa() end
 
@@ -1585,9 +1614,13 @@ function ProgramBrand(str) end
 --- Configures Cache-Control and Expires header generation for static asset serving.
 --- A negative value will disable the headers. Zero means don't cache. Greater than
 --- zero asks public proxies and browsers to cache for a given number of seconds.
+--- The directive value is added to the Cache-Control header when specified (with
+--- "must-revalidate" provided by default) and can be set to an empty  string to
+--- remove the default value.
 --- This should only be called from `/.init.lua`.
 ---@param seconds integer
-function ProgramCache(seconds) end
+---@param directive string?
+function ProgramCache(seconds, directive) end
 
 --- This function is the same as the -C flag if called from `.init.lua`, e.g.
 --- `ProgramCertificate(LoadAsset("/.sign.crt"))` for zip loading or
@@ -2116,6 +2149,186 @@ function bin(int) end
 ---@nodiscard
 ---@overload fun(hostname: string): nil, error: string
 function ResolveIp(hostname) end
+
+--- Returns `true` if IP address is trustworthy.
+--- If the `ProgramTrustedIp()` function has NOT been called then redbean
+--- will consider the networks 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12,
+--- and 192.168.0.0/16 to be trustworthy too. If `ProgramTrustedIp()` HAS
+--- been called at some point earlier in your redbean's lifecycle, then
+--- it'll trust the IPs and network subnets you specify instead.
+--- The network interface addresses used by the host machine are always
+--- considered trustworthy, e.g. 127.0.0.1. This may change soon, if we
+--- decide to export a `GetHostIps()` API which queries your NIC devices.
+---@param ip integer
+---@return boolean
+function IsTrustedIp(ip) end
+
+--- Trusts an IP address or network
+--- This function may be used to configure the `IsTrustedIp()` function
+--- which is how redbean determines if a client is allowed to send us
+--- headers like X-Forwarded-For (cf `GetRemoteAddr` vs. `GetClientAddr`)
+--- without them being ignored. Trusted IPs is also how redbean turns
+--- off token bucket rate limiting selectively, so be careful. Here's
+--- an example of how you could trust all of Cloudflare's IPs:
+---
+---     ProgramTrustedIp(ParseIp("103.21.244.0"), 22);
+---     ProgramTrustedIp(ParseIp("103.22.200.0"), 22);
+---     ProgramTrustedIp(ParseIp("103.31.4.0"), 22);
+---     ProgramTrustedIp(ParseIp("104.16.0.0"), 13);
+---     ProgramTrustedIp(ParseIp("104.24.0.0"), 14);
+---     ProgramTrustedIp(ParseIp("108.162.192.0"), 18);
+---     ProgramTrustedIp(ParseIp("131.0.72.0"), 22);
+---     ProgramTrustedIp(ParseIp("141.101.64.0"), 18);
+---     ProgramTrustedIp(ParseIp("162.158.0.0"), 15);
+---     ProgramTrustedIp(ParseIp("172.64.0.0"), 13);
+---     ProgramTrustedIp(ParseIp("173.245.48.0"), 20);
+---     ProgramTrustedIp(ParseIp("188.114.96.0"), 20);
+---     ProgramTrustedIp(ParseIp("190.93.240.0"), 20);
+---     ProgramTrustedIp(ParseIp("197.234.240.0"), 22);
+---     ProgramTrustedIp(ParseIp("198.41.128.0"), 17);
+---
+--- Although you might want consider trusting redbean's open source
+--- freedom embracing solution to DDOS protection instead!
+---@param ip integer
+---@param cidr integer?
+function ProgramTrustedIp(ip, cidr) end
+
+--- Enables DDOS protection.
+---
+--- Imagine you have 2**32 buckets, one for each IP address. Each bucket
+--- can hold about 127 tokens. Every second a background worker puts one
+--- token in each bucket. When a TCP client socket is opened, it takes a
+--- token from its bucket, and then proceeds. If the bucket holds only a
+--- third of its original tokens, then redbean sends them a 429 warning.
+--- If the client ignores this warning and keeps sending requests, until
+--- there's no tokens left, then the banhammer finally comes down.
+---
+---    function OnServerStart()
+---        ProgramTokenBucket()
+---        ProgramTrustedIp(ParseIp('x.x.x.x'), 32)
+---        assert(unix.setrlimit(unix.RLIMIT_NPROC, 1000, 1000))
+---    end
+---
+--- This model of network rate limiting generously lets people "burst" a
+--- tiny bit. For example someone might get a strong craving for content
+--- and smash the reload button in Chrome 64 times in a fow seconds. But
+--- since the client only get 1 new token per second, they'd better cool
+--- their heels for a few minutes after doing that. This amount of burst
+--- can be altered by choosing the `reject` / `ignore` / `ban` threshold
+--- arguments. For example, if the `reject` parameter is set to 126 then
+--- no bursting is allowed, which probably isn't a good idea.
+---
+--- redbean is programmed to acquire a token immediately after accept()
+--- is called from the main server process, which is well before fork()
+--- or read() or any Lua code happens. redbean then takes action, based
+--- on the token count, which can be accept / reject / ignore / ban. If
+--- redbean determines a ban is warrented, then 4-byte datagram is sent
+--- to the unix domain socket `/var/run/blackhole.sock` which should be
+--- operated using the blackholed program we distribute separately.
+---
+--- The trick redbean uses on Linux for example is insert rules in your
+--- raw prerouting table. redbean is very fast at the application layer
+--- so the biggest issue we've encountered in production is are kernels
+--- themselves, and programming the raw prerouting table dynamically is
+--- how we solved that.
+---
+--- `replenish` is the number of times per second a token should be
+--- added to each bucket. The default value is 1 which means one token
+--- is granted per second to all buckets. The minimum value is 1/3600
+--- which means once per hour. The maximum value for this setting is
+--- 1e6, which means once every microsecond.
+--- 
+--- `cidr` is the specificity of judgement.  Since creating 2^32 buckets
+--- would need 4GB of RAM, redbean defaults this value to 24 which means
+--- filtering applies to class c network blocks (i.e. x.x.x.*), and your
+--- token buckets only take up 2^24 bytes of RAM (16MB). This can be set
+--- to any number on the inclusive interval [8,32], where having a lower
+--- number means you use less ram/cpu, but splash damage applies more to
+--- your clients; whereas higher numbers means more ram/cpu usage, while
+--- ensuring rate limiting only applies to specific compromised actors.
+--- 
+--- `reject` is the token count or treshold at which redbean should send
+--- 429 Too Many Request warnings to the client. Permitted values can be
+--- anywhere between -1 and 126 inclusively. The default value is 30 and
+--- -1 means disable to disable (assuming AcquireToken() will be used).
+--- 
+--- `ignore` is the token count or treshold, at which redbean should try
+--- simply ignoring clients and close the connection without logging any
+--- kind of warning, and without sending any response. The default value
+--- for this setting is `MIN(reject / 2, 15)`. This must be less than or
+--- equal to the `reject` setting. Allowed values are [-1,126] where you
+--- can use -1 as a means of disabling `ignore`.
+--- 
+--- `ban` is the token count at which redbean should report IP addresses
+--- to the blackhole daemon via a unix-domain socket datagram so they'll
+--- get banned in the kernel routing tables. redbean's default value for
+--- this setting is `MIN(ignore / 10, 1)`. Permitted values are [-1,126]
+--- where -1 may be used as a means of disabling the `ban` feature.
+--- 
+--- This function throws an exception if the constraints described above
+--- are not the case. Warnings are logged should redbean fail to connect
+--- to the blackhole daemon, assuming it hasn't been disabled. It's safe
+--- to use load balancing tools when banning is enabled, since you can't
+--- accidentally ban your own network interface addresses, loopback ips,
+--- or ProgramTrustedIp() addresses where these rate limits don't apply.
+--- 
+--- It's assumed will be called from the .init.lua global scope although
+--- it could be used in interpreter mode, or from a forked child process
+--- in which case the only processes that'll have ability to use it will
+--- be that same process, and any descendent processes. This function is
+--- only able to be called once.
+--- 
+--- This feature is not available in unsecure mode.
+---@param replenish number?
+---@param cidr integer?
+---@param reject integer?
+---@param ignore integer?
+---@param ban integer?
+function ProgramTokenBucket(replenish, cidr, reject, ignore, ban) end
+
+--- Atomically acquires token.
+---
+--- This routine atomically acquires a single token for an `ip` address.
+--- The return value is the token count before the subtraction happened.
+--- No action is taken based on the count, since the caller will decide.
+---
+--- `ip` should be an IPv4 address and this defaults to `GetClientAddr()`,
+--- although other interpretations of its meaning are possible.
+---
+--- Your token buckets are stored in shared memory so this can be called
+--- from multiple forked processes. which operate on the same values.
+---@param ip uint32?
+---@return int8
+function AcquireToken(ip) end
+
+--- Counts number of tokens in bucket.
+--- 
+--- This function is the same as AcquireToken() except no subtraction is
+--- performed, i.e. no token is taken.
+--- 
+--- `ip` should be an IPv4 address and this defaults to GetClientAddr(),
+--- although other interpretations of its meaning are possible.
+---@param ip uint32?
+---@return int8
+function CountTokens(ip) end
+
+--- Sends IP address to blackholed service.
+---
+--- `ProgramTokenBucket()` needs to be called beforehand. The default
+--- settings will blackhole automatically, during the `accept()` loop
+--- based on the banned threshold. However if your Lua code calls
+--- `AcquireToken()` manually, then you'll need this function to take
+--- action on the returned values.
+--- 
+--- This function returns true if a datagram could be sent sucessfully.
+--- Otherwise false is returned, which can happen if blackholed isn't
+--- running, or if a lot of processes are sending messages to it and the
+--- operation would have blocked.
+--- 
+--- It's assumed that the blackholed service is running locally in the
+--- background.
+---@param ip uint32
+function Blackhole(ip) end
 
 -- MODULES
 
@@ -3921,7 +4134,8 @@ unix = {
     CLOCK_REALTIME_FAST = nil,
     --- @type integer
     CLOCK_TAI = nil,
-
+    ---@type integer
+    CLOCK_THREAD_CPUTIME_ID = nil,
     --- @type integer
     DT_BLK = nil,
     --- @type integer
