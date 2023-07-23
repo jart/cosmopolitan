@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/describentoverlapped.internal.h"
@@ -23,6 +24,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
+#include "libc/sock/internal.h"
 
 __msabi extern typeof(WSARecv) *const __imp_WSARecv;
 
@@ -38,6 +40,12 @@ textwindows int WSARecv(
     struct NtOverlapped *opt_inout_lpOverlapped,
     const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine) {
   int rc;
+  if (opt_inout_lpOverlapped) {
+    // Use NULL for this parameter if the lpOverlapped parameter is not
+    // NULL to avoid potentially erroneous results. This parameter can
+    // be NULL only if the lpOverlapped parameter is not NULL.
+    _unassert(!opt_out_lpNumberOfBytesRecvd);
+  }
 #if defined(SYSDEBUG) && _NTTRACE
   uint32_t NumberOfBytesRecvd;
   if (opt_out_lpNumberOfBytesRecvd) {
@@ -50,7 +58,7 @@ textwindows int WSARecv(
     *opt_out_lpNumberOfBytesRecvd = NumberOfBytesRecvd;
   }
   if (rc == -1) {
-    __winerr();
+    __winsockerr();
   }
   if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "WSARecv(%lu, [", s);
@@ -66,7 +74,7 @@ textwindows int WSARecv(
                      opt_out_lpNumberOfBytesRecvd, inout_lpFlags,
                      opt_inout_lpOverlapped, opt_lpCompletionRoutine);
   if (rc == -1) {
-    __winerr();
+    __winsockerr();
   }
 #endif
   return rc;

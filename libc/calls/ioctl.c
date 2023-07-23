@@ -559,34 +559,6 @@ static int ioctl_siocgifflags(int fd, void *arg) {
 }
 
 /**
- * Sets "close on exec" on file descriptor the fast way.
- *
- * @see ioctl(fd, FIOCLEX, 0) dispatches here
- */
-static int ioctl_fioclex(int fd, int req) {
-  int rc;
-  if (fd >= 0) {
-    if (IsWindows() || (fd < g_fds.n && g_fds.p[fd].kind == kFdZip)) {
-      if (__isfdopen(fd)) {
-        if (req == FIOCLEX) {
-          g_fds.p[fd].flags |= O_CLOEXEC;
-        } else {
-          g_fds.p[fd].flags &= ~O_CLOEXEC;
-        }
-        rc = 0;
-      } else {
-        rc = ebadf();
-      }
-    } else {
-      rc = sys_ioctl(fd, req);
-    }
-  } else {
-    rc = einval();
-  }
-  return rc;
-}
-
-/**
  * Performs special i/o operation on file descriptor.
  *
  * @param request can be any of:
@@ -618,17 +590,6 @@ static int ioctl_fioclex(int fd, int req) {
  *     - `TIOCNXCL` to give up exclusive mode on terminal. Only
  *       available on UNIX.
  *
- *     - `FIOCLEX` sets the `O_CLOEXEC` state (no arg) noting that this
- *       polyfill may be removed in the future, and code should migrate
- *       to the equivalent fcntl() api.
- *
- *     - `FIONBIO` sets the `O_NONBLOCK` state (arg is `int *enabled`)
- *       which is supported on Windows for sockets.
- *
- *     - `FIONCLEX` clears the `O_CLOEXEC` state (no arg) noting that
- *       this polyfill may be removed in the future, and code should
- *       migrate to the equivalent fcntl() api.
- *
  *     - `SIOCGIFCONF` takes an struct ifconf object of a given size,
  *       whose arg is `struct ifconf *`. It implements the Linux style
  *       and modifies the following:
@@ -647,6 +608,9 @@ static int ioctl_fioclex(int fd, int req) {
  *       network broadcast addr. This data structure should be obtained
  *       by calling `SIOCGIFCONF`.
  *
+ *     - `FIONBIO` isn't polyfilled; use `fcntl(F_SETFL, O_NONBLOCK)`
+ *     - `FIOCLEX` isn't polyfilled; use `fcntl(F_SETFD, FD_CLOEXEC)`
+ *     - `FIONCLEX` isn't polyfilled; use `fcntl(F_SETFD, 0)`
  *     - `TCGETS` isn't polyfilled; use tcgetattr()
  *     - `TCSETS` isn't polyfilled; use tcsetattr()
  *     - `TCSETSW` isn't polyfilled; use tcsetattr()
@@ -673,10 +637,6 @@ int ioctl(int fd, unsigned long request, ...) {
   va_end(va);
   if (request == FIONBIO) {
     rc = ioctl_default(fd, request, arg);
-  } else if (request == FIOCLEX) {
-    rc = ioctl_fioclex(fd, request);
-  } else if (request == FIONCLEX) {
-    rc = ioctl_fioclex(fd, request);
   } else if (request == TIOCGWINSZ) {
     rc = tcgetwinsize(fd, arg);
   } else if (request == TIOCSWINSZ) {

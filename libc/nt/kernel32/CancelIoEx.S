@@ -3,7 +3,7 @@
 
 	.text.windows
         .ftrace1
-CancelIoEx:
+__CancelIoEx:
         .ftrace2
 #ifdef __x86_64__
 	push	%rbp
@@ -14,5 +14,5 @@ CancelIoEx:
 	mov	x0,#0
 	ret
 #endif
-	.endfn	CancelIoEx,globl
+	.endfn	__CancelIoEx,globl
 	.previous

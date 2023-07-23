@@ -16,15 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.internal.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sock.h"
 
 int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
-  if (!flags) return sys_accept(server, addr, addrsize);
-  int olderr, client;
+  int olderr, client, file_mode;
   union sockaddr_storage_bsd bsd;
   uint32_t size = sizeof(bsd);
   void *out_addr = !IsBsd() ? addr : &bsd;
@@ -37,8 +42,17 @@ int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
     errno = olderr;
     demodernize = true;
   TriedAndTrue:
-    client = __fixupnewsockfd(__sys_accept(server, out_addr, out_addrsize, 0),
-                              flags);
+    if ((client = __sys_accept(server, out_addr, out_addrsize, 0)) != -1) {
+      // __sys_accept() has inconsistent flag inheritence across platforms
+      _unassert((file_mode = __sys_fcntl(client, F_GETFD)) != -1);
+      _unassert(!__sys_fcntl(client, F_SETFD,
+                             ((file_mode & ~FD_CLOEXEC) |
+                              (flags & SOCK_CLOEXEC ? FD_CLOEXEC : 0))));
+      _unassert((file_mode = __sys_fcntl(client, F_GETFL)) != -1);
+      _unassert(!__sys_fcntl(client, F_SETFL,
+                             ((file_mode & ~O_NONBLOCK) |
+                              (flags & SOCK_NONBLOCK ? O_NONBLOCK : 0))));
+    }
   }
   if (client != -1 && IsBsd()) {
     sockaddr2linux(&bsd, size, addr, addrsize);

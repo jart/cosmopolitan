@@ -21,23 +21,28 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
   ssize_t rc;
-  uint32_t sent = 0;
+  uint32_t sent = -666;
   struct SockFd *sockfd;
   struct NtIovec iovnt[16];
-  struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   if (_check_interrupts(true, g_fds.p)) return -1;
-  if (!WSASend(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen), &sent,
+  struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
+  if (!WSASend(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen), 0,
                flags, &overlapped, NULL)) {
-    rc = sent;
+    if (WSAGetOverlappedResult(g_fds.p[fd].handle, &overlapped, &sent, false,
+                               &flags)) {
+      rc = sent;
+    } else {
+      rc = -1;
+    }
   } else {
     sockfd = (struct SockFd *)g_fds.p[fd].extra;
-    rc = __wsablock(g_fds.p[fd].handle, &overlapped, &flags, true,
-                    sockfd->sndtimeo);
+    rc = __wsablock(g_fds.p + fd, &overlapped, &flags, true, sockfd->sndtimeo);
   }
   WSACloseEvent(overlapped.hEvent);
   return rc;

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon sio,SIOCGIFENCAP,0x8925,0x8925,0,0,0,0,0,0
+.syscon ioctl,SIOCGIFENCAP,0x8925,0x8925,0,0,0,0,0,0

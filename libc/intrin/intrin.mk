@@ -146,6 +146,7 @@ o/$(MODE)/libc/intrin/exit1.greg.o			\
 o/$(MODE)/libc/intrin/wsarecv.o				\
 o/$(MODE)/libc/intrin/wsarecvfrom.o			\
 o/$(MODE)/libc/intrin/createfile.o			\
+o/$(MODE)/libc/intrin/cancelioex.o			\
 o/$(MODE)/libc/intrin/reopenfile.o			\
 o/$(MODE)/libc/intrin/deletefile.o			\
 o/$(MODE)/libc/intrin/createpipe.o			\
@@ -175,6 +176,7 @@ o/$(MODE)/libc/intrin/mapviewoffileexnuma.o		\
 o/$(MODE)/libc/intrin/createfilemapping.o		\
 o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
 o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
+o/$(MODE)/libc/intrin/wsagetoverlappedresult.o		\
 o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
 o/$(MODE)/libc/intrin/wsawaitformultipleevents.o: private\
 		CFLAGS +=				\

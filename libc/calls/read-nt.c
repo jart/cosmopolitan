@@ -33,6 +33,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
@@ -50,6 +51,9 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
       POLLTRACE("sys_read_nt polling");
       if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
         POLLTRACE("IOCP EINTR");
+      }
+      if (fd->flags & O_NONBLOCK) {
+        return eagain();
       }
       if (_check_interrupts(true, g_fds.p)) {
         POLLTRACE("sys_read_nt interrupted");

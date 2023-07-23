@@ -684,11 +684,21 @@ PyInit_termios(void)
     PyModule_AddIntConstant(m, "CWERASE", CWERASE);
 
     /* ioctl */
+#ifdef FIOCLEX
     PyModule_AddIntConstant(m, "FIOCLEX", FIOCLEX);
+#endif
+#ifdef FIONCLEX
     PyModule_AddIntConstant(m, "FIONCLEX", FIONCLEX);
+#endif
+#ifdef FIONBIO
     PyModule_AddIntConstant(m, "FIONBIO", FIONBIO);
+#endif
+#ifdef FIONREAD
     PyModule_AddIntConstant(m, "FIONREAD", FIONREAD);
+#endif
+#ifdef FIOASYNC
     PyModule_AddIntConstant(m, "FIOASYNC", FIOASYNC);
+#endif
     if (EXTA) PyModule_AddIntConstant(m, "EXTA", EXTA);
     if (EXTB) PyModule_AddIntConstant(m, "EXTB", EXTB);
 
@@ -744,17 +754,25 @@ PyInit_termios(void)
     /* TODO(jart): NOSTOP */
     /* TODO(jart): START */
     /* TODO(jart): STOP */
+#ifdef TIOCSCTTY
     if (TIOCSCTTY) PyModule_AddIntConstant(m, "TIOCSCTTY", TIOCSCTTY);
+#endif
     /* TODO(jart): TIOCSERCONFIG */
     /* TODO(jart): TIOCSERGSTRUCT */
     /* TODO(jart): TIOCSERGWILD */
     /* TODO(jart): TIOCSERSWILD */
+#ifdef TIOCSETD
     if (TIOCSETD) PyModule_AddIntConstant(m, "TIOCSETD", TIOCSETD);
+#endif
     /* TODO(jart): TIOCSLCKTRMIOS */
+#ifdef TIOCSPGRP
     if (TIOCSPGRP) PyModule_AddIntConstant(m, "TIOCSPGRP", TIOCSPGRP);
+#endif
     /* TODO(jart): TIOCSSERIAL */
     /* TODO(jart): TIOCSSOFTCAR */
+#ifdef TIOCSTI
     if (TIOCSTI) PyModule_AddIntConstant(m, "TIOCSTI", TIOCSTI);
+#endif
     /* TODO(jart): TIOCTTYGSTRUCT */
 
     return m;

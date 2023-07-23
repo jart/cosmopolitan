@@ -23,6 +23,15 @@
  * Initializes pthread attributes.
  *
  * @return 0 on success, or errno on error
+ * @see pthread_attr_setdetachstate()
+ * @see pthread_attr_setsigmask_np()
+ * @see pthread_attr_setstack()
+ * @see pthread_attr_setstacksize()
+ * @see pthread_attr_setguardsize()
+ * @see pthread_attr_setschedparam()
+ * @see pthread_attr_setschedpolicy()
+ * @see pthread_attr_setinheritsched()
+ * @see pthread_attr_setscope()
  */
 errno_t pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){

@@ -36,10 +36,13 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/winsock.h"
+#include "libc/sock/internal.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
@@ -307,21 +310,49 @@ static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
   return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0), start);
 }
 
+static textwindows int sys_fcntl_nt_setfl(int fd, unsigned *flags, unsigned arg,
+                                          unsigned supported) {
+  unsigned old, neu, changed, other, allowed;
+  old = *flags & supported;
+  other = *flags & ~supported;
+  neu = arg & supported;
+  changed = old ^ neu;
+  // you may change the following access mode flags:
+  //
+  // - O_NONBLOCK     make read() raise EAGAIN
+  // - O_NDELAY       same thing as O_NONBLOCK
+  //
+  allowed = O_NONBLOCK;
+  if (changed & ~allowed) {
+    // the following access mode flags are supported, but it's currently
+    // not possible to change them on windows.
+    //
+    // - O_APPEND     tried to support but failed
+    // - O_RANDOM     use posix_fadvise() instead
+    // - O_SEQUENTIAL use posix_fadvise() instead
+    // - O_DIRECT     possibly in future?
+    // - O_DSYNC      possibly in future?
+    // - O_RSYNC      possibly in future?
+    // - O_SYNC       possibly in future?
+    //
+    return enotsup();
+  }
+  // 1. ignore flags that aren't access mode flags
+  // 2. return zero if nothing's changed
+  *flags = other | neu;
+  return 0;
+}
+
 textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   int rc;
   uint32_t flags;
+  int access_mode_flags = O_ACCMODE | O_APPEND | O_ASYNC | O_DIRECT |
+                          O_NOATIME | O_NONBLOCK | O_RANDOM | O_SEQUENTIAL;
   if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdSocket)) {
     if (cmd == F_GETFL) {
-      rc = g_fds.p[fd].flags &
-           (O_ACCMODE | O_APPEND | O_ASYNC | O_DIRECT | O_NOATIME | O_NONBLOCK |
-            O_RANDOM | O_SEQUENTIAL);
+      rc = g_fds.p[fd].flags & access_mode_flags;
     } else if (cmd == F_SETFL) {
-      // O_APPEND doesn't appear to be tunable at cursory glance
-      // O_NONBLOCK might require we start doing all i/o in threads
-      // O_DSYNC / O_RSYNC / O_SYNC maybe if we fsync() everything
-      // O_DIRECT | O_RANDOM | O_SEQUENTIAL | O_NDELAY possible but
-      // not worth it.
-      rc = enosys();
+      rc = sys_fcntl_nt_setfl(fd, &g_fds.p[fd].flags, arg, access_mode_flags);
     } else if (cmd == F_GETFD) {
       if (g_fds.p[fd].flags & O_CLOEXEC) {
         rc = FD_CLOEXEC;

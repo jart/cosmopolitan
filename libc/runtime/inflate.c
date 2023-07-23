@@ -58,8 +58,8 @@ int __inflate(void *out, size_t outsize, const void *in, size_t insize) {
   } else {
     rc = _puff(out, &outsize, in, &insize);
   }
-  STRACE("inflate([%#.*hhs%s], %'zu, %#.*hhs%s, %'zu) → %d", MIN(40, outsize),
-         out, outsize > 40 ? "..." : "", outsize, MIN(40, insize), in,
-         insize > 40 ? "..." : "", insize, rc);
+  STRACE("inflate([%#.*hhs%s], %'zu, %#.*hhs%s, %'zu) → %d",
+         (int)MIN(40, outsize), out, outsize > 40 ? "..." : "", outsize,
+         (int)MIN(40, insize), in, insize > 40 ? "..." : "", insize, rc);
   return rc;
 }

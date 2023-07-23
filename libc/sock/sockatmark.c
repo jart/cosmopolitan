@@ -16,36 +16,50 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/winsock.h"
+#include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sysv/consts/sio.h"
+#include "libc/sysv/errfuns.h"
 
-static textwindows int sockatmark_nt(int64_t fd) {
+static textwindows int sockatmark_nt(int fd, unsigned long magnum) {
   bool32 res;
+  int64_t hand;
   uint32_t bytes;
-  if (WSAIoctl(fd, SIOCATMARK, 0, 0, &res, sizeof(res), &bytes, 0, 0) != -1) {
-    return !res;
-  } else {
-    return -1;
+  if (fd >= g_fds.n) return ebadf();
+  if (g_fds.p[fd].kind != kFdSocket) return einval();
+  hand = g_fds.p[fd].handle;
+  if (WSAIoctl(hand, magnum, 0, 0, &res, sizeof(res), &bytes, 0, 0) == -1) {
+    return __winsockerr();
   }
+  return !res;
 }
 
 /**
  * Returns true if out of band data is available on socket for reading.
  *
  * @return 1 if OOB'd, 0 if not, or -1 w/ errno
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise EINVAL if `fd` isn't an appropriate file descriptor
  */
 int sockatmark(int fd) {
   int rc;
+  unsigned long magnum;
+  if (IsLinux()) {
+    magnum = 0x8905;      // SIOCATMARK (Linux only)
+  } else {                //
+    magnum = 0x40047307;  // SIOCATMARK (BSD, Windows)
+  }
   if (!IsWindows()) {
-    if (sys_ioctl(fd, SIOCATMARK, &rc) == -1) {
+    if (sys_ioctl(fd, magnum, &rc) == -1) {
       rc = -1;
     }
   } else {
-    rc = sockatmark_nt(fd);
+    rc = sockatmark_nt(fd, magnum);
   }
   STRACE("sockatmark(%d) → %d% m", fd, rc);
   return rc;

@@ -446,8 +446,18 @@ _Py_get_inheritable(int fd)
 static int
 set_inheritable(int fd, int inheritable, int raise, int *atomic_flag_works)
 {
+#ifdef MS_WINDOWS
+    HANDLE handle;
+    DWORD flags;
+#else
+#if defined(HAVE_SYS_IOCTL_H) && defined(FIOCLEX) && defined(FIONCLEX)
     static int ioctl_works = -1;
-    int res, err, flags, new_flags;
+    int request;
+    int err;
+#endif
+    int flags, new_flags;
+    int res;
+#endif
 
     /* atomic_flag_works can only be used to make the file descriptor
        non-inheritable */
@@ -460,22 +470,49 @@ set_inheritable(int fd, int inheritable, int raise, int *atomic_flag_works)
                 return -1;
             *atomic_flag_works = !isInheritable;
         }
+
         if (*atomic_flag_works)
             return 0;
     }
 
+#ifdef MS_WINDOWS
+    _Py_BEGIN_SUPPRESS_IPH
+    handle = (HANDLE)_get_osfhandle(fd);
+    _Py_END_SUPPRESS_IPH
+    if (handle == INVALID_HANDLE_VALUE) {
+        if (raise)
+            PyErr_SetFromErrno(PyExc_OSError);
+        return -1;
+    }
+
+    if (inheritable)
+        flags = HANDLE_FLAG_INHERIT;
+    else
+        flags = 0;
+    if (!SetHandleInformation(handle, HANDLE_FLAG_INHERIT, flags)) {
+        if (raise)
+            PyErr_SetFromWindowsErr(0);
+        return -1;
+    }
+    return 0;
+
+#else
+
+#if defined(HAVE_SYS_IOCTL_H) && defined(FIOCLEX) && defined(FIONCLEX)
     if (ioctl_works != 0 && raise != 0) {
         /* fast-path: ioctl() only requires one syscall */
         /* caveat: raise=0 is an indicator that we must be async-signal-safe
          * thus avoid using ioctl() so we skip the fast-path. */
         if (inheritable)
-            err = ioctl(fd, FIONCLEX, NULL);
+            request = FIONCLEX;
         else
-            err = ioctl(fd, FIOCLEX, NULL);
+            request = FIOCLEX;
+        err = ioctl(fd, request, NULL);
         if (!err) {
             ioctl_works = 1;
             return 0;
         }
+
         if (errno != ENOTTY && errno != EACCES) {
             if (raise)
                 PyErr_SetFromErrno(PyExc_OSError);
@@ -483,18 +520,19 @@ set_inheritable(int fd, int inheritable, int raise, int *atomic_flag_works)
         }
         else {
             /* Issue #22258: Here, ENOTTY means "Inappropriate ioctl for
-               device". The ioctl is declared but not supported by the
-               kernel. Remember that ioctl() doesn't work. It is the
-               case on Illumos-based OS for example.
+               device". The ioctl is declared but not supported by the kernel.
+               Remember that ioctl() doesn't work. It is the case on
+               Illumos-based OS for example.
 
-               Issue #27057: When SELinux policy disallows ioctl it will
-               fail with EACCES. While FIOCLEX is safe operation it may
-               be unavailable because ioctl was denied altogether. This
-               can be the case on Android. */
+               Issue #27057: When SELinux policy disallows ioctl it will fail
+               with EACCES. While FIOCLEX is safe operation it may be
+               unavailable because ioctl was denied altogether.
+               This can be the case on Android. */
             ioctl_works = 0;
         }
         /* fallback to fcntl() if ioctl() does not work */
     }
+#endif
 
     /* slow-path: fcntl() requires two syscalls */
     flags = fcntl(fd, F_GETFD);
@@ -523,6 +561,7 @@ set_inheritable(int fd, int inheritable, int raise, int *atomic_flag_works)
         return -1;
     }
     return 0;
+#endif
 }
 
 /* Make the file descriptor non-inheritable.

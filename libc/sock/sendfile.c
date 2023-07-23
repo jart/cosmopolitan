@@ -65,11 +65,11 @@ static textwindows int SendfileBlock(int64_t handle,
       break;
     }
   }
-  if (!WSAGetOverlappedResult(handle, overlapped, &got, false, &flags)) {
-    NTTRACE("WSAGetOverlappedResult failed %lm");
-    return __winsockerr();
+  if (WSAGetOverlappedResult(handle, overlapped, &got, false, &flags)) {
+    return got;
+  } else {
+    return -1;
   }
-  return got;
 }
 
 static dontinline textwindows ssize_t sys_sendfile_nt(

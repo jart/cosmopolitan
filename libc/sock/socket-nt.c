@@ -24,7 +24,6 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
-#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/so.h"
@@ -52,13 +51,6 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
     oflags = 0;
     if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
     if (type & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
-    if (type & SOCK_NONBLOCK) {
-      if (__sys_ioctlsocket_nt(h, FIONBIO, (uint32_t[1]){1}) == -1) {
-        __sys_closesocket_nt(h);
-        __releasefd(fd);
-        return __winsockerr();
-      }
-    }
     sockfd = calloc(1, sizeof(struct SockFd));
     sockfd->family = family;
     sockfd->type = truetype;

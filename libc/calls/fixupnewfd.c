@@ -26,9 +26,15 @@
 // Applies file descriptor fixups on XNU or old Linux.
 // See __fixupnewsockfd() for socket file descriptors.
 int __fixupnewfd(int fd, int flags) {
+  int file_mode;
   if (fd != -1) {
     if (flags & O_CLOEXEC) {
-      _npassert(!__sys_fcntl(fd, F_SETFD, FD_CLOEXEC));
+      _unassert((file_mode = __sys_fcntl(fd, F_GETFD)) != -1);
+      _unassert(!__sys_fcntl(fd, F_SETFD, file_mode | FD_CLOEXEC));
+    }
+    if (flags & O_NONBLOCK) {
+      _unassert((file_mode = __sys_fcntl(fd, F_GETFL)) != -1);
+      _unassert(!__sys_fcntl(fd, F_SETFL, file_mode | O_NONBLOCK));
     }
   }
   return fd;

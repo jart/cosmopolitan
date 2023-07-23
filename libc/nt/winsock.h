@@ -294,7 +294,7 @@ int32_t WSAStartup(uint16_t wVersionRequested, struct NtWsaData *lpWSAData)
     paramsnonnull() dontdiscard;
 
 int WSACleanup(void);
-int WSAGetLastError(void);
+int WSAGetLastError(void) nosideeffect;
 void WSASetLastError(int);
 
 int __sys_bind_nt(uint64_t, const void *, int);
@@ -342,6 +342,12 @@ int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
                   const NtConditionProc opt_lpfnCondition,
                   const uint32_t *opt_dwCallbackData)
     paramsnonnull((2)) dontdiscard;
+
+bool32 AcceptEx(int64_t sListenSocket, int64_t sAcceptSocket,
+                void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
+                uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
+                uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
+                struct NtOverlapped *inout_lpOverlapped);
 
 int WSASend(uint64_t s, const struct NtIovec *lpBuffers, uint32_t dwBufferCount,
             uint32_t *opt_out_lpNumberOfBytesSent, uint32_t dwFlags,

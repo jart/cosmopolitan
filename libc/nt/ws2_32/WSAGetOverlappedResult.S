@@ -3,7 +3,7 @@
 
 	.text.windows
         .ftrace1
-WSAGetOverlappedResult:
+__WSAGetOverlappedResult:
         .ftrace2
 #ifdef __x86_64__
 	push	%rbp
@@ -14,5 +14,5 @@ WSAGetOverlappedResult:
 	mov	x0,#0
 	ret
 #endif
-	.endfn	WSAGetOverlappedResult,globl
+	.endfn	__WSAGetOverlappedResult,globl
 	.previous

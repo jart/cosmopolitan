@@ -98,7 +98,6 @@ imp	'CallNamedPipeA'					CallNamedPipeA						kernel32	110	7
 imp	'CallbackMayRunLong'					CallbackMayRunLong					kernel32	0
 imp	'CancelDeviceWakeupRequest'				CancelDeviceWakeupRequest				kernel32	113
 imp	'CancelIo'						CancelIo						kernel32	0	1
-imp	'CancelIoEx'						CancelIoEx						kernel32	0	2
 imp	'CancelSynchronousIo'					CancelSynchronousIo					kernel32	0	1
 imp	'CancelTimerQueueTimer'					CancelTimerQueueTimer					kernel32	118
 imp	'CancelWaitableTimer'					CancelWaitableTimer					kernel32	0
@@ -1097,6 +1096,7 @@ imp	'WriteProfileString'					WriteProfileStringW					kernel32	1575
 imp	'WriteTapemark'						WriteTapemark						kernel32	1576
 imp	'ZombifyActCtx'						ZombifyActCtx						kernel32	0
 imp	'ZombifyActCtxWorker'					ZombifyActCtxWorker					kernel32	1578
+imp	'__CancelIoEx'						CancelIoEx						kernel32	0	2
 imp	'__CloseHandle'						CloseHandle						kernel32	0	1
 imp	'__CreateDirectory'					CreateDirectoryW					kernel32	0	2
 imp	'__CreateFile'						CreateFileW						kernel32	0	7
@@ -3228,7 +3228,6 @@ imp	'WSAEnumNetworkEvents'					WSAEnumNetworkEvents					ws2_32		64	3
 imp	'WSAEnumProtocols'					WSAEnumProtocolsW					ws2_32		66	3
 imp	'WSAEventSelect'					WSAEventSelect						ws2_32		67	3
 imp	'WSAGetLastError'					WSAGetLastError						ws2_32		111	0
-imp	'WSAGetOverlappedResult'				WSAGetOverlappedResult					ws2_32		68	5
 imp	'WSAGetQOSByName'					WSAGetQOSByName						ws2_32		69	3
 imp	'WSAGetServiceClassInfo'				WSAGetServiceClassInfoW					ws2_32		71	4
 imp	'WSAGetServiceClassNameByClassId'			WSAGetServiceClassNameByClassIdW			ws2_32		73	3
@@ -3329,6 +3328,7 @@ imp	'__WSARecvFrom'						WSARecvFrom						ws2_32		93	9
 imp	'__WSAWaitForMultipleEvents'				WSAWaitForMultipleEvents				ws2_32		124	5
 imp	'__sys_recv_nt'						recv							ws2_32		16	4	# we're using WSARecvFrom()
 imp	'__sys_send_nt'						send							ws2_32		19	4	# we're using WSASendTo()
+imp	'__WSAGetOverlappedResult'				WSAGetOverlappedResult					ws2_32		68	5
 
 # IPHLPAPI.DLL
 #

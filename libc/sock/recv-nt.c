@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/winsock.h"
@@ -30,20 +32,24 @@ textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
                                 size_t iovlen, uint32_t flags) {
   int err;
   ssize_t rc;
-  uint32_t got = 0;
+  uint32_t got = -666;
   struct SockFd *sockfd;
   struct NtIovec iovnt[16];
-  struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   if (_check_interrupts(true, g_fds.p)) return -1;
+  struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   err = errno;
-  if (!WSARecv(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), &got, &flags,
-               &overlapped, NULL)) {
-    rc = got;
+  if (!WSARecv(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), 0, &flags,
+               &overlapped, 0)) {
+    if (WSAGetOverlappedResult(fd->handle, &overlapped, &got, false, &flags)) {
+      rc = got;
+    } else {
+      rc = -1;
+    }
   } else {
     errno = err;
     sockfd = (struct SockFd *)fd->extra;
-    rc = __wsablock(fd->handle, &overlapped, &flags, true, sockfd->rcvtimeo);
+    rc = __wsablock(fd, &overlapped, &flags, true, sockfd->rcvtimeo);
   }
-  WSACloseEvent(overlapped.hEvent);
+  _unassert(WSACloseEvent(overlapped.hEvent));
   return rc;
 }

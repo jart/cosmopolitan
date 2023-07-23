@@ -3,16 +3,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const uint32_t FIOASYNC;
-extern const uint32_t FIOCLEX;
-extern const uint32_t FIONBIO;
-extern const uint32_t FIONCLEX;
-extern const uint32_t FIONREAD;
+extern const uint32_t FIONREAD; /* one of the few encouraged ioctls */
+extern const uint32_t FIONBIO;  /* use fcntl(fd, F_SETFL, O_NONBLOCK) */
+extern const uint32_t FIOCLEX;  /* use fcntl(fd, F_SETFD, FD_CLOEXEC) */
+extern const uint32_t FIONCLEX; /* use fcntl(fd, F_SETFD, 0) */
+extern const uint32_t FIOASYNC; /* todo: fcntl(fd, F_SETOWN, pid) */
 
-#define FIOASYNC FIOASYNC
-#define FIOCLEX  FIOCLEX
-#define FIONBIO  FIONBIO
-#define FIONCLEX FIONCLEX
 #define FIONREAD FIONREAD
 
 COSMOPOLITAN_C_END_

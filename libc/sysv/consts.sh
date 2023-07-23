@@ -947,7 +947,6 @@ syscon	ioctl	FIONCLEX				0x5450			0x5450			0x20006602		0x20006602		0x20006602		0
 #syscon	ioctl	FIONWRITE				0x0			0x0			0x0			0x0			0x40046677		0x0			0x0			-1			# [FreeBSD Generalization] bytes queued in FD's output buffer (same as TIOCOUTQ for TTY FDs; see also SO_SNDBUF)
 #syscon	ioctl	FIONSPACE				0x0			0x0			0x0			0x0			0x40046676		0x0			0x0			-1			# [FreeBSD Generalization] capacity of FD's output buffer, e.g. equivalent to TIOCGSERIAL w/ UART
 syscon	ioctl	SIOCGIFCONF				0x8912			0x8912			0xc00c6924		0xc00c6924		0xc0106924		0xc0106924		0xc0106924		0
-syscon	ioctl	SIOCATMARK				0x8905			0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		# use sockatmark(); determines if oob is available; bsd consensus
 syscon	ioctl	SIOCADDMULTI				0x8931			0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
 syscon	ioctl	SIOCDELMULTI				0x8932			0x8932			0x80206932		0x80206932		0x80206932		0x80206932		0x80206932		0			# bsd consensus
 syscon	ioctl	SIOCDIFADDR				0x8936			0x8936			0x80206919		0x80206919		0x80206919		0x80206919		0x80206919		0			# bsd consensus

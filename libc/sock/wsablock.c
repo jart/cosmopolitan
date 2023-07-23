@@ -16,23 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wait.h"
+#include "libc/nt/enum/wsa.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/winsock.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
+textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
                            uint32_t *flags, bool restartable,
                            uint32_t timeout) {
-  int rc;
-  uint32_t i, got;
+  int e, rc;
+  uint32_t i, got = -666;
   if (WSAGetLastError() != kNtErrorIoPending) {
-    NTTRACE("sock i/o failed %lm");
+    NTTRACE("sock i/o failed %s", strerror(errno));
     return __winsockerr();
+  }
+  if (fd->flags & O_NONBLOCK) {
+    e = errno;
+    _unassert(CancelIoEx(fd->handle, overlapped) ||
+              WSAGetLastError() == kNtErrorNotFound);
+    errno = e;
   }
   for (;;) {
     i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
@@ -46,6 +63,7 @@ textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
       }
       if (timeout) {
         if (timeout <= __SIG_POLLING_INTERVAL_MS) {
+          NTTRACE("__wsablock timeout elapsed");
           return eagain();
         }
         timeout -= __SIG_POLLING_INTERVAL_MS;
@@ -54,9 +72,12 @@ textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
       break;
     }
   }
-  if (!WSAGetOverlappedResult(handle, overlapped, &got, false, flags)) {
-    NTTRACE("WSAGetOverlappedResult failed %lm");
-    return __winsockerr();
+  if (WSAGetOverlappedResult(fd->handle, overlapped, &got, false, flags)) {
+    return got;
+  } else if ((fd->flags & O_NONBLOCK) &&
+             WSAGetLastError() == kNtErrorOperationAborted) {
+    return eagain();
+  } else {
+    return -1;
   }
-  return got;
 }

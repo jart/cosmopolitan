@@ -6,7 +6,6 @@ COSMOPOLITAN_C_START_
 extern const unsigned long SIOCADDDLCI;
 extern const unsigned long SIOCADDMULTI;
 extern const unsigned long SIOCADDRT;
-extern const unsigned long SIOCATMARK; /* use sockatmark() */
 extern const unsigned long SIOCDARP;
 extern const unsigned long SIOCDELDLCI;
 extern const unsigned long SIOCDELMULTI;

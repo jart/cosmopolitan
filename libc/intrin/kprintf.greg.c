@@ -26,12 +26,14 @@
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -259,6 +261,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
                                  va_list va) {
   int si, y;
   wint_t t, u;
+  char errnum[12];
   const char *abet;
   signed char type;
   const char *s, *f;
@@ -539,6 +542,10 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           } else {
             type = 0;
             s = _strerrno(e);
+            if (!s) {
+              FormatInt32(errnum, e);
+              s = errnum;
+            }
             goto FormatString;
           }
         }
@@ -612,7 +619,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             if (cols) --cols;          // end quote
             p = kemitquote(p, e, type, hash);
           }
-          if (sign == ' ' && (!pdot || prec) && *s) {
+          if (sign == ' ' && (!pdot || prec) && s && *s) {
             if (p < e) *p = ' ';
             ++p;
           }

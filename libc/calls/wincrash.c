@@ -42,6 +42,7 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
   ucontext_t ctx;
   struct CosmoTib *tib;
   static bool noreentry;
+  noreentry = true;
 
   if ((tib = __tls_enabled ? __get_tls_privileged() : 0)) {
     if (~tib->tib_flags & TIB_FLAG_WINCRASHING) {

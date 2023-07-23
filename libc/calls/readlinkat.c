@@ -56,6 +56,6 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);
   }
   STRACE("readlinkat(%s, %#s, [%#.*s]) → %d% m", DescribeDirfd(dirfd), path,
-         MAX(0, bytes), buf, bytes);
+         (int)MAX(0, bytes), buf, bytes);
   return bytes;
 }

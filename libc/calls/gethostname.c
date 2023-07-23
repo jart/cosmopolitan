@@ -71,6 +71,6 @@ int gethostname(char *name, size_t len) {
   } else {
     rc = enosys();
   }
-  STRACE("gethostname([%#.*s], %'zu) → %d% m", len, name, len, rc);
+  STRACE("gethostname([%#.*s], %'zu) → %d% m", (int)len, name, len, rc);
   return rc;
 }

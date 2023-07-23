@@ -55,7 +55,7 @@ dos	kNtErrorInvalidFunction         EINVAL
 dos	kNtErrorNegativeSeek		EINVAL
 dos	kNtErrorInvalidNetname          EADDRNOTAVAIL
 dos	kNtErrorInvalidUserBuffer	EMSGSIZE
-dos	kNtErrorIoPending               EINPROGRESS
+dos	kNtErrorIoPending		EINPROGRESS
 dos	kNtErrorLockViolation           EAGAIN
 dos	kNtErrorMoreData                EMSGSIZE
 dos	kNtErrorNetnameDeleted          ECONNABORTED

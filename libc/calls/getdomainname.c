@@ -76,6 +76,6 @@ int getdomainname(char *name, size_t len) {
   if (!rc && len && !strcmp(name, "(none)")) {
     name[0] = 0;
   }
-  STRACE("getdomainname([%#.*s], %'zu) → %d% m", len, name, len, rc);
+  STRACE("getdomainname([%#.*s], %'zu) → %d% m", (int)len, name, len, rc);
   return rc;
 }
