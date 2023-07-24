@@ -1084,15 +1084,29 @@ static bool HasString(struct Strings *l, const char *s, size_t n) {
   return false;
 }
 
+static const char* DEFAULTLUAPATH = "/zip/.lua/?.lua;/zip/.lua/?/init.lua";
+
 static void UpdateLuaPath(const char *s) {
 #ifndef STATIC
   lua_State *L = GL;
+  char *curpath = "";
+  char *respath = 0;
+  char *t;
   int n = lua_gettop(L);
   lua_getglobal(L, "package");
   if (lua_istable(L, -1)) {
     lua_getfield(L, -1, "path");
-    lua_pushstring(L, _gc(xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua",
-                                    luaL_optstring(L, -1, ""), s, s)));
+    curpath = luaL_optstring(L, -1, "");
+    if (t = strstr(curpath, DEFAULTLUAPATH)) {
+      // if the DEFAULT path is found, prepend the path in front of it
+      respath = xasprintf("%.*s%s/.lua/?.lua;%s/.lua/?/init.lua;%s",
+                          t-curpath, curpath, s, s, t);
+    } else {
+      // if the DEFAULT path is not found, append to the end
+      respath = xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua",
+                          curpath, s, s);
+    }
+    lua_pushstring(L, _gc(respath));
     lua_setfield(L, -3, "path");
   }
   lua_settop(L, n);
@@ -5342,7 +5356,7 @@ static char *GetDefaultLuaPath(void) {
     appendf(&s, "%s/.lua/?.lua;%s/.lua/?/init.lua;", stagedirs.p[i].s,
             stagedirs.p[i].s);
   }
-  appends(&s, "/zip/.lua/?.lua;/zip/.lua/?/init.lua");
+  appends(&s, DEFAULTLUAPATH);
   return s;
 }
 
