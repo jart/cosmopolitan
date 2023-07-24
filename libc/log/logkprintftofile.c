@@ -24,7 +24,7 @@
 #include "libc/sysv/consts/o.h"
 
 static int __klog_fd;
-extern _Hide long __klog_handle;
+extern long __klog_handle;
 
 /**
  * Redirects kprintf(), `--strace`, etc. output to file.

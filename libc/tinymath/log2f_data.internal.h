@@ -7,7 +7,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern _Hide const struct log2f_data {
+extern const struct log2f_data {
   struct {
     double invc, logc;
   } tab[1 << LOG2F_TABLE_BITS];

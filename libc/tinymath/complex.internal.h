@@ -40,8 +40,8 @@ COSMOPOLITAN_C_START_
     (d) = asfloat(w);        \
   } while (0)
 
-_Complex double __ldexp_cexp(_Complex double, int) _Hide;
-_Complex float __ldexp_cexpf(_Complex float, int) _Hide;
+_Complex double __ldexp_cexp(_Complex double, int);
+_Complex float __ldexp_cexpf(_Complex float, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

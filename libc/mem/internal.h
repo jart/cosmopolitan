@@ -9,7 +9,7 @@ struct CritbitNode {
   unsigned otherbits;
 };
 
-int PutEnvImpl(char *, bool) _Hide;
+int PutEnvImpl(char *, bool);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

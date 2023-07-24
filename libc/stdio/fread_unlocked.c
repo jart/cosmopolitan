@@ -19,17 +19,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sock/sock.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Reads data from stream.

@@ -5,7 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-errno_t _wait0(const atomic_int *, struct timespec *) _Hide;
+errno_t _wait0(const atomic_int *, struct timespec *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -6,15 +6,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-axdx_t sys_gettimeofday(struct timeval *, struct timezone *, void *) _Hide;
-int sys_settimeofday(const struct timeval *, const struct timezone *) _Hide;
-int sys_futimes(int, const struct timeval *) _Hide;
-int sys_lutimes(const char *, const struct timeval *) _Hide;
-int sys_utimes(const char *, const struct timeval *) _Hide;
-axdx_t sys_gettimeofday_m1(struct timeval *, struct timezone *, void *) _Hide;
-axdx_t sys_gettimeofday_xnu(struct timeval *, struct timezone *, void *) _Hide;
-axdx_t sys_gettimeofday_nt(struct timeval *, struct timezone *, void *) _Hide;
-int sys_utimes_nt(const char *, const struct timeval[2]) _Hide;
+axdx_t sys_gettimeofday(struct timeval *, struct timezone *, void *);
+int sys_settimeofday(const struct timeval *, const struct timezone *);
+int sys_futimes(int, const struct timeval *);
+int sys_lutimes(const char *, const struct timeval *);
+int sys_utimes(const char *, const struct timeval *);
+axdx_t sys_gettimeofday_m1(struct timeval *, struct timezone *, void *);
+axdx_t sys_gettimeofday_xnu(struct timeval *, struct timezone *, void *);
+axdx_t sys_gettimeofday_nt(struct timeval *, struct timezone *, void *);
+int sys_utimes_nt(const char *, const struct timeval[2]);
 axdx_t sys_gettimeofday_metal(struct timeval *, struct timezone *, void *);
 
 const char *DescribeTimeval(char[45], int, const struct timeval *);

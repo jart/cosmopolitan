@@ -143,13 +143,13 @@ struct tnfa_transition {
 };
 
 /* Assertions. */
-#define ASSERT_AT_BOL         1 /* Beginning of line. */
-#define ASSERT_AT_EOL         2 /* End of line. */
-#define ASSERT_CHAR_CLASS     4 /* Character class in `class'. */
-#define ASSERT_CHAR_CLASS_NEG 8 /* Character classes in `neg_classes'. */
-#define ASSERT_AT_BOW         16 /* Beginning of word. */
-#define ASSERT_AT_EOW         32 /* End of word. */
-#define ASSERT_AT_WB          64 /* Word boundary. */
+#define ASSERT_AT_BOL         1   /* Beginning of line. */
+#define ASSERT_AT_EOL         2   /* End of line. */
+#define ASSERT_CHAR_CLASS     4   /* Character class in `class'. */
+#define ASSERT_CHAR_CLASS_NEG 8   /* Character classes in `neg_classes'. */
+#define ASSERT_AT_BOW         16  /* Beginning of word. */
+#define ASSERT_AT_EOW         32  /* End of word. */
+#define ASSERT_AT_WB          64  /* Word boundary. */
 #define ASSERT_AT_WB_NEG      128 /* Not a word boundary. */
 #define ASSERT_BACKREF        256 /* A back reference in `backref'. */
 #define ASSERT_LAST           256
@@ -215,9 +215,9 @@ typedef struct tre_mem_struct {
 #define tre_mem_alloc_impl __tre_mem_alloc_impl
 #define tre_mem_destroy    __tre_mem_destroy
 
-tre_mem_t tre_mem_new_impl(int provided, void *provided_block) _Hide;
+tre_mem_t tre_mem_new_impl(int provided, void *provided_block);
 void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
-                         int zero, size_t size) _Hide;
+                         int zero, size_t size);
 
 /* Returns a new memory allocator or NULL if out of memory. */
 #define tre_mem_new() tre_mem_new_impl(0, NULL)
@@ -245,4 +245,4 @@ void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
 #endif /* TRE_USE_ALLOCA */
 
 /* Frees the memory allocator and all memory allocated with it. */
-_Hide void tre_mem_destroy(tre_mem_t mem);
+void tre_mem_destroy(tre_mem_t mem);

@@ -17,7 +17,7 @@ union statfs_meta {
   struct statfs_netbsd netbsd;
 };
 
-void statfs2cosmo(struct statfs *, const union statfs_meta *) _Hide;
+void statfs2cosmo(struct statfs *, const union statfs_meta *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

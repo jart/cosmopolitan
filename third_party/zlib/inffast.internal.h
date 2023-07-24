@@ -20,7 +20,7 @@ COSMOPOLITAN_C_START_
  */
 #define INFLATE_FAST_MIN_OUTPUT 258
 
-void inflate_fast(z_streamp strm, unsigned start) _Hide;
+void inflate_fast(z_streamp strm, unsigned start);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

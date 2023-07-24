@@ -5,9 +5,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int sys_getitimer(int, struct itimerval *) _Hide;
-int sys_setitimer(int, const struct itimerval *, struct itimerval *) _Hide;
-int sys_setitimer_nt(int, const struct itimerval *, struct itimerval *) _Hide;
+int sys_getitimer(int, struct itimerval *);
+int sys_setitimer(int, const struct itimerval *, struct itimerval *);
+int sys_setitimer_nt(int, const struct itimerval *, struct itimerval *);
 
 const char *DescribeItimerval(char[90], int, const struct itimerval *);
 #define DescribeItimerval(rc, ts) DescribeItimerval(alloca(90), rc, ts)

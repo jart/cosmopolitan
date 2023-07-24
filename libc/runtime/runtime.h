@@ -103,7 +103,6 @@ int _cocmd(int, char **, char **);
 char *GetProgramExecutableName(void);
 char *GetInterpreterExecutableName(char *, size_t);
 int _OpenExecutable(void);
-bool _IsDynamicExecutable(const char *);
 /* execution control */
 int verynice(void);
 axdx_t setlongerjmp(jmp_buf)
@@ -121,6 +120,9 @@ void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
 void __oom_hook(size_t);
 bool _isheap(void *);
+/* code morphing */
+void __morph_begin(void);
+void __morph_end(void);
 /* portability */
 int NtGetVersion(void) pureconst;
 bool IsGenuineBlink(void);

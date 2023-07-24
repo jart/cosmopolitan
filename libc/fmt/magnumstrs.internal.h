@@ -16,17 +16,17 @@ struct MagnumStr {
   int x, s;
 };
 
-_Hide extern const struct MagnumStr kClockNames[];
-_Hide extern const struct MagnumStr kErrnoDocs[];
-_Hide extern const struct MagnumStr kErrnoNames[];
-_Hide extern const struct MagnumStr kFcntlCmds[];
-_Hide extern const struct MagnumStr kIpOptnames[];
-_Hide extern const struct MagnumStr kOpenFlags[];
-_Hide extern const struct MagnumStr kRlimitNames[];
-_Hide extern const struct MagnumStr kSignalNames[];
-_Hide extern const struct MagnumStr kSockOptnames[];
-_Hide extern const struct MagnumStr kTcpOptnames[];
-_Hide extern const struct MagnumStr kPollNames[];
+extern const struct MagnumStr kClockNames[];
+extern const struct MagnumStr kErrnoDocs[];
+extern const struct MagnumStr kErrnoNames[];
+extern const struct MagnumStr kFcntlCmds[];
+extern const struct MagnumStr kIpOptnames[];
+extern const struct MagnumStr kOpenFlags[];
+extern const struct MagnumStr kRlimitNames[];
+extern const struct MagnumStr kSignalNames[];
+extern const struct MagnumStr kSockOptnames[];
+extern const struct MagnumStr kTcpOptnames[];
+extern const struct MagnumStr kPollNames[];
 
 char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
 

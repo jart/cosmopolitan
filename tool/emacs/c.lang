@@ -116,7 +116,6 @@ Keywords={
 "nullterminated",
 "unreachable",
 "notpossible",
-"_Hide",
 "privileged",
 "hasatleast",
 "nodebuginfo",

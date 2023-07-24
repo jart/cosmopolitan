@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int sys_wait4_nt(int, int *, int, struct rusage *) _Hide;
+int sys_wait4_nt(int, int *, int, struct rusage *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -7,7 +7,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern _Hide const struct exp2f_data {
+extern const struct exp2f_data {
   uint64_t tab[1 << EXP2F_TABLE_BITS];
   double shift_scaled;
   double poly[EXP2F_POLY_ORDER];

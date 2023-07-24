@@ -29,8 +29,8 @@ COSMOPOLITAN_C_START_
 #error "unsupported architecture"
 #endif
 
-void _ntcontext2linux(struct ucontext *, const struct NtContext *) _Hide;
-void _ntlinux2context(struct NtContext *, const ucontext_t *) _Hide;
+void _ntcontext2linux(struct ucontext *, const struct NtContext *);
+void _ntlinux2context(struct NtContext *, const ucontext_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

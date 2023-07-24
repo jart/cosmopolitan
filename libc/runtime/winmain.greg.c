@@ -67,7 +67,7 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
 extern int64_t __wincrashearly;
 extern const char kConsoleHandles[3];
-extern void cosmo(int, char **, char **, long (*)[2]) _Hide wontreturn;
+extern void cosmo(int, char **, char **, long (*)[2]) wontreturn;
 
 static const short kConsoleModes[3] = {
     kNtEnableProcessedInput | kNtEnableLineInput | kNtEnableEchoInput |

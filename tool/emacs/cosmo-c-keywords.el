@@ -66,7 +66,6 @@
            "reallocesque"
            "nullterminated"
            "notpossible"
-           "_Hide"
            "privileged"
            "hasatleast"
            "nodebuginfo"

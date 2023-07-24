@@ -123,13 +123,15 @@ o/$(MODE)/libc/runtime/enable_tls.o: private		\
 endif
 
 # privileged functions
+o/$(MODE)/libc/runtime/morph.o				\
 o/$(MODE)/libc/runtime/getsymbol.o			\
 o/$(MODE)/libc/runtime/enable_threads.o			\
 o/$(MODE)/libc/runtime/morph_tls.o: private		\
 		CFLAGS +=				\
 			-ffreestanding			\
 			-fno-sanitize=all		\
-			-fno-stack-protector
+			-fno-stack-protector		\
+			-fpatchable-function-entry=0,0
 
 # TODO(jart): We need a way to avoid WinThreadEntry() being hooked.
 o/$(MODE)/libc/runtime/clone.o: private			\

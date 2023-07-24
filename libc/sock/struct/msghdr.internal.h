@@ -14,8 +14,8 @@ struct msghdr_bsd {
   uint32_t msg_flags; /* « different type */
 };
 
-ssize_t sys_sendmsg(int, const struct msghdr *, int) _Hide;
-ssize_t sys_recvmsg(int, struct msghdr *, int) _Hide;
+ssize_t sys_sendmsg(int, const struct msghdr *, int);
+ssize_t sys_recvmsg(int, struct msghdr *, int);
 bool __asan_is_valid_msghdr(const struct msghdr *);
 
 COSMOPOLITAN_C_END_

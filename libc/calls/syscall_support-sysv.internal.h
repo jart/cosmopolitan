@@ -6,27 +6,27 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § syscalls » system five » structless support               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-bool __is_linux_2_6_23(void) _Hide;
+bool __is_linux_2_6_23(void);
 bool32 sys_isatty_metal(int);
-int __fixupnewfd(int, int) _Hide;
+int __fixupnewfd(int, int);
 int __notziposat(int, const char *);
-int __tkill(int, int, void *) _Hide;
-int _fork(uint32_t) _Hide;
-int _isptmaster(int) _Hide;
-int _ptsname(int, char *, size_t) _Hide;
-int getdomainname_linux(char *, size_t) _Hide;
-int gethostname_bsd(char *, size_t, int) _Hide;
-int gethostname_linux(char *, size_t) _Hide;
-int gethostname_nt(char *, size_t, int) _Hide;
+int __tkill(int, int, void *);
+int _fork(uint32_t);
+int _isptmaster(int);
+int _ptsname(int, char *, size_t);
+int getdomainname_linux(char *, size_t);
+int gethostname_bsd(char *, size_t, int);
+int gethostname_linux(char *, size_t);
+int gethostname_nt(char *, size_t, int);
 int sys_msyscall(void *, size_t);
 long sys_bogus(void);
-ssize_t __getrandom(void *, size_t, unsigned) _Hide;
-void *__vdsosym(const char *, const char *) _Hide;
-void __onfork(void) _Hide;
-void __restore_rt() _Hide;
-void __restore_rt_netbsd(void) _Hide;
-void cosmo2flock(uintptr_t) _Hide;
-void flock2cosmo(uintptr_t) _Hide;
+ssize_t __getrandom(void *, size_t, unsigned);
+void *__vdsosym(const char *, const char *);
+void __onfork(void);
+void __restore_rt();
+void __restore_rt_netbsd(void);
+void cosmo2flock(uintptr_t);
+void flock2cosmo(uintptr_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

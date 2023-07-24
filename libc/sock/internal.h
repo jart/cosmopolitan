@@ -34,61 +34,58 @@ struct SockFd {
   uint32_t sndtimeo;
 };
 
-errno_t __dos2errno(uint32_t) _Hide;
+errno_t __dos2errno(uint32_t);
 
-int32_t __sys_accept(int32_t, void *, uint32_t *, int) dontdiscard _Hide;
-int32_t __sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard _Hide;
-int32_t __sys_bind(int32_t, const void *, uint32_t) _Hide;
-int32_t __sys_connect(int32_t, const void *, uint32_t) _Hide;
-int32_t __sys_getpeername(int32_t, void *, uint32_t *) _Hide;
-int32_t __sys_getsockname(int32_t, void *, uint32_t *) _Hide;
-int32_t __sys_socket(int32_t, int32_t, int32_t) _Hide;
-int32_t __sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]) _Hide;
+int32_t __sys_accept(int32_t, void *, uint32_t *, int) dontdiscard;
+int32_t __sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard;
+int32_t __sys_bind(int32_t, const void *, uint32_t);
+int32_t __sys_connect(int32_t, const void *, uint32_t);
+int32_t __sys_getpeername(int32_t, void *, uint32_t *);
+int32_t __sys_getsockname(int32_t, void *, uint32_t *);
+int32_t __sys_socket(int32_t, int32_t, int32_t);
+int32_t __sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]);
 
-int32_t sys_accept4(int32_t, struct sockaddr_storage *, int) dontdiscard _Hide;
-int32_t sys_bind(int32_t, const void *, uint32_t) _Hide;
-int32_t sys_connect(int32_t, const void *, uint32_t) _Hide;
-int32_t sys_getsockopt(int32_t, int32_t, int32_t, void *, uint32_t *) _Hide;
-int32_t sys_listen(int32_t, int32_t) _Hide;
-int32_t sys_getsockname(int32_t, void *, uint32_t *) _Hide;
-int32_t sys_getpeername(int32_t, void *, uint32_t *) _Hide;
-int32_t sys_shutdown(int32_t, int32_t) _Hide;
-int32_t sys_socket(int32_t, int32_t, int32_t) _Hide;
-int32_t sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]) _Hide;
-ssize_t sys_recvfrom(int, void *, size_t, int, void *, uint32_t *) _Hide;
-ssize_t sys_sendto(int, const void *, size_t, int, const void *,
-                   uint32_t) _Hide;
-int32_t sys_select(int32_t, fd_set *, fd_set *, fd_set *,
-                   struct timeval *) _Hide;
+int32_t sys_accept4(int32_t, struct sockaddr_storage *, int) dontdiscard;
+int32_t sys_bind(int32_t, const void *, uint32_t);
+int32_t sys_connect(int32_t, const void *, uint32_t);
+int32_t sys_getsockopt(int32_t, int32_t, int32_t, void *, uint32_t *);
+int32_t sys_listen(int32_t, int32_t);
+int32_t sys_getsockname(int32_t, void *, uint32_t *);
+int32_t sys_getpeername(int32_t, void *, uint32_t *);
+int32_t sys_shutdown(int32_t, int32_t);
+int32_t sys_socket(int32_t, int32_t, int32_t);
+int32_t sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]);
+ssize_t sys_recvfrom(int, void *, size_t, int, void *, uint32_t *);
+ssize_t sys_sendto(int, const void *, size_t, int, const void *, uint32_t);
+int32_t sys_select(int32_t, fd_set *, fd_set *, fd_set *, struct timeval *);
 int sys_pselect(int, fd_set *, fd_set *, fd_set *, struct timespec *,
-                const void *) _Hide;
-int sys_setsockopt(int, int, int, const void *, uint32_t) _Hide;
-int32_t sys_epoll_create(int32_t) _Hide;
-int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *) _Hide;
-int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t) _Hide;
+                const void *);
+int sys_setsockopt(int, int, int, const void *, uint32_t);
+int32_t sys_epoll_create(int32_t);
+int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *);
+int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t);
 int32_t sys_epoll_pwait(int32_t, void *, int32_t, int32_t, const sigset_t *,
                         size_t);
 
-int sys_socket_nt(int, int, int) _Hide;
+int sys_socket_nt(int, int, int);
 
 /*
-int sys_socketpair_nt_stream(int, int, int, int[2]) _Hide;
-int sys_socketpair_nt_dgram(int, int, int, int[2]) _Hide;
+int sys_socketpair_nt_stream(int, int, int, int[2]) ;
+int sys_socketpair_nt_dgram(int, int, int, int[2]) ;
 */
-int sys_socketpair_nt(int, int, int, int[2]) _Hide;
+int sys_socketpair_nt(int, int, int, int[2]);
 int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *,
-                  const sigset_t *) _Hide;
+                  const sigset_t *);
 
-size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
-                  size_t) _Hide;
+size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *, size_t);
 
-void WinSockInit(void) _Hide;
-int64_t __winsockerr(void) nocallback _Hide;
-int __fixupnewsockfd(int, int) _Hide;
-int64_t __winsockblock(int64_t, unsigned, int64_t, uint32_t) _Hide;
-struct SockFd *_dupsockfd(struct SockFd *) _Hide;
-int64_t GetNtBaseSocket(int64_t) _Hide;
-int sys_close_epoll(int) _Hide;
+void WinSockInit(void);
+int64_t __winsockerr(void) nocallback;
+int __fixupnewsockfd(int, int);
+int64_t __winsockblock(int64_t, unsigned, int64_t, uint32_t);
+struct SockFd *_dupsockfd(struct SockFd *);
+int64_t GetNtBaseSocket(int64_t);
+int sys_close_epoll(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

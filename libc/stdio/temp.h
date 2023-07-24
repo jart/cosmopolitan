@@ -15,7 +15,7 @@ int mkstemp(char *);
 int mkstemps(char *, int);
 
 int mkostempsmi(char *, int, unsigned, uint64_t *, int,
-                int (*)(const char *, int, ...)) _Hide dontdiscard;
+                int (*)(const char *, int, ...)) dontdiscard;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

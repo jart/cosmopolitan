@@ -4,8 +4,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int sys_sysinfo(struct sysinfo *) _Hide;
-int sys_sysinfo_nt(struct sysinfo *) _Hide;
+int sys_sysinfo(struct sysinfo *);
+int sys_sysinfo_nt(struct sysinfo *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

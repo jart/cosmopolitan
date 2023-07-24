@@ -18,11 +18,11 @@ int64_t time2posix(int64_t) pureconst;
 void tzset(void);
 
 #ifdef COSMO
-_Hide extern const char kWeekdayNameShort[7][4];
-_Hide extern const char kWeekdayName[7][10];
-_Hide extern const char kMonthNameShort[12][4];
-_Hide extern const char kMonthName[12][10];
-_Hide extern const unsigned short kMonthYearDay[2][12];
+extern const char kWeekdayNameShort[7][4];
+extern const char kWeekdayName[7][10];
+extern const char kMonthNameShort[12][4];
+extern const char kMonthName[12][10];
+extern const unsigned short kMonthYearDay[2][12];
 extern long double (*nowl)(void);
 long double ConvertTicksToNanos(double);
 long double dsleep(long double);

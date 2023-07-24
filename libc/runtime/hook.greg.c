@@ -20,7 +20,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/morph.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
 #ifdef __x86_64__
@@ -109,11 +109,10 @@ static privileged void HookFunction(code_t *func, void *dest) {
 privileged dontinstrument noasan int __hook(void *dest,
                                             struct SymbolTable *st) {
   long i;
-  sigset_t mask;
   code_t *p, *pe;
   intptr_t lowest;
   if (!st) return -1;
-  __morph_begin(&mask);
+  __morph_begin();
   lowest = MAX((intptr_t)__executable_start, (intptr_t)_ereal);
   for (i = 0; i < st->count; ++i) {
     if (st->symbols[i].x < 9) continue;
@@ -129,6 +128,6 @@ privileged dontinstrument noasan int __hook(void *dest,
       // kprintf("can't hook %t at %lx\n", p, p);
     }
   }
-  __morph_end(&mask);
+  __morph_end();
   return 0;
 }

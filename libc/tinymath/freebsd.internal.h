@@ -972,7 +972,7 @@ struct ExplData {
 
 extern const struct ExplData kExplData[INTERVALS];
 
-void __k_expl(long double , long double *, long double *, int *) _Hide;
+void __k_expl(long double , long double *, long double *, int *) ;
 
 /*
  * XXX: the rest of the functions are identical for ld80 and ld128.

@@ -38,7 +38,7 @@ COSMOPOLITAN_C_START_
    define "local" for the non-static meaning of "static", for readability
    (compile with -Dlocal if your debugger can't find static symbols) */
 
-extern const char *const z_errmsg[10] _Hide; /* indexed by 2-zlib_error */
+extern const char *const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT - (err)]
@@ -52,8 +52,8 @@ extern const char *const z_errmsg[10] _Hide; /* indexed by 2-zlib_error */
 
 /* Diagnostic functions */
 #ifdef ZLIB_DEBUG
-extern int z_verbose _Hide;
-extern void z_error(const char *, int, char *) _Hide;
+extern int z_verbose;
+extern void z_error(const char *, int, char *);
 #define Assert(cond, msg)               \
   {                                     \
     if (!(cond)) {                      \

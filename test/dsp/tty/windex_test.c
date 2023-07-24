@@ -28,9 +28,9 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-unsigned windex_k8(short *, size_t) _Hide;
-unsigned windex_avx2(short *, size_t) _Hide;
-unsigned windex_sse4(short *, size_t) _Hide;
+unsigned windex_k8(short *, size_t);
+unsigned windex_avx2(short *, size_t);
+unsigned windex_sse4(short *, size_t);
 
 const short kW[64] forcealign(32) = {
     8281, 3883, 1365, 1786, 9006, 3681, 5563, 8013, 5787,   9063, 2923,

@@ -35,7 +35,7 @@
 STATIC_YOINK("__get_symbol");
 
 static pthread_spinlock_t g_lock;
-_Hide struct SymbolTable *__symtab;  // for kprintf
+struct SymbolTable *__symtab;  // for kprintf
 
 /**
  * Looks for `.symtab` in zip central directory.

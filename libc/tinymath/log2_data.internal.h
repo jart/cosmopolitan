@@ -8,7 +8,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern _Hide const struct log2_data {
+extern const struct log2_data {
   double invln2hi;
   double invln2lo;
   double poly[LOG2_POLY_ORDER - 1];

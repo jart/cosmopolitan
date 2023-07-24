@@ -193,15 +193,6 @@ typedef struct {
 #define strftimeesque(n)
 #endif
 
-#ifndef _Hide
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__visibility__) || defined(__GNUC__)) && !defined(_WIN32)
-#define _Hide __attribute__((__visibility__("hidden")))
-#else
-#define _Hide
-#endif
-#endif
-
 #ifndef privileged
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__visibility__) || defined(__GNUC__))

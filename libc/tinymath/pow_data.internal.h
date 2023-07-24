@@ -7,7 +7,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern _Hide const struct pow_log_data {
+extern const struct pow_log_data {
   double ln2hi;
   double ln2lo;
   double poly[POW_LOG_POLY_ORDER - 1]; /* First coefficient is 1.  */

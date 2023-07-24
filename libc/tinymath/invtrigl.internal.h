@@ -7,9 +7,9 @@ COSMOPOLITAN_C_START_
 #define pio2_hi __pio2_hi
 #define pio2_lo __pio2_lo
 
-_Hide extern const long double pio2_hi, pio2_lo;
+extern const long double pio2_hi, pio2_lo;
 
-_Hide long double __invtrigl_R(long double z);
+long double __invtrigl_R(long double z);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

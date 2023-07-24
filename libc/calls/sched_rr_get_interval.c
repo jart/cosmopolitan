@@ -21,7 +21,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 
-int sys_sched_rr_get_interval(int, struct timespec *) _Hide;
+int sys_sched_rr_get_interval(int, struct timespec *);
 
 /**
  * Returns round-robin `SCHED_RR` quantum for `pid`.

@@ -30,7 +30,9 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
+#include "libc/elf/elf.h"
 #include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/phdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
@@ -530,6 +532,54 @@ int Extract(const char *from, const char *to, int mode) {
   return close(fdout) | close(fdin);
 }
 
+/**
+ * Returns true if ELF executable uses dynamic loading magic.
+ */
+static bool IsDynamicExecutable(const char *prog) {
+  bool res;
+  Elf64_Ehdr *e;
+  Elf64_Phdr *p;
+  struct stat st;
+  int i, fd, err;
+  fd = -1;
+  err = errno;
+  e = MAP_FAILED;
+  if ((fd = open(prog, O_RDONLY)) == -1) {
+    res = false;
+    goto Finish;
+  }
+  if (fstat(fd, &st) == -1 || st.st_size < 64) {
+    res = false;
+    goto Finish;
+  }
+  if ((e = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+    res = false;
+    goto Finish;
+  }
+  if (READ32LE(e->e_ident) != READ32LE(ELFMAG)) {
+    res = false;
+    goto Finish;
+  }
+  if (e->e_type == ET_DYN) {
+    res = true;
+    goto Finish;
+  }
+  for (i = 0; i < e->e_phnum; ++i) {
+    p = GetElfProgramHeaderAddress(e, st.st_size, i);
+    if (p->p_type == PT_INTERP || p->p_type == PT_DYNAMIC) {
+      res = true;
+      goto Finish;
+    }
+  }
+  res = false;
+  goto Finish;
+Finish:
+  if (e != MAP_FAILED) munmap(e, st.st_size);
+  if (fd != -1) close(fd);
+  errno = err;
+  return res;
+}
+
 int main(int argc, char *argv[]) {
   const char *s;
   bool hasfunbits;
@@ -659,7 +709,7 @@ int main(int argc, char *argv[]) {
   }
 
   // figure out where we want the dso
-  if (_IsDynamicExecutable(prog)) {
+  if (IsDynamicExecutable(prog)) {
     isdynamic = true;
     if ((s = getenv("TMPDIR")) ||  //
         (s = getenv("HOME")) ||    //

@@ -106,8 +106,8 @@
       break;                                 \
   }
 
-_Hide long __klog_handle;
-extern _Hide struct SymbolTable *__symtab;
+long __klog_handle;
+extern struct SymbolTable *__symtab;
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;

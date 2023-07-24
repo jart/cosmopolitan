@@ -6,13 +6,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int mkntcmdline(char16_t[ARG_MAX / 2], char *const[]) _Hide;
+int mkntcmdline(char16_t[ARG_MAX / 2], char *const[]);
 int mkntenvblock(char16_t[ARG_MAX / 2], char *const[], const char *,
-                 char[ARG_MAX]) _Hide;
+                 char[ARG_MAX]);
 int ntspawn(const char *, char *const[], char *const[], const char *,
             struct NtSecurityAttributes *, struct NtSecurityAttributes *,
             bool32, uint32_t, const char16_t *, const struct NtStartupInfo *,
-            struct NtProcessInformation *) _Hide;
+            struct NtProcessInformation *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -17,12 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/runtime/morph.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
 
@@ -30,8 +26,7 @@ extern int __threadcalls_end[] __attribute__((__weak__));
 extern int __threadcalls_start[] __attribute__((__weak__));
 
 static privileged dontinline void FixupLockNops(void) {
-  sigset_t mask;
-  __morph_begin(&mask);
+  __morph_begin();
   /*
    * _NOPL("__threadcalls", func)
    *
@@ -55,7 +50,7 @@ static privileged dontinline void FixupLockNops(void) {
     __executable_start[*p + 1] = 0x67;
     __executable_start[*p + 2] = 0xe8;
   }
-  __morph_end(&mask);
+  __morph_end();
 }
 
 void __enable_threads(void) {

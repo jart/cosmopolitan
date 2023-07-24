@@ -777,7 +777,7 @@ haveinc:
  * @asyncsignalsafe if floating point isn't used
  * @vforksafe if floating point isn't used
  */
-_Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
+int __fmt(void *fn, void *arg, const char *format, va_list va) {
   long ld;
   void *p;
   double x;

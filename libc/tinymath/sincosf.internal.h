@@ -28,10 +28,10 @@ typedef struct
 } sincos_t;
 
 /* Polynomial data (the cosine polynomial is negated in the 2nd entry).  */
-extern const sincos_t __sincosf_table[2] _Hide;
+extern const sincos_t __sincosf_table[2] ;
 
 /* Table with 4/PI to 192 bit precision.  */
-extern const uint32_t __inv_pio4[] _Hide;
+extern const uint32_t __inv_pio4[] ;
 
 /* Top 12 bits of the float representation with the sign bit cleared.  */
 static inline uint32_t

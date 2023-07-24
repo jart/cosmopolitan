@@ -69,13 +69,14 @@ static int RunFileActions(struct _posix_faction *a) {
  * @param envp is environment variables, or `environ` if null
  * @return 0 on success or error number on failure
  * @see posix_spawnp() for `$PATH` searching
+ * @returnserrno
  * @tlsrequired
  * @threadsafe
  */
-int posix_spawn(int *pid, const char *path,
-                const posix_spawn_file_actions_t *file_actions,
-                const posix_spawnattr_t *attrp, char *const argv[],
-                char *const envp[]) {
+errno_t posix_spawn(int *pid, const char *path,
+                    const posix_spawn_file_actions_t *file_actions,
+                    const posix_spawnattr_t *attrp, char *const argv[],
+                    char *const envp[]) {
   short flags = 0;
   sigset_t sigmask;
   int s, child, policy;

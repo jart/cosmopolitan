@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/str.h"
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/str/internal.h"
 #include "libc/str/tab.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"

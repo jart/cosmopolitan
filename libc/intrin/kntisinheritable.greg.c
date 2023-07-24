@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/struct/securityattributes.h"
 
-_Hide const struct NtSecurityAttributes kNtIsInheritable = {
+const struct NtSecurityAttributes kNtIsInheritable = {
     sizeof(struct NtSecurityAttributes),
     NULL,
     true,

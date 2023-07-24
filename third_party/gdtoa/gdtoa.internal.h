@@ -348,13 +348,13 @@ typedef struct ThInfo {
 #define Bcopy(x, y) \
   memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
 
-_Hide extern const double __gdtoa_tens[];
-_Hide extern const double __gdtoa_bigtens[];
-_Hide extern const double __gdtoa_tinytens[];
-_Hide extern const unsigned char __gdtoa_hexdig[];
-_Hide extern const char *const __gdtoa_InfName[6];
-_Hide extern const char *const __gdtoa_NanName[3];
-_Hide extern const ULong __gdtoa_NanDflt_Q[4];
+extern const double __gdtoa_tens[];
+extern const double __gdtoa_bigtens[];
+extern const double __gdtoa_tinytens[];
+extern const unsigned char __gdtoa_hexdig[];
+extern const char *const __gdtoa_InfName[6];
+extern const char *const __gdtoa_NanName[3];
+extern const ULong __gdtoa_NanDflt_Q[4];
 
 Bigint *__gdtoa_Balloc(int, ThInfo **);
 void __gdtoa_Bfree(Bigint *, ThInfo **);

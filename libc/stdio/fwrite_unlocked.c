@@ -16,18 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sock/sock.h"
 #include "libc/stdckdint.h"
-#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -45,7 +39,7 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   size_t n, m;
   const char *p;
   struct iovec iov[2];
-  if (!stride) {
+  if (!stride || !count) {
     return 0;
   }
   if ((f->iomode & O_ACCMODE) == O_RDONLY) {
@@ -109,7 +103,7 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   iov[1].iov_base = data;
   iov[1].iov_len = n;
   n += f->beg;
-  if (WritevUninterruptible(f->fd, iov, 2) == -1) {
+  if (__robust_writev(f->fd, iov, 2) == -1) {
     f->state = errno;
     return 0;
   }

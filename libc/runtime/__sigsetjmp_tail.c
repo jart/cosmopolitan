@@ -23,7 +23,7 @@
 #ifdef __x86_64__
 
 // kudos rich felker for the brilliant design
-_Hide int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
+int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
   _Static_assert(
       sizeof(sigjmp_buf) == sizeof(jmp_buf) + 8 + 8 + sizeof(sigset_t),
       "please recompute sigjmp_buf w.r.t. sigset_t");

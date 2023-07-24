@@ -28,14 +28,14 @@ struct Signals {
 extern struct Signals __sig;
 extern atomic_long __sig_count;
 
-bool __sig_check(bool) _Hide;
-bool __sig_handle(bool, int, int, ucontext_t *) _Hide;
-int __sig_add(int, int, int) _Hide;
-int __sig_mask(int, const sigset_t *, sigset_t *) _Hide;
-int __sig_raise(int, int) _Hide;
-void __sig_check_ignore(const int, const unsigned) _Hide;
-void __sig_pending(sigset_t *) _Hide;
-int __sig_is_applicable(struct Signal *) _Hide;
+bool __sig_check(bool);
+bool __sig_handle(bool, int, int, ucontext_t *);
+int __sig_add(int, int, int);
+int __sig_mask(int, const sigset_t *, sigset_t *);
+int __sig_raise(int, int);
+void __sig_check_ignore(const int, const unsigned);
+void __sig_pending(sigset_t *);
+int __sig_is_applicable(struct Signal *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

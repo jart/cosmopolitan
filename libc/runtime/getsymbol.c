@@ -19,7 +19,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
-extern _Hide struct SymbolTable *__symtab;
+extern struct SymbolTable *__symtab;
 
 /**
  * Returns low index into symbol table for address.

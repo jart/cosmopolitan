@@ -14,9 +14,9 @@ COSMOPOLITAN_C_START_
 #elif defined(__aarch64__)
 
 #define cpu_check_features zlib_cpu_check_features
-_Hide extern int arm_cpu_enable_crc32;
-_Hide extern int arm_cpu_enable_pmull;
-_Hide void cpu_check_features(void);
+extern int arm_cpu_enable_crc32;
+extern int arm_cpu_enable_pmull;
+void cpu_check_features(void);
 
 #endif
 COSMOPOLITAN_C_END_

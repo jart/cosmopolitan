@@ -31,27 +31,27 @@ struct Zipos {
   struct ZiposHandle *freelist;
 };
 
-void __zipos_lock(void) _Hide;
-void __zipos_unlock(void) _Hide;
-int __zipos_close(int) _Hide;
-struct Zipos *__zipos_get(void) pureconst _Hide;
-void __zipos_free(struct Zipos *, struct ZiposHandle *) _Hide;
-ssize_t __zipos_parseuri(const char *, struct ZiposUri *) _Hide;
+void __zipos_lock(void);
+void __zipos_unlock(void);
+int __zipos_close(int);
+struct Zipos *__zipos_get(void) pureconst;
+void __zipos_free(struct Zipos *, struct ZiposHandle *);
+ssize_t __zipos_parseuri(const char *, struct ZiposUri *);
 ssize_t __zipos_find(struct Zipos *, const struct ZiposUri *);
-int __zipos_open(const struct ZiposUri *, unsigned, int) _Hide;
-int __zipos_access(const struct ZiposUri *, int) _Hide;
-int __zipos_stat(const struct ZiposUri *, struct stat *) _Hide;
-int __zipos_fstat(const struct ZiposHandle *, struct stat *) _Hide;
-int __zipos_stat_impl(struct Zipos *, size_t, struct stat *) _Hide;
+int __zipos_open(const struct ZiposUri *, unsigned, int);
+int __zipos_access(const struct ZiposUri *, int);
+int __zipos_stat(const struct ZiposUri *, struct stat *);
+int __zipos_fstat(const struct ZiposHandle *, struct stat *);
+int __zipos_stat_impl(struct Zipos *, size_t, struct stat *);
 ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
-                     ssize_t) _Hide;
+                     ssize_t);
 ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,
-                      ssize_t) _Hide;
-int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned) _Hide;
-int __zipos_fcntl(int, int, uintptr_t) _Hide;
-int __zipos_notat(int, const char *) _Hide;
+                      ssize_t);
+int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned);
+int __zipos_fcntl(int, int, uintptr_t);
+int __zipos_notat(int, const char *);
 noasan void *__zipos_Mmap(void *, uint64_t, int32_t, int32_t,
-                          struct ZiposHandle *, int64_t) _Hide;
+                          struct ZiposHandle *, int64_t);
 
 #ifdef _NOPL0
 #define __zipos_lock()   _NOPL0("__threadcalls", __zipos_lock)

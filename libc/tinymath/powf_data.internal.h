@@ -13,7 +13,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern _Hide const struct powf_log2_data {
+extern const struct powf_log2_data {
   struct {
     double invc, logc;
   } tab[1 << POWF_LOG2_TABLE_BITS];

@@ -18,22 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "ape/sections.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
 
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
@@ -77,24 +71,37 @@ __funline void __morph_mprotect(void *addr, size_t size, int prot, int ntprot) {
 /**
  * Begins code morphing executable.
  *
- * @return 0 on success, or -1 w/ errno
+ * The following example
+ *
+ *     #include <cosmo.h>
+ *     #include <stdlib.h>
+ *
+ *     privileged int main() {  // privileged code is unmodifiable
+ *       ShowCrashReports();    // print report if trapped
+ *       __morph_begin(0);      // make executable code R+W
+ *       *(char *)exit = 0xCC;  // turn exit() into an INT3 trap
+ *       __morph_end();         // make executable code R+X
+ *       exit(0);               // won't actually exit
+ *     }
+ *
+ * shows how the exit() function can be recompiled at runtime to become
+ * an int3 (x86-64) debugger trap. What makes it tricky is Cosmopolitan
+ * maintains a R^X invariant, in order to support OpenBSD. So when code
+ * wants to modify some part of the executable image in memory the vast
+ * majority of the code stops being executable during that time, unless
+ * it's been linked into a special privileged section of the binary. It
+ * is only possible to code morph from privileged functions. Privileged
+ * functions are also only allowed to call other privileged functions.
  */
-privileged void __morph_begin(sigset_t *save) {
-  int ax;
-  bool cf;
-  intptr_t dx;
-  sigset_t ss = {{-1, -1}};
+privileged void __morph_begin(void) {
   __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_WRITE, kNtPageWritecopy);
 }
 
 /**
- * Begins code morphing executable.
+ * Finishes code morphing executable.
  */
-privileged void __morph_end(sigset_t *save) {
-  int ax;
-  long dx;
-  bool cf;
+privileged void __morph_end(void) {
   __morph_mprotect(__executable_start, __privileged_start - __executable_start,
                    PROT_READ | PROT_EXEC, kNtPageExecuteRead);
 }

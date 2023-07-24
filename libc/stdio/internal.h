@@ -7,14 +7,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-_Hide extern uint64_t g_rando;
+extern uint64_t g_rando;
 
-int __fflush_impl(FILE *) _Hide;
-int __fflush_register(FILE *) _Hide;
-void __fflush_unregister(FILE *) _Hide;
-bool __stdio_isok(FILE *) _Hide;
-FILE *__stdio_alloc(void) _Hide;
-void __stdio_free(FILE *) _Hide;
+int __fflush_impl(FILE *);
+int __fflush_register(FILE *);
+void __fflush_unregister(FILE *);
+bool __stdio_isok(FILE *);
+FILE *__stdio_alloc(void);
+void __stdio_free(FILE *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

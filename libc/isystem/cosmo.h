@@ -12,10 +12,9 @@
  *
  * Users of the `cosmocc` toolchain can say, for example:
  *
-#include "tool/args/args.h"
  *     #include <cosmo.h>
  *
- *     int main(int argc, char *argv[]) {
+ *     main() {
  *       ShowCrashReports();
  *       kprintf("hello world\n");
  *     }
@@ -46,7 +45,6 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/morph.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"

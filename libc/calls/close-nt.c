@@ -24,7 +24,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
 
-void sys_fcntl_nt_lock_cleanup(int) _Hide;
+void sys_fcntl_nt_lock_cleanup(int);
 
 textwindows int sys_close_nt(struct Fd *fd, int fildes) {
   int e;

@@ -7,8 +7,8 @@ COSMOPOLITAN_C_START_
 #define V_LOG1PF_2U5
 #define LOG1PF_NCOEFFS 9
 extern const struct log1pf_data {
-  float coeffs[LOG1PF_NCOEFFS];
-} __log1pf_data _Hide;
+  float coeffs[LOG1PF_NCOEFFS];  //
+} __log1pf_data;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

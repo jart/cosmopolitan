@@ -583,3 +583,5 @@ void seekdir(DIR *dir, long off) {
   dir->tell = i;
   _unlockdir(dir);
 }
+
+__weak_reference(readdir, readdir64);

@@ -19,9 +19,8 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/errno.h"
-#include "libc/sock/sock.h"
 
-ssize_t WritevUninterruptible(int fd, struct iovec *iov, int iovlen) {
+ssize_t __robust_writev(int fd, struct iovec *iov, int iovlen) {
   ssize_t rc;
   size_t wrote;
   do {

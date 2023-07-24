@@ -7,9 +7,9 @@ COSMOPOLITAN_C_START_
 typedef int clock_gettime_f(int, struct timespec *);
 
 extern clock_gettime_f *__clock_gettime;
-clock_gettime_f *__clock_gettime_get(bool *) _Hide;
-int __clock_gettime_init(int, struct timespec *) _Hide;
-int sys_clock_gettime_mono(struct timespec *) _Hide;
+clock_gettime_f *__clock_gettime_get(bool *);
+int __clock_gettime_init(int, struct timespec *);
+int sys_clock_gettime_mono(struct timespec *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

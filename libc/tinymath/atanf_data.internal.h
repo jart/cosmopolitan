@@ -6,7 +6,7 @@ COSMOPOLITAN_C_START_
 #define ATANF_POLY_NCOEFFS 8
 extern const struct atanf_poly_data {
   float poly[ATANF_POLY_NCOEFFS];
-} __atanf_poly_data _Hide;
+} __atanf_poly_data;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -17,11 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
-#include "libc/dce.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
-#include "libc/runtime/morph.h"
+#include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
@@ -47,10 +45,9 @@ privileged void __morph_tls(void) {
   // have actually been linked into this program.
   int n;
   uint64_t w;
-  sigset_t mask;
   unsigned m, dis;
   unsigned char *p;
-  __morph_begin(&mask);
+  __morph_begin();
 
   if (IsXnu()) {
     // Apple is quite straightforward to patch. We basically
@@ -114,6 +111,6 @@ privileged void __morph_tls(void) {
     }
   }
 
-  __morph_end(&mask);
+  __morph_end();
 #endif
 }

@@ -29,7 +29,7 @@ char *gcvt(double, int, char *);
 #ifdef COSMO
 int __vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
               va_list);
-int __fmt(void *, void *, const char *, va_list) _Hide;
+int __fmt(void *, void *, const char *, va_list);
 #endif
 
 COSMOPOLITAN_C_END_

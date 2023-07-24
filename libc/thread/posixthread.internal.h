@@ -87,18 +87,18 @@ typedef void (*atfork_f)(void);
 
 extern struct Dll *_pthread_list;
 extern pthread_spinlock_t _pthread_lock;
-extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] _Hide;
+extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 
-int _pthread_atfork(atfork_f, atfork_f, atfork_f) _Hide;
-int _pthread_reschedule(struct PosixThread *) _Hide;
-int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) _Hide;
-void _pthread_zombify(struct PosixThread *) _Hide;
-void _pthread_free(struct PosixThread *) _Hide;
-void _pthread_onfork_prepare(void) _Hide;
-void _pthread_onfork_parent(void) _Hide;
-void _pthread_onfork_child(void) _Hide;
-void _pthread_ungarbage(void) _Hide;
-int _pthread_cancel_sys(void) _Hide;
+int _pthread_atfork(atfork_f, atfork_f, atfork_f);
+int _pthread_reschedule(struct PosixThread *);
+int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
+void _pthread_zombify(struct PosixThread *);
+void _pthread_free(struct PosixThread *);
+void _pthread_onfork_prepare(void);
+void _pthread_onfork_parent(void);
+void _pthread_onfork_child(void);
+void _pthread_ungarbage(void);
+int _pthread_cancel_sys(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

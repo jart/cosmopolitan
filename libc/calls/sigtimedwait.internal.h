@@ -7,7 +7,7 @@
 COSMOPOLITAN_C_START_
 
 int sys_sigtimedwait(const sigset_t *, union siginfo_meta *,
-                     const struct timespec *, size_t) _Hide;
+                     const struct timespec *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
