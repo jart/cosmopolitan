@@ -50,6 +50,10 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
     _unassert(CancelIoEx(fd->handle, overlapped) ||
               WSAGetLastError() == kNtErrorNotFound);
     errno = e;
+  } else {
+    if (_check_interrupts(restartable, g_fds.p)) {
+      return -1;
+    }
   }
   for (;;) {
     i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
