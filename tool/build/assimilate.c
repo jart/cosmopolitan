@@ -24,6 +24,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
@@ -107,12 +108,12 @@ void GetOpts(int argc, char *argv[]) {
   }
 }
 
-void GetElfHeader(char ehdr[hasatleast 64], const char *image) {
+void GetElfHeader(char ehdr[hasatleast 64], const char *image, size_t n) {
   char *p;
   int c, i;
-  for (p = image; p < image + 4096; ++p) {
+  for (p = image; p < image + MIN(n, 4096); ++p) {
     if (READ64LE(p) != READ64LE("printf '")) continue;
-    for (i = 0, p += 8; p + 3 < image + 4096 && (c = *p++) != '\'';) {
+    for (i = 0, p += 8; p + 3 < image + MIN(n, 4096) && (c = *p++) != '\'';) {
       if (c == '\\') {
         if ('0' <= *p && *p <= '7') {
           c = *p++ - '0';
@@ -208,7 +209,7 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
 
 void AssimilateElf(char *p, size_t n) {
   char ehdr[64];
-  GetElfHeader(ehdr, p);
+  GetElfHeader(ehdr, p, n);
   memcpy(p, ehdr, 64);
   msync(p, 4096, MS_SYNC);
 }
@@ -232,8 +233,8 @@ void Assimilate(void) {
     kprintf("%s: fstat() failed: %m\n", prog);
     exit(14);
   }
-  if (st.st_size < 4096) {
-    kprintf("%s: ape binaries must be at least 4096 bytes\n", prog);
+  if (st.st_size < 64) {
+    kprintf("%s: ape binaries must be at least 64 bytes\n", prog);
     exit(15);
   }
   if ((p = mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) ==

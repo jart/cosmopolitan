@@ -390,7 +390,7 @@ SECTIONS {
   } :Tls :Rom
 /*END: Read Only Data */
 
-  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
+  . = DATA_SEGMENT_ALIGN(CONSTANT(COMMONPAGESIZE), CONSTANT(COMMONPAGESIZE));
   . = DATA_SEGMENT_RELRO_END(0, .);
 
 /* this only tells the linker about the layout of uninitialized */
@@ -461,7 +461,7 @@ SECTIONS {
 
     KEEP(*(.bssepilogue))
 
-    . = ALIGN(64);
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
 
 /*END: NT FORK COPYING */
     _end = .;
@@ -722,7 +722,7 @@ PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
 ape_pe_optsz = ape_pe_sections - (ape_pe + 24);
 ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40;
 ape_pe_base = IMAGE_BASE_VIRTUAL;
-ape_idata = LINK_WINDOWS ? RVA(ape_idata_iat) : 0;
+ape_idataz = LINK_WINDOWS ? RVA(ape_idata_iat) : 0;
 ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0;
 ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0;
 ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0;

@@ -224,7 +224,7 @@ stub:	mov	$0x40,%dl		// *literally* dos
 3:	.byte	0xbd,0,0		// a.k.a. mov imm,%bp
 	jmp	pc			// real mode, is real
 	jmp	_start			// surprise it's unix
-	.endfn	stub
+	.endfn	stub,globl
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § ibm personal computer                         │
@@ -1073,25 +1073,10 @@ ape_pe:	.ascin	"PE",4
 	.quad	0			// HeapReserve
 	.quad	0			// HeapCommit
 	.long	0			// LoaderFlags
-	.long	16			// NumberOfDirectoryEntries
+	.long	2			// NumberOfDirectoryEntries
 	.long	0,0			// ExportsDirectory
 	.stub	ape_idata,long		// ImportsDirectory
 	.stub	ape_idata_idtsize,long	// ImportsDirectorySize
-	.long	0,0			// ResourcesDirectory
-	.long	0,0			// ExceptionsDirectory
-	.long	0,0			// SecurityDirectory
-	.long	0,0			// BaseRelocationTable
-	.long	0,0			// DebugDirectory
-	.long	0,0			// DescriptionString
-	.long	0,0			// MachineSpecific
-	.long	0,0			// ThreadLocalStorage
-	.long	0,0			// LoadConfigurationDirectory
-	.long	0,0			// BoundImportDirectory
-	.stub	ape_idata,long		// ImportAddressDirectory
-	.stub	ape_idata_iatsize,long	// ImportAddressDirectorySize
-	.long	0,0			// DelayImportDescriptor
-	.long	0,0			// ComPlusRuntimeHeader
-	.long	0,0			// Reserved
 	.endobj	ape_pe,globl
 	.previous
 

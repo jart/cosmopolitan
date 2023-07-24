@@ -888,7 +888,8 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
     }
   }
   if (READ64(M->ehdr.buf) == READ64("MZqFpD='") ||
-      READ64(M->ehdr.buf) == READ64("jartsr='")) {
+      READ64(M->ehdr.buf) == READ64("jartsr='") ||
+      READ64(M->ehdr.buf) == READ64("APEDBG='")) {
     for (p = M->ehdr.buf; p < pe; ++p) {
       if (READ64(p) != READ64("printf '")) {
         continue;

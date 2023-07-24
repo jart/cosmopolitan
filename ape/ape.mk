@@ -215,7 +215,7 @@ o/$(MODE)/ape/ape.elf.dbg:			\
 		o/$(MODE)/ape/launch.o		\
 		o/$(MODE)/ape/systemcall.o	\
 		ape/loader.lds
-	@$(COMPILE) -ALINK.elf $(LINK) $(APE_LOADER_LDFLAGS) -o $@ $(patsubst %.lds,-T %.lds,$^)
+	@$(COMPILE) -ALINK.elf $(LD) $(APE_LOADER_LDFLAGS) -o $@ $(patsubst %.lds,-T %.lds,$^)
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE_CHECKS)			\

@@ -72,7 +72,7 @@ SECTIONS {
     KEEP(*(SORT_NONE(.fini)))
   } =0x1f2003d5
 
-  .privileged ALIGN(CONSTANT(MAXPAGESIZE)) : {
+  .privileged ALIGN(CONSTANT(COMMONPAGESIZE)) : {
     __privileged_start = .;
     *(.privileged*)
   } =0x1f2003d6
@@ -119,8 +119,8 @@ SECTIONS {
   _etext = .;
   PROVIDE(etext = .);
 
-  . = ALIGN(CONSTANT(MAXPAGESIZE));
-  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
+  . = ALIGN(CONSTANT(COMMONPAGESIZE));
+  . = DATA_SEGMENT_ALIGN(CONSTANT(COMMONPAGESIZE), CONSTANT(COMMONPAGESIZE));
 
   .eh_frame : ONLY_IF_RW {
     KEEP(*(.eh_frame))
@@ -209,6 +209,7 @@ SECTIONS {
     *(.bss .bss.* .gnu.linkonce.b.*)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
     *(COMMON)
+    . = ALIGN(CONSTANT(COMMONPAGESIZE));
   }
 
   _bss_end__ = .;

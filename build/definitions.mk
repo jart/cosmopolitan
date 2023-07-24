@@ -252,7 +252,7 @@ DEFAULT_LDFLAGS +=							\
 	-znorelro
 else
 DEFAULT_LDFLAGS +=							\
-	-zmax-page-size=0x1000						\
+	-zmax-page-size=0x10000						\
 	-zcommon-page-size=0x1000
 endif
 
