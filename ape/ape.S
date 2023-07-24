@@ -610,7 +610,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.1\"\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.3\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
@@ -622,8 +622,8 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	      "[ -d /Applications ] && "
 	.ascii	        "dd if=\"$t.$$\""
 	.ascii	          " of=\"$t.$$\""
-	.ascii	          " skip=6"
-	.ascii	          " count=6"
+	.ascii	          " skip=5"
+	.ascii	          " count=8"
 	.ascii	          " bs=64"
 	.ascii	          " conv=notrunc"
 	.ascii	          " 2>/dev/null\n"
@@ -801,17 +801,18 @@ ape_loader_end:
 	.long	PT_NOTE
 	.long	PF_R
 	.stub	ape_note_offset,quad
-	.stub	ape_note_vaddr,quad
-	.stub	ape_note_paddr,quad
+	.quad	0
+	.quad	0
 	.stub	ape_note_filesz,quad
 	.stub	ape_note_memsz,quad
-	.stub	ape_note_align,quad
+	.quad	4
 #endif
 	.previous
 #endif /* SupportsSystemv() || SupportsMetal() */
 
 #if SupportsOpenbsd()
 	.section .note.openbsd.ident,"a",@progbits
+	.balign	4
 openbsd.ident:
 	.long	2f-1f
 	.long	4f-3f
@@ -826,6 +827,7 @@ openbsd.ident:
 
 #if SupportsNetbsd()
 	.section .note.netbsd.ident,"a",@progbits
+	.balign	4
 netbsd.ident:
 	.long	2f-1f
 	.long	4f-3f

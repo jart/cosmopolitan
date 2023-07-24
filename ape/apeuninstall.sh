@@ -35,6 +35,7 @@ rm -f o/tmp/ape /tmp/ape "${TMPDIR:-/tmp}/ape"
 # ad-hoc installations
 for x in .ape \
          .ape-1.1 \
+         .ape-1.3 \
          .ape-blink-0.9.2 \
          .ape-blink-1.0.0; do
   rm -f \

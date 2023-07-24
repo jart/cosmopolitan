@@ -77,9 +77,6 @@
  * @note this can probably be used as a binfmt_misc interpreter
  */
 
-#define PAGE_SIZE 4096
-#define NULL_PAGE 2097152
-
 #define LINUX   1
 #define XNU     8
 #define OPENBSD 16
@@ -102,6 +99,7 @@
 #define IsNetbsd()  (SupportsNetbsd() && os == NETBSD)
 
 #define O_RDONLY           0
+#define PROT_NONE          0
 #define PROT_READ          1
 #define PROT_WRITE         2
 #define PROT_EXEC          4
@@ -109,10 +107,12 @@
 #define MAP_PRIVATE        2
 #define MAP_FIXED          16
 #define MAP_ANONYMOUS      (IsLinux() ? 32 : 4096)
+#define MAP_NORESERVE      (IsLinux() ? 16384 : 0)
 #define ELFCLASS32         1
 #define ELFDATA2LSB        1
 #define EM_NEXGEN32E       62
 #define ET_EXEC            2
+#define ET_DYN             3
 #define PT_LOAD            1
 #define PT_DYNAMIC         2
 #define PT_INTERP          3
@@ -124,6 +124,7 @@
 #define AT_PHDR            3
 #define AT_PHENT           4
 #define AT_PHNUM           5
+#define AT_PAGESZ          6
 #define AT_EXECFN_LINUX    31
 #define AT_EXECFN_NETBSD   2014
 #define X_OK               1
@@ -132,11 +133,11 @@
 #define PR_SET_MM          35
 #define PR_SET_MM_EXE_FILE 13
 
-#define Read32(S)                                                      \
+#define READ32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
    (unsigned)(255 & (S)[1]) << 010 | (unsigned)(255 & (S)[0]) << 000)
 
-#define Read64(S)                         \
+#define READ64(S)                         \
   ((unsigned long)(255 & (S)[7]) << 070 | \
    (unsigned long)(255 & (S)[6]) << 060 | \
    (unsigned long)(255 & (S)[5]) << 050 | \
@@ -145,6 +146,13 @@
    (unsigned long)(255 & (S)[2]) << 020 | \
    (unsigned long)(255 & (S)[1]) << 010 | \
    (unsigned long)(255 & (S)[0]) << 000)
+
+#define DEBUG(VAR)                          \
+  {                                         \
+    char ibuf[19] = {0};                    \
+    Utox(ibuf, VAR);                        \
+    Print(os, 2, #VAR " ", ibuf, "\n", 0l); \
+  }
 
 struct ElfEhdr {
   unsigned char e_ident[16];
@@ -176,7 +184,7 @@ struct ElfPhdr {
 
 union ElfEhdrBuf {
   struct ElfEhdr ehdr;
-  char buf[4096];
+  char buf[8192];
 };
 
 union ElfPhdrBuf {
@@ -199,8 +207,8 @@ struct ApeLoader {
   char path[1024];
 };
 
-long SystemCall(long arg1, long arg2, long arg3, long arg4, long arg5,
-                long arg6, long arg7, long magi);
+long SystemCall(long, long, long, long, long, long, long, int);
+void Launch(void *, long, void *, int) __attribute__((__noreturn__));
 
 extern char __executable_start[];
 extern char _end[];
@@ -215,6 +223,27 @@ static unsigned long StrLen(const char *s) {
   return n;
 }
 
+static int StrCmp(const char *l, const char *r) {
+  unsigned long i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 255) - (r[i] & 255);
+}
+
+static void Bzero(void *a, unsigned long n) {
+  long z;
+  char *p, *e;
+  p = (char *)a;
+  e = p + n;
+  z = 0;
+  while (p + sizeof(z) <= e) {
+    __builtin_memcpy(p, &z, sizeof(z));
+    p += sizeof(z);
+  }
+  while (p < e) {
+    *p++ = 0;
+  }
+}
+
 static const char *MemChr(const char *s, unsigned char c, unsigned long n) {
   for (; n; --n, ++s) {
     if ((*s & 255) == c) {
@@ -225,15 +254,29 @@ static const char *MemChr(const char *s, unsigned char c, unsigned long n) {
 }
 
 static void *MemMove(void *a, const void *b, unsigned long n) {
-  char *d = a;
+  long w;
+  char *d;
+  const char *s;
   unsigned long i;
-  const char *s = b;
+  d = (char *)a;
+  s = (const char *)b;
   if (d > s) {
-    for (i = n; i--;) {
-      d[i] = s[i];
+    while (n >= sizeof(w)) {
+      n -= sizeof(w);
+      __builtin_memcpy(&w, s + n, sizeof(n));
+      __builtin_memcpy(d + n, &w, sizeof(n));
+    }
+    while (n--) {
+      d[n] = s[n];
     }
   } else {
-    for (i = 0; i < n; ++i) {
+    i = 0;
+    while (i + sizeof(w) <= n) {
+      __builtin_memcpy(&w, s + i, sizeof(i));
+      __builtin_memcpy(d + i, &w, sizeof(i));
+      i += sizeof(w);
+    }
+    for (; i < n; ++i) {
       d[i] = s[i];
     }
   }
@@ -260,6 +303,23 @@ static char *GetEnv(char **p, const char *s) {
   return 0;
 }
 
+static char *Utox(char p[19], unsigned long x) {
+  int i;
+  if (x) {
+    *p++ = '0';
+    *p++ = 'x';
+    i = (__builtin_clzl(x) ^ (sizeof(long) * 8 - 1)) + 1;
+    i = (i + 3) & -4;
+    do {
+      *p++ = "0123456789abcdef"[(x >> (i -= 4)) & 15];
+    } while (i);
+  } else {
+    *p++ = '0';
+  }
+  *p = 0;
+  return p;
+}
+
 static char *Utoa(char p[21], unsigned long x) {
   char t;
   unsigned long i, a, b;
@@ -284,15 +344,22 @@ static char *Itoa(char p[21], long x) {
   return Utoa(p, x);
 }
 
-__attribute__((__noreturn__)) static void Exit(int rc, int os) {
-  SystemCall(rc, 0, 0, 0, 0, 0, 0,
-             (IsLinux() ? 60 : 1) | (IsXnu() ? 0x2000000 : 0));
+__attribute__((__noinline__)) static long CallSystem(long arg1, long arg2,
+                                                     long arg3, long arg4,
+                                                     long arg5, long arg6,
+                                                     long arg7, int numba,
+                                                     char os) {
+  if (IsXnu()) numba |= 0x2000000;
+  return SystemCall(arg1, arg2, arg3, arg4, arg5, arg6, arg7, numba);
+}
+
+__attribute__((__noreturn__)) static void Exit(long rc, int os) {
+  CallSystem(rc, 0, 0, 0, 0, 0, 0, IsLinux() ? 60 : 1, os);
   __builtin_unreachable();
 }
 
 static int Close(int fd, int os) {
-  return SystemCall(fd, 0, 0, 0, 0, 0, 0,
-                    (IsLinux() ? 3 : 6) | (IsXnu() ? 0x2000000 : 0));
+  return CallSystem(fd, 0, 0, 0, 0, 0, 0, IsLinux() ? 3 : 6, os);
 }
 
 static long Pread(int fd, void *data, unsigned long size, long off, int os) {
@@ -314,18 +381,15 @@ static long Pread(int fd, void *data, unsigned long size, long off, int os) {
 }
 
 static long Write(int fd, const void *data, unsigned long size, int os) {
-  return SystemCall(fd, (long)data, size, 0, 0, 0, 0,
-                    (IsLinux() ? 1 : 4) | (IsXnu() ? 0x2000000 : 0));
+  return CallSystem(fd, (long)data, size, 0, 0, 0, 0, IsLinux() ? 1 : 4, os);
 }
 
 static int Execve(const char *prog, char **argv, char **envp, int os) {
-  return SystemCall((long)prog, (long)argv, (long)envp, 0, 0, 0, 0,
-                    59 | (IsXnu() ? 0x2000000 : 0));
+  return CallSystem((long)prog, (long)argv, (long)envp, 0, 0, 0, 0, 59, os);
 }
 
 static int Access(const char *path, int mode, int os) {
-  return SystemCall((long)path, mode, 0, 0, 0, 0, 0,
-                    (IsLinux() ? 21 : 33) | (IsXnu() ? 0x2000000 : 0));
+  return CallSystem((long)path, mode, 0, 0, 0, 0, 0, IsLinux() ? 21 : 33, os);
 }
 
 static int Msyscall(long p, unsigned long n, int os) {
@@ -337,13 +401,12 @@ static int Msyscall(long p, unsigned long n, int os) {
 }
 
 static int Open(const char *path, int flags, int mode, int os) {
-  return SystemCall((long)path, flags, mode, 0, 0, 0, 0,
-                    (IsLinux() ? 2 : 5) | (IsXnu() ? 0x2000000 : 0));
+  return CallSystem((long)path, flags, mode, 0, 0, 0, 0, IsLinux() ? 2 : 5, os);
 }
 
 static int Mprotect(void *addr, unsigned long size, int prot, int os) {
-  return SystemCall((long)addr, size, prot, 0, 0, 0, 0,
-                    (IsLinux() ? 10 : 74) | (IsXnu() ? 0x2000000 : 0));
+  return CallSystem((long)addr, size, prot, 0, 0, 0, 0, IsLinux() ? 10 : 74,
+                    os);
 }
 
 static long Mmap(void *addr, unsigned long size, int prot, int flags, int fd,
@@ -394,21 +457,6 @@ __attribute__((__noreturn__)) static void Pexit(int os, const char *c, int rc,
                                                 const char *s) {
   Perror(os, c, rc, s);
   Exit(127, os);
-}
-
-static int StrCmp(const char *l, const char *r) {
-  unsigned long i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
-  return (l[i] & 255) - (r[i] & 255);
-}
-
-static void *MemSet(void *a, int c, unsigned long n) {
-  char *d = a;
-  unsigned long i;
-  for (i = 0; i < n; ++i) {
-    d[i] = c;
-  }
-  return d;
 }
 
 static char EndsWithIgnoreCase(const char *p, unsigned long n, const char *s) {
@@ -466,8 +514,6 @@ static char FindCommand(struct PathSearcher *ps, const char *suffix) {
       MemChr(ps->name, '\\', ps->namelen)) {
     ps->path[0] = 0;
     return AccessCommand(ps, suffix, 0);
-  } else {
-    if (AccessCommand(ps, suffix, 0)) return 1;
   }
   return SearchPath(ps, suffix);
 }
@@ -486,7 +532,8 @@ static char *Commandv(struct PathSearcher *ps, int os, const char *name,
 }
 
 __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
-                                                long *sp, struct ElfEhdr *e,
+                                                long *sp, unsigned long pagesz,
+                                                struct ElfEhdr *e,
                                                 struct ElfPhdr *p) {
   long rc;
   int prot;
@@ -494,21 +541,26 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   int found_code;
   int found_entry;
   long code, codesize;
+  unsigned long dynbase;
+  unsigned long virtmin, virtmax;
   unsigned long a, b, c, d, i, j;
 
-  /* load elf */
+  /* validate elf */
   code = 0;
   codesize = 0;
   found_code = 0;
   found_entry = 0;
+  virtmin = virtmax = 0;
+  if (!pagesz) pagesz = 4096;
+  if (pagesz & (pagesz - 1)) {
+    Pexit(os, exe, 0, "AT_PAGESZ isn't two power");
+  }
   for (i = 0; i < e->e_phnum; ++i) {
-
-    /* validate program header */
     if (p[i].p_type == PT_INTERP) {
-      Pexit(os, exe, 0, "ELF has PT_INTERP which is unsupported");
+      Pexit(os, exe, 0, "ELF has PT_INTERP which isn't supported");
     }
     if (p[i].p_type == PT_DYNAMIC) {
-      Pexit(os, exe, 0, "ELF has PT_DYNAMIC which is unsupported");
+      Pexit(os, exe, 0, "ELF has PT_DYNAMIC which isn't supported");
     }
     if (p[i].p_type != PT_LOAD) {
       continue;
@@ -517,48 +569,34 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
       continue;
     }
     if (p[i].p_filesz > p[i].p_memsz) {
-      Pexit(os, exe, 0, "ELF phdr filesz exceeds memsz");
+      Pexit(os, exe, 0, "ELF p_filesz exceeds p_memsz");
     }
-    if ((p[i].p_vaddr & (PAGE_SIZE - 1)) != (p[i].p_offset & (PAGE_SIZE - 1))) {
-      Pexit(os, exe, 0, "ELF phdr virt/off skew mismatch w.r.t. pagesize");
+    if ((p[i].p_vaddr & (pagesz - 1)) != (p[i].p_offset & (pagesz - 1))) {
+      Pexit(os, exe, 0, "ELF p_vaddr incongruent w/ p_offset modulo AT_PAGESZ");
     }
     if (p[i].p_vaddr + p[i].p_memsz < p[i].p_vaddr ||
-        p[i].p_vaddr + p[i].p_memsz + (PAGE_SIZE - 1) < p[i].p_vaddr) {
-      Pexit(os, exe, 0, "ELF phdr vaddr+memsz overflow");
+        p[i].p_vaddr + p[i].p_memsz + (pagesz - 1) < p[i].p_vaddr) {
+      Pexit(os, exe, 0, "ELF p_vaddr + p_memsz overflow");
     }
     if (p[i].p_vaddr + p[i].p_filesz < p[i].p_vaddr ||
-        p[i].p_vaddr + p[i].p_filesz + (PAGE_SIZE - 1) < p[i].p_vaddr) {
-      Pexit(os, exe, 0, "ELF phdr vaddr+files overflow");
+        p[i].p_vaddr + p[i].p_filesz + (pagesz - 1) < p[i].p_vaddr) {
+      Pexit(os, exe, 0, "ELF p_vaddr + p_filesz overflow");
     }
-    a = p[i].p_vaddr & -PAGE_SIZE;
-    b = (p[i].p_vaddr + p[i].p_memsz + (PAGE_SIZE - 1)) & -PAGE_SIZE;
-    if (MAX(a, 0) < MIN(b, NULL_PAGE)) {
-      Pexit(os, exe, 0, "ELF overlaps NULL page");
-    }
+    a = p[i].p_vaddr & -pagesz;
+    b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
     if (MAX(a, (unsigned long)__executable_start) <
         MIN(b, (unsigned long)_end)) {
-      Pexit(os, exe, 0, "ELF overlaps your APE loader");
+      Pexit(os, exe, 0, "ELF segments overlap your APE loader");
     }
     for (j = i + 1; j < e->e_phnum; ++j) {
       if (p[j].p_type != PT_LOAD) continue;
-      c = p[j].p_vaddr & -PAGE_SIZE;
-      d = (p[j].p_vaddr + p[j].p_memsz + (PAGE_SIZE - 1)) & -PAGE_SIZE;
+      c = p[j].p_vaddr & -pagesz;
+      d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
       if (MAX(a, c) < MIN(b, d)) {
-        Pexit(os, exe, 0, "ELF overlaps its own vaspace");
+        Pexit(os, exe, 0, "ELF segments overlap each others virtual memory");
       }
     }
-
-    /* configure mapping */
-    prot = 0;
-    flags = MAP_FIXED | MAP_PRIVATE;
-    if (p[i].p_flags & PF_R) {
-      prot |= PROT_READ;
-    }
-    if (p[i].p_flags & PF_W) {
-      prot |= PROT_WRITE;
-    }
     if (p[i].p_flags & PF_X) {
-      prot |= PROT_EXEC;
       if (!found_code) {
         code = p[i].p_vaddr;
         codesize = p[i].p_filesz;
@@ -568,30 +606,65 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
         found_entry = 1;
       }
     }
+    if (p[i].p_vaddr < virtmin) {
+      virtmin = p[i].p_vaddr;
+    }
+    if (p[i].p_vaddr + p[i].p_memsz > virtmax) {
+      virtmax = p[i].p_vaddr + p[i].p_memsz;
+    }
+  }
+  if (!found_entry) {
+    Pexit(os, exe, 0, "ELF entrypoint not found in PT_LOAD with PF_X");
+  }
+
+  /* choose loading address for dynamic elf executables
+     that maintains relative distances between segments */
+  if (e->e_type == ET_DYN) {
+    rc = Mmap(0, virtmax - virtmin, PROT_NONE,
+              MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0, os);
+    if (rc < 0) Pexit(os, exe, rc, "pie mmap");
+    dynbase = rc;
+    if (dynbase & (pagesz - 1)) {
+      Pexit(os, exe, 0, "OS mmap incongruent w/ AT_PAGESZ");
+    }
+    if (dynbase + virtmin < dynbase) {
+      Pexit(os, exe, 0, "ELF dynamic base overflow");
+    }
+  } else {
+    dynbase = 0;
+  }
+
+  /* load elf */
+  for (i = 0; i < e->e_phnum; ++i) {
+    if (p[i].p_type != PT_LOAD) continue;
+    if (!p[i].p_memsz) continue;
+
+    /* configure mapping */
+    prot = 0;
+    flags = MAP_FIXED | MAP_PRIVATE;
+    if (p[i].p_flags & PF_R) prot |= PROT_READ;
+    if (p[i].p_flags & PF_W) prot |= PROT_WRITE;
+    if (p[i].p_flags & PF_X) prot |= PROT_EXEC;
 
     /* load from file */
     if (p[i].p_filesz) {
       void *addr;
+      int prot1, prot2;
       unsigned long size;
-      int dirty, prot1, prot2;
-      dirty = 0;
       prot1 = prot;
       prot2 = prot;
-      a = p[i].p_vaddr + p[i].p_filesz;
-      b = (a + (PAGE_SIZE - 1)) & -PAGE_SIZE;
-      c = p[i].p_vaddr + p[i].p_memsz;
+      a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
+      b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
+      c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
       if (b > c) b = c;
-      if (c > b) {
-        dirty = 1;
-        if (~prot1 & PROT_WRITE) {
-          prot1 = PROT_READ | PROT_WRITE;
-        }
+      if (c > b && (~prot1 & PROT_WRITE)) {
+        prot1 = PROT_READ | PROT_WRITE;
       }
-      addr = (void *)(p[i].p_vaddr & -PAGE_SIZE);
-      size = (p[i].p_vaddr & (PAGE_SIZE - 1)) + p[i].p_filesz;
-      rc = Mmap(addr, size, prot1, flags, fd, p[i].p_offset & -PAGE_SIZE, os);
+      addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
+      size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
+      rc = Mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz, os);
       if (rc < 0) Pexit(os, exe, rc, "prog mmap");
-      if (dirty) MemSet((void *)a, 0, b - a);
+      if (c > b) Bzero((void *)(dynbase + a), b - a);
       if (prot2 != prot1) {
         rc = Mprotect(addr, size, prot2, os);
         if (rc < 0) Pexit(os, exe, rc, "prog mprotect");
@@ -600,83 +673,100 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
 
     /* allocate extra bss */
     a = p[i].p_vaddr + p[i].p_filesz;
-    a = (a + (PAGE_SIZE - 1)) & -PAGE_SIZE;
+    a = (a + (pagesz - 1)) & -pagesz;
     b = p[i].p_vaddr + p[i].p_memsz;
     if (b > a) {
-      rc = Mmap((void *)a, b - a, prot, flags | MAP_ANONYMOUS, 0, 0, os);
+      flags |= MAP_ANONYMOUS;
+      rc = Mmap((void *)(dynbase + a), b - a, prot, flags, -1, 0, os);
       if (rc < 0) Pexit(os, exe, rc, "bss mmap");
     }
   }
 
   /* finish up */
-  if (!found_entry) {
-    Pexit(os, exe, 0, "ELF entrypoint not found in PT_LOAD with PF_X");
-  }
   Close(fd, os);
-  Msyscall(code, codesize, os);
+  Msyscall(dynbase + code, codesize, os);
 
-  /* we clear all the general registers we can to have some wiggle room
-     to extend the behavior of this loader in the future. we don't need
-     to clear the xmm registers since the ape loader should be compiled
-     with the -mgeneral-regs-only flag. */
-  asm volatile("xor\t%%eax,%%eax\n\t"
-               "xor\t%%r8d,%%r8d\n\t"
-               "xor\t%%r9d,%%r9d\n\t"
-               "xor\t%%r10d,%%r10d\n\t"
-               "xor\t%%r11d,%%r11d\n\t"
-               "xor\t%%ebx,%%ebx\n\t"   /* netbsd doesnt't clear this */
-               "xor\t%%r12d,%%r12d\n\t" /* netbsd doesnt't clear this */
-               "xor\t%%r13d,%%r13d\n\t" /* netbsd doesnt't clear this */
-               "xor\t%%r14d,%%r14d\n\t" /* netbsd doesnt't clear this */
-               "xor\t%%r15d,%%r15d\n\t" /* netbsd doesnt't clear this */
-               "mov\t%%rdx,%%rsp\n\t"
-               "xor\t%%edx,%%edx\n\t"
-               "push\t%%rsi\n\t"
-               "xor\t%%esi,%%esi\n\t"
-               "xor\t%%ebp,%%ebp\n\t"
-               "ret"
-               : /* no outputs */
-               : "D"(IsFreebsd() ? sp : 0), "S"(e->e_entry), "d"(sp), "c"(os)
-               : "memory");
-  __builtin_unreachable();
+  /* call program entrypoint */
+  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, sp, os);
 }
 
-static void TryElf(struct ApeLoader *M, const char *exe, int fd, long *sp,
-                   long *auxv, int os) {
-  unsigned size = M->ehdr.ehdr.e_phnum;
-  if (Read32(M->ehdr.buf) == Read32("\177ELF") &&
-      M->ehdr.ehdr.e_type == ET_EXEC &&
-      M->ehdr.ehdr.e_machine == EM_NEXGEN32E &&
-      M->ehdr.ehdr.e_ident[EI_CLASS] != ELFCLASS32 &&
-      M->ehdr.ehdr.e_phentsize >= sizeof(M->phdr.phdr) &&
-      (size *= M->ehdr.ehdr.e_phentsize) <= sizeof(M->phdr.buf) &&
-      Pread(fd, M->phdr.buf, size, M->ehdr.ehdr.e_phoff, os) == size) {
-    for (; *auxv; auxv += 2) {
-      switch (*auxv) {
-        case AT_PHDR:
-          auxv[1] = (unsigned long)&M->phdr;
-          break;
-        case AT_PHENT:
-          auxv[1] = M->ehdr.ehdr.e_phentsize;
-          break;
-        case AT_PHNUM:
-          auxv[1] = M->ehdr.ehdr.e_phnum;
-          break;
-        default:
-          break;
-      }
-    }
-    Spawn(os, exe, fd, sp, &M->ehdr.ehdr, &M->phdr.phdr);
+static const char *TryElf(struct ApeLoader *M, const char *exe, int fd,
+                          long *sp, long *auxv, unsigned long pagesz, int os) {
+  long rc;
+  unsigned size;
+  if (READ32(M->ehdr.buf) != READ32("\177ELF")) {
+    return "didn't embed ELF magic";
   }
+  if (M->ehdr.ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+    return "32-bit ELF isn't supported";
+  }
+  if (M->ehdr.ehdr.e_type != ET_EXEC && M->ehdr.ehdr.e_type != ET_DYN) {
+    return "ELF not ET_EXEC or ET_DYN";
+  }
+  if (M->ehdr.ehdr.e_machine != EM_NEXGEN32E) {
+    return "couldn't find ELF header with x86-64 machine type";
+  }
+  if (M->ehdr.ehdr.e_phentsize < sizeof(M->phdr.phdr)) {
+    return "e_phentsize is too small";
+  }
+  size = M->ehdr.ehdr.e_phnum;
+  if ((size *= M->ehdr.ehdr.e_phentsize) > sizeof(M->phdr.buf)) {
+    return "too many ELF program headers";
+  }
+  rc = Pread(fd, M->phdr.buf, size, M->ehdr.ehdr.e_phoff, os);
+  if (rc < 0) return "failed to read ELF program headers";
+  if (rc != size) return "truncated read of ELF program headers";
+  for (; *auxv; auxv += 2) {
+    switch (*auxv) {
+      case AT_PHDR:
+        auxv[1] = (unsigned long)&M->phdr;
+        break;
+      case AT_PHENT:
+        auxv[1] = M->ehdr.ehdr.e_phentsize;
+        break;
+      case AT_PHNUM:
+        auxv[1] = M->ehdr.ehdr.e_phnum;
+        break;
+      default:
+        break;
+    }
+  }
+  Spawn(os, exe, fd, sp, pagesz, &M->ehdr.ehdr, &M->phdr.phdr);
+}
+
+static __attribute__((__noreturn__)) void ShowUsage(int os, int fd, int rc) {
+  Print(os, fd,
+        "NAME\n"
+        "\n"
+        "  actually portable executable loader v1.3\n"
+        "  copyright 2023 justine alexandra roberts tunney\n"
+        "  https://justine.lol/ape.html\n"
+        "\n"
+        "USAGE\n"
+        "\n"
+        "  ape [FLAGS]   PROG [ARGV1,ARGV2,...]\n"
+        "  ape [FLAGS] - PROG [ARGV0,ARGV1,...]\n"
+        "\n"
+        "FLAGS\n"
+        "\n"
+        "  -h     show this help\n"
+        "  -f     force loading of program (do not use execve)\n"
+        "\n",
+        0l);
+  Exit(rc, os);
 }
 
 __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
   int rc;
   unsigned i, n;
+  int usetheforce;
   int c, fd, os, argc;
   struct ApeLoader *M;
+  unsigned long pagesz;
   long *auxv, *ap, *ew;
-  char *p, *exe, *prog, **argv, **envp;
+  char *p, *pe, *exe, *ape, *prog, **argv, **envp;
+
+  (void)Utox;
 
   /* detect freebsd */
   if (SupportsXnu() && dl == XNU) {
@@ -699,14 +789,21 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
     }
   }
 
+  /* determine ape loader program name */
+  ape = argv[0];
+  if (!ape) ape = "ape";
+
   /* detect openbsd */
   if (SupportsOpenbsd() && !os && !auxv[0]) {
     os = OPENBSD;
   }
 
   /* detect netbsd and find end of words */
+  pagesz = 0;
   for (ap = auxv; ap[0]; ap += 2) {
-    if (SupportsNetbsd() && !os && ap[0] == AT_EXECFN_NETBSD) {
+    if (ap[0] == AT_PAGESZ) {
+      pagesz = ap[1];
+    } else if (SupportsNetbsd() && !os && ap[0] == AT_EXECFN_NETBSD) {
       os = NETBSD;
     }
   }
@@ -723,6 +820,23 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
     os = LINUX;
   }
 
+  /* parse flags */
+  usetheforce = 0;
+  while (argc > 1) {
+    if (argv[1][0] != '-') break; /* normal argument */
+    if (!argv[1][1]) break;       /* hyphen argument */
+    if (!StrCmp(argv[1], "-h") || !StrCmp(argv[1], "--help")) {
+      ShowUsage(os, 1, 0);
+    } else if (!StrCmp(argv[1], "-f")) {
+      usetheforce = 1;
+    } else {
+      Print(os, 2, ape, ": invalid flag (pass -h for help)\n", 0l);
+      Exit(1, os);
+    }
+    *++sp = --argc;
+    ++argv;
+  }
+
   /* we can load via shell, shebang, or binfmt_misc */
   if (argc >= 3 && !StrCmp(argv[1], "-")) {
     /* if the first argument is a hyphen then we give the user the
@@ -733,13 +847,7 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
   } else if (argc < 2) {
-    Print(os, 2,
-          "usage: ape   PROG [ARGV1,ARGV2,...]\n"
-          "       ape - PROG [ARGV0,ARGV1,...]\n"
-          "αcτµαlly pδrταblε εxεcµταblε loader v1.2\n"
-          "copyright 2022 justine alexandra roberts tunney\n"
-          "https://justine.lol/ape.html\n",
-          0l);
+    Print(os, 2, ape, ": missing command name (pass -h for help)\n", 0l);
     Exit(1, os);
   } else {
     prog = (char *)sp[2];
@@ -749,14 +857,15 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
 
   /* resolve path of executable and read its first page */
   if (!(exe = Commandv(&M->ps, os, prog, GetEnv(envp, "PATH")))) {
-    Pexit(os, prog, 0, "not found (maybe chmod +x)");
+    Pexit(os, prog, 0, "not found (maybe chmod +x or ./ needed)");
   } else if ((fd = Open(exe, O_RDONLY, 0, os)) < 0) {
     Pexit(os, exe, fd, "open");
   } else if ((rc = Pread(fd, M->ehdr.buf, sizeof(M->ehdr.buf), 0, os)) < 0) {
     Pexit(os, exe, rc, "read");
-  } else if (rc != sizeof(M->ehdr.buf)) {
+  } else if ((unsigned long)rc < sizeof(M->ehdr.ehdr)) {
     Pexit(os, exe, 0, "too small");
   }
+  pe = M->ehdr.buf + rc;
 
   /* change argv[0] to resolved path if it's ambiguous */
   if (argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) {
@@ -767,21 +876,24 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
      1. if file is a native executable, try to run it natively
      2. if ape, will scan shell script for elf printf statements
      3. shell script may have multiple lines producing elf headers
-     4. all elf printf lines must exist in the first 4096 bytes of file
+     4. all elf printf lines must exist in the first 8192 bytes of file
      5. elf program headers may appear anywhere in the binary */
-  if ((IsXnu() && Read32(M->ehdr.buf) == 0xFEEDFACE + 1) ||
-      (!IsXnu() && Read32(M->ehdr.buf) == Read32("\177ELF"))) {
+  if (!usetheforce &&
+      ((IsXnu() && READ32(M->ehdr.buf) == 0xFEEDFACE + 1) ||
+       (!IsXnu() && READ32(M->ehdr.buf) == READ32("\177ELF")))) {
     Close(fd, os);
     Execve(exe, argv, envp, os);
+    if ((fd = Open(exe, O_RDONLY, 0, os)) < 0) {
+      Pexit(os, exe, rc, "execve and open failed");
+    }
   }
-  if (Read64(M->ehdr.buf) == Read64("MZqFpD='") ||
-      Read64(M->ehdr.buf) == Read64("jartsr='")) {
-    for (p = M->ehdr.buf; p < M->ehdr.buf + sizeof(M->ehdr.buf); ++p) {
-      if (Read64(p) != Read64("printf '")) {
+  if (READ64(M->ehdr.buf) == READ64("MZqFpD='") ||
+      READ64(M->ehdr.buf) == READ64("jartsr='")) {
+    for (p = M->ehdr.buf; p < pe; ++p) {
+      if (READ64(p) != READ64("printf '")) {
         continue;
       }
-      for (i = 0, p += 8;
-           p + 3 < M->ehdr.buf + sizeof(M->ehdr.buf) && (c = *p++) != '\'';) {
+      for (i = 0, p += 8; p + 3 < pe && (c = *p++) != '\'';) {
         if (c == '\\') {
           if ('0' <= *p && *p <= '7') {
             c = *p++ - '0';
@@ -796,12 +908,14 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
           }
         }
         M->ehdr.buf[i++] = c;
+        if (i >= sizeof(M->ehdr.buf)) {
+          break;
+        }
       }
       if (i >= sizeof(M->ehdr.ehdr)) {
-        TryElf(M, exe, fd, sp, auxv, os);
+        TryElf(M, exe, fd, sp, auxv, pagesz, os);
       }
     }
   }
-  TryElf(M, exe, fd, sp, auxv, os);
-  Pexit(os, exe, 0, "Not an acceptable APE/ELF executable for x86-64");
+  Pexit(os, exe, 0, TryElf(M, exe, fd, sp, auxv, pagesz, os));
 }

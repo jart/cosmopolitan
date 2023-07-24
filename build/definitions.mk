@@ -83,7 +83,7 @@ COMMA := ,
 PWD := $(shell build/bootstrap/pwd.com)
 
 IGNORE := $(shell $(ECHO) -2 ♥cosmo)
-IGNORE := $(shell $(MKDIR) o/tmp)
+IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
@@ -237,6 +237,7 @@ DEFAULT_ASFLAGS =							\
 DEFAULT_LDFLAGS =							\
 	-static								\
 	-nostdlib							\
+	-znorelro							\
 	--gc-sections							\
 	--build-id=none							\
 	--no-dynamic-linker

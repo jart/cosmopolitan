@@ -21,18 +21,19 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 
-//	APE Loader Executable Structure for XNU
+//	Apple Mach-O Executable Headers
+//	Fixups are applied by objbincopy.com
+//	There must exist a MAC_LC_SEGMENT_64 for every PT_LOAD
 
-	.section .head
-
+	.section .macho,"a",@progbits
 	.balign	64
-macho:	.long	0xFEEDFACE+1
+	.long	0xFEEDFACE+1
 	.long	MAC_CPU_NEXGEN32E
 	.long	MAC_CPU_NEXGEN32E_ALL
 	.long	MAC_EXECUTE
-	.long	4				// number of load commands
-	.long	50f-10f				// size of all load commands
-	.long	MAC_NOUNDEFS			// flags
+	.long	5				// number of load commands
+	.long	60f-10f				// size of all load commands
+	.long	MAC_NOUNDEFS|MAC_SPLIT_SEGS	// flags
 	.long	0				// reserved
 10:	.long	MAC_LC_SEGMENT_64
 	.long	20f-10b				// unmaps first page dir
@@ -42,23 +43,34 @@ macho:	.long	0xFEEDFACE+1
 20:	.long	MAC_LC_SEGMENT_64
 	.long	30f-20b
 	.ascin	"__TEXT",16
-	.quad	macho				// vaddr
-	.quad	filesz				// memsz
+	.quad	0				// vaddr
+	.quad	0				// memsz
 	.quad	0				// file offset
-	.quad	filesz				// file size
-	.long	PROT_EXEC|PROT_READ|PROT_WRITE	// maxprot
-	.long	PROT_EXEC|PROT_READ		// initprot
+	.quad	0				// file size
+	.long	0				// maxprot
+	.long	0				// initprot
 	.long	0				// segment section count
 	.long	0				// flags
-30:	.long	MAC_LC_UUID
+30:	.long	MAC_LC_SEGMENT_64
 	.long	40f-30b
-	.quad	0x3fb29ee4ac6c87aa		// uuid1
-	.quad	0xdd2c9bb866d9eef8		// uuid2
-40:	.long	MAC_LC_UNIXTHREAD
-	.long	50f-40b				// cmdsize
+	.ascin	"__RODATA",16
+	.quad	0				// vaddr
+	.quad	0				// memsz
+	.quad	0				// file offset
+	.quad	0				// file size
+	.long	0				// maxprot
+	.long	0				// initprot
+	.long	0				// segment section count
+	.long	0				// flags
+40:	.long	MAC_LC_UUID
+	.long	50f-40b
+	.quad	0x4527148ba7a513ef		// uuid1
+	.quad	0x56fa865940665e8f		// uuid2
+50:	.long	MAC_LC_UNIXTHREAD
+	.long	60f-50b				// cmdsize
 	.long	MAC_THREAD_NEXGEN32E		// flavaflav
-	.long	(420f-410f)/4			// count
-410:	.quad	0				// rax
+	.long	(520f-510f)/4			// count
+510:	.quad	0				// rax
 	.quad	0				// rbx
 	.quad	0				// rcx
 	.quad	0				// rdx
@@ -74,37 +86,10 @@ macho:	.long	0xFEEDFACE+1
 	.quad	0				// r13
 	.quad	0				// r14
 	.quad	0				// r15
-	.quad	_start				// rip
+	.quad	XnuEntrypoint			// rip
 	.quad	0				// rflags
 	.quad	0				// cs
 	.quad	0				// fs
 	.quad	0				// gs
-420:
-50:
-	.endobj	macho,globl
-
-	.balign	64
-_start:	mov	$_HOSTXNU,%dl			// xnu's not unix!
-	mov	%rsp,%rsi			// save real stack
-	sub	$1024*1024,%rsp			// room for allocs
-	jmp	ApeLoader
-	.endfn	_start,globl
-
-//	Invokes system call.
-//
-//	This function has eight parameters. The first seven are for
-//	arguments passed along to the system call. The eight is for
-//	the magic number that indicates which system call is called
-//
-//	The return value follows the Linux kernel convention, where
-//	errors are returned as `-errno`. BSD systems are normalized
-//	to follow this convention automatically.
-SystemCall:
-	mov	%rcx,%r10
-	mov	16(%rsp),%eax
-	clc
-	syscall
-	jnc	1f
-	neg	%rax
-1:	ret
-	.endfn	SystemCall,globl
+520:
+60:

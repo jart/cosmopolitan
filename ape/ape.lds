@@ -581,11 +581,8 @@ ape_stack_memsz2 = ape_stack_memsz * 2;
 ape_stack_align = 16;
 
 ape_note_offset = ape_cod_offset + (ape_note - ape_cod_vaddr);
-ape_note_vaddr = ape_note;
-ape_note_paddr = ape_cod_paddr + ape_note_offset;
 ape_note_filesz = ape_note_end - ape_note;
 ape_note_memsz = ape_note_filesz;
-ape_note_align = __SIZEOF_POINTER__;
 
 ape_text_offset = ape_cod_offset + LOADADDR(.text) - ape_cod_paddr;
 ape_text_paddr = LOADADDR(.text);
@@ -665,13 +662,10 @@ CHURN(ape_elf_shoff);
 CHURN(ape_elf_shstrndx);
 CHURN(ape_macho_end);
 CHURN(ape_note);
-CHURN(ape_note_align);
 CHURN(ape_note_end);
 CHURN(ape_note_filesz);
 CHURN(ape_note_memsz);
 CHURN(ape_note_offset);
-CHURN(ape_note_paddr);
-CHURN(ape_note_vaddr);
 CHURN(ape_ram_align);
 CHURN(ape_ram_filesz);
 CHURN(ape_ram_memsz);

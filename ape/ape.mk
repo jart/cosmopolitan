@@ -181,41 +181,41 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		-DAPE_NO_MODIFY_SELF $<
 
 o/$(MODE)/ape/loader.o: ape/loader.c
-	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b01111001 -g $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=121 -g $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-gcc.asm: ape/loader.c
-	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b01111001 -S -g0 $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=121 -S -g0 $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-clang.asm: ape/loader.c
-	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=0b01111001 -S -g0 $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=121 -S -g0 $(APE_LOADER_FLAGS)
 
 o/$(MODE)/ape/loader-xnu.o: ape/loader.c
-	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b00001000 -g $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=8 -g $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-xnu-gcc.asm: ape/loader.c
-	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b00001000 -S -g0 $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=8 -S -g0 $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-xnu-clang.asm: ape/loader.c
-	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=0b00001000 -S -g0 $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=8 -S -g0 $(APE_LOADER_FLAGS)
 
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
-o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.macho.dbg
+	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy.com -f -o $@ $<
+
+o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.elf.dbg
+	@$(COMPILE) -AOBJBINCOPY -w build/bootstrap/objbincopy.com -fm -o $@ $<
 
 APE_LOADER_LDFLAGS =				\
 	-static					\
-	-no-pie					\
 	-nostdlib				\
 	--no-dynamic-linker			\
-	-zcommon-page-size=0x1000		\
-	-zmax-page-size=0x1000
+	-z separate-code			\
+	-z common-page-size=0x1000		\
+	-z max-page-size=0x10000
 
 o/$(MODE)/ape/ape.elf.dbg:			\
-		o/$(MODE)/ape/loader.o		\
-		o/$(MODE)/ape/loader-elf.o	\
-		ape/loader.lds
-	@$(COMPILE) -ALINK.elf $(LINK) -T ape/loader.lds $(APE_LOADER_LDFLAGS) -o $@ o/$(MODE)/ape/loader-elf.o o/$(MODE)/ape/loader.o
-
-o/$(MODE)/ape/ape.macho.dbg:			\
-		o/$(MODE)/ape/loader-xnu.o	\
 		o/$(MODE)/ape/loader-macho.o	\
+		o/$(MODE)/ape/start.o		\
+		o/$(MODE)/ape/loader.o		\
+		o/$(MODE)/ape/launch.o		\
+		o/$(MODE)/ape/systemcall.o	\
 		ape/loader.lds
-	@$(COMPILE) -ALINK.elf $(LINK) -T ape/loader.lds $(APE_LOADER_LDFLAGS) -o $@ o/$(MODE)/ape/loader-macho.o o/$(MODE)/ape/loader-xnu.o
+	@$(COMPILE) -ALINK.elf $(LINK) $(APE_LOADER_LDFLAGS) -o $@ $(patsubst %.lds,-T %.lds,$^)
 
 .PHONY: o/$(MODE)/ape
 o/$(MODE)/ape:	$(APE_CHECKS)			\
