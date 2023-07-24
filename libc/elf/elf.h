@@ -21,6 +21,7 @@ Elf64_Shdr *GetElfSectionHeaderAddress(const Elf64_Ehdr *, size_t, Elf64_Half);
 Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *, size_t, char *, const char *);
 const char *GetElfString(const Elf64_Ehdr *, size_t, const char *, Elf64_Word);
 void *GetElfSectionAddress(const Elf64_Ehdr *, size_t, const Elf64_Shdr *);
+void *GetElfSegmentAddress(const Elf64_Ehdr *, size_t, const Elf64_Phdr *);
 const char *GetElfSectionName(const Elf64_Ehdr *, size_t, Elf64_Shdr *);
 char *GetElfSectionNameStringTable(const Elf64_Ehdr *, size_t);
 
