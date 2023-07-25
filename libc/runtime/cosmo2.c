@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/internal.h"
@@ -32,6 +33,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/lua/lunix.h"
 #ifndef __x86_64__
 
 /**
@@ -128,11 +130,13 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   _mmi.p = _mmi.s;
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
 
-  // record provided stack to memory manager
+  // record system provided stack to memory manager
+  uintptr_t s = (uintptr_t)sp;
+  uintptr_t z = GetStackSize() << 1;
   _mmi.i = 1;
-  _mmi.p->x = (uintptr_t)GetStackAddr() >> 16;
-  _mmi.p->y = (uintptr_t)(GetStackAddr() + (GetStackSize() - FRAMESIZE)) >> 16;
-  _mmi.p->size = GetStackSize();
+  _mmi.p->x = (s & -z) >> 16;
+  _mmi.p->y = MIN(((s & -z) + (z - 1)) >> 16, INT_MAX);
+  _mmi.p->size = z;
   _mmi.p->prot = PROT_READ | PROT_WRITE;
   __virtualmax = -1;
 

@@ -143,7 +143,7 @@ STATIC_STACK_SIZE(0x80000);
 
 STATIC_YOINK("zipos");
 
-#ifndef TINY
+#ifdef USE_BLINK
 STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
 STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
 #endif
@@ -4928,7 +4928,7 @@ static int LuaProgramTokenBucket(lua_State *L) {
     blackhole.addr.sun_family = AF_UNIX;
     strlcpy(blackhole.addr.sun_path, "/var/run/blackhole.sock",
             sizeof(blackhole.addr.sun_path));
-    if ((blackhole.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
+    if ((blackhole.fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
       WARNF("(token) socket(AF_UNIX) failed: %m");
       ban = -1;
     } else if (sendto(blackhole.fd, &testip, 4, 0,

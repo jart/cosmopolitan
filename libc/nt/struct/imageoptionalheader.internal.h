@@ -4,8 +4,20 @@
 #include "libc/nt/struct/imagedatadirectory.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
+/**
+ * Portable Executable Optional Header.
+ *
+ * @see NtImageNtHeaders which encloses this
+ * @see NtImageFileHeader which precedes this
+ * @see NtImageSectionHeader which follows this
+ */
 struct NtImageOptionalHeader {
+
+  /*
+   * Must be kNtPe64bit.
+   */
   uint16_t Magic;
+
   uint8_t MajorLinkerVersion;
   uint8_t MinorLinkerVersion;
   uint32_t SizeOfCode;
@@ -55,8 +67,20 @@ struct NtImageOptionalHeader {
   uint16_t MajorSubsystemVersion;
   uint16_t MinorSubsystemVersion;
   uint32_t Win32VersionValue;
+
+  /*
+   * The size (in bytes) of the image, including all headers, as the
+   * image is loaded in memory. It must be a multiple of
+   * SectionAlignment.
+   */
   uint32_t SizeOfImage;
+
+  /*
+   * The combined size of an MS-DOS stub, PE header, and section headers
+   * rounded up to a multiple of FileAlignment.
+   */
   uint32_t SizeOfHeaders;
+
   uint32_t CheckSum;
   uint16_t Subsystem;
   uint16_t DllCharacteristics;

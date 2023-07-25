@@ -33,6 +33,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -89,6 +90,17 @@ TEST(mmap, noreplaceExistingMap) {
              mmap(p, FRAMESIZE, PROT_READ,
                   MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED_NOREPLACE, -1, 0));
   EXPECT_SYS(0, 0, munmap(p, FRAMESIZE));
+}
+
+TEST(mmap, smallerThanPage_mapsRemainder) {
+  long pagesz = sysconf(_SC_PAGESIZE);
+  char *map = mmap(0, 1, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  ASSERT_NE(MAP_FAILED, map);
+  EXPECT_TRUE(testlib_memoryexists(map));
+  EXPECT_TRUE(testlib_memoryexists(map + (pagesz - 1)));
+  EXPECT_SYS(0, 0, munmap(map, 1));
+  EXPECT_FALSE(testlib_memoryexists(map));
+  EXPECT_FALSE(testlib_memoryexists(map + (pagesz - 1)));
 }
 
 TEST(mmap, testMapFile) {

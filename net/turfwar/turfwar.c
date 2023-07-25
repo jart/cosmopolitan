@@ -1929,7 +1929,7 @@ int main(int argc, char *argv[]) {
   CHECK_EQ(0, chdir("/opt/turfwar"));
   putenv("TMPDIR=/opt/turfwar/tmp");
 
-  if ((g_blackhole.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
+  if ((g_blackhole.fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
     kprintf("error: socket(AF_UNIX) failed: %s\n", strerror(errno));
     _Exit(3);
   }

@@ -532,6 +532,11 @@ SECTIONS {
   }
 }
 
+ape_pe_filealignment = 512;
+ape_pe_sectionalignment = 4096;
+ape_pe_sizeofheaders = SIZEOF(.head);
+ape_pe_sizeofimage = ROUNDUP(_end - __executable_start, ape_pe_sectionalignment);
+
 PFSTUB8(ape_elf_entry, _start);
 PFSTUB8(ape_elf_phoff, RVA(ape_phdrs));
 PFSTUB8(ape_elf_shoff, 0);
@@ -720,6 +725,7 @@ CHURN(WinMain);
 #define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
 PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
 ape_pe_optsz = ape_pe_sections - (ape_pe + 24);
+ASSERT(ape_pe_optsz % 8 == 0, "SizeOfOptionalHeader must be multiple of 8");
 ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40;
 ape_pe_base = IMAGE_BASE_VIRTUAL;
 ape_idataz = LINK_WINDOWS ? RVA(ape_idata_iat) : 0;

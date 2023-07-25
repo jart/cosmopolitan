@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
+#include "libc/errno.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/so.h"
@@ -33,18 +34,23 @@ static bool Tune(int fd, int a, int b, int x) {
  */
 int GoodSocket(int family, int type, int protocol, bool isserver,
                const struct timeval *timeout) {
-  int fd;
+  int e, fd;
   if ((fd = socket(family, type, protocol)) != -1) {
+    e = errno;
     if (isserver) {
       Tune(fd, SOL_TCP, TCP_FASTOPEN, 100);
       Tune(fd, SOL_SOCKET, SO_REUSEADDR, 1);
     } else {
       Tune(fd, SOL_TCP, TCP_FASTOPEN_CONNECT, 1);
     }
+    errno = e;
     if (!Tune(fd, SOL_TCP, TCP_QUICKACK, 1)) {
+      e = errno;
       Tune(fd, SOL_TCP, TCP_NODELAY, 1);
+      errno = e;
     }
     if (timeout) {
+      e = errno;
       if (timeout->tv_sec < 0) {
         Tune(fd, SOL_SOCKET, SO_KEEPALIVE, 1);
         Tune(fd, SOL_TCP, TCP_KEEPIDLE, -timeout->tv_sec);
@@ -53,6 +59,7 @@ int GoodSocket(int family, int type, int protocol, bool isserver,
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout));
         setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, timeout, sizeof(*timeout));
       }
+      errno = e;
     }
   }
   return fd;

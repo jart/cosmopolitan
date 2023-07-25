@@ -16,10 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/stdio/rand.h"
 #include "net/https/https.h"
 
 int GenerateHardRandom(void *ctx, unsigned char *p, size_t n) {
-  rngset(p, n, rdseed, 0);
+  size_t i;
+  ssize_t rc;
+  for (i = 0; i < n; i += (size_t)rc) {
+    _npassert((rc = getrandom(p + i, n - i, 0)) != -1);
+  }
   return 0;
 }

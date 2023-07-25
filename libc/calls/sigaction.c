@@ -48,8 +48,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-#undef sigaction
-
 #ifdef SYSDEBUG
 STATIC_YOINK("strsignal");  // for kprintf()
 #endif

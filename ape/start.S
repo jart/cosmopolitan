@@ -49,3 +49,13 @@ netbsd.ident:
 3:	.long	901000000
 4:	.size	netbsd.ident,.-netbsd.ident
 	.type	netbsd.ident,@object
+	.balign	4
+ape.ident:
+	.long	2f-1f
+	.long	4f-3f
+	.long	1
+1:	.asciz	"APE"
+2:	.balign	4
+3:	.long	104000000
+4:	.size	ape.ident,.-ape.ident
+	.type	ape.ident,@object

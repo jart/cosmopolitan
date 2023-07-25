@@ -610,7 +610,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.3\"\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.4\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
@@ -809,6 +809,19 @@ ape_loader_end:
 #endif
 	.previous
 #endif /* SupportsSystemv() || SupportsMetal() */
+
+	.section .note.ape.ident,"a",@progbits
+	.balign	4
+ape.ident:
+	.long	2f-1f
+	.long	4f-3f
+	.long	1
+1:	.asciz	"APE"
+2:	.balign	4
+3:	.long	104000000
+4:	.size	ape.ident,.-ape.ident
+	.type	ape.ident,@object
+	.previous
 
 #if SupportsOpenbsd()
 	.section .note.openbsd.ident,"a",@progbits
@@ -1054,8 +1067,8 @@ ape_pe:	.ascin	"PE",4
 	.long	RVA(ape_pe_entry)	// EntryPoint
 	.long	0			// BaseOfCode
 	.quad	ape_pe_base		// ImageBase
-	.long	4096			// SectionAlignment
-	.long	4096			// FileAlignment
+	.long	ape_pe_sectionalignment	// SectionAlignment
+	.long	ape_pe_filealignment	// FileAlignment
 	.short	v_ntversion		// MajorOperatingSystemVersion
 	.short	0			// MinorOperatingSystemVersion
 	.short	0			// MajorImageVersion
@@ -1064,7 +1077,7 @@ ape_pe:	.ascin	"PE",4
 	.short	0			// MinorSubsystemVersion
 	.long	0			// Win32VersionValue
 	.long	RVA(_end)		// SizeOfImage
-	.long	RVA(_ehead)		// SizeOfHeaders
+	.long	ape_pe_sizeofheaders	// SizeOfHeaders
 	.long	0			// Checksum
 	.short	v_ntsubsystem		// Subsystem: 0=Neutral,2=GUI,3=Console
 	.stub	v_ntdllchar,short	// DllCharacteristics

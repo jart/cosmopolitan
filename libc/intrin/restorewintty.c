@@ -20,6 +20,7 @@
 #include "libc/nt/console.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
@@ -28,17 +29,18 @@ __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 
 extern uint32_t __pid_exec;
 
-const unsigned char kConsoleHandles[3] = {
+const signed char kConsoleHandles[3] = {
     kNtStdInputHandle,
     kNtStdOutputHandle,
     kNtStdErrorHandle,
 };
 
 // Puts cmd.exe gui back the way it was.
-privileged dontinstrument void _restorewintty(void) {
+void _restorewintty(void) {
+  int i;
   if (!IsWindows()) return;
   if (__imp_GetCurrentProcessId() != __pid_exec) return;
-  for (int i = 0; i < 3; ++i) {
+  for (i = 0; i < 3; ++i) {
     __imp_SetConsoleMode(__imp_GetStdHandle(kConsoleHandles[i]),
                          __ntconsolemode[i]);
   }

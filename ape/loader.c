@@ -510,8 +510,7 @@ static char SearchPath(struct PathSearcher *ps, const char *suffix) {
 }
 
 static char FindCommand(struct PathSearcher *ps, const char *suffix) {
-  if (MemChr(ps->name, '/', ps->namelen) ||
-      MemChr(ps->name, '\\', ps->namelen)) {
+  if (MemChr(ps->name, '/', ps->namelen)) {
     ps->path[0] = 0;
     return AccessCommand(ps, suffix, 0);
   }
@@ -556,16 +555,7 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
     Pexit(os, exe, 0, "AT_PAGESZ isn't two power");
   }
   for (i = 0; i < e->e_phnum; ++i) {
-    if (p[i].p_type == PT_INTERP) {
-      Pexit(os, exe, 0, "ELF has PT_INTERP which isn't supported");
-    }
-    if (p[i].p_type == PT_DYNAMIC) {
-      Pexit(os, exe, 0, "ELF has PT_DYNAMIC which isn't supported");
-    }
     if (p[i].p_type != PT_LOAD) {
-      continue;
-    }
-    if (!p[i].p_memsz) {
       continue;
     }
     if (p[i].p_filesz > p[i].p_memsz) {
@@ -578,9 +568,9 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
         p[i].p_vaddr + p[i].p_memsz + (pagesz - 1) < p[i].p_vaddr) {
       Pexit(os, exe, 0, "ELF p_vaddr + p_memsz overflow");
     }
-    if (p[i].p_vaddr + p[i].p_filesz < p[i].p_vaddr ||
-        p[i].p_vaddr + p[i].p_filesz + (pagesz - 1) < p[i].p_vaddr) {
-      Pexit(os, exe, 0, "ELF p_vaddr + p_filesz overflow");
+    if (p[i].p_offset + p[i].p_filesz < p[i].p_offset ||
+        p[i].p_offset + p[i].p_filesz + (pagesz - 1) < p[i].p_offset) {
+      Pexit(os, exe, 0, "ELF p_offset + p_filesz overflow");
     }
     a = p[i].p_vaddr & -pagesz;
     b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
@@ -637,7 +627,6 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   /* load elf */
   for (i = 0; i < e->e_phnum; ++i) {
     if (p[i].p_type != PT_LOAD) continue;
-    if (!p[i].p_memsz) continue;
 
     /* configure mapping */
     prot = 0;
@@ -692,53 +681,122 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
 
 static const char *TryElf(struct ApeLoader *M, const char *exe, int fd,
                           long *sp, long *auxv, unsigned long pagesz, int os) {
-  long rc;
+  long i, rc;
   unsigned size;
+  struct ElfEhdr *e;
+  struct ElfPhdr *p;
+
+  /* validate page size */
+  if (!pagesz) pagesz = 4096;
+  if (pagesz & (pagesz - 1)) {
+    Pexit(os, exe, 0, "AT_PAGESZ isn't two power");
+  }
+
+  /* validate elf header */
+  e = &M->ehdr.ehdr;
   if (READ32(M->ehdr.buf) != READ32("\177ELF")) {
     return "didn't embed ELF magic";
   }
-  if (M->ehdr.ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+  if (e->e_ident[EI_CLASS] == ELFCLASS32) {
     return "32-bit ELF isn't supported";
   }
-  if (M->ehdr.ehdr.e_type != ET_EXEC && M->ehdr.ehdr.e_type != ET_DYN) {
+  if (e->e_type != ET_EXEC && e->e_type != ET_DYN) {
     return "ELF not ET_EXEC or ET_DYN";
   }
-  if (M->ehdr.ehdr.e_machine != EM_NEXGEN32E) {
+  if (e->e_machine != EM_NEXGEN32E) {
     return "couldn't find ELF header with x86-64 machine type";
   }
-  if (M->ehdr.ehdr.e_phentsize < sizeof(M->phdr.phdr)) {
-    return "e_phentsize is too small";
+  if (e->e_phentsize != sizeof(struct ElfPhdr)) {
+    Pexit(os, exe, 0, "e_phentsize is wrong");
   }
-  size = M->ehdr.ehdr.e_phnum;
-  if ((size *= M->ehdr.ehdr.e_phentsize) > sizeof(M->phdr.buf)) {
-    return "too many ELF program headers";
+  size = e->e_phnum;
+  if ((size *= sizeof(struct ElfPhdr)) > sizeof(M->phdr.buf)) {
+    Pexit(os, exe, 0, "too many ELF program headers");
   }
-  rc = Pread(fd, M->phdr.buf, size, M->ehdr.ehdr.e_phoff, os);
+
+  /* read program headers */
+  rc = Pread(fd, M->phdr.buf, size, e->e_phoff, os);
   if (rc < 0) return "failed to read ELF program headers";
   if (rc != size) return "truncated read of ELF program headers";
+
+  /* bail on recoverable program header errors */
+  p = &M->phdr.phdr;
+  for (i = 0; i < e->e_phnum; ++i) {
+    if (p[i].p_type == PT_INTERP) {
+      return "ELF has PT_INTERP which isn't supported";
+    }
+    if (p[i].p_type == PT_DYNAMIC) {
+      return "ELF has PT_DYNAMIC which isn't supported";
+    }
+  }
+
+  /* remove empty program headers */
+  for (i = 0; i < e->e_phnum;) {
+    if (p[i].p_type == PT_LOAD && !p[i].p_memsz) {
+      if (i + 1 < e->e_phnum) {
+        MemMove(p + i, p + i + 1,
+                (e->e_phnum - (i + 1)) * sizeof(struct ElfPhdr));
+      }
+      --e->e_phnum;
+    } else {
+      ++i;
+    }
+  }
+
+  /*
+   * merge adjacent loads that are contiguous with equal protection,
+   * which prevents our program header overlap check from needlessly
+   * failing later on; it also shaves away a microsecond of latency,
+   * since every program header requires invoking at least 1 syscall
+   */
+  for (i = 0; i + 1 < e->e_phnum;) {
+    if (p[i].p_type == PT_LOAD && p[i + 1].p_type == PT_LOAD &&
+        ((p[i].p_flags & (PF_R | PF_W | PF_X)) ==
+         (p[i + 1].p_flags & (PF_R | PF_W | PF_X))) &&
+        ((p[i].p_offset + p[i].p_filesz + (pagesz - 1)) & -pagesz) -
+                (p[i + 1].p_offset & -pagesz) <=
+            pagesz &&
+        ((p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz) -
+                (p[i + 1].p_vaddr & -pagesz) <=
+            pagesz) {
+      p[i].p_memsz = (p[i + 1].p_vaddr + p[i + 1].p_memsz) - p[i].p_vaddr;
+      p[i].p_filesz = (p[i + 1].p_offset + p[i + 1].p_filesz) - p[i].p_offset;
+      if (i + 2 < e->e_phnum) {
+        MemMove(p + i + 1, p + i + 2,
+                (e->e_phnum - (i + 2)) * sizeof(struct ElfPhdr));
+      }
+      --e->e_phnum;
+    } else {
+      ++i;
+    }
+  }
+
+  /* fixup operating system provided auxiliary values */
   for (; *auxv; auxv += 2) {
     switch (*auxv) {
       case AT_PHDR:
         auxv[1] = (unsigned long)&M->phdr;
         break;
       case AT_PHENT:
-        auxv[1] = M->ehdr.ehdr.e_phentsize;
+        auxv[1] = e->e_phentsize;
         break;
       case AT_PHNUM:
-        auxv[1] = M->ehdr.ehdr.e_phnum;
+        auxv[1] = e->e_phnum;
         break;
       default:
         break;
     }
   }
-  Spawn(os, exe, fd, sp, pagesz, &M->ehdr.ehdr, &M->phdr.phdr);
+
+  /* we're now ready to load */
+  Spawn(os, exe, fd, sp, pagesz, e, p);
 }
 
 static __attribute__((__noreturn__)) void ShowUsage(int os, int fd, int rc) {
   Print(os, fd,
         "NAME\n"
         "\n"
-        "  actually portable executable loader v1.3\n"
+        "  actually portable executable loader version 1.4\n"
         "  copyright 2023 justine alexandra roberts tunney\n"
         "  https://justine.lol/ape.html\n"
         "\n"

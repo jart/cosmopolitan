@@ -45,7 +45,6 @@ extern const unsigned RLIMIT_VMEM;
 #define RLIMIT_SWAP       RLIMIT_SWAP
 #define RLIMIT_VMEM       RLIMIT_VMEM
 
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_ */

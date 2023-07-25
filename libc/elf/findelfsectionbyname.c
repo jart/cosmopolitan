@@ -33,11 +33,13 @@ Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *elf, size_t mapsize,
   long i;
   Elf64_Shdr *shdr;
   const char *secname;
-  for (i = 0; i < elf->e_shnum; ++i) {
-    if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&
-        (secname = GetElfString(elf, mapsize, shdrstrtab, shdr->sh_name)) &&
-        !strcmp(name, secname)) {
-      return shdr;
+  if (shdrstrtab) {
+    for (i = 0; i < elf->e_shnum; ++i) {
+      if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&
+          (secname = GetElfString(elf, mapsize, shdrstrtab, shdr->sh_name)) &&
+          !strcmp(name, secname)) {
+        return shdr;
+      }
     }
   }
   return 0;

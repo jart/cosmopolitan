@@ -8,7 +8,7 @@ COSMOPOLITAN_C_START_
 
 int tcgetwinsize_nt(struct Fd *, struct winsize *);
 const char *DescribeWinsize(char[64], int, struct winsize *);
-#define DescribeWinsize(rc, ws) DescribeWinsize(alloca(12), rc, ws)
+#define DescribeWinsize(rc, ws) DescribeWinsize(alloca(64), rc, ws)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

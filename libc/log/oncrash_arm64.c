@@ -32,10 +32,12 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
@@ -162,6 +164,17 @@ static bool AppendFileLine(struct Buffer *b, const char *addr2line,
   }
 }
 
+static char *GetSymbolName(struct SymbolTable *st, int symbol, char **mem,
+                           size_t *memsz) {
+  char *s, *t;
+  if ((s = __get_symbol_name(st, symbol)) &&  //
+      s[0] == '_' && s[1] == 'Z' &&           //
+      (t = __cxa_demangle(s, *mem, memsz, 0))) {
+    *mem = s = t;
+  }
+  return s;
+}
+
 relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
   char buf[10000];
   ucontext_t *ctx = arg;
@@ -200,6 +213,8 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
     if (ctx) {
       long pc;
       char line[256];
+      char *mem = 0;
+      size_t memsz = 0;
       int addend, symbol;
       const char *debugbin;
       const char *addr2line;
@@ -253,8 +268,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       if (pc && st && (symbol = __get_symbol(st, pc))) {
         addend = pc - st->addr_base;
         addend -= st->symbols[symbol].x;
-        Append(b, " ");
-        Append(b, "%s", __get_symbol_name(st, symbol));
+        Append(b, " %s", GetSymbolName(st, symbol, &mem, &memsz));
         if (addend) Append(b, "%+d", addend);
       }
       Append(b, "\n");
@@ -274,7 +288,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
           addend -= st->symbols[symbol].x;
           Append(b, " ");
           if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-            Append(b, "%s", __get_symbol_name(st, symbol));
+            Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
             if (addend) Append(b, "%+d", addend);
           }
         }
@@ -313,11 +327,12 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
         }
         Append(b, " %016lx fp %lx lr ", fp, pc);
         if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
-          Append(b, "%s", __get_symbol_name(st, symbol));
+          Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
           if (addend) Append(b, "%+d", addend);
         }
         Append(b, "\n");
       }
+      free(mem);
     }
   } else {
     Append(b, "got %G while crashing! pc %lx lr %lx\n", sig,

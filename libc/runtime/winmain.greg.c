@@ -66,7 +66,7 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
  */
 
 extern int64_t __wincrashearly;
-extern const char kConsoleHandles[3];
+extern const signed char kConsoleHandles[3];
 extern void cosmo(int, char **, char **, long (*)[2]) wontreturn;
 
 static const short kConsoleModes[3] = {
