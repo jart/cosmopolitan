@@ -23,7 +23,7 @@ It's recommended that Cosmopolitan be installed to `/opt/cosmo` and
 `/opt/cosmos` on your computer. The first has the monorepo. The second
 contains your non-monorepo artifacts.
 
-```
+```sh
 sudo mkdir -p /opt
 sudo chmod 1777 /opt
 git clone https://github.com/jart/cosmopolitan /opt/cosmo
@@ -57,7 +57,7 @@ important to give it an output path that ends with `.com` so the output
 format will be Actually Portable Executable. When this happens, a
 concomitant debug binary is created automatically too.
 
-```
+```sh
 cosmocc -o hello.com hello.c
 ./hello.com
 ./hello.com.dbg
@@ -66,7 +66,7 @@ cosmocc -o hello.com hello.c
 You can use the `cosmocc` toolchain to build conventional open source
 projects which use autotools. This strategy normally works:
 
-```
+```sh
 export CC=cosmocc
 export CXX=cosmoc++
 ./configure --prefix=/opt/cosmos
@@ -78,13 +78,13 @@ The Cosmopolitan Libc runtime links some heavyweight troubleshooting
 features by default, which are very useful for developers and admins.
 Here's how you can log system calls:
 
-```
+```sh
 ./hello.com --strace
 ```
 
 Here's how you can get a much more verbose log of function calls:
 
-```
+```sh
 ./hello.com --ftrace
 ```
 
@@ -94,7 +94,7 @@ can select one of the predefined ones by looking at
 [build/config.mk](build/config.mk). One of the most popular modes is
 `MODE=tiny`. It can be used with the `cosmocc` toolchain as follows:
 
-```
+```sh
 cd /opt/cosmo
 make -j8 MODE=tiny toolchain
 ```
@@ -115,7 +115,7 @@ int main() {
 Now let's compile our tiny actually portable executable, which should be
 on the order of 20kb in size.
 
-```
+```sh
 export MODE=tiny
 cosmocc -Os -o hello2.com hello2.c
 ./hello2.com
@@ -126,7 +126,7 @@ binaries, similar to what Musl Libc would produce. In that case, try
 using the `MODE=tinylinux` build mode, which can produce binaries more
 on the order of 4kb.
 
-```
+```sh
 export MODE=tinylinux
 (cd /opt/cosmo; make -j8 toolchain)
 cosmocc -Os -o hello2.com hello2.c
@@ -156,7 +156,7 @@ scientific computing (e.g. running LLMs with
 Therefore, the second option is to cross compile aarch64 executables,
 by using build modes like the following:
 
-```
+```sh
 make -j8 m=aarch64 o/aarch64/third_party/ggml/llama.com
 make -j8 m=aarch64-tiny o/aarch64-tiny/third_party/ggml/llama.com
 ```
@@ -168,7 +168,7 @@ compile these executables on an x86_64-linux machine. The second catch
 is that MacOS needs a little bit of help understanding the ELF format.
 To solve that, we provide a tiny APE loader you can use on M1 machines.
 
-```
+```sh
 scp ape/ape-m1.c macintosh:
 scp o/aarch64/third_party/ggml/llama.com macintosh:
 ssh macintosh
@@ -179,7 +179,7 @@ sudo cp ape /usr/local/bin/ape
 
 You can run your ELF AARCH64 executable on Apple Silicon as follows:
 
-```
+```sh
 ape ./llama.com
 ```
 
@@ -375,7 +375,7 @@ src
 You normally run the `.com.dbg` file under gdb. If you need to debug the
 `.com` file itself, then you can load the debug symbols independently as
 
-```
+```sh
 gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 ```
 
@@ -405,7 +405,7 @@ Cosmopolitan officially only builds on Linux. However, one highly
 experimental (and currently broken) thing you could try, is building the
 entire cosmo repository from source using the cross9 toolchain.
 
-```
+```sh
 mkdir -p o/third_party
 rm -rf o/third_party/gcc
 wget https://justine.lol/linux-compiler-on-windows/cross9.zip
