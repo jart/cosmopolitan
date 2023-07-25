@@ -25,7 +25,7 @@
 #endif /* !defined TZDIR */
 
 #ifndef TZDEFAULT
-#define TZDEFAULT	"GST"
+#define TZDEFAULT	"GMT"
 #endif /* !defined TZDEFAULT */
 
 #ifndef TZDEFRULES
