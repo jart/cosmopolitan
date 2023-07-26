@@ -5355,22 +5355,11 @@ static void LuaSetConstant(lua_State *L, const char *s, long x) {
   lua_setglobal(L, s);
 }
 
-static char *GetDefaultLuaPath(void) {
-  char *s;
-  size_t i;
-  for (s = 0, i = 0; i < stagedirs.n; ++i) {
-    appendf(&s, "%s/.lua/?.lua;%s/.lua/?/init.lua;", stagedirs.p[i].s,
-            stagedirs.p[i].s);
-  }
-  appends(&s, DEFAULTLUAPATH);
-  return s;
-}
-
 static void LuaStart(void) {
 #ifndef STATIC
   size_t i;
   lua_State *L = GL = luaL_newstate();
-  g_lua_path_default = GetDefaultLuaPath();
+  g_lua_path_default = DEFAULTLUAPATH;
   luaL_openlibs(L);
   for (i = 0; i < ARRAYLEN(kLuaLibs); ++i) {
     luaL_requiref(L, kLuaLibs[i].name, kLuaLibs[i].func, 1);
@@ -5520,7 +5509,6 @@ static void LuaDestroy(void) {
 #ifndef STATIC
   lua_State *L = GL;
   lua_close(L);
-  free(g_lua_path_default);
 #endif
 }
 
