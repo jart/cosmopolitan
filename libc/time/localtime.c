@@ -20,18 +20,19 @@
 __static_yoink("zipos");
 __static_yoink("usr/share/zoneinfo/");
 __static_yoink("usr/share/zoneinfo/Anchorage");
-__static_yoink("usr/share/zoneinfo/Beijing");
 __static_yoink("usr/share/zoneinfo/Berlin");
-__static_yoink("usr/share/zoneinfo/Boulder");
 __static_yoink("usr/share/zoneinfo/Chicago");
+__static_yoink("usr/share/zoneinfo/Denver");
 __static_yoink("usr/share/zoneinfo/GMT");
-__static_yoink("usr/share/zoneinfo/GST");
 __static_yoink("usr/share/zoneinfo/Honolulu");
-__static_yoink("usr/share/zoneinfo/Israel");
-__static_yoink("usr/share/zoneinfo/Japan");
+__static_yoink("usr/share/zoneinfo/Jerusalem");
+__static_yoink("usr/share/zoneinfo/Kolkata");
+__static_yoink("usr/share/zoneinfo/Los_Angeles");
 __static_yoink("usr/share/zoneinfo/London");
-__static_yoink("usr/share/zoneinfo/Melbourne");
 __static_yoink("usr/share/zoneinfo/New_York");
+__static_yoink("usr/share/zoneinfo/Shanghai");
+__static_yoink("usr/share/zoneinfo/Sydney");
+__static_yoink("usr/share/zoneinfo/Tokyo");
 __static_yoink("usr/share/zoneinfo/UTC");
 
 // clang-format off
