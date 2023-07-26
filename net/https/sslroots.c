@@ -18,20 +18,20 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "net/https/https.h"
 
-STATIC_YOINK("zipos");
-STATIC_YOINK("usr/share/ssl/root/");
-STATIC_YOINK("usr/share/ssl/root/amazon.pem");
-STATIC_YOINK("usr/share/ssl/root/certum.pem");
-STATIC_YOINK("usr/share/ssl/root/comodo.pem");
-STATIC_YOINK("usr/share/ssl/root/digicert.pem");
-STATIC_YOINK("usr/share/ssl/root/geotrust.pem");
-STATIC_YOINK("usr/share/ssl/root/globalsign.pem");
-STATIC_YOINK("usr/share/ssl/root/godaddy.pem");
-STATIC_YOINK("usr/share/ssl/root/google.pem");
-STATIC_YOINK("usr/share/ssl/root/isrg.pem");
-STATIC_YOINK("usr/share/ssl/root/quovadis.pem");
-STATIC_YOINK("usr/share/ssl/root/redbean.pem");
-STATIC_YOINK("usr/share/ssl/root/starfield.pem");
-STATIC_YOINK("usr/share/ssl/root/verisign.pem");
+__static_yoink("zipos");
+__static_yoink("usr/share/ssl/root/");
+__static_yoink("usr/share/ssl/root/amazon.pem");
+__static_yoink("usr/share/ssl/root/certum.pem");
+__static_yoink("usr/share/ssl/root/comodo.pem");
+__static_yoink("usr/share/ssl/root/digicert.pem");
+__static_yoink("usr/share/ssl/root/geotrust.pem");
+__static_yoink("usr/share/ssl/root/globalsign.pem");
+__static_yoink("usr/share/ssl/root/godaddy.pem");
+__static_yoink("usr/share/ssl/root/google.pem");
+__static_yoink("usr/share/ssl/root/isrg.pem");
+__static_yoink("usr/share/ssl/root/quovadis.pem");
+__static_yoink("usr/share/ssl/root/redbean.pem");
+__static_yoink("usr/share/ssl/root/starfield.pem");
+__static_yoink("usr/share/ssl/root/verisign.pem");
 
 char ssl_root_support;

@@ -64,7 +64,7 @@ TEST(atanhf, test) {
 
 BENCH(_atanh, bench) {
   volatile double a = .5;
-  EZBENCH2("atanhf", donothing, EXPROPRIATE(_atanhf(a)));
-  EZBENCH2("atanh", donothing, EXPROPRIATE(_atanh(a)));
-  EZBENCH2("atanhl", donothing, EXPROPRIATE(_atanhl(a)));
+  EZBENCH2("atanhf", donothing, __expropriate(_atanhf(a)));
+  EZBENCH2("atanh", donothing, __expropriate(_atanh(a)));
+  EZBENCH2("atanhl", donothing, __expropriate(_atanhl(a)));
 }

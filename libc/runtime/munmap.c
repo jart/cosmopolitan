@@ -39,7 +39,7 @@
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
-static noasan void MunmapShadow(char *p, size_t n) {
+static dontasan void MunmapShadow(char *p, size_t n) {
   intptr_t a, b, x, y;
   KERNTRACE("MunmapShadow(%p, %'zu)", p, n);
   a = ((intptr_t)p >> 3) + 0x7fff8000;
@@ -66,7 +66,7 @@ static noasan void MunmapShadow(char *p, size_t n) {
 // our api supports doing things like munmap(0, 0x7fffffffffff) but some
 // platforms (e.g. openbsd) require that we know the specific intervals
 // or else it returns EINVAL. so we munmap a piecewise.
-static noasan void MunmapImpl(char *p, size_t n) {
+static dontasan void MunmapImpl(char *p, size_t n) {
   char *q;
   size_t m;
   intptr_t a, b, c;
@@ -102,7 +102,7 @@ static noasan void MunmapImpl(char *p, size_t n) {
     q = (char *)a;
     m = MIN(b, c) - a;
     if (!IsWindows()) {
-      _npassert(!sys_munmap(q, m));
+      npassert(!sys_munmap(q, m));
     } else {
       // Handled by UntrackMemoryIntervals() on Windows
     }
@@ -112,11 +112,11 @@ static noasan void MunmapImpl(char *p, size_t n) {
   }
 }
 
-noasan int _Munmap(char *p, size_t n) {
+dontasan int _Munmap(char *p, size_t n) {
   unsigned i;
   char poison;
   intptr_t a, b, x, y;
-  _unassert(!__vforked);
+  unassert(!__vforked);
   if (UNLIKELY(!n)) {
     STRACE("munmap n is 0");
     return einval();

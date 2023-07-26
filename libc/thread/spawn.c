@@ -153,7 +153,7 @@ int _join(struct spawn *th) {
   int rc;
   if (th->tib) {
     // wait for ctid to become zero
-    _npassert(!_wait0(&th->tib->tib_tid, 0));
+    npassert(!_wait0(&th->tib->tib_tid, 0));
     // free thread memory
     free(th->tls);
     rc = munmap(th->stk, GetStackSize());

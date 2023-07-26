@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/rsa.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
@@ -24,7 +25,6 @@
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/profile.h"
-#include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/rsa_internal.h"
 #include "third_party/mbedtls/sha1.h"
 
@@ -1353,8 +1353,8 @@ forceinline unsigned size_greater_than( size_t size, size_t max )
 forceinline unsigned if_int( unsigned cond, unsigned if1, unsigned if0 )
 {
     unsigned mask = all_or_nothing_int( cond );
-    return( ( CONCEAL( "r",  mask ) & if1 ) |
-            ( CONCEAL( "r", ~mask ) & if0 ) );
+    return( ( __conceal( "r",  mask ) & if1 ) |
+            ( __conceal( "r", ~mask ) & if0 ) );
 }
 
 /**

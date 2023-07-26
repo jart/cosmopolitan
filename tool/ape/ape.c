@@ -277,17 +277,17 @@ int _curl(int argc, char *argv[]) {
   mbedtls_ssl_init(&ssl);
   mbedtls_ctr_drbg_init(&drbg);
   mbedtls_ssl_config_init(&conf);
-  _unassert(!mbedtls_ctr_drbg_seed(&drbg, GetSslEntropy, 0, "justine", 7));
-  _unassert(!mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
-                                         MBEDTLS_SSL_TRANSPORT_STREAM,
-                                         MBEDTLS_SSL_PRESET_DEFAULT));
+  unassert(!mbedtls_ctr_drbg_seed(&drbg, GetSslEntropy, 0, "justine", 7));
+  unassert(!mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
+                                        MBEDTLS_SSL_TRANSPORT_STREAM,
+                                        MBEDTLS_SSL_PRESET_DEFAULT));
   mbedtls_ssl_conf_ca_chain(&conf, GetSslRoots(), 0);
   mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &drbg);
 #ifndef NDEBUG
   mbedtls_ssl_conf_dbg(&conf, OnSslDebug, 0);
 #endif
-  _unassert(!mbedtls_ssl_setup(&ssl, &conf));
-  _unassert(!mbedtls_ssl_set_hostname(&ssl, host));
+  unassert(!mbedtls_ssl_setup(&ssl, &conf));
+  unassert(!mbedtls_ssl_set_hostname(&ssl, host));
   mbedtls_ssl_set_bio(&ssl, &sock, TlsSend, 0, TlsRecv);
   if ((ret = mbedtls_ssl_handshake(&ssl))) {
     tinyprint(2, prog, ": ssl negotiation with ", host,
@@ -340,7 +340,7 @@ int _curl(int argc, char *argv[]) {
     i += g;
     switch (t) {
       case kHttpClientStateHeaders:
-        _unassert(g);
+        unassert(g);
         if ((rc = ParseHttpMessage(&msg, p, i)) == -1) {
           tinyprint(2, prog, ": ", host, " sent bad http message\n", NULL);
           exit(1);
@@ -376,7 +376,7 @@ int _curl(int argc, char *argv[]) {
         }
         break;
       case kHttpClientStateBodyLengthed:
-        _unassert(g);
+        unassert(g);
         if (i - hdrlen > paylen) {
           g = hdrlen + paylen - (i - g);
         }

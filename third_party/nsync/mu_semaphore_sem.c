@@ -33,7 +33,7 @@
  * @fileoverview Semaphores w/ POSIX Semaphores API.
  */
 
-#define ASSERT(x) _npassert(x)
+#define ASSERT(x) npassert(x)
 
 struct sem {
 	int64_t id;

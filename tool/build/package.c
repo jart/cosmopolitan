@@ -43,7 +43,7 @@
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/getargs.h"
 
-STATIC_YOINK("realloc");
+__static_yoink("realloc");
 
 /**
  * @fileoverview Build Package Script.

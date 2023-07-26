@@ -34,7 +34,7 @@ struct appendz appendz(char *p) {
   struct appendz z;
   if (p) {
     z.n = malloc_usable_size(p);
-    _unassert(z.n >= W * 2 && !(z.n & (W - 1)));
+    unassert(z.n >= W * 2 && !(z.n & (W - 1)));
     z.i = *(size_t *)(p + z.n - W);
     if (!IsTiny() && W == 8) {
       /*
@@ -43,10 +43,10 @@ struct appendz appendz(char *p) {
        * can be free()'d safely, but they need to be allocated by the
        * append library, because we write a special value to the end.
        */
-      _unassert((z.i >> 48) == APPEND_COOKIE);
+      unassert((z.i >> 48) == APPEND_COOKIE);
       z.i &= 0x0000ffffffffffff;
     }
-    _unassert(z.n >= z.i);
+    unassert(z.n >= z.i);
   } else {
     z.i = 0;
     z.n = 0;

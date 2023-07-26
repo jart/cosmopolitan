@@ -31,7 +31,7 @@
 // Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
 textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   int64_t rc, proc, handle;
-  _unassert(!(flags & ~O_CLOEXEC));
+  unassert(!(flags & ~O_CLOEXEC));
 
   __fds_lock();
 

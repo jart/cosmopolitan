@@ -81,7 +81,7 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     if (!ok && GetLastError() == kNtErrorIoPending) ok = true;
     if (ok) ok = GetOverlappedResult(fd->handle, &overlap, &got, true);
     // restore file pointer which windows clobbers, even on error
-    _unassert(SetFilePointerEx(fd->handle, position, 0, SEEK_SET));
+    unassert(SetFilePointerEx(fd->handle, position, 0, SEEK_SET));
   }
   if (ok) {
     return got;

@@ -93,8 +93,8 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
 void __defer(void *rbp, void *fn, void *arg) {
   struct StackFrame *f, *frame = rbp;
   f = __builtin_frame_address(0);
-  _unassert(f->next == frame);
-  _unassert(PointerNotOwnedByParentStackFrame(f, frame, arg));
+  unassert(f->next == frame);
+  unassert(PointerNotOwnedByParentStackFrame(f, frame, arg));
   DeferFunction(frame, fn, arg);
 }
 

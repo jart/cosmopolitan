@@ -14,4 +14,4 @@ LICENSE
 
 LOCAL CHANGES
 
-    - Use _unassert() macro for undefined behavior on failed assertions
+    - Use unassert() macro for undefined behavior on failed assertions

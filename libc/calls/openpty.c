@@ -66,8 +66,8 @@ static int openpty_impl(int *mfd, int *sfd, char *name,
   *mfd = m;
   *sfd = s;
   if (name) strcpy(name, t.sname);
-  if (tio) _npassert(!tcsetattr(s, TCSAFLUSH, tio));
-  if (wsz) _npassert(!tcgetwinsize(s, wsz));
+  if (tio) npassert(!tcsetattr(s, TCSAFLUSH, tio));
+  if (wsz) npassert(!tcgetwinsize(s, wsz));
   return 0;
 OnError:
   if (m != -1) sys_close(m);

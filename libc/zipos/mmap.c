@@ -47,8 +47,8 @@
  *     it does not need to be 64kb aligned.
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
-noasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
-                          struct ZiposHandle *h, int64_t off) {
+dontasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
+                            struct ZiposHandle *h, int64_t off) {
   if (!(flags & MAP_PRIVATE) ||
       (flags & ~(MAP_PRIVATE | MAP_FILE | MAP_FIXED | MAP_FIXED_NOREPLACE)) ||
       (!!(flags & MAP_FIXED) ^ !!(flags & MAP_FIXED_NOREPLACE))) {

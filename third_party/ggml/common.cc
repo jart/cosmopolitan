@@ -45,7 +45,7 @@
 #include "third_party/libcxx/sstream"
 #include "third_party/libcxx/string"
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\

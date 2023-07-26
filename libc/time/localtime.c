@@ -17,28 +17,29 @@
 #include "libc/time/tz.internal.h"
 #include "libc/time/tzfile.internal.h"
 
-STATIC_YOINK("zipos");
-STATIC_YOINK("usr/share/zoneinfo/");
-STATIC_YOINK("usr/share/zoneinfo/America/");
-STATIC_YOINK("usr/share/zoneinfo/America/Anchorage");
-STATIC_YOINK("usr/share/zoneinfo/America/Chicago");
-STATIC_YOINK("usr/share/zoneinfo/America/Denver");
-STATIC_YOINK("usr/share/zoneinfo/America/Los_Angeles");
-STATIC_YOINK("usr/share/zoneinfo/America/New_York");
-STATIC_YOINK("usr/share/zoneinfo/Asia/");
-STATIC_YOINK("usr/share/zoneinfo/Asia/Jerusalem");
-STATIC_YOINK("usr/share/zoneinfo/Asia/Kolkata");
-STATIC_YOINK("usr/share/zoneinfo/Asia/Shanghai");
-STATIC_YOINK("usr/share/zoneinfo/Asia/Tokyo");
-STATIC_YOINK("usr/share/zoneinfo/Australia/");
-STATIC_YOINK("usr/share/zoneinfo/Australia/Sydney");
-STATIC_YOINK("usr/share/zoneinfo/Europe/");
-STATIC_YOINK("usr/share/zoneinfo/Europe/Berlin");
-STATIC_YOINK("usr/share/zoneinfo/Europe/London");
-STATIC_YOINK("usr/share/zoneinfo/GMT");
-STATIC_YOINK("usr/share/zoneinfo/Pacific/");
-STATIC_YOINK("usr/share/zoneinfo/Pacific/Honolulu");
-STATIC_YOINK("usr/share/zoneinfo/UTC");
+__static_yoink("zipos");
+__static_yoink("usr/share/zoneinfo/");
+__static_yoink("usr/share/zoneinfo/America/");
+__static_yoink("usr/share/zoneinfo/America/Anchorage");
+__static_yoink("usr/share/zoneinfo/America/Chicago");
+__static_yoink("usr/share/zoneinfo/America/Denver");
+__static_yoink("usr/share/zoneinfo/America/Los_Angeles");
+__static_yoink("usr/share/zoneinfo/America/New_York");
+__static_yoink("usr/share/zoneinfo/Asia/");
+__static_yoink("usr/share/zoneinfo/Asia/Jerusalem");
+__static_yoink("usr/share/zoneinfo/Asia/Kolkata");
+__static_yoink("usr/share/zoneinfo/Asia/Shanghai");
+__static_yoink("usr/share/zoneinfo/Asia/Tokyo");
+__static_yoink("usr/share/zoneinfo/Australia/");
+__static_yoink("usr/share/zoneinfo/Australia/Sydney");
+__static_yoink("usr/share/zoneinfo/Europe/");
+__static_yoink("usr/share/zoneinfo/Europe/Berlin");
+__static_yoink("usr/share/zoneinfo/Europe/London");
+__static_yoink("usr/share/zoneinfo/GMT");
+__static_yoink("usr/share/zoneinfo/Pacific/");
+__static_yoink("usr/share/zoneinfo/Pacific/Honolulu");
+__static_yoink("usr/share/zoneinfo/UTC");
+
 // clang-format off
 /* Convert timestamp from time_t to struct tm.  */
 /*

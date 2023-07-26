@@ -35,9 +35,9 @@ TEST(_bitreverse, test) {
 
 BENCH(_bitreverse, bench) {
   EZBENCH2("_bitreverse8", donothing,
-           EXPROPRIATE(_bitreverse8(CONCEAL("r", 123))));
+           __expropriate(_bitreverse8(__conceal("r", 123))));
   EZBENCH2("_bitreverse32", donothing,
-           EXPROPRIATE(_bitreverse32(CONCEAL("r", 123))));
+           __expropriate(_bitreverse32(__conceal("r", 123))));
   EZBENCH2("_bitreverse64", donothing,
-           EXPROPRIATE(_bitreverse64(CONCEAL("r", 123))));
+           __expropriate(_bitreverse64(__conceal("r", 123))));
 }

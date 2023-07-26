@@ -31,7 +31,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
-STATIC_YOINK("strerror_wr");
+__static_yoink("strerror_wr");
 
 /**
  * Handles failure of CHECK_xx() macros.

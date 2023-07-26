@@ -52,7 +52,7 @@
 #include "third_party/dlmalloc/dlmalloc.h"
 #ifdef __x86_64__
 
-STATIC_YOINK("_init_asan");
+__static_yoink("_init_asan");
 
 #if IsModeDbg()
 // MODE=dbg
@@ -342,7 +342,7 @@ static char *__asan_hexcpy(char *p, uint64_t x, uint8_t k) {
 
 static void __asan_exit(void) {
   kprintf("your asan runtime needs\n"
-          "\tSTATIC_YOINK(\"__die\");\n"
+          "\t__static_yoink(\"__die\");\n"
           "in order to show you backtraces\n");
   _Exitr(99);
 }
@@ -457,7 +457,7 @@ static struct AsanFault __asan_checka(const signed char *s, long ndiv8) {
  * This is normally abstracted by the compiler. In some cases, it may be
  * desirable to perform an ASAN memory safety check explicitly, e.g. for
  * system call wrappers that need to vet memory passed to the kernel, or
- * string library routines that use the `noasan` keyword due to compiler
+ * string library routines that use the `dontasan` keyword due to compiler
  * generated ASAN being too costly. This function is fast especially for
  * large memory ranges since this takes a few picoseconds for each byte.
  *
@@ -766,11 +766,11 @@ static void __asan_report_memory_origin_image(intptr_t a, int z) {
       kprintf("\tunknown please supply .com.dbg symbols or set COMDBG\n");
     }
   } else {
-    kprintf("\tunknown please STATIC_YOINK(\"GetSymbolTable\");\n");
+    kprintf("\tunknown please __static_yoink(\"GetSymbolTable\");\n");
   }
 }
 
-static noasan void __asan_onmemory(void *x, void *y, size_t n, void *a) {
+static dontasan void __asan_onmemory(void *x, void *y, size_t n, void *a) {
   const unsigned char *p = x;
   struct ReportOriginHeap *t = a;
   if ((p <= t->a && t->a < p + n) ||
@@ -790,7 +790,7 @@ static void __asan_report_memory_origin_heap(const unsigned char *a, int z) {
     t.z = z;
     _weaken(malloc_inspect_all)(__asan_onmemory, &t);
   } else {
-    kprintf("\tunknown please STATIC_YOINK(\"malloc_inspect_all\");\n");
+    kprintf("\tunknown please __static_yoink(\"malloc_inspect_all\");\n");
   }
 }
 
@@ -1117,7 +1117,7 @@ int __asan_print_trace(void *p) {
     kprintf("\n%*lx %s", 12, e->bt.p[i],
             _weaken(GetSymbolByAddr)
                 ? _weaken(GetSymbolByAddr)(e->bt.p[i])
-                : "please STATIC_YOINK(\"GetSymbolByAddr\")");
+                : "please __static_yoink(\"GetSymbolByAddr\")");
   }
   return 0;
 }
@@ -1482,7 +1482,8 @@ static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
 static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_shadow_mapping(&_mmi, 0);
   __asan_map_shadow(GetStackAddr(), GetStackSize());
-  __asan_poison((void *)GetStackAddr(), APE_GUARDSIZE, kAsanStackOverflow);
+  __asan_poison((void *)GetStackAddr(), getauxval(AT_PAGESZ),
+                kAsanStackOverflow);
 }
 
 forceinline ssize_t __write_str(const char *s) {
@@ -1509,7 +1510,7 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   __asan_shadow_existing_mappings();
   __asan_map_shadow((uintptr_t)__executable_start, _end - __executable_start);
   __asan_map_shadow(0, 4096);
-  __asan_poison(0, APE_GUARDSIZE, kAsanNullPage);
+  __asan_poison(0, getauxval(AT_PAGESZ), kAsanNullPage);
   if (!IsWindows()) {
     sys_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
   }

@@ -656,8 +656,8 @@ void *NewSafeBuffer(size_t n) {
   char *p;
   long pagesize = sysconf(_SC_PAGESIZE);
   size_t m = ROUNDUP(n, pagesize);
-  _npassert((p = valloc(m + pagesize)));
-  _npassert(!mprotect(p + m, pagesize, PROT_NONE));
+  npassert((p = valloc(m + pagesize)));
+  npassert(!mprotect(p + m, pagesize, PROT_NONE));
   return p;
 }
 
@@ -666,7 +666,7 @@ void FreeSafeBuffer(void *p) {
   long pagesize = sysconf(_SC_PAGESIZE);
   size_t n = malloc_usable_size(p);
   size_t m = ROUNDDOWN(n, pagesize);
-  _npassert(!mprotect(p, m, PROT_READ | PROT_WRITE));
+  npassert(!mprotect(p, m, PROT_READ | PROT_WRITE));
   free(p);
 }
 
@@ -1947,9 +1947,9 @@ int main(int argc, char *argv[]) {
     if (closefrom(0))
       for (int i = 0; i < 256; ++i)  //
         close(i);
-    _npassert(0 == open(_PATH_DEVNULL, O_RDWR));
-    _npassert(1 == dup(0));
-    _npassert(2 == open("turfwar.log", O_CREAT | O_WRONLY | O_APPEND, 0644));
+    npassert(0 == open(_PATH_DEVNULL, O_RDWR));
+    npassert(1 == dup(0));
+    npassert(2 == open("turfwar.log", O_CREAT | O_WRONLY | O_APPEND, 0644));
   }
 
   LOG("Generating Hilbert Curve...\n");

@@ -44,7 +44,7 @@ textwindows int WSARecv(
     // Use NULL for this parameter if the lpOverlapped parameter is not
     // NULL to avoid potentially erroneous results. This parameter can
     // be NULL only if the lpOverlapped parameter is not NULL.
-    _unassert(!opt_out_lpNumberOfBytesRecvd);
+    unassert(!opt_out_lpNumberOfBytesRecvd);
   }
 #if defined(SYSDEBUG) && _NTTRACE
   uint32_t NumberOfBytesRecvd;

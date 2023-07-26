@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
-static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
+static dontasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
   uint64_t w;
   for (; i + 8 < n; i += 8) {
     w = *(uint64_t *)(s + i);
@@ -43,7 +43,7 @@ static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
  * @return byte length
  * @asyncsignalsafe
  */
-noasan size_t strnlen(const char *s, size_t n) {
+dontasan size_t strnlen(const char *s, size_t n) {
   size_t i;
   if (IsAsan() && n) __asan_verify(s, 1);
   for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
@@ -53,7 +53,7 @@ noasan size_t strnlen(const char *s, size_t n) {
   for (;; ++i) {
     if (i == n || !s[i]) break;
   }
-  _unassert(i == n || (i < n && !s[i]));
+  unassert(i == n || (i < n && !s[i]));
   if (IsAsan()) __asan_verify(s, i);
   return i;
 }

@@ -13,7 +13,7 @@
  *===----------------------------------------------------------------------===
  */
 
-STATIC_YOINK("huge_compiler_rt_license");
+__static_yoink("huge_compiler_rt_license");
 
 #include "libc/literal.h"
 #include "third_party/compiler_rt/int_lib.h"

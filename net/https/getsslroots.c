@@ -25,7 +25,7 @@
 #include "libc/thread/thread.h"
 #include "third_party/mbedtls/x509_crt.h"
 
-STATIC_YOINK("ssl_root_support");
+__static_yoink("ssl_root_support");
 
 #define SSL_ROOT_DIR "/zip/usr/share/ssl/root"
 

@@ -13,4 +13,4 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");

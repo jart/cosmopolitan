@@ -64,12 +64,12 @@ static wontreturn void __arena_die(void) {
 }
 
 forceinline void __arena_check(void) {
-  _unassert(__arena.depth);
+  unassert(__arena.depth);
 }
 
 forceinline void __arena_check_pointer(void *p) {
-  _unassert(BASE + __arena.offset[__arena.depth - 1] <= (uintptr_t)p &&
-            (uintptr_t)p < BASE + __arena.offset[__arena.depth]);
+  unassert(BASE + __arena.offset[__arena.depth - 1] <= (uintptr_t)p &&
+           (uintptr_t)p < BASE + __arena.offset[__arena.depth]);
 }
 
 forceinline bool __arena_is_arena_pointer(void *p) {
@@ -322,7 +322,7 @@ void __arena_push(void) {
   if (!__arena.depth) {
     __arena_install();
   } else {
-    _unassert(__arena.depth < ARRAYLEN(__arena.offset) - 1);
+    unassert(__arena.depth < ARRAYLEN(__arena.offset) - 1);
   }
   __arena.offset[__arena.depth + 1] = __arena.offset[__arena.depth];
   ++__arena.depth;

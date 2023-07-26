@@ -32,7 +32,8 @@ static inline const char *strchrnul_pure(const char *s, int c) {
 
 #ifdef __x86_64__
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
+dontasan static inline const char *strchrnul_sse(const char *s,
+                                                 unsigned char c) {
   unsigned k;
   unsigned m;
   xmm_t v, *p;
@@ -52,7 +53,7 @@ noasan static inline const char *strchrnul_sse(const char *s, unsigned char c) {
 }
 #endif
 
-noasan static const char *strchrnul_x64(const char *p, uint64_t c) {
+dontasan static const char *strchrnul_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
@@ -101,7 +102,7 @@ char *strchrnul(const char *s, int c) {
   } else {
     r = strchrnul_pure(s, c);
   }
-  _unassert((*r & 255) == (c & 255) || !*r);
+  unassert((*r & 255) == (c & 255) || !*r);
   return (char *)r;
 #else
   char *r;

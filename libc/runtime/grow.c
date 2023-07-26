@@ -38,9 +38,9 @@ bool __grow(void *pp, size_t *capacity, size_t itemsize, size_t extra) {
   size_t t1, t2;
   extra += GUARANTEE_TERMINATOR;
   p = (void **)pp;
-  _unassert(itemsize);
-  _unassert((*p && *capacity) || (!*p && !*capacity));
-  _unassert(!_isheap(*p) || ((intptr_t)*p & 15) == 0);
+  unassert(itemsize);
+  unassert((*p && *capacity) || (!*p && !*capacity));
+  unassert(!_isheap(*p) || ((intptr_t)*p & 15) == 0);
   p1 = _isheap(*p) ? *p : NULL;
   p2 = NULL;
   n1 = *capacity;

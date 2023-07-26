@@ -35,7 +35,7 @@
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/regex/regex.h"
 
-STATIC_YOINK("strerror_wr");
+__static_yoink("strerror_wr");
 
 // options used: fhem
 // letters not used: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdgijklnopqrstuvwxyz

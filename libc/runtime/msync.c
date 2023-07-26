@@ -43,7 +43,7 @@ int msync(void *addr, size_t size, int flags) {
   int rc;
   BEGIN_CANCELLATION_POINT;
 
-  _unassert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
+  unassert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
   if (!IsWindows()) {
     rc = sys_msync(addr, size, flags);
   } else {

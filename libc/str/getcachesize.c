@@ -52,8 +52,8 @@ static unsigned _getcachesize_cpuid4(int type, int level) {
  * @return size in bytes, or 0 if unknown
  */
 unsigned _getcachesize(int type, int level) {
-  _unassert(1 <= type && type <= 3);
-  _unassert(level >= 1);
+  unassert(1 <= type && type <= 3);
+  unassert(level >= 1);
   return _getcachesize_cpuid4(type, level);
 }
 

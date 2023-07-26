@@ -25,8 +25,8 @@
 #include "libc/str/utf16.h"
 
 /* 34x speedup for ascii */
-static inline noasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
-                                               const char *src, axdx_t r) {
+static inline dontasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
+                                                 const char *src, axdx_t r) {
   uint8_t v1[16], v2[16], vz[16];
   memset(vz, 0, 16);
   while (r.ax + 16 < dstsize) {

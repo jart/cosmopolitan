@@ -80,11 +80,11 @@ static struct timespec GetNanosleepLatency(void) {
   if (!(nanos = g_nanosleep_latency)) {
     BLOCK_CANCELLATIONS;
     for (cgt = __clock_gettime_get(0);;) {
-      _npassert(!cgt(CLOCK_REALTIME_PRECISE, &x));
+      npassert(!cgt(CLOCK_REALTIME_PRECISE, &x));
       rc = sys_clock_nanosleep(CLOCK_REALTIME, 0, &w, 0);
-      _npassert(!rc || rc == EINTR);
+      npassert(!rc || rc == EINTR);
       if (!rc) {
-        _npassert(!cgt(CLOCK_REALTIME_PRECISE, &y));
+        npassert(!cgt(CLOCK_REALTIME_PRECISE, &y));
         nanos = timespec_tonanos(timespec_sub(y, x));
         g_nanosleep_latency = nanos;
         break;
@@ -115,10 +115,10 @@ static errno_t SpinNanosleep(int clock, int flags, const struct timespec *req,
     return rc;
   }
   cgt = __clock_gettime_get(0);
-  _npassert(!cgt(CLOCK_REALTIME, &start));
+  npassert(!cgt(CLOCK_REALTIME, &start));
   for (;;) {
     sched_yield();
-    _npassert(!cgt(CLOCK_REALTIME, &now));
+    npassert(!cgt(CLOCK_REALTIME, &now));
     if (flags & TIMER_ABSTIME) {
       if (timespec_cmp(now, *req) >= 0) {
         return 0;

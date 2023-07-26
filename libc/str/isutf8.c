@@ -51,7 +51,7 @@ static const char kUtf8Dispatch[] = {
  *
  * @param size if -1 implies strlen
  */
-noasan bool _isutf8(const void *data, size_t size) {
+dontasan bool _isutf8(const void *data, size_t size) {
   long c;
   unsigned m;
   const char *p, *e;

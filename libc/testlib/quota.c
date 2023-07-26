@@ -34,7 +34,7 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
-static noasan noubsan relegated uint64_t CountMappedBytes(void) {
+static dontasan dontubsan relegated uint64_t CountMappedBytes(void) {
   size_t i;
   uint64_t x, y;
   for (x = i = 0; i < _mmi.i; ++i) {

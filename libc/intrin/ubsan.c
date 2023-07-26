@@ -204,7 +204,7 @@ static wontreturn void __ubsan_unreachable(void) {
 
 static void __ubsan_exit(void) {
   kprintf("your ubsan runtime needs\n"
-          "\tSTATIC_YOINK(\"__die\");\n"
+          "\t__static_yoink(\"__die\");\n"
           "in order to show you backtraces\n");
   _Exitr(99);
 }

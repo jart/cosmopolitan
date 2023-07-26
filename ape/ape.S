@@ -610,7 +610,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.4\"\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.5\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
@@ -717,8 +717,8 @@ emush:	.ascii	"\n@\n#'\"\n"
 	.previous
 //	...
 //	decentralized section (.emush)
-//	- STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
-//	- STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
+//	- __static_yoink("blink_linux_aarch64");  // for raspberry pi
+//	- __static_yoink("blink_xnu_aarch64");    // is apple silicon
 //	...
         .section .emushepilogue,"a",@progbits
 	.ascii	"echo \"$0: this ape binary lacks $m support\" >&2\n"
@@ -818,7 +818,7 @@ ape.ident:
 	.long	1
 1:	.asciz	"APE"
 2:	.balign	4
-3:	.long	104000000
+3:	.long	105000000
 4:	.size	ape.ident,.-ape.ident
 	.type	ape.ident,@object
 	.previous

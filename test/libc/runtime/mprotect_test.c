@@ -28,6 +28,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -116,9 +117,9 @@ void TearDown(void) {
 }
 
 TEST(mprotect, testOkMemory) {
-  char *p = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
+  char *p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   p[0] = 0;
-  ASSERT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ | PROT_WRITE));
+  ASSERT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
   p[0] = 1;
   EXPECT_EQ(1, p[0]);
   EXPECT_FALSE(gotsegv);
@@ -127,19 +128,19 @@ TEST(mprotect, testOkMemory) {
 
 TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
   volatile char *p;
-  p = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
+  p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   EXPECT_FALSE(gotsegv);
   p[0] = 1;
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ));
   _missingno(p[0]);
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
   p[0] = 2;
   EXPECT_TRUE(gotsegv | gotbusted);
   EXPECT_EQ(1, p[0]);
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ | PROT_WRITE));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }
 
 TEST(mprotect, testExecOnly_canExecute) {
@@ -159,33 +160,34 @@ TEST(mprotect, testExecOnly_canExecute) {
 
 TEST(mprotect, testProtNone_cantEvenRead) {
   volatile char *p;
-  p = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_NONE));
+  p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_NONE));
   _missingno(p[0]);
   EXPECT_TRUE(gotsegv | gotbusted);
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ | PROT_WRITE));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }
 
 TEST(mprotect, testExecJit_actuallyWorks) {
-  int (*p)(void) = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
+  int (*p)(void) = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   memcpy(p, kRet31337, sizeof(kRet31337));
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_EXEC));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_EXEC));
   EXPECT_EQ(31337, p());
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ | PROT_WRITE));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }
 
 TEST(mprotect, testRwxMap_vonNeumannRules) {
   if (IsOpenbsd()) return;     // boo
   if (IsXnuSilicon()) return;  // boo
-  int (*p)(void) = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
+  int (*p)(void) = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   memcpy(p, kRet31337, sizeof(kRet31337));
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ | PROT_WRITE | PROT_EXEC));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ),
+                         PROT_READ | PROT_WRITE | PROT_EXEC));
   EXPECT_EQ(31337, p());
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
-  EXPECT_NE(-1, mprotect(p, APE_GUARDSIZE, PROT_READ | PROT_WRITE));
+  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }
 
 TEST(mprotect, testExecuteFlatFileMapOpenedAsReadonly) {
@@ -220,13 +222,13 @@ TEST(mprotect, testFileMap_canChangeToExecWhileOpenInRdwrMode) {
 }
 
 TEST(mprotect, testBadProt_failsEinval) {
-  volatile char *p = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
+  volatile char *p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   EXPECT_EQ(-1, mprotect(p, 9999, -1));
   EXPECT_EQ(EINVAL, errno);
 }
 
 TEST(mprotect, testZeroSize_doesNothing) {
-  volatile char *p = gc(memalign(APE_GUARDSIZE, APE_GUARDSIZE));
+  volatile char *p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   EXPECT_NE(-1, mprotect(p, 0, PROT_READ));
   p[0] = 1;
   EXPECT_FALSE(gotsegv);

@@ -37,13 +37,13 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
-STATIC_YOINK("zipos");                       // for symtab
-STATIC_YOINK("__die");                       // for backtracing
-STATIC_YOINK("ShowBacktrace");               // for backtracing
-STATIC_YOINK("GetSymbolTable");              // for backtracing
-STATIC_YOINK("PrintBacktraceUsingSymbols");  // for backtracing
-STATIC_YOINK("malloc_inspect_all");          // for asan memory origin
-STATIC_YOINK("GetSymbolByAddr");             // for asan memory origin
+__static_yoink("zipos");                       // for symtab
+__static_yoink("__die");                       // for backtracing
+__static_yoink("ShowBacktrace");               // for backtracing
+__static_yoink("GetSymbolTable");              // for backtracing
+__static_yoink("PrintBacktraceUsingSymbols");  // for backtracing
+__static_yoink("malloc_inspect_all");          // for asan memory origin
+__static_yoink("GetSymbolByAddr");             // for asan memory origin
 
 struct CrashHandler {
   int sig;
@@ -147,8 +147,8 @@ void ShowCrashReports(void) {
     ss.ss_size = GetStackSize();
     // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
     // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
-    _npassert((ss.ss_sp = _mapanon(GetStackSize())));
-    _npassert(!sigaltstack(&ss, 0));
+    npassert((ss.ss_sp = _mapanon(GetStackSize())));
+    npassert(!sigaltstack(&ss, 0));
   }
   InstallCrashHandler(SIGQUIT, __got_sigquit, ef);  // ctrl+\ aka ctrl+break
   InstallCrashHandler(SIGFPE, __got_sigfpe, ef);    // 1 / 0

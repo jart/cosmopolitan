@@ -270,7 +270,7 @@ static int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
       }
       buf[len++] = alphabet[digit];
     } while (value);
-    _npassert(count <= BUFFER_SIZE);
+    npassert(count <= BUFFER_SIZE);
   }
   return __fmt_ntoa_format(out, arg, buf, len, neg, log2base, prec, width,
                            flags, alphabet);

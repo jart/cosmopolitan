@@ -82,8 +82,7 @@
 #else
 #define APE_STACKSIZE 4194304 /* default 4mb stack */
 #endif
-#define APE_PAGESIZE  0x10000 /* i386+ */
-#define APE_GUARDSIZE 0x4000  /* b/c apple m1 */
+#define APE_PAGESIZE 0x10000 /* i386+ */
 
 #define BUFSIZ     0x1000 /* best stdio default */
 #define CHAR_BIT   8      /* b/c von neumann */

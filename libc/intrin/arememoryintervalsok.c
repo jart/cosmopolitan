@@ -19,7 +19,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
-noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
+dontasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
   /* asan runtime depends on this function */
   int i;
   size_t wantsize;

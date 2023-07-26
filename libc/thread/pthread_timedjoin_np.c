@@ -58,7 +58,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() does not refer to a joinable thread."
   //                                  ──Quoth POSIX.1-2017
-  _unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
+  unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
   if (!(rc = _wait0(&pt->tib->tib_tid, abstime))) {
     pthread_spin_lock(&_pthread_lock);
     dll_remove(&_pthread_list, &pt->list);

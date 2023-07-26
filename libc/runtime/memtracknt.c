@@ -23,14 +23,14 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 
-static inline noasan void *GetFrameAddr(int f) {
+static inline dontasan void *GetFrameAddr(int f) {
   intptr_t a;
   a = f;
   a *= FRAMESIZE;
   return (void *)a;
 }
 
-noasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
+dontasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
   int i;
   for (i = l; i <= r; ++i) {
     UnmapViewOfFile(GetFrameAddr(mm->p[i].x));

@@ -54,7 +54,7 @@
  *
  * If your main() source file has this statement:
  *
- *     STATIC_YOINK("zipos");
+ *     __static_yoink("zipos");
  *
  * Then you can read zip assets by adding a `"/zip/..."` prefix to `file`, e.g.
  *

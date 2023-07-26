@@ -50,7 +50,7 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 #if defined(MBEDTLS_PLATFORM_C)
 static mbedtls_platform_context platform_ctx;

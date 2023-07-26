@@ -573,29 +573,30 @@ TEST(strtol, invalidHex_consistentWithBsd2) {
 }
 
 BENCH(atoi, bench) {
-  EZBENCH2("atoi 10⁸", donothing, EXPROPRIATE(atoi(VEIL("r", "100000000"))));
+  EZBENCH2("atoi 10⁸", donothing,
+           __expropriate(atoi(__veil("r", "100000000"))));
   EZBENCH2("strtol 10⁸", donothing,
-           EXPROPRIATE(strtol(VEIL("r", "100000000"), 0, 10)));
+           __expropriate(strtol(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("strtoul 10⁸", donothing,
-           EXPROPRIATE(strtol(VEIL("r", "100000000"), 0, 10)));
+           __expropriate(strtol(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("wcstol 10⁸", donothing,
-           EXPROPRIATE(wcstol(VEIL("r", L"100000000"), 0, 10)));
+           __expropriate(wcstol(__veil("r", L"100000000"), 0, 10)));
   EZBENCH2("wcstoul 10⁸", donothing,
-           EXPROPRIATE(wcstol(VEIL("r", L"100000000"), 0, 10)));
+           __expropriate(wcstol(__veil("r", L"100000000"), 0, 10)));
   EZBENCH2("strtoimax 10⁸", donothing,
-           EXPROPRIATE(strtoimax(VEIL("r", "100000000"), 0, 10)));
+           __expropriate(strtoimax(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("strtoumax 10⁸", donothing,
-           EXPROPRIATE(strtoimax(VEIL("r", "100000000"), 0, 10)));
+           __expropriate(strtoimax(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("wcstoimax 10⁸", donothing,
-           EXPROPRIATE(wcstoimax(VEIL("r", L"100000000"), 0, 10)));
+           __expropriate(wcstoimax(__veil("r", L"100000000"), 0, 10)));
   EZBENCH2("wcstoumax 10⁸", donothing,
-           EXPROPRIATE(wcstoimax(VEIL("r", L"100000000"), 0, 10)));
+           __expropriate(wcstoimax(__veil("r", L"100000000"), 0, 10)));
   EZBENCH2("strtoi128 10⁸", donothing,
-           EXPROPRIATE(strtoi128(VEIL("r", "100000000"), 0, 10)));
+           __expropriate(strtoi128(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("strtou128 10⁸", donothing,
-           EXPROPRIATE(strtoi128(VEIL("r", "100000000"), 0, 10)));
+           __expropriate(strtoi128(__veil("r", "100000000"), 0, 10)));
   EZBENCH2("wcstoi128 10⁸", donothing,
-           EXPROPRIATE(wcstoi128(VEIL("r", L"100000000"), 0, 10)));
+           __expropriate(wcstoi128(__veil("r", L"100000000"), 0, 10)));
   EZBENCH2("wcstou128 10⁸", donothing,
-           EXPROPRIATE(wcstoi128(VEIL("r", L"100000000"), 0, 10)));
+           __expropriate(wcstoi128(__veil("r", L"100000000"), 0, 10)));
 }

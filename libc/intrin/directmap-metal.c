@@ -32,15 +32,15 @@
 
 static uint64_t sys_mmap_metal_break;
 
-noasan static struct DirectMap bad_mmap(void) {
+dontasan static struct DirectMap bad_mmap(void) {
   struct DirectMap res;
   res.addr = (void *)-1;
   res.maphandle = -1;
   return res;
 }
 
-noasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
-                                       int flags, int fd, int64_t off) {
+dontasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
+                                         int flags, int fd, int64_t off) {
   /* asan runtime depends on this function */
   size_t i;
   struct mman *mm;

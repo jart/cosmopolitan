@@ -32,7 +32,7 @@
 #include "libc/zipos/zipos.internal.h"
 
 #ifdef __x86_64__
-STATIC_YOINK(APE_COM_NAME);
+__static_yoink(APE_COM_NAME);
 #endif
 
 static uint64_t __zipos_get_min_offset(const uint8_t *base,

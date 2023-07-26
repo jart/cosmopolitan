@@ -263,14 +263,14 @@ void RequireRoot(void) {
 
 void ListenForTerm(void) {
   struct sigaction sa = {.sa_handler = OnTerm};
-  _npassert(!sigaction(SIGTERM, &sa, 0));
-  _npassert(!sigaction(SIGHUP, &sa, 0));
-  _npassert(!sigaction(SIGINT, &sa, 0));
+  npassert(!sigaction(SIGTERM, &sa, 0));
+  npassert(!sigaction(SIGHUP, &sa, 0));
+  npassert(!sigaction(SIGINT, &sa, 0));
 }
 
 void AutomaticallyHarvestZombies(void) {
   struct sigaction sa = {.sa_handler = SIG_IGN, .sa_flags = SA_NOCLDWAIT};
-  _npassert(!sigaction(SIGCHLD, &sa, 0));
+  npassert(!sigaction(SIGCHLD, &sa, 0));
 }
 
 void FindFirewall(void) {
@@ -305,9 +305,9 @@ void Daemonize(void) {
 
 void UseLog(void) {
   if (g_logfd > 0) {
-    _npassert(dup2(g_logfd, 2) == 2);
+    npassert(dup2(g_logfd, 2) == 2);
     if (g_logfd != 2) {
-      _npassert(!close(g_logfd));
+      npassert(!close(g_logfd));
     }
   }
 }
@@ -338,7 +338,7 @@ void WritePid(void) {
     LOG("error: open(%#s) failed: %s", g_pidname, strerror(errno));
     _Exit(4);
   }
-  _npassert((rc = pread(fd, buf, 11, 0)) != -1);
+  npassert((rc = pread(fd, buf, 11, 0)) != -1);
   if (rc) {
     pid = atoi(buf);
     LOG("killing old blackholed process %d", pid);
@@ -358,9 +358,9 @@ void WritePid(void) {
     }
   }
   FormatInt32(buf, getpid());
-  _npassert(!ftruncate(fd, 0));
-  _npassert((rc = pwrite(fd, buf, strlen(buf), 0)) == strlen(buf));
-  _npassert(!close(fd));
+  npassert(!ftruncate(fd, 0));
+  npassert((rc = pwrite(fd, buf, strlen(buf), 0)) == strlen(buf));
+  npassert(!close(fd));
 }
 
 bool IsMyIp(uint32_t ip) {

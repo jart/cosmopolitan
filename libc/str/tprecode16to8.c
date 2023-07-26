@@ -27,8 +27,8 @@
 static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
 
 /* 10x speedup for ascii */
-static noasan axdx_t tprecode16to8_sse2(char *dst, size_t dstsize,
-                                        const char16_t *src, axdx_t r) {
+static dontasan axdx_t tprecode16to8_sse2(char *dst, size_t dstsize,
+                                          const char16_t *src, axdx_t r) {
   int16_t v1[8], v2[8], v3[8], vz[8];
   memset(vz, 0, 16);
   while (r.ax + 8 < dstsize) {

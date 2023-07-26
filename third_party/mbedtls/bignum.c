@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/bignum.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bswap.h"
@@ -23,7 +24,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/chk.h"
 #include "third_party/mbedtls/common.h"
@@ -291,7 +291,7 @@ int mbedtls_mpi_safe_cond_assign(mbedtls_mpi *X,
     for (i = 0; i < Y->n; i++)
         X->p[i] = Select(Y->p[i], X->p[i], -assign);
     for (i = Y->n; i < X->n; i++)
-        X->p[i] &= CONCEAL("r", assign - 1);
+        X->p[i] &= __conceal("r", assign - 1);
 cleanup:
     return( ret );
 }

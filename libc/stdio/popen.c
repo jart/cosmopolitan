@@ -73,26 +73,26 @@ FILE *popen(const char *cmdline, const char *mode) {
   if ((f = fdopen(pipefds[dir], mode))) {
     switch ((pid = fork())) {
       case 0:
-        _unassert(dup2(pipefds[!dir], !dir) == !dir);
+        unassert(dup2(pipefds[!dir], !dir) == !dir);
         // we can't rely on cloexec because cocmd builtins don't execve
-        if (pipefds[0] != !dir) _unassert(!close(pipefds[0]));
-        if (pipefds[1] != !dir) _unassert(!close(pipefds[1]));
+        if (pipefds[0] != !dir) unassert(!close(pipefds[0]));
+        if (pipefds[1] != !dir) unassert(!close(pipefds[1]));
         _Exit(_cocmd(3, (char *[]){"popen", "-c", cmdline, 0}, environ));
       default:
         f->pid = pid;
-        _unassert(!close(pipefds[!dir]));
+        unassert(!close(pipefds[!dir]));
         return f;
       case -1:
         e = errno;
-        _unassert(!fclose(f));
-        _unassert(!close(pipefds[!dir]));
+        unassert(!fclose(f));
+        unassert(!close(pipefds[!dir]));
         errno = e;
         return NULL;
     }
   } else {
     e = errno;
-    _unassert(!close(pipefds[0]));
-    _unassert(!close(pipefds[1]));
+    unassert(!close(pipefds[0]));
+    unassert(!close(pipefds[1]));
     errno = e;
     return NULL;
   }

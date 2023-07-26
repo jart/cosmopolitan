@@ -103,7 +103,7 @@ wontreturn void pthread_exit(void *rc) {
 
   tib = __get_tls();
   pt = (struct PosixThread *)tib->tib_pthread;
-  _unassert(~pt->flags & PT_EXITING);
+  unassert(~pt->flags & PT_EXITING);
   pt->flags |= PT_EXITING;
   pt->rc = rc;
 

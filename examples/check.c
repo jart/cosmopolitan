@@ -75,8 +75,8 @@
  * the following functions to further expand the information shown by
  * the NDEBUG check failure:
  *
- *     STATIC_YOINK("__die");
- *     STATIC_YOINK("strerror");
+ *     __static_yoink("__die");
+ *     __static_yoink("strerror");
  *
  * Please note that backtraces aren't ever available in MODE=tiny.
  */

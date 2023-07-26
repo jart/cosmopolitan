@@ -159,7 +159,7 @@ LUALIB_API void (luaL_requiref) (lua_State *L, const char *modname,
 #if defined LUAI_ASSERT
   #define lua_assert(c)		assert(c)
 #else
-  #define lua_assert(c)		_unassert(c)
+  #define lua_assert(c)		unassert(c)
 #endif
 
 #endif

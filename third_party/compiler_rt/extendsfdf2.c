@@ -9,7 +9,7 @@
 //===----------------------------------------------------------------------===//
 //
 
-STATIC_YOINK("huge_compiler_rt_license");
+__static_yoink("huge_compiler_rt_license");
 
 #define SRC_SINGLE
 #define DST_DOUBLE

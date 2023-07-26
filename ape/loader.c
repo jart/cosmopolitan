@@ -98,6 +98,12 @@
 #define IsOpenbsd() (SupportsOpenbsd() && os == OPENBSD)
 #define IsNetbsd()  (SupportsNetbsd() && os == NETBSD)
 
+#ifdef __aarch64__
+#define IsAarch64() 1
+#else
+#define IsAarch64() 0
+#endif
+
 #define O_RDONLY           0
 #define PROT_NONE          0
 #define PROT_READ          1
@@ -111,6 +117,7 @@
 #define ELFCLASS32         1
 #define ELFDATA2LSB        1
 #define EM_NEXGEN32E       62
+#define EM_AARCH64         183
 #define ET_EXEC            2
 #define ET_DYN             3
 #define PT_LOAD            1
@@ -227,6 +234,19 @@ static int StrCmp(const char *l, const char *r) {
   unsigned long i = 0;
   while (l[i] == r[i] && r[i]) ++i;
   return (l[i] & 255) - (r[i] & 255);
+}
+
+static const char *BaseName(const char *s) {
+  int c;
+  const char *b = "";
+  if (s) {
+    while ((c = *s++)) {
+      if (c == '/') {
+        b = s;
+      }
+    }
+  }
+  return b;
 }
 
 static void Bzero(void *a, unsigned long n) {
@@ -354,42 +374,86 @@ __attribute__((__noinline__)) static long CallSystem(long arg1, long arg2,
 }
 
 __attribute__((__noreturn__)) static void Exit(long rc, int os) {
-  CallSystem(rc, 0, 0, 0, 0, 0, 0, IsLinux() ? 60 : 1, os);
+  int numba;
+  if (IsLinux()) {
+    if (IsAarch64()) {
+      numba = 94;
+    } else {
+      numba = 60;
+    }
+  } else {
+    numba = 1;
+  }
+  CallSystem(rc, 0, 0, 0, 0, 0, 0, numba, os);
   __builtin_unreachable();
 }
 
 static int Close(int fd, int os) {
-  return CallSystem(fd, 0, 0, 0, 0, 0, 0, IsLinux() ? 3 : 6, os);
+  int numba;
+  if (IsLinux()) {
+    if (IsAarch64()) {
+      numba = 57;
+    } else {
+      numba = 3;
+    }
+  } else {
+    numba = 6;
+  }
+  return CallSystem(fd, 0, 0, 0, 0, 0, 0, numba, os);
 }
 
 static long Pread(int fd, void *data, unsigned long size, long off, int os) {
-  long magi;
+  long numba;
   if (IsLinux()) {
-    magi = 0x011;
+    if (IsAarch64()) {
+      numba = 0x043;
+    } else {
+      numba = 0x011;
+    }
   } else if (IsXnu()) {
-    magi = 0x2000099;
+    numba = 0x2000099;
   } else if (IsFreebsd()) {
-    magi = 0x1db;
+    numba = 0x1db;
   } else if (IsOpenbsd()) {
-    magi = 0x0a9; /* OpenBSD v7.3+ */
+    numba = 0x0a9; /* OpenBSD v7.3+ */
   } else if (IsNetbsd()) {
-    magi = 0x0ad;
+    numba = 0x0ad;
   } else {
     __builtin_unreachable();
   }
-  return SystemCall(fd, (long)data, size, off, off, 0, 0, magi);
+  return SystemCall(fd, (long)data, size, off, off, 0, 0, numba);
 }
 
 static long Write(int fd, const void *data, unsigned long size, int os) {
-  return CallSystem(fd, (long)data, size, 0, 0, 0, 0, IsLinux() ? 1 : 4, os);
+  int numba;
+  if (IsLinux()) {
+    if (IsAarch64()) {
+      numba = 64;
+    } else {
+      numba = 1;
+    }
+  } else {
+    numba = 4;
+  }
+  return CallSystem(fd, (long)data, size, 0, 0, 0, 0, numba, os);
 }
 
 static int Execve(const char *prog, char **argv, char **envp, int os) {
-  return CallSystem((long)prog, (long)argv, (long)envp, 0, 0, 0, 0, 59, os);
+  int numba;
+  if (IsLinux() && IsAarch64()) {
+    numba = 221;
+  } else {
+    numba = 59;
+  }
+  return CallSystem((long)prog, (long)argv, (long)envp, 0, 0, 0, 0, numba, os);
 }
 
 static int Access(const char *path, int mode, int os) {
-  return CallSystem((long)path, mode, 0, 0, 0, 0, 0, IsLinux() ? 21 : 33, os);
+  if (IsLinux() && IsAarch64()) {
+    return SystemCall(-100, (long)path, mode, 0, 0, 0, 0, 48);
+  } else {
+    return CallSystem((long)path, mode, 0, 0, 0, 0, 0, IsLinux() ? 21 : 33, os);
+  }
 }
 
 static int Msyscall(long p, unsigned long n, int os) {
@@ -401,31 +465,49 @@ static int Msyscall(long p, unsigned long n, int os) {
 }
 
 static int Open(const char *path, int flags, int mode, int os) {
-  return CallSystem((long)path, flags, mode, 0, 0, 0, 0, IsLinux() ? 2 : 5, os);
+  if (IsLinux() && IsAarch64()) {
+    return SystemCall(-100, (long)path, flags, mode, 0, 0, 0, 56);
+  } else {
+    return CallSystem((long)path, flags, mode, 0, 0, 0, 0, IsLinux() ? 2 : 5,
+                      os);
+  }
 }
 
 static int Mprotect(void *addr, unsigned long size, int prot, int os) {
-  return CallSystem((long)addr, size, prot, 0, 0, 0, 0, IsLinux() ? 10 : 74,
-                    os);
+  int numba;
+  if (IsLinux()) {
+    if (IsAarch64()) {
+      numba = 226;
+    } else {
+      numba = 10;
+    }
+  } else {
+    numba = 74;
+  }
+  return CallSystem((long)addr, size, prot, 0, 0, 0, 0, numba, os);
 }
 
 static long Mmap(void *addr, unsigned long size, int prot, int flags, int fd,
                  long off, int os) {
-  long magi;
+  long numba;
   if (IsLinux()) {
-    magi = 9;
+    if (IsAarch64()) {
+      numba = 222;
+    } else {
+      numba = 9;
+    }
   } else if (IsXnu()) {
-    magi = 0x2000000 | 197;
+    numba = 0x2000000 | 197;
   } else if (IsFreebsd()) {
-    magi = 477;
+    numba = 477;
   } else if (IsOpenbsd()) {
-    magi = 49; /* OpenBSD v7.3+ */
+    numba = 49; /* OpenBSD v7.3+ */
   } else if (IsNetbsd()) {
-    magi = 197;
+    numba = 197;
   } else {
     __builtin_unreachable();
   }
-  return SystemCall((long)addr, size, prot, flags, fd, off, off, magi);
+  return SystemCall((long)addr, size, prot, flags, fd, off, off, numba);
 }
 
 static long Print(int os, int fd, const char *s, ...) {
@@ -703,9 +785,15 @@ static const char *TryElf(struct ApeLoader *M, const char *exe, int fd,
   if (e->e_type != ET_EXEC && e->e_type != ET_DYN) {
     return "ELF not ET_EXEC or ET_DYN";
   }
+#ifdef __aarch64__
+  if (e->e_machine != EM_AARCH64) {
+    return "couldn't find ELF header with AARCH64 machine type";
+  }
+#else
   if (e->e_machine != EM_NEXGEN32E) {
     return "couldn't find ELF header with x86-64 machine type";
   }
+#endif
   if (e->e_phentsize != sizeof(struct ElfPhdr)) {
     Pexit(os, exe, 0, "e_phentsize is wrong");
   }
@@ -796,7 +884,7 @@ static __attribute__((__noreturn__)) void ShowUsage(int os, int fd, int rc) {
   Print(os, fd,
         "NAME\n"
         "\n"
-        "  actually portable executable loader version 1.4\n"
+        "  actually portable executable loader version 1.5\n"
         "  copyright 2023 justine alexandra roberts tunney\n"
         "  https://justine.lol/ape.html\n"
         "\n"
@@ -814,10 +902,10 @@ static __attribute__((__noreturn__)) void ShowUsage(int os, int fd, int rc) {
   Exit(rc, os);
 }
 
-__attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
+__attribute__((__noreturn__)) //
+void ApeLoader(long di, long *sp, char dl) {
   int rc;
   unsigned i, n;
-  int usetheforce;
   int c, fd, os, argc;
   struct ApeLoader *M;
   unsigned long pagesz;
@@ -879,14 +967,11 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
   }
 
   /* parse flags */
-  usetheforce = 0;
   while (argc > 1) {
     if (argv[1][0] != '-') break; /* normal argument */
     if (!argv[1][1]) break;       /* hyphen argument */
     if (!StrCmp(argv[1], "-h") || !StrCmp(argv[1], "--help")) {
       ShowUsage(os, 1, 0);
-    } else if (!StrCmp(argv[1], "-f")) {
-      usetheforce = 1;
     } else {
       Print(os, 2, ape, ": invalid flag (pass -h for help)\n", 0l);
       Exit(1, os);
@@ -926,25 +1011,16 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
   pe = M->ehdr.buf + rc;
 
   /* change argv[0] to resolved path if it's ambiguous */
-  if (argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) {
+  if ((argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
+      !StrCmp(BaseName(prog), argv[0])) {
     argv[0] = exe;
   }
 
   /* ape intended behavior
-     1. if file is a native executable, try to run it natively
-     2. if ape, will scan shell script for elf printf statements
-     3. shell script may have multiple lines producing elf headers
-     4. all elf printf lines must exist in the first 8192 bytes of file
-     5. elf program headers may appear anywhere in the binary */
-  if (!usetheforce &&
-      ((IsXnu() && READ32(M->ehdr.buf) == 0xFEEDFACE + 1) ||
-       (!IsXnu() && READ32(M->ehdr.buf) == READ32("\177ELF")))) {
-    Close(fd, os);
-    Execve(exe, argv, envp, os);
-    if ((fd = Open(exe, O_RDONLY, 0, os)) < 0) {
-      Pexit(os, exe, rc, "execve and open failed");
-    }
-  }
+     1. if ape, will scan shell script for elf printf statements
+     2. shell script may have multiple lines producing elf headers
+     3. all elf printf lines must exist in the first 8192 bytes of file
+     4. elf program headers may appear anywhere in the binary */
   if (READ64(M->ehdr.buf) == READ64("MZqFpD='") ||
       READ64(M->ehdr.buf) == READ64("jartsr='") ||
       READ64(M->ehdr.buf) == READ64("APEDBG='")) {

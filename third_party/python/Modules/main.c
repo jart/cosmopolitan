@@ -8,8 +8,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/s.h"
 #include "libc/str/locale.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/ceval.h"
@@ -29,16 +29,16 @@
 #include "third_party/python/pyconfig.h"
 /* clang-format off */
 
-STATIC_YOINK("PyInit__codecs");      // for pylifecycle.o
-STATIC_YOINK("PyInit__collections"); // for pylifecycle.o
-STATIC_YOINK("PyInit__functools");   // for pylifecycle.o
-STATIC_YOINK("PyInit__locale");      // for pylifecycle.o
-STATIC_YOINK("PyInit__operator");    // for pylifecycle.o
-STATIC_YOINK("PyInit__signal");      // for pylifecycle.o
-STATIC_YOINK("PyInit__sre");         // for pylifecycle.o
-STATIC_YOINK("PyInit__stat");        // for pylifecycle.o
-STATIC_YOINK("PyInit_errno");        // for pylifecycle.o
-STATIC_YOINK("PyInit_itertools");    // for pylifecycle.o
+__static_yoink("PyInit__codecs");      // for pylifecycle.o
+__static_yoink("PyInit__collections"); // for pylifecycle.o
+__static_yoink("PyInit__functools");   // for pylifecycle.o
+__static_yoink("PyInit__locale");      // for pylifecycle.o
+__static_yoink("PyInit__operator");    // for pylifecycle.o
+__static_yoink("PyInit__signal");      // for pylifecycle.o
+__static_yoink("PyInit__sre");         // for pylifecycle.o
+__static_yoink("PyInit__stat");        // for pylifecycle.o
+__static_yoink("PyInit_errno");        // for pylifecycle.o
+__static_yoink("PyInit_itertools");    // for pylifecycle.o
 
 PYTHON_YOINK("site");                // for pylifecycle.o
 PYTHON_YOINK("struct");              // for memoryobject.o

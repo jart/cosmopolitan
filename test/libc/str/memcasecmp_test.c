@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
@@ -35,5 +35,5 @@ TEST(memcasecmp, test) {
 BENCH(memcasecmp, bench) {
   volatile char *copy = gc(strdup(kHyperion));
   EZBENCH2("memcasecmp", donothing,
-           EXPROPRIATE(memcasecmp(kHyperion, copy, kHyperionSize)));
+           __expropriate(memcasecmp(kHyperion, copy, kHyperionSize)));
 }

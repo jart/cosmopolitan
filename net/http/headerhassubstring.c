@@ -33,7 +33,7 @@
 bool HeaderHas(struct HttpMessage *m, const char *b, int h, const char *s,
                size_t n) {
   size_t i;
-  _unassert(0 <= h && h < kHttpHeadersMax);
+  unassert(0 <= h && h < kHttpHeadersMax);
   if (n == -1) n = s ? strlen(s) : 0;
   if (m->headers[h].a) {
     if (memmem(b + m->headers[h].a, m->headers[h].b - m->headers[h].a, s, n)) {

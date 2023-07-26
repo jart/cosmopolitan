@@ -34,6 +34,6 @@ TEST(inv3, test) {
 
 BENCH(inv3, bench) {
   double M[3][3], d;
-  EZBENCH2("det3", donothing, EXPROPRIATE((d = det3(kBradford))));
-  EZBENCH2("inv3", donothing, EXPROPRIATE(inv3(M, kBradford, d)));
+  EZBENCH2("det3", donothing, __expropriate((d = det3(kBradford))));
+  EZBENCH2("inv3", donothing, __expropriate(inv3(M, kBradford, d)));
 }

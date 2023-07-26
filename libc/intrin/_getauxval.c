@@ -20,19 +20,15 @@
 #include "libc/runtime/runtime.h"
 
 /**
- * Returns auxiliary value, or zero if kernel didn't provide it.
- *
- * This function is typically regarded as a libc implementation detail;
- * thus, the source code is the documentation.
+ * Returns auxiliary value better.
  *
  * @param at is `AT_...` search key
  * @return true if value was found
  * @see libc/sysv/consts.sh
  * @see System Five Application Binary Interface § 3.4.3
- * @error ENOENT when value not found
  * @asyncsignalsafe
  */
-struct AuxiliaryValue _getauxval(unsigned long at) {
+dontasan struct AuxiliaryValue _getauxval(unsigned long at) {
   unsigned long *ap;
   for (ap = __auxv; ap[0]; ap += 2) {
     if (at == ap[0]) {

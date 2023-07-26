@@ -154,20 +154,20 @@ TEST(memcpy, testBackwardsOverlap3) {
   volatile char *c;
   c = malloc(3);
   memcpy(c, "\e[C", 3);
-  memcpy(c, c + 1, VEIL("r", 3) - 1);
+  memcpy(c, c + 1, __veil("r", 3) - 1);
   EXPECT_EQ('[', c[0]);
   EXPECT_EQ('C', c[1]);
   free(c);
 }
 
-#define B(F, N)                                              \
-  do {                                                       \
-    char *d = rngset(malloc(N), N, _rand64, -1);             \
-    char *s = rngset(malloc(N), N, _rand64, -1);             \
-    EZBENCH2(#F " " #N, donothing,                           \
-             EXPROPRIATE(F(VEIL("r", d), VEIL("r", s), N))); \
-    free(d);                                                 \
-    free(s);                                                 \
+#define B(F, N)                                                    \
+  do {                                                             \
+    char *d = rngset(malloc(N), N, _rand64, -1);                   \
+    char *s = rngset(malloc(N), N, _rand64, -1);                   \
+    EZBENCH2(#F " " #N, donothing,                                 \
+             __expropriate(F(__veil("r", d), __veil("r", s), N))); \
+    free(d);                                                       \
+    free(s);                                                       \
   } while (0)
 
 void BB(size_t N) {

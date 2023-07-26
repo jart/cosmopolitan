@@ -23,7 +23,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("strwidth");
+__static_yoink("strwidth");
 
 volatile uint64_t v;
 
@@ -45,7 +45,7 @@ TEST(_tpenc, testBeyondTheStandard) {
 }
 
 uint64_t _Tpenc(int x) {
-  return (v = EXPROPRIATE(_tpenc(VEIL("r", x))));
+  return (v = __expropriate(_tpenc(__veil("r", x))));
 }
 
 BENCH(_tpenc, bench) {

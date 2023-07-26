@@ -143,8 +143,8 @@ machine](https://github.com/jart/blink) by adding the following to the
 top of your main.c file:
 
 ```c
-STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
-STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
+__static_yoink("blink_linux_aarch64");  // for raspberry pi
+__static_yoink("blink_xnu_aarch64");    // is apple silicon
 ```
 
 The benefit is you'll have single file executables that'll run on both

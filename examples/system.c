@@ -15,8 +15,8 @@
  * Yes this works on Windows.
  */
 
-STATIC_YOINK("_tr");
-STATIC_YOINK("_sed");
+__static_yoink("_tr");
+__static_yoink("_sed");
 
 int main(int argc, char *argv[]) {
   system("x=world\n"

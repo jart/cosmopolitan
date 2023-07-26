@@ -222,7 +222,7 @@ static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
   0x1 /* waiter reserved by a thread, even when not in use */
 #define WAITER_IN_USE 0x2 /* waiter in use by a thread */
 
-#define ASSERT(x) _npassert(x)
+#define ASSERT(x) npassert(x)
 
 /* Return a pointer to the nsync_waiter_s containing struct Dll *e. */
 #define DLL_NSYNC_WAITER(e)                 \

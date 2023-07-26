@@ -36,14 +36,14 @@ TEST(strcspn, test) {
 
 BENCH(strcspn, bench) {
   EZBENCH2("strcspn", donothing,
-           EXPROPRIATE(
+           __expropriate(
                strcspn("pABCDEFGHIJKLMNOPABCDEFGHIJKLMNO", "abcdefghijklmnp")));
   EZBENCH2("strcspn", donothing,
-           EXPROPRIATE(
+           __expropriate(
                strcspn("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOp", "abcdefghijklmnp")));
   EZBENCH2(
       "strcspn", donothing,
-      EXPROPRIATE(strcspn(
+      __expropriate(strcspn(
           "ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOABCDEFGHIJKLMNOPABCDEFGHIJKLMNOp",
           "abcdefghijklmnp")));
 }

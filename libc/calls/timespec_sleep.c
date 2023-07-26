@@ -34,7 +34,7 @@ struct timespec timespec_sleep(struct timespec delay) {
   BLOCK_CANCELLATIONS;
   bzero(&remain, sizeof(remain));
   if ((rc = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
-    _npassert(rc == EINTR);
+    npassert(rc == EINTR);
   }
   ALLOW_CANCELLATIONS;
   return remain;

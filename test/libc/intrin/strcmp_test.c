@@ -543,37 +543,37 @@ BENCH(bench_00_strcmp, bench) {
   dupe = gc(malloc(size));
 
   EZBENCH2("strcmp [identity]", longstringislong(size, data),
-           EXPROPRIATE(strcmp(VEIL("r", data), data)));
+           __expropriate(strcmp(__veil("r", data), data)));
 
   EZBENCH2("strcmp [2 diff]", donothing,
-           EXPROPRIATE(strcmp(VEIL("r", "hi"), VEIL("r", "there"))));
+           __expropriate(strcmp(__veil("r", "hi"), __veil("r", "there"))));
   EZBENCH2("scmppure [2 diff]", donothing,
-           EXPROPRIATE(strcmp_pure(VEIL("r", "hi"), VEIL("r", "there"))));
+           __expropriate(strcmp_pure(__veil("r", "hi"), __veil("r", "there"))));
 
   EZBENCH2("strcmp [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
-           EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp(__veil("r", data), __veil("r", dupe))));
   EZBENCH2("scmp_pure [2 dupe]", randomize_buf2str_dupe(2, data, dupe),
-           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp_pure(__veil("r", data), __veil("r", dupe))));
 
   EZBENCH2("strcmp [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
-           EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp(__veil("r", data), __veil("r", dupe))));
   EZBENCH2("scmp_pure [4 dupe]", randomize_buf2str_dupe(4, data, dupe),
-           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp_pure(__veil("r", data), __veil("r", dupe))));
 
   EZBENCH2("strcmp [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
-           EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp(__veil("r", data), __veil("r", dupe))));
   EZBENCH2("scmp_pure [8 dupe]", randomize_buf2str_dupe(8, data, dupe),
-           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp_pure(__veil("r", data), __veil("r", dupe))));
 
   EZBENCH2("strcmp [sdupe]", randomize_buf2str_dupe(size, data, dupe),
-           EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp(__veil("r", data), __veil("r", dupe))));
   EZBENCH2("scmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
-           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp_pure(__veil("r", data), __veil("r", dupe))));
 
   EZBENCH2("strcmp [ldupe]", longstringislong_dupe(size, data, dupe),
-           EXPROPRIATE(strcmp(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp(__veil("r", data), __veil("r", dupe))));
   EZBENCH2("scmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
-           EXPROPRIATE(strcmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcmp_pure(__veil("r", data), __veil("r", dupe))));
 }
 
 BENCH(bench_01_strcasecmp, bench) {
@@ -584,26 +584,28 @@ BENCH(bench_01_strcasecmp, bench) {
   dupe = gc(malloc(size));
 
   EZBENCH2("strcasecmp [iden]", longstringislong(size, data),
-           EXPROPRIATE(strcasecmp(VEIL("r", data), data)));
+           __expropriate(strcasecmp(__veil("r", data), data)));
 
   EZBENCH2("strcasecmp [sdupe]", randomize_buf2str_dupe(size, data, dupe),
-           EXPROPRIATE(strcasecmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("sccmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
-           EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcasecmp(__veil("r", data), __veil("r", dupe))));
+  EZBENCH2(
+      "sccmp_pure [sdupe]", randomize_buf2str_dupe(size, data, dupe),
+      __expropriate(strcasecmp_pure(__veil("r", data), __veil("r", dupe))));
 
   EZBENCH2("strcasecmp [ldupe]", longstringislong_dupe(size, data, dupe),
-           EXPROPRIATE(strcasecmp(VEIL("r", data), VEIL("r", dupe))));
-  EZBENCH2("sccmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
-           EXPROPRIATE(strcasecmp_pure(VEIL("r", data), VEIL("r", dupe))));
+           __expropriate(strcasecmp(__veil("r", data), __veil("r", dupe))));
+  EZBENCH2(
+      "sccmp_pure [ldupe]", longstringislong_dupe(size, data, dupe),
+      __expropriate(strcasecmp_pure(__veil("r", data), __veil("r", dupe))));
 }
 
 BENCH(memcmp, bench) {
   volatile char *copy = gc(strdup(kHyperion));
   EZBENCH2("memcmp big", donothing,
-           EXPROPRIATE(memcmp(kHyperion, copy, kHyperionSize)));
+           __expropriate(memcmp(kHyperion, copy, kHyperionSize)));
   copy = gc(strdup("tough little ship"));
   EZBENCH2("memcmp 18", donothing,
-           EXPROPRIATE(memcmp("tough little ship", copy, 18)));
+           __expropriate(memcmp("tough little ship", copy, 18)));
 }
 
 /* jart

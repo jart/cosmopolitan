@@ -76,7 +76,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   } else {
     rc = ebadf();
   }
-  _npassert(rc == -1 || (size_t)rc <= size);
+  npassert(rc == -1 || (size_t)rc <= size);
 
   END_CANCELLATION_POINT;
   DATATRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,

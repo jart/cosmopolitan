@@ -75,7 +75,7 @@ static void ListenForSigThr(void) {
   sa.sa_sigaction = OnSigThr;
   sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_ONSTACK;
   memset(&sa.sa_mask, -1, sizeof(sa.sa_mask));
-  _npassert(!sigaction(SIGTHR, &sa, 0));
+  npassert(!sigaction(SIGTHR, &sa, 0));
 }
 
 /**

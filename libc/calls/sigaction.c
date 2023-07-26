@@ -49,13 +49,13 @@
 #include "libc/sysv/errfuns.h"
 
 #ifdef SYSDEBUG
-STATIC_YOINK("strsignal");  // for kprintf()
+__static_yoink("strsignal");  // for kprintf()
 #endif
 
 #if SupportsWindows()
-STATIC_YOINK("_init_onntconsoleevent");
-STATIC_YOINK("_check_sigwinch");
-STATIC_YOINK("_init_wincrash");
+__static_yoink("_init_onntconsoleevent");
+__static_yoink("_check_sigwinch");
+__static_yoink("_init_wincrash");
 #endif
 
 #define SA_RESTORER 0x04000000

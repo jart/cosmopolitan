@@ -35,9 +35,9 @@
  * functions through weak reference. This ensure those symbols are not
  * stripped during final link.
  */
-STATIC_YOINK("GetAdaptersAddresses");
-STATIC_YOINK("tprecode16to8");
-STATIC_YOINK("_dupsockfd");
+__static_yoink("GetAdaptersAddresses");
+__static_yoink("tprecode16to8");
+__static_yoink("_dupsockfd");
 
 textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;

@@ -75,7 +75,7 @@ extern char *ttyraster(char *, const struct TtyRgb *, size_t, size_t,
 
 #ifndef ttyquant
 #define ttyquant()    (&g_ttyquant_)
-#define TTYQUANT()    VEIL("r", &g_ttyquant_)
+#define TTYQUANT()    __veil("r", &g_ttyquant_)
 #define rgb2tty(...)  (ttyquant()->rgb2tty(__VA_ARGS__))
 #define tty2rgb(...)  (ttyquant()->tty2rgb(__VA_ARGS__))
 #define rgb2ttyf(...) (ttyquant()->rgb2ttyf(__VA_ARGS__))

@@ -24,7 +24,7 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("strnwidth");
+__static_yoink("strnwidth");
 
 void __testlib_ezbenchreport(const char *form, double c1, double c2) {
   long ns1, ns2;
@@ -32,7 +32,7 @@ void __testlib_ezbenchreport(const char *form, double c1, double c2) {
   ns1 = lrintl(ConvertTicksToNanos(c1));
   ns2 = lrintl(ConvertTicksToNanos(c2));
   (fprintf)(stderr,
-            VEIL("r", " *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n"),
+            __veil("r", " *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n"),
             form, lrint(c1), ns1, lrint(c2), ns2);
 }
 
@@ -47,40 +47,41 @@ void __testlib_ezbenchreport_n(const char *form, char z, size_t n, double c) {
     (fprintf)(stderr, "\n");
     (fprintf)(stderr, " *     %-28s", msg);
     if (cn < 1) {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)(cn * 1024),
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(cn * 1024),
                 "picoseconds");
     } else if (cn > 1024) {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)(cn / 1024),
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(cn / 1024),
                 "microseconds");
     } else {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)cn, "nanoseconds");
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)cn,
+                "nanoseconds");
     }
   } else {
     (fprintf)(stderr, " *     %-28s", msg);
     bps = n / cn * 1e9;
     lat = cn / n;
     if (lat < 1e-3) {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)(lat * 1024 * 1024),
-                "fs/byte");
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"),
+                (int64_t)(lat * 1024 * 1024), "fs/byte");
     } else if (lat < 1) {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)(lat * 1024),
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(lat * 1024),
                 "ps/byte");
     } else if (lat > 1024) {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)(lat / 1024),
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(lat / 1024),
                 "µs/byte");
     } else {
-      (fprintf)(stderr, VEIL("r", " %,9lu %-12s"), (int64_t)lat, "ns/byte");
+      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)lat, "ns/byte");
     }
     if (bps < 10 * 1000) {
-      (fprintf)(stderr, VEIL("r", " %,9lu b/s"), bps);
+      (fprintf)(stderr, __veil("r", " %,9lu b/s"), bps);
     } else if (bps < 10 * 1000 * 1024) {
-      (fprintf)(stderr, VEIL("r", " %,9lu kb/s"), bps / 1024);
+      (fprintf)(stderr, __veil("r", " %,9lu kb/s"), bps / 1024);
     } else if (bps < 10ul * 1000 * 1024 * 1024) {
-      (fprintf)(stderr, VEIL("r", " %,9lu mb/s"), bps / (1024 * 1024));
+      (fprintf)(stderr, __veil("r", " %,9lu mb/s"), bps / (1024 * 1024));
     } else if (bps < 10ul * 1000 * 1024 * 1024 * 1024) {
-      (fprintf)(stderr, VEIL("r", " %,9lu GB/s"), bps / (1024 * 1024 * 1024));
+      (fprintf)(stderr, __veil("r", " %,9lu GB/s"), bps / (1024 * 1024 * 1024));
     } else {
-      (fprintf)(stderr, VEIL("r", " %,9lu TB/s"),
+      (fprintf)(stderr, __veil("r", " %,9lu TB/s"),
                 bps / (1024ul * 1024 * 1024 * 1024));
     }
   }

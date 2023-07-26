@@ -3,7 +3,7 @@
  * License. See LICENSE.TXT for details.
  */
 
-STATIC_YOINK("huge_compiler_rt_license");
+__static_yoink("huge_compiler_rt_license");
 
 /* double __floatdidf(di_int a); */
 

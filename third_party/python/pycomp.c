@@ -44,7 +44,7 @@
 #include "tool/build/lib/stripcomponents.h"
 /* clang-format off */
 
-STATIC_YOINK("_PyUnicode_GetCode");
+__static_yoink("_PyUnicode_GetCode");
 
 #define MANUAL "\
 SYNOPSIS\n\

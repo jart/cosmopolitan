@@ -34,7 +34,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @return original dest
  * @asyncsignalsafe
  */
-noasan char *strcpy(char *d, const char *s) {
+dontasan char *strcpy(char *d, const char *s) {
   size_t i = 0;
   if (IsAsan()) {
     __asan_verify(d, strlen(s) + 1);

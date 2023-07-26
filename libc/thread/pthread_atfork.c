@@ -48,7 +48,7 @@ static void _pthread_purge(void) {
 static void _pthread_onfork(int i) {
   struct AtFork *a;
   struct PosixThread *pt;
-  _unassert(0 <= i && i <= 2);
+  unassert(0 <= i && i <= 2);
   if (!i) pthread_spin_lock(&_atforks.lock);
   for (a = _atforks.list; a; a = a->p[!i]) {
     if (a->f[i]) a->f[i]();

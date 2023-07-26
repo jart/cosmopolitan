@@ -53,7 +53,7 @@ static void PrintHistogram(const long *h, size_t n, long t) {
   unsigned long logos;
   for (i = 0; i < n; ++i) {
     p = (h[i] * 10000 + (t >> 1)) / t;
-    _unassert(0 <= p && p <= 10000);
+    unassert(0 <= p && p <= 10000);
     if (p) {
       for (j = 0; j < p / 100; ++j) s[j] = '#';
       s[j] = 0;

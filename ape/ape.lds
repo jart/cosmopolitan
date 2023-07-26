@@ -432,6 +432,7 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
+    . = ALIGN(512);
 /*END: NT FORK COPYING */
     _edata = .;
     PROVIDE(edata = .);

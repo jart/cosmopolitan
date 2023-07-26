@@ -92,7 +92,7 @@ static long double nowl_art(void) {
 static long double nowl_vdso(void) {
   long double secs;
   struct timespec tv;
-  _unassert(__gettime);
+  unassert(__gettime);
   __gettime(CLOCK_REALTIME_PRECISE, &tv);
   secs = tv.tv_nsec;
   secs *= 1 / 1e9L;

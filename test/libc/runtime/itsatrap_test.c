@@ -50,128 +50,128 @@ void SetUp(void) {
 /* 32-BIT SIGNED NEGATION */
 
 TEST(__negvsi2, testMax) {
-  EXPECT_EQ(-INT_MAX, -VEIL("r", INT_MAX));
+  EXPECT_EQ(-INT_MAX, -__veil("r", INT_MAX));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__negvsi2, testMin0) {
-  EXPROPRIATE(-VEIL("r", INT_MIN));
+  __expropriate(-__veil("r", INT_MIN));
   EXPECT_TRUE(overflowed_);
 }
 
 /* 64-BIT SIGNED NEGATION */
 
 TEST(__negvdi2, testMax) {
-  EXPECT_EQ(-LONG_MAX, -VEIL("r", LONG_MAX));
+  EXPECT_EQ(-LONG_MAX, -__veil("r", LONG_MAX));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__negvdi2, testMin0) {
-  EXPROPRIATE(-VEIL("r", LONG_MIN));
+  __expropriate(-__veil("r", LONG_MIN));
   EXPECT_TRUE(overflowed_);
 }
 
 /* 32-BIT SIGNED MULTIPLICATION */
 
 TEST(__mulvsi3, testMin0) {
-  EXPECT_EQ(0, 0 * VEIL("r", INT_MIN));
+  EXPECT_EQ(0, 0 * __veil("r", INT_MIN));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvsi3, testMin1) {
-  EXPECT_EQ(INT_MIN, 1 * VEIL("r", INT_MIN));
+  EXPECT_EQ(INT_MIN, 1 * __veil("r", INT_MIN));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvsi3, testMin2) {
-  EXPROPRIATE(2 * VEIL("r", INT_MIN));
+  __expropriate(2 * __veil("r", INT_MIN));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvsi3, testMax0) {
-  EXPECT_EQ(0, 0 * VEIL("r", INT_MAX));
+  EXPECT_EQ(0, 0 * __veil("r", INT_MAX));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvsi3, testMax1) {
-  EXPECT_EQ(INT_MAX, 1 * VEIL("r", INT_MAX));
+  EXPECT_EQ(INT_MAX, 1 * __veil("r", INT_MAX));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvsi3, testMax2) {
-  EXPROPRIATE(2 * VEIL("r", INT_MAX));
+  __expropriate(2 * __veil("r", INT_MAX));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvsi3, test7) {
-  EXPECT_EQ(0x70000000, 7 * VEIL("r", 0x10000000));
+  EXPECT_EQ(0x70000000, 7 * __veil("r", 0x10000000));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvsi3, test8) {
-  EXPROPRIATE(8 * VEIL("r", 0x10000000));
+  __expropriate(8 * __veil("r", 0x10000000));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvsi3, test31337) {
-  EXPROPRIATE(0x31337 * VEIL("r", 0x31337));
+  __expropriate(0x31337 * __veil("r", 0x31337));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvsi3, standAndDeliver_aNegativeTimesANegativeEqualsAPositive) {
-  EXPECT_EQ(25, -5 * VEIL("r", -5));
+  EXPECT_EQ(25, -5 * __veil("r", -5));
   EXPECT_FALSE(overflowed_);
 }
 
 /* 64-BIT SIGNED MULTIPLICATION */
 
 TEST(__mulvdi3, testMin0) {
-  EXPECT_EQ(0, 0 * VEIL("r", LONG_MIN));
+  EXPECT_EQ(0, 0 * __veil("r", LONG_MIN));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvdi3, testMin1) {
-  EXPECT_EQ(LONG_MIN, 1 * VEIL("r", LONG_MIN));
+  EXPECT_EQ(LONG_MIN, 1 * __veil("r", LONG_MIN));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvdi3, testMin2) {
-  EXPROPRIATE(2 * VEIL("r", LONG_MIN));
+  __expropriate(2 * __veil("r", LONG_MIN));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvdi3, testMax0) {
-  EXPECT_EQ(0, 0 * VEIL("r", LONG_MAX));
+  EXPECT_EQ(0, 0 * __veil("r", LONG_MAX));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvdi3, testMax1) {
-  EXPECT_EQ(LONG_MAX, 1 * VEIL("r", LONG_MAX));
+  EXPECT_EQ(LONG_MAX, 1 * __veil("r", LONG_MAX));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvdi3, testMax2) {
-  EXPROPRIATE(2 * VEIL("r", LONG_MAX));
+  __expropriate(2 * __veil("r", LONG_MAX));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvdi3, test7) {
-  EXPECT_EQ(0x7000000000000000l, 7 * VEIL("r", 0x1000000000000000l));
+  EXPECT_EQ(0x7000000000000000l, 7 * __veil("r", 0x1000000000000000l));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__mulvdi3, test8) {
-  EXPROPRIATE(8 * VEIL("r", 0x1000000000000000l));
+  __expropriate(8 * __veil("r", 0x1000000000000000l));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvdi3, test31337) {
-  EXPROPRIATE(0x3133700000000l * VEIL("r", 0x3133700000000l));
+  __expropriate(0x3133700000000l * __veil("r", 0x3133700000000l));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__mulvdi3, standAndDeliver_aNegativeTimesANegativeEqualsAPositive) {
-  EXPECT_EQ(25l, -5l * VEIL("r", -5l));
+  EXPECT_EQ(25l, -5l * __veil("r", -5l));
   EXPECT_FALSE(overflowed_);
 }
 
@@ -188,73 +188,73 @@ TEST(__mulvdi3, testOverflow) {
 /* 32-BIT SIGNED ADDITION */
 
 TEST(__addvsi3, testMin1) {
-  EXPECT_EQ(INT_MIN + 1, 1 + VEIL("r", INT_MIN));
+  EXPECT_EQ(INT_MIN + 1, 1 + __veil("r", INT_MIN));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__addvsi3, testMax1) {
-  EXPROPRIATE(1 + VEIL("r", INT_MAX));
+  __expropriate(1 + __veil("r", INT_MAX));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__addvsi3, testNegPos) {
-  EXPECT_EQ(2, -2 + VEIL("r", 4));
+  EXPECT_EQ(2, -2 + __veil("r", 4));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__addvsi3, testPosNeg) {
-  EXPECT_EQ(-2, 2 + VEIL("r", -4));
+  EXPECT_EQ(-2, 2 + __veil("r", -4));
   EXPECT_FALSE(overflowed_);
 }
 
 /* 64-BIT SIGNED ADDITION */
 
 TEST(__addvdi3, testMin1) {
-  EXPECT_EQ(LONG_MIN + 1, 1 + VEIL("r", LONG_MIN));
+  EXPECT_EQ(LONG_MIN + 1, 1 + __veil("r", LONG_MIN));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__addvdi3, testMax1) {
-  EXPROPRIATE(1 + VEIL("r", LONG_MAX));
+  __expropriate(1 + __veil("r", LONG_MAX));
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__addvdi3, testNegPos) {
-  EXPECT_EQ(2l, -2l + VEIL("r", 4l));
+  EXPECT_EQ(2l, -2l + __veil("r", 4l));
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__addvdi3, testPosNeg) {
-  EXPECT_EQ(-2l, 2l + VEIL("r", -4l));
+  EXPECT_EQ(-2l, 2l + __veil("r", -4l));
   EXPECT_FALSE(overflowed_);
 }
 
 /* 32-BIT SIGNED SUBTRACTION */
 
 TEST(__subvsi3, testMin1) {
-  EXPROPRIATE(VEIL("r", INT_MIN) - 1);
+  __expropriate(__veil("r", INT_MIN) - 1);
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__subvsi3, testMax1) {
-  EXPECT_EQ(INT_MAX - 1, VEIL("r", INT_MAX) - 1);
+  EXPECT_EQ(INT_MAX - 1, __veil("r", INT_MAX) - 1);
   EXPECT_FALSE(overflowed_);
 }
 
 TEST(__subvsi3, testPosNeg) {
-  EXPECT_EQ(-2, 2 - VEIL("r", 4));
+  EXPECT_EQ(-2, 2 - __veil("r", 4));
   EXPECT_FALSE(overflowed_);
 }
 
 /* 64-BIT SIGNED SUBTRACTION */
 
 TEST(__subvdi3, testMin1) {
-  EXPROPRIATE(VEIL("r", LONG_MIN) - 1);
+  __expropriate(__veil("r", LONG_MIN) - 1);
   EXPECT_TRUE(overflowed_);
 }
 
 TEST(__subvdi3, testMax1) {
-  EXPECT_EQ(LONG_MAX - 1, VEIL("r", LONG_MAX) - 1);
+  EXPECT_EQ(LONG_MAX - 1, __veil("r", LONG_MAX) - 1);
   EXPECT_FALSE(overflowed_);
 }
 

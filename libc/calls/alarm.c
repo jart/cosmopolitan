@@ -35,7 +35,7 @@ unsigned alarm(unsigned seconds) {
   struct itimerval it;
   bzero(&it, sizeof(it));
   it.it_value.tv_sec = seconds;
-  _npassert(!setitimer(ITIMER_REAL, &it, &it));
+  npassert(!setitimer(ITIMER_REAL, &it, &it));
   if (!it.it_value.tv_sec && !it.it_value.tv_usec) {
     return 0;
   } else {

@@ -126,7 +126,7 @@ int BLAKE2B256_Update(struct Blake2b *b2b, const void *in_data, size_t len) {
     return 0;
   }
   // More input remains therefore we must have filled |b2b->block|.
-  _unassert(b2b->block_used == BLAKE2B_CBLOCK);
+  unassert(b2b->block_used == BLAKE2B_CBLOCK);
   Blake2bTransform(b2b, b2b->block.words, BLAKE2B_CBLOCK,
                    /*is_final_block=*/0);
   b2b->block_used = 0;

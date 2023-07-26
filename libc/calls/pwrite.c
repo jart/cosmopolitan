@@ -69,9 +69,9 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   if (rc != -1) {
     wrote = (size_t)rc;
     if (!wrote) {
-      _npassert(size == 0);
+      npassert(size == 0);
     } else {
-      _npassert(wrote <= size);
+      npassert(wrote <= size);
     }
   }
 

@@ -31,7 +31,7 @@ TEST(memrchr16, test) {
 
 BENCH(memrchr16, bench) {
   EZBENCH2("memrchr16", donothing,
-           EXPROPRIATE(memrchr16(u"yo.hi.there", '.', 11)));
+           __expropriate(memrchr16(u"yo.hi.there", '.', 11)));
   EZBENCH2("memrchr16 hyperion", donothing,
-           EXPROPRIATE(memrchr16(kHyperion, '.', kHyperionSize / 2)));
+           __expropriate(memrchr16(kHyperion, '.', kHyperionSize / 2)));
 }

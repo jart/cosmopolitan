@@ -23,7 +23,7 @@
 
 int UntrackMemoryIntervals(void *addr, size_t size) {
   int a, b;
-  _unassert(size > 0);
+  unassert(size > 0);
   a = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
   b = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
   return ReleaseMemoryIntervals(&_mmi, a, b,

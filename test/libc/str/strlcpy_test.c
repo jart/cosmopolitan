@@ -40,8 +40,10 @@ TEST(strlcpy, testShortBuffer_copies) {
 
 BENCH(strlcpy, bench) {
   char buf[256];
-  EZBENCH2("strlcpy", donothing,
-           EXPROPRIATE(strlcpy(VEIL("r", buf), "hello there", sizeof(buf))));
-  EZBENCH2("strncpy", donothing,
-           EXPROPRIATE(strncpy(VEIL("r", buf), "hello there", sizeof(buf))));
+  EZBENCH2(
+      "strlcpy", donothing,
+      __expropriate(strlcpy(__veil("r", buf), "hello there", sizeof(buf))));
+  EZBENCH2(
+      "strncpy", donothing,
+      __expropriate(strncpy(__veil("r", buf), "hello there", sizeof(buf))));
 }

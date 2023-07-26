@@ -34,6 +34,6 @@ errno_t(pthread_spin_trylock)(pthread_spinlock_t *spin) {
   int x;
   x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
   if (!x) return 0;
-  _unassert(x == 1);
+  unassert(x == 1);
   return EBUSY;
 }

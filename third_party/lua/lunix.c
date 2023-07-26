@@ -2869,7 +2869,7 @@ static int LuaUnixMemoryWake(lua_State *L) {
   count = luaL_optinteger(L, 3, INT_MAX);
   woken = nsync_futex_wake_((atomic_int *)GetWord(L), count,
                             PTHREAD_PROCESS_SHARED);
-  _npassert(woken >= 0);
+  npassert(woken >= 0);
   return ReturnInteger(L, woken);
 }
 
@@ -2886,7 +2886,7 @@ static int LuaUnixMemoryGc(lua_State *L) {
   struct Memory *m;
   m = luaL_checkudata(L, 1, "unix.Memory");
   if (m->u.bytes) {
-    _npassert(!munmap(m->map, m->mapsize));
+    npassert(!munmap(m->map, m->mapsize));
     m->u.bytes = 0;
   }
   return 0;

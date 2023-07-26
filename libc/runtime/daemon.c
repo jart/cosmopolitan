@@ -52,15 +52,15 @@ int daemon(int nochdir, int noclose) {
   }
 
   if (!nochdir) {
-    _unassert(!chdir("/"));
+    unassert(!chdir("/"));
   }
 
   if (!noclose && (fd = open(_PATH_DEVNULL, O_RDWR)) != -1) {
-    _unassert(dup2(fd, 0) == 0);
-    _unassert(dup2(fd, 1) == 1);
-    _unassert(dup2(fd, 2) == 2);
+    unassert(dup2(fd, 0) == 0);
+    unassert(dup2(fd, 1) == 1);
+    unassert(dup2(fd, 2) == 2);
     if (fd > 2) {
-      _unassert(!close(fd));
+      unassert(!close(fd));
     }
   }
 

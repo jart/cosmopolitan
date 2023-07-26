@@ -33,6 +33,6 @@
 errno_t timespec_sleep_until(struct timespec abs_deadline) {
   errno_t rc;
   rc = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs_deadline, 0);
-  _npassert(!rc || rc == EINTR || rc == ECANCELED);
+  npassert(!rc || rc == EINTR || rc == ECANCELED);
   return rc;
 }

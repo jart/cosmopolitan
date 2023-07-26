@@ -72,7 +72,9 @@ SECTIONS {
     KEEP(*(SORT_NONE(.fini)))
   } =0x1f2003d5
 
-  .privileged ALIGN(CONSTANT(COMMONPAGESIZE)) : {
+  . += CONSTANT(COMMONPAGESIZE);
+
+  .privileged : {
     __privileged_start = .;
     *(.privileged*)
   } =0x1f2003d6
@@ -119,7 +121,7 @@ SECTIONS {
   _etext = .;
   PROVIDE(etext = .);
 
-  . = ALIGN(CONSTANT(COMMONPAGESIZE));
+  . += CONSTANT(COMMONPAGESIZE);
   . = DATA_SEGMENT_ALIGN(CONSTANT(COMMONPAGESIZE), CONSTANT(COMMONPAGESIZE));
 
   .eh_frame : ONLY_IF_RW {

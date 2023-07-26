@@ -141,16 +141,16 @@
 
 STATIC_STACK_SIZE(0x80000);
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 #ifdef USE_BLINK
-STATIC_YOINK("blink_linux_aarch64");  // for raspberry pi
-STATIC_YOINK("blink_xnu_aarch64");    // is apple silicon
+__static_yoink("blink_linux_aarch64");  // for raspberry pi
+__static_yoink("blink_xnu_aarch64");    // is apple silicon
 #endif
 
 #if !IsTiny()
 #ifdef __x86_64__
-STATIC_YOINK("ShowCrashReportsEarly");
+__static_yoink("ShowCrashReportsEarly");
 #endif
 #endif
 
@@ -4948,7 +4948,7 @@ static int LuaProgramTokenBucket(lua_State *L) {
   tokenbucket.ban = ban;
   tokenbucket.replenish = timespec_fromnanos(1 / replenish * 1e9);
   int pid = fork();
-  _npassert(pid != -1);
+  npassert(pid != -1);
   if (!pid) Replenisher();
   return 0;
 }

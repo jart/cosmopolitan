@@ -23,7 +23,7 @@
 //	If you want to support Apple M1 by embedding an emulator in
 //	your APE binary that runs automatically, then put this:
 //
-//	    STATIC_YOINK("blink_xnu_aarch64");
+//	    __static_yoink("blink_xnu_aarch64");
 //
 //	In your main.c file, to pull it into linkage from the static
 //	archive. Alternatively, you may simply add blink_xnu_aarch64.o

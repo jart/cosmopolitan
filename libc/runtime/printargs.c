@@ -63,57 +63,14 @@
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/x86idnames.h"
 
-STATIC_YOINK("strerror");   // for kprintf()
-STATIC_YOINK("strsignal");  // for kprintf()
+__static_yoink("strerror");   // for kprintf()
+__static_yoink("strsignal");  // for kprintf()
 
 #define PRINT(FMT, ...)               \
   do {                                \
     kprintf(prologue);                \
     kprintf(FMT "\n", ##__VA_ARGS__); \
   } while (0)
-
-static const struct AuxiliaryValue {
-  const char *fmt;
-  long *id;
-  const char *name;
-} kAuxiliaryValues[] = {
-    {"%-14p", &AT_EXECFD, "AT_EXECFD"},
-    {"%-14p", &AT_PHDR, "AT_PHDR"},
-    {"%-14p", &AT_PHENT, "AT_PHENT"},
-    {"%-14p", &AT_PHNUM, "AT_PHNUM"},
-    {"%-14p", &AT_PAGESZ, "AT_PAGESZ"},
-    {"%-14p", &AT_BASE, "AT_BASE"},
-    {"%-14p", &AT_ENTRY, "AT_ENTRY"},
-    {"%-14p", &AT_NOTELF, "AT_NOTELF"},
-    {"%-14d", &AT_UID, "AT_UID"},
-    {"%-14d", &AT_EUID, "AT_EUID"},
-    {"%-14d", &AT_GID, "AT_GID"},
-    {"%-14d", &AT_EGID, "AT_EGID"},
-    {"%-14d", &AT_CLKTCK, "AT_CLKTCK"},
-    {"%-14d", &AT_OSRELDATE, "AT_OSRELDATE"},
-    {"%-14p", &AT_PLATFORM, "AT_PLATFORM"},
-    {"%-14p", &AT_DCACHEBSIZE, "AT_DCACHEBSIZE"},
-    {"%-14p", &AT_ICACHEBSIZE, "AT_ICACHEBSIZE"},
-    {"%-14p", &AT_UCACHEBSIZE, "AT_UCACHEBSIZE"},
-    {"%-14p", &AT_SECURE, "AT_SECURE"},
-    {"%-14s", &AT_BASE_PLATFORM, "AT_BASE_PLATFORM"},
-    {"%-14p", &AT_RANDOM, "AT_RANDOM"},
-    {"%-14s", &AT_EXECFN, "AT_EXECFN"},
-    {"%-14p", &AT_SYSINFO_EHDR, "AT_SYSINFO_EHDR"},
-    {"%-14p", &AT_FLAGS, "AT_FLAGS"},
-    {"%-14p", &AT_HWCAP, "AT_HWCAP"},
-    {"%-14p", &AT_HWCAP2, "AT_HWCAP2"},
-    {"%-14p", &AT_STACKBASE, "AT_STACKBASE"},
-    {"%-14p", &AT_CANARY, "AT_CANARY"},
-    {"%-14p", &AT_CANARYLEN, "AT_CANARYLEN"},
-    {"%-14ld", &AT_NCPUS, "AT_NCPUS"},
-    {"%-14p", &AT_PAGESIZES, "AT_PAGESIZES"},
-    {"%-14d", &AT_PAGESIZESLEN, "AT_PAGESIZESLEN"},
-    {"%-14p", &AT_TIMEKEEP, "AT_TIMEKEEP"},
-    {"%-14p", &AT_STACKPROT, "AT_STACKPROT"},
-    {"%-14p", &AT_EHDRFLAGS, "AT_EHDRFLAGS"},
-    {"%-14d", &AT_MINSIGSTKSZ, "AT_MINSIGSTKSZ"},
-};
 
 static const char *FindNameById(const struct IdName *names, unsigned long id) {
   for (; names->name; names++) {
@@ -124,17 +81,7 @@ static const char *FindNameById(const struct IdName *names, unsigned long id) {
   return NULL;
 }
 
-static const struct AuxiliaryValue *DescribeAuxv(unsigned long x) {
-  int i;
-  for (i = 0; i < ARRAYLEN(kAuxiliaryValues); ++i) {
-    if (*kAuxiliaryValues[i].id && x == *kAuxiliaryValues[i].id) {
-      return kAuxiliaryValues + i;
-    }
-  }
-  return NULL;
-}
-
-static noasan void PrintDependencies(const char *prologue) {
+static dontasan void PrintDependencies(const char *prologue) {
   struct NtLinkedList *head = &NtGetPeb()->Ldr->InLoadOrderModuleList;
   struct NtLinkedList *ldr = head->Next;
   do {
@@ -145,7 +92,7 @@ static noasan void PrintDependencies(const char *prologue) {
   } while ((ldr = ldr->Next) && ldr != head);
 }
 
-static noasan void Print(const char *prologue) {
+static dontasan void Print(const char *prologue) {
 }
 
 /**
@@ -158,6 +105,50 @@ static noasan void Print(const char *prologue) {
  * @param prologue needs to be a .rodata kprintf string
  */
 textstartup void __printargs(const char *prologue) {
+
+  const struct AuxiliaryValue {
+    const char *fmt;
+    unsigned long id;
+    const char *name;
+  } kAuxiliaryValues[] = {
+      {"%-14p", AT_EXECFD, "AT_EXECFD"},
+      {"%-14p", AT_PHDR, "AT_PHDR"},
+      {"%-14p", AT_PHENT, "AT_PHENT"},
+      {"%-14p", AT_PHNUM, "AT_PHNUM"},
+      {"%-14p", AT_PAGESZ, "AT_PAGESZ"},
+      {"%-14p", AT_BASE, "AT_BASE"},
+      {"%-14p", AT_ENTRY, "AT_ENTRY"},
+      {"%-14p", AT_NOTELF, "AT_NOTELF"},
+      {"%-14d", AT_UID, "AT_UID"},
+      {"%-14d", AT_EUID, "AT_EUID"},
+      {"%-14d", AT_GID, "AT_GID"},
+      {"%-14d", AT_EGID, "AT_EGID"},
+      {"%-14d", AT_CLKTCK, "AT_CLKTCK"},
+      {"%-14d", AT_OSRELDATE, "AT_OSRELDATE"},
+      {"%-14p", AT_PLATFORM, "AT_PLATFORM"},
+      {"%-14p", AT_DCACHEBSIZE, "AT_DCACHEBSIZE"},
+      {"%-14p", AT_ICACHEBSIZE, "AT_ICACHEBSIZE"},
+      {"%-14p", AT_UCACHEBSIZE, "AT_UCACHEBSIZE"},
+      {"%-14p", AT_SECURE, "AT_SECURE"},
+      {"%-14s", AT_BASE_PLATFORM, "AT_BASE_PLATFORM"},
+      {"%-14p", AT_RANDOM, "AT_RANDOM"},
+      {"%-14s", AT_EXECFN, "AT_EXECFN"},
+      {"%-14p", AT_SYSINFO_EHDR, "AT_SYSINFO_EHDR"},
+      {"%-14p", AT_FLAGS, "AT_FLAGS"},
+      {"%-14p", AT_HWCAP, "AT_HWCAP"},
+      {"%-14p", AT_HWCAP2, "AT_HWCAP2"},
+      {"%-14p", AT_STACKBASE, "AT_STACKBASE"},
+      {"%-14p", AT_CANARY, "AT_CANARY"},
+      {"%-14p", AT_CANARYLEN, "AT_CANARYLEN"},
+      {"%-14ld", AT_NCPUS, "AT_NCPUS"},
+      {"%-14p", AT_PAGESIZES, "AT_PAGESIZES"},
+      {"%-14d", AT_PAGESIZESLEN, "AT_PAGESIZESLEN"},
+      {"%-14p", AT_TIMEKEEP, "AT_TIMEKEEP"},
+      {"%-14p", AT_STACKPROT, "AT_STACKPROT"},
+      {"%-14p", AT_EHDRFLAGS, "AT_EHDRFLAGS"},
+      {"%-14d", AT_MINSIGSTKSZ, "AT_MINSIGSTKSZ"},
+  };
+
   long key;
   char **env;
   sigset_t ss;
@@ -412,7 +403,14 @@ textstartup void __printargs(const char *prologue) {
   if (*__auxv) {
     if (*__auxv) {
       for (auxp = __auxv; *auxp; auxp += 2) {
-        if ((auxinfo = DescribeAuxv(auxp[0]))) {
+        auxinfo = 0;
+        for (i = 0; i < ARRAYLEN(kAuxiliaryValues); ++i) {
+          if (kAuxiliaryValues[i].id && auxp[0] == kAuxiliaryValues[i].id) {
+            auxinfo = kAuxiliaryValues + i;
+            break;
+          }
+        }
+        if (auxinfo) {
           ksnprintf(u.path, sizeof(u.path), auxinfo->fmt, auxp[1]);
           PRINT(" ☼ %16s[%4ld] = %s", auxinfo->name, auxp[0], u.path);
         } else {

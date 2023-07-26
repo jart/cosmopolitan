@@ -76,15 +76,15 @@ static textwindows void GetNtName(char *name, int kind) {
   }
 }
 
-static inline textwindows noasan int GetNtMajorVersion(void) {
+static inline textwindows dontasan int GetNtMajorVersion(void) {
   return NtGetPeb()->OSMajorVersion;
 }
 
-static inline textwindows noasan int GetNtMinorVersion(void) {
+static inline textwindows dontasan int GetNtMinorVersion(void) {
   return NtGetPeb()->OSMinorVersion;
 }
 
-static inline textwindows noasan int GetNtBuildNumber(void) {
+static inline textwindows dontasan int GetNtBuildNumber(void) {
   return NtGetPeb()->OSBuildNumber;
 }
 

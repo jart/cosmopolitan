@@ -61,7 +61,7 @@
 
 #ifdef __x86_64__
 
-STATIC_YOINK("_check_sigchld");
+__static_yoink("_check_sigchld");
 
 extern int64_t __wincrashearly;
 bool32 __onntconsoleevent_nt(uint32_t);
@@ -231,7 +231,7 @@ textwindows void WinMainForked(void) {
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
-  struct Fds *fds = VEIL("r", &g_fds);
+  struct Fds *fds = __veil("r", &g_fds);
   fds->p[0].handle = GetStdHandle(kNtStdInputHandle);
   fds->p[1].handle = GetStdHandle(kNtStdOutputHandle);
   fds->p[2].handle = GetStdHandle(kNtStdErrorHandle);

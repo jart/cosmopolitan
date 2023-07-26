@@ -18,8 +18,8 @@ void __assert_fail(const char *, const char *, int) relegated;
 #ifdef COSMO
 extern bool __assert_disable;
 #ifndef NDEBUG
-#define _unassert(x) __assert_macro(x, #x)
-#define _npassert(x) __assert_macro(x, #x)
+#define unassert(x) __assert_macro(x, #x)
+#define npassert(x) __assert_macro(x, #x)
 #define __assert_macro(x, s)                \
   ({                                        \
     if (__builtin_expect(!(x), 0)) {        \
@@ -29,14 +29,14 @@ extern bool __assert_disable;
     (void)0;                                \
   })
 #else
-#define _npassert(x)                 \
+#define npassert(x)                  \
   ({                                 \
     if (__builtin_expect(!(x), 0)) { \
       __builtin_trap();              \
     }                                \
     (void)0;                         \
   })
-#define _unassert(x)                 \
+#define unassert(x)                  \
   ({                                 \
     if (__builtin_expect(!(x), 0)) { \
       __builtin_unreachable();       \

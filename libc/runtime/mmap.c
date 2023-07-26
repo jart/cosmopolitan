@@ -28,7 +28,6 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -47,9 +46,11 @@
 #include "libc/stdckdint.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 #include "libc/zipos/zipos.internal.h"
@@ -76,9 +77,9 @@ static wontreturn void OnUnrecoverableMmapError(const char *s) {
   _Exitr(199);
 }
 
-static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
+static dontasan inline bool OverlapsExistingMapping(char *p, size_t n) {
   int a, b, i;
-  _unassert(n > 0);
+  unassert(n > 0);
   a = FRAME(p);
   b = FRAME(p + (n - 1));
   i = FindMemoryInterval(&_mmi, a);
@@ -90,10 +91,10 @@ static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
   return false;
 }
 
-static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
+static dontasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
   // TODO: improve performance
   int i, start, end;
-  _unassert(align > 0);
+  unassert(align > 0);
   if (_mmi.i) {
 
     // find the start of the automap memory region
@@ -151,14 +152,14 @@ static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
   return false;
 }
 
-noasan static bool Automap(int count, int align, int *res) {
+dontasan static bool Automap(int count, int align, int *res) {
   return ChooseMemoryInterval(FRAME(kAutomapStart), count, align, res) &&
          *res + count <= FRAME(kAutomapStart + (kAutomapSize - 1));
 }
 
-static noasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
-                                 int fd, int64_t off, int f, int x, int n,
-                                 struct DirectMap dm) {
+static dontasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
+                                   int fd, int64_t off, int f, int x, int n,
+                                   struct DirectMap dm) {
   if (!IsWindows() && (flags & MAP_FIXED)) {
     if (UntrackMemoryIntervals(addr, size)) {
       OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
@@ -177,8 +178,8 @@ static noasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
   return addr;
 }
 
-static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
-                              int fd, int64_t off, int f, int x, int n) {
+static dontasan void *MapMemory(void *addr, size_t size, int prot, int flags,
+                                int fd, int64_t off, int f, int x, int n) {
   struct DirectMap dm;
   dm = sys_mmap(addr, size, prot, f, fd, off);
   if (VERY_UNLIKELY(dm.addr == MAP_FAILED)) {
@@ -200,17 +201,18 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
  * This is useful on Windows since it allows us to partially unmap or
  * punch holes into existing mappings.
  */
-static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
-                                                       int prot, int flags,
-                                                       int fd, int64_t off,
-                                                       int f, int x, int n) {
+static textwindows dontinline dontasan void *MapMemories(char *addr,
+                                                         size_t size, int prot,
+                                                         int flags, int fd,
+                                                         int64_t off, int f,
+                                                         int x, int n) {
   size_t i, m;
   int64_t oi, sz;
   struct DirectMap dm;
   bool iscow, readonlyfile;
   m = (size_t)(n - 1) << 16;
-  _unassert(m < size);
-  _unassert(m + FRAMESIZE >= size);
+  unassert(m < size);
+  unassert(m + FRAMESIZE >= size);
   oi = fd == -1 ? 0 : off + m;
   sz = size - m;
   dm = sys_mmap(addr + m, sz, prot, f, fd, oi);
@@ -239,12 +241,13 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
   return addr;
 }
 
-noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
-                          int64_t off) {
+dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
+                            int fd, int64_t off) {
   char *p = addr;
   struct DirectMap dm;
   int a, b, i, f, m, n, x;
   bool needguard, clashes;
+  unsigned long guardsize;
   size_t virtualused, virtualneed;
 
   if (VERY_UNLIKELY(!size)) {
@@ -332,6 +335,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
   }
 
   needguard = false;
+  guardsize = getauxval(AT_PAGESZ);
   p = (char *)ADDR_32_TO_48(x);
   if ((f & MAP_TYPE) == MAP_STACK) {
     if (~f & MAP_ANONYMOUS) {
@@ -355,7 +359,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
       // make sure there's no existing stuff existing between our stack
       // starting page and the bottom guard page, since that would stop
       // our stack page from growing down.
-      _npassert(!sys_munmap(p, size));
+      npassert(!sys_munmap(p, size));
       // by default MAP_GROWSDOWN will auto-allocate 10mb of pages. it's
       // supposed to stop growing if an adjacent allocation exists, to
       // prevent your stacks from overlapping on each other. we're not
@@ -367,12 +371,12 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
       // however this 1mb behavior oddly enough is smart enough to not
       // apply if the mapping is a manually-created guard page.
       int e = errno;
-      if ((dm = sys_mmap(p + size - APE_GUARDSIZE, APE_GUARDSIZE, prot,
+      if ((dm = sys_mmap(p + size - SIGSTKSZ, SIGSTKSZ, prot,
                          f | MAP_GROWSDOWN_linux, fd, off))
               .addr != MAP_FAILED) {
-        _npassert(sys_mmap(p, APE_GUARDSIZE, PROT_NONE,
-                           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
-                      .addr == p);
+        npassert(sys_mmap(p, guardsize, PROT_NONE,
+                          MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
+                     .addr == p);
         dm.addr = p;
         return FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
       } else if (errno == ENOTSUP) {
@@ -398,11 +402,11 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
     if (needguard) {
       if (!IsWindows()) {
         // make windows fork() code simpler
-        mprotect(p, APE_GUARDSIZE, PROT_NONE);
+        mprotect(p, guardsize, PROT_NONE);
       }
       if (IsAsan()) {
         __repstosb((void *)(((intptr_t)p >> 3) + 0x7fff8000),
-                   kAsanStackOverflow, APE_GUARDSIZE / 8);
+                   kAsanStackOverflow, guardsize / 8);
       }
     }
   }
@@ -435,15 +439,7 @@ noasan inline void *_Mmap(void *addr, size_t size, int prot, int flags, int fd,
  *     - `MAP_PRIVATE` for copy-on-write behavior of writeable pages
  *     - `MAP_SHARED` to create shared memory between processes
  *     - `MAP_STACK` to create a grows-down alloc, where a guard page
- *       is automatically protected at the bottom: FreeBSD's behavior
- *       is polyfilled across platforms; uses MAP_GROWSDOWN on Linux
- *       too for extra oomph (do not use MAP_GROWSDOWN!) and this is
- *       completely mandatory on OpenBSD but helps perf elsewhere if
- *       you need to create 10,000 threads.  This flag is the reason
- *       why `STACK_FRAME_UNLIMITED` toil is important, because this
- *       only allocates a 4096-byte guard page, thus we need the GCC
- *       compile-time checks to ensure some char[8192] vars will not
- *       create an undetectable overflow into another thread's stack
+ *       is automatically protected at the bottom, sized as AT_PAGESZ
  *     Your `flags` may optionally bitwise or any of the following:
  *     - `MAP_ANONYMOUS` in which case `fd` and `off` are ignored
  *     - `MAP_FIXED` in which case `addr` becomes more than a hint

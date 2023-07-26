@@ -82,10 +82,15 @@ o/$(MODE)/test/libc/runtime/itsatrap_test.o: private			\
 			-fno-sanitize=all				\
 			-ftrapv
 
+ifeq ($(ARCH), aarch64)
+FTRACEASM_LDSCRIPT = o/$(MODE)/ape/aarch64.lds
+endif
+
 o/$(MODE)/test/libc/runtime/prog/ftraceasm.elf:				\
 		$(TEST_LIBC_RUNTIME_DEPS)				\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.o		\
-		o/$(MODE)/test/libc/runtime/runtime.pkg
+		o/$(MODE)/test/libc/runtime/runtime.pkg			\
+		$(FTRACEASM_LDSCRIPT)
 	@$(ELFLINK)
 o/$(MODE)/test/libc/runtime/prog/ftraceasm.txt:				\
 		o/$(MODE)/test/libc/runtime/prog/ftraceasm.elf

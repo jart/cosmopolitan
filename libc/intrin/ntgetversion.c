@@ -27,7 +27,7 @@
  *
  * @see IsAtLeastWindows10()
  */
-textwindows noasan int NtGetVersion(void) {
+textwindows dontasan int NtGetVersion(void) {
   return (NtGetPeb()->OSMajorVersion & 0xff) << 8 | NtGetPeb()->OSMinorVersion;
 }
 

@@ -22,7 +22,7 @@
 #include "libc/sock/syscall_fd.internal.h"
 
 textwindows int sys_listen_nt(struct Fd *fd, int backlog) {
-  _npassert(fd->kind == kFdSocket);
+  npassert(fd->kind == kFdSocket);
   if (__sys_listen_nt(fd->handle, backlog) != -1) {
     return 0;
   } else {

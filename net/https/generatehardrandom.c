@@ -24,7 +24,7 @@ int GenerateHardRandom(void *ctx, unsigned char *p, size_t n) {
   size_t i;
   ssize_t rc;
   for (i = 0; i < n; i += (size_t)rc) {
-    _npassert((rc = getrandom(p + i, n - i, 0)) != -1);
+    npassert((rc = getrandom(p + i, n - i, 0)) != -1);
   }
   return 0;
 }

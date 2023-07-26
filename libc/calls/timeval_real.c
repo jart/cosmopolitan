@@ -26,6 +26,6 @@
  */
 struct timeval timeval_real(void) {
   struct timeval tv;
-  _npassert(!gettimeofday(&tv, 0));
+  npassert(!gettimeofday(&tv, 0));
   return tv;
 }

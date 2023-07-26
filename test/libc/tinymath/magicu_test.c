@@ -49,8 +49,9 @@ TEST(magicu, test) {
 
 BENCH(magicu, bench) {
   struct magicu d = __magicu_get(UINT32_MAX);
-  EZBENCH2("__magicu_get", donothing, __magicu_get(VEIL("r", UINT32_MAX)));
+  EZBENCH2("__magicu_get", donothing, __magicu_get(__veil("r", UINT32_MAX)));
   EZBENCH2("__magicu_div", donothing,
-           EXPROPRIATE(__magicu_div(VEIL("r", 77u), d)));
-  EZBENCH2("/", donothing, EXPROPRIATE(VEIL("r", 77u) / VEIL("r", UINT32_MAX)));
+           __expropriate(__magicu_div(__veil("r", 77u), d)));
+  EZBENCH2("/", donothing,
+           __expropriate(__veil("r", 77u) / __veil("r", UINT32_MAX)));
 }

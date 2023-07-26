@@ -45,7 +45,7 @@
 #include "third_party/stb/stb_image.h"
 #include "tool/viz/lib/graphic.h"
 
-STATIC_YOINK("__zipos_get");
+__static_yoink("__zipos_get");
 
 static struct Flags {
   const char *out;

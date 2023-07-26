@@ -21,7 +21,7 @@
 #include "libc/thread/thread.h"
 
 #ifdef __x86_64__
-STATIC_YOINK("_init__mmi");
+__static_yoink("_init__mmi");
 #endif
 
 struct MemoryIntervals _mmi;

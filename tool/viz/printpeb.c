@@ -82,7 +82,7 @@ const struct IdName kNtStartfFlagNames[] = {
     {0, 0},
 };
 
-noasan void PrintStartupInfo(void) {
+dontasan void PrintStartupInfo(void) {
 #if 0
   printf("\n\
 ╔──────────────────────────────────────────────────────────────────────────────╗\n\
@@ -161,7 +161,7 @@ void PrintStdioInfo(void) {
          ft2str(GetFileType(g_fds.p[2].handle)));
 }
 
-noasan void PrintTeb(void) {
+dontasan void PrintTeb(void) {
   GetCurrentProcessId();
   SetLastError(0x1234);
   printf("\n\

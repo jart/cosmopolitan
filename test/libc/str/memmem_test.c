@@ -193,11 +193,11 @@ TEST(memmem, fuzz) {
  */
 BENCH(memmem, bench) {
   EZBENCH2("memmem naive", donothing,
-           EXPROPRIATE(memmem_naive(kHyperion, kHyperionSize, "THE END", 7)));
+           __expropriate(memmem_naive(kHyperion, kHyperionSize, "THE END", 7)));
   EZBENCH2("memmem", donothing,
-           EXPROPRIATE(memmem(kHyperion, kHyperionSize, "THE END", 7)));
+           __expropriate(memmem(kHyperion, kHyperionSize, "THE END", 7)));
   EZBENCH2("memmem", donothing,
-           EXPROPRIATE(memmem(
+           __expropriate(memmem(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                62, "aaaaaab", 7)));
 }

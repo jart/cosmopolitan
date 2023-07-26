@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 #define IGNORE_LEAKS(FUNC)                                        \
-  STATIC_YOINK("_leaky_start");                                   \
+  __static_yoink("_leaky_start");                                   \
   void *_leaky_##FUNC[] _Section(".piro.relo.sort.leaky.2." #FUNC \
                                  ",\"aw\",@init_array #") = {FUNC}
 

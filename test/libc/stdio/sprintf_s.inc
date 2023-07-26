@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
 /* MODE=tiny makes these dependencies optional */
-STATIC_YOINK("strnwidth");
-STATIC_YOINK("strnwidth16");
-STATIC_YOINK("wcsnwidth");
+__static_yoink("strnwidth");
+__static_yoink("strnwidth16");
+__static_yoink("wcsnwidth");
 
 TEST(SUITE(sprintf), testStringLength) {
   ASSERT_STREQ("This", Format(FORMAT("%.4"), STRING("This is a test")));

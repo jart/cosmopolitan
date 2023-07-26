@@ -125,7 +125,7 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
  * So if you want to trade away Windows so that you can use
  * UEFI instead of the normal BIOS boot process, do this:
  *
- *     STATIC_YOINK("EfiMain");
+ *     __static_yoink("EfiMain");
  *     int main() { ... }
  *
  * You can use QEMU to test this, but please note that UEFI
@@ -141,8 +141,8 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
  *
  * @see libc/dce.h
  */
-__msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
-                                  EFI_SYSTEM_TABLE *SystemTable) {
+__msabi dontasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
+                                    EFI_SYSTEM_TABLE *SystemTable) {
   int type, x87cw = 0x037f;
   struct mman *mm;
   uint32_t DescVersion;

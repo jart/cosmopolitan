@@ -129,40 +129,40 @@ TEST(strstr, breakit) {
  */
 BENCH(strstr, bench) {
   EZBENCH2("strstr naive", donothing,
-           EXPROPRIATE(strstr_naive(kHyperion, "THE END")));
-  EZBENCH2("strstr", donothing, EXPROPRIATE(strstr(kHyperion, "THE END")));
+           __expropriate(strstr_naive(kHyperion, "THE END")));
+  EZBENCH2("strstr", donothing, __expropriate(strstr(kHyperion, "THE END")));
   EZBENCH2("strstr torture 1", donothing,
-           EXPROPRIATE(strstr(
+           __expropriate(strstr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "b")));
   EZBENCH2("strstr torture 2", donothing,
-           EXPROPRIATE(strstr(
+           __expropriate(strstr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "ab")));
   EZBENCH2("strstr torture 4", donothing,
-           EXPROPRIATE(strstr(
+           __expropriate(strstr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "aaab")));
   EZBENCH2("strstr torture 8", donothing,
-           EXPROPRIATE(strstr(
+           __expropriate(strstr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "aaaaaaab")));
   EZBENCH2("strstr torture 16", donothing,
-           EXPROPRIATE(strstr(
+           __expropriate(strstr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "aaaaaaaaaaaaaaab")));
   EZBENCH2("strstr torture 32", donothing,
-           EXPROPRIATE(strstr(
+           __expropriate(strstr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",

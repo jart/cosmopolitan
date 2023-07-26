@@ -47,7 +47,7 @@ void *xloadzd(_Atomic(void *) *a, const void *p, size_t n, size_t m, size_t c,
   void *r, *g;
   int64_t x, y;
   if ((r = atomic_load_explicit(a, memory_order_acquire))) return r;
-  _unassert(z == 2 || z == 4);
+  unassert(z == 2 || z == 4);
   if (!(b = q = malloc(m))) return 0;
   if (__inflate(q, m, p, n)) {
     free(q);

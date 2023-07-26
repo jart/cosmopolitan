@@ -52,7 +52,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 
-STATIC_YOINK("rdrand_init");
+__static_yoink("rdrand_init");
 
 int sys_getentropy(void *, size_t) asm("sys_getrandom");
 
@@ -128,7 +128,7 @@ static ssize_t GetRandomMetal(char *p, size_t n, int f) {
 }
 
 static void GetRandomEntropy(char *p, size_t n) {
-  _unassert(n <= 256);
+  unassert(n <= 256);
   if (sys_getentropy(p, n)) notpossible;
 }
 
@@ -137,7 +137,7 @@ static void GetRandomArnd(char *p, size_t n) {
   int cmd[2];
   cmd[0] = 1;                      // CTL_KERN
   cmd[1] = IsFreebsd() ? 37 : 81;  // KERN_ARND
-  _unassert((m = n) <= 256);
+  unassert((m = n) <= 256);
   if (sys_sysctl(cmd, 2, p, &n, 0, 0) == -1) notpossible;
   if (m != n) notpossible;
 }

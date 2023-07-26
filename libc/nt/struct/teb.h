@@ -7,7 +7,7 @@
 
 /*
  * These macros address directly into NT's TEB a.k.a. TIB
- * Any function that does this needs the `noasan` keyword
+ * Any function that does this needs the `dontasan` keyword
  */
 #define NtGetPeb()           gs((struct NtPeb **)(0x60ULL))
 #define NtGetTeb()           gs((void **)(0x30))    /* %gs:0 linear address */

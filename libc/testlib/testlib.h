@@ -13,7 +13,7 @@ COSMOPOLITAN_C_START_
  * the (SUITE, NAME) tuple passed here.
  */
 #define TEST(SUITE, NAME)           \
-  STATIC_YOINK("__testcase_start"); \
+  __static_yoink("__testcase_start"); \
   __TEST_PROTOTYPE(SUITE, NAME, __TEST_ARRAY, )
 
 /**
@@ -26,7 +26,7 @@ COSMOPOLITAN_C_START_
  * are also guaranteed by the linker to be run in sorted order.
  */
 #define FIXTURE(SUITE, NAME)       \
-  STATIC_YOINK("__fixture_start"); \
+  __static_yoink("__fixture_start"); \
   __FIXTURE("fixture", SUITE, NAME)
 
 /**
@@ -37,7 +37,7 @@ COSMOPOLITAN_C_START_
  * more appropriate for testing pure code (i.e. no syscalls) like math.
  */
 #define COMBO(GROUP, ENTRY)      \
-  STATIC_YOINK("__combo_start"); \
+  __static_yoink("__combo_start"); \
   __FIXTURE("combo", GROUP, ENTRY)
 
 /**
@@ -50,7 +50,7 @@ COSMOPOLITAN_C_START_
  * @see EZBENCH()
  */
 #define BENCH(SUITE, NAME)       \
-  STATIC_YOINK("__bench_start"); \
+  __static_yoink("__bench_start"); \
   __TEST_PROTOTYPE(SUITE, NAME, __BENCH_ARRAY, optimizespeed)
 
 #define ASSERT_GE(C, X) _TEST2("ASSERT_GE", C, >=, (X), #C, " ≥ ", #X, 1)

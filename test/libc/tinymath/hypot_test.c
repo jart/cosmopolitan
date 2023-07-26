@@ -121,7 +121,7 @@ _hypotl                     l:        43𝑐        14𝑛𝑠   m:        74�
 BENCH(_hypot, bench) {
   volatile double a = 2;
   volatile double b = 3;
-  EZBENCH2("hypotf", donothing, EXPROPRIATE(_hypotf(a, b)));
-  EZBENCH2("hypot", donothing, EXPROPRIATE(_hypot(a, b)));
-  EZBENCH2("hypotl", donothing, EXPROPRIATE(_hypotl(a, b)));
+  EZBENCH2("hypotf", donothing, __expropriate(_hypotf(a, b)));
+  EZBENCH2("hypot", donothing, __expropriate(_hypot(a, b)));
+  EZBENCH2("hypotl", donothing, __expropriate(_hypotl(a, b)));
 }

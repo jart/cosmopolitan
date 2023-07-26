@@ -24,8 +24,8 @@
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
-noasan static unsigned timingsafe_bcmp_sse(const char *p, const char *q,
-                                           size_t n) {
+dontasan static unsigned timingsafe_bcmp_sse(const char *p, const char *q,
+                                             size_t n) {
   uint64_t w;
   xmm_t a = {0};
   while (n > 16 + 16) {
@@ -41,9 +41,9 @@ noasan static unsigned timingsafe_bcmp_sse(const char *p, const char *q,
 }
 
 #ifdef __x86_64__
-noasan static _Microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
-                                                                const char *q,
-                                                                size_t n) {
+dontasan static _Microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
+                                                                  const char *q,
+                                                                  size_t n) {
   uint64_t w;
   xmm_t a = {0};
   if (n > 32) {

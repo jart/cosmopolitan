@@ -49,7 +49,7 @@ void _bt(const char *fmt, ...) {
     errno = e;
   } else {
     kprintf("_bt() can't show backtrace because you need:\n"
-            "\tSTATIC_YOINK(\"ShowBacktrace\");\n"
+            "\t__static_yoink(\"ShowBacktrace\");\n"
             "to be linked.\n");
     if (_weaken(PrintBacktraceUsingSymbols) && _weaken(GetSymbolTable)) {
       e = errno;
@@ -58,8 +58,8 @@ void _bt(const char *fmt, ...) {
       errno = e;
     } else {
       kprintf("_bt() can't show backtrace because you need:\n"
-              "\tSTATIC_YOINK(\"PrintBacktraceUsingSymbols\");\n"
-              "\tSTATIC_YOINK(\"GetSymbolTable\");\n"
+              "\t__static_yoink(\"PrintBacktraceUsingSymbols\");\n"
+              "\t__static_yoink(\"GetSymbolTable\");\n"
               "to be linked.\n");
     }
   }

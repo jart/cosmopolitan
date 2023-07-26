@@ -47,8 +47,8 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
   }
   if (fd->flags & O_NONBLOCK) {
     e = errno;
-    _unassert(CancelIoEx(fd->handle, overlapped) ||
-              WSAGetLastError() == kNtErrorNotFound);
+    unassert(CancelIoEx(fd->handle, overlapped) ||
+             WSAGetLastError() == kNtErrorNotFound);
     errno = e;
   } else {
     if (_check_interrupts(restartable, g_fds.p)) {

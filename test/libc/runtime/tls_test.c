@@ -30,7 +30,7 @@ _Thread_local long x;
 _Thread_local long y[1] = {40};
 _Alignas(A) _Thread_local long a;
 
-noubsan void *Worker(void *arg) {
+dontubsan void *Worker(void *arg) {
   ASSERT_EQ(42, x + y[0] + z);
   ASSERT_EQ(0, (intptr_t)&a & (A - 1));
   if (IsAsan()) {

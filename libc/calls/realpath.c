@@ -181,7 +181,7 @@ skip_readlink:
 			continue;
 		}
 		k = rc;
-		_npassert(k <= p);
+		npassert(k <= p);
 		if (k==p)
 			goto toolong;
 		if (!k) {
