@@ -4584,6 +4584,12 @@ static int LuaProgramBrand(lua_State *L) {
 }
 
 static int LuaProgramDirectory(lua_State *L) {
+  struct stat st;
+  char *path = luaL_checkstring(L, 1);
+  // check to raise a Lua error, to allow it to be handled
+  if (stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
+    return luaL_argerror(L, 1, "not a directory");
+  }
   return LuaProgramString(L, ProgramDirectory);
 }
 
