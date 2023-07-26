@@ -41,8 +41,8 @@
 #include "net/http/escape.h"
 #ifdef __x86_64__
 
-STATIC_YOINK("backtrace.com");
-STATIC_YOINK("backtrace.com.dbg");
+__static_yoink("backtrace.com");
+__static_yoink("backtrace.com.dbg");
 
 char testlib_enable_tmp_setup_teardown_once;
 

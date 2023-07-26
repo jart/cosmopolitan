@@ -35,7 +35,7 @@ APELINK =					\
 	$(FIXUPOBJ)				\
 	$@
 
-APE_SRCS = ape/ape.S
+APE_SRCS = ape/ape.S ape/start.S ape/launch.S ape/systemcall.S
 APE_OBJS = o/$(MODE)/ape/ape.o
 APE_NO_MODIFY_SELF = $(APE)
 APE_COPY_SELF = $(APE)
@@ -51,6 +51,54 @@ o/$(MODE)/ape/aarch64.lds:			\
 	libc/calls/struct/timespec.h		\
 	libc/macros.internal.h			\
 	libc/str/str.h
+
+APE_LOADER_LDFLAGS =				\
+	-pie					\
+	-static					\
+	-nostdlib				\
+	--no-dynamic-linker			\
+	-z norelro				\
+	-z common-page-size=0x4000		\
+	-z max-page-size=0x4000
+
+APE_LOADER_FLAGS =				\
+	-DNDEBUG				\
+	-iquote.				\
+	-Wall					\
+	-Wextra					\
+	-fpie					\
+	-Os					\
+	-ffreestanding				\
+	-mgeneral-regs-only			\
+	-fno-asynchronous-unwind-tables		\
+	-fno-stack-protector			\
+	-fno-ident				\
+	-fno-gnu-unique				\
+	-c					\
+	 $(OUTPUT_OPTION)			\
+	$<
+
+o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
+	$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -g $< $@
+
+o/$(MODE)/ape/ape.elf.dbg:			\
+		o/$(MODE)/ape/start.o		\
+		o/$(MODE)/ape/loader.o		\
+		o/$(MODE)/ape/launch.o		\
+		o/$(MODE)/ape/systemcall.o
+	@$(COMPILE) -ALINK.elf $(LD) $(APE_LOADER_LDFLAGS) -o $@ $(patsubst %.lds,-T %.lds,$^)
+
+o/$(MODE)/ape/loader.o: ape/loader.c
+	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=1 -g $(APE_LOADER_FLAGS)
+o/$(MODE)/ape/start.o: ape/start.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/ape/launch.o: ape/launch.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/ape/systemcall.o: ape/systemcall.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+
+.PHONY: o/$(MODE)/ape
+o/$(MODE)/ape: o/$(MODE)/ape/ape.elf
 
 else
 

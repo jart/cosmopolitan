@@ -27,7 +27,7 @@ extern struct SymbolTable *__symtab;
  * @param t if null will be auto-populated only if already open
  * @return index or -1 if nothing found
  */
-dontinstrument privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
+privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
   // we need privileged because:
   //   kprintf is privileged and it depends on this
   // we don't want function tracing because:

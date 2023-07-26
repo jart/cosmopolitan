@@ -31,7 +31,7 @@ textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
   if ((ok = SetFilePointerEx(handle, 0, &tell, kNtFileCurrent))) {
     ok = SetFilePointerEx(handle, length, NULL, kNtFileBegin) &&
          SetEndOfFile(handle);
-    _npassert(SetFilePointerEx(handle, tell, NULL, kNtFileBegin));
+    npassert(SetFilePointerEx(handle, tell, NULL, kNtFileBegin));
   }
   if (ok) {
     return 0;

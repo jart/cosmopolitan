@@ -50,7 +50,7 @@ static size_t maptotal;
 static void *__zipos_mmap_space(size_t mapsize) {
   char *start;
   size_t offset;
-  _unassert(mapsize);
+  unassert(mapsize);
   offset = maptotal;
   maptotal += mapsize;
   start = (char *)kMemtrackZiposStart;
@@ -135,7 +135,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
   int rc, fd, minfd;
   struct ZiposHandle *h;
   lf = GetZipCfileOffset(zipos->map + cf);
-  _npassert((ZIP_LFILE_MAGIC(zipos->map + lf) == kZipLfileHdrMagic));
+  npassert((ZIP_LFILE_MAGIC(zipos->map + lf) == kZipLfileHdrMagic));
   size = GetZipLfileUncompressedSize(zipos->map + lf);
   switch (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
     case kZipCompressionNone:

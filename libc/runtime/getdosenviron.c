@@ -36,7 +36,7 @@ forceinline char *MemChr(const char *s, unsigned char c, unsigned long n) {
   return 0;
 }
 
-static textwindows noasan dontinstrument axdx_t
+static textwindows dontasan dontinstrument axdx_t
 Recode16to8(char *dst, size_t dstsize, const char16_t *src) {
   bool v;
   axdx_t r;
@@ -70,7 +70,7 @@ Recode16to8(char *dst, size_t dstsize, const char16_t *src) {
   return r;
 }
 
-textwindows dontinstrument noasan void FixPath(char *path) {
+textwindows dontinstrument dontasan void FixPath(char *path) {
   char *p;
   size_t i;
 
@@ -110,9 +110,9 @@ textwindows dontinstrument noasan void FixPath(char *path) {
 // @param envp stores NULL-terminated string pointer list (optional)
 // @param max is the pointer count capacity of envp
 // @return number of variables decoded, excluding NULL-terminator
-textwindows noasan dontinstrument int GetDosEnviron(const char16_t *env,
-                                                    char *buf, size_t size,
-                                                    char **envp, size_t max) {
+textwindows dontasan dontinstrument int GetDosEnviron(const char16_t *env,
+                                                      char *buf, size_t size,
+                                                      char **envp, size_t max) {
   int i;
   char *p;
   axdx_t r;

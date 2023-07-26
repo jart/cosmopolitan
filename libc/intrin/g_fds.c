@@ -31,7 +31,7 @@
 #include "libc/thread/thread.h"
 
 #ifdef __x86_64__
-STATIC_YOINK("_init_g_fds");
+__static_yoink("_init_g_fds");
 #endif
 
 struct Fds g_fds;
@@ -49,7 +49,7 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
 textstartup void __init_fds(void) {
   struct Fds *fds;
   __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
-  fds = VEIL("r", &g_fds);
+  fds = __veil("r", &g_fds);
   fds->n = 4;
   atomic_store_explicit(&fds->f, 3, memory_order_relaxed);
   if (_weaken(_extend)) {
@@ -73,9 +73,9 @@ textstartup void __init_fds(void) {
       fds->p[1].kind = pushpop(kFdSerial);
       fds->p[2].kind = pushpop(kFdSerial);
     }
-    fds->p[0].handle = VEIL("r", 0x3F8ull);
-    fds->p[1].handle = VEIL("r", 0x3F8ull);
-    fds->p[2].handle = VEIL("r", 0x3F8ull);
+    fds->p[0].handle = __veil("r", 0x3F8ull);
+    fds->p[1].handle = __veil("r", 0x3F8ull);
+    fds->p[2].handle = __veil("r", 0x3F8ull);
   } else if (IsWindows()) {
     SetupWinStd(fds, 0, kNtStdInputHandle);
     SetupWinStd(fds, 1, kNtStdOutputHandle);

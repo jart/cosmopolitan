@@ -383,7 +383,7 @@ static textwindows int afd_poll(int64_t afd_device_handle,
                                 struct NtIoStatusBlock *io_status_block) {
   NtStatus status;
   /* Blocking operation is not supported.*/
-  _npassert(io_status_block);
+  npassert(io_status_block);
   io_status_block->Status = kNtStatusPending;
   status =
       NtDeviceIoControlFile(afd_device_handle, 0, NULL, io_status_block,
@@ -563,7 +563,7 @@ static textwindows int ts_tree_add(struct TsTree *ts_tree,
 }
 
 static textwindows void port__free(struct PortState *port) {
-  _npassert(port);
+  npassert(port);
   free(port);
 }
 
@@ -591,7 +591,7 @@ err1:
 }
 
 static textwindows int sock__cancel_poll(struct SockState *sock_state) {
-  _npassert(sock_state->poll_status == kPollPending);
+  npassert(sock_state->poll_status == kPollPending);
   if (afd_cancel_poll(poll_group_get_afd_device_handle(sock_state->poll_group),
                       &sock_state->io_status_block) < 0) {
     return -1;
@@ -707,13 +707,13 @@ static textwindows void reflock__await_event(void *address) {
 static textwindows void reflock_ref(struct RefLock *reflock) {
   long state = InterlockedAdd(&reflock->state, REFLOCK__REF);
   /* Verify that the counter didn 't overflow and the lock isn' t destroyed.*/
-  _npassert((state & REFLOCK__DESTROY_MASK) == 0);
+  npassert((state & REFLOCK__DESTROY_MASK) == 0);
 }
 
 static textwindows void reflock_unref(struct RefLock *reflock) {
   long state = InterlockedAdd(&reflock->state, -REFLOCK__REF);
   /* Verify that the lock was referenced and not already destroyed.*/
-  _npassert((state & REFLOCK__DESTROY_MASK & ~REFLOCK__DESTROY) == 0);
+  npassert((state & REFLOCK__DESTROY_MASK & ~REFLOCK__DESTROY) == 0);
   if (state == REFLOCK__DESTROY) reflock__signal_event(reflock);
 }
 
@@ -749,10 +749,10 @@ static textwindows void reflock_unref_and_destroy(struct RefLock *reflock) {
   state = InterlockedAdd(&reflock->state, REFLOCK__DESTROY - REFLOCK__REF);
   ref_count = state & REFLOCK__REF_MASK;
   /* Verify that the lock was referenced and not already destroyed. */
-  _npassert((state & REFLOCK__DESTROY_MASK) == REFLOCK__DESTROY);
+  npassert((state & REFLOCK__DESTROY_MASK) == REFLOCK__DESTROY);
   if (ref_count != 0) reflock__await_event(reflock);
   state = InterlockedExchange(&reflock->state, REFLOCK__POISON);
-  _npassert(state == REFLOCK__DESTROY);
+  npassert(state == REFLOCK__DESTROY);
 }
 
 static textwindows void ts_tree_node_unref_and_destroy(
@@ -780,13 +780,13 @@ static textwindows void poll_group_release(struct PollGroup *poll_group) {
   struct PortState *port_state = poll_group->port_state;
   struct Queue *poll_group_queue = port_get_poll_group_queue(port_state);
   poll_group->group_size--;
-  _npassert(poll_group->group_size < MAX_GROUP_SIZE);
+  npassert(poll_group->group_size < MAX_GROUP_SIZE);
   queue_move_to_end(poll_group_queue, &poll_group->queue_node);
   /* Poll groups are currently only freed when the epoll port is closed. */
 }
 
 static textwindows void sock__free(struct SockState *sock_state) {
-  _npassert(sock_state != NULL);
+  npassert(sock_state != NULL);
   free(sock_state);
 }
 
@@ -832,7 +832,7 @@ static textwindows void sock_force_delete(struct PortState *port_state,
 }
 
 static textwindows void poll_group_delete(struct PollGroup *poll_group) {
-  _npassert(poll_group->group_size == 0);
+  npassert(poll_group->group_size == 0);
   CloseHandle(poll_group->afd_device_handle);
   queue_remove(&poll_group->queue_node);
   free(poll_group);
@@ -844,7 +844,7 @@ static textwindows int port_delete(struct PortState *port_state) {
   struct SockState *sock_state;
   struct PollGroup *poll_group;
   /* At this point the IOCP port should have been closed.*/
-  _npassert(!port_state->iocp_handle);
+  npassert(!port_state->iocp_handle);
   while ((tree_node = tree_root(&port_state->sock_tree)) != NULL) {
     sock_state = sock_state_from_tree_node(tree_node);
     sock_force_delete(port_state, sock_state);
@@ -857,14 +857,14 @@ static textwindows int port_delete(struct PortState *port_state) {
     poll_group = poll_group_from_queue_node(queue_node);
     poll_group_delete(poll_group);
   }
-  _npassert(queue_is_empty(&port_state->sock_update_queue));
+  npassert(queue_is_empty(&port_state->sock_update_queue));
   DeleteCriticalSection(&port_state->lock);
   port__free(port_state);
   return 0;
 }
 
 static textwindows int64_t port_get_iocp_handle(struct PortState *port_state) {
-  _npassert(port_state->iocp_handle);
+  npassert(port_state->iocp_handle);
   return port_state->iocp_handle;
 }
 
@@ -938,7 +938,7 @@ static textwindows uint32_t sock__afd_events_to_epoll_events(uint32_t a) {
 
 static textwindows int sock_update(struct PortState *port_state,
                                    struct SockState *sock_state) {
-  _npassert(!sock_state->delete_pending);
+  npassert(!sock_state->delete_pending);
   if ((sock_state->poll_status == kPollPending) &&
       !(sock_state->user_events & KNOWN_EVENTS & ~sock_state->pending_events)) {
     /* All the events the user is interested in are already being

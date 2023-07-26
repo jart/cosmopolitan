@@ -41,7 +41,7 @@
 
 #define USE_COSMO_CRASH MODE_DBG + 0
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 PYTHON_YOINK("_bootlocale");
 PYTHON_YOINK("_locale");
 PYTHON_YOINK("encodings.aliases");

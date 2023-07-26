@@ -45,7 +45,7 @@
 #endif
 
 #undef assert
-#define assert(x) _npassert(x)
+#define assert(x) npassert(x)
 
 #include "third_party/dlmalloc/platform.inc"
 #include "third_party/dlmalloc/locks.inc"

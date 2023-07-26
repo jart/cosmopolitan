@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/runtime/memtrack.internal.h"
 
-noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
+dontasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
   unsigned l, m, r;
   l = 0;
   r = mm->i;
@@ -31,6 +31,6 @@ noasan unsigned FindMemoryInterval(const struct MemoryIntervals *mm, int x) {
       r = m;
     }
   }
-  _unassert(l == mm->i || x <= mm->p[l].y);
+  unassert(l == mm->i || x <= mm->p[l].y);
   return l;
 }

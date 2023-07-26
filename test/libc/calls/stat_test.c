@@ -34,7 +34,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 char testlib_enable_tmp_setup_teardown;
 

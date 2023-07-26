@@ -26,7 +26,7 @@
  * @assume stack addresses are always greater than heap addresses
  * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
  */
-optimizesize noasan bool _isheap(void *p) {
+optimizesize dontasan bool _isheap(void *p) {
   intptr_t x, y;
   x = kAutomapStart;
   y = x + kAutomapSize;

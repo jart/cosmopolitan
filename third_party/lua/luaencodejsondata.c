@@ -24,10 +24,12 @@
 #include "libc/log/rop.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/strlist.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "net/http/escape.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
@@ -169,7 +171,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
   bool multi;
   bool isarray;
   lua_Unsigned n;
-  if (UNLIKELY(!HaveStackMemory(APE_GUARDSIZE))) {
+  if (UNLIKELY(!HaveStackMemory(getauxval(AT_PAGESZ)))) {
     z->reason = "out of stack";
     return -1;
   }

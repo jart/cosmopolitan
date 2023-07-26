@@ -295,7 +295,7 @@ backslash(STR *s)
 	size_t i;
 	int ch, val;
 
-	_unassert(*s->str == '\\');
+	unassert(*s->str == '\\');
 	s->str++;
 
 	/* Empty escapes become plain backslashes. */

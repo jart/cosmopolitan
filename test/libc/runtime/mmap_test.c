@@ -48,7 +48,7 @@
 #include "libc/x/xspawn.h"
 #include "third_party/xed/x86.h"
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 char testlib_enable_tmp_setup_teardown;
 

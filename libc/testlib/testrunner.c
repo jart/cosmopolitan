@@ -120,7 +120,7 @@ static void CheckSignalHandler(int sig) {
 #if 0
   int i;
   struct sigaction sa = {0};
-  _unassert(0 <= sig - 1 && sig - 1 < ARRAYLEN(wanthandlers));
+  unassert(0 <= sig - 1 && sig - 1 < ARRAYLEN(wanthandlers));
   CHECK_EQ(0, sigaction(sig, 0, &sa));
   CHECK_EQ(0, memcmp(wanthandlers + sig - 1, &sa, sizeof(sa)),
            "signal handler for %s was %p/%#x/%#x:%x "

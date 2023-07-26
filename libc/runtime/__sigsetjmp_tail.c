@@ -28,7 +28,7 @@ int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
       sizeof(sigjmp_buf) == sizeof(jmp_buf) + 8 + 8 + sizeof(sigset_t),
       "please recompute sigjmp_buf w.r.t. sigset_t");
   void *p = (char *)jb + sizeof(jmp_buf) + 8 + 8;
-  _npassert(!sigprocmask(SIG_SETMASK, rc ? p : 0, rc ? 0 : p));
+  npassert(!sigprocmask(SIG_SETMASK, rc ? p : 0, rc ? 0 : p));
   return rc;
 }
 

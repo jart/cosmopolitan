@@ -20,7 +20,7 @@
 #include "third_party/mbedtls/platform.h"
 
 // disable ubsan because n=0 is defined behavior in cosmopolitan
-noubsan void mbedtls_platform_zeroize(void *p, size_t n) {
+dontubsan void mbedtls_platform_zeroize(void *p, size_t n) {
   MBEDTLS_INTERNAL_VALIDATE(!n || p);
   bzero(p, n);
 }

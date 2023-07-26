@@ -53,7 +53,7 @@ static textwindows int sys_open_nt_console(int dirfd,
              -1) {
     g_fds.p[fd].extra = sys_open_nt_impl(dirfd, mp->conout,
                                          (flags & ~O_ACCMODE) | O_WRONLY, mode);
-    _npassert(g_fds.p[fd].extra != -1);
+    npassert(g_fds.p[fd].extra != -1);
   } else {
     return -1;
   }

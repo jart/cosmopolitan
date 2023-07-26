@@ -82,7 +82,7 @@ void *kmalloc(size_t size) {
   }
   __kmalloc_unlock();
   if (p) {
-    _unassert(!((intptr_t)(p + i) & (KMALLOC_ALIGN - 1)));
+    unassert(!((intptr_t)(p + i) & (KMALLOC_ALIGN - 1)));
     if (IsAsan()) __asan_poison(p + i + size, n - size, kAsanHeapOverrun);
     return p + i;
   } else {

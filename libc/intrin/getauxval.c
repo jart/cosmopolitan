@@ -16,28 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
+#include "libc/intrin/_getauxval.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/sysv/consts/auxv.h"
 
 /**
- * Returns auxiliary value, or zero if kernel didn't provide it.
+ * Returns auxiliary value.
  *
- * This function is typically regarded as a libc implementation detail;
- * thus, the source code is the documentation.
- *
- * @return auxiliary value or 0 if `at` not found
+ * @return auxiliary value or 0 if `key` not found
  * @see libc/sysv/consts.sh
  * @see System Five Application Binary Interface § 3.4.3
  * @error ENOENT when value not found
  * @asyncsignalsafe
  */
-unsigned long getauxval(unsigned long at) {
-  unsigned long res, *ap;
-  for (ap = __auxv; ap[0]; ap += 2) {
-    if (at == ap[0]) {
-      return ap[1];
+unsigned long getauxval(unsigned long key) {
+  struct AuxiliaryValue x;
+  x = _getauxval(key);
+  if (key == AT_PAGESZ) {
+    if (!x.isfound) {
+      x.value = 16384;
     }
+    x.isfound = true;
   }
-  enoent();
-  return 0;
+  if (x.isfound) {
+    return x.value;
+  } else {
+    errno = ENOENT;
+    return 0;
+  }
 }

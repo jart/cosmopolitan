@@ -41,7 +41,7 @@
  *
  * @return original buf
  */
-noasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
+dontasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
   size_t m;
   uint64_t i, x, t = 0;
   unsigned char *p = b;

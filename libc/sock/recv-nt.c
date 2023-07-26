@@ -49,6 +49,6 @@ textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
     sockfd = (struct SockFd *)fd->extra;
     rc = __wsablock(fd, &overlapped, &flags, true, sockfd->rcvtimeo);
   }
-  _unassert(WSACloseEvent(overlapped.hEvent));
+  unassert(WSACloseEvent(overlapped.hEvent));
   return rc;
 }

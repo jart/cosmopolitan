@@ -190,6 +190,19 @@ static int StrCmp(const char *l, const char *r) {
   return (l[i] & 255) - (r[i] & 255);
 }
 
+static const char *BaseName(const char *s) {
+  int c;
+  const char *b = "";
+  if (s) {
+    while ((c = *s++)) {
+      if (c == '/') {
+        b = s;
+      }
+    }
+  }
+  return b;
+}
+
 static void Bzero(void *a, unsigned long n) {
   long z;
   char *p, *e;
@@ -848,7 +861,7 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
-         "actually portable executable loader silicon 1.4\n"
+         "actually portable executable loader silicon 1.5\n"
          "copyright 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
     _exit(1);
@@ -871,7 +884,8 @@ int main(int argc, char **argv, char **envp) {
   pe = M->ehdr.buf + rc;
 
   // resolve argv[0] to reflect path search
-  if (argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) {
+  if ((argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
+      !StrCmp(BaseName(prog), argv[0])) {
     tp -= (n = StrLen(exe) + 1);
     MemMove(tp, exe, n);
     argv[0] = tp;

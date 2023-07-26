@@ -3,7 +3,7 @@
  * License. See LICENSE.TXT for details.
  */
 
-STATIC_YOINK("huge_compiler_rt_license");
+__static_yoink("huge_compiler_rt_license");
 
 #if defined(__x86_64__) || defined(_M_X64)
 

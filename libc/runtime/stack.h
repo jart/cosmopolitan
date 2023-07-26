@@ -13,7 +13,7 @@
  *
  * If you want to know how much stack your programs needs, then
  *
- *     STATIC_YOINK("stack_usage_logging");
+ *     __static_yoink("stack_usage_logging");
  *
  * will install an atexit() handler that appends to `o/$MODE/stack.log`
  *
@@ -125,7 +125,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * Returns true if at least `n` bytes of stack are available.
  */
 #define HaveStackMemory(n) \
-  ((intptr_t)__builtin_frame_address(0) >= GetStackAddr() + APE_GUARDSIZE + (n))
+  ((intptr_t)__builtin_frame_address(0) >= GetStackAddr() + 16384 + (n))
 
 forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
   for (; n > 0; n -= 4096) {

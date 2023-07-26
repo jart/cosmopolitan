@@ -60,7 +60,7 @@ StartOverLocked:
       if (!pred) {
         b2 = b->next;
         if (b2) {
-          _unassert(b != &__cxa_blocks.root);
+          unassert(b != &__cxa_blocks.root);
           if (_weaken(free)) {
             _weaken(free)(b);
           }

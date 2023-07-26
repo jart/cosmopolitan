@@ -25,7 +25,7 @@
 
 textwindows int sys_bind_nt(struct Fd *fd, const void *addr,
                             uint32_t addrsize) {
-  _npassert(fd->kind == kFdSocket);
+  npassert(fd->kind == kFdSocket);
   if (__sys_bind_nt(fd->handle, addr, addrsize) != -1) {
     return 0;
   } else {

@@ -51,7 +51,7 @@ static void ContinueOnError(int sig, siginfo_t *si, void *vctx) {
  * on error. It then attempts a volatile read and if it faults, then
  * this function shall return false. The value at `p` isn't considered.
  */
-noasan bool testlib_memoryexists(const void *p) {
+dontasan bool testlib_memoryexists(const void *p) {
   volatile char c;
   const atomic_char *mem = p;
   struct sigaction old[2];
@@ -60,11 +60,11 @@ noasan bool testlib_memoryexists(const void *p) {
       .sa_flags = SA_SIGINFO,
   };
   gotsignal = 0;
-  _npassert(!sigaction(SIGSEGV, &sa, old + 0));
-  _npassert(!sigaction(SIGBUS, &sa, old + 1));
+  npassert(!sigaction(SIGSEGV, &sa, old + 0));
+  npassert(!sigaction(SIGBUS, &sa, old + 1));
   c = atomic_load(mem);
   (void)c;
-  _npassert(!sigaction(SIGBUS, old + 1, 0));
-  _npassert(!sigaction(SIGSEGV, old + 0, 0));
+  npassert(!sigaction(SIGBUS, old + 1, 0));
+  npassert(!sigaction(SIGSEGV, old + 0, 0));
   return !gotsignal;
 }

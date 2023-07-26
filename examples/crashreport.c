@@ -25,7 +25,7 @@
  *     o//examples/crashreport.com
  */
 
-noubsan int main(int argc, char *argv[]) {
+dontubsan int main(int argc, char *argv[]) {
   kprintf("----------------\n");
   kprintf(" THIS IS A TEST \n");
   kprintf("SIMULATING CRASH\n");

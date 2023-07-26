@@ -44,7 +44,7 @@ int getppid(void) {
   } else {
     rc = sys_getppid_nt();
   }
-  _npassert(rc >= 0);
+  npassert(rc >= 0);
   STRACE("%s() → %d", "getppid", rc);
   return rc;
 }

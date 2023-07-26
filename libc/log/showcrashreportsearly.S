@@ -22,7 +22,7 @@
 //	there's a crash in a constructor, this will help with
 //	troubleshooting it. You need to add:
 //
-//	    STATIC_YOINK("ShowCrashReportsEarly");
+//	    __static_yoink("ShowCrashReportsEarly");
 //
 //	To the top of your main module to use this.
 

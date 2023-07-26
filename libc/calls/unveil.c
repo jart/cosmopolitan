@@ -473,10 +473,10 @@ int unveil(const char *path, const char *permissions) {
     if (permissions) return einval();
     if (IsOpenbsd()) return 0;
     if (landlock_abi_version != -1) {
-      _unassert(landlock_abi_version >= 1);
+      unassert(landlock_abi_version >= 1);
       return landlock_abi_version;
     } else {
-      _unassert(landlock_abi_errno);
+      unassert(landlock_abi_errno);
       errno = landlock_abi_errno;
       return -1;
     }

@@ -45,13 +45,14 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
-STATIC_YOINK("strerror_wr");  // for kprintf %m
-STATIC_YOINK("strsignal_r");  // for kprintf %G
+__static_yoink("strerror_wr");  // for kprintf %m
+__static_yoink("strsignal_r");  // for kprintf %G
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
@@ -219,7 +220,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   uname(&names);
   errno = err;
   // TODO(jart): Buffer the WHOLE crash report with backtrace for atomic write.
-  _npassert((p = buf = kmalloc((n = 1024 * 1024))));
+  npassert((p = buf = kmalloc((n = 1024 * 1024))));
   p += ksnprintf(
       p, n,
       "\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
@@ -227,8 +228,9 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
       "  %s\n"
       "  %s %s %s %s\n",
       !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
-      (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
-               ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + APE_GUARDSIZE))
+      (ctx &&
+       (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
+        ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + getauxval(AT_PAGESZ)))
           ? "Stack Overflow"
           : GetSiCodeName(sig, si->si_code),
       host, getpid(), gettid(), program_invocation_name, strerror(err),

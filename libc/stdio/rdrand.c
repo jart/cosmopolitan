@@ -22,7 +22,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/sysv/consts/grnd.h"
 
-STATIC_YOINK("rdrand_init");
+__static_yoink("rdrand_init");
 
 static dontinline uint64_t rdrand_failover(void) {
   int f;

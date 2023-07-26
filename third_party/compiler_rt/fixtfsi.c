@@ -9,7 +9,7 @@
  * ===----------------------------------------------------------------------===
  */
 
-STATIC_YOINK("huge_compiler_rt_license");
+__static_yoink("huge_compiler_rt_license");
 
 #define QUAD_PRECISION
 #include "third_party/compiler_rt/fp_lib.inc"

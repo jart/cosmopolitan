@@ -66,7 +66,7 @@ TEST(makecontext, args) {
   EXPECT_TRUE(gotsome);
 }
 
-noasan noubsan void itsatrap(int x, int y) {
+dontasan dontubsan void itsatrap(int x, int y) {
   *(int *)(intptr_t)x = scalbn(x, y);
 }
 

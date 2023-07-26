@@ -55,11 +55,13 @@
 #include "libc/nt/struct/openfilename.h"
 #include "libc/nt/windows.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/poll.h"
@@ -481,17 +483,17 @@ static void *NewBoard(size_t *out_size) {
   char *p;
   size_t s, n, k;
   s = (byn * bxn) >> 3;
-  k = APE_GUARDSIZE + ROUNDUP(s, APE_GUARDSIZE);
-  n = ROUNDUP(k + APE_GUARDSIZE, FRAMESIZE);
+  k = getauxval(AT_PAGESZ) + ROUNDUP(s, getauxval(AT_PAGESZ));
+  n = ROUNDUP(k + getauxval(AT_PAGESZ), sysconf(_SC_PAGESIZE));
   p = _mapanon(n);
-  mprotect(p, APE_GUARDSIZE, 0);
+  mprotect(p, getauxval(AT_PAGESZ), 0);
   mprotect(p + k, n - k, 0);
   if (out_size) *out_size = n;
-  return p + APE_GUARDSIZE;
+  return p + getauxval(AT_PAGESZ);
 }
 
 static void FreeBoard(void *p, size_t n) {
-  munmap((char *)p - APE_GUARDSIZE, n);
+  munmap((char *)p - getauxval(AT_PAGESZ), n);
 }
 
 static void AllocateBoardsWithHardwareAcceleratedMemorySafety(void) {

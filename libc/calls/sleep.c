@@ -42,7 +42,7 @@ unsigned sleep(unsigned seconds) {
   struct timespec tv = {seconds};
   if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, &tv, &tv))) return 0;
   if (rc == ECANCELED) return -1u;
-  _npassert(rc == EINTR);
+  npassert(rc == EINTR);
   unslept = tv.tv_sec;
   if (tv.tv_nsec && unslept < UINT_MAX) {
     ++unslept;

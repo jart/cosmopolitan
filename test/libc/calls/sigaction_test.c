@@ -155,7 +155,7 @@ void OnFpe(int sig, struct siginfo *si, void *vctx) {
   ctx->uc_mcontext.rdx = 0;
 }
 
-noubsan void ubsanTrumpsSystemsEngineering(void) {
+dontubsan void ubsanTrumpsSystemsEngineering(void) {
   struct sigaction saint = {.sa_sigaction = OnFpe, .sa_flags = SA_SIGINFO};
   EXPECT_SYS(0, 0, sigaction(SIGFPE, &saint, &oldsa));
   volatile long x = 0;

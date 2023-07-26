@@ -28,7 +28,7 @@
 
 // once we're paying the cost of nsync we might as well get the benefit
 // of a better pthread_once(), since no other component pulls it in now
-STATIC_YOINK("nsync_run_once");
+__static_yoink("nsync_run_once");
 
 asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\

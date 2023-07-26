@@ -194,19 +194,22 @@ typedef struct {
 #endif
 
 #ifndef privileged
-#if !defined(__STRICT_ANSI__) && \
-    (__has_attribute(__visibility__) || defined(__GNUC__))
-#define privileged _Section(".privileged")
-#else
-#define privileged _Section(".privileged")
-#endif
+#define privileged \
+  _Section(".privileged") dontinline dontinstrument dontubsan dontasan
 #endif
 
 #ifndef dontinstrument
 #if !defined(__STRICT_ANSI__) &&                    \
     (__has_attribute(__no_instrument_function__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 204)
+#if ((__GNUC__ + 0) >= 7 && !defined(__chibicc__)) || \
+    __has_attribute(__patchable_function_entry__)
+#define dontinstrument                       \
+  __attribute__((__no_instrument_function__, \
+                 __patchable_function_entry__(0, 0)))
+#else
 #define dontinstrument __attribute__((__no_instrument_function__))
+#endif
 #else
 #define dontinstrument
 #endif
@@ -569,17 +572,17 @@ typedef struct {
 #if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
      __has_attribute(__no_sanitize_address__)) &&          \
     !defined(__STRICT_ANSI__)
-#define noasan __attribute__((__no_sanitize_address__))
+#define dontasan __attribute__((__no_sanitize_address__))
 #else
-#define noasan
+#define dontasan
 #endif
 
 #if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 408 || \
      __has_attribute(__no_sanitize_undefined__)) &&        \
     !defined(__STRICT_ANSI__)
-#define noubsan __attribute__((__no_sanitize_undefined__))
+#define dontubsan __attribute__((__no_sanitize_undefined__))
 #else
-#define noubsan
+#define dontubsan
 #endif
 
 #ifdef __STRICT_ANSI__
@@ -645,11 +648,7 @@ void abort(void) wontreturn;
 #endif
 
 #ifndef _Section
-#if !defined(__STRICT_ANSI__) && !defined(__APPLE__)
 #define _Section(s) __attribute__((__section__(s)))
-#else
-#define _Section(s)
-#endif
 #endif
 
 #if defined(__x86_64__) && !defined(__llvm__)
@@ -772,69 +771,69 @@ void abort(void) wontreturn;
 #endif
 
 #ifndef __STRICT_ANSI__
-#define VEIL(CONSTRAINT, EXPRESSION)                             \
+#define __veil(CONSTRAINT, EXPRESSION)                           \
   ({                                                             \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);             \
     asm("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
     VeiledValue;                                                 \
   })
 #else
-#define VEIL(CONSTRAINT, EXPRESSION) (EXPRESSION)
+#define __veil(CONSTRAINT, EXPRESSION) (EXPRESSION)
 #endif
 
 #ifndef __STRICT_ANSI__
-#define CONCEAL(CONSTRAINT, EXPRESSION)                                   \
+#define __conceal(CONSTRAINT, EXPRESSION)                                 \
   ({                                                                      \
     autotype(EXPRESSION) VeiledValue = (EXPRESSION);                      \
     asm volatile("" : "=" CONSTRAINT ""(VeiledValue) : "0"(VeiledValue)); \
     VeiledValue;                                                          \
   })
 #else
-#define CONCEAL(CONSTRAINT, EXPRESSION) (EXPRESSION)
+#define __conceal(CONSTRAINT, EXPRESSION) (EXPRESSION)
 #endif
 
 #ifndef __STRICT_ANSI__
-#define EXPROPRIATE(EXPRESSION)                    \
+#define __expropriate(EXPRESSION)                  \
   ({                                               \
     asm volatile("" ::"g"(EXPRESSION) : "memory"); \
     0;                                             \
   })
 #else
-#define EXPROPRIATE(EXPRESSION) (EXPRESSION)
+#define __expropriate(EXPRESSION) (EXPRESSION)
 #endif
 
 #if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
-#define YOINK(SYMBOL) \
+#define __yoink(SYMBOL) \
   asm(".section .yoink\n\tnopl\t%0\n\t.previous" : : "m"(SYMBOL))
 #elif defined(__aarch64__)
-#define YOINK(SYMBOL) \
+#define __yoink(SYMBOL) \
   asm(".section .yoink\n\tb\t%0\n\t.previous" : : "m"(SYMBOL))
 #else
-#define YOINK(SYMBOL) (void)0
+#define __yoink(SYMBOL) (void)0
 #endif
 
 #if !defined(__STRICT_ANSI__) && !defined(__APPLE__) && defined(__x86_64__)
-#define STATIC_YOINK(SYMBOLSTR) \
+#define __static_yoink(SYMBOLSTR) \
   asm(".section .yoink\n\tnopl\t\"" SYMBOLSTR "\"\n\t.previous")
 #elif defined(__aarch64__)
-#define STATIC_YOINK(SYMBOLSTR) \
+#define __static_yoink(SYMBOLSTR) \
   asm(".section .yoink\n\tb\t\"" SYMBOLSTR "\"\n\t.previous")
 #else
-#define STATIC_YOINK(SYMBOLSTR)
+#define __static_yoink(SYMBOLSTR)
 #endif
 
 #if !defined(IM_FEELING_NAUGHTY)
-#define STATIC_YOINK_SOURCE(PATH) STATIC_YOINK(PATH)
+#define __static_yoink_source(PATH) __static_yoink(PATH)
 #else
-#define STATIC_YOINK_SOURCE(PATH)
+#define __static_yoink_source(PATH)
 #endif
 
 #define __strong_reference(sym, aliassym) \
-  extern typeof(sym) aliassym __attribute__((__alias__(#sym)))
-#define __weak_reference(sym, alias)   \
-  asm(".weak\t" #alias "\n\t"          \
-      ".equ\t" #alias ", " #sym "\n\t" \
-      ".type\t" #alias ",@notype")
+  extern __typeof(sym) aliassym __attribute__((__alias__(#sym)))
+#define __weak_reference(sym, alias)       \
+  __asm__(".weak\t" #alias "\n\t"          \
+          ".equ\t" #alias ", " #sym "\n\t" \
+          ".type\t" #alias ",@notype")
 
 #define __funline \
   extern __inline \

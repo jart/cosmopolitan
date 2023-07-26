@@ -85,9 +85,9 @@ static sem_t *sem_open_impl(const char *path, int oflag, unsigned mode,
   if ((fd = openat(AT_FDCWD, path, oflag, mode)) == -1) {
     return SEM_FAILED;
   }
-  _npassert(!fstat(fd, &st));
+  npassert(!fstat(fd, &st));
   if (st.st_size < PAGESIZE && ftruncate(fd, PAGESIZE) == -1) {
-    _npassert(!close(fd));
+    npassert(!close(fd));
     return SEM_FAILED;
   }
   sem = mmap(0, PAGESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -100,7 +100,7 @@ static sem_t *sem_open_impl(const char *path, int oflag, unsigned mode,
   } else {
     sem = SEM_FAILED;
   }
-  _npassert(!close(fd));
+  npassert(!close(fd));
   return sem;
 }
 
@@ -256,23 +256,23 @@ int sem_close(sem_t *sem) {
   int prefs;
   bool unmap, delete;
   struct Semaphore *s, **p;
-  _npassert(sem->sem_magic == SEM_MAGIC_NAMED);
+  npassert(sem->sem_magic == SEM_MAGIC_NAMED);
   sem_open_init();
   sem_open_lock();
-  _npassert((s = sem_open_get(sem, &p)));
+  npassert((s = sem_open_get(sem, &p)));
   prefs = atomic_fetch_add_explicit(&sem->sem_prefs, -1, memory_order_acq_rel);
-  _npassert(s->refs > 0);
+  npassert(s->refs > 0);
   if ((unmap = !--s->refs)) {
-    _npassert(prefs > 0);
+    npassert(prefs > 0);
     delete = sem->sem_lazydelete && prefs == 1;
     *p = s->next;
   } else {
-    _npassert(prefs > 1);
+    npassert(prefs > 1);
     delete = false;
   }
   sem_open_unlock();
   if (unmap) {
-    _npassert(!munmap(sem, PAGESIZE));
+    npassert(!munmap(sem, PAGESIZE));
   }
   if (delete) {
     unlink(s->path);

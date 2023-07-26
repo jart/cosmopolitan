@@ -44,39 +44,45 @@ TEST(towlower, test) {
 }
 
 BENCH(towupper, bench) {
-  EZBENCH2("towupper ascii", donothing, EXPROPRIATE(towupper(VEIL("r", L'a'))));
+  EZBENCH2("towupper ascii", donothing,
+           __expropriate(towupper(__veil("r", L'a'))));
   EZBENCH2("towupper latin1", donothing,
-           EXPROPRIATE(towupper(VEIL("r", u'A'))));
+           __expropriate(towupper(__veil("r", u'A'))));
   EZBENCH2("towupper watinc", donothing,
-           EXPROPRIATE(towupper(VEIL("r", u'Ỿ'))));
-  EZBENCH2("towupper greek", donothing, EXPROPRIATE(towupper(VEIL("r", u'α'))));
+           __expropriate(towupper(__veil("r", u'Ỿ'))));
+  EZBENCH2("towupper greek", donothing,
+           __expropriate(towupper(__veil("r", u'α'))));
   EZBENCH2("towupper astral", donothing,
-           EXPROPRIATE(towupper(VEIL("r", L'𝛿'))));
+           __expropriate(towupper(__veil("r", L'𝛿'))));
 }
 
 BENCH(towlower, bench) {
-  EZBENCH2("towlower ascii", donothing, EXPROPRIATE(towlower(VEIL("r", L'a'))));
+  EZBENCH2("towlower ascii", donothing,
+           __expropriate(towlower(__veil("r", L'a'))));
   EZBENCH2("towlower latin1", donothing,
-           EXPROPRIATE(towlower(VEIL("r", u'A'))));
+           __expropriate(towlower(__veil("r", u'A'))));
   EZBENCH2("towlower watinc", donothing,
-           EXPROPRIATE(towlower(VEIL("r", u'Ỿ'))));
-  EZBENCH2("towlower greek", donothing, EXPROPRIATE(towupper(VEIL("r", u'α'))));
+           __expropriate(towlower(__veil("r", u'Ỿ'))));
+  EZBENCH2("towlower greek", donothing,
+           __expropriate(towupper(__veil("r", u'α'))));
   EZBENCH2("towlower astral", donothing,
-           EXPROPRIATE(towlower(VEIL("r", L'𝛿'))));
+           __expropriate(towlower(__veil("r", L'𝛿'))));
 }
 
 BENCH(iswupper, bench) {
-  EZBENCH2("iswupper ascii", donothing, EXPROPRIATE(iswupper(VEIL("r", L'A'))));
+  EZBENCH2("iswupper ascii", donothing,
+           __expropriate(iswupper(__veil("r", L'A'))));
   EZBENCH2("iswupper latin1", donothing,
-           EXPROPRIATE(iswupper(VEIL("r", u'A'))));
+           __expropriate(iswupper(__veil("r", u'A'))));
   EZBENCH2("iswupper astral", donothing,
-           EXPROPRIATE(iswupper(VEIL("r", L'𝛿'))));
+           __expropriate(iswupper(__veil("r", L'𝛿'))));
 }
 
 BENCH(iswlower, bench) {
-  EZBENCH2("iswlower ascii", donothing, EXPROPRIATE(iswlower(VEIL("r", L'a'))));
+  EZBENCH2("iswlower ascii", donothing,
+           __expropriate(iswlower(__veil("r", L'a'))));
   EZBENCH2("iswlower latin1", donothing,
-           EXPROPRIATE(iswlower(VEIL("r", u'A'))));
+           __expropriate(iswlower(__veil("r", u'A'))));
   EZBENCH2("iswlower astral", donothing,
-           EXPROPRIATE(iswlower(VEIL("r", L'𝛿'))));
+           __expropriate(iswlower(__veil("r", L'𝛿'))));
 }

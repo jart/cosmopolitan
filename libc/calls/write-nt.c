@@ -60,7 +60,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     if (!ok && GetLastError() == kNtErrorIoPending) ok = true;
     if (ok) ok = GetOverlappedResult(handle, &overlap, &sent, true);
     // restore file pointer which windows clobbers, even on error
-    _unassert(SetFilePointerEx(handle, position, 0, SEEK_SET));
+    unassert(SetFilePointerEx(handle, position, 0, SEEK_SET));
   }
   if (ok) {
     return sent;

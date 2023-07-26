@@ -234,7 +234,7 @@ void secp384r1(uint64_t p[12]) {
   p[4] = E;
   p[5] = F;
   p[6] = G;
-  G = CONCEAL("r", 0L);
+  G = __conceal("r", 0L);
   p[7] = G;
   p[8] = G;
   p[9] = G;

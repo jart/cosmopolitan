@@ -5,11 +5,11 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
@@ -1910,13 +1910,13 @@ bumpserialno(void)
 
 #define SST SIZEOF_SIZE_T
 
-static inline optimizespeed noasan size_t
+static inline optimizespeed dontasan size_t
 read_size_t(const void *p)
 {
     return READ64BE(p);
 }
 
-static inline optimizespeed noasan void
+static inline optimizespeed dontasan void
 write_size_t(void *p, size_t n)
 {
     WRITE64BE((char *)p, n);
@@ -2049,7 +2049,7 @@ _PyMem_DebugRawFree(void *ctx, void *p)
     api->alloc.free(api->alloc.ctx, q);
 }
 
-static noasan void *
+static dontasan void *
 _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
 {
     _Static_assert(sizeof(size_t) == 8, "");
@@ -2138,7 +2138,7 @@ _PyMem_DebugRealloc(void *ctx, void *ptr, size_t nbytes)
  * and call Py_FatalError to kill the program.
  * The API id, is also checked.
  */
-static noasan void
+static dontasan void
 _PyMem_DebugCheckAddress(char api, const void *p)
 {
     const uint8_t *q = (const uint8_t *)p;
@@ -2191,7 +2191,7 @@ error:
 }
 
 /* Display info to stderr about the memory block at p. */
-static noasan void
+static dontasan void
 _PyObject_DebugDumpAddress(const void *p)
 {
     const uint8_t *q = (const uint8_t *)p;

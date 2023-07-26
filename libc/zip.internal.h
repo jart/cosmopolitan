@@ -12,7 +12,7 @@
 #ifdef __ASSEMBLER__
 #define ZM_(x) x
 #else
-#define ZM_(x) ~VEIL("r", ~x) /* prevent magic from appearing in binary */
+#define ZM_(x) ~__veil("r", ~x) /* prevent magic from appearing in binary */
 #endif
 
 #ifdef TINY

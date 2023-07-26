@@ -21,11 +21,13 @@
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
+#include "libc/sysv/consts/auxv.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
@@ -99,7 +101,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
   if (UNLIKELY(!depth)) {
     return (struct DecodeJson){-1, "maximum depth exceeded"};
   }
-  if (UNLIKELY(!HaveStackMemory(APE_GUARDSIZE))) {
+  if (UNLIKELY(!HaveStackMemory(getauxval(AT_PAGESZ)))) {
     return (struct DecodeJson){-1, "out of stack"};
   }
   for (a = p, d = +1; p < e;) {

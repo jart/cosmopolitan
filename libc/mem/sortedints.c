@@ -51,8 +51,8 @@ int LeftmostInt(const struct SortedInts *t, int k) {
       r = m;
     }
   }
-  _unassert(l == 0 || k >= t->p[l - 1]);
-  _unassert(l == t->n || k <= t->p[l]);
+  unassert(l == 0 || k >= t->p[l - 1]);
+  unassert(l == t->n || k <= t->p[l]);
   return l;
 }
 
@@ -70,8 +70,8 @@ int CountInt(const struct SortedInts *t, int k) {
 
 bool InsertInt(struct SortedInts *t, int k, bool u) {
   int l;
-  _unassert(t->n >= 0);
-  _unassert(t->n <= t->c);
+  unassert(t->n >= 0);
+  unassert(t->n <= t->c);
   if (t->n == t->c) {
     ++t->c;
     if (!IsModeDbg()) {

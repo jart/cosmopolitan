@@ -35,7 +35,7 @@ void *pthread_getspecific(pthread_key_t k) {
   //  pthread_key_create() or after key has been deleted with
   //  pthread_key_delete() is undefined."
   //                                  ──Quoth POSIX.1-2017
-  _unassert(0 <= k && k < PTHREAD_KEYS_MAX);
-  _unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
+  unassert(0 <= k && k < PTHREAD_KEYS_MAX);
+  unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
   return __get_tls()->tib_keys[k];
 }

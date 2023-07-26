@@ -54,8 +54,8 @@
 
 STATIC_STACK_SIZE(0x100000);
 
-STATIC_YOINK("__die");
-STATIC_YOINK("zipos");
+__static_yoink("__die");
+__static_yoink("zipos");
 
 PYTHON_YOINK("cosmo");
 PYTHON_YOINK("_locale");

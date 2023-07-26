@@ -53,5 +53,5 @@ TEST(strwidth, cjk) {
 }
 
 BENCH(strnwidth, bench) {
-  EZBENCH2("strnwidth", donothing, EXPROPRIATE(strnwidth(kHyperion, -1, 0)));
+  EZBENCH2("strnwidth", donothing, __expropriate(strnwidth(kHyperion, -1, 0)));
 }

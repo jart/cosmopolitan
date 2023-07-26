@@ -67,10 +67,10 @@ Flags:\n\
   -h         show this information\n\
 \n"
 
-STATIC_YOINK("__die");
-STATIC_YOINK("GetSymbolByAddr");
-STATIC_YOINK("testlib_quota_handlers");
-STATIC_YOINK("stack_usage_logging");
+__static_yoink("__die");
+__static_yoink("GetSymbolByAddr");
+__static_yoink("testlib_quota_handlers");
+__static_yoink("stack_usage_logging");
 
 static bool runbenchmarks_;
 
@@ -163,7 +163,7 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
 /**
  * Generic test program main function.
  */
-noasan int main(int argc, char *argv[]) {
+dontasan int main(int argc, char *argv[]) {
   unsigned cpus;
   const char *comdbg;
   __log_level = kLogInfo;

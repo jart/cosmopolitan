@@ -52,7 +52,7 @@ int fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
     } else {
       rc = sys_fadvise_netbsd(fd, offset, offset, len, advice);
     }
-    _npassert(rc >= 0);
+    npassert(rc >= 0);
     if (rc) {
       errno = rc;
       rc = -1;

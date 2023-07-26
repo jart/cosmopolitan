@@ -19,7 +19,7 @@
 #include "tool/plinko/lib/plinko.h"
 #include "libc/thread/tls.h"
 
-STATIC_YOINK("__zipos_get");
+__static_yoink("__zipos_get");
 
 int main(int argc, char *argv[]) {
   __tls_enabled = false;

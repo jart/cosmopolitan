@@ -27,6 +27,6 @@
 pthread_t pthread_self(void) {
   pthread_t t;
   t = __get_tls()->tib_pthread;
-  _unassert(t);
+  unassert(t);
   return t;
 }

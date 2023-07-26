@@ -30,8 +30,8 @@
 #include "libc/x/x.h"
 #ifdef __x86_64__
 
-STATIC_YOINK("_tr");
-STATIC_YOINK("glob");
+__static_yoink("_tr");
+__static_yoink("glob");
 
 char testlib_enable_tmp_setup_teardown;
 

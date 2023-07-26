@@ -158,7 +158,7 @@ static int fd_to_mem_fd(const int infd, char *path) {
       if (path) {
         FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), fd);
       }
-      _unassert(readRc == st.st_size);
+      unassert(readRc == st.st_size);
       return fd;
     } else if (!success) {
       errno = e;

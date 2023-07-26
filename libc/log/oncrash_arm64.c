@@ -39,12 +39,13 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #ifdef __aarch64__
 
-STATIC_YOINK("strerror_wr");  // for kprintf %m
-STATIC_YOINK("strsignal_r");  // for kprintf %G
+__static_yoink("strerror_wr");  // for kprintf %m
+__static_yoink("strsignal_r");  // for kprintf %G
 
 #define RESET   "\e[0m"
 #define BOLD    "\e[1m"
@@ -197,7 +198,8 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
     gethostname(host, sizeof(host));
     reset = !__nocolor ? RESET : "";
     strong = !__nocolor ? STRONG : "";
-    if (ctx && (ctx->uc_mcontext.sp & (GetStackSize() - 1)) <= APE_GUARDSIZE) {
+    if (ctx &&
+        (ctx->uc_mcontext.sp & (GetStackSize() - 1)) <= getauxval(AT_PAGESZ)) {
       kind = "Stack Overflow";
     } else {
       kind = GetSiCodeName(sig, si->si_code);

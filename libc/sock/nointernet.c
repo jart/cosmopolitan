@@ -323,7 +323,7 @@ int nointernet(void) {
     sigprocmask(SIG_SETMASK, &old, 0);
     return eperm();
   }
-  _npassert(WIFSTOPPED(ws));
+  npassert(WIFSTOPPED(ws));
 
   // parent process becomes monitor of subprocess tree. all signals
   // continue to be blocked since we assume they'll also be sent to

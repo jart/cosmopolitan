@@ -26,5 +26,6 @@ TEST(memrchr, test) {
 }
 
 BENCH(memrchr, bench) {
-  EZBENCH2("memrchr", donothing, EXPROPRIATE(memrchr("yo.hi.there", '.', 11)));
+  EZBENCH2("memrchr", donothing,
+           __expropriate(memrchr("yo.hi.there", '.', 11)));
 }

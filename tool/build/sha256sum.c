@@ -119,15 +119,15 @@ static bool GetDigest(const char *path, FILE *f, unsigned char digest[32]) {
   unsigned char buf[512];
   mbedtls_sha256_context ctx;
   mbedtls_sha256_init(&ctx);
-  _unassert(!mbedtls_sha256_starts_ret(&ctx, false));
+  unassert(!mbedtls_sha256_starts_ret(&ctx, false));
   while ((got = fread(buf, 1, sizeof(buf), f))) {
-    _unassert(!mbedtls_sha256_update_ret(&ctx, buf, got));
+    unassert(!mbedtls_sha256_update_ret(&ctx, buf, got));
   }
   if (ferror(f)) {
     tinyprint(2, prog, ": ", path, ": ", strerror(errno), "\n", NULL);
     return false;
   }
-  _unassert(!mbedtls_sha256_finish_ret(&ctx, digest));
+  unassert(!mbedtls_sha256_finish_ret(&ctx, digest));
   mbedtls_sha256_free(&ctx);
   return true;
 }

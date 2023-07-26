@@ -28,6 +28,16 @@
 //	errors are returned as `-errno`. BSD systems are normalized
 //	to follow this convention automatically.
 SystemCall:
+#ifdef __aarch64__
+	mov	x8,x7
+	mov	x9,0
+	adds	x9,x9,0
+	svc	0
+	bcs	1f
+	ret
+1:	neg	x0,x0
+	ret
+#else
 	mov	%rcx,%r10
 	mov	16(%rsp),%eax
 	clc
@@ -35,4 +45,5 @@ SystemCall:
 	jnc	1f
 	neg	%rax
 1:	ret
+#endif
 	.endfn	SystemCall,globl

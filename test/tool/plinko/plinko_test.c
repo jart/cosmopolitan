@@ -29,15 +29,15 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("zipos");
-STATIC_YOINK("plinko.com");
-STATIC_YOINK("library.lisp");
-STATIC_YOINK("library_test.lisp");
-STATIC_YOINK("binarytrees.lisp");
-STATIC_YOINK("algebra.lisp");
-STATIC_YOINK("algebra_test.lisp");
-STATIC_YOINK("infix.lisp");
-STATIC_YOINK("ok.lisp");
+__static_yoink("zipos");
+__static_yoink("plinko.com");
+__static_yoink("library.lisp");
+__static_yoink("library_test.lisp");
+__static_yoink("binarytrees.lisp");
+__static_yoink("algebra.lisp");
+__static_yoink("algebra_test.lisp");
+__static_yoink("infix.lisp");
+__static_yoink("ok.lisp");
 
 static const char *const kSauces[] = {
     "/zip/library.lisp",       //

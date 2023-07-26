@@ -113,11 +113,11 @@ int WinThreadLaunch(void *arg,                 // rdi
 //   2. windows owns the stack memory right now
 // we need win32 raw imports because:
 //   1. generated thunks are function logged
-noasan dontinstrument static textwindows wontreturn void  //
-WinThreadEntry(int rdi,                                   // rcx
-               int rsi,                                   // rdx
-               int rdx,                                   // r8
-               struct CloneArgs *wt) {                    // r9
+dontasan dontinstrument static textwindows wontreturn void  //
+WinThreadEntry(int rdi,                                     // rcx
+               int rsi,                                     // rdx
+               int rdx,                                     // r8
+               struct CloneArgs *wt) {                      // r9
   int rc;
   if (wt->tls) __set_tls_win32(wt->tls);
   *wt->ctid = wt->tid;
@@ -143,7 +143,7 @@ static textwindows errno_t CloneWindows(int (*func)(void *, int), char *stk,
   wt->func = func;
   wt->arg = arg;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
-  if ((h = CreateThread(0, 4096, (void *)WinThreadEntry, wt, 0, &wt->utid))) {
+  if ((h = CreateThread(0, 65536, (void *)WinThreadEntry, wt, 0, &wt->utid))) {
     CloseHandle(h);
     if (flags & CLONE_PARENT_SETTID) {
       *ptid = wt->tid;
@@ -216,7 +216,7 @@ static errno_t CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   static bool once;
   struct CloneArgs *wt;
   if (!once) {
-    _npassert(sys_bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) != -1);
+    npassert(sys_bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) != -1);
     once = true;
   }
   wt = AllocateCloneArgs(stk, stksz);
@@ -286,7 +286,7 @@ static errno_t CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
 
 // we can't use address sanitizer because:
 //   1. __asan_handle_no_return wipes stack [todo?]
-noasan static wontreturn void OpenbsdThreadMain(void *p) {
+dontasan static wontreturn void OpenbsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
   *wt->ctid = wt->tid;
   wt->func(wt->arg, wt->tid);
@@ -325,7 +325,7 @@ static errno_t CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
   tf->tf_tcb = flags & CLONE_SETTLS ? tls : 0;
   tf->tf_tid = &wt->tid;
   if ((rc = __tfork_thread(tf, sizeof(*tf), OpenbsdThreadMain, wt)) >= 0) {
-    _npassert(rc);
+    npassert(rc);
     if (flags & CLONE_PARENT_SETTID) {
       *ptid = rc;
     }
@@ -376,7 +376,7 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
                  : CFLAG_CONSTRAINT(failed), "=a"(ax)
                  : "1"(__NR_getcontext_netbsd), "D"(&netbsd_clone_template)
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
-    _npassert(!failed);
+    npassert(!failed);
     once = true;
   }
   sp = (intptr_t)(stk + stksz);
@@ -425,7 +425,7 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
                : "1"(__NR__lwp_create), "D"(ctx), "S"(LWP_DETACHED), "2"(tid)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (!failed) {
-    _npassert(*tid);
+    npassert(*tid);
     if (flags & CLONE_PARENT_SETTID) {
       *ptid = *tid;
     }

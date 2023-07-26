@@ -8,7 +8,7 @@
  *
  * ===----------------------------------------------------------------------===
 
-STATIC_YOINK("huge_compiler_rt_license");
+__static_yoink("huge_compiler_rt_license");
 
  * This file implements __multi3 for the compiler_rt library.
  *

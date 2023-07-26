@@ -28,7 +28,7 @@ textwindows int sys_connect_nt(struct Fd *fd, const void *addr,
                                uint32_t addrsize) {
   struct SockFd *sockfd;
   sockfd = (struct SockFd *)fd->extra;
-  _npassert(fd->kind == kFdSocket);
+  npassert(fd->kind == kFdSocket);
   return __winsockblock(
       fd->handle, _bsr(kNtFdConnect),
       WSAConnect(fd->handle, addr, addrsize, NULL, NULL, NULL, NULL),

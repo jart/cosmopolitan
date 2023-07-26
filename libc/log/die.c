@@ -32,7 +32,7 @@
 #include "libc/thread/thread.h"
 
 #if SupportsMetal()
-STATIC_YOINK("_idt");
+__static_yoink("_idt");
 #endif
 
 /**

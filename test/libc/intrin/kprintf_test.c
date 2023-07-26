@@ -227,7 +227,7 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
   uint64_t x;
   char *f, b[32];
   _Alignas(FRAMESIZE) static const char weasel[FRAMESIZE];
-  f = VEIL("r", weasel);
+  f = __veil("r", weasel);
   EXPECT_SYS(0, 0, mprotect(f, FRAMESIZE, PROT_READ | PROT_WRITE));
   strcpy(f, "hello %s\n");
   EXPECT_EQ(12, ksnprintf(b, sizeof(b), f, "world"));

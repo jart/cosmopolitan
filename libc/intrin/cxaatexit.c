@@ -26,7 +26,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
-STATIC_YOINK("__cxa_finalize");
+__static_yoink("__cxa_finalize");
 
 /**
  * Adds global destructor.
@@ -42,7 +42,7 @@ STATIC_YOINK("__cxa_finalize");
  * @return 0 on success or nonzero w/ errno
  * @note folks have forked libc in past just to unbloat atexit()
  */
-noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
+dontasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   /* asan runtime depends on this function */
   unsigned i;
   struct CxaAtexitBlock *b, *b2;
@@ -61,7 +61,7 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
     }
   }
   i = _bsr(~b->mask);
-  _unassert(i < ARRAYLEN(b->p));
+  unassert(i < ARRAYLEN(b->p));
   b->mask |= 1u << i;
   b->p[i].fp = fp;
   b->p[i].arg = arg;

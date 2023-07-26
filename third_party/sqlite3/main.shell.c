@@ -1,2 +1,2 @@
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 #include "third_party/sqlite3/main.c"

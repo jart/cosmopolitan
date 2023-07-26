@@ -93,15 +93,16 @@ TEST(strchr, fuzz) {
 }
 
 BENCH(strchr, bench) {
-  EZBENCH2("strchr 0", donothing, EXPROPRIATE(strchr(VEIL("r", ""), 0)));
-  EZBENCH2("strchr 5", donothing, EXPROPRIATE(strchr(VEIL("r", "hello"), 'o')));
+  EZBENCH2("strchr 0", donothing, __expropriate(strchr(__veil("r", ""), 0)));
+  EZBENCH2("strchr 5", donothing,
+           __expropriate(strchr(__veil("r", "hello"), 'o')));
   EZBENCH2("strchr 8", donothing,
-           EXPROPRIATE(strchr(VEIL("r", "hellzzzo"), 'o')));
+           __expropriate(strchr(__veil("r", "hellzzzo"), 'o')));
   EZBENCH2("strchr 17", donothing,
-           EXPROPRIATE(strchr(VEIL("r", "hellzzzhellzzzeeo"), 'o')));
+           __expropriate(strchr(__veil("r", "hellzzzhellzzzeeo"), 'o')));
   EZBENCH2("strchr 34", donothing,
-           EXPROPRIATE(
-               strchr(VEIL("r", "hellzzzhellzzzeeAhellzzzhellzzzeeo"), 'o')));
+           __expropriate(
+               strchr(__veil("r", "hellzzzhellzzzeeAhellzzzhellzzzeeo"), 'o')));
 }
 
 char *memchr_pure(const char *m, int c, size_t n) {

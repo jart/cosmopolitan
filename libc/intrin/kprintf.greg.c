@@ -57,6 +57,7 @@
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
@@ -187,7 +188,7 @@ privileged bool kisdangerous(const void *p) {
     if (IsStackFrame(frame)) return false;
     if (kismapped(frame)) return false;
   }
-  if (GetStackAddr() + APE_GUARDSIZE <= (uintptr_t)p &&
+  if (GetStackAddr() + 16384 <= (uintptr_t)p &&
       (uintptr_t)p < GetStackAddr() + GetStackSize()) {
     return false;
   }

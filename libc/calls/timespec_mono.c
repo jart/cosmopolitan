@@ -29,6 +29,6 @@
  */
 struct timespec timespec_mono(void) {
   struct timespec ts;
-  _npassert(!clock_gettime(CLOCK_MONOTONIC, &ts));
+  npassert(!clock_gettime(CLOCK_MONOTONIC, &ts));
   return ts;
 }

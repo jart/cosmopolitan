@@ -28,7 +28,7 @@ sigset_t _sigsetmask(sigset_t neu) {
   if (IsMetal() || IsWindows()) {
     __sig_mask(SIG_SETMASK, &neu, &res);
   } else {
-    _npassert(!sys_sigprocmask(SIG_SETMASK, &neu, &res));
+    npassert(!sys_sigprocmask(SIG_SETMASK, &neu, &res));
   }
   return res;
 }

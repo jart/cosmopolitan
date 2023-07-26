@@ -215,10 +215,12 @@ TEST(lroundl, test) {
 
 BENCH(round, bench) {
 #ifdef __x86_64__
-  EZBENCH2("double+.5", donothing, EXPROPRIATE(VEIL("x", (double)(-3.5)) + .5));
-  EZBENCH2("float+.5f", donothing, EXPROPRIATE(VEIL("x", (float)(-3.5)) + .5));
+  EZBENCH2("double+.5", donothing,
+           __expropriate(__veil("x", (double)(-3.5)) + .5));
+  EZBENCH2("float+.5f", donothing,
+           __expropriate(__veil("x", (float)(-3.5)) + .5));
   EZBENCH2("ldbl+.5l", donothing,
-           EXPROPRIATE(VEIL("t", (long double)(-3.5)) + .5));
+           __expropriate(__veil("t", (long double)(-3.5)) + .5));
 #endif
   EZBENCH2("round", donothing, _round(.7));   /* ~4ns */
   EZBENCH2("roundf", donothing, _roundf(.7)); /* ~3ns */

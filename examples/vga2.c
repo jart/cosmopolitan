@@ -24,9 +24,9 @@
  *     qemu-system-x86_64 -hda o//examples/vga2.com -serial stdio
  */
 
-STATIC_YOINK("vga_console");
-STATIC_YOINK("_idt");
-STATIC_YOINK("EfiMain");
+__static_yoink("vga_console");
+__static_yoink("_idt");
+__static_yoink("EfiMain");
 
 int main(int argc, char *argv[]) {
   int i;

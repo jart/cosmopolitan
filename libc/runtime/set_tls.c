@@ -36,7 +36,7 @@ textstartup void __set_tls(struct CosmoTib *tib) {
   int ax, dx;
   if (IsWindows()) {
     __tls_index = TlsAlloc();
-    _npassert(0 <= __tls_index && __tls_index < 64);
+    npassert(0 <= __tls_index && __tls_index < 64);
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
     sys_set_tls(129 /*AMD64_SET_FSBASE*/, tib);

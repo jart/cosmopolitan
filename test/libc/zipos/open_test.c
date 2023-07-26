@@ -26,11 +26,11 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 
-STATIC_YOINK("zipos");
-STATIC_YOINK("libc/testlib/hyperion.txt");
-STATIC_YOINK("inflate");
-STATIC_YOINK("inflateInit2");
-STATIC_YOINK("inflateEnd");
+__static_yoink("zipos");
+__static_yoink("libc/testlib/hyperion.txt");
+__static_yoink("inflate");
+__static_yoink("inflateInit2");
+__static_yoink("inflateEnd");
 
 int Worker(void *arg, int tid) {
   int i, fd;

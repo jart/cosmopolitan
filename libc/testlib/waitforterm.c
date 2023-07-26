@@ -22,7 +22,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("strsignal");
+__static_yoink("strsignal");
 
 void testlib_waitforterm(const char *file, int line, const char *code, int sig,
                          int pid) {

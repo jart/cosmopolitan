@@ -47,12 +47,12 @@
 #define MAP_FIXED_linux     0x00000010
 #define MAP_SHARED_linux    0x00000001
 
-STATIC_YOINK("_init_metalfile");
+__static_yoink("_init_metalfile");
 
 void *__ape_com_base;
 size_t __ape_com_size = 0;
 
-textstartup noasan void InitializeMetalFile(void) {
+textstartup dontasan void InitializeMetalFile(void) {
   if (IsMetal()) {
     /*
      * Copy out a pristine image of the program — before the program might
@@ -61,7 +61,7 @@ textstartup noasan void InitializeMetalFile(void) {
      * This code is included if a symbol "file:/proc/self/exe" is defined
      * (see libc/calls/metalfile.internal.h & libc/calls/metalfile_init.S).
      * The zipos code will automatically arrange to do this.  Alternatively,
-     * user code can STATIC_YOINK this symbol.
+     * user code can __static_yoink this symbol.
      */
     size_t size = ROUNDUP(_ezip - __executable_start, 4096);
     // TODO(jart): Restore support for ZIPOS on metal.
@@ -70,7 +70,7 @@ textstartup noasan void InitializeMetalFile(void) {
     dm = sys_mmap_metal(NULL, size, PROT_READ | PROT_WRITE,
                         MAP_SHARED_linux | MAP_ANONYMOUS_linux, -1, 0);
     copied_base = dm.addr;
-    _npassert(copied_base != (void *)-1);
+    npassert(copied_base != (void *)-1);
     memcpy(copied_base, (void *)(BANE + IMAGE_BASE_PHYSICAL), size);
     __ape_com_base = copied_base;
     __ape_com_size = size;

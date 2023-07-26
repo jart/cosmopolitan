@@ -29,7 +29,7 @@
 #include "libc/testlib/testlib.h"
 // clang-format off
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 int fds[2];
 char buf[8];

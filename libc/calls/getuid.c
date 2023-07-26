@@ -63,7 +63,7 @@ uint32_t getuid(void) {
   } else {
     rc = GetUserNameHash();
   }
-  _npassert(rc >= 0);
+  npassert(rc >= 0);
   STRACE("%s() → %d", "getuid", rc);
   return rc;
 }
@@ -88,7 +88,7 @@ uint32_t getgid(void) {
   } else {
     rc = GetUserNameHash();
   }
-  _npassert(rc >= 0);
+  npassert(rc >= 0);
   STRACE("%s() → %d", "getgid", rc);
   return rc;
 }

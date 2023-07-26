@@ -13,7 +13,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/sig.h"
 
-STATIC_YOINK("strerror");
+__static_yoink("strerror");
 
 int main(int argc, char *argv[]) {
   sigset_t ss;

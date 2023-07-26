@@ -46,7 +46,7 @@ errno_t _wait0(const atomic_int *ctid, struct timespec *abstime) {
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() refers to the calling thread."
   //                                  ──Quoth POSIX.1-2017
-  _unassert(ctid != &__get_tls()->tib_tid);
+  unassert(ctid != &__get_tls()->tib_tid);
   // "If the thread calling pthread_join() is canceled, then the target
   //  thread shall not be detached."  ──Quoth POSIX.1-2017
   if (!(rc = pthread_testcancel_np())) {

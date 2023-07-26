@@ -35,8 +35,8 @@
  */
 int pthread_key_delete(pthread_key_t k) {
   uint64_t mask;
-  _unassert(0 <= k && k < PTHREAD_KEYS_MAX);
-  _unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
+  unassert(0 <= k && k < PTHREAD_KEYS_MAX);
+  unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
   atomic_store_explicit(_pthread_key_dtor + k, 0, memory_order_release);
   return 0;
 }

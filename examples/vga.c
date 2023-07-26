@@ -28,12 +28,12 @@
  * Please note that, by default, APE binaries only use the serial port
  * for stdio. To get the VGA console as an added bonus:
  *
- *     STATIC_YOINK("vga_console");
+ *     __static_yoink("vga_console");
  *
  * Should be added to the top of your main() program source file.
  */
 
-STATIC_YOINK("vga_console");
+__static_yoink("vga_console");
 
 int main(int argc, char *argv[]) {
   volatile long double x = -.5;

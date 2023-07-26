@@ -110,9 +110,9 @@ static dontinline textwindows ssize_t sys_sendfile_nt(
   if (rc != -1) {
     if (opt_in_out_inoffset) {
       *opt_in_out_inoffset = offset + rc;
-      _npassert(SetFilePointerEx(ih, pos, 0, SEEK_SET));
+      npassert(SetFilePointerEx(ih, pos, 0, SEEK_SET));
     } else {
-      _npassert(SetFilePointerEx(ih, offset + rc, 0, SEEK_SET));
+      npassert(SetFilePointerEx(ih, offset + rc, 0, SEEK_SET));
     }
   }
   WSACloseEvent(ov.hEvent);
@@ -141,7 +141,7 @@ static ssize_t sys_sendfile_bsd(int outfd, int infd,
     if (opt_in_out_inoffset) {
       *opt_in_out_inoffset += sbytes;
     } else {
-      _npassert(lseek(infd, offset + sbytes, SEEK_SET) == offset + sbytes);
+      npassert(lseek(infd, offset + sbytes, SEEK_SET) == offset + sbytes);
     }
     return sbytes;
   } else {

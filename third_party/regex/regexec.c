@@ -394,7 +394,7 @@ static reg_errcode_t tre_tnfa_run_parallel(const tre_tnfa_t *tnfa,
             reach_next_i++;
 
           } else {
-            _unassert(reach_pos[trans_i->state_id].pos == pos);
+            unassert(reach_pos[trans_i->state_id].pos == pos);
             /* Another path has also reached this state.  We choose
                the winner by examining the tag values for both
                paths. */
@@ -521,7 +521,7 @@ typedef struct tre_backtrack_struct {
 #define BT_STACK_POP()                                                  \
   do {                                                                  \
     int i;                                                              \
-    _unassert(stack->prev);                                             \
+    unassert(stack->prev);                                              \
     pos = stack->item.pos;                                              \
     str_byte = stack->item.str_byte;                                    \
     state = stack->item.state;                                          \
@@ -847,8 +847,8 @@ static void tre_fill_pmatch(size_t nmatch, regmatch_t pmatch[], int cflags,
        submatches. */
     i = 0;
     while (i < tnfa->num_submatches && i < nmatch) {
-      if (pmatch[i].rm_eo == -1) _unassert(pmatch[i].rm_so == -1);
-      _unassert(pmatch[i].rm_so <= pmatch[i].rm_eo);
+      if (pmatch[i].rm_eo == -1) unassert(pmatch[i].rm_so == -1);
+      unassert(pmatch[i].rm_so <= pmatch[i].rm_eo);
 
       parents = submatch_data[i].parents;
       if (parents != NULL)

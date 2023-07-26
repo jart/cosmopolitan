@@ -37,6 +37,6 @@
 //	TODO(jart): why does corruption happen when zip has no assets?
 	.yoink	.cosmo
 
-//	deprecated: use STATIC_YOINK("zipos")
+//	deprecated: use __static_yoink("zipos")
 	zip_uri_support = 0
 	.globl	zip_uri_support

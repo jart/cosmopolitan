@@ -45,9 +45,9 @@ static void sys_dup3_test(void) {
 
 int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
   int how;
-  _unassert(oldfd >= 0);
-  _unassert(newfd >= 0);
-  _unassert(!(flags & ~O_CLOEXEC));
+  unassert(oldfd >= 0);
+  unassert(newfd >= 0);
+  unassert(!(flags & ~O_CLOEXEC));
 
   if (IsFreebsd()) {
     if (flags & O_CLOEXEC) {

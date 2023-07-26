@@ -217,7 +217,7 @@ int posix_spawnattr_getsigmask(const posix_spawnattr_t *attr,
                                sigset_t *sigmask) {
   struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
   if (!a->sigmask_isset) {
-    _npassert(!sigprocmask(SIG_SETMASK, 0, &a->sigmask));
+    npassert(!sigprocmask(SIG_SETMASK, 0, &a->sigmask));
     a->sigmask_isset = true;
   }
   *sigmask = a->sigmask;

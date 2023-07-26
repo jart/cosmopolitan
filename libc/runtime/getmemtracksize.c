@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/memtrack.internal.h"
 
-noasan size_t GetMemtrackSize(struct MemoryIntervals *mm) {
+dontasan size_t GetMemtrackSize(struct MemoryIntervals *mm) {
   size_t i, n;
   for (n = i = 0; i < mm->i; ++i) {
     n += ((size_t)(mm->p[i].y - mm->p[i].x) + 1) << 16;

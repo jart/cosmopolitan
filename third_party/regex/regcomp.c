@@ -334,7 +334,7 @@ static reg_errcode_t tre_stack_push(tre_stack_t *s,
       if (new_buffer == NULL) {
         return REG_ESPACE;
       }
-      _unassert(new_size > s->size);
+      unassert(new_size > s->size);
       s->size = new_size;
       s->stack = new_buffer;
       tre_stack_push(s, value);
@@ -1209,7 +1209,7 @@ static reg_errcode_t tre_add_tags(tre_mem_t mem, tre_stack_t *stack,
                 status = REG_ESPACE;
                 break;
               }
-              _unassert(tnfa->submatch_data[id].parents == NULL);
+              unassert(tnfa->submatch_data[id].parents == NULL);
               tnfa->submatch_data[id].parents = p;
               for (i = 0; parents[i] >= 0; i++) p[i] = parents[i];
               p[i] = -1;
@@ -1254,7 +1254,7 @@ static reg_errcode_t tre_add_tags(tre_mem_t mem, tre_stack_t *stack,
                 next_tag++;
               }
             } else {
-              _unassert(!IS_TAG(lit));
+              unassert(!IS_TAG(lit));
             }
             break;
           }
@@ -1516,7 +1516,7 @@ static reg_errcode_t tre_add_tags(tre_mem_t mem, tre_stack_t *stack,
     num_minimals++;
   }
 
-  _unassert(tree->num_tags == num_tags);
+  unassert(tree->num_tags == num_tags);
   tnfa->end_tag = num_tags;
   tnfa->num_tags = num_tags;
   tnfa->num_minimals = num_minimals;
@@ -1954,7 +1954,7 @@ static reg_errcode_t tre_match_empty(tre_stack_t *stack, tre_ast_node_t *node,
             }
             break;
           case ASSERTION:
-            _unassert(lit->code_max >= 1 || lit->code_max <= ASSERT_LAST);
+            unassert(lit->code_max >= 1 || lit->code_max <= ASSERT_LAST);
             if (assertions != NULL) *assertions |= lit->code_max;
             break;
           case EMPTY:
@@ -1980,8 +1980,8 @@ static reg_errcode_t tre_match_empty(tre_stack_t *stack, tre_ast_node_t *node,
       case CATENATION:
         /* The path must go through both children. */
         cat = (tre_catenation_t *)node->obj;
-        _unassert(cat->left->nullable);
-        _unassert(cat->right->nullable);
+        unassert(cat->left->nullable);
+        unassert(cat->right->nullable);
         STACK_PUSHX(stack, voidptr, cat->left);
         STACK_PUSHX(stack, voidptr, cat->right);
         break;
@@ -2245,8 +2245,8 @@ static reg_errcode_t tre_make_trans(tre_pos_and_tags_t *p1,
             (p1->class ? ASSERT_CHAR_CLASS : 0) |
             (p1->neg_classes != NULL ? ASSERT_CHAR_CLASS_NEG : 0);
         if (p1->backref >= 0) {
-          _unassert((trans->assertions & ASSERT_CHAR_CLASS) == 0);
-          _unassert(p2->backref < 0);
+          unassert((trans->assertions & ASSERT_CHAR_CLASS) == 0);
+          unassert(p2->backref < 0);
           trans->u.backref = p1->backref;
           trans->assertions |= ASSERT_BACKREF;
         } else
@@ -2356,10 +2356,10 @@ static reg_errcode_t tre_ast_to_tnfa(tre_ast_node_t *node,
 
     case ITERATION:
       iter = (tre_iteration_t *)node->obj;
-      _unassert(iter->max == -1 || iter->max == 1);
+      unassert(iter->max == -1 || iter->max == 1);
 
       if (iter->max == -1) {
-        _unassert(iter->min == 0 || iter->min == 1);
+        unassert(iter->min == 0 || iter->min == 1);
         /* Add a transition from each last position in the iterated
            expression to each first position. */
         errcode = tre_make_trans(iter->arg->lastpos, iter->arg->firstpos,

@@ -55,6 +55,6 @@
  * @see unbing() for inverse
  */
 int bing(int b, int intent) {
-  _unassert(0 <= b && b < 256);
+  unassert(0 <= b && b < 256);
   return kCp437[b & 0xff];
 }

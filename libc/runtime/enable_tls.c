@@ -116,8 +116,8 @@ textstartup void __enable_tls(void) {
   //     _tbss_start + _tbss_size:
   //     _tdata_start + _tls_size:
   //
-  _unassert(_tbss_start == _tdata_start + I(_tbss_offset));
-  _unassert(_tbss_start + I(_tbss_size) == _tdata_start + I(_tls_size));
+  unassert(_tbss_start == _tdata_start + I(_tbss_offset));
+  unassert(_tbss_start + I(_tbss_size) == _tdata_start + I(_tls_size));
 
 #ifdef __x86_64__
 
@@ -130,12 +130,12 @@ textstartup void __enable_tls(void) {
   } else {
     // if this binary needs a hefty tls block then we'll bank on
     // malloc() being linked, which links _mapanon().  otherwise
-    // if you exceed this, you need to STATIC_YOINK("_mapanon").
+    // if you exceed this, you need to __static_yoink("_mapanon").
     // please note that it's probably too early to call calloc()
-    _npassert(_weaken(_mapanon));
+    npassert(_weaken(_mapanon));
     siz = ROUNDUP(siz, FRAMESIZE);
     mem = _weaken(_mapanon)(siz);
-    _npassert(mem);
+    npassert(mem);
   }
 
   if (IsAsan()) {
@@ -154,10 +154,10 @@ textstartup void __enable_tls(void) {
   if (siz <= sizeof(__static_tls)) {
     mem = __static_tls;
   } else {
-    _npassert(_weaken(_mapanon));
+    npassert(_weaken(_mapanon));
     siz = ROUNDUP(siz, FRAMESIZE);
     mem = _weaken(_mapanon)(siz);
-    _npassert(mem);
+    npassert(mem);
   }
 
   if (IsAsan()) {
@@ -205,7 +205,7 @@ textstartup void __enable_tls(void) {
   _pthread_main.tib = tib;
   _pthread_main.flags = PT_STATIC;
   _pthread_main.list.prev = _pthread_main.list.next =  //
-      _pthread_list = VEIL("r", &_pthread_main.list);
+      _pthread_list = __veil("r", &_pthread_main.list);
   atomic_store_explicit(&_pthread_main.ptid, tid, memory_order_relaxed);
 
   // copy in initialized data section

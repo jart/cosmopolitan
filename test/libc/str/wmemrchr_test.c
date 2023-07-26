@@ -30,5 +30,5 @@ TEST(wmemrchr, test) {
 
 BENCH(wmemrchr, bench) {
   EZBENCH2("wmemrchr", donothing,
-           EXPROPRIATE(wmemrchr(L"yo.hi.there", '.', 11)));
+           __expropriate(wmemrchr(L"yo.hi.there", '.', 11)));
 }

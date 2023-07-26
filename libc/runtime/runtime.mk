@@ -130,8 +130,7 @@ o/$(MODE)/libc/runtime/morph_tls.o: private		\
 		CFLAGS +=				\
 			-ffreestanding			\
 			-fno-sanitize=all		\
-			-fno-stack-protector		\
-			-fpatchable-function-entry=0,0
+			-fno-stack-protector
 
 # TODO(jart): We need a way to avoid WinThreadEntry() being hooked.
 o/$(MODE)/libc/runtime/clone.o: private			\

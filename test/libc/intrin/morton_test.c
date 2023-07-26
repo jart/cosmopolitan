@@ -60,6 +60,6 @@ TEST(unmorton, test) {
 
 BENCH(morton, bench) {
   EZBENCH2("morton", donothing,
-           EXPROPRIATE(morton(CONCEAL("r", 123), CONCEAL("r", 123))));
-  EZBENCH2("unmorton", donothing, EXPROPRIATE(unmorton(CONCEAL("r", 123))));
+           __expropriate(morton(__conceal("r", 123), __conceal("r", 123))));
+  EZBENCH2("unmorton", donothing, __expropriate(unmorton(__conceal("r", 123))));
 }

@@ -51,10 +51,10 @@ errno_t posix_fadvise(int fd, int64_t offset, int64_t len, int advice) {
     rc = sys_fadvise(fd, offset, len, advice);
   } else if (IsFreebsd()) {
     rc = sys_fadvise(fd, offset, len, advice);
-    _unassert(rc >= 0);
+    unassert(rc >= 0);
   } else if (IsNetbsd()) {
     rc = sys_fadvise_netbsd(fd, offset, offset, len, advice);
-    _unassert(rc >= 0);
+    unassert(rc >= 0);
   } else if (IsWindows()) {
     rc = sys_fadvise_nt(fd, offset, len, advice);
   } else {

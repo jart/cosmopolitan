@@ -66,7 +66,7 @@
  */
 char *iso8601us(char p[hasatleast 27], struct tm *tm, long ns) {
   p = iso8601(p, tm);
-  _unassert(0 <= ns && ns < 1000000000);
+  unassert(0 <= ns && ns < 1000000000);
   *p++ = '.';
   *p++ = '0' + ns / 100000000;
   *p++ = '0' + ns / 10000000 % 10;

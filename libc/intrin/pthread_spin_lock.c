@@ -48,14 +48,14 @@ errno_t(pthread_spin_lock)(pthread_spinlock_t *spin) {
       LOCKTRACE("pthread_spin_lock(%t)", spin);
       break;
     }
-    _unassert(x == 1);
+    unassert(x == 1);
     LOCKTRACE("pthread_spin_lock(%t) trying...", spin);
   }
 #else
   for (;;) {
     x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
     if (!x) break;
-    _unassert(x == 1);
+    unassert(x == 1);
   }
 #endif
   return 0;

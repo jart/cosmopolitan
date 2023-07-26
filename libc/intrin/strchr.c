@@ -32,7 +32,7 @@ static inline const char *strchr_pure(const char *s, int c) {
 
 #ifdef __x86_64__
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
+dontasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
   xmm_t v, *p;
@@ -55,7 +55,7 @@ noasan static inline const char *strchr_sse(const char *s, unsigned char c) {
 }
 #endif
 
-static noasan inline const char *strchr_x64(const char *p, uint64_t c) {
+static dontasan inline const char *strchr_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
@@ -103,7 +103,7 @@ char *strchr(const char *s, int c) {
   } else {
     r = strchr_pure(s, c);
   }
-  _unassert(!r || *r || !(c & 255));
+  unassert(!r || *r || !(c & 255));
   return (char *)r;
 #else
   char *r;
@@ -112,7 +112,7 @@ char *strchr(const char *s, int c) {
     if (!*s) return NULL;
   }
   r = strchr_x64(s, c);
-  _unassert(!r || *r || !c);
+  unassert(!r || *r || !c);
   return r;
 #endif
 }

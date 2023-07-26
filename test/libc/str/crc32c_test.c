@@ -74,15 +74,17 @@ BENCH(crc32c, bench) {
     EZBENCH_N("crc32c", i, crc32c(0, kHyperion, i));
     EZBENCH_N("crc32_z", i, crc32_z(0, kHyperion, i));
     EZBENCH_N("fnv_hash", i,
-              EXPROPRIATE(fnv_hash(VEIL("r", kHyperion), VEIL("r", i))));
-    EZBENCH_N("KMH", i, EXPROPRIATE(KMH(VEIL("r", kHyperion), VEIL("r", i))));
+              __expropriate(fnv_hash(__veil("r", kHyperion), __veil("r", i))));
+    EZBENCH_N("KMH", i,
+              __expropriate(KMH(__veil("r", kHyperion), __veil("r", i))));
     fprintf(stderr, "\n");
   }
   EZBENCH_N("crc32c", kHyperionSize, crc32c(0, kHyperion, kHyperionSize));
   EZBENCH_N("crc32_z", kHyperionSize, crc32_z(0, kHyperion, kHyperionSize));
+  EZBENCH_N("fnv_hash", kHyperionSize,
+            __expropriate(
+                fnv_hash(__veil("r", kHyperion), __veil("r", kHyperionSize))));
   EZBENCH_N(
-      "fnv_hash", kHyperionSize,
-      EXPROPRIATE(fnv_hash(VEIL("r", kHyperion), VEIL("r", kHyperionSize))));
-  EZBENCH_N("KMH", kHyperionSize,
-            EXPROPRIATE(KMH(VEIL("r", kHyperion), VEIL("r", kHyperionSize))));
+      "KMH", kHyperionSize,
+      __expropriate(KMH(__veil("r", kHyperion), __veil("r", kHyperionSize))));
 }

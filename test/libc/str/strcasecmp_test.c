@@ -32,9 +32,9 @@ TEST(strcasecmp, test) {
 
 BENCH(strcasecmp, bench) {
   EZBENCH2("strcasecmp 16 eq (same)", donothing,
-           EXPROPRIATE(
-               strcasecmp(VEIL("r", "abcdefghijklmnop"), "abcdefghijklmnop")));
+           __expropriate(strcasecmp(__veil("r", "abcdefghijklmnop"),
+                                    "abcdefghijklmnop")));
   EZBENCH2("strcasecmp 16 eq (evil)", donothing,
-           EXPROPRIATE(
-               strcasecmp(VEIL("r", "abcdefghijklmnop"), "ABCDEFGHIJKLMNOP")));
+           __expropriate(strcasecmp(__veil("r", "abcdefghijklmnop"),
+                                    "ABCDEFGHIJKLMNOP")));
 }

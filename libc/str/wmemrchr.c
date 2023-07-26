@@ -36,8 +36,8 @@ static inline const wchar_t *wmemrchr_pure(const wchar_t *s, wchar_t c,
 }
 
 #ifdef __x86_64__
-noasan static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
-                                                 size_t n) {
+dontasan static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
+                                                   size_t n) {
   size_t i;
   unsigned k, m;
   xmm_t v, t = {c, c, c, c};

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 
-STATIC_YOINK("glob");
+__static_yoink("glob");
 
 int main(int argc, char **argv, char **envp) {
   return _cocmd(argc, argv, envp);

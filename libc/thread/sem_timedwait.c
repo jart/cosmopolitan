@@ -35,8 +35,8 @@ static void sem_delay(int n) {
 
 static void sem_timedwait_cleanup(void *arg) {
   sem_t *sem = arg;
-  _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
-                                      memory_order_acq_rel) > 0);
+  unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
+                                     memory_order_acq_rel) > 0);
 }
 
 /**
@@ -69,8 +69,8 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   }
 
   BEGIN_CANCELLATION_POINT;
-  _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
-                                      memory_order_acq_rel) >= 0);
+  unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
+                                     memory_order_acq_rel) >= 0);
   pthread_cleanup_push(sem_timedwait_cleanup, sem);
 
   do {
@@ -82,20 +82,20 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
       } else if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
         rc = 0;
       } else if (rc == -ETIMEDOUT) {
-        _npassert(abstime);
+        npassert(abstime);
         if (timespec_cmp(*abstime, timespec_real()) <= 0) {
           rc = etimedout();
         } else {
           rc = 0;
         }
       } else {
-        _npassert(!rc);
+        npassert(!rc);
         rc = 0;
       }
     } else if (v > 0) {
       rc = 0;
     } else {
-      _unassert(v > INT_MIN);
+      unassert(v > INT_MIN);
       rc = einval();
     }
   } while (!rc && (!v || !atomic_compare_exchange_weak_explicit(

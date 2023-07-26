@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/pystate.h"
 #include "libc/errno.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/runtime/dlfcn.h"
@@ -15,11 +16,10 @@
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
-#include "third_party/python/Include/pystate.h"
 /* clang-format off */
 
 #if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_UNDEFINED__)
-STATIC_YOINK("__die"); /* to guarantee backtraces */
+__static_yoink("__die"); /* to guarantee backtraces */
 #endif
 
 /* Thread and interpreter state structures and their interfaces */

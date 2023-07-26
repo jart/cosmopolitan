@@ -36,9 +36,9 @@ static inline const unsigned char *memchr_pure(const unsigned char *s,
 }
 
 #ifdef __x86_64__
-noasan static inline const unsigned char *memchr_sse(const unsigned char *s,
-                                                     unsigned char c,
-                                                     size_t n) {
+dontasan static inline const unsigned char *memchr_sse(const unsigned char *s,
+                                                       unsigned char c,
+                                                       size_t n) {
   size_t i;
   unsigned k;
   unsigned m;

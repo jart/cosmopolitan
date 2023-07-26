@@ -35,7 +35,7 @@
  *
  * If you put the following in your main file:
  *
- *     STATIC_YOINK("enable_memory_log");
+ *     __static_yoink("enable_memory_log");
  *
  * Then memory allocations with constant backtraces will be logged to
  * standard error. The columns printed are
@@ -146,7 +146,7 @@ static void __memlog_update(void *p2, void *p) {
       __memlog.usage += n - __memlog.allocs.p[i].size;
       __memlog.allocs.p[i].addr = p2;
       __memlog.allocs.p[i].size = n;
-      _unassert(__memlog.usage >= 0);
+      unassert(__memlog.usage >= 0);
       return;
     }
   }
@@ -170,20 +170,20 @@ static void __memlog_free(void *p) {
     __memlog.allocs.p[i].addr = 0;
     __memlog.usage -= __memlog.allocs.p[i].size;
     __memlog.allocs.f = MIN(__memlog.allocs.f, i);
-    _unassert(__memlog.usage >= 0);
+    unassert(__memlog.usage >= 0);
   } else {
     kprintf("memlog could not find %p\n", p);
     notpossible;
   }
   __memlog_unlock();
-  _unassert(__memlog.free);
+  unassert(__memlog.free);
   __memlog.free(p);
   __memlog_log(__builtin_frame_address(0), "free", 0, p, n);
 }
 
 static void *__memlog_malloc(size_t n) {
   void *res;
-  _unassert(__memlog.malloc);
+  unassert(__memlog.malloc);
   if ((res = __memlog.malloc(n))) {
     __memlog_lock();
     __memlog_insert(res);
@@ -195,7 +195,7 @@ static void *__memlog_malloc(size_t n) {
 
 static void *__memlog_calloc(size_t n, size_t z) {
   void *res;
-  _unassert(__memlog.calloc);
+  unassert(__memlog.calloc);
   if ((res = __memlog.calloc(n, z))) {
     __memlog_lock();
     __memlog_insert(res);
@@ -207,7 +207,7 @@ static void *__memlog_calloc(size_t n, size_t z) {
 
 static void *__memlog_memalign(size_t l, size_t n) {
   void *res;
-  _unassert(__memlog.memalign);
+  unassert(__memlog.memalign);
   if ((res = __memlog.memalign(l, n))) {
     __memlog_lock();
     __memlog_insert(res);
@@ -221,7 +221,7 @@ static void *__memlog_realloc_impl(void *p, size_t n,
                                    void *(*f)(void *, size_t),
                                    struct StackFrame *frame) {
   void *res;
-  _unassert(f);
+  unassert(f);
   if ((res = f(p, n))) {
     __memlog_lock();
     if (p) {

@@ -29,12 +29,12 @@ int __fixupnewfd(int fd, int flags) {
   int file_mode;
   if (fd != -1) {
     if (flags & O_CLOEXEC) {
-      _unassert((file_mode = __sys_fcntl(fd, F_GETFD)) != -1);
-      _unassert(!__sys_fcntl(fd, F_SETFD, file_mode | FD_CLOEXEC));
+      unassert((file_mode = __sys_fcntl(fd, F_GETFD)) != -1);
+      unassert(!__sys_fcntl(fd, F_SETFD, file_mode | FD_CLOEXEC));
     }
     if (flags & O_NONBLOCK) {
-      _unassert((file_mode = __sys_fcntl(fd, F_GETFL)) != -1);
-      _unassert(!__sys_fcntl(fd, F_SETFL, file_mode | O_NONBLOCK));
+      unassert((file_mode = __sys_fcntl(fd, F_GETFL)) != -1);
+      unassert(!__sys_fcntl(fd, F_SETFL, file_mode | O_NONBLOCK));
     }
   }
   return fd;

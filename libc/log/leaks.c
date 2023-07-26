@@ -28,14 +28,14 @@
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("GetSymbolByAddr");
+__static_yoink("GetSymbolByAddr");
 
 #define MAXLEAKS 1000
 
 static bool once;
 static bool hasleaks;
 
-static noasan void CheckLeak(void *x, void *y, size_t n, void *a) {
+static dontasan void CheckLeak(void *x, void *y, size_t n, void *a) {
   if (n) {
     if (IsAsan()) {
       if (__asan_get_heap_size(x) && !__asan_is_leaky(x)) {
@@ -47,7 +47,7 @@ static noasan void CheckLeak(void *x, void *y, size_t n, void *a) {
   }
 }
 
-static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
+static dontasan void OnMemory(void *x, void *y, size_t n, void *a) {
   static int i;
   if (n) {
     if (MAXLEAKS) {
@@ -67,7 +67,7 @@ static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
   }
 }
 
-static noasan bool HasLeaks(void) {
+static dontasan bool HasLeaks(void) {
   malloc_inspect_all(CheckLeak, 0);
   return hasleaks;
 }
@@ -79,7 +79,7 @@ static noasan bool HasLeaks(void) {
  * services that depend on malloc() cannot be used, after calling this
  * function.
  */
-noasan void CheckForMemoryLeaks(void) {
+dontasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
   if (!IsAsan()) return;  // we need traces to exclude leaky
   if (!_cmpxchg(&once, false, true)) {

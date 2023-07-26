@@ -31,7 +31,7 @@ static textwindows inline bool HasWorkingConsole(void) {
   return !!(__ntconsolemode[0] | __ntconsolemode[1] | __ntconsolemode[2]);
 }
 
-static noubsan void RaiseSigFpe(void) {
+static dontubsan void RaiseSigFpe(void) {
   volatile int x = 0;
   x = 1 / x;
 }

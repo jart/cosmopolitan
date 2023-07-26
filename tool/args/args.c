@@ -27,7 +27,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 static struct ZipArgs {
   bool initialized;

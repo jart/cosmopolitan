@@ -122,41 +122,41 @@ TEST(strcasestr, test) {
  */
 BENCH(strcasestr, bench) {
   EZBENCH2("strcasestr naive", donothing,
-           EXPROPRIATE(strcasestr_naive(kHyperion, "THE END")));
+           __expropriate(strcasestr_naive(kHyperion, "THE END")));
   EZBENCH2("strcasestr", donothing,
-           EXPROPRIATE(strcasestr(kHyperion, "THE END")));
+           __expropriate(strcasestr(kHyperion, "THE END")));
   EZBENCH2("strcasestr tort 1", donothing,
-           EXPROPRIATE(strcasestr(
+           __expropriate(strcasestr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "B")));
   EZBENCH2("strcasestr tort 2", donothing,
-           EXPROPRIATE(strcasestr(
+           __expropriate(strcasestr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "ab")));
   EZBENCH2("strcasestr tort 4", donothing,
-           EXPROPRIATE(strcasestr(
+           __expropriate(strcasestr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "aaab")));
   EZBENCH2("strcasestr tort 8", donothing,
-           EXPROPRIATE(strcasestr(
+           __expropriate(strcasestr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "aaaaaaab")));
   EZBENCH2("strcasestr tort 16", donothing,
-           EXPROPRIATE(strcasestr(
+           __expropriate(strcasestr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
                "aaaaaaaaaaaaaaab")));
   EZBENCH2("strcasestr tort 32", donothing,
-           EXPROPRIATE(strcasestr(
+           __expropriate(strcasestr(
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",

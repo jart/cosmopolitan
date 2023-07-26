@@ -51,14 +51,14 @@ ssize_t appendr(char **b, size_t i) {
   char *p;
   size_t n;
   struct appendz z;
-  _unassert(b);
+  unassert(b);
   z = appendz((p = *b));
   if (i != z.i || !p) {
     n = ROUNDUP(i + 1, 8) + W;
     if (n > z.n || _bsrl(n) < _bsrl(z.n)) {
       if ((p = realloc(p, n))) {
         z.n = malloc_usable_size(p);
-        _unassert(!(z.n & (W - 1)));
+        unassert(!(z.n & (W - 1)));
         *b = p;
       } else {
         return -1;

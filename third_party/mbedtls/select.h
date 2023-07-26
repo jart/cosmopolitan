@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 static inline uint64_t Select(uint64_t a, uint64_t b, uint64_t mask) {
-  return (CONCEAL("r", mask) & a) | (CONCEAL("r", ~mask) & b);
+  return (__conceal("r", mask) & a) | (__conceal("r", ~mask) & b);
 }
 
 COSMOPOLITAN_C_END_

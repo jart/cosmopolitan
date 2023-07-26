@@ -20,7 +20,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("zipos");
+__static_yoink("zipos");
 
 /**
  * Extracts zip asset to filesystem.

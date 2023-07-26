@@ -291,7 +291,7 @@ static textwindows int createHostInfo(
   char name[IFNAMSIZ];
   int count, i;
   /* __hostInfo must be empty */
-  _unassert(__hostInfo == NULL);
+  unassert(__hostInfo == NULL);
   for (aa = firstAdapter; aa; aa = aa->Next) {
     /* Skip all the interfaces with no address and the ones that are not AF_INET
      */

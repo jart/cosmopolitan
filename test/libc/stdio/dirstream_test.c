@@ -29,8 +29,8 @@
 #include "libc/x/xasprintf.h"
 #include "libc/x/xiso8601.h"
 
-STATIC_YOINK("zipos");
-STATIC_YOINK("usr/share/zoneinfo/New_York");
+__static_yoink("zipos");
+__static_yoink("usr/share/zoneinfo/New_York");
 
 char testlib_enable_tmp_setup_teardown;
 

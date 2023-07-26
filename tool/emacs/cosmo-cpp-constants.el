@@ -178,7 +178,6 @@
  '("__SAUCE__"
    "PAGESIZE"
    "APE_STACKSIZE"
-   "APE_GUARDSIZE"
    "FRAMESIZE"
    "ARG_MAX"
    "PATH_MAX"

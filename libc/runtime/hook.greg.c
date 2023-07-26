@@ -106,8 +106,7 @@ static privileged void HookFunction(code_t *func, void *dest) {
  * @param st can be obtained using `GetSymbolTable()`
  * @see ape/ape.lds
  */
-privileged dontinstrument noasan int __hook(void *dest,
-                                            struct SymbolTable *st) {
+privileged int __hook(void *dest, struct SymbolTable *st) {
   long i;
   code_t *p, *pe;
   intptr_t lowest;

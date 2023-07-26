@@ -25,7 +25,7 @@
 extern int __threadcalls_end[] __attribute__((__weak__));
 extern int __threadcalls_start[] __attribute__((__weak__));
 
-static privileged dontinline void FixupLockNops(void) {
+static privileged void FixupLockNops(void) {
   __morph_begin();
   /*
    * _NOPL("__threadcalls", func)
