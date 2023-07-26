@@ -30,7 +30,7 @@
 #include "libc/x/xiso8601.h"
 
 STATIC_YOINK("zipos");
-STATIC_YOINK("usr/share/zoneinfo/New_York");
+STATIC_YOINK("usr/share/zoneinfo/America/New_York");
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -142,7 +142,7 @@ TEST(dirstream, test) {
 
 TEST(dirstream, zipTest) {
   bool foundNewYork = false;
-  const char *path = "/zip/usr/share/zoneinfo/";
+  const char *path = "/zip/usr/share/zoneinfo/America/";
   ASSERT_NE(0, _gc(xiso8601ts(NULL)));
   ASSERT_NE(NULL, (dir = opendir(path)));
   while ((ent = readdir(dir))) {
@@ -180,6 +180,6 @@ TEST(rewinddir, test) {
 }
 
 TEST(dirstream, zipTest_notDir) {
-  ASSERT_EQ(NULL, opendir("/zip/usr/share/zoneinfo/New_York"));
+  ASSERT_EQ(NULL, opendir("/zip/usr/share/zoneinfo/America/New_York"));
   ASSERT_EQ(ENOTDIR, errno);
 }

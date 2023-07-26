@@ -4,7 +4,13 @@
 PKGS += LIBC_TIME
 
 LIBC_TIME_ARTIFACTS += LIBC_TIME_A
-LIBC_TIME_ZONEINFOS = $(wildcard usr/share/zoneinfo/*)
+LIBC_TIME_ZONEINFOS = 					\
+	$(wildcard usr/share/zoneinfo/*) 		\
+	$(wildcard usr/share/zoneinfo/America/*) 	\
+	$(wildcard usr/share/zoneinfo/Asia/*) 		\
+	$(wildcard usr/share/zoneinfo/Australia/*)	\
+	$(wildcard usr/share/zoneinfo/Europe/*) 	\
+	$(wildcard usr/share/zoneinfo/Pacific/*)
 LIBC_TIME = $(LIBC_TIME_A_DEPS) $(LIBC_TIME_A)
 LIBC_TIME_A = o/$(MODE)/libc/time/time.a
 LIBC_TIME_A_FILES := $(wildcard libc/time/struct/*) $(wildcard libc/time/*)
@@ -16,11 +22,16 @@ LIBC_TIME_A_SRCS =				\
 	$(LIBC_TIME_A_SRCS_S)			\
 	$(LIBC_TIME_A_SRCS_C)
 
-LIBC_TIME_A_OBJS =				\
-	o/$(MODE)/usr/share/zoneinfo/.zip.o	\
-	$(LIBC_TIME_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
-	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+LIBC_TIME_A_OBJS =					\
+	o/$(MODE)/usr/share/zoneinfo/.zip.o		\
+	o/$(MODE)/usr/share/zoneinfo/America/.zip.o	\
+	o/$(MODE)/usr/share/zoneinfo/Asia/.zip.o	\
+	o/$(MODE)/usr/share/zoneinfo/Australia/.zip.o	\
+	o/$(MODE)/usr/share/zoneinfo/Europe/.zip.o	\
+	o/$(MODE)/usr/share/zoneinfo/Pacific/.zip.o	\
+	$(LIBC_TIME_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
+	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
+	$(LIBC_TIME_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
 	$(LIBC_TIME_ZONEINFOS:%=o/$(MODE)/%.zip.o)
 
 LIBC_TIME_A_CHECKS =				\
@@ -70,6 +81,16 @@ o/$(MODE)/libc/time/iso8601us.o: private	\
 
 o/$(MODE)/usr/share/zoneinfo/.zip.o:		\
 	usr/share/zoneinfo
+o/$(MODE)/usr/share/zoneinfo/America/.zip.o:	\
+	usr/share/zoneinfo/America
+o/$(MODE)/usr/share/zoneinfo/Asia/.zip.o:	\
+	usr/share/zoneinfo/Asia
+o/$(MODE)/usr/share/zoneinfo/Australia/.zip.o:	\
+	usr/share/zoneinfo/Australia
+o/$(MODE)/usr/share/zoneinfo/Europe/.zip.o:	\
+	usr/share/zoneinfo/Europe
+o/$(MODE)/usr/share/zoneinfo/Pacific/.zip.o:	\
+	usr/share/zoneinfo/Pacific
 
 o/$(MODE)/libc/time/kmonthname.o: libc/time/kmonthname.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

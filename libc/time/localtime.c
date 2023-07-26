@@ -19,22 +19,26 @@
 
 STATIC_YOINK("zipos");
 STATIC_YOINK("usr/share/zoneinfo/");
-STATIC_YOINK("usr/share/zoneinfo/Anchorage");
-STATIC_YOINK("usr/share/zoneinfo/Berlin");
-STATIC_YOINK("usr/share/zoneinfo/Chicago");
-STATIC_YOINK("usr/share/zoneinfo/Denver");
+STATIC_YOINK("usr/share/zoneinfo/America/");
+STATIC_YOINK("usr/share/zoneinfo/America/Anchorage");
+STATIC_YOINK("usr/share/zoneinfo/America/Chicago");
+STATIC_YOINK("usr/share/zoneinfo/America/Denver");
+STATIC_YOINK("usr/share/zoneinfo/America/Los_Angeles");
+STATIC_YOINK("usr/share/zoneinfo/America/New_York");
+STATIC_YOINK("usr/share/zoneinfo/Asia/");
+STATIC_YOINK("usr/share/zoneinfo/Asia/Jerusalem");
+STATIC_YOINK("usr/share/zoneinfo/Asia/Kolkata");
+STATIC_YOINK("usr/share/zoneinfo/Asia/Shanghai");
+STATIC_YOINK("usr/share/zoneinfo/Asia/Tokyo");
+STATIC_YOINK("usr/share/zoneinfo/Australia/");
+STATIC_YOINK("usr/share/zoneinfo/Australia/Sydney");
+STATIC_YOINK("usr/share/zoneinfo/Europe/");
+STATIC_YOINK("usr/share/zoneinfo/Europe/Berlin");
+STATIC_YOINK("usr/share/zoneinfo/Europe/London");
 STATIC_YOINK("usr/share/zoneinfo/GMT");
-STATIC_YOINK("usr/share/zoneinfo/Honolulu");
-STATIC_YOINK("usr/share/zoneinfo/Jerusalem");
-STATIC_YOINK("usr/share/zoneinfo/Kolkata");
-STATIC_YOINK("usr/share/zoneinfo/Los_Angeles");
-STATIC_YOINK("usr/share/zoneinfo/London");
-STATIC_YOINK("usr/share/zoneinfo/New_York");
-STATIC_YOINK("usr/share/zoneinfo/Shanghai");
-STATIC_YOINK("usr/share/zoneinfo/Sydney");
-STATIC_YOINK("usr/share/zoneinfo/Tokyo");
+STATIC_YOINK("usr/share/zoneinfo/Pacific/");
+STATIC_YOINK("usr/share/zoneinfo/Pacific/Honolulu");
 STATIC_YOINK("usr/share/zoneinfo/UTC");
-
 // clang-format off
 /* Convert timestamp from time_t to struct tm.  */
 /*

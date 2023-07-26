@@ -24,7 +24,7 @@
 #include "libc/time/time.h"
 
 textstartup static void strftime_test_init(void) {
-  setenv("TZ", "Los_Angeles", true);
+  setenv("TZ", "America/Los_Angeles", true);
 }
 const void *const strftime_test_ctor[] initarray = {strftime_test_init};
 
@@ -60,7 +60,7 @@ TEST(strftime_100, rfc822_ShakaZuluTime) {
 
 TEST(strftime_201, iso8601_LosAngeles) {
   int64_t t = 0x5cd04d0e;
-  ASSERT_STREQ("Los_Angeles", getenv("TZ"));
+  ASSERT_STREQ("America/Los_Angeles", getenv("TZ"));
   ASSERT_STREQ("2019-05-06T08:04:46PDT",
                FormatTime("%Y-%m-%dT%H:%M:%S%Z", localtime(&t)));
 }

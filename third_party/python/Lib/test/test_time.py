@@ -300,8 +300,8 @@ class TimeTestCase(unittest.TestCase):
         # utc='UTC+0'
 
         utc = 'UTC'
-        new_york = 'New_York'
-        sydney = 'Sydney'
+        new_york = 'America/New_York'
+        sydney = 'Australia/Sydney'
 
         org_TZ = environ.get('TZ',None)
         try:
