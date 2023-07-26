@@ -7071,21 +7071,21 @@ function unix.gmtime(unixts) end
 ---
 --- Your redbean ships with a subset of the time zone database.
 ---
---- - `/zip/usr/share/zoneinfo/Honolulu`   Z-10
---- - `/zip/usr/share/zoneinfo/Anchorage`  Z -9
---- - `/zip/usr/share/zoneinfo/GST`        Z -8
---- - `/zip/usr/share/zoneinfo/Boulder`    Z -6
---- - `/zip/usr/share/zoneinfo/Chicago`    Z -5
---- - `/zip/usr/share/zoneinfo/New_York`   Z -4
---- - `/zip/usr/share/zoneinfo/UTC`        Z +0
---- - `/zip/usr/share/zoneinfo/GMT`        Z +0
---- - `/zip/usr/share/zoneinfo/London`     Z +1
---- - `/zip/usr/share/zoneinfo/Berlin`     Z +2
---- - `/zip/usr/share/zoneinfo/Israel`     Z +3
---- - `/zip/usr/share/zoneinfo/India`      Z +5
---- - `/zip/usr/share/zoneinfo/Beijing`    Z +8
---- - `/zip/usr/share/zoneinfo/Japan`      Z +9
---- - `/zip/usr/share/zoneinfo/Sydney`     Z+10
+--- - `/zip/usr/share/zoneinfo/Honolulu`    Z-10
+--- - `/zip/usr/share/zoneinfo/Anchorage`   Z-09/-08
+--- - `/zip/usr/share/zoneinfo/Los_Angeles` Z-08/-07
+--- - `/zip/usr/share/zoneinfo/Denver`      Z-07/-06
+--- - `/zip/usr/share/zoneinfo/Chicago`     Z-06/-05
+--- - `/zip/usr/share/zoneinfo/New_York`    Z-05/-04
+--- - `/zip/usr/share/zoneinfo/UTC`         Z+00
+--- - `/zip/usr/share/zoneinfo/GMT`         Z+00
+--- - `/zip/usr/share/zoneinfo/London`      Z+00/+01
+--- - `/zip/usr/share/zoneinfo/Berlin`      Z+01/+02
+--- - `/zip/usr/share/zoneinfo/Jerusalem`   Z+02/+03
+--- - `/zip/usr/share/zoneinfo/Kolkata`     Z+05:30
+--- - `/zip/usr/share/zoneinfo/Shanghai`    Z+08
+--- - `/zip/usr/share/zoneinfo/Tokyo`       Z+09
+--- - `/zip/usr/share/zoneinfo/Sydney`      Z+10/+11
 ---
 --- You can control which timezone is used using the `TZ` environment
 --- variable. If your time zone isn't included in the above list, you
