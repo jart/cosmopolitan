@@ -143,8 +143,9 @@ asm(".include \"libc/disclaimer.inc\"");
 
 #define LUA_TMPNAMBUFSIZE	32
 
+// [jart]
 #define lua_tmpnam(b,e) { \
-        strcpy(b, kTmpPath); \  // [jart]
+        strcpy(b, kTmpPath); \
         strcat(b, "lua_XXXXXX"); \
         e = mkstemp(b); \
         if (e != -1) close(e); \
