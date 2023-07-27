@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsOneCoreTransformMode,IsOneCoreTransformMode,2072
+.imp	user32,__imp_IsOneCoreTransformMode,IsOneCoreTransformMode,0

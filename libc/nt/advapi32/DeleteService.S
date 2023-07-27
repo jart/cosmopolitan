@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_DeleteService,DeleteService,1238
+.imp	advapi32,__imp_DeleteService,DeleteService,0

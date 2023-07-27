@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_MenuWindowProcW,MenuWindowProcW,2161
+.imp	user32,__imp_MenuWindowProcW,MenuWindowProcW,0

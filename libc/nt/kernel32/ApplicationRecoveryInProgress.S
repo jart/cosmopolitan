@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ApplicationRecoveryInProgress,ApplicationRecoveryInProgress,35
+.imp	kernel32,__imp_ApplicationRecoveryInProgress,ApplicationRecoveryInProgress,0

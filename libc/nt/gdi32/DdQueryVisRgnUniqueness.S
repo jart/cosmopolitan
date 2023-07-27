@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_DdQueryVisRgnUniqueness,DdQueryVisRgnUniqueness,1382
+.imp	gdi32,__imp_DdQueryVisRgnUniqueness,DdQueryVisRgnUniqueness,0

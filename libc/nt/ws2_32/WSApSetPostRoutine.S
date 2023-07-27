@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSApSetPostRoutine,WSApSetPostRoutine,24
+.imp	ws2_32,__imp_WSApSetPostRoutine,WSApSetPostRoutine,0

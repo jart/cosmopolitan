@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_InflateRect,InflateRect,2026
+.imp	user32,__imp_InflateRect,InflateRect,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GdiAddGlsRecord,GdiAddGlsRecord,1489
+.imp	gdi32,__imp_GdiAddGlsRecord,GdiAddGlsRecord,0

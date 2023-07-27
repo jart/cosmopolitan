@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SendIMEMessageExW,SendIMEMessageExW,2299
+.imp	user32,__imp_SendIMEMessageExW,SendIMEMessageExW,0

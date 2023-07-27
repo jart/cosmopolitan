@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTDestroyPagingQueue,D3DKMTDestroyPagingQueue,1151
+.imp	gdi32,__imp_D3DKMTDestroyPagingQueue,D3DKMTDestroyPagingQueue,0

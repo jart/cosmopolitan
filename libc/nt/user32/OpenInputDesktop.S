@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_OpenInputDesktop,OpenInputDesktop,2191
+.imp	user32,__imp_OpenInputDesktop,OpenInputDesktop,0

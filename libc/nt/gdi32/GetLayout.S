@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetLayout,GetLayout,1668
+.imp	gdi32,__imp_GetLayout,GetLayout,0

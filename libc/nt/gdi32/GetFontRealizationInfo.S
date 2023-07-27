@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetFontRealizationInfo,GetFontRealizationInfo,1652
+.imp	gdi32,__imp_GetFontRealizationInfo,GetFontRealizationInfo,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetFileAttributesTransactedW,GetFileAttributesTransactedW,584
+.imp	kernel32,__imp_GetFileAttributesTransactedW,GetFileAttributesTransactedW,0

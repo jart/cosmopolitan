@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_HideCaret,HideCaret,2014
+.imp	user32,__imp_HideCaret,HideCaret,0

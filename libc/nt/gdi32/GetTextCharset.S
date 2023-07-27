@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetTextCharset,GetTextCharset,1710
+.imp	gdi32,__imp_GetTextCharset,GetTextCharset,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DestroyCaret,DestroyCaret,1684
+.imp	user32,__imp_DestroyCaret,DestroyCaret,0

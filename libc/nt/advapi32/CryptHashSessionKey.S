@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CryptHashSessionKey,CryptHashSessionKey,1220
+.imp	advapi32,__imp_CryptHashSessionKey,CryptHashSessionKey,0

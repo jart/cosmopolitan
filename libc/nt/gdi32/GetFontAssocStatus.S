@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetFontAssocStatus,GetFontAssocStatus,1647
+.imp	gdi32,__imp_GetFontAssocStatus,GetFontAssocStatus,0

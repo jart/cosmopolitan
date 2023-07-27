@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetRectRgn,SetRectRgn,1906
+.imp	gdi32,__imp_SetRectRgn,SetRectRgn,0

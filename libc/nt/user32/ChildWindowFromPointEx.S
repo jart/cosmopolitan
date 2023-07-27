@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ChildWindowFromPointEx,ChildWindowFromPointEx,1582
+.imp	user32,__imp_ChildWindowFromPointEx,ChildWindowFromPointEx,0

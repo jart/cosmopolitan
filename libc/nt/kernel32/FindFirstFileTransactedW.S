@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FindFirstFileTransactedW,FindFirstFileTransactedW,388
+.imp	kernel32,__imp_FindFirstFileTransactedW,FindFirstFileTransactedW,0

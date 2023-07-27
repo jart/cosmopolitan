@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetDesktopColorTransform,SetDesktopColorTransform,2326
+.imp	user32,__imp_SetDesktopColorTransform,SetDesktopColorTransform,0

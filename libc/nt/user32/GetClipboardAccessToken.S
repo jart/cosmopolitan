@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetClipboardAccessToken,GetClipboardAccessToken,1817
+.imp	user32,__imp_GetClipboardAccessToken,GetClipboardAccessToken,0

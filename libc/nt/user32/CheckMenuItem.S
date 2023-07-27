@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CheckMenuItem,CheckMenuItem,1575
+.imp	user32,__imp_CheckMenuItem,CheckMenuItem,0

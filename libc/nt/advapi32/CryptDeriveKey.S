@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CryptDeriveKey,CryptDeriveKey,1200
+.imp	advapi32,__imp_CryptDeriveKey,CryptDeriveKey,0

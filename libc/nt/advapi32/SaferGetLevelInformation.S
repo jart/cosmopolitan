@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_SaferGetLevelInformation,SaferGetLevelInformation,1711
+.imp	advapi32,__imp_SaferGetLevelInformation,SaferGetLevelInformation,0

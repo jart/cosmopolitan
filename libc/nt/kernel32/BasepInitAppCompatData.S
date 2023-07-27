@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BasepInitAppCompatData,BasepInitAppCompatData,90
+.imp	kernel32,__imp_BasepInitAppCompatData,BasepInitAppCompatData,0

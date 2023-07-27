@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_getprotobynumber,getprotobynumber,54
+.imp	ws2_32,__imp_getprotobynumber,getprotobynumber,0

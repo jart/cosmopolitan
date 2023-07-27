@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTGetContextInProcessSchedulingPriority,D3DKMTGetContextInProcessSchedulingPriority,1167
+.imp	gdi32,__imp_D3DKMTGetContextInProcessSchedulingPriority,D3DKMTGetContextInProcessSchedulingPriority,0

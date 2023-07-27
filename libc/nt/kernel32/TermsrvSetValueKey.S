@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_TermsrvSetValueKey,TermsrvSetValueKey,1441
+.imp	kernel32,__imp_TermsrvSetValueKey,TermsrvSetValueKey,0

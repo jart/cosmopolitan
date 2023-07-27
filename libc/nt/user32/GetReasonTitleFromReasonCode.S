@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetReasonTitleFromReasonCode,GetReasonTitleFromReasonCode,1943
+.imp	user32,__imp_GetReasonTitleFromReasonCode,GetReasonTitleFromReasonCode,0

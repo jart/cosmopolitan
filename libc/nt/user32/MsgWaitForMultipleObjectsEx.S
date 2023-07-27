@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_MsgWaitForMultipleObjectsEx,MsgWaitForMultipleObjectsEx,2178
+.imp	user32,__imp_MsgWaitForMultipleObjectsEx,MsgWaitForMultipleObjectsEx,0

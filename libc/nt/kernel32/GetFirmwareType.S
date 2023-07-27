@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetFirmwareType,GetFirmwareType,601
+.imp	kernel32,__imp_GetFirmwareType,GetFirmwareType,0

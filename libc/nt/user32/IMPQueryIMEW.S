@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IMPQueryIMEW,IMPQueryIMEW,2020
+.imp	user32,__imp_IMPQueryIMEW,IMPQueryIMEW,0

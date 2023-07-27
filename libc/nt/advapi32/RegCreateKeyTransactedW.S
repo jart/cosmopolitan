@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegCreateKeyTransactedW,RegCreateKeyTransactedW,1615
+.imp	advapi32,__imp_RegCreateKeyTransactedW,RegCreateKeyTransactedW,0

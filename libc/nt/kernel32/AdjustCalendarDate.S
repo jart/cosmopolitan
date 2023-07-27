@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_AdjustCalendarDate,AdjustCalendarDate,21
+.imp	kernel32,__imp_AdjustCalendarDate,AdjustCalendarDate,0

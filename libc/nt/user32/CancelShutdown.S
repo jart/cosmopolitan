@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CancelShutdown,CancelShutdown,1538
+.imp	user32,__imp_CancelShutdown,CancelShutdown,0

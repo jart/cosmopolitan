@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_LZCloseFile,LZCloseFile,946
+.imp	kernel32,__imp_LZCloseFile,LZCloseFile,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_RegisterApplicationRestart,RegisterApplicationRestart,1185
+.imp	kernel32,__imp_RegisterApplicationRestart,RegisterApplicationRestart,0

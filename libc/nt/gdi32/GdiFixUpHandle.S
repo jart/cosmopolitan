@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GdiFixUpHandle,GdiFixUpHandle,1534
+.imp	gdi32,__imp_GdiFixUpHandle,GdiFixUpHandle,0

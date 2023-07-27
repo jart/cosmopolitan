@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ToUnicodeEx,ToUnicodeEx,2441
+.imp	user32,__imp_ToUnicodeEx,ToUnicodeEx,0

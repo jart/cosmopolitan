@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ConvertCalDateTimeToSystemTime,ConvertCalDateTimeToSystemTime,159
+.imp	kernel32,__imp_ConvertCalDateTimeToSystemTime,ConvertCalDateTimeToSystemTime,0

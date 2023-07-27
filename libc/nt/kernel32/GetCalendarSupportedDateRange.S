@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetCalendarSupportedDateRange,GetCalendarSupportedDateRange,466
+.imp	kernel32,__imp_GetCalendarSupportedDateRange,GetCalendarSupportedDateRange,0

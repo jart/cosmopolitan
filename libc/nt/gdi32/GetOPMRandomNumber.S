@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetOPMRandomNumber,GetOPMRandomNumber,1681
+.imp	gdi32,__imp_GetOPMRandomNumber,GetOPMRandomNumber,0

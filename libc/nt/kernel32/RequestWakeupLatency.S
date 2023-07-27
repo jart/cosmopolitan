@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_RequestWakeupLatency,RequestWakeupLatency,1219
+.imp	kernel32,__imp_RequestWakeupLatency,RequestWakeupLatency,0

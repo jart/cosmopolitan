@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetBkColor,SetBkColor,1871
+.imp	gdi32,__imp_SetBkColor,SetBkColor,0

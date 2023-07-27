@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_DebugSetProcessKillOnExit,DebugSetProcessKillOnExit,264
+.imp	kernel32,__imp_DebugSetProcessKillOnExit,DebugSetProcessKillOnExit,0

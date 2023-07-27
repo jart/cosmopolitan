@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetAtomNameW,GetAtomNameW,450
+.imp	kernel32,__imp_GetAtomNameW,GetAtomNameW,0

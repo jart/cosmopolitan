@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CredGetSessionTypes,CredGetSessionTypes,1159
+.imp	advapi32,__imp_CredGetSessionTypes,CredGetSessionTypes,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_TerminateJobObject,TerminateJobObject,1426
+.imp	kernel32,__imp_TerminateJobObject,TerminateJobObject,0

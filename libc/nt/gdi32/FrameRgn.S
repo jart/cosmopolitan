@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_FrameRgn,FrameRgn,1485
+.imp	gdi32,__imp_FrameRgn,FrameRgn,0

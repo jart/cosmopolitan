@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_LsaSetInformationPolicy,LsaSetInformationPolicy,1492
+.imp	advapi32,__imp_LsaSetInformationPolicy,LsaSetInformationPolicy,0

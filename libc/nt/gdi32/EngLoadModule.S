@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_EngLoadModule,EngLoadModule,1429
+.imp	gdi32,__imp_EngLoadModule,EngLoadModule,0

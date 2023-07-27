@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SwapBuffers,SwapBuffers,1929
+.imp	gdi32,__imp_SwapBuffers,SwapBuffers,0
 
 	.text.windows
         .ftrace1

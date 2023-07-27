@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetEnhMetaFileDescriptionW,GetEnhMetaFileDescriptionW,1642
+.imp	gdi32,__imp_GetEnhMetaFileDescriptionW,GetEnhMetaFileDescriptionW,0

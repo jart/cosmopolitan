@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetProcessDefaultLayout,SetProcessDefaultLayout,2360
+.imp	user32,__imp_SetProcessDefaultLayout,SetProcessDefaultLayout,0

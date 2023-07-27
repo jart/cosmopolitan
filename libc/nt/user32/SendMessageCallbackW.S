@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SendMessageCallbackW,SendMessageCallbackW,2303
+.imp	user32,__imp_SendMessageCallbackW,SendMessageCallbackW,0

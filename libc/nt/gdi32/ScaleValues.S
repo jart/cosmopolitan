@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_ScaleValues,ScaleValues,1817
+.imp	gdi32,__imp_ScaleValues,ScaleValues,0

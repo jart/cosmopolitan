@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_RegisterSuspendResumeNotification,RegisterSuspendResumeNotification,2271
+.imp	user32,__imp_RegisterSuspendResumeNotification,RegisterSuspendResumeNotification,0

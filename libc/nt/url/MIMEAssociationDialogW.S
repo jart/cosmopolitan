@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	url,__imp_MIMEAssociationDialogW,MIMEAssociationDialogW,108
+.imp	url,__imp_MIMEAssociationDialogW,MIMEAssociationDialogW,0

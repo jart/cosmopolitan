@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetTimer,SetTimer,2384
+.imp	user32,__imp_SetTimer,SetTimer,0
 
 	.text.windows
         .ftrace1

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetObjectType,GetObjectType,1683
+.imp	gdi32,__imp_GetObjectType,GetObjectType,0

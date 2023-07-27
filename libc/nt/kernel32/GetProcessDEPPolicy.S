@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetProcessDEPPolicy,GetProcessDEPPolicy,692
+.imp	kernel32,__imp_GetProcessDEPPolicy,GetProcessDEPPolicy,0

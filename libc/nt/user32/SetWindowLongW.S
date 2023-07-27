@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetWindowLongW,SetWindowLongW,2398
+.imp	user32,__imp_SetWindowLongW,SetWindowLongW,0
 
 	.text.windows
         .ftrace1

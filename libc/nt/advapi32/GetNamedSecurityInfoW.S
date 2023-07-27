@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_GetNamedSecurityInfoW,GetNamedSecurityInfoW,1345
+.imp	advapi32,__imp_GetNamedSecurityInfoW,GetNamedSecurityInfoW,0

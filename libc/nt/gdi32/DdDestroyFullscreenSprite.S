@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_DdDestroyFullscreenSprite,DdDestroyFullscreenSprite,1323
+.imp	gdi32,__imp_DdDestroyFullscreenSprite,DdDestroyFullscreenSprite,0

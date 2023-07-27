@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetEUDCTimeStamp,GetEUDCTimeStamp,1637
+.imp	gdi32,__imp_GetEUDCTimeStamp,GetEUDCTimeStamp,0

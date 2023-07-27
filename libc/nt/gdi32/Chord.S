@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_Chord,Chord,1041
+.imp	gdi32,__imp_Chord,Chord,0

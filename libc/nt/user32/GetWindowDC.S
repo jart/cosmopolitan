@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetWindowDC,GetWindowDC,1981
+.imp	user32,__imp_GetWindowDC,GetWindowDC,0

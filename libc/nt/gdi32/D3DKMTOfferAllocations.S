@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTOfferAllocations,D3DKMTOfferAllocations,1205
+.imp	gdi32,__imp_D3DKMTOfferAllocations,D3DKMTOfferAllocations,0

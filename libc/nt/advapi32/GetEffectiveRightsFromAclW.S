@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_GetEffectiveRightsFromAclW,GetEffectiveRightsFromAclW,1321
+.imp	advapi32,__imp_GetEffectiveRightsFromAclW,GetEffectiveRightsFromAclW,0

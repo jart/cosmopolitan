@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetConsoleMenuClose,SetConsoleMenuClose,1279
+.imp	kernel32,__imp_SetConsoleMenuClose,SetConsoleMenuClose,0

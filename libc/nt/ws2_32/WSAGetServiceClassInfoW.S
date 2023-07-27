@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAGetServiceClassInfoW,WSAGetServiceClassInfoW,71
+.imp	ws2_32,__imp_WSAGetServiceClassInfoW,WSAGetServiceClassInfoW,0
 
 	.text.windows
         .ftrace1

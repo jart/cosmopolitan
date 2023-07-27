@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CompareCalendarDates,CompareCalendarDates,150
+.imp	kernel32,__imp_CompareCalendarDates,CompareCalendarDates,0

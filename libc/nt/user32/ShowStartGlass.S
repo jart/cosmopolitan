@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ShowStartGlass,ShowStartGlass,2415
+.imp	user32,__imp_ShowStartGlass,ShowStartGlass,0

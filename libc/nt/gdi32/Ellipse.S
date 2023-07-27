@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_Ellipse,Ellipse,1395
+.imp	gdi32,__imp_Ellipse,Ellipse,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BaseIsDosApplication,BaseIsDosApplication,65
+.imp	kernel32,__imp_BaseIsDosApplication,BaseIsDosApplication,0

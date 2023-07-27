@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GdiSetAttrs,GdiSetAttrs,1576
+.imp	gdi32,__imp_GdiSetAttrs,GdiSetAttrs,0

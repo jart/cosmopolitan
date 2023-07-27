@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsServerSideWindow,IsServerSideWindow,2077
+.imp	user32,__imp_IsServerSideWindow,IsServerSideWindow,0

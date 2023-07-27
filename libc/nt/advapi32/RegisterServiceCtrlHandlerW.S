@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegisterServiceCtrlHandlerW,RegisterServiceCtrlHandlerW,1692
+.imp	advapi32,__imp_RegisterServiceCtrlHandlerW,RegisterServiceCtrlHandlerW,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_LogicalToPhysicalPoint,LogicalToPhysicalPoint,2121
+.imp	user32,__imp_LogicalToPhysicalPoint,LogicalToPhysicalPoint,0

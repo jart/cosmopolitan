@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GdiConvertRegion,GdiConvertRegion,1506
+.imp	gdi32,__imp_GdiConvertRegion,GdiConvertRegion,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GdiFullscreenControl,GdiFullscreenControl,1536
+.imp	gdi32,__imp_GdiFullscreenControl,GdiFullscreenControl,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateSymbolicLinkTransactedW,CreateSymbolicLinkTransactedW,238
+.imp	kernel32,__imp_CreateSymbolicLinkTransactedW,CreateSymbolicLinkTransactedW,0

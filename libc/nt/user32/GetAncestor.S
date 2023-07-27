@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetAncestor,GetAncestor,1794
+.imp	user32,__imp_GetAncestor,GetAncestor,0

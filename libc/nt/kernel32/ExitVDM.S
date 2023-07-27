@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ExitVDM,ExitVDM,357
+.imp	kernel32,__imp_ExitVDM,ExitVDM,0

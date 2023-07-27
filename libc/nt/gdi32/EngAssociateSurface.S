@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_EngAssociateSurface,EngAssociateSurface,1404
+.imp	gdi32,__imp_EngAssociateSurface,EngAssociateSurface,0

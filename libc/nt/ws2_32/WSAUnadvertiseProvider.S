@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAUnadvertiseProvider,WSAUnadvertiseProvider,123
+.imp	ws2_32,__imp_WSAUnadvertiseProvider,WSAUnadvertiseProvider,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetAutoRotationState,GetAutoRotationState,1798
+.imp	user32,__imp_GetAutoRotationState,GetAutoRotationState,0

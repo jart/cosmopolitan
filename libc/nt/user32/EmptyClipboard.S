@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_EmptyClipboard,EmptyClipboard,1704
+.imp	user32,__imp_EmptyClipboard,EmptyClipboard,0

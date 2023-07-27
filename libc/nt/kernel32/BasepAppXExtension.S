@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BasepAppXExtension,BasepAppXExtension,79
+.imp	kernel32,__imp_BasepAppXExtension,BasepAppXExtension,0

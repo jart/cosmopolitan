@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_CreateRoundRectRgn,CreateRoundRectRgn,1099
+.imp	gdi32,__imp_CreateRoundRectRgn,CreateRoundRectRgn,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_LZSeek,LZSeek,954
+.imp	kernel32,__imp_LZSeek,LZSeek,0

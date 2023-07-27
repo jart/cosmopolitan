@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_QueryActCtxWWorker,QueryActCtxWWorker,1087
+.imp	kernel32,__imp_QueryActCtxWWorker,QueryActCtxWWorker,0

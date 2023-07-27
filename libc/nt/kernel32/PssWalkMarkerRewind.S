@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_PssWalkMarkerRewind,PssWalkMarkerRewind,1076
+.imp	kernel32,__imp_PssWalkMarkerRewind,PssWalkMarkerRewind,0

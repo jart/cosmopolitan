@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetWorldTransform,SetWorldTransform,1920
+.imp	gdi32,__imp_SetWorldTransform,SetWorldTransform,0

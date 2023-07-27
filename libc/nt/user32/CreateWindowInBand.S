@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CreateWindowInBand,CreateWindowInBand,1626
+.imp	user32,__imp_CreateWindowInBand,CreateWindowInBand,0

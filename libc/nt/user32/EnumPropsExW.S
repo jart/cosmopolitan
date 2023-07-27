@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_EnumPropsExW,EnumPropsExW,1769
+.imp	user32,__imp_EnumPropsExW,EnumPropsExW,0

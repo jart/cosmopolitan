@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_SetServiceObjectSecurity,SetServiceObjectSecurity,1754
+.imp	advapi32,__imp_SetServiceObjectSecurity,SetServiceObjectSecurity,0

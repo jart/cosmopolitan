@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTEvict,D3DKMTEvict,1160
+.imp	gdi32,__imp_D3DKMTEvict,D3DKMTEvict,0

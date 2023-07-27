@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_AuditEnumerateCategories,AuditEnumerateCategories,1040
+.imp	advapi32,__imp_AuditEnumerateCategories,AuditEnumerateCategories,0

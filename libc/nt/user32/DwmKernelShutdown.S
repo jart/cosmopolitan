@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DwmKernelShutdown,DwmKernelShutdown,1735
+.imp	user32,__imp_DwmKernelShutdown,DwmKernelShutdown,0

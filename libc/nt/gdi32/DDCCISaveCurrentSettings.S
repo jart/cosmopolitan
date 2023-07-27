@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_DDCCISaveCurrentSettings,DDCCISaveCurrentSettings,1319
+.imp	gdi32,__imp_DDCCISaveCurrentSettings,DDCCISaveCurrentSettings,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_UnregisterPowerSettingNotification,UnregisterPowerSettingNotification,2465
+.imp	user32,__imp_UnregisterPowerSettingNotification,UnregisterPowerSettingNotification,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_GetExplicitEntriesFromAclW,GetExplicitEntriesFromAclW,1325
+.imp	advapi32,__imp_GetExplicitEntriesFromAclW,GetExplicitEntriesFromAclW,0

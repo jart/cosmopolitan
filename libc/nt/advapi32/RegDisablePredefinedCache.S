@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegDisablePredefinedCache,RegDisablePredefinedCache,1629
+.imp	advapi32,__imp_RegDisablePredefinedCache,RegDisablePredefinedCache,0
 
 	.text.windows
         .ftrace1

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_WritePrivateProfileStructW,WritePrivateProfileStructW,1570
+.imp	kernel32,__imp_WritePrivateProfileStructW,WritePrivateProfileStructW,0

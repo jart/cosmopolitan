@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetTitleBarInfo,GetTitleBarInfo,1964
+.imp	user32,__imp_GetTitleBarInfo,GetTitleBarInfo,0

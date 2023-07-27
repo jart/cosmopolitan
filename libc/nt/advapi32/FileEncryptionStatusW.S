@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_FileEncryptionStatusW,FileEncryptionStatusW,1301
+.imp	advapi32,__imp_FileEncryptionStatusW,FileEncryptionStatusW,0

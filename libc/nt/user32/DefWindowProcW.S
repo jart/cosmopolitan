@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DefWindowProcW,DefWindowProcW,174
+.imp	user32,__imp_DefWindowProcW,DefWindowProcW,0
 
 	.text.windows
         .ftrace1

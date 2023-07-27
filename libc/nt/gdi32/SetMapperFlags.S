@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetMapperFlags,SetMapperFlags,1895
+.imp	gdi32,__imp_SetMapperFlags,SetMapperFlags,0

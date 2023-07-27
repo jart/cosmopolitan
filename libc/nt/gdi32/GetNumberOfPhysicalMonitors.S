@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetNumberOfPhysicalMonitors,GetNumberOfPhysicalMonitors,1679
+.imp	gdi32,__imp_GetNumberOfPhysicalMonitors,GetNumberOfPhysicalMonitors,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_InitializeGenericHidInjection,InitializeGenericHidInjection,2029
+.imp	user32,__imp_InitializeGenericHidInjection,InitializeGenericHidInjection,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BaseFreeAppCompatDataForProcessWorker,BaseFreeAppCompatDataForProcessWorker,58
+.imp	kernel32,__imp_BaseFreeAppCompatDataForProcessWorker,BaseFreeAppCompatDataForProcessWorker,0

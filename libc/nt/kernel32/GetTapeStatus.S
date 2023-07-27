@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetTapeStatus,GetTapeStatus,758
+.imp	kernel32,__imp_GetTapeStatus,GetTapeStatus,0

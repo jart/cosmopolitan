@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateDirectoryTransactedW,CreateDirectoryTransactedW,185
+.imp	kernel32,__imp_CreateDirectoryTransactedW,CreateDirectoryTransactedW,0

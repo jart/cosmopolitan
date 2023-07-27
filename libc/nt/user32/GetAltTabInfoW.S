@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetAltTabInfoW,GetAltTabInfoW,1793
+.imp	user32,__imp_GetAltTabInfoW,GetAltTabInfoW,0

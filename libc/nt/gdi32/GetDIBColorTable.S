@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetDIBColorTable,GetDIBColorTable,1632
+.imp	gdi32,__imp_GetDIBColorTable,GetDIBColorTable,0

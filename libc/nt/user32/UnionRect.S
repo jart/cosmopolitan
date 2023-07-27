@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_UnionRect,UnionRect,2454
+.imp	user32,__imp_UnionRect,UnionRect,0

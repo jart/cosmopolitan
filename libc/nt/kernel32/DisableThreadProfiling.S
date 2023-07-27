@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_DisableThreadProfiling,DisableThreadProfiling,290
+.imp	kernel32,__imp_DisableThreadProfiling,DisableThreadProfiling,0

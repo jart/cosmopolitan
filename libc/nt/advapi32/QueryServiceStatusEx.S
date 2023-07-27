@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_QueryServiceStatusEx,QueryServiceStatusEx,1594
+.imp	advapi32,__imp_QueryServiceStatusEx,QueryServiceStatusEx,0

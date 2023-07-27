@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DisplayConfigSetDeviceInfo,DisplayConfigSetDeviceInfo,1700
+.imp	user32,__imp_DisplayConfigSetDeviceInfo,DisplayConfigSetDeviceInfo,0

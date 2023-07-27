@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BaseSetLastNTError,BaseSetLastNTError,68
+.imp	kernel32,__imp_BaseSetLastNTError,BaseSetLastNTError,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetMagnificationDesktopColorEffect,SetMagnificationDesktopColorEffect,2343
+.imp	user32,__imp_SetMagnificationDesktopColorEffect,SetMagnificationDesktopColorEffect,0

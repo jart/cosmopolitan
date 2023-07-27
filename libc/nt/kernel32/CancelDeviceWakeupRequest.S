@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CancelDeviceWakeupRequest,CancelDeviceWakeupRequest,113
+.imp	kernel32,__imp_CancelDeviceWakeupRequest,CancelDeviceWakeupRequest,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CryptGetHashParam,CryptGetHashParam,1215
+.imp	advapi32,__imp_CryptGetHashParam,CryptGetHashParam,0

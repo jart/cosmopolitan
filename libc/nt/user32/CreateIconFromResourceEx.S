@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CreateIconFromResourceEx,CreateIconFromResourceEx,1617
+.imp	user32,__imp_CreateIconFromResourceEx,CreateIconFromResourceEx,0

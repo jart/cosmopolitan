@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetProcessUIContextInformation,GetProcessUIContextInformation,2521
+.imp	user32,__imp_GetProcessUIContextInformation,GetProcessUIContextInformation,0

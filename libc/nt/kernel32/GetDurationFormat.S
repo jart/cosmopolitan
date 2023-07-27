@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetDurationFormat,GetDurationFormat,564
+.imp	kernel32,__imp_GetDurationFormat,GetDurationFormat,0

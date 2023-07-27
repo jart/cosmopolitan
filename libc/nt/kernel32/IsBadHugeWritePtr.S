@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_IsBadHugeWritePtr,IsBadHugeWritePtr,884
+.imp	kernel32,__imp_IsBadHugeWritePtr,IsBadHugeWritePtr,0

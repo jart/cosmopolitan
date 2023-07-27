@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTUpdateGpuVirtualAddress,D3DKMTUpdateGpuVirtualAddress,1303
+.imp	gdi32,__imp_D3DKMTUpdateGpuVirtualAddress,D3DKMTUpdateGpuVirtualAddress,0

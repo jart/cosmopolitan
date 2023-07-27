@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CryptAcquireContextW,CryptAcquireContextW,1196
+.imp	advapi32,__imp_CryptAcquireContextW,CryptAcquireContextW,0

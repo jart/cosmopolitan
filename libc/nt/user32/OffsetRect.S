@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_OffsetRect,OffsetRect,2186
+.imp	user32,__imp_OffsetRect,OffsetRect,0

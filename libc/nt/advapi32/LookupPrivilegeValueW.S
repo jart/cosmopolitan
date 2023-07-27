@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_LookupPrivilegeValueW,LookupPrivilegeValueW,1432
+.imp	advapi32,__imp_LookupPrivilegeValueW,LookupPrivilegeValueW,0
 
 	.text.windows
         .ftrace1

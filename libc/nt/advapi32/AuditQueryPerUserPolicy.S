@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_AuditQueryPerUserPolicy,AuditQueryPerUserPolicy,1052
+.imp	advapi32,__imp_AuditQueryPerUserPolicy,AuditQueryPerUserPolicy,0

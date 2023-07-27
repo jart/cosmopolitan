@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetMagnificationDesktopMagnification,SetMagnificationDesktopMagnification,2344
+.imp	user32,__imp_SetMagnificationDesktopMagnification,SetMagnificationDesktopMagnification,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_DDCCIGetCapabilitiesStringLength,DDCCIGetCapabilitiesStringLength,1316
+.imp	gdi32,__imp_DDCCIGetCapabilitiesStringLength,DDCCIGetCapabilitiesStringLength,0

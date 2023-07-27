@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetMonitorInfoW,GetMonitorInfoW,1901
+.imp	user32,__imp_GetMonitorInfoW,GetMonitorInfoW,0

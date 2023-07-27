@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetNumaNodeProcessorMask,GetNumaNodeProcessorMask,655
+.imp	kernel32,__imp_GetNumaNodeProcessorMask,GetNumaNodeProcessorMask,0

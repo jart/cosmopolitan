@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetNextUmsListItem,GetNextUmsListItem,649
+.imp	kernel32,__imp_GetNextUmsListItem,GetNextUmsListItem,0

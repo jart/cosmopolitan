@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BasepFreeActivationContextActivationBlock,BasepFreeActivationContextActivationBlock,85
+.imp	kernel32,__imp_BasepFreeActivationContextActivationBlock,BasepFreeActivationContextActivationBlock,0

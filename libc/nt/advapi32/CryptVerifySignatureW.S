@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CryptVerifySignatureW,CryptVerifySignatureW,1233
+.imp	advapi32,__imp_CryptVerifySignatureW,CryptVerifySignatureW,0

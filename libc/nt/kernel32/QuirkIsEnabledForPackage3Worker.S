@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_QuirkIsEnabledForPackage3Worker,QuirkIsEnabledForPackage3Worker,1115
+.imp	kernel32,__imp_QuirkIsEnabledForPackage3Worker,QuirkIsEnabledForPackage3Worker,0

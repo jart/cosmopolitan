@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsWindowRedirectedForPrint,IsWindowRedirectedForPrint,2088
+.imp	user32,__imp_IsWindowRedirectedForPrint,IsWindowRedirectedForPrint,0

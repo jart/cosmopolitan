@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_PolyPolygon,PolyPolygon,1785
+.imp	gdi32,__imp_PolyPolygon,PolyPolygon,0

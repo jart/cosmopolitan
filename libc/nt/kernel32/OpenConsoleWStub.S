@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_OpenConsoleWStub,OpenConsoleWStub,1020
+.imp	kernel32,__imp_OpenConsoleWStub,OpenConsoleWStub,0

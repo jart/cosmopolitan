@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_QueryAllTracesW,QueryAllTracesW,1581
+.imp	advapi32,__imp_QueryAllTracesW,QueryAllTracesW,0

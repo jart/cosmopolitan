@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetBitmapBits,SetBitmapBits,1869
+.imp	gdi32,__imp_SetBitmapBits,SetBitmapBits,0

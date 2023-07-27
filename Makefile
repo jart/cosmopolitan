@@ -425,6 +425,7 @@ $(SRCS):					\
 	libc/integral/lp64.inc
 
 .PHONY: toolchain
+ifeq ($(ARCH), x86_64)
 toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/ape/public/ape.lds			\
 		o/$(MODE)/libc/crt/crt.o			\
@@ -435,6 +436,14 @@ toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/third_party/libcxx/libcxx.a		\
 		o/$(MODE)/tool/build/fixupobj.com		\
 		o/$(MODE)/tool/build/zipcopy.com
+else
+toolchain:	o/$(MODE)/ape/aarch64.lds			\
+		o/$(MODE)/libc/crt/crt.o			\
+		o/$(MODE)/cosmopolitan.a			\
+		o/$(MODE)/third_party/libcxx/libcxx.a		\
+		o/$(MODE)/tool/build/fixupobj.com		\
+		o/$(MODE)/tool/build/zipcopy.com
+endif
 
 aarch64: private .INTERNET = true
 aarch64: private .UNSANDBOXED = true

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetWindowMinimizeRect,GetWindowMinimizeRect,1991
+.imp	user32,__imp_GetWindowMinimizeRect,GetWindowMinimizeRect,0

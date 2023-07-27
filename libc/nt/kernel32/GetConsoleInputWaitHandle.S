@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetConsoleInputWaitHandle,GetConsoleInputWaitHandle,510
+.imp	kernel32,__imp_GetConsoleInputWaitHandle,GetConsoleInputWaitHandle,0

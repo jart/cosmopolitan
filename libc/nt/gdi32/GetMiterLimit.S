@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetMiterLimit,GetMiterLimit,1676
+.imp	gdi32,__imp_GetMiterLimit,GetMiterLimit,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_InjectGenericHidInput,InjectGenericHidInput,2036
+.imp	user32,__imp_InjectGenericHidInput,InjectGenericHidInput,0

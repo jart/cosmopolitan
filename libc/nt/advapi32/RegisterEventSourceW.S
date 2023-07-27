@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegisterEventSourceW,RegisterEventSourceW,1687
+.imp	advapi32,__imp_RegisterEventSourceW,RegisterEventSourceW,0
 
 	.text.windows
         .ftrace1

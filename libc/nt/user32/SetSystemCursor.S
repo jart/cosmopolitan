@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetSystemCursor,SetSystemCursor,2377
+.imp	user32,__imp_SetSystemCursor,SetSystemCursor,0

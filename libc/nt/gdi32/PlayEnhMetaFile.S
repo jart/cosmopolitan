@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_PlayEnhMetaFile,PlayEnhMetaFile,1776
+.imp	gdi32,__imp_PlayEnhMetaFile,PlayEnhMetaFile,0

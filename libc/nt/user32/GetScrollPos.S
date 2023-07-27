@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetScrollPos,GetScrollPos,1947
+.imp	user32,__imp_GetScrollPos,GetScrollPos,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_Rectangle,Rectangle,1798
+.imp	gdi32,__imp_Rectangle,Rectangle,0

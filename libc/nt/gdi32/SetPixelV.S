@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetPixelV,SetPixelV,1903
+.imp	gdi32,__imp_SetPixelV,SetPixelV,0

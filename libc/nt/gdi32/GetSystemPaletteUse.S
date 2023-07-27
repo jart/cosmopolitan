@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetSystemPaletteUse,GetSystemPaletteUse,1707
+.imp	gdi32,__imp_GetSystemPaletteUse,GetSystemPaletteUse,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_OpenThreadWaitChainSession,OpenThreadWaitChainSession,1540
+.imp	advapi32,__imp_OpenThreadWaitChainSession,OpenThreadWaitChainSession,0

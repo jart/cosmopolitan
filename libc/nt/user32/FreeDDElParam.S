@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_FreeDDElParam,FreeDDElParam,1788
+.imp	user32,__imp_FreeDDElParam,FreeDDElParam,0

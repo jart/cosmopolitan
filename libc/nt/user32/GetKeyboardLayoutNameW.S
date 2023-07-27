@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetKeyboardLayoutNameW,GetKeyboardLayoutNameW,1870
+.imp	user32,__imp_GetKeyboardLayoutNameW,GetKeyboardLayoutNameW,0

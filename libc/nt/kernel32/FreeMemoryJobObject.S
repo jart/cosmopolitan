@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FreeMemoryJobObject,FreeMemoryJobObject,435
+.imp	kernel32,__imp_FreeMemoryJobObject,FreeMemoryJobObject,0

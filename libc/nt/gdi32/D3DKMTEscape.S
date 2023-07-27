@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTEscape,D3DKMTEscape,1159
+.imp	gdi32,__imp_D3DKMTEscape,D3DKMTEscape,0

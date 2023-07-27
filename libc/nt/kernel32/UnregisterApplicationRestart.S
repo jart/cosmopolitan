@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_UnregisterApplicationRestart,UnregisterApplicationRestart,1467
+.imp	kernel32,__imp_UnregisterApplicationRestart,UnregisterApplicationRestart,0

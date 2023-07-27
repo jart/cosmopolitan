@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_EditWndProc,EditWndProc,1739
+.imp	user32,__imp_EditWndProc,EditWndProc,0

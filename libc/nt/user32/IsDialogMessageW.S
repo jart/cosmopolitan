@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsDialogMessageW,IsDialogMessageW,2063
+.imp	user32,__imp_IsDialogMessageW,IsDialogMessageW,0

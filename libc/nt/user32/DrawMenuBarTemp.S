@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DrawMenuBarTemp,DrawMenuBarTemp,1725
+.imp	user32,__imp_DrawMenuBarTemp,DrawMenuBarTemp,0

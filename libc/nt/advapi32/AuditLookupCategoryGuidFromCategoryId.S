@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_AuditLookupCategoryGuidFromCategoryId,AuditLookupCategoryGuidFromCategoryId,1044
+.imp	advapi32,__imp_AuditLookupCategoryGuidFromCategoryId,AuditLookupCategoryGuidFromCategoryId,0

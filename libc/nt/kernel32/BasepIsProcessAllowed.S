@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_BasepIsProcessAllowed,BasepIsProcessAllowed,91
+.imp	kernel32,__imp_BasepIsProcessAllowed,BasepIsProcessAllowed,0

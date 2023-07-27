@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_MITStopAndEndInertia,MITStopAndEndInertia,2145
+.imp	user32,__imp_MITStopAndEndInertia,MITStopAndEndInertia,0

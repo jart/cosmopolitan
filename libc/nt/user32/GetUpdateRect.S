@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetUpdateRect,GetUpdateRect,1969
+.imp	user32,__imp_GetUpdateRect,GetUpdateRect,0

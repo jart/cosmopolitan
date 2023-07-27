@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_DestroyOPMProtectedOutput,DestroyOPMProtectedOutput,1389
+.imp	gdi32,__imp_DestroyOPMProtectedOutput,DestroyOPMProtectedOutput,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_QueryUmsThreadInformation,QueryUmsThreadInformation,1106
+.imp	kernel32,__imp_QueryUmsThreadInformation,QueryUmsThreadInformation,0

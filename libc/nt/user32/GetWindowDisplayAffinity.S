@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetWindowDisplayAffinity,GetWindowDisplayAffinity,1982
+.imp	user32,__imp_GetWindowDisplayAffinity,GetWindowDisplayAffinity,0

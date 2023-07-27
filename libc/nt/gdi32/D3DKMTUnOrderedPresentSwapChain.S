@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTUnOrderedPresentSwapChain,D3DKMTUnOrderedPresentSwapChain,1297
+.imp	gdi32,__imp_D3DKMTUnOrderedPresentSwapChain,D3DKMTUnOrderedPresentSwapChain,0

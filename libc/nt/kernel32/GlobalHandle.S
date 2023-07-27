@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GlobalHandle,GlobalHandle,829
+.imp	kernel32,__imp_GlobalHandle,GlobalHandle,0

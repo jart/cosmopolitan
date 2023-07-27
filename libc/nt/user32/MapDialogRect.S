@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_MapDialogRect,MapDialogRect,2152
+.imp	user32,__imp_MapDialogRect,MapDialogRect,0

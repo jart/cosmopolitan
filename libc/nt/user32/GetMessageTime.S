@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetMessageTime,GetMessageTime,1898
+.imp	user32,__imp_GetMessageTime,GetMessageTime,0

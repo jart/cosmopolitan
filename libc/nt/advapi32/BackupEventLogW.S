@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_BackupEventLogW,BackupEventLogW,1061
+.imp	advapi32,__imp_BackupEventLogW,BackupEventLogW,0

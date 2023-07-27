@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_cGetTTFFromFOT,cGetTTFFromFOT,1952
+.imp	gdi32,__imp_cGetTTFFromFOT,cGetTTFFromFOT,0

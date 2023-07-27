@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_IsNativeVhdBoot,IsNativeVhdBoot,897
+.imp	kernel32,__imp_IsNativeVhdBoot,IsNativeVhdBoot,0

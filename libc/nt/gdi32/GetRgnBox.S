@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetRgnBox,GetRgnBox,1700
+.imp	gdi32,__imp_GetRgnBox,GetRgnBox,0

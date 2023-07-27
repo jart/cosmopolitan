@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_MITSynthesizeTouchInput,MITSynthesizeTouchInput,2148
+.imp	user32,__imp_MITSynthesizeTouchInput,MITSynthesizeTouchInput,0

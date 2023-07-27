@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ScrollWindowEx,ScrollWindowEx,2295
+.imp	user32,__imp_ScrollWindowEx,ScrollWindowEx,0

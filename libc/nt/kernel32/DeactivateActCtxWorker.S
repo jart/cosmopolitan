@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_DeactivateActCtxWorker,DeactivateActCtxWorker,259
+.imp	kernel32,__imp_DeactivateActCtxWorker,DeactivateActCtxWorker,0

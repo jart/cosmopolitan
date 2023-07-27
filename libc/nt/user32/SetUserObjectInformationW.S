@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetUserObjectInformationW,SetUserObjectInformationW,2386
+.imp	user32,__imp_SetUserObjectInformationW,SetUserObjectInformationW,0

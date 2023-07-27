@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CredUnmarshalCredentialW,CredUnmarshalCredentialW,1182
+.imp	advapi32,__imp_CredUnmarshalCredentialW,CredUnmarshalCredentialW,0

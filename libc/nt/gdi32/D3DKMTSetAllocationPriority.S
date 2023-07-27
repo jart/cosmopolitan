@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTSetAllocationPriority,D3DKMTSetAllocationPriority,1260
+.imp	gdi32,__imp_D3DKMTSetAllocationPriority,D3DKMTSetAllocationPriority,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_D3DKMTOutputDuplGetPointerShapeData,D3DKMTOutputDuplGetPointerShapeData,1226
+.imp	gdi32,__imp_D3DKMTOutputDuplGetPointerShapeData,D3DKMTOutputDuplGetPointerShapeData,0

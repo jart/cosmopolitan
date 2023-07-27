@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetGraphicsMode,GetGraphicsMode,1661
+.imp	gdi32,__imp_GetGraphicsMode,GetGraphicsMode,0

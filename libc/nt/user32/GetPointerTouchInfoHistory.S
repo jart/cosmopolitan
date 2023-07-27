@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetPointerTouchInfoHistory,GetPointerTouchInfoHistory,1927
+.imp	user32,__imp_GetPointerTouchInfoHistory,GetPointerTouchInfoHistory,0

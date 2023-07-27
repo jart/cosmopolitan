@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DrawCaptionTempW,DrawCaptionTempW,1717
+.imp	user32,__imp_DrawCaptionTempW,DrawCaptionTempW,0

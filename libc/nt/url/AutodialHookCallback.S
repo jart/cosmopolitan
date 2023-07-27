@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	url,__imp_AutodialHookCallback,AutodialHookCallback,103
+.imp	url,__imp_AutodialHookCallback,AutodialHookCallback,0

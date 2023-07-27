@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CloseConsoleHandle,CloseConsoleHandle,134
+.imp	kernel32,__imp_CloseConsoleHandle,CloseConsoleHandle,0

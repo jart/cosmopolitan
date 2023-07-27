@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_KillTimer,KillTimer,2093
+.imp	user32,__imp_KillTimer,KillTimer,0
 
 	.text.windows
         .ftrace1

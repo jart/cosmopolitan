@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CreateDesktopW,CreateDesktopW,1609
+.imp	user32,__imp_CreateDesktopW,CreateDesktopW,0

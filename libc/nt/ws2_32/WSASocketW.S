@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSASocketW,WSASocketW,120
+.imp	ws2_32,__imp_WSASocketW,WSASocketW,0
 
 	.text.windows
         .ftrace1

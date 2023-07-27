@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetIconInfo,GetIconInfo,1856
+.imp	user32,__imp_GetIconInfo,GetIconInfo,0

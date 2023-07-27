@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetRegisteredRawInputDevices,GetRegisteredRawInputDevices,1944
+.imp	user32,__imp_GetRegisteredRawInputDevices,GetRegisteredRawInputDevices,0

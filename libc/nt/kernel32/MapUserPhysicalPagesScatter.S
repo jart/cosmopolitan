@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_MapUserPhysicalPagesScatter,MapUserPhysicalPagesScatter,986
+.imp	kernel32,__imp_MapUserPhysicalPagesScatter,MapUserPhysicalPagesScatter,0

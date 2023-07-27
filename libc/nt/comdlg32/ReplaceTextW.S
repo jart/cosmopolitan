@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	comdlg32,__imp_ReplaceTextW,ReplaceTextW,125
+.imp	comdlg32,__imp_ReplaceTextW,ReplaceTextW,0
 
 	.text.windows
         .ftrace1

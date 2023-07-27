@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetPointerFramePenInfoHistory,GetPointerFramePenInfoHistory,1918
+.imp	user32,__imp_GetPointerFramePenInfoHistory,GetPointerFramePenInfoHistory,0

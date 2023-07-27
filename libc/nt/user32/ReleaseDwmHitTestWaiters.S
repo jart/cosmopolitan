@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ReleaseDwmHitTestWaiters,ReleaseDwmHitTestWaiters,2281
+.imp	user32,__imp_ReleaseDwmHitTestWaiters,ReleaseDwmHitTestWaiters,0

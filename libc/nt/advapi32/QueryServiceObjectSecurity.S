@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_QueryServiceObjectSecurity,QueryServiceObjectSecurity,1592
+.imp	advapi32,__imp_QueryServiceObjectSecurity,QueryServiceObjectSecurity,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetCurrentUmsThread,GetCurrentUmsThread,547
+.imp	kernel32,__imp_GetCurrentUmsThread,GetCurrentUmsThread,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_QueryRecoveryAgentsOnEncryptedFile,QueryRecoveryAgentsOnEncryptedFile,1583
+.imp	advapi32,__imp_QueryRecoveryAgentsOnEncryptedFile,QueryRecoveryAgentsOnEncryptedFile,0

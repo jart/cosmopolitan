@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_UpdatePerUserSystemParameters,UpdatePerUserSystemParameters,2473
+.imp	user32,__imp_UpdatePerUserSystemParameters,UpdatePerUserSystemParameters,0

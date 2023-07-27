@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GdiGradientFill,GdiGradientFill,1552
+.imp	gdi32,__imp_GdiGradientFill,GdiGradientFill,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetTapeParameters,SetTapeParameters,1366
+.imp	kernel32,__imp_SetTapeParameters,SetTapeParameters,0

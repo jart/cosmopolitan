@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_RegisterWowBaseHandlers,RegisterWowBaseHandlers,1194
+.imp	kernel32,__imp_RegisterWowBaseHandlers,RegisterWowBaseHandlers,0

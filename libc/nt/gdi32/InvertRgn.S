@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_InvertRgn,InvertRgn,1738
+.imp	gdi32,__imp_InvertRgn,InvertRgn,0

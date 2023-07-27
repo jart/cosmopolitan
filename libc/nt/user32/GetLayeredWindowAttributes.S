@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetLayeredWindowAttributes,GetLayeredWindowAttributes,1875
+.imp	user32,__imp_GetLayeredWindowAttributes,GetLayeredWindowAttributes,0

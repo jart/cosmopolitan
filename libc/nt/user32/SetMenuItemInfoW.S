@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetMenuItemInfoW,SetMenuItemInfoW,2353
+.imp	user32,__imp_SetMenuItemInfoW,SetMenuItemInfoW,0

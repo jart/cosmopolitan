@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_fpClosePrinter,fpClosePrinter,1953
+.imp	gdi32,__imp_fpClosePrinter,fpClosePrinter,0

@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FileTimeToDosDateTime,FileTimeToDosDateTime,365
+.imp	kernel32,__imp_FileTimeToDosDateTime,FileTimeToDosDateTime,0

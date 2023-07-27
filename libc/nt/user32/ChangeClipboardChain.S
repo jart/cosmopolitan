@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ChangeClipboardChain,ChangeClipboardChain,1541
+.imp	user32,__imp_ChangeClipboardChain,ChangeClipboardChain,0

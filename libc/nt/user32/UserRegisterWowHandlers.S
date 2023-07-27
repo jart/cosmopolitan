@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_UserRegisterWowHandlers,UserRegisterWowHandlers,2482
+.imp	user32,__imp_UserRegisterWowHandlers,UserRegisterWowHandlers,0

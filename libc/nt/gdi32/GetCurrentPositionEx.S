@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetCurrentPositionEx,GetCurrentPositionEx,1627
+.imp	gdi32,__imp_GetCurrentPositionEx,GetCurrentPositionEx,0
