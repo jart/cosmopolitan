@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define luac_c
 #define LUA_CORE
+
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -37,12 +38,13 @@
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lopcodes.h"
-#include "third_party/lua/lopnames.inc"
+#include "third_party/lua/lopnames.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lundump.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

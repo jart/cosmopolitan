@@ -27,12 +27,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define loadlib_c
 #define LUA_LIB
+
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -40,14 +42,16 @@ Lua 5.4.3 (MIT License)\\n\
 Copyright 1994–2021 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+
 /*
-** This module contains an implementation of loadlib for Unix systems
+**
+** [jart] This module contains an implementation of loadlib for Unix systems
 ** that have dlfcn, an implementation for Windows, and a stub for other
 ** systems.
 */
 
 
-const char *g_lua_path_default = LUA_PATH_DEFAULT;
+const char *g_lua_path_default = LUA_PATH_DEFAULT;  // [jart]
 
 
 /*
@@ -761,7 +765,7 @@ static void createclibstable (lua_State *L) {
 
 
 static const char *GetLuaPathDefault(void) {
-  return g_lua_path_default;
+  return g_lua_path_default;  // [jart]
 }
 
 

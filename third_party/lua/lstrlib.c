@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lstrlib_c
 #define LUA_LIB
+
 #include "libc/math.h"
 #include "libc/str/str.h"
 #include "third_party/lua/cosmo.h"
@@ -34,6 +35,7 @@
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -67,7 +69,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 
 
-static int str_format(lua_State *);
+static int str_format(lua_State *);  // [jart]
 
 
 static int str_len (lua_State *L) {

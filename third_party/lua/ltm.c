@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ltm_c
 #define LUA_CORE
+
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
 #include "third_party/lua/lgc.h"
@@ -38,6 +39,7 @@
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lvm.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

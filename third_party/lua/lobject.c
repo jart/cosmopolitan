@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lobject_c
 #define LUA_CORE
+
 #include "libc/str/str.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
@@ -38,12 +39,19 @@
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lvm.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
 Lua 5.4.3 (MIT License)\\n\
 Copyright 1994–2021 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
+
+
+/*
+** Computes ceil(log2(x))
+*/
+// [jart] moved to lobject.h
 
 
 static lua_Integer intarith (lua_State *L, int op, lua_Integer v1,
@@ -267,9 +275,9 @@ static const char *l_str2d (const char *s, lua_Number *result) {
 
 
 #define MAXBY10		cast(lua_Unsigned, LUA_MAXINTEGER / 10)
-#define MAXBY8		cast(lua_Unsigned, LUA_MAXINTEGER / 8)
+#define MAXBY8		cast(lua_Unsigned, LUA_MAXINTEGER / 8)  // [jart]
 #define MAXLASTD	cast_int(LUA_MAXINTEGER % 10)
-#define MAXLASTD8	cast_int(LUA_MAXINTEGER % 8)
+#define MAXLASTD8	cast_int(LUA_MAXINTEGER % 8)  // [jart]
 
 static const char *l_str2int (const char *s, lua_Integer *result) {
   lua_Unsigned a = 0;

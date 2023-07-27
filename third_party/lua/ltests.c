@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ltests_c
 #define LUA_CORE
+
 #include "third_party/lua/lapi.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lcode.h"
@@ -36,13 +37,14 @@
 #include "third_party/lua/lfunc.h"
 #include "third_party/lua/lmem.h"
 #include "third_party/lua/lopcodes.h"
-#include "third_party/lua/lopnames.inc"
+#include "third_party/lua/lopnames.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/ltable.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -1263,7 +1265,7 @@ static int panicback (lua_State *L) {
   b = (struct Aux *)lua_touserdata(L, -1);
   lua_pop(L, 1);  /* remove 'Aux' struct */
   runC(b->L, L, b->paniccode);  /* run optional panic code */
-  _gclongjmp(b->jb, 1);
+  _gclongjmp(b->jb, 1);  // [jart]
   return 1;  /* to avoid warnings */
 }
 
@@ -1724,7 +1726,7 @@ static int runC (lua_State *L, lua_State *L1, const char *pc) {
       lua_error(L1);
     }
     else if EQ("abort") {
-      __die();
+      __die();  // [jart]
     }
     else if EQ("throw") {
 #if defined(__cplusplus)

@@ -3,7 +3,7 @@
 
 #include "third_party/lua/lobject.h"
 
-/* clang-format off */
+// clang-format off
 
 #define sizeCclosure(n)	(cast_int(offsetof(CClosure, upvalue)) + \
                          cast_int(sizeof(TValue)) * (n))

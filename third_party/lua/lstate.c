@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lstate_c
 #define LUA_CORE
+
 #include "libc/str/str.h"
 #include "libc/time/time.h"
 #include "third_party/lua/lapi.h"
@@ -42,6 +43,7 @@
 #include "third_party/lua/ltable.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

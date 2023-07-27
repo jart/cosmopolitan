@@ -27,11 +27,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldump_c
 #define LUA_CORE
+
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lundump.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

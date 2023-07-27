@@ -1,5 +1,6 @@
 #ifndef luaconf_h
 #define luaconf_h
+
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -7,10 +8,10 @@
 #include "libc/limits.h"
 #include "libc/str/unicode.h"
 
-#define LUA_USE_POSIX
-#define LUA_USE_LINENOISE
+// clang-format off
 
-/* clang-format off */
+#define LUA_USE_LINENOISE
+#define LUA_USE_POSIX
 
 /*
 ** ===================================================================

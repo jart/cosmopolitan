@@ -27,12 +27,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lbaselib_c
 #define LUA_LIB
+
 #include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
-/* clang-format off */
+
+// clang-format off
 
 asm(".ident\t\"\\n\\n\
 Lua 5.4.3 (MIT License)\\n\
