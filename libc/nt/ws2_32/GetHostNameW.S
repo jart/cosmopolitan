@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_GetHostNameW,GetHostNameW,33
+.imp	ws2_32,__imp_GetHostNameW,GetHostNameW
 
 	.text.windows
         .ftrace1

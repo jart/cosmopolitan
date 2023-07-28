@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetClientRect,GetClientRect,1815
+.imp	user32,__imp_GetClientRect,GetClientRect
 
 	.text.windows
         .ftrace1

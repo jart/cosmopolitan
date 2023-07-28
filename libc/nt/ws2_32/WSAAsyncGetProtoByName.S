@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAAsyncGetProtoByName,WSAAsyncGetProtoByName,105
+.imp	ws2_32,__imp_WSAAsyncGetProtoByName,WSAAsyncGetProtoByName
 
 	.text.windows
         .ftrace1

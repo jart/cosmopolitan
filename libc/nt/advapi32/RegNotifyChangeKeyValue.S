@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegNotifyChangeKeyValue,RegNotifyChangeKeyValue,0
+.imp	advapi32,__imp_RegNotifyChangeKeyValue,RegNotifyChangeKeyValue
 
 	.text.windows
         .ftrace1

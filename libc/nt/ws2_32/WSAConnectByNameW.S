@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAConnectByNameW,WSAConnectByNameW,49
+.imp	ws2_32,__imp_WSAConnectByNameW,WSAConnectByNameW
 
 	.text.windows
         .ftrace1

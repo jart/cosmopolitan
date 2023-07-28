@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetPixelFormat,SetPixelFormat,1902
+.imp	gdi32,__imp_SetPixelFormat,SetPixelFormat
 
 	.text.windows
         .ftrace1

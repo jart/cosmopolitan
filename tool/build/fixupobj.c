@@ -176,13 +176,13 @@ static void RewriteTlsCode(void) {
   uint32_t *p, *pe;
   for (i = 0; i < elf->e_shnum; ++i) {
     if (!(shdr = GetElfSectionHeaderAddress(elf, esize, i))) {
-      Die("elf header overflow");
+      Die("elf header overflow #1");
     }
     if (shdr->sh_type == SHT_PROGBITS &&  //
         (shdr->sh_flags & SHF_ALLOC) &&   //
         (shdr->sh_flags & SHF_EXECINSTR)) {
       if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
-        Die("elf header overflow");
+        Die("elf header overflow #2");
       }
       for (pe = p + shdr->sh_size / 4; p <= pe; ++p) {
         if ((*p & -32) == MRS_TPIDR_EL0) {
@@ -213,11 +213,11 @@ static void OptimizePatchableFunctionEntries(void) {
     if (!syms[i].st_size) continue;
     if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
     if (!(shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx))) {
-      Die("elf header overflow");
+      Die("elf header overflow #3");
     }
     if (shdr->sh_type != SHT_PROGBITS) continue;
     if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
-      Die("elf header overflow");
+      Die("elf header overflow #4");
     }
     if (syms[i].st_value < shdr->sh_addr) {
       Die("elf symbol beneath section");

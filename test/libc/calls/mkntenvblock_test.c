@@ -18,10 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 
 char tmp[ARG_MAX];
 char16_t envvars[ARG_MAX / 2];
+
+void SetUpOnce(void) {
+  environ = 0;  // pacify systemroot
+}
 
 TEST(mkntenvblock, emptyList_onlyOutputsDoubleNulStringTerminator) {
   char *envp[] = {NULL};

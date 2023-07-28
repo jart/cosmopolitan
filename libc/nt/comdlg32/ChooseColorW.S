@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	comdlg32,__imp_ChooseColorW,ChooseColorW,103
+.imp	comdlg32,__imp_ChooseColorW,ChooseColorW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetTextAlign,SetTextAlign,1910
+.imp	gdi32,__imp_SetTextAlign,SetTextAlign
 
 	.text.windows
         .ftrace1

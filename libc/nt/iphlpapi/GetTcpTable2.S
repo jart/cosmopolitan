@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_GetTcpTable2,GetTcpTable2,0
+.imp	iphlpapi,__imp_GetTcpTable2,GetTcpTable2
 
 	.text.windows
         .ftrace1

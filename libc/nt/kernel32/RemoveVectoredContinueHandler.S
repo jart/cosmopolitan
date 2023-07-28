@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_RemoveVectoredContinueHandler,RemoveVectoredContinueHandler,0
+.imp	kernel32,__imp_RemoveVectoredContinueHandler,RemoveVectoredContinueHandler
 
 	.text.windows
         .ftrace1

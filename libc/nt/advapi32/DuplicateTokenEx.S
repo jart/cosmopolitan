@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_DuplicateTokenEx,DuplicateTokenEx,0
+.imp	advapi32,__imp_DuplicateTokenEx,DuplicateTokenEx
 
 	.text.windows
         .ftrace1

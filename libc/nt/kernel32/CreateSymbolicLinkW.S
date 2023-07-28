@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateSymbolicLinkW,CreateSymbolicLinkW,0
+.imp	kernel32,__imp_CreateSymbolicLinkW,CreateSymbolicLinkW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_TryEnterCriticalSection,TryEnterCriticalSection,0
+.imp	kernel32,__imp_TryEnterCriticalSection,TryEnterCriticalSection
 
 	.text.windows
         .ftrace1

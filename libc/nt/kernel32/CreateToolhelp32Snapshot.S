@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateToolhelp32Snapshot,CreateToolhelp32Snapshot,0
+.imp	kernel32,__imp_CreateToolhelp32Snapshot,CreateToolhelp32Snapshot
 
 	.text.windows
         .ftrace1

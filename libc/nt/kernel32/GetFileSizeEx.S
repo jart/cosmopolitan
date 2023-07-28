@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetFileSizeEx,GetFileSizeEx,0
+.imp	kernel32,__imp_GetFileSizeEx,GetFileSizeEx
 
 	.text.windows
         .ftrace1

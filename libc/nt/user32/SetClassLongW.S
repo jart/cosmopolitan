@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_SetClassLongW,SetClassLongW,2316
+.imp	user32,__imp_SetClassLongW,SetClassLongW
 
 	.text.windows
         .ftrace1

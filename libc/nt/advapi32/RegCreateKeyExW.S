@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegCreateKeyExW,RegCreateKeyExW,0
+.imp	advapi32,__imp_RegCreateKeyExW,RegCreateKeyExW
 
 	.text.windows
         .ftrace1
