@@ -45,6 +45,11 @@ assert(-1 >> numbits == 0 and
        -1 << numbits == 0 and
        -1 << -numbits == 0)
 
+assert(1 >> math.mininteger == 0)
+assert(1 >> math.maxinteger == 0)
+assert(1 << math.mininteger == 0)
+assert(1 << math.maxinteger == 0)
+
 assert((2^30 - 1) << 2^30 == 0)
 assert((2^30 - 1) >> 2^30 == 0)
 

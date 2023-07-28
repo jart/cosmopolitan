@@ -424,7 +424,6 @@
 @@ LUA_MAXINTEGER is the maximum value for a LUA_INTEGER.
 @@ LUA_MININTEGER is the minimum value for a LUA_INTEGER.
 @@ LUA_MAXUNSIGNED is the maximum value for a LUA_UNSIGNED.
-@@ LUA_UNSIGNEDBITS is the number of bits in a LUA_UNSIGNED.
 @@ lua_integer2str converts an integer to a string.
 */
 
@@ -443,9 +442,6 @@
 ** can turn a comparison between unsigneds into a signed comparison)
 */
 #define LUA_UNSIGNED		unsigned LUAI_UACINT
-
-
-#define LUA_UNSIGNEDBITS	(sizeof(LUA_UNSIGNED) * CHAR_BIT)
 
 
 /* now the variable definitions */

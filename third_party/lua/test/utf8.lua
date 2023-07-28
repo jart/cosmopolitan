@@ -112,6 +112,12 @@ do
   end
   errorcodes("ab\xff")
   errorcodes("\u{110000}")
+
+  -- calling interation function with invalid arguments
+  local f = utf8.codes("")
+  assert(f("", 2) == nil)
+  assert(f("", -1) == nil)
+  assert(f("", math.mininteger) == nil)
 end
 
 -- error in initial position for offset

@@ -47,8 +47,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -602,24 +602,41 @@ static int stringK (FuncState *fs, TString *s) {
 
 /*
 ** Add an integer to list of constants and return its index.
-** Integers use userdata as keys to avoid collision with floats with
-** same value; conversion to 'void*' is used only for hashing, so there
-** are no "precision" problems.
 */
 static int luaK_intK (FuncState *fs, lua_Integer n) {
-  TValue k, o;
-  setpvalue(&k, cast_voidp(cast_sizet(n)));
+  TValue o;
   setivalue(&o, n);
-  return addk(fs, &k, &o);
+  return addk(fs, &o, &o);  /* use integer itself as key */
 }
 
 /*
-** Add a float to list of constants and return its index.
+** Add a float to list of constants and return its index. Floats
+** with integral values need a different key, to avoid collision
+** with actual integers. To that, we add to the number its smaller
+** power-of-two fraction that is still significant in its scale.
+** For doubles, that would be 1/2^52.
+** (This method is not bulletproof: there may be another float
+** with that value, and for floats larger than 2^53 the result is
+** still an integer. At worst, this only wastes an entry with
+** a duplicate.)
 */
 static int luaK_numberK (FuncState *fs, lua_Number r) {
   TValue o;
+  lua_Integer ik;
   setfltvalue(&o, r);
+  if (!luaV_flttointeger(r, &ik, F2Ieq))  /* not an integral value? */
   return addk(fs, &o, &o);  /* use number itself as key */
+  else {  /* must build an alternative key */
+    const int nbm = l_floatatt(MANT_DIG);
+    const lua_Number q = l_mathop(ldexp)(l_mathop(1.0), -nbm + 1);
+    const lua_Number k = (ik == 0) ? q : r + r*q;  /* new key */
+    TValue kv;
+    setfltvalue(&kv, k);
+    /* result is not an integral value, unless value is too large */
+    lua_assert(!luaV_flttointeger(k, &ik, F2Ieq) ||
+                l_mathop(fabs)(r) >= l_mathop(1e6));
+    return addk(fs, &kv, &o);
+  }
 }
 
 

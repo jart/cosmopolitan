@@ -55,8 +55,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -92,7 +92,8 @@ static void print_usage (const char *badoption) {
   "Available options are:\n"
   "  -e stat  execute string 'stat'\n"
   "  -i       enter interactive mode after executing 'script'\n"
-  "  -l name  require library 'name' into global 'name'\n"
+  "  -l mod    require library 'mod' into global 'mod'\n"
+  "  -l g=mod  require library 'mod' into global 'g'\n"
   "  -v       show version information\n"
   "  -E       ignore environment variables\n"
   "  -W       turn warnings on\n"
@@ -147,17 +148,23 @@ static int dostring (lua_State *L, const char *s, const char *name) {
 
 
 /*
-** Calls 'require(name)' and stores the result in a global variable
-** with the given name.
+** Receives 'globname[=modname]' and runs 'globname = require(modname)'.
 */
-static int dolibrary (lua_State *L, const char *name) {
+static int dolibrary (lua_State *L, char *globname) {
   int status;
+  char *modname = strchr(globname, '=');
+  if (modname == NULL)  /* no explicit name? */
+    modname = globname;  /* module name is equal to global name */
+  else {
+    *modname = '\0';  /* global name ends here */
+    modname++;  /* module name starts after the '=' */
+  }
   lua_getglobal(L, "require");
-  lua_pushstring(L, name);
-  status = lua_runchunk(L, 1, 1);  /* call 'require(name)' */
+  lua_pushstring(L, modname);
+  status = docall(L, 1, 1);  /* call 'require(modname)' */
   if (status == LUA_OK)
-    lua_setglobal(L, name);  /* global[name] = require return */
-  return lua_report(L, status);
+    lua_setglobal(L, globname);  /* globname = require(modname) */
+  return report(L, status);
 }
 
 
@@ -267,7 +274,7 @@ static int runargs (lua_State *L, char **argv, int n) {
     switch (option) {
       case 'e':  case 'l': {
         int status;
-        const char *extra = argv[i] + 2;  /* both options need an argument */
+        char *extra = argv[i] + 2;  /* both options need an argument */
         if (*extra == '\0') extra = argv[++i];
         lua_assert(extra != NULL);
         status = (option == 'e')

@@ -190,6 +190,11 @@ prepfile(("print(a); print(_G['%s'].x)"):format(prog), otherprog)
 RUN('env LUA_PATH="?;;" lua -l %s -l%s -lstring -l io %s > %s', prog, otherprog, otherprog, out)
 checkout("1\n2\n15\n2\n15\n")
 
+-- test explicit global names in -l
+prepfile("print(str.upper'alo alo', m.max(10, 20))")
+RUN("lua -l 'str=string' '-lm=math' -e 'print(m.sin(0))' %s > %s", prog, out)
+checkout("0.0\nALO ALO\t20\n")
+
 -- test 'arg' table
 local a = [[
   assert(#arg == 3 and arg[1] == 'a' and
@@ -255,6 +260,34 @@ u2 = setmetatable({}, {__gc = function () error("ZYX") end})
 ]]
 RUN('lua -W %s 2> %s', prog, out)
 checkprogout("ZYX)\nXYZ)\n")
+
+-- bug since 5.2: finalizer called when closing a state could
+-- subvert finalization order
+prepfile[[
+-- should be called last
+print("creating 1")
+setmetatable({}, {__gc = function () print(1) end})
+
+print("creating 2")
+setmetatable({}, {__gc = function ()
+  print("2")
+  print("creating 3")
+  -- this finalizer should not be called, as object will be
+  -- created after 'lua_close' has been called
+  setmetatable({}, {__gc = function () print(3) end})
+  print(collectgarbage())    -- cannot call collector here
+  os.exit(0, true)
+end})
+]]
+RUN('lua -W %s > %s', prog, out)
+checkout[[
+creating 1
+creating 2
+2
+creating 3
+nil
+1
+]]
 
 
 -- test many arguments

@@ -48,8 +48,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -1760,6 +1760,9 @@ static struct X { int x; } x;
       const char *s1 = lua_pushstring(L1, s);
       (void)s1;  /* to avoid warnings */
       lua_longassert((s == NULL && s1 == NULL) || strcmp(s, s1) == 0);
+    }
+    else if EQ("Ltolstring") {
+      luaL_tolstring(L1, getindex, NULL);
     }
     else if EQ("type") {
       lua_pushstring(L1, luaL_typename(L1, getnum));

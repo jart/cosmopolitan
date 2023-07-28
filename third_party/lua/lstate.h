@@ -159,7 +159,7 @@ typedef struct stringtable {
 ** - field 'nyield' is used only while a function is "doing" an
 ** yield (from the yield until the next resume);
 ** - field 'nres' is used only while closing tbc variables when
-** returning from a C function;
+** returning from a function;
 ** - field 'transferinfo' is used only during call/returnhooks,
 ** before the function starts or after it ends.
 */
@@ -203,7 +203,7 @@ typedef struct CallInfo {
 #define CIST_YPCALL	(1<<4)	/* doing a yieldable protected call */
 #define CIST_TAIL	(1<<5)	/* call was tail called */
 #define CIST_HOOKYIELD	(1<<6)	/* last hook called yielded */
-#define CIST_FIN	(1<<7)	/* call is running a finalizer */
+#define CIST_FIN	(1<<7)	/* function "called" a finalizer */
 #define CIST_TRAN	(1<<8)	/* 'ci' has transfer information */
 #define CIST_CLSRET	(1<<9)  /* function is closing tbc variables */
 /* Bits 10-12 are used for CIST_RECST (see below) */
@@ -257,7 +257,7 @@ typedef struct global_State {
   lu_byte gcstopem;  /* stops emergency collections */
   lu_byte genminormul;  /* control for minor generational collections */
   lu_byte genmajormul;  /* control for major generational collections */
-  lu_byte gcrunning;  /* true if GC is running */
+  lu_byte gcstp;  /* control whether GC is running */
   lu_byte gcemergency;  /* true if this is an emergency collection */
   lu_byte gcpause;  /* size of pause between successive GCs */
   lu_byte gcstepmul;  /* GC "speed" */
