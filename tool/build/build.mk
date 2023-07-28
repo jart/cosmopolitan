@@ -9,16 +9,7 @@ TOOL_BUILD_HDRS = $(filter %.h,$(TOOL_BUILD_FILES))
 
 TOOL_BUILD_BINS =					\
 	$(TOOL_BUILD_COMS)				\
-	$(TOOL_BUILD_COMS:%=%.dbg)			\
-	o/$(MODE)/tool/build/mkdir			\
-	o/$(MODE)/tool/build/chmod			\
-	o/$(MODE)/tool/build/cp				\
-	o/$(MODE)/tool/build/mv				\
-	o/$(MODE)/tool/build/echo			\
-	o/$(MODE)/tool/build/false			\
-	o/$(MODE)/tool/build/gzip			\
-	o/$(MODE)/tool/build/printf			\
-	o/$(MODE)/tool/build/dd
+	$(TOOL_BUILD_COMS:%=%.dbg)
 
 TOOL_BUILD_OBJS =					\
 	$(TOOL_BUILD_SRCS:%.c=o/$(MODE)/%.o)
@@ -85,18 +76,9 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/tool/build/dso/sandbox.so.zip.o		\
-o/$(MODE)/tool/build/mkdir.zip.o			\
-o/$(MODE)/tool/build/chmod.zip.o			\
-o/$(MODE)/tool/build/cp.zip.o				\
-o/$(MODE)/tool/build/mv.zip.o				\
-o/$(MODE)/tool/build/false.zip.o			\
 o/$(MODE)/tool/build/false.com.zip.o			\
-o/$(MODE)/tool/build/echo.zip.o				\
 o/$(MODE)/tool/build/echo.com.zip.o			\
-o/$(MODE)/tool/build/cocmd.com.zip.o			\
-o/$(MODE)/tool/build/gzip.zip.o				\
-o/$(MODE)/tool/build/printf.zip.o			\
-o/$(MODE)/tool/build/dd.zip.o: private			\
+o/$(MODE)/tool/build/cocmd.com.zip.o: private		\
 		ZIPOBJ_FLAGS +=				\
 			-B
 

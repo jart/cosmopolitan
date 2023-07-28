@@ -116,10 +116,6 @@ o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com $(VM)
 o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com $(VM)
 	@$(COMPILE) -wALUA -tT$@ $(VM) o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
 
-o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com $(VM)
-	@$(COMPILE) -wACP -T$@ $(VM) o/$(MODE)/tool/build/cp.com $< $@
-	@$(COMPILE) -wAASSIMILATE -T$@ $(VM) o/$(MODE)/tool/build/assimilate.com $@
-
 ################################################################################
 # LOCAL UNIT TESTS
 #
