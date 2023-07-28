@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetUnhandledExceptionFilter,SetUnhandledExceptionFilter,0
+.imp	kernel32,__imp_SetUnhandledExceptionFilter,SetUnhandledExceptionFilter
 
 	.text.windows
         .ftrace1

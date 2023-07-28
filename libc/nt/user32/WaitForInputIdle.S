@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_WaitForInputIdle,WaitForInputIdle,0
+.imp	user32,__imp_WaitForInputIdle,WaitForInputIdle
 
 	.text.windows
         .ftrace1

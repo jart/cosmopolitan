@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsIconic,IsIconic,0
+.imp	user32,__imp_IsIconic,IsIconic
 
 	.text.windows
         .ftrace1

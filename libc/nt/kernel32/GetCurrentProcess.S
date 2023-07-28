@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetCurrentProcess,GetCurrentProcess,0
+.imp	kernel32,__imp_GetCurrentProcess,GetCurrentProcess
 
 	.text.windows
         .ftrace1

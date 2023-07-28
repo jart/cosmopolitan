@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_TranslateMessage,TranslateMessage,0
+.imp	user32,__imp_TranslateMessage,TranslateMessage
 
 	.text.windows
         .ftrace1

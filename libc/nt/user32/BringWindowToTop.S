@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_BringWindowToTop,BringWindowToTop,0
+.imp	user32,__imp_BringWindowToTop,BringWindowToTop
 
 	.text.windows
         .ftrace1

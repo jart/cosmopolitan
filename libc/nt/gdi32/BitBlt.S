@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_BitBlt,BitBlt,0
+.imp	gdi32,__imp_BitBlt,BitBlt
 
 	.text.windows
         .ftrace1

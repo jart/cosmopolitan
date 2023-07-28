@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_AccessCheck,AccessCheck,0
+.imp	advapi32,__imp_AccessCheck,AccessCheck
 
 	.text.windows
         .ftrace1

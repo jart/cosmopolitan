@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_GetAdaptersAddresses,GetAdaptersAddresses,0
+.imp	iphlpapi,__imp_GetAdaptersAddresses,GetAdaptersAddresses
 
 	.text.windows
         .ftrace1

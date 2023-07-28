@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAGetOverlappedResult,WSAGetOverlappedResult,0
+.imp	ws2_32,__imp_WSAGetOverlappedResult,WSAGetOverlappedResult
 
 	.text.windows
         .ftrace1

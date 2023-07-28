@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateIoCompletionPort,CreateIoCompletionPort,0
+.imp	kernel32,__imp_CreateIoCompletionPort,CreateIoCompletionPort
 
 	.text.windows
         .ftrace1

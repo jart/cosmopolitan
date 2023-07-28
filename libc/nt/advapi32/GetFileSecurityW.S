@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_GetFileSecurityW,GetFileSecurityW,0
+.imp	advapi32,__imp_GetFileSecurityW,GetFileSecurityW
 
 	.text.windows
         .ftrace1

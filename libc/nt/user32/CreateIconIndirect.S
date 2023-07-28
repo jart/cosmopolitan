@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CreateIconIndirect,CreateIconIndirect,0
+.imp	user32,__imp_CreateIconIndirect,CreateIconIndirect
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_AdjustWindowRect,AdjustWindowRect,0
+.imp	user32,__imp_AdjustWindowRect,AdjustWindowRect
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetCurrentDirectoryW,GetCurrentDirectoryW,0
+.imp	kernel32,__imp_GetCurrentDirectoryW,GetCurrentDirectoryW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_SetAddrInfoExW,SetAddrInfoExW,0
+.imp	ws2_32,__imp_SetAddrInfoExW,SetAddrInfoExW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSALookupServiceBeginW,WSALookupServiceBeginW,0
+.imp	ws2_32,__imp_WSALookupServiceBeginW,WSALookupServiceBeginW
 
 	.text.windows
         .ftrace1

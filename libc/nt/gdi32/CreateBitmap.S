@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_CreateBitmap,CreateBitmap,0
+.imp	gdi32,__imp_CreateBitmap,CreateBitmap
 
 	.text.windows
         .ftrace1

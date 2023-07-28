@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	pdh,__imp_PdhAddEnglishCounterW,PdhAddEnglishCounterW,0
+.imp	pdh,__imp_PdhAddEnglishCounterW,PdhAddEnglishCounterW
 
 	.text.windows
         .ftrace1

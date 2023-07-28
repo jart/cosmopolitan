@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CallNextHookEx,CallNextHookEx,0
+.imp	user32,__imp_CallNextHookEx,CallNextHookEx
 
 	.text.windows
         .ftrace1

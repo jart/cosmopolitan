@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetFilePointerEx,SetFilePointerEx,0
+.imp	kernel32,__imp_SetFilePointerEx,SetFilePointerEx
 
 	.text.windows
         .ftrace1

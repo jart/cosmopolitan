@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetComputerNameExW,GetComputerNameExW,0
+.imp	kernel32,__imp_GetComputerNameExW,GetComputerNameExW
 
 	.text.windows
         .ftrace1

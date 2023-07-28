@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAEnumNetworkEvents,WSAEnumNetworkEvents,0
+.imp	ws2_32,__imp_WSAEnumNetworkEvents,WSAEnumNetworkEvents
 
 	.text.windows
         .ftrace1

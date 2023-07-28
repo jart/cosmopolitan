@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetEnvironmentVariableW,SetEnvironmentVariableW,0
+.imp	kernel32,__imp_SetEnvironmentVariableW,SetEnvironmentVariableW
 
 	.text.windows
         .ftrace1

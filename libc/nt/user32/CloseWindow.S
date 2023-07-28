@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CloseWindow,CloseWindow,0
+.imp	user32,__imp_CloseWindow,CloseWindow
 
 	.text.windows
         .ftrace1

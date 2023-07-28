@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_CreateDIBSection,CreateDIBSection,0
+.imp	gdi32,__imp_CreateDIBSection,CreateDIBSection
 
 	.text.windows
         .ftrace1

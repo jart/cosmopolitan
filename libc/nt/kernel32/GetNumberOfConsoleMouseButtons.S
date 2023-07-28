@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetNumberOfConsoleMouseButtons,GetNumberOfConsoleMouseButtons,0
+.imp	kernel32,__imp_GetNumberOfConsoleMouseButtons,GetNumberOfConsoleMouseButtons
 
 	.text.windows
         .ftrace1

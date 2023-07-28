@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_MapGenericMask,MapGenericMask,0
+.imp	advapi32,__imp_MapGenericMask,MapGenericMask
 
 	.text.windows
         .ftrace1
