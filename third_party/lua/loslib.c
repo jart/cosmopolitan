@@ -46,7 +46,7 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.5 (MIT License)\\n\
+Lua 5.4.6 (MIT License)\\n\
 Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 

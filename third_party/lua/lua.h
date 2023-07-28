@@ -10,10 +10,10 @@ COSMOPOLITAN_C_START_
 
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"4"
-#define LUA_VERSION_RELEASE	"5"
+#define LUA_VERSION_RELEASE	"6"
 
 #define LUA_VERSION_NUM			504
-#define LUA_VERSION_RELEASE_NUM		(LUA_VERSION_NUM * 100 + 5)
+#define LUA_VERSION_RELEASE_NUM		(LUA_VERSION_NUM * 100 + 6)
 
 #define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
 #define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
@@ -155,7 +155,8 @@ extern const char lua_ident[];
 LUA_API lua_State *(lua_newstate) (lua_Alloc f, void *ud);
 LUA_API void       (lua_close) (lua_State *L);
 LUA_API lua_State *(lua_newthread) (lua_State *L);
-LUA_API int        (lua_resetthread) (lua_State *L, lua_State *from);
+LUA_API int        (lua_closethread) (lua_State *L, lua_State *from);
+LUA_API int        (lua_resetthread) (lua_State *L);  /* Deprecated! */
 
 LUA_API lua_CFunction (lua_atpanic) (lua_State *L, lua_CFunction panicf);
 

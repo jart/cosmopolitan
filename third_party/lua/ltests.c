@@ -48,7 +48,7 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.5 (MIT License)\\n\
+Lua 5.4.6 (MIT License)\\n\
 Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
@@ -1551,7 +1551,7 @@ static int runC (lua_State *L, lua_State *L1, const char *pc) {
       lua_newthread(L1);
     }
     else if EQ("resetthread") {
-      lua_pushinteger(L1, lua_resetthread(L1, L));
+      lua_pushinteger(L1, lua_resetthread(L1));  /* deprecated */
     }
     else if EQ("newuserdata") {
       lua_newuserdata(L1, getnum);
