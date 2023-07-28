@@ -16,7 +16,7 @@ assert(type(nil) == 'nil'
    and type(type) == 'function')
 
 assert(type(assert) == type(print))
-function f (x) return a:x (x) end
+local function f (x) return a:x (x) end
 assert(type(f) == 'function')
 assert(not pcall(type))
 
@@ -33,10 +33,11 @@ do
   assert(fact(5) == 120)
 end
 assert(fact == false)
+fact = nil
 
 -- testing declarations
-a = {i = 10}
-self = 20
+local a = {i = 10}
+local self = 20
 function a:x (x) return x+self.i end
 function a.y (x) return x+self end
 
@@ -72,6 +73,8 @@ f(1,2,   -- this one too
       3,4)
 assert(t[1] == 1 and t[2] == 2 and t[3] == 3 and t[4] == 'a')
 
+t = nil   -- delete 't'
+
 function fat(x)
   if x <= 1 then return 1
   else return x*load("return fat(" .. x-1 .. ")", "")()
@@ -80,26 +83,29 @@ end
 
 assert(load "load 'assert(fat(6)==720)' () ")()
 a = load('return fat(5), 3')
-a,b = a()
+local a,b = a()
 assert(a == 120 and b == 3)
+fat = nil
 print('+')
 
-function err_on_n (n)
+local function err_on_n (n)
   if n==0 then error(); exit(1);
   else err_on_n (n-1); exit(1);
   end
 end
 
 do
-  function dummy (n)
+  local function dummy (n)
     if n > 0 then
       assert(not pcall(err_on_n, n))
       dummy(n-1)
     end
   end
+
+  dummy(10)
 end
 
-dummy(10)
+_G.deep = nil   -- "declaration"  (used by 'all.lua')
 
 function deep (n)
   if n>0 then deep(n-1) end
@@ -151,6 +157,16 @@ do   -- tail calls x varargs
 end
 
 
+do   -- C-stack overflow while handling C-stack overflow
+  local function loop ()
+    assert(pcall(loop))
+  end
+
+  local err, msg = xpcall(loop, loop)
+  assert(not err and string.find(msg, "error"))
+end
+
+
 
 do   -- tail calls x chain of __call
   local n = 10000   -- depth
@@ -199,7 +215,7 @@ assert(a == 23 and (function (x) return x*2 end)(20) == 40)
 -- testing closures
 
 -- fixed-point operator
-Z = function (le)
+local Z = function (le)
       local function a (f)
         return le(function (x) return f(f)(x) end)
       end
@@ -209,14 +225,14 @@ Z = function (le)
 
 -- non-recursive factorial
 
-F = function (f)
+local F = function (f)
       return function (n)
                if n == 0 then return 1
                else return n*f(n-1) end
              end
     end
 
-fat = Z(F)
+local fat = Z(F)
 
 assert(fat(0) == 1 and fat(4) == 24 and Z(F)(5)==5*Z(F)(4))
 
@@ -227,22 +243,21 @@ local function g (z)
   return f(z,z+1,z+2,z+3)
 end
 
-f = g(10)
+local f = g(10)
 assert(f(9, 16) == 10+11+12+13+10+9+16+10)
 
-Z, F, f = nil
 print('+')
 
 -- testing multiple returns
 
-function unlpack (t, i)
+local function unlpack (t, i)
   i = i or 1
   if (i <= #t) then
     return t[i], unlpack(t, i+1)
   end
 end
 
-function equaltab (t1, t2)
+local function equaltab (t1, t2)
   assert(#t1 == #t2)
   for i = 1, #t1 do
     assert(t1[i] == t2[i])
@@ -251,8 +266,8 @@ end
 
 local pack = function (...) return (table.pack(...)) end
 
-function f() return 1,2,30,4 end
-function ret2 (a,b) return a,b end
+local function f() return 1,2,30,4 end
+local function ret2 (a,b) return a,b end
 
 local a,b,c,d = unlpack{1,2,3}
 assert(a==1 and b==2 and c==3 and d==nil)
@@ -281,7 +296,7 @@ table.sort({10,9,8,4,19,23,0,0}, function (a,b) return a<b end, "extra arg")
 local x = "-- a comment\0\0\0\n  x = 10 + \n23; \
      local a = function () x = 'hi' end; \
      return '\0'"
-function read1 (x)
+local function read1 (x)
   local i = 0
   return function ()
     collectgarbage()
@@ -290,7 +305,7 @@ function read1 (x)
   end
 end
 
-function cannotload (msg, a,b)
+local function cannotload (msg, a,b)
   assert(not a and string.find(b, msg))
 end
 
@@ -327,11 +342,26 @@ do   -- another bug (in 5.4.0)
 end
 
 
+do   -- another bug (since 5.2)
+  -- corrupted binary dump: list of upvalue names is larger than number
+  -- of upvalues, overflowing the array of upvalues.
+  local code =
+   "\x1b\x4c\x75\x61\x54\x00\x19\x93\x0d\x0a\x1a\x0a\x04\x08\x08\x78\x56\z
+    \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x28\x77\x40\x00\x86\x40\z
+    \x74\x65\x6d\x70\x81\x81\x01\x00\x02\x82\x48\x00\x02\x00\xc7\x00\x01\z
+    \x00\x80\x80\x80\x82\x00\x00\x80\x81\x82\x78\x80\x82\x81\x86\x40\x74\z
+    \x65\x6d\x70"
+
+  assert(load(code))   -- segfaults in previous versions
+end
+
+
 x = string.dump(load("x = 1; return x"))
 a = assert(load(read1(x), nil, "b"))
 assert(a() == 1 and _G.x == 1)
 cannotload("attempt to load a binary chunk", load(read1(x), nil, "t"))
 cannotload("attempt to load a binary chunk", load(x, nil, "t"))
+_G.x = nil
 
 assert(not pcall(string.dump, print))  -- no dump of C functions
 
@@ -356,7 +386,7 @@ debug.setupvalue(x, 2, _G)
 assert(x() == 123)
 
 assert(assert(load("return XX + ...", nil, nil, {XX = 13}))(4) == 17)
-
+XX = nil
 
 -- test generic load with nested functions
 x = [[

@@ -94,6 +94,33 @@ RUN('echo "print(10)\nprint(2)\n" | lua > %s', out)
 checkout("10\n2\n")
 
 
+-- testing BOM
+prepfile("\xEF\xBB\xBF")
+RUN('lua %s > %s', prog, out)
+checkout("")
+
+prepfile("\xEF\xBB\xBFprint(3)")
+RUN('lua %s > %s', prog, out)
+checkout("3\n")
+
+prepfile("\xEF\xBB\xBF# comment!!\nprint(3)")
+RUN('lua %s > %s', prog, out)
+checkout("3\n")
+
+-- bad BOMs
+prepfile("\xEF")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+prepfile("\xEF\xBB")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+prepfile("\xEFprint(3)")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+prepfile("\xEF\xBBprint(3)")
+NoRun("unexpected symbol", 'lua %s > %s', prog, out)
+
+
 -- test option '-'
 RUN('echo "print(arg[1])" | lua - -h > %s', out)
 checkout("-h\n")
@@ -312,7 +339,7 @@ prepfile("a = [[b\nc\nd\ne]]\n=a")
 RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
 checkprogout("b\nc\nd\ne\n\n")
 
-prompt = "alo"
+local prompt = "alo"
 prepfile[[ --
 a = 2
 ]]
@@ -372,7 +399,7 @@ NoRun("error object is a table value", [[lua %s]], prog)
 
 
 -- chunk broken in many lines
-s = [=[ --
+local s = [=[ --
 function f ( x )
   local a = [[
 xuxu
@@ -394,12 +421,10 @@ checkprogout("101\n13\t22\n\n")
 prepfile[[#comment in 1st line without \n at the end]]
 RUN('lua %s', prog)
 
-prepfile[[#test line number when file starts with comment line
-debug = require"debug"
-print(debug.getinfo(1).currentline)
-]]
+-- first-line comment with binary file
+prepfile("#comment\n" .. string.dump(load("print(3)")))
 RUN('lua %s > %s', prog, out)
-checkprogout('3\n')
+checkout('3\n')
 
 -- close Lua with an open file
 prepfile(string.format([[io.output(%q); io.write('alo')]], out))

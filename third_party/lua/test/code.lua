@@ -86,7 +86,7 @@ checkKlist(foo, {1, 1.0, 2, 2.0, 0, 0.0})
 -- testing opcodes
 
 -- check that 'f' opcodes match '...'
-function check (f, ...)
+local function check (f, ...)
   local arg = {...}
   local c = T.listcode(f)
   for i=1, #arg do
@@ -99,7 +99,7 @@ end
 
 
 -- check that 'f' opcodes match '...' and that 'f(p) == r'.
-function checkR (f, p, r, ...)
+local function checkR (f, p, r, ...)
   local r1 = f(p)
   assert(r == r1 and math.type(r) == math.type(r1))
   check(f, ...)
@@ -107,7 +107,7 @@ end
 
 
 -- check that 'a' and 'b' has the same opcodes
-function checkequal (a, b)
+local function checkequal (a, b)
   a = T.listcode(a)
   b = T.listcode(b)
   assert(#a == #b)

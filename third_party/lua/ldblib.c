@@ -37,7 +37,7 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.4 (MIT License)\\n\
+Lua 5.4.5 (MIT License)\\n\
 Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
@@ -502,3 +502,4 @@ LUAMOD_API int luaopen_debug (lua_State *L) {
   luaL_newlib(L, dblib);
   return 1;
 }
+

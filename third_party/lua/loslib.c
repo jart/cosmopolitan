@@ -46,7 +46,7 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.4 (MIT License)\\n\
+Lua 5.4.5 (MIT License)\\n\
 Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
@@ -59,23 +59,14 @@ asm(".include \"libc/disclaimer.inc\"");
 */
 #if !defined(LUA_STRFTIMEOPTIONS)	/* { */
 
-/* options for ANSI C 89 (only 1-char options) */
-#define L_STRFTIMEC89		"aAbBcdHIjmMpSUwWxXyYZ%"
-
-/* options for ISO C 99 and POSIX */
-#define L_STRFTIMEC99 "aAbBcCdDeFgGhHIjmMnprRStTuUVwWxXyYzZ%" \
-    "||" "EcECExEXEyEY" "OdOeOHOIOmOMOSOuOUOVOwOWOy"  /* two-char options */
-
-/* options for Windows */
-#define L_STRFTIMEWIN "aAbBcdHIjmMpSUwWxXyYzZ%" \
-    "||" "#c#x#d#H#I#j#m#M#S#U#w#W#y#Y"  /* two-char options */
-
 #if defined(LUA_USE_WINDOWS)
-#define LUA_STRFTIMEOPTIONS	L_STRFTIMEWIN
-#elif defined(LUA_USE_C89)
-#define LUA_STRFTIMEOPTIONS	L_STRFTIMEC89
+#define LUA_STRFTIMEOPTIONS  "aAbBcdHIjmMpSUwWxXyYzZ%" \
+    "||" "#c#x#d#H#I#j#m#M#S#U#w#W#y#Y"  /* two-char options */
+#elif defined(LUA_USE_C89)  /* ANSI C 89 (only 1-char options) */
+#define LUA_STRFTIMEOPTIONS  "aAbBcdHIjmMpSUwWxXyYZ%"
 #else  /* C99 specification */
-#define LUA_STRFTIMEOPTIONS	L_STRFTIMEC99
+#define LUA_STRFTIMEOPTIONS  "aAbBcCdDeFgGhHIjmMnprRStTuUVwWxXyYzZ%" \
+    "||" "EcECExEXEyEY" "OdOeOHOIOmOMOSOuOUOVOwOWOy"  /* two-char options */
 #endif
 
 #endif					/* } */
@@ -163,12 +154,21 @@ asm(".include \"libc/disclaimer.inc\"");
 /* }================================================================== */
 
 
+#if !defined(l_system)
+#if defined(LUA_USE_IOS)
+/* Despite claiming to be ISO C, iOS does not implement 'system'. */
+#define l_system(cmd) ((cmd) == NULL ? 0 : -1)
+#else
+#define l_system(cmd)	system(cmd)  /* default definition */
+#endif
+#endif
+
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);
   int stat;
   errno = 0;
-  stat = system(cmd);
+  stat = l_system(cmd);
   if (cmd != NULL)
     return luaL_execresult(L, stat);
   else {
@@ -285,9 +285,7 @@ static int getfield (lua_State *L, const char *key, int d, int delta) {
     res = d;
   }
   else {
-    /* unsigned avoids overflow when lua_Integer has 32 bits */
-    if (!(res >= 0 ? (lua_Unsigned)res <= (lua_Unsigned)INT_MAX + delta
-                   : (lua_Integer)INT_MIN + delta <= res))
+    if (!(res >= 0 ? res - delta <= INT_MAX : INT_MIN + delta <= res))
       return luaL_error(L, "field '%s' is out-of-bound", key);
     res -= delta;
   }

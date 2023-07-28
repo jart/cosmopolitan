@@ -16,7 +16,7 @@ end
 assert(not debug.gethook())
 
 local testline = 19         -- line where 'test' is defined
-function test (s, l, p)     -- this must be line 19
+local function test (s, l, p)     -- this must be line 19
   collectgarbage()   -- avoid gc during trace
   local function f (event, line)
     assert(event == 'line')
@@ -50,7 +50,7 @@ end
 
 
 -- test file and string names truncation
-a = "function f () end"
+local a = "function f () end"
 local function dostring (s, x) return load(s, x)() end
 dostring(a)
 assert(debug.getinfo(f).short_src == string.format('[string "%s"]', a))
@@ -72,7 +72,8 @@ dostring(a, string.format("=%s", string.rep('x', 500)))
 assert(string.find(debug.getinfo(f).short_src, "^x*$"))
 dostring(a, "=")
 assert(debug.getinfo(f).short_src == "")
-a = nil; f = nil;
+_G.a = nil; _G.f = nil;
+_G[string.rep("p", 400)] = nil
 
 
 repeat
@@ -120,6 +121,7 @@ else
 end
 ]], {2,3,4,7})
 
+
 test([[
 local function foo()
 end
@@ -128,6 +130,7 @@ A = 1
 A = 2
 A = 3
 ]], {2, 3, 2, 4, 5, 6})
+_G.A = nil
 
 
 test([[--
@@ -175,6 +178,8 @@ end
 
 test([[for i=1,4 do a=1 end]], {1,1,1,1})
 
+_G.a = nil
+
 
 do   -- testing line info/trace with large gaps in source
 
@@ -194,6 +199,7 @@ do   -- testing line info/trace with large gaps in source
     end
   end
 end
+_G.a = nil
 
 
 do   -- testing active lines
@@ -287,7 +293,6 @@ foo(200, 3, 4)
 local a = {}
 for i = 1, (_soft and 100 or 1000) do a[i] = i end
 foo(table.unpack(a))
-a = nil
 
 
 
@@ -307,13 +312,14 @@ do   -- test hook presence in debug info
   debug.sethook()
   assert(count == 4)
 end
+_ENV.a = nil
 
 
 -- hook table has weak keys
 assert(getmetatable(debug.getregistry()._HOOKKEY).__mode == 'k')
 
 
-a = {}; L = nil
+a = {}; local L = nil
 local glob = 1
 local oldglob = glob
 debug.sethook(function (e,l)
@@ -354,7 +360,7 @@ function foo()
 end; foo()  -- set L
 -- check line counting inside strings and empty lines
 
-_ = 'alo\
+local _ = 'alo\
 alo' .. [[
 
 ]]
@@ -403,6 +409,7 @@ function g(a,b) return (a+1) + f() end
 
 assert(g(0,0) == 30)
  
+_G.f, _G.g = nil
 
 debug.sethook(nil);
 assert(not debug.gethook())
@@ -446,7 +453,7 @@ local function collectlocals (level)
 end
 
 
-X = nil
+local X = nil
 a = {}
 function a:f (a, b, ...) local arg = {...}; local c = 13 end
 debug.sethook(function (e)
@@ -469,6 +476,7 @@ a:f(1,2,3,4,5)
 assert(X.self == a and X.a == 1   and X.b == 2 and X.c == nil)
 assert(XX == 12)
 assert(not debug.gethook())
+_G.XX = nil
 
 
 -- testing access to local variables in return hook (bug in 5.2)
@@ -593,6 +601,7 @@ end
 
 debug.sethook()
 
+local g, g1
 
 -- tests for tail calls
 local function f (x)
@@ -638,7 +647,7 @@ h(false)
 debug.sethook()
 assert(b == 2)   -- two tail calls
 
-lim = _soft and 3000 or 30000
+local lim = _soft and 3000 or 30000
 local function foo (x)
   if x==0 then
     assert(debug.getinfo(2).what == "main")
@@ -940,7 +949,7 @@ end
 
 
 print("testing debug functions on chunk without debug info")
-prog = [[-- program to be loaded without debug information (strip)
+local prog = [[-- program to be loaded without debug information (strip)
 local debug = require'debug'
 local a = 12  -- a local variable
 

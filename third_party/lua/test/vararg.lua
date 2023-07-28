@@ -3,13 +3,13 @@
 
 print('testing vararg')
 
-function f(a, ...)
+local function f (a, ...)
   local x = {n = select('#', ...), ...}
   for i = 1, x.n do assert(a[i] == x[i]) end
   return x.n
 end
 
-function c12 (...)
+local function c12 (...)
   assert(arg == _G.arg)    -- no local 'arg'
   local x = {...}; x.n = #x
   local res = (x.n==2 and x[1] == 1 and x[2] == 2)
@@ -17,7 +17,7 @@ function c12 (...)
   return res, 2
 end
 
-function vararg (...) return {n = select('#', ...), ...} end
+local function vararg (...) return {n = select('#', ...), ...} end
 
 local call = function (f, args) return f(table.unpack(args, 1, args.n)) end
 
@@ -29,7 +29,7 @@ assert(vararg().n == 0)
 assert(vararg(nil, nil).n == 2)
 
 assert(c12(1,2)==55)
-a,b = assert(call(c12, {1,2}))
+local a,b = assert(call(c12, {1,2}))
 assert(a == 55 and b == 2)
 a = call(c12, {1,2;n=2})
 assert(a == 55 and b == 2)
@@ -49,7 +49,7 @@ function t:f (...) local arg = {...}; return self[...]+#arg end
 assert(t:f(1,4) == 3 and t:f(2) == 11)
 print('+')
 
-lim = 20
+local lim = 20
 local i, a = 1, {}
 while i <= lim do a[i] = i+0.3; i=i+1 end
 
@@ -59,7 +59,7 @@ function f(a, b, c, d, ...)
          more[lim-4] == lim+0.3 and not more[lim-3])
 end
 
-function g(a,b,c)
+local function g (a,b,c)
   assert(a == 1.3 and b == 2.3 and c == 3.3)
 end
 
@@ -76,7 +76,7 @@ print("+")
 
 -- new-style varargs
 
-function oneless (a, ...) return ... end
+local function oneless (a, ...) return ... end
 
 function f (n, a, ...)
   local b
@@ -99,8 +99,8 @@ assert(a==nil and b==nil and c==nil and d==nil and e==nil)
 
 
 -- varargs for main chunks
-f = load[[ return {...} ]]
-x = f(2,3)
+local f = load[[ return {...} ]]
+local x = f(2,3)
 assert(x[1] == 2 and x[2] == 3 and x[3] == undef)
 
 

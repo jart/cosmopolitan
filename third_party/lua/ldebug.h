@@ -9,7 +9,7 @@
 
 
 /* Active Lua function (given call info) */
-#define ci_func(ci)		(clLvalue(s2v((ci)->func)))
+#define ci_func(ci)		(clLvalue(s2v((ci)->func.p)))
 
 
 #define resethookcount(L)	(L->hookcount = L->basehookcount)

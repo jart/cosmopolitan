@@ -63,11 +63,24 @@ typedef signed char ls_byte;
 
 
 /*
-** conversion of pointer to unsigned integer:
-** this is for hashing only; there is no problem if the integer
-** cannot hold the whole pointer value
+** conversion of pointer to unsigned integer: this is for hashing only;
+** there is no problem if the integer cannot hold the whole pointer
+** value. (In strict ISO C this may cause undefined behavior, but no
+** actual machine seems to bother.)
 */
-#define point2uint(p)	((unsigned int)((size_t)(p) & UINT_MAX))
+#if !defined(LUA_USE_C89) && defined(__STDC_VERSION__) && \
+    __STDC_VERSION__ >= 199901L
+
+#if defined(UINTPTR_MAX)  /* even in C99 this type is optional */
+#define L_P2I	uintptr_t
+#else  /* no 'intptr'? */
+#define L_P2I	uintmax_t  /* use the largest available integer */
+#endif
+#else  /* C89 option */
+#define L_P2I	size_t
+#endif
+
+#define point2uint(p)	((unsigned int)((L_P2I)(p) & UINT_MAX))
 
 
 

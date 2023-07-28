@@ -420,6 +420,9 @@ assert(i == 3 and x[1] == 3 and x[3] == 5)
 
 assert(_G.X == 20)
 
+_G.X, _G.B = nil
+
+
 print'+'
 
 local _g = _G

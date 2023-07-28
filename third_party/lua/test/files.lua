@@ -507,15 +507,17 @@ load((io.lines(file, 1)))()
 assert(_G.X == 4)
 load((io.lines(file, 3)))()
 assert(_G.X == 8)
+_G.X = nil
 
 print('+')
 
 local x1 = "string\n\n\\com \"\"''coisas [[estranhas]] ]]'"
 io.output(file)
-assert(io.write(string.format("x2 = %q\n-- comment without ending EOS", x1)))
+assert(io.write(string.format("X2 = %q\n-- comment without ending EOS", x1)))
 io.close()
 assert(loadfile(file))()
-assert(x1 == x2)
+assert(x1 == _G.X2)
+_G.X2 = nil
 print('+')
 assert(os.remove(file))
 assert(not os.remove(file))
@@ -834,7 +836,16 @@ checkerr("missing", os.time, {hour = 12})   -- missing date
 if string.packsize("i") == 4 then   -- 4-byte ints
   checkerr("field 'year' is out-of-bound", os.time,
               {year = -(1 << 31) + 1899, month = 1, day = 1})
+
+  checkerr("field 'year' is out-of-bound", os.time,
+              {year = -(1 << 31), month = 1, day = 1})
+
+  if math.maxinteger > 2^31 then   -- larger lua_integer?
+    checkerr("field 'year' is out-of-bound", os.time,
+                {year = (1 << 31) + 1900, month = 1, day = 1})
+  end
 end
+
 
 if not _port then
   -- test Posix-specific modifiers

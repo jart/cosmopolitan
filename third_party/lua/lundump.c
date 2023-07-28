@@ -43,7 +43,7 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.4 (MIT License)\\n\
+Lua 5.4.5 (MIT License)\\n\
 Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
@@ -143,10 +143,10 @@ static TString *loadStringN (LoadState *S, Proto *p) {
   }
   else {  /* long string */
     ts = luaS_createlngstrobj(L, size);  /* create string */
-    setsvalue2s(L, L->top, ts);  /* anchor it ('loadVector' can GC) */
+    setsvalue2s(L, L->top.p, ts);  /* anchor it ('loadVector' can GC) */
     luaD_inctop(L);
     loadVector(S, getstr(ts), size);  /* load directly in final place */
-    L->top--;  /* pop string */
+    L->top.p--;  /* pop string */
   }
   luaC_objbarrier(L, p, ts);
   return ts;
@@ -271,6 +271,8 @@ static void loadDebug (LoadState *S, Proto *f) {
     f->locvars[i].endpc = loadInt(S);
   }
   n = loadInt(S);
+  if (n != 0)  /* does it have debug information? */
+    n = f->sizeupvalues;  /* must be this many */
   for (i = 0; i < n; i++)
     f->upvalues[i].name = loadStringN(S, f);
 }
@@ -344,7 +346,7 @@ LClosure *luaU_undump(lua_State *L, ZIO *Z, const char *name) {
   S.Z = Z;
   checkHeader(&S);
   cl = luaF_newLclosure(L, loadByte(&S));
-  setclLvalue2s(L, L->top, cl);
+  setclLvalue2s(L, L->top.p, cl);
   luaD_inctop(L);
   cl->p = luaF_newproto(L);
   luaC_objbarrier(L, cl, cl->p);

@@ -14,7 +14,7 @@ local pack = table.pack
 -- standard error message for memory errors
 local MEMERRMSG = "not enough memory"
 
-function tcheck (t1, t2)
+local function tcheck (t1, t2)
   assert(t1.n == (t2.n or #t2) + 1)
   for i = 2, t1.n do assert(t1[i] == t2[i - 1]) end
 end
@@ -28,7 +28,7 @@ end
 
 print('testing C API')
 
-a = T.testC("pushvalue R; return 1")
+local a = T.testC("pushvalue R; return 1")
 assert(a == debug.getregistry())
 
 
@@ -43,10 +43,10 @@ a = T.d2s(12458954321123.0)
 assert(a == string.pack("d", 12458954321123.0))
 assert(T.s2d(a) == 12458954321123.0)
 
-a,b,c = T.testC("pushnum 1; pushnum 2; pushnum 3; return 2")
+local a,b,c = T.testC("pushnum 1; pushnum 2; pushnum 3; return 2")
 assert(a == 2 and b == 3 and not c)
 
-f = T.makeCfunc("pushnum 1; pushnum 2; pushnum 3; return 2")
+local f = T.makeCfunc("pushnum 1; pushnum 2; pushnum 3; return 2")
 a,b,c = f()
 assert(a == 2 and b == 3 and not c)
 
@@ -61,7 +61,7 @@ assert(a==false and b==true and c==false)
 a,b,c = T.testC("gettop; return 2", 10, 20, 30, 40)
 assert(a == 40 and b == 5 and not c)
 
-t = pack(T.testC("settop 5; return *", 2, 3))
+local t = pack(T.testC("settop 5; return *", 2, 3))
 tcheck(t, {n=4,2,3})
 
 t = pack(T.testC("settop 0; settop 15; return 10", 3, 1, 23))
@@ -166,16 +166,17 @@ end
 
 
 -- testing globals
-_G.a = 14; _G.b = "a31"
+_G.AA = 14; _G.BB = "a31"
 local a = {T.testC[[
-  getglobal a;
-  getglobal b;
-  getglobal b;
-  setglobal a;
+  getglobal AA;
+  getglobal BB;
+  getglobal BB;
+  setglobal AA;
   return *
 ]]}
-assert(a[2] == 14 and a[3] == "a31" and a[4] == nil and _G.a == "a31")
+assert(a[2] == 14 and a[3] == "a31" and a[4] == nil and _G.AA == "a31")
 
+_G.AA, _G.BB = nil
 
 -- testing arith
 assert(T.testC("pushnum 10; pushnum 20; arith /; return 1") == 0.5)
@@ -199,13 +200,14 @@ a,b,c = T.testC([[pushnum 1;
                   pushstring 10; arith _;
                   pushstring 5; return 3]])
 assert(a == 1 and b == -10 and c == "5")
-mt = {__add = function (a,b) return setmetatable({a[1] + b[1]}, mt) end,
+local mt = {
+      __add = function (a,b) return setmetatable({a[1] + b[1]}, mt) end,
       __mod = function (a,b) return setmetatable({a[1] % b[1]}, mt) end,
       __unm = function (a) return setmetatable({a[1]* 2}, mt) end}
 a,b,c = setmetatable({4}, mt),
         setmetatable({8}, mt),
         setmetatable({-3}, mt)
-x,y,z = T.testC("arith +; return 2", 10, a, b)
+local x,y,z = T.testC("arith +; return 2", 10, a, b)
 assert(x == 10 and y[1] == 12 and z == nil)
 assert(T.testC("arith %; return 1", a, c)[1] == 4%-3)
 assert(T.testC("arith _; arith +; arith %; return 1", b, a, c)[1] ==
@@ -312,9 +314,9 @@ assert(T.testC("concat 1; return 1", "xuxu") == "xuxu")
 
 -- testing lua_is
 
-function B(x) return x and 1 or 0 end
+local function B (x) return x and 1 or 0 end
 
-function count (x, n)
+local function count (x, n)
   n = n or 2
   local prog = [[
     isnumber %d;
@@ -345,7 +347,7 @@ assert(count(nil, 15) == 100)
 
 -- testing lua_to...
 
-function to (s, x, n)
+local function to (s, x, n)
   n = n or 2
   return T.testC(string.format("%s %d; return 1", s, n), x)
 end
@@ -486,11 +488,12 @@ a = T.testC([[
   pushvalue 3; insert -2; pcall 1 1 0;
   pcall 0 0 0;
   return 1
-]], "x=150", function (a) assert(a==nil); return 3 end)
+]], "XX=150", function (a) assert(a==nil); return 3 end)
 
-assert(type(a) == 'string' and x == 150)
+assert(type(a) == 'string' and XX == 150)
+_G.XX = nil
 
-function check3(p, ...)
+local function check3(p, ...)
   local arg = {...}
   assert(#arg == 3)
   assert(string.find(arg[3], p))
@@ -500,7 +503,7 @@ check3("%.", T.testC("loadfile 2; return *", "."))
 check3("xxxx", T.testC("loadfile 2; return *", "xxxx"))
 
 -- test errors in non protected threads
-function checkerrnopro (code, msg)
+local function checkerrnopro (code, msg)
   local th = coroutine.create(function () end)  -- create new thread
   local stt, err = pcall(T.testC, th, code)   -- run code there
   assert(not stt and string.find(err, msg))
@@ -510,8 +513,9 @@ if not _soft then
   collectgarbage("stop")   -- avoid __gc with full stack
   checkerrnopro("pushnum 3; call 0 0", "attempt to call")
   print"testing stack overflow in unprotected thread"
-  function f () f() end
-  checkerrnopro("getglobal 'f'; call 0 0;", "stack overflow")
+  function F () F() end
+  checkerrnopro("getglobal 'F'; call 0 0;", "stack overflow")
+  F = nil
   collectgarbage("restart")
 end
 print"+"
@@ -588,7 +592,7 @@ assert(a[a] == "x")
 
 b = setmetatable({p = a}, {})
 getmetatable(b).__index = function (t, i) return t.p[i] end
-k, x = T.testC("gettable 3, return 2", 4, b, 20, 35, "x")
+local k, x = T.testC("gettable 3, return 2", 4, b, 20, 35, "x")
 assert(x == 15 and k == 35)
 k = T.testC("getfield 2 y, return 1", b)
 assert(k == 12)
@@ -748,8 +752,8 @@ local i = T.ref{}
 T.unref(i)
 assert(T.ref{} == i)
 
-Arr = {}
-Lim = 100
+local Arr = {}
+local Lim = 100
 for i=1,Lim do   -- lock many objects
   Arr[i] = T.ref({})
 end
@@ -761,7 +765,7 @@ for i=1,Lim do   -- unlock all them
   T.unref(Arr[i])
 end
 
-function printlocks ()
+local function printlocks ()
   local f = T.makeCfunc("gettable R; return 1")
   local n = f("n")
   print("n", n)
@@ -793,8 +797,8 @@ assert(type(T.getref(a)) == 'table')
 
 
 -- colect in cl the `val' of all collected userdata
-tt = {}
-cl = {n=0}
+local tt = {}
+local cl = {n=0}
 A = nil; B = nil
 local F
 F = function (x)
@@ -816,6 +820,7 @@ F = function (x)
   return 1,2,3
 end
 tt.__gc = F
+
 
 -- test whether udate collection frees memory in the right time
 do
@@ -853,9 +858,9 @@ end
 collectgarbage("stop")
 
 -- create 3 userdatas with tag `tt'
-a = T.newuserdata(0); debug.setmetatable(a, tt); na = T.udataval(a)
-b = T.newuserdata(0); debug.setmetatable(b, tt); nb = T.udataval(b)
-c = T.newuserdata(0); debug.setmetatable(c, tt); nc = T.udataval(c)
+a = T.newuserdata(0); debug.setmetatable(a, tt); local na = T.udataval(a)
+b = T.newuserdata(0); debug.setmetatable(b, tt); local nb = T.udataval(b)
+c = T.newuserdata(0); debug.setmetatable(c, tt); local nc = T.udataval(c)
 
 -- create userdata without meta table
 x = T.newuserdata(4)
@@ -866,9 +871,9 @@ checkerr("FILE%* expected, got userdata", io.input, x)
 
 assert(debug.getmetatable(x) == nil and debug.getmetatable(y) == nil)
 
-d=T.ref(a);
-e=T.ref(b);
-f=T.ref(c);
+local d = T.ref(a);
+local e = T.ref(b);
+local f = T.ref(c);
 t = {T.getref(d), T.getref(e), T.getref(f)}
 assert(t[1] == a and t[2] == b and t[3] == c)
 
@@ -888,7 +893,7 @@ tt=nil    -- frees tt for GC
 A = nil
 b = nil
 T.unref(d);
-n5 = T.newuserdata(0)
+local n5 = T.newuserdata(0)
 debug.setmetatable(n5, {__gc=F})
 n5 = T.udataval(n5)
 collectgarbage()
@@ -959,11 +964,11 @@ print'+'
 
 
 -- testing changing hooks during hooks
-_G.t = {}
+_G.TT = {}
 T.sethook([[
   # set a line hook after 3 count hooks
   sethook 4 0 '
-    getglobal t;
+    getglobal TT;
     pushvalue -3; append -2
     pushvalue -2; append -2
   ']], "c", 3)
@@ -973,12 +978,13 @@ a = 1   -- count hook (set line hook)
 a = 1   -- line hook
 a = 1   -- line hook
 debug.sethook()
-t = _G.t
+local t = _G.TT
 assert(t[1] == "line")
-line = t[2]
+local line = t[2]
 assert(t[3] == "line" and t[4] == line + 1)
 assert(t[5] == "line" and t[6] == line + 2)
 assert(t[7] == nil)
+_G.TT = nil
 
 
 -------------------------------------------------------------------------
@@ -1003,6 +1009,7 @@ do   -- testing errors during GC
   collectgarbage("restart")
   warn("@on")
 end
+_G.A = nil
 -------------------------------------------------------------------------
 -- test for userdata vals
 do
@@ -1032,8 +1039,8 @@ assert(a == 'alo' and b == '3')
 
 T.doremote(L1, "_ERRORMESSAGE = nil")
 -- error: `sin' is not defined
-a, _, b = T.doremote(L1, "return sin(1)")
-assert(a == nil and b == 2)   -- 2 == run-time error
+a, b, c = T.doremote(L1, "return sin(1)")
+assert(a == nil and c == 2)   -- 2 == run-time error
 
 -- error: syntax error
 a, b, c = T.doremote(L1, "return a+")
@@ -1204,7 +1211,7 @@ T.alloccount()          -- remove limit
 -- o that we get memory errors in all allocations of a given
 -- task, until there is enough memory to complete the task without
 -- errors.
-function testbytes (s, f)
+local function testbytes (s, f)
   collectgarbage()
   local M = T.totalmem()
   local oldM = M
@@ -1229,7 +1236,7 @@ end
 -- task, until there is enough allocations to complete the task without
 -- errors.
 
-function testalloc (s, f)
+local function testalloc (s, f)
   collectgarbage()
   local M = 0
   local a,b = nil
@@ -1296,12 +1303,12 @@ end)
 -- testing threads
 
 -- get main thread from registry (at index LUA_RIDX_MAINTHREAD == 1)
-mt = T.testC("rawgeti R 1; return 1")
+local mt = T.testC("rawgeti R 1; return 1")
 assert(type(mt) == "thread" and coroutine.running() == mt)
 
 
 
-function expand (n,s)
+local function expand (n,s)
   if n==0 then return "" end
   local e = string.rep("=", n)
   return string.format("T.doonnewstack([%s[ %s;\n collectgarbage(); %s]%s])\n",
@@ -1311,9 +1318,10 @@ end
 G=0; collectgarbage(); a =collectgarbage("count")
 load(expand(20,"G=G+1"))()
 assert(G==20); collectgarbage();  -- assert(gcinfo() <= a+1)
+G = nil
 
 testamem("running code on new thread", function ()
-  return T.doonnewstack("x=1") == 0  -- try to create thread
+  return T.doonnewstack("local x=1") == 0  -- try to create thread
 end)
 
 
@@ -1327,13 +1335,13 @@ end)
 local testprog = [[
 local function foo () return end
 local t = {"x"}
-a = "aaa"
-for i = 1, #t do a=a..t[i] end
+AA = "aaa"
+for i = 1, #t do AA = AA .. t[i] end
 return true
 ]]
 
 -- testing memory x dofile
-_G.a = nil
+_G.AA = nil
 local t =os.tmpname()
 local f = assert(io.open(t, "w"))
 f:write(testprog)
@@ -1343,7 +1351,7 @@ testamem("dofile", function ()
   return a and a()
 end)
 assert(os.remove(t))
-assert(_G.a == "aaax")
+assert(_G.AA == "aaax")
 
 
 -- other generic tests
@@ -1359,6 +1367,8 @@ testamem("dump/undump", function ()
   a = b and load(b)
   return a and a()
 end)
+
+_G.AA = nil
 
 local t = os.tmpname()
 testamem("file creation", function ()
@@ -1381,7 +1391,7 @@ testamem("constructors", function ()
 end)
 
 local a = 1
-close = nil
+local close = nil
 testamem("closure creation", function ()
   function close (b)
    return function (x) return b + x end

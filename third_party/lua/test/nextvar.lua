@@ -9,6 +9,16 @@ local function checkerror (msg, f, ...)
 end
 
 
+local function check (t, na, nh)
+  if not T then return end
+  local a, h = T.querytab(t)
+  if a ~= na or h ~= nh then
+    print(na, nh, a, h)
+    assert(nil)
+  end
+end
+
+
 local a = {}
 
 -- make sure table has lots of space in hash part
@@ -19,6 +29,25 @@ for i=1,100 do
   a[i] = true
   assert(#a == i)
 end
+
+
+do   -- rehash moving elements from array to hash
+  local a = {}
+  for i = 1, 100 do a[i] = i end
+  check(a, 128, 0)
+
+  for i = 5, 95 do a[i] = nil end
+  check(a, 128, 0)
+
+  a.x = 1     -- force a re-hash
+  check(a, 4, 8)
+
+  for i = 1, 4 do assert(a[i] == i) end
+  for i = 5, 95 do assert(a[i] == nil) end
+  for i = 96, 100 do assert(a[i] == i) end
+  assert(a.x == 1)
+end
+
 
 -- testing ipairs
 local x = 0
@@ -62,15 +91,6 @@ local function mp2 (n)   -- minimum power of 2 >= n
   local mp = 2^math.ceil(math.log(n, 2))
   assert(n == 0 or (mp/2 < n and n <= mp))
   return mp
-end
-
-
-local function check (t, na, nh)
-  local a, h = T.querytab(t)
-  if a ~= na or h ~= nh then
-    print(na, nh, a, h)
-    assert(nil)
-  end
 end
 
 
@@ -169,7 +189,7 @@ end
 
 -- size tests for vararg
 lim = 35
-function foo (n, ...)
+local function foo (n, ...)
   local arg = {...}
   check(arg, n, 0)
   assert(select('#', ...) == n)
