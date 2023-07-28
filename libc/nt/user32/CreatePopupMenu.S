@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_CreatePopupMenu,CreatePopupMenu,1622
+.imp	user32,__imp_CreatePopupMenu,CreatePopupMenu
 
 	.text.windows
         .ftrace1

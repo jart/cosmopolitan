@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetConsoleScreenBufferInfoEx,SetConsoleScreenBufferInfoEx,0
+.imp	kernel32,__imp_SetConsoleScreenBufferInfoEx,SetConsoleScreenBufferInfoEx
 
 	.text.windows
         .ftrace1

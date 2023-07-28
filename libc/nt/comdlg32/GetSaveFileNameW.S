@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	comdlg32,__imp_GetSaveFileNameW,GetSaveFileNameW,116
+.imp	comdlg32,__imp_GetSaveFileNameW,GetSaveFileNameW
 
 	.text.windows
         .ftrace1

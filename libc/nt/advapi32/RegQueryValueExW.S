@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegQueryValueExW,RegQueryValueExW,0
+.imp	advapi32,__imp_RegQueryValueExW,RegQueryValueExW
 
 	.text.windows
         .ftrace1

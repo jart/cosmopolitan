@@ -1,2 +1,2 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_TraceSetInformation,TraceSetInformation,1812
+.imp	advapi32,__imp_TraceSetInformation,TraceSetInformation

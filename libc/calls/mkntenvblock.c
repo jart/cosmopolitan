@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
@@ -91,12 +93,15 @@ static textwindows void FixPath(char *path) {
 }
 
 static textwindows void InsertString(char **a, size_t i, char *s,
-                                     char buf[ARG_MAX], size_t *bufi) {
+                                     char buf[ARG_MAX], size_t *bufi,
+                                     bool *have_systemroot) {
   char *v;
   size_t j, k;
 
+  v = StrChr(s, '=');
+
   // apply fixups to var=/c/...
-  if ((v = StrChr(s, '=')) && v[1] == '/' && IsAlpha(v[2]) && v[3] == '/') {
+  if (v && v[1] == '/' && IsAlpha(v[2]) && v[3] == '/') {
     v = buf + *bufi;
     for (k = 0; s[k]; ++k) {
       if (*bufi + 1 < ARG_MAX) {
@@ -136,11 +141,25 @@ textwindows int mkntenvblock(char16_t envvars[ARG_MAX / 2], char *const envp[],
   uint64_t w;
   char **vars;
   wint_t x, y;
+  bool have_systemroot = false;
   size_t i, j, k, n, m, bufi = 0;
   for (n = 0; envp[n];) n++;
   vars = alloca((n + 1) * sizeof(char *));
-  for (i = 0; i < n; ++i) InsertString(vars, i, envp[i], buf, &bufi);
-  if (extravar) InsertString(vars, n++, extravar, buf, &bufi);
+  for (i = 0; i < n; ++i) {
+    InsertString(vars, i, envp[i], buf, &bufi, &have_systemroot);
+  }
+  if (extravar) {
+    InsertString(vars, n++, extravar, buf, &bufi, &have_systemroot);
+  }
+  if (!have_systemroot && environ) {
+    // https://jpassing.com/2009/12/28/the-hidden-danger-of-forgetting-to-specify-systemroot-in-a-custom-environment-block/
+    struct Env systemroot;
+    systemroot = _getenv(environ, "SYSTEMROOT");
+    if (systemroot.s) {
+      InsertString(vars, n++, environ[systemroot.i], buf, &bufi,
+                   &have_systemroot);
+    }
+  }
   for (k = i = 0; i < n; ++i) {
     j = 0;
     v = false;

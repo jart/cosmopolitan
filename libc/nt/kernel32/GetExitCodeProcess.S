@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetExitCodeProcess,GetExitCodeProcess,0
+.imp	kernel32,__imp_GetExitCodeProcess,GetExitCodeProcess
 
 	.text.windows
         .ftrace1

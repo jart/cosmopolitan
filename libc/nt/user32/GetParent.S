@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetParent,GetParent,1906
+.imp	user32,__imp_GetParent,GetParent
 
 	.text.windows
         .ftrace1

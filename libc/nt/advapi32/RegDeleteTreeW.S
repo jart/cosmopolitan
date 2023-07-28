@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegDeleteTreeW,RegDeleteTreeW,0
+.imp	advapi32,__imp_RegDeleteTreeW,RegDeleteTreeW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_OfferVirtualMemory,OfferVirtualMemory,0
+.imp	kernel32,__imp_OfferVirtualMemory,OfferVirtualMemory
 
 	.text.windows
         .ftrace1

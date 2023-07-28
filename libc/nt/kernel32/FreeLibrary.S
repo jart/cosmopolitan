@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FreeLibrary,FreeLibrary,0
+.imp	kernel32,__imp_FreeLibrary,FreeLibrary
 
 	.text.windows
         .ftrace1

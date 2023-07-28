@@ -88,7 +88,8 @@ o/$(MODE):			\
 
 ifneq ($(LANDLOCKMAKE_VERSION),)
 ifeq ($(wildcard /usr/bin/ape),)
-$(error please run ape/apeinstall.sh if you intend to use landlock make)
+$(warning please run ape/apeinstall.sh if you intend to use landlock make)
+$(shell sleep .5)
 endif
 ifeq ($(USE_SYSTEM_TOOLCHAIN),)
 .STRICT = 1
@@ -344,7 +345,6 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_NT_PDH			\
 	LIBC_NT_GDI32			\
 	LIBC_NT_COMDLG32		\
-	LIBC_NT_URL			\
 	LIBC_NT_USER32			\
 	LIBC_NT_NTDLL			\
 	LIBC_NT_ADVAPI32		\
@@ -425,6 +425,7 @@ $(SRCS):					\
 	libc/integral/lp64.inc
 
 .PHONY: toolchain
+ifeq ($(ARCH), x86_64)
 toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/ape/public/ape.lds			\
 		o/$(MODE)/libc/crt/crt.o			\
@@ -435,6 +436,14 @@ toolchain:	o/cosmopolitan.h				\
 		o/$(MODE)/third_party/libcxx/libcxx.a		\
 		o/$(MODE)/tool/build/fixupobj.com		\
 		o/$(MODE)/tool/build/zipcopy.com
+else
+toolchain:	o/$(MODE)/ape/aarch64.lds			\
+		o/$(MODE)/libc/crt/crt.o			\
+		o/$(MODE)/cosmopolitan.a			\
+		o/$(MODE)/third_party/libcxx/libcxx.a		\
+		o/$(MODE)/tool/build/fixupobj.com		\
+		o/$(MODE)/tool/build/zipcopy.com
+endif
 
 aarch64: private .INTERNET = true
 aarch64: private .UNSANDBOXED = true

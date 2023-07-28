@@ -201,17 +201,18 @@ char buf[PAGESIZE];
 char tmpout[PATH_MAX];
 
 const char *const kSafeEnv[] = {
-    "ADDR2LINE",  // needed by GetAddr2linePath
-    "HOME",       // needed by ~/.runit.psk
-    "HOMEDRIVE",  // needed by ~/.runit.psk
-    "HOMEPATH",   // needed by ~/.runit.psk
-    "MAKEFLAGS",  // needed by IsRunningUnderMake
-    "MODE",       // needed by test scripts
-    "PATH",       // needed by clang
-    "PWD",        // just seems plain needed
-    "STRACE",     // useful for troubleshooting
-    "TERM",       // needed to detect colors
-    "TMPDIR",     // needed by compiler
+    "ADDR2LINE",   // needed by GetAddr2linePath
+    "HOME",        // needed by ~/.runit.psk
+    "HOMEDRIVE",   // needed by ~/.runit.psk
+    "HOMEPATH",    // needed by ~/.runit.psk
+    "MAKEFLAGS",   // needed by IsRunningUnderMake
+    "MODE",        // needed by test scripts
+    "PATH",        // needed by clang
+    "PWD",         // just seems plain needed
+    "STRACE",      // useful for troubleshooting
+    "TERM",        // needed to detect colors
+    "TMPDIR",      // needed by compiler
+    "SYSTEMROOT",  // needed by socket()
 };
 
 const char *const kGccOnlyFlags[] = {
@@ -373,7 +374,11 @@ bool IsSafeEnv(const char *s) {
   r = ARRAYLEN(kSafeEnv) - 1;
   while (l <= r) {
     m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
-    x = strncmp(s, kSafeEnv[m], n);
+    if (IsWindows()) {
+      x = strncasecmp(s, kSafeEnv[m], n);
+    } else {
+      x = strncmp(s, kSafeEnv[m], n);
+    }
     if (x < 0) {
       r = m - 1;
     } else if (x > 0) {
@@ -643,10 +648,6 @@ int Launch(void) {
   close(pipefds[1]);
 
   for (;;) {
-    if (gotchld) {
-      rc = 0;
-      break;
-    }
     if (gotalrm) {
       PrintRed();
       appends(&output, "\n\n`");

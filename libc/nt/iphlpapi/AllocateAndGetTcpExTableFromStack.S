@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_AllocateAndGetTcpExTableFromStack,AllocateAndGetTcpExTableFromStack,0
+.imp	iphlpapi,__imp_AllocateAndGetTcpExTableFromStack,AllocateAndGetTcpExTableFromStack
 
 	.text.windows
         .ftrace1

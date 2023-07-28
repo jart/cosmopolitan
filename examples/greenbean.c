@@ -189,7 +189,7 @@ void *Worker(void *id) {
       // we're not terrible concerned when errors happen here
       if ((got = read(client, inbuf, sizeof(inbuf))) <= 0) break;
       // check that client message wasn't fragmented into more reads
-      if (!(inmsglen = ParseHttpMessage(&msg, inbuf, got))) break;
+      if ((inmsglen = ParseHttpMessage(&msg, inbuf, got)) <= 0) break;
       ++messages;
 
 #if LOGGING

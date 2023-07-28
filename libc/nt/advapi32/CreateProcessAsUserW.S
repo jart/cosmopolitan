@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_CreateProcessAsUserW,CreateProcessAsUserW,0
+.imp	advapi32,__imp_CreateProcessAsUserW,CreateProcessAsUserW
 
 	.text.windows
         .ftrace1

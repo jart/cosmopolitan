@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_UnlockFileEx,UnlockFileEx,0
+.imp	kernel32,__imp_UnlockFileEx,UnlockFileEx
 
 	.text.windows
         .ftrace1

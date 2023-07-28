@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSARecvFrom,WSARecvFrom,93
+.imp	ws2_32,__imp_WSARecvFrom,WSARecvFrom
 
 	.text.windows
         .ftrace1

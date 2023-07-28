@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetShellWindow,GetShellWindow,1950
+.imp	user32,__imp_GetShellWindow,GetShellWindow
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetStartupInfoW,GetStartupInfoW,0
+.imp	kernel32,__imp_GetStartupInfoW,GetStartupInfoW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_GetAdapterOrderMap,GetAdapterOrderMap,0
+.imp	iphlpapi,__imp_GetAdapterOrderMap,GetAdapterOrderMap
 
 	.text.windows
         .ftrace1

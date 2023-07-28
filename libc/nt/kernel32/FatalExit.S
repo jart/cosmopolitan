@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FatalExit,FatalExit,364
+.imp	kernel32,__imp_FatalExit,FatalExit
 
 	.text.windows
         .ftrace1

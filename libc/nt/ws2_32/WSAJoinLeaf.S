@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAJoinLeaf,WSAJoinLeaf,79
+.imp	ws2_32,__imp_WSAJoinLeaf,WSAJoinLeaf
 
 	.text.windows
         .ftrace1

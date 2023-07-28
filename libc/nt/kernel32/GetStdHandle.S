@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetStdHandle,GetStdHandle,0
+.imp	kernel32,__imp_GetStdHandle,GetStdHandle
 
 	.text.windows
         .ftrace1

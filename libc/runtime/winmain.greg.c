@@ -20,6 +20,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
@@ -29,6 +30,7 @@
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/files.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
@@ -123,6 +125,18 @@ __msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
   ExitProcess(200);
 }
 
+__msabi static textwindows void DeduplicateStdioHandles(void) {
+  int64_t proc, outhand, errhand, newhand;
+  outhand = GetStdHandle(kNtStdOutputHandle);
+  errhand = GetStdHandle(kNtStdErrorHandle);
+  if (outhand == errhand) {
+    proc = GetCurrentProcess();
+    DuplicateHandle(proc, errhand, proc, &newhand, 0, true,
+                    kNtDuplicateSameAccess);
+    SetStdHandle(kNtStdErrorHandle, newhand);
+  }
+}
+
 __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   bool32 rc;
   int64_t h, hand;
@@ -136,6 +150,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   intptr_t stackaddr, allocaddr;
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
+  DeduplicateStdioHandles();
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
     rc = SetConsoleCP(kNtCpUtf8);
     NTTRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);

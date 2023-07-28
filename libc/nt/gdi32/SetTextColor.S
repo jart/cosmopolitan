@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetTextColor,SetTextColor,1912
+.imp	gdi32,__imp_SetTextColor,SetTextColor
 
 	.text.windows
         .ftrace1

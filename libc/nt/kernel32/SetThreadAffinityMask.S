@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetThreadAffinityMask,SetThreadAffinityMask,1369
+.imp	kernel32,__imp_SetThreadAffinityMask,SetThreadAffinityMask
 
 	.text.windows
         .ftrace1

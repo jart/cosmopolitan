@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ReleaseCapture,ReleaseCapture,2279
+.imp	user32,__imp_ReleaseCapture,ReleaseCapture
 
 	.text.windows
         .ftrace1
