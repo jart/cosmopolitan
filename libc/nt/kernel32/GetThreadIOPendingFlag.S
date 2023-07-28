@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetThreadIOPendingFlag,GetThreadIOPendingFlag,0
+.imp	kernel32,__imp_GetThreadIOPendingFlag,GetThreadIOPendingFlag
 
 	.text.windows
         .ftrace1

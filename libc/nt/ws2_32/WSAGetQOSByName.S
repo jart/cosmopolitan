@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAGetQOSByName,WSAGetQOSByName,69
+.imp	ws2_32,__imp_WSAGetQOSByName,WSAGetQOSByName
 
 	.text.windows
         .ftrace1

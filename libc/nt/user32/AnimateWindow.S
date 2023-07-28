@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_AnimateWindow,AnimateWindow,1513
+.imp	user32,__imp_AnimateWindow,AnimateWindow
 
 	.text.windows
         .ftrace1

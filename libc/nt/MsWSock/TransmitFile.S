@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	MsWSock,__imp_TransmitFile,TransmitFile,0
+.imp	MsWSock,__imp_TransmitFile,TransmitFile
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	pdh,__imp_PdhOpenQueryW,PdhOpenQueryW,0
+.imp	pdh,__imp_PdhOpenQueryW,PdhOpenQueryW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetLargestConsoleWindowSize,GetLargestConsoleWindowSize,0
+.imp	kernel32,__imp_GetLargestConsoleWindowSize,GetLargestConsoleWindowSize
 
 	.text.windows
         .ftrace1

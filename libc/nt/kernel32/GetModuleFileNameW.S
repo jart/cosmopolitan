@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetModuleFileNameW,GetModuleFileNameW,0
+.imp	kernel32,__imp_GetModuleFileNameW,GetModuleFileNameW
 
 	.text.windows
         .ftrace1

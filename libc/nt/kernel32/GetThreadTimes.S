@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetThreadTimes,GetThreadTimes,0
+.imp	kernel32,__imp_GetThreadTimes,GetThreadTimes
 
 	.text.windows
         .ftrace1

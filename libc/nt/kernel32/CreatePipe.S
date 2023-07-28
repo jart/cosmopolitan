@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreatePipe,CreatePipe,0
+.imp	kernel32,__imp_CreatePipe,CreatePipe
 
 	.text.windows
         .ftrace1

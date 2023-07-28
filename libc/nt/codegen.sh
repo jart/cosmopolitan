@@ -27,8 +27,7 @@ imp() {
   NAME="$1"
   ACTUAL="$2"
   DLL="$3"
-  HINT="$4"
-  ARITY="$5"
+  ARITY="$4"
   if [ "$MADEDIRS" != "${MADEDIRS#*$3}" ]; then  # ← sre interview question
     mkdir -p "libc/nt/$3"
     MADEDIRS="$MADEDIRS $3"
@@ -40,7 +39,7 @@ imp() {
       echo ".ntimp	$ACTUAL,$NAME"
     else
       echo "#include \"libc/nt/codegen.h\""
-      echo ".imp	$DLL,__imp_$ACTUAL,$ACTUAL,$HINT"
+      echo ".imp	$DLL,__imp_$ACTUAL,$ACTUAL"
     fi
 
     # Generate System Five ABI translating thunks

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetConsoleSelectionInfo,GetConsoleSelectionInfo,0
+.imp	kernel32,__imp_GetConsoleSelectionInfo,GetConsoleSelectionInfo
 
 	.text.windows
         .ftrace1

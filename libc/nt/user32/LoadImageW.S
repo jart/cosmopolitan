@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_LoadImageW,LoadImageW,2105
+.imp	user32,__imp_LoadImageW,LoadImageW
 
 	.text.windows
         .ftrace1

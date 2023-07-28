@@ -17,10 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/struct/securityattributes.h"
 
-const char *DescribeNtSecurityAttributes(struct NtSecurityAttributes *p) {
+const char *(DescribeNtSecurityAttributes)(char buf[32],
+                                           struct NtSecurityAttributes *p) {
   if (p == &kNtIsInheritable) return "&kNtIsInheritable";
-  return "0";
+  FormatInt64(buf, (uintptr_t)p);
+  return buf;
 }

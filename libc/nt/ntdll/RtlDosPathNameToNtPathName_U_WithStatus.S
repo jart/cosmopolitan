@@ -1,2 +1,0 @@
-#include "libc/nt/ntdllimport.h"
-.ntimp	RtlDosPathNameToNtPathName_U_WithStatus,RtlDosPathNameToNtPathName_U_WithStatus

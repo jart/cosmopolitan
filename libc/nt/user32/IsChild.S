@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsChild,IsChild,2059
+.imp	user32,__imp_IsChild,IsChild
 
 	.text.windows
         .ftrace1

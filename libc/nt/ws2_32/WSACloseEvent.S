@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSACloseEvent,WSACloseEvent,45
+.imp	ws2_32,__imp_WSACloseEvent,WSACloseEvent
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetFileAttributesExW,GetFileAttributesExW,0
+.imp	kernel32,__imp_GetFileAttributesExW,GetFileAttributesExW
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	pdh,__imp_PdhCollectQueryDataEx,PdhCollectQueryDataEx,0
+.imp	pdh,__imp_PdhCollectQueryDataEx,PdhCollectQueryDataEx
 
 	.text.windows
         .ftrace1

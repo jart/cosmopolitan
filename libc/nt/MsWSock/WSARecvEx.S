@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	MsWSock,__imp_WSARecvEx,WSARecvEx,0
+.imp	MsWSock,__imp_WSARecvEx,WSARecvEx
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_InitializeCriticalSectionAndSpinCount,InitializeCriticalSectionAndSpinCount,0
+.imp	kernel32,__imp_InitializeCriticalSectionAndSpinCount,InitializeCriticalSectionAndSpinCount
 
 	.text.windows
         .ftrace1

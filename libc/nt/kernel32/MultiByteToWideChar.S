@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_MultiByteToWideChar,MultiByteToWideChar,0
+.imp	kernel32,__imp_MultiByteToWideChar,MultiByteToWideChar
 
 	.text.windows
         .ftrace1

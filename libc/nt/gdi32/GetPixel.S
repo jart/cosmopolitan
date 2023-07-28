@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_GetPixel,GetPixel,1691
+.imp	gdi32,__imp_GetPixel,GetPixel
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetTempPathA,GetTempPathA,0
+.imp	kernel32,__imp_GetTempPathA,GetTempPathA
 
 	.text.windows
         .ftrace1

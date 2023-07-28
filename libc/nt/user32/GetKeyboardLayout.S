@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetKeyboardLayout,GetKeyboardLayout,1867
+.imp	user32,__imp_GetKeyboardLayout,GetKeyboardLayout
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_shutdown,shutdown,22
+.imp	ws2_32,__imp_shutdown,shutdown
 
 	.text.windows
         .ftrace1

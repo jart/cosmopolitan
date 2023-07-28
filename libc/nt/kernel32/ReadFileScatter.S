@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ReadFileScatter,ReadFileScatter,0
+.imp	kernel32,__imp_ReadFileScatter,ReadFileScatter
 
 	.text.windows
         .ftrace1

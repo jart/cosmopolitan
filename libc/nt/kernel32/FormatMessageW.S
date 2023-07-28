@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FormatMessageW,FormatMessageW,0
+.imp	kernel32,__imp_FormatMessageW,FormatMessageW
 
 	.text.windows
         .ftrace1

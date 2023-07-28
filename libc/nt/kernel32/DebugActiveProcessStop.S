@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_DebugActiveProcessStop,DebugActiveProcessStop,0
+.imp	kernel32,__imp_DebugActiveProcessStop,DebugActiveProcessStop
 
 	.text.windows
         .ftrace1

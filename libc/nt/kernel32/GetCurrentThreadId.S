@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetCurrentThreadId,GetCurrentThreadId,0
+.imp	kernel32,__imp_GetCurrentThreadId,GetCurrentThreadId
 
 	.text.windows
         .ftrace1

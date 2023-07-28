@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegOverridePredefKey,RegOverridePredefKey,1658
+.imp	advapi32,__imp_RegOverridePredefKey,RegOverridePredefKey
 
 	.text.windows
         .ftrace1

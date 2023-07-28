@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_AcquireSRWLockShared,AcquireSRWLockShared,0
+.imp	kernel32,__imp_AcquireSRWLockShared,AcquireSRWLockShared
 
 	.text.windows
         .ftrace1

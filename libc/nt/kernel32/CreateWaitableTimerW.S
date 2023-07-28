@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateWaitableTimerW,CreateWaitableTimerW,0
+.imp	kernel32,__imp_CreateWaitableTimerW,CreateWaitableTimerW
 
 	.text.windows
         .ftrace1

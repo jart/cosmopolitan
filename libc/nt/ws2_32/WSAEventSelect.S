@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAEventSelect,WSAEventSelect,67
+.imp	ws2_32,__imp_WSAEventSelect,WSAEventSelect
 
 	.text.windows
         .ftrace1

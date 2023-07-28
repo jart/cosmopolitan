@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FindClose,FindClose,0
+.imp	kernel32,__imp_FindClose,FindClose
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_HeapDestroy,HeapDestroy,0
+.imp	kernel32,__imp_HeapDestroy,HeapDestroy
 
 	.text.windows
         .ftrace1

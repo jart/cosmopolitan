@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetFinalPathNameByHandleW,GetFinalPathNameByHandleW,0
+.imp	kernel32,__imp_GetFinalPathNameByHandleW,GetFinalPathNameByHandleW
 
 	.text.windows
         .ftrace1

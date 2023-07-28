@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_MapVirtualKeyExW,MapVirtualKeyExW,2155
+.imp	user32,__imp_MapVirtualKeyExW,MapVirtualKeyExW
 
 	.text.windows
         .ftrace1

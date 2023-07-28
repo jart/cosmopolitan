@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SetTextJustification,SetTextJustification,1913
+.imp	gdi32,__imp_SetTextJustification,SetTextJustification
 
 	.text.windows
         .ftrace1

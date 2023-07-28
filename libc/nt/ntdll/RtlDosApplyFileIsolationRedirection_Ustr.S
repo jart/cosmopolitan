@@ -1,2 +1,0 @@
-#include "libc/nt/ntdllimport.h"
-.ntimp	RtlDosApplyFileIsolationRedirection_Ustr,RtlDosApplyFileIsolationRedirection_Ustr

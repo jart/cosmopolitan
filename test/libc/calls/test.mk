@@ -133,7 +133,6 @@ o/$(MODE)/test/libc/calls/fexecve_test.com.dbg:				\
 		o/$(MODE)/test/libc/calls/fexecve_test.o		\
 		o/$(MODE)/test/libc/calls/calls.pkg			\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
-		o/$(MODE)/tool/build/echo.zip.o				\
 		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
 		o/$(MODE)/test/libc/calls/zipread.com.zip.o		\
 		$(LIBC_TESTMAIN)					\

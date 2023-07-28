@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegOpenCurrentUser,RegOpenCurrentUser,0
+.imp	advapi32,__imp_RegOpenCurrentUser,RegOpenCurrentUser
 
 	.text.windows
         .ftrace1

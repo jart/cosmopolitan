@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GlobalMemoryStatusEx,GlobalMemoryStatusEx,0
+.imp	kernel32,__imp_GlobalMemoryStatusEx,GlobalMemoryStatusEx
 
 	.text.windows
         .ftrace1

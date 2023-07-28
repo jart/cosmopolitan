@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetLastError,SetLastError,0
+.imp	kernel32,__imp_SetLastError,SetLastError
 
 	.text.windows
         .ftrace1

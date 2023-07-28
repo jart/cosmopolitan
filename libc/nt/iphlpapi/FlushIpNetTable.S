@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_FlushIpNetTable,FlushIpNetTable,0
+.imp	iphlpapi,__imp_FlushIpNetTable,FlushIpNetTable
 
 	.text.windows
         .ftrace1

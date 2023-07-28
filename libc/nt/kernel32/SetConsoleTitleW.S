@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetConsoleTitleW,SetConsoleTitleW,0
+.imp	kernel32,__imp_SetConsoleTitleW,SetConsoleTitleW
 
 	.text.windows
         .ftrace1

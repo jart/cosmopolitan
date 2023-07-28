@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAProviderConfigChange,WSAProviderConfigChange,90
+.imp	ws2_32,__imp_WSAProviderConfigChange,WSAProviderConfigChange
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_SelectObject,SelectObject,1864
+.imp	gdi32,__imp_SelectObject,SelectObject
 
 	.text.windows
         .ftrace1

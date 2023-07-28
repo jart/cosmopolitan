@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsWindowVisible,IsWindowVisible,2090
+.imp	user32,__imp_IsWindowVisible,IsWindowVisible
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GenerateConsoleCtrlEvent,GenerateConsoleCtrlEvent,0
+.imp	kernel32,__imp_GenerateConsoleCtrlEvent,GenerateConsoleCtrlEvent
 
 	.text.windows
         .ftrace1

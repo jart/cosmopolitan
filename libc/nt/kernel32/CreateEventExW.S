@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateEventExW,CreateEventExW,0
+.imp	kernel32,__imp_CreateEventExW,CreateEventExW
 
 	.text.windows
         .ftrace1

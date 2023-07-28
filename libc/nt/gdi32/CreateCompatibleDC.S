@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_CreateCompatibleDC,CreateCompatibleDC,1064
+.imp	gdi32,__imp_CreateCompatibleDC,CreateCompatibleDC
 
 	.text.windows
         .ftrace1

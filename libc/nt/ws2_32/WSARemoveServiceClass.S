@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSARemoveServiceClass,WSARemoveServiceClass,94
+.imp	ws2_32,__imp_WSARemoveServiceClass,WSARemoveServiceClass
 
 	.text.windows
         .ftrace1

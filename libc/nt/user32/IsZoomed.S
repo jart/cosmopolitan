@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_IsZoomed,IsZoomed,2092
+.imp	user32,__imp_IsZoomed,IsZoomed
 
 	.text.windows
         .ftrace1

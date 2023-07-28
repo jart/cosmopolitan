@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetProcessHeap,GetProcessHeap,0
+.imp	kernel32,__imp_GetProcessHeap,GetProcessHeap
 
 	.text.windows
         .ftrace1

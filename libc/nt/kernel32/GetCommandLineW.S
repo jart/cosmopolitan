@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetCommandLineW,GetCommandLineW,0
+.imp	kernel32,__imp_GetCommandLineW,GetCommandLineW
 
 	.text.windows
         .ftrace1

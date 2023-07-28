@@ -24,6 +24,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/ifreq.h"
@@ -32,6 +33,7 @@
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
 TEST(siocgifconf, test) {
@@ -69,4 +71,13 @@ TEST(siocgifconf, test) {
   }
   EXPECT_TRUE(foundloopback);
   ASSERT_NE(-1, close(socketfd));
+}
+
+TEST(siocgifconf, mkntenvblock_systemroot) {
+  if (__argc != 1) return;
+  SPAWN(fork);
+  execve(GetProgramExecutableName(),
+         (char *[]){GetProgramExecutableName(), "hi", NULL}, (char *[]){NULL});
+  abort();
+  EXITS(0);
 }

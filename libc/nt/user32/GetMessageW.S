@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_GetMessageW,GetMessageW,1899
+.imp	user32,__imp_GetMessageW,GetMessageW
 
 	.text.windows
         .ftrace1

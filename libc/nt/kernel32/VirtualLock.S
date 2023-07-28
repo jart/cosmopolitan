@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_VirtualLock,VirtualLock,0
+.imp	kernel32,__imp_VirtualLock,VirtualLock
 
 	.text.windows
         .ftrace1

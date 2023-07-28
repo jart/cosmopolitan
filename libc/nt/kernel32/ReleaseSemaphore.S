@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ReleaseSemaphore,ReleaseSemaphore,0
+.imp	kernel32,__imp_ReleaseSemaphore,ReleaseSemaphore
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_getsockopt,getsockopt,7
+.imp	ws2_32,__imp_getsockopt,getsockopt
 
 	.text.windows
         .ftrace1

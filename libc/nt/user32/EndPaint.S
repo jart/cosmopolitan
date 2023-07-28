@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_EndPaint,EndPaint,1752
+.imp	user32,__imp_EndPaint,EndPaint
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_GetNumberOfInterfaces,GetNumberOfInterfaces,0
+.imp	iphlpapi,__imp_GetNumberOfInterfaces,GetNumberOfInterfaces
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAInstallServiceClassW,WSAInstallServiceClassW,77
+.imp	ws2_32,__imp_WSAInstallServiceClassW,WSAInstallServiceClassW
 
 	.text.windows
         .ftrace1

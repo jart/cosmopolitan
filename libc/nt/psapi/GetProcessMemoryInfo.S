@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	psapi,__imp_GetProcessMemoryInfo,GetProcessMemoryInfo,0
+.imp	psapi,__imp_GetProcessMemoryInfo,GetProcessMemoryInfo
 
 	.text.windows
         .ftrace1

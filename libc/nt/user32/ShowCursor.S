@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_ShowCursor,ShowCursor,2412
+.imp	user32,__imp_ShowCursor,ShowCursor
 
 	.text.windows
         .ftrace1

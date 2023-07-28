@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ReleaseMutex,ReleaseMutex,0
+.imp	kernel32,__imp_ReleaseMutex,ReleaseMutex
 
 	.text.windows
         .ftrace1

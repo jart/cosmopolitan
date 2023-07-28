@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_UnhookWindowsHook,UnhookWindowsHook,2452
+.imp	user32,__imp_UnhookWindowsHook,UnhookWindowsHook
 
 	.text.windows
         .ftrace1

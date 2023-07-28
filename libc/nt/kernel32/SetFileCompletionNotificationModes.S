@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetFileCompletionNotificationModes,SetFileCompletionNotificationModes,1318
+.imp	kernel32,__imp_SetFileCompletionNotificationModes,SetFileCompletionNotificationModes
 
 	.text.windows
         .ftrace1

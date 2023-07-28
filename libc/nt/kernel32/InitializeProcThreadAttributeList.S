@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_InitializeProcThreadAttributeList,InitializeProcThreadAttributeList,0
+.imp	kernel32,__imp_InitializeProcThreadAttributeList,InitializeProcThreadAttributeList
 
 	.text.windows
         .ftrace1

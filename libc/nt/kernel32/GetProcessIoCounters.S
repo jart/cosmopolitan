@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetProcessIoCounters,GetProcessIoCounters,701
+.imp	kernel32,__imp_GetProcessIoCounters,GetProcessIoCounters
 
 	.text.windows
         .ftrace1

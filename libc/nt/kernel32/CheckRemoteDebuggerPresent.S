@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CheckRemoteDebuggerPresent,CheckRemoteDebuggerPresent,0
+.imp	kernel32,__imp_CheckRemoteDebuggerPresent,CheckRemoteDebuggerPresent
 
 	.text.windows
         .ftrace1

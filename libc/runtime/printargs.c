@@ -104,7 +104,7 @@ static dontasan void Print(const char *prologue) {
  *
  * @param prologue needs to be a .rodata kprintf string
  */
-textstartup void __printargs(const char *prologue) {
+dontasan textstartup void __printargs(const char *prologue) {
 
   const struct AuxiliaryValue {
     const char *fmt;

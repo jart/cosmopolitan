@@ -31,7 +31,7 @@
 //	@see	libc/nt/master.sh
 //	@see	ape/ape.lds
 //	@see	winimp
-.macro	.imp	dll:req fn:req actual:req hint
+.macro	.imp	dll:req fn:req actual:req
 #ifdef __x86_64__
 	.dll	"\dll"
 	.section ".piro.data.sort.iat.2.\dll\().2.\actual","aw",@progbits
@@ -50,11 +50,7 @@
 	.previous
 	.section ".idata.ro.hnt.\dll\().2.\actual","a",@progbits
 "\dll\().\actual":
-	.ifnb	\hint			// hint i.e. guess function ordinal
-	.short	\hint
-	.else
-	.short	0
-	.endif
+	.short	0			// hint
 	.asciz	"\actual"
 	.align	2			// documented requirement
 	.globl	"\dll\().\actual"

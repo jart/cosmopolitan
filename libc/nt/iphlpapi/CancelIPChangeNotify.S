@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_CancelIPChangeNotify,CancelIPChangeNotify,0
+.imp	iphlpapi,__imp_CancelIPChangeNotify,CancelIPChangeNotify
 
 	.text.windows
         .ftrace1

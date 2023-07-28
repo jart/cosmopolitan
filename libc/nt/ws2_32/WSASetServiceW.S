@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSASetServiceW,WSASetServiceW,118
+.imp	ws2_32,__imp_WSASetServiceW,WSASetServiceW
 
 	.text.windows
         .ftrace1

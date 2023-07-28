@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_FindFirstFileExW,FindFirstFileExW,0
+.imp	kernel32,__imp_FindFirstFileExW,FindFirstFileExW
 
 	.text.windows
         .ftrace1

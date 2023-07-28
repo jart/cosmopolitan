@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetConsoleCursorInfo,GetConsoleCursorInfo,0
+.imp	kernel32,__imp_GetConsoleCursorInfo,GetConsoleCursorInfo
 
 	.text.windows
         .ftrace1

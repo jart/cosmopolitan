@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetMaximumProcessorCount,GetMaximumProcessorCount,627
+.imp	kernel32,__imp_GetMaximumProcessorCount,GetMaximumProcessorCount
 
 	.text.windows
         .ftrace1

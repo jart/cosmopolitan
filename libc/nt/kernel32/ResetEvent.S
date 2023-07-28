@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_ResetEvent,ResetEvent,0
+.imp	kernel32,__imp_ResetEvent,ResetEvent
 
 	.text.windows
         .ftrace1

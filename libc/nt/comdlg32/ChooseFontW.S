@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	comdlg32,__imp_ChooseFontW,ChooseFontW,105
+.imp	comdlg32,__imp_ChooseFontW,ChooseFontW
 
 	.text.windows
         .ftrace1

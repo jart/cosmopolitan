@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSASendMsg,WSASendMsg,98
+.imp	ws2_32,__imp_WSASendMsg,WSASendMsg
 
 	.text.windows
         .ftrace1

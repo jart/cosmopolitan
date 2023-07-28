@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_TransactNamedPipe,TransactNamedPipe,0
+.imp	kernel32,__imp_TransactNamedPipe,TransactNamedPipe
 
 	.text.windows
         .ftrace1

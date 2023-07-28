@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetDefaultDllDirectories,SetDefaultDllDirectories,0
+.imp	kernel32,__imp_SetDefaultDllDirectories,SetDefaultDllDirectories
 
 	.text.windows
         .ftrace1

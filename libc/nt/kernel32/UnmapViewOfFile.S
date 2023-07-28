@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_UnmapViewOfFile,UnmapViewOfFile,0
+.imp	kernel32,__imp_UnmapViewOfFile,UnmapViewOfFile
 
 	.text.windows
         .ftrace1

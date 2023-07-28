@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetProcessWorkingSetSizeEx,GetProcessWorkingSetSizeEx,0
+.imp	kernel32,__imp_GetProcessWorkingSetSizeEx,GetProcessWorkingSetSizeEx
 
 	.text.windows
         .ftrace1

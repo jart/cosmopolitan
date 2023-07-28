@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_DestroyIcon,DestroyIcon,1687
+.imp	user32,__imp_DestroyIcon,DestroyIcon
 
 	.text.windows
         .ftrace1

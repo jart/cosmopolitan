@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_ImpersonateSelf,ImpersonateSelf,0
+.imp	advapi32,__imp_ImpersonateSelf,ImpersonateSelf
 
 	.text.windows
         .ftrace1

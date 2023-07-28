@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSACleanup,WSACleanup,116
+.imp	ws2_32,__imp_WSACleanup,WSACleanup
 
 	.text.windows
         .ftrace1

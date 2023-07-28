@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	pdh,__imp_PdhGetFormattedCounterValue,PdhGetFormattedCounterValue,0
+.imp	pdh,__imp_PdhGetFormattedCounterValue,PdhGetFormattedCounterValue
 
 	.text.windows
         .ftrace1

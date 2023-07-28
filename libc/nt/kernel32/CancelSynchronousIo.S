@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CancelSynchronousIo,CancelSynchronousIo,0
+.imp	kernel32,__imp_CancelSynchronousIo,CancelSynchronousIo
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_PrefetchVirtualMemory,PrefetchVirtualMemory,0
+.imp	kernel32,__imp_PrefetchVirtualMemory,PrefetchVirtualMemory
 
 	.text.windows
         .ftrace1

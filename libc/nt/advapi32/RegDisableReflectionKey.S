@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_RegDisableReflectionKey,RegDisableReflectionKey,1631
+.imp	advapi32,__imp_RegDisableReflectionKey,RegDisableReflectionKey
 
 	.text.windows
         .ftrace1

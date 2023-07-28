@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_CreateFileMappingW,CreateFileMappingW,0
+.imp	kernel32,__imp_CreateFileMappingW,CreateFileMappingW
 
 	.text.windows
         .ftrace1

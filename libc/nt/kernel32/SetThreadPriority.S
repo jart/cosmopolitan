@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SetThreadPriority,SetThreadPriority,0
+.imp	kernel32,__imp_SetThreadPriority,SetThreadPriority
 
 	.text.windows
         .ftrace1

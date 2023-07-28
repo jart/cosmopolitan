@@ -25,7 +25,7 @@
 
 /* index corresponding to given bit. Use x86 asm if possible */
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#ifdef __GNUC__
 #define compute_bit2idx(X, I)\
 {\
   unsigned int J;\

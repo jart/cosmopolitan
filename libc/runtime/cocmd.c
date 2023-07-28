@@ -32,6 +32,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
@@ -279,6 +280,24 @@ static int Cat(void) {
       }
     }
   }
+  return 0;
+}
+
+static int Mktemp(void) {
+  int fd;
+  char template[PATH_MAX + 1];
+  if (n == 2) {
+    strlcpy(template, args[1], sizeof(template));
+  } else {
+    strlcpy(template, kTmpPath, sizeof(template));
+    strlcat(template, "tmp.XXXXXX", sizeof(template));
+  }
+  if ((fd = mkstemp(template)) == -1) {
+    perror("mkstemp");
+    return 1;
+  }
+  Write(1, template);
+  close(fd);
   return 0;
 }
 
@@ -583,6 +602,7 @@ static int TryBuiltin(void) {
   if (!strcmp(args[0], "rmdir")) return Rmdir();
   if (!strcmp(args[0], "mkdir")) return Mkdir();
   if (!strcmp(args[0], "false")) return False();
+  if (!strcmp(args[0], "mktemp")) return Mktemp();
   if (!strcmp(args[0], "usleep")) return Usleep();
   if (!strcmp(args[0], "toupper")) return Toupper();
   if (_weaken(_tr) && !strcmp(args[0], "tr")) return Fake(_weaken(_tr));

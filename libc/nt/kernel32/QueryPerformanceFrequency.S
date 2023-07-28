@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_QueryPerformanceFrequency,QueryPerformanceFrequency,1099
+.imp	kernel32,__imp_QueryPerformanceFrequency,QueryPerformanceFrequency
 
 	.text.windows
         .ftrace1

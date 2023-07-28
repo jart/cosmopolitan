@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSAEnumProtocolsW,WSAEnumProtocolsW,66
+.imp	ws2_32,__imp_WSAEnumProtocolsW,WSAEnumProtocolsW
 
 	.text.windows
         .ftrace1
