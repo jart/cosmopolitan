@@ -247,7 +247,7 @@ o/$(MODE)/%-clang.asm: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 
 # TODO(jart): Make intrinsics support Clang.
-# o/$(MODE)/%-clang.asm: CC = $(CLANG)
+o/$(MODE)/%-clang.asm: CC = $(CLANG)
 o/$(MODE)/%-clang.asm: private .UNSANDBOXED = 1
 o/$(MODE)/%-clang.asm: %.cc
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<

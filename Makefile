@@ -88,7 +88,8 @@ o/$(MODE):			\
 
 ifneq ($(LANDLOCKMAKE_VERSION),)
 ifeq ($(wildcard /usr/bin/ape),)
-$(error please run ape/apeinstall.sh if you intend to use landlock make)
+$(warning please run ape/apeinstall.sh if you intend to use landlock make)
+$(shell sleep .5)
 endif
 ifeq ($(USE_SYSTEM_TOOLCHAIN),)
 .STRICT = 1
