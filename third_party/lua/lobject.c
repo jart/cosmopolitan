@@ -43,8 +43,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -168,7 +168,7 @@ static int isneg (const char **s) {
 */
 static lua_Number lua_strx2number (const char *s, char **endptr) {
   int dot = lua_getlocaledecpoint();
-  lua_Number r = 0.0;  /* result (accumulator) */
+  lua_Number r = l_mathop(0.0);  /* result (accumulator) */
   int sigdig = 0;  /* number of significant digits */
   int nosigdig = 0;  /* number of non-significant digits */
   int e = 0;  /* exponent correction */
@@ -178,7 +178,7 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
   while (lisspace(cast_uchar(*s))) s++;  /* skip initial spaces */
   neg = isneg(&s);  /* check sign */
   if (!(*s == '0' && (*(s + 1) == 'x' || *(s + 1) == 'X')))  /* check '0x' */
-    return 0.0;  /* invalid format (no '0x') */
+    return l_mathop(0.0);  /* invalid format (no '0x') */
   for (s += 2; ; s++) {  /* skip '0x' and read numeral */
     if (*s == dot) {
       if (hasdot) break;  /* second dot? stop loop */
@@ -188,14 +188,14 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
       if (sigdig == 0 && *s == '0')  /* non-significant digit (zero)? */
         nosigdig++;
       else if (++sigdig <= MAXSIGDIG)  /* can read it without overflow? */
-          r = (r * cast_num(16.0)) + luaO_hexavalue(*s);
+          r = (r * l_mathop(16.0)) + luaO_hexavalue(*s);
       else e++; /* too many digits; ignore, but still count for exponent */
       if (hasdot) e--;  /* decimal digit? correct exponent */
     }
     else break;  /* neither a dot nor a digit */
   }
   if (nosigdig + sigdig == 0)  /* no digits? */
-    return 0.0;  /* invalid format */
+    return l_mathop(0.0);  /* invalid format */
   *endptr = cast_charp(s);  /* valid up to here */
   e *= 4;  /* each digit multiplies/divides value by 2^4 */
   if (*s == 'p' || *s == 'P') {  /* exponent part? */
@@ -204,7 +204,7 @@ static lua_Number lua_strx2number (const char *s, char **endptr) {
     s++;  /* skip 'p' */
     neg1 = isneg(&s);  /* sign */
     if (!lisdigit(cast_uchar(*s)))
-      return 0.0;  /* invalid; must have at least one digit */
+      return l_mathop(0.0);  /* invalid; must have at least one digit */
     while (lisdigit(cast_uchar(*s)))  /* read exponent */
       exp1 = exp1 * 10 + *(s++) - '0';
     if (neg1) exp1 = -exp1;

@@ -47,8 +47,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -434,6 +434,17 @@ static void markupval (FuncState *fs, int level) {
   while (bl->nactvar > level)
     bl = bl->previous;
   bl->upval = 1;
+  fs->needclose = 1;
+}
+
+
+/*
+** Mark that current block has a to-be-closed variable.
+*/
+static void marktobeclosed (FuncState *fs) {
+  BlockCnt *bl = fs->bl;
+  bl->upval = 1;
+  bl->insidetbc = 1;
   fs->needclose = 1;
 }
 
@@ -1621,7 +1632,7 @@ static void forlist (LexState *ls, TString *indexname) {
   line = ls->linenumber;
   adjust_assign(ls, 4, explist(ls, &e), &e);
   adjustlocalvars(ls, 4);  /* control variables */
-  markupval(fs, fs->nactvar);  /* last control var. must be closed */
+  marktobeclosed(fs);  /* last control var. must be closed */
   luaK_checkstack(fs, 3);  /* extra space to call generator */
   forbody(ls, base, line, nvars - 4, 1);
 }
@@ -1725,11 +1736,9 @@ static int getlocalattribute (LexState *ls) {
 }
 
 
-static void checktoclose (LexState *ls, int level) {
+static void checktoclose (FuncState *fs, int level) {
   if (level != -1) {  /* is there a to-be-closed variable? */
-    FuncState *fs = ls->fs;
-    markupval(fs, level + 1);
-    fs->bl->insidetbc = 1;  /* in the scope of a to-be-closed variable */
+    marktobeclosed(fs);
     luaK_codeABC(fs, OP_TBC, reglevel(fs, level), 0, 0);
   }
 }
@@ -1773,7 +1782,7 @@ static void localstat (LexState *ls) {
     adjust_assign(ls, nvars, nexps, &e);
     adjustlocalvars(ls, nvars);
   }
-  checktoclose(ls, toclose);
+  checktoclose(fs, toclose);
 }
 
 
@@ -1798,6 +1807,7 @@ static void funcstat (LexState *ls, int line) {
   luaX_next(ls);  /* skip FUNCTION */
   ismethod = funcname(ls, &v);
   body(ls, &b, ismethod, line);
+  check_readonly(ls, &v);
   luaK_storevar(ls->fs, &v, &b);
   luaK_fixline(ls->fs, line);  /* definition "happens" in the first line */
 }

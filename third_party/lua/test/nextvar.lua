@@ -43,6 +43,14 @@ assert(i == 4)
 assert(type(ipairs{}) == 'function' and ipairs{} == ipairs{})
 
 
+do   -- overflow (must wrap-around)
+  local f = ipairs{}
+  local k, v = f({[math.mininteger] = 10}, math.maxinteger)
+  assert(k == math.mininteger and v == 10)
+  k, v = f({[math.mininteger] = 10}, k)
+  assert(k == nil)
+end
+
 if not T then
   (Message or print)
     ('\n >>> testC not active: skipping tests for table sizes <<<\n')
@@ -499,6 +507,15 @@ do   -- testing table library with metamethods
 end
 
 
+do   -- testing overflow in table.insert (must wrap-around)
+
+  local t = setmetatable({},
+            {__len = function () return math.maxinteger end})
+  table.insert(t, 20)
+  local k, v = next(t)
+  assert(k == math.mininteger and v == 20)
+end
+
 if not T then
   (Message or print)
     ('\n >>> testC not active: skipping tests for table library on non-tables <<<\n')
@@ -763,5 +780,26 @@ for k,v in ipairs(a) do
   assert(k == i and v == i * 10)
 end
 assert(i == a.n)
+
+
+-- testing yield inside __pairs
+do
+  local t = setmetatable({10, 20, 30}, {__pairs = function (t)
+    local inc = coroutine.yield()
+    return function (t, i)
+             if i > 1 then return i - inc, t[i - inc]  else return nil end
+           end, t, #t + 1
+  end})
+
+  local res = {}
+  local co = coroutine.wrap(function ()
+    for i,p in pairs(t) do res[#res + 1] = p end
+  end)
+
+  co()     -- start coroutine
+  co(1)    -- continue after yield
+  assert(res[1] == 30 and res[2] == 20 and res[3] == 10 and #res == 3)
+  
+end
 
 print"OK"

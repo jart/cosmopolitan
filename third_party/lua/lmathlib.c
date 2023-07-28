@@ -39,8 +39,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -497,7 +497,7 @@ static lua_Number I2d (Rand64 x) {
 
 /* 2^(-FIGS) = 1.0 / 2^30 / 2^3 / 2^(FIGS-33) */
 #define scaleFIG  \
-	((lua_Number)1.0 / (UONE << 30) / 8.0 / (UONE << (FIGS - 33)))
+    (l_mathop(1.0) / (UONE << 30) / l_mathop(8.0) / (UONE << (FIGS - 33)))
 
 /*
 ** use FIGS - 32 bits from lower half, throwing out the other
@@ -508,7 +508,7 @@ static lua_Number I2d (Rand64 x) {
 /*
 ** higher 32 bits go after those (FIGS - 32) bits: shiftHI = 2^(FIGS - 32)
 */
-#define shiftHI		((lua_Number)(UONE << (FIGS - 33)) * 2.0)
+#define shiftHI		((lua_Number)(UONE << (FIGS - 33)) * l_mathop(2.0))
 
 
 static lua_Number I2d (Rand64 x) {

@@ -136,6 +136,10 @@ do
   assert(coroutine.status(co) == "dead")
   local st, msg = coroutine.close(co)
   assert(st and msg == nil)
+  -- also ok to close it again
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
+
 
   -- cannot close the running coroutine
   local st, msg = pcall(coroutine.close, coroutine.running())
@@ -149,6 +153,22 @@ do
     assert(not st and string.find(msg, "normal"))
   end))()
 
+  -- cannot close a coroutine while closing it
+  do
+    local co
+    co = coroutine.create(
+      function()
+        local x <close> = func2close(function()
+            coroutine.close(co)   -- try to close it again
+         end)
+        coroutine.yield(20)
+      end)
+    local st, msg = coroutine.resume(co)
+    assert(st and msg == 20)
+    st, msg = coroutine.close(co)
+    assert(not st and string.find(msg, "running coroutine"))
+  end
+
   -- to-be-closed variables in coroutines
   local X
 
@@ -158,6 +178,9 @@ do
   assert(not st and msg == 100)
   st, msg = coroutine.close(co)
   assert(not st and msg == 100)
+  -- after closing, no more errors
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
 
   co = coroutine.create(function ()
     local x <close> = func2close(function (self, err)
@@ -189,6 +212,9 @@ do
   local st, msg = coroutine.close(co)
   assert(st == false and coroutine.status(co) == "dead" and msg == 200)
   assert(x == 200)
+  -- after closing, no more errors
+  st, msg = coroutine.close(co)
+  assert(st and msg == nil)
 end
 
 do
@@ -205,7 +231,7 @@ do
   co = coroutine.create(function () return pcall(foo) end)
   local st1, st2, err = coroutine.resume(co)
   assert(st1 and not st2 and err == 43)
-  assert(X == 43 and Y.name == "pcall")
+  assert(X == 43 and Y.what == "C")
 
   -- recovering from errors in __close metamethods
   local track = {}
@@ -419,11 +445,27 @@ do
 
   local X = false
   A = coroutine.wrap(function()
-    local _ <close> = setmetatable({}, {__close = function () X = true end})
+    local _ <close> = func2close(function () X = true end)
     return pcall(A, 1)
   end)
   st, res = A()
   assert(not st and string.find(res, "non%-suspended") and X == true)
+end
+
+
+-- bug in 5.4.1
+do
+  -- coroutine ran close metamethods with invalid status during a
+  -- reset.
+  local co
+  co = coroutine.wrap(function()
+    local x <close> = func2close(function() return pcall(co) end)
+    error(111)
+  end)
+  local st, errobj = pcall(co)
+  assert(not st and errobj == 111)
+  st, errobj = pcall(co)
+  assert(not st and string.find(errobj, "dead coroutine"))
 end
 
 

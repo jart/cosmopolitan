@@ -39,8 +39,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -83,8 +83,9 @@ static void checktab (lua_State *L, int arg, int what) {
 
 
 static int tinsert (lua_State *L) {
-  lua_Integer e = aux_getn(L, 1, TAB_RW) + 1;  /* first empty element */
   lua_Integer pos;  /* where to insert new element */
+  lua_Integer e = aux_getn(L, 1, TAB_RW);
+  e = luaL_intop(+, e, 1);  /* first empty element */
   switch (lua_gettop(L)) {
     case 2: {  /* called with only 2 arguments */
       pos = e;  /* insert new element at the end */
@@ -171,7 +172,7 @@ static void addfield (lua_State *L, luaL_Buffer *b, lua_Integer i) {
   lua_geti(L, 1, i);
   if (l_unlikely(!lua_isstring(L, -1)))
     luaL_error(L, "invalid value (%s) at index %I in table for 'concat'",
-                  luaL_typename(L, -1), i);
+                  luaL_typename(L, -1), (LUAI_UACINT)i);
   luaL_addvalue(b);
 }
 

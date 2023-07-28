@@ -157,6 +157,20 @@ typedef LUAI_UACINT l_uacInt;
 
 
 /*
+** Inline functions
+*/
+#if !defined(LUA_USE_C89)
+#define l_inline	inline
+#elif defined(__GNUC__)
+#define l_inline	__inline__
+#else
+#define l_inline	/* empty */
+#endif
+
+#define l_sinline	static l_inline
+
+
+/*
 ** type for virtual-machine instructions;
 ** must be an unsigned with (at least) 4 bytes (see details in lopcodes.h)
 */
@@ -338,7 +352,7 @@ typedef l_uint32 Instruction;
 #define condchangemem(L,pre,pos)	((void)0)
 #else
 #define condchangemem(L,pre,pos)  \
-	{ if (G(L)->gcrunning) { pre; luaC_fullgc(L, 0); pos; } }
+	{ if (gcrunning(G(L))) { pre; luaC_fullgc(L, 0); pos; } }
 #endif
 
 #endif

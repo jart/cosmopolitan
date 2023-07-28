@@ -36,8 +36,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -244,14 +244,11 @@ static int byteoffset (lua_State *L) {
 static int iter_aux (lua_State *L, int strict) {
   size_t len;
   const char *s = luaL_checklstring(L, 1, &len);
-  lua_Integer n = lua_tointeger(L, 2) - 1;
-  if (n < 0)  /* first iteration? */
-    n = 0;  /* start from here */
-  else if (n < (lua_Integer)len) {
-    n++;  /* skip current byte */
-    while (iscont(s + n)) n++;  /* and its continuations */
+  lua_Unsigned n = (lua_Unsigned)lua_tointeger(L, 2);
+  if (n < len) {
+    while (iscont(s + n)) n++;  /* skip continuation bytes */
   }
-  if (n >= (lua_Integer)len)
+  if (n >= len)  /* (also handles original 'n' being negative) */
     return 0;  /* no more codepoints */
   else {
     utfint code;

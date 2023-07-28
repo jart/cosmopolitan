@@ -46,8 +46,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -426,7 +426,7 @@ static int l_strcmp (const TString *ls, const TString *rs) {
 ** from float to int.)
 ** When 'f' is NaN, comparisons must result in false.
 */
-static int LTintfloat (lua_Integer i, lua_Number f) {
+l_sinline int LTintfloat (lua_Integer i, lua_Number f) {
   if (l_intfitsf(i))
     return luai_numlt(cast_num(i), f);  /* compare them as floats */
   else {  /* i < f <=> i < ceil(f) */
@@ -443,7 +443,7 @@ static int LTintfloat (lua_Integer i, lua_Number f) {
 ** Check whether integer 'i' is less than or equal to float 'f'.
 ** See comments on previous function.
 */
-static int LEintfloat (lua_Integer i, lua_Number f) {
+l_sinline int LEintfloat (lua_Integer i, lua_Number f) {
   if (l_intfitsf(i))
     return luai_numle(cast_num(i), f);  /* compare them as floats */
   else {  /* i <= f <=> i <= floor(f) */
@@ -460,7 +460,7 @@ static int LEintfloat (lua_Integer i, lua_Number f) {
 ** Check whether float 'f' is less than integer 'i'.
 ** See comments on previous function.
 */
-static int LTfloatint (lua_Number f, lua_Integer i) {
+l_sinline int LTfloatint (lua_Number f, lua_Integer i) {
   if (l_intfitsf(i))
     return luai_numlt(f, cast_num(i));  /* compare them as floats */
   else {  /* f < i <=> floor(f) < i */
@@ -477,7 +477,7 @@ static int LTfloatint (lua_Number f, lua_Integer i) {
 ** Check whether float 'f' is less than or equal to integer 'i'.
 ** See comments on previous function.
 */
-static int LEfloatint (lua_Number f, lua_Integer i) {
+l_sinline int LEfloatint (lua_Number f, lua_Integer i) {
   if (l_intfitsf(i))
     return luai_numle(f, cast_num(i));  /* compare them as floats */
   else {  /* f <= i <=> ceil(f) <= i */
@@ -493,7 +493,7 @@ static int LEfloatint (lua_Number f, lua_Integer i) {
 /*
 ** Return 'l < r', for numbers.
 */
-static int LTnum (const TValue *l, const TValue *r) {
+l_sinline int LTnum (const TValue *l, const TValue *r) {
   lua_assert(ttisnumber(l) && ttisnumber(r));
   if (ttisinteger(l)) {
     lua_Integer li = ivalue(l);
@@ -515,7 +515,7 @@ static int LTnum (const TValue *l, const TValue *r) {
 /*
 ** Return 'l <= r', for numbers.
 */
-static int LEnum (const TValue *l, const TValue *r) {
+l_sinline int LEnum (const TValue *l, const TValue *r) {
   lua_assert(ttisnumber(l) && ttisnumber(r));
   if (ttisinteger(l)) {
     lua_Integer li = ivalue(l);
@@ -786,7 +786,8 @@ lua_Number luaV_modf (lua_State *L, lua_Number m, lua_Number n) {
 /*
 ** Shift left operation. (Shift right just negates 'y'.)
 */
-#define luaV_shiftr(x,y)	luaV_shiftl(x,-(y))
+#define luaV_shiftr(x,y)	luaV_shiftl(x,intop(-, 0, y))
+
 
 lua_Integer luaV_shiftl (lua_Integer x, lua_Integer y) {
   if (y < 0) {  /* shift right? */
@@ -867,8 +868,17 @@ void luaV_finishOp (lua_State *L) {
       luaV_concat(L, total);  /* concat them (may yield again) */
       break;
     }
-    case OP_CLOSE:  case OP_RETURN: {  /* yielded closing variables */
+    case OP_CLOSE: {  /* yielded closing variables */
       ci->u.l.savedpc--;  /* repeat instruction to close other vars. */
+      break;
+    }
+    case OP_RETURN: {  /* yielded closing variables */
+      StkId ra = base + GETARG_A(inst);
+      /* adjust top to signal correct number of returns, in case the
+         return is "up to top" ('isIT') */
+      L->top = ra + ci->u2.nres;
+      /* repeat instruction to close other vars. and complete the return */
+      ci->u.l.savedpc--;
       break;
     }
     default: {
@@ -1119,7 +1129,7 @@ void luaV_finishOp (lua_State *L) {
 #define ProtectNT(exp)  (savepc(L), (exp), updatetrap(ci))
 
 /*
-** Protect code that can only raise errors. (That is, it cannnot change
+** Protect code that can only raise errors. (That is, it cannot change
 ** the stack or hooks.)
 */
 #define halfProtect(exp)  (savestate(L,ci), (exp))
@@ -1176,8 +1186,10 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
     Instruction i;  /* instruction being executed */
     StkId ra;  /* instruction's A register */
     vmfetch();
-// low-level line tracing for debugging Lua
-// printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
+    #if 0
+      /* low-level line tracing for debugging Lua */
+      printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
+    #endif
     lua_assert(base == ci->func + 1);
     lua_assert(base <= L->top && L->top < L->stack_last);
     /* invalidate top for instructions not expecting it */
@@ -1645,13 +1657,13 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
           updatetrap(ci);  /* C call; nothing else to be done */
         else {  /* Lua call: run function in this same C frame */
           ci = newci;
-          ci->callstatus = 0;  /* call re-uses 'luaV_execute' */
           goto startfunc;
         }
         vmbreak;
       }
       vmcase(OP_TAILCALL) {
         int b = GETARG_B(i);  /* number of arguments + 1 (function) */
+        int n;  /* number of results when calling a C function */
         int nparams1 = GETARG_C(i);
         /* delta is virtual 'func' - real 'func' (vararg functions) */
         int delta = (nparams1) ? ci->u.l.nextraargs + nparams1 : 0;
@@ -1665,23 +1677,14 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
           lua_assert(L->tbclist < base);  /* no pending tbc variables */
           lua_assert(base == ci->func + 1);
         }
-        while (!ttisfunction(s2v(ra))) {  /* not a function? */
-          luaD_tryfuncTM(L, ra);  /* try '__call' metamethod */
-          b++;  /* there is now one extra argument */
-          checkstackGCp(L, 1, ra);
-        }
-        if (!ttisLclosure(s2v(ra))) {  /* C function? */
-          luaD_precall(L, ra, LUA_MULTRET);  /* call it */
-          updatetrap(ci);
-          updatestack(ci);  /* stack may have been relocated */
+        if ((n = luaD_pretailcall(L, ci, ra, b, delta)) < 0)  /* Lua function? */
+          goto startfunc;  /* execute the callee */
+        else {  /* C function? */
           ci->func -= delta;  /* restore 'func' (if vararg) */
-          luaD_poscall(L, ci, cast_int(L->top - ra));  /* finish caller */
+          luaD_poscall(L, ci, n);  /* finish caller */
           updatetrap(ci);  /* 'luaD_poscall' can change hooks */
           goto ret;  /* caller returns after the tail call */
         }
-        ci->func -= delta;  /* restore 'func' (if vararg) */
-        luaD_pretailcall(L, ci, ra, b);  /* prepare call frame */
-        goto startfunc;  /* execute the callee */
       }
       vmcase(OP_RETURN) {
         int n = GETARG_B(i) - 1;  /* number of results */
@@ -1690,6 +1693,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
           n = cast_int(L->top - ra);  /* get what is available */
         savepc(ci);
         if (TESTARG_k(i)) {  /* may there be open upvalues? */
+          ci->u2.nres = n;  /* save number of returns */
           if (L->top < ci->top)
             L->top = ci->top;
           luaF_close(L, base, CLOSEKTOP, 1);

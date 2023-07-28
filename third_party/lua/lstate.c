@@ -47,8 +47,8 @@
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -187,7 +187,7 @@ void luaE_checkcstack (lua_State *L) {
   if (getCcalls(L) == LUAI_MAXCCALLS)
     luaG_runerror(L, "C stack overflow");
   else if (getCcalls(L) >= (LUAI_MAXCCALLS / 10 * 11))
-    luaD_throw(L, LUA_ERRERR);  /* error while handing stack error */
+    luaD_throw(L, LUA_ERRERR);  /* error while handling stack error */
 }
 
 
@@ -257,7 +257,7 @@ static void f_luaopen (lua_State *L, void *ud) {
   luaS_init(L);
   luaT_init(L);
   luaX_init(L);
-  g->gcrunning = 1;  /* allow gc */
+  g->gcstp = 0;  /* allow gc */
   setnilvalue(&g->nilvalue);  /* now state is complete */
   luai_userstateopen(L);
 }
@@ -290,8 +290,9 @@ static void preinit_thread (lua_State *L, global_State *g) {
 static void close_state (lua_State *L) {
   global_State *g = G(L);
   if (!completestate(g))  /* closing a partially built state? */
-    luaC_freeallobjects(L);  /* jucst collect its objects */
+    luaC_freeallobjects(L);  /* just collect its objects */
   else {  /* closing a fully built state */
+    L->ci = &L->base_ci;  /* unwind CallInfo list */
     luaD_closeprotected(L, 1, LUA_OK);  /* close all upvalues */
     luaC_freeallobjects(L);  /* collect all objects */
     luai_userstateclose(L);
@@ -361,13 +362,13 @@ int luaE_resetthread (lua_State *L, int status) {
   ci->callstatus = CIST_C;
   if (status == LUA_YIELD)
     status = LUA_OK;
+  L->status = LUA_OK;  /* so it can run __close metamethods */
   status = luaD_closeprotected(L, 1, status);
   if (status != LUA_OK)  /* errors? */
     luaD_seterrorobj(L, status, L->stack + 1);
   else
     L->top = L->stack + 1;
   ci->top = L->top + LUA_MINSTACK;
-  L->status = cast_byte(status);
   luaD_reallocstack(L, cast_int(ci->top - L->stack), 0);
   return status;
 }
@@ -403,7 +404,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->ud_warn = NULL;
   g->mainthread = L;
   g->seed = luai_makeseed(L);
-  g->gcrunning = 0;  /* no GC while building state */
+  g->gcstp = GCSTPGC;  /* no GC while building state */
   g->strt.size = g->strt.nuse = 0;
   g->strt.hash = NULL;
   setnilvalue(&g->l_registry);

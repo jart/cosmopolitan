@@ -610,6 +610,7 @@ do
   assert(os.remove(file))
 end
 
+
 io.output(file)
 assert(io.write("qualquer coisa\n"))
 assert(io.write("mais qualquer coisa"))
@@ -743,7 +744,7 @@ if not _port then
     {"exit 129", "exit", 129},
     {"kill -s HUP $$", "signal", 1},
     {"kill -s KILL $$", "signal", 9},
-    {"sh -c 'kill -s HUP $$'", "signal", 1},
+    {"sh -c 'kill -s HUP $$'", "signal", 1},  -- [jart]
     {progname .. ' -e " "', "ok"},
     {progname .. ' -e "os.exit(0, true)"', "ok"},
     {progname .. ' -e "os.exit(20, true)"', "exit", 20},
