@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_MoveFileW,MoveFileW,1000
+.imp	kernel32,__imp_MoveFileW,MoveFileW
 
 	.text.windows
         .ftrace1

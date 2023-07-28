@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_SuspendThread,SuspendThread,0
+.imp	kernel32,__imp_SuspendThread,SuspendThread
 
 	.text.windows
         .ftrace1

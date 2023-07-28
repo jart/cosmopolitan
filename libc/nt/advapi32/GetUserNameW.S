@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_GetUserNameW,GetUserNameW,1381
+.imp	advapi32,__imp_GetUserNameW,GetUserNameW
 
 	.text.windows
         .ftrace1

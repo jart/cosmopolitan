@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_EnumChildWindows,EnumChildWindows,1755
+.imp	user32,__imp_EnumChildWindows,EnumChildWindows
 
 	.text.windows
         .ftrace1

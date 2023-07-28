@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_DeleteDC,DeleteDC,1384
+.imp	gdi32,__imp_DeleteDC,DeleteDC
 
 	.text.windows
         .ftrace1

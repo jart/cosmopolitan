@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	PowrProf,__imp_SetSuspendState,SetSuspendState,0
+.imp	PowrProf,__imp_SetSuspendState,SetSuspendState
 
 	.text.windows
         .ftrace1

@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	ws2_32,__imp_WSASendDisconnect,WSASendDisconnect,97
+.imp	ws2_32,__imp_WSASendDisconnect,WSASendDisconnect
 
 	.text.windows
         .ftrace1

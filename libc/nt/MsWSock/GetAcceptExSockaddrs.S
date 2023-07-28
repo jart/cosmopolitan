@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	MsWSock,__imp_GetAcceptExSockaddrs,GetAcceptExSockaddrs,0
+.imp	MsWSock,__imp_GetAcceptExSockaddrs,GetAcceptExSockaddrs
 
 	.text.windows
         .ftrace1

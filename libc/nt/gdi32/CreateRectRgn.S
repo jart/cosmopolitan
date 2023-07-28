@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	gdi32,__imp_CreateRectRgn,CreateRectRgn,1097
+.imp	gdi32,__imp_CreateRectRgn,CreateRectRgn
 
 	.text.windows
         .ftrace1

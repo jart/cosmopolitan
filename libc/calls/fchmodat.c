@@ -27,6 +27,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
+int sys_fchmodat_linux(int, const char *, unsigned, int);
+
 /**
  * Changes permissions on file, e.g.:
  *
@@ -50,7 +52,11 @@ int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
              (rc = __zipos_notat(dirfd, path)) == -1) {
     rc = enotsup();
   } else if (!IsWindows()) {
-    rc = sys_fchmodat(dirfd, path, mode, flags);
+    if (IsLinux() && flags) {
+      rc = sys_fchmodat_linux(dirfd, path, mode, flags);
+    } else {
+      rc = sys_fchmodat(dirfd, path, mode, flags);
+    }
   } else {
     rc = sys_fchmodat_nt(dirfd, path, mode, flags);
   }

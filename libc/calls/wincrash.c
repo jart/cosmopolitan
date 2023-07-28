@@ -44,20 +44,20 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
   static bool noreentry;
   noreentry = true;
 
+  STRACE("wincrash rip %x bt %s", ep->ContextRecord->Rip,
+         DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
+
   if ((tib = __tls_enabled ? __get_tls_privileged() : 0)) {
     if (~tib->tib_flags & TIB_FLAG_WINCRASHING) {
       tib->tib_flags |= TIB_FLAG_WINCRASHING;
     } else {
-    WincrashPanic:
-      STRACE("panic: wincrash reentry: rip %x bt %s", ep->ContextRecord->Rip,
-             DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
       ExitProcess(89);
     }
   } else {
     if (!noreentry) {
       noreentry = true;
     } else {
-      goto WincrashPanic;
+      ExitProcess(89);
     }
   }
 

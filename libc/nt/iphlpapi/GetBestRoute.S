@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_GetBestRoute,GetBestRoute,0
+.imp	iphlpapi,__imp_GetBestRoute,GetBestRoute
 
 	.text.windows
         .ftrace1

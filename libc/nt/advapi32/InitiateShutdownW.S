@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	advapi32,__imp_InitiateShutdownW,InitiateShutdownW,1403
+.imp	advapi32,__imp_InitiateShutdownW,InitiateShutdownW
 
 	.text.windows
         .ftrace1

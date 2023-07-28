@@ -16,24 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/bits.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/temp.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/str/str.h"
 
 /**
- * Generates unique filename.
+ * Generates temporary filename.
  *
- * This function is usually frowned upon, since it's been known to
- * create nasty opportunities for race conditions. Our implementation
- * reflects that; consider using mkostemps().
+ *     char tmp[14] = "/tmp/hiXXXXXX";
+ *     puts(mkstemp(tmp));
+ *
+ * @param template is mutated to replace last six X's with rng
+ * @raise EINVAL if `template` didn't end with `XXXXXX`
+ * @return pointer to mutated `template`, or 0 w/ errno
+ * @see mkstemp()
  */
 char *mktemp(char *template) {
-  int fd;
-  if ((fd = mkostemps(template, 0, 0)) != -1) {
-    close(fd);
-    unlink(template);
-  } else {
-    template[0] = '\0';
+  int i, n;
+  uint64_t w;
+  if ((n = strlen(template)) < 6 ||
+      READ16LE(template + n - 2) != READ16LE("XX") ||
+      READ32LE(template + n - 6) != READ32LE("XXXX")) {
+    errno = EINVAL;
+    return 0;
+  }
+  w = _rand64();
+  for (i = 0; i < 6; ++i) {
+    template[n - 6 + i] = "0123456789abcdefghijklmnopqrstuvwxyz"[w % 36];
+    w /= 36;
   }
   return template;
 }

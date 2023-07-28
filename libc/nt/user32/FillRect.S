@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	user32,__imp_FillRect,FillRect,1780
+.imp	user32,__imp_FillRect,FillRect
 
 	.text.windows
         .ftrace1

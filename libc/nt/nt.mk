@@ -137,27 +137,6 @@ $(LIBC_NT_NTDLL_A).pkg:					\
 
 #───────────────────────────────────────────────────────────────────────────────
 
-LIBC_NT_ARTIFACTS += LIBC_NT_URL_A
-LIBC_NT_URL = $(LIBC_NT_URL_A_DEPS) $(LIBC_NT_URL_A)
-LIBC_NT_URL_A = o/$(MODE)/libc/nt/url.a
-LIBC_NT_URL_A_SRCS := $(wildcard libc/nt/url/*.S)
-LIBC_NT_URL_A_OBJS = $(LIBC_NT_URL_A_SRCS:%.S=o/$(MODE)/%.o)
-LIBC_NT_URL_A_CHECKS = $(LIBC_NT_URL_A).pkg
-LIBC_NT_URL_A_DIRECTDEPS = LIBC_NT_KERNEL32
-LIBC_NT_URL_A_DEPS :=					\
-	$(call uniq,$(foreach x,$(LIBC_NT_URL_A_DIRECTDEPS),$($(x))))
-
-$(LIBC_NT_URL_A):					\
-		libc/nt/url/				\
-		$(LIBC_NT_URL_A).pkg			\
-		$(LIBC_NT_URL_A_OBJS)
-
-$(LIBC_NT_URL_A).pkg:					\
-		$(LIBC_NT_URL_A_OBJS)			\
-		$(foreach x,$(LIBC_NT_URL_A_DIRECTDEPS),$($(x)_A).pkg)
-
-#───────────────────────────────────────────────────────────────────────────────
-
 LIBC_NT_ARTIFACTS += LIBC_NT_SYNCHRONIZATION_A
 LIBC_NT_SYNCHRONIZATION = $(LIBC_NT_SYNCHRONIZATION_A_DEPS) $(LIBC_NT_SYNCHRONIZATION_A)
 LIBC_NT_SYNCHRONIZATION_A = o/$(MODE)/libc/nt/synchronization.a

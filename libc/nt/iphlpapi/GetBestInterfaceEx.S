@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_GetBestInterfaceEx,GetBestInterfaceEx,0
+.imp	iphlpapi,__imp_GetBestInterfaceEx,GetBestInterfaceEx
 
 	.text.windows
         .ftrace1

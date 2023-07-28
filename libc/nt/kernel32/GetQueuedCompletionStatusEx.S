@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	kernel32,__imp_GetQueuedCompletionStatusEx,GetQueuedCompletionStatusEx,0
+.imp	kernel32,__imp_GetQueuedCompletionStatusEx,GetQueuedCompletionStatusEx
 
 	.text.windows
         .ftrace1

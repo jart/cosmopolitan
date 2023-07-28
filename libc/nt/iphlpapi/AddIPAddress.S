@@ -1,5 +1,5 @@
 #include "libc/nt/codegen.h"
-.imp	iphlpapi,__imp_AddIPAddress,AddIPAddress,0
+.imp	iphlpapi,__imp_AddIPAddress,AddIPAddress
 
 	.text.windows
         .ftrace1
