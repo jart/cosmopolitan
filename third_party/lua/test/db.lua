@@ -339,7 +339,7 @@ function f(a,b)
   local _, y = debug.getlocal(1, 2)
   assert(x == a and y == b)
   assert(debug.setlocal(2, 3, "pera") == "AA".."AA")
-  assert(debug.setlocal(2, 4, "ma√ß√£") == "B")
+  assert(debug.setlocal(2, 4, "maÁ„") == "B")
   x = debug.getinfo(2)
   assert(x.func == g and x.what == "Lua" and x.name == 'g' and
          x.nups == 2 and string.find(x.source, "^@.*db%.lua$"))
@@ -367,9 +367,9 @@ function g (...)
   local arg = {...}
   do local a,b,c; a=math.sin(40); end
   local feijao
-  local AAAA,B = "xuxu", "mam√£o"
+  local AAAA,B = "xuxu", "mam„o"
   f(AAAA,B)
-  assert(AAAA == "pera" and B == "ma√ß√£")
+  assert(AAAA == "pera" and B == "maÁ„")
   do
      local B = 13
      local x,y = debug.getlocal(1,5)
