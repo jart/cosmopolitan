@@ -91,9 +91,9 @@ assert(string.byte("hi", 2, 1) == nil)
 assert(string.char() == "")
 assert(string.char(0, 255, 0) == "\0\255\0")
 assert(string.char(0, string.byte("\xe4"), 0) == "\0\xe4\0")
-assert(string.char(string.byte("\xe4l\0Ã³u", 1, -1)) == "\xe4l\0Ã³u")
-assert(string.char(string.byte("\xe4l\0Ã³u", 1, 0)) == "")
-assert(string.char(string.byte("\xe4l\0Ã³u", -10, 100)) == "\xe4l\0Ã³u")
+assert(string.char(string.byte("\xe4l\0óu", 1, -1)) == "\xe4l\0óu")
+assert(string.char(string.byte("\xe4l\0óu", 1, 0)) == "")
+assert(string.char(string.byte("\xe4l\0óu", -10, 100)) == "\xe4l\0óu")
 
 checkerror("out of range", string.char, 256)
 checkerror("out of range", string.char, -1)
@@ -103,7 +103,7 @@ checkerror("out of range", string.char, math.mininteger)
 assert(string.upper("ab\0c") == "AB\0C")
 assert(string.lower("\0ABCc%$") == "\0abcc%$")
 assert(string.rep('teste', 0) == '')
-assert(string.rep('tÃ©s\00tÃª', 2) == 'tÃ©s\0tÃªtÃ©s\000tÃª')
+assert(string.rep('tés\00tê', 2) == 'tés\0têtés\000tê')
 assert(string.rep('', 10) == '')
 
 if string.packsize("i") == 4 then
@@ -192,8 +192,8 @@ do  -- tests for '%p' format
   end
 end
 
-x = '"Ã­lo"\n\\'
-assert(string.format('%q%s', x, x) == '"\\"Ã­lo\\"\\\n\\\\""Ã­lo"\n\\')
+x = '"ílo"\n\\'
+assert(string.format('%q%s', x, x) == '"\\"ílo\\"\\\n\\\\""ílo"\n\\')
 assert(string.format('%q', "\0") == [["\0"]])
 assert(load(string.format('return %q', x))() == x)
 x = "\0\1\0023\5\0009"
@@ -405,14 +405,14 @@ if not _port then
   end
 
   if trylocale("collate")  then
-    assert("alo" < "Ã¡lo" and "Ã¡lo" < "amo")
+    assert("alo" < "álo" and "álo" < "amo")
   end
 
   if trylocale("ctype") then
-    assert(string.gsub("Ã¡Ã©Ã­Ã³Ãº", "%a", "x") == "xxxxx")
-    assert(string.gsub("Ã¡ÃÃ©Ã‰", "%l", "x") == "xÃxÃ‰")
-    assert(string.gsub("Ã¡ÃÃ©Ã‰", "%u", "x") == "Ã¡xÃ©x")
-    assert(string.upper"Ã¡ÃÃ©{xuxu}Ã§Ã£o" == "ÃÃÃ‰{XUXU}Ã‡ÃƒO")
+    assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
+    assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
+    assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
+    assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
   end
 
   os.setlocale("C")
