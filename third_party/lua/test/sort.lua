@@ -289,7 +289,7 @@ timesort(a, limit,  function(x,y) return nil end, "equal")
 
 for i,v in pairs(a) do assert(v == false) end
 
-AA = {"Ã¡lo", "\0first :-)", "alo", "then this one", "45", "and a new"}
+AA = {"álo", "\0first :-)", "alo", "then this one", "45", "and a new"}
 table.sort(AA)
 check(AA)
 
