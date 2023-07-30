@@ -30,7 +30,7 @@ int wcscmp(const wchar_t *a, const wchar_t *b) {
   size_t i = 0;
   if (a == b) return 0;
   while (a[i] == b[i] && b[i]) ++i;
-  return a[i] < b[i] ? -1 : a[i] > b[i];
+  return (int)a[i] < (int)b[i] ? -1 : (int)a[i] > (int)b[i];
 }
 
 __weak_reference(wcscmp, wcscoll);
