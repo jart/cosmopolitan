@@ -116,8 +116,9 @@ void OnInterrupt(int sig) {
 }
 
 void OnChildTerminated(int sig) {
-  int ws, pid;
+  int e, ws, pid;
   sigset_t ss, oldss;
+  e = errno;  // SIGCHLD can be called asynchronously
   sigfillset(&ss);
   sigdelset(&ss, SIGTERM);
   sigprocmask(SIG_BLOCK, &ss, &oldss);
@@ -140,6 +141,7 @@ void OnChildTerminated(int sig) {
     }
   }
   sigprocmask(SIG_SETMASK, &oldss, 0);
+  errno = e;
 }
 
 wontreturn void ShowUsage(FILE *f, int rc) {

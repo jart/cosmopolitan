@@ -18,9 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/struct/fd.internal.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
+
+__msabi extern typeof(__sys_bind_nt) *const __imp_bind;
 
 textwindows int sys_bind_nt(struct Fd *fd, const void *addr,
                             uint32_t addrsize) {

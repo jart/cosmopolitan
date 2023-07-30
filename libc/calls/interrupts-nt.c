@@ -34,17 +34,27 @@
 #include "libc/thread/tls.h"
 
 textwindows int _check_interrupts(bool restartable, struct Fd *fd) {
-  int rc;
+  int e, rc;
+  e = errno;
   if (_weaken(pthread_testcancel_np) &&
       (rc = _weaken(pthread_testcancel_np)())) {
     errno = rc;
     return -1;
   }
-  if (_weaken(_check_sigalrm)) _weaken(_check_sigalrm)();
-  if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
-    if (_weaken(_check_sigchld)) _weaken(_check_sigchld)();
-    if (fd && _weaken(_check_sigwinch)) _weaken(_check_sigwinch)(fd);
+  if (_weaken(_check_sigalrm)) {
+    _weaken(_check_sigalrm)();
   }
-  if (_weaken(__sig_check) && _weaken(__sig_check)(restartable)) return eintr();
+  if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
+    if (_weaken(_check_sigchld)) {
+      _weaken(_check_sigchld)();
+    }
+    if (fd && _weaken(_check_sigwinch)) {
+      _weaken(_check_sigwinch)(fd);
+    }
+  }
+  if (_weaken(__sig_check) && _weaken(__sig_check)(restartable)) {
+    return eintr();
+  }
+  errno = e;
   return 0;
 }

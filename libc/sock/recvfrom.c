@@ -34,12 +34,15 @@
 /**
  * Receives data from network.
  *
- * This function blocks unless MSG_DONTWAIT is passed.
- *
  * @param fd is the file descriptor returned by socket()
  * @param buf is where received network data gets copied
  * @param size is the byte capacity of buf
- * @param flags can have MSG_{WAITALL,DONTROUTE,PEEK,OOB}, etc.
+ * @param flags is a bitmask which may contain any of the following:
+ *     - `MSG_DONTWAIT` to force `O_NONBLOCK` behavior for this call
+ *     - `MSG_OOB` is broadly supported (untested by cosmo)
+ *     - `MSG_PEEK` is broadly supported (untested by cosmo)
+ *     - `MSG_WAITALL` is broadly supported (untested by cosmo)
+ *     - `MSG_DONTROUTE` is broadly supported (untested by cosmo)
  * @param opt_out_srcaddr receives the binary ip:port of the data's origin
  * @param opt_inout_srcaddrsize is srcaddr capacity which gets updated
  * @return number of bytes received, 0 on remote close, or -1 w/ errno

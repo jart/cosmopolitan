@@ -48,12 +48,14 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
+#include "libc/nt/synchronization.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -108,20 +110,36 @@ static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
 
 static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
   bool ok;
+  // kprintf("WriteAll(%ld, %p, %zu);\n", h, buf, n);
   ok = ForkIo2(h, buf, n, WriteFile, "WriteFile", false);
+#ifndef NDEBUG
+  if (ok) ok = ForkIo2(h, &n, sizeof(n), WriteFile, "WriteFile", false);
+#endif
 #ifdef SYSDEBUG
   if (!ok) {
     kprintf("failed to write %zu bytes to forked child: %d\n", n,
             GetLastError());
   }
 #endif
+  // Sleep(10);
   return ok;
 }
 
 static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
+  // kprintf("ReadOrDie(%ld, %p, %zu);\n", h, buf, n);
   if (!ForkIo2(h, buf, n, ReadFile, "ReadFile", true)) {
-    AbortFork("ReadFile");
+    AbortFork("ReadFile1");
   }
+#ifndef NDEBUG
+  size_t got;
+  if (!ForkIo2(h, &got, sizeof(got), ReadFile, "ReadFile", true)) {
+    AbortFork("ReadFile2");
+  }
+  if (got != n) {
+    AbortFork("ReadFile_SIZE_CHECK");
+  }
+#endif
+  // Sleep(10);
 }
 
 static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
@@ -276,6 +294,7 @@ textwindows void WinMainForked(void) {
 
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   jmp_buf jb;
+  uint32_t op;
   uint32_t oldprot;
   char ok, threaded;
   char **args, **args2;
@@ -290,12 +309,10 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   tib = __tls_enabled ? __get_tls() : 0;
   if (!setjmp(jb)) {
     pid = untrackpid = __reservefd_unlocked(-1);
-    reader = CreateNamedPipe(CreatePipeName(pipename),
-                             kNtPipeAccessInbound | kNtFileFlagOverlapped,
-                             kNtPipeTypeMessage | kNtPipeReadmodeMessage, 1,
-                             65536, 65536, 0, &kNtIsInheritable);
-    writer = CreateFile(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting,
-                        kNtFileFlagOverlapped, 0);
+    reader = CreateNamedPipe(CreatePipeName(pipename), kNtPipeAccessInbound,
+                             kNtPipeTypeByte | kNtPipeReadmodeByte, 1, PIPE_BUF,
+                             PIPE_BUF, 0, &kNtIsInheritable);
+    writer = CreateFile(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting, 0, 0);
     if (pid != -1 && reader != -1 && writer != -1) {
       p = stpcpy(forkvar, "_FORK=");
       p = FormatUint64(p, reader);
@@ -331,7 +348,6 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
         }
         for (i = 0; i < _mmi.i && ok; ++i) {
           if ((_mmi.p[i].flags & MAP_TYPE) != MAP_SHARED) {
-            uint32_t op;
             char *p = (char *)((uint64_t)_mmi.p[i].x << 16);
             // XXX: forking destroys thread guard pages currently
             VirtualProtect(

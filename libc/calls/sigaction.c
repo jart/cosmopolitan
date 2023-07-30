@@ -479,6 +479,15 @@ static int __sigaction(int sig, const struct sigaction *act,
  * frequently calling sigprocmask() out of an abundance of caution, will
  * no longer need to pay its outrageous cost.
  *
+ * Signal handlers should avoid clobbering global variables like `errno`
+ * because most signals are asynchronous, i.e. the signal handler might
+ * be called at any assembly instruction. If something like a `SIGCHLD`
+ * handler doesn't save / restore the `errno` global when calling wait,
+ * then any i/o logic in the main program that checks `errno` will most
+ * likely break. This is rare in practice, since systems usually design
+ * signals to favor delivery from cancellation points before they block
+ * however that's not guaranteed.
+ *
  * @return 0 on success or -1 w/ errno
  * @see xsigaction() for a much better api
  * @asyncsignalsafe

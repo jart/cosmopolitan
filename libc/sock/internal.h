@@ -80,7 +80,7 @@ int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *,
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *, size_t);
 
 void WinSockInit(void);
-int64_t __winsockerr(void) nocallback;
+int64_t __winsockerr(void);
 int __fixupnewsockfd(int, int);
 int64_t __winsockblock(int64_t, unsigned, int64_t, uint32_t);
 struct SockFd *_dupsockfd(struct SockFd *);

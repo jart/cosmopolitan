@@ -19,13 +19,12 @@
 #include "libc/mem/mem.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/str/str.h"
 
 textwindows struct SockFd *_dupsockfd(struct SockFd *sockfd) {
   struct SockFd *newsf;
-  if ((newsf = calloc(1, sizeof(struct SockFd)))) {
-    newsf->family = sockfd->family;
-    newsf->type = sockfd->type;
-    newsf->protocol = sockfd->protocol;
+  if ((newsf = malloc(sizeof(struct SockFd)))) {
+    memcpy(newsf, sockfd, sizeof(*sockfd));
   }
   return newsf;
 }

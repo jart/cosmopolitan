@@ -17,13 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 
+__msabi extern typeof(__sys_listen_nt) *const __imp_listen;
+
 textwindows int sys_listen_nt(struct Fd *fd, int backlog) {
   npassert(fd->kind == kFdSocket);
-  if (__sys_listen_nt(fd->handle, backlog) != -1) {
+  if (__imp_listen(fd->handle, backlog) != -1) {
     return 0;
   } else {
     return __winsockerr();

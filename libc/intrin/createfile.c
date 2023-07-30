@@ -17,12 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/createfile.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/thunk/msabi.h"
 
 __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
+__msabi extern typeof(GetLastError) *const __imp_GetLastError;
+__msabi extern typeof(Sleep) *const __imp_Sleep;
 
 /**
  * Opens file on the New Technology.
@@ -36,9 +42,16 @@ textwindows int64_t CreateFile(
     int dwCreationDisposition, uint32_t dwFlagsAndAttributes,
     int64_t opt_hTemplateFile) {
   int64_t hHandle;
+  uint32_t micros = 1;
+TryAgain:
   hHandle = __imp_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode,
                               opt_lpSecurityAttributes, dwCreationDisposition,
                               dwFlagsAndAttributes, opt_hTemplateFile);
+  if (hHandle == -1 && __imp_GetLastError() == kNtErrorPipeBusy) {
+    if (micros >= 1024) __imp_Sleep(micros / 1024);
+    if (micros / 1024 < __SIG_POLLING_INTERVAL_MS) micros <<= 1;
+    goto TryAgain;
+  }
   if (hHandle == -1) __winerr();
   NTTRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → %ld% m", lpFileName,
           DescribeNtFileAccessFlags(dwDesiredAccess),

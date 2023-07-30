@@ -464,6 +464,8 @@ dontasan textstartup void __printargs(const char *prologue) {
         PRINT("  - stderr");
       }
       kprintf(prologue);
+      errno = 0;
+      kprintf("    isatty = %d% m\n", isatty(i));
       if (!tcgetwinsize(i, &ws)) {
         kprintf("    ws_row = %d\n", ws.ws_row);
         kprintf("    ws_col = %d\n", ws.ws_col);

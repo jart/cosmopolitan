@@ -16,12 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 
+__msabi extern typeof(__sys_shutdown_nt) *const __imp_shutdown;
+
 textwindows int sys_shutdown_nt(struct Fd *fd, int how) {
-  if (__sys_shutdown_nt(fd->handle, how) != -1) {
+  if (__imp_shutdown(fd->handle, how) != -1) {
     return 0;
   } else {
     return __winsockerr();

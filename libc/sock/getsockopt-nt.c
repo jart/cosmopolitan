@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/nt/struct/linger.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -28,6 +29,8 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
+
+__msabi extern typeof(__sys_getsockopt_nt) *const __imp_getsockopt;
 
 textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
                                   void *out_opt_optval,
@@ -63,8 +66,8 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
   }
 
   // TODO(jart): Use WSAIoctl?
-  if (__sys_getsockopt_nt(fd->handle, level, optname, out_opt_optval,
-                          inout_optlen) == -1) {
+  if (__imp_getsockopt(fd->handle, level, optname, out_opt_optval,
+                       inout_optlen) == -1) {
     return __winsockerr();
   }
 

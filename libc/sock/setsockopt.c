@@ -40,10 +40,10 @@ static bool setsockopt_polyfill(int *optname) {
 /**
  * Modifies socket settings.
  *
- * This function is the ultimate rabbit hole. Basic usage:
+ * Basic usage:
  *
- *   int yes = 1;
- *   setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
+ *     int yes = 1;
+ *     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
  *
  * @param level can be SOL_SOCKET, SOL_IP, SOL_TCP, etc.
  * @param optname can be SO_{REUSE{PORT,ADDR},KEEPALIVE,etc.} etc.

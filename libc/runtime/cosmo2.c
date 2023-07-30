@@ -131,10 +131,14 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
 
   // record system provided stack to memory manager
+  // todo: how do we get the real size of the stack
+  //       if `y` is too small mmap will destroy it
+  //       if `x` is too high, backtraces will fail
+  uintptr_t t = (uintptr_t)__builtin_frame_address(0);
   uintptr_t s = (uintptr_t)sp;
   uintptr_t z = GetStackSize() << 1;
   _mmi.i = 1;
-  _mmi.p->x = (s & -z) >> 16;
+  _mmi.p->x = MIN((s & -z) >> 16, (t & -z) >> 16);
   _mmi.p->y = MIN(((s & -z) + (z - 1)) >> 16, INT_MAX);
   _mmi.p->size = z;
   _mmi.p->prot = PROT_READ | PROT_WRITE;
