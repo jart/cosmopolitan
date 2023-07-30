@@ -144,6 +144,8 @@ TEST(socket, canBeInheritedByForkedWorker) {
   WAIT(exit, 0);
 }
 
+#ifdef __x86_64__
+
 __attribute__((__constructor__)) static void StdioPro(int argc, char *argv[]) {
   if (argc >= 2 && !strcmp(argv[1], "StdioProg")) {
     ASSERT_EQ(NULL, getenv("__STDIO_SOCKETS"));
@@ -186,3 +188,5 @@ TEST(socket, canBeUsedAsExecutedStdio) {
   EXPECT_SYS(0, 0, close(3));
   WAIT(exit, 0);
 }
+
+#endif /* __x86_64__ */

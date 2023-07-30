@@ -72,10 +72,10 @@ SECTIONS {
     KEEP(*(SORT_NONE(.fini)))
   } =0x1f2003d5
 
-  . += CONSTANT(COMMONPAGESIZE);
+  . += CONSTANT(MAXPAGESIZE);
 
   .privileged : {
-    __privileged_start = .;
+    __privileged_start = ABSOLUTE(.) & -CONSTANT(MAXPAGESIZE);
     *(.privileged*)
   } =0x1f2003d6
 
@@ -121,8 +121,8 @@ SECTIONS {
   _etext = .;
   PROVIDE(etext = .);
 
-  . += CONSTANT(COMMONPAGESIZE);
-  . = DATA_SEGMENT_ALIGN(CONSTANT(COMMONPAGESIZE), CONSTANT(COMMONPAGESIZE));
+  . += CONSTANT(MAXPAGESIZE);
+  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
 
   .eh_frame : ONLY_IF_RW {
     KEEP(*(.eh_frame))
