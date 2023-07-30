@@ -9,6 +9,41 @@
 # KERNEL32.DLL
 #
 #	Name							Actual							DLL		Arity
+imp	''							CancelIoEx						kernel32	2
+imp	''							CloseHandle						kernel32	1
+imp	''							CreateDirectoryW					kernel32	2
+imp	''							CreateFileMappingNumaW					kernel32	7
+imp	''							CreateFileMappingW					kernel32	6
+imp	''							CreateFileW						kernel32	7
+imp	''							CreateNamedPipeW					kernel32	8
+imp	''							CreatePipe						kernel32	4
+imp	''							CreateProcessW						kernel32	10
+imp	''							CreateSymbolicLinkW					kernel32	3
+imp	''							CreateThread						kernel32	6
+imp	''							DeleteFileW						kernel32	1
+imp	''							DeviceIoControl						kernel32	8
+imp	''							FindClose						kernel32	1
+imp	''							FindFirstFileW						kernel32	2
+imp	''							FindNextFileW						kernel32	2
+imp	''							FlushFileBuffers					kernel32	1
+imp	''							FlushViewOfFile						kernel32	2
+imp	''							GenerateConsoleCtrlEvent				kernel32	2
+imp	''							GetExitCodeProcess					kernel32	2
+imp	''							GetFileAttributesW					kernel32	1
+imp	''							LockFileEx						kernel32	6
+imp	''							MapViewOfFileEx						kernel32	6
+imp	''							MapViewOfFileExNuma					kernel32	7
+imp	''							MoveFileExW						kernel32	3
+imp	''							OpenProcess						kernel32	3
+imp	''							ReOpenFile						kernel32	4	# TODO(jart): 6.2 and higher
+imp	''							RemoveDirectoryW					kernel32	1
+imp	''							SetCurrentDirectoryW					kernel32	1
+imp	''							TerminateProcess					kernel32	2
+imp	''							UnlockFileEx						kernel32	5
+imp	''							UnmapViewOfFile						kernel32	1
+imp	''							VirtualProtect						kernel32	4
+imp	''							WaitForMultipleObjects					kernel32	4
+imp	''							WaitForSingleObject					kernel32	2
 imp	'AcquireSRWLockExclusive'				AcquireSRWLockExclusive					kernel32	1
 imp	'AcquireSRWLockShared'					AcquireSRWLockShared					kernel32	1
 imp	'AddVectoredContinueHandler'				AddVectoredContinueHandler				kernel32	2
@@ -259,41 +294,6 @@ imp	'WriteConsoleOutputCharacter'				WriteConsoleOutputCharacterW				kernel32	5
 imp	'WriteFile'						WriteFile						kernel32	5
 imp	'WriteFileEx'						WriteFileEx						kernel32	5
 imp	'WriteFileGather'					WriteFileGather						kernel32	5
-imp	'__CancelIoEx'						CancelIoEx						kernel32	2
-imp	'__CloseHandle'						CloseHandle						kernel32	1
-imp	'__CreateDirectory'					CreateDirectoryW					kernel32	2
-imp	'__CreateFile'						CreateFileW						kernel32	7
-imp	'__CreateFileMapping'					CreateFileMappingW					kernel32	6
-imp	'__CreateFileMappingNuma'				CreateFileMappingNumaW					kernel32	7
-imp	'__CreateNamedPipe'					CreateNamedPipeW					kernel32	8
-imp	'__CreatePipe'						CreatePipe						kernel32	4
-imp	'__CreateProcess'					CreateProcessW						kernel32	10
-imp	'__CreateSymbolicLink'					CreateSymbolicLinkW					kernel32	3
-imp	'__CreateThread'					CreateThread						kernel32	6
-imp	'__DeleteFile'						DeleteFileW						kernel32	1
-imp	'__DeviceIoControl'					DeviceIoControl						kernel32	8
-imp	'__FindClose'						FindClose						kernel32	1
-imp	'__FindFirstFile'					FindFirstFileW						kernel32	2
-imp	'__FindNextFile'					FindNextFileW						kernel32	2
-imp	'__FlushFileBuffers'					FlushFileBuffers					kernel32	1
-imp	'__FlushViewOfFile'					FlushViewOfFile						kernel32	2
-imp	'__GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				kernel32	2
-imp	'__GetExitCodeProcess'					GetExitCodeProcess					kernel32	2
-imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	1
-imp	'__LockFileEx'						LockFileEx						kernel32	6
-imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	6
-imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	7
-imp	'__MoveFileEx'						MoveFileExW						kernel32	3
-imp	'__OpenProcess'						OpenProcess						kernel32	3
-imp	'__ReOpenFile'						ReOpenFile						kernel32	4	# TODO(jart): 6.2 and higher
-imp	'__RemoveDirectory'					RemoveDirectoryW					kernel32	1
-imp	'__SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	1
-imp	'__TerminateProcess'					TerminateProcess					kernel32	2
-imp	'__UnlockFileEx'					UnlockFileEx						kernel32	5
-imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	1
-imp	'__VirtualProtect'					VirtualProtect						kernel32	4
-imp	'__WaitForMultipleObjects'				WaitForMultipleObjects					kernel32	4
-imp	'__WaitForSingleObject'					WaitForSingleObject					kernel32	2
 
 # ADVAPI32.DLL
 #
@@ -490,6 +490,27 @@ imp	'WSARecvEx'						WSARecvEx						MsWSock		4
 # WS2_32.DLL
 #
 #	Name							Actual							DLL		Arity
+imp	''							WSAGetOverlappedResult					ws2_32		5
+imp	''							WSARecv							ws2_32		7
+imp	''							WSARecvFrom						ws2_32		9
+imp	''							WSAWaitForMultipleEvents				ws2_32		5
+imp	''							accept							ws2_32		3	# we're using WSAAccept()
+imp	''							bind							ws2_32		3
+imp	''							closesocket						ws2_32		1
+imp	''							getpeername						ws2_32		3
+imp	''							getsockname						ws2_32		3
+imp	''							getsockopt						ws2_32		5
+imp	''							ioctlsocket						ws2_32		3
+imp	''							listen							ws2_32		2
+imp	''							recv							ws2_32		4	# we're using WSARecvFrom()
+imp	''							recvfrom						ws2_32		6	# we're using WSARecvFrom()
+imp	''							select							ws2_32		5
+imp	''							send							ws2_32		4	# we're using WSASendTo()
+imp	''							sendto							ws2_32		6	# we're using WSASendTo()
+imp	''							setsockopt						ws2_32		5
+imp	''							shutdown						ws2_32		2
+imp	''							socket							ws2_32		3
+imp	''							socket							ws2_32		3
 imp	'FreeAddrInfo'						FreeAddrInfoW						ws2_32		1
 imp	'FreeAddrInfoEx'					FreeAddrInfoExW						ws2_32		1
 imp	'GetAddrInfo'						GetAddrInfoW						ws2_32		4
@@ -542,27 +563,6 @@ imp	'WSASetLastError'					WSASetLastError						ws2_32		1
 imp	'WSASetService'						WSASetServiceW						ws2_32		3
 imp	'WSASocket'						WSASocketW						ws2_32		6
 imp	'WSAStartup'						WSAStartup						ws2_32		2
-imp	'__sys_socket_nt'					socket							ws2_32		3
-imp	'__sys_accept_nt'					accept							ws2_32		3	# we're using WSAAccept()
-imp	'__sys_bind_nt'						bind							ws2_32		3
-imp	'__sys_closesocket_nt'					closesocket						ws2_32		1
-imp	'__sys_getpeername_nt'					getpeername						ws2_32		3
-imp	'__sys_getsockname_nt'					getsockname						ws2_32		3
-imp	'__sys_getsockopt_nt'					getsockopt						ws2_32		5
-imp	'__sys_ioctlsocket_nt'					ioctlsocket						ws2_32		3
-imp	'__sys_listen_nt'					listen							ws2_32		2
-imp	'__sys_recvfrom_nt'					recvfrom						ws2_32		6	# we're using WSARecvFrom()
-imp	'__sys_select_nt'					select							ws2_32		5
-imp	'__sys_sendto_nt'					sendto							ws2_32		6	# we're using WSASendTo()
-imp	'__sys_setsockopt_nt'					setsockopt						ws2_32		5
-imp	'__sys_shutdown_nt'					shutdown						ws2_32		2
-imp	'__sys_socket_nt'					socket							ws2_32		3
-imp	'__WSARecv'						WSARecv							ws2_32		7
-imp	'__WSARecvFrom'						WSARecvFrom						ws2_32		9
-imp	'__WSAWaitForMultipleEvents'				WSAWaitForMultipleEvents				ws2_32		5
-imp	'__sys_recv_nt'						recv							ws2_32		4	# we're using WSARecvFrom()
-imp	'__sys_send_nt'						send							ws2_32		4	# we're using WSASendTo()
-imp	'__WSAGetOverlappedResult'				WSAGetOverlappedResult					ws2_32		5
 
 # IPHLPAPI.DLL
 #

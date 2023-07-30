@@ -24,6 +24,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/iphlpapi.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/yoink.inc"
@@ -34,6 +35,8 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+
+__msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 
 /*
  * ioctl(SIOCGIFCONFIG) for Windows need to access the following
@@ -59,7 +62,7 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
     // pydoc of this file third_party/python/Lib/test/support/__init__.py
     // this needs to happen right after socket is called or it won't work
     if (family == AF_INET || family == AF_INET6) {
-      unassert(__sys_setsockopt_nt(h, SOL_SOCKET, -5, &yes, 4) != -1);
+      unassert(__imp_setsockopt(h, SOL_SOCKET, -5, &yes, 4) != -1);
     }
 
     oflags = O_RDWR;

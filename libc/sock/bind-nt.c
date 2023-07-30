@@ -28,7 +28,7 @@ __msabi extern typeof(__sys_bind_nt) *const __imp_bind;
 textwindows int sys_bind_nt(struct Fd *fd, const void *addr,
                             uint32_t addrsize) {
   unassert(fd->kind == kFdSocket);
-  if (__sys_bind_nt(fd->handle, addr, addrsize) != -1) {
+  if (__imp_bind(fd->handle, addr, addrsize) != -1) {
     return 0;
   } else {
     return __winsockerr();

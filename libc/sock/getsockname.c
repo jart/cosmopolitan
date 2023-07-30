@@ -22,6 +22,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -30,10 +31,14 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
+__msabi extern typeof(__sys_getsockname_nt) *const __imp_getsockname;
+__msabi extern typeof(__sys_getpeername_nt) *const __imp_getpeername;
+
 static int __getsockpeername(int fd, struct sockaddr *out_addr,
                              uint32_t *inout_addrsize, const char *name,
                              int impl_sysv(int, void *, uint32_t *),
-                             int impl_win32(uint64_t, void *, uint32_t *)) {
+                             int (*__msabi impl_win32)(uint64_t, void *,
+                                                       uint32_t *)) {
   int rc;
   struct sockaddr_storage ss = {0};
   uint32_t size = sizeof(ss);
@@ -41,8 +46,7 @@ static int __getsockpeername(int fd, struct sockaddr *out_addr,
   if (IsWindows()) {
     if (__isfdkind(fd, kFdSocket)) {
       if ((rc = impl_win32(g_fds.p[fd].handle, &ss, &size))) {
-        if (impl_win32 == __sys_getsockname_nt &&
-            WSAGetLastError() == WSAEINVAL) {
+        if (impl_win32 == __imp_getsockname && WSAGetLastError() == WSAEINVAL) {
           // The socket has not been bound to an address with bind, or
           // ADDR_ANY is specified in bind but connection has not yet
           // occurred. -MSDN
@@ -78,7 +82,7 @@ static int __getsockpeername(int fd, struct sockaddr *out_addr,
  */
 int getsockname(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
   return __getsockpeername(fd, out_addr, inout_addrsize, "getsockname",
-                           __sys_getsockname, __sys_getsockname_nt);
+                           __sys_getsockname, __imp_getsockname);
 }
 
 /**
@@ -88,5 +92,5 @@ int getsockname(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
  */
 int getpeername(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
   return __getsockpeername(fd, out_addr, inout_addrsize, "getpeername",
-                           __sys_getpeername, __sys_getpeername_nt);
+                           __sys_getpeername, __imp_getpeername);
 }
