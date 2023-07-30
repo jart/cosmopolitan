@@ -34,21 +34,27 @@
 
 __static_yoink("__get_symbol");
 
+#ifdef __x86_64__
+#define SYMTAB_ARCH ".symtab.x86"
+#elif defined(__aarch64__)
+#define SYMTAB_ARCH ".symtab.aarch64"
+#elif defined(__powerpc64__)
+#define SYMTAB_ARCH ".symtab.powerpc64"
+#else
+#error "unsupported architecture"
+#endif
+
 static pthread_spinlock_t g_lock;
 struct SymbolTable *__symtab;  // for kprintf
 
-/**
- * Looks for `.symtab` in zip central directory.
- */
-static ssize_t FindSymtabInZip(struct Zipos *zipos) {
-  size_t i, n, c;
+static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
+  size_t i, n, c, z;
+  z = strlen(name);
   c = GetZipCdirOffset(zipos->cdir);
   n = GetZipCdirRecords(zipos->cdir);
   for (i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
-    if (ZIP_CFILE_NAMESIZE(zipos->map + c) == 7 &&
-        READ32LE(ZIP_CFILE_NAME(zipos->map + c + 0)) == READ32LE(".sym") &&
-        READ16LE(ZIP_CFILE_NAME(zipos->map + c + 4)) == READ16LE("ta") &&
-        *ZIP_CFILE_NAME(zipos->map + c + 6) == 'b') {
+    if (ZIP_CFILE_NAMESIZE(zipos->map + c) == z &&
+        !memcmp(ZIP_CFILE_NAME(zipos->map + c), name, z)) {
       return c;
     }
   }
@@ -63,7 +69,8 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
   size_t size, size2;
   ssize_t rc, cf, lf;
   struct SymbolTable *res = 0;
-  if ((cf = FindSymtabInZip(zipos)) != -1) {
+  if ((cf = GetZipFile(zipos, SYMTAB_ARCH)) != -1 ||
+      (cf = GetZipFile(zipos, ".symtab")) != -1) {
     lf = GetZipCfileOffset(zipos->map + cf);
     size = GetZipLfileUncompressedSize(zipos->map + lf);
     size2 = ROUNDUP(size, FRAMESIZE);

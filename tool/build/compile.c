@@ -66,6 +66,10 @@
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
 
+#ifndef NDEBUG
+__static_yoink("zipos");
+#endif
+
 #define MANUAL \
   "\
 SYNOPSIS\n\
@@ -842,6 +846,10 @@ int main(int argc, char *argv[]) {
   bool isproblematic;
   int ws, opt, exitcode;
   char *s, *p, *q, **envp;
+
+#ifndef NDEBUG
+  ShowCrashReports();
+#endif
 
   mode = firstnonnull(getenv("MODE"), MODE);
 

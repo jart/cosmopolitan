@@ -47,7 +47,7 @@ static bool ShouldCompress(const char *name, size_t namesize,
 static void GetDosLocalTime(int64_t utcunixts, uint16_t *out_time,
                             uint16_t *out_date) {
   struct tm tm;
-  CHECK_NOTNULL(localtime_r(&utcunixts, &tm));
+  CHECK_NOTNULL(gmtime_r(&utcunixts, &tm));
   *out_time = DOS_TIME(tm.tm_hour, tm.tm_min, tm.tm_sec);
   *out_date = DOS_DATE(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday + 1);
 }

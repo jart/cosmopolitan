@@ -42,7 +42,6 @@ TEST(fork, testPipes) {
   int a, b;
   int ws, pid;
   int pipefds[2];
-  alarm(5);
   ASSERT_NE(-1, pipe(pipefds));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -57,11 +56,9 @@ TEST(fork, testPipes) {
   EXPECT_NE(-1, close(pipefds[0]));
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
   EXPECT_EQ(31337, b);
-  alarm(0);
 }
 
 TEST(fork, testSharedMemory) {
-  alarm(5);
   int ws, pid;
   int stackvar;
   int *sharedvar;
@@ -93,7 +90,6 @@ TEST(fork, testSharedMemory) {
   EXPECT_EQ(1, *privatevar);
   EXPECT_NE(-1, munmap(sharedvar, FRAMESIZE));
   EXPECT_NE(-1, munmap(privatevar, FRAMESIZE));
-  alarm(0);
 }
 
 static volatile bool gotsigusr1;
@@ -140,13 +136,11 @@ TEST(fork, childToChild) {
 }
 
 TEST(fork, preservesTlsMemory) {
-  alarm(5);
   int pid;
   __get_tls()->tib_errno = 31337;
   SPAWN(fork);
   ASSERT_EQ(31337, __get_tls()->tib_errno);
   EXITS(0);
-  alarm(0);
 }
 
 void ForkInSerial(void) {
