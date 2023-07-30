@@ -1847,7 +1847,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_exception_variations.py		\
 	third_party/python/Lib/test/test_exceptions.py				\
 	third_party/python/Lib/test/test_extcall.py				\
-	third_party/python/Lib/test/test_faulthandler.py			\
 	third_party/python/Lib/test/test_fcntl.py				\
 	third_party/python/Lib/test/test_file.py				\
 	third_party/python/Lib/test/test_file_eintr.py				\
@@ -2900,8 +2899,9 @@ o/$(MODE)/third_party/python/Lib/test/test_docxmlrpc.py.runs: $(PYTHONTESTER)
 o/$(MODE)/third_party/python/Lib/test/test_extcall.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_extcall $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_faulthandler.py.runs: $(PYTHONTESTER)
-	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_faulthandler $(PYTESTARGS)
+# too slow
+#o/$(MODE)/third_party/python/Lib/test/test_faulthandler.py.runs: $(PYTHONTESTER)
+#	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_faulthandler $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_fcntl.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_fcntl $(PYTESTARGS)

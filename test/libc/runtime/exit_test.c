@@ -16,7 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
@@ -59,4 +64,53 @@ TEST(exit, test) {
   ASSERT_EQ(2, p[1]);
   ASSERT_EQ(3, p[2]);
   ASSERT_EQ(3, p[3]);
+}
+
+TEST(exit, narrowing) {
+  SPAWN(vfork);
+  _Exit(31337);
+  EXITS(IsWindows() || IsNetbsd() || IsOpenbsd() ? 31337 : 31337 & 255);
+}
+
+TEST(exit, exitCode259_wontCauseParentProcessToHangForever) {
+  if (!IsWindows()) return;
+  SPAWN(vfork);
+  _Exit(259);
+  EXITS(259);
+}
+
+TEST(exit, sigkill) {
+  int ws, pid;
+  atomic_int *ready = _mapshared(4);
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    for (*ready = 1;;) {
+      pause();
+    }
+  }
+  while (!*ready) donothing;
+  ASSERT_EQ(0, kill(pid, SIGKILL));
+  ASSERT_SYS(0, pid, wait(&ws));
+  ASSERT_EQ(SIGKILL, ws);
+  munmap(ready, 4);
+}
+
+// NetBSD is the only operating system that ignores SIGPWR by default
+
+TEST(exit, sigalrm) {
+  int ws, pid;
+  sighandler_t oldint = signal(SIGALRM, SIG_DFL);
+  atomic_int *ready = _mapshared(4);
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    for (*ready = 1;;) {
+      pause();
+    }
+  }
+  while (!*ready) donothing;
+  ASSERT_EQ(0, kill(pid, SIGALRM));
+  ASSERT_SYS(0, pid, wait(&ws));
+  ASSERT_EQ(SIGALRM, ws);
+  munmap(ready, 4);
+  signal(SIGALRM, oldint);
 }

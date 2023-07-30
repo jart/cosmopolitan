@@ -95,14 +95,14 @@ textwindows int sys_kill_nt(int pid, int sig) {
       do {
         if (pe.th32ParentProcessID == ntpid) {
           if ((h = OpenProcess(kNtProcessTerminate, false, pe.th32ProcessID))) {
-            TerminateProcess(h, 128 + sig);
+            TerminateProcess(h, sig);
             CloseHandle(h);
           }
         }
       } while (Process32Next(hSnap, &pe));
     }
     CloseHandle(hSnap);
-    ok = TerminateProcess(g_fds.p[pid].handle, 128 + sig);
+    ok = TerminateProcess(g_fds.p[pid].handle, sig);
     if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
     return 0;
   }
@@ -110,7 +110,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
   // XXX: Is this a raw new technology pid? Because that's messy.
   if ((h = OpenProcess(kNtProcessTerminate, false, pid))) {
     if (sig) {
-      ok = TerminateProcess(h, 128 + sig);
+      ok = TerminateProcess(h, sig);
       if (!ok && GetLastError() == kNtErrorAccessDenied) {
         ok = true;  // cargo culting other codebases here
       }

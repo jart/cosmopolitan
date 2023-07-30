@@ -134,8 +134,11 @@ static textwindows int sys_wait4_nt_impl(int *pid, int *opt_out_wstatus,
   if (dwExitCode == kNtStillActive) {
     return -2;
   }
-  if (opt_out_wstatus) {  // @see WEXITSTATUS()
-    *opt_out_wstatus = (dwExitCode & 0xff) << 8;
+  if (dwExitCode == 0xc9af3d51u) {
+    dwExitCode = kNtStillActive;
+  }
+  if (opt_out_wstatus) {
+    *opt_out_wstatus = dwExitCode;
   }
   if (opt_out_rusage) {
     bzero(opt_out_rusage, sizeof(*opt_out_rusage));

@@ -74,7 +74,7 @@ static textwindows wontreturn void AbortFork(const char *func) {
 #ifdef SYSDEBUG
   kprintf("fork() %s() failed with win32 error %d\n", func, GetLastError());
 #endif
-  ExitProcess(177);
+  ExitProcess(11);
 }
 
 static textwindows char16_t *ParseInt(char16_t *p, int64_t *x) {
@@ -166,7 +166,7 @@ static textwindows int OnForkCrash(struct NtExceptionPointers *ep) {
           "\tRip = %x%n",
           ep->ExceptionRecord->ExceptionCode,
           ep->ContextRecord ? ep->ContextRecord->Rip : -1);
-  ExitProcess(73);
+  ExitProcess(11);
 }
 
 textwindows void WinMainForked(void) {
@@ -370,7 +370,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
           untrackpid = -1;
           rc = pid;
         } else {
-          TerminateProcess(procinfo.hProcess, 127);
+          TerminateProcess(procinfo.hProcess, 9);
           CloseHandle(procinfo.hProcess);
         }
       }

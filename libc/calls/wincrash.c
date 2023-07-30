@@ -51,13 +51,13 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
     if (~tib->tib_flags & TIB_FLAG_WINCRASHING) {
       tib->tib_flags |= TIB_FLAG_WINCRASHING;
     } else {
-      ExitProcess(89);
+      ExitProcess(SIGSEGV);
     }
   } else {
     if (!noreentry) {
       noreentry = true;
     } else {
-      ExitProcess(89);
+      ExitProcess(SIGSEGV);
     }
   }
 

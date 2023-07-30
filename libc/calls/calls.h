@@ -44,15 +44,15 @@
 
 #define MAP_FAILED ((void *)-1)
 
-#define WCOREDUMP(s)    (128 & (s))
-#define WEXITSTATUS(s)  ((0xff00 & (s)) >> 8)
-#define WIFCONTINUED(s) ((s) == 0xffff)
-#define WIFEXITED(s)    (!WTERMSIG(s))
-#define WIFSIGNALED(s)  (((signed char)((127 & (s)) + 1) >> 1) > 0)
-#define WIFSTOPPED(s)   ((255 & (s)) == 127)
-#define WSTOPSIG(s)     WEXITSTATUS(s)
-#define WTERMSIG(s)     (127 & (s))
-#define W_STOPCODE(s)   ((s) << 8 | 0177)
+#define WTERMSIG(x)     (127 & (x))
+#define WCOREDUMP(x)    (128 & (x))
+#define WIFEXITED(x)    (!WTERMSIG(x))
+#define WEXITSTATUS(x)  ((x) >> 8)
+#define WSTOPSIG(x)     ((0xff00 & (x)) >> 8)
+#define WIFSTOPPED(x)   __wifstopped(x)
+#define WIFSIGNALED(x)  __wifsignaled(x)
+#define WIFCONTINUED(x) __wifcontinued(x)
+#define W_STOPCODE(x)   ((x) << 8 | 0177)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -233,6 +233,10 @@ ssize_t copyfd(int, int, size_t);
 ssize_t readansi(int, char *, size_t);
 ssize_t tinyprint(int, const char *, ...) nullterminated();
 #endif
+
+int __wifstopped(int) pureconst;
+int __wifcontinued(int) pureconst;
+int __wifsignaled(int) pureconst;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

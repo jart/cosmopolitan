@@ -389,6 +389,9 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           if (!(tib && (tib->tib_flags & TIB_FLAG_VFORKED))) {
             if (tib) {
               x = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
+              if (IsNetbsd() && x == 1) {
+                x = __pid;
+              }
             } else {
               x = __pid;
             }

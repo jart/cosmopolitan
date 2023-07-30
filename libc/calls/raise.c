@@ -50,10 +50,6 @@ static dontubsan void RaiseSigFpe(void) {
  * helps us support Windows. So if the raised signal has a signal
  * handler, then the reported `si_code` might not be `SI_TKILL`.
  *
- * On Windows, if a signal results in the termination of the process
- * then we use the convention `_Exit(128 + sig)` to notify the parent of
- * the signal number.
- *
  * @param sig can be SIGALRM, SIGINT, SIGTERM, SIGKILL, etc.
  * @return 0 if signal was delivered and returned, or -1 w/ errno
  * @asyncsignalsafe

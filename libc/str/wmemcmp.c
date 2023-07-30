@@ -31,8 +31,8 @@ int wmemcmp(const wchar_t *a, const wchar_t *b, size_t n) {
   size_t i;
   for (i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
-      return a[i] - b[i];
+      break;
     }
   }
-  return 0;
+  return i < n ? (a[i] > b[i]) - (a[i] < b[i]) : 0;
 }

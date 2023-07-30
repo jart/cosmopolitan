@@ -78,7 +78,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
         return epipe();
       } else {
         STRACE("broken pipe");
-        _Exitr(128 + EPIPE);
+        ExitProcess(EPIPE);
       }
     case kNtErrorAccessDenied:  // write doesn't return EACCESS
       return ebadf();

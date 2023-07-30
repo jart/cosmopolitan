@@ -27,6 +27,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -172,13 +173,14 @@ static textwindows bool __sig_is_fatal(int sig) {
  * Handles signal.
  * @return true if signal was delivered
  */
-bool __sig_handle(int sigops, int sig, int si_code, ucontext_t *ctx) {
+textwindows bool __sig_handle(int sigops, int sig, int si_code,
+                              ucontext_t *ctx) {
   bool delivered;
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:
       if (__sig_is_fatal(sig)) {
         STRACE("terminating on %G", sig);
-        _Exitr(128 + sig);
+        ExitProcess(sig);
       }
       // fallthrough
     case (intptr_t)SIG_IGN:

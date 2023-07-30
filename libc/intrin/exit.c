@@ -20,6 +20,7 @@
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
+#include "libc/nt/enum/status.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
@@ -30,7 +31,10 @@
  * When running on bare metal, this function will reboot your computer
  * by hosing the interrupt descriptors and triple faulting the system.
  *
- * @param exitcode is masked with 255 on unix (but not windows)
+ * Exit codes are narrowed to an unsigned char on most platforms. The
+ * exceptions would be Windows, NetBSD, and OpenBSD, which should let
+ * you have larger exit codes.
+ *
  * @asyncsignalsafe
  * @threadsafe
  * @vforksafe
@@ -79,7 +83,23 @@ wontreturn void _Exit(int exitcode) {
                  : "x8", "memory");
 #endif
   } else if (IsWindows()) {
-    ExitProcess(exitcode);
+    uint32_t waitstatus;
+    waitstatus = exitcode;
+    waitstatus <<= 8;
+    if (waitstatus == kNtStillActive) {
+      // The GetExitCodeProcess function returns a valid error code
+      // defined by the application only after the thread terminates.
+      // Therefore, an application should not use STILL_ACTIVE (259) as
+      // an error code (STILL_ACTIVE is a macro for STATUS_PENDING
+      // (minwinbase.h)). If a thread returns STILL_ACTIVE (259) as an
+      // error code, then applications that test for that value could
+      // interpret it to mean that the thread is still running, and
+      // continue to test for the completion of the thread after the
+      // thread has terminated, which could put the application into an
+      // infinite loop. -Quoth MSDN (see also libc/calls/wait4-nt.c)
+      waitstatus = 0xc9af3d51u;
+    }
+    ExitProcess(waitstatus);
   }
 #ifdef __x86_64__
   asm("push\t$0\n\t"

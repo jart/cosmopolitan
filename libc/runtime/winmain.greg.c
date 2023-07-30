@@ -122,7 +122,7 @@ __msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
   *p++ = '\r';
   *p++ = '\n';
   WriteFile(GetStdHandle(kNtStdErrorHandle), buf, p - buf, &wrote, 0);
-  ExitProcess(200);
+  ExitProcess(11);
 }
 
 __msabi static textwindows void DeduplicateStdioHandles(void) {

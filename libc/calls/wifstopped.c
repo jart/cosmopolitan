@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
 
-/**
- * Compares NUL-terminated wide strings.
- *
- * @param a is first non-null NUL-terminated string pointer
- * @param b is second non-null NUL-terminated string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
- * @asyncsignalsafe
- */
-int wcscmp(const wchar_t *a, const wchar_t *b) {
-  size_t i = 0;
-  if (a == b) return 0;
-  while (a[i] == b[i] && b[i]) ++i;
-  return a[i] < b[i] ? -1 : a[i] > b[i];
+int __wifstopped(int x) {
+  if (IsLinux() || IsMetal() || IsWindows()) {
+    return (short)(((x & 0xffff) * 0x10001U) >> 8) > 0x7f00;
+  } else if (IsXnu()) {
+    return (x & 0177) == 0177 && WSTOPSIG(x) != 0x13;  // SIGCONT
+  } else if (IsOpenbsd() || IsFreebsd()) {
+    return (x & 0xff) == 0177;
+  } else if (IsNetbsd()) {
+    return (x & 0177) == 0177 && !(x == 0177777);
+  } else {
+    __builtin_unreachable();
+  }
 }
-
-__weak_reference(wcscmp, wcscoll);
-__weak_reference(wcscmp, wcscoll_l);
