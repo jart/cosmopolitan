@@ -55,7 +55,9 @@ int wait4(int pid, int *opt_out_wstatus, int options,
   } else {
     rc = sys_wait4_nt(pid, &ws, options, opt_out_rusage);
   }
-  if (rc != -1 && opt_out_wstatus) *opt_out_wstatus = ws;
+  if (rc != -1 && opt_out_wstatus) {
+    *opt_out_wstatus = ws;
+  }
 
   END_CANCELLATION_POINT;
   STRACE("wait4(%d, [%#x], %d, %p) → %d% m", pid, ws, options, opt_out_rusage,

@@ -28,8 +28,8 @@ struct Signals {
 extern struct Signals __sig;
 extern atomic_long __sig_count;
 
-bool __sig_check(bool);
-bool __sig_handle(bool, int, int, ucontext_t *);
+bool __sig_check(int);
+bool __sig_handle(int, int, int, ucontext_t *);
 int __sig_add(int, int, int);
 int __sig_mask(int, const sigset_t *, sigset_t *);
 int __sig_raise(int, int);

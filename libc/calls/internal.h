@@ -7,6 +7,9 @@
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */
 
+#define kSigOpRestartable 1
+#define kSigOpNochld      2
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -35,7 +38,7 @@ forceinline bool __isfdkind(int fd, int kind) {
 }
 
 int sys_close_nt(struct Fd *, int);
-int _check_interrupts(bool, struct Fd *);
+int _check_interrupts(int, struct Fd *);
 int sys_openat_metal(int, const char *, int, unsigned);
 
 COSMOPOLITAN_C_END_

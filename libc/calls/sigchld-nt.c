@@ -24,7 +24,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
@@ -34,40 +33,37 @@
 
 #ifdef __x86_64__
 
+static textwindows bool CheckForExitedChildProcess(void) {
+  int pids[64];
+  uint32_t i, n;
+  int64_t handles[64];
+  if (!(n = __sample_pids(pids, handles, true))) return false;
+  i = WaitForMultipleObjects(n, handles, false, 0);
+  if (i == kNtWaitFailed) return false;
+  if (i == kNtWaitTimeout) return false;
+  if ((__sighandrvas[SIGCHLD] >= kSigactionMinRva) &&
+      (__sighandflags[SIGCHLD] & SA_NOCLDWAIT)) {
+    CloseHandle(handles[i]);
+    __releasefd(pids[i]);
+  } else {
+    g_fds.p[pids[i]].zombie = true;
+  }
+  return true;
+}
+
 /**
  * Checks to see if SIGCHLD should be raised on Windows.
  * @return true if a signal was raised
  * @note yoinked by fork-nt.c
  */
-void _check_sigchld(void) {
-  siginfo_t si;
-  int pids[64];
-  uint32_t i, n;
-  int64_t handles[64];
+textwindows void _check_sigchld(void) {
+  bool should_signal;
   __fds_lock();
-  n = __sample_pids(pids, handles, true);
+  should_signal = CheckForExitedChildProcess();
   __fds_unlock();
-  if (!n) return;
-  i = WaitForMultipleObjects(n, handles, false, 0);
-  if (i == kNtWaitTimeout) return;
-  if (i == kNtWaitFailed) {
-    NTTRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
-    return;
+  if (should_signal) {
+    __sig_add(0, SIGCHLD, CLD_EXITED);
   }
-  if (__sighandrvas[SIGCHLD] == (intptr_t)SIG_IGN ||
-      __sighandrvas[SIGCHLD] == (intptr_t)SIG_DFL) {
-    NTTRACE("new zombie fd=%d handle=%ld", pids[i], handles[i]);
-    return;
-  }
-  if (__sighandflags[SIGCHLD] & SA_NOCLDWAIT) {
-    NTTRACE("SIGCHILD SA_NOCLDWAIT fd=%d handle=%ld", pids[i], handles[i]);
-    CloseHandle(handles[i]);
-    __releasefd(pids[i]);
-  }
-  __fds_lock();
-  g_fds.p[pids[i]].zombie = true;
-  __fds_unlock();
-  __sig_add(0, SIGCHLD, CLD_EXITED);
 }
 
 #endif /* __x86_64__ */

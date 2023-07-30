@@ -42,7 +42,8 @@ textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
     }
   } else {
     sockfd = (struct SockFd *)g_fds.p[fd].extra;
-    rc = __wsablock(g_fds.p + fd, &overlapped, &flags, true, sockfd->sndtimeo);
+    rc = __wsablock(g_fds.p + fd, &overlapped, &flags, kSigOpRestartable,
+                    sockfd->sndtimeo);
   }
   WSACloseEvent(overlapped.hEvent);
   return rc;

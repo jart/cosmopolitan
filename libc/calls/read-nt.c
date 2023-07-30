@@ -53,7 +53,7 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
       if (fd->flags & O_NONBLOCK) {
         return eagain();
       }
-      if (_check_interrupts(true, g_fds.p)) {
+      if (_check_interrupts(kSigOpRestartable, g_fds.p)) {
         POLLTRACE("sys_read_nt interrupted");
         return -1;
       }
@@ -105,7 +105,7 @@ textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
   uint32_t size;
   size_t i, total;
   if (opt_offset < -1) return einval();
-  if (_check_interrupts(true, fd)) return -1;
+  if (_check_interrupts(kSigOpRestartable, fd)) return -1;
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {

@@ -23,6 +23,6 @@
 textwindows int sys_fdatasync_nt(int fd) {
   // TODO(jart): what should we do with worker pipes?
   if (!__isfdkind(fd, kFdFile)) return ebadf();
-  if (_check_interrupts(false, 0)) return -1;
+  if (_check_interrupts(0, 0)) return -1;
   return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : -1;
 }

@@ -19,6 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -75,12 +76,14 @@ textwindows int __sig_is_applicable(struct Signal *s) {
  * Dequeues signal that isn't masked.
  * @return signal or null if empty or none unmasked
  */
-static textwindows struct Signal *__sig_remove(void) {
+static textwindows struct Signal *__sig_remove(int sigops) {
   struct Signal *prev, *res;
   if (__sig.queue) {
     __sig_lock();
     for (prev = 0, res = __sig.queue; res; prev = res, res = res->next) {
-      if (__sig_is_applicable(res) && !__sig_is_masked(res->sig)) {
+      if (__sig_is_applicable(res) &&    //
+          !__sig_is_masked(res->sig) &&  //
+          !((sigops & kSigOpNochld) && res->sig == SIGCHLD)) {
         if (res == __sig.queue) {
           __sig.queue = res->next;
         } else if (prev) {
@@ -102,8 +105,7 @@ static textwindows struct Signal *__sig_remove(void) {
  * @note called from main thread
  * @return true if EINTR should be returned by caller
  */
-static bool __sig_deliver(bool restartable, int sig, int si_code,
-                          ucontext_t *ctx) {
+static bool __sig_deliver(int sigops, int sig, int si_code, ucontext_t *ctx) {
   unsigned rva, flags;
   siginfo_t info, *infop;
   STRACE("delivering %G", sig);
@@ -145,7 +147,7 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
     }
   }
 
-  if (!restartable) {
+  if (!(sigops & kSigOpRestartable)) {
     return true;  // always send EINTR for wait4(), poll(), etc.
   } else if (flags & SA_RESTART) {
     STRACE("restarting syscall on %G", sig);
@@ -168,11 +170,9 @@ static textwindows bool __sig_is_fatal(int sig) {
 
 /**
  * Handles signal.
- *
- * @param restartable can be used to suppress true return if SA_RESTART
  * @return true if signal was delivered
  */
-bool __sig_handle(bool restartable, int sig, int si_code, ucontext_t *ctx) {
+bool __sig_handle(int sigops, int sig, int si_code, ucontext_t *ctx) {
   bool delivered;
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:
@@ -186,7 +186,7 @@ bool __sig_handle(bool restartable, int sig, int si_code, ucontext_t *ctx) {
       delivered = false;
       break;
     default:
-      delivered = __sig_deliver(restartable, sig, si_code, ctx);
+      delivered = __sig_deliver(sigops, sig, si_code, ctx);
       break;
   }
   return delivered;
@@ -226,7 +226,9 @@ textwindows int __sig_add(int tid, int sig, int si_code) {
   int rc;
   struct Signal *mem;
   if (1 <= sig && sig <= 64) {
-    if (__sighandrvas[sig] == (unsigned)(intptr_t)SIG_IGN) {
+    if (__sighandrvas[sig] == (unsigned)(uintptr_t)SIG_IGN ||
+        (__sighandrvas[sig] == (unsigned)(uintptr_t)SIG_DFL &&
+         !__sig_is_fatal(sig))) {
       STRACE("ignoring %G", sig);
       rc = 0;
     } else {
@@ -253,19 +255,17 @@ textwindows int __sig_add(int tid, int sig, int si_code) {
 
 /**
  * Checks for unblocked signals and delivers them on New Technology.
- *
- * @param restartable is for functions like read() but not poll()
  * @return true if EINTR should be returned by caller
  * @note called from main thread
  * @threadsafe
  */
-textwindows bool __sig_check(bool restartable) {
+textwindows bool __sig_check(int sigops) {
   unsigned rva;
   bool delivered;
   struct Signal *sig;
   delivered = false;
-  while ((sig = __sig_remove())) {
-    delivered |= __sig_handle(restartable, sig->sig, sig->si_code, 0);
+  while ((sig = __sig_remove(sigops))) {
+    delivered |= __sig_handle(sigops, sig->sig, sig->si_code, 0);
     __sig_free(sig);
   }
   return delivered;

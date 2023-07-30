@@ -77,7 +77,7 @@ int sigsuspend(const sigset_t *ignore) {
       long totoms = 0;
 #endif
       do {
-        if ((rc = _check_interrupts(false, g_fds.p))) {
+        if ((rc = _check_interrupts(0, g_fds.p))) {
           break;
         }
         if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {

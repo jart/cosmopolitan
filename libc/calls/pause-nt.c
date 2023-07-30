@@ -28,7 +28,7 @@
 textwindows int sys_pause_nt(void) {
   for (;;) {
 
-    if (_check_interrupts(false, g_fds.p)) {
+    if (_check_interrupts(0, g_fds.p)) {
       return -1;
     }
 

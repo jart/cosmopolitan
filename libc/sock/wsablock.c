@@ -37,8 +37,7 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
-                           uint32_t *flags, bool restartable,
-                           uint32_t timeout) {
+                           uint32_t *flags, int sigops, uint32_t timeout) {
   int e, rc;
   uint32_t i, got;
   if (WSAGetLastError() != kNtErrorIoPending) {
@@ -51,7 +50,7 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
              WSAGetLastError() == kNtErrorNotFound);
     errno = e;
   } else {
-    if (_check_interrupts(restartable, g_fds.p)) {
+    if (_check_interrupts(sigops, g_fds.p)) {
       return -1;
     }
   }
@@ -62,7 +61,7 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
       NTTRACE("WSAWaitForMultipleEvents failed %lm");
       return __winsockerr();
     } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
-      if (_check_interrupts(restartable, g_fds.p)) {
+      if (_check_interrupts(sigops, g_fds.p)) {
         return -1;
       }
       if (timeout) {

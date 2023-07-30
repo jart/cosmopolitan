@@ -67,7 +67,7 @@ textwindows int sys_accept_nt(struct Fd *fd, struct sockaddr_storage *addr,
   if (!AcceptEx(fd->handle, handle, &buffer, 0, sizeof(buffer.local),
                 sizeof(buffer.remote), &bytes_received, &overlapped)) {
     sockfd = (struct SockFd *)fd->extra;
-    if (__wsablock(fd, &overlapped, &completion_flags, true,
+    if (__wsablock(fd, &overlapped, &completion_flags, kSigOpRestartable,
                    sockfd->rcvtimeo) == -1) {
       WSACloseEvent(overlapped.hEvent);
       __sys_closesocket_nt(handle);

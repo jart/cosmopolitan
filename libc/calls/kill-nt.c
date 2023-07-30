@@ -88,10 +88,9 @@ textwindows int sys_kill_nt(int pid, int sig) {
     // since windows can't execve we need to kill the grandchildren
     // TODO(jart): should we just kill the whole tree too? there's
     //             no obvious way to tell if it's the execve shell
-    int64_t hSnap, hProc, hChildProc;
     struct NtProcessEntry32 pe = {.dwSize = sizeof(struct NtProcessEntry32)};
     ntpid = GetProcessId(g_fds.p[pid].handle);
-    hSnap = CreateToolhelp32Snapshot(kNtTh32csSnapprocess, 0);
+    int64_t hSnap = CreateToolhelp32Snapshot(kNtTh32csSnapprocess, 0);
     if (Process32First(hSnap, &pe)) {
       do {
         if (pe.th32ParentProcessID == ntpid) {
@@ -102,6 +101,7 @@ textwindows int sys_kill_nt(int pid, int sig) {
         }
       } while (Process32Next(hSnap, &pe));
     }
+    CloseHandle(hSnap);
     ok = TerminateProcess(g_fds.p[pid].handle, 128 + sig);
     if (!ok && GetLastError() == kNtErrorAccessDenied) ok = true;
     return 0;

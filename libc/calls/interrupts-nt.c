@@ -33,7 +33,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-textwindows int _check_interrupts(bool restartable, struct Fd *fd) {
+textwindows int _check_interrupts(int sigops, struct Fd *fd) {
   int e, rc;
   e = errno;
   if (_weaken(pthread_testcancel_np) &&
@@ -45,14 +45,14 @@ textwindows int _check_interrupts(bool restartable, struct Fd *fd) {
     _weaken(_check_sigalrm)();
   }
   if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
-    if (_weaken(_check_sigchld)) {
+    if (!(sigops & kSigOpNochld) && _weaken(_check_sigchld)) {
       _weaken(_check_sigchld)();
     }
     if (fd && _weaken(_check_sigwinch)) {
       _weaken(_check_sigwinch)(fd);
     }
   }
-  if (_weaken(__sig_check) && _weaken(__sig_check)(restartable)) {
+  if (_weaken(__sig_check) && _weaken(__sig_check)(sigops)) {
     return eintr();
   }
   errno = e;

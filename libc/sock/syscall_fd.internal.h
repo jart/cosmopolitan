@@ -20,7 +20,7 @@ int sys_shutdown_nt(struct Fd *, int);
 ssize_t sys_recv_nt(struct Fd *, const struct iovec *, size_t, uint32_t);
 ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
                         void *, uint32_t *);
-int __wsablock(struct Fd *, struct NtOverlapped *, uint32_t *, bool, uint32_t);
+int __wsablock(struct Fd *, struct NtOverlapped *, uint32_t *, int, uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
