@@ -23,6 +23,8 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
@@ -41,7 +43,7 @@ int mprotect(void *addr, size_t size, int prot) {
     rc = einval();  // unix checks prot before checking size
   } else if (!size) {
     return 0;  // make new technology consistent with unix
-  } else if (UNLIKELY((intptr_t)addr & 4095)) {
+  } else if (UNLIKELY((intptr_t)addr & (getauxval(AT_PAGESZ) - 1))) {
     rc = einval();  // unix checks prot before checking size
   } else if (!IsWindows()) {
     rc = sys_mprotect(addr, size, prot);

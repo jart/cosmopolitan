@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/rand.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -64,6 +64,7 @@
  * @return file descriptor on success, or -1 w/ errno
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
+ * @see mkstemp() if you need a path
  * @see tmpfile() for stdio version
  * @cancellationpoint
  * @asyncsignalsafe
@@ -71,45 +72,23 @@
  * @vforksafe
  */
 int tmpfd(void) {
-  FILE *f;
-  unsigned x;
-  int fd, i, j, e;
-  char path[PATH_MAX], *p;
-  e = errno;
-  if (IsLinux() && (fd = open(kTmpPath, O_RDWR | _O_TMPFILE, 0600)) != -1) {
-    return fd;
-  }
-  errno = e;
-  p = path;
-  p = stpcpy(p, kTmpPath);
-  p = stpcpy(p, "tmp.");
-  if (program_invocation_short_name &&
-      strlen(program_invocation_short_name) < 128) {
-    p = stpcpy(p, program_invocation_short_name);
-    *p++ = '.';
-  }
-  for (i = 0; i < 10; ++i) {
-    x = _rand64();
-    for (j = 0; j < 6; ++j) {
-      p[j] = "0123456789abcdefghijklmnopqrstuvwxyz"[x % 36];
-      x /= 36;
-    }
-    p[j] = 0;
+  int e, fd;
+  const char *prog;
+  char path[PATH_MAX + 1];
+  if (IsLinux()) {
     e = errno;
-    if ((fd = open(path,
-                   O_RDWR | O_CREAT | O_EXCL | (IsWindows() ? _O_TMPFILE : 0),
-                   0600)) != -1) {
-      if (!IsWindows()) {
-        if (unlink(path)) {
-          notpossible;
-        }
-      }
+    if ((fd = open(kTmpPath, O_RDWR | _O_TMPFILE, 0600)) != -1) {
       return fd;
-    } else if (errno == EEXIST) {
-      errno = e;
     } else {
-      break;
+      errno = e;
     }
   }
-  return -1;
+  path[0] = 0;
+  strlcat(path, kTmpPath, sizeof(path));
+  if (!(prog = program_invocation_short_name)) prog = "tmp";
+  strlcat(path, prog, sizeof(path));
+  strlcat(path, ".XXXXXX", sizeof(path));
+  if ((fd = mkstemp(path)) == -1) return -1;
+  if (!IsWindows()) unassert(!unlink(path));
+  return fd;
 }

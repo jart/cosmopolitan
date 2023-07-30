@@ -421,7 +421,7 @@ static struct AsanFault __asan_fault(const signed char *s, signed char dflt) {
   struct AsanFault r;
   if (s[0] < 0) {
     r.kind = s[0];
-  } else if (((uintptr_t)(s + 1) & (PAGESIZE - 1)) && s[1] < 0) {
+  } else if (((uintptr_t)(s + 1) & 4095) && s[1] < 0) {
     r.kind = s[1];
   } else {
     r.kind = dflt;
@@ -652,6 +652,8 @@ static wint_t __asan_symbolize_access_poison(signed char kind) {
       return L'μ';
     case kAsanGlobalOverrun:
       return L'Ω';
+    case kAsanMmapSizeOverrun:
+      return L'Z';
     default:
       return L'?';
   }
@@ -963,14 +965,6 @@ __attribute__((__destructor__)) static void __asan_morgue_flush(void) {
   }
 }
 
-static size_t __asan_user_size(size_t n) {
-  if (n) {
-    return n;
-  } else {
-    return 1;
-  }
-}
-
 static size_t __asan_heap_size(size_t n) {
   if (n < 0x7fffffff0000) {
     n = ROUNDUP(n, _Alignof(struct AsanExtra));
@@ -1043,7 +1037,6 @@ static void *__asan_allocate(size_t a, size_t n, struct AsanTrace *bt,
   char *p;
   size_t c;
   struct AsanExtra *e;
-  n = __asan_user_size(n);
   if ((p = _weaken(dlmemalign)(a, __asan_heap_size(n)))) {
     c = _weaken(dlmalloc_usable_size)(p);
     e = (struct AsanExtra *)(p + c - sizeof(*e));
@@ -1244,12 +1237,7 @@ void *__asan_calloc(size_t n, size_t m) {
 void *__asan_realloc(void *p, size_t n) {
   struct AsanTrace bt;
   if (p) {
-    if (n) {
-      return __asan_realloc_impl(p, n, __asan_realloc_grow);
-    } else {
-      __asan_free(p);
-      return 0;
-    }
+    return __asan_realloc_impl(p, n, __asan_realloc_grow);
   } else {
     __asan_trace(&bt, RBP);
     return __asan_allocate_heap(16, n, &bt);

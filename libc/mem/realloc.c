@@ -29,8 +29,12 @@ void *(*hook_realloc)(void *, size_t) = dlrealloc;
  * does chunk p up to the minimum of (n, p's size) bytes, or null if no
  * space is available.
  *
- * If p is NULL, realloc is equivalent to malloc.
- * If p is not NULL and n is 0, realloc is equivalent to free.
+ * If p is NULL, then realloc() is equivalent to malloc().
+ *
+ * If p is not NULL and n is 0, then realloc() shrinks the allocation to
+ * zero bytes. The allocation isn't freed and still continues to be a
+ * uniquely allocated piece of memory. However it should be assumed that
+ * zero bytes can be accessed, since that's enforced by `MODE=asan`.
  *
  * The returned pointer may or may not be the same as p. The algorithm
  * prefers extending p in most cases when possible, otherwise it employs
@@ -54,8 +58,6 @@ void *(*hook_realloc)(void *, size_t) = dlrealloc;
  * @param p is address of current allocation or NULL
  * @param n is number of bytes needed
  * @return rax is result, or NULL w/ errno w/o free(p)
- * @note realloc(p=0, n=0) → malloc(32)
- * @note realloc(p≠0, n=0) → free(p)
  * @see dlrealloc()
  * @threadsafe
  */

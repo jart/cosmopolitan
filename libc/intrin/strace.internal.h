@@ -19,7 +19,9 @@ COSMOPOLITAN_C_START_
 #define STRACE(FMT, ...)                                   \
   do {                                                     \
     if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) { \
+      ftrace_enabled(-1);                                  \
       __stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__);  \
+      ftrace_enabled(+1);                                  \
     }                                                      \
   } while (0)
 #else

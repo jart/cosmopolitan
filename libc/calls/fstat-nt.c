@@ -102,7 +102,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
           st->st_ctim = FileTimeToTimeSpec(wst.ftCreationFileTime);
           st->st_birthtim = st->st_ctim;
           st->st_size = (uint64_t)wst.nFileSizeHigh << 32 | wst.nFileSizeLow;
-          st->st_blksize = PAGESIZE;
+          st->st_blksize = 4096;
           st->st_dev = wst.dwVolumeSerialNumber;
           st->st_rdev = 0;
           st->st_ino = (uint64_t)wst.nFileIndexHigh << 32 | wst.nFileIndexLow;
@@ -118,7 +118,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
                                              &fci, sizeof(fci))) {
               actualsize = fci.CompressedFileSize;
             }
-            st->st_blocks = ROUNDUP(actualsize, PAGESIZE) / 512;
+            st->st_blocks = ROUNDUP(actualsize, 4096) / 512;
           }
         } else {
           STRACE("%s failed %m", "GetFileInformationByHandle");

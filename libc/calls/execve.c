@@ -40,6 +40,11 @@
  * to be valid UTF-8 in order to round-trip the WIN32 API, without being
  * corrupted.
  *
+ * On Windows, only file descriptors 0, 1 and 2 can be passed to a child
+ * process in such a way that allows them to be automatically discovered
+ * when the child process initializes. Cosmpolitan currently treats your
+ * other file descriptors as implicitly O_CLOEXEC.
+ *
  * @param program will not be PATH searched, see commandv()
  * @param argv[0] is the name of the program to run
  * @param argv[1,n-2] optionally specify program arguments

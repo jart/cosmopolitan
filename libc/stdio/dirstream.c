@@ -285,7 +285,9 @@ DIR *opendir(const char *name) {
           res->zip.offset = GetZipCdirOffset(zip->cdir);
           res->zip.records = GetZipCdirRecords(zip->cdir);
           res->zip.prefix = malloc(zipname.len + 2);
-          memcpy(res->zip.prefix, zipname.path, zipname.len);
+          if (zipname.len) {
+            memcpy(res->zip.prefix, zipname.path, zipname.len);
+          }
           if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
             res->zip.prefix[zipname.len++] = '/';
           }
@@ -364,7 +366,9 @@ static struct dirent *readdir_impl(DIR *dir) {
           ent->d_off = dir->zip.offset;
           ent->d_reclen = MIN(n, 255);
           ent->d_type = S_ISDIR(mode) ? DT_DIR : DT_REG;
-          memcpy(ent->d_name, s, ent->d_reclen);
+          if (ent->d_reclen) {
+            memcpy(ent->d_name, s, ent->d_reclen);
+          }
           ent->d_name[ent->d_reclen] = 0;
         } else {
           lastent = (struct dirent *)dir->buf;
@@ -377,7 +381,9 @@ static struct dirent *readdir_impl(DIR *dir) {
             ent->d_off = -1;
             ent->d_reclen = n;
             ent->d_type = DT_DIR;
-            memcpy(ent->d_name, s, ent->d_reclen);
+            if (ent->d_reclen) {
+              memcpy(ent->d_name, s, ent->d_reclen);
+            }
             ent->d_name[ent->d_reclen] = 0;
           }
         }
@@ -474,7 +480,9 @@ errno_t readdir_r(DIR *dir, struct dirent *output, struct dirent **result) {
     return err;
   }
   if (entry) {
-    memcpy(output, entry, entry->d_reclen);
+    if (entry->d_reclen) {
+      memcpy(output, entry, entry->d_reclen);
+    }
   } else {
     output = 0;
   }

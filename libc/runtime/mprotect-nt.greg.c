@@ -27,6 +27,7 @@ textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
   uint32_t op;
   char *a, *b, *x, *y, *p;
   __mmi_lock();
+  size = (size + 4095) & -4096;
   p = addr;
   i = FindMemoryInterval(&_mmi, (intptr_t)p >> 16);
   if (i == _mmi.i || (!i && p + size <= (char *)ADDR_32_TO_48(_mmi.p[0].x))) {
@@ -41,9 +42,14 @@ textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
     // we unfortunately must do something similar to this for cow
     for (; i < _mmi.i; ++i) {
       x = (char *)ADDR_32_TO_48(_mmi.p[i].x);
-      y = x + _mmi.p[i].size;
+      y = (char *)ADDR_32_TO_48(_mmi.p[i].y) + 65536;
       if ((x <= p && p < y) || (x < p + size && p + size <= y) ||
           (p < x && y < p + size)) {
+        if (p <= x && p + size >= y) {
+          _mmi.p[i].prot = prot;
+        } else {
+          _mmi.p[i].prot |= prot;
+        }
         a = MIN(MAX(p, x), y);
         b = MAX(MIN(p + size, y), x);
         if (!VirtualProtect(a, b - a, __prot2nt(prot, _mmi.p[i].iscow), &op)) {

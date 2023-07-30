@@ -65,7 +65,7 @@ const char *(DescribeSockaddr)(char buf[128], const struct sockaddr *sa,
       unix = (const struct sockaddr_un *)sa;
       n = strnlen(unix->sun_path, sizeof(unix->sun_path));
       n = MIN(n, 128 - 1);
-      memcpy(buf, unix->sun_path, n);
+      if (n) memcpy(buf, unix->sun_path, n);
       buf[n] = 0;
     }
   }

@@ -8,9 +8,6 @@ int _bitreverse8(int) pureconst;
 int _bitreverse16(int) pureconst;
 uint32_t _bitreverse32(uint32_t) pureconst;
 uint64_t _bitreverse64(uint64_t) pureconst;
-unsigned long _roundup2pow(unsigned long) pureconst;
-unsigned long _roundup2log(unsigned long) pureconst;
-unsigned long _rounddown2pow(unsigned long) pureconst;
 
 #define READ16LE(P)                    \
   (__extension__({                     \

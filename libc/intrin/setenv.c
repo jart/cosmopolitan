@@ -30,6 +30,7 @@
  * @raise EINVAL if `name` is empty or contains `'='`
  * @raise ENOMEM if we require more vespene gas
  * @see putenv(), getenv()
+ * @threadunsafe
  */
 int setenv(const char *name, const char *value, int overwrite) {
   int rc;

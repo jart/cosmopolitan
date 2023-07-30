@@ -91,7 +91,7 @@ char *xjoinpaths(const char *, const char *) paramsnonnull()
 void xfixpath(void);
 void *xslurp(const char *, size_t *)
     paramsnonnull((1)) returnspointerwithnoaliases
-    returnsaligned((PAGESIZE)) dontdiscard;
+    returnsaligned((4096)) dontdiscard;
 int xbarf(const char *, const void *, size_t);
 
 #endif /* COSMO */

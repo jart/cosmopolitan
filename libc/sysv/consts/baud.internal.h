@@ -63,7 +63,6 @@ extern const uint32_t B4000000;
 #define B3500000 B3500000
 #define B4000000 B4000000
 
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_BAUD_H_ */

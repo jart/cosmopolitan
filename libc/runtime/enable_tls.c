@@ -102,11 +102,11 @@ textstartup void __enable_tls(void) {
 
   // Here's the layout we're currently using:
   //
-  //         .balign PAGESIZE
+  //         .balign 4096
   //     _tdata_start:
   //         .tdata
   //         _tdata_size = . - _tdata_start
-  //         .balign PAGESIZE
+  //         .balign 4096
   //     _tbss_start:
   //     _tdata_start + _tbss_offset:
   //         .tbss

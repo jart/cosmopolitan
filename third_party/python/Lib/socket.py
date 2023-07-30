@@ -904,7 +904,6 @@ if __name__ == 'PYOBJ.COM':
     SO_PEERCRED = 0
     SO_PEERSEC = 0
     SO_PRIORITY = 0
-    SO_PROTOCOL = 0
     SO_RCVBUF = 0
     SO_RCVLOWAT = 0
     SO_RCVTIMEO = 0

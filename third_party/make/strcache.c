@@ -253,7 +253,8 @@ strcache_add_len (const char *str, size_t len)
 void
 strcache_init (void)
 {
-  hash_init (&strings, 8000, str_hash_1, str_hash_2, str_hash_cmp);
+  // [jart] increased from 8000
+  hash_init (&strings, 131072, str_hash_1, str_hash_2, str_hash_cmp);
 }
 
 

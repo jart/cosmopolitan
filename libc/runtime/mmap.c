@@ -245,9 +245,10 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
                             int fd, int64_t off) {
   char *p = addr;
   struct DirectMap dm;
+  size_t requested_size;
   int a, b, i, f, m, n, x;
   bool needguard, clashes;
-  unsigned long guardsize;
+  unsigned long page_size;
   size_t virtualused, virtualneed;
 
   if (VERY_UNLIKELY(!size)) {
@@ -274,11 +275,12 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
     flags = MAP_SHARED;  // cf. MAP_SHARED_VALIDATE
   }
 
+  requested_size = size;
+  page_size = getauxval(AT_PAGESZ);
   if (flags & MAP_ANONYMOUS) {
     fd = -1;
     off = 0;
     size = ROUNDUP(size, FRAMESIZE);
-    if (IsWindows()) prot |= PROT_WRITE;  // kludge
     if ((flags & MAP_TYPE) == MAP_FILE) {
       STRACE("need MAP_PRIVATE or MAP_SHARED");
       return VIP(einval());
@@ -289,8 +291,8 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
   } else if (VERY_UNLIKELY(off < 0)) {
     STRACE("mmap negative offset");
     return VIP(einval());
-  } else if (VERY_UNLIKELY(!ALIGNED(off))) {
-    STRACE("mmap off isn't 64kb aligned");
+  } else if (off & ((IsWindows() ? FRAMESIZE : page_size) - 1)) {
+    STRACE("mmap offset isn't properly aligned");
     return VIP(einval());
   } else if (VERY_UNLIKELY(INT64_MAX - size < off)) {
     STRACE("mmap too large");
@@ -326,8 +328,7 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
         OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
       }
     }
-  } else if (p && !clashes && !OverlapsArenaSpace(p, size) &&
-             !OverlapsShadowSpace(p, size)) {
+  } else if (p && !clashes && !OverlapsShadowSpace(p, size)) {
     x = FRAME(p);
   } else if (!Automap(n, a, &x)) {
     STRACE("automap has no room for %d frames with %d alignment", n, a);
@@ -335,7 +336,6 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
   }
 
   needguard = false;
-  guardsize = getauxval(AT_PAGESZ);
   p = (char *)ADDR_32_TO_48(x);
   if ((f & MAP_TYPE) == MAP_STACK) {
     if (~f & MAP_ANONYMOUS) {
@@ -374,11 +374,15 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
       if ((dm = sys_mmap(p + size - SIGSTKSZ, SIGSTKSZ, prot,
                          f | MAP_GROWSDOWN_linux, fd, off))
               .addr != MAP_FAILED) {
-        npassert(sys_mmap(p, guardsize, PROT_NONE,
+        npassert(sys_mmap(p, page_size, PROT_NONE,
                           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
                      .addr == p);
         dm.addr = p;
-        return FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
+        p = FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
+        if (IsAsan() && p != MAP_FAILED) {
+          __asan_poison(p, page_size, kAsanStackOverflow);
+        }
+        return p;
       } else if (errno == ENOTSUP) {
         // WSL doesn't support MAP_GROWSDOWN
         needguard = true;
@@ -399,14 +403,14 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
   }
 
   if (p != MAP_FAILED) {
+    if (IsAsan()) {
+      __asan_poison(p + requested_size, size - requested_size,
+                    kAsanMmapSizeOverrun);
+    }
     if (needguard) {
-      if (!IsWindows()) {
-        // make windows fork() code simpler
-        mprotect(p, guardsize, PROT_NONE);
-      }
+      unassert(!mprotect(p, page_size, PROT_NONE));
       if (IsAsan()) {
-        __repstosb((void *)(((intptr_t)p >> 3) + 0x7fff8000),
-                   kAsanStackOverflow, guardsize / 8);
+        __asan_poison(p, page_size, kAsanStackOverflow);
       }
     }
   }
@@ -415,7 +419,7 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
 }
 
 /**
- * Beseeches system for page-table entries, e.g.
+ * Creates virtual memory, e.g.
  *
  *     char *m;
  *     m = mmap(NULL, FRAMESIZE, PROT_READ | PROT_WRITE,
@@ -430,9 +434,7 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
  *     needs to be made mandatory because of Windows although you can
  *     use __sys_mmap() to circumvent it on System Five in which case
  *     runtime support services, e.g. asan memory safety, could break
- * @param size must be >0 and needn't be a multiple of FRAMESIZE, but
- *     will be rounded up to FRAMESIZE automatically if MAP_ANONYMOUS
- *     is specified
+ * @param size must be >0 otherwise EINVAL is raised
  * @param prot can have PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE/etc.
  * @param flags should have one of the following masked by `MAP_TYPE`
  *     - `MAP_FILE` in which case `MAP_ANONYMOUS` shouldn't be used
@@ -459,8 +461,8 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
  * @param fd is an open()'d file descriptor, whose contents shall be
  *     made available w/ automatic reading at the chosen address
  * @param off specifies absolute byte index of fd's file for mapping,
- *     should be zero if MAP_ANONYMOUS is specified, and sadly needs
- *     to be 64kb aligned too
+ *     should be zero if MAP_ANONYMOUS is specified, which SHOULD be
+ *     aligned to FRAMESIZE
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {

@@ -17,15 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
-#include "libc/sock/yoink.inc"
-#include "libc/sysv/errfuns.h"
 
 textwindows int sys_bind_nt(struct Fd *fd, const void *addr,
                             uint32_t addrsize) {
-  npassert(fd->kind == kFdSocket);
+  unassert(fd->kind == kFdSocket);
   if (__sys_bind_nt(fd->handle, addr, addrsize) != -1) {
     return 0;
   } else {

@@ -86,7 +86,7 @@ ssize_t read(int fd, void *buf, size_t size) {
     rc = ebadf();
   }
   END_CANCELLATION_POINT;
-  DATATRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)),
-            buf, rc > 40 ? "..." : "", size, rc);
+  DATATRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd,
+            (int)MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, rc);
   return rc;
 }

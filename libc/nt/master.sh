@@ -93,6 +93,7 @@ imp	'GetModuleFileName'					GetModuleFileNameW					kernel32	3
 imp	'GetModuleHandle'					GetModuleHandleA					kernel32	1
 imp	'GetModuleHandleEx'					GetModuleHandleExW					kernel32	3
 imp	'GetModuleHandleW'					GetModuleHandleW					kernel32	1
+imp	'GetNamedPipeInfo'					GetNamedPipeInfo					kernel32	5
 imp	'GetNumberOfConsoleInputEvents'				GetNumberOfConsoleInputEvents				kernel32	2
 imp	'GetNumberOfConsoleMouseButtons'			GetNumberOfConsoleMouseButtons				kernel32	1
 imp	'GetOverlappedResult'					GetOverlappedResult					kernel32	4
@@ -246,8 +247,8 @@ imp	'VirtualAlloc'						VirtualAlloc						kernel32	4
 imp	'VirtualAllocEx'					VirtualAllocEx						kernel32	5
 imp	'VirtualFree'						VirtualFree						kernel32	3
 imp	'VirtualLock'						VirtualLock						kernel32	2
-imp	'VirtualUnlock'						VirtualUnlock						kernel32	2
 imp	'VirtualQuery'						VirtualQuery						kernel32	3
+imp	'VirtualUnlock'						VirtualUnlock						kernel32	2
 imp	'WaitForMultipleObjectsEx'				WaitForMultipleObjectsEx				kernel32	5
 imp	'WaitForSingleObjectEx'					WaitForSingleObjectEx					kernel32	3
 imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	8

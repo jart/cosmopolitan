@@ -134,12 +134,6 @@ o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 		CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
-# we must segregate codegen because:
-#   file contains multiple independently linkable apis
-		COPTS +=				\
-			-ffunction-sections		\
-			-fdata-sections
-
 # we always want -Os because:
 #   va_arg codegen is very bloated in default mode
 o//libc/calls/open.o					\

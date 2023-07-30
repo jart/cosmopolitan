@@ -42,11 +42,6 @@ int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
   va_list va, vb;
   char pathbuf[PATH_MAX];
 
-  // resolve path of executable
-  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) {
-    return -1;
-  }
-
   // turn varargs into array
   va_copy(vb, va);
   va_start(va, arg);
@@ -59,6 +54,15 @@ int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
     if (!(argv[i] = va_arg(vb, const char *))) break;
   }
   va_end(vb);
+
+  if (strchr(prog, '/')) {
+    return execv(prog, argv);
+  }
+
+  // resolve path of executable
+  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) {
+    return -1;
+  }
 
   // change argv[0] to resolved path if it's ambiguous
   // otherwise the program won't have much luck finding itself

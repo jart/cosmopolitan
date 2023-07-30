@@ -348,7 +348,6 @@ TEST(pledge, inet_forbidsOtherSockets) {
     ASSERT_SYS(EPERM, -1, socket(AF_BLUETOOTH, SOCK_DGRAM, IPPROTO_UDP));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_RAW, IPPROTO_UDP));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_DGRAM, IPPROTO_RAW));
-    ASSERT_SYS(EPERM, -1, setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, &yes, 4));
     struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
     ASSERT_SYS(0, 0, bind(4, (struct sockaddr *)&sin, sizeof(sin)));
     struct sockaddr_in6 sin6 = {.sin6_family = AF_INET6,
@@ -372,7 +371,6 @@ TEST(pledge, anet_forbidsUdpSocketsAndConnect) {
     ASSERT_SYS(0, 0, pledge("stdio anet", 0));
     ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
-    ASSERT_SYS(EPERM, -1, setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, &yes, 4));
     struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
     ASSERT_SYS(EPERM, -1, connect(4, (struct sockaddr *)&sin, sizeof(sin)));
     _Exit(0);

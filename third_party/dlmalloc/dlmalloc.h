@@ -99,13 +99,6 @@ void* dlmemalign(size_t, size_t);
 int dlposix_memalign(void**, size_t, size_t);
 
 /*
-  valloc(size_t n);
-  Equivalent to memalign(pagesize, n), where pagesize is the page
-  size of the system. If the pagesize is unknown, 4096 is used.
-*/
-void* dlvalloc(size_t);
-
-/*
   mallopt(int parameter_number, int parameter_value)
   Sets tunable parameters The format is to provide a
   (parameter-number, parameter-value) pair.  mallopt then sets the
@@ -347,13 +340,6 @@ void** dlindependent_comalloc(size_t, size_t*, void**);
   may be worthwhile to sort this array before calling bulk_free.
 */
 size_t dlbulk_free(void**, size_t n_elements);
-
-/*
-  pvalloc(size_t n);
-  Equivalent to valloc(minimum-page-that-holds(n)), that is,
-  round up n to nearest pagesize.
- */
-void* dlpvalloc(size_t);
 
 /*
   malloc_trim(size_t pad);

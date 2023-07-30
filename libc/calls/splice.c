@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
@@ -28,10 +29,9 @@
 #include "libc/mem/alloca.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/thread.h"
 
 static struct Splice {
-  pthread_once_t once;
+  _Atomic(uint32_t) once;
   bool ok;
 } g_splice;
 
@@ -79,7 +79,7 @@ ssize_t splice(int infd, int64_t *opt_in_out_inoffset, int outfd,
                int64_t *opt_in_out_outoffset, size_t uptobytes,
                uint32_t flags) {
   ssize_t rc;
-  pthread_once(&g_splice.once, splice_init);
+  cosmo_once(&g_splice.once, splice_init);
   if (!g_splice.ok) {
     rc = enosys();
   } else if (IsAsan() && ((opt_in_out_inoffset &&

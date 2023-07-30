@@ -644,7 +644,7 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
   if (!func) {
     rc = EINVAL;
   } else if (!IsTiny() &&
-             ((flags & CLONE_VM) && (stksz < PAGESIZE || (stksz & 15)))) {
+             ((flags & CLONE_VM) && (stksz < 4096 || (stksz & 15)))) {
     rc = EINVAL;
   } else if (IsAsan() &&
              (((flags & CLONE_SETTLS) && !__asan_is_valid(tls, 64)) ||

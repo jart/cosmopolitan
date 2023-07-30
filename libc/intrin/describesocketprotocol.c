@@ -27,6 +27,7 @@ const char *(DescribeSocketProtocol)(char buf[12], int family) {
   if (family == IPPROTO_UDP) return "IPPROTO_UDP";
   if (family == IPPROTO_RAW) return "IPPROTO_RAW";
   if (family == IPPROTO_IPV6) return "IPPROTO_IPv6";
+  if (family == IPPROTO_ICMPV6) return "IPPROTO_ICMPV6";
   FormatInt32(buf, family);
   return buf;
 }

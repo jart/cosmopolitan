@@ -87,13 +87,13 @@ errno_t posix_spawn(int *pid, const char *path,
       posix_spawnattr_getflags(attrp, &flags);
       if (flags & POSIX_SPAWN_SETSID) {
         if (setsid()) {
-          STRACE("posix_spawn fail #%d", 1);
+          STRACE("posix_spawn fail #%d% m", 1);
           _Exit(127);
         }
       }
       if (flags & POSIX_SPAWN_SETPGROUP) {
         if (setpgid(0, (*attrp)->pgroup)) {
-          STRACE("posix_spawn fail #%d", 1);
+          STRACE("posix_spawn fail #%d% m", 2);
           _Exit(127);
         }
       }
@@ -103,14 +103,14 @@ errno_t posix_spawn(int *pid, const char *path,
       }
       if ((flags & POSIX_SPAWN_RESETIDS) &&
           (setgid(getgid()) || setuid(getuid()))) {
-        STRACE("posix_spawn fail #%d", 2);
+        STRACE("posix_spawn fail #%d% m", 3);
         _Exit(127);
       }
       if (flags & POSIX_SPAWN_SETSIGDEF) {
         for (s = 1; s < 32; s++) {
           if (sigismember(&(*attrp)->sigdefault, s)) {
             if (sigaction(s, &dfl, 0) == -1) {
-              STRACE("posix_spawn fail #%d", 3);
+              STRACE("posix_spawn fail #%d% m", 4);
               _Exit(127);
             }
           }
@@ -119,7 +119,7 @@ errno_t posix_spawn(int *pid, const char *path,
     }
     if (file_actions) {
       if (RunFileActions(*file_actions) == -1) {
-        STRACE("posix_spawn fail #%d", 4);
+        STRACE("posix_spawn fail #%d% m", 5);
         _Exit(127);
       }
     }
@@ -128,21 +128,21 @@ errno_t posix_spawn(int *pid, const char *path,
         posix_spawnattr_getschedpolicy(attrp, &policy);
         posix_spawnattr_getschedparam(attrp, &param);
         if (sched_setscheduler(0, policy, &param) == -1) {
-          STRACE("posix_spawn fail #%d", 5);
+          STRACE("posix_spawn fail #%d% m", 6);
           _Exit(127);
         }
       }
       if (flags & POSIX_SPAWN_SETSCHEDPARAM) {
         posix_spawnattr_getschedparam(attrp, &param);
         if (sched_setparam(0, &param) == -1) {
-          STRACE("posix_spawn fail #%d", 6);
+          STRACE("posix_spawn fail #%d% m", 7);
           _Exit(127);
         }
       }
     }
     if (!envp) envp = environ;
     execve(path, argv, envp);
-    STRACE("posix_spawn fail #%d", 7);
+    STRACE("posix_spawn fail #%d% m", 8);
     _Exit(127);
   } else if (child != -1) {
     if (pid) *pid = child;

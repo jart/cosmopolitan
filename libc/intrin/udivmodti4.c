@@ -85,7 +85,7 @@ forceinline du_int udiv128by64to64(du_int u1, du_int u0, du_int v, du_int *r) {
  * @param b is divisor
  * @param rem receives remainder if not NULL
  */
-COMPILER_RT_ABI tu_int __udivmodti4(tu_int a, tu_int b, tu_int *rem) {
+tu_int __udivmodti4(tu_int a, tu_int b, tu_int *rem) {
   const unsigned n_utword_bits = sizeof(tu_int) * CHAR_BIT;
   utwords dividend, divisor, quotient, remainder;
   si_int shift;
@@ -134,4 +134,8 @@ COMPILER_RT_ABI tu_int __udivmodti4(tu_int a, tu_int b, tu_int *rem) {
   }
   if (rem) *rem = dividend.all;
   return quotient.all;
+}
+
+tu_int __udivti3(tu_int a, tu_int b) {
+  return __udivmodti4(a, b, NULL);
 }

@@ -141,10 +141,6 @@ forceinline pureconst bool IsShadowFrame(int x) {
   return 0x7fff <= x && x < 0x10008000;
 }
 
-forceinline pureconst bool IsArenaFrame(int x) {
-  return 0x5004 <= x && x <= 0x7ffb;
-}
-
 forceinline pureconst bool IsStaticStackFrame(int x) {
   intptr_t stack = GetStaticStackAddr(0);
   return (int)(stack >> 16) <= x &&
@@ -186,19 +182,6 @@ forceinline pureconst bool OverlapsImageSpace(const void *p, size_t n) {
     EndA = BegA + (n - 1);
     BegB = __executable_start;
     EndB = _end - 1;
-    return MAX(BegA, BegB) < MIN(EndA, EndB);
-  } else {
-    return 0;
-  }
-}
-
-forceinline pureconst bool OverlapsArenaSpace(const void *p, size_t n) {
-  intptr_t BegA, EndA, BegB, EndB;
-  if (n) {
-    BegA = (intptr_t)p;
-    EndA = BegA + (n - 1);
-    BegB = 0x50000000;
-    EndB = 0x7ffdffff;
     return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {
     return 0;

@@ -21,6 +21,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
@@ -79,12 +80,16 @@ static struct SslCache *OpenSslCache(const char *path, size_t size) {
   return c;
 }
 
+static unsigned long rounddown2pow(unsigned long x) {
+  return x ? 1ul << _bsrl(x) : 0;
+}
+
 struct SslCache *CreateSslCache(const char *path, size_t bytes, int lifetime) {
   size_t ents, size;
   struct SslCache *c;
   if (!bytes) bytes = 10 * 1024 * 1024;
   if (lifetime <= 0) lifetime = 24 * 60 * 60;
-  ents = _rounddown2pow(MAX(2, bytes / sizeof(struct SslCacheEntry)));
+  ents = rounddown2pow(MAX(2, bytes / sizeof(struct SslCacheEntry)));
   size = sizeof(struct SslCache) + sizeof(struct SslCacheEntry) * ents;
   size = ROUNDUP(size, FRAMESIZE);
   c = OpenSslCache(path, size);

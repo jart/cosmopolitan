@@ -54,9 +54,11 @@ int _pthread_cancel_sys(void) {
 
 static void OnSigThr(int sig, siginfo_t *si, void *ctx) {
   ucontext_t *uc = ctx;
-  struct CosmoTib *t = __get_tls();
-  struct PosixThread *pt = (struct PosixThread *)t->tib_pthread;
-  if (pt && !(pt->flags & PT_NOCANCEL) &&
+  struct CosmoTib *t;
+  struct PosixThread *pt;
+  if ((t = __get_tls()) &&  // TODO: why can it be null on freebsd?
+      (pt = (struct PosixThread *)t->tib_pthread) &&
+      !(pt->flags & PT_NOCANCEL) &&
       atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
     sigaddset(&uc->uc_sigmask, sig);
     if (systemfive_cancellable <= (char *)uc->uc_mcontext.rip &&
@@ -255,14 +257,21 @@ static void ListenForSigThr(void) {
  * while running read(). Masked mode doesn't have second chances. You
  * must rigorously check the results of each cancellation point call.
  *
+ * Unit tests should be able to safely ignore the return value, or at
+ * the very least be programmed to consider ESRCH a successful status
+ *
  * @return 0 on success, or errno on error
- * @raise ESRCH if thread isn't alive
+ * @raise ESRCH if system thread wasn't alive or we lost a race
  */
 errno_t pthread_cancel(pthread_t thread) {
   int e, rc, tid;
   static bool once;
   struct PosixThread *pt;
-  if (!once) ListenForSigThr(), once = true;
+  __require_tls();
+  if (!once) {
+    ListenForSigThr();
+    once = true;
+  }
   pt = (struct PosixThread *)thread;
   switch (atomic_load_explicit(&pt->status, memory_order_acquire)) {
     case kPosixThreadZombie:

@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
@@ -34,7 +35,10 @@
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
 
-char program_executable_name[PATH_MAX];
+static struct ProgramExecutableName {
+  _Atomic(uint32_t) once;
+  char buf[PATH_MAX];
+} program_executable_name;
 
 static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
@@ -50,7 +54,9 @@ static inline char *StrCat(char buf[PATH_MAX], const char *a, const char *b) {
 }
 
 static inline void GetProgramExecutableNameImpl(char *p, char *e) {
+  int c;
   char *q;
+  char **ep;
   ssize_t rc;
   size_t i, n;
   union {
@@ -84,9 +90,9 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
 
   // if argv[0] exists then turn it into an absolute path. we also try
   // adding a .com suffix since the ape auto-appends it when resolving
-  if (__argc && (((q = __argv[0]) && !sys_faccessat(AT_FDCWD, q, F_OK, 0)) ||
-                 ((q = StrCat(u.path, __argv[0], ".com")) &&
-                  !sys_faccessat(AT_FDCWD, q, F_OK, 0)))) {
+  if (((q = __argv[0]) && !sys_faccessat(AT_FDCWD, q, F_OK, 0)) ||
+      ((q = StrCat(u.path, __argv[0], ".com")) &&
+       !sys_faccessat(AT_FDCWD, q, F_OK, 0))) {
     if (*q != '/') {
       if (q[0] == '.' && q[1] == '/') {
         q += 2;
@@ -101,6 +107,19 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
     }
     *p = 0;
     return;
+  }
+
+  // if getenv("_") exists then use that
+  for (ep = __envp; (q = *ep); ++ep) {
+    if (*q++ == '_' && *q++ == '=') {
+      while ((c = *q++)) {
+        if (p + 1 < e) {
+          *p++ = c;
+        }
+      }
+      *p = 0;
+      return;
+    }
   }
 
   // if argv[0] doesn't exist, then fallback to interpreter name
@@ -125,28 +144,29 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
   }
 
   // otherwise give up and just copy argv[0] into it
-  if (!*p && __argv[0] && strlen(__argv[0]) < e - p) {
-    strcpy(p, __argv[0]);
+  if (!*p && (q = __argv[0])) {
+    while ((c = *q++)) {
+      if (p + 1 < e) {
+        *p++ = c;
+      }
+    }
+    *p = 0;
   }
+}
+
+static void InitProgramExecutableName(void) {
+  int e;
+  e = errno;
+  GetProgramExecutableNameImpl(
+      program_executable_name.buf,
+      program_executable_name.buf + sizeof(program_executable_name.buf));
+  errno = e;
 }
 
 /**
  * Returns absolute path of program.
  */
 char *GetProgramExecutableName(void) {
-  int e;
-  static bool once;
-  if (!once) {
-    e = errno;
-    GetProgramExecutableNameImpl(
-        program_executable_name,
-        program_executable_name + sizeof(program_executable_name));
-    errno = e;
-    once = true;
-  }
-  return program_executable_name;
+  cosmo_once(&program_executable_name.once, InitProgramExecutableName);
+  return program_executable_name.buf;
 }
-
-/* const void *const GetProgramExecutableNameCtor[] initarray = { */
-/*     GetProgramExecutableName, */
-/* }; */

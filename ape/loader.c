@@ -438,16 +438,6 @@ static long Write(int fd, const void *data, unsigned long size, int os) {
   return CallSystem(fd, (long)data, size, 0, 0, 0, 0, numba, os);
 }
 
-static int Execve(const char *prog, char **argv, char **envp, int os) {
-  int numba;
-  if (IsLinux() && IsAarch64()) {
-    numba = 221;
-  } else {
-    numba = 59;
-  }
-  return CallSystem((long)prog, (long)argv, (long)envp, 0, 0, 0, 0, numba, os);
-}
-
 static int Access(const char *path, int mode, int os) {
   if (IsLinux() && IsAarch64()) {
     return SystemCall(-100, (long)path, mode, 0, 0, 0, 0, 48);

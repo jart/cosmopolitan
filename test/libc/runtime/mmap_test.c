@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
@@ -37,6 +38,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
@@ -94,13 +96,24 @@ TEST(mmap, noreplaceExistingMap) {
 
 TEST(mmap, smallerThanPage_mapsRemainder) {
   long pagesz = sysconf(_SC_PAGESIZE);
-  char *map = mmap(0, 1, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  char *map =
+      mmap(0, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   ASSERT_NE(MAP_FAILED, map);
   EXPECT_TRUE(testlib_memoryexists(map));
   EXPECT_TRUE(testlib_memoryexists(map + (pagesz - 1)));
   EXPECT_SYS(0, 0, munmap(map, 1));
   EXPECT_FALSE(testlib_memoryexists(map));
   EXPECT_FALSE(testlib_memoryexists(map + (pagesz - 1)));
+}
+
+TEST(mmap, smallerThanPage_remainderIsPoisoned) {
+  if (!IsAsan()) return;
+  char *map;
+  ASSERT_NE(MAP_FAILED, (map = mmap(0, 1, PROT_READ | PROT_WRITE,
+                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
+  EXPECT_TRUE(__asan_is_valid(map, 1));
+  EXPECT_FALSE(__asan_is_valid(map + 1, 1));
+  EXPECT_SYS(0, 0, munmap(map, 1));
 }
 
 TEST(mmap, testMapFile) {
@@ -130,7 +143,7 @@ TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   EXPECT_NE(-1, close(fd));
   EXPECT_STREQN("hello", p, 5);
   p[1] = 'a';
-  EXPECT_NE(-1, msync(p, PAGESIZE, MS_SYNC));
+  EXPECT_NE(-1, msync(p, getauxval(AT_PAGESZ), MS_SYNC));
   ASSERT_NE(-1, (fd = open(path, O_RDONLY)));
   EXPECT_EQ(5, read(fd, buf, 5));
   EXPECT_STREQN("hallo", buf, 5);
@@ -179,15 +192,16 @@ TEST(mmap, customStackMemory_isAuthorized) {
 TEST(mmap, fileOffset) {
   int fd;
   char *map;
+  int offset_align = IsWindows() ? FRAMESIZE : getauxval(AT_PAGESZ);
   ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
-  EXPECT_NE(-1, ftruncate(fd, FRAMESIZE * 2));
-  EXPECT_NE(-1, pwrite(fd, "hello", 5, FRAMESIZE * 0));
-  EXPECT_NE(-1, pwrite(fd, "there", 5, FRAMESIZE * 1));
+  EXPECT_NE(-1, ftruncate(fd, offset_align * 2));
+  EXPECT_NE(-1, pwrite(fd, "hello", 5, offset_align * 0));
+  EXPECT_NE(-1, pwrite(fd, "there", 5, offset_align * 1));
   EXPECT_NE(-1, fdatasync(fd));
-  ASSERT_NE(MAP_FAILED, (map = mmap(NULL, FRAMESIZE, PROT_READ, MAP_PRIVATE, fd,
-                                    FRAMESIZE)));
+  ASSERT_NE(MAP_FAILED, (map = mmap(NULL, offset_align, PROT_READ, MAP_PRIVATE,
+                                    fd, offset_align)));
   EXPECT_EQ(0, memcmp(map, "there", 5), "%#.*s", 5, map);
-  EXPECT_NE(-1, munmap(map, FRAMESIZE));
+  EXPECT_NE(-1, munmap(map, offset_align));
   EXPECT_NE(-1, close(fd));
 }
 

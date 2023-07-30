@@ -146,7 +146,7 @@ int pthread_condattr_destroy(pthread_condattr_t *) paramsnonnull();
 int pthread_condattr_getpshared(const pthread_condattr_t *, int *) paramsnonnull();
 int pthread_condattr_init(pthread_condattr_t *) paramsnonnull();
 int pthread_condattr_setpshared(pthread_condattr_t *, int) paramsnonnull();
-int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *) paramsnonnull((1, 3));
+int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *) paramsnonnull((1));
 int pthread_detach(pthread_t);
 int pthread_equal(pthread_t, pthread_t);
 int pthread_getattr_np(pthread_t, pthread_attr_t *) paramsnonnull();

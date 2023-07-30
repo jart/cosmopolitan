@@ -24,7 +24,6 @@
 
 #include "libc/fmt/libgen.h"
 #include "libc/log/libfatal.internal.h"
-#include "libc/mem/arena.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/xasprintf.h"
@@ -267,7 +266,6 @@ static Token *read_const_expr(Token **rest, Token *tok) {
 
 // Read and evaluate a constant expression.
 static long eval_const_expr(Token **rest, Token *tok) {
-  __arena_push();
   Token *start = tok;
   Token *expr = read_const_expr(rest, tok->next);
   expr = preprocess2(expr);
@@ -290,7 +288,6 @@ static long eval_const_expr(Token **rest, Token *tok) {
   if (rest2->kind != TK_EOF && rest2->kind != TK_JAVADOWN) {
     error_tok(rest2, "extra token");
   }
-  __arena_pop();
   return val;
 }
 

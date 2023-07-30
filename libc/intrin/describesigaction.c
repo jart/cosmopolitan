@@ -46,6 +46,7 @@ static const char *DescribeSigFlags(char buf[64], int x) {
       {SA_RESETHAND, "RESETHAND"},  //
       {SA_NOMASK, "NOMASK"},        //
       {SA_ONESHOT, "ONESHOT"},      //
+      {0x04000000, "RESTORER"},     //
   };
   return DescribeFlags(buf, 64, kSigFlags, ARRAYLEN(kSigFlags), "SA_", x);
 }

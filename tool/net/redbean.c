@@ -2134,6 +2134,10 @@ static void FreeStrings(struct Strings *l) {
   l->n = 0;
 }
 
+static unsigned long roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+}
+
 static void IndexAssets(void) {
   uint64_t cf;
   struct Asset *p;
@@ -2145,7 +2149,7 @@ static void IndexAssets(void) {
   CHECK(READ32LE(zcdir) == kZipCdir64HdrMagic ||
         READ32LE(zcdir) == kZipCdirHdrMagic);
   n = GetZipCdirRecords(zcdir);
-  m = _roundup2pow(MAX(1, n) * HASH_LOAD_FACTOR);
+  m = roundup2pow(MAX(1, n) * HASH_LOAD_FACTOR);
   p = xcalloc(m, sizeof(struct Asset));
   for (cf = GetZipCdirOffset(zcdir); n--; cf += ZIP_CFILE_HDRSIZE(zmap + cf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zmap + cf));
@@ -6675,9 +6679,10 @@ static int MemoryMonitor(void *arg, int tid) {
           addr = (char *)((int64_t)((uint64_t)mi[i].x << 32) >> 16);
           color = 0;
           appendf(&b, "\e[0m%lx", addr);
-          pages = (mi[i].size + PAGESIZE - 1) / PAGESIZE;
+          int pagesz = getauxval(AT_PAGESZ);
+          pages = (mi[i].size + pagesz - 1) / pagesz;
           for (j = 0; j < pages; ++j) {
-            rc = mincore(addr + j * PAGESIZE, PAGESIZE, &rez);
+            rc = mincore(addr + j * pagesz, pagesz, &rez);
             if (!rc) {
               if (rez & 1) {
                 if (mi[i].flags & MAP_SHARED) {

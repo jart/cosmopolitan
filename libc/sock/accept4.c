@@ -32,8 +32,8 @@
  * Creates client socket file descriptor for incoming connection.
  *
  * @param fd is the server socket file descriptor
- * @param out_addr will receive the remote address
- * @param inout_addrsize provides and receives out_addr's byte length
+ * @param opt_out_addr will receive the remote address
+ * @param opt_inout_addrsize provides and receives out_addr's byte length
  * @param flags can have SOCK_{CLOEXEC,NONBLOCK}, which may apply to
  *     both the newly created socket and the server one
  * @return client fd which needs close(), or -1 w/ errno
@@ -41,7 +41,7 @@
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
-int accept4(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize,
+int accept4(int fd, struct sockaddr *opt_out_addr, uint32_t *opt_inout_addrsize,
             int flags) {
   int rc;
   struct sockaddr_storage ss = {0};
@@ -61,11 +61,13 @@ int accept4(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize,
     if (IsBsd()) {
       __convert_bsd_to_sockaddr(&ss);
     }
-    __write_sockaddr(&ss, out_addr, inout_addrsize);
+    __write_sockaddr(&ss, opt_out_addr, opt_inout_addrsize);
   }
 
   END_CANCELLATION_POINT;
   STRACE("accept4(%d, [%s]) -> %d% lm", fd,
-         DescribeSockaddr(out_addr, inout_addrsize ? *inout_addrsize : 0), rc);
+         DescribeSockaddr(opt_out_addr,
+                          opt_inout_addrsize ? *opt_inout_addrsize : 0),
+         rc);
   return rc;
 }

@@ -32,7 +32,11 @@
  *
  *     struct sockaddr_in in = {AF_INET, htons(12345), {htonl(0x7f000001)}};
  *     int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
- *     bind(fd, &in, sizeof(in));
+ *     bind(fd, (struct sockaddr *)&in, sizeof(in));
+ *
+ * On Windows, Cosmopolitan's implementation of bind() takes care of
+ * always setting the WIN32-specific `SO_EXCLUSIVEADDRUSE` option on
+ * inet stream sockets in order to safeguard your servers from tests
  *
  * @param fd is the file descriptor returned by socket()
  * @param addr is usually the binary-encoded ip:port on which to listen

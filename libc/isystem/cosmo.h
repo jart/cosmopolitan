@@ -29,6 +29,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/elf/elf.h"
 #include "libc/fmt/itoa.h"

@@ -46,34 +46,34 @@
 int system(const char *cmdline) {
   int pid, wstatus;
   sigset_t chldmask, savemask;
-  struct sigaction ignore, saveint, savequit;
   if (!cmdline) return 1;
   BLOCK_CANCELLATIONS;
-  ignore.sa_flags = 0;
-  ignore.sa_handler = SIG_IGN;
-  sigemptyset(&ignore.sa_mask);
-  sigaction(SIGINT, &ignore, &saveint);
-  sigaction(SIGQUIT, &ignore, &savequit);
   sigemptyset(&chldmask);
+  sigaddset(&chldmask, SIGINT);
+  sigaddset(&chldmask, SIGQUIT);
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   if (!(pid = fork())) {
-    sigaction(SIGINT, &saveint, 0);
-    sigaction(SIGQUIT, &savequit, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     _Exit(_cocmd(3, (char *[]){"system", "-c", cmdline, 0}, environ));
-  } else if (pid != -1) {
+  } else if (pid == -1) {
+    wstatus = -1;
+  } else {
+    struct sigaction ignore, saveint, savequit;
+    ignore.sa_flags = 0;
+    ignore.sa_handler = SIG_IGN;
+    sigemptyset(&ignore.sa_mask);
+    sigaction(SIGINT, &ignore, &saveint);
+    sigaction(SIGQUIT, &ignore, &savequit);
     while (wait4(pid, &wstatus, 0, 0) == -1) {
       if (errno != EINTR) {
         wstatus = -1;
         break;
       }
     }
-  } else {
-    wstatus = -1;
+    sigaction(SIGINT, &saveint, 0);
+    sigaction(SIGQUIT, &savequit, 0);
   }
-  sigaction(SIGINT, &saveint, 0);
-  sigaction(SIGQUIT, &savequit, 0);
   sigprocmask(SIG_SETMASK, &savemask, 0);
   ALLOW_CANCELLATIONS;
   return wstatus;

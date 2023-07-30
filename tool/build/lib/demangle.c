@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/demangle.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-#include "tool/build/lib/demangle.h"
 
 struct CxxFilt {
   int pid;
@@ -83,7 +83,7 @@ char *DemangleCxxFilt(char *p, size_t pn, const char *s, size_t sn) {
   ssize_t rc;
   size_t got;
   struct iovec iov[2];
-  static char buf[PAGESIZE];
+  static char buf[4096];
   if (!g_cxxfilt.pid) SpawnCxxFilt();
   if (g_cxxfilt.pid == -1) return NULL;
   buf[0] = '\n';

@@ -27,9 +27,7 @@ void (*hook_free)(void *) = dlfree;
  *
  * Releases the chunk of memory pointed to by p, that had been
  * previously allocated using malloc or a related routine such as
- * realloc. It has no effect if p is null. If p was not malloced or
- * already freed, free(p) will by default cause the current program to
- * abort.
+ * realloc. It has no effect if p is null.
  *
  * @param p is allocation address, which may be NULL
  * @see dlfree()

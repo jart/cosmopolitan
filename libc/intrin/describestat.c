@@ -79,7 +79,7 @@ const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
     append(", .st_%s=%'lu", "rdev", st->st_rdev);
   }
 
-  if (st->st_blksize != PAGESIZE) {
+  if (st->st_blksize != 4096) {
     append(", .st_%s=%'lu", "blksize", st->st_blksize);
   }
 

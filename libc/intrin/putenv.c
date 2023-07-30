@@ -93,6 +93,7 @@ int PutEnvImpl(char *s, bool overwrite) {
  * @return 0 on success, or non-zero w/ errno on error
  * @raise ENOMEM if we require more vespene gas
  * @see setenv(), getenv()
+ * @threadunsafe
  */
 int putenv(char *s) {
   int rc;

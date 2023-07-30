@@ -30,11 +30,14 @@ void *(*hook_malloc)(size_t) = dlmalloc;
  * on ANSI C systems.
  *
  * If n is zero, malloc returns a minimum-sized chunk. (The minimum size
- * is 32 bytes on 64bit systems.) Note that size_t is an unsigned type,
- * so calls with arguments that would be negative if signed are
- * interpreted as requests for huge amounts of space, which will often
- * fail. The maximum supported value of n differs across systems, but is
- * in all cases less than the maximum representable value of a size_t.
+ * is 32 bytes on 64bit systems.) It should be assumed that zero bytes
+ * are possible access, since that'll be enforced by `MODE=asan`.
+ *
+ * Note that size_t is an unsigned type, so calls with arguments that
+ * would be negative if signed are interpreted as requests for huge
+ * amounts of space, which will often fail. The maximum supported value
+ * of n differs across systems, but is in all cases less than the
+ * maximum representable value of a size_t.
  *
  * @param rdi is number of bytes needed, coerced to 1+
  * @return new memory, or NULL w/ errno

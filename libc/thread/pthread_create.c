@@ -26,6 +26,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
@@ -52,6 +53,10 @@ __static_yoink("_pthread_atfork");
 
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
+
+static unsigned long roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+}
 
 void _pthread_free(struct PosixThread *pt) {
   if (pt->flags & PT_STATIC) return;
@@ -104,13 +109,14 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   // in order to successfully call mmap(), which will return EINVAL if
   // these calculations should overflow.
   size_t n;
-  int e, rc;
   uintptr_t x, y;
+  int e, rc, pagesz;
+  pagesz = getauxval(AT_PAGESZ);
   n = attr->__stacksize;
   x = (uintptr_t)attr->__stackaddr;
-  y = ROUNDUP(x, PAGESIZE);
+  y = ROUNDUP(x, pagesz);
   n -= y - x;
-  n = ROUNDDOWN(n, PAGESIZE);
+  n = ROUNDDOWN(n, pagesz);
   e = errno;
   if (__sys_mmap((void *)y, n, PROT_READ | PROT_WRITE,
                  MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
@@ -176,7 +182,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     default_guardsize = getauxval(AT_PAGESZ);
     pt->flags = PT_OWNSTACK;
     pt->attr.__stacksize = MAX(pt->attr.__stacksize, GetStackSize());
-    pt->attr.__stacksize = _roundup2pow(pt->attr.__stacksize);
+    pt->attr.__stacksize = roundup2pow(pt->attr.__stacksize);
     pt->attr.__guardsize = ROUNDUP(pt->attr.__guardsize, default_guardsize);
     if (pt->attr.__guardsize + default_guardsize >= pt->attr.__stacksize) {
       _pthread_free(pt);

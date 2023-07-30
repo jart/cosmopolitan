@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/errno.h"
 #include "libc/mem/mem.h"
+#include "libc/stdckdint.h"
 
 /**
  * Allocates granular aligned memory of granular size, i.e.
@@ -31,5 +32,9 @@
  * @threadsafe
  */
 void *pvalloc(size_t n) {
-  return memalign(FRAMESIZE, ROUNDUP(n, FRAMESIZE));
+  if (ckd_add(&n, n, FRAMESIZE - 1)) {
+    errno = ENOMEM;
+    return 0;
+  }
+  return memalign(FRAMESIZE, n & -FRAMESIZE);
 }

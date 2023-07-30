@@ -99,7 +99,6 @@ void *Worker(void *arg) {
 }
 
 TEST(pthread_atfork, torture) {
-  if (IsWindows()) return;  // TODO(jart): why do we get EBADF? it worked before
   pthread_mutex_init(&mu, 0);
   pthread_atfork(mu_lock, mu_unlock, mu_funlock);
   int i, n = 4;

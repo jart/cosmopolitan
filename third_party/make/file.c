@@ -1140,7 +1140,8 @@ build_target_list (char *value)
 void
 init_hash_files (void)
 {
-  hash_init (&files, 1000, file_hash_1, file_hash_2, file_hash_cmp);
+  // [jart] increased from 1000
+  hash_init (&files, 32768, file_hash_1, file_hash_2, file_hash_cmp);
 }
 
 /* EOF */

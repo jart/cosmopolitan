@@ -39,7 +39,7 @@ void *xslurp(const char *path, size_t *opt_out_size) {
   res = NULL;
   if ((fd = open(path, O_RDONLY)) != -1) {
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-        (res = memalign(PAGESIZE, size + 1))) {
+        (res = memalign(4096, size + 1))) {
       if (size > 2 * 1024 * 1024) {
         fadvise(fd, 0, size, MADV_SEQUENTIAL);
       }

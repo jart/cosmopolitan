@@ -1770,7 +1770,6 @@ Keywords={
 "FLT_MIN",
 "FLT_MAX",
 "__SAUCE__",
-"PAGESIZE",
 "FRAMESIZE",
 "ARG_MAX",
 "PATH_MAX",

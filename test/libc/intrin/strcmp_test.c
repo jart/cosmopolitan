@@ -325,30 +325,30 @@ TEST(wcscasecmp, testItWorksCase) {
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 TEST(strncmp, testEqualManyNs) {
-  char *s1 = malloc(PAGESIZE);
-  char *s2 = malloc(PAGESIZE);
-  memset(s1, 7, PAGESIZE);
-  memset(s2, 7, PAGESIZE);
-  s1[PAGESIZE - 1] = '\0';
-  s2[PAGESIZE - 1] = '\0';
+  char *s1 = malloc(4096);
+  char *s2 = malloc(4096);
+  memset(s1, 7, 4096);
+  memset(s2, 7, 4096);
+  s1[4096 - 1] = '\0';
+  s2[4096 - 1] = '\0';
   for (unsigned i = 1; i <= 128; ++i) {
-    ASSERT_EQ(0, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 0));
-    ASSERT_EQ(0, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 1));
+    ASSERT_EQ(0, strncmp(s1 + 4096 - i, s2 + 4096 - i, i + 0));
+    ASSERT_EQ(0, strncmp(s1 + 4096 - i, s2 + 4096 - i, i + 1));
   }
   free(s2);
   free(s1);
 }
 
 TEST(strncmp, testNotEqualManyNs) {
-  char *s1 = malloc(PAGESIZE);
-  char *s2 = malloc(PAGESIZE);
+  char *s1 = malloc(4096);
+  char *s2 = malloc(4096);
   for (unsigned i = 1; i <= 128; ++i) {
-    memset(s1, 7, PAGESIZE);
-    memset(s2, 7, PAGESIZE);
-    s1[PAGESIZE - 1] = (unsigned char)0;
-    s2[PAGESIZE - 1] = (unsigned char)255;
-    ASSERT_EQ(-255, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 0));
-    ASSERT_EQ(-255, strncmp(s1 + PAGESIZE - i, s2 + PAGESIZE - i, i + 1));
+    memset(s1, 7, 4096);
+    memset(s2, 7, 4096);
+    s1[4096 - 1] = (unsigned char)0;
+    s2[4096 - 1] = (unsigned char)255;
+    ASSERT_EQ(-255, strncmp(s1 + 4096 - i, s2 + 4096 - i, i + 0));
+    ASSERT_EQ(-255, strncmp(s1 + 4096 - i, s2 + 4096 - i, i + 1));
   }
   free(s2);
   free(s1);

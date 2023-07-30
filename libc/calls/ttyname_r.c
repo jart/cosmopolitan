@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
@@ -34,66 +35,79 @@
 
 #define FIODGNAME 0x80106678  // freebsd
 
-static textwindows dontinline int sys_ttyname_nt(int fd, char *buf,
-                                                 size_t size) {
+static textwindows errno_t sys_ttyname_nt(int fd, char *buf, size_t size) {
   uint32_t mode;
+  const char *s;
   if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
-    if (mode & kNtEnableVirtualTerminalInput) {
-      strncpy(buf, "CONIN$", size);
+    if (strlcpy(buf,
+                (mode & kNtEnableVirtualTerminalInput) ? "CONIN$" : "CONOUT$",
+                size) < size) {
       return 0;
     } else {
-      strncpy(buf, "CONOUT$", size);
-      return 0;
+      return ERANGE;
     }
   } else {
-    return enotty();
+    return ENOTTY;
   }
 }
 
-static int ttyname_freebsd(int fd, char *buf, size_t size) {
+// clobbers errno
+static errno_t ttyname_freebsd(int fd, char *buf, size_t size) {
   struct fiodgname_arg {
     int len;
     void *buf;
   } fg;
   fg.buf = buf;
   fg.len = size;
-  if (sys_ioctl(fd, FIODGNAME, &fg) != -1) return 0;
-  return enotty();
+  if (sys_ioctl(fd, FIODGNAME, &fg) != -1) {
+    return 0;
+  } else {
+    return ENOTTY;
+  }
 }
 
-static int ttyname_linux(int fd, char *buf, size_t size) {
-  struct stat st1, st2;
-  if (!isatty(fd)) return errno;
-  char name[PATH_MAX];
-  FormatInt32(stpcpy(name, "/proc/self/fd/"), fd);
+// clobbers errno
+static errno_t ttyname_linux(int fd, char *buf, size_t size) {
   ssize_t got;
+  struct stat st1, st2;
+  char name[14 + 12 + 1];
+  if (!isatty(fd)) return errno;
+  FormatInt32(stpcpy(name, "/proc/self/fd/"), fd);
   got = readlink(name, buf, size);
   if (got == -1) return errno;
-  if ((size_t)got >= size) return erange();
+  if (got >= size) return ERANGE;
   buf[got] = 0;
   if (stat(buf, &st1) || fstat(fd, &st2)) return errno;
-  if (st1.st_dev != st2.st_dev || st1.st_ino != st2.st_ino) return enodev();
+  if (st1.st_dev != st2.st_dev || st1.st_ino != st2.st_ino) return ENODEV;
   return 0;
 }
 
 /**
- * Returns name of terminal, reentrantly.
+ * Returns name of terminal.
+ *
+ * @return 0 on success, or error number on error
+ * @raise ERANGE if `size` was too small
+ * @returnserrno
+ * @threadsafe
  */
-int ttyname_r(int fd, char *buf, size_t size) {
-  int rc;
+errno_t ttyname_r(int fd, char *buf, size_t size) {
+  errno_t e, res;
+  e = errno;
   if (IsLinux()) {
-    rc = ttyname_linux(fd, buf, size);
+    res = ttyname_linux(fd, buf, size);
   } else if (IsFreebsd()) {
-    rc = ttyname_freebsd(fd, buf, size);
+    res = ttyname_freebsd(fd, buf, size);
   } else if (IsWindows()) {
-    if (__isfdkind(fd, kFdFile)) {
-      rc = sys_ttyname_nt(fd, buf, size);
+    if (__isfdopen(fd)) {
+      res = sys_ttyname_nt(fd, buf, size);
     } else {
-      rc = ebadf();
+      res = EBADF;
     }
   } else {
-    rc = enosys();
+    res = ENOSYS;
   }
-  STRACE("ttyname_r(%d, %s) → %d% m", fd, buf, rc);
-  return rc;
+  errno = e;
+  STRACE("ttyname_r(%d, %#.*hhs) → %s", fd, (int)size, buf,
+         !res ? "0" : _strerrno(res));
+  return res;
 }

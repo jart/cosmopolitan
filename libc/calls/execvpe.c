@@ -27,7 +27,9 @@
 /**
  * Executes program, with path environment search.
  *
- * The current process is replaced with the executed one.
+ * This function is a wrapper of the execve() system call that does path
+ * resolution. The `PATH` environment variable is taken from your global
+ * `environ` rather than the `envp` argument.
  *
  * @param prog is the program to launch
  * @param argv is [file,argv₁..argvₙ₋₁,NULL]
@@ -45,6 +47,10 @@ int execvpe(const char *prog, char *const argv[], char *const *envp) {
   if (IsAsan() &&
       (!__asan_is_valid_str(prog) || !__asan_is_valid_strlist(argv))) {
     return efault();
+  }
+
+  if (strchr(prog, '/')) {
+    return execve(prog, argv, envp);
   }
 
   // resolve path of executable

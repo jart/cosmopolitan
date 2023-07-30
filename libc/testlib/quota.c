@@ -20,6 +20,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
@@ -64,6 +65,10 @@ static relegated void OnXfsz(int sig) {
   DieBecauseOfQuota(25, "\n\nSIGXFSZ: exceeded maximum file size");
 }
 
+static unsigned long roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+}
+
 relegated void __oom_hook(size_t request) {
   int e;
   uint64_t toto, newlim;
@@ -75,7 +80,7 @@ relegated void __oom_hook(size_t request) {
   if (IsRunningUnderMake()) {
     newlim = toto + request;
     newlim += newlim >> 1;
-    newlim = _roundup2pow(newlim);
+    newlim = roundup2pow(newlim);
     kprintf("FIX CODE OR TUNE QUOTA += -M%dm\n", newlim / (1024 * 1024));
   }
   kprintf("\n");

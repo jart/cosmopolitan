@@ -21,6 +21,9 @@
 	.init.start 305,_init_g_fds
 	push	%rdi
 	push	%rsi
+	mov	%r12d,%edi			// argc
+	mov	%r13,%rsi			// argv
+	mov	%r14,%rdx			// environ
 	call	__init_fds
 	pop	%rsi
 	pop	%rdi

@@ -1327,20 +1327,6 @@ void dlmalloc_atfork(void) {
 }
 #endif
 
-void* dlvalloc(size_t bytes) {
-  size_t pagesz;
-  ensure_initialization();
-  pagesz = mparams.page_size;
-  return dlmemalign(pagesz, bytes);
-}
-
-void* dlpvalloc(size_t bytes) {
-  size_t pagesz;
-  ensure_initialization();
-  pagesz = mparams.page_size;
-  return dlmemalign(pagesz, (bytes + pagesz - SIZE_T_ONE) & ~(pagesz - SIZE_T_ONE));
-}
-
 void** dlindependent_calloc(size_t n_elements, size_t elem_size,
                             void* chunks[]) {
   size_t sz = elem_size; /* serves as 1-element array */

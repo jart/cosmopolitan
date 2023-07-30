@@ -48,7 +48,7 @@ $(THIRD_PARTY_NSYNC_A).pkg:				\
 		$(THIRD_PARTY_NSYNC_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_NSYNC_A_DIRECTDEPS),$($(x)_A).pkg)
 
-#$(THIRD_PARTY_NSYNC_A_OBJS): private			\
+$(THIRD_PARTY_NSYNC_A_OBJS): private			\
 		CCFLAGS +=				\
 			-ffunction-sections		\
 			-fdata-sections

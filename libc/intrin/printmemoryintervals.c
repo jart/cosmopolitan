@@ -27,7 +27,6 @@ static bool IsNoteworthyHole(unsigned i, const struct MemoryIntervals *mm) {
   // gaps between shadow frames aren't interesting
   // the chasm from heap to stack ruins statistics
   return !(
-      (IsArenaFrame(mm->p[i].y) && !IsArenaFrame(mm->p[i + 1].x)) ||
       (IsShadowFrame(mm->p[i].y) || IsShadowFrame(mm->p[i + 1].x)) ||
       (!IsStaticStackFrame(mm->p[i].y) && IsStaticStackFrame(mm->p[i + 1].x)));
 }

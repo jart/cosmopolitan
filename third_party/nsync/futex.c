@@ -26,6 +26,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -41,7 +42,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
@@ -55,29 +55,32 @@ errno_t _futex (atomic_int *, int, int, const struct timespec *, int *, int);
 errno_t _futex_wake (atomic_int *, int, int) asm ("_futex");
 int sys_futex_cp (atomic_int *, int, int, const struct timespec *, int *, int);
 
-static int FUTEX_WAIT_;
-static int FUTEX_PRIVATE_FLAG_;
-static bool futex_is_supported;
-static bool futex_timeout_is_relative;
+static struct NsyncFutex {
+	_Atomic(uint32_t) once;
+	int FUTEX_WAIT_;
+	int FUTEX_PRIVATE_FLAG_;
+	bool is_supported;
+	bool timeout_is_relative;
+} nsync_futex_;
 
-__attribute__((__constructor__)) static void nsync_futex_init_ (void) {
+static void nsync_futex_init_ (void) {
 	int e;
 	atomic_int x;
 
-	FUTEX_WAIT_ = FUTEX_WAIT;
+	nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT;
 
 	if (IsWindows ()) {
-		futex_is_supported = true;
+		nsync_futex_.is_supported = true;
 		return;
 	}
 
 	if (IsFreebsd ()) {
-		futex_is_supported = true;
-		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		nsync_futex_.is_supported = true;
+		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		return;
 	}
 
-        if (!(futex_is_supported = IsLinux () || IsOpenbsd ())) {
+        if (!(nsync_futex_.is_supported = IsLinux () || IsOpenbsd ())) {
 		return;
 	}
 
@@ -96,22 +99,23 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	if (IsLinux () &&
 	    _futex (&x, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME,
 		    1, 0, 0, FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
-		FUTEX_WAIT_ = FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME;
-		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		nsync_futex_.FUTEX_WAIT_ =
+			FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME;
+		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 	} else if (!IsTiny () && IsLinux () &&
 		   _futex (&x, FUTEX_WAIT_BITSET, 1, 0, 0,
 			   FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
-		FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
-		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
+		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 	} else if (IsOpenbsd () ||
 		   (!IsTiny () && IsLinux () &&
 		    !_futex_wake (&x, FUTEX_WAKE_PRIVATE, 1))) {
-		FUTEX_WAIT_ = FUTEX_WAIT;
-		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
-		futex_timeout_is_relative = true;
+		nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT;
+		nsync_futex_.FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		nsync_futex_.timeout_is_relative = true;
 	} else {
-		FUTEX_WAIT_ = FUTEX_WAIT;
-		futex_timeout_is_relative = true;
+		nsync_futex_.FUTEX_WAIT_ = FUTEX_WAIT;
+		nsync_futex_.timeout_is_relative = true;
 	}
 	errno = e;
 }
@@ -197,7 +201,7 @@ static struct timespec *nsync_futex_timeout_ (struct timespec *memory,
 	struct timespec now;
 	if (!abstime) {
 		return 0;
-	} else if (!futex_timeout_is_relative) {
+	} else if (!nsync_futex_.timeout_is_relative) {
 		*memory = *abstime;
 		return memory;
 	} else {
@@ -212,9 +216,11 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 	struct PosixThread *pt = 0;
 	struct timespec tsmem, *timeout;
 
-	op = FUTEX_WAIT_;
+	cosmo_once (&nsync_futex_.once, nsync_futex_init_);
+
+	op = nsync_futex_.FUTEX_WAIT_;
 	if (pshare == PTHREAD_PROCESS_PRIVATE) {
-		op |= FUTEX_PRIVATE_FLAG_;
+		op |= nsync_futex_.FUTEX_PRIVATE_FLAG_;
 	}
 
 	if (abstime && timespec_cmp (*abstime, timespec_zero) <= 0) {
@@ -234,7 +240,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 		   DescribeFutexOp (op), expect,
 		   DescribeTimespec (0, timeout));
 
-	if (futex_is_supported) {
+	if (nsync_futex_.is_supported) {
 		e = errno;
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
@@ -296,12 +302,14 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 
 	ASSERT (count == 1 || count == INT_MAX);
 
+	cosmo_once (&nsync_futex_.once, nsync_futex_init_);
+
 	op = FUTEX_WAKE;
 	if (pshare == PTHREAD_PROCESS_PRIVATE) {
-		op |= FUTEX_PRIVATE_FLAG_;
+		op |= nsync_futex_.FUTEX_PRIVATE_FLAG_;
 	}
 
-	if (futex_is_supported) {
+	if (nsync_futex_.is_supported) {
 		if (IsWindows ()) {
 			if (pshare) {
 				goto Polyfill;

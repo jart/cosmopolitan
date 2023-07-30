@@ -35,7 +35,11 @@ unsigned long getauxval(unsigned long key) {
   x = _getauxval(key);
   if (key == AT_PAGESZ) {
     if (!x.isfound) {
+#ifdef __aarch64__
       x.value = 16384;
+#else
+      x.value = 4096;
+#endif
     }
     x.isfound = true;
   }

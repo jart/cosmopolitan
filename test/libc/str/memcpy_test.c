@@ -192,6 +192,6 @@ BENCH(memcpy, bench) {
   BB(256);
   BB(1023);
   BB(1024);
-  BB(PAGESIZE);
+  BB(4096);
   BB(FRAMESIZE);
 }

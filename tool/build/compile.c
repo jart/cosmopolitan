@@ -196,9 +196,12 @@ struct itimerval timer;
 struct timespec signalled;
 
 sigset_t mask;
+char buf[4096];
 sigset_t savemask;
-char buf[PAGESIZE];
 char tmpout[PATH_MAX];
+
+char *g_tmpout;
+const char *g_tmpout_original;
 
 const char *const kSafeEnv[] = {
     "ADDR2LINE",   // needed by GetAddr2linePath
@@ -454,7 +457,13 @@ char *StripPrefix(char *s, char *p) {
   }
 }
 
-void AddArg(char *s) {
+void AddArg(char *actual) {
+  const char *s;
+  if (actual == g_tmpout) {
+    s = g_tmpout_original;
+  } else {
+    s = actual;
+  }
   if (args.n) {
     appendw(&command, ' ');
   }
@@ -487,7 +496,7 @@ void AddArg(char *s) {
     appendw(&shortened, ' ');
     appends(&shortened, s);
   }
-  AddStr(&args, s);
+  AddStr(&args, actual);
 }
 
 static int GetBaseCpuFreqMhz(void) {
@@ -810,6 +819,7 @@ char *MakeTmpOut(const char *path) {
   int c;
   char *p = tmpout;
   char *e = tmpout + sizeof(tmpout) - 1;
+  g_tmpout_original = path;
   p = stpcpy(p, kTmpPath);
   while ((c = *path++)) {
     if (c == '/') c = '_';
@@ -820,6 +830,7 @@ char *MakeTmpOut(const char *path) {
     *p++ = c;
   }
   *p = 0;
+  g_tmpout = tmpout;
   return tmpout;
 }
 

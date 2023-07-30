@@ -48,7 +48,7 @@ __attribute__((__constructor__)) static void kTmpPathInit(void) {
   char16_t path16[PATH_MAX];
 
   if ((s = getenv("TMPDIR")) && (n = strlen(s)) < PATH_MAX / 2) {
-    memcpy(kTmpPath, s, n);
+    if (n) memcpy(kTmpPath, s, n);
     if (n && kTmpPath[n - 1] != '/') {
       kTmpPath[n + 0] = '/';
       kTmpPath[n + 1] = 0;

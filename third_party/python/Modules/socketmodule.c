@@ -6760,7 +6760,6 @@ PyInit__socket(void)
     PyModule_AddIntMacro(m, SO_DEBUG);
     PyModule_AddIntMacro(m, SO_ACCEPTCONN);
     if (SO_REUSEADDR) PyModule_AddIntMacro(m, SO_REUSEADDR);
-    if (SO_EXCLUSIVEADDRUSE) PyModule_AddIntMacro(m, SO_EXCLUSIVEADDRUSE);
     PyModule_AddIntMacro(m, SO_KEEPALIVE);
     PyModule_AddIntMacro(m, SO_DONTROUTE);
     PyModule_AddIntMacro(m, SO_BROADCAST);
@@ -6776,17 +6775,6 @@ PyInit__socket(void)
     PyModule_AddIntMacro(m, SO_RCVTIMEO);
     PyModule_AddIntMacro(m, SO_ERROR);
     PyModule_AddIntMacro(m, SO_TYPE);
-    if (SO_SETFIB) PyModule_AddIntMacro(m, SO_SETFIB);
-    if (SO_PASSCRED) PyModule_AddIntMacro(m, SO_PASSCRED);
-    if (SO_PEERCRED) PyModule_AddIntMacro(m, SO_PEERCRED);
-    if (LOCAL_PEERCRED) PyModule_AddIntMacro(m, LOCAL_PEERCRED);
-    if (SO_PASSSEC) PyModule_AddIntMacro(m, SO_PASSSEC);
-    if (SO_PEERSEC) PyModule_AddIntMacro(m, SO_PEERSEC);
-    if (SO_BINDTODEVICE) PyModule_AddIntMacro(m, SO_BINDTODEVICE);
-    if (SO_PRIORITY) PyModule_AddIntMacro(m, SO_PRIORITY);
-    if (SO_MARK) PyModule_AddIntMacro(m, SO_MARK);
-    if (SO_DOMAIN) PyModule_AddIntMacro(m, SO_DOMAIN);
-    if (SO_PROTOCOL) PyModule_AddIntMacro(m, SO_PROTOCOL);
 
     /* Maximum number of connections for "listen" */
     PyModule_AddIntConstant(m, "SOMAXCONN", 0x80);
@@ -6915,12 +6903,10 @@ PyInit__socket(void)
 #endif
 
     PyModule_AddIntMacro(m, IPPROTO_IP);
-    PyModule_AddIntMacro(m, IPPROTO_HOPOPTS);
     PyModule_AddIntMacro(m, IPPROTO_ICMP);
     PyModule_AddIntMacro(m, IPPROTO_TCP);
     PyModule_AddIntMacro(m, IPPROTO_UDP);
     PyModule_AddIntMacro(m, IPPROTO_RAW);
-    PyModule_AddIntMacro(m, IPPROTO_IGMP);
 #ifdef IPPROTO_GGP
     if (IPPROTO_GGP) PyModule_AddIntMacro(m, IPPROTO_GGP);
 #endif

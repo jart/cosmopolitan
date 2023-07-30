@@ -371,7 +371,7 @@ static bool CloseSpeaker(void) {
 }
 
 static void ResizeVtFrame(struct VtFrame *f, size_t yn, size_t xn) {
-  BALLOC(&f->b, PAGESIZE, 64 + yn * (xn * 32 + 8), __FUNCTION__);
+  BALLOC(&f->b, 4096, 64 + yn * (xn * 32 + 8), __FUNCTION__);
   f->i = f->n = 0;
 }
 
@@ -837,7 +837,8 @@ static void OnVideo(plm_t *mpeg, plm_frame_t *pf, void *user) {
   } else {
     TranscodeVideo(pf);
     if (!f1_->n) {
-      xchg(&f1_, &f2_);
+      struct VtFrame *t = f1_;
+      f1_ = f2_, f2_ = t;
       f1_start_ = decode_start_;
     } else {
       f2_start_ = decode_start_;
@@ -872,7 +873,7 @@ static void OpenVideo(void) {
 static ssize_t WriteVideoCall(void) {
   size_t amt;
   ssize_t rc;
-  amt = min(PAGESIZE * 4, f1_->n - f1_->i);
+  amt = min(4096 * 4, f1_->n - f1_->i);
   if ((rc = write(outfd_, f1_->bytes + f1_->i, amt)) != -1) {
     if ((f1_->i += rc) == f1_->n) {
       if (plm_get_audio_enabled(plm_)) {
@@ -883,7 +884,8 @@ static ssize_t WriteVideoCall(void) {
       }
       f1_start_ = f2_start_;
       f1_->i = f1_->n = 0;
-      xchg(&f1_, &f2_);
+      struct VtFrame *t = f1_;
+      f1_ = f2_, f2_ = t;
       RecordFactThatFrameWasFullyRendered();
     }
   }

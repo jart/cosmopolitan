@@ -68,7 +68,7 @@ typedef struct sCppState {
 	boolean hasAtLiteralStrings; /* supports @"c:\" strings */
 	struct sDirective {
 		enum eState state;       /* current directive being processed */
-		boolean	accept;          /* is a directive syntactically permitted? */
+		boolean	accept_;          /* is a directive syntactically permitted? */
 		vString * name;          /* macro name */
 		unsigned int nestLevel;  /* level 0 is not used */
 		conditionalInfo ifdef [MaxCppNestingLevel];
@@ -120,7 +120,7 @@ extern void cppInit (const boolean state, const boolean hasAtLiteralStrings)
 	Cpp.hasAtLiteralStrings = hasAtLiteralStrings;
 
 	Cpp.directive.state     = DRCTV_NONE;
-	Cpp.directive.accept    = TRUE;
+	Cpp.directive.accept_   = TRUE;
 	Cpp.directive.nestLevel = 0;
 
 	Cpp.directive.ifdef [0].ignoreAllBranches = FALSE;
@@ -564,25 +564,25 @@ process:
 			case NEWLINE:
 				if (directive  &&  ! ignore)
 					directive = FALSE;
-				Cpp.directive.accept = TRUE;
+				Cpp.directive.accept_ = TRUE;
 				break;
 
 			case DOUBLE_QUOTE:
-				Cpp.directive.accept = FALSE;
+				Cpp.directive.accept_ = FALSE;
 				c = skipToEndOfString (FALSE);
 				break;
 
 			case '#':
-				if (Cpp.directive.accept)
+				if (Cpp.directive.accept_)
 				{
 					directive = TRUE;
-					Cpp.directive.state  = DRCTV_HASH;
-					Cpp.directive.accept = FALSE;
+					Cpp.directive.state   = DRCTV_HASH;
+					Cpp.directive.accept_ = FALSE;
 				}
 				break;
 
 			case SINGLE_QUOTE:
-				Cpp.directive.accept = FALSE;
+				Cpp.directive.accept_ = FALSE;
 				c = skipToEndOfChar ();
 				break;
 
@@ -599,7 +599,7 @@ process:
 						fileUngetc (c);
 				}
 				else
-					Cpp.directive.accept = FALSE;
+					Cpp.directive.accept_ = FALSE;
 				break;
 			}
 
@@ -649,12 +649,12 @@ process:
 					int next = fileGetc ();
 					if (next == DOUBLE_QUOTE)
 					{
-						Cpp.directive.accept = FALSE;
+						Cpp.directive.accept_ = FALSE;
 						c = skipToEndOfString (TRUE);
 						break;
 					}
 				}
-				Cpp.directive.accept = FALSE;
+				Cpp.directive.accept_ = FALSE;
 				if (directive)
 					ignore = handleDirective (c);
 				break;

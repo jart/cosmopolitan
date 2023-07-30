@@ -28,9 +28,19 @@
 /**
  * Duplicates file descriptor/handle.
  *
- * On Windows, we can't guarantee the desired file descriptor is used.
- * We can however remap the standard handles (non-atomically) if their
- * symbolic names are used.
+ * The `O_CLOEXEC` flag shall be cleared from the resulting file
+ * descriptor; see dup3() to preserve it.
+ *
+ * One use case for duplicating file descriptors is to be able to
+ * reassign an open()'d file or pipe() to the stdio of an executed
+ * subprocess. On Windows, in order for this to work, the subprocess
+ * needs to be a Cosmopolitan program that has socket() linked.
+ *
+ * Only small programs should duplicate sockets. That's because this
+ * implementation uses DuplicateHandle() on Windows, which Microsoft
+ * says might cause its resources to leak internally. Thus it likely
+ * isn't a good idea to design a server that does it a lot and lives
+ * a long time, without contributing a patch to this implementation.
  *
  * @param oldfd isn't closed afterwards
  * @param newfd if already assigned, is silently closed beforehand;

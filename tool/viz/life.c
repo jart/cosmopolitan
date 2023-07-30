@@ -258,6 +258,12 @@ static char16_t statusline16[256];
     RES = (B11 | r0) & r1 & ~r2;                                           \
   } while (0)
 
+static void SwapBoards(void) {
+  uint64_t *t = board;
+  board = board2;
+  board2 = t;
+}
+
 static void Step(void) {
   long y, x, yn, xn;
   yn = byn >> 3;
@@ -275,7 +281,7 @@ static void Step(void) {
            board[(y + 1 < yn ? y + 1 : 0) * xn + (x + 1 < xn ? x + 1 : 0)]);
     }
   }
-  xchg(&board, &board2);
+  SwapBoards();
   ++generation;
 }
 
@@ -593,7 +599,7 @@ static int LoadFile(const char *path) {
     if ((c = ReadChar(f)) == -1) goto ReadError;
   }
   if (yn > byn || xn > bxn) goto ReadError;
-  xchg(&board, &board2);
+  SwapBoards();
   bzero(board, (byn * bxn) >> 3);
   yo = byn / 2 - yn / 2;
   xo = bxn / 2 - xn / 2;
@@ -640,7 +646,7 @@ static int LoadFile(const char *path) {
   return 0;
 ReadError:
   fclose(f);
-  xchg(&board, &board2);
+  SwapBoards();
   return -1;
 }
 

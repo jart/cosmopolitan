@@ -176,7 +176,6 @@
 
 (defconst cosmo-cpp-constants-cosmopolitan
  '("__SAUCE__"
-   "PAGESIZE"
    "APE_STACKSIZE"
    "FRAMESIZE"
    "ARG_MAX"

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/mem/alg.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -281,9 +282,13 @@ static int CompareDoxIndexEntry(const void *p1, const void *p2, void *arg) {
   return strcasecmp(s1, s2);
 }
 
+static unsigned long roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+}
+
 static void IndexDox(struct Dox *dox) {
   size_t i, j, n;
-  dox->names.n = _roundup2pow(dox->objects.n + dox->macros.n) << 1;
+  dox->names.n = roundup2pow(dox->objects.n + dox->macros.n) << 1;
   dox->names.p = calloc(dox->names.n, sizeof(*dox->names.p));
   n = 0;
   for (i = 0; i < dox->objects.n; ++i) {

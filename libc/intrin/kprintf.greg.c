@@ -625,7 +625,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             ++p;
           }
           for (i = j = 0; !pdot || j < prec; ++j) {
-            if (UNLIKELY(!((intptr_t)s & (PAGESIZE - 1)))) {
+            if (UNLIKELY(!((intptr_t)s & 4095))) {
               if (!dang && kisdangerous(s)) break;
             }
             if (!type) {
@@ -687,7 +687,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
               s += sizeof(char16_t);
               if (IsHighSurrogate(t)) {
                 if (!pdot || j + 1 < prec) {
-                  if (UNLIKELY(!((intptr_t)s & (PAGESIZE - 1)))) {
+                  if (UNLIKELY(!((intptr_t)s & 4095))) {
                     if (!dang && kisdangerous(s)) break;
                   }
                   u = *(const char16_t *)s;

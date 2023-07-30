@@ -23,13 +23,14 @@
  * Creates client socket file descriptor for incoming connection.
  *
  * @param fd is the server socket file descriptor
- * @param out_addr will receive the remote address
- * @param inout_addrsize provides and receives addr's byte length
+ * @param opt_out_addr will receive the remote address
+ * @param opt_inout_addrsize provides and receives addr's byte length
  * @return client fd which needs close(), or -1 w/ errno
  * @cancellationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
-int accept(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
-  return accept4(fd, out_addr, inout_addrsize, 0);
+int accept(int fd, struct sockaddr *opt_out_addr,
+           uint32_t *opt_inout_addrsize) {
+  return accept4(fd, opt_out_addr, opt_inout_addrsize, 0);
 }

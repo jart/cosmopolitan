@@ -1,5 +1,4 @@
 /* clang-format off */
-/* clang-format off */
 /* Locating a program in PATH.
    Copyright (C) 2001-2003, 2009-2020 Free Software Foundation, Inc.
    Written by Bruno Haible <haible@clisp.cons.org>, 2001.

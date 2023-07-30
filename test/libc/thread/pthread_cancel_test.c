@@ -24,6 +24,7 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
@@ -80,7 +81,7 @@ TEST(pthread_cancel, synchronous) {
   pthread_t th;
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_TRUE(gotcleanup);
@@ -94,7 +95,7 @@ TEST(pthread_cancel, synchronous_delayed) {
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
   usleep(10);
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_TRUE(gotcleanup);
@@ -116,7 +117,7 @@ TEST(pthread_cancel, masked) {
   pthread_t th;
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, DisabledWorker, 0));
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(0, rc);
   ASSERT_FALSE(gotcleanup);
@@ -130,7 +131,7 @@ TEST(pthread_cancel, masked_delayed) {
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, DisabledWorker, 0));
   usleep(10);
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(0, rc);
   ASSERT_FALSE(gotcleanup);
@@ -150,7 +151,7 @@ TEST(pthread_cancel, condMaskedWait) {
   void *rc;
   pthread_t th;
   ASSERT_EQ(0, pthread_create(&th, 0, CondWaitMaskedWorker, 0));
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(0, rc);
 }
@@ -160,7 +161,7 @@ TEST(pthread_cancel, condWaitMaskedDelayed) {
   pthread_t th;
   ASSERT_EQ(0, pthread_create(&th, 0, CondWaitMaskedWorker, 0));
   usleep(10);
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(0, rc);
 }
@@ -177,7 +178,7 @@ TEST(pthread_cancel, condDeferredWait) {
   void *rc;
   pthread_t th;
   ASSERT_EQ(0, pthread_create(&th, 0, CondWaitDeferredWorker, 0));
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_EQ(0, pthread_mutex_trylock(&mu));
@@ -189,7 +190,7 @@ TEST(pthread_cancel, condDeferredWaitDelayed) {
   pthread_t th;
   ASSERT_EQ(0, pthread_create(&th, 0, CondWaitDeferredWorker, 0));
   usleep(10);
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_EQ(0, pthread_mutex_trylock(&mu));
@@ -252,7 +253,7 @@ TEST(pthread_cancel, async) {
   key_destructor_was_run = false;
   ASSERT_EQ(0, pthread_create(&th, 0, CpuBoundWorker, 0));
   while (!is_in_infinite_loop) pthread_yield();
-  ASSERT_EQ(0, pthread_cancel(th));
+  pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
   ASSERT_TRUE(key_destructor_was_run);

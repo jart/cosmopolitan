@@ -2375,7 +2375,7 @@ exec_command (char **argv, char **envp)
 
   /* Run the program.  */
   environ = envp;
-  execv (argv[0], argv);
+  execvp (argv[0], argv);
 
   if(errno == ENOENT)
     OSS (error, NILF, "%s: command doesn't exist: %s",

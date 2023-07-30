@@ -35,6 +35,10 @@
 #define W 64
 #define C 253
 
+static unsigned long roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+}
+
 void bf(int fd) {
   ssize_t rc;
   uint64_t w;
@@ -44,7 +48,7 @@ void bf(int fd) {
   char ibuf[W], obuf[12 + 1 + W * 6 + 1 + W * (2 + 11) + 11 + 1];
   o = 0;
   if (fstat(fd, &st) != -1 && S_ISREG(st.st_mode) && st.st_size) {
-    bits = _bsr(_roundup2pow(st.st_size));
+    bits = _bsr(roundup2pow(st.st_size));
     bits = ROUNDUP(bits, 4);
   } else {
     bits = 48;

@@ -26,6 +26,7 @@
  * Environment variables can store empty string on Unix but not Windows.
  *
  * @return pointer to value of `environ` entry, or null if not found
+ * @threadunsafe
  */
 char *getenv(const char *s) {
   char **p;

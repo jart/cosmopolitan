@@ -50,7 +50,7 @@ ssize_t sys_readv_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
       file = (struct MetalFile *)fd->handle;
       for (toto = i = 0; i < iovlen && file->pos < file->size; ++i) {
         got = MIN(iov[i].iov_len, file->size - file->pos);
-        memcpy(iov[i].iov_base, file->base, got);
+        if (got) memcpy(iov[i].iov_base, file->base, got);
         toto += got;
       }
       return toto;

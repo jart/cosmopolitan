@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
@@ -32,6 +33,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
@@ -41,13 +43,16 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath cpath proc unix", 0));
 }
 
-void DatagramServer(void) {
+TEST(unix, datagram) {
+  if (IsWindows()) return;  // no unix datagram on windows :'(
+  atomic_bool *ready = _mapshared(1);
+  SPAWN(fork);
   char buf[256] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
-  alarm(3);
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
+  *ready = true;
   bzero(&addr, sizeof(addr));
   ASSERT_SYS(0, 0, getsockname(3, (void *)&addr, &len));
   ASSERT_EQ(11, len);
@@ -55,33 +60,21 @@ void DatagramServer(void) {
   ASSERT_SYS(0, 5, read(3, buf, 256));
   EXPECT_STREQ("hello", buf);
   ASSERT_SYS(0, 0, close(3));
-}
-
-TEST(unix, datagram) {
-  if (IsWindows()) return;  // no unix datagram on windows :'(
-  int ws;
+  PARENT();
+  while (!*ready) sched_yield();
+  ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
-  if (!fork()) {
-    DatagramServer();
-    _Exit(0);
-  }
-  alarm(3);
-  while (!fileexists(addr.sun_path)) usleep(10000);
-  ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 5, sendto(3, "hello", 5, 0, (struct sockaddr *)&addr, len));
   ASSERT_SYS(0, 0, close(3));
-  ASSERT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFEXITED(ws));
-  EXPECT_EQ(0, WEXITSTATUS(ws));
-  alarm(0);
+  WAIT(exit, 0);
+  munmap(ready, 1);
 }
 
-void StreamServer(void) {
+void StreamServer(atomic_bool *ready) {
   char buf[256] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
-  alarm(3);
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
   bzero(&addr, sizeof(addr));
@@ -92,6 +85,7 @@ void StreamServer(void) {
   ASSERT_SYS(0, 0, listen(3, 10));
   bzero(&addr, sizeof(addr));
   len = sizeof(addr);
+  *ready = true;
   ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &len));
   ASSERT_EQ(AF_UNIX, addr.sun_family);
   EXPECT_STREQ("", addr.sun_path);
@@ -101,26 +95,26 @@ void StreamServer(void) {
 }
 
 TEST(unix, stream) {
-  if (IsWindows() && !IsAtLeastWindows10()) return;
   int ws;
-  uint32_t len = sizeof(struct sockaddr_un);
-  struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
+  if (IsWindows() && !IsAtLeastWindows10()) return;
+  atomic_bool *ready = _mapshared(1);
   // TODO(jart): move this line down when kFdProcess is gone
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
   if (!fork()) {
     close(3);
-    StreamServer();
+    StreamServer(ready);
     _Exit(0);
   }
-  alarm(3);
-  while (!fileexists(addr.sun_path)) usleep(10000);
+  while (!*ready) sched_yield();
+  uint32_t len = sizeof(struct sockaddr_un);
+  struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
   ASSERT_SYS(0, 0, connect(3, (void *)&addr, len));
   ASSERT_SYS(0, 5, write(3, "hello", 5));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(0, WEXITSTATUS(ws));
-  alarm(0);
+  munmap(ready, 1);
 }
 
 TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine

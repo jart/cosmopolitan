@@ -105,9 +105,9 @@
 bool use_ftrace;
 bool use_strace;
 char *g_exepath;
+unsigned char g_buf[4096];
 volatile bool g_interrupted;
 struct sockaddr_in g_servaddr;
-unsigned char g_buf[PAGESIZE];
 bool g_daemonize, g_sendready;
 int g_timeout, g_bogusfd, g_servfd, g_clifd, g_exefd;
 

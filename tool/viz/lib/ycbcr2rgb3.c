@@ -27,6 +27,7 @@
 #include "dsp/scale/scale.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/pmulhrsw.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -80,6 +81,14 @@ struct YCbCr {
   } luma, chroma;
 };
 
+static unsigned long roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
+}
+
+static unsigned long rounddown2pow(unsigned long x) {
+  return x ? 1ul << _bsrl(x) : 0;
+}
+
 /**
  * Computes magnums for Y′CbCr decoding.
  *
@@ -95,8 +104,8 @@ void YCbCrComputeCoefficients(int swing, double gamma,
   double x;
   double f1[6][3];
   long longs[6][6];
-  long bitlimit = _roundup2pow(swing);
-  long wordoffset = _rounddown2pow((bitlimit - swing) / 2);
+  long bitlimit = roundup2pow(swing);
+  long wordoffset = rounddown2pow((bitlimit - swing) / 2);
   long chromaswing = swing + 2 * (bitlimit / 2. - swing / 2. - wordoffset);
   long lumamin = wordoffset;
   long lumamax = wordoffset + swing;

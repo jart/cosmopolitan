@@ -86,11 +86,11 @@ static sem_t *sem_open_impl(const char *path, int oflag, unsigned mode,
     return SEM_FAILED;
   }
   npassert(!fstat(fd, &st));
-  if (st.st_size < PAGESIZE && ftruncate(fd, PAGESIZE) == -1) {
+  if (st.st_size < 4096 && ftruncate(fd, 4096) == -1) {
     npassert(!close(fd));
     return SEM_FAILED;
   }
-  sem = mmap(0, PAGESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  sem = mmap(0, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (sem != MAP_FAILED) {
     atomic_store_explicit(&sem->sem_value, value, memory_order_relaxed);
     sem->sem_magic = SEM_MAGIC_NAMED;
@@ -272,7 +272,7 @@ int sem_close(sem_t *sem) {
   }
   sem_open_unlock();
   if (unmap) {
-    npassert(!munmap(sem, PAGESIZE));
+    npassert(!munmap(sem, 4096));
   }
   if (delete) {
     unlink(s->path);

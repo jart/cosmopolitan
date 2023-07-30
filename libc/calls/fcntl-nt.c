@@ -321,8 +321,9 @@ static textwindows int sys_fcntl_nt_setfl(int fd, unsigned *flags, unsigned arg,
   //
   // - O_NONBLOCK     make read() raise EAGAIN
   // - O_NDELAY       same thing as O_NONBLOCK
+  // - O_ACCMODE      but has a minimal effect
   //
-  allowed = O_NONBLOCK;
+  allowed = O_ACCMODE | O_NONBLOCK;
   if (changed & ~allowed) {
     // the following access mode flags are supported, but it's currently
     // not possible to change them on windows.

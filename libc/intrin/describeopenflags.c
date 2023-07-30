@@ -25,7 +25,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sol.h"
 
-#define N (PAGESIZE / 2 / sizeof(struct DescribeFlags))
+#define N (4096 / 2 / sizeof(struct DescribeFlags))
 
 /**
  * Describes clock_gettime() clock argument.

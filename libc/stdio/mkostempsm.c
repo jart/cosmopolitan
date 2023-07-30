@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
@@ -39,7 +40,8 @@ int mkostempsmi(char *tpl, int slen, unsigned flags, uint64_t *rando, int mode,
   if (len < wildlen || slen > len - wildlen) return einval();
   char *ss = tpl + len - wildlen - slen;
   npassert(memcmp(ss, WILDCARD, wildlen) == 0);
-  flags = (flags & ~(flags & O_ACCMODE)) | O_RDWR | O_CREAT | O_EXCL;
+  flags = (flags & ~(flags & O_ACCMODE)) | O_RDWR | O_CREAT | O_EXCL |
+          (IsWindows() ? 0x00410000 : 0);
   unsigned attempts = ATTEMPTS;
   do {
     char *p = ss;
@@ -74,8 +76,7 @@ static uint64_t g_mkostemps_reseed;
  *     or -1 w/ errno
  * @see kTmpPath
  */
-dontdiscard int mkostempsm(char *template, int suffixlen, unsigned flags,
-                           int mode) {
+int mkostempsm(char *template, int suffixlen, unsigned flags, int mode) {
   int fd;
   if (g_mkostemps_reseed++ % RESEED == 0) g_mkostemps_rand = _rand64();
   fd = mkostempsmi(template, suffixlen, flags, &g_mkostemps_rand, mode, open);

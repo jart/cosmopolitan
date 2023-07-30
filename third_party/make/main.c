@@ -1036,6 +1036,10 @@ main (int argc, char **argv, char **envp)
 
 #undef  FATAL_SIG
 
+#ifndef NDEBUG
+  ShowCrashReports();
+#endif
+
   /* Do not ignore the child-death signal.  This must be done before
      any children could possibly be created; otherwise, the wait
      functions won't work on systems with the SVR4 ECHILD brain

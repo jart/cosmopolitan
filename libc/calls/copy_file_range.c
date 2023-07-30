@@ -23,6 +23,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -30,10 +31,9 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/thread.h"
 
 static struct CopyFileRange {
-  pthread_once_t once;
+  _Atomic(uint32_t) once;
   bool ok;
 } g_copy_file_range;
 
@@ -104,7 +104,7 @@ ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
                         int64_t *opt_in_out_outoffset, size_t uptobytes,
                         uint32_t flags) {
   ssize_t rc;
-  pthread_once(&g_copy_file_range.once, copy_file_range_init);
+  cosmo_once(&g_copy_file_range.once, copy_file_range_init);
   BEGIN_CANCELLATION_POINT;
 
   if (!g_copy_file_range.ok) {

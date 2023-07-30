@@ -20,6 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -51,12 +52,59 @@ void SetUp(void) {
   if (IsWindows()) exit(0);
 }
 
-TEST(malloc, zeroMeansOne) {
-  ASSERT_GE(malloc_usable_size(gc(malloc(0))), 1);
+TEST(malloc, zero) {
+  char *p;
+  ASSERT_NE(NULL, (p = malloc(0)));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
+  free(p);
 }
 
-TEST(calloc, zerosMeansOne) {
-  ASSERT_GE(malloc_usable_size(gc(calloc(0, 0))), 1);
+TEST(realloc, bothAreZero_createsMinimalAllocation) {
+  char *p;
+  ASSERT_NE(NULL, (p = realloc(0, 0)));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
+  free(p);
+}
+
+TEST(realloc, ptrIsZero_createsAllocation) {
+  char *p;
+  ASSERT_NE(NULL, (p = realloc(0, 1)));
+  if (IsAsan()) ASSERT_TRUE(__asan_is_valid(p, 1));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  ASSERT_EQ(p, realloc(p, 0));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  free(p);
+}
+
+TEST(realloc, sizeIsZero_shrinksAllocation) {
+  char *p;
+  ASSERT_NE(NULL, (p = malloc(1)));
+  if (IsAsan()) ASSERT_TRUE(__asan_is_valid(p, 1));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  ASSERT_EQ(p, realloc(p, 0));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p, 1));
+  if (IsAsan()) ASSERT_FALSE(__asan_is_valid(p + 1, 1));
+  free(p);
+}
+
+TEST(realloc_in_place, test) {
+  char *x = malloc(16);
+  EXPECT_EQ(x, realloc_in_place(x, 0));
+  EXPECT_EQ(x, realloc_in_place(x, 1));
+  *x = 2;
+  free(x);
+}
+
+BENCH(realloc_in_place, bench) {
+  volatile int i = 1000;
+  volatile char *x = malloc(i);
+  EZBENCH2("malloc", donothing, free(malloc(i)));
+  EZBENCH2("memalign", donothing, free(memalign(16, i)));
+  EZBENCH2("memalign", donothing, free(memalign(32, i)));
+  EZBENCH2("realloc", donothing, x = realloc(x, --i));
+  EZBENCH2("realloc_in_place", donothing, realloc_in_place(x, --i));
+  free(x);
 }
 
 void AppendStuff(char **p, size_t *n) {

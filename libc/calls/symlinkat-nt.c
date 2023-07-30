@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -31,12 +32,13 @@
 #include "libc/nt/struct/tokenprivileges.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/thread.h"
 
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
-static _Bool g_winlink_allowed;
-static pthread_once_t g_winlink_once;
+static struct {
+  _Atomic(uint32_t) once;
+  _Bool allowed;
+} g_winlink;
 
 static textwindows void InitializeWinlink(void) {
   int64_t tok;
@@ -48,7 +50,7 @@ static textwindows void InitializeWinlink(void) {
   tp.Privileges[0].Luid = id;
   tp.Privileges[0].Attributes = kNtSePrivilegeEnabled;
   if (!AdjustTokenPrivileges(tok, 0, &tp, sizeof(tp), 0, 0)) return;
-  g_winlink_allowed = GetLastError() != kNtErrorNotAllAssigned;
+  g_winlink.allowed = GetLastError() != kNtErrorNotAllAssigned;
 }
 
 textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
@@ -82,8 +84,8 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
 
   // windows only lets administrators do this
   // even then we're required to ask for permission
-  pthread_once(&g_winlink_once, InitializeWinlink);
-  if (!g_winlink_allowed) {
+  cosmo_once(&g_winlink.once, InitializeWinlink);
+  if (!g_winlink.allowed) {
     return eperm();
   }
 

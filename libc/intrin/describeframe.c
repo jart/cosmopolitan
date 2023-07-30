@@ -37,8 +37,6 @@ static const char *GetFrameName(int x) {
     return "automap";
   } else if (IsFixedFrame(x)) {
     return "fixed";
-  } else if (IsArenaFrame(x)) {
-    return "arena";
   } else if (IsStaticStackFrame(x)) {
     return "stack";
   } else if (IsGfdsFrame(x)) {

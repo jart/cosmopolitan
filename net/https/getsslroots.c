@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/cosmo.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/thread/thread.h"
 #include "third_party/mbedtls/x509_crt.h"
 
 __static_yoink("ssl_root_support");
@@ -30,7 +30,7 @@ __static_yoink("ssl_root_support");
 #define SSL_ROOT_DIR "/zip/usr/share/ssl/root"
 
 static struct {
-  pthread_once_t once;
+  _Atomic(uint32_t) once;
   mbedtls_x509_crt chain;
 } g_ssl_roots;
 
@@ -74,6 +74,6 @@ static void InitSslRoots(void) {
  * Returns singleton of SSL roots stored in /zip/usr/share/ssl/root/...
  */
 mbedtls_x509_crt *GetSslRoots(void) {
-  pthread_once(&g_ssl_roots.once, InitSslRoots);
+  cosmo_once(&g_ssl_roots.once, InitSslRoots);
   return &g_ssl_roots.chain;
 }

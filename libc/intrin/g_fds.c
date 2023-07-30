@@ -18,13 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -37,16 +41,26 @@ __static_yoink("_init_g_fds");
 struct Fds g_fds;
 static struct Fd g_fds_static[OPEN_MAX];
 
-static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
+static int Atoi(const char *str) {
+  int i;
+  for (i = 0; '0' <= *str && *str <= '9'; ++str) {
+    i *= 10;
+    i += *str - '0';
+  }
+  return i;
+}
+
+static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x,
+                                               int sockset) {
   int64_t h;
   h = GetStdHandle(x);
   if (!h || h == -1) return;
-  fds->p[i].kind = pushpop(kFdFile);
+  fds->p[i].kind = ((1 << i) & sockset) ? pushpop(kFdSocket) : pushpop(kFdFile);
   fds->p[i].handle = h;
   atomic_store_explicit(&fds->f, i + 1, memory_order_relaxed);
 }
 
-textstartup void __init_fds(void) {
+textstartup void __init_fds(int argc, char **argv, char **envp) {
   struct Fds *fds;
   __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
   fds = __veil("r", &g_fds);
@@ -77,9 +91,29 @@ textstartup void __init_fds(void) {
     fds->p[1].handle = __veil("r", 0x3F8ull);
     fds->p[2].handle = __veil("r", 0x3F8ull);
   } else if (IsWindows()) {
-    SetupWinStd(fds, 0, kNtStdInputHandle);
-    SetupWinStd(fds, 1, kNtStdOutputHandle);
-    SetupWinStd(fds, 2, kNtStdErrorHandle);
+    int sockset = 0;
+    struct Env var;
+    var = _getenv(envp, "__STDIO_SOCKETS");
+    if (var.s) {
+      int i = var.i + 1;
+      do {
+        envp[i - 1] = envp[i];
+      } while (envp[i]);
+      sockset = Atoi(var.s);
+    }
+    if (sockset && !_weaken(socket)) {
+#ifdef SYSDEBUG
+      kprintf("%s: parent process passed sockets as stdio, but this program"
+              " can't use them since it didn't link the socket() function\n",
+              argv[0]);
+      _Exit(1);
+#else
+      sockset = 0;  // let ReadFile() fail
+#endif
+    }
+    SetupWinStd(fds, 0, kNtStdInputHandle, sockset);
+    SetupWinStd(fds, 1, kNtStdOutputHandle, sockset);
+    SetupWinStd(fds, 2, kNtStdErrorHandle, sockset);
   }
   fds->p[1].flags = O_WRONLY | O_APPEND;
   fds->p[2].flags = O_WRONLY | O_APPEND;

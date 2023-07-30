@@ -24,10 +24,14 @@
  * Describes setsockopt() level arguments.
  */
 const char *(DescribeSockLevel)(char buf[12], int x) {
+  if (x == SOL_SOCKET) return "SOL_SOCKET";
   if (x == SOL_IP) return "SOL_IP";
+  if (x == SOL_ICMP) return "SOL_ICMP";
   if (x == SOL_TCP) return "SOL_TCP";
   if (x == SOL_UDP) return "SOL_UDP";
-  if (x == SOL_SOCKET) return "SOL_SOCKET";
+  if (x == SOL_IPV6) return "SOL_IPV6";
+  if (x == SOL_ICMPV6) return "SOL_ICMPV6";
+  if (x == SOL_RAW) return "SOL_RAW";
   FormatInt32(buf, x);
   return buf;
 }

@@ -29,7 +29,7 @@
  * @note Linux documentation says this call is "dangerous"; for highest
  *     assurance of data recovery after crash, consider fsync() on both
  *     file and directory
- * @see fsync(), fdatasync(), PAGESIZE
+ * @see fsync(), fdatasync()
  */
 int sync_file_range(int fd, int64_t offset, int64_t bytes, unsigned flags) {
   int rc, olderr;

@@ -52,6 +52,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -68,7 +69,9 @@ bool32 __onntconsoleevent_nt(uint32_t);
 void kmalloc_unlock(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
-  STRACE("fork() %s() failed %d", func, GetLastError());
+#ifdef SYSDEBUG
+  kprintf("fork() %s() failed with win32 error %d\n", func, GetLastError());
+#endif
   ExitProcess(177);
 }
 
@@ -104,7 +107,15 @@ static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
 }
 
 static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
-  return ForkIo2(h, buf, n, WriteFile, "WriteFile", false);
+  bool ok;
+  ok = ForkIo2(h, buf, n, WriteFile, "WriteFile", false);
+#ifdef SYSDEBUG
+  if (!ok) {
+    kprintf("failed to write %zu bytes to forked child: %d\n", n,
+            GetLastError());
+  }
+#endif
+  return ok;
 }
 
 static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
@@ -320,8 +331,13 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
         }
         for (i = 0; i < _mmi.i && ok; ++i) {
           if ((_mmi.p[i].flags & MAP_TYPE) != MAP_SHARED) {
-            ok = WriteAll(writer, (void *)((uint64_t)_mmi.p[i].x << 16),
-                          _mmi.p[i].size);
+            uint32_t op;
+            char *p = (char *)((uint64_t)_mmi.p[i].x << 16);
+            // XXX: forking destroys thread guard pages currently
+            VirtualProtect(
+                p, _mmi.p[i].size,
+                __prot2nt(_mmi.p[i].prot | PROT_READ, _mmi.p[i].iscow), &op);
+            ok = WriteAll(writer, p, _mmi.p[i].size);
           }
         }
         if (ok) ok = WriteAll(writer, __data_start, __data_end - __data_start);

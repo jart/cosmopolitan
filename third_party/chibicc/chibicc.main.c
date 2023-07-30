@@ -1,7 +1,6 @@
-#include "libc/mem/arena.h"
+#include "third_party/chibicc/chibicc.h"
 #include "libc/runtime/internal.h"
 #include "libc/x/x.h"
-#include "third_party/chibicc/chibicc.h"
 #include "tool/build/lib/getargs.h"
 
 int main(int argc, char **argv) {
