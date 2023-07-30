@@ -2631,27 +2631,6 @@ static Node *new_mul(Node *lhs, Node *rhs, Token *tok) {
   return new_binary(ND_MUL, lhs, rhs, tok);
 }
 
-static Node *builtin_overflow(Token **rest, Token *tok,
-                              Node *new_op(Node *, Node *, Token *)) {
-  Token *start = tok;
-  tok = skip(tok->next, '(');
-  Node *lhs = assign(&tok, tok);
-  tok = skip(tok, ',');
-  Node *rhs = assign(&tok, tok);
-  tok = skip(tok, ',');
-  Node *dst = assign(&tok, tok);
-  *rest = skip(tok, ')');
-  Node *node = new_op(lhs, rhs, start);
-  add_type(node);
-  add_type(dst);
-  if (!is_compatible(pointer_to(node->ty), dst->ty)) {
-    error_tok(start, "output pointer type incompatible");
-  }
-  node->overflow = dst;
-  node->ty = copy_type(ty_bool);
-  return node;
-}
-
 // add = mul ("+" mul | "-" mul)*
 static Node *add(Token **rest, Token *tok) {
   Node *node = mul(&tok, tok);
@@ -3376,32 +3355,6 @@ static Node *primary(Token **rest, Token *tok) {
         const_expr(&tok, tok->next);
       }
       *rest = skip(tok, ')');
-      return node;
-    }
-    if (kw == KW___BUILTIN_ADD_OVERFLOW) {
-      return builtin_overflow(rest, tok, new_add);
-    }
-    if (kw == KW___BUILTIN_SUB_OVERFLOW) {
-      return builtin_overflow(rest, tok, new_sub);
-    }
-    if (kw == KW___BUILTIN_MUL_OVERFLOW) {
-      return builtin_overflow(rest, tok, new_mul);
-    }
-    if (kw == KW___BUILTIN_NEG_OVERFLOW) {
-      Token *start = tok;
-      tok = skip(tok->next, '(');
-      Node *lhs = assign(&tok, tok);
-      tok = skip(tok, ',');
-      Node *dst = assign(&tok, tok);
-      *rest = skip(tok, ')');
-      Node *node = new_unary(ND_NEG, lhs, start);
-      add_type(node);
-      add_type(dst);
-      if (!is_compatible(pointer_to(node->ty), dst->ty)) {
-        error_tok(start, "output pointer type incompatible");
-      }
-      node->overflow = dst;
-      node->ty = copy_type(ty_bool);
       return node;
     }
     if (kw == KW___BUILTIN_FPCLASSIFY) {

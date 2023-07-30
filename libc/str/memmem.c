@@ -34,7 +34,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  */
 dontasan void *memmem(const void *haystack, size_t haystacklen,
                       const void *needle, size_t needlelen) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   char c;
   xmm_t n, *v;
   unsigned i, k, m;

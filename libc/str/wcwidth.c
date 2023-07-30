@@ -30,7 +30,7 @@ extern const uint32_t kCombiningCharsBits;
  * Returns cell width of monospace character.
  */
 int wcwidth(wchar_t c) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   if (LIKELY(32 <= c && c < 127)) {
     return 1;
   } else if (!c) {

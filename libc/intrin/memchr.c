@@ -35,7 +35,7 @@ static inline const unsigned char *memchr_pure(const unsigned char *s,
   return 0;
 }
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
 dontasan static inline const unsigned char *memchr_sse(const unsigned char *s,
                                                        unsigned char c,
                                                        size_t n) {
@@ -71,7 +71,7 @@ dontasan static inline const unsigned char *memchr_sse(const unsigned char *s,
  * @asyncsignalsafe
  */
 void *memchr(const void *s, int c, size_t n) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
   if (IsAsan()) __asan_verify(s, n);
   r = memchr_sse(s, c, n);

@@ -1152,19 +1152,6 @@ static int GetSseIntSuffix(Type *ty) {
   }
 }
 
-static bool IsOverflowArithmetic(Node *node) {
-  return (node->kind == ND_ADD || node->kind == ND_SUB ||
-          node->kind == ND_MUL || node->kind == ND_NEG) &&
-         node->overflow;
-}
-
-static void HandleOverflow(const char *ax) {
-  pop("%rdi");
-  println("\tmov\t%s,(%%rdi)", ax);
-  emitlin("\tseto\t%al");
-  emitlin("\tmovzbl\t%al,%eax");
-}
-
 static void HandleAtomicArithmetic(Node *node, const char *op) {
   gen_expr(node->lhs);
   push();
@@ -1238,10 +1225,6 @@ void gen_expr(Node *node) {
       }
     }
     case ND_NEG:
-      if (IsOverflowArithmetic(node)) {
-        gen_expr(node->overflow);
-        push();
-      }
       gen_expr(node->lhs);
       switch (node->ty->kind) {
         case TY_FLOAT:
@@ -1277,9 +1260,6 @@ void gen_expr(Node *node) {
         ax = "%eax";
       }
       println("\tneg\t%s", ax);
-      if (IsOverflowArithmetic(node)) {
-        HandleOverflow(ax);
-      }
       return;
     case ND_VAR:
       gen_addr(node);
@@ -1771,10 +1751,6 @@ void gen_expr(Node *node) {
       error_tok(node->tok, "invalid expression");
     }
   }
-  if (IsOverflowArithmetic(node)) {
-    gen_expr(node->overflow);
-    push();
-  }
   if (node->lhs->ty->vector_size == 16) {
     gen_expr(node->rhs);
     pushx();
@@ -2209,9 +2185,6 @@ void gen_expr(Node *node) {
       break;
     default:
       error_tok(node->tok, "invalid expression");
-  }
-  if (IsOverflowArithmetic(node)) {
-    HandleOverflow(ax);
   }
 }
 

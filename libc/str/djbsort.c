@@ -34,7 +34,7 @@ void djbsort(int32_t *a, size_t n) {
     __asan_verify(a, m);
   }
   if (n > 1) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
     if (X86_HAVE(AVX2)) {
       djbsort_avx2(a, n);
     } else {

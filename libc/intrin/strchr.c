@@ -30,7 +30,7 @@ static inline const char *strchr_pure(const char *s, int c) {
   }
 }
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 dontasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
@@ -95,7 +95,7 @@ static dontasan inline const char *strchr_x64(const char *p, uint64_t c) {
  * @vforksafe
  */
 char *strchr(const char *s, int c) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   const char *r;
   if (X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, 1);

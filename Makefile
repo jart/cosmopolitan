@@ -414,7 +414,7 @@ o/cosmopolitan.html:							\
 	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
-		@$(TMPDIR)/$(subst /,_,$@)
+		-DCOSMO @$(TMPDIR)/$(subst /,_,$@)
 
 $(SRCS):					\
 	libc/integral/normalize.inc		\

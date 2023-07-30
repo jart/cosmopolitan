@@ -95,7 +95,7 @@ void *memmove(void *dst, const void *src, size_t n) {
   d = dst;
   s = src;
 
-#ifdef __x86__
+#if defined(__x86_64__) && !defined(__chibicc__)
   if (IsTiny()) {
     uint16_t w1, w2;
     uint32_t l1, l2;
@@ -214,7 +214,7 @@ void *memmove(void *dst, const void *src, size_t n) {
     default:
       if (d == s) return d;
 
-#ifdef __x86__
+#if defined(__x86_64__) && !defined(__chibicc__)
       if (n < kHalfCache3 || !kHalfCache3) {
         if (d > s) {
           if (IsAsan() || n < 900 || !X86_HAVE(ERMS)) {

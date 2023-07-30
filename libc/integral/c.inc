@@ -44,6 +44,10 @@
 #endif
 #endif
 
+#ifdef __chibicc__
+#define __extension__
+#endif
+
 #if __STDC_VERSION__ + 0 < 201112
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define _Alignas(x) __attribute__((__aligned__(x)))
@@ -828,12 +832,17 @@ void abort(void) wontreturn;
 #define __static_yoink_source(PATH)
 #endif
 
-#define __strong_reference(sym, aliassym) \
-  extern __typeof(sym) aliassym __attribute__((__alias__(#sym)))
 #define __weak_reference(sym, alias)       \
   __asm__(".weak\t" #alias "\n\t"          \
           ".equ\t" #alias ", " #sym "\n\t" \
           ".type\t" #alias ",@notype")
+
+#ifndef __chibicc__
+#define __strong_reference(sym, alias) \
+  extern __typeof(sym) alias __attribute__((__alias__(#sym)))
+#else
+#define __strong_reference(sym, alias) __weak_reference(sym, alias)
+#endif
 
 #define __funline \
   extern __inline \

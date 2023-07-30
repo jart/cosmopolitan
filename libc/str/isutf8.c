@@ -60,7 +60,7 @@ dontasan bool _isutf8(const void *data, size_t size) {
   p = data;
   e = p + size;
   while (p < e) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
     if (!((intptr_t)p & 15)) {
       for (;;) {
         if ((m = __builtin_ia32_pmovmskb128(*(xmm_t *)p >= (xmm_t){0}) ^

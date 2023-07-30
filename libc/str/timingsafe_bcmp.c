@@ -22,8 +22,8 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
+#ifndef __chibicc__
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
-
 dontasan static unsigned timingsafe_bcmp_sse(const char *p, const char *q,
                                              size_t n) {
   uint64_t w;
@@ -39,8 +39,9 @@ dontasan static unsigned timingsafe_bcmp_sse(const char *p, const char *q,
   w = a[0] | a[1];
   return w | w >> 32;
 }
+#endif
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
 dontasan static _Microarchitecture("avx") int timingsafe_bcmp_avx(const char *p,
                                                                   const char *q,
                                                                   size_t n) {
@@ -141,12 +142,14 @@ int timingsafe_bcmp(const void *a, const void *b, size_t n) {
           __asan_verify(a, n);
           __asan_verify(b, n);
         }
+#ifndef __chibicc__
 #ifdef __x86_64__
         if (X86_HAVE(AVX)) {
           return timingsafe_bcmp_avx(p, q, n);
         }
 #endif
         return timingsafe_bcmp_sse(p, q, n);
+#endif
       }
     } else if (n >= 4) {
       __builtin_memcpy(&u0, p, 4);

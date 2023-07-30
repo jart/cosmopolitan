@@ -39,7 +39,7 @@ dontasan char *strcpy(char *d, const char *s) {
   if (IsAsan()) {
     __asan_verify(d, strlen(s) + 1);
   }
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   for (; (uintptr_t)(s + i) & 15; ++i) {
     if (!(d[i] = s[i])) {
       return d;

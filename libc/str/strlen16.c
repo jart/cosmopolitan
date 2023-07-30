@@ -30,7 +30,7 @@ typedef char16_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @asyncsignalsafe
  */
 dontasan size_t strlen16(const char16_t *s) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   size_t n;
   xmm_t z = {0};
   unsigned m, k = (uintptr_t)s & 15;

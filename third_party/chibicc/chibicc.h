@@ -410,8 +410,6 @@ struct Node {
   Node *atomic_expr;
   // Variable
   Obj *var;
-  // Arithmetic
-  Node *overflow;
   // Numeric literal
   int64_t val;
   long double fval;

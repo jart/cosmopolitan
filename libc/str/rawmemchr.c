@@ -31,7 +31,7 @@ static inline const unsigned char *rawmemchr_pure(const unsigned char *s,
   }
 }
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 dontasan static inline const char *rawmemchr_sse(const char *s,
                                                  unsigned char c) {
@@ -68,7 +68,7 @@ static inline dontasan uint64_t UncheckedAlignedRead64(unsigned char *p) {
  * @return is pointer to first instance of c
  */
 void *rawmemchr(const void *s, int c) {
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
   if (X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, 1);

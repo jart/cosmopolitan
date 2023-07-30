@@ -23,6 +23,7 @@
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
+#if !defined(__chibicc__)
 static int bcmp_sse(const char *p, const char *q, size_t n) {
   xmm_t a;
   while (n > 32) {
@@ -36,8 +37,9 @@ static int bcmp_sse(const char *p, const char *q, size_t n) {
       *(const xmm_t *)(p + n - 16) ^ *(const xmm_t *)(q + n - 16);
   return !!(a[0] | a[1]);
 }
+#endif
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
 _Microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
                                               size_t n) {
   xmm_t a, b, c, d;
@@ -123,12 +125,14 @@ int bcmp(const void *a, const void *b, size_t n) {
         __builtin_memcpy(&j, q + n - 4, 4);
         return !!(i ^ j);
       }
+#ifndef __chibicc__
 #ifdef __x86_64__
     } else if (LIKELY(X86_HAVE(AVX))) {
       return bcmp_avx(p, q, n);
 #endif
     } else {
       return bcmp_sse(p, q, n);
+#endif
     }
   }
   while (n--) {

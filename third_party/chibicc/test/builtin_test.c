@@ -192,104 +192,6 @@ void test_memcpy(void) {
   }
 }
 
-void test_add_overflow(void) {
-  {
-    int z;
-    ASSERT(0, ckd_add(&z, 2, 3));
-    ASSERT(5, z);
-  }
-  {
-    int x, y, z;
-    x = 2;
-    y = 3;
-    ASSERT(0, ckd_add(&z, x, y));
-    ASSERT(5, z);
-  }
-  {
-    int x, y, z;
-    x = 0x7fffffff;
-    y = 1;
-    ASSERT(1, ckd_add(&z, x, y));
-    ASSERT(-2147483648, z);
-  }
-  {
-    long x, y, z;
-    x = 0x7fffffff;
-    y = 1;
-    ASSERT(0, ckd_add(&z, x, y));
-    ASSERT(2147483648, z);
-  }
-}
-
-void test_sub_overflow(void) {
-  {
-    int x, y, z;
-    x = 2;
-    y = 3;
-    ASSERT(0, ckd_sub(&z, x, y));
-    ASSERT(-1, z);
-  }
-  {
-    int x, y, z;
-    x = -2147483648;
-    y = 1;
-    ASSERT(1, ckd_sub(&z, x, y));
-    ASSERT(2147483647, z);
-  }
-  {
-    long x, y, z;
-    x = -2147483648;
-    y = 1;
-    ASSERT(0, ckd_sub(&z, x, y));
-    ASSERT(-2147483649, z);
-  }
-}
-
-void test_mul_overflow(void) {
-  {
-    int x, y, z;
-    x = 2;
-    y = 3;
-    ASSERT(0, ckd_mul(&z, x, y));
-    ASSERT(6, z);
-  }
-  {
-    int x, y, z;
-    x = 2147483647;
-    y = 2;
-    ASSERT(1, ckd_mul(&z, x, y));
-    ASSERT(-2, z);
-  }
-  {
-    long x, y, z;
-    x = 2147483647;
-    y = 2;
-    ASSERT(0, ckd_mul(&z, x, y));
-    ASSERT(4294967294, z);
-  }
-}
-
-void test_neg_overflow(void) {
-  {
-    int x, z;
-    x = 2;
-    ASSERT(0, __builtin_neg_overflow(x, &z));
-    ASSERT(-2, z);
-  }
-  {
-    int x, z;
-    x = -2147483648;
-    ASSERT(1, __builtin_neg_overflow(x, &z));
-    ASSERT(-2147483648, z);
-  }
-  {
-    long x, z;
-    x = -2147483648;
-    ASSERT(0, __builtin_neg_overflow(x, &z));
-    ASSERT(2147483648, z);
-  }
-}
-
 void test_inf(void) {
   ASSERT(0, __builtin_isinf(0));
   ASSERT(0, __builtin_isinf(1));
@@ -433,10 +335,6 @@ int main() {
   test_memcpy();
   test_offsetof();
   test_ignored();
-  test_add_overflow();
-  test_sub_overflow();
-  test_mul_overflow();
-  test_neg_overflow();
   test_strlen();
   test_strchr();
   test_strpbrk();

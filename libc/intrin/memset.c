@@ -24,9 +24,9 @@
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
+#ifndef __chibicc__
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
-
 static void *memset_sse(char *p, char c, size_t n) {
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   if (IsAsan()) __asan_verify(p, n);
@@ -44,8 +44,9 @@ static void *memset_sse(char *p, char c, size_t n) {
   }
   return p;
 }
+#endif
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !defined(__chibicc__)
 _Microarchitecture("avx") static void *memset_avx(char *p, char c, size_t n) {
   char *t;
   xmm_t v = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
@@ -158,7 +159,7 @@ void *memset(void *p, int c, size_t n) {
       } while (n);
     }
     return b;
-#ifdef __x86__
+#if defined(__x86_64__) && !defined(__chibicc__)
   } else if (IsTiny()) {
     asm("rep stosb" : "+D"(b), "+c"(n), "=m"(*(char(*)[n])b) : "a"(c));
     return p;

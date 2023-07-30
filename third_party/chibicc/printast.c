@@ -189,7 +189,6 @@ static void PrintNode(FILE *f, int l, const char *s, Node *n) {
     PrintInt(f, l + 2, "end: ", n->end);
     PrintMember(f, l + 2, "member: ", n->member);
     PrintObj(f, l + 2, "var: ", n->var);
-    PrintNode(f, l + 2, "overflow: ", n->overflow);
     PrintInt(f, l + 2, "val: ", n->val);
     if (n->fval) PrintLine(f, l + 2, "fval: %Lf", n->fval);
     PrintLine(f, l, "}");
