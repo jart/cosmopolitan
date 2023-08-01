@@ -294,7 +294,7 @@ void GetTermSize(void) {
   tyn_ = wsize_.ws_row * 2;
   txn_ = wsize_.ws_col * 2;
   ssy_ = ComputeSamplingSolution(tyn_, ChopAxis(tyn_, DYN), 0, 0, 2);
-  ssx_ = ComputeSamplingSolution(txn_, ChopAxis(txn_, DXN), 0, 0, 0);
+  ssx_ = ComputeSamplingSolution(txn_, ChopAxis(txn_, DXN), 0, 0, 2);
   R = (unsigned char*)realloc(R, tyn_ * txn_);
   G = (unsigned char*)realloc(G, tyn_ * txn_);
   B = (unsigned char*)realloc(B, tyn_ * txn_);
