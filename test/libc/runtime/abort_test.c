@@ -19,33 +19,20 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-TEST(abort, sysv) {
-  if (IsWindows()) return;
+TEST(abort, test) {
   SPAWN(fork);
   ASSERT_NE(SIG_ERR, signal(SIGABRT, SIG_DFL));
   abort();
   TERMS(SIGABRT);
 }
 
-TEST(abort, windows) {
-  if (!IsWindows()) return;
-  SPAWN(fork);
-  ASSERT_NE(SIG_ERR, signal(SIGABRT, SIG_DFL));
-  abort();
-  EXITS(128 + SIGABRT);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TEST(abort, blocked_stillTerminates_sysv) {
+TEST(abort, blocked_stillTerminates) {
   sigset_t ss;
-  if (IsWindows()) return;
   SPAWN(fork);
   ASSERT_NE(SIG_ERR, signal(SIGABRT, SIG_DFL));
   sigfillset(&ss);
@@ -54,52 +41,19 @@ TEST(abort, blocked_stillTerminates_sysv) {
   TERMS(SIGABRT);
 }
 
-TEST(abort, blocked_stillTerminates_windows) {
-  sigset_t ss;
-  if (!IsWindows()) return;
-  SPAWN(fork);
-  ASSERT_NE(SIG_ERR, signal(SIGABRT, SIG_DFL));
-  sigfillset(&ss);
-  sigprocmask(SIG_SETMASK, &ss, 0);
-  abort();
-  EXITS(128 + SIGABRT);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TEST(abort, ign_stillTerminates_sysv) {
-  if (IsWindows()) return;
+TEST(abort, ign_stillTerminates) {
   SPAWN(fork);
   ASSERT_NE(SIG_ERR, signal(SIGABRT, SIG_IGN));
   abort();
   TERMS(SIGABRT);
 }
-
-TEST(abort, ign_stillTerminates_windows) {
-  if (!IsWindows()) return;
-  SPAWN(fork);
-  ASSERT_NE(SIG_ERR, signal(SIGABRT, SIG_IGN));
-  abort();
-  EXITS(128 + SIGABRT);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Ignore(int sig) {
 }
 
-TEST(abort, handled_stillTerminates_sysv) {
-  if (IsWindows()) return;
+TEST(abort, handled_stillTerminates) {
   SPAWN(fork);
   ASSERT_NE(SIG_ERR, signal(SIGABRT, Ignore));
   abort();
   TERMS(SIGABRT);
-}
-
-TEST(abort, handled_stillTerminates_windows) {
-  if (!IsWindows()) return;
-  SPAWN(fork);
-  ASSERT_NE(SIG_ERR, signal(SIGABRT, Ignore));
-  abort();
-  EXITS(128 + SIGABRT);
 }

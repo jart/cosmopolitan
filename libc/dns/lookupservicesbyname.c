@@ -45,7 +45,7 @@
  * @param buf is a buffer to store the official name of the service
  *          (if NULL, the official name is not stored)
  * @param bufsize is the size of buf
- * @param filepath is the location of services file
+ * @param path is the location of services file
  *          (if NULL, uses /etc/services)
  * @return -1 on error, or positive port number
  * @note aliases are read from file for comparison, but not returned.
@@ -54,29 +54,23 @@
  */
 int LookupServicesByName(const char *servname, char *servproto,
                          size_t servprotolen, char *buf, size_t bufsize,
-                         const char *filepath) {
+                         const char *path) {
   FILE *f;
   char *line;
-  const char *path;
   size_t linesize;
+  char pathbuf[256];
   int found, result;
-  char pathbuf[PATH_MAX];
   char *name, *port, *proto, *alias, *comment, *tok;
-  if (!(path = filepath)) {
-    path = "/etc/services";
-    if (IsWindows()) {
-      path =
-          firstnonnull(GetNtServicesTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
-    }
-  }
-  if (servprotolen == 0 || !(f = fopen(path, "r"))) {
+  if (servprotolen == 0 ||
+      !(f = fopen(path ? path : GetServicesTxtPath(pathbuf, sizeof(pathbuf)),
+                  "r"))) {
     return -1;
   }
   line = NULL;
   linesize = 0;
   found = 0;
   result = -1;
-  if (buf && bufsize != 0) strcpy(buf, "");
+  if (bufsize) strcpy(buf, "");
   while (found == 0 && (getline(&line, &linesize, f)) != -1) {
     if ((comment = strchr(line, '#'))) *comment = '\0';
     name = strtok_r(line, " \t\r\n\v", &tok);
@@ -93,8 +87,8 @@ int LookupServicesByName(const char *servname, char *servproto,
             strcpy(servproto, "");
             break;
           }
-          if (buf && bufsize != 0 && !memccpy(buf, name, '\0', bufsize)) {
-            strcpy(buf, "");
+          if (bufsize && !memccpy(buf, name, '\0', bufsize)) {
+            *buf = 0;
             break;
           }
           result = atoi(port);

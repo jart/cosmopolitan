@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
-#include "third_party/gdtoa/lock.h"
+#include "libc/dns/dns.h"
+#include "libc/nt/systeminfo.h"
+#include "libc/str/str.h"
 
-static pthread_mutex_t __gdtoa_lock_obj;
-static pthread_mutex_t __gdtoa_lock1_obj;
-
-int(__gdtoa_lock)(void) {
-  return pthread_mutex_lock(&__gdtoa_lock_obj);
-}
-
-int(__gdtoa_unlock)(void) {
-  return pthread_mutex_unlock(&__gdtoa_lock_obj);
-}
-
-int(__gdtoa_lock1)(void) {
-  return pthread_mutex_lock(&__gdtoa_lock1_obj);
-}
-
-int(__gdtoa_unlock1)(void) {
-  return pthread_mutex_unlock(&__gdtoa_lock1_obj);
+// e.g. GetSystemDirectoryPath(buf, size, "FOO") → "C:\WINDOWS\SYSTEM32\FOO"
+textwindows char *GetSystemDirectoryPath(char *buf, size_t size,
+                                         const char *path) {
+  uint32_t syslen = GetSystemDirectoryA(buf, size);
+  size_t pathlen = strlen(path);
+  if (syslen && syslen + pathlen + 1 < size) {
+    if (buf[syslen] == '\\') {
+      --syslen;
+    }
+    memcpy(buf + syslen, path, pathlen + 1);
+    return buf;
+  } else {
+    return 0;
+  }
 }

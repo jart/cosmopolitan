@@ -22,7 +22,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
 
-#define SIZE    ROUNDUP(sizeof(struct addrinfo), sizeof(void *))
+#define SIZE    sizeof(struct addrinfo)
 #define ADDRLEN sizeof(struct sockaddr_in)
 
 struct addrinfo *newaddrinfo(uint16_t port) {

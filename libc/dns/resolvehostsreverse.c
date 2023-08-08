@@ -44,7 +44,7 @@ int ResolveHostsReverse(const struct HostsTxt *ht, int af, const uint8_t *ip,
   if (af != AF_INET && af != AF_UNSPEC) return eafnosupport();
   for (i = 0; i < ht->entries.i; ++i) {
     if (READ32LE(ip) == READ32LE(ht->entries.p[i].ip)) {
-      if (memccpy(buf, ht->strings.p + ht->entries.p[i].name, '\0', bufsize)) {
+      if (memccpy(buf, ht->strings.p + ht->entries.p[i].name, 0, bufsize)) {
         return 1;
       }
     }

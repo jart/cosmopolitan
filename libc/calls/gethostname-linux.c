@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/utsname-linux.internal.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

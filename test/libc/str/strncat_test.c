@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Coerces `tv` from 1e-6 to 1e-9 granularity.
- */
-struct timespec timeval_totimespec(struct timeval tv) {
-  return (struct timespec){tv.tv_sec, tv.tv_usec * 1000};
+TEST(strncat, test) {
+  char buf[32] = "foo";
+  EXPECT_STREQ("foobar", strncat(buf, "bar", 3));
+  EXPECT_STREQ("foobarbar", strncat(buf, "bar", 10));
+  EXPECT_STREQ("foobarbarb", strncat(buf, "bar", 1));
+  EXPECT_STREQ("foobarbarb", strncat(buf, "", 1));
 }

@@ -1,19 +1,7 @@
-/*
- * Copyright 2023 Justine Alexandra Roberts Tunney
- *
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
- * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- */
+#ifndef COSMOPOLITAN_LIBC_STDCKDINT_H_
+#define COSMOPOLITAN_LIBC_STDCKDINT_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+/* clang-format off */
 
 /**
  * @fileoverview C23 Checked Arithmetic
@@ -54,16 +42,6 @@
  * @version 0.1 (2023-07-22)
  */
 
-#ifndef JTCKDINT_H_
-#define JTCKDINT_H_
-/* clang-format off */
-
-#ifdef __has_include
-#define __ckd_has_include(x) __has_include(x)
-#else
-#define __ckd_has_include(x) 0
-#endif
-
 #define __STDC_VERSION_STDCKDINT_H__ 202311L
 
 #if ((defined(__llvm__) ||                                              \
@@ -81,18 +59,12 @@
 typedef signed __ckd_intmax __ckd_intmax_t;
 typedef unsigned __ckd_intmax __ckd_uintmax_t;
 
-#ifdef __has_builtin
-#define __ckd_has_builtin(x) __has_builtin(x)
-#else
-#define __ckd_has_builtin(x) 0
-#endif
-
-#if (!defined(__STRICT_ANSI__) &&                                       \
-     ((defined(__GNUC__) && __GNUC__ >= 5 &&                            \
-       !defined(__chibicc__) && !defined(__ICC)) ||                     \
-      (__ckd_has_builtin(__builtin_add_overflow) &&                     \
-       __ckd_has_builtin(__builtin_sub_overflow) &&                     \
-       __ckd_has_builtin(__builtin_mul_overflow))))
+#if (!defined(__STRICT_ANSI__) &&                       \
+     ((defined(__GNUC__) && __GNUC__ >= 5 &&            \
+       !defined(__chibicc__) && !defined(__ICC)) ||     \
+      (__has_builtin(__builtin_add_overflow) &&         \
+       __has_builtin(__builtin_sub_overflow) &&         \
+       __has_builtin(__builtin_mul_overflow))))
 #define ckd_add(res, x, y) __builtin_add_overflow((x), (y), (res))
 #define ckd_sub(res, x, y) __builtin_sub_overflow((x), (y), (res))
 #define ckd_mul(res, x, y) __builtin_mul_overflow((x), (y), (res))
@@ -653,4 +625,5 @@ __ckd_declare_mul(__ckd_mul_uint128, unsigned __int128)
 #define ckd_mul(res, x, y) (*(res) = (x) * (y), 0)
 
 #endif /* GNU */
-#endif /* JTCKDINT_H_ */
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_STDCKDINT_H_ */

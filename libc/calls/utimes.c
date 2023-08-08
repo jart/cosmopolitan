@@ -37,10 +37,8 @@ int utimes(const char *path, const struct timeval tv[2]) {
   int rc;
   struct timespec ts[2];
   if (tv) {
-    ts[0].tv_sec = tv[0].tv_sec;
-    ts[0].tv_nsec = tv[0].tv_usec * 1000;
-    ts[1].tv_sec = tv[1].tv_sec;
-    ts[1].tv_nsec = tv[1].tv_usec * 1000;
+    ts[0] = timeval_totimespec(tv[0]);
+    ts[1] = timeval_totimespec(tv[1]);
     rc = __utimens(AT_FDCWD, path, ts, 0);
   } else {
     rc = __utimens(AT_FDCWD, path, 0, 0);

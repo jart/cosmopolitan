@@ -57,7 +57,7 @@ void endprotoent(void);
 
 struct hostent *gethostent(void);
 struct hostent *gethostbyname(const char *);
-struct hostent *gethostbyaddr(const void *, socklen_t, int);
+struct hostent *gethostbyaddr(const void *, uint32_t, int);
 void sethostent(int);
 void endhostent(void);
 

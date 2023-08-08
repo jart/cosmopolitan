@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -97,7 +98,7 @@
  *   - 1 byte exit status
  */
 
-#define DEATH_CLOCK_SECONDS 128
+#define DEATH_CLOCK_SECONDS 300
 
 #define kLogFile     "o/runitd.log"
 #define kLogMaxBytes (2 * 1000 * 1000)
@@ -123,7 +124,6 @@ void OnChildTerminated(int sig) {
   sigdelset(&ss, SIGTERM);
   sigprocmask(SIG_BLOCK, &ss, &oldss);
   for (;;) {
-    INFOF("waitpid");
     if ((pid = waitpid(-1, &ws, WNOHANG)) != -1) {
       if (pid) {
         if (WIFEXITED(ws)) {
@@ -364,13 +364,12 @@ void HandleClient(void) {
   const size_t kMaxNameSize = 128;
   const size_t kMaxFileSize = 10 * 1024 * 1024;
   uint32_t crc;
+  sigset_t sigmask;
   ssize_t got, wrote;
   struct sockaddr_in addr;
-  long double now, deadline;
-  sigset_t chldmask, savemask;
+  struct timespec now, deadline;
   char *addrstr, *exename, *exe;
   unsigned char msg[4 + 1 + 4 + 4 + 4];
-  struct sigaction ignore, saveint, savequit;
   uint32_t addrsize, namesize, filesize, remaining;
   int rc, events, exitcode, wstatus, child, pipefds[2];
 
@@ -411,29 +410,24 @@ void HandleClient(void) {
   }
   CHECK_NE(-1, (g_exefd = creat(g_exepath, 0700)));
   LOGIFNEG1(ftruncate(g_exefd, filesize));
-  INFOF("xwrite");
   CHECK_NE(-1, xwrite(g_exefd, exe, filesize));
   LOGIFNEG1(close(g_exefd));
 
   /* run program, tee'ing stderr to both log and client */
   DEBUGF("spawning %s", exename);
-  ignore.sa_flags = 0;
-  ignore.sa_handler = SIG_IGN;
-  sigemptyset(&ignore.sa_mask);
-  sigaction(SIGINT, &ignore, &saveint);
-  sigaction(SIGQUIT, &ignore, &savequit);
-  sigemptyset(&chldmask);
-  sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
+  sigemptyset(&sigmask);
+  sigaddset(&sigmask, SIGINT);
+  sigaddset(&sigmask, SIGQUIT);
+  sigaddset(&sigmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &sigmask, 0);
   CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
   CHECK_NE(-1, (child = fork()));
   if (!child) {
     dup2(g_bogusfd, 0);
     dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
-    sigaction(SIGINT, &(struct sigaction){0}, 0);
-    sigaction(SIGQUIT, &(struct sigaction){0}, 0);
-    sigprocmask(SIG_SETMASK, &savemask, 0);
+    sigemptyset(&sigmask);
+    sigprocmask(SIG_SETMASK, &sigmask, 0);
     int i = 0;
     const char *exe;
     char *args[8] = {0};
@@ -451,13 +445,17 @@ void HandleClient(void) {
     execvp(exe, args);
     _Exit(127);
   }
+  signal(SIGINT, SIG_IGN);
+  signal(SIGQUIT, SIG_IGN);
   close(pipefds[1]);
   DEBUGF("communicating %s[%d]", exename, child);
-  deadline = nowl() + DEATH_CLOCK_SECONDS;
+  deadline =
+      timespec_add(timespec_real(), timespec_fromseconds(DEATH_CLOCK_SECONDS));
   for (;;) {
-    now = nowl();
-    if (now >= deadline) {
+    now = timespec_real();
+    if (timespec_cmp(now, deadline) >= 0) {
       WARNF("%s worker timed out", exename);
+    TerminateJob:
       LOGIFNEG1(kill(child, 9));
       LOGIFNEG1(waitpid(child, 0, 0));
       LOGIFNEG1(close(g_clifd));
@@ -470,31 +468,31 @@ void HandleClient(void) {
     fds[0].events = POLLIN;
     fds[1].fd = pipefds[0];
     fds[1].events = POLLIN;
-    INFOF("poll");
-    events = poll(fds, ARRAYLEN(fds), (deadline - now) * 1000);
+    int waitms = timespec_tomillis(timespec_sub(deadline, now));
+    INFOF("polling for %d ms", waitms);
+    events = poll(fds, ARRAYLEN(fds), waitms);
     CHECK_NE(-1, events);  // EINTR shouldn't be possible
-    if (fds[0].revents) {
-      if (!(fds[0].revents & POLLHUP)) {
-        WARNF("%s got unexpected input event from client %#x", exename,
-              fds[0].revents);
+    if (events) {
+      if (fds[0].revents) {
+        if (!(fds[0].revents & POLLHUP)) {
+          WARNF("%s got unexpected input event from client %#x", exename,
+                fds[0].revents);
+        }
+        WARNF("%s client disconnected so killing worker %d", exename, child);
+        goto TerminateJob;
       }
-      WARNF("%s client disconnected so killing worker %d", exename, child);
-      LOGIFNEG1(kill(child, 9));
-      LOGIFNEG1(waitpid(child, 0, 0));
-      LOGIFNEG1(close(g_clifd));
-      LOGIFNEG1(close(pipefds[0]));
-      LOGIFNEG1(unlink(g_exepath));
-      _exit(1);
+      if (fds[1].revents) {
+        INFOF("read");
+        got = read(pipefds[0], g_buf, sizeof(g_buf));
+        CHECK_NE(-1, got);  // EINTR shouldn't be possible
+        if (!got) {
+          LOGIFNEG1(close(pipefds[0]));
+          break;
+        }
+        fwrite(g_buf, got, 1, stderr);
+        SendOutputFragmentMessage(kRunitStderr, g_buf, got);
+      }
     }
-    INFOF("read");
-    got = read(pipefds[0], g_buf, sizeof(g_buf));
-    CHECK_NE(-1, got);  // EINTR shouldn't be possible
-    if (!got) {
-      LOGIFNEG1(close(pipefds[0]));
-      break;
-    }
-    fwrite(g_buf, got, 1, stderr);
-    SendOutputFragmentMessage(kRunitStderr, g_buf, got);
   }
   INFOF("waitpid");
   CHECK_NE(-1, waitpid(child, &wstatus, 0));  // EINTR shouldn't be possible

@@ -30,7 +30,9 @@ struct timeval timeval_add(struct timeval, struct timeval) pureconst;
 struct timeval timeval_sub(struct timeval, struct timeval) pureconst;
 struct timeval timeval_subz(struct timeval, struct timeval) pureconst;
 struct timeval timespec_totimeval(struct timespec) pureconst;
-struct timespec timeval_totimespec(struct timeval) pureconst;
+static inline struct timespec timeval_totimespec(struct timeval __tv) {
+  return (struct timespec){__tv.tv_sec, __tv.tv_usec * 1000};
+}
 static inline bool timeval_iszero(struct timeval __tv) {
   return !(__tv.tv_sec | __tv.tv_usec);
 }

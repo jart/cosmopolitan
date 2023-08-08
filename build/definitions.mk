@@ -91,7 +91,7 @@ VM = o/third_party/qemu/qemu-aarch64
 HOSTS ?= pi silicon
 else
 ARCH = x86_64
-HOSTS ?= freebsd openbsd openbsd73 netbsd rhel7 rhel5 xnu win10
+HOSTS ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10
 endif
 
 ifeq ($(PREFIX),)

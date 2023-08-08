@@ -25,10 +25,10 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dns/servicestxt.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
-#include "libc/dns/servicestxt.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -137,8 +137,8 @@ TEST(LookupServicesByName, GetPortWhenNameOrAlias) {
 
   localproto = proto2;
   ASSERT_EQ(-1, /* protocol is non-NULL/length must be nonzero */
-            LookupServicesByName("ssh", localproto, 0, name, sizeof(name),
-                                 "services"));
+            LookupServicesByName("ssh", localproto, sizeof(proto2), name,
+                                 sizeof(name), "services"));
   ASSERT_STREQ(proto2, "udp");
 
   localproto = proto1;

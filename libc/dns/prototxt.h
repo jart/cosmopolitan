@@ -5,11 +5,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+const char *GetProtocolsTxtPath(char *, size_t);
+
 int LookupProtoByNumber(const int, char *, size_t, const char *)
     paramsnonnull((2));
 int LookupProtoByName(const char *, char *, size_t, const char *)
     paramsnonnull((1, 2));
-char *GetNtProtocolsTxtPath(char *, uint32_t);
 
 /* TODO: implement like struct HostsTxt? */
 

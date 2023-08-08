@@ -84,7 +84,9 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
   }
 
   if (IsMetal()) {
-    if (!memccpy(p, APE_COM_NAME, 0, e - p - 1)) e[-1] = 0;
+    if (!memccpy(p, APE_COM_NAME, 0, e - p - 1)) {
+      e[-1] = 0;
+    }
     return;
   }
 

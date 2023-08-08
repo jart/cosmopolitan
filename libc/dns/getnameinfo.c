@@ -53,8 +53,8 @@
  *
  * @return 0 on success or EAI_xxx value
  */
-int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
-                socklen_t namelen, char *service, socklen_t servicelen,
+int getnameinfo(const struct sockaddr *addr, uint32_t addrlen, char *name,
+                uint32_t namelen, char *service, uint32_t servicelen,
                 int flags) {
   char *p, rdomain[1 + sizeof "255.255.255.255.in-addr.arpa"];
   char info[NI_MAXHOST + 1];

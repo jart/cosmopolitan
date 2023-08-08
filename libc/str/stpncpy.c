@@ -16,27 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 /**
  * Prepares static search buffer.
  *
  * 1. If SRC is too long, it's truncated and *not* NUL-terminated.
- *
  * 2. If SRC is too short, the remainder is zero-filled.
  *
- * Please note this function isn't designed to prevent untrustworthy
- * data from modifying memory without authorization. Consider trying
- * memccpy() for that purpose.
- *
- * @return dest + stride
- * @see stncpy(), memccpy()
+ * @param dst is output buffer
+ * @param src is a nul-terminated string
+ * @param dstlen is size of `dst` buffer
+ * @return pointer to first nul-terminator, otherwise dest + stride
  * @asyncsignalsafe
+ * @see strncpy()
+ * @see memccpy()
+ * @see strlcpy()
  */
-char *stpncpy(char *dest, const char *src, size_t stride) {
-  char *p;
-  if ((p = memccpy(dest, src, '\0', stride))) {
-    bzero(p, dest + stride - p);
-  }
-  return dest + stride;
+char *stpncpy(char *dst, const char *src, size_t dstlen) {
+  size_t srclen, cpylen, zerlen;
+  srclen = strlen(src);
+  cpylen = MIN(srclen, dstlen);
+  if (cpylen) memcpy(dst, src, cpylen);
+  zerlen = dstlen - cpylen;
+  if (zerlen) bzero(dst + cpylen, zerlen);
+  return dst + cpylen;
 }

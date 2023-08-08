@@ -32,11 +32,58 @@
 #include "libc/calls/calls.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-#include "third_party/gdtoa/lock.h"
 /* clang-format off */
 
 static ThInfo TI0;
+static pthread_mutex_t __gdtoa_lock_obj;
+static pthread_mutex_t __gdtoa_lock1_obj;
+
+static void
+__gdtoa_lock(void)
+{
+	if (!__threaded)
+		return;
+	pthread_mutex_lock(&__gdtoa_lock_obj);
+}
+
+static void
+__gdtoa_unlock(void)
+{
+	if (!__threaded)
+		return;
+	pthread_mutex_unlock(&__gdtoa_lock_obj);
+}
+
+static void
+__gdtoa_initlock(void)
+{
+	pthread_mutex_init(&__gdtoa_lock_obj, 0);
+}
+
+static void
+__gdtoa_lock1(void)
+{
+	if (!__threaded)
+		return;
+	pthread_mutex_lock(&__gdtoa_lock1_obj);
+}
+
+static void
+__gdtoa_unlock1(void)
+{
+	if (!__threaded)
+		return;
+	pthread_mutex_unlock(&__gdtoa_lock1_obj);
+}
+
+static void
+__gdtoa_initlock1(void)
+{
+	pthread_mutex_init(&__gdtoa_lock1_obj, 0);
+}
 
 static void
 __gdtoa_Brelease(Bigint *rv)
@@ -63,7 +110,11 @@ __gdtoa_Bclear(void)
 __attribute__((__constructor__)) static void
 __gdtoa_Binit(void)
 {
+	__gdtoa_initlock();
+	__gdtoa_initlock1();
 	atexit(__gdtoa_Bclear);
+	pthread_atfork(__gdtoa_lock1, __gdtoa_unlock1, __gdtoa_initlock1);
+	pthread_atfork(__gdtoa_lock, __gdtoa_unlock, __gdtoa_initlock);
 }
 
 static ThInfo *

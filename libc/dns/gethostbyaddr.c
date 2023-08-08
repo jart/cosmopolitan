@@ -28,7 +28,7 @@
 #include "libc/mem/mem.h"
 #include "libc/sysv/consts/af.h"
 
-struct hostent *gethostbyaddr(const void *s_addr, socklen_t len, int type) {
+struct hostent *gethostbyaddr(const void *s_addr, uint32_t len, int type) {
   static struct hostent *ptr1, he1;
   static char h_name[DNS_NAME_MAX + 1];
   static char *h_aliases[1];

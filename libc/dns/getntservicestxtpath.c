@@ -24,18 +24,13 @@
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/dns/servicestxt.h"
-#include "libc/nt/systeminfo.h"
-#include "libc/str/str.h"
 
-textwindows char *GetNtServicesTxtPath(char *pathbuf, uint32_t size) {
-  const char *const kWinHostsPath = "\\drivers\\etc\\services";
-  uint32_t len = GetSystemDirectoryA(&pathbuf[0], size);
-  if (len && len + strlen(kWinHostsPath) + 1 < size) {
-    if (pathbuf[len] == '\\') pathbuf[len--] = '\0';
-    memcpy(&pathbuf[len], kWinHostsPath, strlen(kWinHostsPath) + 1);
-    return &pathbuf[0];
+const char *GetServicesTxtPath(char *path, size_t size) {
+  if (!IsWindows()) {
+    return "/etc/services";
   } else {
-    return NULL;
+    return GetSystemDirectoryPath(path, size, "drivers\\etc\\services");
   }
 }

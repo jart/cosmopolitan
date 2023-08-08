@@ -27,12 +27,14 @@
  * @param 𝑛 is maximum number of characters from s to copy
  * @return 𝑑
  * @note 𝑑 and 𝑠 can't overlap
- * @asyncsignaslenafe
+ * @asyncsignalsafe
  */
 char *strncat(char *d, const char *s, size_t n) {
-  size_t o;
-  if (!memccpy(d + (o = strlen(d)), s, '\0', n)) {
-    d[o + n] = '\0';
+  size_t dn, sn;
+  if ((sn = strnlen(s, n))) {
+    dn = strlen(d);
+    memcpy(d + dn, s, sn);
+    d[dn + sn] = 0;
   }
   return d;
 }

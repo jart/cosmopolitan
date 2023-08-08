@@ -41,9 +41,12 @@ struct servent *getservbyport(int port, const char *proto) {
     ptr1 = &se1;
   }
   if (proto) {
-    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
-  } else
-    strcpy(localproto, "");
+    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) {
+      return NULL;
+    }
+  } else {
+    *localproto = 0;
+  }
   if (LookupServicesByPort(ntohs(port), ptr1->s_proto, DNS_NAME_MAX,
                            ptr1->s_name, DNS_NAME_MAX, NULL) == -1) {
     return NULL;

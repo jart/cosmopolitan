@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_DNS_DNS_H_
 #define COSMOPOLITAN_LIBC_DNS_DNS_H_
-#include "libc/calls/weirdtypes.h"
 #include "libc/dns/resolvconf.h"
-#include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 
 #define DNS_PORT      53
@@ -67,8 +65,8 @@ struct addrinfo {
 int getaddrinfo(const char *, const char *, const struct addrinfo *,
                 struct addrinfo **);
 void freeaddrinfo(struct addrinfo *);
-int getnameinfo(const struct sockaddr *, socklen_t, char *, socklen_t, char *,
-                socklen_t, int);
+int getnameinfo(const struct sockaddr *, uint32_t, char *, uint32_t, char *,
+                uint32_t, int);
 const char *gai_strerror(int);
 int CompareDnsNames(const char *, const char *) paramsnonnull();
 int PascalifyDnsName(uint8_t *, size_t, const char *) paramsnonnull();

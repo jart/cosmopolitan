@@ -38,6 +38,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/ucontext.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"

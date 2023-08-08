@@ -29,6 +29,7 @@
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/log/bsd.h"

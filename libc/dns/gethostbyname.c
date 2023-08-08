@@ -53,16 +53,16 @@ struct hostent *gethostbyname(const char *name) {
     ptr0 = &he0;
   }
 
-  if (getaddrinfo(name, NULL, NULL, &result) || result == NULL) return NULL;
+  if (getaddrinfo(name, NULL, NULL, &result) || result == NULL) {
+    return NULL;
+  }
 
   /* if getaddrinfo is successful, result->ai_canonname is non-NULL,
    * (see newaddrinfo) but the string can still be empty */
-  if (result->ai_canonname[0])
-    memccpy(ptr0->h_name, result->ai_canonname, '\0', DNS_NAME_MAX);
-  else
-    memccpy(ptr0->h_name, name, '\0', DNS_NAME_MAX);
+  strlcpy(ptr0->h_name, *result->ai_canonname ? result->ai_canonname : name,
+          sizeof(h_name));
 
-  *((uint32_t *)ptr0->h_addr_list[0]) = (result->ai_addr4->sin_addr.s_addr);
+  *((uint32_t *)ptr0->h_addr_list[0]) = result->ai_addr4->sin_addr.s_addr;
   /* TODO: if result has ai_next, fit multiple entries for h_addr_list */
 
   freeaddrinfo(result);

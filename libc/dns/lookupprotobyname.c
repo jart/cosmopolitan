@@ -51,17 +51,16 @@ int LookupProtoByName(const char *protoname, char *buf, size_t bufsize,
                       const char *filepath) {
   FILE *f;
   char *line;
-  const char *path;
   size_t linesize;
+  const char *path;
   int found, result;
-  char pathbuf[PATH_MAX];
+  char pathbuf[256];
   char *name, *number, *alias, *comment, *tok;
   if (!(path = filepath)) {
-    path = "/etc/protocols";
-    if (IsWindows()) {
-      path =
-          firstnonnull(GetNtProtocolsTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
-    }
+    path =
+        !IsWindows()
+            ? "/etc/protocols"
+            : firstnonnull(GetProtocolsTxtPath(pathbuf, sizeof(pathbuf)), path);
   }
   if (bufsize == 0 || !(f = fopen(path, "r"))) {
     return -1;
@@ -70,18 +69,20 @@ int LookupProtoByName(const char *protoname, char *buf, size_t bufsize,
   linesize = 0;
   found = 0;
   result = -1;
-  while (found == 0 && (getline(&line, &linesize, f)) != -1) {
+  while (found == 0 && getline(&line, &linesize, f) != -1) {
     if ((comment = strchr(line, '#'))) *comment = '\0';
     name = strtok_r(line, " \t\r\n\v", &tok);
     number = strtok_r(NULL, "/ \t\r\n\v", &tok);
     if (name && number) {
       alias = name;
-      while (alias && strcasecmp(alias, protoname) != 0)
+      while (alias && strcasecmp(alias, protoname)) {
         alias = strtok_r(NULL, " \t\r\n\v", &tok);
-      if (alias) /* alias matched with protoname */
-      {
+      }
+      if (alias) { /* alias matched with protoname */
         if (!memccpy(buf, name, '\0', bufsize)) {
-          strcpy(buf, "");
+          if (bufsize) {
+            *buf = 0;
+          }
           break;
         }
         result = atoi(number);

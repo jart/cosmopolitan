@@ -15,8 +15,10 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/net_sockets.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/sock/select.h"
@@ -31,7 +33,6 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "third_party/mbedtls/error.h"
-#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 
 #define IS_EINTR(ret) ((ret) == EINTR)

@@ -71,8 +71,8 @@ int system(const char *cmdline) {
         break;
       }
     }
-    sigaction(SIGINT, &saveint, 0);
     sigaction(SIGQUIT, &savequit, 0);
+    sigaction(SIGINT, &saveint, 0);
   }
   sigprocmask(SIG_SETMASK, &savemask, 0);
   ALLOW_CANCELLATIONS;

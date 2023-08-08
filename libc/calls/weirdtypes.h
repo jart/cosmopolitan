@@ -13,7 +13,7 @@ typedef uint64_t dev_t;  /* int32_t on xnu */
 typedef uint64_t fsblkcnt_t;
 typedef int64_t fsfilcnt_t; /* uint32_t on xnu */
 typedef uint32_t gid_t;
-typedef uint32_t id_t; /* int32_t on linux/freebsd/etc. */
+typedef int32_t id_t; /* int32_t on linux/freebsd/etc. */
 typedef uint32_t in_addr_t;
 typedef uint32_t in_addr_t;
 typedef uint16_t in_port_t;

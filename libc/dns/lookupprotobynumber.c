@@ -28,7 +28,6 @@
 #include "libc/dns/prototxt.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
@@ -46,28 +45,22 @@
  * @param protonum is the protocol number
  * @param buf is a buffer to store the official name of the protocol
  * @param bufsize is the size of buf
- * @param filepath is the location of the protocols file
- *          (if NULL, uses /etc/protocols)
+ * @param path is the location of the protocols file, which may be NULL
+ *     to use the system-wide default
  * @return 0 on success, -1 on error
  * @note aliases are not read from the file.
  */
 int LookupProtoByNumber(const int protonum, char *buf, size_t bufsize,
-                        const char *filepath) {
+                        const char *path) {
   FILE *f;
-  char *line;
   int found;
+  char *line;
   size_t linesize;
-  const char *path;
-  char pathbuf[PATH_MAX];
+  char pathbuf[256];
   char *name, *number, *comment, *tok;
-  if (!(path = filepath)) {
-    path = "/etc/protocols";
-    if (IsWindows()) {
-      path =
-          firstnonnull(GetNtProtocolsTxtPath(pathbuf, ARRAYLEN(pathbuf)), path);
-    }
-  }
-  if (bufsize == 0 || !(f = fopen(path, "r"))) {
+  if (!bufsize ||
+      !(f = fopen(path ? path : GetProtocolsTxtPath(pathbuf, sizeof(pathbuf)),
+                  "r"))) {
     return -1;
   }
   line = NULL;

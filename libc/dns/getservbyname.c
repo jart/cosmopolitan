@@ -27,6 +27,7 @@
 #include "libc/dns/ent.h"
 #include "libc/dns/servicestxt.h"
 #include "libc/mem/mem.h"
+#include "libc/sock/sock.h"
 #include "libc/str/str.h"
 
 struct servent *getservbyname(const char *name, const char *proto) {
@@ -42,9 +43,10 @@ struct servent *getservbyname(const char *name, const char *proto) {
     ptr0 = &se0;
   }
   if (proto) {
-    if (!memccpy(localproto, proto, '\0', DNS_NAME_MAX)) return NULL;
-  } else
-    strcpy(localproto, "");
+    strlcpy(localproto, proto, sizeof(localproto));
+  } else {
+    *localproto = 0;
+  }
   p = LookupServicesByName(name, ptr0->s_proto, DNS_NAME_MAX, ptr0->s_name,
                            DNS_NAME_MAX, NULL);
   if (p == -1) return NULL;
