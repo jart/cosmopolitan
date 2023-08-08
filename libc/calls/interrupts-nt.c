@@ -41,8 +41,14 @@ textwindows int _check_interrupts(int sigops, struct Fd *fd) {
     errno = rc;
     return -1;
   }
+  if (__tls_enabled) {
+    __get_tls()->tib_flags |= TIB_FLAG_TIME_CRITICAL;
+  }
   if (_weaken(_check_sigalrm)) {
     _weaken(_check_sigalrm)();
+  }
+  if (__tls_enabled) {
+    __get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
   }
   if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     if (!(sigops & kSigOpNochld) && _weaken(_check_sigchld)) {

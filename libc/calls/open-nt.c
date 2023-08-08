@@ -23,21 +23,28 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/createfile.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 
-static textwindows int sys_open_nt_impl(int dirfd, const char *path,
-                                        uint32_t flags, int32_t mode) {
+static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
+                                            uint32_t flags, int32_t mode,
+                                            uint32_t extra_attr) {
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
-  if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
-  if (GetNtOpenFlags(flags, mode, &perm, &share, &disp, &attr) == -1) return -1;
-  return __fix_enotdir(
-      CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0),
-      path16);
+  if (__mkntpathat(dirfd, path, flags, path16) == -1) {
+    return kNtInvalidHandleValue;
+  }
+  if (GetNtOpenFlags(flags, mode, &perm, &share, &disp, &attr) == -1) {
+    return kNtInvalidHandleValue;
+  }
+  return __fix_enotdir(CreateFile(path16, perm, share, &kNtIsInheritable, disp,
+                                  attr | extra_attr, 0),
+                       path16);
 }
 
 static textwindows int sys_open_nt_console(int dirfd,
@@ -49,10 +56,10 @@ static textwindows int sys_open_nt_console(int dirfd,
     g_fds.p[fd].handle = g_fds.p[STDIN_FILENO].handle;
     g_fds.p[fd].extra = g_fds.p[STDOUT_FILENO].handle;
   } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
-                  dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode)) !=
-             -1) {
-    g_fds.p[fd].extra = sys_open_nt_impl(dirfd, mp->conout,
-                                         (flags & ~O_ACCMODE) | O_WRONLY, mode);
+                  dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode,
+                  kNtFileFlagOverlapped)) != -1) {
+    g_fds.p[fd].extra = sys_open_nt_impl(
+        dirfd, mp->conout, (flags & ~O_ACCMODE) | O_WRONLY, mode, 0);
     npassert(g_fds.p[fd].extra != -1);
   } else {
     return -1;
@@ -66,7 +73,8 @@ static textwindows int sys_open_nt_console(int dirfd,
 static textwindows int sys_open_nt_file(int dirfd, const char *file,
                                         uint32_t flags, int32_t mode,
                                         size_t fd) {
-  if ((g_fds.p[fd].handle = sys_open_nt_impl(dirfd, file, flags, mode)) != -1) {
+  if ((g_fds.p[fd].handle = sys_open_nt_impl(dirfd, file, flags, mode, 0)) !=
+      -1) {
     g_fds.p[fd].kind = kFdFile;
     g_fds.p[fd].flags = flags;
     g_fds.p[fd].mode = mode;

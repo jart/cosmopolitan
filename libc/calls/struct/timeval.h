@@ -29,7 +29,11 @@ struct timeval timeval_frommillis(int64_t) pureconst;
 struct timeval timeval_add(struct timeval, struct timeval) pureconst;
 struct timeval timeval_sub(struct timeval, struct timeval) pureconst;
 struct timeval timeval_subz(struct timeval, struct timeval) pureconst;
+int64_t timeval_toseconds(struct timeval);
 struct timeval timespec_totimeval(struct timespec) pureconst;
+static inline struct timeval timeval_fromseconds(int64_t __x) {
+  return (struct timeval){__x};
+}
 static inline struct timespec timeval_totimespec(struct timeval __tv) {
   return (struct timespec){__tv.tv_sec, __tv.tv_usec * 1000};
 }

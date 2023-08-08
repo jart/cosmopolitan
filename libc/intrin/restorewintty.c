@@ -29,10 +29,10 @@ __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 
 extern uint32_t __pid_exec;
 
-const signed char kConsoleHandles[3] = {
-    kNtStdInputHandle,
-    kNtStdOutputHandle,
-    kNtStdErrorHandle,
+const signed char kNtConsoleHandles[3] = {
+    (signed char)kNtStdInputHandle,
+    (signed char)kNtStdOutputHandle,
+    (signed char)kNtStdErrorHandle,
 };
 
 // Puts cmd.exe gui back the way it was.
@@ -41,7 +41,7 @@ void _restorewintty(void) {
   if (!IsWindows()) return;
   if (__imp_GetCurrentProcessId() != __pid_exec) return;
   for (i = 0; i < 3; ++i) {
-    __imp_SetConsoleMode(__imp_GetStdHandle(kConsoleHandles[i]),
+    __imp_SetConsoleMode(__imp_GetStdHandle(kNtConsoleHandles[i]),
                          __ntconsolemode[i]);
   }
 }

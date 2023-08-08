@@ -30,6 +30,9 @@
  * The returned memory is owned by the stream. It'll be reused when
  * fgetln() is called again. It's free()'d upon fclose() / fflush()
  *
+ * When reading from the console on Windows in `ICANON` mode, the
+ * returned line will end with `\r\n` rather than `\n`.
+ *
  * @param stream specifies non-null open input stream
  * @param len optionally receives byte length of line
  * @return nul-terminated line string, including the `\n` character

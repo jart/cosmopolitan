@@ -55,12 +55,16 @@ int64_t RegisterEventSource(const char16_t *lpUNCServerName,
                             const char16_t *lpSourceName);
 int32_t DeregisterEventSource(uint64_t handle);
 
-int64_t CreateEvent(struct NtSecurityAttributes *lpEventAttributes,
+int64_t CreateEvent(struct NtSecurityAttributes *opt_lpEventAttributes,
                     bool32 bManualReset, bool32 bInitialState,
-                    const char16_t *lpName);
+                    const char16_t *opt_lpName);
 int64_t CreateEventEx(struct NtSecurityAttributes *lpEventAttributes,
                       const char16_t *lpName, uint32_t dwFlags,
                       uint32_t dwDesiredAccess);
+
+int32_t SetEvent(int64_t hEvent);
+int32_t ResetEvent(int64_t hEvent);
+int32_t PulseEvent(int64_t hEvent);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

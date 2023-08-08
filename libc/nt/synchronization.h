@@ -85,10 +85,6 @@ int64_t CreateSemaphore(struct NtSecurityAttributes *opt_lpSemaphoreAttributes,
                         uint32_t lInitialCount, uint32_t lMaximumCount,
                         const char16_t *opt_lpName);
 
-int32_t SetEvent(int64_t hEvent);
-int32_t ResetEvent(int64_t hEvent);
-int32_t PulseEvent(int64_t hEvent);
-
 int32_t ReleaseMutex(int64_t hMutex);
 int32_t ReleaseSemaphore(int64_t hSemaphore, int32_t lReleaseCount,
                          int *lpPreviousCount);

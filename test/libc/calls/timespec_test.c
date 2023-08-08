@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/stdio/rand.h"
@@ -82,6 +83,15 @@ TEST(timespec_tonanos, test) {
   EXPECT_EQ(2000123000, timespec_tonanos((struct timespec){2, 123000}));
   EXPECT_EQ(INT64_MAX, timespec_tonanos((struct timespec){INT64_MAX, 0}));
   EXPECT_EQ(INT64_MIN, timespec_tonanos((struct timespec){INT64_MIN, 0}));
+}
+
+TEST(timeval_toseconds, test) {
+  ASSERT_EQ(0, timeval_toseconds((struct timeval){0, 0}));
+  ASSERT_EQ(1, timeval_toseconds((struct timeval){0, 1}));
+  ASSERT_EQ(1, timeval_toseconds((struct timeval){0, 2}));
+  ASSERT_EQ(1, timeval_toseconds((struct timeval){1, 0}));
+  ASSERT_EQ(2, timeval_toseconds((struct timeval){1, 1}));
+  ASSERT_EQ(INT64_MAX, timeval_toseconds(timeval_max));
 }
 
 static long mod(long x, long y) {

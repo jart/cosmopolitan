@@ -42,7 +42,11 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   bool32 ok;
   uint32_t sent;
   int64_t handle;
-  handle = g_fds.p[fd].handle;
+  if (g_fds.p[fd].kind == kFdConsole) {
+    handle = g_fds.p[fd].extra;  // get write end of console
+  } else {
+    handle = g_fds.p[fd].handle;
+  }
   size = MIN(size, 0x7ffff000);
   if (offset == -1) {
     // perform simple blocking write

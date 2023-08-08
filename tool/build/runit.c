@@ -448,7 +448,7 @@ int SpawnSubprocesses(int argc, char *argv[]) {
       break;
     }
   }
-  CHECK_NE(-1, unlink(tpath));
+  unlink(tpath);
   sigprocmask(SIG_SETMASK, &savemask, 0);
   sigaction(SIGQUIT, &savequit, 0);
   sigaction(SIGINT, &saveint, 0);

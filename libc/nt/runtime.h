@@ -14,9 +14,9 @@
 
 #define kNtCpUtf8             65001
 #define kNtInvalidHandleValue -1L
-#define kNtStdInputHandle     -10L
-#define kNtStdOutputHandle    -11L
-#define kNtStdErrorHandle     -12L
+#define kNtStdInputHandle     -10u
+#define kNtStdOutputHandle    -11u
+#define kNtStdErrorHandle     -12u
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -36,8 +36,8 @@ int64_t GetCurrentProcess(void) pureconst;
 void ExitProcess(uint32_t uExitCode) wontreturn;
 uint32_t GetLastError(void) nosideeffect;
 bool32 CloseHandle(int64_t hObject) dontthrow nocallback;
-intptr_t GetStdHandle(int64_t nStdHandle) nosideeffect;
-bool32 SetStdHandle(int64_t nStdHandle, int64_t hHandle);
+intptr_t GetStdHandle(uint32_t nStdHandle) nosideeffect;
+bool32 SetStdHandle(uint32_t nStdHandle, int64_t hHandle);
 bool32 SetDefaultDllDirectories(unsigned dirflags);
 bool32 RtlGenRandom(void *RandomBuffer, uint32_t RandomBufferLength);
 uint32_t GetModuleFileName(int64_t hModule, char16_t *lpFilename,

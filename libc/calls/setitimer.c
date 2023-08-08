@@ -31,17 +31,17 @@
  * Raise SIGALRM every 1.5s:
  *
  *     sigaction(SIGALRM,
- *               &(struct sigaction){.sa_sigaction = _missingno},
+ *               &(struct sigaction){.sa_handler = OnSigalrm},
  *               NULL);
  *     setitimer(ITIMER_REAL,
  *               &(const struct itimerval){{1, 500000},
  *                                         {1, 500000}},
  *               NULL);
  *
- * Set single-shot 50ms timer callback to interrupt laggy connect():
+ * Single-shot alarm to interrupt connect() after 50ms:
  *
  *     sigaction(SIGALRM,
- *               &(struct sigaction){.sa_sigaction = _missingno,
+ *               &(struct sigaction){.sa_handler = OnSigalrm,
  *                                   .sa_flags = SA_RESETHAND},
  *               NULL);
  *     setitimer(ITIMER_REAL,
@@ -49,11 +49,14 @@
  *               NULL);
  *     if (connect(...) == -1 && errno == EINTR) { ... }
  *
- * Disarm timer:
+ * Disarm existing timer:
  *
  *     setitimer(ITIMER_REAL, &(const struct itimerval){0}, NULL);
  *
- * Be sure to check for EINTR on your i/o calls, for best low latency.
+ * If the goal is to use alarms to interrupt blocking i/o routines, e.g.
+ * read(), connect(), etc. then it's important to install the signal
+ * handler using sigaction() rather than signal(), because the latter
+ * sets the `SA_RESTART` flag.
  *
  * Timers are not inherited across fork.
  *

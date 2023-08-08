@@ -25,51 +25,126 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filetype.h"
+#include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+
+static textwindows void sys_read_nt_abort(int64_t handle,
+                                          struct NtOverlapped *overlapped) {
+  unassert(CancelIoEx(handle, overlapped) ||
+           GetLastError() == kNtErrorNotFound);
+}
+
+static textwindows void MungeTerminalInput(struct Fd *fd, char *p, size_t n) {
+  if (!(fd->ttymagic & kFdTtyNoCr2Nl)) {
+    size_t i;
+    for (i = 0; i < n; ++i) {
+      if (p[i] == '\r') {
+        p[i] = '\n';
+      }
+    }
+  }
+}
+
+// Manual CMD.EXE echoing for when !ICANON && ECHO is the case.
+static textwindows void EchoTerminalInput(struct Fd *fd, char *p, size_t n) {
+  int64_t hOutput;
+  if (fd->kind == kFdConsole) {
+    hOutput = fd->extra;
+  } else {
+    hOutput = g_fds.p[1].handle;
+  }
+  if (fd->ttymagic & kFdTtyEchoRaw) {
+    WriteFile(hOutput, p, n, 0, 0);
+  } else {
+    size_t i;
+    for (i = 0; i < n; ++i) {
+      if (isascii(p[i]) && iscntrl(p[i]) && p[i] != '\n' && p[i] != '\t') {
+        char ctl[2];
+        ctl[0] = '^';
+        ctl[1] = p[i] ^ 0100;
+        WriteFile(hOutput, ctl, 2, 0, 0);
+      } else {
+        WriteFile(hOutput, p + i, 1, 0, 0);
+      }
+    }
+  }
+}
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, int64_t offset) {
 
-  // try to poll rather than block
-  uint32_t avail;
-  if (GetFileType(fd->handle) == kNtFileTypePipe) {
-    for (;;) {
-      if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
-      if (avail) break;
-      POLLTRACE("sys_read_nt polling");
-      if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
-        POLLTRACE("IOCP EINTR");
-      }
-      if (fd->flags & O_NONBLOCK) {
-        return eagain();
-      }
-      if (_check_interrupts(kSigOpRestartable, g_fds.p)) {
-        POLLTRACE("sys_read_nt interrupted");
-        return -1;
-      }
-    }
-    POLLTRACE("sys_read_nt ready to read");
-  }
-
   // perform the read i/o operation
   bool32 ok;
   uint32_t got;
+  int filetype;
+  int abort_errno = EAGAIN;
   size = MIN(size, 0x7ffff000);
-  if (offset == -1) {
-    // perform simple blocking read
+  filetype = GetFileType(fd->handle);
+  if (filetype == kNtFileTypeChar || filetype == kNtFileTypePipe) {
+    struct NtOverlapped overlap = {0};
+    if (offset != -1) {
+      // pread() and pwrite() should not be called on a pipe or tty
+      return espipe();
+    }
+    if ((overlap.hEvent = CreateEvent(0, 0, 0, 0))) {
+      // the win32 manual says it's important to *not* put &got here
+      // since for overlapped i/o, we always use GetOverlappedResult
+      ok = ReadFile(fd->handle, data, size, 0, &overlap);
+      if (!ok && GetLastError() == kNtErrorIoPending) {
+        // i/o operation is in flight; blocking is unavoidable
+        // if we're in non-blocking mode, then immediately abort
+        // if an interrupt is pending, then abort before waiting
+        // otherwise wait for i/o periodically checking interrupts
+        if (fd->flags & O_NONBLOCK) {
+          sys_read_nt_abort(fd->handle, &overlap);
+        } else if (_check_interrupts(kSigOpRestartable, g_fds.p)) {
+        Interrupted:
+          abort_errno = errno;
+          sys_read_nt_abort(fd->handle, &overlap);
+        } else {
+          for (;;) {
+            uint32_t i;
+            i = WaitForSingleObject(overlap.hEvent, __SIG_POLLING_INTERVAL_MS);
+            if (i == kNtWaitTimeout) {
+              if (_check_interrupts(kSigOpRestartable, g_fds.p)) {
+                goto Interrupted;
+              }
+            } else {
+              npassert(!i);
+              break;
+            }
+          }
+        }
+        ok = true;
+      }
+      if (ok) {
+        // overlapped is allocated on stack, so it's important we wait
+        // for windows to acknowledge that it's done using that memory
+        ok = GetOverlappedResult(fd->handle, &overlap, &got, true);
+      }
+      CloseHandle(overlap.hEvent);
+    } else {
+      ok = false;
+    }
+  } else if (offset == -1) {
+    // perform simple blocking file read
     ok = ReadFile(fd->handle, data, size, &got, 0);
   } else {
-    // perform pread()-style read at particular file offset
+    // perform pread()-style file read at particular file offset
     int64_t position;
     // save file pointer which windows clobbers, even for overlapped i/o
     if (!SetFilePointerEx(fd->handle, 0, &position, SEEK_CUR)) {
@@ -84,6 +159,12 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     unassert(SetFilePointerEx(fd->handle, position, 0, SEEK_SET));
   }
   if (ok) {
+    if (fd->ttymagic & kFdTtyMunging) {
+      MungeTerminalInput(fd, data, got);
+    }
+    if (fd->ttymagic & kFdTtyEchoing) {
+      EchoTerminalInput(fd, data, got);
+    }
     return got;
   }
 
@@ -94,6 +175,9 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
       return 0;                 //
     case kNtErrorAccessDenied:  // read doesn't return EACCESS
       return ebadf();           //
+    case kNtErrorOperationAborted:
+      errno = abort_errno;
+      return -1;
     default:
       return __winerr();
   }

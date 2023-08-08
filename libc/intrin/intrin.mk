@@ -146,7 +146,6 @@ o/$(MODE)/libc/intrin/exit1.greg.o			\
 o/$(MODE)/libc/intrin/wsarecv.o				\
 o/$(MODE)/libc/intrin/wsarecvfrom.o			\
 o/$(MODE)/libc/intrin/createfile.o			\
-o/$(MODE)/libc/intrin/cancelioex.o			\
 o/$(MODE)/libc/intrin/reopenfile.o			\
 o/$(MODE)/libc/intrin/deletefile.o			\
 o/$(MODE)/libc/intrin/createpipe.o			\

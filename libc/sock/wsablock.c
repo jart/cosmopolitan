@@ -21,11 +21,11 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/enum/wsa.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
@@ -36,50 +36,61 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
+static textwindows void __wsablock_abort(int64_t handle,
+                                         struct NtOverlapped *overlapped) {
+  unassert(CancelIoEx(handle, overlapped) ||
+           GetLastError() == kNtErrorNotFound);
+}
+
 textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
                            uint32_t *flags, int sigops, uint32_t timeout) {
-  int e, rc;
   uint32_t i, got;
+  int rc, abort_errno;
   if (WSAGetLastError() != kNtErrorIoPending) {
-    NTTRACE("sock i/o failed %s", strerror(errno));
+    // our i/o operation never happened because it failed
     return __winsockerr();
   }
+  // our i/o operation is in flight and it needs to block
+  abort_errno = EAGAIN;
   if (fd->flags & O_NONBLOCK) {
-    e = errno;
-    unassert(CancelIoEx(fd->handle, overlapped) ||
-             WSAGetLastError() == kNtErrorNotFound);
-    errno = e;
+    __wsablock_abort(fd->handle, overlapped);
+  } else if (_check_interrupts(sigops, g_fds.p)) {
+  Interrupted:
+    abort_errno = errno;  // EINTR or ECANCELED
+    __wsablock_abort(fd->handle, overlapped);
   } else {
-    if (_check_interrupts(sigops, g_fds.p)) {
-      return -1;
-    }
-  }
-  for (;;) {
-    i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
-                                 __SIG_POLLING_INTERVAL_MS, true);
-    if (i == kNtWaitFailed) {
-      NTTRACE("WSAWaitForMultipleEvents failed %lm");
-      return __winsockerr();
-    } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
-      if (_check_interrupts(sigops, g_fds.p)) {
-        return -1;
-      }
-      if (timeout) {
-        if (timeout <= __SIG_POLLING_INTERVAL_MS) {
-          NTTRACE("__wsablock timeout elapsed");
-          return eagain();
+    for (;;) {
+      i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
+                                   __SIG_POLLING_INTERVAL_MS, true);
+      if (i == kNtWaitFailed || i == kNtWaitTimeout) {
+        if (_check_interrupts(sigops, g_fds.p)) {
+          goto Interrupted;
         }
-        timeout -= __SIG_POLLING_INTERVAL_MS;
+        if (i == kNtWaitFailed) {
+          // Failure should be an impossible condition, but MSDN lists
+          // WSAENETDOWN and WSA_NOT_ENOUGH_MEMORY as possible errors,
+          // which we're going to hope are ephemeral.
+          SleepEx(__SIG_POLLING_INTERVAL_MS, false);
+        }
+        if (timeout) {
+          if (timeout <= __SIG_POLLING_INTERVAL_MS) {
+            __wsablock_abort(fd->handle, overlapped);
+            break;
+          }
+          timeout -= __SIG_POLLING_INTERVAL_MS;
+        }
+      } else {
+        break;
       }
-    } else {
-      break;
     }
   }
-  if (WSAGetOverlappedResult(fd->handle, overlapped, &got, false, flags)) {
+  // overlapped is allocated on stack by caller, so it's important that
+  // we wait for win32 to acknowledge that it's done using that memory.
+  if (WSAGetOverlappedResult(fd->handle, overlapped, &got, true, flags)) {
     return got;
-  } else if ((fd->flags & O_NONBLOCK) &&
-             WSAGetLastError() == kNtErrorOperationAborted) {
-    return eagain();
+  } else if (WSAGetLastError() == kNtErrorOperationAborted) {
+    errno = abort_errno;
+    return -1;
   } else {
     return -1;
   }

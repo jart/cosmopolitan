@@ -68,6 +68,7 @@ __static_yoink("_check_sigchld");
 
 extern int64_t __wincrashearly;
 bool32 __onntconsoleevent_nt(uint32_t);
+void sys_setitimer_nt_reset(void);
 void kmalloc_unlock(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
@@ -395,6 +396,10 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     // re-apply code morphing for function tracing
     if (ftrace_stackdigs) {
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
+    }
+    // reset alarms
+    if (_weaken(sys_setitimer_nt_reset)) {
+      _weaken(sys_setitimer_nt_reset)();
     }
   }
   if (untrackpid != -1) {

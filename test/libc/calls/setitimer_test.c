@@ -21,18 +21,21 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/calls/ucontext.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
 bool gotsig;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio", 0));
+  ASSERT_SYS(0, 0, pledge("stdio proc", 0));
 }
 
 void OnSigAlrm(int sig, siginfo_t *si, void *ctx) {
@@ -58,4 +61,16 @@ TEST(setitimer, testSingleShot) {
   EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &oldmask, 0));
   EXPECT_EQ(0, sigaction(SIGUSR1, &oldalrm, 0));
   EXPECT_EQ(true, gotsig);
+}
+
+TEST(setitimer, notInheritedAcrossFork) {
+  struct itimerval disarm = {0};
+  struct itimerval singleshot = {{0}, {100}};
+  ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &singleshot, 0));
+  SPAWN(fork);
+  struct itimerval it;
+  ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, 0, &it));
+  ASSERT_TRUE(timeval_iszero(it.it_value));
+  EXITS(0);
+  ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &disarm, 0));
 }

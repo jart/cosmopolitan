@@ -474,12 +474,25 @@ void HandleClient(void) {
     CHECK_NE(-1, events);  // EINTR shouldn't be possible
     if (events) {
       if (fds[0].revents) {
-        if (!(fds[0].revents & POLLHUP)) {
-          WARNF("%s got unexpected input event from client %#x", exename,
-                fds[0].revents);
+        int received;
+        char buf[512];
+        INFOF("mbedtls_ssl_read");
+        received = mbedtls_ssl_read(&ezssl, buf, sizeof(buf));
+        if (!received) {
+          WARNF("%s client disconnected so killing worker %d", exename, child);
+          goto TerminateJob;
         }
-        WARNF("%s client disconnected so killing worker %d", exename, child);
-        goto TerminateJob;
+        if (received > 0) {
+          WARNF("%s client sent %d unexpected bytes so killing job", exename,
+                received);
+          goto TerminateJob;
+        }
+        if (received != MBEDTLS_ERR_SSL_WANT_READ) {
+          WARNF("%s client ssl read failed with -0x%04x so killing job",
+                exename, -received);
+          goto TerminateJob;
+        }
+        INFOF("got spurious ssl data");
       }
       if (fds[1].revents) {
         INFOF("read");

@@ -13,13 +13,19 @@ COSMOPOLITAN_C_START_
 #define kFdEpoll    7
 #define kFdReserved 8
 
+#define kFdTtyEchoing 1 /* read()→write() (ECHO && !ICANON) */
+#define kFdTtyEchoRaw 2 /* don't ^X visualize control codes */
+#define kFdTtyMunging 4 /* enable input / output remappings */
+#define kFdTtyNoCr2Nl 8 /* don't map \r → \n (a.k.a !ICRNL) */
+
 struct Fd {
-  int kind;
+  char kind;
+  bool zombie;
+  char ttymagic;
   unsigned flags;
   unsigned mode;
   int64_t handle;
   int64_t extra;
-  bool zombie;
 };
 
 struct Fds {

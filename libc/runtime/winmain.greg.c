@@ -27,8 +27,13 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/consolemodeflags.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filemapflags.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
@@ -38,29 +43,37 @@
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
+#include "libc/sysv/consts/prot.h"
 
 #ifdef __x86_64__
 
-#if IsTiny()
+// clang-format off
+__msabi extern typeof(AddVectoredExceptionHandler) *const __imp_AddVectoredExceptionHandler;
+__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
+__msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
+__msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
+__msabi extern typeof(ExitProcess) *const __imp_ExitProcess;
+__msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
+__msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
+__msabi extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess;
+__msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
+__msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW;
+__msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
+__msabi extern typeof(SetConsoleCP) *const __imp_SetConsoleCP;
+__msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
+__msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
+__msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
-#define CreateFileMapping __imp_CreateFileMappingW
-#define MapViewOfFileEx   __imp_MapViewOfFileEx
-#define VirtualProtect    __imp_VirtualProtect
-#endif
-
-#define AT_EXECFN     31L
-#define MAP_ANONYMOUS 32
-#define MAP_PRIVATE   2
-#define PROT_EXEC     4
-#define PROT_READ     1
-#define PROT_WRITE    2
+__msabi extern typeof(WriteFile) *const __imp_WriteFile;
+// clang-format on
 
 /*
  * TODO: Why can't we allocate addresses above 4GB on Windows 7 x64?
@@ -68,7 +81,7 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
  */
 
 extern int64_t __wincrashearly;
-extern const signed char kConsoleHandles[3];
+extern const signed char kNtConsoleHandles[3];
 extern void cosmo(int, char **, char **, long (*)[2]) wontreturn;
 
 static const short kConsoleModes[3] = {
@@ -83,7 +96,7 @@ static const short kConsoleModes[3] = {
 };
 
 // https://nullprogram.com/blog/2022/02/18/
-static inline char16_t *MyCommandLine(void) {
+__msabi static inline char16_t *MyCommandLine(void) {
   void *cmd;
   asm("mov\t%%gs:(0x60),%0\n"
       "mov\t0x20(%0),%0\n"
@@ -92,7 +105,7 @@ static inline char16_t *MyCommandLine(void) {
   return cmd;
 }
 
-static inline size_t StrLen16(const char16_t *s) {
+__msabi static inline size_t StrLen16(const char16_t *s) {
   size_t n;
   for (n = 0;; ++n) {
     if (!s[n]) {
@@ -121,19 +134,45 @@ __msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
   p = __fixcpy(p, ep->ContextRecord ? ep->ContextRecord->Rip : -1, 32);
   *p++ = '\r';
   *p++ = '\n';
-  WriteFile(GetStdHandle(kNtStdErrorHandle), buf, p - buf, &wrote, 0);
-  ExitProcess(11);
+  __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), buf, p - buf, &wrote,
+                  0);
+  __imp_ExitProcess(11);
+  __builtin_unreachable();
 }
 
+// this makes it possible for our read() implementation to periodically
+// poll for signals while performing a blocking overlapped io operation
+__msabi static textwindows void ReopenConsoleForOverlappedIo(void) {
+  uint32_t mode;
+  int64_t hOld, hNew;
+  hOld = __imp_GetStdHandle(kNtStdInputHandle);
+  if (__imp_GetConsoleMode(hOld, &mode)) {
+    hNew = __imp_CreateFileW(u"CONIN$", kNtGenericRead | kNtGenericWrite,
+                             kNtFileShareRead | kNtFileShareWrite,
+                             &kNtIsInheritable, kNtOpenExisting,
+                             kNtFileFlagOverlapped, 0);
+    if (hNew != kNtInvalidHandleValue) {
+      __imp_SetStdHandle(kNtStdInputHandle, hNew);
+      __imp_CloseHandle(hOld);
+    }
+  }
+}
+
+// this ensures close(1) won't accidentally close(2) for example
 __msabi static textwindows void DeduplicateStdioHandles(void) {
-  int64_t proc, outhand, errhand, newhand;
-  outhand = GetStdHandle(kNtStdOutputHandle);
-  errhand = GetStdHandle(kNtStdErrorHandle);
-  if (outhand == errhand) {
-    proc = GetCurrentProcess();
-    DuplicateHandle(proc, errhand, proc, &newhand, 0, true,
-                    kNtDuplicateSameAccess);
-    SetStdHandle(kNtStdErrorHandle, newhand);
+  long i, j;
+  int64_t h1, h2, h3, proc;
+  for (i = 0; i < 3; ++i) {
+    h1 = __imp_GetStdHandle(kNtConsoleHandles[i]);
+    for (j = i + 1; j < 3; ++j) {
+      h3 = h2 = __imp_GetStdHandle(kNtConsoleHandles[j]);
+      if (h1 == h2) {
+        proc = __imp_GetCurrentProcess();
+        __imp_DuplicateHandle(proc, h2, proc, &h3, 0, true,
+                              kNtDuplicateSameAccess);
+        __imp_SetStdHandle(kNtConsoleHandles[j], h3);
+      }
+    }
   }
 }
 
@@ -150,20 +189,21 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   intptr_t stackaddr, allocaddr;
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
+  ReopenConsoleForOverlappedIo();
   DeduplicateStdioHandles();
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
-    rc = SetConsoleCP(kNtCpUtf8);
+    rc = __imp_SetConsoleCP(kNtCpUtf8);
     NTTRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
-    rc = SetConsoleOutputCP(kNtCpUtf8);
+    rc = __imp_SetConsoleOutputCP(kNtCpUtf8);
     NTTRACE("SetConsoleOutputCP(kNtCpUtf8) → %hhhd", rc);
     for (i = 0; i < 3; ++i) {
-      hand = GetStdHandle(kConsoleHandles[i]);
-      rc = GetConsoleMode(hand, __ntconsolemode + i);
+      hand = __imp_GetStdHandle(kNtConsoleHandles[i]);
+      rc = __imp_GetConsoleMode(hand, __ntconsolemode + i);
       NTTRACE("GetConsoleMode(%p, [%s]) → %hhhd", hand,
               i ? (DescribeNtConsoleOutFlags)(outflagsbuf, __ntconsolemode[i])
                 : (DescribeNtConsoleInFlags)(inflagsbuf, __ntconsolemode[i]),
               rc);
-      rc = SetConsoleMode(hand, kConsoleModes[i]);
+      rc = __imp_SetConsoleMode(hand, kConsoleModes[i]);
       NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hand,
               i ? (DescribeNtConsoleOutFlags)(outflagsbuf, kConsoleModes[i])
                 : (DescribeNtConsoleInFlags)(inflagsbuf, kConsoleModes[i]),
@@ -179,14 +219,15 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   allocaddr = stackaddr;
   allocsize = stacksize + sizeof(struct WinArgs);
   NTTRACE("WinMainNew() mapping %'zu byte stack at %p", allocsize, allocaddr);
-  MapViewOfFileEx(
-      (_mmi.p[0].h =
-           CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
+  __imp_MapViewOfFileEx((_mmi.p[0].h = __imp_CreateFileMappingW(
+                             -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
                              allocsize >> 32, allocsize, NULL)),
-      kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize, (void *)allocaddr);
+                        kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize,
+                        (void *)allocaddr);
   prot = (intptr_t)ape_stack_prot;
   if (~prot & PROT_EXEC) {
-    VirtualProtect((void *)allocaddr, allocsize, kNtPageReadwrite, &oldprot);
+    __imp_VirtualProtect((void *)allocaddr, allocsize, kNtPageReadwrite,
+                         &oldprot);
   }
   _mmi.p[0].x = allocaddr >> 16;
   _mmi.p[0].y = (allocaddr >> 16) + ((allocsize - 1) >> 16);
@@ -203,57 +244,26 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
       wa->argv[0][i] = '/';
     }
   }
-  env16 = GetEnvironmentStrings();
+  env16 = __imp_GetEnvironmentStringsW();
   NTTRACE("WinMainNew() loading environment");
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
-  FreeEnvironmentStrings(env16);
+  __imp_FreeEnvironmentStringsW(env16);
   NTTRACE("WinMainNew() switching stacks");
   _jmpstack((char *)(stackaddr + stacksize - (intptr_t)ape_stack_align), cosmo,
             count, wa->argv, wa->envp, wa->auxv);
 }
 
-/**
- * Main function on Windows NT.
- *
- * The Cosmopolitan Runtime provides the following services, which aim
- * to bring Windows NT behavior closer in harmony with System Five:
- *
- * 1. We configure CMD.EXE for UTF-8 and enable ANSI colors on Win10.
- *
- * 2. Command line arguments are passed as a blob of UTF-16 text. We
- *    chop them up into an char *argv[] UTF-8 data structure, in
- *    accordance with the DOS conventions for argument quoting.
- *
- * 3. Environment variables are passed to us as a sorted UTF-16 double
- *    NUL terminated list. We translate this to char ** using UTF-8.
- *
- * 4. Allocates new stack at a high address. NT likes to choose a
- *    stack address that's beneath the program image. We want to be
- *    able to assume that stack addresses are located at higher
- *    addresses than heap and program memory.
- *
- * 5. Reconfigure x87 FPU so long double is actually long (80 bits).
- *
- * 6. Finally, we need fork. Since disagreeing with fork is axiomatic to
- *    Microsoft's engineering culture, we need to go to great lengths to
- *    have it anyway without breaking Microsoft's rules: using the WIN32
- *    API (i.e. not NTDLL) to copy MAP_PRIVATE pages via a pipe. It'd go
- *    faster if the COW pages CreateFileMappingNuma claims to have turns
- *    out to be true. Until then we have a "PC Scale" and entirely legal
- *    workaround that they hopefully won't block using Windows Defender.
- *
- * @param hInstance call GetModuleHandle(NULL) from main if you need it
- */
 __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                                     const char *lpCmdLine, int64_t nCmdShow) {
   const char16_t *cmdline;
   extern char os asm("__hostos");
   os = _HOSTWINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   kStartTsc = rdtsc();
-  __pid = GetCurrentProcessId();
+  __pid = __imp_GetCurrentProcessId();
 #if !IsTiny()
-  __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
+  __wincrashearly =
+      __imp_AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
 #endif
   cmdline = MyCommandLine();
 #ifdef SYSDEBUG
@@ -261,8 +271,12 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   if (__strstr16(cmdline, u"--strace")) ++__strace;
 #endif
   NTTRACE("WinMain()");
-  if (_weaken(WinSockInit)) _weaken(WinSockInit)();
-  if (_weaken(WinMainForked)) _weaken(WinMainForked)();
+  if (_weaken(WinSockInit)) {
+    _weaken(WinSockInit)();
+  }
+  if (_weaken(WinMainForked)) {
+    _weaken(WinMainForked)();
+  }
   WinMainNew(cmdline);
 }
 

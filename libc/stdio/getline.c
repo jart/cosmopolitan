@@ -33,13 +33,16 @@
  * documentation. Concerning lines, please note the \n or \r\n are
  * included in results, and can be removed with _chomp().
  *
- * @param line is the caller's buffer (in/out) which is extended
- *     automatically. *line may be NULL but only if *n is 0;
+ * When reading from the console on Windows in `ICANON` mode, the
+ * returned line will end with `\r\n` rather than `\n`.
+ *
+ * @param linebuf is the caller's buffer (in/out) which is extended
+ *     automatically. *line may be NULL but only if *capacity is 0;
  *     NUL-termination is guaranteed FTMP
  * @return number of bytes read, including delim, excluding NUL, or -1
  *     w/ errno on EOF or error; see ferror() and feof()
  * @see fgetln(), xgetline(), getdelim(), gettok_r()
  */
-ssize_t getline(char **line, size_t *n, FILE *f) {
-  return getdelim(line, n, '\n', f);
+ssize_t getline(char **linebuf, size_t *capacity, FILE *f) {
+  return getdelim(linebuf, capacity, '\n', f);
 }

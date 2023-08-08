@@ -18,14 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -43,10 +47,35 @@ TEST(read, eof) {
   ASSERT_SYS(0, 0, close(3));
 }
 
+volatile bool got_sigalrm;
+
+void OnSigalrm(int sig) {
+  got_sigalrm = true;
+}
+
+TEST(read_pipe, canBeInterruptedByAlarm) {
+  int fds[2];
+  char buf[1];
+  struct sigaction sa;
+  alarm(1);
+  sa.sa_flags = 0;
+  sa.sa_handler = OnSigalrm;
+  sigemptyset(&sa.sa_mask);
+  sigaction(SIGALRM, &sa, 0);
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(ESPIPE, -1, pread(fds[0], buf, 1, 777));
+  ASSERT_SYS(EINTR, -1, read(fds[0], buf, 1));
+  ASSERT_TRUE(got_sigalrm);
+  signal(SIGALRM, SIG_DFL);
+  close(fds[1]);
+  close(fds[0]);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 BENCH(read, bench) {
   char buf[16];
+  BEGIN_CANCELLATION_POINT;
   ASSERT_SYS(0, 3, open("/dev/zero", O_RDONLY));
   EZBENCH2("read", donothing, read(3, buf, 5));
   EZBENCH2("pread", donothing, pread(3, buf, 5, 0));
@@ -59,4 +88,5 @@ BENCH(read, bench) {
   EZBENCH2("sys_read", donothing, sys_read(3, buf, 5));
   EZBENCH2("sys_readv", donothing, sys_readv(3, &(struct iovec){buf, 5}, 1));
   ASSERT_SYS(0, 0, close(3));
+  END_CANCELLATION_POINT;
 }

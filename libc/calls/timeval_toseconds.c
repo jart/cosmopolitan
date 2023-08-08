@@ -16,23 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/struct/overlapped.h"
-#include "libc/nt/thread.h"
-#include "libc/nt/thunk/msabi.h"
-
-__msabi extern typeof(CancelIoEx) *const __imp_CancelIoEx;
+#include "libc/calls/struct/timeval.h"
+#include "libc/limits.h"
 
 /**
- * Cancels Windows i/o operation.
+ * Converts timeval to seconds.
+ *
+ * This function uses ceil rounding, so 1µs becomes 1s. The addition
+ * operation is saturating so timeval_toseconds(timeval_max) returns
+ * INT64_MAX.
  */
-bool32 CancelIoEx(int64_t hFile, struct NtOverlapped *opt_lpOverlapped) {
-  bool32 ok;
-  ok = __imp_CancelIoEx(hFile, opt_lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE("CancelIoEx(%ld, %s) → %hhhd% m", hFile,
-          DescribeNtOverlapped(opt_lpOverlapped), ok);
-  return ok;
+int64_t timeval_toseconds(struct timeval tv) {
+  int64_t secs;
+  secs = tv.tv_sec;
+  if (tv.tv_usec && secs < INT64_MAX) {
+    ++secs;
+  }
+  return secs;
 }

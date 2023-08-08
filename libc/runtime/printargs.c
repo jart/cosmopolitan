@@ -95,6 +95,16 @@ static dontasan void PrintDependencies(const char *prologue) {
 static dontasan void Print(const char *prologue) {
 }
 
+static dontasan const char *ConvertCcToStr(int cc) {
+  if (cc == _POSIX_VDISABLE) {
+    return "_POSIX_VDISABLE";
+  } else {
+    static char buf[8] = "CTRL-";
+    buf[5] = CTRL(cc);
+    return buf;
+  }
+}
+
 /**
  * Prints lots of information about this process, e.g.
  *
@@ -558,67 +568,6 @@ dontasan textstartup void __printargs(const char *prologue) {
       } else if ((termios.c_cflag & CSIZE) == CS8) {
         kprintf(" CS8");
       }
-
-      b = cfgetospeed(&termios);
-      if (b == B0) {
-        kprintf(" B0");
-      } else if (b == B50) {
-        kprintf(" B50");
-      } else if (b == B75) {
-        kprintf(" B75");
-      } else if (b == B110) {
-        kprintf(" B110");
-      } else if (b == B134) {
-        kprintf(" B134");
-      } else if (b == B150) {
-        kprintf(" B150");
-      } else if (b == B200) {
-        kprintf(" B200");
-      } else if (b == B300) {
-        kprintf(" B300");
-      } else if (b == B600) {
-        kprintf(" B600");
-      } else if (b == B1200) {
-        kprintf(" B1200");
-      } else if (b == B1800) {
-        kprintf(" B1800");
-      } else if (b == B2400) {
-        kprintf(" B2400");
-      } else if (b == B4800) {
-        kprintf(" B4800");
-      } else if (b == B9600) {
-        kprintf(" B9600");
-      } else if (b == B19200) {
-        kprintf(" B19200");
-      } else if (b == B38400) {
-        kprintf(" B38400");
-      } else if (b == B57600) {
-        kprintf(" B57600");
-      } else if (b == B115200) {
-        kprintf(" B115200");
-      } else if (b == B230400) {
-        kprintf(" B230400");
-      } else if (b == B500000) {
-        kprintf(" B500000");
-      } else if (b == B576000) {
-        kprintf(" B576000");
-      } else if (b == B1000000) {
-        kprintf(" B1000000");
-      } else if (b == B1152000) {
-        kprintf(" B1152000");
-      } else if (b == B1500000) {
-        kprintf(" B1500000");
-      } else if (b == B2000000) {
-        kprintf(" B2000000");
-      } else if (b == B2500000) {
-        kprintf(" B2500000");
-      } else if (b == B3000000) {
-        kprintf(" B3000000");
-      } else if (b == B3500000) {
-        kprintf(" B3500000");
-      } else if (b == B4000000) {
-        kprintf(" B4000000");
-      }
       kprintf("\n");
       kprintf(prologue);
       kprintf("    c_lflag =");
@@ -642,21 +591,21 @@ dontasan textstartup void __printargs(const char *prologue) {
       PRINT("    cfgetospeed()  = %u", cfgetospeed(&termios));
       PRINT("    c_cc[VMIN]     = %d", termios.c_cc[VMIN]);
       PRINT("    c_cc[VTIME]    = %d", termios.c_cc[VTIME]);
-      PRINT("    c_cc[VINTR]    = CTRL-%c", CTRL(termios.c_cc[VINTR]));
-      PRINT("    c_cc[VQUIT]    = CTRL-%c", CTRL(termios.c_cc[VQUIT]));
-      PRINT("    c_cc[VERASE]   = CTRL-%c", CTRL(termios.c_cc[VERASE]));
-      PRINT("    c_cc[VKILL]    = CTRL-%c", CTRL(termios.c_cc[VKILL]));
-      PRINT("    c_cc[VEOF]     = CTRL-%c", CTRL(termios.c_cc[VEOF]));
-      PRINT("    c_cc[VSTART]   = CTRL-%c", CTRL(termios.c_cc[VSTART]));
-      PRINT("    c_cc[VSTOP]    = CTRL-%c", CTRL(termios.c_cc[VSTOP]));
-      PRINT("    c_cc[VSUSP]    = CTRL-%c", CTRL(termios.c_cc[VSUSP]));
-      PRINT("    c_cc[VEOL]     = CTRL-%c", CTRL(termios.c_cc[VEOL]));
-      PRINT("    c_cc[VSWTC]    = CTRL-%c", CTRL(termios.c_cc[VSWTC]));
-      PRINT("    c_cc[VREPRINT] = CTRL-%c", CTRL(termios.c_cc[VREPRINT]));
-      PRINT("    c_cc[VDISCARD] = CTRL-%c", CTRL(termios.c_cc[VDISCARD]));
-      PRINT("    c_cc[VWERASE]  = CTRL-%c", CTRL(termios.c_cc[VWERASE]));
-      PRINT("    c_cc[VLNEXT]   = CTRL-%c", CTRL(termios.c_cc[VLNEXT]));
-      PRINT("    c_cc[VEOL2]    = CTRL-%c", CTRL(termios.c_cc[VEOL2]));
+      PRINT("    c_cc[VINTR]    = %s", ConvertCcToStr(termios.c_cc[VINTR]));
+      PRINT("    c_cc[VQUIT]    = %s", ConvertCcToStr(termios.c_cc[VQUIT]));
+      PRINT("    c_cc[VERASE]   = %s", ConvertCcToStr(termios.c_cc[VERASE]));
+      PRINT("    c_cc[VKILL]    = %s", ConvertCcToStr(termios.c_cc[VKILL]));
+      PRINT("    c_cc[VEOF]     = %s", ConvertCcToStr(termios.c_cc[VEOF]));
+      PRINT("    c_cc[VSTART]   = %s", ConvertCcToStr(termios.c_cc[VSTART]));
+      PRINT("    c_cc[VSTOP]    = %s", ConvertCcToStr(termios.c_cc[VSTOP]));
+      PRINT("    c_cc[VSUSP]    = %s", ConvertCcToStr(termios.c_cc[VSUSP]));
+      PRINT("    c_cc[VSWTC]    = %s", ConvertCcToStr(termios.c_cc[VSWTC]));
+      PRINT("    c_cc[VREPRINT] = %s", ConvertCcToStr(termios.c_cc[VREPRINT]));
+      PRINT("    c_cc[VDISCARD] = %s", ConvertCcToStr(termios.c_cc[VDISCARD]));
+      PRINT("    c_cc[VWERASE]  = %s", ConvertCcToStr(termios.c_cc[VWERASE]));
+      PRINT("    c_cc[VLNEXT]   = %s", ConvertCcToStr(termios.c_cc[VLNEXT]));
+      PRINT("    c_cc[VEOL]     = %s", ConvertCcToStr(termios.c_cc[VEOL]));
+      PRINT("    c_cc[VEOL2]    = %s", ConvertCcToStr(termios.c_cc[VEOL2]));
     } else {
       PRINT("  - tcgetattr(%d) failed %m", i);
     }

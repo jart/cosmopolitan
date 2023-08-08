@@ -17,28 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/itimer.h"
-#include "libc/time/time.h"
 
 /**
  * Asks for single-shot SIGALRM to be raise()'d after interval.
  *
- * @param seconds until we get signal, or 0 to reset previous alarm()
- * @return seconds previous alarm() had remaining, or -1u w/ errno
- * @see setitimer()
+ * @param seconds is how long to wait before raising SIGALRM (which will
+ *     only happen once) or zero to clear any previously scheduled alarm
+ * @return seconds that were remaining on the previously scheduled
+ *     alarm, or zero if there wasn't one (failure isn't possible)
+ * @see setitimer() for a more powerful api
  * @asyncsignalsafe
  */
 unsigned alarm(unsigned seconds) {
-  struct itimerval it;
-  bzero(&it, sizeof(it));
-  it.it_value.tv_sec = seconds;
-  npassert(!setitimer(ITIMER_REAL, &it, &it));
-  if (!it.it_value.tv_sec && !it.it_value.tv_usec) {
-    return 0;
-  } else {
-    return MIN(1, it.it_value.tv_sec + (it.it_value.tv_usec > 5000000));
-  }
+  struct itimerval it, old;
+  it.it_value = timeval_fromseconds(seconds);
+  it.it_interval = timeval_zero;
+  npassert(!setitimer(ITIMER_REAL, &it, &old));
+  return timeval_toseconds(old.it_value);
 }

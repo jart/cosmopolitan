@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/itimerval.h"
-#include "libc/calls/struct/timeval.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
@@ -43,21 +43,33 @@ textwindows void _check_sigalrm(void) {
   __sig_add(0, SIGALRM, SI_TIMER);
 }
 
+textwindows void sys_setitimer_nt_reset(void) {
+  // this function is called by fork(), because
+  // timers aren't inherited by forked subprocesses
+  bzero(&g_setitimer, sizeof(g_setitimer));
+}
+
 textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
                                  struct itimerval *old) {
+  struct itimerval config;
   if (which != ITIMER_REAL || (neu && (!timeval_isvalid(neu->it_value) ||
                                        !timeval_isvalid(neu->it_interval)))) {
     return einval();
+  }
+  if (neu) {
+    // POSIX defines setitimer() with the restrict keyword but let's
+    // accommodate the usage setitimer(ITIMER_REAL, &it, &it) anyway
+    config = *neu;
   }
   if (old) {
     old->it_interval = g_setitimer.it_interval;
     old->it_value = timeval_subz(g_setitimer.it_value, timeval_real());
   }
   if (neu) {
-    g_setitimer.it_interval = neu->it_interval;
-    g_setitimer.it_value = timeval_iszero(neu->it_value)
-                               ? timeval_zero
-                               : timeval_add(timeval_real(), neu->it_value);
+    if (!timeval_iszero(config.it_value)) {
+      config.it_value = timeval_add(config.it_value, timeval_real());
+    }
+    g_setitimer = config;
   }
   return 0;
 }
