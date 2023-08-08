@@ -131,7 +131,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
       if (pipefds[i].events & POLLOUT) {
         // we have no way of polling if a non-socket is writeable yet
         // therefore we assume that if it can happen, it shall happen
-        pipefds[i].revents = POLLOUT;
+        pipefds[i].revents |= POLLOUT;
       }
       if (pipefds[i].events & POLLIN) {
         if (GetFileType(pipefds[i].handle) == kNtFileTypePipe) {
@@ -140,15 +140,15 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
                     pipefds[i].handle, avail, ok);
           if (ok) {
             if (avail) {
-              pipefds[i].revents = POLLIN;
+              pipefds[i].revents |= POLLIN;
             }
           } else {
-            pipefds[i].revents = POLLERR;
+            pipefds[i].revents |= POLLERR;
           }
         } else {
           // we have no way of polling if a non-socket is readable yet
           // therefore we assume that if it can happen it shall happen
-          pipefds[i].revents = POLLIN;
+          pipefds[i].revents |= POLLIN;
         }
       }
       if (pipefds[i].revents) {
