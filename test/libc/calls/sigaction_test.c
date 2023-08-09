@@ -19,6 +19,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -247,4 +248,20 @@ TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
   sigdelset(&want, SIGUSR1);
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, 0));
+}
+
+TEST(sig_ign, discardsPendingSignalsEvenIfBlocked) {
+  sigset_t block, oldmask;
+  struct sigaction sa, oldsa;
+  ASSERT_SYS(0, 0, sigemptyset(&block));
+  ASSERT_SYS(0, 0, sigaddset(&block, SIGUSR1));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_BLOCK, &block, &oldmask));
+  raise(SIGUSR1);  // enqueue
+  sa.sa_flags = 0;
+  sa.sa_handler = SIG_IGN;
+  ASSERT_SYS(0, 0, sigemptyset(&sa.sa_mask));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));  // discard
+  ASSERT_SYS(0, 0, sigprocmask(SIG_UNBLOCK, &block, 0));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldmask, 0));
 }

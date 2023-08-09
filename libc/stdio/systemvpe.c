@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -20,59 +20,50 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/dce.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
-#include "libc/intrin/weaken.h"
-#include "libc/log/log.h"
-#include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/ok.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/thread/thread.h"
 
 /**
- * Launches program with system command interpreter.
+ * Executes program and waits for it to complete, e.g.
  *
- * This implementation embeds the Cosmopolitan Command Interpreter which
- * provides Bourne-like syntax on all platforms, including Windows. Many
- * builtin commands are included, e.g. exit, cd, rm, [, cat, wait, exec,
- * env, echo, read, true, test, kill, touch, rmdir, mkdir, false, mktemp
- * and usleep. It's also possible to __static_yoink() the symbols `_tr`,
- * `_sed`, `_awk`, and `_curl` for the tr, sed, awk and curl commands if
- * you're using the Cosmopolitan mono-repo.
+ *     systemvpe("ls", (char *[]){"ls", dir, 0}, environ);
  *
- * If you just have a program name and arguments, and you don't need the
- * full power of a UNIX-like shell, then consider using the Cosmopolitan
- * provided API systemvpe() instead. It provides a safer alternative for
- * variable arguments than shell script escaping. It lets you clean your
- * environment variables, for even more safety. Finally it's 10x faster.
+ * This function is designed to do the same thing as system() except
+ * rather than taking a shell script argument it accepts an array of
+ * strings which are safely passed directly to execve().
  *
- * It's important to check the returned status code. For example, if you
- * press CTRL-C while running your program you'll expect it to terminate
- * however that won't be the case if the SIGINT gets raised while inside
- * the system() function. If the child process doesn't handle the signal
- * then this will return e.g. WIFSIGNALED(ws) && WTERMSIG(ws) == SIGINT.
+ * This function is 5x faster than system() and generally safer, for
+ * most command running use cases that don't need to control the i/o
+ * file descriptors.
  *
- * @param cmdline is a unix shell script
+ * @param prog is path searched (if it doesn't contain a slash) from
+ *     the $PATH environment variable in `environ` (not your `envp`)
  * @return -1 if child process couldn't be created, otherwise a wait
  *     status that can be accessed using macros like WEXITSTATUS(s),
  *     WIFSIGNALED(s), WTERMSIG(s), etc.
- * @see systemve()
+ * @see system()
  * @threadsafe
  */
-int system(const char *cmdline) {
+int systemvpe(const char *prog, char *const argv[], char *const envp[]) {
+  char *exe;
   int pid, wstatus;
+  char pathbuf[PATH_MAX + 1];
   sigset_t chldmask, savemask;
-  if (!cmdline) return 1;
+  if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) {
+    return -1;
+  }
   sigemptyset(&chldmask);
   sigaddset(&chldmask, SIGINT);
   sigaddset(&chldmask, SIGQUIT);
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  if (!(pid = fork())) {
+  if (!(pid = vfork())) {
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    _Exit(_cocmd(3, (char *[]){"system", "-c", cmdline, 0}, environ));
+    execve(prog, argv, envp);
+    _Exit(127);
   } else if (pid == -1) {
     wstatus = -1;
   } else {

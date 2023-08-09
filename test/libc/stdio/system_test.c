@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
@@ -243,6 +244,8 @@ int system2(const char *);
 BENCH(system, bench) {
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   EZBENCH2("system cmd", donothing, system("./echo.com hi >/dev/null"));
+  EZBENCH2("systemvpe cmd", donothing,
+           systemvpe("./echo.com", (char *[]){"./echo.com", "hi", 0}, 0));
   EZBENCH2("cocmd echo", donothing, system("echo hi >/dev/null"));
   EZBENCH2("cocmd exit", donothing, system("exit"));
 }
