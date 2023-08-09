@@ -4,7 +4,7 @@
 
 struct NtImageSectionHeader {
 
-  uint8_t Name[8];
+  char Name[8];
 
   union {
 
