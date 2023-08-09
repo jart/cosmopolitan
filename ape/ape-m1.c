@@ -544,8 +544,9 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 
   /* load elf */
   for (i = 0; i < e->e_phnum; ++i) {
+    void *addr;
+    unsigned long size;
     if (p[i].p_type != PT_LOAD) continue;
-    if (!p[i].p_memsz) continue;
 
     /* configure mapping */
     prot = 0;
@@ -556,36 +557,51 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 
     /* load from file */
     if (p[i].p_filesz) {
-      void *addr;
       int prot1, prot2;
-      unsigned long size;
+      unsigned long wipe;
       prot1 = prot;
       prot2 = prot;
+      /*
+       * when we ask the system to map the interval [vaddr,vaddr+filesz)
+       * it might schlep extra file content into memory on both the left
+       * and the righthand side. that's because elf doesn't require that
+       * either side of the interval be aligned on the system page size.
+       *
+       * normally we can get away with ignoring these junk bytes. but if
+       * the segment defines bss memory (i.e. memsz > filesz) then we'll
+       * need to clear the extra bytes in the page, if they exist.
+       *
+       * since we can't do that if we're mapping a read-only page, we'll
+       * actually map it with write permissions and protect it afterward
+       */
       a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
       b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
       c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
-      if (b > c) b = c;
-      if (c > b && (~prot1 & PROT_WRITE)) {
+      wipe = MIN(b - a, c - a);
+      if (wipe && (~prot1 & PROT_WRITE)) {
         prot1 = PROT_READ | PROT_WRITE;
       }
       addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
       rc = (long)mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
       if (rc < 0) Pexit(exe, rc, "prog mmap");
-      if (c > b) Bzero((void *)(dynbase + a), b - a);
+      if (wipe) Bzero((void *)(dynbase + a), wipe);
       if (prot2 != prot1) {
         rc = mprotect(addr, size, prot2);
         if (rc < 0) Pexit(exe, rc, "prog mprotect");
       }
-    }
-
-    /* allocate extra bss */
-    a = p[i].p_vaddr + p[i].p_filesz;
-    a = (a + (pagesz - 1)) & -pagesz;
-    b = p[i].p_vaddr + p[i].p_memsz;
-    if (b > a) {
+      /* allocate extra bss */
+      if (c > b) {
+        flags |= MAP_ANONYMOUS;
+        rc = (long)mmap((void *)(dynbase + b), c - b, prot, flags, -1, 0);
+        if (rc < 0) Pexit(exe, rc, "extra bss mmap");
+      }
+    } else {
+      /* allocate pure bss */
+      addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
+      size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_memsz;
       flags |= MAP_ANONYMOUS;
-      rc = (long)mmap((void *)(dynbase + a), b - a, prot, flags, -1, 0);
+      rc = (long)mmap(addr, size, prot, flags, -1, 0);
       if (rc < 0) Pexit(exe, rc, "bss mmap");
     }
   }
@@ -861,7 +877,7 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
-         "actually portable executable loader silicon 1.5\n"
+         "actually portable executable loader silicon 1.6\n"
          "copyright 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
     _exit(1);

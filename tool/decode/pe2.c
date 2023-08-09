@@ -317,7 +317,9 @@ static void showpeheader(struct NtImageNtHeaders *pe) {
   printf("\n");
   showpeoptionalheader(pecheckaddress(mz, mzsize, &pe->OptionalHeader,
                                       pe->FileHeader.SizeOfOptionalHeader));
-  ShowSections(pecheckaddress(mz, mzsize, pe + 1,
+  ShowSections(pecheckaddress(mz, mzsize,
+                              (char *)(pe + 1) +
+                                  pe->OptionalHeader.NumberOfRvaAndSizes * 8,
                               pe->FileHeader.NumberOfSections *
                                   sizeof(struct NtImageSectionHeader)),
                pe->FileHeader.NumberOfSections);

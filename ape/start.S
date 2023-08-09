@@ -65,7 +65,7 @@ ape.ident:
 	.long	1
 1:	.asciz	"APE"
 2:	.balign	4
-3:	.long	105000000
+3:	.long	106000000
 4:	.size	ape.ident,.-ape.ident
 	.type	ape.ident,@object
 

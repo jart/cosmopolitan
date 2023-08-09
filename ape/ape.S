@@ -610,7 +610,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.5\"\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.6\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
@@ -818,7 +818,7 @@ ape.ident:
 	.long	1
 1:	.asciz	"APE"
 2:	.balign	4
-3:	.long	105000000
+3:	.long	106000000
 4:	.size	ape.ident,.-ape.ident
 	.type	ape.ident,@object
 	.previous
@@ -1052,11 +1052,11 @@ PEIMPS = 0b11000000000000000000000001000000
 	.balign	__SIZEOF_POINTER__
 ape_pe:	.ascin	"PE",4
 	.short	kNtImageFileMachineNexgen32e
-	.stub	ape_pe_shnum,short	// NumberOfSections
+	.short	ape_pe_shnum		// NumberOfSections
 	.long	0x5c64126b		// TimeDateStamp
 	.long	0			// PointerToSymbolTable
 	.long	0			// NumberOfSymbols
-	.stub	ape_pe_optsz,short	// SizeOfOptionalHeader
+	.short	ape_pe_optsz		// SizeOfOptionalHeader
 	.short	PEEXE			// Characteristics
 	.short	kNtPe64bit		// Optional Header Magic
 	.byte	14			// MajorLinkerVersion
@@ -1080,25 +1080,25 @@ ape_pe:	.ascin	"PE",4
 	.long	ape_pe_sizeofheaders	// SizeOfHeaders
 	.long	0			// Checksum
 	.short	v_ntsubsystem		// Subsystem: 0=Neutral,2=GUI,3=Console
-	.stub	v_ntdllchar,short	// DllCharacteristics
-	.quad	0x0000000000100000	// StackReserve
-	.quad	0x00000000000fc000	// StackCommit
+	.short	v_ntdllchar		// DllCharacteristics
+	.quad	ape_stack_memsz2	// StackReserve
+	.quad	64 * 1024		// StackCommit
 	.quad	0			// HeapReserve
 	.quad	0			// HeapCommit
 	.long	0			// LoaderFlags
 	.long	2			// NumberOfDirectoryEntries
 	.long	0,0			// ExportsDirectory
-	.stub	ape_idata,long		// ImportsDirectory
-	.stub	ape_idata_idtsize,long	// ImportsDirectorySize
+	.long	ape_idata		// ImportsDirectory
+	.long	ape_idata_idtsize	// ImportsDirectorySize
 	.endobj	ape_pe,globl
 	.previous
 
 	.section .pe.sections,"a",@progbits
 	.ascin	".text",8		// Section Name
-	.stub	ape_text_memsz,long	// Virtual Size or Physical Address
-	.stub	ape_text_rva,long	// Relative Virtual Address
-	.stub	ape_text_filesz,long	// Physical Size
-	.stub	ape_text_offset,long	// Physical Offset
+	.long	ape_text_memsz		// Virtual Size or Physical Address
+	.long	ape_text_rva		// Relative Virtual Address
+	.long	ape_text_filesz		// Physical Size
+	.long	ape_text_offset		// Physical Offset
 	.long	0			// Relocation Table Offset
 	.long	0			// Line Number Table Offset
 	.short	0			// Relocation Count
@@ -1108,10 +1108,10 @@ ape_pe:	.ascin	"PE",4
 
 	.section .pe.sections,"a",@progbits
 	.ascin	".data",8		// Section Name
-	.stub	ape_ram_memsz,long	// Virtual Size or Physical Address
-	.stub	ape_ram_rva,long	// Relative Virtual Address
-	.stub	ape_ram_filesz,long	// Physical Size
-	.stub	ape_ram_offset,long	// Physical Offset
+	.long	ape_ram_memsz		// Virtual Size or Physical Address
+	.long	ape_ram_rva		// Relative Virtual Address
+	.long	ape_ram_filesz		// Physical Size
+	.long	ape_ram_offset		// Physical Offset
 	.long	0			// Relocation Table Offset
 	.long	0			// Line Number Table Offset
 	.short	0			// Relocation Count

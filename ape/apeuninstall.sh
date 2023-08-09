@@ -38,6 +38,7 @@ for x in .ape \
          .ape-1.3 \
          .ape-1.4 \
          .ape-1.5 \
+         .ape-1.6 \
          .ape-blink-0.9.2 \
          .ape-blink-1.0.0; do
   rm -f \
