@@ -97,6 +97,8 @@
 #define PR_CAP_AMBIENT              47
 #define PR_GET_SPECULATION_CTRL     52
 #define PR_SET_SPECULATION_CTRL     53
+#define PR_SET_TAGGED_ADDR_CTRL     55
+#define PR_GET_TAGGED_ADDR_CTRL     56
 #define PR_SET_PTRACER              0x59616d61
 #define PR_SET_PTRACER_ANY          -1
 
