@@ -261,7 +261,7 @@ SECTIONS {
     . = ALIGN(CODE_GRANULE);
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(SupportsWindows() || SupportsMetal() ? CONSTANT(COMMONPAGESIZE) : 16);
+    . = ALIGN(SupportsWindows() || SupportsMetal() ? CONSTANT(MAXPAGESIZE) : 16);
     _ehead = .;
   } :Head
 
@@ -312,14 +312,14 @@ SECTIONS {
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
-    . = ALIGN(__privileged_end > __privileged_start ? CONSTANT(COMMONPAGESIZE) : 1);
+    . = ALIGN(__privileged_end > __privileged_start ? CONSTANT(MAXPAGESIZE) : 1);
 /*END: morphable code */
     __privileged_start = .;
     *(.privileged)
     __privileged_end = .;
 
     KEEP(*(.ape.pad.text))
-    . = ALIGN(CONSTANT(COMMONPAGESIZE));
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 /*END: Read Only Data (only needed for initialization) */
   } :Cod
 
@@ -349,28 +349,12 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
 #endif
 
-    . = ALIGN(__SIZEOF_POINTER__);
-    __init_array_start = .;
-    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
-           SORT_BY_INIT_PRIORITY(.ctors.*)))
-    KEEP(*(.ctors))
-    KEEP(*(.init_array))
-    KEEP(*(.preinit_array))
-    __init_array_end = .;
-
-    . = ALIGN(__SIZEOF_POINTER__);
-    __fini_array_start = .;
-    KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
-           SORT_BY_INIT_PRIORITY(.dtors.*)))
-    KEEP(*(.fini_array))
-    KEEP(*(.dtors))
-    __fini_array_end = .;
-
     /* Encoded Data Structures w/ Linear Initialization Order */
     KEEP(*(.initroprologue))
     KEEP(*(SORT_BY_NAME(.initro.*)))
     KEEP(*(.initroepilogue))
     KEEP(*(SORT_BY_NAME(.sort.rodata.*)))
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
 /*END: read-only data that's only needed for initialization */
 
@@ -384,13 +368,13 @@ SECTIONS {
     *(SORT_BY_ALIGNMENT(.tdata.*))
     _tdata_end = .;
     KEEP(*(.ape.pad.rodata))
-    . = ALIGN(CONSTANT(COMMONPAGESIZE));
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
     _etext = .;
     PROVIDE(etext = .);
   } :Tls :Rom
 /*END: Read Only Data */
 
-  . = DATA_SEGMENT_ALIGN(CONSTANT(COMMONPAGESIZE), CONSTANT(COMMONPAGESIZE));
+  . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(MAXPAGESIZE));
   . = DATA_SEGMENT_RELRO_END(0, .);
 
 /* this only tells the linker about the layout of uninitialized */
@@ -425,6 +409,23 @@ SECTIONS {
     *(.got.plt)
     KEEP(*(.gotpltepilogue))
 
+    . = ALIGN(__SIZEOF_POINTER__);
+    __init_array_start = .;
+    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
+           SORT_BY_INIT_PRIORITY(.ctors.*)))
+    KEEP(*(.ctors))
+    KEEP(*(.init_array))
+    KEEP(*(.preinit_array))
+    __init_array_end = .;
+
+    . = ALIGN(__SIZEOF_POINTER__);
+    __fini_array_start = .;
+    KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)
+           SORT_BY_INIT_PRIORITY(.dtors.*)))
+    KEEP(*(.fini_array))
+    KEEP(*(.dtors))
+    __fini_array_end = .;
+
 /*BEGIN: Post-Initialization Read-Only */
     . = ALIGN(__SIZEOF_POINTER__);
     KEEP(*(SORT_BY_NAME(.piro.relo.sort.*)))
@@ -432,7 +433,7 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
-    . = ALIGN(512);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 /*END: NT FORK COPYING */
     _edata = .;
     PROVIDE(edata = .);
@@ -462,7 +463,7 @@ SECTIONS {
 
     KEEP(*(.bssepilogue))
 
-    . = ALIGN(CONSTANT(COMMONPAGESIZE));
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
 /*END: NT FORK COPYING */
     _end = .;
@@ -557,7 +558,7 @@ ape_cod_vaddr = ADDR(.head);
 ape_cod_paddr = LOADADDR(.head);
 ape_cod_filesz = SIZEOF(.head) + SIZEOF(.text);
 ape_cod_memsz = ape_cod_filesz;
-ape_cod_align = CONSTANT(COMMONPAGESIZE);
+ape_cod_align = CONSTANT(MAXPAGESIZE);
 ape_cod_rva = RVA(ape_cod_vaddr);
 
 ape_rom_offset = ape_cod_offset + ape_cod_filesz;
@@ -565,7 +566,7 @@ ape_rom_vaddr = ADDR(.rodata);
 ape_rom_paddr = LOADADDR(.rodata);
 ape_rom_filesz = SIZEOF(.rodata) + SIZEOF(.tdata);
 ape_rom_memsz = ape_rom_filesz;
-ape_rom_align = CONSTANT(COMMONPAGESIZE);
+ape_rom_align = CONSTANT(MAXPAGESIZE);
 ape_rom_rva = RVA(ape_rom_vaddr);
 
 ape_ram_offset = ape_rom_offset + ape_rom_filesz;
@@ -573,7 +574,7 @@ ape_ram_vaddr = ADDR(.data);
 ape_ram_paddr = LOADADDR(.data);
 ape_ram_filesz = SIZEOF(.data);
 ape_ram_memsz = SIZEOF(.data) + SIZEOF(.bss);
-ape_ram_align = CONSTANT(COMMONPAGESIZE);
+ape_ram_align = CONSTANT(MAXPAGESIZE);
 ape_ram_rva = RVA(ape_ram_vaddr);
 
 ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W;
@@ -595,7 +596,7 @@ ape_text_paddr = LOADADDR(.text);
 ape_text_vaddr = ADDR(.text);
 ape_text_filesz = SIZEOF(.text) + SIZEOF(.rodata) + SIZEOF(.tdata);
 ape_text_memsz = ape_text_filesz;
-ape_text_align = CONSTANT(COMMONPAGESIZE);
+ape_text_align = CONSTANT(MAXPAGESIZE);
 ape_text_rva = RVA(ape_text_vaddr);
 
 /* we roundup here because xnu wants the file load segments page-aligned */
@@ -604,7 +605,7 @@ ape_text_rva = RVA(ape_text_vaddr);
 SHSTUB2(ape_loader_dd_skip, DEFINED(ape_loader) ? RVA(ape_loader) / 64 : 0);
 SHSTUB2(ape_loader_dd_count,
         DEFINED(ape_loader_end)
-            ? ROUNDUP(ape_loader_end - ape_loader, CONSTANT(COMMONPAGESIZE)) / 64
+            ? ROUNDUP(ape_loader_end - ape_loader, CONSTANT(MAXPAGESIZE)) / 64
             : 0);
 
 #if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()

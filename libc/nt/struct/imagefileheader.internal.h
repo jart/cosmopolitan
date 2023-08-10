@@ -22,7 +22,7 @@ struct NtImageFileHeader {
   uint32_t NumberOfSymbols;
 
   /*
-   * [File Size] The size of the optional header, which is required for
+   * [file size] The size of the optional header, which is required for
    * executable files but not for object files. This value should be
    * zero for an object file. For a description of the header format,
    * see Optional Header (Image Only).

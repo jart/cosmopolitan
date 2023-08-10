@@ -34,12 +34,20 @@ typedef struct Elf64_Rela {
    *     Elf64_Word sym = ELF64_R_SYM(r_info);
    *     Elf64_Word type = ELF64_R_TYPE(r_info);
    *
-   * Where `sym` is a symbol index, and `type` might be:
+   * Where `sym` is a symbol index, and `type` will likely be:
    *
-   * - `R_X86_64_64`
    * - `R_X86_64_PC32`
-   * - `R_X86_64_GOTPCRELX`
-   * - `R_AARCH64_ABS64`
+   * - `R_X86_64_PLT32`
+   * - `R_X86_64_32`
+   * - `R_X86_64_64`
+   * - `R_X86_64_32S`
+   * - `R_X86_64_8`
+   * - `R_X86_64_16`
+   * - `R_X86_64_DTPOFF32`
+   * - `R_X86_64_GOTPCREL`
+   * - `R_X86_64_PC16`
+   * - `R_X86_64_REX_GOTPCRELX`
+   * - `R_X86_64_TPOFF32`
    *
    */
   Elf64_Xword r_info;

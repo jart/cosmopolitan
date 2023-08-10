@@ -11,6 +11,6 @@
 #include "libc/str/str.h"
 
 int main() {
-  write(1, "hello world\n", 12);
+  // write(1, "hello world\n", 12);
   return 0;
 }

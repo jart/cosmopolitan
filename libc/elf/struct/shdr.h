@@ -13,7 +13,7 @@ typedef struct Elf64_Shdr {
 
   Elf64_Word sh_type; /* SHT_{PROGBITS,NOBITS,STRTAB,SYMTAB,RELA,...} */
 
-  Elf64_Xword sh_flags; /* SHF_{WRITE,ALLOC,EXECINSTR,MERGE,STRINGS,...} */
+  Elf64_Xword sh_flags; /* SHF_{WRITE,ALLOC,EXECINSTR,TLS,MERGE,STRINGS,,...} */
 
   Elf64_Addr sh_addr;
 

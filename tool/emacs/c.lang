@@ -81,6 +81,7 @@ Keywords={
 "_Imaginary_I",
 "__inline",
 "__msabi",
+"__weak",
 "offsetof",
 "microarchitecture",
 "forcealignargpointer",

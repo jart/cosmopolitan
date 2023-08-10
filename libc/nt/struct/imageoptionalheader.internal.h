@@ -41,7 +41,7 @@ struct NtImageOptionalHeader {
   uint32_t SizeOfUninitializedData;
 
   /*
-   * [Relative Virtual Address] The address of the entry point relative
+   * [relative virtual address] The address of the entry point relative
    * to the image base when the executable file is loaded into memory.
    * For program images, this is the starting address. For device
    * drivers, this is the address of the initialization function. An
@@ -51,14 +51,14 @@ struct NtImageOptionalHeader {
   uint32_t AddressOfEntryPoint;
 
   /*
-   * [Relative Virtual Address] The address that is relative to the
-   * image base of the beginning-of-code section when it is loaded into
-   * memory.
+   * [relative virtual address; Informative] The address that is
+   * relative to the image base of the beginning-of-code section when it
+   * is loaded into memory.
    */
   uint32_t BaseOfCode;
 
   /*
-   * [Virtual Address] The preferred address of the first byte
+   * [virtual address] The preferred address of the first byte
    * of image when loaded into memory; must be a multiple of 64 K. The
    * default for DLLs is 0x10000000. The default for Windows CE EXEs is
    * 0x00010000. The default for Windows NT, Windows 2000, Windows XP,
@@ -91,14 +91,14 @@ struct NtImageOptionalHeader {
   uint32_t Win32VersionValue;
 
   /*
-   * [Virtual Size] The size (in bytes) of the image, including all
+   * [virtual size] The size (in bytes) of the image, including all
    * headers, as the image is loaded in memory. It must be a multiple of
    * SectionAlignment.
    */
   uint32_t SizeOfImage;
 
   /*
-   * [File Size] The combined size of an MS-DOS stub, PE header, and
+   * [file size] The combined size of an MS-DOS stub, PE header, and
    * section headers rounded up to a multiple of FileAlignment.
    */
   uint32_t SizeOfHeaders;

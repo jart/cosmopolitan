@@ -25,7 +25,8 @@
            "_Imaginary_I"))
 
         (cosmo
-         '("__msabi"
+         '("__weak"
+           "__msabi"
            "__funline"
            "function"
            "offsetof"

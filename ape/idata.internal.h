@@ -81,7 +81,7 @@
 	.size	".Lidata.idt.\name",.-".Lidata.idt.\name"
   .previous
   .section ".idata.ro.ilt.\name\().1","aG",@progbits,"\name",comdat
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.type	"idata.ilt.\name",@object
 "idata.ilt.\name":
 	.previous/*
@@ -92,12 +92,12 @@
 	.quad	0
   .previous
   .section ".idata.ro.hnt.\name\().1","aG",@progbits,"\name",comdat
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.type	"idata.hnt.\name",@object
 	.equ	"idata.hnt.\name",.
   .previous
   .section ".piro.data.sort.iat.2.\name\().1","awG",@progbits,"\name",comdat
-	.align	__SIZEOF_POINTER__
+	.balign	__SIZEOF_POINTER__
 	.type	"idata.iat.\name",@object
 "idata.iat.\name":
 	.previous/*

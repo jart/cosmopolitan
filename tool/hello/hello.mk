@@ -3,37 +3,26 @@
 
 PKGS += TOOL_HELLO
 
-TOOL_HELLO_SRCS := $(wildcard tool/hello/*.c)
-TOOL_HELLO_OBJS = $(TOOL_HELLO_SRCS:%.c=o/$(MODE)/%.o)
-TOOL_HELLO_COMS = $(TOOL_HELLO_SRCS:%.c=o/$(MODE)/%.com)
-TOOL_HELLO_BINS = $(TOOL_HELLO_COMS) $(TOOL_HELLO_COMS:%=%.dbg)
+TOOL_HELLO_FILES := $(wildcard tool/hello/*)
+TOOL_HELLO_HDRS = $(filter %.h,$(TOOL_HELLO_FILES))
+TOOL_HELLO_SRCS_C = $(filter %.c,$(TOOL_HELLO_FILES))
+TOOL_HELLO_SRCS_S = $(filter %.S,$(TOOL_HELLO_FILES))
+TOOL_HELLO_SRCS = $(TOOL_HELLO_SRCS_C) $(TOOL_HELLO_SRCS_S)
+TOOL_HELLO_OBJS = $(TOOL_HELLO_SRCS_C:%.c=o/$(MODE)/%.o) $(TOOL_HELLO_SRCS_S:%.S=o/$(MODE)/%.o)
+TOOL_HELLO_BINS = o/$(MODE)/tool/hello/hello.com.dbg
 
-TOOL_HELLO_DIRECTDEPS =				\
-	LIBC_CALLS				\
-	LIBC_INTRIN				\
-	LIBC_NEXGEN32E				\
-	LIBC_RUNTIME				\
-	LIBC_STR				\
-	LIBC_SYSV
+o/$(MODE)/tool/hello/hello.com.dbg:			\
+		o/$(MODE)/tool/hello/systemcall.o	\
+		o/$(MODE)/tool/hello/hello.o		\
+		o/$(MODE)/tool/hello/start.o
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -zmax-page-size=4096
 
-TOOL_HELLO_DEPS :=				\
-	$(call uniq,$(foreach x,$(TOOL_HELLO_DIRECTDEPS),$($(x))))
+o/$(MODE)/tool/hello/hello.com:				\
+		o/$(MODE)/tool/hello/hello.com.dbg	\
+		o/$(MODE)/tool/build/elf2pe.com
+	o/$(MODE)/tool/build/elf2pe.com -o $@ $<
 
-o/$(MODE)/tool/hello/hello.pkg:			\
-		$(TOOL_HELLO_OBJS)		\
-		$(foreach x,$(TOOL_HELLO_DIRECTDEPS),$($(x)_A).pkg)
-
-o/$(MODE)/tool/hello/%.com.dbg:			\
-		$(TOOL_HELLO_DEPS)		\
-		o/$(MODE)/tool/hello/%.o	\
-		o/$(MODE)/tool/hello/hello.pkg	\
-		$(CRT)				\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-$(TOOL_HELLO_OBJS):				\
-		$(BUILD_FILES)			\
-		tool/hello/hello.mk
+$(TOOL_HELLO_OBJS): tool/hello/hello.mk
 
 .PHONY: o/$(MODE)/tool/hello
-o/$(MODE)/tool/hello: $(TOOL_HELLO_BINS) $(TOOL_HELLO_CHECKS)
+o/$(MODE)/tool/hello: $(TOOL_HELLO_BINS)
