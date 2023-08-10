@@ -103,5 +103,7 @@
 #define PR_GET_IO_FLUSHER           58
 #define PR_SET_PTRACER              0x59616d61
 #define PR_SET_PTRACER_ANY          -1
+#define PR_SET_VMA                  0x53564d41
+#define PR_SET_VMA_ANON_NAME        0
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_PR_H_ */
