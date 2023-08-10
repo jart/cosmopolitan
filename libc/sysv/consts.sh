@@ -765,6 +765,7 @@ syscon	ptrace	PTRACE_INTERRUPT			0x4207			0x4207			-1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_LISTEN				0x4208			0x4208			-1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_PEEKSIGINFO			0x4209			0x4209			-1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_SECCOMP_GET_FILTER		0x420c			0x420c			-1			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_SECCOMP_GET_METADATA		0x420d			0x420d			-1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_SEIZE				0x4206			0x4206			-1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_SETREGSET			0x4205			0x4205			-1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_SETSIGMASK			0x420b			0x420b			-1			-1			-1			-1			-1			-1
