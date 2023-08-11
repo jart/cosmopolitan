@@ -266,6 +266,7 @@ syscon	madv	MADV_HUGEPAGE				14			14			127			127			127			127			127			127			# TOD
 syscon	madv	MADV_NOHUGEPAGE				15			15			127			127			127			127			127			127			# TODO(jart): why would we need it?
 syscon	madv	MADV_DODUMP				17			17			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	madv	MADV_WIPEONFORK				18			18			127			127			127			127			127			127			# TODO: add support ?
+syscon	madv	MADV_KEEPONFORK				19			19			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_DOFORK				11			11			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	madv	MADV_DONTDUMP				16			16			127			127			127			127			127			127			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
 syscon	madv	MADV_DONTFORK				10			10			127			127			127			127			127			127			# TODO(jart): what is it?
