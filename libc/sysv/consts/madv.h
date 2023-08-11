@@ -22,6 +22,7 @@ extern const unsigned MADV_WILLNEED;
 extern const unsigned MADV_SOFT_OFFLINE;
 extern const unsigned MADV_WIPEONFORK;
 extern const unsigned MADV_KEEPONFORK;
+extern const unsigned MADV_COLD;
 
 #define MADV_NORMAL     0
 #define MADV_RANDOM     1
