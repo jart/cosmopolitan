@@ -113,7 +113,6 @@ void _Exitr(int) libcesque wontreturn;
 void _Exit1(int) libcesque wontreturn;
 void _restorewintty(void);
 void __paginate(int, const char *);
-long _missingno();
 /* memory management */
 void _weakfree(void *);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;

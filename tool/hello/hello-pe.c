@@ -7,12 +7,15 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
+#include "tool/build/elf2pe.h"
 
-#ifndef TINY
-__static_yoink("zipos");  // so apelink embeds symbol table
-#endif
+#define STD_OUTPUT_HANDLE -11u
 
-int main(int argc, char *argv[]) {
-  write(2, "hello world\n", 12);
+__dll_import("kernel32.dll", long, GetStdHandle, (unsigned));
+__dll_import("kernel32.dll", int, WriteFile,
+             (long, const void *, unsigned, unsigned *, void *));
+
+__attribute__((__ms_abi__)) long WinMain(void) {
+  WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), "hello world\n", 12, 0, 0);
+  return 0;
 }

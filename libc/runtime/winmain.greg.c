@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
@@ -94,6 +95,12 @@ static const short kConsoleModes[3] = {
     kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
         kNtEnableVirtualTerminalProcessing,
 };
+
+// implements all win32 apis on non-windows hosts
+__msabi long __win32_oops(void) {
+  assert(!"win32 api called on non-windows host");
+  return 0;
+}
 
 // https://nullprogram.com/blog/2022/02/18/
 __msabi static inline char16_t *MyCommandLine(void) {

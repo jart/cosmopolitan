@@ -611,8 +611,8 @@ void abort(void) wontreturn;
   } while (0)
 
 #ifndef __STRICT_ANSI__
-#define textstartup _Section(".text.startup") dontinstrument
-#define textexit    _Section(".text.exit") dontinstrument
+#define textstartup _Section(".text.startup")
+#define textexit    _Section(".text.exit")
 #define textreal    _Section(".text.real")
 #define texthead    _Section(".text.head")
 #define textwindows _Section(".text.windows")

@@ -206,6 +206,7 @@
            "__conceal"
            "__expropriate"
            "__yoink"
+           "__dll_import"
            "__static_yoink"
            "PYTHON_YOINK"
            "PYTHON_PROVIDE"

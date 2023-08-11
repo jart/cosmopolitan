@@ -43,10 +43,10 @@
 	.hidden	\fn
 	.previous
 	.section ".idata.ro.ilt.\dll\().2.\actual","a",@progbits
-".Lidata.ilt.\dll\().\actual":
+"idata.ilt.\dll\().\actual":
 	.quad	RVA("\dll\().\actual")
-	.type	".Lidata.ilt.\dll\().\actual",@object
-	.size	".Lidata.ilt.\dll\().\actual",.-".Lidata.ilt.\dll\().\actual"
+	.type	"idata.ilt.\dll\().\actual",@object
+	.size	"idata.ilt.\dll\().\actual",.-"idata.ilt.\dll\().\actual"
 	.previous
 	.section ".idata.ro.hnt.\dll\().2.\actual","a",@progbits
 "\dll\().\actual":

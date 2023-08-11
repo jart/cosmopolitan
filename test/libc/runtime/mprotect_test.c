@@ -134,7 +134,7 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
   EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ));
-  _missingno(p[0]);
+  __expropriate(p[0]);
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
   p[0] = 2;
@@ -162,7 +162,7 @@ TEST(mprotect, testProtNone_cantEvenRead) {
   volatile char *p;
   p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
   EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_NONE));
-  _missingno(p[0]);
+  __expropriate(p[0]);
   EXPECT_TRUE(gotsegv | gotbusted);
   EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }

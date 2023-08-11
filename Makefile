@@ -139,7 +139,6 @@ include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
-include tool/hello/hello.mk			# │
 include third_party/nsync/nsync.mk		# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
@@ -147,6 +146,7 @@ include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
 include third_party/nsync/mem/mem.mk		# │  You can now use stdio
 include libc/thread/thread.mk			# │  You can finally call malloc()
 include libc/zipos/zipos.mk			# │
+include tool/hello/hello.mk			# │
 include libc/stdio/stdio.mk			# │
 include libc/time/time.mk			# │
 include net/net.mk				# │

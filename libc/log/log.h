@@ -50,6 +50,7 @@ char *GetSymbolByAddr(int64_t);
 void PrintGarbage(void);
 void PrintGarbageNumeric(FILE *);
 void CheckForMemoryLeaks(void);
+void PrintWindowsMemory(const char *, size_t);
 
 #ifndef __STRICT_ANSI__
 

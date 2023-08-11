@@ -705,6 +705,10 @@ haveinc:
   return prec;
 }
 
+static int __fmt_noop(const char *, void *, size_t) {
+  return 0;
+}
+
 /**
  * Implements {,v}{,s{,n},{,{,x}as},f,d}printf domain-specific language.
  *
@@ -797,7 +801,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
 
   x = 0;
   lasterr = errno;
-  out = fn ? fn : (void *)_missingno;
+  out = fn ? fn : __fmt_noop;
 
   while (*format) {
     if (*format != '%') {

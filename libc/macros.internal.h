@@ -347,14 +347,6 @@
 	pop	\dest
 .endm
 
-//	Declares optional function.
-.macro	.optfn	fn:req
-	.globl	"\fn"
-	.weak	"\fn"
-	.equ	"\fn",_missingno
-	.type	"\fn",@function
-.endm
-
 //	Embeds fixed-width zero-filled string table.
 //	@note	zero-padded ≠ nul-terminated
 .macro	.fxstr	width head rest:vararg

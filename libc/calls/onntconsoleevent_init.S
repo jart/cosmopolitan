@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/macros.internal.h"
 .text.windows
 
@@ -25,7 +26,9 @@ __onntconsoleevent_nt:
 	.endfn	__onntconsoleevent_nt,globl,hidden
 
 	.init.start 300,_init_onntconsoleevent
+	testb	IsWindows()
+	jz	1f
 	ezlea	__onntconsoleevent_nt,cx
 	pushpop	1,%rdx
 	ntcall	__imp_SetConsoleCtrlHandler
-	.init.end 300,_init_onntconsoleevent,globl,hidden
+1:	.init.end 300,_init_onntconsoleevent,globl,hidden

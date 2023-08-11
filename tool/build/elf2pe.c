@@ -47,8 +47,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "third_party/getopt/getopt.internal.h"
 
-// see tool/hello/hello.c for an example program this can link
-// make -j8 m=tiny o/tiny/tool/hello/hello.com
+// see tool/hello/hello-pe.c for an example program this can link
+// make -j8 m=tiny o/tiny/tool/hello/hello-pe.com
 
 #define VERSION                     \
   "elf2pe v0.1\n"                   \
@@ -571,6 +571,7 @@ static struct Section *LoadSection(struct Elf *elf, int index,
 static void LoadSectionsIntoSegments(struct Elf *elf) {
   int i;
   Elf64_Shdr *shdr;
+  bool hasdataseg = false;
   struct Segment *segment = 0;
   for (i = 0; i < elf->ehdr->e_shnum; ++i) {
     if ((shdr = GetElfSectionHeaderAddress(elf->ehdr, elf->size, i)) &&
@@ -590,6 +591,7 @@ static void LoadSectionsIntoSegments(struct Elf *elf) {
         segment->vaddr_min = section->shdr->sh_addr;
         if (shdr->sh_type == SHT_PROGBITS)
           segment->offset_min = section->shdr->sh_offset;
+        hasdataseg |= segment->prot == (PROT_READ | PROT_WRITE);
       }
       segment->hasnobits |= shdr->sh_type == SHT_NOBITS;
       segment->hasprogbits |= shdr->sh_type == SHT_PROGBITS;
@@ -602,6 +604,16 @@ static void LoadSectionsIntoSegments(struct Elf *elf) {
     }
   }
   if (segment) {
+    dll_make_last(&elf->segments, &segment->elem);
+  }
+  if (elf->imports && !hasdataseg) {
+    // if the program we're linking is really tiny and it doesn't have
+    // either a .data or .bss section but it does import function from
+    // libraries, then create a synthetic .data segment for the pe iat
+    segment = NewSegment();
+    segment->align = 8;
+    segment->hasprogbits = true;
+    segment->prot = PROT_READ | PROT_WRITE;
     dll_make_last(&elf->segments, &segment->elem);
   }
 }
@@ -678,8 +690,8 @@ static struct Elf *OpenElf(const char *path) {
   if (!elf->strtab) Die(path, "elf doesn't have string table");
   elf->secstrs = GetElfSectionNameStringTable(elf->ehdr, elf->size);
   if (!elf->strtab) Die(path, "elf doesn't have section string table");
-  LoadSectionsIntoSegments(elf);
   LoadDllImports(elf);
+  LoadSectionsIntoSegments(elf);
   close(fd);
   return elf;
 }
@@ -745,11 +757,20 @@ static void PickPeSectionName(char *p, struct Elf *elf,
 
 static uint32_t GetPeSectionCharacteristics(struct Segment *s) {
   uint32_t x = 0;
-  if (s->prot & PROT_EXEC) x |= kNtPeSectionCntCode | kNtPeSectionMemExecute;
-  if (s->prot & PROT_READ) x |= kNtPeSectionMemRead;
-  if (s->prot & PROT_WRITE) x |= kNtPeSectionMemWrite;
-  if (s->hasnobits) x |= kNtPeSectionCntUninitializedData;
-  if (s->hasprogbits) x |= kNtPeSectionCntInitializedData;
+  if (s->prot & PROT_EXEC) {
+    x |= kNtPeSectionCntCode | kNtPeSectionMemExecute;
+  } else if (s->hasprogbits) {
+    x |= kNtPeSectionCntInitializedData;
+  }
+  if (s->prot & PROT_READ) {
+    x |= kNtPeSectionMemRead;
+  }
+  if (s->prot & PROT_WRITE) {
+    x |= kNtPeSectionMemWrite;
+  }
+  if (s->hasnobits) {
+    x |= kNtPeSectionCntUninitializedData;
+  }
   return x;
 }
 
@@ -780,9 +801,6 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
   mzhdr = (struct NtImageDosHeader *)fp;
   fp += sizeof(struct NtImageDosHeader);
   memcpy(mzhdr, "MZ", 2);
-  /* memcpy(mzhdr, "MZqFpD='\n\n", 10); */
-  /* mzhdr->e_oemid = 'J' | 'T' << 8; */
-  /* memcpy(mzhdr->e_res2, "' <<'@'\n", 8); */
 
   // embed the ms-dos stub and/or bios bootloader
   if (stubpath) {
@@ -796,10 +814,6 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
     }
     if (close(fd)) DieSys(stubpath);
   }
-
-  // begin the shell script
-  /* fp = stpcpy(fp, "\n@\n" */
-  /*                 "#'\"\n"); */
 
   // output portable executable magic
   fp = ALIGN_FILE(fp, 8);
@@ -956,6 +970,7 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
         struct Library *library = LIBRARY_CONTAINER(e);
         library->idt->ImportAddressTable = vp - opthdr->ImageBase;
         fp = mempcpy(fp, library->ilt, library->iltbytes);
+        segment->hasprogbits = true;
         for (struct Dll *g = dll_first(library->funcs); g;
              g = dll_next(library->funcs, g)) {
           struct Func *func = FUNC_CONTAINER(g);
@@ -1055,19 +1070,17 @@ int main(int argc, char *argv[]) {
 #ifndef NDEBUG
   ShowCrashReports();
 #endif
-
   // get program name
   prog = argv[0];
   if (!prog) prog = "elf2pe";
-
   // process flags
   GetOpts(argc, argv);
-
   // translate executable
   struct Elf *elf = OpenElf(argv[optind]);
-  char *buf = memalign(MAX_ALIGN, INT_MAX);
+  char *buf = memalign(MAX_ALIGN, 134217728);
   struct ImagePointer ip = GeneratePe(elf, buf, 0x00400000);
   if (creat(outpath, 0755) == -1) DieSys(elf->path);
   Pwrite(3, buf, ip.fp - buf, 0);
   if (close(3)) DieSys(elf->path);
+  // PrintElf(elf);
 }

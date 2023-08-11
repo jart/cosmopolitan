@@ -226,13 +226,14 @@ static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
   }
 }
 
-static void ShowIlt(int64_t *ilt) {
-  printf("\n");
-  showtitle(basename(path), "windows", "import lookup table (ilt)", 0, 0);
+static void ShowIlt(uint32_t rva) {
+  int64_t *ilt, *ilt0;
+  ilt = ilt0 = GetRva(rva);
   do {
     printf("\n");
     show(".quad", format(b1, "%#lx", *ilt),
-         _gc(xasprintf("@%#lx", (intptr_t)ilt - (intptr_t)mz)));
+         _gc(xasprintf("rva=%#lx off=%#lx", (char *)ilt - (char *)ilt0 + rva,
+                       (intptr_t)ilt - (intptr_t)mz)));
     if (*ilt) {
       char *hint = GetRva(*ilt);
       printf("/\t.short\t%d\t\t\t# @%#lx\n", READ16LE(hint),
@@ -244,11 +245,11 @@ static void ShowIlt(int64_t *ilt) {
   } while (*ilt++);
 }
 
-static void ShowIat(char *iat, size_t size) {
+static void ShowIdt(char *idt, size_t size) {
   char *p, *e;
   printf("\n");
-  showtitle(basename(path), "windows", "import address table (iat)", 0, 0);
-  for (p = iat, e = iat + size; p + 20 <= e; p += 20) {
+  showtitle(basename(path), "windows", "import descriptor table (idt)", 0, 0);
+  for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
     printf("\n");
     show(".long", format(b1, "%#x", READ32LE(p)),
          _gc(xasprintf("ImportLookupTable RVA @%#lx",
@@ -262,9 +263,18 @@ static void ShowIat(char *iat, size_t size) {
     show(".long", format(b1, "%#x", READ32LE(p + 16)),
          "ImportAddressTable RVA");
   }
-  for (p = iat, e = iat + size; p + 20 <= e; p += 20) {
+  for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
     if (READ32LE(p)) {
-      ShowIlt(GetRva(READ32LE(p)));
+      printf("\n");
+      showtitle(basename(path), "windows", "import lookup table (ilt)", 0, 0);
+      ShowIlt(READ32LE(p));
+    }
+  }
+  for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
+    if (READ32LE(p)) {
+      printf("\n");
+      showtitle(basename(path), "windows", "import address table (iat)", 0, 0);
+      ShowIlt(READ32LE(p + 16));
     }
   }
 }
@@ -342,7 +352,7 @@ static void showpeheader(struct NtImageNtHeaders *pe) {
                               pe->FileHeader.NumberOfSections *
                                   sizeof(struct NtImageSectionHeader)),
                pe->FileHeader.NumberOfSections);
-  ShowIat(GetRva(pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]
+  ShowIdt(GetRva(pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]
                      .VirtualAddress),
           pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport].Size);
 }

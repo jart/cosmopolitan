@@ -1044,7 +1044,8 @@ DLLEXE = DLLSTD
 //	   ││││││││        │       │┌6:Contains Initialized Data
 //	   ││││││││ o      │       ││┌5:Contains Code
 //	   ││││││││┌┴─┐rrrr│  ooror│││rorrr
-PETEXT = 0b01100000000000000000000001100000
+PETEXT = 0b01100000000000000000000000100000
+PERDAT = 0b01000000000000000000000001000000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
 
@@ -1107,6 +1108,19 @@ ape_pe:	.ascin	"PE",4
 	.previous
 
 	.section .pe.sections,"a",@progbits
+	.ascin	".rdata",8		// Section Name
+	.long	ape_rom_memsz		// Virtual Size or Physical Address
+	.long	ape_rom_rva		// Relative Virtual Address
+	.long	ape_rom_filesz		// Physical Size
+	.long	ape_rom_offset		// Physical Offset
+	.long	0			// Relocation Table Offset
+	.long	0			// Line Number Table Offset
+	.short	0			// Relocation Count
+	.short	0			// Line Number Count
+	.long	PERDAT			// Flags
+	.previous
+
+	.section .pe.sections,"a",@progbits
 	.ascin	".data",8		// Section Name
 	.long	ape_ram_memsz		// Virtual Size or Physical Address
 	.long	ape_ram_rva		// Relative Virtual Address
@@ -1128,6 +1142,7 @@ ape_pe:	.ascin	"PE",4
 	.type	ape_idata_idt,@object
 	.globl	ape_idata_idt,ape_idata_idtend
 	.hidden	ape_idata_idt,ape_idata_idtend
+	.balign	4
 ape_idata_idt:
 	.previous/*
 	...
@@ -1136,6 +1151,7 @@ ape_idata_idt:
 	*/.section .idata.ro.idt.3,"a",@progbits
 	.long	0,0,0,0,0
 ape_idata_idtend:
+	.byte	0
 	.previous
 
 	.section .piro.data.sort.iat.1,"aw",@progbits
@@ -1143,13 +1159,16 @@ ape_idata_idtend:
 	.type	ape_idata_iat,@object
 	.globl	ape_idata_iat,ape_idata_iatend
 	.hidden	ape_idata_iat,ape_idata_iatend
+	.balign	8
 ape_idata_iat:
 	.previous/*
 	...
 	decentralized content
 	...
 	*/.section .piro.data.sort.iat.3,"aw",@progbits
+	.quad	0
 ape_idata_iatend:
+	.byte	0
 	.previous
 
 #endif /* SupportsWindows() */
@@ -1259,8 +1278,6 @@ realmodeloader:
 	call	lhinit
 	call	rlinit
 	call	sinit4
-	.optfn	_start16
-	call	_start16
 	call	longmodeloader
 	.endfn	realmodeloader
 

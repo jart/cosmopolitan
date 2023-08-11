@@ -66,6 +66,18 @@
 #define IsXnuSilicon() 0
 #endif
 
+#if defined(__x86_64__)
+#define _ARCH_NAME "amd64"
+#elif defined(__aarch64__)
+#define _ARCH_NAME "arm64"
+#elif defined(__powerpc64__)
+#define _ARCH_NAME "ppc64"
+#elif defined(__s390x__)
+#define _ARCH_NAME "s390x"
+#elif defined(__riscv)
+#define _ARCH_NAME "riscv"
+#endif
+
 #define SupportsLinux()   ((SUPPORT_VECTOR & _HOSTLINUX) == _HOSTLINUX)
 #define SupportsMetal()   ((SUPPORT_VECTOR & _HOSTMETAL) == _HOSTMETAL)
 #define SupportsWindows() ((SUPPORT_VECTOR & _HOSTWINDOWS) == _HOSTWINDOWS)

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/nt/struct/imageimportbyname.internal.h"
 #include "libc/nt/struct/imageimportdescriptor.internal.h"
@@ -27,9 +28,28 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+
+/**
+ * @fileoverview Linter for PE static executable files.
+ *
+ * Generating PE files from scratch is tricky. There's numerous things
+ * that can go wrong, and operating systems don't explain what's wrong
+ * when they refuse to run a program. This program can help illuminate
+ * any issues with your generated binaries, with better error messages
+ */
+
+struct Exe {
+  char *map;
+  size_t size;
+  const char *path;
+  struct NtImageNtHeaders *pe;
+  struct NtImageSectionHeader *sections;
+  uint32_t section_count;
+};
 
 static wontreturn void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
@@ -39,6 +59,68 @@ static wontreturn void Die(const char *thing, const char *reason) {
 static wontreturn void DieSys(const char *thing) {
   perror(thing);
   exit(1);
+}
+
+static void LogPeSections(FILE *f, struct NtImageSectionHeader *p, size_t n) {
+  size_t i;
+  fprintf(f, "Name     Offset   RelativeVirtAddr   FileSiz  MemSiz   Flg\n");
+  for (i = 0; i < n; ++i) {
+    fprintf(f, "%-8.8s 0x%06lx 0x%016lx 0x%06lx 0x%06lx %c%c%c\n", p[i].Name,
+            p[i].PointerToRawData, p[i].VirtualAddress, p[i].SizeOfRawData,
+            p[i].Misc.VirtualSize,
+            p[i].Characteristics & kNtPeSectionMemRead ? 'R' : ' ',
+            p[i].Characteristics & kNtPeSectionMemWrite ? 'W' : ' ',
+            p[i].Characteristics & kNtPeSectionMemExecute ? 'E' : ' ');
+  }
+}
+
+// resolves relative virtual address
+//
+// this is a trivial process when an executable has been loaded properly
+// i.e. a separate mmap() call was made for each individual section; but
+// we've only mapped the executable file itself into memory; thus, we'll
+// need to remap a virtual address into a file offset to get the pointer
+//
+// returns pointer to image data, or null on error
+static void *GetRva(struct Exe *exe, uint32_t rva, uint32_t size) {
+  int i;
+  for (i = 0; i < exe->section_count; ++i) {
+    if (exe->sections[i].VirtualAddress <= rva &&
+        rva < exe->sections[i].VirtualAddress +
+                  exe->sections[i].Misc.VirtualSize) {
+      if (rva + size <=
+          exe->sections[i].VirtualAddress + exe->sections[i].Misc.VirtualSize) {
+        return exe->map + exe->sections[i].PointerToRawData +
+               (rva - exe->sections[i].VirtualAddress);
+      } else {
+        break;
+      }
+    }
+  }
+  return 0;
+}
+
+static bool HasControlCodes(const char *s) {
+  int c;
+  while ((c = *s++)) {
+    if (isascii(c) && iscntrl(c)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void CheckPeImportByName(struct Exe *exe, uint32_t rva) {
+  struct NtImageImportByName *hintname;
+  if (rva & 1)
+    Die(exe->path, "PE IMAGE_IMPORT_BY_NAME (hint name) structures must "
+                   "be 2-byte aligned");
+  if (!(hintname = GetRva(exe, rva, sizeof(struct NtImageImportByName))))
+    Die(exe->path, "PE import table RVA entry didn't reslove");
+  if (!*hintname->Name)
+    Die(exe->path, "PE imported function name is empty string");
+  if (HasControlCodes(hintname->Name))
+    Die(exe->path, "PE imported function name contains ascii control codes");
 }
 
 static void CheckPe(const char *path, char *map, size_t size) {
@@ -53,6 +135,8 @@ static void CheckPe(const char *path, char *map, size_t size) {
   uint32_t pe_offset;
   if ((pe_offset = READ32LE(map + 60)) >= size)
     Die(path, "PE header offset points past end of image");
+  if (pe_offset & 7)
+    Die(path, "PE header offset must possess an 8-byte alignment");
   if (pe_offset + sizeof(struct NtImageNtHeaders) > size)
     Die(path, "PE mandatory headers overlap end of image");
   struct NtImageNtHeaders *pe = (struct NtImageNtHeaders *)(map + pe_offset);
@@ -93,12 +177,14 @@ static void CheckPe(const char *path, char *map, size_t size) {
     Die(path, "PE FileHeader.Characteristics needs "
               "IMAGE_FILE_LARGE_ADDRESS_AWARE if ImageBase > INT_MAX");
 
-  // fixup pe header
+  // validate the size of the pe optional headers
   int len;
-  if (ckd_mul(&len, pe->OptionalHeader.NumberOfRvaAndSizes, 8) ||
-      ckd_add(&len, len, sizeof(struct NtImageOptionalHeader)) ||
-      pe->FileHeader.SizeOfOptionalHeader < len)
-    Die(path, "PE SizeOfOptionalHeader too small");
+  if (ckd_mul(&len, pe->OptionalHeader.NumberOfRvaAndSizes,
+              sizeof(struct NtImageDataDirectory)) ||
+      ckd_add(&len, len, sizeof(struct NtImageOptionalHeader)))
+    Die(path, "encountered overflow computing PE SizeOfOptionalHeader");
+  if (pe->FileHeader.SizeOfOptionalHeader != len)
+    Die(path, "PE SizeOfOptionalHeader had incorrect value");
   if (len > size || (char *)&pe->OptionalHeader + len > map + size)
     Die(path, "PE OptionalHeader overflows image");
 
@@ -167,34 +253,60 @@ static void CheckPe(const char *path, char *map, size_t size) {
     }
   }
 
-#if 0  // broken
+  // create an object for our portable executable
+  struct Exe exe[1] = {{
+      .pe = pe,
+      .path = path,
+      .map = map,
+      .size = size,
+      .sections = sections,
+      .section_count = pe->FileHeader.NumberOfSections,
+  }};
+
   // validate dll imports
-  if (pe->OptionalHeader.NumberOfRvaAndSizes >= 2 &&
-      pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]
-          .VirtualAddress) {
-    struct NtImageImportDescriptor *idt =
-        (struct NtImageImportDescriptor
-             *)(map +
-                pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]
-                    .VirtualAddress);
-    for (int i = 0;; ++i) {
-      if ((char *)(idt + i + sizeof(*idt)) > map + size)
-        Die(path, "PE IMAGE_DIRECTORY_ENTRY_IMPORT points outside image");
-      if (!idt[i].ImportLookupTable) break;
-      uint64_t *ilt = (uint64_t *)(map + idt[i].ImportLookupTable);
-      for (int j = 0;; ++j) {
-        if ((char *)(ilt + j + sizeof(*ilt)) > map + size)
-          Die(path, "PE ImportLookupTable points outside image");
-        if (!ilt[j]) break;
-        struct NtImageImportByName *func =
-            (struct NtImageImportByName *)(map + ilt[j]);
+  struct NtImageDataDirectory *ddImports =
+      exe->pe->OptionalHeader.DataDirectory + kNtImageDirectoryEntryImport;
+  if (exe->pe->OptionalHeader.NumberOfRvaAndSizes >= 2 && ddImports->Size) {
+    if (ddImports->Size % sizeof(struct NtImageImportDescriptor) != 0)
+      Die(exe->path, "PE Imports data directory entry Size should be a "
+                     "multiple of sizeof(IMAGE_IMPORT_DESCRIPTOR)");
+    if (ddImports->VirtualAddress & 3)
+      Die(exe->path, "PE IMAGE_IMPORT_DESCRIPTOR table must be 4-byte aligned");
+    struct NtImageImportDescriptor *idt;
+    if (!(idt = GetRva(exe, ddImports->VirtualAddress, ddImports->Size)))
+      Die(exe->path, "couldn't resolve VirtualAddress/Size RVA of PE Import "
+                     "Directory Table to within a defined PE section");
+    if (idt->ImportLookupTable >= exe->size)
+      Die(exe->path, "Import Directory Table VirtualAddress/Size RVA resolved "
+                     "to dense unrelated binary content");
+    for (int i = 0; idt->ImportLookupTable; ++i, ++idt) {
+      char *dllname;
+      if (!(dllname = GetRva(exe, idt->DllNameRva, 2)))
+        Die(exe->path, "PE DllNameRva doesn't resolve to a PE section");
+      if (!*dllname)
+        Die(exe->path, "PE import DllNameRva pointed to empty string");
+      if (HasControlCodes(dllname))
+        Die(exe->path, "PE import DllNameRva contained ascii control codes");
+      if (idt->ImportLookupTable & 7)
+        Die(exe->path, "PE ImportLookupTable must be 8-byte aligned");
+      if (idt->ImportAddressTable & 7)
+        Die(exe->path, "PE ImportAddressTable must be 8-byte aligned");
+      uint64_t *ilt, *iat;
+      if (!(ilt = GetRva(exe, idt->ImportLookupTable, 8)))
+        Die(exe->path, "PE ImportLookupTable RVA didn't resolve to a section");
+      if (!(iat = GetRva(exe, idt->ImportAddressTable, 8)))
+        Die(exe->path, "PE ImportAddressTable RVA didn't resolve to a section");
+      for (int j = 0;; ++j, ++ilt, ++iat) {
+        if (*ilt != *iat) {
+          kprintf("i=%d j=%d ilt=%#x iat=%#x\n", i, j, *ilt, *iat);
+          Die(exe->path, "PE ImportLookupTable and ImportAddressTable should "
+                         "have identical content");
+        }
+        if (!*ilt) break;
+        CheckPeImportByName(exe, *ilt);
       }
-      uint64_t *iat = (uint64_t *)(map + idt[i].ImportAddressTable);
-      if ((char *)(iat + sizeof(*iat)) > map + size)
-        Die(path, "PE ImportAddressTable points outside image");
     }
   }
-#endif
 }
 
 int main(int argc, char *argv[]) {
@@ -202,6 +314,9 @@ int main(int argc, char *argv[]) {
   void *map;
   ssize_t size;
   const char *path;
+#ifndef NDEBUG
+  ShowCrashReports();
+#endif
   for (i = 1; i < argc; ++i) {
     path = argv[i];
     if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);

@@ -32,10 +32,12 @@ kNtSystemDirectory:
 
 	.init.start 300,_init_kNtSystemDirectory
 #if SupportsWindows()
+	testb	IsWindows()
+	jz	1f
 	pushpop	BYTES,%rdx
 	mov	__imp_GetSystemDirectoryA(%rip),%rax
 	call	__getntsyspath
-#else
-	add	$BYTES,%rdi
+	jmp	2f
 #endif
-	.init.end 300,_init_kNtSystemDirectory
+1:	add	$BYTES,%rdi
+2:	.init.end 300,_init_kNtSystemDirectory

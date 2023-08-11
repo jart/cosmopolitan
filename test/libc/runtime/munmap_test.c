@@ -19,6 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -200,12 +202,12 @@ TEST(munmap, tinyFile_preciseUnmapSize) {
 
 // clang-format off
 TEST(munmap, tinyFile_mapThriceUnmapOnce) {
-  char *p = (char *)0x02000000;
+  char *p = (char *)0x000063d646e20000;
   ASSERT_SYS(0, 3, open("doge", O_RDWR | O_CREAT | O_TRUNC, 0644));
   ASSERT_SYS (0, 5, write(3, "hello", 5));
-  ASSERT_NE(MAP_FAILED, mmap(p+FRAMESIZE*0, FRAMESIZE, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, -1, 0));
-  ASSERT_NE(MAP_FAILED, mmap(p+FRAMESIZE*1, 5, PROT_READ, MAP_PRIVATE|MAP_FIXED, 3, 0));
-  ASSERT_NE(MAP_FAILED, mmap(p+FRAMESIZE*3, 5, PROT_READ, MAP_PRIVATE|MAP_FIXED, 3, 0));
+  ASSERT_EQ(p+FRAMESIZE*0, mmap(p+FRAMESIZE*0, FRAMESIZE, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, -1, 0));
+  ASSERT_EQ(p+FRAMESIZE*1, mmap(p+FRAMESIZE*1, 5, PROT_READ, MAP_PRIVATE|MAP_FIXED, 3, 0));
+  ASSERT_EQ(p+FRAMESIZE*3, mmap(p+FRAMESIZE*3, 5, PROT_READ, MAP_PRIVATE|MAP_FIXED, 3, 0));
   ASSERT_SYS(0, 0, close(3));
   EXPECT_TRUE(testlib_memoryexists(p+FRAMESIZE*0));
   EXPECT_TRUE(testlib_memoryexists(p+FRAMESIZE*1));
