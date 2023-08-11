@@ -19,6 +19,7 @@ extern const unsigned MADV_REMOVE;
 extern const unsigned MADV_SEQUENTIAL;
 extern const unsigned MADV_UNMERGEABLE;
 extern const unsigned MADV_WILLNEED;
+extern const unsigned MADV_SOFT_OFFLINE;
 
 #define MADV_NORMAL     0
 #define MADV_RANDOM     1

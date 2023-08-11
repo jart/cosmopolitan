@@ -269,6 +269,7 @@ syscon	madv	MADV_DOFORK				11			11			127			127			127			127			127			127			# TODO(
 syscon	madv	MADV_DONTDUMP				16			16			127			127			127			127			127			127			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
 syscon	madv	MADV_DONTFORK				10			10			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	madv	MADV_HWPOISON				100			100			127			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_SOFT_OFFLINE				101			101			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_REMOVE				9			9			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	fadv	POSIX_FADV_NOREUSE			5			5			127			127			5			127			5			127			# wut
 
