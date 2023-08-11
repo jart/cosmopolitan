@@ -483,8 +483,8 @@ void HandleClient(void) {
           goto TerminateJob;
         }
         if (received > 0) {
-          WARNF("%s client sent %d bytes unexpected bytes so killing job",
-                exename, received);
+          WARNF("%s client sent %d unexpected bytes so killing job", exename,
+                received);
           goto TerminateJob;
         }
         if (received != MBEDTLS_ERR_SSL_WANT_READ) {

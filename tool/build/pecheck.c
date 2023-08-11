@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/nt/struct/imageimportbyname.internal.h"
 #include "libc/nt/struct/imageimportdescriptor.internal.h"
@@ -199,11 +198,11 @@ static void CheckPe(const char *path, char *map, size_t size) {
   if (pe->OptionalHeader.SizeOfHeaders >= pe->OptionalHeader.SizeOfImage)
     Die(path, "PE SizeOfHeaders < SizeOfImage must be the case");
   if (pe->OptionalHeader.SizeOfStackCommit >> 32)
-    Die(path, "PE SizeOfStackReserve can't exceed 4GB");
+    Die(path, "PE SizeOfStackCommit can't exceed 4GB");
   if (pe->OptionalHeader.SizeOfStackReserve >> 32)
     Die(path, "PE SizeOfStackReserve can't exceed 4GB");
   if (pe->OptionalHeader.SizeOfHeapCommit >> 32)
-    Die(path, "PE SizeOfHeapReserve can't exceed 4GB");
+    Die(path, "PE SizeOfHeapCommit can't exceed 4GB");
   if (pe->OptionalHeader.SizeOfHeapReserve >> 32)
     Die(path, "PE SizeOfHeapReserve can't exceed 4GB");
 
@@ -231,7 +230,7 @@ static void CheckPe(const char *path, char *map, size_t size) {
         kNtPeSectionCntUninitializedData) {
       if (sections[i].SizeOfRawData)
         Die(path, "PE SizeOfRawData should be zero for pure BSS section");
-      if (sections[i].SizeOfRawData)
+      if (sections[i].PointerToRawData)
         Die(path, "PE PointerToRawData should be zero for pure BSS section");
     }
     if (!i) {
@@ -298,7 +297,6 @@ static void CheckPe(const char *path, char *map, size_t size) {
         Die(exe->path, "PE ImportAddressTable RVA didn't resolve to a section");
       for (int j = 0;; ++j, ++ilt, ++iat) {
         if (*ilt != *iat) {
-          kprintf("i=%d j=%d ilt=%#x iat=%#x\n", i, j, *ilt, *iat);
           Die(exe->path, "PE ImportLookupTable and ImportAddressTable should "
                          "have identical content");
         }

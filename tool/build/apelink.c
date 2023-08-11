@@ -747,11 +747,11 @@ static int ValidatePeImage(char *img, size_t imgsize,    //
   if (pe->OptionalHeader.SizeOfHeaders >= pe->OptionalHeader.SizeOfImage)
     Die(path, "PE SizeOfHeaders < SizeOfImage must be the case");
   if (pe->OptionalHeader.SizeOfStackCommit >> 32)
-    Die(path, "PE SizeOfStackReserve can't exceed 4GB");
+    Die(path, "PE SizeOfStackCommit can't exceed 4GB");
   if (pe->OptionalHeader.SizeOfStackReserve >> 32)
     Die(path, "PE SizeOfStackReserve can't exceed 4GB");
   if (pe->OptionalHeader.SizeOfHeapCommit >> 32)
-    Die(path, "PE SizeOfHeapReserve can't exceed 4GB");
+    Die(path, "PE SizeOfHeapCommit can't exceed 4GB");
   if (pe->OptionalHeader.SizeOfHeapReserve >> 32)
     Die(path, "PE SizeOfHeapReserve can't exceed 4GB");
 
@@ -779,7 +779,7 @@ static int ValidatePeImage(char *img, size_t imgsize,    //
         kNtPeSectionCntUninitializedData) {
       if (sections[i].SizeOfRawData)
         Die(path, "PE SizeOfRawData should be zero for pure BSS section");
-      if (sections[i].SizeOfRawData)
+      if (sections[i].PointerToRawData)
         Die(path, "PE PointerToRawData should be zero for pure BSS section");
     }
     if (!i) {
