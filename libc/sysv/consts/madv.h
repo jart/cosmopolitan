@@ -20,6 +20,7 @@ extern const unsigned MADV_SEQUENTIAL;
 extern const unsigned MADV_UNMERGEABLE;
 extern const unsigned MADV_WILLNEED;
 extern const unsigned MADV_SOFT_OFFLINE;
+extern const unsigned MADV_WIPEONFORK;
 
 #define MADV_NORMAL     0
 #define MADV_RANDOM     1
