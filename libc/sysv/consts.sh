@@ -272,6 +272,7 @@ syscon	madv	MADV_PAGEOUT				21			21			127			127			127			127			127			127			# TODO
 syscon	madv	MADV_POPULATE_READ				22			22			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_POPULATE_WRITE				23			23			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_DONTNEED_LOCKED				24			24			127			127			127			127			127			127			# TODO: add support ?
+syscon	madv	MADV_COLLAPSE				25			25			127			127			127			127			127			127			# TODO: add support ?
 syscon	madv	MADV_DOFORK				11			11			127			127			127			127			127			127			# TODO(jart): what is it?
 syscon	madv	MADV_DONTDUMP				16			16			127			127			127			127			127			127			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
 syscon	madv	MADV_DONTFORK				10			10			127			127			127			127			127			127			# TODO(jart): what is it?

@@ -27,6 +27,7 @@ extern const unsigned MADV_PAGEOUT;
 extern const unsigned MADV_POPULATE_READ;
 extern const unsigned MADV_POPULATE_WRITE;
 extern const unsigned MADV_DONTNEED_LOCKED;
+extern const unsigned MADV_COLLAPSE;
 
 #define MADV_NORMAL     0
 #define MADV_RANDOM     1
