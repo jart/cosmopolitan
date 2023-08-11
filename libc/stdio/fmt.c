@@ -244,15 +244,15 @@ static int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
   unsigned len, count, digit;
   char buf[BUFFER_SIZE];
   len = 0;
-  /* we check for log2base != 3 because otherwise we'll print nothing for a
-   * value of 0 with precision 0 when # mandates that one be printed */
+  // we check for log2base!=3, since otherwise we'll print nothing for
+  // a value of 0 with precision 0 when # mandates that one be printed
   if (!value && log2base != 3) flags &= ~FLAGS_HASH;
   if (value || !(flags & FLAGS_PRECISION)) {
     count = 0;
     do {
       if (!log2base) {
         if (value <= UINT64_MAX) {
-          value = DivMod10(value, &digit);
+          value = __divmod10(value, &digit);
         } else {
           value = __udivmodti4(value, 10, &remainder);
           digit = remainder;

@@ -432,7 +432,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
         FormatUnsigned:
           if (x && hash) sign = hash;
           for (i = j = 0;;) {
-            x = DivMod10(x, &rem);
+            x = __divmod10(x, &rem);
             z[i++ & 127] = '0' + rem;
             if (pdot ? i >= prec : !x) break;
             if (quot && ++j == 3) {

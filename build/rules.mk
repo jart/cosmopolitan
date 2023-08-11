@@ -17,7 +17,6 @@
 MAKEFLAGS += --no-builtin-rules
 
 MAKE_ZIPCOPY = $(COMPILE) -AZIPCOPY -wT$@ $(ZIPCOPY) $< $@
-MAKE_PECHECK = $(COMPILE) -APECHECK -wT$@ $(PECHECK) $@
 ifneq ($(ARCH), aarch64)
 MAKE_OBJCOPY = $(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@ && $(MAKE_ZIPCOPY)
 else

@@ -1,9 +1,6 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
-# qemu-user execve() is broken so we need to build/bootstrap/ commands
-ifeq ($(ARCH), x86_64)
-
 PKGS += TOOL_HELLO
 
 TOOL_HELLO_FILES := $(wildcard tool/hello/*)
@@ -81,8 +78,3 @@ o/$(MODE)/tool/hello/hello-pe.com:				\
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -o $@ $<
 
 $(TOOL_HELLO_OBJS): tool/hello/hello.mk
-
-.PHONY: o/$(MODE)/tool/hello
-o/$(MODE)/tool/hello: $(TOOL_HELLO_BINS)
-
-endif
