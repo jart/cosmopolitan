@@ -25,7 +25,7 @@
 #endif /* !defined TZDIR */
 
 #ifndef TZDEFAULT
-#define TZDEFAULT	"GMT"
+#define TZDEFAULT	"/etc/localtime"
 #endif /* !defined TZDEFAULT */
 
 #ifndef TZDEFRULES
