@@ -43,18 +43,23 @@
   "copyright 2023 justine alexandra roberts tunney\n"
 
 #define USAGE                                               \
-  "usage: assimilate.com [-hvfem] COMFILE...\n"             \
+  " [-xapembfchv] [-o PATH] FILE...\n"                      \
   "  -h          show help\n"                               \
   "  -v          show version\n"                            \
   "  -f          ignore soft errors\n"                      \
+  "  -b          don't remove freebsd from elf os/abi\n"    \
+  "  -c          clobber input path w/o making backup\n"    \
   "  -e          convert to elf regardless of host os\n"    \
   "  -m          convert to macho regardless of host os\n"  \
   "  -x          convert to amd64 regardless of host cpu\n" \
-  "  -a          convert to arm64 regardless of host cpu\n"
+  "  -a          convert to arm64 regardless of host cpu\n" \
+  "  -p          convert to ppc64 regardless of host cpu\n" \
+  "  -o PATH     write modified binary to different file\n"
 
 #define ARCH_NATIVE 0
 #define ARCH_AMD64  1
 #define ARCH_ARM64  2
+#define ARCH_PPC64  3
 
 #define FORMAT_NATIVE 0
 #define FORMAT_ELF    1
@@ -64,10 +69,13 @@
 static int g_arch;
 static int g_format;
 static bool g_force;
+static bool g_clobber;
+static bool g_freebsd;
 static const char *prog;
 static const char *path;
-static char errstr[128];
+static const char *outpath;
 static bool got_format_flag;
+static char bakpath[PATH_MAX];
 
 static wontreturn void Die(const char *thing, const char *reason) {
   const char *native_explainer;
@@ -99,10 +107,22 @@ static int Atoi(const char *s) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "hvfemxa")) != -1) {
+  if (IsFreebsd()) {
+    g_freebsd = true;
+  }
+  while ((opt = getopt(argc, argv, "hvfemxapbco:")) != -1) {
     switch (opt) {
       case 'f':
         g_force = true;
+        break;
+      case 'c':
+        g_clobber = true;
+        break;
+      case 'b':
+        g_freebsd = true;
+        break;
+      case 'o':
+        outpath = optarg;
         break;
       case 'e':
         g_format = FORMAT_ELF;
@@ -118,14 +138,17 @@ static void GetOpts(int argc, char *argv[]) {
       case 'a':
         g_arch = ARCH_ARM64;
         break;
+      case 'p':
+        g_arch = ARCH_PPC64;
+        break;
       case 'v':
         tinyprint(1, VERSION, NULL);
         exit(0);
       case 'h':
-        tinyprint(1, VERSION, USAGE, NULL);
+        tinyprint(1, VERSION, "usage: ", prog, USAGE, NULL);
         exit(0);
       default:
-        tinyprint(2, VERSION, USAGE, NULL);
+        tinyprint(2, VERSION, "usage: ", prog, USAGE, NULL);
         exit(1);
     }
   }
@@ -144,17 +167,31 @@ static void GetOpts(int argc, char *argv[]) {
   if (g_arch == ARCH_NATIVE) {
 #ifdef __aarch64__
     g_arch = ARCH_ARM64;
+#elif defined(__powerpc64__)
+    g_arch = ARCH_PPC64;
 #else
     g_arch = ARCH_AMD64;
 #endif
   }
-  if (g_format == FORMAT_PE && g_arch == ARCH_ARM64) {
-    Die(prog, "native arm64 on windows not supported yet");
+  if (g_format == FORMAT_PE && g_arch != ARCH_AMD64) {
+    Die(prog, "native non-x86 on windows not supported yet");
   }
 }
 
-static void GetElfHeader(char ehdr[hasatleast 64], const char *image,
-                         size_t n) {
+static int GetElfArch(void) {
+  switch (g_arch) {
+    case ARCH_AMD64:
+      return EM_NEXGEN32E;
+    case ARCH_ARM64:
+      return EM_AARCH64;
+    case ARCH_PPC64:
+      return EM_PPC64;
+    default:
+      unassert(false);
+  }
+}
+
+static void GetElfHeader(Elf64_Ehdr *ehdr, const char *image, size_t n) {
   int c, i;
   char *p, *e;
   for (p = image, e = p + MIN(n, 8192); p < e; ++p) {
@@ -175,16 +212,15 @@ static void GetElfHeader(char ehdr[hasatleast 64], const char *image,
         }
       }
       if (i < 64) {
-        ehdr[i++] = c;
+        ((char *)ehdr)[i++] = c;
       } else {
         goto TryAgain;
       }
     }
-    if (i != 64 ||                                //
-        READ32LE(ehdr) != READ32LE("\177ELF") ||  //
-        ehdr[EI_CLASS] == ELFCLASS32 ||           //
-        READ16LE(ehdr + 18) !=
-            (g_arch == ARCH_AMD64 ? EM_NEXGEN32E : EM_AARCH64)) {
+    if (i != sizeof(*ehdr) ||                              //
+        READ32LE(ehdr->e_ident) != READ32LE("\177ELF") ||  //
+        ehdr->e_ident[EI_CLASS] == ELFCLASS32 ||           //
+        ehdr->e_machine != GetElfArch()) {
       goto TryAgain;
     }
     return;
@@ -196,8 +232,24 @@ static void GetElfHeader(char ehdr[hasatleast 64], const char *image,
     case ARCH_ARM64:
       Die(path, "printf statement not found in first 8192 bytes of image "
                 "containing elf64 ehdr for arm64");
+    case ARCH_PPC64:
+      Die(path, "printf statement not found in first 8192 bytes of image "
+                "containing elf64 ehdr for ppc64");
     default:
-      __builtin_unreachable();
+      unassert(false);
+  }
+}
+
+static int GetMachoArch(void) {
+  switch (g_arch) {
+    case ARCH_AMD64:
+      return MAC_CPU_NEXGEN32E;
+    case ARCH_ARM64:
+      return MAC_CPU_ARM64;
+    case ARCH_PPC64:
+      return MAC_CPU_POWERPC64;
+    default:
+      unassert(false);
   }
 }
 
@@ -208,9 +260,9 @@ static void GetMachoPayload(const char *image, size_t imagesize,
   regmatch_t rm[1 + 13] = {0};
   int rc, skip, count, bs, offset, size;
 
-  if ((script = memmem(image, imagesize, "'\n#'\"\n", 6))) {
+  if ((script = memmem(image, MIN(imagesize, 4096), "'\n#'\"\n", 6))) {
     script += 6;
-  } else if ((script = memmem(image, imagesize, "#'\"\n", 4))) {
+  } else if ((script = memmem(image, MIN(imagesize, 4096), "#'\"\n", 4))) {
     script += 4;
   } else {
     Die(path, "ape shell script not found");
@@ -254,9 +306,14 @@ TryAgain:
       case ARCH_AMD64:
         Die(path, "ape macho dd command for amd64 not found");
       case ARCH_ARM64:
-        Die(path, "ape macho dd command for arm64 not found");
+        Die(path, "ape macho dd command for arm64 not found; by convention ape "
+                  "executables are run on apple silicon only as elf binaries, "
+                  "which are loaded by the ape-m1.c ape loader program; thus "
+                  "consider passing the -ae flags to assimilate to arm64 elf");
+      case ARCH_PPC64:
+        Die(path, "ape macho dd command for ppc64 not found");
       default:
-        __builtin_unreachable();
+        unassert(false);
     }
   }
   i += rm[13].rm_eo;
@@ -287,8 +344,7 @@ TryAgain:
   }
 
   if (READ32LE(image + offset) != 0xFEEDFACE + 1 ||
-      READ32LE(image + offset + 4) !=
-          (g_arch == ARCH_AMD64 ? MAC_CPU_NEXGEN32E : MAC_CPU_ARM64)) {
+      READ32LE(image + offset + 4) != GetMachoArch()) {
     goto TryAgain;
   }
 
@@ -297,28 +353,94 @@ TryAgain:
   regfree(&rx);
 }
 
-static void AssimilateElf(char *p, size_t n) {
-  char ehdr[64];
-  GetElfHeader(ehdr, p, n);
-  memcpy(p, ehdr, 64);
-  msync(p, 4096, MS_SYNC);
+static ssize_t Write(int fd, const void *data, size_t size) {
+  ssize_t rc;
+  const char *p, *e;
+  for (p = data, e = p + size; p < e; p += (size_t)rc) {
+    if ((rc = write(fd, p, e - p)) == -1) {
+      return -1;
+    }
+  }
+  return size;
 }
 
-static void AssimilateMacho(char *p, size_t n) {
-  int offset, size;
-  GetMachoPayload(p, n, &offset, &size);
-  memmove(p, p + offset, size);
-  msync(p, n, MS_SYNC);
+static ssize_t Pwrite(int fd, const void *data, size_t size, uint64_t offset) {
+  ssize_t rc;
+  const char *p, *e;
+  for (p = data, e = p + size; p < e; p += (size_t)rc, offset += (size_t)rc) {
+    if ((rc = pwrite(fd, p, e - p, offset)) == -1) {
+      return -1;
+    }
+  }
+  return size;
+}
+
+static int GetMode(int fd) {
+  struct stat st;
+  if (fstat(fd, &st)) DieSys(path);
+  return st.st_mode & 0777;
+}
+
+static void CopyFile(int infd, const char *map, size_t size,  //
+                     void *hdr, size_t hdrsize) {
+  int outfd;
+  if (!outpath) return;
+  if ((outfd = creat(outpath, GetMode(infd))) == -1) DieSys(outpath);
+  if (hdrsize && Write(outfd, hdr, hdrsize) == -1) DieSys(outpath);
+  if (Write(outfd, map + hdrsize, size - hdrsize) == -1) DieSys(outpath);
+  if (close(outfd)) DieSys(outpath);
+}
+
+static void WriteOutput(int infd, const char *map, size_t size,  //
+                        void *hdr, size_t hdrsize) {
+  int outfd, oflags, omode;
+  if (outpath) {
+    CopyFile(infd, map, size, hdr, hdrsize);
+  } else if (g_clobber) {
+    if (Pwrite(infd, hdr, hdrsize, 0) == -1) DieSys(path);
+  } else {
+    omode = GetMode(infd);
+    oflags = O_WRONLY | O_CREAT | (g_force ? O_TRUNC : O_EXCL);
+    strlcat(bakpath, path, sizeof(bakpath));
+    if (strlcat(bakpath, ".bak", sizeof(bakpath)) >= sizeof(bakpath)) {
+      Die(path, "filename too long");
+    }
+    if ((outfd = open(bakpath, oflags, omode)) == -1) DieSys(bakpath);
+    if (Write(outfd, map, size) == -1) DieSys(bakpath);
+    if (close(outfd)) DieSys(bakpath);
+    if (Pwrite(infd, hdr, hdrsize, 0) == -1) DieSys(path);
+  }
+}
+
+static void AssimilateElf(int infd, const char *map, size_t size) {
+  Elf64_Ehdr ehdr;
+  GetElfHeader(&ehdr, map, size);
+  if (!g_freebsd && ehdr.e_ident[EI_OSABI] == ELFOSABI_FREEBSD) {
+    // none of the kernels except freebsd care about the osabi. however
+    // gdb does whine about it when trying to debug ape elf programs on
+    // other platforms like linux. so when assimilating, it makes sense
+    // to fall back to the more generic system v os abi.
+    ehdr.e_ident[EI_OSABI] = ELFOSABI_SYSV;
+  }
+  WriteOutput(infd, map, size, &ehdr, sizeof(ehdr));
+}
+
+static void AssimilateMacho(int infd, const char *map, size_t size) {
+  int macho_offset, macho_size;
+  GetMachoPayload(map, size, &macho_offset, &macho_size);
+  WriteOutput(infd, map, size, map + macho_offset, macho_size);
 }
 
 static void Assimilate(void) {
   int fd;
   char *p;
+  int oflags;
   ssize_t size;
-  if ((fd = open(path, O_RDWR)) == -1) DieSys(path);
+  oflags = outpath ? O_RDONLY : O_RDWR;
+  if ((fd = open(path, oflags)) == -1) DieSys(path);
   if ((size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
   if (size < 64) Die(path, "ape executables must be at least 64 bytes");
-  p = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  p = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (p == MAP_FAILED) DieSys(path);
 
   if (READ32LE(p) == READ32LE("\177ELF")) {
@@ -334,12 +456,15 @@ static void Assimilate(void) {
             switch (ehdr->e_machine) {
               case EM_NEXGEN32E:
                 if (g_force) {
+                  CopyFile(fd, p, size, 0, 0);
                   exit(0);
                 } else {
                   Die(path, "already an elf amd64 executable");
                 }
               case EM_AARCH64:
                 Die(path, "can't assimilate elf arm64 to elf amd64");
+              case EM_PPC64:
+                Die(path, "can't assimilate elf ppc64 to elf amd64");
               default:
                 Die(path, "elf has unsupported architecture");
             }
@@ -347,24 +472,43 @@ static void Assimilate(void) {
             switch (ehdr->e_machine) {
               case EM_AARCH64:
                 if (g_force) {
+                  CopyFile(fd, p, size, 0, 0);
                   exit(0);
                 } else {
                   Die(path, "already an elf arm64 executable");
                 }
               case EM_NEXGEN32E:
                 Die(path, "can't assimilate elf amd64 to elf arm64");
+              case EM_PPC64:
+                Die(path, "can't assimilate elf ppc64 to elf arm64");
+              default:
+                Die(path, "elf has unsupported architecture");
+            }
+          case ARCH_PPC64:
+            switch (ehdr->e_machine) {
+              case EM_PPC64:
+                if (g_force) {
+                  CopyFile(fd, p, size, 0, 0);
+                  exit(0);
+                } else {
+                  Die(path, "already an elf ppc64 executable");
+                }
+              case EM_NEXGEN32E:
+                Die(path, "can't assimilate elf amd64 to elf ppc64");
+              case EM_AARCH64:
+                Die(path, "can't assimilate elf arm64 to elf ppc64");
               default:
                 Die(path, "elf has unsupported architecture");
             }
           default:
-            __builtin_unreachable();
+            unassert(false);
         }
       case FORMAT_MACHO:
         Die(path, "can't assimilate elf to macho");
       case FORMAT_PE:
         Die(path, "can't assimilate elf to pe (try elf2pe.com)");
       default:
-        __builtin_unreachable();
+        unassert(false);
     }
   }
 
@@ -378,12 +522,15 @@ static void Assimilate(void) {
             switch (macho->arch) {
               case MAC_CPU_NEXGEN32E:
                 if (g_force) {
+                  CopyFile(fd, p, size, 0, 0);
                   exit(0);
                 } else {
                   Die(path, "already a macho amd64 executable");
                 }
               case MAC_CPU_ARM64:
                 Die(path, "can't assimilate macho arm64 to macho amd64");
+              case MAC_CPU_POWERPC64:
+                Die(path, "can't assimilate macho ppc64 to macho amd64");
               default:
                 Die(path, "macho has unsupported architecture");
             }
@@ -391,24 +538,43 @@ static void Assimilate(void) {
             switch (macho->arch) {
               case MAC_CPU_ARM64:
                 if (g_force) {
+                  CopyFile(fd, p, size, 0, 0);
                   exit(0);
                 } else {
                   Die(path, "already a macho arm64 executable");
                 }
               case MAC_CPU_NEXGEN32E:
                 Die(path, "can't assimilate macho amd64 to macho arm64");
+              case MAC_CPU_POWERPC64:
+                Die(path, "can't assimilate macho ppc64 to macho arm64");
+              default:
+                Die(path, "macho has unsupported architecture");
+            }
+          case ARCH_PPC64:
+            switch (macho->arch) {
+              case MAC_CPU_POWERPC64:
+                if (g_force) {
+                  CopyFile(fd, p, size, 0, 0);
+                  exit(0);
+                } else {
+                  Die(path, "already a macho ppc64 executable");
+                }
+              case MAC_CPU_NEXGEN32E:
+                Die(path, "can't assimilate macho amd64 to macho ppc64");
+              case MAC_CPU_ARM64:
+                Die(path, "can't assimilate macho arm64 to macho ppc64");
               default:
                 Die(path, "macho has unsupported architecture");
             }
           default:
-            __builtin_unreachable();
+            unassert(false);
         }
       case FORMAT_ELF:
         Die(path, "can't assimilate macho to elf");
       case FORMAT_PE:
         Die(path, "can't assimilate macho to pe");
       default:
-        __builtin_unreachable();
+        unassert(false);
     }
   }
 
@@ -421,6 +587,7 @@ static void Assimilate(void) {
   if (g_format == FORMAT_PE) {
     if (READ16LE(p) == READ16LE("MZ")) {
       if (g_force) {
+        CopyFile(fd, p, size, 0, 0);
         exit(0);
       } else {
         Die(path, "this ape file is already a pe file");
@@ -431,9 +598,9 @@ static void Assimilate(void) {
   }
 
   if (g_format == FORMAT_ELF) {
-    AssimilateElf(p, size);
+    AssimilateElf(fd, p, size);
   } else if (g_format == FORMAT_MACHO) {
-    AssimilateMacho(p, size);
+    AssimilateMacho(fd, p, size);
   }
 
   if (munmap(p, size)) DieSys(path);
@@ -441,8 +608,7 @@ static void Assimilate(void) {
 }
 
 int main(int argc, char *argv[]) {
-  prog = argv[0];
-  if (!prog) prog = "assimilate";
+  prog = program_invocation_short_name;
   GetOpts(argc, argv);
   for (int i = optind; i < argc; ++i) {
     path = argv[i];
