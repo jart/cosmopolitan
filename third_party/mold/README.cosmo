@@ -1,0 +1,24 @@
+DESCRIPTION
+
+  Mold: A Modern Linker 🦠
+
+  mold is a faster drop-in replacement for existing Unix linkers.
+  It is several times quicker than the LLVM lld linker, the second-fastest open-source linker,
+  which I initially developed a few years ago. mold aims to enhance developer productivity by minimizing build time,
+  particularly in rapid debug-edit-rebuild cycles.
+
+SOURCE
+
+  https://github.com/rui314/mold
+
+  commit d4d93d7fb72dd19c44aafa4dd5397e35787d33ad
+  Author: Rui Ueyama <ruiu@bluewhale.systems>
+  Date:   Mon Jun 19 12:35:20 2023 +0900
+
+      Format
+
+CHANGES
+  * removed tbb by including a fake implementation
+  * made the parallel_for effectively single-threaded
+  * changed tbb:enumerable_thread_specific to thread_local
+  * removed rust demangle support

@@ -1828,7 +1828,7 @@ static void XXH_free(void* p) { (void)p; }
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
-#include "third_party/getopt/getopt.internal.h"
+#include "third_party/getopt/long.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/rand48.h"
 
