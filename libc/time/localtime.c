@@ -19,19 +19,25 @@
 
 __static_yoink("zipos");
 __static_yoink("usr/share/zoneinfo/");
-__static_yoink("usr/share/zoneinfo/Anchorage");
-__static_yoink("usr/share/zoneinfo/Beijing");
-__static_yoink("usr/share/zoneinfo/Berlin");
-__static_yoink("usr/share/zoneinfo/Boulder");
-__static_yoink("usr/share/zoneinfo/Chicago");
+__static_yoink("usr/share/zoneinfo/America/");
+__static_yoink("usr/share/zoneinfo/America/Anchorage");
+__static_yoink("usr/share/zoneinfo/America/Chicago");
+__static_yoink("usr/share/zoneinfo/America/Denver");
+__static_yoink("usr/share/zoneinfo/America/Los_Angeles");
+__static_yoink("usr/share/zoneinfo/America/New_York");
+__static_yoink("usr/share/zoneinfo/Asia/");
+__static_yoink("usr/share/zoneinfo/Asia/Jerusalem");
+__static_yoink("usr/share/zoneinfo/Asia/Kolkata");
+__static_yoink("usr/share/zoneinfo/Asia/Shanghai");
+__static_yoink("usr/share/zoneinfo/Asia/Tokyo");
+__static_yoink("usr/share/zoneinfo/Australia/");
+__static_yoink("usr/share/zoneinfo/Australia/Sydney");
+__static_yoink("usr/share/zoneinfo/Europe/");
+__static_yoink("usr/share/zoneinfo/Europe/Berlin");
+__static_yoink("usr/share/zoneinfo/Europe/London");
 __static_yoink("usr/share/zoneinfo/GMT");
-__static_yoink("usr/share/zoneinfo/GST");
-__static_yoink("usr/share/zoneinfo/Honolulu");
-__static_yoink("usr/share/zoneinfo/Israel");
-__static_yoink("usr/share/zoneinfo/Japan");
-__static_yoink("usr/share/zoneinfo/London");
-__static_yoink("usr/share/zoneinfo/Melbourne");
-__static_yoink("usr/share/zoneinfo/New_York");
+__static_yoink("usr/share/zoneinfo/Pacific/");
+__static_yoink("usr/share/zoneinfo/Pacific/Honolulu");
 __static_yoink("usr/share/zoneinfo/UTC");
 
 // clang-format off
