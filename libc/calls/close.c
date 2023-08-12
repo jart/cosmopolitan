@@ -27,7 +27,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Closes file descriptor.

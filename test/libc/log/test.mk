@@ -38,8 +38,7 @@ TEST_LIBC_LOG_DIRECTDEPS =					\
 	LIBC_STR						\
 	LIBC_TESTLIB						\
 	LIBC_SYSV						\
-	LIBC_LOG						\
-	LIBC_ZIPOS
+	LIBC_LOG
 
 TEST_LIBC_LOG_DEPS :=						\
 	$(call uniq,$(foreach x,$(TEST_LIBC_LOG_DIRECTDEPS),$($(x))))

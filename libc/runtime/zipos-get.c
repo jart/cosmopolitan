@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 #ifdef __x86_64__
 __static_yoink(APE_COM_NAME);

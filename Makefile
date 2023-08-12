@@ -145,7 +145,6 @@ include libc/mem/mem.mk				#─┐
 include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
 include third_party/nsync/mem/mem.mk		# │  You can now use stdio
 include libc/thread/thread.mk			# │  You can finally call malloc()
-include libc/zipos/zipos.mk			# │
 include tool/hello/hello.mk			# │
 include libc/stdio/stdio.mk			# │
 include libc/time/time.mk			# │
@@ -243,7 +242,6 @@ include test/libc/fmt/test.mk
 include test/libc/dns/test.mk
 include test/libc/time/test.mk
 include test/libc/stdio/test.mk
-include test/libc/zipos/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
 include test/net/http/test.mk
@@ -325,7 +323,6 @@ COSMOPOLITAN_OBJECTS =			\
 	THIRD_PARTY_GETOPT		\
 	LIBC_LOG			\
 	LIBC_TIME			\
-	LIBC_ZIPOS			\
 	THIRD_PARTY_MUSL		\
 	LIBC_STDIO			\
 	THIRD_PARTY_GDTOA		\
@@ -383,7 +380,6 @@ COSMOPOLITAN_HEADERS =			\
 	LIBC_TIME			\
 	LIBC_TINYMATH			\
 	LIBC_X				\
-	LIBC_ZIPOS			\
 	LIBC_VGA			\
 	NET_HTTP			\
 	TOOL_ARGS			\

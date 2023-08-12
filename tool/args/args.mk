@@ -19,10 +19,10 @@ TOOL_ARGS_A_DIRECTDEPS =			\
 	LIBC_INTRIN				\
 	LIBC_MEM				\
 	LIBC_NEXGEN32E				\
+	LIBC_RUNTIME				\
 	LIBC_STR				\
 	LIBC_SYSV				\
-	LIBC_X					\
-	LIBC_ZIPOS
+	LIBC_X
 
 TOOL_ARGS_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_ARGS_A_DIRECTDEPS),$($(x))))

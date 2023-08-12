@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,37 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/str/str.h"
 #include "libc/thread/thread.h"
-#include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
-static size_t GetIovSize(const struct iovec *iov, size_t iovlen) {
-  size_t i, r;
-  for (r = i = 0; i < iovlen; ++i) r += iov[i].iov_len;
-  return r;
+static pthread_mutex_t __zipos_lock_obj;
+
+void(__zipos_lock)(void) {
+  pthread_mutex_lock(&__zipos_lock_obj);
 }
 
-/**
- * Reads data from zip store object.
- *
- * @return [1..size] bytes on success, 0 on EOF, or -1 w/ errno; with
- *     exception of size==0, in which case return zero means no error
- * @asyncsignalsafe
- */
-ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
-                     size_t iovlen, ssize_t opt_offset) {
-  size_t i, b, x, y;
-  pthread_mutex_lock(&h->lock);
-  x = y = opt_offset != -1 ? opt_offset : h->pos;
-  for (i = 0; i < iovlen && y < h->size; ++i, y += b) {
-    b = min(iov[i].iov_len, h->size - y);
-    if (b) memcpy(iov[i].iov_base, h->mem + y, b);
-  }
-  if (opt_offset == -1) h->pos = y;
-  pthread_mutex_unlock(&h->lock);
-  return y - x;
+void(__zipos_unlock)(void) {
+  pthread_mutex_unlock(&__zipos_lock_obj);
+}
+
+void __zipos_funlock(void) {
+  pthread_mutex_init(&__zipos_lock_obj, 0);
+}
+
+__attribute__((__constructor__)) static void __zipos_init(void) {
+  __zipos_funlock();
+  pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_funlock);
 }

@@ -48,7 +48,6 @@ TOOL_NET_DIRECTDEPS =								\
 	LIBC_THREAD								\
 	LIBC_TINYMATH								\
 	LIBC_X									\
-	LIBC_ZIPOS								\
 	NET_FINGER								\
 	NET_HTTP								\
 	NET_HTTPS								\

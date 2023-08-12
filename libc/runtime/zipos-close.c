@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/runtime/zipos.internal.h"
 
-static pthread_mutex_t __zipos_lock_obj;
-
-void(__zipos_lock)(void) {
-  pthread_mutex_lock(&__zipos_lock_obj);
-}
-
-void(__zipos_unlock)(void) {
-  pthread_mutex_unlock(&__zipos_lock_obj);
-}
-
-void __zipos_funlock(void) {
-  pthread_mutex_init(&__zipos_lock_obj, 0);
-}
-
-__attribute__((__constructor__)) static void __zipos_init(void) {
-  __zipos_funlock();
-  pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_funlock);
+/**
+ * Closes compressed object.
+ *
+ * @param fd is vetted by close()
+ * @asyncsignalsafe
+ * @threadsafe
+ * @vforksafe
+ */
+int __zipos_close(int fd) {
+  int rc;
+  struct ZiposHandle *h;
+  h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+  if (!IsWindows()) {
+    rc = sys_close(fd);
+  } else {
+    rc = 0; /* no system file descriptor needed on nt */
+  }
+  if (!__vforked) {
+    __zipos_free(__zipos_get(), h);
+  }
+  return rc;
 }

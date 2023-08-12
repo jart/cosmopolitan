@@ -26,7 +26,8 @@ LIBC_RUNTIME_A_SRCS =					\
 
 LIBC_RUNTIME_A_OBJS =					\
 	$(LIBC_RUNTIME_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(LIBC_RUNTIME_A_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(LIBC_RUNTIME_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	o/$(MODE)/libc/runtime/.cosmo.zip.o
 
 LIBC_RUNTIME_A_CHECKS =					\
 	$(LIBC_RUNTIME_A).pkg				\
@@ -138,6 +139,10 @@ o/$(MODE)/libc/runtime/clone.o: private			\
 			-fno-sanitize=all		\
 			-fpatchable-function-entry=0,0
 
+o/$(MODE)/libc/runtime/.cosmo.zip.o: private		\
+		ZIPOBJ_FLAGS +=				\
+			-B
+
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/runtime/init.o: libc/runtime/init.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
@@ -150,6 +155,8 @@ o/$(MODE)/libc/runtime/clone-linux.o: libc/runtime/clone-linux.S
 o/$(MODE)/libc/runtime/ftrace-hook.o: libc/runtime/ftrace-hook.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/runtime/dsohandle.o: libc/runtime/dsohandle.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/runtime/zipos.o: libc/runtime/zipos.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_RUNTIME_LIBS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)))

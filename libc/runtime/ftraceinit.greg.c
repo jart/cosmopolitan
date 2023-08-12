@@ -21,6 +21,8 @@
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
 
+__static_yoink("zipos");
+
 /**
  * Enables plaintext function tracing if `--ftrace` flag is passed.
  *

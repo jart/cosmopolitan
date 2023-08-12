@@ -16,20 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/stat.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zip.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
-/**
- * Extracts information about ZIP URI if it is one.
- */
-ssize_t __zipos_parseuri(const char *uri, struct ZiposUri *out) {
-  size_t len;
-  if ((uri[0] == '/' && uri[1] == 'z' && uri[2] == 'i' && uri[3] == 'p' &&
-       (!uri[4] || uri[4] == '/')) &&
-      (len = strlen(uri)) < PATH_MAX) {
-    out->path = uri + 4 + !!uri[4];
-    return (out->len = len - 4 - !!uri[4]);
+int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
+  size_t lf;
+  if (zipos && st) {
+    bzero(st, sizeof(*st));
+    if (cf) {
+      lf = GetZipCfileOffset(zipos->map + cf);
+      st->st_mode = GetZipCfileMode(zipos->map + cf);
+      st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
+      st->st_blocks =
+          roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
+      GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
+                            &st->st_ctim, 0);
+      st->st_birthtim = st->st_ctim;
+    } else {
+      st->st_mode = 0444 | S_IFDIR | 0111;
+    }
+    return 0;
   } else {
-    return -1;
+    return einval();
   }
 }

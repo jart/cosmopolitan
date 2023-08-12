@@ -27,7 +27,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Writes data to file descriptor.

@@ -39,7 +39,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * @fileoverview Directory Streams for Linux+Mac+Windows+FreeBSD+OpenBSD.

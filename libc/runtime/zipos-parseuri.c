@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/str/str.h"
+#include "libc/runtime/zipos.internal.h"
 
-int __zipos_notat(int dirfd, const char *path) {
-  struct ZiposUri zipname;
-  if (!path) return efault();
-  if (__isfdkind(dirfd, kFdZip) || __zipos_parseuri(path, &zipname) != -1) {
-    return einval();
+/**
+ * Extracts information about ZIP URI if it is one.
+ */
+ssize_t __zipos_parseuri(const char *uri, struct ZiposUri *out) {
+  size_t len;
+  if ((uri[0] == '/' && uri[1] == 'z' && uri[2] == 'i' && uri[3] == 'p' &&
+       (!uri[4] || uri[4] == '/')) &&
+      (len = strlen(uri)) < PATH_MAX) {
+    out->path = uri + 4 + !!uri[4];
+    return (out->len = len - 4 - !!uri[4]);
+  } else {
+    return -1;
   }
-  return 0;
 }

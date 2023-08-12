@@ -31,7 +31,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Reads data to multiple buffers.

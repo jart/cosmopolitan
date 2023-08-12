@@ -23,7 +23,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
                   int flags) {

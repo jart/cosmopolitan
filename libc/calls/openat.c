@@ -33,7 +33,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Opens file.

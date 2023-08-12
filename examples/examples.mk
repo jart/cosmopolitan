@@ -67,7 +67,6 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_TINYMATH								\
 	LIBC_VGA								\
 	LIBC_X									\
-	LIBC_ZIPOS								\
 	NET_HTTP								\
 	NET_HTTPS								\
 	THIRD_PARTY_AWK								\

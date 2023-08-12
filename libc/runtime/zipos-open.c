@@ -42,7 +42,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 static char *mapend;
 static size_t maptotal;

@@ -29,7 +29,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Does things with file descriptor, e.g.

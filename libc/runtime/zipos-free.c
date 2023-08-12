@@ -22,7 +22,7 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 void __zipos_free(struct Zipos *z, struct ZiposHandle *h) {
   if (IsAsan()) {

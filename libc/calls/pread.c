@@ -30,7 +30,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Reads from file at offset.

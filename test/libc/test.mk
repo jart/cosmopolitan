@@ -19,5 +19,4 @@ o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/time		\
 		o/$(MODE)/test/libc/tinymath		\
 		o/$(MODE)/test/libc/x			\
-		o/$(MODE)/test/libc/zipos		\
 		o/$(MODE)/test/libc/xed

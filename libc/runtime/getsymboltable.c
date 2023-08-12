@@ -29,7 +29,7 @@
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 #include "third_party/puff/puff.h"
 
 __static_yoink("__get_symbol");

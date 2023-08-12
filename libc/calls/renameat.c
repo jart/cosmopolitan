@@ -26,7 +26,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Renames files relative to directories.

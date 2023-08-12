@@ -16,39 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/relocations.h"
-#include "libc/assert.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/runtime/zipos.internal.h"
 
-// TODO(jart): improve time complexity here
-
-ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
-  const char *zname;
-  size_t i, n, c, znamesize;
-  if (!name->len) {
-    return 0;
-  }
-  c = GetZipCdirOffset(zipos->cdir);
-  n = GetZipCdirRecords(zipos->cdir);
-  for (i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
-    npassert(ZIP_CFILE_MAGIC(zipos->map + c) == kZipCfileHdrMagic);
-    zname = ZIP_CFILE_NAME(zipos->map + c);
-    znamesize = ZIP_CFILE_NAMESIZE(zipos->map + c);
-    if ((name->len == znamesize && !memcmp(name->path, zname, name->len)) ||
-        (name->len + 1 == znamesize && !memcmp(name->path, zname, name->len) &&
-         zname[name->len] == '/')) {
-      return c;
-    } else if ((name->len < znamesize &&
-                !memcmp(name->path, zname, name->len) &&
-                zname[name->len - 1] == '/') ||
-               (name->len + 1 < znamesize &&
-                !memcmp(name->path, zname, name->len) &&
-                zname[name->len] == '/')) {
-      return 0;
+/**
+ * Reads file metadata from αcτµαlly pδrταblε εxεcµταblε object store.
+ *
+ * @param uri is obtained via __zipos_parseuri()
+ * @asyncsignalsafe
+ */
+int __zipos_stat(const struct ZiposUri *name, struct stat *st) {
+  int rc;
+  ssize_t cf;
+  struct Zipos *zipos;
+  if (st) {
+    if ((zipos = __zipos_get())) {
+      if ((cf = __zipos_find(zipos, name)) != -1) {
+        rc = __zipos_stat_impl(zipos, cf, st);
+      } else {
+        rc = enoent();
+      }
+    } else {
+      rc = enoexec();
     }
+  } else {
+    rc = efault();
   }
-  return -1;
+  return rc;
 }

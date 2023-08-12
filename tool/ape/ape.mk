@@ -27,7 +27,6 @@ TOOL_APE_DIRECTDEPS =				\
 	LIBC_SYSV				\
 	LIBC_TIME				\
 	LIBC_X					\
-	LIBC_ZIPOS				\
 	NET_HTTP				\
 	NET_HTTPS				\
 	THIRD_PARTY_GETOPT			\

@@ -37,9 +37,9 @@ TEST_LIBC_RUNTIME_DIRECTDEPS =						\
 	LIBC_TESTLIB							\
 	LIBC_TINYMATH							\
 	LIBC_X								\
-	LIBC_ZIPOS							\
 	TOOL_BUILD_LIB							\
-	THIRD_PARTY_XED
+	THIRD_PARTY_XED							\
+	THIRD_PARTY_ZLIB
 
 TEST_LIBC_RUNTIME_DEPS :=						\
 	$(call uniq,$(foreach x,$(TEST_LIBC_RUNTIME_DIRECTDEPS),$($(x))))

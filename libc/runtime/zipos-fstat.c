@@ -16,32 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/assert.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zip.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
- * Closes compressed object.
+ * Reads file metadata from αcτµαlly pδrταblε εxεcµταblε object store.
  *
- * @param fd is vetted by close()
+ * @param uri is obtained via __zipos_parseuri()
  * @asyncsignalsafe
- * @threadsafe
- * @vforksafe
  */
-int __zipos_close(int fd) {
+int __zipos_fstat(const struct ZiposHandle *h, struct stat *st) {
   int rc;
-  struct ZiposHandle *h;
-  h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
-  if (!IsWindows()) {
-    rc = sys_close(fd);
+  if (st) {
+    rc = __zipos_stat_impl(__zipos_get(), h->cfile, st);
   } else {
-    rc = 0; /* no system file descriptor needed on nt */
-  }
-  if (!__vforked) {
-    __zipos_free(__zipos_get(), h);
+    rc = efault();
   }
   return rc;
 }

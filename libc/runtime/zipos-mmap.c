@@ -23,10 +23,11 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
 
 #define IP(X)  (intptr_t)(X)
 #define VIP(X) (void *)IP(X)

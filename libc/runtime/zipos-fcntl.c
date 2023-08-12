@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/runtime/zipos.internal.h"
 
 #define ZIPOS  __zipos_get()
 #define HANDLE ((struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle)
