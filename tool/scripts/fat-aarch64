@@ -9,7 +9,7 @@ LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
 if [ x"$PROG" != x"${PROG%++}" ]; then
   CC="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-g++"
-  CCFLAGS="$CCFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
+  CCFLAGS="$CCFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $LDLIBS"
 fi
 

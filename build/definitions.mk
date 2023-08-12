@@ -231,7 +231,6 @@ DEFAULT_CXXFLAGS =							\
 	-fno-rtti							\
 	-fno-exceptions							\
 	-fuse-cxa-atexit						\
-	-fno-threadsafe-statics						\
 	-Wno-int-in-bool-context					\
 	-Wno-narrowing							\
 	-Wno-literal-suffix
