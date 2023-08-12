@@ -54,7 +54,7 @@ o/$(MODE)/tool/hello/hello-elf.com:				\
 		o/$(MODE)/tool/hello/hello.com.dbg		\
 		o/$(MODE)/tool/build/apelink.com		\
 		o/$(MODE)/ape/ape.elf
-	@$(COMPILE) -ALINK.ape o/$(MODE)/tool/build/apelink.com -s elf -o $@ -l o/$(MODE)/ape/ape.elf $<
+	@$(COMPILE) -ALINK.ape o/$(MODE)/tool/build/apelink.com -V elf -o $@ -l o/$(MODE)/ape/ape.elf $<
 
 # uses apelink to generate non-pe ape executable
 # support vector = macos/linux/freebsd/openbsd/netbsd
@@ -64,7 +64,7 @@ o/$(MODE)/tool/hello/hello-unix.com:				\
 		o/$(MODE)/tool/hello/hello.com.dbg		\
 		o/$(MODE)/tool/build/apelink.com		\
 		o/$(MODE)/ape/ape.elf
-	@$(COMPILE) -ALINK.ape o/$(MODE)/tool/build/apelink.com -s unix -o $@ -l o/$(MODE)/ape/ape.elf $<
+	@$(COMPILE) -ALINK.ape o/$(MODE)/tool/build/apelink.com -V unix -o $@ -l o/$(MODE)/ape/ape.elf $<
 
 # elf2pe generates optimal pe binaries
 # windows is the only platform supported

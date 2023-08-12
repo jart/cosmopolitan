@@ -77,6 +77,8 @@
   "\n"                                                         \
   "  -o OUTPUT  set output path\n"                             \
   "\n"                                                         \
+  "  -s         never embed symbol table\n"                    \
+  "\n"                                                         \
   "  -l PATH    bundle ape loader executable [repeatable]\n"   \
   "             if no ape loaders are specified then your\n"   \
   "             executable will self-modify its header on\n"   \
@@ -86,7 +88,7 @@
   "             processors running the xnu kernel so that\n"   \
   "             it can be compiled on the fly by xcode\n"      \
   "\n"                                                         \
-  "  -s BITS    set OS support vector\n"                       \
+  "  -V BITS    set OS support vector\n"                       \
   "\n"                                                         \
   "             the default value is -1 which sets the bits\n" \
   "             for all supported operating systems to true\n" \
@@ -232,6 +234,7 @@ struct Assets {
 static int outfd;
 static int hashes;
 static const char *prog;
+static bool want_stripped;
 static int support_vector;
 static int macholoadcount;
 static const char *outpath;
@@ -246,6 +249,7 @@ static bool dont_path_lookup_ape_loader;
 _Alignas(4096) static char prologue[1048576];
 static uint8_t hashpool[BLAKE2B256_DIGEST_LENGTH];
 static const char *macos_silicon_loader_source_path;
+static const char *macos_silicon_loader_source_text;
 static char *macos_silicon_loader_source_ddarg_skip;
 static char *macos_silicon_loader_source_ddarg_size;
 
@@ -329,6 +333,16 @@ static const char *DescribePhdrType(Elf64_Word p_type) {
   }
 }
 
+static bool IsBinary(const char *p, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if ((p[i] & 255) < '\t') {
+      return true;
+    }
+  }
+  return false;
+}
+
 static void BlendHashes(uint8_t out[static BLAKE2B256_DIGEST_LENGTH],
                         uint8_t inp[static BLAKE2B256_DIGEST_LENGTH]) {
   int i;
@@ -347,6 +361,28 @@ static void HashInput(const void *data, size_t size) {
 
 static void HashInputString(const char *str) {
   HashInput(str, strlen(str));
+}
+
+static char *LoadSourceCode(const char *path) {
+  int fd;
+  size_t i;
+  char *text;
+  ssize_t rc, size;
+  if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
+  if ((size = lseek(fd, 0, SEEK_END)) == -1) DieSys(path);
+  text = Malloc(size + 1);
+  text[size] = 0;
+  for (i = 0; i < size; i += rc) {
+    if ((rc = pread(fd, text, size - i, i)) <= 0) {
+      DieSys(path);
+    }
+    if (IsBinary(text, rc)) {
+      Die(path, "source code contains binary data");
+    }
+  }
+  if (close(fd)) DieSys(path);
+  HashInput(text, size);
+  return text;
 }
 
 static void Pwrite(const void *data, size_t size, uint64_t offset) {
@@ -928,13 +964,17 @@ static void GetOpts(int argc, char *argv[]) {
   char *endptr;
   int opt, bits;
   bool got_support_vector = false;
-  while ((opt = getopt(argc, argv, "hvgGBo:s:l:S:M:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvgsGBo:l:S:M:V:")) != -1) {
     switch (opt) {
       case 'o':
         outpath = optarg;
         break;
       case 's':
         HashInputString("-s");
+        want_stripped = true;
+        break;
+      case 'V':
+        HashInputString("-V");
         HashInputString(optarg);
         if (ParseSupportVector(optarg, &bits)) {
           support_vector |= bits;
@@ -945,22 +985,30 @@ static void GetOpts(int argc, char *argv[]) {
         got_support_vector = true;
         break;
       case 'l':
+        HashInputString("-l");
         AddLoader(optarg);
         break;
       case 'S':
+        HashInputString("-S");
+        HashInputString(optarg);
         custom_sh_code = optarg;
         break;
       case 'B':
+        HashInputString("-B");
         force_bypass_binfmt_misc = true;
         break;
       case 'g':
+        HashInputString("-g");
         generate_debuggable_binary = true;
         break;
       case 'G':
+        HashInputString("-G");
         dont_path_lookup_ape_loader = true;
         break;
       case 'M':
+        HashInputString("-M");
         macos_silicon_loader_source_path = optarg;
+        macos_silicon_loader_source_text = LoadSourceCode(optarg);
         break;
       case 'v':
         tinyprint(0, VERSION, NULL);
@@ -1740,7 +1788,7 @@ static void CopyZips(Elf64_Off offset) {
 
 int main(int argc, char *argv[]) {
   char *p;
-  int i, opt;
+  int i, j, opt;
   Elf64_Off offset;
   char empty[64] = {0};
   Elf64_Xword prologue_bytes;
@@ -1776,10 +1824,25 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < loaders.n; ++i) {
     OpenLoader(loaders.p + i);
   }
+  for (i = 0; i < loaders.n; ++i) {
+    for (j = i + 1; j < loaders.n; ++j) {
+      if (loaders.p[i].os == loaders.p[j].os &&
+          loaders.p[i].machine == loaders.p[j].machine) {
+        Die(prog, "multiple ape loaders specified for the same platform");
+      }
+    }
+  }
 
   // open input files
   for (i = optind; i < argc; ++i) {
     OpenInput(argv[i]);
+  }
+  for (i = 0; i < inputs.n; ++i) {
+    for (j = i + 1; j < inputs.n; ++j) {
+      if (inputs.p[i].elf->e_machine == inputs.p[j].elf->e_machine) {
+        Die(prog, "multiple executables passed for the same machine type");
+      }
+    }
   }
 
   // validate input files
@@ -1789,15 +1852,17 @@ int main(int argc, char *argv[]) {
   }
 
   // load symbols
-  for (i = 0; i < inputs.n; ++i) {
-    struct Input *in = inputs.p + i;
-    if (GetElfSymbol(in, "__zipos_get")) {
-      LoadSymbols(in->elf, in->size, in->path);
-    } else {
-      tinyprint(2, in->path,
-                ": warning: won't generate symbol table unless "
-                "__static_yoink(\"zipos\") is linked\n",
-                NULL);
+  if (!want_stripped) {
+    for (i = 0; i < inputs.n; ++i) {
+      struct Input *in = inputs.p + i;
+      if (GetElfSymbol(in, "__zipos_get")) {
+        LoadSymbols(in->elf, in->size, in->path);
+      } else {
+        tinyprint(2, in->path,
+                  ": warning: won't generate symbol table unless "
+                  "__static_yoink(\"zipos\") is linked\n",
+                  NULL);
+      }
     }
   }
 
@@ -2046,11 +2111,7 @@ int main(int argc, char *argv[]) {
       }
       p = stpcpy(p, "fi\n");  // if [ -d /Applications ]; then
     } else {
-      if (macos_silicon_loader_source_path) {
-        Die(macos_silicon_loader_source_path,
-            "won't embed macos arm64 ape loader source code because xnu isn't "
-            "in the support vector");
-      }
+      macos_silicon_loader_source_path = 0;
     }
 
     // extract the ape loader for open platforms
@@ -2131,25 +2192,16 @@ int main(int argc, char *argv[]) {
 
   // concatenate ape loader source code
   if (macos_silicon_loader_source_path) {
-    int fd;
-    char *map;
-    ssize_t size;
     char *compressed_data;
     size_t compressed_size;
-    fd = open(macos_silicon_loader_source_path, O_RDONLY);
-    if (fd == -1) DieSys(macos_silicon_loader_source_path);
-    size = lseek(fd, 0, SEEK_END);
-    if (size == -1) DieSys(macos_silicon_loader_source_path);
-    map = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (map == MAP_FAILED) DieSys(macos_silicon_loader_source_path);
-    compressed_data = Gzip(map, size, &compressed_size);
+    compressed_data =
+        Gzip(macos_silicon_loader_source_text,
+             strlen(macos_silicon_loader_source_text), &compressed_size);
     FixupWordAsDecimal(macos_silicon_loader_source_ddarg_skip, offset);
     FixupWordAsDecimal(macos_silicon_loader_source_ddarg_size, compressed_size);
     Pwrite(compressed_data, compressed_size, offset);
     offset += compressed_size;
     free(compressed_data);
-    munmap(map, size);
-    close(fd);
   }
 
   // add the zip files

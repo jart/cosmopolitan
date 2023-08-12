@@ -424,26 +424,41 @@ $(SRCS):					\
 	libc/integral/lp64arg.inc		\
 	libc/integral/lp64.inc
 
-.PHONY: toolchain
 ifeq ($(ARCH), x86_64)
-toolchain:	o/cosmopolitan.h				\
-		o/$(MODE)/ape/public/ape.lds			\
-		o/$(MODE)/libc/crt/crt.o			\
-		o/$(MODE)/ape/ape.o				\
-		o/$(MODE)/ape/ape-copy-self.o			\
-		o/$(MODE)/ape/ape-no-modify-self.o		\
-		o/$(MODE)/cosmopolitan.a			\
-		o/$(MODE)/third_party/libcxx/libcxx.a		\
-		o/$(MODE)/tool/build/fixupobj.com		\
-		o/$(MODE)/tool/build/zipcopy.com
+TOOLCHAIN_ARTIFACTS =				\
+	o/cosmopolitan.h			\
+	o/$(MODE)/ape/public/ape.lds		\
+	o/$(MODE)/libc/crt/crt.o		\
+	o/$(MODE)/ape/ape.elf			\
+	o/$(MODE)/ape/ape.o			\
+	o/$(MODE)/ape/ape-copy-self.o		\
+	o/$(MODE)/ape/ape-no-modify-self.o	\
+	o/$(MODE)/cosmopolitan.a		\
+	o/$(MODE)/third_party/libcxx/libcxx.a	\
+	o/$(MODE)/tool/build/march-native.com	\
+	o/$(MODE)/tool/build/ar.com		\
+	o/$(MODE)/tool/build/fixupobj.com	\
+	o/$(MODE)/tool/build/zipcopy.com	\
+	o/$(MODE)/tool/build/apelink.com	\
+	o/$(MODE)/tool/build/pecheck.com
 else
-toolchain:	o/$(MODE)/ape/aarch64.lds			\
-		o/$(MODE)/libc/crt/crt.o			\
-		o/$(MODE)/cosmopolitan.a			\
-		o/$(MODE)/third_party/libcxx/libcxx.a		\
-		o/$(MODE)/tool/build/fixupobj.com		\
-		o/$(MODE)/tool/build/zipcopy.com
+TOOLCHAIN_ARTIFACTS =				\
+	o/$(MODE)/ape/ape.elf			\
+	o/$(MODE)/ape/aarch64.lds		\
+	o/$(MODE)/libc/crt/crt.o		\
+	o/$(MODE)/cosmopolitan.a		\
+	o/$(MODE)/third_party/libcxx/libcxx.a	\
+	o/$(MODE)/tool/build/march-native.com	\
+	o/$(MODE)/tool/build/fixupobj.com	\
+	o/$(MODE)/tool/build/zipcopy.com
 endif
+
+.PHONY: toolchain
+toolchain: $(TOOLCHAIN_ARTIFACTS)
+
+.PHONY: clean_toolchain
+clean_toolchain:
+	$(RM) $(TOOLCHAIN_ARTIFACTS)
 
 aarch64: private .INTERNET = true
 aarch64: private .UNSANDBOXED = true

@@ -1,0 +1,310 @@
+#!/bin/sh
+#
+# fat cosmopolitan c compiler
+#
+#   - this command is a drop-in replacement for the cc or gcc command.
+#     the difference is that (1) your binaries will be linked with the
+#     cosmopolitan c library, rather than your system specific tooling
+#     and (2) they'll be fat ape executables that run on the platforms
+#
+#     * amd64
+#       + linux
+#       + macos
+#       + windows
+#       + freebsd
+#       + openbsd
+#       + netbsd
+#     * arm64
+#       + linux
+#       + macos
+#       + windows (non-native)
+#
+#   - you need to use linux to build your binaries currently, but you
+#     can scp and distribute the output files to the above platforms!
+#
+# installation
+#
+#     sudo chmod 1777 /opt
+#     git clone https://github.com/jart/cosmopolitan /opt/cosmo
+#     export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"
+#     echo 'export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"' >>~/.profile
+#     fatcosmocc --update  # pull and rebuild toolchain artifacts
+#
+# getting started
+#
+#     fatcosmocc -o hello.com hello.c
+#     ./foo.com
+#     ./foo.com.dbg
+#
+# building open source projects
+#
+#     export CC=fatcosmocc
+#     export CXX=fatcosmoc++
+#     ./configure --prefix=/opt/cosmos
+#     make -j
+#     make install
+#
+# cosmopolitan runtime flags
+#
+#     ./hello.com --strace
+#     ./hello.com --ftrace
+#
+# cosmpolitan runtime libraries
+#
+#     #include <cosmo.h>
+#     int main() {
+#       ShowCrashReports();
+#       __builtin_trap();
+#     }
+#
+# building in tiny mode
+#
+#     export MODE=tiny
+#     fatcosmocc --update
+#     fatcosmocc -Os -o foo.com foo.c
+#
+# building in debug mode
+#
+#     export MODE=dbg
+#     fatcosmocc --update
+#     fatcosmocc -g -o foo.com foo.c
+#
+
+export PROG=${0##*/}
+export COSMO=${COSMO:-/opt/cosmo}
+export COSMOS=${COSMOS:-/opt/cosmos}
+export ORIGINAL="$0 $*"
+
+if [ "$1" = "--version" ]; then
+cat <<EOF
+$PROG (GCC) 11.2.0
+Copyright (C) 2019 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+EOF
+exit 0
+fi
+
+MODE=${MODE:-$m}
+if [ x"$MODE" = x"" ]; then
+  MODE_AARCH64=aarch64
+elif [ x"$MODE" = x"tiny" ]; then
+  MODE_AARCH64=aarch64-tiny
+elif [ x"$MODE" = x"zero" ]; then
+  MODE_AARCH64=aarch64-zero
+elif [ x"$MODE" = x"dbg" ]; then
+  MODE_AARCH64=aarch64-dbg
+else
+  echo "$PROG: build MODE=$MODE not supported by fatcosmocc" >&2
+  exit 1
+fi
+
+if [ "$1" = "--update" ]; then
+  cd /opt/cosmo || exit
+  if GIT=$(command -v git); then
+    echo "$PROG: running git pull on cosmo..." >&2
+    "$GIT" pull --quiet || exit
+  fi
+  echo "$PROG: building cosmo x86_64 toolchain..." >&2
+  make --silent -j toolchain MODE="${MODE}" || exit
+  echo "$PROG: building cosmo aarch64 toolchain..." >&2
+  make --silent -j toolchain MODE="${MODE_AARCH64}" || exit
+  "$COSMO/tool/scripts/setup-cosmos"
+  echo "$PROG: successfully updated your cosmo toolchain" >&2
+  exit
+fi
+
+if [ ! -d "$COSMO" ]; then
+  echo "$PROG: you need to clone cosmopolitan to your $COSMO directory" >&2
+  exit 1
+fi
+
+if [ ! -d "$COSMOS" ] ||
+   [ ! -x "$COSMO/o/$MODE/cosmopolitan.a" ] ||
+   [ ! -x "$COSMO/o/$MODE_AARCH64/cosmopolitan.a" ]; then
+  echo "$PROG: you need to run: $PROG --update" >&2
+  exit 1
+fi
+
+export FIXUPOBJ="$COSMO/o/$MODE/tool/build/fixupobj.com"
+
+OPT=
+FIRST=1
+OUTPUT=
+STRIP=0
+INTENT=ld
+GOT_SOME=0
+SAVE_TEMPS=0
+NEED_OUTPUT=
+FRAME=""
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ -n "$NEED_OUTPUT" ]; then
+    NEED_OUTPUT=
+    OUTPUT=$x
+    continue
+  fi
+  if [ x"$x" = x"${x#-*}" ]; then
+    GOT_SOME=1
+  elif [ x"$x" = x"-o" ]; then
+    NEED_OUTPUT=1
+    continue
+  elif [ x"$x" != x"${x#-o}" ]; then
+    OUTPUT=${x#-o}
+    continue
+  elif [ x"$x" != x"${x#-O}" ]; then
+    OPT=$x
+  elif [ x"$x" = x"-c" ]; then
+    INTENT=cc
+  elif [ x"$x" = x"-E" ]; then
+    INTENT=cpp
+  elif [ x"$x" = x"-s" ]; then
+    STRIP=1
+    continue
+  elif [ x"$x" = x"-save-temps" ]; then
+    SAVE_TEMPS=1
+  elif [ x"$x" = x"-fomit-frame-pointer" ]; then
+    # Quoth Apple "The frame pointer register must always address a
+    # valid frame record. Some functions — such as leaf functions or
+    # tail calls — may opt not to create an entry in this list. As a
+    # result, stack traces are always meaningful, even without debug
+    # information."
+    x="-momit-leaf-frame-pointer"
+  elif [ x"$x" = x"-r" ] ||
+       [ x"$x" = x"-pie" ] ||
+       [ x"$x" = x"-frtti" ] ||
+       [ x"$x" = x"-shared" ] ||
+       [ x"$x" = x"-nostdlib" ] ||
+       [ x"$x" = x"-mred-zone" ] ||
+       [ x"$x" = x"-fexceptions" ] ||
+       [ x"$x" = x"-fsanitize=thread" ]; then
+    echo "$PROG: $x not supported" >&2
+    exit 1
+  elif [ x"$x" = x"-fsanitize=all" ] ||
+       [ x"$x" = x"-fsanitize=address" ] ||
+       [ x"$x" = x"-fsanitize=undefined" ]; then
+    echo "$PROG: use cosmo MODE=dbg rather than passing $x" >&2
+    exit 1
+  elif [ x"$x" = x"-mno-red-zone" ]; then
+    # "Any memory below the stack beyond the red zone is considered
+    # volatile and may be modified by the operating system at any time."
+    # https://devblogs.microsoft.com/oldnewthing/20190111-00/?p=100685
+    continue
+  elif [ x"$x" = x"-fpic" ] || [ x"$x" = x"-fPIC" ]; then
+    # no support for building dynamic shared objects yet. reports
+    # indicate that ignoring these flags, helps let autoconf know
+    continue
+  elif [ x"$x" = x"-Werror" ] || \
+       [ x"$x" = x"-pedantic-errors" ]; then
+    # this toolchain is intended for building other people's code
+    # elevating warnings into errors, should only be done by devs
+    continue
+  elif [ x"$x" = x"-static-libgcc" ] || \
+       [ x"$x" = x"-shared-libgcc" ]; then
+    # cosmopolitan.a always has llvm compiler runtime static code
+    continue
+  fi
+  set -- "$@" "$x"
+done
+
+if [ x"$MODE" = x"dbg" ]; then
+  set -- \
+      -fsanitize=address \
+      -fsanitize=undefined \
+      "$@"
+fi
+
+if [ x"$OPT" != x"-Os" ] &&
+   [ x"${MODE#tiny}" != x"${MODE}" ]; then
+  set -- \
+      -fno-optimize-sibling-calls \
+      -mno-omit-leaf-frame-pointer \
+      "$@"
+fi
+
+set -- \
+    -fno-pie \
+    -fportcosmo \
+    -fno-dwarf2-cfi-asm \
+    -fno-unwind-tables \
+    -fno-asynchronous-unwind-tables \
+    -fno-semantic-interposition \
+    -fno-math-errno \
+    "$@" \
+    -fno-omit-frame-pointer
+
+PLATFORM="-D__COSMOPOLITAN__"
+PREDEF="-include libc/integral/normalize.inc"
+CPPFLAGS="-nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
+
+if [ "$GOT_SOME" -eq 0 ]; then
+  echo "$PROG: fatal error: no input files" >&2
+  echo "compilation terminated." >&2
+  exit 1
+fi
+
+if [ $INTENT = cpp ]; then
+  if [ -n "$OUTPUT" ]; then
+    set -- "$@" -o"$OUTPUT"
+  fi
+  MODE="$MODE" "$COSMO/tool/scripts/fat-x86_64" \
+      -U__x86_64__ $PLATFORM $CPPFLAGS "$@"
+  exit
+fi
+
+if [ -z "$OUTPUT" ]; then
+  if [ $INTENT = cc ]; then
+    echo "$PROG: passing -c without -o flag not supported" >&2
+    exit 1
+  fi
+  OUTPUT=a.out
+fi
+
+set -- $PLATFORM $PREDEF $CPPFLAGS "$@"
+
+out2=$(mktemp "${TMPDIR:-/tmp}/ccc.XXXXXX") || exit
+
+MODE="$MODE" \
+"$COSMO/tool/scripts/fat-x86_64" -o"$OUTPUT.x86_64" "$@" &
+pid1=$!
+
+MODE="$MODE_AARCH64" \
+"$COSMO/tool/scripts/fat-aarch64" -o"$OUTPUT.aarch64" "$@" 2>"$out2" &
+pid2=$!
+
+if ! wait $pid1; then
+  wait
+  rm -f "$out2"
+  exit 1
+fi
+
+if ! wait $pid2; then
+  wait
+  echo "$PROG: aarch64 compiler failed with:" >&2
+  cat "$out2" >&2
+  rm -f "$out2"
+  exit 1
+fi
+
+rm -f "$out2"
+
+set -- \
+"$COSMO/o/$MODE/tool/build/apelink.com" \
+  -l "$COSMO/o/$MODE/ape/ape.elf" \
+  -l "$COSMO/o/$MODE_AARCH64/ape/ape.elf" \
+  -M "$COSMO/ape/ape-m1.c" \
+  -o "$OUTPUT" \
+  "$OUTPUT.x86_64" \
+  "$OUTPUT.aarch64"
+printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"${TMPDIR:-/tmp}/build.log"
+"$@" || exit
+
+"$COSMO/o/$MODE/tool/build/pecheck.com" "$OUTPUT" || exit
+
+if [ $SAVE_TEMPS -eq 0 ]; then
+  rm -f "$OUTPUT.x86_64" \
+        "$OUTPUT.aarch64"
+fi

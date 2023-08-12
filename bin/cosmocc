@@ -1,0 +1,259 @@
+#!/bin/sh
+#
+# non-fat cosmopolitan c compiler
+#
+# getting started
+#
+#     sudo chmod 1777 /opt
+#     git clone https://github.com/jart/cosmopolitan /opt/cosmo
+#     export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"
+#     echo 'export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"' >>~/.profile
+#     cosmocc --update  # pull and rebuild toolchain artifacts
+#
+# building open source projects
+#
+#     export CC=cosmocc
+#     export CXX=cosmoc++
+#     ./configure --prefix=/opt/cosmos
+#     make -j
+#     make install
+#
+# cosmopolitan runtime flags
+#
+#     ./hello.com --strace
+#     ./hello.com --ftrace
+#
+# cosmpolitan runtime libraries
+#
+#     #include <cosmo.h>
+#     int main() {
+#       ShowCrashReports();
+#       __builtin_trap();
+#     }
+#
+# building in tiny mode
+#
+#     export MODE=tiny
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     cosmocc -Os -o foo.com foo.c
+#
+# building in tiniest mode (linux only)
+#
+#     export MODE=tinylinux
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     cosmocc -Os -o foo.com foo.c
+#
+# hardening programs with memory safety
+#
+#     export MODE=asan
+#     (cd /opt/cosmo; make -j8 toolchain)
+#     cosmocc -o foo.com foo.c
+#
+
+PROG=${0##*/}
+MODE=${MODE:-$m}
+COSMO=${COSMO:-/opt/cosmo}
+COSMOS=${COSMOS:-/opt/cosmos}
+
+if [ "$1" = "--version" ]; then
+cat <<EOF
+$PROG (GCC) 11.2.0
+Copyright (C) 2019 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+EOF
+exit 0
+fi
+
+if [ "$1" = "--update" ]; then
+  cd /opt/cosmo || exit
+  if GIT=$(command -v git); then
+    echo "$PROG: running git pull on cosmo..." >&2
+    "$GIT" pull --quiet || exit
+  fi
+  echo "$PROG: building cosmo x86_64 toolchain..." >&2
+  make --silent -j toolchain MODE="${MODE}" || exit
+  "$COSMO/tool/scripts/setup-cosmos"
+  echo "$PROG: successfully updated your cosmo toolchain" >&2
+  exit
+fi
+
+CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
+ORIGINAL="$0 $*"
+PLATFORM="-D__COSMOPOLITAN__"
+PREDEF="-include libc/integral/normalize.inc"
+CCFLAGS="-fdata-sections -ffunction-sections -fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
+CPPFLAGS="-nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64"
+APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
+LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
+
+if [ x"$0" != x"${0%++}" ]; then
+  CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
+  CCFLAGS="$CCFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
+  LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $LDLIBS"
+fi
+
+if [ ! -d "$COSMO" ]; then
+  echo "$PROG: you need to clone cosmopolitan to your $COSMO directory" >&2
+  exit 1
+fi
+
+if [ ! -d "$COSMOS" ] ||
+   [ ! -x "$COSMO/o/$MODE/cosmopolitan.a" ]; then
+  echo "$PROG: you need to run: $PROG --update" >&2
+  exit 1
+fi
+
+# auto-install some shell libraries
+if [ ! -d "$COSMOS/lib" ]; then
+  mkdir -p "$COSMOS/lib"
+fi
+for lib in c dl gcc_s m pthread resolv rt dl z stdc++; do
+  if [ ! -f "$COSMOS/lib/lib$lib.a" ]; then
+    printf '\041\074\141\162\143\150\076\012' >"$COSMOS/lib/lib$lib.a"
+  fi
+done
+
+OPT=
+FIRST=1
+OUTPUT=
+SFLAG=0
+INTENT=ld
+GOT_SOME=0
+NEED_OUTPUT=
+RELOCATABLE=0
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ -n "$NEED_OUTPUT" ]; then
+    NEED_OUTPUT=
+    OUTPUT=$x
+    set -- "$@" "$x"
+    continue
+  fi
+  if [ x"$x" = x"${x#-*}" ]; then
+    GOT_SOME=1
+  elif [ x"$x" = x"-static-libstdc++" ]; then
+    continue
+  elif [ x"$x" = x"-static-libgcc" ]; then
+    continue
+  elif [ x"$x" != x"${x#-O}" ]; then
+    OPT=$x
+  elif [ x"$x" = x"-c" ]; then
+    INTENT=cc
+  elif [ x"$x" = x"-s" ]; then
+    SFLAG=1
+    continue
+  elif [ x"$x" = x"-r" ]; then
+    RELOCATABLE=1
+  elif [ x"$x" = x"-E" ]; then
+    INTENT=cpp
+  elif [ x"$x" = x"-o" ]; then
+    NEED_OUTPUT=1
+  elif [ x"$x" != x"${x#-o}" ]; then
+    OUTPUT=${x#-o}
+  elif [ x"$x" = x"-fpic" ]; then
+    continue
+  elif [ x"$x" = x"-fPIC" ]; then
+    continue
+  elif [ x"$x" = x"-r" ] ||
+       [ x"$x" = x"-pie" ] ||
+       [ x"$x" = x"-frtti" ] ||
+       [ x"$x" = x"-shared" ] ||
+       [ x"$x" = x"-nostdlib" ] ||
+       [ x"$x" = x"-mred-zone" ] ||
+       [ x"$x" = x"-fexceptions" ] ||
+       [ x"$x" = x"-fsanitize=thread" ]; then
+    echo "$PROG: $x not supported" >&2
+    exit 1
+  elif [ x"$x" = x"-fsanitize=all" ] ||
+       [ x"$x" = x"-fsanitize=address" ] ||
+       [ x"$x" = x"-fsanitize=undefined" ]; then
+    echo "$PROG: use cosmo MODE=dbg rather than passing $x" >&2
+    exit 1
+  elif [ x"$x" = x"-fomit-frame-pointer" ]; then
+    # Quoth Apple "The frame pointer register must always address a
+    # valid frame record. Some functions — such as leaf functions or
+    # tail calls — may opt not to create an entry in this list. As a
+    # result, stack traces are always meaningful, even without debug
+    # information."
+    x="-momit-leaf-frame-pointer"
+  elif [ x"$x" = x"-Werror" ] || \
+       [ x"$x" = x"-pedantic-errors" ]; then
+    # this toolchain is intended for building other people's code
+    # elevating warnings into errors, should only be done by devs
+    continue
+  elif [ x"$x" = x"-march=native" ]; then
+    set -- "$@" $("$COSMO/o/$MODE/tool/build/march-native.com")
+    continue
+  fi
+  set -- "$@" "$x"
+done
+
+if [ "$GOT_SOME" -eq 0 ]; then
+  echo "$PROG: fatal error: no input files" >&2
+  echo "compilation terminated." >&2
+  exit 1
+fi
+
+if [ $RELOCATABLE -eq 1 ]; then
+  APEFLAGS="-r"
+fi
+
+if [ x"$MODE" = x"nox87" ]; then
+  CCFLAGS="$CCFLAGS -mlong-double-64"
+fi
+
+if [ x"$OPT" != x"-Os" ] && [ x"${MODE#tiny}" != x"${MODE}" ]; then
+  # support --ftrace unless optimizing for size
+  CCFLAGS="$CCFLAGS -fpatchable-function-entry=18,16"
+fi
+
+if [ x"$MODE" = x"dbg" ]; then
+  set -- \
+      -fsanitize=address \
+      -fsanitize=undefined \
+      "$@"
+fi
+
+if [ x"$OPT" != x"-Os" ] &&
+   [ x"${MODE#tiny}" != x"${MODE}" ]; then
+  set -- \
+      -fno-optimize-sibling-calls \
+      -mno-omit-leaf-frame-pointer \
+      "$@"
+fi
+
+if [ $INTENT = cpp ]; then
+  set -- "$CC" $PLATFORM $CCFLAGS $CPPFLAGS "$@"
+elif [ $INTENT = cc ]; then
+  set -- "$CC" $PLATFORM $PREDEF $CCFLAGS $CPPFLAGS "$@" -fno-omit-frame-pointer
+else
+  set -- "$CC" $PLATFORM $PREDEF $CCFLAGS $CPPFLAGS $LDFLAGS $APEFLAGS $CPPFLAGS "$@" \
+         $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 -fno-omit-frame-pointer
+fi
+
+printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"${TMPDIR:-/tmp}/build.log"
+"$@" || exit
+
+if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
+  if [ $INTENT = cc ] || [ $INTENT = ld ]; then
+    "$COSMO/o/$MODE/tool/build/fixupobj.com" "$OUTPUT" || exit
+  fi
+  if [ $INTENT = ld ]; then
+    if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
+       [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
+      # cosmocc -o foo.com ...
+      # -> foo.com (ape)
+      # -> foo.com.dbg (elf)
+      mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
+      "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-objcopy" -S -O binary "$OUTPUT.dbg" "$OUTPUT" || exit
+      "$COSMO/o/$MODE/tool/build/zipcopy.com" "$OUTPUT.dbg" "$OUTPUT" || exit
+    elif [ $SFLAG -eq 1 ]; then
+      "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-strip" "$OUTPUT" || exit
+    fi
+  fi
+fi

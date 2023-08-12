@@ -23,6 +23,6 @@
  *
  * @return wc if written or -1 w/ errno
  */
-wint_t(putwc_unlocked)(wchar_t wc, FILE *f) {
+wint_t putwc_unlocked(wchar_t wc, FILE *f) {
   return fputwc_unlocked(wc, f);
 }

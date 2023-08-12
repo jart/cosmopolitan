@@ -1,0 +1,18 @@
+#!/bin/sh
+
+MODE=${MODE:-$m}
+COSMO=${COSMO:-/opt/cosmo}
+COSMOS=${COSMOS:-/opt/cosmos}
+
+if [ x"$1" = x"rcs" ] || [ x"$1" = x"rcsD" ]; then
+  TOOL="$COSMO/o/$MODE/tool/build/ar.com"
+else
+  TOOL="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar"
+fi
+
+if [ ! -x "$TOOL" ]; then
+  echo "$0: you need to run: cosmocc --update" >&2
+  exit 1
+fi
+
+exec "$TOOL" "$@"

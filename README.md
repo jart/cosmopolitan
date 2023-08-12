@@ -27,14 +27,10 @@ contains your non-monorepo artifacts.
 sudo mkdir -p /opt
 sudo chmod 1777 /opt
 git clone https://github.com/jart/cosmopolitan /opt/cosmo
-cd /opt/cosmo
-make -j8 toolchain
-ape/apeinstall.sh  # optional
-mkdir -p /opt/cosmos/bin
-export PATH="/opt/cosmos/bin:$PATH"
-echo 'PATH="/opt/cosmos/bin:$PATH"' >>~/.profile
-sudo ln -sf /opt/cosmo/tool/scripts/cosmocc /opt/cosmos/bin/cosmocc
-sudo ln -sf /opt/cosmo/tool/scripts/cosmoc++ /opt/cosmos/bin/cosmoc++
+export PATH="/opt/cosmo/bin:/opt/cosmos/bin:$PATH"
+echo 'PATH="/opt/cosmo/bin:/opt/cosmos/bin:$PATH"' >>~/.profile
+cosmocc --update   # pull cosmo and rebuild toolchain
+ape-install        # [optional] install /usr/bin/ape and binfmt_misc
 ```
 
 You've now successfully installed your very own cosmos. Now let's build
@@ -88,21 +84,21 @@ Here's how you can get a much more verbose log of function calls:
 ./hello.com --ftrace
 ```
 
-If you want to cut out the bloat and instead make your executables as
-tiny as possible, then the monorepo supports numerous build modes. You
-can select one of the predefined ones by looking at
-[build/config.mk](build/config.mk). One of the most popular modes is
-`MODE=tiny`. It can be used with the `cosmocc` toolchain as follows:
+If you don't want rich runtime features like the above included, and you
+just want libc, and you want smaller simpler programs. In that case, you
+can consider using `MODE=tiny`, which is preconfigured by the repo in
+[build/config.mk](build/config.mk). Using this mode is much more
+effective at reducing binary footprint than the `-Os` flag alone. You
+can change your build mode by doing the following:
 
 ```sh
-cd /opt/cosmo
-make -j8 MODE=tiny toolchain
+export MODE=tiny
+cosmocc --update
 ```
 
-Now that we have our toolchain, let's write a program that links less
-surface area than the program above. The executable that this program
-produces will run on platforms like Linux, Windows, MacOS, etc., even
-though it's directly using POSIX APIs, which Cosmopolitan polyfills.
+We can also make our program slightly smaller by using the system call
+interface directly, which is fine, since Cosmopolitan polyfills these
+interfaces across platforms, including Windows. For example:
 
 ```c
 // hello2.c
@@ -112,8 +108,7 @@ int main() {
 }
 ```
 
-Now let's compile our tiny actually portable executable, which should be
-on the order of 20kb in size.
+Once compiled, your APE binary should be ~36kb in size.
 
 ```sh
 export MODE=tiny
@@ -121,14 +116,14 @@ cosmocc -Os -o hello2.com hello2.c
 ./hello2.com
 ```
 
-Let's say you only care about Linux and would rather have simpler tinier
-binaries, similar to what Musl Libc would produce. In that case, try
-using the `MODE=tinylinux` build mode, which can produce binaries more
-on the order of 4kb.
+But let's say you only care about your binaries running on Linux and you
+don't want to use up all this additional space for platforms like WIN32.
+In that case, you can try `MODE=tinylinux` for example which will create
+executables more on the order of 8kb (similar to Musl Libc).
 
 ```sh
 export MODE=tinylinux
-(cd /opt/cosmo; make -j8 toolchain)
+cosmocc --update
 cosmocc -Os -o hello2.com hello2.c
 ./hello2.com  # <-- actually an ELF executable
 ```
@@ -207,7 +202,7 @@ WINE installed to `binfmt_misc`. You can fix that by installing the the
 APE loader as an interpreter. It'll improve build performance too!
 
 ```sh
-ape/apeinstall.sh
+bin/ape-install
 ```
 
 Since the Cosmopolitan repository is very large, you might only want to
@@ -306,11 +301,11 @@ It's possible to install the APE loader systemwide as follows.
 # for Linux, Darwin, and BSDs
 # 1. Copies APE Loader to /usr/bin/ape
 # 2. Registers w/ binfmt_misc too if Linux
-ape/apeinstall.sh
+bin/ape-install
 
 # System-Wide APE Uninstall
 # for Linux, Darwin, and BSDs
-ape/apeuninstall.sh
+bin/ape-uninstall
 ```
 
 It's also possible to convert APE binaries into the system-local format
