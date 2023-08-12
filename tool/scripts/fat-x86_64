@@ -2,16 +2,22 @@
 # amd64 backend compiler for fatcosmocc
 
 CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
-CCFLAGS="-mno-tls-direct-seg-refs -mno-red-zone"
+CFLAGS="-mno-tls-direct-seg-refs -mno-red-zone"
 LDFLAGS="-static -nostdlib -no-pie -Wl,-melf_x86_64"
 APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape.o $COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
 if [ x"$PROG" != x"${PROG%++}" ]; then
   CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
-  CCFLAGS="$CCFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $LDLIBS"
 fi
+
+log_command() {
+  if [ -n "$BUILDLOG" ]; then
+    printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"$BUILDLOG"
+  fi
+}
 
 OPT=
 FIRST=1
@@ -35,22 +41,31 @@ for x; do
 done
 
 if [ x"$MODE" = x"nox87" ]; then
-  CCFLAGS="$CCFLAGS -mlong-double-64"
+  CFLAGS="$CFLAGS -mlong-double-64"
 fi
 
 if [ x"$OPT" != x"-Os" ] && [ x"${MODE#tiny}" != x"${MODE}" ]; then
   # support --ftrace unless optimizing for size
-  CCFLAGS="$CCFLAGS -fpatchable-function-entry=18,16"
+  CFLAGS="$CFLAGS -fpatchable-function-entry=18,16"
 fi
 
 if [ $INTENT = cc ]; then
-  set -- "$CC" $CCFLAGS "$@"
+  set -- \
+      "$CC" \
+      $CFLAGS \
+      "$@"
 else
-  set -- "$CC" $CCFLAGS $LDFLAGS $APEFLAGS $CPPFLAGS "$@" \
-         $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 \
-         -fuse-ld=bfd
+  set -- \
+      "$CC" \
+      $LDFLAGS \
+      $APEFLAGS \
+      "$@" \
+      $LDLIBS \
+      -Wl,-z,common-page-size=4096 \
+      -Wl,-z,max-page-size=4096 \
+      -fuse-ld=bfd
 fi
 
-printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"${TMPDIR:-/tmp}/build.log"
+log_command "$@"
 "$@" || exit
 "$FIXUPOBJ" "$OUTPUT" || exit

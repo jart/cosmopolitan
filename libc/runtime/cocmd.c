@@ -578,20 +578,25 @@ static int Env(void) {
   return 0;
 }
 
-static int Exec(void) {
+static wontreturn void Exec(void) {
   Shift(1);
-  return ShellExec();
+  if (!ShellExec()) {
+    _Exit(0);  // can happen for builtins
+  } else {
+    perror("exec");
+    _Exit(127);  // sh exec never returns
+  }
 }
 
 static int TryBuiltin(void) {
   if (!n) return exitstatus;
   if (!strcmp(args[0], "exit")) Exit();
+  if (!strcmp(args[0], "exec")) Exec();
   if (!strcmp(args[0], "cd")) return Cd();
   if (!strcmp(args[0], "rm")) return Rm();
   if (!strcmp(args[0], "[")) return Test();
   if (!strcmp(args[0], "cat")) return Cat();
   if (!strcmp(args[0], "env")) return Env();
-  if (!strcmp(args[0], "exec")) return Exec();
   if (!strcmp(args[0], "wait")) return Wait();
   if (!strcmp(args[0], "echo")) return Echo();
   if (!strcmp(args[0], "read")) return Read();

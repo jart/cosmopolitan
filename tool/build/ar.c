@@ -327,8 +327,11 @@ int main(int argc, char *argv[]) {
   // on modern systems that it isn't worth supporting the byzantine
   // standard posix ar flags intended to improve cassette tape perf
   SortChars(flags, strlen(flags));
-  if (!IsEqual(flags, "crs") &&  //
-      !IsEqual(flags, "Dcrs")) {
+  if (*flags == 'D') ++flags;
+  if (!IsEqual(flags, "cr") &&    //
+      !IsEqual(flags, "cru") &&   //
+      !IsEqual(flags, "crsu") &&  //
+      !IsEqual(flags, "crs")) {
     tinyprint(2, program_invocation_name, ": flags should be rcsD\n", NULL);
     ShowUsage(1, 2);
   }

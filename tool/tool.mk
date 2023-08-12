@@ -3,7 +3,6 @@
 
 .PHONY:	o/$(MODE)/tool
 o/$(MODE)/tool:			\
-	o/$(MODE)/tool/ape	\
 	o/$(MODE)/tool/args	\
 	o/$(MODE)/tool/build	\
 	o/$(MODE)/tool/curl	\

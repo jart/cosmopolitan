@@ -13,6 +13,12 @@ if [ x"$PROG" != x"${PROG%++}" ]; then
   LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $LDLIBS"
 fi
 
+log_command() {
+  if [ -n "$BUILDLOG" ]; then
+    printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"$BUILDLOG"
+  fi
+}
+
 OPT=
 FIRST=1
 OUTPUT=
@@ -40,12 +46,21 @@ if [ x"$OPT" != x"-Os" ] && [ x"${MODE#aarch64-tiny}" != x"${MODE}" ]; then
 fi
 
 if [ $INTENT = cc ]; then
-  set -- "$CC" $CCFLAGS "$@"
+  set -- \
+      "$CC" \
+      $CCFLAGS \
+      "$@"
 else
-  set -- "$CC" $CCFLAGS $LDFLAGS $APEFLAGS $CPPFLAGS "$@" \
-         $LDLIBS -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384
+  set -- \
+      "$CC" \
+      $LDFLAGS \
+      $APEFLAGS \
+      "$@" \
+      $LDLIBS \
+      -Wl,-z,common-page-size=16384 \
+      -Wl,-z,max-page-size=16384
 fi
 
-printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"${TMPDIR:-/tmp}/build.log"
+log_command "$@"
 "$@" || exit
 "$FIXUPOBJ" "$OUTPUT" || exit

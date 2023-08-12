@@ -770,6 +770,8 @@ ASSERT(ape_stack_vaddr % ape_stack_memsz == 0,
 ASSERT(ALIGNOF(.tdata) <= TLS_ALIGNMENT && ALIGNOF(.tbss) <= TLS_ALIGNMENT,
        "_Thread_local _Alignof can't exceed TLS_ALIGNMENT");
 
+ASSERT(DEFINED(main), "main() function not defined");
+
 /* Let's not be like Knight Capital. */
 /* NOCROSSREFS_TO(.test .text) */
 

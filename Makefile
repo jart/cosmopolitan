@@ -209,7 +209,6 @@ include third_party/chibicc/test/test.mk
 include third_party/python/python.mk
 include tool/build/build.mk
 include tool/curl/curl.mk
-include tool/ape/ape.mk
 include third_party/qemu/qemu.mk
 include examples/examples.mk
 include examples/pyapp/pyapp.mk
@@ -433,6 +432,7 @@ TOOLCHAIN_ARTIFACTS =				\
 	o/$(MODE)/third_party/libcxx/libcxx.a	\
 	o/$(MODE)/tool/build/march-native.com	\
 	o/$(MODE)/tool/build/ar.com		\
+	o/$(MODE)/tool/build/mktemper.com	\
 	o/$(MODE)/tool/build/fixupobj.com	\
 	o/$(MODE)/tool/build/zipcopy.com	\
 	o/$(MODE)/tool/build/apelink.com	\

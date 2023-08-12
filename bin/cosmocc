@@ -1,13 +1,14 @@
 #!/bin/sh
 #
-# non-fat cosmopolitan c compiler
+# cosmopolitan c/c++ compiler
 #
 # getting started
 #
-#     sudo chmod 1777 /opt
+#     sudo chmod 1777 /opt  # sticky bit isn't required
 #     git clone https://github.com/jart/cosmopolitan /opt/cosmo
 #     export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"
 #     echo 'export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"' >>~/.profile
+#     ape-install  # optionally install a faster systemwide ape loader
 #     cosmocc --update  # pull and rebuild toolchain artifacts
 #
 # building open source projects
@@ -49,15 +50,44 @@
 #     (cd /opt/cosmo; make -j8 toolchain)
 #     cosmocc -o foo.com foo.c
 #
+# detecting this environment
+#
+#   - `__COSMOCC__` is defined when this compiler is in play
+#   - `__COSMOPOLITAN__` is always defined by Cosmopolitan Libc
+#
+# some notes on this compiler
+#
+#   - the underlying compiler itself is gcc
+#   - we use cosmopoiltan libc rather than glibc
+#   - we use llvm's compiler-rt and libcxx runtimes
+#   - we patched gcc so switch case can have symbols
+#   - our scanf() implementation is somewhat troubled
+#
+# compiler flags that aren't supported
+#
+#   - `-r` partial linking not implemented yet (todo)
+#   - `-S` you need to put your assembly behind #ifdefs instead
+#   - `-fexceptions` cosmopolitan doesn't support c++ exceptions yet
+#   - `-frtti` cosmopolitan doesn't support c++ runtime reflection yet
+#   - `-mred-zone` the system v red zone doesn't exist on windows and metal
+#   - `-fpic`, '-fPIC', `-shared`, `-pie`, etc. no shared object support yet
+#   - `-fsanitize=thread` cosmopolitan doesn't have thread sanitizer runtime yet
+#   - `-fomit-frame-pointer` is partially supported (apple forbids full removal)
+#
+# for further details, run `man gcc`
 
 PROG=${0##*/}
 MODE=${MODE:-$m}
 COSMO=${COSMO:-/opt/cosmo}
 COSMOS=${COSMOS:-/opt/cosmos}
+GCC_VERSION=11.2.0
 
 if [ "$1" = "--version" ]; then
+# note: only the underlying gcc compiler binaries are gpl
+#       our shell script is released with the isc license
+#       absolutely zero cosmo runtime libraries are gpl'd
 cat <<EOF
-$PROG (GCC) 11.2.0
+$PROG (GCC) $GCC_VERSION
 Copyright (C) 2019 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -134,7 +164,8 @@ for x; do
     set -- "$@" "$x"
     continue
   fi
-  if [ x"$x" = x"${x#-*}" ]; then
+  if [ x"$x" = x"-" ] ||           # is an argument
+     [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
     GOT_SOME=1
   elif [ x"$x" = x"-static-libstdc++" ]; then
     continue
@@ -180,7 +211,8 @@ for x; do
     # tail calls — may opt not to create an entry in this list. As a
     # result, stack traces are always meaningful, even without debug
     # information."
-    x="-momit-leaf-frame-pointer"
+    set -- "$@" -momit-leaf-frame-pointer -foptimize-sibling-calls
+    continue
   elif [ x"$x" = x"-Werror" ] || \
        [ x"$x" = x"-pedantic-errors" ]; then
     # this toolchain is intended for building other people's code
@@ -189,6 +221,9 @@ for x; do
   elif [ x"$x" = x"-march=native" ]; then
     set -- "$@" $("$COSMO/o/$MODE/tool/build/march-native.com")
     continue
+  elif [ x"$x" = x"-dumpversion" ]; then
+    echo $GCC_VERSION
+    exit 0
   fi
   set -- "$@" "$x"
 done
