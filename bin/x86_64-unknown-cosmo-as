@@ -6,7 +6,7 @@ COSMOS=${COSMOS:-/opt/cosmos}
 TOOL="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-as"
 
 if [ ! -x "$TOOL" ]; then
-  echo "$0: you need to run: cosmocc --update" >&2
+  echo "$0: you need to run: x86_64-unknown-cosmo-cc --update" >&2
   exit 1
 fi
 

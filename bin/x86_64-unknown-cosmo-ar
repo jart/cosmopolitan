@@ -10,7 +10,7 @@ fatal_error() {
 }
 
 if [ ! -x "$COSMO/o/$MODE/tool/build/ar.com" ]; then
-  fatal_error "you need to run: cosmocc --update"
+  fatal_error "you need to run: x86_64-unknown-cosmo-cc --update"
 fi
 
 if [ x"$1" = x"rc" ] ||
