@@ -242,7 +242,8 @@ if [ x"$MODE" = x"nox87" ]; then
   CCFLAGS="$CCFLAGS -mlong-double-64"
 fi
 
-if [ x"$OPT" != x"-Os" ] && [ x"${MODE#tiny}" != x"${MODE}" ]; then
+if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
+   [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   # support --ftrace unless optimizing for size
   CCFLAGS="$CCFLAGS -fpatchable-function-entry=18,16"
 fi
