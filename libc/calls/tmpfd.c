@@ -27,6 +27,8 @@
 
 #define _O_TMPFILE 000020200000
 
+int _mkstemp(char *, int);
+
 /**
  * Returns file descriptor of open anonymous file, e.g.
  *
@@ -88,7 +90,7 @@ int tmpfd(void) {
   if (!(prog = program_invocation_short_name)) prog = "tmp";
   strlcat(path, prog, sizeof(path));
   strlcat(path, ".XXXXXX", sizeof(path));
-  if ((fd = mkstemp(path)) == -1) return -1;
+  if ((fd = _mkstemp(path, IsWindows() ? 0x00410000 : 0)) == -1) return -1;
   if (!IsWindows()) unassert(!unlink(path));
   return fd;
 }

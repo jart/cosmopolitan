@@ -26,6 +26,32 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
+int _mkstemp(char *template, int oflags) {
+  uint64_t w;
+  int i, n, e, fd;
+  if ((n = strlen(template)) < 6 ||
+      READ16LE(template + n - 2) != READ16LE("XX") ||
+      READ32LE(template + n - 6) != READ32LE("XXXX")) {
+    return einval();
+  }
+  for (;;) {
+    w = _rand64();
+    for (i = 0; i < 6; ++i) {
+      template[n - 6 + i] = "0123456789abcdefghijklmnopqrstuvwxyz"[w % 36];
+      w /= 36;
+    }
+    e = errno;
+    if ((fd = open(template, O_RDWR | O_CREAT | O_EXCL | oflags, 0600)) != -1) {
+      return fd;
+    } else if (errno == EEXIST) {
+      errno = e;
+    } else {
+      template[0] = 0;
+      return fd;
+    }
+  }
+}
+
 /**
  * Creates temporary file name and file descriptor.
  *
@@ -52,27 +78,5 @@
  * @see tmpfd() if you don't need a path
  */
 int mkstemp(char *template) {
-  uint64_t w;
-  int i, n, e, fd;
-  if ((n = strlen(template)) < 6 ||
-      READ16LE(template + n - 2) != READ16LE("XX") ||
-      READ32LE(template + n - 6) != READ32LE("XXXX")) {
-    return einval();
-  }
-  for (;;) {
-    w = _rand64();
-    for (i = 0; i < 6; ++i) {
-      template[n - 6 + i] = "0123456789abcdefghijklmnopqrstuvwxyz"[w % 36];
-      w /= 36;
-    }
-    e = errno;
-    if ((fd = open(template, O_RDWR | O_CREAT | O_EXCL, 0600)) != -1) {
-      return fd;
-    } else if (errno == EEXIST) {
-      errno = e;
-    } else {
-      template[0] = 0;
-      return fd;
-    }
-  }
+  return _mkstemp(template, 0);
 }
