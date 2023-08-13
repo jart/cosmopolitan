@@ -34,6 +34,7 @@
  */
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/libgen.h"
 #include "libc/log/bsd.h"

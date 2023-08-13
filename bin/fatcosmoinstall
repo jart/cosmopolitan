@@ -1,5 +1,22 @@
 #!/bin/sh
 
+# the `install -s` strip flag provided by gnu coreutils surprisngly
+# enough understands the portable executable format however it will
+# silently corrupt any actually portable executable it touches, due
+# to how it overwrites the whole mz header and removes the dos stub
+FIRST=1
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ x"$x" = x"-s" ]; then
+    continue
+  fi
+  set -- "$@" "$x"
+done
+
+# now magically copy multi-architecture build artifacts
 if [ $# -gt 1 ]; then
 
   # parse `install [$flags]... $src $dst`
@@ -11,7 +28,7 @@ if [ $# -gt 1 ]; then
   for x; do
     if [ x"$x" != x"${x#* }" ]; then
       # give up if any arguments contain spaces
-      exec /usr/bin/install "$@"
+      exec install "$@"
     fi
     src=$dst
     dst=$x
@@ -48,8 +65,8 @@ if [ $# -gt 1 ]; then
       if [ ! -d "$dstdir.$arch" ]; then
         mkdir -p "$dstdir.$arch" || exit
       fi
-      /usr/bin/install $flags $src $dst || exit
-      exec /usr/bin/install $flags \
+      install $flags $src $dst || exit
+      exec install $flags \
            "$srcdir.$arch/$srcbas" \
            "$dstdir.$arch/$dstbas"
     fi
@@ -73,13 +90,11 @@ if [ $# -gt 1 ]; then
       if [ ! -d "$dst/.$arch" ]; then
         mkdir -p "$dst/.$arch" || exit
       fi
-      /usr/bin/install $flags $src $dst || exit
-      exec /usr/bin/install $flags \
-           "$srcdir.$arch/$srcbas" \
-           "$dst/.$arch"
+      install $flags $src $dst || exit
+      exec install $flags "$srcdir.$arch/$srcbas" "$dst/.$arch"
     fi
   fi
 
 fi
 
-exec /usr/bin/install "$@"
+exec install "$@"

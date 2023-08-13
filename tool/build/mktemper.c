@@ -22,6 +22,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/o.h"
 
 /**

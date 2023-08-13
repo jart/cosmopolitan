@@ -40,6 +40,7 @@
 #include "libc/zip.internal.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/elfwriter.h"
+#include "libc/errno.h"
 #include "tool/build/lib/stripcomponents.h"
 
 char *name_;

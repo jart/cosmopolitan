@@ -235,7 +235,7 @@ for x; do
   elif [ x"$x" = x"-" ] ||           # is alias for stdin
        [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
     if [ x"$x" != x"${x%.s}" ] ||
-         [ x"$x" != x"${x%.S}" ]; then
+       [ x"$x" != x"${x%.S}" ]; then
       fatal_error "$x: assembler input files not supported"
     elif [ x"$x" != x"${x%.so}" ] ||
          [ x"$x" != x"${x%.dll}" ] ||
@@ -466,9 +466,10 @@ for x in $ARGS; do
         OUTPUT_AARCH64="$mangled_path"
         build_object $FLAGS -c "$x"
       else
-        # e.g. `cc -c foo.c` builds foo.o
-        OUTPUT_X86_64="${x%.*}.o"
-        mangle_object_path "${x%.*}.o" aarch64
+        # e.g. `cc -c dir/foo.c` builds foo.o
+        o=${x##*/}
+        OUTPUT_X86_64="${o%.*}.o"
+        mangle_object_path "${o%.*}.o" aarch64
         OUTPUT_AARCH64="$mangled_path"
         build_object $FLAGS -c "$x"
       fi

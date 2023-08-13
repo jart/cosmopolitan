@@ -42,7 +42,8 @@ for x; do
   set -- "$@" "$x"
 done
 
-if [ x"$OPT" != x"-Os" ] && [ x"${MODE#aarch64-tiny}" != x"${MODE}" ]; then
+if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
+   [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   # support --ftrace unless optimizing for size
   CCFLAGS="$CCFLAGS -fpatchable-function-entry=7,6"
 fi

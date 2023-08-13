@@ -1,6 +1,17 @@
-#ifndef COSMOPOLITAN_LIBC_ASSERT_H_
-#define COSMOPOLITAN_LIBC_ASSERT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef _ASSERT_H
+#undef _ASSERT_H
+#undef assert
+#ifdef COSMO
+#undef unassert
+#undef npassert
+#ifndef NDEBUG
+#undef __assert_macro
+#endif /* NDEBUG */
+#endif /* COSMO */
+#endif /* _ASSERT_H */
+
+#ifndef _ASSERT_H
+#define _ASSERT_H
 COSMOPOLITAN_C_START_
 
 void __assert_fail(const char *, const char *, int) relegated;
@@ -11,7 +22,8 @@ void __assert_fail(const char *, const char *, int) relegated;
 #define assert(x) ((void)((x) || (__assert_fail(#x, __FILE__, __LINE__), 0)))
 #endif
 
-#ifndef __cplusplus
+#if __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
+#undef static_assert
 #define static_assert _Static_assert
 #endif
 
@@ -47,5 +59,4 @@ extern bool __assert_disable;
 #endif /* COSMO */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_ASSERT_H_ */
+#endif /* _ASSERT_H */

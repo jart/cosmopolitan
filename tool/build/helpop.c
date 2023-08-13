@@ -24,6 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/errno.h"
 #include "third_party/getopt/getopt.internal.h"
 
 #define USAGE \

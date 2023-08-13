@@ -4,7 +4,7 @@
 CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
 CFLAGS="-mno-tls-direct-seg-refs -mno-red-zone"
 LDFLAGS="-static -nostdlib -no-pie -Wl,-melf_x86_64 -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 -fuse-ld=bfd"
-APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape.o"
+APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds"
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
 if [ x"$PROG" != x"${PROG%++}" ]; then
@@ -44,7 +44,8 @@ if [ x"$MODE" = x"nox87" ]; then
   CFLAGS="$CFLAGS -mlong-double-64"
 fi
 
-if [ x"$OPT" != x"-Os" ] && [ x"${MODE#tiny}" != x"${MODE}" ]; then
+if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
+   [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
   # support --ftrace unless optimizing for size
   CFLAGS="$CFLAGS -fpatchable-function-entry=18,16"
 fi
@@ -57,6 +58,7 @@ if [ $INTENT = cc ]; then
 else
   set -- \
       "$CC" \
+      "$COSMO/o/$MODE/ape/ape.o" \
       "$COSMO/o/$MODE/libc/crt/crt.o" \
       "$@" \
       $LDFLAGS \

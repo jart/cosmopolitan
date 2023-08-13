@@ -33,6 +33,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "libc/errno.h"
 #include "third_party/lua/lunix.h"
 #ifndef __x86_64__
 

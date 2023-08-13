@@ -21,8 +21,6 @@ typedef unsigned long jmp_buf[26];
 typedef long sigjmp_buf[12];
 
 extern char **environ;
-extern char *program_invocation_name;
-extern char *program_invocation_short_name;
 
 void mcount(void);
 int daemon(int, int);

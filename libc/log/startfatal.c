@@ -19,7 +19,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/errno.h"
 #include "libc/thread/thread.h"
 
 /**

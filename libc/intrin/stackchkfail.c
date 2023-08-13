@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 
 __attribute__((__weak__)) void __stack_chk_fail(void) {

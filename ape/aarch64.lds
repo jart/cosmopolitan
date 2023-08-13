@@ -273,6 +273,7 @@ SECTIONS {
     *(.gnu.lto_*)
     *(.eh_frame)
     *(.idata.*)
+    *(.yoink)
     *(.head)
   }
 }

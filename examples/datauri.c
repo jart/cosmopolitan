@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"

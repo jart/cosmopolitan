@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"

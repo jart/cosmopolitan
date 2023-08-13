@@ -36,6 +36,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "libc/errno.h"
 #include "third_party/regex/regex.h"
 
 #define VERSION                                    \

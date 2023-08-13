@@ -17,6 +17,7 @@
 #include "third_party/mbedtls/test/lib.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
