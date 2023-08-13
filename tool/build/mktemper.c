@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/errno.h"
 #include "libc/sysv/consts/o.h"
 
 /**
@@ -57,9 +57,7 @@ int main(int argc, char *argv[]) {
     w /= 36;
   }
   int fd;
-  if ((fd = open(template,
-                 O_RDWR | O_CREAT | O_EXCL | (IsWindows() ? 0x00410000 : 0),
-                 0600)) == -1) {
+  if ((fd = open(template, O_RDWR | O_CREAT | O_EXCL, 0600)) == -1) {
     DieSys(template);
   }
   close(fd);

@@ -66,9 +66,7 @@ int mkstemp(char *template) {
       w /= 36;
     }
     e = errno;
-    if ((fd = open(template,
-                   O_RDWR | O_CREAT | O_EXCL | (IsWindows() ? 0x00410000 : 0),
-                   0600)) != -1) {
+    if ((fd = open(template, O_RDWR | O_CREAT | O_EXCL, 0600)) != -1) {
       return fd;
     } else if (errno == EEXIST) {
       errno = e;

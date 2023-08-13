@@ -71,22 +71,27 @@ COSMOPOLITAN_C_END_
 #define SIGXCPU   24
 #define SIGXFSZ   25
 
+/*
+ * - No macro is define for SIGIO and SIGPOLL in order to persuade
+ *   ./configure scripts to favor using poll() or select() instead of
+ *   interrupt-based i/o.
+ *
+ * - No macros are defined for SIGRTMIN and SIGRTMAX because the project
+ *   hasn't fleshed them out yet.
+ *
+ * - SIGTHR doesn't have a macro since it's internal to posix threads.
+ */
+
 #define SIGBUS    SIGBUS
-#define SIGTHR    SIGTHR
 #define SIGCHLD   SIGCHLD
 #define SIGCONT   SIGCONT
 #define SIGEMT    SIGEMT
 #define SIGINFO   SIGINFO
-#define SIGIO     SIGIO
-#define SIGPOLL   SIGPOLL
 #define SIGPWR    SIGPWR
-#define SIGRTMAX  SIGRTMAX
-#define SIGRTMIN  SIGRTMIN
 #define SIGSTKFLT SIGSTKFLT
 #define SIGSTOP   SIGSTOP
 #define SIGSYS    SIGSYS
 #define SIGTSTP   SIGTSTP
-#define SIGUNUSED SIGUNUSED
 #define SIGURG    SIGURG
 #define SIGUSR1   SIGUSR1
 #define SIGUSR2   SIGUSR2
@@ -94,7 +99,5 @@ COSMOPOLITAN_C_END_
 #define SIG_BLOCK   SIG_BLOCK
 #define SIG_SETMASK SIG_SETMASK
 #define SIG_UNBLOCK SIG_UNBLOCK
-
-
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SIG_H_ */

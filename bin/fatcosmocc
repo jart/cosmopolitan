@@ -76,7 +76,7 @@
 # some notes on this compiler
 #
 #   - the underlying compiler itself is gcc
-#   - we use cosmopoiltan libc rather than glibc
+#   - we use cosmopolitan libc rather than glibc
 #   - we use llvm's compiler-rt and libcxx runtimes
 #   - we patched gcc so switch case can have symbols
 #   - our scanf() implementation is somewhat troubled

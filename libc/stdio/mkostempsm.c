@@ -40,8 +40,7 @@ int mkostempsmi(char *tpl, int slen, unsigned flags, uint64_t *rando, int mode,
   if (len < wildlen || slen > len - wildlen) return einval();
   char *ss = tpl + len - wildlen - slen;
   npassert(memcmp(ss, WILDCARD, wildlen) == 0);
-  flags = (flags & ~(flags & O_ACCMODE)) | O_RDWR | O_CREAT | O_EXCL |
-          (IsWindows() ? 0x00410000 : 0);
+  flags = (flags & ~(flags & O_ACCMODE)) | O_RDWR | O_CREAT | O_EXCL;
   unsigned attempts = ATTEMPTS;
   do {
     char *p = ss;

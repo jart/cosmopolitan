@@ -100,7 +100,6 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
   if (flags & _O_SEQUENTIAL) attr |= kNtFileFlagSequentialScan;
   if (flags & _O_RANDOM) attr |= kNtFileFlagRandomAccess;
   if (flags & _O_DIRECT) attr |= kNtFileFlagNoBuffering;
-  if (flags & _O_NDELAY) attr |= kNtFileFlagWriteThrough;
 
   if (out_perm) *out_perm = perm;
   if (out_share) *out_share = share;
