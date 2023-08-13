@@ -109,15 +109,19 @@ export TMPDIR=${TMPDIR:-/tmp}
 GCC_VERSION=11.2.0
 
 if [ "$1" = "--version" ]; then
-# note: only the underlying gcc compiler binaries are gpl
-#       our shell script is released with the isc license
-#       absolutely zero cosmo runtime libraries are gpl'd
-#       and the apelink.com program is definitely not gpl
 cat <<EOF
 $PROG (GCC) $GCC_VERSION
+Copyright (c) 2023 Justine Alexandra Roberts Tunney
+Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
+notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
+our copyright notices. This toolchain is configured to do so default.
+Cosmopolitan comes with absolutely NO WARRANTY of any kind.
+For more information, see the Cosmopolitan LICENSE files.
 Copyright (C) 2019 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This launches GNU GCC/Binutils subprocesses, which is free software; see
+Cosmopolitan's third_party/gcc/ for source code and copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
 EOF
 exit 0
 fi
@@ -147,15 +151,25 @@ fi
 if [ "$1" = "--update" ]; then
   cd /opt/cosmo || exit
   if GIT=$(command -v git); then
-    echo "$PROG: running git pull on cosmo..." >&2
+    echo "running git pull on cosmo..." >&2
     "$GIT" pull --quiet || exit
   fi
-  echo "$PROG: building cosmo x86_64 toolchain..." >&2
-  make --silent -j toolchain MODE="${MODE}" || exit
-  echo "$PROG: building cosmo aarch64 toolchain..." >&2
-  make --silent -j toolchain MODE="${MODE_AARCH64}" || exit
-  "$COSMO/tool/scripts/setup-cosmos"
-  echo "$PROG: successfully updated your cosmo toolchain" >&2
+  echo "building cosmo host toolchain..." >&2
+  make --silent -j toolchain MODE= || exit
+  echo "building cosmo x86_64 target (MODE=$MODE) toolchain..." >&2
+  make --silent -j toolchain MODE="$MODE" || exit
+  echo "building cosmo aarch64 target (MODE=$MODE_AARCH64) toolchain..." >&2
+  make --silent -j toolchain MODE="$MODE_AARCH64" || exit
+  echo "setting up your cosmos..." >&2
+  for arch in "" .aarch64/; do
+    mkdir -p "$COSMOS/lib/$arch" || exit
+    for lib in c dl gcc_s m pthread resolv rt dl z stdc++; do
+      if [ ! -f "$COSMOS/lib/${arch}lib${lib}.a" ]; then
+        printf '\041\074\141\162\143\150\076\012' >"$COSMOS/lib/${arch}lib${lib}.a" || exit
+      fi
+    done
+  done
+  echo "successfully updated your cosmo toolchain" >&2
   exit
 fi
 
@@ -164,14 +178,15 @@ if [ ! -d "$COSMO" ]; then
   exit 1
 fi
 
-if [ ! -d "$COSMOS" ] ||
+if [ ! -f "$COSMOS/lib/libc.a" ] ||
+   [ ! -f "$COSMOS/lib/.aarch64/libc.a" ] ||
    [ ! -f "$COSMO/o/$MODE/cosmopolitan.a" ] ||
    [ ! -f "$COSMO/o/$MODE_AARCH64/cosmopolitan.a" ]; then
   echo "$PROG: you need to run: $PROG --update" >&2
   exit 1
 fi
 
-export FIXUPOBJ="$COSMO/o/$MODE/tool/build/fixupobj.com"
+export FIXUPOBJ="$COSMO/o//tool/build/fixupobj.com"
 
 TEMP_FILES=
 SAVE_TEMPS=0
@@ -307,6 +322,8 @@ for x; do
        [ x"$x" = x"-shared-libgcc" ]; then
     # cosmopolitan.a always has llvm compiler runtime static code
     continue
+  elif [ x"$x" = x"-march=native" ]; then
+    fatal_error "-march=native can't be used when building fat binaries"
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     Exit 0
@@ -395,7 +412,7 @@ mangle_object_path() {
 }
 
 mktemper() {
-  "$COSMO/o/$MODE/tool/build/mktemper.com" \
+  "$COSMO/o//tool/build/mktemper.com" \
     "$TMPDIR/fatcosmocc.XXXXXXXXXXXXX$1"
 }
 
@@ -493,8 +510,8 @@ if [ $INTENT != ld ]; then
   Exit
 fi
 
-OUTPUT_X86_64="$OUTPUT.x86_64"
-OUTPUT_AARCH64="$OUTPUT.aarch64"
+OUTPUT_X86_64=$(mktemper ".com.dbg") || Exit
+OUTPUT_AARCH64=$(mktemper ".aarch64.elf") || Exit
 
 out2=$(mktemper .txt) || Exit
 TEMP_FILES="${TEMP_FILES} $out2"
@@ -516,7 +533,7 @@ if ! wait $pid2; then
 fi
 
 set -- \
-"$COSMO/o/$MODE/tool/build/apelink.com" \
+"$COSMO/o//tool/build/apelink.com" \
   -l "$COSMO/o/$MODE/ape/ape.elf" \
   -l "$COSMO/o/$MODE_AARCH64/ape/ape.elf" \
   -M "$COSMO/ape/ape-m1.c" \
@@ -528,13 +545,13 @@ log_command "$@"
 "$@" || Exit
 
 set -- \
-"$COSMO/o/$MODE/tool/build/pecheck.com" "$OUTPUT"
+"$COSMO/o//tool/build/pecheck.com" "$OUTPUT"
 log_command "$@"
 "$@" || Exit
 
 if [ $INTENT = ld ] && [ $SAVE_TEMPS -eq 0 ]; then
-  rm -f "$OUTPUT_X86_64" \
-        "$OUTPUT_AARCH64"
+  mv -f "$OUTPUT_X86_64" "${OUTPUT%.com}.com.dbg" || Exit
+  mv -f "$OUTPUT_AARCH64" "${OUTPUT%.com}.aarch64.elf" || Exit
 fi
 
 Exit

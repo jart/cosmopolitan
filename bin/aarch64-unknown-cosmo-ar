@@ -1,0 +1,29 @@
+#!/bin/sh
+
+PROG=${0##*/}
+MODE=${MODE:-${m:-aarch64}}
+COSMO=${COSMO:-/opt/cosmo}
+
+fatal_error() {
+  echo "$PROG: $1" >&2
+  exit 1
+}
+
+if [ ! -x "$COSMO/o//tool/build/ar.com" ]; then
+  fatal_error "you need to run: aarch64-unknown-cosmo-cc --update"
+fi
+
+if [ x"$1" = x"rc" ] ||
+   [ x"$1" = x"rcD" ] ||
+   [ x"$1" = x"rcu" ] |
+   [ x"$1" = x"rcuD" ] ||
+   [ x"$1" = x"rcs" ] ||
+   [ x"$1" = x"rcsD" ] ||
+   [ x"$1" = x"--help" ] ||
+   [ x"$1" = x"--version" ]; then
+  AR="$COSMO/o//tool/build/ar.com"
+else
+  AR="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-ar"
+fi
+
+exec "$AR" "$@"

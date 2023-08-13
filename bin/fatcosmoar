@@ -9,7 +9,7 @@ fatal_error() {
   exit 1
 }
 
-if [ ! -x "$COSMO/o/$MODE/tool/build/ar.com" ]; then
+if [ ! -x "$COSMO/o//tool/build/ar.com" ]; then
   fatal_error "you need to run: fatcosmocc --update"
 fi
 
@@ -24,8 +24,8 @@ if [ x"$1" = x"rc" ] ||
   # binutils ar is accidentally quadratic
   # cosmopolitan ar is significantly faster
   # it'll also use tricks like copy_file_range
-  AR_X86_64="$COSMO/o/$MODE/tool/build/ar.com"
-  AR_AARCH64="$COSMO/o/$MODE/tool/build/ar.com"
+  AR_X86_64="$COSMO/o//tool/build/ar.com"
+  AR_AARCH64="$COSMO/o//tool/build/ar.com"
   if [ "$1" = "--help" ] ||
      [ "$1" = "--version" ]; then
     exec "$AR_X86_64" "$1"

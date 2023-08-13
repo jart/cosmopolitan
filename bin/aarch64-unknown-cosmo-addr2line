@@ -1,0 +1,13 @@
+#!/bin/sh
+
+MODE=${MODE:-${m:-aarch64}}
+COSMO=${COSMO:-/opt/cosmo}
+COSMOS=${COSMOS:-/opt/cosmos/aarch64}
+TOOL="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-addr2line"
+
+if [ ! -x "$TOOL" ]; then
+  echo "$0: you need to run: aarch64-unknown-cosmo-cc --update" >&2
+  exit 1
+fi
+
+exec "$TOOL" "$@"
