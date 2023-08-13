@@ -32,11 +32,20 @@
  *     0x08000000       27       27       28       27        4
  *     0xffffffff        0        0        1       31        0
  *
- * @param x is a 32-bit integer
- * @return number in range 0..31 or undefined if 𝑥 is 0
+ * @param 𝑥 is a 64-bit integer
+ * @return number in range 0..63 or undefined if 𝑥 is 0
  */
-int(_bsf)(int x) {
-  return _bsf(x);
+int(_bsfl)(long x) {
+  unsigned l, r;
+  x &= -x;
+  l = x | x >> 32;
+  r = !!(x >> 32), r <<= 1;
+  r += !!((l & 0xffff0000)), r <<= 1;
+  r += !!((l & 0xff00ff00)), r <<= 1;
+  r += !!((l & 0xf0f0f0f0)), r <<= 1;
+  r += !!((l & 0xcccccccc)), r <<= 1;
+  r += !!((l & 0xaaaaaaaa));
+  return r;
 }
 
 /**
@@ -53,11 +62,11 @@ int(_bsf)(int x) {
  *     0x08000000       27       27       28       27        4
  *     0xffffffff        0        0        1       31        0
  *
- * @param 𝑥 is a 64-bit integer
- * @return number in range 0..63 or undefined if 𝑥 is 0
+ * @param x is a 32-bit integer
+ * @return number in range 0..31 or undefined if 𝑥 is 0
  */
-int(_bsfl)(long x) {
-  return _bsfl(x);
+int(_bsf)(int x) {
+  return _bsf((unsigned)x);
 }
 
 __weak_reference(_bsfl, _bsfll);
