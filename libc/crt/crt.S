@@ -113,6 +113,12 @@ _start:
 	call	cosmo
 9:	.unreachable
 
+//	strongly link main() function (discarded by linker)
+//	libc_runtime had to weakly link, due to package.com
+	.section .yoink
+	call	main
+	.previous
+
 ////////////////////////////////////////////////////////////////////////////////
 #elif defined(__aarch64__)
 
@@ -139,6 +145,12 @@ _start:
 //	switch to c code
 	bl	cosmo
 	.unreachable
+
+//	strongly link main() function (discarded by linker)
+//	libc_runtime had to weakly link, due to package.com
+	.section .yoink
+	bl	main
+	.previous
 
 ////////////////////////////////////////////////////////////////////////////////
 #else

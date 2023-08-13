@@ -1,0 +1,85 @@
+#!/bin/sh
+
+if [ $# -gt 1 ]; then
+
+  # parse `install [$flags]... $src $dst`
+  i=0
+  n=$(( $# - 2 ))
+  dst=
+  src=
+  flags=
+  for x; do
+    if [ x"$x" != x"${x#* }" ]; then
+      # give up if any arguments contain spaces
+      exec /usr/bin/install "$@"
+    fi
+    src=$dst
+    dst=$x
+    if [ $i -lt $n ]; then
+      flags="$flags $x"
+    fi
+    i=$(( i + 1 ))
+  done
+
+  arch=aarch64
+
+  # turn:
+  #   install -c -m 644 foo.a /usr/lib/foo.a
+  # into:
+  #   install -c -m 644 foo.a /usr/lib/foo.a
+  #   install -c -m 644 .aarch/foo.a /usr/lib/.aarch/foo.a
+  if [ x"${dst##*/}" = x"${src##*/}" ] &&  # basenames are equal
+     [ x"$dst" != x"${dst%.a}" ]; then     # specifies static archive
+    srcdir=${src%/*}
+    srcbas=${dst##*/}
+    if [ x"$srcdir" = x"$src" ]; then
+      srcdir=
+    elif [ -n "$srcdir" ]; then
+      srcdir="$srcdir/"
+    fi
+    if [ -f "$srcdir.$arch/$srcbas" ]; then
+      dstdir=${dst%/*}
+      dstbas=${dst##*/}
+      if [ x"$dstdir" = x"$dst" ]; then
+        dstdir=
+      elif [ -n "$dstdir" ]; then
+        dstdir="$dstdir/"
+      fi
+      if [ ! -d "$dstdir.$arch" ]; then
+        mkdir -p "$dstdir.$arch" || exit
+      fi
+      /usr/bin/install $flags $src $dst || exit
+      exec /usr/bin/install $flags \
+           "$srcdir.$arch/$srcbas" \
+           "$dstdir.$arch/$dstbas"
+    fi
+  fi
+
+  # turn:
+  #   install -c -m 644 foo.a /usr/lib
+  # into:
+  #   install -c -m 644 foo.a /usr/lib
+  #   install -c -m 644 .aarch/foo.a /usr/lib/.aarch
+  arch=aarch64
+  if [ x"$src" != x"${src%.a}" ] && [ -d "$dst" ]; then
+    srcdir=${src%/*}
+    srcbas=${dst##*/}
+    if [ x"$srcdir" = x"$src" ]; then
+      srcdir=
+    elif [ -n "$srcdir" ]; then
+      srcdir="$srcdir/"
+    fi
+    if [ -f "$srcdir.$arch/$srcbas" ]; then
+      if [ ! -d "$dst/.$arch" ]; then
+        mkdir -p "$dst/.$arch" || exit
+      fi
+      /usr/bin/install $flags $src $dst || exit
+      exec /usr/bin/install $flags \
+           "$srcdir.$arch/$srcbas" \
+           "$dst/.$arch"
+    fi
+  fi
+
+fi
+
+exec /usr/bin/install "$@"

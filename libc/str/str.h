@@ -137,14 +137,6 @@ char *strtok_r(char *, const char *, char **) paramsnonnull((2, 3));
 wchar_t *wcstok(wchar_t *, const wchar_t *, wchar_t **) paramsnonnull((2, 3));
 char *wstrtrunc(uint16_t *) memcpyesque;
 char *wstrntrunc(uint16_t *, size_t) memcpyesque;
-bool _startswith(const char *, const char *) strlenesque;
-bool _startswithi(const char *, const char *) strlenesque;
-bool _startswith16(const char16_t *, const char16_t *) strlenesque;
-bool _wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
-bool _endswith(const char *, const char *) strlenesque;
-bool _endswith16(const char16_t *, const char16_t *) strlenesque;
-bool _wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
-const char *IndexDoubleNulString(const char *, unsigned) strlenesque;
 int strverscmp(const char *, const char *);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t) memcpyesque;
 char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
@@ -165,9 +157,6 @@ char *strtoupper(char *) libcesque paramsnonnull();
 char *_chomp(char *) libcesque;
 char16_t *_chomp16(char16_t *) libcesque;
 wchar_t *_wchomp(wchar_t *) libcesque;
-bool _istext(const void *, size_t) libcesque;
-bool _isutf8(const void *, size_t) libcesque;
-bool _escapedos(char16_t *, unsigned, const char16_t *, unsigned) libcesque;
 
 typedef unsigned mbstate_t;
 
@@ -213,6 +202,20 @@ int strerror_wr(int, uint32_t, char *, size_t)
 dontthrow nocallback;
 int __xpg_strerror_r(int, char *, size_t)
 dontthrow nocallback;
+
+#ifdef COSMO
+bool _startswith(const char *, const char *) strlenesque;
+bool _startswithi(const char *, const char *) strlenesque;
+bool _startswith16(const char16_t *, const char16_t *) strlenesque;
+bool _wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
+bool _endswith(const char *, const char *) strlenesque;
+bool _endswith16(const char16_t *, const char16_t *) strlenesque;
+bool _wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
+const char *IndexDoubleNulString(const char *, unsigned) strlenesque;
+bool _istext(const void *, size_t) libcesque;
+bool _isutf8(const void *, size_t) libcesque;
+bool _escapedos(char16_t *, unsigned, const char16_t *, unsigned) libcesque;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

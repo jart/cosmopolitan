@@ -25,6 +25,8 @@
     "__NetBSD_Version__"
     "__OpenBSD__"
     "__COSMOPOLITAN__"
+    "__COSMOCC__"
+    "__FATCOSMOCC__"
     "__GLIBC__"
     "__linux"
     "__MACH__"

@@ -29,22 +29,22 @@
 #define get_byte_1(v)           (((v) >> 11) & 0x7FF)
 #define get_byte_2_flip_sign(v) (((unsigned)(v) >> 22) ^ 0x200)
 
-bool radix_sort_int32(int32_t *A, size_t n) {
+int radix_sort_int32(int32_t *A, size_t n) {
   int32_t *T, *reader, *writer;
   size_t i, pos, sum0, sum1, sum2, tsum, *b0, *b1, *b2;
 
   if (n < HIST_SIZE) {
     _intsort(A, n);
-    return true;
+    return 0;
   }
 
   if (!(T = (int32_t *)malloc(n * sizeof(int32_t)))) {
-    return false;
+    return -1;
   }
 
   if (!(b0 = (size_t *)calloc(HIST_SIZE * 3, sizeof(size_t)))) {
     free(T);
-    return false;
+    return -1;
   }
 
   b1 = b0 + HIST_SIZE;
@@ -97,5 +97,5 @@ bool radix_sort_int32(int32_t *A, size_t n) {
 
   free(b0);
   free(T);
-  return true;
+  return 0;
 }

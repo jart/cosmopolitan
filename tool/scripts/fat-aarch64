@@ -3,8 +3,8 @@
 
 CC="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-gcc"
 CCFLAGS="-ffixed-x18 -ffixed-x28 -mno-outline-atomics"
-LDFLAGS="-static -nostdlib -no-pie -Wl,-z,norelro"
-APEFLAGS="-L$COSMOS/lib/.aarch64 -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/aarch64.lds $COSMO/o/$MODE/libc/crt/crt.o"
+LDFLAGS="-static -nostdlib -no-pie -Wl,-z,norelro -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
+APEFLAGS="-L$COSMOS/lib/.aarch64 -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/aarch64.lds"
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
 if [ x"$PROG" != x"${PROG%++}" ]; then
@@ -34,6 +34,8 @@ for x; do
     INTENT=cc
   elif [ x"$x" != x"${x#-o}" ]; then
     OUTPUT=${x#-o}
+  elif [ x"$x" != x"${x#-L}" ]; then
+    x="$x/.aarch64"
   elif [ x"$x" = x"-march=native" ]; then
     continue  # doesn't make sense for a cross compiler
   fi
@@ -53,12 +55,11 @@ if [ $INTENT = cc ]; then
 else
   set -- \
       "$CC" \
+      "$COSMO/o/$MODE/libc/crt/crt.o" \
+      "$@" \
       $LDFLAGS \
       $APEFLAGS \
-      "$@" \
-      $LDLIBS \
-      -Wl,-z,common-page-size=16384 \
-      -Wl,-z,max-page-size=16384
+      $LDLIBS
 fi
 
 log_command "$@"

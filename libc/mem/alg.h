@@ -29,8 +29,8 @@ int mergesort_r(void *, size_t, size_t,
 
 #define __algalloc returnspointerwithnoaliases dontthrow nocallback dontdiscard
 
-bool radix_sort_int32(int32_t *, size_t);
-bool radix_sort_int64(int64_t *, size_t);
+int radix_sort_int32(int32_t *, size_t);
+int radix_sort_int64(int64_t *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

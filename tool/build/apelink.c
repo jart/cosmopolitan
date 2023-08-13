@@ -1857,7 +1857,7 @@ int main(int argc, char *argv[]) {
       struct Input *in = inputs.p + i;
       if (GetElfSymbol(in, "__zipos_get")) {
         LoadSymbols(in->elf, in->size, in->path);
-      } else {
+      } else if (!want_stripped) {
         tinyprint(2, in->path,
                   ": warning: won't generate symbol table unless "
                   "__static_yoink(\"zipos\") is linked\n",

@@ -29,8 +29,8 @@ sudo chmod 1777 /opt
 git clone https://github.com/jart/cosmopolitan /opt/cosmo
 export PATH="/opt/cosmo/bin:/opt/cosmos/bin:$PATH"
 echo 'PATH="/opt/cosmo/bin:/opt/cosmos/bin:$PATH"' >>~/.profile
+ape-install        # optionally install a faster systemwide ape loader
 cosmocc --update   # pull cosmo and rebuild toolchain
-ape-install        # [optional] install /usr/bin/ape and binfmt_misc
 ```
 
 You've now successfully installed your very own cosmos. Now let's build

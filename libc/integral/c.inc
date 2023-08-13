@@ -97,14 +97,6 @@
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
-#define HAVE_STDBOOL_H 1
-#if __STDC_VERSION__ + 0 >= 201112
-typedef _Bool bool;
-#else
-#define bool int
-#endif
-#define true 1
-#define false 0
 typedef __WCHAR_TYPE__ wchar_t;
 typedef __CHAR16_TYPE__ char16_t;
 typedef __CHAR32_TYPE__ char32_t;
@@ -112,6 +104,10 @@ typedef __CHAR32_TYPE__ char32_t;
 #pragma GCC pop_options
 #endif
 #endif /* __cplusplus */
+
+#ifndef __COSMOCC__
+#include "libc/stdbool.h"
+#endif
 
 #define _LIBCPP_STDINT_H
 

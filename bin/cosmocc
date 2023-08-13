@@ -6,8 +6,8 @@
 #
 #     sudo chmod 1777 /opt  # sticky bit isn't required
 #     git clone https://github.com/jart/cosmopolitan /opt/cosmo
-#     export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"
-#     echo 'export PATH="$PATH:/opt/cosmo/bin:/opt/cosmos/bin"' >>~/.profile
+#     export PATH="/opt/cosmo/bin:/opt/cosmos/bin:$PATH"
+#     echo 'export PATH="/opt/cosmo/bin:/opt/cosmos/bin:$PATH"' >>~/.profile
 #     ape-install  # optionally install a faster systemwide ape loader
 #     cosmocc --update  # pull and rebuild toolchain artifacts
 #
@@ -114,7 +114,7 @@ PLATFORM="-D__COSMOPOLITAN__"
 PREDEF="-include libc/integral/normalize.inc"
 CCFLAGS="-fno-pie -mno-tls-direct-seg-refs -mno-red-zone -fportcosmo"
 CPPFLAGS="-nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
-LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096"
 APEFLAGS="-L$COSMOS/lib -Wl,--gc-sections -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds $COSMO/o/$MODE/ape/ape-no-modify-self.o $COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 
@@ -130,7 +130,7 @@ if [ ! -d "$COSMO" ]; then
 fi
 
 if [ ! -d "$COSMOS" ] ||
-   [ ! -x "$COSMO/o/$MODE/cosmopolitan.a" ]; then
+   [ ! -f "$COSMO/o/$MODE/cosmopolitan.a" ]; then
   echo "$PROG: you need to run: $PROG --update" >&2
   exit 1
 fi
@@ -267,8 +267,8 @@ if [ $INTENT = cpp ]; then
 elif [ $INTENT = cc ]; then
   set -- "$CC" $PLATFORM $PREDEF $CCFLAGS $CPPFLAGS "$@" -fno-omit-frame-pointer
 else
-  set -- "$CC" $PLATFORM $PREDEF $CCFLAGS $CPPFLAGS $LDFLAGS $APEFLAGS $CPPFLAGS "$@" \
-         $LDLIBS -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096 -fno-omit-frame-pointer
+  set -- "$CC" $PLATFORM $PREDEF $CCFLAGS $CPPFLAGS $CPPFLAGS "$@" \
+         $LDFLAGS $APEFLAGS $LDLIBS -fno-omit-frame-pointer
 fi
 
 printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"${TMPDIR:-/tmp}/build.log"

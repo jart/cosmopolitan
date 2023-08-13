@@ -99,6 +99,7 @@ endif
 .PLEDGE = stdio rpath wpath cpath fattr proc
 .UNVEIL =			\
 	libc/integral		\
+	libc/stdbool.h		\
 	libc/disclaimer.inc	\
 	rwc:/dev/shm		\
 	rx:build/bootstrap	\
@@ -131,7 +132,6 @@ include libc/str/str.mk				# │
 include third_party/xed/xed.mk			# │
 include third_party/puff/puff.mk		# │
 include third_party/zlib/zlib.mk		# │
-include third_party/double-conversion/dc.mk	# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
 include libc/fmt/fmt.mk				# │
@@ -139,7 +139,8 @@ include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include third_party/nsync/nsync.mk		# │
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
-include libc/crt/crt.mk				# │  You can issue system calls
+include third_party/double-conversion/dc.mk	# │  You can issue system calls
+include libc/crt/crt.mk				# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
 include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
