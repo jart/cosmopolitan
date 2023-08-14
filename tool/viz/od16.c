@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
@@ -25,6 +26,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/fileno.h"
 #include "third_party/getopt/getopt.internal.h"
 
 #define USAGE \
@@ -36,17 +38,15 @@ Flags:\n\
   -c INT\n\
   -w INT     width (aka cols) [default 8]\n\
   -o PATH    output path [default -]\n\
-  -h         shows this information\n\
+  -h or -?   shows this information\n\
 \n"
 
 static long width_;
 static FILE *in_, *out_;
 static char *inpath_, *outpath_;
 
-void PrintUsage(int rc, FILE *f) {
-  fputs("Usage: ", f);
-  fputs(program_invocation_name, f);
-  fputs(USAGE, f);
+void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "Usage: ", program_invocation_name, USAGE, NULL);
   exit(rc);
 }
 
@@ -63,11 +63,14 @@ void GetOpts(int *argc, char *argv[]) {
       case 'w':
         width_ = strtol(optarg, NULL, 0);
         break;
-      case '?':
       case 'h':
-        PrintUsage(EXIT_SUCCESS, stdout);
+      case '?':
       default:
-        PrintUsage(EX_USAGE, stderr);
+        if (opt == optopt) {
+          PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
+        } else {
+          PrintUsage(EX_USAGE, STDERR_FILENO);
+        }
     }
   }
   if (optind == *argc) {

@@ -66,8 +66,8 @@ static struct Flags {
 
 struct winsize g_winsize;
 
-static wontreturn void PrintUsage(int rc, FILE *f) {
-  fprintf(f, "Usage: %s%s", program_invocation_name, "\
+static wontreturn void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "Usage: ", program_invocation_name, "\
  [FLAGS] [PATH]\n\
 \n\
 FLAGS\n\
@@ -94,7 +94,7 @@ FLAGS\n\
 EXAMPLES\n\
 \n\
   printimage.com -sxd lemurs.jpg  # 256-color dither unsharp\n\
-\n");
+\n", NULL);
   exit(rc);
 }
 
@@ -114,7 +114,7 @@ static void GetOpts(int *argc, char *argv[]) {
   g_flags.blocks = IsWindows() ? kTtyBlocksCp437 : kTtyBlocksUnicode;
   if (*argc == 2 &&
       (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0)) {
-    PrintUsage(EXIT_SUCCESS, stdout);
+    PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
   }
   while ((opt = getopt(*argc, argv, "?vpmfirtxads234o:w:h:")) != -1) {
     switch (opt) {
@@ -170,9 +170,12 @@ static void GetOpts(int *argc, char *argv[]) {
         ++__log_level;
         break;
       case '?':
-        PrintUsage(EXIT_SUCCESS, stdout);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        if (opt == optopt) {
+          PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
+        } else {
+          PrintUsage(EX_USAGE, STDERR_FILENO);
+        }
     }
   }
   g_winsize.ws_col = 80;
@@ -435,7 +438,7 @@ int main(int argc, char *argv[]) {
   int i;
   ShowCrashReports();
   GetOpts(&argc, argv);
-  if (optind == argc) PrintUsage(0, stdout);
+  if (optind == argc) PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
   stbi_set_unpremultiply_on_load(true);
   for (i = optind; i < argc; ++i) {
     WithImageFile(argv[i], ProcessImage);

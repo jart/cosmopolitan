@@ -43,8 +43,17 @@ typedef struct {
   int max_frame_size;
 } stb_vorbis_info;
 
+typedef struct {
+  char *vendor;
+  int comment_list_length;
+  char **comment_list;
+} stb_vorbis_comment;
+
 // get general information about the file
 stb_vorbis_info stb_vorbis_get_info(stb_vorbis *f);
+
+// get ogg comments
+stb_vorbis_comment stb_vorbis_get_comment(stb_vorbis *f);
 
 // get the last error detected (clears it, too)
 int stb_vorbis_get_error(stb_vorbis *f);
@@ -119,6 +128,12 @@ int stb_vorbis_decode_frame_pushdata(
 // channel. In other words, (*output)[0][0] contains the first sample from
 // the first channel, and (*output)[1][0] contains the first sample from
 // the second channel.
+//
+// *output points into stb_vorbis's internal output buffer storage; these
+// buffers are owned by stb_vorbis and application code should not free
+// them or modify their contents. They are transient and will be overwritten
+// once you ask for more data to get decoded, so be sure to grab any data
+// you need before then.
 
 void stb_vorbis_flush_pushdata(stb_vorbis *f);
 // inform stb_vorbis that your next datablock will not be contiguous with

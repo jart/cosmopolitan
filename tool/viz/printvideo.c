@@ -123,7 +123,7 @@ Flags & Keyboard Shortcuts:\n\
   -v         increases verbosity        [flag]\n\
   -L PATH    redirects stderr to path   [flag]\n\
   -y         yes to interactive prompts [flag]\n\
-  -h         shows this information     [flag]\n\
+  -h or -?   shows this information     [flag]\n\
   UP/DOWN    adjust volume              [keyboard]\n\
   CTRL+L     redraw                     [keyboard]\n\
   CTRL+Z     suspend                    [keyboard]\n\
@@ -1374,10 +1374,8 @@ static bool CanPlayAudio(void) {
   }
 }
 
-static void PrintUsage(int rc, FILE *f) {
-  fputs("Usage: ", f);
-  fputs(program_invocation_name, f);
-  fputs(USAGE, f);
+static void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "Usage: ", program_invocation_name, USAGE, NULL);
   exit(rc);
 }
 
@@ -1399,12 +1397,15 @@ static void GetOpts(int argc, char *argv[]) {
       case 'Y':
         yonly_ = true;
         break;
-      case '?':
       case 'h':
-        PrintUsage(EXIT_SUCCESS, stdout);
+      case '?':
       default:
         if (!ProcessOptKey(opt)) {
-          PrintUsage(EX_USAGE, stderr);
+          if (opt == optopt) {
+            PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
+          } else {
+            PrintUsage(EX_USAGE, STDERR_FILENO);
+          }
         }
     }
   }
@@ -1562,7 +1563,7 @@ int main(int argc, char *argv[]) {
   fullclear_ = true;
   GetOpts(argc, argv);
   if (!tuned_) PickDefaults();
-  if (optind == argc) PrintUsage(EX_USAGE, stderr);
+  if (optind == argc) PrintUsage(EX_USAGE, STDERR_FILENO);
   patharg_ = argv[optind];
   s = commandvenv("SOX", "sox");
   sox_ = s ? strdup(s) : 0;
