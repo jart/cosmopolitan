@@ -54,6 +54,19 @@
 #define WIFCONTINUED(x) __wifcontinued(x)
 #define W_STOPCODE(x)   ((x) << 8 | 0177)
 
+#ifdef _COSMO_SOURCE
+#define clone         __clone
+#define commandv      __commandv
+#define fileexists    __fileexists
+#define ischardev     __ischardev
+#define isdirectory   __isdirectory
+#define isexecutable  __isexecutable
+#define isregularfile __isregularfile
+#define issymlink     __issymlink
+#define makedirs      __makedirs
+#define tmpfd         __tmpfd
+#endif
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -63,7 +76,6 @@ COSMOPOLITAN_C_START_
 typedef int sig_atomic_t;
 
 bool32 isatty(int);
-char *get_current_dir_name(void) dontdiscard;
 char *getcwd(char *, size_t);
 char *realpath(const char *, char *);
 char *ttyname(int);
@@ -79,15 +91,12 @@ int creat(const char *, unsigned);
 int dup(int);
 int dup2(int, int);
 int dup3(int, int, int);
-int eaccess(const char *, int);
-int euidaccess(const char *, int);
 int execl(const char *, const char *, ...) nullterminated();
 int execle(const char *, const char *, ...) nullterminated((1));
 int execlp(const char *, const char *, ...) nullterminated();
 int execv(const char *, char *const[]);
 int execve(const char *, char *const[], char *const[]);
 int execvp(const char *, char *const[]);
-int execvpe(const char *, char *const[], char *const[]);
 int faccessat(int, const char *, int, int);
 int fadvise(int, uint64_t, uint64_t, int);
 int fchdir(int);
@@ -111,12 +120,8 @@ int getpgrp(void) nosideeffect;
 int getpid(void) nosideeffect libcesque;
 int getppid(void);
 int getpriority(int, unsigned);
-int getresgid(unsigned *, unsigned *, unsigned *);
-int getresuid(unsigned *, unsigned *, unsigned *);
 int getsid(int) nosideeffect libcesque;
 int ioctl(int, unsigned long, ...);
-int ioprio_get(int, int);
-int ioprio_set(int, int, int);
 int issetugid(void);
 int kill(int, int);
 int killpg(int, int);
@@ -124,7 +129,6 @@ int lchmod(const char *, unsigned);
 int lchown(const char *, unsigned, unsigned);
 int link(const char *, const char *) dontthrow;
 int linkat(int, const char *, int, const char *, int);
-int madvise(void *, uint64_t, int);
 int mincore(void *, size_t, unsigned char *);
 int mkdir(const char *, unsigned);
 int mkdirat(int, const char *, unsigned);
@@ -140,7 +144,6 @@ int pipe(int[hasatleast 2]);
 int pipe2(int[hasatleast 2], int);
 int posix_fadvise(int, int64_t, int64_t, int);
 int posix_madvise(void *, uint64_t, int);
-int prctl(int, ...);
 int raise(int);
 int reboot(int);
 int remove(const char *);
@@ -158,8 +161,6 @@ int setpgid(int, int);
 int setpgrp(void);
 int setpriority(int, unsigned, int);
 int setregid(unsigned, unsigned);
-int setresgid(unsigned, unsigned, unsigned);
-int setresuid(unsigned, unsigned, unsigned);
 int setreuid(unsigned, unsigned);
 int setsid(void);
 int setuid(unsigned);
@@ -167,9 +168,6 @@ int sigignore(int);
 int siginterrupt(int, int);
 int symlink(const char *, const char *);
 int symlinkat(const char *, int, const char *);
-int sync_file_range(int, int64_t, int64_t, unsigned);
-int tcgetpgrp(int);
-int tcsetpgrp(int, int);
 int truncate(const char *, int64_t);
 int ttyname_r(int, char *, size_t);
 int unlink(const char *);
@@ -187,7 +185,6 @@ ssize_t pwrite(int, const void *, size_t, int64_t);
 ssize_t read(int, void *, size_t);
 ssize_t readlink(const char *, char *, size_t);
 ssize_t readlinkat(int, const char *, char *, size_t);
-ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned);
 ssize_t write(int, const void *, size_t);
 unsigned alarm(unsigned);
 unsigned getegid(void) nosideeffect;
@@ -198,20 +195,34 @@ unsigned sleep(unsigned);
 unsigned umask(unsigned);
 void sync(void);
 
-#ifdef COSMO
-bool fileexists(const char *);
-bool isdirectory(const char *);
-bool isexecutable(const char *);
-bool isregularfile(const char *);
-bool issymlink(const char *);
+#if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE)
+int syncfs(int);
+int prctl(int, ...);
+int gettid(void) libcesque;
+int setresgid(unsigned, unsigned, unsigned);
+int setresuid(unsigned, unsigned, unsigned);
+int getresgid(unsigned *, unsigned *, unsigned *);
+int getresuid(unsigned *, unsigned *, unsigned *);
+char *get_current_dir_name(void) dontdiscard;
+int sync_file_range(int, int64_t, int64_t, unsigned);
+ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned);
+int memfd_create(const char *, unsigned int);
+int execvpe(const char *, char *const[], char *const[]);
+int euidaccess(const char *, int);
+int eaccess(const char *, int);
+int madvise(void *, uint64_t, int);
+#endif
+
+#ifdef _COSMO_SOURCE
+bool32 fileexists(const char *);
+bool32 isdirectory(const char *);
+bool32 isexecutable(const char *);
+bool32 isregularfile(const char *);
+bool32 issymlink(const char *);
 bool32 ischardev(int);
 char *commandv(const char *, char *, size_t);
-char *replaceuser(const char *) dontdiscard;
 int clone(void *, void *, size_t, int, void *, void *, void *, void *);
-int gettid(void) libcesque;
 int makedirs(const char *, unsigned);
-int memfd_create(const char *, unsigned int);
-int personality(uint64_t);
 int pivot_root(const char *, const char *);
 int pledge(const char *, const char *);
 int seccomp(unsigned, unsigned, void *);
@@ -219,10 +230,13 @@ int sys_iopl(int);
 int sys_mlock(const void *, size_t);
 int sys_mlock2(const void *, size_t, int);
 int sys_mlockall(int);
+int sys_personality(uint64_t);
 int sys_munlock(const void *, size_t);
 int sys_munlockall(void);
 int sys_ptrace(int, ...);
 int sys_sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
+int sys_ioprio_get(int, int);
+int sys_ioprio_set(int, int, int);
 int tgkill(int, int, int);
 int tkill(int, int);
 int tmpfd(void);
@@ -232,11 +246,20 @@ long ptrace(int, ...);
 ssize_t copyfd(int, int, size_t);
 ssize_t readansi(int, char *, size_t);
 ssize_t tinyprint(int, const char *, ...) nullterminated();
-#endif
+#endif /* _COSMO_SOURCE */
 
 int __wifstopped(int) pureconst;
 int __wifcontinued(int) pureconst;
 int __wifsignaled(int) pureconst;
+
+#if defined(_LARGEFILE64_SOURCE) || defined(_GNU_SOURCE)
+#define lseek64     lseek
+#define pread64     pread
+#define pwrite64    pwrite
+#define truncate64  truncate
+#define ftruncate64 ftruncate
+#define lockf64     lockf
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

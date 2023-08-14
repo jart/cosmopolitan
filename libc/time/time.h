@@ -17,7 +17,7 @@ int64_t posix2time(int64_t) pureconst;
 int64_t time2posix(int64_t) pureconst;
 void tzset(void);
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 extern const char kWeekdayNameShort[7][4];
 extern const char kWeekdayName[7][10];
 extern const char kMonthNameShort[12][4];
@@ -28,7 +28,7 @@ long double ConvertTicksToNanos(double);
 long double dsleep(long double);
 long double dtime(int);
 void RefreshTime(void);
-#endif
+#endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -37,7 +37,7 @@ char *utf32to8(const wchar_t *p, size_t n, size_t *z) {
   if ((q = r = malloc(n * 6 + 1))) {
     for (i = 0; i < n; ++i) {
       x = p[i];
-      w = _tpenc(x);
+      w = tpenc(x);
       do {
         *q++ = w;
       } while ((w >>= 8));

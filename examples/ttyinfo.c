@@ -147,12 +147,12 @@ int main(int argc, char *argv[]) {
     if (iscntrl(code[0]) && !code[1]) {
       printf("is CTRL-%c a.k.a. ^%c\r\n", CTRL(code[0]), CTRL(code[0]));
       if (code[0] == CTRL('C') || code[0] == CTRL('D')) break;
-    } else if (_startswith(code, "\e[") && _endswith(code, "R")) {
+    } else if (startswith(code, "\e[") && endswith(code, "R")) {
       yn = 1, xn = 1;
       sscanf(code, "\e[%d;%dR", &yn, &xn);
       printf("inband signalling says terminal size is %d×%d\r\n", xn, yn);
-    } else if (_startswith(code, "\e[<") &&
-               (_endswith(code, "m") || _endswith(code, "M"))) {
+    } else if (startswith(code, "\e[<") &&
+               (endswith(code, "m") || endswith(code, "M"))) {
       e = 0, y = 1, x = 1;
       sscanf(code, "\e[<%d;%d;%d%c", &e, &y, &x, &c);
       printf("mouse %s at %d×%d\r\n", describemouseevent(e | (c == 'm') << 2),

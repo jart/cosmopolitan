@@ -358,14 +358,14 @@ static int __fmt_stoa_byte(out_f out, void *a, uint64_t c) {
 
 static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
   char buf[8];
-  if (!isascii(w)) w = _tpenc(w);
+  if (!isascii(w)) w = tpenc(w);
   WRITE64LE(buf, w);
   return out(buf, a, w ? (_bsr(w) >> 3) + 1 : 1);
 }
 
 static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
   char buf[8];
-  w = _tpenc(kCp437[w & 0xFF]);
+  w = tpenc(kCp437[w & 0xFF]);
   WRITE64LE(buf, w);
   return out(buf, a, w ? (_bsr(w) >> 3) + 1 : 1);
 }
@@ -375,7 +375,7 @@ static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
   if (isascii(w)) {
     w = __fmt_cescapec(w);
   } else {
-    w = _tpenc(w);
+    w = tpenc(w);
   }
   WRITE64LE(buf, w);
   return out(buf, a, w ? (_bsr(w) >> 3) + 1 : 1);

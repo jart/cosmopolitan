@@ -86,7 +86,7 @@ libcesque nosideeffect;
 │ cosmopolitan § conversion » manipulation                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 char *stripext(char *);
 char *stripexts(char *);
 #endif

@@ -351,8 +351,8 @@ int main(int argc, char *argv[]) {
     struct stat st;
     const char *arg;
     if (!(arg = getargs_next(&ga))) break;
-    if (_endswith(arg, "/")) continue;
-    if (_endswith(arg, ".pkg")) continue;
+    if (endswith(arg, "/")) continue;
+    if (endswith(arg, ".pkg")) continue;
     if (stat(arg, &st)) SysDie(arg, "stat");
     if (S_ISDIR(st.st_mode)) continue;
     if (!st.st_size) Die(arg, "file is empty");

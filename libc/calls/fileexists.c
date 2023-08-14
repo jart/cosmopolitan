@@ -27,10 +27,10 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Returns true if file exists at path.
@@ -44,7 +44,7 @@
  * or sockets, could be considered files for the purposes of this
  * function. The stat() function may be used to differentiate them.
  */
-bool fileexists(const char *path) {
+bool32 fileexists(const char *path) {
   int e;
   bool res;
   union metastat st;

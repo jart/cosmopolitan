@@ -4,6 +4,12 @@
 #define BLAKE2B256_DIGEST_LENGTH 32
 #define BLAKE2B_CBLOCK           128
 
+#define BLAKE2B256_Init    __BLAKE2B256_Init
+#define BLAKE2B256_Update  __BLAKE2B256_Update
+#define BLAKE2B256_Process __BLAKE2B256_Process
+#define BLAKE2B256_Final   __BLAKE2B256_Final
+#define BLAKE2B256         __BLAKE2B256
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

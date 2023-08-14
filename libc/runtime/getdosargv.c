@@ -48,7 +48,7 @@ textwindows dontasan void DecodeDosArgv(int ignore, struct DosArgv *st) {
 
 static textwindows dontasan void AppendDosArgv(wint_t wc, struct DosArgv *st) {
   uint64_t w;
-  w = _tpenc(wc);
+  w = tpenc(wc);
   do {
     if (st->p >= st->pe) break;
     *st->p++ = w & 0xff;

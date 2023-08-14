@@ -37,6 +37,6 @@ __attribute__((__constructor__)) static void __stderr_init(void) {
   stderr->iomode = O_WRONLY;
   stderr->buf = stderr->mem;
   stderr->size = sizeof(stderr->mem);
-  ((pthread_mutex_t *)stderr->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
+  stderr->lock._type = PTHREAD_MUTEX_RECURSIVE;
   __fflush_register(stderr);
 }

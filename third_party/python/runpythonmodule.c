@@ -96,7 +96,7 @@ CompleteModule(const char *s, const char *p, linenoiseCompletions *c)
     PyObject *m, *f, *g, *i, *v, *n;
     plen = strlen(p);
     for (it = PyImport_Inittab; it->name; ++it) {
-        if (_startswithi(it->name, p)) {
+        if (startswithi(it->name, p)) {
             AddCompletion(c, xasprintf("%s%s", s, it->name + plen));
         }
     }
@@ -170,7 +170,7 @@ Complete(const char *p, linenoiseCompletions *c)
 {
     PyObject *o, *t, *i;
     const char *q, *s, *b;
-    if (_startswith(p, "import ")) {
+    if (startswith(p, "import ")) {
         for (q = p + 7; *q; ++q) {
             if (!isalnum(*q) && *q != '_') {
                 return;

@@ -37,8 +37,8 @@ static void *_mapframe(void *p, int f) {
   flags = f | MAP_ANONYMOUS | MAP_FIXED;
   if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p) {
     __mmi_lock();
-    rc = TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
-                             dm.maphandle, prot, flags, false, false, 0, G);
+    rc = __track_memory(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
+                        dm.maphandle, prot, flags, false, false, 0, G);
     __mmi_unlock();
     if (!rc) {
       return p;

@@ -218,7 +218,7 @@ MATHEMATICAL =								\
 	-fwrapv
 
 DEFAULT_CPPFLAGS +=							\
-	-DCOSMO								\
+	-D_COSMO_SOURCE							\
 	-DMODE='"$(MODE)"'						\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\

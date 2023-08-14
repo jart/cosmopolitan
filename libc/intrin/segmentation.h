@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_BITS_SEGMENTATION_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 
 /**
  * Reads scalar from memory, offset by segment.
@@ -20,7 +20,7 @@
     Pk;                                                           \
   })
 
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_SEGMENTATION_H_ */

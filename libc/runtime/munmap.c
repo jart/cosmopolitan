@@ -39,9 +39,9 @@
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
-static dontasan void MunmapShadow(char *p, size_t n) {
+static dontasan void __munmap_shadow(char *p, size_t n) {
   intptr_t a, b, x, y;
-  KERNTRACE("MunmapShadow(%p, %'zu)", p, n);
+  KERNTRACE("__munmap_shadow(%p, %'zu)", p, n);
   a = ((intptr_t)p >> 3) + 0x7fff8000;
   b = a + (n >> 3);
   if (IsMemtracked(FRAME(a), FRAME(b - 1))) {
@@ -52,7 +52,7 @@ static dontasan void MunmapShadow(char *p, size_t n) {
       // to be >1mb since we can only unmap it if it's aligned, and
       // as such we poison the edges if there are any.
       __repstosb((void *)a, kAsanUnmapped, x - a);
-      _Munmap((void *)x, y - x);
+      __munmap_unlocked((void *)x, y - x);
       __repstosb((void *)y, kAsanUnmapped, b - y);
     } else {
       // otherwise just poison and assume reuse
@@ -66,15 +66,15 @@ static dontasan void MunmapShadow(char *p, size_t n) {
 // our api supports doing things like munmap(0, 0x7fffffffffff) but some
 // platforms (e.g. openbsd) require that we know the specific intervals
 // or else it returns EINVAL. so we munmap a piecewise.
-static dontasan void MunmapImpl(char *p, size_t n) {
+static dontasan void __munmap_impl(char *p, size_t n) {
   char *q;
   size_t m;
   intptr_t a, b, c;
   int i, l, r, rc, beg, end;
-  KERNTRACE("MunmapImpl(%p, %'zu)", p, n);
+  KERNTRACE("__munmap_impl(%p, %'zu)", p, n);
   l = FRAME(p);
   r = FRAME(p + n - 1);
-  i = FindMemoryInterval(&_mmi, l);
+  i = __find_memory(&_mmi, l);
   for (; i < _mmi.i && r >= _mmi.p[i].x; ++i) {
     if (l >= _mmi.p[i].x && r <= _mmi.p[i].y) {
 
@@ -104,15 +104,15 @@ static dontasan void MunmapImpl(char *p, size_t n) {
     if (!IsWindows()) {
       npassert(!sys_munmap(q, m));
     } else {
-      // Handled by UntrackMemoryIntervals() on Windows
+      // Handled by __untrack_memories() on Windows
     }
     if (IsAsan() && !OverlapsShadowSpace(p, n)) {
-      MunmapShadow(q, m);
+      __munmap_shadow(q, m);
     }
   }
 }
 
-dontasan int _Munmap(char *p, size_t n) {
+dontasan int __munmap_unlocked(char *p, size_t n) {
   unsigned i;
   char poison;
   intptr_t a, b, x, y;
@@ -137,8 +137,8 @@ dontasan int _Munmap(char *p, size_t n) {
     STRACE("munmap(%p) isn't 64kb aligned", p);
     return einval();
   }
-  MunmapImpl(p, n);
-  return UntrackMemoryIntervals(p, n);
+  __munmap_impl(p, n);
+  return __untrack_memories(p, n);
 }
 
 /**
@@ -156,9 +156,9 @@ int munmap(void *p, size_t n) {
   int rc;
   size_t toto;
   __mmi_lock();
-  rc = _Munmap(p, n);
+  rc = __munmap_unlocked(p, n);
 #if SYSDEBUG
-  toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
+  toto = __strace > 0 ? __get_memtrack_size(&_mmi) : 0;
 #endif
   __mmi_unlock();
   STRACE("munmap(%.12p, %'zu) → %d% m (%'zu bytes total)", p, n, rc, toto);

@@ -210,7 +210,7 @@ TEST(sigaction, autoZombieSlayer) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) _Exit(0);
   // XXX: WSL does the wrong thing here.
-  if (IsWsl1()) usleep(10);
+  if (__iswsl1()) usleep(10);
   ASSERT_SYS(ECHILD, -1, wait(0));
   // clean up
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, 0));

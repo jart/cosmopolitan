@@ -29,7 +29,7 @@
 wint_t fputwc_unlocked(wchar_t wc, FILE *f) {
   uint64_t w;
   if (wc != -1) {
-    w = _tpenc(wc);
+    w = tpenc(wc);
     do {
       if (fputc_unlocked(w, f) == -1) {
         return -1;

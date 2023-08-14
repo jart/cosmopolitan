@@ -29,7 +29,7 @@ dontasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   int i, rc = 0;
   char *a, *b, *x, *y;
   __mmi_lock();
-  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
+  for (i = __find_memory(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
     x = (char *)ADDR_32_TO_48(_mmi.p[i].x);
     y = x + _mmi.p[i].size;
     if ((x <= addr && addr < y) || (x < addr + size && addr + size <= y) ||

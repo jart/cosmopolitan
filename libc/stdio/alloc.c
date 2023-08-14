@@ -43,7 +43,7 @@ FILE *__stdio_alloc(void) {
     f = kmalloc(sizeof(FILE));
   }
   if (f) {
-    ((pthread_mutex_t *)f->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
+    f->lock._type = PTHREAD_MUTEX_RECURSIVE;
   }
   return f;
 }

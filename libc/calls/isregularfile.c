@@ -25,10 +25,10 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Returns true if file exists and is a regular file.
@@ -42,7 +42,7 @@
  *
  * @see isdirectory(), ischardev(), issymlink()
  */
-bool isregularfile(const char *path) {
+bool32 isregularfile(const char *path) {
   int e;
   bool res;
   union metastat st;

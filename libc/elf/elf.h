@@ -5,8 +5,8 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef _COSMO_SOURCE
 COSMOPOLITAN_C_START_
-#ifdef COSMO
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § executable linkable format                                ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -25,7 +25,7 @@ void *GetElfSegmentAddress(const Elf64_Ehdr *, size_t, const Elf64_Phdr *);
 const char *GetElfSectionName(const Elf64_Ehdr *, size_t, Elf64_Shdr *);
 char *GetElfSectionNameStringTable(const Elf64_Ehdr *, size_t);
 
-#endif /* COSMO */
 COSMOPOLITAN_C_END_
+#endif /* _COSMO_SOURCE */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_H_ */

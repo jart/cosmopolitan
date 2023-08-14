@@ -76,7 +76,7 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
       if (x < 0200) {
         *q++ = x;
       } else {
-        w = _tpenc(x);
+        w = tpenc(x);
         WRITE64LE(q, w);
         q += _bsr(w) >> 3;
         q += 1;

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 
@@ -23,7 +24,7 @@
  * Retrieves line from stream, e.g.
  *
  *     char *line;
- *     while ((line = _chomp(fgetln(stdin, 0)))) {
+ *     while ((line = chomp(fgetln(stdin, 0)))) {
  *       printf("%s\n", line);
  *     }
  *

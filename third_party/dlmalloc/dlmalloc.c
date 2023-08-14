@@ -1297,29 +1297,6 @@ void* dlmemalign(size_t alignment, size_t bytes) {
   return internal_memalign(gm, alignment, bytes);
 }
 
-int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
-  void* mem = 0;
-  if (alignment == MALLOC_ALIGNMENT)
-    mem = dlmalloc(bytes);
-  else {
-    size_t d = alignment / sizeof(void*);
-    size_t r = alignment % sizeof(void*);
-    if (r != 0 || d == 0 || (d & (d-SIZE_T_ONE)) != 0)
-      return EINVAL;
-    else if (bytes <= MAX_REQUEST - alignment) {
-      if (alignment <  MIN_CHUNK_SIZE)
-        alignment = MIN_CHUNK_SIZE;
-      mem = internal_memalign(gm, alignment, bytes);
-    }
-  }
-  if (!mem) {
-    return ENOMEM;
-  } else {
-    *pp = mem;
-    return 0;
-  }
-}
-
 #if USE_LOCKS
 void dlmalloc_atfork(void) {
   bzero(&gm->mutex, sizeof(gm->mutex));

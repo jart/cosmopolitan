@@ -19,7 +19,10 @@
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 
-bool _startswithi(const char *s, const char *prefix) {
+/**
+ * Checks if string starts with prefix, case insensitively.
+ */
+bool startswithi(const char *s, const char *prefix) {
   for (;;) {
     if (!*prefix) return true;
     if (!*s) return false;

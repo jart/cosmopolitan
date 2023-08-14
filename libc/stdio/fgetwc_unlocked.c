@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpdecodecb.internal.h"

@@ -1,10 +1,10 @@
 #ifndef _COSMO_H
 #define _COSMO_H
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 #define COSMO_ALREADY_DEFINED
 #else
-#define COSMO
+#define _COSMO_SOURCE
 #endif
 
 /**
@@ -62,7 +62,7 @@
 #ifdef COSMO_ALREADY_DEFINED
 #undef COSMO_ALREADY_DEFINED
 #else
-#undef COSMO
+#undef _COSMO_SOURCE
 #endif
 
 #endif /* _COSMO_H */

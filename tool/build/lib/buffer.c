@@ -53,7 +53,7 @@ void AppendWide(struct Buffer *b, wint_t wc) {
   uint64_t wb;
   char buf[8];
   i = 0;
-  wb = _tpenc(wc);
+  wb = tpenc(wc);
   do {
     buf[i++] = wb & 0xFF;
     wb >>= 8;

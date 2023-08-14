@@ -111,7 +111,7 @@ TEST(plinko, worksOrPrintsNiceError) {
   EXPECT_NE(-1, close(pfds[1][0]));
   EXPECT_NE(-1, waitpid(pid, &wstatus, 0));
   EXPECT_TRUE(WIFEXITED(wstatus));
-  if (!_startswith(buf, "error: ")) {
+  if (!startswith(buf, "error: ")) {
     EXPECT_STREQ("OKCOMPUTER\n", buf);
     EXPECT_EQ(0, WEXITSTATUS(wstatus));
   } else {

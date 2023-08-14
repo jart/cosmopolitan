@@ -24,7 +24,7 @@
  * @param s is a NUL-terminated string
  * @param prefix is also NUL-terminated
  */
-bool _startswith(const char *s, const char *prefix) {
+bool startswith(const char *s, const char *prefix) {
   for (;;) {
     if (!*prefix) return true;
     if (!*s) return false;

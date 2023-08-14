@@ -17,7 +17,7 @@ char *setstate(char *);
 long random(void);
 void srandom(unsigned);
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 #define vigna   __vigna
 #define vigna_r __vigna_r
 #define rngset  __rngset
@@ -43,7 +43,7 @@ void *rngset(void *, size_t, uint64_t (*)(void), size_t);
 void rt_init(int);
 void rt_add(void *, int);
 void rt_end(double *, double *, double *, double *, double *);
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

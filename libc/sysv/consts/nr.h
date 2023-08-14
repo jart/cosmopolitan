@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_NR_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_NR_H_
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -339,5 +339,5 @@ extern const int __NR_ktrace;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_NR_H_ */

@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/sysv/consts/itimer.h"
 
 /**

@@ -78,7 +78,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
             }
             w = x;
           } else {
-            w = _tpenc(x);
+            w = tpenc(x);
           }
           do {
             if (j < bufsiz) {

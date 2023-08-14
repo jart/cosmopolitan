@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
@@ -28,7 +29,7 @@ wint_t ungetwc_unlocked(wint_t c, FILE *f) {
   uint64_t w;
   if (c == -1) return -1;
   n = 0;
-  w = _tpenc(c);
+  w = tpenc(c);
   do {
     b[n++] = w;
   } while ((w >>= 8));

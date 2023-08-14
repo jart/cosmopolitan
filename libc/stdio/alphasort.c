@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/dirent.h"
+#include "libc/stdio/internal.h"
 #include "libc/str/str.h"
 
 int alphasort(const struct dirent **a, const struct dirent **b) {

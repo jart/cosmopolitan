@@ -197,7 +197,7 @@ static uint64_t __asan_roundup2pow(uint64_t x) {
 
 static char *__asan_utf8cpy(char *p, unsigned c) {
   uint64_t z;
-  z = _tpenc(c);
+  z = tpenc(c);
   do *p++ = z;
   while ((z >>= 8));
   return p;
@@ -403,7 +403,7 @@ static bool __asan_is_mapped(int x) {
   struct MemoryIntervals *m;
   __mmi_lock();
   m = _weaken(_mmi);
-  i = FindMemoryInterval(m, x);
+  i = __find_memory(m, x);
   res = i < m->i && x >= m->p[i].x;
   __mmi_unlock();
   return res;
@@ -1411,10 +1411,10 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     flag = MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS;
     sm = _weaken(sys_mmap)(addr, size, prot, flag, -1, 0);
     if (sm.addr == MAP_FAILED ||
-        _weaken(TrackMemoryInterval)(m, a, a + i - 1, sm.maphandle,
-                                     PROT_READ | PROT_WRITE,
-                                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
-                                     false, false, 0, size) == -1) {
+        _weaken(__track_memory)(m, a, a + i - 1, sm.maphandle,
+                                PROT_READ | PROT_WRITE,
+                                MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, false,
+                                false, 0, size) == -1) {
       kprintf("error: could not map asan shadow memory\n");
       __asan_die()();
       __asan_unreachable();
@@ -1487,7 +1487,7 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   }
   REQUIRE(_mmi);
   REQUIRE(sys_mmap);
-  REQUIRE(TrackMemoryInterval);
+  REQUIRE(__track_memory);
   if (_weaken(hook_malloc) || _weaken(hook_calloc) || _weaken(hook_realloc) ||
       _weaken(hook_realloc_in_place) || _weaken(hook_free) ||
       _weaken(hook_malloc_usable_size)) {

@@ -32,7 +32,7 @@
 	.yoink	__zipos_read
 	.yoink	__zipos_stat
 	.yoink	__zipos_notat
-	.yoink	__zipos_Mmap
+	.yoink	__zipos_mmap
 
 //	TODO(jart): why does corruption happen when zip has no assets?
 	.yoink	.cosmo

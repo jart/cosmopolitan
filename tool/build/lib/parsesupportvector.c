@@ -34,7 +34,7 @@ bool ParseSupportVector(char *str, int *out_bits) {
   char *tok, *state;
   const char *sep = " ,+:/|";
   while ((tok = strtok_r(str, sep, &state))) {
-    if (_startswithi(tok, "_HOST")) {
+    if (startswithi(tok, "_host")) {
       tok += 5;
     }
     if (!strcasecmp(tok, "linux")) {

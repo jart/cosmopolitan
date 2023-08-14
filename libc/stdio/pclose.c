@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/errno.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 

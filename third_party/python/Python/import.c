@@ -2667,7 +2667,7 @@ static PyObject *SFLObject_is_package(SourcelessFileLoader *self,
                  self->name, name);
     return NULL;
   }
-  if (_startswith(basename(self->path), "__init__")) {
+  if (startswith(basename(self->path), "__init__")) {
     Py_RETURN_TRUE;
   }
   Py_RETURN_FALSE;

@@ -55,7 +55,7 @@ Recode16to8(char *dst, size_t dstsize, const char16_t *src) {
         x = ToUpper(x);
       }
     }
-    w = _tpenc(x);
+    w = tpenc(x);
     do {
       if (r.ax + 1 < dstsize) {
         dst[r.ax++] = w;

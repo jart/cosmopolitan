@@ -36,6 +36,6 @@ __attribute__((__constructor__)) static void __stdin_init(void) {
   stdin->iomode = O_RDONLY;
   stdin->buf = stdin->mem;
   stdin->size = sizeof(stdin->mem);
-  ((pthread_mutex_t *)stdin->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
+  stdin->lock._type = PTHREAD_MUTEX_RECURSIVE;
   __fflush_register(stdin);
 }

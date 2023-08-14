@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_X_H_
 #define COSMOPOLITAN_LIBC_X_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-#ifdef COSMO
 
+#ifdef _COSMO_SOURCE
 #define xwrite        __xwrite
 #define xdie          __xdie
 #define xmalloc       __xmalloc
@@ -34,6 +32,11 @@ COSMOPOLITAN_C_START_
 #define xfixpath      __xfixpath
 #define xslurp        __xslurp
 #define xbarf         __xbarf
+#endif /* _COSMO_SOURCE */
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef _COSMO_SOURCE
+COSMOPOLITAN_C_START_
 
 int xwrite(int, const void *, uint64_t);
 void xdie(void) wontreturn;
@@ -94,7 +97,7 @@ void *xslurp(const char *, size_t *)
     returnsaligned((4096)) dontdiscard;
 int xbarf(const char *, const void *, size_t);
 
-#endif /* COSMO */
 COSMOPOLITAN_C_END_
+#endif /* _COSMO_SOURCE */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_X_H_ */

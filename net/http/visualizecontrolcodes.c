@@ -108,7 +108,7 @@ char *VisualizeControlCodes(const char *data, size_t size, size_t *out_size) {
         } else if (x == 0x7F) {
           x = 0x2421;
         }
-        w = _tpenc(x);
+        w = tpenc(x);
         do {
           *q++ = w;
         } while ((w >>= 8));

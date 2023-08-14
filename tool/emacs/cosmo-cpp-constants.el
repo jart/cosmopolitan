@@ -174,6 +174,7 @@
     "__TIMESTAMP__"
     "_GNU_SOURCE"
     "_BSD_SOURCE"
+    "_COSMO_SOURCE"
     "_XOPEN_SOURCE"))
 
 (defconst cosmo-cpp-constants-cosmopolitan

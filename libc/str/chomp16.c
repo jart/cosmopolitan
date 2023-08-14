@@ -24,7 +24,7 @@
  * @param line is NULL-propagating
  * @see getline
  */
-char16_t *_chomp16(char16_t *line) {
+char16_t *chomp16(char16_t *line) {
   size_t i;
   if (line) {
     for (i = strlen16(line); i--;) {

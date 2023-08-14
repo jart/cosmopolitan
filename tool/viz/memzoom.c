@@ -705,7 +705,7 @@ static void LoadRanges(void) {
         case 0:
           if (isxdigit(b[i])) {
             range.a <<= 4;
-            range.a += hextoint(b[i]);
+            range.a += kHexToInt[b[i] & 255];
           } else if (b[i] == '-') {
             t = 1;
           }
@@ -713,7 +713,7 @@ static void LoadRanges(void) {
         case 1:
           if (isxdigit(b[i])) {
             range.b <<= 4;
-            range.b += hextoint(b[i]);
+            range.b += kHexToInt[b[i] & 255];
           } else if (b[i] == ' ') {
             t = 2;
           }
@@ -771,7 +771,7 @@ static void Render(void) {
         p = FormatInt64(p, fg);
         *p++ = 'm';
       }
-      w = _tpenc(kCp437[c]);
+      w = tpenc(kCp437[c]);
       do {
         *p++ = w & 0xff;
         w >>= 8;

@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 
 /**
  * Tunes APE stack maximum size.
@@ -136,8 +136,8 @@ forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
 void *NewCosmoStack(void) vallocesque;
 int FreeCosmoStack(void *) libcesque;
 
-#endif /* COSMO */
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
+#endif /* _COSMO_SOURCE */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_STACK_H_ */

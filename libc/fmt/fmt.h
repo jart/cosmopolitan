@@ -26,7 +26,7 @@ char *fcvt(double, int, int *, int *);
 char *ecvt(double, int, int *, int *);
 char *gcvt(double, int, char *);
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 int __vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
               va_list);
 int __fmt(void *, void *, const char *, va_list);

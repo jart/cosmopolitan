@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
+/**
+ * Narrows number to ASCII.
+ */
 int toascii(int c) {
   return c & 127;
 }

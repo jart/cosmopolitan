@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
 #include "libc/limits.h"
@@ -40,7 +41,6 @@
 #include "libc/zip.internal.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "tool/build/lib/elfwriter.h"
-#include "libc/errno.h"
 #include "tool/build/lib/stripcomponents.h"
 
 char *name_;
@@ -173,7 +173,7 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
   }
   if (S_ISDIR(st.st_mode)) {
     st.st_size = 0;
-    if (!_endswith(name, "/")) {
+    if (!endswith(name, "/")) {
       name = gc(xstrcat(name, '/'));
     }
   }
@@ -194,7 +194,7 @@ void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
 
 void CheckFilenameKosher(const char *path) {
   CHECK_LE(kZipCfileHdrMinSize + strlen(path), 65535);
-  CHECK(!_startswith(path, "/"));
+  CHECK(!startswith(path, "/"));
   CHECK(!strstr(path, ".."));
 }
 

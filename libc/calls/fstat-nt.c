@@ -60,7 +60,7 @@ static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
           x = 0xfffd;
         }
       }
-      z += x < 0200 ? 1 : _bsrl(_tpenc(x)) >> 3;
+      z += x < 0200 ? 1 : _bsrl(tpenc(x)) >> 3;
     }
   } else {
     STRACE("%s failed %m", "GetSizeOfReparsePoint");

@@ -412,16 +412,16 @@ bool IsGccOnlyFlag(const char *s) {
       return true;
     }
   }
-  if (_startswith(s, "-ffixed-")) return true;
-  if (_startswith(s, "-fcall-saved")) return true;
-  if (_startswith(s, "-fcall-used")) return true;
-  if (_startswith(s, "-fgcse-")) return true;
-  if (_startswith(s, "-fvect-cost-model=")) return true;
-  if (_startswith(s, "-fsimd-cost-model=")) return true;
-  if (_startswith(s, "-fopt-info")) return true;
-  if (_startswith(s, "-mstringop-strategy=")) return true;
-  if (_startswith(s, "-mpreferred-stack-boundary=")) return true;
-  if (_startswith(s, "-Wframe-larger-than=")) return true;
+  if (startswith(s, "-ffixed-")) return true;
+  if (startswith(s, "-fcall-saved")) return true;
+  if (startswith(s, "-fcall-used")) return true;
+  if (startswith(s, "-fgcse-")) return true;
+  if (startswith(s, "-fvect-cost-model=")) return true;
+  if (startswith(s, "-fsimd-cost-model=")) return true;
+  if (startswith(s, "-fopt-info")) return true;
+  if (startswith(s, "-mstringop-strategy=")) return true;
+  if (startswith(s, "-mpreferred-stack-boundary=")) return true;
+  if (startswith(s, "-Wframe-larger-than=")) return true;
   return false;
 }
 
@@ -454,7 +454,7 @@ void AddEnv(char *s) {
 }
 
 char *StripPrefix(char *s, char *p) {
-  if (_startswith(s, p)) {
+  if (startswith(s, p)) {
     return s + strlen(p);
   } else {
     return s;
@@ -478,18 +478,18 @@ void AddArg(char *actual) {
     appendw(&shortened, ' ');
     if ((isar || isbfd || ispkg) &&
         (strcmp(args.p[args.n - 1], "-o") &&
-         (_endswith(s, ".o") || _endswith(s, ".pkg") ||
-          (_endswith(s, ".a") && !isar)))) {
+         (endswith(s, ".o") || endswith(s, ".pkg") ||
+          (endswith(s, ".a") && !isar)))) {
       appends(&shortened, basename(s));
     } else {
       appends(&shortened, s);
     }
   } else if (/*
               * a in ('-', '--') or
-              * a._startswith('-o') or
+              * a.startswith('-o') or
               * c == 'ld' and a == '-T' or
-              * c == 'cc' and a._startswith('-O') or
-              * c == 'cc' and a._startswith('-x') or
+              * c == 'cc' and a.startswith('-O') or
+              * c == 'cc' and a.startswith('-x') or
               * c == 'cc' and a in ('-c', '-E', '-S')
               */
              s[0] == '-' && (!s[1] || s[1] == 'o' || (s[1] == '-' && !s[2]) ||
@@ -984,7 +984,7 @@ int main(int argc, char *argv[]) {
     /*
      * capture flags
      */
-    if (_startswith(argv[i], "-o")) {
+    if (startswith(argv[i], "-o")) {
       if (!strcmp(argv[i], "-o")) {
         outpath = argv[++i];
       } else {
@@ -1174,27 +1174,27 @@ int main(int argc, char *argv[]) {
       if (isgcc && ccversion >= 6) no_sanitize_alignment = true;
     } else if (!strcmp(argv[i], "-fno-sanitize=pointer-overflow")) {
       if (isgcc && ccversion >= 6) no_sanitize_pointer_overflow = true;
-    } else if (_startswith(argv[i], "-fsanitize=implicit") &&
+    } else if (startswith(argv[i], "-fsanitize=implicit") &&
                strstr(argv[i], "integer")) {
       if (isgcc) AddArg(argv[i]);
     } else if (strstr(argv[i], "stack-protector")) {
       if (isclang || (isgcc && ccversion >= 6)) {
         AddArg(argv[i]);
       }
-    } else if (_startswith(argv[i], "-fvect-cost") ||
-               _startswith(argv[i], "-mstringop") ||
-               _startswith(argv[i], "-gz") || strstr(argv[i], "sanitize") ||
-               _startswith(argv[i], "-fvect-cost") ||
-               _startswith(argv[i], "-fvect-cost")) {
+    } else if (startswith(argv[i], "-fvect-cost") ||
+               startswith(argv[i], "-mstringop") ||
+               startswith(argv[i], "-gz") || strstr(argv[i], "sanitize") ||
+               startswith(argv[i], "-fvect-cost") ||
+               startswith(argv[i], "-fvect-cost")) {
       if (isgcc && ccversion >= 6) {
         AddArg(argv[i]);
       }
-    } else if (_startswith(argv[i], "-fdiagnostic-color=")) {
+    } else if (startswith(argv[i], "-fdiagnostic-color=")) {
       colorflag = argv[i];
-    } else if (_startswith(argv[i], "-R") ||
+    } else if (startswith(argv[i], "-R") ||
                !strcmp(argv[i], "-fsave-optimization-record")) {
       if (isclang) AddArg(argv[i]);
-    } else if (isclang && _startswith(argv[i], "--debug-prefix-map")) {
+    } else if (isclang && startswith(argv[i], "--debug-prefix-map")) {
       /* llvm doesn't provide a gas interface so simulate w/ clang */
       AddArg(xstrcat("-f", argv[i] + 2));
     } else if (isgcc && (!strcmp(argv[i], "-Os") || !strcmp(argv[i], "-O2") ||
@@ -1279,7 +1279,7 @@ int main(int argc, char *argv[]) {
    * scrub environment for determinism and great justice
    */
   for (envp = environ; *envp; ++envp) {
-    if (_startswith(*envp, "MODE=")) {
+    if (startswith(*envp, "MODE=")) {
       mode = *envp + 5;
     }
     if (IsSafeEnv(*envp)) {

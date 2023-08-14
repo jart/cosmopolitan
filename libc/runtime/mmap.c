@@ -68,22 +68,22 @@
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
-static pureconst unsigned long RoundDownTwoPow(unsigned long x) {
+static inline pureconst unsigned long __rounddown2pow(unsigned long x) {
   return x ? 1ul << _bsrl(x) : 0;
 }
 
-static wontreturn void OnUnrecoverableMmapError(const char *s) {
+static wontreturn void __mmap_die(const char *s) {
   if (_weaken(__die)) _weaken(__die)();
   STRACE("%s %m", s);
   _Exitr(199);
 }
 
-static dontasan inline bool OverlapsExistingMapping(char *p, size_t n) {
+static dontasan inline bool __overlaps_existing_mapping(char *p, size_t n) {
   int a, b, i;
   unassert(n > 0);
   a = FRAME(p);
   b = FRAME(p + (n - 1));
-  i = FindMemoryInterval(&_mmi, a);
+  i = __find_memory(&_mmi, a);
   if (i < _mmi.i) {
     if (a <= _mmi.p[i].x && _mmi.p[i].x <= b) return true;
     if (a <= _mmi.p[i].y && _mmi.p[i].y <= b) return true;
@@ -92,14 +92,14 @@ static dontasan inline bool OverlapsExistingMapping(char *p, size_t n) {
   return false;
 }
 
-static dontasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
+static dontasan bool __choose_memory(int x, int n, int align, int *res) {
   // TODO: improve performance
   int i, start, end;
   unassert(align > 0);
   if (_mmi.i) {
 
     // find the start of the automap memory region
-    i = FindMemoryInterval(&_mmi, x);
+    i = __find_memory(&_mmi, x);
     if (i < _mmi.i) {
 
       // check to see if there's space available before the first entry
@@ -153,23 +153,23 @@ static dontasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
   return false;
 }
 
-dontasan static bool Automap(int count, int align, int *res) {
-  return ChooseMemoryInterval(FRAME(kAutomapStart), count, align, res) &&
+dontasan static bool __auto_map(int count, int align, int *res) {
+  return __choose_memory(FRAME(kAutomapStart), count, align, res) &&
          *res + count <= FRAME(kAutomapStart + (kAutomapSize - 1));
 }
 
-static dontasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
-                                   int fd, int64_t off, int f, int x, int n,
-                                   struct DirectMap dm) {
+static dontasan void *__finish_memory(void *addr, size_t size, int prot,
+                                      int flags, int fd, int64_t off, int f,
+                                      int x, int n, struct DirectMap dm) {
   if (!IsWindows() && (flags & MAP_FIXED)) {
-    if (UntrackMemoryIntervals(addr, size)) {
-      OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
+    if (__untrack_memories(addr, size)) {
+      __mmap_die("FIXED UNTRACK FAILED");
     }
   }
-  if (TrackMemoryInterval(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags,
-                          false, false, off, size)) {
+  if (__track_memory(&_mmi, x, x + (n - 1), dm.maphandle, prot, flags, false,
+                     false, off, size)) {
     if (sys_munmap(addr, n) == -1) {
-      OnUnrecoverableMmapError("TRACK MUNMAP FAILED");
+      __mmap_die("TRACK MUNMAP FAILED");
     }
     return MAP_FAILED;
   }
@@ -179,21 +179,20 @@ static dontasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
   return addr;
 }
 
-static dontasan void *MapMemory(void *addr, size_t size, int prot, int flags,
-                                int fd, int64_t off, int f, int x, int n) {
+static dontasan void *__map_memory(void *addr, size_t size, int prot, int flags,
+                                   int fd, int64_t off, int f, int x, int n) {
   struct DirectMap dm;
   dm = sys_mmap(addr, size, prot, f, fd, off);
   if (VERY_UNLIKELY(dm.addr == MAP_FAILED)) {
     if (IsWindows() && (flags & MAP_FIXED)) {
-      OnUnrecoverableMmapError(
-          "can't recover from MAP_FIXED errors on Windows");
+      __mmap_die("can't recover from MAP_FIXED errors on Windows");
     }
     return MAP_FAILED;
   }
   if (VERY_UNLIKELY(dm.addr != addr)) {
-    OnUnrecoverableMmapError("KERNEL DIDN'T RESPECT MAP_FIXED");
+    __mmap_die("KERNEL DIDN'T RESPECT MAP_FIXED");
   }
-  return FinishMemory(addr, size, prot, flags, fd, off, f, x, n, dm);
+  return __finish_memory(addr, size, prot, flags, fd, off, f, x, n, dm);
 }
 
 /**
@@ -202,11 +201,9 @@ static dontasan void *MapMemory(void *addr, size_t size, int prot, int flags,
  * This is useful on Windows since it allows us to partially unmap or
  * punch holes into existing mappings.
  */
-static textwindows dontinline dontasan void *MapMemories(char *addr,
-                                                         size_t size, int prot,
-                                                         int flags, int fd,
-                                                         int64_t off, int f,
-                                                         int x, int n) {
+static textwindows dontinline dontasan void *__map_memories(
+    char *addr, size_t size, int prot, int flags, int fd, int64_t off, int f,
+    int x, int n) {
   size_t i, m;
   int64_t oi, sz;
   struct DirectMap dm;
@@ -221,19 +218,19 @@ static textwindows dontinline dontasan void *MapMemories(char *addr,
   iscow = (flags & MAP_TYPE) != MAP_SHARED && fd != -1;
   readonlyfile = (flags & MAP_TYPE) == MAP_SHARED && fd != -1 &&
                  (g_fds.p[fd].flags & O_ACCMODE) == O_RDONLY;
-  if (TrackMemoryInterval(&_mmi, x + (n - 1), x + (n - 1), dm.maphandle, prot,
-                          flags, readonlyfile, iscow, oi, sz) == -1) {
-    OnUnrecoverableMmapError("MapMemories unrecoverable #1");
+  if (__track_memory(&_mmi, x + (n - 1), x + (n - 1), dm.maphandle, prot, flags,
+                     readonlyfile, iscow, oi, sz) == -1) {
+    __mmap_die("__map_memories unrecoverable #1");
   }
   for (i = 0; i < m; i += FRAMESIZE) {
     oi = fd == -1 ? 0 : off + i;
     sz = FRAMESIZE;
     dm = sys_mmap(addr + i, sz, prot, f, fd, oi);
     if (dm.addr == MAP_FAILED ||
-        TrackMemoryInterval(&_mmi, x + i / FRAMESIZE, x + i / FRAMESIZE,
-                            dm.maphandle, prot, flags, readonlyfile, iscow, oi,
-                            sz) == -1) {
-      OnUnrecoverableMmapError("MapMemories unrecoverable #2");
+        __track_memory(&_mmi, x + i / FRAMESIZE, x + i / FRAMESIZE,
+                       dm.maphandle, prot, flags, readonlyfile, iscow, oi,
+                       sz) == -1) {
+      __mmap_die("__map_memories unrecoverable #2");
     }
   }
   if (_weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
@@ -242,8 +239,8 @@ static textwindows dontinline dontasan void *MapMemories(char *addr,
   return addr;
 }
 
-dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
-                            int fd, int64_t off) {
+dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
+                                      int flags, int fd, int64_t off) {
   char *p = addr;
   struct DirectMap dm;
   size_t requested_size;
@@ -301,14 +298,15 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
   }
 
   if (__virtualmax < LONG_MAX &&
-      (ckd_add(&virtualneed, (virtualused = GetMemtrackSize(&_mmi)), size) ||
+      (ckd_add(&virtualneed, (virtualused = __get_memtrack_size(&_mmi)),
+               size) ||
        virtualneed > __virtualmax)) {
     STRACE("mmap %'zu size + %'zu inuse exceeds virtual memory limit %'zu",
            size, virtualused, __virtualmax);
     return VIP(enomem());
   }
 
-  clashes = OverlapsImageSpace(p, size) || OverlapsExistingMapping(p, size);
+  clashes = OverlapsImageSpace(p, size) || __overlaps_existing_mapping(p, size);
 
   if ((flags & MAP_FIXED_NOREPLACE) == MAP_FIXED_NOREPLACE && clashes) {
     STRACE("mmap noreplace overlaps existing");
@@ -320,18 +318,18 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
-  a = MAX(1, RoundDownTwoPow(size) >> 16);
+  a = MAX(1, __rounddown2pow(size) >> 16);
   f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {
     x = FRAME(p);
     if (IsWindows()) {
-      if (UntrackMemoryIntervals(p, size)) {
-        OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
+      if (__untrack_memories(p, size)) {
+        __mmap_die("FIXED UNTRACK FAILED");
       }
     }
   } else if (p && !clashes && !OverlapsShadowSpace(p, size)) {
     x = FRAME(p);
-  } else if (!Automap(n, a, &x)) {
+  } else if (!__auto_map(n, a, &x)) {
     STRACE("automap has no room for %d frames with %d alignment", n, a);
     return VIP(enomem());
   }
@@ -379,7 +377,7 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
                           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
                      .addr == p);
         dm.addr = p;
-        p = FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
+        p = __finish_memory(p, size, prot, flags, fd, off, f, x, n, dm);
         if (IsAsan() && p != MAP_FAILED) {
           __asan_poison(p, page_size, kAsanStackOverflow);
         }
@@ -398,9 +396,9 @@ dontasan inline void *_Mmap(void *addr, size_t size, int prot, int flags,
   }
 
   if (!IsWindows()) {
-    p = MapMemory(p, size, prot, flags, fd, off, f, x, n);
+    p = __map_memory(p, size, prot, flags, fd, off, f, x, n);
   } else {
-    p = MapMemories(p, size, prot, flags, fd, off, f, x, n);
+    p = __map_memories(p, size, prot, flags, fd, off, f, x, n);
   }
 
   if (p != MAP_FAILED) {
@@ -477,14 +475,14 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
 #endif
   __mmi_lock();
   if (!__isfdkind(fd, kFdZip)) {
-    res = _Mmap(addr, size, prot, flags, fd, off);
+    res = __mmap_unlocked(addr, size, prot, flags, fd, off);
   } else {
-    res = _weaken(__zipos_Mmap)(
+    res = _weaken(__zipos_mmap)(
         addr, size, prot, flags,
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, off);
   }
 #if SYSDEBUG
-  toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
+  toto = __strace > 0 ? __get_memtrack_size(&_mmi) : 0;
 #endif
   __mmi_unlock();
   STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m (%'zu bytes total)", addr,

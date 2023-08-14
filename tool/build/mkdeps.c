@@ -362,7 +362,7 @@ static const char *StripExt(char pathbuf[PATH_MAX + 1], const char *s) {
 static bool IsObjectSource(const char *name) {
   int i;
   for (i = 0; i < ARRAYLEN(kSourceExts); ++i) {
-    if (_endswith(name, kSourceExts[i])) return true;
+    if (endswith(name, kSourceExts[i])) return true;
   }
   return false;
 }
@@ -399,7 +399,7 @@ static char *Explore(void) {
     path = names + sauces[i].name;
     if (!IsObjectSource(path)) continue;
     Appendw(&makefile, '\n');
-    if (!_startswith(path, "o/")) {
+    if (!startswith(path, "o/")) {
       Appends(&makefile, buildroot);
     }
     Appends(&makefile, StripExt(buf, path));

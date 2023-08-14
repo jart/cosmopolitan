@@ -32,7 +32,8 @@
 int verynice(void) {
   int e = errno;
   setpriority(PRIO_PROCESS, 0, 10);
-  ioprio_set(IOPRIO_WHO_PROCESS, 0, IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
+  sys_ioprio_set(IOPRIO_WHO_PROCESS, 0,
+                 IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
   struct sched_param param = {sched_get_priority_min(SCHED_IDLE)};
   sched_setscheduler(0, SCHED_IDLE, &param);
   errno = e;

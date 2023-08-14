@@ -1,5 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_KOMPRESSOR_KOMPRESSOR_H_
 #define COSMOPOLITAN_LIBC_KOMPRESSOR_KOMPRESSOR_H_
+#ifdef _COSMO_SOURCE
+
+#define rldecode  __rldecode
+#define rldecode2 __rldecode2
+#define lz4check  __lz4check
+#define lz4cpy    __lz4cpy
+#define lz4len    __lz4len
+#define lz4decode __lz4decode
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #if 0
@@ -22,4 +31,5 @@ void *lz4decode(void *dest, const void *src);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_KOMPRESSOR_KOMPRESSOR_H_ */

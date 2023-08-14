@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_LEB128_H_
 #define COSMOPOLITAN_LIBC_FMT_LEB128_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef _COSMO_SOURCE
 COSMOPOLITAN_C_START_
-#ifdef COSMO
 
 #define sleb64    __sleb64
 #define zleb64    __zleb64
@@ -27,7 +27,7 @@ char *uleb128(char *, uint128_t);
 int unsleb128(const void *, size_t, int128_t *);
 #endif /* __STRICT_ANSI__ */
 
-#endif /* COSMO */
 COSMOPOLITAN_C_END_
+#endif /* _COSMO_SOURCE */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_LEB128_H_ */

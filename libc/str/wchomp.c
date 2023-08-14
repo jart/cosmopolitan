@@ -24,7 +24,7 @@
  * @param line is NULL-propagating
  * @see getline
  */
-wchar_t *_wchomp(wchar_t *line) {
+wchar_t *wchomp(wchar_t *line) {
   size_t i;
   if (line) {
     for (i = wcslen(line); i--;) {

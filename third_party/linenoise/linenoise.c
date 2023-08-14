@@ -1224,7 +1224,7 @@ StartOver:
     } else {
       flipit = hasflip && (i == flip[0] || i == flip[1]);
       if (flipit) abAppendw(&ab, READ32LE("\e[1m"));
-      abAppendw(&ab, _tpenc(rune.c));
+      abAppendw(&ab, tpenc(rune.c));
       if (flipit) abAppendw(&ab, READ64LE("\e[22m\0\0"));
     }
     t = wcwidth(rune.c);
@@ -1473,7 +1473,7 @@ static void linenoiseEditXlatWord(struct linenoiseState *l,
     r = GetUtf8(l->buf + j, l->len - j);
     if (iswseparator(r.c)) break;
     if ((c = xlat(r.c)) != r.c) {
-      abAppendw(&ab, _tpenc(c));
+      abAppendw(&ab, tpenc(c));
     } else { /* avoid canonicalization */
       abAppend(&ab, l->buf + j, r.n);
     }
@@ -1727,7 +1727,7 @@ static void linenoiseEditBarf(struct linenoiseState *l) {
   /* now move the text */
   r = GetUtf8(l->buf + end, l->len - end);
   memmove(l->buf + pos + r.n, l->buf + pos, end - pos);
-  w = _tpenc(r.c);
+  w = tpenc(r.c);
   for (i = 0; i < r.n; ++i) {
     l->buf[pos + i] = w;
     w >>= 8;
@@ -2248,7 +2248,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
               uint64_t w;
               struct rune rune;
               rune = GetUtf8(seq, rc);
-              w = _tpenc(xlatCallback(rune.c));
+              w = tpenc(xlatCallback(rune.c));
               rc = 0;
               do {
                 seq[rc++] = w;
@@ -2393,7 +2393,7 @@ char *linenoiseGetHistoryPath(const char *prog) {
   if (*a) {
     abAppends(&path, a);
     abAppends(&path, b);
-    if (!_endswith(path.b, "/") && !_endswith(path.b, "\\")) {
+    if (!endswith(path.b, "/") && !endswith(path.b, "\\")) {
       abAppendw(&path, '/');
     }
   }

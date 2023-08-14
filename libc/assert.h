@@ -1,13 +1,13 @@
 #ifdef _ASSERT_H
 #undef _ASSERT_H
 #undef assert
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 #undef unassert
 #undef npassert
 #ifndef NDEBUG
 #undef __assert_macro
 #endif /* NDEBUG */
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 #endif /* _ASSERT_H */
 
 #ifndef _ASSERT_H
@@ -27,7 +27,7 @@ void __assert_fail(const char *, const char *, int) relegated;
 #define static_assert _Static_assert
 #endif
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 extern bool __assert_disable;
 #ifndef NDEBUG
 #define unassert(x) __assert_macro(x, #x)
@@ -56,7 +56,7 @@ extern bool __assert_disable;
     (void)0;                         \
   })
 #endif /* NDEBUG */
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
 #endif /* _ASSERT_H */

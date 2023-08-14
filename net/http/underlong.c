@@ -71,7 +71,7 @@ char *Underlong(const char *p, size_t n, size_t *z) {
           }
         }
       }
-      w = _tpenc(x);
+      w = tpenc(x);
       do {
         *q++ = w;
       } while ((w >>= 8));

@@ -24,7 +24,7 @@
  *
  * This function is similar to getline() except it'll truncate lines
  * exceeding size. The line ending marker is included and may be removed
- * using _chomp().
+ * using chomp().
  *
  * @param s is is nul-terminated string that's non-null
  * @param size is byte length of `s`

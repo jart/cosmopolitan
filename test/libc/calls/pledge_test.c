@@ -37,6 +37,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr6.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
@@ -605,7 +606,7 @@ TEST(pledge_openbsd, bigSyscalls) {
 
 int LockWorker(void *arg, int tid) {
   flockfile(stdout);
-  ASSERT_EQ(gettid(), ((pthread_mutex_t *)stdout->lock)->_owner);
+  ASSERT_EQ(gettid(), stdout->lock._owner);
   funlockfile(stdout);
   return 0;
 }

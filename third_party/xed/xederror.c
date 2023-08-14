@@ -21,8 +21,6 @@
 /**
  * Xed error code names.
  *
- *   puts(IndexDoubleNulString(kXedErrorNames, xedd->op.error));
- *
  * @see XedError
  */
 const char kXedErrorNames[] = "\

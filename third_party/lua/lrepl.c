@@ -149,7 +149,7 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
     while (lua_next(L, -2)) {
       if (lua_type(L, -2) == LUA_TSTRING) {
         name = lua_tolstring(L, -2, &n);
-        if (_startswithi(name, a) && (s = malloc(a - p + n + 1))) {
+        if (startswithi(name, a) && (s = malloc(a - p + n + 1))) {
           memcpy(s, p, a - p);
           memcpy(s + (a - p), name, n + 1);
           lua_readline_addcompletion(c, s);
@@ -162,7 +162,7 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
   lua_pop(L, 1); // pop table
 
   for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
-    if (_startswithi(kKeywordHints[i], p)) {
+    if (startswithi(kKeywordHints[i], p)) {
       if ((s = strdup(kKeywordHints[i]))) {
         lua_readline_addcompletion(c, s);
       }

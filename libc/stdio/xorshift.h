@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RAND_XORSHIFT_H_
 #define COSMOPOLITAN_LIBC_RAND_XORSHIFT_H_
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 
 #define kMarsagliaXorshift64Seed 88172645463325252
 #define kMarsagliaXorshift32Seed 2463534242
@@ -13,5 +13,5 @@ uint64_t MarsagliaXorshift64(uint64_t[hasatleast 1]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_RAND_XORSHIFT_H_ */

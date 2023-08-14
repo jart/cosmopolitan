@@ -61,7 +61,7 @@ textwindows char *sys_getcwd_nt(char *buf, size_t size) {
           }
           w = x;
         } else {
-          w = _tpenc(x);
+          w = tpenc(x);
         }
         do {
           if (j < size) {

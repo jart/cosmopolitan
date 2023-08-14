@@ -30,7 +30,7 @@ static inline dontasan void *GetFrameAddr(int f) {
   return (void *)a;
 }
 
-dontasan void ReleaseMemoryNt(struct MemoryIntervals *mm, int l, int r) {
+dontasan void __release_memory_nt(struct MemoryIntervals *mm, int l, int r) {
   int i;
   for (i = l; i <= r; ++i) {
     UnmapViewOfFile(GetFrameAddr(mm->p[i].x));

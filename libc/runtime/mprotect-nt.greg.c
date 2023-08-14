@@ -29,7 +29,7 @@ textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
   __mmi_lock();
   size = (size + 4095) & -4096;
   p = addr;
-  i = FindMemoryInterval(&_mmi, (intptr_t)p >> 16);
+  i = __find_memory(&_mmi, (intptr_t)p >> 16);
   if (i == _mmi.i || (!i && p + size <= (char *)ADDR_32_TO_48(_mmi.p[0].x))) {
     // memory isn't in memtrack
     // let's just trust the user then

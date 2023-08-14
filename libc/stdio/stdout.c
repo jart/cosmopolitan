@@ -38,7 +38,7 @@ __attribute__((__constructor__)) static void __stdout_init(void) {
   stdout->iomode = O_WRONLY;
   stdout->buf = stdout->mem;
   stdout->size = sizeof(stdout->mem);
-  ((pthread_mutex_t *)stdout->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
+  stdout->lock._type = PTHREAD_MUTEX_RECURSIVE;
 
   /*
    * Unlike other C libraries we don't bother calling fstat() to check

@@ -231,7 +231,7 @@ void StartTcpServer(void) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
     fflush(stdout);
     fclose(stdout);
-    dup2(g_bogusfd, stdout->fd);
+    dup2(g_bogusfd, fileno(stdout));
   }
 }
 
@@ -573,8 +573,8 @@ void Daemonize(void) {
   if (fork() > 0) _exit(0);
   setsid();
   if (fork() > 0) _exit(0);
-  dup2(g_bogusfd, stdin->fd);
-  if (!g_sendready) dup2(g_bogusfd, stdout->fd);
+  dup2(g_bogusfd, fileno(stdin));
+  if (!g_sendready) dup2(g_bogusfd, fileno(stdout));
   freopen(kLogFile, "ae", stderr);
   if (fstat(fileno(stderr), &st) != -1 && st.st_size > kLogMaxBytes) {
     ftruncate(fileno(stderr), 0);

@@ -1,5 +1,12 @@
 #ifndef COSMOPOLITAN_LIBC_STR_TAB_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_STR_TAB_INTERNAL_H_
+
+#define kHexToInt __kHexToInt
+#define kToLower  __kToLower
+#define kToUpper  __kToUpper
+#define kBase36   __kBase36
+#define kCp437    __kCp437
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

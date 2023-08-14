@@ -48,7 +48,7 @@
  *     it does not need to be 64kb aligned.
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
-dontasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
+dontasan void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
                             struct ZiposHandle *h, int64_t off) {
   if (!(flags & MAP_PRIVATE) ||
       (flags & ~(MAP_PRIVATE | MAP_FILE | MAP_FIXED | MAP_FIXED_NOREPLACE)) ||
@@ -64,8 +64,8 @@ dontasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
   }
 
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
-  void *outAddr =
-      _Mmap(addr, size, tempProt, (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
+  void *outAddr = __mmap_unlocked(addr, size, tempProt,
+                                  (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }
@@ -83,7 +83,7 @@ dontasan void *__zipos_Mmap(void *addr, size_t size, int prot, int flags,
     return outAddr;
   } while (0);
   const int e = errno;
-  _Munmap(outAddr, size);
+  __munmap_unlocked(outAddr, size);
   errno = e;
   strace_enabled(+1);
   return MAP_FAILED;

@@ -1,5 +1,30 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_DLMALLOC_DLMALLOC_H_
 #define COSMOPOLITAN_THIRD_PARTY_DLMALLOC_DLMALLOC_H_
+
+#define dlbulk_free                  __dlbulk_free
+#define dlcalloc                     __dlcalloc
+#define dlfree                       __dlfree
+#define dlindependent_calloc         __dlindependent_calloc
+#define dlindependent_comalloc       __dlindependent_comalloc
+#define dlmallinfo                   __dlmallinfo
+#define dlmalloc                     __dlmalloc
+#define dlmalloc_abort               __dlmalloc_abort
+#define dlmalloc_atfork              __dlmalloc_atfork
+#define dlmalloc_footprint           __dlmalloc_footprint
+#define dlmalloc_footprint_limit     __dlmalloc_footprint_limit
+#define dlmalloc_inspect_all         __dlmalloc_inspect_all
+#define dlmalloc_max_footprint       __dlmalloc_max_footprint
+#define dlmalloc_set_footprint_limit __dlmalloc_set_footprint_limit
+#define dlmalloc_stats               __dlmalloc_stats
+#define dlmalloc_trim                __dlmalloc_trim
+#define dlmalloc_usable_size         __dlmalloc_usable_size
+#define dlmallopt                    __dlmallopt
+#define dlmallopt                    __dlmallopt
+#define dlmemalign                   __dlmemalign
+#define dlrealloc                    __dlrealloc
+#define dlrealloc_in_place           __dlrealloc_in_place
+#define dlrealloc_in_place           __dlrealloc_in_place
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -87,16 +112,6 @@ void* dlrealloc_in_place(void*, size_t);
   Overreliance on memalign is a sure way to fragment space.
 */
 void* dlmemalign(size_t, size_t);
-
-/*
-  int posix_memalign(void** pp, size_t alignment, size_t n);
-  Allocates a chunk of n bytes, aligned in accord with the alignment
-  argument. Differs from memalign only in that it (1) assigns the
-  allocated memory to *pp rather than returning it, (2) fails and
-  returns EINVAL if the alignment is not a power of two (3) fails and
-  returns ENOMEM if memory cannot be allocated.
-*/
-int dlposix_memalign(void**, size_t, size_t);
 
 /*
   mallopt(int parameter_number, int parameter_value)

@@ -32,12 +32,12 @@ struct tm *gmtime_r(const int64_t *, struct tm *);
 struct tm *localtime(const int64_t *);
 struct tm *localtime_r(const int64_t *, struct tm *);
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 #define iso8601   __iso8601
 #define iso8601us __iso8601us
 char *iso8601(char[hasatleast 20], struct tm *);
 char *iso8601us(char[hasatleast 27], struct tm *, long);
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

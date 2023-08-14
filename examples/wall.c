@@ -80,7 +80,7 @@ char *GetTime(void) {
   struct timespec ts;
   clock_gettime(0, &ts);
   localtime_r(&ts.tv_sec, &tm);
-  return _chomp(asctime(&tm));
+  return chomp(asctime(&tm));
 }
 
 int main(int argc, char *argv[]) {

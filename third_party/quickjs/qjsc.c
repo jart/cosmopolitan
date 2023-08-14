@@ -636,7 +636,7 @@ int main(int argc, char **argv)
                 "\n"
                 );
     } else {
-#ifndef COSMO
+#ifndef _COSMO_SOURCE
         fprintf(fo, "#include <inttypes.h>\n"
                 "\n"
                 );

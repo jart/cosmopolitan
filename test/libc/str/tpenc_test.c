@@ -27,34 +27,34 @@ __static_yoink("strwidth");
 
 volatile uint64_t v;
 
-TEST(_tpenc, test) {
-  EXPECT_EQ(0, _tpenc(0));
-  EXPECT_EQ(1, _tpenc(1));
-  EXPECT_EQ(' ', _tpenc(' '));
-  EXPECT_EQ(0x7f, _tpenc(0x7f));
-  EXPECT_EQ(0x008496E2, _tpenc(L'▄'));
-  EXPECT_EQ(0x8080808080FEul, _tpenc(INT_MIN));
+TEST(tpenc, test) {
+  EXPECT_EQ(0, tpenc(0));
+  EXPECT_EQ(1, tpenc(1));
+  EXPECT_EQ(' ', tpenc(' '));
+  EXPECT_EQ(0x7f, tpenc(0x7f));
+  EXPECT_EQ(0x008496E2, tpenc(L'▄'));
+  EXPECT_EQ(0x8080808080FEul, tpenc(INT_MIN));
 }
 
-TEST(_tpenc, theimp) {
-  ASSERT_EQ(0x88989FF0, _tpenc(L'😈'));
+TEST(tpenc, theimp) {
+  ASSERT_EQ(0x88989FF0, tpenc(L'😈'));
 }
 
-TEST(_tpenc, testBeyondTheStandard) {
-  ASSERT_EQ(0xBFBFBFBFBFFF, _tpenc(-1));
+TEST(tpenc, testBeyondTheStandard) {
+  ASSERT_EQ(0xBFBFBFBFBFFF, tpenc(-1));
 }
 
-uint64_t _Tpenc(int x) {
-  return (v = __expropriate(_tpenc(__veil("r", x))));
+uint64_t tpenc_(int x) {
+  return (v = __expropriate(tpenc(__veil("r", x))));
 }
 
-BENCH(_tpenc, bench) {
-  EZBENCH(donothing, _Tpenc(0));
-  EZBENCH(donothing, _Tpenc(1));
-  EZBENCH(donothing, _Tpenc(' '));
-  EZBENCH(donothing, _Tpenc(0x7f));
-  EZBENCH(donothing, _Tpenc(L'▄'));
-  EZBENCH(donothing, _Tpenc(-1));
-  EZBENCH(donothing, _Tpenc(INT_MIN));
+BENCH(tpenc, bench) {
+  EZBENCH(donothing, tpenc_(0));
+  EZBENCH(donothing, tpenc_(1));
+  EZBENCH(donothing, tpenc_(' '));
+  EZBENCH(donothing, tpenc_(0x7f));
+  EZBENCH(donothing, tpenc_(L'▄'));
+  EZBENCH(donothing, tpenc_(-1));
+  EZBENCH(donothing, tpenc_(INT_MIN));
   fprintf(stderr, "\n");
 }

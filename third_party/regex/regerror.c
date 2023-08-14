@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
 #include "third_party/regex/regex.h"
 
@@ -39,6 +39,18 @@ static const char kRegexErrors[] =
     "Invalid character range\0"
     "Out of memory\0"
     "Repetition not preceded by valid expression\0";
+
+static const char *IndexDoubleNulString(const char *s, unsigned i) {
+  size_t n;
+  while (i--) {
+    if ((n = strlen(s))) {
+      s += n + 1;
+    } else {
+      return NULL;
+    }
+  }
+  return s;
+}
 
 /**
  * Converts regular expression error code to string.

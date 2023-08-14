@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_KPRINTF_H_
 #define COSMOPOLITAN_LIBC_INTRIN_KPRINTF_H_
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 
 #define kprintf      __kprintf
 #define ksnprintf    __ksnprintf
@@ -26,5 +26,5 @@ void _klog(const char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_KPRINTF_H_ */

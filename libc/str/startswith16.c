@@ -24,7 +24,7 @@
  * @param s is a NUL-terminated string
  * @param prefix is also NUL-terminated
  */
-bool _startswith16(const char16_t *s, const char16_t *prefix) {
+bool startswith16(const char16_t *s, const char16_t *prefix) {
   for (;;) {
     if (!*prefix) return true;
     if (!*s) return false;

@@ -52,16 +52,16 @@ void __mmi_unlock(void);
 void __mmi_funlock(void);
 bool IsMemtracked(int, int);
 void PrintSystemMappings(int);
-unsigned FindMemoryInterval(const struct MemoryIntervals *, int) nosideeffect;
-bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect;
+unsigned __find_memory(const struct MemoryIntervals *, int) nosideeffect;
+bool __check_memtrack(const struct MemoryIntervals *) nosideeffect;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *);
-int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int,
-                        bool, bool, long, long);
-int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
-                           void (*)(struct MemoryIntervals *, int, int));
-void ReleaseMemoryNt(struct MemoryIntervals *, int, int);
-int UntrackMemoryIntervals(void *, size_t);
-size_t GetMemtrackSize(struct MemoryIntervals *);
+int __track_memory(struct MemoryIntervals *, int, int, long, int, int, bool,
+                   bool, long, long);
+int __untrack_memory(struct MemoryIntervals *, int, int,
+                     void (*)(struct MemoryIntervals *, int, int));
+void __release_memory_nt(struct MemoryIntervals *, int, int);
+int __untrack_memories(void *, size_t);
+size_t __get_memtrack_size(struct MemoryIntervals *);
 
 #ifdef _NOPL0
 #define __mmi_lock()   _NOPL0("__threadcalls", __mmi_lock)

@@ -267,8 +267,8 @@ scall	sys_waitid		0xfffffffff28ad8f7	0x05f	globl # Linux 2.6.9+; no wrapper
 scall	sys_add_key		0xfffffffffffff0f8	0x0d9	globl # no wrapper
 scall	sys_request_key		0xfffffffffffff0f9	0x0da	globl # no wrapper
 scall	sys_keyctl		0xfffffffffffff0fa	0x0db	globl # no wrapper
-scall	ioprio_set		0xfffffffffffff0fb	0x01e	globl
-scall	ioprio_get		0xfffffffffffff0fc	0x01f	globl
+scall	sys_ioprio_set		0xfffffffffffff0fb	0x01e	globl
+scall	sys_ioprio_get		0xfffffffffffff0fc	0x01f	globl
 scall	sys_inotify_init	0xfffffffffffff0fd	0xfff	globl # no wrapper
 scall	sys_inotify_add_watch	0xfffffffffffff0fe	0xfff	globl # no wrapper
 scall	sys_inotify_rm_watch	0xfffffffffffff0ff	0xfff	globl # no wrapper

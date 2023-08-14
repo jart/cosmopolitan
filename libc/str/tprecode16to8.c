@@ -73,7 +73,7 @@ axdx_t tprecode16to8(char *dst, size_t dstsize, const char16_t *src) {
       if (!(y = src[r.dx++])) break;
       x = MergeUtf16(x, y);
     }
-    w = _tpenc(x);
+    w = tpenc(x);
     while (w && r.ax + 1 < dstsize) {
       dst[r.ax++] = w & 0xFF;
       w >>= 8;

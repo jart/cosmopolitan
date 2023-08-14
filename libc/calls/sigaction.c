@@ -195,7 +195,7 @@ static int __sigaction(int sig, const struct sigaction *act,
           ap->sa_flags |= SA_RESTORER;
           ap->sa_restorer = &__restore_rt;
         }
-        if (IsWsl1()) {
+        if (__iswsl1()) {
           sigenter = __sigenter_wsl;
         } else {
           sigenter = ap->sa_sigaction;

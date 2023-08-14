@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_DLL_H_
 #define COSMOPOLITAN_LIBC_INTRIN_DLL_H_
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 #define dll_make_first   __dll_make_first
 #define dll_make_last    __dll_make_last
 #define dll_remove       __dll_remove
@@ -53,5 +53,5 @@ void dll_splice_after(struct Dll *, struct Dll *) paramsnonnull((1)) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_DLL_H_ */

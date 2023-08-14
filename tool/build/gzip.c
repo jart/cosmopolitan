@@ -234,7 +234,7 @@ void Decompress(const char *inpath) {
   if (opt_usestdout) {
     output = stdout;
     outpath = "/dev/stdout";
-  } else if (_endswith(inpath, ".gz")) {
+  } else if (endswith(inpath, ".gz")) {
     n = strlen(inpath);
     if (n - 3 + 1 > PATH_MAX) _Exit(2);
     memcpy(pathbuf, inpath, n - 3);

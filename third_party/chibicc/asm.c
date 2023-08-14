@@ -370,7 +370,7 @@ static Token *ParseAsmClobbers(Asm *a, Token *tok) {
       a->flagclob = true;
     } else if ((i = GetIndexOfRegisterName(s)) != -1) {
       a->regclob |= 1 << i;
-    } else if (_startswith(s, "xmm") && isdigit(s[3]) &&
+    } else if (startswith(s, "xmm") && isdigit(s[3]) &&
                (!s[4] || isdigit(s[4]))) {
       i = s[3] - '0';
       if (s[4]) {
@@ -381,7 +381,7 @@ static Token *ParseAsmClobbers(Asm *a, Token *tok) {
       a->xmmclob |= 1 << i;
     } else if (!strcmp(s, "st")) {
       a->x87clob |= 1;
-    } else if (_startswith(s, "st(") && isdigit(s[3]) && s[4] == ')') {
+    } else if (startswith(s, "st(") && isdigit(s[3]) && s[4] == ')') {
       i = s[3] - '0';
       i &= 7;
       a->x87clob |= 1 << i;

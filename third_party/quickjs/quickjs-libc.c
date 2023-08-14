@@ -2050,7 +2050,7 @@ static void call_handler(JSContext *ctx, JSValueConst func)
     JS_FreeValue(ctx, ret);
 }
 
-#if defined(COSMO)
+#if defined(_COSMO_SOURCE)
 #define DWORD	uint32_t
 #define HANDLE	int64_t
 #define _get_osfhandle(fd)	g_fds.p[fd].handle

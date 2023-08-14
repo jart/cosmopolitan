@@ -151,7 +151,7 @@ static bool CheckDigests(const char *path, FILE *f) {
   unsigned char wantdigest[32], gotdigest[32];
   char buf[64 + 2 + PATH_MAX + 1 + 1], *p;
   for (line = 0; fgets(buf, sizeof(buf), f); ++line) {
-    if (!*_chomp(buf)) continue;
+    if (!*chomp(buf)) continue;
     for (p = buf, i = 0; i < 32; ++i) {
       if ((a = kHexToInt[*p++ & 255]) == -1) goto InvalidLine;
       if ((b = kHexToInt[*p++ & 255]) == -1) goto InvalidLine;

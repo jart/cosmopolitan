@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/internal.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/thread/thread.h"
@@ -26,5 +27,5 @@
  * @return 0 on success, or non-zero if another thread owns the lock
  */
 int(ftrylockfile)(FILE *f) {
-  return pthread_mutex_trylock((pthread_mutex_t *)f->lock);
+  return pthread_mutex_trylock(&f->lock);
 }

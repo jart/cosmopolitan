@@ -59,7 +59,7 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
   bool founddots;
   char *arg, **args, *state, *start;
   assert(!g_zipargs.loaded);
-  if (_chomp(data)) {
+  if (chomp(data)) {
     n = 0;
     args = 0;
     start = data;

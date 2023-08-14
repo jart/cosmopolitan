@@ -5,8 +5,10 @@
 │   • http://unlicense.org/                                        │
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 /**
  * @fileoverview Hex to binary converter program.
@@ -15,14 +17,14 @@
  */
 
 int main() {
-  int o, t = -1;
-  while (0 <= (o = getchar()) && o <= 255) {
-    if (!isxdigit(o)) continue;
-    int h = hextoint(o);
-    if (t != -1) putchar(t * 16 + h), h = -1;
-    t = h;
+  int h, o, t = -1;
+  while ((o = getchar()) != -1) {
+    if ((h = kHexToInt[o & 255]) != -1) {
+      if (t != -1) {
+        putchar(t * 16 + h);
+        h = -1;
+      }
+      t = h;
+    }
   }
-  if (ferror(stdout)) return 1;
-  if (t != -1) return 2;
-  return 0;
 }

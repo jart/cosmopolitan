@@ -777,7 +777,7 @@ document.addEventListener('DOMContentLoaded', function () {\n\
               prefix = xasprintf("%s ", o->params.p[j].name);
               for (k = 0; k < o->javadown->tags.n; ++k) {
                 if (!strcmp(o->javadown->tags.p[k].tag, "param") &&
-                    _startswith(o->javadown->tags.p[k].text, prefix)) {
+                    startswith(o->javadown->tags.p[k].text, prefix)) {
                   fprintf(f, "<dd>");
                   PrintText(f, o->javadown->tags.p[k].text + strlen(prefix));
                   fprintf(f, "\n");
@@ -911,7 +911,7 @@ document.addEventListener('DOMContentLoaded', function () {\n\
               prefix = xasprintf("%s ", m->params.p[j].name);
               for (k = 0; k < m->javadown->tags.n; ++k) {
                 if (!strcmp(m->javadown->tags.p[k].tag, "param") &&
-                    _startswith(m->javadown->tags.p[k].text, prefix)) {
+                    startswith(m->javadown->tags.p[k].text, prefix)) {
                   fprintf(f, "<dd>");
                   PrintText(f, m->javadown->tags.p[k].text + strlen(prefix));
                   fprintf(f, "\n");

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,32 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
+#include "libc/calls/syscall-sysv.internal.h"
 
 /**
- * Replaces tilde in path w/ user home folder.
+ * Syncs filesystem associated with file descriptor.
  *
- * @param path is NULL propagating
- * @return must be free()'d
+ * Since Linux 5.8, syncfs() will report an error if an inode failed to
+ * be written during the time since syncfs() was last called.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EIO if some kind of data/metadata write error happened
+ * @raise ENOSPC if disk space was exhausted during sync
+ * @raise EDQUOT (or ENOSPC) on some kinds of NFS errors
+ * @raise EBADF if `fd` isn't a valid file descriptor
+ * @raise ENOSYS on non-Linux
  */
-char *replaceuser(const char *path) {
-  char *res, *p;
-  const char *home;
-  size_t pathlen, homelen;
-  res = NULL;
-  if (path && *path++ == '~' && !isempty((home = getenv("HOME")))) {
-    while (*path == '/') path++;
-    pathlen = strlen(path);
-    homelen = strlen(home);
-    while (homelen && home[homelen - 1] == '/') homelen--;
-    if ((p = res = malloc(pathlen + 1 + homelen + 1))) {
-      p = mempcpy(p, home, homelen);
-      *p++ = '/';
-      memcpy(p, path, pathlen + 1);
-    }
-  }
-  return res;
+int syncfs(int fd) {
+  return sys_syncfs(fd);
 }

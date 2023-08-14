@@ -1,4 +1,5 @@
 //	o/$(MODE)/tool/build/lz4toasm.com -o o/$(MODE)/libc/str/EastAsianWidth.s -s kEastAsianWidth o/$(MODE)/libc/str/EastAsianWidth.bin.lz4
+#include "libc/nexgen32e/kompressor.h"
 #include "libc/macros.internal.h"
 
 	.rodata

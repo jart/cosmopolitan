@@ -2140,7 +2140,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         bool quantize =
                 tensor.ne.size() == 2 &&
                 tensor.type != quantized_type &&
-                _endswith(tensor.name.c_str(), "weight") &&
+                endswith(tensor.name.c_str(), "weight") &&
                 tensor.name != "output.weight";
 
         enum ggml_type new_type;

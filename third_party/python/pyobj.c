@@ -346,7 +346,7 @@ GetModName(bool *ispkg)
 {
     char *mod;
     mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
-    if ((*ispkg = _endswith(mod, ".__init__"))) {
+    if ((*ispkg = endswith(mod, ".__init__"))) {
         mod[strlen(mod) - strlen(".__init__")] = 0;
     }
     return mod;
@@ -377,7 +377,7 @@ GetParent2(void)
 {
     char *p, *mod;
     mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
-    if (_endswith(mod, ".__init__")) mod[strlen(mod) - strlen(".__init__")] = 0;
+    if (endswith(mod, ".__init__")) mod[strlen(mod) - strlen(".__init__")] = 0;
     if ((p = strrchr(mod, '.'))) *p = 0;
     return mod;
 }

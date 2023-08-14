@@ -22,7 +22,7 @@
 bool testlib_endswith(size_t cw, const void *s, const void *suffix) {
   if (s == suffix) return true;
   if (!s || !suffix) return false;
-  return cw == sizeof(wchar_t)    ? _wcsendswith(s, suffix)
-         : cw == sizeof(char16_t) ? _endswith16(s, suffix)
-                                  : _endswith(s, suffix);
+  return cw == sizeof(wchar_t)    ? wcsendswith(s, suffix)
+         : cw == sizeof(char16_t) ? endswith16(s, suffix)
+                                  : endswith(s, suffix);
 }

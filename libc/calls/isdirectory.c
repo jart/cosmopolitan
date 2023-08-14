@@ -27,10 +27,10 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Returns true if file exists and is a directory.
@@ -45,7 +45,7 @@
  *
  * @see isregularfile(), issymlink(), ischardev()
  */
-bool isdirectory(const char *path) {
+bool32 isdirectory(const char *path) {
   int e;
   bool res;
   union metastat st;

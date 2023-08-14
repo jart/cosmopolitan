@@ -65,7 +65,7 @@ static errno_t pthread_getname_impl(pthread_t thread, char *name, size_t size) {
         errno = e;
         return rc;
       }
-      _chomp(buf);
+      chomp(buf);
     }
     if ((len = strlen(buf))) {
       memcpy(name, buf, MIN(len, size - 1));

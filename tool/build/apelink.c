@@ -398,8 +398,13 @@ static void Pwrite(const void *data, size_t size, uint64_t offset) {
 
 static void LogElfPhdrs(FILE *f, Elf64_Phdr *p, size_t n) {
   size_t i;
-  fprintf(f, "Type           Offset   VirtAddr           PhysAddr           "
-             "FileSiz  MemSiz   Flg Align\n");
+  fprintf(f, "Type           "
+             "Offset   "
+             "VirtAddr           "
+             "PhysAddr           "
+             "FileSiz  "
+             "MemSiz   "
+             "Flg Align\n");
   for (i = 0; i < n; ++i) {
     fprintf(f,
             "%-14s 0x%06lx 0x%016lx 0x%016lx 0x%06lx 0x%06lx %c%c%c 0x%04lx\n",
@@ -412,8 +417,13 @@ static void LogElfPhdrs(FILE *f, Elf64_Phdr *p, size_t n) {
 
 static void LogPeSections(FILE *f, struct NtImageSectionHeader *p, size_t n) {
   size_t i;
-  fprintf(f, "Name           Offset   RelativeVirtAddr   PhysAddr           "
-             "FileSiz  MemSiz   Flg\n");
+  fprintf(f, "Name           "
+             "Offset   "
+             "RelativeVirtAddr   "
+             "PhysAddr           "
+             "FileSiz  "
+             "MemSiz   "
+             "Flg\n");
   for (i = 0; i < n; ++i) {
     fprintf(f, "%-14.8s 0x%06lx 0x%016lx 0x%016lx 0x%06lx 0x%06lx %c%c%c\n",
             p[i].Name, p[i].PointerToRawData, p[i].VirtualAddress,

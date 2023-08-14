@@ -59,7 +59,7 @@ textwindows int sys_fstatfs_nt(int64_t handle, struct statfs *f) {
     return eio();
   }
   for (h = j = i = 0; FileSystemNameBuffer[i]; i++) {
-    w = _tpenc(FileSystemNameBuffer[i]);
+    w = tpenc(FileSystemNameBuffer[i]);
     do {
       if (j + 1 < sizeof(f->f_fstypename)) {
         h = ((unsigned)(w & 255) + h) * 0x9e3779b1u;

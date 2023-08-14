@@ -74,7 +74,7 @@
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 /* Programs should call GetStackSize() */
 #define APE_STACKSIZE 262144 /* default 256kb stack */
 #define FRAMESIZE     0x10000

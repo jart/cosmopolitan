@@ -62,7 +62,7 @@ void bf(int fd) {
       obuf[n++] = ' ';
       for (i = 0; i < rc; ++i) {
         c = ibuf[i] & 0xff;
-        w = _tpenc(kCp437[c]);
+        w = tpenc(kCp437[c]);
         do {
           obuf[n++] = w;
         } while ((w >>= 8));

@@ -50,7 +50,7 @@ ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,
 int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned);
 int __zipos_fcntl(int, int, uintptr_t);
 int __zipos_notat(int, const char *);
-void *__zipos_Mmap(void *, uint64_t, int32_t, int32_t, struct ZiposHandle *,
+void *__zipos_mmap(void *, uint64_t, int32_t, int32_t, struct ZiposHandle *,
                    int64_t) dontasan;
 
 #ifdef _NOPL0

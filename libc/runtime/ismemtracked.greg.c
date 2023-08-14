@@ -20,7 +20,7 @@
 
 static inline bool IsMemtrackedImpl(int x, int y) {
   unsigned i;
-  i = FindMemoryInterval(&_mmi, x);
+  i = __find_memory(&_mmi, x);
   if (i == _mmi.i) return false;
   if (x < _mmi.p[i].x) return false;
   for (;;) {

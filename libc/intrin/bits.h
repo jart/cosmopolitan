@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_H_
 #define COSMOPOLITAN_LIBC_BITS_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifdef _COSMO_SOURCE
 COSMOPOLITAN_C_START_
-#ifdef COSMO
 
 int _bitreverse8(int) pureconst;
 int _bitreverse16(int) pureconst;
@@ -99,7 +99,7 @@ uint64_t _bitreverse64(uint64_t) pureconst;
     __p + 64 / 8;                        \
   }))
 
-#endif /* COSMO */
 COSMOPOLITAN_C_END_
+#endif /* _COSMO_SOURCE */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_H_ */

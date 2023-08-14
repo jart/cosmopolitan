@@ -55,10 +55,9 @@ size_t malloc_footprint(void);
 size_t malloc_max_footprint(void);
 size_t malloc_footprint_limit(void);
 size_t malloc_set_footprint_limit(size_t);
-void malloc_inspect_all(void (*handler)(void *, void *, size_t, void *),
-                        void *);
+void malloc_inspect_all(void (*)(void *, void *, size_t, void *), void *);
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 #endif
 

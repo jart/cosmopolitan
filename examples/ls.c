@@ -49,7 +49,7 @@ void List(const char *path) {
   const char *vpath;
   if (strcmp(path, ".") == 0) {
     vpath = "";
-  } else if (!_endswith(path, "/")) {
+  } else if (!endswith(path, "/")) {
     vpath = _gc(xasprintf("%s/", path));
   } else {
     vpath = path;

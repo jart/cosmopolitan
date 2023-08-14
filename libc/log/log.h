@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
+#ifdef _COSMO_SOURCE
 #include "libc/stdio/stdio.h"
 
 #define kLogFatal   0
@@ -229,4 +230,5 @@ void vffatalf(ARGS, va_list) asm("vflogf") ATTRV relegated wontreturn libcesque;
 #endif /* __STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_LOG_LOG_H_ */

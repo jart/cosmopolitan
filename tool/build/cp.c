@@ -27,6 +27,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/ftw.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -37,7 +38,6 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "libc/stdio/ftw.h"
 
 #define USAGE \
   " SRC... DST\n\
@@ -130,7 +130,7 @@ int Visit(const char *fpath, const struct stat *sb, int tflag,
   strcpy(srcfile, fpath);
   src = srcfile + striplen;
   strcpy(dstfile, dstdir);
-  if (!_endswith(dstfile, "/")) {
+  if (!endswith(dstfile, "/")) {
     strcat(dstfile, "/");
   }
   strcat(dstfile, src);

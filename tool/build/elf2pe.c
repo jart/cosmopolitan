@@ -624,7 +624,7 @@ static bool ParseDllImportSymbol(const char *symbol_name,
   size_t n;
   char *dll_name;
   const char *dolla;
-  if (!_startswith(symbol_name, "dll$")) return false;
+  if (!startswith(symbol_name, "dll$")) return false;
   symbol_name += 4;
   dolla = strchr(symbol_name, '$');
   if (!dolla) return false;

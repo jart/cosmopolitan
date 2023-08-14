@@ -21,11 +21,11 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
-int UntrackMemoryIntervals(void *addr, size_t size) {
+int __untrack_memories(void *addr, size_t size) {
   int a, b;
   unassert(size > 0);
   a = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
   b = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
-  return ReleaseMemoryIntervals(&_mmi, a, b,
-                                SupportsWindows() ? ReleaseMemoryNt : 0);
+  return __untrack_memory(&_mmi, a, b,
+                          SupportsWindows() ? __release_memory_nt : 0);
 }

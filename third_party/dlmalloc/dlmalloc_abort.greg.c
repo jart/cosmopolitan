@@ -21,6 +21,7 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 #define MESSAGE "dlmalloc_abort()\n"
 

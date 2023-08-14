@@ -285,23 +285,22 @@ static void LoadPublicDefinitions(struct DoxWriter *dox, Obj *prog) {
       if (*obj->name == '_') continue;
       if (strchr(obj->name, '$')) continue;
       if (obj->visibility && !strcmp(obj->visibility, "hidden")) continue;
-      if (_startswith(obj->name, "nsync_") && _endswith(obj->name, "_"))
-        continue;
+      if (startswith(obj->name, "nsync_") && endswith(obj->name, "_")) continue;
       if (!obj->is_definition && (!obj->is_function || !obj->params ||
                                   !obj->params->name || !*obj->params->name)) {
         continue;
       }
     }
-    if (_startswith(obj->name, "__gdtoa_")) continue;
-    if (_startswith(obj->name, "sys_")) continue;
-    if (_startswith(obj->name, "ioctl_")) continue;
-    if (_startswith(obj->name, "nsync_mu_semaphore_")) continue;
-    if (_startswith(obj->name, "Describe")) continue;
-    if (_startswith(obj->name, "__sig")) continue;
-    if (_startswith(obj->name, "__zipos")) continue;
+    if (startswith(obj->name, "__gdtoa_")) continue;
+    if (startswith(obj->name, "sys_")) continue;
+    if (startswith(obj->name, "ioctl_")) continue;
+    if (startswith(obj->name, "nsync_mu_semaphore_")) continue;
+    if (startswith(obj->name, "Describe")) continue;
+    if (startswith(obj->name, "__sig")) continue;
+    if (startswith(obj->name, "__zipos")) continue;
     if (obj->is_static) continue;
     if (obj->is_string_literal) continue;
-    if (obj->section && _startswith(obj->section, ".init_array")) continue;
+    if (obj->section && startswith(obj->section, ".init_array")) continue;
     APPEND(dox->objects);
     dox->objects.p[dox->objects.n - 1] = obj;
   }

@@ -17,7 +17,7 @@ int settimeofday(const struct timeval *, const struct timezone *);
 int lutimes(const char *, const struct timeval[2]);
 int utimes(const char *, const struct timeval[2]);
 
-#ifdef COSMO
+#ifdef _COSMO_SOURCE
 /* cosmopolitan libc's non-posix timevals library
    removed by default due to emacs codebase clash */
 #define timeval_zero ((struct timeval){0})
@@ -43,7 +43,7 @@ static inline bool timeval_iszero(struct timeval __tv) {
 static inline bool timeval_isvalid(struct timeval __tv) {
   return __tv.tv_sec >= 0 && __tv.tv_usec < 1000000ull;
 }
-#endif /* COSMO */
+#endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

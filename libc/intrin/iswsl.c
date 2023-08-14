@@ -33,7 +33,7 @@
 /**
  * Returns true if host platform is WSL 1.0.
  */
-bool IsWsl1(void) {
+bool __iswsl1(void) {
   static char res;
   if (res) return res & 1;
   if (!IsLinux()) return res = 2, false;

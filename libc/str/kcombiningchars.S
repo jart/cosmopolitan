@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/nr.h"
+#include "libc/nexgen32e/kompressor.h"
 #include "libc/sysv/consts/madv.h"
 
 	.rodata.cst4

@@ -2284,11 +2284,11 @@ static char *AppendHeader(char *p, const char *k, const char *v) {
 static char *AppendContentType(char *p, const char *ct) {
   p = stpcpy(p, "Content-Type: ");
   p = stpcpy(p, ct);
-  if ((cpm.istext = _startswith(ct, "text/"))) {
+  if ((cpm.istext = startswith(ct, "text/"))) {
     if (!strchr(ct + 5, ';')) {
       p = stpcpy(p, "; charset=utf-8");
     }
-    if (!cpm.referrerpolicy && _startswith(ct + 5, "html")) {
+    if (!cpm.referrerpolicy && startswith(ct + 5, "html")) {
       cpm.referrerpolicy = "no-referrer-when-downgrade";
     }
   }
@@ -3828,7 +3828,7 @@ static void StoreFile(char *path) {
   size_t plen, tlen;
   struct stat st;
   char *target = path;
-  if (_startswith(target, "./")) target += 2;
+  if (startswith(target, "./")) target += 2;
   tlen = strlen(target);
   if (!IsReasonablePath(target, tlen))
     FATALF("(cfg) error: can't store %`'s: contains '.' or '..' segments",
@@ -3844,7 +3844,7 @@ static void StorePath(const char *dirpath) {
   DIR *d;
   char *path;
   struct dirent *e;
-  if (!isdirectory(dirpath) && !_endswith(dirpath, "/"))
+  if (!isdirectory(dirpath) && !endswith(dirpath, "/"))
     return StoreFile(dirpath);
   if (!(d = opendir(dirpath))) FATALF("(cfg) error: can't open %`'s", dirpath);
   while ((e = readdir(d))) {
@@ -4730,7 +4730,7 @@ static int LuaGetZipPaths(lua_State *L) {
        zcf += ZIP_CFILE_HDRSIZE(zcf)) {
     CHECK_EQ(kZipCfileHdrMagic, ZIP_CFILE_MAGIC(zcf));
     path = GetAssetPath(zcf, &pathlen);
-    if (prefixlen == 0 || _startswith(path, prefix)) {
+    if (prefixlen == 0 || startswith(path, prefix)) {
       lua_pushlstring(L, path, pathlen);
       lua_seti(L, -2, ++i);
     }
@@ -6184,7 +6184,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
                ClientAcceptsGzip() && !ShouldAvoidGzip() &&
                !(a->file &&
                  IsNoCompressExt(a->file->path.s, a->file->path.n)) &&
-               ((cpm.contentlength >= 100 && _startswithi(ct, "text/")) ||
+               ((cpm.contentlength >= 100 && startswithi(ct, "text/")) ||
                 (cpm.contentlength >= 1000 &&
                  MeasureEntropy(cpm.content, 1000) < 7))) {
       VERBOSEF("serving compressed asset");
@@ -6926,10 +6926,10 @@ static void MakeExecutableModifiable(void) {
   if (IsWindows()) return;  // TODO
   if (IsOpenbsd()) return;  // TODO
   if (IsNetbsd()) return;   // TODO
-  if (_endswith(zpath, ".com.dbg")) return;
+  if (endswith(zpath, ".com.dbg")) return;
   close(zfd);
   ft = ftrace_enabled(0);
-  if ((zfd = _OpenExecutable()) == -1) {
+  if ((zfd = __open_executable()) == -1) {
     WARNF("(srvr) can't open executable for modification: %m");
   }
   if (ft > 0) {

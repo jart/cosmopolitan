@@ -25,7 +25,7 @@ void LogCertificate(const char *msg, mbedtls_x509_crt *cert) {
   if (LOGGABLE(kLogDebug)) {
     if ((s = malloc((n = 15000)))) {
       if (mbedtls_x509_crt_info(s, n, " ", cert) > 0) {
-        DEBUGF("%s\n%s", msg, _chomp(s));
+        DEBUGF("%s\n%s", msg, chomp(s));
       }
       free(s);
     }

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bsr.h"
+#include "libc/str/str.h"
 
 static const uint16_t kTpEnc[32 - 7] = {
     1 | 0300 << 8, 1 | 0300 << 8, 1 | 0300 << 8, 1 | 0300 << 8, 2 | 0340 << 8,
@@ -29,7 +30,7 @@ static const uint16_t kTpEnc[32 - 7] = {
 /**
  * Encodes Thompson-Pike variable-length integer.
  */
-uint64_t _tpenc(uint32_t c) {
+uint64_t tpenc(uint32_t c) {
   int e, n;
   uint64_t w;
   if (0 <= c && c <= 127) return c;

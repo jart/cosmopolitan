@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/javadown.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "tool/build/lib/javadown.h"
 
 #define FILEOVERVIEW "@fileoverview"
 
@@ -122,7 +122,7 @@ static void SplitLines(struct Lines *lines, char *p) {
 static bool ConsumeFileOverview(struct Lines *lines) {
   int i;
   if (lines->n && lines->p[0].n >= strlen(FILEOVERVIEW) &&
-      _startswith(lines->p[0].p, FILEOVERVIEW)) {
+      startswith(lines->p[0].p, FILEOVERVIEW)) {
     lines->p[0].p += strlen(FILEOVERVIEW);
     lines->p[0].n -= strlen(FILEOVERVIEW);
     while (lines->p[0].n &&

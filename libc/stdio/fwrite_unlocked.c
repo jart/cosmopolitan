@@ -22,6 +22,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/stdckdint.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"

@@ -24,14 +24,14 @@
  *     char *line = NULL;
  *     size_t linesize = 0;
  *     while (getline(&line, &linesize, stdin) > 0) {
- *       _chomp(line);
+ *       chomp(line);
  *       printf("%s\n", line);
  *     }
  *     free(line);
  *
  * This function delegates to getdelim(), which provides further
  * documentation. Concerning lines, please note the \n or \r\n are
- * included in results, and can be removed with _chomp().
+ * included in results, and can be removed with chomp().
  *
  * When reading from the console on Windows in `ICANON` mode, the
  * returned line will end with `\r\n` rather than `\n`.

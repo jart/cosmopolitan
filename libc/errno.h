@@ -660,8 +660,11 @@ extern const errno_t EXFULL;
 
 extern errno_t __errno;
 errno_t *__errno_location(void) dontthrow pureconst;
+
+#if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE)
 extern char *program_invocation_short_name;
 extern char *program_invocation_name;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

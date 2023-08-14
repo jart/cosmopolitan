@@ -37,6 +37,6 @@ void __warn_if_powersave(void) {
   if ((fd = open(FILE, O_RDONLY)) == -1) return;
   read(fd, buf, 15);
   close(fd);
-  if (!_startswith(buf, "powersave")) return;
+  if (!startswith(buf, "powersave")) return;
   write(2, WARN, sizeof(WARN) - 1);
 }

@@ -104,7 +104,7 @@ TEST(diagnose_syscall, getpid) {
     // netbsd puts parent pid in edx
     // xnu seems to just clobber it!
     ASSERT_STREQ("rax rdx rcx r11", _gc(DiffContexts(&x, &y)));
-  } else if (IsWsl1()) {
+  } else if (__iswsl1()) {
     // XXX: WSL1 must be emulating SYSCALL instructions.
     ASSERT_STREQ("rax rcx", _gc(DiffContexts(&x, &y)));
   } else {
@@ -117,7 +117,7 @@ TEST(diagnose_syscall, testWriteSuccess) {
   diagnose_syscall(__NR_write, 2, Z, 0, Z, Z, Z, Z, &x, &y);
   if (IsFreebsd()) {
     ASSERT_STREQ("rax rcx r8 r9 r10 r11", _gc(DiffContexts(&x, &y)));
-  } else if (IsWsl1()) {
+  } else if (__iswsl1()) {
     // XXX: WSL1 must be emulating SYSCALL instructions.
     ASSERT_STREQ("rax rcx", _gc(DiffContexts(&x, &y)));
   } else {
@@ -132,7 +132,7 @@ TEST(diagnose_syscall, testWriteFailed) {
     ASSERT_STREQ("rax rcx r8 r9 r10 r11 cf", _gc(DiffContexts(&x, &y)));
   } else if (IsBsd()) {
     ASSERT_STREQ("rax rcx r11 cf", _gc(DiffContexts(&x, &y)));
-  } else if (IsWsl1()) {
+  } else if (__iswsl1()) {
     // XXX: WSL1 must be emulating SYSCALL instructions.
     ASSERT_STREQ("rax rcx", _gc(DiffContexts(&x, &y)));
   } else {
