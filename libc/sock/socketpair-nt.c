@@ -54,7 +54,7 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
     return eopnotsupp();
   }
 
-  CreatePipeName(pipename);
+  __create_pipe_name(pipename);
   __fds_lock();
   reader = __reservefd_unlocked(-1);
   writer = __reservefd_unlocked(-1);

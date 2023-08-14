@@ -31,10 +31,10 @@ __msabi extern typeof(CreateThread) *const __imp_CreateThread;
  * @return thread handle, or 0 on failure
  * @note this wrapper takes care of ABI, STRACE()
  */
-textwindows int64_t CreateThread(
-    struct NtSecurityAttributes *lpThreadAttributes, size_t dwStackSize,
-    NtThreadStartRoutine lpStartAddress, void *lpParameter,
-    uint32_t dwCreationFlags, uint32_t *opt_lpThreadId) {
+textwindows int64_t
+CreateThread(struct NtSecurityAttributes *lpThreadAttributes,
+             size_t dwStackSize, void *lpStartAddress, void *lpParameter,
+             uint32_t dwCreationFlags, uint32_t *opt_lpThreadId) {
   int64_t hHandle;
   hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
                                lpParameter, dwCreationFlags, opt_lpThreadId);

@@ -18,7 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -29,7 +31,10 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
 #include "libc/nt/iphlpapi.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/ipadapteraddresses.h"
@@ -48,6 +53,10 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+__static_yoink("WinMainStdin");
+#endif
+
 /* Maximum number of unicast addresses handled for each interface */
 #define MAX_UNICAST_ADDR 32
 #define MAX_NAME_CLASH   ((int)('z' - 'a')) /* Allow a..z */
@@ -61,14 +70,10 @@ static struct HostAdapterInfoNode {
   short flags;
 } * __hostInfo;
 
-static int ioctl_default(int fd, unsigned long request, ...) {
+static int ioctl_default(int fd, unsigned long request, void *arg) {
   int rc;
-  void *arg;
   va_list va;
   int64_t handle;
-  va_start(va, request);
-  arg = va_arg(va, void *);
-  va_end(va);
   if (!IsWindows()) {
     return sys_ioctl(fd, request, arg);
   } else if (__isfdopen(fd)) {
@@ -78,6 +83,36 @@ static int ioctl_default(int fd, unsigned long request, ...) {
         return rc;
       } else {
         return _weaken(__winsockerr)();
+      }
+    } else {
+      return eopnotsupp();
+    }
+  } else {
+    return ebadf();
+  }
+}
+
+static int ioctl_fionread(int fd, uint32_t *arg) {
+  int rc;
+  va_list va;
+  int64_t handle;
+  uint32_t avail;
+  if (!IsWindows()) {
+    return sys_ioctl(fd, FIONREAD, arg);
+  } else if (__isfdopen(fd)) {
+    handle = __resolve_stdin_handle(g_fds.p[fd].handle);
+    if (g_fds.p[fd].kind == kFdSocket) {
+      if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, FIONREAD, arg)) != -1) {
+        return rc;
+      } else {
+        return _weaken(__winsockerr)();
+      }
+    } else if (GetFileType(handle) == kNtFileTypePipe) {
+      if (PeekNamedPipe(handle, 0, 0, 0, &avail, 0)) {
+        *arg = avail;
+        return 0;
+      } else {
+        return __winerr();
       }
     } else {
       return eopnotsupp();
@@ -564,8 +599,7 @@ static int ioctl_siocgifflags(int fd, void *arg) {
  * @param request can be any of:
  *
  *     - `FIONREAD` takes an `int *` and returns how many bytes of input
- *       are available on a terminal or socket, waiting to be read. On
- *       Windows this currently won't work for console file descriptors.
+ *       are available on a terminal or socket, waiting to be read.
  *
  *     - `TIOCGWINSZ` populates `struct winsize *` with the dimensions
  *       of your teletypewriter. It's an alias for tcgetwinsize().
@@ -635,8 +669,8 @@ int ioctl(int fd, unsigned long request, ...) {
   va_start(va, request);
   arg = va_arg(va, void *);
   va_end(va);
-  if (request == FIONBIO) {
-    rc = ioctl_default(fd, request, arg);
+  if (request == FIONREAD) {
+    rc = ioctl_fionread(fd, arg);
   } else if (request == TIOCGWINSZ) {
     rc = tcgetwinsize(fd, arg);
   } else if (request == TIOCSWINSZ) {

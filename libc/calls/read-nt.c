@@ -91,9 +91,11 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
   bool32 ok;
   uint32_t got;
   int filetype;
+  int64_t handle;
   int abort_errno = EAGAIN;
   size = MIN(size, 0x7ffff000);
-  filetype = GetFileType(fd->handle);
+  handle = __resolve_stdin_handle(fd->handle);
+  filetype = GetFileType(handle);
   if (filetype == kNtFileTypeChar || filetype == kNtFileTypePipe) {
     struct NtOverlapped overlap = {0};
     if (offset != -1) {
@@ -103,18 +105,18 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     if ((overlap.hEvent = CreateEvent(0, 0, 0, 0))) {
       // the win32 manual says it's important to *not* put &got here
       // since for overlapped i/o, we always use GetOverlappedResult
-      ok = ReadFile(fd->handle, data, size, 0, &overlap);
+      ok = ReadFile(handle, data, size, 0, &overlap);
       if (!ok && GetLastError() == kNtErrorIoPending) {
         // i/o operation is in flight; blocking is unavoidable
         // if we're in non-blocking mode, then immediately abort
         // if an interrupt is pending, then abort before waiting
         // otherwise wait for i/o periodically checking interrupts
         if (fd->flags & O_NONBLOCK) {
-          sys_read_nt_abort(fd->handle, &overlap);
+          sys_read_nt_abort(handle, &overlap);
         } else if (_check_interrupts(kSigOpRestartable, g_fds.p)) {
         Interrupted:
           abort_errno = errno;
-          sys_read_nt_abort(fd->handle, &overlap);
+          sys_read_nt_abort(handle, &overlap);
         } else {
           for (;;) {
             uint32_t i;
@@ -134,7 +136,7 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
       if (ok) {
         // overlapped is allocated on stack, so it's important we wait
         // for windows to acknowledge that it's done using that memory
-        ok = GetOverlappedResult(fd->handle, &overlap, &got, true);
+        ok = GetOverlappedResult(handle, &overlap, &got, true);
       }
       CloseHandle(overlap.hEvent);
     } else {
@@ -142,21 +144,21 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     }
   } else if (offset == -1) {
     // perform simple blocking file read
-    ok = ReadFile(fd->handle, data, size, &got, 0);
+    ok = ReadFile(handle, data, size, &got, 0);
   } else {
     // perform pread()-style file read at particular file offset
     int64_t position;
     // save file pointer which windows clobbers, even for overlapped i/o
-    if (!SetFilePointerEx(fd->handle, 0, &position, SEEK_CUR)) {
+    if (!SetFilePointerEx(handle, 0, &position, SEEK_CUR)) {
       return __winerr();  // fd probably isn't seekable?
     }
     struct NtOverlapped overlap = {0};
     overlap.Pointer = (void *)(uintptr_t)offset;
-    ok = ReadFile(fd->handle, data, size, 0, &overlap);
+    ok = ReadFile(handle, data, size, 0, &overlap);
     if (!ok && GetLastError() == kNtErrorIoPending) ok = true;
-    if (ok) ok = GetOverlappedResult(fd->handle, &overlap, &got, true);
+    if (ok) ok = GetOverlappedResult(handle, &overlap, &got, true);
     // restore file pointer which windows clobbers, even on error
-    unassert(SetFilePointerEx(fd->handle, position, 0, SEEK_SET));
+    unassert(SetFilePointerEx(handle, position, 0, SEEK_SET));
   }
   if (ok) {
     if (fd->ttymagic & kFdTtyMunging) {

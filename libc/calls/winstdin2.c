@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/intrin/atomic.h"
-#include "libc/runtime/internal.h"
+#include "libc/nt/synchronization.h"
 
-static dontasan textwindows char16_t *itoa16(char16_t p[21], uint64_t x) {
-  char t;
-  size_t a, b, i = 0;
-  do {
-    p[i++] = x % 10 + '0';
-    x = x / 10;
-  } while (x > 0);
-  if (i) {
-    for (a = 0, b = i - 1; a < b; ++a, --b) {
-      t = p[a];
-      p[a] = p[b];
-      p[b] = t;
+textwindows int64_t __resolve_stdin_handle(int64_t handle) {
+  if (handle == g_fds.stdin.handle) {
+    if (!atomic_exchange(&g_fds.stdin.once, 1)) {
+      ReleaseSemaphore(g_fds.stdin.inisem, 1, 0);
     }
+    handle = g_fds.stdin.reader;
   }
-  return p + i;
-}
-
-// This function is called very early by WinMain().
-dontasan textwindows char16_t *__create_pipe_name(char16_t *a) {
-  char16_t *p = a;
-  const char *q = "\\\\?\\pipe\\cosmo\\";
-  static atomic_uint x;
-  while (*q) *p++ = *q++;
-  p = itoa16(p, __pid);
-  *p++ = '-';
-  p = itoa16(p, atomic_fetch_add(&x, 1));
-  *p = 0;
-  return a;
+  return handle;
 }

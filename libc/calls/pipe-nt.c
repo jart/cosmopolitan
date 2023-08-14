@@ -34,7 +34,7 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   int64_t hin, hout;
   int reader, writer;
   char16_t pipename[64];
-  CreatePipeName(pipename);
+  __create_pipe_name(pipename);
   __fds_lock();
   if ((reader = __reservefd_unlocked(-1)) == -1) {
     __fds_unlock();

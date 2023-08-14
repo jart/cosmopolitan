@@ -28,11 +28,23 @@ struct Fd {
   int64_t extra;
 };
 
+struct StdinRelay {
+  _Atomic(uint32_t) once;
+  int64_t inisem; /* semaphore to delay 1st read */
+  int64_t handle; /* should == g_fds.p[0].handle */
+  int64_t reader; /* ReadFile() use this instead */
+  int64_t writer; /* only used by WinStdinThread */
+};
+
 struct Fds {
   _Atomic(int) f; /* lowest free slot */
   size_t n;
   struct Fd *p, *e;
+  struct StdinRelay stdin;
 };
+
+int64_t __resolve_stdin_handle(int64_t);
+void WinMainStdin(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -1625,7 +1625,7 @@ static char *FinishGeneratingDosHeader(char *p) {
   p = WRITE16LE(p, 0);       // 38
 
   // terminate the shell quote started earlier in the ape magic. the big
-  // concern with shell script quoting is that binary content mimght get
+  // concern with shell script quoting, is that binary content might get
   // generated in the dos stub which has an ascii value that is the same
   // as the end of quote. using a longer terminator reduces it to a very
   // low order of probability. tacking on an unpredictable deterministic

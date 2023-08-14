@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
@@ -37,6 +38,7 @@
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
@@ -44,6 +46,8 @@
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -53,6 +57,26 @@
 #include "libc/sysv/consts/prot.h"
 
 #ifdef __x86_64__
+
+/**
+ * @fileoverview makes windows stdin handle capable of being poll'd
+ *
+ * 1. On Windows, there's no way to check how many bytes of input are
+ *    available from the cmd.exe console. The only thing you can do is a
+ *    blocking read that can't be interrupted.
+ *
+ * 2. On Windows, it's up to the parent process whether or not the
+ *    handles it passes us are capable of non-blocking overlapped i/o
+ *    reads (which we need for busy polling to check for interrupts).
+ *
+ * So we solve this by creating a thread which just does naive reads on
+ * standard input, and then relays the data to the process via a named
+ * pipe, which we explicitly creaete with overlapped i/o enabled.
+ *
+ * This code runs very early during process initialization, at the
+ * beginning of WinMain(). This module is only activated if the app
+ * links any one of: poll(), select(), or ioctl(FIONREAD).
+ */
 
 // clang-format off
 __msabi extern typeof(AddVectoredExceptionHandler) *const __imp_AddVectoredExceptionHandler;
@@ -68,6 +92,7 @@ __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
+__msabi extern typeof(ReadFile) *const __imp_ReadFile;
 __msabi extern typeof(SetConsoleCP) *const __imp_SetConsoleCP;
 __msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
 __msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
@@ -147,22 +172,8 @@ __msabi static textwindows int OnEarlyWinCrash(struct NtExceptionPointers *ep) {
   __builtin_unreachable();
 }
 
-// this makes it possible for our read() implementation to periodically
-// poll for signals while performing a blocking overlapped io operation
-__msabi static textwindows void ReopenConsoleForOverlappedIo(void) {
-  uint32_t mode;
-  int64_t hOld, hNew;
-  hOld = __imp_GetStdHandle(kNtStdInputHandle);
-  if (__imp_GetConsoleMode(hOld, &mode)) {
-    hNew = __imp_CreateFileW(u"CONIN$", kNtGenericRead | kNtGenericWrite,
-                             kNtFileShareRead | kNtFileShareWrite,
-                             &kNtIsInheritable, kNtOpenExisting,
-                             kNtFileFlagOverlapped, 0);
-    if (hNew != kNtInvalidHandleValue) {
-      __imp_SetStdHandle(kNtStdInputHandle, hNew);
-      __imp_CloseHandle(hOld);
-    }
-  }
+__msabi static textwindows bool ProxyStdin(void) {
+  return true;
 }
 
 // this ensures close(1) won't accidentally close(2) for example
@@ -196,8 +207,6 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   intptr_t stackaddr, allocaddr;
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
-  ReopenConsoleForOverlappedIo();
-  DeduplicateStdioHandles();
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
     rc = __imp_SetConsoleCP(kNtCpUtf8);
     NTTRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
@@ -268,6 +277,10 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   os = _HOSTWINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
   kStartTsc = rdtsc();
   __pid = __imp_GetCurrentProcessId();
+  DeduplicateStdioHandles();
+  if (_weaken(WinMainStdin)) {
+    _weaken(WinMainStdin)();
+  }
 #if !IsTiny()
   __wincrashearly =
       __imp_AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
