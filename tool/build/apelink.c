@@ -240,6 +240,7 @@ static int macholoadcount;
 static const char *outpath;
 static struct Assets assets;
 static struct Inputs inputs;
+static char ape_heredoc[15];
 static enum Strategy strategy;
 static struct Loaders loaders;
 static const char *custom_sh_code;
@@ -1597,31 +1598,46 @@ static char *GenerateScriptIfMachine(char *p, struct Input *in) {
 }
 
 static char *FinishGeneratingDosHeader(char *p) {
-  p = WRITE16LE(p, 0x1000);    // 10: MZ: lowers upper bound load / 16
-  p = WRITE16LE(p, 0xf800);    // 12: MZ: roll greed on bss
-  p = WRITE16LE(p, 0);         // 14: MZ: lower bound on stack segment
-  p = WRITE16LE(p, 0);         // 16: MZ: initialize stack pointer
-  p = WRITE16LE(p, 0);         // 18: MZ: ∑bₙ checksum don't bother
-  p = WRITE16LE(p, 0x0100);    // 20: MZ: initial ip value
-  p = WRITE16LE(p, 0x0800);    // 22: MZ: increases cs load lower bound
-  p = WRITE16LE(p, 0x0040);    // 24: MZ: reloc table offset
-  p = WRITE16LE(p, 0);         // 26: MZ: overlay number
-  p = WRITE16LE(p, 0);         // 28: MZ: overlay information
-  p = WRITE16LE(p, 0);         // 30
-  p = WRITE16LE(p, 0);         // 32
-  p = WRITE16LE(p, 0);         // 34
-  p = stpcpy(p, "JT");         // 36: Justine Tunney
-  p = WRITE16LE(p, 0);         // 38
-  p = stpcpy(p, "' <<'@'\n");  // 40
-  p = WRITE16LE(p, 0);         // 48
-  p = WRITE16LE(p, 0);         // 50
-  p = WRITE16LE(p, 0);         // 52
-  p = WRITE16LE(p, 0);         // 54
-  p = WRITE16LE(p, 0);         // 56
-  p = WRITE16LE(p, 0);         // 58
-  p = WRITE32LE(p, 0);         // 60: portable executable
-  r_off32_e_lfanew = p - 4;
-  return p;
+  p = WRITE16LE(p, 0x1000);  // 10: MZ: lowers upper bound load / 16
+  p = WRITE16LE(p, 0xf800);  // 12: MZ: roll greed on bss
+  p = WRITE16LE(p, 0);       // 14: MZ: lower bound on stack segment
+  p = WRITE16LE(p, 0);       // 16: MZ: initialize stack pointer
+  p = WRITE16LE(p, 0);       // 18: MZ: ∑bₙ checksum don't bother
+  p = WRITE16LE(p, 0x0100);  // 20: MZ: initial ip value
+  p = WRITE16LE(p, 0x0800);  // 22: MZ: increases cs load lower bound
+  p = WRITE16LE(p, 0x0040);  // 24: MZ: reloc table offset
+  p = WRITE16LE(p, 0);       // 26: MZ: overlay number
+  p = WRITE16LE(p, 0);       // 28: MZ: overlay information
+  p = WRITE16LE(p, 0);       // 30
+  p = WRITE16LE(p, 0);       // 32
+  p = WRITE16LE(p, 0);       // 34
+  p = WRITE16LE(p, 0);       // 36
+  p = WRITE16LE(p, 0);       // 38
+
+  // terminate the shell quote started earlier in the ape magic. the big
+  // concern with shell script quoting is that binary content mimght get
+  // generated in the dos stub which has an ascii value that is the same
+  // as the end of quote. using a longer terminator reduces it to a very
+  // low order of probability. tacking on an unpredictable deterministic
+  // value makes it nearly impossible to break even with intent for that
+  // another terminator exists, which dates back to every version of ape
+  // ever released, which is "#'\"\n". programs wanting a simple way for
+  // scanning over the actually portable executable mz stub can use that
+  char *q = ape_heredoc;
+  q = stpcpy(q, "justine");
+  uint64_t w = READ64LE(hashpool);
+  for (int i = 0; i < 6; ++i) {
+    *q++ = "0123456789abcdefghijklmnopqrstuvwxyz"[w % 36];
+    w /= 36;
+  }
+  p = stpcpy(p, "' <<'");
+  p = stpcpy(p, ape_heredoc);
+  p = stpcpy(p, "'\n");
+
+  // here's our first unpredictable binary value, which is the offset of
+  // the portable executable headers.
+  r_off32_e_lfanew = p;
+  return WRITE32LE(p, 0);
 }
 
 static char *CopyMasterBootRecord(char *p) {
@@ -1899,9 +1915,11 @@ int main(int argc, char *argv[]) {
     if (support_vector & _HOSTMETAL) {
       p = CopyMasterBootRecord(p);
     }
-    p = stpcpy(p, "\n@\n"
-                  "#'\"\n"
-                  "\n");
+    p = stpcpy(p, "\n");
+    p = stpcpy(p, ape_heredoc);
+    p = stpcpy(p, "\n");
+    p = stpcpy(p, "#'\"\n");  // longstanding convention (see mz notes)
+    p = stpcpy(p, "\n");
     if (custom_sh_code) {
       p = stpcpy(p, custom_sh_code);
       *p++ = '\n';

@@ -123,7 +123,7 @@ Cosmopolitan's third_party/gcc/ for source code and copying conditions.
 There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.
 EOF
-exit 0
+exit
 fi
 
 if [ "$1" = "--help" ]; then
@@ -303,7 +303,7 @@ for x; do
   elif [ x"$x" = x"-fsanitize=all" ] ||
        [ x"$x" = x"-fsanitize=address" ] ||
        [ x"$x" = x"-fsanitize=undefined" ]; then
-    fatal_error "$x use cosmo MODE=dbg rather than passing $x"
+    fatal_error "use cosmo MODE=dbg rather than passing $x"
   elif [ x"$x" = x"-mno-red-zone" ]; then
     # "Any memory below the stack beyond the red zone is considered
     # volatile and may be modified by the operating system at any time."
