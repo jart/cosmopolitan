@@ -149,7 +149,7 @@ else
 fi
 
 if [ "$1" = "--update" ]; then
-  cd /opt/cosmo || exit
+  cd $COSMO || exit
   if GIT=$(command -v git); then
     echo "running git pull on cosmo..." >&2
     "$GIT" pull --quiet || exit
