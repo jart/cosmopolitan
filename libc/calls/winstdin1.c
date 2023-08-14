@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -83,6 +84,7 @@ dontasan dontubsan dontinstrument textwindows void WinMainStdin(void) {
   uint32_t mode;
   char16_t pipename[64];
   int64_t hStdin, hWriter, hReader, hThread, hSemaphore;
+  if (!SupportsWindows()) return;
   hStdin = __imp_GetStdHandle(kNtStdInputHandle);
   if (hStdin == kNtInvalidHandleValue) {
     NTTRACE("<stdin> GetStdHandle failed");
