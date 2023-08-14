@@ -6,7 +6,6 @@ COSMOPOLITAN_C_START_
 int _bsf(int) pureconst;
 int _bsfl(long) pureconst;
 int _bsfll(long long) pureconst;
-int _bsf128(uintmax_t) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define _bsf(x)   __builtin_ctz(x)

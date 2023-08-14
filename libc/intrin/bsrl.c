@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,7 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bsr.h"
-// clang-format off
+
+static const char kDebruijn[64] = {
+    0,  47, 1,  56, 48, 27, 2,  60, 57, 49, 41, 37, 28, 16, 3,  61,
+    54, 58, 35, 52, 50, 42, 21, 44, 38, 32, 29, 23, 17, 11, 4,  62,
+    46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45,
+    25, 39, 14, 33, 19, 30, 9,  24, 13, 18, 8,  12, 7,  6,  5,  63,
+};
 
 /**
  * Returns binary logarithm of 𝑥.
@@ -33,15 +39,17 @@
  *     0x08000000       27       27       28       27        4
  *     0xffffffff        0        0        1       31        0
  *
- * @param x is a 32-bit integer
- * @return number in range 0..31 or undefined if 𝑥 is 0
+ * @param x is a 64-bit integer
+ * @return number in range 0..63 or undefined if 𝑥 is 0
  */
-int(_bsr)(int x) {
-  int r = 0;
-  if(x & 0xFFFF0000u) { x >>= 16; r |= 16; }
-  if(x & 0xFF00) { x >>= 8; r |= 8; }
-  if(x & 0xF0) { x >>= 4; r |= 4; }
-  if(x & 0xC) { x >>= 2; r |= 2; }
-  if(x & 0x2) { r |= 1; }
-  return r;
+int(_bsrl)(long x) {
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  x |= x >> 32;
+  return kDebruijn[(x * 0x03f79d71b4cb0a89) >> 58];
 }
+
+__weak_reference(_bsrl, _bsrll);
