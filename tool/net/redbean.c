@@ -7014,14 +7014,8 @@ static int HandlePoll(int ms) {
 #ifndef STATIC
     } else if (__replmode) {
       // handle refresh repl line
-      if (!IsWindows()) {
-        rc = HandleReadline();
-        if (rc < 0) return rc;
-      } else {
-        strace_enabled(-1);
-        linenoiseRefreshLine(lua_repl_linenoise);
-        strace_enabled(+1);
-      }
+      rc = HandleReadline();
+      if (rc < 0) return rc;
 #endif
     }
   } else {
@@ -7170,31 +7164,6 @@ static void ReplEventLoop(void) {
   lua_freerepl();
   lua_settop(L, 0);  // clear stack
   polls[0].fd = -1;
-}
-
-static int WindowsReplThread(void *arg, int tid) {
-  int sig;
-  lua_State *L = GL;
-  DEBUGF("(repl) started windows thread");
-  lua_repl_blocking = true;
-  lua_repl_completions_callback = HandleCompletions;
-  lua_initrepl(L);
-  EnableRawMode();
-  while (!terminated) {
-    if (HandleReadline() == -1) {
-      break;
-    }
-  }
-  DisableRawMode();
-  lua_freerepl();
-  lua_repl_lock();
-  lua_settop(L, 0);  // clear stack
-  lua_repl_unlock();
-  if ((sig = linenoiseGetInterrupt())) {
-    raise(sig);
-  }
-  DEBUGF("(repl) terminating windows thread");
-  return 0;
 }
 
 static void InstallSignalHandler(int sig, void *handler) {
@@ -7477,9 +7446,6 @@ void RedBean(int argc, char *argv[]) {
   GetResolvConf();  // for effect
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(timespec_tomillis(heartbeatinterval));
-  } else if (IsWindows()) {
-    CHECK_NE(-1, _spawn(WindowsReplThread, 0, &replth));
-    EventLoop(100);
   } else {
     ReplEventLoop();
   }
@@ -7514,11 +7480,6 @@ int main(int argc, char *argv[]) {
   // 2. unwound worker exit
   if (IsModeDbg()) {
     if (isexitingworker) {
-      if (IsWindows()) {
-        // TODO(jart): Get windows worker leak detector working again.
-        return 0;
-        CloseServerFds();
-      }
       _join(&replth);
       linenoiseDisableRawMode();
       linenoiseHistoryFree();
