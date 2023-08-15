@@ -9,47 +9,28 @@ fatal_error() {
   exit 1
 }
 
-if [ ! -x "$COSMO/o//tool/build/ar.com" ]; then
+if [ ! -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar" ]; then
   fatal_error "you need to run: fatcosmocc --update"
 fi
 
-if [ x"$1" = x"rc" ] ||
-   [ x"$1" = x"rcD" ] ||
-   [ x"$1" = x"rcu" ] |
-   [ x"$1" = x"rcuD" ] ||
-   [ x"$1" = x"rcs" ] ||
-   [ x"$1" = x"rcsD" ] ||
-   [ x"$1" = x"--help" ] ||
-   [ x"$1" = x"--version" ]; then
-  # binutils ar is accidentally quadratic
-  # cosmopolitan ar is significantly faster
-  # it'll also use tricks like copy_file_range
-  AR_X86_64="$COSMO/o//tool/build/ar.com"
-  AR_AARCH64="$COSMO/o//tool/build/ar.com"
-  if [ "$1" = "--help" ] ||
-     [ "$1" = "--version" ]; then
-    exec "$AR_X86_64" "$1"
-  fi
-else
-  AR_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar"
-  AR_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-ar"
-  if [ "$1" = "--version" ]; then
-    # note: only the underlying gnu compiler binaries are gpl
-    #       our shell script is released with the isc license
-    cat <<EOF
+AR_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar"
+AR_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-ar"
+if [ "$1" = "--version" ]; then
+  # note: only the underlying gnu compiler binaries are gpl
+  #       our shell script is released with the isc license
+  cat <<EOF
 $PROG (GNU Binutils) 2.38
 Copyright (C) 2022 Free Software Foundation, Inc.
 This program is free software; you may redistribute it under the terms of
 the GNU General Public License version 3 or (at your option) any later version.
 This program has absolutely no warranty.
 EOF
-    exit 0
-  elif [ "$1" = "--help" ]; then
-    "$AR_X86_64" --help |
-      sed "s!$AR_X86_64!$PROG!g" 2>/dev/null ||
-      "$AR_X86_64" --help
-    exit
-  fi
+  exit 0
+elif [ "$1" = "--help" ]; then
+  "$AR_X86_64" --help |
+    sed "s!$AR_X86_64!$PROG!g" 2>/dev/null ||
+    "$AR_X86_64" --help
+  exit
 fi
 
 FIRST=1
