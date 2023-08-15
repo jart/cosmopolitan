@@ -101,11 +101,11 @@
 #
 # for further details, run `man gcc`
 
-export PROG=${0##*/}
-export COSMO=${COSMO:-/opt/cosmo}
-export COSMOS=${COSMOS:-/opt/cosmos}
-export ORIGINAL="$0 $*"
-export TMPDIR=${TMPDIR:-/tmp}
+PROG=${0##*/}
+COSMO=${COSMO:-/opt/cosmo}
+COSMOS=${COSMOS:-/opt/cosmos}
+ORIGINAL="$0 $*"
+TMPDIR=${TMPDIR:-/tmp}
 GCC_VERSION=11.2.0
 
 if [ "$1" = "--version" ]; then
@@ -186,8 +186,7 @@ if [ ! -f "$COSMOS/lib/libc.a" ] ||
   exit 1
 fi
 
-export FIXUPOBJ="$COSMO/o//tool/build/fixupobj.com"
-
+FIXUPOBJ="$COSMO/o//tool/build/fixupobj.com"
 TEMP_FILES=
 SAVE_TEMPS=0
 
@@ -209,9 +208,15 @@ fatal_error() {
   Exit 1
 }
 
+log_original() {
+  if [ -n "$BUILDLOG" ]; then
+    printf '# %s\n' "$ORIGINAL" >>"$BUILDLOG"
+  fi
+}
+
 log_command() {
   if [ -n "$BUILDLOG" ]; then
-    printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"$BUILDLOG"
+    printf '(cd %s; %s)\n' "$PWD" "$*" >>"$BUILDLOG"
   fi
 }
 
@@ -227,6 +232,7 @@ OPT=
 ARGS=
 FLAGS=
 OUTPUT=
+MCOSMO=0
 INTENT=ld
 NEED_JOIN=
 NEED_EQUAL=
@@ -279,10 +285,13 @@ for x; do
     continue
   elif [ x"$x" = x"-v" ]; then
     exec 3<&2  # dup2(2, 3) b/c stderr will be redirected later
-    export BUILDLOG=/dev/fd/3
+    BUILDLOG=/dev/fd/3
     continue
   elif [ x"$x" = x"-save-temps" ]; then
     SAVE_TEMPS=1
+  elif [ x"$x" = x"-mcosmo" ]; then
+    MCOSMO=1
+    continue
   elif [ x"$x" = x"-fomit-frame-pointer" ]; then
     # Quoth Apple: "The frame pointer register must always address a
     # valid frame record. Some functions — such as leaf functions or
@@ -357,27 +366,61 @@ fi
 
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
-CPPFLAGS="-nostdinc -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem -fno-pie -fno-math-errno"
-CCFLAGS_START="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
-CCFLAGS_END="-fno-omit-frame-pointer"
+CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -iquote $COSMO -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
+CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,norelro -Wl,--gc-sections"
+PRECIOUS="-fno-omit-frame-pointer"
+
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
+  CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+
+CC_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
+CC_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-gcc"
+if [ x"$PROG" != x"${PROG%++}" ]; then
+  CC_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
+  CC_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-g++"
+  CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+fi
+
+CRT_X86_64="$COSMO/o/$MODE/ape/ape.o $COSMO/o/$MODE/libc/crt/crt.o"
+CPPFLAGS_X86_64="$CPPFLAGS -mno-red-zone"
+CFLAGS_X86_64="$CFLAGS -mno-tls-direct-seg-refs"
+LDFLAGS_X86_64="$LDFLAGS -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096"
+LDLIBS_X86_64="$COSMO/o/$MODE/cosmopolitan.a"
+if [ $MCOSMO -eq 1 ]; then
+  CPPFLAGS_X86_64="${CPPFLAGS_X86_64} -D_COSMO_SOURCE"
+fi
+
+CRT_AARCH64="$COSMO/o/$MODE_AARCH64/libc/crt/crt.o"
+CPPFLAGS_AARCH64="$CPPFLAGS"
+CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
+LDFLAGS_AARCH64="$LDFLAGS -L$COSMOS/lib/.aarch64 -Wl,-T,$COSMO/o/${MODE_AARCH64}/ape/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
+LDLIBS_AARCH64="$COSMO/o/${MODE_AARCH64}/cosmopolitan.a"
+
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
+  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16"
+  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6"
+fi
+
+if [ x"$PROG" != x"${PROG%++}" ]; then
+  LDLIBS_X86_64="$COSMO/o/$MODE/third_party/libcxx/libcxx.a ${LDLIBS_X86_64}"
+  LDLIBS_AARCH64="$COSMO/o/${MODE_AARCH64}/third_party/libcxx/libcxx.a ${LDLIBS_AARCH64}"
+fi
+
 if [ x"$MODE" = x"dbg" ]; then
-  CPPFLAGS_START="-fsanitize=address -fsanitize=undefined"
+  CPPFLAGS_X86_64="${CPPFLAGS_X86_64} -fsanitize=address -fsanitize=undefined"
+  CPPFLAGS_AARCH64="${CPPFLAGS_AARCH64} -fsanitize=undefined"
 fi
-if [ x"$OPT" != x"-Os" ] &&
-   [ x"${MODE#tiny}" != x"${MODE}" ]; then
-  CCFLAGS_START="${CCFLAGS_START} -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
-fi
+
+log_original
 
 if [ $INTENT = cpp ]; then
   if [ -n "$OUTPUT" ]; then
     ARGS="$ARGS -o$OUTPUT"
   fi
-  CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
-  if [ x"$PROG" != x"${PROG%++}" ]; then
-    CC="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
-  fi
   set -- \
-      "$CC" \
+      "$CC_X86_64" \
       -U__k8 \
       -U__k8__ \
       -U__amd64 \
@@ -419,26 +462,43 @@ mktemper() {
 build_object() {
   out2=$(mktemper .txt) || Exit
   TEMP_FILES="${TEMP_FILES} $out2"
-  MODE="$MODE" \
-    "$COSMO/tool/scripts/fat-x86_64" \
-      -o"$OUTPUT_X86_64" \
-      $PLATFORM \
-      $PREDEF \
-      $CPPFLAGS \
-      $CCFLAGS_START \
-      "$@" \
-      $CCFLAGS_END &
+  (
+    set -- \
+        "$CC_X86_64" \
+        -o"$OUTPUT_X86_64" \
+        $PLATFORM \
+        $PREDEF \
+        $CFLAGS_X86_64 \
+        $CPPFLAGS_X86_64 \
+        "$@" \
+        $PRECIOUS
+    log_command "$@"
+    "$@" || exit
+    set -- \
+        "$COSMO/o//tool/build/fixupobj.com" \
+        "$OUTPUT_X86_64"
+    log_command "$@"
+    exec "$@"
+  ) &
   pid1=$!
-  MODE="$MODE_AARCH64" \
-    "$COSMO/tool/scripts/fat-aarch64" \
-      -o"$OUTPUT_AARCH64" \
-      $PLATFORM \
-      $PREDEF \
-      $CPPFLAGS \
-      $CCFLAGS_START \
-      "$@" \
-      $CCFLAGS_END \
-      2>"$out2" &
+  (
+    set -- \
+        "$CC_AARCH64" \
+        -o"$OUTPUT_AARCH64" \
+        $PLATFORM \
+        $PREDEF \
+        $CFLAGS_AARCH64 \
+        $CPPFLAGS_AARCH64 \
+        "$@" \
+        $PRECIOUS &&
+    log_command "$@"
+    "$@" || exit
+    set -- \
+        "$COSMO/o//tool/build/fixupobj.com" \
+        "$OUTPUT_AARCH64"
+    log_command "$@"
+    exec "$@"
+  ) 2>"$out2" &
   pid2=$!
   if ! wait $pid1; then
     kill $pid2 2>/dev/null
@@ -446,7 +506,7 @@ build_object() {
     Exit 1
   fi
   if ! wait $pid2; then
-    echo "$PROG: x86_64 succeeded but failed to build object for aarch64:" >&2
+    echo "$PROG: x86_64 succeeded but aarch64 failed to build object" >&2
     cat "$out2" >&2
     Exit 1
   fi
@@ -460,6 +520,9 @@ for x in $ARGS; do
      [ x"$x" != x"${x#-*}" ]; then  # startswith(x, "-")
     # this argument is a flag
     LDARGS_X86_64="${LDARGS_X86_64} $x"
+    if [ x"$x" != x"${x#-L}" ]; then  # startswith(x, "-L")
+      x="$x/.aarch64"
+    fi
     LDARGS_AARCH64="${LDARGS_AARCH64} $x"
   else
     # this argument is an input file
@@ -515,11 +578,39 @@ OUTPUT_AARCH64=$(mktemper ".aarch64.elf") || Exit
 
 out2=$(mktemper .txt) || Exit
 TEMP_FILES="${TEMP_FILES} $out2"
-MODE="$MODE" \
-"$COSMO/tool/scripts/fat-x86_64" -o"$OUTPUT_X86_64" $LDARGS_X86_64 &
+(
+  set -- \
+      "$CC_X86_64" \
+      -o"$OUTPUT_X86_64"\
+      $CRT_X86_64 \
+      $LDFLAGS_X86_64 \
+      $LDARGS_X86_64 \
+      $LDLIBS_X86_64
+  log_command "$@"
+  "$@" || exit
+  set -- \
+      "$COSMO/o//tool/build/fixupobj.com" \
+      "$OUTPUT_X86_64"
+  log_command "$@"
+  exec "$@"
+) &
 pid1=$!
-MODE="$MODE_AARCH64" \
-"$COSMO/tool/scripts/fat-aarch64" -o"$OUTPUT_AARCH64" $LDARGS_AARCH64 2>"$out2" &
+(
+  set -- \
+      "$CC_AARCH64" \
+      -o"$OUTPUT_AARCH64"\
+      $CRT_AARCH64 \
+      $LDFLAGS_AARCH64 \
+      $LDARGS_AARCH64 \
+      $LDLIBS_AARCH64
+  log_command "$@"
+  "$@" || exit
+  set -- \
+      "$COSMO/o//tool/build/fixupobj.com" \
+      "$OUTPUT_AARCH64"
+  log_command "$@"
+  exec "$@"
+) 2>"$out2" &
 pid2=$!
 if ! wait $pid1; then
   kill $pid2 2>/dev/null
@@ -527,7 +618,7 @@ if ! wait $pid1; then
   Exit 1
 fi
 if ! wait $pid2; then
-  echo "$PROG: x86_64 succeeded but failed to link executable for aarch64:" >&2
+  echo "$PROG: x86_64 succeeded but aarch64 failed to link executable" >&2
   cat "$out2" >&2
   Exit 1
 fi

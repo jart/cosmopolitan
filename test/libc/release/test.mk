@@ -8,7 +8,7 @@ ifeq ($(ARCH), x86_64)
 o/$(MODE)/test/libc/release/cosmopolitan.zip: private .UNSANDBOXED = 1
 o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/cosmopolitan.h				\
-		o/$(MODE)/ape/public/ape.lds			\
+		o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/ape/ape-copy-self.o			\
@@ -19,7 +19,7 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/third_party/zip/zip.com		\
 		-b$(TMPDIR) -qj $@				\
 		o/cosmopolitan.h				\
-		o/$(MODE)/ape/public/ape.lds			\
+		o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
 		o/$(MODE)/ape/ape-copy-self.o			\
@@ -44,7 +44,7 @@ o/$(MODE)/test/libc/release/smoke.o:					\
 
 o/$(MODE)/test/libc/release/smoke.com.dbg:				\
 		o/$(MODE)/test/libc/release/smoke.o			\
-		o/$(MODE)/ape/public/ape.lds				\
+		o/$(MODE)/ape/ape.lds					\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
 		o/$(MODE)/cosmopolitan.a
@@ -55,7 +55,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:				\
 		--gc-sections						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
-		-T o/$(MODE)/ape/public/ape.lds				\
+		-T o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/test/libc/release/smoke.o			\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
@@ -64,7 +64,7 @@ o/$(MODE)/test/libc/release/smoke.com.dbg:				\
 
 o/$(MODE)/test/libc/release/smoke-nms.com.dbg:				\
 		o/$(MODE)/test/libc/release/smoke.o			\
-		o/$(MODE)/ape/public/ape.lds				\
+		o/$(MODE)/ape/ape.lds					\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o			\
 		o/$(MODE)/cosmopolitan.a
@@ -75,7 +75,7 @@ o/$(MODE)/test/libc/release/smoke-nms.com.dbg:				\
 		--gc-sections						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
-		-T o/$(MODE)/ape/public/ape.lds				\
+		-T o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/test/libc/release/smoke.o			\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o			\
@@ -84,7 +84,7 @@ o/$(MODE)/test/libc/release/smoke-nms.com.dbg:				\
 
 o/$(MODE)/test/libc/release/smoke-chibicc.com.dbg:			\
 		o/$(MODE)/test/libc/release/smoke-chibicc.o		\
-		o/$(MODE)/ape/public/ape.lds				\
+		o/$(MODE)/ape/ape.lds					\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o			\
 		o/$(MODE)/cosmopolitan.a				\
@@ -96,7 +96,7 @@ o/$(MODE)/test/libc/release/smoke-chibicc.com.dbg:			\
 		--gc-sections						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
-		-T o/$(MODE)/ape/public/ape.lds				\
+		-T o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/test/libc/release/smoke-chibicc.o		\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape-no-modify-self.o			\
@@ -124,7 +124,7 @@ o/$(MODE)/test/libc/release/smoke-chibicc.o:				\
 
 o/$(MODE)/test/libc/release/smokecxx.com.dbg:				\
 		o/$(MODE)/test/libc/release/smokecxx.o			\
-		o/$(MODE)/ape/public/ape.lds				\
+		o/$(MODE)/ape/ape.lds					\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
 		o/$(MODE)/cosmopolitan.a				\
@@ -136,7 +136,7 @@ o/$(MODE)/test/libc/release/smokecxx.com.dbg:				\
 		--gc-sections						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
-		-T o/$(MODE)/ape/public/ape.lds				\
+		-T o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/test/libc/release/smokecxx.o			\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
@@ -162,7 +162,7 @@ o/$(MODE)/test/libc/release/smokecxx.o:					\
 
 o/$(MODE)/test/libc/release/smokeansi.com.dbg:				\
 		o/$(MODE)/test/libc/release/smokeansi.o			\
-		o/$(MODE)/ape/public/ape.lds				\
+		o/$(MODE)/ape/ape.lds					\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\
 		o/$(MODE)/cosmopolitan.a
@@ -173,7 +173,7 @@ o/$(MODE)/test/libc/release/smokeansi.com.dbg:				\
 		--gc-sections						\
 		-z max-page-size=0x1000					\
 		-z common-page-size=0x1000				\
-		-T o/$(MODE)/ape/public/ape.lds				\
+		-T o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/test/libc/release/smokeansi.o			\
 		o/$(MODE)/libc/crt/crt.o				\
 		o/$(MODE)/ape/ape.o					\

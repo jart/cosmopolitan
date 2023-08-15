@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_GETOPT_H_
 #define COSMOPOLITAN_GETOPT_H_
-#ifdef COSMOPOLITAN_GETOPT_LONG_H_
+#if defined(COSMOPOLITAN_GETOPT_LONG1_H_) || \
+    defined(COSMOPOLITAN_GETOPT_LONG2_H_)
 #error "don't mix getopt_long() with cosmo's getopt()"
 #endif
 

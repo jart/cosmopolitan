@@ -1,7 +1,8 @@
-#include "third_party/getopt/long.h"
 #include "libc/log/bsd.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "third_party/getopt/long1.h"
+#include "third_party/getopt/long2.h"
 // clang-format off
 
 /*	$OpenBSD: getopt_long.c,v 1.32 2020/05/27 22:25:09 schwarze Exp $	*/

@@ -425,7 +425,7 @@ $(SRCS):					\
 ifeq ($(ARCH), x86_64)
 TOOLCHAIN_ARTIFACTS =				\
 	o/cosmopolitan.h			\
-	o/$(MODE)/ape/public/ape.lds		\
+	o/$(MODE)/ape/ape.lds			\
 	o/$(MODE)/libc/crt/crt.o		\
 	o/$(MODE)/ape/ape.elf			\
 	o/$(MODE)/ape/ape.o			\

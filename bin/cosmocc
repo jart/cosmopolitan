@@ -113,8 +113,8 @@ log_command() {
 ORIGINAL="$0 $*"
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
-CFLAGS="-fportcosmo"
-CPPFLAGS="-fno-pie -nostdinc -iquote $COSMO"
+CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -iquote $COSMO"
 LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd"
 APEFLAGS="-Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
@@ -155,7 +155,7 @@ if [ x"$ARCH" = x"x86_64" ]; then
   CRT="$COSMO/o/$MODE/ape/ape-no-modify-self.o $CRT"
   CPPFLAGS="$CPPFLAGS -mno-red-zone"
   CFLAGS="$CFLAGS -mno-tls-direct-seg-refs"
-  LDFLAGS="$LDFLAGS -Wl,-T,$COSMO/o/$MODE/ape/public/ape.lds"
+  LDFLAGS="$LDFLAGS -Wl,-T,$COSMO/o/$MODE/ape/ape.lds"
   if [ x"$MODE" = x"aarch64" ]; then
     fatal_error '$MODE must not be aarch64 when using x86_64 cross compiler'
   elif [ x"$MODE" != x"${MODE#* }" ]; then
@@ -244,6 +244,9 @@ for x; do
     INTENT=cpp
   elif [ x"$x" = x"-o" ]; then
     NEED_OUTPUT=1
+  elif [ x"$x" = x"-mcosmo" ]; then
+    CPPFLAGS="$CPPFLAGS -D_COSMO_SOURCE"
+    continue
   elif [ x"$x" != x"${x#-o}" ]; then
     OUTPUT=${x#-o}
   elif [ x"$x" = x"-fpic" ]; then

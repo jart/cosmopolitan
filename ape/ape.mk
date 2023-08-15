@@ -147,25 +147,6 @@ APE_SRCS = $(APE_SRCS_C) $(APE_SRCS_S)
 APE_OBJS = $(APE_SRCS_S:%.S=o/$(MODE)/%.o)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
-o/$(MODE)/ape/public/ape.lds: CPPFLAGS += -UCOSMO
-o/$(MODE)/ape/public/ape.lds:			\
-		ape/public/ape.lds		\
-		ape/ape.lds			\
-		ape/ape.internal.h		\
-		ape/macros.internal.h		\
-		ape/relocations.h		\
-		libc/intrin/bits.h		\
-		libc/thread/tls.h		\
-		libc/calls/struct/timespec.h	\
-		libc/thread/thread.h		\
-		libc/dce.h			\
-		libc/elf/def.h			\
-		libc/elf/pf2prot.internal.h	\
-		libc/macros.internal.h		\
-		libc/nt/pedef.internal.h	\
-		libc/str/str.h			\
-		libc/zip.internal.h
-
 o/ape/idata.inc:				\
 		ape/idata.internal.h		\
 		ape/relocations.h
@@ -269,7 +250,6 @@ o/$(MODE)/ape/ape.elf.dbg:			\
 o/$(MODE)/ape:	$(APE_CHECKS)			\
 		o/$(MODE)/ape/ape.o		\
 		o/$(MODE)/ape/ape.lds		\
-		o/$(MODE)/ape/public/ape.lds	\
 		o/$(MODE)/ape/ape.elf		\
 		o/$(MODE)/ape/ape.macho		\
 		o/$(MODE)/ape/ape-copy-self.o	\
