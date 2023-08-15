@@ -1,0 +1,3 @@
+#!/bin/sh
+COSMO=${COSMO:-/opt/cosmo}
+exec "$COSMO/o//tool/build/apelink.com" "$@"

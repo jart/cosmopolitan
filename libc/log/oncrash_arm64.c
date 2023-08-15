@@ -206,12 +206,14 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
     }
     Append(b,
            "%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
-           " %s\n"
-           " %m\n"
-           " %s %s %s %s\n",
+           "%s\n",
            strong, reset, sig, kind, host, getpid(), gettid(),
-           program_invocation_name, names.sysname, names.version,
-           names.nodename, names.release);
+           program_invocation_name);
+    if (errno) {
+      Append(b, " %m\n");
+    }
+    Append(b, " %s %s %s %s\n", names.sysname, names.version, names.nodename,
+           names.release);
     if (ctx) {
       long pc;
       char line[256];

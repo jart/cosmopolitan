@@ -1,0 +1,15 @@
+#!/bin/sh
+
+FIRST=1
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ x"$x" = x"-s" ]; then
+    continue
+  fi
+  set -- "$@" "$x"
+done
+
+exec install "$@"

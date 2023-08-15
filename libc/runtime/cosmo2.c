@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
@@ -29,11 +31,15 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/errno.h"
 #include "third_party/lua/lunix.h"
 #ifndef __x86_64__
 
@@ -64,6 +70,11 @@ extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
 
+void cosmo2(int, char **, char **, unsigned long *) wontreturn;
+void __switch_stacks(int, char **, char **, unsigned long *,
+                     void (*)(int, char **, char **, unsigned long *),
+                     void *) wontreturn;
+
 static const char *DecodeMagnum(const char *p, long *r) {
   int k = 0;
   unsigned long c, x = 0;
@@ -75,26 +86,21 @@ static const char *DecodeMagnum(const char *p, long *r) {
   return *r = x, p;
 }
 
-textstartup void cosmo(long *sp, struct Syslib *m1) {
-  int argc;
-  long *mp;
-  init_f **fp;
-  uintptr_t *pp;
-  unsigned long *auxv;
-  char **argv, **envp, *magnums;
+wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
 
   // get startup timestamp as early as possible
   // its used by --strace and also kprintf() %T
   kStartTsc = rdtsc();
 
   // extracts arguments from old sysv stack abi
-  argc = *sp;
-  argv = (char **)(sp + 1);
-  envp = (char **)(sp + 1 + argc + 1);
-  auxv = (unsigned long *)(sp + 1 + argc + 1);
+  int argc = *sp;
+  char **argv = (char **)(sp + 1);
+  char **envp = (char **)(sp + 1 + argc + 1);
+  unsigned long *auxv = (unsigned long *)(sp + 1 + argc + 1);
   while (*auxv++) donothing;
 
   // detect apple m1 environment
+  char *magnums;
   if (SupportsXnu() && (__syslib = m1)) {
     hostos = _HOSTXNU;
     magnums = syscon_xnu;
@@ -105,8 +111,17 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
     notpossible;
   }
 
+  // get page size
+  unsigned long pagesz = 4096;
+  for (int i = 0; auxv[i]; auxv += 2) {
+    if (auxv[0] == AT_PAGESZ) {
+      pagesz = auxv[1];
+      break;
+    }
+  }
+
   // setup system magic numbers
-  for (mp = syscon_start; mp < syscon_end; ++mp) {
+  for (long *mp = syscon_start; mp < syscon_end; ++mp) {
     magnums = DecodeMagnum(magnums, mp);
   }
 
@@ -122,39 +137,6 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
     sys_sigaction(SIGSYS, act, 0, 8, 0);
   }
 
-  // needed by kisdangerous()
-  __oldstack = (intptr_t)sp;
-  __pid = sys_getpid().ax;
-
-  // initialize memory manager
-  _mmi.n = ARRAYLEN(_mmi.s);
-  _mmi.p = _mmi.s;
-  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
-
-  // record system provided stack to memory manager
-  // todo: how do we get the real size of the stack
-  //       if `y` is too small mmap will destroy it
-  //       if `x` is too high, backtraces will fail
-  uintptr_t t = (uintptr_t)__builtin_frame_address(0);
-  uintptr_t s = (uintptr_t)sp;
-  uintptr_t z = GetStackSize() << 1;
-  _mmi.i = 1;
-  _mmi.p->x = MIN((s & -z) >> 16, (t & -z) >> 16);
-  _mmi.p->y = MIN(((s & -z) + (z - 1)) >> 16, INT_MAX);
-  _mmi.p->size = z;
-  _mmi.p->prot = PROT_READ | PROT_WRITE;
-  __virtualmax = -1;
-
-#if 0
-#if IsAsan()
-  // TODO(jart): Figure out ASAN data model on AARCH64.
-  __asan_init(argc, argv, envp, auxv);
-#endif
-#endif
-
-  // initialize file system
-  __init_fds(argc, argv, envp);
-
   // set helpful globals
   __argc = argc;
   __argv = argv;
@@ -163,13 +145,45 @@ textstartup void cosmo(long *sp, struct Syslib *m1) {
   environ = envp;
   program_invocation_name = argv[0];
 
-  // initialize program
-  _init();
+  // needed by kisdangerous()
+  __oldstack = (intptr_t)sp;
+  __pid = sys_getpid().ax;
+
+  // initialize memory manager
+  _mmi.i = 0;
+  _mmi.p = _mmi.s;
+  _mmi.n = ARRAYLEN(_mmi.s);
+  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+  __virtualmax = -1;
+
+  // initialize file system
+  __init_fds(argc, argv, envp);
+
   __enable_tls();
+
+  __switch_stacks(argc, argv, envp, auxv, cosmo2,
+                  (char *)mmap(ape_stack_vaddr, (uintptr_t)ape_stack_memsz,
+                               MAP_FIXED | PROT_READ | PROT_WRITE,
+                               MAP_ANONYMOUS | MAP_STACK, -1, 0) +
+                      (uintptr_t)ape_stack_memsz);
+}
+
+wontreturn textstartup void cosmo2(int argc, char **argv, char **envp,
+                                   unsigned long *auxv) {
+
+#if 0
+#if IsAsan()
+  // TODO(jart): Figure out ASAN data model on AARCH64.
+  __asan_init(argc, argv, envp, auxv);
+#endif
+#endif
+
+  _init();
+  // initialize program
 #ifdef SYSDEBUG
   argc = __strace_init(argc, argv, envp, auxv);
 #endif
-  for (fp = __init_array_end; fp-- > __init_array_start;) {
+  for (init_f **fp = __init_array_end; fp-- > __init_array_start;) {
     (*fp)(argc, argv, envp, auxv);
   }
 #ifdef FTRACE
