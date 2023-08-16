@@ -12,9 +12,11 @@ TEST_LIBC_PROC_OBJS =							\
 TEST_LIBC_PROC_COMS =							\
 	$(TEST_LIBC_PROC_SRCS:%.c=o/$(MODE)/%)
 
-TEST_LIBC_PROC_BINS =							\
-	$(TEST_LIBC_PROC_COMS)						\
-	$(TEST_LIBC_PROC_COMS:%=%.dbg)
+TEST_LIBC_PROC_BINS =						\
+	$(TEST_LIBC_PROC_COMS)					\
+	$(TEST_LIBC_PROC_COMS:%=%.dbg)			\
+	o/$(MODE)/test/libc/proc/zipread.dbg	\
+	o/$(MODE)/test/libc/proc/zipread
 
 TEST_LIBC_PROC_TESTS =							\
 	$(TEST_LIBC_PROC_SRCS_TEST:%.c=o/$(MODE)/%.ok)
@@ -35,6 +37,7 @@ TEST_LIBC_PROC_DIRECTDEPS =						\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\
+	LIBC_SYSV_CALLS							\
 	LIBC_TESTLIB							\
 	LIBC_THREAD							\
 	LIBC_X								\
@@ -101,6 +104,7 @@ o/$(MODE)/test/libc/proc/execve_test.dbg:				\
 		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
 		o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o	\
 		o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o	\
+		o/$(MODE)/test/libc/proc/echo.elf.zip.o			\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
@@ -113,9 +117,10 @@ o/$(MODE)/test/libc/proc/fexecve_test.dbg:				\
 		$(TEST_LIBC_PROC_DEPS)					\
 		o/$(MODE)/test/libc/proc/fexecve_test.o			\
 		o/$(MODE)/test/libc/proc/proc.pkg			\
+		o/$(MODE)/test/libc/proc/echo.elf.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
 		o/$(MODE)/test/libc/calls/life-nomod.zip.o		\
-		o/$(MODE)/test/libc/calls/zipread.zip.o			\
+		o/$(MODE)/test/libc/proc/zipread.zip.o			\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
@@ -128,11 +133,33 @@ o/$(MODE)/test/libc/proc/life.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/proc/zipread.dbg:			\
+		$(LIBC_RUNTIME)					\
+		o/$(MODE)/test/libc/proc/zipread.o			\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
+		$(CRT)						\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/echo.elf:				\
+		o/$(MODE)/tool/build/assimilate		\
+		o/$(MODE)/tool/build/echo		\
+		o/$(MODE)/tool/build/cp
+	@$(COMPILE) -wACP -T$@					\
+		o/$(MODE)/tool/build/cp				\
+		o/$(MODE)/tool/build/echo		\
+		o/$(MODE)/test/libc/proc/echo.elf
+	@$(COMPILE) -wAASSIMILATE -T$@				\
+		o/$(MODE)/tool/build/assimilate -bcef	\
+		o/$(MODE)/test/libc/proc/echo.elf
+
 o/$(MODE)/test/libc/proc/life.zip.o					\
 o/$(MODE)/test/libc/proc/execve_test_prog1.zip.o			\
 o/$(MODE)/test/libc/proc/execve_test_prog2.zip.o			\
-o/$(MODE)/test/libc/proc/life-pe.zip.o: private				\
-		ZIPOBJ_FLAGS +=						\
+o/$(MODE)/test/libc/proc/life-pe.zip.o			\
+o/$(MODE)/test/libc/proc/echo.elf.zip.o					\
+o/$(MODE)/test/libc/proc/zipread.zip.o: private		\
+		ZIPOBJ_FLAGS +=					\
 			-B
 
 o/$(MODE)/test/libc/proc/vfork_test.runs:				\
