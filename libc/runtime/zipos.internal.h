@@ -41,11 +41,12 @@ struct Zipos {
 int __zipos_close(int);
 void __zipos_lock(void);
 void __zipos_unlock(void);
-size_t __zipos_normpath(char *);
-struct Zipos *__zipos_get(void) pureconst;
 void __zipos_free(struct ZiposHandle *);
+struct Zipos *__zipos_get(void) pureconst;
+size_t __zipos_normpath(char *, const char *, size_t);
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *);
 ssize_t __zipos_find(struct Zipos *, struct ZiposUri *);
+uint64_t __zipos_inode(struct Zipos *, int64_t, const void *, size_t);
 int __zipos_open(struct ZiposUri *, int);
 int __zipos_access(struct ZiposUri *, int);
 int __zipos_stat(struct ZiposUri *, struct stat *);
@@ -53,8 +54,6 @@ int __zipos_fstat(struct ZiposHandle *, struct stat *);
 int __zipos_stat_impl(struct Zipos *, size_t, struct stat *);
 ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
                      ssize_t);
-ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,
-                      ssize_t);
 int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned);
 int __zipos_fcntl(int, int, uintptr_t);
 int __zipos_notat(int, const char *);

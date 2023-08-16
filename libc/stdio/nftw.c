@@ -29,11 +29,11 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
+#include "libc/stdio/ftw.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/thread/thread.h"
-#include "libc/stdio/ftw.h"
 
 #define PATH_MAXIMUS 4096
 

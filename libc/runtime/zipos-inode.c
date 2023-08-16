@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,39 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
-#include "libc/sock/syscall_fd.internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/assert.h"
+#include "libc/limits.h"
+#include "libc/runtime/zipos.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/zip.internal.h"
 
-/**
- * Asks system to accept incoming connections on socket.
- *
- * The socket() and bind() functions need to be called beforehand. Once
- * this function is called, accept() is used to wait for connections.
- * Using this on connectionless sockets will allow it to receive packets
- * on a designated address.
- *
- * @param backlog <= SOMAXCONN
- * @return 0 on success or -1 w/ errno
- */
-int listen(int fd, int backlog) {
-  int rc;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    rc = enotsock();
-  } else if (!IsWindows()) {
-    rc = sys_listen(fd, backlog);
-  } else if (!__isfdopen(fd)) {
-    rc = ebadf();
-  } else if (__isfdkind(fd, kFdSocket)) {
-    rc = sys_listen_nt(&g_fds.p[fd], backlog);
-  } else {
-    rc = enotsock();
+static uint64_t __zipos_fnv(const char *s, int len) {
+  uint64_t hash = 0xcbf29ce484222325;
+  for (int i = 0; i < len; i++) {
+    hash *= 0x100000001b3;
+    hash ^= (unsigned char)s[i];
   }
-  STRACE("listen(%d, %d) → %d% lm", fd, backlog, rc);
-  return rc;
+  return hash;
+}
+
+uint64_t __zipos_inode(struct Zipos *zipos, int64_t cfile,  //
+                       const void *name, size_t namelen) {
+  unassert(cfile >= 0);
+  if (cfile == ZIPOS_SYNTHETIC_DIRECTORY) {
+    if (namelen && ((char *)name)[namelen - 1] == '/') --namelen;
+    cfile = INT64_MIN | __zipos_fnv(name, namelen);
+  }
+  return cfile;
 }

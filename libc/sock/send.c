@@ -48,6 +48,8 @@ ssize_t send(int fd, const void *buf, size_t size, int flags) {
 
   if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_sendto(fd, buf, size, flags, 0, 0);
   } else if (__isfdopen(fd)) {

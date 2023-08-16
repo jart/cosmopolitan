@@ -17,8 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/dirent.h"
+#include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/zipos.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/testlib/testlib.h"
@@ -67,4 +72,104 @@ TEST(dirstream, hasDirectoryEntry) {
   }
   ASSERT_SYS(0, 0, closedir(dir));
   EXPECT_TRUE(gotsome);
+}
+
+TEST(__zipos_normpath, emptyBuf_wontNulTerminate) {
+  __zipos_normpath(0, "hello", 0);
+}
+
+TEST(__zipos_normpath, overflows_willNulTerminate) {
+  char buf[2];
+  ASSERT_EQ(2, __zipos_normpath(buf, "hello", 2));
+  ASSERT_STREQ("h", buf);
+}
+
+TEST(__zipos_normpath, vectors) {
+  static const char V[][2][128] = {
+      {"", ""},
+      {"/..", ""},
+      {"/../", ""},
+      {".", ""},
+      {"./", ""},
+      {"..", ""},
+      {"../", ""},
+      {"../abc/def", "abc/def"},
+      {"../abc/def/..", "abc"},
+      {"../abc/././././def/..", "abc"},
+      {"////../abc/def", "abc/def"},
+      {"/../def", "def"},
+      {"../def", "def"},
+      {"/abc////../def", "def"},
+      {"abc/../def/ghi", "def/ghi"},
+      {"/abc/def/../ghi", "abc/ghi"},
+      {"/abc/..abc////../def", "abc/def"},
+      {"/abc/..abc/../def", "abc/def"},
+      {"/abc/..abc/def", "abc/..abc/def"},
+      {"abc/../def", "def"},
+      {"abc/../../def", "def"},
+      {"abc/../../../def", "def"},
+      {"././", ""},
+      {"abc/..", ""},
+      {"abc/../", ""},
+      {"abc/../..", ""},
+      {"abc/../../", ""},
+      {"a/..", ""},
+      {"a/../", ""},
+      {"a/../..", ""},
+      {"a/../../", ""},
+      {"../../a", "a"},
+      {"../../../a", "a"},
+      {"../a../../a", "a"},
+      {"cccc/abc////..////.//../", ""},
+      {"aaaa/cccc/abc////..////.//../", "aaaa"},
+      {"..//////.///..////..////.//////abc////.////..////def//abc/..", "def"},
+      {"////////////..//////.///..////..////.//////abc////.////..////def//abc/"
+       "..",
+       "def"},
+  };
+  int fails = 0;
+
+  // test non-overlapping arguments
+  // duplicate input string for better asan checking
+  for (int i = 0; i < ARRAYLEN(V); ++i) {
+    char tmp[128];
+    __zipos_normpath(tmp, gc(strdup(V[i][0])), sizeof(tmp));
+    if (strcmp(tmp, V[i][1])) {
+      if (++fails < 8) {
+        fprintf(stderr,
+                "\n%s: zipos path normalization test failed\n"
+                "\tinput = %`'s\n"
+                "\t want = %`'s\n"
+                "\t  got = %`'s\n"
+                "\t    i = %d\n",
+                program_invocation_name, V[i][0], V[i][1], tmp, i);
+      }
+    }
+  }
+
+  // test overlapping arguments
+  if (!fails) {
+    for (int i = 0; i < ARRAYLEN(V); ++i) {
+      char tmp[128];
+      strcpy(tmp, V[i][0]);
+      __zipos_normpath(tmp, tmp, sizeof(tmp));
+      if (strcmp(tmp, V[i][1])) {
+        if (++fails < 8) {
+          fprintf(stderr,
+                  "\n%s: zipos path normalization breaks w/ overlapping args\n"
+                  "\tinput = %`'s\n"
+                  "\t want = %`'s\n"
+                  "\t  got = %`'s\n"
+                  "\t    i = %d\n",
+                  program_invocation_name, V[i][0], V[i][1], tmp, i);
+        }
+      }
+    }
+  }
+
+  if (fails) {
+    fprintf(stderr, "\n%d / %zd zipos path norm tests failed\n", fails,
+            ARRAYLEN(V));
+    exit(1);
+  }
 }

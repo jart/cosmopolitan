@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
@@ -54,7 +55,9 @@ static dontinline textwindows int sys_tcdrain_nt(int fd) {
 int tcdrain(int fd) {
   int rc;
   BEGIN_CANCELLATION_POINT;
-  if (IsLinux()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsLinux()) {
     rc = sys_ioctl_cp(fd, TCSBRK, (uintptr_t)1);
   } else if (IsBsd()) {
     rc = sys_ioctl_cp(fd, TIOCDRAIN, 0);

@@ -30,7 +30,6 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
                        int64_t off) {
@@ -51,8 +50,7 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
   }
 
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    return _weaken(__zipos_write)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, off);
+    return ebadf();
   }
 
   if (IsWindows()) {

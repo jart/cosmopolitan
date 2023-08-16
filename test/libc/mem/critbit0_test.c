@@ -136,3 +136,10 @@ TEST(critbit0, duplicate) {
   ASSERT_FALSE(critbit0_insert(&tree, "hi"));
   critbit0_clear(&tree);
 }
+
+TEST(critbit0, manual_clear) {
+  struct critbit0 tree = {0};
+  ASSERT_TRUE(critbit0_insert(&tree, "hi"));
+  ASSERT_TRUE(critbit0_delete(&tree, "hi"));
+  ASSERT_EQ(NULL, tree.root);
+}

@@ -84,7 +84,6 @@ static void copy_file_range_init(void) {
  * @raise EXDEV if source and destination are on different filesystems
  * @raise EBADF if `infd` or `outfd` aren't open files or append-only
  * @raise EPERM if `fdout` refers to an immutable file on Linux
- * @raise ENOTSUP if `infd` or `outfd` is a zip file descriptor
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINVAL if ranges overlap or `flags` is non-zero
  * @raise EFBIG if `setrlimit(RLIMIT_FSIZE)` is exceeded
@@ -114,8 +113,10 @@ ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
                           (opt_in_out_outoffset &&
                            !__asan_is_valid(opt_in_out_outoffset, 8)))) {
     rc = efault();
-  } else if (__isfdkind(infd, kFdZip) || __isfdkind(outfd, kFdZip)) {
-    rc = enotsup();
+  } else if (__isfdkind(outfd, kFdZip)) {
+    rc = ebadf();
+  } else if (__isfdkind(infd, kFdZip)) {
+    rc = exdev();
   } else {
     rc = sys_copy_file_range(infd, opt_in_out_inoffset, outfd,
                              opt_in_out_outoffset, uptobytes, flags);

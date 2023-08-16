@@ -57,7 +57,9 @@ static textwindows int sys_tcsendbreak_nt(int fd) {
  */
 int tcsendbreak(int fd, int duration) {
   int rc;
-  if (IsLinux()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsLinux()) {
     rc = sys_ioctl(fd, TCSBRK, 0);
   } else if (IsBsd()) {
     rc = sys_tcsendbreak_bsd(fd);

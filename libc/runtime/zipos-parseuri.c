@@ -29,8 +29,9 @@ ssize_t __zipos_parseuri(const char *uri, struct ZiposUri *out) {
        uri[2] == 'i' &&  //
        uri[3] == 'p' &&  //
        (!uri[4] || uri[4] == '/')) &&
-      strlcpy(out->path, uri + 4 + !!uri[4], ZIPOS_PATH_MAX) < ZIPOS_PATH_MAX) {
-    return (out->len = __zipos_normpath(out->path));
+      (len = __zipos_normpath(out->path, uri + 4 + !!uri[4],
+                              sizeof(out->path))) < sizeof(out->path)) {
+    return (out->len = len);
   } else {
     return -1;
   }

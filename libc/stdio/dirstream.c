@@ -27,6 +27,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/mem.h"
@@ -76,14 +77,13 @@ struct dirstream {
       uint64_t inode;
       uint64_t offset;
       uint64_t records;
-      size_t prefixlen;
-      uint8_t prefix[ZIPOS_PATH_MAX];
+      struct ZiposUri prefix;
       struct critbit0 found;
     } zip;
     struct {
       unsigned buf_pos;
       unsigned buf_end;
-      uint64_t buf[(BUFSIZ + 256) / 8];
+      uint64_t buf[4096];
     };
     struct {
       bool isdone;
@@ -129,13 +129,13 @@ struct dirent_netbsd {
   char d_name[512];
 };
 
-static void _lockdir(DIR *dir) {
+static void lockdir(DIR *dir) {
   if (__threaded) {
     pthread_mutex_lock(&dir->lock);
   }
 }
 
-static void _unlockdir(DIR *dir) {
+static void unlockdir(DIR *dir) {
   if (__threaded) {
     pthread_mutex_unlock(&dir->lock);
   }
@@ -189,28 +189,46 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
     return NULL;
   }
 
-  // join absolute path
+  // join absolute path that's already normalized
   uint64_t ino = 0;
-  size_t i = dir->name16len - 1;
+  char16_t jp[PATH_MAX];
+  size_t i = dir->name16len - 1;  // foo\* -> foo\ (strip star)
+  memcpy(jp, dir->name16, i * sizeof(char16_t));
   char16_t *p = dir->windata.cFileName;
-  while (*p) {
-    if (i + 1 < ARRAYLEN(dir->name16)) {
-      dir->name16[i++] = *p++;
+  if (p[0] == u'.' && p[1] == u'\0') {
+    // join("foo\\", ".") -> "foo\\"
+  } else if (p[0] == u'.' && p[1] == u'.' && p[2] == u'\0') {
+    if (i == 7 &&         //
+        jp[0] == '\\' &&  //
+        jp[1] == '\\' &&  //
+        jp[2] == '?' &&   //
+        jp[3] == '\\' &&  //
+        jp[5] == ':' &&   //
+        jp[6] == '\\') {
+      // e.g. \\?\C:\ stays the same
     } else {
-      // ignore errors and set inode to zero
-      goto GiveUpOnGettingInode;
+      --i;  // foo\bar\ -> foo\ (parent)
+      while (i && jp[i - 1] != '\\') --i;
+    }
+  } else {
+    while (*p) {
+      if (i + 1 < ARRAYLEN(jp)) {
+        jp[i++] = *p++;
+      } else {
+        // ignore errors and set inode to zero
+        goto GiveUpOnGettingInode;
+      }
     }
   }
-  dir->name16[i] = u'\0';
+  jp[i] = u'\0';
 
-  // get inode that's consistent with stat()
-  int e = errno;
-  int64_t fh =
-      CreateFile(dir->name16, kNtFileReadAttributes, 0, 0, kNtOpenExisting,
-                 kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
-                     kNtFileFlagOpenReparsePoint,
-                 0);
-  if (fh != -1) {
+  // get inode such that it's consistent with stat()
+  // it's important that we not follow symlinks here
+  int64_t fh = CreateFile(jp, kNtFileReadAttributes, 0, 0, kNtOpenExisting,
+                          kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
+                              kNtFileFlagOpenReparsePoint,
+                          0);
+  if (fh != kNtInvalidHandleValue) {
     struct NtByHandleFileInformation wst;
     if (GetFileInformationByHandle(fh, &wst)) {
       ino = (uint64_t)wst.nFileIndexHigh << 32 | wst.nFileIndexLow;
@@ -218,15 +236,11 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
     CloseHandle(fh);
   } else {
     // ignore errors and set inode to zero
-    // TODO(jart): How do we handle "." and ".."?
-    errno = e;
+    STRACE("failed to get inode of path join(%#hs, %#hs) -> %#hs %m",
+           dir->name16, dir->windata.cFileName, jp);
   }
 
 GiveUpOnGettingInode:
-  // restore original directory search path
-  dir->name16[dir->name16len - 1] = u'*';
-  dir->name16[dir->name16len] = u'\0';
-
   // create result object
   bzero(&dir->ent, sizeof(dir->ent));
   dir->ent.d_ino = ino;
@@ -293,18 +307,19 @@ DIR *fdopendir(int fd) {
     enametoolong();
     return 0;
   }
-  if (len) memcpy(dir->zip.prefix, name, len);
-  if (len && dir->zip.prefix[len - 1] != '/') {
-    dir->zip.prefix[len++] = '/';
+  if (len) memcpy(dir->zip.prefix.path, name, len);
+  if (len && dir->zip.prefix.path[len - 1] != '/') {
+    dir->zip.prefix.path[len++] = '/';
   }
-  dir->zip.prefix[len] = 0;
-  dir->zip.prefixlen = len;
+  dir->zip.prefix.path[len] = 0;
+  dir->zip.prefix.len = len;
 
   // setup state values for directory iterator
   dir->zip.zipos = h->zipos;
-  dir->zip.inode = h->cfile;
   dir->zip.offset = GetZipCdirOffset(h->zipos->cdir);
   dir->zip.records = GetZipCdirRecords(h->zipos->cdir);
+  dir->zip.inode = __zipos_inode(h->zipos, h->cfile, dir->zip.prefix.path,
+                                 dir->zip.prefix.len);
 
   return dir;
 }
@@ -346,7 +361,6 @@ DIR *opendir(const char *name) {
 static struct dirent *readdir_zipos(DIR *dir) {
   struct dirent *ent = 0;
   while (!ent && dir->tell < dir->zip.records + 2) {
-    size_t n;
     if (!dir->tell) {
       ent = &dir->ent;
       ent->d_off = dir->tell;
@@ -354,23 +368,29 @@ static struct dirent *readdir_zipos(DIR *dir) {
       ent->d_type = DT_DIR;
       ent->d_name[0] = '.';
       ent->d_name[1] = 0;
-      n = 1;
     } else if (dir->tell == 1) {
       ent = &dir->ent;
       ent->d_off = dir->tell;
-      ent->d_ino = 0;  // TODO
       ent->d_type = DT_DIR;
       ent->d_name[0] = '.';
       ent->d_name[1] = '.';
       ent->d_name[2] = 0;
-      n = 2;
+      struct ZiposUri p;
+      p.len = dir->zip.prefix.len;
+      if (p.len) memcpy(p.path, dir->zip.prefix.path, p.len);
+      while (p.len && p.path[p.len - 1] == '/') --p.len;
+      while (p.len && p.path[p.len - 1] != '/') --p.len;
+      while (p.len && p.path[p.len - 1] == '/') --p.len;
+      p.path[p.len] = 0;
+      ent->d_ino = __zipos_inode(
+          dir->zip.zipos, __zipos_find(dir->zip.zipos, &p), p.path, p.len);
     } else {
       uint8_t *s = ZIP_CFILE_NAME(dir->zip.zipos->map + dir->zip.offset);
-      n = ZIP_CFILE_NAMESIZE(dir->zip.zipos->map + dir->zip.offset);
-      if (n > dir->zip.prefixlen &&
-          !memcmp(dir->zip.prefix, s, dir->zip.prefixlen)) {
-        s += dir->zip.prefixlen;
-        n -= dir->zip.prefixlen;
+      size_t n = ZIP_CFILE_NAMESIZE(dir->zip.zipos->map + dir->zip.offset);
+      if (n > dir->zip.prefix.len &&
+          !memcmp(dir->zip.prefix.path, s, dir->zip.prefix.len)) {
+        s += dir->zip.prefix.len;
+        n -= dir->zip.prefix.len;
         uint8_t *p = memchr(s, '/', n);
         if (p) n = p - s;
         if ((n = MIN(n, sizeof(ent->d_name) - 1)) &&
@@ -394,10 +414,33 @@ static struct dirent *readdir_zipos(DIR *dir) {
   return ent;
 }
 
+static void *golden(void *a, const void *b, size_t n) {
+  size_t i;
+  char *volatile d = a;
+  const char *volatile s = b;
+  if (d > s) {
+    for (i = n; i--;) {
+      d[i] = s[i];
+      asm volatile("" ::: "memory");
+    }
+  } else {
+    for (i = 0; i < n; ++i) {
+      d[i] = s[i];
+      asm volatile("" ::: "memory");
+    }
+  }
+  return d;
+}
+
 static struct dirent *readdir_unix(DIR *dir) {
   if (dir->buf_pos >= dir->buf_end) {
     long basep = dir->tell;
-    int rc = sys_getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
+    if (IsNetbsd() || IsFreebsd()) {
+      unsigned long seeky = lseek(dir->fd, 0, SEEK_CUR);
+      unassert(seeky <= INT_MAX);
+      dir->tell = seeky << 32;
+    }
+    int rc = sys_getdents(dir->fd, dir->buf, sizeof(dir->buf), &basep);
     STRACE("sys_getdents(%d) → %d% m", dir->fd, rc);
     if (!rc || rc == -1) {
       return NULL;
@@ -455,11 +498,11 @@ static struct dirent *readdir_unix(DIR *dir) {
 static struct dirent *readdir_impl(DIR *dir) {
   if (dir->iszip) {
     return readdir_zipos(dir);
-  }
-  if (IsWindows()) {
+  } else if (IsWindows()) {
     return readdir_nt(dir);
+  } else {
+    return readdir_unix(dir);
   }
-  return readdir_unix(dir);
 }
 
 /**
@@ -474,9 +517,9 @@ static struct dirent *readdir_impl(DIR *dir) {
 struct dirent *readdir(DIR *dir) {
   struct dirent *e;
   if (dir) {
-    _lockdir(dir);
+    lockdir(dir);
     e = readdir_impl(dir);
-    _unlockdir(dir);
+    unlockdir(dir);
   } else {
     efault();
     e = 0;
@@ -497,14 +540,14 @@ struct dirent *readdir(DIR *dir) {
 errno_t readdir_r(DIR *dir, struct dirent *output, struct dirent **result) {
   int err, olderr;
   struct dirent *entry;
-  _lockdir(dir);
+  lockdir(dir);
   olderr = errno;
   errno = 0;
   entry = readdir_impl(dir);
   err = errno;
   errno = olderr;
   if (err) {
-    _unlockdir(dir);
+    unlockdir(dir);
     return err;
   }
   if (entry) {
@@ -514,7 +557,7 @@ errno_t readdir_r(DIR *dir, struct dirent *output, struct dirent **result) {
   } else {
     output = 0;
   }
-  _unlockdir(dir);
+  unlockdir(dir);
   *result = output;
   return 0;
 }
@@ -548,9 +591,9 @@ int closedir(DIR *dir) {
  */
 long telldir(DIR *dir) {
   long rc;
-  _lockdir(dir);
+  lockdir(dir);
   rc = dir->tell;
-  _unlockdir(dir);
+  unlockdir(dir);
   return rc;
 }
 
@@ -567,7 +610,7 @@ int dirfd(DIR *dir) {
  * @threadsafe
  */
 void rewinddir(DIR *dir) {
-  _lockdir(dir);
+  lockdir(dir);
   if (dir->iszip) {
     critbit0_clear(&dir->zip.found);
     dir->tell = 0;
@@ -586,7 +629,7 @@ void rewinddir(DIR *dir) {
       dir->isdone = true;
     }
   }
-  _unlockdir(dir);
+  unlockdir(dir);
 }
 
 /**
@@ -594,13 +637,21 @@ void rewinddir(DIR *dir) {
  * @threadsafe
  */
 void seekdir(DIR *dir, long tell) {
-  _lockdir(dir);
+  lockdir(dir);
   if (dir->iszip) {
     critbit0_clear(&dir->zip.found);
     dir->tell = 0;
     dir->zip.offset = GetZipCdirOffset(dir->zip.zipos->cdir);
     while (dir->tell < tell) {
       if (!readdir_zipos(dir)) {
+        break;
+      }
+    }
+  } else if (IsNetbsd() || IsFreebsd()) {
+    dir->buf_pos = dir->buf_end = 0;
+    dir->tell = lseek(dir->fd, tell >> 32, SEEK_SET) << 32;
+    while (dir->tell < tell) {
+      if (!readdir_unix(dir)) {
         break;
       }
     }
@@ -622,7 +673,7 @@ void seekdir(DIR *dir, long tell) {
       dir->isdone = true;
     }
   }
-  _unlockdir(dir);
+  unlockdir(dir);
 }
 
 __weak_reference(readdir, readdir64);

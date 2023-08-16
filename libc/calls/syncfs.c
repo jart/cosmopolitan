@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Syncs filesystem associated with file descriptor.
@@ -30,8 +32,13 @@
  * @raise ENOSPC if disk space was exhausted during sync
  * @raise EDQUOT (or ENOSPC) on some kinds of NFS errors
  * @raise EBADF if `fd` isn't a valid file descriptor
+ * @raise EROFS if `fd` is a zip file
  * @raise ENOSYS on non-Linux
  */
 int syncfs(int fd) {
-  return sys_syncfs(fd);
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    return erofs();
+  } else {
+    return sys_syncfs(fd);
+  }
 }

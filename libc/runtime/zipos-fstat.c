@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/stat.h"
 #include "libc/runtime/zipos.internal.h"
 
 /**
@@ -25,5 +26,7 @@
  * @asyncsignalsafe
  */
 int __zipos_fstat(struct ZiposHandle *h, struct stat *st) {
-  return __zipos_stat_impl(h->zipos, h->cfile, st);
+  if (__zipos_stat_impl(h->zipos, h->cfile, st)) return -1;
+  st->st_ino = __zipos_inode(h->zipos, h->cfile, h->data, h->size);
+  return 0;
 }

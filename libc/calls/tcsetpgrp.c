@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
@@ -39,7 +40,9 @@
  */
 int tcsetpgrp(int fd, int pgrp) {
   int rc;
-  if (IsWindows() || IsMetal()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsWindows() || IsMetal()) {
     rc = enosys();
   } else {
     rc = sys_ioctl(fd, TIOCSPGRP, &pgrp);

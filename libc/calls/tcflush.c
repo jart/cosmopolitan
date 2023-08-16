@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -76,7 +77,9 @@ static dontinline textwindows int sys_tcflush_nt(int fd, int queue) {
  */
 int tcflush(int fd, int queue) {
   int rc;
-  if (IsLinux()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsLinux()) {
     rc = sys_ioctl(fd, TCFLSH, queue);
   } else if (IsBsd()) {
     rc = sys_ioctl(fd, TIOCFLUSH, &queue);

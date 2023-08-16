@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -50,12 +51,16 @@ int bind(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   if (!addr || (IsAsan() && !__asan_is_valid(addr, addrsize))) {
     rc = efault();
   } else if (addrsize >= sizeof(struct sockaddr_in)) {
-    if (!IsWindows()) {
+    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = enotsock();
+    } else if (!IsWindows()) {
       rc = sys_bind(fd, addr, addrsize);
+    } else if (!__isfdopen(fd)) {
+      rc = ebadf();
     } else if (__isfdkind(fd, kFdSocket)) {
       rc = sys_bind_nt(&g_fds.p[fd], addr, addrsize);
     } else {
-      rc = ebadf();
+      rc = enotsock();
     }
   } else {
     rc = einval();

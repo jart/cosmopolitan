@@ -148,7 +148,7 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
   CHECK_NE(0, mtim.tv_sec);
 
   char *name = gc(strndup(cname, namesize));
-  namesize = __zipos_normpath(name);
+  namesize = __zipos_normpath(name, name, strlen(name) + 1);
   if (S_ISDIR(mode) && namesize && name[namesize - 1] != '/') {
     name[namesize++] = '/';
     name[namesize] = 0;

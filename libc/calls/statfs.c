@@ -18,29 +18,39 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/statfs-meta.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Returns information about filesystem.
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
+ * @raise ENOTSUP if /zip path
  * @cancellationpoint
  */
 int statfs(const char *path, struct statfs *sf) {
   int rc;
   union statfs_meta m;
+  struct ZiposUri zipname;
   BEGIN_CANCELLATION_POINT;
 
   CheckLargeStackAllocation(&m, sizeof(m));
-  if (!IsWindows()) {
+  if (_weaken(__zipos_parseuri) &&
+      _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    rc = enotsup();
+  } else if (!IsWindows()) {
     if ((rc = sys_statfs(path, &m)) != -1) {
       statfs2cosmo(sf, &m);
     }

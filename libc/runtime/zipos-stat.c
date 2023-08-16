@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/stat.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -30,5 +31,7 @@ int __zipos_stat(struct ZiposUri *name, struct stat *st) {
   struct Zipos *zipos;
   if (!(zipos = __zipos_get())) return enoexec();
   if ((cf = __zipos_find(zipos, name)) == -1) return enoent();
-  return __zipos_stat_impl(zipos, cf, st);
+  if (__zipos_stat_impl(zipos, cf, st)) return -1;
+  st->st_ino = __zipos_inode(zipos, cf, name->path, name->len);
+  return 0;
 }

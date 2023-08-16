@@ -199,6 +199,11 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
 
 static int __zipos_open_impl(struct ZiposUri *name, int flags) {
   struct Zipos *zipos;
+  if ((flags & O_CREAT) ||  //
+      (flags & O_TRUNC) ||  //
+      (flags & O_ACCMODE) != O_RDONLY) {
+    return erofs();
+  }
   if (!(zipos = __zipos_get())) {
     return enoexec();
   }
@@ -206,19 +211,14 @@ static int __zipos_open_impl(struct ZiposUri *name, int flags) {
   if ((cf = __zipos_find(zipos, name)) == -1) {
     return enoent();
   }
-  if ((flags & O_ACCMODE) != O_RDONLY || (flags & O_TRUNC)) {
-    return erofs();
-  }
   if (flags & O_EXCL) {
     return eexist();
   }
   if (cf != ZIPOS_SYNTHETIC_DIRECTORY) {
     int mode = GetZipCfileMode(zipos->map + cf);
-#if 0
     if ((flags & O_DIRECTORY) && !S_ISDIR(mode)) {
       return enotdir();
     }
-#endif
     if (!(mode & 0444)) {
       return eacces();
     }

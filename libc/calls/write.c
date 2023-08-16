@@ -25,9 +25,9 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Writes data to file descriptor.
@@ -71,8 +71,8 @@ ssize_t write(int fd, const void *buf, size_t size) {
   if (fd >= 0) {
     if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
       rc = efault();
-    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = enotsup();
+    } else if (__isfdkind(fd, kFdZip)) {
+      rc = ebadf();
     } else if (!IsWindows() && !IsMetal()) {
       rc = sys_write(fd, buf, size);
     } else if (fd >= g_fds.n) {

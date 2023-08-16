@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -127,7 +128,9 @@ static dontinline textwindows int sys_tcflow_nt(int fd, int action) {
  */
 int tcflow(int fd, int action) {
   int rc;
-  if (IsLinux()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsLinux()) {
     rc = sys_ioctl(fd, TCXONC, action);
   } else if (IsBsd()) {
     rc = sys_tcflow_bsd(fd, action);

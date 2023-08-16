@@ -54,7 +54,9 @@ int sockatmark(int fd) {
   } else {                //
     magnum = 0x40047307;  // SIOCATMARK (BSD, Windows)
   }
-  if (!IsWindows()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotsock();
+  } else if (!IsWindows()) {
     if (sys_ioctl(fd, magnum, &rc) == -1) {
       rc = -1;
     }

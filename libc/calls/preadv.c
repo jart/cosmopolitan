@@ -29,8 +29,8 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   int e, i;

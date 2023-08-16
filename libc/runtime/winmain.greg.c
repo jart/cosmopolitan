@@ -104,7 +104,6 @@ __msabi static inline char16_t *MyCommandLine(void) {
 
 // this ensures close(1) won't accidentally close(2) for example
 __msabi static textwindows void DeduplicateStdioHandles(void) {
-  int64_t h1, h2, h3, proc;
   for (long i = 0; i < 3; ++i) {
     int64_t h1 = __imp_GetStdHandle(kNtConsoleHandles[i]);
     for (long j = i + 1; j < 3; ++j) {

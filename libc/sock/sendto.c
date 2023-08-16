@@ -64,31 +64,31 @@ ssize_t sendto(int fd, const void *buf, size_t size, int flags,
   if (IsAsan() && (!__asan_is_valid(buf, size) ||
                    (opt_addr && !__asan_is_valid(opt_addr, addrsize)))) {
     rc = efault();
-  } else {
-    if (!IsWindows()) {
-      if (!IsBsd() || !opt_addr) {
-        rc = sys_sendto(fd, buf, size, flags, opt_addr, addrsize);
-      } else if (!(rc = sockaddr2bsd(opt_addr, addrsize, &bsd, &bsdaddrsize))) {
-        rc = sys_sendto(fd, buf, size, flags, &bsd, bsdaddrsize);
-      }
-    } else if (__isfdopen(fd)) {
-      if (__isfdkind(fd, kFdSocket)) {
-        rc = sys_sendto_nt(fd, (struct iovec[]){{buf, size}}, 1, flags,
-                           opt_addr, addrsize);
-      } else if (__isfdkind(fd, kFdFile)) {
-        if (flags) {
-          rc = einval();
-        } else if (opt_addr) {
-          rc = eisconn();
-        } else {
-          rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
-        }
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotsock();
+  } else if (!IsWindows()) {
+    if (!IsBsd() || !opt_addr) {
+      rc = sys_sendto(fd, buf, size, flags, opt_addr, addrsize);
+    } else if (!(rc = sockaddr2bsd(opt_addr, addrsize, &bsd, &bsdaddrsize))) {
+      rc = sys_sendto(fd, buf, size, flags, &bsd, bsdaddrsize);
+    }
+  } else if (__isfdopen(fd)) {
+    if (__isfdkind(fd, kFdSocket)) {
+      rc = sys_sendto_nt(fd, (struct iovec[]){{buf, size}}, 1, flags, opt_addr,
+                         addrsize);
+    } else if (__isfdkind(fd, kFdFile)) {
+      if (flags) {
+        rc = einval();
+      } else if (opt_addr) {
+        rc = eisconn();
       } else {
-        rc = enotsock();
+        rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
       }
     } else {
-      rc = ebadf();
+      rc = enotsock();
     }
+  } else {
+    rc = ebadf();
   }
 
   END_CANCELLATION_POINT;

@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
@@ -56,6 +57,8 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   BEGIN_CANCELLATION_POINT;
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotsock();
   } else if (!IsWindows()) {
     if (IsBsd() && msg->msg_name) {
       memcpy(&msg2, msg, sizeof(msg2));

@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -59,6 +60,8 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
     rc = ebadf();
   } else if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
+    rc = ebadf();
   } else if (!IsWindows()) {
     rc = sys_pwrite(fd, buf, size, offset, offset);
   } else if (__isfdkind(fd, kFdFile)) {

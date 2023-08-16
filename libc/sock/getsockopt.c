@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -45,18 +46,22 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
   int rc;
 
   if (level == -1 || !optname) {
-    rc = enoprotoopt(); /* see libc/sysv/consts.sh */
+    rc = enoprotoopt();  // see libc/sysv/consts.sh
   } else if (IsAsan() && (out_opt_optval && out_optlen &&
                           (!__asan_is_valid(out_optlen, sizeof(uint32_t)) ||
                            !__asan_is_valid(out_opt_optval, *out_optlen)))) {
     rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotsock();
   } else if (!IsWindows()) {
     rc = sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
+  } else if (!__isfdopen(fd)) {
+    rc = ebadf();
   } else if (__isfdkind(fd, kFdSocket)) {
     rc = sys_getsockopt_nt(&g_fds.p[fd], level, optname, out_opt_optval,
                            out_optlen);
   } else {
-    rc = ebadf();
+    rc = enotsock();
   }
 
 #ifdef SYSDEBUG

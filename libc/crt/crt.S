@@ -72,7 +72,6 @@ _start:
 
 //	make process stack (8mb) follow thread stack (256kb) alignment
 	and	$-(256*1024),%rsp
-//	bofram	9f
 
 #if SupportsWindows()
 //	make win32 imps noop

@@ -18,63 +18,45 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/zipos.internal.h"
 
-static size_t __zipos_trimpath(char *s, int *isabs) {
-  char *p = s, *q = s;
-  for (; *q; ++q) {
-    if (*q == '/') {
-      while (q[1] == '/') ++q;
-      if (q[1] == '.' && (q[2] == '/' || q[2] == '\0')) {
-        ++q;
-      } else {
-        *p++ = '/';
-      }
+// normalizes zip filesystem path w/ overlapping strlcpy() style api
+// zip paths look like relative paths, but they're actually absolute
+// with respect to the archive; so similar to how /../etc would mean
+// /etc, we'd translate that here to "etc". when storing assets in a
+// zip archive, callers should append trailing slash for directories
+// returns strlen of 𝑑; returns 𝑛 when insufficient buffer available
+// nul terminator is guaranteed if n>0. it's fine if 𝑑 and 𝑠 overlap
+// test vectors for this algorithm in: test/libc/stdio/zipdir_test.c
+size_t __zipos_normpath(char *d, const char *s, size_t n) {
+  char *p, *e;
+  for (p = d, e = d + n; p < e && *s; ++s) {
+    if ((p == d || p[-1] == '/') && *s == '/') {
+      // matched "^/" or "//"
+    } else if ((p == d || p[-1] == '/') &&  //
+               s[0] == '.' &&               //
+               (!s[1] || s[1] == '/')) {
+      // matched "/./" or "^.$" or "^./" or "/.$"
+      s += !!s[1];
+    } else if ((p == d || p[-1] == '/') &&  //
+               s[0] == '.' &&               //
+               s[1] == '.' &&               //
+               (!s[2] || s[2] == '/')) {
+      // matched "/../" or "^..$" or "^../" or "/..$"
+      while (p > d && p[-1] == '/') --p;
+      while (p > d && p[-1] != '/') --p;
     } else {
-      *p++ = *q;
+      *p++ = *s;
     }
   }
-  if (s < p && p[-1] == '.' && p[-2] == '.' && (p - 2 == s || p[-3] == '/')) {
-    *p++ = '/';
-  }
-  *p = '\0';
-  if (isabs) {
-    *isabs = *s == '/';
-  }
-  return p - s;
-}
-
-size_t __zipos_normpath(char *s) {
-  int isabs;
-  char *p = s, *q = s;
-  __zipos_trimpath(s, &isabs);
-  if (!*s) return 0;
-  for (; *q != '\0'; ++q) {
-    if (q[0] == '/' && q[1] == '.' && q[2] == '.' &&
-        (q[3] == '/' || q[3] == '\0')) {
-      char *ep = p;
-      while (s < ep && *--ep != '/') donothing;
-      if (ep != p &&
-          (p[-1] != '.' || p[-2] != '.' || (s < p - 3 && p[-3] != '/'))) {
-        p = ep;
-        q += 2;
-        continue;
-      } else if (ep == s && isabs) {
-        q += 2;
-        continue;
-      }
-    }
-    if (q[0] != '/' || p != s || isabs) {
-      *p++ = *q;
+  // if we didn't overflow
+  if (p < e) {
+    // trim trailing slashes and add nul terminator
+    while (p > d && p[-1] == '/') --p;
+    *p = '\0';
+  } else {
+    // force nul-terminator to exist if possible
+    if (p > d) {
+      p[-1] = '\0';
     }
   }
-  if (p == s) {
-    *p++ = isabs ? '/' : '.';
-  }
-  if (p == s + 1 && s[0] == '.') {
-    *p++ = '/';
-  }
-  while (p - s > 1 && p[-1] == '/') {
-    --p;
-  }
-  *p = '\0';
-  return p - s;
+  return p - d;
 }

@@ -26,7 +26,6 @@
 int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   size_t lf;
   bzero(st, sizeof(*st));
-  st->st_ino = cf;
   st->st_nlink = 1;
   st->st_dev = zipos->dev;
   st->st_blksize = FRAMESIZE;
