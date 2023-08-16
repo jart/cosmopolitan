@@ -24,8 +24,8 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Returns information about file, via open()'d descriptor.
@@ -38,7 +38,9 @@
  */
 int fstat(int fd, struct stat *st) {
   int rc;
-  if (__isfdkind(fd, kFdZip)) {
+  if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) {
+    rc = efault();
+  } else if (__isfdkind(fd, kFdZip)) {
     rc = _weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
   } else if (!IsWindows() && !IsMetal()) {

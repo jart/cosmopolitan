@@ -25,7 +25,7 @@
  * @param delta is added to enabled state
  * @return enabled state before `delta` was applied
  */
-dontinstrument int ftrace_enabled(int delta) {
+dontasan dontubsan dontinstrument int ftrace_enabled(int delta) {
   int res;
   struct CosmoTib *tib;
   if (__tls_enabled) {

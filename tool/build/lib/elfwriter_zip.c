@@ -22,8 +22,11 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
@@ -130,7 +133,7 @@ static void EmitZipCdirHdr(unsigned char *p, const void *name, size_t namesize,
 /**
  * Embeds zip file in elf object.
  */
-void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
+void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
                    size_t namesize, const void *data, size_t size,
                    uint32_t mode, struct timespec mtim, struct timespec atim,
                    struct timespec ctim, bool nocompress) {
@@ -143,6 +146,13 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   uint16_t method, gflags, mtime, mdate, iattrs, dosmode;
 
   CHECK_NE(0, mtim.tv_sec);
+
+  char *name = gc(strndup(cname, namesize));
+  namesize = __zipos_normpath(name);
+  if (S_ISDIR(mode) && namesize && name[namesize - 1] != '/') {
+    name[namesize++] = '/';
+    name[namesize] = 0;
+  }
 
   gflags = 0;
   iattrs = 0;

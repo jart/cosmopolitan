@@ -16,19 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/str/str.h"
 
 /**
  * Extracts information about ZIP URI if it is one.
  */
 ssize_t __zipos_parseuri(const char *uri, struct ZiposUri *out) {
   size_t len;
-  if ((uri[0] == '/' && uri[1] == 'z' && uri[2] == 'i' && uri[3] == 'p' &&
+  if ((uri[0] == '/' &&  //
+       uri[1] == 'z' &&  //
+       uri[2] == 'i' &&  //
+       uri[3] == 'p' &&  //
        (!uri[4] || uri[4] == '/')) &&
-      (len = strlen(uri)) < PATH_MAX) {
-    out->path = uri + 4 + !!uri[4];
-    return (out->len = len - 4 - !!uri[4]);
+      strlcpy(out->path, uri + 4 + !!uri[4], ZIPOS_PATH_MAX) < ZIPOS_PATH_MAX) {
+    return (out->len = __zipos_normpath(out->path));
   } else {
     return -1;
   }

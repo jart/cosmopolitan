@@ -74,7 +74,7 @@
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
 
-#define APE_STACKSIZE 4194304 /* default 4mb stack */
+#define APE_STACKSIZE 8388608 /* default 8mb stack */
 #define APE_PAGESIZE  0x10000 /* i386+ */
 #ifdef _COSMO_SOURCE
 #define FRAMESIZE 0x10000

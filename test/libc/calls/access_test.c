@@ -35,7 +35,6 @@ void SetUpOnce(void) {
 }
 
 TEST(access, efault) {
-  ASSERT_SYS(EFAULT, -1, access(0, F_OK));
   if (IsWindows() || !IsAsan()) return;  // not possible
   ASSERT_SYS(EFAULT, -1, access((void *)77, F_OK));
 }

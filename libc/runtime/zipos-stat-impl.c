@@ -18,17 +18,19 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/stat.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.internal.h"
-#include "libc/runtime/zipos.internal.h"
 
 int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   size_t lf;
   if (zipos && st) {
     bzero(st, sizeof(*st));
-    if (cf) {
+    if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
+      st->st_mode = S_IFDIR | 0555;
+    } else {
       lf = GetZipCfileOffset(zipos->map + cf);
       st->st_mode = GetZipCfileMode(zipos->map + cf);
       st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
@@ -37,8 +39,6 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
       GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
                             &st->st_ctim, 0);
       st->st_birthtim = st->st_ctim;
-    } else {
-      st->st_mode = 0444 | S_IFDIR | 0111;
     }
     return 0;
   } else {

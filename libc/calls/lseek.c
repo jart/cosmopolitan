@@ -25,8 +25,8 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Changes current position of file descriptor, e.g.

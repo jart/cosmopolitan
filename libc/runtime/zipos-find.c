@@ -16,39 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/relocations.h"
-#include "libc/assert.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/zip.internal.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/zip.internal.h"
 
-// TODO(jart): improve time complexity here
-
-ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
-  const char *zname;
-  size_t i, n, c, znamesize;
+ssize_t __zipos_find(struct Zipos *zipos, struct ZiposUri *name) {
   if (!name->len) {
-    return 0;
+    return ZIPOS_SYNTHETIC_DIRECTORY;
   }
-  c = GetZipCdirOffset(zipos->cdir);
-  n = GetZipCdirRecords(zipos->cdir);
-  for (i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
-    npassert(ZIP_CFILE_MAGIC(zipos->map + c) == kZipCfileHdrMagic);
-    zname = ZIP_CFILE_NAME(zipos->map + c);
-    znamesize = ZIP_CFILE_NAMESIZE(zipos->map + c);
-    if ((name->len == znamesize && !memcmp(name->path, zname, name->len)) ||
-        (name->len + 1 == znamesize && !memcmp(name->path, zname, name->len) &&
-         zname[name->len] == '/')) {
+  bool found_subfile = false;
+  size_t c = GetZipCdirOffset(zipos->cdir);
+  size_t n = GetZipCdirRecords(zipos->cdir);
+  for (size_t i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
+    const char *zname = ZIP_CFILE_NAME(zipos->map + c);
+    size_t zsize = ZIP_CFILE_NAMESIZE(zipos->map + c);
+    if ((name->len == zsize ||
+         (name->len + 1 == zsize && zname[name->len] == '/')) &&
+        !memcmp(name->path, zname, name->len)) {
       return c;
-    } else if ((name->len < znamesize &&
-                !memcmp(name->path, zname, name->len) &&
-                zname[name->len - 1] == '/') ||
-               (name->len + 1 < znamesize &&
-                !memcmp(name->path, zname, name->len) &&
-                zname[name->len] == '/')) {
-      return 0;
+    } else if (name->len + 1 < zsize && zname[name->len] == '/' &&
+               !memcmp(name->path, zname, name->len)) {
+      found_subfile = true;
     }
+  }
+  if (found_subfile) {
+    return ZIPOS_SYNTHETIC_DIRECTORY;
   }
   return -1;
 }

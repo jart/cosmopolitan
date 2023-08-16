@@ -18,13 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xiso8601.h"
@@ -61,6 +66,10 @@ TEST(opendir, enotdir) {
 TEST(opendir, zipTest_fake) {
   ASSERT_NE(NULL, (dir = opendir("/zip")));
   EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("..", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("echo.com", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("usr", ent->d_name);
@@ -69,6 +78,10 @@ TEST(opendir, zipTest_fake) {
   EXPECT_EQ(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
   ASSERT_NE(NULL, (dir = opendir("/zip/")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("..", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("echo.com", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
@@ -79,16 +92,46 @@ TEST(opendir, zipTest_fake) {
   EXPECT_EQ(0, closedir(dir));
   ASSERT_NE(NULL, (dir = opendir("/zip/usr")));
   EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("..", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("share", ent->d_name);
   EXPECT_EQ(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
   ASSERT_NE(NULL, (dir = opendir("/zip/usr/")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("..", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("share", ent->d_name);
   EXPECT_EQ(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
   EXPECT_EQ(NULL, (dir = opendir("/zip/us")));
   EXPECT_EQ(NULL, (dir = opendir("/zip/us/")));
+}
+
+TEST(opendir, openSyntheticDirEntry) {
+  struct stat st;
+  ASSERT_SYS(0, 3, open("/zip", O_RDONLY | O_DIRECTORY));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_TRUE(S_ISDIR(st.st_mode));
+  EXPECT_SYS(EISDIR, -1, read(3, 0, 0));
+  ASSERT_NE(NULL, (dir = fdopendir(3)));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_EQ(0, closedir(dir));
+}
+
+TEST(opendir, openRealDirEntry) {
+  struct stat st;
+  ASSERT_SYS(0, 3, open("/zip/usr/share/zoneinfo", O_RDONLY | O_DIRECTORY));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_TRUE(S_ISDIR(st.st_mode));
+  EXPECT_SYS(EISDIR, -1, read(3, 0, 0));
+  ASSERT_NE(NULL, (dir = fdopendir(3)));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_EQ(0, closedir(dir));
 }
 
 TEST(dirstream, testDots) {
@@ -115,9 +158,9 @@ TEST(dirstream, test) {
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = _gc(xasprintf("%s.%d", "dirstream", rand()));
-  file1 = _gc(xasprintf("%s/%s", dpath, "foo"));
-  file2 = _gc(xasprintf("%s/%s", dpath, "bar"));
+  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
+  file1 = gc(xasprintf("%s/%s", dpath, "foo"));
+  file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
   EXPECT_NE(-1, touch(file1, 0644));
   EXPECT_NE(-1, touch(file2, 0644));
@@ -143,12 +186,11 @@ TEST(dirstream, test) {
 TEST(dirstream, zipTest) {
   bool foundNewYork = false;
   const char *path = "/zip/usr/share/zoneinfo/";
-  ASSERT_NE(0, _gc(xiso8601ts(NULL)));
   ASSERT_NE(NULL, (dir = opendir(path)));
   while ((ent = readdir(dir))) {
     foundNewYork |= !strcmp(ent->d_name, "New_York");
   }
-  closedir(dir);
+  EXPECT_SYS(0, 0, closedir(dir));
   EXPECT_TRUE(foundNewYork);
 }
 
@@ -156,9 +198,9 @@ TEST(rewinddir, test) {
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = _gc(xasprintf("%s.%d", "dirstream", rand()));
-  file1 = _gc(xasprintf("%s/%s", dpath, "foo"));
-  file2 = _gc(xasprintf("%s/%s", dpath, "bar"));
+  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
+  file1 = gc(xasprintf("%s/%s", dpath, "foo"));
+  file2 = gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
   EXPECT_NE(-1, touch(file1, 0644));
   EXPECT_NE(-1, touch(file2, 0644));
@@ -182,4 +224,29 @@ TEST(rewinddir, test) {
 TEST(dirstream, zipTest_notDir) {
   ASSERT_EQ(NULL, opendir("/zip/usr/share/zoneinfo/New_York"));
   ASSERT_EQ(ENOTDIR, errno);
+}
+
+TEST(dirstream, seek) {
+  if (IsNetbsd()) return;  // omg
+  ASSERT_SYS(0, 0, mkdir("boop", 0755));
+  EXPECT_SYS(0, 0, touch("boop/a", 0644));
+  EXPECT_SYS(0, 0, touch("boop/b", 0644));
+  EXPECT_SYS(0, 0, touch("boop/c", 0644));
+  ASSERT_NE(NULL, (dir = opendir("boop")));
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #1
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #2
+  long pos = telldir(dir);
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #3
+  char name[32];
+  strlcpy(name, ent->d_name, sizeof(name));
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #4
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #5
+  ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  seekdir(dir, pos);
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #2
+  ASSERT_STREQ(name, ent->d_name);
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #3
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #4
+  ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  ASSERT_SYS(0, 0, closedir(dir));
 }

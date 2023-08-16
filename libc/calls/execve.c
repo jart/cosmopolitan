@@ -29,9 +29,9 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Replaces current process with program.
@@ -74,7 +74,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
     if (!rc) {
       if (_weaken(__zipos_parseuri) &&
           (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
-        rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC, 0);
+        rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
         if (rc != -1) {
           const int zipFD = rc;
           strace_enabled(-1);

@@ -17,34 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/zip.internal.h"
-#include "libc/runtime/zipos.internal.h"
-
-#define ZIPOS  __zipos_get()
-#define HANDLE ((struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle)
 
 int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
-  int rc;
   if (cmd == F_GETFD) {
     if (g_fds.p[fd].flags & O_CLOEXEC) {
-      rc = FD_CLOEXEC;
+      return FD_CLOEXEC;
     } else {
-      rc = 0;
+      return 0;
     }
   } else if (cmd == F_SETFD) {
     if (arg & FD_CLOEXEC) {
       g_fds.p[fd].flags |= O_CLOEXEC;
-      rc = FD_CLOEXEC;
+      return FD_CLOEXEC;
     } else {
       g_fds.p[fd].flags &= ~O_CLOEXEC;
-      rc = 0;
+      return 0;
     }
   } else {
-    rc = einval();
+    return einval();
   }
-  return rc;
 }

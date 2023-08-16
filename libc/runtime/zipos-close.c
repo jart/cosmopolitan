@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -38,10 +37,10 @@ int __zipos_close(int fd) {
   if (!IsWindows()) {
     rc = sys_close(fd);
   } else {
-    rc = 0; /* no system file descriptor needed on nt */
+    rc = 0;  // no system file descriptor needed on nt
   }
   if (!__vforked) {
-    __zipos_free(__zipos_get(), h);
+    __zipos_free(h);
   }
   return rc;
 }

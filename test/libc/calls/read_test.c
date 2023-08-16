@@ -71,6 +71,15 @@ TEST(read_pipe, canBeInterruptedByAlarm) {
   close(fds[0]);
 }
 
+TEST(read_directory, eisdir) {
+  // TODO(jart): what
+  if (IsWindows() || IsFreebsd()) return;
+  ASSERT_SYS(0, 0, mkdir("boop", 0755));
+  ASSERT_SYS(0, 3, open("boop", O_RDONLY | O_DIRECTORY));
+  ASSERT_SYS(EISDIR, -1, read(3, 0, 0));
+  ASSERT_SYS(0, 0, close(3));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 BENCH(read, bench) {

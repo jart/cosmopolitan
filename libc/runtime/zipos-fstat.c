@@ -16,9 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zip.internal.h"
 #include "libc/runtime/zipos.internal.h"
 
 /**
@@ -27,12 +24,6 @@
  * @param uri is obtained via __zipos_parseuri()
  * @asyncsignalsafe
  */
-int __zipos_fstat(const struct ZiposHandle *h, struct stat *st) {
-  int rc;
-  if (st) {
-    rc = __zipos_stat_impl(__zipos_get(), h->cfile, st);
-  } else {
-    rc = efault();
-  }
-  return rc;
+int __zipos_fstat(struct ZiposHandle *h, struct stat *st) {
+  return __zipos_stat_impl(h->zipos, h->cfile, st);
 }

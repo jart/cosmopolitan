@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/hyperion.h"
@@ -52,4 +55,40 @@ TEST(zipos, test) {
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
   __print_maps();
+}
+
+TEST(zipos, normpath) {
+  {
+    char s[] = "";
+    __zipos_normpath(s);
+    ASSERT_STREQ("", s);
+  }
+  {
+    char s[] = "usr/";
+    __zipos_normpath(s);
+    ASSERT_STREQ("usr", s);
+  }
+  {
+    char s[] = "usr/./";
+    __zipos_normpath(s);
+    ASSERT_STREQ("usr", s);
+  }
+}
+
+#if 0
+TEST(zipos_O_DIRECTORY, blocksOpeningOfNormalFiles) {
+  ASSERT_SYS(ENOTDIR, -1,
+             open("/zip/libc/testlib/hyperion.txt", O_RDONLY | O_DIRECTORY));
+}
+#endif
+
+TEST(zipos, readPastEof) {
+  char buf[512];
+  ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  EXPECT_SYS(EINVAL, -1, pread(3, buf, 512, UINT64_MAX));
+  EXPECT_SYS(0, 0, pread(3, buf, 512, INT64_MAX));
+  EXPECT_SYS(EINVAL, -1, lseek(3, UINT64_MAX, SEEK_SET));
+  EXPECT_SYS(0, INT64_MAX, lseek(3, INT64_MAX, SEEK_SET));
+  EXPECT_SYS(0, 0, read(3, buf, 512));
+  EXPECT_SYS(0, 0, close(3));
 }

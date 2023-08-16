@@ -17,18 +17,64 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/zipos.internal.h"
-#include "libc/sysv/errfuns.h"
 
-/**
- * Reads file metadata from αcτµαlly pδrταblε εxεcµταblε object store.
- *
- * @param uri is obtained via __zipos_parseuri()
- * @asyncsignalsafe
- */
-int __zipos_stat(struct ZiposUri *name, struct stat *st) {
-  ssize_t cf;
-  struct Zipos *zipos;
-  if (!(zipos = __zipos_get())) return enoexec();
-  if ((cf = __zipos_find(zipos, name)) == -1) return enoent();
-  return __zipos_stat_impl(zipos, cf, st);
+static size_t __zipos_trimpath(char *s, int *isabs) {
+  char *p = s, *q = s;
+  for (; *q; ++q) {
+    if (*q == '/') {
+      while (q[1] == '/') ++q;
+      if (q[1] == '.' && (q[2] == '/' || q[2] == '\0')) {
+        ++q;
+      } else {
+        *p++ = '/';
+      }
+    } else {
+      *p++ = *q;
+    }
+  }
+  if (s < p && p[-1] == '.' && p[-2] == '.' && (p - 2 == s || p[-3] == '/')) {
+    *p++ = '/';
+  }
+  *p = '\0';
+  if (isabs) {
+    *isabs = *s == '/';
+  }
+  return p - s;
+}
+
+size_t __zipos_normpath(char *s) {
+  int isabs;
+  char *p = s, *q = s;
+  __zipos_trimpath(s, &isabs);
+  if (!*s) return 0;
+  for (; *q != '\0'; ++q) {
+    if (q[0] == '/' && q[1] == '.' && q[2] == '.' &&
+        (q[3] == '/' || q[3] == '\0')) {
+      char *ep = p;
+      while (s < ep && *--ep != '/') donothing;
+      if (ep != p &&
+          (p[-1] != '.' || p[-2] != '.' || (s < p - 3 && p[-3] != '/'))) {
+        p = ep;
+        q += 2;
+        continue;
+      } else if (ep == s && isabs) {
+        q += 2;
+        continue;
+      }
+    }
+    if (q[0] != '/' || p != s || isabs) {
+      *p++ = *q;
+    }
+  }
+  if (p == s) {
+    *p++ = isabs ? '/' : '.';
+  }
+  if (p == s + 1 && s[0] == '.') {
+    *p++ = '/';
+  }
+  while (p - s > 1 && p[-1] == '/') {
+    --p;
+  }
+  *p = '\0';
+  return p - s;
 }

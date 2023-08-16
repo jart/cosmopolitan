@@ -54,7 +54,6 @@
 #include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
-#include "libc/zipos/zipos.internal.h"
 
 #define MAP_ANONYMOUS_linux   0x00000020
 #define MAP_ANONYMOUS_openbsd 0x00001000

@@ -22,8 +22,9 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nopl.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -32,6 +33,7 @@
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/win32finddata.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/o.h"
@@ -39,7 +41,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * @fileoverview Directory Streams for Linux+Mac+Windows+FreeBSD+OpenBSD.
@@ -57,15 +58,17 @@ int sys_getdents(unsigned, void *, unsigned, long *);
  * Directory stream object.
  */
 struct dirstream {
+  int fd;
   bool iszip;
-  int64_t fd;
+  int64_t hand;
   int64_t tell;
+  char16_t *name;
   pthread_mutex_t lock;
   struct {
     uint64_t offset;
     uint64_t records;
-    uint8_t *prefix;
     size_t prefixlen;
+    uint8_t prefix[ZIPOS_PATH_MAX];
   } zip;
   struct dirent ent;
   union {
@@ -76,7 +79,6 @@ struct dirstream {
     };
     struct {
       bool isdone;
-      char16_t *name;
       struct NtWin32FindData windata;
     };
   };
@@ -148,7 +150,7 @@ static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
     }
     name[len] = u'\0';
     if ((res = calloc(1, sizeof(DIR)))) {
-      if ((res->fd = FindFirstFile(name, &res->windata)) != -1) {
+      if ((res->hand = FindFirstFile(name, &res->windata)) != -1) {
         return res;
       }
       __fix_enotdir(-1, name);
@@ -160,35 +162,17 @@ static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
   return NULL;
 }
 
-static textwindows dontinline DIR *opendir_nt(const char *path) {
-  int len;
-  DIR *res;
-  char16_t *name;
-  if (*path) {
-    if ((name = malloc(PATH_MAX * 2))) {
-      if ((len = __mkntpath(path, name)) != -1 &&
-          (res = opendir_nt_impl(name, len))) {
-        res->name = name;
-        return res;
-      }
-      free(name);
-    }
-  } else {
-    enoent();
-  }
-  return NULL;
-}
-
 static textwindows dontinline DIR *fdopendir_nt(int fd) {
   DIR *res;
   char16_t *name;
   if (__isfdkind(fd, kFdFile)) {
-    if ((name = malloc(PATH_MAX * 2))) {
+    if ((name = calloc(1, PATH_MAX * 2))) {
       if ((res = opendir_nt_impl(
                name, GetFinalPathNameByHandle(
                          g_fds.p[fd].handle, name, PATH_MAX,
                          kNtFileNameNormalized | kNtVolumeNameDos)))) {
         res->name = name;
+        res->fd = -1;
         close(fd);
         return res;
       }
@@ -235,84 +219,11 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
       }
     }
     dir->ent.d_type = GetNtDirentType(&dir->windata);
-    dir->isdone = !FindNextFile(dir->fd, &dir->windata);
+    dir->isdone = !FindNextFile(dir->hand, &dir->windata);
     return &dir->ent;
   } else {
     return NULL;
   }
-}
-
-/**
- * Opens directory, e.g.
- *
- *     DIR *d;
- *     struct dirent *e;
- *     CHECK((d = opendir(path)));
- *     while ((e = readdir(d))) {
- *       printf("%s/%s\n", path, e->d_name);
- *     }
- *     LOGIFNEG1(closedir(d));
- *
- * @returns newly allocated DIR object, or NULL w/ errno
- * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM
- * @raise ECANCELED if thread was cancelled in masked mode
- * @raise EINTR if we needed to block and a signal was delivered instead
- * @cancellationpoint
- * @see glob()
- */
-DIR *opendir(const char *name) {
-  DIR *res;
-  int fd, rc;
-  struct stat st;
-  struct Zipos *zip;
-  struct ZiposUri zipname;
-  if (_weaken(pthread_testcancel_np) &&
-      (rc = _weaken(pthread_testcancel_np)())) {
-    errno = rc;
-    return 0;
-  }
-  if (!name || (IsAsan() && !__asan_is_valid_str(name))) {
-    efault();
-    res = 0;
-  } else if (_weaken(__zipos_get) &&
-             _weaken(__zipos_parseuri)(name, &zipname) != -1) {
-    if (_weaken(__zipos_stat)(&zipname, &st) != -1) {
-      if (S_ISDIR(st.st_mode)) {
-        zip = _weaken(__zipos_get)();
-        if ((res = calloc(1, sizeof(DIR)))) {
-          res->iszip = true;
-          res->fd = -1;
-          res->zip.offset = GetZipCdirOffset(zip->cdir);
-          res->zip.records = GetZipCdirRecords(zip->cdir);
-          res->zip.prefix = malloc(zipname.len + 2);
-          if (zipname.len) {
-            memcpy(res->zip.prefix, zipname.path, zipname.len);
-          }
-          if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
-            res->zip.prefix[zipname.len++] = '/';
-          }
-          res->zip.prefix[zipname.len] = '\0';
-          res->zip.prefixlen = zipname.len;
-        }
-      } else {
-        enotdir();
-        res = 0;
-      }
-    } else {
-      res = 0;
-    }
-  } else if (!IsWindows()) {
-    res = 0;
-    if ((fd = open(name, O_RDONLY | O_NOCTTY | O_DIRECTORY | O_CLOEXEC)) !=
-        -1) {
-      if (!(res = fdopendir(fd))) {
-        close(fd);
-      }
-    }
-  } else {
-    res = opendir_nt(name);
-  }
-  return res;
 }
 
 /**
@@ -324,19 +235,98 @@ DIR *opendir(const char *name) {
  * @errors ENOMEM and fd is closed
  */
 DIR *fdopendir(int fd) {
+
+  // allocate directory iterator object
   DIR *dir;
-  if (!IsWindows()) {
-    if (!(dir = calloc(1, sizeof(*dir)))) return NULL;
-    dir->fd = fd;
-  } else {
-    dir = fdopendir_nt(fd);
+  if (!(dir = calloc(1, sizeof(*dir)))) {
+    return NULL;
   }
+
+  // on unix, file descriptor isn't required to be tracked
+  dir->fd = fd;
+  if (!__isfdkind(fd, kFdZip)) {
+    if (IsWindows()) {
+      free(dir);
+      return fdopendir_nt(fd);
+    }
+    return dir;
+  }
+  dir->iszip = true;
+
+  // ensure open /zip/... file is a directory
+  struct ZiposHandle *h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+  if (h->cfile != ZIPOS_SYNTHETIC_DIRECTORY &&
+      !S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
+    free(dir);
+    enotdir();
+    return 0;
+  }
+
+  // get path of this file descriptor and ensure trailing slash
+  size_t len;
+  char *name;
+  if (h->cfile != ZIPOS_SYNTHETIC_DIRECTORY) {
+    len = ZIP_CFILE_NAMESIZE(h->zipos->map + h->cfile);
+    name = ZIP_CFILE_NAME(h->zipos->map + h->cfile);
+  } else {
+    len = h->size;
+    name = (char *)h->data;
+  }
+  if (len + 2 > ZIPOS_PATH_MAX) {
+    free(dir);
+    enametoolong();
+    return 0;
+  }
+  if (len) memcpy(dir->zip.prefix, name, len);
+  if (len && dir->zip.prefix[len - 1] != '/') {
+    dir->zip.prefix[len++] = '/';
+  }
+  dir->zip.prefix[len] = 0;
+  dir->zip.prefixlen = len;
+
+  // setup state values for directory iterator
+  dir->zip.offset = GetZipCdirOffset(h->zipos->cdir);
+  dir->zip.records = GetZipCdirRecords(h->zipos->cdir);
+
   return dir;
+}
+
+/**
+ * Opens directory, e.g.
+ *
+ *     DIR *d;
+ *     struct dirent *e;
+ *     d = opendir(path);
+ *     while ((e = readdir(d))) {
+ *       printf("%s/%s\n", path, e->d_name);
+ *     }
+ *     closedir(d);
+ *
+ * @returns newly allocated DIR object, or NULL w/ errno
+ * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if we needed to block and a signal was delivered instead
+ * @cancellationpoint
+ * @see glob()
+ */
+DIR *opendir(const char *name) {
+  int rc;
+  if (_weaken(pthread_testcancel_np) &&
+      (rc = _weaken(pthread_testcancel_np)())) {
+    errno = rc;
+    return 0;
+  }
+  int fd;
+  if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_NOCTTY | O_CLOEXEC)) == -1) {
+    return 0;
+  }
+  DIR *res = fdopendir(fd);
+  if (!res) close(fd);
+  return res;
 }
 
 static struct dirent *readdir_impl(DIR *dir) {
   size_t n;
-  long basep;
   int rc, mode;
   uint8_t *s, *p;
   struct Zipos *zip;
@@ -348,53 +338,68 @@ static struct dirent *readdir_impl(DIR *dir) {
   if (dir->iszip) {
     ent = 0;
     zip = _weaken(__zipos_get)();
-    while (!ent && dir->tell < dir->zip.records) {
-      npassert(ZIP_CFILE_MAGIC(zip->map + dir->zip.offset) ==
-               kZipCfileHdrMagic);
-      s = ZIP_CFILE_NAME(zip->map + dir->zip.offset);
-      n = ZIP_CFILE_NAMESIZE(zip->map + dir->zip.offset);
-      if (dir->zip.prefixlen < n &&
-          !memcmp(dir->zip.prefix, s, dir->zip.prefixlen)) {
-        s += dir->zip.prefixlen;
-        n -= dir->zip.prefixlen;
-        p = memchr(s, '/', n);
-        if (!p || p + 1 - s == n) {
-          if (p + 1 - s == n) --n;
-          mode = GetZipCfileMode(zip->map + dir->zip.offset);
-          ent = (struct dirent *)dir->buf;
-          ent->d_ino++;
-          ent->d_off = dir->zip.offset;
-          ent->d_reclen = MIN(n, 255);
-          ent->d_type = S_ISDIR(mode) ? DT_DIR : DT_REG;
-          if (ent->d_reclen) {
-            memcpy(ent->d_name, s, ent->d_reclen);
-          }
-          ent->d_name[ent->d_reclen] = 0;
-        } else {
-          lastent = (struct dirent *)dir->buf;
-          n = p - s;
-          n = MIN(n, 255);
-          if (!lastent->d_ino || (n != lastent->d_reclen) ||
-              memcmp(lastent->d_name, s, n)) {
-            ent = lastent;
+    while (!ent && dir->tell < dir->zip.records + 2) {
+      if (!dir->tell) {
+        ent = (struct dirent *)dir->buf;
+        ent->d_ino++;
+        ent->d_off = dir->tell;
+        ent->d_reclen = 1;
+        ent->d_type = DT_DIR;
+        strcpy(ent->d_name, ".");
+      } else if (dir->tell == 1) {
+        ent = (struct dirent *)dir->buf;
+        ent->d_ino++;
+        ent->d_off = dir->tell;
+        ent->d_reclen = 2;
+        ent->d_type = DT_DIR;
+        strcpy(ent->d_name, "..");
+      } else {
+        s = ZIP_CFILE_NAME(zip->map + dir->zip.offset);
+        n = ZIP_CFILE_NAMESIZE(zip->map + dir->zip.offset);
+        if (dir->zip.prefixlen < n &&
+            !memcmp(dir->zip.prefix, s, dir->zip.prefixlen)) {
+          s += dir->zip.prefixlen;
+          n -= dir->zip.prefixlen;
+          p = memchr(s, '/', n);
+          if (!p || p + 1 - s == n) {
+            if (p + 1 - s == n) --n;
+            mode = GetZipCfileMode(zip->map + dir->zip.offset);
+            ent = (struct dirent *)dir->buf;
             ent->d_ino++;
-            ent->d_off = -1;
-            ent->d_reclen = n;
-            ent->d_type = DT_DIR;
+            ent->d_off = dir->tell;
+            ent->d_reclen = MIN(n, 255);
+            ent->d_type = S_ISDIR(mode) ? DT_DIR : DT_REG;
             if (ent->d_reclen) {
               memcpy(ent->d_name, s, ent->d_reclen);
             }
             ent->d_name[ent->d_reclen] = 0;
+          } else {
+            lastent = (struct dirent *)dir->buf;
+            n = p - s;
+            n = MIN(n, 255);
+            if (!lastent->d_ino || (n != lastent->d_reclen) ||
+                memcmp(lastent->d_name, s, n)) {
+              ent = lastent;
+              mode = GetZipCfileMode(zip->map + dir->zip.offset);
+              ent->d_ino++;
+              ent->d_off = dir->tell;
+              ent->d_reclen = n;
+              ent->d_type = S_ISDIR(mode) ? DT_DIR : DT_REG;
+              if (ent->d_reclen) {
+                memcpy(ent->d_name, s, ent->d_reclen);
+              }
+              ent->d_name[ent->d_reclen] = 0;
+            }
           }
         }
+        dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
       }
-      dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
       dir->tell++;
     }
     return ent;
   } else if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
-      basep = dir->tell; /* TODO(jart): what does xnu do */
+      long basep = dir->tell;
       rc = sys_getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
       STRACE("sys_getdents(%d) → %d% m", dir->fd, rc);
       if (!rc || rc == -1) return NULL;
@@ -408,6 +413,7 @@ static struct dirent *readdir_impl(DIR *dir) {
     } else if (IsOpenbsd()) {
       obsd = (struct dirent_openbsd *)((char *)dir->buf + dir->buf_pos);
       dir->buf_pos += obsd->d_reclen;
+      dir->tell = obsd->d_off;
       ent = &dir->ent;
       ent->d_ino = obsd->d_fileno;
       ent->d_off = obsd->d_off;
@@ -419,7 +425,7 @@ static struct dirent *readdir_impl(DIR *dir) {
       dir->buf_pos += nbsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = nbsd->d_fileno;
-      ent->d_off = dir->tell++;
+      ent->d_off = (dir->tell += nbsd->d_reclen);
       ent->d_reclen = nbsd->d_reclen;
       ent->d_type = nbsd->d_type;
       memcpy(ent->d_name, nbsd->d_name, MAX(256, nbsd->d_namlen + 1));
@@ -428,7 +434,7 @@ static struct dirent *readdir_impl(DIR *dir) {
       dir->buf_pos += bsd->d_reclen;
       ent = &dir->ent;
       ent->d_ino = bsd->d_fileno;
-      ent->d_off = IsXnu() ? (dir->tell = basep) : dir->tell++;
+      ent->d_off = dir->tell++;
       ent->d_reclen = bsd->d_reclen;
       ent->d_type = bsd->d_type;
       memcpy(ent->d_name, bsd->d_name, bsd->d_namlen + 1);
@@ -450,9 +456,14 @@ static struct dirent *readdir_impl(DIR *dir) {
  */
 struct dirent *readdir(DIR *dir) {
   struct dirent *e;
-  _lockdir(dir);
-  e = readdir_impl(dir);
-  _unlockdir(dir);
+  if (dir) {
+    _lockdir(dir);
+    e = readdir_impl(dir);
+    _unlockdir(dir);
+  } else {
+    efault();
+    e = 0;
+  }
   return e;
 }
 
@@ -496,20 +507,18 @@ errno_t readdir_r(DIR *dir, struct dirent *output, struct dirent **result) {
  * @return 0 on success or -1 w/ errno
  */
 int closedir(DIR *dir) {
-  int rc;
+  int rc = 0;
   if (dir) {
-    if (dir->iszip) {
-      free(dir->zip.prefix);
-      rc = 0;
-    } else if (!IsWindows()) {
-      rc = close(dir->fd);
-    } else {
-      free(dir->name);
-      rc = FindClose(dir->fd) ? 0 : __winerr();
+    if (dir->fd != -1) {
+      rc |= close(dir->fd);
+    }
+    free(dir->name);
+    if (IsWindows() && !dir->iszip) {
+      if (!FindClose(dir->hand)) {
+        rc = __winerr();
+      }
     }
     free(dir);
-  } else {
-    rc = 0;
   }
   return rc;
 }
@@ -533,13 +542,7 @@ long telldir(DIR *dir) {
 int dirfd(DIR *dir) {
   int rc;
   _lockdir(dir);
-  if (dir->iszip) {
-    rc = eopnotsupp();
-  } else if (IsWindows()) {
-    rc = eopnotsupp();
-  } else {
-    rc = dir->fd;
-  }
+  rc = dir->fd;
   _unlockdir(dir);
   return rc;
 }
@@ -559,8 +562,8 @@ void rewinddir(DIR *dir) {
       dir->tell = 0;
     }
   } else {
-    FindClose(dir->fd);
-    if ((dir->fd = FindFirstFile(dir->name, &dir->windata)) != -1) {
+    FindClose(dir->hand);
+    if ((dir->hand = FindFirstFile(dir->name, &dir->windata)) != -1) {
       dir->isdone = false;
       dir->tell = 0;
     } else {
@@ -582,11 +585,27 @@ void seekdir(DIR *dir, long off) {
   if (dir->iszip) {
     dir->zip.offset = GetZipCdirOffset(_weaken(__zipos_get)()->cdir);
     for (i = 0; i < off && i < dir->zip.records; ++i) {
-      dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
+      if (i >= 2) {
+        dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
+      }
     }
-  } else {
+  } else if (!IsWindows()) {
     i = lseek(dir->fd, off, SEEK_SET);
     dir->buf_pos = dir->buf_end = 0;
+  } else {
+    i = 0;
+    dir->isdone = false;
+    FindClose(dir->hand);
+    if ((dir->hand = FindFirstFile(dir->name, &dir->windata)) != -1) {
+      for (; i < off; ++i) {
+        if (!FindNextFile(dir->hand, &dir->windata)) {
+          dir->isdone = true;
+          break;
+        }
+      }
+    } else {
+      dir->isdone = true;
+    }
   }
   dir->tell = i;
   _unlockdir(dir);

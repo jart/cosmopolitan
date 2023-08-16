@@ -26,9 +26,9 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Checks if effective user can access path in particular ways.
@@ -51,7 +51,7 @@
 int faccessat(int dirfd, const char *path, int amode, int flags) {
   int e, rc;
   struct ZiposUri zipname;
-  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+  if (IsAsan() && !__asan_is_valid_str(path)) {
     rc = efault();
   } else if (__isfdkind(dirfd, kFdZip)) {
     rc = enotsup();

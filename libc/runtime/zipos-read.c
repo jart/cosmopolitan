@@ -18,16 +18,38 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/str/str.h"
-#include "libc/thread/thread.h"
-#include "libc/zip.internal.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zip.internal.h"
 
 static size_t GetIovSize(const struct iovec *iov, size_t iovlen) {
   size_t i, r;
   for (r = i = 0; i < iovlen; ++i) r += iov[i].iov_len;
   return r;
+}
+
+static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
+                                 size_t iovlen, ssize_t opt_offset) {
+  int i;
+  int64_t b, x, y;
+  if (h->cfile == ZIPOS_SYNTHETIC_DIRECTORY ||
+      S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
+    return eisdir();
+  }
+  if (opt_offset == -1) {
+    x = y = h->pos;
+  } else {
+    x = y = opt_offset;
+  }
+  for (i = 0; i < iovlen && y < h->size; ++i, y += b) {
+    b = MIN(iov[i].iov_len, h->size - y);
+    if (b) memcpy(iov[i].iov_base, h->mem + y, b);
+  }
+  if (opt_offset == -1) {
+    h->pos = y;
+  }
+  return y - x;
 }
 
 /**
@@ -39,14 +61,10 @@ static size_t GetIovSize(const struct iovec *iov, size_t iovlen) {
  */
 ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
                      size_t iovlen, ssize_t opt_offset) {
-  size_t i, b, x, y;
+  ssize_t rc;
+  unassert(opt_offset >= 0 || opt_offset == -1);
   pthread_mutex_lock(&h->lock);
-  x = y = opt_offset != -1 ? opt_offset : h->pos;
-  for (i = 0; i < iovlen && y < h->size; ++i, y += b) {
-    b = min(iov[i].iov_len, h->size - y);
-    if (b) memcpy(iov[i].iov_base, h->mem + y, b);
-  }
-  if (opt_offset == -1) h->pos = y;
+  rc = __zipos_read_impl(h, iov, iovlen, opt_offset);
   pthread_mutex_unlock(&h->lock);
-  return y - x;
+  return rc;
 }

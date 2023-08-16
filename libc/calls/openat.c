@@ -29,11 +29,11 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Opens file.
@@ -166,7 +166,7 @@ int openat(int dirfd, const char *file, int flags, ...) {
       if (_weaken(__zipos_open) &&
           _weaken(__zipos_parseuri)(file, &zipname) != -1) {
         if (!__vforked && dirfd == AT_FDCWD) {
-          rc = _weaken(__zipos_open)(&zipname, flags, mode);
+          rc = _weaken(__zipos_open)(&zipname, flags);
         } else {
           rc = enotsup(); /* TODO */
         }

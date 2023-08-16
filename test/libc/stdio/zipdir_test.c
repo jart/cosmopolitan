@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,54 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
-#include "libc/intrin/cmpxchg.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/thread/thread.h"
-#include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/consts/dt.h"
+#include "libc/testlib/testlib.h"
 
-void __zipos_free(struct Zipos *z, struct ZiposHandle *h) {
-  if (IsAsan()) {
-    __asan_poison((char *)h + sizeof(struct ZiposHandle),
-                  h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
+__static_yoink("zipos");
+__static_yoink("libc/testlib/hyperion.txt");
+__static_yoink("libc/testlib/moby.txt");
+__static_yoink("usr/share/zoneinfo/New_York");
+
+DIR *dir;
+struct dirent *ent;
+
+TEST(zipdir, test) {
+  const char *path = "/zip/libc/testlib///";
+  ASSERT_NE(NULL, (dir = opendir(path)));
+  ASSERT_EQ(0, telldir(dir));
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(0, strcmp(ent->d_name, "."));
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(0, strcmp(ent->d_name, ".."));
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(0, strcmp(ent->d_name, "hyperion.txt"));
+  ASSERT_EQ(DT_REG, ent->d_type);
+  long pos = telldir(dir);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(0, strcmp(ent->d_name, "moby.txt"));
+  ASSERT_EQ(DT_REG, ent->d_type);
+  ASSERT_EQ(NULL, (ent = readdir(dir)));
+  seekdir(dir, pos);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(0, strcmp(ent->d_name, "moby.txt"));
+  ASSERT_EQ(DT_REG, ent->d_type);
+  ASSERT_EQ(NULL, (ent = readdir(dir)));
+  ASSERT_SYS(0, 0, closedir(dir));
+}
+
+TEST(dirstream, hasDirectoryEntry) {
+  bool gotsome = false;
+  const char *path = "/zip/usr/share/zoneinfo";
+  ASSERT_NE(NULL, (dir = opendir(path)));
+  while ((ent = readdir(dir))) {
+    gotsome = true;
   }
-  pthread_mutex_destroy(&h->lock);
-  __zipos_lock();
-  do h->next = z->freelist;
-  while (!_cmpxchg(&z->freelist, h->next, h));
-  __zipos_unlock();
+  ASSERT_SYS(0, 0, closedir(dir));
+  EXPECT_TRUE(gotsome);
 }

@@ -29,10 +29,10 @@
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/mem/alloca.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 static inline const char *__strace_fstatat_flags(char buf[12], int flags) {
   if (flags == AT_SYMLINK_NOFOLLOW) return "AT_SYMLINK_NOFOLLOW";
@@ -56,7 +56,9 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   /* execve() depends on this */
   int rc;
   struct ZiposUri zipname;
-  if (__isfdkind(dirfd, kFdZip)) {
+  if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) {
+    rc = efault();
+  } else if (__isfdkind(dirfd, kFdZip)) {
     STRACE("zipos dirfd not supported yet");
     rc = einval();
   } else if (_weaken(__zipos_stat) &&

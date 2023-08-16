@@ -957,18 +957,6 @@ syscon	pf	PF_VSOCK				40			40			0			0			0			0			0			0
 syscon	pf	PF_WANPIPE				25			25			0			0			0			0			0			0
 syscon	pf	PF_X25					9			9			0			0			0			0			0			0
 
-#	getdents() constants
-#
-#	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	dt	DT_UNKNOWN				0			0			0			0			0			0			0			0			# consensus
-syscon	dt	DT_FIFO					1			1			1			1			1			1			1			1			# unix consensus & faked nt
-syscon	dt	DT_CHR					2			2			2			2			2			2			2			2			# unix consensus & faked nt
-syscon	dt	DT_DIR					4			4			4			4			4			4			4			4			# unix consensus & faked nt
-syscon	dt	DT_BLK					6			6			6			6			6			6			6			6			# unix consensus & faked nt
-syscon	dt	DT_REG					8			8			8			8			8			8			8			8			# unix consensus & faked nt
-syscon	dt	DT_LNK					10			10			10			10			10			10			10			10			# unix consensus & faked nt
-syscon	dt	DT_SOCK					12			12			12			12			12			12			12			12			# unix consensus & faked nt
-
 #	msync() flags
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary

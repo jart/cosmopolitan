@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metastat.internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/gc.internal.h"
@@ -47,13 +48,15 @@ TEST(stat_010, testEmptyFile_sizeIsZero) {
 }
 
 TEST(stat, enoent) {
-  ASSERT_SYS(ENOENT, -1, stat("hi", 0));
-  ASSERT_SYS(ENOENT, -1, stat("o/doesnotexist", 0));
+  struct stat st;
+  ASSERT_SYS(ENOENT, -1, stat("hi", &st));
+  ASSERT_SYS(ENOENT, -1, stat("o/doesnotexist", &st));
 }
 
 TEST(stat, enotdir) {
+  struct stat st;
   ASSERT_SYS(0, 0, close(creat("yo", 0644)));
-  ASSERT_SYS(ENOTDIR, -1, stat("yo/there", 0));
+  ASSERT_SYS(ENOTDIR, -1, stat("yo/there", &st));
 }
 
 TEST(stat, zipos) {

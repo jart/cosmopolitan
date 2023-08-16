@@ -164,7 +164,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   __switch_stacks(argc, argv, envp, auxv, cosmo2,
                   (char *)mmap(ape_stack_vaddr, (uintptr_t)ape_stack_memsz,
                                MAP_FIXED | PROT_READ | PROT_WRITE,
-                               MAP_ANONYMOUS | MAP_STACK, -1, 0) +
+                               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0) +
                       (uintptr_t)ape_stack_memsz);
 }
 

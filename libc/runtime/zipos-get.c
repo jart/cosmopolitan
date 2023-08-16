@@ -20,16 +20,17 @@
 #include "libc/calls/metalfile.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
-#include "libc/runtime/zipos.internal.h"
 
 #ifdef __x86_64__
 __static_yoink(APE_COM_NAME);
@@ -81,7 +82,9 @@ struct Zipos *__zipos_get(void) {
     }
     if (fd != -1 || PLEDGED(RPATH)) {
       if (fd == -1) {
-        progpath = GetProgramExecutableName();
+        if (!progpath) {
+          progpath = GetProgramExecutableName();
+        }
         fd = open(progpath, O_RDONLY);
       }
       if (fd != -1) {

@@ -20,14 +20,15 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zip.internal.h"
 
 #define IP(X)  (intptr_t)(X)
 #define VIP(X) (void *)IP(X)
@@ -50,25 +51,36 @@
  */
 dontasan void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
                             struct ZiposHandle *h, int64_t off) {
-  if (!(flags & MAP_PRIVATE) ||
-      (flags & ~(MAP_PRIVATE | MAP_FILE | MAP_FIXED | MAP_FIXED_NOREPLACE)) ||
-      (!!(flags & MAP_FIXED) ^ !!(flags & MAP_FIXED_NOREPLACE))) {
-    STRACE(
-        "zipos mappings currently only support MAP_PRIVATE with select flags");
+
+  if (off < 0) {
+    STRACE("negative zipos mmap offset");
     return VIP(einval());
   }
 
-  if (VERY_UNLIKELY(off < 0)) {
-    STRACE("neg off");
+  if (h->cfile == ZIPOS_SYNTHETIC_DIRECTORY ||
+      S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
+    return VIP(eisdir());
+  }
+
+  if (flags & (MAP_SHARED | MAP_ANONYMOUS)) {
+    STRACE("ZipOS bad flags");
     return VIP(einval());
   }
+
+  if (prot & ~(PROT_READ | PROT_WRITE | PROT_EXEC)) {
+    STRACE("ZipOS bad protection");
+    return VIP(einval());
+  }
+
+  flags &= MAP_FIXED | MAP_FIXED_NOREPLACE;
+  flags |= MAP_PRIVATE | MAP_ANONYMOUS;
 
   const int tempProt = !IsXnu() ? prot | PROT_WRITE : PROT_WRITE;
-  void *outAddr = __mmap_unlocked(addr, size, tempProt,
-                                  (flags & (~MAP_FILE)) | MAP_ANONYMOUS, -1, 0);
+  void *outAddr = __mmap_unlocked(addr, size, tempProt, flags, -1, 0);
   if (outAddr == MAP_FAILED) {
     return MAP_FAILED;
   }
+
   do {
     if (__zipos_read(h, &(struct iovec){outAddr, size}, 1, off) == -1) {
       strace_enabled(-1);
@@ -82,6 +94,7 @@ dontasan void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
     }
     return outAddr;
   } while (0);
+
   const int e = errno;
   __munmap_unlocked(outAddr, size);
   errno = e;

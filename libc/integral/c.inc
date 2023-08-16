@@ -742,14 +742,6 @@ void abort(void) wontreturn;
 #pragma GCC diagnostic error "-Wtrampolines"
 #if __GNUC__ >= 6
 #pragma GCC diagnostic error "-Wnonnull-compare"
-#if defined(_COSMO_SOURCE) && !defined(MODE_DBG) && \
-    !defined(STACK_FRAME_UNLIMITED)
-#pragma GCC diagnostic error "-Wframe-larger-than=131072"
-#if __GNUC__ >= 9
-// #pragma GCC diagnostic error "-Walloca-larger-than=1024"
-// #pragma GCC diagnostic error "-Wvla-larger-than=1024"
-#endif /* GCC 9+ */
-#endif /* STACK_FRAME_UNLIMITED */
 #elif __GNUC__ >= 9
 #pragma GCC diagnostic error /* e.g. fabs not abs */ "-Wabsolute-value"
 #endif /* GCC 6+ */
