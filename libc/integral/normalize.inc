@@ -74,11 +74,11 @@
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
 
-#define APE_STACKSIZE 8388608 /* default 8mb stack */
-#define APE_PAGESIZE  0x10000 /* i386+ */
+#define APE_STACKSIZE 8388608
+#define APE_PAGESIZE  65536
 #ifdef _COSMO_SOURCE
-#define FRAMESIZE 0x10000
-#define _PAGESIZE 0x1000 /* i386+ */
+#define FRAMESIZE 65536
+#define _PAGESIZE 4096
 #endif
 
 #define BUFSIZ     0x1000 /* best stdio default */

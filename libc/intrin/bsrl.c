@@ -49,7 +49,7 @@ int(_bsrl)(long x) {
   x |= x >> 8;
   x |= x >> 16;
   x |= x >> 32;
-  return kDebruijn[(x * 0x03f79d71b4cb0a89) >> 58];
+  return kDebruijn[(x * 0x03f79d71b4cb0a89ull) >> 58];
 }
 
 __weak_reference(_bsrl, _bsrll);

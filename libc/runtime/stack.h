@@ -81,9 +81,18 @@ extern char ape_stack_memsz[] __attribute__((__weak__));
 extern char ape_stack_align[] __attribute__((__weak__));
 
 /**
- * Returns size of stack, which is always a two power.
+ * Returns preferred size and alignment of thread stack.
+ *
+ * This will always be equal to `PTHREAD_STACK_MIN`.
  */
-#define GetStackSize() ((uintptr_t)ape_stack_memsz)
+#define GetStackSize() 262144
+
+/**
+ * Returns preferred stack guard size.
+ *
+ * This is the max cpu page size of supported architectures.
+ */
+#define GetGuardSize() 16384
 
 /**
  * Returns address of bottom of stack.
@@ -124,9 +133,13 @@ extern char ape_stack_align[] __attribute__((__weak__));
 /**
  * Returns true if at least `n` bytes of stack are available.
  */
-#define HaveStackMemory(n) \
-  ((intptr_t)__builtin_frame_address(0) >= GetStackAddr() + 16384 + (n))
+#define HaveStackMemory(n)                 \
+  ((intptr_t)__builtin_frame_address(0) >= \
+   GetStackAddr() + GetGuardSize() + (n))
 
+/**
+ * Extends stack memory by poking large allocations.
+ */
 forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
   for (; n > 0; n -= 4096) {
     ((char *)p)[n - 1] = 0;

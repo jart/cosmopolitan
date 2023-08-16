@@ -45,7 +45,7 @@ void *NewCosmoStack(void) {
                 MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
     if (IsAsan()) {
       __asan_poison(p + GetStackSize() - 16, 16, kAsanStackOverflow);
-      __asan_poison(p, 4096, kAsanStackOverflow);
+      __asan_poison(p, GetGuardSize(), kAsanStackOverflow);
     }
     return p;
   } else {

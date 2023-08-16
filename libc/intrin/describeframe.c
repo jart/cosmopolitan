@@ -54,7 +54,7 @@ static const char *GetFrameName(int x) {
               x <= ((GetStaticStackAddr(0) + GetStackSize() +
                      sizeof(struct WinArgs) - 1) >>
                     16))) {
-    return "winargs";
+    return "mainstack";
   } else if ((int)((intptr_t)__executable_start >> 16) <= x &&
              x <= (int)(((intptr_t)_end - 1) >> 16)) {
     return "image";

@@ -372,13 +372,13 @@ dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
       if ((dm = sys_mmap(p + size - SIGSTKSZ, SIGSTKSZ, prot,
                          f | MAP_GROWSDOWN_linux, fd, off))
               .addr != MAP_FAILED) {
-        npassert(sys_mmap(p, page_size, PROT_NONE,
+        npassert(sys_mmap(p, GetGuardSize(), PROT_NONE,
                           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
                      .addr == p);
         dm.addr = p;
         p = __finish_memory(p, size, prot, flags, fd, off, f, x, n, dm);
         if (IsAsan() && p != MAP_FAILED) {
-          __asan_poison(p, page_size, kAsanStackOverflow);
+          __asan_poison(p, GetGuardSize(), kAsanStackOverflow);
         }
         return p;
       } else if (errno == ENOTSUP) {
