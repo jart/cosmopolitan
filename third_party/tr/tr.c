@@ -34,7 +34,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/bsd.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

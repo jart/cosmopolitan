@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"

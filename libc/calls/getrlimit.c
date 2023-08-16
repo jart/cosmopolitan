@@ -22,6 +22,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/stack.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
@@ -41,6 +42,10 @@ int getrlimit(int resource, struct rlimit *rlim) {
     rc = efault();
   } else if (!IsWindows()) {
     rc = sys_getrlimit(resource, rlim);
+  } else if (resource == RLIMIT_STACK) {
+    rlim->rlim_cur = (uintptr_t)ape_stack_memsz;
+    rlim->rlim_max = (uintptr_t)ape_stack_memsz;
+    rc = 0;
   } else if (resource == RLIMIT_AS) {
     rlim->rlim_cur = __virtualmax;
     rlim->rlim_max = __virtualmax;

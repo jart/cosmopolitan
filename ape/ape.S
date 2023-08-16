@@ -794,7 +794,7 @@ ape_loader_end:
 	.stub	ape_stack_vaddr,quad		// is mmap()'d with MAP_FIXED
 	.stub	ape_stack_paddr,quad		// ignored
 	.stub	ape_stack_filesz,quad		// ignored
-	.stub	ape_stack_memsz2,quad		// is mmap(size) argument
+	.stub	ape_stack_memsz,quad		// ignored?
 	.stub	ape_stack_align,quad		// must be 16+
 
 #if SupportsOpenbsd() || SupportsNetbsd()
@@ -1082,8 +1082,8 @@ ape_pe:	.ascin	"PE",4
 	.long	0			// Checksum
 	.short	v_ntsubsystem		// Subsystem: 0=Neutral,2=GUI,3=Console
 	.short	v_ntdllchar		// DllCharacteristics
-	.quad	0x30000			// StackReserve
-	.quad	0x30000			// StackCommit
+	.quad	0x10000			// StackReserve
+	.quad	0x10000			// StackCommit
 	.quad	0			// HeapReserve
 	.quad	0			// HeapCommit
 	.long	0			// LoaderFlags
@@ -1735,7 +1735,7 @@ ape_grub_entry:
 │ αcτµαlly pδrταblε εxεcµταblε § cosmopolitan libc runtime runtime         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 kernel:	movabs	$ape_stack_vaddr,%rsp
-	add	$ape_stack_memsz2,%rsp
+	add	$ape_stack_memsz,%rsp
 	movl	$0,0x7b000			// unmap null 2mb
 #if USE_SYMBOL_HACK
 	.byte	0x0f,0x1f,0207			// nop rdi binbase

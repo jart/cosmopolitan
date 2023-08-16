@@ -458,7 +458,7 @@ syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0x0800			0			0			0			0x0800			0			0x0800
 syscon	rlimit	RLIMIT_CPU				0			0			0			0			0			0			0			127			# max cpu time in seconds; see SIGXCPU; unix consensus
 syscon	rlimit	RLIMIT_FSIZE				1			1			1			1			1			1			1			127			# max file size in bytes; unix consensus
 syscon	rlimit	RLIMIT_DATA				2			2			2			2			2			2			2			127			# max mmap() / brk() / sbrk() size in bytes; unix consensus
-syscon	rlimit	RLIMIT_STACK				3			3			3			3			3			3			3			127			# max stack size in bytes; see SIGXFSZ; unix consensus
+syscon	rlimit	RLIMIT_STACK				3			3			3			3			3			3			3			1			# max stack size in bytes; see SIGXFSZ; unix consensus
 syscon	rlimit	RLIMIT_CORE				4			4			4			4			4			4			4			127			# max core file size in bytes; unix consensus
 syscon	rlimit	RLIMIT_RSS				5			5			5			5			5			5			5			127			# max physical memory size in bytes; see mmap()→ENOMEM; unix consensus
 syscon	rlimit	RLIMIT_NPROC				6			6			7			7			7			7			7			127			# max number of processes; see fork()→EAGAIN; bsd consensus
@@ -479,7 +479,7 @@ syscon	compat	RLIMIT_VMEM				9			9			5			5			10			127			10			127			# same as RLI
 #	resource limit special values
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	rlim	RLIM_NLIMITS				16			16			9			9			15			9			12			1
+syscon	rlim	RLIM_NLIMITS				16			16			9			9			15			9			12			2
 syscon	rlim	RLIM_INFINITY				0xffffffffffffffff	0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
 syscon	rlim	RLIM_SAVED_CUR				0xffffffffffffffff	0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
 syscon	rlim	RLIM_SAVED_MAX				0xffffffffffffffff	0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff

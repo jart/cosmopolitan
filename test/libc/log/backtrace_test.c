@@ -22,7 +22,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"

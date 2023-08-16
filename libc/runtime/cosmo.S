@@ -123,66 +123,6 @@ cosmo:	push	%rbp
 	pop	%rdi
 	.init.end 304,_init_tls
 
-#if !IsTiny()
-//	Creates deterministically addressed stack we can use
-//
-//	This helps debugging be more comprehensible, because
-//	when diagnosing low-level problems when error report
-//	isn't working, sometimes numbers are all you have to
-//	go on, and we can't use them if kernel hardening has
-//	configured that meaningful data to be randomized.
-//
-//	Having deterministic addresses is also key to ensure
-//	builds, execution, and other things are reproducible
-	.init.start 304,_init_stack
-	testb	IsWindows()
-	jnz	9f
-	testb	IsMetal()
-	jnz	9f
-	push	%rdi
-	push	%rsi
-
-//	allocate stack
-	movabs	$ape_stack_vaddr,%rdi
-	mov	$ape_stack_memsz,%esi
-	mov	$ape_stack_prot,%edx
-	mov	$MAP_STACK,%ecx
-	or	MAP_ANONYMOUS,%ecx
-	or	$-1,%r8
-	xor	%r9d,%r9d
-	push	%rsi
-	push	%rsi
-	call	mmap
-	pop	%r8
-	pop	%r8
-	pop	%rsi
-	pop	%rdi
-	cmp	$-1,%rax
-	je	9f
-
-//	switch stacks
-//
-//	we subtract 8 because the openbsd kernel always checks rsp
-//	is on a MAP_STACK interval non-inclusively of stack + size
-	leave
-	pop	%rcx			// return address
-	sub	$8,%r8d			// openbsd:stackbound
-	lea	(%rax,%r8),%rsp
-	mov	$ape_stack_align,%eax
-	neg	%rax
-	and	%rax,%rsp
-	push	%rcx
-	push	%rbp
-	mov	%rsp,%rbp
-
-9:	nop
-	.init.end 304,_init_stack
-	.weak	ape_stack_prot
-	.weak	ape_stack_vaddr
-	.weak	ape_stack_memsz
-	.weak	ape_stack_align
-#endif
-
 #if IsAsan()
 	.init.start 305,_init_symbols
 	push	%rdi

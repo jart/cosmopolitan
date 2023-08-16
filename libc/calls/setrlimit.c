@@ -78,6 +78,8 @@ int setrlimit(int resource, const struct rlimit *rlim) {
       // TODO(jart): What's up with XNU and NetBSD?
       __virtualmax = rlim->rlim_cur;
     }
+  } else if (resource == RLIMIT_STACK) {
+    rc = enotsup();
   } else if (resource == RLIMIT_AS) {
     __virtualmax = rlim->rlim_cur;
     rc = 0;

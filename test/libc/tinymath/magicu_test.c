@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/tinymath/magicu.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"

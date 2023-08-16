@@ -54,6 +54,7 @@ TEST(zipdir, test) {
   ASSERT_EQ(0, strcmp(ent->d_name, "moby.txt"));
   ASSERT_EQ(DT_REG, ent->d_type);
   ASSERT_EQ(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(NULL, (ent = readdir(dir)));
   ASSERT_SYS(0, 0, closedir(dir));
 }
 

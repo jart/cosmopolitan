@@ -20,7 +20,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"

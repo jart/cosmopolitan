@@ -34,6 +34,7 @@ struct ZiposHandle {
 struct Zipos {
   uint8_t *map;
   uint8_t *cdir;
+  uint64_t dev;
   struct ZiposHandle *freelist;
 };
 

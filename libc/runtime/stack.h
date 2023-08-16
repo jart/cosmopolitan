@@ -4,6 +4,20 @@
 #ifdef _COSMO_SOURCE
 
 /**
+ * Returns preferred size and alignment of thread stack.
+ *
+ * This will always be equal to `PTHREAD_STACK_MIN`.
+ */
+#define GetStackSize() 262144
+
+/**
+ * Returns preferred stack guard size.
+ *
+ * This is the max cpu page size of supported architectures.
+ */
+#define GetGuardSize() 16384
+
+/**
  * Tunes APE stack maximum size.
  *
  * The bottom-most page will be protected to ensure your stack does not
@@ -81,20 +95,6 @@ extern char ape_stack_memsz[] __attribute__((__weak__));
 extern char ape_stack_align[] __attribute__((__weak__));
 
 /**
- * Returns preferred size and alignment of thread stack.
- *
- * This will always be equal to `PTHREAD_STACK_MIN`.
- */
-#define GetStackSize() 262144
-
-/**
- * Returns preferred stack guard size.
- *
- * This is the max cpu page size of supported architectures.
- */
-#define GetGuardSize() 16384
-
-/**
  * Returns address of bottom of stack.
  *
  * This takes into consideration threads and sigaltstack. This is
@@ -106,6 +106,8 @@ extern char ape_stack_align[] __attribute__((__weak__));
  */
 #define GetStackAddr() \
   (((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize())
+
+#define GetStaticStackSize() ((uintptr_t)ape_stack_memsz)
 
 #ifdef __x86_64__
 /**

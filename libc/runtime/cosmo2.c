@@ -64,8 +64,6 @@ extern init_f *__preinit_array_start[] __attribute__((__weak__));
 extern init_f *__preinit_array_end[] __attribute__((__weak__));
 extern init_f *__init_array_start[] __attribute__((__weak__));
 extern init_f *__init_array_end[] __attribute__((__weak__));
-extern char ape_stack_vaddr[] __attribute__((__weak__));
-extern char ape_stack_memsz[] __attribute__((__weak__));
 extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
@@ -160,16 +158,6 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   __init_fds(argc, argv, envp);
 
   __enable_tls();
-
-  __switch_stacks(argc, argv, envp, auxv, cosmo2,
-                  (char *)mmap(ape_stack_vaddr, (uintptr_t)ape_stack_memsz,
-                               MAP_FIXED | PROT_READ | PROT_WRITE,
-                               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0) +
-                      (uintptr_t)ape_stack_memsz);
-}
-
-wontreturn textstartup void cosmo2(int argc, char **argv, char **envp,
-                                   unsigned long *auxv) {
 
 #if 0
 #if IsAsan()

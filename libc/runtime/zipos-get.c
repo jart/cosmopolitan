@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
@@ -26,6 +27,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -64,19 +66,19 @@ static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
  */
 struct Zipos *__zipos_get(void) {
   char *endptr;
-  ssize_t size;
-  int fd, err, msg;
+  struct stat st;
   static bool once;
   struct Zipos *res;
+  int x, fd, err, msg;
   uint8_t *map, *cdir;
   const char *progpath;
   static struct Zipos zipos;
   __zipos_lock();
   if (!once) {
-    progpath = getenv("COSMOPOLITAN_INIT_ZIPOS");
-    if (progpath) {
-      fd = strtol(progpath, &endptr, 10);
-      if (*endptr) fd = -1;
+    // this environment variable may be a filename or file descriptor
+    if ((progpath = getenv("COSMOPOLITAN_INIT_ZIPOS")) &&
+        (x = strtol(progpath, &endptr, 10)) >= 0 && !*endptr) {
+      fd = x;
     } else {
       fd = -1;
     }
@@ -88,16 +90,16 @@ struct Zipos *__zipos_get(void) {
         fd = open(progpath, O_RDONLY);
       }
       if (fd != -1) {
-        if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-            (map = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
-                MAP_FAILED) {
-          if ((cdir = GetZipEocd(map, size, &err))) {
+        if (!fstat(fd, &st) && (map = mmap(0, st.st_size, PROT_READ,
+                                           MAP_PRIVATE, fd, 0)) != MAP_FAILED) {
+          if ((cdir = GetZipEocd(map, st.st_size, &err))) {
             __zipos_munmap_unneeded(map, cdir, map);
             zipos.map = map;
             zipos.cdir = cdir;
+            zipos.dev = st.st_ino;
             msg = kZipOk;
           } else {
-            munmap(map, size);
+            munmap(map, st.st_size);
             msg = !cdir ? err : kZipErrorRaceCondition;
           }
         } else {

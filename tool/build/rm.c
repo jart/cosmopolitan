@@ -20,14 +20,13 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/ftw.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "libc/stdio/ftw.h"
 
 #define USAGE \
   " FILE...\n\

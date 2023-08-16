@@ -78,6 +78,7 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
       break;
     case kNtSignalGuardPage:
     case kNtSignalInPageError:
+    case kNtStatusStackOverflow:
       code = SEGV_MAPERR;
       sig = SIGSEGV;
       break;
@@ -128,7 +129,9 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
       sig = SIGSYS;
       break;
     default:
-      return kNtExceptionContinueSearch;
+      code = ep->ExceptionRecord->ExceptionCode;
+      sig = SIGSEGV;
+      break;
   }
   rip = ep->ContextRecord->Rip;
 

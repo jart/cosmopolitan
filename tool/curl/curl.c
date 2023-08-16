@@ -15,7 +15,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"

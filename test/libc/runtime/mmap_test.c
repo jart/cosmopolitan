@@ -25,7 +25,6 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/xchg.internal.h"
 #include "libc/log/log.h"

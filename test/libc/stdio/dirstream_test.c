@@ -21,7 +21,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/fmt/fmt.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -35,6 +35,7 @@
 #include "libc/x/xiso8601.h"
 
 __static_yoink("zipos");
+__static_yoink("usr/share/zoneinfo/");
 __static_yoink("usr/share/zoneinfo/New_York");
 
 char testlib_enable_tmp_setup_teardown;
@@ -248,5 +249,75 @@ TEST(dirstream, seek) {
   ASSERT_NE(NULL, (ent = readdir(dir)));  // #3
   ASSERT_NE(NULL, (ent = readdir(dir)));  // #4
   ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  ASSERT_SYS(0, 0, closedir(dir));
+}
+
+TEST(dirstream, ino) {
+  if (IsNetbsd()) return;  // omg
+  ASSERT_SYS(0, 0, mkdir("boop", 0755));
+  EXPECT_SYS(0, 0, touch("boop/a", 0644));
+  EXPECT_SYS(0, 0, touch("boop/b", 0644));
+  EXPECT_SYS(0, 0, touch("boop/c", 0644));
+  ASSERT_NE(NULL, (dir = opendir("boop")));
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #1
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #2
+  long pos = telldir(dir);
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #3
+  char name[32];
+  strlcpy(name, ent->d_name, sizeof(name));
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #4
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #5
+  ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  seekdir(dir, pos);
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #2
+  ASSERT_STREQ(name, ent->d_name);
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #3
+  ASSERT_NE(NULL, (ent = readdir(dir)));  // #4
+  ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  ASSERT_EQ(NULL, (ent = readdir(dir)));  // eod
+  ASSERT_SYS(0, 0, closedir(dir));
+}
+
+TEST(dirstream, dots) {
+  bool got_dot = false;
+  bool got_dot_dot = false;
+  ASSERT_NE(NULL, (dir = opendir(".")));
+  while ((ent = readdir(dir))) {
+    got_dot |= !strcmp(ent->d_name, ".");
+    got_dot_dot |= !strcmp(ent->d_name, "..");
+  }
+  ASSERT_SYS(0, 0, closedir(dir));
+  ASSERT_TRUE(got_dot_dot);
+  ASSERT_TRUE(got_dot);
+}
+
+TEST(dirstream, inoFile_isConsistentWithStat) {
+  struct stat st;
+  bool gotsome = false;
+  EXPECT_SYS(0, 0, touch("foo", 0644));
+  EXPECT_SYS(0, 0, stat("foo", &st));
+  ASSERT_NE(NULL, (dir = opendir(".")));
+  while ((ent = readdir(dir))) {
+    if (!strcmp(ent->d_name, "foo")) {
+      ASSERT_EQ(st.st_ino, ent->d_ino);
+      gotsome = true;
+    }
+  }
+  ASSERT_SYS(0, 0, closedir(dir));
+  ASSERT_TRUE(gotsome);
+}
+
+TEST(dirstream_zipos, inoFile_isConsistentWithStat) {
+  struct stat st;
+  const char *dirpath;
+  char filename[PATH_MAX];
+  dirpath = "/zip/usr/share/zoneinfo";
+  ASSERT_NE(NULL, (dir = opendir(dirpath)));
+  while ((ent = readdir(dir))) {
+    snprintf(filename, sizeof(filename), "%s/%s", dirpath, ent->d_name);
+    EXPECT_SYS(0, 0, stat(filename, &st));
+    ASSERT_EQ(st.st_ino, ent->d_ino);
+  }
   ASSERT_SYS(0, 0, closedir(dir));
 }

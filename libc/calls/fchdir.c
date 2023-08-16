@@ -17,22 +17,30 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Sets current directory based on file descriptor.
  *
  * This does *not* update the `PWD` environment variable.
  *
+ * @raise EACCES if search permission was denied on directory
+ * @raise ENOTDIR if `dirfd` doesn't refer to a directory
+ * @raise EBADF if `dirfd` isn't a valid file descriptor
+ * @raise ENOTSUP if `dirfd` refers to `/zip/...` file
  * @see open(path, O_DIRECTORY)
  * @asyncsignalsafe
  */
 int fchdir(int dirfd) {
   int rc;
-  if (!IsWindows()) {
+  if (__isfdkind(dirfd, kFdZip)) {
+    rc = enotsup();
+  } else if (!IsWindows()) {
     rc = sys_fchdir(dirfd);
   } else {
     rc = sys_fchdir_nt(dirfd);

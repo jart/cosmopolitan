@@ -31,7 +31,6 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"

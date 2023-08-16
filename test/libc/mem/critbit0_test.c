@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/critbit0.h"
 #include "libc/intrin/bits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/mem.h"
@@ -127,4 +128,11 @@ TEST(critbit0, testAllPrefixed_haltOnNonzero) {
   ASSERT_STREQ("aa", a->p[1]);
   critbit0_clear(tree);
   FreeBog(&a);
+}
+
+TEST(critbit0, duplicate) {
+  struct critbit0 tree = {0};
+  ASSERT_TRUE(critbit0_insert(&tree, "hi"));
+  ASSERT_FALSE(critbit0_insert(&tree, "hi"));
+  critbit0_clear(&tree);
 }

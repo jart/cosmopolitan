@@ -74,8 +74,6 @@
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
 
-#define APE_STACKSIZE 8388608
-#define APE_PAGESIZE  65536
 #ifdef _COSMO_SOURCE
 #define FRAMESIZE 65536
 #define _PAGESIZE 4096
