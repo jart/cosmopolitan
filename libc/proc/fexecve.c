@@ -34,6 +34,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
+#include "libc/paths.h"
 #include "libc/proc/execve.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
@@ -42,12 +43,14 @@
 #include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/shm.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zip.internal.h"
 
 static bool IsAPEFd(const int fd) {
   char buf[8];
-  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsApeLoadable(buf);
+  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsApeMagic(buf);
 }
 
 static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
@@ -64,6 +67,57 @@ static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
   return rc;
 }
 
+#define defer(fn) __attribute__((cleanup(fn)))
+
+void cleanup_close(int *pFD) {
+  STRACE("time to close");
+  if (*pFD != -1) {
+    close(*pFD);
+  }
+}
+#define defer_close defer(cleanup_close)
+
+void cleanup_unlink(const char **path) {
+  STRACE("time to unlink");
+  if (*path != NULL) {
+    sys_unlink(*path);
+  }
+}
+#define defer_unlink defer(cleanup_unlink)
+
+static bool ape_to_elf_execve(void *ape, const size_t apesize) {
+  if (!_weaken(fork) || !_weaken(exit) || !IsLinux()) {
+    return false;
+  }
+  defer_unlink const char *tempfile = "/dev/shm/ape_to_elf_execve_XXXXXX";
+  defer_close int fd = open(tempfile, O_RDWR | O_CREAT | O_EXCL, S_IRWXU);
+  if (fd == -1) {
+    tempfile = NULL;
+    return false;
+  }
+  if ((sys_ftruncate(fd, apesize, apesize) == -1) || (write(fd, ape, apesize) != apesize)) {
+    return false;
+  }
+  close(fd);
+  fd = -1;
+  int child = _weaken(fork)();
+  if (child == -1) {
+    return false;
+  } else if (child == 0) {
+    __sys_execve(_PATH_BSHELL, (char *const[]){_PATH_BSHELL, (char*)tempfile, "--assimilate", NULL}, (char *const[]){NULL});
+    _weaken(exit)(1);
+  }
+  int wstatus;
+  if ((child != waitpid(child, &wstatus, 0)) || !WIFEXITED(wstatus) || (WEXITSTATUS(wstatus) != 0)) {
+    return false;
+  }
+  return ((fd = open(tempfile, O_RDWR, S_IRWXU)) != -1) && (pread(fd, ape, apesize, 0) == apesize);
+}
+
+#undef defer_unlink
+#undef defer_close
+#undef defer
+
 typedef enum {
   PTF_NUM = 1 << 0,
   PTF_NUM2 = 1 << 1,
@@ -72,6 +126,7 @@ typedef enum {
 } PTF_PARSE;
 
 static bool ape_to_elf(void *ape, const size_t apesize) {
+  return ape_to_elf_execve(ape, apesize);
   static const char printftok[] = "printf '";
   static const size_t printftoklen = sizeof(printftok) - 1;
   const char *tok = memmem(ape, apesize, printftok, printftoklen);
@@ -142,15 +197,21 @@ static int fd_to_mem_fd(const int infd, char *path) {
     ssize_t readRc;
     readRc = pread(infd, space, st.st_size, 0);
     bool success = readRc != -1;
-    if (success && (st.st_size > 8) && IsApeLoadable(space)) {
-      int flags = fcntl(fd, F_GETFD);
-      if ((success = (flags != -1) &&
-                     (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&
-                     ape_to_elf(space, st.st_size))) {
-        const int newfd = fcntl(fd, F_DUPFD, 9001);
-        if (newfd != -1) {
-          close(fd);
-          fd = newfd;
+    if (success) {
+      int ziperror;
+      if ((st.st_size > 8) && IsApeMagic(space)) {
+        success = ape_to_elf(space, st.st_size);
+      }
+      // we need to preserve the fd over exec if there's zipos
+      if (success && _weaken(GetZipEocd) && _weaken(GetZipEocd)(space, st.st_size, &ziperror)) {
+        int flags = fcntl(fd, F_GETFD);
+        if ((success = (flags != -1) &&
+                       (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1))) {
+          const int newfd = fcntl(fd, F_DUPFD, 9001);
+          if (newfd != -1) {
+            close(fd);
+            fd = newfd;
+          }
         }
       }
     }
@@ -233,7 +294,6 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       }
       size_t numenvs;
       for (numenvs = 0; envp[numenvs];) ++numenvs;
-      // const size_t desenvs = min(500, max(numenvs + 1, 2));
       static _Thread_local char *envs[500];
       memcpy(envs, envp, numenvs * sizeof(char *));
       envs[numenvs] = path;

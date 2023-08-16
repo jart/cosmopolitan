@@ -28,3 +28,11 @@ bool IsApeLoadable(char buf[8]) {
          READ64LE(buf) == READ64LE("jartsr='") ||
          READ64LE(buf) == READ64LE("APEDBG='");
 }
+
+/**
+ * Returns true if executable image is an APE
+ */
+bool IsApeMagic(char buf[8]) {
+  return READ64LE(buf) == READ64LE("MZqFpD='") ||
+         READ64LE(buf) == READ64LE("JTqFpD='");
+}

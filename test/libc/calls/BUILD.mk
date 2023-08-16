@@ -19,9 +19,7 @@ TEST_LIBC_CALLS_BINS =							\
 	$(TEST_LIBC_CALLS_COMS)						\
 	$(TEST_LIBC_CALLS_COMS:%=%.dbg)					\
 	o/$(MODE)/test/libc/calls/life-nomod.com			\
-	o/$(MODE)/test/libc/calls/life-classic.com			\
-	o/$(MODE)/test/libc/calls/zipread.com.dbg			\
-	o/$(MODE)/test/libc/calls/zipread.com
+	o/$(MODE)/test/libc/calls/life-classic.com
 
 TEST_LIBC_CALLS_TESTS =							\
 	$(TEST_LIBC_CALLS_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
@@ -118,8 +116,7 @@ o/$(MODE)/test/libc/calls/life-nomod.com.dbg:				\
 
 o/$(MODE)/test/libc/calls/tiny64.elf.zip.o				\
 o/$(MODE)/test/libc/calls/life-nomod.com.zip.o				\
-o/$(MODE)/test/libc/calls/life-classic.com.zip.o			\
-o/$(MODE)/test/libc/calls/zipread.com.zip.o: private			\
+o/$(MODE)/test/libc/calls/life-classic.com.zip.o: private	\
 		ZIPOBJ_FLAGS +=						\
 			-B
 
