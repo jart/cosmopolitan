@@ -31,6 +31,26 @@
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 
+/**
+ * @fileoverview makes windows stdin handle capable of being poll'd
+ *
+ * 1. On Windows, there's no way to check how many bytes of input are
+ *    available from the cmd.exe console. The only thing you can do is a
+ *    blocking read that can't be interrupted.
+ *
+ * 2. On Windows, it's up to the parent process whether or not the
+ *    handles it passes us are capable of non-blocking overlapped i/o
+ *    reads (which we need for busy polling to check for interrupts).
+ *
+ * So we solve this by creating a thread which just does naive reads on
+ * standard input, and then relays the data to the process via a named
+ * pipe, which we explicitly creaete with overlapped i/o enabled.
+ *
+ * This code runs very early during process initialization, at the
+ * beginning of WinMain(). This module is only activated if the app
+ * links any one of: poll(), select(), or ioctl(FIONREAD).
+ */
+
 __msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
 __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW;
