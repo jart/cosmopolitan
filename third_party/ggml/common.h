@@ -21,7 +21,7 @@
 struct gpt_params {
     int32_t seed          = -1;   // RNG seed
     int32_t verbose       = 0;    // Logging verbosity
-    int32_t n_threads     = std::max(1, _getcpucount() >> 1);
+    int32_t n_threads     = std::max(20., (unsigned)__get_cpu_count() * .75);
     int32_t n_predict     = -1;   // new tokens to predict
     int32_t n_parts       = -1;   // amount of model parts (-1 = determine from model dimensions)
     int32_t n_ctx         = 512;  // context size

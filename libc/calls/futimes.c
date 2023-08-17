@@ -30,8 +30,8 @@
  *
  * @param ts is atime/mtime, or null for current time
  * @return 0 on success, or -1 w/ errno
- * @raise ENOTSUP if `fd` is on zip filesystem
  * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise EROFS if `fd` is on zip or read-only filesystem
  * @raise EPERM if pledge() is in play without `fattr` promise
  * @raise EINVAL if `tv` specifies a microsecond value that's out of range
  * @raise ENOSYS on RHEL5 or bare metal

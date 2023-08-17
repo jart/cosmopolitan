@@ -79,7 +79,7 @@ TEST(popen, semicolon) {
 
 TEST(popen, singleQuotes) {
   setenv("there", "a b c", true);
-  ASSERT_NE(NULL, (f = popen("echo -l 'hello $there' yo", "r")));
+  ASSERT_NE(NULL, (f = popen("echo 'hello $there'; echo yo", "r")));
   ASSERT_STREQ("hello $there\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("yo\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
@@ -88,7 +88,7 @@ TEST(popen, singleQuotes) {
 
 TEST(popen, doubleQuotes) {
   setenv("hello", "a b c", true);
-  ASSERT_NE(NULL, (f = popen("echo -l \"$hello there\"", "r")));
+  ASSERT_NE(NULL, (f = popen("echo \"$hello there\"", "r")));
   ASSERT_STREQ("a b c there\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
   CheckForFdLeaks();
@@ -96,7 +96,7 @@ TEST(popen, doubleQuotes) {
 
 TEST(popen, quoteless) {
   setenv("there", "a b c", true);
-  ASSERT_NE(NULL, (f = popen("echo -l hello a$there yo", "r")));
+  ASSERT_NE(NULL, (f = popen("echo hello; echo a$there; echo yo", "r")));
   ASSERT_STREQ("hello\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("aa b c\n", fgets(buf, sizeof(buf), f));  // mixed feelings
   ASSERT_STREQ("yo\n", fgets(buf, sizeof(buf), f));

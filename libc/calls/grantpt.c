@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/sysv/errfuns.h"
 
 #define TIOCPTYGRANT 0x20007454
 
@@ -34,7 +37,9 @@
  */
 int grantpt(int fd) {
   int rc;
-  if (IsXnu()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsXnu()) {
     rc = sys_ioctl(fd, TIOCPTYGRANT);
   } else {
     rc = _isptmaster(fd);

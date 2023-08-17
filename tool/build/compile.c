@@ -314,7 +314,7 @@ void PrintMakeCommand(void) {
   appends(&output, "make MODE=");
   appends(&output, mode);
   appends(&output, " -j");
-  appendd(&output, buf, FormatUint64(buf, _getcpucount()) - buf);
+  appendd(&output, buf, FormatUint64(buf, __get_cpu_count()) - buf);
   appendw(&output, ' ');
   appends(&output, target);
 }

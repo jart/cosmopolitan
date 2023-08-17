@@ -18,7 +18,7 @@
  * @return quotient or result of division
  * @note rounds towards zero
  */
-COMPILER_RT_ABI ti_int __divmodti4(ti_int a, ti_int b, tu_int *opt_out_rem) {
+ti_int __divmodti4(ti_int a, ti_int b, tu_int *opt_out_rem) {
   int k;
   tu_int r;
   ti_int sa, sb, sq, sr, x, y, q;

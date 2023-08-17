@@ -92,7 +92,7 @@ int main(int argc, char ** argv) {
         ftype = (enum llama_ftype)atoi(argv[3]);
     }
 
-    int nthread = argc > 4 ? atoi(argv[4]) : std::min(20, std::max(1, _getcpucount() >> 1));
+    int nthread = argc > 4 ? atoi(argv[4]) : std::min(20, std::max(1, __get_cpu_count() >> 1));
 
     const int64_t t_main_start_us = ggml_time_us();
 

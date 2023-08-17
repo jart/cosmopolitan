@@ -206,8 +206,8 @@ static void Crunch(void) {
   free(sources.p);
   sources.p = 0;
   sources.i = j;
-  if (!radix_sort_int64((const long *)sauces, sources.i) ||
-      !radix_sort_int64((const long *)edges.p, edges.i)) {
+  if (radix_sort_int64((const long *)sauces, sources.i) == -1 ||
+      radix_sort_int64((const long *)edges.p, edges.i) == -1) {
     DieOom();
   }
 }

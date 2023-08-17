@@ -163,9 +163,9 @@ static void GetOpts(int argc, char *argv[]) {
   g_fszquota = 256 * 1000 * 1000;
   if (!sysinfo(&si)) {
     g_memquota = si.totalram;
-    g_proquota = _getcpucount() + si.procs;
+    g_proquota = __get_cpu_count() + si.procs;
   } else {
-    g_proquota = _getcpucount() * 100;
+    g_proquota = __get_cpu_count() * 100;
     g_memquota = 4L * 1024 * 1024 * 1024;
   }
   while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:O:v:")) != -1) {

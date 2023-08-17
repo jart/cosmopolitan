@@ -1916,7 +1916,7 @@ int main(int argc, char *argv[]) {
   // we don't have proper futexes on these platforms
   // we'll be somewhat less aggressive about workers
   if (IsXnu() || IsNetbsd()) {
-    g_workers = MIN(g_workers, _getcpucount());
+    g_workers = MIN(g_workers, (unsigned)__get_cpu_count());
   }
 
   // user interface

@@ -53,6 +53,8 @@ static int64_t GetPhysmem(void) {
 static int sys_sysinfo_bsd(struct sysinfo *info) {
   info->uptime = GetUptime();
   info->totalram = GetPhysmem();
+  info->bufferram = GetPhysmem();
+  info->mem_unit = 1;
   return 0;
 }
 

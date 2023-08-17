@@ -23,8 +23,8 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Changes owner and/or group of path.
@@ -34,7 +34,7 @@
  * @param gid is group id, or -1 to not change
  * @param flags can have AT_SYMLINK_NOFOLLOW, etc.
  * @return 0 on success, or -1 w/ errno
- * @raise ENOTSUP if `dirfd` or `path` use zip file system
+ * @raise EROFS if `dirfd` or `path` use zip file system
  * @see chown(), lchown() for shorthand notation
  * @see /etc/passwd for user ids
  * @see /etc/group for group ids
@@ -47,7 +47,7 @@ int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
     rc = efault();
   } else if (_weaken(__zipos_notat) &&
              (rc = __zipos_notat(dirfd, path)) == -1) {
-    rc = enotsup();
+    rc = erofs();
   } else {
     rc = sys_fchownat(dirfd, path, uid, gid, flags);
   }

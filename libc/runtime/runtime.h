@@ -129,9 +129,14 @@ bool IsCygwin(void);
 const char *GetCpuidOs(void);
 const char *GetCpuidEmulator(void);
 void GetCpuidBrand(char[13], uint32_t);
-long _GetResourceLimit(int);
+long __get_rlimit(int);
+int __set_rlimit(int, int64_t);
 const char *__describe_os(void);
-int __arg_max(void);
+long __get_sysctl(int, int);
+int __get_arg_max(void) pureconst;
+int __get_cpu_count(void) pureconst;
+long __get_avphys_pages(void) pureconst;
+long __get_phys_pages(void) pureconst;
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_

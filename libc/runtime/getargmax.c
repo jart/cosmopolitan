@@ -17,17 +17,50 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/rlimit.h"
+
+#define CTL_KERN    1
+#define KERN_ARGMAX 8
 
 /**
- * Returns `ARG_MAX` for host platform.
+ * Returns expensive but more correct version of `ARG_MAX`.
  */
-int __arg_max(void) {
-  if (IsWindows()) return 32767;
-  if (IsLinux()) return 128 * 1024;
-  if (IsNetbsd()) return 256 * 1024;
-  if (IsFreebsd()) return 512 * 1024;
-  if (IsOpenbsd()) return 512 * 1024;
-  if (IsXnu()) return 1024 * 1024;
-  return ARG_MAX;
+int __get_arg_max(void) {
+  if (IsLinux()) {
+    // You might think that just returning a constant 128KiB (ARG_MAX)
+    // would make sense, as this guy did:
+    //
+    //   https://lkml.org/lkml/2017/11/15/813...
+    //
+    //   I suspect a 128kB sysconf(_SC_ARG_MAX) is the sanest bet, simply
+    //   because of that "conservative is better than aggressive".
+    //
+    //   Especially since _technically_ we're still limiting things to that
+    //   128kB due to the single-string limit.
+    //
+    //                 Linus
+    //
+    // In practice that caused us trouble with toybox tests for xargs
+    // edge cases. The tests assume that they can at least reach the
+    // kernel's "minimum maximum" of 128KiB, but if we report 128KiB for
+    // _SC_ARG_MAX and xargs starts subtracting the environment space
+    // and so on from that, then xargs will think it's run out of space
+    // when given 128KiB of data, which should always work. See this
+    // thread for more:
+    //
+    // http://lists.landley.net/pipermail/toybox-landley.net/2019-November/011229.html
+    //
+    // So let's resign ourselves to tracking what the kernel actually
+    // does. Right now (2019, Linux 5.3) that amounts to:
+    uint64_t stacksz;
+    stacksz = __get_rlimit(RLIMIT_STACK);
+    return MAX(MIN(stacksz / 4, 3 * (8 * 1024 * 1024) / 4), _ARG_MAX);
+  } else if (IsBsd()) {
+    return __get_sysctl(CTL_KERN, KERN_ARGMAX);
+  } else {
+    return _ARG_MAX;
+  }
 }

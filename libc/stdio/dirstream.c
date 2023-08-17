@@ -413,24 +413,6 @@ static struct dirent *readdir_zipos(DIR *dir) {
   return ent;
 }
 
-static void *golden(void *a, const void *b, size_t n) {
-  size_t i;
-  char *volatile d = a;
-  const char *volatile s = b;
-  if (d > s) {
-    for (i = n; i--;) {
-      d[i] = s[i];
-      asm volatile("" ::: "memory");
-    }
-  } else {
-    for (i = 0; i < n; ++i) {
-      d[i] = s[i];
-      asm volatile("" ::: "memory");
-    }
-  }
-  return d;
-}
-
 static struct dirent *readdir_unix(DIR *dir) {
   if (dir->buf_pos >= dir->buf_end) {
     long basep = dir->tell;

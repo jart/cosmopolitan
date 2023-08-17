@@ -17,11 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/critbit0.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 struct Bog {
@@ -142,4 +145,27 @@ TEST(critbit0, manual_clear) {
   ASSERT_TRUE(critbit0_insert(&tree, "hi"));
   ASSERT_TRUE(critbit0_delete(&tree, "hi"));
   ASSERT_EQ(NULL, tree.root);
+}
+
+#define N 500
+
+char words[N][16];
+
+void GenerateWords(void) {
+  for (int i = 0; i < N; ++i) {
+    FormatInt32(words[i], rand());
+  }
+}
+
+void BuildTree(void) {
+  struct critbit0 tree = {0};
+  for (int i = 0; i < N; ++i) {
+    critbit0_insert(&tree, words[i]);
+  }
+  critbit0_clear(&tree);
+}
+
+BENCH(critbit0, bench) {
+  GenerateWords();
+  EZBENCH2("critbit0", donothing, BuildTree());
 }

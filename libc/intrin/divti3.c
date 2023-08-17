@@ -17,6 +17,6 @@
  * @return quotient or result of division
  * @note rounds towards zero
  */
-COMPILER_RT_ABI ti_int __divti3(ti_int a, ti_int b) {
+ti_int __divti3(ti_int a, ti_int b) {
   return __divmodti4(a, b, NULL);
 }

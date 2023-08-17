@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sysinfo.h"
+#include "libc/calls/struct/sysinfo.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
@@ -40,7 +41,7 @@ struct loadavg {
  * @raise ENOSYS on metal
  */
 int getloadavg(double *a, int n) {
-  /* cat /proc/loadavg  */
+  // cat /proc/loadavg
   int i, rc;
   if (n > 3) n = 3;
   if (!n) {
@@ -51,7 +52,7 @@ int getloadavg(double *a, int n) {
     return sys_getloadavg_nt(a, n);
   } else if (IsLinux()) {
     struct sysinfo si;
-    if ((rc = sysinfo(&si)) != -1) {
+    if ((rc = sys_sysinfo(&si)) != -1) {
       for (i = 0; i < n; i++) {
         a[i] = 1. / 65536 * si.loads[i];
       }

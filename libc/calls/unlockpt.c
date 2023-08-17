@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/termios.h"
@@ -37,7 +39,9 @@
  */
 int unlockpt(int fd) {
   int rc, unlock = 0;
-  if (IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = enotty();
+  } else if (IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = _isptmaster(fd);
   } else if (IsXnu()) {
     rc = sys_ioctl(fd, TIOCPTYUNLK);

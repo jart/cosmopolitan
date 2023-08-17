@@ -218,64 +218,69 @@ static const char *GetOptArg(int c, int *i, int j) {
 static int Echo(void) {
   int i = 1;
   bool once = false;
-  const char *l = " ";
-  if (i < n && !strcmp(args[i], "-l")) {
-    ++i, l = "\n";
+  bool print_newline = true;
+  if (i < n && args[i][0] == '-' && args[i][1] == 'n' && !args[i][2]) {
+    ++i, print_newline = false;
   }
   for (; i < n; ++i) {
     if (once) {
-      Write(1, l);
+      Write(1, " ");
     } else {
       once = true;
     }
     Write(1, args[i]);
   }
-  Write(1, "\n");
+  if (print_newline) {
+    Write(1, "\n");
+  }
+  return 0;
+}
+
+static int CatDump(const char *path, int fd, bool dontclose) {
+  ssize_t rc;
+  char buf[512];
+  for (;;) {
+    rc = read(fd, buf, sizeof(buf));
+    if (rc == -1) {
+      perror(path);
+      if (!dontclose) {
+        close(fd);
+      }
+      return 1;
+    }
+    if (!rc) break;
+    rc = write(1, buf, rc);
+    if (rc == -1) {
+      perror("write");
+      if (!dontclose) {
+        close(fd);
+      }
+      return 1;
+    }
+  }
+  if (!dontclose && close(fd)) {
+    perror(path);
+    return 1;
+  }
   return 0;
 }
 
 static int Cat(void) {
-  int i, fd;
-  ssize_t rc;
-  char buf[512];
+  int i, fd, rc;
   if (n < 2) {
-    for (;;) {
-      rc = read(0, buf, sizeof(buf));
-      if (rc == -1) {
-        perror("read");
-        return 1;
-      }
-      if (!rc) break;
-      rc = write(1, buf, rc);
-      if (rc == -1) {
-        perror("write");
-        return 1;
-      }
-    }
+    return CatDump("<stdin>", 0, true);
   } else {
     for (i = 1; i < n; ++i) {
-      if ((fd = open(args[i], O_RDONLY)) == -1) {
+      bool dontclose = false;
+      if (args[i][0] == '-' && !args[i][1]) {
+        dontclose = true;
+        fd = 0;
+      } else if ((fd = open(args[i], O_RDONLY)) == -1) {
         perror(args[i]);
         return 1;
       }
-      for (;;) {
-        rc = read(fd, buf, sizeof(buf));
-        if (rc == -1) {
-          perror(args[i]);
-          close(fd);
-          return 1;
-        }
-        if (!rc) break;
-        rc = write(1, buf, rc);
-        if (rc == -1) {
-          perror("write");
-          close(fd);
-          return 1;
-        }
-      }
-      if (close(fd)) {
-        perror(args[i]);
-        return 1;
+      if ((rc = CatDump(args[i], fd, dontclose))) {
+        return rc;
       }
     }
   }

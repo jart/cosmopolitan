@@ -24,6 +24,7 @@
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
@@ -43,6 +44,22 @@ void SetUp(void) {
             "running as a subprocess of something like runitd.com?\n");
     exit(0);
   }
+}
+
+int pipefd[2];
+int stdoutBack;
+
+void CaptureStdout(void) {
+  ASSERT_NE(-1, (stdoutBack = dup(1)));
+  ASSERT_SYS(0, 0, pipe(pipefd));
+  ASSERT_NE(-1, dup2(pipefd[1], 1));
+}
+
+void RestoreStdout(void) {
+  ASSERT_SYS(0, 1, dup2(stdoutBack, 1));
+  ASSERT_SYS(0, 0, close(stdoutBack));
+  ASSERT_SYS(0, 0, close(pipefd[1]));
+  ASSERT_SYS(0, 0, close(pipefd[0]));
 }
 
 TEST(system, haveShell) {
@@ -71,20 +88,14 @@ TEST(system, testStdoutRedirect_withSpacesInFilename) {
 }
 
 TEST(system, testStderrRedirect_toStdout) {
-  if (IsAsan()) return;  // TODO(jart): fix me
-  int pipefd[2];
-  int stdoutBack = dup(1);
-  ASSERT_NE(-1, stdoutBack);
-  ASSERT_EQ(0, pipe(pipefd));
-  ASSERT_NE(-1, dup2(pipefd[1], 1));
+  CaptureStdout();
   int stderrBack = dup(2);
   ASSERT_NE(-1, stderrBack);
   char buf[5] = {0};
-
   ASSERT_NE(-1, dup2(1, 2));
   bool success = false;
   if (WEXITSTATUS(system("echo aaa 2>&1")) == 0) {
-    success = read(pipefd[0], buf, sizeof(buf) - 1) == (sizeof(buf) - 1);
+    success = read(pipefd[0], buf, 4) == (4);
   }
   ASSERT_NE(-1, dup2(stderrBack, 2));
   ASSERT_EQ(true, success);
@@ -97,15 +108,12 @@ TEST(system, testStderrRedirect_toStdout) {
   ASSERT_NE(-1, dup2(1, 2));
   success = false;
   if (WEXITSTATUS(system("./echo.com aaa 2>&1")) == 0) {
-    success = read(pipefd[0], buf, sizeof(buf) - 1) == (sizeof(buf) - 1);
+    success = read(pipefd[0], buf, 4) == (4);
   }
   ASSERT_NE(-1, dup2(stderrBack, 2));
   ASSERT_EQ(true, success);
   ASSERT_STREQ("aaa\n", buf);
-
-  ASSERT_NE(-1, dup2(stdoutBack, 1));
-  ASSERT_EQ(0, close(pipefd[1]));
-  ASSERT_EQ(0, close(pipefd[0]));
+  RestoreStdout();
 }
 
 TEST(system, and) {
@@ -168,49 +176,43 @@ TEST(system, exitStatusPreservedAfterSemiColon) {
   ASSERT_EQ(1, WEXITSTATUS(system("false; ")));
   ASSERT_EQ(1, WEXITSTATUS(system("./false.com;")));
   ASSERT_EQ(1, WEXITSTATUS(system("./false.com;")));
-  int pipefd[2];
-  int stdoutBack = dup(1);
-  ASSERT_NE(-1, stdoutBack);
-  ASSERT_EQ(0, pipe(pipefd));
-  ASSERT_NE(-1, dup2(pipefd[1], 1));
+  CaptureStdout();
   ASSERT_EQ(0, WEXITSTATUS(system("false; echo $?")));
-  char buf[3] = {0};
-  ASSERT_EQ(2, read(pipefd[0], buf, 2));
+  char buf[9] = {0};
+  ASSERT_EQ(2, read(pipefd[0], buf, 8));
   ASSERT_STREQ("1\n", buf);
   ASSERT_EQ(0, WEXITSTATUS(system("./false.com; echo $?")));
-  buf[0] = 0;
-  buf[1] = 0;
-  ASSERT_EQ(2, read(pipefd[0], buf, 2));
+  ASSERT_EQ(2, read(pipefd[0], buf, 8));
   ASSERT_STREQ("1\n", buf);
-  ASSERT_NE(-1, dup2(stdoutBack, 1));
-  ASSERT_EQ(0, close(pipefd[1]));
-  ASSERT_EQ(0, close(pipefd[0]));
+  ASSERT_EQ(0, WEXITSTATUS(system("echo -n hi")));
+  EXPECT_EQ(2, read(pipefd[0], buf, 8));
+  ASSERT_STREQ("hi", buf);
+  RestoreStdout();
+}
+
+TEST(system, globio) {
+  char buf[9] = {0};
+  CaptureStdout();
+  ASSERT_SYS(0, 0, touch("a", 0644));
+  ASSERT_SYS(0, 0, touch("b", 0644));
+  ASSERT_EQ(0, WEXITSTATUS(system("echo *")));
+  EXPECT_EQ(4, read(pipefd[0], buf, 8));
+  ASSERT_STREQ("a b\n", buf);
+  RestoreStdout();
 }
 
 TEST(system, allowsLoneCloseCurlyBrace) {
-  int pipefd[2];
-  int stdoutBack = dup(1);
-  ASSERT_NE(-1, stdoutBack);
-  ASSERT_EQ(0, pipe(pipefd));
-  ASSERT_NE(-1, dup2(pipefd[1], 1));
+  CaptureStdout();
   char buf[6] = {0};
-
   ASSERT_EQ(0, WEXITSTATUS(system("echo \"aaa\"}")));
-  ASSERT_EQ(sizeof(buf) - 1, read(pipefd[0], buf, sizeof(buf) - 1));
+  ASSERT_EQ(5, read(pipefd[0], buf, 5));
   ASSERT_STREQ("aaa}\n", buf);
-  buf[0] = 0;
-  buf[1] = 0;
-  buf[2] = 0;
-  buf[3] = 0;
-  buf[4] = 0;
+  bzero(buf, 6);
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   ASSERT_EQ(0, WEXITSTATUS(system("./echo.com \"aaa\"}")));
-  ASSERT_EQ(sizeof(buf) - 1, read(pipefd[0], buf, sizeof(buf) - 1));
+  ASSERT_EQ(5, read(pipefd[0], buf, 5));
   ASSERT_STREQ("aaa}\n", buf);
-
-  ASSERT_NE(-1, dup2(stdoutBack, 1));
-  ASSERT_EQ(0, close(pipefd[1]));
-  ASSERT_EQ(0, close(pipefd[0]));
+  RestoreStdout();
 }
 
 TEST(system, glob) {

@@ -60,7 +60,7 @@ static textstartup void sys_getloadavg_nt_init(void) {
   double a[3];
   if (IsWindows()) {
     load = 1;
-    cpus = _getcpucount() / 2;
+    cpus = __get_cpu_count() / 2;
     cpus = MAX(1, cpus);
     GetSystemTimes(&idle1, &kern1, &user1);
   }

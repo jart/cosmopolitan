@@ -51,7 +51,7 @@ TEST(sched_getaffinity, firstOnly) {
 }
 
 TEST(sched_getaffinity, secondOnly) {
-  if (_getcpucount() < 2) return;
+  if (__get_cpu_count() < 2) return;
   cpu_set_t x, y;
   CPU_ZERO(&x);
   CPU_SET(1, &x);

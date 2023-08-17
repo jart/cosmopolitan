@@ -298,7 +298,7 @@ int main(int argc, char *argv[]) {
             PORT);
   }
 
-  threads = argc > 1 ? atoi(argv[1]) : _getcpucount();
+  threads = argc > 1 ? atoi(argv[1]) : __get_cpu_count();
   if (!(1 <= threads && threads <= 100000)) {
     kprintf("error: invalid number of threads: %d\n", threads);
     exit(1);

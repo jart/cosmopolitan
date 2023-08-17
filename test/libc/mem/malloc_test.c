@@ -214,7 +214,7 @@ void *Worker(void *arg) {
 }
 
 BENCH(malloc, torture) {
-  int i, n = _getcpucount() * 2;
+  int i, n = __get_cpu_count() * 2;
   pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
   if (!n) return;
   printf("\nmalloc torture test w/ %d threads and %d iterations\n", n,

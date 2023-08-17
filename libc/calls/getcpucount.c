@@ -19,13 +19,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
-#include "libc/calls/weirdtypes.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
-#include "libc/nt/dll.h"
-#include "libc/nt/struct/systeminfo.h"
-#include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 
 #define CTL_HW                6
@@ -34,16 +30,16 @@
 #define HW_NCPUONLINE_NETBSD  16
 #define ALL_PROCESSOR_GROUPS  0xffff
 
-static unsigned _getcpucount_linux(void) {
-  cpu_set_t s = {0};
-  if (sys_sched_getaffinity(0, sizeof(s), &s) != -1) {
-    return CPU_COUNT(&s);
+static int __get_cpu_count_linux(void) {
+  cpu_set_t cs = {0};
+  if (sys_sched_getaffinity(0, sizeof(cs), &cs) != -1) {
+    return CPU_COUNT(&cs);
   } else {
-    return 0;
+    return -1;
   }
 }
 
-static unsigned _getcpucount_bsd(void) {
+static int __get_cpu_count_bsd(void) {
   size_t n;
   int c, cmd[2];
   n = sizeof(c);
@@ -58,27 +54,17 @@ static unsigned _getcpucount_bsd(void) {
   if (!sys_sysctl(cmd, 2, &c, &n, 0, 0)) {
     return c;
   } else {
-    return 0;
+    return -1;
   }
 }
 
-static unsigned _getcpucount_impl(void) {
-  if (!IsWindows()) {
-    if (!IsBsd()) {
-      return _getcpucount_linux();
-    } else {
-      return _getcpucount_bsd();
-    }
+static textwindows int __get_cpu_count_nt(void) {
+  uint32_t res;
+  if ((res = GetMaximumProcessorCount(ALL_PROCESSOR_GROUPS))) {
+    return res;
   } else {
-    return GetMaximumProcessorCount(ALL_PROCESSOR_GROUPS);
+    return __winerr();
   }
-}
-
-static int g_cpucount;
-
-// precompute because process affinity on linux may change later
-__attribute__((__constructor__)) static void _getcpucount_init(void) {
-  g_cpucount = _getcpucount_impl();
 }
 
 /**
@@ -88,13 +74,20 @@ __attribute__((__constructor__)) static void _getcpucount_init(void) {
  *
  *     sysconf(_SC_NPROCESSORS_ONLN);
  *
- * Except this function isn't a bloated diamond dependency.
- *
  * On Intel systems with HyperThreading this will return the number of
- * cores multiplied by two.
+ * cores multiplied by two. On Linux, if you change cpu affinity it'll
+ * change the cpu count, which also gets inherited by child processes.
  *
- * @return cpu count or 0 if it couldn't be determined
+ * @return cpu count, or -1 w/ errno
  */
-int _getcpucount(void) {
-  return g_cpucount;
+int __get_cpu_count(void) {
+  if (!IsWindows()) {
+    if (!IsBsd()) {
+      return __get_cpu_count_linux();
+    } else {
+      return __get_cpu_count_bsd();
+    }
+  } else {
+    return __get_cpu_count_nt();
+  }
 }

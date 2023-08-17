@@ -131,7 +131,7 @@ int LuaGetCpuCore(lua_State *L) {
 }
 
 int LuaGetCpuCount(lua_State *L) {
-  lua_pushinteger(L, _getcpucount());
+  lua_pushinteger(L, __get_cpu_count());
   return 1;
 }
 

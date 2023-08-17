@@ -3532,7 +3532,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "RUSAGE_CHILDREN", RUSAGE_CHILDREN);
   LuaSetIntField(L, "RUSAGE_BOTH", RUSAGE_BOTH);
 
-  LuaSetIntField(L, "ARG_MAX", __arg_max());
+  LuaSetIntField(L, "ARG_MAX", __get_arg_max());
   LuaSetIntField(L, "BUFSIZ", BUFSIZ);
   LuaSetIntField(L, "CLK_TCK", CLK_TCK);
   LuaSetIntField(L, "NAME_MAX", _NAME_MAX);

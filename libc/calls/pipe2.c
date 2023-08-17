@@ -27,6 +27,12 @@
 /**
  * Creates file-less file descriptors for interprocess communication.
  *
+ * This function offers atomic operation on all supported platforms
+ * except for XNU and RHEL5 where it's polyfilled.
+ *
+ * @params flags may contain `O_CLOEXEC`, `O_NONBLOCK`, and `O_DIRECT`
+ * @raise EINVAL if flags has invalid or unsupported bits
+ * @raise EFAULT if `pipefd` doesn't point to valid memory
  * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
  * @raise ENFILE if system-wide file limit has been reached
  * @param pipefd is used to return (reader, writer) file descriptors

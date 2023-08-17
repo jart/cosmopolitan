@@ -28,9 +28,9 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 int __utimens(int fd, const char *path, const struct timespec ts[2],
               int flags) {
@@ -47,7 +47,7 @@ int __utimens(int fd, const char *path, const struct timespec ts[2],
   } else if (__isfdkind(fd, kFdZip) ||
              (path && (_weaken(__zipos_parseuri) &&
                        _weaken(__zipos_parseuri)(path, &zipname) != -1))) {
-    rc = enotsup();
+    rc = erofs();
   } else if (IsLinux() && !__is_linux_2_6_23() && fd == AT_FDCWD && !flags) {
     rc = sys_utimes(path, (void *)ts);  // rhel5 truncates to seconds
   } else if (!IsWindows()) {

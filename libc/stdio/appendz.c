@@ -37,12 +37,10 @@ struct appendz appendz(char *p) {
     unassert(z.n >= W * 2 && !(z.n & (W - 1)));
     z.i = *(size_t *)(p + z.n - W);
     if (!IsTiny() && W == 8) {
-      /*
-       * This check should fail if an append*() function was passed a
-       * pointer that was allocated manually by malloc(). Append ptrs
-       * can be free()'d safely, but they need to be allocated by the
-       * append library, because we write a special value to the end.
-       */
+      // This check should fail if an append*() function was passed a
+      // pointer that was allocated manually by malloc(). Append ptrs
+      // can be free()'d safely, but they need to be allocated by the
+      // append library, because we write a special value to the end.
       unassert((z.i >> 48) == APPEND_COOKIE);
       z.i &= 0x0000ffffffffffff;
     }

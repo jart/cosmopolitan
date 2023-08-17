@@ -38,7 +38,7 @@
 errno_t pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){
       .__stacksize = GetStackSize(),
-      .__guardsize = getauxval(AT_PAGESZ),
+      .__guardsize = GetGuardSize(),
   };
   return 0;
 }

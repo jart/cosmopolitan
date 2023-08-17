@@ -25,9 +25,9 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Sets access/modified time on file, the modern way.
@@ -48,13 +48,12 @@
  * @raise EINVAL if `flags` had an unrecognized value
  * @raise EPERM if pledge() is in play without `fattr` promise
  * @raise EACCES if unveil() is in play and `path` isn't unveiled
- * @raise ENOTSUP if `path` is a zip filesystem path or `dirfd` is zip
  * @raise EINVAL if `ts` specifies a nanosecond value that's out of range
  * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
  * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
  * @raise EBADF if `dirfd` isn't a valid fd or `AT_FDCWD`
  * @raise EFAULT if `path` or `ts` memory was invalid
- * @raise EROFS if `path` is on read-only filesystem
+ * @raise EROFS if `path` is on read-only filesystem (e.g. zipos)
  * @raise ENOSYS on bare metal or on rhel5 when `dirfd` or `flags` is used
  * @asyncsignalsafe
  * @threadsafe

@@ -26,9 +26,9 @@ static void critbit0_clear_traverse(void *top) {
     struct CritbitNode *q = (void *)(p - 1);
     critbit0_clear_traverse(q->child[0]);
     critbit0_clear_traverse(q->child[1]);
-    free(q), q = NULL;
+    free(q);
   } else {
-    free(p), p = NULL;
+    free(p);
   }
 }
 

@@ -20,7 +20,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
-static inline int PutsImpl(const char *s, FILE *f) {
+static inline int puts_unlocked(const char *s, FILE *f) {
   size_t n, r;
   if ((n = strlen(s))) {
     r = fwrite_unlocked(s, 1, n, f);
@@ -45,7 +45,7 @@ int puts(const char *s) {
   int bytes;
   f = stdout;
   flockfile(f);
-  bytes = PutsImpl(s, f);
+  bytes = puts_unlocked(s, f);
   funlockfile(f);
   return bytes;
 }

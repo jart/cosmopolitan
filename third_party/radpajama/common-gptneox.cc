@@ -39,7 +39,7 @@
 // clang-format off
 
 bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
-    params.n_threads = std::min(20, std::max(1, (int)(_getcpucount() * 0.75)));
+    params.n_threads = std::min(20., (unsigned)__get_cpu_count() * 0.75);
 
     bool invalid_param = false;
     std::string arg;

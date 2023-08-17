@@ -24,8 +24,7 @@
  * Creates session and sets the process group id.
  */
 int getsid(int pid) {
-  int rc;
-  rc = sys_getsid(pid);
+  int rc = sys_getsid(pid);
   STRACE("%s(%d) → %d% m", "getsid", pid, rc);
   return rc;
 }

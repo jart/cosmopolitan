@@ -53,10 +53,10 @@
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EIO if a low-level i/o error happened
  * @raise EFBIG or EINVAL if `length` is too huge
- * @raise ENOTSUP if `fd` is a zip file descriptor
  * @raise EBADF if `fd` isn't an open file descriptor
  * @raise EINVAL if `fd` is a non-file, e.g. pipe, socket
  * @raise EINVAL if `fd` wasn't opened in a writeable mode
+ * @raise EROFS if `fd` is on a read-only filesystem (e.g. zipos)
  * @raise ENOSYS on bare metal
  * @cancellationpoint
  * @asyncsignalsafe
@@ -69,7 +69,7 @@ int ftruncate(int fd, int64_t length) {
   if (fd < 0) {
     rc = ebadf();
   } else if (__isfdkind(fd, kFdZip)) {
-    rc = enotsup();
+    rc = erofs();
   } else if (IsMetal()) {
     rc = enosys();
   } else if (!IsWindows()) {

@@ -7,26 +7,19 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/stdio.h"
 
-// this implementation uses cosmopolitan specific apis so that the
-// resulting program will be 28kb in size. the proper way to do it
-// though is use sysconf(_SC_NPROCESSORS_ONLN), which is humongous
+#define SYSCONF(NAME) printf("%s %,ld\n", #NAME, sysconf(NAME))
 
-int main() {
-  int count;
-  if ((count = __get_cpu_count()) != -1) {
-    char ibuf[12];
-    FormatInt32(ibuf, count);
-    tinyprint(1, ibuf, "\n", NULL);
-    return 0;
-  } else {
-    perror("__get_cpu_count");
-    return 1;
-  }
+int main(int argc, char *argv[]) {
+  SYSCONF(_SC_CLK_TCK);
+  SYSCONF(_SC_PAGESIZE);
+  SYSCONF(_SC_ARG_MAX);
+  SYSCONF(_SC_CHILD_MAX);
+  SYSCONF(_SC_OPEN_MAX);
+  SYSCONF(_SC_NPROCESSORS_CONF);
+  SYSCONF(_SC_NPROCESSORS_ONLN);
+  SYSCONF(_SC_PHYS_PAGES);
+  SYSCONF(_SC_AVPHYS_PAGES);
 }

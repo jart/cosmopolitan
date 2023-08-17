@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/time/time.h"
+#include "libc/calls/struct/sysinfo.h"
+#include "libc/runtime/runtime.h"
 
-/**
- * Returns nanoseconds since UNIX epoch.
- */
-int128_t _nanos(int timer) {
-  int128_t nanos;
-  struct timespec ts;
-  clock_gettime(timer, &ts);
-  nanos = ts.tv_sec;
-  nanos *= 1000000000;
-  nanos += ts.tv_nsec;
-  return nanos;
+long __get_phys_pages(void) {
+  struct sysinfo si;
+  if (sysinfo(&si) == -1) return -1;
+  return ((int64_t)si.totalram * si.mem_unit) / FRAMESIZE;
 }

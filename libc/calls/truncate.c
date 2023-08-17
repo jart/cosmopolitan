@@ -25,8 +25,8 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Changes size of file.
@@ -50,15 +50,14 @@
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EFBIG or EINVAL if `length` is too huge
  * @raise EFAULT if `path` points to invalid memory
- * @raise ENOTSUP if `path` is a zip filesystem path
  * @raise EACCES if we don't have permission to search a component of `path`
  * @raise ENOTDIR if a directory component in `path` exists as non-directory
  * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
  * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
  * @raise ELOOP if a loop was detected resolving components of `path`
+ * @raise EROFS if `path` is on a read-only filesystem (e.g. zip)
  * @raise ENOENT if `path` doesn't exist or is an empty string
  * @raise ETXTBSY if `path` is an executable being executed
- * @raise EROFS if `path` is on a read-only filesystem
  * @raise ENOSYS on bare metal
  * @cancellationpoint
  * @see ftruncate()
@@ -75,7 +74,7 @@ int truncate(const char *path, int64_t length) {
     rc = efault();
   } else if (_weaken(__zipos_parseuri) &&
              _weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    rc = enotsup();
+    rc = erofs();
   } else if (!IsWindows()) {
     rc = sys_truncate(path, length, length);
     if (IsNetbsd() && rc == -1 && errno == ENOSPC) {

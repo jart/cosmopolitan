@@ -24,6 +24,7 @@
 #define _POSIX_SEMAPHORES                 _POSIX_VERSION
 #define _POSIX_SHARED_MEMORY_OBJECTS      _POSIX_VERSION
 #define _POSIX_MEMLOCK_RANGE              _POSIX_VERSION
+#define _POSIX_SPAWN                      _POSIX_VERSION
 
 #define EOF      -1         /* end of file */
 #define WEOF     -1u        /* end of file (multibyte) */
