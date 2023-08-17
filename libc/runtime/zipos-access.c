@@ -40,7 +40,7 @@ int __zipos_access(struct ZiposUri *name, int amode) {
 
   ssize_t cf;
   if ((cf = __zipos_find(z, name)) == -1) {
-    return enoent();
+    return -1;
   }
 
   int mode = GetZipCfileMode(z->map + cf);

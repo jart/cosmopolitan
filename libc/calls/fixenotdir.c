@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -44,10 +45,14 @@ static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
 
 textwindows dontinline int64_t __fix_enotdir3(int64_t rc, char16_t *path1,
                                               char16_t *path2) {
-  if (rc == -1 && errno == kNtErrorPathNotFound) {
-    if ((!path1 || !SubpathExistsThatsNotDirectory(path1)) &&
-        (!path2 || !SubpathExistsThatsNotDirectory(path2))) {
-      errno = kNtErrorFileNotFound;
+  if (rc == -1 && (errno == kNtErrorPathNotFound ||  // Windows returns ENOTDIR
+                   errno == kNtErrorInvalidName)) {  // e.g. has trailing slash
+    bool isdir = false;
+    if ((!path1 || !(isdir |= SubpathExistsThatsNotDirectory(path1))) &&
+        (!path2 || !(isdir |= SubpathExistsThatsNotDirectory(path2)))) {
+      errno = kNtErrorFileNotFound;  // ENOENT
+    } else if (isdir) {
+      errno = kNtErrorPathNotFound;  // ENOTDIR
     }
   }
   return rc;

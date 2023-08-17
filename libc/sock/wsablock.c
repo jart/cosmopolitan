@@ -20,7 +20,6 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/enum/wsa.h"
 #include "libc/nt/errors.h"

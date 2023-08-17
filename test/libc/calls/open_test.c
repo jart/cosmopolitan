@@ -47,6 +47,9 @@ TEST(open, enoent) {
 
 TEST(open, enotdir) {
   ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, open("o/", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, -1, open("o/.", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, -1, open("o/./", O_RDONLY));
   ASSERT_SYS(ENOTDIR, -1, open("o/doesnotexist", O_RDONLY));
 }
 

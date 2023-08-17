@@ -21,8 +21,7 @@
 // normalizes zip filesystem path w/ overlapping strlcpy() style api
 // zip paths look like relative paths, but they're actually absolute
 // with respect to the archive; so similar to how /../etc would mean
-// /etc, we'd translate that here to "etc". when storing assets in a
-// zip archive, callers should append trailing slash for directories
+// /etc, we'd translate that here to "etc", and "etc/" slash is kept
 // returns strlen of 𝑑; returns 𝑛 when insufficient buffer available
 // nul terminator is guaranteed if n>0. it's fine if 𝑑 and 𝑠 overlap
 // test vectors for this algorithm in: test/libc/stdio/zipdir_test.c
@@ -49,8 +48,6 @@ size_t __zipos_normpath(char *d, const char *s, size_t n) {
   }
   // if we didn't overflow
   if (p < e) {
-    // trim trailing slashes and add nul terminator
-    while (p > d && p[-1] == '/') --p;
     *p = '\0';
   } else {
     // force nul-terminator to exist if possible

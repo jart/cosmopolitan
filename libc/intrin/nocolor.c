@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"

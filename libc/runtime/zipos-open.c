@@ -209,7 +209,7 @@ static int __zipos_open_impl(struct ZiposUri *name, int flags) {
   }
   ssize_t cf;
   if ((cf = __zipos_find(zipos, name)) == -1) {
-    return enoent();
+    return -1;
   }
   if (flags & O_EXCL) {
     return eexist();

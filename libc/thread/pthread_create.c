@@ -28,7 +28,6 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

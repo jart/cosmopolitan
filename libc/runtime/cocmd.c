@@ -27,7 +27,6 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"

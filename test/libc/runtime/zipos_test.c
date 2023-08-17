@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
@@ -81,4 +82,13 @@ TEST(zipos, readPastEof) {
 TEST(zipos_O_DIRECTORY, blocksOpeningOfNormalFiles) {
   ASSERT_SYS(ENOTDIR, -1,
              open("/zip/libc/testlib/hyperion.txt", O_RDONLY | O_DIRECTORY));
+}
+
+TEST(zipos, trailingComponents_willEnodirFile) {
+  struct stat st;
+  ASSERT_SYS(ENOTDIR, -1, open("/zip/libc/testlib/hyperion.txt/", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, -1, open("/zip/libc/testlib/hyperion.txt/.", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, -1, open("/zip/libc/testlib/hyperion.txt/./", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, -1, open("/zip/libc/testlib/hyperion.txt/a/b", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, -1, stat("/zip/libc/testlib/hyperion.txt/", &st));
 }

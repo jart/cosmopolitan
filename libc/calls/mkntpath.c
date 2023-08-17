@@ -194,5 +194,10 @@ textwindows int __mkntpath2(const char *path,
     n -= 4;
   }
 
+  // turn "foo\\." into "foo\\"
+  if (n > 2 && path16[n - 1] == u'.' && path16[n - 2] == u'\\') {
+    path16[--n] = 0;
+  }
+
   return n;
 }
