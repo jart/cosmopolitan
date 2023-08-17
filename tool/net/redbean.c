@@ -1084,15 +1084,29 @@ static bool HasString(struct Strings *l, const char *s, size_t n) {
   return false;
 }
 
+static const char* DEFAULTLUAPATH = "/zip/.lua/?.lua;/zip/.lua/?/init.lua";
+
 static void UpdateLuaPath(const char *s) {
 #ifndef STATIC
   lua_State *L = GL;
+  char *curpath = "";
+  char *respath = 0;
+  char *t;
   int n = lua_gettop(L);
   lua_getglobal(L, "package");
   if (lua_istable(L, -1)) {
     lua_getfield(L, -1, "path");
-    lua_pushstring(L, _gc(xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua",
-                                    luaL_optstring(L, -1, ""), s, s)));
+    curpath = luaL_optstring(L, -1, "");
+    if (t = strstr(curpath, DEFAULTLUAPATH)) {
+      // if the DEFAULT path is found, prepend the path in front of it
+      respath = xasprintf("%.*s%s/.lua/?.lua;%s/.lua/?/init.lua;%s",
+                          t-curpath, curpath, s, s, t);
+    } else {
+      // if the DEFAULT path is not found, append to the end
+      respath = xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua",
+                          curpath, s, s);
+    }
+    lua_pushstring(L, _gc(respath));
     lua_setfield(L, -3, "path");
   }
   lua_settop(L, n);
@@ -4574,6 +4588,12 @@ static int LuaProgramBrand(lua_State *L) {
 }
 
 static int LuaProgramDirectory(lua_State *L) {
+  struct stat st;
+  char *path = luaL_checkstring(L, 1);
+  // check to raise a Lua error, to allow it to be handled
+  if (stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
+    return luaL_argerror(L, 1, "not a directory");
+  }
   return LuaProgramString(L, ProgramDirectory);
 }
 
@@ -5339,22 +5359,11 @@ static void LuaSetConstant(lua_State *L, const char *s, long x) {
   lua_setglobal(L, s);
 }
 
-static char *GetDefaultLuaPath(void) {
-  char *s;
-  size_t i;
-  for (s = 0, i = 0; i < stagedirs.n; ++i) {
-    appendf(&s, "%s/.lua/?.lua;%s/.lua/?/init.lua;", stagedirs.p[i].s,
-            stagedirs.p[i].s);
-  }
-  appends(&s, "/zip/.lua/?.lua;/zip/.lua/?/init.lua");
-  return s;
-}
-
 static void LuaStart(void) {
 #ifndef STATIC
   size_t i;
   lua_State *L = GL = luaL_newstate();
-  g_lua_path_default = GetDefaultLuaPath();
+  g_lua_path_default = DEFAULTLUAPATH;
   luaL_openlibs(L);
   for (i = 0; i < ARRAYLEN(kLuaLibs); ++i) {
     luaL_requiref(L, kLuaLibs[i].name, kLuaLibs[i].func, 1);
@@ -5504,7 +5513,6 @@ static void LuaDestroy(void) {
 #ifndef STATIC
   lua_State *L = GL;
   lua_close(L);
-  free(g_lua_path_default);
 #endif
 }
 
