@@ -499,7 +499,7 @@ SPECIAL PATHS
           this path is a hidden file so that it can't be unintentionally run
           by the network client.
 
-  /.reload.lua
+  /.reload.lua (deprecated; use OnServerReload instead)
           This script is run from the main process when SIGHUP is received.
           This only applies to redbean when running in daemon mode. Any
           changes that are made to the Lua interpreter state will be
@@ -611,6 +611,12 @@ HOOKS
           before redbean starts listening on a port. This hook can be used
           to modify socket configuration to set `SO_REUSEPORT`, for example.
           If it returns `true`, redbean will not listen to that ip/port.
+
+  OnServerReload(reindex:bool)
+          If this function is defined it'll be called from the main process
+          on each server reload triggered by SIGHUP (for deamonized) and
+          SIGUSR1 (for all) redbean instances. reindex indicates if redbean
+          assets have been re-indexed following the signal.
 
   OnServerStart()
           If this function is defined it'll be called from the main process

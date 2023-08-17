@@ -5560,11 +5560,20 @@ static void LuaInit(void) {
 #endif
 }
 
-static void LuaReload(void) {
+static void LuaOnServerReload(bool reindex) {
 #ifndef STATIC
   if (!LuaRunAsset("/.reload.lua", false)) {
     DEBUGF("(srvr) no /.reload.lua defined");
   }
+
+  lua_State *L = GL;
+  lua_getglobal(L, "OnServerReload");
+  lua_pushboolean(L, reindex);
+  if (LuaCallWithTrace(L, 1, 0, NULL) != LUA_OK) {
+    LogLuaError("OnServerReload", lua_tostring(L, -1));
+    lua_pop(L, 1);  // pop error
+  }
+  AssertLuaStackIsAt(L, 0);
 #endif
 }
 
@@ -5754,8 +5763,8 @@ static void HandleFrag(size_t got) {
 
 static void HandleReload(void) {
   LockInc(&shared->c.reloads);
-  Reindex();
-  LuaReload();
+  LuaOnServerReload(Reindex());
+  invalidated = false;
 }
 
 static void HandleHeartbeat(void) {
@@ -6506,7 +6515,6 @@ static void HandleMessages(void) {
       }
       if (invalidated) {
         HandleReload();
-        invalidated = false;
       }
     }
     if (cpm.msgsize == amtread) {
@@ -6537,7 +6545,6 @@ static void HandleMessages(void) {
     CollectGarbage();
     if (invalidated) {
       HandleReload();
-      invalidated = false;
     }
   }
 }
@@ -7135,7 +7142,6 @@ int EventLoop(int ms) {
       lua_repl_lock();
       HandleReload();
       lua_repl_unlock();
-      invalidated = false;
     } else if (meltdown) {
       lua_repl_lock();
       EnterMeltdownMode();
