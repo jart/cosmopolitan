@@ -48,6 +48,7 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
@@ -119,9 +120,9 @@ __msabi static textwindows void DeduplicateStdioHandles(void) {
 }
 
 __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
+  size_t stacksize;
   struct WinArgs *wa;
-  size_t allocsize, stacksize;
-  uintptr_t stackaddr, allocaddr;
+  uintptr_t stackaddr;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if (NtGetPeb()->OSMajorVersion >= 10 &&
       (intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
@@ -138,26 +139,23 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.n = ARRAYLEN(_mmi.s);
   stackaddr = GetStaticStackAddr(0);
   stacksize = GetStaticStackSize();
-  allocaddr = stackaddr;
-  allocsize = stacksize + sizeof(struct WinArgs);
   __imp_MapViewOfFileEx((_mmi.p[0].h = __imp_CreateFileMappingW(
                              -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
-                             allocsize >> 32, allocsize, NULL)),
-                        kNtFileMapWrite | kNtFileMapExecute, 0, 0, allocsize,
-                        (void *)allocaddr);
+                             stacksize >> 32, stacksize, NULL)),
+                        kNtFileMapWrite | kNtFileMapExecute, 0, 0, stacksize,
+                        (void *)stackaddr);
   int prot = (intptr_t)ape_stack_prot;
   if (~prot & PROT_EXEC) {
-    uint32_t oldprot;
-    __imp_VirtualProtect((void *)allocaddr, allocsize, kNtPageReadwrite,
-                         &oldprot);
+    uint32_t old;
+    __imp_VirtualProtect((void *)stackaddr, stacksize, kNtPageReadwrite, &old);
   }
-  _mmi.p[0].x = allocaddr >> 16;
-  _mmi.p[0].y = (allocaddr >> 16) + ((allocsize - 1) >> 16);
+  _mmi.p[0].x = stackaddr >> 16;
+  _mmi.p[0].y = (stackaddr >> 16) + ((stacksize - 1) >> 16);
   _mmi.p[0].prot = prot;
   _mmi.p[0].flags = 0x00000026;  // stack+anonymous
-  _mmi.p[0].size = allocsize;
+  _mmi.p[0].size = stacksize;
   _mmi.i = 1;
-  wa = (struct WinArgs *)(allocaddr + stacksize);
+  wa = (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
   int count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock),
                          wa->argv, ARRAYLEN(wa->argv));
   for (int i = 0; wa->argv[0][i]; ++i) {
@@ -169,7 +167,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   __imp_FreeEnvironmentStringsW(env16);
-  _jmpstack((char *)(stackaddr + stacksize - (intptr_t)ape_stack_align), cosmo,
+  _jmpstack((char *)(stackaddr + (stacksize - sizeof(struct WinArgs))), cosmo,
             count, wa->argv, wa->envp, wa->auxv);
 }
 

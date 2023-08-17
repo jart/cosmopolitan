@@ -40,7 +40,9 @@ dontinline void ShowIt(const char *path) {
          "total file nodes in filesystem");
   printf("f_ffree   = %,zu (%s)\n", sf.f_ffree,
          "free file nodes in filesystem");
-  printf("f_fsid    = %#lx (%s)\n", sf.f_fsid, "filesystem id");
+  printf("f_fsid    = %#lx (%s)\n",
+         sf.f_fsid.__val[0] | (uint64_t)sf.f_fsid.__val[1] << 32,
+         "filesystem id");
   printf("f_owner   = %#lx (%s)\n", sf.f_owner, "user that created mount");
   printf("f_namelen = %,zu (%s)\n", sf.f_namelen,
          "maximum length of filenames");

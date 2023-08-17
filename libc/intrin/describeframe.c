@@ -48,13 +48,10 @@ static const char *GetFrameName(int x) {
   } else if (IsMemtrackFrame(x)) {
     return "memtrack";
   } else if (IsOldStackFrame(x)) {
-    return "oldstack";
-  } else if (IsWindows() &&
-             (((GetStaticStackAddr(0) + GetStackSize()) >> 16) <= x &&
-              x <= ((GetStaticStackAddr(0) + GetStackSize() +
-                     sizeof(struct WinArgs) - 1) >>
-                    16))) {
-    return "mainstack";
+    return "system stack";
+  } else if (((GetStaticStackAddr(0) + GetStackSize()) >> 16) <= x &&
+             x <= ((GetStaticStackAddr(0) + GetStackSize() - 1) >> 16)) {
+    return "static stack";
   } else if ((int)((intptr_t)__executable_start >> 16) <= x &&
              x <= (int)(((intptr_t)_end - 1) >> 16)) {
     return "image";

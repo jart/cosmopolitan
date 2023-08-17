@@ -110,9 +110,9 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
 
   // get page size
   unsigned long pagesz = 4096;
-  for (int i = 0; auxv[i]; auxv += 2) {
-    if (auxv[0] == AT_PAGESZ) {
-      pagesz = auxv[1];
+  for (int i = 0; auxv[i]; i += 2) {
+    if (auxv[i] == AT_PAGESZ) {
+      pagesz = auxv[i + 1];
       break;
     }
   }

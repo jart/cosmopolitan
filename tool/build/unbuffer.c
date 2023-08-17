@@ -81,13 +81,13 @@ int main(int argc, char *argv[]) {
 
   if (!(prog = commandv(argv[optind], pathbuf, sizeof(pathbuf)))) {
     kprintf("%s: command not found\n", argv[optind]);
-    return __COUNTER__ + 1;
+    exit(1);
   }
 
   if (outputpath) {
     if ((outfd = creat(outputpath, 0644)) == -1) {
       perror(outputpath);
-      return __COUNTER__ + 1;
+      exit(1);
     }
   }
 
@@ -97,12 +97,12 @@ int main(int argc, char *argv[]) {
 
   if (tcgetattr(1, &tio)) {
     perror("tcgetattr");
-    return __COUNTER__ + 1;
+    exit(1);
   }
 
   if (openpty(&mfd, &sfd, 0, &tio, &wsz)) {
     perror("openpty");
-    return __COUNTER__ + 1;
+    exit(1);
   }
 
   ignore.sa_flags = 0;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 
   if ((pid = fork()) == -1) {
     perror("fork");
-    return __COUNTER__ + 1;
+    exit(1);
   }
 
   if (!pid) {
@@ -148,13 +148,13 @@ int main(int argc, char *argv[]) {
         rc = 0;
       } else {
         perror("read");
-        return __COUNTER__ + 1;
+        exit(1);
       }
     }
     if (!(got = rc)) {
       if (waitpid(pid, &ws, 0) == -1) {
         perror("waitpid");
-        return __COUNTER__ + 1;
+        exit(1);
       }
       break;
     }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
         wrote = rc;
       } else {
         perror("write");
-        return __COUNTER__ + 1;
+        exit(1);
       }
     }
     if (outputpath) {
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
           wrote = rc;
         } else {
           perror("write");
-          return __COUNTER__ + 1;
+          exit(1);
         }
       }
     }
@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
   if (WIFEXITED(ws)) {
     return WEXITSTATUS(ws);
   } else {
-    return 128 + WTERMSIG(ws);
+    raise(WTERMSIG(ws));
+    exit(128 + WTERMSIG(ws));
   }
 }

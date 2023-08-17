@@ -83,6 +83,7 @@ extern char kTmpPath[];
 extern const char kNtSystemDirectory[];
 extern const char kNtWindowsDirectory[];
 extern size_t __virtualmax;
+extern size_t __stackmax;
 extern bool __isworker;
 /* utilities */
 void _intsort(int *, size_t);

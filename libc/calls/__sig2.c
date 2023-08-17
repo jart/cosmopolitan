@@ -180,6 +180,7 @@ textwindows bool __sig_handle(int sigops, int sig, int si_code,
     case (intptr_t)SIG_DFL:
       if (__sig_is_fatal(sig)) {
         STRACE("terminating on %G", sig);
+        _restorewintty();
         ExitProcess(sig);
       }
       // fallthrough

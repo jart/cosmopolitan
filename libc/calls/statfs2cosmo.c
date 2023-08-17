@@ -278,7 +278,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     f_files = m->netbsd.f_files;
     f_ffree = m->netbsd.f_ffree;
     f_fsid = m->netbsd.f_fsid;
-    f_namelen = f->f_namelen;
+    f_namelen = 511;
     f_frsize = m->netbsd.f_bsize;
     f_flags = m->netbsd.f_flags;
     f_owner = m->netbsd.f_owner;

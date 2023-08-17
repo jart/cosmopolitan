@@ -32,7 +32,6 @@ XnuEntrypoint:
 	mov	$_HOSTXNU,%dl			// xnu's not unix!
 ElfEntrypoint:
 	mov	%rsp,%rsi			// save real stack
-	sub	$1024*1024,%rsp			// room for allocs
 	call	ApeLoader
 	.endfn	ElfEntrypoint,globl
 	.endfn	XnuEntrypoint,globl
@@ -65,7 +64,7 @@ ape.ident:
 	.long	1
 1:	.asciz	"APE"
 2:	.balign	4
-3:	.long	106000000
+3:	.long	107000000
 4:	.size	ape.ident,.-ape.ident
 	.type	ape.ident,@object
 

@@ -43,8 +43,8 @@ int getrlimit(int resource, struct rlimit *rlim) {
   } else if (!IsWindows()) {
     rc = sys_getrlimit(resource, rlim);
   } else if (resource == RLIMIT_STACK) {
-    rlim->rlim_cur = (uintptr_t)ape_stack_memsz;
-    rlim->rlim_max = (uintptr_t)ape_stack_memsz;
+    rlim->rlim_cur = GetStaticStackSize();
+    rlim->rlim_max = GetStaticStackSize();
     rc = 0;
   } else if (resource == RLIMIT_AS) {
     rlim->rlim_cur = __virtualmax;

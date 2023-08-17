@@ -87,11 +87,9 @@ struct Syslib {
 #define AT_RANDOM   25
 #define AT_EXECFN   31
 
-#define STACK_SIZE  (8ul * 1024 * 1024)
-#define STACK_ALIGN (sizeof(long) * 2)
-#define AUXV_BYTES  (sizeof(long) * 2 * 15)
+#define AUXV_WORDS 29
 
-// from the xnu codebase
+/* from the xnu codebase */
 #define _COMM_PAGE_START_ADDRESS      0x0000000FFFFFC000ul
 #define _COMM_PAGE_APRR_SUPPORT       (_COMM_PAGE_START_ADDRESS + 0x10C)
 #define _COMM_PAGE_APRR_WRITE_ENABLE  (_COMM_PAGE_START_ADDRESS + 0x110)
@@ -149,7 +147,7 @@ union ElfEhdrBuf {
 
 union ElfPhdrBuf {
   struct ElfPhdr phdr;
-  char buf[4096];
+  char buf[1024];
 };
 
 struct PathSearcher {
@@ -160,15 +158,7 @@ struct PathSearcher {
 };
 
 struct ApeLoader {
-  union ElfEhdrBuf ehdr;
   struct PathSearcher ps;
-  // this memory shall be discarded by the guest
-  //////////////////////////////////////////////
-  // this memory shall be known to guest program
-  union {
-    char argblock[ARG_MAX];
-    long numblock[ARG_MAX / sizeof(long)];
-  };
   union ElfPhdrBuf phdr;
   struct Syslib lib;
   char rando[16];
@@ -561,19 +551,15 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       unsigned long wipe;
       prot1 = prot;
       prot2 = prot;
-      /*
-       * when we ask the system to map the interval [vaddr,vaddr+filesz)
-       * it might schlep extra file content into memory on both the left
-       * and the righthand side. that's because elf doesn't require that
-       * either side of the interval be aligned on the system page size.
-       *
-       * normally we can get away with ignoring these junk bytes. but if
-       * the segment defines bss memory (i.e. memsz > filesz) then we'll
-       * need to clear the extra bytes in the page, if they exist.
-       *
-       * since we can't do that if we're mapping a read-only page, we'll
-       * actually map it with write permissions and protect it afterward
-       */
+      /* when we ask the system to map the interval [vaddr,vaddr+filesz)
+         it might schlep extra file content into memory on both the left
+         and the righthand side. that's because elf doesn't require that
+         either side of the interval be aligned on the system page size.
+         normally we can get away with ignoring these junk bytes. but if
+         the segment defines bss memory (i.e. memsz > filesz) then we'll
+         need to clear the extra bytes in the page, if they exist. since
+         we can't do that if we're mapping a read-only page, we can just
+         map it with write permissions and call mprotect on it afterward */
       a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
       b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
       c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
@@ -648,16 +634,17 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   __builtin_unreachable();
 }
 
-static const char *TryElf(struct ApeLoader *M, const char *exe, int fd,
-                          long *sp, long *bp, char *execfn) {
+static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
+                          const char *exe, int fd, long *sp, long *auxv,
+                          char *execfn) {
   long i, rc;
   unsigned size;
   struct ElfEhdr *e;
   struct ElfPhdr *p;
 
   /* validate elf header */
-  e = &M->ehdr.ehdr;
-  if (READ32(M->ehdr.buf) != READ32("\177ELF")) {
+  e = &ebuf->ehdr;
+  if (READ32(ebuf->buf) != READ32("\177ELF")) {
     return "didn't embed ELF magic";
   }
   if (e->e_ident[EI_CLASS] == ELFCLASS32) {
@@ -678,7 +665,7 @@ static const char *TryElf(struct ApeLoader *M, const char *exe, int fd,
   }
 
   /* read program headers */
-  rc = pread(fd, M->phdr.buf, size, M->ehdr.ehdr.e_phoff);
+  rc = pread(fd, M->phdr.buf, size, ebuf->ehdr.e_phoff);
   if (rc < 0) return "failed to read ELF program headers";
   if (rc != size) return "truncated read of ELF program headers";
 
@@ -735,26 +722,35 @@ static const char *TryElf(struct ApeLoader *M, const char *exe, int fd,
   }
 
   /* simulate linux auxiliary values */
-  long auxv[][2] = {
-      {AT_PHDR, (long)&M->phdr.phdr},        //
-      {AT_PHENT, M->ehdr.ehdr.e_phentsize},  //
-      {AT_PHNUM, M->ehdr.ehdr.e_phnum},      //
-      {AT_ENTRY, M->ehdr.ehdr.e_entry},      //
-      {AT_PAGESZ, pagesz},                   //
-      {AT_UID, getuid()},                    //
-      {AT_EUID, geteuid()},                  //
-      {AT_GID, getgid()},                    //
-      {AT_EGID, getegid()},                  //
-      {AT_HWCAP, 0xffb3ffffu},               //
-      {AT_HWCAP2, 0x181},                    //
-      {AT_SECURE, issetugid()},              //
-      {AT_RANDOM, (long)M->rando},           //
-      {AT_EXECFN, (long)execfn},             //
-      {0, 0},                                //
-  };
-  _Static_assert(sizeof(auxv) == AUXV_BYTES,
-                 "Please update the AUXV_BYTES constant");
-  MemMove(bp, auxv, sizeof(auxv));
+  auxv[0] = AT_PHDR;
+  auxv[1] = (long)&M->phdr.phdr;
+  auxv[2] = AT_PHENT;
+  auxv[3] = ebuf->ehdr.e_phentsize;
+  auxv[4] = AT_PHNUM;
+  auxv[5] = ebuf->ehdr.e_phnum;
+  auxv[6] = AT_ENTRY;
+  auxv[7] = ebuf->ehdr.e_entry;
+  auxv[8] = AT_PAGESZ;
+  auxv[9] = pagesz;
+  auxv[10] = AT_UID;
+  auxv[11] = getuid();
+  auxv[12] = AT_EUID;
+  auxv[13] = geteuid();
+  auxv[14] = AT_GID;
+  auxv[15] = getgid();
+  auxv[16] = AT_EGID;
+  auxv[17] = getegid();
+  auxv[18] = AT_HWCAP;
+  auxv[19] = 0xffb3ffffu;
+  auxv[20] = AT_HWCAP2;
+  auxv[21] = 0x181;
+  auxv[22] = AT_SECURE;
+  auxv[23] = issetugid();
+  auxv[24] = AT_RANDOM;
+  auxv[25] = (long)M->rando;
+  auxv[26] = AT_EXECFN;
+  auxv[27] = (long)execfn;
+  auxv[28] = 0;
 
   /* we're now ready to load */
   Spawn(exe, fd, sp, e, p, &M->lib);
@@ -788,31 +784,17 @@ static long sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
 int main(int argc, char **argv, char **envp) {
   long z;
   void *map;
-  long *sp, *bp, *ip;
   int c, i, n, fd, rc;
   struct ApeLoader *M;
-  unsigned char rando[24];
+  long *sp, *sp2, *auxv;
+  union ElfEhdrBuf *ebuf;
   char *p, *pe, *tp, *exe, *prog, *execfn;
 
-  // generate some hard random data
-  if (getentropy(rando, sizeof(rando))) {
-    Pexit(argv[0], -1, "getentropy");
-  }
+  /* allocate loader memory in program's arg block */
+  n = sizeof(struct ApeLoader);
+  M = __builtin_alloca(n);
 
-  // make the stack look like a linux one
-  map = mmap((void *)(0x7f0000000000 | (long)rando[23] << 32), STACK_SIZE,
-             PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (map == MAP_FAILED) {
-    Pexit(argv[0], -1, "stack mmap");
-  }
-
-  // put argument block at top of allocated stack
-  z = (long)map;
-  z += STACK_SIZE - sizeof(struct ApeLoader);
-  z &= -_Alignof(struct ApeLoader);
-  M = (struct ApeLoader *)z;
-
-  // expose screwy apple libs
+  /* expose apple libs */
   M->lib.magic = SYSLIB_MAGIC;
   M->lib.version = SYSLIB_VERSION;
   M->lib.fork = sys_fork;
@@ -833,44 +815,24 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dispatch_semaphore_wait = dispatch_semaphore_wait;
   M->lib.dispatch_walltime = dispatch_walltime;
 
-  // copy system provided argument block
-  bp = M->numblock;
-  tp = M->argblock + sizeof(M->argblock);
-  *bp++ = argc;
-  for (i = 0; i < argc; ++i) {
-    tp -= (n = StrLen(argv[i]) + 1);
-    MemMove(tp, argv[i], n);
-    *bp++ = (long)tp;
-  }
-  *bp++ = 0;
-  for (i = 0; envp[i]; ++i) {
-    tp -= (n = StrLen(envp[i]) + 1);
-    MemMove(tp, envp[i], n);
-    *bp++ = (long)tp;
-  }
-  *bp++ = 0;
-
-  // get arguments that point into our block
-  sp = M->numblock;
-  argc = *sp;
-  argv = (char **)(sp + 1);
-  envp = (char **)(sp + 1 + argc + 1);
-
-  // xnu stores getauxval(at_execfn) in getenv("_")
+  /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
-      break;
     }
   }
 
-  // interpret command line arguments
+  /* sneak the system five abi back out of args */
+  sp = (long *)(argv - 1);
+  auxv = (long *)(envp + i + 1);
+
+  /* interpret command line arguments */
   if (argc >= 3 && !StrCmp(argv[1], "-")) {
-    // if the first argument is a hyphen then we give the user the
-    // power to change argv[0] or omit it entirely. most operating
-    // systems don't permit the omission of argv[0] but we do, b/c
-    // it's specified by ANSI X3.159-1988.
+    /* if the first argument is a hyphen then we give the user the
+       power to change argv[0] or omit it entirely. most operating
+       systems don't permit the omission of argv[0] but we do, b/c
+       it's specified by ANSI X3.159-1988. */
     prog = (char *)sp[3];
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
@@ -887,19 +849,41 @@ int main(int argc, char **argv, char **envp) {
     argv = (char **)((sp += 1) + 1);
   }
 
-  // search for executable
+  /* create new bottom of stack for spawned program
+     system v abi aligns this on a 16-byte boundary
+     grows down the alloc by poking the guard pages */
+  n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
+  sp2 = __builtin_alloca(n);
+  if ((long)sp2 & 15) ++sp2;
+  for (; n > 0; n -= pagesz) {
+    ((char *)sp2)[n - 1] = 0;
+  }
+  MemMove(sp2, sp, (auxv - sp) * sizeof(long));
+  argv = (char **)(sp2 + 1);
+  envp = (char **)(sp2 + 1 + argc + 1);
+  auxv = sp2 + (auxv - sp);
+  sp = sp2;
+
+  /* allocate ephemeral memory for reading file */
+  n = sizeof(union ElfEhdrBuf);
+  ebuf = __builtin_alloca(n);
+  for (; n > 0; n -= pagesz) {
+    ((char *)ebuf)[n - 1] = 0;
+  }
+
+  /* search for executable */
   if (!(exe = Commandv(&M->ps, prog, GetEnv(envp, "PATH")))) {
     Pexit(prog, 0, "not found (maybe chmod +x)");
   } else if ((fd = openat(AT_FDCWD, exe, O_RDONLY)) < 0) {
     Pexit(exe, -1, "open");
-  } else if ((rc = read(fd, M->ehdr.buf, sizeof(M->ehdr.buf))) < 0) {
+  } else if ((rc = read(fd, ebuf->buf, sizeof(ebuf->buf))) < 0) {
     Pexit(exe, -1, "read");
-  } else if ((unsigned long)rc < sizeof(M->ehdr.ehdr)) {
+  } else if ((unsigned long)rc < sizeof(ebuf->ehdr)) {
     Pexit(exe, 0, "too small");
   }
-  pe = M->ehdr.buf + rc;
+  pe = ebuf->buf + rc;
 
-  // resolve argv[0] to reflect path search
+  /* resolve argv[0] to reflect path search */
   if ((argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
       !StrCmp(BaseName(prog), argv[0])) {
     tp -= (n = StrLen(exe) + 1);
@@ -907,28 +891,20 @@ int main(int argc, char **argv, char **envp) {
     argv[0] = tp;
   }
 
-  // squeeze and align the argument block
-  ip = (long *)(((long)tp - AUXV_BYTES) & -sizeof(long));
-  ip -= (n = bp - sp);
-  ip = (long *)((long)ip & -STACK_ALIGN);
-  MemMove(ip, sp, n * sizeof(long));
-  bp = ip + n;
-  sp = ip;
+  /* generate some hard random data */
+  if (getentropy(M->rando, sizeof(M->rando))) {
+    Pexit(argv[0], -1, "getentropy");
+  }
 
-  // relocate the guest's random numbers
-  MemMove(M->rando, rando, sizeof(M->rando));
-  Bzero(rando, sizeof(rando));
-
-  // ape intended behavior
-  // 1. if file is an elf executable, it'll be used as-is
-  // 2. if ape, will scan shell script for elf printf statements
-  // 3. shell script may have multiple lines producing elf headers
-  // 4. all elf printf lines must exist in the first 8192 bytes of file
-  // 5. elf program headers may appear anywhere in the binary
-  if (READ64(M->ehdr.buf) == READ64("MZqFpD='") ||
-      READ64(M->ehdr.buf) == READ64("jartsr='") ||
-      READ64(M->ehdr.buf) == READ64("APEDBG='")) {
-    for (p = M->ehdr.buf; p < pe; ++p) {
+  /* ape intended behavior
+     1. if ape, will scan shell script for elf printf statements
+     2. shell script may have multiple lines producing elf headers
+     3. all elf printf lines must exist in the first 8192 bytes of file
+     4. elf program headers may appear anywhere in the binary */
+  if (READ64(ebuf->buf) == READ64("MZqFpD='") ||
+      READ64(ebuf->buf) == READ64("jartsr='") ||
+      READ64(ebuf->buf) == READ64("APEDBG='")) {
+    for (p = ebuf->buf; p < pe; ++p) {
       if (READ64(p) != READ64("printf '")) {
         continue;
       }
@@ -946,15 +922,15 @@ int main(int argc, char **argv, char **envp) {
             }
           }
         }
-        M->ehdr.buf[i++] = c;
-        if (i >= sizeof(M->ehdr.buf)) {
+        ebuf->buf[i++] = c;
+        if (i >= sizeof(ebuf->buf)) {
           break;
         }
       }
-      if (i >= sizeof(M->ehdr.ehdr)) {
-        TryElf(M, exe, fd, sp, bp, execfn);
+      if (i >= sizeof(ebuf->ehdr)) {
+        TryElf(M, ebuf, exe, fd, sp, auxv, execfn);
       }
     }
   }
-  Pexit(exe, 0, TryElf(M, exe, fd, sp, bp, execfn));
+  Pexit(exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, execfn));
 }
