@@ -261,7 +261,7 @@ SECTIONS {
     . = ALIGN(. != 0 ? CODE_GRANULE : 0);
 
     KEEP(*(.ape.pad.head))
-    . = ALIGN(. != 0 ? (SupportsWindows() || SupportsMetal() ? CONSTANT(MAXPAGESIZE) : 16) : 0);
+    . = ALIGN(. != 0 ? (SupportsWindows() || SupportsMetal() ? CONSTANT(COMMONPAGESIZE) : 16) : 0);
     _ehead = .;
   } :Head
 
@@ -312,14 +312,14 @@ SECTIONS {
 
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
-    . = ALIGN(__privileged_end > __privileged_start ? CONSTANT(MAXPAGESIZE) : 0);
+    . = ALIGN(__privileged_end > __privileged_start ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: morphable code */
     __privileged_start = .;
     *(.privileged)
     __privileged_end = .;
 
     KEEP(*(.ape.pad.text))
-    . = ALIGN(. != 0 ? CONSTANT(MAXPAGESIZE) : 0);
+    . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: Read Only Data (only needed for initialization) */
   } :Cod
 
@@ -354,7 +354,7 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.initro.*)))
     KEEP(*(.initroepilogue))
     KEEP(*(SORT_BY_NAME(.sort.rodata.*)))
-    . = ALIGN(. != 0 ? CONSTANT(MAXPAGESIZE) : 0); /* don't delete this line :o */
+    . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0); /* don't delete this line :o */
 
 /*END: read-only data that's only needed for initialization */
 
@@ -368,13 +368,13 @@ SECTIONS {
     *(SORT_BY_ALIGNMENT(.tdata.*))
     _tdata_end = .;
     KEEP(*(.ape.pad.rodata))
-    . = ALIGN(. != 0 ? CONSTANT(MAXPAGESIZE) : 0);
+    . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
     _etext = .;
     PROVIDE(etext = .);
   } :Tls :Rom
 /*END: Read Only Data */
 
-  . = ALIGN(CONSTANT(MAXPAGESIZE));
+  . = ALIGN(CONSTANT(COMMONPAGESIZE));
 
 /* this only tells the linker about the layout of uninitialized */
 /* TLS data, and does not advance the linker's location counter */
@@ -432,14 +432,14 @@ SECTIONS {
     KEEP(*(SORT_BY_NAME(.piro.data.sort.*)))
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
-    . = ALIGN(. != 0 ? CONSTANT(MAXPAGESIZE) : 0);
+    . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 /*END: NT FORK COPYING */
     _edata = .;
     PROVIDE(edata = .);
     _ezip = .; /* <-- very deprecated */
   } :Ram
 
-  . = ALIGN(CONSTANT(MAXPAGESIZE));
+  . = ALIGN(CONSTANT(COMMONPAGESIZE));
 
 /*END:   file content that's loaded by o/s */
 /*END:   file content */
@@ -464,12 +464,12 @@ SECTIONS {
 
     KEEP(*(.bssepilogue))
 
-    . = ALIGN(. != 0 ? CONSTANT(MAXPAGESIZE) : 0);
+    . = ALIGN(. != 0 ? CONSTANT(COMMONPAGESIZE) : 0);
 
 /*END: NT FORK COPYING */
   } :Ram
 
-  . = ALIGN(CONSTANT(MAXPAGESIZE));
+  . = ALIGN(CONSTANT(COMMONPAGESIZE));
   _end = .;
   PROVIDE(end = .);
 
@@ -559,7 +559,7 @@ ape_cod_vaddr = ADDR(.head);
 ape_cod_paddr = LOADADDR(.head);
 ape_cod_filesz = ADDR(.rodata) - ADDR(.head);
 ape_cod_memsz = ape_cod_filesz;
-ape_cod_align = CONSTANT(MAXPAGESIZE);
+ape_cod_align = CONSTANT(COMMONPAGESIZE);
 ape_cod_rva = RVA(ape_cod_vaddr);
 
 ape_rom_vaddr = ADDR(.rodata);
@@ -567,7 +567,7 @@ ape_rom_offset = ape_rom_vaddr - __executable_start;
 ape_rom_paddr = LOADADDR(.rodata);
 ape_rom_filesz = ADDR(.tbss) - ADDR(.rodata);
 ape_rom_memsz = ape_rom_filesz;
-ape_rom_align = CONSTANT(MAXPAGESIZE);
+ape_rom_align = CONSTANT(COMMONPAGESIZE);
 ape_rom_rva = RVA(ape_rom_vaddr);
 
 ape_ram_vaddr = ADDR(.data);
@@ -575,7 +575,7 @@ ape_ram_offset = ape_ram_vaddr - __executable_start;
 ape_ram_paddr = LOADADDR(.data);
 ape_ram_filesz = ADDR(.bss) - ADDR(.data);
 ape_ram_memsz = _end - ADDR(.data);
-ape_ram_align = CONSTANT(MAXPAGESIZE);
+ape_ram_align = CONSTANT(COMMONPAGESIZE);
 ape_ram_rva = RVA(ape_ram_vaddr);
 
 ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W;
@@ -596,7 +596,7 @@ ape_text_offset = ape_text_vaddr - __executable_start;
 ape_text_paddr = LOADADDR(.text);
 ape_text_filesz = ADDR(.rodata) - ADDR(.text);
 ape_text_memsz = ape_text_filesz;
-ape_text_align = CONSTANT(MAXPAGESIZE);
+ape_text_align = CONSTANT(COMMONPAGESIZE);
 ape_text_rva = RVA(ape_text_vaddr);
 
 /* we roundup here because xnu wants the file load segments page-aligned */
@@ -605,7 +605,7 @@ ape_text_rva = RVA(ape_text_vaddr);
 SHSTUB2(ape_loader_dd_skip, DEFINED(ape_loader) ? RVA(ape_loader) / 64 : 0);
 SHSTUB2(ape_loader_dd_count,
         DEFINED(ape_loader_end)
-            ? ROUNDUP(ape_loader_end - ape_loader, CONSTANT(MAXPAGESIZE)) / 64
+            ? ROUNDUP(ape_loader_end - ape_loader, CONSTANT(COMMONPAGESIZE)) / 64
             : 0);
 
 #if defined(APE_IS_SHELL_SCRIPT) && !IsTiny()

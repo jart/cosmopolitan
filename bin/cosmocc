@@ -173,7 +173,7 @@ else
   fatal_error "$ARCH: unsupported architecture"
 fi
 
-LDFLAGS="$LDFLAGS -Wl,-z,common-page-size=$PAGESZ -Wl,-z,max-page-size=$PAGESZ"
+LDFLAGS="$LDFLAGS -Wl,-z,common-page-size=$PAGESZ -Wl,-z,max-page-size=16384"
 
 if [ ! -d "$COSMO" ]; then
   fatal_error "you need to clone cosmopolitan to your $COSMO directory"

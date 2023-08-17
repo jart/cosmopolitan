@@ -386,7 +386,7 @@ fi
 CRT_X86_64="$COSMO/o/$MODE/ape/ape.o $COSMO/o/$MODE/libc/crt/crt.o"
 CPPFLAGS_X86_64="$CPPFLAGS -mno-red-zone"
 CFLAGS_X86_64="$CFLAGS -mno-tls-direct-seg-refs"
-LDFLAGS_X86_64="$LDFLAGS -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096"
+LDFLAGS_X86_64="$LDFLAGS -L$COSMOS/lib -Wl,-T,$COSMO/o/$MODE/ape/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
 LDLIBS_X86_64="$COSMO/o/$MODE/cosmopolitan.a"
 if [ $MCOSMO -eq 1 ]; then
   CPPFLAGS_X86_64="${CPPFLAGS_X86_64} -D_COSMO_SOURCE"

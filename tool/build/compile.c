@@ -62,6 +62,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.internal.h"
@@ -114,6 +115,7 @@ FLAGS\n\
   -C SECS      set cpu limit [default 16]\n\
   -L SECS      set lat limit [default 90]\n\
   -P PROCS     set pro limit [default 2048]\n\
+  -S BYTES     set stk limit [default 2m]\n\
   -M BYTES     set mem limit [default 512m]\n\
   -F BYTES     set fsz limit [default 256m]\n\
   -O BYTES     set out limit [default 1m]\n\
@@ -173,6 +175,7 @@ int pipefds[2];
 long cpuquota;
 long fszquota;
 long memquota;
+long stkquota;
 long proquota;
 long outquota;
 
@@ -547,6 +550,14 @@ void SetMemLimit(long n) {
   setrlimit(RLIMIT_AS, &rlim);
 }
 
+void SetStkLimit(long n) {
+  if (IsWindows()) return;
+  if (n <= 0) return;
+  n = MAX(n, PTHREAD_STACK_MIN * 2);
+  struct rlimit rlim = {n, n};
+  setrlimit(RLIMIT_STACK, &rlim);
+}
+
 void SetProLimit(long n) {
   struct rlimit rlim = {n, n};
   if (n <= 0) return;
@@ -650,6 +661,7 @@ int Launch(void) {
     SetCpuLimit(cpuquota);
     SetFszLimit(fszquota);
     SetMemLimit(memquota);
+    SetStkLimit(stkquota);
     SetProLimit(proquota);
     if (stdoutmustclose) dup2(pipefds[1], 1);
     dup2(pipefds[1], 2);
@@ -860,10 +872,11 @@ int main(int argc, char *argv[]) {
   timeout = 90;                 /* secs */
   cpuquota = 32;                /* secs */
   proquota = 2048;              /* procs */
+  stkquota = 2 * 1024 * 1024;   /* bytes */
   fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
-  while ((opt = getopt(argc, argv, "hnstvwA:C:F:L:M:O:P:T:V:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnstvwA:C:F:L:M:O:P:T:V:S:")) != -1) {
     switch (opt) {
       case 'n':
         exit(0);
@@ -902,6 +915,9 @@ int main(int argc, char *argv[]) {
         break;
       case 'M':
         memquota = sizetol(optarg, 1024);
+        break;
+      case 'S':
+        stkquota = sizetol(optarg, 1024);
         break;
       case 'O':
         outquota = sizetol(optarg, 1024);
