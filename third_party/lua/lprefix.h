@@ -1,6 +1,8 @@
 #ifndef lprefix_h
 #define lprefix_h
 
+// clang-format off
+
 /*
 ** Allows POSIX/XSI stuff
 */
@@ -22,6 +24,7 @@
 
 #endif /* } */
 
+
 /*
 ** Windows stuff
 */
@@ -34,3 +37,4 @@
 #endif /* } */
 
 #endif
+

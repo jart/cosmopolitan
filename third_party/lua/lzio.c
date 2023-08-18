@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lzio_c
 #define LUA_CORE
+
 #include "libc/str/str.h"
 #include "third_party/lua/llimits.h"
 #include "third_party/lua/lmem.h"
@@ -34,11 +35,12 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lzio.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.6 (MIT License)\\n\
+Copyright 1994–2023 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 

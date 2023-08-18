@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define linit_c
 #define LUA_LIB
+
 /*
 ** If you embed Lua in your program and need to open the standard
 ** libraries, call luaL_openlibs in your program. If you need a
@@ -42,15 +43,17 @@
 **  lua_setfield(L, -2, modname);
 **  lua_pop(L, 1);  // remove PRELOAD table
 */
+
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.6 (MIT License)\\n\
+Copyright 1994–2023 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 

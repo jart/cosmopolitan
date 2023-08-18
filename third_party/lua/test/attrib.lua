@@ -85,7 +85,7 @@ local DIR = "libs" .. dirsep
 
 -- prepend DIR to a name and correct directory separators
 local function D (x)
-  x = string.gsub(x, "/", dirsep)
+  local x = string.gsub(x, "/", dirsep)
   return DIR .. x
 end
 
@@ -106,7 +106,7 @@ local function createfiles (files, preextras, posextras)
   end
 end
 
-function removefiles (files)
+local function removefiles (files)
   for n in pairs(files) do
     os.remove(D(n))
   end
@@ -154,10 +154,9 @@ local try = function (p, n, r, ext)
   assert(ext == x)
 end
 
-a = require"names"
+local a = require"names"
 assert(a[1] == "names" and a[2] == D"names.lua")
 
-_G.a = nil
 local st, msg = pcall(require, "err")
 assert(not st and string.find(msg, "arithmetic") and B == 15)
 st, msg = pcall(require, "synerr")
@@ -191,6 +190,7 @@ try("X", "XXxX", AA, "libs/XXxX")
 
 
 removefiles(files)
+NAME, REQUIRED, AA, B = nil
 
 
 -- testing require of sub-packages
@@ -223,7 +223,7 @@ assert(require"P1" == m and m.AA == 10)
 
 
 removefiles(files)
-
+AA = nil
 
 package.path = ""
 assert(not pcall(require, "file_does_not_exist"))
@@ -305,6 +305,7 @@ else
   assert(_ENV.x == "lib1.sub" and _ENV.y == DC"lib1")
   assert(string.find(ext, "libs/lib1", 1, true))
   assert(fs.id(45) == 45)
+  _ENV.x, _ENV.y = nil
 end
 
 _ENV = _G
@@ -338,10 +339,10 @@ print("testing assignments, logical operators, and constructors")
 
 local res, res2 = 27
 
-a, b = 1, 2+3
+local a, b = 1, 2+3
 assert(a==1 and b==5)
 a={}
-function f() return 10, 11, 12 end
+local function f() return 10, 11, 12 end
 a.x, b, a[1] = 1, 2, f()
 assert(a.x==1 and b==2 and a[1]==10)
 a[f()], b, a[f()+3] = f(), a, 'x'
@@ -353,15 +354,15 @@ do
   local a,b,c
   a,b = 0, f(1)
   assert(a == 0 and b == 1)
-  A,b = 0, f(1)
-  assert(A == 0 and b == 1)
+  a,b = 0, f(1)
+  assert(a == 0 and b == 1)
   a,b,c = 0,5,f(4)
   assert(a==0 and b==5 and c==1)
   a,b,c = 0,5,f(0)
   assert(a==0 and b==5 and c==nil)
 end
 
-a, b, c, d = 1 and nil, 1 or nil, (1 and (nil or 1)), 6
+local a, b, c, d = 1 and nil, 1 or nil, (1 and (nil or 1)), 6
 assert(not a and b and c and d==6)
 
 d = 20
@@ -419,6 +420,7 @@ assert(not pcall(function () local a = {[nil] = 10} end))
 assert(a[nil] == undef)
 a = nil
 
+local a, b, c
 a = {10,9,8,7,6,5,4,3,2; [-3]='a', [f]=print, a='a', b='ab'}
 a, a.x, a.y = a, a[-3]
 assert(a[1]==10 and a[-3]==a.a and a[f]==print and a.x=='a' and not a.y)
@@ -434,6 +436,16 @@ a.aVeryLongName012345678901234567890123456789012345678901234567890123456789 ==
 10)
 
 
+do
+  -- _ENV constant
+  local function foo ()
+    local _ENV <const> = 11
+    X = "hi"
+  end
+  local st, msg = pcall(foo)
+  assert(not st and string.find(msg, "number"))
+end
+
 
 -- test of large float/integer indices 
 
@@ -445,7 +457,7 @@ while maxint ~= (maxint + 0.0) or (maxint - 1) ~= (maxint - 1.0) do
   maxint = maxint // 2
 end
 
-maxintF = maxint + 0.0   -- float version
+local maxintF = maxint + 0.0   -- float version
 
 assert(maxintF == maxint and math.type(maxintF) == "float" and
        maxintF >= 2.0^14)

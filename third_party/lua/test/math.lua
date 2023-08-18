@@ -50,7 +50,7 @@ end
 local msgf2i = "number.* has no integer representation"
 
 -- float equality
-function eq (a,b,limit)
+local function eq (a,b,limit)
   if not limit then
     if floatbits >= 50 then limit = 1E-11
     else limit = 1E-5
@@ -62,7 +62,7 @@ end
 
 
 -- equality with types
-function eqT (a,b)
+local function eqT (a,b)
   return a == b and math.type(a) == math.type(b)
 end
 
@@ -83,7 +83,7 @@ end
 do
   local x = -1
   local mz = 0/x   -- minus zero
-  t = {[0] = 10, 20, 30, 40, 50}
+  local t = {[0] = 10, 20, 30, 40, 50}
   assert(t[mz] == t[0] and t[-0] == t[0])
 end
 
@@ -849,6 +849,7 @@ do
   math.randomseed(x, y)    -- again should repeat the state
   assert(math.random(0) == res)
   -- keep the random seed for following tests
+  print(string.format("random seeds: %d, %d", x, y))
 end
 
 do   -- test random for floats

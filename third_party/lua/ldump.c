@@ -27,16 +27,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldump_c
 #define LUA_CORE
+
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lundump.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.6 (MIT License)\\n\
+Copyright 1994–2023 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -76,8 +78,11 @@ static void dumpByte (DumpState *D, int y) {
 }
 
 
-/* dumpInt Buff Size */
-#define DIBS    ((sizeof(size_t) * 8 / 7) + 1)
+/*
+** 'dumpSize' buffer size: each byte can store up to 7 bits. (The "+6"
+** rounds up the division.)
+*/
+#define DIBS    ((sizeof(size_t) * CHAR_BIT + 6) / 7)
 
 static void dumpSize (DumpState *D, size_t x) {
   lu_byte buff[DIBS];

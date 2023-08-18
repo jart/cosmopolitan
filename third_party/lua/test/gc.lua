@@ -125,7 +125,7 @@ do
   end
 
   a:test()
-
+  _G.temp = nil
 end
 
 
@@ -134,7 +134,7 @@ do local f = function () end end
 
 
 print("functions with errors")
-prog = [[
+local prog = [[
 do
   a = 10;
   function foo(x,y)
@@ -153,22 +153,25 @@ do
     end
   end
 end
+rawset(_G, "a", nil)
+_G.x = nil
 
+do
 foo = nil
 print('long strings')
-x = "01234567890123456789012345678901234567890123456789012345678901234567890123456789"
+  local x = "01234567890123456789012345678901234567890123456789012345678901234567890123456789"
 assert(string.len(x)==80)
-s = ''
-k = math.min(300, (math.maxinteger // 80) // 2)
-for n = 1, k do s = s..x; j=tostring(n)  end
+  local s = ''
+  local k = math.min(300, (math.maxinteger // 80) // 2)
+  for n = 1, k do s = s..x; local j=tostring(n)  end
 assert(string.len(s) == k*80)
 s = string.sub(s, 1, 10000)
-s, i = string.gsub(s, '(%d%d%d%d)', '')
+  local s, i = string.gsub(s, '(%d%d%d%d)', '')
 assert(i==10000 // 4)
-s = nil
-x = nil
 
 assert(_G["while"] == 234)
+  _G["while"] = nil
+end
 
 
 --
@@ -227,8 +230,8 @@ end
 
 
 print("clearing tables")
-lim = 15
-a = {}
+local lim = 15
+local a = {}
 -- fill a with `collectable' indices
 for i=1,lim do a[{}] = i end
 b = {}
@@ -371,7 +374,7 @@ if T then
 
   warn("@on"); warn("@store")
   collectgarbage()
-  assert(string.find(_WARN, "error in __gc metamethod"))
+  assert(string.find(_WARN, "error in __gc"))
   assert(string.match(_WARN, "@(.-)@") == "expected"); _WARN = false
   for i = 8, 10 do assert(s[i]) end
 
@@ -552,6 +555,7 @@ do
     for i=1,1000 do _ENV.a = {} end   -- no collection during the loop
   until gcinfo() > 2 * x
   collectgarbage"restart"
+  _ENV.a = nil
 end
 
 
@@ -676,11 +680,13 @@ end
 -- just to make sure
 assert(collectgarbage'isrunning')
 
-do    -- check that the collector is reentrant in incremental mode
+do    -- check that the collector is not reentrant in incremental mode
+  local res = true
   setmetatable({}, {__gc = function ()
-    collectgarbage()
+    res = collectgarbage()
   end})
   collectgarbage()
+  assert(not res)
 end
 
 

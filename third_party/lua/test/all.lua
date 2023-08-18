@@ -163,6 +163,7 @@ f()
 
 dofile('db.lua')
 assert(dofile('calls.lua') == deep and deep)
+_G.deep = nil
 olddofile('strings.lua')
 olddofile('literals.lua')
 dofile('tpack.lua')

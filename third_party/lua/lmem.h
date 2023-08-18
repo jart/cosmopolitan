@@ -4,7 +4,7 @@
 #include "third_party/lua/llimits.h"
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
+// clang-format off
 
 #define luaM_error(L)	luaD_throw(L, LUA_ERRMEM)
 
