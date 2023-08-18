@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lua_c
+
 #include "third_party/lua/lua.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
@@ -50,12 +51,14 @@
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
 #include "tool/args/args.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.5 (MIT License)\\n\
+Copyright 1994–2023 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
+
 
 STATIC_STACK_SIZE(0x80000);
 
@@ -89,7 +92,8 @@ static void print_usage (const char *badoption) {
   "Available options are:\n"
   "  -e stat  execute string 'stat'\n"
   "  -i       enter interactive mode after executing 'script'\n"
-  "  -l name  require library 'name' into global 'name'\n"
+  "  -l mod    require library 'mod' into global 'mod'\n"
+  "  -l g=mod  require library 'mod' into global 'g'\n"
   "  -v       show version information\n"
   "  -E       ignore environment variables\n"
   "  -W       turn warnings on\n"
@@ -113,10 +117,11 @@ static void print_version (void) {
 ** to the script (everything after 'script') go to positive indices;
 ** other arguments (before the script name) go to negative indices.
 ** If there is no script name, assume interpreter's name as base.
+** (If there is no interpreter's name either, 'script' is -1, so
+** table sizes are zero.)
 */
 static void createargtable (lua_State *L, char **argv, int argc, int script) {
   int i, narg;
-  if (script == argc) script = 0;  /* no script name? */
   narg = argc - (script + 1);  /* number of positive indices */
   lua_createtable(L, narg, script + 1);
   for (i = 0; i < argc; i++) {
@@ -144,16 +149,22 @@ static int dostring (lua_State *L, const char *s, const char *name) {
 
 
 /*
-** Calls 'require(name)' and stores the result in a global variable
-** with the given name.
+** Receives 'globname[=modname]' and runs 'globname = require(modname)'.
 */
-static int dolibrary (lua_State *L, const char *name) {
+static int dolibrary (lua_State *L, char *globname) {
   int status;
+  char *modname = strchr(globname, '=');
+  if (modname == NULL)  /* no explicit name? */
+    modname = globname;  /* module name is equal to global name */
+  else {
+    *modname = '\0';  /* global name ends here */
+    modname++;  /* module name starts after the '=' */
+  }
   lua_getglobal(L, "require");
-  lua_pushstring(L, name);
-  status = lua_runchunk(L, 1, 1);  /* call 'require(name)' */
+  lua_pushstring(L, modname);
+  status = lua_runchunk(L, 1, 1);  /* call 'require(modname)' */
   if (status == LUA_OK)
-    lua_setglobal(L, name);  /* global[name] = require return */
+    lua_setglobal(L, globname);  /* globname = require(modname) */
   return lua_report(L, status);
 }
 
@@ -198,14 +209,23 @@ static int handle_script (lua_State *L, char **argv) {
 
 /*
 ** Traverses all arguments from 'argv', returning a mask with those
-** needed before running any Lua code (or an error code if it finds
-** any invalid argument). 'first' returns the first not-handled argument
-** (either the script name or a bad argument in case of error).
+** needed before running any Lua code or an error code if it finds any
+** invalid argument. In case of error, 'first' is the index of the bad
+** argument.  Otherwise, 'first' is -1 if there is no program name,
+** 0 if there is no script name, or the index of the script name.
 */
 static int collectargs (char **argv, int *first) {
   int args = 0;
   int i;
-  for (i = 1; argv[i] != NULL; i++) {
+  if (argv[0] != NULL) {  /* is there a program name? */
+    if (argv[0][0])  /* not empty? */
+      lua_progname = argv[0];  /* save it */
+  }
+  else {  /* no program name */
+    *first = -1;
+    return 0;
+  }
+  for (i = 1; argv[i] != NULL; i++) {  /* handle arguments */
     *first = i;
     if (argv[i][0] != '-')  /* not an option? */
         return args;  /* stop handling options */
@@ -246,7 +266,7 @@ static int collectargs (char **argv, int *first) {
         return has_error;
     }
   }
-  *first = i;  /* no script name */
+  *first = 0;  /* no script name */
   return args;
 }
 
@@ -264,7 +284,7 @@ static int runargs (lua_State *L, char **argv, int n) {
     switch (option) {
       case 'e':  case 'l': {
         int status;
-        const char *extra = argv[i] + 2;  /* both options need an argument */
+        char *extra = argv[i] + 2;  /* both options need an argument */
         if (*extra == '\0') extra = argv[++i];
         lua_assert(extra != NULL);
         status = (option == 'e')
@@ -352,9 +372,8 @@ static int pmain (lua_State *L) {
   char **argv = (char **)lua_touserdata(L, 2);
   int script;
   int args = collectargs(argv, &script);
+  int optlim = (script > 0) ? script : argc; /* first argv not an option */
   luaL_checkversion(L);  /* check that interpreter has correct version */
-  lua_progname = LUA_PROGNAME;
-  if (argv[0] && argv[0][0]) lua_progname = argv[0];
   if (args == has_error) {  /* bad arg? */
     print_usage(argv[script]);  /* 'script' has index of bad arg. */
     return 0;
@@ -369,19 +388,21 @@ static int pmain (lua_State *L) {
   luaL_requiref(L, "unix", LuaUnix, 1);
   lua_pop(L, 1);
   createargtable(L, argv, argc, script);  /* create table 'arg' */
-  lua_gc(L, LUA_GCGEN, 0, 0);  /* GC in generational mode */
+  lua_gc(L, LUA_GCRESTART);  /* start GC... */
+  lua_gc(L, LUA_GCGEN, 0, 0);  /* ...in generational mode */
   if (!(args & has_E)) {  /* no option '-E'? */
     if (handle_luainit(L) != LUA_OK)  /* run LUA_INIT */
       return 0;  /* error running LUA_INIT */
   }
-  if (!runargs(L, argv, script))  /* execute arguments -e and -l */
+  if (!runargs(L, argv, optlim))  /* execute arguments -e and -l */
     return 0;  /* something failed */
-  if (script < argc &&  /* execute main script (if there is one) */
-      handle_script(L, argv + script) != LUA_OK)
-    return 0;
+  if (script > 0) {  /* execute main script (if there is one) */
+    if (handle_script(L, argv + script) != LUA_OK)
+      return 0;  /* interrupt in case of error */
+  }
   if (args & has_i)  /* -i option? */
     doREPL(L);  /* do read-eval-print loop */
-  else if (script == argc && !(args & (has_e | has_v))) {  /* no arguments? */
+  else if (script < 1 && !(args & (has_e | has_v))) { /* no active option? */
     if (lua_stdin_is_tty()) {  /* running in interactive mode? */
       print_version();
       doREPL(L);  /* do read-eval-print loop */
@@ -405,6 +426,7 @@ int main (int argc, char **argv) {
     lua_l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
+  lua_gc(L, LUA_GCSTOP);  /* stop GC while building state */
   lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
   lua_pushinteger(L, argc);  /* 1st argument */
   lua_pushlightuserdata(L, argv); /* 2nd argument */

@@ -32,7 +32,7 @@ setmetatable(env, {
 })
 
 X = nil
-co = coroutine.wrap(f)
+local co = coroutine.wrap(f)
 assert(co() == 's')
 assert(co() == 'g')
 assert(co() == 'g')

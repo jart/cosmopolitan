@@ -26,7 +26,7 @@ end
 
 local function checkmessage (prog, msg, debug)
   local m = doit(prog)
-  if debug then print(m) end
+  if debug then print(m, msg) end
   assert(string.find(m, msg, 1, true))
 end
 
@@ -114,12 +114,14 @@ checkmessage("a = {} | 1", "bitwise operation")
 checkmessage("a = {} < 1", "attempt to compare")
 checkmessage("a = {} <= 1", "attempt to compare")
 
-checkmessage("a=1; bbbb=2; a=math.sin(3)+bbbb(3)", "global 'bbbb'")
-checkmessage("a={}; do local a=1 end a:bbbb(3)", "method 'bbbb'")
+checkmessage("aaa=1; bbbb=2; aaa=math.sin(3)+bbbb(3)", "global 'bbbb'")
+checkmessage("aaa={}; do local aaa=1 end aaa:bbbb(3)", "method 'bbbb'")
 checkmessage("local a={}; a.bbbb(3)", "field 'bbbb'")
-assert(not string.find(doit"a={13}; local bbbb=1; a[bbbb](3)", "'bbbb'"))
-checkmessage("a={13}; local bbbb=1; a[bbbb](3)", "number")
-checkmessage("a=(1)..{}", "a table value")
+assert(not string.find(doit"aaa={13}; local bbbb=1; aaa[bbbb](3)", "'bbbb'"))
+checkmessage("aaa={13}; local bbbb=1; aaa[bbbb](3)", "number")
+checkmessage("aaa=(1)..{}", "a table value")
+
+_G.aaa, _G.bbbb = nil
 
 -- calls
 checkmessage("local a; a(13)", "local 'a'")
@@ -134,12 +136,13 @@ checkmessage([[
 
 -- tail calls
 checkmessage("local a={}; return a.bbbb(3)", "field 'bbbb'")
-checkmessage("a={}; do local a=1 end; return a:bbbb(3)", "method 'bbbb'")
+checkmessage("aaa={}; do local aaa=1 end; return aaa:bbbb(3)", "method 'bbbb'")
 
-checkmessage("a = #print", "length of a function value")
-checkmessage("a = #3", "length of a number value")
+checkmessage("aaa = #print", "length of a function value")
+checkmessage("aaa = #3", "length of a number value")
 
-aaa = nil
+_G.aaa = nil
+
 checkmessage("aaa.bbb:ddd(9)", "global 'aaa'")
 checkmessage("local aaa={bbb=1}; aaa.bbb:ddd(9)", "field 'bbb'")
 checkmessage("local aaa={bbb={}}; aaa.bbb:ddd(9)", "method 'ddd'")
@@ -152,15 +155,16 @@ checkmessage("local a,b,cc; (function () a.x = 1 end)()", "upvalue 'a'")
 
 checkmessage("local _ENV = {x={}}; a = a + 1", "global 'a'")
 
-checkmessage("b=1; local aaa={}; x=aaa+b", "local 'aaa'")
+checkmessage("BB=1; local aaa={}; x=aaa+BB", "local 'aaa'")
 checkmessage("aaa={}; x=3.3/aaa", "global 'aaa'")
-checkmessage("aaa=2; b=nil;x=aaa*b", "global 'b'")
+checkmessage("aaa=2; BB=nil;x=aaa*BB", "global 'BB'")
 checkmessage("aaa={}; x=-aaa", "global 'aaa'")
 
 -- short circuit
-checkmessage("a=1; local a,bbbb=2,3; a = math.sin(1) and bbbb(3)",
+checkmessage("aaa=1; local aaa,bbbb=2,3; aaa = math.sin(1) and bbbb(3)",
        "local 'bbbb'")
-checkmessage("a=1; local a,bbbb=2,3; a = bbbb(1) or a(3)", "local 'bbbb'")
+checkmessage("aaa=1; local aaa,bbbb=2,3; aaa = bbbb(1) or aaa(3)",
+       "local 'bbbb'")
 checkmessage("local a,b,c,f = 1,1,1; f((a and b) or c)", "local 'f'")
 checkmessage("local a,b,c = 1,1,1; ((a and b) or c)()", "call a number value")
 assert(not string.find(doit"aaa={}; x=(aaa or aaa)+(aaa and aaa)", "'aaa'"))
@@ -187,8 +191,8 @@ checkmessage("return ~-3e40", "has no integer representation")
 checkmessage("return ~-3.009", "has no integer representation")
 checkmessage("return 3.009 & 1", "has no integer representation")
 checkmessage("return 34 >> {}", "table value")
-checkmessage("a = 24 // 0", "divide by zero")
-checkmessage("a = 1 % 0", "'n%0'")
+checkmessage("aaa = 24 // 0", "divide by zero")
+checkmessage("aaa = 1 % 0", "'n%0'")
 
 
 -- type error for an object which is neither in an upvalue nor a register.
@@ -228,6 +232,22 @@ do   -- named objects (field '__name')
   checkmessage("return {} < XX", "table with My Type")
   checkmessage("return XX < io.stdin", "My Type with FILE*")
   _G.XX = nil
+
+  if T then   -- extra tests for 'luaL_tolstring'
+    -- bug in 5.4.3; 'luaL_tolstring' with negative indices
+    local x = setmetatable({}, {__name="TABLE"})
+    assert(T.testC("Ltolstring -1; return 1", x) == tostring(x))
+
+    local a, b = T.testC("pushint 10; Ltolstring -2; return 2", x)
+    assert(a == 10 and b == tostring(x))
+
+    setmetatable(x, {__tostring=function (o)
+      assert(o == x)
+      return "ABC"
+    end})
+    local a, b, c = T.testC("pushint 10; Ltolstring -2; return 3", x)
+    assert(a == x and b == 10 and c == "ABC")
+  end
 end
 
 -- global functions
@@ -253,13 +273,13 @@ end
 -- tests for field accesses after RK limit
 local t = {}
 for i = 1, 1000 do
-  t[i] = "a = x" .. i
+  t[i] = "aaa = x" .. i
 end
 local s = table.concat(t, "; ")
 t = nil
-checkmessage(s.."; a = bbb + 1", "global 'bbb'")
-checkmessage("local _ENV=_ENV;"..s.."; a = bbb + 1", "global 'bbb'")
-checkmessage(s.."; local t = {}; a = t.bbb + 1", "field 'bbb'")
+checkmessage(s.."; aaa = bbb + 1", "global 'bbb'")
+checkmessage("local _ENV=_ENV;"..s.."; aaa = bbb + 1", "global 'bbb'")
+checkmessage(s.."; local t = {}; aaa = t.bbb + 1", "field 'bbb'")
 checkmessage(s.."; local t = {}; t:bbb()", "method 'bbb'")
 
 checkmessage([[aaa=9
@@ -289,7 +309,7 @@ end]], "global 'insert'")
 
 checkmessage([[  -- tail call
   return math.sin("a")
-]], "'sin'")
+]], "sin")
 
 checkmessage([[collectgarbage("nooption")]], "invalid option")
 
@@ -308,13 +328,16 @@ main()
 ]], "global 'NoSuchName'")
 print'+'
 
-a = {}; setmetatable(a, {__index = string})
-checkmessage("a:sub()", "bad self")
+aaa = {}; setmetatable(aaa, {__index = string})
+checkmessage("aaa:sub()", "bad self")
 checkmessage("string.sub('a', {})", "#2")
 checkmessage("('a'):sub{}", "#1")
 
 checkmessage("table.sort({1,2,3}, table.sort)", "'table.sort'")
 checkmessage("string.gsub('s', 's', setmetatable)", "'setmetatable'")
+
+_G.aaa = nil
+
 
 -- tests for errors in coroutines
 
@@ -333,7 +356,7 @@ checkerr("yield across", f)
 
 -- testing size of 'source' info; size of buffer for that info is
 -- LUA_IDSIZE, declared as 60 in luaconf. Get one position for '\0'.
-idsize = 60 - 1
+local idsize = 60 - 1
 local function checksize (source)
   -- syntax error
   local _, msg = load("x", source)
@@ -395,13 +418,14 @@ x
 
 local p = [[
   function g() f() end
-  function f(x) error('a', X) end
+  function f(x) error('a', XX) end
 g()
 ]]
-X=3;lineerror((p), 3)
-X=0;lineerror((p), false)
-X=1;lineerror((p), 2)
-X=2;lineerror((p), 1)
+XX=3;lineerror((p), 3)
+XX=0;lineerror((p), false)
+XX=1;lineerror((p), 2)
+XX=2;lineerror((p), 1)
+_G.XX, _G.g, _G.f = nil
 
 
 lineerror([[
@@ -420,6 +444,14 @@ if not b then
   end
 end]], 5)
 
+
+-- bug in 5.4.0
+lineerror([[
+  local a = 0
+  local b = 1
+  local c = b % a
+]], 3)
+
 do
   -- Force a negative estimate for base line. Error in instruction 2
   -- (after VARARGPREP, GETGLOBAL), with first absolute line information
@@ -433,11 +465,11 @@ if not _soft then
   -- several tests that exaust the Lua stack
   collectgarbage()
   print"testing stack overflow"
-  C = 0
+  local C = 0
   -- get line where stack overflow will happen
   local l = debug.getinfo(1, "l").currentline + 1
   local function auxy () C=C+1; auxy() end     -- produce a stack overflow
-  function y ()
+  function YY ()
     collectgarbage("stop")   -- avoid running finalizers without stack space
     auxy()
     collectgarbage("restart")
@@ -449,9 +481,11 @@ if not _soft then
     return (string.find(m, "stack overflow"))
   end
   -- repeated stack overflows (to check stack recovery)
-  assert(checkstackmessage(doit('y()')))
-  assert(checkstackmessage(doit('y()')))
-  assert(checkstackmessage(doit('y()')))
+  assert(checkstackmessage(doit('YY()')))
+  assert(checkstackmessage(doit('YY()')))
+  assert(checkstackmessage(doit('YY()')))
+
+  _G.YY = nil
 
 
   -- error lines in stack overflow
@@ -545,7 +579,7 @@ do
 end
 
 -- xpcall with arguments
-a, b, c = xpcall(string.find, error, "alo", "al")
+local a, b, c = xpcall(string.find, error, "alo", "al")
 assert(a and b == 1 and c == 2)
 a, b, c = xpcall(string.find, function (x) return {} end, true, "al")
 assert(not a and type(b) == "table" and c == nil)
@@ -565,11 +599,12 @@ checksyntax("a\1a = 1", "", "<\\1>", 1)
 -- test 255 as first char in a chunk
 checksyntax("\255a = 1", "", "<\\255>", 1)
 
-doit('I = load("a=9+"); a=3')
-assert(a==3 and not I)
+doit('I = load("a=9+"); aaa=3')
+assert(_G.aaa==3 and not _G.I)
+_G.I,_G.aaa = nil
 print('+')
 
-lim = 1000
+local lim = 1000
 if _soft then lim = 100 end
 for i=1,lim do
   doit('a = ')

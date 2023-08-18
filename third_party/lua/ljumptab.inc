@@ -1,9 +1,3 @@
-/*
-** $Id: ljumptab.h $
-** Jump Table for the Lua interpreter
-** See Copyright Notice in lua.h
-*/
-
 #undef vmdispatch
 #undef vmcase
 #undef vmbreak
