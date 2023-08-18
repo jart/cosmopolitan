@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lfunc_c
 #define LUA_CORE
+
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
 #include "third_party/lua/lfunc.h"
@@ -37,6 +38,7 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

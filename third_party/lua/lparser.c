@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lparser_c
 #define LUA_CORE
+
 #include "libc/str/str.h"
 #include "third_party/lua/lcode.h"
 #include "third_party/lua/ldebug.h"
@@ -42,6 +43,7 @@
 #include "third_party/lua/lstring.h"
 #include "third_party/lua/ltable.h"
 #include "third_party/lua/lua.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

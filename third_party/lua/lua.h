@@ -1,9 +1,12 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_LUA_LUA_H_
 #define COSMOPOLITAN_THIRD_PARTY_LUA_LUA_H_
+
 #include "third_party/lua/luaconf.h"
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
+
+// clang-format off
 
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"4"
@@ -479,8 +482,9 @@ struct lua_Debug {
 
 /* }====================================================================== */
 
-extern const char *g_lua_path_default;
+extern const char *g_lua_path_default;  // [jart]
 
 COSMOPOLITAN_C_END_
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_LUA_LUA_H_ */

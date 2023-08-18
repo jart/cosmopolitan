@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lapi_c
 #define LUA_CORE
+
 #include "third_party/lua/lapi.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
@@ -42,6 +43,7 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lundump.h"
 #include "third_party/lua/lvm.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -1524,7 +1526,7 @@ LUA_API int lua_error (lua_State *L) {
   else
     luaG_errormsg(L);  /* raise a regular error */
   /* code unreachable; will unlock when control actually leaves the kernel */
-  __builtin_unreachable();
+  __builtin_unreachable();  // [jart]
 }
 
 

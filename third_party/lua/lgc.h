@@ -4,7 +4,7 @@
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lstate.h"
 
-/* clang-format off */
+// clang-format off
 
 /*
 ** Collectable objects may have one of three colors: white, which means

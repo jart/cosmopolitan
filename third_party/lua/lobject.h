@@ -5,7 +5,7 @@
 #include "third_party/lua/llimits.h"
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
+// clang-format off
 
 /*
 ** Extra types for collectable non-values
@@ -786,7 +786,7 @@ LUAI_FUNC void luaO_chunkid (char *out, const char *source, size_t srclen);
 ** Computes ceil(log2(x))
 */
 static inline int luaO_ceillog2 (unsigned int x) {
-  return --x ? _bsr(x) + 1 : 0;
+  return --x ? _bsr(x) + 1 : 0;  // [jart]
 }
 
 #endif
