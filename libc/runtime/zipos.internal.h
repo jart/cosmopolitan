@@ -35,6 +35,8 @@ struct Zipos {
   uint8_t *map;
   uint8_t *cdir;
   uint64_t dev;
+  size_t *index;
+  size_t records;
   struct ZiposHandle *freelist;
 };
 
@@ -45,6 +47,7 @@ void __zipos_free(struct ZiposHandle *);
 struct Zipos *__zipos_get(void) pureconst;
 size_t __zipos_normpath(char *, const char *, size_t);
 ssize_t __zipos_find(struct Zipos *, struct ZiposUri *);
+ssize_t __zipos_scan(struct Zipos *, struct ZiposUri *);
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *);
 uint64_t __zipos_inode(struct Zipos *, int64_t, const void *, size_t);
 int __zipos_open(struct ZiposUri *, int);

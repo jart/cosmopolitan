@@ -16,37 +16,66 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.internal.h"
 
-static ssize_t __zipos_scan(struct Zipos *zipos, struct ZiposUri *name) {
-  size_t len = name->len;
+ssize_t __zipos_scan(struct Zipos *zipos, struct ZiposUri *name) {
+
+  // strip trailing slash from search name
+  int len = name->len;
   if (len && name->path[len - 1] == '/') {
     --len;
   }
+
+  // empty string means the /zip root directory
   if (!len) {
     return ZIPOS_SYNTHETIC_DIRECTORY;
   }
-  bool found_subfile = false;
-  size_t c = GetZipCdirOffset(zipos->cdir);
-  size_t n = GetZipCdirRecords(zipos->cdir);
-  for (size_t i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
-    const char *zname = ZIP_CFILE_NAME(zipos->map + c);
-    size_t zsize = ZIP_CFILE_NAMESIZE(zipos->map + c);
-    if ((len == zsize || (len + 1 == zsize && zname[len] == '/')) &&
-        !memcmp(name->path, zname, len)) {
-      return c;
-    } else if (len + 1 < zsize && zname[len] == '/' &&
-               !memcmp(name->path, zname, len)) {
-      found_subfile = true;
+
+  // binary search for leftmost name in central directory
+  int l = 0;
+  int r = zipos->records;
+  while (l < r) {
+    int m = (l & r) + ((l ^ r) >> 1);  // floor((a+b)/2)
+    const char *xp = ZIP_CFILE_NAME(zipos->map + zipos->index[m]);
+    const char *yp = name->path;
+    int xn = ZIP_CFILE_NAMESIZE(zipos->map + zipos->index[m]);
+    int yn = len;
+    int n = MIN(xn, yn);
+    int c;
+    if (n) {
+      if (!(c = memcmp(xp, yp, n))) {
+        c = xn - yn;  // xn and yn are 16-bit
+      }
+    } else {
+      c = xn - yn;
+    }
+    if (c < 0) {
+      l = m + 1;
+    } else {
+      r = m;
     }
   }
-  if (found_subfile) {
-    return ZIPOS_SYNTHETIC_DIRECTORY;
+
+  // return pointer to leftmost record if it matches
+  if (l < zipos->records) {
+    size_t cfile = zipos->index[l];
+    const char *zname = ZIP_CFILE_NAME(zipos->map + cfile);
+    int zsize = ZIP_CFILE_NAMESIZE(zipos->map + cfile);
+    if ((len == zsize || (len + 1 == zsize && zname[len] == '/')) &&
+        !memcmp(name->path, zname, len)) {
+      return cfile;
+    } else if (len + 1 < zsize && zname[len] == '/' &&
+               !memcmp(name->path, zname, len)) {
+      return ZIPOS_SYNTHETIC_DIRECTORY;
+    }
   }
+
+  // otherwise return not found
   return -1;
 }
 

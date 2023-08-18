@@ -21,9 +21,11 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/kmalloc.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/f.h"
@@ -37,25 +39,53 @@
 __static_yoink(APE_COM_NAME);
 #endif
 
-static uint64_t __zipos_get_min_offset(const uint8_t *base,
+static uint64_t __zipos_get_min_offset(const uint8_t *map,
                                        const uint8_t *cdir) {
   uint64_t i, n, c, r, o;
   c = GetZipCdirOffset(cdir);
   n = GetZipCdirRecords(cdir);
-  for (r = c, i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(base + c)) {
-    o = GetZipCfileOffset(base + c);
+  for (r = c, i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(map + c)) {
+    o = GetZipCfileOffset(map + c);
     if (o < r) r = o;
   }
   return r;
 }
 
-static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
-                                    const uint8_t *map) {
+static void __zipos_munmap_unneeded(const uint8_t *map, const uint8_t *cdir) {
   uint64_t n;
-  n = __zipos_get_min_offset(base, cdir);
-  n += base - map;
+  n = __zipos_get_min_offset(map, cdir);
   n = ROUNDDOWN(n, FRAMESIZE);
   if (n) munmap(map, n);
+}
+
+static int __zipos_compare_names(const void *a, const void *b, void *c) {
+  const size_t *x = (const size_t *)a;
+  const size_t *y = (const size_t *)b;
+  struct Zipos *z = (struct Zipos *)c;
+  int xn = ZIP_CFILE_NAMESIZE(z->map + *x);
+  int yn = ZIP_CFILE_NAMESIZE(z->map + *y);
+  int n = MIN(xn, yn);
+  if (n) {
+    int res =
+        memcmp(ZIP_CFILE_NAME(z->map + *x), ZIP_CFILE_NAME(z->map + *y), n);
+    if (res) return res;
+  }
+  return xn - yn;  // xn and yn are 16-bit
+}
+
+// creates binary searchable array of file offsets to cdir records
+static void __zipos_generate_index(struct Zipos *zipos) {
+  size_t c, i;
+  zipos->records = GetZipCdirRecords(zipos->cdir);
+  zipos->index = kmalloc(zipos->records * sizeof(size_t));
+  for (i = 0, c = GetZipCdirOffset(zipos->cdir); i < zipos->records;
+       ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
+    zipos->index[i] = c;
+  }
+  // smoothsort() isn't the fastest algorithm, but it guarantees
+  // o(logn), won't smash the stack and doesn't depend on malloc
+  smoothsort_r(zipos->index, zipos->records, sizeof(size_t),
+               __zipos_compare_names, zipos);
 }
 
 /**
@@ -95,10 +125,11 @@ struct Zipos *__zipos_get(void) {
               (map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
                   MAP_FAILED) {
             if ((cdir = GetZipEocd(map, st.st_size, &err))) {
-              __zipos_munmap_unneeded(map, cdir, map);
+              __zipos_munmap_unneeded(map, cdir);
               zipos.map = map;
               zipos.cdir = cdir;
               zipos.dev = st.st_ino;
+              __zipos_generate_index(&zipos);
               msg = kZipOk;
             } else {
               munmap(map, st.st_size);

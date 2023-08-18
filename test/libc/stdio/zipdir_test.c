@@ -87,6 +87,7 @@ TEST(__zipos_normpath, overflows_willNulTerminate) {
 TEST(__zipos_normpath, vectors) {
   static const char V[][2][128] = {
       {"", ""},
+      {"/", ""},
       {"/..", ""},
       {"/../", ""},
       {".", ""},
