@@ -1,16 +1,10 @@
-/*
-** $Id: llex.h $
-** Lexical Analyzer
-** See Copyright Notice in lua.h
-*/
-
 #ifndef llex_h
 #define llex_h
 
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lzio.h"
 
-/* clang-format off */
+// clang-format off
 
 /*
 ** Single-char tokens (terminal symbols) are represented by their own

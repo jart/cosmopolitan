@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lauxlib_c
 #define LUA_LIB
+
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
@@ -34,11 +35,12 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -1241,6 +1243,7 @@ LUALIB_API lua_Integer luaL_len (lua_State *L, int idx) {
  * the result of the call as its result.
  */
 LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
+  idx = lua_absindex(L,idx);
   if (luaL_callmeta(L, idx, "__tostring")) {  /* metafield? */
     if (!lua_isstring(L, -1))
       luaL_error(L, "'__tostring' must return a string");

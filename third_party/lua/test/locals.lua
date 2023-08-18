@@ -187,6 +187,8 @@ do   -- constants
   checkro("y", "local x, y <const>, z = 10, 20, 30; x = 11; y = 12")
   checkro("x", "local x <const>, y, z <const> = 10, 20, 30; x = 11")
   checkro("z", "local x <const>, y, z <const> = 10, 20, 30; y = 10; z = 11")
+  checkro("foo", "local foo <const> = 10; function foo() end")
+  checkro("foo", "local foo <const> = {}; function foo() end")
 
   checkro("z", [[
     local a, z <const>, b = 10;
@@ -332,6 +334,29 @@ do
 
   local a, b, c, d = bar()
   assert(a == 1 and b == 2 and c == 3 and X == false and Y == 10 and d == nil)
+end
+
+
+do
+  -- bug in 5.4.3: previous condition (calls cannot be tail in the
+  -- scope of to-be-closed variables) must be valid for tbc variables
+  -- created by 'for' loops.
+
+  local closed = false
+
+  local function foo ()
+    return function () return true end, 0, 0,
+           func2close(function () closed = true end)
+  end
+
+  local function tail() return closed end
+
+  local function foo1 ()
+    for k in foo() do return tail() end
+  end
+
+  assert(foo1() == false)
+  assert(closed == true)
 end
 
 
@@ -789,6 +814,65 @@ do
 
 end
 
+
+do
+  -- yielding inside closing metamethods while returning
+  -- (bug in 5.4.3)
+
+  local extrares    -- result from extra yield (if any)
+
+  local function check (body, extra, ...)
+    local t = table.pack(...)   -- expected returns
+    local co = coroutine.wrap(body)
+    if extra then
+      extrares = co()    -- runs until first (extra) yield
+    end
+    local res = table.pack(co())   -- runs until yield inside '__close'
+    assert(res.n == 2 and res[2] == nil)
+    local res2 = table.pack(co())   -- runs until end of function
+    assert(res2.n == t.n)
+    for i = 1, #t do
+      if t[i] == "x" then
+        assert(res2[i] == res[1])    -- value that was closed
+      else
+        assert(res2[i] == t[i])
+      end
+    end
+  end
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)
+    local extra <close> = func2close(function (self)
+      assert(self == extrares)
+      coroutine.yield(100)
+    end)
+    extrares = extra
+    return table.unpack{10, x, 30}
+  end
+  check(foo, true, 10, "x", 30)
+  assert(extrares == 100)
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)
+    return
+  end
+  check(foo, false)
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)
+    local y, z = 20, 30
+    return x
+  end
+  check(foo, false, "x")
+
+  local function foo ()
+    local x <close> = func2close(coroutine.yield)
+    local extra <close> = func2close(coroutine.yield)
+    return table.unpack({}, 1, 100)   -- 100 nils
+  end
+  check(foo, true, table.unpack({}, 1, 100))
+
+end
 
 do
   -- yielding inside closing metamethods after an error

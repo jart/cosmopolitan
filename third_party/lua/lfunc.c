@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lfunc_c
 #define LUA_CORE
+
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
 #include "third_party/lua/lfunc.h"
@@ -37,11 +38,12 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 

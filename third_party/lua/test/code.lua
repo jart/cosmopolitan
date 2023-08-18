@@ -69,6 +69,20 @@ foo = function (f, a)
 checkKlist(foo, {100000, 100000.0, -100000, -100000.0})
 
 
+-- floats x integers
+foo = function (t, a)
+  t[a] = 1; t[a] = 1.0
+  t[a] = 1; t[a] = 1.0
+  t[a] = 2; t[a] = 2.0
+  t[a] = 0; t[a] = 0.0
+  t[a] = 1; t[a] = 1.0
+  t[a] = 2; t[a] = 2.0
+  t[a] = 0; t[a] = 0.0
+end
+
+checkKlist(foo, {1, 1.0, 2, 2.0, 0, 0.0})
+
+
 -- testing opcodes
 
 -- check that 'f' opcodes match '...'

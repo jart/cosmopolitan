@@ -103,6 +103,20 @@ do
 end
 
 
+do    -- bug in 5.4.2
+  print("nesting coroutines running after recoverable errors")
+  local count = 0
+  local function foo()
+    count = count + 1
+    pcall(1)   -- create an error
+    -- running now inside 'precover' ("protected recover")
+    coroutine.wrap(foo)()   -- call another coroutine
+  end
+  checkerror("C stack overflow", foo)
+  print("final count: ", count)
+end
+
+
 if T then
   print("testing stack recovery")
   local N = 0      -- trace number of calls

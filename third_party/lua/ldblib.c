@@ -27,16 +27,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldblib_c
 #define LUA_LIB
+
 #include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 

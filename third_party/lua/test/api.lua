@@ -804,15 +804,14 @@ F = function (x)
   d = nil
   assert(debug.getmetatable(x).__gc == F)
   assert(load("table.insert({}, {})"))()   -- create more garbage
-  collectgarbage()   -- force a GC during GC
-  assert(debug.getmetatable(x).__gc == F)  -- previous GC did not mess this?
+  assert(not collectgarbage())    -- GC during GC (no op)
   local dummy = {}    -- create more garbage during GC
   if A ~= nil then
     assert(type(A) == "userdata")
     assert(T.udataval(A) == B)
     debug.getmetatable(A)    -- just access it
   end
-  A = x   -- ressucita userdata
+  A = x   -- ressurect userdata
   B = udval
   return 1,2,3
 end

@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define luac_c
 #define LUA_CORE
+
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -37,17 +38,18 @@
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lopcodes.h"
-#include "third_party/lua/lopnames.inc"
+#include "third_party/lua/lopnames.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lundump.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -181,6 +183,7 @@ static const Proto* combine(lua_State* L, int n)
    f->p[i]=toproto(L,i-n-1);
    if (f->p[i]->sizeupvalues>0) f->p[i]->upvalues[0].instack=0;
   }
+  luaM_freearray(L,f->lineinfo,f->sizelineinfo);
   f->sizelineinfo=0;
   return f;
  }
@@ -626,11 +629,11 @@ static void PrintCode(const Proto* f)
 	if (c==0) printf("all out"); else printf("%d out",c-1);
 	break;
    case OP_TAILCALL:
-	printf("%d %d %d",a,b,c);
+	printf("%d %d %d%s",a,b,c,ISK);
 	printf(COMMENT "%d in",b-1);
 	break;
    case OP_RETURN:
-	printf("%d %d %d",a,b,c);
+	printf("%d %d %d%s",a,b,c,ISK);
 	printf(COMMENT);
 	if (b==0) printf("all out"); else printf("%d out",b-1);
 	break;
@@ -645,7 +648,7 @@ static void PrintCode(const Proto* f)
 	break;
    case OP_FORPREP:
 	printf("%d %d",a,bx);
-	printf(COMMENT "to %d",pc+bx+2);
+	printf(COMMENT "exit to %d",pc+bx+3);
 	break;
    case OP_TFORPREP:
 	printf("%d %d",a,bx);

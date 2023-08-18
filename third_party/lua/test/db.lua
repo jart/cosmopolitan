@@ -195,6 +195,49 @@ do   -- testing line info/trace with large gaps in source
   end
 end
 
+
+do   -- testing active lines
+  local function checkactivelines (f, lines)
+    local t = debug.getinfo(f, "SL")
+    for _, l in pairs(lines) do
+      l = l + t.linedefined
+      assert(t.activelines[l])
+      t.activelines[l] = undef
+    end
+    assert(next(t.activelines) == nil)   -- no extra lines
+  end
+
+  checkactivelines(function (...)   -- vararg function
+    -- 1st line is empty
+    -- 2nd line is empty
+    -- 3th line is empty
+    local a = 20
+    -- 5th line is empty
+    local b = 30
+    -- 7th line is empty
+  end, {4, 6, 8})
+
+  checkactivelines(function (a)
+    -- 1st line is empty
+    -- 2nd line is empty
+    local a = 20
+    local b = 30
+    -- 5th line is empty
+  end, {3, 4, 6})
+
+  checkactivelines(function (a, b, ...) end, {0})
+
+  checkactivelines(function (a, b)
+  end, {1})
+
+  for _, n in pairs{0, 1, 2, 10, 50, 100, 1000, 10000} do
+    checkactivelines(
+      load(string.format("%s return 1", string.rep("\n", n))),
+      {n + 1})
+  end
+
+end
+
 print'+'
 
 -- invalid levels in [gs]etlocal
@@ -844,7 +887,7 @@ do   -- testing debug info for finalizers
 
   -- create a piece of garbage with a finalizer
   setmetatable({}, {__gc = function ()
-    local t = debug.getinfo(2)   -- get callee information
+    local t = debug.getinfo(1)   -- get function information
     assert(t.namewhat == "metamethod")
     name = t.name
   end})

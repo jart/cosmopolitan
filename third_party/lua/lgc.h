@@ -4,7 +4,7 @@
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lstate.h"
 
-/* clang-format off */
+// clang-format off
 
 /*
 ** Collectable objects may have one of three colors: white, which means
@@ -142,6 +142,16 @@
 ** mode to improve performance. This is signaled by 'g->lastatomic != 0'.
 */
 #define isdecGCmodegen(g)	(g->gckind == KGC_GEN || g->lastatomic != 0)
+
+
+/*
+** Control when GC is running:
+*/
+#define GCSTPUSR	1  /* bit true when GC stopped by user */
+#define GCSTPGC		2  /* bit true when GC stopped by itself */
+#define GCSTPCLS	4  /* bit true when closing Lua state */
+#define gcrunning(g)	((g)->gcstp == 0)
+
 
 /*
 ** Does one step of collection when debt becomes positive. 'pre'/'pos'

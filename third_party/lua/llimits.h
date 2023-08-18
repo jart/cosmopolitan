@@ -5,7 +5,7 @@
 #include "libc/math.h"
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
+// clang-format off
 
 /*
 ** 'lu_mem' and 'l_mem' are unsigned/signed integers big enough to count
@@ -154,6 +154,20 @@ typedef LUAI_UACINT l_uacInt;
 #endif
 
 #endif
+
+
+/*
+** Inline functions
+*/
+#if !defined(LUA_USE_C89)
+#define l_inline	inline
+#elif defined(__GNUC__)
+#define l_inline	__inline__
+#else
+#define l_inline	/* empty */
+#endif
+
+#define l_sinline	static l_inline
 
 
 /*
@@ -338,7 +352,7 @@ typedef l_uint32 Instruction;
 #define condchangemem(L,pre,pos)	((void)0)
 #else
 #define condchangemem(L,pre,pos)  \
-	{ if (G(L)->gcrunning) { pre; luaC_fullgc(L, 0); pos; } }
+	{ if (gcrunning(G(L))) { pre; luaC_fullgc(L, 0); pos; } }
 #endif
 
 #endif

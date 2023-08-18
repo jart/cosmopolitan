@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lmem_c
 #define LUA_CORE
+
 #include "libc/log/log.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
@@ -36,11 +37,12 @@
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/lua.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -171,7 +173,7 @@ static void *tryagain (lua_State *L, void *block,
                        size_t osize, size_t nsize) {
   global_State *g = G(L);
   if (completestate(g) && !g->gcstopem) {
-    WARNF("reacting to malloc() failure by running lua garbage collector...");
+    WARNF("reacting to malloc() failure by running lua garbage collector...");  // [jart]
     luaC_fullgc(L, 1);  /* try to free some memory... */
     return (*g->frealloc)(g->ud, block, osize, nsize);  /* try again */
   }

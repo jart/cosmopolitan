@@ -26,7 +26,7 @@ end
 
 local function checkmessage (prog, msg, debug)
   local m = doit(prog)
-  if debug then print(m) end
+  if debug then print(m, msg) end
   assert(string.find(m, msg, 1, true))
 end
 
@@ -228,6 +228,22 @@ do   -- named objects (field '__name')
   checkmessage("return {} < XX", "table with My Type")
   checkmessage("return XX < io.stdin", "My Type with FILE*")
   _G.XX = nil
+
+  if T then   -- extra tests for 'luaL_tolstring'
+    -- bug in 5.4.3; 'luaL_tolstring' with negative indices
+    local x = setmetatable({}, {__name="TABLE"})
+    assert(T.testC("Ltolstring -1; return 1", x) == tostring(x))
+
+    local a, b = T.testC("pushint 10; Ltolstring -2; return 2", x)
+    assert(a == 10 and b == tostring(x))
+
+    setmetatable(x, {__tostring=function (o)
+      assert(o == x)
+      return "ABC"
+    end})
+    local a, b, c = T.testC("pushint 10; Ltolstring -2; return 3", x)
+    assert(a == x and b == 10 and c == "ABC")
+  end
 end
 
 -- global functions
@@ -289,7 +305,7 @@ end]], "global 'insert'")
 
 checkmessage([[  -- tail call
   return math.sin("a")
-]], "'sin'")
+]], "sin")
 
 checkmessage([[collectgarbage("nooption")]], "invalid option")
 

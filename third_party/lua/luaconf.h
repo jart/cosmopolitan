@@ -1,5 +1,6 @@
 #ifndef luaconf_h
 #define luaconf_h
+
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -7,10 +8,10 @@
 #include "libc/limits.h"
 #include "libc/str/unicode.h"
 
-#define LUA_USE_POSIX
-#define LUA_USE_LINENOISE
+// clang-format off
 
-/* clang-format off */
+#define LUA_USE_LINENOISE
+#define LUA_USE_POSIX
 
 /*
 ** ===================================================================
@@ -423,7 +424,6 @@
 @@ LUA_MAXINTEGER is the maximum value for a LUA_INTEGER.
 @@ LUA_MININTEGER is the minimum value for a LUA_INTEGER.
 @@ LUA_MAXUNSIGNED is the maximum value for a LUA_UNSIGNED.
-@@ LUA_UNSIGNEDBITS is the number of bits in a LUA_UNSIGNED.
 @@ lua_integer2str converts an integer to a string.
 */
 
@@ -442,9 +442,6 @@
 ** can turn a comparison between unsigneds into a signed comparison)
 */
 #define LUA_UNSIGNED		unsigned LUAI_UACINT
-
-
-#define LUA_UNSIGNEDBITS	(sizeof(LUA_UNSIGNED) * CHAR_BIT)
 
 
 /* now the variable definitions */

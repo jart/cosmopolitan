@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define llex_c
 #define LUA_CORE
+
 #include "third_party/lua/llex.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
@@ -40,11 +41,12 @@
 #include "third_party/lua/ltable.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lzio.h"
+
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
-Lua 5.4.3 (MIT License)\\n\
-Copyright 1994–2021 Lua.org, PUC-Rio.\"");
+Lua 5.4.4 (MIT License)\\n\
+Copyright 1994–2022 Lua.org, PUC-Rio.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 
@@ -413,9 +415,9 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
         int c;  /* final character to be saved */
         save_and_next(ls);  /* keep '\\' for error messages */
         switch (ls->current) {
-          case 'e': c = '\e'; goto read_save;
           case 'a': c = '\a'; goto read_save;
           case 'b': c = '\b'; goto read_save;
+          case 'e': c = '\e'; goto read_save;  // [jart]
           case 'f': c = '\f'; goto read_save;
           case 'n': c = '\n'; goto read_save;
           case 'r': c = '\r'; goto read_save;
