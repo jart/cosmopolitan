@@ -53,28 +53,28 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
   ssize_t rc;
   BEGIN_CANCELLATION_POINT;
 
-  if (fd >= 0 && iovlen >= 0) {
-    if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
-      rc = efault();
-    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = ebadf();
-    } else if (!IsWindows() && !IsMetal()) {
-      if (iovlen == 1) {
-        rc = sys_write(fd, iov[0].iov_base, iov[0].iov_len);
-      } else {
-        rc = sys_writev(fd, iov, iovlen);
-      }
-    } else if (fd >= g_fds.n) {
-      rc = ebadf();
-    } else if (IsMetal()) {
-      rc = sys_writev_metal(g_fds.p + fd, iov, iovlen);
-    } else {
-      rc = sys_writev_nt(fd, iov, iovlen);
-    }
-  } else if (fd < 0) {
+  if (fd < 0) {
     rc = ebadf();
-  } else {
+  } else if (iovlen < 0) {
     rc = einval();
+  } else if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
+    rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = ebadf();  // posix specifies this when not open()'d for writing
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+    if (iovlen == 1) {
+      rc = sys_write(fd, iov[0].iov_base, iov[0].iov_len);
+    } else {
+      rc = sys_writev(fd, iov, iovlen);
+    }
+  } else if (fd >= g_fds.n) {
+    rc = ebadf();
+  } else if (IsMetal()) {
+    rc = sys_writev_metal(g_fds.p + fd, iov, iovlen);
+  } else if (IsWindows()) {
+    rc = sys_writev_nt(fd, iov, iovlen);
+  } else {
+    rc = enosys();
   }
 
   END_CANCELLATION_POINT;

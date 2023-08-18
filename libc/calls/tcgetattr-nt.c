@@ -21,6 +21,7 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/ttydefaults.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
@@ -31,20 +32,19 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int tcgetattr_nt(int ignored, struct termios *tio) {
-  int ttymagic;
   int64_t in, out;
   bool32 inok, outok;
-  uint32_t inmode, outmode;
+  uint32_t inmode = 0, outmode = 0;
   inok = GetConsoleMode((in = __getfdhandleactual(0)), &inmode);
   outok = GetConsoleMode((out = __getfdhandleactual(1)), &outmode);
   if (inok | outok) {
     bzero(tio, sizeof(*tio));
 
     tio->c_cc[VMIN] = 1;
-    tio->c_cc[VINTR] = CTRL('C');
-    tio->c_cc[VQUIT] = CTRL('\\');
-    tio->c_cc[VWERASE] = CTRL('?');  // windows swaps these :'(
-    tio->c_cc[VERASE] = CTRL('H');   // windows swaps these :'(
+    tio->c_cc[VINTR] = __vintr;
+    tio->c_cc[VQUIT] = __vquit;
+    tio->c_cc[VERASE] = CTRL('?');
+    tio->c_cc[VWERASE] = CTRL('W');
     tio->c_cc[VKILL] = CTRL('U');
     tio->c_cc[VEOF] = CTRL('D');
     tio->c_cc[VMIN] = CTRL('A');
@@ -57,26 +57,30 @@ textwindows int tcgetattr_nt(int ignored, struct termios *tio) {
 
     tio->c_iflag = IUTF8;
     tio->c_lflag = ECHOE;
-    tio->c_cflag = CS8;
+    tio->c_cflag = CS8 | CREAD;
     tio->_c_ispeed = B38400;
     tio->_c_ospeed = B38400;
 
     if (inok) {
-      ttymagic = g_fds.p[0].ttymagic;
       if (inmode & kNtEnableLineInput) {
         tio->c_lflag |= ICANON;
       }
-      if ((inmode & kNtEnableEchoInput) || (ttymagic & kFdTtyEchoing)) {
+      // kNtEnableEchoInput only works with kNtEnableLineInput enabled.
+      if ((inmode & kNtEnableEchoInput) || (__ttymagic & kFdTtyEchoing)) {
         tio->c_lflag |= ECHO;
       }
-      if (!(ttymagic & kFdTtyEchoRaw)) {
+      // The Windows console itself always echos control codes as ASCII.
+      if ((inmode & kNtEnableEchoInput) || !(__ttymagic & kFdTtyEchoRaw)) {
         tio->c_lflag |= ECHOCTL;
       }
-      if (!(ttymagic & kFdTtyNoCr2Nl)) {
+      if (!(__ttymagic & kFdTtyNoCr2Nl)) {
         tio->c_iflag |= ICRNL;
       }
-      if (inmode & kNtEnableProcessedInput) {
-        tio->c_lflag |= IEXTEN | ISIG;
+      if (!(__ttymagic & kFdTtyNoIsigs)) {
+        tio->c_lflag |= ISIG;
+      }
+      if ((inmode & kNtEnableProcessedInput) || (__ttymagic & kFdTtyMunging)) {
+        tio->c_lflag |= IEXTEN;
       }
     }
 

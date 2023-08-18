@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/nomultics.internal.h"
 
 /**
  * Controls ANSI prefix for log emissions.
@@ -26,3 +27,6 @@
  */
 char __replmode;
 char __replstderr;
+char __ttymagic;
+char __vintr;
+char __vquit;

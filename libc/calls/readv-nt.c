@@ -22,6 +22,8 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
+#ifdef __x86_64__
+
 textwindows ssize_t sys_readv_nt(struct Fd *fd, const struct iovec *iov,
                                  int iovlen) {
   switch (fd->kind) {
@@ -34,3 +36,5 @@ textwindows ssize_t sys_readv_nt(struct Fd *fd, const struct iovec *iov,
       return ebadf();
   }
 }
+
+#endif /* __x86_64__ */

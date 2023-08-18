@@ -312,10 +312,10 @@ syscon	splice	SPLICE_F_MORE				4			4			0			0			0			0			0			0			# can be safely i
 syscon	splice	SPLICE_F_GIFT				8			8			0			0			0			0			0			0			# can probably be ignored by polyfill
 
 #	access() flags
+#	libc/sysv/consts/ok.h
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	access	F_OK					0			0			0			0			0			0			0			0			# consensus
-syscon	access	X_OK					1			1			1			1			1			1			1			0xa0000000		# unix consensus and kNtGenericExecute | kNtGenericRead
+syscon	access	X_OK					1			1			1			1			1			1			1			0x20000000		# unix consensus and kNtGenericExecute
 syscon	access	W_OK					2			2			2			2			2			2			2			0x40000000		# unix consensus and kNtGenericWrite
 syscon	access	R_OK					4			4			4			4			4			4			4			0x80000000		# unix consensus and kNtGenericRead
 
@@ -403,10 +403,10 @@ syscon	fcntl	F_GETLEASE				0x0401			0x0401			-1			107			-1			-1			-1			-1
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	at	AT_FDCWD				-100			-100			-2			-2			-100			-100			-100			-100			# faked nt
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x0100			0x20			0x20			0x0200			2			0x200			0x0100			# faked nt
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x0400			0x40			0x40			0x0400			4			0x400			0			# see linkat(2)
+syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x0400			0x40			0x40			0x0400			4			0x400			0x0400			# see linkat(2)
 syscon	at	AT_REMOVEDIR				0x0200			0x0200			0x80			0x80			0x0800			8			0x800			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x0200			0x10			0x10			0x0100			1			0x100			0			# performs check using effective uid/gid; unnecessary nt
-syscon	at	AT_EMPTY_PATH				0x1000			0x1000			0			0			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
+syscon	at	AT_EMPTY_PATH				0x1000			0x1000			0			0			0			0			0			0x1000			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
 
 #	utimensat() special values
 #

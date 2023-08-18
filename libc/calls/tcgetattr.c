@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
+#include "libc/calls/struct/termios.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
@@ -105,6 +106,6 @@ int tcgetattr(int fd, struct termios *tio) {
   } else {
     rc = enosys();
   }
-  STRACE("tcgetattr(%d, %p) → %d% m", fd, tio, rc);
+  STRACE("tcgetattr(%d, [%s]) → %d% m", fd, DescribeTermios(rc, tio), rc);
   return rc;
 }

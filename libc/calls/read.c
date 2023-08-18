@@ -66,25 +66,27 @@
 ssize_t read(int fd, void *buf, size_t size) {
   ssize_t rc;
   BEGIN_CANCELLATION_POINT;
-  if (fd >= 0) {
-    if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
-      rc = efault();
-    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = _weaken(__zipos_read)(
-          (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
-          &(struct iovec){buf, size}, 1, -1);
-    } else if (!IsWindows() && !IsMetal()) {
-      rc = sys_read(fd, buf, size);
-    } else if (fd >= g_fds.n) {
-      rc = ebadf();
-    } else if (IsMetal()) {
-      rc = sys_readv_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
-    } else {
-      rc = sys_readv_nt(g_fds.p + fd, &(struct iovec){buf, size}, 1);
-    }
-  } else {
+
+  if (fd < 0) {
     rc = ebadf();
+  } else if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
+    rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = _weaken(__zipos_read)(
+        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
+        &(struct iovec){buf, size}, 1, -1);
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+    rc = sys_read(fd, buf, size);
+  } else if (fd >= g_fds.n) {
+    rc = ebadf();
+  } else if (IsMetal()) {
+    rc = sys_readv_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+  } else if (IsWindows()) {
+    rc = sys_readv_nt(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+  } else {
+    rc = enosys();
   }
+
   END_CANCELLATION_POINT;
   DATATRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd,
             (int)MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, rc);

@@ -17,11 +17,12 @@ COSMOPOLITAN_C_START_
 #define kFdTtyEchoRaw 2 /* don't ^X visualize control codes */
 #define kFdTtyMunging 4 /* enable input / output remappings */
 #define kFdTtyNoCr2Nl 8 /* don't map \r → \n (a.k.a !ICRNL) */
+#define kFdTtyNoIsigs 16
 
 struct Fd {
   char kind;
   bool zombie;
-  char ttymagic;
+  bool dontclose;
   unsigned flags;
   unsigned mode;
   int64_t handle;

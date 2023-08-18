@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
@@ -117,4 +119,6 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
   }
   fds->p[1].flags = O_WRONLY | O_APPEND;
   fds->p[2].flags = O_WRONLY | O_APPEND;
+  __vintr = CTRL('C');
+  __vquit = CTRL('\\');
 }

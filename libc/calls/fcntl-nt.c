@@ -349,7 +349,9 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   uint32_t flags;
   int access_mode_flags = O_ACCMODE | O_APPEND | O_ASYNC | O_DIRECT |
                           O_NOATIME | O_NONBLOCK | O_RANDOM | O_SEQUENTIAL;
-  if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdSocket)) {
+  if (__isfdkind(fd, kFdFile) ||    //
+      __isfdkind(fd, kFdSocket) ||  //
+      __isfdkind(fd, kFdConsole)) {
     if (cmd == F_GETFL) {
       rc = g_fds.p[fd].flags & access_mode_flags;
     } else if (cmd == F_SETFL) {

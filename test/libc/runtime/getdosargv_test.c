@@ -16,9 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
+
+char testlib_enable_tmp_setup_teardown;
+
+void SetUpOnce(void) {
+  if (!IsWindows()) {
+    // TODO(jart): mock out that win32 i/o call
+    tinyprint(2, program_invocation_name, ": skipping on non-windows\n", NULL);
+    exit(0);
+  }
+}
 
 TEST(GetDosArgv, empty) {
   size_t max = 4;
@@ -181,6 +194,19 @@ TEST(GetDosArgv, cmdToil) {
   EXPECT_STREQ("/C", argv[1]);
   EXPECT_STREQ("echo hi >\"𝑓𝑜𝑜 bar.txt\"", argv[2]);
   EXPECT_EQ(NULL, argv[3]);
+  free(argv);
+  free(buf);
+}
+
+TEST(GetDosArgv, canonicalizesCurrentDirectoryCommandPath) {
+  size_t max = 4;
+  size_t size = ARG_MAX / 2;
+  char *buf = malloc(size * sizeof(char));
+  char **argv = malloc(max * sizeof(char *));
+  ASSERT_SYS(0, 0, touch("emacs.com", 0755));
+  EXPECT_EQ(1, GetDosArgv(u"emacs.com", buf, size, argv, max));
+  EXPECT_STREQ(".\\emacs.com", argv[0]);
+  EXPECT_EQ(NULL, argv[1]);
   free(argv);
   free(buf);
 }

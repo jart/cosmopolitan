@@ -22,7 +22,6 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"
@@ -31,6 +30,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
 static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                                             uint32_t flags, int32_t mode,
@@ -54,8 +54,10 @@ static textwindows int sys_open_nt_console(int dirfd,
                                            size_t fd) {
   if (GetFileType(g_fds.p[STDIN_FILENO].handle) == kNtFileTypeChar &&
       GetFileType(g_fds.p[STDOUT_FILENO].handle) == kNtFileTypeChar) {
+    // this is an ugly hack that works for observed usage patterns
     g_fds.p[fd].handle = g_fds.p[STDIN_FILENO].handle;
     g_fds.p[fd].extra = g_fds.p[STDOUT_FILENO].handle;
+    g_fds.p[fd].dontclose = true;  // don't call CloseHandle() upon close()
   } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
                   dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode,
                   kNtFileFlagOverlapped)) != -1) {

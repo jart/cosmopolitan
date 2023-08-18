@@ -19,7 +19,9 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
@@ -31,7 +33,7 @@
 
 textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   bool32 ok;
-  int ttymagic;
+  int infd;
   int64_t hInput, hOutput;
   uint32_t inmode, outmode;
   if (__isfdkind(fd, kFdConsole)) {
@@ -56,21 +58,21 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
     inmode &=
         ~(kNtEnableLineInput | kNtEnableEchoInput | kNtEnableProcessedInput);
     inmode |= kNtEnableWindowInput;
-    ttymagic = 0;
+    __ttymagic = 0;
     if (tio->c_lflag & ICANON) {
       inmode |= kNtEnableLineInput;
     } else {
-      ttymagic |= kFdTtyMunging;
+      __ttymagic |= kFdTtyMunging;
       if (tio->c_cc[VMIN] != 1) {
         STRACE("tcsetattr c_cc[VMIN] must be 1 on Windows");
         return einval();
       }
     }
     if (!(tio->c_iflag & ICRNL)) {
-      ttymagic |= kFdTtyNoCr2Nl;
+      __ttymagic |= kFdTtyNoCr2Nl;
     }
     if (!(tio->c_lflag & ECHOCTL)) {
-      ttymagic |= kFdTtyEchoRaw;
+      __ttymagic |= kFdTtyEchoRaw;
     }
     if (tio->c_lflag & ECHO) {
       // "kNtEnableEchoInput can be used only if the
@@ -82,16 +84,21 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
         // magically write(1) to simulate echoing. This normally
         // visualizes control codes, e.g. \r → ^M unless ECHOCTL
         // hasn't been specified.
-        ttymagic |= kFdTtyEchoing;
+        __ttymagic |= kFdTtyEchoing;
       }
     }
-    if (tio->c_lflag & (IEXTEN | ISIG)) {
-      inmode |= kNtEnableProcessedInput;
+    if (!(tio->c_lflag & ISIG)) {
+      __ttymagic |= kFdTtyNoIsigs;
     }
     if (IsAtLeastWindows10()) {
       inmode |= kNtEnableVirtualTerminalInput;
     }
-    g_fds.p[fd].ttymagic = ttymagic;
+    __vintr = tio->c_cc[VINTR];
+    __vquit = tio->c_cc[VQUIT];
+    if ((tio->c_lflag & ISIG) &&  //
+        tio->c_cc[VINTR] == CTRL('C')) {
+      inmode |= kNtEnableProcessedInput;
+    }
     ok = SetConsoleMode(hInput, inmode);
     (void)ok;
     NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hInput,

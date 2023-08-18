@@ -94,11 +94,11 @@ static dontasan inline const char *strchr_x64(const char *p, uint64_t c) {
  * @asyncsignalsafe
  * @vforksafe
  */
-char *strchr(const char *s, int c) {
+dontasan char *strchr(const char *s, int c) {
+  if (IsAsan()) __asan_verify_str(s);
 #if defined(__x86_64__) && !defined(__chibicc__)
   const char *r;
   if (X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_verify(s, 1);
     r = strchr_sse(s, c);
   } else {
     r = strchr_pure(s, c);

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/struct/termios.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/termios.internal.h"
@@ -92,7 +93,7 @@ static int tcsetattr_impl(int fd, int opt, const struct termios *tio) {
 int tcsetattr(int fd, int opt, const struct termios *tio) {
   int rc;
   rc = tcsetattr_impl(fd, opt, tio);
-  STRACE("tcsetattr(%d, %s, %p) → %d% m", fd, DescribeTcsa(alloca(12), opt),
-         tio, rc);
+  STRACE("tcsetattr(%d, %s, %s) → %d% m", fd, DescribeTcsa(alloca(12), opt),
+         DescribeTermios(0, tio), rc);
   return rc;
 }

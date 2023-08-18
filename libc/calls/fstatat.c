@@ -58,6 +58,8 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   struct ZiposUri zipname;
   if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) {
     rc = efault();
+  } else if (flags & ~AT_SYMLINK_NOFOLLOW) {
+    return einval();
   } else if (__isfdkind(dirfd, kFdZip)) {
     STRACE("zipos dirfd not supported yet");
     rc = einval();

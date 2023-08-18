@@ -68,22 +68,22 @@ ssize_t write(int fd, const void *buf, size_t size) {
   ssize_t rc;
   BEGIN_CANCELLATION_POINT;
 
-  if (fd >= 0) {
-    if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
-      rc = efault();
-    } else if (__isfdkind(fd, kFdZip)) {
-      rc = ebadf();
-    } else if (!IsWindows() && !IsMetal()) {
-      rc = sys_write(fd, buf, size);
-    } else if (fd >= g_fds.n) {
-      rc = ebadf();
-    } else if (IsMetal()) {
-      rc = sys_writev_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
-    } else {
-      rc = sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
-    }
-  } else {
+  if (fd < 0) {
     rc = ebadf();
+  } else if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
+    rc = efault();
+  } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+    rc = ebadf();  // posix specifies this when not open()'d for writing
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+    rc = sys_write(fd, buf, size);
+  } else if (fd >= g_fds.n) {
+    rc = ebadf();
+  } else if (IsMetal()) {
+    rc = sys_writev_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+  } else if (IsWindows()) {
+    rc = sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
+  } else {
+    rc = enosys();
   }
 
   END_CANCELLATION_POINT;

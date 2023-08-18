@@ -18,10 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/files.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
+
+__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
 struct DosArgv {
   const char16_t *s;
@@ -102,6 +106,31 @@ textwindows dontasan int GetDosArgv(const char16_t *cmdline, char *buf,
     if (!st->wc) break;
     if (++argc < max) {
       argv[argc - 1] = st->p < st->pe ? st->p : NULL;
+      if (argc == 1) {
+        // windows lets you run "foo.com" without saying "./foo.com"
+        // which caused emacs to crash after searching for itself :(
+        char16_t cmd[256];
+        uint32_t i, j, attr;
+        i = j = 0;
+        cmd[j++] = st->wc;
+        for (; st->s[i]; ++i) {
+          if (i == 255 || st->s[i] == '/' || st->s[i] == '\\') {
+            goto GiveUpAddingDotSlash;
+          }
+          if (st->s[i] == ' ' || st->s[i] == '\t') {
+            break;
+          }
+          cmd[j++] = st->s[i];
+        }
+        cmd[j] = 0;
+        if ((attr = __imp_GetFileAttributesW(cmd)) != -1u &&
+            !(attr & kNtFileAttributeDirectory)) {
+          AppendDosArgv('.', st);
+          AppendDosArgv('\\', st);
+        }
+      GiveUpAddingDotSlash:
+        donothing;
+      }
     }
     inquote = false;
     while (st->wc) {
