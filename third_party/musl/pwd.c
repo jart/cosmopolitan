@@ -44,6 +44,16 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
+#ifdef FTRACE
+// if the default mode debugging tools are enabled, and we're linking
+// something as substantive as this library, then we shall assume the
+// application is meaty enough to benefit from the performance of the
+// chromium zlib library (costs ~40kb binary) versus just having puff
+__static_yoink("_Cz_inflateInit2");
+__static_yoink("_Cz_inflate");
+__static_yoink("_Cz_inflateEnd");
+#endif
+
 static char *
 __create_synthetic_passwd_file(void)
 {

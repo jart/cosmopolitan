@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/_getenv.internal.h"
+#include "libc/intrin/getenv.internal.h"
 
 #define ToUpper(c) \
   (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
-struct Env _getenv(char **p, const char *k) {
+dontasan struct Env __getenv(char **p, const char *k) {
   char *t;
   int i, j;
   for (i = 0; (t = p[i]); ++i) {

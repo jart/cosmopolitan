@@ -19,9 +19,9 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/ttydefaults.h"
-#include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.internal.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/pushpop.internal.h"
@@ -95,7 +95,7 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
   } else if (IsWindows()) {
     int sockset = 0;
     struct Env var;
-    var = _getenv(envp, "__STDIO_SOCKETS");
+    var = __getenv(envp, "__STDIO_SOCKETS");
     if (var.s) {
       int i = var.i + 1;
       do {

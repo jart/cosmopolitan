@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/_getauxval.internal.h"
+#include "libc/intrin/getauxval.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
@@ -32,7 +32,7 @@
  */
 unsigned long getauxval(unsigned long key) {
   struct AuxiliaryValue x;
-  x = _getauxval(key);
+  x = __getauxval(key);
   if (key == AT_PAGESZ) {
     if (!x.isfound) {
 #ifdef __aarch64__

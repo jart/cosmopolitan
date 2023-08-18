@@ -25,7 +25,8 @@ THIRD_PARTY_MUSL_A_DIRECTDEPS =				\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
-	LIBC_SYSV
+	LIBC_SYSV					\
+	THIRD_PARTY_ZLIB
 
 THIRD_PARTY_MUSL_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_MUSL_A_DIRECTDEPS),$($(x))))

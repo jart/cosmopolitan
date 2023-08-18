@@ -20,6 +20,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
@@ -45,7 +46,7 @@ int IsDebuggerPresent(bool force) {
   int e, fd, res;
   char *p, buf[1024];
   if (!force && IsGenuineBlink()) return 0;
-  if (!force && __getenv(environ, "HEISENDEBUG")) return 0;
+  if (!force && __getenv(environ, "HEISENDEBUG").s) return 0;
   if (IsWindows()) return IsBeingDebugged();
   if (__isworker) return false;
   if (!PLEDGED(RPATH)) return false;

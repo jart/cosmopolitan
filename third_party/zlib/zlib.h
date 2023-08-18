@@ -1730,10 +1730,10 @@ int gzgetc_(gzFile file); /* backward compatibility */
 #undef z_gzgetc
 #define z_gzgetc(g) \
   ((g)->have ? ((g)->have--, (g)->pos++, *((g)->next)++) : (gzgetc)(g))
-#elif defined(Z_CR_PREFIX_SET)
+#elif defined(Z_COSMO_PREFIX_SET)
 #undef gzgetc
 #define gzgetc(g) \
-  ((g)->have ? ((g)->have--, (g)->pos++, *((g)->next)++) : (Cr_z_gzgetc)(g))
+  ((g)->have ? ((g)->have--, (g)->pos++, *((g)->next)++) : (__gzgetc)(g))
 #else
 #define gzgetc(g) \
   ((g)->have ? ((g)->have--, (g)->pos++, *((g)->next)++) : (gzgetc)(g))

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/_getenv.internal.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -63,7 +63,7 @@ int PutEnvImpl(char *s, bool overwrite) {
       return -1;
     }
   }
-  e = _getenv(p, s);
+  e = __getenv(p, s);
   if (e.s && !overwrite) {
     return 0;
   }

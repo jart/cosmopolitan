@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/_getauxval.internal.h"
+#include "libc/intrin/getauxval.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -54,7 +54,7 @@ uint64_t _rand64(void) {
     s = g_rand64.thepool;  // normal path
   } else {
     if (!g_rand64.thepid) {
-      if (AT_RANDOM && (p = (void *)_getauxval(AT_RANDOM).value)) {
+      if (AT_RANDOM && (p = (void *)__getauxval(AT_RANDOM).value)) {
         // linux / freebsd kernel supplied entropy
         memcpy(&s, p, 16);
       } else {

@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/_getauxval.internal.h"
+#include "libc/intrin/getauxval.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
@@ -55,7 +55,7 @@ static dontinline int __clk_tck_init(void) {
       x = -1;
     }
   } else {
-    x = _getauxval(AT_CLKTCK).value;
+    x = __getauxval(AT_CLKTCK).value;
   }
   if (x < 1) x = 100;
   clk_tck = x;

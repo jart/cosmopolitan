@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/_getauxval.internal.h"
+#include "libc/intrin/getauxval.internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -28,7 +28,7 @@
  * @see System Five Application Binary Interface § 3.4.3
  * @asyncsignalsafe
  */
-dontasan struct AuxiliaryValue _getauxval(unsigned long at) {
+dontasan struct AuxiliaryValue __getauxval(unsigned long at) {
   unsigned long *ap;
   for (ap = __auxv; ap[0]; ap += 2) {
     if (at == ap[0]) {

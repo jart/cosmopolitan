@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/arraylist2.internal.h"
@@ -154,7 +154,7 @@ textwindows int mkntenvblock(char16_t envvars[ARG_MAX / 2], char *const envp[],
   if (!have_systemroot && environ) {
     // https://jpassing.com/2009/12/28/the-hidden-danger-of-forgetting-to-specify-systemroot-in-a-custom-environment-block/
     struct Env systemroot;
-    systemroot = _getenv(environ, "SYSTEMROOT");
+    systemroot = __getenv(environ, "SYSTEMROOT");
     if (systemroot.s) {
       InsertString(vars, n++, environ[systemroot.i], buf, &bufi,
                    &have_systemroot);

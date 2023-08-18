@@ -25,8 +25,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -120,7 +120,7 @@ static int GetSignalByName(const char *s) {
 
 static void PutEnv(char **p, const char *kv) {
   struct Env e;
-  e = _getenv(p, kv);
+  e = __getenv(p, kv);
   p[e.i] = kv;
   if (!e.s) p[e.i + 1] = 0;
 }
@@ -128,7 +128,7 @@ static void PutEnv(char **p, const char *kv) {
 static void UnsetEnv(char **p, const char *k) {
   int i;
   struct Env e;
-  if ((e = _getenv(p, k)).s) {
+  if ((e = __getenv(p, k)).s) {
     p[e.i] = 0;
     for (i = e.i + 1; p[i]; ++i) {
       p[i - 1] = p[i];
@@ -399,7 +399,7 @@ static int Read(void) {
 
 static int Cd(void) {
   const char *s;
-  if ((s = n > 1 ? args[1] : _getenv(envs, "HOME").s)) {
+  if ((s = n > 1 ? args[1] : __getenv(envs, "HOME").s)) {
     if (!chdir(s)) {
       return 0;
     } else {
@@ -776,7 +776,7 @@ static const char *GetVar(const char *key) {
     FormatInt32(vbuf, geteuid());
     return vbuf;
   } else {
-    return _getenv(envs, key).s;
+    return __getenv(envs, key).s;
   }
 }
 

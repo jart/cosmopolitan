@@ -23,15 +23,17 @@
 #include "third_party/zlib/cpu_features.internal.h"
 #include "third_party/zlib/zlib.h"
 
+#if defined(__aarch64__) && defined(__ARM_NEON)
+
 int arm_cpu_enable_crc32;
 int arm_cpu_enable_pmull;
 
-void(cpu_check_features)(void) {
-#if defined(__aarch64__) && defined(__ARM_NEON)
+void cpu_check_features(void) {
   if (IsLinux()) {
     unsigned long features = getauxval(AT_HWCAP);
     arm_cpu_enable_crc32 = !!(features & HWCAP_CRC32);
     arm_cpu_enable_pmull = !!(features & HWCAP_PMULL);
   }
-#endif
 }
+
+#endif

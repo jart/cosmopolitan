@@ -20,6 +20,7 @@
 #include "libc/assert.h"
 #include "third_party/zip/crc32.h"
 #endif
+#include "third_party/zip/crc32.h"
 
 /* for realloc 2/6/2005 EG */
 #include "libc/calls/calls.h"
@@ -71,6 +72,8 @@
 #include "libc/nt/windows.h"
 #include "libc/nt/winsock.h"
 #endif
+
+unsigned _Cz_crc32(unsigned crc, const unsigned char *buf, unsigned len);
 
 /*
  * XXX start of zipfile.h
@@ -865,7 +868,7 @@ local void read_Unicode_Path_entry(pZipListEntry)
   }
   strcpy(iname, pZipListEntry->iname);
 
-  chksum = crc32(chksum, (uch *)(iname), strlen(iname));
+  chksum = _Cz_crc32(chksum, (uch *)(iname), strlen(iname));
 
   free(iname);
 
@@ -970,7 +973,7 @@ local void read_Unicode_Path_local_entry(pZipListEntry)
   }
   strcpy(iname, pZipListEntry->iname);
 
-  chksum = crc32(chksum, (uch *)(iname), strlen(iname));
+  chksum = _Cz_crc32(chksum, (uch *)(iname), strlen(iname));
 
   free(iname);
 
@@ -1556,7 +1559,7 @@ local int add_Unicode_Path_local_extra_field(pZEntry)
 # define inameLocal (pZEntry->iname)
 #endif
 
-  chksum = crc32(chksum, (uch *)(inameLocal), strlen(inameLocal));
+  chksum = _Cz_crc32(chksum, (uch *)(inameLocal), strlen(inameLocal));
 
 #ifdef WIN32_OEM
   free(inameLocal);
@@ -1683,7 +1686,7 @@ local int add_Unicode_Path_cen_extra_field(pZEntry)
 # define inameLocal (pZEntry->iname)
 #endif
 
-  chksum = crc32(chksum, (uch *)(inameLocal), strlen(inameLocal));
+  chksum = _Cz_crc32(chksum, (uch *)(inameLocal), strlen(inameLocal));
 
 #ifdef WIN32_OEM
   free(inameLocal);

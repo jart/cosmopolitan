@@ -24,7 +24,6 @@
 #include "third_party/zip/zipup.h"
 #include "third_party/bzip2/bzlib.h"
 #include "libc/calls/typedef/u.h"
-#include "third_party/zlib/zconf.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/errno.h"
 

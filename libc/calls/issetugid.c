@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/_getauxval.internal.h"
+#include "libc/intrin/getauxval.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/auxv.h"
 
@@ -36,7 +36,7 @@
 int issetugid(void) {
   int rc;
   if (IsLinux()) {
-    rc = !!_getauxval(AT_SECURE).value;
+    rc = !!__getauxval(AT_SECURE).value;
   } else if (IsMetal()) {
     rc = 0;
   } else {
