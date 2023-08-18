@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/ape.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -1390,7 +1391,7 @@ static char *GenerateElfNotes(char *p) {
   char *save;
   save = p = ALIGN(p, 4);
   noteoff = p - prologue;
-  p = GenerateElfNote(p, "APE", 1, 107000000);
+  p = GenerateElfNote(p, "APE", 1, APE_VERSION_NOTE);
   if (support_vector & _HOSTOPENBSD) {
     p = GenerateElfNote(p, "OpenBSD", 1, 0);
   }
@@ -1941,7 +1942,7 @@ int main(int argc, char *argv[]) {
 
     // otherwise try to use the ad-hoc self-extracted loader, securely
     if (loaders.n) {
-      p = stpcpy(p, "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.7\"\n"
+      p = stpcpy(p, "t=\"${TMPDIR:-${HOME:-.}}/.ape-" APE_VERSION_STR "\"\n"
                     "[ x\"$1\" != x--assimilate ] && "
                     "[ -x \"$t\" ] && "
                     "exec \"$t\" \"$o\" \"$@\"\n");

@@ -25,9 +25,14 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
+#include "libc/paths.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
@@ -38,6 +43,57 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
+
+static char *
+__create_synthetic_passwd_file(void)
+{
+	int uid, gid;
+	char login[256], cwd[PATH_MAX];
+	char *user, *home, *shell, *res = 0;
+	uid = getuid();
+	gid = getgid();
+	user = getenv("USER");
+	home = getenv("HOME");
+	shell = getenv("SHELL");
+	if (user && strchr(user, ':'))
+		user = 0;
+	if (home && strchr(home, ':'))
+		user = 0;
+	if (shell && strchr(shell, ':'))
+		user = 0;
+	if (!shell)
+		shell = _PATH_BSHELL;
+	if (!user && getlogin_r(login, sizeof(login)) != -1)
+		user = login;
+	if (!home && getcwd(cwd, sizeof(cwd))) {
+		if (!strchr(cwd, ':'))
+			home = cwd;
+		else
+			home = "/";
+	}
+	if (uid)
+		appendf(&res, "root:x:0:0:root:/root:%s\n", shell);
+	if (user && home) {
+		appendf(&res, "%s:x:%d:%d:%s:%s:%s\n",
+			user, uid, gid, user, home, shell);
+	}
+	return res;
+}
+
+static FILE *
+__fopen_passwd(void)
+{
+	FILE *f;
+	char *s;
+	// MacOS has a fake /etc/passwd file without any user details.
+	if (!IsXnu() && (f = fopen("/etc/passwd", "rbe")))
+		return f;
+	if (!(s = __create_synthetic_passwd_file()))
+		return 0;
+	if (!(f = fmemopen(s, strlen(s), "rb")))
+		free(s);
+	return f;
+}
 
 static unsigned
 atou(char **s)
@@ -104,7 +160,7 @@ __getpw_a(const char *name, uid_t uid, struct passwd *pw, char **buf,
 	int rv = 0;
 	*res = 0;
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-	if ((f = fopen("/etc/passwd", "rbe"))) {
+	if ((f = __fopen_passwd())) {
 		while (!(rv = __getpwent_a(f, pw, buf, size, res)) && *res) {
 			if ((name && !strcmp(name, (*res)->pw_name)) ||
 			    (!name && (*res)->pw_uid == uid)) {
@@ -167,46 +223,83 @@ static struct GetpwentState {
 	char *line;
 	struct passwd pw;
 	size_t size;
-} g_getpwent[1];
+} g_getpwent;
 
+/**
+ * Closes global handle to password database.
+ *
+ * @see getpwent()
+ */
 void
-endpwent()
+endpwent(void)
 {
 	setpwent();
 }
 
+/**
+ * Rewinds global handle to password database.
+ *
+ * @see getpwent()
+ */
 void
-setpwent()
+setpwent(void)
 {
-	if (g_getpwent->f) fclose(g_getpwent->f);
-	g_getpwent->f = 0;
+	if (g_getpwent.f)
+		fclose(g_getpwent.f);
+	g_getpwent.f = 0;
 }
 
+/**
+ * Returns next entry in password database.
+ *
+ * @return pointer to entry static memory, or NULL on EOF
+ * @see getpwent()
+ */
 struct passwd *
 getpwent()
 {
 	struct passwd *res;
-	if (!g_getpwent->f) g_getpwent->f = fopen("/etc/passwd", "rbe");
-	if (!g_getpwent->f) return 0;
-	__getpwent_a(g_getpwent->f, &g_getpwent->pw, &g_getpwent->line,
-		     &g_getpwent->size, &res);
+	if (!g_getpwent.f)
+		g_getpwent.f = __fopen_passwd();
+	if (!g_getpwent.f)
+		return 0;
+	__getpwent_a(g_getpwent.f, &g_getpwent.pw, &g_getpwent.line,
+		     &g_getpwent.size, &res);
 	return res;
 }
 
+/**
+ * Returns password database entry for user id.
+ *
+ * This is essentially guaranteed to succeed if `uid == getuid()`, since
+ * this implementation will generate an entry based on the environment
+ * if `/etc/passwd` doesn't exist, or is fake (e.g. MacOS).
+ *
+ * @return pointer to passwd entry static memory, or NULL if not found
+ */
 struct passwd *
 getpwuid(uid_t uid)
 {
 	struct passwd *res;
-	__getpw_a(0, uid, &g_getpwent->pw, &g_getpwent->line, &g_getpwent->size,
+	__getpw_a(0, uid, &g_getpwent.pw, &g_getpwent.line, &g_getpwent.size,
 		  &res);
 	return res;
 }
 
+/**
+ * Returns password database entry for user name.
+ *
+ * This is essentially guaranteed to succeed if `uid == getenv("USER")`,
+ * since this implementation will generate an entry based on `environ`
+ * if `/etc/passwd` doesn't exist, or is fake (e.g. MacOS).
+ *
+ * @return pointer to passwd entry static memory, or NULL if not found
+ */
 struct passwd *
 getpwnam(const char *name)
 {
 	struct passwd *res;
-	__getpw_a(name, 0, &g_getpwent->pw, &g_getpwent->line,
-		  &g_getpwent->size, &res);
+	__getpw_a(name, 0, &g_getpwent.pw, &g_getpwent.line,
+		  &g_getpwent.size, &res);
 	return res;
 }

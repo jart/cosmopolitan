@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/ape.h"
 
 /**
  * @fileoverview APE Loader for GNU/Systemd/XNU/FreeBSD/NetBSD/OpenBSD
@@ -102,6 +103,12 @@
 #define IsAarch64() 1
 #else
 #define IsAarch64() 0
+#endif
+
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#else
+#define EXTERN_C
 #endif
 
 #define O_RDONLY           0
@@ -213,8 +220,8 @@ struct ApeLoader {
   char path[1024];
 };
 
-long SystemCall(long, long, long, long, long, long, long, int);
-void Launch(void *, long, void *, int) __attribute__((__noreturn__));
+EXTERN_C long SystemCall(long, long, long, long, long, long, long, int);
+EXTERN_C void Launch(void *, long, void *, int) __attribute__((__noreturn__));
 
 extern char __executable_start[];
 extern char _end[];
@@ -882,11 +889,11 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   Spawn(os, exe, fd, sp, pagesz, e, p);
 }
 
-static __attribute__((__noreturn__)) void ShowUsage(int os, int fd, int rc) {
+__attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
   Print(os, fd,
         "NAME\n"
         "\n"
-        "  actually portable executable loader version 1.7\n"
+        "  actually portable executable loader version " APE_VERSION_STR "\n"
         "  copyright 2023 justine alexandra roberts tunney\n"
         "  https://justine.lol/ape.html\n"
         "\n"
@@ -904,15 +911,17 @@ static __attribute__((__noreturn__)) void ShowUsage(int os, int fd, int rc) {
   Exit(rc, os);
 }
 
-__attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
+EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
+                                                      char dl) {
   int rc, n;
   unsigned i;
+  const char *ape;
   int c, fd, os, argc;
   struct ApeLoader *M;
   unsigned long pagesz;
   union ElfEhdrBuf *ebuf;
   long *auxv, *ap, *endp, *sp2;
-  char *p, *pe, *exe, *ape, *prog, **argv, **envp;
+  char *p, *pe, *exe, *prog, **argv, **envp;
 
   (void)Utox;
 
@@ -999,13 +1008,13 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
-  M = __builtin_alloca(n);
+  M = (struct ApeLoader *)__builtin_alloca(n);
 
   /* create new bottom of stack for spawned program
      system v abi aligns this on a 16-byte boundary
      grows down the alloc by poking the guard pages */
   n = (endp - sp + 1) * sizeof(long);
-  sp2 = __builtin_alloca(n);
+  sp2 = (long *)__builtin_alloca(n);
   if ((long)sp2 & 15) ++sp2;
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
@@ -1013,12 +1022,12 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl) {
   MemMove(sp2, sp, (endp - sp) * sizeof(long));
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
-  auxv = (char **)(sp2 + (auxv - sp));
+  auxv = sp2 + (auxv - sp);
   sp = sp2;
 
   /* allocate ephemeral memory for reading file */
   n = sizeof(union ElfEhdrBuf);
-  ebuf = __builtin_alloca(n);
+  ebuf = (union ElfEhdrBuf *)__builtin_alloca(n);
   for (; n > 0; n -= pagesz) {
     ((char *)ebuf)[n - 1] = 0;
   }

@@ -44,6 +44,7 @@
 #include "libc/runtime/pc.internal.h"
 #include "ape/ape.internal.h"
 #include "libc/thread/tls.h"
+#include "ape/ape.h"
 #include "libc/sysv/consts/prot.h"
 
 #define USE_SYMBOL_HACK 1
@@ -610,7 +611,9 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-1.7\"\n"
+	.ascii	    "t=\"${TMPDIR:-${HOME:-.}}/.ape-"
+	.ascii	     APE_VERSION_STR
+	.ascii	     "\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
 	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
@@ -818,7 +821,7 @@ ape.ident:
 	.long	1
 1:	.asciz	"APE"
 2:	.balign	4
-3:	.long	107000000
+3:	.long	APE_VERSION_NOTE
 4:	.size	ape.ident,.-ape.ident
 	.type	ape.ident,@object
 	.previous

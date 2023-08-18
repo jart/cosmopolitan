@@ -69,10 +69,12 @@ TEST(zipos, enoent) {
 TEST(zipos, readPastEof) {
   char buf[512];
   ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  EXPECT_SYS(EINVAL, -1, lseek(3, -1, SEEK_CUR));
+  EXPECT_SYS(EINVAL, -1, lseek(3, -1, SEEK_SET));
   EXPECT_SYS(EINVAL, -1, pread(3, buf, 512, UINT64_MAX));
   EXPECT_SYS(0, 0, pread(3, buf, 512, INT64_MAX));
-  EXPECT_SYS(EINVAL, -1, lseek(3, UINT64_MAX, SEEK_SET));
   EXPECT_SYS(0, INT64_MAX, lseek(3, INT64_MAX, SEEK_SET));
+  EXPECT_SYS(EOVERFLOW, -1, lseek(3, 2, SEEK_CUR));
   EXPECT_SYS(EBADF, -1, write(3, buf, 512));
   EXPECT_SYS(EBADF, -1, pwrite(3, buf, 512, 0));
   EXPECT_SYS(0, 0, read(3, buf, 512));
@@ -91,4 +93,16 @@ TEST(zipos, trailingComponents_willEnodirFile) {
   ASSERT_SYS(ENOTDIR, -1, open("/zip/libc/testlib/hyperion.txt/./", O_RDONLY));
   ASSERT_SYS(ENOTDIR, -1, open("/zip/libc/testlib/hyperion.txt/a/b", O_RDONLY));
   ASSERT_SYS(ENOTDIR, -1, stat("/zip/libc/testlib/hyperion.txt/", &st));
+}
+
+TEST(zipos, lseek) {
+  char b1[512], b2[512];
+  ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  EXPECT_SYS(0, 512, pread(3, b2, 512, 512 - 200));
+  EXPECT_SYS(0, 512, read(3, b1, 512));
+  EXPECT_SYS(0, 512, lseek(3, 0, SEEK_CUR));
+  EXPECT_SYS(0, 512 - 200, lseek(3, -200, SEEK_CUR));
+  EXPECT_SYS(0, 512, read(3, b1, 512));
+  EXPECT_EQ(0, memcmp(b1, b2, 512));
+  EXPECT_SYS(0, 0, close(3));
 }

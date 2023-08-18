@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/weaken.h"
-#include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"

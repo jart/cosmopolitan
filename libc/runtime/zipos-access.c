@@ -20,6 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.internal.h"
 
@@ -43,7 +44,12 @@ int __zipos_access(struct ZiposUri *name, int amode) {
     return -1;
   }
 
-  int mode = GetZipCfileMode(z->map + cf);
+  int mode;
+  if (cf != ZIPOS_SYNTHETIC_DIRECTORY) {
+    mode = GetZipCfileMode(z->map + cf);
+  } else {
+    mode = S_IFDIR | 0555;
+  }
   if (amode == F_OK) {
     return 0;
   }

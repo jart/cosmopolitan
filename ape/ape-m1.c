@@ -50,7 +50,7 @@ struct Syslib {
                         void *);
   void (*pthread_exit)(void *);
   int (*pthread_kill)(pthread_t, int);
-  int (*pthread_sigmask)(int, const sigset_t *restrict, sigset_t *restrict);
+  int (*pthread_sigmask)(int, const sigset_t *, sigset_t *);
   int (*pthread_setname_np)(const char *);
   dispatch_semaphore_t (*dispatch_semaphore_create)(long);
   long (*dispatch_semaphore_signal)(dispatch_semaphore_t);
@@ -399,26 +399,24 @@ static char *Commandv(struct PathSearcher *ps, const char *name,
 static void pthread_jit_write_protect_np_workaround(int enabled) {
   int count_start = 8192;
   volatile int count = count_start;
-  unsigned long *addr, *other, val, val2, reread = -1;
+  unsigned long *addr, val, val2, reread = -1;
   addr = (unsigned long *)(!enabled ? _COMM_PAGE_APRR_WRITE_ENABLE
-                                    : _COMM_PAGE_APRR_WRITE_DISABLE);
-  other = (unsigned long *)(enabled ? _COMM_PAGE_APRR_WRITE_ENABLE
                                     : _COMM_PAGE_APRR_WRITE_DISABLE);
   switch (*(volatile unsigned char *)_COMM_PAGE_APRR_SUPPORT) {
     case 1:
       do {
         val = *addr;
         reread = -1;
-        asm volatile("msr\tS3_4_c15_c2_7,%0\n"
-                     "isb\tsy\n"
-                     : /* no outputs */
-                     : "r"(val)
-                     : "memory");
+        __asm__ volatile("msr\tS3_4_c15_c2_7,%0\n"
+                         "isb\tsy\n"
+                         : /* no outputs */
+                         : "r"(val)
+                         : "memory");
         val2 = *addr;
-        asm volatile("mrs\t%0,S3_4_c15_c2_7\n"
-                     : "=r"(reread)
-                     : /* no inputs */
-                     : "memory");
+        __asm__ volatile("mrs\t%0,S3_4_c15_c2_7\n"
+                         : "=r"(reread)
+                         : /* no inputs */
+                         : "memory");
         if (val2 == reread) {
           return;
         }
@@ -429,16 +427,16 @@ static void pthread_jit_write_protect_np_workaround(int enabled) {
       do {
         val = *addr;
         reread = -1;
-        asm volatile("msr\tS3_6_c15_c1_5,%0\n"
-                     "isb\tsy\n"
-                     : /* no outputs */
-                     : "r"(val)
-                     : "memory");
+        __asm__ volatile("msr\tS3_6_c15_c1_5,%0\n"
+                         "isb\tsy\n"
+                         : /* no outputs */
+                         : "r"(val)
+                         : "memory");
         val2 = *addr;
-        asm volatile("mrs\t%0,S3_6_c15_c1_5\n"
-                     : "=r"(reread)
-                     : /* no inputs */
-                     : "memory");
+        __asm__ volatile("mrs\t%0,S3_6_c15_c1_5\n"
+                         : "=r"(reread)
+                         : /* no inputs */
+                         : "memory");
         if (val2 == reread) {
           return;
         }
@@ -595,42 +593,42 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   /* finish up */
   close(fd);
 
-  register long *x0 asm("x0") = sp;
-  register struct Syslib *x15 asm("x15") = lib;
-  register long x16 asm("x16") = e->e_entry;
-  asm volatile("mov\tx1,#0\n\t"
-               "mov\tx2,#0\n\t"
-               "mov\tx3,#0\n\t"
-               "mov\tx4,#0\n\t"
-               "mov\tx5,#0\n\t"
-               "mov\tx6,#0\n\t"
-               "mov\tx7,#0\n\t"
-               "mov\tx8,#0\n\t"
-               "mov\tx9,#0\n\t"
-               "mov\tx10,#0\n\t"
-               "mov\tx11,#0\n\t"
-               "mov\tx12,#0\n\t"
-               "mov\tx13,#0\n\t"
-               "mov\tx14,#0\n\t"
-               "mov\tx17,#0\n\t"
-               "mov\tx19,#0\n\t"
-               "mov\tx20,#0\n\t"
-               "mov\tx21,#0\n\t"
-               "mov\tx22,#0\n\t"
-               "mov\tx23,#0\n\t"
-               "mov\tx24,#0\n\t"
-               "mov\tx25,#0\n\t"
-               "mov\tx26,#0\n\t"
-               "mov\tx27,#0\n\t"
-               "mov\tx28,#0\n\t"
-               "mov\tx29,#0\n\t"
-               "mov\tx30,#0\n\t"
-               "mov\tsp,x0\n\t"
-               "mov\tx0,#0\n\t"
-               "br\tx16"
-               : /* no outputs */
-               : "r"(x0), "r"(x15), "r"(x16)
-               : "memory");
+  register long *x0 __asm__("x0") = sp;
+  register struct Syslib *x15 __asm__("x15") = lib;
+  register long x16 __asm__("x16") = e->e_entry;
+  __asm__ volatile("mov\tx1,#0\n\t"
+                   "mov\tx2,#0\n\t"
+                   "mov\tx3,#0\n\t"
+                   "mov\tx4,#0\n\t"
+                   "mov\tx5,#0\n\t"
+                   "mov\tx6,#0\n\t"
+                   "mov\tx7,#0\n\t"
+                   "mov\tx8,#0\n\t"
+                   "mov\tx9,#0\n\t"
+                   "mov\tx10,#0\n\t"
+                   "mov\tx11,#0\n\t"
+                   "mov\tx12,#0\n\t"
+                   "mov\tx13,#0\n\t"
+                   "mov\tx14,#0\n\t"
+                   "mov\tx17,#0\n\t"
+                   "mov\tx19,#0\n\t"
+                   "mov\tx20,#0\n\t"
+                   "mov\tx21,#0\n\t"
+                   "mov\tx22,#0\n\t"
+                   "mov\tx23,#0\n\t"
+                   "mov\tx24,#0\n\t"
+                   "mov\tx25,#0\n\t"
+                   "mov\tx26,#0\n\t"
+                   "mov\tx27,#0\n\t"
+                   "mov\tx28,#0\n\t"
+                   "mov\tx29,#0\n\t"
+                   "mov\tx30,#0\n\t"
+                   "mov\tsp,x0\n\t"
+                   "mov\tx0,#0\n\t"
+                   "br\tx16"
+                   : /* no outputs */
+                   : "r"(x0), "r"(x15), "r"(x16)
+                   : "memory");
   __builtin_unreachable();
 }
 
@@ -769,7 +767,7 @@ static long sys_pipe(int pfds[2]) {
 }
 
 static long sys_clock_gettime(int clock, struct timespec *ts) {
-  return sysret(clock_gettime(clock, ts));
+  return sysret(clock_gettime((clockid_t)clock, ts));
 }
 
 static long sys_nanosleep(const struct timespec *req, struct timespec *rem) {
@@ -782,17 +780,16 @@ static long sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
 }
 
 int main(int argc, char **argv, char **envp) {
-  long z;
-  void *map;
-  int c, i, n, fd, rc;
+  unsigned i;
+  int c, n, fd, rc;
   struct ApeLoader *M;
   long *sp, *sp2, *auxv;
   union ElfEhdrBuf *ebuf;
-  char *p, *pe, *tp, *exe, *prog, *execfn;
+  char *p, *pe, *exe, *prog, *execfn;
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
-  M = __builtin_alloca(n);
+  M = (struct ApeLoader *)__builtin_alloca(n);
 
   /* expose apple libs */
   M->lib.magic = SYSLIB_MAGIC;
@@ -839,7 +836,7 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
-         "actually portable executable loader silicon 1.6\n"
+         "actually portable executable loader silicon 1.7\n"
          "copyright 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
     _exit(1);
@@ -853,7 +850,7 @@ int main(int argc, char **argv, char **envp) {
      system v abi aligns this on a 16-byte boundary
      grows down the alloc by poking the guard pages */
   n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
-  sp2 = __builtin_alloca(n);
+  sp2 = (long *)__builtin_alloca(n);
   if ((long)sp2 & 15) ++sp2;
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
@@ -866,7 +863,7 @@ int main(int argc, char **argv, char **envp) {
 
   /* allocate ephemeral memory for reading file */
   n = sizeof(union ElfEhdrBuf);
-  ebuf = __builtin_alloca(n);
+  ebuf = (union ElfEhdrBuf *)__builtin_alloca(n);
   for (; n > 0; n -= pagesz) {
     ((char *)ebuf)[n - 1] = 0;
   }
@@ -886,9 +883,7 @@ int main(int argc, char **argv, char **envp) {
   /* resolve argv[0] to reflect path search */
   if ((argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
       !StrCmp(BaseName(prog), argv[0])) {
-    tp -= (n = StrLen(exe) + 1);
-    MemMove(tp, exe, n);
-    argv[0] = tp;
+    argv[0] = exe;
   }
 
   /* generate some hard random data */

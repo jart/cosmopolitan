@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "ape/ape.h"
 #include "libc/macros.internal.h"
 
 #ifdef __aarch64__
@@ -64,7 +65,7 @@ ape.ident:
 	.long	1
 1:	.asciz	"APE"
 2:	.balign	4
-3:	.long	107000000
+3:	.long	APE_VERSION_NOTE
 4:	.size	ape.ident,.-ape.ident
 	.type	ape.ident,@object
 

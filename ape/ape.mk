@@ -88,7 +88,7 @@ o/$(MODE)/ape/ape.elf.dbg:			\
 		o/$(MODE)/ape/systemcall.o
 	@$(COMPILE) -ALINK.elf $(LD) $(APE_LOADER_LDFLAGS) -o $@ $(patsubst %.lds,-T %.lds,$^)
 
-o/$(MODE)/ape/loader.o: ape/loader.c
+o/$(MODE)/ape/loader.o: ape/loader.c ape/ape.h
 	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=1 -g $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/start.o: ape/start.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
@@ -130,6 +130,8 @@ APE_LOADER_FLAGS =				\
 	-iquote.				\
 	-Wall					\
 	-Wextra					\
+	-Werror					\
+	-pedantic-errors			\
 	-fpie					\
 	-Os					\
 	-ffreestanding				\
@@ -153,6 +155,7 @@ o/ape/idata.inc:				\
 
 o/$(MODE)/ape/ape-no-modify-self.o:		\
 		ape/ape.S			\
+		ape/ape.h			\
 		ape/macros.internal.h		\
 		ape/notice.inc			\
 		ape/relocations.h		\
@@ -183,6 +186,7 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 
 o/$(MODE)/ape/ape-copy-self.o:			\
 		ape/ape.S			\
+		ape/ape.h			\
 		ape/macros.internal.h		\
 		ape/notice.inc			\
 		ape/relocations.h		\
