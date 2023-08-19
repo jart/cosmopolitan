@@ -67,11 +67,6 @@ extern char ape_stack_prot[] __attribute__((__weak__));
 extern pthread_mutex_t __mmi_lock_obj;
 extern int hostos asm("__hostos");
 
-void cosmo2(int, char **, char **, unsigned long *) wontreturn;
-void __switch_stacks(int, char **, char **, unsigned long *,
-                     void (*)(int, char **, char **, unsigned long *),
-                     void *) wontreturn;
-
 static const char *DecodeMagnum(const char *p, long *r) {
   int k = 0;
   unsigned long c, x = 0;
@@ -95,6 +90,15 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   char **envp = (char **)(sp + 1 + argc + 1);
   unsigned long *auxv = (unsigned long *)(sp + 1 + argc + 1);
   while (*auxv++) donothing;
+
+  // set helpful globals
+  __argc = argc;
+  __argv = argv;
+  __envp = envp;
+  __auxv = auxv;
+  environ = envp;
+  program_invocation_name = argv[0];
+  __oldstack = (intptr_t)sp;
 
   // detect apple m1 environment
   char *magnums;
@@ -134,16 +138,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
     sys_sigaction(SIGSYS, act, 0, 8, 0);
   }
 
-  // set helpful globals
-  __argc = argc;
-  __argv = argv;
-  __envp = envp;
-  __auxv = auxv;
-  environ = envp;
-  program_invocation_name = argv[0];
-
   // needed by kisdangerous()
-  __oldstack = (intptr_t)sp;
   __pid = sys_getpid().ax;
 
   // initialize memory manager

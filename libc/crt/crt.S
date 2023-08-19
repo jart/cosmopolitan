@@ -66,6 +66,7 @@ _start:
 	lea	8(%rsp),%rsi			// argv
 	lea	16(%rsp,%rbx,8),%rdx		// envp
 	mov	%rsp,__oldstack(%rip)
+	mov	%rdx,__envp(%rip)
 
 //	setup backtraces
 	xor	%ebp,%ebp
@@ -77,7 +78,8 @@ _start:
 //	make win32 imps noop
 	.weak	ape_idata_iat
 	.weak	ape_idata_iatend
-	ezlea	__win32_oops,ax
+	.weak	__oops_win32
+	ezlea	__oops_win32,ax
 	ezlea	ape_idata_iat,di
 	ezlea	ape_idata_iatend,cx
 	sub	%rdi,%rcx

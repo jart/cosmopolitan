@@ -155,7 +155,7 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
   sigaddset(&mask, SIGCHLD);
   __sig_mask(SIG_BLOCK, &mask, &oldmask);
   do {
-    rc = _check_interrupts(kSigOpRestartable | kSigOpNochld, 0);
+    rc = _check_interrupts(kSigOpRestartable | kSigOpNochld);
     if (rc == -1) break;
     __fds_lock();
     rc = sys_wait4_nt_impl(&pid, opt_out_wstatus, options, opt_out_rusage);

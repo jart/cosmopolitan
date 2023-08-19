@@ -42,6 +42,7 @@
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
@@ -145,18 +146,38 @@ static textwindows dontinline void ReadOrDie(int64_t h, void *buf, size_t n) {
 
 static textwindows int64_t MapOrDie(uint32_t prot, uint64_t size) {
   int64_t h;
-  if ((h = CreateFileMapping(-1, 0, prot, size >> 32, size, 0))) {
-    return h;
-  } else {
+  for (;;) {
+    if ((h = CreateFileMapping(-1, 0, prot, size >> 32, size, 0))) {
+      return h;
+    }
+    if (GetLastError() == kNtErrorAccessDenied) {
+      switch (prot) {
+        case kNtPageExecuteWritecopy:
+          prot = kNtPageWritecopy;
+          continue;
+        case kNtPageExecuteReadwrite:
+          prot = kNtPageReadwrite;
+          continue;
+        case kNtPageExecuteRead:
+          prot = kNtPageReadonly;
+          continue;
+        default:
+          break;
+      }
+    }
     AbortFork("MapOrDie");
   }
 }
 
 static textwindows void ViewOrDie(int64_t h, uint32_t access, size_t pos,
                                   size_t size, void *base) {
-  void *got;
-  got = MapViewOfFileEx(h, access, pos >> 32, pos, size, base);
-  if (!got || (base && got != base)) {
+TryAgain:
+  if (!MapViewOfFileEx(h, access, pos >> 32, pos, size, base)) {
+    if ((access & kNtFileMapExecute) &&
+        GetLastError() == kNtErrorAccessDenied) {
+      access &= ~kNtFileMapExecute;
+      goto TryAgain;
+    }
     AbortFork("ViewOrDie");
   }
 }

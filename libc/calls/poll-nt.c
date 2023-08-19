@@ -69,7 +69,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
   if (sigmask) {
     __sig_mask(SIG_SETMASK, sigmask, &oldmask);
   }
-  if ((rc = _check_interrupts(0, g_fds.p))) {
+  if ((rc = _check_interrupts(0))) {
     goto ReturnPath;
   }
 
@@ -194,7 +194,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
     }
     // otherwise loop limitlessly for timeout to elapse while
     // checking for signal delivery interrupts, along the way
-    if ((rc = _check_interrupts(0, g_fds.p))) {
+    if ((rc = _check_interrupts(0))) {
       goto ReturnPath;
     }
   }

@@ -21,11 +21,17 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/enum/lang.h"
 #include "libc/nt/process.h"
 #include "libc/str/str.h"
+// clang-format off
+
+#if defined(SYSDEBUG) && _NTTRACE
+dontasan dontubsan privileged
+#endif
 
 /**
  * Converts errno value to string with explicit windows errno too.
@@ -53,7 +59,7 @@ int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
     for (; (c = *sym++); --size)
       if (size > 1) *buf++ = c;
     if (size) *buf = 0;
-  } else if (!IsWindows() || ((err == winerr || !winerr) && !wanting)) {
+  } else if (!IsWindows() /* || ((err == winerr || !winerr) && !wanting) */) {
     ksnprintf(buf, size, "%s/%d/%s", sym, err, msg);
   } else {
     if ((n = __imp_FormatMessageW(

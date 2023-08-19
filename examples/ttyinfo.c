@@ -55,10 +55,10 @@ int rawmode(void) {
   static bool once;
   struct termios t;
   if (!once) {
-    if (tcgetattr(1, &oldterm) != -1) {
+    if (tcgetattr(1, &oldterm)) {
       atexit(restoretty);
     } else {
-      return -1;
+      perror("tcgetattr");
     }
     once = true;
   }
@@ -82,7 +82,10 @@ int rawmode(void) {
   t.c_cflag |= CS8;
   t.c_iflag |= IUTF8;
 
-  tcsetattr(1, TCSANOW, &t);
+  if (tcsetattr(1, TCSANOW, &t)) {
+    perror("tcsetattr");
+  }
+
   WRITE(1, ENABLE_SAFE_PASTE);
   WRITE(1, ENABLE_MOUSE_TRACKING);
   WRITE(1, PROBE_DISPLAY_SIZE);
@@ -94,7 +97,7 @@ void getsize(void) {
     printf("termios says terminal size is %hu×%hu\r\n", wsize.ws_col,
            wsize.ws_row);
   } else {
-    printf("%s\n", strerror(errno));
+    perror("tcgetwinsize");
   }
 }
 
@@ -157,12 +160,13 @@ int main(int argc, char *argv[]) {
       getsize();
       resized = false;
     }
+    bzero(code, sizeof(code));
     if ((n = readansi(0, code, sizeof(code))) == -1) {
       if (errno == EINTR) continue;
-      printf("ERROR: READ: %s\r\n", strerror(errno));
+      perror("read");
       exit(1);
     }
-    printf("%`'.*s ", n, code);
+    printf("%`'.*s (got %d) ", n, code, n);
     if (iscntrl(code[0]) && !code[1]) {
       printf("is CTRL-%c a.k.a. ^%c\r\n", CTRL(code[0]), CTRL(code[0]));
       if (code[0] == CTRL('C') || code[0] == CTRL('D')) break;

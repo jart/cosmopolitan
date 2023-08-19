@@ -40,6 +40,13 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
   if (__mkntpathat(dirfd, path, flags, path16) == -1) {
     return kNtInvalidHandleValue;
   }
+  if (flags & O_NOFOLLOW) {
+    if ((attr = GetFileAttributes(path16)) != -1u &&  //
+        (attr & kNtFileAttributeReparsePoint)) {
+      return eloop();
+    }
+    flags &= ~O_NOFOLLOW;
+  }
   if (GetNtOpenFlags(flags, mode, &perm, &share, &disp, &attr) == -1) {
     return kNtInvalidHandleValue;
   }
@@ -57,7 +64,9 @@ static textwindows int sys_open_nt_console(int dirfd,
     // this is an ugly hack that works for observed usage patterns
     g_fds.p[fd].handle = g_fds.p[STDIN_FILENO].handle;
     g_fds.p[fd].extra = g_fds.p[STDOUT_FILENO].handle;
-    g_fds.p[fd].dontclose = true;  // don't call CloseHandle() upon close()
+    g_fds.p[STDOUT_FILENO].dontclose = true;
+    g_fds.p[STDIN_FILENO].dontclose = true;
+    g_fds.p[fd].dontclose = true;
   } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
                   dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode,
                   kNtFileFlagOverlapped)) != -1) {

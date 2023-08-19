@@ -39,13 +39,13 @@ $(LIBC_NEXGEN32E_A).pkg:				\
 		$(LIBC_NEXGEN32E_A_OBJS)		\
 		$(foreach x,$(LIBC_NEXGEN32E_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/nexgen32e/envp.o				\
 o/$(MODE)/libc/nexgen32e/argc2.o			\
 o/$(MODE)/libc/nexgen32e/argv2.o			\
 o/$(MODE)/libc/nexgen32e/auxv2.o			\
 o/$(MODE)/libc/nexgen32e/cescapec.o			\
 o/$(MODE)/libc/nexgen32e/crc32init.o			\
 o/$(MODE)/libc/nexgen32e/environ2.o			\
-o/$(MODE)/libc/nexgen32e/envp2.o			\
 o/$(MODE)/libc/nexgen32e/kbase36.o			\
 o/$(MODE)/libc/nexgen32e/ktens.o			\
 o/$(MODE)/libc/nexgen32e/ktolower.o			\

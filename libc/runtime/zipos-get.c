@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/cosmo.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kmalloc.h"
@@ -28,9 +30,11 @@
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
@@ -39,23 +43,33 @@
 __static_yoink(APE_COM_NAME);
 #endif
 
-static uint64_t __zipos_get_min_offset(const uint8_t *map,
-                                       const uint8_t *cdir) {
-  uint64_t i, n, c, r, o;
+static struct Zipos __zipos;
+static atomic_uint __zipos_once;
+
+static void __zipos_dismiss(const uint8_t *map, const uint8_t *cdir, long pg) {
+  uint64_t i, n, c, ef, lf, mo, lo, hi;
+
+  // determine the byte range of zip file content (excluding central dir)
   c = GetZipCdirOffset(cdir);
   n = GetZipCdirRecords(cdir);
-  for (r = c, i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(map + c)) {
-    o = GetZipCfileOffset(map + c);
-    if (o < r) r = o;
+  for (lo = c, hi = i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(map + c)) {
+    lf = GetZipCfileOffset(map + c);
+    if (lf < lo) lo = lf;
+    ef = lf + ZIP_LFILE_HDRSIZE(map + lf) + GetZipLfileCompressedSize(map + lf);
+    if (ef > hi) hi = ef;
   }
-  return r;
-}
 
-static void __zipos_munmap_unneeded(const uint8_t *map, const uint8_t *cdir) {
-  uint64_t n;
-  n = __zipos_get_min_offset(map, cdir);
-  n = ROUNDDOWN(n, FRAMESIZE);
-  if (n) munmap(map, n);
+  // unmap the executable portion beneath the local files
+  mo = ROUNDDOWN(lo, FRAMESIZE);
+  if (mo) munmap(map, mo);
+
+  // this is supposed to reduce our rss usage but does it
+  pg = getauxval(AT_PAGESZ);
+  lo = ROUNDDOWN(lo, pg);
+  hi = MIN(ROUNDUP(hi, pg), ROUNDDOWN(c, pg));
+  if (hi > lo) {
+    posix_madvise(map + lo, hi - lo, POSIX_MADV_DONTNEED);
+  }
 }
 
 static int __zipos_compare_names(const void *a, const void *b, void *c) {
@@ -88,75 +102,67 @@ static void __zipos_generate_index(struct Zipos *zipos) {
                __zipos_compare_names, zipos);
 }
 
+static void __zipos_init(void) {
+  char *endptr;
+  const char *s;
+  struct stat st;
+  int x, fd, err, msg;
+  uint8_t *map, *cdir;
+  const char *progpath;
+  if (!(s = getenv("COSMOPOLITAN_DISABLE_ZIPOS"))) {
+    // this environment variable may be a filename or file descriptor
+    if ((progpath = getenv("COSMOPOLITAN_INIT_ZIPOS")) &&
+        (x = strtol(progpath, &endptr, 10)) >= 0 && !*endptr) {
+      fd = x;
+    } else {
+      fd = -1;
+    }
+    if (fd != -1 || PLEDGED(RPATH)) {
+      if (fd == -1) {
+        if (!progpath) {
+          progpath = GetProgramExecutableName();
+        }
+        fd = open(progpath, O_RDONLY);
+      }
+      if (fd != -1) {
+        if (!fstat(fd, &st) && (map = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
+                                           fd, 0)) != MAP_FAILED) {
+          if ((cdir = GetZipEocd(map, st.st_size, &err))) {
+            long pagesz = getauxval(AT_PAGESZ);
+            __zipos_dismiss(map, cdir, pagesz);
+            __zipos.map = map;
+            __zipos.cdir = cdir;
+            __zipos.dev = st.st_ino;
+            __zipos.pagesz = pagesz;
+            __zipos_generate_index(&__zipos);
+            msg = kZipOk;
+          } else {
+            munmap(map, st.st_size);
+            msg = !cdir ? err : kZipErrorRaceCondition;
+          }
+        } else {
+          msg = kZipErrorMapFailed;
+        }
+        close(fd);
+      } else {
+        msg = kZipErrorOpenFailed;
+      }
+    } else {
+      msg = -666;
+    }
+  } else {
+    progpath = 0;
+    msg = -777;
+  }
+  STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
+}
+
 /**
  * Returns pointer to zip central directory of current executable.
  * @asyncsignalsafe
  * @threadsafe
  */
 struct Zipos *__zipos_get(void) {
-  char *endptr;
-  const char *s;
-  struct stat st;
-  static bool once;
-  struct Zipos *res;
-  int x, fd, err, msg;
-  uint8_t *map, *cdir;
-  const char *progpath;
-  static struct Zipos zipos;
-  __zipos_lock();
-  if (!once) {
-    if (!(s = getenv("COSMOPOLITAN_DISABLE_ZIPOS"))) {
-      // this environment variable may be a filename or file descriptor
-      if ((progpath = getenv("COSMOPOLITAN_INIT_ZIPOS")) &&
-          (x = strtol(progpath, &endptr, 10)) >= 0 && !*endptr) {
-        fd = x;
-      } else {
-        fd = -1;
-      }
-      if (fd != -1 || PLEDGED(RPATH)) {
-        if (fd == -1) {
-          if (!progpath) {
-            progpath = GetProgramExecutableName();
-          }
-          fd = open(progpath, O_RDONLY);
-        }
-        if (fd != -1) {
-          if (!fstat(fd, &st) &&
-              (map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) !=
-                  MAP_FAILED) {
-            if ((cdir = GetZipEocd(map, st.st_size, &err))) {
-              __zipos_munmap_unneeded(map, cdir);
-              zipos.map = map;
-              zipos.cdir = cdir;
-              zipos.dev = st.st_ino;
-              __zipos_generate_index(&zipos);
-              msg = kZipOk;
-            } else {
-              munmap(map, st.st_size);
-              msg = !cdir ? err : kZipErrorRaceCondition;
-            }
-          } else {
-            msg = kZipErrorMapFailed;
-          }
-          close(fd);
-        } else {
-          msg = kZipErrorOpenFailed;
-        }
-      } else {
-        msg = -666;
-      }
-    } else {
-      progpath = 0;
-      msg = -777;
-    }
-    STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
-    once = true;
-  }
-  __zipos_unlock();
-  if (zipos.cdir) {
-    res = &zipos;
-  } else {
-    res = 0;
-  }
-  return res;
+  cosmo_once(&__zipos_once, __zipos_init);
+  return __zipos.cdir ? &__zipos : 0;
 }

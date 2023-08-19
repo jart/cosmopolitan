@@ -43,10 +43,12 @@ textwindows int64_t CreateFileMapping(
                                      flProtect, dwMaximumSizeHigh,
                                      dwMaximumSizeLow, opt_lpName);
   if (!hHandle) __winerr();
+#if 1
   NTTRACE("CreateFileMapping(%ld, %s, %s, %'zu, %#hs) → %ld% m", opt_hFile,
           DescribeNtSecurityAttributes(opt_lpFileMappingAttributes),
           DescribeNtPageFlags(flProtect),
           (uint64_t)dwMaximumSizeHigh << 32 | dwMaximumSizeLow, opt_lpName,
           hHandle);
+#endif
   return hHandle;
 }

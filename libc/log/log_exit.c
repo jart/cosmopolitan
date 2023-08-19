@@ -20,5 +20,5 @@
 #include "libc/runtime/runtime.h"
 
 wontreturn void _log_exit(int exitcode) {
-  _Exitr(exitcode);
+  _Exit(exitcode);
 }

@@ -239,11 +239,11 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     p = ShowGeneralRegisters(p, ctx);
     p = ShowSseRegisters(p, ctx);
     *p++ = '\n';
-    _klog(buf, p - buf);
+    klog(buf, p - buf);
     ShowFunctionCalls(ctx);
   } else {
     *p++ = '\n';
-    _klog(buf, p - buf);
+    klog(buf, p - buf);
   }
   kprintf("\n");
   if (!IsWindows()) __print_maps();
@@ -275,7 +275,7 @@ static wontreturn relegated dontinstrument void __minicrash(int sig,
           kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
           ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0, __pid,
           __tls_enabled ? __get_tls()->tib_tid : sys_gettid());
-  _Exitr(119);
+  _Exit(119);
 }
 
 /**
@@ -334,7 +334,7 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
       if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
         __restore_tty();
         ShowCrashReport(err, sig, si, ctx);
-        _Exitr(128 + sig);
+        _Exit(128 + sig);
       }
       atomic_store_explicit(&once, 0, memory_order_relaxed);
     } else {

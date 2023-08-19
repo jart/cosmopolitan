@@ -38,7 +38,7 @@ int tcgetwinsize(int fd, struct winsize *ws) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
       rc = enotty();
     } else if (IsWindows()) {
-      rc = tcgetwinsize_nt(g_fds.p + fd, ws);
+      rc = tcgetwinsize_nt(fd, ws);
     } else {
       rc = sys_ioctl(fd, TIOCGWINSZ, ws);
     }

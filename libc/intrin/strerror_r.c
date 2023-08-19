@@ -16,9 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#define ShouldUseMsabiAttribute() 1
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
+// clang-format off
+
+#if defined(SYSDEBUG) && _NTTRACE
+dontasan dontubsan privileged
+#endif
 
 /**
  * Converts errno value to string.
@@ -27,6 +35,6 @@
  * @return 0 on success, or error code
  */
 int strerror_r(int err, char *buf, size_t size) {
-  int winerr = IsWindows() ? GetLastError() : 0;
+  int winerr = IsWindows() ? __imp_GetLastError() : 0;
   return strerror_wr(err, winerr, buf, size);
 }

@@ -21,7 +21,9 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -59,6 +61,8 @@
  */
 int dup3(int oldfd, int newfd, int flags) {
   int rc;
+  // helps guarantee stderr log gets duplicated before user closes
+  if (_weaken(kloghandle)) _weaken(kloghandle)();
   if (oldfd == newfd || (flags & ~O_CLOEXEC)) {
     rc = einval();  // NetBSD doesn't do this
   } else if (oldfd < 0 || newfd < 0) {

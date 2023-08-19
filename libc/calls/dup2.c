@@ -21,7 +21,9 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -60,6 +62,8 @@
  */
 int dup2(int oldfd, int newfd) {
   int rc;
+  // helps guarantee stderr log gets duplicated before user closes
+  if (_weaken(kloghandle)) _weaken(kloghandle)();
   if (__isfdkind(oldfd, kFdZip)) {
     rc = enotsup();
 #ifdef __aarch64__

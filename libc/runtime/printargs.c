@@ -480,13 +480,15 @@ dontasan textstartup void __printargs(const char *prologue) {
       } else {
         PRINT("  - stderr");
       }
-      kprintf(prologue);
       errno = 0;
-      kprintf("    isatty = %d% m\n", isatty(i));
+      PRINT("    isatty = %d% m", isatty(i));
       if (!tcgetwinsize(i, &ws)) {
-        kprintf("    ws_row = %d\n", ws.ws_row);
-        kprintf("    ws_col = %d\n", ws.ws_col);
+        PRINT("    ws_row = %d", ws.ws_row);
+        PRINT("    ws_col = %d", ws.ws_col);
+      } else {
+        PRINT("    tcgetwinsize = %s", strerror(errno));
       }
+      kprintf(prologue);
       kprintf("    c_iflag =");
       if (termios.c_iflag & IGNBRK) kprintf(" IGNBRK");
       if (termios.c_iflag & BRKINT) kprintf(" BRKINT");

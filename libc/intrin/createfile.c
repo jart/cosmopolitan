@@ -21,6 +21,8 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
@@ -33,30 +35,50 @@ __msabi extern typeof(Sleep) *const __imp_Sleep;
 /**
  * Opens file on the New Technology.
  *
- * @return handle, or -1 on failure
+ * @return handle, or -1 on failure w/ `errno` set appropriately
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
-textwindows int64_t CreateFile(
-    const char16_t *lpFileName, uint32_t dwDesiredAccess, uint32_t dwShareMode,
-    struct NtSecurityAttributes *opt_lpSecurityAttributes,
-    int dwCreationDisposition, uint32_t dwFlagsAndAttributes,
-    int64_t opt_hTemplateFile) {
+textwindows int64_t CreateFile(const char16_t *lpFileName,                   //
+                               uint32_t dwDesiredAccess,                     //
+                               uint32_t dwShareMode,                         //
+                               struct NtSecurityAttributes *opt_lpSecurity,  //
+                               int dwCreationDisposition,                    //
+                               uint32_t dwFlagsAndAttributes,                //
+                               int64_t opt_hTemplateFile) {
   int64_t hHandle;
   uint32_t micros = 1;
 TryAgain:
   hHandle = __imp_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode,
-                              opt_lpSecurityAttributes, dwCreationDisposition,
+                              opt_lpSecurity, dwCreationDisposition,
                               dwFlagsAndAttributes, opt_hTemplateFile);
-  if (hHandle == -1 && __imp_GetLastError() == kNtErrorPipeBusy) {
-    if (micros >= 1024) __imp_Sleep(micros / 1024);
-    if (micros / 1024 < __SIG_POLLING_INTERVAL_MS) micros <<= 1;
-    goto TryAgain;
+  if (hHandle == -1) {
+    switch (__imp_GetLastError()) {
+      case kNtErrorPipeBusy:
+        if (micros >= 1024) __imp_Sleep(micros / 1024);
+        if (micros / 1024 < __SIG_POLLING_INTERVAL_MS) micros <<= 1;
+        goto TryAgain;
+      case kNtErrorAccessDenied:
+        // GetNtOpenFlags() always greedily requests execute permissions
+        // because the POSIX flag O_EXEC doesn't mean the same thing. It
+        // seems however this causes the opening of certain files to not
+        // work, possibly due to Windows Defender or some security thing
+        // In that case, we'll cross our fingers the file isn't a binary
+        if ((dwDesiredAccess & kNtGenericExecute) &&
+            (dwCreationDisposition == kNtOpenExisting ||
+             dwCreationDisposition == kNtTruncateExisting)) {
+          dwDesiredAccess &= ~kNtGenericExecute;
+          goto TryAgain;
+        }
+        break;
+      default:
+        break;
+    }
+    __winerr();
   }
-  if (hHandle == -1) __winerr();
   NTTRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → %ld% m", lpFileName,
           DescribeNtFileAccessFlags(dwDesiredAccess),
           DescribeNtFileShareFlags(dwShareMode),
-          DescribeNtSecurityAttributes(opt_lpSecurityAttributes),
+          DescribeNtSecurityAttributes(opt_lpSecurity),
           DescribeNtCreationDisposition(dwCreationDisposition),
           DescribeNtFileFlagAttr(dwFlagsAndAttributes), opt_hTemplateFile,
           hHandle);

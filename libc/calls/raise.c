@@ -27,10 +27,6 @@
 #include "libc/thread/tls.h"
 #include "libc/thread/xnu.internal.h"
 
-static textwindows inline bool HasWorkingConsole(void) {
-  return !!(__ntconsolemode[0] | __ntconsolemode[1] | __ntconsolemode[2]);
-}
-
 static dontubsan void RaiseSigFpe(void) {
   volatile int x = 0;
   x = 1 / x;

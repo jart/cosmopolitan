@@ -45,21 +45,39 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/zip.internal.h"
 
-static char *mapend;
-static size_t maptotal;
+static char *__zipos_mapend;
+static size_t __zipos_maptotal;
+static pthread_mutex_t __zipos_lock_obj;
+
+static void __zipos_lock(void) {
+  if (__threaded) {
+    pthread_mutex_lock(&__zipos_lock_obj);
+  }
+}
+
+static void __zipos_unlock(void) {
+  if (__threaded) {
+    pthread_mutex_unlock(&__zipos_lock_obj);
+  }
+}
+
+static void __zipos_funlock(void) {
+  pthread_mutex_init(&__zipos_lock_obj, 0);
+}
 
 static void *__zipos_mmap_space(size_t mapsize) {
   char *start;
   size_t offset;
   unassert(mapsize);
-  offset = maptotal;
-  maptotal += mapsize;
+  offset = __zipos_maptotal;
+  __zipos_maptotal += mapsize;
   start = (char *)kMemtrackZiposStart;
-  if (!mapend) mapend = start;
-  mapend = _extend(start, maptotal, mapend, MAP_PRIVATE,
-                   kMemtrackZiposStart + kMemtrackZiposSize);
+  if (!__zipos_mapend) __zipos_mapend = start;
+  __zipos_mapend = _extend(start, __zipos_maptotal, __zipos_mapend, MAP_PRIVATE,
+                           kMemtrackZiposStart + kMemtrackZiposSize);
   return start + offset;
 }
 
@@ -68,7 +86,6 @@ void __zipos_free(struct ZiposHandle *h) {
     __asan_poison((char *)h + sizeof(struct ZiposHandle),
                   h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
   }
-  pthread_mutex_destroy(&h->lock);
   __zipos_lock();
   do h->next = h->zipos->freelist;
   while (!_cmpxchg(&h->zipos->freelist, h->next, h));
@@ -105,7 +122,6 @@ StartOver:
     h->size = size;
     h->zipos = zipos;
     h->mapsize = mapsize;
-    pthread_mutex_init(&h->lock, 0);
   }
   return h;
 }
@@ -197,16 +213,40 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
   return -1;
 }
 
-static int __zipos_open_impl(struct ZiposUri *name, int flags) {
-  struct Zipos *zipos;
+/**
+ * Loads compressed file from αcτµαlly pδrταblε εxεcµταblε object store.
+ *
+ * @param uri is obtained via __zipos_parseuri()
+ * @asyncsignalsafe
+ * @threadsafe
+ */
+int __zipos_open(struct ZiposUri *name, int flags) {
+
+  // check if this thread is cancelled
+  int rc;
+  if (_weaken(pthread_testcancel_np) &&
+      (rc = _weaken(pthread_testcancel_np)())) {
+    errno = rc;
+    return -1;
+  }
+
+  // validate api usage
   if ((flags & O_CREAT) ||  //
       (flags & O_TRUNC) ||  //
       (flags & O_ACCMODE) != O_RDONLY) {
     return erofs();
   }
+
+  // get the zipos global singleton
+  struct Zipos *zipos;
   if (!(zipos = __zipos_get())) {
     return enoexec();
   }
+
+  // most open() calls are due to languages path searching assets. the
+  // majority of these calls will return ENOENT or ENOTDIR. we need to
+  // perform two extremely costly sigprocmask() calls below. thanks to
+  // zipos being a read-only filesystem, we can avoid it in many cases
   ssize_t cf;
   if ((cf = __zipos_find(zipos, name)) == -1) {
     return -1;
@@ -223,25 +263,14 @@ static int __zipos_open_impl(struct ZiposUri *name, int flags) {
       return eacces();
     }
   }
-  return __zipos_load(zipos, cf, flags, name);
-}
 
-/**
- * Loads compressed file from αcτµαlly pδrταblε εxεcµταblε object store.
- *
- * @param uri is obtained via __zipos_parseuri()
- * @asyncsignalsafe
- * @threadsafe
- */
-int __zipos_open(struct ZiposUri *name, int flags) {
-  int rc;
-  if (_weaken(pthread_testcancel_np) &&
-      (rc = _weaken(pthread_testcancel_np)())) {
-    errno = rc;
-    return -1;
-  }
+  // now do the heavy lifting
   BLOCK_SIGNALS;
-  rc = __zipos_open_impl(name, flags);
+  rc = __zipos_load(zipos, cf, flags, name);
   ALLOW_SIGNALS;
   return rc;
+}
+
+__attribute__((__constructor__)) static void __zipos_ctor(void) {
+  pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_funlock);
 }

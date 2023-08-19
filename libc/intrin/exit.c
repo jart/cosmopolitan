@@ -19,21 +19,23 @@
 #include "libc/dce.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
  *
- * When running on bare metal, this function will reboot your computer
- * by hosing the interrupt descriptors and triple faulting the system.
- *
  * Exit codes are narrowed to an unsigned char on most platforms. The
  * exceptions would be Windows, NetBSD, and OpenBSD, which should let
  * you have larger exit codes.
+ *
+ * When running on bare metal, this function will reboot your computer
+ * by hosing the interrupt descriptors and triple faulting the system.
  *
  * @asyncsignalsafe
  * @threadsafe
@@ -41,7 +43,6 @@
  * @noreturn
  */
 wontreturn void _Exit(int exitcode) {
-  int i;
   STRACE("_Exit(%d)", exitcode);
   if (!IsWindows() && !IsMetal()) {
     // On Linux _Exit1 (exit) must be called in pledge("") mode. If we
@@ -84,19 +85,24 @@ wontreturn void _Exit(int exitcode) {
 #endif
   } else if (IsWindows()) {
     uint32_t waitstatus;
+    // Restoring the CMD.EXE program to its original state is critical.
+    if (_weaken(__restore_console_win32)) {
+      _weaken(__restore_console_win32)();
+    }
+    // What Microsoft calls an exit code, POSIX calls a status code. See
+    // also the WEXITSTATUS() and WIFEXITED() macros that POSIX defines.
     waitstatus = exitcode;
     waitstatus <<= 8;
+    // "The GetExitCodeProcess function returns a valid error code
+    //  defined by the application only after the thread terminates.
+    //  Therefore, an application should not use kNtStillActive (259) as
+    //  an error code (kNtStillActive is a macro for kNtStatusPending).
+    //  If a thread returns kNtStillActive (259) as an error code, then
+    //  applications that test for that value could interpret it to mean
+    //  that the thread is still running, and continue to test for the
+    //  completion of the thread after the thread has terminated, which
+    //  could put the application into an infinite loop." -Quoth MSDN
     if (waitstatus == kNtStillActive) {
-      // The GetExitCodeProcess function returns a valid error code
-      // defined by the application only after the thread terminates.
-      // Therefore, an application should not use STILL_ACTIVE (259) as
-      // an error code (STILL_ACTIVE is a macro for STATUS_PENDING
-      // (minwinbase.h)). If a thread returns STILL_ACTIVE (259) as an
-      // error code, then applications that test for that value could
-      // interpret it to mean that the thread is still running, and
-      // continue to test for the completion of the thread after the
-      // thread has terminated, which could put the application into an
-      // infinite loop. -Quoth MSDN (see also libc/calls/wait4-nt.c)
       waitstatus = 0xc9af3d51u;
     }
     ExitProcess(waitstatus);

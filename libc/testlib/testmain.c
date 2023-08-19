@@ -120,6 +120,8 @@ static void FixIrregularFds(void) {
       }
     }
   }
+  // TODO(jart): delete this stuff
+  if (1) return;
   e = errno;
   if (!closefrom(3)) return;
   errno = e;

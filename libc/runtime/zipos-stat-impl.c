@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
@@ -30,7 +32,8 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   st->st_dev = zipos->dev;
   st->st_blksize = FRAMESIZE;
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
-    st->st_mode = S_IFDIR | 0555;
+    st->st_mode = S_IFDIR | (0555 & ~atomic_load_explicit(
+                                        &__umask, memory_order_acquire));
   } else {
     lf = GetZipCfileOffset(zipos->map + cf);
     st->st_mode = GetZipCfileMode(zipos->map + cf);

@@ -344,7 +344,7 @@ static void __asan_exit(void) {
   kprintf("your asan runtime needs\n"
           "\t__static_yoink(\"__die\");\n"
           "in order to show you backtraces\n");
-  _Exitr(99);
+  _Exit(99);
 }
 
 dontdiscard static __asan_die_f *__asan_die(void) {
@@ -1483,7 +1483,7 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   if (!_cmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
     __write_str("error: asan binaries require windows10\r\n");
-    _Exitr(0); /* So `make MODE=dbg test` passes w/ Windows7 */
+    _Exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
   }
   REQUIRE(_mmi);
   REQUIRE(sys_mmap);

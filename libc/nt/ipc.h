@@ -77,8 +77,8 @@ bool32 SetNamedPipeHandleState(int64_t hNamedPipe, uint32_t *lpMode,
                                uint32_t *lpCollectDataTimeout);
 
 bool32 PeekNamedPipe(int64_t hNamedPipe, void *lpBuffer, uint32_t nBufferSize,
-                     uint32_t *lpBytesRead, uint32_t *lpTotalBytesAvail,
-                     uint32_t *lpBytesLeftThisMessage);
+                     uint32_t *opt_lpBytesRead, uint32_t *opt_lpTotalBytesAvail,
+                     uint32_t *opt_lpBytesLeftThisMessage);
 
 bool32 TransactNamedPipe(int64_t hNamedPipe, void *lpInBuffer,
                          uint32_t nInBufferSize, void *lpOutBuffer,

@@ -21,13 +21,8 @@
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 #include "libc/zip.internal.h"
-
-static size_t GetIovSize(const struct iovec *iov, size_t iovlen) {
-  size_t i, r;
-  for (r = i = 0; i < iovlen; ++i) r += iov[i].iov_len;
-  return r;
-}
 
 static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
                                  size_t iovlen, ssize_t opt_offset) {
@@ -61,10 +56,6 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
  */
 ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
                      size_t iovlen, ssize_t opt_offset) {
-  ssize_t rc;
   unassert(opt_offset >= 0 || opt_offset == -1);
-  pthread_mutex_lock(&h->lock);
-  rc = __zipos_read_impl(h, iov, iovlen, opt_offset);
-  pthread_mutex_unlock(&h->lock);
-  return rc;
+  return __zipos_read_impl(h, iov, iovlen, opt_offset);
 }

@@ -55,10 +55,10 @@ relegated wontreturn void __die(void) {
       DebugBreak();
     }
     ShowBacktrace(2, __builtin_frame_address(0));
-    _Exitr(77);
+    _Exit(77);
   } else if (owner == me) {
     kprintf("die failed while dying\n");
-    _Exitr(79);
+    _Exit(79);
   } else {
     _Exit1(79);
   }

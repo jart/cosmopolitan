@@ -206,7 +206,7 @@ static void __ubsan_exit(void) {
   kprintf("your ubsan runtime needs\n"
           "\t__static_yoink(\"__die\");\n"
           "in order to show you backtraces\n");
-  _Exitr(99);
+  _Exit(99);
 }
 
 static char *__ubsan_stpcpy(char *d, const char *s) {

@@ -50,6 +50,10 @@ __static_yoink("libc/testlib/hyperion.txt");
 #define THREADS 8
 
 void SetUpOnce(void) {
+  for (int i = 3; i < 200; ++i) {
+    close(i);
+  }
+  errno = 0;
   __enable_threads();
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }

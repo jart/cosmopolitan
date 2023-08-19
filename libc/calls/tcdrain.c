@@ -33,8 +33,9 @@
 
 static dontinline textwindows int sys_tcdrain_nt(int fd) {
   if (!__isfdopen(fd)) return ebadf();
-  if (_check_interrupts(0, g_fds.p)) return -1;
-  if (!FlushFileBuffers(g_fds.p[fd].handle)) return __winerr();
+  if (_check_interrupts(0)) return -1;
+  // Tried FlushFileBuffers but it made Emacs hang when run in cmd.exe
+  // "Console output is not buffered." -Quoth MSDN on FlushFileBuffers
   return 0;
 }
 

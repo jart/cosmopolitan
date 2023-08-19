@@ -57,7 +57,7 @@ static textwindows int SendfileBlock(int64_t handle,
       NTTRACE("WSAWaitForMultipleEvents failed %lm");
       return __winsockerr();
     } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
-      if (_check_interrupts(kSigOpRestartable, g_fds.p)) return -1;
+      if (_check_interrupts(kSigOpRestartable)) return -1;
 #if _NTTRACE
       POLLTRACE("WSAWaitForMultipleEvents...");
 #endif

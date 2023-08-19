@@ -120,10 +120,6 @@ const char *(DescribeTermios)(char buf[N], ssize_t rc, struct termios *tio) {
   append(", .c_lflag=%s",
          DescribeFlags(b128, 128, kLocal, ARRAYLEN(kLocal), "", tio->c_lflag));
 
-  append(", c_cc[VINTR]=%#o", tio->c_cc[VINTR]);
-  append(", c_cc[VERASE]=%#o", tio->c_cc[VERASE]);
-  append(", c_cc[VWERASE]=%#o", tio->c_cc[VWERASE]);
-
   append("}");
 
   return buf;

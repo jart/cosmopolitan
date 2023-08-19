@@ -245,20 +245,20 @@ syscon	compat	MAP_32BIT				0x00000040		0x00000040		0			0x00008000		0x00080000		0
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	madv	MADV_NORMAL				0			0			0			0			0			0			0			0			# consensus
-syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0			0			0			# consensus
-syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0			0			0			# consensus
+syscon	madv	POSIX_FADV_NORMAL			0			0			0			0			0			0			0			0			# consensus
+syscon	madv	POSIX_MADV_NORMAL			0			0			0			0			0			0			0			0			# consensus
 syscon	madv	MADV_DONTNEED				4			4			4			4			4			4			4			127			# TODO(jart): weird nt decommit thing?
-syscon	compat	POSIX_MADV_DONTNEED			4			4			4			4			4			4			4			127			# unix consensus
-syscon	compat	POSIX_FADV_DONTNEED			4			4			127			127			4			4			4			127			# unix consensus
+syscon	madv	POSIX_MADV_DONTNEED			4			4			4			4			4			4			4			127			# unix consensus
+syscon	madv	POSIX_FADV_DONTNEED			4			4			127			127			4			4			4			127			# unix consensus
 syscon	madv	MADV_RANDOM				1			1			1			1			1			1			1			1			# unix consensus
-syscon	compat	POSIX_MADV_RANDOM			1			1			1			1			1			1			1			1			# unix consensus
-syscon	compat	POSIX_FADV_RANDOM			1			1			127			127			1			1			1			1			# unix consensus
+syscon	madv	POSIX_MADV_RANDOM			1			1			1			1			1			1			1			1			# unix consensus
+syscon	madv	POSIX_FADV_RANDOM			1			1			127			127			1			1			1			1			# unix consensus
 syscon	madv	MADV_SEQUENTIAL				2			2			2			2			2			2			2			2			# unix consensus
-syscon	compat	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			2			2			2			# unix consensus
-syscon	compat	POSIX_FADV_SEQUENTIAL			2			2			127			127			2			2			2			2			# TODO(jart): double check xnu
+syscon	madv	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			2			2			2			# unix consensus
+syscon	madv	POSIX_FADV_SEQUENTIAL			2			2			127			127			2			2			2			2			# TODO(jart): double check xnu
 syscon	madv	MADV_WILLNEED				3			3			3			3			3			3			3			3			# unix consensus (faked on NT)
-syscon	compat	POSIX_MADV_WILLNEED			3			3			3			3			3			3			3			3			# unix consensus
-syscon	compat	POSIX_FADV_WILLNEED			3			3			127			127			3			3			3			3			# TODO(jart): double check xnu
+syscon	madv	POSIX_MADV_WILLNEED			3			3			3			3			3			3			3			3			# unix consensus
+syscon	madv	POSIX_FADV_WILLNEED			3			3			127			127			3			3			3			3			# TODO(jart): double check xnu
 syscon	madv	MADV_MERGEABLE				12			12			127			127			127			127			127			127			# turns on (private anon range) page scanning and merging service (linux only)
 syscon	madv	MADV_UNMERGEABLE			13			13			127			127			127			127			127			127			# turns off mergeable (linux only)
 syscon	madv	MADV_FREE				8			8			5			5			5			6			6			8			# Linux 4.5+ (c. 2016) / NT Faked → VMOfferPriorityNormal (Win8+)

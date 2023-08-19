@@ -31,7 +31,6 @@
 wontreturn void quick_exit(int exitcode) {
   const uintptr_t *p;
   STRACE("quick_exit(%d)", exitcode);
-  _restorewintty();
   if (_weaken(fflush)) {
     _weaken(fflush)(0);
   }

@@ -92,20 +92,24 @@ TryAgain:
           if (result || flags == F_OK) {
             rc = 0;
           } else {
-            NTTRACE("ntaccesscheck finale failed %d %x", result, flags);
+            NTTRACE("ntaccesscheck finale failed: result=%d flags=%x", result,
+                    flags);
             rc = eacces();
           }
         } else {
           rc = __winerr();
-          NTTRACE("%s(%#hs) failed: %m", "AccessCheck", pathname);
+          NTTRACE("%s(%#hs) failed: %s", "AccessCheck", pathname,
+                  strerror(errno));
         }
       } else {
         rc = __winerr();
-        NTTRACE("%s(%#hs) failed: %m", "DuplicateToken", pathname);
+        NTTRACE("%s(%#hs) failed: %s", "DuplicateToken", pathname,
+                strerror(errno));
       }
     } else {
       rc = __winerr();
-      NTTRACE("%s(%#hs) failed: %m", "OpenProcessToken", pathname);
+      NTTRACE("%s(%#hs) failed: %s", "OpenProcessToken", pathname,
+              strerror(errno));
     }
   } else {
     e = GetLastError();
@@ -115,11 +119,13 @@ TryAgain:
         goto TryAgain;
       } else {
         rc = enomem();
-        NTTRACE("%s(%#hs) failed: %m", "GetFileSecurity", pathname);
+        NTTRACE("%s(%#hs) failed: %s", "GetFileSecurity", pathname,
+                strerror(errno));
       }
     } else {
       errno = e;
-      NTTRACE("%s(%#hs) failed: %m", "GetFileSecurity", pathname);
+      NTTRACE("%s(%#hs) failed: %s", "GetFileSecurity", pathname,
+              strerror(errno));
       rc = -1;
     }
   }

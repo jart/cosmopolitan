@@ -46,6 +46,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/zip.internal.h"
 
 /**

@@ -74,7 +74,7 @@ static inline pureconst unsigned long __rounddown2pow(unsigned long x) {
 static wontreturn void __mmap_die(const char *s) {
   if (_weaken(__die)) _weaken(__die)();
   STRACE("%s %m", s);
-  _Exitr(199);
+  _Exit(199);
 }
 
 static dontasan inline bool __overlaps_existing_mapping(char *p, size_t n) {

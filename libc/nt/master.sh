@@ -13,6 +13,7 @@ imp	''							CloseHandle						kernel32	1
 imp	''							CreateDirectoryW					kernel32	2
 imp	''							CreateFileMappingNumaW					kernel32	7
 imp	''							CreateFileMappingW					kernel32	6
+imp	''							CreateFileA						kernel32	7
 imp	''							CreateFileW						kernel32	7
 imp	''							CreateNamedPipeW					kernel32	8
 imp	''							CreatePipe						kernel32	4

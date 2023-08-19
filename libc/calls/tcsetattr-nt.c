@@ -17,19 +17,150 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
+#include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/version.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/version.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+
+#ifdef __x86_64__
+
+textwindows int __munge_terminal_input(char *p, uint32_t *n) {
+  size_t i, j;
+  if (!(__ttymagic & kFdTtyNoCr2Nl)) {
+    for (i = 0; i < *n; ++i) {
+      if (p[i] == '\r') {
+        p[i] = '\n';
+      }
+    }
+  }
+  bool delivered = false;
+  bool got_vintr = false;
+  bool got_vquit = false;
+  for (j = i = 0; i < *n; ++i) {
+    /*
+       It's not possible to type Ctrl+Space (aka ^@) into the CMD.EXE
+       console. Ctrl+Z is also problematic, since the Windows Console
+       processes that keystroke into an EOF event, even when we don't
+       enable input processing. These control codes are important for
+       Emacs users. One solution is to install the "Windows Terminal"
+       application from Microsoft Store, type Ctrl+Shift+, to get its
+       settings.json file opened, and add this code to its "actions":
+
+           "actions": [
+               {
+                   "command": {
+                       "action": "sendInput",
+                       "input": "␀"
+                   },
+                   "keys": "ctrl+space"
+               },
+               {
+                   "command": {
+                       "action": "sendInput",
+                       "input": "␚"
+                   },
+                   "keys": "ctrl+z"
+               },
+               {
+                   "command": {
+                       "action": "sendInput",
+                       "input": "\u001f"
+                   },
+                   "keys": "ctrl+-"
+               }
+           ],
+
+       Its not possible to configure Windows Terminal to output our
+       control codes. The workaround is to encode control sequences
+       using the "Control Pictures" UNICODE plane, which we'll then
+       translate back from UTF-8 glyphs, into actual control codes.
+
+       Another option Windows users can consider, particularly when
+       using CMD.EXE is installing Microsoft PowerTools whech makes
+       it possible to remap keys then configure ncurses to use them
+
+       https://github.com/microsoft/terminal/issues/2865
+     */
+    int c;
+    if (i + 3 <= *n &&                // control pictures ascii nul ␀
+        (p[i + 0] & 255) == 0xe2 &&   // becomes ^@ a.k.a. ctrl-space
+        (p[i + 1] & 255) == 0x90 &&   // map the entire unicode plane
+        ((p[i + 2] & 255) >= 0x80 &&  //
+         (p[i + 2] & 255) <= 0x9F)) {
+      c = (p[i + 2] & 255) - 0x80;
+      i += 2;
+    } else {
+      c = p[i] & 255;
+    }
+    if (!(__ttymagic & kFdTtyNoIsigs) &&  //
+        __vintr != _POSIX_VDISABLE &&     //
+        c == __vintr) {
+      got_vintr = true;
+    } else if (!(__ttymagic & kFdTtyNoIsigs) &&  //
+               __vquit != _POSIX_VDISABLE &&     //
+               c == __vquit) {
+      got_vquit = true;
+    } else {
+      p[j++] = c;
+    }
+  }
+  if (got_vintr) {
+    delivered |= __sig_handle(0, SIGINT, SI_KERNEL, 0);
+  }
+  if (got_vquit) {
+    delivered |= __sig_handle(0, SIGQUIT, SI_KERNEL, 0);
+  }
+  if (*n && !j) {
+    if (delivered) {
+      return DO_EINTR;
+    } else {
+      return DO_RESTART;
+    }
+  }
+  *n = j;
+  return DO_NOTHING;
+}
+
+// Manual CMD.EXE echoing for when !ICANON && ECHO is the case.
+textwindows void __echo_terminal_input(struct Fd *fd, char *p, size_t n) {
+  int64_t hOutput;
+  if (fd->kind == kFdConsole) {
+    hOutput = fd->extra;
+  } else {
+    hOutput = g_fds.p[1].handle;
+  }
+  if (__ttymagic & kFdTtyEchoRaw) {
+    WriteFile(hOutput, p, n, 0, 0);
+  } else {
+    size_t i;
+    for (i = 0; i < n; ++i) {
+      if (isascii(p[i]) && iscntrl(p[i]) && p[i] != '\n' && p[i] != '\t') {
+        char ctl[2];
+        ctl[0] = '^';
+        ctl[1] = p[i] ^ 0100;
+        WriteFile(hOutput, ctl, 2, 0, 0);
+      } else {
+        WriteFile(hOutput, p + i, 1, 0, 0);
+      }
+    }
+  }
+}
 
 textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   bool32 ok;
@@ -122,3 +253,11 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
     return enotty();
   }
 }
+
+__attribute__((__constructor__)) static void tcsetattr_nt_init(void) {
+  if (!getenv("TERM")) {
+    setenv("TERM", "xterm-256color", true);
+  }
+}
+
+#endif /* __x86_64__ */

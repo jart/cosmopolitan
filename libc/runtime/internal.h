@@ -16,7 +16,6 @@ COSMOPOLITAN_C_START_
 extern int __pid;
 extern char __runlevel;
 extern int ftrace_stackdigs;
-extern uint32_t __ntconsolemode[3];
 extern const char v_ntsubsystem[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_end[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_start[] __attribute__((__weak__));
@@ -38,6 +37,7 @@ void __morph_tls(void);
 void __enable_tls(void);
 void __enable_threads(void);
 void *__cxa_finalize(void *);
+void __restore_console_win32(void);
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated;
 void __asan_init(int, char **, char **, intptr_t *);

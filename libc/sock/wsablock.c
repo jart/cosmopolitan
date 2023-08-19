@@ -53,7 +53,7 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
   abort_errno = EAGAIN;
   if (fd->flags & O_NONBLOCK) {
     __wsablock_abort(fd->handle, overlapped);
-  } else if (_check_interrupts(sigops, g_fds.p)) {
+  } else if (_check_interrupts(sigops)) {
   Interrupted:
     abort_errno = errno;  // EINTR or ECANCELED
     __wsablock_abort(fd->handle, overlapped);
@@ -62,7 +62,7 @@ textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
       i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
                                    __SIG_POLLING_INTERVAL_MS, true);
       if (i == kNtWaitFailed || i == kNtWaitTimeout) {
-        if (_check_interrupts(sigops, g_fds.p)) {
+        if (_check_interrupts(sigops)) {
           goto Interrupted;
         }
         if (i == kNtWaitFailed) {

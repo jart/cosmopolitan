@@ -19,31 +19,30 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 
 textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
                                          int flags, int fd, int64_t off) {
-  int iscow;
-  int64_t handle;
-  uint32_t oldprot;
-  struct DirectMap dm;
-  struct ProtectNt fl;
-  const struct NtSecurityAttributes *sec;
 
+  int64_t handle;
   if (flags & MAP_ANONYMOUS) {
     handle = kNtInvalidHandleValue;
   } else {
     handle = g_fds.p[fd].handle;
   }
 
+  const struct NtSecurityAttributes *sec;
   if ((flags & MAP_TYPE) != MAP_SHARED) {
     sec = 0;  // MAP_PRIVATE isn't inherited across fork()
   } else {
@@ -54,7 +53,8 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
   // later using mprotect(). the workaround is to always request execute
   // and then virtualprotect() it away until we actually need it. please
   // note that open-nt.c always requests an kNtGenericExecute accessmask
-  iscow = false;
+  int iscow = false;
+  struct ProtectNt fl;
   if (handle != -1) {
     if ((flags & MAP_TYPE) != MAP_SHARED) {
       // windows has cow pages but they can't propagate across fork()
@@ -77,16 +77,43 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
                             kNtFileMapWrite | kNtFileMapExecute};
   }
 
+  int e = errno;
+  struct DirectMap dm;
+TryAgain:
   if ((dm.maphandle = CreateFileMapping(handle, sec, fl.flags1,
                                         (size + off) >> 32, (size + off), 0))) {
     if ((dm.addr = MapViewOfFileEx(dm.maphandle, fl.flags2, off >> 32, off,
                                    size, addr))) {
+      uint32_t oldprot;
       if (VirtualProtect(addr, size, __prot2nt(prot, iscow), &oldprot)) {
         return dm;
       }
       UnmapViewOfFile(dm.addr);
     }
     CloseHandle(dm.maphandle);
+  } else if (!(prot & PROT_EXEC) &&              //
+             (fl.flags2 & kNtFileMapExecute) &&  //
+             GetLastError() == kNtErrorAccessDenied) {
+    // your file needs to have been O_CREAT'd with exec `mode` bits in
+    // order to be mapped with executable permission. we always try to
+    // get execute permission if the kernel will give it to us because
+    // win32 would otherwise forbid mprotect() from elevating later on
+    fl.flags2 &= ~kNtFileMapExecute;
+    switch (fl.flags1) {
+      case kNtPageExecuteWritecopy:
+        fl.flags1 = kNtPageWritecopy;
+        break;
+      case kNtPageExecuteReadwrite:
+        fl.flags1 = kNtPageReadwrite;
+        break;
+      case kNtPageExecuteRead:
+        fl.flags1 = kNtPageReadonly;
+        break;
+      default:
+        __builtin_unreachable();
+    }
+    errno = e;
+    goto TryAgain;
   }
 
   dm.maphandle = kNtInvalidHandleValue;

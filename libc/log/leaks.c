@@ -115,6 +115,6 @@ dontasan void CheckForMemoryLeaks(void) {
     /* __print_maps(); */
     /* PrintSystemMappings(2); */
     /* PrintGarbage(); */
-    _Exitr(78);
+    _Exit(78);
   }
 }

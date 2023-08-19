@@ -174,7 +174,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, stru
 		deadline = timespec_max;
 	}
 
-	while (!(rc = _check_interrupts (0, 0))) {
+	while (!(rc = _check_interrupts (0))) {
 		now = timespec_real ();
 		if (timespec_cmp (now, deadline) > 0) {
 			rc = etimedout();

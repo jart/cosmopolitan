@@ -5,7 +5,7 @@
 #include "libc/calls/ucontext.h"
 
 #define __SIG_QUEUE_LENGTH        32
-#define __SIG_POLLING_INTERVAL_MS 50
+#define __SIG_POLLING_INTERVAL_MS 20
 #define __SIG_LOGGING_INTERVAL_MS 1700
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

@@ -6,7 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int tcgetwinsize_nt(struct Fd *, struct winsize *);
+int tcgetwinsize_nt(int, struct winsize *);
 const char *DescribeWinsize(char[64], int, struct winsize *);
 #define DescribeWinsize(rc, ws) DescribeWinsize(alloca(64), rc, ws)
 

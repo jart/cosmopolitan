@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -70,25 +72,27 @@ static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
 
 textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
   int filetype;
+  uint32_t umask;
   uint64_t actualsize;
   struct NtFileCompressionInfo fci;
   struct NtByHandleFileInformation wst;
   if (!st) return efault();
   if ((filetype = GetFileType(handle))) {
     bzero(st, sizeof(*st));
+    umask = atomic_load_explicit(&__umask, memory_order_acquire);
     switch (filetype) {
       case kNtFileTypeChar:
-        st->st_mode = S_IFCHR | 0644;
+        st->st_mode = S_IFCHR | (0666 & ~umask);
         break;
       case kNtFileTypePipe:
-        st->st_mode = S_IFIFO | 0644;
+        st->st_mode = S_IFIFO | (0666 & ~umask);
         break;
       case kNtFileTypeDisk:
         if (GetFileInformationByHandle(handle, &wst)) {
-          st->st_mode = 0555;
+          st->st_mode = 0555 & ~umask;
           st->st_flags = wst.dwFileAttributes;
           if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
-            st->st_mode |= 0200;
+            st->st_mode |= 0222 & ~umask;
           }
           if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
             st->st_mode |= S_IFDIR;
@@ -101,6 +105,7 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
           st->st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
           st->st_ctim = FileTimeToTimeSpec(wst.ftCreationFileTime);
           st->st_birthtim = st->st_ctim;
+          st->st_gid = st->st_uid = __synthesize_uid();
           st->st_size = (uint64_t)wst.nFileSizeHigh << 32 | wst.nFileSizeLow;
           st->st_blksize = 4096;
           st->st_dev = wst.dwVolumeSerialNumber;

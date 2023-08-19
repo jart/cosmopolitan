@@ -22,6 +22,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
@@ -59,6 +60,7 @@
 // clang-format off
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
+__msabi extern typeof(ExitProcess) *const __imp_ExitProcess;
 __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
 __msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
 __msabi extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess;
@@ -71,10 +73,16 @@ __msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
 __msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
 __msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
+__msabi extern typeof(WriteFile) *const __imp_WriteFile;
 // clang-format on
 
-extern const signed char kNtConsoleHandles[3];
 extern void cosmo(int, char **, char **, long (*)[2]) wontreturn;
+
+static const signed char kNtStdio[3] = {
+    (signed char)kNtStdInputHandle,
+    (signed char)kNtStdOutputHandle,
+    (signed char)kNtStdErrorHandle,
+};
 
 static const short kConsoleModes[3] = {
     kNtEnableProcessedInput | kNtEnableLineInput | kNtEnableEchoInput |
@@ -87,10 +95,23 @@ static const short kConsoleModes[3] = {
         kNtEnableVirtualTerminalProcessing,
 };
 
+static uint32_t __init_pid;
+static uint32_t __console_mode[3];
+
 // implements all win32 apis on non-windows hosts
-__msabi long __win32_oops(void) {
+__msabi long __oops_win32(void) {
   assert(!"win32 api called on non-windows host");
   return 0;
+}
+
+// called by _exit to undo our config changes to cmd.exe
+// it must never ever be called from forked subprocesses
+void __restore_console_win32(void) {
+  if (__imp_GetCurrentProcessId() == __init_pid) {
+    for (int i = 0; i < 3; ++i) {
+      __imp_SetConsoleMode(__imp_GetStdHandle(kNtStdio[i]), __console_mode[i]);
+    }
+  }
 }
 
 // https://nullprogram.com/blog/2022/02/18/
@@ -106,14 +127,14 @@ __msabi static inline char16_t *MyCommandLine(void) {
 // this ensures close(1) won't accidentally close(2) for example
 __msabi static textwindows void DeduplicateStdioHandles(void) {
   for (long i = 0; i < 3; ++i) {
-    int64_t h1 = __imp_GetStdHandle(kNtConsoleHandles[i]);
+    int64_t h1 = __imp_GetStdHandle(kNtStdio[i]);
     for (long j = i + 1; j < 3; ++j) {
-      int64_t h2 = __imp_GetStdHandle(kNtConsoleHandles[j]);
+      int64_t h2 = __imp_GetStdHandle(kNtStdio[j]);
       if (h1 == h2) {
         int64_t h3, proc = __imp_GetCurrentProcess();
         __imp_DuplicateHandle(proc, h2, proc, &h3, 0, true,
                               kNtDuplicateSameAccess);
-        __imp_SetStdHandle(kNtConsoleHandles[j], h3);
+        __imp_SetStdHandle(kNtStdio[j], h3);
       }
     }
   }
@@ -123,14 +144,15 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   size_t stacksize;
   struct WinArgs *wa;
   uintptr_t stackaddr;
+  __init_pid = __pid;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if (NtGetPeb()->OSMajorVersion >= 10 &&
       (intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
     __imp_SetConsoleCP(kNtCpUtf8);
     __imp_SetConsoleOutputCP(kNtCpUtf8);
     for (int i = 0; i < 3; ++i) {
-      int64_t hand = __imp_GetStdHandle(kNtConsoleHandles[i]);
-      __imp_GetConsoleMode(hand, __ntconsolemode + i);
+      int64_t hand = __imp_GetStdHandle(kNtStdio[i]);
+      __imp_GetConsoleMode(hand, __console_mode + i);
       __imp_SetConsoleMode(hand, kConsoleModes[i]);
     }
   }
@@ -167,6 +189,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   __imp_FreeEnvironmentStringsW(env16);
+  __envp = &wa->envp[0];
   _jmpstack((char *)(stackaddr + (stacksize - sizeof(struct WinArgs))), cosmo,
             count, wa->argv, wa->envp, wa->auxv);
 }
@@ -175,8 +198,9 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                                     const char *lpCmdLine, int64_t nCmdShow) {
   const char16_t *cmdline;
   extern char os asm("__hostos");
-  os = _HOSTWINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
+  os = _HOSTWINDOWS;  // madness https://news.ycombinator.com/item?id=21019722
   kStartTsc = rdtsc();
+  __umask = 077;
   __pid = __imp_GetCurrentProcessId();
   DeduplicateStdioHandles();
   if (_weaken(WinMainStdin)) {
@@ -184,7 +208,7 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   }
   cmdline = MyCommandLine();
 #ifdef SYSDEBUG
-  /* sloppy flag-only check for early initialization */
+  // sloppy flag-only check for early initialization
   if (__strstr16(cmdline, u"--strace")) ++__strace;
 #endif
   if (_weaken(WinSockInit)) {

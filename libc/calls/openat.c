@@ -61,6 +61,19 @@
  *     // run `zip program.com hi.txt` beforehand
  *     openat(AT_FDCWD, "/zip/hi.txt", O_RDONLY);
  *
+ * Cosmopolitan's general approach on Windows to path translation is to
+ *
+ *   - replace `/' with `\`
+ *   - translate utf-8 into utf-16
+ *   - turn `"\X\foo"` into `"\\?\X:\foo"`
+ *   - turn `"\X"` into `"\\?\X:\"`
+ *   - turn `"X:\foo"` into `"\\?\X:\foo"`
+ *
+ * On Windows, opening files in `/tmp` will open them in GetTempPath(),
+ * which is a secure per-user directory. Opening `/dev/tty` will open a
+ * special console file descriptor holding both `CONIN$` and `CONOUT$`,
+ * which can't be fully closed. Opening `/dev/null` will open up `NUL`.
+ *
  * @param dirfd is normally `AT_FDCWD` but if it's an open directory and
  *     `file` names a relative path then it's opened relative to `dirfd`
  * @param file is a UTF-8 string naming filesystem entity, e.g. `foo/bar.txt`,
@@ -81,12 +94,12 @@
  *     - `O_CLOEXEC`    automatic close() upon execve()
  *     - `O_EXCL`       exclusive access (see below)
  *     - `O_APPEND`     open file for appending only
+ *     - `O_NOFOLLOW`   fail with ELOOP if it's a symlink
+ *     - `O_NONBLOCK`   asks read/write to fail with `EAGAIN` rather than block
  *     - `O_EXEC`       open file for execution only; see fexecve()
  *     - `O_NOCTTY`     prevents `file` possibly becoming controlling terminal
- *     - `O_NONBLOCK`   asks read/write to fail with `EAGAIN` rather than block
  *     - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
  *     - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
- *     - `O_NOFOLLOW`   fail if it's a symlink (zero on Windows)
  *     - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
  *     - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
  *     - `O_VERIFY`     it's complicated (zero on non-FreeBSD)

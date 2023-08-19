@@ -26,7 +26,7 @@
 	.yoink	__zipos_fcntl
 	.yoink	__zipos_fstat
 	.yoink	__zipos_access
-	.yoink	__zipos_lseek
+	.yoink	__zipos_seek
 	.yoink	__zipos_open
 	.yoink	__zipos_parseuri
 	.yoink	__zipos_read

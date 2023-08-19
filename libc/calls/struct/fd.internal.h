@@ -3,6 +3,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define DO_NOTHING 0
+#define DO_RESTART 1
+#define DO_EINTR   2
+
 #define kFdEmpty    0
 #define kFdFile     1
 #define kFdSocket   2
@@ -23,6 +27,8 @@ struct Fd {
   char kind;
   bool zombie;
   bool dontclose;
+  char buflen;
+  char buf[4];
   unsigned flags;
   unsigned mode;
   int64_t handle;
@@ -44,8 +50,10 @@ struct Fds {
   struct StdinRelay stdin;
 };
 
-int64_t __resolve_stdin_handle(int64_t);
 void WinMainStdin(void);
+int64_t __resolve_stdin_handle(int64_t);
+int __munge_terminal_input(char *, uint32_t *);
+void __echo_terminal_input(struct Fd *, char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

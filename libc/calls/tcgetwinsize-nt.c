@@ -17,67 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/winsize.h"
 #include "libc/calls/struct/winsize.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
 #include "libc/nt/console.h"
-#include "libc/nt/enum/startf.h"
-#include "libc/nt/startupinfo.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
-#include "libc/nt/struct/startupinfo.h"
-#include "libc/str/str.h"
+#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int tcgetwinsize_nt(struct Fd *fd, struct winsize *ws) {
-  int i, e, rc;
-  uint32_t mode;
-  struct Fd *fds[3];
-  struct NtStartupInfo startinfo;
-  struct NtConsoleScreenBufferInfoEx sbinfo;
-  rc = -1;
-  e = errno;
-  if (ws) {
-    __fds_lock();
-    fds[0] = fd, fds[1] = g_fds.p + 1, fds[2] = g_fds.p + 0;
-    GetStartupInfo(&startinfo);
-    for (i = 0; i < ARRAYLEN(fds); ++i) {
-      if (fds[i]->kind == kFdFile || fds[i]->kind == kFdConsole) {
-        if (GetConsoleMode(__getfdhandleactual(i), &mode)) {
-          bzero(&sbinfo, sizeof(sbinfo));
-          sbinfo.cbSize = sizeof(sbinfo);
-          if (GetConsoleScreenBufferInfoEx(__getfdhandleactual(i), &sbinfo)) {
-            ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;
-            ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top + 1;
-            ws->ws_xpixel = 0;
-            ws->ws_ypixel = 0;
-            errno = e;
-            rc = 0;
-            break;
-          } else if (startinfo.dwFlags & kNtStartfUsecountchars) {
-            ws->ws_col = startinfo.dwXCountChars;
-            ws->ws_row = startinfo.dwYCountChars;
-            ws->ws_xpixel = 0;
-            ws->ws_ypixel = 0;
-            errno = e;
-            rc = 0;
-            break;
-          } else {
-            __winerr();
-          }
-        } else {
-          enotty();
-        }
-      } else {
-        ebadf();
-      }
-    }
-    __fds_unlock();
-  } else {
-    efault();
+textwindows int tcgetwinsize_nt(int fd, struct winsize *ws) {
+
+  // The Linux man page doesn't list EBADF as an errno for this.
+  if (!__isfdopen(fd)) {
+    return enotty();
   }
-  return rc;
+
+  // Unlike _check_sigwinch() this is an API so be stricter.
+  intptr_t hConsoleOutput;
+  if (fd == STDIN_FILENO) {
+    uint32_t dwMode;
+    // WIN32 doesn't allow GetConsoleScreenBufferInfoEx(stdin)
+    if (GetConsoleMode(g_fds.p[STDIN_FILENO].handle, &dwMode)) {
+      hConsoleOutput = g_fds.p[STDOUT_FILENO].handle;
+      if (GetConsoleMode(hConsoleOutput, &dwMode)) {
+        hConsoleOutput = g_fds.p[STDERR_FILENO].handle;
+      }
+    } else {
+      return enotty();
+    }
+  } else if (g_fds.p[fd].kind == kFdConsole) {
+    hConsoleOutput = g_fds.p[fd].extra;
+  } else {
+    hConsoleOutput = g_fds.p[fd].handle;
+  }
+
+  // Query the console.
+  struct NtConsoleScreenBufferInfoEx sr = {.cbSize = sizeof(sr)};
+  if (GetConsoleScreenBufferInfoEx(hConsoleOutput, &sr)) {
+    ws->ws_col = sr.srWindow.Right - sr.srWindow.Left + 1;
+    ws->ws_row = sr.srWindow.Bottom - sr.srWindow.Top + 1;
+    return 0;
+  } else {
+    return enotty();
+  }
 }

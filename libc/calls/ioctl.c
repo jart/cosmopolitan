@@ -672,9 +672,9 @@ int ioctl(int fd, unsigned long request, ...) {
   if (request == FIONREAD) {
     rc = ioctl_fionread(fd, arg);
   } else if (request == TIOCGWINSZ) {
-    rc = tcgetwinsize(fd, arg);
+    return tcgetwinsize(fd, arg);
   } else if (request == TIOCSWINSZ) {
-    rc = tcsetwinsize(fd, arg);
+    return tcsetwinsize(fd, arg);
   } else if (request == SIOCGIFCONF) {
     rc = ioctl_siocgifconf(fd, arg);
   } else if (request == SIOCGIFADDR) {

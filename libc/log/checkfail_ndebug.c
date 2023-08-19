@@ -49,7 +49,7 @@ static relegated wontreturn void __check_fail_ndebug(uint64_t want,       //
   }
   kprintf("\n");
   if (_weaken(__die)) _weaken(__die)();
-  _Exitr(68);
+  _Exit(68);
 }
 
 void __check_fail_eq(uint64_t want, uint64_t got, const char *file, int line,

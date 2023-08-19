@@ -43,10 +43,26 @@ static inline const char *__strace_fstatat_flags(char buf[12], int flags) {
 /**
  * Returns information about thing.
  *
- * @param dirfd is normally AT_FDCWD but if it's an open directory and
- *     file is a relative path, then file becomes relative to dirfd
+ * On Windows, this implementation always sets `st_uid` and `st_gid` to
+ * `getuid()` and `getgid()`. Anyone who relies upon the information to
+ * secure a multi-tenant personal computer should consider improving it
+ * and further note that the `st_mode` group / other bits will be clear
+ *
+ * @param dirfd is normally `AT_FDCWD` but if it's an open directory and
+ *     file is a relative path, then `path` becomes relative to `dirfd`
+ * @param st is where the result is stored
+ * @param flags can have `AT_SYMLINK_NOFOLLOW`
  * @param st is where result is stored
- * @param flags can have AT_SYMLINK_NOFOLLOW
+ * @raise EACCES if denied access to component in path prefix
+ * @raise EIO if i/o error occurred while reading from filesystem
+ * @raise ELOOP if a symbolic link loop exists in `path`
+ * @raise ENAMETOOLONG if a component in `path` exceeds `NAME_MAX`
+ * @raise ENOENT on empty string or if component in path doesn't exist
+ * @raise ENOTDIR if a parent component existed that wasn't a directory
+ * @raise ENOTDIR if `path` is relative and `dirfd` isn't an open directory
+ * @raise EOVERFLOW shouldn't be possible on 64-bit systems
+ * @raise ELOOP may ahappen if `SYMLOOP_MAX` symlinks were dereferenced
+ * @raise ENAMETOOLONG may happen if `path` exceeded `PATH_MAX`
  * @return 0 on success, or -1 w/ errno
  * @see S_ISDIR(st.st_mode), S_ISREG()
  * @asyncsignalsafe
@@ -70,10 +86,12 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
     } else {
       rc = enotsup();
     }
-  } else if (!IsWindows()) {
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = sys_fstatat(dirfd, path, st, flags);
-  } else {
+  } else if (IsWindows()) {
     rc = sys_fstatat_nt(dirfd, path, st, flags);
+  } else {
+    rc = enosys();
   }
   STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", DescribeDirfd(dirfd), path,
          DescribeStat(rc, st), __strace_fstatat_flags(alloca(12), flags), rc);
