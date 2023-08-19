@@ -154,6 +154,9 @@ __msabi dontasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   uintptr_t Args, MapKey, DescSize;
   uint64_t p, pe, cr4, *m, *pd, *sp, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
 
+  extern char os asm("__hostos");
+  os = _HOSTMETAL;
+
   /*
    * Allocates and clears PC-compatible memory and copies image.  Marks the
    * pages as EfiRuntimeServicesData, so that we can simply free up all

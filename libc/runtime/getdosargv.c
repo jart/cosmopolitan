@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -123,7 +124,8 @@ textwindows dontasan int GetDosArgv(const char16_t *cmdline, char *buf,
           cmd[j++] = st->s[i];
         }
         cmd[j] = 0;
-        if ((attr = __imp_GetFileAttributesW(cmd)) != -1u &&
+        if (IsWindows() &&                                    //
+            (attr = __imp_GetFileAttributesW(cmd)) != -1u &&  //
             !(attr & kNtFileAttributeDirectory)) {
           AppendDosArgv('.', st);
           AppendDosArgv('\\', st);
