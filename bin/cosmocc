@@ -182,7 +182,7 @@ fi
 if [ "$1" = "--update" ]; then
   cd $COSMO || exit
   echo "building cosmo host toolchain..." >&2
-  make --silent -j toolchain MODE= || exit
+  make --silent -j toolchain MODE= ARCH=x86_64 || exit
   echo "building cosmo target (MODE=$MODE) toolchain..." >&2
   make --silent -j toolchain MODE="$MODE" || exit
   echo "setting up your cosmos..." >&2

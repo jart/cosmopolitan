@@ -13,4 +13,9 @@
 #include "third_party/getopt/long1.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
+
+#ifndef _CS_PATH
+#define _CS_PATH 0
+#endif
+
 #endif /* _UNISTD_H */
