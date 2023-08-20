@@ -97,7 +97,13 @@
 #define PR_CAP_AMBIENT              47
 #define PR_GET_SPECULATION_CTRL     52
 #define PR_SET_SPECULATION_CTRL     53
+#define PR_SET_TAGGED_ADDR_CTRL     55
+#define PR_GET_TAGGED_ADDR_CTRL     56
+#define PR_SET_IO_FLUSHER           57
+#define PR_GET_IO_FLUSHER           58
 #define PR_SET_PTRACER              0x59616d61
 #define PR_SET_PTRACER_ANY          -1
+#define PR_SET_VMA                  0x53564d41
+#define PR_SET_VMA_ANON_NAME        0
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_PR_H_ */
