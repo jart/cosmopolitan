@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
@@ -33,7 +34,7 @@
 #include "libc/sysv/errfuns.h"
 
 static struct CopyFileRange {
-  _Atomic(uint32_t) once;
+  atomic_uint once;
   bool ok;
 } g_copy_file_range;
 

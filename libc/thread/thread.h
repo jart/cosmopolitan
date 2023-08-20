@@ -194,6 +194,7 @@ int pthread_spin_unlock(pthread_spinlock_t *) paramsnonnull();
 int pthread_testcancel_np(void);
 int pthread_tryjoin_np(pthread_t, void **);
 int pthread_yield(void);
+void pthread_kill_siblings_np(void);
 pthread_id_np_t pthread_getthreadid_np(void);
 pthread_t pthread_self(void) pureconst;
 void *pthread_getspecific(pthread_key_t);

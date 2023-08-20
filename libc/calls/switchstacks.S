@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/sig.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/sysv/consts/sicode.h"
+#include "libc/macros.internal.h"
 
-// OpenBSD has an optional `tib` parameter for extra safety
-int __tkill(int tid, int sig, void *tib) {
-  int rc;
-  if (!IsWindows() && !IsMetal()) {
-    rc = sys_tkill(tid, sig, tib);
-  } else {
-    rc = __sig_add(tid, sig, SI_TKILL);
-  }
-  STRACE("tkill(%d, %G) → %d% m", tid, sig, rc);
-  return rc;
-}
-
-/**
- * Kills thread.
- *
- * @param tid is thread id
- * @param sig does nothing on xnu
- * @return 0 on success, or -1 w/ errno
- * @raise EAGAIN if `RLIMIT_SIGPENDING` was exceeded
- * @raise EINVAL if `tid` or `sig` were invalid
- * @raise ESRCH if no such `tid` existed
- * @raise EPERM if permission was denied
- * @asyncsignalsafe
- */
-int tkill(int tid, int sig) {
-  return __tkill(tid, sig, 0);
-}
+__switch_stacks:
+#ifdef __x86_64__
+	mov	%r9,%rsp
+	and	$-16,%rsp
+	xor	%rbp,%rbp
+	call	*%r8
+#elif defined(__aarch64__)
+	and	sp,x5,#-16
+	mov	x29,0
+	blr	x4
+#else
+#error "unsupported architecture"
+#endif
+	.endfn	__switch_stacks,globl

@@ -71,6 +71,26 @@ void _pthread_free(struct PosixThread *pt) {
   free(pt);
 }
 
+void pthread_kill_siblings_np(void) {
+  struct Dll *e, *e2;
+  struct PosixThread *pt, *self;
+  enum PosixThreadStatus status;
+  self = (struct PosixThread *)__get_tls()->tib_pthread;
+  pthread_spin_lock(&_pthread_lock);
+  for (e = dll_first(_pthread_list); e; e = e2) {
+    e2 = dll_next(_pthread_list, e);
+    pt = POSIXTHREAD_CONTAINER(e);
+    if (pt != self) {
+      status = atomic_load_explicit(&pt->status, memory_order_acquire);
+      pthread_kill((pthread_t)pt, SIGKILL);
+      dll_remove(&_pthread_list, e);
+      pthread_spin_unlock(&_pthread_lock);
+      _pthread_free(pt);
+    }
+  }
+  pthread_spin_unlock(&_pthread_lock);
+}
+
 static int PosixThread(void *arg, int tid) {
   void *rc;
   struct sigaltstack ss;

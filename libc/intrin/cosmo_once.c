@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -35,7 +36,7 @@
  *
  * @return 0 on success, or errno on error
  */
-errno_t cosmo_once(_Atomic(uint32_t) *once, void init(void)) {
+errno_t cosmo_once(atomic_uint *once, void init(void)) {
   uint32_t old;
   switch ((old = atomic_load_explicit(once, memory_order_relaxed))) {
     case INIT:

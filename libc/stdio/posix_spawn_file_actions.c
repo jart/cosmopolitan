@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
@@ -27,14 +28,16 @@ static int AddFileAction(posix_spawn_file_actions_t *l,
                          struct _posix_faction a) {
   struct _posix_faction *ap;
   if (!(ap = malloc(sizeof(*ap)))) return ENOMEM;
-  a.next = *l;
   *ap = a;
+  while (*l) l = &(*l)->next;
   *l = ap;
   return 0;
 }
 
 /**
  * Initializes posix_spawn() file actions list.
+ *
+ * File actions get applied in the same order as they're registered.
  *
  * @param file_actions will need posix_spawn_file_actions_destroy()
  * @return 0 on success, or errno on error
@@ -68,9 +71,12 @@ int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions) {
  * @param file_actions was initialized by posix_spawn_file_actions_init()
  * @return 0 on success, or errno on error
  * @raise ENOMEM if we require more vespene gas
+ * @raise EBADF if `fildes` is negative
  */
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
                                       int fildes) {
+  if (fildes < 0) return EBADF;
+  if (IsWindows() && fildes > 2) return 0;
   return AddFileAction(file_actions, (struct _posix_faction){
                                          .action = _POSIX_SPAWN_CLOSE,
                                          .fildes = fildes,
@@ -83,9 +89,13 @@ int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
  * @param file_actions was initialized by posix_spawn_file_actions_init()
  * @return 0 on success, or errno on error
  * @raise ENOMEM if we require more vespene gas
+ * @raise EBADF if 'fildes' or `newfildes` is negative
+ * @raise ENOTSUP if `newfildes` isn't 0, 1, or 2 on Windows
  */
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
                                      int fildes, int newfildes) {
+  if (fildes < 0 || newfildes < 0) return EBADF;
+  if (IsWindows() && newfildes > 2) return ENOTSUP;
   return AddFileAction(file_actions, (struct _posix_faction){
                                          .action = _POSIX_SPAWN_DUP2,
                                          .fildes = fildes,
@@ -97,15 +107,18 @@ int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
  * Add an open action to object.
  *
  * @param file_actions was initialized by posix_spawn_file_actions_init()
- * @param filedes is what open() result gets duplicated to
+ * @param fildes is what open() result gets duplicated to
  * @param path will be safely copied
  * @return 0 on success, or errno on error
  * @raise ENOMEM if we require more vespene gas
+ * @raise EBADF if `fildes` is negative
+ * @raise ENOTSUP if `fildes` isn't 0, 1, or 2 on Windows
  */
 int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t *file_actions,
                                      int fildes, const char *path, int oflag,
                                      unsigned mode) {
   if (fildes < 0) return EBADF;
+  if (IsWindows() && fildes > 2) return ENOTSUP;
   if (!(path = strdup(path))) return ENOMEM;
   return AddFileAction(file_actions, (struct _posix_faction){
                                          .action = _POSIX_SPAWN_OPEN,

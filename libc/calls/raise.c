@@ -21,6 +21,8 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
@@ -62,10 +64,20 @@ int raise(int sig) {
     RaiseSigFpe();
     rc = 0;
 #endif
-  } else if (!IsWindows() && !IsMetal()) {
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = sys_tkill(gettid(), sig, 0);
+  } else if (IsWindows() || IsMetal()) {
+    if (IsWindows() && sig == SIGKILL) {
+      // TODO(jart): Isn't this implemented by __sig_raise()?
+      if (_weaken(__restore_console_win32)) {
+        _weaken(__restore_console_win32)();
+      }
+      ExitProcess(sig);
+    } else {
+      rc = __sig_raise(sig, SI_TKILL);
+    }
   } else {
-    rc = __sig_raise(sig, SI_TKILL);
+    __builtin_unreachable();
   }
   STRACE("...raise(%G) → %d% m", sig, rc);
   return rc;

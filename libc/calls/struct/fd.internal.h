@@ -41,6 +41,7 @@ struct StdinRelay {
   int64_t handle; /* should == g_fds.p[0].handle */
   int64_t reader; /* ReadFile() use this instead */
   int64_t writer; /* only used by WinStdinThread */
+  int64_t thread; /* handle for the stdio thread */
 };
 
 struct Fds {

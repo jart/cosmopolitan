@@ -30,13 +30,12 @@ __msabi extern typeof(CreateDirectory) *const __imp_CreateDirectoryW;
  * @return handle, or -1 on failure
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
-textwindows bool32
-CreateDirectory(const char16_t *lpPathName,
-                struct NtSecurityAttributes *lpSecurityAttributes) {
+textwindows bool32 CreateDirectory(const char16_t *lpPathName,
+                                   struct NtSecurityAttributes *lpSecurity) {
   bool32 ok;
-  ok = __imp_CreateDirectoryW(lpPathName, lpSecurityAttributes);
+  ok = __imp_CreateDirectoryW(lpPathName, lpSecurity);
   if (!ok) __winerr();
   NTTRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
-          DescribeNtSecurityAttributes(lpSecurityAttributes), ok);
+          DescribeNtSecurityAttributes(lpSecurity), ok);
   return ok;
 }

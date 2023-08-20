@@ -135,8 +135,8 @@ dontasan dontubsan dontinstrument textwindows void WinMainStdin(void) {
     NTTRACE("<stdin> CreateThread failed");
     return;
   }
-  __imp_CloseHandle(hThread);
-  g_fds.stdin.handle = hStdin;
+  g_fds.stdin.thread = hStdin;
+  g_fds.stdin.handle = hThread;
   g_fds.stdin.reader = hReader;
   g_fds.stdin.writer = hWriter;
   g_fds.stdin.inisem = hSemaphore;
