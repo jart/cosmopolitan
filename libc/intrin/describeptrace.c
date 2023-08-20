@@ -51,6 +51,7 @@ const char *(DescribePtrace)(char buf[12], int x) {
   if (x == PTRACE_ATTACH) return "PTRACE_ATTACH";
   if (x == PTRACE_SEIZE) return "PTRACE_SEIZE";
   if (x == PTRACE_SECCOMP_GET_FILTER) return "PTRACE_SECCOMP_GET_FILTER";
+  if (x == PTRACE_SECCOMP_GET_METADATA) return "PTRACE_SECCOMP_GET_METADATA";
   if (x == PTRACE_DETACH) return "PTRACE_DETACH";
   FormatInt32(buf, x);
   return buf;
