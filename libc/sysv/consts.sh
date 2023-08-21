@@ -959,9 +959,9 @@ syscon	pf	PF_X25					9			9			0			0			0			0			0			0
 #	msync() flags
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ms	MS_SYNC					4			4			16			16			0			2			4			4			# faked nt
-syscon	ms	MS_ASYNC				1			1			1			1			1			1			1			1			# consensus (faked nt)
-syscon	ms	MS_INVALIDATE				2			2			2			2			2			4			2			0
+syscon	ms	MS_SYNC					4			4			16			16			1			2			4			4			# faked nt; actually 0 on freebsd
+syscon	ms	MS_ASYNC				1			1			1			1			2			1			1			1			# faked nt; actually 1 on freebsd
+syscon	ms	MS_INVALIDATE				2			2			2			2			4			4			2			0			# actually 2 on freebsd
 
 #	statfs() flags
 #
