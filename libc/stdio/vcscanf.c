@@ -156,26 +156,34 @@ int __vcscanf(int callback(void *),    //
             case 'b':  // binary
               base = 2;
               prefix = 'b';
-              while (isspace(c)) {
-                c = READ;
-              }
               goto ConsumeBasePrefix;
-            case 'p':  // pointer
+            case 'p':  // pointer (NexGen32e)
               bits = 48;
               // fallthrough
             case 'x':
             case 'X':  // hexadecimal
               base = 16;
               prefix = 'x';
-              while (isspace(c)) {
-                c = READ;
-              }
               goto ConsumeBasePrefix;
             case 'o':  // octal
               base = 8;
-              goto SetupNumber;
-            case 'i':  // flexidecimal
+              goto HandleNumber;
+            case 'n':
+              goto ReportConsumed;
+            case 'd':  // decimal
               issigned = true;
+              // fallthrough
+            case 'u':
+              base = 10;
+            HandleNumber:
+              while (isspace(c)) {
+                c = READ;
+              }
+              if (c == '+' || (isneg = c == '-')) {
+                c = READ;
+              }
+              goto DecodeNumber;
+            case 'i':  // flexidecimal
               while (isspace(c)) {
                 c = READ;
               }
@@ -184,35 +192,20 @@ int __vcscanf(int callback(void *),    //
               }
               if (c == '0') {
                 c = READ;
-                if (c == -1) {
-                  number = 0;
-                  goto GotNumber;
-                }
                 if (c == 'x' || c == 'X') {
                   c = READ;
                   base = 16;
                 } else if (c == 'b' || c == 'B') {
+                  c = READ;
                   base = 2;
-                } else {
+                } else if ('0' <= c && c <= '7') {
                   base = 8;
+                } else {
+                  number = 0;
+                  goto GotNumber;
                 }
               } else {
                 base = 10;
-              }
-              goto DecodeNumber;
-            case 'n':
-              goto ReportConsumed;
-            case 'd':  // decimal
-              issigned = true;
-              // fallthrough
-            case 'u':
-              base = 10;
-            SetupNumber:
-              while (isspace(c)) {
-                c = READ;
-              }
-              if (c == '+' || (isneg = c == '-')) {
-                c = READ;
               }
               goto DecodeNumber;
             default:
@@ -220,21 +213,25 @@ int __vcscanf(int callback(void *),    //
               goto Done;
           }
         }
-      ReportConsumed:
-        n_ptr = va_arg(va, int *);
-        *n_ptr = consumed - 1;  // minus lookahead
-        continue;
       ConsumeBasePrefix:
+        while (isspace(c)) {
+          c = READ;
+        }
+        if (c == '+' || (isneg = c == '-')) {
+          c = READ;
+        }
         if (c == '0') {
           c = READ;
           if (c == prefix || c == prefix + ('a' - 'A')) {
             c = READ;
           } else if (c == -1) {
-            c = '0';
+            number = 0;
+            goto GotNumber;
           }
         }
       DecodeNumber:
-        if (c != -1 && kBase36[(unsigned char)c] <= base) {
+        if (c != -1 && (1 <= kBase36[(unsigned char)c] &&
+                        kBase36[(unsigned char)c] <= base)) {
           number = 0;
           width = !width ? bits : width;
           do {
@@ -286,10 +283,19 @@ int __vcscanf(int callback(void *),    //
             items = -1;
             goto Done;
           }
-        } else if (!items) {
+        } else if (c == -1 && !items) {
           items = -1;
           goto Done;
+        } else {
+          if (c != -1 && unget) {
+            unget(c, arg);
+          }
+          goto Done;
         }
+        continue;
+      ReportConsumed:
+        n_ptr = va_arg(va, int *);
+        *n_ptr = consumed - 1;  // minus lookahead
         continue;
       DecodeString:
         bufsize = !width ? 32 : rawmode ? width : width + 1;

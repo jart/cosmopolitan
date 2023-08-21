@@ -21,7 +21,10 @@
 #include "libc/intrin/bits.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 #define sscanf1(STR, FMT)               \
@@ -335,4 +338,32 @@ TEST(sscanf, lupluser) {
   long x = 666;
   EXPECT_EQ(1, sscanf("+123", "%li", &x));
   EXPECT_EQ(123, x);
+}
+
+TEST(fscanf, stuff) {
+  int x;
+  char *s = "1 12 123\n"
+            "4 44\n";
+  FILE *f = fmemopen(s, strlen(s), "r+");
+  EXPECT_EQ(1, fscanf(f, "%d", &x));
+  EXPECT_EQ(1, x);
+  EXPECT_EQ(1, fscanf(f, "%d", &x));
+  EXPECT_EQ(12, x);
+  EXPECT_EQ(1, fscanf(f, "%d", &x));
+  EXPECT_EQ(123, x);
+  EXPECT_EQ(1, fscanf(f, "%d", &x));
+  EXPECT_EQ(4, x);
+  EXPECT_EQ(1, fscanf(f, "%d", &x));
+  EXPECT_EQ(44, x);
+  EXPECT_EQ(-1, fscanf(f, "%d", &x));
+  fclose(f);
+}
+
+TEST(fscanf, wantDecimalButGotLetter_returnsZeroMatches) {
+  int x = 666;
+  char *s = "a1\n";
+  FILE *f = fmemopen(s, strlen(s), "r+");
+  EXPECT_EQ(0, fscanf(f, "%d", &x));
+  EXPECT_EQ(666, x);
+  fclose(f);
 }
