@@ -1045,7 +1045,7 @@ syscon	limits	MAX_INPUT				255			255			1024			1024			255			255			255			255			# w
 syscon	limits	SOMAXCONN				4096			4096			128			128			128			128			128			2147483647		# maximum backlog for listen()
 syscon	limits	_ARG_MAX				128*1024		128*1024		1024*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
 syscon	limits	_NAME_MAX				255			255			255			255			255			255			511			255			# probably higher on windows?
-syscon	limits	_PATH_MAX				4096			4096			1024			1024			1024			1024			1024			32767			# win32 paths are 260 characters max. even with unc paths, cosmo wrappers won't go beyond 1024 chars
+syscon	limits	_PATH_MAX				4096			4096			1024			1024			1024			1024			1024			260			#
 syscon	limits	_NSIG					64			64			32			32			128			32			64			64			# _SIG_MAXSIG on FreeBSD
 
 #	unmount() flags
