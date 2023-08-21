@@ -23,7 +23,11 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -31,7 +35,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr proc", 0));
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr proc inet", 0));
 }
 
 TEST(lseek, ebadf) {
@@ -59,11 +63,23 @@ TEST(lseek, 64bit) {
   EXPECT_SYS(0, 0, close(3));
 }
 
-TEST(lseek, nonSeekableFd_espipe) {
+TEST(lseek, isPipe_ESPIPE) {
   int fds[2];
+  char buf[2];
   ASSERT_SYS(0, 0, pipe(fds));
   ASSERT_SYS(ESPIPE, -1, lseek(3, 0, SEEK_SET));
+  ASSERT_SYS(ESPIPE, -1, pwrite(4, "hi", 2, 0));
+  ASSERT_SYS(ESPIPE, -1, pread(3, buf, 2, 0));
   EXPECT_SYS(0, 0, close(4));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, isSocket_ESPIPE) {
+  char buf[2];
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(ESPIPE, -1, lseek(3, 0, SEEK_SET));
+  ASSERT_SYS(ESPIPE, -1, pwrite(3, "hi", 2, 0));
+  ASSERT_SYS(ESPIPE, -1, pread(3, buf, 2, 0));
   EXPECT_SYS(0, 0, close(3));
 }
 

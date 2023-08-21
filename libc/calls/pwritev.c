@@ -54,7 +54,11 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
 
   if (IsWindows()) {
     if (fd < g_fds.n) {
-      return sys_write_nt(fd, iov, iovlen, off);
+      if (g_fds.p[fd].kind == kFdSocket) {
+        return espipe();
+      } else {
+        return sys_write_nt(fd, iov, iovlen, off);
+      }
     } else {
       return ebadf();
     }

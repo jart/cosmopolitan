@@ -29,6 +29,7 @@
 #include "libc/sock/struct/ifreq.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/sock.h"
@@ -82,3 +83,18 @@ TEST(siocgifconf, mkntenvblock_systemroot) {
   EXITS(0);
 }
 #endif
+
+TEST(fionread, pipe) {
+  int pfds[2];
+  int pending;
+  ASSERT_SYS(0, 0, pipe(pfds));
+  ASSERT_SYS(0, 2, write(pfds[1], "hi", 2));
+  // checking the reading end is agreed upon
+  ASSERT_SYS(0, 0, ioctl(pfds[0], FIONREAD, &pending));
+  ASSERT_EQ(2, pending);
+  // checking the writing end is real hairy
+  // ASSERT_SYS(0, 0, ioctl(pfds[1], FIONREAD, &pending));
+  // ASSERT_EQ(2, pending);
+  ASSERT_SYS(0, 0, close(pfds[1]));
+  ASSERT_SYS(0, 0, close(pfds[0]));
+}

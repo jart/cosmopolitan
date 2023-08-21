@@ -20,50 +20,59 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/filesharemode.h"
+// clang-format off
 
 static const struct DescribeFlags kFileAccessflags[] = {
-    {kNtFileAllAccess, "FileAllAccess"},                    // order matters
-    {kNtFileGenericRead, "FileGenericRead"},                // order matters
-    {kNtFileGenericWrite, "FileGenericWrite"},              // order matters
-    {kNtFileGenericExecute, "FileGenericExecute"},          // order matters
-    {kNtGenericRead, "GenericRead"},                        //
-    {kNtGenericWrite, "GenericWrite"},                      //
-    {kNtGenericExecute, "GenericExecute"},                  //
-    {kNtGenericAll, "GenericAll"},                          //
-    {kNtDelete, "Delete"},                                  //
-    {kNtReadControl, "ReadControl"},                        //
-    {kNtWriteDac, "WriteDac"},                              //
-    {kNtWriteOwner, "WriteOwner"},                          //
-    {kNtSynchronize, "Synchronize"},                        //
-    {kNtStandardRightsRequired, "StandardRightsRequired"},  //
-    {kNtAccessSystemSecurity, "AccessSystemSecurity"},      //
-    {kNtMaximumAllowed, "MaximumAllowed"},                  //
-    {kNtFileReadData, "FileReadData"},                      //
-    {kNtFileListDirectory, "FileListDirectory"},            //
-    {kNtFileWriteData, "FileWriteData"},                    //
-    {kNtFileAddFile, "FileAddFile"},                        //
-    {kNtFileAppendData, "FileAppendData"},                  //
-    {kNtFileAddSubdirectory, "FileAddSubdirectory"},        //
-    {kNtFileCreatePipeInstance, "FileCreatePipeInstance"},  //
-    {kNtFileReadEa, "FileReadEa"},                          //
-    {kNtFileWriteEa, "FileWriteEa"},                        //
-    {kNtFileExecute, "FileExecute"},                        //
-    {kNtFileTraverse, "FileTraverse"},                      //
-    {kNtFileDeleteChild, "FileDeleteChild"},                //
-    {kNtFileReadAttributes, "FileReadAttributes"},          //
-    {kNtFileWriteAttributes, "FileWriteAttributes"},        //
-    {kNtTokenAssignPrimary, "TokenAssignPrimary"},          //
-    {kNtTokenDuplicate, "TokenDuplicate"},                  //
-    {kNtTokenImpersonate, "TokenImpersonate"},              //
-    {kNtTokenQuery, "TokenQuery"},                          //
-    {kNtTokenQuerySource, "TokenQuerySource"},              //
-    {kNtTokenAdjustPrivileges, "TokenAdjustPrivileges"},    //
-    {kNtTokenAdjustGroups, "TokenAdjustGroups"},            //
-    {kNtTokenAdjustDefault, "TokenAdjustDefault"},          //
-    {kNtTokenAdjustSessionid, "TokenAdjustSessionid"},      //
+    {kNtFileAllAccess, "kNtFileAllAccess"},
+    {kNtFileGenericRead|kNtFileGenericWrite|kNtFileGenericExecute,
+     "kNtFileGenericRead|kNtFileGenericWrite|kNtFileGenericExecute"},
+    {kNtFileGenericRead|kNtFileGenericWrite,
+     "kNtFileGenericRead|kNtFileGenericWrite"},
+    {kNtFileGenericRead|kNtFileGenericExecute,
+     "kNtFileGenericRead|kNtFileGenericExecute"},
+    {kNtFileGenericWrite|kNtFileGenericExecute,
+     "kNtFileGenericWrite|kNtFileGenericExecute"},
+    {kNtFileGenericRead, "kNtFileGenericRead"},
+    {kNtFileGenericWrite, "kNtFileGenericWrite"},
+    {kNtFileGenericExecute, "kNtFileGenericExecute"},
+    {kNtGenericRead, "kNtGenericRead"},
+    {kNtGenericWrite, "kNtGenericWrite"},
+    {kNtGenericExecute, "kNtGenericExecute"},
+    {kNtGenericAll, "kNtGenericAll"},
+    {kNtDelete, "kNtDelete"},
+    {kNtReadControl, "kNtReadControl"},
+    {kNtWriteDac, "kNtWriteDac"},
+    {kNtWriteOwner, "kNtWriteOwner"},
+    {kNtSynchronize, "kNtSynchronize"},
+    {kNtStandardRightsRequired, "kNtStandardRightsRequired"},
+    {kNtAccessSystemSecurity, "kNtAccessSystemSecurity"},
+    {kNtMaximumAllowed, "kNtMaximumAllowed"},
+    {kNtFileReadData, "kNtFileReadData"},
+    {kNtFileListDirectory, "kNtFileListDirectory"},
+    {kNtFileWriteData, "kNtFileWriteData"},
+    {kNtFileAddFile, "kNtFileAddFile"},
+    {kNtFileAppendData, "kNtFileAppendData"},
+    {kNtFileAddSubdirectory, "kNtFileAddSubdirectory"},
+    {kNtFileCreatePipeInstance, "kNtFileCreatePipeInstance"},
+    {kNtFileReadEa, "kNtFileReadEa"},
+    {kNtFileWriteEa, "kNtFileWriteEa"},
+    {kNtFileExecute, "kNtFileExecute"},
+    {kNtFileTraverse, "kNtFileTraverse"},
+    {kNtFileDeleteChild, "kNtFileDeleteChild"},
+    {kNtFileReadAttributes, "kNtFileReadAttributes"},
+    {kNtFileWriteAttributes, "kNtFileWriteAttributes"},
+    {kNtTokenAssignPrimary, "kNtTokenAssignPrimary"},
+    {kNtTokenDuplicate, "kNtTokenDuplicate"},
+    {kNtTokenImpersonate, "kNtTokenImpersonate"},
+    {kNtTokenQuery, "kNtTokenQuery"},
+    {kNtTokenQuerySource, "kNtTokenQuerySource"},
+    {kNtTokenAdjustPrivileges, "kNtTokenAdjustPrivileges"},
+    {kNtTokenAdjustGroups, "kNtTokenAdjustGroups"},
+    {kNtTokenAdjustDefault, "kNtTokenAdjustDefault"},
+    {kNtTokenAdjustSessionid, "kNtTokenAdjustSessionid"},
 };
 
 const char *(DescribeNtFileAccessFlags)(char buf[512], uint32_t x) {
   return DescribeFlags(buf, 512, kFileAccessflags, ARRAYLEN(kFileAccessflags),
-                       "kNt", x);
+                       "", x);
 }

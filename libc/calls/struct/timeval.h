@@ -30,6 +30,7 @@ struct timeval timeval_add(struct timeval, struct timeval) pureconst;
 struct timeval timeval_sub(struct timeval, struct timeval) pureconst;
 struct timeval timeval_subz(struct timeval, struct timeval) pureconst;
 int64_t timeval_toseconds(struct timeval);
+int64_t timeval_tomicros(struct timeval);
 struct timeval timespec_totimeval(struct timespec) pureconst;
 static inline struct timeval timeval_fromseconds(int64_t __x) {
   return (struct timeval){__x};

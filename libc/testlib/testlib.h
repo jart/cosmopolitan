@@ -12,7 +12,7 @@ COSMOPOLITAN_C_START_
  * Test cases are guaranteed by the linker to be run in order, sorted by
  * the (SUITE, NAME) tuple passed here.
  */
-#define TEST(SUITE, NAME)           \
+#define TEST(SUITE, NAME)             \
   __static_yoink("__testcase_start"); \
   __TEST_PROTOTYPE(SUITE, NAME, __TEST_ARRAY, )
 
@@ -25,7 +25,7 @@ COSMOPOLITAN_C_START_
  * temorarilly by the runtime while calling fixture functions. Fixtures
  * are also guaranteed by the linker to be run in sorted order.
  */
-#define FIXTURE(SUITE, NAME)       \
+#define FIXTURE(SUITE, NAME)         \
   __static_yoink("__fixture_start"); \
   __FIXTURE("fixture", SUITE, NAME)
 
@@ -36,7 +36,7 @@ COSMOPOLITAN_C_START_
  * Cartesian product of groups. That makes this similar to fixture, but
  * more appropriate for testing pure code (i.e. no syscalls) like math.
  */
-#define COMBO(GROUP, ENTRY)      \
+#define COMBO(GROUP, ENTRY)        \
   __static_yoink("__combo_start"); \
   __FIXTURE("combo", GROUP, ENTRY)
 
@@ -49,7 +49,7 @@ COSMOPOLITAN_C_START_
  *
  * @see EZBENCH()
  */
-#define BENCH(SUITE, NAME)       \
+#define BENCH(SUITE, NAME)         \
   __static_yoink("__bench_start"); \
   __TEST_PROTOTYPE(SUITE, NAME, __BENCH_ARRAY, optimizespeed)
 
@@ -223,11 +223,12 @@ void TearDownOnce(void);
 
 #define EXPECT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    testlib_seterrno(0);                                                   \
+    int e = testlib_geterrno();                                            \
     __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
               testlib_strerror(), ERRNO, testlib_geterrno(), __VA_ARGS__); \
+    testlib_seterrno(e);                                                   \
   } while (0)
 
 #define EXPECT_FALSE(X) _TEST2("EXPECT_FALSE", false, ==, (X), #X, "", "", 0)
@@ -347,8 +348,6 @@ struct TestFixture {
 };
 
 extern char g_fixturename[256];
-extern char g_testlib_olddir[PATH_MAX];
-extern char g_testlib_tmpdir[PATH_MAX];
 extern bool g_testlib_shoulddebugbreak;     /* set by testmain */
 extern _Atomic(unsigned) g_testlib_ran;     /* set by wrappers */
 extern _Atomic(unsigned) g_testlib_failed;  /* set by wrappers */

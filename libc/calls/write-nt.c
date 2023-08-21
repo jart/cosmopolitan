@@ -26,11 +26,13 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -42,11 +44,21 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   bool32 ok;
   uint32_t sent;
   int64_t handle;
+
   if (g_fds.p[fd].kind == kFdConsole) {
     handle = g_fds.p[fd].extra;  // get write end of console
   } else {
     handle = g_fds.p[fd].handle;
   }
+
+  // don't use pread() or pwrite() on a pipe
+  if (offset != -1) {
+    uint32_t filetype = GetFileType(handle);
+    if (filetype == kNtFileTypeChar || filetype == kNtFileTypePipe) {
+      return espipe();
+    }
+  }
+
   size = MIN(size, 0x7ffff000);
   if (offset == -1) {
     // perform simple blocking write

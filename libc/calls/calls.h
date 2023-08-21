@@ -193,6 +193,7 @@ unsigned geteuid(void) nosideeffect;
 unsigned getgid(void) nosideeffect;
 unsigned getuid(void) libcesque;
 unsigned sleep(unsigned);
+unsigned ualarm(unsigned, unsigned);
 unsigned umask(unsigned);
 void sync(void);
 

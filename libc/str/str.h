@@ -11,6 +11,8 @@
 #define chomp16       _chomp16
 #define wchomp        _wchomp
 #define tpenc         _tpenc
+#define isutf8        _isutf8
+#define istext        _istext
 #define startswith    _startswith
 #define startswithi   _startswithi
 #define endswith      _endswith
@@ -187,9 +189,9 @@ wchar_t *wchomp(wchar_t *) libcesque;
 bool startswith(const char *, const char *) strlenesque;
 bool startswithi(const char *, const char *) strlenesque;
 bool endswith(const char *, const char *) strlenesque;
-bool _istext(const void *, size_t) libcesque;
-bool _isutf8(const void *, size_t) libcesque;
-char *strsignal_r(int, char[hasatleast 15]) returnsnonnull libcesque;
+bool istext(const void *, size_t) libcesque;
+bool isutf8(const void *, size_t) libcesque;
+char *strsignal_r(int, char[15]) returnsnonnull libcesque dontdiscard;
 int strerror_wr(int, uint32_t, char *, size_t)
 dontthrow nocallback;
 char16_t *chomp16(char16_t *) libcesque;

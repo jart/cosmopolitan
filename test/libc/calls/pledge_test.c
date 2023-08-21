@@ -447,7 +447,7 @@ TEST(pledge, open_rpath) {
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
     ASSERT_SYS(0, 3, open("foo", O_RDONLY));
-    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY | O_TRUNC));
+    ASSERT_SYS(EINVAL, -1, open("foo", O_RDONLY | O_TRUNC));
     ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY | O_TMPFILE));
     ASSERT_SYS(EPERM, -1, open("foo", O_RDWR | O_TRUNC | O_CREAT, 0644));
     ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));

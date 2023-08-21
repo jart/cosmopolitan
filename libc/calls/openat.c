@@ -24,6 +24,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -56,7 +57,7 @@
  *
  *     __static_yoink("zipos");
  *
- * Then you can read zip assets by adding a `"/zip/..."` prefix to `file`, e.g.
+ * Then you can read zip assets by adding a `"/zip/..."` prefix to `path`, e.g.
  *
  *     // run `zip program.com hi.txt` beforehand
  *     openat(AT_FDCWD, "/zip/hi.txt", O_RDONLY);
@@ -64,10 +65,12 @@
  * Cosmopolitan's general approach on Windows to path translation is to
  *
  *   - replace `/' with `\`
+ *   - normalize `.' and `..`
  *   - translate utf-8 into utf-16
  *   - turn `"\X\foo"` into `"\\?\X:\foo"`
  *   - turn `"\X"` into `"\\?\X:\"`
  *   - turn `"X:\foo"` into `"\\?\X:\foo"`
+ *   - turn `"\\?\X:\foo"` back into `X:\foo` if less than 260 chars
  *
  * On Windows, opening files in `/tmp` will open them in GetTempPath(),
  * which is a secure per-user directory. Opening `/dev/tty` will open a
@@ -75,31 +78,24 @@
  * which can't be fully closed. Opening `/dev/null` will open up `NUL`.
  *
  * @param dirfd is normally `AT_FDCWD` but if it's an open directory and
- *     `file` names a relative path then it's opened relative to `dirfd`
- * @param file is a UTF-8 string naming filesystem entity, e.g. `foo/bar.txt`,
- *     which on Windows is bludgeoned into a WIN32 path automatically, e.g.
- *     - `foo/bar.txt` becomes `foo\bar.txt`
- *     - `/tmp/...` becomes whatever GetTempPath() is
- *     - `\\...` or `//...` is passed through to WIN32 unchanged
- *     - `/c/foo` or `\c\foo` becomes `\\?\c:\foo`
- *     - `c:/foo` or `c:\foo` becomes `\\?\c:\foo`
- *     - `/D` becomes `\\?\D:\`
+ *     `path` names a relative path then it's opened relative to `dirfd`
+ * @param path is a UTF-8 string naming a filesystem entity
  * @param flags must have one of the following under the `O_ACCMODE` bits:
- *     - `O_RDONLY`     to open `file` for reading only
- *     - `O_WRONLY`     to open `file` for writing
- *     - `O_RDWR`       to open `file` for reading and writing
+ *     - `O_RDONLY`     to open `path` for reading only
+ *     - `O_WRONLY`     to open `path` for writing
+ *     - `O_RDWR`       to open `path` for reading and writing
  *     The following may optionally be bitwise or'd into `flags`:
  *     - `O_CREAT`      create file if it doesn't exist
- *     - `O_TRUNC`      automatic `ftruncate(fd,0)` if exists
+ *     - `O_TRUNC`      automatic `ftruncate(fd,0)` if exists (atomic on unix)
  *     - `O_CLOEXEC`    automatic close() upon execve()
  *     - `O_EXCL`       exclusive access (see below)
  *     - `O_APPEND`     open file for appending only
  *     - `O_NOFOLLOW`   fail with ELOOP if it's a symlink
  *     - `O_NONBLOCK`   asks read/write to fail with `EAGAIN` rather than block
  *     - `O_EXEC`       open file for execution only; see fexecve()
- *     - `O_NOCTTY`     prevents `file` possibly becoming controlling terminal
+ *     - `O_NOCTTY`     prevents `path` from becoming the controlling terminal
+ *     - `O_DIRECTORY`  advisory feature for avoiding accidentally opening files
  *     - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
- *     - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
  *     - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
  *     - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
  *     - `O_VERIFY`     it's complicated (zero on non-FreeBSD)
@@ -131,40 +127,48 @@
  *     the executable bit is set thrice too
  * @return file descriptor (which needs to be close()'d), or -1 w/ errno
  * @raise EPERM if pledge() is in play w/o appropriate rpath/wpath/cpath
- * @raise EACCES if unveil() is in play and didn't unveil your `file` path
- * @raise EACCES if we don't have permission to search a component of `file`
+ * @raise EACCES if unveil() is in play and didn't unveil your `path` path
+ * @raise EACCES if we don't have permission to search a component of `path`
  * @raise EACCES if file exists but requested `flags & O_ACCMODE` was denied
  * @raise EACCES if file doesn't exist and parent dir lacks write permissions
  * @raise EACCES if `O_TRUNC` was specified in `flags` but writing was denied
- * @raise ENOTSUP if `file` is on zip file system and `dirfd` isn't `AT_FDCWD`
- * @raise ENOTDIR if a directory component in `file` exists as non-directory
- * @raise ENOTDIR if `file` is relative and `dirfd` isn't an open directory
- * @raise EROFS when writing is requested w/ `file` on read-only filesystem
- * @raise ENAMETOOLONG if symlink-resolved `file` length exceeds `PATH_MAX`
- * @raise ENAMETOOLONG if component in `file` exists longer than `NAME_MAX`
- * @raise ENOTSUP if `file` is on zip file system and process is vfork()'d
- * @raise ENOSPC if file system is full when `file` would be `O_CREAT`ed
+ * @raise ENOTSUP if `path` is on zip file system and `dirfd` isn't `AT_FDCWD`
+ * @raise ENOEXEC if `path` is a zip path and this executable isn't a zip file
+ * @raise ENOTDIR if a directory component in `path` exists as non-directory
+ * @raise ENOTDIR if `path` ends with a trailing slash and refers to a file
+ * @raise ENOTDIR if `path` is relative and `dirfd` isn't an open directory
+ * @raise ENOTDIR if `path` isn't a directory and `O_DIRECTORY` was passed
+ * @raise EILSEQ if `path` contains illegal UTF-8 sequences (Windows/MacOS)
+ * @raise EROFS when writing is requested w/ `path` on read-only filesystem
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise ENAMETOOLONG if `path` is relative and longer than 260 characters
+ * @raise ENOTSUP if `path` is on zip file system and process is vfork()'d
+ * @raise ENOSPC if file system is full when `path` would be `O_CREAT`ed
  * @raise EINTR if we needed to block and a signal was delivered instead
- * @raise EEXIST if `O_CREAT|O_EXCL` are used and `file` already existed
+ * @raise EEXIST if `O_CREAT|O_EXCL` are used and `path` already existed
+ * @raise EINVAL if ASCII control codes are used in `path` on Windows
+ * @raise EINVAL if `O_TRUNC` is specified in `O_RDONLY` mode
+ * @raise EINVAL if `flags` contains unsupported bits
  * @raise ECANCELED if thread was cancelled in masked mode
- * @raise ENOENT if `file` doesn't exist when `O_CREAT` isn't in `flags`
- * @raise ENOENT if `file` points to a string that's empty
+ * @raise ENOENT if `path` doesn't exist when `O_CREAT` isn't in `flags`
+ * @raise ENOENT if `path` points to a string that's empty
  * @raise ENOMEM if insufficient memory was available
  * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
  * @raise ENFILE if system-wide file limit has been reached
- * @raise EOPNOTSUPP if `file` names a named socket
- * @raise EFAULT if `file` points to invalid memory
- * @raise ETXTBSY if writing is requested on `file` that's being executed
- * @raise ELOOP if `flags` had `O_NOFOLLOW` and `file` is a symbolic link
- * @raise ELOOP if a loop was detected resolving components of `file`
- * @raise EISDIR if writing is requested and `file` names a directory
+ * @raise EOPNOTSUPP if `path` names a named socket
+ * @raise EFAULT if `path` points to invalid memory
+ * @raise ETXTBSY if writing is requested on `path` that's being executed
+ * @raise ELOOP if `flags` had `O_NOFOLLOW` and `path` is a symbolic link
+ * @raise ELOOP if a loop was detected resolving components of `path`
+ * @raise EISDIR if writing is requested and `path` names a directory
  * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @threadsafe
  * @vforksafe
  */
-int openat(int dirfd, const char *file, int flags, ...) {
+int openat(int dirfd, const char *path, int flags, ...) {
   int rc;
   va_list va;
   unsigned mode;
@@ -174,32 +178,48 @@ int openat(int dirfd, const char *file, int flags, ...) {
   va_end(va);
   BEGIN_CANCELLATION_POINT;
 
-  if (file && (!IsAsan() || __asan_is_valid_str(file))) {
-    if (!__isfdkind(dirfd, kFdZip)) {
-      if (_weaken(__zipos_open) &&
-          _weaken(__zipos_parseuri)(file, &zipname) != -1) {
-        if (!__vforked && dirfd == AT_FDCWD) {
-          rc = _weaken(__zipos_open)(&zipname, flags);
-        } else {
-          rc = enotsup(); /* TODO */
-        }
-      } else if (!IsWindows() && !IsMetal()) {
-        rc = sys_openat(dirfd, file, flags, mode);
-      } else if (IsMetal()) {
-        rc = sys_openat_metal(dirfd, file, flags, mode);
-      } else {
-        rc = sys_open_nt(dirfd, file, flags, mode);
-      }
-    } else {
-      rc = enotsup(); /* TODO */
-    }
-  } else {
+  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     rc = efault();
+  } else if (__isfdkind(dirfd, kFdZip)) {
+    rc = enotsup();  // TODO
+  } else if (_weaken(__zipos_open) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    if (!__vforked && dirfd == AT_FDCWD) {
+      rc = _weaken(__zipos_open)(&zipname, flags);
+    } else {
+      rc = enotsup();  // TODO
+    }
+  } else if ((flags & O_ACCMODE) == O_RDONLY && (flags & O_TRUNC)) {
+    rc = einval();  // Every OS except OpenBSD actually does this D:
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+    rc = sys_openat(dirfd, path, flags, mode);
+    if (IsFreebsd()) {
+      // Address FreeBSD divergence from IEEE Std 1003.1-2008 (POSIX.1)
+      // in the case when O_NOFOLLOW is used, but fails due to symlink.
+      if (rc == -1 && errno == EMLINK) {
+        errno = ELOOP;
+      }
+    }
+    if (IsNetbsd()) {
+      // Address NetBSD divergence from IEEE Std 1003.1-2008 (POSIX.1)
+      // in the case when O_NOFOLLOW is used but fails due to symlink.
+      if (rc == -1 && errno == EFTYPE) {
+        errno = ELOOP;
+      }
+    }
+  } else if (IsMetal()) {
+    rc = sys_openat_metal(dirfd, path, flags, mode);
+  } else if (IsWindows()) {
+    rc = sys_open_nt(dirfd, path, flags, mode);
+  } else {
+    rc = enosys();
   }
 
   END_CANCELLATION_POINT;
-  STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(dirfd), file,
+  STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(dirfd), path,
          DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
          rc);
   return rc;
 }
+
+__strong_reference(openat, openat64);

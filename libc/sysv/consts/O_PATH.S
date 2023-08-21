@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_PATH,0x00200000,0x00200000,0,0,0,0,0,0
+.syscon open,O_PATH,0x00200000,0x00200000,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff

@@ -64,6 +64,8 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
     rc = ebadf();
   } else if (!IsWindows()) {
     rc = sys_pwrite(fd, buf, size, offset, offset);
+  } else if (__isfdkind(fd, kFdSocket)) {
+    rc = espipe();
   } else if (__isfdkind(fd, kFdFile)) {
     rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, offset);
   } else {

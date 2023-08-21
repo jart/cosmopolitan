@@ -163,8 +163,8 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *cname,
   lfilehdrsize = kZipLfileHdrMinSize + namesize;
   crc = crc32_z(0, data, uncompsize);
   GetDosLocalTime(mtim.tv_sec, &mtime, &mdate);
-  if (_isutf8(name, namesize)) gflags |= kZipGflagUtf8;
-  if (S_ISREG(mode) && _istext(data, size)) {
+  if (isutf8(name, namesize)) gflags |= kZipGflagUtf8;
+  if (S_ISREG(mode) && istext(data, size)) {
     iattrs |= kZipIattrText;
   }
   dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;

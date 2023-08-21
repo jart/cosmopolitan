@@ -66,6 +66,7 @@ TryAgain:
         if ((dwDesiredAccess & kNtGenericExecute) &&
             (dwCreationDisposition == kNtOpenExisting ||
              dwCreationDisposition == kNtTruncateExisting)) {
+          NTTRACE("CreateFile removed kNtGenericExecute");
           dwDesiredAccess &= ~kNtGenericExecute;
           goto TryAgain;
         }

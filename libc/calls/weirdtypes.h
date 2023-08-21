@@ -28,7 +28,7 @@ typedef int64_t register_t;
 typedef uint16_t sa_family_t; /* bsd:uint8_t */
 typedef uint32_t socklen_t;
 typedef uint32_t speed_t;
-typedef int64_t suseconds_t;   /* int32_t on xnu */
+typedef uint32_t suseconds_t;
 typedef uint64_t useconds_t;   /* uint32_t on xnu */
 typedef int64_t syscall_arg_t; /* uint64_t on xnu */
 typedef uint32_t tcflag_t;

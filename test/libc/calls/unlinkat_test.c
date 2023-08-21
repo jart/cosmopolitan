@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;
@@ -43,6 +44,16 @@ TEST(unlink, enoent) {
 TEST(unlink, enotdir) {
   ASSERT_SYS(0, 0, touch("o", 0644));
   ASSERT_SYS(ENOTDIR, -1, unlink("o/doesnotexist"));
+}
+
+TEST(rmdir, willDeleteRegardlessOfAccessBits) {
+  ASSERT_SYS(0, 0, mkdir("foo", 0));
+  ASSERT_SYS(0, 0, rmdir("foo/"));
+}
+
+TEST(unlink, willDeleteRegardlessOfAccessBits) {
+  ASSERT_SYS(0, 0, touch("foo", 0));
+  ASSERT_SYS(0, 0, unlink("foo"));
 }
 
 TEST(unlinkat, test) {

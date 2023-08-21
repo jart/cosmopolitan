@@ -76,7 +76,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
     } else if (__isfdkind(fd, kFdSocket)) {
       rc = sys_sendto_nt(fd, msg->msg_iov, msg->msg_iovlen, flags,
                          msg->msg_name, msg->msg_namelen);
-    } else if (__isfdkind(fd, kFdFile)) {
+    } else if (__isfdkind(fd, kFdFile)) {  // e.g. socketpair
       rc = sys_write_nt(fd, msg->msg_iov, msg->msg_iovlen, -1);
     } else {
       rc = enotsock();

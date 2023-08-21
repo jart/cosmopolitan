@@ -52,27 +52,31 @@ static inline const char *__strace_fstatat_flags(char buf[12], int flags) {
  *     file is a relative path, then `path` becomes relative to `dirfd`
  * @param st is where the result is stored
  * @param flags can have `AT_SYMLINK_NOFOLLOW`
- * @param st is where result is stored
  * @raise EACCES if denied access to component in path prefix
  * @raise EIO if i/o error occurred while reading from filesystem
  * @raise ELOOP if a symbolic link loop exists in `path`
  * @raise ENAMETOOLONG if a component in `path` exceeds `NAME_MAX`
  * @raise ENOENT on empty string or if component in path doesn't exist
  * @raise ENOTDIR if a parent component existed that wasn't a directory
+ * @raise EILSEQ if `path` contains illegal UTF-8 sequences (Windows/MacOS)
  * @raise ENOTDIR if `path` is relative and `dirfd` isn't an open directory
+ * @raise ENOEXEC if `path` is a zip path and this executable isn't a zip file
  * @raise EOVERFLOW shouldn't be possible on 64-bit systems
  * @raise ELOOP may ahappen if `SYMLOOP_MAX` symlinks were dereferenced
  * @raise ENAMETOOLONG may happen if `path` exceeded `PATH_MAX`
+ * @raise EFAULT if `path` or `st` point to invalid memory
+ * @raise EINVAL if `flags` has unsupported bits
  * @return 0 on success, or -1 w/ errno
  * @see S_ISDIR(st.st_mode), S_ISREG()
  * @asyncsignalsafe
  * @vforksafe
  */
 int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
-  /* execve() depends on this */
+  // execve() depends on this
   int rc;
   struct ZiposUri zipname;
-  if (IsAsan() && !__asan_is_valid(st, sizeof(*st))) {
+  if (IsAsan() && (!__asan_is_valid_str(path) ||  //
+                   !__asan_is_valid(st, sizeof(*st)))) {
     rc = efault();
   } else if (flags & ~AT_SYMLINK_NOFOLLOW) {
     return einval();

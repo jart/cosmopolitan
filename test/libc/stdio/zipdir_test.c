@@ -94,6 +94,7 @@ TEST(__zipos_normpath, vectors) {
       {"./", ""},
       {"..", ""},
       {"../", ""},
+      {"./foo/", "foo/"},
       {"foo/", "foo/"},
       {"../abc/def", "abc/def"},
       {"../abc/def/..", "abc/"},

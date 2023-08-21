@@ -30,7 +30,8 @@
  * This function offers atomic operation on all supported platforms
  * except for XNU and RHEL5 where it's polyfilled.
  *
- * @params flags may contain `O_CLOEXEC`, `O_NONBLOCK`, and `O_DIRECT`
+ * @params flags may contain `O_CLOEXEC`, `O_NONBLOCK`, or the non-POSIX
+ *     packet mode flag `O_DIRECT`, which is `EINVAL` on MacOS / OpenBSD
  * @raise EINVAL if flags has invalid or unsupported bits
  * @raise EFAULT if `pipefd` doesn't point to valid memory
  * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
@@ -41,7 +42,7 @@
  */
 int pipe2(int pipefd[hasatleast 2], int flags) {
   int rc;
-  if (flags & ~(O_CLOEXEC | O_NONBLOCK | O_DIRECT)) {
+  if (flags & ~(O_CLOEXEC | O_NONBLOCK | (O_DIRECT != -1u ? O_DIRECT : 0))) {
     return einval();
   } else if (!pipefd ||
              (IsAsan() && !__asan_is_valid(pipefd, sizeof(int) * 2))) {

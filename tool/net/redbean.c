@@ -1084,7 +1084,7 @@ static bool HasString(struct Strings *l, const char *s, size_t n) {
   return false;
 }
 
-static const char* DEFAULTLUAPATH = "/zip/.lua/?.lua;/zip/.lua/?/init.lua";
+static const char *DEFAULTLUAPATH = "/zip/.lua/?.lua;/zip/.lua/?/init.lua";
 
 static void UpdateLuaPath(const char *s) {
 #ifndef STATIC
@@ -1100,11 +1100,10 @@ static void UpdateLuaPath(const char *s) {
     if (t = strstr(curpath, DEFAULTLUAPATH)) {
       // if the DEFAULT path is found, prepend the path in front of it
       respath = xasprintf("%.*s%s/.lua/?.lua;%s/.lua/?/init.lua;%s",
-                          t-curpath, curpath, s, s, t);
+                          t - curpath, curpath, s, s, t);
     } else {
       // if the DEFAULT path is not found, append to the end
-      respath = xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua",
-                          curpath, s, s);
+      respath = xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua", curpath, s, s);
     }
     lua_pushstring(L, _gc(respath));
     lua_setfield(L, -3, "path");
@@ -3659,8 +3658,8 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   }
   INFOF("(srvr) storing asset %`'s", path);
   disk = gflags = iattrs = 0;
-  if (_isutf8(path, pathlen)) gflags |= kZipGflagUtf8;
-  if (_istext(data, datalen)) iattrs |= kZipIattrText;
+  if (isutf8(path, pathlen)) gflags |= kZipGflagUtf8;
+  if (istext(data, datalen)) iattrs |= kZipIattrText;
   crc = crc32_z(0, data, datalen);
   if (datalen < 100) {
     method = kZipCompressionNone;

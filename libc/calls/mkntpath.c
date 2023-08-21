@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntmagicpaths.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/systeminfo.h"
@@ -75,22 +77,21 @@ textwindows int __mkntpath(const char *path,
  */
 textwindows int __mkntpath2(const char *path,
                             char16_t path16[hasatleast PATH_MAX], int flags) {
-  /*
-   * 1. Need +1 for NUL-terminator
-   * 2. Need +1 for UTF-16 overflow
-   * 3. Need ≥2 for SetCurrentDirectory trailing slash requirement
-   * 4. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
-   *    which is an "8.3 filename" from the DOS days
-   */
-  const char *q;
-  bool isdospath;
-  char16_t c, *p;
-  size_t i, j, n, m, x, z;
-  if (!path) return efault();
-  path = FixNtMagicPath(path, flags);
-  p = path16;
-  q = path;
 
+  // 1. Need +1 for NUL-terminator
+  // 2. Need +1 for UTF-16 overflow
+  // 3. Need ≥2 for SetCurrentDirectory trailing slash requirement
+  // 4. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
+  //    which is an "8.3 filename" from the DOS days
+
+  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+    return efault();
+  }
+  path = FixNtMagicPath(path, flags);
+
+  size_t x, z;
+  char16_t *p = path16;
+  const char *q = path;
   if (IsSlash(q[0]) && IsAlpha(q[1]) && IsSlash(q[2])) {
     z = MIN(32767, PATH_MAX);
     // turn "\c\foo" into "\\?\c:\foo"
@@ -142,6 +143,7 @@ textwindows int __mkntpath2(const char *path,
   }
 
   // turn /tmp into GetTempPath()
+  size_t m;
   if (!x && IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
       (IsSlash(q[4]) || !q[4])) {
     m = GetTempPath(z, p);
@@ -154,23 +156,37 @@ textwindows int __mkntpath2(const char *path,
   }
 
   // turn utf-8 into utf-16
-  n = tprecode8to16(p, z, q).ax;
+  size_t n = tprecode8to16(p, z, q).ax;
   if (n >= z - 1) {
-    STRACE("path too long for windows: %#s", path);
     return enametoolong();
   }
 
-  // 1. turn `/` into `\`
-  // 2. turn `\\` into `\` if not at beginning
+  // normalize path
+  // we need it because \\?\... paths have to be normalized
+  // we don't remove the trailing slash since it is special
+  size_t i, j;
   for (j = i = 0; i < n; ++i) {
-    c = p[i];
+    int c = p[i];
     if (c == '/') {
       c = '\\';
     }
     if (j > 1 && c == '\\' && p[j - 1] == '\\') {
-      continue;
+      // matched "^/" or "//" but not "^//"
+    } else if ((j && p[j - 1] == '\\') &&  //
+               c == '.' &&                 //
+               (i + 1 == n || IsSlash(p[i + 1]))) {
+      // matched "/./" or "/.$"
+      i += !(i + 1 == n);
+    } else if ((j && p[j - 1] == '\\') &&         //
+               c == '.' &&                        //
+               (i + 1 < n && p[i + 1] == '.') &&  //
+               (i + 2 == n || IsSlash(p[i + 2]))) {
+      // matched "/../" or "/..$"
+      while (j && p[j - 1] == '\\') --j;
+      while (j && p[j - 1] != '\\') --j;
+    } else {
+      p[j++] = c;
     }
-    p[j++] = c;
   }
   p[j] = 0;
   n = j;
@@ -180,11 +196,11 @@ textwindows int __mkntpath2(const char *path,
 
   // To avoid toil like this:
   //
-  //     CMD.EXE was started with the above path as the current directory.
-  //     UNC paths are not supported.  Defaulting to Windows directory.
-  //     Access is denied.
+  //     "CMD.EXE was started with the above path as the current
+  //      directory. UNC paths are not supported. Defaulting to Windows
+  //      directory. Access is denied." -Quoth CMD.EXE
   //
-  // Remove \\?\ prefix if we're within 260 character limit.
+  // Remove \\?\ prefix if we're within the 260 character limit.
   if (n > 4 && n < 260 &&   //
       path16[0] == '\\' &&  //
       path16[1] == '\\' &&  //
@@ -192,11 +208,6 @@ textwindows int __mkntpath2(const char *path,
       path16[3] == '\\') {
     memmove(path16, path16 + 4, (n - 4 + 1) * sizeof(char16_t));
     n -= 4;
-  }
-
-  // turn "foo\\." into "foo\\"
-  if (n > 2 && path16[n - 1] == u'.' && path16[n - 2] == u'\\') {
-    path16[--n] = 0;
   }
 
   return n;

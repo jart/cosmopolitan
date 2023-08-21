@@ -192,7 +192,7 @@ static int SerializeString(lua_State *L, char **buf, int idx) {
   size_t i, n;
   const char *s;
   s = lua_tolstring(L, idx, &n);
-  utf8 = _isutf8(s, n);
+  utf8 = isutf8(s, n);
   RETURN_ON_ERROR(appendw(buf, '"'));
   for (i = 0; i < n; i++) {
     switch ((x = kLuaStrXlat[(c = s[i] & 255)])) {

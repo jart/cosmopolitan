@@ -185,30 +185,28 @@ syscon	open	O_CREAT					0x00000040		0x00000040		0x00000200		0x00000200		0x000002
 syscon	open	O_EXCL					0x00000080		0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
 syscon	open	O_TRUNC					0x00000200		0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
 syscon	open	O_DIRECTORY				0x00010000		0x00004000		0x00100000		0x00100000		0x00020000		0x00020000		0x00200000		0x00010000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics) [SYNC libc/calls/open-nt.c]
-syscon	open	O_NOFOLLOW				0x00020000		0x00008000		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00020000	       	# bsd consensus; kNtFileFlagOpenReparsePoint
-syscon	open	O_DIRECT				0x00004000		0x00010000		0			0			0x00010000		0			0x00080000		0x00004000		#  kNtFileFlagNoBuffering [SYNC libc/calls/open-nt.c]
-syscon	open	O_NDELAY				0x00000800		0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		#  kNtFileFlagWriteThrough [SYNC libc/calls/open-nt.c]
-syscon	open	O_RANDOM				0			0			0			0			0			0			0			0x80000000		#  kNtFileFlagRandomAccess [SYNC libc/calls/open-nt.c]
-syscon	open	O_SEQUENTIAL				0			0			0			0			0			0			0			0x40000000		#  kNtFileFlagSequentialScan [SYNC libc/calls/open-nt.c]
-syscon	open	O_COMPRESSED				0			0			0			0			0			0			0			0x20000000		#  kNtFileAttributeCompressed [SYNC libc/calls/open-nt.c]
+syscon	open	O_NOFOLLOW				0x00020000		0x00008000		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00020000	       	# don't follow symlinks in the final path component; bsd consensus; kNtFileFlagOpenReparsePoint
+syscon	open	O_DIRECT				0x00004000		0x00010000		0xffffffff		0xffffffff		0x00010000		0xffffffff		0x00080000		0x00004000		# kNtFileFlagNoBuffering [SYNC libc/calls/open-nt.c]
+syscon	open	O_NONBLOCK				0x00000800		0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# same as O_NDELAY; overlaps with kNtFileFlagWriteThrough which we don't actually pass to win32 (we implement non-blocking ourselves using overlapped i/o)
+syscon	open	O_RANDOM				0			0			0			0			0			0			0			0x80000000		# kNtFileFlagRandomAccess [SYNC libc/calls/open-nt.c]
+syscon	open	O_SEQUENTIAL				0			0			0			0			0			0			0			0x40000000		# kNtFileFlagSequentialScan [SYNC libc/calls/open-nt.c]
+syscon	open	O_COMPRESSED				0			0			0			0			0			0			0			0x20000000		# kNtFileAttributeCompressed [SYNC libc/calls/open-nt.c]
 syscon	open	O_INDEXED				0			0			0			0			0			0			0			0x10000000		# !kNtFileAttributeNotContentIndexed [SYNC libc/calls/open-nt.c]
 syscon	open	O_CLOEXEC				0x00080000		0x00080000		0x01000000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux [SYNC libc/calls/open-nt.c]
 syscon	open	O_TMPFILE				0x00410000		0x00404000		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# please use tmpfd(); Linux 3.11+ (c. 2013) __O_TMPFILE | O_DIRECTORY; kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose [SYNC libc/calls/open-nt.c]
-syscon	open	O_SPARSE				0			0			0			0			0			0			0			0			# wut
-syscon	open	O_NONBLOCK				0x00000800		0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus
-syscon	open	O_ASYNC					0x00002000		0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0x00000040		0			# bsd consensus
-syscon	open	O_NOFOLLOW_ANY				0			0			0x20000000		0x20000000		0			0			0			0			#
-syscon	open	O_SYNC					0x00101000		0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0x00000080		0			# bsd consensus
+syscon	open	O_ASYNC					0x00002000		0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0x00000040		0xffffffff		# bsd consensus
+syscon	open	O_NOFOLLOW_ANY				0xffffffff		0xffffffff		0x20000000		0x20000000		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# don't follow symlinks in any path component
+syscon	open	O_SYNC					0x00101000		0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0x00000080		0xffffffff		# bsd consensus
 syscon	open	O_NOCTTY				0x00000100		0x00000100		0x00020000		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
 syscon	open	O_NOATIME				0x00040000		0x00040000		0			0			0			0			0			0			# optimize away access time update
 syscon	open	O_EXEC					0x00200000		0x00200000		0			0x40000000		0x00040000		0			0x04000000		0			# open only for executing (POSIX.1 hack for when file mode is 0111); see fexecve(); O_PATH on Linux
-syscon	open	O_SEARCH				0			0			0			0x40100000		0x00040000		0			0x00800000		0			# it's specified by posix what does it mean
-syscon	open	O_DSYNC					0x00001000		0x00001000		0x00400000		0x00400000		0			0x00000080		0x00010000		0			#
-syscon	open	O_RSYNC					0x00101000		0x00101000		0			0			0			0x00000080		0x00020000		0			#
-syscon	open	O_PATH					0x00200000		0x00200000		0			0			0			0			0			0			# Linux 2.6.39+
-syscon	open	O_VERIFY				0			0			0			0			0x00200000		0			0			0			#
-syscon	open	O_SHLOCK				0			0			0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0			#
-syscon	open	O_EXLOCK				0			0			0x00000020		0x00000020		0x00000020		0x00000020		0x00000020		0			#
+syscon	open	O_SEARCH				0xffffffff		0xffffffff		0xffffffff		0x40100000		0x00040000		0xffffffff		0x00800000		0xffffffff		# it's specified by posix what does it mean
+syscon	open	O_DSYNC					0x00001000		0x00001000		0x00400000		0x00400000		0xffffffff		0x00000080		0x00010000		0xffffffff		#
+syscon	open	O_RSYNC					0x00101000		0x00101000		0xffffffff		0xffffffff		0xffffffff		0x00000080		0x00020000		0xffffffff		#
+syscon	open	O_PATH					0x00200000		0x00200000		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# Linux 2.6.39+
+syscon	open	O_VERIFY				0xffffffff		0xffffffff		0xffffffff		0xffffffff		0x00200000		0xffffffff		0xffffffff		0xffffffff		#
+syscon	open	O_SHLOCK				0xffffffff		0xffffffff		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0xffffffff		#
+syscon	open	O_EXLOCK				0xffffffff		0xffffffff		0x00000020		0x00000020		0x00000020		0x00000020		0x00000020		0xffffffff		#
 syscon	open	O_TTY_INIT				0			0			0			0			0x00080000		0			0			0			#
 syscon	compat	O_LARGEFILE				0x00008000		0x00020000		0			0			0			0			0			0			#
 
@@ -1047,7 +1045,7 @@ syscon	limits	MAX_INPUT				255			255			1024			1024			255			255			255			255			# w
 syscon	limits	SOMAXCONN				4096			4096			128			128			128			128			128			2147483647		# maximum backlog for listen()
 syscon	limits	_ARG_MAX				128*1024		128*1024		1024*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
 syscon	limits	_NAME_MAX				255			255			255			255			255			255			511			255			# probably higher on windows?
-syscon	limits	_PATH_MAX				4096			4096			1024			1024			1024			1024			1024			512			# cosmopolitan libc imposes a lower 512 limit; nt theoretically goes up to 32767
+syscon	limits	_PATH_MAX				4096			4096			1024			1024			1024			1024			1024			32767			# win32 paths are 260 characters max. even with unc paths, cosmo wrappers won't go beyond 1024 chars
 syscon	limits	_NSIG					64			64			32			32			128			32			64			64			# _SIG_MAXSIG on FreeBSD
 
 #	unmount() flags

@@ -34,17 +34,14 @@ cosmocc --update   # pull cosmo and rebuild toolchain
 ```
 
 You've now successfully installed your very own cosmos. Now let's build
-an example program, which demonstrates the crash reporting feature:
+an example program:
 
 ```c
 // hello.c
 #include <stdio.h>
-#include <cosmo.h>
 
 int main() {
-  ShowCrashReports();
   printf("hello world\n");
-  __builtin_trap();
 }
 ```
 

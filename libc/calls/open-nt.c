@@ -22,34 +22,92 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/createfile.h"
+#include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
+__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
+
 static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
                                             uint32_t flags, int32_t mode,
                                             uint32_t extra_attr) {
+
+  // join(topath(dirfd), path) and translate from utf-8 to utf-16
   char16_t path16[PATH_MAX];
-  uint32_t perm, share, disp, attr;
   if (__mkntpathat(dirfd, path, flags, path16) == -1) {
     return kNtInvalidHandleValue;
   }
+
+  // strip trailing slash
+  size_t n = strlen16(path16);
+  if (n > 1 && path16[n - 1] == '\\') {
+    // path denormalization only goes so far. when a trailing / or /.
+    // exists the kernel interprets that as having O_DIRECTORY intent
+    // furthermore, windows will throw an error on unc paths with it!
+    flags |= O_DIRECTORY;
+    path16[--n] = 0;
+  }
+
+  // implement no follow flag
+  // you can't open symlinks; use readlink
+  // this flag only applies to the final path component
+  // if O_NOFOLLOW_ANY is passed (-1 on NT) it'll be rejected later
+  uint32_t fattr = __imp_GetFileAttributesW(path16);
   if (flags & O_NOFOLLOW) {
-    if ((attr = GetFileAttributes(path16)) != -1u &&  //
-        (attr & kNtFileAttributeReparsePoint)) {
+    if (fattr != -1u && (fattr & kNtFileAttributeReparsePoint)) {
       return eloop();
     }
-    flags &= ~O_NOFOLLOW;
+    flags &= ~O_NOFOLLOW;  // don't actually pass this to win32
   }
+
+  // handle some obvious cases while we have the attributes
+  // we should ideally resolve symlinks ourself before doing this
+  if (fattr != -1u) {
+    if (fattr & kNtFileAttributeDirectory) {
+      if ((flags & O_ACCMODE) != O_RDONLY || (flags & O_CREAT)) {
+        // tried to open directory for writing. note that our
+        // undocumented O_TMPFILE support on windows requires that a
+        // filename be passed, rather than a directory like linux.
+        return eisdir();
+      }
+      // on posix, the o_directory flag is an advisory safeguard that
+      // isn't required. on windows, it's mandatory for opening a dir
+      flags |= O_DIRECTORY;
+    } else if (!(fattr & kNtFileAttributeReparsePoint)) {
+      // we know for certain file isn't a directory
+      if (flags & O_DIRECTORY) {
+        return enotdir();
+      }
+    }
+  }
+
+  // translate posix flags to win32 flags
+  uint32_t perm, share, disp, attr;
   if (GetNtOpenFlags(flags, mode, &perm, &share, &disp, &attr) == -1) {
     return kNtInvalidHandleValue;
   }
+
+  // kNtTruncateExisting always returns kNtErrorInvalidParameter :'(
+  if (disp == kNtTruncateExisting) {
+    if (fattr != -1u) {
+      disp = kNtCreateAlways;  // file exists (wish it could be more atomic)
+    } else {
+      return __fix_enotdir(enotdir(), path16);
+    }
+  }
+
+  // open the file, following symlinks
   return __fix_enotdir(CreateFile(path16, perm, share, &kNtIsInheritable, disp,
                                   attr | extra_attr, 0),
                        path16);

@@ -596,68 +596,68 @@ static int ioctl_siocgifflags(int fd, void *arg) {
 /**
  * Performs special i/o operation on file descriptor.
  *
- * @param request can be any of:
+ * The following i/o requests are available.
  *
- *     - `FIONREAD` takes an `int *` and returns how many bytes of input
- *       are available on a terminal or socket, waiting to be read.
+ * - `FIONREAD` takes an `int *` and returns how many bytes of input are
+ *   available on a terminal/socket/pipe, waiting to be read. Be sure to
+ *   only use it on the reading end of a pipe.
  *
- *     - `TIOCGWINSZ` populates `struct winsize *` with the dimensions
- *       of your teletypewriter. It's an alias for tcgetwinsize().
+ * - `TIOCGWINSZ` populates `struct winsize *` with the dimensions of
+ *   your teletypewriter. It's an alias for tcgetwinsize().
  *
- *     - `TIOCSWINSZ` with the dimensions of your teletypewriter to
- *       `struct winsize *`. It's an alias for tcsetwinsize().
+ * - `TIOCSWINSZ` with the dimensions of your teletypewriter to `struct
+ *   winsize *`. It's an alias for tcsetwinsize().
  *
- *     - `TIOCOUTQ` takes an `int *` and returns the number of bytes in
- *       the terminal's output buffer. Only available on UNIX.
+ * - `TIOCOUTQ` takes an `int *` and returns the number of bytes in the
+ *   terminal's output buffer. Only available on UNIX.
  *
- *     - `TIOCSTI` takes a `const char *` and may be used to fake input
- *       to a tty. This API isn't available on OpenBSD. Only available
- *       on UNIX.
+ * - `TIOCSTI` takes a `const char *` and may be used to fake input to a
+ *   tty. This API isn't available on OpenBSD. Only available on UNIX.
  *
- *     - `TIOCNOTTY` takes an `int tty_fd` arg and makes it the
- *       controlling terminal of the calling process, which should have
- *       called setsid() beforehand.
+ * - `TIOCNOTTY` takes an `int tty_fd` arg and makes it the controlling
+ *   terminal of the calling process, which should have called setsid()
+ *   beforehand.
  *
- *     - `TIOCNOTTY` to give up the controlling terminal. Only available
- *       on UNIX.
+ * - `TIOCNOTTY` to give up the controlling terminal. Only available on
+ *   UNIX.
  *
- *     - `TIOCNXCL` to give up exclusive mode on terminal. Only
- *       available on UNIX.
+ * - `TIOCNXCL` to give up exclusive mode on terminal. Only available on
+ *   UNIX.
  *
- *     - `SIOCGIFCONF` takes an struct ifconf object of a given size,
- *       whose arg is `struct ifconf *`. It implements the Linux style
- *       and modifies the following:
- *       - ifc_len: set it to the number of valid ifreq structures
- *         representingthe interfaces
- *       - ifc_ifcu.ifcu_req: sets the name of the interface for each
- *         interface
- *       The ifc_len is an input/output parameter: set it to the total
- *       size of the ifcu_buf (ifcu_req) buffer on input.
+ * - `SIOCGIFCONF` takes an struct ifconf object of a given size,
+ *   whose arg is `struct ifconf *`. It implements the Linux style
+ *   and modifies the following:
+ *   - ifc_len: set it to the number of valid ifreq structures
+ *     representingthe interfaces
+ *   - ifc_ifcu.ifcu_req: sets the name of the interface for each
+ *     interface
+ *   The ifc_len is an input/output parameter: set it to the total
+ *   size of the ifcu_buf (ifcu_req) buffer on input.
  *
- *     - `SIOCGIFNETMASK` populates a `struct ifconf *` record with the
- *       network interface mask. This data structure should be obtained
- *       by calling `SIOCGIFCONF`.
+ * - `SIOCGIFNETMASK` populates a `struct ifconf *` record with the
+ *   network interface mask. This data structure should be obtained by
+ *   calling `SIOCGIFCONF`.
  *
- *     - `SIOCGIFBRDADDR` populates a `struct ifconf *` record with the
- *       network broadcast addr. This data structure should be obtained
- *       by calling `SIOCGIFCONF`.
+ * - `SIOCGIFBRDADDR` populates a `struct ifconf *` record with the
+ *   network broadcast addr. This data structure should be obtained by
+ *   calling `SIOCGIFCONF`.
  *
- *     - `FIONBIO` isn't polyfilled; use `fcntl(F_SETFL, O_NONBLOCK)`
- *     - `FIOCLEX` isn't polyfilled; use `fcntl(F_SETFD, FD_CLOEXEC)`
- *     - `FIONCLEX` isn't polyfilled; use `fcntl(F_SETFD, 0)`
- *     - `TCGETS` isn't polyfilled; use tcgetattr()
- *     - `TCSETS` isn't polyfilled; use tcsetattr()
- *     - `TCSETSW` isn't polyfilled; use tcsetattr()
- *     - `TCSETSF` isn't polyfilled; use tcsetattr()
- *     - `TCXONC` isn't polyfilled; use tcflow()
- *     - `TCSBRK` isn't polyfilled; use tcdrain()
- *     - `TCFLSH` isn't polyfilled; use tcflush()
- *     - `TIOCGPTN` isn't polyfilled; use ptsname()
- *     - `TIOCGSID` isn't polyfilled; use tcgetsid()
- *     - `TCSBRK` isn't polyfilled; use tcsendbreak()
- *     - `TCSBRK` isn't polyfilled; use tcsendbreak()
- *     - `TIOCSPGRP` isn't polyfilled; use tcsetpgrp()
- *     - `TIOCSPTLCK` isn't polyfilled; use unlockpt()
+ * - `FIONBIO` isn't polyfilled; use `fcntl(F_SETFL, O_NONBLOCK)`
+ * - `FIOCLEX` isn't polyfilled; use `fcntl(F_SETFD, FD_CLOEXEC)`
+ * - `FIONCLEX` isn't polyfilled; use `fcntl(F_SETFD, 0)`
+ * - `TCGETS` isn't polyfilled; use tcgetattr()
+ * - `TCSETS` isn't polyfilled; use tcsetattr()
+ * - `TCSETSW` isn't polyfilled; use tcsetattr()
+ * - `TCSETSF` isn't polyfilled; use tcsetattr()
+ * - `TCXONC` isn't polyfilled; use tcflow()
+ * - `TCSBRK` isn't polyfilled; use tcdrain()
+ * - `TCFLSH` isn't polyfilled; use tcflush()
+ * - `TIOCGPTN` isn't polyfilled; use ptsname()
+ * - `TIOCGSID` isn't polyfilled; use tcgetsid()
+ * - `TCSBRK` isn't polyfilled; use tcsendbreak()
+ * - `TCSBRK` isn't polyfilled; use tcsendbreak()
+ * - `TIOCSPGRP` isn't polyfilled; use tcsetpgrp()
+ * - `TIOCSPTLCK` isn't polyfilled; use unlockpt()
  *
  * @restartable
  * @vforksafe

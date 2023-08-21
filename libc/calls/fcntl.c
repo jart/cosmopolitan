@@ -27,9 +27,9 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/runtime/zipos.internal.h"
 
 /**
  * Does things with file descriptor, e.g.
@@ -57,6 +57,12 @@
  *     - `F_SETFD` sets `FD_CLOEXEC` status of `arg` file descriptor
  *     - `F_GETFL` returns file descriptor status flags
  *     - `F_SETFL` sets file descriptor status flags
+ *       - `O_NONBLOCK` may be changed
+ *       - `O_APPEND` may be changed
+ *       - `O_DIRECT` may be changed
+ *       - `O_SEQUENTIAL` may be changed (no-op on non-Windows)
+ *       - `O_RANDOM` may be changed (no-op on non-Windows)
+ *       - Other bits (`O_ACCMODE`, `O_CREAT`, etc.) are ignored
  *     - `F_DUPFD` is like dup() but `arg` is a minimum result, e.g. 3
  *     - `F_DUPFD_CLOEXEC` ditto but sets `O_CLOEXEC` on returned fd
  *     - `F_SETLK` for record locking where `arg` is `struct flock *`
@@ -131,11 +137,15 @@ int fcntl(int fd, int cmd, ...) {
   }
 
 #ifdef SYSDEBUG
-  if (cmd == F_GETFD ||         //
-      cmd == F_GETOWN ||        //
-      cmd == F_FULLFSYNC ||     //
-      cmd == F_BARRIERFSYNC ||  //
-      cmd == F_MAXFD) {
+  if (rc != -1 && cmd == F_GETFL) {
+    STRACE("fcntl(%d, F_GETFL) → %s", fd, DescribeOpenFlags(rc));
+  } else if (cmd == F_SETFL) {
+    STRACE("fcntl(%d, F_SETFL, %s) → %d% m", fd, DescribeOpenFlags(arg), rc);
+  } else if (cmd == F_GETFD ||         //
+             cmd == F_GETOWN ||        //
+             cmd == F_FULLFSYNC ||     //
+             cmd == F_BARRIERFSYNC ||  //
+             cmd == F_MAXFD) {
     STRACE("fcntl(%d, %s) → %d% m", fd, DescribeFcntlCmd(cmd), rc);
   } else if (cmd == F_GETFL) {
     STRACE("fcntl(%d, %s) → %s% m", fd, DescribeFcntlCmd(cmd),

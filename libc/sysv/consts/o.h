@@ -22,7 +22,6 @@ extern const unsigned O_EXEC;
 extern const unsigned O_EXLOCK;
 extern const unsigned O_INDEXED;
 extern const unsigned O_LARGEFILE;
-extern const unsigned O_NDELAY;
 extern const unsigned O_NOATIME;
 extern const unsigned O_NOCTTY;
 extern const unsigned O_NOFOLLOW;
@@ -34,7 +33,6 @@ extern const unsigned O_RSYNC;
 extern const unsigned O_SEARCH;
 extern const unsigned O_SEQUENTIAL;
 extern const unsigned O_SHLOCK;
-extern const unsigned O_SPARSE;
 extern const unsigned O_SYNC;
 extern const unsigned O_TMPFILE; /* use tmpfd() or tmpfile() */
 extern const unsigned O_TRUNC;
@@ -46,13 +44,12 @@ extern const unsigned O_VERIFY;
 #define O_CLOEXEC    O_CLOEXEC
 #define O_COMPRESSED O_COMPRESSED
 #define O_CREAT      O_CREAT
-#define O_DIRECT     O_DIRECT
 #define O_DIRECTORY  O_DIRECTORY
 #define O_EXCL       O_EXCL
 #define O_EXEC       O_EXEC
 #define O_INDEXED    O_INDEXED
 #define O_LARGEFILE  O_LARGEFILE
-#define O_NDELAY     O_NDELAY
+#define O_NDELAY     O_NONBLOCK
 #define O_NOATIME    O_NOATIME
 #define O_NOCTTY     O_NOCTTY
 #define O_NOFOLLOW   O_NOFOLLOW

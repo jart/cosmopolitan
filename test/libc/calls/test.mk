@@ -150,6 +150,7 @@ o/$(MODE)/test/libc/calls/zipread.com.zip.o: private			\
 o/$(MODE)/test/libc/calls/ioctl_test.com.runs:				\
 		private .PLEDGE =
 
+o/$(MODE)/test/libc/calls/lseek_test.com.runs				\
 o/$(MODE)/test/libc/calls/poll_test.com.runs:				\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 

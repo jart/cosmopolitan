@@ -62,9 +62,6 @@ TEST(readlinkat, test) {
   EXPECT_EQ(255, buf[8] & 255);
   buf[8] = 0;
   EXPECT_STREQ("hello→", buf);
-  p = gc(xjoinpaths(g_testlib_tmpdir, "hello→"));
-  q = gc(realpath("there→", 0));
-  EXPECT_EQ(0, strcmp(p, q), "%`'s\n\t%`'s", p, q);
 }
 
 TEST(readlinkat, efault) {
@@ -89,10 +86,7 @@ TEST(readlinkat, frootloop) {
   ASSERT_SYS(0, 0, symlink("froot", "froot"));
   ASSERT_SYS(ELOOP, -1, readlink("froot/loop", buf, sizeof(buf)));
   if (O_NOFOLLOW) {
-    ASSERT_SYS(IsFreebsd()  ? EMLINK
-               : IsNetbsd() ? EFTYPE
-                            : ELOOP,
-               -1, open("froot", O_RDONLY | O_NOFOLLOW));
+    ASSERT_SYS(ELOOP, -1, open("froot", O_RDONLY | O_NOFOLLOW));
     if (0 && O_PATH) { /* need rhel5 test */
       ASSERT_NE(-1, (fd = open("froot", O_RDONLY | O_NOFOLLOW | O_PATH)));
       ASSERT_NE(-1, close(fd));

@@ -181,13 +181,14 @@ textwindows bool __sig_handle(int sigops, int sig, int si_code,
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:
       if (__sig_is_fatal(sig)) {
-        size_t len;
-        char name[16];
-        strsignal_r(sig, name);
-        len = strlen(name);
-        name[len++] = '\n';
-        WriteFile(GetStdHandle(kNtStdErrorHandle), name, len, 0, 0);
-        STRACE("terminating on %s", name);
+        intptr_t hStderr;
+        const char *signame;
+        char *end, sigbuf[15], output[16];
+        signame = strsignal_r(sig, sigbuf);
+        STRACE("terminating due to uncaught %s", signame);
+        hStderr = GetStdHandle(kNtStdErrorHandle);
+        end = stpcpy(stpcpy(output, signame), "\n");
+        WriteFile(hStderr, output, end - output, 0, 0);
         if (_weaken(__restore_console_win32)) {
           _weaken(__restore_console_win32)();
         }

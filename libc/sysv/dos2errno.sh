@@ -53,6 +53,7 @@ dos	kNtErrorInvalidAddress          EADDRNOTAVAIL
 dos	kNtErrorNotAReparsePoint	EINVAL
 dos	kNtErrorInvalidFunction         EINVAL
 dos	kNtErrorNegativeSeek		EINVAL
+dos	kNtErrorInvalidName		EINVAL
 dos	kNtErrorInvalidNetname          EADDRNOTAVAIL
 dos	kNtErrorInvalidUserBuffer	EMSGSIZE
 dos	kNtErrorIoPending		EINPROGRESS

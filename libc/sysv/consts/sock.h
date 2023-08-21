@@ -18,6 +18,8 @@ extern const int SOCK_STREAM;
 #define SOCK_RAW       3
 #define SOCK_RDM       4
 #define SOCK_SEQPACKET 5
+#define SOCK_CLOEXEC   SOCK_CLOEXEC
+#define SOCK_NONBLOCK  SOCK_NONBLOCK
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

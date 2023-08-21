@@ -80,12 +80,12 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   if (h1 != -1) {
 
     g_fds.p[reader].kind = kFdFile;
-    g_fds.p[reader].flags = oflags;
+    g_fds.p[reader].flags = O_RDWR | oflags;
     g_fds.p[reader].mode = 0140444;
     g_fds.p[reader].handle = hpipe;
 
     g_fds.p[writer].kind = kFdFile;
-    g_fds.p[writer].flags = oflags;
+    g_fds.p[writer].flags = O_RDWR | oflags;
     g_fds.p[writer].mode = 0140222;
     g_fds.p[writer].handle = h1;
 

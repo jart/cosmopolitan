@@ -26,7 +26,7 @@ textwindows int sys_fchmodat_nt(int dirfd, const char *path, uint32_t mode,
   uint16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if ((attr = GetFileAttributes(path16)) != -1u) {
-    if (mode & 0200) {
+    if (mode & 0222) {
       attr &= ~kNtFileAttributeReadonly;
     } else {
       attr |= kNtFileAttributeReadonly;

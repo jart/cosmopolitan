@@ -17,10 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/stdio/ftw.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
-#include "libc/stdio/ftw.h"
+
+static inline bool IsSlash(char c) {
+  return c == '/' || c == '\\';
+}
+
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
 
 static int rmrf_callback(const char *fpath,      //
                          const struct stat *st,  //
@@ -48,6 +57,12 @@ static int rmrf_callback(const char *fpath,      //
  * @return 0 on success, or -1 w/ errno
  */
 int rmrf(const char *path) {
-  if (path[0] == '/' && !path[1]) return enotsup();
+  if ((IsSlash(path[0]) && !path[1]) ||
+      (IsWindows() && ((IsSlash(path[0]) && IsAlpha(path[1]) &&
+                        (!path[2] || (IsSlash(path[2]) && !path[3]))) ||
+                       (IsAlpha(path[0]) && path[1] == ':' &&
+                        (!path[2] || (IsSlash(path[2]) && !path[3])))))) {
+    return enotsup();  // if you really want rmrf("/") try rmrf("/.")
+  }
   return nftw(path, rmrf_callback, 128, FTW_PHYS | FTW_DEPTH);
 }

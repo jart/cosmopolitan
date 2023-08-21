@@ -209,7 +209,7 @@ typedef unsigned char u8;
 #   define access(f,m) _access((f),(m))
 #  endif
 #  ifndef unlink
-#   define unlink _unlink
+#   define unlink_ _unlink
 #  endif
 #  ifndef strdup
 #   define strdup _strdup

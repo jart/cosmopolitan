@@ -58,11 +58,11 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
                            kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
       g_fds.p[reader].kind = kFdFile;
-      g_fds.p[reader].flags = flags;
+      g_fds.p[reader].flags = O_RDONLY | flags;
       g_fds.p[reader].mode = 0010444;
       g_fds.p[reader].handle = hin;
       g_fds.p[writer].kind = kFdFile;
-      g_fds.p[writer].flags = flags;
+      g_fds.p[writer].flags = O_WRONLY | flags;
       g_fds.p[writer].mode = 0010222;
       g_fds.p[writer].handle = hout;
       pipefd[0] = reader;

@@ -35,7 +35,7 @@
 #define _O_DIRECTORY  0x00010000  // kNtFileFlagBackupSemantics
 #define _O_TMPFILE    0x00410000  // AttributeTemporary|FlagDeleteOnClose
 #define _O_DIRECT     0x00004000  // kNtFileFlagNoBuffering
-#define _O_NONBLOCK   0x00000800  // kNtFileFlagWriteThrough
+#define _O_NONBLOCK   0x00000800  // kNtFileFlagWriteThrough (not sent to win32)
 #define _O_RANDOM     0x80000000  // kNtFileFlagRandomAccess
 #define _O_SEQUENTIAL 0x40000000  // kNtFileFlagSequentialScan
 #define _O_COMPRESSED 0x20000000  // kNtFileAttributeCompressed
@@ -62,15 +62,21 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
       break;
     case O_WRONLY:
       perm = kNtFileGenericWrite;
+      if (flags & _O_APPEND) {
+        // kNtFileAppendData is already present in kNtFileGenericWrite.
+        // WIN32 wont act on append access when write is already there.
+        perm = kNtFileAppendData;
+      }
       break;
     case O_RDWR:
-      perm = kNtFileGenericRead | kNtFileGenericWrite;
+      if (flags & _O_APPEND) {
+        perm = kNtFileGenericRead | kNtFileAppendData;
+      } else {
+        perm = kNtFileGenericRead | kNtFileGenericWrite;
+      }
       break;
     default:
       return einval();
-  }
-  if (flags & _O_APPEND) {
-    perm = kNtFileAppendData;  // todo: this is part of generic write above
   }
 
   attr = 0;
