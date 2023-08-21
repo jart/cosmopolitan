@@ -1,0 +1,13 @@
+#!/bin/sh
+
+MODE=${MODE:-$m}
+COSMO=${COSMO:-/opt/cosmo}
+COSMOS=${COSMOS:-/opt/cosmos}
+TOOL="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-nm"
+
+if [ ! -x "$TOOL" ]; then
+  echo "$0: you need to run: x86_64-unknown-cosmo-cc --update" >&2
+  exit 1
+fi
+
+exec "$TOOL" "$@"

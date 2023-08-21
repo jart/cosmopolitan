@@ -1,5 +1,6 @@
 #ifndef _COSMO_H
 #define _COSMO_H
+#include "libc/stdbool.h"
 
 #ifdef _COSMO_SOURCE
 #define COSMO_ALREADY_DEFINED

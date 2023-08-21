@@ -276,7 +276,7 @@ for x; do
     # information."
     set -- "$@" -momit-leaf-frame-pointer -foptimize-sibling-calls
     continue
-  elif [ x"$x" = x"-Werror" ] || \
+  elif [ x"$x" != x"${x#-Werror}" ] || \
        [ x"$x" = x"-pedantic-errors" ]; then
     # this toolchain is intended for building other people's code
     # elevating warnings into errors, should only be done by devs

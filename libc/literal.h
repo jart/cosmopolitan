@@ -30,12 +30,4 @@
 #define UINTMAX_C(c) c##ULL
 #endif
 
-#if __SIZEOF_INTMAX__ == 16
-#define INT128_C(c)  ((intmax_t)(c))
-#define UINT128_C(c) ((uintmax_t)(c))
-#elif __SIZEOF_INTMAX__ == 8
-#define INT128_C(c)  __INT64_C(c)
-#define UINT128_C(c) __UINT64_C(c)
-#endif
-
 #endif /* COSMOPOLITAN_LIBC_LITERAL_H_ */

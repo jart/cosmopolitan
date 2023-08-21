@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -101,7 +100,7 @@ int __vcscanf(int callback(void *),    //
         bool discard = false;
         for (;;) {
           switch (p[i++]) {
-            case '%': /* %% → % */
+            case '%':  // %% → %
               goto NonDirectiveCharacter;
             case '0':
             case '1':
@@ -134,56 +133,48 @@ int __vcscanf(int callback(void *),    //
             case '\'':
               thousands = true;
               break;
-            case 'j': /* j=64-bit jj=128-bit */
+            case 'j':  // j=64-bit jj=128-bit
               if (bits < 64) {
                 bits = 64;
               } else {
                 bits = 128;
               }
               break;
-            case 'l': /* long */
-            case 'L': /* loooong */
+            case 'l':  // long
+            case 'L':  // loooong
               charbytes = sizeof(wchar_t);
-              /* fallthrough */
-            case 't': /* ptrdiff_t */
-            case 'Z': /* size_t */
-            case 'z': /* size_t */
+              // fallthrough
+            case 't':  // ptrdiff_t
+            case 'Z':  // size_t
+            case 'z':  // size_t
               bits = 64;
               break;
-            case 'h': /* short and char */
+            case 'h':  // short and char
               charbytes = sizeof(char16_t);
               bits >>= 1;
               break;
-            case 'b': /* binary */
+            case 'b':  // binary
               base = 2;
               prefix = 'b';
               while (isspace(c)) {
                 c = READ;
               }
               goto ConsumeBasePrefix;
-            case 'p': /* pointer (NexGen32e) */
+            case 'p':  // pointer
               bits = 48;
-              while (isspace(c)) {
-                c = READ;
-              }
-              /* fallthrough */
+              // fallthrough
             case 'x':
-            case 'X': /* hexadecimal */
+            case 'X':  // hexadecimal
               base = 16;
               prefix = 'x';
               while (isspace(c)) {
                 c = READ;
               }
               goto ConsumeBasePrefix;
-            case 'o': /* octal */
+            case 'o':  // octal
               base = 8;
-              while (isspace(c)) {
-                c = READ;
-              }
-              goto DecodeNumber;
-            case 'n':
-              goto ReportConsumed;
-            case 'd':  // decimal
+              goto SetupNumber;
+            case 'i':  // flexidecimal
               issigned = true;
               while (isspace(c)) {
                 c = READ;
@@ -191,10 +182,36 @@ int __vcscanf(int callback(void *),    //
               if (c == '+' || (isneg = c == '-')) {
                 c = READ;
               }
+              if (c == '0') {
+                c = READ;
+                if (c == -1) {
+                  number = 0;
+                  goto GotNumber;
+                }
+                if (c == 'x' || c == 'X') {
+                  c = READ;
+                  base = 16;
+                } else if (c == 'b' || c == 'B') {
+                  base = 2;
+                } else {
+                  base = 8;
+                }
+              } else {
+                base = 10;
+              }
+              goto DecodeNumber;
+            case 'n':
+              goto ReportConsumed;
+            case 'd':  // decimal
+              issigned = true;
               // fallthrough
             case 'u':
               base = 10;
+            SetupNumber:
               while (isspace(c)) {
+                c = READ;
+              }
+              if (c == '+' || (isneg = c == '-')) {
                 c = READ;
               }
               goto DecodeNumber;
@@ -217,7 +234,7 @@ int __vcscanf(int callback(void *),    //
           }
         }
       DecodeNumber:
-        if (c != -1) {
+        if (c != -1 && kBase36[(unsigned char)c] <= base) {
           number = 0;
           width = !width ? bits : width;
           do {
@@ -227,15 +244,16 @@ int __vcscanf(int callback(void *),    //
               number *= base;
               number += diglet - 1;
             } else if (thousands && diglet == ',') {
-              /* ignore */
+              // ignore
             } else {
               break;
             }
           } while ((c = READ) != -1 && width > 0);
+        GotNumber:
           if (!discard) {
             uint128_t bane = (uint128_t)1 << (bits - 1);
             if (!(number & ~((bane - 1) | (issigned ? 0 : bane))) ||
-                (issigned && number == bane /* two's complement bane */)) {
+                (issigned && number == bane)) {
               ++items;
             } else {
               items = erange();

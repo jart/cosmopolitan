@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
@@ -46,8 +47,7 @@ static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
 /**
  * Formats string to buffer w/ preexisting vararg state.
  *
- * @param buf stores output and a NUL-terminator is always written,
- *     provided buf!=NULL && size!=0
+ * @param buf stores output
  * @param size is byte capacity buf
  * @return number of bytes written, excluding the NUL terminator; or,
  *     if the output buffer wasn't passed, or was too short, then the
@@ -58,7 +58,8 @@ static int vsnprintfputchar(const char *s, struct SprintfStr *t, size_t n) {
  */
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list va) {
   struct SprintfStr str = {buf, 0, size};
-  __fmt(vsnprintfputchar, &str, fmt, va);
+  int rc = __fmt(vsnprintfputchar, &str, fmt, va);
+  if (rc < 0) return rc;
   if (str.n) str.p[MIN(str.i, str.n - 1)] = '\0';
   return str.i;
 }

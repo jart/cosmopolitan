@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/xasprintf.h"
 
 TEST(fprintf, testWriteError) {
   // Only Linux, NetBSD and FreeBSD are known to have /dev/full
@@ -31,4 +33,9 @@ TEST(fprintf, testWriteError) {
   ASSERT_LT(fprintf(fp, "test"), 0);
 
   ASSERT_EQ(fclose(fp), 0);
+}
+
+TEST(fun, test) {
+  ASSERT_STREQ("-0x1.4p+0", gc(xasprintf("%a", -1.25)));
+  ASSERT_STREQ("0x1p-17", gc(xasprintf("%a", 7.62939453125e-6)));
 }

@@ -79,6 +79,7 @@
 #define MB_CUR_MAX 4
 #define MB_LEN_MAX 4
 
+#ifdef _COSMO_SOURCE
 #if __GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)
 #define INT128_MIN  (-INT128_MAX - 1)
 #define UINT128_MIN ((uint128_t)0)
@@ -87,6 +88,7 @@
 #define UINT128_MAX \
   ((uint128_t)0xffffffffffffffff << 64 | (uint128_t)0xffffffffffffffff)
 #endif /* GCC 4.6+ */
+#endif /* _COSMO_SOURCE */
 
 #define SIG_ATOMIC_MIN INT32_MIN
 #define SIG_ATOMIC_MAX INT32_MAX

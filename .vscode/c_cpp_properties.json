@@ -35,7 +35,6 @@
 				"returnstwice=",
 				"textwindows=",
 				"privileged=",
-				"compatfn=",
 				"dontinstrument=",
 				"nodebuginfo=",
 				"interruptfn=",

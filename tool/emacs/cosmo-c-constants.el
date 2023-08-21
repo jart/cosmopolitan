@@ -111,7 +111,6 @@
     "INFINITY"
     "M_E"
     "M_LOG2_10"
-    "M_LOG10_2"
     "M_LOG2E"
     "M_LOG10E"
     "M_LN2"

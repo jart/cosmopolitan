@@ -48,26 +48,6 @@ TEST(FormatUint64, test) {
   EXPECT_STREQ("9223372036854775808", buf);
 }
 
-TEST(int128toarray_radix10, test) {
-  char buf[41];
-  EXPECT_EQ(1, int128toarray_radix10(0, buf));
-  EXPECT_STREQ("0", buf);
-  EXPECT_EQ(39, int128toarray_radix10(INT128_MAX, buf));
-  EXPECT_STREQ("170141183460469231731687303715884105727", buf);
-  EXPECT_EQ(40, int128toarray_radix10(INT128_MIN, buf));
-  EXPECT_STREQ("-170141183460469231731687303715884105728", buf);
-}
-
-TEST(uint128toarray_radix10, test) {
-  char buf[40];
-  EXPECT_EQ(1, uint128toarray_radix10(0, buf));
-  EXPECT_STREQ("0", buf);
-  EXPECT_EQ(39, uint128toarray_radix10(UINT128_MAX, buf));
-  EXPECT_STREQ("340282366920938463463374607431768211455", buf);
-  EXPECT_EQ(39, uint128toarray_radix10(INT128_MIN, buf));
-  EXPECT_STREQ("170141183460469231731687303715884105728", buf);
-}
-
 BENCH(itoa64radix10, bench) {
   char b[21];
   EZBENCH2("itoa64radix10", donothing, FormatUint64(b, UINT64_MAX));

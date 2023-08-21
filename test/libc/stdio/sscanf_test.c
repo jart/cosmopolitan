@@ -284,3 +284,55 @@ TEST(sscanf, eofConditions) {
   EXPECT_EQ(-1, sscanf("123", "%*d%n", &x));
   EXPECT_EQ(666, x);
 }
+
+TEST(sscanf, decimal) {
+  int x = 666;
+  int y = 666;
+  EXPECT_EQ(1, sscanf("019", "%d%d", &x, &y));
+  EXPECT_EQ(19, x);
+  EXPECT_EQ(666, y);
+}
+
+TEST(sscanf, octal) {
+  int x = 666;
+  int y = 666;
+  EXPECT_EQ(2, sscanf("019", "%o%d", &x, &y));
+  EXPECT_EQ(1, x);
+  EXPECT_EQ(9, y);
+}
+
+TEST(sscanf, flexdecimal_octal) {
+  int x = 666;
+  int y = 666;
+  EXPECT_EQ(2, sscanf("019", "%i%d", &x, &y));
+  EXPECT_EQ(1, x);
+  EXPECT_EQ(9, y);
+}
+
+TEST(sscanf, flexdecimal_decimal) {
+  int x = 666;
+  int y = 666;
+  EXPECT_EQ(1, sscanf("109a", "%i%d", &x, &y));
+  EXPECT_EQ(109, x);
+  EXPECT_EQ(666, y);
+}
+
+TEST(sscanf, flexdecimal_hex) {
+  int x = 666;
+  int y = 666;
+  EXPECT_EQ(1, sscanf("0x19a", "%i%d", &x, &y));
+  EXPECT_EQ(0x19a, x);
+  EXPECT_EQ(666, y);
+}
+
+TEST(sscanf, luplus) {
+  long x = 666;
+  EXPECT_EQ(1, sscanf("+123", "%lu", &x));
+  EXPECT_EQ(123, x);
+}
+
+TEST(sscanf, lupluser) {
+  long x = 666;
+  EXPECT_EQ(1, sscanf("+123", "%li", &x));
+  EXPECT_EQ(123, x);
+}

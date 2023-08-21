@@ -130,12 +130,14 @@ typedef __UINT64_TYPE__ uint64_t;
 typedef __INTMAX_TYPE__ intmax_t;
 typedef __UINTMAX_TYPE__ uintmax_t;
 
+#ifdef _COSMO_SOURCE
 #if ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 406 || \
      defined(__llvm__)) &&                                 \
     !defined(__STRICT_ANSI__)
 typedef signed __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 #endif
+#endif /* _COSMO_SOURCE */
 typedef struct {
   intptr_t ax, dx;
 } axdx_t;
@@ -194,23 +196,6 @@ typedef struct {
 #ifndef privileged
 #define privileged \
   _Section(".privileged") dontinline dontinstrument dontubsan dontasan
-#endif
-
-#ifndef dontinstrument
-#if !defined(__STRICT_ANSI__) &&                    \
-    (__has_attribute(__no_instrument_function__) || \
-     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 204)
-#if ((__GNUC__ + 0) >= 7 && !defined(__chibicc__)) || \
-    __has_attribute(__patchable_function_entry__)
-#define dontinstrument                       \
-  __attribute__((__no_instrument_function__, \
-                 __patchable_function_entry__(0, 0)))
-#else
-#define dontinstrument __attribute__((__no_instrument_function__))
-#endif
-#else
-#define dontinstrument
-#endif
 #endif
 
 #ifndef wontreturn
@@ -282,16 +267,6 @@ typedef struct {
 #endif /* !ANSI && GCC >= 3.2 */
 #endif /* __cplusplus */
 #endif /* forceinline */
-
-#ifndef mayalias
-#if !defined(__STRICT_ANSI__) &&       \
-    (__has_attribute(__may_alias__) || \
-     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
-#define mayalias __attribute__((__may_alias__))
-#else
-#define mayalias
-#endif
-#endif
 
 #ifndef dontdiscard
 #if !defined(__STRICT_ANSI__) &&                           \
@@ -414,53 +389,6 @@ typedef struct {
 #endif
 #endif
 
-#ifndef dontoptimize
-#ifndef __STRICT_ANSI__
-#if defined(__llvm__) || __has_attribute(__optnone__)
-#define dontoptimize __attribute__((__optnone__))
-#elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
-    __has_attribute(__optimize__)
-#define dontoptimize __attribute__((__optimize__(0)))
-#endif
-#else
-#define dontoptimize
-#endif
-#endif
-
-#ifndef optimizesize
-#ifndef __STRICT_ANSI__
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
-    __has_attribute(__optimize__)
-#define optimizesize __attribute__((__optimize__("s")))
-#elif defined(__llvm__) || __has_attribute(__optnone__)
-#define optimizesize __attribute__((__optnone__))
-#endif
-#else
-#define optimizesize
-#endif
-#endif
-
-#ifndef optimizespeed
-/* warning: corrupts frame pointer; only use on leaf functions */
-#if !defined(__STRICT_ANSI__) &&                           \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
-     __has_attribute(__optimize__))
-#define optimizespeed __attribute__((__optimize__(3)))
-#else
-#define optimizespeed
-#endif
-#endif
-
-#ifndef unrollloops
-#if !defined(__STRICT_ANSI__) &&                           \
-    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
-     __has_attribute(__optimize__))
-#define unrollloops __attribute__((__optimize__("unroll-loops")))
-#else
-#define unrollloops
-#endif
-#endif
-
 #ifndef returnstwice
 #if !defined(__STRICT_ANSI__) &&           \
     (__has_attribute(__returns_twice__) || \
@@ -477,16 +405,6 @@ typedef struct {
 #define nodebuginfo __attribute__((__nodebug__))
 #else
 #define nodebuginfo
-#endif
-#endif
-
-#ifndef _Microarchitecture
-#if !defined(__STRICT_ANSI__) &&    \
-    (__has_attribute(__target__) || \
-     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 404)
-#define _Microarchitecture(march) __attribute__((__target__(march)))
-#else
-#define _Microarchitecture(march)
 #endif
 #endif
 
@@ -557,6 +475,99 @@ typedef struct {
 #define autotype(x) typeof(x)
 #endif
 
+#if defined(__STRICT_ANSI__) || \
+    (!defined(__GNUC__) && !defined(__builtin_offsetof))
+#define offsetof(type, member) ((unsigned long)&((type *)0)->member)
+#else
+#define offsetof(type, member) __builtin_offsetof(type, member)
+#endif
+
+#ifdef _COSMO_SOURCE
+
+#ifndef dontinstrument
+#if !defined(__STRICT_ANSI__) &&                    \
+    (__has_attribute(__no_instrument_function__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 204)
+#if ((__GNUC__ + 0) >= 7 && !defined(__chibicc__)) || \
+    __has_attribute(__patchable_function_entry__)
+#define dontinstrument                       \
+  __attribute__((__no_instrument_function__, \
+                 __patchable_function_entry__(0, 0)))
+#else
+#define dontinstrument __attribute__((__no_instrument_function__))
+#endif
+#else
+#define dontinstrument
+#endif
+#endif
+
+#ifndef mayalias
+#if !defined(__STRICT_ANSI__) &&       \
+    (__has_attribute(__may_alias__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 303)
+#define mayalias __attribute__((__may_alias__))
+#else
+#define mayalias
+#endif
+#endif
+
+#ifndef dontoptimize
+#ifndef __STRICT_ANSI__
+#if defined(__llvm__) || __has_attribute(__optnone__)
+#define dontoptimize __attribute__((__optnone__))
+#elif (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+    __has_attribute(__optimize__)
+#define dontoptimize __attribute__((__optimize__(0)))
+#endif
+#else
+#define dontoptimize
+#endif
+#endif
+
+#ifndef optimizesize
+#ifndef __STRICT_ANSI__
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+    __has_attribute(__optimize__)
+#define optimizesize __attribute__((__optimize__("s")))
+#elif defined(__llvm__) || __has_attribute(__optnone__)
+#define optimizesize __attribute__((__optnone__))
+#endif
+#else
+#define optimizesize
+#endif
+#endif
+
+#ifndef optimizespeed
+/* warning: corrupts frame pointer; only use on leaf functions */
+#if !defined(__STRICT_ANSI__) &&                           \
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+     __has_attribute(__optimize__))
+#define optimizespeed __attribute__((__optimize__(3)))
+#else
+#define optimizespeed
+#endif
+#endif
+
+#ifndef unrollloops
+#if !defined(__STRICT_ANSI__) &&                           \
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+     __has_attribute(__optimize__))
+#define unrollloops __attribute__((__optimize__("unroll-loops")))
+#else
+#define unrollloops
+#endif
+#endif
+
+#ifndef _Microarchitecture
+#if !defined(__STRICT_ANSI__) &&    \
+    (__has_attribute(__target__) || \
+     (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 404)
+#define _Microarchitecture(march) __attribute__((__target__(march)))
+#else
+#define _Microarchitecture(march)
+#endif
+#endif
+
 #ifdef __x86_64__
 #if __GNUC__ >= 7 || __has_attribute(__no_caller_saved_registers__)
 #define nocallersavedregisters __attribute__((__no_caller_saved_registers__))
@@ -604,6 +615,12 @@ void abort(void) wontreturn;
   do {            \
   } while (0)
 
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#define _Vector_size(k) __attribute__((__vector_size__(k)))
+#else
+#define _Vector_size(k) [k]
+#endif
+
 #ifndef __STRICT_ANSI__
 #define textstartup _Section(".text.startup")
 #define textexit    _Section(".text.exit")
@@ -618,27 +635,6 @@ void abort(void) wontreturn;
 #define texthead
 #define textwindows
 #define antiquity
-#endif
-
-#ifndef compatfn
-#define compatfn
-#endif
-
-#ifndef frownedupon
-#define frownedupon(alternative)
-#endif
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define _Vector_size(k) __attribute__((__vector_size__(k)))
-#else
-#define _Vector_size(k) [k]
-#endif
-
-#if defined(__STRICT_ANSI__) || \
-    (!defined(__GNUC__) && !defined(__builtin_offsetof))
-#define offsetof(type, member) ((unsigned long)&((type *)0)->member)
-#else
-#define offsetof(type, member) __builtin_offsetof(type, member)
 #endif
 
 #ifdef __llvm__
@@ -760,6 +756,8 @@ void abort(void) wontreturn;
 #else
 #define DebugBreak() (void)0
 #endif
+
+#endif /* _COSMO_SOURCE */
 
 #ifndef __STRICT_ANSI__
 #define __veil(CONSTRAINT, EXPRESSION)                           \

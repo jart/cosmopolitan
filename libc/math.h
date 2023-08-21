@@ -6,7 +6,6 @@
 
 #define M_E        2.7182818284590452354 /* 𝑒 */
 #define M_LOG2_10  0xd.49a784bcd1b8afep-2 /* log₂10 ≈ 3.3219280948873623478 */
-#define M_LOG10_2  0x9.a209a84fbcff799p-5 /* log₁₀2 ≈ 0.301029995663981195 */
 #define M_LOG2E    0xb.8aa3b295c17f0bcp-3 /* log₂𝑒 ≈ 1.4426950408889634074 */
 #define M_LOG10E   0.43429448190325182765  /* log₁₀𝑒 */
 #define M_LN2      0xb.17217f7d1cf79acp-4  /* logₑ2 ≈ */

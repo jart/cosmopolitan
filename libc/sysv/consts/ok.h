@@ -9,8 +9,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const unsigned X_OK;
-extern const unsigned W_OK;
+extern const int X_OK;
+extern const int W_OK;
 extern const unsigned R_OK; /* warning: is sign bit on windows */
 
 COSMOPOLITAN_C_END_

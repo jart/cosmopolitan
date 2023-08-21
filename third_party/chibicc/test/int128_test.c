@@ -38,8 +38,8 @@ __int128 sub128x6(int f, __int128 a, __int128 b, __int128 c, __int128 d,
   return f - a - b - c - d - e;
 }
 
-void lotsOfArgs(const char *file, int line, const char *func, int128_t beg,
-                int128_t end, int128_t got, const char *gotcode, bool isfatal) {
+void lotsOfArgs(const char *file, int line, const char *func, __int128 beg,
+                __int128 end, __int128 got, const char *gotcode, bool isfatal) {
 }
 
 void testLang128(void) {
