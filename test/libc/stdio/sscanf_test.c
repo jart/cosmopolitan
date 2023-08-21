@@ -42,7 +42,6 @@ TEST(sscanf, testMultiple) {
 
 TEST(sscanf, testDecimal) {
   EXPECT_EQ(123, sscanf1("123", "%d"));
-  EXPECT_EQ(123, sscanf1("123", "%n"));
   EXPECT_EQ(123, sscanf1("123", "%u"));
   EXPECT_EQ((uint32_t)-123, sscanf1("-123", "%d"));
 }
@@ -257,4 +256,31 @@ TEST(sscanf, test0) {
   v = 0xFFFFFFFF;
   ASSERT_EQ(sscanf("0", "%b", &v), 1);
   ASSERT_EQ(v, 0);
+}
+
+TEST(sscanf, n) {
+  int x, y;
+  EXPECT_EQ(1, sscanf("7 2 3 4", "%d%n", &x, &y));
+  EXPECT_EQ(7, x);
+  EXPECT_EQ(1, y);
+}
+
+TEST(sscanf, eofForNoMatching) {
+  int y = 666;
+  char x[8] = "hi";
+  EXPECT_EQ(-1, sscanf("   ", "%s%n", &x, &y));
+  EXPECT_STREQ("hi", x);
+  EXPECT_EQ(666, y);
+}
+
+TEST(sscanf, eofConditions) {
+  int x = 666;
+  EXPECT_EQ(-1, sscanf("", "%d", &x));
+  EXPECT_EQ(666, x);
+  EXPECT_EQ(-1, sscanf(" ", "%d", &x));
+  EXPECT_EQ(666, x);
+  EXPECT_EQ(-1, sscanf("123", "%*d%d", &x));
+  EXPECT_EQ(666, x);
+  EXPECT_EQ(-1, sscanf("123", "%*d%n", &x));
+  EXPECT_EQ(666, x);
 }

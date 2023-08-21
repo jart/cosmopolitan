@@ -37,6 +37,10 @@ struct __locale_struct {
 
 typedef struct __locale_struct *locale_t;
 
+extern const struct __locale_map __c_dot_utf8;
+extern const struct __locale_struct __c_locale;
+extern const struct __locale_struct __c_dot_utf8_locale;
+
 char *nl_langinfo_l(int, locale_t);
 char *setlocale(int, const char *);
 double strtod_l(const char *, char **, locale_t);

@@ -25,8 +25,6 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 
-// TODO(jart): POSIX says buffer needs to grow in write modes?
-
 /**
  * Opens buffer as stream.
  *
@@ -63,7 +61,9 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
   }
   f->fd = -1;
   f->buf = buf;
-  f->end = size;
+  if (!(iomode & O_TRUNC)) {
+    f->end = size;
+  }
   f->size = size;
   f->iomode = iomode;
   if (iomode & O_APPEND) {

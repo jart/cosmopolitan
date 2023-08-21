@@ -59,11 +59,11 @@ static void vflogf_onfail(FILE *f) {
       (err == ENOSPC || err == EDQUOT || err == EFBIG) &&
       (fstat(fileno_unlocked(f), &st) == -1 || st.st_size > kNontrivialSize)) {
     ftruncate(fileno_unlocked(f), 0);
-    fseeko_unlocked(f, SEEK_SET, 0);
+    fseek_unlocked(f, SEEK_SET, 0);
     f->beg = f->end = 0;
     clearerr_unlocked(f);
-    (fprintf_unlocked)(f, "performed emergency log truncation: %s\n",
-                       strerror(err));
+    fprintf_unlocked(f, "performed emergency log truncation: %s\n",
+                     strerror(err));
   }
 }
 

@@ -29,6 +29,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -191,6 +192,7 @@ textstartup void __enable_tls(void) {
   tib->tib_errno = __errno;
   tib->tib_strace = __strace;
   tib->tib_ftrace = __ftrace;
+  tib->tib_locale = (intptr_t)&__c_dot_utf8_locale;
   tib->tib_pthread = (pthread_t)&_pthread_main;
   if (IsLinux() || IsXnuSilicon()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can

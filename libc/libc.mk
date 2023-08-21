@@ -35,5 +35,4 @@ o/$(MODE)/libc:	o/$(MODE)/libc/calls		\
 		o/$(MODE)/libc/tinymath		\
 		o/$(MODE)/libc/vga		\
 		o/$(MODE)/libc/x		\
-		o/$(MODE)/libc/zipos		\
 		$(LIBC_CHECKS)

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -26,6 +27,13 @@
 #include "libc/str/tpdecodecb.internal.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
+
+#define READ                 \
+  ({                         \
+    int c = callback(arg);   \
+    if (c != -1) ++consumed; \
+    c;                       \
+  })
 
 /**
  * String / file / stream decoder.
@@ -54,10 +62,12 @@ int __vcscanf(int callback(void *),    //
     void *ptr;
   } *freeme = NULL;
   const unsigned char *p = (const unsigned char *)fmt;
-  unsigned i = 0;
+  int *n_ptr;
   int items = 0;
-  int c = callback(arg);
-  while (c != -1) {
+  int consumed = 0;
+  unsigned i = 0;
+  int c = READ;
+  for (;;) {
     switch (p[i++]) {
       case '\0':
         if (c != -1 && unget) {
@@ -70,7 +80,7 @@ int __vcscanf(int callback(void *),    //
       case '\r':
       case '\v':
         while (isspace(c)) {
-          c = callback(arg);
+          c = READ;
         }
         break;
       case '%': {
@@ -115,8 +125,11 @@ int __vcscanf(int callback(void *),    //
             case 'c':
               rawmode = true;
               if (!width) width = 1;
-              /* εpsilon transition */
+              // fallthrough
             case 's':
+              while (isspace(c)) {
+                c = READ;
+              }
               goto DecodeString;
             case '\'':
               thousands = true;
@@ -144,38 +157,61 @@ int __vcscanf(int callback(void *),    //
             case 'b': /* binary */
               base = 2;
               prefix = 'b';
+              while (isspace(c)) {
+                c = READ;
+              }
               goto ConsumeBasePrefix;
             case 'p': /* pointer (NexGen32e) */
               bits = 48;
+              while (isspace(c)) {
+                c = READ;
+              }
               /* fallthrough */
             case 'x':
             case 'X': /* hexadecimal */
               base = 16;
               prefix = 'x';
+              while (isspace(c)) {
+                c = READ;
+              }
               goto ConsumeBasePrefix;
             case 'o': /* octal */
               base = 8;
-              goto DecodeNumber;
-            case 'd': /* decimal */
-            case 'n': /* TODO(jart): flexidecimal */
-              issigned = true;
-              if (c == '+' || (isneg = c == '-')) {
-                c = callback(arg);
+              while (isspace(c)) {
+                c = READ;
               }
-              /* εpsilon transition */
+              goto DecodeNumber;
+            case 'n':
+              goto ReportConsumed;
+            case 'd':  // decimal
+              issigned = true;
+              while (isspace(c)) {
+                c = READ;
+              }
+              if (c == '+' || (isneg = c == '-')) {
+                c = READ;
+              }
+              // fallthrough
             case 'u':
               base = 10;
+              while (isspace(c)) {
+                c = READ;
+              }
               goto DecodeNumber;
             default:
               items = einval();
               goto Done;
           }
         }
+      ReportConsumed:
+        n_ptr = va_arg(va, int *);
+        *n_ptr = consumed - 1;  // minus lookahead
+        continue;
       ConsumeBasePrefix:
         if (c == '0') {
-          c = callback(arg);
+          c = READ;
           if (c == prefix || c == prefix + ('a' - 'A')) {
-            c = callback(arg);
+            c = READ;
           } else if (c == -1) {
             c = '0';
           }
@@ -195,7 +231,7 @@ int __vcscanf(int callback(void *),    //
             } else {
               break;
             }
-          } while ((c = callback(arg)) != -1 && width > 0);
+          } while ((c = READ) != -1 && width > 0);
           if (!discard) {
             uint128_t bane = (uint128_t)1 << (bits - 1);
             if (!(number & ~((bane - 1) | (issigned ? 0 : bane))) ||
@@ -228,7 +264,13 @@ int __vcscanf(int callback(void *),    //
                 *(uint8_t *)out = (uint8_t)number;
                 break;
             }
+          } else if (!items && c == -1) {
+            items = -1;
+            goto Done;
           }
+        } else if (!items) {
+          items = -1;
+          goto Done;
         }
         continue;
       DecodeString:
@@ -256,7 +298,7 @@ int __vcscanf(int callback(void *),    //
             if (c != -1 && j + !rawmode < bufsize && (rawmode || !isspace(c))) {
               if (charbytes == 1) {
                 ((unsigned char *)buf)[j++] = (unsigned char)c;
-                c = callback(arg);
+                c = READ;
               } else if (tpdecodecb((wint_t *)&c, c, (void *)callback, arg) !=
                          -1) {
                 if (charbytes == sizeof(char16_t)) {
@@ -270,10 +312,13 @@ int __vcscanf(int callback(void *),    //
                 } else {
                   ((wchar_t *)buf)[j++] = (wchar_t)c;
                 }
-                c = callback(arg);
+                c = READ;
               }
             } else {
-              if (!rawmode && j < bufsize) {
+              if (!j && c == -1 && !items) {
+                items = -1;
+                goto Done;
+              } else if (!rawmode && j < bufsize) {
                 if (charbytes == sizeof(char)) {
                   ((unsigned char *)buf)[j] = '\0';
                 } else if (charbytes == sizeof(char16_t)) {
@@ -292,13 +337,13 @@ int __vcscanf(int callback(void *),    //
         } else {
           do {
             if (isspace(c)) break;
-          } while ((c = callback(arg)) != -1);
+          } while ((c = READ) != -1);
         }
         break;
       }
       default:
       NonDirectiveCharacter:
-        c = (c == p[i - 1]) ? callback(arg) : -1;
+        c = (c == p[i - 1]) ? READ : -1;
         break;
     }
   }

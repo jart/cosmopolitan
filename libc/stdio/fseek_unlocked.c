@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/stdio/lock.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/macros.internal.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
 
 /**
  * Repositions open file stream.
@@ -33,16 +35,49 @@
  * @param offset is the byte delta
  * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
  * @returns 0 on success or -1 on error
- * @threadsafe
  */
-int fseeko(FILE *f, int64_t offset, int whence) {
-  int rc;
-  flockfile(f);
-  rc = fseeko_unlocked(f, offset, whence);
-  STDIOTRACE("fseeko(%p, %'ld, %s) → %d %s", f, offset, DescribeWhence(whence),
-             rc, DescribeStdioState(f->state));
-  funlockfile(f);
-  return rc;
+int fseek_unlocked(FILE *f, int64_t offset, int whence) {
+  int res;
+  ssize_t rc;
+  int64_t pos;
+  if (f->fd != -1) {
+    if (__fflush_impl(f) == -1) return -1;
+    if (whence == SEEK_CUR && f->beg < f->end) {
+      offset -= f->end - f->beg;
+    }
+    if (lseek(f->fd, offset, whence) != -1) {
+      f->beg = 0;
+      f->end = 0;
+      f->state = 0;
+      res = 0;
+    } else {
+      f->state = errno == ESPIPE ? EBADF : errno;
+      res = -1;
+    }
+  } else {
+    switch (whence) {
+      case SEEK_SET:
+        pos = offset;
+        break;
+      case SEEK_CUR:
+        pos = f->beg + offset;
+        break;
+      case SEEK_END:
+        pos = f->end + offset;
+        break;
+      default:
+        pos = -1;
+        break;
+    }
+    f->end = MAX(f->beg, f->end);
+    if (0 <= pos && pos <= f->end) {
+      f->beg = pos;
+      f->state = 0;
+      res = 0;
+    } else {
+      f->state = errno = EINVAL;
+      res = -1;
+    }
+  }
+  return res;
 }
-
-__strong_reference(fseeko, fseek);

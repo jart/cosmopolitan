@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -28,7 +29,7 @@
 
 TEST(fgetln, test) {
   FILE *f;
-  f = fmemopen(_gc(strdup(kHyperion)), kHyperionSize, "r+");
+  f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
   EXPECT_STREQ("The fall of Hyperion - a Dream\n", fgetln(f, 0));
   EXPECT_STREQ("John Keats\n", fgetln(f, 0));
   EXPECT_STREQ("\n", fgetln(f, 0));
@@ -81,7 +82,7 @@ TEST(fgetln, testReadingFromStdin_doesntLeakMemory) {
 }
 
 BENCH(fgetln, bench) {
-  FILE *f = fmemopen(_gc(strdup(kHyperion)), kHyperionSize, "r+");
+  FILE *f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
   EZBENCH2("fgetln", donothing, fgetln(f, 0));
   EZBENCH2("xgetline", donothing, free(xgetline(f)));
   fclose(f);

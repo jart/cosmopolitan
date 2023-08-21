@@ -29,7 +29,8 @@
 /**
  * Sets current directory.
  *
- * This does *not* update the `PWD` environment variable.
+ * The current directory is shared by all threads in a process. This
+ * does not update the `PWD` environment variable.
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ELOOP if a loop was detected resolving components of `path`

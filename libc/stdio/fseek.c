@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,44 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/o.h"
-
-static inline int64_t ftello_unlocked(FILE *f) {
-  int64_t pos;
-  uint32_t skew;
-  if (f->fd != -1) {
-    if (__fflush_impl(f) == -1) return -1;
-    if ((pos = lseek(f->fd, 0, SEEK_CUR)) != -1) {
-      if (f->beg < f->end) pos -= f->end - f->beg;
-      return pos;
-    } else {
-      f->state = errno == ESPIPE ? EBADF : errno;
-      return -1;
-    }
-  } else {
-    return f->beg;
-  }
-}
 
 /**
- * Returns current position of stream.
+ * Repositions open file stream.
  *
- * @param stream is a non-null stream handle
- * @returns current byte offset from beginning, or -1 w/ errno
+ * This function flushes the buffer (unless it's currently in the EOF
+ * state) and then calls lseek() on the underlying file. If the stream
+ * is in the EOF state, this function can be used to restore it without
+ * needing to reopen the file.
+ *
+ * @param f is a non-null stream handle
+ * @param offset is the byte delta
+ * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
+ * @returns 0 on success or -1 on error
  * @threadsafe
  */
-int64_t ftello(FILE *f) {
-  int64_t rc;
+int fseek(FILE *f, int64_t offset, int whence) {
+  int rc;
   flockfile(f);
-  rc = ftello_unlocked(f);
+  rc = fseek_unlocked(f, offset, whence);
+  STDIOTRACE("fseek(%p, %'ld, %s) → %d %s", f, offset, DescribeWhence(whence),
+             rc, DescribeStdioState(f->state));
   funlockfile(f);
   return rc;
 }
 
-__strong_reference(ftello, ftell);
+__strong_reference(fseek, fseeko);

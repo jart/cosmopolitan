@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/stdio/internal.h"
-#include "libc/stdio/lock.internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/str/unicode.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Moves standard i/o stream to beginning of file.
- *
- * Like fseek(), this function can be used to restore a stream from the
- * EOF state, without reopening it.
- */
-void rewind(FILE *f) {
-  flockfile(f);
-  fseek_unlocked(f, 0, SEEK_SET);
-  f->state = 0;
-  funlockfile(f);
+TEST(locale, test) {
+  EXPECT_STREQ(".", localeconv()->decimal_point);
 }

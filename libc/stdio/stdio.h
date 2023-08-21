@@ -147,7 +147,7 @@ wchar_t *fgetws_unlocked(wchar_t *, int, FILE *);
 int fputws_unlocked(const wchar_t *, FILE *);
 wint_t ungetwc_unlocked(wint_t, FILE *) paramsnonnull();
 int ungetc_unlocked(int, FILE *) paramsnonnull();
-int fseeko_unlocked(FILE *, int64_t, int) paramsnonnull();
+int fseek_unlocked(FILE *, int64_t, int) paramsnonnull();
 ssize_t getdelim_unlocked(char **, size_t *, int, FILE *) paramsnonnull();
 int fprintf_unlocked(FILE *, const char *, ...) printfesque(2)
     paramsnonnull((1, 2)) dontthrow nocallback;

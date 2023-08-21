@@ -39,7 +39,6 @@ static int __vfprintf_flbuf(const char *s, struct state *t, size_t n) {
   if (n) {
     if (n == 1 && *s != '\n' && t->f->beg < t->f->size) {
       t->f->buf[t->f->beg++] = *s;
-      t->n += n;
       rc = 0;
     } else if (fwrite_unlocked(s, 1, n, t->f)) {
       rc = 0;
