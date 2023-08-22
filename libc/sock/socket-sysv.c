@@ -25,7 +25,8 @@ int sys_socket(int family, int type, int protocol) {
   int sock, tf, e = errno;
   tf = SOCK_CLOEXEC | SOCK_NONBLOCK;
   sock = __sys_socket(family, type, protocol);
-  if (sock == -1 && (type & tf) && (errno == EINVAL || errno == EPROTOTYPE)) {
+  if (sock == -1 && (type & tf) &&
+      (errno == EINVAL || errno == EPROTOTYPE || errno == EPROTONOSUPPORT)) {
     errno = e;  // XNU/RHEL5/etc. don't support flags; see if removing helps
     sock = __fixupnewsockfd(__sys_socket(family, type & ~tf, protocol), type);
   }
