@@ -35,6 +35,7 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/filetime.h"
+#include "libc/nt/struct/iocounters.h"
 #include "libc/nt/struct/processentry32.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/synchronization.h"
@@ -67,6 +68,13 @@ static textwindows void AddProcessStats(int64_t h, struct rusage *ru) {
         ru->ru_stime, WindowsDurationToTimeVal(ReadFileTime(kernelfiletime)));
   } else {
     STRACE("%s failed %u", "GetProcessTimes", GetLastError());
+  }
+  struct NtIoCounters iocount;
+  if (GetProcessIoCounters(h, &iocount)) {
+    ru->ru_inblock += iocount.ReadOperationCount;
+    ru->ru_oublock += iocount.WriteOperationCount;
+  } else {
+    STRACE("%s failed %u", "GetProcessIoCounters", GetLastError());
   }
 }
 

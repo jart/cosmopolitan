@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -24,5 +25,11 @@
  * @see libc/fmt/vcscanf.h
  */
 int vfscanf(FILE *stream, const char *fmt, va_list ap) {
-  return __vcscanf((void *)fgetc, (void *)ungetc, stream, fmt, ap);
+  int rc;
+  flockfile(stream);
+  rc = __vcscanf((void *)fgetc_unlocked,   //
+                 (void *)ungetc_unlocked,  //
+                 stream, fmt, ap);
+  funlockfile(stream);
+  return rc;
 }

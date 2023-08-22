@@ -16,19 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/filetime.h"
 #include "libc/nt/struct/iocounters.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/thread.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/errfuns.h"
 
