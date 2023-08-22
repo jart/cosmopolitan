@@ -330,7 +330,7 @@ privileged long kloghandle(void) {
                               kNtDuplicateSameAccess);
       } else if (n && n < 512) {
         hand = __imp_CreateFileW(
-            path, kNtGenericWrite | kNtFileAppendData,
+            path, kNtFileAppendData,
             kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
             &kNtIsInheritable, kNtOpenAlways, kNtFileAttributeNormal, 0);
       } else {

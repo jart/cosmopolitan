@@ -214,3 +214,15 @@ TEST(posixAdvisoryLocks, twoProcesses) {
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldss, 0));
 }
+
+TEST(fcntl, nonblock) {
+  int pfds[2];
+  char buf[8];
+  ASSERT_SYS(0, 0, pipe(pfds));
+  ASSERT_SYS(0, 0, fcntl(pfds[0], F_SETFL, O_RDONLY));
+  ASSERT_SYS(0, 0, fcntl(pfds[0], F_SETFL, O_RDONLY | O_NONBLOCK));
+  ASSERT_SYS(EAGAIN, -1, read(pfds[0], buf, 8));
+  ASSERT_SYS(0, 0, fcntl(pfds[0], F_SETFL, O_RDONLY));
+  ASSERT_SYS(0, 0, close(pfds[1]));
+  ASSERT_SYS(0, 0, close(pfds[0]));
+}

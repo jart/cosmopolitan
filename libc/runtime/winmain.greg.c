@@ -202,15 +202,15 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   kStartTsc = rdtsc();
   __umask = 077;
   __pid = __imp_GetCurrentProcessId();
-  DeduplicateStdioHandles();
-  if (_weaken(WinMainStdin)) {
-    _weaken(WinMainStdin)();
-  }
   cmdline = MyCommandLine();
 #ifdef SYSDEBUG
   // sloppy flag-only check for early initialization
   if (__strstr16(cmdline, u"--strace")) ++__strace;
 #endif
+  DeduplicateStdioHandles();
+  if (_weaken(WinMainStdin)) {
+    _weaken(WinMainStdin)();
+  }
   if (_weaken(WinSockInit)) {
     _weaken(WinSockInit)();
   }
