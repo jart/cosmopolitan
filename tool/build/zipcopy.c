@@ -23,11 +23,15 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/newbie.h"
 #include "libc/limits.h"
+#include "libc/nt/struct/imagedosheader.internal.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/zip.internal.h"
@@ -109,6 +113,25 @@ static void GetOpts(int argc, char *argv[]) {
   outpath = argv[optind + 1];
 }
 
+static void BiosZipFix(unsigned long cdest) {
+  struct NtImageDosHeader head;
+  size_t hd_sz = sizeof(head);
+  size_t e_oemid = offsetof(struct NtImageDosHeader, e_oemid);
+  size_t e_oeminfo = offsetof(struct NtImageDosHeader, e_oeminfo);
+  if (outsize < hd_sz) return;
+  if (pread(outfd, &head, hd_sz, 0) != hd_sz) return;
+  if (READ64LE((uint8_t *)&head) != READ64LE("MZqFpD='") &&
+      READ64LE((uint8_t *)&head) != READ64LE("jartsr='")) return;
+  if (le16toh(head.e_oemid) != READ16LE("JT") ||
+      le16toh(head.e_oeminfo) != 1) return;
+  // patch executable head so that it will load the right count of sectors
+  // when run as a legacy BIOS disk image
+  head.e_res2[0] = htole16(ROUNDUP(cdest, 0x200) / 0x200);
+  if (pwrite(outfd, &head, hd_sz, 0) != hd_sz) {
+    SysDie(outpath, "head pwrite");
+  }
+}
+
 static void CopyZip(void) {
   char *secstrs;
   int rela, recs;
@@ -176,7 +199,7 @@ static void CopyZip(void) {
   }
 
   // write output
-  if ((outfd = open(outpath, O_WRONLY | O_CREAT, 0644)) == -1) {
+  if ((outfd = open(outpath, O_RDWR | O_CREAT, 0644)) == -1) {
     SysDie(outpath, "open");
   }
   if ((outsize = lseek(outfd, 0, SEEK_END)) == -1) {
@@ -205,6 +228,7 @@ static void CopyZip(void) {
   if (pwrite(outfd, eocd, length, cdest) != length) {
     SysDie(outpath, "eocd pwrite");
   }
+  BiosZipFix(cdest);
   if (close(outfd)) {
     SysDie(outpath, "close");
   }

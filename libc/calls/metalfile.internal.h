@@ -11,6 +11,7 @@ struct MetalFile {
 
 extern void *__ape_com_base;
 extern size_t __ape_com_size;
+extern uint16_t __ape_com_sectors;  // ape/ape.S
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

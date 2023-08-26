@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
@@ -46,6 +47,10 @@ dontasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
   struct mman *mm;
   struct DirectMap res;
   uint64_t addr, faddr = 0, page, e, *pte, *fdpte, *pml4t;
+  if ((uintptr_t)BANE + size < (uintptr_t)BANE) {
+    assert(false);
+    return bad_mmap();
+  }
   mm = __get_mm();
   pml4t = __get_pml4t();
   size = ROUNDUP(size, 4096);
@@ -69,11 +74,14 @@ dontasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
     } else {
       addr = ROUNDUP(addr, 4096);
     }
-    for (i = 0; i < size; i += 4096) {
+    i = 0;
+    while (i < size) {
       pte = __get_virtual(mm, pml4t, addr + i, false);
       if (pte && (*pte & (PAGE_V | PAGE_RSRV))) {
         addr = MAX(addr, sys_mmap_metal_break) + i + 4096;
         i = 0;
+      } else {
+        i += 4096;
       }
     }
     sys_mmap_metal_break = MAX(addr + size, sys_mmap_metal_break);

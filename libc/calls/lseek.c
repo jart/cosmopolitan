@@ -77,9 +77,11 @@
  */
 int64_t lseek(int fd, int64_t offset, int whence) {
   int64_t rc;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+  if (fd >= 0 && fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = _weaken(__zipos_seek)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, offset, whence);
+  } else if (fd >= 0 && fd < g_fds.n && IsMetal()) {
+    rc = sys_lseek_metal(g_fds.p + fd, offset, whence);
   } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd()) {
     rc = sys_lseek(fd, offset, whence, 0);
   } else if (IsNetbsd()) {
