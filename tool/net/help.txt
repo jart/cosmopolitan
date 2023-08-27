@@ -614,7 +614,7 @@ HOOKS
 
   OnServerReload(reindex:bool)
           If this function is defined it'll be called from the main process
-          on each server reload triggered by SIGHUP (for deamonized) and
+          on each server reload triggered by SIGHUP (for daemonized) and
           SIGUSR1 (for all) redbean instances. reindex indicates if redbean
           assets have been re-indexed following the signal.
 
