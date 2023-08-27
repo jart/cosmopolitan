@@ -470,7 +470,7 @@ SPECIAL PATHS
         this path is a hidden file so that it can't be unintentionally run
         by the network client.
 
-/.reload.lua
+/.reload.lua (deprecated; use OnServerReload instead)
         This script is run from the main process when SIGHUP is received.
         This only applies to redbean when running in daemon mode. Any
         changes that are made to the Lua interpreter state will be
@@ -609,6 +609,13 @@ function OnServerHeartbeat() end
 ---@param serverport uint16
 ---@return boolean ignore If `true`, redbean will not listen to that ip/port.
 function OnServerListen(socketdescriptor, serverip, serverport) end
+
+--- If this function is defined it'll be called from the main process
+--- on each server reload triggered by SIGHUP (for daemonized) and
+--- SIGUSR1 (for all) redbean instances. `reindex` indicates if redbean
+--- assets have been re-indexed following the signal.
+---@param reindex boolean
+function OnServerReload(reindex) end
 
 --- If this function is defined it'll be called from the main process
 --- right before the main event loop starts.
@@ -1824,8 +1831,8 @@ function ProgramLogBodies(bool) end
 --- before de-escalating the user / group id. The file is opened in append only
 --- mode. If the disk runs out of space then redbean will truncate the log file if
 --- has access to change the log file after daemonizing.
----@param bool boolean
-function ProgramLogPath(bool) end
+---@param str string
+function ProgramLogPath(str) end
 
 --- Same as the `-P` flag if called from `.init.lua` for setting the pid file path
 --- on the local file system. It's useful for reloading daemonized redbean using
@@ -1858,11 +1865,11 @@ function ProgramUniprocess(bool) end
 --- if you need to react to it.
 ---
 ---@param filename string
----@param i integer
----@param j integer
+---@param i integer?
+---@param j integer?
 ---@return string data
 ---@nodiscard
----@overload fun(filename: string, i: integer, j: integer): nil, unix.Errno
+---@overload fun(filename: string, i?: integer, j?: integer): nil, unix.Errno
 function Slurp(filename, i, j) end
 
 --- Writes all data to file the easy way.
@@ -4659,6 +4666,38 @@ unix = {
     --- when exceeding the libc limit.
     PATH_MAX = nil,
 
+    ---@type integer Causes the violating thread to be killed. This is
+    --- the default on Linux. It's effectively the same as killing the
+    --- process, since redbean has no threads. The termination signal
+    --- can't be caught and will be either `SIGSYS` or `SIGABRT`.
+    --- Consider enabling stderr logging below so you'll know why your
+    --- program failed. Otherwise check the system log.
+    PLEDGE_PENALTY_KILL_THREAD = nil,
+
+    ---@type integer Causes the process and all its threads to be killed.
+    --- This is always the case on OpenBSD.
+    PLEDGE_PENALTY_KILL_PROCESS = nil,
+
+    ---@type integer Causes system calls to just return an `EPERM` error
+    --- instead of killing. This is a gentler solution that allows code to
+    --- display a friendly warning. Please note this may lead to weird
+    --- behaviors if the software being sandboxed is lazy about checking
+    --- error results.
+    PLEDGE_PENALTY_RETURN_EPERM = nil,
+
+    ---@type integer Enables friendly error message logging letting you
+    --- know which promises are needed whenever violations occur. Without
+    --- this, violations will be logged to `dmesg` on Linux if the penalty
+    --- is to kill the process. You would then need to manually look up
+    --- the system call number and then cross reference it with the
+    --- cosmopolitan libc `pledge()` documentation. You can also use
+    --- `strace -ff` which is easier. This is ignored OpenBSD, which
+    --- already has a good system log. Turning on stderr logging (which
+    --- uses SECCOMP trapping) also means that the `unix.WTERMSIG()` on
+    --- your killed processes will always be `unix.SIGABRT` on both Linux
+    --- and OpenBSD. Otherwise, Linux prefers to raise `unix.SIGSYS`.
+    PLEDGE_STDERR_LOGGING = nil,
+
     --- @type integer Returns maximum size at which pipe i/o is guaranteed atomic.
     ---
     --- POSIX requires this be at least 512. Linux is more generous and
@@ -6977,9 +7016,41 @@ function unix.getrusage(who) end
 --- Since Linux has to do this before calling `sys_execve()`, the executed
 --- process will be weakened to have execute permissions too.
 ---
+---@param mode integer? if specified should specify one penalty:
+---
+--- - `unix.PLEDGE_PENALTY_KILL_THREAD` causes the violating thread to
+---   be killed. This is the default on Linux. It's effectively the
+---   same as killing the process, since redbean has no threads. The
+---   termination signal can't be caught and will be either `SIGSYS`
+---   or `SIGABRT`. Consider enabling stderr logging below so you'll
+---   know why your program failed. Otherwise check the system log.
+---
+--- - `unix.PLEDGE_PENALTY_KILL_PROCESS` causes the process and all
+---   its threads to be killed. This is always the case on OpenBSD.
+---
+--- - `unix.PLEDGE_PENALTY_RETURN_EPERM` causes system calls to just
+---   return an `EPERM` error instead of killing. This is a gentler
+---   solution that allows code to display a friendly warning. Please
+---   note this may lead to weird behaviors if the software being
+---   sandboxed is lazy about checking error results.
+---
+--- `mode` may optionally bitwise or the following flags:
+---
+--- - `unix.PLEDGE_STDERR_LOGGING` enables friendly error message
+---   logging letting you know which promises are needed whenever
+---   violations occur. Without this, violations will be logged to
+---   `dmesg` on Linux if the penalty is to kill the process. You
+---   would then need to manually look up the system call number and
+---   then cross reference it with the cosmopolitan libc pledge()
+---   documentation. You can also use `strace -ff` which is easier.
+---   This is ignored OpenBSD, which already has a good system log.
+---   Turning on stderr logging (which uses SECCOMP trapping) also
+---   means that the `unix.WTERMSIG()` on your killed processes will
+---   always be `unix.SIGABRT` on both Linux and OpenBSD. Otherwise,
+---   Linux prefers to raise `unix.SIGSYS`.
 ---@return true
----@overload fun(promises?: string, execpromises?: string): nil, error: unix.Errno
-function unix.pledge(promises, execpromises) end
+---@overload fun(promises?: string, execpromises?: string, mode?: integer): nil, error: unix.Errno
+function unix.pledge(promises, execpromises, mode) end
 
 --- Restricts filesystem operations, e.g.
 ---
@@ -7043,6 +7114,7 @@ function unix.pledge(promises, execpromises) end
 ---
 ---@return true
 ---@overload fun(path: string, permissions: string): nil, error: unix.Errno
+---@overload fun(path: nil, permissions: nil): true
 function unix.unveil(path, permissions) end
 
 --- Breaks down UNIX timestamp into Zulu Time numbers.
@@ -7808,7 +7880,7 @@ function unix.Stat:flags() end
 --- The unix.Sigset class defines a mutable bitset that may currently
 --- contain 128 entries. See `unix.NSIG` to find out how many signals
 --- your operating system actually supports.
-
+---
 --- Constructs new signal bitset object.
 ---@param sig integer
 ---@param ... integer
