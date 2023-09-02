@@ -82,7 +82,6 @@ TEST(gclongjmp, test) {
 }
 
 void crawl(const char *path) {
-  const char *dir;
   if (!strcmp(path, "/") || !strcmp(path, ".")) return;
   crawl(_gc(xdirname(path)));
 }
@@ -100,7 +99,6 @@ TEST(gc, torture) {
 }
 
 void crawl2(jmp_buf jb, const char *path) {
-  const char *dir;
   if (!strcmp(path, "/") || !strcmp(path, ".")) _gclongjmp(jb, 1);
   crawl2(jb, _gc(xdirname(path)));
 }

@@ -502,6 +502,8 @@ void test_aes_check_params( )
     const int valid_mode = MBEDTLS_AES_ENCRYPT;
     const int invalid_mode = 42;
 
+    (void)size;
+
     TEST_INVALID_PARAM( mbedtls_aes_init( NULL ) );
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
     TEST_INVALID_PARAM( mbedtls_aes_xts_init( NULL ) );

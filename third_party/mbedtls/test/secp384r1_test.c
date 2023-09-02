@@ -59,14 +59,6 @@ TEST(secp384r1, testIsTheSame) {
 
 TEST(secp384r1, needsDownwardCorrection) {
   int i;
-  uint64_t P[6] = {
-      0x00000000ffffffff,  //
-      0xffffffff00000000,  //
-      0xfffffffffffffffe,  //
-      0xffffffffffffffff,  //
-      0xffffffffffffffff,  //
-      0xffffffffffffffff,  //
-  };
   uint64_t X[12] = {
       0xffffffffffffffff,  //
       0xffffffffffffffff,  //

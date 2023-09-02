@@ -45,10 +45,10 @@
 int main(int argc, char *argv[]) {
   ssize_t rc;
   size_t i, got;
+  int opt, sock;
   char buf[1500];
   bool halfclose = true;
   const char *host, *port;
-  int opt, err, toto, sock;
   struct addrinfo *ai = NULL;
   struct linger linger = {true, 1};
   struct pollfd fds[2] = {{-1, POLLIN}, {-1, POLLIN}};

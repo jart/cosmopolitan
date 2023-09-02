@@ -146,7 +146,6 @@ noooopppqqqqqqqqqqqqqqqppoooonn",
 #define HDY (1080 / 4)
 
 BENCH(magikarp, bench) { /* 30ms */
-  unsigned char kMagkern[16] = {4, 12, 12, 4};
   signed char kMagikarp[16] = {-1, -3, 3, 17, 17, 3, -3, -1};
   unsigned char(*Me)[HDY][HDX] = gc(malloc((HDX + 1) * (HDY + 1)));
   unsigned char(*Mo)[HDY][HDX] = gc(malloc((HDX + 1) * (HDY + 1)));

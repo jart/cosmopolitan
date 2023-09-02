@@ -120,7 +120,6 @@ TEST(unix, stream) {
 TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
   if (IsWindows()) return;
   if (IsCygwin()) return;
-  int ws, rc;
   char buf[8] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
@@ -138,7 +137,7 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
   ASSERT_SYS(0, 0, unlink(addr.sun_path));
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
-  rc = write(4, "hello", 5);
+  int rc = write(4, "hello", 5);
   ASSERT_TRUE(rc == -1 && (errno == ECONNRESET ||    //
                            errno == ENOTCONN ||      //
                            errno == ECONNREFUSED ||  //
@@ -156,7 +155,6 @@ TEST(unix, serverGoesDown_deletedSockFile) {  // field of landmine
 TEST(unix, serverGoesDown_usingSendTo_unlink) {  // much easier
   if (IsWindows()) return;
   if (IsCygwin()) return;
-  int ws, rc;
   char buf[8] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};

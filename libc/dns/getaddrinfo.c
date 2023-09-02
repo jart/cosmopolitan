@@ -47,7 +47,6 @@ int getaddrinfo(const char *name, const char *service,
                 const struct addrinfo *hints, struct addrinfo **res) {
   int rc, port;
   const char *canon;
-  size_t protolen;
   struct addrinfo *ai;
   char proto[32];
   port = 0;

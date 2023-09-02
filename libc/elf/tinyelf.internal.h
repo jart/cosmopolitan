@@ -22,7 +22,7 @@ COSMOPOLITAN_C_START_
   ((Elf64_Shdr *)((intptr_t)(e) + (e)->e_shoff + \
                   (unsigned)(e)->e_shentsize * (i)))
 
-static inline char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
+static inline char *GetStrtab(const Elf64_Ehdr *e, size_t *n) {
   int i;
   char *name;
   Elf64_Shdr *shdr;
@@ -39,7 +39,7 @@ static inline char *GetStrtab(Elf64_Ehdr *e, size_t *n) {
   return 0;
 }
 
-static inline Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
+static inline Elf64_Sym *GetSymtab(const Elf64_Ehdr *e, Elf64_Xword *n) {
   int i;
   Elf64_Shdr *shdr;
   for (i = e->e_shnum; i-- > 0;) {
@@ -52,9 +52,10 @@ static inline Elf64_Sym *GetSymtab(Elf64_Ehdr *e, Elf64_Xword *n) {
   return 0;
 }
 
-static inline void GetImageRange(Elf64_Ehdr *elf, intptr_t *x, intptr_t *y) {
+static inline void GetImageRange(const Elf64_Ehdr *elf, intptr_t *x,
+                                 intptr_t *y) {
   unsigned i;
-  Elf64_Phdr *phdr;
+  const Elf64_Phdr *phdr;
   intptr_t start, end, pstart, pend;
   start = INTPTR_MAX;
   end = 0;

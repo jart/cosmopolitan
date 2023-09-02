@@ -488,7 +488,6 @@ static privileged void linuxssefpustate2xnu(
 privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
                                struct siginfo_xnu *xnuinfo,
                                struct __darwin_ucontext *xnuctx) {
-  intptr_t ax;
   int rva, flags;
   struct Goodies {
     ucontext_t uc;
@@ -571,6 +570,7 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
   }
 
 #ifdef __x86_64__
+  intptr_t ax;
   asm volatile("syscall"
                : "=a"(ax)
                : "0"(0x20000b8 /* sigreturn */), "D"(xnuctx), "S"(infostyle)

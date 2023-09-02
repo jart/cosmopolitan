@@ -37,7 +37,7 @@
 void *sys_mremap(void *p, size_t n, size_t m, int f, void *q) {
 #ifdef __x86_64__
   bool cf;
-  uintptr_t res, rdi, rsi, rdx;
+  uintptr_t res, rdx;
   register uintptr_t r8 asm("r8");
   register uintptr_t r10 asm("r10");
   if (IsLinux()) {

@@ -52,7 +52,7 @@ void nsync_mu_semaphore_init_futex (nsync_semaphore *s) {
 /* Wait until the count of *s exceeds 0, and decrement it. */
 errno_t nsync_mu_semaphore_p_futex (nsync_semaphore *s) {
 	struct futex *f = (struct futex *) s;
-	int e, i;
+	int i;
 	errno_t result = 0;
 	do {
 		i = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);
@@ -79,7 +79,7 @@ errno_t nsync_mu_semaphore_p_futex (nsync_semaphore *s) {
    or abs_deadline expires, in which case return ETIMEDOUT. */
 errno_t nsync_mu_semaphore_p_with_deadline_futex (nsync_semaphore *s, nsync_time abs_deadline) {
 	struct futex *f = (struct futex *)s;
-	int e, i;
+	int i;
 	int result = 0;
 	do {
 		i = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);

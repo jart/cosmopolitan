@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 __funline signed char C121S(signed char al, signed char bl, signed char cl) {
-  short ax, bx;
+  short ax;
   ax = al;
   ax += bl;
   ax += bl;

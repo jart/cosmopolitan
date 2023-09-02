@@ -266,7 +266,7 @@ void TY_(strrep)(tmbstr buffer, ctmbstr str, ctmbstr rep)
             }
             else
             {
-                strncpy(buf,buffer,strlen(buffer) - strlen(p));
+                strncpy(__veil("r", buf),__veil("r", buffer),__veil("r", strlen(buffer) - strlen(p)));
                 strcat(buf,rep);
                 strcat(buf,p+strlen(str));
             }

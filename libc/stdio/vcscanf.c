@@ -326,7 +326,6 @@ int __vcscanf(int callback(void *),    //
               } else if (tpdecodecb((wint_t *)&c, c, (void *)callback, arg) !=
                          -1) {
                 if (charbytes == sizeof(char16_t)) {
-                  size_t k = 0;
                   unsigned w = EncodeUtf16(c);
                   do {
                     if ((j + 1) * 2 < bufsize) {

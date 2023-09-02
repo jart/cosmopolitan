@@ -110,7 +110,7 @@ double acos(double x)
 	/* |x| >= 1 or nan */
 	if (ix >= 0x3ff00000) {
 		lx = u.i;
-		if ((ix-0x3ff00000 | lx) == 0) {
+		if (((ix-0x3ff00000) | lx) == 0) {
 			/* acos(1)=0, acos(-1)=pi */
 			if (hx >> 31)
 				return 2*pio2_hi + 0x1p-120f;

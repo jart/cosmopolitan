@@ -31,9 +31,7 @@
 wchar_t *utf16to32(const char16_t *p, size_t n, size_t *z) {
   wint_t x, y;
   wchar_t *r, *q;
-  unsigned m, j, w;
   const char16_t *e;
-  int16_t v1[8], v2[8], v3[8], vz[8];
   if (z) *z = 0;
   if (n == -1) n = p ? strlen16(p) : 0;
   if ((q = r = malloc(n * 4 + 8 + 1))) {

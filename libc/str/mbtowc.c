@@ -51,19 +51,19 @@ int mbtowc(wchar_t *restrict wc, const char *restrict src, size_t n) {
    * insufficient to read a character */
   if (n < 4 && ((c << (6 * n - 6)) & (1U << 31))) goto ilseq;
   if (OOB(c, *s)) goto ilseq;
-  c = c << 6 | *s++ - 0x80;
+  c = c << 6 | (*s++ - 0x80);
   if (!(c & (1U << 31))) {
     *wc = c;
     return 2;
   }
   if (*s - 0x80u >= 0x40) goto ilseq;
-  c = c << 6 | *s++ - 0x80;
+  c = c << 6 | (*s++ - 0x80);
   if (!(c & (1U << 31))) {
     *wc = c;
     return 3;
   }
   if (*s - 0x80u >= 0x40) goto ilseq;
-  *wc = c << 6 | *s++ - 0x80;
+  *wc = c << 6 | (*s++ - 0x80);
   return 4;
 ilseq:
   errno = EILSEQ;

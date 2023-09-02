@@ -42,7 +42,7 @@ static inline bool timeval_iszero(struct timeval __tv) {
   return !(__tv.tv_sec | __tv.tv_usec);
 }
 static inline bool timeval_isvalid(struct timeval __tv) {
-  return __tv.tv_sec >= 0 && __tv.tv_usec < 1000000ull;
+  return __tv.tv_sec >= 0 && __tv.tv_usec + 0ull < 1000000ull;
 }
 #endif /* _COSMO_SOURCE */
 

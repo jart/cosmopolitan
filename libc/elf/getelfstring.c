@@ -39,10 +39,10 @@
  *     3. a nul byte wasn't present within `[strtab+i,elf+mapsize)`, or
  *     4. an arithmetic overflow occurred
  */
-const char *GetElfString(const Elf64_Ehdr *elf,  // validated
-                         size_t mapsize,         // validated
-                         const char *strtab,     // validated
-                         Elf64_Word i) {         // foreign
+char *GetElfString(const Elf64_Ehdr *elf,  // validated
+                   size_t mapsize,         // validated
+                   const char *strtab,     // validated
+                   Elf64_Word i) {         // foreign
   const char *e;
   if (!i) return "";
   e = (const char *)elf;
@@ -50,5 +50,5 @@ const char *GetElfString(const Elf64_Ehdr *elf,  // validated
   if (i >= mapsize) return 0;
   if (strtab + i >= e + mapsize) return 0;
   if (!memchr(strtab + i, 0, (e + mapsize) - (strtab + i))) return 0;
-  return (const char *)strtab + i;
+  return (char *)strtab + i;
 }

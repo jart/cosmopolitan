@@ -28,7 +28,7 @@
  * @asyncsignalsafe
  */
 int sigcountset(const sigset_t *set) {
-  int r, i, x, y;
+  int x, y;
   switch (_NSIG) {
     case 32:
       x = (uint32_t)set->__bits[0];

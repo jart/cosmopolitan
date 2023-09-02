@@ -91,11 +91,11 @@ __attribute__((__constructor__)) static void init(void) {
 
 #ifdef __x86_64__
 TEST(sched_setaffinity, isInheritedAcrossExecve) {
-  cpu_set_t x, y;
+  cpu_set_t x;
   CPU_ZERO(&x);
   CPU_SET(0, &x);
   ASSERT_SYS(0, 0, sched_setaffinity(0, sizeof(x), &x));
-  int rc, ws, pid;
+  int ws, pid;
   char *prog = GetProgramExecutableName();
   char *args[] = {program_invocation_name, NULL};
   char *envs[] = {"THE_DOGE=42", NULL};

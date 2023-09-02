@@ -61,8 +61,6 @@ TEST(IsAcceptablePort, test) {
 }
 
 BENCH(IsAcceptableHost, bench) {
-  uint32_t ip;
-  uint16_t port;
   EZBENCH2("IsAcceptableHost 127.0.0.1", donothing,
            IsAcceptableHost("127.0.0.1", 9));
   EZBENCH2("IsAcceptablePort 80", donothing, IsAcceptablePort("80", 2));

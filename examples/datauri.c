@@ -35,8 +35,7 @@ void PrintUsage(int rc, FILE *f) {
 
 void PrintUri(const char *path) {
   size_t n;
-  void *img, *src, *mime;
-  int opt, i;
+  void *img;
   if (!(img = gc(xslurp(path, &n)))) exit(2);
   fputs("data:", stdout);
   fputs(FindContentType(path, -1), stdout);

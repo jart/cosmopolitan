@@ -244,10 +244,13 @@ getcodec(PyObject *self, PyObject *encoding)
     return r;
 }
 
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct PyMethodDef __methods[] = {
     {"getcodec", (PyCFunction)getcodec, METH_O, ""},
     {0},
 };
+#pragma GCC pop_options
 
 #ifdef USING_BINARY_PAIR_SEARCH
 static DBCHAR

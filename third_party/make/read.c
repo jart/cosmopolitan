@@ -431,6 +431,7 @@ eval_makefile (const char *filename, unsigned short flags)
 
   /* [jart] breaks gcc11 (also wat) */
   void *volatile wat = alloca (0);
+  (void)wat;
 
   errno = 0;
   return deps;
@@ -474,6 +475,7 @@ eval_buffer (char *buffer, const floc *flocp)
 
   /* [jart] breaks gcc11 (also wat) */
   void *volatile wat = alloca (0);
+  (void)wat;
 }
 
 /* Check LINE to see if it's a variable assignment or undefine.
@@ -1181,7 +1183,7 @@ eval (struct ebuffer *ebuf, int set_default)
             if (semip)
               {
                 size_t l = p2 - variable_buffer;
-                *(--semip) = ';';
+                *__veil("r", (--semip)) = ';';
                 collapse_continuations (semip);
                 variable_buffer_output (p2 + strlen (p2),
                                         semip, strlen (semip)+1);

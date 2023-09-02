@@ -42,7 +42,6 @@ TEST(siocgifconf, test) {
   int socketfd;
   struct ifreq *ifr;
   struct ifconf conf;
-  char addrbuf[1024];
   uint32_t ip, netmask;
   bool foundloopback = false;
   data = gc(malloc((n = 4096)));

@@ -25,7 +25,6 @@
  * Returns home directory.
  */
 char *xhomedir(void) {
-  int fd;
   const char *a, *b;
   if ((a = getenv("HOME"))) {
     b = "";

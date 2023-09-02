@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
   if (X86_HAVE(BMI2)) Puts("-mbmi2");
   if (X86_HAVE(ADX)) Puts("-madx");
   if (X86_HAVE(FXSR)) Puts("-mfxsr");
-  if ((model = getx86processormodel(kX86ProcessorModelKey))) {
+  if ((model = (void *)getx86processormodel(kX86ProcessorModelKey))) {
     switch (model->march) {
       case X86_MARCH_CORE2:
         Puts("-march=core2");

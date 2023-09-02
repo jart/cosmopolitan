@@ -135,7 +135,7 @@ void GetOpts(int argc, char *argv[]) {
 void Compress(const char *inpath) {
   FILE *input;
   gzFile output;
-  int rc, n, errnum;
+  int rc, errnum;
   const char *outpath;
   char *p, openflags[5];
   if ((!inpath || opt_usestdout) && (!isatty(1) || opt_force)) {

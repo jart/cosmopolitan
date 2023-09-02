@@ -230,15 +230,12 @@ bool Send(int tmpfd, const void *output, size_t outputsize) {
 bool SendRequest(int tmpfd) {
   int fd;
   char *p;
-  size_t i;
   bool okall;
-  ssize_t rc;
   uint32_t crc;
   struct stat st;
   const char *name;
   unsigned char *hdr, *q;
   size_t progsize, namesize, hdrsize;
-  unsigned have;
   CHECK_NE(-1, (fd = open(g_prog, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
@@ -302,8 +299,7 @@ bool Recv(unsigned char *p, size_t n) {
 
 int ReadResponse(void) {
   int res;
-  ssize_t rc;
-  size_t n, m;
+  size_t n;
   uint32_t size;
   unsigned char b[512];
   for (res = -1; res == -1;) {
@@ -378,7 +374,7 @@ bool ShouldRunInParallel(void) {
 int SpawnSubprocesses(int argc, char *argv[]) {
   const char *tpath;
   sigset_t chldmask, savemask;
-  int i, rc, ws, pid, tmpfd, *pids, exitcode;
+  int i, ws, pid, tmpfd, *pids, exitcode;
   struct sigaction ignore, saveint, savequit;
   char *args[5] = {argv[0], argv[1], argv[2]};
 

@@ -46,7 +46,7 @@ static int inet_pton_inet6_impl(const char *src, uint8_t *dst) {
   unsigned digitsLeft = 32;
   bool zeroFound = false;
   uint16_t currentSet = 0;
-  while (c = *src++) {
+  while ((c = *src++)) {
     if (digitsLeft == 0) {
       return 0;
     }

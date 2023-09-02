@@ -121,7 +121,6 @@ static void DrawSphere(double k, double ambient) {
 
 int main() {
   double ang;
-  struct termios old;
   WRITE("\e[?25l");
   if (!setjmp(jb_)) {
     signal(SIGINT, OnCtrlC);

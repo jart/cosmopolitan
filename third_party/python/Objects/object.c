@@ -464,6 +464,7 @@ int
 _PyObject_IsFreed(PyObject *op)
 {
     uintptr_t ptr = (uintptr_t)op;
+    (void)ptr;
     if (_PyMem_IsFreed(&ptr, sizeof(ptr))) {
         return 1;
     }

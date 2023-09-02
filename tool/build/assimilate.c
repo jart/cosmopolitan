@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/struct/ehdr.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
 #include "libc/limits.h"
@@ -36,7 +37,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "third_party/getopt/getopt.internal.h"
-#include "libc/errno.h"
 #include "third_party/regex/regex.h"
 
 #define VERSION                                    \
@@ -194,7 +194,7 @@ static int GetElfArch(void) {
 
 static void GetElfHeader(Elf64_Ehdr *ehdr, const char *image, size_t n) {
   int c, i;
-  char *p, *e;
+  const char *p, *e;
   for (p = image, e = p + MIN(n, 8192); p < e; ++p) {
   TryAgain:
     if (READ64LE(p) != READ64LE("printf '")) continue;
@@ -383,7 +383,7 @@ static int GetMode(int fd) {
 }
 
 static void CopyFile(int infd, const char *map, size_t size,  //
-                     void *hdr, size_t hdrsize) {
+                     const void *hdr, size_t hdrsize) {
   int outfd;
   if (!outpath) return;
   if ((outfd = creat(outpath, GetMode(infd))) == -1) DieSys(outpath);
@@ -393,7 +393,7 @@ static void CopyFile(int infd, const char *map, size_t size,  //
 }
 
 static void WriteOutput(int infd, const char *map, size_t size,  //
-                        void *hdr, size_t hdrsize) {
+                        const void *hdr, size_t hdrsize) {
   int outfd, oflags, omode;
   if (outpath) {
     CopyFile(infd, map, size, hdr, hdrsize);

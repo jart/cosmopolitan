@@ -158,7 +158,7 @@ char *Join(const char *a, const char *b) {
 
 void Mv(char *src, char *dst) {
   ssize_t rc;
-  const char *s, *d;
+  const char *d;
   if (strlen(src) + 1 > PATH_MAX) _Exit(2);
   if (strlen(dst) + 1 > PATH_MAX) _Exit(2);
   basename(src);

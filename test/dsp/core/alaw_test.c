@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -188,7 +188,6 @@ TEST(unalaw, test) {
 }
 
 BENCH(alaw, bench) {
-  char *p = gc(malloc(kHyperionSize));
   EZBENCH2("alaw -32k", donothing, alaw(-32768));
   EZBENCH2("alaw 32k", donothing, alaw(32767));
   EZBENCH2("unalaw 0", donothing, unalaw(0));

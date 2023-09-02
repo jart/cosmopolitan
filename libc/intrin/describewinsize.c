@@ -29,11 +29,8 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeWinsize)(char buf[N], int rc, struct winsize *ws) {
-  char b64[64];
-  const char *d;
-  int i, j, o = 0;
-
+const char *(DescribeWinsize)(char buf[N], int rc, const struct winsize *ws) {
+  int o = 0;
   if (!ws) return "NULL";
   if (rc == -1) return "n/a";
   if ((!IsAsan() && kisdangerous(ws)) ||

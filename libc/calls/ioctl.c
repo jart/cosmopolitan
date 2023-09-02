@@ -72,7 +72,6 @@ static struct HostAdapterInfoNode {
 
 static int ioctl_default(int fd, unsigned long request, void *arg) {
   int rc;
-  va_list va;
   int64_t handle;
   if (!IsWindows()) {
     return sys_ioctl(fd, request, arg);
@@ -94,7 +93,6 @@ static int ioctl_default(int fd, unsigned long request, void *arg) {
 
 static int ioctl_fionread(int fd, uint32_t *arg) {
   int rc;
-  va_list va;
   int64_t handle;
   uint32_t avail;
   if (!IsWindows()) {
@@ -323,7 +321,6 @@ static textwindows int createHostInfo(
   struct NtIpAdapterPrefix *ap;
   struct HostAdapterInfoNode *node = NULL;
   char baseName[IFNAMSIZ];
-  char name[IFNAMSIZ];
   int count, i;
   /* __hostInfo must be empty */
   unassert(__hostInfo == NULL);
@@ -416,7 +413,6 @@ err:
 
 static textwindows int ioctl_siocgifconf_nt(int fd, struct ifconf *ifc) {
   struct ifreq *ptr;
-  struct NtIpAdapterAddresses *aa;
   struct HostAdapterInfoNode *node;
   if (__hostInfo) {
     freeHostInfo();
@@ -480,12 +476,12 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
    * BSD ABIs mainly differ by having sockaddr::sa_len
    * XNU uses a 32-bit length in a struct that's packed!
    */
-  int i, rc, fam;
+  int rc, fam;
+  size_t bufMax;
   char *b, *p, *e;
   char ifcBsd[16];
   struct ifreq *req;
   uint32_t bufLen, ip;
-  size_t numReq, bufMax;
   if (IsLinux()) {
     return sys_ioctl(fd, SIOCGIFCONF, ifc);
   }

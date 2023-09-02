@@ -32,7 +32,7 @@ static inline long GetVarInt(va_list va, signed char t) {
 }
 
 static int PrintStr(int fd, const char *s, int cols) {
-  int n, j, k = 0, i = 0;
+  int n, k = 0, i = 0;
   n = strlen(s);
   k += PrintIndent(fd, +cols - n);
   while (i < n) k += PrintChar(fd, s[i++]);
@@ -77,7 +77,7 @@ int Vfnprintf(const char *f, va_list va, int fd, int n) {
   const char *s;
   signed char type;
   char quot, ansi, gotr, pdot, zero;
-  int b, c, i, x, y, si, prec, cols, sign;
+  int b, c, x, y, si, prec, cols, sign;
   gotr = false;
   t = rdtsc();
   ftrace_enabled(-1);

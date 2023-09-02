@@ -82,7 +82,6 @@ static bool IsNormalized(int n, double A[n]) {
 }
 
 void FreeSamplingSolution(struct SamplingSolution *ss) {
-  long i;
   if (ss) {
     free(ss->indices);
     free(ss->weights);
@@ -93,7 +92,7 @@ void FreeSamplingSolution(struct SamplingSolution *ss) {
 struct SamplingSolution *ComputeSamplingSolution(long dn, long sn, double dar,
                                                  double off, double par) {
   double *fweights;
-  double sum, hw, w, x, f;
+  double sum, hw, x, f;
   short *weights, *indices;
   struct SamplingSolution *res;
   long j, i, k, n, min, max, s, N[6];
@@ -151,8 +150,8 @@ static void GyaradosImpl(long dyw, long dxw, int dst[dyw][dxw], long syw,
                          const short fyi[dyn][yfn], const short fyw[dyn][yfn],
                          const short fxi[dxn][xfn], const short fxw[dxn][xfn],
                          bool sharpen) {
-  long i, j;
-  int eax, dy, dx, sy, sx;
+  long i;
+  int eax, dy, dx, sx;
   for (sx = 0; sx < sxn; ++sx) {
     for (dy = 0; dy < dyn; ++dy) {
       for (eax = i = 0; i < yfn; ++i) {

@@ -609,7 +609,7 @@ static struct Pick PickBlockUnicodeAnsi(struct TtyRgb tl, struct TtyRgb tr,
   struct TtyRgb tr2 = GetQuant(tr);
   struct TtyRgb bl2 = GetQuant(bl);
   struct TtyRgb br2 = GetQuant(br);
-  unsigned i, p1, p2;
+  unsigned p1, p2;
   uint16_t picks1[96] forcealign(32);
   uint16_t picks2[32] forcealign(32);
   memset(picks1, 0x79, sizeof(picks1));
@@ -646,7 +646,7 @@ static struct Pick PickBlockCp437Ansi(struct TtyRgb tl, struct TtyRgb tr,
   struct TtyRgb tr2 = GetQuant(tr);
   struct TtyRgb bl2 = GetQuant(bl);
   struct TtyRgb br2 = GetQuant(br);
-  unsigned i, p1, p2;
+  unsigned p1, p2;
   uint16_t picks1[32] forcealign(32);
   uint16_t picks2[32] forcealign(32);
   memset(picks1, 0x79, sizeof(picks1));
@@ -660,7 +660,6 @@ static struct Pick PickBlockCp437Ansi(struct TtyRgb tl, struct TtyRgb tr,
 
 static struct Pick PickBlockCp437True(struct TtyRgb tl, struct TtyRgb tr,
                                       struct TtyRgb bl, struct TtyRgb br) {
-  unsigned i;
   uint16_t picks[32] forcealign(32);
   memset(picks, 0x79, sizeof(picks));
   PickCp437(picks, tl, tr, bl, br, tl, tr, bl, br);

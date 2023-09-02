@@ -32,8 +32,7 @@
 const char *(DescribePollFds)(char buf[N], ssize_t rc, struct pollfd *fds,
                               size_t nfds) {
   char b64[64];
-  const char *d;
-  int i, j, o = 0;
+  int i, o = 0;
 
   if (!fds) return "NULL";
   if ((!IsAsan() && kisdangerous(fds)) ||

@@ -96,7 +96,7 @@ static dword PlanLambda(int e, int a, int s) {
 }
 
 static dword PlanCond(int e, int a, int s) {
-  int x, b;
+  int x;
   if (!Cdr(e)) return DF(DispatchNil);  // (ζ) ⟺ ⊥
   for (x = e; (x = Cdr(x));) {
     if (x > 0) React(e, e, kCond);            // (ζ . 𝑣) not allowed
@@ -107,7 +107,6 @@ static dword PlanCond(int e, int a, int s) {
 }
 
 static dword PlanProgn(int e, int a, int s) {
-  int x;
   if (!Cdr(e)) return DF(DispatchNil);  // (progn) ⟺ ⊥
   if (CountSimpleArguments(Cdr(e)) == -1) React(e, e, kProgn);
   return MAKE(DF(DispatchProgn), Cdr(e));
@@ -216,7 +215,7 @@ static dword PlanClosure(int e, int a, int s) {
 }
 
 static dword PlanLet(int e, int a, int s) {
-  int p, n;
+  int n;
   if ((n = CountSimpleArguments(Cdr(e))) == -1) return DF(DispatchFuncall);
   if (CountSimpleArguments(Car(e)) < 3) React(e, e, kLambda);  // need (λ 𝑥 𝑦)
   switch (CountSimpleParameters(Cadr(Car(e)))) {
@@ -234,7 +233,6 @@ static dword PlanLet(int e, int a, int s) {
 }
 
 static dontinline dword PlanPrecious(int e, int a, int s, int f) {
-  int x;
   DCHECK_GT(f, 0);
   if (f == kCar) return PlanCar(e, a, s);
   if (f == kCdr) return PlanCdr(e, a, s);

@@ -62,7 +62,7 @@ void Process(const char *p, const char *pe, const char *path, bool isheader) {
   int level;
   bool noformat;
   const char *p2, *dq, *name;
-  for (noformat = level = 0; p < pe; p = p2) {
+  for (noformat = false, level = 0; p < pe; p = p2) {
     p2 = memchr(p, '\n', pe - p);
     p2 = p2 ? p2 + 1 : pe;
     if (LOOKINGAT(p, pe, "#if")) {

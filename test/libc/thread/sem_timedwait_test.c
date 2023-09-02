@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -44,54 +45,53 @@ TEST(sem_init, einval) {
 
 TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
-  int val;
   sem_t sem;
   SPAWN(fork);
+  signal(SIGABRT, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_post(&sem);
-  EXITS(128 + SIGABRT);  // see __assert_fail
+  TERMS(SIGABRT);
 }
 
 TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
-  int val;
   sem_t sem;
   SPAWN(fork);
+  signal(SIGABRT, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_trywait(&sem);
-  EXITS(128 + SIGABRT);  // see __assert_fail
+  TERMS(SIGABRT);
 }
 
 TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
-  int val;
   sem_t sem;
   SPAWN(fork);
+  signal(SIGABRT, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_wait(&sem);
-  EXITS(128 + SIGABRT);  // see __assert_fail
+  TERMS(SIGABRT);
 }
 
 TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
-  int val;
   sem_t sem;
   SPAWN(fork);
+  signal(SIGABRT, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_timedwait(&sem, 0);
-  EXITS(128 + SIGABRT);  // see __assert_fail
+  TERMS(SIGABRT);
 }
 
 void *Worker(void *arg) {
-  int rc;
   sem_t **s = arg;
   struct timespec ts;
   ASSERT_SYS(0, 0, clock_gettime(CLOCK_REALTIME, &ts));

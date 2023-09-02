@@ -41,7 +41,7 @@ char *GetElfStringTable(const Elf64_Ehdr *elf,  //
                         const char *section_name) {
   int i;
   char *name;
-  Elf64_Shdr *shdr;
+  const Elf64_Shdr *shdr;
   for (i = 0; i < elf->e_shnum; ++i) {
     if ((shdr = GetElfSectionHeaderAddress(elf, mapsize, i)) &&
         shdr->sh_type == SHT_STRTAB &&

@@ -74,15 +74,15 @@ ssize_t sendto(int fd, const void *buf, size_t size, int flags,
     }
   } else if (__isfdopen(fd)) {
     if (__isfdkind(fd, kFdSocket)) {
-      rc = sys_sendto_nt(fd, (struct iovec[]){{buf, size}}, 1, flags, opt_addr,
-                         addrsize);
+      rc = sys_sendto_nt(fd, (struct iovec[]){{(void *)buf, size}}, 1, flags,
+                         opt_addr, addrsize);
     } else if (__isfdkind(fd, kFdFile)) {
       if (flags) {
         rc = einval();
       } else if (opt_addr) {
         rc = eisconn();
       } else {
-        rc = sys_write_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
+        rc = sys_write_nt(fd, (struct iovec[]){{(void *)buf, size}}, 1, -1);
       }
     } else {
       rc = enotsock();

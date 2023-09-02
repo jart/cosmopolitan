@@ -104,7 +104,6 @@ int main(int argc, char *argv[]) {
   char **rasters;
   char **fasters;
   size_t ttfsize;
-  const char *dir;
   bool isdifferent;
   unsigned char **ttf;
   stbtt_fontinfo *font;

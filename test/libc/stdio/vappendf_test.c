@@ -171,7 +171,6 @@ TEST(appendd, nontrivialAmountOfMemory) {
 }
 
 BENCH(vappendf, bench) {
-  const char t[] = {0};
   char *b = 0;
   EZBENCH2("appendf", donothing, appendf(&b, "hello"));
   EZBENCH2("kappendf", donothing, kappendf(&b, "hello"));

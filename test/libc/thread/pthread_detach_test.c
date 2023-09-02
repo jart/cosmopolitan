@@ -27,7 +27,6 @@
 #include "libc/thread/thread.h"
 
 void OnUsr1(int sig, struct siginfo *si, void *vctx) {
-  struct ucontext *ctx = vctx;
 }
 
 void SetUp(void) {

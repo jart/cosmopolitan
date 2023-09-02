@@ -324,6 +324,7 @@ update_file (struct file *file, unsigned int depth)
 
       /* Clean up any alloca() used during the update.  */
       void *volatile wat = alloca (0);
+      (void)wat;
 
       /* If we got an error, don't bother with double_colon etc.  */
       if (new && !keep_going_flag)

@@ -4,6 +4,8 @@
 
 #include "third_party/python/Include/pymacro.h"
 
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
 /******************************************************************************/
 /*                                Module                                      */
@@ -871,6 +873,7 @@ PyDoc_STRVAR(doc_ctx_to_sci_string,
 Convert a number to a string using scientific notation.\n\
 \n");
 
+#pragma GCC pop_options
 
 #endif /* DOCSTRINGS_H */
 

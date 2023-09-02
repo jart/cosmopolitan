@@ -40,7 +40,7 @@ dontasan static inline const unsigned char *memrchr_sse(const unsigned char *s,
                                                         unsigned char c,
                                                         size_t n) {
   size_t i;
-  unsigned k, m;
+  unsigned m;
   xmm_t v, t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   for (i = n; i >= 16;) {
     v = *(const xmm_t *)(s + (i -= 16));

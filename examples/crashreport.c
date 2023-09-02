@@ -36,6 +36,7 @@ dontubsan int main(int argc, char *argv[]) {
   volatile double a = 0;
   volatile double b = 23;
   volatile double c = exp(b) / a;
+  (void)c;
 
   volatile int64_t x;
   return 1 / (x = 0);

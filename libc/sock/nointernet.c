@@ -284,7 +284,6 @@ static int WaitForTrace(int main) {
 int nointernet(void) {
   int ws, act, main;
   sigset_t set, old;
-  char path[PATH_MAX];
   struct sock_fprog prog = {.filter = kInetBpf, .len = ARRAYLEN(kInetBpf)};
 
   // seccomp bpf and ptrace are pretty much just linux for now.

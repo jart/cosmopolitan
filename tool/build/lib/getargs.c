@@ -117,7 +117,6 @@ const char *getargs_next(struct GetArgs *ga) {
   int fd;
   char *p;
   size_t k;
-  unsigned m;
   ssize_t size;
   for (;;) {
     if (ga->map) {
@@ -128,6 +127,7 @@ const char *getargs_next(struct GetArgs *ga) {
       }
       k = 0;
 #if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+      unsigned m;
       typedef unsigned char xmm_t
           __attribute__((__vector_size__(16), __aligned__(1)));
       for (; ga->j + k + 16 <= ga->mapsize; k += 16) {

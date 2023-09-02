@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/log/log.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
- * Returns symbolic name for siginfo::si_code value.
+ * Writes string w/ trailing newline to stdout.
+ *
+ * @return non-negative number on success, or `EOF` on error with
+ *     `errno` set and the `ferror(stdout)` state is updated
  */
-const char *GetSiCodeName(int sig, int si_code) {
-  static char b[17];
-  return (DescribeSiCode)(b, sig, si_code);
+int puts_unlocked(const char *s) {
+  size_t n, r;
+  if ((n = strlen(s))) {
+    r = fwrite_unlocked(s, 1, n, stdout);
+    if (!r) return -1;
+    if (r < n) return r;
+  }
+  if (fputc_unlocked('\n', stdout) == -1) {
+    if (feof_unlocked(stdout)) return n;
+    return -1;
+  }
+  return n + 1;
 }

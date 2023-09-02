@@ -43,7 +43,7 @@
 #include "tool/decode/lib/idname.h"
 #if defined(__x86_64__) && SupportsWindows()
 
-char *GetString(struct NtUnicodeString *s) {
+char *GetString(const struct NtUnicodeString *s) {
   static char buf[1024];
   unsigned len = min(sizeof(buf) - 1, s->Length);
   for (unsigned i = 0; i < len; ++i) {

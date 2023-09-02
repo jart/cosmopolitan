@@ -25,7 +25,7 @@
 #include "libc/nt/thread.h"
 #include "libc/sysv/consts/arch.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/tls2.internal.h"
 
 int sys_set_tls();
 
@@ -33,7 +33,6 @@ textstartup void __set_tls(struct CosmoTib *tib) {
   tib = __adj_tls(tib);
 #ifdef __x86_64__
   // ask the operating system to change the x86 segment register
-  int ax, dx;
   if (IsWindows()) {
     __tls_index = TlsAlloc();
     npassert(0 <= __tls_index && __tls_index < 64);

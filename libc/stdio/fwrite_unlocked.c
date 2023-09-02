@@ -101,7 +101,7 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   // (2) we avoid need for malloc() when it's out of room
   iov[0].iov_base = f->buf;
   iov[0].iov_len = f->beg;
-  iov[1].iov_base = data;
+  iov[1].iov_base = (void *)data;
   iov[1].iov_len = n;
   n += f->beg;
   if (__robust_writev(f->fd, iov, 2) == -1) {

@@ -46,7 +46,7 @@ struct AcceptExBuffer {
 textwindows int sys_accept_nt(struct Fd *fd, struct sockaddr_storage *addr,
                               int accept4_flags) {
   int64_t handle;
-  int rc, client, oflags;
+  int client, oflags;
   uint32_t bytes_received;
   uint32_t completion_flags;
   struct AcceptExBuffer buffer;

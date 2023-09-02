@@ -33,8 +33,7 @@
 
 char *strcasestr_naive(const char *haystack, const char *needle) {
   size_t i;
-  unsigned k, m;
-  if (haystack == needle || !*needle) return haystack;
+  if (haystack == needle || !*needle) return (void *)haystack;
   for (;;) {
     for (i = 0;; ++i) {
       if (!needle[i]) return (/*unconst*/ char *)haystack;

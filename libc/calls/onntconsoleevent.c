@@ -26,13 +26,12 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/tls2.internal.h"
 
 #ifdef __x86_64__
 
 textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
   struct CosmoTib tib;
-  struct StackFrame *fr;
 
   // win32 spawns a thread on its own just to deliver sigint
   // TODO(jart): make signal code lockless so we can delete!

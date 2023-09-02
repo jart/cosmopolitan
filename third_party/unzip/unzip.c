@@ -3626,7 +3626,7 @@ static ZCONST char Far long_op_ambig_err[] =
 static ZCONST char Far long_op_not_sup_err[] =
    "long option '%s' not supported\n";
 
-static ZCONST char Far no_arg_files_err[] = "argument files not enabled\n";
+/* static ZCONST char Far no_arg_files_err[] = "argument files not enabled\n"; */
 
 
 /* below removed as only used for processing argument files */

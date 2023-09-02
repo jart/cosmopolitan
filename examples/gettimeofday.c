@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   struct tm tm;
   struct timeval tv;
   rc = gettimeofday(&tv, 0);
-  assert(!rc);
+  unassert(!rc);
   t = tv.tv_sec;
   gmtime_r(&t, &tm);
   FormatHttpDateTime(p, &tm);

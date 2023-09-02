@@ -2,8 +2,8 @@
 #define COSMOPOLITAN_LIBC_FMT_STRTOL_H_
 #include "libc/errno.h"
 
-#define CONSUME_SPACES(s, c) \
-  if (endptr) *endptr = s;   \
+#define CONSUME_SPACES(t, s, c)   \
+  if (endptr) *endptr = (t *)(s); \
   while (c == ' ' || c == '\t') c = *++s
 
 #define GET_SIGN(s, c, d) \

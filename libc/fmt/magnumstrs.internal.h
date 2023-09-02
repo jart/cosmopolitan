@@ -28,9 +28,9 @@ extern const struct MagnumStr kSockOptnames[];
 extern const struct MagnumStr kTcpOptnames[];
 extern const struct MagnumStr kPollNames[];
 
-char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
+const char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
 
-__funline char *GetMagnumStr(const struct MagnumStr *ms, int x) {
+__funline const char *GetMagnumStr(const struct MagnumStr *ms, int x) {
   int i;
   for (i = 0; ms[i].x != MAGNUM_TERMINATOR; ++i) {
     if (x == MAGNUM_NUMBER(ms, i)) {
@@ -44,7 +44,7 @@ __funline char *GetMagnumStr(const struct MagnumStr *ms, int x) {
  * Converts errno value to descriptive sentence.
  * @return non-null rodata string or null if not found
  */
-__funline char *_strerdoc(int x) {
+__funline const char *_strerdoc(int x) {
   if (x) {
     return GetMagnumStr(kErrnoDocs, x);
   } else {
@@ -56,7 +56,7 @@ __funline char *_strerdoc(int x) {
  * Converts errno value to symbolic name.
  * @return non-null rodata string or null if not found
  */
-__funline char *_strerrno(int x) {
+__funline const char *_strerrno(int x) {
   if (x) {
     return GetMagnumStr(kErrnoNames, x);
   } else {

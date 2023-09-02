@@ -171,7 +171,7 @@ static void HaclEcPointSwap(uint64_t a[2][5], uint64_t b[2][5], uint64_t m) {
   }
 }
 
-static void HaclEcFormatFexpand(uint64_t o[5], uint8_t p[32]) {
+static void HaclEcFormatFexpand(uint64_t o[5], const uint8_t p[32]) {
   o[0] = READ64LE(p + 000) >> 00 & 0x7ffffffffffff;
   o[1] = READ64LE(p + 006) >> 03 & 0x7ffffffffffff;
   o[2] = READ64LE(p + 014) >> 06 & 0x7ffffffffffff;

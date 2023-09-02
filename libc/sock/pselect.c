@@ -60,7 +60,6 @@
 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
             const struct timespec *timeout, const sigset_t *sigmask) {
   int rc;
-  sigset_t oldmask;
   struct timeval tv, *tvp;
   struct timespec ts, *tsp;
   struct {
@@ -89,7 +88,8 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
     ss.n = 8;
     rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, &ss);
   } else if (!IsWindows()) {
-    rc = sys_pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+    rc = sys_pselect(nfds, readfds, writefds, exceptfds,
+                     (struct timespec *)timeout, sigmask);
   } else {
     if (timeout) {
       tv.tv_sec = timeout->tv_sec;

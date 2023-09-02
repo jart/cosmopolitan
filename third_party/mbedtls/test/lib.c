@@ -78,7 +78,6 @@ int option_verbose = 1;
 mbedtls_test_info_t mbedtls_test_info;
 
 int mbedtls_test_platform_setup(void) {
-  char *p;
   int ret = 0;
   static char mybuf[2][BUFSIZ];
   ShowCrashReports();
@@ -132,8 +131,7 @@ int mbedtls_hardware_poll(void *wut, unsigned char *p, size_t n, size_t *olen) {
 }
 
 int mbedtls_test_write(const char *fmt, ...) {
-  int i, n;
-  char *p;
+  int n;
   va_list va;
   va_start(va, fmt);
   if (option_verbose) {

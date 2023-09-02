@@ -22,7 +22,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-char buf[19];
+char buf[100];
 
 void SetUp(void) {
   memset(buf, 0x55, sizeof(buf));

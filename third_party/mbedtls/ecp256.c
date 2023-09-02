@@ -38,7 +38,7 @@ static bool
 mbedtls_p256_gte( uint64_t p[5] )
 {
     return( (((int64_t)p[4] > 0) |
-             (!p[4] &
+             ((!p[4]) &
               ((p[3] > 0xffffffff00000001) |
                ((p[3] == 0xffffffff00000001) &
                 ((p[2] > 0x0000000000000000) |

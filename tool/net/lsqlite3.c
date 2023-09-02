@@ -28,6 +28,7 @@
 │ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"
@@ -120,7 +121,6 @@ struct sdb {
 
 static const char *const sqlite_meta      = ":sqlite3";
 static const char *const sqlite_vm_meta   = ":sqlite3:vm";
-static const char *const sqlite_bu_meta   = ":sqlite3:bu";
 static const char *const sqlite_ctx_meta  = ":sqlite3:ctx";
 static int sqlite_ctx_meta_ref;
 #ifdef SQLITE_ENABLE_SESSION
@@ -1264,7 +1264,6 @@ static void db_update_hook_callback(void *user, int op, char const *dbname, char
     sdb *db = (sdb*)user;
     lua_State *L = db->L;
     int top = lua_gettop(L);
-    lua_Number n;
 
     /* setup lua callback call */
     lua_rawgeti(L, LUA_REGISTRYINDEX, db->update_hook_cb);    /* get callback */
@@ -1777,7 +1776,7 @@ static int db_deserialize(lua_State *L) {
         return 0;
 
     const char *sqlbuf = memcpy(sqlite3_malloc(size), buffer, size);
-    sqlite3_deserialize(db->db, "main", sqlbuf, size, size,
+    sqlite3_deserialize(db->db, "main", (void *)sqlbuf, size, size,
         SQLITE_DESERIALIZE_FREEONCLOSE + SQLITE_DESERIALIZE_RESIZEABLE);
     return 0;
 }
@@ -1917,7 +1916,6 @@ static int liter_next(lua_State *L) {
 }
 
 static int liter_pk(lua_State *L) {
-    const char *zTab;
     int n, rc, nCol;
     unsigned char *abPK;
     liter *litr = lsqlite_checkiter(L, 1);
@@ -2255,13 +2253,13 @@ static int db_create_session(lua_State *L) {
 
 static int db_iterate_changeset(lua_State *L) {
     sqlite3_changeset_iter *p;
-    sdb *db = lsqlite_checkdb(L, 1);
+    lsqlite_checkdb(L, 1);
     const char *cset = luaL_checkstring(L, 2);
     int nset = lua_rawlen(L, 2);
     int flags = luaL_optinteger(L, 3, 0);
     int rc;
 
-    if ((rc = sqlite3changeset_start_v2(&p, nset, cset, flags)) != SQLITE_OK) {
+    if ((rc = sqlite3changeset_start_v2(&p, nset, (void *)cset, flags)) != SQLITE_OK) {
         return pusherr(L, rc);
     }
     (void)lsqlite_makeiter(L, p, 1);
@@ -2269,7 +2267,7 @@ static int db_iterate_changeset(lua_State *L) {
 }
 
 static int db_invert_changeset(lua_State *L) {
-    sdb *db = lsqlite_checkdb(L, 1);
+    lsqlite_checkdb(L, 1);
     const char *cset = luaL_checkstring(L, 2);
     int nset = lua_rawlen(L, 2);
     int rc;
@@ -2285,7 +2283,7 @@ static int db_invert_changeset(lua_State *L) {
 }
 
 static int db_concat_changeset(lua_State *L) {
-    sdb *db = lsqlite_checkdb(L, 1);
+    lsqlite_checkdb(L, 1);
     int size, nset;
     void *buf, *cset;
     sqlite3_changegroup *pGrp;
@@ -2295,7 +2293,7 @@ static int db_concat_changeset(lua_State *L) {
     int rc = sqlite3changegroup_new(&pGrp);
     for (int i = 1; rc == SQLITE_OK && i <= n; i++) {
         lua_rawgeti(L, 2, i);
-        cset = lua_tostring(L, -1);
+        cset = gc(strdup(lua_tostring(L, -1)));
         nset = lua_rawlen(L, -1);
         rc = sqlite3changegroup_add(pGrp, nset, cset);
         lua_pop(L, 1);  // pop the string
@@ -2311,7 +2309,7 @@ static int db_concat_changeset(lua_State *L) {
 
 static int db_apply_changeset(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
-    const char *cset = luaL_checkstring(L, 2);
+    char *cset = gc(strdup(luaL_checkstring(L, 2)));
     int nset = lua_rawlen(L, 2);
     int top = lua_gettop(L);
     int rc;

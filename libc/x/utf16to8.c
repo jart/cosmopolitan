@@ -41,9 +41,9 @@ static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
  * @param z if non-NULL receives output length
  */
 char *utf16to8(const char16_t *p, size_t n, size_t *z) {
+  unsigned w;
   char *r, *q;
   wint_t x, y;
-  unsigned m, j, w;
   const char16_t *e;
   int16_t v1[8], v2[8], v3[8], vz[8];
   if (z) *z = 0;

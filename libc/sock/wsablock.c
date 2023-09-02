@@ -43,8 +43,8 @@ static textwindows void __wsablock_abort(int64_t handle,
 
 textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
                            uint32_t *flags, int sigops, uint32_t timeout) {
+  int abort_errno;
   uint32_t i, got;
-  int rc, abort_errno;
   if (WSAGetLastError() != kNtErrorIoPending) {
     // our i/o operation never happened because it failed
     return __winsockerr();

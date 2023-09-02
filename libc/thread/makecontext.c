@@ -94,7 +94,6 @@ void makecontext(ucontext_t *uc, void func(), int argc, ...) {
   va_list va;
   long sp, sb;
   struct Gadget *call;
-  struct StackFrame *sf;
 
   // allocate call
   sp = sb = (long)uc->uc_stack.ss_sp;

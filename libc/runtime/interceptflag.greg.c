@@ -37,7 +37,7 @@ textstartup bool __intercept_flag(int *argc, char *argv[], const char *flag) {
        * todo: update this to allow ------strace etc.
        */
       if (a && a[0] == '-' && a[1] == '-' && !__strcmp(a + 2, flag)) {
-        a = flag;
+        a = (char *)flag;
       }
       argv[i++] = a;
     }

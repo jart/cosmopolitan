@@ -34,9 +34,7 @@
 #include "libc/thread/thread.h"
 
 TEST(O_NONBLOCK, canBeSetBySocket_toMakeListenNonBlocking) {
-  int ws, pid;
   char buf[16] = {0};
-  int64_t inoffset;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {
       .sin_family = AF_INET,
@@ -81,9 +79,7 @@ TEST(O_NONBLOCK, canBeSetBySocket_toMakeListenNonBlocking) {
 }
 
 TEST(O_NONBLOCK, canBeTunedWithFcntl_toMakeReadNonBlocking) {
-  int ws, pid;
   char buf[16] = {0};
-  int64_t inoffset;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {
       .sin_family = AF_INET,

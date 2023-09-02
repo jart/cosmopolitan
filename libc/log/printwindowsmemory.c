@@ -56,7 +56,6 @@ static const char *DescribeNtMemType(char buf[64], uint32_t x) {
  */
 void PrintWindowsMemory(const char *high, size_t size) {
   char *p, b[5][64];
-  const char *start, *stop;
   struct NtMemoryBasicInformation mi;
   kprintf("%-12s %-12s %10s %16s %16s %32s %32s\n", "Allocation", "BaseAddress",
           "RegionSize", "State", "Type", "AllocationProtect", "Protect");

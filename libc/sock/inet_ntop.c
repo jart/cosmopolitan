@@ -32,8 +32,8 @@
  */
 const char *inet_ntop(int af, const void *src, char *dst, uint32_t size) {
   char *p;
-  unsigned char *ip;
   int i, t, a, b, c, d;
+  const unsigned char *ip;
   p = dst;
   if (!size) return dst;
   if ((ip = src)) {

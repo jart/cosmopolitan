@@ -40,7 +40,6 @@ void *__cxa_finalize(void *);
 void __restore_console_win32(void);
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated;
-void __asan_init(int, char **, char **, intptr_t *);
 void _jmpstack(void *, void *, ...) wontreturn;
 long _setstack(void *, void *, ...);
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);

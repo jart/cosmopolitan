@@ -36,12 +36,13 @@ dontasan void *memmem(const void *haystack, size_t haystacklen,
                       const void *needle, size_t needlelen) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   char c;
-  xmm_t n, *v;
+  xmm_t n;
+  const xmm_t *v;
   unsigned i, k, m;
   const char *p, *q, *e;
   if (IsAsan()) __asan_verify(needle, needlelen);
   if (IsAsan()) __asan_verify(haystack, haystacklen);
-  if (!needlelen) return haystack;
+  if (!needlelen) return (void *)haystack;
   if (UNLIKELY(needlelen > haystacklen)) return 0;
   q = needle;
   c = *q;
@@ -72,7 +73,7 @@ dontasan void *memmem(const void *haystack, size_t haystacklen,
   }
 #else
   size_t i, j;
-  if (!needlelen) return haystack;
+  if (!needlelen) return (void *)haystack;
   if (needlelen > haystacklen) return 0;
   for (i = 0; i < haystacklen; ++i) {
     for (j = 0;; ++j) {

@@ -33,10 +33,10 @@ static void mbedtls_mpi_shift_l_mod_p256( const mbedtls_ecp_group *G,
     X->p[0] = X->p[0] << 1;
     if( (X->p[4] ||
          X->p[3] > G->P.p[3] ||
-         (X->p[3] == G->P.p[3] &&
-          X->p[2] > G->P.p[2] ||
-          (X->p[2] == G->P.p[2] &&
-           X->p[0] > G->P.p[0] ||
+         ((X->p[3] == G->P.p[3] &&
+           X->p[2] > G->P.p[2]) ||
+          ((X->p[2] == G->P.p[2] &&
+            X->p[0] > G->P.p[0]) ||
            (X->p[0] == G->P.p[0])))) )
     {
         SBB(X->p[0], X->p[0], G->P.p[0], 0, c);
@@ -63,14 +63,14 @@ static void mbedtls_mpi_shift_l_mod_p384( const mbedtls_ecp_group *G,
     X->p[0] = X->p[0] << 1;
     if( (X->p[6] ||
          X->p[5] > G->P.p[5] ||
-         (X->p[5] == G->P.p[5] &&
-          X->p[4] > G->P.p[4] ||
-          (X->p[4] == G->P.p[4] &&
-           X->p[3] > G->P.p[3] ||
-           (X->p[3] == G->P.p[3] &&
-            X->p[2] > G->P.p[2] ||
-            (X->p[2] == G->P.p[2] &&
-             X->p[0] > G->P.p[0] ||
+         ((X->p[5] == G->P.p[5] &&
+           X->p[4] > G->P.p[4]) ||
+          ((X->p[4] == G->P.p[4] &&
+            X->p[3] > G->P.p[3]) ||
+           ((X->p[3] == G->P.p[3] &&
+             X->p[2] > G->P.p[2]) ||
+            ((X->p[2] == G->P.p[2] &&
+              X->p[0] > G->P.p[0]) ||
              (X->p[0] == G->P.p[0])))))) )
     {
         SBB(X->p[0], X->p[0], G->P.p[0], 0, c);

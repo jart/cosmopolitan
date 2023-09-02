@@ -354,8 +354,8 @@ TEST(mmap, cow) {
 
 TEST(mmap, cowFileMapReadonlyFork) {
   char *p;
-  int fd, pid, ws;
-  char path[PATH_MAX], lol[6];
+  int fd, ws;
+  char path[PATH_MAX];
   sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(6, write(fd, "hello", 6));
@@ -380,7 +380,7 @@ TEST(mmap, cowFileMapReadonlyFork) {
 
 TEST(mmap, cowFileMapFork) {
   char *p;
-  int fd, pid, ws;
+  int fd, ws;
   char path[PATH_MAX], lol[6];
   sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
@@ -409,8 +409,8 @@ TEST(mmap, cowFileMapFork) {
 // SHARED ANONYMOUS MEMORY BETWEEN PROCESSES
 
 TEST(mmap, sharedAnonMapFork) {
+  int ws;
   char *p;
-  int pid, ws;
   EXPECT_NE(MAP_FAILED, (p = mmap(NULL, 6, PROT_READ | PROT_WRITE,
                                   MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
   strcpy(p, "parnt");
@@ -432,7 +432,7 @@ TEST(mmap, sharedAnonMapFork) {
 
 TEST(mmap, sharedFileMapFork) {
   char *p;
-  int fd, pid, ws;
+  int fd, ws;
   char path[PATH_MAX], lol[6];
   sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));

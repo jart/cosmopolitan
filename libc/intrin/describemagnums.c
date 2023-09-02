@@ -20,8 +20,9 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/str/str.h"
 
-char *DescribeMagnum(char *b, const struct MagnumStr *m, const char *p, int x) {
-  char *s;
+const char *DescribeMagnum(char *b, const struct MagnumStr *m, const char *p,
+                           int x) {
+  const char *s;
   if (x == 127) return "CLOCK_INVALID";
   if ((s = GetMagnumStr(m, x))) {
     stpcpy(stpcpy(b, p), s);

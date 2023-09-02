@@ -136,7 +136,7 @@ static struct Semaphore *sem_open_reopen(const char *path) {
 
 static struct Semaphore *sem_open_get(const sem_t *sem,
                                       struct Semaphore ***out_prev) {
-  struct Semaphore *s, *t, **p;
+  struct Semaphore *s, **p;
   for (p = &g_semaphores.list, s = *p; s; p = &s->next, s = s->next) {
     if (s && sem == s->sem) {
       *out_prev = p;
@@ -176,9 +176,10 @@ static struct Semaphore *sem_open_get(const sem_t *sem,
 sem_t *sem_open(const char *name, int oflag, ...) {
   sem_t *sem;
   va_list va;
+  const char *path;
   struct Semaphore *s;
+  char pathbuf[PATH_MAX];
   unsigned mode = 0, value = 0;
-  char *path, pathbuf[PATH_MAX];
   if (oflag & ~(O_CREAT | O_EXCL)) {
     einval();
     return SEM_FAILED;
@@ -300,9 +301,10 @@ int sem_close(sem_t *sem) {
  * @raise ENAMETOOLONG if too long
  */
 int sem_unlink(const char *name) {
+  const char *path;
   int rc, e = errno;
   struct Semaphore *s;
-  char *path, pathbuf[PATH_MAX];
+  char pathbuf[PATH_MAX];
   if (!(path = sem_path_np(name, pathbuf, sizeof(pathbuf)))) return -1;
   if ((rc = unlink(path)) == -1 && IsWindows() && errno == EACCES) {
     sem_open_init();

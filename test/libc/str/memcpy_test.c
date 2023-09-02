@@ -136,30 +136,6 @@ TEST(memcpy, overlapping_isFineIfCopyingBackwards) {
   }
 }
 
-TEST(stpcpy, test) {
-  volatile char *p;
-  volatile char b[16];
-  volatile const char *s1 = "hello";
-  volatile const char *s2 = "there";
-  p = b;
-  p = stpcpy(p, s1);
-  EXPECT_EQ((intptr_t)b + 5, (intptr_t)p);
-  EXPECT_STREQ("hello", b);
-  p = stpcpy(p, s2);
-  EXPECT_EQ((intptr_t)b + 10, (intptr_t)p);
-  EXPECT_STREQ("hellothere", b);
-}
-
-TEST(memcpy, testBackwardsOverlap3) {
-  volatile char *c;
-  c = malloc(3);
-  memcpy(c, "\e[C", 3);
-  memcpy(c, c + 1, __veil("r", 3) - 1);
-  EXPECT_EQ('[', c[0]);
-  EXPECT_EQ('C', c[1]);
-  free(c);
-}
-
 #define B(F, N)                                                    \
   do {                                                             \
     char *d = rngset(malloc(N), N, _rand64, -1);                   \

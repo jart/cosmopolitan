@@ -29,8 +29,9 @@
  * @raise EINVAL if `s` is an empty string or has a `'='` character
  */
 int unsetenv(const char *s) {
-  char **p, *t;
+  char **p;
   struct Env e;
+  const char *t;
   if (!s || !*s) return einval();
   for (t = s; *t; ++t) {
     if (*t == '=') return einval();

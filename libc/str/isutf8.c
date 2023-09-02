@@ -51,7 +51,6 @@ static const char kUtf8Dispatch[] = {
  */
 dontasan bool isutf8(const void *data, size_t size) {
   long c;
-  unsigned m;
   const char *p, *e;
   if (size == -1) size = data ? strlen(data) : 0;
   if (IsAsan()) __asan_verify(data, size);
@@ -62,6 +61,7 @@ dontasan bool isutf8(const void *data, size_t size) {
     typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
     if (!((intptr_t)p & 15)) {
       for (;;) {
+        unsigned m;
         if ((m = __builtin_ia32_pmovmskb128(*(xmm_t *)p >= (xmm_t){0}) ^
                  0xffff)) {
           m = __builtin_ctzll(m);

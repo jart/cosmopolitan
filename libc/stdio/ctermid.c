@@ -42,6 +42,6 @@ char *ctermid(char *s) {
   if (s) {
     return strcpy(s, tty);
   } else {
-    return tty;
+    return (char *)tty;
   }
 }

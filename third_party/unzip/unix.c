@@ -1268,6 +1268,7 @@ int set_symlnk_attribs(__G__ slnk_entry)
     slinkentry *slnk_entry;
 {
     ulg z_uidgid[2];
+    (void)z_uidgid;
 
     if (slnk_entry->attriblen > 0) {
 # if (!defined(NO_LCHOWN))

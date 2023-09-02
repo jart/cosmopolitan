@@ -38,8 +38,8 @@
  * @return 0 on success, or -1 w/ errno
  */
 ssize_t ttywrite(int fd, const void *data, size_t size) {
-  char *p;
   ssize_t rc;
+  const char *p;
   size_t wrote, n;
   p = data;
   n = size;

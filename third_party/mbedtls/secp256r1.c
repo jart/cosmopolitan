@@ -43,16 +43,18 @@
  * @see FIPS 186-3 §D.2.3
  */
 void secp256r1(uint64_t p[8]) {
-  int r;
   char o;
   signed char E;
-  uint64_t A, B, C, D, a, b, c, d, e;
+  uint64_t A, B, C, D, b, c, d;
   A = Q(0);
   B = Q(2);
   C = Q(4);
   D = Q(6);
   E = 0;
 #if !defined(__x86_64__) || defined(__STRICT_ANSI__)
+  (void)b;
+  (void)c;
+  (void)d;
   ADC(B, B, H(Q(10)) << 1, 0, o);
   ADC(C, C, Q(12) << 1 | Q(10) >> 63, o, o);
   ADC(D, D, Q(14) << 1 | Q(12) >> 63, o, o);
@@ -92,6 +94,7 @@ void secp256r1(uint64_t p[8]) {
   SBB(D, D, H(Q(12)), o, o);
   E -= o;
 #else
+  (void)o;
   asm volatile(/* x += 2 × ( A₁₅ ‖ A₁₄ ‖ A₁₃ ‖ A₁₂ ‖ A₁₁ ‖ 0 ‖ 0 ‖ 0 ) */
                "mov\t11*4(%8),%k5\n\t"
                "mov\t12*4(%8),%6\n\t"

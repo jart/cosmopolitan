@@ -24,7 +24,6 @@
  * Returns name of function that called caller function.
  */
 const char *GetCallerName(const struct StackFrame *bp) {
-  struct SymbolTable *st;
   if (!bp && (bp = __builtin_frame_address(0))) bp = bp->next;
   if (bp) return GetSymbolByAddr(bp->addr);
   return 0;

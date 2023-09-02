@@ -19,7 +19,7 @@
 #include "libc/log/check.h"
 #include "net/https/https.h"
 
-char *FormatX509Name(mbedtls_x509_name *name) {
+char *FormatX509Name(const mbedtls_x509_name *name) {
   char *s = calloc(1, 1000);
   CHECK_GT(mbedtls_x509_dn_gets(s, 1000, name), 0);
   return s;

@@ -556,7 +556,6 @@ TEST(EncodeUrl, testTortureCharacters_doesWhatYouAskItToDoButSchemeCantEscape) {
 }
 
 TEST(EncodeUrl, testUserPassPort_allDependOnHostNonAbsence) {
-  size_t n;
   struct Url h;
   memset(&h, 0, sizeof(h));
   h.scheme.n = 1;
@@ -582,7 +581,6 @@ TEST(EncodeUrl, testUserPassPort_allDependOnHostNonAbsence) {
 }
 
 TEST(EncodeUrl, testEmptyRegName_isLegal) {
-  size_t n;
   struct Url h;
   memset(&h, 0, sizeof(h));
   h.scheme.n = 1;

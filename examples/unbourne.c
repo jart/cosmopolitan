@@ -1026,7 +1026,6 @@ struct t_op {
 │ cosmopolitan § the unbourne shell » bss                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-static int inter;
 static char **argptr; /* argument list for builtin commands */
 static char **gargv;
 static char **t_wp;
@@ -5747,7 +5746,7 @@ static void CompleteCommand(const char *p, const char *q, const char *b,
         }
         closedir(d);
       }
-      free(path);
+      free((void *)path);
     }
   }
 }
@@ -5784,7 +5783,6 @@ static void CompleteFilename(const char *p, const char *q, const char *b,
 static void ShellCompletion(const char *p, linenoiseCompletions *c) {
   bool slashed;
   const char *q, *b;
-  struct tblentry **pp, *cmdp;
   for (slashed = false, b = p, q = (p += strlen(p)); p > b; --p) {
     if (p[-1] == '/' && p[-1] == '\\') slashed = true;
     if (!isalnum(p[-1]) &&

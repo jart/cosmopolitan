@@ -192,13 +192,11 @@ static textwindows int OnForkCrash(struct NtExceptionPointers *ep) {
 }
 
 textwindows void WinMainForked(void) {
-  bool ok;
   jmp_buf jb;
   int64_t reader;
+  int64_t savetsc;
   char *addr, *shad;
-  struct DirectMap dm;
   uint64_t size, upsize;
-  int64_t oncrash, savetsc;
   struct MemoryInterval *maps;
   char16_t fvar[21 + 1 + 21 + 1];
   uint32_t i, varlen, oldprot, savepid;
@@ -215,7 +213,7 @@ textwindows void WinMainForked(void) {
   NTTRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
 #ifdef SYSDEBUG
-  oncrash = AddVectoredExceptionHandler(1, NT2SYSV(OnForkCrash));
+  int64_t oncrash = AddVectoredExceptionHandler(1, NT2SYSV(OnForkCrash));
 #endif
   ParseInt(fvar, &reader);
 
@@ -321,14 +319,13 @@ textwindows void WinMainForked(void) {
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   jmp_buf jb;
   uint32_t op;
-  uint32_t oldprot;
+  char **args;
   char ok, threaded;
-  char **args, **args2;
   struct CosmoTib *tib;
   char16_t pipename[64];
   int64_t reader, writer;
   struct NtStartupInfo startinfo;
-  int i, n, pid, untrackpid, rc = -1;
+  int i, pid, untrackpid, rc = -1;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtProcessInformation procinfo;
   threaded = __threaded;
@@ -353,6 +350,8 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
       // If --strace was passed to this program, then propagate it the
       // forked process since the flag was removed by __intercept_flag
       if (strace_enabled(0) > 0) {
+        int n;
+        char **args2;
         for (n = 0; args[n];) ++n;
         args2 = alloca((n + 2) * sizeof(char *));
         for (i = 0; i < n; ++i) args2[i] = args[i];

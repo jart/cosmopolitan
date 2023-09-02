@@ -670,7 +670,7 @@ static void PopAsmInputs(Asm *a) {
 }
 
 static void StoreAsmOutputs(Asm *a) {
-  int i, z, x0, x1;
+  int i, z;
   for (i = 0; i < a->n; ++i) {
     if (a->ops[i].flow == '=' || a->ops[i].flow == '+') {
       switch (a->ops[i].type) {

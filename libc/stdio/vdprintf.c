@@ -40,7 +40,7 @@ static int vdprintf_putc(const char *s, struct VdprintfState *t, size_t n) {
     } else {
       iov[0].iov_base = t->b;
       iov[0].iov_len = t->n;
-      iov[1].iov_base = s;
+      iov[1].iov_base = (void *)s;
       iov[1].iov_len = n;
       if (__robust_writev(t->fd, iov, 2) == -1) {
         return -1;

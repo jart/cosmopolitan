@@ -111,7 +111,7 @@ TEST(execve, ziposAPE) {
 void ExecvTinyElf(const char *path) {
   int ws;
   if (!vfork()) {
-    execv(path, (char *[]){path, 0});
+    execv(path, (char *[]){(char *)path, 0});
     abort();
   }
   ASSERT_NE(-1, wait(&ws));
@@ -121,7 +121,7 @@ void ExecvTinyElf(const char *path) {
 void ExecvpTinyElf(const char *path) {
   int ws;
   if (!vfork()) {
-    execvp(path, (char *[]){path, 0});
+    execvp(path, (char *[]){(char *)path, 0});
     abort();
   }
   ASSERT_NE(-1, wait(&ws));
@@ -131,7 +131,7 @@ void ExecvpTinyElf(const char *path) {
 void ExecveTinyElf(const char *path) {
   int ws;
   if (!vfork()) {
-    execve(path, (char *[]){path, 0}, (char *[]){0});
+    execve(path, (char *[]){(char *)path, 0}, (char *[]){0});
     abort();
   }
   ASSERT_NE(-1, wait(&ws));

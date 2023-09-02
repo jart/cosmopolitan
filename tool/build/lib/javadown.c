@@ -120,7 +120,6 @@ static void SplitLines(struct Lines *lines, char *p) {
 }
 
 static bool ConsumeFileOverview(struct Lines *lines) {
-  int i;
   if (lines->n && lines->p[0].n >= strlen(FILEOVERVIEW) &&
       startswith(lines->p[0].p, FILEOVERVIEW)) {
     lines->p[0].p += strlen(FILEOVERVIEW);
@@ -192,10 +191,9 @@ static int ExtractText(struct Javadown *jd, struct Lines *lines, int i) {
 }
 
 static void ExtractTags(struct Javadown *jd, struct Lines *lines, int i) {
-  size_t n;
-  char *p, *tag, *text, *p2;
+  char *tag, *text, *p2;
   unsigned taglen, textlen, n2;
-  for (p = NULL, n = 0; i < lines->n; ++i) {
+  for (; i < lines->n; ++i) {
     if (!lines->p[i].n) continue;
     if (lines->p[i].p[0] != '@') continue;
     tag = lines->p[i].p + 1;

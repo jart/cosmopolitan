@@ -55,7 +55,7 @@ void FreeZipArgs(void) {
 }
 
 int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
-  int i, n, fd;
+  int i, n;
   bool founddots;
   char *arg, **args, *state, *start;
   assert(!g_zipargs.loaded);

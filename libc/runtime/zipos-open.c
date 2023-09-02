@@ -154,7 +154,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
                         struct ZiposUri *name) {
   size_t lf;
   size_t size;
-  int rc, fd, minfd;
+  int fd, minfd;
   struct ZiposHandle *h;
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
     size = name->len;

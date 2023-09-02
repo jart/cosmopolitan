@@ -28,7 +28,7 @@
  */
 char *strerror(int err) {
   if (IsTiny()) {
-    return firstnonnull(_strerrno(err), "EUNKNOWN");
+    return (char *)firstnonnull(_strerrno(err), "EUNKNOWN");
   } else {
     _Alignas(1) static char buf[512];
     strerror_r(err, buf, sizeof(buf));

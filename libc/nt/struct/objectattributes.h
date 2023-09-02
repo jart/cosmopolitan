@@ -7,7 +7,7 @@
 struct NtObjectAttributes {
   uint32_t Length;
   int64_t RootDirectory;
-  struct NtUnicodeString *ObjectName;
+  const struct NtUnicodeString *ObjectName;
   uint32_t Attributes; /* OBJ_INHERIT, etc. */
   struct NtSecurityDescriptor *SecurityDescriptor;
   void *SecurityQualityOfService;

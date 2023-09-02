@@ -58,7 +58,7 @@ int Thrasher(void *arg, int tid) {
 
 TEST(_rand64, testLcg_doesntProduceIdenticalValues) {
   int i, j;
-  bzero(A, sizeof(A));
+  bzero((void *)A, sizeof(A));
   for (i = 0; i < ARRAYLEN(A); ++i) {
     A[i] = _rand64();
   }
@@ -72,13 +72,13 @@ TEST(_rand64, testLcg_doesntProduceIdenticalValues) {
 }
 
 TEST(_rand64, testThreadSafety_doesntProduceIdenticalValues) {
-  int i, j, rc, ws;
+  int i, j;
   sigset_t ss, oldss;
   struct sigaction oldsa;
   struct spawn th[THREADS];
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
-  bzero(A, sizeof(A));
+  bzero((void *)A, sizeof(A));
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));

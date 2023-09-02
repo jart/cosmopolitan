@@ -24,7 +24,7 @@ void FormatSslTime(char[restrict hasatleast 16], struct tm *);
 void ChooseCertificateLifetime(char[16], char[16]);
 void LogCertificate(const char *, mbedtls_x509_crt *);
 bool IsSelfSigned(mbedtls_x509_crt *);
-char *FormatX509Name(mbedtls_x509_name *);
+char *FormatX509Name(const mbedtls_x509_name *);
 void TlsDie(const char *, int) wontreturn;
 bool ChainCertificate(mbedtls_x509_crt *, mbedtls_x509_crt *);
 bool CertHasIp(const mbedtls_x509_crt *, uint32_t);

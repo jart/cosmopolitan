@@ -44,9 +44,9 @@ TEST(sendrecvmsg, testPingPong) {
   memset(&msg, 0, sizeof(msg));
   memset(&data[0], 0, sizeof(data));
 
-  data[0].iov_base = hello;
+  data[0].iov_base = (void *)hello;
   data[0].iov_len = strlen(hello);
-  data[1].iov_base = world;
+  data[1].iov_base = (void *)world;
   data[1].iov_len = strlen(world); /* Don't send the '\0' */
 
   msg.msg_iov = &data[0];

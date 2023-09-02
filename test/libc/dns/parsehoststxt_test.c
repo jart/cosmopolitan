@@ -69,7 +69,7 @@ TEST(ParseHostsTxt, testIpv6_isIgnored) {
   const char kInput[] = "::1             boop\n"
                         "203.0.113.2     cat     # ignore me\n";
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
-  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
+  FILE *f = fmemopen((void *)kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
   ASSERT_EQ(1, ht->entries.i);
   EXPECT_STREQ("cat", &ht->strings.p[ht->entries.p[0].name]);

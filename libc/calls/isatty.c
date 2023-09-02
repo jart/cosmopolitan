@@ -37,7 +37,6 @@
  * @raise EPERM if pledge() was used without tty
  */
 bool32 isatty(int fd) {
-  int e;
   bool32 res;
   struct winsize ws;
   if (__isfdkind(fd, kFdZip)) {

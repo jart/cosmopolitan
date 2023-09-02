@@ -33,7 +33,6 @@ forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
 }
 
 static void TeardownGc(void) {
-  int i;
   struct Garbages *g;
   struct CosmoTib *t;
   if (__tls_enabled) {

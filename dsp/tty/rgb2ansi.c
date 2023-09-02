@@ -98,8 +98,8 @@ static int uncube(int x) {
 }
 
 static textstartup void rgb2ansi_init(void) {
-  uint8_t c, y;
-  uint32_t i, j;
+  uint8_t c;
+  uint32_t i;
   memcpy(g_ansi2rgb_, &kCgaPalette, sizeof(kCgaPalette));
   for (i = 16; i < 232; ++i) {
     g_ansi2rgb_[i].r = kXtermCube[((i - 020) / 044) % 06];

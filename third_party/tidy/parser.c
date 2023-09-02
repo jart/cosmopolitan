@@ -2796,6 +2796,7 @@ Node* TY_(ParseHTML)( TidyDocImpl *doc, Node *html, GetTokenMode mode )
     Node *frameset = NULL;
     Node *noframes = NULL;
     DEBUG_LOG_COUNTERS;
+    (void)head;
 
     enum parserState {
         STATE_INITIAL,                /* This is the initial state for every parser. */

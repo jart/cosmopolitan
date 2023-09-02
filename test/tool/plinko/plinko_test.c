@@ -63,7 +63,6 @@ void SetUpOnce(void) {
 }
 
 TEST(plinko, worksOrPrintsNiceError) {
-  size_t n;
   ssize_t rc, got;
   char buf[1024], drain[64];
   sigset_t chldmask, savemask;

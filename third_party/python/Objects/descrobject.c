@@ -4,10 +4,10 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/ceval.h"
-#include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/object.h"
@@ -297,7 +297,8 @@ _PyMethodDescr_FastCallKeywords(PyObject *descrobj,
     }
 
     result = _PyMethodDef_RawFastCallKeywords(descr->d_method, self,
-                                              args+1, nargs-1, kwnames);
+                                              (void *)(args+1), nargs-1,
+                                              kwnames);
     result = _Py_CheckFunctionResult((PyObject *)descr, result, NULL);
     return result;
 }

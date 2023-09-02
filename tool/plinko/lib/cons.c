@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "tool/plinko/lib/char.h"
 #include "tool/plinko/lib/cons.h"
+#include "tool/plinko/lib/char.h"
 
 int List(int x, int y) {
   return Cons(x, Cons(y, -0));
@@ -47,8 +47,7 @@ int GetCommonCons(int x, int y) {
 }
 
 int ShareCons(int x, int y) {
-  dword t;
-  int i, n;
+  int i;
   if ((i = GetCommonCons(x, y))) return i;
 #if 0
   t = MAKE(x, y);

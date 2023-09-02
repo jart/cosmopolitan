@@ -2436,7 +2436,6 @@ static Node *logor(Token **rest, Token *tok) {
 
 // logand = binor ("&&" binor)*
 static Node *logand(Token **rest, Token *tok) {
-  Token *start = tok;
   Node *node = binor(&tok, tok);
   while (EQUAL(tok, "&&")) {
     Token *start = tok;

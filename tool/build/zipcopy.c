@@ -114,7 +114,7 @@ static void CopyZip(void) {
   int rela, recs;
   Elf64_Ehdr *ehdr;
   unsigned long ldest, cdest, ltotal, ctotal, length;
-  unsigned char *szip, *ineof, *stop, *eocd, *cdir, *lfile, *cfile;
+  unsigned char *ineof, *stop, *eocd, *cdir, *lfile, *cfile;
 
   // find zip eocd header
   //
@@ -211,7 +211,6 @@ static void CopyZip(void) {
 }
 
 int main(int argc, char *argv[]) {
-  int i, opt;
 #ifndef NDEBUG
   ShowCrashReports();
 #endif

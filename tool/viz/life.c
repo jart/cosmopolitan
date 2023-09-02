@@ -572,7 +572,7 @@ static int GetChar(FILE *f) {
 
 static int LoadFile(const char *path) {
   FILE *f;
-  long c, y, x, i, j, n, yn, xn, yo, xo;
+  long c, y, x, i, n, yn, xn, yo, xo;
   line = 0;
   f = fopen(path, "r");
   if (GetChar(f) != 'x') goto ReadError;
@@ -1295,7 +1295,7 @@ static void OnWindowRbuttonup(int64_t hwnd, int64_t wParam, int64_t lParam) {
 }
 
 static void OnWindowMousemove(int64_t hwnd, int64_t wParam, int64_t lParam) {
-  int y, x, by, bx;
+  int y, x;
   y = (lParam & 0xFFFF0000) >> 020;
   x = (lParam & 0x0000FFFF) >> 000;
   if (wParam & kNtMkLbutton) {

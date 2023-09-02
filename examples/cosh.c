@@ -93,10 +93,8 @@ static void CompleteFilename(const char *p, const char *q, const char *b,
 }
 
 static void ShellCompletion(const char *p, linenoiseCompletions *c) {
-  bool slashed;
   const char *q, *b;
-  for (slashed = false, b = p, q = (p += strlen(p)); p > b; --p) {
-    if (p[-1] == '/' && p[-1] == '\\') slashed = true;
+  for (b = p, q = (p += strlen(p)); p > b; --p) {
     if (!isalnum(p[-1]) &&
         (p[-1] != '.' && p[-1] != '_' && p[-1] != '-' && p[-1] != '+' &&
          p[-1] != '[' && p[-1] != '/' && p[-1] != '\\')) {
@@ -143,8 +141,8 @@ int main(int argc, char *argv[]) {
   char *prog, path[PATH_MAX];
   sigset_t chldmask, savemask;
   int stdoutflags, stderrflags;
+  int n, rc, ws, child, killcount;
   const char *stdoutpath, *stderrpath;
-  int n, rc, ws, pid, child, killcount;
   struct sigaction sa, saveint, savequit;
   char *p, *line, **args, *arg, *start, *state, prompt[1024];
   linenoiseSetFreeHintsCallback(free);

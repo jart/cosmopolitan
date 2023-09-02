@@ -11,8 +11,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/grnd.h"
@@ -392,7 +392,6 @@ void
 _PyRandom_Init(void)
 {
     char *env;
-    const unsigned char *auxrng;
     unsigned char *secret = (unsigned char *)&_Py_HashSecret.uc;
     Py_ssize_t secret_size = sizeof(_Py_HashSecret_t);
     Py_BUILD_ASSERT(sizeof(_Py_HashSecret_t) == sizeof(_Py_HashSecret.uc));
@@ -431,7 +430,7 @@ _PyRandom_Init(void)
     }
     else {
         uint64_t x;
-        int res, i, j;
+        int i, j;
         /* _PyRandom_Init() is called very early in the Python initialization
            and so exceptions cannot be used (use raise=0).
            _PyRandom_Init() must not block Python initialization: call

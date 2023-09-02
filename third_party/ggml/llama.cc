@@ -510,7 +510,7 @@ struct llama_file_loader {
             }
 
             vocab.token_to_id[word] = i;
-            vocab.longest_token = MAX(vocab.longest_token, word.size());
+            vocab.longest_token = std::max(vocab.longest_token, (int)word.size());
 
             auto & tok_score = vocab.id_to_token[i];
             tok_score.tok = std::move(word);

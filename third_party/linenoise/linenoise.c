@@ -231,30 +231,30 @@ struct linenoiseRing {
 };
 
 struct linenoiseState {
-  int state;          /* state machine */
-  int ifd;            /* terminal stdin file descriptor */
-  int ofd;            /* terminal stdout file descriptor */
-  struct winsize ws;  /* rows and columns in terminal */
-  char *buf;          /* edited line buffer */
-  const char *prompt; /* prompt to display */
-  int hindex;         /* history index */
-  int rows;           /* rows being used */
-  int oldpos;         /* previous refresh cursor position */
-  unsigned debugrow;  /* row for debug display */
-  unsigned buflen;    /* edited line buffer size */
-  unsigned pos;       /* current buffer index */
-  unsigned len;       /* current edited line length */
-  unsigned mark;      /* saved cursor position */
-  unsigned yi, yj;    /* boundaries of last yank */
-  char seq[2][16];    /* keystroke history for yanking code */
-  char final;         /* set to true on last update */
-  char dirty;         /* if an update was squashed */
+  int state;         /* state machine */
+  int ifd;           /* terminal stdin file descriptor */
+  int ofd;           /* terminal stdout file descriptor */
+  struct winsize ws; /* rows and columns in terminal */
+  char *buf;         /* edited line buffer */
+  char *prompt;      /* prompt to display */
+  int hindex;        /* history index */
+  int rows;          /* rows being used */
+  int oldpos;        /* previous refresh cursor position */
+  unsigned debugrow; /* row for debug display */
+  unsigned buflen;   /* edited line buffer size */
+  unsigned pos;      /* current buffer index */
+  unsigned len;      /* current edited line length */
+  unsigned mark;     /* saved cursor position */
+  unsigned yi, yj;   /* boundaries of last yank */
+  char seq[2][16];   /* keystroke history for yanking code */
+  char final;        /* set to true on last update */
+  char dirty;        /* if an update was squashed */
   linenoiseCompletions lc;
   struct abuf ab;
   int i, j, perline, itemlen;
   // for reverse search
   int fail, matlen, oldindex, olderpos;
-  const char *oldprompt;
+  char *oldprompt;
 };
 
 static const unsigned short kMirrorLeft[][2] = {
@@ -296,8 +296,6 @@ static char iscapital;
 static int historylen;
 static signed char rawmode = -1;
 static struct linenoiseRing ring;
-static struct sigaction orig_int;
-static struct sigaction orig_quit;
 static struct sigaction orig_cont;
 static struct sigaction orig_winch;
 static struct termios orig_termios;
@@ -386,7 +384,7 @@ static struct rune GetUtf8(const char *p, size_t n) {
   if ((r.n = r.c = 0) < n && (r.c = p[r.n++] & 255) >= 0300) {
     r.c = DecodeUtf8(r.c).c;
     while (r.n < n && (p[r.n] & 0300) == 0200) {
-      r.c = r.c << 6 | p[r.n++] & 077;
+      r.c = r.c << 6 | (p[r.n++] & 077);
     }
   }
   return r;
@@ -738,7 +736,7 @@ static void linenoiseDebug(struct linenoiseState *l, const char *fmt, ...) {
   va_list va;
   char *msg = 0;
   char *ansi = 0;
-  int x, y, n, dy, xn;
+  int x, y, n, xn;
   va_start(va, fmt);
   (vappendf)(&msg, fmt, va);
   va_end(va);
@@ -1105,9 +1103,9 @@ static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force,
   struct abuf ab;
   struct rune rune;
   unsigned flip[2];
-  const char *p, *buf;
+  const char *buf;
   struct winsize oldsize;
-  int i, x, y, t, xn, yn, cx, cy, tn, resized;
+  int i, x, t, xn, yn, cx, cy, tn, resized;
   int fd, plen, width, pwidth, rows, len, pos;
 
   /*
@@ -1464,9 +1462,9 @@ static void linenoiseEditRuboutWord(struct linenoiseState *l) {
 static void linenoiseEditXlatWord(struct linenoiseState *l,
                                   wint_t xlat(wint_t)) {
   int c;
+  size_t i, j;
   struct rune r;
   struct abuf ab;
-  size_t i, j, p;
   abInit(&ab);
   i = Forwards(l, l->pos, iswseparator);
   for (j = i; j < l->len; j += r.n) {
@@ -1569,7 +1567,6 @@ static void linenoiseEditTranspose(struct linenoiseState *l) {
 
 static void linenoiseEditTransposeWords(struct linenoiseState *l) {
   char *q, *p;
-  struct rune r;
   size_t pi, xi, xj, yi, yj;
   pi = EscapeWord(l);
   xj = Backwards(l, pi, iswseparator);
@@ -1897,7 +1894,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
 
       // handle reverse history search
       if (seq[0] == CTRL('R')) {
-        int fail, added, oldpos;
+        int fail, added;
         if (historylen <= 1) continue;
         l->ab.len = 0;
         l->olderpos = l->pos;

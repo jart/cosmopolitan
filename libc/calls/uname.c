@@ -66,7 +66,6 @@ static void GetBsdStr(int c0, int c1, char *s) {
 
 // Gets NT name ignoring errors with guaranteed NUL-terminator.
 static textwindows void GetNtName(char *name, int kind) {
-  uint32_t n = SYS_NMLN;
   char16_t name16[256];
   uint32_t size = ARRAYLEN(name16);
   if (GetComputerNameEx(kind, name16, &size)) {

@@ -30,7 +30,7 @@ forceinline int IsAlpha(int c) {
 forceinline char *MemChr(const char *s, unsigned char c, unsigned long n) {
   for (; n; --n, ++s) {
     if ((*s & 255) == c) {
-      return s;
+      return (char *)s;
     }
   }
   return 0;
@@ -42,7 +42,7 @@ Recode16to8(char *dst, size_t dstsize, const char16_t *src) {
   axdx_t r;
   uint64_t w;
   wint_t x, y;
-  for (v = r.ax = 0, r.dx = 0;;) {
+  for (v = false, r.ax = 0, r.dx = 0;;) {
     if (!(x = src[r.dx++])) break;
     if (!IsUcs2(x)) {
       y = src[r.dx++];
@@ -72,7 +72,6 @@ Recode16to8(char *dst, size_t dstsize, const char16_t *src) {
 
 textwindows dontinstrument dontasan void FixPath(char *path) {
   char *p;
-  size_t i;
 
   // turn backslash into slash
   for (p = path; *p; ++p) {

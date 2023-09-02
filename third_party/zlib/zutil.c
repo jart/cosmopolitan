@@ -12,6 +12,8 @@
 #include "third_party/zlib/zutil.internal.h"
 // clang-format off
 
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+
 /* @(#) $Id$ */
 
 z_const char * const z_errmsg[10] = {

@@ -164,7 +164,6 @@ textwindows void __echo_terminal_input(struct Fd *fd, char *p, size_t n) {
 
 textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   bool32 ok;
-  int infd;
   int64_t hInput, hOutput;
   uint32_t inmode, outmode;
   if (__isfdkind(fd, kFdConsole)) {

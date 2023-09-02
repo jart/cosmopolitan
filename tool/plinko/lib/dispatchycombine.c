@@ -46,7 +46,7 @@ struct T DispatchRecur2(dword ea, dword tm, dword r, dword p1, dword p2,
 
 struct T DispatchYcombine(dword ea, dword tm, dword r, dword p1, dword p2,
                           dword d) {
-  int ycomb, z, u, t, p, b, name, lambda, closure;
+  int ycomb, p, name, lambda, closure;
   SetFrame(r, LO(ea));
   r |= NEED_GC;
   ycomb = recurse(MAKE(Car(LO(ea)), HI(ea)), p1, p2);

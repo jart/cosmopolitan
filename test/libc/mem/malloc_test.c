@@ -99,7 +99,7 @@ TEST(realloc_in_place, test) {
 
 BENCH(realloc_in_place, bench) {
   volatile int i = 1000;
-  volatile char *x = malloc(i);
+  char *volatile x = malloc(i);
   EZBENCH2("malloc", donothing, free(malloc(i)));
   EZBENCH2("memalign", donothing, free(memalign(16, i)));
   EZBENCH2("memalign", donothing, free(memalign(32, i)));
@@ -116,10 +116,11 @@ void AppendStuff(char **p, size_t *n) {
 }
 
 TEST(malloc, test) {
+  size_t n;
   char *big = 0;
-  size_t n, bigsize = 0;
   static struct stat st;
-  static volatile int i, j, k, *A[4096], fds[M], *maps[M], mapsizes[M];
+  static int *A[4096], *maps[M];
+  static int i, j, k, fds[M], mapsizes[M];
   memset(fds, -1, sizeof(fds));
   memset(maps, -1, sizeof(maps));
   for (i = 0; i < N * M; ++i) {

@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int dprintf(int, const char *, ...) printfesque(2) paramsnonnull((2));
+int dprintf(int, const char *, ...) paramsnonnull((2));
 int vdprintf(int, const char *, va_list) paramsnonnull();
 
 COSMOPOLITAN_C_END_

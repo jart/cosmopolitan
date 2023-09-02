@@ -313,7 +313,6 @@ static void TtySetXlat(struct Tty *tty, wchar_t *xlat) {
 }
 
 static void TtySetCodepage(struct Tty *tty, char id) {
-  unsigned i;
   switch (id) {
     default:
     case 'B':
@@ -676,7 +675,7 @@ static void TtyEraseLine(struct Tty *tty) {
 }
 
 static void TtyEraseCells(struct Tty *tty) {
-  int yn, xn, yi, xi, n, left;
+  int yn, xn, yi, xi, left;
   yn = Yn(tty);
   xn = Xn(tty);
   yi = tty->y;
@@ -1310,8 +1309,8 @@ ssize_t _TtyWriteInput(struct Tty *tty, const void *data, size_t n) {
   int c;
   bool cr;
   char *p;
+  size_t i, j;
   const char *q;
-  size_t i, j, m;
   q = data;
   p = tty->input.p;
   i = tty->input.i;
@@ -1341,7 +1340,6 @@ ssize_t _TtyWriteInput(struct Tty *tty, const void *data, size_t n) {
 }
 
 ssize_t _TtyRead(struct Tty *tty, void *buf, size_t size) {
-  char *p;
   size_t n;
   n = MIN(size, tty->input.i);
 #ifdef VGA_PERSNICKETY_STATUS

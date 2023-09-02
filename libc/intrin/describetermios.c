@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/termios.h"
+#include "libc/calls/struct/termios.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -28,7 +29,8 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeTermios)(char buf[N], ssize_t rc, struct termios *tio) {
+const char *(DescribeTermios)(char buf[N], ssize_t rc,
+                              const struct termios *tio) {
   int o = 0;
   char b128[128];
 

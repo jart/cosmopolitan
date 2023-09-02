@@ -5,7 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-const char *DescribeTermios(char[1024], ssize_t, struct termios *);
+const char *DescribeTermios(char[1024], ssize_t, const struct termios *);
 
 #define DescribeTermios(rc, tio) DescribeTermios(alloca(1024), rc, tio)
 

@@ -1520,7 +1520,6 @@ pysleep(_PyTime_t secs)
 {
     _PyTime_t deadline, monotonic;
 #ifndef MS_WINDOWS
-    struct timeval timeout;
     struct timespec timeout2;
     int err = 0;
 #else

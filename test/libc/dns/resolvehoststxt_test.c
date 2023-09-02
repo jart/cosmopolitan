@@ -47,7 +47,7 @@ static const char kInput[] = "127.0.0.1	localhost\n"
 
 TEST(ResolveHostsTxt, testBasicLookups) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
-  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
+  FILE *f = fmemopen((void *)kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
   ASSERT_EQ(5, ht->entries.i);
   EXPECT_STREQ("127.0.0.1", EzIp4Lookup(ht, "localhost"));
@@ -63,7 +63,7 @@ TEST(ResolveHostsTxt, testBasicLookups) {
 
 TEST(ResolveHostsTxt, testCanonicalize) {
   struct HostsTxt *ht = calloc(1, sizeof(struct HostsTxt));
-  FILE *f = fmemopen(kInput, strlen(kInput), "r+");
+  FILE *f = fmemopen((void *)kInput, strlen(kInput), "r+");
   ASSERT_EQ(0, ParseHostsTxt(ht, f));
   ASSERT_EQ(5, ht->entries.i);
   EXPECT_STREQ("localhost", EzCanonicalize(ht, "localhost"));

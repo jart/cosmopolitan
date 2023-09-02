@@ -71,7 +71,6 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], char *const argv[]) {
   wint_t x, y;
   int slashes, n;
   bool needsquote;
-  char16_t cbuf[2];
   char *ansiargv[2];
   size_t i, j, k, s;
   if (!argv[0]) {

@@ -53,7 +53,6 @@ static void sem_timedwait_cleanup(void *arg) {
  */
 int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   int e, i, v, rc;
-  struct timespec ts;
 
   e = errno;
   for (i = 0; i < 7; ++i) {

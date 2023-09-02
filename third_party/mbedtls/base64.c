@@ -15,8 +15,8 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "third_party/mbedtls/base64.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/platform.h"
 
@@ -127,8 +127,8 @@ static inline unsigned char mbedtls_base64_table_lookup( const unsigned char * c
 int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
                            const unsigned char *src, size_t slen )
 {
+    size_t n;
     unsigned w;
-    size_t i, n;
     unsigned char *q;
     const unsigned char *p, *pe;
     if( !slen ) {

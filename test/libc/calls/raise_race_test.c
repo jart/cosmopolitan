@@ -99,7 +99,7 @@ TEST(raise, test) {
   if (IsXnu()) return;      // no support for realtime signals yet
   if (IsWindows()) return;  // TODO(jart): why does it exit 128+SIGRTMIN?
   void *p;
-  int r, i, s;
+  int r, i;
   pthread_t t;
   if (signal(SIGRTMIN, handler0) == SIG_ERR)
     t_error("registering signal handler failed: %s\n", strerror(errno));

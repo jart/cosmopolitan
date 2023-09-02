@@ -107,6 +107,8 @@ TEST(sortedints, fuzz) {
     b = ContainsInt(&T, x);
     b = ContainsInt(&T, -x);
     y = CountInt(&T, x);
+    (void)b;
+    (void)y;
   }
   for (int i = 1; i < T.n; ++i) {
     ASSERT_GE(T.p[i], T.p[i - 1]);
@@ -123,4 +125,5 @@ BENCH(sortedints, bench) {
   }
   EZBENCH2("insert big", donothing, InsertInt(&T, lemur64(), true));
   EZBENCH2("contains big", donothing, ContainsInt(&T, lemur64()));
+  (void)x;
 }

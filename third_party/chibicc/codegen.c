@@ -67,7 +67,6 @@ static void emitlin(char *nextline) {
 
 void println(char *fmt, ...) {
   va_list ap;
-  char *nextline;
   va_start(ap, fmt);
   emitlin(xvasprintf(fmt, ap));
   va_end(ap);
@@ -105,12 +104,12 @@ void pop2(char *a, char *b) {
   DCHECK_GE(depth, 0);
 }
 
-void pushreg(char *arg) {
+void pushreg(const char *arg) {
   println("\tpush\t%%%s", arg);
   depth++;
 }
 
-void popreg(char *arg) {
+void popreg(const char *arg) {
   println("\tpop\t%%%s", arg);
   depth--;
   DCHECK_GE(depth, 0);
@@ -1777,15 +1776,13 @@ void gen_expr(Node *node) {
     gen_expr(node->lhs);
     pop("%rdi");
   }
-  char *ax, *di, *dx;
+  char *ax, *di;
   if (node->lhs->ty->kind == TY_LONG || node->lhs->ty->base) {
     ax = "%rax";
     di = "%rdi";
-    dx = "%rdx";
   } else {
     ax = "%eax";
     di = "%edi";
-    dx = "%edx";
   }
   switch (node->kind) {
     case ND_PMOVMSKB:

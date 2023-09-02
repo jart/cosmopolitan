@@ -29,18 +29,17 @@
  * @note 30gbps on Nehalem (Intel 2008+) otherwise 3gbps
  */
 size_t _countbits(const void *a, size_t n) {
-  int i;
   size_t t;
   unsigned b;
   uint64_t x;
-  long Ai, Bi, Ci, Di;
-  long Ao, Bo, Co, Do;
   const char *p, *e;
   t = 0;
   p = a;
   e = p + n;
   if (!IsTiny()) {
 #ifdef __x86_64__
+    long Ai, Bi, Ci, Di;
+    long Ao, Bo, Co, Do;
     if (X86_HAVE(POPCNT)) {
       while (p + sizeof(long) * 4 <= e) {
         __builtin_memcpy(&Ai, p + 000, sizeof(long));

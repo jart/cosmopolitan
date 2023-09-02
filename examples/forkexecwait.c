@@ -11,8 +11,6 @@
 #include "libc/stdio/stdio.h"
 
 int main(int argc, char *argv[]) {
-  int pid;
-  volatile void *p;
   if (argc < 3) {
     fputs("USAGE: FORKEXECWAIT.COM PROG ARGV₀ [ARGV₁...]\n", stderr);
     return 1;

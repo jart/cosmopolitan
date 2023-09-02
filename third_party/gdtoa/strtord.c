@@ -67,7 +67,8 @@ int
 strtord(const char *s, char **sp, int rounding, double *d)
 {
 	static const FPI fpi0 = { 53, 1-1023-53+1, 2046-1023-53+1, 1, SI, 0 /*unused*/ };
-	FPI *fpi, fpi1;
+	FPI fpi1;
+	const FPI *fpi;
 	ULong bits[2];
 	Long exp;
 	int k;

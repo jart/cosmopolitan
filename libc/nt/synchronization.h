@@ -50,7 +50,7 @@ typedef void (*NtWaitOrTimerCallback)(void *lpParameter,
 
 void WakeByAddressAll(void *Address);
 void WakeByAddressSingle(void *Address);
-bool32 WaitOnAddress(volatile void *Address, void *CompareAddress,
+bool32 WaitOnAddress(const volatile void *Address, void *CompareAddress,
                      size_t AddressSize, uint32_t opt_dwMilliseconds);
 
 void Sleep(uint32_t dwMilliseconds);

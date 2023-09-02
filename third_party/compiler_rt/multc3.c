@@ -20,6 +20,9 @@ __static_yoink("huge_compiler_rt_license");
 
 /* Returns: the product of a + ib and c + id */
 
+// todo: what m=opt
+#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
+
 COMPILER_RT_ABI long double _Complex __multc3(long double a, long double b,
                                               long double c, long double d) {
   long double ac = a * c;

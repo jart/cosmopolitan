@@ -53,7 +53,7 @@ char *DecodeLatin1(const char *p, size_t n, size_t *z) {
         *q++ = c;
       } else {
         *q++ = 0300 | c >> 6;
-        *q++ = 0200 | c & 077;
+        *q++ = 0200 | (c & 077);
       }
     }
     if (z) *z = q - r;

@@ -72,7 +72,7 @@ TEST(makedirs, pathExists_isSuccess) {
 TEST(mkdir, enametoolong) {
   int i;
   size_t n = 2048;
-  char *d, *s = gc(calloc(1, n));
+  char *s = gc(calloc(1, n));
   for (i = 0; i < n - 1; ++i) s[i] = 'x';
   s[i] = 0;
   EXPECT_SYS(ENAMETOOLONG, -1, mkdir(s, 0644));

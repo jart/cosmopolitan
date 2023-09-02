@@ -275,8 +275,7 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
 }
 
 void Recv(void *output, size_t outputsize) {
-  int rc;
-  ssize_t tx, chunk, received, totalgot;
+  ssize_t chunk, received, totalgot;
   static bool once;
   static int zstatus;
   static char buf[32768];
@@ -294,7 +293,6 @@ void Recv(void *output, size_t outputsize) {
   totalgot = 0;
   for (;;) {
     if (rbuf.len >= outputsize) {
-      tx = MIN(outputsize, rbuf.len);
       memcpy(output, rbuf.data + rbuf.off, outputsize);
       rbuf.len -= outputsize;
       rbuf.off += outputsize;
@@ -362,17 +360,15 @@ void Recv(void *output, size_t outputsize) {
 }
 
 void HandleClient(void) {
-  const size_t kMaxNameSize = 128;
-  const size_t kMaxFileSize = 10 * 1024 * 1024;
+  ssize_t got;
   uint32_t crc;
   sigset_t sigmask;
-  ssize_t got, wrote;
   struct sockaddr_in addr;
   struct timespec now, deadline;
   char *addrstr, *exename, *exe;
   unsigned char msg[4 + 1 + 4 + 4 + 4];
-  uint32_t addrsize, namesize, filesize, remaining;
-  int rc, events, exitcode, wstatus, child, pipefds[2];
+  uint32_t addrsize, namesize, filesize;
+  int events, exitcode, wstatus, child, pipefds[2];
 
   /* read request to run program */
   addrsize = sizeof(addr);
@@ -436,7 +432,7 @@ void HandleClient(void) {
       exe = g_exepath;
     } else {
       exe = "ape-m1.com";
-      args[i++] = exe;
+      args[i++] = (char *)exe;
       args[i++] = "-";
       args[i++] = g_exepath;
     }

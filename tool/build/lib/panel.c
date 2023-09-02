@@ -65,7 +65,6 @@ static int tpdecode(const char *s, wint_t *out) {
 ssize_t PrintPanels(int fd, long pn, struct Panel *p, long tyn, long txn) {
   wint_t wc;
   ssize_t rc;
-  size_t wrote;
   struct Buffer b, *l;
   int x, y, i, j, width;
   enum { kUtf8, kAnsi, kAnsiCsi } state;

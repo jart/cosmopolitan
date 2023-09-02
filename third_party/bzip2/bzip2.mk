@@ -63,6 +63,7 @@ o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
 
 $(THIRD_PARTY_BZIP2_A_OBJS): private				\
 		CFLAGS +=					\
+			-w					\
 			-ffunction-sections			\
 			-fdata-sections
 

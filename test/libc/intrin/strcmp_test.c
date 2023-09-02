@@ -602,10 +602,10 @@ BENCH(bench_01_strcasecmp, bench) {
 BENCH(memcmp, bench) {
   volatile char *copy = gc(strdup(kHyperion));
   EZBENCH2("memcmp big", donothing,
-           __expropriate(memcmp(kHyperion, copy, kHyperionSize)));
+           __expropriate(memcmp(kHyperion, (void *)copy, kHyperionSize)));
   copy = gc(strdup("tough little ship"));
   EZBENCH2("memcmp 18", donothing,
-           __expropriate(memcmp("tough little ship", copy, 18)));
+           __expropriate(memcmp("tough little ship", (void *)copy, 18)));
 }
 
 /* jart

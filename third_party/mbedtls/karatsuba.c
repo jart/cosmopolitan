@@ -24,7 +24,6 @@
 #include "third_party/mbedtls/platform.h"
 
 forceinline int Cmp(uint64_t *a, uint64_t *b, size_t n) {
-  size_t i;
   uint64_t x, y;
   while (n--) {
     x = a[n];
@@ -38,8 +37,9 @@ forceinline int Cmp(uint64_t *a, uint64_t *b, size_t n) {
 
 forceinline bool Sub(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
   bool cf;
-  uint64_t c, i;
+  uint64_t i;
 #ifdef __x86_64__
+  uint64_t c;
   asm volatile("xor\t%1,%1\n\t"
                ".align\t16\n1:\t"
                "mov\t(%5,%3,8),%1\n\t"
@@ -52,7 +52,7 @@ forceinline bool Sub(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
                : "r"(C), "r"(A), "r"(B), "3"(0)
                : "cc", "memory");
 #else
-  for (cf = false, c = i = 0; i < n; ++i) {
+  for (cf = false, i = 0; i < n; ++i) {
     SBB(C[i], A[i], B[i], cf, cf);
   }
 #endif
@@ -61,8 +61,9 @@ forceinline bool Sub(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
 
 forceinline bool Add(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
   bool cf;
-  uint64_t c, i;
+  uint64_t i;
 #ifdef __x86_64__
+  uint64_t c;
   asm volatile("xor\t%1,%1\n\t"
                ".align\t16\n1:\t"
                "mov\t(%5,%3,8),%1\n\t"
@@ -75,7 +76,7 @@ forceinline bool Add(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
                : "r"(C), "r"(A), "r"(B), "3"(0)
                : "cc", "memory");
 #else
-  for (cf = false, c = i = 0; i < n; ++i) {
+  for (cf = false, i = 0; i < n; ++i) {
     ADC(C[i], A[i], B[i], cf, cf);
   }
 #endif
@@ -89,10 +90,8 @@ forceinline bool Add(uint64_t *C, uint64_t *A, uint64_t *B, size_t n) {
  * For 16384 bit numbers it's thrice as fast.
  */
 void Karatsuba(uint64_t *C, uint64_t *A, uint64_t *B, size_t n, uint64_t *K) {
-  int q, r;
   size_t i;
   uint64_t c, t;
-  uint64_t *x, *y;
   if (n == 8) {
 #ifdef __x86_64__
     if (X86_HAVE(BMI2) && X86_HAVE(ADX)) {

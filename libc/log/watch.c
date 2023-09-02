@@ -41,7 +41,6 @@ static dontinstrument inline void Copy(char *p, char *q, size_t n) {
 }
 
 static dontinstrument inline int Cmp(char *p, char *q, size_t n) {
-  int c;
   if (n == 8) return READ64LE(p) != READ64LE(q);
   if (n == 4) return READ32LE(p) != READ32LE(q);
   for (; n; ++p, ++q, --n) {

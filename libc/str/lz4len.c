@@ -28,8 +28,8 @@
  * @see lz4cpy()
  */
 size_t lz4len(const void *blockdata, size_t blocksize) {
-  unsigned char *ip, *ipe;
-  unsigned token, length, fifteen, offset, matchlen;
+  const unsigned char *ip, *ipe;
+  unsigned token, length, fifteen, matchlen;
   size_t unpacklen = 0;
   for (ip = blockdata, ipe = ip + blocksize;;) {
     token = *ip++;
@@ -43,7 +43,6 @@ size_t lz4len(const void *blockdata, size_t blocksize) {
     ip += length;
     unpacklen += length;
     if (ip >= ipe) break;
-    offset = READ16LE(ip);
     matchlen = token & fifteen;
     ip += 2;
     if (matchlen == fifteen) {

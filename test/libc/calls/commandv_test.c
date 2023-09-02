@@ -45,7 +45,6 @@ void SetUpOnce(void) {
 }
 
 void SetUp(void) {
-  static int x;
   mkdir("bin", 0755);
   mkdir("home", 0755);
   oldpath = strdup(nulltoempty(getenv("PATH")));

@@ -183,7 +183,7 @@ textwindows bool __sig_handle(int sigops, int sig, int si_code,
       if (__sig_is_fatal(sig)) {
         intptr_t hStderr;
         const char *signame;
-        char *end, sigbuf[15], output[16];
+        char *end, sigbuf[21], output[22];
         signame = strsignal_r(sig, sigbuf);
         STRACE("terminating due to uncaught %s", signame);
         hStderr = GetStdHandle(kNtStdErrorHandle);
@@ -274,7 +274,6 @@ textwindows int __sig_add(int tid, int sig, int si_code) {
  * @threadsafe
  */
 textwindows bool __sig_check(int sigops) {
-  unsigned rva;
   bool delivered;
   struct Signal *sig;
   delivered = false;

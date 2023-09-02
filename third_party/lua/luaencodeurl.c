@@ -25,23 +25,28 @@
 #include "third_party/lua/lua.h"
 
 int LuaEncodeUrl(lua_State *L) {
+  char *data;
   size_t size;
-  struct Url h;
   int i, j, n;
-  const char *data;
+  struct Url h;
   if (!lua_isnil(L, 1)) {
     i = lua_gettop(L);
     bzero(&h, sizeof(h));
     luaL_checktype(L, 1, LUA_TTABLE);
     if (lua_getfield(L, 1, "scheme"))
-      h.scheme.p = lua_tolstring(L, -1, &h.scheme.n);
+      h.scheme.p = (char *)lua_tolstring(L, -1, &h.scheme.n);
     if (lua_getfield(L, 1, "fragment"))
-      h.fragment.p = lua_tolstring(L, -1, &h.fragment.n);
-    if (lua_getfield(L, 1, "user")) h.user.p = lua_tolstring(L, -1, &h.user.n);
-    if (lua_getfield(L, 1, "pass")) h.pass.p = lua_tolstring(L, -1, &h.pass.n);
-    if (lua_getfield(L, 1, "host")) h.host.p = lua_tolstring(L, -1, &h.host.n);
-    if (lua_getfield(L, 1, "port")) h.port.p = lua_tolstring(L, -1, &h.port.n);
-    if (lua_getfield(L, 1, "path")) h.path.p = lua_tolstring(L, -1, &h.path.n);
+      h.fragment.p = (char *)lua_tolstring(L, -1, &h.fragment.n);
+    if (lua_getfield(L, 1, "user"))
+      h.user.p = (char *)lua_tolstring(L, -1, &h.user.n);
+    if (lua_getfield(L, 1, "pass"))
+      h.pass.p = (char *)lua_tolstring(L, -1, &h.pass.n);
+    if (lua_getfield(L, 1, "host"))
+      h.host.p = (char *)lua_tolstring(L, -1, &h.host.n);
+    if (lua_getfield(L, 1, "port"))
+      h.port.p = (char *)lua_tolstring(L, -1, &h.port.n);
+    if (lua_getfield(L, 1, "path"))
+      h.path.p = (char *)lua_tolstring(L, -1, &h.path.n);
     lua_settop(L, i);  // restore stack position
     if (lua_getfield(L, 1, "params")) {
       luaL_checktype(L, -1, LUA_TTABLE);
@@ -55,10 +60,10 @@ int LuaEncodeUrl(lua_State *L) {
             h.params.p =
                 xrealloc(h.params.p, ++h.params.n * sizeof(*h.params.p));
             h.params.p[h.params.n - 1].key.p =
-                lua_tolstring(L, -1, &h.params.p[h.params.n - 1].key.n);
+                (char *)lua_tolstring(L, -1, &h.params.p[h.params.n - 1].key.n);
             if (lua_geti(L, -2, 2)) {
-              h.params.p[h.params.n - 1].val.p =
-                  lua_tolstring(L, -1, &h.params.p[h.params.n - 1].val.n);
+              h.params.p[h.params.n - 1].val.p = (char *)lua_tolstring(
+                  L, -1, &h.params.p[h.params.n - 1].val.n);
             } else {
               h.params.p[h.params.n - 1].val.p = 0;
               h.params.p[h.params.n - 1].val.n = 0;

@@ -54,10 +54,10 @@ PYTHON_PROVIDE("_hashlib.mbedtls_sha512");
 
 struct Hasher {
     PyObject_HEAD
-    PyObject            *name;
+    const PyObject       *name;
     mbedtls_md_context_t  ctx;
 #ifdef WITH_THREAD
-    PyThread_type_lock   lock;
+    PyThread_type_lock    lock;
 #endif
 };
 
@@ -81,7 +81,7 @@ SetMbedtlsError(PyObject *exc, int rc)
 }
 
 static struct Hasher *
-hasher_new(PyObject *name)
+hasher_new(const PyObject *name)
 {
     struct Hasher *self;
     if ((self = PyObject_New(struct Hasher, &hasher_type))) {
@@ -304,7 +304,7 @@ static PyTypeObject hasher_type = {
 };
 
 static PyObject *
-NewHasher(PyObject *name_obj,
+NewHasher(const PyObject *name_obj,
           const mbedtls_md_info_t *digest,
           void *p, Py_ssize_t n)
 {
@@ -482,7 +482,7 @@ GenerateHashNameList(void)
 {
     int i;
     char *s;
-    uint8_t *p;
+    const uint8_t *p;
     PyObject *set, *name;
     if ((set = PyFrozenSet_New(0))) {
         for (p = mbedtls_md_list(); *p != MBEDTLS_MD_NONE; ++p) {

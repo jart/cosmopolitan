@@ -25,8 +25,9 @@
  */
 char *xdirname(const char *path) {
   char *dirp;
-  path = xstrdup(path);
-  dirp = xstrdup(dirname(path));
-  free(path);
+  char *path2;
+  path2 = xstrdup(path);
+  dirp = xstrdup(dirname(path2));
+  free(path2);
   return dirp;
 }

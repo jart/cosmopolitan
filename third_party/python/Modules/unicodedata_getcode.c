@@ -270,7 +270,7 @@ _PyUnicode_GetUcName(PyObject *self, Py_UCS4 code, char *buffer, int buflen,
         /* copy word string from lexicon.  the last character in the
            word has bit 7 set.  the last word in a string ends with
            0x80 */
-        w = (_PyUnicode_Lexicon +
+        w = (void *)(_PyUnicode_Lexicon +
              BitFieldExtract(_PyUnicode_LexiconOffset, word,
                              _PyUnicode_LexiconOffsetBits));
         while (*w < 128) {

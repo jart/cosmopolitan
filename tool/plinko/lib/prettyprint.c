@@ -23,7 +23,7 @@
 #include "tool/plinko/lib/tree.h"
 
 static void PrettyPrintList(int fd, int x, int n) {
-  int i, y, once, func, mode, argwidth, funcwidth, forcedot;
+  int y, once, func, mode, argwidth, funcwidth, forcedot;
   DCHECK_GE(n, 0);
   DCHECK_LE(x, 0);
   if (x < cx) {

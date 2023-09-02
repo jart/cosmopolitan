@@ -37,7 +37,6 @@
 textwindows int sys_fstatfs_nt(int64_t handle, struct statfs *f) {
   uint64_t w;
   NtStatus st;
-  uint32_t type;
   uint32_t h, i, j;
   struct NtIoStatusBlock io;
   struct NtFileFsFullSizeInformation fs;

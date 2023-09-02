@@ -153,7 +153,6 @@ static char *DeserializeStr(struct Dox *dox) {
 
 static struct Javadown *DeserializeJavadown(struct Dox *dox) {
   int i;
-  bool present;
   struct Javadown *jd;
   if (DeserializeInt(dox)) {
     jd = FreeLater(dox, calloc(1, sizeof(struct Javadown)));
@@ -273,7 +272,7 @@ static bool AddSet(struct Set *set, char *s) {
 static int CompareDoxIndexEntry(const void *p1, const void *p2, void *arg) {
   struct Dox *dox;
   const char *s1, *s2;
-  struct DoxIndexEntry *a, *b;
+  const struct DoxIndexEntry *a, *b;
   dox = arg, a = p1, b = p2;
   s1 = a->t == kObject ? dox->objects.p[a->i].name : dox->macros.p[a->i].name;
   s2 = b->t == kObject ? dox->objects.p[b->i].name : dox->macros.p[b->i].name;

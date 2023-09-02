@@ -75,7 +75,6 @@ char *GetHost(void) {
 }
 
 char *GetTime(void) {
-  int64_t t;
   struct tm tm;
   struct timespec ts;
   clock_gettime(0, &ts);

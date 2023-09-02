@@ -58,7 +58,7 @@ static inline dontasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
 axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   axdx_t r;
   unsigned w;
-  int x, y, a, b, i, n;
+  int x, a, b, i, n;
   r.ax = 0;
   r.dx = 0;
   for (;;) {

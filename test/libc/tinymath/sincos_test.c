@@ -58,9 +58,9 @@ BENCH(sincos, bench) {
   double _sincos(double, double*, double*) asm("sincos");
   float _sincosf(float, float*, float*) asm("sincosf");
   long double _sincosl(long double, long double*, long double*) asm("sincosl");
-  volatile float sinef, cosinef;
-  volatile double sine, cosine;
-  volatile long double sinel, cosinel;
+  float sinef, cosinef;
+  double sine, cosine;
+  long double sinel, cosinel;
   EZBENCH2("sin+cos", donothing, (_sin(NUM), _cos(NUM)));
   EZBENCH2("sincos", donothing, _sincos(NUM, &sine, &cosine));
   EZBENCH2("sinf+cosf", donothing, (_sinf(NUM), _cosf(NUM)));

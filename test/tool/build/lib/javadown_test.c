@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
+#include "tool/build/lib/javadown.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "tool/build/lib/javadown.h"
 
 TEST(ParseJavadown, testOneLiner) {
   const char *comment = "/** Parses javadown. */";
@@ -40,7 +40,6 @@ TEST(ParseJavadown, testShortAndTerse) {
  * Parses javadown.\n\
  * @see love\n\
  */";
-  const char *title = "Parses javadown and that is the bottom line.";
   struct Javadown *jd;
   jd = ParseJavadown(comment + 3, strlen(comment) - 3 - 2);
   EXPECT_FALSE(jd->isfileoverview);
@@ -60,7 +59,6 @@ TEST(ParseJavadown, testBlankLineOmitted) {
  * Description.\n\
  * @see love\n\
  */";
-  const char *title = "Parses javadown and that is the bottom line.";
   struct Javadown *jd;
   jd = ParseJavadown(comment + 3, strlen(comment) - 3 - 2);
   EXPECT_FALSE(jd->isfileoverview);

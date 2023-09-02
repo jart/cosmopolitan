@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
@@ -85,7 +86,7 @@ void OnSigBus(int sig, struct siginfo *si, void *vctx) {
   kprintf("si->si_signo = %G%n", si->si_signo);
   kprintf("si->si_errno = %s (%d)%n", _strerrno(si->si_errno),
           si->si_errno);
-  kprintf("si->si_code = %s (%d)%n", GetSiCodeName(sig, si->si_code),
+  kprintf("si->si_code = %s (%d)%n", DescribeSiCode(sig, si->si_code),
           si->si_code);
   kprintf("┌si->si_addr = %p%n", si->si_addr);
   kprintf("┼─────────────────%n");
@@ -133,14 +134,15 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
   p[0] = 1;
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
-  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ));
+  EXPECT_NE(-1, mprotect((void *)p, getauxval(AT_PAGESZ), PROT_READ));
   __expropriate(p[0]);
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
   p[0] = 2;
   EXPECT_TRUE(gotsegv | gotbusted);
   EXPECT_EQ(1, p[0]);
-  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
+  EXPECT_NE(-1,
+            mprotect((void *)p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }
 
 TEST(mprotect, testExecOnly_canExecute) {
@@ -161,10 +163,11 @@ TEST(mprotect, testExecOnly_canExecute) {
 TEST(mprotect, testProtNone_cantEvenRead) {
   volatile char *p;
   p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
-  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_NONE));
+  EXPECT_NE(-1, mprotect((void *)p, getauxval(AT_PAGESZ), PROT_NONE));
   __expropriate(p[0]);
   EXPECT_TRUE(gotsegv | gotbusted);
-  EXPECT_NE(-1, mprotect(p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
+  EXPECT_NE(-1,
+            mprotect((void *)p, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE));
 }
 
 TEST(mprotect, testExecJit_actuallyWorks) {
@@ -223,13 +226,13 @@ TEST(mprotect, testFileMap_canChangeToExecWhileOpenInRdwrMode) {
 
 TEST(mprotect, testBadProt_failsEinval) {
   volatile char *p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
-  EXPECT_EQ(-1, mprotect(p, 9999, -1));
+  EXPECT_EQ(-1, mprotect((void *)p, 9999, -1));
   EXPECT_EQ(EINVAL, errno);
 }
 
 TEST(mprotect, testZeroSize_doesNothing) {
   volatile char *p = gc(memalign(getauxval(AT_PAGESZ), getauxval(AT_PAGESZ)));
-  EXPECT_NE(-1, mprotect(p, 0, PROT_READ));
+  EXPECT_NE(-1, mprotect((void *)p, 0, PROT_READ));
   p[0] = 1;
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);

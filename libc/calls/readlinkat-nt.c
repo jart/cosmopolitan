@@ -45,7 +45,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   mem = 16384;
   memory = alloca(mem);
-  CheckLargeStackAllocation(memory, mem);
+  CheckLargeStackAllocation((char *)memory, mem);
   rdb = (struct NtReparseDataBuffer *)memory;
   if ((h = CreateFile(path16, 0, 0, 0, kNtOpenExisting,
                       kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics,

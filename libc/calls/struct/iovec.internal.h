@@ -21,7 +21,7 @@ ssize_t sys_writev_metal(struct Fd *, const struct iovec *, int);
 ssize_t sys_writev_nt(int, const struct iovec *, int);
 ssize_t sys_writev_serial(struct Fd *, const struct iovec *, int);
 ssize_t sys_send_nt(int, const struct iovec *, size_t, uint32_t);
-ssize_t sys_sendto_nt(int, const struct iovec *, size_t, uint32_t, void *,
+ssize_t sys_sendto_nt(int, const struct iovec *, size_t, uint32_t, const void *,
                       uint32_t);
 
 const char *DescribeIovec(char[300], ssize_t, const struct iovec *, int);

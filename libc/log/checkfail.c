@@ -46,7 +46,6 @@ relegated void __check_fail(const char *suffix,   //
                             int line,             //
                             const char *fmt,      //
                             ...) {
-  char *p;
   size_t i;
   va_list va;
   char hostname[32];

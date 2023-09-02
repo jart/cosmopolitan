@@ -97,7 +97,7 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
  */
 textstartup void __enable_tls(void) {
   int tid;
-  size_t hiz, siz;
+  size_t siz;
   char *mem, *tls;
   struct CosmoTib *tib;
 
@@ -150,7 +150,7 @@ textstartup void __enable_tls(void) {
 
 #elif defined(__aarch64__)
 
-  hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));
+  size_t hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));
   siz = hiz + I(_tls_size);
   if (siz <= sizeof(__static_tls)) {
     mem = __static_tls;

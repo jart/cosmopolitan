@@ -35,7 +35,6 @@ int main(int argc, char *argv[]) {
   int line;
   char *l1, *l2;
   FILE *f1, *f2;
-  int differences;
   if (argc < 3) {
     fprintf(stderr, "usage: %s FILE1 FILE2\n", argv[0]);
     exit(1);
@@ -48,7 +47,7 @@ int main(int argc, char *argv[]) {
     perror(argv[2]);
     exit(1);
   }
-  for (differences = 0, line = 1;; ++line) {
+  for (line = 1;; ++line) {
     l1 = fgets(line1, sizeof(line1), f1);
     l2 = fgets(line2, sizeof(line2), f2);
     if (!l1 && !l2) {

@@ -15,6 +15,9 @@
 #include "libc/math.h"
 #if !(LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024)
 
+// todo: what m=opt
+#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
+
 __static_yoink("huge_compiler_rt_license");
 
 #define QUAD_PRECISION

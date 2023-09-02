@@ -17,7 +17,6 @@
 /* clang-format off */
 
 _Py_IDENTIFIER(flush);
-_Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
 
 /* Import the site module (not into __main__ though) */

@@ -38,7 +38,6 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
   FILE *f;
   char *p;
   int iomode;
-  unsigned flags;
   iomode = fopenflags(mode);
   if ((size && size > 0x7ffff000) ||  //
       (!buf && (iomode & O_ACCMODE) != O_RDWR)) {

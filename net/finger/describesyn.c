@@ -52,7 +52,7 @@
  */
 char *DescribeSyn(char *q, size_t m, const char *p, size_t n) {
   char *e;
-  int i, j, k, r, iplen, tcplen, ttl, wsize, mss;
+  int i, j, k, iplen, tcplen, ttl, wsize, mss;
   if (n >= 20 + 20 && n >= (iplen = (p[0] & 0x0F) * 4) + 20 &&
       n >= iplen + (tcplen = ((p[iplen + 12] & 0xF0) >> 4) * 4)) {
     e = q + m;

@@ -135,7 +135,6 @@ TEST(fork, childToChild) {
 }
 
 TEST(fork, preservesTlsMemory) {
-  int pid;
   __get_tls()->tib_errno = 31337;
   SPAWN(fork);
   ASSERT_EQ(31337, __get_tls()->tib_errno);

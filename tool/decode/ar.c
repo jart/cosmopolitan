@@ -94,8 +94,8 @@ static void PrintHeader(uint8_t *p) {
 
 static void Print(void) {
   int arsize;
+  uint8_t *b, *p;
   uint64_t offset;
-  uint8_t *b, *p, *e;
   uint32_t i, n, o, table, entries, symbols, symbolslen;
   arsize = atoi((char *)(data + 8 + 48));
   CHECK_LE(4, arsize);

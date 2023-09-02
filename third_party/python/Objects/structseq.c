@@ -4,13 +4,13 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/structmember.h"
-#include "third_party/python/Include/structseq.h"
 /* clang-format off */
 
 /* Implementation helper: a struct that looks like a tuple.  See timemodule
@@ -188,6 +188,7 @@ structseq_repr(PyStructSequence *obj)
     /* "typename(", limited to  TYPE_MAXSIZE */
     len = strlen(typ->tp_name) > TYPE_MAXSIZE ? TYPE_MAXSIZE :
                             strlen(typ->tp_name);
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(pbuf, typ->tp_name, len);
     pbuf += len;
     *pbuf++ = '(';

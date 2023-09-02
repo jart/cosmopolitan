@@ -42,7 +42,6 @@ bool IsYcombinator(int x_) {
   if (dx_ >= 0) return false;
   w_ = Get(dx_);  // ((λ (N) ((λ (W) (W W)) (λ (V) (N (λ M ((V V) . M)))))) . Q)
   int adx_ = LO(w_);
-  int ddx_ = HI(w_);
   if (adx_ >= 0) return false;
   w_ = Get(adx_);  // (λ (N) ((λ (W) (W W)) (λ (V) (N (λ M ((V V) . M))))))
   int aadx_ = LO(w_);

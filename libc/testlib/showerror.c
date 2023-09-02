@@ -40,7 +40,6 @@ const char *testlib_showerror_symbol;
 void testlib_showerror(const char *file, int line, const char *func,
                        const char *method, const char *symbol, const char *code,
                        char *v1, char *v2) {
-  char *p;
   char hostname[128];
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));

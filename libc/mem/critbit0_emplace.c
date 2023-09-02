@@ -42,7 +42,7 @@ int critbit0_emplace(struct critbit0 *t, const void *u, size_t ulen) {
   unsigned char *p = t->root;
   if (!p) {
     if ((u = critbit0_dup(u, ulen))) {
-      t->root = u;
+      t->root = (void *)u;
       t->count = 1;
       return 1;
     } else {

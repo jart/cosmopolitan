@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1))
+char *xasprintf(const char *, ...) paramsnonnull((1))
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 char *xvasprintf(const char *, va_list) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;

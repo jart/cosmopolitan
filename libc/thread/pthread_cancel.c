@@ -343,7 +343,6 @@ void pthread_testcancel(void) {
  *     in masked mode when the calling thread has been cancelled
  */
 errno_t pthread_testcancel_np(void) {
-  int rc;
   struct PosixThread *pt;
   if (!__tls_enabled) return 0;
   if (!(pt = (struct PosixThread *)__get_tls()->tib_pthread)) return 0;

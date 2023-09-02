@@ -38,7 +38,7 @@
  */
 int mkfifo(const char *pathname, unsigned mode) {
   // TODO(jart): Windows?
-  int e, rc;
+  int rc;
   if (IsAsan() && !__asan_is_valid_str(pathname)) {
     rc = efault();
   } else if (IsLinux()) {

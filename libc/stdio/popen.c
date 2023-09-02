@@ -77,7 +77,14 @@ FILE *popen(const char *cmdline, const char *mode) {
         // we can't rely on cloexec because cocmd builtins don't execve
         if (pipefds[0] != !dir) unassert(!close(pipefds[0]));
         if (pipefds[1] != !dir) unassert(!close(pipefds[1]));
-        _Exit(_cocmd(3, (char *[]){"popen", "-c", cmdline, 0}, environ));
+        _Exit(_cocmd(3,
+                     (char *[]){
+                         "popen",
+                         "-c",
+                         (char *)cmdline,
+                         0,
+                     },
+                     environ));
       default:
         f->pid = pid;
         unassert(!close(pipefds[!dir]));

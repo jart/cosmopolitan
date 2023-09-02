@@ -91,7 +91,7 @@ void *memmove(void *dst, const void *src, size_t n) {
   size_t i;
   const char *s;
   uint64_t a, b;
-  xmm_t v, w, x, y, V, W, X, Y, wut;
+  xmm_t v, w, x, y, V, W, X, Y;
   d = dst;
   s = src;
 

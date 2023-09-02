@@ -6,7 +6,7 @@
 COSMOPOLITAN_C_START_
 
 int nsync_futex_wake_(_Atomic(int) *, int, char);
-int nsync_futex_wait_(_Atomic(int) *, int, char, struct timespec *);
+int nsync_futex_wait_(_Atomic(int) *, int, char, const struct timespec *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

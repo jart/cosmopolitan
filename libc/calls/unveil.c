@@ -211,8 +211,8 @@ static int unveil_init(void) {
 static char *JoinPaths(char *buf, size_t size, const char *path,
                        const char *other) {
   size_t pathlen, otherlen;
-  if (!other) return path;
-  if (!path) return other;
+  if (!other) return (char *)path;
+  if (!path) return (char *)other;
   pathlen = strlen(path);
   if (!pathlen || *other == '/') {
     return (/*unconst*/ char *)other;

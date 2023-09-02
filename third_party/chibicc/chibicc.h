@@ -180,7 +180,7 @@ struct AsmOperand {
   uint8_t reg;
   uint8_t type;
   char flow;
-  char x87mask;
+  unsigned char x87mask;
   bool isused;
   int regmask;
   int predicate;
@@ -216,10 +216,10 @@ void gen_addr(Node *);
 void gen_asm(Asm *);
 void gen_expr(Node *);
 void pop(char *);
-void popreg(char *);
+void popreg(const char *);
 void print_loc(int64_t, int64_t);
 void push(void);
-void pushreg(char *);
+void pushreg(const char *);
 
 //
 // fpclassify.c

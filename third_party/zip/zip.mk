@@ -152,6 +152,7 @@ o/$(MODE)/third_party/zip/zipnote.o		\
 o/$(MODE)/third_party/zip/zipsplit.o		\
 o/$(MODE)/third_party/zip/zipup.o: private	\
 	CPPFLAGS +=				\
+		-w				\
 		-DUNIX				\
 		-DMMAP				\
 		-DUNICODE_SUPPORT		\

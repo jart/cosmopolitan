@@ -22,7 +22,6 @@
  * Returns nonzero if c is uppercase letter.
  */
 int iswupper(wint_t c) {
-  int r;
   if (c < 0200) {
     return 'A' <= c && c <= 'Z';
   } else {

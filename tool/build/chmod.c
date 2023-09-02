@@ -58,7 +58,7 @@ static void GetOpts(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   int i, mode;
-  char buf[PATH_MAX], *endptr;
+  char *endptr;
   prog = argv[0];
   if (!prog) prog = "chmod";
   GetOpts(argc, argv);

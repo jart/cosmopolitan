@@ -45,7 +45,6 @@ const char *GetAddr2linePath(void);
 const char *GetGdbPath(void);
 bool32 IsDebuggerPresent(bool);
 bool IsRunningUnderMake(void);
-const char *GetSiCodeName(int, int);
 char *GetSymbolByAddr(int64_t);
 void PrintGarbage(void);
 void PrintGarbageNumeric(FILE *);

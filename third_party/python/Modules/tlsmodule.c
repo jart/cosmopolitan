@@ -285,7 +285,6 @@ tls_recv_into(struct Tls *self, PyObject *args)
 {
     LOG("TLS.recv_into\n");
     int rc;
-    Py_ssize_t n;
     PyObject *res;
     Py_buffer buf;
     if (!PyArg_ParseTuple(args, "w*:recv_into", &buf)) return 0;
@@ -458,7 +457,7 @@ Creates TLS client.");
 static PyObject *
 newclient(PyObject *self, PyObject *args)
 {
-    int rc, fd;
+    int fd;
     PyObject *todo;
     struct Tls *tls;
     const char *host;
@@ -483,7 +482,7 @@ static struct PyModuleDef mbedtls_module = {
 PyMODINIT_FUNC
 PyInit_tls(void)
 {
-    PyObject *m, *mbedtls_md_meth_names;
+    PyObject *m;
     Py_TYPE(&tls_type) = &PyType_Type;
     if (PyType_Ready(&tls_type) < 0) return 0;
     if (!(m = PyModule_Create(&mbedtls_module))) return 0;

@@ -38,7 +38,6 @@ typedef long long v2di __attribute__((__vector_size__(16), __aligned__(1)));
  * @return pointer to EOCD64 or EOCD, otherwise null
  */
 void *GetZipEocd(const void *f, size_t n, int *e) {
-  v2di x;
   int err;
   size_t i, j;
   uint32_t magic;
@@ -53,7 +52,7 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
                READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
     asm("" : "+x"(pk));
     if (i >= 14) {
-      x = *(const v2di *)(p + i - 14);
+      v2di x = *(const v2di *)(p + i - 14);
       if (!(__builtin_ia32_pmovmskb128(
                 (v16qi)__builtin_ia32_pcmpeqw128((v8hi)x, pk)) |
             __builtin_ia32_pmovmskb128((v16qi)__builtin_ia32_pcmpeqw128(
@@ -70,7 +69,7 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
     }
     if (magic == kZipCdir64LocatorMagic && i + kZipCdir64LocatorSize <= n &&
         (err = IsZipEocd64(p, n, ZIP_LOCATE64_OFFSET(p + i))) == kZipOk) {
-      return p + ZIP_LOCATE64_OFFSET(p + i);
+      return (void *)(p + ZIP_LOCATE64_OFFSET(p + i));
     } else if (magic == kZipCdirHdrMagic &&
                (err = IsZipEocd32(p, n, i)) == kZipOk) {
       j = i;
@@ -78,10 +77,10 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
         if (READ32LE(p + j) == kZipCdir64LocatorMagic &&
             j + kZipCdir64LocatorSize <= n &&
             IsZipEocd64(p, n, ZIP_LOCATE64_OFFSET(p + j)) == kZipOk) {
-          return p + ZIP_LOCATE64_OFFSET(p + j);
+          return (void *)(p + ZIP_LOCATE64_OFFSET(p + j));
         }
       } while (j-- && i - j < 128);
-      return p + i;
+      return (void *)(p + i);
     }
   } while (i > 0 && i-- + 0x10000 + 0x1000 >= n);
   if (e) *e = err;

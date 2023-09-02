@@ -424,7 +424,7 @@ static bool NeedsShellQuotes(const char *s) {
 
 static bool run_subprocess(char **argv) {
   int rc, ws;
-  size_t i, j, n;
+  size_t i, j;
   if (opt_verbose) {
     for (i = 0; argv[i]; i++) {
       fputc(' ', stderr);

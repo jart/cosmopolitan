@@ -42,20 +42,24 @@ unsigned long strtoul(const char *s, char **endptr, int base) {
   char t = 0;
   int d, c = *s;
   unsigned long x = 0;
-  CONSUME_SPACES(s, c);
+  CONSUME_SPACES(char, s, c);
   GET_SIGN(s, c, d);
   GET_RADIX(s, c, base);
   if ((c = kBase36[c & 255]) && --c < base) {
     t |= 1;
     do {
       if (ckd_mul(&x, x, base) || ckd_add(&x, x, c)) {
-        if (endptr) *endptr = s + 1;
+        if (endptr) {
+          *endptr = (char *)(s + 1);
+        }
         errno = ERANGE;
         return ULONG_MAX;
       }
     } while ((c = kBase36[*++s & 255]) && --c < base);
   }
-  if (t && endptr) *endptr = s;
+  if (t && endptr) {
+    *endptr = (char *)s;
+  }
   return d > 0 ? x : -x;
 }
 

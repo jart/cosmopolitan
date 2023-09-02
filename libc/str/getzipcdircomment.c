@@ -21,7 +21,7 @@
 /**
  * Returns comment of zip central directory.
  */
-void *GetZipCdirComment(const uint8_t *eocd) {
+const void *GetZipCdirComment(const uint8_t *eocd) {
   if (READ32LE(eocd) == kZipCdir64HdrMagic && ZIP_CDIR64_COMMENTSIZE(eocd)) {
     return ZIP_CDIR64_COMMENT(eocd);
   } else {

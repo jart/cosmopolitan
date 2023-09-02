@@ -214,7 +214,7 @@ void GetOpts(int argc, char *argv[]) {
 }
 
 void OnTerm(int sig) {
-  char tmp[15];
+  char tmp[21];
   LOG("got %s", strsignal_r(sig, tmp));
   g_shutdown = sig;
 }
@@ -231,12 +231,12 @@ void BlockIp(uint32_t ip) {
     if (g_iptables) {
       execve(g_iptables,
              (char *const[]){
-                 "iptables",          //
-                 "-t", "raw",         //
-                 "-I", g_chain,       //
-                 "-s", FormatIp(ip),  //
-                 "-j", "DROP",        //
-                 0,                   //
+                 "iptables",             //
+                 "-t", "raw",            //
+                 "-I", (char *)g_chain,  //
+                 "-s", FormatIp(ip),     //
+                 "-j", "DROP",           //
+                 0,                      //
              },
              (char *const[]){0});
     } else if (g_pfctl) {

@@ -62,7 +62,6 @@ TEST(fgetln, testEvilLastLine) {
 }
 
 TEST(fgetln, testReadingFromStdin_doesntLeakMemory) {
-  FILE *f;
   int oldstdin, pfds[2];
   oldstdin = dup(0);
   EXPECT_SYS(0, 0, pipe(pfds));

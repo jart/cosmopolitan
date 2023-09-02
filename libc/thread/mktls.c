@@ -86,8 +86,8 @@ static char *_mktls_below(struct CosmoTib **out_tib) {
 
 static char *_mktls_above(struct CosmoTib **out_tib) {
   size_t hiz, siz;
+  struct CosmoTib *tib;
   char *mem, *dtv, *tls;
-  struct CosmoTib *tib, *old;
 
   // allocate memory for tdata, tbss, and tib
   hiz = ROUNDUP(sizeof(*tib) + 2 * sizeof(void *), I(_tls_align));

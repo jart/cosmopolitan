@@ -1662,7 +1662,10 @@ main (int argc, char **argv, char **envp)
           p = quote_for_env (p, eval_strings->list[i]);
           *(p++) = ' ';
         }
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wstringop-overflow" /* wut */
       p[-1] = '\0';
+#pragma GCC pop_options
 
       define_variable_cname ("-*-eval-flags-*-", value, o_automatic, 0);
     }

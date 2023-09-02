@@ -31,7 +31,7 @@ struct _posix_faction {
     int newfildes;
     unsigned mode;
   };
-  const char *path;
+  char *path;
 };
 
 COSMOPOLITAN_C_END_

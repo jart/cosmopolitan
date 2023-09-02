@@ -49,9 +49,9 @@ int execlp(const char *prog, const char *arg, ... /*, NULL*/) {
   va_end(va);
   argv = alloca((i + 2) * sizeof(char *));
   va_start(vb, arg);
-  argv[0] = arg;
+  argv[0] = (char *)arg;
   for (i = 1;; ++i) {
-    if (!(argv[i] = va_arg(vb, const char *))) break;
+    if (!(argv[i] = va_arg(vb, char *))) break;
   }
   va_end(vb);
 

@@ -27,7 +27,7 @@
  * @see PKZIP, FAT
  */
 int64_t DosDateTimeToUnix(unsigned date, unsigned time) {
-  unsigned weekday, year, month, day, hour, minute, second, yday, leap;
+  unsigned year, month, day, hour, minute, second, yday, leap;
   year = ((date & 0xfffffe00) >> 9) + 1980 - 1900;
   month = MAX(1, MIN(12, (date & 0x01e0) >> 5));
   day = (date & 0x001f) ? (date & 0x001f) - 1 : 0;

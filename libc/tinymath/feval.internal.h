@@ -5,14 +5,17 @@ COSMOPOLITAN_C_START_
 
 static inline void fevalf(float x) {
   volatile float y = x;
+  (void)y;
 }
 
 static inline void feval(double x) {
   volatile double y = x;
+  (void)y;
 }
 
 static inline void fevall(long double x) {
   volatile long double y = x;
+  (void)y;
 }
 
 COSMOPOLITAN_C_END_

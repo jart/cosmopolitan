@@ -225,7 +225,7 @@ static int Need(void) {
 static struct Node *Parse1(void) {
   wint_t c;
   int i, oldsp;
-  struct Node *r, *p, *q, *s;
+  struct Node *r, *p, *q;
   do {
     if ((c = Greed()) == EOF) return 0;
   } while (iswspace(c));
@@ -288,9 +288,7 @@ static struct Node *Parse1(void) {
 }
 
 static struct Node *Parse(void) {
-  wint_t c;
-  int i, oldsp;
-  struct Node *r, *p, *q, *s;
+  struct Node *r, *p, *q;
   p = r = Parse1();
   if (!p) Error(6, "empty expression");
   while ((q = Parse1())) {

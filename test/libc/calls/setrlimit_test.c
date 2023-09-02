@@ -55,8 +55,7 @@ void OnSigxfsz(int sig) {
 }
 
 TEST(setrlimit, testCpuLimit) {
-  char *p;
-  int i, wstatus;
+  int wstatus;
   long double start;
   struct rlimit rlim;
   double matrices[3][3][3];
@@ -84,7 +83,6 @@ TEST(setrlimit, testCpuLimit) {
 }
 
 TEST(setrlimit, testFileSizeLimit) {
-  char *p;
   char junkdata[512];
   int i, fd, wstatus;
   struct rlimit rlim;
@@ -129,7 +127,7 @@ TEST(setrlimit, testMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));
-    for (gotsome = i = 0; i < (MEM * 2) / getauxval(AT_PAGESZ); ++i) {
+    for (gotsome = false, i = 0; i < (MEM * 2) / getauxval(AT_PAGESZ); ++i) {
       p = mmap(0, getauxval(AT_PAGESZ), PROT_READ | PROT_WRITE,
                MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0);
       if (p != MAP_FAILED) {
@@ -228,7 +226,7 @@ wontreturn void OnVfork(void *ctx) {
 }
 
 TEST(setrlimit, isVforkSafe) {
-  int pid, ws;
+  int ws;
   struct rlimit rlim[2];
   if (IsWindows()) return; /* of course it doesn't work on windows */
   ASSERT_EQ(0, getrlimit(RLIMIT_CPU, rlim));

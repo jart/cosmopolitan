@@ -47,7 +47,6 @@ int GetEntropy1(void *c, unsigned char *p, size_t n) {
 }
 
 void ctrdrbg1(void *p, size_t n) {
-  int rc;
   size_t i, m;
   mbedtls_ctr_drbg_context rng;
   mbedtls_ctr_drbg_init(&rng);
@@ -65,7 +64,6 @@ int GetEntropy2(void *c, unsigned char *p, size_t n) {
 }
 
 void ctrdrbg2(void *p, size_t n) {
-  int rc;
   size_t i, m;
   mbedtls_ctr_drbg_context rng;
   mbedtls_ctr_drbg_init(&rng);
@@ -153,63 +151,3 @@ TEST(mt19937, test) {
     ASSERT_EQ(want[i], _mt19937());
   }
 }
-
-BENCH(mt19937, bench8) {
-  volatile uint64_t x;
-  EZBENCH2("lemur64", donothing, x = lemur64());
-  EZBENCH2("_rand64", donothing, x = _rand64());
-  EZBENCH2("vigna", donothing, x = vigna());
-  EZBENCH2("vigna_r", donothing, vigna_r(&x));
-  EZBENCH2("xorshift", donothing, x = xorshift());
-  EZBENCH2("knuth", donothing, x = knuth());
-  EZBENCH2("random", donothing, x = urandom());
-  EZBENCH2("mt19937", donothing, x = _mt19937());
-  EZBENCH2("rand64char", donothing, x = _rand64());
-  size_t i = 0;
-  volatile uint8_t *p = gc(malloc(3 * 2048 * 2 * 8));
-  EZBENCH3("rdrand", 2048, donothing, p[i++] = rdrand());
-  EZBENCH3("rdseed", 2048, donothing, p[i++] = rdseed());
-  EZBENCH3("getrandom", 2048, donothing, GetRandom(p + i++, 8));
-}
-
-BENCH(mt19937, bench32k) {
-  volatile char *p = gc(malloc(32768));
-  EZBENCH_N("rngset(_rand64,-1)", 32768, rngset(p, 32768, _rand64, -1));
-  EZBENCH_N("rngset(rdseed,512)", 32768, rngset(p, 32768, rdseed, 512));
-  EZBENCH_N("ctrdrbg+rdseed [blk]", 32768, ctrdrbg1(p, 32768));
-  EZBENCH_N("getrandom [block]", 32768, GetRandom(p, 32768));
-  EZBENCH_N("vigna [word]", 32768, rngset(p, 32768, vigna, 0));
-  EZBENCH_N("xorshift [word]", 32768, xorshifta(p, 32768));
-  EZBENCH_N("knuth [word]", 32768, knutha(p, 32768));
-  EZBENCH_N("random [word]", 32768, rngset(p, 32768, urandom, 0));
-  EZBENCH_N("mt19937 [word]", 32768, rngset(p, 32768, _mt19937, 0));
-  EZBENCH_N("_rand64 [word]", 32768, rngset(p, 32768, _rand64, 0));
-  EZBENCH_N("rdrand [word]", 32768, rngset(p, 32768, rdrand, 0));
-  EZBENCH_N("rdseed [word]", 32768, rngset(p, 32768, rdseed, 0));
-}
-
-BENCH(mt19937, bench48) {
-  volatile char *p = gc(malloc(48));
-  EZBENCH_N("rngset(rdrand,0)", 48, rngset(p, 48, rdrand, 0));
-  EZBENCH_N("rngset(rdseed,0)", 48, rngset(p, 48, rdseed, 0));
-  EZBENCH_N("getrandom", 48, GetRandom(p, 48));
-}
-
-#if 0
-TEST(mt19937, test) {
-  int i;
-  uint64_t init[4] = {0x12345ULL, 0x23456ULL, 0x34567ULL, 0x45678ULL};
-  uint64_t length = 4;
-  mt19937_init_by_array64(init, length);
-  printf("1000 outputs of genrand64_int64()\n");
-  for (i = 0; i < 1000; i++) {
-    printf("%20llu ", mt19937_genrand64_int64());
-    if (i % 5 == 4) printf("\n");
-  }
-  printf("\n1000 outputs of genrand64_real2()\n");
-  for (i = 0; i < 1000; i++) {
-    printf("%10.8f ", mt19937_genrand64_real2());
-    if (i % 5 == 4) printf("\n");
-  }
-}
-#endif

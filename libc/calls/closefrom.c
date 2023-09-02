@@ -43,6 +43,7 @@
  */
 int closefrom(int first) {
   int rc, err;
+  (void)err;
   if (first < 0) {
     // consistent with openbsd
     // freebsd allows this but it's dangerous

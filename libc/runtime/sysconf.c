@@ -51,7 +51,6 @@
  * @raise EINVAL if `name` isn't valid
  */
 long sysconf(int name) {
-  int n;
   switch (name) {
     case _SC_CLK_TCK:
       return CLK_TCK;

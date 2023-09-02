@@ -28,7 +28,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/tls2.internal.h"
 
 /**
  * @fileoverview Plain-text function call logging.
@@ -48,7 +48,7 @@
 
 static struct CosmoFtrace g_ftrace;
 
-static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
+__funline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
   while (frame) {
     ++nesting;
@@ -57,8 +57,7 @@ static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   return MAX(0, nesting);
 }
 
-static privileged inline int GetNestingLevel(struct CosmoFtrace *ft,
-                                             struct StackFrame *sf) {
+__funline int GetNestingLevel(struct CosmoFtrace *ft, struct StackFrame *sf) {
   int nesting;
   nesting = GetNestingLevelImpl(sf);
   if (nesting < ft->ft_skew) ft->ft_skew = nesting;

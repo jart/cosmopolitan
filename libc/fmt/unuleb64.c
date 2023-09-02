@@ -26,7 +26,7 @@
  * @param x receives number number
  * @return bytes decoded or -1 on error
  */
-int unuleb64(char *p, size_t n, uint64_t *x) {
+int unuleb64(const char *p, size_t n, uint64_t *x) {
   int k;
   size_t i;
   uint64_t t;

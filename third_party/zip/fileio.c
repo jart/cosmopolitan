@@ -2941,7 +2941,7 @@ local int ucs4_string_to_utf8(ucs4, utf8buf, buflen)
     if (mbl < c)
       c = mbl;
     if (utf8buf && count < buflen)
-      strncpy(utf8buf + count, mb, c);
+      strlcpy(utf8buf + count, mb, c);
     if (mbl == 1 && !mb[0])
       return count;           /* terminating nul */
     count += mbl;
@@ -3204,7 +3204,6 @@ char *wide_to_local_string(wide_string)
   int i;
   wchar_t wc;
   int b;
-  int state_dependent;
   int wsize = 0;
   int max_bytes = MB_CUR_MAX;
   char buf[9];
@@ -3225,10 +3224,6 @@ char *wide_to_local_string(wide_string)
   /* set initial state if state-dependent encoding */
   wc = (wchar_t)'a';
   b = wctomb(NULL, wc);
-  if (b == 0)
-    state_dependent = 0;
-  else
-    state_dependent = 1;
   for (i = 0; i < wsize; i++) {
     if (sizeof(wchar_t) < 4 && wide_string[i] > 0xFFFF) {
       /* wchar_t probably 2 bytes */

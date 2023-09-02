@@ -79,9 +79,9 @@ ssize_t write(int fd, const void *buf, size_t size) {
   } else if (fd >= g_fds.n) {
     rc = ebadf();
   } else if (IsMetal()) {
-    rc = sys_writev_metal(g_fds.p + fd, &(struct iovec){buf, size}, 1);
+    rc = sys_writev_metal(g_fds.p + fd, &(struct iovec){(void *)buf, size}, 1);
   } else if (IsWindows()) {
-    rc = sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
+    rc = sys_writev_nt(fd, &(struct iovec){(void *)buf, size}, 1);
   } else {
     rc = enosys();
   }

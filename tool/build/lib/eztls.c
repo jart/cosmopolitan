@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/build/lib/eztls.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
@@ -27,7 +28,6 @@
 #include "net/https/https.h"
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
-#include "tool/build/lib/eztls.h"
 
 struct EzTlsBio ezbio;
 mbedtls_ssl_config ezconf;
@@ -72,7 +72,7 @@ int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
   if (len || bio->c > 0) {
     v[0].iov_base = bio->u;
     v[0].iov_len = MAX(0, bio->c);
-    v[1].iov_base = buf;
+    v[1].iov_base = (void *)buf;
     v[1].iov_len = len;
     if (EzWritevAll(bio->fd, v, 2) != -1) {
       if (bio->c > 0) bio->c = 0;
@@ -90,7 +90,6 @@ int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
 
 static int EzTlsSend(void *ctx, const unsigned char *buf, size_t len) {
   int rc;
-  struct iovec v[2];
   struct EzTlsBio *bio = ctx;
   if (bio->c >= 0 && bio->c + len <= sizeof(bio->u)) {
     memcpy(bio->u + bio->c, buf, len);
@@ -103,7 +102,6 @@ static int EzTlsSend(void *ctx, const unsigned char *buf, size_t len) {
 
 static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
   int r;
-  ssize_t s;
   struct iovec v[2];
   struct EzTlsBio *bio = ctx;
   if ((r = EzTlsFlush(bio, 0, 0)) < 0) return r;

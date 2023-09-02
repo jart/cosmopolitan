@@ -51,7 +51,7 @@ char *EncodeLatin1(const char *p, size_t n, size_t *z, int f) {
       c = p[i++] & 0xff;
       if (c >= 0300) {
         if ((c <= 0303) && i < n && (p[i] & 0300) == 0200) {
-          c = (c & 037) << 6 | p[i++] & 077;
+          c = (c & 037) << 6 | (p[i++] & 077);
         } else {
           goto Invalid;
         }

@@ -4305,6 +4305,7 @@ tracemalloc_track(PyObject *self, PyObject *args)
     Py_ssize_t size;
     int release_gil = 0;
     int res;
+    (void)ptr;
 
     if (!PyArg_ParseTuple(args, "IOn|i", &domain, &ptr_obj, &size, &release_gil))
         return NULL;
@@ -4336,6 +4337,7 @@ tracemalloc_untrack(PyObject *self, PyObject *args)
     PyObject *ptr_obj;
     void *ptr;
     int res;
+    (void)ptr;
 
     if (!PyArg_ParseTuple(args, "IO", &domain, &ptr_obj))
         return NULL;
@@ -4358,6 +4360,7 @@ tracemalloc_get_traceback(PyObject *self, PyObject *args)
     unsigned int domain;
     PyObject *ptr_obj;
     void *ptr;
+    (void)ptr;
 
     if (!PyArg_ParseTuple(args, "IO", &domain, &ptr_obj))
         return NULL;

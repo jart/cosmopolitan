@@ -53,7 +53,7 @@ long strtol(const char *s, char **endptr, int base) {
   char t = 0;
   long x = 0;
   int d, c = *s;
-  CONSUME_SPACES(s, c);
+  CONSUME_SPACES(char, s, c);
   GET_SIGN(s, c, d);
   GET_RADIX(s, c, base);
   if ((c = kBase36[c & 255]) && --c < base) {
@@ -67,7 +67,9 @@ long strtol(const char *s, char **endptr, int base) {
       } while ((c = kBase36[*++s & 255]) && --c < base);
     }
   }
-  if (t && endptr) *endptr = s;
+  if (t && endptr) {
+    *endptr = (char *)s;
+  }
   return x;
 }
 

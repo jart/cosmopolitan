@@ -23,6 +23,8 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
 #include "libc/nt/struct/imageoptionalheader.internal.h"
@@ -99,7 +101,7 @@ static void *pecheckaddress(struct NtImageDosHeader *mz, size_t mzsize,
 }
 
 static void showmzheader(void) {
-  showtitle(basename(path), "dos", "mz header",
+  showtitle(basename(gc(strdup(path))), "dos", "mz header",
             "\tMZ = Mark 'Zibo' Joseph Zbikowski\n"
             "\te_cblp: bytes on last page\n"
             "\te_cp: 512-byte pages in file\n"
@@ -152,7 +154,8 @@ static void showdosstub(void) {
 
 static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
   int i;
-  showtitle(basename(path), "windows", "pe \"optional\" header", NULL, NULL);
+  showtitle(basename(gc(strdup(path))), "windows", "pe \"optional\" header",
+            NULL, NULL);
   printf("\n");
   show(".short",
        firstnonnull(findnamebyid(kNtPeOptionalHeaderMagicNames, opt->Magic),
@@ -248,7 +251,8 @@ static void ShowIlt(uint32_t rva) {
 static void ShowIdt(char *idt, size_t size) {
   char *p, *e;
   printf("\n");
-  showtitle(basename(path), "windows", "import descriptor table (idt)", 0, 0);
+  showtitle(basename(gc(strdup(path))), "windows",
+            "import descriptor table (idt)", 0, 0);
   for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
     printf("\n");
     show(".long", format(b1, "%#x", READ32LE(p)),
@@ -266,14 +270,16 @@ static void ShowIdt(char *idt, size_t size) {
   for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
     if (READ32LE(p)) {
       printf("\n");
-      showtitle(basename(path), "windows", "import lookup table (ilt)", 0, 0);
+      showtitle(basename(gc(strdup(path))), "windows",
+                "import lookup table (ilt)", 0, 0);
       ShowIlt(READ32LE(p));
     }
   }
   for (p = idt, e = idt + size; p + 20 <= e; p += 20) {
     if (READ32LE(p)) {
       printf("\n");
-      showtitle(basename(path), "windows", "import address table (iat)", 0, 0);
+      showtitle(basename(gc(strdup(path))), "windows",
+                "import address table (iat)", 0, 0);
       ShowIlt(READ32LE(p + 16));
     }
   }
@@ -316,14 +322,14 @@ static void ShowSections(struct NtImageSectionHeader *s, size_t n) {
   sections = s;
   section_count = n;
   printf("\n");
-  showtitle(basename(path), "windows", "sections", 0, 0);
+  showtitle(basename(gc(strdup(path))), "windows", "sections", 0, 0);
   for (i = 0; i < n; ++i) {
     ShowSection(s + i);
   }
 }
 
 static void showpeheader(struct NtImageNtHeaders *pe) {
-  showtitle(basename(path), "windows", "pe header", NULL, NULL);
+  showtitle(basename(gc(strdup(path))), "windows", "pe header", NULL, NULL);
   printf("\n");
   showorg(mz->e_lfanew);
   show(".ascii", format(b1, "%`'.*s", 4, (const char *)&pe->Signature),

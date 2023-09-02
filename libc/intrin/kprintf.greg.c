@@ -74,7 +74,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/tls2.internal.h"
 #include "libc/vga/vga.internal.h"
 
 #define KGETINT(x, va, t, s)                 \
@@ -134,14 +134,13 @@ __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 long __klog_handle;
 extern struct SymbolTable *__symtab;
 
-privileged static inline char *kadvance(char *p, char *e, long n) {
+__funline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;
   if (ckd_add(&t, t, n)) t = (intptr_t)e;
   return (char *)t;
 }
 
-privileged static char *kemitquote(char *p, char *e, signed char t,
-                                   unsigned c) {
+__funline char *kemitquote(char *p, char *e, signed char t, unsigned c) {
   if (t) {
     if (p < e) {
       *p = t < 0 ? 'u' : 'L';
@@ -155,27 +154,27 @@ privileged static char *kemitquote(char *p, char *e, signed char t,
   return p;
 }
 
-privileged static inline bool kiskernelpointer(const void *p) {
+__funline bool kiskernelpointer(const void *p) {
   return 0x7f0000000000 <= (intptr_t)p && (intptr_t)p < 0x800000000000;
 }
 
-privileged static inline bool kistextpointer(const void *p) {
+__funline bool kistextpointer(const void *p) {
   return __executable_start <= (const unsigned char *)p &&
          (const unsigned char *)p < _etext;
 }
 
-privileged static inline bool kisimagepointer(const void *p) {
+__funline bool kisimagepointer(const void *p) {
   return __executable_start <= (const unsigned char *)p &&
          (const unsigned char *)p < _end;
 }
 
-privileged static inline bool kischarmisaligned(const char *p, signed char t) {
+__funline bool kischarmisaligned(const char *p, signed char t) {
   if (t == -1) return (intptr_t)p & 1;
   if (t >= 1) return !!((intptr_t)p & 3);
   return false;
 }
 
-privileged static inline bool kismemtrackhosed(void) {
+__funline bool kismemtrackhosed(void) {
   return !((_weaken(_mmi)->i <= _weaken(_mmi)->n) &&
            (_weaken(_mmi)->p == _weaken(_mmi)->s ||
             _weaken(_mmi)->p == (struct MemoryInterval *)kMemtrackStart));
@@ -319,7 +318,7 @@ privileged long kloghandle(void) {
       hand = STDERR_FILENO;
     } else if (IsWindows()) {
       uint32_t e, n;
-      const char16_t path[512];
+      char16_t path[512];
       e = __imp_GetLastError();
       n = __imp_GetEnvironmentVariableW(u"KPRINTF_LOG", path, 512);
       if (!n && __imp_GetLastError() == kNtErrorEnvvarNotFound) {
@@ -389,7 +388,6 @@ privileged void klog(const char *b, size_t n) {
 #ifdef __x86_64__
   int e;
   long h;
-  bool cf;
   size_t i;
   uint16_t dx;
   uint32_t wrote;
@@ -442,7 +440,7 @@ privileged void klog(const char *b, size_t n) {
 
 privileged static size_t kformat(char *b, size_t n, const char *fmt,
                                  va_list va) {
-  int si, y;
+  int si;
   wint_t t, u;
   const char *abet;
   signed char type;

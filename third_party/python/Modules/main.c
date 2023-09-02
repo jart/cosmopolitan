@@ -405,6 +405,8 @@ Py_Main(int argc, wchar_t **argv)
     PyObject *warning_option = NULL;
     PyObject *warning_options = NULL;
 
+    (void)opt;
+
     cf.cf_flags = 0;
 
     orig_argc = argc;           /* For Py_GetArgcArgv() */

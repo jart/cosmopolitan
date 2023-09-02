@@ -164,7 +164,6 @@ static struct TtyRgb* ttyrgb_;
 static unsigned char *R, *G, *B;
 static struct ZipGames zipgames_;
 static struct Action arrow_, button_;
-static struct SamplingSolution* asx_;
 static struct SamplingSolution* ssy_;
 static struct SamplingSolution* ssx_;
 static unsigned char pixels_[3][DYN][DXN];
@@ -585,7 +584,6 @@ void Raster(void) {
     f->p = stpcpy(f->p, "\e[0m\e[H");
     f->p = stpcpy(f->p, status_.text);
   }
-  CHECK_LT(f->p - f->mem, vtsize_);
   PollAndSynchronize();
 }
 
@@ -599,7 +597,6 @@ void FlushScanline(unsigned py) {
 }
 
 static void PutPixel(unsigned px, unsigned py, unsigned pixel, int offset) {
-  unsigned rgb;
   static unsigned prev;
   pixels_[0][py][px] = palette_[offset][prev % 64][pixel][2];
   pixels_[1][py][px] = palette_[offset][prev % 64][pixel][1];
@@ -1811,8 +1808,8 @@ void GetOpts(int argc, char* argv[]) {
 
 size_t FindZipGames(void) {
   char* name;
+  size_t i, cf;
   struct Zipos* zipos;
-  size_t i, cf, namesize;
   if ((zipos = __zipos_get())) {
     for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
          i < ZIP_CDIR_RECORDS(zipos->cdir);
@@ -1834,14 +1831,14 @@ int SelectGameFromZip(void) {
   int i, rc;
   char *line, *uri;
   fputs("\nCOSMOPOLITAN NESEMU1\n\n", stdout);
-  for (i = 0; i < zipgames_.i; ++i) {
+  for (i = 0; i < (int)zipgames_.i; ++i) {
     printf("  [%d] %s\n", i, zipgames_.p[i]);
   }
   fputs("\nPlease choose a game (or CTRL-C to quit) [default 0]: ", stdout);
   fflush(stdout);
   rc = 0;
   if ((line = GetLine())) {
-    i = MAX(0, MIN(zipgames_.i - 1, atoi(line)));
+    i = MAX(0, MIN((int)zipgames_.i - 1, atoi(line)));
     uri = zipgames_.p[i];
     rc = PlayGame(uri, NULL);
     free(uri);

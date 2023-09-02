@@ -38,13 +38,14 @@ __msabi extern typeof(Sleep) *const __imp_Sleep;
  * @return handle, or -1 on failure w/ `errno` set appropriately
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
-textwindows int64_t CreateFile(const char16_t *lpFileName,                   //
-                               uint32_t dwDesiredAccess,                     //
-                               uint32_t dwShareMode,                         //
-                               struct NtSecurityAttributes *opt_lpSecurity,  //
-                               int dwCreationDisposition,                    //
-                               uint32_t dwFlagsAndAttributes,                //
-                               int64_t opt_hTemplateFile) {
+textwindows int64_t
+CreateFile(const char16_t *lpFileName,                         //
+           uint32_t dwDesiredAccess,                           //
+           uint32_t dwShareMode,                               //
+           const struct NtSecurityAttributes *opt_lpSecurity,  //
+           int dwCreationDisposition,                          //
+           uint32_t dwFlagsAndAttributes,                      //
+           int64_t opt_hTemplateFile) {
   int64_t hHandle;
   uint32_t micros = 1;
 TryAgain:

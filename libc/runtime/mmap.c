@@ -240,10 +240,10 @@ static textwindows dontinline dontasan void *__map_memories(
 
 dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
                                       int flags, int fd, int64_t off) {
+  int a, f, n, x;
   char *p = addr;
   struct DirectMap dm;
   size_t requested_size;
-  int a, b, i, f, m, n, x;
   bool needguard, clashes;
   unsigned long page_size;
   size_t virtualused, virtualneed;
@@ -465,12 +465,14 @@ dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
+#ifdef SYSDEBUG
   size_t toto = 0;
-#if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
+#if _KERNTRACE || _NTTRACE
   if (IsWindows()) {
     STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
            DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
   }
+#endif
 #endif
   __mmi_lock();
   if (!__isfdkind(fd, kFdZip)) {

@@ -29,6 +29,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
@@ -232,7 +233,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
        (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
         ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + getauxval(AT_PAGESZ)))
           ? "Stack Overflow"
-          : GetSiCodeName(sig, si->si_code),
+          : DescribeSiCode(sig, si->si_code),
       host, getpid(), gettid(), program_invocation_name, strerror(err),
       names.sysname, names.version, names.nodename, names.release);
   if (ctx) {

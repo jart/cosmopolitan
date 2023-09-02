@@ -31,7 +31,7 @@
 void *memmem_naive(const void *haystk, size_t haystklen,  //
                    const void *needle, size_t needlelen) {
   size_t i, j;
-  if (!needlelen) return haystk;
+  if (!needlelen) return (void *)haystk;
   if (needlelen > haystklen) return 0;
   for (i = 0; i < haystklen; ++i) {
     for (j = 0;; ++j) {
@@ -155,7 +155,7 @@ TEST(memmem, testWut) {
 }
 
 TEST(memmem, fuzz) {
-  int i, j, k, n, m;
+  int i, n, m;
   char a[128], b[128], *p, *q;
   for (i = 0; i < 10000; ++i) {
     rngset(a, sizeof(a), lemur64, -1);

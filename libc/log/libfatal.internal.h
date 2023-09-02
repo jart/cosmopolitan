@@ -45,7 +45,7 @@ __funline void *__repmovsb(void *di, const void *si, size_t cx) {
   return di;
 #else
   volatile char *volatile d = di;
-  volatile char *volatile s = si;
+  volatile const char *volatile s = si;
   while (cx--) *d++ = *s++;
   return (void *)d;
 #endif
@@ -131,7 +131,6 @@ __funline char16_t *__strstr16(const char16_t *haystack,
 }
 
 __funline const char *__strchr(const char *s, unsigned char c) {
-  char *r;
   for (;; ++s) {
     if ((*s & 255) == c) return s;
     if (!*s) return 0;

@@ -18,7 +18,7 @@
 
 int main(int argc, char *argv[]) {
   long i, ns;
-  struct timespec x, y, w;
+  struct timespec x, y;
   timespec_sleep(timespec_fromnanos(0));  // warmup
 
   printf("\nrelative sleep\n");

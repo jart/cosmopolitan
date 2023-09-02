@@ -128,7 +128,6 @@ __gdtoa_Balloc(int k, ThInfo **PTI)
 {
 	int x;
 	Bigint *rv;
-	unsigned int len;
 	ThInfo *TI;
 	if (!(TI = *PTI))
 		*PTI = TI = __gdtoa_get_TI();

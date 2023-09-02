@@ -35,7 +35,7 @@
  * @raise ENOTRECOVERABLE if `mutex` is corrupted
  */
 errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  int c, d, t;
+  int t;
 
   if (__tls_enabled &&                               //
       mutex->_type == PTHREAD_MUTEX_NORMAL &&        //

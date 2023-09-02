@@ -24,7 +24,7 @@
 /**
  * Collapses repeating headers onto a single line.
  */
-char *FoldHeader(struct HttpMessage *msg, char *b, int h, size_t *z) {
+char *FoldHeader(struct HttpMessage *msg, const char *b, int h, size_t *z) {
   char *p, *p2;
   size_t i, n, m;
   struct HttpHeader *x;

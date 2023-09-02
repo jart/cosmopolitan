@@ -5,7 +5,7 @@
 #if LOCK_AT_FORK
 static void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
 static void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
-static void dlmalloc_post_fork_child(void)  { INITIAL_LOCK(&(gm)->mutex); }
+static void dlmalloc_post_fork_child(void)  { (void)INITIAL_LOCK(&(gm)->mutex); }
 #endif /* LOCK_AT_FORK */
 
 /* Initialize mparams */

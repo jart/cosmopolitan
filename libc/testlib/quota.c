@@ -46,7 +46,6 @@ static dontasan dontubsan relegated uint64_t CountMappedBytes(void) {
 }
 
 static relegated void DieBecauseOfQuota(int rc, const char *message) {
-  int e = errno;
   char hostname[32];
   stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));

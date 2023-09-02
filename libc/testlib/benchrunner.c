@@ -63,7 +63,6 @@ void EnableCruiseControlForCool(void) {
  * @see BENCH()
  */
 void testlib_runallbenchmarks(void) {
-  int e;
   __log_level = kLogWarn;
   EnableCruiseControlForCool();
   testlib_runtestcases(__bench_start, __bench_end, testlib_benchwarmup);

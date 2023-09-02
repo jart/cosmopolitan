@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 int sys_getgroups(int size, uint32_t list[]);
-int sys_setgroups(size_t size, uint32_t list[]);
+int sys_setgroups(size_t size, const uint32_t list[]);
 
 const char *DescribeGidList(char[128], int, int, const uint32_t list[]);
 #define DescribeGidList(rc, length, gidlist) \

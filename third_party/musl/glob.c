@@ -25,17 +25,17 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
+#include "third_party/musl/glob.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/s.h"
 #include "third_party/musl/fnmatch.h"
-#include "third_party/musl/glob.h"
 
 #define MAXPATH 1024
 
@@ -186,7 +186,7 @@ static int PerformGlob(char *buf, size_t pos, int type, char *pat, int flags,
     /* With GLOB_PERIOD don't allow matching . or .. unless fnmatch()
      * would match them with FNM_PERIOD rules in effect. */
     if (p2 && (flags & GLOB_PERIOD) && de->d_name[0] == '.' &&
-        (!de->d_name[1] || de->d_name[1] == '.' && !de->d_name[2]) &&
+        (!de->d_name[1] || (de->d_name[1] == '.' && !de->d_name[2])) &&
         fnmatch(pat, de->d_name, fnm_flags | FNM_PERIOD)) {
       continue;
     }
@@ -247,7 +247,7 @@ int glob(const char *pat, int flags, int errfunc(const char *path, int err),
          glob_t *g) {
   int error = 0;
   size_t cnt, i;
-  char *p, **pathv, buf[MAXPATH];
+  char **pathv, buf[MAXPATH];
   struct GlobList head = {.next = NULL}, *tail = &head;
   size_t offs = (flags & GLOB_DOOFFS) ? g->gl_offs : 0;
   if (!errfunc) errfunc = IgnoreGlobError;

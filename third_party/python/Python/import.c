@@ -865,7 +865,7 @@ PyImport_ExecCodeModuleWithPathnames(const char *name, PyObject *co,
 {
     struct stat stinfo;
     PyObject *m = NULL;
-    PyObject *nameobj, *pathobj = NULL, *cpathobj = NULL, *external= NULL;
+    PyObject *nameobj, *pathobj = NULL, *cpathobj = NULL;
 
     nameobj = PyUnicode_FromString(name);
     if (nameobj == NULL)
@@ -1183,7 +1183,7 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
     res = bsearch(&key, Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
 
     if (res != NULL) {
-        p = res->tab;
+        p = (void *)res->tab;
         PyModuleDef *def;
         if (p->initfunc == NULL) {
             /* Cannot re-init internal module ("sys" or "builtins") */
@@ -2491,7 +2491,6 @@ static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
   FILE *fp = NULL;
   PyObject *res = NULL;
   char *rawbuf = NULL;
-  size_t rawlen = 0;
 
   if (!PyArg_Parse(arg, "z:get_code", &name)) return 0;
   if (!name) name = self->name;

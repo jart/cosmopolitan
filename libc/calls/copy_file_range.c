@@ -39,8 +39,8 @@ static struct CopyFileRange {
 } g_copy_file_range;
 
 static bool HasCopyFileRange(void) {
+  int e;
   bool ok;
-  int e, rc;
   e = errno;
   BLOCK_CANCELLATIONS;
   if (IsLinux()) {

@@ -39,7 +39,7 @@ void *GetElfSectionAddress(const Elf64_Ehdr *elf,     // validated
                            const Elf64_Shdr *shdr) {  // foreign
   Elf64_Off last;
   if (!shdr) return 0;
-  if (!shdr->sh_size) return elf;
+  if (!shdr->sh_size) return (void *)elf;
   if (shdr->sh_type == SHT_NOBITS) return 0;
   if (ckd_add(&last, shdr->sh_offset, shdr->sh_size)) return 0;
   if (last > mapsize) return 0;

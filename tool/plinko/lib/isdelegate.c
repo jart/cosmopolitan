@@ -44,7 +44,6 @@ int IsDelegate(int x_) {
   if (ddx_ >= 0) return 0;
   w_ = Get(ddx_);  // ((F . V) . Q)
   int addx_ = LO(w_);
-  int dddx_ = HI(w_);
   if (addx_ >= 0) return 0;
   w_ = Get(addx_);  // (F . V)
   int aaddx_ = LO(w_);

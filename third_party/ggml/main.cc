@@ -389,7 +389,7 @@ int main(int argc, char ** argv) {
         }
         fprintf(stderr, "\"\n");
         fprintf(stderr, "%s: second part of prompt: \"", __func__);
-        for (int i = n_keep; i < embd_inp.size(); i++) {
+        for (int i = n_keep; i < (int)embd_inp.size(); i++) {
             fprintf(stderr, "%'s", llama_token_to_str(ctx, embd_inp[i]));
         }
         fprintf(stderr, "\"\n");
@@ -607,7 +607,6 @@ int main(int argc, char ** argv) {
         if (just_finished_initializing_prompt && !params.prompt_path.empty()) {
             int fd = -1;
             int close_rc;
-            uint8_t buf[8];
             size_t file_size;
             size_t state_size;
             std::string tmppath;

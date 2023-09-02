@@ -168,7 +168,7 @@ static int QuoteList(int x) {
 }
 
 static int GetAtom(const char *s) {
-  int x, y, t, u;
+  int x, y;
   ax = y = TERM;
   x = *s++ & 255;
   if (*s) y = GetAtom(s);
@@ -532,7 +532,7 @@ struct T DispatchIf(dword ea, dword tm, dword r, dword p1, dword p2, dword d) {
 struct T DispatchPrinc(dword ea, dword tm, dword r, dword p1, dword p2,
                        dword d) {
   bool b;
-  int x, e, A;
+  int e;
   e = LO(ea);
   SetFrame(r, e);
   b = literally;
@@ -545,7 +545,6 @@ struct T DispatchPrinc(dword ea, dword tm, dword r, dword p1, dword p2,
 
 struct T DispatchFlush(dword ea, dword tm, dword r, dword p1, dword p2,
                        dword d) {
-  int x, A;
   SetFrame(r, LO(ea));
   Flush(1);
   return Ret(MAKE(kIgnore0, 0), tm, r);
@@ -794,15 +793,11 @@ Delegate:
 
 struct T DispatchCall1(dword ea, dword tm, dword r, dword p1, dword p2,
                        dword d) {
-  int a, b, e, f, t, u, y, p, z;
+  int b, e, u, y, p;
   e = LO(ea);
-  a = HI(ea);
   DCHECK_LT(e, 0);
   SetFrame(r, e);
-  f = Car(e);
-  z = Cdr(e);
   y = HI(d);
-  t = Car(y);
   // (eval ((⅄ (λ 𝑥 𝑦) 𝑏) 𝑧) 𝑎) ↩ (eval ((λ 𝑥 𝑦) 𝑧) 𝑏)
   y = Cdr(y);  // ((λ 𝑥 𝑦) 𝑏)
   u = Cdr(y);  //          𝑏
@@ -816,15 +811,11 @@ struct T DispatchCall1(dword ea, dword tm, dword r, dword p1, dword p2,
 
 struct T DispatchCall2(dword ea, dword tm, dword r, dword p1, dword p2,
                        dword d) {
-  int a, b, e, f, t, u, y, p, z;
+  int b, e, u, y, p;
   e = LO(ea);
-  a = HI(ea);
   DCHECK_LT(e, 0);
   SetFrame(r, e);
-  f = Car(e);
-  z = Cdr(e);
   y = HI(d);
-  t = Car(y);
   // (eval ((⅄ (λ 𝑥 𝑦) 𝑏) 𝑧) 𝑎) ↩ (eval ((λ 𝑥 𝑦) 𝑧) 𝑏)
   y = Cdr(y);  // ((λ 𝑥 𝑦) 𝑏)
   u = Cdr(y);  //          𝑏
@@ -878,7 +869,7 @@ static void PrintStats(long usec) {
           -cHeap - -cFrost, usec, cGets, cSets, cAtoms, -cFrost);
 }
 
-static wontreturn Exit(void) {
+static wontreturn int Exit(void) {
   exit(0 <= fails && fails <= 255 ? fails : 255);
 }
 
@@ -903,9 +894,8 @@ static wontreturn void PrintUsage(void) {
 }
 
 int Plinko(int argc, char *argv[]) {
-  long *p;
+  int S, x;
   bool trace;
-  int S, x, u, j;
   uint64_t t1, t2;
   tick = kStartTsc;
 #ifndef NDEBUG

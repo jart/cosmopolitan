@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/double-conversion/wrapper.h"
 #include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 #include "third_party/double-conversion/double-conversion.h"
 #include "third_party/double-conversion/double-to-string.h"
-#include "third_party/double-conversion/wrapper.h"
 
 namespace double_conversion {
 extern "C" {
@@ -59,7 +59,7 @@ char* DoubleToLua(char buf[128], double x) {
 }
 
 double StringToDouble(const char* s, size_t n, int* out_processed) {
-  if (n == -1) n = strlen(s);
+  if (n == -1ull) n = strlen(s);
   int flags = StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY |
               StringToDoubleConverter::ALLOW_LEADING_SPACES |
               StringToDoubleConverter::ALLOW_TRAILING_JUNK |

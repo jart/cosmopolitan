@@ -24,7 +24,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/tls2.internal.h"
 
 /**
  * Return path for failed Win32 API calls.

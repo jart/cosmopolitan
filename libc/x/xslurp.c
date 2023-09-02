@@ -33,8 +33,8 @@
  */
 void *xslurp(const char *path, size_t *opt_out_size) {
   int fd;
+  char *res;
   size_t i, got;
-  char *res, *p;
   ssize_t rc, size;
   res = NULL;
   if ((fd = open(path, O_RDONLY)) != -1) {

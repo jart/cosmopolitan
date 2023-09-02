@@ -50,7 +50,7 @@ TEST(readlink, enotdir) {
 }
 
 TEST(readlinkat, test) {
-  char buf[128], *p, *q;
+  char buf[128];
   memset(buf, -1, sizeof(buf));
   ASSERT_NE(-1, xbarf("hello→", "hi", -1));
   ASSERT_STREQ("hi", gc(xslurp("hello→", 0)));
@@ -103,7 +103,6 @@ TEST(readlinkat, statReadsNameLength) {
 }
 
 TEST(readlinkat, realpathReturnsLongPath) {
-  struct stat st;
   char buf[PATH_MAX];
   if (!IsWindows()) return;
   if (!startswith(getcwd(buf, PATH_MAX), "/c/")) return;

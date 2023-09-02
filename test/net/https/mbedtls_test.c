@@ -182,7 +182,6 @@ BENCH(p384, bench) {
 #ifdef MBEDTLS_ECP_C
   mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP384R1);
-  uint64_t y[12];
   mbedtls_mpi x = {1, 12, _gc(calloc(12, 8))};
   EZBENCH2("P-384 modulus MbedTLS MPI lib", donothing, P384_MPI(&x));
   EZBENCH2("P-384 modulus Justine rewrite", donothing, P384_JUSTINE(&x));
@@ -224,7 +223,7 @@ TEST(sha1, test) {
 }
 
 TEST(sha224, test) {
-  uint8_t d[28];
+  uint8_t d[50];
   uint8_t want[28] = {0x23, 0x09, 0x7D, 0x22, 0x34, 0x05, 0xD8,
                       0x22, 0x86, 0x42, 0xA4, 0x77, 0xBD, 0xA2,
                       0x55, 0xB3, 0x2A, 0xAD, 0xBC, 0xE4, 0xBD,
@@ -244,7 +243,7 @@ TEST(sha256, test) {
 }
 
 TEST(sha384, test) {
-  uint8_t d[48];
+  uint8_t d[70];
   uint8_t want[48] = {
       0xCB, 0x00, 0x75, 0x3F, 0x45, 0xA3, 0x5E, 0x8B, 0xB5, 0xA0, 0x3D, 0x69,
       0x9A, 0xC6, 0x50, 0x07, 0x27, 0x2C, 0x32, 0xAB, 0x0E, 0xDE, 0xD1, 0x63,
@@ -300,7 +299,6 @@ char *mpi2str(mbedtls_mpi *m) {
 }
 
 mbedtls_mpi *str2mpi(const char *s) {
-  size_t n;
   mbedtls_mpi *m;
   m = calloc(1, sizeof(mbedtls_mpi));
   ASSERT_EQ(0, mbedtls_mpi_read_string(m, 10, s));
@@ -315,7 +313,6 @@ char *mpi2str16(mbedtls_mpi *m) {
 }
 
 mbedtls_mpi *str2mpi16(const char *s) {
-  size_t n;
   mbedtls_mpi *m;
   m = calloc(1, sizeof(mbedtls_mpi));
   ASSERT_EQ(0, mbedtls_mpi_read_string(m, 16, s));
@@ -618,9 +615,6 @@ TEST(mpi_shift_r, funbye) {
 }
 
 TEST(mpi_shift_l, fun1) {
-  mbedtls_mpi w = {1, 9,
-                   (uint64_t[]){0, 0, 2 << 1, 4 << 1, 8 << 1, 16 << 1, 32 << 1,
-                                64 << 1, 128 << 1}};
   mbedtls_mpi x = {1, 9, (uint64_t[]){2, 4, 8, 16, 32, 64, 128, 0, 0}};
   EXPECT_EQ(0, mbedtls_mpi_shift_l(&x, 129));
   EXPECT_EQ(9, x.n);
@@ -636,8 +630,6 @@ TEST(mpi_shift_l, fun1) {
 }
 
 TEST(mpi_shift_l, fun2) {
-  mbedtls_mpi o = {1, 3, (uint64_t[9]){0x8000000000000000, 0, 0}};
-  mbedtls_mpi w = {1, 3, (uint64_t[9]){0, 1, 0}};
   mbedtls_mpi x = {1, 3,
                    (uint64_t[9]){
                        0x8000000000000003,
@@ -903,7 +895,7 @@ TEST(endian, big4) {
 }
 
 TEST(Mul4x4, test) {
-  int i, j, N, M;
+  int N, M;
   mbedtls_mpi A, B, C, D;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 4;
@@ -926,7 +918,7 @@ TEST(Mul4x4, test) {
 }
 
 BENCH(Mul4x4, bench) {
-  int i, j, N, M;
+  int i, N, M;
   mbedtls_mpi A, B, C, D, E;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 4;
@@ -981,7 +973,7 @@ BENCH(Mul4x4, bench) {
 }
 
 BENCH(Mul6x6, bench) {
-  int i, j, N, M;
+  int i, N, M;
   mbedtls_mpi A, B, C, D;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 6;
@@ -1018,8 +1010,8 @@ BENCH(Mul6x6, bench) {
 }
 
 BENCH(Mul10x10, bench) {
-  int i, j, N, M;
-  mbedtls_mpi A, B, C, D;
+  int N, M;
+  mbedtls_mpi A, B, C;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 10;
   M = 10;
@@ -1037,8 +1029,8 @@ BENCH(Mul10x10, bench) {
 }
 
 BENCH(Mul16x16, bench) {
-  int i, j, N, M;
-  mbedtls_mpi A, B, C, D;
+  int N, M;
+  mbedtls_mpi A, B, C;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 16;
   M = 16;
@@ -1056,7 +1048,7 @@ BENCH(Mul16x16, bench) {
 }
 
 BENCH(Mul32x32, bench) {
-  int i, j, N, M;
+  int i, N, M;
   mbedtls_mpi A, B, C, D, K;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 32;
@@ -1097,8 +1089,8 @@ BENCH(Mul32x32, bench) {
 }
 
 BENCH(Mul16x1, bench) {
-  int i, j, N, M;
-  mbedtls_mpi A, B, C, D;
+  int N, M;
+  mbedtls_mpi A, B, C;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 16;
   M = 1;
@@ -1116,8 +1108,8 @@ BENCH(Mul16x1, bench) {
 }
 
 BENCH(Mul32x1, bench) {
-  int i, j, N, M;
-  mbedtls_mpi A, B, C, D;
+  int N, M;
+  mbedtls_mpi A, B, C;
   if (!X86_HAVE(BMI2) || !X86_HAVE(ADX)) return;
   N = 32;
   M = 1;

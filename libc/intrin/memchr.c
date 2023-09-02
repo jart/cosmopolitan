@@ -40,10 +40,8 @@ dontasan static inline const unsigned char *memchr_sse(const unsigned char *s,
                                                        unsigned char c,
                                                        size_t n) {
   size_t i;
-  unsigned k;
   unsigned m;
-  xmm_t v, *p;
-  xmm_t t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
+  xmm_t v, t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   for (; n >= 16; n -= 16, s += 16) {
     v = *(const xmm_t *)s;
     m = __builtin_ia32_pmovmskb128(v == t);

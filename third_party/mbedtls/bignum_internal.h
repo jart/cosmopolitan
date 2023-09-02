@@ -9,8 +9,8 @@ COSMOPOLITAN_C_START_
 #define MPI_VALIDATE(cond) MBEDTLS_INTERNAL_VALIDATE(cond)
 
 #define ciL (sizeof(mbedtls_mpi_uint)) /* chars in limb  */
-#define biL (ciL << 3) /* bits  in limb  */
-#define biH (ciL << 2) /* half limb size */
+#define biL (ciL << 3)                 /* bits  in limb  */
+#define biH (ciL << 2)                 /* half limb size */
 
 #define MPI_SIZE_T_MAX ((size_t)-1) /* SIZE_T_MAX is not standard */
 
@@ -30,9 +30,9 @@ void Mul4x4Adx(uint64_t[8], const uint64_t[4], const uint64_t[4]);
 void Mul6x6Adx(uint64_t[12], const uint64_t[6], const uint64_t[6]);
 void Mul8x8Adx(uint64_t[16], const uint64_t[8], const uint64_t[8]);
 void Mul4x4Pure(uint64_t[16], const uint64_t[8], const uint64_t[8]);
-void Mul(uint64_t *, uint64_t *, unsigned, uint64_t *, unsigned);
+void Mul(uint64_t *, const uint64_t *, unsigned, const uint64_t *, unsigned);
 void Karatsuba(uint64_t *, uint64_t *, uint64_t *, size_t, uint64_t *);
-void mbedtls_mpi_mul_hlp(size_t, uint64_t *, uint64_t *, uint64_t);
+void mbedtls_mpi_mul_hlp(size_t, const uint64_t *, uint64_t *, uint64_t);
 void mbedtls_mpi_mul_hlp1(size_t, const uint64_t *, uint64_t *, uint64_t);
 
 COSMOPOLITAN_C_END_

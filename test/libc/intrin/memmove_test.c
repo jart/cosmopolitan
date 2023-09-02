@@ -43,7 +43,7 @@ static void *golden(void *a, const void *b, size_t n) {
 }
 
 TEST(memmove, hug) {
-  char *a, *b, *c;
+  char *a, *b;
   int i, o1, o2;
   int N[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,   13,   14,
              15, 16, 17, 18, 31, 32, 33, 63, 64, 65, 80, 81, 1000, 1024, 1025};
@@ -63,7 +63,7 @@ TEST(memmove, hug) {
 }
 
 TEST(memmove, bighug) {
-  char *a, *b, *c;
+  char *a, *b;
   int i, o1, o2;
   int N[] = {5 * 1024 * 1024};
   a = gc(malloc(6291456));
@@ -82,19 +82,18 @@ TEST(memmove, bighug) {
 }
 
 BENCH(memmove, bench) {
-  volatile char *r;
   int n, max = 128 * 1024 * 1024;
   char *volatile p = gc(calloc(max, 1));
   char *volatile q = gc(calloc(max, 1));
   EZBENCH_N("memmove", 0, memmove(p, q, 0));
   for (n = 0; n < 127; ++n) {
-    EZBENCH_N("memmove", n, r = memmove(p, q, n));
+    EZBENCH_N("memmove", n, memmove(p, q, n));
   }
   for (n = 128; n <= max; n *= 2) {
-    EZBENCH_N("memmove", n - 1, r = memmove(p, q, n - 1));
-    EZBENCH_N("memmove", n, r = memmove(p, q, n));
+    EZBENCH_N("memmove", n - 1, memmove(p, q, n - 1));
+    EZBENCH_N("memmove", n, memmove(p, q, n));
   }
   for (n = 500; n <= 1000; n += 100) {
-    EZBENCH_N("memmove", n, r = memmove(p, q, n));
+    EZBENCH_N("memmove", n, memmove(p, q, n));
   }
 }

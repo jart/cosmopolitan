@@ -170,17 +170,13 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
 }
 
 int fetch(void) {
-  char *p;
   int status;
   ssize_t rc;
-  const char *body;
   int t, ret, sock;
-  struct TlsBio *bio;
   long messagesremaining;
   struct HttpMessage msg;
   struct HttpUnchunker u;
-  size_t urlarglen, requestlen;
-  size_t g, i, n, hdrsize, paylen;
+  size_t g, n, hdrsize, paylen;
 
   messagesremaining = messagesperconnection;
 
@@ -188,7 +184,7 @@ int fetch(void) {
    * Setup crypto.
    */
   if (usessl) {
-    -mbedtls_ssl_session_reset(&ssl);
+    mbedtls_ssl_session_reset(&ssl);
     CHECK_EQ(0, mbedtls_ssl_set_hostname(&ssl, host));
   }
 

@@ -5,7 +5,7 @@ COSMOPOLITAN_C_START_
 
 __funline unsigned char C121(unsigned char al, unsigned char bl,
                              unsigned char cl) {
-  unsigned short ax, bx;
+  unsigned short ax;
   ax = al;
   ax += bl;
   ax += bl;

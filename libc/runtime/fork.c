@@ -37,6 +37,7 @@ int _fork(uint32_t dwCreationFlags) {
   struct CosmoTib *tib;
   struct PosixThread *pt;
   int ax, dx, tid, parent;
+  (void)parent;
   BLOCK_SIGNALS;
   if (__threaded && _weaken(_pthread_onfork_prepare)) {
     _weaken(_pthread_onfork_prepare)();

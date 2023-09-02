@@ -131,6 +131,7 @@ TEST(poll, pipe_hasInput) {
   char buf[2];
   sigset_t chldmask, savemask;
   int ws, pid, sync[2], pipefds[2];
+  (void)sync;
   EXPECT_EQ(0, sigemptyset(&chldmask));
   EXPECT_EQ(0, sigaddset(&chldmask, SIGCHLD));
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &chldmask, &savemask));

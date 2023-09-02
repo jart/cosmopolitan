@@ -112,6 +112,7 @@ void secp384r1(uint64_t p[12]) {
   SBB(F, F, 0, o, o);
   G -= o;
 #else
+  (void)o;
   asm volatile(/* S₁ = (0  ‖0  ‖0  ‖0  ‖0  ‖A₂₃‖A₂₂‖A₂₁‖0  ‖0  ‖0  ‖0  ) */
                "mov\t21*4(%9),%7\n\t"
                "mov\t23*4(%9),%k8\n\t"

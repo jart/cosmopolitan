@@ -61,7 +61,6 @@ static const char *GetFrameName(int x) {
 }
 
 const char *(DescribeFrame)(char buf[32], int x) {
-  char *p;
   if (IsShadowFrame(x)) {
     ksnprintf(buf, 32, "%s %s %.8x", GetFrameName(x),
               GetFrameName(FRAME(UNSHADOW(ADDR_32_TO_48(x)))),

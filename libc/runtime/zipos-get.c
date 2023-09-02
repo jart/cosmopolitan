@@ -46,7 +46,7 @@ __static_yoink(APE_COM_NAME);
 static struct Zipos __zipos;
 static atomic_uint __zipos_once;
 
-static void __zipos_dismiss(const uint8_t *map, const uint8_t *cdir, long pg) {
+static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   uint64_t i, n, c, ef, lf, mo, lo, hi;
 
   // determine the byte range of zip file content (excluding central dir)
@@ -154,6 +154,7 @@ static void __zipos_init(void) {
     progpath = 0;
     msg = -777;
   }
+  (void)msg;
   STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
 }
 

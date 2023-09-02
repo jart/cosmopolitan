@@ -37,6 +37,6 @@ int pthread_setspecific(pthread_key_t k, const void *val) {
   //                                  ──Quoth POSIX.1-2017
   unassert(0 <= k && k < PTHREAD_KEYS_MAX);
   unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
-  __get_tls()->tib_keys[k] = val;
+  __get_tls()->tib_keys[k] = (void *)val;
   return 0;
 }

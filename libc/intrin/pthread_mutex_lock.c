@@ -65,7 +65,7 @@
  * @vforksafe
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  int c, d, t;
+  int t;
 
   if (__vforked) return 0;
 

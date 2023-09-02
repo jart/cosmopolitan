@@ -31,13 +31,14 @@
  * @param y needs to be 16-byte aligned
  */
 void sad16x8n(size_t n, short x[n][8], const short y[n][8]) {
-  size_t i, j;
+  size_t i;
   for (i = 0; i < n; ++i) {
 #ifdef __x86_64__
     *(__m128i *)x[i] = _mm_adds_epi16(*(__m128i *)x[i], *(__m128i *)y[i]);
 #elif defined(__aarch64__)
     *(int16x4_t *)x[i] = vqadd_s16(*(int16x4_t *)x[i], *(int16x4_t *)y[i]);
 #else
+    size_t j;
     for (j = 0; j < 8; ++j) {
       x[i][j] = MIN(MAX(x[i][j] + y[i][j], INT16_MIN), INT16_MAX);
     }

@@ -1242,6 +1242,7 @@ static void parseStatements (tokenInfo *const token, const boolean exit_on_endif
 {
 	boolean isAnsi   = TRUE;
 	boolean stmtTerm = FALSE;
+        (void)isAnsi;
 	do
 	{
 

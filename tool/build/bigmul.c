@@ -31,10 +31,8 @@
 
 void PrintMultiplyKernel(int n, int m) {
   bool cf, of;
-  uint128_t x;
   bool *Rs, *Ra;
   int j, i, k1, k2, g;
-  uint64_t *R, *H;
   printf("\
 /**\n\
  * Computes %d-bit product of %d-bit and %d-bit numbers.\n\
@@ -67,7 +65,7 @@ void Multiply%dx%d(uint64_t C[%d], const uint64_t A[%d], const uint64_t B[%d]) {
     (printf)("\
   asm(\"xorl\\t%%k0,%%k0\" : \"=r\"(z), \"+m\"(cf), \"+m\"(of));\n",
              j);
-    for (cf = of = i = 0; i < n; ++i) {
+    for (cf = of = false, i = 0; i < n; ++i) {
       if (!i) {
         if (!Rs[i + j] && !Rs[i + j + 1]) {
           assert(!cf);

@@ -42,7 +42,6 @@ struct DoxWriter {
 };
 
 static void SerializeData(struct Buffer *buf, const void *p, unsigned long n) {
-  struct Slice *s;
   buf->p = realloc(buf->p, buf->n + n);
   memcpy(buf->p + buf->n, p, n);
   buf->n += n;

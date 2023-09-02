@@ -41,7 +41,7 @@
  * @raise EBUSY if `abstime` was specified and deadline expired
  * @cancellationpoint
  */
-errno_t _wait0(const atomic_int *ctid, struct timespec *abstime) {
+errno_t _wait0(atomic_int *ctid, struct timespec *abstime) {
   int x, e, rc = 0;
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() refers to the calling thread."

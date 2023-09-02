@@ -225,7 +225,7 @@ int IsZipEocd64(const uint8_t *, size_t, size_t);
 int GetZipCfileMode(const uint8_t *);
 uint64_t GetZipCdirOffset(const uint8_t *);
 uint64_t GetZipCdirRecords(const uint8_t *);
-void *GetZipCdirComment(const uint8_t *);
+const void *GetZipCdirComment(const uint8_t *);
 uint64_t GetZipCdirSize(const uint8_t *);
 uint64_t GetZipCdirCommentSize(const uint8_t *);
 uint64_t GetZipCfileUncompressedSize(const uint8_t *);

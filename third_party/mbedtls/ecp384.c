@@ -39,7 +39,7 @@ static bool
 mbedtls_p384_gte( uint64_t p[7] )
 {
     return( (((int64_t)p[6] > 0) |
-             (!p[6] &
+             ((!p[6]) &
               ((p[5] > 0xffffffffffffffff) |
                ((p[5] == 0xffffffffffffffff) &
                 ((p[4] > 0xffffffffffffffff) |
@@ -189,13 +189,11 @@ mbedtls_p384_mul( uint64_t X[12],
         void *f = 0;
         if( A == X )
         {
-            A = memcpy( malloc( 6 * 8 ), A, 6 * 8 );
-            f = A;
+            A = f = memcpy( malloc( 6 * 8 ), A, 6 * 8 );
         }
         else if( B == X )
         {
-            B = memcpy( malloc( 6 * 8 ), B, 6 * 8 );
-            f = B;
+            B = f = memcpy( malloc( 6 * 8 ), B, 6 * 8 );
         }
         Mul( X, A, n, B, m );
         mbedtls_platform_zeroize( X + n + m, (12 - n - m) * 8 );
@@ -417,7 +415,7 @@ int mbedtls_p384_double_jac( const mbedtls_ecp_group *G,
     if( IsAsan() ) __asan_verify( P, sizeof( *P ) );
     if( IsAsan() ) __asan_verify( R, sizeof( *R ) );
     if( ( ret = mbedtls_p384_dim( R ) ) ) return( ret );
-    if( ( ret = mbedtls_p384_dim( P ) ) ) return( ret );
+    if( ( ret = mbedtls_p384_dim( (void *)P ) ) ) return( ret );
     mbedtls_platform_zeroize( T, sizeof( T ) );
     mbedtls_p384_mul( T[1], P->Z.p, 6, P->Z.p, 6 );
     mbedtls_p384_add( T[2], P->X.p, T[1] );

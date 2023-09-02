@@ -129,13 +129,13 @@ struct AsanExtra {
 };
 
 struct AsanSourceLocation {
-  const char *filename;
+  char *filename;
   int line;
   int column;
 };
 
 struct AsanAccessInfo {
-  const char *addr;
+  char *addr;
   const uintptr_t first_bad_addr;
   size_t size;
   bool iswrite;
@@ -143,7 +143,7 @@ struct AsanAccessInfo {
 };
 
 struct AsanGlobal {
-  const char *addr;
+  char *addr;
   size_t size;
   size_t size_with_redzone;
   const void *name;
@@ -517,7 +517,6 @@ struct AsanFault __asan_check(const void *p, long n) {
  */
 struct AsanFault __asan_check_str(const char *p) {
   uint64_t w;
-  struct AsanFault f;
   signed char c, k, *s;
   s = SHADOW(p);
   if (OverlapsShadowSpace(p, 1)) {
@@ -1059,7 +1058,8 @@ static struct AsanExtra *__asan_get_extra(const void *p, size_t *c) {
   long x, n;
   struct AsanExtra *e;
   f = (intptr_t)p >> 16;
-  if (!kisdangerous(p) && (n = _weaken(dlmalloc_usable_size)(p)) > sizeof(*e) &&
+  if (!kisdangerous(p) &&
+      (n = _weaken(dlmalloc_usable_size)((void *)p)) > sizeof(*e) &&
       !ckd_add(&x, (intptr_t)p, n) && x <= 0x800000000000 &&
       (LIKELY(f == (int)((x - 1) >> 16)) || !kisdangerous((void *)(x - 1))) &&
       (LIKELY(f == (int)((x = x - sizeof(*e)) >> 16)) ||
@@ -1227,7 +1227,6 @@ void *__asan_memalign(size_t align, size_t size) {
 }
 
 void *__asan_calloc(size_t n, size_t m) {
-  char *p;
   struct AsanTrace bt;
   __asan_trace(&bt, RBP);
   if (ckd_mul(&n, n, m)) n = -1;
@@ -1498,7 +1497,7 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
   __asan_shadow_existing_mappings();
   __asan_map_shadow((uintptr_t)__executable_start, _end - __executable_start);
   __asan_map_shadow(0, 4096);
-  __asan_poison(0, getauxval(AT_PAGESZ), kAsanNullPage);
+  __asan_poison((void *)__veil("r", 0L), getauxval(AT_PAGESZ), kAsanNullPage);
   if (!IsWindows()) {
     sys_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
   }

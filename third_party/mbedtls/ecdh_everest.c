@@ -15,8 +15,8 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "third_party/mbedtls/ecdh_everest.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/everest.h"
 #if defined(MBEDTLS_ECDH_C) && defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)
 #define KEYSIZE 32
@@ -156,7 +156,6 @@ int mbedtls_everest_get_params(mbedtls_ecdh_context_everest *ctx,
                                mbedtls_everest_ecdh_side side)
 {
   size_t olen = 0;
-  mbedtls_everest_ecdh_side s;
   switch (side)
   {
     case MBEDTLS_EVEREST_ECDH_THEIRS:

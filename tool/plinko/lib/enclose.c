@@ -69,8 +69,6 @@ static void CheckClosure(int e, int a) {
 }
 
 int Enclose(int e, int a) {
-  int x;
-  dword w;
   CheckClosure(e, a);
   return Cons(kClosure, Cons(e, a));
 }

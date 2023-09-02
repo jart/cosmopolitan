@@ -113,9 +113,9 @@ main(int argc, char *argv[])
 	static char obuf[BUFSIZ];
 	static char ibuf[BUFSIZ];
 	fd_set rfd;
+	int fm_fd;
 	int aflg, Fflg, kflg, pflg, ch, k, n;
 	int flushtime, readstdin;
-	int fm_fd, fm_log;
 
 	aflg = Fflg = kflg = pflg = 0;
 	usesleep = 1;
@@ -124,6 +124,8 @@ main(int argc, char *argv[])
 	fm_fd = -1;	/* Shut up stupid "may be used uninitialized" GCC
 			   warning. (not needed w/clang) */
 	showexit = 0;
+
+	(void)fm_fd;
 
 	while ((ch = getopt(argc, argv, "adeFfkpqrt:")) != -1)
 		switch(ch) {

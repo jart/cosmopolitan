@@ -42,7 +42,7 @@
  * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t recv(int fd, void *buf, size_t size, int flags) {
-  ssize_t rc, got;
+  ssize_t rc;
   BEGIN_CANCELLATION_POINT;
 
   if (IsAsan() && !__asan_is_valid(buf, size)) {

@@ -28,7 +28,7 @@
  * @param mapsize is the number of bytes past `elf` we can access
  * @return pointer to section header within image, or null
  */
-Elf64_Shdr *FindElfSectionByName(Elf64_Ehdr *elf, size_t mapsize,
+Elf64_Shdr *FindElfSectionByName(const Elf64_Ehdr *elf, size_t mapsize,
                                  char *shdrstrtab, const char *name) {
   long i;
   Elf64_Shdr *shdr;

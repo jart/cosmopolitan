@@ -76,6 +76,5 @@ TEST(strwidth, testTextDelimitingControlCodes_dontHaveSubstance) {
 }
 
 BENCH(wcwidth, bench) {
-  volatile int x;
-  EZBENCH2("wcwidth", donothing, x = wcwidth(__veil("r", u'→')));
+  EZBENCH2("wcwidth", donothing, __expropriate(wcwidth(__veil("r", u'→'))));
 }

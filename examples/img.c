@@ -44,14 +44,14 @@ void PrintUsage(int rc, FILE *f) {
 
 void PrintImg(const char *path) {
   size_t n;
-  int opt, i, yn, xn, cn, w, h;
-  void *img, *pix, *src, *mime;
+  int yn, xn, cn, w, h;
+  void *img, *pix, *src;
   if (!(img = _gc(xslurp(path, &n)))) exit(2);
   if (!(pix = _gc(stbi_load_from_memory(img, n, &xn, &yn, &cn, 0)))) exit(3);
   if (linktag) {
     printf("<a href=\"%s\"\n  >", path);
   }
-  src = path;
+  src = (void *)path;
   if (datauri) {
     src = xasprintf("data:%s;base64,%s", FindContentType(path, -1),
                     _gc(EncodeBase64(img, n, &n)));

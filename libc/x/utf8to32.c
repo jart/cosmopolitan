@@ -37,7 +37,6 @@
  * @param z if non-NULL receives output length
  */
 wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
-  int e;
   size_t i;
   unsigned m, j;
   wint_t x, a, b;

@@ -53,7 +53,7 @@ static dontubsan void RaiseSigFpe(void) {
  * @asyncsignalsafe
  */
 int raise(int sig) {
-  int rc, tid, event;
+  int rc;
   STRACE("raise(%G) → ...", sig);
   if (sig == SIGTRAP) {
     DebugBreak();

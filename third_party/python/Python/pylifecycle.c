@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/pylifecycle.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -13,8 +14,8 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/str/locale.h"
+#include "libc/sysv/consts/sig.h"
 #include "third_party/python/Include/Python-ast.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/ast.h"
@@ -37,7 +38,6 @@
 #include "third_party/python/Include/parsetok.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
-#include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pystrcmp.h"
 #include "third_party/python/Include/pytime.h"
@@ -53,9 +53,6 @@
 
 /* Python interpreter top-level routines, including init/exit */
 
-_Py_IDENTIFIER(name);
-_Py_IDENTIFIER(flush);
-_Py_IDENTIFIER(stdout);
 _Py_IDENTIFIER(stderr);
 
 /* Forward */

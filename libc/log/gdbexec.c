@@ -29,8 +29,8 @@
  * Attaches GDB temporarily, to do something like print a variable.
  */
 relegated int(gdbexec)(const char *cmd) {
+  int pid;
   struct StackFrame *bp;
-  int pid, ttyin, ttyout;
   const char *se, *elf, *gdb;
   char pidstr[11], breakcmd[40];
   if (!(gdb = GetGdbPath())) return -1;
@@ -50,8 +50,8 @@ relegated int(gdbexec)(const char *cmd) {
                    "--nh",
                    "-p",
                    pidstr,
-                   se,
-                   elf,
+                   (char *)se,
+                   (char *)elf,
                    "-ex",
                    "set osabi GNU/Linux",
                    "-ex",
@@ -64,7 +64,7 @@ relegated int(gdbexec)(const char *cmd) {
                    "-ex",
                    breakcmd,
                    "-ex",
-                   cmd,
+                   (char *)cmd,
                    "-ex",
                    "quit",
                    NULL,

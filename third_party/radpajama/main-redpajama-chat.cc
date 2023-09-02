@@ -160,11 +160,6 @@ int main(int argc, char ** argv) {
 
     set_console_color(con_st, CONSOLE_COLOR_PROMPT);
 
-    const int32_t top_k          = params.top_k;
-    const float   top_p          = params.top_p;
-    const float   temp           = params.temp;
-    const float   repeat_penalty = params.repeat_penalty;
-
     while (true) {
         is_interacting = true;
         int n_past = 0;
@@ -223,7 +218,7 @@ int main(int argc, char ** argv) {
         embd_inp.push_back(gptneox_str_to_token(ctx, ">:"));
 
         // How many tokens to generate - check if theres space in context for atleast one token (or batch size tokens?)
-        auto inp_size = embd_inp.size();
+        int inp_size = embd_inp.size();
         auto space = params.n_ctx - inp_size;
         if(space <= 0) {
             fprintf(stderr, "%s : input too long\n", __func__);
@@ -325,7 +320,7 @@ int main(int argc, char ** argv) {
             space -= 1;
             // Repeat tokens update
             last_n_tokens.push_back(id);
-            if (last_n_tokens.size() > params.repeat_last_n) {
+            if ((int)last_n_tokens.size() > params.repeat_last_n) {
                 last_n_tokens.erase(last_n_tokens.begin());
             }
             // Redpajama: check if the interactive is done.

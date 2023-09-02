@@ -30,7 +30,6 @@ _Py_InitImport(PyInterpreterState *interp, PyObject *sysmod)
 {
     PyObject *importlib;
     PyObject *impmod;
-    PyObject *cosmomod;
     PyObject *sys_modules;
     PyObject *value;
 

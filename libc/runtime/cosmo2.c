@@ -101,7 +101,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   __oldstack = (intptr_t)sp;
 
   // detect apple m1 environment
-  char *magnums;
+  const char *magnums;
   if (SupportsXnu() && (__syslib = m1)) {
     hostos = _HOSTXNU;
     magnums = syscon_xnu;
@@ -110,15 +110,6 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
     magnums = syscon_linux;
   } else {
     notpossible;
-  }
-
-  // get page size
-  unsigned long pagesz = 4096;
-  for (int i = 0; auxv[i]; i += 2) {
-    if (auxv[i] == AT_PAGESZ) {
-      pagesz = auxv[i + 1];
-      break;
-    }
   }
 
   // setup system magic numbers

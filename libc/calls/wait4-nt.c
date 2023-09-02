@@ -81,11 +81,11 @@ static textwindows void AddProcessStats(int64_t h, struct rusage *ru) {
 static textwindows int sys_wait4_nt_impl(int *pid, int *opt_out_wstatus,
                                          int options,
                                          struct rusage *opt_out_rusage) {
+  int pids[64];
   int64_t handle;
-  int rc, pids[64];
+  uint32_t i, count;
   int64_t handles[64];
   uint32_t dwExitCode;
-  uint32_t i, j, count;
   if (*pid != -1 && *pid != 0) {
     if (*pid < 0) {
       // XXX: this is sloppy

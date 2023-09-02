@@ -37,7 +37,6 @@ static void sys_clock_gettime_mono_init(void) {
 int sys_clock_gettime_mono(struct timespec *time) {
   uint64_t nanos;
   uint64_t cycles;
-  struct timespec res;
   if (X86_HAVE(INVTSC)) {
     cosmo_once(&g_mono.once, sys_clock_gettime_mono_init);
     cycles = rdtsc() - g_mono.base_tick;

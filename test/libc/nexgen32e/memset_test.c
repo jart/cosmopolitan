@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
 void *_memset(void *, int, size_t) asm("memset");
@@ -68,7 +68,7 @@ TEST(memset, size5) {
 }
 
 TEST(memset, wut) {
-  char buf[128], *p, *q;
+  char buf[128];
   _memset(buf, -1, sizeof(buf));
   EXPECT_EQ(255, buf[8] & 255);
 }

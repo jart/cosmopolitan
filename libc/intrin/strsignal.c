@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-static char g_strsignal[15];
+static char g_strsignal[21];
 
 /**
  * Returns string describing signal code.

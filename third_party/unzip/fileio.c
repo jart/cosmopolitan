@@ -183,8 +183,6 @@ static ZCONST char Far ExtraFieldTooLong[] =
 #else
    static ZCONST char Far DiskFullQuery[] =
      "%s:  write error (disk full?).  Continue? (y/n/^C) ";
-   static ZCONST char Far ZipfileCorrupt[] =
-     "error:  zipfile probably corrupt (%s)\n";
 #  ifdef SYMLINKS
      static ZCONST char Far FileIsSymLink[] =
        "%s exists and is a symbolic link%s.\n";

@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
   if (argc < 3) {
     ShowUsage(1, 2);
   }
-  const char *flags = argv[1];
+  char *flags = argv[1];
   const char *outpath = argv[2];
 
   // we only support one mode of operation, which is creating a new

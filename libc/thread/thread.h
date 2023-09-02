@@ -218,11 +218,12 @@ void pthread_testcancel(void);
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 && \
     !defined(__STRICT_ANSI__) && !defined(MODE_DBG)
 extern const errno_t EBUSY;
-#define pthread_spin_lock(pSpin)                                           \
-  ({                                                                       \
-    pthread_spinlock_t *_s = pSpin;                                        \
-    while (__atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE)) donothing; \
-    0;                                                                     \
+#define pthread_spin_lock(pSpin)                                  \
+  ({                                                              \
+    pthread_spinlock_t *_s = pSpin;                               \
+    while (__atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE)) { \
+    }                                                             \
+    0;                                                            \
   })
 #define pthread_spin_unlock(pSpin)                     \
   ({                                                   \

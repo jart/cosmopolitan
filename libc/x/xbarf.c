@@ -31,9 +31,9 @@
  * @note this is uninterruptible
  */
 int xbarf(const char *path, const void *data, size_t size) {
-  char *p;
   ssize_t rc;
   int fd, res;
+  const char *p;
   size_t i, wrote;
   res = 0;
   p = data;

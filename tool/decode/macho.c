@@ -23,6 +23,8 @@
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macho.internal.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -56,7 +58,7 @@ static void showmachoheader(void) {
     exit(1);
   }
 #endif
-  showtitle(basename(path), "macho", "header", NULL, NULL);
+  showtitle(basename(gc(strdup(path))), "macho", "header", NULL, NULL);
   printf("\n");
   showinthex(macho->magic);
   show(".long",
@@ -171,7 +173,7 @@ static void showmacholoaduuid(struct MachoLoadUuid *lu) {
 #define COLS 8
 
 static void showmacholoadgeneric(struct MachoLoadCommand *lc) {
-  int i, c, col = 0;
+  int c, col = 0;
   int need_newline = 0;
   char16_t glyphs[COLS + 1];
   const unsigned char *p, *pe;

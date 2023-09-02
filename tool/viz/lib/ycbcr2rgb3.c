@@ -237,7 +237,7 @@ void YCbCr2Rgb(long yn, long xn, unsigned char RGB[restrict 3][yn][xn],
                const unsigned char Cr[restrict cys][cxs], const int K[8][4],
                const int L[6][4], const unsigned char T[256]) {
   long i, j;
-  short y, u, v, r, g, b, A, B, C;
+  short y, u, v, r, g, b;
   for (i = 0; i < yn; ++i) {
     for (j = 0; j < xn; ++j) {
       y = T[Y[i][j]];
@@ -280,8 +280,8 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                      long cyn, long cxn, double syn, double sxn, double pry,
                      double prx) {
   long double ts;
-  long y, x, scyn, scxn;
-  double yry, yrx, cry, crx, yoy, yox, coy, cox, err, oy;
+  long scyn, scxn;
+  double yry, yrx, cry, crx, yoy, yox, coy, cox;
   scyn = syn * cyn / yyn;
   scxn = sxn * cxn / yxn;
   if (HALF(yxn) > dxn && HALF(scxn) > dxn) {

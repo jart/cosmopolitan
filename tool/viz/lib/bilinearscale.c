@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/viz/lib/bilinearscale.h"
 #include "dsp/core/twixt8.h"
 #include "libc/intrin/bsr.h"
 #include "libc/log/check.h"
@@ -29,7 +30,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/tinymath/emod.h"
 #include "libc/x/x.h"
-#include "tool/viz/lib/bilinearscale.h"
 
 static void ComputeScalingSolution(long dn, long sn, double r, double o,
                                    unsigned char pct[dn + 1], int idx[dn + 1]) {
@@ -52,7 +52,7 @@ static void BilinearScaler(long dcw, long dyw, long dxw,
                            int iy[dyn + 1], unsigned char py[dyn + 1],
                            int ix[dxn + 1], unsigned char px[dxn + 1],
                            unsigned char db[dxn], unsigned char sb[2][sxn]) {
-  long c, y, x, b;
+  long c, y, x;
   ComputeScalingSolution(dxn, sxn, rx, ox, px, ix);
   ComputeScalingSolution(dyn, syn, ry, oy, py, iy);
   for (c = c0; c < cn; ++c) {

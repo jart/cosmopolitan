@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   luaL_openlibs(L);
   lua_pushcfunction(L, NativeAdd);
   lua_setglobal(L, "NativeAdd");
-  luaL_dofile(L, "/zip/examples/hellolua.lua");
+  (void)luaL_dofile(L, "/zip/examples/hellolua.lua");
   lua_close(L);
   return 0;
 }

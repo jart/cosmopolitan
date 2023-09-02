@@ -40,7 +40,6 @@
 #include "libc/thread/thread2.h"
 
 void OnUsr1(int sig, struct siginfo *si, void *vctx) {
-  struct ucontext *ctx = vctx;
 }
 
 void SetUp(void) {
@@ -83,7 +82,7 @@ TEST(pthread_create, testCreateExitJoin) {
 }
 
 static void *CheckSchedule(void *arg) {
-  int rc, policy;
+  int policy;
   struct sched_param prio;
   ASSERT_EQ(0, pthread_getschedparam(pthread_self(), &policy, &prio));
   ASSERT_EQ(SCHED_OTHER, policy);

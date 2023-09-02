@@ -901,7 +901,6 @@ privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
 }
 
 privileged static void xed_evex_imm_scanner(struct XedDecodedInst *d) {
-  uint64_t uimm0;
   uint8_t *itext, *imm_ptr;
   xed_bits_t length, imm_bytes, imm1_bytes, max_bytes;
   imm_ptr = 0;
@@ -1162,7 +1161,7 @@ privileged static void XED_LF_DISP_BUCKET_0_l1(struct XedDecodedInst *x) {
 }
 
 privileged static void xed_disp_scanner(struct XedDecodedInst *d) {
-  xed_bits_t length, disp_width, disp_bytes, max_bytes;
+  xed_bits_t length, disp_bytes, max_bytes;
   length = d->length;
   if (d->op.map < XED_ILD_MAP2) {
     switch (xed_disp_bits_2d[d->op.map][d->op.opcode]) {

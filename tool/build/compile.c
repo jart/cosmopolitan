@@ -313,7 +313,6 @@ void PrintReset(void) {
 }
 
 void PrintMakeCommand(void) {
-  const char *s;
   appends(&output, "make MODE=");
   appends(&output, mode);
   appends(&output, " -j");
@@ -476,14 +475,15 @@ void AddArg(char *actual) {
   }
   appends(&command, s);
   if (!args.n) {
-    appends(&shortened, StripPrefix(basename(s), "x86_64-linux-musl-"));
+    appends(&shortened,
+            StripPrefix(basename(gc(strdup(s))), "x86_64-linux-musl-"));
   } else if (*s != '-') {
     appendw(&shortened, ' ');
     if ((isar || isbfd || ispkg) &&
         (strcmp(args.p[args.n - 1], "-o") &&
          (endswith(s, ".o") || endswith(s, ".pkg") ||
           (endswith(s, ".a") && !isar)))) {
-      appends(&shortened, basename(s));
+      appends(&shortened, basename(gc(strdup(s))));
     } else {
       appends(&shortened, s);
     }
@@ -511,11 +511,11 @@ static int GetBaseCpuFreqMhz(void) {
 }
 
 void SetCpuLimit(int secs) {
-  int mhz, lim;
-  struct rlimit rlim;
   if (secs <= 0) return;
   if (IsWindows()) return;
 #ifdef __x86_64__
+  int mhz, lim;
+  struct rlimit rlim;
   if (!(mhz = GetBaseCpuFreqMhz())) return;
   lim = ceil(3100. / mhz * secs);
   rlim.rlim_cur = lim;
@@ -851,13 +851,12 @@ char *MakeTmpOut(const char *path) {
 }
 
 int main(int argc, char *argv[]) {
-  int columns;
   uint64_t us;
   bool isineditor;
   size_t i, j, n, m;
   bool isproblematic;
+  char *s, *q, **envp;
   int ws, opt, exitcode;
-  char *s, *p, *q, **envp;
 
 #ifndef NDEBUG
   ShowCrashReports();
@@ -1070,7 +1069,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef __x86_64__
     } else if (!strcmp(argv[i], "-march=native")) {
-      struct X86ProcessorModel *model;
+      const struct X86ProcessorModel *model;
       if (X86_HAVE(XOP)) AddArg("-mxop");
       if (X86_HAVE(SSE4A)) AddArg("-msse4a");
       if (X86_HAVE(SSE3)) AddArg("-msse3");

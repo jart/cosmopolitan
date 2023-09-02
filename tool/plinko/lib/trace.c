@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/plinko/lib/trace.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/printf.h"
-#include "tool/plinko/lib/trace.h"
 
 void EnableTracing(void) {
   eval = EvalTrace;
@@ -112,7 +112,7 @@ static relegated int Trace(int e, int a, EvalFn *f, bool p(int), const char *s,
 }
 
 relegated int RecurseTrace(dword ea, dword p1, dword p2) {
-  int r, d, S = sp;
+  int r;
   const char *s = "Recurse";
   const unsigned short c[5] = u"╔═║╚═";
   if (depth < ARRAYLEN(g_depths)) {
@@ -143,7 +143,7 @@ relegated int RecurseTrace(dword ea, dword p1, dword p2) {
 }
 
 relegated int EvlisTrace(int e, int a, dword p1, dword p2) {
-  int r, d, S = sp;
+  int r, d;
   const char *s = "Evlis";
   const unsigned short c[5] = u"╒─┆╘─";
   DCHECK_GE(depth, -1);
@@ -177,7 +177,7 @@ relegated int EvlisTrace(int e, int a, dword p1, dword p2) {
 
 relegated int Trace3(int x, int y, int a, PairFn *f, const char *s,
                      const unsigned short c[5]) {
-  int r, d, S = sp;
+  int r;
   if (depth < ARRAYLEN(g_depths)) {
     if (loga) {
       Fprintf(2, "%I%c%c%s[x=%S; y=%S; a=%S] δ %'Rns%n", c[0], c[1], s,
@@ -198,7 +198,6 @@ relegated int Trace3(int x, int y, int a, PairFn *f, const char *s,
 
 relegated struct Binding BindTrace(int x, int y, int a, int u, dword p1,
                                    dword p2) {
-  int d, S = sp;
   struct Binding r;
   if (depth < ARRAYLEN(g_depths)) {
     if (loga) {

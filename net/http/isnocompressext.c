@@ -39,7 +39,7 @@ static const char kNoCompressExts[][8] = {
 };
 
 static bool BisectNoCompressExts(uint64_t ext) {
-  int c, m, l, r;
+  int m, l, r;
   l = 0;
   r = ARRAYLEN(kNoCompressExts) - 1;
   while (l <= r) {

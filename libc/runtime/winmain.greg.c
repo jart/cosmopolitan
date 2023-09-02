@@ -185,7 +185,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
       wa->argv[0][i] = '/';
     }
   }
-  const char16_t *env16 = __imp_GetEnvironmentStringsW();
+  char16_t *env16 = __imp_GetEnvironmentStringsW();
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   __imp_FreeEnvironmentStringsW(env16);

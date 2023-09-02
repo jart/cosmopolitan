@@ -33,8 +33,8 @@
 
 textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   uint32_t mode;
+  int64_t hpipe, h1;
   char16_t pipename[64];
-  int64_t hpipe, h1, h2;
   int rc, reader, writer, oflags;
 
   // Supports only AF_UNIX

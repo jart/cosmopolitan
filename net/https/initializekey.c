@@ -22,9 +22,7 @@
 mbedtls_pk_context *InitializeKey(struct Cert *ca,
                                   mbedtls_x509write_cert *wcert,
                                   mbedtls_md_type_t md_alg, int type) {
-  mbedtls_pk_context *k;
-  mbedtls_ctr_drbg_context kr;
-  k = calloc(1, sizeof(mbedtls_pk_context));
+  mbedtls_pk_context *k = calloc(1, sizeof(mbedtls_pk_context));
   mbedtls_x509write_crt_init(wcert);
   mbedtls_x509write_crt_set_issuer_key(wcert, ca ? ca->key : k);
   mbedtls_x509write_crt_set_subject_key(wcert, k);

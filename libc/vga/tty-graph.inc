@@ -257,7 +257,7 @@ static MAYUNROLLLOOPS void FILLRECT(struct Tty *tty, size_t gy, size_t gx,
                                     size_t fill_ht, size_t fill_wid, COLOR bg) {
   size_t xs = tty->xs;
   char *cplotter = tty->canvas + gy * xs + gx * sizeof(COLOR);
-  size_t yleft = fill_ht, xleft;
+  size_t yleft = fill_ht;
   while (yleft-- != 0) {
     COLOR *plotter = (COLOR *)cplotter;
     size_t i;

@@ -148,14 +148,13 @@ void *Worker(void *id) {
   while (!closingtime) {
     struct tm tm;
     int64_t unixts;
-    struct Url url;
     ssize_t got, sent;
     struct timespec ts;
     struct HttpMessage msg;
     uint32_t clientaddrsize;
     struct sockaddr_in clientaddr;
     char inbuf[1500], outbuf[512], *p, *q;
-    int clientip, client, inmsglen, outmsglen;
+    int client, inmsglen, outmsglen;
 
     // this slows the server down a lot but is needed on non-Linux to
     // react to keyboard ctrl-c

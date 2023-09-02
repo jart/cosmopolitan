@@ -56,9 +56,8 @@
  * @vforksafe
  */
 int execve(const char *prog, char *const argv[], char *const envp[]) {
-  struct ZiposUri uri;
   int rc;
-  size_t i;
+  struct ZiposUri uri;
   if (!prog || !argv || !envp ||
       (IsAsan() && (!__asan_is_valid_str(prog) ||      //
                     !__asan_is_valid_strlist(argv) ||  //

@@ -28,7 +28,6 @@
 
 int sys_utimensat_xnu(int dirfd, const char *path, const struct timespec ts[2],
                       int flags) {
-  int i;
   struct stat st;
   struct timeval now, tv[2];
   if (flags) return einval();

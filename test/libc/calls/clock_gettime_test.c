@@ -37,12 +37,12 @@ TEST(clock_gettime, fault) {
 }
 
 TEST(clock_gettime, test) {
-  bool isfast;
   struct timespec ts = {0};
   ASSERT_EQ(0, clock_gettime(0, &ts));
   ASSERT_NE(0, ts.tv_sec);
   ASSERT_NE(0, ts.tv_nsec);
 #ifndef __aarch64__
+  bool isfast;
   // we support vdso on aarch64 but qemu-aarch64 won't let us test it
   if (__is_linux_2_6_23()) {
     ASSERT_GT((intptr_t)__clock_gettime_get(&isfast),

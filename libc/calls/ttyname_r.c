@@ -37,7 +37,6 @@
 
 static textwindows errno_t sys_ttyname_nt(int fd, char *buf, size_t size) {
   uint32_t mode;
-  const char *s;
   if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
     if (strlcpy(buf,
                 (mode & kNtEnableVirtualTerminalInput) ? "CONIN$" : "CONOUT$",

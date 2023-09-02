@@ -1026,11 +1026,6 @@ sys_getwindowsversion(PyObject *self)
     int pos = 0;
     PyObject *version;
     struct NtOsVersionInfo ver;
-    uint32_t realMajor, realMinor, realBuild;
-    int64_t hKernel32;
-    wchar_t kernel32_path[PATH_MAX];
-    void *verblock;
-    uint32_t verblock_size;
 
     if (!IsWindows()) {
         PyErr_SetString(PyExc_SystemError, "this is not windows");
@@ -1054,36 +1049,6 @@ sys_getwindowsversion(PyObject *self)
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wServicePackMinor));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wSuiteMask));
     PyStructSequence_SET_ITEM(version, pos++, PyLong_FromLong(ver.wProductType));
-
-    realMajor = ver.dwMajorVersion;
-    realMinor = ver.dwMinorVersion;
-    realBuild = ver.dwBuildNumber;
-
-#if 0 // todo(jart): port me
-    // GetVersion will lie if we are running in a compatibility mode.
-    // We need to read the version info from a system file resource
-    // to accurately identify the OS version. If we fail for any reason,
-    // just return whatever GetVersion said.
-    hKernel32 = GetModuleHandle("kernel32.dll");
-    if (hKernel32 && GetModuleFileNameW(hKernel32, kernel32_path, MAX_PATH) &&
-        (verblock_size = GetFileVersionInfoSizeW(kernel32_path, NULL)) &&
-        (verblock = PyMem_RawMalloc(verblock_size))) {
-        VS_FIXEDFILEINFO *ffi;
-        UINT ffi_len;
-        if (GetFileVersionInfoW(kernel32_path, 0, verblock_size, verblock) &&
-            VerQueryValueW(verblock, L"", (LPVOID)&ffi, &ffi_len)) {
-            realMajor = HIWORD(ffi->dwProductVersionMS);
-            realMinor = LOWORD(ffi->dwProductVersionMS);
-            realBuild = HIWORD(ffi->dwProductVersionLS);
-        }
-        PyMem_RawFree(verblock);
-    }
-    PyStructSequence_SET_ITEM(version, pos++, Py_BuildValue("(kkk)",
-        realMajor,
-        realMinor,
-        realBuild
-    ));
-#endif
 
     if (PyErr_Occurred()) {
         Py_DECREF(version);

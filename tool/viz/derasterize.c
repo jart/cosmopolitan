@@ -497,8 +497,9 @@ static void LoadFileViaImageMagick(const char *path, unsigned yn, unsigned xn,
   CHECK_NE(-1, pipe2(pipefds, O_CLOEXEC));
   if (!(pid = vfork())) {
     dup2(pipefds[1], 1);
-    execv(convert, (char *const[]){"convert", path, "-resize", dim, "-depth",
-                                   "8", "-colorspace", "sRGB", "rgb:-", NULL});
+    execv(convert,
+          (char *const[]){"convert", (char *)path, "-resize", dim, "-depth",
+                          "8", "-colorspace", "sRGB", "rgb:-", NULL});
     abort();
   }
   CHECK_NE(-1, close(pipefds[1]));
@@ -510,8 +511,7 @@ static void LoadFileViaImageMagick(const char *path, unsigned yn, unsigned xn,
 
 static void LoadFile(const char *path, size_t yn, size_t xn, void *rgb) {
   struct stat st;
-  size_t data2size, data3size;
-  void *map, *data, *data2, *data3;
+  void *map, *data;
   int fd, gotx, goty, channels_in_file;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)), "%s", path);
   CHECK_NE(-1, fstat(fd, &st));
@@ -585,7 +585,6 @@ int main(int argc, char *argv[]) {
   int i;
   void *rgb;
   size_t size;
-  char *option;
   unsigned yd, xd;
   ShowCrashReports();
   GetOpts(argc, argv);

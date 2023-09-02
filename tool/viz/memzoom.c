@@ -261,7 +261,6 @@ static void SetExtent(long lo, long hi) {
 }
 
 static void Open(void) {
-  int err;
   if ((fd = open(path, O_RDONLY)) == -1) {
     FailPath("open() failed", errno);
   }

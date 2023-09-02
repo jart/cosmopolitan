@@ -70,7 +70,7 @@ static dontasan void __munmap_impl(char *p, size_t n) {
   char *q;
   size_t m;
   intptr_t a, b, c;
-  int i, l, r, rc, beg, end;
+  int i, l, r, beg, end;
   KERNTRACE("__munmap_impl(%p, %'zu)", p, n);
   l = FRAME(p);
   r = FRAME(p + n - 1);
@@ -113,9 +113,6 @@ static dontasan void __munmap_impl(char *p, size_t n) {
 }
 
 dontasan int __munmap_unlocked(char *p, size_t n) {
-  unsigned i;
-  char poison;
-  intptr_t a, b, x, y;
   unassert(!__vforked);
   if (UNLIKELY(!n)) {
     STRACE("munmap n is 0");
@@ -154,11 +151,10 @@ dontasan int __munmap_unlocked(char *p, size_t n) {
  */
 int munmap(void *p, size_t n) {
   int rc;
-  size_t toto;
   __mmi_lock();
   rc = __munmap_unlocked(p, n);
 #if SYSDEBUG
-  toto = __strace > 0 ? __get_memtrack_size(&_mmi) : 0;
+  size_t toto = __strace > 0 ? __get_memtrack_size(&_mmi) : 0;
 #endif
   __mmi_unlock();
   STRACE("munmap(%.12p, %'zu) → %d% m (%'zu bytes total)", p, n, rc, toto);

@@ -95,7 +95,6 @@ static wontreturn void UnsupportedSyntax(unsigned char c) {
 }
 
 static void Open(const char *path, int fd, int flags) {
-  const char *err;
   close(fd);
   if (open(path, flags, 0644) == -1) {
     perror(path);
@@ -118,7 +117,7 @@ static int GetSignalByName(const char *s) {
   return 0;
 }
 
-static void PutEnv(char **p, const char *kv) {
+static void PutEnv(char **p, char *kv) {
   struct Env e;
   e = __getenv(p, kv);
   p[e.i] = kv;
@@ -182,7 +181,6 @@ static int Waiter(int pid) {
 }
 
 static int Wait(void) {
-  char ibuf[12];
   int e, ws, pid;
   if (n > 1) {
     if ((pid = atoi(args[1])) <= 0) {
@@ -719,7 +717,7 @@ static void Pipe(void) {
 }
 
 static int ShellSpawn(void) {
-  int rc, ws, pid;
+  int rc, pid;
   if ((rc = TryBuiltin()) == -1) {
     switch ((pid = fork())) {
       case 0:
@@ -804,8 +802,7 @@ static bool CopyVar(void) {
 }
 
 static char *Tokenize(void) {
-  const char *s;
-  int c, t, j, k, rc;
+  int c, t, rc;
   for (t = STATE_WHITESPACE;; ++p) {
     switch (t) {
 
@@ -954,8 +951,8 @@ static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
 }
 
 int _cocmd(int argc, char **argv, char **envp) {
+  size_t i;
   char *arg;
-  size_t i, j;
   size_t globCount = 0;
   int globFlags = 0;
   glob_t globTheBuilder;

@@ -38,7 +38,6 @@
  */
 int fseek_unlocked(FILE *f, int64_t offset, int whence) {
   int res;
-  ssize_t rc;
   int64_t pos;
   if (f->fd != -1) {
     if (__fflush_impl(f) == -1) return -1;

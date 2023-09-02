@@ -47,10 +47,11 @@
 int sigtimedwait(const sigset_t *set, siginfo_t *info,
                  const struct timespec *timeout) {
   int rc;
-  char strsig[15];
+  char strsig[21];
   struct timespec ts;
   union siginfo_meta si = {0};
   BEGIN_CANCELLATION_POINT;
+  (void)strsig;
 
   if (IsAsan() && (!__asan_is_valid(set, sizeof(*set)) ||
                    (info && !__asan_is_valid(info, sizeof(*info))) ||

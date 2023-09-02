@@ -408,7 +408,7 @@ Bool TY_(tidySetLanguage)( ctmbstr languageCode )
 
     if ( strlen( wantCode ) > 2 )
     {
-        strncpy(lang, wantCode, 2);
+        strncpy(__veil("r", lang), __veil("r", wantCode), __veil("r", 2));
         lang[2] = '\0';
         dict2 = TY_(tidyTestLanguage( lang ) ); /* BACKUP language? */
     }

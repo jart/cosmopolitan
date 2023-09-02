@@ -66,7 +66,6 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
   int filetype;
   int64_t handle;
   uint32_t remain;
-  uint32_t conmode;
   char *targetdata;
   uint32_t targetsize;
   bool is_console_input;
@@ -205,7 +204,6 @@ StartOver:
 textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
                                 size_t iovlen, int64_t opt_offset) {
   ssize_t rc;
-  uint32_t size;
   size_t i, total;
   if (opt_offset < -1) return einval();
   if (_check_interrupts(kSigOpRestartable)) return -1;

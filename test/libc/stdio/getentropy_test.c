@@ -63,7 +63,7 @@ TEST(getentropy, test) {
   pthread_t child;
   double e, w = 7.7;
   struct sigaction sa;
-  int i, j, k, m, n = 999;
+  int i, k, m, n = 999;
   char *buf = _gc(calloc(1, n));
   sa.sa_flags = 0;
   sa.sa_handler = OnSig;

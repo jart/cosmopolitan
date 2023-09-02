@@ -19,12 +19,12 @@
 #include "libc/intrin/describeflags.internal.h"
 
 // TODO(jart): Fork this function into ASAN and non-ASAN versions.
-const char *DescribeFlags(char *p, size_t n, struct DescribeFlags *d, size_t m,
-                          const char *prefix, unsigned x) {
+const char *DescribeFlags(char *p, size_t n, const struct DescribeFlags *d,
+                          size_t m, const char *prefix, unsigned x) {
   bool t;
   char b[21];
   size_t i, j, k;
-  for (t = i = j = 0; j < m; ++j) {
+  for (t = false, i = j = 0; j < m; ++j) {
     if (d[j].flag && d[j].flag != -1 && (x & d[j].flag) == d[j].flag) {
       x &= ~d[j].flag;
       if (t) {

@@ -47,7 +47,6 @@ static void _pthread_purge(void) {
 
 static void _pthread_onfork(int i) {
   struct AtFork *a;
-  struct PosixThread *pt;
   unassert(0 <= i && i <= 2);
   if (!i) pthread_spin_lock(&_atforks.lock);
   for (a = _atforks.list; a; a = a->p[!i]) {
@@ -91,7 +90,7 @@ void _pthread_onfork_child(void) {
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);
   pthread_mutex_init(&__fds_lock_obj, &attr);
-  pthread_spin_init(&_pthread_lock, 0);
+  (void)pthread_spin_init(&_pthread_lock, 0);
 
   // call user-supplied forked child callbacks
   _pthread_onfork(2);

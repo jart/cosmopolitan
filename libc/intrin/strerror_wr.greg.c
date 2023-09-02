@@ -42,17 +42,16 @@ dontasan dontubsan privileged
 int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
   /* kprintf() weakly depends on this function */
   int c, n;
-  bool wanting;
   char16_t winmsg[256];
   const char *sym, *msg;
-  wanting = false;
+  /* wanting = false; */
   if (!(sym = _strerrno(err))) {
     sym = "EUNKNOWN";
-    wanting = true;
+    /* wanting = true; */
   }
   if (!(msg = _strerdoc(err))) {
     msg = "No error information";
-    wanting = true;
+    /* wanting = true; */
   }
   if (IsTiny()) {
     if (!sym) sym = "EUNKNOWN";

@@ -26,8 +26,9 @@
  */
 char *xbasename(const char *path) {
   char *base;
-  path = xstrdup(path);
-  base = xstrdup(basename(path));
-  free(path);
+  char *path2;
+  path2 = xstrdup(path);
+  base = xstrdup(basename(path2));
+  free(path2);
   return base;
 }

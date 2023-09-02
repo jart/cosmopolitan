@@ -70,9 +70,6 @@ STATIC_STACK_SIZE(0x80000);
 #define LUA_INITVARVERSION	LUA_INIT_VAR LUA_VERSUFFIX
 
 
-static lua_State *globalL = NULL;
-
-
 static bool lua_stdin_is_tty(void) {
   return isatty(0);
 }

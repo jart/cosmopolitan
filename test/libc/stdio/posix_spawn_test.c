@@ -52,7 +52,7 @@ __attribute__((__constructor__)) static void init(void) {
 }
 
 TEST(posix_spawn, test) {
-  int rc, ws, pid;
+  int ws, pid;
   char *prog = GetProgramExecutableName();
   char *args[] = {prog, NULL};
   char *envs[] = {"THE_DOGE=42", NULL};
@@ -73,7 +73,8 @@ TEST(posix_spawn, pipe) {
   ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, p[0]));
   ASSERT_EQ(0, posix_spawn_file_actions_adddup2(&fa, p[1], 1));
   ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, p[1]));
-  ASSERT_EQ(0, posix_spawnp(&pid, pn, &fa, 0, (char *[]){pn, "hello", 0}, 0));
+  ASSERT_EQ(
+      0, posix_spawnp(&pid, pn, &fa, 0, (char *[]){(void *)pn, "hello", 0}, 0));
   ASSERT_SYS(0, 0, close(p[1]));
   ASSERT_SYS(0, pid, waitpid(pid, &status, 0));
   ASSERT_SYS(0, 6, read(p[0], buf, sizeof(buf)));
@@ -91,7 +92,6 @@ void OhMyGoth(int sig) {
 TEST(posix_spawn, torture) {
   int n = 10;
   int ws, pid;
-  short flags;
   sigset_t allsig;
   posix_spawnattr_t attr;
   posix_spawn_file_actions_t fa;
@@ -157,7 +157,7 @@ TEST(posix_spawn, agony) {
  */
 
 void BenchmarkProcessLifecycle(void) {
-  int rc, ws, pid;
+  int ws, pid;
   char *prog = "/tmp/tiny64";
   char *args[] = {"tiny64", NULL};
   char *envs[] = {NULL};

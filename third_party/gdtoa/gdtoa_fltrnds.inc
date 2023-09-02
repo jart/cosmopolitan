@@ -1,7 +1,8 @@
 /* clang-format off */
 
-	FPI *fpi, fpi1;
+	FPI fpi1;
 	int Rounding;
+	const FPI *fpi;
 	Rounding = FLT_ROUNDS;
 	fpi = &fpi0;
 	if (Rounding != FPI_Round_near) {

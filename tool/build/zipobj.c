@@ -138,7 +138,6 @@ void GetOpts(int *argc, char ***argv) {
 void ProcessFile(struct ElfWriter *elf, const char *path) {
   int fd;
   void *map;
-  size_t pathlen;
   struct stat st;
   const char *name;
   if (stat(path, &st)) {
@@ -167,7 +166,7 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
     name = name_;
   } else {
     name = path;
-    if (basenamify_) name = basename(name);
+    if (basenamify_) name = basename(gc(xstrdup(name)));
     name = StripComponents(name, strip_components_);
     if (path_prefix_) name = gc(xjoinpaths(path_prefix_, name));
   }

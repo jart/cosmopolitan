@@ -1475,6 +1475,7 @@ static boolean parseStatement (tokenInfo *const token)
 	boolean is_global = FALSE;
 	boolean is_prototype = FALSE;
 	vString *	fulltag;
+        (void)is_prototype;
 
 	vStringClear(saveScope);
 	vStringCopy (saveScope, token->scope);

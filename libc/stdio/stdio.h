@@ -123,6 +123,7 @@ int vasprintf(char **, const char *, va_list) paramsnonnull() libcesque;
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int getc_unlocked(FILE *) paramsnonnull();
+int puts_unlocked(const char *);
 int getchar_unlocked(void);
 int putc_unlocked(int, FILE *) paramsnonnull();
 int putchar_unlocked(int);

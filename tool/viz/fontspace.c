@@ -63,12 +63,11 @@ int main(int argc, char *argv[]) {
   float scale;
   void *bitmap;
   size_t ttfsize;
-  const char *dir;
   unsigned char *ttf;
   stbtt_fontinfo font;
   unsigned char *present;
   unsigned char *intotal;
-  int w, h, i, j, c, arg, opt, errs, line, count, maxcode, s = 40 * 4, rc = 0;
+  int w, h, i, c, arg, opt, errs, line, s = 40 * 4, rc = 0;
   ShowCrashReports();
   tcgetwinsize(0, &ws);
   while ((opt = getopt(argc, argv, "vs:e:")) != -1) {
@@ -103,7 +102,7 @@ int main(int argc, char *argv[]) {
         continue;
       }
       bzero(present, m);
-      for (maxcode = errs = 0, c = start; c <= end; ++c) {
+      for (errs = 0, c = start; c <= end; ++c) {
         if (!(line = setjmp(stbtt_jmpbuf))) {
           if ((i = stbtt_FindGlyphIndex(&font, c)) > 0) {
             w = h = 0;
@@ -111,7 +110,6 @@ int main(int argc, char *argv[]) {
             bitmap = stbtt_GetGlyphBitmap(&font, 0, scale, i, &w, &h, 0, 0);
             if (w && h) {
               intotal[c - start] = present[c - start] = 255;
-              maxcode = c;
             }
             free(bitmap);
           }

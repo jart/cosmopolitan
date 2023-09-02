@@ -51,7 +51,6 @@ static struct timespec vflogf_ts;
  */
 static void vflogf_onfail(FILE *f) {
   errno_t err;
-  int64_t size;
   struct stat st;
   if (IsTiny()) return;
   err = ferror_unlocked(f);
@@ -93,7 +92,6 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   char buf32[32];
   const char *prog;
   const char *sign;
-  bool issamesecond;
   struct timespec t2;
   if (!f) f = __log_file;
   if (!f) return;

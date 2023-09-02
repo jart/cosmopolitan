@@ -74,7 +74,8 @@ int
 strtorx(const char *s, char **sp, int rounding, void *L)
 {
 	static const FPI fpi0 = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, SI, 0 /*unused*/ };
-	FPI *fpi, fpi1;
+	FPI fpi1;
+	const FPI *fpi;
 	ULong bits[2];
 	Long exp;
 	int k;

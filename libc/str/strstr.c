@@ -37,13 +37,13 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  */
 dontasan char *strstr(const char *haystack, const char *needle) {
 #if defined(__x86_64__) && !defined(__chibicc__)
-  xmm_t *p;
   size_t i;
   unsigned k, m;
+  const xmm_t *p;
   xmm_t v, n, z = {0};
   if (IsAsan()) __asan_verify(needle, 1);
   if (IsAsan()) __asan_verify(haystack, 1);
-  if (haystack == needle || !*needle) return haystack;
+  if (haystack == needle || !*needle) return (char *)haystack;
   n = (xmm_t){*needle, *needle, *needle, *needle, *needle, *needle,
               *needle, *needle, *needle, *needle, *needle, *needle,
               *needle, *needle, *needle, *needle};
@@ -69,8 +69,7 @@ dontasan char *strstr(const char *haystack, const char *needle) {
   return 0;
 #else
   size_t i;
-  unsigned k, m;
-  if (haystack == needle || !*needle) return haystack;
+  if (haystack == needle || !*needle) return (void *)haystack;
   for (;;) {
     for (i = 0;; ++i) {
       if (!needle[i]) return (/*unconst*/ char *)haystack;

@@ -33,7 +33,6 @@ static bool IsSymbolChar2(char c) {
 }
 
 static bool IsSymbolString(const char *s) {
-  int i;
   if (!IsSymbolChar1(*s++)) return false;
   while (*s) {
     if (!IsSymbolChar2(*s++)) return false;
@@ -54,7 +53,8 @@ static bool IsSymbolString(const char *s) {
  */
 struct Asmdown *ParseAsmdown(const char *code, size_t size) {
   struct Asmdown *ad;
-  char *p1, *p2, *p3, *symbol, *alias;
+  const char *p1;
+  char *p2, *p3, *symbol, *alias;
   enum { BOL, COM, SYM, OTHER } state;
   int i, j, line, start_line, start_docstring, end_docstring, start_symbol;
   ad = calloc(1, sizeof(struct Asmdown));

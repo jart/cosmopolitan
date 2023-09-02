@@ -1253,8 +1253,6 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_ssl_cf_hmac(
     const unsigned char * const okey = ikey + block_size;
     const size_t hash_size = mbedtls_md_get_size( ctx->md_info );
 
-    unsigned char aux_out[MBEDTLS_MD_MAX_SIZE];
-    size_t offset;
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
 
 #define MD_CHK( func_call ) \

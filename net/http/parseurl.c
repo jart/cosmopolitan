@@ -33,7 +33,7 @@ struct UrlParser {
 
 static void EmitLatin1(char **p, int c) {
   (*p)[0] = 0300 | c >> 6;
-  (*p)[1] = 0200 | c & 077;
+  (*p)[1] = 0200 | (c & 077);
   *p += 2;
 }
 
@@ -149,7 +149,7 @@ static void ParseAuthority(struct UrlParser *u, struct Url *h) {
       if (c) {
         h->user.p = u->q;
         h->user.n = c - 1 - u->q;
-        h->pass.p = c;
+        h->pass.p = (char *)c;
         h->pass.n = u->p - c;
         c = NULL;
         t = 1;
@@ -169,7 +169,7 @@ static void ParseAuthority(struct UrlParser *u, struct Url *h) {
   if (t == 2) {
     h->host.p = u->q;
     h->host.n = c - 1 - u->q;
-    h->port.p = c;
+    h->port.p = (char *)c;
     h->port.n = u->p - c;
     c = NULL;
   } else {

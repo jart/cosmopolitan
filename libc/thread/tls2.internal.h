@@ -12,7 +12,7 @@ COSMOPOLITAN_C_START_
  * This should be favored over __get_tls() for .privileged code that
  * can't be self-modified by __enable_tls().
  */
-privileged static inline struct CosmoTib *__get_tls_privileged(void) {
+__funline struct CosmoTib *__get_tls_privileged(void) {
   char *tib, *lin = (char *)0x30;
   if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd() || IsMetal()) {
     asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");

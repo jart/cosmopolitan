@@ -117,13 +117,14 @@ int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
 int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t *file_actions,
                                      int fildes, const char *path, int oflag,
                                      unsigned mode) {
+  char *path2;
   if (fildes < 0) return EBADF;
   if (IsWindows() && fildes > 2) return ENOTSUP;
-  if (!(path = strdup(path))) return ENOMEM;
+  if (!(path2 = strdup(path))) return ENOMEM;
   return AddFileAction(file_actions, (struct _posix_faction){
                                          .action = _POSIX_SPAWN_OPEN,
                                          .fildes = fildes,
-                                         .path = path,
+                                         .path = path2,
                                          .oflag = oflag,
                                          .mode = mode,
                                      });

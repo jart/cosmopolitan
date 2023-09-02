@@ -24,8 +24,6 @@
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 
-static char buffer[128];
-
 #define Format(...) _gc(xasprintf(__VA_ARGS__))
 
 /**

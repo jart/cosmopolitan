@@ -94,8 +94,8 @@ size_t interncount(const struct Interner *t) {
 size_t internobj(struct Interner *t, const void *data, size_t size) {
   char *p2;
   size_t n2;
-  char *item;
   unsigned hash;
+  const char *item;
   struct InternerObject *it;
   size_t i, off, step, need, bytes;
   step = 0;

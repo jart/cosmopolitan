@@ -215,9 +215,6 @@ const char *const kIgnoredModules[] = /* sorted */ {
     /* "xml.dom", */
 };
 
-_Py_IDENTIFIER(stdout);
-_Py_IDENTIFIER(stderr);
-
 struct Yoinks {
     size_t n;
     char **p;
@@ -469,13 +466,13 @@ Analyze(const char *modname, PyObject *code, struct Interner *globals)
     int rc;
     bool istry;
     unsigned a;
-    size_t i, j, n;
+    size_t i, n;
     char *p, *mod, *imp;
     int x, y, op, arg, rel;
     PyObject *co_code, *co_names, *co_consts, *name, *iter, *item;
     rc = 0;
     mod = 0;
-    istry = rel = 0;
+    istry = (rel = 0);
     assert(PyCode_Check(code));
     co_code = ((PyCodeObject *)code)->co_code;
     co_names = ((PyCodeObject *)code)->co_names;

@@ -114,19 +114,19 @@ size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st) {
         s--;
         break;
       }
-      c = (c << 6) | *s++ - 0x80;
+      c = (c << 6) | (*s++ - 0x80);
       if (c & (1U << 31)) {
         if (*s - 0x80u >= 0x40) {
           s -= 2;
           break;
         }
-        c = (c << 6) | *s++ - 0x80;
+        c = (c << 6) | (*s++ - 0x80);
         if (c & (1U << 31)) {
           if (*s - 0x80u >= 0x40) {
             s -= 3;
             break;
           }
-          c = (c << 6) | *s++ - 0x80;
+          c = (c << 6) | (*s++ - 0x80);
         }
       }
       *ws++ = c;

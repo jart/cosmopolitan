@@ -26,8 +26,8 @@
  * Describes setsockopt() optname arguments.
  */
 const char *(DescribeSockOptname)(char buf[32], int l, int x) {
-  int i;
-  char *s, *p;
+  char *p;
+  const char *s;
   const struct MagnumStr *ms;
   p = buf;
   if (x) {

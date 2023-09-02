@@ -31,6 +31,8 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -53,8 +55,8 @@ static struct stat st[1];
 static Elf64_Ehdr *elf;
 
 static void startfile(void) {
-  showtitle("αcτµαlly pδrταblε εxεcµταblε", "tool/decode/elf", basename(path),
-            NULL, &kModelineAsm);
+  showtitle("αcτµαlly pδrταblε εxεcµταblε", "tool/decode/elf",
+            basename(gc(strdup(path))), NULL, &kModelineAsm);
   printf("#include \"libc/elf.h\"\n\n", path);
 }
 
@@ -224,7 +226,6 @@ static void printelfgroups(void) {
                              section->sh_name)
                        : 0);
       }
-      shdr->sh_offset;
     }
   }
 }

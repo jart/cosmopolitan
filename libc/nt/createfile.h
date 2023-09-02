@@ -6,14 +6,14 @@ COSMOPOLITAN_C_START_
 
 int64_t CreateFile(
     const char16_t *lpFileName, uint32_t dwDesiredAccess, uint32_t dwShareMode,
-    struct NtSecurityAttributes *opt_lpSecurityAttributes,
+    const struct NtSecurityAttributes *opt_lpSecurityAttributes,
     int dwCreationDisposition,
     uint32_t dwFlagsAndAttributes, /* libc/nt/enum/fileflagandattributes.h */
     int64_t opt_hTemplateFile) paramsnonnull((1));
 
 int64_t CreateFileA(
     const char *lpFileName, uint32_t dwDesiredAccess, uint32_t dwShareMode,
-    struct NtSecurityAttributes *opt_lpSecurityAttributes,
+    const struct NtSecurityAttributes *opt_lpSecurityAttributes,
     int dwCreationDisposition,
     uint32_t dwFlagsAndAttributes, /* libc/nt/enum/fileflagandattributes.h */
     int64_t opt_hTemplateFile) paramsnonnull((1));

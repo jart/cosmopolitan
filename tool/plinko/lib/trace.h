@@ -10,7 +10,6 @@ COSMOPOLITAN_C_START_
   BindFn *bf;                          \
   EvlisFn *ef;                         \
   RecurseFn *rf;                       \
-  unsigned char mo;                    \
   TailFn *tails[8];                    \
   EvalFn *ev, *ex;                     \
   memcpy(tails, kTail, sizeof(kTail)); \

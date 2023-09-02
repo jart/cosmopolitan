@@ -101,7 +101,6 @@ Finish:
 // this makes it possible for our read() implementation to periodically
 // poll for signals while performing a blocking overlapped io operation
 dontasan dontubsan dontinstrument textwindows void WinMainStdin(void) {
-  uint32_t mode;
   char16_t pipename[64];
   int64_t hStdin, hWriter, hReader, hThread, hSemaphore;
   if (!SupportsWindows()) return;

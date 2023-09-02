@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "tool/plinko/lib/tree.h"
 #include "libc/log/check.h"
 #include "tool/plinko/lib/index.h"
-#include "tool/plinko/lib/tree.h"
 
 int Nod(int E, int L, int R, int C) {
 #ifndef NDEBUG
@@ -30,7 +30,7 @@ int Nod(int E, int L, int R, int C) {
 }
 
 static void CheckTreeImpl(int N) {
-  int p, e, L, R;
+  int p, L, R;
   if (N >= 0) Error("N is atom: %S", N);
   if (Car(N) >= 0) Error("Car(N) is an atom: %S", N);
   if (Cdr(N) & ~1) Error("Cdr(N) is non-bool: %S", N);
@@ -229,7 +229,7 @@ int PutTree(int E, int N, int KEEP) {
  * @return ((𝑒 𝑙 . 𝑟) . 𝑐) if found, otherwise 0
  */
 int GetTree(int k, int N) {
-  int p, e;
+  int p;
   while (N) {
     p = Cmp(k, Key(Ent(N)));
     if (p < 0) {
@@ -244,7 +244,7 @@ int GetTree(int k, int N) {
 }
 
 int GetTreeCount(int k, int N, int *c) {
-  int p, e;
+  int p;
   while (N) {
     ++*c;
     p = Cmp(k, Key(Ent(N)));

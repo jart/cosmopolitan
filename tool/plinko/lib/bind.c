@@ -20,7 +20,7 @@
 #include "tool/plinko/lib/plinko.h"
 
 struct Binding Bind(int x, int y, int a, int u, dword p1, dword p2) {
-  int k, v, w;
+  int k, v;
   dword a1 = 0;
   while (x) {
     if (x < 0) {

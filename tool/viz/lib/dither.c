@@ -90,15 +90,14 @@ static void SerpentineDither(long yw, long xw, unsigned char rgb[3][yw][xw],
                              long yn, long xn, long y, long x, long r,
                              const struct Dither *d) {
   void *c;
-  long b, e, i, j, n, m;
-  e = 0;
+  long b, i, j, n, m;
   b = d->chunks[r].b;
   c = d->chunks[r].c;
   n = (yn - y) / b;
   m = (xn - x) / b;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < m; ++j) {
-      e = SerpentineDitherSq2(yw, xw, rgb, y + i * b, x + j * b, b, c, 0);
+      SerpentineDitherSq2(yw, xw, rgb, y + i * b, x + j * b, b, c, 0);
     }
   }
   if (r) {

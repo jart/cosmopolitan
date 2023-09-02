@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/nexgen32e/ffs.h"
 
 /**
  * Finds lowest set bit in word.
@@ -27,7 +28,7 @@ int ffs(int x) {
 /**
  * Finds lowest set bit in word.
  */
-long ffsl(long x) {
+int ffsl(long x) {
   return __builtin_ffsl(x);
 }
 

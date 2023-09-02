@@ -47,7 +47,8 @@
  */
 int sigsuspend(const sigset_t *ignore) {
   int rc;
-  sigset_t save, *arg, mask = {0};
+  const sigset_t *arg;
+  sigset_t save, mask = {0};
   STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
   BEGIN_CANCELLATION_POINT;
 

@@ -43,7 +43,6 @@ asm(".include \"libc/disclaimer.inc\"");
 #elif FLT_EVAL_METHOD==2
 #define EPS LDBL_EPSILON
 #endif
-static const double_t toint = 1/EPS;
 
 /**
  * Returns largest integral value not greater than 𝑥.
@@ -74,6 +73,7 @@ double floor(double x)
 
 #else
 
+	static const double_t toint = 1/EPS;
 	union {double f; uint64_t i;} u = {x};
 	int e = u.i >> 52 & 0x7ff;
 	double_t y;

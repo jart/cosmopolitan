@@ -58,7 +58,7 @@ int getnameinfo(const struct sockaddr *addr, uint32_t addrlen, char *name,
                 int flags) {
   char *p, rdomain[1 + sizeof "255.255.255.255.in-addr.arpa"];
   char info[NI_MAXHOST + 1];
-  int rc, port;
+  int port;
   uint8_t *ip;
   unsigned int valid_flags;
 

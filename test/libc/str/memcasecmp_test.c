@@ -31,9 +31,3 @@ TEST(memcasecmp, test) {
   EXPECT_EQ(0, memcasecmp("\0ELLo\0ELLo", "\0ELLO\0ELLO", 10));
   EXPECT_NE(0, memcasecmp("\0ELLo\0ELLo", "\0ELL-\0ELL-", 10));
 }
-
-BENCH(memcasecmp, bench) {
-  volatile char *copy = gc(strdup(kHyperion));
-  EZBENCH2("memcasecmp", donothing,
-           __expropriate(memcasecmp(kHyperion, copy, kHyperionSize)));
-}

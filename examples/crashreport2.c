@@ -43,7 +43,6 @@
  */
 
 int main(int argc, char *argv[]) {
-  volatile int64_t x;
   ShowCrashReports();
   printf("please press ctrl+\\ and see what happens...\n");
   sigsuspend(0);

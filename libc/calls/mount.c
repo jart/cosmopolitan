@@ -25,7 +25,7 @@ int32_t sys_mount_linux(const char *source, const char *target,
                         const char *filesystemtype, uint64_t mountflags,
                         const void *data) asm("sys_mount");
 int32_t sys_mount_bsd(const char *type, const char *dir, int32_t flags,
-                      void *data) asm("sys_mount");
+                      const void *data) asm("sys_mount");
 
 /**
  * Mounts file system.

@@ -27,7 +27,7 @@
  */
 uint32_t FingerSyn(const char *p, size_t n) {
   uint32_t h = 0;
-  int i, j, k, q, r, iplen, tcplen, ttl;
+  int i, j, k, iplen, tcplen, ttl;
   if (n >= 20 + 20 && n >= (iplen = (p[0] & 0x0F) * 4) + 20 &&
       n >= iplen + (tcplen = ((p[iplen + 12] & 0xF0) >> 4) * 4)) {
     n = iplen + tcplen;

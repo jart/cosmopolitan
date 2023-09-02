@@ -325,7 +325,6 @@ static void HandleElf(const char *inpath, Elf64_Ehdr *elf, size_t esize) {
   int i, loadcount;
   Elf64_Off maxoff;
   Elf64_Phdr *phdr;
-  char empty[64] = {0};
   Elf64_Shdr *macho_shdr;
   struct MachoHeader *macho;
   struct MachoLoadCommand *loadcommand;
@@ -416,7 +415,7 @@ static void HandleInput(const char *inpath) {
 }
 
 int main(int argc, char *argv[]) {
-  int i, opt;
+  int i;
   prog = argv[0];
   if (!prog) prog = "objbincopy";
   GetOpts(argc, argv);

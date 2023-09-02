@@ -72,7 +72,7 @@ int system(const char *cmdline) {
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   if (!(pid = fork())) {
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    _Exit(_cocmd(3, (char *[]){"system", "-c", cmdline, 0}, environ));
+    _Exit(_cocmd(3, (char *[]){"system", "-c", (char *)cmdline, 0}, environ));
   } else if (pid == -1) {
     wstatus = -1;
   } else {

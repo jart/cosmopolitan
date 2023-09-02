@@ -146,7 +146,7 @@ void JS_SetUncatchableError(JSContext *ctx, JSValueConst val, BOOL flag);
 
 static const JSClassExoticMethods js_arguments_exotic_methods;
 static const JSClassExoticMethods js_string_exotic_methods;
-static const JSClassExoticMethods js_proxy_exotic_methods;
+/* static */ const JSClassExoticMethods js_proxy_exotic_methods;
 static const JSClassExoticMethods js_module_ns_exotic_methods;
 static JSClassID js_class_id_alloc = JS_CLASS_INIT_COUNT;
 
@@ -914,6 +914,7 @@ void JS_SetContextOpaque(JSContext *ctx, void *opaque)
 void JS_SetClassProto(JSContext *ctx, JSClassID class_id, JSValue obj)
 {
     JSRuntime *rt = ctx->rt;
+    (void)rt;
     assert(class_id < rt->class_count);
     set_value(ctx, &ctx->class_proto[class_id], obj);
 }
@@ -921,6 +922,7 @@ void JS_SetClassProto(JSContext *ctx, JSClassID class_id, JSValue obj)
 JSValue JS_GetClassProto(JSContext *ctx, JSClassID class_id)
 {
     JSRuntime *rt = ctx->rt;
+    (void)rt;
     assert(class_id < rt->class_count);
     return JS_DupValue(ctx, ctx->class_proto[class_id]);
 }
@@ -3016,7 +3018,7 @@ static int num_keys_cmp(const void *p1, const void *p2, void *opaque)
     BOOL atom1_is_integer, atom2_is_integer;
     atom1_is_integer = JS_AtomIsArrayIndex(ctx, &v1, atom1);
     atom2_is_integer = JS_AtomIsArrayIndex(ctx, &v2, atom2);
-    assert(atom1_is_integer && atom2_is_integer);
+    unassert(atom1_is_integer && atom2_is_integer);
     if (v1 < v2)
         return -1;
     else if (v1 == v2)
@@ -13268,8 +13270,8 @@ JSValue JS_EvalThis(JSContext *ctx, JSValueConst this_obj,
 {
     int eval_type = eval_flags & JS_EVAL_TYPE_MASK;
     JSValue ret;
-    assert(eval_type == JS_EVAL_TYPE_GLOBAL ||
-           eval_type == JS_EVAL_TYPE_MODULE);
+    unassert(eval_type == JS_EVAL_TYPE_GLOBAL ||
+             eval_type == JS_EVAL_TYPE_MODULE);
     ret = JS_EvalInternal(ctx, this_obj, input, input_len, filename,
                           eval_flags, -1);
     return ret;

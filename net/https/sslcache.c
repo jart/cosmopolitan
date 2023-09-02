@@ -40,7 +40,7 @@
 #define PROT  (PROT_READ | PROT_WRITE)
 #define FLAGS MAP_SHARED
 
-static uint32_t HashSslSession(mbedtls_ssl_session *session) {
+static uint32_t HashSslSession(const mbedtls_ssl_session *session) {
   int i;
   uint32_t h;
   h = session->ciphersuite;

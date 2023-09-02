@@ -39,7 +39,6 @@ static volatile size_t mapsize;
  * @asyncsignalsafe
  */
 int __ensurefds_unlocked(int fd) {
-  bool relocate;
   if (fd < g_fds.n) return fd;
   g_fds.n = fd + 1;
   g_fds.e = _extend(g_fds.p, g_fds.n * sizeof(*g_fds.p), g_fds.e, MAP_PRIVATE,

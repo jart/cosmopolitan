@@ -687,7 +687,6 @@ internal_setblocking(PySocketSockObject *s, int block)
 #endif
 #if !defined(MS_WINDOWS) \
     && !((defined(HAVE_SYS_IOCTL_H) && defined(FIONBIO)))
-    int delay_flag, new_delay_flag;
 #endif
 #ifdef SOCK_NONBLOCK
     if (block)
@@ -5655,7 +5654,7 @@ socket_inet_aton(PyObject *self, PyObject *args)
 #ifdef HAVE_INET_ATON
 
 #ifdef USE_INET_ATON_WEAKLINK
-    if (inet_aton != NULL) {
+    if (__veil("r", inet_aton) != NULL) {
 #endif
     if (inet_aton(ip_addr, &buf))
         return PyBytes_FromStringAndSize((char *)(&buf),

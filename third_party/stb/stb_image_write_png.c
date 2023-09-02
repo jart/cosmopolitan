@@ -170,12 +170,13 @@ forceinline unsigned char stbiw__paeth(int a, int b, int c) {
 }
 
 // @OPTIMIZE: provide an option that always forces left-predict or paeth predict
-static void stbiw__encode_png_line(unsigned char *pixels, int stride_bytes,
-                                   int width, int height, int y, int n,
-                                   int filter_type, signed char *line_buffer) {
-  const int mapping[] = {0, 1, 2, 3, 4};
-  const int firstmap[] = {0, 1, 0, 5, 6};
-  unsigned char *z;
+static void stbiw__encode_png_line(const unsigned char *pixels,
+                                   int stride_bytes, int width, int height,
+                                   int y, int n, int filter_type,
+                                   signed char *line_buffer) {
+  int mapping[] = {0, 1, 2, 3, 4};
+  int firstmap[] = {0, 1, 0, 5, 6};
+  const unsigned char *z;
   int *mymap, i, type, signed_stride;
 
   mymap = (y != 0) ? mapping : firstmap;

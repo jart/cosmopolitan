@@ -159,23 +159,24 @@ dontasan textstartup void __printargs(const char *prologue) {
       {"%-14d", AT_MINSIGSTKSZ, "AT_MINSIGSTKSZ"},
   };
 
-  long key;
+  int e, x;
   char **env;
   sigset_t ss;
   bool gotsome;
-  int e, x, flags;
+  unsigned i, n;
   uintptr_t *auxp;
-  unsigned i, n, b;
   struct rlimit rlim;
   struct utsname uts;
   struct sigaction sa;
   struct sched_param sp;
   struct termios termios;
-  struct AuxiliaryValue *auxinfo;
+  const struct AuxiliaryValue *auxinfo;
   union {
     char path[PATH_MAX];
     struct pollfd pfds[128];
   } u;
+
+  (void)x;
 
   if (!PLEDGED(STDIO)) return;
 
@@ -351,7 +352,7 @@ dontasan textstartup void __printargs(const char *prologue) {
     PRINT("");
     PRINT("CAPABILITIES");
     if (prctl(PR_CAPBSET_READ, 0) != -1) {
-      for (gotsome = i = 0; i <= CAP_LAST_CAP; ++i) {
+      for (gotsome = false, i = 0; i <= CAP_LAST_CAP; ++i) {
         if (prctl(PR_CAPBSET_READ, i) == 1) {
           char buf[64];
           PRINT(" ☼ %s", (DescribeCapability)(buf, i));
@@ -368,7 +369,7 @@ dontasan textstartup void __printargs(const char *prologue) {
 
   PRINT("");
   PRINT("RESOURCE LIMITS");
-  for (gotsome = i = 0; i < RLIM_NLIMITS; ++i) {
+  for (gotsome = false, i = 0; i < RLIM_NLIMITS; ++i) {
     if (!getrlimit(i, &rlim)) {
       char buf[20];
       if (rlim.rlim_cur == RLIM_INFINITY) rlim.rlim_cur = -1;

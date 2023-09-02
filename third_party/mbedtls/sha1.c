@@ -380,8 +380,8 @@ int mbedtls_sha1_update_ret( mbedtls_sha1_context *ctx,
                              size_t ilen )
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;
+    size_t fill;
     uint32_t left;
-    size_t n, fill;
 
     SHA1_VALIDATE_RET( ctx != NULL );
     SHA1_VALIDATE_RET( ilen == 0 || input != NULL );

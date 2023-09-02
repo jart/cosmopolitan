@@ -40,8 +40,8 @@ void *Worker(void *arg) {
 
 TEST(tkill, test) {
   if (IsWindows()) return;  // TODO(jart): fix me
+  int tid;
   void *res;
-  int i, tid;
   pthread_t t;
   sigset_t ss, oldss;
   sighandler_t oldsig;

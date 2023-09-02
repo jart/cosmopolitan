@@ -1106,6 +1106,8 @@ static boolean parseStatement (tokenInfo *const token, boolean is_inside_class)
 	boolean has_methods = FALSE;
 	vString *	fulltag;
 
+        (void)is_prototype;
+
 	vStringClear(saveScope);
 	/*
 	 * Functions can be named or unnamed.

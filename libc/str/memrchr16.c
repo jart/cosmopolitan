@@ -38,7 +38,7 @@ static inline const char16_t *memrchr16_pure(const char16_t *s, char16_t c,
 dontasan static inline const char16_t *memrchr16_sse(const char16_t *s,
                                                      char16_t c, size_t n) {
   size_t i;
-  unsigned k, m;
+  unsigned m;
   xmm_t v, t = {c, c, c, c, c, c, c, c};
   for (i = n; i >= 8;) {
     v = *(const xmm_t *)(s + (i -= 8));
@@ -77,6 +77,6 @@ void *memrchr16(const void *s, int c, size_t n) {
   }
   return (void *)r;
 #else
-  return memrchr16_pure(s, c, n);
+  return (void *)memrchr16_pure(s, c, n);
 #endif
 }

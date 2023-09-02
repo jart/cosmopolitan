@@ -775,7 +775,7 @@ static void Tokenize(struct As *a, int path) {
 
 static int GetSymbol(struct As *a, int name) {
   struct HashEntry *p;
-  unsigned i, j, k, n, m, h, n2;
+  unsigned i, j, k, n, m, h;
   if (!(h = crc32c(0, a->slices.p[name].p, a->slices.p[name].n))) h = 1;
   n = a->symbolindex.n;
   i = 0;
@@ -932,7 +932,6 @@ static int NewBinary(struct As *a, enum ExprKind k, int lhs, int rhs) {
 //         | symbol
 //         | reference
 static int ParsePrimary(struct As *a, int *rest, int i) {
-  int e;
   if (IsInt(a, i)) {
     *rest = i + 1;
     return NewPrimary(a, EX_INT, a->ints.p[a->things.p[i].i]);
@@ -1765,7 +1764,7 @@ static void OnSize(struct As *a, struct Slice s) {
 }
 
 static void OnEqu(struct As *a, struct Slice s) {
-  int i, j;
+  int i;
   i = GetSymbol(a, a->things.p[a->i++].i);
   ConsumeComma(a);
   a->symbols.p[i].offset = GetInt(a);
@@ -1967,15 +1966,17 @@ static int RemoveRexw(int x) {
 
 static int GetRegisterReg(struct As *a) {
   int reg;
-  struct Slice wut;
-  if ((reg = FindRegReg(GetSlice(a))) == -1) InvalidRegister(a);
+  if ((reg = FindRegReg(GetSlice(a))) == -1) {
+    InvalidRegister(a);
+  }
   return reg;
 }
 
 static int GetRegisterRm(struct As *a) {
   int reg;
-  struct Slice wut;
-  if ((reg = FindRegRm(GetSlice(a))) == -1) InvalidRegister(a);
+  if ((reg = FindRegRm(GetSlice(a))) == -1) {
+    InvalidRegister(a);
+  }
   return reg;
 }
 
@@ -1992,7 +1993,7 @@ static int ParseModrm(struct As *a, int *disp) {
                │││││├──────┐├┐├─┐├─┐
   0b00000000000000000000000000000000*/
   struct Slice str;
-  int reg, scale, modrm = 0;
+  int reg, modrm = 0;
   if (!ConsumeSegment(a) && IsRegister(a, a->i)) {
     *disp = 0;
     modrm = GetRegisterRm(a) | ISREG;
@@ -2057,12 +2058,12 @@ static void EmitImm(struct As *a, int reg, int imm) {
 }
 
 static void EmitModrm(struct As *a, int reg, int modrm, int disp) {
-  int relo, mod, rm;
+  int relo, mod;
   void (*emitter)(struct As *, uint128_t);
   reg &= 7;
   reg <<= 3;
   if (modrm & ISREG) {
-    EmitByte(a, 0300 | reg | modrm & 7);
+    EmitByte(a, 0300 | reg | (modrm & 7));
   } else {
     if (modrm & ISRIP) {
       EmitByte(a, 005 | reg);
@@ -2348,7 +2349,7 @@ static dontinline void OpXadd(struct As *a) {
 }
 
 static dontinline int OpF6Impl(struct As *a, struct Slice s, int reg) {
-  int modrm, imm, disp;
+  int modrm, disp;
   modrm = ParseModrm(a, &disp);
   reg |= GetOpSize(a, s, modrm, 1) << 3;
   EmitRexOpModrm(a, 0xF6, reg, modrm, disp, 1);
@@ -2642,7 +2643,6 @@ static void OnPush(struct As *a, struct Slice s) {
 }
 
 static void OnRdpid(struct As *a, struct Slice s) {
-  int modrm, disp;
   EmitVarword(a, 0xf30fc7);
   EmitByte(a, 0370 | GetRegisterReg(a));
 }
@@ -2700,6 +2700,8 @@ static void OnFile(struct As *a, struct Slice s) {
   struct Slice path;
   fileno = GetInt(a);
   path = GetSlice(a);
+  (void)fileno;
+  (void)path;
   // TODO: DWARF
 }
 
@@ -2707,6 +2709,8 @@ static void OnLoc(struct As *a, struct Slice s) {
   int fileno, lineno;
   fileno = GetInt(a);
   lineno = GetInt(a);
+  (void)fileno;
+  (void)lineno;
   // TODO: DWARF
 }
 
@@ -2762,7 +2766,7 @@ static void OnFxch(struct As *a, struct Slice s) {
   int rm;
   rm = !IsSemicolon(a) ? GetRegisterRm(a) : 1;
   EmitByte(a, 0xD9);
-  EmitByte(a, 0310 | rm & 7);
+  EmitByte(a, 0310 | (rm & 7));
 }
 
 static void OnBswap(struct As *a, struct Slice s) {
@@ -2770,7 +2774,7 @@ static void OnBswap(struct As *a, struct Slice s) {
   srm = GetRegisterRm(a);
   EmitRex(a, srm);
   EmitByte(a, 0x0F);
-  EmitByte(a, 0310 | srm & 7);
+  EmitByte(a, 0310 | (srm & 7));
 }
 
 static dontinline void OpFcomImpl(struct As *a, int op) {
@@ -2786,7 +2790,7 @@ static dontinline void OpFcomImpl(struct As *a, int op) {
       }
     }
   }
-  EmitVarword(a, op | rm & 7);
+  EmitVarword(a, op | (rm & 7));
 }
 
 static dontinline void OpFcom(struct As *a, int op) {

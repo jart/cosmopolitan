@@ -57,5 +57,5 @@ char *getlogin(void) {
     res = 0;
   }
   STRACE("getlogin() → %#s% m", res);
-  return res;
+  return (char *)res;
 }

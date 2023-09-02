@@ -26,7 +26,7 @@ static bool IsDataAvailable(struct Fd *fd) {
   return inb(fd->handle + UART_LSR) & UART_TTYDA;
 }
 
-static int GetFirstIov(struct iovec *iov, int iovlen) {
+static int GetFirstIov(const struct iovec *iov, int iovlen) {
   int i;
   for (i = 0; i < iovlen; ++i) {
     if (iov[i].iov_len) {

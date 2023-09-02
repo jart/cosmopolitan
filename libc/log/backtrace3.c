@@ -47,12 +47,12 @@
  */
 dontinstrument dontasan int PrintBacktraceUsingSymbols(
     int fd, const struct StackFrame *bp, struct SymbolTable *st) {
-  bool ok;
   size_t gi;
   intptr_t addr;
   int i, symbol, addend;
   struct Garbages *garbage;
   const struct StackFrame *frame;
+  (void)gi;
   if (!bp) bp = __builtin_frame_address(0);
   garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;

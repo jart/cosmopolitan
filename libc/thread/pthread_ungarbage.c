@@ -21,7 +21,6 @@
 #include "libc/thread/tls.h"
 
 void _pthread_ungarbage(void) {
-  int i;
   struct Garbages *g;
   struct CosmoTib *tib;
   tib = __get_tls();

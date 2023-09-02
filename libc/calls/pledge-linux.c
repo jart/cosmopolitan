@@ -1079,11 +1079,11 @@ static privileged int GetTid(void) {
 }
 
 static privileged void Log(const char *s, ...) {
-  int res;
   va_list va;
   va_start(va, s);
   do {
 #ifdef __x86_64__
+    int res;
     asm volatile("syscall"
                  : "=a"(res)
                  : "0"(__NR_linux_write), "D"(2), "S"(s), "d"(StrLen(s))
@@ -1156,10 +1156,10 @@ static privileged int SigProcMask(int how, int64_t set, int64_t *old) {
 }
 
 static privileged void KillThisProcess(void) {
-  int res;
   SigAction(Sigabrt, &(struct sigaction){0}, 0);
   SigProcMask(Sig_Setmask, -1, 0);
 #ifdef __x86_64__
+  int res;
   asm volatile("syscall"
                : "=a"(res)
                : "0"(__NR_linux_kill), "D"(GetPid()), "S"(Sigabrt)
@@ -1196,10 +1196,10 @@ static privileged void KillThisProcess(void) {
 }
 
 static privileged void KillThisThread(void) {
-  int res;
   SigAction(Sigabrt, &(struct sigaction){0}, 0);
   SigProcMask(Sig_Setmask, -1, 0);
 #ifdef __x86_64__
+  int res;
   asm volatile("syscall"
                : "=a"(res)
                : "0"(__NR_linux_tkill), "D"(GetTid()), "S"(Sigabrt)
@@ -1233,7 +1233,7 @@ static privileged const char *GetSyscallName(uint16_t n) {
   return "unknown";
 }
 
-static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
+static privileged int HasSyscall(const struct Pledges *p, uint16_t n) {
   int i;
   for (i = 0; i < p->len; ++i) {
     if (p->syscalls[i] == n) {
@@ -1249,11 +1249,11 @@ static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
 static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   bool found;
   char ord[17];
-  int i, ok, mode = si->si_errno;
+  int i, mode = si->si_errno;
   ucontext_t *ctx = vctx;
   ctx->uc_mcontext.MCONTEXT_SYSCALL_RESULT_REGISTER = -Eperm;
   FixCpy(ord, si->si_syscall, 12);
-  for (found = i = 0; i < ARRAYLEN(kPledge); ++i) {
+  for (found = false, i = 0; i < ARRAYLEN(kPledge); ++i) {
     if (HasSyscall(kPledge + i, si->si_syscall)) {
       Log("error: protected syscall ", GetSyscallName(si->si_syscall),
           " (ord=", ord, "); pledge promise '", kPledge[i].name, "' to allow\n",
@@ -1289,8 +1289,8 @@ static privileged void MonitorSigSys(void) {
   }
 }
 
-static privileged void AppendFilter(struct Filter *f, struct sock_filter *p,
-                                    size_t n) {
+static privileged void AppendFilter(struct Filter *f,
+                                    const struct sock_filter *p, size_t n) {
   if (UNLIKELY(f->n + n > ARRAYLEN(f->p))) notpossible;
   MemCpy(f->p + f->n, p, n * sizeof(*f->p));
   f->n += n;
@@ -2290,8 +2290,8 @@ static privileged void AppendPledge(struct Filter *f,   //
  * @vforksafe
  */
 privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
+  int i, rc = -1;
   struct Filter f;
-  int i, e, rc = -1;
   struct sock_filter sf[1] = {BPF_STMT(BPF_RET | BPF_K, 0)};
   CheckLargeStackAllocation(&f, sizeof(f));
   f.n = 0;

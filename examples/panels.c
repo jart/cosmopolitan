@@ -122,7 +122,7 @@ void Clear(void) {
 }
 
 void Layout(void) {
-  long i, j;
+  long i;
   i = txn >> 1;
   pan.left.top = 0;
   pan.left.left = 0;

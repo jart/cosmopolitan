@@ -45,10 +45,8 @@
  */
 char *GetInterpreterExecutableName(char *p, size_t n) {
   int e;
-  size_t m;
   int cmd[4];
   ssize_t rc;
-  char *r, *t;
   e = errno;
   if (n < 2) {
     errno = ENAMETOOLONG;

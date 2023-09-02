@@ -278,15 +278,15 @@ static uint64_t t1, t2, t3, t4, t5, t6, t8;
 static const char *sox_, *ffplay_, *patharg_;
 static struct VtFrame vtframe_[2], *f1_, *f2_;
 static struct Graphic graphic_[2], *g1_, *g2_;
+static long double deadline_, dura_, starttime_;
 static bool yes_, stats_, dither_, ttymode_, istango_;
-static long double deadline_, dura_, skip_, starttime_;
 static long double decode_start_, f1_start_, f2_start_;
 static int16_t pcm_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static int16_t pcmscale_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static bool fullclear_, historyclear_, tuned_, yonly_, gotvideo_;
-static int homerow_, lastrow_, playfd_, infd_, outfd_, nullfd_, speakerfails_;
-static char host_[DNS_NAME_MAX + 1], status_[7][200], logpath_[PATH_MAX],
-    fifopath_[PATH_MAX], chansstr_[32], sratestr_[32], port_[32];
+static int homerow_, lastrow_, playfd_, infd_, outfd_, speakerfails_;
+static char status_[7][200], logpath_[PATH_MAX], fifopath_[PATH_MAX],
+    chansstr_[32], sratestr_[32];
 
 static void OnCtrlC(void) {
   longjmp(jb_, 1);
@@ -324,7 +324,7 @@ static int GetNamedVector(const struct NamedVector *choices, size_t n,
                           const char *s) {
   int i;
   char name[sizeof(choices->name)];
-  strncpy(name, s, sizeof(name));
+  strlcpy(name, s, sizeof(name));
   strntoupper(name, sizeof(name));
   for (i = 0; i < n; ++i) {
     if (memcmp(choices[i].name, name, sizeof(name)) == 0) {

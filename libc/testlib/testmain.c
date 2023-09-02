@@ -166,8 +166,6 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
  * Generic test program main function.
  */
 dontasan int main(int argc, char *argv[]) {
-  unsigned cpus;
-  const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
   setenv("GDB", "", true);

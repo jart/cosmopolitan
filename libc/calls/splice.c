@@ -36,8 +36,8 @@ static struct Splice {
 } g_splice;
 
 static bool HasSplice(void) {
+  int e;
   bool ok;
-  int e, rc;
   e = errno;
   if (IsLinux()) {
     // Our testing indicates splice() doesn't work as documneted on

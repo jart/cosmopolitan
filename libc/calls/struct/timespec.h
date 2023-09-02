@@ -45,7 +45,7 @@ static inline bool timespec_iszero(struct timespec __ts) {
   return !(__ts.tv_sec | __ts.tv_nsec);
 }
 static inline bool timespec_isvalid(struct timespec __ts) {
-  return __ts.tv_sec >= 0 && __ts.tv_nsec < 1000000000ull;
+  return __ts.tv_sec >= 0 && __ts.tv_nsec + 0ull < 1000000000ull;
 }
 #endif /* _COSMO_SOURCE */
 

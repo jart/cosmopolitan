@@ -17,7 +17,7 @@ int snprintf(char *, size_t, const char *, ...)
     printfesque(3) dontthrow nocallback;
 int vsnprintf(char *, size_t, const char *, va_list)
 dontthrow nocallback;
-int sprintf(char *, const char *, ...) printfesque(2) dontthrow nocallback;
+int sprintf(char *, const char *, ...) dontthrow nocallback;
 int vsprintf(char *, const char *, va_list)
 dontthrow nocallback;
 int sscanf(const char *, const char *, ...) scanfesque(2);

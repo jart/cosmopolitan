@@ -34,9 +34,7 @@
 #include "libc/testlib/testlib.h"
 
 TEST(ipv4, test) {
-  int ws, pid;
   char buf[16] = {0};
-  int64_t inoffset;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {
       .sin_family = AF_INET,
@@ -61,7 +59,6 @@ TEST(ipv4, test) {
 
 TEST(ipv6, test) {
   char buf[16] = {0};
-  int64_t inoffset;
   uint32_t addrsize = sizeof(struct sockaddr_in6);
   struct sockaddr_in6 addr = {
       .sin6_family = AF_INET6,
@@ -116,7 +113,6 @@ TEST(getsockname, copiesSafely_givesFullSize) {
 
 TEST(socket, canBeInheritedByForkedWorker) {
   char buf[16] = {0};
-  int64_t inoffset;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {
       .sin_family = AF_INET,
@@ -156,7 +152,6 @@ __attribute__((__constructor__)) static void StdioPro(int argc, char *argv[]) {
 
 TEST(socket, canBeUsedAsExecutedStdio) {
   char buf[16] = {0};
-  int64_t inoffset;
   const char *prog;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in addr = {
@@ -173,7 +168,7 @@ TEST(socket, canBeUsedAsExecutedStdio) {
              accept4(3, (struct sockaddr *)&addr, &addrsize, SOCK_CLOEXEC));
   ASSERT_SYS(0, 1, dup2(4, 1));
   SPAWN(vfork);
-  execve(prog, (char *[]){prog, "StdioProg", 0}, (char *[]){0});
+  execve(prog, (char *[]){(void *)prog, "StdioProg", 0}, (char *[]){0});
   abort();
   PARENT();
   ASSERT_SYS(0, 0, close(4));

@@ -11,13 +11,13 @@
 
 static int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
-  char *p;
   ssize_t rc;
   bool usingssl;
   uint32_t ip;
   struct Url url;
   int t, ret, sock = -1, methodidx, hdridx;
-  char *host, *port, *request;
+  const char *host, *port;
+  char *request;
   struct TlsBio *bio;
   struct addrinfo *addr;
   struct Buffer inbuf;     // shadowing intentional
@@ -26,13 +26,13 @@ static int LuaFetch(lua_State *L) {
   const char *urlarg, *body, *method;
   char *conlenhdr = "";
   char *headers = 0;
-  char *hosthdr = 0;
-  char *connhdr = 0;
-  char *agenthdr = brand;
-  char *key, *val, *hdr;
+  const char *hosthdr = 0;
+  const char *connhdr = 0;
+  const char *agenthdr = brand;
+  const char *key, *val, *hdr;
   size_t keylen, vallen;
   size_t urlarglen, requestlen, paylen, bodylen;
-  size_t i, g, n, hdrsize;
+  size_t i, g, hdrsize;
   int keepalive = kaNONE;
   int imethod, numredirects = 0, maxredirects = 5;
   bool followredirect = true;
@@ -40,6 +40,9 @@ static int LuaFetch(lua_State *L) {
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
+
+  (void)ret;
+  (void)usingssl;
 
   /*
    * Get args: url [, body | {method = "PUT", body = "..."}]
@@ -204,7 +207,7 @@ static int LuaFetch(lua_State *L) {
   url.host.p = 0, url.host.n = 0;
   url.port.p = 0, url.port.n = 0;
   if (!url.path.n || url.path.p[0] != '/') {
-    p = _gc(xmalloc(1 + url.path.n));
+    void *p = _gc(xmalloc(1 + url.path.n));
     mempcpy(mempcpy(p, "/", 1), url.path.p, url.path.n);
     url.path.p = p;
     ++url.path.n;
@@ -258,6 +261,7 @@ static int LuaFetch(lua_State *L) {
     }
   }
 
+  (void)bio;
 #ifndef UNSECURE
   if (usingssl) {
     if (sslcliused) {

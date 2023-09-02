@@ -651,101 +651,13 @@ void abort(void) wontreturn;
 #define initarray _Section(".init_array")
 #endif
 
-#ifndef __STRICT_ANSI__
-#if defined(__GNUC__) || defined(__llvm__)
-#pragma GCC diagnostic ignored \
-    "-Wundef" /* complaints about __ASSEMBLER__/__LINKER__  */
-#pragma GCC diagnostic ignored "-Wsign-compare"     /* lint needs to change  */
-#pragma GCC diagnostic ignored "-Wtype-limits"      /* makes macros unsafe  */
-#pragma GCC diagnostic ignored "-Woverflow"         /* also breaks macros  */
-#pragma GCC diagnostic ignored "-Wformat"           /* forces only gnu pf */
-#pragma GCC diagnostic ignored "-Wunused-parameter" /* extreme prejudice */
-#pragma GCC diagnostic ignored "-Wunused-function"  /* contradicts dce! */
-#pragma GCC diagnostic ignored "-Wunused-const-variable"   /* let me dce */
-#pragma GCC diagnostic ignored "-Wunused-variable"         /* belongs in tidy */
-#pragma GCC diagnostic ignored "-Wformat-extra-args"       /* is also broken */
-#pragma GCC diagnostic ignored "-Wparentheses"             /* annoying tidy */
-#pragma GCC diagnostic ignored "-Wdangling-else"           /* come on tidy */
-#pragma GCC diagnostic ignored "-Wformat-security"         /* come on tidy */
-#pragma GCC diagnostic ignored "-Wunused-value"            /* breaks macros */
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations" /* libcxx */
+#pragma GCC diagnostic ignored "-Wformat"                /* todo: patch gcc */
+#pragma GCC diagnostic ignored "-Wformat-extra-args"     /* todo: patch gcc */
+#pragma GCC diagnostic ignored "-Wunused-function"       /* contradicts dce */
+#pragma GCC diagnostic ignored "-Wunused-const-variable" /* sooo ridiculous */
 #ifndef __cplusplus
-#pragma GCC diagnostic ignored "-Wimplicit-int"
-#pragma GCC diagnostic ignored "-Wc++-compat"
-#endif /* C++ */
-#endif /* GCC || LLVM */
-#if defined(__GNUC__) && !defined(__llvm__)
-/* why we need authorization to name a variable `yn' */
-#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
-#pragma GCC diagnostic ignored "-Wfree-nonheap-object" /* broken #54202 */
-#ifndef __cplusplus
-#if __GNUC__ >= 6
-#pragma GCC diagnostic ignored /* wut */ "-Wdiscarded-qualifiers"
-#pragma GCC diagnostic ignored /* tidy */ "-Wunused-but-set-variable"
-#pragma GCC diagnostic ignored /* tidy */ "-Wunused-but-set-parameter"
-#endif /* GCC6+ */
-#if __GNUC__ >= 8
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-#pragma GCC diagnostic ignored "-Wstringop-overflow" /* breaks strndup */
-#endif                                               /* GCC8+ */
-#if __GNUC__ + 0 >= 9
-#pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
-#if __GNUC__ >= 11
-#pragma GCC diagnostic ignored /* annoying */ "-Wattributes"
-#pragma GCC diagnostic ignored /* orwellian */ "-Wold-style-definition"
-#pragma GCC diagnostic ignored /* what? */ "-Wformat-overflow"
-#endif /* GCC11+ */
-#endif /* GCC9+ */
-#endif /* !C++ */
-#endif /* GCC && !LLVM */
-#ifdef __llvm__
-#pragma clang diagnostic ignored \
-    "-Wincompatible-pointer-types-discards-qualifiers"
-#pragma clang diagnostic ignored "-Wbuiltin-requires-header"
-#pragma clang diagnostic ignored "-Wparentheses-equality" /*-save-temps*/
-#pragma clang diagnostic ignored "-Wunused-value"         /*({-save-temps})*/
-#pragma clang diagnostic ignored "-Wstring-plus-int"      /* special ed */
-#pragma clang diagnostic ignored "-Wunused-value" /* extreme prejudice */
-#pragma clang diagnostic ignored "-Wbuiltin-requires-header"
-#pragma clang diagnostic ignored \
-    "-Wincompatible-pointer-types-discards-qualifiers"
-#endif /* !GCC && LLVM */
-#endif /* ANSI */
-
-#ifndef __W__
-#ifndef __STRICT_ANSI__
-#if defined(__GNUC__) || defined(__llvm__)
-#pragma GCC diagnostic error "-Wpointer-arith"
-#pragma GCC diagnostic error "-Wnonnull"
-#pragma GCC diagnostic error "-Wunused-result"
-#pragma GCC diagnostic error "-Wstrict-aliasing"
-#ifndef __cplusplus
-#pragma GCC diagnostic error "-Wimplicit-function-declaration"
-#if __GNUC__ >= 6
-#pragma GCC diagnostic error "-Wincompatible-pointer-types"
-#if __GNUC__ >= 8
-#pragma GCC diagnostic error "-Wmultistatement-macros"
-#pragma GCC diagnostic error "-Wpacked-not-aligned"
-#pragma GCC diagnostic error "-Wcast-align=strict"
-#pragma GCC diagnostic error "-Wif-not-aligned"
-#endif /* GCC 8+ */
-#endif /* GCC 6+ */
-#endif /* __cplusplus */
-#endif /* GCC || LLVM */
-#if defined(__GNUC__) && !defined(__llvm__)
-#pragma GCC diagnostic error "-Wwrite-strings"
-#pragma GCC diagnostic error "-Wtrampolines"
-#if __GNUC__ >= 6
-#pragma GCC diagnostic error "-Wnonnull-compare"
-#elif __GNUC__ >= 9
-#pragma GCC diagnostic error /* e.g. fabs not abs */ "-Wabsolute-value"
-#endif /* GCC 6+ */
-#endif /* GCC && !LLVM */
-#ifdef __llvm__
-#pragma clang diagnostic error "-Wassume"
-#endif /* !GCC && LLVM */
-#endif /* ANSI */
-#endif /* -w */
+#pragma GCC diagnostic ignored "-Wold-style-definition" /* orwellian bulls */
+#endif
 
 #ifndef __STRICT_ANSI__
 #ifdef __x86_64__
@@ -829,9 +741,13 @@ void abort(void) wontreturn;
 #define __strong_reference(sym, alias) __weak_reference(sym, alias)
 #endif
 
+#if defined(__GNUC__) || defined(__llvm__)
 #define __funline \
   extern __inline \
       __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+#else
+#define __funline static inline
+#endif
 
 #define MACHINE_CODE_ANALYSIS_BEGIN_
 #define MACHINE_CODE_ANALYSIS_END_

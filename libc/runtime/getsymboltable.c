@@ -25,11 +25,11 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/zip.internal.h"
-#include "libc/runtime/zipos.internal.h"
 #include "third_party/puff/puff.h"
 
 __static_yoink("__get_symbol");
@@ -56,8 +56,8 @@ static ssize_t GetZipFile(struct Zipos *zipos, const char *name) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
+  ssize_t cf, lf;
   size_t size, size2;
-  ssize_t rc, cf, lf;
   struct SymbolTable *res = 0;
   if ((cf = GetZipFile(zipos, ".symtab." _ARCH_NAME)) != -1 ||
       (cf = GetZipFile(zipos, ".symtab")) != -1) {
@@ -93,7 +93,6 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromElf(void) {
-  int e;
   const char *s;
   if (PLEDGED(RPATH) && (s = FindDebugBinary())) {
     return OpenSymbolTable(s);

@@ -37,7 +37,6 @@ void OnSig(int sig, siginfo_t *si, void *ctx) {
 }
 
 TEST(sigprocmask, testMultipleBlockedDeliveries) {
-  int pid, ws;
   sigset_t neu, old;
   struct sigaction oldusr1, oldusr2;
   struct sigaction sa = {.sa_sigaction = OnSig, .sa_flags = SA_SIGINFO};
@@ -58,7 +57,6 @@ TEST(sigprocmask, testMultipleBlockedDeliveries) {
 }
 
 TEST(sigprocmask, testMultipleBlockedDeliveriesOfSameSignal) {
-  int pid, ws;
   sigset_t neu, old;
   struct sigaction oldusr2;
   struct sigaction sa = {.sa_sigaction = OnSig, .sa_flags = SA_SIGINFO};

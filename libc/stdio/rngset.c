@@ -43,7 +43,7 @@
  */
 dontasan void *rngset(void *b, size_t n, uint64_t seed(void), size_t reseed) {
   size_t m;
-  uint64_t i, x, t = 0;
+  uint64_t x, t = 0;
   unsigned char *p = b;
   if (IsAsan()) {
     __asan_verify(b, n);

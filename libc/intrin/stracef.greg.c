@@ -20,7 +20,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/tls2.internal.h"
 
 privileged void __stracef(const char *fmt, ...) {
   va_list v;

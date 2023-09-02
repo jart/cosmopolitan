@@ -33,8 +33,8 @@ static int bcmp_sse(const char *p, const char *q, size_t n) {
     q += 16;
     n -= 16;
   }
-  a = *(const xmm_t *)p ^ *(const xmm_t *)q |
-      *(const xmm_t *)(p + n - 16) ^ *(const xmm_t *)(q + n - 16);
+  a = (*(const xmm_t *)p ^ *(const xmm_t *)q) |
+      (*(const xmm_t *)(p + n - 16) ^ *(const xmm_t *)(q + n - 16));
   return !!(a[0] | a[1]);
 }
 #endif
@@ -65,8 +65,8 @@ _Microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
       n -= 16;
     }
   }
-  a = *(const xmm_t *)p ^ *(const xmm_t *)q |
-      *(const xmm_t *)(p + n - 16) ^ *(const xmm_t *)(q + n - 16);
+  a = (*(const xmm_t *)p ^ *(const xmm_t *)q) |
+      (*(const xmm_t *)(p + n - 16) ^ *(const xmm_t *)(q + n - 16));
   return !!(a[0] | a[1]);
 }
 #endif
@@ -103,7 +103,6 @@ _Microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
  */
 int bcmp(const void *a, const void *b, size_t n) {
   int c;
-  unsigned u;
   uint32_t i, j;
   uint64_t x, y;
   const char *p, *q;

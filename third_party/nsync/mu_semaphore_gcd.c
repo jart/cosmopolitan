@@ -50,6 +50,7 @@ static long dispatch_semaphore_wait (dispatch_semaphore_t ds,
 
 static long dispatch_semaphore_signal (dispatch_semaphore_t ds) {
 	long rc = __syslib->dispatch_semaphore_signal (ds);
+	(void)rc;
 	STRACE ("dispatch_semaphore_signal(%#lx) → %ld", ds, rc);
 	return (ds);
 }

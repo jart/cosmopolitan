@@ -41,7 +41,7 @@ long wcstol(const wchar_t *s, wchar_t **endptr, int base) {
   char t = 0;
   long x = 0;
   int d, c = *s;
-  CONSUME_SPACES(s, c);
+  CONSUME_SPACES(wchar_t, s, c);
   GET_SIGN(s, c, d);
   GET_RADIX(s, c, base);
   if ((c = kBase36[c & 255]) && --c < base) {
@@ -55,7 +55,9 @@ long wcstol(const wchar_t *s, wchar_t **endptr, int base) {
       } while ((c = kBase36[*++s & 255]) && --c < base);
     }
   }
-  if (t && endptr) *endptr = s;
+  if (t && endptr) {
+    *endptr = (wchar_t *)s;
+  }
   return x;
 }
 

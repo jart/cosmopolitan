@@ -68,7 +68,8 @@ static void testlib_describecombo(struct ComboProduct *product,
 
 static void testlib_callcombos(struct ComboProduct *product,
                                const struct TestFixture *combos,
-                               testfn_t *test_start, testfn_t *test_end) {
+                               const testfn_t *test_start,
+                               const testfn_t *test_end) {
   for (;;) {
     testlib_describecombo(product, combos);
     for (unsigned i = 0; i < product->n; ++i) {
@@ -88,7 +89,7 @@ static void testlib_callcombos(struct ComboProduct *product,
  * @see ape/ape.lds
  * @see libc/testlib/testlib.h
  */
-void testlib_runcombos(testfn_t *test_start, testfn_t *test_end,
+void testlib_runcombos(const testfn_t *test_start, const testfn_t *test_end,
                        const struct TestFixture *combo_start,
                        const struct TestFixture *combo_end) {
   struct ComboProduct *product;

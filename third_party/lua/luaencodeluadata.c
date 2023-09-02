@@ -113,7 +113,7 @@ OnError:
 
 static int SerializeNumber(lua_State *L, char **buf, int idx) {
   int64_t x;
-  char ibuf[24];
+  char ibuf[128];
   if (lua_isinteger(L, idx)) {
     x = luaL_checkinteger(L, idx);
     if (x == -9223372036854775807 - 1) {
@@ -252,7 +252,6 @@ OnError:
 static int SerializeArray(lua_State *L, char **buf, struct Serializer *z,
                           int depth) {
   size_t i, n;
-  const char *s;
   RETURN_ON_ERROR(appendw(buf, '{'));
   n = lua_rawlen(L, -1);
   for (i = 1; i <= n; i++) {
@@ -269,7 +268,6 @@ OnError:
 
 static int SerializeObject(lua_State *L, char **buf, struct Serializer *z,
                            int depth, bool multi) {
-  int rc;
   size_t n;
   const char *s;
   bool comma = false;
@@ -308,8 +306,8 @@ OnError:
 
 static int SerializeSorted(lua_State *L, char **buf, struct Serializer *z,
                            int depth, bool multi) {
+  int i;
   size_t n;
-  int i, rc;
   const char *s;
   struct StrList sl = {0};
   lua_pushnil(L);
@@ -354,7 +352,6 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
                           struct Serializer *z, int depth) {
   int rc;
   bool multi;
-  intptr_t rsp, bot;
   if (UNLIKELY(!HaveStackMemory(getauxval(AT_PAGESZ)))) {
     z->reason = "out of stack";
     return -1;

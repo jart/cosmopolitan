@@ -32,7 +32,8 @@
  * @see rldecode() for a 16-byte decompressor
  */
 textstartup void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) {
-  unsigned char *op, *ip, *ipe, *match;
+  unsigned char *op, *match;
+  const unsigned char *ip, *ipe;
   unsigned token, length, fifteen, offset, matchlen;
   for (op = dest, ip = blockdata, ipe = ip + blocksize;;) {
     token = *ip++;

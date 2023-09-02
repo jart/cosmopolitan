@@ -45,7 +45,6 @@
 
 static bool IsAPEFd(const int fd) {
   char buf[8];
-  bool res;
   return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsAPEMagic(buf);
 }
 
@@ -115,7 +114,7 @@ static bool ape_to_elf(void *ape, const size_t apesize) {
  * This does an inplace conversion of APE to ELF when detected!!!!
  */
 static int fd_to_mem_fd(const int infd, char *path) {
-  if (!IsLinux() && !IsFreebsd() || !_weaken(mmap) || !_weaken(munmap)) {
+  if ((!IsLinux() && !IsFreebsd()) || !_weaken(mmap) || !_weaken(munmap)) {
     return enosys();
   }
 
@@ -143,9 +142,9 @@ static int fd_to_mem_fd(const int infd, char *path) {
     bool success = readRc != -1;
     if (success && (st.st_size > 8) && IsAPEMagic(space)) {
       int flags = fcntl(fd, F_GETFD);
-      if (success = (flags != -1) &&
-                    (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&
-                    ape_to_elf(space, st.st_size)) {
+      if ((success = (flags != -1) &&
+                     (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&
+                     ape_to_elf(space, st.st_size))) {
         const int newfd = fcntl(fd, F_DUPFD, 9001);
         if (newfd != -1) {
           close(fd);
@@ -232,7 +231,7 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       }
       size_t numenvs;
       for (numenvs = 0; envp[numenvs];) ++numenvs;
-      const size_t desenvs = min(500, max(numenvs + 1, 2));
+      // const size_t desenvs = min(500, max(numenvs + 1, 2));
       static _Thread_local char *envs[500];
       memcpy(envs, envp, numenvs * sizeof(char *));
       envs[numenvs] = path;

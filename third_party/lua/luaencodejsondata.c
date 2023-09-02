@@ -69,8 +69,8 @@ OnError:
 
 static int SerializeString(lua_State *L, char **buf, int idx,
                            struct Serializer *z) {
-  char *s;
   size_t m;
+  const char *s;
   s = lua_tolstring(L, idx, &m);
   if (!(s = EscapeJsStringLiteral(&z->strbuf, &z->strbuflen, s, m, &m))) {
     goto OnError;

@@ -210,7 +210,7 @@ dontasan void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
  */
 static dontasan textreal void __invert_memory(struct mman *mm,
                                               uint64_t *pml4t) {
-  uint64_t i, j, *m, p, pe;
+  uint64_t i;
   for (i = 0; i < mm->e820n; ++i) {
     uint64_t ps = mm->e820[i].addr, size = mm->e820[i].size;
     /* ape/ape.S has already mapped the first 2 MiB of physical memory. */
@@ -261,8 +261,8 @@ dontasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t,
  */
 dontasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
                                    uint64_t top) {
+  uint64_t i, f, v, m;
   struct Elf64_Phdr *p;
-  uint64_t i, f, v, m, *e;
   extern char ape_phdrs[] __attribute__((__weak__));
   extern char ape_phdrs_end[] __attribute__((__weak__));
   __setup_mman(mm, pml4t, top);

@@ -124,11 +124,10 @@ textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
 
 static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
                                          uintptr_t arg) {
-  int e;
+  uint32_t flags;
   struct flock *l;
-  uint32_t flags, err;
+  int64_t pos, off, len, end;
   struct FileLock *fl, *ft, **flp;
-  int64_t pos, off, len, end, size;
 
   l = (struct flock *)arg;
   len = l->l_len;
@@ -171,7 +170,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
       for (flp = &g_locks.list, fl = *flp; fl;) {
         if (fl->fd == fd) {
           if (EqualsFileLock(fl, off, len)) {
-            if (fl->exc == l->l_type == F_WRLCK) {
+            if (fl->exc == (l->l_type == F_WRLCK)) {
               // we already have this lock
               return 0;
             } else {
@@ -205,7 +204,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
           l->l_whence = SEEK_SET;
           l->l_start = fl->off;
           l->l_len = fl->len;
-          l->l_type == fl->exc ? F_WRLCK : F_RDLCK;
+          l->l_type = fl->exc ? F_WRLCK : F_RDLCK;
           l->l_pid = getpid();
           return 0;
         }
@@ -360,7 +359,6 @@ static textwindows int sys_fcntl_nt_setfl(int fd, unsigned *flags,
 
 textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   int rc;
-  uint32_t flags;
   if (__isfdkind(fd, kFdFile) ||    //
       __isfdkind(fd, kFdSocket) ||  //
       __isfdkind(fd, kFdConsole)) {

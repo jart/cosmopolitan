@@ -68,8 +68,8 @@ void *TortureWorker(void *arg) {
 }
 
 TEST(getrandom, test) {
+  int i, n = 999;
   double e, w = 7.7;
-  int i, j, n = 999;
   char *buf = _gc(calloc(1, n));
   ASSERT_SYS(0, 0, getrandom(0, 0, 0));
   ASSERT_SYS(0, n, getrandom(buf, n, 0));
@@ -91,7 +91,7 @@ TEST(getrandom, test2) {
   pthread_t child;
   double e, w = 7.7;
   struct sigaction sa;
-  int i, j, k, m, n = 999;
+  int i, k, m, n = 999;
   char *buf = _gc(calloc(1, n));
   sa.sa_flags = 0;
   sa.sa_handler = OnSig;
@@ -307,7 +307,7 @@ static const struct RandomFunction {
 TEST(getrandom, sanityTest) {
   uint64_t q;
   size_t i, j, k;
-  double montepi, chip, scc, mean, chisq, ent;
+  double montepi, scc, mean, chisq, ent;
   for (k = 0; k < 1; ++k) {
     for (j = 0; j < ARRAYLEN(kRandomFunctions); ++j) {
       rt_init(0);
@@ -316,8 +316,8 @@ TEST(getrandom, sanityTest) {
         rt_add(&q, 8);
       }
       rt_end(&ent, &chisq, &mean, &montepi, &scc);
-      chip = pochisq(chisq, 255);
 #if 0
+      double chip = pochisq(chisq, 255);
       fprintf(stderr, "\n");
       fprintf(stderr, "/* %-32s */\n", kRandomFunctions[j].s);
       fprintf(stderr, "/* entropy:            %-12g */\n", ent);

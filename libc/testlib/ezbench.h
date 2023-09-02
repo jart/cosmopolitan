@@ -151,6 +151,9 @@ COSMOPOLITAN_C_START_
       __testlib_yield();                                               \
       Core = __testlib_getcore();                                      \
       Interrupts = __testlib_getinterrupts();                          \
+      (void)Toto;                                                      \
+      (void)Core;                                                      \
+      (void)Interrupts;                                                \
       EXPR;                                                            \
       Speculative = BENCHLOOPER(__startbench, __endbench, 32, (EXPR)); \
     } while (++Tries < EZBENCH_TRIES && !Speculative);                 \

@@ -35,7 +35,8 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 dontasan static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
-  xmm_t v, *p;
+  const xmm_t *p;
+  xmm_t v;
   xmm_t z = {0};
   xmm_t n = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
   k = (uintptr_t)s & 15;

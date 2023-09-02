@@ -32,7 +32,6 @@ const char *(DescribeSockaddr)(char buf[128], const struct sockaddr *sa,
                                size_t sasize) {
   int e;
   size_t n;
-  uint16_t port;
   char *p, ip[72];
   e = errno;
   stpcpy(buf, "NULL");

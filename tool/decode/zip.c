@@ -419,7 +419,7 @@ uint8_t *GetZipCdir64(const uint8_t *p, size_t n) {
     do {
       if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
           (j = ZIP_LOCATE64_OFFSET(p + i)) + kZipCdir64HdrMinSize <= n) {
-        return p + j;
+        return (uint8_t *)p + j;
       }
     } while (i--);
   }
@@ -430,7 +430,7 @@ void DisassembleZip(const char *path, uint8_t *p, size_t n) {
   size_t pos;
   uint16_t i;
   static int records;
-  uint8_t *eocd32, *eocd64, *cdir, *cf, *lf, *q;
+  uint8_t *eocd32, *eocd64, *cdir, *cf, *lf;
   eocd32 = GetZipCdir32(p, n);
   eocd64 = GetZipCdir64(p, n);
   CHECK(eocd32 || eocd64);

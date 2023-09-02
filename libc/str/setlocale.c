@@ -24,9 +24,7 @@
 /**
  * Sets program locale.
  *
- * Cosmopolitan only supports the C or POSIX locale.
- *
- * "You can have any locale you want as long as it's C." -- Henry Ford
+ * Cosmopolitan only supports the C or POSIX locale with UTF-8.
  */
 char *setlocale(int category, const char *locale) {
   char *res;
@@ -36,7 +34,7 @@ char *setlocale(int category, const char *locale) {
              !strcmp(locale, "POSIX") ||    //
              !strcmp(locale, "C.UTF-8") ||  //
              !strcmp(locale, "en_US.UTF-8")) {
-    res = locale;
+    res = (char *)locale;
   } else {
     res = NULL;
   }

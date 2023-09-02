@@ -45,7 +45,7 @@ int GetDepth(struct Closure *env) {
 }
 
 void PrintClosure(struct Closure *c, const char *name, int indent, FILE *f) {
-  int i, j;
+  int j;
   char ibuf[21];
   while (c && c != &root) {
     for (j = 0; j < indent; ++j) {
@@ -71,7 +71,6 @@ void PrintMachineState(FILE *f) {
   int i;
   char buf[256];
   static int op;
-  struct Closure *c;
   fputc('\n', f);
   for (i = 0; i < 80; ++i) fputwc(L'─', f);
   ksnprintf(buf, sizeof(buf),

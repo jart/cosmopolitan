@@ -35,7 +35,7 @@ __attribute__((__constructor__)) void init(void) {
   for (i = j = 0; i < 2; ++i) {
     while ((c = s[j] & 255)) {
       ++j;
-      if ('0' <= c & c <= '9') {
+      if ('0' <= c && c <= '9') {
         arg[i] *= 10;
         arg[i] += c - '0';
       } else {

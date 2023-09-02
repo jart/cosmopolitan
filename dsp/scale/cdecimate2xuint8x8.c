@@ -55,10 +55,10 @@ void *cDecimate2xUint8x8(unsigned long n, unsigned char A[n],
                             K[4], K[5], K[4], K[5], K[4], K[5], K[4], K[5]};
   signed char kMadd4[16] = {K[6], K[7], K[6], K[7], K[6], K[7], K[6], K[7],
                             K[6], K[7], K[6], K[7], K[6], K[7], K[6], K[7]};
-  unsigned char in1[16], in2[16], in3[16], in4[32];
   unsigned char bv0[16], bv1[16], bv2[16], bv3[16];
+  unsigned char in1[16], in2[16], in3[16];
   short wv0[8], wv1[8], wv2[8], wv3[8];
-  unsigned long i, j, v, w, o;
+  unsigned long i, j, w;
   if (n >= STRIDE) {
     i = 0;
     w = (n + RATIO / 2) / RATIO;

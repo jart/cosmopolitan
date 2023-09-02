@@ -55,7 +55,6 @@ static gettimeofday_f *__gettimeofday = __gettimeofday_init;
  */
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
   int rc;
-  axdx_t ad;
   if (IsAsan() && ((tv && !__asan_is_valid(tv, sizeof(*tv))) ||
                    (tz && !__asan_is_valid(tz, sizeof(*tz))))) {
     rc = efault();

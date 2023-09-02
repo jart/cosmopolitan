@@ -119,7 +119,7 @@ double asin(double x)
 	/* |x| >= 1 or nan */
 	if (ix >= 0x3ff00000) {
 		lx = u.i;
-		if (!(ix-0x3ff00000 | lx))
+		if (!((ix-0x3ff00000) | lx))
 			/* asin(1) = +-pi/2 with inexact */
 			return x*pio2_hi + 0x1p-120f;
 		return 0/(x-x);

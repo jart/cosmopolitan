@@ -32,8 +32,6 @@
 // two clients send a udp packet containing their local address
 // server verifies content of packet matches the peer's address
 TEST(recvfrom, test) {
-  int ws, pid;
-  int64_t inoffset;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in server = {
       .sin_family = AF_INET,

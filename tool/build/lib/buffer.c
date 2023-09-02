@@ -27,7 +27,7 @@
 
 /* TODO(jart): replace with new append*() library */
 
-void AppendData(struct Buffer *b, char *data, unsigned len) {
+void AppendData(struct Buffer *b, const char *data, size_t len) {
   char *p;
   unsigned n;
   if (b->i + len + 1 > b->n) {
@@ -63,7 +63,6 @@ void AppendWide(struct Buffer *b, wint_t wc) {
 
 int AppendFmt(struct Buffer *b, const char *fmt, ...) {
   int n;
-  char *p;
   va_list va, vb;
   va_start(va, fmt);
   va_copy(vb, va);

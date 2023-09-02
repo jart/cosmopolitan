@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
   const char *lz4path = "/dev/stdin";
   const char *outpath = "/dev/stdout";
   const char *initprio = "400,_init_";
-  const unsigned char *lz4data;
+  unsigned char *lz4data;
   int opt;
   FILE *fin, *fout;
 
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
   fprintf(fout, "\n");
   fprintf(fout, "\t.init.start %s%s\n", initprio, symbol);
   fprintf(fout, "\tpush\t%%rsi\n");
-  fprintf(fout, "\tmov\t$%u,%%edx\n", size);
+  fprintf(fout, "\tmov\t$%zu,%%edx\n", size);
   fprintf(fout, "\tcall\tlz4cpy\n");
   if (misalign) {
     fprintf(fout, "\tlea\t%zu(%%rax),%%rdi\n", misalign);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     fprintf(fout, "\tmov\t%%rax,%%rdi\n");
   }
   fprintf(fout, "\tpop\t%%rsi\n");
-  fprintf(fout, "\tadd\t$%u,%%rsi\n", ROUNDUP(size, 8));
+  fprintf(fout, "\tadd\t$%zu,%%rsi\n", ROUNDUP(size, 8));
   fprintf(fout, "\t.init.end %s%s\n", initprio, symbol);
 
   fprintf(fout, "\n");

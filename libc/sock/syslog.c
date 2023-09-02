@@ -19,7 +19,6 @@
 #include "libc/sock/syslog.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/stdio/dprintf.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
@@ -32,6 +31,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -261,7 +261,6 @@ int setlogmask(int maskpri) {
  * @asyncsignalsafe
  */
 void openlog(const char *ident, int opt, int facility) {
-  size_t n;
   BLOCK_CANCELLATIONS;
   if (log_facility == -1) __initlog();
   if (!ident) ident = firstnonnull(program_invocation_short_name, "unknown");

@@ -41,7 +41,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * @note discovered by Nasir Ahmed
  */
 void plm_video_idct(int block[8][8]) {
-  int i, j, t1, t2, m0;
+  int i, t1, t2, m0;
   int b1, b3, b4, b6, b7;
   int y3, y4, y5, y6, y7;
   int x0, x1, x2, x3, x4;

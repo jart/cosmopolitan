@@ -413,9 +413,9 @@ void editorUpdateSyntax(erow *row) {
   int i, prev_sep, in_string, in_comment;
   char *p;
   const char *const *keywords = E.syntax->keywords;
-  char *scs = E.syntax->singleline_comment_start;
-  char *mcs = E.syntax->multiline_comment_start;
-  char *mce = E.syntax->multiline_comment_end;
+  const char *scs = E.syntax->singleline_comment_start;
+  const char *mcs = E.syntax->multiline_comment_start;
+  const char *mce = E.syntax->multiline_comment_end;
 
   /* Point to the first non-space char. */
   p = row->render;
@@ -575,7 +575,7 @@ int editorSyntaxToColor(int hl) {
  * setting it in the global state E.syntax. */
 void editorSelectSyntaxHighlight(char *filename) {
   for (unsigned j = 0; j < HLDB_ENTRIES; j++) {
-    struct editorSyntax *s = HLDB + j;
+    const struct editorSyntax *s = HLDB + j;
     unsigned i = 0;
     while (s->filematch[i]) {
       char *p;
@@ -898,7 +898,7 @@ struct abuf {
 };
 
 static void abAppend(struct abuf *ab, const char *s, int len) {
-  CONCAT(&ab->p, &ab->i, &ab->n, s, len);
+  CONCAT(&ab->p, &ab->i, &ab->n, (void *)s, len);
 }
 
 /* This function writes the whole screen using VT100 escape characters

@@ -57,7 +57,6 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
 }
 
 static textstartup void sys_getloadavg_nt_init(void) {
-  double a[3];
   if (IsWindows()) {
     load = 1;
     cpus = __get_cpu_count() / 2;

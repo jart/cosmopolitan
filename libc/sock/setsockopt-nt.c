@@ -34,9 +34,9 @@ __msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
                                   const void *optval, uint32_t optlen) {
   int64_t ms, micros;
-  struct timeval *tv;
-  struct linger *linger;
   struct SockFd *sockfd;
+  const struct timeval *tv;
+  const struct linger *linger;
   union {
     uint32_t millis;
     struct linger_nt linger;

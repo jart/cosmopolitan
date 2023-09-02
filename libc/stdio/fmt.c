@@ -398,7 +398,7 @@ static int __fmt_stoa(int out(const char *, void *, size_t), void *arg,
   unsigned n;
   emit_f emit;
   char *p, buf[1];
-  unsigned w, c, pad;
+  unsigned w, pad;
   bool justdobytes, ignorenul;
 
   p = data;
@@ -604,7 +604,7 @@ static void __fmt_ldfpbits(union U *u, struct FPBits *b) {
 
 // returns number of hex digits minus 1, or 0 for zero
 static int __fmt_fpiprec(struct FPBits *b) {
-  FPI *fpi;
+  const FPI *fpi;
   int i, j, k, m;
   uint32_t *bits;
   if (b->kind == STRTOG_Zero) return (b->ex = 0);
@@ -794,10 +794,10 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
   wchar_t charbuf[1];
   const char *alphabet;
   unsigned char signbit, log2base;
+  int c, k, i1, bw, rc, bex, prec1, decpt;
   int (*out)(const char *, void *, size_t);
   char *se, *s0, *s, *q, qchar, special[8];
   int d, w, n, sign, prec, flags, width, lasterr;
-  int c, k, i1, ui, bw, rc, bex, sgn, prec1, decpt;
 
   x = 0;
   lasterr = errno;
@@ -852,7 +852,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         continue;
       } else if (format[1] == '.' && format[2] == '*' && format[3] == 's') {
         n = va_arg(va, unsigned);  // FAST PATH: PRECISION STRING
-        s = va_arg(va, const char *);
+        const char *s = va_arg(va, const char *);
         if (s) {
           n = strnlen(s, n);
         } else {

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
 #include "net/http/tokenbucket.h"
+#include "libc/intrin/atomic.h"
 
 /**
  * Atomically increments all signed bytes in array, without overflowing.
@@ -40,7 +40,7 @@ void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
     if (a == 0x7f7f7f7f7f7f7f7f) continue;
     uint64_t b = 0x8080808080808080;
     uint64_t c = 0x7f7f7f7f7f7f7f7f ^ a;
-    uint64_t d = ((c >> 1 | b) - c & b ^ b) >> 7;
+    uint64_t d = ((((c >> 1 | b) - c) & b) ^ b) >> 7;
     atomic_fetch_add_explicit(w + i, d, memory_order_relaxed);
   }
 }
