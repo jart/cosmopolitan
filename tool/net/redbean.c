@@ -83,6 +83,7 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/hwcap.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
@@ -215,7 +216,7 @@ __static_yoink("blink_xnu_aarch64");    // is apple silicon
 // digits not used:  0123456789
 // puncts not used:  !"#$&'()+,-./;<=>@[\]^_`{|}~
 #define GETOPTS \
-  "*%BEJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:w:"
+  "%*?BEJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:w:"
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -7294,7 +7295,6 @@ static void GetOpts(int argc, char *argv[]) {
         break;
         CASE('r', ProgramRedirectArg(307, optarg));
         CASE('t', ProgramTimeout(ParseInt(optarg)));
-        CASE('h', PrintUsage(1, EXIT_SUCCESS));
         CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #if !IsTiny()
         CASE('W', monitortty = optarg);
@@ -7331,8 +7331,14 @@ static void GetOpts(int argc, char *argv[]) {
         CASE('C', ProgramFile(optarg, ProgramCertificate));
         CASE('K', ProgramFile(optarg, ProgramPrivateKey));
 #endif
+      case 'h':
+      case '?':
       default:
-        PrintUsage(2, EX_USAGE);
+        if (opt == optopt) {
+          PrintUsage(STDOUT_FILENO, EXIT_SUCCESS);
+        } else {
+          PrintUsage(STDERR_FILENO, EX_USAGE);
+        }
     }
   }
   // if storing asset(s) is requested, don't need to continue
@@ -7481,5 +7487,5 @@ int main(int argc, char *argv[]) {
     CheckForMemoryLeaks();
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 }
