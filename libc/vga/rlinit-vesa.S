@@ -46,11 +46,7 @@
 	.set	"mi::sizeof",14
 
 //	Routine to activate additional VESA functionality if the user holds
-//	down a magic key, when booting from bare metal.  Currently this just
-//	dumps a list of all usable VESA VBE video modes on the console.
-//
-//	TODO: allow user to select a video mode and switch to it
-//	TODO: implement character drawing in graphics modes
+//	down a magic key, when booting from bare metal.
 //
 //	@return	CF = 0 if we decided to set a new video mode, CF = 1 otherwise
 
@@ -372,7 +368,7 @@ _rlinit_vesa:
 	jz	.fail3
 	call	.video_type		# check if we know about the video
 	jc	.fail3			# buffer type, & what exact type it is
-	mov	(%bp),%bx		# if we are already tracking too
+	mov	(%bp),%bx		# if we are already tracking too many
 	cmp	$MAX_VESA_MODES_TO_TRACK,%bx # VESA modes, also skip
 	jnb	.fail3
 	inc	%bx			# otherwise start noting down mode
@@ -435,7 +431,7 @@ _rlinit_vesa:
 	mov	$PC_VIDEO_TEXT,%al	# if text mode, simply say so
 	test	$0b00010000,%cl
 	jz	.ok4
-	cmpl	$6,%es:0x1b(%di)	# if graphics mode, check if direct
+	cmpb	$6,%es:0x1b(%di)	# if graphics mode, check if direct
 	jnz	.fail4			# color; bail out if not
 	mov	%es:0x19(%di),%cl	# check actual color fields & bits
 	mov	%es:0x1f(%di),%ax	# per pixel, against a list
