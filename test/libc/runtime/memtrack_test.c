@@ -28,6 +28,8 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
+#define OPEN_MAX 16
+
 #define I(x, y) \
   { x, y, 0, (y - x) * FRAMESIZE + FRAMESIZE }
 

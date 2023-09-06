@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,33 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/macros.internal.h"
-.text.startup
+#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio_ext.h"
 
-//	Initializes jump table for memset() and memcpy().
-//
-//	@param	!ZF if required cpu vector extensions are available
-//	@param	rdi is address of 64-bit jump table
-//	@param	rsi is address of 8-bit jump initializers
-//	@param	rdx is address of indirect branch
-//	@param	ecx is size of jump table
-memjmpinit:
-	.leafprologue
-	setnz	%r8b
-	shl	%r8b
-0:	xor	%eax,%eax
-	lodsb
-	add	%rdx,%rax
-	stosq
-	.loop	0b
-	xor	%eax,%eax
-	testb	X86_HAVE(ERMS)+kCpuids(%rip)
-	setnz	%al
-	or	%r8b,%al
-	mov	(%rsi,%rax),%al
-	add	%rdx,%rax
-	stosq
-	lodsq
-	.leafepilogue
-	.endfn	memjmpinit,globl,hidden
+const char *__freadptr(FILE *f, size_t *sizep) {
+  if (f->beg == f->end) return 0;
+  *sizep = f->end - f->beg;
+  return (const char *)f->buf + f->beg;
+}

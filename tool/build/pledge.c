@@ -39,6 +39,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/gc.internal.h"

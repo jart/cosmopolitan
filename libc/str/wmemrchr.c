@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/limits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"

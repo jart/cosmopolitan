@@ -11,14 +11,14 @@
 COSMOPOLITAN_C_START_
 
 typedef struct fd_set {
-  unsigned long fds_bits[FD_SETSIZE / (sizeof(long) * CHAR_BIT)];
+  unsigned long fds_bits[FD_SETSIZE / (sizeof(long) * 8)];
 } fd_set;
 
 #define FD_ISSET(FD, SET) (((SET)->fds_bits[(FD) >> 6] >> ((FD)&63)) & 1)
 #define FD_SET(FD, SET)   ((SET)->fds_bits[(FD) >> 6] |= 1ull << ((FD)&63))
 #define FD_CLR(FD, SET)   ((SET)->fds_bits[(FD) >> 6] &= ~(1ull << ((FD)&63)))
 #define FD_ZERO(SET)      bzero((SET)->fds_bits, sizeof((SET)->fds_bits))
-#define FD_SIZE(bits)     (((bits) + (sizeof(long) * CHAR_BIT) - 1) / sizeof(long))
+#define FD_SIZE(bits)     (((bits) + (sizeof(long) * 8) - 1) / sizeof(long))
 
 int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *,

@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -42,6 +43,7 @@
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
@@ -261,6 +263,20 @@ GiveUpOnGettingInode:
  * @errors ENOMEM and fd is closed
  */
 DIR *fdopendir(int fd) {
+
+  // sanity check file descriptor
+  struct stat st;
+  if (fstat(fd, &st) == -1) {
+    return 0;
+  }
+  if (!S_ISDIR(st.st_mode)) {
+    enotdir();
+    return 0;
+  }
+  if (IsLinux() && (__sys_fcntl(fd, F_GETFL) & O_PATH)) {
+    ebadf();
+    return 0;
+  }
 
   // allocate directory iterator object
   DIR *dir;

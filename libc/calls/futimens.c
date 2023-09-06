@@ -44,7 +44,11 @@
  */
 int futimens(int fd, const struct timespec ts[2]) {
   int rc;
-  rc = __utimens(fd, 0, ts, 0);
+  if (fd < 0) {
+    rc = ebadf();  // so we don't confuse __utimens if caller passes AT_FDCWD
+  } else {
+    rc = __utimens(fd, 0, ts, 0);
+  }
   STRACE("futimens(%d, {%s, %s}) → %d% m", fd, DescribeTimespec(0, ts),
          DescribeTimespec(0, ts ? ts + 1 : 0), rc);
   return rc;

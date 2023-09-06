@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
@@ -25,6 +26,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/enum/filetype.h"
@@ -39,102 +41,119 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
-  wint_t x, y;
-  const char16_t *p;
-  uint32_t mem, i, n, z = 0;
-  struct NtReparseDataBuffer *rdb;
-  long buf[(sizeof(*rdb) + PATH_MAX * sizeof(char16_t)) / sizeof(long)];
-  mem = sizeof(buf);
-  rdb = (struct NtReparseDataBuffer *)buf;
-  if (DeviceIoControl(fh, kNtFsctlGetReparsePoint, 0, 0, rdb, mem, &n, 0)) {
-    i = 0;
-    n = rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
-    p = (char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
-                     rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
-    while (i < n) {
-      x = p[i++] & 0xffff;
-      if (!IsUcs2(x)) {
-        if (i < n) {
-          y = p[i++] & 0xffff;
-          x = MergeUtf16(x, y);
-        } else {
-          x = 0xfffd;
-        }
+static textwindows long GetSizeOfReparsePoint(int64_t fh) {
+  uint32_t mem =
+      sizeof(struct NtReparseDataBuffer) + PATH_MAX * sizeof(char16_t);
+  void *buf = alloca(mem);
+  uint32_t dwBytesReturned;
+  struct NtReparseDataBuffer *rdb = (struct NtReparseDataBuffer *)buf;
+  if (!DeviceIoControl(fh, kNtFsctlGetReparsePoint, 0, 0, rdb, mem,
+                       &dwBytesReturned, 0)) {
+    return -1;
+  }
+  const char16_t *p =
+      (const char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
+                         rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
+  uint32_t n =
+      rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
+  uint32_t i = 0;
+  uint32_t z = 0;
+  while (i < n) {
+    wint_t x = p[i++] & 0xffff;
+    if (!IsUcs2(x)) {
+      if (i < n) {
+        wint_t y = p[i++] & 0xffff;
+        x = MergeUtf16(x, y);
+      } else {
+        x = 0xfffd;
       }
-      z += x < 0200 ? 1 : _bsrl(tpenc(x)) >> 3;
     }
-  } else {
-    STRACE("%s failed %m", "GetSizeOfReparsePoint");
+    if (x >= 0200) {
+      z += _bsrl(tpenc(x)) >> 3;
+    }
+    ++z;
   }
   return z;
 }
 
-textwindows int sys_fstat_nt(int64_t handle, struct stat *st) {
-  int filetype;
-  uint32_t umask;
-  uint64_t actualsize;
-  struct NtFileCompressionInfo fci;
-  struct NtByHandleFileInformation wst;
-  if (!st) return efault();
-  if ((filetype = GetFileType(handle))) {
-    bzero(st, sizeof(*st));
-    umask = atomic_load_explicit(&__umask, memory_order_acquire);
-    switch (filetype) {
-      case kNtFileTypeChar:
-        st->st_mode = S_IFCHR | (0666 & ~umask);
-        break;
-      case kNtFileTypePipe:
-        st->st_mode = S_IFIFO | (0666 & ~umask);
-        break;
-      case kNtFileTypeDisk:
-        if (GetFileInformationByHandle(handle, &wst)) {
-          st->st_mode = 0555 & ~umask;
-          st->st_flags = wst.dwFileAttributes;
-          if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
-            st->st_mode |= 0222 & ~umask;
-          }
-          if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
-            st->st_mode |= S_IFDIR;
-          } else if (wst.dwFileAttributes & kNtFileAttributeReparsePoint) {
-            st->st_mode |= S_IFLNK;
-          } else {
-            st->st_mode |= S_IFREG;
-          }
-          st->st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
-          st->st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
-          st->st_ctim = FileTimeToTimeSpec(wst.ftCreationFileTime);
-          st->st_birthtim = st->st_ctim;
-          st->st_gid = st->st_uid = __synthesize_uid();
-          st->st_size = (uint64_t)wst.nFileSizeHigh << 32 | wst.nFileSizeLow;
-          st->st_blksize = 4096;
-          st->st_dev = wst.dwVolumeSerialNumber;
-          st->st_rdev = 0;
-          st->st_ino = (uint64_t)wst.nFileIndexHigh << 32 | wst.nFileIndexLow;
-          st->st_nlink = wst.nNumberOfLinks;
-          if (S_ISLNK(st->st_mode)) {
-            if (!st->st_size) {
-              st->st_size = GetSizeOfReparsePoint(handle);
-            }
-          } else {
-            actualsize = st->st_size;
-            if (S_ISREG(st->st_mode) &&
-                GetFileInformationByHandleEx(handle, kNtFileCompressionInfo,
-                                             &fci, sizeof(fci))) {
-              actualsize = fci.CompressedFileSize;
-            }
-            st->st_blocks = ROUNDUP(actualsize, 4096) / 512;
-          }
-        } else {
-          STRACE("%s failed %m", "GetFileInformationByHandle");
+textwindows int sys_fstat_nt(int64_t handle, struct stat *out_st) {
+  struct stat st = {0};
+
+  // Always set st_blksize to avoid divide by zero issues.
+  // The Linux kernel sets this for /dev/tty and similar too.
+  // TODO(jart): GetVolumeInformationByHandle?
+  st.st_blksize = 4096;
+
+  // We'll use the "umask" to fake out the mode bits.
+  uint32_t umask = atomic_load_explicit(&__umask, memory_order_acquire);
+
+  switch (GetFileType(handle)) {
+    case kNtFileTypeUnknown:
+      break;
+    case kNtFileTypeChar:
+      st.st_mode = S_IFCHR | (0666 & ~umask);
+      break;
+    case kNtFileTypePipe:
+      st.st_mode = S_IFIFO | (0666 & ~umask);
+      break;
+    case kNtFileTypeDisk: {
+      struct NtByHandleFileInformation wst;
+      if (!GetFileInformationByHandle(handle, &wst)) {
+        return __winerr();
+      }
+      st.st_mode = 0555 & ~umask;
+      st.st_flags = wst.dwFileAttributes;
+      if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
+        st.st_mode |= 0222 & ~umask;
+      }
+      if (wst.dwFileAttributes & kNtFileAttributeReparsePoint) {
+        st.st_mode |= S_IFLNK;
+      } else if (wst.dwFileAttributes & kNtFileAttributeDirectory) {
+        st.st_mode |= S_IFDIR;
+      } else {
+        st.st_mode |= S_IFREG;
+      }
+      st.st_atim = FileTimeToTimeSpec(wst.ftLastAccessFileTime);
+      st.st_mtim = FileTimeToTimeSpec(wst.ftLastWriteFileTime);
+      st.st_birthtim = FileTimeToTimeSpec(wst.ftCreationFileTime);
+      // compute time of last status change
+      if (timespec_cmp(st.st_atim, st.st_mtim) > 0) {
+        st.st_ctim = st.st_atim;
+      } else {
+        st.st_ctim = st.st_mtim;
+      }
+      st.st_gid = st.st_uid = __synthesize_uid();
+      st.st_size = (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
+      st.st_dev = wst.dwVolumeSerialNumber;
+      st.st_ino = (wst.nFileIndexHigh + 0ull) << 32 | wst.nFileIndexLow;
+      st.st_nlink = wst.nNumberOfLinks;
+      if (S_ISLNK(st.st_mode)) {
+        if (!st.st_size) {
+          long size = GetSizeOfReparsePoint(handle);
+          if (size == -1) return -1;
+          st.st_size = size;
         }
-        break;
-      default:
-        break;
+      } else {
+        // st_size       = uncompressed size
+        // st_blocks*512 = physical size
+        uint64_t physicalsize;
+        struct NtFileCompressionInfo fci;
+        if (!(wst.dwFileAttributes &
+              (kNtFileAttributeDirectory | kNtFileAttributeReparsePoint)) &&
+            GetFileInformationByHandleEx(handle, kNtFileCompressionInfo, &fci,
+                                         sizeof(fci))) {
+          physicalsize = fci.CompressedFileSize;
+        } else {
+          physicalsize = st.st_size;
+        }
+        st.st_blocks = ROUNDUP(physicalsize, st.st_blksize) / 512;
+      }
+      break;
     }
-    return 0;
-  } else {
-    STRACE("%s failed %m", "GetFileType");
-    return __winerr();
+    default:
+      __builtin_unreachable();
   }
+
+  memcpy(out_st, &st, sizeof(st));
+  return 0;
 }

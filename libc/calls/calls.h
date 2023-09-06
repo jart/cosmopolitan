@@ -26,11 +26,6 @@
 #define _POSIX_MEMLOCK_RANGE              _POSIX_VERSION
 #define _POSIX_SPAWN                      _POSIX_VERSION
 
-#define EOF      -1         /* end of file */
-#define WEOF     -1u        /* end of file (multibyte) */
-#define _IOFBF   0          /* fully buffered */
-#define _IOLBF   1          /* line buffered */
-#define _IONBF   2          /* no buffering */
 #define SEEK_SET 0          /* relative to beginning */
 #define SEEK_CUR 1          /* relative to current position */
 #define SEEK_END 2          /* relative to end */
@@ -99,7 +94,6 @@ int execv(const char *, char *const[]);
 int execve(const char *, char *const[], char *const[]);
 int execvp(const char *, char *const[]);
 int faccessat(int, const char *, int, int);
-int fadvise(int, uint64_t, uint64_t, int);
 int fchdir(int);
 int fchmod(int, unsigned) dontthrow;
 int fchmodat(int, const char *, unsigned, int);
@@ -136,7 +130,6 @@ int mkdirat(int, const char *, unsigned);
 int mkfifo(const char *, unsigned);
 int mkfifoat(int, const char *, unsigned);
 int mknod(const char *, unsigned, uint64_t);
-int mknodat(int, const char *, int, uint64_t);
 int nice(int);
 int open(const char *, int, ...);
 int openat(int, const char *, int, ...);
@@ -205,7 +198,7 @@ int setresgid(unsigned, unsigned, unsigned);
 int setresuid(unsigned, unsigned, unsigned);
 int getresgid(unsigned *, unsigned *, unsigned *);
 int getresuid(unsigned *, unsigned *, unsigned *);
-char *get_current_dir_name(void) dontdiscard;
+char *get_current_dir_name(void) __wur;
 int sync_file_range(int, int64_t, int64_t, unsigned);
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned);
 int memfd_create(const char *, unsigned int);
@@ -245,6 +238,7 @@ int tmpfd(void);
 int touch(const char *, unsigned);
 int unveil(const char *, const char *);
 long ptrace(int, ...);
+int fadvise(int, uint64_t, uint64_t, int);
 ssize_t copyfd(int, int, size_t);
 ssize_t readansi(int, char *, size_t);
 ssize_t tinyprint(int, const char *, ...) nullterminated();

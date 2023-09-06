@@ -36,8 +36,8 @@ COSMOPOLITAN_C_START_
 
 bool32 CreateProcess(const char16_t *opt_lpApplicationName,
                      char16_t *lpCommandLine,
-                     struct NtSecurityAttributes *opt_lpProcessAttributes,
-                     struct NtSecurityAttributes *opt_lpThreadAttributes,
+                     const struct NtSecurityAttributes *opt_lpProcessAttributes,
+                     const struct NtSecurityAttributes *opt_lpThreadAttributes,
                      bool32 bInheritHandles, uint32_t dwCreationFlags,
                      void *opt_lpEnvironment,
                      const char16_t *opt_lpCurrentDirectory,

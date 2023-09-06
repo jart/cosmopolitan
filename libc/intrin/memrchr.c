@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/limits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #ifndef __aarch64__
@@ -75,7 +76,7 @@ void *memrchr(const void *s, int c, size_t n) {
   r = memrchr_sse(s, c, n);
   return (void *)r;
 #else
-  return memrchr_pure(s, c, n);
+  return (void *)memrchr_pure(s, c, n);
 #endif
 }
 

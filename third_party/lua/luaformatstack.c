@@ -20,7 +20,7 @@
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 
-dontdiscard char *LuaFormatStack(lua_State *L) {
+__wur char *LuaFormatStack(lua_State *L) {
   int i, top;
   char *b = 0;
   struct EncoderConfig conf = {

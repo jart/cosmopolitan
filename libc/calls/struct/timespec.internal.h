@@ -25,7 +25,7 @@ int sys_nanosleep_xnu(const struct timespec *, struct timespec *);
 int sys_sem_timedwait(int64_t, const struct timespec *);
 int sys_utimensat(int, const char *, const struct timespec[2], int);
 int sys_utimensat_nt(int, const char *, const struct timespec[2], int);
-int sys_utimensat_xnu(int, const char *, const struct timespec[2], int);
+int sys_utimensat_old(int, const char *, const struct timespec[2], int);
 
 const char *DescribeTimespec(char[45], int, const struct timespec *);
 #define DescribeTimespec(rc, ts) DescribeTimespec(alloca(45), rc, ts)

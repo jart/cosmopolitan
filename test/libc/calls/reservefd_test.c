@@ -75,7 +75,7 @@ TEST(reservefd, testGrowthOfFdsDataStructure) {
   for (i = 0; i < n; ++i) {
     ASSERT_SYS(0, i + 3, open("/zip/usr/share/zoneinfo/UTC", O_RDONLY));
   }
-  ASSERT_GT(g_fds.n, OPEN_MAX);
+  ASSERT_GT(g_fds.n, 16);
   for (i = 0; i < n; ++i) {
     ASSERT_SYS(0, 0, close(i + 3));
   }

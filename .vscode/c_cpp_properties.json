@@ -15,7 +15,7 @@
 				"alignas(x)",
 				"alignof(x)",
 				"artificial=",
-				"dontdiscard=",
+				"__wur=",
 				"mayalias=",
 				"forceinline=",
 				"forcealign(x)=",

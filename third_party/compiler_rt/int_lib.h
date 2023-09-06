@@ -57,6 +57,7 @@
 
 #include "libc/literal.h"
 #include "libc/math.h"
+#include "libc/limits.h"
 
 /* Include the commonly used internal type definitions. */
 #include "third_party/compiler_rt/int_types.h"

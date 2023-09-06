@@ -37,6 +37,7 @@ extern const unsigned O_SYNC;
 extern const unsigned O_TMPFILE; /* use tmpfd() or tmpfile() */
 extern const unsigned O_TRUNC;
 extern const unsigned O_TTY_INIT;
+extern const unsigned O_UNLINK;
 extern const unsigned O_VERIFY;
 
 #define O_APPEND     O_APPEND
@@ -58,6 +59,7 @@ extern const unsigned O_VERIFY;
 #define O_SEQUENTIAL O_SEQUENTIAL
 #define O_SYNC       O_SYNC
 #define O_TRUNC      O_TRUNC
+#define O_UNLINK     O_UNLINK
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

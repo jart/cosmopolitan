@@ -979,6 +979,10 @@ main (int argc, char **argv, char **envp)
   unsigned int syncing = 0;
   int argv_slots;
 
+  // [jart] workaround to prevent make -j fork bomb
+  default_load_average = __get_cpu_count();
+  max_load_average = default_load_average;
+
   /* Useful for attaching debuggers, etc.  */
   SPIN ("main-entry");
 

@@ -75,15 +75,16 @@ bool32 RegisterWaitForSingleObject(int64_t *phNewWaitObject, int64_t hObject,
                                    void *Context, uint32_t dwMilliseconds,
                                    uint32_t dwFlags);
 
-int64_t CreateWaitableTimer(struct NtSecurityAttributes *lpTimerAttributes,
-                            bool32 bManualReset, const char16_t *lpTimerName);
+int64_t CreateWaitableTimer(
+    const struct NtSecurityAttributes *lpTimerAttributes, bool32 bManualReset,
+    const char16_t *lpTimerName);
 bool32 SetWaitableTimer(int64_t hTimer, const int64_t *lpDueTimeAsFtOrNegRela,
                         int32_t opt_lPeriodMs, NtTimerapcroutine opt_callback,
                         void *lpArgToCallback, bool32 fUnsleepSystem);
 
-int64_t CreateSemaphore(struct NtSecurityAttributes *opt_lpSemaphoreAttributes,
-                        uint32_t lInitialCount, uint32_t lMaximumCount,
-                        const char16_t *opt_lpName);
+int64_t CreateSemaphore(
+    const struct NtSecurityAttributes *opt_lpSemaphoreAttributes,
+    uint32_t lInitialCount, uint32_t lMaximumCount, const char16_t *opt_lpName);
 
 int32_t ReleaseMutex(int64_t hMutex);
 int32_t ReleaseSemaphore(int64_t hSemaphore, int32_t lReleaseCount,

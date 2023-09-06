@@ -31,11 +31,11 @@ __msabi extern typeof(CreateDirectory) *const __imp_CreateDirectoryW;
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows bool32 CreateDirectory(const char16_t *lpPathName,
-                                   struct NtSecurityAttributes *lpSecurity) {
+                                   const struct NtSecurityAttributes *lpSec) {
   bool32 ok;
-  ok = __imp_CreateDirectoryW(lpPathName, lpSecurity);
+  ok = __imp_CreateDirectoryW(lpPathName, lpSec);
   if (!ok) __winerr();
   NTTRACE("CreateDirectory(%#hs, %s) → %hhhd% m", lpPathName,
-          DescribeNtSecurityAttributes(lpSecurity), ok);
+          DescribeNtSecurityAttributes(lpSec), ok);
   return ok;
 }

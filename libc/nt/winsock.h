@@ -291,7 +291,7 @@ struct NtInterfaceInfo {
  */
 
 int32_t WSAStartup(uint16_t wVersionRequested, struct NtWsaData *lpWSAData)
-    paramsnonnull() dontdiscard;
+    paramsnonnull() __wur;
 
 int WSACleanup(void);
 int WSAGetLastError(void) nosideeffect;
@@ -311,7 +311,7 @@ int __sys_select_nt(int, struct NtFdSet *, struct NtFdSet *, struct NtFdSet *,
 
 uint64_t WSASocket(int af, int type, int protocol,
                    const struct NtWsaProtocolInfo *opt_lpProtocolInfo,
-                   const uint32_t opt_group, uint32_t dwFlags) dontdiscard;
+                   const uint32_t opt_group, uint32_t dwFlags) __wur;
 
 int WSAConnect(uint64_t s, const struct sockaddr *name, const int namelen,
                const struct NtIovec *opt_lpCallerData,
@@ -340,8 +340,7 @@ bool32 WSAConnectByList(uint64_t s,
 int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
                   int32_t *opt_inout_addrlen,
                   const NtConditionProc opt_lpfnCondition,
-                  const uint32_t *opt_dwCallbackData)
-    paramsnonnull((2)) dontdiscard;
+                  const uint32_t *opt_dwCallbackData) paramsnonnull((2)) __wur;
 
 bool32 AcceptEx(int64_t sListenSocket, int64_t sAcceptSocket,
                 void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
@@ -409,7 +408,7 @@ int WSANSPIoctl(int64_t hLookup, uint32_t dwControlCode,
                 const struct NtWsaCompletion *opt_lpCompletion)
     paramsnonnull((3, 5, 7));
 
-int64_t WSACreateEvent(void) dontdiscard;
+int64_t WSACreateEvent(void) __wur;
 bool32 WSACloseEvent(const int64_t hEvent);
 bool32 WSAResetEvent(const int64_t hEvent);
 bool32 WSASetEvent(const int64_t hEvent);

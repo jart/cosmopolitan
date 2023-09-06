@@ -107,14 +107,14 @@ dontasan char *strchr(const char *s, int c) {
   unassert(!r || *r || !(c & 255));
   return (char *)r;
 #else
-  char *r;
+  const char *r;
   for (c &= 255; (uintptr_t)s & 7; ++s) {
-    if ((*s & 255) == c) return s;
+    if ((*s & 255) == c) return (char *)s;
     if (!*s) return NULL;
   }
   r = strchr_x64(s, c);
   unassert(!r || *r || !c);
-  return r;
+  return (char *)r;
 #endif
 }
 

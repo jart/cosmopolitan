@@ -24,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"

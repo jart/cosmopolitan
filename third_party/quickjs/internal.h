@@ -413,7 +413,7 @@ typedef enum JSErrorEnum {
 #define JS_STACK_SIZE_MAX 65534
 #define JS_STRING_LEN_MAX ((1 << 30) - 1)
 
-#define __exception dontdiscard
+#define __exception __wur
 
 typedef struct JSShape JSShape;
 typedef struct JSString JSString;
@@ -1795,17 +1795,17 @@ JSValue js_promise_resolve(JSContext *, JSValueConst, int, JSValueConst *, int);
 JSValue js_string___GetSubstitution(JSContext *, JSValueConst, int, JSValueConst *);
 JSValue js_string_constructor(JSContext *, JSValueConst, int, JSValueConst *);
 JSValueConst JS_NewGlobalCConstructor(JSContext *, const char *, JSCFunction *, int, JSValueConst);
-int JS_CopyDataProperties(JSContext *, JSValueConst, JSValueConst, JSValueConst, BOOL) dontdiscard;
+int JS_CopyDataProperties(JSContext *, JSValueConst, JSValueConst, JSValueConst, BOOL) __wur;
 int JS_GetOwnPropertyInternal(JSContext *, JSPropertyDescriptor *, JSObject *, JSAtom);
-int JS_GetOwnPropertyNamesInternal(JSContext *, JSPropertyEnum **, uint32_t *, JSObject *, int) dontdiscard;
+int JS_GetOwnPropertyNamesInternal(JSContext *, JSPropertyEnum **, uint32_t *, JSObject *, int) __wur;
 int JS_SetObjectData(JSContext *, JSValueConst, JSValue);
-int JS_ToArrayLengthFree(JSContext *, uint32_t *, JSValue, BOOL) dontdiscard;
+int JS_ToArrayLengthFree(JSContext *, uint32_t *, JSValue, BOOL) __wur;
 int JS_ToInt32Clamp(JSContext *, int *, JSValueConst, int, int, int);
 int JS_ToInt64Sat(JSContext *, int64_t *, JSValueConst);
-int JS_ToLengthFree(JSContext *, int64_t *, JSValue) dontdiscard;
+int JS_ToLengthFree(JSContext *, int64_t *, JSValue) __wur;
 int JS_ToUint8ClampFree(JSContext *, int32_t *, JSValue);
-int __JS_ToFloat64Free(JSContext *, double *, JSValue) dontdiscard;
-int __js_poll_interrupts(JSContext *) dontdiscard;
+int __JS_ToFloat64Free(JSContext *, double *, JSValue) __wur;
+int __js_poll_interrupts(JSContext *) __wur;
 int add_closure_var(JSContext *, JSFunctionDef *, BOOL, BOOL, int, JSAtom, BOOL, BOOL, JSVarKindEnum);
 int add_scope_var(JSContext *, JSFunctionDef *, JSAtom, JSVarKindEnum);
 int add_var(JSContext *, JSFunctionDef *, JSAtom);
@@ -1821,27 +1821,27 @@ int find_lexical_decl(JSContext *, JSFunctionDef *, JSAtom, int, BOOL);
 int find_private_class_field(JSContext *, JSFunctionDef *, JSAtom, int);
 int find_var(JSContext *, JSFunctionDef *, JSAtom);
 int get_ovop_from_opcode(OPCodeEnum);
-int ident_realloc(JSContext *, char **, size_t *, char *) dontdiscard;
+int ident_realloc(JSContext *, char **, size_t *, char *) __wur;
 int init_class_range(JSRuntime *, JSClassShortDef const *, int, int);
-int js_add_slow(JSContext *, JSValue *) dontdiscard;
-int js_binary_arith_slow(JSContext *, JSValue *, OPCodeEnum) dontdiscard;
+int js_add_slow(JSContext *, JSValue *) __wur;
+int js_binary_arith_slow(JSContext *, JSValue *, OPCodeEnum) __wur;
 int js_binary_logic_slow(JSContext *, JSValue *, OPCodeEnum);
 int js_call_binary_op_fallback(JSContext *, JSValue *, JSValueConst, JSValueConst, OPCodeEnum, BOOL, int);
-int js_eq_slow(JSContext *, JSValue *, BOOL) dontdiscard;
-int js_for_of_start(JSContext *, JSValue *, BOOL) dontdiscard;
-int js_get_length32(JSContext *, uint32_t *, JSValueConst) dontdiscard;
-int js_get_length64(JSContext *, int64_t *, JSValueConst) dontdiscard;
+int js_eq_slow(JSContext *, JSValue *, BOOL) __wur;
+int js_for_of_start(JSContext *, JSValue *, BOOL) __wur;
+int js_get_length32(JSContext *, uint32_t *, JSValueConst) __wur;
+int js_get_length64(JSContext *, int64_t *, JSValueConst) __wur;
 int js_get_radix(JSContext *, JSValueConst);
 int js_not_slow(JSContext *, JSValue *);
 int js_obj_to_desc(JSContext *, JSPropertyDescriptor *, JSValueConst);
-int js_operator_in(JSContext *, JSValue *) dontdiscard;
-int js_parse_export(JSParseState *) dontdiscard;
+int js_operator_in(JSContext *, JSValue *) __wur;
+int js_parse_export(JSParseState *) __wur;
 int js_parse_string(JSParseState *, int, BOOL, const uint8_t *, JSToken *, const uint8_t **);
-int js_parse_template_part(JSParseState *, const uint8_t *) dontdiscard;
-int js_post_inc_slow(JSContext *, JSValue *, OPCodeEnum) dontdiscard;
+int js_parse_template_part(JSParseState *, const uint8_t *) __wur;
+int js_post_inc_slow(JSContext *, JSValue *, OPCodeEnum) __wur;
 int js_relational_slow(JSContext *, JSValue *, OPCodeEnum);
 int js_shr_slow(JSContext *, JSValue *);
-int js_unary_arith_slow(JSContext *, JSValue *, OPCodeEnum) dontdiscard;
+int js_unary_arith_slow(JSContext *, JSValue *, OPCodeEnum) __wur;
 int js_update_property_flags(JSContext *, JSObject *, JSShapeProperty **, int);
 int new_label(JSParseState *);
 int perform_promise_then(JSContext *, JSValueConst, JSValueConst *, JSValueConst *);
@@ -1882,9 +1882,9 @@ void js_autoinit_mark(JSRuntime *, JSProperty *, JS_MarkFunc *);
 void free_zero_refcount(JSRuntime *);
 
 void free_token(JSParseState *, JSToken *);
-int next_token(JSParseState *) dontdiscard;
+int next_token(JSParseState *) __wur;
 int simple_next_token(const uint8_t **, BOOL);
-int js_parse_program(JSParseState *) dontdiscard;
+int js_parse_program(JSParseState *) __wur;
 
 JSValue JS_IteratorGetCompleteValue(JSContext *, JSValueConst, BOOL *);
 JSValue js_create_iterator_result(JSContext *, JSValue, BOOL);
@@ -1915,7 +1915,7 @@ JSValue js_closure2(JSContext *, JSValue, JSFunctionBytecode *, JSVarRef **, JSS
 JSValue js_function_apply(JSContext *, JSValueConst, int, JSValueConst *, int);
 JSValue js_function_constructor(JSContext *, JSValueConst, int, JSValueConst *, int);
 JSVarRef *get_var_ref(JSContext *, JSStackFrame *, int, BOOL);
-int async_func_init(JSContext *, JSAsyncFunctionState *, JSValueConst, JSValueConst, int, JSValueConst *) dontdiscard;
+int async_func_init(JSContext *, JSAsyncFunctionState *, JSValueConst, JSValueConst, int, JSValueConst *) __wur;
 void async_func_free(JSRuntime *, JSAsyncFunctionState *);
 void async_func_mark(JSRuntime *, JSAsyncFunctionState *, JS_MarkFunc *);
 void js_async_generator_free(JSRuntime *, JSAsyncGeneratorData *);

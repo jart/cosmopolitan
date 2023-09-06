@@ -36,7 +36,7 @@
  * @asyncsignalsafe
  * @threadsafe
  */
-privileged dontdiscard char *strsignal_r(int sig, char buf[21]) {
+privileged char *strsignal_r(int sig, char buf[21]) {
   const char *s;
   if (!sig) {
     return "0";

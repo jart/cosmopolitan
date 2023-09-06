@@ -31,7 +31,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/time/struct/tm.h"

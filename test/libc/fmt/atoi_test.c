@@ -512,6 +512,18 @@ TEST(wcstoumax, testIBM) {
   ASSERT_STREQ(L"f", e);
 }
 
+TEST(strtol, term) {
+  static char const input[2][3] = {"0x", "0b"};
+  static int const base[] = {0, 2, 10};
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 3; j++) {
+      char *term;
+      strtoll(input[i], &term, base[j]);
+      ASSERT_EQ(input[i] + 1, term);
+    }
+  }
+}
+
 TEST(strtoul, testoverflow) {
   errno = 0;
   char *e = 0;
@@ -521,18 +533,39 @@ TEST(strtoul, testoverflow) {
   ASSERT_STREQ("", e);
 }
 
-TEST(strtol, invalidHex_consistentWithBsd) {
+TEST(strtol, invalidHex1) {
   char *c = 0;
   long x = strtol("0xz", &c, 16);
   ASSERT_EQ(0, x);
-  ASSERT_STREQ("z", c);
+  ASSERT_STREQ("xz", c);
 }
 
-TEST(strtol, invalidHex_consistentWithBsd2) {
+TEST(strtol, invalidHex2) {
   char *c = 0;
   long x = strtol("0xez", &c, 16);
   ASSERT_EQ(0xe, x);
   ASSERT_STREQ("z", c);
+}
+
+TEST(strtol, invalidHex3) {
+  char *c = 0;
+  long x = strtol("0xez", &c, 0);
+  ASSERT_EQ(0xe, x);
+  ASSERT_STREQ("z", c);
+}
+
+TEST(strtol, invalidBin1) {
+  char *c = 0;
+  long x = strtol("0b2", &c, 2);
+  ASSERT_EQ(0, x);
+  ASSERT_STREQ("b2", c);
+}
+
+TEST(strtol, invalidBin2) {
+  char *c = 0;
+  long x = strtol("0b2", &c, 0);
+  ASSERT_EQ(0, x);
+  ASSERT_STREQ("b2", c);
 }
 
 BENCH(atoi, bench) {

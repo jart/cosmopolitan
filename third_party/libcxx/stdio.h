@@ -104,7 +104,7 @@ void perror(const char* s);
 
 #include "libc/fmt/fmt.h"
 #include "libc/calls/calls.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/stdio.h"
 

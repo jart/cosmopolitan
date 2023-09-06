@@ -30,7 +30,7 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § new technology » threads                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int64_t CreateThread(struct NtSecurityAttributes *lpThreadAttributes,
+int64_t CreateThread(const struct NtSecurityAttributes *lpThreadAttributes,
                      size_t dwStackSize, void *lpStartAddress,
                      void *lpParameter, uint32_t dwCreationFlags,
                      uint32_t *opt_lpThreadId);

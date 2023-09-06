@@ -42,7 +42,7 @@ int end = 0x03134A /* 0x10FFFD */;
 int verbose;
 
 struct winsize ws = {24, 80};
-signed char kThePerfectKernel[8] = {-1, -3, 3, 17, 17, 3, -3, -1};
+signed char kThePerfectKernel[8] = {-1, -1, 3, 15, 15, 3, -1, -1};
 
 void PrintBar(unsigned char *p, size_t n) {
   size_t i, j;

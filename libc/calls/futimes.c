@@ -42,19 +42,16 @@
 int futimes(int fd, const struct timeval tv[2]) {
   int rc;
   struct timespec ts[2];
-
-  if (tv) {
-    ts[0].tv_sec = tv[0].tv_sec;
-    ts[0].tv_nsec = tv[0].tv_usec * 1000;
-    ts[1].tv_sec = tv[1].tv_sec;
-    ts[1].tv_nsec = tv[1].tv_usec * 1000;
+  if (fd < 0) {
+    rc = ebadf();  // so we don't confuse __utimens if caller passes AT_FDCWD
+  } else if (tv) {
+    ts[0] = timeval_totimespec(tv[0]);
+    ts[1] = timeval_totimespec(tv[1]);
     rc = __utimens(fd, 0, ts, 0);
   } else {
     rc = __utimens(fd, 0, 0, 0);
   }
-
   STRACE("futimes(%d, {%s, %s}) → %d% m", fd, DescribeTimeval(0, tv),
          DescribeTimeval(0, tv ? tv + 1 : 0), rc);
-
   return rc;
 }

@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"

@@ -181,10 +181,6 @@ fi
 
 if [ "$1" = "--update" ]; then
   cd $COSMO || exit
-  if GIT=$(command -v git); then
-    echo "running git pull on cosmo..." >&2
-    "$GIT" pull --quiet || exit
-  fi
   echo "building cosmo host toolchain..." >&2
   make --silent -j toolchain MODE= || exit
   echo "building cosmo target (MODE=$MODE) toolchain..." >&2

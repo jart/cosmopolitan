@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/bextra.h"
+#include "libc/limits.h"
 
 unsigned BitFieldExtract(const unsigned *p, size_t i, char b) {
   unsigned k, r, w;

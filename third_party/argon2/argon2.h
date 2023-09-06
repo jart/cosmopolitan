@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ARGON2_ARGON2_H_
 #define COSMOPOLITAN_THIRD_PARTY_ARGON2_ARGON2_H_
+#include "libc/limits.h"
 #include "libc/literal.h"
 
 #define ARGON2_NO_THREADS

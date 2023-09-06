@@ -53,7 +53,7 @@ bool CanUseSeccomp(void) {
 }
 
 void SetUp(void) {
-  if (!__is_linux_2_6_23() || !CanUseSeccomp()) {
+  if (!IsLinux() || !__is_linux_2_6_23() || !CanUseSeccomp()) {
     exit(0);
   }
 }

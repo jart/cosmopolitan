@@ -20,7 +20,7 @@
 #include "libc/macros.internal.h"
 
 	.init.start 200,_init__mmi
-	movb	$OPEN_MAX,_mmi+8
+	movb	$16,_mmi+8
 	movl	$_mmi+24,_mmi+16
 	movb	$PTHREAD_MUTEX_RECURSIVE,__mmi_lock_obj+4(%rip)
 	.init.end 200,_init__mmi

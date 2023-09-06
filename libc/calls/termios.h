@@ -15,13 +15,13 @@ int tcsetattr(int, int, const struct termios *);
 int openpty(int *, int *, char *, const struct termios *,
             const struct winsize *) paramsnonnull((1, 2));
 int forkpty(int *, char *, const struct termios *, const struct winsize *)
-    paramsnonnull((1, 2)) dontdiscard;
+    paramsnonnull((1, 2)) __wur;
 char *ptsname(int);
 errno_t ptsname_r(int, char *, size_t);
 
 int grantpt(int);
 int unlockpt(int);
-int posix_openpt(int) dontdiscard;
+int posix_openpt(int) __wur;
 
 int tcdrain(int);
 int tcgetsid(int);

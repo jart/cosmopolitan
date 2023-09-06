@@ -19,6 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
@@ -26,7 +28,12 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
@@ -36,7 +43,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr proc id", 0));
 }
 
 TEST(open, efault) {
@@ -69,6 +76,18 @@ TEST(open, doubleSlash_worksAndGetsNormalizedOnWindows) {
   ASSERT_SYS(0, 3,
              open(gc(xjoinpaths(gc(getcwd(0, 0)), "o//deleteme")),
                   O_WRONLY | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(open, fdWillBeInheritedByExecutedPrograms) {
+  ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT | O_TRUNC, 0666));
+  ASSERT_SYS(0, 0, fcntl(3, F_GETFD));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(open, fdWillBeClosedByExecveAutomatically) {
+  ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0666));
+  ASSERT_SYS(0, FD_CLOEXEC, fcntl(3, F_GETFD));
   ASSERT_SYS(0, 0, close(3));
 }
 
@@ -319,4 +338,160 @@ TEST(open, drive) {
   ASSERT_EQ(GetInode("/"), GetInode("/c/"));
   ASSERT_SYS(0, 3, open("/", O_RDONLY));
   ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(open, readOnlyCreatMode) {
+  char buf[8];
+  struct stat st;
+  ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT | O_TRUNC, 0500));
+  ASSERT_SYS(0, 2, pwrite(3, "hi", 2, 0));
+  ASSERT_SYS(0, 2, pread(3, buf, 8, 0));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, stat("x", &st));
+  ASSERT_EQ(0100500, st.st_mode);
+  if (getuid()) {
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR));
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT));
+  } else {
+    // root is invulnerable to eacces
+    ASSERT_SYS(0, 3, open("x", O_RDWR));
+    ASSERT_SYS(0, 0, close(3));
+    ASSERT_SYS(0, 3, open("x", O_RDWR | O_CREAT));
+    ASSERT_SYS(0, 0, close(3));
+    SPAWN(fork);
+    setuid(1000);
+    setgid(1000);
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR));
+    ASSERT_SYS(EACCES, -1, open("x", O_RDWR | O_CREAT));
+    EXITS(0);
+  }
+}
+
+TEST(open, parentSymlink) {
+  struct stat st;
+  ASSERT_SYS(0, 0, mkdir("parent", 0755));
+  // create directory symlink
+  ASSERT_SYS(0, 0, symlink("parent", "parent-link"));
+  // test the symlink we just made is a symlink
+  ASSERT_SYS(0, 0, lstat("parent-link", &st));
+  ASSERT_TRUE(S_ISLNK(st.st_mode));
+  // create regular file when parent component is symlink dir
+  ASSERT_SYS(0, 0, touch("parent-link/regular", 0644));
+  // test stat works
+  ASSERT_SYS(0, 0, stat("parent-link/regular", &st));
+  ASSERT_TRUE(S_ISREG(st.st_mode));
+  // test open works
+  ASSERT_SYS(0, 3, open("parent-link/regular", O_RDONLY));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_TRUE(S_ISREG(st.st_mode));
+  ASSERT_SYS(0, 0, close(3));
+  // test O_NOFOLLOW doesn't apply to parent components
+  ASSERT_SYS(0, 3, open("parent-link/regular", O_RDONLY | O_NOFOLLOW));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_TRUE(S_ISREG(st.st_mode));
+  ASSERT_SYS(0, 0, close(3));
+  // create regular symlink
+  ASSERT_SYS(0, 0, symlink("regular", "parent-link/regular-link"));
+  // test stat works
+  ASSERT_SYS(0, 0, stat("parent-link/regular-link", &st));
+  ASSERT_TRUE(S_ISREG(st.st_mode));
+  ASSERT_SYS(0, 0, lstat("parent-link/regular-link", &st));
+  ASSERT_TRUE(S_ISLNK(st.st_mode));
+  // test open works
+  ASSERT_SYS(0, 3, open("parent-link/regular-link", O_RDONLY));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_TRUE(S_ISREG(st.st_mode));
+  ASSERT_SYS(0, 0, close(3));
+  // test O_NOFOLLOW applies to last component
+  ASSERT_SYS(ELOOP, -1,
+             open("parent-link/regular-link", O_RDONLY | O_NOFOLLOW));
+}
+
+TEST(open, readonlyCreateMode_dontChangeStatusIfExists) {
+  char buf[8];
+  struct stat st;
+  ASSERT_SYS(0, 3, creat("wut", 0700));
+  ASSERT_SYS(0, 2, pwrite(3, "hi", 2, 0));
+  ASSERT_SYS(0, 0, close(3));
+  // since the file already exists, unix doesn't change read-only
+  ASSERT_SYS(0, 3, open("wut", O_CREAT | O_TRUNC | O_RDWR, 0500));
+  ASSERT_SYS(0, 0, pread(3, buf, 8, 0));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_EQ(0100700, st.st_mode);
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(open, creatRdonly) {
+  char buf[8];
+  ASSERT_SYS(EINVAL, -1, open("foo", O_CREAT | O_TRUNC | O_RDONLY, 0700));
+  ASSERT_SYS(0, 3, open("foo", O_CREAT | O_RDONLY, 0700));
+  ASSERT_SYS(EBADF, -1, pwrite(3, "hi", 2, 0));
+  ASSERT_SYS(0, 0, pread(3, buf, 8, 0));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(open, sequentialRandom_EINVAL) {
+  if (!IsWindows()) return;
+  ASSERT_SYS(
+      EINVAL, -1,
+      open("foo", O_CREAT | O_TRUNC | O_RDWR | O_SEQUENTIAL | O_RANDOM, 0700));
+}
+
+// "If O_CREAT is set and the file did not previously exist, upon
+//  successful completion, open() shall mark for update the last data
+//  access, last data modification, and last file status change
+//  timestamps of the file and the last data modification and last
+//  file status change timestamps of the parent directory." -POSIX
+TEST(open, creatFile_touchesDirectory) {
+  struct stat st;
+  struct timespec birth;
+  ASSERT_SYS(0, 0, mkdir("dir", 0755));
+  ASSERT_SYS(0, 0, stat("dir", &st));
+  birth = st.st_ctim;
+  // check we can read time without changing it
+  sleep(1);
+  ASSERT_SYS(0, 0, stat("dir", &st));
+  EXPECT_EQ(0, timespec_cmp(st.st_ctim, birth));
+  EXPECT_EQ(0, timespec_cmp(st.st_mtim, birth));
+  EXPECT_EQ(0, timespec_cmp(st.st_atim, birth));
+  // check that the directory time changes when file is made
+  sleep(1);
+  ASSERT_SYS(0, 0, touch("dir/file", 0644));
+  ASSERT_SYS(0, 0, stat("dir", &st));
+  EXPECT_EQ(1, timespec_cmp(st.st_ctim, birth));
+  EXPECT_EQ(1, timespec_cmp(st.st_mtim, birth));
+  // TODO: Maybe statfs() for noatime / relative?
+  // EXPECT_EQ(1, timespec_cmp(st.st_atim, birth));
+}
+
+// "If O_TRUNC is set and the file did previously exist, upon successful
+//  completion, open() shall mark for update the last data modification
+//  and last file status change timestamps of the file." -POSIX
+TEST(open, trunc_touchesMtimCtim) {
+  struct stat st;
+  struct timespec birth;
+  ASSERT_SYS(0, 0, touch("regular", 0755));
+  ASSERT_SYS(0, 0, stat("regular", &st));
+  birth = st.st_ctim;
+  sleep(1);
+  ASSERT_SYS(0, 3, open("regular", O_RDWR | O_TRUNC));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  EXPECT_EQ(1, timespec_cmp(st.st_ctim, birth));
+  EXPECT_EQ(1, timespec_cmp(st.st_mtim, birth));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(open, mereOpen_doesntTouch) {
+  struct stat st;
+  struct timespec birth;
+  ASSERT_SYS(0, 0, touch("regular", 0755));
+  ASSERT_SYS(0, 0, stat("regular", &st));
+  birth = st.st_ctim;
+  sleep(1);
+  ASSERT_SYS(0, 3, open("regular", O_RDWR));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, stat("regular", &st));
+  EXPECT_EQ(0, timespec_cmp(st.st_ctim, birth));
+  EXPECT_EQ(0, timespec_cmp(st.st_mtim, birth));
+  EXPECT_EQ(0, timespec_cmp(st.st_atim, birth));
 }

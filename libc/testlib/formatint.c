@@ -25,7 +25,7 @@
 static size_t sbufi_;
 static char sbufs_[2][256];
 
-dontdiscard char *testlib_formatint(intptr_t x) {
+char *testlib_formatint(intptr_t x) {
   char *str = sbufi_ < ARRAYLEN(sbufs_) ? sbufs_[sbufi_++] : malloc(256);
   char *p = str;
   p += sprintf(p, "%ld\t(or %#lx", x, x);

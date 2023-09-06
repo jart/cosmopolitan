@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_DECODE_LIB_ASMCODEGEN_H_
 #define COSMOPOLITAN_TOOL_DECODE_LIB_ASMCODEGEN_H_
+#include "libc/stdio/stdio.h"
 #include "tool/decode/lib/idname.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -19,7 +20,7 @@ extern char b1[BUFSIZ];
 extern char b2[BUFSIZ];
 
 char *format(char *buf, const char *fmt, ...);
-char *tabpad(const char *s, unsigned width) dontdiscard;
+char *tabpad(const char *s, unsigned width) __wur;
 void show(const char *directive, const char *value, const char *comment);
 
 COSMOPOLITAN_C_END_

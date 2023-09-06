@@ -25,7 +25,7 @@
 #include "test/libc/xed/lib.h"
 #include "third_party/xed/x86.h"
 
-dontdiscard uint8_t *unbingx86op(const char16_t *codez) {
+__wur uint8_t *unbingx86op(const char16_t *codez) {
   size_t len;
   len = strlen16(codez);
   return unbingbuf(xmalloc(ROUNDUP(len, 16)), len, codez, 0x90);

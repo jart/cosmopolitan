@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"

@@ -59,7 +59,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/musl/crypt.h"
@@ -69,7 +69,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "third_party/musl/tempnam.h"    /* perror */
 
 UTIL_time_t UTIL_getTime(void)
@@ -123,7 +123,7 @@ UTIL_time_t UTIL_getTime(void)
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/getopt/getopt.internal.h"
@@ -134,7 +134,7 @@ UTIL_time_t UTIL_getTime(void)
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "third_party/musl/tempnam.h"    /* perror */
 
 UTIL_time_t UTIL_getTime(void)
@@ -171,7 +171,7 @@ UTIL_time_t UTIL_getTime(void)
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/getopt/getopt.internal.h"
@@ -182,7 +182,7 @@ UTIL_time_t UTIL_getTime(void)
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "third_party/musl/tempnam.h"    /* perror */
 
 UTIL_time_t UTIL_getTime(void)

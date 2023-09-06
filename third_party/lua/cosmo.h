@@ -23,7 +23,7 @@ struct Serializer {
 };
 
 bool LuaHasMultipleItems(lua_State *);
-char *LuaFormatStack(lua_State *) dontdiscard;
+char *LuaFormatStack(lua_State *) __wur;
 int LuaCallWithTrace(lua_State *, int, int, lua_State *);
 int LuaEncodeJsonData(lua_State *, char **, int, struct EncoderConfig);
 int LuaEncodeLuaData(lua_State *, char **, int, struct EncoderConfig);

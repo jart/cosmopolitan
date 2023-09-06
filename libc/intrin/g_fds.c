@@ -34,6 +34,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
 
+#define OPEN_MAX 16
+
 #ifdef __x86_64__
 __static_yoink("_init_g_fds");
 #endif

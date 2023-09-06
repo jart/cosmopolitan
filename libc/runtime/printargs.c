@@ -32,6 +32,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
 #include "libc/nexgen32e/kcpuids.h"

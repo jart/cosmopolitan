@@ -25,8 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/limits.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/mb.internal.h"
 #include "libc/str/str.h"
 

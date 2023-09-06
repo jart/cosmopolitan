@@ -32,7 +32,7 @@ __msabi extern typeof(CreateThread) *const __imp_CreateThread;
  * @note this wrapper takes care of ABI, STRACE()
  */
 textwindows int64_t
-CreateThread(struct NtSecurityAttributes *lpThreadAttributes,
+CreateThread(const struct NtSecurityAttributes *lpThreadAttributes,
              size_t dwStackSize, void *lpStartAddress, void *lpParameter,
              uint32_t dwCreationFlags, uint32_t *opt_lpThreadId) {
   int64_t hHandle;

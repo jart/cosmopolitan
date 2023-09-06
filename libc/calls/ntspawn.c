@@ -66,9 +66,11 @@ struct SpawnBlock {
  */
 textwindows int ntspawn(
     const char *prog, char *const argv[], char *const envp[],
-    const char *extravar, struct NtSecurityAttributes *opt_lpProcessAttributes,
-    struct NtSecurityAttributes *opt_lpThreadAttributes, bool32 bInheritHandles,
-    uint32_t dwCreationFlags, const char16_t *opt_lpCurrentDirectory,
+    const char *extravar,
+    const struct NtSecurityAttributes *opt_lpProcessAttributes,
+    const struct NtSecurityAttributes *opt_lpThreadAttributes,
+    bool32 bInheritHandles, uint32_t dwCreationFlags,
+    const char16_t *opt_lpCurrentDirectory,
     const struct NtStartupInfo *lpStartupInfo,
     struct NtProcessInformation *opt_out_lpProcessInformation) {
   int rc;

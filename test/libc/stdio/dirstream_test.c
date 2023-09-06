@@ -25,6 +25,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
@@ -93,6 +94,13 @@ TEST(opendir, openRealDirEntry) {
   ASSERT_NE(NULL, (dir = fdopendir(3)));
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
+}
+
+TEST(fdopendir, test) {
+  ASSERT_SYS(0, 0, touch("foo", 0644));
+  ASSERT_SYS(0, 3, open("foo", O_RDONLY));
+  ASSERT_SYS(ENOTDIR, 0, fdopendir(3));
+  ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(dirstream, testDots) {

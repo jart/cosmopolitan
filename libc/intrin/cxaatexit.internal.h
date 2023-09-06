@@ -14,7 +14,7 @@ struct CxaAtexitBlocks {
       void *fp;
       void *arg;
       void *pred;
-    } p[ATEXIT_MAX];
+    } p[32];
   } * p, root;
 };
 

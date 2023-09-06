@@ -32,6 +32,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/internal.h"
@@ -175,7 +176,7 @@ static int unveil_init(void) {
       .handled_access_fs = State.fs_mask,
   };
   // [undocumented] landlock_create_ruleset() always returns O_CLOEXEC
-  //                assert(__sys_fcntl(rc, F_GETFD, 0) == FD_CLOEXEC);
+  //                assert(__sys_fcntl(rc, F_GETFD) == FD_CLOEXEC);
   if ((rc = landlock_create_ruleset(&attr, sizeof(attr), 0)) < 0) return -1;
   // grant file descriptor a higher number that's less likely to interfere
   if ((fd = __sys_fcntl(rc, F_DUPFD_CLOEXEC, 100)) == -1) {

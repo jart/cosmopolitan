@@ -36,7 +36,8 @@ kOpenFlags:
 	.e	O_TRUNC,"TRUNC"			//
 	.e	O_CLOEXEC,"CLOEXEC"		//
 	.e	O_NONBLOCK,"NONBLOCK"		//
-	.e	O_TMPFILE,"TMPFILE"		// linux, windows
+	.e	O_TMPFILE,"TMPFILE"		// linux
+	.e	O_UNLINK,"UNLINK"		// windows+unix
 	.e	O_DIRECTORY,"DIRECTORY"		// order matters
 	.e	O_DIRECT,"DIRECT"		// no-op on xnu/openbsd
 	.e	O_APPEND,"APPEND"		// weird on nt

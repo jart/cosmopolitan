@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-char *RecreateFlags(const struct IdName *, unsigned long) dontdiscard;
+char *RecreateFlags(const struct IdName *, unsigned long) __wur;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

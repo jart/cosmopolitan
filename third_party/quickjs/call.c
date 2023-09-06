@@ -23,8 +23,8 @@
  * THE SOFTWARE.
  */
 #include "libc/assert.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/quickjs/internal.h"
 
@@ -1345,7 +1345,7 @@ exception:
     return -1;
 }
 
-static dontdiscard int js_operator_instanceof(JSContext *ctx, JSValue *sp)
+static __wur int js_operator_instanceof(JSContext *ctx, JSValue *sp)
 {
     JSValue op1, op2;
     BOOL ret;
@@ -1360,7 +1360,7 @@ static dontdiscard int js_operator_instanceof(JSContext *ctx, JSValue *sp)
     return 0;
 }
 
-static dontdiscard int js_operator_typeof(JSContext *ctx, JSValueConst op1)
+static __wur int js_operator_typeof(JSContext *ctx, JSValueConst op1)
 {
     JSAtom atom;
     uint32_t tag;
@@ -1416,7 +1416,7 @@ static dontdiscard int js_operator_typeof(JSContext *ctx, JSValueConst op1)
     return atom;
 }
 
-static dontdiscard int js_operator_delete(JSContext *ctx, JSValue *sp)
+static __wur int js_operator_delete(JSContext *ctx, JSValue *sp)
 {
     JSValue op1, op2;
     JSAtom atom;
@@ -1436,7 +1436,7 @@ static dontdiscard int js_operator_delete(JSContext *ctx, JSValue *sp)
     return 0;
 }
 
-static dontdiscard int js_has_unscopable(JSContext *ctx, JSValueConst obj, JSAtom atom)
+static __wur int js_has_unscopable(JSContext *ctx, JSValueConst obj, JSAtom atom)
 {
     JSValue arr, val;
     int ret;

@@ -24,6 +24,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/sysv/consts/auxv.h"

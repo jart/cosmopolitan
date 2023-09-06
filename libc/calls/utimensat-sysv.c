@@ -16,39 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
-#include "libc/runtime/zipos.internal.h"
 
 int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
                   int flags) {
   int rc, olderr;
   struct timeval tv[2];
-  if (!IsXnu()) {
-    if (!path && (IsFreebsd() || IsNetbsd() || IsOpenbsd())) {
-      rc = sys_futimens(dirfd, ts);
-    } else {
-      olderr = errno;
-      rc = __sys_utimensat(dirfd, path, ts, flags);
-      // TODO(jart): How does RHEL5 do futimes()?
-      if (rc == -1 && errno == ENOSYS && path) {
-        errno = olderr;
-        if (ts) {
-          tv[0] = timespec_totimeval(ts[0]);
-          tv[1] = timespec_totimeval(ts[1]);
-          rc = sys_utimes(path, tv);
-        } else {
-          rc = sys_utimes(path, NULL);
-        }
+  unassert(!IsWindows() && !IsXnu());
+  if (!path && (IsFreebsd() || IsNetbsd() || IsOpenbsd())) {
+    rc = sys_futimens(dirfd, ts);
+  } else {
+    olderr = errno;
+    rc = __sys_utimensat(dirfd, path, ts, flags);
+    // TODO(jart): How does RHEL5 do futimes()?
+    if (rc == -1 && errno == ENOSYS && path) {
+      errno = olderr;
+      if (ts) {
+        tv[0] = timespec_totimeval(ts[0]);
+        tv[1] = timespec_totimeval(ts[1]);
+        rc = sys_utimes(path, tv);
+      } else {
+        rc = sys_utimes(path, NULL);
       }
     }
-    return rc;
-  } else {
-    return sys_utimensat_xnu(dirfd, path, ts, flags);
   }
+  return rc;
 }

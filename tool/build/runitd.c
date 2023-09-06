@@ -196,7 +196,7 @@ void GetOpts(int argc, char *argv[]) {
   }
 }
 
-dontdiscard char *DescribeAddress(struct sockaddr_in *addr) {
+__wur char *DescribeAddress(struct sockaddr_in *addr) {
   char ip4buf[16];
   return xasprintf("%s:%hu",
                    inet_ntop(addr->sin_family, &addr->sin_addr.s_addr, ip4buf,

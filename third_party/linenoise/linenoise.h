@@ -23,8 +23,8 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *);
 void linenoiseAddCompletion(linenoiseCompletions *, const char *);
 void linenoiseSetXlatCallback(linenoiseXlatCallback *);
 
-char *linenoise(const char *) dontdiscard;
-char *linenoiseWithHistory(const char *, const char *) dontdiscard;
+char *linenoise(const char *) __wur;
+char *linenoiseWithHistory(const char *, const char *) __wur;
 int linenoiseHistoryAdd(const char *);
 int linenoiseHistorySave(const char *);
 int linenoiseHistoryLoad(const char *);
@@ -48,7 +48,7 @@ void linenoiseEnd(struct linenoiseState *);
 char *linenoiseGetLine(FILE *);
 struct winsize linenoiseGetTerminalSize(struct winsize, int, int);
 void linenoiseRefreshLine(struct linenoiseState *);
-char *linenoiseRaw(const char *, int, int) dontdiscard;
+char *linenoiseRaw(const char *, int, int) __wur;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

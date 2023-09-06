@@ -21,7 +21,7 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/testlib/testlib.h"
 
 TEST(fmemopen, testWriteRewindRead) {

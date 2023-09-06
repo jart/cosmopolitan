@@ -19,7 +19,7 @@
 #include "libc/nt/struct/securityattributes.h"
 
 const struct NtSecurityAttributes kNtIsInheritable = {
-    sizeof(struct NtSecurityAttributes),
-    NULL,
-    true,
+    .nLength = sizeof(struct NtSecurityAttributes),
+    .lpSecurityDescriptor = NULL,
+    .bInheritHandle = true,
 };

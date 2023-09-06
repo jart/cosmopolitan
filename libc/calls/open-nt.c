@@ -23,14 +23,17 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
@@ -98,6 +101,16 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
     return kNtInvalidHandleValue;
   }
 
+  if (fattr != -1u) {
+    // "We have been asked to create a read-only file. "If the file
+    //  already exists, the semantics of the Unix open system call is to
+    //  preserve the existing permissions. If we pass CREATE_ALWAYS and
+    //  FILE_ATTRIBUTE_READONLY to CreateFile, and the file already
+    //  exists, CreateFile will change the file permissions. Avoid that to
+    //  preserve the Unix semantics." -Quoth GoLang syscall_windows.go
+    attr &= ~kNtFileAttributeReadonly;
+  }
+
   // kNtTruncateExisting always returns kNtErrorInvalidParameter :'(
   if (disp == kNtTruncateExisting) {
     if (fattr != -1u) {
@@ -107,10 +120,24 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
     }
   }
 
+  // We optimistically request some write permissions in O_RDONLY mode.
+  // But that might prevent opening some files. So reactively back off.
+  int extra_perm = 0;
+  if ((flags & O_ACCMODE) == O_RDONLY) {
+    extra_perm = kNtFileWriteAttributes | kNtFileWriteEa;
+  }
+
   // open the file, following symlinks
-  return __fix_enotdir(CreateFile(path16, perm, share, &kNtIsInheritable, disp,
-                                  attr | extra_attr, 0),
-                       path16);
+  int e = errno;
+  int64_t hand = CreateFile(path16, perm | extra_perm, share, &kNtIsInheritable,
+                            disp, attr | extra_attr, 0);
+  if (hand == -1 && errno == EACCES && (flags & O_ACCMODE) == O_RDONLY) {
+    errno = e;
+    hand = CreateFile(path16, perm, share, &kNtIsInheritable, disp,
+                      attr | extra_attr, 0);
+  }
+
+  return __fix_enotdir(hand, path16);
 }
 
 static textwindows int sys_open_nt_console(int dirfd,

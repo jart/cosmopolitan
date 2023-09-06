@@ -20,12 +20,14 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/temp.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/temp.h"
 
-#define _O_TMPFILE 000020200000
+#define O_TMPFILE_LINUX 0x00410000
 
 int _mkstemp(char *, int);
 
@@ -79,7 +81,7 @@ int tmpfd(void) {
   char path[PATH_MAX + 1];
   if (IsLinux()) {
     e = errno;
-    if ((fd = open(kTmpPath, O_RDWR | _O_TMPFILE, 0600)) != -1) {
+    if ((fd = open(kTmpPath, O_RDWR | O_TMPFILE_LINUX, 0600)) != -1) {
       return fd;
     } else {
       errno = e;
@@ -90,7 +92,6 @@ int tmpfd(void) {
   if (!(prog = program_invocation_short_name)) prog = "tmp";
   strlcat(path, prog, sizeof(path));
   strlcat(path, ".XXXXXX", sizeof(path));
-  if ((fd = _mkstemp(path, IsWindows() ? 0x00410000 : 0)) == -1) return -1;
-  if (!IsWindows()) unassert(!unlink(path));
+  if ((fd = openatemp(AT_FDCWD, path, 0, O_UNLINK, 0)) == -1) return -1;
   return fd;
 }

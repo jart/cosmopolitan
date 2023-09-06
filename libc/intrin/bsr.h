@@ -8,9 +8,9 @@ int _bsrl(long) pureconst;
 int _bsrll(long long) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define _bsr(x)   (__builtin_clz(x) ^ (sizeof(int) * CHAR_BIT - 1))
-#define _bsrl(x)  (__builtin_clzl(x) ^ (sizeof(long) * CHAR_BIT - 1))
-#define _bsrll(x) (__builtin_clzll(x) ^ (sizeof(long long) * CHAR_BIT - 1))
+#define _bsr(x)   (__builtin_clz(x) ^ (sizeof(int) * 8 - 1))
+#define _bsrl(x)  (__builtin_clzl(x) ^ (sizeof(long) * 8 - 1))
+#define _bsrll(x) (__builtin_clzll(x) ^ (sizeof(long long) * 8 - 1))
 #endif
 
 COSMOPOLITAN_C_END_

@@ -139,6 +139,10 @@ void bzero(void *p, size_t n) {
 #ifdef __x86_64__
   asm("xorl\t%k0,%k0" : "=r"(x));
 #else
+  if (1) {
+    memset(p, 0, n);
+    return;
+  }
   x = 0;
 #endif
   if (n <= 16) {

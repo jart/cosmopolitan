@@ -23,6 +23,7 @@
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/intrin/bsf.h"
+#include "libc/limits.h"
 #include "libc/mem/alg.h"
 #include "libc/str/str.h"
 

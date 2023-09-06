@@ -24,7 +24,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/musl/crypt.h"
@@ -59,7 +59,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "third_party/musl/tempnam.h"       /* fprintf */
 #  define DISPLAY(...)       fprintf(stderr, __VA_ARGS__)
 #  define DEBUGOUTPUT(...) { if (DEBUG) DISPLAY(__VA_ARGS__); }

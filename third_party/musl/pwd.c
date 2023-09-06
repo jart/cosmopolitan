@@ -29,6 +29,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"

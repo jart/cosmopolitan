@@ -2,6 +2,11 @@
 #define COSMOPOLITAN_LIBC_LIMITS_H_
 #define __STDC_LIMIT_MACROS
 
+#define CHAR_BIT 8
+#define PATH_MAX 1024
+#define NAME_MAX 255    /* 511 on netbsd */
+#define ARG_MAX  0xfffe /* for argv and envp; see CreateProcess (32767*2) */
+
 #define UCHAR_MIN 0
 #define UCHAR_MAX 255
 

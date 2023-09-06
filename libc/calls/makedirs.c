@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"

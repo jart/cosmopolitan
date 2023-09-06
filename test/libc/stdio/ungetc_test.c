@@ -16,6 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/nexgen32e/crc32.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/hyperion.h"
@@ -67,4 +70,29 @@ TEST(ungetwc, testGetWideChar_canBeUndoneWithinReason) {
   EXPECT_NE(0, fread(buf, 1, sizeof(buf), f));
   EXPECT_STREQ("𐌰𐌱\n", buf);
   EXPECT_EQ(0, fclose(f));
+}
+
+TEST(ungetc, io) {
+  static char b1[BUFSIZ * 2];
+  static char b2[BUFSIZ * 2];
+  for (int i = 0; i < sizeof(b1); ++i) {
+    b1[i] = rand();
+  }
+  FILE *f = tmpfile();
+  fwrite(b1, 1, sizeof(b1), f);
+  rewind(f);
+  for (int i = 0; i < sizeof(b1); ++i) {
+    int c;
+    ASSERT_NE(EOF, (c = fgetc(f)));
+    ASSERT_EQ(c, ungetc(c, f));
+    ASSERT_EQ(c, fgetc(f));
+    b2[i] = c;
+    if (rand() % 10 == 0) {
+      ASSERT_NE(EOF, fflush(f));
+      ASSERT_NE(i, lseek(fileno(f), 0, SEEK_CUR));
+    }
+  }
+  ASSERT_EQ(EOF, fgetc(f));
+  fclose(f);
+  ASSERT_EQ(crc32c(0, b1, sizeof(b1)), crc32c(0, b2, sizeof(b2)));
 }

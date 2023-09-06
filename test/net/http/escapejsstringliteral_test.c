@@ -21,7 +21,7 @@
 #include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"

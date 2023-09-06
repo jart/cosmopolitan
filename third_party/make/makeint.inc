@@ -35,7 +35,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"

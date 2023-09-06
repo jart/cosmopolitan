@@ -6,7 +6,7 @@ COSMOPOLITAN_C_START_
 int ild(const char16_t *codez);
 int ildreal(const char16_t *codez);
 int ildlegacy(const char16_t *codez);
-uint8_t *unbingx86op(const char16_t *codez) dontdiscard;
+uint8_t *unbingx86op(const char16_t *codez) __wur;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

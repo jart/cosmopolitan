@@ -22,6 +22,7 @@
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Changes last accessed/modified timestamps on file.
@@ -36,7 +37,9 @@
 int utimes(const char *path, const struct timeval tv[2]) {
   int rc;
   struct timespec ts[2];
-  if (tv) {
+  if (!path) {
+    rc = efault();
+  } else if (tv) {
     ts[0] = timeval_totimespec(tv[0]);
     ts[1] = timeval_totimespec(tv[1]);
     rc = __utimens(AT_FDCWD, path, ts, 0);

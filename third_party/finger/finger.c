@@ -33,10 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#include "third_party/finger/finger.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/fmt.h"
+#include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/struct/msg.h"
 #include "libc/runtime/runtime.h"
@@ -46,7 +48,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/time/time.h"
-#include "third_party/finger/finger.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/passwd.h"
 // clang-format off

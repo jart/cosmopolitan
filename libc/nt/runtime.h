@@ -22,7 +22,7 @@
 COSMOPOLITAN_C_START_
 
 char16_t *GetCommandLine(void) nosideeffect;
-char16_t *GetEnvironmentStrings(void) dontdiscard;
+char16_t *GetEnvironmentStrings(void) __wur;
 bool32 FreeEnvironmentStrings(char16_t *) paramsnonnull();
 bool32 ReadFile(int64_t hFile, void *lpBuffer, uint32_t nNumberOfBytesToRead,
                 uint32_t *lpNumberOfBytesRead,

@@ -26,7 +26,7 @@ int sys_linkat_nt(int, const char *, int, const char *);
 int sys_madvise_nt(void *, size_t, int);
 int sys_mkdirat_nt(int, const char *, uint32_t);
 int sys_msync_nt(char *, size_t, int);
-int sys_open_nt(int, const char *, uint32_t, int32_t) dontdiscard;
+int sys_open_nt(int, const char *, uint32_t, int32_t) __wur;
 int sys_pipe_nt(int[hasatleast 2], unsigned);
 int sys_renameat_nt(int, const char *, int, const char *);
 int sys_sched_yield_nt(void);

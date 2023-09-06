@@ -21,12 +21,13 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/temp.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 
@@ -79,7 +80,7 @@ TEST(tmpfile, test) {
 #ifndef __aarch64__
 // TODO(jart): Find way to detect qemu-aarch64
 TEST(tmpfile, renameToRealFile) {
-  if (!IsLinux() || !__is_linux_2_6_23()) return;
+  if (!(IsLinux() && __is_linux_2_6_23())) return;  // need non-ancient linux
   FILE *f;
   f = tmpfile();
   ASSERT_EQ(2, fputs("hi", f));

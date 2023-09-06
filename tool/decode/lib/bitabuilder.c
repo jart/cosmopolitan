@@ -19,6 +19,7 @@
 #include "tool/decode/lib/bitabuilder.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

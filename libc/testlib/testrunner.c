@@ -83,6 +83,7 @@ static void SetupTmpDir(void) {
   strlcat(g_tmpdir, number, sizeof(g_tmpdir));
   if (makedirs(g_tmpdir, 0755) || chdir(g_tmpdir)) {
     perror(g_tmpdir);
+    tinyprint(2, "testlib failed to setup tmpdir\n", NULL);
     exit(1);
   }
 }
@@ -94,6 +95,7 @@ static void TearDownTmpDir(void) {
   }
   if (rmrf(g_tmpdir)) {
     perror(g_tmpdir);
+    tinyprint(2, "testlib failed to tear down tmpdir\n", NULL);
     exit(1);
   }
 }

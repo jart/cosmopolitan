@@ -41,7 +41,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/musl/crypt.h"

@@ -16,67 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/bits.h"
-#include "libc/stdio/rand.h"
-#include "libc/stdio/temp.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
-
-int _mkstemp(char *template, int oflags) {
-  uint64_t w;
-  int i, n, e, fd;
-  if ((n = strlen(template)) < 6 ||
-      READ16LE(template + n - 2) != READ16LE("XX") ||
-      READ32LE(template + n - 6) != READ32LE("XXXX")) {
-    return einval();
-  }
-  for (;;) {
-    w = _rand64();
-    for (i = 0; i < 6; ++i) {
-      template[n - 6 + i] = "0123456789abcdefghijklmnopqrstuvwxyz"[w % 36];
-      w /= 36;
-    }
-    e = errno;
-    if ((fd = open(template, O_RDWR | O_CREAT | O_EXCL | oflags, 0600)) != -1) {
-      return fd;
-    } else if (errno == EEXIST) {
-      errno = e;
-    } else {
-      template[0] = 0;
-      return fd;
-    }
-  }
-}
+#include "libc/temp.h"
+#include "libc/sysv/consts/at.h"
 
 /**
- * Creates temporary file name and file descriptor.
+ * Creates temporary file name and file descriptor, e.g.
  *
- * The best way to construct your path template is:
- *
- *     char path[PATH_MAX+1];
- *     strlcat(path, kTmpDir, sizeof(path));
- *     strlcat(path, "sauce.XXXXXX", sizeof(path));
- *
- * This usage pattern makes mkstemp() equivalent to tmpfd():
- *
- *     int fd;
- *     fd = mkstemp(path);
- *     unlink(path);
- *
- * This usage pattern makes mkstemp() equivalent to mktemp():
- *
- *     close(mkstemp(path));
- *     puts(path);
+ *     char path[] = "/tmp/foo.XXXXXX";
+ *     int fd = mkstemp(path);
+ *     printf("%s is opened as %d\n", path, fd);
  *
  * @param template is mutated to replace last six X's with rng
  * @return open file descriptor r + w exclusive or -1 w/ errno
  * @raise EINVAL if `template` didn't end with `XXXXXX`
+ * @see openatemp() for one temp roller to rule them all
+ * @see mkostemp() if you you need a `O_CLOEXEC`, `O_APPEND`, etc.
+ * @see mkstemps() if you you need a suffix
+ * @see mktemp() if you don't need an fd
  * @see tmpfd() if you don't need a path
  */
 int mkstemp(char *template) {
-  return _mkstemp(template, 0);
+  return openatemp(AT_FDCWD, template, 0, 0, 0);
 }
+
+__strong_reference(mkstemp, mkstemp64);

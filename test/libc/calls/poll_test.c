@@ -55,7 +55,7 @@ void OnSig(int sig) {
   gotsig = true;
 }
 
-dontdiscard char *FormatPollFd(struct pollfd p[2]) {
+__wur char *FormatPollFd(struct pollfd p[2]) {
   return xasprintf("fd:%d revents:%s\n"
                    "fd:%d revents:%s\n",
                    p[0].fd, "<TODO:kPollNames>", p[1].fd, "<TODO:kPollNames>");

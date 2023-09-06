@@ -44,7 +44,7 @@ TEST(clock_gettime, test) {
 #ifndef __aarch64__
   bool isfast;
   // we support vdso on aarch64 but qemu-aarch64 won't let us test it
-  if (__is_linux_2_6_23()) {
+  if (IsLinux() && __is_linux_2_6_23()) {
     ASSERT_GT((intptr_t)__clock_gettime_get(&isfast),
               getauxval(AT_SYSINFO_EHDR));
     ASSERT_TRUE(isfast);

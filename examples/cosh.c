@@ -16,6 +16,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/limits.h"
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"

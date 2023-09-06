@@ -41,7 +41,7 @@ struct MemoryInterval {
 struct MemoryIntervals {
   size_t i, n;
   struct MemoryInterval *p;
-  struct MemoryInterval s[OPEN_MAX];
+  struct MemoryInterval s[16];
 };
 
 extern struct MemoryIntervals _mmi;

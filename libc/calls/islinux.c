@@ -16,21 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/atomic.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/pr.h"
 
-bool __is_linux_2_6_23(void) {
 #ifdef __x86_64__
+
+static struct {
+  atomic_uint once;
+  bool res;
+} __is_linux_2_6_23_data;
+
+static bool __is_linux_2_6_23_impl(void) {
   int rc;
-  if (!IsLinux()) return false;
   if (IsGenuineBlink()) return true;
   asm volatile("syscall"
                : "=a"(rc)
                : "0"(157), "D"(PR_GET_SECCOMP)
                : "rcx", "r11", "memory");
   return rc != -EINVAL;
+}
+
+static void __is_linux_2_6_23_init(void) {
+  __is_linux_2_6_23_data.res = __is_linux_2_6_23_impl();
+}
+
+#endif /* x86 */
+
+/**
+ * Returns true if we're running on non-ancient Linux.
+ * @note this function must only be called on Linux
+ */
+bool __is_linux_2_6_23(void) {
+  unassert(IsLinux());  // should be checked by caller
+#ifdef __x86_64__
+  cosmo_once(&__is_linux_2_6_23_data.once, __is_linux_2_6_23_init);
+  return __is_linux_2_6_23_data.res;
 #else
   return true;
 #endif

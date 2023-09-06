@@ -53,7 +53,7 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   }
   m = f->size - f->beg;
   if (n <= m && f->bufmode != _IONBF) {
-    // this isn't a fully buffered stream, and
+    // this isn't an unbuffered stream, and
     // there's enough room in the buffer for the request
     memcpy(f->buf + f->beg, data, n);
     f->beg += n;

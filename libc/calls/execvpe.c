@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/limits.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"

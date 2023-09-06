@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/limits.h"
 #include "libc/log/bsd.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

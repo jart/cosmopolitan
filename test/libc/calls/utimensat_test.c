@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/utime.h"
@@ -68,15 +70,6 @@ TEST(futimes, test) {
   EXPECT_EQ(1000, st.st_atim.tv_nsec);
   EXPECT_EQ(2000, st.st_mtim.tv_nsec);
   EXPECT_SYS(0, 0, close(3));
-}
-
-TEST(futimes, rhel5_enosys) {
-  if (IsLinux() && !__is_linux_2_6_23()) {
-    struct timeval tv[2] = {{1655455857}, {827727928}};
-    EXPECT_SYS(0, 3, creat("boop", 0644));
-    EXPECT_SYS(ENOSYS, -1, futimes(3, tv));
-    EXPECT_SYS(0, 0, close(3));
-  }
 }
 
 TEST(utimensat, test) {
@@ -126,4 +119,40 @@ TEST(utimensat, testOmit) {
   EXPECT_SYS(0, 0, stat("boop", &st));
   EXPECT_NE(123, st.st_atim.tv_sec);
   EXPECT_NE(123, st.st_mtim.tv_sec);
+}
+
+TEST(futimens, test2) {
+  struct timespec ts[2];
+  int fd = creat("foo", 0600);
+  if (fd < 0) exit(1);
+  struct stat st;
+  int64_t birth;
+  ASSERT_SYS(0, 0, fstat(fd, &st));
+  ASSERT_EQ(st.st_ctime, st.st_atime);
+  ASSERT_EQ(st.st_ctime, st.st_mtime);
+  birth = st.st_ctime;
+  ts[0].tv_sec = 1;
+  ts[0].tv_nsec = UTIME_OMIT;
+  ts[1].tv_sec = 1;
+  ts[1].tv_nsec = UTIME_NOW;
+  errno = 0;
+  ASSERT_SYS(EBADF, -1, futimens(AT_FDCWD, NULL));
+  ASSERT_SYS(0, 0, futimens(fd, ts));
+  sleep(1);
+  ts[0].tv_nsec = UTIME_NOW;   // change access time
+  ts[1].tv_nsec = UTIME_OMIT;  // don't change modified time
+  close(fd);
+  fd = open("foo", O_RDONLY);
+  ASSERT_SYS(0, 0, futimens(fd, ts));
+  ASSERT_SYS(0, 0, fstat(fd, &st));
+  // check time of last status change equals access time
+  ASSERT_GT(st.st_atime, birth);
+  ASSERT_EQ(st.st_mtime, birth);
+  // NetBSD doesn't appear to change ctime even though it says it does
+  if (!IsNetbsd()) {
+    ASSERT_GT(st.st_ctime, birth);
+    ASSERT_EQ(st.st_ctime, st.st_atime);
+    ASSERT_GT(st.st_ctime, st.st_mtime);
+  }
+  close(fd);
 }

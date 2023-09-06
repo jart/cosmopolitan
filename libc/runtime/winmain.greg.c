@@ -98,6 +98,10 @@ static const short kConsoleModes[3] = {
 static uint32_t __init_pid;
 static uint32_t __console_mode[3];
 
+forceinline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
 // implements all win32 apis on non-windows hosts
 __msabi long __oops_win32(void) {
   assert(!"win32 api called on non-windows host");
@@ -184,6 +188,12 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
     if (wa->argv[0][i] == '\\') {
       wa->argv[0][i] = '/';
     }
+  }
+  if (IsAlpha(wa->argv[0][0]) &&  //
+      wa->argv[0][1] == ':' &&    //
+      wa->argv[0][2] == '/') {
+    wa->argv[0][1] = wa->argv[0][0];
+    wa->argv[0][0] = '/';
   }
   char16_t *env16 = __imp_GetEnvironmentStringsW();
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,

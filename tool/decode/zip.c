@@ -48,12 +48,12 @@
  * @fileoverview Zip File Disassembler.
  */
 
-dontdiscard char *FormatDosDate(uint16_t dosdate) {
+static __wur char *FormatDosDate(uint16_t dosdate) {
   return xasprintf("%04u-%02u-%02u", ((dosdate >> 9) & 0b1111111) + 1980,
                    (dosdate >> 5) & 0b1111, dosdate & 0b11111);
 }
 
-dontdiscard char *FormatDosTime(uint16_t dostime) {
+static __wur char *FormatDosTime(uint16_t dostime) {
   return xasprintf("%02u:%02u:%02u", (dostime >> 11) & 0b11111,
                    (dostime >> 5) & 0b111111, (dostime << 1) & 0b111110);
 }

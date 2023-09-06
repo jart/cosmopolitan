@@ -27,7 +27,7 @@ int mergesort(void *, size_t, size_t, int (*)(const void *, const void *));
 int mergesort_r(void *, size_t, size_t,
                 int (*)(const void *, const void *, void *), void *);
 
-#define __algalloc returnspointerwithnoaliases dontthrow nocallback dontdiscard
+#define __algalloc returnspointerwithnoaliases dontthrow nocallback __wur
 
 int radix_sort_int32(int32_t *, size_t);
 int radix_sort_int64(int64_t *, size_t);

@@ -34,14 +34,23 @@ int __fflush_impl(FILE *f) {
     }
     f->getln = 0;
   }
-  if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
-    for (i = 0; i < f->beg; i += rc) {
-      if ((rc = write(f->fd, f->buf + i, f->beg - i)) == -1) {
+  if (f->fd != -1) {
+    if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
+      for (i = 0; i < f->beg; i += rc) {
+        if ((rc = write(f->fd, f->buf + i, f->beg - i)) == -1) {
+          f->state = errno;
+          return -1;
+        }
+      }
+      f->beg = 0;
+    }
+    if (f->beg < f->end && (f->iomode & O_ACCMODE) != O_WRONLY) {
+      if (lseek(f->fd, -(int)(f->end - f->beg), SEEK_CUR) == -1) {
         f->state = errno;
         return -1;
       }
+      f->end = f->beg;
     }
-    f->beg = 0;
   }
   return 0;
 }

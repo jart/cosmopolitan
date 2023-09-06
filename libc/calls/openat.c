@@ -25,6 +25,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -92,6 +93,7 @@
  *     - `O_APPEND`     open file for appending only
  *     - `O_NOFOLLOW`   fail with ELOOP if it's a symlink
  *     - `O_NONBLOCK`   asks read/write to fail with `EAGAIN` rather than block
+ *     - `O_UNLINK`     delete file automatically on close
  *     - `O_EXEC`       open file for execution only; see fexecve()
  *     - `O_NOCTTY`     prevents `path` from becoming the controlling terminal
  *     - `O_DIRECTORY`  advisory feature for avoiding accidentally opening files
@@ -107,7 +109,7 @@
  *     - `O_SEQUENTIAL` hint sequential access intent (zero on non-Windows)
  *     - `O_COMPRESSED` ask fs to abstract compression (zero on non-Windows)
  *     - `O_INDEXED`    turns on that slow performance (zero on non-Windows)
- *     - `O_TMPFILE`    should not be used; use tmpfd() or tmpfile() instead
+ *     - `O_TMPFILE`    EINVALs on non-Linux; please use tmpfd() / tmpfile()
  *     There are three regular combinations for the above flags:
  *     - `O_RDONLY`: Opens existing file for reading. If it doesn't
  *       exist then nil is returned and errno will be `ENOENT` (or in
@@ -148,6 +150,7 @@
  * @raise EINTR if we needed to block and a signal was delivered instead
  * @raise EEXIST if `O_CREAT|O_EXCL` are used and `path` already existed
  * @raise EINVAL if ASCII control codes are used in `path` on Windows
+ * @raise EINVAL if `O_UNLINK` is used without `O_CREAT|O_EXCL`
  * @raise EINVAL if `O_TRUNC` is specified in `O_RDONLY` mode
  * @raise EINVAL if `flags` contains unsupported bits
  * @raise ECANCELED if thread was cancelled in masked mode
@@ -180,6 +183,15 @@ int openat(int dirfd, const char *path, int flags, ...) {
 
   if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     rc = efault();
+  } else if ((flags & O_UNLINK) &&
+             (flags & (O_CREAT | O_EXCL)) != (O_CREAT | O_EXCL)) {
+    // O_UNLINK is a non-standard cosmo extension; we've chosen bits for
+    // this magic number which we believe are unlikely to interfere with
+    // the bits chosen by operating systems both today and in the future
+    // however, due to the risks here and the irregularity of using this
+    // feature for anything but temporary files, we are going to prevent
+    // the clever use cases for now; please file an issue if you want it
+    rc = einval();
   } else if (__isfdkind(dirfd, kFdZip)) {
     rc = enotsup();  // TODO
   } else if (_weaken(__zipos_open) &&
@@ -190,20 +202,29 @@ int openat(int dirfd, const char *path, int flags, ...) {
       rc = enotsup();  // TODO
     }
   } else if ((flags & O_ACCMODE) == O_RDONLY && (flags & O_TRUNC)) {
-    rc = einval();  // Every OS except OpenBSD actually does this D:
+    // Every operating system we've tested (with the notable exception
+    // of OpenBSD) will gladly truncate files opened in read-only mode
+    rc = einval();
   } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
-    rc = sys_openat(dirfd, path, flags, mode);
-    if (IsFreebsd()) {
-      // Address FreeBSD divergence from IEEE Std 1003.1-2008 (POSIX.1)
-      // in the case when O_NOFOLLOW is used, but fails due to symlink.
-      if (rc == -1 && errno == EMLINK) {
+    // openat unix userspace
+    rc = sys_openat(dirfd, path, flags & ~O_UNLINK, mode);
+    if (rc != -1) {
+      // openat succeeded
+      if (flags & O_UNLINK) {
+        // Implement Cosmopolitan O_UNLINK extension for UNIX
+        // This cannot fail since we require O_CREAT / O_EXCL
+        unassert(!sys_unlinkat(dirfd, path, 0));
+      }
+    } else {
+      // openat failed
+      if (IsFreebsd() && errno == EMLINK) {
+        // Address FreeBSD divergence from IEEE Std 1003.1-2008 (POSIX.1)
+        // in the case when O_NOFOLLOW is used, but fails due to symlink.
         errno = ELOOP;
       }
-    }
-    if (IsNetbsd()) {
-      // Address NetBSD divergence from IEEE Std 1003.1-2008 (POSIX.1)
-      // in the case when O_NOFOLLOW is used but fails due to symlink.
-      if (rc == -1 && errno == EFTYPE) {
+      if (IsNetbsd() && errno == EFTYPE) {
+        // Address NetBSD divergence from IEEE Std 1003.1-2008 (POSIX.1)
+        // in the case when O_NOFOLLOW is used but fails due to symlink.
         errno = ELOOP;
       }
     }
@@ -216,9 +237,8 @@ int openat(int dirfd, const char *path, int flags, ...) {
   }
 
   END_CANCELLATION_POINT;
-  STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(dirfd), path,
-         DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
-         rc);
+  STRACE("openat(%s, %#s, %s%s) → %d% m", DescribeDirfd(dirfd), path,
+         DescribeOpenFlags(flags), DescribeOpenMode(flags, mode), rc);
   return rc;
 }
 

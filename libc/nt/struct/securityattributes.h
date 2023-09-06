@@ -11,7 +11,7 @@ struct NtSecurityAttributes {
 };
 
 const char *DescribeNtSecurityAttributes(char[32],
-                                         struct NtSecurityAttributes *);
+                                         const struct NtSecurityAttributes *);
 #define DescribeNtSecurityAttributes(x) \
   DescribeNtSecurityAttributes(alloca(32), x)
 

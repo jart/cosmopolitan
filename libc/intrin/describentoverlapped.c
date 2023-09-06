@@ -20,7 +20,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 
-const char *(DescribeNtOverlapped)(char b[128], struct NtOverlapped *o) {
+const char *(DescribeNtOverlapped)(char b[128], const struct NtOverlapped *o) {
   int i = 0, n = 128;
   bool gotsome = false;
   if (!o) return "NULL";

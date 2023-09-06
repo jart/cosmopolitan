@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_NTSPAWN_H_
 #define COSMOPOLITAN_LIBC_CALLS_NTSPAWN_H_
+#include "libc/limits.h"
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
@@ -10,8 +11,9 @@ int mkntcmdline(char16_t[ARG_MAX / 2], char *const[]);
 int mkntenvblock(char16_t[ARG_MAX / 2], char *const[], const char *,
                  char[ARG_MAX]);
 int ntspawn(const char *, char *const[], char *const[], const char *,
-            struct NtSecurityAttributes *, struct NtSecurityAttributes *,
-            bool32, uint32_t, const char16_t *, const struct NtStartupInfo *,
+            const struct NtSecurityAttributes *,
+            const struct NtSecurityAttributes *, bool32, uint32_t,
+            const char16_t *, const struct NtStartupInfo *,
             struct NtProcessInformation *);
 
 COSMOPOLITAN_C_END_

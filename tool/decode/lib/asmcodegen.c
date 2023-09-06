@@ -35,7 +35,7 @@ char *format(char *buf, const char *fmt, ...) {
   return buf;
 }
 
-dontdiscard char *tabpad(const char *s, unsigned width) {
+char *tabpad(const char *s, unsigned width) {
   char *p;
   size_t i, l, need;
   l = strlen(s);

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,8 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/temp.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/testlib/testlib.h"
 
-int mkstemps(char *template, int suffixlen) {
-  return mkostempsm(template, suffixlen, 0, 0600);
+TEST(memchr, test) {
+  const char *s = "hello";
+  ASSERT_EQ(s + 1, memchr(s, 'e', 5));
+}
+
+TEST(memchr, pageOverlapTorture) {
+  long pagesz = sysconf(_SC_PAGESIZE);
+  char *map = mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
+                   MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  ASSERT_SYS(0, 0, mprotect(map + pagesz, pagesz, PROT_NONE));
+  strcpy(map + pagesz - 9, "12345678");
+  EXPECT_EQ(map + pagesz - 1, memchr(map + pagesz - 9, 0, 79));
+  EXPECT_SYS(0, 0, munmap(map, pagesz * 2));
 }

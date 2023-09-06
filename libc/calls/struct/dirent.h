@@ -14,8 +14,8 @@ struct dirent {      /* linux getdents64 abi */
 struct dirstream;
 typedef struct dirstream DIR;
 
-DIR *fdopendir(int) dontdiscard;
-DIR *opendir(const char *) dontdiscard;
+DIR *fdopendir(int) __wur;
+DIR *opendir(const char *) __wur;
 int closedir(DIR *);
 int dirfd(DIR *);
 long telldir(DIR *);

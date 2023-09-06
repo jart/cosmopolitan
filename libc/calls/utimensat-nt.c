@@ -41,8 +41,14 @@ textwindows int sys_utimensat_nt(int dirfd, const char *path,
 
   if (path) {
     if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-    if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead, NULL,
-                         kNtOpenExisting, kNtFileAttributeNormal, 0)) != -1) {
+    if ((fh = CreateFile(
+             path16, kNtFileWriteAttributes,
+             kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, NULL,
+             kNtOpenExisting,
+             kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
+                 ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
+                                                : 0),
+             0)) != -1) {
       closeme = fh;
     } else {
       return __winerr();

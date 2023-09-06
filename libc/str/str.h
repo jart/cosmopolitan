@@ -191,7 +191,7 @@ bool startswithi(const char *, const char *) strlenesque;
 bool endswith(const char *, const char *) strlenesque;
 bool istext(const void *, size_t) libcesque;
 bool isutf8(const void *, size_t) libcesque;
-char *strsignal_r(int, char[21]) returnsnonnull libcesque dontdiscard;
+char *strsignal_r(int, char[21]) returnsnonnull libcesque __wur;
 int strerror_wr(int, uint32_t, char *, size_t)
 dontthrow nocallback;
 char16_t *chomp16(char16_t *) libcesque;

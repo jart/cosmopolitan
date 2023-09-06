@@ -36,10 +36,9 @@ void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
 void quick_exit(int) wontreturn;
 void abort(void) wontreturn;
-int __cxa_atexit(void *, void *, void *) libcesque;
-int atfork(void *, void *) libcesque;
-int atexit(void (*)(void)) libcesque;
-char *getenv(const char *) nosideeffect libcesque;
+int __cxa_atexit(void *, void *, void *) paramsnonnull((1)) libcesque;
+int atexit(void (*)(void)) paramsnonnull() libcesque;
+char *getenv(const char *) paramsnonnull() __wur nosideeffect libcesque;
 int putenv(char *);
 int setenv(const char *, const char *, int);
 int unsetenv(const char *);
@@ -65,6 +64,7 @@ int acct(const char *);
 
 #if defined(_GNU_SOURCE) || defined(_COSMO_SOURCE)
 extern char **environ;
+char *secure_getenv(const char *) paramsnonnull() __wur nosideeffect libcesque;
 #endif
 
 #ifdef _COSMO_SOURCE
@@ -91,7 +91,6 @@ void _longsort(long *, size_t);
 /* diagnostics */
 void ShowCrashReports(void);
 void __printargs(const char *);
-int _getcpucount(void) pureconst;
 int ftrace_install(void);
 int ftrace_enabled(int);
 int strace_enabled(int);

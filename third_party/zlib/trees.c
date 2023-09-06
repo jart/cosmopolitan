@@ -10,7 +10,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
+#include "libc/temp.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/deflate.internal.h"
 // clang-format off

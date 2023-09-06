@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,8 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/temp.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/bits.h"
+#include "libc/stdio/rand.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/temp.h"
 
-int mkostemp(char *template, unsigned flags) {
-  return mkostempsm(template, 0, flags, 0600);
+/**
+ * Creates temporary directory, e.g.
+ *
+ *     char path[] = "/tmp/foo.XXXXXX";
+ *     mkdtemp(path);
+ *     rmdir(path);
+ *
+ * @param template must end with XXXXXX which will be replaced
+ *     with random text on success (and not modified on error)
+ * @return pointer to template on success, or NULL w/ errno
+ * @raise EINVAL if template didn't end with XXXXXX
+ */
+char *mkdtemp(char *template) {
+  int n;
+  if ((n = strlen(template)) < 6 ||
+      READ32LE(template + n - 6) != READ32LE("XXXX") ||
+      READ16LE(template + n - 6 + 4) != READ16LE("XX")) {
+    einval();
+    return 0;
+  }
+  for (;;) {
+    int x = _rand64();
+    for (int i = 0; i < 6; ++i) {
+      template[n - 6 + i] = "0123456789abcdefghikmnpqrstvwxyz"[x & 31];
+      x >>= 5;
+    }
+    int e = errno;
+    if (!mkdir(template, 0700)) {
+      return template;
+    } else if (errno != EEXIST) {
+      memcpy(template + n - 6, "XXXXXX", 6);
+      return 0;
+    }
+    errno = e;
+  }
 }

@@ -37,7 +37,7 @@ int issetugid(void) {
   int rc;
   if (IsLinux()) {
     rc = !!__getauxval(AT_SECURE).value;
-  } else if (IsMetal()) {
+  } else if (IsMetal() || IsWindows()) {
     rc = 0;
   } else {
     rc = sys_issetugid();

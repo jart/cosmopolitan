@@ -84,7 +84,7 @@
            "warnifused"
            "attributeallocsize"
            "attributeallocalign"
-           "dontdiscard"
+           "__wur"
            "nointerpose"
            "returnsnonnull"
            "strftimeesque"

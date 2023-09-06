@@ -46,7 +46,6 @@ dontasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   /* asan runtime depends on this function */
   unsigned i;
   struct CxaAtexitBlock *b, *b2;
-  _Static_assert(ATEXIT_MAX == CHAR_BIT * sizeof(b->mask), "");
   __cxa_lock();
   b = __cxa_blocks.p;
   if (!b) b = __cxa_blocks.p = &__cxa_blocks.root;

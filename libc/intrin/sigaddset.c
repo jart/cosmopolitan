@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/limits.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"

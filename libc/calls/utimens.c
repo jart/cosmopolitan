@@ -48,12 +48,16 @@ int __utimens(int fd, const char *path, const struct timespec ts[2],
              (path && (_weaken(__zipos_parseuri) &&
                        _weaken(__zipos_parseuri)(path, &zipname) != -1))) {
     rc = erofs();
-  } else if (IsLinux() && !__is_linux_2_6_23() && fd == AT_FDCWD && !flags) {
-    rc = sys_utimes(path, (void *)ts);  // rhel5 truncates to seconds
-  } else if (!IsWindows()) {
+  } else if (IsXnu() || (IsLinux() && !__is_linux_2_6_23())) {
+    rc = sys_utimensat_old(fd, path, ts, flags);
+  } else if (IsLinux() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = sys_utimensat(fd, path, ts, flags);
-  } else {
+  } else if (IsWindows()) {
     rc = sys_utimensat_nt(fd, path, ts, flags);
+  } else if (IsMetal()) {
+    rc = enosys();
+  } else {
+    rc = enosys();
   }
   return rc;
 }

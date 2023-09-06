@@ -28,8 +28,8 @@
 char testlib_enable_tmp_setup_teardown;
 
 void CheckPlatform(void) {
-  if (IsOpenbsd()) return;
-  if (__is_linux_2_6_23()) return;
+  if (IsOpenbsd()) return;                       // openbsd is ok
+  if (IsLinux() && __is_linux_2_6_23()) return;  // non-ancient linux is ok
   kprintf("skipping openbsd_test\n");
   exit(0);
 }

@@ -156,7 +156,7 @@ typedef struct {
 #define memcpyesque libcesque
 #define strlenesque libcesque nosideeffect paramsnonnull()
 #define vallocesque \
-  libcesque dontdiscard returnsaligned((65536)) returnspointerwithnoaliases
+  libcesque __wur returnsaligned((65536)) returnspointerwithnoaliases
 #define reallocesque libcesque returnsaligned((16))
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer
@@ -268,13 +268,13 @@ typedef struct {
 #endif /* __cplusplus */
 #endif /* forceinline */
 
-#ifndef dontdiscard
+#ifndef __wur
 #if !defined(__STRICT_ANSI__) &&                           \
     ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 304 || \
      __has_attribute(__warn_unused_result__))
-#define dontdiscard __attribute__((__warn_unused_result__))
+#define __wur __attribute__((__warn_unused_result__))
 #else
-#define dontdiscard
+#define __wur
 #endif
 #endif
 

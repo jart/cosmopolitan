@@ -1,10 +1,19 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_H_
 
+#define EOF    -1  /* end of file */
+#define WEOF   -1u /* end of file (multibyte) */
+#define _IOFBF 0   /* fully buffered */
+#define _IOLBF 1   /* line buffered */
+#define _IONBF 2   /* no buffering */
+
+#define L_tmpnam     20
 #define L_ctermid    20
-#define FILENAME_MAX PATH_MAX
+#define P_tmpdir     "/tmp"
+#define FILENAME_MAX 1024
 #define FOPEN_MAX    1000
 #define TMP_MAX      10000
+#define BUFSIZ       4096
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -51,9 +60,9 @@ int putchar(int);
 int puts(const char *);
 ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
 ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
-FILE *fopen(const char *, const char *) paramsnonnull((2)) dontdiscard;
-FILE *fdopen(int, const char *) paramsnonnull() dontdiscard;
-FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) dontdiscard;
+FILE *fopen(const char *, const char *) paramsnonnull((2)) __wur;
+FILE *fdopen(int, const char *) paramsnonnull() __wur;
+FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) __wur;
 FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
 size_t fread(void *, size_t, size_t, FILE *) paramsnonnull((4));
 size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4));
@@ -77,6 +86,9 @@ char *gets(char *) paramsnonnull();
 int fgetpos(FILE *, fpos_t *) paramsnonnull();
 int fsetpos(FILE *, const fpos_t *) paramsnonnull();
 
+FILE *tmpfile(void) __wur;
+char *tmpnam(char *) __wur;
+char *tmpnam_r(char *) __wur;
 int system(const char *);
 FILE *popen(const char *, const char *);
 

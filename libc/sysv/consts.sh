@@ -180,20 +180,21 @@ syscon	compat	SIGIOT					6			6			6			6			6			6			6			6			# PDP-11 feature; same 
 #	open() flags
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			Windoze			Commentary
-syscon	open	O_APPEND				0x00000400		0x00000400		8			8			8			8			8			0x00000400		# bsd consensus & kNtFileAppendData; won't pose issues w/ mknod(S_IFIFO) [SYNC libc/calls/open-nt.c]
-syscon	open	O_CREAT					0x00000040		0x00000040		0x00000200		0x00000200		0x00000200		0x00000200		0x00000200		0x00000040		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
-syscon	open	O_EXCL					0x00000080		0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
-syscon	open	O_TRUNC					0x00000200		0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
-syscon	open	O_DIRECTORY				0x00010000		0x00004000		0x00100000		0x00100000		0x00020000		0x00020000		0x00200000		0x00010000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics) [SYNC libc/calls/open-nt.c]
+syscon	open	O_APPEND				0x00000400		0x00000400		8			8			8			8			8			0x00000400		# bsd consensus & kNtFileAppendData; won't pose issues w/ mknod(S_IFIFO)
+syscon	open	O_CREAT					0x00000040		0x00000040		0x00000200		0x00000200		0x00000200		0x00000200		0x00000200		0x00000040		# bsd consensus & NT faked as Linux
+syscon	open	O_EXCL					0x00000080		0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux
+syscon	open	O_TRUNC					0x00000200		0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux
+syscon	open	O_DIRECTORY				0x00010000		0x00004000		0x00100000		0x00100000		0x00020000		0x00020000		0x00200000		0x00010000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics)
 syscon	open	O_NOFOLLOW				0x00020000		0x00008000		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00020000	       	# don't follow symlinks in the final path component; bsd consensus; kNtFileFlagOpenReparsePoint
-syscon	open	O_DIRECT				0x00004000		0x00010000		0xffffffff		0xffffffff		0x00010000		0xffffffff		0x00080000		0x00004000		# kNtFileFlagNoBuffering [SYNC libc/calls/open-nt.c]
+syscon	open	O_DIRECT				0x00004000		0x00010000		0xffffffff		0xffffffff		0x00010000		0xffffffff		0x00080000		0x00004000		# kNtFileFlagNoBuffering
 syscon	open	O_NONBLOCK				0x00000800		0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# same as O_NDELAY; overlaps with kNtFileFlagWriteThrough which we don't actually pass to win32 (we implement non-blocking ourselves using overlapped i/o)
-syscon	open	O_RANDOM				0			0			0			0			0			0			0			0x80000000		# kNtFileFlagRandomAccess [SYNC libc/calls/open-nt.c]
-syscon	open	O_SEQUENTIAL				0			0			0			0			0			0			0			0x40000000		# kNtFileFlagSequentialScan [SYNC libc/calls/open-nt.c]
-syscon	open	O_COMPRESSED				0			0			0			0			0			0			0			0x20000000		# kNtFileAttributeCompressed [SYNC libc/calls/open-nt.c]
-syscon	open	O_INDEXED				0			0			0			0			0			0			0			0x10000000		# !kNtFileAttributeNotContentIndexed [SYNC libc/calls/open-nt.c]
-syscon	open	O_CLOEXEC				0x00080000		0x00080000		0x01000000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux [SYNC libc/calls/open-nt.c]
-syscon	open	O_TMPFILE				0x00410000		0x00404000		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# please use tmpfd(); Linux 3.11+ (c. 2013) __O_TMPFILE | O_DIRECTORY; kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose [SYNC libc/calls/open-nt.c]
+syscon	open	O_RANDOM				0			0			0			0			0			0			0			0x80000000		# kNtFileFlagRandomAccess
+syscon	open	O_SEQUENTIAL				0			0			0			0			0			0			0			0x40000000		# kNtFileFlagSequentialScan
+syscon	open	O_COMPRESSED				0			0			0			0			0			0			0			0x20000000		# kNtFileAttributeCompressed
+syscon	open	O_INDEXED				0			0			0			0			0			0			0			0x10000000		# !kNtFileAttributeNotContentIndexed
+syscon	open	O_CLOEXEC				0x00080000		0x00080000		0x01000000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux
+syscon	open	O_TMPFILE				0x00410000		0x00404000		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# please use tmpfd(); Linux 3.11+ (c. 2013) __O_TMPFILE | O_DIRECTORY; kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
+syscon	open	O_UNLINK				0x40000000		0x40000000		0x40000000		0x40000000		0x40000000		0x40000000		0x40000000		0x04000100		# kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose on WIN32; polyfilled w/ unlink() on UNIX
 syscon	open	O_ASYNC					0x00002000		0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0x00000040		0xffffffff		# bsd consensus
 syscon	open	O_NOFOLLOW_ANY				0xffffffff		0xffffffff		0x20000000		0x20000000		0xffffffff		0xffffffff		0xffffffff		0xffffffff		# don't follow symlinks in any path component
 syscon	open	O_SYNC					0x00101000		0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0x00000080		0xffffffff		# bsd consensus

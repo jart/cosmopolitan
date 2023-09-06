@@ -20,6 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
@@ -96,10 +97,10 @@ TEST(readlinkat, frootloop) {
 
 TEST(readlinkat, statReadsNameLength) {
   struct stat st;
-  ASSERT_SYS(0, 0, symlink("froot", "froot"));
-  ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "froot", &st, AT_SYMLINK_NOFOLLOW));
+  ASSERT_SYS(0, 0, symlink("froÒt", "froÒt"));
+  ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "froÒt", &st, AT_SYMLINK_NOFOLLOW));
   EXPECT_TRUE(S_ISLNK(st.st_mode));
-  EXPECT_EQ(5, st.st_size);
+  EXPECT_EQ(6, st.st_size);
 }
 
 TEST(readlinkat, realpathReturnsLongPath) {

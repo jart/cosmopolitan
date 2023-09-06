@@ -5,7 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-const char *DescribeNtOverlapped(char[128], struct NtOverlapped *);
+const char *DescribeNtOverlapped(char[128], const struct NtOverlapped *);
 #define DescribeNtOverlapped(x) DescribeNtOverlapped(alloca(128), x)
 
 COSMOPOLITAN_C_END_

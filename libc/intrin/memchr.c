@@ -22,7 +22,7 @@
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 
 static inline const unsigned char *memchr_pure(const unsigned char *s,
                                                unsigned char c, size_t n) {
@@ -68,14 +68,22 @@ dontasan static inline const unsigned char *memchr_sse(const unsigned char *s,
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-void *memchr(const void *s, int c, size_t n) {
+dontasan void *memchr(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
   if (IsAsan()) __asan_verify(s, n);
-  r = memchr_sse(s, c, n);
+  const unsigned char *p = (const unsigned char *)s;
+  while (n && ((intptr_t)p & 15)) {
+    if (*p == (unsigned char)c) {
+      return (void *)p;
+    }
+    ++p;
+    --n;
+  }
+  r = memchr_sse(p, c, n);
   return (void *)r;
 #else
-  return memchr_pure(s, c, n);
+  return (void *)memchr_pure(s, c, n);
 #endif
 }
 

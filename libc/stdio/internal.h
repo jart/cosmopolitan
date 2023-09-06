@@ -10,7 +10,7 @@ COSMOPOLITAN_C_START_
 
 struct FILE {
   uint8_t bufmode;      /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
-  bool noclose;         /* 0x01 for fake dup() todo delete! */
+  char noclose;         /* 0x01 for fake dup() todo delete! */
   uint32_t iomode;      /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
   int32_t state;        /* 0x08 0=OK, -1=EOF, >0=errno */
   int fd;               /* 0x0c ≥0=fd, -1=closed|buffer */

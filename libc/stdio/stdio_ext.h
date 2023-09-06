@@ -20,6 +20,9 @@ int __fsetlocking(FILE *, int);
 void _flushlbf(void);
 void __fpurge(FILE *);
 void __fseterr(FILE *);
+const char *__freadptr(FILE *, size_t *);
+size_t __freadahead(FILE *);
+void __freadptrinc(FILE *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

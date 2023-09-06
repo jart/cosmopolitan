@@ -8,7 +8,7 @@ bool IsCipherSuiteGood(uint16_t);
 const char *GetCipherSuiteName(uint16_t);
 const char *DescribeMbedtlsErrorCode(int);
 const char *GetAlertDescription(unsigned char);
-dontdiscard char *FormatSslClientCiphers(const mbedtls_ssl_context *);
+char *FormatSslClientCiphers(const mbedtls_ssl_context *) __wur;
 const char *DescribeSslClientHandshakeError(const mbedtls_ssl_context *, int);
 
 COSMOPOLITAN_C_END_
