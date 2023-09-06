@@ -413,7 +413,10 @@ get_target_variable (const char *name,
 char *
 get_tmpdir (struct file *file)
 {
-  return strdup (get_target_variable (STRING_SIZE_TUPLE ("TMPDIR"), file, 0));
+  const char *tmpdir;
+  tmpdir = get_target_variable (STRING_SIZE_TUPLE ("TMPDIR"), file, 0);
+  if (!tmpdir) tmpdir = kTmpPath;
+  return strdup (tmpdir);
 }
 
 char *
