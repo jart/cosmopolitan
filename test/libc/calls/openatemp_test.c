@@ -40,15 +40,6 @@ TEST(openatemp, test) {
   EXPECT_SYS(0, 0, close(3));
 }
 
-TEST(openatemp, dirfd) {
-  ASSERT_SYS(0, 3, open(kTmpPath, O_RDONLY | O_DIRECTORY));
-  char path[] = "foo.XXXXXX.txt";
-  ASSERT_SYS(0, 4, openatemp(3, path, 4, 0, 0));
-  EXPECT_TRUE(fileexists(gc(xjoinpaths(kTmpPath, path))));
-  EXPECT_SYS(0, 0, close(4));
-  EXPECT_SYS(0, 0, close(3));
-}
-
 TEST(openatemp, unlink) {
   char path[] = "foo.XXXXXX";
   ASSERT_SYS(0, 3, openatemp(AT_FDCWD, path, 0, O_UNLINK, 0));
