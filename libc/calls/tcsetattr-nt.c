@@ -185,17 +185,22 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
     if (opt == TCSAFLUSH) {
       FlushConsoleInputBuffer(hInput);
     }
-    inmode &=
-        ~(kNtEnableLineInput | kNtEnableEchoInput | kNtEnableProcessedInput);
+    inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |
+                kNtEnableProcessedInput | kNtEnableVirtualTerminalInput);
     inmode |= kNtEnableWindowInput;
     __ttymagic = 0;
     if (tio->c_lflag & ICANON) {
-      inmode |= kNtEnableLineInput;
+      inmode |= kNtEnableLineInput | kNtEnableProcessedInput;
     } else {
       __ttymagic |= kFdTtyMunging;
       if (tio->c_cc[VMIN] != 1) {
         STRACE("tcsetattr c_cc[VMIN] must be 1 on Windows");
         return einval();
+      }
+      if (IsAtLeastWindows10()) {
+        // - keys like f1, up, etc. get turned into \e ansi codes
+        // - totally destroys default console gui (e.g. up arrow)
+        inmode |= kNtEnableVirtualTerminalInput;
       }
     }
     if (!(tio->c_iflag & ICRNL)) {
@@ -220,13 +225,11 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
     if (!(tio->c_lflag & ISIG)) {
       __ttymagic |= kFdTtyNoIsigs;
     }
-    if (IsAtLeastWindows10()) {
-      inmode |= kNtEnableVirtualTerminalInput;
-    }
     __vintr = tio->c_cc[VINTR];
     __vquit = tio->c_cc[VQUIT];
     if ((tio->c_lflag & ISIG) &&  //
         tio->c_cc[VINTR] == CTRL('C')) {
+      // allows ctrl-c to be delivered asynchronously via win32
       inmode |= kNtEnableProcessedInput;
     }
     ok = SetConsoleMode(hInput, inmode);

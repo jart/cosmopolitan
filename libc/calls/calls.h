@@ -73,7 +73,7 @@ typedef int sig_atomic_t;
 
 bool32 isatty(int);
 char *getcwd(char *, size_t);
-char *realpath(const char *, char *);
+char *realpath(const char *, char *) __wur;
 char *ttyname(int);
 int access(const char *, int) dontthrow;
 int chdir(const char *);

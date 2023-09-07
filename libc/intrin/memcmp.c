@@ -20,7 +20,6 @@
 #include "libc/intrin/likely.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
-#ifndef __aarch64__
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
@@ -83,5 +82,3 @@ int memcmp(const void *a, const void *b, size_t n) {
   }
   return 0;
 }
-
-#endif /* __aarch64__ */

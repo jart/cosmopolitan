@@ -28,7 +28,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
@@ -107,6 +106,7 @@ StartOver:
       // since for overlapped i/o, we always use GetOverlappedResult
       ok = ReadFile(handle, targetdata, targetsize, 0, &overlap);
       if (!ok && GetLastError() == kNtErrorIoPending) {
+      TryAgain:
         // the i/o operation is in flight; blocking is unavoidable
         // if we're in a non-blocking mode, then immediately abort
         // if an interrupt is pending then we abort before waiting
@@ -137,6 +137,9 @@ StartOver:
         // overlapped is allocated on stack, so it's important we wait
         // for windows to acknowledge that it's done using that memory
         ok = GetOverlappedResult(handle, &overlap, &got, true);
+        if (!ok && GetLastError() == kNtErrorIoIncomplete) {
+          goto TryAgain;
+        }
       }
       CloseHandle(overlap.hEvent);
     } else {

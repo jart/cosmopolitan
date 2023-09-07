@@ -24,9 +24,9 @@
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 
-/* 34x speedup for ascii */
-static inline dontasan axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
-                                                 const char *src, axdx_t r) {
+// 34x speedup for ascii
+static inline axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
+                                        const char *src, axdx_t r) {
   uint8_t v1[16], v2[16], vz[16];
   memset(vz, 0, 16);
   while (r.ax + 16 < dstsize) {
@@ -62,9 +62,11 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   r.ax = 0;
   r.dx = 0;
   for (;;) {
+#ifdef __x86_64__
     if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
       r = tprecode8to16_sse2(dst, dstsize, src, r);
     }
+#endif
     x = src[r.dx++] & 0377;
     if (x >= 0300) {
       a = ThomPikeByte(x);

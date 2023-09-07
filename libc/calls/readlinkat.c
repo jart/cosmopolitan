@@ -24,8 +24,8 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Reads symbolic link.
@@ -40,12 +40,20 @@
  *     and this buffer will *not* be nul-terminated
  * @return number of bytes written to buf, or -1 w/ errno; if the
  *     return is equal to bufsiz then truncation may have occurred
- * @error EINVAL if path isn't a symbolic link
+ * @raise EINVAL if path isn't a symbolic link
+ * @raise ENOENT if `path` didn't exist
+ * @raise ENOTDIR if parent component existed that's not a directory
+ * @raise ENOTDIR if base component ends with slash and is not a dir
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise EBADF on relative `path` when `dirfd` isn't open or `AT_FDCWD`
+ * @raise ELOOP if a loop was detected resolving parent components
  * @asyncsignalsafe
  */
 ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   ssize_t bytes;
-  if ((IsAsan() && !__asan_is_valid(buf, bufsiz)) || (bufsiz && !buf)) {
+  if ((bufsiz && !buf) || (IsAsan() && (!__asan_is_valid_str(path) ||
+                                        !__asan_is_valid(buf, bufsiz)))) {
     bytes = efault();
   } else if (_weaken(__zipos_notat) &&
              (bytes = __zipos_notat(dirfd, path)) == -1) {

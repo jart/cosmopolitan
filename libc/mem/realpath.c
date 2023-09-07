@@ -30,8 +30,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
@@ -44,7 +42,7 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
+// clang-format off
 
 static inline bool IsSlash(char c)
 {
@@ -60,7 +58,7 @@ static size_t GetSlashLen(const char *s)
 
 static char *ResolvePath(char *d, const char *s, size_t n)
 {
-	if (d || (_weaken(malloc) && (d = _weaken(malloc)(n+1)))) {
+	if (d || (d = malloc(n+1))) {
 		return memmove(d, s, n+1);
 	} else {
 		enomem();
@@ -71,11 +69,26 @@ static char *ResolvePath(char *d, const char *s, size_t n)
 /**
  * Returns absolute pathname.
  *
- * This function removes `/./` and `/../` components. IF the path is a
- * symbolic link then it's resolved.
+ * This function removes `/./` and `/../` components. If any individual
+ * path component is a symbolic link, then it'll be resolved. Any slash
+ * characters that repeat (e.g. `//`) will collapse into one (i.e. `/`)
  *
- * @param resolved needs PATH_MAX bytes or NULL to use malloc()
- * @return resolved or NULL w/ errno
+ * This implementation is consistent with glibc, in that `"//"` becomes
+ * `"/"` unlike Musl Libc, which considers that special (not sure why?)
+ * This is the only change Cosmopolitan Libc made vs. Musl's realpath()
+ * aside from also being permissive about backslashes, to help Windows.
+ *
+ * @param filename is the path that needs to be resolved
+ * @param resolved needs PATH_MAX bytes, or NULL to use malloc()
+ * @return resolved path, or NULL w/ errno
+ * @raise EINVAL if `filename` is NULL
+ * @raise ENOENT if `filename` is an empty string
+ * @raise ENOMEM if `resolved` is NULL and malloc() failed
+ * @raise ENOENT if `filename` didn't exist
+ * @raise ENOTDIR if directory component existed that's not a directory
+ * @raise ENOTDIR if base component ends with slash and is not a dir
+ * @raise ENAMETOOLONG if filename resolution exceeded `PATH_MAX`
+ * @raise ELOOP if too many symlinks were encountered
  */
 char *realpath(const char *filename, char *resolved)
 {
@@ -83,8 +96,6 @@ char *realpath(const char *filename, char *resolved)
 	int e, up, check_dir=0;
 	size_t k, p, q, l, l0, cnt=0, nup=0;
 	char output[PATH_MAX], stack[PATH_MAX+1], *z;
-
-	/* STRACE("realpath(%#s, %#s)", filename, resolved); */
 
 	if (!filename) {
 		einval();
@@ -118,9 +129,6 @@ restart:
 			q=0;
 			output[q++] = '/';
 			p++;
-			/* Initial // is special. */
-			if (IsSlash(stack[p]) && !IsSlash(stack[p+1]))
-				output[q++] = '/';
 			continue;
 		}
 

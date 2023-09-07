@@ -94,6 +94,12 @@ o/$(MODE)/libc/fmt/strsignal.greg.o: private			\
 			-ffreestanding				\
 			$(NO_MAGIC)
 
+# we can't use sanitizers because:
+#   WinMain calls this
+o/$(MODE)/libc/str/tprecode8to16.o: private			\
+		COPTS +=					\
+			-fno-sanitize=all
+
 o/$(MODE)/libc/str/eastasianwidth.bin:				\
 		libc/str/eastasianwidth.txt			\
 		o/$(MODE)/tool/decode/mkwides.com

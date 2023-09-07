@@ -85,10 +85,6 @@ wontreturn void _Exit(int exitcode) {
 #endif
   } else if (IsWindows()) {
     uint32_t waitstatus;
-    // Restoring the CMD.EXE program to its original state is critical.
-    if (_weaken(__restore_console_win32)) {
-      _weaken(__restore_console_win32)();
-    }
     // What Microsoft calls an exit code, POSIX calls a status code. See
     // also the WEXITSTATUS() and WIFEXITED() macros that POSIX defines.
     waitstatus = exitcode;

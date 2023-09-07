@@ -45,6 +45,7 @@
 #include "libc/runtime/utmp.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/time/time.h"

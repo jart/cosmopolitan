@@ -24,7 +24,6 @@
 #include "libc/calls/struct/winsize.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/sysv/consts/sicode.h"
@@ -66,7 +65,6 @@ __attribute__((__constructor__)) static void sigwinch_init(void) {
   if (!IsWindows()) return;
   unsigned ws = __get_console_size();
   atomic_store_explicit(&__win_winsize, ws, memory_order_release);
-  STRACE("sigwinch_init() → %08x", ws);
 }
 
 #endif /* __x86_64__ */

@@ -65,6 +65,13 @@ $(LIBC_CALLS_A).pkg:					\
 		$(LIBC_CALLS_A_OBJS)			\
 		$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+# we can't use sanitizers because:
+#   we're on a stack owned by win32 without tls
+o/$(MODE)/libc/calls/onntconsoleevent.o: private	\
+		COPTS +=				\
+			-ffreestanding			\
+			-fno-sanitize=all
+
 # we can't use asan because:
 #   siginfo_t memory is owned by kernels
 o/$(MODE)/libc/calls/siginfo2cosmo.o: private		\

@@ -20,7 +20,9 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -30,6 +32,8 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/thread/tls.h"
+#include "libc/thread/tls2.internal.h"
 
 /**
  * @fileoverview makes windows stdin handle capable of being poll'd
@@ -56,10 +60,23 @@ __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW;
 __msabi extern typeof(CreateSemaphore) *const __imp_CreateSemaphoreW;
 __msabi extern typeof(CreateThread) *const __imp_CreateThread;
+__msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(ReadFile) *const __imp_ReadFile;
 __msabi extern typeof(WaitForSingleObject) *const __imp_WaitForSingleObject;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
+
+static unsigned long StrLen(const char *s) {
+  unsigned long n = 0;
+  while (*s++) ++n;
+  return n;
+}
+
+static void Log(const char *s) {
+#if 0
+  __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), s, StrLen(s), 0, 0);
+#endif
+}
 
 __msabi static dontasan dontubsan dontinstrument textwindows uint32_t
 WinStdinThread(void *lpParameter) {
@@ -75,19 +92,19 @@ WinStdinThread(void *lpParameter) {
   __imp_CloseHandle(g_fds.stdin.inisem);
 
   // relay stdin to process
-  NTTRACE("<stdin> activated");
+  Log("<stdin> activated\n");
   for (;;) {
     if (!__imp_ReadFile(g_fds.stdin.handle, buf, sizeof(buf), &got, 0)) {
-      NTTRACE("<stdin> read failed");
+      Log("<stdin> read failed\n");
       goto Finish;
     }
     if (!got) {
-      NTTRACE("<stdin> end of file");
+      Log("<stdin> end of file\n");
       goto Finish;
     }
     for (i = 0; i < got; i += wrote) {
       if (!__imp_WriteFile(g_fds.stdin.writer, buf + i, got - i, &wrote, 0)) {
-        NTTRACE("<stdin> failed to write to pipe");
+        Log("<stdin> failed to write to pipe\n");
         goto Finish;
       }
     }
@@ -106,13 +123,13 @@ dontasan dontubsan dontinstrument textwindows void WinMainStdin(void) {
   if (!SupportsWindows()) return;
   hStdin = __imp_GetStdHandle(kNtStdInputHandle);
   if (hStdin == kNtInvalidHandleValue) {
-    NTTRACE("<stdin> GetStdHandle failed");
+    Log("<stdin> GetStdHandle failed\n");
     return;
   }
   // create non-inherited semaphore with initial value of 0
   hSemaphore = __imp_CreateSemaphoreW(0, 0, 1, 0);
   if (!hSemaphore) {
-    NTTRACE("<stdin> CreateSemaphore failed");
+    Log("<stdin> CreateSemaphore failed\n");
     return;
   }
   __create_pipe_name(pipename);
@@ -120,18 +137,18 @@ dontasan dontubsan dontinstrument textwindows void WinMainStdin(void) {
       pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
       kNtPipeTypeByte | kNtPipeReadmodeByte, 1, 4096, 4096, 0, 0);
   if (hReader == kNtInvalidHandleValue) {
-    NTTRACE("<stdin> CreateNamedPipe failed");
+    Log("<stdin> CreateNamedPipe failed\n");
     return;
   }
   hWriter = __imp_CreateFileW(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting,
                               kNtFileFlagOverlapped, 0);
   if (hWriter == kNtInvalidHandleValue) {
-    NTTRACE("<stdin> CreateFile failed");
+    Log("<stdin> CreateFile failed\n");
     return;
   }
   hThread = __imp_CreateThread(0, 65536, WinStdinThread, 0, 0, 0);
   if (!hThread) {
-    NTTRACE("<stdin> CreateThread failed");
+    Log("<stdin> CreateThread failed\n");
     return;
   }
   g_fds.stdin.handle = hStdin;

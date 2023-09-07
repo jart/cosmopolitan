@@ -40,8 +40,6 @@
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 
-struct Dll *_pthread_list;
-pthread_spinlock_t _pthread_lock;
 static struct PosixThread _pthread_main;
 _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
 

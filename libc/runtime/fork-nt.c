@@ -68,7 +68,7 @@
 __static_yoink("_check_sigchld");
 
 extern int64_t __wincrashearly;
-bool32 __onntconsoleevent_nt(uint32_t);
+bool32 __onntconsoleevent(uint32_t);
 void sys_setitimer_nt_reset(void);
 void kmalloc_unlock(void);
 
@@ -308,8 +308,8 @@ textwindows void WinMainForked(void) {
     }
     AddVectoredExceptionHandler(1, (void *)_weaken(__wincrash_nt));
   }
-  if (_weaken(__onntconsoleevent_nt)) {
-    SetConsoleCtrlHandler(_weaken(__onntconsoleevent_nt), 1);
+  if (_weaken(__onntconsoleevent)) {
+    SetConsoleCtrlHandler(_weaken(__onntconsoleevent), 1);
   }
 
   // jump back into function below

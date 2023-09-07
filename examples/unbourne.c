@@ -5816,8 +5816,11 @@ static ssize_t preadfd(void) {
 retry:
   if (!parsefile->fd && isatty(0)) {
     linenoiseSetFreeHintsCallback(free);
-    linenoiseSetHintsCallback(ShellHint);
-    linenoiseSetCompletionCallback(ShellCompletion);
+    if (!IsWindows()) {
+      // TODO(jart): Cache $PATH search.
+      linenoiseSetHintsCallback(ShellHint);
+      linenoiseSetCompletionCallback(ShellCompletion);
+    }
     if ((p = linenoiseWithHistory(">: ", "unbourne"))) {
       nr = min(strlen(p), IBUFSIZ - 2);
       memcpy(buf, p, nr);

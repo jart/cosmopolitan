@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/syscall-nt.internal.h"
-#include "libc/nt/console.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
-textwindows bool32 sys_isatty_nt(int fd) {
-  if (__isfdopen(fd)) {
-    uint32_t mode;
-    if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
-      return true;
-    } else {
-      enotty();
-      return false;
-    }
-  } else {
-    ebadf();
-    return false;
-  }
-}
+pthread_spinlock_t _pthread_lock;

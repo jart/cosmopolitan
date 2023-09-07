@@ -10,14 +10,25 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
+
+volatile bool gotsig;
 
 void SignalHandler(int sig) {
   // we don't need to do anything in our signal handler since the signal
   // delivery itself causes a visible state change, saying what happened
+  const char *s = "SignalHandler() called\n";
+  write(1, s, strlen(s));  // notice both functions are @asyncsignalsafe
+  // however this will help if delivered asynchronously in cpubound code
+  // it's also necessary to discern spurious interrupts from real signal
+  gotsig = true;
 }
 
 int main(int argc, char *argv[]) {
@@ -30,6 +41,16 @@ int main(int argc, char *argv[]) {
   sigaction(SIGINT, &(struct sigaction){.sa_handler = SignalHandler}, 0);
 
   for (;;) {
+
+    // some programs are blocked on cpu rather than i/o
+    // such programs shall rely on asynchronous signals
+    printf("doing cpu task...\n");
+    for (volatile int i = 0; i < INT_MAX / 20; ++i) {
+      if (gotsig) {
+        printf("\rgot ctrl+c asynchronously\n");
+        exit(0);
+      }
+    }
 
     // posix guarantees atomic i/o if you use pipe_buf sized buffers
     // that way we don't need to worry about things like looping and
@@ -45,6 +66,7 @@ int main(int argc, char *argv[]) {
     // it's possible to be more precise if we were building library
     // code. for example, you can block signals using sigprocmask()
     // and then use pselect() to do the waiting.
+    printf("doing read i/o task...\n");
     int got = read(0, buf, sizeof(buf));
 
     // check if the read operation failed
@@ -59,8 +81,13 @@ int main(int argc, char *argv[]) {
         // however EINTR is very useful, when we choose to use it
         // the \r character is needed so when the line is printed
         // it'll overwrite the ^C that got echo'd with the ctrl-c
-        printf("\rgot ctrl+c\n");
-        exit(0);
+        if (gotsig) {
+          printf("\rgot ctrl+c via i/o eintr\n");
+          exit(0);
+        } else {
+          printf("\rgot spurious eintr\n");
+          continue;
+        }
       } else {
         // log it in the unlikely event something else went wrong
         perror("<stdin>");

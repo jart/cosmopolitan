@@ -53,6 +53,7 @@
 #include "libc/runtime/stack.h"
 #include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
 
 #ifdef __x86_64__
@@ -66,6 +67,7 @@ __msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
 __msabi extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess;
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW;
+__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
 __msabi extern typeof(SetConsoleCP) *const __imp_SetConsoleCP;
@@ -73,7 +75,6 @@ __msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
 __msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
 __msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
-__msabi extern typeof(WriteFile) *const __imp_WriteFile;
 // clang-format on
 
 extern void cosmo(int, char **, char **, long (*)[2]) wontreturn;
@@ -83,20 +84,6 @@ static const signed char kNtStdio[3] = {
     (signed char)kNtStdOutputHandle,
     (signed char)kNtStdErrorHandle,
 };
-
-static const short kConsoleModes[3] = {
-    kNtEnableProcessedInput | kNtEnableLineInput | kNtEnableEchoInput |
-        kNtEnableMouseInput | kNtEnableQuickEditMode | kNtEnableExtendedFlags |
-        kNtEnableAutoPosition | kNtEnableInsertMode |
-        kNtEnableVirtualTerminalInput,
-    kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
-        kNtEnableVirtualTerminalProcessing,
-    kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
-        kNtEnableVirtualTerminalProcessing,
-};
-
-static uint32_t __init_pid;
-static uint32_t __console_mode[3];
 
 forceinline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
@@ -108,16 +95,6 @@ __msabi long __oops_win32(void) {
   return 0;
 }
 
-// called by _exit to undo our config changes to cmd.exe
-// it must never ever be called from forked subprocesses
-void __restore_console_win32(void) {
-  if (__imp_GetCurrentProcessId() == __init_pid) {
-    for (int i = 0; i < 3; ++i) {
-      __imp_SetConsoleMode(__imp_GetStdHandle(kNtStdio[i]), __console_mode[i]);
-    }
-  }
-}
-
 // https://nullprogram.com/blog/2022/02/18/
 __msabi static inline char16_t *MyCommandLine(void) {
   void *cmd;
@@ -126,6 +103,15 @@ __msabi static inline char16_t *MyCommandLine(void) {
       "mov\t0x78(%0),%0\n"
       : "=r"(cmd));
   return cmd;
+}
+
+// returns true if utf-8 path is a win32-style path that exists
+__msabi static textwindows bool32 WinFileExists(const char *path) {
+  uint16_t path16[PATH_MAX];
+  size_t z = ARRAYLEN(path16);
+  size_t n = tprecode8to16(path16, z, path).ax;
+  if (n >= z - 1) return false;
+  return __imp_GetFileAttributesW(path16) != -1u;
 }
 
 // this ensures close(1) won't accidentally close(2) for example
@@ -144,27 +130,30 @@ __msabi static textwindows void DeduplicateStdioHandles(void) {
   }
 }
 
-__msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
-  size_t stacksize;
-  struct WinArgs *wa;
-  uintptr_t stackaddr;
-  __init_pid = __pid;
+// main function of windows init process
+// i.e. first process spawned that isn't forked
+__msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
   __oldstack = (intptr_t)__builtin_frame_address(0);
+
+  // make console into utf-8 ansi/xterm style tty
   if (NtGetPeb()->OSMajorVersion >= 10 &&
       (intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
     __imp_SetConsoleCP(kNtCpUtf8);
     __imp_SetConsoleOutputCP(kNtCpUtf8);
-    for (int i = 0; i < 3; ++i) {
-      int64_t hand = __imp_GetStdHandle(kNtStdio[i]);
-      __imp_GetConsoleMode(hand, __console_mode + i);
-      __imp_SetConsoleMode(hand, kConsoleModes[i]);
+    for (int i = 1; i <= 2; ++i) {
+      uint32_t m;
+      intptr_t h = __imp_GetStdHandle(kNtStdio[i]);
+      __imp_GetConsoleMode(h, &m);
+      __imp_SetConsoleMode(h, m | kNtEnableVirtualTerminalProcessing);
     }
   }
+
+  // allocate memory for stack and argument block
   _Static_assert(sizeof(struct WinArgs) % FRAMESIZE == 0, "");
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
-  stackaddr = GetStaticStackAddr(0);
-  stacksize = GetStaticStackSize();
+  uintptr_t stackaddr = GetStaticStackAddr(0);
+  size_t stacksize = GetStaticStackSize();
   __imp_MapViewOfFileEx((_mmi.p[0].h = __imp_CreateFileMappingW(
                              -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
                              stacksize >> 32, stacksize, NULL)),
@@ -181,25 +170,47 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.p[0].flags = 0x00000026;  // stack+anonymous
   _mmi.p[0].size = stacksize;
   _mmi.i = 1;
-  wa = (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
+  struct WinArgs *wa =
+      (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
+
+  // parse utf-16 command into utf-8 argv array in argument block
   int count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock),
                          wa->argv, ARRAYLEN(wa->argv));
-  for (int i = 0; wa->argv[0][i]; ++i) {
-    if (wa->argv[0][i] == '\\') {
-      wa->argv[0][i] = '/';
+
+  // munge argv so dos paths become cosmo paths
+  for (int i = 0; wa->argv[i]; ++i) {
+    if (wa->argv[i][0] == '\\' &&  //
+        wa->argv[i][1] == '\\') {
+      // don't munge new technology style paths
+      continue;
+    }
+    if (!WinFileExists(wa->argv[i])) {
+      // don't munge if we're not certain it's a file
+      continue;
+    }
+    // use forward slashes
+    for (int j = 0; wa->argv[i][j]; ++j) {
+      if (wa->argv[i][j] == '\\') {
+        wa->argv[i][j] = '/';
+      }
+    }
+    // turn c:/... into /c/...
+    if (IsAlpha(wa->argv[i][0]) &&  //
+        wa->argv[i][1] == ':' &&    //
+        wa->argv[i][2] == '/') {
+      wa->argv[i][1] = wa->argv[i][0];
+      wa->argv[i][0] = '/';
     }
   }
-  if (IsAlpha(wa->argv[0][0]) &&  //
-      wa->argv[0][1] == ':' &&    //
-      wa->argv[0][2] == '/') {
-    wa->argv[0][1] = wa->argv[0][0];
-    wa->argv[0][0] = '/';
-  }
+
+  // translate utf-16 win32 environment into utf-8 environment variables
   char16_t *env16 = __imp_GetEnvironmentStringsW();
   GetDosEnviron(env16, wa->envblock, ARRAYLEN(wa->envblock) - 8, wa->envp,
                 ARRAYLEN(wa->envp) - 1);
   __imp_FreeEnvironmentStringsW(env16);
   __envp = &wa->envp[0];
+
+  // handover control to cosmopolitan runtime
   _jmpstack((char *)(stackaddr + (stacksize - sizeof(struct WinArgs))), cosmo,
             count, wa->argv, wa->envp, wa->auxv);
 }
@@ -227,7 +238,7 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   if (_weaken(WinMainForked)) {
     _weaken(WinMainForked)();
   }
-  WinMainNew(cmdline);
+  WinInit(cmdline);
 }
 
 #endif /* __x86_64__ */

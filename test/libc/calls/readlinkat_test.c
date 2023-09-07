@@ -47,6 +47,8 @@ TEST(readlink, enoent) {
 TEST(readlink, enotdir) {
   char buf[32];
   ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, readlink("o/", buf, 32));
+  ASSERT_SYS(ENOTDIR, -1, readlink("o/o/..", buf, 32));
   ASSERT_SYS(ENOTDIR, -1, readlink("o/doesnotexist", buf, 32));
 }
 
@@ -95,7 +97,7 @@ TEST(readlinkat, frootloop) {
   }
 }
 
-TEST(readlinkat, statReadsNameLength) {
+TEST(readlinkat, statReadsNameLength_countsUtf8Bytes) {
   struct stat st;
   ASSERT_SYS(0, 0, symlink("froÒt", "froÒt"));
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, "froÒt", &st, AT_SYMLINK_NOFOLLOW));

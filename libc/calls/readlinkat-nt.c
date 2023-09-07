@@ -20,8 +20,11 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/fsctl.h"
 #include "libc/nt/enum/io.h"
 #include "libc/nt/files.h"
@@ -34,28 +37,45 @@
 
 textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
                                       size_t bufsiz) {
+
+  char16_t path16[PATH_MAX];
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+  size_t len = strlen16(path16);
+  bool must_be_directory = len > 1 && path16[len - 1] == '\\';
+  if (must_be_directory) path16[--len] = 0;
+
   int64_t h;
   ssize_t rc;
-  uint64_t w;
-  wint_t x, y;
-  volatile char *memory;
-  uint32_t i, j, n, mem;
-  char16_t path16[PATH_MAX], *p;
-  struct NtReparseDataBuffer *rdb;
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  mem = 16384;
-  memory = alloca(mem);
+  uint32_t mem = 16384;
+  volatile char *memory = alloca(mem);
   CheckLargeStackAllocation((char *)memory, mem);
-  rdb = (struct NtReparseDataBuffer *)memory;
-  if ((h = CreateFile(path16, 0, 0, 0, kNtOpenExisting,
+  struct NtReparseDataBuffer *rdb = (struct NtReparseDataBuffer *)memory;
+  if ((h = CreateFile(path16, kNtFileReadAttributes,
+                      kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
+                      0, kNtOpenExisting,
                       kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics,
                       0)) != -1) {
-    if (DeviceIoControl(h, kNtFsctlGetReparsePoint, 0, 0, rdb, mem, &n, 0)) {
+
+    // if path had trailing slash, assert last component is directory
+    if (must_be_directory) {
+      struct NtByHandleFileInformation wst;
+      if (GetFileType(h) != kNtFileTypeDisk ||
+          (GetFileInformationByHandle(h, &wst) &&
+           !(wst.dwFileAttributes & kNtFileAttributeDirectory))) {
+        return enotdir();
+      }
+    }
+
+    uint32_t bc;
+    if (DeviceIoControl(h, kNtFsctlGetReparsePoint, 0, 0, rdb, mem, &bc, 0)) {
       if (rdb->ReparseTag == kNtIoReparseTagSymlink) {
-        i = 0;
-        j = 0;
-        n = rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
-        p = (char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
+
+        uint32_t i = 0;
+        uint32_t j = 0;
+        uint32_t n =
+            rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(char16_t);
+        char16_t *p =
+            (char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
                          rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
         if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
           p[1] = p[0];
@@ -63,15 +83,18 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
           p[2] = '/';
         }
         while (i < n) {
-          x = p[i++] & 0xffff;
+
+          wint_t x = p[i++] & 0xffff;
           if (!IsUcs2(x)) {
             if (i < n) {
-              y = p[i++] & 0xffff;
+              wint_t y = p[i++] & 0xffff;
               x = MergeUtf16(x, y);
             } else {
               x = 0xfffd;
             }
           }
+
+          uint64_t w;
           if (x < 0200) {
             if (x == '\\') {
               x = '/';
@@ -95,6 +118,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
     } else {
       rc = -1;
     }
+
     CloseHandle(h);
   } else {
     rc = __fix_enotdir(-1, path16);

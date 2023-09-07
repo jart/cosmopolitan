@@ -18,17 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-.text.windows
-
-__onntconsoleevent_nt:
-	ezlea	__onntconsoleevent,ax
-	jmp	__nt2sysv
-	.endfn	__onntconsoleevent_nt,globl,hidden
 
 	.init.start 300,_init_onntconsoleevent
 	testb	IsWindows()
 	jz	1f
-	ezlea	__onntconsoleevent_nt,cx
+	ezlea	__onntconsoleevent,cx
 	pushpop	1,%rdx
 	ntcall	__imp_SetConsoleCtrlHandler
 1:	.init.end 300,_init_onntconsoleevent,globl,hidden

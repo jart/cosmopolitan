@@ -55,7 +55,7 @@ int rawmode(void) {
   static bool once;
   struct termios t;
   if (!once) {
-    if (tcgetattr(1, &oldterm)) {
+    if (!tcgetattr(1, &oldterm)) {
       atexit(restoretty);
     } else {
       perror("tcgetattr");
