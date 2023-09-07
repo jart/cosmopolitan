@@ -7,6 +7,7 @@
 #include "libc/assert.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/stack.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/compile.h"
 #include "third_party/python/Include/fileutils.h"
@@ -17,6 +18,8 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pythonrun.h"
 /* clang-format off */
+
+STATIC_STACK_ALIGN(GetStackSize());
 
 #define HEADER "\
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│\n\

@@ -6,10 +6,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/runpythonmodule.h"
 #include "tool/args/args.h"
 // clang-format off
+
+STATIC_STACK_ALIGN(GetStackSize());
 
 int
 main(int argc, char **argv)

@@ -29,6 +29,7 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
@@ -63,6 +64,8 @@
 #include "tool/build/lib/interner.h"
 #include "tool/build/lib/stripcomponents.h"
 /* clang-format off */
+
+STATIC_STACK_ALIGN(GetStackSize());
 
 __static_yoink("_PyUnicode_GetCode");
 
