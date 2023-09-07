@@ -32,8 +32,6 @@
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/sock.h"
 
-/* TODO(jart): DELETE */
-
 static uint32_t *GetUnixIps(void) {
   int fd, n;
   uint64_t z;

@@ -15,7 +15,9 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/select.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -25,6 +27,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/x/xsigaction.h"
+
+__static_yoink("WinMainStdin");
 
 #define CTRL(C)                ((C) ^ 0b01000000)
 #define WRITE(FD, SLIT)        write(FD, SLIT, strlen(SLIT))

@@ -53,12 +53,12 @@ ssize_t recv(int fd, void *buf, size_t size, int flags) {
     rc = sys_recvfrom(fd, buf, size, flags, 0, 0);
   } else if (__isfdopen(fd)) {
     if (__isfdkind(fd, kFdSocket)) {
-      rc = sys_recv_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, flags);
+      rc = sys_recv_nt(fd, (struct iovec[]){{buf, size}}, 1, flags);
     } else if (__isfdkind(fd, kFdFile)) {
       if (flags) {
         rc = einval();
       } else {
-        rc = sys_read_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, -1);
+        rc = sys_read_nt(fd, (struct iovec[]){{buf, size}}, 1, -1);
       }
     } else {
       rc = enotsock();

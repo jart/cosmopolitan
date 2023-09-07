@@ -56,8 +56,10 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // convert the wait time to a word
-  if (!timeout || ckd_add(&millis, timeout->tv_sec, timeout->tv_usec / 1000)) {
+  if (!timeout) {
     millis = -1;
+  } else {
+    millis = timeval_tomillis(*timeout);
   }
 
   // call our nt poll implementation
@@ -76,8 +78,7 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
 
   // store remaining time back in caller's timeval
   if (timeout) {
-    timeout->tv_sec = millis / 1000;
-    timeout->tv_usec = millis % 1000 * 1000;
+    *timeout = timeval_frommillis(millis);
   }
 
   return fdcount;

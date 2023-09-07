@@ -23,7 +23,7 @@
 
 textwindows int64_t __resolve_stdin_handle(int64_t handle) {
   if (handle == g_fds.stdin.handle) {
-    if (!atomic_exchange(&g_fds.stdin.once, 1)) {
+    if (g_fds.stdin.inisem) {
       ReleaseSemaphore(g_fds.stdin.inisem, 1, 0);
     }
     handle = g_fds.stdin.reader;

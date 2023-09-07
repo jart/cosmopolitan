@@ -68,9 +68,9 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   } else if (fd >= g_fds.n) {
     rc = ebadf();
   } else if (IsMetal()) {
-    rc = sys_readv_metal(g_fds.p + fd, iov, iovlen);
+    rc = sys_readv_metal(fd, iov, iovlen);
   } else if (IsWindows()) {
-    rc = sys_readv_nt(g_fds.p + fd, iov, iovlen);
+    rc = sys_readv_nt(fd, iov, iovlen);
   } else {
     rc = enosys();
   }

@@ -108,6 +108,14 @@ int vscanf(const char *, va_list);
 int fscanf(FILE *, const char *, ...) scanfesque(2);
 int vfscanf(FILE *, const char *, va_list);
 
+int snprintf(char *, size_t, const char *, ...)
+    printfesque(3) dontthrow nocallback;
+int vsnprintf(char *, size_t, const char *, va_list)
+dontthrow nocallback;
+int sprintf(char *, const char *, ...) dontthrow nocallback;
+int vsprintf(char *, const char *, va_list)
+dontthrow nocallback;
+
 int fwprintf(FILE *, const wchar_t *, ...);
 int fwscanf(FILE *, const wchar_t *, ...);
 int swprintf(wchar_t *, size_t, const wchar_t *, ...);
@@ -121,6 +129,9 @@ int vwscanf(const wchar_t *, va_list);
 int wprintf(const wchar_t *, ...);
 int wscanf(const wchar_t *, ...);
 int fwide(FILE *, int);
+
+int sscanf(const char *, const char *, ...) scanfesque(2);
+int vsscanf(const char *, const char *, va_list);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » allocating                                 ─╬─│┼

@@ -20,9 +20,11 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -60,6 +62,7 @@ __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(CreateNamedPipe) *const __imp_CreateNamedPipeW;
 __msabi extern typeof(CreateSemaphore) *const __imp_CreateSemaphoreW;
 __msabi extern typeof(CreateThread) *const __imp_CreateThread;
+__msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
 __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(ReadFile) *const __imp_ReadFile;
@@ -78,78 +81,97 @@ static void Log(const char *s) {
 #endif
 }
 
-__msabi static dontasan dontubsan dontinstrument textwindows uint32_t
-WinStdinThread(void *lpParameter) {
-  char buf[4096];
+__msabi static textwindows uint32_t WinStdinThread(void *lpParameter) {
+  char buf[4];
   uint32_t i, got, wrote;
-
-  // wait forever for semaphore to exceed 0
-  //
-  // this semaphore is unlocked the first time read or poll happens. we
-  // need it so the prog has time to call functions like SetConsoleMode
-  // before we begin performing i/o.
-  __imp_WaitForSingleObject(g_fds.stdin.inisem, -1u);
-  __imp_CloseHandle(g_fds.stdin.inisem);
-
-  // relay stdin to process
-  Log("<stdin> activated\n");
+  Log("<stdin> activated thread\n");
   for (;;) {
+    Log("<stdin> wait\n");
+    __imp_WaitForSingleObject(g_fds.stdin.inisem, -1u);
+    Log("<stdin> read\n");
     if (!__imp_ReadFile(g_fds.stdin.handle, buf, sizeof(buf), &got, 0)) {
       Log("<stdin> read failed\n");
       goto Finish;
     }
     if (!got) {
-      Log("<stdin> end of file\n");
+      Log("<stdin> eof\n");
       goto Finish;
     }
     for (i = 0; i < got; i += wrote) {
+      Log("<stdin> write");
       if (!__imp_WriteFile(g_fds.stdin.writer, buf + i, got - i, &wrote, 0)) {
-        Log("<stdin> failed to write to pipe\n");
+        Log("<stdin> write failed\n");
         goto Finish;
       }
     }
   }
-
 Finish:
   __imp_CloseHandle(g_fds.stdin.writer);
   return 0;
 }
 
+textwindows static char16_t *FixCpy(char16_t p[17], uint64_t x, uint8_t k) {
+  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  *p = '\0';
+  return p;
+}
+
+textwindows static char16_t *CreateStdinPipeName(char16_t *a, int64_t h) {
+  char16_t *p = a;
+  const char *q = "\\\\?\\pipe\\cosmo\\stdin\\";
+  while (*q) *p++ = *q++;
+  p = FixCpy(p, h, 64);
+  *p = 0;
+  return a;
+}
+
 // this makes it possible for our read() implementation to periodically
 // poll for signals while performing a blocking overlapped io operation
-dontasan dontubsan dontinstrument textwindows void WinMainStdin(void) {
+textwindows void WinMainStdin(void) {
   char16_t pipename[64];
   int64_t hStdin, hWriter, hReader, hThread, hSemaphore;
   if (!SupportsWindows()) return;
+  // handle numbers stay the same when inherited by the subprocesses
   hStdin = __imp_GetStdHandle(kNtStdInputHandle);
   if (hStdin == kNtInvalidHandleValue) {
     Log("<stdin> GetStdHandle failed\n");
     return;
   }
-  // create non-inherited semaphore with initial value of 0
-  hSemaphore = __imp_CreateSemaphoreW(0, 0, 1, 0);
-  if (!hSemaphore) {
-    Log("<stdin> CreateSemaphore failed\n");
-    return;
-  }
-  __create_pipe_name(pipename);
-  hReader = __imp_CreateNamedPipeW(
-      pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
-      kNtPipeTypeByte | kNtPipeReadmodeByte, 1, 4096, 4096, 0, 0);
-  if (hReader == kNtInvalidHandleValue) {
-    Log("<stdin> CreateNamedPipe failed\n");
-    return;
-  }
-  hWriter = __imp_CreateFileW(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting,
+  CreateStdinPipeName(pipename, hStdin);
+  hReader = __imp_CreateFileW(pipename, kNtGenericRead, 0, 0, kNtOpenExisting,
                               kNtFileFlagOverlapped, 0);
-  if (hWriter == kNtInvalidHandleValue) {
-    Log("<stdin> CreateFile failed\n");
-    return;
-  }
-  hThread = __imp_CreateThread(0, 65536, WinStdinThread, 0, 0, 0);
-  if (!hThread) {
-    Log("<stdin> CreateThread failed\n");
-    return;
+  if (hReader == kNtInvalidHandleValue) {
+    // we are the init process; create pipe server to dole out stdin
+    hWriter = __imp_CreateNamedPipeW(
+        pipename, kNtPipeAccessOutbound | kNtFileFlagOverlapped,
+        kNtPipeTypeMessage | kNtPipeReadmodeMessage | kNtPipeNowait,
+        kNtPipeUnlimitedInstances, 4096, 4096, 0, 0);
+    if (hWriter == kNtInvalidHandleValue) {
+      Log("<stdin> CreateNamedPipe failed\n");
+      return;
+    }
+    hReader = __imp_CreateFileW(pipename, kNtGenericRead, 0, 0, kNtOpenExisting,
+                                kNtFileFlagOverlapped, 0);
+    if (hReader == kNtInvalidHandleValue) {
+      Log("<stdin> CreateFile failed\n");
+      return;
+    }
+    // create non-inherited semaphore with initial value of 0
+    hSemaphore = __imp_CreateSemaphoreW(0, 0, 1, 0);
+    if (!hSemaphore) {
+      Log("<stdin> CreateSemaphore failed\n");
+      return;
+    }
+    hThread = __imp_CreateThread(0, 65536, WinStdinThread, 0, 0, 0);
+    if (!hThread) {
+      Log("<stdin> CreateThread failed\n");
+      return;
+    }
+  } else {
+    // we are the child of a cosmo process with its own stdin thread
+    hWriter = 0;
+    hThread = 0;
+    hSemaphore = 0;
   }
   g_fds.stdin.handle = hStdin;
   g_fds.stdin.thread = hThread;

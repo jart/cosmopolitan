@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/append.h"
+#include "libc/stdio/stdio.h"
 
 #define W sizeof(size_t)
 

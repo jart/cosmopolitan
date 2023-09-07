@@ -6,8 +6,8 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "third_party/zlib/gz/gzguts.inc"
 // clang-format off
 

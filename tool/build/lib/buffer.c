@@ -19,10 +19,10 @@
 #include "tool/build/lib/buffer.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 /* TODO(jart): replace with new append*() library */

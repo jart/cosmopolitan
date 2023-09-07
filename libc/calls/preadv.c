@@ -62,7 +62,7 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
       if (g_fds.p[fd].kind == kFdSocket) {
         return espipe();
       } else {
-        return sys_read_nt(g_fds.p + fd, iov, iovlen, off);
+        return sys_read_nt(fd, iov, iovlen, off);
       }
     } else {
       return ebadf();

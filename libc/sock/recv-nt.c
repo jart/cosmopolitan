@@ -28,8 +28,8 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
-                                size_t iovlen, uint32_t flags) {
+textwindows ssize_t sys_recv_nt(int fd, const struct iovec *iov, size_t iovlen,
+                                uint32_t flags) {
   int err;
   ssize_t rc;
   uint32_t got;
@@ -37,17 +37,18 @@ textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
   struct NtIovec iovnt[16];
   struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   err = errno;
-  if (!WSARecv(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), 0, &flags,
-               &overlapped, 0)) {
-    if (WSAGetOverlappedResult(fd->handle, &overlapped, &got, false, &flags)) {
+  if (!WSARecv(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen), 0,
+               &flags, &overlapped, 0)) {
+    if (WSAGetOverlappedResult(g_fds.p[fd].handle, &overlapped, &got, false,
+                               &flags)) {
       rc = got;
     } else {
       rc = -1;
     }
   } else {
     errno = err;
-    sockfd = (struct SockFd *)fd->extra;
-    rc = __wsablock(fd, &overlapped, &flags, kSigOpRestartable,
+    sockfd = (struct SockFd *)g_fds.p[fd].extra;
+    rc = __wsablock(g_fds.p + fd, &overlapped, &flags, kSigOpRestartable,
                     sockfd->rcvtimeo);
   }
   unassert(WSACloseEvent(overlapped.hEvent));

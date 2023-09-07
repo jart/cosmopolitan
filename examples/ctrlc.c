@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -15,7 +16,9 @@
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
 
@@ -45,7 +48,7 @@ int main(int argc, char *argv[]) {
     // some programs are blocked on cpu rather than i/o
     // such programs shall rely on asynchronous signals
     printf("doing cpu task...\n");
-    for (volatile int i = 0; i < INT_MAX / 20; ++i) {
+    for (volatile int i = 0; i < INT_MAX / 5; ++i) {
       if (gotsig) {
         printf("\rgot ctrl+c asynchronously\n");
         exit(0);
@@ -55,7 +58,7 @@ int main(int argc, char *argv[]) {
     // posix guarantees atomic i/o if you use pipe_buf sized buffers
     // that way we don't need to worry about things like looping and
     // we can also be assured that multiple actors wont have tearing
-    char buf[PIPE_BUF];
+    char buf[4];
 
     // read data from standard input
     //
@@ -107,5 +110,6 @@ int main(int argc, char *argv[]) {
     // operating system will send SIGPIPE if there's any problem
     // which kills the process by default
     write(1, buf, got);
+    write(1, "\n", 1);
   }
 }

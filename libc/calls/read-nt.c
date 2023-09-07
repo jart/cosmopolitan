@@ -41,6 +41,7 @@
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
@@ -48,7 +49,11 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
+__static_yoink("WinMainStdin");
+
 #ifdef __x86_64__
+
+__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
 
 static textwindows void sys_read_nt_abort(int64_t handle,
                                           struct NtOverlapped *overlapped) {
@@ -56,11 +61,12 @@ static textwindows void sys_read_nt_abort(int64_t handle,
            GetLastError() == kNtErrorNotFound);
 }
 
-static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
-                                            size_t size, int64_t offset) {
+textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
+                                     int64_t offset) {
 
   // perform the read i/o operation
   bool32 ok;
+  struct Fd *f;
   uint32_t got;
   int filetype;
   int64_t handle;
@@ -69,27 +75,28 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
   uint32_t targetsize;
   bool is_console_input;
   int abort_errno = EAGAIN;
+  f = g_fds.p + fd;
 StartOver:
   size = MIN(size, 0x7ffff000);
-  handle = __resolve_stdin_handle(fd->handle);
+  handle = __resolve_stdin_handle(f->handle);
   filetype = GetFileType(handle);
-  is_console_input = g_fds.stdin.handle ? fd->handle == g_fds.stdin.handle
-                                        : fd->handle == g_fds.p[0].handle;
+  is_console_input = g_fds.stdin.handle ? f->handle == g_fds.stdin.handle
+                                        : f->handle == g_fds.p[0].handle;
 
   // the caller might be reading a single byte at a time. but we need to
   // be able to munge three bytes into just 1 e.g. "\342\220\200" → "\0"
-  if (size && fd->buflen) {
+  if (size && f->buflen) {
   ReturnDataFromBuffer:
-    got = MIN(size, fd->buflen);
-    remain = fd->buflen - got;
-    if (got) memcpy(data, fd->buf, got);
-    if (remain) memmove(fd->buf, fd->buf + got, remain);
-    fd->buflen = remain;
+    got = MIN(size, f->buflen);
+    remain = f->buflen - got;
+    if (got) memcpy(data, f->buf, got);
+    if (remain) memmove(f->buf, f->buf + got, remain);
+    f->buflen = remain;
     return got;
   }
   if (is_console_input && size && size < 3 && (__ttymagic & kFdTtyMunging)) {
-    targetdata = fd->buf;
-    targetsize = sizeof(fd->buf);
+    targetdata = f->buf;
+    targetsize = sizeof(f->buf);
   } else {
     targetdata = data;
     targetsize = size;
@@ -106,12 +113,11 @@ StartOver:
       // since for overlapped i/o, we always use GetOverlappedResult
       ok = ReadFile(handle, targetdata, targetsize, 0, &overlap);
       if (!ok && GetLastError() == kNtErrorIoPending) {
-      TryAgain:
         // the i/o operation is in flight; blocking is unavoidable
         // if we're in a non-blocking mode, then immediately abort
         // if an interrupt is pending then we abort before waiting
         // otherwise wait for i/o periodically checking interrupts
-        if (fd->flags & O_NONBLOCK) {
+        if (f->flags & O_NONBLOCK) {
           sys_read_nt_abort(handle, &overlap);
         } else if (_check_interrupts(kSigOpRestartable)) {
         Interrupted:
@@ -120,6 +126,9 @@ StartOver:
         } else {
           for (;;) {
             uint32_t i;
+            if (g_fds.stdin.inisem) {
+              ReleaseSemaphore(g_fds.stdin.inisem, 1, 0);
+            }
             i = WaitForSingleObject(overlap.hEvent, __SIG_POLLING_INTERVAL_MS);
             if (i == kNtWaitTimeout) {
               if (_check_interrupts(kSigOpRestartable)) {
@@ -138,10 +147,11 @@ StartOver:
         // for windows to acknowledge that it's done using that memory
         ok = GetOverlappedResult(handle, &overlap, &got, true);
         if (!ok && GetLastError() == kNtErrorIoIncomplete) {
-          goto TryAgain;
+          kprintf("you complete me\n");
+          ok = true;
         }
       }
-      CloseHandle(overlap.hEvent);
+      __imp_CloseHandle(overlap.hEvent);
     } else {
       ok = false;
     }
@@ -153,7 +163,7 @@ StartOver:
     int64_t position;
     // save file pointer which windows clobbers, even for overlapped i/o
     if (!SetFilePointerEx(handle, 0, &position, SEEK_CUR)) {
-      return __winerr();  // fd probably isn't seekable?
+      return __winerr();  // f probably isn't seekable?
     }
     struct NtOverlapped overlap = {0};
     overlap.Pointer = (void *)(uintptr_t)offset;
@@ -179,11 +189,11 @@ StartOver:
         }
       }
       if (__ttymagic & kFdTtyEchoing) {
-        _weaken(__echo_terminal_input)(fd, targetdata, got);
+        _weaken(__echo_terminal_input)(f, targetdata, got);
       }
     }
     if (targetdata != data) {
-      fd->buflen = got;
+      f->buflen = got;
       goto ReturnDataFromBuffer;
     }
     return got;
@@ -204,8 +214,8 @@ StartOver:
   }
 }
 
-textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
-                                size_t iovlen, int64_t opt_offset) {
+textwindows ssize_t sys_read_nt(int fd, const struct iovec *iov, size_t iovlen,
+                                int64_t opt_offset) {
   ssize_t rc;
   size_t i, total;
   if (opt_offset < -1) return einval();

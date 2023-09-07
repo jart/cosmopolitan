@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 
 /**
  * Formats string w/ dynamic memory allocation.

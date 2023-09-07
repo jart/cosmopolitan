@@ -25,7 +25,6 @@
 │ THE SOFTWARE.                                                                │
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -33,6 +32,7 @@
 #include "libc/math.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/complex.h"
-#include "libc/fmt/fmt.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
 TEST(complex, test) {

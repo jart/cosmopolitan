@@ -74,12 +74,12 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   } else if (__isfdopen(fd)) {
     if (!msg->msg_control) {
       if (__isfdkind(fd, kFdSocket)) {
-        rc = sys_recvfrom_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
+        rc = sys_recvfrom_nt(fd, msg->msg_iov, msg->msg_iovlen, flags,
                              msg->msg_name, &msg->msg_namelen);
       } else if (__isfdkind(fd, kFdFile) && !msg->msg_name) { /* socketpair */
         if (!flags) {
-          if ((got = sys_read_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen,
-                                 -1)) != -1) {
+          if ((got = sys_read_nt(fd, msg->msg_iov, msg->msg_iovlen, -1)) !=
+              -1) {
             msg->msg_flags = 0;
             rc = got;
           } else {

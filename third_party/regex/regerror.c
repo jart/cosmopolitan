@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/regex/regex.h"
 

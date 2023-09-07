@@ -15,11 +15,12 @@
 │ - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0            │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/argon2/encoding.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/argon2/core.h"
-#include "third_party/argon2/encoding.h"
 
 asm(".ident\t\"\\n\\n\
 argon2 (CC0 or Apache2)\\n\

@@ -3,8 +3,8 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/unicode.h"
 
 #define LUA_USE_POSIX

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
@@ -24,9 +25,8 @@
 
 #ifdef __x86_64__
 
-textwindows ssize_t sys_readv_nt(struct Fd *fd, const struct iovec *iov,
-                                 int iovlen) {
-  switch (fd->kind) {
+textwindows ssize_t sys_readv_nt(int fd, const struct iovec *iov, int iovlen) {
+  switch (g_fds.p[fd].kind) {
     case kFdFile:
     case kFdConsole:
       return sys_read_nt(fd, iov, iovlen, -1);

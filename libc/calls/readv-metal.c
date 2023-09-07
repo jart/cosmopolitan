@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
@@ -28,11 +29,11 @@
 
 #ifdef __x86_64__
 
-ssize_t sys_readv_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
+ssize_t sys_readv_metal(int fd, const struct iovec *iov, int iovlen) {
   int i;
   size_t got, toto;
   struct MetalFile *file;
-  switch (fd->kind) {
+  switch (g_fds.p[fd].kind) {
     case kFdConsole:
       /*
        * The VGA teletypewriter code may wish to send out "status report"
@@ -40,14 +41,14 @@ ssize_t sys_readv_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
        * Read & return these if they are available.
        */
       if (_weaken(sys_readv_vga)) {
-        ssize_t res = _weaken(sys_readv_vga)(fd, iov, iovlen);
+        ssize_t res = _weaken(sys_readv_vga)(g_fds.p + fd, iov, iovlen);
         if (res > 0) return res;
       }
       /* fall through */
     case kFdSerial:
       return sys_readv_serial(fd, iov, iovlen);
     case kFdFile:
-      file = (struct MetalFile *)fd->handle;
+      file = (struct MetalFile *)g_fds.p[fd].handle;
       for (toto = i = 0; i < iovlen && file->pos < file->size; ++i) {
         got = MIN(iov[i].iov_len, file->size - file->pos);
         if (got) memcpy(iov[i].iov_base, file->base, got);

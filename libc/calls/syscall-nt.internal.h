@@ -14,9 +14,10 @@ int sys_fadvise_nt(int, uint64_t, uint64_t, int);
 int sys_fchdir_nt(int);
 int sys_fchmodat_nt(int, const char *, uint32_t, int);
 int sys_fcntl_nt(int, int, uintptr_t);
-int sys_fdatasync_nt(int);
+int sys_fdatasync_nt(int, bool);
 int sys_flock_nt(int, int);
 int sys_fork_nt(uint32_t);
+int sys_fsync_fake(int);
 int sys_ftruncate_nt(int64_t, uint64_t);
 int sys_getloadavg_nt(double *, int);
 int sys_getppid_nt(void);
@@ -36,6 +37,7 @@ int sys_sync_nt(void);
 int sys_truncate_nt(const char *, uint64_t);
 int sys_unlinkat_nt(int, const char *, int);
 int64_t sys_lseek_nt(int, int64_t, int);
+ssize_t sys_read_nt_impl(int, void *, size_t, int64_t);
 ssize_t sys_readlinkat_nt(int, const char *, char *, size_t);
 
 COSMOPOLITAN_C_END_

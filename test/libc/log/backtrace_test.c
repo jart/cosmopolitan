@@ -91,7 +91,7 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
     return;
   }
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
@@ -191,7 +191,7 @@ TEST(ShowCrashReports, testDivideByZero) {
   int ws, pid, fds[2];
   char *output, buf[512];
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
@@ -315,7 +315,7 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   int ws, pid, fds[2];
   char *output, buf[512];
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
@@ -393,7 +393,7 @@ TEST(ShowCrashReports, testNpeCrash) {
   int ws, pid, fds[2];
   char *output, buf[512];
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
@@ -452,7 +452,7 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
   int ws, pid, fds[2];
   char *output, buf[512];
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
@@ -506,7 +506,7 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   int ws, pid, fds[2];
   char *output, buf[512];
   ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);

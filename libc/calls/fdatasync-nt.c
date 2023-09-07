@@ -17,12 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_fdatasync_nt(int fd) {
-  // TODO(jart): what should we do with worker pipes?
-  if (!__isfdkind(fd, kFdFile)) return ebadf();
+textwindows int sys_fdatasync_nt(int fd, bool fake) {
+  if (!__isfdopen(fd)) return ebadf();
+  if (!__isfdkind(fd, kFdFile)) return einval();
+  if (GetFileType(g_fds.p[fd].handle) != kNtFileTypeDisk) return einval();
   if (_check_interrupts(0)) return -1;
+  if (fake) return 0;
   return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : -1;
 }

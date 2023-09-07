@@ -24,6 +24,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -144,14 +145,20 @@ static textwindows int sys_open_nt_console(int dirfd,
                                            const struct NtMagicPaths *mp,
                                            uint32_t flags, int32_t mode,
                                            size_t fd) {
-  if (GetFileType(g_fds.p[STDIN_FILENO].handle) == kNtFileTypeChar &&
-      GetFileType(g_fds.p[STDOUT_FILENO].handle) == kNtFileTypeChar) {
+  uint32_t cm;
+  int input, output;
+  if ((__isfdopen((input = STDIN_FILENO)) &&
+       GetConsoleMode(g_fds.p[input].handle, &cm)) &&
+      ((__isfdopen((output = STDOUT_FILENO)) &&
+        GetConsoleMode(g_fds.p[output].handle, &cm)) ||
+       (__isfdopen((output = STDERR_FILENO)) &&
+        GetConsoleMode(g_fds.p[output].handle, &cm)))) {
     // this is an ugly hack that works for observed usage patterns
-    g_fds.p[fd].handle = g_fds.p[STDIN_FILENO].handle;
-    g_fds.p[fd].extra = g_fds.p[STDOUT_FILENO].handle;
-    g_fds.p[STDOUT_FILENO].dontclose = true;
-    g_fds.p[STDIN_FILENO].dontclose = true;
+    g_fds.p[fd].handle = g_fds.p[input].handle;
+    g_fds.p[fd].extra = g_fds.p[output].handle;
     g_fds.p[fd].dontclose = true;
+    g_fds.p[input].dontclose = true;
+    g_fds.p[output].dontclose = true;
   } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
                   dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode,
                   kNtFileFlagOverlapped)) != -1) {
@@ -187,7 +194,7 @@ textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
   ssize_t rc;
   __fds_lock();
   if ((rc = fd = __reservefd_unlocked(-1)) != -1) {
-    if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
+    if (!strcmp(file, kNtMagicPaths.devtty)) {
       rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);
     } else {
       rc = sys_open_nt_file(dirfd, file, flags, mode, fd);

@@ -93,6 +93,12 @@ o/$(MODE)/libc/calls/vdsofunc.greg.o: private		\
 			-ffreestanding			\
 			-fno-sanitize=address
 
+# we can't use magic because:
+#   this code is called by WinMain
+o/$(MODE)/libc/calls/winstdin1.o: private		\
+		COPTS +=				\
+			$(NO_MAGIC)
+
 # we can't use asan because:
 #   ntspawn allocates 128kb of heap memory via win32
 o/$(MODE)/libc/calls/ntspawn.o				\

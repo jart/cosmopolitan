@@ -74,7 +74,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   } else if (__isfdkind(fd, kFdSocket)) {
     rc = espipe();
   } else if (__isfdkind(fd, kFdFile)) {
-    rc = sys_read_nt(&g_fds.p[fd], (struct iovec[]){{buf, size}}, 1, offset);
+    rc = sys_read_nt(fd, (struct iovec[]){{buf, size}}, 1, offset);
   } else {
     rc = ebadf();
   }

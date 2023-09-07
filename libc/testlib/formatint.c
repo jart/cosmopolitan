@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 
 static size_t sbufi_;

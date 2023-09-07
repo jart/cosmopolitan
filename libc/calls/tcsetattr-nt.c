@@ -19,12 +19,15 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/termios.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/version.h"
@@ -32,6 +35,7 @@
 #include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
@@ -166,94 +170,92 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   bool32 ok;
   int64_t hInput, hOutput;
   uint32_t inmode, outmode;
+
   if (__isfdkind(fd, kFdConsole)) {
-    // program manually opened /dev/tty in O_RDWR mode for cmd.exe
     hInput = g_fds.p[fd].handle;
     hOutput = g_fds.p[fd].extra;
-  } else if (fd == 0 || fd == 1) {
-    // otherwise just assume cmd.exe console stdio
-    // there's no serial port support yet
-    hInput = g_fds.p[0].handle;
-    hOutput = g_fds.p[1].handle;
-    fd = 0;
+  } else if (fd == STDIN_FILENO ||   //
+             fd == STDOUT_FILENO ||  //
+             fd == STDERR_FILENO) {
+    hInput = g_fds.p[STDIN_FILENO].handle;
+    hOutput = g_fds.p[MAX(STDOUT_FILENO, fd)].handle;
   } else {
-    STRACE("tcsetattr(fd) must be 0, 1, or open'd /dev/tty");
     return enotty();
   }
-  if (GetConsoleMode(hInput, &inmode) && GetConsoleMode(hOutput, &outmode)) {
 
-    if (opt == TCSAFLUSH) {
-      FlushConsoleInputBuffer(hInput);
-    }
-    inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |
-                kNtEnableProcessedInput | kNtEnableVirtualTerminalInput);
-    inmode |= kNtEnableWindowInput;
-    __ttymagic = 0;
-    if (tio->c_lflag & ICANON) {
-      inmode |= kNtEnableLineInput | kNtEnableProcessedInput;
-    } else {
-      __ttymagic |= kFdTtyMunging;
-      if (tio->c_cc[VMIN] != 1) {
-        STRACE("tcsetattr c_cc[VMIN] must be 1 on Windows");
-        return einval();
-      }
-      if (IsAtLeastWindows10()) {
-        // - keys like f1, up, etc. get turned into \e ansi codes
-        // - totally destroys default console gui (e.g. up arrow)
-        inmode |= kNtEnableVirtualTerminalInput;
-      }
-    }
-    if (!(tio->c_iflag & ICRNL)) {
-      __ttymagic |= kFdTtyNoCr2Nl;
-    }
-    if (!(tio->c_lflag & ECHOCTL)) {
-      __ttymagic |= kFdTtyEchoRaw;
-    }
-    if (tio->c_lflag & ECHO) {
-      // "kNtEnableEchoInput can be used only if the
-      //  kNtEnableLineInput mode is also enabled." -MSDN
-      if (tio->c_lflag & ICANON) {
-        inmode |= kNtEnableEchoInput;
-      } else {
-        // If ECHO is enabled in raw mode, then read(0) needs to
-        // magically write(1) to simulate echoing. This normally
-        // visualizes control codes, e.g. \r → ^M unless ECHOCTL
-        // hasn't been specified.
-        __ttymagic |= kFdTtyEchoing;
-      }
-    }
-    if (!(tio->c_lflag & ISIG)) {
-      __ttymagic |= kFdTtyNoIsigs;
-    }
-    __vintr = tio->c_cc[VINTR];
-    __vquit = tio->c_cc[VQUIT];
-    if ((tio->c_lflag & ISIG) &&  //
-        tio->c_cc[VINTR] == CTRL('C')) {
-      // allows ctrl-c to be delivered asynchronously via win32
-      inmode |= kNtEnableProcessedInput;
-    }
-    ok = SetConsoleMode(hInput, inmode);
-    (void)ok;
-    NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hInput,
-            DescribeNtConsoleInFlags(inmode), ok);
+  if (!GetConsoleMode(hInput, &inmode) || !GetConsoleMode(hOutput, &outmode)) {
+    return enotty();
+  }
 
-    outmode &= ~kNtDisableNewlineAutoReturn;
-    outmode |= kNtEnableProcessedOutput;
-    if (!(tio->c_oflag & ONLCR)) {
-      outmode |= kNtDisableNewlineAutoReturn;
+  if (opt == TCSAFLUSH) {
+    tcflush(fd, TCIFLUSH);
+  }
+  inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |
+              kNtEnableProcessedInput | kNtEnableVirtualTerminalInput);
+  inmode |= kNtEnableWindowInput;
+  __ttymagic = 0;
+  if (tio->c_lflag & ICANON) {
+    inmode |= kNtEnableLineInput | kNtEnableProcessedInput;
+  } else {
+    __ttymagic |= kFdTtyMunging;
+    if (tio->c_cc[VMIN] != 1) {
+      STRACE("tcsetattr c_cc[VMIN] must be 1 on Windows");
+      return einval();
     }
     if (IsAtLeastWindows10()) {
-      outmode |= kNtEnableVirtualTerminalProcessing;
+      // - keys like f1, up, etc. get turned into \e ansi codes
+      // - totally destroys default console gui (e.g. up arrow)
+      inmode |= kNtEnableVirtualTerminalInput;
     }
-    ok = SetConsoleMode(hOutput, outmode);
-    (void)ok;
-    NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hOutput,
-            DescribeNtConsoleOutFlags(outmode), ok);
-
-    return 0;
-  } else {
-    return enotty();
   }
+  if (!(tio->c_iflag & ICRNL)) {
+    __ttymagic |= kFdTtyNoCr2Nl;
+  }
+  if (!(tio->c_lflag & ECHOCTL)) {
+    __ttymagic |= kFdTtyEchoRaw;
+  }
+  if (tio->c_lflag & ECHO) {
+    // "kNtEnableEchoInput can be used only if the
+    //  kNtEnableLineInput mode is also enabled." -MSDN
+    if (tio->c_lflag & ICANON) {
+      inmode |= kNtEnableEchoInput;
+    } else {
+      // If ECHO is enabled in raw mode, then read(0) needs to
+      // magically write(1) to simulate echoing. This normally
+      // visualizes control codes, e.g. \r → ^M unless ECHOCTL
+      // hasn't been specified.
+      __ttymagic |= kFdTtyEchoing;
+    }
+  }
+  if (!(tio->c_lflag & ISIG)) {
+    __ttymagic |= kFdTtyNoIsigs;
+  }
+  __vintr = tio->c_cc[VINTR];
+  __vquit = tio->c_cc[VQUIT];
+  if ((tio->c_lflag & ISIG) &&  //
+      tio->c_cc[VINTR] == CTRL('C')) {
+    // allows ctrl-c to be delivered asynchronously via win32
+    inmode |= kNtEnableProcessedInput;
+  }
+  ok = SetConsoleMode(hInput, inmode);
+  (void)ok;
+  NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hInput,
+          DescribeNtConsoleInFlags(inmode), ok);
+
+  outmode &= ~kNtDisableNewlineAutoReturn;
+  outmode |= kNtEnableProcessedOutput;
+  if (!(tio->c_oflag & ONLCR)) {
+    outmode |= kNtDisableNewlineAutoReturn;
+  }
+  if (IsAtLeastWindows10()) {
+    outmode |= kNtEnableVirtualTerminalProcessing;
+  }
+  ok = SetConsoleMode(hOutput, outmode);
+  (void)ok;
+  NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hOutput,
+          DescribeNtConsoleOutFlags(outmode), ok);
+
+  return 0;
 }
 
 __attribute__((__constructor__)) static void tcsetattr_nt_init(void) {

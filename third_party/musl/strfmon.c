@@ -26,7 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
