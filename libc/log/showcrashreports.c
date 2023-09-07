@@ -155,7 +155,6 @@ void ShowCrashReports(void) {
   InstallCrashHandler(SIGILL, __got_sigill, ef);    // illegal instruction
   InstallCrashHandler(SIGSEGV, __got_sigsegv, ef);  // bad memory access
   InstallCrashHandler(SIGTRAP, __got_sigtrap, ef);  // bad system call
-  InstallCrashHandler(SIGABRT, __got_sigabrt, ef);  // abort() called
   InstallCrashHandler(SIGBUS, __got_sigbus, ef);    // misalign, mmap i/o failed
   InstallCrashHandler(SIGURG, __got_sigurg, ef);    // placeholder
   GetSymbolTable();

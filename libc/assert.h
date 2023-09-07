@@ -14,7 +14,7 @@
 #define _ASSERT_H
 COSMOPOLITAN_C_START_
 
-void __assert_fail(const char *, const char *, int) relegated;
+void __assert_fail(const char *, const char *, int) wontreturn relegated;
 
 #ifdef NDEBUG
 #define assert(x) ((void)0)
@@ -28,7 +28,6 @@ void __assert_fail(const char *, const char *, int) relegated;
 #endif
 
 #ifdef _COSMO_SOURCE
-extern bool __assert_disable;
 #ifndef NDEBUG
 #define unassert(x) __assert_macro(x, #x)
 #define npassert(x) __assert_macro(x, #x)
@@ -36,7 +35,6 @@ extern bool __assert_disable;
   ({                                        \
     if (__builtin_expect(!(x), 0)) {        \
       __assert_fail(s, __FILE__, __LINE__); \
-      __builtin_trap();                     \
     }                                       \
     (void)0;                                \
   })

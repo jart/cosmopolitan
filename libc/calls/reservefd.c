@@ -39,10 +39,12 @@ static volatile size_t mapsize;
  * @asyncsignalsafe
  */
 int __ensurefds_unlocked(int fd) {
+  size_t n;
   if (fd < g_fds.n) return fd;
-  g_fds.n = fd + 1;
-  g_fds.e = _extend(g_fds.p, g_fds.n * sizeof(*g_fds.p), g_fds.e, MAP_PRIVATE,
+  n = fd + 1;
+  g_fds.e = _extend(g_fds.p, n * sizeof(*g_fds.p), g_fds.e, MAP_PRIVATE,
                     kMemtrackFdsStart + kMemtrackFdsSize);
+  g_fds.n = n;
   return fd;
 }
 

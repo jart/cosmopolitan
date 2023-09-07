@@ -41,12 +41,6 @@ int Worker(void *arg, int tid) {
   return 0;
 }
 
-TEST(pthread_barrier_init, test0_isInvalid) {
-  __assert_disable = true;
-  ASSERT_EQ(EINVAL, pthread_barrier_init(&barrier, 0, 0));
-  __assert_disable = false;
-}
-
 TEST(pthread_barrier_wait, test1) {
   struct spawn t;
   p = 0;

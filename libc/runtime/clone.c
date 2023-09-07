@@ -690,6 +690,10 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
     rc = ENOSYS;
   }
 
+  if (SupportsBsd() && rc == EPROCLIM) {
+    rc = EAGAIN;
+  }
+
   STRACE("clone(%t, %p, %'zu, %#x, %p, %p, %p, %p) → %s", func, stk, stksz,
          flags, arg, ptid, tls, ctid, DescribeErrno(rc));
 

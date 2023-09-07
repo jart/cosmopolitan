@@ -22,11 +22,13 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 /**
  * Releases memory of detached threads that have terminated.
  */
 void pthread_decimate_np(void) {
+  bool empty;
   struct Dll *e;
   struct PosixThread *pt;
   enum PosixThreadStatus status;
@@ -44,5 +46,9 @@ StartOver:
       goto StartOver;
     }
   }
+  empty = dll_is_empty(_pthread_list);
   pthread_spin_unlock(&_pthread_lock);
+  if (empty) {
+    dlmalloc_trim(0);
+  }
 }

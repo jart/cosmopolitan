@@ -164,11 +164,22 @@ static bool __sig_deliver(int sigops, int sig, int si_code, ucontext_t *ctx) {
  * Returns true if signal default action is to end process.
  */
 static textwindows bool __sig_is_fatal(int sig) {
-  if (sig == SIGCHLD || sig == SIGURG || sig == SIGWINCH) {
-    return false;
-  } else {
-    return true;
-  }
+  return !(sig == SIGURG ||   //
+           sig == SIGCHLD ||  //
+           sig == SIGWINCH);
+}
+
+/**
+ * Returns true if signal is so fatal it should dump core.
+ */
+static textwindows bool __sig_is_core(int sig) {
+  return sig == SIGSYS ||   //
+         sig == SIGBUS ||   //
+         sig == SIGSEGV ||  //
+         sig == SIGQUIT ||  //
+         sig == SIGTRAP ||  //
+         sig == SIGXCPU ||  //
+         sig == SIGXFSZ;
 }
 
 /**
@@ -186,11 +197,10 @@ textwindows bool __sig_handle(int sigops, int sig, int si_code,
         char *end, sigbuf[21], output[22];
         signame = strsignal_r(sig, sigbuf);
         STRACE("terminating due to uncaught %s", signame);
-        hStderr = GetStdHandle(kNtStdErrorHandle);
-        end = stpcpy(stpcpy(output, signame), "\n");
-        WriteFile(hStderr, output, end - output, 0, 0);
-        if (_weaken(__restore_console_win32)) {
-          _weaken(__restore_console_win32)();
+        if (__sig_is_core(sig)) {
+          hStderr = GetStdHandle(kNtStdErrorHandle);
+          end = stpcpy(stpcpy(output, signame), "\n");
+          WriteFile(hStderr, output, end - output, 0, 0);
         }
         ExitProcess(sig);
       }

@@ -26,9 +26,7 @@
  */
 void __assert_fail(const char *expr, const char *file, int line) {
   char ibuf[12];
-  if (!__assert_disable) {
-    FormatInt32(ibuf, line);
-    tinyprint(2, file, ":", ibuf, ": assert(", expr, ") failed\n", NULL);
-    abort();
-  }
+  FormatInt32(ibuf, line);
+  tinyprint(2, "\n", file, ":", ibuf, ": assert(", expr, ") failed\n", NULL);
+  abort();
 }
