@@ -38,7 +38,6 @@ void __enable_tls(void);
 void *__cxa_finalize(void *);
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated;
-void _jmpstack(void *, void *, ...) wontreturn;
 long _setstack(void *, void *, ...);
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);
 int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);

@@ -135,6 +135,7 @@ long double
 tanhl(long double x)
 {
 	long double hi,lo,s,x2,x4,z;
+	(void)x4;
 #if LDBL_MANT_DIG == 113
 	double dx2;
 #endif

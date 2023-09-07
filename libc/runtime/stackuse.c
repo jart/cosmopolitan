@@ -27,6 +27,10 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 
+// TODO(jart): Delete?
+
+STATIC_STACK_ALIGN(GetStackSize());
+
 static char stacklog[1024];
 
 dontasan size_t GetStackUsage(char *s, size_t n) {

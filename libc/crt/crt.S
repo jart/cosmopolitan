@@ -68,14 +68,12 @@ _start:
 	mov	%rsp,__oldstack(%rip)
 	mov	%rdx,__envp(%rip)
 
-//	setup backtraces
+//	setup stack
 	xor	%ebp,%ebp
+	and	$ape_stack_round,%rsp
 
-//	make process stack (8mb) follow thread stack (256kb) alignment
-	and	$-(256*1024),%rsp
-
-#if SupportsWindows()
-//	make win32 imps noop
+#if SupportsWindows() && !IsTiny()
+//	make win32 imps crash
 	.weak	ape_idata_iat
 	.weak	ape_idata_iatend
 	.weak	__oops_win32
@@ -122,9 +120,12 @@ _start:
 //	this is the first argument to cosmo() below
 	mov	x0,sp
 
-//	make process stack (8mb) conform to thread stack (256kb) alignment
-	mov	x1,sp
-	and	sp,x1,-(256*1024)
+//	setup the stack
+	mov	x29,#0
+	mov	x30,#0
+	ldr	x1,=ape_stack_round
+	and	x1,x0,x1
+	mov	sp,x1
 
 //	second arg shall be struct Syslib passed by ape-m1.c
 //	used to talk to apple's authoritarian libraries

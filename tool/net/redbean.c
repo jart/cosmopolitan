@@ -142,7 +142,7 @@
 
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-STATIC_STACK_SIZE(0x80000);
+STATIC_STACK_ALIGN(GetStackSize());
 
 __static_yoink("zipos");
 

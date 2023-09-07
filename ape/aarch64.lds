@@ -280,6 +280,8 @@ SECTIONS {
 
 ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000;
 ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : 8 * 1024 * 1024;
+ape_stack_align = DEFINED(ape_stack_align) ? ape_stack_align : 16;
+ape_stack_round = -ape_stack_align;
 
 _tls_size = _tbss_end - _tdata_start;
 _tdata_size = _tdata_end - _tdata_start;

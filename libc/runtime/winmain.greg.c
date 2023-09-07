@@ -77,7 +77,10 @@ __msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 // clang-format on
 
-extern void cosmo(int, char **, char **, long (*)[2]) wontreturn;
+void cosmo(int, char **, char **, long (*)[2]) wontreturn;
+void __switch_stacks(int, char **, char **, long (*)[2],
+                     void (*)(int, char **, char **, long (*)[2]),
+                     intptr_t) wontreturn;
 
 static const signed char kNtStdio[3] = {
     (signed char)kNtStdInputHandle,
@@ -211,8 +214,8 @@ __msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
   __envp = &wa->envp[0];
 
   // handover control to cosmopolitan runtime
-  _jmpstack((char *)(stackaddr + (stacksize - sizeof(struct WinArgs))), cosmo,
-            count, wa->argv, wa->envp, wa->auxv);
+  __switch_stacks(count, wa->argv, wa->envp, wa->auxv, cosmo,
+                  stackaddr + (stacksize - sizeof(struct WinArgs)));
 }
 
 __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,

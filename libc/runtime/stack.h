@@ -18,46 +18,18 @@
 #define GetGuardSize() 16384
 
 /**
- * Tunes APE stack maximum size.
+ * Align APE main thread stack at startup.
  *
- * The bottom-most page will be protected to ensure your stack does not
- * magically grow beyond this value. It's possible to detect stack
- * overflows, by calling `ShowCrashReports()`. Your stack size must be a
- * power of two; the linker will check this.
+ * You need this in your main program module:
  *
- * If you want to know how much stack your programs needs, then
+ *     STATIC_STACK_ALIGN(GetStackSize());
  *
- *     __static_yoink("stack_usage_logging");
- *
- * will install an atexit() handler that appends to `o/$MODE/stack.log`
- *
- * @see libc/sysv/systemfive.S
- * @see ape/ape.lds
+ * If you want to use GetStackAddr() and HaveStackMemory() safely on
+ * your main thread in your process. It causes crt.S to waste a tiny
+ * amount of memory to ensure those macros go extremely fast.
  */
-#define STATIC_STACK_SIZE(BYTES) \
-  _STACK_SYMBOL("ape_stack_memsz", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
-
-/**
- * Tunes APE stack virtual address.
- *
- * This value must be aligned according to your stack size, and that's
- * checked by your linker script. This defaults to `0x700000000000` so
- *
- * 1. It's easy to see how close you are to the bottom
- * 2. The linker script error is unlikely to happen
- *
- * This macro will be respected, with two exceptions
- *
- * 1. In MODE=tiny the operating system provided stack is used instead
- * 2. Windows 7 doesn't support 64-bit addresses, so we'll instead use
- *    `0x10000000 - GetStackSize()` as the stack address
- *
- * @see libc/sysv/systemfive.S
- * @see libc/nt/winmain.greg.c
- * @see ape/ape.lds
- */
-#define STATIC_STACK_ADDR(ADDR) \
-  _STACK_SYMBOL("ape_stack_vaddr", _STACK_STRINGIFY(ADDR))
+#define STATIC_STACK_ALIGN(BYTES) \
+  _STACK_SYMBOL("ape_stack_align", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
 
 /**
  * Makes program stack executable if declared, e.g.
@@ -77,9 +49,9 @@
 #define STATIC_EXEC_STACK() _STACK_SYMBOL("ape_stack_pf", "7")
 
 #define _STACK_STRINGIFY(ADDR) #ADDR
-#define _STACK_SYMBOL(NAME, VALUE)   \
-  asm(".equ\t" NAME "," VALUE "\n\t" \
-      ".globl\t" NAME)
+#define _STACK_SYMBOL(NAME, VALUE)       \
+  __asm__(".equ\t" NAME "," VALUE "\n\t" \
+          ".globl\t" NAME)
 
 #ifdef __SANITIZE_ADDRESS__
 #define _STACK_EXTRA "*2"
@@ -95,29 +67,71 @@ extern char ape_stack_memsz[] __attribute__((__weak__));
 extern char ape_stack_align[] __attribute__((__weak__));
 
 /**
- * Returns address of bottom of stack.
+ * Returns address of bottom of current stack.
  *
- * This takes into consideration threads and sigaltstack. This is
- * implemented as a fast pure expression, since we're able to make the
- * assumption that stack sizes are two powers and aligned. This is
- * thanks to (1) the linker script checks the statically chosen sizes,
- * and (2) the mmap() address picker will choose aligned addresses when
- * the provided size is a two power.
+ * This always works on threads. If you want it to work on the main
+ * process too, then you'll need STATIC_STACK_ALIGN(GetStackSize())
+ * which will burn O(256kb) of memory to ensure thread invariants.
  */
 #define GetStackAddr() \
   (((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize())
 
 #define GetStaticStackSize() ((uintptr_t)ape_stack_memsz)
 
+/**
+ * Returns true if at least `n` bytes of stack are available.
+ *
+ * This always works on threads. If you want it to work on the main
+ * process too, then you'll need STATIC_STACK_ALIGN(GetStackSize())
+ * which will burn O(256kb) of memory to ensure thread invariants,
+ * which make this check exceedingly fast.
+ */
+#define HaveStackMemory(n)                 \
+  ((intptr_t)__builtin_frame_address(0) >= \
+   GetStackAddr() + GetGuardSize() + (n))
+
+/**
+ * Extends stack memory by poking large allocations.
+ *
+ * This can be particularly useful depending on how your system
+ * implements guard pages. For example, Windows can make stacks
+ * that aren't fully committed, in which case there's only 4096
+ * bytes of grows-down guard pages made by portable executable.
+ * If you alloca() more memory than that, you should call this,
+ * since it'll not only ensure stack overflows are detected, it
+ * will also trigger the stack to grow down safely.
+ */
+__funline void CheckLargeStackAllocation(void *p, ssize_t n) {
+  for (; n > 0; n -= 4096) {
+    ((char *)p)[n - 1] = 0;
+  }
+}
+
+void *NewCosmoStack(void) vallocesque;
+int FreeCosmoStack(void *) libcesque;
+
+/**
+ * Tunes stack size of main thread on Windows.
+ *
+ * On UNIX systems use `RLIMIT_STACK` to tune the main thread size.
+ */
+#define STATIC_STACK_SIZE(BYTES) \
+  _STACK_SYMBOL("ape_stack_memsz", _STACK_STRINGIFY(BYTES) _STACK_EXTRA)
+
+/**
+ * Tunes main thread stack address on Windows.
+ */
+#define STATIC_STACK_ADDR(ADDR) \
+  _STACK_SYMBOL("ape_stack_vaddr", _STACK_STRINGIFY(ADDR))
+
 #ifdef __x86_64__
 /**
- * Returns preferred bottom address of stack.
+ * Returns preferred bottom address of main thread stack.
  *
- * This is the stakc address of the main process. The only time that
- * isn't guaranteed to be the case is in MODE=tiny, since it doesn't
- * link the code for stack creation at startup. This generally isn't
- * problematic, since MODE=tiny doesn't use any of the runtime codes
- * which want the stack to be cheaply knowable, e.g. ftrace, kprintf
+ * On UNIX systems we favor the system provided stack, so this only
+ * really applies to Windows. It's configurable at link time. It is
+ * needed because polyfilling fork requires that we know, precicely
+ * where the stack memory begins and ends.
  */
 #define GetStaticStackAddr(ADDEND)          \
   ({                                        \
@@ -131,25 +145,6 @@ extern char ape_stack_align[] __attribute__((__weak__));
 #else
 #define GetStaticStackAddr(ADDEND) (GetStackAddr() + ADDEND)
 #endif
-
-/**
- * Returns true if at least `n` bytes of stack are available.
- */
-#define HaveStackMemory(n)                 \
-  ((intptr_t)__builtin_frame_address(0) >= \
-   GetStackAddr() + GetGuardSize() + (n))
-
-/**
- * Extends stack memory by poking large allocations.
- */
-forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
-  for (; n > 0; n -= 4096) {
-    ((char *)p)[n - 1] = 0;
-  }
-}
-
-void *NewCosmoStack(void) vallocesque;
-int FreeCosmoStack(void *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */

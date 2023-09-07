@@ -108,6 +108,7 @@ long double
 sinhl(long double x)
 {
 	long double hi,lo,x2,x4;
+	(void)x4;
 #if LDBL_MANT_DIG == 113
 	double dx2;
 #endif
