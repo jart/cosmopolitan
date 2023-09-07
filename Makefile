@@ -136,7 +136,8 @@ include third_party/puff/puff.mk		# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
 include libc/fmt/fmt.mk				# │
-include libc/vga/vga.mk				#─┘
+include libc/vga/vga.mk				# │
+include libc/irq/irq.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include third_party/nsync/nsync.mk		# │
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME

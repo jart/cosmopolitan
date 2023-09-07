@@ -43,6 +43,8 @@ struct EfiArgs {
 
 static EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
 static EFI_GUID kEfiGraphicsOutputProtocol = GRAPHICS_OUTPUT_PROTOCOL;
+static const EFI_GUID kEfiAcpi20TableGuid = ACPI_20_TABLE_GUID;
+static const EFI_GUID kEfiAcpi10TableGuid = ACPI_10_TABLE_GUID;
 
 extern const char vga_console[];
 extern void _EfiPostboot(struct mman *, uint64_t *, uintptr_t, char **);
@@ -115,6 +117,25 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
   mm->pc_video_curs_info.y = mm->pc_video_curs_info.x = 0;
   SystemTable->BootServices->SetMem((void *)GraphMode->FrameBufferBase,
                                     GraphMode->FrameBufferSize, 0);
+}
+
+static void EfiInitAcpi(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
+  void *rsdp1 = NULL, *rsdp2 = NULL;
+  uintptr_t n = SystemTable->NumberOfTableEntries, i;
+  EFI_CONFIGURATION_TABLE *tab;
+  for (i = 0, tab = SystemTable->ConfigurationTable; i < n; ++i, ++tab) {
+    EFI_GUID *guid = &tab->VendorGuid;
+    if (memcmp(guid, &kEfiAcpi20TableGuid, sizeof(EFI_GUID)) == 0) {
+      rsdp2 = tab->VendorTable;
+    } else if (memcmp(guid, &kEfiAcpi20TableGuid, sizeof(EFI_GUID)) == 0) {
+      rsdp1 = tab->VendorTable;
+    }
+  }
+  if (rsdp2) {
+    mm->pc_acpi_rsdp = (uintptr_t)rsdp2;
+  } else {
+    mm->pc_acpi_rsdp = (uintptr_t)rsdp1;
+  }
 }
 
 /**
@@ -202,6 +223,11 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
    * type we support.
    */
   if (_weaken(vga_console)) EfiInitVga(mm, SystemTable);
+
+  /*
+   * Gets a pointer to the ACPI RSDP.
+   */
+  EfiInitAcpi(mm, SystemTable);
 
   /*
    * Asks UEFI which parts of our RAM we're allowed to use.
