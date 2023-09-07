@@ -41,6 +41,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
 	libc/sysv/sysret.c				\
+	libc/sysv/sysv.c				\
 	libc/sysv/errno.c				\
 	libc/sysv/errfun.S				\
 	libc/sysv/errfun2.c				\
@@ -73,12 +74,29 @@ $(LIBC_SYSV_A).pkg:					\
 		$(LIBC_SYSV_A_OBJS)			\
 		$(foreach x,$(LIBC_SYSV_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/sysv/sysv.o				\
 o/$(MODE)/libc/sysv/errno.o				\
 o/$(MODE)/libc/sysv/sysret.o				\
 o/$(MODE)/libc/sysv/errfun2.o				\
 o/$(MODE)/libc/sysv/sysret.o: private			\
 		CFLAGS +=				\
 			$(NO_MAGIC)
+
+ifeq ($(ARCH),aarch64)
+o/$(MODE)/libc/sysv/sysv.o: private			\
+		CFLAGS +=				\
+			-ffixed-x0			\
+			-ffixed-x1			\
+			-ffixed-x2			\
+			-ffixed-x3			\
+			-ffixed-x4			\
+			-ffixed-x5			\
+			-ffixed-x8			\
+			-ffixed-x16			\
+			-fomit-frame-pointer		\
+			-foptimize-sibling-calls	\
+			-Os
+endif
 
 #───────────────────────────────────────────────────────────────────────────────
 

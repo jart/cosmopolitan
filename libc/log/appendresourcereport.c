@@ -81,15 +81,15 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
     ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
     if (ru->ru_idrss) {
       AppendMetric(st, "needed ", lroundl(ru->ru_idrss / ticks),
-                   " memory on average");
-    }
-    if (ru->ru_isrss) {
-      AppendMetric(st, "needed ", lroundl(ru->ru_isrss / ticks),
-                   " stack on average");
+                   "kb private on average");
     }
     if (ru->ru_ixrss) {
       AppendMetric(st, "needed ", lroundl(ru->ru_ixrss / ticks),
-                   " shared on average");
+                   "kb shared on average");
+    }
+    if (ru->ru_isrss) {
+      AppendMetric(st, "needed ", lroundl(ru->ru_isrss / ticks),
+                   "kb stack on average");
     }
   }
   if (ru->ru_minflt || ru->ru_majflt) {

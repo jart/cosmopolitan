@@ -121,6 +121,7 @@ _start:
 	mov	x0,sp
 
 //	setup the stack
+	mov	x28,#0
 	mov	x29,#0
 	mov	x30,#0
 	ldr	x1,=ape_stack_round

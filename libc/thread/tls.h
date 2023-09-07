@@ -44,9 +44,15 @@ extern unsigned __tls_index;
 #ifdef __x86_64__
 extern bool __tls_enabled;
 #define __tls_enabled_set(x) __tls_enabled = x
-#else
-#define __tls_enabled        true
+#elif defined(__aarch64__)
+#define __tls_enabled                        \
+  ({                                         \
+    register struct CosmoTib *_t asm("x28"); \
+    !!_t;                                    \
+  })
 #define __tls_enabled_set(x) (void)0
+#else
+#error "unsupported architecture"
 #endif
 
 void __require_tls(void);

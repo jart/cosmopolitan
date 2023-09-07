@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaltstack.h"
@@ -28,6 +29,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -58,6 +60,7 @@ static unsigned long roundup2pow(unsigned long x) {
 }
 
 void _pthread_free(struct PosixThread *pt) {
+  static atomic_uint freed;
   if (pt->flags & PT_STATIC) return;
   free(pt->tls);
   if ((pt->flags & PT_OWNSTACK) &&  //
@@ -69,6 +72,9 @@ void _pthread_free(struct PosixThread *pt) {
     free(pt->altstack);
   }
   free(pt);
+  if (popcnt(atomic_fetch_add_explicit(&freed, 1, memory_order_acq_rel)) == 1) {
+    malloc_trim(0);
+  }
 }
 
 void pthread_kill_siblings_np(void) {

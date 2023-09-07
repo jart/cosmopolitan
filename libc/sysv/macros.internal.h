@@ -35,62 +35,12 @@
   .endif
 	.endfn	\name,\kw1,\kw2
 #elif defined(__aarch64__)
-  .ifc \arm_linux,4095
-    .ifc \arm_xnu,4095
-//	return enosys();
 	.ftrace1
 \name:	.ftrace2
-	b	enosys
+	mov	x8,#\arm_linux
+	mov	x16,#\arm_xnu
+	b	systemfive
 	.endfn	\name,\kw1,\kw2
-  .else
-//	return IsXnu() ? syscall(x16, ...) : syscall(x8, ...);
-	.ftrace1
-\name:	.ftrace2
-	adrp	x9,__hostos
-	ldr	w9,[x9,#:lo12:__hostos]
-	tbz	x9,#3,1f			// !IsXnu()
-	mov	x16,#\arm_xnu			// apple ordinal
-	mov	x9,#0				// clear carry flag
-	adds	x9,x9,#0			// clear carry flag
-	svc	#0				// issue system call
-	bcs	1f
-	b	_sysret
-1:	neg	x0,x0
-	b	_sysret
-	.hidden	_sysret
-	.endfn	\name,\kw1,\kw2
-    .endif
-  .else
-    .ifc \arm_xnu,4095
-//	return IsLinux() ? syscall(x8, ...) : enosys();
-	.ftrace1
-\name:	.ftrace2
-	adrp	x9,__hostos
-	ldr	w9,[x9,#:lo12:__hostos]
-	tbz	x9,#0,1f			// !IsLinux()
-	mov	x8,#\arm_linux			// systemd ordinal
-	svc	#0				// issue system call
-	mov	x1,#\arm_linux
-	b	_sysret
-	.hidden	_sysret
-1:	b	enosys
-	.endfn	\name,\kw1,\kw2
-  .else
-	.ftrace1
-\name:	.ftrace2
-	mov	x16,#\arm_xnu			// apple ordinal
-	mov	x8,#\arm_linux			// systemd ordinal
-	mov	x9,#0				// clear carry flag
-	adds	x9,x9,#0			// clear carry flag
-	svc	#0				// issue system call
-	bcs	1f
-	b	_sysret
-1:	neg	x0,x0
-	b	_sysret
-	.hidden	_sysret
-	.endfn	\name,\kw1,\kw2
-    .endif
-  .endif
 #else
 #error "architecture unsupported"
 #endif

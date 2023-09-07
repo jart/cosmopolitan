@@ -34,30 +34,30 @@ dir=libc/sysv/calls
 #	                       9.1+│  │  │ │ │  │
 #	Symbol                    ┌┴┐┌┴┐┌┴┐│┬┴┐┌┴┐      Arm64	Directives & Commentary
 scall	sys_exit		0x00100100120010e7	0x05e	globl hidden # a.k.a. exit_group
-scall	sys_read		0x8038038032803800	0x03f	globl hidden
-scall	sys_write		0x8048048042804801	0x040	globl hidden
+scall	sys_read		0x8038038032803800	0x83f	globl hidden
+scall	sys_write		0x8048048042804801	0x840	globl hidden
 scall	sys_close		0x0060060062006003	0x039	globl hidden
 scall	__sys_stat		0x1b7026fff2152004	0x04f	globl hidden # FreeBSD 11→12 fumble; use sys_fstatat(); blocked on Android
 scall	__sys_fstat		0x1b80352272153005	0x050	globl hidden # needs __stat2linux()
 scall	__sys_lstat		0x1b90280282154006	0xfff	globl hidden # needs __stat2linux(); blocked on Android
 scall	__sys_poll		0x8d18fc8d128e6807	0xfff	globl hidden
-scall	sys_ppoll		0xfff86da21ffff90f	0x049	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
+scall	sys_ppoll		0xfff86da21ffff90f	0x849	globl hidden # consider INTON/INTOFF tutorial in examples/unbourne.c
 scall	sys_lseek		0x0c70a61de20c7008	0x03e	globl hidden # netbsd:evilpad, OpenBSD 7.3+
 scall	__sys_mmap		0x0c50311dd20c5009	0x0de	globl hidden # netbsd:pad, OpenBSD 7.3+
-scall	sys_msync		0x915900841284181a	0x0e3	globl hidden
+scall	sys_msync		0x915900841284181a	0x8e3	globl hidden
 scall	sys_mprotect		0x04a04a04a204a00a	0x0e2	globl hidden
 scall	__sys_munmap		0x049049049204900b	0x0d7	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	0x086	globl hidden # rt_sigaction on Lunix; __sigaction_sigtramp() on NetBSD
 scall	__sys_sigprocmask	0x125030154214900e	0x087	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	0x01d	globl hidden
-scall	sys_ioctl_cp		0x8368368362836810	0x01d	globl hidden # intended for TCSBRK
-scall	sys_pread		0x8ad8a99db2899811	0x043	globl hidden # a.k.a. pread64; netbsd:pad, OpenBSD 7.3+
-scall	sys_pwrite		0x8ae8aa9dc289a812	0x044	globl hidden # a.k.a. pwrite64; netbsd:pad, OpenBSD 7.3+
-scall	sys_readv		0x8788788782878813	0x041	globl hidden
-scall	sys_writev		0x8798798792879814	0x042	globl hidden
+scall	sys_ioctl_cp		0x8368368362836810	0x81d	globl hidden # intended for TCSBRK
+scall	sys_pread		0x8ad8a99db2899811	0x843	globl hidden # a.k.a. pread64; netbsd:pad, OpenBSD 7.3+
+scall	sys_pwrite		0x8ae8aa9dc289a812	0x844	globl hidden # a.k.a. pwrite64; netbsd:pad, OpenBSD 7.3+
+scall	sys_readv		0x8788788782878813	0x841	globl hidden
+scall	sys_writev		0x8798798792879814	0x842	globl hidden
 scall	__sys_pipe		0x02a10721e202a016	0x03b	globl hidden # NOTE: pipe2() on FreeBSD and Linux Aarch64; XNU is pipe(void)→eax:edx
 scall	sys_select		0x9a184785d285d817	0xfff	globl hidden
-scall	sys_pselect		0x9b486ea0a298a90e	0x048	globl hidden # pselect6() on gnu/systemd
+scall	sys_pselect		0x9b486ea0a298a90e	0x848	globl hidden # pselect6() on gnu/systemd
 scall	sys_sched_yield		0x15e12a14bf25d018	0x07c	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
 scall	__sys_mremap		0x19bffffffffff019	0x0d8	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	0x0e8	globl hidden
@@ -68,20 +68,20 @@ scall	sys_shmctl		0x1bb128200210701f	0x0c3	globl # no wrapper
 scall	sys_dup			0x0290290292029020	0x017	globl hidden
 scall	sys_dup2		0x05a05a05a205a021	0x018	globl hidden # dup3() on linux aarch64 (doesn't behave same if oldfd==newfd)
 scall	sys_pause		0xfffffffffffff022	0xfff	globl hidden
-scall	sys_nanosleep		0x9ae85b8f0ffff823	0x065	globl hidden
-scall	__sys_clock_nanosleep	0x9ddfff8f4ffff8e6	0x073	globl hidden
+scall	sys_nanosleep		0x9ae85b8f0ffff823	0x865	globl hidden
+scall	__sys_clock_nanosleep	0x9ddfff8f4ffff8e6	0x873	globl hidden
 scall	sys_getitimer		0x1aa0460562056024	0x066	globl hidden
 scall	sys_setitimer		0x1a90450532053026	0x067	globl hidden
 scall	sys_alarm		0xfffffffffffff025	0xfff	globl hidden
 scall	sys_getpid		0x0140140142014027	0x0ac	globl hidden # netbsd returns ppid in edx
 scall	sys_sendfile		0xffffff1892151028	0x047	globl hidden # Linux vs. XNU/BSD ABIs very different
 scall	__sys_socket		0x18a0610612061029	0x0c6	globl hidden
-scall	__sys_connect		0x862862862286282a	0x0cb	globl hidden
-scall	__sys_accept		0x81e81ea1d281e82b	0x0ca	globl hidden # accept4 on freebsd
-scall	sys_sendto		0x885885885288582c	0x0ce	globl hidden
-scall	sys_recvfrom		0x81d81d81d281d82d	0x0cf	globl hidden
-scall	sys_sendmsg		0x81c81c81c281c82e	0x0d3	globl hidden
-scall	sys_recvmsg		0x81b81b81b281b82f	0x0d4	globl hidden
+scall	__sys_connect		0x862862862286282a	0x8cb	globl hidden
+scall	__sys_accept		0x81e81ea1d281e82b	0x8ca	globl hidden # accept4 on freebsd
+scall	sys_sendto		0x885885885288582c	0x8ce	globl hidden
+scall	sys_recvfrom		0x81d81d81d281d82d	0x8cf	globl hidden
+scall	sys_sendmsg		0x81c81c81c281c82e	0x8d3	globl hidden
+scall	sys_recvmsg		0x81b81b81b281b82f	0x8d4	globl hidden
 scall	sys_shutdown		0x0860860862086030	0x0d2	globl hidden
 scall	__sys_bind		0x0680680682068031	0x0c8	globl hidden
 scall	sys_listen		0x06a06a06a206a032	0x0c9	globl hidden
@@ -94,14 +94,14 @@ scall	__sys_fork		0x0020020022002039	0xfff	globl hidden # xnu needs eax&=~-edx b
 #scall	vfork			0x042042042204203a	0xfff	globl        # this syscall is from the moon so we implement it by hand in libc/runtime/vfork.S; probably removed from XNU in 12.5
 scall	sys_posix_spawn		0x1daffffff20f4fff	0xfff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	0x0dd	globl hidden
-scall	__sys_wait4		0x9c180b807280783d	0x104	globl hidden
+scall	__sys_wait4		0x9c180b807280783d	0x904	globl hidden
 scall	sys_kill		0x02507a025202503e	0x081	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0x092fff092fffffff	0xfff	globl hidden
 scall	sys_clone		0x11fffffffffff038	0x0dc	globl hidden
 scall	sys_tkill		0x13e0771b121480c8	0x082	globl hidden # thr_kill() on FreeBSD; _lwp_kill() on NetBSD; thrkill() on OpenBSD where arg3 should be 0 or tcb; __pthread_kill() on XNU
 scall	sys_tgkill		0xffffff1e1ffff0ea	0x083	globl hidden # thr_kill2() on FreeBSD
 scall	sys_futex		0x0a60531c6ffff0ca	0x062	globl hidden # raises SIGSYS on NetBSD; _umtx_op() on FreeBSD
-scall	sys_futex_cp		0x8a68539c6ffff8ca	0x062	globl hidden # intended for futex wait ops
+scall	sys_futex_cp		0x8a68539c6ffff8ca	0x862	globl hidden # intended for futex wait ops
 scall	sys_set_robust_list	0x0a7ffffffffff111	0x063	globl # no wrapper
 scall	sys_get_robust_list	0x0a8ffffffffff112	0x064	globl # no wrapper
 scall	sys_uname		0x0a4fff0a4ffff03f	0x0a0	globl hidden
@@ -110,16 +110,16 @@ scall	sys_semop		0x0de1220de2100041	0x0c1	globl # no wrapper
 scall	sys_semctl		0xfff1271fe20fe042	0x0bf	globl # no wrapper
 scall	sys_shmdt		0x0e60e60e62108043	0x0c5	globl # no wrapper
 scall	sys_msgget		0x0e10e10e12103044	0x0ba	globl # no wrapper
-scall	sys_msgsnd		0x8e28e28e22904845	0x0bd	globl # no wrapper
-scall	sys_msgrcv		0x8e38e38e32905846	0x0bc	globl # no wrapper
+scall	sys_msgsnd		0x8e28e28e22904845	0x8bd	globl # no wrapper
+scall	sys_msgrcv		0x8e38e38e32905846	0x8bc	globl # no wrapper
 scall	sys_msgctl		0x1bc1291ff2102047	0x0bb	globl # no wrapper
 scall	__sys_fcntl		0x05c05c05c205c048	0x019	globl hidden
-scall	__sys_fcntl_cp		0x85c85c85c285c848	0x019	globl hidden # intended for F_SETLKW and F_OFD_SETLKW
-scall	sys_flock		0x8838838832883849	0x020	globl hidden
-scall	sys_fsync		0x85f85f85f285f84a	0x052	globl hidden
-scall	sys_fdatasync		0x8f185fa2628bb84b	0x053	globl hidden # fsync() on openbsd
-scall	sys_truncate		0x8c88a79df28c884c	0x02d	globl hidden # netbsd:pad, OpenBSD 7.3+
-scall	sys_ftruncate		0x8c98a89e028c984d	0x02e	globl hidden # netbsd:pad, OpenBSD 7.3+
+scall	__sys_fcntl_cp		0x85c85c85c285c848	0x819	globl hidden # intended for F_SETLKW and F_OFD_SETLKW
+scall	sys_flock		0x8838838832883849	0x820	globl hidden
+scall	sys_fsync		0x85f85f85f285f84a	0x852	globl hidden
+scall	sys_fdatasync		0x8f185fa2628bb84b	0x853	globl hidden # fsync() on openbsd
+scall	sys_truncate		0x8c88a79df28c884c	0x82d	globl hidden # netbsd:pad, OpenBSD 7.3+
+scall	sys_ftruncate		0x8c98a89e028c984d	0x82e	globl hidden # netbsd:pad, OpenBSD 7.3+
 scall	sys_getcwd		0x128130146ffff04f	0x011	globl hidden
 scall	sys_chdir		0x00c00c00c200c050	0x031	globl hidden
 scall	sys_fchdir		0x00d00d00d200d051	0x032	globl hidden
@@ -154,14 +154,14 @@ scall	sys_setresgid		0xfff11c138ffff077	0x095	globl hidden # polyfilled for xnu
 scall	sys_getresuid		0xfff119168ffff076	0x094	globl hidden # semantics aren't well-defined
 scall	sys_getresgid		0xfff11b169ffff078	0x096	globl hidden # semantics aren't well-defined
 scall	sys_sigpending		0x124034157203407f	0x088	globl hidden # a.k.a. rt_sigpending on linux
-scall	sys_sigsuspend		0x92686f955286f882	0x085	globl hidden # a.k.a. rt_sigsuspend on Linux; openbsd:byvalue, sigsuspend_nocancel on XNU
+scall	sys_sigsuspend		0x92686f955286f882	0x885	globl hidden # a.k.a. rt_sigsuspend on Linux; openbsd:byvalue, sigsuspend_nocancel on XNU
 scall	sys_sigaltstack		0x1191200352035083	0x084	globl hidden
 scall	sys_mknod		0x1c200e00e200e085	0xfff	globl hidden
 scall	sys_mknodat		0x1cc14022fffff103	0x021	globl # no wrapper; FreeBSD 12+
 scall	sys_mkfifo		0x0840840842084fff	0xfff	globl hidden
 scall	sys_mkfifoat		0x1cb13f1f1fffffff	0xfff	globl # no wrapper
-scall	sys_statfs		0x89d83fa2b2959889	0x02b	globl hidden
-scall	sys_fstatfs		0x89e840a2c295a88a	0x02c	globl hidden
+scall	sys_statfs		0x89d83fa2b2959889	0x82b	globl hidden
+scall	sys_fstatfs		0x89e840a2c295a88a	0x82c	globl hidden
 scall	sys_getpriority		0x064064064206408c	0x08d	globl hidden
 scall	sys_setpriority		0x060060060206008d	0x08c	globl hidden # modern nice()
 scall	sys_mlock		0x0cb0cb0cb20cb095	0x0e4	globl # no wrapper
@@ -182,7 +182,7 @@ scall	sys_setfsuid		0xfffffffffffff07a	0x097	globl hidden
 scall	sys_setfsgid		0xfffffffffffff07b	0x098	globl hidden
 scall	sys_capget		0xfffffffffffff07d	0x05a	globl # no wrapper
 scall	sys_capset		0xfffffffffffff07e	0x05b	globl # no wrapper
-scall	sys_sigtimedwait	0x9affff959ffff880	0x089	globl hidden
+scall	sys_sigtimedwait	0x9affff959ffff880	0x889	globl hidden
 scall	sys_sigqueue		0xffffff1c8fffffff	0xfff	globl hidden
 scall	sys_sigqueueinfo	0x0f5ffffffffff081	0x08a	globl hidden # a.k.a. rt_sigqueueinfo on linux
 scall	sys_personality		0xfffffffffffff087	0x05c	globl # no wrapper
@@ -272,7 +272,7 @@ scall	sys_ioprio_get		0xfffffffffffff0fc	0x01f	globl
 scall	sys_inotify_init	0xfffffffffffff0fd	0xfff	globl # no wrapper
 scall	sys_inotify_add_watch	0xfffffffffffff0fe	0xfff	globl # no wrapper
 scall	sys_inotify_rm_watch	0xfffffffffffff0ff	0xfff	globl # no wrapper
-scall	__sys_openat		0x9d49419f329cf901	0x038	globl hidden # Linux 2.6.16+ (c. 2007)
+scall	__sys_openat		0x9d49419f329cf901	0x838	globl hidden # Linux 2.6.16+ (c. 2007)
 scall	__sys_openat_nc		0x1d41411f321d0101	0x038	globl hidden # openat_nocancel() on xnu
 scall	sys_mkdirat		0x1cd13e1f021db102	0x022	globl hidden
 scall	sys_fchownat		0x1d013b1eb21d4104	0x036	globl hidden # @asyncsignalsafe
@@ -296,15 +296,15 @@ scall	sys_vmsplice		0xfffffffffffff116	0x04b	globl hidden
 scall	sys_migrate_pages	0xfffffffffffff100	0x0ee	globl        # no wrapper; numa numa yay
 scall	sys_move_pages		0xfffffffffffff117	0x0ef	globl        # no wrapper; NOTE: We view Red Hat versions as "epochs" for all distros.
 #──────────────────────RHEL 5.0 LIMIT────────────────────────────────        # ←┬─ last distro with gplv2 licensed compiler c. 2007
-scall	sys_preadv		0x9218ab9212a1c927	0x045	globl hidden #  ├─ last distro with system v shell script init
-scall	sys_pwritev		0x9228ac9222a1d928	0x046	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
+scall	sys_preadv		0x9218ab9212a1c927	0x845	globl hidden #  ├─ last distro with system v shell script init
+scall	sys_pwritev		0x9228ac9222a1d928	0x846	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	0x058	globl hidden #  ├─ python modules need this due to pep513
 scall	sys_fallocate		0xfffffffffffff91d	0x02f	globl        #  ├─ end of life 2020-11-30 (extended)
 scall	sys_posix_fallocate	0x9dffffa12fffffff	0xfff	globl hidden #  └─ cosmopolitan supports rhel5+
-scall	__sys_accept4		0xfff85da1dffff920	0x0f2	globl hidden # Linux 2.6.28+
+scall	__sys_accept4		0xfff85da1dffff920	0x8f2	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	0x018	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	0x03b	globl hidden # Linux 2.6.27+
-scall	sys_epoll_pwait		0xfffffffffffff919	0x016	globl hidden
+scall	sys_epoll_pwait		0xfffffffffffff919	0x816	globl hidden
 scall	sys_epoll_create1	0xfffffffffffff123	0x014	globl hidden
 scall	sys_perf_event_open	0xfffffffffffff12a	0x0f1	globl # no wrapper
 scall	sys_inotify_init1	0xfffffffffffff126	0x01a	globl # no wrapper
@@ -345,7 +345,7 @@ scall	sys_execveat		0xfffffffffffff142	0x119	globl # no wrapper
 scall	sys_userfaultfd		0xfffffffffffff143	0x11a	globl # no wrapper; Linux 4.3+ (c. 2015)
 scall	sys_membarrier		0xfffffffffffff144	0x11b	globl # no wrapper; Linux 4.3+ (c. 2015)
 scall	sys_mlock2		0xfffffffffffff145	0x11c	globl # no wrapper; Linux 4.5+ (c. 2016)
-scall	sys_copy_file_range	0xffffffa39ffff946	0x11d	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
+scall	sys_copy_file_range	0xffffffa39ffff946	0x91d	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
 scall	sys_preadv2		0xfffffffffffff147	0x11e	globl # no wrapper
 scall	sys_pwritev2		0xfffffffffffff148	0x11f	globl # no wrapper
 scall	sys_pkey_mprotect	0xfffffffffffff149	0x120	globl # no wrapper

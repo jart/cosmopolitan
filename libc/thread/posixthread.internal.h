@@ -97,8 +97,8 @@ void _pthread_free(struct PosixThread *);
 void _pthread_onfork_prepare(void);
 void _pthread_onfork_parent(void);
 void _pthread_onfork_child(void);
+long _pthread_cancel_sys(void);
 void _pthread_ungarbage(void);
-int _pthread_cancel_sys(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

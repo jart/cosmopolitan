@@ -155,9 +155,11 @@ SANITIZER =								\
 	-fsanitize=address
 
 NO_MAGIC =								\
+	-ffreestanding							\
 	-fno-stack-protector						\
 	-fwrapv								\
-	-fno-sanitize=all
+	-fno-sanitize=all						\
+	-fpatchable-function-entry=0,0
 
 OLD_CODE =								\
 	-fno-strict-aliasing						\

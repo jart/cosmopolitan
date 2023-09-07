@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -29,7 +30,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
-#ifdef __x86_64__
 
 int pfds[2];
 pthread_cond_t cv;
@@ -229,12 +229,14 @@ void *CpuBoundWorker(void *arg) {
   (void)wontleak2;
   ASSERT_EQ(0, pthread_setspecific(key, (void *)31337));
   ASSERT_EQ(0, pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0));
-#ifdef __x86_64__
   for (;;) {
+#ifdef __x86_64__
     TortureStack();
+#else
+    CheckStackIsAligned();
+#endif
     is_in_infinite_loop = true;
   }
-#endif
   pthread_cleanup_pop(1);
   free(wouldleak);
   return 0;
@@ -282,5 +284,3 @@ TEST(pthread_cancel, self_asynchronous_takesImmediateEffect) {
   ASSERT_SYS(0, 0, close(pfds[1]));
   ASSERT_SYS(0, 0, close(pfds[0]));
 }
-
-#endif /* __x86_64__ */

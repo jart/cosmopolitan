@@ -21,11 +21,13 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
@@ -34,14 +36,13 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#ifdef __x86_64__
 
 int systemfive_cancel(void);
 
 extern const char systemfive_cancellable[];
 extern const char systemfive_cancellable_end[];
 
-int _pthread_cancel_sys(void) {
+long _pthread_cancel_sys(void) {
   struct PosixThread *pt;
   pt = (struct PosixThread *)__get_tls()->tib_pthread;
   if (!(pt->flags & (PT_NOCANCEL | PT_MASKED)) || (pt->flags & PT_ASYNC)) {
@@ -60,9 +61,9 @@ static void OnSigThr(int sig, siginfo_t *si, void *ctx) {
       !(pt->flags & PT_NOCANCEL) &&
       atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
     sigaddset(&uc->uc_sigmask, sig);
-    if (systemfive_cancellable <= (char *)uc->uc_mcontext.rip &&
-        (char *)uc->uc_mcontext.rip < systemfive_cancellable_end) {
-      uc->uc_mcontext.rip = (intptr_t)systemfive_cancel;
+    if (systemfive_cancellable <= (char *)uc->uc_mcontext.PC &&
+        (char *)uc->uc_mcontext.PC < systemfive_cancellable_end) {
+      uc->uc_mcontext.PC = (intptr_t)systemfive_cancel;
     } else if (pt->flags & PT_ASYNC) {
       pthread_exit(PTHREAD_CANCELED);
     } else {
@@ -301,8 +302,6 @@ errno_t pthread_cancel(pthread_t thread) {
   }
   return rc;
 }
-
-#endif /* __x86_64__ */
 
 /**
  * Creates cancellation point in calling thread.

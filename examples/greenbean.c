@@ -186,6 +186,7 @@ void *Worker(void *id) {
     do {
       // parse the incoming http message
       InitHttpMessage(&msg, kHttpRequest);
+      // wait for http message (non-fragmented required)
       // we're not terrible concerned when errors happen here
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
       if ((got = read(client, inbuf, sizeof(inbuf))) <= 0) break;
@@ -198,9 +199,8 @@ void *Worker(void *id) {
 #if LOGGING
       // log the incoming http message
       unsigned clientip = ntohl(clientaddr.sin_addr.s_addr);
-      kprintf("\r\e[K%6P get some %d.%d.%d.%d:%d %#.*s\n",
-              (clientip & 0xff000000) >> 030, (clientip & 0x00ff0000) >> 020,
-              (clientip & 0x0000ff00) >> 010, (clientip & 0x000000ff) >> 000,
+      kprintf("\r\e[K%6P get some %hhu.%hhu.%hhu.%hhu:%hu %#.*s\n",
+              clientip >> 24, clientip >> 16, clientip >> 8, clientip,
               ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a,
               inbuf + msg.uri.a);
       SomethingHappened();
@@ -314,10 +314,8 @@ int main(int argc, char *argv[]) {
   // Cosmo's GetHostIps() API is much easier than ioctl(SIOCGIFCONF)
   uint32_t *hostips;
   for (hostips = gc(GetHostIps()), i = 0; hostips[i]; ++i) {
-    kprintf("listening on http://%d.%d.%d.%d:%d\n",
-            (hostips[i] & 0xff000000) >> 030, (hostips[i] & 0x00ff0000) >> 020,
-            (hostips[i] & 0x0000ff00) >> 010, (hostips[i] & 0x000000ff) >> 000,
-            PORT);
+    kprintf("listening on http://%hhu.%hhu.%hhu.%hhu:%hu\n", hostips[i] >> 24,
+            hostips[i] >> 16, hostips[i] >> 8, hostips[i], PORT);
   }
 
   // you can pass the number of threads you want as the first command arg
@@ -414,7 +412,7 @@ int main(int argc, char *argv[]) {
   while (!a_termsig) {
     PrintStatus();
     unassert(!pthread_cond_wait(&statuscond, &statuslock));
-    usleep(20);
+    usleep(10 * 1000);
   }
   unassert(!pthread_mutex_unlock(&statuslock));
 

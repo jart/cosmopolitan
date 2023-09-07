@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_readv,0x8788788782878813,65,120,globl,hidden
+.scall sys_readv,0x8788788782878813,2113,120,globl,hidden

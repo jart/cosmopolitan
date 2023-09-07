@@ -204,7 +204,6 @@
            "__vector_size__"
            "__ms_abi__"
            "__sysv_abi__"
-           "systemfive"
            "__mode__"
            "__seg_fs"
            "__seg_gs"))
