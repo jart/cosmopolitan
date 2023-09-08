@@ -64,6 +64,7 @@ void *TlsGetValue(uint32_t);
 uint32_t SuspendThread(int64_t hThread);
 uint32_t ResumeThread(int64_t hThread);
 bool32 GetThreadContext(int64_t hThread, struct NtContext *in_out_lpContext);
+bool32 SetThreadContext(int64_t hThread, const struct NtContext *lpContext);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/thread.inc"

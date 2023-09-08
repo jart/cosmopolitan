@@ -176,9 +176,6 @@ static ssize_t GetDevUrandom(char *p, size_t n) {
 ssize_t __getrandom(void *p, size_t n, unsigned f) {
   ssize_t rc;
   if (IsWindows()) {
-    if (_check_interrupts(kSigOpRestartable)) {
-      return -1;
-    }
     rc = RtlGenRandom(p, n) ? n : __winerr();
   } else if (have_getrandom) {
     if (IsXnu() || IsOpenbsd()) {

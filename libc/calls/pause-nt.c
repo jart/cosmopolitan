@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -26,6 +27,7 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_pause_nt(void) {
+  BEGIN_BLOCKING_OPERATION;
   for (;;) {
 
     if (_check_interrupts(0)) {
@@ -46,4 +48,5 @@ textwindows int sys_pause_nt(void) {
     }
 #endif
   }
+  END_BLOCKING_OPERATION;
 }

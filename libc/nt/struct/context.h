@@ -53,7 +53,7 @@ struct NtContext {
   uint64_t LastBranchFromRip;
   uint64_t LastExceptionToRip;
   uint64_t LastExceptionFromRip;
-};
+} forcealign(16);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CONTEXT_H_ */

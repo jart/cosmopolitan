@@ -302,11 +302,11 @@ textwindows void WinMainForked(void) {
 #ifdef SYSDEBUG
   RemoveVectoredExceptionHandler(oncrash);
 #endif
-  if (_weaken(__wincrash_nt)) {
+  if (_weaken(__wincrash)) {
     if (!IsTiny()) {
       RemoveVectoredExceptionHandler(__wincrashearly);
     }
-    AddVectoredExceptionHandler(1, (void *)_weaken(__wincrash_nt));
+    AddVectoredExceptionHandler(1, (void *)_weaken(__wincrash));
   }
   if (_weaken(__onntconsoleevent)) {
     SetConsoleCtrlHandler(_weaken(__onntconsoleevent), 1);

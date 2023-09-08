@@ -23,9 +23,7 @@
 
 #ifdef __x86_64__
 
-// TODO(jart): uc_sigmask support
-
-privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
+textwindows void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   if (!cr) return;
   ctx->uc_mcontext.eflags = cr->EFlags;
   ctx->uc_mcontext.rax = cr->Rax;
@@ -52,7 +50,7 @@ privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   __repmovsb(&ctx->__fpustate, &cr->FltSave, sizeof(ctx->__fpustate));
 }
 
-privileged void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
+textwindows void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
   if (!cr) return;
   cr->EFlags = ctx->uc_mcontext.eflags;
   cr->Rax = ctx->uc_mcontext.rax;

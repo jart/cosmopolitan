@@ -260,6 +260,7 @@ imp	'SetProcessWorkingSetSize'				SetProcessWorkingSetSize				kernel32	3
 imp	'SetProcessWorkingSetSizeEx'				SetProcessWorkingSetSizeEx				kernel32	4
 imp	'SetStdHandle'						SetStdHandle						kernel32	2
 imp	'SetThreadAffinityMask'					SetThreadAffinityMask					kernel32	2
+imp	'SetThreadContext'					SetThreadContext					kernel32	2
 imp	'SetThreadPriority'					SetThreadPriority					kernel32	2
 imp	'SetThreadPriorityBoost'				SetThreadPriorityBoost					kernel32	2
 imp	'SetUnhandledExceptionFilter'				SetUnhandledExceptionFilter				kernel32	1

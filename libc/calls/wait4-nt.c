@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -162,6 +163,7 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
   sigset_t oldmask, mask = {0};
   sigaddset(&mask, SIGCHLD);
   __sig_mask(SIG_BLOCK, &mask, &oldmask);
+  BEGIN_BLOCKING_OPERATION;
   do {
     rc = _check_interrupts(kSigOpRestartable | kSigOpNochld);
     if (rc == -1) break;
@@ -169,6 +171,7 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
     rc = sys_wait4_nt_impl(&pid, opt_out_wstatus, options, opt_out_rusage);
     __fds_unlock();
   } while (rc == -2);
+  END_BLOCKING_OPERATION;
   __sig_mask(SIG_SETMASK, &oldmask, 0);
   return rc;
 }

@@ -64,16 +64,8 @@ int raise(int sig) {
     RaiseSigFpe();
     rc = 0;
 #endif
-  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
-    rc = sys_tkill(gettid(), sig, 0);
-  } else if (IsWindows() || IsMetal()) {
-    if (IsWindows() && sig == SIGKILL) {
-      ExitProcess(sig);
-    } else {
-      rc = __sig_raise(sig, SI_TKILL);
-    }
   } else {
-    __builtin_unreachable();
+    rc = tkill(gettid(), sig);
   }
   STRACE("...raise(%G) → %d% m", sig, rc);
   return rc;

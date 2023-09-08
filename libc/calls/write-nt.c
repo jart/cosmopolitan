@@ -89,12 +89,12 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     //   return edquot(); /* handled by consts.sh */
     case kNtErrorBrokenPipe:  // broken pipe
     case kNtErrorNoData:      // closing named pipe
-      if (_weaken(__sig_raise)) {
-        _weaken(__sig_raise)(SIGPIPE, SI_KERNEL);
+      if (_weaken(__sig_handle)) {
+        _weaken(__sig_handle)(0, SIGPIPE, SI_KERNEL, 0);
         return epipe();
       } else {
         STRACE("broken pipe");
-        ExitProcess(EPIPE);
+        ExitProcess(SIGPIPE);
       }
     case kNtErrorAccessDenied:  // write doesn't return EACCESS
       return ebadf();

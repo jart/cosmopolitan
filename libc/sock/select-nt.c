@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timeval.h"
@@ -63,7 +64,9 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // call our nt poll implementation
+  BEGIN_BLOCKING_OPERATION;
   fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
+  END_BLOCKING_OPERATION;
   if (fdcount == -1) return -1;
 
   // convert pollfd back to bitsets

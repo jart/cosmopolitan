@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -25,9 +26,9 @@
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_clock_nanosleep_nt(int clock, int flags,
-                                       const struct timespec *req,
-                                       struct timespec *rem) {
+static textwindows int sys_clock_nanosleep_nt_impl(int clock, int flags,
+                                                   const struct timespec *req,
+                                                   struct timespec *rem) {
   struct timespec now, abs;
   if (flags & TIMER_ABSTIME) {
     abs = *req;
@@ -54,4 +55,14 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
               false);
     }
   }
+}
+
+textwindows int sys_clock_nanosleep_nt(int clock, int flags,
+                                       const struct timespec *req,
+                                       struct timespec *rem) {
+  int rc;
+  BEGIN_BLOCKING_OPERATION;
+  rc = sys_clock_nanosleep_nt_impl(clock, flags, req, rem);
+  END_BLOCKING_OPERATION;
+  return rc;
 }

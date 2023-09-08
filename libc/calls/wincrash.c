@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/ucontext.internal.h"
@@ -36,18 +37,14 @@
 
 #ifdef __x86_64__
 
-unsigned __wincrash(struct NtExceptionPointers *ep) {
-  int64_t rip;
+// win32 calls this; we're running inside the thread that crashed
+__msabi unsigned __wincrash(struct NtExceptionPointers *ep) {
   int sig, code;
-  ucontext_t ctx;
   struct CosmoTib *tib;
   static bool noreentry;
   noreentry = true;
 
-  STRACE("wincrash rip %x bt %s", ep->ContextRecord->Rip,
-         DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
-
-  if ((tib = __tls_enabled ? __get_tls_privileged() : 0)) {
+  if ((tib = __tls_enabled ? __get_tls() : 0)) {
     if (~tib->tib_flags & TIB_FLAG_WINCRASHING) {
       tib->tib_flags |= TIB_FLAG_WINCRASHING;
     } else {
@@ -61,12 +58,14 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
     }
   }
 
-  STRACE("__wincrash");
-
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
       code = TRAP_BRKPT;
       sig = SIGTRAP;
+      // Windows seems to be the only operating system that traps INT3 at
+      // addressof(INT3) rather than addressof(INT3)+1. So we must adjust
+      // RIP to prevent the same INT3 from being trapped forevermore.
+      ep->ContextRecord->Rip++;
       break;
     case kNtSignalIllegalInstruction:
       code = ILL_ILLOPC;
@@ -133,21 +132,15 @@ unsigned __wincrash(struct NtExceptionPointers *ep) {
       sig = SIGSEGV;
       break;
   }
-  rip = ep->ContextRecord->Rip;
+
+  STRACE("wincrash %G rip %x bt %s", sig, ep->ContextRecord->Rip,
+         DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
 
   if (__sighandflags[sig] & SA_SIGINFO) {
-    _ntcontext2linux(&ctx, ep->ContextRecord);
-    __sig_handle(false, sig, code, &ctx);
-    _ntlinux2context(ep->ContextRecord, &ctx);
+    struct Delivery pkg = {kSigOpUnmaskable, sig, code, ep->ContextRecord};
+    __sig_tramp(&pkg);
   } else {
-    __sig_handle(false, sig, code, 0);
-  }
-
-  // Windows seems to be the only operating system that traps INT3 at
-  // addressof(INT3) rather than addressof(INT3)+1. So we must adjust
-  // RIP to prevent the same INT3 from being trapped forevermore.
-  if (sig == SIGTRAP && rip == ep->ContextRecord->Rip) {
-    ep->ContextRecord->Rip++;
+    __sig_handle(kSigOpUnmaskable, sig, code, 0);
   }
 
   noreentry = false;

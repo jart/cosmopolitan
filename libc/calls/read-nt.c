@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -113,6 +114,7 @@ StartOver:
       // since for overlapped i/o, we always use GetOverlappedResult
       ok = ReadFile(handle, targetdata, targetsize, 0, &overlap);
       if (!ok && GetLastError() == kNtErrorIoPending) {
+        BEGIN_BLOCKING_OPERATION;
         // the i/o operation is in flight; blocking is unavoidable
         // if we're in a non-blocking mode, then immediately abort
         // if an interrupt is pending then we abort before waiting
@@ -141,6 +143,7 @@ StartOver:
           }
         }
         ok = true;
+        END_BLOCKING_OPERATION;
       }
       if (ok) {
         // overlapped is allocated on stack, so it's important we wait
@@ -219,7 +222,6 @@ textwindows ssize_t sys_read_nt(int fd, const struct iovec *iov, size_t iovlen,
   ssize_t rc;
   size_t i, total;
   if (opt_offset < -1) return einval();
-  if (_check_interrupts(kSigOpRestartable)) return -1;
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {

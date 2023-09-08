@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
@@ -23,6 +24,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
@@ -61,4 +63,54 @@ TEST(pthread_kill, canCancelReadOperation) {
   ASSERT_SYS(0, 0, close(fds[0]));
   ASSERT_SYS(0, 0, close(fds[1]));
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
+}
+
+volatile unsigned got_sig_async;
+volatile pthread_t cpu_worker_th;
+volatile unsigned is_wasting_cpu;
+
+void OnSigAsync(int sig) {
+  ASSERT_TRUE(pthread_equal(cpu_worker_th, pthread_self()));
+  got_sig_async = 1;
+}
+
+void *CpuWorker(void *arg) {
+  cpu_worker_th = pthread_self();
+  while (!got_sig_async) {
+    is_wasting_cpu = 1;
+  }
+  return 0;
+}
+
+TEST(pthread_kill, canAsynchronouslyRunHandlerInsideTargetThread) {
+  pthread_t t;
+  struct sigaction oldsa;
+  struct sigaction sa = {.sa_handler = OnSigAsync};
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
+  ASSERT_EQ(0, pthread_create(&t, 0, CpuWorker, 0));
+  while (!is_wasting_cpu) donothing;
+  ASSERT_EQ(0, pthread_kill(t, SIGUSR1));
+  ASSERT_EQ(0, pthread_join(t, 0));
+  ASSERT_TRUE(got_sig_async);
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
+}
+
+volatile int is_having_fun;
+
+void *FunWorker(void *arg) {
+  for (;;) {
+    is_having_fun = 1;
+    sched_yield();
+  }
+  return 0;
+}
+
+TEST(pthread_kill, defaultThreadSignalHandlerWillKillWholeProcess) {
+  SPAWN(fork);
+  pthread_t t;
+  ASSERT_EQ(0, pthread_create(&t, 0, FunWorker, 0));
+  while (!is_having_fun) sched_yield();
+  ASSERT_SYS(0, 0, pthread_kill(t, SIGKILL));
+  for (;;) sched_yield();
+  TERMS(SIGKILL);
 }

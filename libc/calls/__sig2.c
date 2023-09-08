@@ -25,10 +25,17 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/ucontext.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/console.h"
+#include "libc/nt/enum/context.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/context.h"
+#include "libc/nt/thread.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -38,6 +45,28 @@
 #include "libc/thread/tls.h"
 
 #ifdef __x86_64__
+
+/**
+ * Returns true if signal default action is to end process.
+ */
+textwindows bool __sig_is_fatal(int sig) {
+  return !(sig == SIGURG ||   //
+           sig == SIGCHLD ||  //
+           sig == SIGWINCH);
+}
+
+/**
+ * Returns true if signal is so fatal it should dump core.
+ */
+textwindows bool __sig_is_core(int sig) {
+  return sig == SIGSYS ||   //
+         sig == SIGBUS ||   //
+         sig == SIGSEGV ||  //
+         sig == SIGQUIT ||  //
+         sig == SIGTRAP ||  //
+         sig == SIGXCPU ||  //
+         sig == SIGXFSZ;
+}
 
 /**
  * Allocates piece of memory for storing pending signal.
@@ -105,49 +134,66 @@ static textwindows struct Signal *__sig_remove(int sigops) {
 
 /**
  * Delivers signal to callback.
- * @note called from main thread
- * @return true if EINTR should be returned by caller
+ *
+ * @return true if `EINTR` should be raised
  */
-static bool __sig_deliver(int sigops, int sig, int si_code, ucontext_t *ctx) {
-  unsigned rva, flags;
-  siginfo_t info, *infop;
-  STRACE("delivering %G", sig);
+bool __sig_deliver(int sigops, int sig, int sic, ucontext_t *ctx) {
+  unsigned rva = __sighandrvas[sig];
+  unsigned flags = __sighandflags[sig];
 
-  // enter the signal
-  rva = __sighandrvas[sig];
-  flags = __sighandflags[sig];
-  if ((~flags & SA_NODEFER) || (flags & SA_RESETHAND)) {
-    // by default we try to avoid reentering a signal handler. for
-    // example, if a sigsegv handler segfaults, then we'd want the
-    // second signal to just kill the process. doing this means we
-    // track state. that's bad if you want to longjmp() out of the
-    // signal handler. in that case you must use SA_NODEFER.
-    __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
-  }
-
-  // setup the somewhat expensive information args
-  // only if they're requested by the user in sigaction()
+  // generate expensive data if needed
+  ucontext_t uc;
+  siginfo_t info;
+  siginfo_t *infop;
   if (flags & SA_SIGINFO) {
-    bzero(&info, sizeof(info));
+    __repstosb(&info, 0, sizeof(info));
     info.si_signo = sig;
-    info.si_code = si_code;
+    info.si_code = sic;
     infop = &info;
+    if (!ctx) {
+      struct NtContext nc = {.ContextFlags = kNtContextAll};
+      __repstosb(&uc, 0, sizeof(uc));
+      GetThreadContext(GetCurrentThread(), &nc);
+      _ntcontext2linux(&uc, &nc);
+      ctx = &uc;
+    }
   } else {
     infop = 0;
-    ctx = 0;
   }
 
-  // handover control to user
+  // save the thread's signal mask
+  uint64_t oldmask;
+  if (__tls_enabled) {
+    oldmask = __get_tls()->tib_sigmask;
+  } else {
+    oldmask = __sig.sigmask;
+  }
+  if (ctx) {
+    ctx->uc_sigmask = (sigset_t){{oldmask}};
+  }
+
+  // mask the signal that's being handled whilst handling
+  if (!(flags & SA_NODEFER)) {
+    if (__tls_enabled) {
+      __get_tls()->tib_sigmask |= 1ull << (sig - 1);
+    } else {
+      __sig.sigmask |= 1ull << (sig - 1);
+    }
+  }
+
+  STRACE("delivering %G", sig);
   ((sigaction_f)(__executable_start + rva))(sig, infop, ctx);
 
-  if ((~flags & SA_NODEFER) && (~flags & SA_RESETHAND)) {
-    // it's now safe to reenter the signal so we need to restore it.
-    // since sigaction() is @asyncsignalsafe we only restore it if the
-    // user didn't change it during the signal handler. we also don't
-    // need to do anything if this was a oneshot signal or nodefer.
-    if (__sighandrvas[sig] == (int32_t)(intptr_t)SIG_DFL) {
-      __sighandrvas[sig] = rva;
-    }
+  if (ctx) {
+    oldmask = ctx->uc_sigmask.__bits[0];
+  }
+  if (__tls_enabled) {
+    __get_tls()->tib_sigmask = oldmask;
+  } else {
+    __sig.sigmask = oldmask;
+  }
+  if (flags & SA_RESETHAND) {
+    __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
   }
 
   if (!(sigops & kSigOpRestartable)) {
@@ -161,37 +207,22 @@ static bool __sig_deliver(int sigops, int sig, int si_code, ucontext_t *ctx) {
 }
 
 /**
- * Returns true if signal default action is to end process.
- */
-static textwindows bool __sig_is_fatal(int sig) {
-  return !(sig == SIGURG ||   //
-           sig == SIGCHLD ||  //
-           sig == SIGWINCH);
-}
-
-/**
- * Returns true if signal is so fatal it should dump core.
- */
-static textwindows bool __sig_is_core(int sig) {
-  return sig == SIGSYS ||   //
-         sig == SIGBUS ||   //
-         sig == SIGSEGV ||  //
-         sig == SIGQUIT ||  //
-         sig == SIGTRAP ||  //
-         sig == SIGXCPU ||  //
-         sig == SIGXFSZ;
-}
-
-/**
  * Handles signal.
- * @return true if signal was delivered
+ * @return true if `EINTR` should be raised
  */
-textwindows bool __sig_handle(int sigops, int sig, int si_code,
-                              ucontext_t *ctx) {
-  bool delivered;
+textwindows bool __sig_handle(int sigops, int sig, int sic, ucontext_t *ctx) {
+  if (__sig_is_masked(sig)) {
+    if (sigops & kSigOpUnmaskable) {
+      goto DefaultAction;
+    }
+    __sig_add(0, sig, sic);
+    return false;
+  }
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:
+    DefaultAction:
       if (__sig_is_fatal(sig)) {
+        uint32_t cmode;
         intptr_t hStderr;
         const char *signame;
         char *end, sigbuf[21], output[22];
@@ -199,45 +230,18 @@ textwindows bool __sig_handle(int sigops, int sig, int si_code,
         STRACE("terminating due to uncaught %s", signame);
         if (__sig_is_core(sig)) {
           hStderr = GetStdHandle(kNtStdErrorHandle);
-          end = stpcpy(stpcpy(output, signame), "\n");
-          WriteFile(hStderr, output, end - output, 0, 0);
+          if (GetConsoleMode(hStderr, &cmode)) {
+            end = stpcpy(stpcpy(output, signame), "\n");
+            WriteFile(hStderr, output, end - output, 0, 0);
+          }
         }
         ExitProcess(sig);
       }
       // fallthrough
     case (intptr_t)SIG_IGN:
-      STRACE("ignoring %G", sig);
-      delivered = false;
-      break;
+      return false;
     default:
-      delivered = __sig_deliver(sigops, sig, si_code, ctx);
-      break;
-  }
-  return delivered;
-}
-
-/**
- * Handles signal immediately if not blocked.
- *
- * @param restartable is for functions like read() but not poll()
- * @return true if EINTR should be returned by caller
- * @return 1 if delivered, 0 if enqueued, otherwise -1 w/ errno
- * @note called from main thread
- * @threadsafe
- */
-textwindows int __sig_raise(int sig, int si_code) {
-  if (1 <= sig && sig <= 64) {
-    if (!__sig_is_masked(sig)) {
-      ++__sig_count;
-      // TODO(jart): ucontext_t support
-      __sig_handle(false, sig, si_code, 0);
-      return 0;
-    } else {
-      STRACE("%G is masked", sig);
-      return __sig_add(gettid(), sig, si_code);
-    }
-  } else {
-    return einval();
+      return __sig_deliver(sigops, sig, sic, ctx);
   }
 }
 
@@ -319,7 +323,7 @@ textwindows void __sig_check_ignore(const int sig, const unsigned rva) {
         } else if (prev) {
           prev->next = cur->next;
         }
-        __sig_handle(false, cur->sig, cur->si_code, 0);
+        __sig_handle(0, cur->sig, cur->si_code, 0);
         __sig_free(cur);
       } else {
         prev = cur;

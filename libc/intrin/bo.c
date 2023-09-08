@@ -16,19 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/sig.internal.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/dce.h"
-#include "libc/sysv/consts/sig.h"
+#include "libc/calls/bo.internal.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
 
-dontasan sigset_t _sigsetmask(sigset_t neu) {
-  sigset_t res;
-  if (IsMetal() || IsWindows()) {
-    __sig_mask(SIG_SETMASK, &neu, &res);
-  } else {
-    npassert(!sys_sigprocmask(SIG_SETMASK, &neu, &res));
+int begin_blocking_operation(void) {
+  int state = 0;
+  struct CosmoTib *tib;
+  struct PosixThread *pt;
+  if (__tls_enabled) {
+    tib = __get_tls();
+    if ((pt = (struct PosixThread *)tib->tib_pthread)) {
+      state = pt->flags & PT_BLOCKED;
+      pt->flags |= PT_BLOCKED;
+    }
   }
-  return res;
+  return state;
+}
+
+void end_blocking_operation(int state) {
+  struct CosmoTib *tib;
+  struct PosixThread *pt;
+  if (__tls_enabled) {
+    tib = __get_tls();
+    if ((pt = (struct PosixThread *)tib->tib_pthread)) {
+      pt->flags &= ~PT_BLOCKED;
+      pt->flags |= state;
+    }
+  }
 }

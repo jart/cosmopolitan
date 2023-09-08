@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -104,7 +105,9 @@ static dontinline textwindows ssize_t sys_sendfile_nt(
   if (TransmitFile(oh, ih, uptobytes, 0, &ov, 0, 0)) {
     rc = uptobytes;
   } else {
+    BEGIN_BLOCKING_OPERATION;
     rc = SendfileBlock(oh, &ov);
+    END_BLOCKING_OPERATION;
   }
   if (rc != -1) {
     if (opt_in_out_inoffset) {

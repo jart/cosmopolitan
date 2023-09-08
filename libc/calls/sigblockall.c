@@ -17,10 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/str/str.h"
 
-sigset_t _sigblockall(void) {
+dontasan sigset_t _sigblockall(void) {
   sigset_t ss;
-  memset(&ss, -1, sizeof(ss));
+  __repstosb(&ss, -1, sizeof(ss));
   return _sigsetmask(ss);
 }

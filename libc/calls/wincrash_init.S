@@ -27,6 +27,6 @@
 	ntcall	__imp_RemoveVectoredExceptionHandler
 #endif
 	pushpop	1,%rcx
-	ezlea	__wincrash_nt,dx
+	ezlea	__wincrash,dx
 	ntcall	__imp_AddVectoredExceptionHandler
 1:	.init.end 300,_init_wincrash,globl,hidden

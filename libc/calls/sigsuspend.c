@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
@@ -77,6 +78,7 @@ int sigsuspend(const sigset_t *ignore) {
       long ms = 0;
       long totoms = 0;
 #endif
+      BEGIN_BLOCKING_OPERATION;
       do {
         if ((rc = _check_interrupts(0))) {
           break;
@@ -93,6 +95,7 @@ int sigsuspend(const sigset_t *ignore) {
         }
 #endif
       } while (1);
+      END_BLOCKING_OPERATION;
       __sig_mask(SIG_SETMASK, &save, 0);
     }
   } else {

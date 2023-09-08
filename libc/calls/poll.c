@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -81,7 +82,9 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
     }
   } else {
     millis = timeout_ms;
+    BEGIN_BLOCKING_OPERATION;
     rc = sys_poll_nt(fds, nfds, &millis, 0);
+    END_BLOCKING_OPERATION;
   }
 
   END_CANCELLATION_POINT;

@@ -273,8 +273,11 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
       if (pc && st && (symbol = __get_symbol(st, pc))) {
         addend = pc - st->addr_base;
         addend -= st->symbols[symbol].x;
-        Append(b, " %s", GetSymbolName(st, symbol, &mem, &memsz));
-        if (addend) Append(b, "%+d", addend);
+        Append(b, " ");
+        if (!AppendFileLine(b, addr2line, debugbin, pc)) {
+          Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
+          if (addend) Append(b, "%+d", addend);
+        }
       }
       Append(b, "\n");
 

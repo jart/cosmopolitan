@@ -18,19 +18,23 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
@@ -42,6 +46,7 @@ struct sigaction oldsa;
 volatile bool gotsigint;
 
 void SetUpOnce(void) {
+  __enable_threads();
   ASSERT_SYS(0, 0, pledge("stdio rpath proc", 0));
 }
 
@@ -52,6 +57,48 @@ void OnSigInt(int sig) {
 
 void SetUp(void) {
   gotsigint = false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// test that signal handlers expose cpu state, and let it be changed arbitrarily
+
+void *Gateway(void *arg) {
+  __builtin_trap();
+}
+
+void PromisedLand(void *arg) {
+  sigset_t ss;
+  CheckStackIsAligned();
+  sigprocmask(SIG_SETMASK, 0, &ss);
+  ASSERT_TRUE(sigismember(&ss, SIGUSR1));
+  pthread_exit(arg);
+}
+
+void Teleporter(int sig, struct siginfo *si, void *ctx) {
+  ucontext_t *uc = ctx;
+  sigaddset(&uc->uc_sigmask, SIGUSR1);
+  uc->uc_mcontext.PC = (uintptr_t)PromisedLand;
+  uc->uc_mcontext.SP &= -16;
+#ifdef __x86_64__
+  uc->uc_mcontext.SP -= 8;
+#endif
+}
+
+TEST(sigaction, handlersCanMutateMachineState) {
+  void *rc;
+  sigset_t ss;
+  pthread_t t;
+  struct sigaction oldill, oldtrap;
+  struct sigaction sa = {.sa_sigaction = Teleporter, .sa_flags = SA_SIGINFO};
+  sigprocmask(SIG_SETMASK, 0, &ss);
+  ASSERT_FALSE(sigismember(&ss, SIGUSR1));
+  ASSERT_SYS(0, 0, sigaction(SIGILL, &sa, &oldill));
+  ASSERT_SYS(0, 0, sigaction(SIGTRAP, &sa, &oldtrap));
+  ASSERT_EQ(0, pthread_create(&t, 0, Gateway, (void *)42L));
+  ASSERT_EQ(0, pthread_join(t, &rc));
+  ASSERT_EQ(42, (uintptr_t)rc);
+  ASSERT_SYS(0, 0, sigaction(SIGILL, &oldill, 0));
+  ASSERT_SYS(0, 0, sigaction(SIGTRAP, &oldtrap, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,12 +273,14 @@ sig_atomic_t gotusr1;
 
 void OnSigMask(int sig, struct siginfo *si, void *ctx) {
   ucontext_t *uc = ctx;
+#ifdef __x86_64__
+  ASSERT_EQ(123, uc->uc_mcontext.r15);
+#endif
   sigaddset(&uc->uc_sigmask, sig);
   gotusr1 = true;
 }
 
 TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
-  if (IsWindows()) return;  // TODO(jart): uc_sigmask support on windows
   sigset_t want, got;
   struct sigaction oldsa;
   struct sigaction sa = {.sa_sigaction = OnSigMask, .sa_flags = SA_SIGINFO};
@@ -239,6 +288,9 @@ TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, &got));
   ASSERT_FALSE(sigismember(&got, SIGUSR1));
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
+#ifdef __x86_64__
+  asm volatile("mov\t%0,%%r15" : : "i"(123) : "r15", "memory");
+#endif
   ASSERT_SYS(0, 0, raise(SIGUSR1));
   ASSERT_TRUE(gotusr1);
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, 0, &got));
@@ -264,4 +316,41 @@ TEST(sig_ign, discardsPendingSignalsEvenIfBlocked) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_UNBLOCK, &block, 0));
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldmask, 0));
+}
+
+void AutoMask(int sig, struct siginfo *si, void *ctx) {
+  sigset_t ss;
+  ucontext_t *uc = ctx;
+  sigprocmask(SIG_SETMASK, 0, &ss);
+  EXPECT_FALSE(sigismember(&uc->uc_sigmask, SIGUSR2));  // original mask
+  EXPECT_TRUE(sigismember(&ss, SIGUSR2));               // temporary mask
+}
+
+TEST(sigaction, signalBeingDeliveredGetsAutoMasked) {
+  sigset_t ss;
+  struct sigaction os, sa = {.sa_sigaction = AutoMask, .sa_flags = SA_SIGINFO};
+  ASSERT_SYS(0, 0, sigaction(SIGUSR2, &sa, &os));
+  raise(SIGUSR2);
+  ASSERT_SYS(0, 0, sigaction(SIGUSR2, &os, 0));
+  sigprocmask(SIG_SETMASK, 0, &ss);
+  EXPECT_FALSE(sigismember(&ss, SIGUSR2));  // original mask
+}
+
+void NoDefer(int sig, struct siginfo *si, void *ctx) {
+  sigset_t ss;
+  ucontext_t *uc = ctx;
+  sigprocmask(SIG_SETMASK, 0, &ss);
+  EXPECT_FALSE(sigismember(&uc->uc_sigmask, SIGUSR2));
+  EXPECT_FALSE(sigismember(&ss, SIGUSR2));
+}
+
+TEST(sigaction, NoDefer) {
+  struct sigaction os;
+  struct sigaction sa = {
+      .sa_sigaction = NoDefer,
+      .sa_flags = SA_SIGINFO | SA_NODEFER,
+  };
+  ASSERT_SYS(0, 0, sigaction(SIGUSR2, &sa, &os));
+  raise(SIGUSR2);
+  ASSERT_SYS(0, 0, sigaction(SIGUSR2, &os, 0));
 }

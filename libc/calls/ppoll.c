@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -97,7 +98,9 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
         ckd_add(&millis, timeout->tv_sec, timeout->tv_nsec / 1000000)) {
       millis = -1;
     }
+    BEGIN_BLOCKING_OPERATION;
     rc = sys_poll_nt(fds, nfds, &millis, sigmask);
+    END_BLOCKING_OPERATION;
   }
 
   END_CANCELLATION_POINT;

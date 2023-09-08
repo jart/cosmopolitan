@@ -13,8 +13,9 @@
 #define PT_NOCANCEL       8
 #define PT_MASKED         16
 #define PT_INCANCEL       32
-#define PT_OPENBSD_KLUDGE 64
+#define PT_BLOCKED        64
 #define PT_EXITING        128
+#define PT_OPENBSD_KLUDGE 256
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -92,6 +93,7 @@ extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 int _pthread_atfork(atfork_f, atfork_f, atfork_f);
 int _pthread_reschedule(struct PosixThread *);
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
+int _pthread_signal(struct PosixThread *, int, int);
 void _pthread_zombify(struct PosixThread *);
 void _pthread_free(struct PosixThread *);
 void _pthread_onfork_prepare(void);

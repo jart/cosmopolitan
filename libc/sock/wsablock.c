@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/errno.h"
@@ -43,13 +44,13 @@ static textwindows void __wsablock_abort(int64_t handle,
 
 textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
                            uint32_t *flags, int sigops, uint32_t timeout) {
-  int abort_errno;
   uint32_t i, got;
+  int rc, abort_errno;
   if (WSAGetLastError() != kNtErrorIoPending) {
     // our i/o operation never happened because it failed
     return __winsockerr();
   }
-TryAgain:
+  BEGIN_BLOCKING_OPERATION;
   // our i/o operation is in flight and it needs to block
   abort_errno = EAGAIN;
   if (fd->flags & O_NONBLOCK) {
@@ -87,16 +88,13 @@ TryAgain:
   // overlapped is allocated on stack by caller, so it's important that
   // we wait for win32 to acknowledge that it's done using that memory.
   if (WSAGetOverlappedResult(fd->handle, overlapped, &got, true, flags)) {
-    return got;
-  }
-  switch (WSAGetLastError()) {
-    case kNtErrorIoIncomplete:
-      goto TryAgain;
-    case kNtErrorOperationAborted:
+    rc = got;
+  } else {
+    rc = -1;
+    if (WSAGetLastError() == kNtErrorOperationAborted) {
       errno = abort_errno;
-      break;
-    default:
-      break;
+    }
   }
-  return -1;
+  END_BLOCKING_OPERATION;
+  return rc;
 }

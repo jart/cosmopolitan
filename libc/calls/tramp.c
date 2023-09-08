@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,10 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.text.windows
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/ucontext.h"
+#ifdef __x86_64__
 
-__wincrash_nt:
-	ezlea	__wincrash,ax
-	jmp	__nt2sysv
-	.endfn	__wincrash_nt,globl,hidden
+textwindows int __sig_tramp(struct Delivery *pkg) {
+  ucontext_t ctx = {0};
+  _ntcontext2linux(&ctx, pkg->nc);
+  __sig_handle(pkg->ops, pkg->sig, pkg->sic, &ctx);
+  _ntlinux2context(pkg->nc, &ctx);
+  return 0;
+}
+
+#endif /* __x86_64__ */

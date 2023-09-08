@@ -10,6 +10,7 @@
 
 #define kSigOpRestartable 1
 #define kSigOpNochld      2
+#define kSigOpUnmaskable  4
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

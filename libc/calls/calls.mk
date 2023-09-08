@@ -67,10 +67,13 @@ $(LIBC_CALLS_A).pkg:					\
 
 # we can't use sanitizers because:
 #   we're on a stack owned by win32 without tls
-o/$(MODE)/libc/calls/onntconsoleevent.o: private	\
+o/$(MODE)/libc/calls/foist.o				\
+o/$(MODE)/libc/calls/__sig2.o				\
+o/$(MODE)/libc/calls/onntconsoleevent.o			\
+o/$(MODE)/libc/calls/wincrash.o				\
+o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		COPTS +=				\
-			-ffreestanding			\
-			-fno-sanitize=all
+			$(NO_MAGIC)
 
 # we can't use asan because:
 #   siginfo_t memory is owned by kernels
@@ -107,14 +110,6 @@ o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 		COPTS +=				\
 			-ffreestanding			\
 			-fno-sanitize=address
-
-# we can't use sanitizers because:
-#   windows owns the data structure
-o/$(MODE)/libc/calls/wincrash.o				\
-o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
-		COPTS +=				\
-			-fno-sanitize=all		\
-			-fpatchable-function-entry=0,0
 
 ifneq ($(ARCH), aarch64)
 # we always want -O3 because:
