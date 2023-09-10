@@ -69,6 +69,8 @@ $(LIBC_CALLS_A).pkg:					\
 #   we're on a stack owned by win32 without tls
 o/$(MODE)/libc/calls/foist.o				\
 o/$(MODE)/libc/calls/__sig2.o				\
+o/$(MODE)/libc/calls/sigchld-nt.o			\
+o/$(MODE)/libc/calls/sigwinch-nt.o			\
 o/$(MODE)/libc/calls/onntconsoleevent.o			\
 o/$(MODE)/libc/calls/wincrash.o				\
 o/$(MODE)/libc/calls/ntcontext2linux.o: private		\

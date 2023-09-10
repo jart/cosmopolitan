@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
 #include "libc/assert.h"
+#include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/pushpop.internal.h"
@@ -83,6 +84,7 @@ textwindows int ntspawn(
   char16_t prog16[PATH_MAX];
   rc = -1;
   block = NULL;
+  _init_sigchld();
   if (__mkntpath(prog, prog16) == -1) return -1;
   // we can't call malloc() because we're higher in the topological order
   // we can't call kmalloc() because fork() calls this when kmalloc is locked

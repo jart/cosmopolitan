@@ -34,18 +34,6 @@
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 
-static textwindows unsigned long StrLen(const char *s) {
-  unsigned long n = 0;
-  while (*s++) ++n;
-  return n;
-}
-
-static textwindows void Log(const char *s) {
-#ifndef NDEBUG
-  __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), s, StrLen(s), 0, 0);
-#endif
-}
-
 static textwindows int GetSig(uint32_t dwCtrlType) {
   switch (dwCtrlType) {
     case kNtCtrlCEvent:
@@ -61,11 +49,10 @@ static textwindows int GetSig(uint32_t dwCtrlType) {
   }
 }
 
-__msabi textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
+textwindows bool32 __sig_notify(int sig, int sic) {
 
   // we're on a stack that's owned by win32. to make matters worse,
   // win32 spawns a totally new thread just to invoke this handler.
-  int sig = GetSig(dwCtrlType);
   if (__sighandrvas[sig] == (uintptr_t)SIG_IGN) {
     return true;
   }
@@ -73,7 +60,7 @@ __msabi textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
   // if we don't have tls, then we can't hijack a safe stack from a
   // thread so just try our luck punting the signal to the next i/o
   if (!__tls_enabled) {
-    __sig_add(0, sig, SI_KERNEL);
+    __sig_add(0, sig, sic);
     return true;
   }
 
@@ -92,7 +79,7 @@ __msabi textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
     if (pt->tib->tib_sigmask & (1ull << (sig - 1))) continue;  // masked
     if (pt->flags & PT_BLOCKED) {
       pthread_spin_unlock(&_pthread_lock);
-      __sig_add(0, sig, SI_KERNEL);
+      __sig_add(0, sig, sic);
       return true;
     }
   }
@@ -111,14 +98,18 @@ __msabi textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
     if (tid <= 0) continue;  // -1 means spawning, 0 means terminated
     if (pt->tib->tib_sigmask & (1ull << (sig - 1))) continue;  // masked
     pthread_spin_unlock(&_pthread_lock);
-    if (_pthread_signal(pt, sig, SI_KERNEL) == -1) {
-      __sig_add(0, sig, SI_KERNEL);
+    if (_pthread_signal(pt, sig, sic) == -1) {
+      __sig_add(0, sig, sic);
     }
     return true;
   }
 
   pthread_spin_unlock(&_pthread_lock);
   return true;
+}
+
+__msabi textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
+  return __sig_notify(GetSig(dwCtrlType), SI_KERNEL);
 }
 
 #endif /* __x86_64__ */

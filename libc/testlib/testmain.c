@@ -71,7 +71,6 @@ Flags:\n\
 __static_yoink("__die");
 __static_yoink("GetSymbolByAddr");
 __static_yoink("testlib_quota_handlers");
-__static_yoink("stack_usage_logging");
 
 static bool runbenchmarks_;
 

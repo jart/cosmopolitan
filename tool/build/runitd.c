@@ -416,6 +416,8 @@ void PrintProgramOutput(struct Client *client) {
 
 void FreeClient(struct Client *client) {
   DEBUF("FreeClient");
+  Close(&client->pipe[1]);
+  Close(&client->pipe[0]);
   if (client->pid) {
     kill(client->pid, SIGHUP);
     waitpid(client->pid, 0, 0);
@@ -520,6 +522,8 @@ void *ClientWorker(void *arg) {
   // spawn the program
   int etxtbsy_tries = 0;
 RetryOnEtxtbsyRaceCondition:
+  Close(&client->pipe[1]);
+  Close(&client->pipe[0]);
   if (etxtbsy_tries++) {
     if (etxtbsy_tries == 24) {  // ~30 seconds
       WARNF("%s failed to spawn on %s due because either (1) the ETXTBSY race "
@@ -547,8 +551,6 @@ RetryOnEtxtbsyRaceCondition:
   posix_spawn_file_actions_adddup2(&spawnfila, client->pipe[1], 2);
   err = posix_spawn(&client->pid, exe, &spawnfila, &spawnattr, args, environ);
   if (err) {
-    Close(&client->pipe[1]);
-    Close(&client->pipe[0]);
     if (err == ETXTBSY) {
       goto RetryOnEtxtbsyRaceCondition;
     }
@@ -782,8 +784,8 @@ int main(int argc, char *argv[]) {
   Serve();
   free(g_psk);
 #if IsModeDbg()
-  void CheckForMemoryLeaks(void);
   CheckForMemoryLeaks();
+  CheckForFileLeaks();
 #endif
   pthread_exit(0);
 }

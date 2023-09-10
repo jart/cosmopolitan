@@ -16,54 +16,65 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
+#include "libc/cosmo.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
-
+#include "libc/thread/tls.h"
+#include "libc/thread/tls2.internal.h"
 #ifdef __x86_64__
 
-static textwindows bool CheckForExitedChildProcess(void) {
-  int pids[64];
-  uint32_t i, n;
-  int64_t handles[64];
-  if (!(n = __sample_pids(pids, handles, true))) return false;
-  i = WaitForMultipleObjects(n, handles, false, 0);
-  if (i == kNtWaitFailed) return false;
-  if (i == kNtWaitTimeout) return false;
-  if ((__sighandrvas[SIGCHLD] >= kSigactionMinRva) &&
-      (__sighandflags[SIGCHLD] & SA_NOCLDWAIT)) {
-    CloseHandle(handles[i]);
-    __releasefd(pids[i]);
-  } else {
-    g_fds.p[pids[i]].zombie = true;
+intptr_t __sigchld_thread;
+static atomic_uint __sigchld_once;
+static struct CosmoTib __sigchld_tls;
+
+static textwindows bool __sigchld_check(void) {
+  bool should_signal = false;
+  for (;;) {
+    int pids[64];
+    int64_t handles[64];
+    uint32_t n = __sample_pids(pids, handles, true);
+    if (!n) return should_signal;
+    uint32_t i = WaitForMultipleObjects(n, handles, false, 0);
+    if (i == kNtWaitFailed) return should_signal;
+    if (i == kNtWaitTimeout) return should_signal;
+    i &= ~kNtWaitAbandoned;
+    if ((__sighandrvas[SIGCHLD] >= kSigactionMinRva) &&
+        (__sighandflags[SIGCHLD] & SA_NOCLDWAIT)) {
+      CloseHandle(handles[i]);
+      __releasefd(pids[i]);
+    } else {
+      g_fds.p[pids[i]].zombie = true;
+    }
+    should_signal = true;
   }
-  return true;
 }
 
-/**
- * Checks to see if SIGCHLD should be raised on Windows.
- * @return true if a signal was raised
- * @note yoinked by fork-nt.c
- */
-textwindows void _check_sigchld(void) {
-  bool should_signal;
-  __fds_lock();
-  should_signal = CheckForExitedChildProcess();
-  __fds_unlock();
-  if (should_signal) {
-    __sig_add(0, SIGCHLD, CLD_EXITED);
+static textwindows uint32_t __sigchld_worker(void *arg) {
+  __set_tls_win32(&__sigchld_tls);
+  for (;;) {
+    if (__sigchld_check()) {
+      __sig_notify(SIGCHLD, CLD_EXITED);
+    }
+    SleepEx(100, false);
   }
+  return 0;
+}
+
+static textwindows void __sigchld_init(void) {
+  __sigchld_thread = CreateThread(0, 65536, __sigchld_worker, 0, 0, 0);
+}
+
+void _init_sigchld(void) {
+  cosmo_once(&__sigchld_once, __sigchld_init);
 }
 
 #endif /* __x86_64__ */

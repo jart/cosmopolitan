@@ -115,6 +115,8 @@ void __paginate(int, const char *);
 void _weakfree(void *);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
+void CheckForMemoryLeaks(void);
+void CheckForFileLeaks(void);
 void __enable_threads(void);
 void __oom_hook(size_t);
 bool _isheap(void *);

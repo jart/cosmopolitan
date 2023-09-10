@@ -16,19 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/nt/struct/windowplacement.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -50,14 +43,6 @@ textwindows int _check_interrupts(int sigops) {
   }
   if (__tls_enabled) {
     __get_tls()->tib_flags = flags;
-  }
-  if (_weaken(_check_sigwinch)) {
-    _weaken(_check_sigwinch)();
-  }
-  if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
-    if (!(sigops & kSigOpNochld) && _weaken(_check_sigchld)) {
-      _weaken(_check_sigchld)();
-    }
   }
   if (_weaken(__sig_check) && _weaken(__sig_check)(sigops)) {
     return eintr();

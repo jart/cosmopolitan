@@ -20,18 +20,21 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/winsize.h"
-#include "libc/calls/struct/winsize.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
+#include "libc/cosmo.h"
 #include "libc/nt/console.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
-
+#include "libc/thread/tls.h"
+#include "libc/thread/tls2.internal.h"
 #ifdef __x86_64__
 
-static atomic_uint __win_winsize;
+intptr_t __sigwinch_thread;
+static unsigned __sigwinch_size;
+static atomic_uint __sigwinch_once;
+static struct CosmoTib __sigwinch_tls;
 
 static textwindows unsigned __get_console_size(void) {
   for (int fd = 1; fd < 10; ++fd) {
@@ -51,20 +54,27 @@ static textwindows unsigned __get_console_size(void) {
   return -1u;
 }
 
-textwindows void _check_sigwinch(void) {
-  unsigned old = atomic_load_explicit(&__win_winsize, memory_order_acquire);
-  if (old == -1u) return;
-  unsigned neu = __get_console_size();
-  old = atomic_exchange(&__win_winsize, neu);
-  if (neu != old) {
-    __sig_add(0, SIGWINCH, SI_KERNEL);
+static textwindows uint32_t __sigwinch_worker(void *arg) {
+  __set_tls_win32(&__sigwinch_tls);
+  for (;;) {
+    unsigned old = __sigwinch_size;
+    unsigned neu = __get_console_size();
+    if (neu != old) {
+      __sigwinch_size = neu;
+      __sig_notify(SIGWINCH, SI_KERNEL);
+    }
+    SleepEx(25, false);
   }
+  return 0;
 }
 
-__attribute__((__constructor__)) static void sigwinch_init(void) {
-  if (!IsWindows()) return;
-  unsigned ws = __get_console_size();
-  atomic_store_explicit(&__win_winsize, ws, memory_order_release);
+static textwindows void __sigwinch_init(void) {
+  __sigwinch_size = __get_console_size();
+  __sigwinch_thread = CreateThread(0, 65536, __sigwinch_worker, 0, 0, 0);
+}
+
+textwindows void _init_sigwinch(void) {
+  cosmo_once(&__sigwinch_once, __sigwinch_init);
 }
 
 #endif /* __x86_64__ */

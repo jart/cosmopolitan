@@ -65,8 +65,6 @@
 
 #ifdef __x86_64__
 
-__static_yoink("_check_sigchld");
-
 extern int64_t __wincrashearly;
 bool32 __onntconsoleevent(uint32_t);
 void sys_setitimer_nt_reset(void);

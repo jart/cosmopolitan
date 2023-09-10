@@ -47,6 +47,7 @@ void __sig_pending(sigset_t *);
 int __sig_is_applicable(struct Signal *);
 bool __sig_deliver(int, int, int, ucontext_t *);
 int __sig_tramp(struct Delivery *);
+bool32 __sig_notify(int, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

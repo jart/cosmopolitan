@@ -54,7 +54,6 @@ __static_yoink("strsignal");  // for kprintf()
 
 #if SupportsWindows()
 __static_yoink("_init_onntconsoleevent");
-__static_yoink("_check_sigwinch");
 __static_yoink("_init_wincrash");
 #endif
 
@@ -505,6 +504,9 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
         __interruptible = true;
         once = true;
       }
+    }
+    if (IsWindows() && !rc && sig == SIGWINCH) {
+      _init_sigwinch();  // lazy b/c sigwinch is otherwise ignored
     }
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),

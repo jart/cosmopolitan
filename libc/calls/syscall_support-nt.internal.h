@@ -22,7 +22,6 @@ int64_t ntreturn(uint32_t);
 void *GetProcAddressModule(const char *, const char *);
 void WinMainForked(void);
 void _check_sigalrm(void);
-void _check_sigchld(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
