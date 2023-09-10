@@ -97,7 +97,7 @@ static void RemoveCrashHandler(void *arg) {
   strace_enabled(+1);
 }
 
-static void InstallCrashHandler(int sig, sigaction_f thunk, int extraflags) {
+static void InstallCrashHandler(int sig, sigaction_f thunk) {
   int e;
   struct sigaction sa;
   struct CrashHandler *ch;
@@ -114,7 +114,7 @@ static void InstallCrashHandler(int sig, sigaction_f thunk, int extraflags) {
     sigdelset(&sa.sa_mask, SIGABRT);
     sigdelset(&sa.sa_mask, SIGBUS);
     sigdelset(&sa.sa_mask, SIGURG);
-    sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     if (!sigaction(sig, &sa, &ch->old)) {
       __cxa_atexit(RemoveCrashHandler, ch, 0);
     }
@@ -138,24 +138,21 @@ static void InstallCrashHandler(int sig, sigaction_f thunk, int extraflags) {
  * useful, for example, if a program is caught in an infinite loop.
  */
 void ShowCrashReports(void) {
-  int ef = 0;
-  struct sigaltstack ss;
-  _wantcrashreports = true;
   if (!IsWindows()) {
-    ef = SA_ONSTACK;
+    struct sigaltstack ss;
     ss.ss_flags = 0;
-    ss.ss_size = GetStackSize();
-    // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
-    // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
-    npassert((ss.ss_sp = _mapanon(GetStackSize())));
-    npassert(!sigaltstack(&ss, 0));
+    ss.ss_size = SIGSTKSZ;
+    ss.ss_sp = malloc(SIGSTKSZ);
+    sigaltstack(&ss, 0);
+    __cxa_atexit(free, ss.ss_sp, 0);
   }
-  InstallCrashHandler(SIGQUIT, __got_sigquit, ef);  // ctrl+\ aka ctrl+break
-  InstallCrashHandler(SIGFPE, __got_sigfpe, ef);    // 1 / 0
-  InstallCrashHandler(SIGILL, __got_sigill, ef);    // illegal instruction
-  InstallCrashHandler(SIGSEGV, __got_sigsegv, ef);  // bad memory access
-  InstallCrashHandler(SIGTRAP, __got_sigtrap, ef);  // bad system call
-  InstallCrashHandler(SIGBUS, __got_sigbus, ef);    // misalign, mmap i/o failed
-  InstallCrashHandler(SIGURG, __got_sigurg, ef);    // placeholder
+  InstallCrashHandler(SIGQUIT, __got_sigquit);  // ctrl+\ aka ctrl+break
+  InstallCrashHandler(SIGFPE, __got_sigfpe);    // 1 / 0
+  InstallCrashHandler(SIGILL, __got_sigill);    // illegal instruction
+  InstallCrashHandler(SIGSEGV, __got_sigsegv);  // bad memory access
+  InstallCrashHandler(SIGTRAP, __got_sigtrap);  // bad system call
+  InstallCrashHandler(SIGBUS, __got_sigbus);    // misalign, mmap i/o failed
+  InstallCrashHandler(SIGURG, __got_sigurg);    // placeholder
+  _wantcrashreports = true;
   GetSymbolTable();
 }

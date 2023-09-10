@@ -17,11 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/build/lib/eztls.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
-#include "libc/log/log.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
 #include "libc/x/xsigaction.h"
@@ -29,12 +31,30 @@
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 
-struct EzTlsBio ezbio;
-mbedtls_ssl_config ezconf;
-mbedtls_ssl_context ezssl;
-mbedtls_ctr_drbg_context ezrng;
+_Thread_local int mytid;
+_Thread_local struct EzTlsBio ezbio;
+_Thread_local mbedtls_ssl_config ezconf;
+_Thread_local mbedtls_ssl_context ezssl;
+_Thread_local mbedtls_ctr_drbg_context ezrng;
+
+void EzSanity(void) {
+  unassert(mytid);
+  unassert(mytid == gettid());
+}
+
+void EzTlsDie(const char *s, int r) {
+  EzSanity();
+  if (IsTiny()) {
+    kprintf("error: %s (-0x%04x %s)\n", s, -r, GetTlsError(r));
+  } else {
+    kprintf("error: %s (grep -0x%04x)\n", s, -r);
+  }
+  EzDestroy();
+  pthread_exit(0);
+}
 
 static ssize_t EzWritevAll(int fd, struct iovec *iov, int iovlen) {
+  EzSanity();
   int i;
   ssize_t rc;
   size_t wrote, total;
@@ -58,7 +78,7 @@ static ssize_t EzWritevAll(int fd, struct iovec *iov, int iovlen) {
         }
       } while (wrote);
     } else {
-      WARNF("writev() failed %m");
+      // WARNF("writev() failed %m");
       if (errno != EINTR) {
         return total ? total : -1;
       }
@@ -68,6 +88,7 @@ static ssize_t EzWritevAll(int fd, struct iovec *iov, int iovlen) {
 }
 
 int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
+  EzSanity();
   struct iovec v[2];
   if (len || bio->c > 0) {
     v[0].iov_base = bio->u;
@@ -81,7 +102,7 @@ int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
       return MBEDTLS_ERR_NET_CONN_RESET;
     } else {
-      WARNF("EzTlsSend error %s", strerror(errno));
+      // WARNF("EzTlsSend error %s", strerror(errno));
       return MBEDTLS_ERR_NET_SEND_FAILED;
     }
   }
@@ -89,6 +110,7 @@ int EzTlsFlush(struct EzTlsBio *bio, const unsigned char *buf, size_t len) {
 }
 
 static int EzTlsSend(void *ctx, const unsigned char *buf, size_t len) {
+  EzSanity();
   int rc;
   struct EzTlsBio *bio = ctx;
   if (bio->c >= 0 && bio->c + len <= sizeof(bio->u)) {
@@ -101,6 +123,7 @@ static int EzTlsSend(void *ctx, const unsigned char *buf, size_t len) {
 }
 
 static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
+  EzSanity();
   int r;
   struct iovec v[2];
   struct EzTlsBio *bio = ctx;
@@ -116,7 +139,7 @@ static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
   v[1].iov_base = bio->t;
   v[1].iov_len = sizeof(bio->t);
   while ((r = readv(bio->fd, v, 2)) == -1) {
-    WARNF("tls read() error %s", strerror(errno));
+    // WARNF("tls read() error %s", strerror(errno));
     if (errno == EINTR) {
       return MBEDTLS_ERR_SSL_WANT_READ;
     } else if (errno == EAGAIN) {
@@ -132,60 +155,79 @@ static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
 }
 
 static int EzTlsRecv(void *ctx, unsigned char *buf, size_t len, uint32_t tmo) {
+  EzSanity();
   return EzTlsRecvImpl(ctx, buf, len, tmo);
 }
 
 void EzFd(int fd) {
+  EzSanity();
   mbedtls_ssl_session_reset(&ezssl);
-  mbedtls_platform_zeroize(&ezbio, sizeof(ezbio));
   ezbio.fd = fd;
 }
 
 void EzHandshake(void) {
+  EzSanity();
   int rc;
   while ((rc = mbedtls_ssl_handshake(&ezssl))) {
     if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
-      TlsDie("handshake failed", rc);
+      EzTlsDie("handshake failed", rc);
     }
   }
   while ((rc = EzTlsFlush(&ezbio, 0, 0))) {
     if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
-      TlsDie("handshake flush failed", rc);
+      EzTlsDie("handshake flush failed", rc);
     }
   }
 }
 
 int EzHandshake2(void) {
+  EzSanity();
   int rc;
   while ((rc = mbedtls_ssl_handshake(&ezssl))) {
     if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
       return rc;
     } else if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
-      TlsDie("handshake failed", rc);
+      EzTlsDie("handshake failed", rc);
     }
   }
   while ((rc = EzTlsFlush(&ezbio, 0, 0))) {
     if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
       return rc;
     } else if (rc != MBEDTLS_ERR_SSL_WANT_READ) {
-      TlsDie("handshake flush failed", rc);
+      EzTlsDie("handshake flush failed", rc);
     }
   }
   return 0;
 }
 
 void EzInitialize(void) {
-  xsigaction(SIGPIPE, SIG_IGN, 0, 0, 0);
-  ezconf.disable_compression = 1; /* TODO(jart): Why does it behave weirdly? */
+  unassert(!mytid);
+  mytid = gettid();
+  mbedtls_ssl_init(&ezssl);
+  mbedtls_ssl_config_init(&ezconf);
+  mbedtls_platform_zeroize(&ezbio, sizeof(ezbio));
+  ezconf.disable_compression = 1;
   InitializeRng(&ezrng);
 }
 
 void EzSetup(char psk[32]) {
   int rc;
+  EzSanity();
   mbedtls_ssl_conf_rng(&ezconf, mbedtls_ctr_drbg_random, &ezrng);
-  if ((rc = mbedtls_ssl_conf_psk(&ezconf, psk, 32, "runit", 5)) ||
-      (rc = mbedtls_ssl_setup(&ezssl, &ezconf))) {
-    TlsDie("EzSetup", rc);
+  if ((rc = mbedtls_ssl_conf_psk(&ezconf, psk, 32, "runit", 5))) {
+    EzTlsDie("EzSetup mbedtls_ssl_conf_psk", rc);
+  }
+  if ((rc = mbedtls_ssl_setup(&ezssl, &ezconf))) {
+    EzTlsDie("EzSetup mbedtls_ssl_setup", rc);
   }
   mbedtls_ssl_set_bio(&ezssl, &ezbio, EzTlsSend, 0, EzTlsRecv);
+}
+
+void EzDestroy(void) {
+  if (!mytid) return;
+  EzSanity();
+  mbedtls_ssl_free(&ezssl);
+  mbedtls_ctr_drbg_free(&ezrng);
+  mbedtls_ssl_config_free(&ezconf);
+  mytid = 0;
 }

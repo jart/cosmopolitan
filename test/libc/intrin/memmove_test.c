@@ -20,9 +20,13 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -79,6 +83,21 @@ TEST(memmove, bighug) {
       }
     }
   }
+}
+
+TEST(memmove, pageOverlapTorture) {
+  long pagesz = sysconf(_SC_PAGESIZE);
+  char *map = mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
+                   MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  char *map2 = mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
+                    MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  ASSERT_SYS(0, 0, mprotect(map + pagesz, pagesz, PROT_NONE));
+  ASSERT_SYS(0, 0, mprotect(map2 + pagesz, pagesz, PROT_NONE));
+  strcpy(map + pagesz - 9, "12345678");
+  strcpy(map2 + pagesz - 9, "12345679");
+  __expropriate(memmove(map + pagesz - 9, map2 + pagesz - 9, 9));
+  EXPECT_SYS(0, 0, munmap(map2, pagesz * 2));
+  EXPECT_SYS(0, 0, munmap(map, pagesz * 2));
 }
 
 BENCH(memmove, bench) {

@@ -122,8 +122,9 @@ TEST(posix_spawn, torture) {
     ASSERT_EQ(0, posix_spawn(&pid, "./echo.com", &fa, &attr, args, envs));
     ASSERT_FALSE(__vforked);
     ASSERT_NE(-1, waitpid(pid, &ws, 0));
-    ASSERT_TRUE(WIFEXITED(ws));
-    ASSERT_EQ(0, WEXITSTATUS(ws));
+    EXPECT_FALSE(WIFSIGNALED(ws));
+    EXPECT_EQ(0, WTERMSIG(ws));
+    EXPECT_EQ(0, WEXITSTATUS(ws));
     close(fd);
     free(zzz);
   }
@@ -139,7 +140,7 @@ void *Torturer(void *arg) {
 }
 
 TEST(posix_spawn, agony) {
-  int i, n = 3;
+  int i, n = 4;
   pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   for (i = 0; i < n; ++i) {
@@ -158,7 +159,7 @@ TEST(posix_spawn, agony) {
 
 void BenchmarkProcessLifecycle(void) {
   int ws, pid;
-  char *prog = "/tmp/tiny64";
+  char *prog = "tiny64";
   char *args[] = {"tiny64", NULL};
   char *envs[] = {NULL};
   ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
@@ -189,11 +190,11 @@ const char kTinyLinuxExit[128] = {
 /* BENCH(spawn, bench) { */
 /*   int fd; */
 /*   if (IsLinux()) { */
-/*     fd = open("/tmp/tiny64", O_CREAT | O_TRUNC | O_WRONLY, 0755); */
+/*     fd = open("tiny64", O_CREAT | O_TRUNC | O_WRONLY, 0755); */
 /*     write(fd, kTinyLinuxExit, 128); */
 /*     close(fd); */
 /*     EZBENCH2("spawn", donothing, BenchmarkProcessLifecycle()); */
-/*     unlink("/tmp/tiny64"); */
+/*     unlink("tiny64"); */
 /*   } */
 /* } */
 

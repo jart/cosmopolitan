@@ -21,6 +21,8 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/weaken.h"
@@ -176,6 +178,27 @@ __msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
   struct WinArgs *wa =
       (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
 
+  // allocate asan memory if needed
+  if (IsAsan()) {
+    uintptr_t shadowaddr = 0x7fff8000 + (stackaddr >> 3);
+    uintptr_t shadowend = 0x7fff8000 + ((stackaddr + stacksize) >> 3);
+    uintptr_t shallocaddr = ROUNDDOWN(shadowaddr, FRAMESIZE);
+    uintptr_t shallocend = ROUNDUP(shadowend, FRAMESIZE);
+    uintptr_t shallocsize = shallocend - shallocaddr;
+    __imp_MapViewOfFileEx(
+        (_mmi.p[1].h =
+             __imp_CreateFileMappingW(-1, &kNtIsInheritable, kNtPageReadwrite,
+                                      shallocsize >> 32, shallocsize, NULL)),
+        kNtFileMapWrite, 0, 0, shallocsize, (void *)shallocaddr);
+    _mmi.p[1].x = shallocaddr >> 16;
+    _mmi.p[1].y = (shallocaddr >> 16) + ((shallocsize - 1) >> 16);
+    _mmi.p[1].prot = PROT_READ | PROT_WRITE;
+    _mmi.p[1].flags = 0x00000022;  // private+anonymous
+    _mmi.p[1].size = shallocsize;
+    _mmi.i = 2;
+    __asan_poison((void *)stackaddr, GetGuardSize(), kAsanStackOverflow);
+  }
+
   // parse utf-16 command into utf-8 argv array in argument block
   int count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock),
                          wa->argv, ARRAYLEN(wa->argv));
@@ -231,12 +254,12 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   // sloppy flag-only check for early initialization
   if (__strstr16(cmdline, u"--strace")) ++__strace;
 #endif
+  if (_weaken(WinSockInit)) {
+    _weaken(WinSockInit)();
+  }
   DeduplicateStdioHandles();
   if (_weaken(WinMainStdin)) {
     _weaken(WinMainStdin)();
-  }
-  if (_weaken(WinSockInit)) {
-    _weaken(WinSockInit)();
   }
   if (_weaken(WinMainForked)) {
     _weaken(WinMainForked)();

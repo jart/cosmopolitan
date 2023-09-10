@@ -36,7 +36,6 @@ void OnSignal(int sig, siginfo_t *si, void *ctx) {
 }
 
 TEST(sigsetjmp, test) {
-  if (IsWindows()) return;  // no sigusr1 support
   sigset_t ss;
   int i, n = 1000;
   struct sigaction sa = {.sa_sigaction = OnSignal};

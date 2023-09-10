@@ -4,8 +4,8 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/o.h"
 #include "libc/thread/semaphore.h"
+#include "libc/sysv/consts/o.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 /* clang-format off */
 
@@ -204,10 +204,6 @@ semlock_release(SemLockObject *self, PyObject *args)
 #ifdef __APPLE__
 #  undef SEM_FAILED
 #  define SEM_FAILED ((sem_t *)-1)
-#endif
-
-#ifndef HAVE_SEM_UNLINK
-#  define sem_unlink(name) 0
 #endif
 
 #ifndef HAVE_SEM_TIMEDWAIT

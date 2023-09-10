@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/dll.h"
 #include "libc/runtime/runtime.h"
@@ -75,7 +76,6 @@ struct PosixThread {
   void *(*start)(void *);  // creation callback
   void *arg;               // start's parameter
   void *rc;                // start's return value
-  char *altstack;          // thread sigaltstack
   char *tls;               // bottom of tls allocation
   struct CosmoTib *tib;    // middle of tls allocation
   struct Dll list;         // list of threads

@@ -118,6 +118,8 @@ static textwindows int sys_wait4_nt_impl(int *pid, int *opt_out_wstatus,
       return echild();
     }
   }
+
+  // wait for one of the processes to terminate
   dwExitCode = kNtStillActive;
   if (options & WNOHANG) {
     i = WaitForMultipleObjects(count, handles, false, 0);
@@ -132,12 +134,20 @@ static textwindows int sys_wait4_nt_impl(int *pid, int *opt_out_wstatus,
     }
   }
   if (i == kNtWaitFailed) {
-    STRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
-    return __winerr();
+    notpossible;
   }
+
+  // WaitForMultipleObjects can say kNtWaitAbandoned which MSDN
+  // describes as a "sort of" successful status which indicates
+  // someone else didn't free a mutex and you should check that
+  // persistent resources haven't been left corrupted. not sure
+  // what those resources would be for process objects, however
+  // this status has actually been observed when waiting on 'em
+  i &= ~kNtWaitAbandoned;
+
+  // this is where things get especially hairy. see exit() doc
   if (!GetExitCodeProcess(handles[i], &dwExitCode)) {
-    STRACE("%s failed %u", "GetExitCodeProcess", GetLastError());
-    return __winerr();
+    notpossible;
   }
   if (dwExitCode == kNtStillActive) {
     return -2;
@@ -145,6 +155,8 @@ static textwindows int sys_wait4_nt_impl(int *pid, int *opt_out_wstatus,
   if (dwExitCode == 0xc9af3d51u) {
     dwExitCode = kNtStillActive;
   }
+
+  // now pass along the result
   if (opt_out_wstatus) {
     *opt_out_wstatus = dwExitCode;
   }

@@ -48,11 +48,6 @@
 #define N 1024
 #define M 20
 
-void SetUp(void) {
-  // TODO(jart): what is wrong?
-  if (IsWindows()) exit(0);
-}
-
 TEST(malloc, zero) {
   char *p;
   ASSERT_NE(NULL, (p = malloc(0)));

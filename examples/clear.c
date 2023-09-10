@@ -9,8 +9,11 @@
 #endif
 #include "libc/calls/calls.h"
 
-// clears the teletypewriter display with empty cells
+// clears teletypewriter display
+//
+//   - \e[H moves to top left of display
+//   - \e[J erases whole display forward
 
 int main(int argc, char *argv[]) {
-  write(1, "\e[H", 3);
+  write(1, "\e[H\e[J", 6);
 }

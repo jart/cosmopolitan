@@ -27,11 +27,14 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
@@ -50,6 +53,7 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
+#include "libc/x/xsigaction.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
@@ -271,64 +275,74 @@ void RelayRequest(void) {
     for (i = 0; i < have; i += rc) {
       rc = mbedtls_ssl_write(&ezssl, buf + i, have - i);
       if (rc <= 0) {
-        TlsDie("relay request failed", rc);
+        EzTlsDie("relay request failed", rc);
       }
     }
   }
   CHECK_NE(0, transferred);
   rc = EzTlsFlush(&ezbio, 0, 0);
   if (rc < 0) {
-    TlsDie("relay request failed to flush", rc);
+    EzTlsDie("relay request failed to flush", rc);
   }
   close(13);
 }
 
-bool Recv(unsigned char *p, size_t n) {
-  size_t i, rc;
+bool Recv(char *p, int n) {
+  int i, rc;
   for (i = 0; i < n; i += rc) {
-    do {
-      rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
-    } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
+    do rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
+    while (rc == MBEDTLS_ERR_SSL_WANT_READ);
     if (!rc) return false;
-    if (rc < 0) {
-      TlsDie("read response failed", rc);
-    }
+    if (rc < 0) EzTlsDie("read response failed", rc);
   }
   return true;
 }
-
 int ReadResponse(void) {
-  int res;
-  size_t n;
-  uint32_t size;
-  unsigned char b[512];
-  for (res = -1; res == -1;) {
-    if (!Recv(b, 5)) break;
-    CHECK_EQ(RUNITD_MAGIC, READ32BE(b), "%#.5s", b);
-    switch (b[4]) {
-      case kRunitExit:
-        if (!Recv(b, 1)) break;
-        if ((res = *b)) {
-          WARNF("%s on %s exited with %d", g_prog, g_hostname, res);
-        }
+  int exitcode;
+  for (;;) {
+    char msg[5];
+    if (!Recv(msg, 5)) {
+      WARNF("%s didn't report status of %s", g_hostname, g_prog);
+      exitcode = 200;
+      break;
+    }
+    if (READ32BE(msg) != RUNITD_MAGIC) {
+      WARNF("%s sent corrupted data stream after running %s", g_hostname,
+            g_prog);
+      exitcode = 201;
+      break;
+    }
+    if (msg[4] == kRunitExit) {
+      if (!Recv(msg, 1)) {
+      TruncatedMessage:
+        WARNF("%s sent truncated message running %s", g_hostname, g_prog);
+        exitcode = 202;
         break;
-      case kRunitStderr:
-        if (!Recv(b, 4)) break;
-        size = READ32BE(b);
-        for (; size; size -= n) {
-          n = MIN(size, sizeof(b));
-          if (!Recv(b, n)) goto drop;
-          CHECK_EQ(n, write(2, b, n));
-        }
-        break;
-      default:
-        fprintf(stderr, "error: received invalid runit command\n");
-        _exit(1);
+      }
+      exitcode = *msg;
+      if (exitcode) {
+        WARNF("%s says %s exited with %d", g_hostname, g_prog, exitcode);
+      } else {
+        VERBOSEF("%s says %s exited with %d", g_hostname, g_prog, exitcode);
+      }
+      mbedtls_ssl_close_notify(&ezssl);
+      break;
+    } else if (msg[4] == kRunitStdout || msg[4] == kRunitStderr) {
+      if (!Recv(msg, 4)) goto TruncatedMessage;
+      int n = READ32BE(msg);
+      char *s = malloc(n);
+      if (!Recv(s, n)) goto TruncatedMessage;
+      write(2, s, n);
+      free(s);
+    } else {
+      WARNF("%s sent message with unknown command %d after running %s",
+            g_hostname, msg[4], g_prog);
+      exitcode = 203;
+      break;
     }
   }
-drop:
   close(g_sock);
-  return res;
+  return exitcode;
 }
 
 static inline bool IsElf(const char *p, size_t n) {
@@ -340,23 +354,28 @@ static inline bool IsMachO(const char *p, size_t n) {
 }
 
 int RunOnHost(char *spec) {
-  int rc;
+  int err;
   char *p;
   for (p = spec; *p; ++p) {
     if (*p == ':') *p = ' ';
   }
-  CHECK_GE(sscanf(spec, "%100s %hu %hu", g_hostname, &g_runitdport, &g_sshport),
-           1);
+  int got =
+      sscanf(spec, "%100s %hu %hu", g_hostname, &g_runitdport, &g_sshport);
+  if (got < 1) {
+    kprintf("what on earth %#s -> %d\n", spec, got);
+    exit(1);
+  }
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
   DEBUGF("connecting to %s port %d", g_hostname, g_runitdport);
   for (;;) {
     Connect();
     EzFd(g_sock);
-    if (!(rc = EzHandshake2())) {
-      break;
-    }
-    WARNF("got reset in handshake -0x%04x", rc);
+    err = EzHandshake2();
+    if (!err) break;
+    WARNF("handshake with %s:%d failed -0x%04x (%s)",  //
+          g_hostname, g_runitdport, err, GetTlsError(err));
     close(g_sock);
+    return 1;
   }
   RelayRequest();
   return ReadResponse();
@@ -454,6 +473,7 @@ int SpawnSubprocesses(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   ShowCrashReports();
+  signal(SIGPIPE, SIG_IGN);
   if (getenv("DEBUG")) {
     __log_level = kLogDebug;
   }

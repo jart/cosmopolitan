@@ -59,20 +59,13 @@ static void sigaltstack2linux(struct sigaltstack *linux,
  *     struct sigaction sa;
  *     struct sigaltstack ss;
  *     ss.ss_flags = 0;
+ *     ss.ss_sp = NewCosmoStack();
  *     ss.ss_size = GetStackSize();
- *     ss.ss_sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
- *                     MAP_STACK | MAP_ANONYMOUS, -1, 0);
+ *     sigaltstack(&ss, 0);
+ *     sigemptyset(&sa.ss_mask);
  *     sa.sa_flags = SA_ONSTACK;
  *     sa.sa_handler = OnStackOverflow;
- *     __cxa_atexit(free, ss[0].ss_sp, 0);
- *     sigemptyset(&sa.ss_mask);
- *     sigaltstack(&ss, 0);
  *     sigaction(SIGSEGV, &sa, 0);
- *
- * It's strongly recommended that you allocate a stack with the same
- * size as GetStackSize() and that it have GetStackSize() alignment.
- * Otherwise some of your runtime support code (e.g. ftrace stack use
- * logging, kprintf() memory safety) won't be able to work as well.
  *
  * @param neu if non-null will install new signal alt stack
  * @param old if non-null will receive current signal alt stack
@@ -85,9 +78,8 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   void *b;
   const void *a;
   struct sigaltstack_bsd bsd;
-  if (IsAsan() && ((old && __asan_check(old, sizeof(*old)).kind) ||
-                   (neu && (__asan_check(neu, sizeof(*neu)).kind ||
-                            __asan_check(neu->ss_sp, neu->ss_size).kind)))) {
+  if (IsAsan() && ((old && !__asan_is_valid(old, sizeof(*old))) ||
+                   (neu && !__asan_is_valid(neu, sizeof(*neu))))) {
     rc = efault();
   } else if (neu && neu->ss_size < MINSIGSTKSZ) {
     rc = enomem();

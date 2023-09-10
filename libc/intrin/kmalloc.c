@@ -19,10 +19,13 @@
 #include "libc/intrin/kmalloc.h"
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/extend.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/map.h"
@@ -63,7 +66,7 @@ void __kmalloc_unlock(void) {
  * @return zero-initialized memory on success, or null w/ errno
  * @raise ENOMEM if we require more vespene gas
  */
-void *kmalloc(size_t size) {
+dontasan void *kmalloc(size_t size) {
   char *p, *e;
   size_t i, n, t;
   n = ROUNDUP(size + (IsAsan() * 8), KMALLOC_ALIGN);

@@ -19,5 +19,5 @@
 #include "libc/calls/state.internal.h"
 #include "libc/thread/thread.h"
 
-unsigned __sighandrvas[NSIG];
-unsigned __sighandflags[NSIG];
+unsigned __sighandrvas[NSIG + 1];
+unsigned __sighandflags[NSIG + 1];

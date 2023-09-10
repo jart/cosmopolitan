@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/limits.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/runtime.h"
-#include "net/https/sslcache.h"
+#include "libc/paths.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-/**
- * Returns recommended path argument for CreateSslCache().
- * @return pointer to static memory
- */
-char *GetSslCacheFile(void) {
-  static char sslcachefile[PATH_MAX];
-  if (snprintf(sslcachefile, sizeof(sslcachefile), "%s/%s.sslcache",
-               firstnonnull(getenv("TMPDIR"), "/tmp"),
-               getenv("USER")) < ARRAYLEN(sslcachefile)) {
-    return sslcachefile;
+size_t confstr(int name, char *buf, size_t len) {
+  if (name == _CS_PATH) {
+    return strlcpy(buf, _PATH_DEFPATH, len) + 1;
   } else {
+    einval();
     return 0;
   }
 }

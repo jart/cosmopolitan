@@ -91,7 +91,7 @@ VM = o/third_party/qemu/qemu-aarch64
 HOSTS ?= pi silicon
 else
 ARCH = x86_64
-HOSTS ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10
+HOSTS ?= freebsd rhel7 rhel5 xnu win10 openbsd netbsd
 endif
 
 ifeq ($(PREFIX),)
@@ -395,32 +395,6 @@ OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-er
 OBJECTIFY.c99.c = $(CC) $(OBJECTIFY.c.flags) -std=c99 -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c11.c = $(CC) $(OBJECTIFY.c.flags) -std=c11 -Wextra -Werror -pedantic-errors -c
 OBJECTIFY.c2x.c = $(CC) $(OBJECTIFY.c.flags) -std=c2x -Wextra -Werror -pedantic-errors -c
-
-OBJECTIFY.real.c =							\
-	$(GCC)								\
-	-x-no-pg							\
-	$(OBJECTIFY.c.flags)						\
-	-wrapper build/realify.sh					\
-	-D__REAL_MODE__							\
-	-ffixed-r8							\
-	-ffixed-r9							\
-	-ffixed-r10							\
-	-ffixed-r11							\
-	-ffixed-r12							\
-	-ffixed-r13							\
-	-ffixed-r14							\
-	-ffixed-r15							\
-	-mno-red-zone							\
-	-fcall-used-rbx							\
-	-fno-jump-tables						\
-	-fno-shrink-wrap						\
-	-fno-schedule-insns2						\
-	-flive-range-shrinkage						\
-	-fno-omit-frame-pointer						\
-	-momit-leaf-frame-pointer					\
-	-mpreferred-stack-boundary=3					\
-	-fno-delete-null-pointer-checks					\
-	-c
 
 OBJECTIFY.ncabi.c =							\
 	$(GCC)								\

@@ -155,6 +155,11 @@ static char *Finish(void) {
   }
 }
 
+static int Pause(void) {
+  pause();
+  return 0;
+}
+
 static int True(void) {
   return 0;
 }
@@ -671,6 +676,7 @@ static int TryBuiltin(void) {
   if (!strcmp(args[0], "true")) return True();
   if (!strcmp(args[0], "test")) return Test();
   if (!strcmp(args[0], "kill")) return Kill();
+  if (!strcmp(args[0], "pause")) return Pause();
   if (!strcmp(args[0], "flock")) return Flock();
   if (!strcmp(args[0], "chmod")) return Chmod();
   if (!strcmp(args[0], "touch")) return Touch();

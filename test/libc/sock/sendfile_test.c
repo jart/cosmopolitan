@@ -41,6 +41,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
+  __enable_threads();
   if (IsNetbsd()) exit(0);
   if (IsOpenbsd()) exit(0);
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc inet", 0));

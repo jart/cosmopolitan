@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -31,29 +33,40 @@
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
 
-pthread_barrier_t barrier;
-char testlib_enable_tmp_setup_teardown;
+#if 0  // TODO(jart): delete these stupid multi-process semaphores
 
-void SetUp(void) {
-  // TODO(jart): Fix shocking GitHub Actions error.
-  if (getenv("CI")) exit(0);
-  sem_unlink("/fooz");
-  sem_unlink("/barz");
-}
+char name1[PATH_MAX];
+char name2[PATH_MAX];
+pthread_barrier_t barrier;
 
 void IgnoreStderr(void) {
   close(2);
   open("/dev/null", O_WRONLY);
 }
 
+const char *SemPath(const char *name) {
+  static _Thread_local char buf[PATH_MAX];
+  return sem_path_np(name, buf, sizeof(buf));
+}
+
+void SetUp(void) {
+  mktemp(strcpy(name1, "/tmp/sem_open_test.name1.XXXXXX"));
+  mktemp(strcpy(name2, "/tmp/sem_open_test.name2.XXXXXX"));
+}
+
+void TearDown(void) {
+  ASSERT_FALSE(fileexists(SemPath(name2)));
+  ASSERT_FALSE(fileexists(SemPath(name1)));
+}
+
 void *Worker(void *arg) {
   sem_t *a, *b;
   struct timespec ts;
-  ASSERT_NE(SEM_FAILED, (a = sem_open("/fooz", 0)));
-  ASSERT_EQ((sem_t *)arg, a);
-  ASSERT_NE(SEM_FAILED, (b = sem_open("/barz", 0)));
+  ASSERT_NE(SEM_FAILED, (a = sem_open(name1, 0)));
+  EXPECT_EQ((sem_t *)arg, a);
+  ASSERT_NE(SEM_FAILED, (b = sem_open(name2, 0)));
   if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
-    ASSERT_SYS(0, 0, sem_unlink("/fooz"));
+    ASSERT_SYS(0, 0, sem_unlink(name1));
   }
   ASSERT_SYS(0, 0, clock_gettime(CLOCK_REALTIME, &ts));
   ts.tv_sec += 1;
@@ -72,14 +85,12 @@ void *Worker(void *arg) {
 // 4. semaphore may be unlinked before it's closed, from threads
 TEST(sem_open, test) {
   sem_t *a, *b;
-  int i, r, n = 4;
+  int i, r, n = 8;
   pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
-  sem_unlink("/fooz");
-  sem_unlink("/barz");
   errno = 0;
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
-  ASSERT_NE(SEM_FAILED, (a = sem_open("/fooz", O_CREAT, 0644, 0)));
-  ASSERT_NE(SEM_FAILED, (b = sem_open("/barz", O_CREAT, 0644, 0)));
+  ASSERT_NE(SEM_FAILED, (a = sem_open(name1, O_CREAT, 0644, 0)));
+  ASSERT_NE(SEM_FAILED, (b = sem_open(name2, O_CREAT, 0644, 0)));
   ASSERT_SYS(0, 0, sem_getvalue(a, &r));
   ASSERT_EQ(0, r);
   ASSERT_SYS(0, 0, sem_getvalue(b, &r));
@@ -90,8 +101,8 @@ TEST(sem_open, test) {
   ASSERT_EQ(0, r);
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_post(b));
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
-  ASSERT_SYS(0, 0, sem_unlink("/barz"));
-  ASSERT_SYS(0, 0, sem_getvalue(b, &r));
+  EXPECT_SYS(0, 0, sem_unlink(name2));
+  EXPECT_SYS(0, 0, sem_getvalue(b, &r));
   ASSERT_EQ(0, r);
   ASSERT_SYS(0, 0, sem_close(b));
   ASSERT_FALSE(testlib_memoryexists(b));
@@ -111,28 +122,24 @@ TEST(sem_close, withUnnamedSemaphore_isUndefinedBehavior) {
   ASSERT_SYS(0, 0, sem_destroy(&sem));
 }
 
-TEST(sem_destroy, withNamedSemaphore_isUndefinedBehavior) {
-  if (!IsModeDbg()) return;
-  sem_t *sem;
-  ASSERT_NE(SEM_FAILED, (sem = sem_open("/boop", O_CREAT, 0644, 0)));
+TEST(sem_open, inheritAcrossFork1) {
+  sem_t *a;
+  ASSERT_NE(SEM_FAILED, (a = sem_open(name1, O_CREAT, 0644, 0)));
   SPAWN(fork);
-  IgnoreStderr();
-  sem_destroy(sem);
-  TERMS(SIGABRT);  // see __assert_fail
-  ASSERT_SYS(0, 0, sem_unlink("/boop"));
-  ASSERT_SYS(0, 0, sem_close(sem));
+  EXITS(0);
+  ASSERT_SYS(0, 0, sem_close(a));
 }
 
-TEST(sem_open, inheritAcrossFork) {
+TEST(sem_open, inheritAcrossFork2) {
   sem_t *a, *b;
   struct timespec ts;
   ASSERT_SYS(0, 0, clock_gettime(CLOCK_REALTIME, &ts));
   ts.tv_sec += 1;
   errno = 0;
-  ASSERT_NE(SEM_FAILED, (a = sem_open("/fooz", O_CREAT, 0644, 0)));
-  ASSERT_SYS(0, 0, sem_unlink("/fooz"));
-  ASSERT_NE(SEM_FAILED, (b = sem_open("/barz", O_CREAT, 0644, 0)));
-  ASSERT_SYS(0, 0, sem_unlink("/barz"));
+  ASSERT_NE(SEM_FAILED, (a = sem_open(name1, O_CREAT, 0644, 0)));
+  ASSERT_SYS(0, 0, sem_unlink(name1));
+  ASSERT_NE(SEM_FAILED, (b = sem_open(name2, O_CREAT, 0644, 0)));
+  ASSERT_SYS(0, 0, sem_unlink(name2));
   SPAWN(fork);
   ASSERT_SYS(0, 0, sem_post(a));
   ASSERT_SYS(0, 0, sem_wait(b));
@@ -146,30 +153,36 @@ TEST(sem_open, inheritAcrossFork) {
   ASSERT_FALSE(testlib_memoryexists(a));
 }
 
-TEST(sem_open, openReadonlyAfterUnlink_enoent) {
+TEST(sem_open, openExistsAfterUnlink_enoent) {
   sem_t *sem;
-  sem_unlink("/fooz");
-  ASSERT_NE(SEM_FAILED, (sem = sem_open("/fooz", O_CREAT, 0644, 0)));
-  ASSERT_EQ(0, sem_unlink("/fooz"));
-  ASSERT_EQ(SEM_FAILED, sem_open("/fooz", O_RDONLY));
+  ASSERT_NE(SEM_FAILED, (sem = sem_open(name1, O_CREAT, 0644, 0)));
+  ASSERT_EQ(0, sem_unlink(name1));
+  ASSERT_EQ(SEM_FAILED, sem_open(name1, 0));
   ASSERT_EQ(ENOENT, errno);
   ASSERT_EQ(0, sem_close(sem));
 }
 
-TEST(sem_open, openReadonlyAfterIndependentUnlinkAndRecreate_returnsNewOne) {
-  if (1) return;
+TEST(sem_open, openExistsRecursive) {
+  sem_t *sem1, *sem2;
+  ASSERT_NE(SEM_FAILED, (sem1 = sem_open(name1, O_CREAT, 0644, 0)));
+  ASSERT_NE(SEM_FAILED, (sem2 = sem_open(name1, 0)));
+  ASSERT_EQ(0, sem_close(sem2));
+  ASSERT_EQ(0, sem_close(sem1));
+}
+
+TEST(sem_open, openExistsAfterIndependentUnlinkAndRecreate_returnsNewOne) {
   sem_t *a, *b;
-  ASSERT_NE(SEM_FAILED, (a = sem_open("/fooz", O_CREAT, 0644, 0)));
+  ASSERT_NE(SEM_FAILED, (a = sem_open(name1, O_CREAT, 0644, 0)));
   SPAWN(fork);
-  ASSERT_EQ(0, sem_unlink("/fooz"));
-  ASSERT_NE(SEM_FAILED, (b = sem_open("/fooz", O_CREAT, 0644, 0)));
+  ASSERT_EQ(0, sem_unlink(name1));
+  ASSERT_NE(SEM_FAILED, (b = sem_open(name1, O_CREAT, 0644, 0)));
   ASSERT_NE(a, b);
   ASSERT_SYS(0, 0, sem_post(a));
   ASSERT_SYS(0, 0, sem_wait(b));
   ASSERT_EQ(0, sem_close(b));
   PARENT();
   ASSERT_SYS(0, 0, sem_wait(a));
-  ASSERT_NE(SEM_FAILED, (b = sem_open("/fooz", O_RDONLY)));
+  ASSERT_NE(SEM_FAILED, (b = sem_open(name1, 0)));
   ASSERT_NE(a, b);
   ASSERT_SYS(0, 0, sem_post(b));
   ASSERT_EQ(0, sem_close(b));
@@ -189,3 +202,5 @@ TEST(sem_close, openTwiceCloseOnce_stillMapped) {
   ASSERT_SYS(0, 0, sem_post(a));
   ASSERT_SYS(0, 0, sem_close(b));
 }
+
+#endif

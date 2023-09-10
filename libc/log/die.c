@@ -16,20 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/atomic.h"
+#include "libc/errno.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/thread.h"
+#include "libc/str/str.h"
 
 #if SupportsMetal()
 __static_yoink("_idt");
@@ -37,29 +35,18 @@ __static_yoink("_idt");
 
 /**
  * Aborts process after printing a backtrace.
- *
- * If a debugger is present then this will trigger a breakpoint.
  */
-relegated wontreturn void __die(void) {
-  /* asan runtime depends on this function */
-  int me, owner;
-  static atomic_int once;
-  owner = 0;
-  me = __tls_enabled ? __get_tls()->tib_tid : sys_gettid();
-  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
-  if (__vforked ||
-      atomic_compare_exchange_strong_explicit(
-          &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
-    __restore_tty();
-    if (IsDebuggerPresent(false)) {
-      DebugBreak();
-    }
-    ShowBacktrace(2, __builtin_frame_address(0));
-    _Exit(77);
-  } else if (owner == me) {
-    kprintf("die failed while dying\n");
-    _Exit(79);
-  } else {
-    _Exit1(79);
-  }
+relegated dontasan wontreturn void __die(void) {
+
+  // print vital error nubers reliably
+  // the surface are of code this calls is small and audited
+  kprintf("\r\n\e[1;31m__die %s pid %d tid %d bt %s\e[0m\n",
+          program_invocation_short_name, getpid(), sys_gettid(),
+          DescribeBacktrace(__builtin_frame_address(0)));
+
+  // print much friendlier backtrace less reliably
+  // we're in a broken runtime state and so much can go wrong
+  __restore_tty();
+  ShowBacktrace(2, __builtin_frame_address(0));
+  _Exit(77);
 }

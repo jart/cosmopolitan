@@ -17,18 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
+#include "libc/assert.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/processcreationflags.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
+#include "libc/sysv/errfuns.h"
 
 struct SpawnBlock {
   union {
@@ -95,6 +99,8 @@ textwindows int ntspawn(
                     block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
                     opt_out_lpProcessInformation)) {
     rc = 0;
+  } else if (GetLastError() == kNtErrorSharingViolation) {
+    etxtbsy();
   }
   if (block) UnmapViewOfFile(block);
   if (handle) CloseHandle(handle);

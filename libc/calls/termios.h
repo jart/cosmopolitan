@@ -28,6 +28,7 @@ int tcgetsid(int);
 int tcgetpgrp(int);
 int tcflow(int, int);
 int tcflush(int, int);
+int tcsetsid(int, int);
 int tcsetpgrp(int, int);
 int tcsendbreak(int, int);
 void cfmakeraw(struct termios *);

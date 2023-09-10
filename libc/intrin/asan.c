@@ -17,8 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rlimit.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
@@ -40,6 +43,7 @@
 #include "libc/nt/enum/version.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
@@ -47,6 +51,8 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/dlmalloc.h"
@@ -910,7 +916,7 @@ static __wur __asan_die_f *__asan_report(const void *addr, int size,
   *p = 0;
   kprintf("%s", buf);
   __asan_report_memory_origin(addr, size, kind);
-  kprintf("\nthe crash was caused by\n");
+  kprintf("\nthe crash was caused by %s\n", program_invocation_name);
   ftrace_enabled(+1);
   return __asan_die();
 }
@@ -1428,32 +1434,6 @@ static size_t __asan_strlen(const char *s) {
   return i;
 }
 
-static textstartup void __asan_shadow_string(char *s) {
-  __asan_map_shadow((intptr_t)s, __asan_strlen(s) + 1);
-}
-
-static textstartup void __asan_shadow_auxv(intptr_t *auxv) {
-  size_t i;
-  for (i = 0; auxv[i]; i += 2) {
-    if (_weaken(AT_RANDOM) && auxv[i] == *_weaken(AT_RANDOM)) {
-      __asan_map_shadow(auxv[i + 1], 16);
-    } else if (_weaken(AT_EXECFN) && auxv[i] == *_weaken(AT_EXECFN)) {
-      __asan_shadow_string((char *)auxv[i + 1]);
-    } else if (_weaken(AT_PLATFORM) && auxv[i] == *_weaken(AT_PLATFORM)) {
-      __asan_shadow_string((char *)auxv[i + 1]);
-    }
-  }
-  __asan_map_shadow((uintptr_t)auxv, (i + 2) * sizeof(intptr_t));
-}
-
-static textstartup void __asan_shadow_string_list(char **list) {
-  size_t i;
-  for (i = 0; list[i]; ++i) {
-    __asan_shadow_string(list[i]);
-  }
-  __asan_map_shadow((uintptr_t)list, (i + 1) * sizeof(char *));
-}
-
 static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
                                               size_t i) {
   uintptr_t x, y;
@@ -1465,18 +1445,94 @@ static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
   }
 }
 
-static textstartup void __asan_shadow_existing_mappings(void) {
+static textstartup char *__asan_get_last_string(char **list) {
+  char *res = 0;
+  for (int i = 0; list[i]; ++i) {
+    res = list[i];
+  }
+  return res;
+}
+
+static textstartup uintptr_t __asan_get_stack_top(int argc, char **argv,
+                                                  char **envp,
+                                                  unsigned long *auxv,
+                                                  long pagesz) {
+  uintptr_t top;
+  const char *s;
+  if ((s = __asan_get_last_string(envp)) ||
+      (s = __asan_get_last_string(argv))) {
+    top = (uintptr_t)s + __asan_strlen(s);
+  } else {
+    unsigned long *xp = auxv;
+    while (*xp) xp += 2;
+    top = (uintptr_t)xp;
+  }
+  return (top + (pagesz - 1)) & -pagesz;
+}
+
+static textstartup void __asan_shadow_existing_mappings(int argc, char **argv,
+                                                        char **envp,
+                                                        unsigned long *auxv) {
   __asan_shadow_mapping(&_mmi, 0);
-  __asan_map_shadow(GetStackAddr(), GetStackSize());
-  __asan_poison((void *)GetStackAddr(), getauxval(AT_PAGESZ),
-                kAsanStackOverflow);
+
+  // WinMain() maps its own stack and its shadow too
+  if (IsWindows()) {
+    return;
+  }
+
+  // get microprocessor page size
+  long pagesz = 4096;
+  for (int i = 0; auxv[i]; i += 2) {
+    if (auxv[i] == AT_PAGESZ) {
+      pagesz = auxv[i + 1];
+    }
+  }
+
+  // get configured stack size of main thread
+  // supported platforms use defaults ranging from 4mb to 512mb
+  struct rlimit rlim;
+  uintptr_t stack_size = 4 * 1024 * 1024;
+  if (!sys_getrlimit(RLIMIT_STACK, &rlim) &&  //
+      rlim.rlim_cur > 0 && rlim.rlim_cur < RLIM_INFINITY) {
+    stack_size = (rlim.rlim_cur + (pagesz - 1)) & -pagesz;
+  }
+
+  // Every UNIX system in our support vector creates arg blocks like:
+  //
+  //     <HIGHEST-STACK-ADDRESS>
+  //     last environ string
+  //     ...
+  //     first environ string
+  //     ...
+  //     auxiliary value pointers
+  //     environ pointers
+  //     argument pointers
+  //     argument count
+  //     --- %rsp _start()
+  //     ...
+  //     ...
+  //     ... program's stack
+  //     ...
+  //     ...
+  //     <LOWEST-STACK-ADDRESS>
+  //
+  // The region of memory between highest and lowest can be computed
+  // across all supported platforms ±1 page accuracy as the distance
+  // between the last character of the last environ variable rounded
+  // up to the microprocessor page size (this computes the top addr)
+  // and the bottom is computed by subtracting RLIMIT_STACK rlim_cur
+  // It's simple but gets tricky if we consider environ can be empty
+  uintptr_t stack_top = __asan_get_stack_top(argc, argv, envp, auxv, pagesz);
+  uintptr_t stack_bot = stack_top - stack_size;
+  __asan_map_shadow(stack_bot, stack_top - stack_bot);
+  __asan_poison((void *)stack_bot, GetGuardSize(), kAsanStackOverflow);
 }
 
 forceinline ssize_t __write_str(const char *s) {
   return sys_write(2, s, __asan_strlen(s));
 }
 
-void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
+void __asan_init(int argc, char **argv, char **envp, unsigned long *auxv) {
   static bool once;
   if (!_cmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
@@ -1493,16 +1549,13 @@ void __asan_init(int argc, char **argv, char **envp, intptr_t *auxv) {
     REQUIRE(dlmemalign);
     REQUIRE(dlmalloc_usable_size);
   }
-  __asan_shadow_existing_mappings();
+  __asan_shadow_existing_mappings(argc, argv, envp, auxv);
   __asan_map_shadow((uintptr_t)__executable_start, _end - __executable_start);
   __asan_map_shadow(0, 4096);
   __asan_poison((void *)__veil("r", 0L), getauxval(AT_PAGESZ), kAsanNullPage);
   if (!IsWindows()) {
     sys_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
   }
-  __asan_shadow_string_list(argv);
-  __asan_shadow_string_list(envp);
-  __asan_shadow_auxv(auxv);
   __asan_install_malloc_hooks();
   STRACE("    _    ____    _    _   _ ");
   STRACE("   / \\  / ___|  / \\  | \\ | |");

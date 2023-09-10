@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/ucontext.h"
@@ -29,6 +30,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/intrin/kprintf.h"
@@ -259,113 +261,42 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   kprintf("\n");
 }
 
-static wontreturn relegated dontinstrument void __minicrash(int sig,
-                                                            struct siginfo *si,
-                                                            ucontext_t *ctx,
-                                                            const char *kind) {
-  kprintf("\n"
-          "\n"
-          "CRASHED %s WITH %G\n"
-          "%s\n"
-          "RIP %x\n"
-          "RSP %x\n"
-          "RBP %x\n"
-          "PID %d\n"
-          "TID %d\n"
-          "\n",
-          kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
-          ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0, __pid,
-          __tls_enabled ? __get_tls()->tib_tid : sys_gettid());
-  _Exit(119);
+static relegated wontreturn void RaiseCrash(int sig) {
+  sigset_t ss;
+  sigfillset(&ss);
+  sigdelset(&ss, sig);
+  sigprocmask(SIG_SETMASK, &ss, 0);
+  signal(sig, SIG_DFL);
+  kill(getpid(), sig);
+  _Exit(128 + sig);
 }
 
-/**
- * Crashes in a developer-friendly human-centric way.
- *
- * We first try to launch GDB if it's an interactive development
- * session. Otherwise we show a really good crash report, sort of like
- * Python, that includes filenames and line numbers. Many editors, e.g.
- * Emacs, will even recognize its syntax for quick hopping to the
- * failing line. That's only possible if the the .com.dbg file is in the
- * same folder. If the concomitant debug binary can't be found, we
- * simply print addresses which may be cross-referenced using objdump.
- *
- * This function never returns, except for traps w/ human supervision.
- *
- * @threadsafe
- * @vforksafe
- */
 relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
-  int bZero;
-#ifdef ATTACH_GDB_ON_CRASH
-  intptr_t rip;
-#endif
-  int me, owner;
   int gdbpid, err;
   ucontext_t *ctx = arg;
-  static atomic_int once;
-  static atomic_int once2;
-  STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
+
+  // print vital error nubers reliably
+  // the surface are of code this calls is small and audited
+  kprintf(
+      "\r\n\e[1;31m__oncrash %G %s pid %d tid %d rip %x bt %s\e[0m\n", sig,
+      program_invocation_short_name, getpid(), sys_gettid(),
+      ctx ? ctx->uc_mcontext.rip : 0,
+      DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.rbp
+                            : (struct StackFrame *)__builtin_frame_address(0)));
+
+  // print friendlier detailed crash report less reliably
+  // we're in a broken runtime state and so much can go wrong
   ftrace_enabled(-1);
   strace_enabled(-1);
-  owner = 0;
-  me = __tls_enabled ? __get_tls()->tib_tid : sys_gettid();
-  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
-  if (atomic_compare_exchange_strong_explicit(
-          &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
-    if (!__vforked) {
-#ifdef ATTACH_GDB_ON_CRASH
-      rip = ctx ? ctx->uc_mcontext.rip : 0;
-#endif
-      err = errno;
-      if ((gdbpid = IsDebuggerPresent(true))) {
-        DebugBreak();
-      } else if (__nocolor || g_isrunningundermake) {
-        gdbpid = -1;
-#if ATTACH_GDB_ON_CRASH
-      } else if (!IsTiny() && IsLinux() && FindDebugBinary() && !__isworker) {
-        // RestoreDefaultCrashSignalHandlers();
-        gdbpid = AttachDebugger(
-            ((sig == SIGTRAP || sig == SIGQUIT) &&
-             (rip >= (intptr_t)&__executable_start && rip < (intptr_t)&_etext))
-                ? rip
-                : 0);
-#endif
-      }
-      if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
-        __restore_tty();
-        ShowCrashReport(err, sig, si, ctx);
-        _Exit(128 + sig);
-      }
-      atomic_store_explicit(&once, 0, memory_order_relaxed);
-    } else {
-      atomic_store_explicit(&once, 0, memory_order_relaxed);
-      __minicrash(sig, si, ctx, "WHILE VFORKED");
-    }
-  } else if (sig == SIGTRAP) {
-    // chances are IsDebuggerPresent() confused strace w/ gdb
-    goto ItsATrap;
-  } else if (owner == me) {
-    // we crashed while generating a crash report
-    bZero = false;
-    if (atomic_compare_exchange_strong_explicit(
-            &once2, &bZero, true, memory_order_relaxed, memory_order_relaxed)) {
-      __minicrash(sig, si, ctx, "WHILE CRASHING");
-    } else {
-      // somehow __minicrash() crashed not possible
-      for (;;) {
-        abort();
-      }
-    }
-  } else {
-    // multiple threads have crashed
-    // kill current thread assuming process dies soon
-    // TODO(jart): It'd be nice to report on all threads.
-    _Exit1(8);
+  err = errno;
+  if ((gdbpid = IsDebuggerPresent(true))) {
+    DebugBreak();
   }
-ItsATrap:
-  strace_enabled(+1);
-  ftrace_enabled(+1);
+  if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
+    __restore_tty();
+    ShowCrashReport(err, sig, si, ctx);
+    RaiseCrash(sig);
+  }
 }
 
 #endif /* __x86_64__ */

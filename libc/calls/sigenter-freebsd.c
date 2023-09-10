@@ -41,9 +41,9 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
     ucontext_t uc;
     siginfo_t si;
   } g;
-  rva = __sighandrvas[sig & (NSIG - 1)];
+  rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {
-    flags = __sighandflags[sig & (NSIG - 1)];
+    flags = __sighandflags[sig];
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {

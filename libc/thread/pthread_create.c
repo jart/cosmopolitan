@@ -20,7 +20,6 @@
 #include "libc/atomic.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -29,7 +28,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/popcnt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -60,64 +59,30 @@ static unsigned long roundup2pow(unsigned long x) {
 }
 
 void _pthread_free(struct PosixThread *pt) {
-  static atomic_uint freed;
   if (pt->flags & PT_STATIC) return;
   free(pt->tls);
   if ((pt->flags & PT_OWNSTACK) &&  //
       pt->attr.__stackaddr &&       //
       pt->attr.__stackaddr != MAP_FAILED) {
-    npassert(!munmap(pt->attr.__stackaddr, pt->attr.__stacksize));
-  }
-  if (pt->altstack) {
-    free(pt->altstack);
+    unassert(!munmap(pt->attr.__stackaddr, pt->attr.__stacksize));
   }
   free(pt);
-  if (popcnt(atomic_fetch_add_explicit(&freed, 1, memory_order_acq_rel)) == 1) {
-    malloc_trim(0);
-  }
-}
-
-void pthread_kill_siblings_np(void) {
-  struct Dll *e, *e2;
-  struct PosixThread *pt, *self;
-  self = (struct PosixThread *)__get_tls()->tib_pthread;
-  pthread_spin_lock(&_pthread_lock);
-  for (e = dll_first(_pthread_list); e; e = e2) {
-    e2 = dll_next(_pthread_list, e);
-    pt = POSIXTHREAD_CONTAINER(e);
-    if (pt != self) {
-      pthread_kill((pthread_t)pt, SIGKILL);
-      dll_remove(&_pthread_list, e);
-      pthread_spin_unlock(&_pthread_lock);
-      _pthread_free(pt);
-    }
-  }
-  pthread_spin_unlock(&_pthread_lock);
 }
 
 static int PosixThread(void *arg, int tid) {
   void *rc;
-  struct sigaltstack ss;
   struct PosixThread *pt = arg;
   unassert(__get_tls()->tib_tid > 0);
-  if (pt->altstack) {
-    ss.ss_flags = 0;
-    ss.ss_size = SIGSTKSZ;
-    ss.ss_sp = pt->altstack;
-    if (sigaltstack(&ss, 0)) {
-      notpossible;
-    }
-  }
   if (pt->attr.__inheritsched == PTHREAD_EXPLICIT_SCHED) {
     _pthread_reschedule(pt);
   }
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
-    npassert(!sigprocmask(SIG_SETMASK, (sigset_t *)pt->attr.__sigmask, 0));
+    unassert(!sigprocmask(SIG_SETMASK, (sigset_t *)pt->attr.__sigmask, 0));
     rc = pt->start(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
-    npassert(!pt->cleanup);
+    unassert(!pt->cleanup);
     // calling pthread_exit() will either jump back here, or call exit
     pthread_exit(rc);
   }
@@ -249,11 +214,6 @@ static errno_t pthread_create_impl(pthread_t *thread,
       __asan_poison(pt->attr.__stackaddr, pt->attr.__guardsize,
                     kAsanStackOverflow);
     }
-  }
-
-  // setup signal handler stack
-  if (_wantcrashreports && !IsWindows()) {
-    pt->altstack = malloc(SIGSTKSZ);
   }
 
   // set initial status

@@ -19,44 +19,22 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/ucontext.internal.h"
-#include "libc/calls/ucontext.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
-#include "libc/str/str.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/tls2.internal.h"
 
 #ifdef __x86_64__
 
 // win32 calls this; we're running inside the thread that crashed
 __msabi unsigned __wincrash(struct NtExceptionPointers *ep) {
   int sig, code;
-  struct CosmoTib *tib;
-  static bool noreentry;
-  noreentry = true;
-
-  if ((tib = __tls_enabled ? __get_tls() : 0)) {
-    if (~tib->tib_flags & TIB_FLAG_WINCRASHING) {
-      tib->tib_flags |= TIB_FLAG_WINCRASHING;
-    } else {
-      ExitProcess(SIGSEGV);
-    }
-  } else {
-    if (!noreentry) {
-      noreentry = true;
-    } else {
-      ExitProcess(SIGSEGV);
-    }
-  }
 
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
@@ -133,7 +111,8 @@ __msabi unsigned __wincrash(struct NtExceptionPointers *ep) {
       break;
   }
 
-  STRACE("wincrash %G rip %x bt %s", sig, ep->ContextRecord->Rip,
+  STRACE("win32 vectored exception raising 0x%08Xu %G rip %x bt %s",
+         ep->ExceptionRecord->ExceptionCode, sig, ep->ContextRecord->Rip,
          DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
 
   if (__sighandflags[sig] & SA_SIGINFO) {
@@ -141,11 +120,6 @@ __msabi unsigned __wincrash(struct NtExceptionPointers *ep) {
     __sig_tramp(&pkg);
   } else {
     __sig_handle(kSigOpUnmaskable, sig, code, 0);
-  }
-
-  noreentry = false;
-  if (tib) {
-    tib->tib_flags &= ~TIB_FLAG_WINCRASHING;
   }
 
   return kNtExceptionContinueExecution;

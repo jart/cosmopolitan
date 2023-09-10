@@ -41,7 +41,7 @@
  * @threadsafe
  * @vforksafe
  */
-int getpid(void) {
+dontasan int getpid(void) {
   int rc;
   if (IsMetal()) {
     rc = 1;

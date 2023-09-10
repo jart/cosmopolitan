@@ -18,22 +18,30 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 
-#define N 64
+#define N 100
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeBacktrace)(char buf[N], struct StackFrame *fr) {
-  int o = 0;
+dontinstrument dontasan const char *(DescribeBacktrace)(char buf[N],
+                                                        struct StackFrame *fr) {
   bool gotsome = false;
+  char *p = buf;
+  char *pe = p + N;
   while (fr) {
     if (gotsome) {
-      append(" ");
+      if (p + 1 < pe) {
+        *p++ = ' ';
+        *p = 0;
+      }
     } else {
       gotsome = true;
     }
-    append("%x", fr->addr);
+    if (p + 17 <= pe) {
+      p = __hexcpy(p, fr->addr);
+    }
     fr = fr->next;
   }
   return buf;

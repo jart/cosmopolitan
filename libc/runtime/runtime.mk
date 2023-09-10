@@ -76,6 +76,7 @@ o/$(MODE)/libc/runtime/ftracer.o: private		\
 
 o/$(MODE)/libc/runtime/cosmo2.o				\
 o/$(MODE)/libc/runtime/fork-nt.o			\
+o/$(MODE)/libc/runtime/enable_tls.o			\
 o/$(MODE)/libc/runtime/printmemoryintervals.o		\
 o/$(MODE)/libc/runtime/findmemoryinterval.o		\
 o/$(MODE)/libc/runtime/sys_mprotect.greg.o		\
@@ -92,6 +93,7 @@ o/$(MODE)/libc/runtime/print.greg.o			\
 o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
 o/$(MODE)/libc/runtime/winmain.greg.o			\
+o/$(MODE)/libc/runtime/interceptflag.greg.o		\
 o/$(MODE)/libc/runtime/opensymboltable.o: private	\
 		CFLAGS +=				\
 			-Os				\

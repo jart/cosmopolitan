@@ -41,9 +41,9 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
     ucontext_t uc;
     struct siginfo si;
   } g;
-  rva = __sighandrvas[sig & (NSIG - 1)];
+  rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {
-    flags = __sighandflags[sig & (NSIG - 1)];
+    flags = __sighandflags[sig];
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(__executable_start + rva))(sig, 0, 0);
     } else {

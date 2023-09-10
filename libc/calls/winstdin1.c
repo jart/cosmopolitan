@@ -128,6 +128,7 @@ textwindows static char16_t *CreateStdinPipeName(char16_t *a, int64_t h) {
 // this makes it possible for our read() implementation to periodically
 // poll for signals while performing a blocking overlapped io operation
 textwindows void WinMainStdin(void) {
+  uint32_t conmode;
   char16_t pipename[64];
   int64_t hStdin, hWriter, hReader, hThread, hSemaphore;
   if (!SupportsWindows()) return;
@@ -135,6 +136,10 @@ textwindows void WinMainStdin(void) {
   hStdin = __imp_GetStdHandle(kNtStdInputHandle);
   if (hStdin == kNtInvalidHandleValue) {
     Log("<stdin> GetStdHandle failed\n");
+    return;
+  }
+  if (!__imp_GetConsoleMode(hStdin, &conmode)) {
+    Log("<stdin> stdin not a console\n");
     return;
   }
   CreateStdinPipeName(pipename, hStdin);

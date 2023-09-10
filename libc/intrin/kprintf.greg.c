@@ -325,13 +325,13 @@ privileged long kloghandle(void) {
         long proc;
         proc = __imp_GetCurrentProcess();
         hand = __imp_GetStdHandle(kNtStdErrorHandle);
-        __imp_DuplicateHandle(proc, hand, proc, &hand, 0, true,
+        __imp_DuplicateHandle(proc, hand, proc, &hand, 0, false,
                               kNtDuplicateSameAccess);
       } else if (n && n < 512) {
         hand = __imp_CreateFileW(
             path, kNtFileAppendData,
-            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
-            &kNtIsInheritable, kNtOpenAlways, kNtFileAttributeNormal, 0);
+            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+            kNtOpenAlways, kNtFileAttributeNormal, 0);
       } else {
         hand = -1;  // KPRINTF_LOG was empty string or too long
       }

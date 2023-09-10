@@ -15,13 +15,16 @@
  *  limitations under the License.
  */
 #include "third_party/mbedtls/test/lib.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/libfatal.internal.h"
@@ -38,7 +41,9 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/nr.h"
+#include "libc/temp.h"
 #include "libc/time/time.h"
+#include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/endian.h"
@@ -76,11 +81,33 @@ char *output;
 jmp_buf jmp_tmp;
 int option_verbose = 1;
 mbedtls_test_info_t mbedtls_test_info;
+static char tmpdir[PATH_MAX];
+static char third_party[PATH_MAX];
 
 int mbedtls_test_platform_setup(void) {
   int ret = 0;
+  const char *s;
   static char mybuf[2][BUFSIZ];
   ShowCrashReports();
+  if ((s = getenv("TMPDIR"))) {
+    strlcpy(tmpdir, s, sizeof(tmpdir));
+    if (makedirs(tmpdir, 0755)) {
+      strcpy(tmpdir, "/tmp");
+    }
+  } else {
+    strcpy(tmpdir, "/tmp");
+  }
+  s = realpath("third_party/", third_party);
+  strlcat(tmpdir, "/mbedtls.XXXXXX", sizeof(tmpdir));
+  if (!mkdtemp(tmpdir)) {
+    perror(tmpdir);
+    exit(1);
+  }
+  if (chdir(tmpdir)) {
+    perror(tmpdir);
+    exit(2);
+  }
+  if (s) symlink(s, "third_party");
   makedirs("o/tmp", 0755);
   setvbuf(stdout, mybuf[0], _IOLBF, BUFSIZ);
   setvbuf(stderr, mybuf[1], _IOLBF, BUFSIZ);
@@ -91,14 +118,20 @@ int mbedtls_test_platform_setup(void) {
 }
 
 void mbedtls_test_platform_teardown(void) {
+  rmrf(tmpdir);
 #if defined(MBEDTLS_PLATFORM_C)
   mbedtls_platform_teardown(&platform_ctx);
 #endif /* MBEDTLS_PLATFORM_C */
 }
 
 wontreturn void exit(int rc) {
-  if (rc) fprintf(stderr, "mbedtls test exit() called with %d\n", rc);
-  if (rc) xwrite(1, output, appendz(output).i);
+  if (rc) {
+    fprintf(stderr, "mbedtls test exit() called with $?=%d bt %s\n", rc,
+            DescribeBacktrace(__builtin_frame_address(0)));
+  }
+  if (rc) {
+    xwrite(1, output, appendz(output).i);
+  }
   free(output);
   output = 0;
   __cxa_finalize(0);
@@ -137,7 +170,16 @@ int mbedtls_test_write(const char *fmt, ...) {
   if (option_verbose) {
     n = vfprintf(stderr, fmt, va);
   } else {
-    n = vappendf(&output, fmt, va);
+    char buf[512];
+    const char *s;
+    vsnprintf(buf, 512, fmt, va);
+    if ((s = strchr(buf, '\n')) &&     //
+        s == buf + strlen(buf) - 1 &&  //
+        strstr(buf, "PASS")) {
+      n = 0;  // ignore pointless success lines
+    } else {
+      n = appends(&output, buf);
+    }
   }
   va_end(va);
   return n;

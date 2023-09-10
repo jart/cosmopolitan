@@ -60,7 +60,8 @@ static textexit void LogStackUse(void) {
   if (!PLEDGED(STDIO) || !PLEDGED(WPATH) || !PLEDGED(CPATH)) return;
   usage = GetStackUsage((char *)GetStackAddr(), GetStackSize());
   e = errno;
-  if ((fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY, 0644)) != -1) {
+  if ((fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY | O_CLOEXEC, 0644)) !=
+      -1) {
     p = FormatUint64(stacklog, usage);
     for (i = 0; i < __argc; ++i) {
       n = strlen(__argv[i]);

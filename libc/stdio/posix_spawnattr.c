@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/posix_spawn.internal.h"
@@ -76,11 +77,6 @@ int posix_spawnattr_getflags(const posix_spawnattr_t *attr, short *flags) {
 /**
  * Sets posix_spawn() flags.
  *
- * Setting these flags is needed in order for the other setters in this
- * function to take effect. If a flag is known but unsupported by the
- * host platform, it'll be silently removed from the flags. You can
- * check for this by calling the getter afterwards.
- *
  * @param attr was initialized by posix_spawnattr_init()
  * @param flags may have any of the following
  *     - `POSIX_SPAWN_RESETIDS`
@@ -94,9 +90,6 @@ int posix_spawnattr_getflags(const posix_spawnattr_t *attr, short *flags) {
  * @raise EINVAL if `flags` has invalid bits
  */
 int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
-  if (!(IsLinux() || IsFreebsd() || IsNetbsd())) {
-    flags &= ~(POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER);
-  }
   if (flags &
       ~(POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSIGDEF |
         POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETSCHEDPARAM |
@@ -107,134 +100,62 @@ int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
   return 0;
 }
 
+/**
+ * Gets process group id associated with attributes.
+ *
+ * @param attr was initialized by posix_spawnattr_init()
+ * @param pgroup receives the result on success
+ * @return 0 on success, or errno on error
+ */
 int posix_spawnattr_getpgroup(const posix_spawnattr_t *attr, int *pgroup) {
   *pgroup = (*attr)->pgroup;
   return 0;
 }
 
+/**
+ * Specifies process group into which child process is placed.
+ *
+ * Setting `pgroup` to zero will ensure newly created processes are
+ * placed within their own brand new process group.
+ *
+ * This setter also sets the `POSIX_SPAWN_SETPGROUP` flag.
+ *
+ * @param attr was initialized by posix_spawnattr_init()
+ * @param pgroup is the process group id, or 0 for self
+ * @return 0 on success, or errno on error
+ */
 int posix_spawnattr_setpgroup(posix_spawnattr_t *attr, int pgroup) {
+  (*attr)->flags |= POSIX_SPAWN_SETPGROUP;
   (*attr)->pgroup = pgroup;
-  return 0;
-}
-
-/**
- * Gets scheduler policy that'll be used for spawned process.
- *
- * If the setter wasn't called then this function will return the
- * scheduling policy of the current process.
- *
- * @param attr was initialized by posix_spawnattr_init()
- * @param schedpolicy receives the result
- * @return 0 on success, or errno on error
- * @raise ENOSYS if platform support isn't available
- */
-int posix_spawnattr_getschedpolicy(const posix_spawnattr_t *attr,
-                                   int *schedpolicy) {
-  int rc, e = errno;
-  struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
-  if (!a->schedpolicy_isset) {
-    rc = sched_getscheduler(0);
-    if (rc == -1) {
-      rc = errno;
-      errno = e;
-      return rc;
-    }
-    a->schedpolicy = rc;
-    a->schedpolicy_isset = true;
-  }
-  *schedpolicy = a->schedpolicy;
-  return 0;
-}
-
-/**
- * Specifies scheduler policy override for spawned process.
- *
- * Scheduling policies are inherited by default. Use this to change it.
- *
- * @param attr was initialized by posix_spawnattr_init()
- * @param schedpolicy receives the result
- * @return 0 on success, or errno on error
- */
-int posix_spawnattr_setschedpolicy(posix_spawnattr_t *attr, int schedpolicy) {
-  (*attr)->schedpolicy = schedpolicy;
-  (*attr)->schedpolicy_isset = true;
-  return 0;
-}
-
-/**
- * Gets scheduler parameter that'll be used for spawned process.
- *
- * If the setter wasn't called then this function will return the
- * scheduling parameter of the current process.
- *
- * @param attr was initialized by posix_spawnattr_init()
- * @param schedparam receives the result
- * @return 0 on success, or errno on error
- * @raise ENOSYS if platform support isn't available
- */
-int posix_spawnattr_getschedparam(const posix_spawnattr_t *attr,
-                                  struct sched_param *schedparam) {
-  int rc, e = errno;
-  struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
-  if (!a->schedparam_isset) {
-    rc = sched_getparam(0, &a->schedparam);
-    if (rc == -1) {
-      rc = errno;
-      errno = e;
-      return rc;
-    }
-    a->schedparam_isset = true;
-  }
-  *schedparam = a->schedparam;
-  return 0;
-}
-
-/**
- * Specifies scheduler parameter override for spawned process.
- *
- * Scheduling parameters are inherited by default. Use this to change it.
- *
- * @param attr was initialized by posix_spawnattr_init()
- * @param schedparam receives the result
- * @return 0 on success, or errno on error
- */
-int posix_spawnattr_setschedparam(posix_spawnattr_t *attr,
-                                  const struct sched_param *schedparam) {
-  (*attr)->schedparam = *schedparam;
-  (*attr)->schedparam_isset = true;
   return 0;
 }
 
 /**
  * Gets signal mask for sigprocmask() in child process.
  *
- * If the setter wasn't called then this function will return the
- * scheduling parameter of the current process.
+ * The signal mask is applied to the child process in such a way that
+ * signal handlers from the parent process can't get triggered in the
+ * child process.
  *
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_getsigmask(const posix_spawnattr_t *attr,
                                sigset_t *sigmask) {
-  struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
-  if (!a->sigmask_isset) {
-    npassert(!sigprocmask(SIG_SETMASK, 0, &a->sigmask));
-    a->sigmask_isset = true;
-  }
-  *sigmask = a->sigmask;
+  *sigmask = (*attr)->sigmask;
   return 0;
 }
 
 /**
  * Specifies signal mask for sigprocmask() in child process.
  *
- * Signal masks are inherited by default. Use this to change it.
+ * This setter also sets the `POSIX_SPAWN_SETSIGMASK` flag.
  *
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_setsigmask(posix_spawnattr_t *attr,
                                const sigset_t *sigmask) {
+  (*attr)->flags |= POSIX_SPAWN_SETSIGMASK;
   (*attr)->sigmask = *sigmask;
-  (*attr)->sigmask_isset = true;
   return 0;
 }
 
@@ -252,10 +173,119 @@ int posix_spawnattr_getsigdefault(const posix_spawnattr_t *attr,
 /**
  * Specifies which signals should be restored to `SIG_DFL`.
  *
+ * This routine isn't necessary in most cases, since posix_spawn() by
+ * default will try to avoid vfork() race conditions by tracking what
+ * signals have a handler function and then resets them automatically
+ * within the child process, before applying the child's signal mask.
+ * This function may be used to ensure the `SIG_IGN` disposition will
+ * not propagate across execve in cases where this process explicitly
+ * set the signals to `SIG_IGN` earlier (since posix_spawn() will not
+ * issue O(128) system calls just to be totally pedantic about that).
+ *
+ * Using this setter automatically sets `POSIX_SPAWN_SETSIGDEF`.
+ *
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *attr,
                                   const sigset_t *sigdefault) {
+  (*attr)->flags |= POSIX_SPAWN_SETSIGDEF;
   (*attr)->sigdefault = *sigdefault;
+  return 0;
+}
+
+/**
+ * Gets resource limit for spawned process.
+ *
+ * @return 0 on success, or errno on error
+ * @raise EINVAL if `resource` is invalid
+ * @raise ENOENT if `resource` is absent
+ */
+int posix_spawnattr_getrlimit(const posix_spawnattr_t *attr, int resource,
+                              struct rlimit *rlim) {
+  if ((0 <= resource && resource < ARRAYLEN((*attr)->rlim))) {
+    if (((*attr)->rlimset & (1u << resource))) {
+      *rlim = (*attr)->rlim[resource];
+      return 0;
+    } else {
+      return ENOENT;
+    }
+  } else {
+    return EINVAL;
+  }
+}
+
+/**
+ * Sets resource limit on spawned process.
+ *
+ * Using this setter automatically sets `POSIX_SPAWN_SETRLIMIT`.
+ *
+ * @return 0 on success, or errno on error
+ * @raise EINVAL if resource is invalid
+ */
+int posix_spawnattr_setrlimit(posix_spawnattr_t *attr, int resource,
+                              const struct rlimit *rlim) {
+  if (0 <= resource && resource < ARRAYLEN((*attr)->rlim)) {
+    (*attr)->flags |= POSIX_SPAWN_SETRLIMIT;
+    (*attr)->rlimset |= 1u << resource;
+    (*attr)->rlim[resource] = *rlim;
+    return 0;
+  } else {
+    return EINVAL;
+  }
+}
+
+/**
+ * Gets scheduler policy that'll be used for spawned process.
+ *
+ * @param attr was initialized by posix_spawnattr_init()
+ * @param schedpolicy receives the result
+ * @return 0 on success, or errno on error
+ */
+int posix_spawnattr_getschedpolicy(const posix_spawnattr_t *attr,
+                                   int *schedpolicy) {
+  *schedpolicy = (*attr)->schedpolicy;
+  return 0;
+}
+
+/**
+ * Specifies scheduler policy override for spawned process.
+ *
+ * Using this setter automatically sets `POSIX_SPAWN_SETSCHEDULER`.
+ *
+ * @param attr was initialized by posix_spawnattr_init()
+ * @return 0 on success, or errno on error
+ */
+int posix_spawnattr_setschedpolicy(posix_spawnattr_t *attr, int schedpolicy) {
+  (*attr)->flags |= POSIX_SPAWN_SETSCHEDULER;
+  (*attr)->schedpolicy = schedpolicy;
+  return 0;
+}
+
+/**
+ * Gets scheduler parameter.
+ *
+ * @param attr was initialized by posix_spawnattr_init()
+ * @param schedparam receives the result
+ * @return 0 on success, or errno on error
+ */
+int posix_spawnattr_getschedparam(const posix_spawnattr_t *attr,
+                                  struct sched_param *schedparam) {
+  *schedparam = (*attr)->schedparam;
+  return 0;
+}
+
+/**
+ * Specifies scheduler parameter override for spawned process.
+ *
+ * Using this setter automatically sets `POSIX_SPAWN_SETSCHEDPARAM`.
+ *
+ * @param attr was initialized by posix_spawnattr_init()
+ * @param schedparam receives the result
+ * @return 0 on success, or errno on error
+ */
+int posix_spawnattr_setschedparam(posix_spawnattr_t *attr,
+                                  const struct sched_param *schedparam) {
+  (*attr)->flags |= POSIX_SPAWN_SETSCHEDPARAM;
+  (*attr)->schedparam = *schedparam;
   return 0;
 }

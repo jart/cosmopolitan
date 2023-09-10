@@ -29,12 +29,12 @@
  *
  * The order of precedence is:
  *
- *   - $TMPDIR/
- *   - GetTempPath()
- *   - /tmp/
+ *   - $TMPDIR/ is always favored if defined
+ *   - GetTempPath(), for the New Technology
+ *   - /tmp/ to make security scene go crazy
  *
- * This guarantees trailing slash.
- * We also guarantee `kTmpPath` won't be longer than `PATH_MAX / 2`.
+ * This guarantees an absolute path with a trailing slash. We also
+ * ensure `kTmpPath` isn't longer than `PATH_MAX-NAME_MAX`.
  */
 char kTmpPath[PATH_MAX];
 
@@ -48,15 +48,20 @@ __attribute__((__constructor__)) static void kTmpPathInit(void) {
   uint32_t n;
   char16_t path16[PATH_MAX];
 
-  if ((s = getenv("TMPDIR")) && (n = strlen(s)) < PATH_MAX / 2) {
-    if (n) memcpy(kTmpPath, s, n);
-    if (n && kTmpPath[n - 1] != '/') {
-      kTmpPath[n + 0] = '/';
-      kTmpPath[n + 1] = 0;
+  if ((s = getenv("TMPDIR"))) {
+    if (*s != '/') {
+      if (!getcwd(kTmpPath, PATH_MAX)) {
+        goto GiveUp;
+      }
+      strlcat(kTmpPath, "/", sizeof(kTmpPath));
     }
-    return;
+    strlcat(kTmpPath, s, sizeof(kTmpPath));
+    if (strlcat(kTmpPath, "/", sizeof(kTmpPath)) < PATH_MAX - NAME_MAX) {
+      return;
+    }
   }
 
+GiveUp:
   if (IsWindows() &&
       ((n = GetTempPath(ARRAYLEN(path16), path16)) && n < ARRAYLEN(path16))) {
     // turn c:\foo\bar\ into c:/foo/bar/

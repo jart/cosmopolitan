@@ -34,7 +34,6 @@
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/appendresourcereport.internal.h"
@@ -50,7 +49,7 @@
 #include "libc/nexgen32e/x86info.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/posix_spawn.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
@@ -115,7 +114,7 @@ FLAGS\n\
   -C SECS      set cpu limit [default 16]\n\
   -L SECS      set lat limit [default 90]\n\
   -P PROCS     set pro limit [default 2048]\n\
-  -S BYTES     set stk limit [default 2m]\n\
+  -S BYTES     set stk limit [default 8m]\n\
   -M BYTES     set mem limit [default 512m]\n\
   -F BYTES     set fsz limit [default 256m]\n\
   -O BYTES     set out limit [default 1m]\n\
@@ -138,7 +137,8 @@ ENVIRONMENT\n\
 \n"
 
 struct Strings {
-  size_t n;
+  int n;
+  int c;
   char **p;
 };
 
@@ -206,6 +206,8 @@ sigset_t mask;
 char buf[4096];
 sigset_t savemask;
 char tmpout[PATH_MAX];
+posix_spawnattr_t spawnattr;
+posix_spawn_file_actions_t spawnfila;
 
 char *g_tmpout;
 const char *g_tmpout_original;
@@ -414,16 +416,20 @@ bool IsGccOnlyFlag(const char *s) {
       return true;
     }
   }
-  if (startswith(s, "-ffixed-")) return true;
-  if (startswith(s, "-fcall-saved")) return true;
-  if (startswith(s, "-fcall-used")) return true;
-  if (startswith(s, "-fgcse-")) return true;
-  if (startswith(s, "-fvect-cost-model=")) return true;
-  if (startswith(s, "-fsimd-cost-model=")) return true;
-  if (startswith(s, "-fopt-info")) return true;
-  if (startswith(s, "-mstringop-strategy=")) return true;
-  if (startswith(s, "-mpreferred-stack-boundary=")) return true;
-  if (startswith(s, "-Wframe-larger-than=")) return true;
+  if (s[0] == '-') {
+    if (s[1] == 'f') {
+      if (startswith(s, "-ffixed-")) return true;
+      if (startswith(s, "-fcall-saved")) return true;
+      if (startswith(s, "-fcall-used")) return true;
+      if (startswith(s, "-fgcse-")) return true;
+      if (startswith(s, "-fvect-cost-model=")) return true;
+      if (startswith(s, "-fsimd-cost-model=")) return true;
+      if (startswith(s, "-fopt-info")) return true;
+    }
+    if (startswith(s, "-mstringop-strategy=")) return true;
+    if (startswith(s, "-mpreferred-stack-boundary=")) return true;
+    if (startswith(s, "-Wframe-larger-than=")) return true;
+  }
   return false;
 }
 
@@ -446,9 +452,16 @@ static size_t TallyArgs(char **p) {
 }
 
 void AddStr(struct Strings *l, char *s) {
-  l->p = realloc(l->p, (++l->n + 1) * sizeof(*l->p));
-  l->p[l->n - 1] = s;
-  l->p[l->n - 0] = 0;
+  if (l->n == l->c) {
+    if (l->c) {
+      l->c += l->c >> 1;
+    } else {
+      l->c = 16;
+    }
+    l->p = realloc(l->p, (l->c + 1) * sizeof(*l->p));
+  }
+  l->p[l->n++] = s;
+  l->p[l->n] = 0;
 }
 
 void AddEnv(char *s) {
@@ -510,58 +523,47 @@ static int GetBaseCpuFreqMhz(void) {
   return KCPUIDS(16H, EAX) & 0x7fff;
 }
 
+void PlanResource(int resource, struct rlimit rlim) {
+  struct rlimit prior;
+  if (getrlimit(resource, &prior)) return;
+  rlim.rlim_cur = MIN(rlim.rlim_cur, prior.rlim_max);
+  rlim.rlim_max = MIN(rlim.rlim_max, prior.rlim_max);
+  posix_spawnattr_setrlimit(&spawnattr, resource, &rlim);
+}
+
 void SetCpuLimit(int secs) {
   if (secs <= 0) return;
   if (IsWindows()) return;
 #ifdef __x86_64__
   int mhz, lim;
-  struct rlimit rlim;
   if (!(mhz = GetBaseCpuFreqMhz())) return;
   lim = ceil(3100. / mhz * secs);
-  rlim.rlim_cur = lim;
-  rlim.rlim_max = lim + 1;
-  if (setrlimit(RLIMIT_CPU, &rlim) == -1) {
-    if (getrlimit(RLIMIT_CPU, &rlim) == -1) return;
-    if (lim < rlim.rlim_cur) {
-      rlim.rlim_cur = lim;
-      setrlimit(RLIMIT_CPU, &rlim);
-    }
-  }
+  PlanResource(RLIMIT_CPU, (struct rlimit){lim, lim + 1});
 #endif
 }
 
 void SetFszLimit(long n) {
-  struct rlimit rlim;
   if (n <= 0) return;
   if (IsWindows()) return;
-  rlim.rlim_cur = n;
-  rlim.rlim_max = n + (n >> 1);
-  if (setrlimit(RLIMIT_FSIZE, &rlim) == -1) {
-    if (getrlimit(RLIMIT_FSIZE, &rlim) == -1) return;
-    rlim.rlim_cur = n;
-    setrlimit(RLIMIT_FSIZE, &rlim);
-  }
+  PlanResource(RLIMIT_FSIZE, (struct rlimit){n, n + (n >> 1)});
 }
 
 void SetMemLimit(long n) {
-  struct rlimit rlim = {n, n};
   if (n <= 0) return;
   if (IsWindows() || IsXnu()) return;
-  setrlimit(RLIMIT_AS, &rlim);
+  PlanResource(RLIMIT_AS, (struct rlimit){n, n});
 }
 
 void SetStkLimit(long n) {
   if (IsWindows()) return;
   if (n <= 0) return;
   n = MAX(n, PTHREAD_STACK_MIN * 2);
-  struct rlimit rlim = {n, n};
-  setrlimit(RLIMIT_STACK, &rlim);
+  PlanResource(RLIMIT_STACK, (struct rlimit){n, n});
 }
 
 void SetProLimit(long n) {
-  struct rlimit rlim = {n, n};
   if (n <= 0) return;
-  setrlimit(RLIMIT_NPROC, &rlim);
+  PlanResource(RLIMIT_NPROC, (struct rlimit){n, n});
 }
 
 bool ArgNeedsShellQuotes(const char *s) {
@@ -616,7 +618,7 @@ char *AddShellQuotes(const char *s) {
 
 void MakeDirs(const char *path, int mode) {
   if (makedirs(path, mode)) {
-    kprintf("error: makedirs(%#s) failed\n", path);
+    perror(path);
     exit(1);
   }
 }
@@ -624,14 +626,28 @@ void MakeDirs(const char *path, int mode) {
 int Launch(void) {
   size_t got;
   ssize_t rc;
+  errno_t err;
   int ws, pid;
   uint64_t us;
   gotchld = 0;
 
   if (pipe2(pipefds, O_CLOEXEC) == -1) {
-    kprintf("pipe2 failed: %s\n", _strerrno(errno));
+    perror("pipe2");
     exit(1);
   }
+
+  posix_spawnattr_init(&spawnattr);
+  posix_spawnattr_setsigmask(&spawnattr, &savemask);
+  SetCpuLimit(cpuquota);
+  SetFszLimit(fszquota);
+  SetMemLimit(memquota);
+  SetStkLimit(stkquota);
+  SetProLimit(proquota);
+
+  posix_spawn_file_actions_init(&spawnfila);
+  if (stdoutmustclose)
+    posix_spawn_file_actions_adddup2(&spawnfila, pipefds[1], 1);
+  posix_spawn_file_actions_adddup2(&spawnfila, pipefds[1], 2);
 
   clock_gettime(CLOCK_MONOTONIC, &start);
   if (timeout > 0) {
@@ -640,36 +656,17 @@ int Launch(void) {
     setitimer(ITIMER_REAL, &timer, 0);
   }
 
-  pid = vfork();
-  if (pid == -1) {
-    kprintf("vfork failed: %s\n", _strerrno(errno));
+  err = posix_spawn(&pid, cmd, &spawnfila, &spawnattr, args.p, env.p);
+  if (err) {
+    tinyprint(2, program_invocation_short_name, ": failed to spawn ", cmd, ": ",
+              strerror(err), " (see --strace for further details)\n", NULL);
     exit(1);
   }
 
-#if 0
-  int fd;
-  size_t n;
-  char b[1024], *p;
-  size_t t = strlen(cmd) + 1 + TallyArgs(args.p) + 9 + TallyArgs(env.p) + 9;
-  n = ksnprintf(b, sizeof(b), "%ld %s %s\n", t, cmd, outpath);
-  fd = open("o/argmax.txt", O_APPEND | O_CREAT | O_WRONLY, 0644);
-  write(fd, b, n);
-  close(fd);
-#endif
-
-  if (!pid) {
-    SetCpuLimit(cpuquota);
-    SetFszLimit(fszquota);
-    SetMemLimit(memquota);
-    SetStkLimit(stkquota);
-    SetProLimit(proquota);
-    if (stdoutmustclose) dup2(pipefds[1], 1);
-    dup2(pipefds[1], 2);
-    sigprocmask(SIG_SETMASK, &savemask, 0);
-    execve(cmd, args.p, env.p);
-    kprintf("execve(%#s) failed: %s\n", cmd, _strerrno(errno));
-    _Exit(127);
-  }
+  signal(SIGINT, SIG_IGN);
+  signal(SIGQUIT, SIG_IGN);
+  posix_spawn_file_actions_destroy(&spawnfila);
+  posix_spawnattr_destroy(&spawnattr);
   close(pipefds[1]);
 
   for (;;) {
@@ -790,12 +787,10 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
       remain -= rc;
     } else if (errno == EXDEV || errno == ENOSYS) {
       if (lseek(fdin, 0, SEEK_SET) == -1) {
-        kprintf("%s: failed to lseek\n", from);
         res = false;
         break;
       }
       if (lseek(fdout, 0, SEEK_SET) == -1) {
-        kprintf("%s: failed to lseek\n", to);
         res = false;
         break;
       }
@@ -811,26 +806,6 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
   return res;
 }
 
-bool IsNativeExecutable(const char *path) {
-  bool res;
-  char buf[4];
-  int got, fd;
-  res = false;
-  if ((fd = open(path, O_RDONLY)) != -1) {
-    if ((got = read(fd, buf, 4)) == 4) {
-      if (IsWindows()) {
-        res = READ16LE(buf) == READ16LE("MZ");
-      } else if (IsXnu()) {
-        res = READ32LE(buf) == 0xFEEDFACEu + 1;
-      } else {
-        res = READ32LE(buf) == READ32LE("\177ELF");
-      }
-    }
-    close(fd);
-  }
-  return res;
-}
-
 char *MakeTmpOut(const char *path) {
   int c;
   char *p = tmpout;
@@ -840,7 +815,10 @@ char *MakeTmpOut(const char *path) {
   while ((c = *path++)) {
     if (c == '/') c = '_';
     if (p == e) {
-      kprintf("MakeTmpOut path too long: %s\n", tmpout);
+      tinyprint(2, program_invocation_short_name,
+                ": fatal error: MakeTmpOut() generated temporary filename "
+                "that's too long: ",
+                tmpout, "\n", NULL);
       exit(1);
     }
     *p++ = c;
@@ -864,14 +842,12 @@ int main(int argc, char *argv[]) {
 
   mode = firstnonnull(getenv("MODE"), MODE);
 
-  /*
-   * parse prefix arguments
-   */
+  // parse prefix arguments
   verbose = 4;
   timeout = 90;                 /* secs */
   cpuquota = 32;                /* secs */
   proquota = 2048;              /* procs */
-  stkquota = 2 * 1024 * 1024;   /* bytes */
+  stkquota = 8 * 1024 * 1024;   /* bytes */
   fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
@@ -922,24 +898,23 @@ int main(int argc, char *argv[]) {
         outquota = sizetol(optarg, 1024);
         break;
       case 'h':
-        fputs(MANUAL, stdout);
+        tinyprint(1, MANUAL, NULL);
         exit(0);
       default:
-        fputs(MANUAL, stderr);
+        tinyprint(2, MANUAL, NULL);
         exit(1);
     }
   }
   if (optind == argc) {
-    fputs("error: missing arguments\n", stderr);
+    tinyprint(2, program_invocation_short_name, ": missing arguments\n", NULL);
     exit(1);
   }
 
-  /*
-   * extend limits for slow UBSAN in particular
-   */
+  // extend limits for slow UBSAN in particular
   if (!strcmp(mode, "dbg") || !strcmp(mode, "ubsan")) {
     cpuquota *= 2;
     fszquota *= 2;
+    stkquota *= 2;
     memquota *= 2;
     timeout *= 2;
   }
@@ -964,18 +939,14 @@ int main(int argc, char *argv[]) {
     ispkg = true;
   }
 
-  /*
-   * ingest arguments
-   */
+  // ingest arguments
   for (i = optind; i < argc; ++i) {
 
-    /*
-     * replace output filename argument
-     *
-     * some commands (e.g. ar) don't use the `-o PATH` notation. in that
-     * case we assume the output path was passed to compile.com -TTARGET
-     * which means we can replace the appropriate command line argument.
-     */
+    // replace output filename argument
+    //
+    // some commands (e.g. ar) don't use the `-o PATH` notation. in that
+    // case we assume the output path was passed to compile.com -TTARGET
+    // which means we can replace the appropriate command line argument.
     if (!noworkaround &&  //
         !movepath &&      //
         !outpath &&       //
@@ -1232,9 +1203,7 @@ int main(int argc, char *argv[]) {
     exit(7);
   }
 
-  /*
-   * append special args
-   */
+  // append special args
   if (iscc) {
     if (isclang) {
       AddArg("-Wno-unused-command-line-argument");
@@ -1290,9 +1259,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  /*
-   * scrub environment for determinism and great justice
-   */
+  // scrub environment for determinism and great justice
   for (envp = environ; *envp; ++envp) {
     if (startswith(*envp, "MODE=")) {
       mode = *envp + 5;
@@ -1304,9 +1271,7 @@ int main(int argc, char *argv[]) {
   AddEnv("LC_ALL=C");
   AddEnv("SOURCE_DATE_EPOCH=0");
 
-  /*
-   * ensure output directory exists
-   */
+  // ensure output directory exists
   if (outpath) {
     outdir = xdirname(outpath);
     if (!isdirectory(outdir)) {
@@ -1314,49 +1279,40 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  /*
-   * make sense of standard i/o file descriptors
-   * we want to permit pipelines but prevent talking to terminal
-   */
+  // make sense of standard i/o file descriptors
+  // we want to permit pipelines but prevent talking to terminal
   stdoutmustclose = fstat(1, &st) == -1 || S_ISCHR(st.st_mode);
   if (fstat(0, &st) == -1 || S_ISCHR(st.st_mode)) {
     close(0);
     open("/dev/null", O_RDONLY);
   }
 
-  /*
-   * SIGINT (CTRL-C) and SIGQUIT (CTRL-\) are delivered to process group
-   * so the correct thing to do is to do nothing, and wait for the child
-   * to die as a result of those signals. SIGPIPE shouldn't happen until
-   * the very end since we buffer so it is safe to let it kill the prog.
-   * Most importantly we need SIGCHLD to interrupt the read() operation!
-   */
-  sigfillset(&mask);
-  sigdelset(&mask, SIGILL);
-  sigdelset(&mask, SIGBUS);
-  sigdelset(&mask, SIGPIPE);
-  sigdelset(&mask, SIGALRM);
-  sigdelset(&mask, SIGSEGV);
-  sigdelset(&mask, SIGCHLD);
+  // SIGINT (CTRL-C) and SIGQUIT (CTRL-\) are delivered to the child
+  // process, so we should ignore it and wait for the child to die.
+  // SIGPIPE shouldn't happen until the very end since we buffer so it
+  // is safe to let it kill the prog.
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGINT);
+  sigaddset(&mask, SIGQUIT);
   sigprocmask(SIG_BLOCK, &mask, &savemask);
+
+  // we want SIGCHLD to interrupt the read() operation
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_NOCLDSTOP | SA_SIGINFO;
   sa.sa_sigaction = OnChld;
-  if (sigaction(SIGCHLD, &sa, 0) == -1) exit(83);
+  sigaction(SIGCHLD, &sa, 0);
+
+  // set a death clock if requested
   if (timeout > 0) {
     sa.sa_flags = 0;
     sa.sa_handler = OnAlrm;
     sigaction(SIGALRM, &sa, 0);
   }
 
-  /*
-   * run command
-   */
+  // run command
   ws = Launch();
 
-  /*
-   * propagate exit
-   */
+  // propagate exit
   if (ws != -1) {
     if (WIFEXITED(ws)) {
       if (!(exitcode = WEXITSTATUS(ws)) || exitcode == 254) {
@@ -1423,9 +1379,7 @@ int main(int argc, char *argv[]) {
     exitcode = 89;
   }
 
-  /*
-   * describe command that was run
-   */
+  // describe command that was run
   if (!exitcode || exitcode == 254) {
     if (exitcode == 254) {
       exitcode = 0;
@@ -1576,9 +1530,7 @@ int main(int argc, char *argv[]) {
     ReportResources();
   }
 
-  /*
-   * flush output
-   */
+  // flush output
   if (WriteAllUntilSignalledOrError(2, output, appendz(output).i) == -1) {
     if (errno == EINTR) {
       s = "notice: compile.com output truncated\n";

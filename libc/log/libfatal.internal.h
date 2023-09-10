@@ -9,6 +9,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+__funline unsigned long __strlen(const char *s) {
+  unsigned long n = 0;
+  while (*s++) ++n;
+  return n;
+}
+
 __funline int __strcmp(const char *l, const char *r) {
   size_t i = 0;
   while (l[i] == r[i] && r[i]) ++i;
@@ -22,6 +28,15 @@ __funline char *__stpcpy(char *d, const char *s) {
       return d + i;
     }
   }
+}
+
+__funline long __write_linux(int fd, const void *p, long n) {
+  long ax = 1;
+  asm volatile("syscall"
+               : "+a"(ax)
+               : "D"(fd), "S"(p), "d"(n)
+               : "rcx", "r11", "memory");
+  return ax;
 }
 
 __funline void *__repstosb(void *di, char al, size_t cx) {

@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/aarch64.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -63,18 +64,28 @@ struct Buffer {
   int i;
 };
 
-static bool IsCode(uintptr_t p) {
+static relegated bool IsCode(uintptr_t p) {
   return __executable_start <= (uint8_t *)p && (uint8_t *)p < _etext;
 }
 
-static void Append(struct Buffer *b, const char *fmt, ...) {
+static relegated void Append(struct Buffer *b, const char *fmt, ...) {
   va_list va;
   va_start(va, fmt);
   b->i += kvsnprintf(b->p + b->i, b->n - b->i, fmt, va);
   va_end(va);
 }
 
-static const char *ColorRegister(int r) {
+static relegated wontreturn void RaiseCrash(int sig) {
+  sigset_t ss;
+  sigfillset(&ss);
+  sigdelset(&ss, sig);
+  sigprocmask(SIG_SETMASK, &ss, 0);
+  signal(sig, SIG_DFL);
+  kill(getpid(), sig);
+  _Exit(128 + sig);
+}
+
+static relegated const char *ColorRegister(int r) {
   if (__nocolor) return "";
   switch (r) {
     case 0:  // arg / res
@@ -115,8 +126,8 @@ static const char *ColorRegister(int r) {
   }
 }
 
-static bool AppendFileLine(struct Buffer *b, const char *addr2line,
-                           const char *debugbin, long addr) {
+static relegated bool AppendFileLine(struct Buffer *b, const char *addr2line,
+                                     const char *debugbin, long addr) {
   ssize_t rc;
   char *p, *q, buf[128];
   int j, k, ws, pid, pfd[2];
@@ -167,8 +178,8 @@ static bool AppendFileLine(struct Buffer *b, const char *addr2line,
   }
 }
 
-static char *GetSymbolName(struct SymbolTable *st, int symbol, char **mem,
-                           size_t *memsz) {
+static relegated char *GetSymbolName(struct SymbolTable *st, int symbol,
+                                     char **mem, size_t *memsz) {
   char *s, *t;
   if ((s = __get_symbol_name(st, symbol)) &&  //
       s[0] == '_' && s[1] == 'Z' &&           //
@@ -348,7 +359,7 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
   }
   sys_write(2, b->p, MIN(b->i, b->n));
   __print_maps();
-  _Exit(128 + sig);
+  RaiseCrash(sig);
 }
 
 #endif /* __aarch64__ */

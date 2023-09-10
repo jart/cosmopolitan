@@ -16,14 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigaltstack.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -33,6 +37,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/ss.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
@@ -244,6 +249,58 @@ TEST(pthread_cleanup, pthread_normal) {
   ASSERT_EQ(0, pthread_join(id, 0));
   ASSERT_TRUE(g_cleanup1);
   ASSERT_TRUE(g_cleanup2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// HOW TO PROTECT YOUR THREADS FROM STACK OVERFLOW
+// note that sigaltstack is waq on the main thread
+
+jmp_buf recover;
+volatile bool smashed_stack;
+
+void CrashHandler(int sig) {
+  smashed_stack = true;
+  longjmp(recover, 123);
+}
+
+int StackOverflow(int f(), int n) {
+  if (n < INT_MAX) {
+    return f(f, n + 1) - 1;
+  } else {
+    return INT_MAX;
+  }
+}
+
+int (*pStackOverflow)(int (*)(), int) = StackOverflow;
+
+void *MyPosixThread(void *arg) {
+  int jumpcode;
+  struct sigaction sa, o1, o2;
+  struct sigaltstack ss = {
+      .ss_sp = gc(malloc(SIGSTKSZ)),
+      .ss_size = SIGSTKSZ,
+  };
+  sigaltstack(&ss, 0);
+  sa.sa_flags = SA_ONSTACK;  // <-- important
+  sigemptyset(&sa.sa_mask);
+  sa.sa_handler = CrashHandler;
+  sigaction(SIGBUS, &sa, &o1);
+  sigaction(SIGSEGV, &sa, &o2);
+  if (!(jumpcode = setjmp(recover))) {
+    exit(pStackOverflow(pStackOverflow, 0));
+  }
+  ASSERT_EQ(123, jumpcode);
+  sigaction(SIGSEGV, &o2, 0);
+  sigaction(SIGBUS, &o1, 0);
+  return 0;
+}
+
+TEST(cosmo, altstack_thread) {
+  pthread_t th;
+  if (IsWindows()) return;
+  pthread_create(&th, 0, MyPosixThread, 0);
+  pthread_join(th, 0);
+  ASSERT_TRUE(smashed_stack);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

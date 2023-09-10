@@ -13,16 +13,19 @@ struct EzTlsBio {
   unsigned char u[1430];
 };
 
-extern struct EzTlsBio ezbio;
-extern mbedtls_ssl_config ezconf;
-extern mbedtls_ssl_context ezssl;
-extern mbedtls_ctr_drbg_context ezrng;
+extern _Thread_local struct EzTlsBio ezbio;
+extern _Thread_local mbedtls_ssl_config ezconf;
+extern _Thread_local mbedtls_ssl_context ezssl;
+extern _Thread_local mbedtls_ctr_drbg_context ezrng;
 
 void EzFd(int);
+void EzSanity(void);
+void EzDestroy(void);
 void EzHandshake(void);
 int EzHandshake2(void);
 void EzSetup(char[32]);
 void EzInitialize(void);
+void EzTlsDie(const char *, int);
 int EzTlsFlush(struct EzTlsBio *, const unsigned char *, size_t);
 
 /*

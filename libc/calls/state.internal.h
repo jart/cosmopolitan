@@ -8,10 +8,10 @@ COSMOPOLITAN_C_START_
 
 extern int __vforked;
 extern bool __time_critical;
-extern unsigned __sighandrvas[NSIG];
-extern unsigned __sighandflags[NSIG];
 extern pthread_mutex_t __fds_lock_obj;
 extern pthread_mutex_t __sig_lock_obj;
+extern unsigned __sighandrvas[NSIG + 1];
+extern unsigned __sighandflags[NSIG + 1];
 extern const struct NtSecurityAttributes kNtIsInheritable;
 
 void __fds_lock(void);

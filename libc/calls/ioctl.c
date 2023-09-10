@@ -641,6 +641,7 @@ static int ioctl_siocgifflags(int fd, void *arg) {
  * - `FIONBIO` isn't polyfilled; use `fcntl(F_SETFL, O_NONBLOCK)`
  * - `FIOCLEX` isn't polyfilled; use `fcntl(F_SETFD, FD_CLOEXEC)`
  * - `FIONCLEX` isn't polyfilled; use `fcntl(F_SETFD, 0)`
+ * - `TIOCSCTTY` isn't polyfilled; use `login_tty()`
  * - `TCGETS` isn't polyfilled; use tcgetattr()
  * - `TCSETS` isn't polyfilled; use tcsetattr()
  * - `TCSETSW` isn't polyfilled; use tcsetattr()

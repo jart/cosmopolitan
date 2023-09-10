@@ -20,7 +20,7 @@
 #include "third_party/mbedtls/error.h"
 
 char *GetTlsError(int r) {
-  static char b[128];
+  static _Thread_local char b[128];
   mbedtls_strerror(r, b, sizeof(b));
   return b;
 }

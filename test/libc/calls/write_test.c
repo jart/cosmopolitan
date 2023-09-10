@@ -57,6 +57,17 @@ TEST(write, badMemory_efault) {
   ASSERT_SYS(EFAULT, -1, write(1, (void *)1, 1));
 }
 
+TEST(write, brokenPipe_raisesSigpipe) {
+  int fds[2];
+  SPAWN(fork);
+  signal(SIGPIPE, SIG_DFL);
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(0, 1, write(4, "x", 1));
+  ASSERT_SYS(0, 0, close(3));
+  write(4, "x", 1);
+  TERMS(SIGPIPE);
+}
+
 TEST(write, brokenPipe_sigpipeIgnored_returnsEpipe) {
   int fds[2];
   SPAWN(fork);

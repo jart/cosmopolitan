@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/utmp.h"
@@ -28,23 +30,37 @@
 /**
  * Prepares terminal for login.
  *
+ * After this operation `fd` will be used for all stdio handles.
+ *
  * @return 0 on success, or -1 w/ errno
+ * @raise EPERM if terminal is already controlling another sid?
+ * @raise EPERM if pledge() was used without tty
+ * @raise ENOTTY if `fd` isn't a teletypewriter
  * @raise ENOSYS on Windows and Metal
- * @raise EPERM if terminal is already controlling another sid
+ * @raise EBADF if `fd` isn't open
  */
 int login_tty(int fd) {
-  int i, rc;
-  if (IsLinux() || IsBsd()) {
-    setsid();
-    if (!sys_ioctl(fd, TIOCSCTTY, 0)) {
-      for (i = 0; i < 3; ++i) dup2(fd, i);
-      if (fd > 2) close(fd);
-      rc = 0;
-    } else {
-      rc = -1;
-    }
-  } else {
+  int rc;
+  if (!IsLinux() && !IsBsd()) {
     rc = enosys();
+  } else if (!isatty(fd)) {
+    rc = -1;  // validate before changing the process's state
+  } else {
+    // become session leader
+    // we don't care if it fails due to already being the one
+    int e = errno;
+    sys_setsid();
+    errno = e;
+    // take control of teletypewriter (requires being leader)
+    if ((rc = sys_ioctl(fd, TIOCSCTTY, 0)) != -1) {
+      unassert(!sys_dup2(fd, 0, 0));
+      unassert(!sys_dup2(fd, 1, 0));
+      unassert(!sys_dup2(fd, 2, 0));
+      if (fd > 2) {
+        unassert(!sys_close(fd));
+      }
+      rc = 0;
+    }
   }
   STRACE("login_tty(%d) → %d% m", fd, rc);
   return rc;

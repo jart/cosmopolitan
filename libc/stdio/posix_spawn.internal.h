@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_SPAWNA_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_STDIO_SPAWNA_INTERNAL_H_
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
 
@@ -11,15 +12,16 @@
 COSMOPOLITAN_C_START_
 
 struct _posix_spawna {
-  char flags;
+  short flags;
   bool schedparam_isset;
   bool schedpolicy_isset;
-  bool sigmask_isset;
   int pgroup;
+  int rlimset;
   int schedpolicy;
   struct sched_param schedparam;
   sigset_t sigmask;
   sigset_t sigdefault;
+  struct rlimit rlim[16];
 };
 
 struct _posix_faction {

@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-char *mktemp(char *) returnsnonnull paramsnonnull() __wur;
+char *mktemp(char *) returnsnonnull paramsnonnull();
 char *mkdtemp(char *) paramsnonnull() __wur;
 int mkstemp(char *) paramsnonnull() __wur;
 int mkstemps(char *, int) paramsnonnull() __wur;

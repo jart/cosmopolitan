@@ -21,9 +21,13 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
@@ -42,8 +46,11 @@
 #include "libc/sock/sock.h"
 #include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/posix_spawn.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -149,13 +156,14 @@ static textwindows errno_t posix_spawn_windows_impl(
   };
 
   // figure out the flags
-  short flags;
+  short flags = 0;
   bool bInheritHandles = false;
   uint32_t dwCreationFlags = 0;
   for (i = 0; i < 3; ++i) {
     bInheritHandles |= stdio_handle[i] != -1;
   }
-  if (attrp && *attrp && !posix_spawnattr_getflags(attrp, &flags)) {
+  if (attrp && *attrp) {
+    flags = (*attrp)->flags;
     if (flags & POSIX_SPAWN_SETSID) {
       dwCreationFlags |= kNtDetachedProcess;
     }
@@ -208,8 +216,11 @@ static textwindows dontinline errno_t posix_spawn_windows(
   return err;
 }
 
-static wontreturn void posix_spawn_die(const char *fail_func) {
-  STRACE("posix_spawn: %s failed% m", fail_func);
+static wontreturn void posix_spawn_die(const char *thing) {
+  const char *reason;  // print b/c there's no other way
+  if (!(reason = _strerdoc(errno))) reason = "Unknown error";
+  tinyprint(2, program_invocation_short_name, ": posix_spawn ", thing,
+            " failed: ", reason, "\n", NULL);
   _Exit(127);
 }
 
@@ -229,7 +240,7 @@ static void RunUnixFileActions(struct _posix_faction *a) {
       case _POSIX_SPAWN_OPEN: {
         int t;
         if ((t = open(a->path, a->oflag, a->mode)) == -1) {
-          posix_spawn_die("open");
+          posix_spawn_die(a->path);
         }
         if (t != a->fildes) {
           if (dup2(t, a->fildes) == -1) {
@@ -251,8 +262,7 @@ static void RunUnixFileActions(struct _posix_faction *a) {
 /**
  * Spawns process, the POSIX way.
  *
- * This provides superior process creation performance across systems.
- *
+ * This provides superior process creation performance across systems
  * Processes are normally spawned by calling fork() and execve(), but
  * that goes slow on Windows if the caller has allocated a nontrivial
  * number of memory mappings, all of which need to be copied into the
@@ -260,10 +270,19 @@ static void RunUnixFileActions(struct _posix_faction *a) {
  * fork() bears a similar cost that's 100x less bad, which is copying
  * the page tables. So what this implementation does is on Windows it
  * calls CreateProcess() directly and on UNIX it uses vfork() if it's
- * possible (XNU and OpenBSD don't have it).
+ * possible (XNU and OpenBSD don't have it). On UNIX this API has the
+ * benefit of avoiding the footguns of using vfork() directly because
+ * this implementation will ensure signal handlers can't be called in
+ * the child process since that'd likely corrupt the parent's memory.
  *
- * If the child process exits with status 127 then use the `--strace`
- * flag to get an explanation of failures that occurred during spawn.
+ * This implementation doesn't create a pipe like Musl Libc, and will
+ * report errors in the child process by printing the cause to stderr
+ * which ensures posix_spawn stays fast, and works w/ `RLIMIT_FILENO`
+ * There is however one particular case where knowing the execve code
+ * truly matters, which is ETXTBSY. Thankfully, there's a rarely used
+ * signal with the exact same magic number across supported platforms
+ * called SIGVTALRM which we send to wait4 when execve raises ETXTBSY
+ * Please note that on Windows posix_spawn() returns ETXTBSY directly
  *
  * @param pid if non-null shall be set to child pid on success
  * @param path is resolved path of program which is not `$PATH` searched
@@ -280,67 +299,85 @@ errno_t posix_spawn(int *pid, const char *path,
                     const posix_spawn_file_actions_t *file_actions,
                     const posix_spawnattr_t *attrp, char *const argv[],
                     char *const envp[]) {
-  short flags = 0;
-  sigset_t sigmask;
-  int s, child, policy;
-  struct sched_param param;
-  struct sigaction dfl = {0};
   if (IsWindows()) {
     return posix_spawn_windows(pid, path, file_actions, attrp, argv, envp);
   }
+  sigset_t blockall, oldmask;
+  int child, res, cs, e = errno;
+  if (access(path, X_OK)) {
+    res = errno;
+    errno = e;
+    return res;
+  }
+  sigfillset(&blockall);
+  sys_sigprocmask(SIG_SETMASK, &blockall, &oldmask);
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
   if (!(child = vfork())) {
-    if (attrp && *attrp) {
-      posix_spawnattr_getflags(attrp, &flags);
-      if (flags & POSIX_SPAWN_SETSID) {
-        if (setsid()) {
-          posix_spawn_die("setsid");
-        }
+    sigset_t *childmask;
+    struct sigaction dfl = {0};
+    short flags = attrp && *attrp ? (*attrp)->flags : 0;
+    for (int sig = 1; sig < _NSIG; sig++) {
+      if (__sighandrvas[sig] != (long)SIG_DFL &&
+          (__sighandrvas[sig] != (long)SIG_IGN ||
+           ((flags & POSIX_SPAWN_SETSIGDEF) &&
+            sigismember(&(*attrp)->sigdefault, sig) == 1) ||
+           sig == SIGVTALRM)) {
+        sigaction(sig, &dfl, 0);
       }
-      if (flags & POSIX_SPAWN_SETPGROUP) {
-        if (setpgid(0, (*attrp)->pgroup)) {
-          posix_spawn_die("setpgid");
-        }
-      }
-      if (flags & POSIX_SPAWN_SETSIGMASK) {
-        posix_spawnattr_getsigmask(attrp, &sigmask);
-        sigprocmask(SIG_SETMASK, &sigmask, 0);
-      }
-      if ((flags & POSIX_SPAWN_RESETIDS) &&
-          (setgid(getgid()) || setuid(getuid()))) {
-        posix_spawn_die("setuid");
-      }
-      if (flags & POSIX_SPAWN_SETSIGDEF) {
-        for (s = 1; s < 32; s++) {
-          if (sigismember(&(*attrp)->sigdefault, s)) {
-            if (sigaction(s, &dfl, 0)) {
-              posix_spawn_die("sigaction");
-            }
-          }
-        }
-      }
+    }
+    if (flags & POSIX_SPAWN_SETSIGMASK) {
+      childmask = &(*attrp)->sigmask;
+    } else {
+      childmask = &oldmask;
+    }
+    sys_sigprocmask(SIG_SETMASK, childmask, 0);
+    if (flags & POSIX_SPAWN_SETSID) {
+      setsid();
+    }
+    if ((flags & POSIX_SPAWN_SETPGROUP) && setpgid(0, (*attrp)->pgroup)) {
+      posix_spawn_die("setpgid");
+    }
+    if ((flags & POSIX_SPAWN_RESETIDS) && setgid(getgid())) {
+      posix_spawn_die("setgid");
+    }
+    if ((flags & POSIX_SPAWN_RESETIDS) && setgid(getgid())) {
+      posix_spawn_die("setuid");
     }
     if (file_actions) {
       RunUnixFileActions(*file_actions);
     }
-    if (attrp && *attrp) {
+    if (IsLinux() || IsFreebsd() || IsNetbsd()) {
       if (flags & POSIX_SPAWN_SETSCHEDULER) {
-        posix_spawnattr_getschedpolicy(attrp, &policy);
-        posix_spawnattr_getschedparam(attrp, &param);
-        if (sched_setscheduler(0, policy, &param) == -1) {
+        if (sched_setscheduler(0, (*attrp)->schedpolicy,
+                               &(*attrp)->schedparam) == -1) {
           posix_spawn_die("sched_setscheduler");
         }
       }
       if (flags & POSIX_SPAWN_SETSCHEDPARAM) {
-        posix_spawnattr_getschedparam(attrp, &param);
-        if (sched_setparam(0, &param)) {
+        if (sched_setparam(0, &(*attrp)->schedparam)) {
           posix_spawn_die("sched_setparam");
+        }
+      }
+    }
+    if (flags & POSIX_SPAWN_SETRLIMIT) {
+      for (int rez = 0; rez <= ARRAYLEN((*attrp)->rlim); ++rez) {
+        if ((*attrp)->rlimset & (1u << rez)) {
+          if (setrlimit(rez, (*attrp)->rlim + rez)) {
+            posix_spawn_die("setrlimit");
+          }
         }
       }
     }
     if (!envp) envp = environ;
     execve(path, argv, envp);
-    posix_spawn_die("execve");
-  } else if (child != -1) {
+    if (errno == ETXTBSY) {
+      sys_kill(getpid(), SIGVTALRM, 1);
+    }
+    posix_spawn_die(path);
+  }
+  sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
+  pthread_setcancelstate(cs, 0);
+  if (child != -1) {
     if (pid) *pid = child;
     return 0;
   } else {

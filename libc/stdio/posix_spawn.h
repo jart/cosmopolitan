@@ -1,8 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_SPAWN_H_
 #define COSMOPOLITAN_LIBC_STDIO_SPAWN_H_
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
 
+#define POSIX_SPAWN_USEVFORK      0
 #define POSIX_SPAWN_RESETIDS      1
 #define POSIX_SPAWN_SETPGROUP     2
 #define POSIX_SPAWN_SETSIGDEF     4
@@ -10,6 +12,7 @@
 #define POSIX_SPAWN_SETSCHEDPARAM 16
 #define POSIX_SPAWN_SETSCHEDULER  32
 #define POSIX_SPAWN_SETSID        128
+#define POSIX_SPAWN_SETRLIMIT     256
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -45,6 +48,8 @@ int posix_spawnattr_getsigmask(const posix_spawnattr_t *, sigset_t *);
 int posix_spawnattr_setsigmask(posix_spawnattr_t *, const sigset_t *);
 int posix_spawnattr_getsigdefault(const posix_spawnattr_t *, sigset_t *);
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *, const sigset_t *);
+int posix_spawnattr_getrlimit(const posix_spawnattr_t *, int, struct rlimit *);
+int posix_spawnattr_setrlimit(posix_spawnattr_t *, int, const struct rlimit *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

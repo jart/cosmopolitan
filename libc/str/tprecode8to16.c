@@ -62,8 +62,8 @@ axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   r.ax = 0;
   r.dx = 0;
   for (;;) {
-#ifdef __x86_64__
-    if (!IsTiny() && !((uintptr_t)(src + r.dx) & 15)) {
+#if defined(__x86_64__) && !IsModeDbg()
+    if (!((uintptr_t)(src + r.dx) & 15)) {
       r = tprecode8to16_sse2(dst, dstsize, src, r);
     }
 #endif

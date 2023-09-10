@@ -22,6 +22,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
@@ -42,6 +43,7 @@
  * @param mode can be:
  *     - `"r"` for reading from subprocess standard output
  *     - `"w"` for writing to subprocess standard input
+ *     - `"e"` for `O_CLOEXEC` on returned file
  * @raise EINVAL if `mode` is invalid or specifies read+write
  * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
  * @raise ENFILE if system-wide file limit has been reached
@@ -53,7 +55,7 @@
  * @threadsafe
  */
 FILE *popen(const char *cmdline, const char *mode) {
-  FILE *f;
+  FILE *f, *f2;
   int e, rc, pid, dir, flags, pipefds[2];
   flags = fopenflags(mode);
   if ((flags & O_ACCMODE) == O_RDONLY) {
@@ -77,6 +79,14 @@ FILE *popen(const char *cmdline, const char *mode) {
         // we can't rely on cloexec because cocmd builtins don't execve
         if (pipefds[0] != !dir) unassert(!close(pipefds[0]));
         if (pipefds[1] != !dir) unassert(!close(pipefds[1]));
+        // "The popen() function shall ensure that any streams from
+        //  previous popen() calls that remain open in the parent
+        //  process are closed in the new child process." -POSIX
+        for (int i = 0; i < __fflush.handles.i; ++i) {
+          if ((f2 = __fflush.handles.p[i]) && f2->pid) {
+            close(f2->fd);
+          }
+        }
         _Exit(_cocmd(3,
                      (char *[]){
                          "popen",
@@ -88,18 +98,21 @@ FILE *popen(const char *cmdline, const char *mode) {
       default:
         f->pid = pid;
         unassert(!close(pipefds[!dir]));
+        if (!(flags & O_CLOEXEC)) {
+          unassert(!fcntl(pipefds[dir], F_SETFD, 0));
+        }
         return f;
       case -1:
         e = errno;
-        unassert(!fclose(f));
-        unassert(!close(pipefds[!dir]));
+        fclose(f);
+        close(pipefds[!dir]);
         errno = e;
         return NULL;
     }
   } else {
     e = errno;
-    unassert(!close(pipefds[0]));
-    unassert(!close(pipefds[1]));
+    close(pipefds[0]);
+    close(pipefds[1]);
     errno = e;
     return NULL;
   }

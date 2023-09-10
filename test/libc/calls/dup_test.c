@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
@@ -69,7 +70,10 @@ TEST(dup, bigNumber) {
 
 #ifdef __x86_64__
 TEST(dup, clearsCloexecFlag) {
+  static bool once;
   int ws;
+  ASSERT_FALSE(once);
+  once = true;
   ASSERT_SYS(0, 0, close(creat("file", 0644)));
   ASSERT_SYS(0, 3, open("file", O_RDWR | O_CLOEXEC));
   ASSERT_NE(-1, (ws = xspawn(0)));
@@ -79,7 +83,7 @@ TEST(dup, clearsCloexecFlag) {
           (char *const[]){GetProgramExecutableName(), "boop", 0});
     _exit(127);
   }
-  ASSERT_EQ(72, WEXITSTATUS(ws));
+  ASSERT_EQ(72 << 8, ws);
   ASSERT_SYS(0, 0, close(3));
 }
 #endif

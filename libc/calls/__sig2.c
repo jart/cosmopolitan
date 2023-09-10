@@ -27,10 +27,12 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/context.h"
 #include "libc/nt/runtime.h"
@@ -225,13 +227,20 @@ textwindows bool __sig_handle(int sigops, int sig, int sic, ucontext_t *ctx) {
         uint32_t cmode;
         intptr_t hStderr;
         const char *signame;
-        char *end, sigbuf[21], output[22];
+        char *end, sigbuf[21], output[123];
         signame = strsignal_r(sig, sigbuf);
         STRACE("terminating due to uncaught %s", signame);
         if (__sig_is_core(sig)) {
           hStderr = GetStdHandle(kNtStdErrorHandle);
           if (GetConsoleMode(hStderr, &cmode)) {
-            end = stpcpy(stpcpy(output, signame), "\n");
+            end = stpcpy(output, signame);
+            end = stpcpy(end, " ");
+            end = stpcpy(
+                end,
+                DescribeBacktrace(
+                    ctx ? (struct StackFrame *)ctx->uc_mcontext.BP
+                        : (struct StackFrame *)__builtin_frame_address(0)));
+            end = stpcpy(end, "\n");
             WriteFile(hStderr, output, end - output, 0, 0);
           }
         }

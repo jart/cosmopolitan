@@ -23,14 +23,16 @@
 
 /**
  * Creates session and sets the process group id.
+ *
  * @return new session id, or -1 w/ errno
+ * @raise EPERM if already the leader
  */
 int setsid(void) {
   int rc;
   if (!IsWindows() && !IsMetal()) {
     rc = sys_setsid();
   } else {
-    rc = 0;
+    rc = getpid();
   }
   STRACE("setsid() → %d% m", rc);
   return rc;
