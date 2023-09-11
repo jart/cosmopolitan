@@ -64,7 +64,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
                     !__asan_is_valid_strlist(envp)))) {
     rc = efault();
   } else {
-    STRACE("execve(%#s, %s, %s) → ...", prog, DescribeStringList(argv),
+    STRACE("execve(%#s, %s, %s)", prog, DescribeStringList(argv),
            DescribeStringList(envp));
     rc = 0;
     if (IsLinux() && __execpromises && _weaken(sys_pledge_linux)) {

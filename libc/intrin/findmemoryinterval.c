@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/runtime/memtrack.internal.h"
 
 dontasan unsigned __find_memory(const struct MemoryIntervals *mm, int x) {
@@ -31,6 +30,5 @@ dontasan unsigned __find_memory(const struct MemoryIntervals *mm, int x) {
       r = m;
     }
   }
-  unassert(l == mm->i || x <= mm->p[l].y);
   return l;
 }

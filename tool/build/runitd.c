@@ -396,7 +396,7 @@ void Recv(struct Client *client, void *output, size_t outputsize) {
   }
 }
 
-void SendProgramOutut(struct Client *client) {
+void SendProgramOutput(struct Client *client) {
   if (client->output) {
     SendOutputFragmentMessage(kRunitStderr, client->output,
                               appendz(client->output).i);
@@ -570,7 +570,7 @@ RetryOnEtxtbsyRaceCondition:
       WARNF("killing %d %s and hanging up %d due to interrupt", client->fd,
             exename, client->pid);
     HangupClientAndTerminateJob:
-      SendProgramOutut(client);
+      SendProgramOutput(client);
       mbedtls_ssl_close_notify(&ezssl);
     TerminateJob:
       PrintProgramOutput(client);
@@ -687,7 +687,7 @@ WaitAgain:
     AppendResourceReport(&client->output, &rusage, "\n");
     PrintProgramOutput(client);
   }
-  SendProgramOutut(client);
+  SendProgramOutput(client);
   SendExitMessage(exitcode);
   mbedtls_ssl_close_notify(&ezssl);
   if (etxtbsy_tries) {

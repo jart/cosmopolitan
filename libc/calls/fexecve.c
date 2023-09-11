@@ -21,7 +21,7 @@
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
-#include "libc/calls/execve-sysv.internal.h"
+#include "libc/calls/execve.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -30,6 +30,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -46,7 +47,7 @@
 
 static bool IsAPEFd(const int fd) {
   char buf[8];
-  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsAPEMagic(buf);
+  return (sys_pread(fd, buf, 8, 0, 0) == 8) && IsApeLoadable(buf);
 }
 
 static int fexecve_impl(const int fd, char *const argv[], char *const envp[]) {
@@ -141,7 +142,7 @@ static int fd_to_mem_fd(const int infd, char *path) {
     ssize_t readRc;
     readRc = pread(infd, space, st.st_size, 0);
     bool success = readRc != -1;
-    if (success && (st.st_size > 8) && IsAPEMagic(space)) {
+    if (success && (st.st_size > 8) && IsApeLoadable(space)) {
       int flags = fcntl(fd, F_GETFD);
       if ((success = (flags != -1) &&
                      (fcntl(fd, F_SETFD, flags & (~FD_CLOEXEC)) != -1) &&

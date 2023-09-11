@@ -78,6 +78,7 @@ static int PosixThread(void *arg, int tid) {
   }
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
+    pt->next = __get_tls()->tib_pthread;
     __get_tls()->tib_pthread = (pthread_t)pt;
     unassert(!sigprocmask(SIG_SETMASK, (sigset_t *)pt->attr.__sigmask, 0));
     rc = pt->start(pt->arg);

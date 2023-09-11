@@ -34,6 +34,7 @@
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 struct SpawnBlock {
   union {
@@ -108,3 +109,5 @@ textwindows int ntspawn(
   if (handle) CloseHandle(handle);
   return __fix_enotdir(rc, prog16);
 }
+
+#endif /* __x86_64__ */

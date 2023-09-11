@@ -151,6 +151,7 @@ union ElfPhdrBuf {
 };
 
 struct PathSearcher {
+  int literally;
   unsigned long namelen;
   const char *name;
   const char *syspath;
@@ -377,10 +378,27 @@ static char SearchPath(struct PathSearcher *ps, const char *suffix) {
 }
 
 static char FindCommand(struct PathSearcher *ps, const char *suffix) {
+  ps->path[0] = 0;
+
+  /* paths are always 100% taken literally when a slash exists
+       $ ape foo/bar.com arg1 arg2 */
   if (MemChr(ps->name, '/', ps->namelen)) {
-    ps->path[0] = 0;
     return AccessCommand(ps, suffix, 0);
   }
+
+  /* we don't run files in the current directory
+       $ ape foo.com arg1 arg2
+     unless $PATH has an empty string entry, e.g.
+       $ expert PATH=":/bin"
+       $ ape foo.com arg1 arg2
+     however we will execute this
+       $ ape - foo.com foo.com arg1 arg2
+     because cosmo's execve needs it */
+  if (ps->literally && AccessCommand(ps, suffix, 0)) {
+    return 1;
+  }
+
+  /* otherwise search for name on $PATH */
   return SearchPath(ps, suffix);
 }
 
@@ -825,7 +843,7 @@ int main(int argc, char **argv, char **envp) {
   auxv = (long *)(envp + i + 1);
 
   /* interpret command line arguments */
-  if (argc >= 3 && !StrCmp(argv[1], "-")) {
+  if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
        systems don't permit the omission of argv[0] but we do, b/c
@@ -836,7 +854,7 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
-         "actually portable executable loader silicon 1.7\n"
+         "actually portable executable loader silicon 1.8\n"
          "copyright 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
     _exit(1);
@@ -881,8 +899,8 @@ int main(int argc, char **argv, char **envp) {
   pe = ebuf->buf + rc;
 
   /* resolve argv[0] to reflect path search */
-  if ((argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
-      !StrCmp(BaseName(prog), argv[0])) {
+  if (argc > 0 && ((*prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
+                   !StrCmp(BaseName(prog), argv[0]))) {
     argv[0] = exe;
   }
 

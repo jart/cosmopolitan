@@ -90,10 +90,16 @@ o/$(MODE)/test/libc/mem/prog/life.elf:				\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 	@$(COMPILE) -wAASSIMILATE -T$@				\
 		$(VM)						\
-		o/$(MODE)/tool/build/assimilate.com -cf		\
+		o/$(MODE)/tool/build/assimilate.com -bcef	\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 
 o/$(MODE)/test/libc/mem/prog/life.elf.zip.o: private		\
+		ZIPOBJ_FLAGS +=					\
+			-B
+
+################################################################################
+
+o/$(MODE)/test/libc/mem/prog/life.com.zip.o: private		\
 		ZIPOBJ_FLAGS +=					\
 			-B
 
@@ -117,7 +123,7 @@ o/$(MODE)/test/libc/mem/prog/sock.elf:				\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 	@$(COMPILE) -wAASSIMILATE -T$@				\
 		$(VM)						\
-		o/$(MODE)/tool/build/assimilate.com -cf		\
+		o/$(MODE)/tool/build/assimilate.com -cef	\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 
 o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o: private		\

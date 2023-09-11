@@ -487,6 +487,10 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
   if (!(res = __syslib->pthread_create(&th, 0, SiliconThreadMain, wt)) &&
       (flags & CLONE_PARENT_SETTID)) {
     *ptid = tid;
+    if (flags & CLONE_SETTLS) {
+      struct CosmoTib *tib = tls;
+      tib[-1].tib_pthread = th;
+    }
   }
   return res;
 }

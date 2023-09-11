@@ -72,7 +72,6 @@ TEST(siocgifconf, test) {
   ASSERT_NE(-1, close(socketfd));
 }
 
-#ifdef __x86_64__
 TEST(siocgifconf, mkntenvblock_systemroot) {
   if (__argc != 1) return;
   SPAWN(fork);
@@ -81,7 +80,6 @@ TEST(siocgifconf, mkntenvblock_systemroot) {
   abort();
   EXITS(0);
 }
-#endif
 
 TEST(fionread, pipe) {
   int pfds[2];

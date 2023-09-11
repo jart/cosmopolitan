@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
@@ -31,9 +33,24 @@ __static_yoink("zipos");
  */
 void testlib_extract(const char *zip, const char *to, int mode) {
   int fdin, fdout;
-  ASSERT_NE(-1, (fdin = open(zip, O_RDONLY)));
-  ASSERT_NE(-1, (fdout = creat(to, mode)));
-  ASSERT_NE(-1, copyfd(fdin, fdout, -1));
-  ASSERT_NE(-1, close(fdout));
-  ASSERT_NE(-1, close(fdin));
+  if ((fdin = open(zip, O_RDONLY)) == -1) {
+    perror(zip);
+    exit(1);
+  }
+  if ((fdout = creat(to, mode)) == -1) {
+    perror(to);
+    exit(1);
+  }
+  if (copyfd(fdin, fdout, -1) == -1) {
+    perror(zip);
+    exit(1);
+  }
+  if (close(fdout)) {
+    perror(to);
+    exit(1);
+  }
+  if (close(fdin)) {
+    perror(zip);
+    exit(1);
+  }
 }

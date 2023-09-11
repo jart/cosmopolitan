@@ -406,11 +406,9 @@ static bool __asan_is_mapped(int x) {
   // xxx: we can't lock because no reentrant locks yet
   int i;
   bool res;
-  struct MemoryIntervals *m;
   __mmi_lock();
-  m = _weaken(_mmi);
-  i = __find_memory(m, x);
-  res = i < m->i && x >= m->p[i].x;
+  i = __find_memory(&_mmi, x);
+  res = i < _mmi.i && x >= _mmi.p[i].x;
   __mmi_unlock();
   return res;
 }
@@ -902,7 +900,7 @@ static __wur __asan_die_f *__asan_report(const void *addr, int size,
   p = __asan_format_section(p, _etext, _edata, ".data", addr);
   p = __asan_format_section(p, _end, _edata, ".bss", addr);
   __mmi_lock();
-  for (m = _weaken(_mmi), i = 0; i < m->i; ++i) {
+  for (m = &_mmi, i = 0; i < m->i; ++i) {
     x = m->p[i].x;
     y = m->p[i].y;
     p = __asan_format_interval(p, x << 16, (y << 16) + (FRAMESIZE - 1));
@@ -1396,7 +1394,7 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     kprintf("error: %p size %'zu overlaps shadow space\n", p, n);
     _Exit(1);
   }
-  m = _weaken(_mmi);
+  m = &_mmi;
   a = (0x7fff8000 + (p >> 3)) >> 16;
   b = (0x7fff8000 + (p >> 3) + (n >> 3) + 0xffff) >> 16;
   for (; a <= b; a += i) {
@@ -1413,12 +1411,11 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     addr = (void *)ADDR_32_TO_48(a);
     prot = PROT_READ | PROT_WRITE;
     flag = MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS;
-    sm = _weaken(sys_mmap)(addr, size, prot, flag, -1, 0);
+    sm = sys_mmap(addr, size, prot, flag, -1, 0);
     if (sm.addr == MAP_FAILED ||
-        _weaken(__track_memory)(m, a, a + i - 1, sm.maphandle,
-                                PROT_READ | PROT_WRITE,
-                                MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, false,
-                                false, 0, size) == -1) {
+        __track_memory(m, a, a + i - 1, sm.maphandle, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, false, false, 0,
+                       size) == -1) {
       kprintf("error: could not map asan shadow memory\n");
       __asan_die()();
       __asan_unreachable();
@@ -1539,9 +1536,6 @@ void __asan_init(int argc, char **argv, char **envp, unsigned long *auxv) {
     __write_str("error: asan binaries require windows10\r\n");
     _Exit(0); /* So `make MODE=dbg test` passes w/ Windows7 */
   }
-  REQUIRE(_mmi);
-  REQUIRE(sys_mmap);
-  REQUIRE(__track_memory);
   if (_weaken(hook_malloc) || _weaken(hook_calloc) || _weaken(hook_realloc) ||
       _weaken(hook_realloc_in_place) || _weaken(hook_free) ||
       _weaken(hook_malloc_usable_size)) {

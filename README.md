@@ -128,25 +128,7 @@ cosmocc -Os -o hello2.com hello2.c
 ## ARM
 
 Cosmo supports cross-compiling binaries for machines with ARM
-microprocessors. There are two options available for doing this.
-
-The first option is to embed the [blink virtual
-machine](https://github.com/jart/blink) by adding the following to the
-top of your main.c file:
-
-```c
-__static_yoink("blink_linux_aarch64");  // for raspberry pi
-__static_yoink("blink_xnu_aarch64");    // is apple silicon
-```
-
-The benefit is you'll have single file executables that'll run on both
-x86_64 and arm64 platforms. The tradeoff is Blink's JIT is slower than
-running natively, but tends to go fast enough, unless you're doing
-scientific computing (e.g. running LLMs with
-`o//third_party/ggml/llama.com`).
-
-Therefore, the second option is to cross compile aarch64 executables,
-by using build modes like the following:
+microprocessors. For example:
 
 ```sh
 make -j8 m=aarch64 o/aarch64/third_party/ggml/llama.com
@@ -175,7 +157,196 @@ You can run your ELF AARCH64 executable on Apple Silicon as follows:
 ape ./llama.com
 ```
 
-## Source Builds
+If you want to run the `MODE=aarch64` unit tests, you need to have
+qemu-aarch64 installed as a binfmt_misc interpreter. It needs to be a
+static binary if you want it to work with Landlock Make's security. You
+can use the build included in our `third_party/qemu/` folder.
+
+```
+doas cp o/third_party/qemu/qemu-aarch64 /usr/bin/qemu-aarch64
+doas sh -c "echo ':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-aarch64:CF' > /proc/sys/fs/binfmt_misc/register"
+make -j8 m=aarch64
+```
+
+Please note that the qemu-aarch64 binfmt_misc interpreter installation
+process is *essential* for being able to use the `aarch64-unknown-cosmo`
+toolchain to build fat APE binaries on your x86-64 machine.
+
+## AMD64 + ARM64 fat APE binaries
+
+If you've setup the qemu binfmt_misc interpreter, then you can can use
+cosmo's toolchains to build fat ape binaries. It works by compiling your
+program twice, so you can have a native build for both architectures in
+the same file. The two programs are merged together by apelink.com which
+also embeds multiple copies of APE loader and multiple symbols tables.
+
+The easiest way to build fat APE is using `fatcosmocc`. This compiler
+works by creating a concomitant `.aarch64/foo.o` for every `foo.o` you
+compile. The only exception is the C preprocessor mode, which actually
+runs x86-64 GCC except with macros like `__x86_64__` undefined.
+
+This toolchain works great for C projects that are written in a portable
+way and don't produce architecturue-specific artifacts. One example of a
+large project that can be easily built is GNU coreutils.
+
+```sh
+cd coreutils
+fatcosmocc --update ||exit
+./configure CC=fatcosmocc \
+            AR=fatcosmoar \
+            INSTALL=$(command -v fatcosmoinstall) \
+            --prefix=/opt/cosmos \
+            --disable-nls \
+            --disable-dependency-tracking \
+            --disable-silent-rules
+make -j8
+```
+
+You'll then have a bunch of files like `src/ls` which are fat ape
+binaries. If you want to run them on Windows, then you simply need to
+rename the file so that it has the `.com` suffix. Better yet, consider
+making that a symlink (a.k.a. reparse point). The biggest gotcha with
+`fatcosmocc` though is ensuring builds don't strip binaries. For
+example, Linux's `install -s` command actually understands Windows'
+Portable Executable format well enough to remove the MS-DOS stub, which
+is where the APE shell script is stored. You need to ensure that
+`fatcosmoinstall` is used instead. Especially if your project needs to
+install the libraries built by `fatacosmoar` into `/opt/cosmos`.
+
+## Advanced Fat APE Builds
+
+Once you get seriously involved in creating fat APE builds of software
+you're going to eventually outgrow `fatcosmocc`. One example is Emacs
+which is trickier to build, because it produces architecture-specific
+files, and it also depends on shared files, e.g. zoneinfo. Since we like
+having everything in a neat little single-file executable container that
+doesn't need an "installation wizard", this tutorial will explain how we
+manage to accomplish that.
+
+What you're going to do is, instead of using `fatcosmocc`, you're going
+to use both the `x86_64-unknown-cosmo-cc` and `aarch64-unknown-cosmo-cc`
+toolchains independently, and then run `apelink` and `zip` to manually
+build the final files. But there's a few tricks to learn first.
+
+The first trick is to create a symlink on your system called `/zip`.
+Cosmopolitan Libc normally uses that as a synthetic folder that lets you
+access the assets in your zip executable. But since that's a read-only
+file system, your build system should use the normal one.
+
+```sh
+doas ln -sf /opt/cosmos /zip
+```
+
+Now create a file named `rebuild-fat.sh` which runs the build twice:
+
+```sh
+#!/bin/sh
+set -ex
+export MODE=aarch64
+export COSMOS=/opt/cosmos/aarch64
+rebuild-cosmos.sh aarch64
+export MODE=
+export COSMOS=/opt/cosmos/x86_64
+rebuild-cosmos.sh x86_64
+wall.com 'finished building'
+```
+
+Then create a second file `rebuild-cosmos.sh` which runs your build:
+
+```sh
+#!/bin/bash
+set -ex
+
+ARCH=${1:-x86_64}
+export COSMO=${COSMO:-/opt/cosmo}
+export COSMOS=${COSMOS:-/opt/cosmos/$ARCH}
+export AS=$(command -v $ARCH-unknown-cosmo-as) || exit
+export CC=$(command -v $ARCH-unknown-cosmo-cc) || exit
+export CXX=$(command -v $ARCH-unknown-cosmo-c++) || exit
+export AR=$(command -v $ARCH-unknown-cosmo-ar) || exit
+export STRIP=$(command -v $ARCH-unknown-cosmo-strip) || exit
+export INSTALL=$(command -v $ARCH-unknown-cosmo-install) || exit
+export OBJCOPY=$(command -v $ARCH-unknown-cosmo-objcopy) || exit
+export OBJDUMP=$(command -v $ARCH-unknown-cosmo-objdump) || exit
+export ADDR2LINE=$(command -v $ARCH-unknown-cosmo-addr2line) || exit
+
+$CC --update
+
+export COSMOPOLITAN_DISABLE_ZIPOS=1
+
+cd ~/vendor/zlib
+./configure --prefix=$COSMOS --static
+make clean
+make -j
+make install
+
+cd ~/vendor/ncurses-6.4
+./configure --prefix=$COSMOS --sysconfdir=/zip --datarootdir=/zip/share --exec-prefix=/zip/$ARCH --disable-shared
+make clean
+make -j
+make install
+
+cd ~/vendor/readline-8.2
+./configure --prefix=$COSMOS --sysconfdir=/zip --datarootdir=/zip/share --exec-prefix=/zip/$ARCH --disable-shared
+make uninstall || true
+make clean
+make -j
+make install
+
+# NOTES:
+# 1. You'll need to patch enum { FOO = x } that fails to build into a #define FOO
+# 2. You'll need to patch configure.ac so it DOES NOT define USABLE_FIONREAD to 1
+# 2. You'll need to patch configure.ac so it DOES NOT define INTERRUPT_INPUT to 1
+cd ~/vendor/emacs-28.2
+./configure --prefix=$COSMOS --sysconfdir=/zip --datarootdir=/zip/share --exec-prefix=/zip/$ARCH \
+            --without-x --with-threads --without-gnutls --disable-silent-rules --with-file-notification=no
+make uninstall || true
+make clean
+make -j
+make install
+```
+
+Once you've completed this build process, you'll have the ELF files
+`/opt/cosmos/x86_64/bin/emacs` and `/opt/cosmos/aarch64/bin/emacs`. Your
+next move is to combine them into a single pristine `emacs.com` file.
+
+```sh
+cd /zip
+COSMO=${COSMO:-/opt/cosmo}
+mkdir -p /opt/cosmos/bin
+apelink \
+  -o /opt/cosmos/bin/emacs.com \
+  -l "$COSMO/o//ape/ape.elf" \
+  -l "$COSMO/o/aarch64/ape/ape.elf" \
+  -M "$COSMO/ape/ape-m1.c" \
+  /opt/cosmos/x86_64/bin/emacs \
+  /opt/cosmos/aarch64/bin/emacs
+cd /zip
+zip -r /opt/cosmos/bin/emacs.com \
+    aarch64/libexec \
+    x86_64/libexec \
+    share/terminfo \
+    $(find share/emacs -type f |
+        grep -v '\.el.gz$' |
+        grep -v refcards |
+        grep -v images)
+```
+
+You can now scp your `emacs.com` build to seven operating systems for
+two distinct kinds of microprocessors without any dependencies. All the
+LISP, zoneinfo, and termcap files it needs are stored inside the ZIP
+structure of the binary, which has performance that's equivalent to the
+Linux filesystem (even though it decompresses artifacts on the fly!) For
+this reason, you might actually find that fat APE Emacs goes faster if
+you're using an operating system like Windows where files are go slow.
+
+If you like to use Vim instead of Emacs, then you can build that too.
+However Vim's build system makes it a bit harder, since it's configured
+to always strip binaries. The `apelink` program needs the symbol tables
+to still be there when it creates the fat version. Otherwise tools like
+`--ftrace` won't work.
+
+## Monolithic Source Builds
 
 Cosmopolitan can be compiled from source on any Linux distro. First, you
 need to download or clone the repository.

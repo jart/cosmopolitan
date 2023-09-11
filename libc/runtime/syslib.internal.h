@@ -16,7 +16,7 @@ COSMOPOLITAN_C_START_
  */
 
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 1
+#define SYSLIB_VERSION 2
 
 typedef uint64_t dispatch_time_t;
 typedef uint64_t dispatch_semaphore_t;
@@ -42,6 +42,8 @@ struct Syslib {
   long (*dispatch_semaphore_signal)(dispatch_semaphore_t);
   long (*dispatch_semaphore_wait)(dispatch_semaphore_t, dispatch_time_t);
   dispatch_time_t (*dispatch_walltime)(const struct timespec *, int64_t);
+  /* v2 (2023-09-10) */
+  long (*pthread_self)(void);
 };
 
 extern struct Syslib *__syslib;

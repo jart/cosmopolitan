@@ -89,6 +89,8 @@ dos	kNtErrorUnexpNetErr             ECONNABORTED
 dos	kNtErrorWorkingSetQuota         ENOMEM
 dos	kNtErrorWriteProtect            EACCES
 dos	kNtErrorWrongDisk               EACCES
+dos	kNtErrorExeMarkedInvalid	ENOEXEC
+dos	kNtErrorExeMachineTypeMismatch	ENOEXEC
 dos	WSAEACCES                       EACCES
 dos	WSAEDISCON                      EPIPE
 dos	WSAEFAULT                       EFAULT

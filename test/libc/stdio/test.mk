@@ -85,11 +85,16 @@ o/$(MODE)/test/libc/stdio/popen_test.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/stdio/posix_spawn_test.com.runs:		\
+		private QUOTA += -M8192m
+
 o/$(MODE)/test/libc/stdio/posix_spawn_test.com.dbg:		\
 		$(TEST_LIBC_STDIO_DEPS)				\
 		o/$(MODE)/test/libc/stdio/posix_spawn_test.o	\
 		o/$(MODE)/test/libc/stdio/stdio.pkg		\
 		o/$(MODE)/tool/build/echo.com.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/life.com.zip.o	\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)

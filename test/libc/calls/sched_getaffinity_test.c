@@ -89,7 +89,6 @@ __attribute__((__constructor__)) static void init(void) {
   }
 }
 
-#ifdef __x86_64__
 TEST(sched_setaffinity, isInheritedAcrossExecve) {
   cpu_set_t x;
   CPU_ZERO(&x);
@@ -104,7 +103,6 @@ TEST(sched_setaffinity, isInheritedAcrossExecve) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(42, WEXITSTATUS(ws));
 }
-#endif /* __x86_64__ */
 
 TEST(sched_getaffinity, getpid) {
   cpu_set_t x, y;

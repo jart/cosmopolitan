@@ -17,14 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/posix_spawn.h"
+#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/limits.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -33,14 +39,51 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
-#ifdef __x86_64__
+
+const char kTinyLinuxExit[128] = {
+    0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01, 0x00,  // ⌂ELF☻☺☺ 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //         
+    0x02, 0x00, 0x3e, 0x00, 0x01, 0x00, 0x00, 0x00,  // ☻ > ☺   
+    0x78, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,  // x @     
+    0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // @       
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //         
+    0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x38, 0x00,  //     @ 8 
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // ☺       
+    0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,  // ☺   ♣   
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //         
+    0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,  //   @     
+    0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,  //   @     
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Ç       
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Ç       
+    0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //  ►      
+    0x6a, 0x2a, 0x5f, 0x6a, 0x3c, 0x58, 0x0f, 0x05,  // j*_j<X☼♣
+};
 
 char testlib_enable_tmp_setup_teardown;
+
+char *GetHost(void) {
+  static char host[256];
+  unassert(!gethostname(host, sizeof(host)));
+  return host;
+}
+
+long GetRss(void) {
+  struct rusage ru;
+  unassert(!getrusage(RUSAGE_SELF, &ru));
+  return ru.ru_maxrss * 1024;
+}
+
+long GetSize(const char *path) {
+  struct stat st;
+  unassert(!stat(path, &st));
+  return st.st_size;
+}
 
 __attribute__((__constructor__)) static void init(void) {
   switch (atoi(nulltoempty(getenv("THE_DOGE")))) {
@@ -51,7 +94,7 @@ __attribute__((__constructor__)) static void init(void) {
   }
 }
 
-TEST(posix_spawn, test) {
+TEST(posix_spawn, self) {
   int ws, pid;
   char *prog = GetProgramExecutableName();
   char *args[] = {prog, NULL};
@@ -60,6 +103,31 @@ TEST(posix_spawn, test) {
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(42, WEXITSTATUS(ws));
+}
+
+TEST(posix_spawn, ape) {
+  int ws, pid;
+  char *prog = "./life.com";
+  char *args[] = {prog, 0};
+  char *envs[] = {0};
+  testlib_extract("/zip/life.com", prog, 0755);
+  ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
+}
+
+TEST(posix_spawn, elf) {
+  if (IsXnu() || IsWindows() || IsMetal()) return;
+  int ws, pid;
+  char *prog = "./life.elf";  // assimilate -bcef
+  char *args[] = {prog, 0};
+  char *envs[] = {0};
+  testlib_extract("/zip/life.elf", prog, 0755);
+  ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
 }
 
 TEST(posix_spawn, pipe) {
@@ -151,51 +219,62 @@ TEST(posix_spawn, agony) {
   }
 }
 
-/*
- * BEST LINUX FORK+EXEC+EXIT+WAIT PERFORMANCE
- * The fastest it can go with  fork() is 40µs
- * The fastest it can go with vfork() is 26µs
- */
+////////////////////////////////////////////////////////////////////////////////
 
-void BenchmarkProcessLifecycle(void) {
+void ForkExecveWait(const char *prog) {
+  int ws;
+  if (!fork()) {
+    execve(prog, (char *[]){(char *)prog, 0}, (char *[]){0});
+    _Exit(127);
+  }
+  ASSERT_NE(-1, wait(&ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
+}
+
+void VforkExecveWait(const char *prog) {
+  int ws;
+  if (!vfork()) {
+    execve(prog, (char *[]){(char *)prog, 0}, (char *[]){0});
+    _Exit(127);
+  }
+  ASSERT_NE(-1, wait(&ws));
+  ASSERT_EQ(42, WEXITSTATUS(ws));
+}
+
+void PosixSpawnWait(const char *prog) {
   int ws, pid;
-  char *prog = "tiny64";
-  char *args[] = {"tiny64", NULL};
-  char *envs[] = {NULL};
+  char *args[] = {(char *)prog, 0};
+  char *envs[] = {0};
   ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
   ASSERT_NE(-1, waitpid(pid, &ws, 0));
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(42, WEXITSTATUS(ws));
 }
 
-const char kTinyLinuxExit[128] = {
-    0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01, 0x00,  // ⌂ELF☻☺☺ 
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //         
-    0x02, 0x00, 0x3e, 0x00, 0x01, 0x00, 0x00, 0x00,  // ☻ > ☺   
-    0x78, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,  // x @     
-    0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // @       
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //         
-    0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x38, 0x00,  //     @ 8 
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // ☺       
-    0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,  // ☺   ♣   
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //         
-    0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,  //   @     
-    0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,  //   @     
-    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Ç       
-    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Ç       
-    0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  //  ►      
-    0x6a, 0x2a, 0x5f, 0x6a, 0x3c, 0x58, 0x0f, 0x05,  // j*_j<X☼♣
-};
-
-/* BENCH(spawn, bench) { */
-/*   int fd; */
-/*   if (IsLinux()) { */
-/*     fd = open("tiny64", O_CREAT | O_TRUNC | O_WRONLY, 0755); */
-/*     write(fd, kTinyLinuxExit, 128); */
-/*     close(fd); */
-/*     EZBENCH2("spawn", donothing, BenchmarkProcessLifecycle()); */
-/*     unlink("tiny64"); */
-/*   } */
-/* } */
-
-#endif /* __x86_64__ */
+TEST(posix_spawn, bench) {
+  long n = 128L * 1000 * 1000;
+  memset(gc(malloc(n)), -1, n);
+  creat("tiny64", 0755);
+  write(3, kTinyLinuxExit, 128);
+  close(3);
+  testlib_extract("/zip/life.com", "life.com", 0755);
+  testlib_extract("/zip/life.elf", "life.elf", 0755);
+  kprintf("%s %s (MODE=" MODE
+          " rss=%'zu tiny64=%'zu life.com=%'zu life.elf=%'zu)\n",
+          __describe_os(), GetHost(), GetRss(), GetSize("tiny64"),
+          GetSize("life.com"), GetSize("life.elf"));
+  ForkExecveWait("./life.com");
+  EZBENCH2("posix_spawn life.com", donothing, PosixSpawnWait("./life.com"));
+  EZBENCH2("vfork life.com", donothing, VforkExecveWait("./life.com"));
+  EZBENCH2("fork life.com", donothing, ForkExecveWait("./life.com"));
+  if (IsXnu() || IsWindows() || IsMetal()) return;
+  EZBENCH2("posix_spawn life.elf", donothing, PosixSpawnWait("./life.elf"));
+  EZBENCH2("vfork life.elf", donothing, VforkExecveWait("./life.elf"));
+  EZBENCH2("fork life.elf", donothing, ForkExecveWait("./life.elf"));
+#ifdef __x86_64__
+  if (!IsLinux()) return;
+  EZBENCH2("posix_spawn tiny64", donothing, PosixSpawnWait("tiny64"));
+  EZBENCH2("vfork tiny64", donothing, VforkExecveWait("tiny64"));
+  EZBENCH2("fork tiny64", donothing, ForkExecveWait("tiny64"));
+#endif
+}

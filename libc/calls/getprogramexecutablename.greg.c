@@ -93,9 +93,9 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
 
   // if argv[0] exists then turn it into an absolute path. we also try
   // adding a .com suffix since the ape auto-appends it when resolving
-  if (((q = __argv[0]) && !sys_faccessat(AT_FDCWD, q, F_OK, 0)) ||
-      ((q = StrCat(u.path, __argv[0], ".com")) &&
-       !sys_faccessat(AT_FDCWD, q, F_OK, 0))) {
+  if ((q = __argv[0]) && ((!sys_faccessat(AT_FDCWD, q, F_OK, 0)) ||
+                          ((q = StrCat(u.path, __argv[0], ".com")) &&
+                           !sys_faccessat(AT_FDCWD, q, F_OK, 0)))) {
     if (*q != '/') {
       if (q[0] == '.' && q[1] == '/') {
         q += 2;

@@ -208,6 +208,7 @@ union ElfPhdrBuf {
 
 struct PathSearcher {
   int os;
+  int literally;
   const char *name;
   const char *syspath;
   unsigned long namelen;
@@ -588,10 +589,27 @@ static char SearchPath(struct PathSearcher *ps, const char *suffix) {
 }
 
 static char FindCommand(struct PathSearcher *ps, const char *suffix) {
+  ps->path[0] = 0;
+
+  /* paths are always 100% taken literally when a slash exists
+       $ ape foo/bar.com arg1 arg2 */
   if (MemChr(ps->name, '/', ps->namelen)) {
-    ps->path[0] = 0;
     return AccessCommand(ps, suffix, 0);
   }
+
+  /* we don't run files in the current directory
+       $ ape foo.com arg1 arg2
+     unless $PATH has an empty string entry, e.g.
+       $ expert PATH=":/bin"
+       $ ape foo.com arg1 arg2
+     however we will execute this
+       $ ape - foo.com foo.com arg1 arg2
+     because cosmo's execve needs it */
+  if (ps->literally && AccessCommand(ps, suffix, 0)) {
+    return 1;
+  }
+
+  /* otherwise search for name on $PATH */
   return SearchPath(ps, suffix);
 }
 
@@ -915,6 +933,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
                                                       char dl) {
   int rc, n;
   unsigned i;
+  char literally;
   const char *ape;
   int c, fd, os, argc;
   struct ApeLoader *M;
@@ -989,7 +1008,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   }
 
   /* we can load via shell, shebang, or binfmt_misc */
-  if (argc >= 3 && !StrCmp(argv[1], "-")) {
+  if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
        systems don't permit the omission of argv[0] but we do, b/c
@@ -1009,6 +1028,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
   M = (struct ApeLoader *)__builtin_alloca(n);
+  M->ps.literally = literally;
 
   /* create new bottom of stack for spawned program
      system v abi aligns this on a 16-byte boundary
@@ -1045,8 +1065,8 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   pe = ebuf->buf + rc;
 
   /* change argv[0] to resolved path if it's ambiguous */
-  if ((argc > 0 && *prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
-      !StrCmp(BaseName(prog), argv[0])) {
+  if (argc > 0 && ((*prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
+                   !StrCmp(BaseName(prog), argv[0]))) {
     argv[0] = exe;
   }
 

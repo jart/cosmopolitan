@@ -32,6 +32,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/context.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -97,10 +98,17 @@ static dontinline textwindows int __tkill_nt(int tid, int sig,
   }
 }
 
+static int __tkill_m1(int tid, int sig, struct CosmoTib *tib) {
+  struct PosixThread *pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  return __syslib->pthread_kill(pt->next, sig);
+}
+
 // OpenBSD has an optional `tib` parameter for extra safety.
 int __tkill(int tid, int sig, void *tib) {
   int rc;
-  if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
+  if (IsXnuSilicon()) {
+    return __tkill_m1(tid, sig, tib);
+  } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = sys_tkill(tid, sig, tib);
   } else if (IsWindows()) {
     rc = __tkill_nt(tid, sig, tib);

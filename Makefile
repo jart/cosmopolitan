@@ -97,21 +97,23 @@ endif
 endif
 
 .PLEDGE = stdio rpath wpath cpath fattr proc
-.UNVEIL =			\
-	libc/integral		\
-	libc/stdbool.h		\
-	libc/disclaimer.inc	\
-	rwc:/dev/shm		\
-	rx:build/bootstrap	\
-	rx:o/third_party/gcc	\
-	r:build/portcosmo.h	\
-	/proc/stat		\
-	rw:/dev/null		\
-	rw:/dev/full		\
-	w:o/stack.log		\
-	/etc/hosts		\
-	~/.runit.psk		\
-	/proc/self/status	\
+.UNVEIL =					\
+	libc/integral				\
+	libc/stdbool.h				\
+	libc/disclaimer.inc			\
+	rwc:/dev/shm				\
+	rx:build/bootstrap			\
+	rx:o/third_party/gcc			\
+	r:build/portcosmo.h			\
+	/proc/stat				\
+	rw:/dev/null				\
+	rw:/dev/full				\
+	w:o/stack.log				\
+	/etc/hosts				\
+	~/.runit.psk				\
+	/proc/self/status			\
+	rx:/usr/bin/qemu-aarch64		\
+	rx:o/third_party/qemu/qemu-aarch64	\
 	/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
 PKGS =

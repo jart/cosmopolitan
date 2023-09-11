@@ -79,6 +79,7 @@ struct PosixThread {
   char *tls;               // bottom of tls allocation
   struct CosmoTib *tib;    // middle of tls allocation
   struct Dll list;         // list of threads
+  pthread_t next;          // for xnu silicon
   jmp_buf exiter;          // for pthread_exit
   pthread_attr_t attr;
   struct _pthread_cleanup_buffer *cleanup;
