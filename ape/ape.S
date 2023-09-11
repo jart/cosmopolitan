@@ -152,10 +152,13 @@ ape_mz:
 	.short	0x0800			// MZ: increases cs load lower bound
 	.short	0x0040			// MZ: reloc table offset
 	.short	0			// MZ: overlay number
+	.ascii	"'<<'@'\n"
 	.org	0x24			// MZ: bytes reserved for you
 	.ascii	"JT"			// MZ: OEM identifier
-	.short	0			// MZ: OEM information
-	.ascii	"' <<'@'\n"
+	.short	1			// MZ: OEM information
+__ape_com_sectors:
+	.short	v_ape_allsectors	// total number of sectors to load;
+	.endobj	__ape_com_sectors,globl	// to be patched by Cosmo tools
 	.org	0x40-4			// MZ: bytes reserved for you
 #if SupportsWindows() || SupportsMetal()
 	.long	RVA(ape_pe)		// PE: the new technology
@@ -220,7 +223,7 @@ stub:	mov	$0x40,%dl		// *literally* dos
 	nop				// system five bootpoint
 	.org	0x48,0x90		// note ⌂ELF means JG 47
 	jmp	3f			// MZ also means pop r10
-2:	sub	$8,%rsp			// a.k.a. dec %ax sub %sp
+2:	push	%rax			// a.k.a. push %ax
 	xor	%edx,%edx		// MZ ate BIOS drive code
 3:	.byte	0xbd,0,0		// a.k.a. mov imm,%bp
 	jmp	pc			// real mode, is real
@@ -291,7 +294,11 @@ pc:	cld
 	mov	$1,%al				// current sector
 	xor	%cx,%cx				// current cylinder
 	xor	%dh,%dh				// current head
-	mov	$v_ape_realsectors,%di		// total sectors
+	mov	$v_ape_maxrealsectors,%di	// no. sectors for base memory
+	mov	REAL(__ape_com_sectors),%bp
+	cmp	%bp,%di
+	jb	3f
+	mov	%bp,%di
 3:	call	pcread
 	mov	%es,%si				// addr += 512
 	add	$512>>4,%si
@@ -417,13 +424,12 @@ pcread:	push	%ax
 	ror	%cl
 	or	%al,%cl
 	xor	%bx,%bx			// es:bx is destination addr
-	mov	$1,%al			// read only one disk sector
-	mov	$2,%ah			// read disk sectors ordinal
+	mov	$0x0201,%ax		// read only one disk sector
 	int	$0x13
 	pop	%cx
 	pop	%ax
 	jc	9f
-	inc	%al			// ++sector
+	inc	%ax			// ++sector
 	cmp	mm+"struct mman::pc_drive_last_sector",%al
 	jbe	2f
 	mov	$1,%al
@@ -480,7 +486,7 @@ sinit4:	mov	$4,%cx
 	jz	1f
 	push	%cx
 	push	%si
-	xchg	%ax,%di
+	xchg	%ax,%dx
 	mov	$REAL(sconf),%si
 	call	sinit
 	pop	%si
@@ -491,18 +497,16 @@ sinit4:	mov	$4,%cx
 
 //	Initializes Serial Line Communications 8250 UART 16550A
 //
-//	@param	word di tty port
+//	@param	word dx tty port
 //	@param	char (*{es:,e,r}si)[4] register initial values
+//	@clob	dx
 //	@mode	long,legacy,real
 //	@see	www.lammertbies.nl/comm/info/serial-uart.html
-sinit:	mov	%di,%dx
-	test	%dx,%dx
+sinit:	test	%dx,%dx
 	jz	2f
 	push	%dx
 	push	%si
-	xor	%cx,%cx
-	mov	$UART_LCR,%cl
-	add	%cx,%dx
+	add	$UART_LCR,%dx
 	lodsb	%ds:(%si),%al
 	pop	%si
 	or	$UART_DLAB,%al
@@ -1515,7 +1519,11 @@ cpyhi:	push	%es
 	call	unreal
 	mov	$IMAGE_BASE_REAL,%esi
 	mov	$IMAGE_BASE_PHYSICAL,%edi
-	mov	$v_ape_realdwords,%ecx
+	mov	$v_ape_maxrealsectors,%ecx
+	cmp	%bp,%cx
+	jb	1f
+	mov	%bp,%cx
+1:	shl	$9-2,%ecx		// convert sector count to dword count
 	cld
 	rep movsl %ds:(%esi),%es:(%edi)
 	sti
@@ -1545,13 +1553,16 @@ unreal:	push	%ds
 	pop	%ds
 	ret
 
-//	Reads any remaining program pages into memory which have not yet
-//	been read by the boot sector.
+//	Reads any remaining program & data sectors into memory which have not
+//	yet been read by the boot sector.
 //
-//	@clob	eax, ecx, dx, esi, edi, bp
-loadhi:	mov	$v_ape_highsectors,%bp
-	test	%bp,%bp
-	jz	9f
+//	@return	ebp physical address after end of loaded sectors
+//	@clob	eax, ecx, dx, esi, edi
+loadhi:
+#define	SEG 0x79000
+	mov	$IMAGE_BASE_PHYSICAL+v_ape_maxrealbytes-SEG,%edi
+	sub	$v_ape_maxrealsectors,%bp
+	jbe	9f
 	mov	$mm+"struct mman::pc_drive",%si
 	cld
 	lodsb	//← pc_drive
@@ -1565,8 +1576,6 @@ loadhi:	mov	$v_ape_highsectors,%bp
 	xchg	%ax,%cx
 	mov	(%si),%dh #← pc_drive_next_head
 	push	%es
-#define	SEG 0x79000
-	mov	$IMAGE_BASE_PHYSICAL+v_ape_realbytes-SEG,%edi
 	push	$SEG>>4
 	pop	%es
 0:	call	pcread
@@ -1584,7 +1593,8 @@ loadhi:	mov	$v_ape_highsectors,%bp
 	dec	%bp
 	jnz	0b
 	pop	%es
-9:	ret
+9:	lea	SEG(%edi),%ebp
+	ret
 
 //	Initializes long mode paging.
 pinit:	push	%ds
@@ -1638,6 +1648,8 @@ golong:	cli
 	.endfn	golong
 
 //	Long mode is long.
+//
+//	@param	ebp physical address after end of loaded sectors
 	.code64
 long:	movabs	$BANE+PHYSICAL(0f),%rax
 	jmp	*%rax
@@ -1653,12 +1665,12 @@ long:	movabs	$BANE+PHYSICAL(0f),%rax
 	xor	%r13d,%r13d
 	xor	%r14d,%r14d
 	xor	%r15d,%r15d
-	xor	%ebx,%ebx
-	xor	%ebp,%ebp
 	mov	$mm,%rdi
 	mov	%cr3,%rsi
 	mov	$IMAGE_BASE_PHYSICAL,%edx
-	lea	v_ape_allbytes(%rdx),%ecx
+	mov	%ebp,%ecx
+	xor	%ebx,%ebx
+	xor	%ebp,%ebp
 	call	__map_phdrs
 	push	$0x037f
 	fldcw	(%rsp)
@@ -1792,9 +1804,9 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.endm
 	.ldsvar	_end
 	.ldsvar	_etext
-	.ldsvar	v_ape_realsectors
-	.ldsvar	v_ape_realbytes
-	.ldsvar	v_ape_highsectors
+	.ldsvar	v_ape_maxrealsectors
+	.ldsvar	v_ape_maxrealbytes
+	.ldsvar	v_ape_allsectors
 	.ldsvar	ape_idata_ro
 	.ldsvar	ape_piro
 	.ldsvar	ape_piro_end

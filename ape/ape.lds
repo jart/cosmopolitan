@@ -436,7 +436,6 @@ SECTIONS {
 /*END: NT FORK COPYING */
     _edata = .;
     PROVIDE(edata = .);
-    _ezip = .; /* <-- very deprecated */
   } :Ram
 
   . = ALIGN(CONSTANT(COMMONPAGESIZE));
@@ -633,12 +632,10 @@ APE_DECLARE_FIXED_DECIMAL(IDENTITY, blink_xnu_aarch64_size);
 #endif /* APE_IS_SHELL_SCRIPT */
 
 #if SupportsMetal()
-v_ape_realsectors = MIN(0x70000 - IMAGE_BASE_REAL, ROUNDUP(RVA(_ezip), 512)) / 512;
-v_ape_realbytes = v_ape_realsectors * 512;
-v_ape_realdwords = v_ape_realsectors * (512 / 4);
-v_ape_allsectors = ROUNDUP(RVA(_ezip), 512) / 512;
-v_ape_allbytes = v_ape_allsectors * 512;
-v_ape_highsectors = MIN(0xffff, v_ape_allsectors - v_ape_realsectors);
+v_ape_maxrealbytes = ROUNDUP(0x70000 - IMAGE_BASE_REAL, 512);
+v_ape_maxrealsectors = v_ape_maxrealbytes / 512;
+v_ape_allbytes = ROUNDUP(_edata - __executable_start, 512);
+v_ape_allsectors = v_ape_allbytes / 512;
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
 

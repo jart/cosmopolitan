@@ -9,7 +9,6 @@ extern unsigned char __privileged_start[] __attribute__((__weak__));
 extern unsigned char _ehead[] __attribute__((__weak__));
 extern unsigned char _etext[] __attribute__((__weak__));
 extern unsigned char _edata[] __attribute__((__weak__));
-extern unsigned char _ezip[] __attribute__((__weak__));
 extern unsigned char _end[] __attribute__((__weak__));
 extern unsigned char _ereal[] __attribute__((__weak__));
 extern unsigned char _tdata_start[] __attribute__((__weak__));

@@ -44,6 +44,7 @@ forceinline bool __isfdkind(int fd, int kind) {
 int _check_interrupts(int);
 int sys_close_nt(struct Fd *, int);
 int sys_openat_metal(int, const char *, int, unsigned);
+int64_t sys_lseek_metal(struct Fd *, int64_t, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
