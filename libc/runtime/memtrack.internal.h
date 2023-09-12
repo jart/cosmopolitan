@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/nopl.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
@@ -60,14 +59,6 @@ int __untrack_memory(struct MemoryIntervals *, int, int,
 void __release_memory_nt(struct MemoryIntervals *, int, int);
 int __untrack_memories(void *, size_t);
 size_t __get_memtrack_size(struct MemoryIntervals *);
-
-#ifdef _NOPL0
-#define __mmi_lock()   _NOPL0("__threadcalls", __mmi_lock)
-#define __mmi_unlock() _NOPL0("__threadcalls", __mmi_unlock)
-#else
-#define __mmi_lock()   (__threaded ? __mmi_lock() : 0)
-#define __mmi_unlock() (__threaded ? __mmi_unlock() : 0)
-#endif
 
 #ifdef __x86_64__
 /*

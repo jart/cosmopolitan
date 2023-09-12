@@ -17,13 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/internal.h"
-#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/thread/thread.h"
 
 /**
  * Releases lock on stdio object.
  */
-void(funlockfile)(FILE *f) {
+void funlockfile(FILE *f) {
   pthread_mutex_unlock(&f->lock);
 }

@@ -7,7 +7,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/stdio/lock.internal.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"

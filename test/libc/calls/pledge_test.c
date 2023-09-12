@@ -37,7 +37,6 @@
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr6.h"
 #include "libc/stdio/internal.h"
-#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"

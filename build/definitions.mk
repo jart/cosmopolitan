@@ -137,12 +137,6 @@ else
 TMPSAFE = $(TMPDIR)/
 endif
 
-ifeq ($(ARCH), aarch64)
-IMAGE_BASE_VIRTUAL ?= 0x010000000000
-else
-IMAGE_BASE_VIRTUAL ?= 0x400000
-endif
-
 BACKTRACES =								\
 	-fno-optimize-sibling-calls					\
 	-mno-omit-leaf-frame-pointer
@@ -222,7 +216,6 @@ MATHEMATICAL =								\
 DEFAULT_CPPFLAGS +=							\
 	-D_COSMO_SOURCE							\
 	-DMODE='"$(MODE)"'						\
-	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\
 	-iquote .
 
@@ -373,7 +366,6 @@ LINK = $(LD) $(LINK.flags)
 ELF = o/libc/elf/elf.lds
 ELFLINK = $(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) && $(COMPILE) -AFIXUP.ape -T$@ $(FIXUPOBJ) $@
 LINKARGS = $(patsubst %.lds,-T %.lds,$(call uniqr,$(LD.libs) $(filter-out %.pkg,$^)))
-LOLSAN = build/lolsan -b $(IMAGE_BASE_VIRTUAL)
 
 # The compiler won't generate %xmm code for sources extensioned .greg.c,
 # which is needed for C modules wanting to run at the executive level or

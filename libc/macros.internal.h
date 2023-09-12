@@ -445,35 +445,6 @@
 #endif
 .endm
 
-//	Good alignment for loops where alignment actually helps.
-//	@note 16-byte if <10 padding otherwise 8-byte
-.macro	.alignloop
-#ifndef	__OPTIMIZE_SIZE__
-	.p2align 4,,10
-	.p2align 4
-#endif
-.endm
-
-//	Loads Effective Address
-//	Supporting security blankets
-.macro	plea	symbol:req reg64:req reg32:req
-#if	__PIC__ + __PIE__ + __code_model_medium__ + __code_model_large__ + 0 > 1
-	lea	\symbol(%rip),\reg64
-#else
-	mov	$\symbol,\reg32
-#endif
-.endm
-
-//	Loads Effective Address to Stack
-//	Supporting security blankets
-.macro	pshaddr	symbol:req
-#if	__PIC__ + __PIE__ + __code_model_medium__ + __code_model_large__ + 0 > 1
-	push	$IMAGE_BASE_VIRTUAL+RVA(\symbol)(%rip),\reg64
-#else
-	push	$\symbol
-#endif
-.endm
-
 //	TODO(jart): delete
 //	Loads Effective Address
 //	Supporting security blankets
@@ -484,32 +455,6 @@
 #else
 	mov	$\symbol,%e\reg
 #endif
-.endm
-
-.macro	farcall	symbol:req
- .type	\symbol,@function
-#if	__PIC__ + __PIE__ + __code_model_medium__ + __code_model_large__ + 0 > 1
-	call	*\symbol\()@gotpcrel(%rip)
-#else
-	call	\symbol\()@plt
-#endif
-.endm
-
-//	Pushes RVA on stack of linktime mergeable string literal.
-//	@see	popstr
-.macro	pushstr	text
-	.section .rodata.str1.1,"aSM",@progbits,1
-.Lstr\@: .asciz	"\text"
-	.endobj	.Lstr\@
-	.previous
-	push	$.Lstr\@ - IMAGE_BASE_VIRTUAL
-.endm
-
-//	Pops off stack string address.
-//	@see	pushstr
-.macro	popstr	dest:req
-	addl	$IMAGE_BASE_VIRTUAL,(%rsp)
-	pop	\dest
 .endm
 
 //	Loads address of linktime mergeable string literal into register.

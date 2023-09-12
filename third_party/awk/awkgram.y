@@ -25,7 +25,6 @@ THIS SOFTWARE.
 %{
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
-#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"
 #include "libc/mem/alg.h"

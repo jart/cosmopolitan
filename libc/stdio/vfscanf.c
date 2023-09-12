@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
-#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 
 /**

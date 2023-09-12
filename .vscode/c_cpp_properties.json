@@ -101,8 +101,7 @@
 			],
 			"defines": [
 				"COSMO",
-				"MODE=",
-				"IMAGE_BASE_VIRTUAL=0x400000"
+				"MODE="
 			]
 		}
 	],

@@ -5,7 +5,6 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/nopl.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
@@ -66,11 +65,6 @@ __attribute__((__constructor__)) static void localtime_init(void) {
 		       localtime_unlock,
 		       localtime_funlock);
 }
-
-#ifdef _NOPL0
-#define localtime_lock()   _NOPL0("__threadcalls", localtime_lock)
-#define localtime_unlock() _NOPL0("__threadcalls", localtime_unlock)
-#endif
 
 #ifndef TZ_ABBR_MAX_LEN
 #define TZ_ABBR_MAX_LEN	16

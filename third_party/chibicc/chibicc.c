@@ -668,7 +668,6 @@ static void run_linker(StringArray *inputs, char *output) {
   strarray_push(&arr, "--gc-sections");
   strarray_push(&arr, "--build-id=none");
   strarray_push(&arr, "--no-dynamic-linker");
-  strarray_push(&arr, xasprintf("-Ttext-segment=%#x", IMAGE_BASE_VIRTUAL));
   /* strarray_push(&arr, "-T"); */
   /* strarray_push(&arr, LDS); */
   /* strarray_push(&arr, APE); */

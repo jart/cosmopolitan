@@ -21,7 +21,6 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/nopl.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"

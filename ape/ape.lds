@@ -198,6 +198,10 @@
 #define SKEW 0
 #endif
 
+#ifndef IMAGE_BASE_VIRTUAL
+#define IMAGE_BASE_VIRTUAL 0x400000
+#endif
+
 #if IMAGE_BASE_VIRTUAL > 0xffffffff
 #error "please use 32-bit addresses for image data"
 #endif

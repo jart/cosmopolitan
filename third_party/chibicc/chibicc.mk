@@ -16,7 +16,6 @@ CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com
 CHIBICC_FLAGS =								\
 	-fno-common							\
 	-include libc/integral/normalize.inc				\
-	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-DMODE='"$(MODE)"'
 
 o/$(MODE)/%.chibicc.o: private .UNSANDBOXED = true

@@ -21,7 +21,7 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
-#include "libc/stdio/lock.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"

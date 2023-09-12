@@ -67,7 +67,6 @@ This module exposes low-level utilities from the Cosmopolitan library.\n\
 Static objects:\n\
 \n\
 MODE -- make build mode, e.g. \"\", \"tiny\", \"opt\", \"rel\", etc.\n\
-IMAGE_BASE_VIRTUAL -- base address of actually portable executable image\n\
 kernel -- o/s platform, e.g. \"linux\", \"xnu\", \"metal\", \"nt\", etc.\n\
 kStartTsc -- the rdtsc() value at process creation.");
 
@@ -402,7 +401,6 @@ PyInit_cosmo(void)
     if (PyType_Ready(&FtracerType) < 0) return 0;
     if (!(m = PyModule_Create(&cosmomodule))) return 0;
     PyModule_AddStringConstant(m, "MODE", MODE);
-    PyModule_AddIntConstant(m, "IMAGE_BASE_VIRTUAL", IMAGE_BASE_VIRTUAL);
     PyModule_AddStringConstant(m, "kernel", GetKernelName());
     PyModule_AddIntConstant(m, "kStartTsc", kStartTsc);
 

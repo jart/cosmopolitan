@@ -23,7 +23,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/nopl.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
@@ -70,11 +69,6 @@ static void sem_open_setup(void) {
 static void sem_open_init(void) {
   pthread_once(&g_semaphores.once, sem_open_setup);
 }
-
-#ifdef _NOPL0
-#define sem_open_lock()   _NOPL0("__threadcalls", sem_open_lock)
-#define sem_open_unlock() _NOPL0("__threadcalls", sem_open_unlock)
-#endif
 
 static sem_t *sem_open_impl(const char *path, int oflag, unsigned mode,
                             unsigned value) {

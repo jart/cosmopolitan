@@ -146,12 +146,6 @@ int main(int argc, char *argv[]) {
   visited = newinterner();
   appends(&output, "#ifndef COSMOPOLITAN_H_\n");
   appends(&output, "#define COSMOPOLITAN_H_\n");
-  /* appends(&output, "#define IMAGE_BASE_VIRTUAL "); */
-  /* appendf(&output, "%p", IMAGE_BASE_VIRTUAL); */
-  /* appends(&output, "\n"); */
-  /* appends(&output, "#define IMAGE_BASE_PHYSICAL "); */
-  /* appendf(&output, "%p", IMAGE_BASE_PHYSICAL); */
-  /* appends(&output, "\n"); */
   getargs_init(&ga, argv + 1);
   while ((src = getargs_next(&ga))) {
     Visit(src);

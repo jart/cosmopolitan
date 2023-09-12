@@ -31,8 +31,7 @@
     "__STDC_WANT_LIB_EXT1__"))
 
 (defconst cosmo-c-constants-limits
-  '("IMAGE_BASE_VIRTUAL"
-    "IMAGE_BASE_REAL"
+  '("IMAGE_BASE_REAL"
     "IMAGE_BASE_PHYSICAL"
     "CHAR_MAX"
     "SCHAR_MAX"
