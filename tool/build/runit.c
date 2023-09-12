@@ -345,14 +345,6 @@ int ReadResponse(void) {
   return exitcode;
 }
 
-static inline bool IsElf(const char *p, size_t n) {
-  return n >= 4 && READ32LE(p) == READ32LE("\177ELF");
-}
-
-static inline bool IsMachO(const char *p, size_t n) {
-  return n >= 4 && READ32LE(p) == 0xFEEDFACEu + 1;
-}
-
 int RunOnHost(char *spec) {
   int err;
   char *p;

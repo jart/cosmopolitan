@@ -28,6 +28,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
@@ -77,6 +78,7 @@
 #include "net/http/escape.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
@@ -124,7 +126,7 @@
 
 #define LOG_LEVEL_WARN 0
 #define LOG_LEVEL_INFO 1
-#define LOG_LEVEL_VERB 3
+#define LOG_LEVEL_VERB 2
 #define LOG_LEVEL_DEBU 3
 
 #define DEBUF(FMT, ...) LOGF(DEBU, FMT, ##__VA_ARGS__)
@@ -157,7 +159,7 @@ struct Client {
     char *data;
   } rbuf;
   char *output;
-  char exepath[128];
+  char tmpexepath[128];
   char buf[32768];
 };
 
@@ -203,7 +205,7 @@ void GetOpts(int argc, char *argv[]) {
   g_servaddr.sin_family = AF_INET;
   g_servaddr.sin_port = htons(RUNITD_PORT);
   g_servaddr.sin_addr.s_addr = INADDR_ANY;
-  while ((opt = getopt(argc, argv, "fqhvsdrl:p:t:w:")) != -1) {
+  while ((opt = getopt(argc, argv, "fqhvVsdrl:p:t:w:")) != -1) {
     switch (opt) {
       case 'f':
         use_ftrace = true;
@@ -216,6 +218,9 @@ void GetOpts(int argc, char *argv[]) {
         break;
       case 'v':
         ++g_log_level;
+        break;
+      case 'V':
+        ++mbedtls_debug_threshold;
         break;
       case 'd':
         g_daemonize = true;
@@ -422,8 +427,8 @@ void FreeClient(struct Client *client) {
     waitpid(client->pid, 0, 0);
   }
   Close(&client->fd);
-  if (*client->exepath) {
-    unlink(client->exepath);
+  if (*client->tmpexepath) {
+    unlink(client->tmpexepath);
   }
   if (client->once) {
     inflateEnd(&client->zs);
@@ -441,7 +446,7 @@ void *ClientWorker(void *arg) {
   int events, wstatus;
   struct Client *client = arg;
   uint32_t namesize, filesize;
-  char *addrstr, *exename, *exe;
+  char *addrstr, *origname;
   unsigned char msg[4 + 1 + 4 + 4 + 4];
 
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, g_psk);
@@ -467,14 +472,14 @@ void *ClientWorker(void *arg) {
   namesize = READ32BE(msg + 5);
   filesize = READ32BE(msg + 9);
   crc = READ32BE(msg + 13);
-  exename = gc(calloc(1, namesize + 1));
-  Recv(client, exename, namesize);
-  INFOF("%s sent %#s (%'u bytes @ %#s)", addrstr, exename, filesize,
-        client->exepath);
-  exe = gc(malloc(filesize));
-  Recv(client, exe, filesize);
-  if (crc32_z(0, exe, filesize) != crc) {
-    WARNF("%s crc mismatch! %#s", addrstr, exename);
+  origname = gc(calloc(1, namesize + 1));
+  Recv(client, origname, namesize);
+  INFOF("%s sent %#s (%'u bytes @ %#s)", addrstr, origname, filesize,
+        client->tmpexepath);
+  char *exedata = gc(malloc(filesize));
+  Recv(client, exedata, filesize);
+  if (crc32_z(0, exedata, filesize) != crc) {
+    WARNF("%s crc mismatch! %#s", addrstr, origname);
     pthread_exit(0);
   }
 
@@ -483,36 +488,28 @@ void *ClientWorker(void *arg) {
   // condition can happen, where etxtbsy is raised by our execve
   // we're using o_cloexec so it's guaranteed to fix itself fast
   // thus we use an optimistic approach to avoid expensive locks
-  sprintf(client->exepath, "o/%s.XXXXXX.com", basename(exename));
-  int exefd = openatemp(AT_FDCWD, client->exepath, 4, O_CLOEXEC, 0700);
+  sprintf(client->tmpexepath, "o/%s.XXXXXX.com", basename(origname));
+  int exefd = openatemp(AT_FDCWD, client->tmpexepath, 4, O_CLOEXEC, 0700);
   ftruncate(exefd, filesize);
-  if (write(exefd, exe, filesize) != filesize) {
-    WARNF("%s failed to write %#s", addrstr, exename);
+  if (write(exefd, exedata, filesize) != filesize) {
+    WARNF("%s failed to write %#s", addrstr, origname);
     close(exefd);
     pthread_exit(0);
   }
   if (close(exefd)) {
-    WARNF("%s failed to close %#s", addrstr, exename);
+    WARNF("%s failed to close %#s", addrstr, origname);
     pthread_exit(0);
   }
 
   // do the args
   int i = 0;
   char *args[8] = {0};
-  if (!IsXnuSilicon()) {
-    exe = client->exepath;
-  } else {
-    exe = "ape-m1.com";
-    args[i++] = (char *)exe;
-    args[i++] = "-";
-    args[i++] = client->exepath;
-  }
-  args[i++] = client->exepath;
+  args[i++] = client->tmpexepath;
   if (use_strace) args[i++] = "--strace";
   if (use_ftrace) args[i++] = "--ftrace";
 
   // run program, tee'ing stderr to both log and client
-  DEBUF("spawning %s", client->exepath);
+  DEBUF("spawning %s", client->tmpexepath);
   sigemptyset(&sigmask);
   sigaddset(&sigmask, SIGINT);
   sigaddset(&sigmask, SIGCHLD);
@@ -528,7 +525,7 @@ RetryOnEtxtbsyRaceCondition:
       WARNF("%s failed to spawn on %s due because either (1) the ETXTBSY race "
             "condition kept happening or (2) the program in question actually "
             "is crashing with SIGVTALRM, without printing anything to out/err!",
-            exename, g_hostname);
+            origname, g_hostname);
       pthread_exit(0);
     }
     if (usleep(1u << etxtbsy_tries)) {
@@ -548,12 +545,13 @@ RetryOnEtxtbsyRaceCondition:
   posix_spawn_file_actions_adddup2(&spawnfila, g_bogusfd, 0);
   posix_spawn_file_actions_adddup2(&spawnfila, client->pipe[1], 1);
   posix_spawn_file_actions_adddup2(&spawnfila, client->pipe[1], 2);
-  err = posix_spawn(&client->pid, exe, &spawnfila, &spawnattr, args, environ);
+  err = posix_spawn(&client->pid, client->tmpexepath, &spawnfila, &spawnattr,
+                    args, environ);
   if (err) {
     if (err == ETXTBSY) {
       goto RetryOnEtxtbsyRaceCondition;
     }
-    WARNF("%s failed to spawn on %s due to %s", exename, g_hostname,
+    WARNF("%s failed to spawn on %s due to %s", client->tmpexepath, g_hostname,
           strerror(err));
     pthread_exit(0);
   }
@@ -561,13 +559,13 @@ RetryOnEtxtbsyRaceCondition:
   posix_spawnattr_destroy(&spawnattr);
   Close(&client->pipe[1]);
 
-  DEBUF("communicating %s[%d]", exename, client->pid);
+  DEBUF("communicating %s[%d]", origname, client->pid);
   struct timespec deadline =
       timespec_add(timespec_real(), timespec_fromseconds(DEATH_CLOCK_SECONDS));
   for (;;) {
     if (g_interrupted) {
       WARNF("killing %d %s and hanging up %d due to interrupt", client->fd,
-            exename, client->pid);
+            origname, client->pid);
     HangupClientAndTerminateJob:
       SendProgramOutput(client);
       mbedtls_ssl_close_notify(&ezssl);
@@ -577,7 +575,7 @@ RetryOnEtxtbsyRaceCondition:
     }
     struct timespec now = timespec_real();
     if (timespec_cmp(now, deadline) >= 0) {
-      WARNF("killing %s (pid %d) which timed out after %d seconds", exename,
+      WARNF("killing %s (pid %d) which timed out after %d seconds", origname,
             client->pid, DEATH_CLOCK_SECONDS);
       goto HangupClientAndTerminateJob;
     }
@@ -594,7 +592,7 @@ RetryOnEtxtbsyRaceCondition:
         continue;
       } else {
         WARNF("killing %d %s and hanging up %d because poll failed", client->fd,
-              exename, client->pid);
+              origname, client->pid);
         goto HangupClientAndTerminateJob;
       }
     }
@@ -604,37 +602,37 @@ RetryOnEtxtbsyRaceCondition:
         char buf[512];
         received = mbedtls_ssl_read(&ezssl, buf, sizeof(buf));
         if (!received) {
-          WARNF("%s client disconnected so killing worker %d", exename,
+          WARNF("%s client disconnected so killing worker %d", origname,
                 client->pid);
           goto TerminateJob;
         }
         if (received > 0) {
-          WARNF("%s client sent %d unexpected bytes so killing job", exename,
+          WARNF("%s client sent %d unexpected bytes so killing job", origname,
                 received);
           goto HangupClientAndTerminateJob;
         }
         if (received == MBEDTLS_ERR_SSL_WANT_READ) {  // EAGAIN SO_RCVTIMEO
-          WARNF("%s (pid %d) is taking a really long time", exename,
+          WARNF("%s (pid %d) is taking a really long time", origname,
                 client->pid);
           continue;
         }
         WARNF("client ssl read failed with -0x%04x (%s) so killing %s",
-              -received, GetTlsError(received), exename);
+              -received, GetTlsError(received), origname);
         goto TerminateJob;
       }
       if (fds[1].revents) {
         char buf[512];
         ssize_t got = read(client->pipe[0], buf, sizeof(buf));
         if (got == -1) {
-          WARNF("got %s reading %s output", strerror(errno), exename);
+          WARNF("got %s reading %s output", strerror(errno), origname);
           goto HangupClientAndTerminateJob;
         }
         if (!got) {
-          VERBF("got eof reading %s output", exename);
+          VERBF("got eof reading %s output", origname);
           Close(&client->pipe[0]);
           break;
         }
-        DEBUF("got %ld bytes reading %s output", got, exename);
+        DEBUF("got %ld bytes reading %s output", got, origname);
         appendd(&client->output, buf, got);
       }
     }
@@ -645,7 +643,7 @@ WaitAgain:
   int wrc = wait4(client->pid, &wstatus, 0, &rusage);
   if (wrc == -1) {
     if (errno == EINTR) {
-      WARNF("waitpid interrupted; killing %s pid %d", exename, client->pid);
+      WARNF("waitpid interrupted; killing %s pid %d", origname, client->pid);
       kill(client->pid, SIGINT);
       goto WaitAgain;
     }
@@ -657,12 +655,12 @@ WaitAgain:
   int exitcode;
   if (WIFEXITED(wstatus)) {
     if (WEXITSTATUS(wstatus)) {
-      WARNF("%s on %s exited with %d", exename, g_hostname,
+      WARNF("%s on %s exited with %d", origname, g_hostname,
             WEXITSTATUS(wstatus));
       appendf(&client->output, "------ %s %s $?=%d (0x%08x) ------\n",
-              g_hostname, exename, WEXITSTATUS(wstatus), wstatus);
+              g_hostname, origname, WEXITSTATUS(wstatus), wstatus);
     } else {
-      VERBF("%s on %s exited with %d", exename, g_hostname,
+      VERBF("%s on %s exited with %d", origname, g_hostname,
             WEXITSTATUS(wstatus));
     }
     exitcode = WEXITSTATUS(wstatus);
@@ -672,13 +670,13 @@ WaitAgain:
       client->output = 0;
       goto RetryOnEtxtbsyRaceCondition;
     }
-    WARNF("%s on %s terminated with %s", exename, g_hostname,
+    WARNF("%s on %s terminated with %s", origname, g_hostname,
           strsignal(WTERMSIG(wstatus)));
     exitcode = 128 + WTERMSIG(wstatus);
     appendf(&client->output, "------ %s %s $?=%s (0x%08x) ------\n", g_hostname,
-            exename, strsignal(WTERMSIG(wstatus)), wstatus);
+            origname, strsignal(WTERMSIG(wstatus)), wstatus);
   } else {
-    WARNF("%s on %s died with wait status 0x%08x", exename, g_hostname,
+    WARNF("%s on %s died with wait status 0x%08x", origname, g_hostname,
           wstatus);
     exitcode = 127;
   }
@@ -689,9 +687,9 @@ WaitAgain:
   SendProgramOutput(client);
   SendExitMessage(exitcode);
   mbedtls_ssl_close_notify(&ezssl);
-  if (etxtbsy_tries) {
-    VERBF("encountered %d ETXTBSY race conditions spawning %s", etxtbsy_tries,
-          exename);
+  if (etxtbsy_tries > 1) {
+    WARNF("encountered %d ETXTBSY race conditions spawning %s",
+          etxtbsy_tries - 1, origname);
   }
   pthread_exit(0);
 }

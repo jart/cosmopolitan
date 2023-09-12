@@ -79,7 +79,7 @@ struct Buffer {
 
 char *output;
 jmp_buf jmp_tmp;
-int option_verbose = 1;
+int option_verbose;
 mbedtls_test_info_t mbedtls_test_info;
 static char tmpdir[PATH_MAX];
 static char third_party[PATH_MAX];

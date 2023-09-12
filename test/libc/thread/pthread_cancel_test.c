@@ -169,7 +169,7 @@ void *CondWaitDeferredWorker(void *arg) {
   pthread_setcancelstate(PTHREAD_CANCEL_DEFERRED, 0);
   ASSERT_EQ(0, pthread_mutex_lock(&mu));
   ASSERT_EQ(ECANCELED, pthread_cond_timedwait(&cv, &mu, 0));
-  __builtin_trap();
+  abort();
 }
 
 TEST(pthread_cancel, condDeferredWait_reacquiresMutex) {

@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/syslib.internal.h"
@@ -28,6 +29,7 @@
 #include "libc/x/x.h"
 #include "libc/x/xsigaction.h"
 #include "net/https/https.h"
+#include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 
@@ -210,9 +212,19 @@ void EzInitialize(void) {
   InitializeRng(&ezrng);
 }
 
+static void OnSslDebug(void *ctx, int level, const char *file, int line,
+                       const char *message) {
+  char sline[12];
+  char slevel[12];
+  FormatInt32(sline, line);
+  FormatInt32(slevel, level);
+  tinyprint(2, file, ":", sline, ": (", slevel, ") ", message, "\n", NULL);
+}
+
 void EzSetup(char psk[32]) {
   int rc;
   EzSanity();
+  mbedtls_ssl_conf_dbg(&ezconf, OnSslDebug, 0);
   mbedtls_ssl_conf_rng(&ezconf, mbedtls_ctr_drbg_random, &ezrng);
   if ((rc = mbedtls_ssl_conf_psk(&ezconf, psk, 32, "runit", 5))) {
     EzTlsDie("EzSetup mbedtls_ssl_conf_psk", rc);

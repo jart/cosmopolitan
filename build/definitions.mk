@@ -61,7 +61,6 @@ ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000
 DOT ?= dot
 CLANG = clang
-FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
 TMPDIR = o/tmp
 
 AR = build/bootstrap/ar.com
@@ -334,8 +333,6 @@ LD.libs =								\
 
 COMPILE.c.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(c.flags)
 COMPILE.cxx.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(cxx.flags)
-COMPILE.f.flags = $(cc.flags) $(copt.flags) $(f.flags)
-COMPILE.F.flags = $(cc.flags) $(copt.flags) $(cpp.flags) $(f.flags)
 COMPILE.i.flags = $(cc.flags) $(copt.flags) $(c.flags)
 COMPILE.ii.flags = $(cc.flags) $(copt.flags) $(cxx.flags)
 LINK.flags = $(DEFAULT_LDFLAGS) $(CONFIG_LDFLAGS) $(LDFLAGS)
@@ -343,20 +340,14 @@ OBJECTIFY.c.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags)
 OBJECTIFY.cxx.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(cxx.flags)
 OBJECTIFY.s.flags = $(ASONLYFLAGS) $(s.flags)
 OBJECTIFY.S.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags)
-OBJECTIFY.f.flags = $(cc.flags) $(o.flags) $(S.flags) $(f.flags)
-OBJECTIFY.F.flags = $(cc.flags) $(o.flags) $(S.flags) $(cpp.flags) $(copt.flags) $(f.flags)
 PREPROCESS.flags = -E $(copt.flags) $(cc.flags) $(cpp.flags)
 PREPROCESS.lds.flags = -D__LINKER__ $(filter-out -g%,$(PREPROCESS.flags)) -P -xc
 
 COMPILE.c = $(CC) -S $(COMPILE.c.flags)
 COMPILE.cxx = $(CXX) -S $(COMPILE.cxx.flags)
 COMPILE.i = $(CC) -S $(COMPILE.i.flags)
-COMPILE.f = $(FC) -S $(COMPILE.f.flags)
-COMPILE.F = $(FC) -S $(COMPILE.F.flags)
 OBJECTIFY.s = $(AS) $(OBJECTIFY.s.flags)
 OBJECTIFY.S = $(CC) $(OBJECTIFY.S.flags) -c
-OBJECTIFY.f = $(FC) $(OBJECTIFY.f.flags) -c
-OBJECTIFY.F = $(FC) $(OBJECTIFY.F.flags) -c
 OBJECTIFY.c = $(CC) $(OBJECTIFY.c.flags) -c
 OBJECTIFY.cxx = $(CXX) $(OBJECTIFY.cxx.flags) -c
 PREPROCESS = $(CC) $(PREPROCESS.flags)
@@ -380,42 +371,6 @@ OBJECTIFY.greg.c =							\
 	-fno-sanitize=all						\
 	-ffreestanding							\
 	-fwrapv								\
-	-c
-
-OBJECTIFY.ansi.c = $(CC) $(OBJECTIFY.c.flags) -ansi -Wextra -Werror -pedantic-errors -c
-OBJECTIFY.c99.c = $(CC) $(OBJECTIFY.c.flags) -std=c99 -Wextra -Werror -pedantic-errors -c
-OBJECTIFY.c11.c = $(CC) $(OBJECTIFY.c.flags) -std=c11 -Wextra -Werror -pedantic-errors -c
-OBJECTIFY.c2x.c = $(CC) $(OBJECTIFY.c.flags) -std=c2x -Wextra -Werror -pedantic-errors -c
-
-OBJECTIFY.ncabi.c =							\
-	$(GCC)								\
-	$(OBJECTIFY.c.flags)						\
-	-mno-sse							\
-	-mfpmath=387							\
-	-fno-stack-protector						\
-	-fno-instrument-functions					\
-	-fno-optimize-sibling-calls					\
-	-fno-sanitize=all						\
-	-fcall-saved-rcx						\
-	-fcall-saved-rdx						\
-	-fcall-saved-rdi						\
-	-fcall-saved-rsi						\
-	-fcall-saved-r8							\
-	-fcall-saved-r9							\
-	-fcall-saved-r10						\
-	-fcall-saved-r11						\
-	-c								\
-	-xc
-
-OBJECTIFY.initabi.c =							\
-	$(GCC)								\
-	$(OBJECTIFY.c.flags)						\
-	-fno-stack-protector						\
-	-fno-instrument-functions					\
-	-fno-optimize-sibling-calls					\
-	-fno-sanitize=all						\
-	-fcall-saved-rdi						\
-	-fcall-saved-rsi						\
 	-c
 
 TAGSFLAGS =								\

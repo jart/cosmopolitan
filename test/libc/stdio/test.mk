@@ -100,16 +100,6 @@ o/$(MODE)/test/libc/stdio/posix_spawn_test.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/stdio/wut_test.com.dbg:			\
-		$(TEST_LIBC_STDIO_DEPS)				\
-		o/$(MODE)/test/libc/stdio/wut_test.o		\
-		o/$(MODE)/test/libc/stdio/stdio.pkg		\
-		o/$(MODE)/tool/build/echo.com.zip.o		\
-		$(LIBC_TESTMAIN)				\
-		$(CRT)						\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 $(TEST_LIBC_STDIO_OBJS): private				\
 		DEFAULT_CCFLAGS +=				\
 			-fno-builtin

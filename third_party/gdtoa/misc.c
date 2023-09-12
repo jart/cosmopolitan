@@ -44,16 +44,12 @@ static pthread_mutex_t __gdtoa_lock1_obj;
 static void
 __gdtoa_lock(void)
 {
-	if (!__threaded)
-		return;
 	pthread_mutex_lock(&__gdtoa_lock_obj);
 }
 
 static void
 __gdtoa_unlock(void)
 {
-	if (!__threaded)
-		return;
 	pthread_mutex_unlock(&__gdtoa_lock_obj);
 }
 
@@ -66,16 +62,12 @@ __gdtoa_initlock(void)
 static void
 __gdtoa_lock1(void)
 {
-	if (!__threaded)
-		return;
 	pthread_mutex_lock(&__gdtoa_lock1_obj);
 }
 
 static void
 __gdtoa_unlock1(void)
 {
-	if (!__threaded)
-		return;
 	pthread_mutex_unlock(&__gdtoa_lock1_obj);
 }
 

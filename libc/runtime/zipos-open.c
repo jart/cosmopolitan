@@ -53,15 +53,11 @@ static size_t __zipos_maptotal;
 static pthread_mutex_t __zipos_lock_obj;
 
 static void __zipos_lock(void) {
-  if (__threaded) {
-    pthread_mutex_lock(&__zipos_lock_obj);
-  }
+  pthread_mutex_lock(&__zipos_lock_obj);
 }
 
 static void __zipos_unlock(void) {
-  if (__threaded) {
-    pthread_mutex_unlock(&__zipos_lock_obj);
-  }
+  pthread_mutex_unlock(&__zipos_lock_obj);
 }
 
 static void __zipos_funlock(void) {

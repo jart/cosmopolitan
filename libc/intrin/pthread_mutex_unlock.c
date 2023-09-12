@@ -39,7 +39,9 @@
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int t;
 
-  if (__vforked) return 0;
+  if ((!__threaded && mutex->_pshared != PTHREAD_PROCESS_SHARED) || __vforked) {
+    return 0;
+  }
 
   LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
 

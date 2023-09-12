@@ -180,6 +180,8 @@ int main(int argc, char *argv[]) {
     _Exit(1);
   }
 
+  __threaded = 1;
+
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL));
   ASSERT_EQ(0, pthread_mutex_init(&mu, &attr));

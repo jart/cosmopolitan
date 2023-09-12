@@ -95,7 +95,7 @@ void *Worker(void *arg) {
   sem_t **s = arg;
   struct timespec ts;
   ASSERT_SYS(0, 0, clock_gettime(CLOCK_REALTIME, &ts));
-  ts.tv_sec += 1;
+  ts.tv_sec += 10;
   ASSERT_SYS(0, 0, sem_post(s[0]));
   ASSERT_SYS(0, 0, sem_timedwait(s[1], &ts));
   return 0;

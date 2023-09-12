@@ -23,8 +23,10 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -216,6 +218,44 @@ TEST(posix_spawn, agony) {
   }
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_join(t[i], 0));
+  }
+}
+
+void EmptySigHandler(int sig) {
+}
+
+TEST(posix_spawn, etxtbsy) {
+  if (IsWindows()) return;  // can't deliver signals between processes
+  if (IsXnu()) return;      // they don't appear impacted by this race condition
+  if (IsNetbsd()) return;   // they don't appear impacted by this race condition
+  if (IsOpenbsd()) return;  // they don't appear impacted by this race condition
+  int ws, me, pid, thief;
+  char *prog = "./life.com";
+  char *args[] = {prog, 0};
+  char *envs[] = {0};
+  sigset_t ss, old;
+  testlib_extract("/zip/life.com", prog, 0755);
+  for (int i = 0; i < 2; ++i) {
+    sigemptyset(&ss);
+    sigaddset(&ss, SIGUSR1);
+    sigprocmask(SIG_BLOCK, &ss, &old);
+    sigdelset(&ss, SIGUSR1);
+    ASSERT_SYS(0, 3, open(prog, O_RDWR));
+    signal(SIGUSR1, EmptySigHandler);
+    me = getpid();
+    if (!(thief = fork())) {
+      ASSERT_SYS(0, 0, kill(me, SIGUSR1));
+      ASSERT_SYS(EINTR, -1, sigsuspend(&ss));
+      _Exit(0);
+    }
+    EXPECT_SYS(0, 0, close(3));
+    EXPECT_SYS(EINTR, -1, sigsuspend(&ss));
+    EXPECT_EQ(ETXTBSY, posix_spawn(&pid, prog, NULL, NULL, args, envs));
+    EXPECT_EQ(0, kill(thief, SIGUSR1));
+    EXPECT_EQ(thief, wait(&ws));
+    ASSERT_EQ(0, ws);
+    sigprocmask(SIG_SETMASK, &old, 0);
+    unassert(!errno);
   }
 }
 

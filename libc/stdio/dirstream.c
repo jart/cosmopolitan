@@ -132,15 +132,11 @@ struct dirent_netbsd {
 };
 
 static void lockdir(DIR *dir) {
-  if (__threaded) {
-    pthread_mutex_lock(&dir->lock);
-  }
+  pthread_mutex_lock(&dir->lock);
 }
 
 static void unlockdir(DIR *dir) {
-  if (__threaded) {
-    pthread_mutex_unlock(&dir->lock);
-  }
+  pthread_mutex_unlock(&dir->lock);
 }
 
 static textwindows dontinline int fdopendir_nt(DIR *res, int fd) {
