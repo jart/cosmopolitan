@@ -71,7 +71,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
       rc = _weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
     }
     if (!rc) {
-      if (_weaken(__zipos_parseuri) &&
+      if (0 && _weaken(__zipos_parseuri) &&
           (_weaken(__zipos_parseuri)(prog, &uri) != -1)) {
         rc = _weaken(__zipos_open)(&uri, O_RDONLY | O_CLOEXEC);
         if (rc != -1) {

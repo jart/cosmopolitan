@@ -103,7 +103,8 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 
 			/* wait until awoken. */
 			while (ATM_LOAD_ACQ (&w->nw.waiting) != 0) { /* acquire load */
-				nsync_mu_semaphore_p (&w->sem);
+				/* This can only return 0 or ECANCELED. */
+				ASSERT (nsync_mu_semaphore_p (&w->sem) == 0);
 			}
 			wait_count++;
 			/* If the thread has been woken more than this many
@@ -155,9 +156,10 @@ void nsync_mu_lock (nsync_mu *mu) {
 		if ((old_word&MU_WZERO_TO_ACQUIRE) != 0 ||
 		    !ATM_CAS_ACQ (&mu->word, old_word,
 				  (old_word+MU_WADD_TO_ACQUIRE) & ~MU_WCLEAR_ON_ACQUIRE)) {
-			waiter *w = nsync_waiter_new_ ();
-			nsync_mu_lock_slow_ (mu, w, 0, nsync_writer_type_);
-			nsync_waiter_free_ (w);
+			waiter w;
+			nsync_waiter_init_ (&w);
+			nsync_mu_lock_slow_ (mu, &w, 0, nsync_writer_type_);
+			nsync_waiter_destroy_ (&w);
 		}
 	}
 	IGNORE_RACES_END ();
@@ -190,9 +192,10 @@ void nsync_mu_rlock (nsync_mu *mu) {
 		if ((old_word&MU_RZERO_TO_ACQUIRE) != 0 ||
 		    !ATM_CAS_ACQ (&mu->word, old_word,
 				  (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE)) {
-			waiter *w = nsync_waiter_new_ ();
-			nsync_mu_lock_slow_ (mu, w, 0, nsync_reader_type_);
-			nsync_waiter_free_ (w);
+			waiter w;
+			nsync_waiter_init_ (&w);
+			nsync_mu_lock_slow_ (mu, &w, 0, nsync_reader_type_);
+			nsync_waiter_destroy_ (&w);
 		}
 	}
 	IGNORE_RACES_END ();

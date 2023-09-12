@@ -12,19 +12,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kAutomapStart         0x100080040000
-#define kAutomapSize          (kMemtrackStart - kAutomapStart)
-#define kMemtrackStart        0x1fe7fffc0000
-#define kMemtrackSize         (0x1ffffffc0000 - kMemtrackStart)
-#define kFixedmapStart        0x300000040000
-#define kFixedmapSize         (0x400000040000 - kFixedmapStart)
-#define kMemtrackFdsStart     0x6fe000040000
-#define kMemtrackFdsSize      (0x6feffffc0000 - kMemtrackFdsStart)
-#define kMemtrackZiposStart   0x6fd000040000
-#define kMemtrackZiposSize    (0x6fdffffc0000 - kMemtrackZiposStart)
-#define kMemtrackKmallocStart 0x6fc000040000
-#define kMemtrackKmallocSize  (0x6fcffffc0000 - kMemtrackKmallocStart)
-#define kMemtrackGran         (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
+#define kAutomapStart       0x100080040000
+#define kAutomapSize        (kMemtrackStart - kAutomapStart)
+#define kMemtrackStart      0x1fe7fffc0000
+#define kMemtrackSize       (0x1ffffffc0000 - kMemtrackStart)
+#define kFixedmapStart      0x300000040000
+#define kFixedmapSize       (0x400000040000 - kFixedmapStart)
+#define kMemtrackFdsStart   0x6fe000040000
+#define kMemtrackFdsSize    (0x6feffffc0000 - kMemtrackFdsStart)
+#define kMemtrackZiposStart 0x6fd000040000
+#define kMemtrackZiposSize  (0x6fdffffc0000 - kMemtrackZiposStart)
+#define kMemtrackGran       (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
 
 struct MemoryInterval {
   int x;
@@ -130,11 +128,6 @@ forceinline pureconst bool IsGfdsFrame(int x) {
 forceinline pureconst bool IsZiposFrame(int x) {
   return (int)(kMemtrackZiposStart >> 16) <= x &&
          x <= (int)((kMemtrackZiposStart + kMemtrackZiposSize - 1) >> 16);
-}
-
-forceinline pureconst bool IsKmallocFrame(int x) {
-  return (int)(kMemtrackKmallocStart >> 16) <= x &&
-         x <= (int)((kMemtrackKmallocStart + kMemtrackKmallocSize - 1) >> 16);
 }
 
 forceinline pureconst bool IsShadowFrame(int x) {

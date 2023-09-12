@@ -68,7 +68,6 @@
 extern int64_t __wincrashearly;
 bool32 __onntconsoleevent(uint32_t);
 void sys_setitimer_nt_reset(void);
-void kmalloc_unlock(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
 #ifdef SYSDEBUG

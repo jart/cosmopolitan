@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/kmalloc.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/x/x.h"
 #include "third_party/zlib/zlib.h"
@@ -44,7 +44,7 @@
 void *xload(_Atomic(void *) *a, const void *p, size_t n, size_t m) {
   void *r, *z;
   if ((r = atomic_load_explicit(a, memory_order_acquire))) return r;
-  if (!(r = kmalloc(m))) return 0;
+  if (!(r = malloc(m))) return 0;
   if (__inflate(r, m, p, n)) return 0;
   z = 0;
   if (!atomic_compare_exchange_strong_explicit(a, &z, r, memory_order_release,

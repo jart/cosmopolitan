@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/kmalloc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/internal.h"
@@ -53,7 +52,7 @@ void *xloadzd(_Atomic(void *) *a, const void *p, size_t n, size_t m, size_t c,
     free(q);
     return 0;
   }
-  if (!(r = kmalloc(c * z))) {
+  if (!(r = malloc(c * z))) {
     free(q);
     return 0;
   }

@@ -264,9 +264,8 @@ void StartTcpServer(void) {
   INFOF("listening on tcp:%s", DescribeAddress(&g_servaddr));
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
-    fflush(stdout);
-    fclose(stdout);
-    dup2(g_bogusfd, fileno(stdout));
+    close(1);
+    dup2(g_bogusfd, 1);
   }
 }
 
@@ -698,6 +697,7 @@ WaitAgain:
 }
 
 void HandleClient(void) {
+  struct stat st;
   struct Client *client;
   client = calloc(1, sizeof(struct Client));
   client->addrsize = sizeof(client->addr);
@@ -719,6 +719,9 @@ void HandleClient(void) {
     } else if (errno != EINTR && errno != EAGAIN) {
       WARNF("poll failed %m");
     }
+  }
+  if (fstat(2, &st) != -1 && st.st_size > kLogMaxBytes) {
+    ftruncate(2, 0);  // auto rotate log
   }
   sigset_t mask;
   pthread_attr_t attr;
@@ -749,17 +752,18 @@ int Serve(void) {
 }
 
 void Daemonize(void) {
-  VERBF("Daemonize");
-  struct stat st;
   if (fork() > 0) _exit(0);
   setsid();
   if (fork() > 0) _exit(0);
-  dup2(g_bogusfd, fileno(stdin));
-  if (!g_sendready) dup2(g_bogusfd, fileno(stdout));
-  freopen(kLogFile, "ae", stderr);
-  if (fstat(fileno(stderr), &st) != -1 && st.st_size > kLogMaxBytes) {
-    ftruncate(fileno(stderr), 0);
+  dup2(g_bogusfd, 0);
+  if (!g_sendready) dup2(g_bogusfd, 1);
+  close(2);
+  open(kLogFile, O_CREAT | O_WRONLY | O_APPEND | O_CLOEXEC, 0644);
+  extern long __klog_handle;
+  if (__klog_handle > 0) {
+    close(__klog_handle);
   }
+  __klog_handle = 2;
 }
 
 int main(int argc, char *argv[]) {
@@ -779,8 +783,8 @@ int main(int argc, char *argv[]) {
   } else {
     g_bogusfd = open("/dev/zero", O_RDONLY | O_CLOEXEC);
   }
-  if (g_daemonize) Daemonize();
   mkdir("o", 0700);
+  if (g_daemonize) Daemonize();
   Serve();
   free(g_psk);
 #if IsModeDbg()

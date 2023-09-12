@@ -33,7 +33,7 @@
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 1
+#define SYSLIB_VERSION 2
 
 struct Syslib {
   int magic;
@@ -56,6 +56,9 @@ struct Syslib {
   long (*dispatch_semaphore_signal)(dispatch_semaphore_t);
   long (*dispatch_semaphore_wait)(dispatch_semaphore_t, dispatch_time_t);
   dispatch_time_t (*dispatch_walltime)(const struct timespec *, int64_t);
+  /* v2 (2023-09-10) */
+  pthread_t (*pthread_self)(void);
+  void (*dispatch_release)(dispatch_semaphore_t);
 };
 
 #define ELFCLASS32  1
@@ -829,6 +832,8 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dispatch_semaphore_signal = dispatch_semaphore_signal;
   M->lib.dispatch_semaphore_wait = dispatch_semaphore_wait;
   M->lib.dispatch_walltime = dispatch_walltime;
+  M->lib.pthread_self = pthread_self;
+  M->lib.dispatch_release = dispatch_release;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;

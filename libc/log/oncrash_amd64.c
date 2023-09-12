@@ -32,7 +32,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kmalloc.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -207,9 +206,9 @@ void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
 relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                                ucontext_t *ctx) {
   int i;
-  size_t n;
+  char *p;
   char host[64];
-  char *p, *buf;
+  char buf[3000];
   struct utsname names;
   if (_weaken(ShowCrashReportHook)) {
     ShowCrashReportHook(2, err, sig, si, ctx);
@@ -223,9 +222,9 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   uname(&names);
   errno = err;
   // TODO(jart): Buffer the WHOLE crash report with backtrace for atomic write.
-  npassert((p = buf = kmalloc((n = 1024 * 1024))));
+  p = buf;
   p += ksnprintf(
-      p, n,
+      p, 10000,
       "\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
       "  %s\n"
       "  %s\n"

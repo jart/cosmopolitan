@@ -87,8 +87,6 @@ textwindows int ntspawn(
   block = NULL;
   _init_sigchld();
   if (__mkntpath(prog, prog16) == -1) return -1;
-  // we can't call malloc() because we're higher in the topological order
-  // we can't call kmalloc() because fork() calls this when kmalloc is locked
   if ((handle = CreateFileMapping(-1, 0, pushpop(kNtPageReadwrite), 0,
                                   sizeof(*block), 0)) &&
       (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,

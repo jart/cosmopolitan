@@ -27,7 +27,6 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/kmalloc.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/likely.h"
@@ -835,10 +834,9 @@ static __wur __asan_die_f *__asan_report(const void *addr, int size,
   wint_t c;
   signed char t;
   uint64_t x, y, z;
-  char *p, *q, *buf, *base;
   struct MemoryIntervals *m;
+  char buf[8192], *base, *q, *p = buf;
   ftrace_enabled(-1);
-  p = buf = kmalloc(1024 * 1024);
   kprintf("\n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p\n",
           __asan_describe_access_poison(kind), size, message, addr,
           SHADOW(addr));

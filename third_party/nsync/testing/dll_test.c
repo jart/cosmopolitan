@@ -16,9 +16,8 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/dll.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/dll.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/array.internal.h"
 #include "third_party/nsync/testing/smprintf.h"

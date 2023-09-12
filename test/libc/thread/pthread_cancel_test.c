@@ -169,18 +169,17 @@ void *CondWaitDeferredWorker(void *arg) {
   pthread_setcancelstate(PTHREAD_CANCEL_DEFERRED, 0);
   ASSERT_EQ(0, pthread_mutex_lock(&mu));
   ASSERT_EQ(ECANCELED, pthread_cond_timedwait(&cv, &mu, 0));
-  ASSERT_EQ(0, pthread_mutex_unlock(&mu));
-  return 0;
+  __builtin_trap();
 }
 
-TEST(pthread_cancel, condDeferredWait) {
+TEST(pthread_cancel, condDeferredWait_reacquiresMutex) {
   void *rc;
   pthread_t th;
   ASSERT_EQ(0, pthread_create(&th, 0, CondWaitDeferredWorker, 0));
   pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
-  ASSERT_EQ(0, pthread_mutex_trylock(&mu));
+  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&mu));
   ASSERT_EQ(0, pthread_mutex_unlock(&mu));
 }
 
@@ -192,7 +191,7 @@ TEST(pthread_cancel, condDeferredWaitDelayed) {
   pthread_cancel(th);
   ASSERT_EQ(0, pthread_join(th, &rc));
   ASSERT_EQ(PTHREAD_CANCELED, rc);
-  ASSERT_EQ(0, pthread_mutex_trylock(&mu));
+  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&mu));
   ASSERT_EQ(0, pthread_mutex_unlock(&mu));
 }
 

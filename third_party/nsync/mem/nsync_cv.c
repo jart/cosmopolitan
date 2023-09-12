@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/cp.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/dll.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
@@ -169,6 +170,95 @@ static void void_mu_unlock (void *mu) {
 	nsync_mu_unlock ((nsync_mu *) mu);
 }
 
+/* Memory needed for a single nsync_cv_wait_with_deadline_generic() call. */
+struct nsync_cv_wait_with_deadline_s {
+	nsync_cv *pcv;
+	int sem_outcome;
+	int is_reader_mu;
+	uint32_t old_word;
+	uint32_t remove_count;
+	void *pmu;
+	void (*lock) (void *);
+	nsync_mu *cv_mu;
+	nsync_time abs_deadline;
+	nsync_note cancel_note;
+	waiter w;
+};
+
+/* Wait until awoken or timeout, or back out of wait if the thread is being cancelled. */
+static int nsync_cv_wait_with_deadline_impl_ (struct nsync_cv_wait_with_deadline_s *c) {
+	int outcome = 0;
+	int attempts = 0;
+	IGNORE_RACES_START ();
+	while (ATM_LOAD_ACQ (&c->w.nw.waiting) != 0) { /* acquire load */
+		if (c->sem_outcome == 0) {
+			c->sem_outcome = nsync_sem_wait_with_cancel_ (&c->w, c->abs_deadline, c->cancel_note);
+		}
+		if (c->sem_outcome != 0 && ATM_LOAD (&c->w.nw.waiting) != 0) {
+			/* A timeout or cancellation occurred, and no wakeup.
+			   Acquire *pcv's spinlock, and confirm.  */
+			c->old_word = nsync_spin_test_and_set_ (&c->pcv->word, CV_SPINLOCK,
+								CV_SPINLOCK, 0);
+			/* Check that w wasn't removed from the queue after we
+			   checked above, but before we acquired the spinlock.
+			   The test of remove_count confirms that the waiter *w
+			   is still governed by *pcv's spinlock; otherwise, some
+			   other thread is about to set w.waiting==0.  */
+			if (ATM_LOAD (&c->w.nw.waiting) != 0) {
+				if (c->remove_count == ATM_LOAD (&c->w.remove_count)) {
+					uint32_t old_value;
+					/* still in cv waiter queue */
+					/* Not woken, so remove *w from cv
+					   queue, and declare a
+					   timeout/cancellation.  */
+					outcome = c->sem_outcome;
+					dll_remove (&c->pcv->waiters, &c->w.nw.q);
+					do {
+						old_value = ATM_LOAD (&c->w.remove_count);
+					} while (!ATM_CAS (&c->w.remove_count, old_value, old_value+1));
+					if (dll_is_empty (c->pcv->waiters)) {
+						c->old_word &= ~(CV_NON_EMPTY);
+					}
+					ATM_STORE_REL (&c->w.nw.waiting, 0); /* release store */
+				}
+			}
+			/* Release spinlock. */
+			ATM_STORE_REL (&c->pcv->word, c->old_word); /* release store */
+		}
+		if (ATM_LOAD (&c->w.nw.waiting) != 0) {
+                        /* The delay here causes this thread ultimately to
+                           yield to another that has dequeued this thread, but
+                           has not yet set the waiting field to zero; a
+                           cancellation or timeout may prevent this thread
+                           from blocking above on the semaphore.  */
+			attempts = nsync_spin_delay_ (attempts);
+		}
+	}
+	if (c->cv_mu != NULL && c->w.cv_mu == NULL) { /* waiter was moved to *pmu's queue, and woken. */
+		/* Requeue on *pmu using existing waiter struct; current thread
+		   is the designated waker.  */
+		nsync_mu_lock_slow_ (c->cv_mu, &c->w, MU_DESIG_WAKER, c->w.l_type);
+	} else {
+		/* Traditional case: We've woken from the cv, and need to reacquire *pmu. */
+		if (c->is_reader_mu) {
+			nsync_mu_rlock (c->cv_mu);
+		} else {
+			(*c->lock) (c->pmu);
+		}
+	}
+	nsync_waiter_destroy_ (&c->w);
+	IGNORE_RACES_END ();
+	return (outcome);
+}
+
+/* Handle POSIX thread DEFERRED mode cancellation. */
+static void nsync_cv_wait_with_deadline_unwind_ (void *arg) {
+	struct nsync_cv_wait_with_deadline_s *c;
+	c = (struct nsync_cv_wait_with_deadline_s *)arg;
+	c->sem_outcome = ECANCELED;
+	nsync_cv_wait_with_deadline_impl_ (c);
+}
+
 /* Atomically release *pmu (which must be held on entry)
    and block the calling thread on *pcv.  Then wait until awakened by a
    call to nsync_cv_signal() or nsync_cv_broadcast() (or a spurious wakeup), or by the time
@@ -194,33 +284,33 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 					 void (*lock) (void *), void (*unlock) (void *),
 					 nsync_time abs_deadline,
 					 nsync_note cancel_note) {
-	nsync_mu *cv_mu = NULL;
-	int is_reader_mu;
-	uint32_t old_word;
-	uint32_t remove_count;
-	int sem_outcome;
-	unsigned attempts;
-	int outcome = 0;
-	waiter *w;
+	int outcome;
+	struct nsync_cv_wait_with_deadline_s c;
 	IGNORE_RACES_START ();
-	BEGIN_CANCELLATION_POINT;
-	w = nsync_waiter_new_ ();
-	pthread_cleanup_push((void *)nsync_waiter_free_, w);
-	ATM_STORE (&w->nw.waiting, 1);
-	w->cond.f = NULL; /* Not using a conditional critical section. */
-	w->cond.v = NULL;
-	w->cond.eq = NULL;
+
+	nsync_waiter_init_ (&c.w);
+	c.abs_deadline = abs_deadline;
+	c.cancel_note = cancel_note;
+	c.cv_mu = NULL;
+	c.lock = lock;
+	c.pcv = pcv;
+	c.pmu = pmu;
+
+	ATM_STORE (&c.w.nw.waiting, 1);
+	c.w.cond.f = NULL; /* Not using a conditional critical section. */
+	c.w.cond.v = NULL;
+	c.w.cond.eq = NULL;
 	if (lock == &void_mu_lock ||
 	    lock == (void (*) (void *)) &nsync_mu_lock ||
 	    lock == (void (*) (void *)) &nsync_mu_rlock) {
-		cv_mu = (nsync_mu *) pmu;
+		c.cv_mu = (nsync_mu *) pmu;
 	}
-	w->cv_mu = cv_mu;       /* If *pmu is an nsync_mu, record its address, else record NULL. */
-	is_reader_mu = 0; /* If true, an nsync_mu in reader mode. */
-	if (cv_mu == NULL) {
-		w->l_type = NULL;
+	c.w.cv_mu = c.cv_mu;  /* If *pmu is an nsync_mu, record its address, else record NULL. */
+	c.is_reader_mu = 0; /* If true, an nsync_mu in reader mode. */
+	if (c.cv_mu == NULL) {
+		c.w.l_type = NULL;
 	} else {
-		uint32_t old_mu_word = ATM_LOAD (&cv_mu->word);
+		uint32_t old_mu_word = ATM_LOAD (&c.cv_mu->word);
 		int is_writer = (old_mu_word & MU_WHELD_IF_NON_ZERO) != 0;
 		int is_reader = (old_mu_word & MU_RHELD_IF_NON_ZERO) != 0;
 		if (is_writer) {
@@ -228,95 +318,34 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 				nsync_panic_ ("mu held in reader and writer mode simultaneously "
 				       "on entry to nsync_cv_wait_with_deadline()\n");
 			}
-			w->l_type = nsync_writer_type_;
+			c.w.l_type = nsync_writer_type_;
 		} else if (is_reader) {
-			w->l_type = nsync_reader_type_;
-			is_reader_mu = 1;
+			c.w.l_type = nsync_reader_type_;
+			c.is_reader_mu = 1;
 		} else {
 			nsync_panic_ ("mu not held on entry to nsync_cv_wait_with_deadline()\n");
 		}
 	}
 
 	/* acquire spinlock, set non-empty */
-	old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK, CV_SPINLOCK|CV_NON_EMPTY, 0);
-	dll_make_last (&pcv->waiters, &w->nw.q);
-	remove_count = ATM_LOAD (&w->remove_count);
+	c.old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK, CV_SPINLOCK|CV_NON_EMPTY, 0);
+	dll_make_last (&pcv->waiters, &c.w.nw.q);
+	c.remove_count = ATM_LOAD (&c.w.remove_count);
 	/* Release the spin lock. */
-	ATM_STORE_REL (&pcv->word, old_word|CV_NON_EMPTY); /* release store */
+	ATM_STORE_REL (&pcv->word, c.old_word|CV_NON_EMPTY); /* release store */
 
 	/* Release *pmu. */
-	if (is_reader_mu) {
-		nsync_mu_runlock (cv_mu);
+	if (c.is_reader_mu) {
+		nsync_mu_runlock (c.cv_mu);
 	} else {
 		(*unlock) (pmu);
 	}
 
-	/* wait until awoken or a timeout. */
-	sem_outcome = 0;
-	attempts = 0;
-	while (ATM_LOAD_ACQ (&w->nw.waiting) != 0) { /* acquire load */
-		if (sem_outcome == 0) {
-			sem_outcome = nsync_sem_wait_with_cancel_ (w, abs_deadline, cancel_note);
-		}
-
-		if (sem_outcome != 0 && ATM_LOAD (&w->nw.waiting) != 0) {
-			/* A timeout or cancellation occurred, and no wakeup.
-			   Acquire *pcv's spinlock, and confirm.  */
-			old_word = nsync_spin_test_and_set_ (&pcv->word, CV_SPINLOCK,
-							     CV_SPINLOCK, 0);
-			/* Check that w wasn't removed from the queue after we
-			   checked above, but before we acquired the spinlock.
-			   The test of remove_count confirms that the waiter *w
-			   is still governed by *pcv's spinlock; otherwise, some
-			   other thread is about to set w.waiting==0.  */
-			if (ATM_LOAD (&w->nw.waiting) != 0) {
-				if (remove_count == ATM_LOAD (&w->remove_count)) {
-					uint32_t old_value;
-					/* still in cv waiter queue */
-					/* Not woken, so remove *w from cv
-					   queue, and declare a
-					   timeout/cancellation.  */
-					outcome = sem_outcome;
-					dll_remove (&pcv->waiters, &w->nw.q);
-					do {    
-						old_value = ATM_LOAD (&w->remove_count);
-					} while (!ATM_CAS (&w->remove_count, old_value, old_value+1));
-					if (dll_is_empty (pcv->waiters)) {
-						old_word &= ~(CV_NON_EMPTY);
-					}
-					ATM_STORE_REL (&w->nw.waiting, 0); /* release store */
-				}
-			}
-			/* Release spinlock. */
-			ATM_STORE_REL (&pcv->word, old_word); /* release store */
-		}
-
-		if (ATM_LOAD (&w->nw.waiting) != 0) {
-                        /* The delay here causes this thread ultimately to
-                           yield to another that has dequeued this thread, but
-                           has not yet set the waiting field to zero; a
-                           cancellation or timeout may prevent this thread
-                           from blocking above on the semaphore.  */
-			attempts = nsync_spin_delay_ (attempts);
-		}
-	}
-
-	if (cv_mu != NULL && w->cv_mu == NULL) { /* waiter was moved to *pmu's queue, and woken. */
-		/* Requeue on *pmu using existing waiter struct; current thread
-		   is the designated waker.  */
-		nsync_mu_lock_slow_ (cv_mu, w, MU_DESIG_WAKER, w->l_type);
-		nsync_waiter_free_ (w);
-	} else {
-		/* Traditional case: We've woken from the cv, and need to reacquire *pmu. */
-		nsync_waiter_free_ (w);
-		if (is_reader_mu) {
-			nsync_mu_rlock (cv_mu);
-		} else {
-			(*lock) (pmu);
-		}
-	}
-	pthread_cleanup_pop(0);
-	END_CANCELLATION_POINT;
+	/* Wait until awoken or a timeout. */
+	c.sem_outcome = 0;
+	pthread_cleanup_push (nsync_cv_wait_with_deadline_unwind_, &c);
+	outcome = nsync_cv_wait_with_deadline_impl_ (&c);
+	pthread_cleanup_pop (0);
 	IGNORE_RACES_END ();
 	return (outcome);
 }
@@ -341,7 +370,7 @@ void nsync_cv_signal (nsync_cv *pcv) {
 			first_nw = DLL_NSYNC_WAITER (first);
 			if ((first_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 				uint32_t old_value;
-				do {    
+				do {
 					old_value = ATM_LOAD (&DLL_WAITER (first)->remove_count);
 				} while (!ATM_CAS (&DLL_WAITER (first)->remove_count,
 						   old_value, old_value+1));
@@ -353,7 +382,7 @@ void nsync_cv_signal (nsync_cv *pcv) {
 				/* If the first waiter is a reader, wake all readers, and
 				   if it's possible, one writer.  This allows reader-regions
 				   to be added to a monitor without invalidating code in which
-				   a client has optimized broadcast calls by converting them to 
+				   a client has optimized broadcast calls by converting them to
 				   signal calls.  In particular, we wake a writer when waking
 				   readers because the readers will not invalidate the condition
 				   that motivated the client to call nsync_cv_signal().  But we
@@ -382,7 +411,7 @@ void nsync_cv_signal (nsync_cv *pcv) {
 						dll_remove (&pcv->waiters, p);
 						if ((p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 							uint32_t old_value;
-							do {    
+							do {
 								old_value = ATM_LOAD (
 								    &DLL_WAITER (p)->remove_count);
 							} while (!ATM_CAS (&DLL_WAITER (p)->remove_count,
@@ -427,7 +456,7 @@ void nsync_cv_broadcast (nsync_cv *pcv) {
 			dll_remove (&pcv->waiters, p);
 			if ((p_nw->flags & NSYNC_WAITER_FLAG_MUCV) != 0) {
 				uint32_t old_value;
-				do {    
+				do {
 					old_value = ATM_LOAD (&DLL_WAITER (p)->remove_count);
 				} while (!ATM_CAS (&DLL_WAITER (p)->remove_count,
 						   old_value, old_value+1));

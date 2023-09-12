@@ -28,7 +28,6 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

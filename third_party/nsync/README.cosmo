@@ -15,9 +15,22 @@ ORIGIN
 
 LOCAL CHANGES
 
-  - nsync_malloc_() is implemented as kmalloc()
-  - nsync_mu_semaphore uses Cosmopolitan Futexes
-  - block pthread cancellations in nsync_mu_lock_slow_
-  - support posix thread cancellations in nsync_cv_wait
-  - timespec api was so good that it's now part of libc
-  - linked list api was so good that it's now part of libc
+  - Time APIs were so good that they're now part of our libc
+
+  - Double linked list API was so good that it's now part of our libc
+
+  - Modified *NSYNC to allocate waiter objects on the stack. We need it
+    because we use *NSYNC mutexes to implement POSIX mutexes, which are
+    too low-level to safely depend on malloc, or even mmap in our case.
+
+  - Rewrote most of the semaphore and futex system call support code so
+    it works well with Cosmopolitan's fat runtime portability. *NSYNC's
+    unit test suite passes on all supported platforms. However the BSDs
+    currently appear to be overutilizing CPU time compared with others.
+
+  - Support POSIX thread cancellation. APIs that wait on condition vars
+    are now cancellation points. In PTHREAD_CANCEL_MASKED mode they may
+    return ECANCELED. In PTHREAD_CANCEL_DEFERRED mode the POSIX threads
+    library will unwind the stack to unlock any locks and free waiters.
+    On the other hand the *NSYNC APIs for mutexes will now safely block
+    thread cancellation, but you can still use *NSYNC notes to do that.

@@ -17,13 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/state.internal.h"
+#include "libc/cosmo.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kmalloc.h"
+#include "libc/intrin/leaky.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -61,11 +65,9 @@ void _pthread_onfork_prepare(void) {
   pthread_spin_lock(&_pthread_lock);
   __fds_lock();
   __mmi_lock();
-  __kmalloc_lock();
 }
 
 void _pthread_onfork_parent(void) {
-  __kmalloc_unlock();
   __mmi_unlock();
   __fds_unlock();
   pthread_spin_unlock(&_pthread_lock);
@@ -85,7 +87,6 @@ void _pthread_onfork_child(void) {
   atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
 
   // wipe core runtime locks
-  __kmalloc_unlock();
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);
@@ -105,7 +106,7 @@ void _pthread_onfork_child(void) {
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   int rc;
   struct AtFork *a;
-  if (!(a = kmalloc(sizeof(struct AtFork)))) return ENOMEM;
+  if (!(a = malloc(sizeof(struct AtFork)))) return ENOMEM;
   a->f[0] = prepare;
   a->f[1] = parent;
   a->f[2] = child;
@@ -118,3 +119,5 @@ int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   rc = 0;
   return rc;
 }
+
+IGNORE_LEAKS(_pthread_atfork)

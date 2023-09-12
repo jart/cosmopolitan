@@ -1,12 +1,17 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_LEAKY_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_INTRIN_LEAKY_INTERNAL_H_
+#include "libc/dce.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#if IsAsan()
 #define IGNORE_LEAKS(FUNC)                                        \
-  __static_yoink("_leaky_start");                                   \
+  __static_yoink("_leaky_start");                                 \
   void *_leaky_##FUNC[] _Section(".piro.relo.sort.leaky.2." #FUNC \
-                                 ",\"aw\",@init_array #") = {FUNC}
+                                 ",\"aw\",@init_array #") = {FUNC};
+#else
+#define IGNORE_LEAKS(FUNC)
+#endif
 
 extern intptr_t _leaky_end[] __attribute__((__weak__));
 extern intptr_t _leaky_start[] __attribute__((__weak__));

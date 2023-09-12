@@ -17,11 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/getenv.internal.h"
-#include "libc/intrin/kmalloc.h"
+#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/errfuns.h"
 
 #define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
@@ -40,7 +43,7 @@ static char **GrowEnviron(char **a) {
   if (!a) a = environ;
   n = a ? GetEnvironLen(a) : 0;
   c = MAX(16ul, n) << 1;
-  if ((b = kmalloc(c * sizeof(char *)))) {
+  if (_weaken(malloc) && (b = _weaken(malloc)(c * sizeof(char *)))) {
     if (a) {
       for (p = b; *a;) {
         *p++ = *a++;
@@ -51,9 +54,12 @@ static char **GrowEnviron(char **a) {
     capacity = c;
     return b;
   } else {
+    enomem();
     return 0;
   }
 }
+
+IGNORE_LEAKS(GrowEnviron)
 
 int PutEnvImpl(char *s, bool overwrite) {
   char **p;

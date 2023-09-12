@@ -44,6 +44,7 @@ struct Syslib {
   dispatch_time_t (*dispatch_walltime)(const struct timespec *, int64_t);
   /* v2 (2023-09-10) */
   long (*pthread_self)(void);
+  void (*dispatch_release)(dispatch_semaphore_t);
 };
 
 extern struct Syslib *__syslib;

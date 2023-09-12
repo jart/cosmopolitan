@@ -98,16 +98,43 @@ static dontinline textwindows int __tkill_nt(int tid, int sig,
   }
 }
 
-static int __tkill_m1(int tid, int sig, struct CosmoTib *tib) {
-  struct PosixThread *pt = (struct PosixThread *)__get_tls()->tib_pthread;
-  return __syslib->pthread_kill(pt->next, sig);
+static int __tkill_posix(int tid, int sig, struct CosmoTib *tib) {
+
+  // avoid lock when killing self
+  int me;
+  struct PosixThread *pt;
+  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  me = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
+  if (tid == me && (!tib || tib == __get_tls())) {
+    return __syslib->pthread_kill(pt->next, sig);
+  }
+
+  // otherwise look for matching thread
+  struct Dll *e;
+  pthread_spin_lock(&_pthread_lock);
+  for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
+    enum PosixThreadStatus status;
+    struct PosixThread *pt = POSIXTHREAD_CONTAINER(e);
+    int rhs = atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire);
+    if (rhs <= 0 || tid != rhs) continue;
+    if (tib && tib != pt->tib) continue;
+    status = atomic_load_explicit(&pt->status, memory_order_acquire);
+    pthread_spin_unlock(&_pthread_lock);
+    if (status < kPosixThreadTerminated) {
+      return __syslib->pthread_kill(pt->next, sig);
+    } else {
+      return 0;
+    }
+  }
+  pthread_spin_unlock(&_pthread_lock);
+  return esrch();
 }
 
 // OpenBSD has an optional `tib` parameter for extra safety.
 int __tkill(int tid, int sig, void *tib) {
   int rc;
   if (IsXnuSilicon()) {
-    return __tkill_m1(tid, sig, tib);
+    return __tkill_posix(tid, sig, tib);
   } else if (IsLinux() || IsXnu() || IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = sys_tkill(tid, sig, tib);
   } else if (IsWindows()) {

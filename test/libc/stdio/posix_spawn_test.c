@@ -251,7 +251,7 @@ void PosixSpawnWait(const char *prog) {
   ASSERT_EQ(42, WEXITSTATUS(ws));
 }
 
-TEST(posix_spawn, bench) {
+BENCH(posix_spawn, bench) {
   long n = 128L * 1000 * 1000;
   memset(gc(malloc(n)), -1, n);
   creat("tiny64", 0755);

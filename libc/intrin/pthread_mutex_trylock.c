@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"

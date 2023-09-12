@@ -24,6 +24,7 @@
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -261,6 +262,7 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
 __attribute__((__constructor__)) static void tcsetattr_nt_init(void) {
   if (!getenv("TERM")) {
     setenv("TERM", "xterm-256color", true);
+    errno = 0;  // ignore malloc not linked
   }
 }
 

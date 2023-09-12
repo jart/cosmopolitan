@@ -41,6 +41,11 @@ static dispatch_semaphore_t dispatch_semaphore_create(long count) {
 	return (ds);
 }
 
+static void dispatch_release (dispatch_semaphore_t ds) {
+	__syslib->dispatch_release (ds);
+	STRACE ("dispatch_release(%#lx)", ds);
+}
+
 static long dispatch_semaphore_wait (dispatch_semaphore_t ds,
 				     dispatch_time_t dt) {
 	long rc = __syslib->dispatch_semaphore_wait (ds, dt);
@@ -63,6 +68,11 @@ static dispatch_time_t dispatch_walltime (const struct timespec *base,
 /* Initialize *s; the initial value is 0.  */
 void nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
 	*(dispatch_semaphore_t *)s = dispatch_semaphore_create (0);
+}
+
+/* Releases system resources associated with *s. */
+void nsync_mu_semaphore_destroy_gcd (nsync_semaphore *s) {
+	dispatch_release (*(dispatch_semaphore_t *)s);
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. */

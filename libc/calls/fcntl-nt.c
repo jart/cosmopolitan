@@ -25,12 +25,13 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/kmalloc.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filelockflags.h"
@@ -72,13 +73,15 @@ static textwindows struct FileLock *NewFileLock(void) {
     fl = g_locks.free;
     g_locks.free = fl->next;
   } else {
-    fl = kmalloc(sizeof(*fl));
+    unassert((fl = _weaken(malloc)(sizeof(*fl))));
   }
   bzero(fl, sizeof(*fl));
   fl->next = g_locks.list;
   g_locks.list = fl;
   return fl;
 }
+
+IGNORE_LEAKS(NewFileLock)
 
 static textwindows void FreeFileLock(struct FileLock *fl) {
   fl->next = g_locks.free;
@@ -128,6 +131,10 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
   struct flock *l;
   int64_t pos, off, len, end;
   struct FileLock *fl, *ft, **flp;
+
+  if (!_weaken(malloc)) {
+    return enomem();
+  }
 
   l = (struct flock *)arg;
   len = l->l_len;

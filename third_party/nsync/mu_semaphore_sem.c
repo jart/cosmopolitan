@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -25,6 +25,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/time.h"
 // clang-format off
@@ -44,14 +45,19 @@ static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)
 
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
-	int newfd;
 	struct sem *f = (struct sem *) s;
 	f->id = 0;
 	ASSERT (!sys_sem_init (0, &f->id));
 	STRACE ("sem_init(0, [%ld]) → 0", f->id);
-	ASSERT ((newfd = __sys_fcntl (f->id, F_DUPFD_CLOEXEC, 100)) != -1);
-	ASSERT (!sys_sem_destroy (f->id));
-	f->id = newfd;
+	ASSERT (__sys_fcntl (f->id, F_SETFD, FD_CLOEXEC) == 0); // ouch
+}
+
+/* Releases system resources associated with *s. */
+void nsync_mu_semaphore_destroy_sem (nsync_semaphore *s) {
+	int rc;
+	struct sem *f = (struct sem *) s;
+	ASSERT (!(rc = sys_sem_destroy (f->id)));
+	STRACE ("sem_destroy(%ld) → %d", rc);
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. */
@@ -60,9 +66,7 @@ errno_t nsync_mu_semaphore_p_sem (nsync_semaphore *s) {
 	errno_t result;
 	struct sem *f = (struct sem *) s;
 	e = errno;
-	BEGIN_CANCELLATION_POINT;
 	rc = sys_sem_wait (f->id);
-	END_CANCELLATION_POINT;
 	STRACE ("sem_wait(%ld) → %d% m", f->id, rc);
 	if (!rc) {
 		result = 0;
@@ -82,9 +86,7 @@ errno_t nsync_mu_semaphore_p_with_deadline_sem (nsync_semaphore *s, nsync_time a
 	errno_t result;
 	struct sem *f = (struct sem *) s;
 	e = errno;
-	BEGIN_CANCELLATION_POINT;
 	rc = sys_sem_timedwait (f->id, &abs_deadline);
-	END_CANCELLATION_POINT;
 	STRACE ("sem_timedwait(%ld, %s) → %d% m", f->id,
 		DescribeTimespec(0, &abs_deadline), rc);
 	if (!rc) {

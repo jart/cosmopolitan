@@ -17,9 +17,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/nsync/cv.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/debug.h"
 #include "third_party/nsync/mu.h"

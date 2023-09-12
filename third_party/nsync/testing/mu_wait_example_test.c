@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/array.internal.h"
 #include "third_party/nsync/heap.internal.h"

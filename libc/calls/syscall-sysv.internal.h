@@ -87,6 +87,7 @@ i32 sys_sem_close(i64);
 i32 sys_sem_destroy(i64);
 i32 sys_sem_getvalue(i64, u32 *);
 i32 sys_sem_init(u32, i64 *);
+i32 sys_sem_destroy(i64);
 i32 sys_sem_open(const char *, int, u32, i64 *);
 i32 sys_sem_post(i64);
 i32 sys_sem_trywait(i64);

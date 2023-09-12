@@ -43,8 +43,6 @@ static const char *GetFrameName(int x) {
     return "g_fds";
   } else if (IsZiposFrame(x)) {
     return "zipos";
-  } else if (IsKmallocFrame(x)) {
-    return "kmalloc";
   } else if (IsMemtrackFrame(x)) {
     return "memtrack";
   } else if (IsOldStackFrame(x)) {

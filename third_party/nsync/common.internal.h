@@ -244,12 +244,8 @@ waiter *nsync_dll_waiter_(struct Dll *e);
                : DLL_CONTAINER(struct waiter_s, same_condition, e))
 waiter *nsync_dll_waiter_samecond_(struct Dll *e);
 
-/* Return a pointer to an unused waiter struct.
-   Ensures that the enclosed timer is stopped and its channel drained. */
-waiter *nsync_waiter_new_(void);
-
-/* Return an unused waiter struct *w to the free pool. */
-void nsync_waiter_free_(waiter *w);
+void nsync_waiter_init_(waiter *);
+void nsync_waiter_destroy_(waiter *);
 
 /* ---------- */
 

@@ -15,10 +15,10 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
 #include "third_party/nsync/testing/smprintf.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 // clang-format off
 
 char *smprintf (const char *fmt, ...) {

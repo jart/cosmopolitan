@@ -149,12 +149,12 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 	lock_type *l_type;
 	int first_wait;
 	int condition_is_true;
-	waiter *w;
+	waiter w[1];
 	int outcome;
 	/* Work out in which mode the lock is held. */
 	uint32_t old_word;
 	IGNORE_RACES_START ();
-	BLOCK_CANCELLATIONS; /* not supported yet */
+	BLOCK_CANCELLATIONS;
 	old_word = ATM_LOAD (&mu->word);
 	if ((old_word & MU_ANY_LOCK) == 0) {
 		nsync_panic_ ("nsync_mu not held in some mode when calling "
@@ -165,12 +165,12 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 		l_type = nsync_reader_type_;
 	}
 
+	w->tag = 0; /* avoid allocating system resources */
 	first_wait = 1; /* first time through the loop below. */
 	condition_is_true = (condition == NULL || (*condition) (condition_arg));
 
 	/* Loop until either the condition becomes true, or "outcome" indicates
 	   cancellation or timeout. */
-	w = NULL;
 	outcome = 0;
 	while (outcome == 0 && !condition_is_true) {
 		uint32_t has_condition;
@@ -180,8 +180,10 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 		int sem_outcome;
 		unsigned attempts;
 		int have_lock;
-		if (w == NULL) {
-			w = nsync_waiter_new_ (); /* get a waiter struct if we need one. */
+
+		/* initialize the waiter if we haven't already */
+		if (!w->tag) {
+			nsync_waiter_init_ (w);
 		}
 
 		/* Prepare to wait. */
@@ -259,9 +261,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 		}
 		condition_is_true = (condition == NULL || (*condition) (condition_arg));
 	}
-	if (w != NULL) {
-		nsync_waiter_free_ (w); /* free waiter if we allocated one. */
-	}
+	nsync_waiter_destroy_ (w);
 	if (condition_is_true) {
 		outcome = 0; /* condition is true trumps other outcomes. */
 	}
@@ -319,5 +319,3 @@ void nsync_mu_unlock_without_wakeup (nsync_mu *mu) {
 	}
 	IGNORE_RACES_END ();
 }
-
-
