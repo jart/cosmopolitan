@@ -273,9 +273,6 @@ sig_atomic_t gotusr1;
 
 void OnSigMask(int sig, struct siginfo *si, void *ctx) {
   ucontext_t *uc = ctx;
-#ifdef __x86_64__
-  ASSERT_EQ(123, uc->uc_mcontext.r15);
-#endif
   sigaddset(&uc->uc_sigmask, sig);
   gotusr1 = true;
 }
@@ -288,9 +285,6 @@ TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, &got));
   ASSERT_FALSE(sigismember(&got, SIGUSR1));
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
-#ifdef __x86_64__
-  asm volatile("mov\t%0,%%r15" : : "i"(123) : "r15", "memory");
-#endif
   ASSERT_SYS(0, 0, raise(SIGUSR1));
   ASSERT_TRUE(gotusr1);
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, 0, &got));

@@ -70,7 +70,7 @@ TEST(sigprocmask, testMultipleBlockedDeliveriesOfSameSignal) {
   EXPECT_EQ(0, n);
   EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &old, NULL));
   EXPECT_EQ(0, sigaction(SIGUSR2, &oldusr2, 0));
-  if (IsFreebsd() || IsWindows()) {
+  if (IsFreebsd()) {
     EXPECT_EQ(2, n);
   } else {
     EXPECT_EQ(1, n);

@@ -33,7 +33,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
     if (__tls_enabled) {
       mask = &__get_tls()->tib_sigmask;
     } else {
-      mask = &__sig.sigmask;
+      mask = &__sig.mask;
     }
     if (old) {
       old->__bits[0] = *mask;

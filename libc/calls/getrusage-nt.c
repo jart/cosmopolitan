@@ -53,7 +53,7 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
       .ru_majflt = memcount.PageFaultCount,
       .ru_inblock = iocount.ReadOperationCount,
       .ru_oublock = iocount.WriteOperationCount,
-      .ru_nsignals = __sig_count,
+      .ru_nsignals = __sig.count,
   };
   return 0;
 }

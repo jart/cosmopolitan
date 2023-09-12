@@ -27,10 +27,10 @@ struct CosmoTib {
   _Atomic(int32_t) tib_tid;       /* 0x38 transitions -1 → tid → 0 */
   int32_t tib_errno;              /* 0x3c */
   uint64_t tib_flags;             /* 0x40 */
-  long __padding;
-  int tib_ftrace;       /* inherited */
-  int tib_strace;       /* inherited */
-  uint64_t tib_sigmask; /* inherited */
+  int tib_ftrace;                 /* inherited */
+  int tib_strace;                 /* inherited */
+  uint64_t tib_sigmask;           /* inherited */
+  uint64_t tib_sigpending;
   void *tib_reserved4;
   void *tib_reserved5;
   void *tib_reserved6;

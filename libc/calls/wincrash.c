@@ -24,6 +24,7 @@
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/sa.h"

@@ -24,6 +24,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 /**
  * Determines the blocked pending signals
@@ -57,8 +58,7 @@ int sigpending(sigset_t *pending) {
       }
     }
   } else if (IsWindows()) {
-    sigemptyset(pending);
-    __sig_pending(pending);
+    *pending = (sigset_t){{__sig.pending | __get_tls()->tib_sigpending}};
     rc = 0;
   } else {
     rc = enosys();

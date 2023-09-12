@@ -45,7 +45,7 @@ static textwindows int GetSig(uint32_t dwCtrlType) {
     case kNtCtrlShutdownEvent:  // only received by services
       return SIGHUP;
     default:
-      __builtin_unreachable();
+      return SIGSTKFLT;
   }
 }
 
@@ -60,7 +60,7 @@ textwindows bool32 __sig_notify(int sig, int sic) {
   // if we don't have tls, then we can't hijack a safe stack from a
   // thread so just try our luck punting the signal to the next i/o
   if (!__tls_enabled) {
-    __sig_add(0, sig, sic);
+    __sig.pending |= 1ull << (sig - 1);
     return true;
   }
 
@@ -79,7 +79,7 @@ textwindows bool32 __sig_notify(int sig, int sic) {
     if (pt->tib->tib_sigmask & (1ull << (sig - 1))) continue;  // masked
     if (pt->flags & PT_BLOCKED) {
       pthread_spin_unlock(&_pthread_lock);
-      __sig_add(0, sig, sic);
+      __sig.pending |= 1ull << (sig - 1);
       return true;
     }
   }
@@ -98,9 +98,7 @@ textwindows bool32 __sig_notify(int sig, int sic) {
     if (tid <= 0) continue;  // -1 means spawning, 0 means terminated
     if (pt->tib->tib_sigmask & (1ull << (sig - 1))) continue;  // masked
     pthread_spin_unlock(&_pthread_lock);
-    if (_pthread_signal(pt, sig, sic) == -1) {
-      __sig_add(0, sig, sic);
-    }
+    _pthread_signal(pt, sig, sic);
     return true;
   }
 
@@ -109,7 +107,8 @@ textwindows bool32 __sig_notify(int sig, int sic) {
 }
 
 __msabi textwindows bool32 __onntconsoleevent(uint32_t dwCtrlType) {
-  return __sig_notify(GetSig(dwCtrlType), SI_KERNEL);
+  __sig_notify(GetSig(dwCtrlType), SI_KERNEL);
+  return true;
 }
 
 #endif /* __x86_64__ */

@@ -47,6 +47,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 #ifdef SYSDEBUG
 __static_yoink("strsignal");  // for kprintf()
@@ -264,7 +265,13 @@ static int __sigaction(int sig, const struct sigaction *act,
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
       if (IsWindows()) {
-        __sig_check_ignore(sig, rva);
+        if (rva == (intptr_t)SIG_IGN ||
+            (rva == (intptr_t)SIG_DFL && __sig_is_ignored(sig))) {
+          __sig.pending &= ~(1ull << (sig - 1));
+          if (__tls_enabled) {
+            __get_tls()->tib_sigpending &= ~(1ull << (sig - 1));
+          }
+        }
       }
     }
   }

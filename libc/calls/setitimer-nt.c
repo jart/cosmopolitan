@@ -40,7 +40,7 @@ textwindows void _check_sigalrm(void) {
           timeval_add(g_setitimer.it_value, g_setitimer.it_interval);
     } while (timeval_cmp(now, g_setitimer.it_value) > 0);
   }
-  __sig_add(0, SIGALRM, SI_TIMER);
+  __sig.pending |= 1ull << (SIGALRM - 1);
 }
 
 textwindows void sys_setitimer_nt_reset(void) {

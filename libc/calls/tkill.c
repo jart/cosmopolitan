@@ -49,11 +49,8 @@ static dontinline textwindows int __tkill_nt(int tid, int sig,
   }
 
   // check if caller is killing themself
-  if (tid == gettid() && __tls_enabled && (!tib || tib == __get_tls())) {
-    struct NtContext nc = {.ContextFlags = kNtContextAll};
-    struct Delivery pkg = {0, sig, SI_TKILL, &nc};
-    unassert(GetThreadContext(GetCurrentThread(), &nc));
-    __sig_tramp(&pkg);
+  if (tid == gettid() && (!tib || tib == __get_tls())) {
+    __sig_handle(0, sig, SI_TKILL, 0);
     return 0;
   }
 
@@ -70,7 +67,8 @@ static dontinline textwindows int __tkill_nt(int tid, int sig,
     pthread_spin_unlock(&_pthread_lock);
     if (status < kPosixThreadTerminated) {
       if (pt->flags & PT_BLOCKED) {
-        return __sig_add(tid, sig, SI_TKILL);
+        pt->tib->tib_sigpending |= 1ull << (sig - 1);
+        return 0;
       } else {
         return _pthread_signal(pt, sig, SI_TKILL);
       }
