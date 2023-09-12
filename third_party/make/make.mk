@@ -153,8 +153,7 @@ o/$(MODE)/third_party/make/make.com.dbg:		\
 o/$(MODE)/third_party/make/make.com:			\
 		o/$(MODE)/third_party/make/make.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com	\
-		o/$(MODE)/tool/build/symtab.com		\
-		$(VM)
+		o/$(MODE)/tool/build/symtab.com
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

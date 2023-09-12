@@ -80,8 +80,7 @@ o/$(MODE)/tool/viz/printimage.com.dbg:		\
 o/$(MODE)/tool/viz/printimage.com:			\
 		o/$(MODE)/tool/viz/printimage.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com	\
-		o/$(MODE)/tool/build/symtab.com		\
-		$(VM)
+		o/$(MODE)/tool/build/symtab.com
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
@@ -89,8 +88,7 @@ o/$(MODE)/tool/viz/printimage.com:			\
 o/$(MODE)/tool/viz/printvideo.com:			\
 		o/$(MODE)/tool/viz/printvideo.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com	\
-		o/$(MODE)/tool/build/symtab.com		\
-		$(VM)
+		o/$(MODE)/tool/build/symtab.com
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

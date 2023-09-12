@@ -83,8 +83,7 @@ o/$(MODE)/test/tool/net/redbean-tester.com:			\
 		o/$(MODE)/test/tool/net/redbean-tester.com.dbg	\
 		o/$(MODE)/third_party/zip/zip.com		\
 		o/$(MODE)/tool/build/symtab.com			\
-		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)		\
-		$(VM)
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)

@@ -130,8 +130,8 @@ o/$(MODE)/third_party/mbedtls/test/%.com.dbg:									\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com $(VM)
-	@$(COMPILE) -ACHECK -wtT$@ $(VM) $< $(TESTARGS)
+o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com
+	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
 
 o/$(MODE)/third_party/mbedtls/test/lib.o: private								\
 			CFLAGS +=										\
