@@ -28,7 +28,7 @@
  * @return number of bytes (excluding NUL)
  * @asyncsignalsafe
  */
-dontasan size_t strlen(const char *s) {
+size_t strlen(const char *s) {
   if (IsAsan()) __asan_verify_str(s);
 #if defined(__x86_64__) && !defined(__chibicc__)
   typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));

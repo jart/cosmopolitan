@@ -773,7 +773,7 @@ static void __asan_report_memory_origin_image(intptr_t a, int z) {
   }
 }
 
-static dontasan void __asan_onmemory(void *x, void *y, size_t n, void *a) {
+static void __asan_onmemory(void *x, void *y, size_t n, void *a) {
   const unsigned char *p = x;
   struct ReportOriginHeap *t = a;
   if ((p <= t->a && t->a < p + n) ||

@@ -28,7 +28,7 @@
  * @see System Five Application Binary Interface § 3.4.3
  * @asyncsignalsafe
  */
-dontasan struct AuxiliaryValue __getauxval(unsigned long at) {
+struct AuxiliaryValue __getauxval(unsigned long at) {
   unsigned long *ap;
   for (ap = __auxv; ap[0]; ap += 2) {
     if (at == ap[0]) {

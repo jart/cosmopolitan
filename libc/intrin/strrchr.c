@@ -31,6 +31,6 @@ char *strrchr(const char *s, int c) {
   return memrchr(s, c, strlen(s));
 }
 
-__strong_reference(strrchr, rindex);
+__weak_reference(strrchr, rindex);
 
 #endif /* __aarch64__ */

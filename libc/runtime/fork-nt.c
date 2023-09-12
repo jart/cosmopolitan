@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
@@ -26,6 +27,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/handlock.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -43,6 +45,7 @@
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
@@ -313,6 +316,21 @@ textwindows void WinMainForked(void) {
   longjmp(jb, 1);
 }
 
+static void __hand_inherit(bool32 bInherit) {
+  for (int i = 0; i < _mmi.i; ++i) {
+    if ((_mmi.p[i].flags & MAP_TYPE) == MAP_SHARED) {
+      SetHandleInformation(_mmi.p[i].h, kNtHandleFlagInherit, bInherit);
+    }
+  }
+  for (int i = 0; i < g_fds.n; ++i) {
+    if (g_fds.p[i].kind == kFdEmpty) continue;
+    SetHandleInformation(g_fds.p[i].handle, kNtHandleFlagInherit, bInherit);
+    if (g_fds.p[i].kind == kFdConsole) {
+      SetHandleInformation(g_fds.p[i].extra, kNtHandleFlagInherit, bInherit);
+    }
+  }
+}
+
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   jmp_buf jb;
   uint32_t op;
@@ -357,8 +375,12 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
         args = args2;
       }
 #endif
-      if (ntspawn(GetProgramExecutableName(), args, environ, forkvar, 0, 0,
-                  true, dwCreationFlags, 0, &startinfo, &procinfo) != -1) {
+      __hand_inherit(true);
+      int spawnrc =
+          ntspawn(GetProgramExecutableName(), args, environ, forkvar, 0, 0,
+                  true, dwCreationFlags, 0, &startinfo, &procinfo);
+      __hand_inherit(false);
+      if (spawnrc != -1) {
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb)) &&
              WriteAll(writer, &_mmi.i, sizeof(_mmi.i)) &&

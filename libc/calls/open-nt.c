@@ -130,12 +130,11 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
 
   // open the file, following symlinks
   int e = errno;
-  int64_t hand = CreateFile(path16, perm | extra_perm, share, &kNtIsInheritable,
-                            disp, attr | extra_attr, 0);
+  int64_t hand = CreateFile(path16, perm | extra_perm, share, 0, disp,
+                            attr | extra_attr, 0);
   if (hand == -1 && errno == EACCES && (flags & O_ACCMODE) == O_RDONLY) {
     errno = e;
-    hand = CreateFile(path16, perm, share, &kNtIsInheritable, disp,
-                      attr | extra_attr, 0);
+    hand = CreateFile(path16, perm, share, 0, disp, attr | extra_attr, 0);
   }
 
   return __fix_enotdir(hand, path16);

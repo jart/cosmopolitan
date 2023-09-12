@@ -24,7 +24,6 @@
 const char *(
     DescribeNtSecurityAttributes)(char buf[32],
                                   const struct NtSecurityAttributes *p) {
-  if (p == &kNtIsInheritable) return "&kNtIsInheritable";
   FormatInt64(buf, (uintptr_t)p);
   return buf;
 }

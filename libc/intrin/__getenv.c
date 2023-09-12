@@ -22,7 +22,7 @@
 #define ToUpper(c) \
   (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
-dontasan privileged struct Env __getenv(char **p, const char *k) {
+privileged struct Env __getenv(char **p, const char *k) {
   char *t;
   int i, j;
   for (i = 0; (t = p[i]); ++i) {

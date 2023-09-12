@@ -61,7 +61,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   handle = g_fds.p[oldfd].handle;
   proc = GetCurrentProcess();
 
-  if (DuplicateHandle(proc, handle, proc, &g_fds.p[newfd].handle, 0, true,
+  if (DuplicateHandle(proc, handle, proc, &g_fds.p[newfd].handle, 0, false,
                       kNtDuplicateSameAccess)) {
     g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
     g_fds.p[newfd].mode = g_fds.p[oldfd].mode;

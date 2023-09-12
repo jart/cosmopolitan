@@ -34,11 +34,13 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/handlock.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
+#include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/startupinfo.h"
@@ -62,6 +64,14 @@ static void posix_spawn_cleanup3fds(int fds[3]) {
       if (close(fds[i])) {
         errno = e;
       }
+    }
+  }
+}
+
+static void posix_spawn_inherit(int64_t hands[3], bool32 bInherit) {
+  for (int i = 0; i < 3; ++i) {
+    if (hands[i] != -1) {
+      SetHandleInformation(hands[i], kNtHandleFlagInherit, bInherit);
     }
   }
 }
@@ -176,9 +186,13 @@ static textwindows errno_t posix_spawn_windows_impl(
   int rc, e = errno;
   struct NtProcessInformation procinfo;
   if (!envp) envp = environ;
+  __hand_rlock();
+  posix_spawn_inherit(stdio_handle, true);
   rc = ntspawn(path, argv, envp, v, 0, 0, bInheritHandles, dwCreationFlags, 0,
                &startinfo, &procinfo);
+  posix_spawn_inherit(stdio_handle, false);
   posix_spawn_cleanup3fds(close_this_fd_later);
+  __hand_runlock();
   if (rc == -1) {
     int err = errno;
     __releasefd(child);

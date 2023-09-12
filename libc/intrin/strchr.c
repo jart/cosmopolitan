@@ -32,7 +32,7 @@ static inline const char *strchr_pure(const char *s, int c) {
 
 #if defined(__x86_64__) && !defined(__chibicc__)
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-dontasan static inline const char *strchr_sse(const char *s, unsigned char c) {
+static inline const char *strchr_sse(const char *s, unsigned char c) {
   unsigned k;
   unsigned m;
   const xmm_t *p;
@@ -56,7 +56,7 @@ dontasan static inline const char *strchr_sse(const char *s, unsigned char c) {
 }
 #endif
 
-static dontasan inline const char *strchr_x64(const char *p, uint64_t c) {
+static inline const char *strchr_x64(const char *p, uint64_t c) {
   unsigned a, b;
   uint64_t w, x, y;
   for (c *= 0x0101010101010101;; p += 8) {
@@ -95,7 +95,7 @@ static dontasan inline const char *strchr_x64(const char *p, uint64_t c) {
  * @asyncsignalsafe
  * @vforksafe
  */
-dontasan char *strchr(const char *s, int c) {
+char *strchr(const char *s, int c) {
   if (IsAsan()) __asan_verify_str(s);
 #if defined(__x86_64__) && !defined(__chibicc__)
   const char *r;

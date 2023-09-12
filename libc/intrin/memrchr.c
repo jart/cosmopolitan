@@ -37,9 +37,8 @@ static inline const unsigned char *memrchr_pure(const unsigned char *s,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-dontasan static inline const unsigned char *memrchr_sse(const unsigned char *s,
-                                                        unsigned char c,
-                                                        size_t n) {
+static inline const unsigned char *memrchr_sse(const unsigned char *s,
+                                               unsigned char c, size_t n) {
   size_t i;
   unsigned m;
   xmm_t v, t = {c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};

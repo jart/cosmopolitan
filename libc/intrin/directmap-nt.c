@@ -42,13 +42,6 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
     handle = g_fds.p[fd].handle;
   }
 
-  const struct NtSecurityAttributes *sec;
-  if ((flags & MAP_TYPE) != MAP_SHARED) {
-    sec = 0;  // MAP_PRIVATE isn't inherited across fork()
-  } else {
-    sec = &kNtIsInheritable;  // MAP_SHARED gives us zero-copy fork()
-  }
-
   // nt will whine under many circumstances if we change the execute bit
   // later using mprotect(). the workaround is to always request execute
   // and then virtualprotect() it away until we actually need it. please
@@ -80,7 +73,7 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
   int e = errno;
   struct DirectMap dm;
 TryAgain:
-  if ((dm.maphandle = CreateFileMapping(handle, sec, fl.flags1,
+  if ((dm.maphandle = CreateFileMapping(handle, 0, fl.flags1,
                                         (size + off) >> 32, (size + off), 0))) {
     if ((dm.addr = MapViewOfFileEx(dm.maphandle, fl.flags2, off >> 32, off,
                                    size, addr))) {

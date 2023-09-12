@@ -127,7 +127,7 @@ __msabi static textwindows void DeduplicateStdioHandles(void) {
       int64_t h2 = __imp_GetStdHandle(kNtStdio[j]);
       if (h1 == h2) {
         int64_t h3, proc = __imp_GetCurrentProcess();
-        __imp_DuplicateHandle(proc, h2, proc, &h3, 0, true,
+        __imp_DuplicateHandle(proc, h2, proc, &h3, 0, false,
                               kNtDuplicateSameAccess);
         __imp_SetStdHandle(kNtStdio[j], h3);
       }
@@ -159,11 +159,10 @@ __msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
   _mmi.n = ARRAYLEN(_mmi.s);
   uintptr_t stackaddr = GetStaticStackAddr(0);
   size_t stacksize = GetStaticStackSize();
-  __imp_MapViewOfFileEx((_mmi.p[0].h = __imp_CreateFileMappingW(
-                             -1, &kNtIsInheritable, kNtPageExecuteReadwrite,
-                             stacksize >> 32, stacksize, NULL)),
-                        kNtFileMapWrite | kNtFileMapExecute, 0, 0, stacksize,
-                        (void *)stackaddr);
+  __imp_MapViewOfFileEx(
+      (_mmi.p[0].h = __imp_CreateFileMappingW(
+           -1, 0, kNtPageExecuteReadwrite, stacksize >> 32, stacksize, NULL)),
+      kNtFileMapWrite | kNtFileMapExecute, 0, 0, stacksize, (void *)stackaddr);
   int prot = (intptr_t)ape_stack_prot;
   if (~prot & PROT_EXEC) {
     uint32_t old;
@@ -186,9 +185,8 @@ __msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
     uintptr_t shallocend = ROUNDUP(shadowend, FRAMESIZE);
     uintptr_t shallocsize = shallocend - shallocaddr;
     __imp_MapViewOfFileEx(
-        (_mmi.p[1].h =
-             __imp_CreateFileMappingW(-1, &kNtIsInheritable, kNtPageReadwrite,
-                                      shallocsize >> 32, shallocsize, NULL)),
+        (_mmi.p[1].h = __imp_CreateFileMappingW(
+             -1, 0, kNtPageReadwrite, shallocsize >> 32, shallocsize, NULL)),
         kNtFileMapWrite, 0, 0, shallocsize, (void *)shallocaddr);
     _mmi.p[1].x = shallocaddr >> 16;
     _mmi.p[1].y = (shallocaddr >> 16) + ((shallocsize - 1) >> 16);

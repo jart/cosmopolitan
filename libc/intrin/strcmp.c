@@ -29,7 +29,7 @@
  * @return is <0, 0, or >0 based on uint8_t comparison
  * @asyncsignalsafe
  */
-dontasan int strcmp(const char *a, const char *b) {
+int strcmp(const char *a, const char *b) {
   int c;
   size_t i = 0;
   uint64_t v, w;

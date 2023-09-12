@@ -252,7 +252,7 @@ void PosixSpawnWait(const char *prog) {
 }
 
 BENCH(posix_spawn, bench) {
-  long n = 128L * 1000 * 1000;
+  long n = 1L * 1000 * 1000;
   memset(gc(malloc(n)), -1, n);
   creat("tiny64", 0755);
   write(3, kTinyLinuxExit, 128);

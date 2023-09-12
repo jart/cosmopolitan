@@ -25,8 +25,8 @@
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-dontinstrument dontasan const char *(DescribeBacktrace)(char buf[N],
-                                                        struct StackFrame *fr) {
+dontinstrument const char *(DescribeBacktrace)(char buf[N],
+                                               struct StackFrame *fr) {
   bool gotsome = false;
   char *p = buf;
   char *pe = p + N;

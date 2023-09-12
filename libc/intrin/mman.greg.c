@@ -54,7 +54,7 @@ struct ReclaimedPage {
 /**
  * Allocates new page of physical memory.
  */
-dontasan texthead uint64_t __new_page(struct mman *mm) {
+texthead uint64_t __new_page(struct mman *mm) {
   uint64_t p = mm->frp;
   if (p != NOPAGE) {
     uint64_t q;
@@ -81,8 +81,8 @@ dontasan texthead uint64_t __new_page(struct mman *mm) {
  * Returns pointer to page table entry for page at virtual address.
  * Additional page tables are allocated if needed as a side-effect.
  */
-dontasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
-                                          int64_t vaddr, bool maketables) {
+textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t, int64_t vaddr,
+                                 bool maketables) {
   uint64_t *e, p;
   unsigned char h;
   for (h = 39;; h -= 9) {
@@ -101,7 +101,7 @@ dontasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
 /**
  * Sorts, rounds, and filters BIOS memory map.
  */
-static dontasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
+static textreal void __normalize_e820(struct mman *mm, uint64_t top) {
   uint64_t a, b;
   uint64_t x, y;
   unsigned i, j, n;
@@ -134,10 +134,9 @@ static dontasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
 /**
  * Identity maps an area of physical memory to its negative address.
  */
-dontasan textreal uint64_t *__invert_memory_area(struct mman *mm,
-                                                 uint64_t *pml4t, uint64_t ps,
-                                                 uint64_t size,
-                                                 uint64_t pte_flags) {
+textreal uint64_t *__invert_memory_area(struct mman *mm, uint64_t *pml4t,
+                                        uint64_t ps, uint64_t size,
+                                        uint64_t pte_flags) {
   uint64_t pe = ps + size, p, *m = NULL;
   ps = ROUNDDOWN(ps, 4096);
   pe = ROUNDUP(pe, 4096);
@@ -153,7 +152,7 @@ dontasan textreal uint64_t *__invert_memory_area(struct mman *mm,
 /**
  * Increments the reference count for a page of physical memory.
  */
-dontasan void __ref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
+void __ref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
   uint64_t *m, e;
   m = __invert_memory_area(mm, pml4t, p, 4096, PAGE_RW | PAGE_XD);
   if (m) {
@@ -168,8 +167,7 @@ dontasan void __ref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
 /**
  * Increments the reference counts for an area of physical memory.
  */
-dontasan void __ref_pages(struct mman *mm, uint64_t *pml4t, uint64_t ps,
-                          uint64_t size) {
+void __ref_pages(struct mman *mm, uint64_t *pml4t, uint64_t ps, uint64_t size) {
   uint64_t p = ROUNDDOWN(ps, 4096), e = ROUNDUP(ps + size, 4096);
   while (p != e) {
     __ref_page(mm, pml4t, p);
@@ -180,7 +178,7 @@ dontasan void __ref_pages(struct mman *mm, uint64_t *pml4t, uint64_t ps,
 /**
  * Reclaims a page of physical memory for later use.
  */
-static dontasan void __reclaim_page(struct mman *mm, uint64_t p) {
+static void __reclaim_page(struct mman *mm, uint64_t p) {
   struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
   unassert(p == (p & PAGE_TA));
   rp->next = mm->frp;
@@ -192,7 +190,7 @@ static dontasan void __reclaim_page(struct mman *mm, uint64_t p) {
  * page if there are no virtual addresses (excluding the negative space)
  * referring to it.
  */
-dontasan void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
+void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
   uint64_t *m, e;
   m = __invert_memory_area(mm, pml4t, p, 4096, PAGE_RW | PAGE_XD);
   if (m) {
@@ -208,8 +206,7 @@ dontasan void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
 /**
  * Identity maps all usable physical memory to its negative address.
  */
-static dontasan textreal void __invert_memory(struct mman *mm,
-                                              uint64_t *pml4t) {
+static textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   uint64_t i;
   for (i = 0; i < mm->e820n; ++i) {
     uint64_t ps = mm->e820[i].addr, size = mm->e820[i].size;
@@ -232,8 +229,7 @@ static dontasan textreal void __invert_memory(struct mman *mm,
                  : "i"(offsetof(type, member)));         \
   } while (0)
 
-dontasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t,
-                                    uint64_t top) {
+textreal void __setup_mman(struct mman *mm, uint64_t *pml4t, uint64_t top) {
   export_offsetof(struct mman, pc_drive_base_table);
   export_offsetof(struct mman, pc_drive_last_sector);
   export_offsetof(struct mman, pc_drive_last_head);
@@ -259,8 +255,8 @@ dontasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t,
 /**
  * Maps APE-defined ELF program headers into memory and clears BSS.
  */
-dontasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
-                                   uint64_t top) {
+textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
+                          uint64_t top) {
   uint64_t i, f, v, m;
   struct Elf64_Phdr *p;
   extern char ape_phdrs[] __attribute__((__weak__));
@@ -294,9 +290,8 @@ dontasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
  * Reclaims memory pages which were used at boot time but which can now be
  * made available for the application.
  */
-dontasan textreal void __reclaim_boot_pages(struct mman *mm,
-                                            uint64_t skip_start,
-                                            uint64_t skip_end) {
+textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
+                                   uint64_t skip_end) {
   uint64_t p = mm->frp, q = IMAGE_BASE_REAL, i, n = mm->e820n, b, e;
   for (i = 0; i < n; ++i) {
     b = mm->e820[i].addr;

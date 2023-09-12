@@ -25,7 +25,7 @@
 // clang-format off
 
 #if defined(SYSDEBUG) && _NTTRACE
-dontasan dontubsan privileged
+privileged
 #endif
 
 /**

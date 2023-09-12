@@ -24,6 +24,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/handlock.internal.h"
 #include "libc/intrin/leaky.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -64,11 +65,13 @@ void _pthread_onfork_prepare(void) {
   _pthread_onfork(0);
   pthread_spin_lock(&_pthread_lock);
   __fds_lock();
+  __hand_lock();
   __mmi_lock();
 }
 
 void _pthread_onfork_parent(void) {
   __mmi_unlock();
+  __hand_unlock();
   __fds_unlock();
   pthread_spin_unlock(&_pthread_lock);
   _pthread_onfork(1);
@@ -87,6 +90,7 @@ void _pthread_onfork_child(void) {
   atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
 
   // wipe core runtime locks
+  __hand_init();
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);

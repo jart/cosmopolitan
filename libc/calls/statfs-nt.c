@@ -33,8 +33,8 @@ textwindows int sys_statfs_nt(const char *path, struct statfs *sf) {
   if (__mkntpath(path, path16) == -1) return -1;
   h = __fix_enotdir(
       CreateFile(path16, kNtFileGenericRead,
-                 kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
-                 &kNtIsInheritable, kNtOpenExisting,
+                 kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+                 kNtOpenExisting,
                  kNtFileAttributeNormal | kNtFileFlagBackupSemantics, 0),
       path16);
   if (h == -1) return -1;

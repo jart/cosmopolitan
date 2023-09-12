@@ -32,7 +32,7 @@
 #define kBufSize 1024
 #define kPid     "TracerPid:\t"
 
-static textwindows dontasan bool IsBeingDebugged(void) {
+static textwindows bool IsBeingDebugged(void) {
   return !!NtGetPeb()->BeingDebugged;
 }
 
