@@ -29,7 +29,7 @@ char *testlib_formatint(intptr_t x) {
   char *str = sbufi_ < ARRAYLEN(sbufs_) ? sbufs_[sbufi_++] : malloc(256);
   char *p = str;
   p += sprintf(p, "%ld\t(or %#lx", x, x);
-  if (0 <= x && x < 256) {
+  if (32 <= x && x < 256) {
     p += sprintf(p, " or %#`c", (unsigned char)x);
   }
   *p++ = ')';
