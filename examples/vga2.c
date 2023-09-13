@@ -26,8 +26,7 @@
 
 __static_yoink("vga_console");
 __static_yoink("_idt");
-__static_yoink("_AcpiMadtFlags");
-__static_yoink("_AcpiBootFlags");
+__static_yoink("_irq");
 __static_yoink("EfiMain");
 
 int main(int argc, char *argv[]) {
@@ -38,6 +37,12 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < argc; ++i) {
     printf("argv[%d] = \"%s\"\n", i, argv[i]);
   }
+  for (i = 1; i <= 50; ++i) {
+    printf("%d ", i);
+    fflush(stdout);
+    asm volatile("hlt");
+  }
+  printf("\n");
   printf("\e[92;44mHello World!\e[0m %d\n", 1 / (x + y - 3));
   for (;;)
     ;

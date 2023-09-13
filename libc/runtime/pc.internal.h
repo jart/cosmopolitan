@@ -122,6 +122,18 @@
 #define GDT_LONG_DATA   48
 #define GDT_LONG_TSS    56
 
+#define IRQ_IST   1 /* interrupt stack table (IST) entry to use for IRQs */
+#define EXCEP_IST 2 /* IST entry to use for CPU exceptions */
+
+/*
+ * @see Intel Corporation.  8259A Programmable Interrupt Controller (8259A/
+ *      8259A-2).  1988.  Intel order number 231468-003.
+ * @see IBM.  Technical Reference for the IBM Personal Computer AT.  1985,
+ *      Section 5: System BIOS, p. 5-34.  https://archive.org/details/
+ *      IBMPCATIBM5170TechnicalReference6280070SEP85/page/n205/mode/2up .
+ * @see Intel Corporation.  82371FB (PIIX) and 82371SB (PIIX3) PCI ISA IDE
+ *      Xcelerator.  1997.  Intel order number 290550-002.
+ */
 #define PIC1         0x20 /* IO base address for master PIC */
 #define PIC2         0xA0 /* IO base address for slave PIC */
 #define PIC1_CMD     PIC1
@@ -129,6 +141,9 @@
 #define PIC2_CMD     PIC2
 #define PIC2_DATA    (PIC2 + 1)
 #define PIC_EOI      0x20 /* End-of-interrupt command code */
+#define PIC_INIT     0x10 /* ICW1 initialize */
+#define PIC_IC4      0x01 /* ICW1 initialize needs ICW4 */
+#define PIC_UPM      0x01 /* ICW4 microprocessor mode (8086/8088 vs. 8085) */
 #define PIC_READ_IRR 0x0a /* OCW3 irq ready next CMD read */
 #define PIC_READ_ISR 0x0b /* OCW3 irq service next CMD read */
 
@@ -221,6 +236,14 @@ forceinline void outb(unsigned short port, unsigned char byte) {
   asm volatile("outb\t%0,%1"
                : /* no inputs */
                : "a"(byte), "dN"(port));
+}
+
+forceinline void disable(void) {
+  asm volatile("cli" : : : "memory");
+}
+
+forceinline void enable(void) {
+  asm volatile("sti" : : : "memory");
 }
 
 #define __clear_page(page)                               \

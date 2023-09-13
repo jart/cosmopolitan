@@ -25,37 +25,39 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/irq/acpi.internal.h"
+#include "libc/irq/irq.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/pc.internal.h"
 
-	.init.start 311,_init_acpi_madt
+	.init.start 320,_init_irq
+	testb	IsMetal()
+	jz	9f
 	push	%rdi
 	push	%rsi
-	call	_AcpiMadtInit
+	ezlea	_idt+IRQ0*0x10,di	# fill IDT entry for IRQ 0
+	ezlea	_irq0_isr,dx
+	mov	%edx,%eax
+	stosw
+	mov	%cs,%eax
+	stosw
+	mov	%rdx,%rax
+	mov	$0b1000111000000000|IRQ_IST,%ax
+	stosl
+	shr	$32,%rax
+	stosq
+	call	_IrqHwInit		# bring up interrupt controller(s) &
+					# enable interrupts
 	pop	%rsi
 	pop	%rdi
-	.init.end 311,_init_acpi_madt
-	.data
-_AcpiMadtFlags:
-	.long	kAcpiMadtPcAtCompat
-	.endobj	_AcpiMadtFlags,globl
-	.previous
-	.bss
-_AcpiNumIoApics:
-	.skip	8
-	.endobj	_AcpiNumIoApics,globl
-_AcpiIoApics:
-	.skip	8
-	.endobj	_AcpiIoApics,globl
-	.previous
+9:
+	.init.end 320,_init_irq
+_irq0_isr:
+	push	%rax
+	mov	$PIC_EOI,%al
+	out	%al,$PIC1_CMD
+	pop	%rax
+	iretq
 	.rodata
-	/* Yoinking _acpi from another module will link in ACPI support... */
-_acpi:
-	.endobj	_acpi,globl
+_irq:
+	.endobj	_irq,globl
 	.previous
-	/*
-	 * ...& also link in additional code needed for switching to legacy
-	 * BIOS-style interrupt handling.
-	 */
-	.yoink	_ApicDisableAll

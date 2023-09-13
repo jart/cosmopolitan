@@ -26,6 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/irq/irq.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/pc.internal.h"
 
@@ -33,14 +34,6 @@
 
 #define ISR_STK_SZ 0x10000
 #define ISR_STK_ALIGN 0x10
-//	Interrupt stack to use for IRQs.  TODO.
-#define IRQ_IST   1
-//	Interrupt stack to use for CPU exceptions.
-#define EXCEP_IST 2
-
-//	Interrupt numbers to use for IRQs 0 & 8.  TODO: implement these!
-#define IRQ0 0x20
-#define IRQ8 0x28
 
 	.init.start 100,_init_isr
 	push	%rdi
