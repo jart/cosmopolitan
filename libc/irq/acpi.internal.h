@@ -212,6 +212,7 @@ extern uint32_t _AcpiMadtFlags;
 extern const AcpiMadtIoApic **_AcpiIoApics;
 
 extern void *_AcpiOsMapUncachedMemory(uintptr_t, size_t);
+extern void *_AcpiOsAllocate(size_t);
 extern void *_AcpiMapTable(uintptr_t);
 
 extern AcpiStatus _AcpiGetTableImpl(uint32_t, uint32_t, void **);

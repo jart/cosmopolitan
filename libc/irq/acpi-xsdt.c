@@ -25,8 +25,9 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kmalloc.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/irq/acpi.internal.h"
 #include "libc/log/color.internal.h"
@@ -34,6 +35,8 @@
 #include "libc/nt/efi.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 
 #ifdef __x86_64__
 
@@ -53,6 +56,34 @@ textstartup void *_AcpiOsMapUncachedMemory(uintptr_t phy, size_t n) {
   __invert_and_perm_ref_memory_area(__get_mm(), __get_pml4t(), phy, n,
                                     PAGE_XD | PAGE_PCD | PAGE_RW);
   return (void *)(BANE + phy);
+}
+
+textstartup static void *_AcpiOsAllocatePages(size_t n) {
+  struct DirectMap dm = sys_mmap_metal(NULL, n, PROT_READ | PROT_WRITE,
+                                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void *addr = dm.addr;
+  if (addr == (void *)-1) addr = NULL;
+  return addr;
+}
+
+textstartup void *_AcpiOsAllocate(size_t n) {
+  static _Atomic(char *) slack = NULL;
+  char *addr = NULL;
+  size_t align = __BIGGEST_ALIGNMENT__, use;
+  if (n >= 4096) return _AcpiOsAllocatePages(n);
+  n = ROUNDUP(n, align);
+  for (;;) {
+    addr = atomic_exchange(&slack, NULL);
+    if (!addr) {
+      addr = _AcpiOsAllocatePages(4096);
+      if (!addr) return NULL;
+    }
+    use = (uintptr_t)addr % 4096 + n;
+    if (use <= 4096) {
+      if (use < 4096) atomic_store(&slack, addr + n);
+      return addr;
+    }
+  }
 }
 
 textstartup static uint8_t _AcpiTbChecksum(const uint8_t *p, size_t n) {
@@ -169,7 +200,7 @@ textstartup void _AcpiXsdtInit(void) {
       const AcpiTableRsdt *rsdt = _AcpiMapTable(rsdp->RsdtPhysicalAddress);
       nents = (rsdt->Header.Length - sizeof(rsdt->Header)) / sizeof(uint32_t);
       ACPI_INFO("RSDT @ %p, %#zx entries", rsdt, nents);
-      ents = kmalloc(nents * sizeof(AcpiTableHeader *));
+      ents = _AcpiOsAllocate(nents * sizeof(AcpiTableHeader *));
       if (ents) {
         for (i = 0; i < nents; ++i) {
           ents[i] = _AcpiMapTable(rsdt->TableOffsetEntry[i]);
@@ -179,7 +210,7 @@ textstartup void _AcpiXsdtInit(void) {
       const AcpiTableXsdt *xsdt = _AcpiMapTable(rsdp->XsdtPhysicalAddress);
       nents = (xsdt->Header.Length - sizeof(xsdt->Header)) / sizeof(uint64_t);
       ACPI_INFO("XSDT @ %p, %#zx entries", xsdt, nents);
-      ents = kmalloc(nents * sizeof(AcpiTableHeader *));
+      ents = _AcpiOsAllocate(nents * sizeof(AcpiTableHeader *));
       if (ents) {
         for (i = 0; i < nents; ++i) {
           ents[i] = _AcpiMapTable(xsdt->TableOffsetEntry[i]);

@@ -25,7 +25,6 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/kmalloc.h"
 #include "libc/inttypes.h"
 #include "libc/irq/acpi.internal.h"
 
@@ -60,18 +59,20 @@ textstartup void _AcpiMadtInit(void) {
       p += h->Length;
     }
     ACPI_INFO("MADT: %zu I/O APIC(s)", num_io_apics);
-    _AcpiIoApics = kmalloc(num_io_apics * sizeof(const AcpiMadtIoApic *));
-    icp = _AcpiIoApics;
-    p = madt->Subtable;
-    while (p != madt_end) {
-      h = (const AcpiSubtableHeader *)p;
-      switch (h->Type) {
-        case kAcpiMadtIoApic:
-          *icp++ = (const AcpiMadtIoApic *)p;
+    icp = _AcpiOsAllocate(num_io_apics * sizeof(const AcpiMadtIoApic *));
+    if (icp) {
+      _AcpiIoApics = icp;
+      p = madt->Subtable;
+      while (p != madt_end) {
+        h = (const AcpiSubtableHeader *)p;
+        switch (h->Type) {
+          case kAcpiMadtIoApic:
+            *icp++ = (const AcpiMadtIoApic *)p;
+        }
+        p += h->Length;
       }
-      p += h->Length;
+      _AcpiNumIoApics = num_io_apics;
     }
-    _AcpiNumIoApics = num_io_apics;
   }
 }
 
