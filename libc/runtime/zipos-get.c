@@ -77,10 +77,13 @@ static int __zipos_compare_names(const void *a, const void *b, void *c) {
   struct Zipos *z = (struct Zipos *)c;
   int xn = ZIP_CFILE_NAMESIZE(z->map + *x);
   int yn = ZIP_CFILE_NAMESIZE(z->map + *y);
+  const char *xp = ZIP_CFILE_NAME(z->map + *x);
+  const char *yp = ZIP_CFILE_NAME(z->map + *y);
+  if (xn && xp[xn-1] == '/') --xn;
+  if (yn && yp[yn-1] == '/') --yn;
   int n = MIN(xn, yn);
   if (n) {
-    int res =
-        memcmp(ZIP_CFILE_NAME(z->map + *x), ZIP_CFILE_NAME(z->map + *y), n);
+    int res = memcmp(xp, yp, n);
     if (res) return res;
   }
   return xn - yn;  // xn and yn are 16-bit
