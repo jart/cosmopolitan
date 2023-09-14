@@ -436,7 +436,7 @@ You now have a portable program.
 
 ```sh
 ./hello.com
-bash -c './hello.com'  # zsh/fish workaround (we patched them in 2021)
+bash -c './hello.com'  # older zsh/fish workaround (patched in zsh 5.9 and fish 3.3.0)
 ```
 
 If `./hello.com` executed on Linux throws an error about not finding an
