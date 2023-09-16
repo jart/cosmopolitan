@@ -186,7 +186,7 @@ compile. The only exception is the C preprocessor mode, which actually
 runs x86-64 GCC except with macros like `__x86_64__` undefined.
 
 This toolchain works great for C projects that are written in a portable
-way and don't produce architecturue-specific artifacts. One example of a
+way and don't produce architecture-specific artifacts. One example of a
 large project that can be easily built is GNU coreutils.
 
 ```sh
