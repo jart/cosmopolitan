@@ -27,6 +27,7 @@
 __static_yoink("vga_console");
 __static_yoink("_idt");
 __static_yoink("_irq");
+__static_yoink("_AcpiBootFlags");
 __static_yoink("EfiMain");
 
 int main(int argc, char *argv[]) {

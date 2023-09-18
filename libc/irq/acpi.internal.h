@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_IRQ_ACPI_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_IRQ_ACPI_INTERNAL_H_
+#include "libc/dce.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
@@ -37,6 +38,67 @@
 #define kAcpiMadtLocalApic    0
 #define kAcpiMadtIoApic       1
 #define kAcpiMadtIntOverride  2
+
+/**
+ * @internal
+ * ACPI Machine Language (AML) opcodes.
+ */
+#define kAmlZeroOp             0x00
+#define kAmlOneOp              0x01
+#define kAmlAliasOp            0x06
+#define kAmlNameOp             0x08
+#define kAmlByteOp             0x0A
+#define kAmlWordOp             0x0B
+#define kAmlDwordOp            0x0C
+#define kAmlStringOp           0x0D
+#define kAmlQwordOp            0x0E
+#define kAmlScopeOp            0x10
+#define kAmlBufferOp           0x11
+#define kAmlPackageOp          0x12
+#define kAmlVariablePackageOp  0x13
+#define kAmlMethodOp           0x14
+#define kAmlExternalOp         0x15
+#define kAmlExtendedPrefix     0x5B
+#define kAmlAddOp              0x72
+#define kAmlConcatOp           0x73
+#define kAmlSubtractOp         0x74
+#define kAmlMultiplyOp         0x77
+#define kAmlShiftLeftOp        0x79
+#define kAmlShiftRightOp       0x7A
+#define kAmlAndOp              0x7B
+#define kAmlNandOp             0x7C
+#define kAmlOrOp               0x7D
+#define kAmlNorOp              0x7E
+#define kAmlCreateDwordFieldOp 0x8A
+#define kAmlCreateWordFieldOp  0x8B
+#define kAmlCreateByteFieldOp  0x8C
+#define kAmlCreateBitFieldOp   0x8D
+#define kAmlCreateQwordFieldOp 0x8F
+#define kAmlIfOp               0xA0
+#define kAmlOnesOp             0xFF
+
+/**
+ * @internal
+ * ACPI Machine Language (AML) opcodes prefixed with kAmlExtendedPrefix.
+ */
+#define kAmlXMutexOp         0x01
+#define kAmlXRegionOp        0x80
+#define kAmlXFieldOp         0x81
+#define kAmlXDeviceOp        0x82
+#define kAmlXProcessorOp     0x83
+#define kAmlXPowerResourceOp 0x84
+#define kAmlXThermalZoneOp   0x85
+#define kAmlXIndexFieldOp    0x86
+
+/**
+ * @internal
+ * ACPI Machine Language (AML) name prefix codes.
+ */
+#define kAmlNullName          0x00
+#define kAmlDualNamePrefix    0x2E
+#define kAmlMultiNamePrefix   0x2F
+#define kAmlRootPrefix        0x5C
+#define kAmlParentPrefix      0x5E	
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -232,21 +294,25 @@ forceinline AcpiStatus _AcpiGetTable(const char __sig[4], uint32_t __inst,
   return _AcpiGetTableImpl(READ32LE(__sig_copy), __inst, __phdr);
 }
 
-#define ACPI_INFO(FMT, ...)                                          \
-        do {                                                         \
-          kprintf("%r%s%s:%d: " FMT "%s\n",                          \
-                  SUBTLE, __FILE__, __LINE__, ##__VA_ARGS__, RESET); \
+#define ACPI_INFO(FMT, ...)                                            \
+        do {                                                           \
+          if (!IsTiny()) {                                             \
+            kprintf("%r%s%s:%d: " FMT "%s\n",                          \
+                    SUBTLE, __FILE__, __LINE__, ##__VA_ARGS__, RESET); \
+          }                                                            \
         } while (0)
-#define ACPI_WARN(FMT, ...)                                          \
-        do {                                                         \
-          kprintf("%r%s%s:%d: " FMT "%s\n",                          \
-                  BLUE1, __FILE__, __LINE__, ##__VA_ARGS__, RESET);  \
+#define ACPI_WARN(FMT, ...)                                            \
+        do {                                                           \
+          if (!IsTiny()) {                                             \
+            kprintf("%r%swarn: %s:%d: " FMT "%s\n",                    \
+                    BLUE1, __FILE__, __LINE__, ##__VA_ARGS__, RESET);  \
+          }                                                            \
         } while (0)
-#define ACPI_FATAL(FMT, ...)                                         \
-        do {                                                         \
-          kprintf("%rfatal: %s%s:%d: " FMT "%s\n",                   \
-                  RED, __FILE__, __LINE__, ##__VA_ARGS__, RESET);    \
-          for (;;) asm volatile("cli\n\thlt");                       \
+#define ACPI_FATAL(FMT, ...)                                           \
+        do {                                                           \
+          kprintf("%r%sfatal: %s:%d: " FMT "%s\n",                     \
+                  RED, __FILE__, __LINE__, ##__VA_ARGS__, RESET);      \
+          for (;;) asm volatile("cli\n\thlt");                         \
         } while (0)
 
 COSMOPOLITAN_C_END_
