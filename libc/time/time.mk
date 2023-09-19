@@ -43,6 +43,9 @@ LIBC_TIME_A_DIRECTDEPS =				\
 LIBC_TIME_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_TIME_A_DIRECTDEPS),$($(x))))
 
+# offer assurances about the stack safety of cosmo libc
+$(LIBC_TIME_A_OBJS): private COPTS += -Wframe-larger-than=4096 -Walloca-larger-than=4096
+
 $(LIBC_TIME_A):	libc/time/				\
 		$(LIBC_TIME_A).pkg			\
 		$(LIBC_TIME_A_OBJS)

@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 
 TEST(raise, trap) {
   signal(SIGTRAP, SIG_DFL);
@@ -58,17 +58,17 @@ void WorkerQuit(int sig, siginfo_t *si, void *ctx) {
   ASSERT_EQ(threadid, gettid());
 }
 
-int Worker(void *arg, int tid) {
+void *Worker(void *arg) {
   struct sigaction sa = {.sa_sigaction = WorkerQuit, .sa_flags = SA_SIGINFO};
   ASSERT_EQ(0, sigaction(SIGILL, &sa, 0));
-  threadid = tid;
+  threadid = gettid();
   ASSERT_EQ(0, raise(SIGILL));
   return 0;
 }
 
 TEST(raise, threaded) {
   signal(SIGILL, SIG_DFL);
-  struct spawn worker;
-  ASSERT_SYS(0, 0, _spawn(Worker, 0, &worker));
-  ASSERT_SYS(0, 0, _join(&worker));
+  pthread_t worker;
+  ASSERT_EQ(0, pthread_create(&worker, 0, Worker, 0));
+  ASSERT_EQ(0, pthread_join(worker, 0));
 }

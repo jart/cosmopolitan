@@ -31,7 +31,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xasprintf.h"
 
-char testlib_enable_tmp_setup_teardown;
 char oldtmpdir[PATH_MAX];
 
 bool IsDirectoryEmpty(const char *path) {
@@ -48,24 +47,28 @@ bool IsDirectoryEmpty(const char *path) {
   return res;
 }
 
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
+
 void SetUp(void) {
-  strcpy(oldtmpdir, kTmpPath);
-  strcpy(kTmpPath, ".");
+  strcpy(oldtmpdir, __get_tmpdir());
+  strcpy(__get_tmpdir(), ".");
 }
 
 void TearDown(void) {
-  strcpy(kTmpPath, oldtmpdir);
+  strcpy(__get_tmpdir(), oldtmpdir);
 }
 
 TEST(tmpfile, test) {
   FILE *f;
   struct stat st;
-  EXPECT_TRUE(IsDirectoryEmpty(kTmpPath));
+  EXPECT_TRUE(IsDirectoryEmpty(__get_tmpdir()));
   f = tmpfile();
   if (IsWindows()) {
-    EXPECT_FALSE(IsDirectoryEmpty(kTmpPath));
+    EXPECT_FALSE(IsDirectoryEmpty(__get_tmpdir()));
   } else {
-    EXPECT_TRUE(IsDirectoryEmpty(kTmpPath));
+    EXPECT_TRUE(IsDirectoryEmpty(__get_tmpdir()));
   }
   EXPECT_SYS(0, 0, fstat(fileno(f), &st));
   EXPECT_NE(010600, st.st_mode);
@@ -74,7 +77,7 @@ TEST(tmpfile, test) {
   rewind(f);
   EXPECT_EQ('t', fgetc(f));
   EXPECT_EQ(0, fclose(f));
-  EXPECT_TRUE(IsDirectoryEmpty(kTmpPath));
+  EXPECT_TRUE(IsDirectoryEmpty(__get_tmpdir()));
 }
 
 #ifndef __aarch64__

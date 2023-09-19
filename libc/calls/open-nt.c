@@ -161,8 +161,9 @@ static textwindows int sys_open_nt_console(int dirfd,
   } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
                   dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode,
                   kNtFileFlagOverlapped)) != -1) {
-    g_fds.p[fd].extra = sys_open_nt_impl(
-        dirfd, mp->conout, (flags & ~O_ACCMODE) | O_WRONLY, mode, 0);
+    g_fds.p[fd].extra =
+        sys_open_nt_impl(dirfd, mp->conout, (flags & ~O_ACCMODE) | O_WRONLY,
+                         mode, kNtFileFlagOverlapped);
     npassert(g_fds.p[fd].extra != -1);
   } else {
     return -1;
@@ -176,8 +177,8 @@ static textwindows int sys_open_nt_console(int dirfd,
 static textwindows int sys_open_nt_file(int dirfd, const char *file,
                                         uint32_t flags, int32_t mode,
                                         size_t fd) {
-  if ((g_fds.p[fd].handle = sys_open_nt_impl(dirfd, file, flags, mode, 0)) !=
-      -1) {
+  if ((g_fds.p[fd].handle = sys_open_nt_impl(dirfd, file, flags, mode,
+                                             kNtFileFlagOverlapped)) != -1) {
     g_fds.p[fd].kind = kFdFile;
     g_fds.p[fd].flags = flags;
     g_fds.p[fd].mode = mode;

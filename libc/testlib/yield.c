@@ -18,7 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/thread/thread.h"
 
 void __testlib_yield(void) {
-  sched_yield();
+  pthread_yield();
 }

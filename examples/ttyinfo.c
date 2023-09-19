@@ -90,9 +90,9 @@ int rawmode(void) {
     perror("tcsetattr");
   }
 
-  WRITE(1, ENABLE_SAFE_PASTE);
-  WRITE(1, ENABLE_MOUSE_TRACKING);
-  WRITE(1, PROBE_DISPLAY_SIZE);
+  /* WRITE(1, ENABLE_SAFE_PASTE); */
+  /* WRITE(1, ENABLE_MOUSE_TRACKING); */
+  /* WRITE(1, PROBE_DISPLAY_SIZE); */
   return 0;
 }
 
@@ -146,7 +146,7 @@ const char *describemouseevent(int e) {
 // change the code above to enable ISIG if you want to trigger this
 // then press ctrl-c or ctrl-\ in your pseudoteletypewriter console
 void OnSignalThatWontEintrRead(int sig) {
-  dprintf(1, "got %s\n", strsignal(sig));
+  dprintf(1, "got %s (read()ing will SA_RESTART)\n", strsignal(sig));
 }
 
 int main(int argc, char *argv[]) {
@@ -169,6 +169,10 @@ int main(int argc, char *argv[]) {
       if (errno == EINTR) continue;
       perror("read");
       exit(1);
+    }
+    if (!n) {
+      printf("got stdin eof\n");
+      exit(0);
     }
     printf("%`'.*s (got %d) ", n, code, n);
     if (iscntrl(code[0]) && !code[1]) {

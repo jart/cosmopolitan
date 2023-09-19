@@ -22,7 +22,6 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
@@ -58,9 +57,12 @@ TEST(makedirs, basic) {
   "L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z"
 
 pthread_barrier_t barrier;
-char testlib_enable_tmp_setup_teardown;
 
-int Worker(void *arg, int tid) {
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
+
+void *Worker(void *arg) {
   pthread_barrier_wait(&barrier);
   ASSERT_EQ(0, makedirs(DIR, 0755));
   return 0;
@@ -69,9 +71,9 @@ int Worker(void *arg, int tid) {
 TEST(makedirs, test) {
   if (IsWindows()) return;  // todo: why won't long paths work on windows
   int i, n = 8;
-  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  for (i = 0; i < n; ++i) EXPECT_EQ(0, pthread_join(t[i], 0));
   ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

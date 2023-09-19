@@ -29,6 +29,7 @@ TEST_LIBC_INTRIN_DIRECTDEPS =				\
 	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_PROC					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\

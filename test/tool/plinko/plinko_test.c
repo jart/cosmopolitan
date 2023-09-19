@@ -49,11 +49,10 @@ static const char *const kSauces[] = {
     "/zip/ok.lisp",            //
 };
 
-char testlib_enable_tmp_setup_teardown_once;
-
 void SetUpOnce(void) {
   exit(0);  // TODO(jart): How can we safely disable TLS with *NSYNC?
   int fdin, fdout;
+  testlib_enable_tmp_setup_teardown_once();
   ASSERT_NE(-1, mkdir("bin", 0755));
   ASSERT_NE(-1, (fdin = open("/zip/plinko.com", O_RDONLY)));
   ASSERT_NE(-1, (fdout = creat("bin/plinko.com", 0755)));

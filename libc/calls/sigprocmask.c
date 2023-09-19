@@ -60,7 +60,7 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   } else if (IsMetal() || IsWindows()) {
     rc = __sig_mask(how, opt_set, &old);
     if (_weaken(__sig_check)) {
-      _weaken(__sig_check)(kSigOpRestartable);
+      _weaken(__sig_check)();
     }
   } else {
     rc = sys_sigprocmask(how, opt_set, opt_out_oldset ? &old : 0);

@@ -28,6 +28,8 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
@@ -37,7 +39,18 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
+
+TEST(write, advancesFilePointer) {
+  ASSERT_SYS(0, 3, creat("foo", 0644));
+  ASSERT_SYS(0, 1, write(3, "x", 1));
+  ASSERT_SYS(0, 1, lseek(3, 0, SEEK_CUR));
+  ASSERT_SYS(0, 1, write(3, "y", 1));
+  ASSERT_SYS(0, 2, lseek(3, 0, SEEK_CUR));
+  ASSERT_SYS(0, 0, close(3));
+}
 
 TEST(write, notOpen_ebadf) {
   ASSERT_SYS(EBADF, -1, write(-1, 0, 0));
@@ -106,6 +119,15 @@ TEST(write, rlimitFsizeExceeded_raisesEfbig) {
   ASSERT_SYS(EFBIG, -1, write(3, "x", 1));
   ASSERT_SYS(0, 0, close(3));
   EXITS(0);
+}
+
+TEST(pwrite, testWritePastEof_extendsFile) {
+  char buf[8] = {0};
+  EXPECT_SYS(0, 3, creat("foo", 0644));
+  EXPECT_SYS(0, 8, pwrite(3, buf, 8, 100));
+  EXPECT_EQ(0, lseek(3, 0, SEEK_CUR));
+  EXPECT_EQ(108, lseek(3, 0, SEEK_END));
+  EXPECT_SYS(0, 0, close(3));
 }
 
 BENCH(write, bench) {

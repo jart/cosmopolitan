@@ -14,6 +14,8 @@ LICENSE
 
 LOCAL CHANGES
 
+  - Support ECANCELED (similar to EINTR) needed by pthread_cancel()
+
   - Strengthened server against DOS by removing expensive protections
     for old Internet Explorer against Lucky Thirteen timing attacks.
 

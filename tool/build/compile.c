@@ -49,7 +49,7 @@
 #include "libc/nexgen32e/x86info.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
-#include "libc/stdio/posix_spawn.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
@@ -811,7 +811,7 @@ char *MakeTmpOut(const char *path) {
   char *p = tmpout;
   char *e = tmpout + sizeof(tmpout) - 1;
   g_tmpout_original = path;
-  p = stpcpy(p, kTmpPath);
+  p = stpcpy(p, __get_tmpdir());
   while ((c = *path++)) {
     if (c == '/') c = '_';
     if (p == e) {

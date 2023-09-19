@@ -26,9 +26,12 @@ TEST_LIBC_THREAD_DIRECTDEPS =				\
 	LIBC_CALLS					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
+	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_PROC					\
 	LIBC_RUNTIME					\
+	LIBC_SOCK					\
 	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_SYSV					\
@@ -59,6 +62,9 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 o/$(MODE)/test/libc/thread/pthread_create_test.o:	\
 		private CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
+
+o/$(MODE)/test/libc/thread/pthread_kill_test.com.runs:	\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
 .PHONY: o/$(MODE)/test/libc/thread
 o/$(MODE)/test/libc/thread:				\

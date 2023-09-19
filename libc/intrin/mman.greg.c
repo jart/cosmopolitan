@@ -47,6 +47,13 @@
 #define INVERT(x) (BANE + PHYSICAL(x))
 #define NOPAGE    ((uint64_t)-1)
 
+#define ABS64(x)                                     \
+  ({                                                 \
+    int64_t vAddr;                                   \
+    __asm__("movabs\t%1,%0" : "=r"(vAddr) : "i"(x)); \
+    vAddr;                                           \
+  })
+
 struct ReclaimedPage {
   uint64_t next;
 };
@@ -252,37 +259,56 @@ textreal void __setup_mman(struct mman *mm, uint64_t *pml4t, uint64_t top) {
   __invert_memory(mm, pml4t);
 }
 
+static textreal uint64_t __map_phdr(struct mman *mm, uint64_t *pml4t,
+                                    uint64_t b, uint64_t m,
+                                    struct Elf64_Phdr *p) {
+  uint64_t i, f, v;
+  f = PAGE_RSRV | PAGE_U;
+  if (p->p_flags & PF_W)
+    f |= PAGE_V | PAGE_RW;
+  else if (p->p_flags & (PF_R | PF_X))
+    f |= PAGE_V;
+  if (!(p->p_flags & PF_X)) f |= PAGE_XD;
+  for (i = 0; i < p->p_memsz; i += 4096) {
+    if (i < p->p_filesz) {
+      v = b + p->p_offset + i;
+      m = MAX(m, v);
+    } else {
+      v = __clear_page(BANE + __new_page(mm));
+    }
+    *__get_virtual(mm, pml4t, p->p_vaddr + i, true) = (v & PAGE_TA) | f;
+    __ref_page(mm, pml4t, v & PAGE_TA);
+  }
+  return m;
+}
+
 /**
  * Maps APE-defined ELF program headers into memory and clears BSS.
  */
 textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
                           uint64_t top) {
-  uint64_t i, f, v, m;
+  uint64_t m;
   struct Elf64_Phdr *p;
   extern char ape_phdrs[] __attribute__((__weak__));
   extern char ape_phdrs_end[] __attribute__((__weak__));
+  extern char ape_stack_pf[] __attribute__((__weak__));
+  extern char ape_stack_offset[] __attribute__((__weak__));
+  extern char ape_stack_vaddr[] __attribute__((__weak__));
+  extern char ape_stack_filesz[] __attribute__((__weak__));
+  extern char ape_stack_memsz[] __attribute__((__weak__));
   __setup_mman(mm, pml4t, top);
   for (p = (struct Elf64_Phdr *)INVERT(ape_phdrs), m = 0;
        p < (struct Elf64_Phdr *)INVERT(ape_phdrs_end); ++p) {
-    if (p->p_type == PT_LOAD || p->p_type == PT_GNU_STACK) {
-      f = PAGE_RSRV | PAGE_U;
-      if (p->p_flags & PF_W)
-        f |= PAGE_V | PAGE_RW;
-      else if (p->p_flags & (PF_R | PF_X))
-        f |= PAGE_V;
-      if (!(p->p_flags & PF_X)) f |= PAGE_XD;
-      for (i = 0; i < p->p_memsz; i += 4096) {
-        if (i < p->p_filesz) {
-          v = b + p->p_offset + i;
-          m = MAX(m, v);
-        } else {
-          v = __clear_page(BANE + __new_page(mm));
-        }
-        *__get_virtual(mm, pml4t, p->p_vaddr + i, true) = (v & PAGE_TA) | f;
-        __ref_page(mm, pml4t, v & PAGE_TA);
-      }
-    }
+    m = __map_phdr(mm, pml4t, b, m, p);
   }
+  m = __map_phdr(mm, pml4t, b, m,
+                 &(struct Elf64_Phdr){
+                     .p_flags = (uintptr_t)ape_stack_pf,
+                     .p_offset = (uintptr_t)ape_stack_offset,
+                     .p_vaddr = ABS64(ape_stack_vaddr),
+                     .p_filesz = (uintptr_t)ape_stack_filesz,
+                     .p_memsz = (uintptr_t)ape_stack_memsz,
+                 });
   mm->pdp = MAX(mm->pdp, m);
 }
 

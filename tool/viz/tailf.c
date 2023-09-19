@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
       }
       chopped = j != n;
     }
-    dsleep(.01);
+    usleep(10000);
   }
   close(fd);
   WriteString("\r\n");

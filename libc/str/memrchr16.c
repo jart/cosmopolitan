@@ -36,7 +36,7 @@ static inline const char16_t *memrchr16_pure(const char16_t *s, char16_t c,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-dontasan static inline const char16_t *memrchr16_sse(const char16_t *s,
+static inline const char16_t *memrchr16_sse(const char16_t *s,
                                                      char16_t c, size_t n) {
   size_t i;
   unsigned m;

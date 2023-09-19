@@ -16,9 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 
 // RDTSC on Linux has so much jitter when the CPU is in powersave mode.
@@ -31,12 +36,18 @@
   "/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor\n"
 
 void __warn_if_powersave(void) {
-  int fd;
+  int e, fd;
   char buf[16] = {0};
-  if (!fileexists(FILE)) return;
-  if ((fd = open(FILE, O_RDONLY)) == -1) return;
-  read(fd, buf, 15);
-  close(fd);
-  if (!startswith(buf, "powersave")) return;
-  write(2, WARN, sizeof(WARN) - 1);
+  if (IsLinux()) {
+    e = errno;
+    BLOCK_CANCELLATIONS;
+    if ((fd = __sys_openat(AT_FDCWD, FILE, O_RDONLY, 0)) != -1) {
+      sys_read(fd, buf, 15);
+      sys_close(fd);
+      if (!startswith(buf, "powersave")) return;
+      sys_write(2, WARN, sizeof(WARN) - 1);
+    }
+    ALLOW_CANCELLATIONS;
+    errno = e;
+  }
 }

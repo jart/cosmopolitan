@@ -39,7 +39,7 @@
 #define ALIGNED(p) (!(IP(p) & (FRAMESIZE - 1)))
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
-static dontasan void __munmap_shadow(char *p, size_t n) {
+static void __munmap_shadow(char *p, size_t n) {
   intptr_t a, b, x, y;
   KERNTRACE("__munmap_shadow(%p, %'zu)", p, n);
   a = ((intptr_t)p >> 3) + 0x7fff8000;
@@ -66,7 +66,7 @@ static dontasan void __munmap_shadow(char *p, size_t n) {
 // our api supports doing things like munmap(0, 0x7fffffffffff) but some
 // platforms (e.g. openbsd) require that we know the specific intervals
 // or else it returns EINVAL. so we munmap a piecewise.
-static dontasan void __munmap_impl(char *p, size_t n) {
+static void __munmap_impl(char *p, size_t n) {
   char *q;
   size_t m;
   intptr_t a, b, c;
@@ -112,7 +112,7 @@ static dontasan void __munmap_impl(char *p, size_t n) {
   }
 }
 
-dontasan int __munmap_unlocked(char *p, size_t n) {
+int __munmap_unlocked(char *p, size_t n) {
   unassert(!__vforked);
   if (UNLIKELY(!n)) {
     STRACE("munmap n is 0");

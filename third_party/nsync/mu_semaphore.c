@@ -46,7 +46,10 @@ void nsync_mu_semaphore_destroy (nsync_semaphore *s) {
 	}
 }
 
-/* Wait until the count of *s exceeds 0, and decrement it. */
+/* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations
+   are currently disabled by the thread, then this function always succeeds. When
+   they're enabled in MASKED mode, this function may return ECANCELED. Otherwise,
+   cancellation will occur by unwinding cleanup handlers pushed to the stack. */
 errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	errno_t err;
 	BEGIN_CANCELLATION_POINT;
@@ -61,9 +64,10 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	return err;
 }
 
-/* Wait until one of:
-   the count of *s is non-zero, in which case decrement *s and return 0;
-   or abs_deadline expires, in which case return ETIMEDOUT. */
+/* Like nsync_mu_semaphore_p() this waits for the count of *s to exceed 0,
+   while additionally supporting a time parameter specifying at what point
+   in the future ETIMEDOUT should be returned, if neither cancellation, or
+   semaphore release happens. */
 errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
 	errno_t err;
 	BEGIN_CANCELLATION_POINT;

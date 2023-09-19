@@ -54,12 +54,10 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
-#include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/thread.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -102,7 +100,6 @@
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/x/x.h"
@@ -149,12 +146,6 @@ __static_yoink("zipos");
 #ifdef USE_BLINK
 __static_yoink("blink_linux_aarch64");  // for raspberry pi
 __static_yoink("blink_xnu_aarch64");    // is apple silicon
-#endif
-
-#if !IsTiny()
-#ifdef __x86_64__
-__static_yoink("ShowCrashReportsEarly");
-#endif
 #endif
 
 /**
@@ -514,8 +505,8 @@ static struct Strings hidepaths;
 static const char *launchbrowser;
 static const char ctIdx = 'c';  // a pseudo variable to get address of
 
-static struct spawn replth;
-static struct spawn monitorth;
+static pthread_t replth;
+static pthread_t monitorth;
 static struct Buffer inbuf_actual;
 static struct Buffer inbuf;
 static struct Buffer oldin;
@@ -6549,7 +6540,10 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _join(&monitorth);
+    if (monitorth) {
+      pthread_join(monitorth, 0);
+      monitorth = 0;
+    }
   }
   _Exit(0);
 }
@@ -6582,7 +6576,7 @@ static int EnableSandbox(void) {
   }
 }
 
-static int MemoryMonitor(void *arg, int tid) {
+static void *MemoryMonitor(void *arg) {
   static struct termios oldterm;
   static int tty;
   sigset_t ss;
@@ -6738,8 +6732,9 @@ static int MemoryMonitor(void *arg, int tid) {
 }
 
 static void MonitorMemory(void) {
-  if (_spawn(MemoryMonitor, 0, &monitorth) == -1) {
-    WARNF("(memv) failed to start memory monitor %m");
+  errno_t err;
+  if ((err = pthread_create(&monitorth, 0, MemoryMonitor, 0))) {
+    WARNF("(memv) failed to start memory monitor %s", strerror(err));
   }
 }
 
@@ -7443,10 +7438,16 @@ void RedBean(int argc, char *argv[]) {
   if (!isexitingworker) {
     if (!IsTiny()) {
       terminatemonitor = true;
-      _join(&monitorth);
+      if (monitorth) {
+        pthread_join(monitorth, 0);
+        monitorth = 0;
+      }
     }
 #ifndef STATIC
-    _join(&replth);
+    if (replth) {
+      pthread_join(replth, 0);
+      replth = 0;
+    }
 #endif
     HandleShutdown();
     CallSimpleHookIfDefined("OnServerStop");
@@ -7459,7 +7460,7 @@ void RedBean(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-#if !IsTiny() && !defined(__x86_64__)
+#if !IsTiny()
   ShowCrashReports();
 #endif
   LoadZipArgs(&argc, &argv);
@@ -7470,7 +7471,10 @@ int main(int argc, char *argv[]) {
   // 2. unwound worker exit
   if (IsModeDbg()) {
     if (isexitingworker) {
-      _join(&replth);
+      if (replth) {
+        pthread_join(replth, 0);
+        replth = 0;
+      }
       linenoiseDisableRawMode();
       linenoiseHistoryFree();
     }

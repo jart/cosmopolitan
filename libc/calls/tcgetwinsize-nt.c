@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/winsize.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
@@ -35,11 +36,12 @@ textwindows int tcgetwinsize_nt(int fd, struct winsize *ws) {
   if (fd == STDIN_FILENO) {
     uint32_t dwMode;
     // WIN32 doesn't allow GetConsoleScreenBufferInfoEx(stdin)
-    if (GetConsoleMode(g_fds.p[STDIN_FILENO].handle, &dwMode)) {
+    if (g_fds.p[STDOUT_FILENO].kind != kFdEmpty &&
+        GetConsoleMode(g_fds.p[STDOUT_FILENO].handle, &dwMode)) {
       hConsoleOutput = g_fds.p[STDOUT_FILENO].handle;
-      if (GetConsoleMode(hConsoleOutput, &dwMode)) {
-        hConsoleOutput = g_fds.p[STDERR_FILENO].handle;
-      }
+    } else if (g_fds.p[STDERR_FILENO].kind != kFdEmpty &&
+               GetConsoleMode(g_fds.p[STDERR_FILENO].handle, &dwMode)) {
+      hConsoleOutput = g_fds.p[STDERR_FILENO].handle;
     } else {
       return enotty();
     }

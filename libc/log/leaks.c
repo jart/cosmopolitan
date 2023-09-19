@@ -26,7 +26,10 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
 
 __static_yoink("GetSymbolByAddr");
 
@@ -82,10 +85,17 @@ static dontasan bool HasLeaks(void) {
 dontasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
   if (!IsAsan()) return;  // we need traces to exclude leaky
+  if (!GetSymbolTable()) {
+    kprintf("CheckForMemoryLeaks() needs the symbol table\n");
+    return;
+  }
   if (!_cmpxchg(&once, false, true)) {
     kprintf("CheckForMemoryLeaks() may only be called once\n");
-    exit(1);
+    exit(0);
   }
+  _pthread_unwind(_pthread_self());
+  _pthread_unkey(__get_tls());
+  _pthread_ungarbage();
   __cxa_finalize(0);
   STRACE("checking for memory leaks% m");
   if (!IsAsan()) {

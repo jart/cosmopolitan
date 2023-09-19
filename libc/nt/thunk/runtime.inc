@@ -26,9 +26,6 @@ extern typeof(WriteFile) *const __imp_WriteFile __msabi;
 extern typeof(SetDefaultDllDirectories) *const __imp_SetDefaultDllDirectories
     __msabi;
 
-#define GetCurrentProcess(...) __imp_GetCurrentProcess(__VA_ARGS__)
-extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess __msabi;
-
 #define GetModuleFileName(...) __imp_GetModuleFileNameW(__VA_ARGS__)
 extern typeof(GetModuleFileName) *const __imp_GetModuleFileNameW __msabi;
 

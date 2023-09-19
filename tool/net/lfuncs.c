@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
@@ -51,6 +52,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
@@ -106,7 +108,8 @@ int LuaBin(lua_State *L) {
 }
 
 int LuaGetTime(lua_State *L) {
-  lua_pushnumber(L, nowl());
+  struct timespec now = timespec_real();
+  lua_pushnumber(L, now.tv_sec + now.tv_nsec * 1e-9);
   return 1;
 }
 
@@ -894,7 +897,7 @@ int LuaBenchmark(lua_State *L) {
 
   for (attempts = 0;;) {
     lua_gc(L, LUA_GCCOLLECT);
-    sched_yield();
+    pthread_yield();
     core = TSC_AUX_CORE(Rdpid());
     interrupts = GetInterrupts();
     for (avgticks = iter = 1; iter < count; ++iter) {
@@ -916,7 +919,7 @@ int LuaBenchmark(lua_State *L) {
 
   for (attempts = 0;;) {
     lua_gc(L, LUA_GCCOLLECT);
-    sched_yield();
+    pthread_yield();
     core = TSC_AUX_CORE(Rdpid());
     interrupts = GetInterrupts();
     for (avgticks = iter = 1; iter < count; ++iter) {
@@ -937,7 +940,7 @@ int LuaBenchmark(lua_State *L) {
   avgticks = MAX(avgticks - overhead, 0);
 
   lua_gc(L, LUA_GCRESTART);
-  lua_pushinteger(L, ConvertTicksToNanos(round(avgticks)));
+  lua_pushinteger(L, avgticks / 3);
   lua_pushinteger(L, round(avgticks));
   lua_pushinteger(L, round(overhead));
   lua_pushinteger(L, attempts);

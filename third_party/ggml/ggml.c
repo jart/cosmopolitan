@@ -49,6 +49,7 @@
 #include "libc/assert.h"
 #include "third_party/ggml/ggml.h"
 #include "libc/intrin/bsr.h"
+#include "libc/thread/thread.h"
 #include "third_party/libcxx/math.h"
 
 asm(".ident\t\"\\n\\n\
@@ -3386,7 +3387,7 @@ inline static void ggml_critical_section_start(void) {
     while (processing > 0) {
         // wait for other threads to finish
         atomic_fetch_sub(&g_state_barrier, 1);
-        sched_yield(); // TODO: reconsider this
+        pthread_yield(); // TODO: reconsider this
         processing = atomic_fetch_add(&g_state_barrier, 1);
     }
 }

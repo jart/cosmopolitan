@@ -22,8 +22,10 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
+#include "libc/calls/struct/siginfo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
@@ -33,6 +35,7 @@
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sched.h"
@@ -41,6 +44,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
@@ -252,14 +256,14 @@ TEST(pthread_cleanup, pthread_normal) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HOW TO PROTECT YOUR THREADS FROM STACK OVERFLOW
-// note that sigaltstack is waq on the main thread
 
 jmp_buf recover;
 volatile bool smashed_stack;
 
-void CrashHandler(int sig) {
+void CrashHandler(int sig, siginfo_t *si, void *ctx) {
+  kprintf("kprintf avoids overflowing %G %p\n", si->si_signo, si->si_addr);
   smashed_stack = true;
+  ASSERT_TRUE(__is_stack_overflow(si, ctx));
   longjmp(recover, 123);
 }
 
@@ -276,14 +280,14 @@ int (*pStackOverflow)(int (*)(), int) = StackOverflow;
 void *MyPosixThread(void *arg) {
   int jumpcode;
   struct sigaction sa, o1, o2;
-  struct sigaltstack ss = {
-      .ss_sp = gc(malloc(SIGSTKSZ)),
-      .ss_size = SIGSTKSZ,
-  };
-  sigaltstack(&ss, 0);
-  sa.sa_flags = SA_ONSTACK;  // <-- important
+  struct sigaltstack ss;
+  ss.ss_flags = 0;
+  ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 4096;
+  ss.ss_sp = gc(malloc(ss.ss_size));
+  ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;  // <-- important
   sigemptyset(&sa.sa_mask);
-  sa.sa_handler = CrashHandler;
+  sa.sa_sigaction = CrashHandler;
   sigaction(SIGBUS, &sa, &o1);
   sigaction(SIGSEGV, &sa, &o2);
   if (!(jumpcode = setjmp(recover))) {
@@ -334,6 +338,6 @@ BENCH(pthread_create, bench) {
   EZBENCH2("CreateDetach", donothing, CreateDetach());
   EZBENCH2("CreateDetached", donothing, CreateDetached());
   while (!pthread_orphan_np()) {
-    pthread_decimate_np();
+    _pthread_decimate();
   }
 }

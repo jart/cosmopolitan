@@ -34,7 +34,6 @@ textstartup void __set_tls(struct CosmoTib *tib) {
 #ifdef __x86_64__
   // ask the operating system to change the x86 segment register
   if (IsWindows()) {
-    __tls_index = TlsAlloc();
     npassert(0 <= __tls_index && __tls_index < 64);
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {

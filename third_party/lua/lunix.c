@@ -2013,7 +2013,7 @@ static int LuaUnixTiocgwinsz(lua_State *L) {
 
 // unix.sched_yield()
 static int LuaUnixSchedYield(lua_State *L) {
-  sched_yield();
+  pthread_yield();
   return 0;
 }
 

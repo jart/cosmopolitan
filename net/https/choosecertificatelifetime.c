@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
 #include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
 #include "net/https/https.h"
 
 void ChooseCertificateLifetime(char notbefore[16], char notafter[16]) {
@@ -25,7 +25,7 @@ void ChooseCertificateLifetime(char notbefore[16], char notafter[16]) {
   int64_t past, now, future, lifetime, tolerance;
   tolerance = 60 * 60 * 24;
   lifetime = 60 * 60 * 24 * 365;
-  now = nowl();
+  now = timespec_real().tv_sec;
   past = now - tolerance;
   future = now + tolerance + lifetime;
   FormatSslTime(notbefore, gmtime_r(&past, &tm));

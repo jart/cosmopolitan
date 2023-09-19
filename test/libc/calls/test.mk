@@ -32,25 +32,26 @@ TEST_LIBC_CALLS_CHECKS =						\
 TEST_LIBC_CALLS_DIRECTDEPS =						\
 	DSP_CORE							\
 	LIBC_CALLS							\
-	LIBC_TINYMATH							\
-	LIBC_SOCK							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_LOG							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
-	LIBC_STDIO							\
 	LIBC_NT_KERNEL32						\
-	LIBC_SYSV_CALLS							\
+	LIBC_PROC							\
 	LIBC_RUNTIME							\
+	LIBC_SOCK							\
+	LIBC_STDIO							\
 	LIBC_STR							\
 	LIBC_SYSV							\
+	LIBC_SYSV_CALLS							\
+	LIBC_TESTLIB							\
 	LIBC_THREAD							\
 	LIBC_TIME							\
-	LIBC_TESTLIB							\
+	LIBC_TINYMATH							\
 	LIBC_X								\
-	TOOL_DECODE_LIB							\
 	THIRD_PARTY_COMPILER_RT						\
+	TOOL_DECODE_LIB							\
 	THIRD_PARTY_XED
 
 TEST_LIBC_CALLS_DEPS :=							\

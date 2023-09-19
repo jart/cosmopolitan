@@ -12,21 +12,21 @@ struct siginfo_openbsd {
     int32_t _pad[(128 / 4) - 3];
     struct {
       int32_t si_pid;
+      int32_t si_uid;
       union {
         struct {
-          int32_t si_uid;
           union sigval si_value;
         };
         struct {
           int64_t si_utime;
           int64_t si_stime;
-          int32_t si_status;
+          int si_status;
         };
       };
     };
     struct {
       void *si_addr;
-      int32_t si_trapno;
+      int si_trapno;
     };
   };
 };

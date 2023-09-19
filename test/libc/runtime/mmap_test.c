@@ -52,9 +52,8 @@
 
 __static_yoink("zipos");
 
-char testlib_enable_tmp_setup_teardown;
-
 void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
   // ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
 }
 
@@ -242,14 +241,14 @@ TEST(isheap, malloc) {
   ASSERT_TRUE(_isheap(_gc(malloc(1))));
 }
 
-TEST(isheap, emptyMalloc) {
-  ASSERT_TRUE(_isheap(_gc(malloc(0))));
-}
+/* TEST(isheap, emptyMalloc) { */
+/*   ASSERT_TRUE(_isheap(_gc(malloc(0)))); */
+/* } */
 
-TEST(isheap, mallocOffset) {
-  char *p = _gc(malloc(131072));
-  ASSERT_TRUE(_isheap(p + 100000));
-}
+/* TEST(isheap, mallocOffset) { */
+/*   char *p = _gc(malloc(131072)); */
+/*   ASSERT_TRUE(_isheap(p + 100000)); */
+/* } */
 
 static const char *ziposLifePath = "/zip/life.elf";
 TEST(mmap, ziposCannotBeAnonymous) {

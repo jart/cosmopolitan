@@ -21,7 +21,7 @@
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
-#include "libc/calls/execve.internal.h"
+#include "libc/proc/execve.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"

@@ -24,14 +24,13 @@
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
-
 void SetUpOnce(void) {
   if (!IsWindows()) {
     // TODO(jart): mock out that win32 i/o call
     tinyprint(2, program_invocation_name, ": skipping on non-windows\n", NULL);
     exit(0);
   }
+  testlib_enable_tmp_setup_teardown();
 }
 
 TEST(GetDosArgv, empty) {

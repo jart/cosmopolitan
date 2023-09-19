@@ -33,6 +33,9 @@ asm(".include \"libc/disclaimer.inc\"");
  * characters will be copied. Always NUL terminates (unless `dsize <=
  * strlen(dst)`). Returns `strlen(src) + MIN(dsize, strlen(initial
  * dst))`. If `retval >= dsize`, truncation occurred.
+ *
+ * @asyncsignalsafe
+ * @vforksafe
  */
 size_t
 strlcat(char *dst, const char *src, size_t dsize)

@@ -53,7 +53,7 @@ COSMOPOLITAN_C_START_
 #endif
 
 #if defined(SYSDEBUG) && _NTTRACE
-#define NTTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
+#define NTTRACE(FMT, ...) STRACE("\e[2m" FMT "\e[0m", ##__VA_ARGS__)
 #else
 #define NTTRACE(FMT, ...) (void)0
 #endif

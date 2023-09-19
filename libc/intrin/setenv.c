@@ -29,8 +29,8 @@
  * Copies variable to environment.
  *
  * @return 0 on success, or -1 w/ errno and environment is unchanged
+ * @raise ENOMEM if out of memory or malloc() wasn't linked
  * @raise EINVAL if `name` is empty or contains `'='`
- * @raise ENOMEM if we require more vespene gas
  * @see putenv(), getenv()
  * @threadunsafe
  */

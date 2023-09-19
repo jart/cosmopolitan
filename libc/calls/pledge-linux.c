@@ -1078,81 +1078,81 @@ static privileged int GetTid(void) {
   return res;
 }
 
+static privileged long Write(int fd, const void *p, unsigned long n) {
+#ifdef __x86_64__
+  long res;
+  asm volatile("syscall"
+               : "=a"(res)
+               : "0"(__NR_linux_write), "D"(2), "S"(p), "d"(n)
+               : "rcx", "r11", "memory");
+  return res;
+#elif defined(__aarch64__)
+  register long x0 asm("x0") = 2;
+  register long x1 asm("x1") = (long)p;
+  register long x2 asm("x2") = n;
+  register long x8 asm("x8") = __NR_linux_write;
+  asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x8) : "memory");
+  return x0;
+#endif
+}
+
 static privileged void Log(const char *s, ...) {
   va_list va;
   va_start(va, s);
   do {
-#ifdef __x86_64__
-    int res;
-    asm volatile("syscall"
-                 : "=a"(res)
-                 : "0"(__NR_linux_write), "D"(2), "S"(s), "d"(StrLen(s))
-                 : "rcx", "r11", "memory");
-#elif defined(__aarch64__)
-    register long r0 asm("x0") = 2;
-    register long r1 asm("x1") = (long)s;
-    register long r2 asm("x2") = StrLen(s);
-    register long res_x0 asm("x0");
-    asm volatile("mov\tx8,%1\n\t"
-                 "svc\t0"
-                 : "=r"(res_x0)
-                 : "i"(__NR_linux_write), "r"(r0), "r"(r1), "r"(r2)
-                 : "x8", "memory");
-#endif
+    Write(2, s, StrLen(s));
   } while ((s = va_arg(va, const char *)));
   va_end(va);
 }
 
 static privileged int SigAction(int sig, struct sigaction *act,
                                 struct sigaction *old) {
-  int res;
   act->sa_flags |= Sa_Restorer;
   act->sa_restorer = &__restore_rt;
 #ifdef __x86_64__
+  int res;
   asm volatile("mov\t%5,%%r10\n\t"
                "syscall"
                : "=a"(res)
                : "0"(__NR_linux_sigaction), "D"(sig), "S"(act), "d"(old), "g"(8)
                : "rcx", "r10", "r11", "memory");
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)sig;
-  register long r1 asm("x1") = (long)act;
-  register long r2 asm("x2") = (long)old;
-  register long r3 asm("x3") = (long)8;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(__NR_linux_sigaction), "r"(r0), "r"(r1), "r"(r2), "r"(r3)
-               : "x8", "memory");
-  res = res_x0;
-#endif
   return res;
+#elif defined(__aarch64__)
+  register int x0 asm("x0") = sig;
+  register void *x1 asm("x1") = act;
+  register void *x2 asm("x2") = old;
+  register int x3 asm("x3") = 8;
+  register int x8 asm("x8") = __NR_linux_sigaction;
+  asm volatile("svc\t0"
+               : "+r"(x0)
+               : "r"(x1), "r"(x2), "r"(x3), "r"(x8)
+               : "memory");
+  return x0;
+#endif
 }
 
 static privileged int SigProcMask(int how, int64_t set, int64_t *old) {
-  int res;
 #ifdef __x86_64__
+  int res;
   asm volatile("mov\t%5,%%r10\n\t"
                "syscall"
                : "=a"(res)
                : "0"(__NR_linux_sigprocmask), "D"(how), "S"(&set), "d"(old),
                  "g"(8)
                : "rcx", "r10", "r11", "memory");
-#elif defined(__aarch64__)
-  register long r0 asm("x0") = (long)how;
-  register long r1 asm("x1") = (long)set;
-  register long r2 asm("x2") = (long)old;
-  register long r3 asm("x3") = (long)8;
-  register long res_x0 asm("x0");
-  asm volatile("mov\tx8,%1\n\t"
-               "svc\t0"
-               : "=r"(res_x0)
-               : "i"(__NR_linux_sigprocmask), "r"(r0), "r"(r1), "r"(r2), "r"(r3)
-               : "x8", "memory");
-  res = res_x0;
-#endif
   return res;
+#elif defined(__aarch64__)
+  register int x0 asm("x0") = how;
+  register void *x1 asm("x1") = &set;
+  register void *x2 asm("x2") = old;
+  register int x3 asm("x3") = 8;
+  register long x8 asm("x8") = __NR_linux_sigprocmask;
+  asm volatile("svc\t0"
+               : "+r"(x0)
+               : "r"(x1), "r"(x2), "r"(x3), "r"(x8)
+               : "memory");
+  return x0;
+#endif
 }
 
 static privileged void KillThisProcess(void) {
@@ -1205,6 +1205,16 @@ static privileged void KillThisThread(void) {
                : "0"(__NR_linux_tkill), "D"(GetTid()), "S"(Sigabrt)
                : "rcx", "r11", "memory");
 #elif defined(__aarch64__)
+  {
+    register long r0 asm("x0") = (long)GetTid();
+    register long r1 asm("x1") = (long)Sigabrt;
+    register long res_x0 asm("x0");
+    asm volatile("mov\tx8,%1\n\t"
+                 "svc\t0"
+                 : "=r"(res_x0)
+                 : "i"(__NR_linux_tkill), "r"(r0), "r"(r1)
+                 : "x8", "memory");
+  }
 #endif
   SigProcMask(Sig_Setmask, 0, 0);
 #ifdef __x86_64__
@@ -1267,6 +1277,7 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   }
   switch (mode & PLEDGE_PENALTY_MASK) {
     case PLEDGE_PENALTY_KILL_PROCESS:
+      KillThisThread();
       KillThisProcess();
       // fallthrough
     case PLEDGE_PENALTY_KILL_THREAD:
@@ -2290,10 +2301,13 @@ static privileged void AppendPledge(struct Filter *f,   //
  * @vforksafe
  */
 privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
-  int i, rc = -1;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct Filter f;
-  struct sock_filter sf[1] = {BPF_STMT(BPF_RET | BPF_K, 0)};
   CheckLargeStackAllocation(&f, sizeof(f));
+#pragma GCC pop_options
+  struct sock_filter sf[1] = {BPF_STMT(BPF_RET | BPF_K, 0)};
+  int i, rc = -1;
   f.n = 0;
 
   // set up the seccomp filter

@@ -25,24 +25,22 @@
 #include "libc/thread/posixthread.internal.h"
 
 errno_t _pthread_reschedule(struct PosixThread *pt) {
-  int e, rc, tid;
   int policy = pt->attr.__schedpolicy;
+  int e, rc, tid = _pthread_tid(pt);
   struct sched_param param = {pt->attr.__schedparam};
-  if (!(rc = pthread_getunique_np((pthread_t)pt, &tid))) {
-    e = errno;
-    if (IsNetbsd()) {
-      rc = sys_sched_setparam_netbsd(0, tid, policy, &param);
-    } else if (IsLinux()) {
-      rc = sys_sched_setscheduler(tid, policy, &param);
-    } else if (IsFreebsd()) {
-      rc = _pthread_setschedparam_freebsd(tid, policy, &param);
-    } else {
-      rc = enosys();
-    }
-    if (rc == -1) {
-      rc = errno;
-      errno = e;
-    }
+  e = errno;
+  if (IsNetbsd()) {
+    rc = sys_sched_setparam_netbsd(0, tid, policy, &param);
+  } else if (IsLinux()) {
+    rc = sys_sched_setscheduler(tid, policy, &param);
+  } else if (IsFreebsd()) {
+    rc = _pthread_setschedparam_freebsd(tid, policy, &param);
+  } else {
+    rc = enosys();
+  }
+  if (rc == -1) {
+    rc = errno;
+    errno = e;
   }
   return rc;
 }

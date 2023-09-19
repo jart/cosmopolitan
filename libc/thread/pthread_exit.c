@@ -24,13 +24,15 @@
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/futex.internal.h"
 
-static void CleanupThread(struct PosixThread *pt) {
+void _pthread_unwind(struct PosixThread *pt) {
   struct _pthread_cleanup_buffer *cb;
   while ((cb = pt->cleanup)) {
     pt->cleanup = cb->__prev;
@@ -38,25 +40,27 @@ static void CleanupThread(struct PosixThread *pt) {
   }
 }
 
-static void DestroyTlsKeys(struct CosmoTib *tib) {
+void _pthread_unkey(struct CosmoTib *tib) {
   int i, j, gotsome;
   void *val, **keys;
   pthread_key_dtor dtor;
-  keys = tib->tib_keys;
-  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
-    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
-      if ((val = keys[i]) &&
-          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
-                                       memory_order_relaxed)) &&
-          dtor != (pthread_key_dtor)-1) {
-        gotsome = 1;
-        keys[i] = 0;
-        dtor(val);
+  if ((keys = tib->tib_keys)) {
+    for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
+      for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
+        if ((val = keys[i]) &&
+            (dtor = atomic_load_explicit(_pthread_key_dtor + i,
+                                         memory_order_relaxed)) &&
+            dtor != (pthread_key_dtor)-1) {
+          gotsome = 1;
+          keys[i] = 0;
+          dtor(val);
+        }
+      }
+      if (!gotsome) {
+        break;
       }
     }
-    if (!gotsome) {
-      break;
-    }
+    free(keys);
   }
 }
 
@@ -98,19 +102,25 @@ wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
   enum PosixThreadStatus status, transition;
 
-  STRACE("pthread_exit(%p)", rc);
-
   tib = __get_tls();
   pt = (struct PosixThread *)tib->tib_pthread;
-  unassert(~pt->flags & PT_EXITING);
-  pt->flags |= PT_EXITING;
+  pt->pt_flags |= PT_NOCANCEL;
   pt->rc = rc;
 
+  STRACE("pthread_exit(%p)", rc);
+
   // free resources
-  CleanupThread(pt);
-  DestroyTlsKeys(tib);
+  _pthread_unwind(pt);
+  _pthread_unkey(tib);
   _pthread_ungarbage();
-  pthread_decimate_np();
+  _pthread_decimate();
+
+  // run atexit handlers if orphaned thread
+  if (pthread_orphan_np()) {
+    if (_weaken(__cxa_finalize)) {
+      _weaken(__cxa_finalize)(NULL);
+    }
+  }
 
   // transition the thread to a terminated state
   status = atomic_load_explicit(&pt->status, memory_order_acquire);
@@ -134,14 +144,17 @@ wontreturn void pthread_exit(void *rc) {
     _pthread_zombify(pt);
   }
 
-  // check if this is the main thread or an orphaned thread
+  // check if this is the last survivor
   if (pthread_orphan_np()) {
-    exit(0);
+    for (const uintptr_t *p = __fini_array_end; p > __fini_array_start;) {
+      ((void (*)(void))(*--p))();
+    }
+    _Exit(0);
   }
 
   // check if the main thread has died whilst children live
   // note that the main thread is joinable by child threads
-  if (pt->flags & PT_STATIC) {
+  if (pt->pt_flags & PT_STATIC) {
     atomic_store_explicit(&tib->tib_tid, 0, memory_order_release);
     nsync_futex_wake_(&tib->tib_tid, INT_MAX, !IsWindows());
     _Exit1(0);

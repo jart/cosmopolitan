@@ -178,7 +178,7 @@ Copyright 2018-2020 Justine Tunney <jtunney@gmail.com>\\n\
 Copyright 2010-2016 Salvatore Sanfilippo <antirez@gmail.com>\\n\
 Copyright 2010-2013 Pieter Noordhuis <pcnoordhuis@gmail.com>\"");
 
-#define LINENOISE_POLL_MS __SIG_POLLING_INTERVAL_MS
+#define LINENOISE_POLL_MS 50
 
 #define LINENOISE_MAX_RING    8
 #define LINENOISE_MAX_DEBUG   16

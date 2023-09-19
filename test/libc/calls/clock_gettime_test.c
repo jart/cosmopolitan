@@ -32,10 +32,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-TEST(clock_gettime, fault) {
-  ASSERT_SYS(EFAULT, -1, clock_gettime(0, 0));
-}
-
 TEST(clock_gettime, test) {
   struct timespec ts = {0};
   ASSERT_EQ(0, clock_gettime(0, &ts));
@@ -57,7 +53,6 @@ BENCH(clock_gettime, bench) {
   struct timespec ts;
   gettimeofday(&tv, 0);   // trigger init
   clock_gettime(0, &ts);  // trigger init
-  EZBENCH2("nowl", donothing, nowl());
   EZBENCH2("rdtsc", donothing, rdtsc());
   EZBENCH2("gettimeofday", donothing, gettimeofday(&tv, 0));
   EZBENCH2("timespec_real", donothing, timespec_real());

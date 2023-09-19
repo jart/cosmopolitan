@@ -13,6 +13,7 @@ const char *DescribeFlags(char *, size_t, const struct DescribeFlags *, size_t,
                           const char *, unsigned);
 
 const char *DescribeArchPrctlCode(char[12], int);
+const char *DescribeCancelState(char[12], int, int *);
 const char *DescribeCapability(char[32], int);
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
@@ -43,6 +44,7 @@ const char *DescribeNtPipeOpenFlags(char[64], uint32_t);
 const char *DescribeNtProcAccessFlags(char[256], uint32_t);
 const char *DescribeNtStartFlags(char[128], uint32_t);
 const char *DescribeNtSymlinkFlags(char[64], uint32_t);
+const char *DescribeThreadCreateFlags(char[64], uint32_t);
 const char *DescribeOpenFlags(char[128], int);
 const char *DescribeOpenMode(char[15], int, int);
 const char *DescribePersonalityFlags(char[128], int);
@@ -68,6 +70,7 @@ const char *DescribeWhence(char[12], int);
 const char *DescribeWhichPrio(char[12], int);
 
 #define DescribeArchPrctlCode(x)     DescribeArchPrctlCode(alloca(12), x)
+#define DescribeCancelState(x, y)    DescribeCancelState(alloca(12), x, y)
 #define DescribeCapability(x)        DescribeCapability(alloca(32), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
@@ -116,6 +119,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeSocketType(x)        DescribeSocketType(alloca(64), x)
 #define DescribeStdioState(x)        DescribeStdioState(alloca(12), x)
 #define DescribeStringList(x)        DescribeStringList(alloca(300), x)
+#define DescribeThreadCreateFlags(x) DescribeThreadCreateFlags(alloca(64), x)
 #define DescribeWhence(x)            DescribeWhence(alloca(12), x)
 #define DescribeWhichPrio(x)         DescribeWhichPrio(alloca(12), x)
 

@@ -44,6 +44,7 @@ TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
+	LIBC_PROC					\
 	LIBC_THREAD					\
 	LIBC_TIME					\
 	LIBC_TINYMATH					\

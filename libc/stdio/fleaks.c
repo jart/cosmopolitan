@@ -24,12 +24,14 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 
+#define MIN_CLANDESTINE_FD 100  // e.g. kprintf's dup'd handle
+
 void CheckForFileLeaks(void) {
   char msg[512];
   char *p = msg;
   char *pe = msg + 256;
   bool gotsome = false;
-  for (int fd = 3; fd < 200; ++fd) {
+  for (int fd = 3; fd < MIN_CLANDESTINE_FD; ++fd) {
     if (fcntl(fd, F_GETFL) != -1) {
       if (!gotsome) {
         p = stpcpy(p, program_invocation_short_name);
@@ -46,7 +48,6 @@ void CheckForFileLeaks(void) {
   }
   if (gotsome) {
     char proc[64];
-    char *p = proc;
     *p++ = '\n';
     *p = 0;
     write(2, msg, p - msg);

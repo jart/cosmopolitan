@@ -33,4 +33,6 @@
 #define kNtProfileServer                0x40000000u
 #define kNtCreateIgnoreSystemDefault    0x80000000u
 
+#define kNtStackSizeParamIsAReservation 0x00010000
+
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_PROCESSCREATIONFLAGS_H_ */

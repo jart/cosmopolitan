@@ -20,6 +20,7 @@
 #include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/enum/wsa.h"
@@ -35,66 +36,91 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
 
-static textwindows void __wsablock_abort(int64_t handle,
-                                         struct NtOverlapped *overlapped) {
-  unassert(CancelIoEx(handle, overlapped) ||
-           GetLastError() == kNtErrorNotFound);
-}
-
-textwindows int __wsablock(struct Fd *fd, struct NtOverlapped *overlapped,
+textwindows int __wsablock(struct Fd *f, struct NtOverlapped *overlapped,
                            uint32_t *flags, int sigops, uint32_t timeout) {
+  bool nonblock;
+  int e, rc, err;
   uint32_t i, got;
-  int rc, abort_errno;
+  uint32_t waitfor;
+  struct PosixThread *pt;
+  struct timespec now, remain, interval, deadline;
+
   if (WSAGetLastError() != kNtErrorIoPending) {
     // our i/o operation never happened because it failed
     return __winsockerr();
   }
-  BEGIN_BLOCKING_OPERATION;
+
   // our i/o operation is in flight and it needs to block
-  abort_errno = EAGAIN;
-  if (fd->flags & O_NONBLOCK) {
-    __wsablock_abort(fd->handle, overlapped);
+  nonblock = !!(f->flags & O_NONBLOCK);
+  pt = _pthread_self();
+  pt->abort_errno = EAGAIN;
+  interval = timespec_frommillis(__SIG_IO_INTERVAL_MS);
+  deadline = timeout
+                 ? timespec_add(timespec_real(), timespec_frommillis(timeout))
+                 : timespec_max;
+  e = errno;
+BlockingOperation:
+  if (!nonblock) {
+    pt->ioverlap = overlapped;
+    pt->iohandle = f->handle;
+  }
+  if (nonblock) {
+    CancelIoEx(f->handle, overlapped);
   } else if (_check_interrupts(sigops)) {
   Interrupted:
-    abort_errno = errno;  // EINTR or ECANCELED
-    __wsablock_abort(fd->handle, overlapped);
+    pt->abort_errno = errno;  // EINTR or ECANCELED
+    CancelIoEx(f->handle, overlapped);
   } else {
     for (;;) {
-      i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
-                                   __SIG_POLLING_INTERVAL_MS, true);
-      if (i == kNtWaitFailed || i == kNtWaitTimeout) {
+      now = timespec_real();
+      if (timespec_cmp(now, deadline) >= 0) {
+        CancelIoEx(f->handle, overlapped);
+        nonblock = true;
+        break;
+      }
+      remain = timespec_sub(deadline, now);
+      if (timespec_cmp(remain, interval) >= 0) {
+        waitfor = __SIG_IO_INTERVAL_MS;
+      } else {
+        waitfor = timespec_tomillis(remain);
+      }
+      i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true, waitfor, true);
+      if (i == kNtWaitFailed) {
+        // Failure should be an impossible condition, but MSDN lists
+        // WSAENETDOWN and WSA_NOT_ENOUGH_MEMORY as possible errors.
+        pt->abort_errno = WSAGetLastError();
+        CancelIoEx(f->handle, overlapped);
+        nonblock = true;
+        break;
+      } else if (i == kNtWaitTimeout) {
         if (_check_interrupts(sigops)) {
           goto Interrupted;
         }
-        if (i == kNtWaitFailed) {
-          // Failure should be an impossible condition, but MSDN lists
-          // WSAENETDOWN and WSA_NOT_ENOUGH_MEMORY as possible errors,
-          // which we're going to hope are ephemeral.
-          SleepEx(__SIG_POLLING_INTERVAL_MS, false);
-        }
-        if (timeout) {
-          if (timeout <= __SIG_POLLING_INTERVAL_MS) {
-            __wsablock_abort(fd->handle, overlapped);
-            break;
-          }
-          timeout -= __SIG_POLLING_INTERVAL_MS;
-        }
+        continue;
       } else {
         break;
       }
     }
   }
+  pt->ioverlap = 0;
+  pt->iohandle = 0;
+
   // overlapped is allocated on stack by caller, so it's important that
   // we wait for win32 to acknowledge that it's done using that memory.
-  if (WSAGetOverlappedResult(fd->handle, overlapped, &got, true, flags)) {
+  if (WSAGetOverlappedResult(f->handle, overlapped, &got, nonblock, flags)) {
     rc = got;
   } else {
     rc = -1;
-    if (WSAGetLastError() == kNtErrorOperationAborted) {
-      errno = abort_errno;
+    err = WSAGetLastError();
+    if (err == kNtErrorOperationAborted) {
+      errno = pt->abort_errno;
+    } else if (err == kNtErrorIoIncomplete) {
+      errno = e;
+      goto BlockingOperation;
     }
   }
-  END_BLOCKING_OPERATION;
   return rc;
 }

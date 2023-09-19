@@ -2419,7 +2419,7 @@ sys_pyfile_write(const char *text, PyObject *file)
  */
 
 static void
-sys_write(_Py_Identifier *key, FILE *fp, const char *format, va_list va)
+sys_write_(_Py_Identifier *key, FILE *fp, const char *format, va_list va)
 {
     PyObject *file;
     PyObject *error_type, *error_value, *error_traceback;
@@ -2447,7 +2447,7 @@ PySys_WriteStdout(const char *format, ...)
     va_list va;
 
     va_start(va, format);
-    sys_write(&PyId_stdout, stdout, format, va);
+    sys_write_(&PyId_stdout, stdout, format, va);
     va_end(va);
 }
 
@@ -2457,7 +2457,7 @@ PySys_WriteStderr(const char *format, ...)
     va_list va;
 
     va_start(va, format);
-    sys_write(&PyId_stderr, stderr, format, va);
+    sys_write_(&PyId_stderr, stderr, format, va);
     va_end(va);
 }
 

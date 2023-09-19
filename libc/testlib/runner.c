@@ -30,14 +30,9 @@
  */
 void testlib_runalltests(void) {
   if ((intptr_t)__testcase_end > (intptr_t)__testcase_start) {
-    if (testlib_countfixtures(__combo_start, __combo_end)) {
-      testlib_runcombos(__testcase_start, __testcase_end, __combo_start,
-                        __combo_end);
-    } else {
-      testlib_runtestcases(__testcase_start, __testcase_end, NULL);
-      testlib_runfixtures(__testcase_start, __testcase_end, __fixture_start,
-                          __fixture_end);
-      testlib_finish();
-    }
+    testlib_runtestcases(__testcase_start, __testcase_end, NULL);
+    testlib_runfixtures(__testcase_start, __testcase_end, __fixture_start,
+                        __fixture_end);
+    testlib_finish();
   }
 }

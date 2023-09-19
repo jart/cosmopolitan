@@ -40,6 +40,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 #include "libc/x/xasprintf.h"
 #include "libc/x/xsigaction.h"
@@ -249,7 +250,7 @@ void Exit(int rc) {
 void Cleanup(void) {
   ttyraw((enum TtyRawFlags)(-1u));
   ttyshowcursor(STDOUT_FILENO);
-  if (playpid_) kill(playpid_, SIGTERM), sched_yield();
+  if (playpid_) kill(playpid_, SIGTERM), pthread_yield();
 }
 
 void OnTimer(void) {

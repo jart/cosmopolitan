@@ -55,6 +55,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     }
     if (g_fds.p[newfd].kind) {
       sys_close_nt(g_fds.p + newfd, newfd);
+      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
     }
   }
 

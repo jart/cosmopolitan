@@ -16,19 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/bo.internal.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -50,7 +46,6 @@ int sigsuspend(const sigset_t *ignore) {
   int rc;
   const sigset_t *arg;
   sigset_t save, mask = {0};
-  STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
   BEGIN_CANCELLATION_POINT;
 
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
@@ -74,36 +69,26 @@ int sigsuspend(const sigset_t *ignore) {
       rc = sys_sigsuspend(arg, 8);
     } else {
       __sig_mask(SIG_SETMASK, arg, &save);
-#if defined(SYSDEBUG) && _POLLTRACE
-      long ms = 0;
-      long totoms = 0;
-#endif
-      BEGIN_BLOCKING_OPERATION;
-      do {
-        if ((rc = _check_interrupts(0))) {
+      while (!(rc = _check_interrupts(0))) {
+        struct PosixThread *pt;
+        pt = _pthread_self();
+        pt->abort_errno = 0;
+        pt->pt_flags |= PT_INSEMAPHORE;
+        WaitForSingleObject(pt->semaphore, __SIG_SIG_INTERVAL_MS);
+        pt->pt_flags &= ~PT_INSEMAPHORE;
+        if (pt->abort_errno) {
+          errno = pt->abort_errno;
+          rc = -1;
           break;
         }
-        if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
-          POLLTRACE("IOCP EINTR");
-          continue;
-        }
-#if defined(SYSDEBUG) && _POLLTRACE
-        ms += __SIG_POLLING_INTERVAL_MS;
-        if (ms >= __SIG_LOGGING_INTERVAL_MS) {
-          totoms += ms, ms = 0;
-          POLLTRACE("... sigsuspending for %'lums...", totoms);
-        }
-#endif
-      } while (1);
-      END_BLOCKING_OPERATION;
+      }
       __sig_mask(SIG_SETMASK, &save, 0);
     }
   } else {
-    // TODO(jart): sigsuspend metal support
     rc = enosys();
   }
 
   END_CANCELLATION_POINT;
-  STRACE("...sigsuspend → %d% m", rc);
+  STRACE("sigsuspend(%s) → %d% m", DescribeSigset(0, ignore), rc);
   return rc;
 }

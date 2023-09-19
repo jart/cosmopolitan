@@ -1958,7 +1958,6 @@ int main(int argc, char *argv[]) {
   }
 
   // library init
-  __enable_threads();
   sqlite3_initialize();
   CheckDatabase();
 

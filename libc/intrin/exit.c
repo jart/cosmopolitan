@@ -23,9 +23,11 @@
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/enum/status.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
@@ -101,7 +103,7 @@ wontreturn void _Exit(int exitcode) {
     if (waitstatus == kNtStillActive) {
       waitstatus = 0xc9af3d51u;
     }
-    ExitProcess(waitstatus);
+    TerminateThisProcess(waitstatus);
   }
 #ifdef __x86_64__
   asm("push\t$0\n\t"

@@ -211,6 +211,7 @@ void zipobj(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+  ShowCrashReports();
   timestamp.tv_sec = 1647414000; /* determinism */
   /* clock_gettime(CLOCK_REALTIME, &timestamp); */
   zipobj(argc, argv);

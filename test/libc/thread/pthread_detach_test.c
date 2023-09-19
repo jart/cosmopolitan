@@ -51,7 +51,7 @@ TEST(pthread_detach, testCreateReturn) {
   ASSERT_EQ(0, pthread_create(&id, 0, Increment, 0));
   ASSERT_EQ(0, pthread_detach(id));
   while (!pthread_orphan_np()) {
-    pthread_decimate_np();
+    _pthread_decimate();
   }
 }
 
@@ -63,6 +63,6 @@ TEST(pthread_detach, testDetachUponCreation) {
   ASSERT_EQ(0, pthread_create(&th, &attr, Increment, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   while (!pthread_orphan_np()) {
-    pthread_decimate_np();
+    _pthread_decimate();
   }
 }

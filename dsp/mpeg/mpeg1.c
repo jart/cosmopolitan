@@ -1080,12 +1080,12 @@ static plm_frame_t *plm_video_decode_impl(plm_video_t *self) {
 }
 
 plm_frame_t *plm_video_decode(plm_video_t *self) {
-  long double tsc;
   plm_frame_t *res;
+  struct timespec tsc;
   INFOF("plm_video_decode");
-  tsc = nowl();
+  tsc = timespec_real();
   res = plm_video_decode_impl(self);
-  plmpegdecode_latency_ = lroundl((nowl() - tsc) * 1e6l);
+  plmpegdecode_latency_ = timespec_tomicros(timespec_sub(timespec_real(), tsc));
   return res;
 }
 

@@ -29,6 +29,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
@@ -36,11 +37,15 @@
 
 privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
                                    struct ucontext_openbsd *ctx) {
-  int rva, flags;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct Goodies {
     ucontext_t uc;
     struct siginfo si;
   } g;
+  CheckLargeStackAllocation(&g, sizeof(g));
+#pragma GCC pop_options
+  int rva, flags;
   rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {
     flags = __sighandflags[sig];

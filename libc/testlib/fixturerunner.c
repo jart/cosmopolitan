@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 
@@ -37,8 +37,9 @@ void testlib_runfixtures(const testfn_t *test_start, const testfn_t *test_end,
   unsigned i, count;
   count = testlib_countfixtures(fixture_start, fixture_end);
   for (i = 0; i < count && !g_testlib_failed; ++i) {
-    (snprintf)(g_fixturename, sizeof(g_fixturename), "%s_%s",
-               fixture_start[i].group, fixture_start[i].name);
+    strlcpy(g_fixturename, fixture_start[i].group, sizeof(g_fixturename));
+    strlcat(g_fixturename, "_", sizeof(g_fixturename));
+    strlcat(g_fixturename, fixture_start[i].name, sizeof(g_fixturename));
     fixture_start[i].fn();
     testlib_runtestcases(test_start, test_end, NULL);
   }

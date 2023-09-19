@@ -20,6 +20,10 @@ static inline void dll_init(struct Dll *e) {
   e->prev = e;
 }
 
+static inline int dll_is_alone(struct Dll *e) {
+  return e->next == e && e->prev == e;
+}
+
 static inline int dll_is_empty(struct Dll *list) {
   return !list;
 }

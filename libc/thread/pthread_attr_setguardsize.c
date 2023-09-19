@@ -16,15 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/thread/thread.h"
 
 /**
  * Sets size of unmapped pages at bottom of stack.
  *
+ * This value will be rounded up to the host microprocessor page size,
+ * which is usually 4096 or 16384. It's important to write code in such
+ * a way that that code can't skip over the guard area. GCC has warnings
+ * like `-Wframe-larger-than=4096 -Walloca-larger-than=4096` which help
+ * guarantee your code is safe in this regard. It should be assumed the
+ * guard pages exist beneath the stack pointer, rather than the bottom
+ * of the stack, since guard pages are also used to grow down commit,
+ * which can be poked using CheckLargeStackAllocation().
+ *
  * @param guardsize contains guard size in bytes
  * @return 0 on success, or errno on error
+ * @raise EINVAL if `guardsize` is zero
  */
 errno_t pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
+  if (!guardsize) return EINVAL;
   attr->__guardsize = guardsize;
   return 0;
 }

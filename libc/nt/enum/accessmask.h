@@ -1,25 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_ACCESSMASK_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_ACCESSMASK_H_
 
-/**
- * Can also be described as follows:
- *
- *   struct NtAccessMask {
- *     union {
- *       uint32_t value;
- *       struct {
- *         uint16_t SpecificRights;
- *         unsigned char StandardRights;
- *         unsigned AccessSystemAcl : 1;
- *         unsigned Reserved : 3;
- *         unsigned GenericAll : 1;
- *         unsigned GenericExecute : 1;
- *         unsigned GenericWrite : 1;
- *         unsigned GenericRead : 1;
- *       };
- *     };
- *   };
- */
 #define kNtGenericRead            0x80000000u
 #define kNtGenericWrite           0x40000000u
 #define kNtGenericExecute         0x20000000u

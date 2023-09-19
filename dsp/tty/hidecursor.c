@@ -32,7 +32,7 @@ static int ttysetcursor(int fd, bool visible) {
   char code[8] = "\e[?25l";
   if (__nocolor) return 0;
   if (visible) code[5] = 'h';
-  if (SupportsWindows()) {
+  if (IsWindows()) {
     GetConsoleCursorInfo(GetStdHandle(kNtStdOutputHandle), &ntcursor);
     ntcursor.bVisible = visible;
     SetConsoleCursorInfo(GetStdHandle(kNtStdOutputHandle), &ntcursor);

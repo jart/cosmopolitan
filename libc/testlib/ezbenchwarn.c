@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio.h"
+#include "libc/calls/calls.h"
 #include "libc/testlib/testlib.h"
 
 void __testlib_ezbenchwarn(const char *msg) {
-  fputs("warning: failed to accurately benchmark", stderr);
-  fputs(msg, stderr);
-  fputc('\n', stderr);
+  tinyprint(2, "warning: failed to accurately benchmark", msg, "\n", NULL);
 }

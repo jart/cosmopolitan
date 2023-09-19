@@ -331,12 +331,12 @@ static long Index(long y, long x) {
 }
 
 static void PreventBufferbloat(void) {
-  long double now, rate;
-  static long double last;
-  now = nowl();
-  rate = 1. / fps;
-  if (now - last < rate) {
-    dsleep(rate - (now - last));
+  struct timespec now, rate;
+  static struct timespec last;
+  now = timespec_real();
+  rate = timespec_frommicros(1. / fps * 1e6);
+  if (timespec_cmp(timespec_sub(now, last), rate) < 0) {
+    timespec_sleep(timespec_sub(rate, timespec_sub(now, last)));
   }
   last = now;
 }

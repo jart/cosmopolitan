@@ -32,7 +32,9 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 void SetUp() {
   int fd;

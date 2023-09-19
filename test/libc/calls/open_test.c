@@ -40,9 +40,8 @@
 
 #define abs(rel) gc(xasprintf("%s/%s", gc(getcwd(0, 0)), rel))
 
-char testlib_enable_tmp_setup_teardown;
-
 void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr proc id", 0));
 }
 
@@ -449,13 +448,13 @@ TEST(open, creatFile_touchesDirectory) {
   ASSERT_SYS(0, 0, stat("dir", &st));
   birth = st.st_ctim;
   // check we can read time without changing it
-  sleep(1);
+  sleep(2);
   ASSERT_SYS(0, 0, stat("dir", &st));
   EXPECT_EQ(0, timespec_cmp(st.st_ctim, birth));
   EXPECT_EQ(0, timespec_cmp(st.st_mtim, birth));
   EXPECT_EQ(0, timespec_cmp(st.st_atim, birth));
   // check that the directory time changes when file is made
-  sleep(1);
+  sleep(2);
   ASSERT_SYS(0, 0, touch("dir/file", 0644));
   ASSERT_SYS(0, 0, stat("dir", &st));
   EXPECT_EQ(1, timespec_cmp(st.st_ctim, birth));
@@ -473,7 +472,7 @@ TEST(open, trunc_touchesMtimCtim) {
   ASSERT_SYS(0, 0, touch("regular", 0755));
   ASSERT_SYS(0, 0, stat("regular", &st));
   birth = st.st_ctim;
-  sleep(1);
+  sleep(2);
   ASSERT_SYS(0, 3, open("regular", O_RDWR | O_TRUNC));
   ASSERT_SYS(0, 0, fstat(3, &st));
   EXPECT_EQ(1, timespec_cmp(st.st_ctim, birth));
@@ -487,7 +486,7 @@ TEST(open, mereOpen_doesntTouch) {
   ASSERT_SYS(0, 0, touch("regular", 0755));
   ASSERT_SYS(0, 0, stat("regular", &st));
   birth = st.st_ctim;
-  sleep(1);
+  sleep(2);
   ASSERT_SYS(0, 3, open("regular", O_RDWR));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 0, stat("regular", &st));

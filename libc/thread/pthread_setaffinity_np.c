@@ -31,15 +31,12 @@
 #include "libc/thread/posixthread.internal.h"
 
 static dontinline textwindows int sys_pthread_setaffinity_nt(
-    int tid, uint64_t size, const cpu_set_t *bitset) {
-  int rc;
-  int64_t h;
-  h = OpenThread(kNtThreadSetInformation | kNtThreadQueryInformation, false,
-                 tid);
-  if (!h) return __winerr();
-  rc = SetThreadAffinityMask(h, bitset->__bits[0]) ? 0 : __winerr();
-  CloseHandle(h);
-  return rc;
+    struct PosixThread *pt, uint64_t size, const cpu_set_t *bitset) {
+  if (SetThreadAffinityMask(_pthread_syshand(pt), bitset->__bits[0])) {
+    return 0;
+  } else {
+    return __winerr();
+  }
 }
 
 /**
@@ -54,24 +51,25 @@ static dontinline textwindows int sys_pthread_setaffinity_nt(
 errno_t pthread_setaffinity_np(pthread_t thread, size_t size,
                                const cpu_set_t *bitset) {
   int e, rc, tid;
-  if (!(rc = pthread_getunique_np(thread, &tid))) {
-    e = errno;
-    if (size != sizeof(cpu_set_t)) {
-      rc = einval();
-    } else if (IsWindows()) {
-      rc = sys_pthread_setaffinity_nt(tid, size, bitset);
-    } else if (IsFreebsd()) {
-      rc = sys_sched_setaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid,
-                                         32, bitset);
-    } else if (IsNetbsd()) {
-      rc = sys_sched_setaffinity_netbsd(tid, 0, 32, bitset);
-    } else {
-      rc = sys_sched_setaffinity(tid, size, bitset);
-    }
-    if (rc == -1) {
-      rc = errno;
-      errno = e;
-    }
+  struct PosixThread *pt;
+  e = errno;
+  pt = (struct PosixThread *)thread;
+  tid = _pthread_tid(pt);
+  if (size != sizeof(cpu_set_t)) {
+    rc = einval();
+  } else if (IsWindows()) {
+    rc = sys_pthread_setaffinity_nt(pt, size, bitset);
+  } else if (IsFreebsd()) {
+    rc = sys_sched_setaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid, 32,
+                                       bitset);
+  } else if (IsNetbsd()) {
+    rc = sys_sched_setaffinity_netbsd(tid, 0, 32, bitset);
+  } else {
+    rc = sys_sched_setaffinity(tid, size, bitset);
+  }
+  if (rc == -1) {
+    rc = errno;
+    errno = e;
   }
   STRACE("pthread_setaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,
          DescribeErrno(rc));

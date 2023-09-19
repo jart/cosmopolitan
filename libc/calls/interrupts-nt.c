@@ -18,35 +18,28 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/weaken.h"
-#include "libc/nt/struct/windowplacement.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 textwindows int _check_interrupts(int sigops) {
-  int e, rc, flags = 0;
-  e = errno;
+  int status;
+  errno_t err;
+  struct PosixThread *pt = _pthread_self();
   if (_weaken(pthread_testcancel_np) &&
-      (rc = _weaken(pthread_testcancel_np)())) {
-    errno = rc;
+      (err = _weaken(pthread_testcancel_np)())) {
+    goto Interrupted;
+  }
+  if (_weaken(__sig_check) && (status = _weaken(__sig_check)())) {
+    if (status == 2 && (sigops & kSigOpRestartable)) {
+      return 0;
+    }
+    err = EINTR;
+  Interrupted:
+    pt->abort_errno = errno = err;
     return -1;
   }
-  if (__tls_enabled) {
-    flags = __get_tls()->tib_flags;
-    __get_tls()->tib_flags |= TIB_FLAG_TIME_CRITICAL;
-  }
-  if (_weaken(_check_sigalrm)) {
-    _weaken(_check_sigalrm)();
-  }
-  if (__tls_enabled) {
-    __get_tls()->tib_flags = flags;
-  }
-  if (_weaken(__sig_check) && _weaken(__sig_check)(sigops)) {
-    return eintr();
-  }
-  errno = e;
   return 0;
 }

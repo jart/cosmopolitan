@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/temp.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/temp.h"
 
 /**
  * Creates temporary file name and file descriptor, e.g.
@@ -34,6 +34,7 @@
  * @see mkstemps() if you you need a suffix
  * @see mktemp() if you don't need an fd
  * @see tmpfd() if you don't need a path
+ * @cancellationpoint
  */
 int mkstemp(char *template) {
   return openatemp(AT_FDCWD, template, 0, 0, 0);

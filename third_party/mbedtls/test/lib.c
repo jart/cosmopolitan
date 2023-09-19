@@ -17,6 +17,7 @@
 #include "third_party/mbedtls/test/lib.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -963,7 +964,7 @@ static void write_outcome_result(FILE *outcome_file, size_t unmet_dep_count,
  */
 int execute_tests(int argc, const char **argv, const char *default_filename) {
   /* Local Configurations and options */
-  long double t1, t2;
+  struct timespec t1, t2;
   const char *test_filename = NULL;
   const char **test_files = NULL;
   size_t testfile_count = 0;
@@ -1089,7 +1090,7 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
                               sizeof(params) / sizeof(params[0]));
       }
       // If there are no unmet dependencies execute the test
-      t1 = nowl();
+      t1 = timespec_real();
       if (unmet_dep_count == 0) {
         mbedtls_test_info_reset();
         function_id = strtoul(params[0], NULL, 10);
@@ -1100,7 +1101,7 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
           }
         }
       }
-      t2 = nowl();
+      t2 = timespec_real();
       write_outcome_result(outcome_file, unmet_dep_count, unmet_dependencies,
                            missing_unmet_dependencies, ret, &mbedtls_test_info);
       if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
@@ -1120,7 +1121,7 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
         missing_unmet_dependencies = 0;
       } else if (ret == DISPATCH_TEST_SUCCESS) {
         if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
-          WRITE("PASS (%,ldus)\n", (int64_t)((t2 - t1) * 1e6));
+          WRITE("PASS (%,ldus)\n", timespec_tomicros(timespec_sub(t2, t1)));
         } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
           WRITE("----");
           total_skipped++;

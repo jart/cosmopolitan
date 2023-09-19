@@ -29,6 +29,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
@@ -36,8 +37,12 @@
 
 privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
                                   struct ucontext_netbsd *ctx) {
-  int rva, flags;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
   ucontext_t uc;
+  CheckLargeStackAllocation(&uc, sizeof(uc));
+#pragma GCC pop_options
+  int rva, flags;
   struct siginfo si2;
   rva = __sighandrvas[sig];
   if (rva >= kSigactionMinRva) {

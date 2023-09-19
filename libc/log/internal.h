@@ -10,9 +10,7 @@ extern bool g_isrunningundermake;
 
 void __start_fatal(const char *, int);
 void __restore_tty(void);
-void RestoreDefaultCrashSignalHandlers(void);
-void __oncrash_amd64(int, struct siginfo *, void *) relegated;
-void __oncrash_arm64(int, struct siginfo *, void *) relegated;
+void __oncrash(int, struct siginfo *, void *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -26,6 +26,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/leaky.internal.h"
@@ -830,12 +831,17 @@ static void __asan_report_memory_origin(const unsigned char *addr, int size,
 static __wur __asan_die_f *__asan_report(const void *addr, int size,
                                          const char *message,
                                          signed char kind) {
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
+  char buf[8192];
+  CheckLargeStackAllocation(buf, sizeof(buf));
+#pragma GCC pop_options
   int i;
   wint_t c;
   signed char t;
   uint64_t x, y, z;
+  char *base, *q, *p = buf;
   struct MemoryIntervals *m;
-  char buf[8192], *base, *q, *p = buf;
   ftrace_enabled(-1);
   kprintf("\n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p\n",
           __asan_describe_access_poison(kind), size, message, addr,
@@ -1389,7 +1395,8 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
   struct DirectMap sm;
   struct MemoryIntervals *m;
   if (OverlapsShadowSpace((void *)p, n)) {
-    kprintf("error: %p size %'zu overlaps shadow space\n", p, n);
+    kprintf("error: %p size %'zu overlaps shadow space: %s\n", p, n,
+            DescribeBacktrace(__builtin_frame_address(0)));
     _Exit(1);
   }
   m = &_mmi;
@@ -1423,12 +1430,6 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
   __asan_unpoison((char *)p, n);
 }
 
-static size_t __asan_strlen(const char *s) {
-  size_t i = 0;
-  while (s[i]) ++i;
-  return i;
-}
-
 static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
                                               size_t i) {
   uintptr_t x, y;
@@ -1440,87 +1441,22 @@ static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
   }
 }
 
-static textstartup char *__asan_get_last_string(char **list) {
-  char *res = 0;
-  for (int i = 0; list[i]; ++i) {
-    res = list[i];
-  }
-  return res;
-}
-
-static textstartup uintptr_t __asan_get_stack_top(int argc, char **argv,
-                                                  char **envp,
-                                                  unsigned long *auxv,
-                                                  long pagesz) {
-  uintptr_t top;
-  const char *s;
-  if ((s = __asan_get_last_string(envp)) ||
-      (s = __asan_get_last_string(argv))) {
-    top = (uintptr_t)s + __asan_strlen(s);
-  } else {
-    unsigned long *xp = auxv;
-    while (*xp) xp += 2;
-    top = (uintptr_t)xp;
-  }
-  return (top + (pagesz - 1)) & -pagesz;
-}
-
-static textstartup void __asan_shadow_existing_mappings(int argc, char **argv,
-                                                        char **envp,
-                                                        unsigned long *auxv) {
+static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_shadow_mapping(&_mmi, 0);
-
-  // WinMain() maps its own stack and its shadow too
-  if (IsWindows()) {
-    return;
+  if (!IsWindows()) {
+    int guard;
+    void *addr;
+    size_t size;
+    __get_main_stack(&addr, &size, &guard);
+    __asan_map_shadow((uintptr_t)addr, size);
+    __asan_poison(addr, guard, kAsanStackOverflow);
   }
+}
 
-  // get microprocessor page size
-  long pagesz = 4096;
-  for (int i = 0; auxv[i]; i += 2) {
-    if (auxv[i] == AT_PAGESZ) {
-      pagesz = auxv[i + 1];
-    }
-  }
-
-  // get configured stack size of main thread
-  // supported platforms use defaults ranging from 4mb to 512mb
-  struct rlimit rlim;
-  uintptr_t stack_size = 4 * 1024 * 1024;
-  if (!sys_getrlimit(RLIMIT_STACK, &rlim) &&  //
-      rlim.rlim_cur > 0 && rlim.rlim_cur < RLIM_INFINITY) {
-    stack_size = (rlim.rlim_cur + (pagesz - 1)) & -pagesz;
-  }
-
-  // Every UNIX system in our support vector creates arg blocks like:
-  //
-  //     <HIGHEST-STACK-ADDRESS>
-  //     last environ string
-  //     ...
-  //     first environ string
-  //     ...
-  //     auxiliary value pointers
-  //     environ pointers
-  //     argument pointers
-  //     argument count
-  //     --- %rsp _start()
-  //     ...
-  //     ...
-  //     ... program's stack
-  //     ...
-  //     ...
-  //     <LOWEST-STACK-ADDRESS>
-  //
-  // The region of memory between highest and lowest can be computed
-  // across all supported platforms ±1 page accuracy as the distance
-  // between the last character of the last environ variable rounded
-  // up to the microprocessor page size (this computes the top addr)
-  // and the bottom is computed by subtracting RLIMIT_STACK rlim_cur
-  // It's simple but gets tricky if we consider environ can be empty
-  uintptr_t stack_top = __asan_get_stack_top(argc, argv, envp, auxv, pagesz);
-  uintptr_t stack_bot = stack_top - stack_size;
-  __asan_map_shadow(stack_bot, stack_top - stack_bot);
-  __asan_poison((void *)stack_bot, GetGuardSize(), kAsanStackOverflow);
+static size_t __asan_strlen(const char *s) {
+  size_t i = 0;
+  while (s[i]) ++i;
+  return i;
 }
 
 forceinline ssize_t __write_str(const char *s) {
@@ -1541,7 +1477,7 @@ void __asan_init(int argc, char **argv, char **envp, unsigned long *auxv) {
     REQUIRE(dlmemalign);
     REQUIRE(dlmalloc_usable_size);
   }
-  __asan_shadow_existing_mappings(argc, argv, envp, auxv);
+  __asan_shadow_existing_mappings();
   __asan_map_shadow((uintptr_t)__executable_start, _end - __executable_start);
   __asan_map_shadow(0, 4096);
   __asan_poison((void *)__veil("r", 0L), getauxval(AT_PAGESZ), kAsanNullPage);

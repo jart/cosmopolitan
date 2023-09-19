@@ -77,18 +77,17 @@
  * @vforksafe
  */
 int clock_gettime(int clock, struct timespec *ts) {
+  // threads on win32 stacks call this so we can't asan check *ts
   int rc;
   if (clock == 127) {
     rc = einval();  // 127 is used by consts.sh to mean unsupported
-  } else if (!ts || (IsAsan() && !__asan_is_valid_timespec(ts))) {
-    rc = efault();
   } else {
     rc = __clock_gettime(clock, ts);
   }
 #if SYSDEBUG
   if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
-    STRACE("clock_gettime(%s, [%s]) → %d% m", DescribeClockName(clock),
-           DescribeTimespec(rc, ts), rc);
+    POLLTRACE("clock_gettime(%s, [%s]) → %d% m", DescribeClockName(clock),
+              DescribeTimespec(rc, ts), rc);
   }
 #endif
   return rc;

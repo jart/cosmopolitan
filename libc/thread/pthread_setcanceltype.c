@@ -18,9 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+
+static const char *DescribeCancelType(char buf[12], int err, int *t) {
+  if (err) return "n/a";
+  if (!t) return "NULL";
+  if (*t == PTHREAD_CANCEL_DEFERRED) return "PTHREAD_CANCEL_DEFERRED";
+  if (*t == PTHREAD_CANCEL_ASYNCHRONOUS) return "PTHREAD_CANCEL_ASYNCHRONOUS";
+  FormatInt32(buf, *t);
+  return buf;
+}
 
 /**
  * Sets cancellation strategy.
@@ -35,29 +48,32 @@
  * @see pthread_cancel() for docs
  */
 errno_t pthread_setcanceltype(int type, int *oldtype) {
+  int err;
   struct PosixThread *pt;
   switch (type) {
     case PTHREAD_CANCEL_ASYNCHRONOUS:
-      if (IsWindows()) {
-        return ENOTSUP;
-      }
-      // fallthrough
     case PTHREAD_CANCEL_DEFERRED:
-      pt = (struct PosixThread *)__get_tls()->tib_pthread;
+      pt = _pthread_self();
       if (oldtype) {
-        if (pt->flags & PT_ASYNC) {
+        if (pt->pt_flags & PT_ASYNC) {
           *oldtype = PTHREAD_CANCEL_ASYNCHRONOUS;
         } else {
           *oldtype = PTHREAD_CANCEL_DEFERRED;
         }
       }
       if (type == PTHREAD_CANCEL_DEFERRED) {
-        pt->flags &= ~PT_ASYNC;
+        pt->pt_flags &= ~PT_ASYNC;
       } else {
-        pt->flags |= PT_ASYNC;
+        pt->pt_flags |= PT_ASYNC;
       }
-      return 0;
+      err = 0;
+      break;
     default:
-      return EINVAL;
+      err = EINVAL;
+      break;
   }
+  STRACE("pthread_setcanceltype(%s, [%s]) → %s",
+         DescribeCancelType(alloca(12), 0, &type),
+         DescribeCancelType(alloca(12), err, oldtype), DescribeErrno(err));
+  return err;
 }

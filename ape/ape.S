@@ -775,30 +775,19 @@ ape_loader_end:
 	.stub	ape_ram_memsz,quad
 	.stub	ape_ram_align,quad
 
-//	APE Stack Configuration
-//
-//	We actually respect this when allocating a deterministically
-//	addressed stack on Windows and other operating systems. However
-//	there's a few caveats:
-//
-//	- If ape_stack_pf has PF_X then OpenBSD probably won't work
-//	- We don't bother creating a deterministic stack in MODE=tiny
-//
-//	With that said, here's some examples of configuration:
-//
-//	    STATIC_SYMBOL("ape_stack_pf", "7");  // RWX
-//	    STATIC_STACK_ADDR(0x6fffffff0000);
-//	    STATIC_STACK_SIZE(65536);
-//
-//	@see ape.lds for defaults
+//	These values are left empty because some UNIX OSes give p_filesz
+//	priority over `ulimit -s` a.k.a. RLIMIT_STACK which is preferred
+//	because we use an 8mb stack by default so that decadent software
+//	doesn't unexpectedly crash, but putting that here meant NetBSD's
+//	rusage accounting (which is the best) always reported 6mb of RSS
 	.long	PT_GNU_STACK
-	.stub	ape_stack_pf,long		// override w/ PF_X for execstack
-	.stub	ape_stack_offset,quad		// ignored
-	.stub	ape_stack_vaddr,quad		// is mmap()'d with MAP_FIXED
-	.stub	ape_stack_paddr,quad		// ignored
-	.stub	ape_stack_filesz,quad		// ignored
-	.stub	ape_stack_memsz,quad		// ignored?
-	.stub	ape_stack_align,quad		// must be 16+
+	.stub	ape_stack_pf,long
+	.quad	0
+	.quad	0
+	.quad	0
+	.quad	0
+	.quad	0
+	.stub	ape_stack_align,quad
 
 #if SupportsOpenbsd() || SupportsNetbsd()
 	.long	PT_NOTE
@@ -1086,7 +1075,7 @@ ape_pe:	.ascin	"PE",4
 	.short	v_ntsubsystem		// Subsystem: 0=Neutral,2=GUI,3=Console
 	.short	v_ntdllchar		// DllCharacteristics
 	.quad	0x10000			// StackReserve
-	.quad	0x10000			// StackCommit
+	.quad	0x1000			// StackCommit
 	.quad	0			// HeapReserve
 	.quad	0			// HeapCommit
 	.long	0			// LoaderFlags

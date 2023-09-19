@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -25,8 +26,9 @@ static bool once;
 static double g_ezbenchcontrol;
 
 double __testlib_ezbenchcontrol(void) {
+  char ibuf[12];
+  int Core, Tries, Interrupts;
   if (!once) {
-    int Core, Tries, Interrupts;
     Tries = 0;
     do {
       __testlib_yield();
@@ -37,10 +39,11 @@ double __testlib_ezbenchcontrol(void) {
     } while (++Tries < 10 && (__testlib_getcore() != Core &&
                               __testlib_getinterrupts() > Interrupts));
     if (Tries == 10) {
-      fputs("warning: failed to accurately benchmark control\n", stderr);
+      tinyprint(2, "warning: failed to accurately benchmark control\n");
     }
-    kprintf("will subtract benchmark overhead of %g cycles\n\n",
-            g_ezbenchcontrol);
+    FormatInt32(ibuf, g_ezbenchcontrol);
+    tinyprint(2, "will subtract benchmark overhead of ", ibuf, " cycles\n\n",
+              NULL);
     once = true;
   }
   return g_ezbenchcontrol;

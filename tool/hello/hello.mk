@@ -76,4 +76,22 @@ o/$(MODE)/tool/hello/hello-pe.com:				\
 		o/$(MODE)/tool/build/elf2pe.com
 	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -o $@ $<
 
+# elf2pe can generate binaries that don't have dll imports
+o/$(MODE)/tool/hello/life-pe.com.dbg:				\
+		o/$(MODE)/tool/hello/life-pe.o
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
+o/$(MODE)/tool/hello/life-pe.com:				\
+		o/$(MODE)/tool/hello/life-pe.com.dbg		\
+		o/$(MODE)/tool/build/elf2pe.com
+	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -o $@ $<
+
+# demonstrates in process monitor the lowest resource usage a win32 app can have
+o/$(MODE)/tool/hello/wait-pe.com.dbg:				\
+		o/$(MODE)/tool/hello/wait-pe.o
+	@$(COMPILE) -ALINK.elf $(LINK) $(LINKARGS) $(OUTPUT_OPTION) -q -e WinMain
+o/$(MODE)/tool/hello/wait-pe.com:				\
+		o/$(MODE)/tool/hello/wait-pe.com.dbg		\
+		o/$(MODE)/tool/build/elf2pe.com
+	@$(COMPILE) -AELF2PE o/$(MODE)/tool/build/elf2pe.com -R 64kb -S 4kb -o $@ $<
+
 $(TOOL_HELLO_OBJS): tool/hello/hello.mk

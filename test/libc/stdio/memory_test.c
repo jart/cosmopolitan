@@ -17,14 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 
-int Worker(void *arg, int tid) {
+void *Worker(void *arg) {
   int i;
   char *volatile p;
   char *volatile q;
@@ -41,13 +41,16 @@ int Worker(void *arg, int tid) {
 }
 
 void SetUpOnce(void) {
-  __enable_threads();
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
 TEST(memory, test) {
   int i, n = 32;
-  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  }
+  for (i = 0; i < n; ++i) {
+    EXPECT_EQ(0, pthread_join(t[i], 0));
+  }
 }

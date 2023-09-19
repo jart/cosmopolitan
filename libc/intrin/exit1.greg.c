@@ -83,7 +83,7 @@ privileged wontreturn void _Exit1(int rc) {
                  : "i"(93), "r"(r0)
                  : "x8", "memory");
   } else if (IsXnu()) {
-    __syslib->pthread_exit(0);
+    __syslib->__pthread_exit(0);
   }
   notpossible;
 #else

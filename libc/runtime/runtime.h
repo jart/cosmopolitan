@@ -79,7 +79,6 @@ extern int __strace;
 extern int __ftrace;
 extern uint64_t __syscount;
 extern uint64_t kStartTsc;
-extern char kTmpPath[];
 extern const char kNtSystemDirectory[];
 extern const char kNtWindowsDirectory[];
 extern size_t __virtualmax;
@@ -138,6 +137,10 @@ int __get_arg_max(void) pureconst;
 int __get_cpu_count(void) pureconst;
 long __get_avphys_pages(void) pureconst;
 long __get_phys_pages(void) pureconst;
+long __get_minsigstksz(void) pureconst;
+void __get_main_stack(void **, size_t *, int *);
+long __get_safe_size(long, long);
+char *__get_tmpdir(void);
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_

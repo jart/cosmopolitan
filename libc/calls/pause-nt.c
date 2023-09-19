@@ -16,37 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/synchronization.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
 
 textwindows int sys_pause_nt(void) {
-  BEGIN_BLOCKING_OPERATION;
-  for (;;) {
-
-    if (_check_interrupts(0)) {
-      return -1;
+  int rc;
+  while (!(rc = _check_interrupts(0))) {
+    struct PosixThread *pt = _pthread_self();
+    pt->abort_errno = 0;
+    pt->pt_flags |= PT_INSEMAPHORE;
+    WaitForSingleObject(pt->semaphore, __SIG_SIG_INTERVAL_MS);
+    pt->pt_flags &= ~PT_INSEMAPHORE;
+    if (pt->abort_errno) {
+      errno = pt->abort_errno;
+      rc = -1;
+      break;
     }
-
-    if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
-      POLLTRACE("IOCP EINTR");  // in case we ever figure it out
-      continue;
-    }
-
-#if defined(SYSDEBUG) && _POLLTRACE
-    long ms = 0, totoms = 0;
-    ms += __SIG_POLLING_INTERVAL_MS;
-    if (ms >= __SIG_LOGGING_INTERVAL_MS) {
-      totoms += ms, ms = 0;
-      POLLTRACE("... pausing for %'lums...", totoms);
-    }
-#endif
   }
-  END_BLOCKING_OPERATION;
+  return rc;
 }

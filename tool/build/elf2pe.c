@@ -23,6 +23,7 @@
 #include "libc/elf/scalar.h"
 #include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -56,18 +57,20 @@
   "copyright 2023 justine tunney\n" \
   "https://github.com/jart/cosmopolitan\n"
 
-#define MANUAL                         \
-  " -o OUTPUT INPUT\n"                 \
-  "\n"                                 \
-  "DESCRIPTION\n"                      \
-  "\n"                                 \
-  "  Converts ELF executables to PE\n" \
-  "\n"                                 \
-  "FLAGS\n"                            \
-  "\n"                                 \
-  "  -h         show usage\n"          \
-  "  -o OUTPUT  set output path\n"     \
-  "  -D PATH    embed dos/bios stub\n" \
+#define MANUAL                           \
+  " -o OUTPUT INPUT\n"                   \
+  "\n"                                   \
+  "DESCRIPTION\n"                        \
+  "\n"                                   \
+  "  Converts ELF executables to PE\n"   \
+  "\n"                                   \
+  "FLAGS\n"                              \
+  "\n"                                   \
+  "  -h         show usage\n"            \
+  "  -o OUTPUT  set output path\n"       \
+  "  -D PATH    embed dos/bios stub\n"   \
+  "  -S SIZE    size of stack commit\n"  \
+  "  -R SIZE    size of stack reserve\n" \
   "\n"
 
 #define MAX_ALIGN 65536
@@ -152,6 +155,8 @@ struct Elf {
 static const char *prog;
 static const char *outpath;
 static const char *stubpath;
+static long FLAG_SizeOfStackCommit = 64 * 1024;
+static long FLAG_SizeOfStackReserve = 8 * 1024 * 1024;
 
 static wontreturn void Die(const char *thing, const char *reason) {
   tinyprint(2, thing, ": ", reason, "\n", NULL);
@@ -846,8 +851,9 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
   opthdr->Subsystem = kNtImageSubsystemWindowsCui;
   opthdr->DllCharacteristics = kNtImageDllcharacteristicsNxCompat |
                                kNtImageDllcharacteristicsHighEntropyVa;
-  opthdr->SizeOfStackReserve = 8 * 1024 * 1024;
-  opthdr->SizeOfStackCommit = 64 * 1024;
+  opthdr->SizeOfStackReserve =
+      MAX(FLAG_SizeOfStackReserve, FLAG_SizeOfStackCommit);
+  opthdr->SizeOfStackCommit = FLAG_SizeOfStackCommit;
 
   // output data directory entries
   if (elf->imports) {
@@ -1033,13 +1039,19 @@ static struct ImagePointer GeneratePe(struct Elf *elf, char *fp, int64_t vp) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, "ho:D:")) != -1) {
+  while ((opt = getopt(argc, argv, "ho:D:R:S:")) != -1) {
     switch (opt) {
       case 'o':
         outpath = optarg;
         break;
       case 'D':
         stubpath = optarg;
+        break;
+      case 'S':
+        FLAG_SizeOfStackCommit = sizetol(optarg, 1024);
+        break;
+      case 'R':
+        FLAG_SizeOfStackReserve = sizetol(optarg, 1024);
         break;
       case 'h':
         ShowUsage(0, 1);

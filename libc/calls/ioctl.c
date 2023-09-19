@@ -40,6 +40,7 @@
 #include "libc/nt/struct/ipadapteraddresses.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/ifreq.h"
@@ -485,8 +486,12 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   if (IsLinux()) {
     return sys_ioctl(fd, SIOCGIFCONF, ifc);
   }
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
   bufMax = 15000; /* conservative guesstimate */
   b = alloca(bufMax);
+  CheckLargeStackAllocation(b, bufMax);
+#pragma GCC pop_options
   memcpy(ifcBsd, &bufMax, 8);                /* ifc_len */
   memcpy(ifcBsd + (IsXnu() ? 4 : 8), &b, 8); /* ifc_buf */
   if ((rc = sys_ioctl(fd, SIOCGIFCONF, &ifcBsd)) != -1) {

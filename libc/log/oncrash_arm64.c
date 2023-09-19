@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/aarch64.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
@@ -25,10 +26,12 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/errno.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
@@ -36,6 +39,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -48,6 +52,8 @@
 
 __static_yoink("strerror_wr");  // for kprintf %m
 __static_yoink("strsignal_r");  // for kprintf %G
+
+#define STACK_ERROR "error: not enough room on stack to print crash report\n"
 
 #define RESET   "\e[0m"
 #define BOLD    "\e[1m"
@@ -73,16 +79,6 @@ static relegated void Append(struct Buffer *b, const char *fmt, ...) {
   va_start(va, fmt);
   b->i += kvsnprintf(b->p + b->i, b->n - b->i, fmt, va);
   va_end(va);
-}
-
-static relegated wontreturn void RaiseCrash(int sig) {
-  sigset_t ss;
-  sigfillset(&ss);
-  sigdelset(&ss, sig);
-  sigprocmask(SIG_SETMASK, &ss, 0);
-  signal(sig, SIG_DFL);
-  kill(getpid(), sig);
-  _Exit(128 + sig);
 }
 
 static relegated const char *ColorRegister(int r) {
@@ -144,7 +140,7 @@ static relegated bool AppendFileLine(struct Buffer *b, const char *addr2line,
     sys_close(pfd[0]);
     sys_dup2(pfd[1], 1, 0);
     sys_close(2);
-    __sys_execve(
+    sys_execve(
         addr2line,
         (char *const[]){(char *)addr2line, "-pifCe", (char *)debugbin, buf, 0},
         (char *const[]){0});
@@ -189,98 +185,129 @@ static relegated char *GetSymbolName(struct SymbolTable *st, int symbol,
   return s;
 }
 
-relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
-  char buf[10000];
-  ucontext_t *ctx = arg;
-  static _Thread_local bool once;
-  struct Buffer b[1] = {{buf, sizeof(buf)}};
-  b->p[b->i++] = '\n';
-  if (!once) {
-    int i, j;
-    const char *kind;
-    const char *reset;
-    const char *strong;
-    char host[64] = "unknown";
-    struct utsname names = {0};
-    once = true;
-    ftrace_enabled(-1);
-    strace_enabled(-1);
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
+static relegated void __oncrash_impl(int sig, struct siginfo *si,
+                                     ucontext_t *ctx) {
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+  long size = __get_safe_size(10000, 4096);
+  if (size < 80) {
+    // almost certainly guaranteed to succeed
+    klog(STACK_ERROR, sizeof(STACK_ERROR) - 1);
     __restore_tty();
-    uname(&names);
-    gethostname(host, sizeof(host));
-    reset = !__nocolor ? RESET : "";
-    strong = !__nocolor ? STRONG : "";
-    if (ctx &&
-        (ctx->uc_mcontext.sp & (GetStackSize() - 1)) <= getauxval(AT_PAGESZ)) {
-      kind = "Stack Overflow";
-    } else {
-      kind = DescribeSiCode(sig, si->si_code);
-    }
-    Append(b,
-           "%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
-           "%s\n",
-           strong, reset, sig, kind, host, getpid(), gettid(),
-           program_invocation_name);
-    if (errno) {
-      Append(b, " %m\n");
-    }
-    Append(b, " %s %s %s %s\n", names.sysname, names.version, names.nodename,
-           names.release);
-    if (ctx) {
-      long pc;
-      char *mem = 0;
-      size_t memsz = 0;
-      int addend, symbol;
-      const char *debugbin;
-      const char *addr2line;
-      struct StackFrame *fp;
-      struct SymbolTable *st;
-      struct fpsimd_context *vc;
-      st = GetSymbolTable();
-      debugbin = FindDebugBinary();
-      addr2line = GetAddr2linePath();
+    __minicrash(sig, si, ctx);
+    return;
+  }
+  char *buf = alloca(size);
+  CheckLargeStackAllocation(buf, size);
+#pragma GCC pop_options
+  int i, j;
+  const char *kind;
+  const char *reset;
+  const char *strong;
+  char host[64] = "unknown";
+  struct utsname names = {0};
+  struct Buffer b[1] = {{buf, size}};
+  b->p[b->i++] = '\n';
+  ftrace_enabled(-1);
+  strace_enabled(-1);
+  __restore_tty();
+  uname(&names);
+  gethostname(host, sizeof(host));
+  reset = !__nocolor ? RESET : "";
+  strong = !__nocolor ? STRONG : "";
+  if (__is_stack_overflow(si, ctx)) {
+    kind = "\e[7mStack Overflow\e[0m";
+  } else {
+    kind = DescribeSiCode(sig, si->si_code);
+  }
+  Append(b, "%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n", strong, reset,
+         sig, kind, host, getpid(), gettid());
+  if (program_invocation_name) {
+    Append(b, " %s\n", program_invocation_name);
+  }
+  if (errno) {
+    Append(b, " %s\n", strerror(errno));
+  }
+  Append(b, " %s %s %s %s\n", names.sysname, names.version, names.nodename,
+         names.release);
+  if (ctx) {
+    long pc;
+    char *mem = 0;
+    size_t memsz = 0;
+    int addend, symbol;
+    const char *debugbin;
+    const char *addr2line;
+    struct StackFrame *fp;
+    struct SymbolTable *st;
+    struct fpsimd_context *vc;
+    st = GetSymbolTable();
+    debugbin = FindDebugBinary();
+    addr2line = GetAddr2linePath();
 
-      if (ctx->uc_mcontext.fault_address) {
-        Append(b, " fault_address = %#lx\n", ctx->uc_mcontext.fault_address);
+    if (sig == SIGFPE ||   //
+        sig == SIGILL ||   //
+        sig == SIGBUS ||   //
+        sig == SIGSEGV ||  //
+        sig == SIGTRAP) {
+      Append(b, " faulting address is %016lx\n", si->si_addr);
+    }
+
+    // PRINT REGISTERS
+    for (i = 0; i < 8; ++i) {
+      Append(b, " ");
+      for (j = 0; j < 4; ++j) {
+        int r = 8 * j + i;
+        if (j) Append(b, " ");
+        Append(b, "%s%016lx%s x%d%s", ColorRegister(r),
+               ctx->uc_mcontext.regs[r], reset, r, r == 8 || r == 9 ? " " : "");
       }
+      Append(b, "\n");
+    }
 
-      // PRINT REGISTERS
-      for (i = 0; i < 8; ++i) {
+    // PRINT VECTORS
+    vc = (struct fpsimd_context *)ctx->uc_mcontext.__reserved;
+    if (vc->head.magic == FPSIMD_MAGIC) {
+      int n = 16;
+      while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2]) n -= 2;
+      for (i = 0; i * 2 < n; ++i) {
         Append(b, " ");
-        for (j = 0; j < 4; ++j) {
-          int r = 8 * j + i;
+        for (j = 0; j < 2; ++j) {
+          int r = j + 2 * i;
           if (j) Append(b, " ");
-          Append(b, "%s%016lx%s x%d%s", ColorRegister(r),
-                 ctx->uc_mcontext.regs[r], reset, r,
-                 r == 8 || r == 9 ? " " : "");
+          Append(b, "%016lx ..%s %016lx v%d%s", (long)(vc->vregs[r] >> 64),
+                 !j ? "" : ".", (long)vc->vregs[r], r, r < 10 ? " " : "");
         }
         Append(b, "\n");
       }
+    }
 
-      // PRINT VECTORS
-      vc = (struct fpsimd_context *)ctx->uc_mcontext.__reserved;
-      if (vc->head.magic == FPSIMD_MAGIC) {
-        int n = 16;
-        while (n && !vc->vregs[n - 1] && !vc->vregs[n - 2]) n -= 2;
-        for (i = 0; i * 2 < n; ++i) {
-          Append(b, " ");
-          for (j = 0; j < 2; ++j) {
-            int r = j + 2 * i;
-            if (j) Append(b, " ");
-            Append(b, "%016lx ..%s %016lx v%d%s", (long)(vc->vregs[r] >> 64),
-                   !j ? "" : ".", (long)vc->vregs[r], r, r < 10 ? " " : "");
-          }
-          Append(b, "\n");
-        }
+    // PRINT CURRENT LOCATION
+    //
+    // We can get the address of the currently executing function by
+    // simply examining the program counter.
+    pc = ctx->uc_mcontext.pc;
+    Append(b, " %016lx sp %lx pc", ctx->uc_mcontext.sp, pc);
+    if (pc && st && (symbol = __get_symbol(st, pc))) {
+      addend = pc - st->addr_base;
+      addend -= st->symbols[symbol].x;
+      Append(b, " ");
+      if (!AppendFileLine(b, addr2line, debugbin, pc)) {
+        Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
+        if (addend) Append(b, "%+d", addend);
       }
+    }
+    Append(b, "\n");
 
-      // PRINT CURRENT LOCATION
-      //
-      // We can get the address of the currently executing function by
-      // simply examining the program counter.
-      pc = ctx->uc_mcontext.pc;
-      Append(b, " %016lx sp %lx pc", ctx->uc_mcontext.sp, pc);
+    // PRINT LINKED LOCATION
+    //
+    // The x30 register can usually tell us the address of the parent
+    // function. This can help us determine the caller in cases where
+    // stack frames aren't being generated by the compiler; but if we
+    // have stack frames, then we need to ensure this won't duplicate
+    // the first element of the frame pointer backtrace below.
+    fp = (struct StackFrame *)ctx->uc_mcontext.regs[29];
+    if (IsCode((pc = ctx->uc_mcontext.regs[30]))) {
+      Append(b, " %016lx sp %lx lr", ctx->uc_mcontext.sp, pc);
       if (pc && st && (symbol = __get_symbol(st, pc))) {
         addend = pc - st->addr_base;
         addend -= st->symbols[symbol].x;
@@ -291,75 +318,56 @@ relegated void __oncrash_arm64(int sig, struct siginfo *si, void *arg) {
         }
       }
       Append(b, "\n");
+      if (fp && !kisdangerous(fp) && pc == fp->addr) {
+        fp = fp->next;
+      }
+    }
 
-      // PRINT LINKED LOCATION
-      //
-      // The x30 register can usually tell us the address of the parent
-      // function. This can help us determine the caller in cases where
-      // stack frames aren't being generated by the compiler; but if we
-      // have stack frames, then we need to ensure this won't duplicate
-      // the first element of the frame pointer backtrace below.
-      fp = (struct StackFrame *)ctx->uc_mcontext.regs[29];
-      if (IsCode((pc = ctx->uc_mcontext.regs[30]))) {
-        Append(b, " %016lx sp %lx lr", ctx->uc_mcontext.sp, pc);
-        if (pc && st && (symbol = __get_symbol(st, pc))) {
+    // PRINT FRAME POINTERS
+    //
+    // The prologues and epilogues of non-leaf functions should save
+    // the frame pointer (x29) and return address (x30) to the stack
+    // and then set x29 to sp, which is the address of the new frame
+    // effectively creating a daisy chain letting us trace back into
+    // the origin of execution, e.g. _start(), or sys_clone_linux().
+    for (i = 0; fp; fp = fp->next) {
+      if (kisdangerous(fp)) {
+        Append(b, " %016lx <dangerous fp>\n", fp);
+        break;
+      }
+      if (++i == 100) {
+        Append(b, " <truncated backtrace>\n");
+        break;
+      }
+      if (st && (pc = fp->addr)) {
+        if ((symbol = __get_symbol(st, pc))) {
           addend = pc - st->addr_base;
           addend -= st->symbols[symbol].x;
-          Append(b, " ");
-          if (!AppendFileLine(b, addr2line, debugbin, pc)) {
-            Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-            if (addend) Append(b, "%+d", addend);
-          }
-        }
-        Append(b, "\n");
-        if (fp && !kisdangerous(fp) && pc == fp->addr) {
-          fp = fp->next;
-        }
-      }
-
-      // PRINT FRAME POINTERS
-      //
-      // The prologues and epilogues of non-leaf functions should save
-      // the frame pointer (x29) and return address (x30) to the stack
-      // and then set x29 to sp, which is the address of the new frame
-      // effectively creating a daisy chain letting us trace back into
-      // the origin of execution, e.g. _start(), or sys_clone_linux().
-      for (i = 0; fp; fp = fp->next) {
-        if (kisdangerous(fp)) {
-          Append(b, " %016lx <dangerous fp>\n", fp);
-          break;
-        }
-        if (++i == 100) {
-          Append(b, " <truncated backtrace>\n");
-          break;
-        }
-        if (st && (pc = fp->addr)) {
-          if ((symbol = __get_symbol(st, pc))) {
-            addend = pc - st->addr_base;
-            addend -= st->symbols[symbol].x;
-          } else {
-            addend = 0;
-          }
         } else {
-          symbol = 0;
           addend = 0;
         }
-        Append(b, " %016lx fp %lx lr ", fp, pc);
-        if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
-          Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
-          if (addend) Append(b, "%+d", addend);
-        }
-        Append(b, "\n");
+      } else {
+        symbol = 0;
+        addend = 0;
       }
-      free(mem);
+      Append(b, " %016lx fp %lx lr ", fp, pc);
+      if (!AppendFileLine(b, addr2line, debugbin, pc) && st) {
+        Append(b, "%s", GetSymbolName(st, symbol, &mem, &memsz));
+        if (addend) Append(b, "%+d", addend);
+      }
+      Append(b, "\n");
     }
-  } else {
-    Append(b, "got %G while crashing! pc %lx lr %lx\n", sig,
-           ctx->uc_mcontext.pc, ctx->uc_mcontext.regs[30]);
+    free(mem);
   }
+  b->p[b->n - 1] = '\n';
   sys_write(2, b->p, MIN(b->i, b->n));
-  __print_maps();
-  RaiseCrash(sig);
+}
+
+relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
+  ucontext_t *ctx = arg;
+  BLOCK_CANCELLATIONS;
+  __oncrash_impl(sig, si, ctx);
+  ALLOW_CANCELLATIONS;
 }
 
 #endif /* __aarch64__ */

@@ -44,9 +44,8 @@
 __static_yoink("backtrace.com");
 __static_yoink("backtrace.com.dbg");
 
-char testlib_enable_tmp_setup_teardown_once;
-
 void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown_once();
   ASSERT_NE(-1, mkdir("bin", 0755));
   testlib_extract("/zip/backtrace.com", "bin/backtrace.com", 0755);
   testlib_extract("/zip/backtrace.com.dbg", "bin/backtrace.com.dbg", 0755);

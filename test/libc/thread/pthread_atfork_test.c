@@ -19,8 +19,10 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
@@ -75,7 +77,7 @@ void mu_unlock(void) {
   pthread_mutex_unlock(&mu);
 }
 
-void mu_funlock(void) {
+void mu_wipe(void) {
   pthread_mutex_init(&mu, 0);
 }
 
@@ -97,11 +99,11 @@ void *Worker(void *arg) {
   return 0;
 }
 
-TEST(pthread_atfork, torture) {
-  pthread_mutex_init(&mu, 0);
-  pthread_atfork(mu_lock, mu_unlock, mu_funlock);
+TEST(pthread_atfork, fork_exit_torture) {
+  mu_wipe();
+  pthread_atfork(mu_lock, mu_unlock, mu_wipe);
   int i, n = 4;
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
   }

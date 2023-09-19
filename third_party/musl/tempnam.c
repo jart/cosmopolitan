@@ -67,7 +67,7 @@ tempnam(const char *dir, const char *pfx)
 	int i, r;
 	char s[PATH_MAX];
 	size_t l, dl, pl;
-	if (!dir) dir = kTmpPath;
+	if (!dir) dir = __get_tmpdir();
 	if (!pfx) pfx = "temp";
 	dl = strlen(dir);
 	pl = strlen(pfx);

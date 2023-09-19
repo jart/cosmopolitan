@@ -28,6 +28,9 @@ __msabi extern typeof(CreateThread) *const __imp_CreateThread;
  * Opens file on the New Technology.
  *
  * @param dwStackSize may be 0 for default per executable
+ * @param dwCreationFlags is a bitmask that may consist of:
+ *     - kNtCreateSuspended
+ *     - kNtStackSizeParamIsAReservation
  * @return thread handle, or 0 on failure
  * @note this wrapper takes care of ABI, STRACE()
  */
@@ -38,9 +41,9 @@ CreateThread(const struct NtSecurityAttributes *lpThreadAttributes,
   int64_t hHandle;
   hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
                                lpParameter, dwCreationFlags, opt_lpThreadId);
-  NTTRACE("CreateThread(%s, %'zu, %p, %p, %s, %p) → %ld% m",
+  NTTRACE("CreateThread(%s, %'zu, %t, %p, %s, %p) → %ld% m",
           DescribeNtSecurityAttributes(lpThreadAttributes), dwStackSize,
-          lpStartAddress, lpParameter, dwCreationFlags, opt_lpThreadId,
-          hHandle);
+          lpStartAddress, lpParameter,
+          DescribeThreadCreateFlags(dwCreationFlags), opt_lpThreadId, hHandle);
   return hHandle;
 }

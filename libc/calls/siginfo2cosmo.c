@@ -98,6 +98,8 @@ privileged void __siginfo2cosmo(struct siginfo *si,
     si->si_addr = si_addr;
   } else if (si_signo == SIGCHLD) {
     si->si_status = si_status;
+    si->si_pid = si_pid;
+    si->si_uid = si_uid;
   } else if (si_signo == SIGALRM) {
     si->si_timerid = si_timerid;
     si->si_overrun = si_overrun;

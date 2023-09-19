@@ -33,7 +33,7 @@
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 2
+#define SYSLIB_VERSION 4
 
 struct Syslib {
   int magic;
@@ -59,6 +59,15 @@ struct Syslib {
   /* v2 (2023-09-10) */
   pthread_t (*pthread_self)(void);
   void (*dispatch_release)(dispatch_semaphore_t);
+  int (*raise)(int);
+  int (*pthread_join)(pthread_t, void **);
+  void (*pthread_yield_np)(void);
+  int pthread_stack_min;
+  int sizeof_pthread_attr_t;
+  int (*pthread_attr_init)(pthread_attr_t *);
+  int (*pthread_attr_destroy)(pthread_attr_t *);
+  int (*pthread_attr_setstacksize)(pthread_attr_t *, size_t);
+  int (*pthread_attr_setguardsize)(pthread_attr_t *, size_t);
 };
 
 #define ELFCLASS32  1
@@ -834,6 +843,15 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dispatch_walltime = dispatch_walltime;
   M->lib.pthread_self = pthread_self;
   M->lib.dispatch_release = dispatch_release;
+  M->lib.raise = raise;
+  M->lib.pthread_join = pthread_join;
+  M->lib.pthread_yield_np = pthread_yield_np;
+  M->lib.pthread_stack_min = PTHREAD_STACK_MIN;
+  M->lib.sizeof_pthread_attr_t = sizeof(pthread_attr_t);
+  M->lib.pthread_attr_init = pthread_attr_init;
+  M->lib.pthread_attr_destroy = pthread_attr_destroy;
+  M->lib.pthread_attr_setstacksize = pthread_attr_setstacksize;
+  M->lib.pthread_attr_setguardsize = pthread_attr_setguardsize;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;

@@ -25,8 +25,10 @@
 #include "dsp/core/illumination.h"
 #include "dsp/core/q.h"
 #include "dsp/scale/scale.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/pmulhrsw.h"
 #include "libc/log/check.h"
@@ -64,7 +66,7 @@ const double kSrgbToXyz[3][3] = {
 long magikarp_latency_;
 long gyarados_latency_;
 long ycbcr2rgb_latency_;
-long double magikarp_start_;
+struct timespec magikarp_start_;
 
 struct YCbCr {
   bool yonly;
@@ -261,15 +263,14 @@ void YCbCrConvert(struct YCbCr *me, long yn, long xn,
                   const unsigned char Y[restrict yys][yxs], long cys, long cxs,
                   unsigned char Cb[restrict cys][cxs],
                   unsigned char Cr[restrict cys][cxs]) {
-  long double ts;
-  ts = nowl();
+  struct timespec ts = timespec_real();
   if (!me->yonly) {
     YCbCr2Rgb(yn, xn, RGB, yys, yxs, Y, cys, cxs, Cb, Cr, me->magnums,
               me->lighting, me->transfer[pf10_]);
   } else {
     Y2Rgb(yn, xn, RGB, yys, yxs, Y, me->magnums, me->transfer[pf10_]);
   }
-  ycbcr2rgb_latency_ = lroundl((nowl() - ts) * 1e6l);
+  ycbcr2rgb_latency_ = timespec_tomicros(timespec_sub(timespec_real(), ts));
 }
 
 void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
@@ -279,7 +280,6 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                      unsigned char Cr[restrict cys][cxs], long yyn, long yxn,
                      long cyn, long cxn, double syn, double sxn, double pry,
                      double prx) {
-  long double ts;
   long scyn, scxn;
   double yry, yrx, cry, crx, yoy, yox, coy, cox;
   scyn = syn * cyn / yyn;
@@ -297,8 +297,8 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                     Magkern2xY(cys, cxs, Cr, scyn, scxn), HALF(yyn), yxn,
                     HALF(cyn), scxn, syn / 2, sxn, pry, prx);
   } else {
-    magikarp_latency_ = lroundl((nowl() - magikarp_start_) * 1e6l);
-    ts = nowl();
+    struct timespec ts = timespec_real();
+    magikarp_latency_ = timespec_tomicros(timespec_sub(ts, magikarp_start_));
     yry = syn / dyn;
     yrx = sxn / dxn;
     cry = syn * cyn / yyn / dyn;
@@ -326,7 +326,7 @@ void YCbCr2RgbScaler(struct YCbCr *me, long dyn, long dxn,
                   me->chroma.cy, me->chroma.cx, false);
     GyaradosUint8(cys, cxs, Cr, cys, cxs, Cr, dyn, dxn, scyn, scxn, 0, 255,
                   me->chroma.cy, me->chroma.cx, false);
-    gyarados_latency_ = lround((nowl() - ts) * 1e6l);
+    gyarados_latency_ = timespec_tomicros(timespec_sub(timespec_real(), ts));
     YCbCrConvert(me, dyn, dxn, RGB, yys, yxs, Y, cys, cxs, Cb, Cr);
     INFOF("done");
   }
@@ -381,7 +381,7 @@ void *YCbCr2RgbScale(long dyn, long dxn,
   CHECK_LE(cyn, cys);
   CHECK_LE(cxn, cxs);
   INFOF("magikarp2x");
-  magikarp_start_ = nowl();
+  magikarp_start_ = timespec_real();
   minyys = MAX(ceil(syn), MAX(yyn, ceil(dyn * pry)));
   minyxs = MAX(ceil(sxn), MAX(yxn, ceil(dxn * prx)));
   mincys = MAX(cyn, ceil(dyn * pry));

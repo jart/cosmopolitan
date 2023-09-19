@@ -78,7 +78,7 @@ TEST(pledge, testLogMessage_inSoftyMode) {
   ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
   EXITS(0);
   close(fds[1]);
-  read(fds[0], msg, sizeof(msg));
+  read(fds[0], msg, sizeof(msg) - 1);
   close(fds[0]);
   if (IsLinux()) {
     ASSERT_STARTSWITH("error: protected syscall socket", msg);

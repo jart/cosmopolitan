@@ -43,6 +43,7 @@
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/createfile.h"
@@ -73,9 +74,12 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.internal.h"
 #include "libc/vga/vga.internal.h"
+
+#define STACK_ERROR "kprintf error: stack is about to overflow\n"
 
 #define KGETINT(x, va, t, s)                 \
   switch (t) {                               \
@@ -123,7 +127,6 @@
 // clang-format off
 __msabi extern typeof(CreateFile) *const __imp_CreateFileW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
-__msabi extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess;
 __msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
 __msabi extern typeof(GetLastError) *const __imp_GetLastError;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
@@ -322,10 +325,8 @@ privileged long kloghandle(void) {
       e = __imp_GetLastError();
       n = __imp_GetEnvironmentVariableW(u"KPRINTF_LOG", path, 512);
       if (!n && __imp_GetLastError() == kNtErrorEnvvarNotFound) {
-        long proc;
-        proc = __imp_GetCurrentProcess();
         hand = __imp_GetStdHandle(kNtStdErrorHandle);
-        __imp_DuplicateHandle(proc, hand, proc, &hand, 0, false,
+        __imp_DuplicateHandle(-1, hand, -1, &hand, 0, false,
                               kNtDuplicateSameAccess);
       } else if (n && n < 512) {
         hand = __imp_CreateFileW(
@@ -423,6 +424,8 @@ privileged void klog(const char *b, size_t n) {
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 #elif defined(__aarch64__)
+  // this isn't a cancellation point because we don't acknowledge eintr
+  // on xnu we use the "nocancel" version of the system call for safety
   register long r0 asm("x0") = kloghandle();
   register long r1 asm("x1") = (long)b;
   register long r2 asm("x2") = (long)n;
@@ -740,11 +743,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'G':
           x = va_arg(va, int);
-          if (_weaken(strsignal_r) && (s = _weaken(strsignal_r)(x, z))) {
-            goto FormatString;
-          } else {
-            goto FormatDecimal;
-          }
+          s = strsignal_r(x, z);
+          goto FormatString;
 
         case 't': {
           // %t will print the &symbol associated with an address. this
@@ -1032,10 +1032,18 @@ privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
  * @vforksafe
  */
 privileged void kvprintf(const char *fmt, va_list v) {
-  size_t n;
-  char b[4000];
-  n = kformat(b, sizeof(b), fmt, v);
-  klog(b, MIN(n, sizeof(b) - 1));
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+  long size = __get_safe_size(8000, 3000);
+  if (size < 80) {
+    klog(STACK_ERROR, sizeof(STACK_ERROR) - 1);
+    return;
+  }
+  char *buf = alloca(size);
+  CheckLargeStackAllocation(buf, size);
+#pragma GCC pop_options
+  size_t count = kformat(buf, size, fmt, v);
+  klog(buf, MIN(count, size - 1));
 }
 
 /**

@@ -49,17 +49,25 @@ $(LIBC_INTRIN_A).pkg:					\
 o/$(MODE)/libc/intrin/mman.greg.o: private COPTS += -Os
 
 $(LIBC_INTRIN_A_OBJS): private				\
-		CFLAGS +=				\
+		COPTS +=				\
 			-x-no-pg			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
-			-fno-stack-protector
+			-fno-stack-protector		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
+
+o/$(MODE)/libc/intrin/kprintf.o: private		\
+		CFLAGS +=				\
+			-Wframe-larger-than=128		\
+			-Walloca-larger-than=128
 
 o/$(MODE)/libc/intrin/asan.o: private			\
 		CFLAGS +=				\
 			-O2				\
 			-finline			\
-			-finline-functions
+			-finline-functions		\
+			-fpatchable-function-entry=0,0
 
 o//libc/intrin/memmove.o: private			\
 		CFLAGS +=				\
@@ -112,6 +120,8 @@ o/$(MODE)/libc/intrin/ksockoptnames.o: libc/intrin/ksockoptnames.S
 o/$(MODE)/libc/intrin/ktcpoptnames.o: libc/intrin/ktcpoptnames.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/intrin/sched_yield.o: libc/intrin/sched_yield.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/intrin/stackcall.o: libc/intrin/stackcall.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))

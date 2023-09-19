@@ -126,10 +126,12 @@ textwindows int __munge_terminal_input(char *p, uint32_t *n) {
     }
   }
   if (got_vintr) {
-    delivered |= __sig_handle(0, SIGINT, SI_KERNEL, 0);
+    __sig_raise(SIGINT, SI_KERNEL);
+    delivered |= true;
   }
   if (got_vquit) {
-    delivered |= __sig_handle(0, SIGQUIT, SI_KERNEL, 0);
+    __sig_raise(SIGQUIT, SI_KERNEL);
+    delivered |= true;
   }
   if (*n && !j) {
     if (delivered) {

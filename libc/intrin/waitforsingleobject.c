@@ -25,12 +25,11 @@ __msabi extern typeof(WaitForSingleObject) *const __imp_WaitForSingleObject;
 
 /**
  * Waits for handle to change status.
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ * @return -1u on error w/ GetLastError()
  */
 uint32_t WaitForSingleObject(int64_t hHandle, uint32_t dwMilliseconds) {
   uint32_t rc;
   rc = __imp_WaitForSingleObject(hHandle, dwMilliseconds);
-  if (rc == -1u) __winerr();
   POLLTRACE("WaitForSingleObject(%ld, %'d) → %d% m", hHandle, dwMilliseconds,
             rc);
   return rc;

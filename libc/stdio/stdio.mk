@@ -32,6 +32,7 @@ LIBC_STDIO_A_DIRECTDEPS =				\
 	LIBC_NT_ADVAPI32				\
 	LIBC_NT_KERNEL32				\
 	LIBC_RUNTIME					\
+	LIBC_PROC					\
 	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
@@ -48,6 +49,9 @@ $(LIBC_STDIO_A).pkg:					\
 		$(LIBC_STDIO_A_OBJS)			\
 		$(foreach x,$(LIBC_STDIO_A_DIRECTDEPS),$($(x)_A).pkg)
 
+# offer assurances about the stack safety of cosmo libc
+$(LIBC_STDIO_A_OBJS): private COPTS += -Wframe-larger-than=4096 -Walloca-larger-than=4096
+
 o/$(MODE)/libc/stdio/fputc.o: private			\
 		CFLAGS +=				\
 			-O3
@@ -57,8 +61,6 @@ o//libc/stdio/appendw.o: private			\
 			-Os
 
 o/$(MODE)/libc/stdio/dirstream.o			\
-o/$(MODE)/libc/stdio/posix_spawnattr.o			\
-o/$(MODE)/libc/stdio/posix_spawn_file_actions.o		\
 o/$(MODE)/libc/stdio/mt19937.o: private			\
 		CFLAGS +=				\
 			-ffunction-sections

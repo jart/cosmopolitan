@@ -23,6 +23,7 @@ NET_TURFWAR_DIRECTDEPS =				\
 	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_PROC					\
 	LIBC_RUNTIME					\
 	LIBC_SOCK					\
 	LIBC_STDIO					\

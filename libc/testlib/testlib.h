@@ -30,17 +30,6 @@ COSMOPOLITAN_C_START_
   __FIXTURE("fixture", SUITE, NAME)
 
 /**
- * Registers explosive fixture with linker.
- *
- * All tests will run an additional time for each set of entries in the
- * Cartesian product of groups. That makes this similar to fixture, but
- * more appropriate for testing pure code (i.e. no syscalls) like math.
- */
-#define COMBO(GROUP, ENTRY)        \
-  __static_yoink("__combo_start"); \
-  __FIXTURE("combo", GROUP, ENTRY)
-
-/**
  * Declares benchmark function.
  *
  * These only run if (1) the -b flag is passed to the FOO_test.com; and
@@ -104,13 +93,10 @@ COSMOPOLITAN_C_START_
 /**
  * Enables setup and teardown of test directories.
  *
- * If the linker says this symbol exists then, regardless of its value,
- * a unique test directory will be created at the start of each test,
- * the test will be run with that directory as its working directory,
- * and if the test succeeds it'll be removed along with any contents.
+ * These should be called from SetUpOnce().
  */
-extern char testlib_enable_tmp_setup_teardown;
-extern char testlib_enable_tmp_setup_teardown_once;
+void testlib_enable_tmp_setup_teardown(void);
+void testlib_enable_tmp_setup_teardown_once(void);
 
 /**
  * User-defined test setup function.
@@ -357,7 +343,6 @@ extern const char *testlib_showerror_func;  /* set by macros */
 extern const testfn_t __bench_start[], __bench_end[];
 extern const testfn_t __testcase_start[], __testcase_end[];
 extern const struct TestFixture __fixture_start[], __fixture_end[];
-extern const struct TestFixture __combo_start[], __combo_end[];
 
 void testlib_showerror_assert_eq(int, const char *, const char *, char *,
                                  char *, const char *, ...) wontreturn;
@@ -389,8 +374,6 @@ const char *testlib_strerror(void);
 void testlib_runallbenchmarks(void);
 bool testlib_memoryexists(const void *);
 void testlib_runtestcases(const testfn_t *, const testfn_t *, testfn_t);
-void testlib_runcombos(const testfn_t *, const testfn_t *,
-                       const struct TestFixture *, const struct TestFixture *);
 void testlib_runfixtures(const testfn_t *, const testfn_t *,
                          const struct TestFixture *,
                          const struct TestFixture *);

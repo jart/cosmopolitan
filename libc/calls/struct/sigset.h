@@ -16,7 +16,6 @@ int sigorset(sigset_t *, const sigset_t *, const sigset_t *) paramsnonnull();
 int sigisemptyset(const sigset_t *) paramsnonnull() nosideeffect;
 int sigismember(const sigset_t *, int) paramsnonnull() nosideeffect;
 int sigcountset(const sigset_t *) paramsnonnull() nosideeffect;
-int sigisprecious(int) nosideeffect;
 int sigprocmask(int, const sigset_t *, sigset_t *);
 int sigsuspend(const sigset_t *);
 int sigpending(sigset_t *);

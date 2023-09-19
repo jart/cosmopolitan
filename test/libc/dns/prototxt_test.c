@@ -25,15 +25,17 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dns/prototxt.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
-#include "libc/dns/prototxt.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 void SetUp() {
   int fd;

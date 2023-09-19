@@ -1,0 +1,15 @@
+#!/bin/sh
+set -- -apifCe "$@"
+
+if [ -n "$ADDR2LINE" ]; then
+  exec "$ADDR2LINE" "$@"
+fi
+
+COSMO=${COSMO:-/opt/cosmo}
+for ARCH in x86_64 aarch64; do
+  o/third_party/gcc/bin/$ARCH-linux-musl-addr2line "$@" 2>/dev/null && exit
+  "$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-addr2line" "$@" 2>/dev/null && exit
+done
+
+echo please set the ADDR2LINE environment variable >&2
+exit 1

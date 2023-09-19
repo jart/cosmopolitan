@@ -49,6 +49,12 @@ $(LIBC_THREAD_A).pkg:					\
 		$(LIBC_THREAD_A_OBJS)			\
 		$(foreach x,$(LIBC_THREAD_A_DIRECTDEPS),$($(x)_A).pkg)
 
+$(LIBC_THREAD_A_OBJS): private				\
+		COPTS +=				\
+			-fno-sanitize=all		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
+
 LIBC_THREAD_LIBS = $(foreach x,$(LIBC_THREAD_ARTIFACTS),$($(x)))
 LIBC_THREAD_SRCS = $(foreach x,$(LIBC_THREAD_ARTIFACTS),$($(x)_SRCS))
 LIBC_THREAD_HDRS = $(foreach x,$(LIBC_THREAD_ARTIFACTS),$($(x)_HDRS))

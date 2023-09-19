@@ -17,11 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/mlock.h"
 #include "libc/sysv/consts/o.h"
@@ -50,11 +54,15 @@ void testlib_benchwarmup(void) {
 
 void EnableCruiseControlForCool(void) {
   int fd, micros = 10;
-  if ((fd = open("/dev/cpu_dma_latency", O_WRONLY)) != -1) {
-    write(fd, &micros, sizeof(micros));
-    fcntl(fd, F_DUPFD_CLOEXEC, 123);
-    close(fd);
+  if (!IsLinux()) return;
+  BLOCK_CANCELLATIONS;
+  if ((fd = __sys_openat(AT_FDCWD, "/dev/cpu_dma_latency", O_WRONLY, 0)) !=
+      -1) {
+    sys_write(fd, &micros, sizeof(micros));
+    sys_fcntl(fd, F_DUPFD_CLOEXEC, 123, __sys_fcntl);
+    sys_close(fd);
   }
+  ALLOW_CANCELLATIONS;
 }
 
 /**

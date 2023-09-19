@@ -43,10 +43,8 @@ struct MemoryIntervals {
 
 extern struct MemoryIntervals _mmi;
 
-void __mmi_init(void);
 void __mmi_lock(void);
 void __mmi_unlock(void);
-void __mmi_funlock(void);
 bool IsMemtracked(int, int);
 void PrintSystemMappings(int);
 unsigned __find_memory(const struct MemoryIntervals *, int) nosideeffect;

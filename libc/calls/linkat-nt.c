@@ -20,17 +20,24 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/stack.h"
 
 textwindows int sys_linkat_nt(int olddirfd, const char *oldpath, int newdirfd,
                               const char *newpath) {
-  char16_t newpath16[PATH_MAX];
-  char16_t oldpath16[PATH_MAX];
-  if (__mkntpathat(olddirfd, oldpath, 0, oldpath16) != -1 &&
-      __mkntpathat(newdirfd, newpath, 0, newpath16) != -1) {
-    if (CreateHardLink(newpath16, oldpath16, NULL)) {
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
+  struct {
+    char16_t newpath16[PATH_MAX];
+    char16_t oldpath16[PATH_MAX];
+  } M;
+  CheckLargeStackAllocation(&M, sizeof(M));
+#pragma GCC pop_options
+  if (__mkntpathat(olddirfd, oldpath, 0, M.oldpath16) != -1 &&
+      __mkntpathat(newdirfd, newpath, 0, M.newpath16) != -1) {
+    if (CreateHardLink(M.newpath16, M.oldpath16, NULL)) {
       return 0;
     } else {
-      return __fix_enotdir3(__winerr(), newpath16, oldpath16);
+      return __fix_enotdir3(__winerr(), M.newpath16, M.oldpath16);
     }
   } else {
     return -1;

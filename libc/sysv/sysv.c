@@ -39,7 +39,7 @@ register long cosmo_tls_register asm("x28");
 void report_cancellation_point(void);
 
 dontinline long systemfive_cancel(void) {
-  return _pthread_cancel_sys();
+  return _weaken(_pthread_cancel_ack)();
 }
 
 // special region of executable memory where cancellation is safe
@@ -49,16 +49,16 @@ dontinline long systemfive_cancellable(void) {
   // plus (2) cancellations aren't disabled
   struct PosixThread *pth = 0;
   struct CosmoTib *tib = __get_tls();
-  if (cosmo_tls_register &&               //
-      _weaken(_pthread_cancel_sys) &&     //
-      !(tib->tib_flags & PT_NOCANCEL) &&  //
+  if (cosmo_tls_register &&            //
+      _weaken(_pthread_cancel_ack) &&  //
       (pth = (struct PosixThread *)tib->tib_pthread)) {
     // check if cancellation is already pending
-    if (atomic_load_explicit(&pth->cancelled, memory_order_acquire)) {
+    if (!(pth->pt_flags & PT_NOCANCEL) &&
+        atomic_load_explicit(&pth->cancelled, memory_order_acquire)) {
       return systemfive_cancel();
     }
 #if IsModeDbg()
-    if (!(tib->tib_flags & PT_INCANCEL)) {
+    if (!(pth->flags & PT_INCANCEL)) {
       if (_weaken(report_cancellation_point)) {
         _weaken(report_cancellation_point)();
       }
@@ -87,7 +87,7 @@ dontinline long systemfive_cancellable(void) {
   }
 
   // check if i/o call was interrupted by sigthr
-  if (pth && x0 == -EINTR &&
+  if (pth && x0 == -EINTR && !(pth->pt_flags & PT_NOCANCEL) &&
       atomic_load_explicit(&pth->cancelled, memory_order_acquire)) {
     return systemfive_cancel();
   }

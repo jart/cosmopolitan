@@ -21,18 +21,19 @@
 
 static pthread_mutex_t __cxa_lock_obj;
 
-void(__cxa_lock)(void) {
-  pthread_mutex_lock(&__cxa_lock_obj);
-}
-
-void(__cxa_unlock)(void) {
-  pthread_mutex_unlock(&__cxa_lock_obj);
-}
-
-void(__cxa_funlock)(void) {
+void __cxa_wipe(void) {
   pthread_mutex_init(&__cxa_lock_obj, 0);
 }
 
+void __cxa_lock(void) {
+  pthread_mutex_lock(&__cxa_lock_obj);
+}
+
+void __cxa_unlock(void) {
+  pthread_mutex_unlock(&__cxa_lock_obj);
+}
+
 __attribute__((__constructor__)) static void __cxa_init(void) {
-  pthread_atfork(__cxa_lock, __cxa_unlock, __cxa_funlock);
+  __cxa_wipe();
+  pthread_atfork(__cxa_lock, __cxa_unlock, __cxa_wipe);
 }

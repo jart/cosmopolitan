@@ -240,10 +240,8 @@ static char *JoinPaths(char *buf, size_t size, const char *path,
 }
 
 int sys_unveil_linux(const char *path, const char *permissions) {
-  int rc;
-  const char *dir;
-  const char *last;
-  const char *next;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct {
     char lbuf[PATH_MAX];
     char buf1[PATH_MAX];
@@ -252,6 +250,11 @@ int sys_unveil_linux(const char *path, const char *permissions) {
     char buf4[PATH_MAX];
   } b;
   CheckLargeStackAllocation(&b, sizeof(b));
+#pragma GCC pop_options
+  int rc;
+  const char *dir;
+  const char *last;
+  const char *next;
 
   if (!State.fd && (rc = unveil_init()) == -1) return rc;
   if ((path && !permissions) || (!path && permissions)) return einval();

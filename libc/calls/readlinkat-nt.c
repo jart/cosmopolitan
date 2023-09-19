@@ -46,9 +46,12 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
 
   int64_t h;
   ssize_t rc;
-  uint32_t mem = 16384;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+  uint32_t mem = 6000;
   volatile char *memory = alloca(mem);
   CheckLargeStackAllocation((char *)memory, mem);
+#pragma GCC pop_options
   struct NtReparseDataBuffer *rdb = (struct NtReparseDataBuffer *)memory;
   if ((h = CreateFile(path16, kNtFileReadAttributes,
                       kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,

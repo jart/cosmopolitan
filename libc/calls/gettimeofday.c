@@ -49,21 +49,15 @@ static gettimeofday_f *__gettimeofday = __gettimeofday_init;
  *
  * @param tv points to timeval that receives result if non-NULL
  * @param tz receives UTC timezone if non-NULL
- * @error EFAULT if `tv` or `tz` isn't valid memory
  * @see	clock_gettime() for nanosecond precision
  * @see	strftime() for string formatting
  */
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
-  int rc;
-  if (IsAsan() && ((tv && !__asan_is_valid(tv, sizeof(*tv))) ||
-                   (tz && !__asan_is_valid(tz, sizeof(*tz))))) {
-    rc = efault();
-  } else {
-    rc = __gettimeofday(tv, tz, 0).ax;
-  }
+  int rc = __gettimeofday(tv, tz, 0).ax;
 #if SYSDEBUG
   if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
-    STRACE("gettimeofday([%s], %p) → %d% m", DescribeTimeval(rc, tv), tz, rc);
+    POLLTRACE("gettimeofday([%s], %p) → %d% m", DescribeTimeval(rc, tv), tz,
+              rc);
   }
 #endif
   return rc;

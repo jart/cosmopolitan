@@ -18,10 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/ucontext.h"
@@ -41,10 +44,12 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/alloca.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
@@ -55,6 +60,8 @@
 
 __static_yoink("strerror_wr");  // for kprintf %m
 __static_yoink("strsignal_r");  // for kprintf %G
+
+#define STACK_ERROR "error: not enough room on stack to print crash report\n"
 
 static const char kGregOrder[17] forcealign(1) = {
     13, 11, 8, 14, 12, 9, 10, 15, 16, 0, 1, 2, 3, 4, 5, 6, 7,
@@ -69,16 +76,15 @@ static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
-  struct StackFrame *bp;
-  struct StackFrame goodframe;
-  if (!ctx->uc_mcontext.rip) {
-    kprintf("%s is NULL can't show backtrace\n", "RIP");
-  } else {
-    goodframe.next = (struct StackFrame *)ctx->uc_mcontext.rbp;
-    goodframe.addr = ctx->uc_mcontext.rip;
-    bp = &goodframe;
-    ShowBacktrace(2, bp);
-  }
+  kprintf(
+      "cosmoaddr2line %s%s %lx %s\n\n", __argv[0],
+      endswith(__argv[0], ".com") ? ".dbg" : "", ctx ? ctx->uc_mcontext.PC : 0,
+      DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.BP
+                            : (struct StackFrame *)__builtin_frame_address(0)));
+  ShowBacktrace(2, &(struct StackFrame){
+                       .next = (struct StackFrame *)ctx->uc_mcontext.rbp,
+                       .addr = ctx->uc_mcontext.rip,
+                   });
 }
 
 relegated static char *AddFlag(char *p, int b, const char *s) {
@@ -90,8 +96,8 @@ relegated static char *AddFlag(char *p, int b, const char *s) {
   return p;
 }
 
-relegated static char *DescribeCpuFlags(char *p, int flags, int x87sw,
-                                        int mxcsr) {
+relegated static dontinline char *DescribeCpuFlags(char *p, int flags,
+                                                   int x87sw, int mxcsr) {
   unsigned i;
   for (i = 0; i < ARRAYLEN(kCpuFlags); ++i) {
     if (flags & 1) {
@@ -123,38 +129,16 @@ static char *HexCpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
 }
 
 relegated static char *ShowGeneralRegisters(char *p, ucontext_t *ctx) {
-  int64_t x;
+  size_t i, j;
   const char *s;
-  size_t i, j, k;
-  long double st;
   *p++ = '\n';
-  for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
+  for (i = 0, j = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) *p++ = ' ';
     if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
     p = stpcpy(p, s), *p++ = ' ';
     p = HexCpy(p, ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]], 64);
     if (++j == 3) {
       j = 0;
-      if (ctx->uc_mcontext.fpregs) {
-        memcpy(&st, (char *)&ctx->uc_mcontext.fpregs->st[k], sizeof(st));
-        p = stpcpy(p, " ST(");
-        p = FormatUint64(p, k++);
-        p = stpcpy(p, ") ");
-        if (signbit(st)) {
-          st = -st;
-          *p++ = '-';
-        }
-        if (isnan(st)) {
-          p = stpcpy(p, "nan");
-        } else if (isinf(st)) {
-          p = stpcpy(p, "inf");
-        } else {
-          if (st > 999.999) st = 999.999;
-          x = st * 1000;
-          p = FormatUint64(p, x / 1000), *p++ = '.';
-          p = FormatUint64(p, x % 1000);
-        }
-      }
       *p++ = '\n';
     }
   }
@@ -203,12 +187,22 @@ relegated static char *ShowSseRegisters(char *p, ucontext_t *ctx) {
 
 void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
 
-relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
-                               ucontext_t *ctx) {
+static relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
+                                      ucontext_t *ctx) {
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+  long size = __get_safe_size(8192, 4096);
+  if (size < 6000) {
+    klog(STACK_ERROR, sizeof(STACK_ERROR) - 1);
+    __minicrash(sig, si, ctx);
+    return;
+  }
+  char *buf = alloca(size);
+  CheckLargeStackAllocation(buf, size);
+#pragma GCC pop_options
   int i;
-  char *p;
+  char *p = buf;
   char host[64];
-  char buf[3000];
   struct utsname names;
   if (_weaken(ShowCrashReportHook)) {
     ShowCrashReportHook(2, err, sig, si, ctx);
@@ -222,21 +216,18 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   uname(&names);
   errno = err;
   // TODO(jart): Buffer the WHOLE crash report with backtrace for atomic write.
-  p = buf;
-  p += ksnprintf(
-      p, 10000,
-      "\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
-      "  %s\n"
-      "  %s\n"
-      "  %s %s %s %s\n",
-      !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
-      (ctx &&
-       (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
-        ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + getauxval(AT_PAGESZ)))
-          ? "Stack Overflow"
-          : DescribeSiCode(sig, si->si_code),
-      host, getpid(), gettid(), program_invocation_name, strerror(err),
-      names.sysname, names.version, names.nodename, names.release);
+  p +=
+      ksnprintf(p, 4000,
+                "\n%serror%s: Uncaught %G (%s) at %p on %s pid %d tid %d\n"
+                "  %s\n"
+                "  %s\n"
+                "  %s %s %s %s\n",
+                !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
+                __is_stack_overflow(si, ctx) ? "\e[7mStack Overflow\e[0m"
+                                             : DescribeSiCode(sig, si->si_code),
+                si->si_addr, host, getpid(), gettid(), program_invocation_name,
+                strerror(err), names.sysname, names.version, names.nodename,
+                names.release);
   if (ctx) {
     p = ShowGeneralRegisters(p, ctx);
     p = ShowSseRegisters(p, ctx);
@@ -248,45 +239,21 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     klog(buf, p - buf);
   }
   kprintf("\n");
-  if (!IsWindows()) __print_maps();
+  if (!IsWindows()) {
+    __print_maps();
+  }
   /* PrintSystemMappings(2); */
   if (__argv) {
     for (i = 0; i < __argc; ++i) {
-      if (!__argv[i]) continue;
-      if (IsAsan() && !__asan_is_valid_str(__argv[i])) continue;
       kprintf("%s ", __argv[i]);
     }
   }
   kprintf("\n");
 }
 
-static relegated wontreturn void RaiseCrash(int sig) {
-  sigset_t ss;
-  sigfillset(&ss);
-  sigdelset(&ss, sig);
-  sigprocmask(SIG_SETMASK, &ss, 0);
-  signal(sig, SIG_DFL);
-  kill(getpid(), sig);
-  _Exit(128 + sig);
-}
-
-relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
-  int gdbpid, err;
+relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
   ucontext_t *ctx = arg;
-
-  // print vital error nubers reliably
-  // the surface are of code this calls is small and audited
-  kprintf(
-      "\r\n\e[1;31m__oncrash %G %s pid %d tid %d rip %x bt %s\e[0m\n", sig,
-      program_invocation_short_name, getpid(), sys_gettid(),
-      ctx ? ctx->uc_mcontext.rip : 0,
-      DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.rbp
-                            : (struct StackFrame *)__builtin_frame_address(0)));
-
-  // print friendlier detailed crash report less reliably
-  // we're in a broken runtime state and so much can go wrong
-  ftrace_enabled(-1);
-  strace_enabled(-1);
+  int gdbpid, err;
   err = errno;
   if ((gdbpid = IsDebuggerPresent(true))) {
     DebugBreak();
@@ -294,7 +261,6 @@ relegated void __oncrash_amd64(int sig, struct siginfo *si, void *arg) {
   if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
     __restore_tty();
     ShowCrashReport(err, sig, si, ctx);
-    RaiseCrash(sig);
   }
 }
 

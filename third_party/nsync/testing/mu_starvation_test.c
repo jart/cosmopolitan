@@ -17,6 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
 #include "third_party/nsync/testing/closure.h"
@@ -137,7 +138,7 @@ static void test_starve_with_readers (testing t) {
 			trylock_acquires++;
 			nsync_mu_unlock (&sd.mu);
 		}
-		sched_yield ();
+		pthread_yield ();
 	}
 	if (trylock_acquires != 0) {
 		TEST_ERROR (t, ("expected no acquisitions via nsync_mu_trylock(), got %d\n",
@@ -256,7 +257,7 @@ static void test_starve_with_writer (testing t) {
 				trylock_acquires++;
 				nsync_mu_unlock (&sd.mu);
 			}
-			sched_yield ();
+			pthread_yield ();
 		}
 		if (trylock_acquires < expected_lo) {
 			TEST_ERROR (t, ("expected at least %d acquisitions via "
@@ -276,7 +277,7 @@ static void test_starve_with_writer (testing t) {
 				rtrylock_acquires++;
 				nsync_mu_runlock (&sd.mu);
 			}
-			sched_yield ();
+			pthread_yield ();
 		}
 		if (rtrylock_acquires < expected_lo) {
 			TEST_ERROR (t, ("expected at least %d acquisitions via "

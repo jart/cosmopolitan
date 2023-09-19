@@ -39,34 +39,33 @@
 errno_t pthread_getaffinity_np(pthread_t thread, size_t size,
                                cpu_set_t *bitset) {
   int rc, tid;
+  tid = _pthread_tid((struct PosixThread *)thread);
 
-  if (!(rc = pthread_getunique_np(thread, &tid))) {
-    if (size != sizeof(cpu_set_t)) {
-      rc = einval();
-    } else if (IsWindows() || IsMetal() || IsOpenbsd()) {
-      rc = enosys();
-    } else if (IsFreebsd()) {
-      if (!sys_sched_getaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid,
-                                         32, bitset)) {
-        rc = 32;
-      } else {
-        rc = -1;
-      }
-    } else if (IsNetbsd()) {
-      if (!sys_sched_getaffinity_netbsd(tid, 0, 32, bitset)) {
-        rc = 32;
-      } else {
-        rc = -1;
-      }
+  if (size != sizeof(cpu_set_t)) {
+    rc = einval();
+  } else if (IsWindows() || IsMetal() || IsOpenbsd()) {
+    rc = enosys();
+  } else if (IsFreebsd()) {
+    if (!sys_sched_getaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid, 32,
+                                       bitset)) {
+      rc = 32;
     } else {
-      rc = sys_sched_getaffinity(tid, size, bitset);
+      rc = -1;
     }
-    if (rc > 0) {
-      if (rc < size) {
-        bzero((char *)bitset + rc, size - rc);
-      }
-      rc = 0;
+  } else if (IsNetbsd()) {
+    if (!sys_sched_getaffinity_netbsd(tid, 0, 32, bitset)) {
+      rc = 32;
+    } else {
+      rc = -1;
     }
+  } else {
+    rc = sys_sched_getaffinity(tid, size, bitset);
+  }
+  if (rc > 0) {
+    if (rc < size) {
+      bzero((char *)bitset + rc, size - rc);
+    }
+    rc = 0;
   }
 
   STRACE("pthread_getaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,

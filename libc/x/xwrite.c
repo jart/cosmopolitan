@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/x/x.h"
@@ -26,18 +27,25 @@
  * @return 0 on success, or -1 w/ errno
  */
 int xwrite(int fd, const void *p, uint64_t n) {
+  int rc;
   int64_t i;
   uint64_t m;
   const char *buf;
+  BLOCK_CANCELLATIONS;
+  rc = 0;
   buf = p;
   while (n) {
     m = n;
     do {
       i = write(fd, buf, m);
     } while (i < 0 && errno == EINTR);
-    if (i < 0) return -1;
+    if (i < 0) {
+      rc = -1;
+      break;
+    }
     buf += i;
     n -= i;
   }
-  return 0;
+  ALLOW_CANCELLATIONS;
+  return rc;
 }

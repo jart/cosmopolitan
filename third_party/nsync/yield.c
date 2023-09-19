@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/thread/thread.h"
 #include "third_party/nsync/common.internal.h"
 // clang-format off
 
 void nsync_yield_ (void) {
-	sched_yield ();
+	pthread_yield ();
 	STRACE ("nsync_yield_()");
 }

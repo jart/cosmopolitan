@@ -40,13 +40,11 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 
 #define EACCES_OR_ENOENT (IsOpenbsd() ? ENOENT : EACCES)
-
-char testlib_enable_tmp_setup_teardown;
 
 struct stat st;
 
@@ -60,11 +58,11 @@ bool UnveilCanSecureTruncate(void) {
 }
 
 void SetUpOnce(void) {
-  __enable_threads();
   if (!HasUnveilSupport()) {
     fprintf(stderr, "warning: unveil() not supported on this system: %m\n");
     exit(0);
   }
+  testlib_enable_tmp_setup_teardown();
 }
 
 void SetUp(void) {
@@ -284,25 +282,25 @@ TEST(unveil, procfs_isForbiddenByDefault) {
   EXITS(0);
 }
 
-int Worker(void *arg, int tid) {
+void *Worker(void *arg) {
   ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
   return 0;
 }
 
 TEST(unveil, isInheritedAcrossThreads) {
-  struct spawn t;
+  pthread_t t;
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
   ASSERT_SYS(0, 0, unveil("jail", "rw"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(0, 0, _spawn(Worker, 0, &t));
-  EXPECT_SYS(0, 0, _join(&t));
+  ASSERT_SYS(0, 0, pthread_create(&t, 0, Worker, 0));
+  EXPECT_SYS(0, 0, pthread_join(t, 0));
   EXITS(0);
 }
 
-int Worker2(void *arg, int tid) {
+void *Worker2(void *arg) {
   ASSERT_SYS(0, 0, unveil("jail", "rw"));
   ASSERT_SYS(0, 0, unveil(0, 0));
   ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
@@ -310,13 +308,13 @@ int Worker2(void *arg, int tid) {
 }
 
 TEST(unveil, isThreadSpecificOnLinux_isProcessWideOnOpenbsd) {
-  struct spawn t;
+  pthread_t t;
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
-  ASSERT_SYS(0, 0, _spawn(Worker2, 0, &t));
-  EXPECT_SYS(0, 0, _join(&t));
+  ASSERT_SYS(0, 0, pthread_create(&t, 0, Worker2, 0));
+  EXPECT_SYS(0, 0, pthread_join(t, 0));
   if (IsOpenbsd()) {
     ASSERT_SYS(ENOENT, -1, open("garden/secret.txt", O_RDONLY));
   } else {

@@ -5,8 +5,6 @@
 
 /**
  * Returns preferred size and alignment of thread stack.
- *
- * This will always be equal to `PTHREAD_STACK_MIN`.
  */
 #define GetStackSize() 262144
 
@@ -73,8 +71,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * process too, then you'll need STATIC_STACK_ALIGN(GetStackSize())
  * which will burn O(256kb) of memory to ensure thread invariants.
  */
-#define GetStackAddr() \
-  (((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize())
+#define GetStackAddr() ((GetStackPointer() - 1) & -GetStackSize())
 
 #define GetStaticStackSize() ((uintptr_t)ape_stack_memsz)
 
@@ -86,9 +83,8 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * which will burn O(256kb) of memory to ensure thread invariants,
  * which make this check exceedingly fast.
  */
-#define HaveStackMemory(n)                 \
-  ((intptr_t)__builtin_frame_address(0) >= \
-   GetStackAddr() + GetGuardSize() + (n))
+#define HaveStackMemory(n) \
+  (GetStackPointer() >= GetStackAddr() + GetGuardSize() + (n))
 
 /**
  * Extends stack memory by poking large allocations.
@@ -144,6 +140,19 @@ int FreeCosmoStack(void *) libcesque;
   })
 #else
 #define GetStaticStackAddr(ADDEND) (GetStackAddr() + ADDEND)
+#endif
+
+#define GetStackPointer()           \
+  ({                                \
+    uintptr_t __sp;                 \
+    __asm__(__mov_sp : "=r"(__sp)); \
+    __sp;                           \
+  })
+
+#ifdef __x86_64__
+#define __mov_sp "mov\t%%rsp,%0"
+#elif defined(__aarch64__)
+#define __mov_sp "mov\t%0,sp"
 #endif
 
 COSMOPOLITAN_C_END_

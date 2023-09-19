@@ -86,9 +86,7 @@
  * @param template is a pathname relative to current directory by default,
  *     that needs to have "XXXXXX" at the end of the string; this memory
  *     must be mutable and should be owned by the calling thread; it will
- *     be modified (only on success) to return the generated filename; it
- *     is recommended that the caller use `kTmpPath` at the beginning of
- *     the generated `template` path and then set `dirfd` to `AT_FDCWD`
+ *     be modified (only on success) to return the generated filename
  * @param suffixlen may be nonzero to permit characters after the "XXXXXX"
  * @param mode is conventionally 0600, for owner-only non-exec access
  * @param flags could have O_APPEND, O_CLOEXEC, O_UNLINK, O_SYNC, etc.
@@ -97,6 +95,7 @@
  * @raise EINVAL if `template` (less the `suffixlen` region) didn't
  *     end with the string "XXXXXXX"
  * @raise EINVAL if `suffixlen` was negative or too large
+ * @cancellationpoint
  */
 int openatemp(int dirfd, char *template, int suffixlen, int flags, int mode) {
   flags &= ~O_ACCMODE;

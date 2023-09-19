@@ -20,6 +20,8 @@
 #include "libc/errno.h"
 #include "libc/thread/thread.h"
 
+__static_yoink("_pthread_reschedule");
+
 /**
  * Sets thread scheduler inheritance attribute, e.g.
  *

@@ -27,6 +27,7 @@
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
@@ -116,9 +117,11 @@ void *Worker(void *id) {
 
   server = socket(AF_INET, SOCK_STREAM, 0);
   if (server == -1) {
-    kprintf("socket() failed %m\n"
-            "  try running: sudo prlimit --pid=$$ --nofile=%d\n",
-            threads * 2);
+    kprintf("\r\e[Ksocket() failed %m\n");
+    if (errno == ENFILE || errno == EMFILE) {
+    TooManyFileDescriptors:
+      kprintf("sudo prlimit --pid=$$ --nofile=%d\n", threads * 3);
+    }
     goto WorkerFinished;
   }
 
@@ -136,7 +139,7 @@ void *Worker(void *id) {
   // possible for our many threads to bind to the same interface!
   // otherwise we'd need to create a complex multi-threaded queue
   if (bind(server, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-    kprintf("%s() failed %m\n", "socket");
+    kprintf("\r\e[Ksocket() returned %m\n");
     goto CloseWorker;
   }
   unassert(!listen(server, 1));
@@ -148,7 +151,7 @@ void *Worker(void *id) {
     uint32_t clientaddrsize;
     struct sockaddr_in clientaddr;
     int client, inmsglen, outmsglen;
-    char inbuf[1500], outbuf[512], *p, *q;
+    char inbuf[512], outbuf[512], *p, *q;
 
     // musl libc and cosmopolitan libc support a posix thread extension
     // that makes thread cancellation work much better your io routines
@@ -165,15 +168,14 @@ void *Worker(void *id) {
     // turns cancellation off so we don't interrupt active http clients
     unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
 
-    // accept() can raise a very diverse number of errors but none of
-    // them are really true showstoppers that would necessitate us to
-    // panic and abort the entire server, so we can just ignore these
     if (client == -1) {
-      // we used SO_RCVTIMEO and SO_SNDTIMEO because those settings are
-      // inherited by the accepted sockets, but using them also has the
-      // side-effect that the listening socket fails with EAGAIN errors
-      // which are harmless, and so are most other errors accept raises
-      // e.g. ECANCELED, which lets us check closingtime without delay!
+      if (errno != EAGAIN && errno != ECANCELED) {
+        kprintf("\r\e[Kaccept() returned %m\n");
+        if (errno == ENFILE || errno == EMFILE) {
+          goto TooManyFileDescriptors;
+        }
+        usleep(10000);
+      }
       continue;
     }
 
@@ -301,7 +303,7 @@ int main(int argc, char *argv[]) {
 
   // print cpu registers and backtrace on crash
   // note that pledge'll makes backtraces worse
-  // you can press ctrl+\ to trigger your crash
+  // you can press ctrl+\ to trigger backtraces
   ShowCrashReports();
 
   // listen for ctrl-c, terminal close, and kill
@@ -341,10 +343,6 @@ int main(int argc, char *argv[]) {
   // the server will be allowed to use. this way if it gets hacked, they
   // won't be able to do much damage, like compromising the whole server
   //
-  // we use an internal api to force threads to enable beforehand, since
-  // cosmopolitan code morphs the binary to support tls across platforms
-  // and doing that requires extra permissions we don't need for serving
-  //
   // pledge violations on openbsd are logged nicely to the system logger
   // but on linux we need to use a cosmopolitan extension to get details
   // although doing that slightly weakens the security pledge() provides
@@ -353,20 +351,21 @@ int main(int argc, char *argv[]) {
   // is too old, then pledge() and unveil() don't consider this an error
   // so it works. if security is critical there's a special call to test
   // which is npassert(!pledge(0, 0)), and npassert(unveil("", 0) != -1)
-  __enable_threads();
-  __pledge_mode = PLEDGE_PENALTY_KILL_THREAD | PLEDGE_STDERR_LOGGING;
+  __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;  // c. greenbean --strace
   unveil("/dev/null", "rw");
   unveil(0, 0);
   pledge("stdio inet", 0);
 
-  // spawn over 9,000 worker threads
+  // initialize our synchronization data structures, which were written
+  // by mike burrows in a library called *nsync we've tailored for libc
+  unassert(!pthread_cond_init(&statuscond, 0));
+  unassert(!pthread_mutex_init(&statuslock, 0));
+
+  // spawn over 9000 worker threads
   //
   // you don't need weird i/o models, or event driven yoyo pattern code
   // to build a massively scalable server. the secret is to use threads
   // with tiny stacks. then you can write plain simple imperative code!
-  //
-  // we like pthread attributes since they generally make thread spawns
-  // faster especially in cases where you need to make detached threads
   //
   // we block signals in our worker threads so we won't need messy code
   // to spin on eintr. operating systems also deliver signals to random
@@ -375,17 +374,15 @@ int main(int argc, char *argv[]) {
   // alternatively you can just use signal() instead of sigaction(); it
   // uses SA_RESTART because all the syscalls the worker currently uses
   // are documented as @restartable which means no EINTR toil is needed
-  unassert(!pthread_cond_init(&statuscond, 0));
-  unassert(!pthread_mutex_init(&statuslock, 0));
   sigset_t block;
-  sigfillset(&block);
-  sigdelset(&block, SIGSEGV);  // invalid memory access
-  sigdelset(&block, SIGBUS);   // another kind of bad memory access
-  sigdelset(&block, SIGFPE);   // divide by zero, etc.
-  sigdelset(&block, SIGSYS);   // pledge violations
-  sigdelset(&block, SIGILL);   // bad cpu opcode
+  sigemptyset(&block);
+  sigaddset(&block, SIGINT);
+  sigaddset(&block, SIGHUP);
+  sigaddset(&block, SIGQUIT);
   pthread_attr_t attr;
   unassert(!pthread_attr_init(&attr));
+  unassert(!pthread_attr_setguardsize(&attr, 4096));
+  unassert(!pthread_attr_setstacksize(&attr, 65536));
   unassert(!pthread_attr_setsigmask_np(&attr, &block));
   pthread_t *th = gc(calloc(threads, sizeof(pthread_t)));
   for (i = 0; i < threads; ++i) {
@@ -393,10 +390,10 @@ int main(int argc, char *argv[]) {
     ++a_workers;
     if ((rc = pthread_create(th + i, &attr, Worker, (void *)(intptr_t)i))) {
       --a_workers;
-      // rc will most likely be EAGAIN (we hit the process/thread limit)
-      kprintf("\r\e[Kerror: pthread_create(%d) failed: %s\n"
-              "       try increasing RLIMIT_NPROC\n",
-              i, strerror(rc));
+      kprintf("\r\e[Kpthread_create failed: %s\n", strerror(rc));
+      if (rc == EAGAIN) {
+        kprintf("sudo prlimit --pid=$$ --nproc=%d\n", threads * 2);
+      }
       if (!i) exit(1);
       threads = i;
       break;

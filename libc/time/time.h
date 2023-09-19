@@ -23,10 +23,6 @@ extern const char kWeekdayName[7][10];
 extern const char kMonthNameShort[12][4];
 extern const char kMonthName[12][10];
 extern const unsigned short kMonthYearDay[2][12];
-extern long double (*nowl)(void);
-long double ConvertTicksToNanos(double);
-long double dsleep(long double);
-long double dtime(int);
 void RefreshTime(void);
 #endif /* _COSMO_SOURCE */
 

@@ -415,7 +415,7 @@ get_tmpdir (struct file *file)
 {
   const char *tmpdir;
   tmpdir = get_target_variable (STRING_SIZE_TUPLE ("TMPDIR"), file, 0);
-  if (!tmpdir) tmpdir = kTmpPath;
+  if (!tmpdir) tmpdir = __get_tmpdir();
   return strdup (tmpdir);
 }
 
@@ -2116,40 +2116,6 @@ child_execute_job (struct childbase *child,
                           strerror (errno)));
         }
     }
-
-  /* [jart] Prevent builds from talking to the Internet.  */
-  if (internet)
-    DB (DB_JOBS, (_("Allowing Internet access\n")));
-  else if (!(~ipromises & (1ul << PROMISE_INET)) &&
-           !(~ipromises & (1ul << PROMISE_DNS)))
-    DB (DB_JOBS, (_("Internet access will be blocked by pledge\n")));
-#ifdef __x86_64__
-  else
-    {
-      e = errno;
-      if (!nointernet())
-        DB (DB_JOBS, (_("Blocked Internet access with seccomp ptrace\n")));
-      else
-        {
-          if (errno == EPERM)
-            {
-              errno = e;
-              DB (DB_JOBS, (_("Can't block Internet if already traced\n")));
-            }
-          else if (errno == ENOSYS)
-            {
-              errno = e;
-              DB (DB_JOBS, (_("Need SECCOMP ptrace() to block Internet\n")));
-            }
-          else
-            {
-              OSS (error, NILF, "%s: failed to block internet access: %s",
-                   argv[0], strerror (errno));
-              _Exit (127);
-            }
-        }
-    }
-#endif
 
   /* [jart] Resolve command into executable path.  */
   if (!strict || !sandboxed)

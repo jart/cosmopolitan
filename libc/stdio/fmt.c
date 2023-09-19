@@ -1028,6 +1028,14 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
           flags |= FLAGS_PRECISION;
           prec = 1;
           goto FormatString;
+        } else if (flags & (FLAGS_QUOTE | FLAGS_REPR)) {
+          p = "'\\0'";
+          flags &= ~(FLAGS_QUOTE | FLAGS_REPR | FLAGS_HASH);
+          goto FormatString;
+        } else if (flags & FLAGS_HASH) {
+          flags &= ~FLAGS_HASH;
+          p = " ";
+          goto FormatString;
         } else {
           __FMT_PUT('\0');
           break;

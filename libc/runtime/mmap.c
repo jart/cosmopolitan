@@ -77,7 +77,7 @@ static wontreturn void __mmap_die(const char *s) {
   _Exit(199);
 }
 
-static dontasan inline bool __overlaps_existing_mapping(char *p, size_t n) {
+static inline bool __overlaps_existing_mapping(char *p, size_t n) {
   int a, b, i;
   unassert(n > 0);
   a = FRAME(p);
@@ -91,7 +91,7 @@ static dontasan inline bool __overlaps_existing_mapping(char *p, size_t n) {
   return false;
 }
 
-static dontasan bool __choose_memory(int x, int n, int align, int *res) {
+static bool __choose_memory(int x, int n, int align, int *res) {
   // TODO: improve performance
   int i, start, end;
   unassert(align > 0);
@@ -152,12 +152,12 @@ static dontasan bool __choose_memory(int x, int n, int align, int *res) {
   return false;
 }
 
-dontasan static bool __auto_map(int count, int align, int *res) {
+static bool __auto_map(int count, int align, int *res) {
   return __choose_memory(FRAME(kAutomapStart), count, align, res) &&
          *res + count <= FRAME(kAutomapStart + (kAutomapSize - 1));
 }
 
-static dontasan void *__finish_memory(void *addr, size_t size, int prot,
+static void *__finish_memory(void *addr, size_t size, int prot,
                                       int flags, int fd, int64_t off, int f,
                                       int x, int n, struct DirectMap dm) {
   if (!IsWindows() && (flags & MAP_FIXED)) {
@@ -178,7 +178,7 @@ static dontasan void *__finish_memory(void *addr, size_t size, int prot,
   return addr;
 }
 
-static dontasan void *__map_memory(void *addr, size_t size, int prot, int flags,
+static void *__map_memory(void *addr, size_t size, int prot, int flags,
                                    int fd, int64_t off, int f, int x, int n) {
   struct DirectMap dm;
   dm = sys_mmap(addr, size, prot, f, fd, off);
@@ -200,7 +200,7 @@ static dontasan void *__map_memory(void *addr, size_t size, int prot, int flags,
  * This is useful on Windows since it allows us to partially unmap or
  * punch holes into existing mappings.
  */
-static textwindows dontinline dontasan void *__map_memories(
+static textwindows dontinline void *__map_memories(
     char *addr, size_t size, int prot, int flags, int fd, int64_t off, int f,
     int x, int n) {
   size_t i, m;
@@ -238,14 +238,13 @@ static textwindows dontinline dontasan void *__map_memories(
   return addr;
 }
 
-dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
+inline void *__mmap_unlocked(void *addr, size_t size, int prot,
                                       int flags, int fd, int64_t off) {
-  int a, f, n, x;
   char *p = addr;
   struct DirectMap dm;
   size_t requested_size;
   bool needguard, clashes;
-  unsigned long page_size;
+  int a, f, n, x, pagesize;
   size_t virtualused, virtualneed;
 
   if (VERY_UNLIKELY(!size)) {
@@ -273,7 +272,7 @@ dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
   }
 
   requested_size = size;
-  page_size = getauxval(AT_PAGESZ);
+  pagesize = getauxval(AT_PAGESZ);
   if (flags & MAP_ANONYMOUS) {
     fd = -1;
     off = 0;
@@ -288,7 +287,7 @@ dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
   } else if (VERY_UNLIKELY(off < 0)) {
     STRACE("mmap negative offset");
     return VIP(einval());
-  } else if (off & ((IsWindows() ? FRAMESIZE : page_size) - 1)) {
+  } else if (off & ((IsWindows() ? FRAMESIZE : pagesize) - 1)) {
     STRACE("mmap offset isn't properly aligned");
     return VIP(einval());
   } else if (VERY_UNLIKELY(INT64_MAX - size < off)) {
@@ -358,31 +357,21 @@ dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
       // starting page and the bottom guard page, since that would stop
       // our stack page from growing down.
       npassert(!sys_munmap(p, size));
-      // by default MAP_GROWSDOWN will auto-allocate 10mb of pages. it's
-      // supposed to stop growing if an adjacent allocation exists, to
-      // prevent your stacks from overlapping on each other. we're not
-      // able to easily assume a mapping beneath this one exists. even
-      // if we could, the linux kernel requires for muh security reasons
-      // that stacks be at least 1mb away from each other, so it's not
-      // possible to avoid this call if our goal is to have 60kb stacks
-      // with 4kb guards like a sane multithreaded production system.
-      // however this 1mb behavior oddly enough is smart enough to not
-      // apply if the mapping is a manually-created guard page.
-      int e = errno;
-      if ((dm = sys_mmap(p + size - SIGSTKSZ, SIGSTKSZ, prot,
+      int guardsize = pagesize, e = errno;
+      if ((dm = sys_mmap(p + size - guardsize, guardsize, prot,
                          f | MAP_GROWSDOWN_linux, fd, off))
               .addr != MAP_FAILED) {
-        npassert(sys_mmap(p, GetGuardSize(), PROT_NONE,
+        npassert(sys_mmap(p, pagesize, PROT_NONE,
                           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
                      .addr == p);
         dm.addr = p;
         p = __finish_memory(p, size, prot, flags, fd, off, f, x, n, dm);
         if (IsAsan() && p != MAP_FAILED) {
-          __asan_poison(p, GetGuardSize(), kAsanStackOverflow);
+          __asan_poison(p, pagesize, kAsanStackOverflow);
         }
         return p;
       } else if (errno == ENOTSUP) {
-        // WSL doesn't support MAP_GROWSDOWN
+        // WSL and Blink don't support MAP_GROWSDOWN
         needguard = true;
         errno = e;
       }
@@ -406,9 +395,9 @@ dontasan inline void *__mmap_unlocked(void *addr, size_t size, int prot,
                     kAsanMmapSizeOverrun);
     }
     if (needguard) {
-      unassert(!mprotect(p, page_size, PROT_NONE));
+      unassert(!mprotect(p, pagesize, PROT_NONE));
       if (IsAsan()) {
-        __asan_poison(p, page_size, kAsanStackOverflow);
+        __asan_poison(p, pagesize, kAsanStackOverflow);
       }
     }
   }

@@ -85,6 +85,7 @@ THIRD_PARTY_QUICKJS_A_DIRECTDEPS =						\
 	LIBC_MEM								\
 	LIBC_NEXGEN32E								\
 	LIBC_NT_KERNEL32							\
+	LIBC_PROC								\
 	LIBC_RUNTIME								\
 	LIBC_SOCK								\
 	LIBC_STDIO								\

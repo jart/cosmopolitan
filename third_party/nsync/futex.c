@@ -42,6 +42,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
@@ -132,7 +133,7 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 	}
 
 	nanos = 100;
-	maxnanos = __SIG_POLLING_INTERVAL_MS * 1000L * 1000;
+	maxnanos = __SIG_LOCK_INTERVAL_MS * 1000L * 1000;
 	for (;;) {
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			return 0;
@@ -163,8 +164,11 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 	return -ETIMEDOUT;
 }
 
-static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, const struct timespec *timeout) {
+static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
+				    const struct timespec *timeout,
+				    struct PosixThread *pt) {
 	int rc;
+	bool32 ok;
 	struct timespec deadline, interval, remain, wait, now;
 
 	if (timeout) {
@@ -180,12 +184,15 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, cons
 			break;
 		}
 		remain = timespec_sub (deadline, now);
-		interval = timespec_frommillis (__SIG_POLLING_INTERVAL_MS);
+		interval = timespec_frommillis (__SIG_LOCK_INTERVAL_MS);
 		wait = timespec_cmp (remain, interval) > 0 ? interval : remain;
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			break;
 		}
-		if (WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait))) {
+		if (pt) atomic_store_explicit (&pt->pt_futex, w, memory_order_release);
+		ok = WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait));
+		if (pt) atomic_store_explicit (&pt->pt_futex, 0, memory_order_release);
+		if (ok) {
 			break;
 		} else {
 			ASSERT (GetLastError () == ETIMEDOUT);
@@ -212,7 +219,8 @@ static struct timespec *nsync_futex_timeout_ (struct timespec *memory,
 
 int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct timespec *abstime) {
 	int e, rc, op;
-	struct PosixThread *pt = 0;
+	struct CosmoTib *tib;
+	struct PosixThread *pt;
 	struct timespec tsmem, *timeout;
 
 	cosmo_once (&nsync_futex_.once, nsync_futex_init_);
@@ -239,12 +247,15 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 		   DescribeFutexOp (op), expect,
 		   DescribeTimespec (0, timeout));
 
+	tib = __get_tls();
+	pt = (struct PosixThread *)tib->tib_pthread;
+
 	if (nsync_futex_.is_supported) {
 		e = errno;
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
 			if (pshare) goto Polyfill;
-			rc = nsync_futex_wait_win32_ (w, expect, pshare, timeout);
+			rc = nsync_futex_wait_win32_ (w, expect, pshare, timeout, pt);
 		} else if (IsFreebsd ()) {
 			rc = sys_umtx_timedwait_uint (w, expect, pshare, timeout);
 		} else {
@@ -255,9 +266,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 				// unfortunately OpenBSD futex() defines
 				// its own ECANCELED condition, and that
 				// overlaps with our system call wrapper
-				if ((pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
-					pt->flags &= ~PT_OPENBSD_KLUDGE;
-				}
+				if (pt) pt->pt_flags &= ~PT_OPENBSD_KLUDGE;
 			}
 			rc = sys_futex_cp (w, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
 			if (IsOpenbsd()) {
@@ -270,7 +279,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 				// because a SA_RESTART signal handler was
 				// invoked, such as our SIGTHR callback.
 				if (rc == -1 && errno == ECANCELED &&
-				    pt && (~pt->flags & PT_OPENBSD_KLUDGE)) {
+				    pt && (~pt->pt_flags & PT_OPENBSD_KLUDGE)) {
 					errno = EINTR;
 				}
 			}
@@ -281,9 +290,9 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 		}
 	} else {
 	Polyfill:
-		__get_tls()->tib_flags |= TIB_FLAG_TIME_CRITICAL;
+		tib->tib_flags |= TIB_FLAG_TIME_CRITICAL;
 		rc = nsync_futex_polyfill_ (w, expect, timeout);
-		__get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
+		tib->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
 	}
 
 Finished:
@@ -331,13 +340,13 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 		}
 	} else {
 	Polyfill:
-		sched_yield ();
+		pthread_yield ();
 		rc = 0;
 	}
 
-	STRACE ("futex(%t [%d], %s, %d) → %s",
+	STRACE ("futex(%t [%d], %s, %d) → %d woken",
 		w, atomic_load_explicit (w, memory_order_relaxed),
-		DescribeFutexOp (op), count, DescribeErrno (rc));
+		DescribeFutexOp (op), count, rc);
 
 	return rc;
 }

@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void __hand_init(void);
+void __hand_wipe(void);
 void __hand_rlock(void);
 void __hand_runlock(void);
 void __hand_lock(void);

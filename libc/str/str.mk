@@ -86,19 +86,11 @@ o/$(MODE)/libc/str/windowstimetotimespec.o: private		\
 		CFLAGS +=					\
 			-O2
 
-# we can't use compiler magic because:
-#   kprintf() depends on these functions
-o/$(MODE)/libc/fmt/strsignal.greg.o: private			\
-		CFLAGS +=					\
-			-fpie					\
-			-ffreestanding				\
-			$(NO_MAGIC)
-
-# we can't use sanitizers because:
-#   WinMain calls this
-o/$(MODE)/libc/str/tprecode8to16.o: private			\
+$(LIBC_STR_A_OBJS): private					\
 		COPTS +=					\
-			-fno-sanitize=all
+			-fno-sanitize=all			\
+			-Wframe-larger-than=4096		\
+			-Walloca-larger-than=4096
 
 o/$(MODE)/libc/str/eastasianwidth.bin:				\
 		libc/str/eastasianwidth.txt			\

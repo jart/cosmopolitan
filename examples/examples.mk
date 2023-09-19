@@ -55,6 +55,7 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_NT_NTDLL								\
 	LIBC_NT_USER32								\
 	LIBC_NT_WS2_32								\
+	LIBC_PROC								\
 	LIBC_RUNTIME								\
 	LIBC_SOCK								\
 	LIBC_STDIO								\
@@ -145,25 +146,6 @@ o/$(MODE)/examples/nesemu1.com.dbg:						\
 		o/$(MODE)/examples/examples.pkg					\
 		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
-
-# # force symtab.com to be a zip file, by pulling a zip asset into linkage
-# # we wouldn't need to do this if we depended on functions like localtime
-# o/$(MODE)/examples/symtab.com.dbg:						\
-# 		$(EXAMPLES_DEPS)						\
-# 		o/$(MODE)/examples/symtab.o					\
-# 		o/$(MODE)/examples/symtab.c.zip.o				\
-# 		o/$(MODE)/examples/examples.pkg					\
-# 		$(EXAMPLES_BOOTLOADER)
-# 	@$(APELINK)
-
-# modify .com so it can read the symbol table without needing the .com.dbg file
-o/$(MODE)/examples/symtab.com:							\
-		o/$(MODE)/examples/symtab.com.dbg				\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
-	@$(MAKE_OBJCOPY)
-	@$(MAKE_SYMTAB_CREATE)
-	@$(MAKE_SYMTAB_ZIP)
 
 o/$(MODE)/examples/picol.o: private				\
 		CPPFLAGS +=					\

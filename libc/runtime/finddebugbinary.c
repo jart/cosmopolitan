@@ -17,7 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/atomic.h"
+#include "libc/calls/blockcancel.internal.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/cosmo.h"
 #include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
@@ -29,12 +33,19 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 
-static bool IsMyDebugBinaryImpl(const char *path) {
-  int fd;
+static struct {
+  atomic_uint once;
+  const char *res;
+  char buf[PATH_MAX];
+} g_comdbg;
+
+static bool IsMyDebugBinary(const char *path) {
   void *map;
   int64_t size;
   uintptr_t value;
   bool res = false;
+  int fd, e = errno;
+  BLOCK_CANCELLATIONS;
   if ((fd = open(path, O_RDONLY | O_CLOEXEC, 0)) != -1) {
     // sanity test that this .com.dbg file (1) is an elf image, and (2)
     // contains the same number of bytes of code as our .com executable
@@ -49,16 +60,26 @@ static bool IsMyDebugBinaryImpl(const char *path) {
     }
     close(fd);
   }
+  ALLOW_CANCELLATIONS;
+  errno = e;
   return res;
 }
 
-static bool IsMyDebugBinary(const char *path) {
-  int e;
-  bool res;
-  e = errno;
-  res = IsMyDebugBinaryImpl(path);
-  errno = e;
-  return res;
+static void FindDebugBinaryInit(void) {
+  char *p = GetProgramExecutableName();
+  size_t n = strlen(p);
+  if ((n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) ||
+      IsMyDebugBinary(p)) {
+    g_comdbg.res = p;
+  } else if (n + 4 < ARRAYLEN(g_comdbg.buf)) {
+    mempcpy(mempcpy(g_comdbg.buf, p, n), ".dbg", 5);
+    if (IsMyDebugBinary(g_comdbg.buf)) {
+      g_comdbg.res = g_comdbg.buf;
+    }
+  }
+  if (!g_comdbg.res) {
+    g_comdbg.res = getenv("COMDBG");
+  }
 }
 
 /**
@@ -67,27 +88,6 @@ static bool IsMyDebugBinary(const char *path) {
  * @return path to debug binary, or NULL
  */
 const char *FindDebugBinary(void) {
-  static bool once;
-  static char *res;
-  static char buf[PATH_MAX];
-  char *p;
-  size_t n;
-  if (!once) {
-    p = GetProgramExecutableName();
-    n = strlen(p);
-    if ((n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) ||
-        IsMyDebugBinary(p)) {
-      res = p;
-    } else if (n + 4 < ARRAYLEN(buf)) {
-      mempcpy(mempcpy(buf, p, n), ".dbg", 5);
-      if (IsMyDebugBinary(buf)) {
-        res = buf;
-      }
-    }
-    if (!res) {
-      res = getenv("COMDBG");
-    }
-    once = true;
-  }
-  return res;
+  cosmo_once(&g_comdbg.once, FindDebugBinaryInit);
+  return g_comdbg.res;
 }

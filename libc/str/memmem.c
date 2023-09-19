@@ -32,7 +32,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @param needlelen is its character count
  * @return pointer to first result or NULL if not found
  */
-dontasan void *memmem(const void *haystack, size_t haystacklen,
+void *memmem(const void *haystack, size_t haystacklen,
                       const void *needle, size_t needlelen) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   char c;

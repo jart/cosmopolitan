@@ -22,8 +22,6 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
-// TODO(jart): Can we make this test go faster on NetBSD?
-
 int pos;
 int count;
 int limit;

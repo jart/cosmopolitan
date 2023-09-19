@@ -29,7 +29,7 @@ typedef char16_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @return number of shorts (excluding NUL)
  * @asyncsignalsafe
  */
-dontasan size_t strlen16(const char16_t *s) {
+size_t strlen16(const char16_t *s) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   size_t n;
   xmm_t z = {0};

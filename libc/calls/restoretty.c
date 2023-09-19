@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -60,7 +61,9 @@ void __restore_tty(void) {
   int e;
   if (__isrestorable && !__isworker && !__nocolor) {
     e = errno;
+    BEGIN_CANCELLATION_POINT;
     sys_write(0, ANSI_RESTORE, __strlen(ANSI_RESTORE));
+    END_CANCELLATION_POINT;
     tcsetattr(0, TCSAFLUSH, &__oldtermios);
     errno = e;
   }

@@ -31,10 +31,11 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/thread/posixthread.internal.h"
 
-static errno_t pthread_getname_impl(pthread_t thread, char *name, size_t size) {
+static errno_t pthread_getname_impl(struct PosixThread *pt, char *name,
+                                    size_t size) {
   int e, fd, rc, tid, len;
 
-  if ((rc = pthread_getunique_np(thread, &tid))) return rc;
+  tid = _pthread_tid(pt);
   if (!size) return 0;
   bzero(name, size);
   e = errno;
@@ -127,8 +128,10 @@ static errno_t pthread_getname_impl(pthread_t thread, char *name, size_t size) {
  */
 errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
   errno_t rc;
+  struct PosixThread *pt;
+  pt = (struct PosixThread *)thread;
   BLOCK_CANCELLATIONS;
-  rc = pthread_getname_impl(thread, name, size);
+  rc = pthread_getname_impl(pt, name, size);
   ALLOW_CANCELLATIONS;
   return rc;
 }

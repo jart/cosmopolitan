@@ -17,13 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 
 #define N 100
-
-#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
 dontinstrument const char *(DescribeBacktrace)(char buf[N],
                                                struct StackFrame *fr) {
@@ -44,5 +41,6 @@ dontinstrument const char *(DescribeBacktrace)(char buf[N],
     }
     fr = fr->next;
   }
+  *p = 0;
   return buf;
 }

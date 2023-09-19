@@ -21,52 +21,33 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/intrin/weaken.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/internal.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/xnu.internal.h"
-
-static dontubsan void RaiseSigFpe(void) {
-  volatile int x = 0;
-  x = 1 / x;
-}
 
 /**
  * Sends signal to self.
  *
  * This is basically the same as:
  *
- *     tkill(gettid(), sig);
+ *     pthread_kill(pthread_self(), sig);
  *
  * Note `SIG_DFL` still results in process death for most signals.
  *
- * This function is not entirely equivalent to kill() or tkill(). For
- * example, we raise `SIGTRAP` and `SIGFPE` the natural way, since that
- * helps us support Windows. So if the raised signal has a signal
- * handler, then the reported `si_code` might not be `SI_TKILL`.
- *
  * @param sig can be SIGALRM, SIGINT, SIGTERM, SIGKILL, etc.
- * @return 0 if signal was delivered and returned, or -1 w/ errno
+ * @return 0 on success, or nonzero on failure
  * @asyncsignalsafe
  */
 int raise(int sig) {
   int rc;
-  STRACE("raise(%G) → ...", sig);
-  if (sig == SIGTRAP) {
-    DebugBreak();
+  if (IsXnuSilicon()) {
+    rc = __syslib->__raise(sig);
+  } else if (IsWindows()) {
+    __sig_raise(sig, SI_TKILL);
     rc = 0;
-#ifndef __aarch64__
-  } else if (sig == SIGFPE) {
-    // TODO(jart): Why doesn't AARCH64 raise SIGFPE?
-    RaiseSigFpe();
-    rc = 0;
-#endif
   } else {
-    rc = tkill(gettid(), sig);
+    rc = sys_tkill(gettid(), sig, 0);
   }
-  STRACE("...raise(%G) → %d% m", sig, rc);
+  STRACE("raise(%G) → %d% m", sig, rc);
   return rc;
 }

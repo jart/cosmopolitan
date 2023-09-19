@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ntspawn.h"
+#include "libc/proc/ntspawn.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/getenv.internal.h"
@@ -25,6 +25,7 @@
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
@@ -141,7 +142,12 @@ textwindows int mkntenvblock(char16_t envvars[ARG_MAX / 2], char *const envp[],
   bool have_systemroot = false;
   size_t i, j, k, n, m, bufi = 0;
   for (n = 0; envp[n];) n++;
-  vars = alloca((n + 1) * sizeof(char *));
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Walloca-larger-than="
+  int nbytes = (n + 1) * sizeof(char *);
+  vars = alloca(nbytes);
+  CheckLargeStackAllocation(vars, nbytes);
+#pragma GCC pop_options
   for (i = 0; i < n; ++i) {
     InsertString(vars, i, envp[i], buf, &bufi, &have_systemroot);
   }

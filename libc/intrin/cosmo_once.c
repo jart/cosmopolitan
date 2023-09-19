@@ -38,7 +38,7 @@
  */
 errno_t cosmo_once(atomic_uint *once, void init(void)) {
   uint32_t old;
-  switch ((old = atomic_load_explicit(once, memory_order_relaxed))) {
+  switch ((old = atomic_load_explicit(once, memory_order_acquire))) {
     case INIT:
       if (atomic_compare_exchange_strong_explicit(once, &old, CALLING,
                                                   memory_order_acquire,

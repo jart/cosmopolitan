@@ -28,7 +28,7 @@
 
 static nsync_mu __hand_mu;
 
-void __hand_init(void) {
+void __hand_wipe(void) {
   if (!SupportsWindows()) return;
   bzero(&__hand_mu, sizeof(__hand_mu));
 }

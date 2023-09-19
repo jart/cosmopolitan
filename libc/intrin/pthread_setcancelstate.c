@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/blockcancel.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -45,37 +47,46 @@
  * @asyncsignalsafe
  */
 errno_t pthread_setcancelstate(int state, int *oldstate) {
+  errno_t err;
   struct PosixThread *pt;
-  if (__tls_enabled && (pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+  if (__tls_enabled && (pt = _pthread_self())) {
     switch (state) {
       case PTHREAD_CANCEL_ENABLE:
       case PTHREAD_CANCEL_DISABLE:
       case PTHREAD_CANCEL_MASKED:
         if (oldstate) {
-          if (pt->flags & PT_NOCANCEL) {
+          if (pt->pt_flags & PT_NOCANCEL) {
             *oldstate = PTHREAD_CANCEL_DISABLE;
-          } else if (pt->flags & PT_MASKED) {
+          } else if (pt->pt_flags & PT_MASKED) {
             *oldstate = PTHREAD_CANCEL_MASKED;
           } else {
             *oldstate = PTHREAD_CANCEL_ENABLE;
           }
         }
-        pt->flags &= ~(PT_NOCANCEL | PT_MASKED);
+        pt->pt_flags &= ~(PT_NOCANCEL | PT_MASKED);
         if (state == PTHREAD_CANCEL_MASKED) {
-          pt->flags |= PT_MASKED;
+          pt->pt_flags |= PT_MASKED;
         } else if (state == PTHREAD_CANCEL_DISABLE) {
-          pt->flags |= PT_NOCANCEL;
+          pt->pt_flags |= PT_NOCANCEL;
         }
-        return 0;
+        err = 0;
+        break;
       default:
-        return EINVAL;
+        err = EINVAL;
+        break;
     }
   } else {
     if (oldstate) {
       *oldstate = 0;
     }
-    return 0;
+    err = 0;
   }
+#if IsModeDbg()
+  STRACE("pthread_setcancelstate(%s, [%s]) → %s",
+         DescribeCancelState(0, &state), DescribeCancelState(err, oldstate),
+         DescribeErrno(err));
+#endif
+  return err;
 }
 
 int _pthread_block_cancellations(void) {

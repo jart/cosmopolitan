@@ -32,9 +32,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
-
 void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 

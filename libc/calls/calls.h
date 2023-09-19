@@ -209,6 +209,7 @@ int madvise(void *, uint64_t, int);
 #endif
 
 #ifdef _COSMO_SOURCE
+bool32 fdexists(int);
 bool32 fileexists(const char *);
 bool32 isdirectory(const char *);
 bool32 isexecutable(const char *);
@@ -232,8 +233,6 @@ int sys_ptrace(int, ...);
 int sys_sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
 int sys_ioprio_get(int, int);
 int sys_ioprio_set(int, int, int);
-int tgkill(int, int, int);
-int tkill(int, int);
 int tmpfd(void);
 int touch(const char *, unsigned);
 int unveil(const char *, const char *);

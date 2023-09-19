@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
@@ -25,6 +26,7 @@
 #include "libc/runtime/zipos.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/testlib/testlib.h"
 
@@ -64,8 +66,10 @@ TEST(zipdir, test) {
 }
 
 TEST(dirstream, hasDirectoryEntry) {
+  struct stat st;
   bool gotsome = false;
   const char *path = "/zip/usr/share/zoneinfo";
+  ASSERT_SYS(0, 0, fstatat(AT_FDCWD, path, &st, 0));
   ASSERT_NE(NULL, (dir = opendir(path)));
   while ((ent = readdir(dir))) {
     gotsome = true;

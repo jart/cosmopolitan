@@ -29,7 +29,7 @@
  * @return is <0, 0, or >0 based on tolower(uint8_t) comparison
  * @asyncsignalsafe
  */
-dontasan int strcasecmp(const char *a, const char *b) {
+int strcasecmp(const char *a, const char *b) {
   int x, y;
   size_t i = 0;
   uint64_t v, w;

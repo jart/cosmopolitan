@@ -25,8 +25,5 @@
  * @asyncsignalsafe
  */
 pthread_t pthread_self(void) {
-  pthread_t t;
-  t = __get_tls()->tib_pthread;
-  unassert(t);
-  return t;
+  return __get_tls()->tib_pthread;
 }

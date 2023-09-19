@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
@@ -28,7 +29,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 
 __static_yoink("zipos");
 __static_yoink("libc/testlib/hyperion.txt");
@@ -36,7 +37,7 @@ __static_yoink("_Cz_inflate");
 __static_yoink("_Cz_inflateInit2");
 __static_yoink("_Cz_inflateEnd");
 
-int Worker(void *arg, int tid) {
+void *Worker(void *arg) {
   int i, fd;
   char *data;
   for (i = 0; i < 20; ++i) {
@@ -52,9 +53,13 @@ int Worker(void *arg, int tid) {
 
 TEST(zipos, test) {
   int i, n = 16;
-  struct spawn *t = _gc(malloc(sizeof(struct spawn) * n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
+  for (i = 0; i < n; ++i) {
+    ASSERT_SYS(0, 0, pthread_create(t + i, 0, Worker, 0));
+  }
+  for (i = 0; i < n; ++i) {
+    EXPECT_SYS(0, 0, pthread_join(t[i], 0));
+  }
   __print_maps();
 }
 

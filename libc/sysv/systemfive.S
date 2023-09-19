@@ -149,8 +149,8 @@ systemfive_cancellable_end:		// i/o calls park here for long time
 	jmp	4f			// now we are in fact cancelled
 systemfive_cancel:			// SIGTHR will jump here too
 	pop	%rbp
-4:	jmp	_pthread_cancel_sys	// tail call
-	.weak	_pthread_cancel_sys	// must be linked if we're cancelled
+4:	jmp	_pthread_cancel_ack	// tail call
+	.weak	_pthread_cancel_ack	// must be linked if we're cancelled
 #if IsModeDbg()
 not_a_cancellation_point:		// need BEGIN/END_CANCELLATION_POINT
 	nop

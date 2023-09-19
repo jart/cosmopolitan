@@ -35,7 +35,10 @@
 
 bool gotsome;
 ucontext_t uc, goback;
-char testlib_enable_tmp_setup_teardown;
+
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 void check_args(long x0, long x1, long x2, long x3, long x4, long x5, double f0,
                 double f1, double f2, double f3, double f4, double f5) {

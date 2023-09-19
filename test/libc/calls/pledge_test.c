@@ -26,6 +26,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -55,12 +56,14 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 void OnSig(int sig) {
   // do nothing
@@ -69,9 +72,8 @@ void OnSig(int sig) {
 int sys_memfd_secret(unsigned int);  // our ENOSYS threshold
 
 void SetUp(void) {
-  __enable_threads();
   if (pledge(0, 0) == -1) {
-    fprintf(stderr, "warning: pledge() not supported on this system\n");
+    fprintf(stderr, "warning: pledge() not supported on this system %m\n");
     exit(0);
   }
   testlib_extract("/zip/life.elf", "life.elf", 0755);
@@ -115,7 +117,10 @@ TEST(pledge, execpromises_notok) {
   EXPECT_EQ(129, WEXITSTATUS(ws));
 }
 
-int Enclave(void *arg, int tid) {
+void *Enclave(void *arg) {
+  sigset_t ss;
+  sigfillset(&ss);
+  sigprocmask(SIG_BLOCK, &ss, 0);
   ASSERT_SYS(0, 0, pledge("", 0));
   int *job = arg;            // get job
   job[0] = job[0] + job[1];  // do work
@@ -124,11 +129,11 @@ int Enclave(void *arg, int tid) {
 
 TEST(pledge, withThreadMemory) {
   if (IsOpenbsd()) return;  // openbsd doesn't allow it, wisely
-  struct spawn worker;
-  int job[2] = {2, 2};                              // create workload
-  ASSERT_SYS(0, 0, _spawn(Enclave, job, &worker));  // create worker
-  ASSERT_SYS(0, 0, _join(&worker));                 // wait for exit
-  EXPECT_EQ(4, job[0]);                             // check result
+  pthread_t worker;
+  int job[2] = {2, 2};                                     // create workload
+  ASSERT_EQ(0, pthread_create(&worker, 0, Enclave, job));  // create worker
+  ASSERT_EQ(0, pthread_join(worker, 0));                   // wait for exit
+  EXPECT_EQ(4, job[0]);                                    // check result
 }
 
 bool gotusr1;
@@ -137,7 +142,7 @@ void OnUsr1(int sig) {
   gotusr1 = true;
 }
 
-int TgkillWorker(void *arg, int tid) {
+void *TgkillWorker(void *arg) {
   sigset_t mask;
   signal(SIGUSR1, OnUsr1);
   sigemptyset(&mask);
@@ -150,15 +155,17 @@ TEST(pledge, tgkill) {
   // https://github.com/jart/cosmopolitan/issues/628
   if (!IsLinux()) return;
   sigset_t mask;
-  struct spawn worker;
+  pthread_t worker;
   SPAWN(fork);
   sigemptyset(&mask);
   sigaddset(&mask, SIGUSR1);
   sigprocmask(SIG_BLOCK, &mask, 0);
   ASSERT_SYS(0, 0, pledge("stdio", 0));
-  ASSERT_SYS(0, 0, _spawn(TgkillWorker, 0, &worker));
-  ASSERT_SYS(0, 0, tgkill(getpid(), worker.ptid, SIGUSR1));
-  ASSERT_SYS(0, 0, _join(&worker));
+  ASSERT_SYS(0, 0, pthread_create(&worker, 0, TgkillWorker, 0));
+  ASSERT_SYS(0, 0,
+             sys_tgkill(getpid(), _pthread_tid((struct PosixThread *)worker),
+                        SIGUSR1));
+  ASSERT_SYS(0, 0, pthread_join(worker, 0));
   EXITS(0);
 }
 
@@ -602,7 +609,7 @@ TEST(pledge_openbsd, bigSyscalls) {
   EXPECT_EQ(0, WEXITSTATUS(ws));
 }
 
-int LockWorker(void *arg, int tid) {
+void *LockWorker(void *arg) {
   flockfile(stdout);
   ASSERT_EQ(gettid(), stdout->lock._owner);
   funlockfile(stdout);
@@ -610,14 +617,13 @@ int LockWorker(void *arg, int tid) {
 }
 
 TEST(pledge, threadWithLocks_canCodeMorph) {
-  struct spawn worker;
+  pthread_t worker;
   int ws;
   // not sure how this works on OpenBSD but it works!
   if (!fork()) {
-    __enable_threads();
     ASSERT_SYS(0, 0, pledge("stdio", 0));
-    ASSERT_SYS(0, 0, _spawn(LockWorker, 0, &worker));
-    ASSERT_SYS(0, 0, _join(&worker));
+    ASSERT_EQ(0, pthread_create(&worker, 0, LockWorker, 0));
+    ASSERT_EQ(0, pthread_join(worker, 0));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));

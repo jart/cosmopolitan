@@ -15,9 +15,11 @@ ORIGIN
 
 LOCAL CHANGES
 
-  - Time APIs were so good that they're now part of our libc
+  - Time APIs were so good that they're now in libc
 
-  - Double linked list API was so good that it's now part of our libc
+  - Double linked list API was so good that it's now in libc
+
+  - Ensure resources such as POSIX semaphores are are released on fork.
 
   - Modified *NSYNC to allocate waiter objects on the stack. We need it
     because we use *NSYNC mutexes to implement POSIX mutexes, which are
@@ -27,10 +29,11 @@ LOCAL CHANGES
     it works well with Cosmopolitan's fat runtime portability. *NSYNC's
     unit test suite passes on all supported platforms. However the BSDs
     currently appear to be overutilizing CPU time compared with others.
+    This appears to be the fault of the OSes rather than *NSYNC / Cosmo
 
   - Support POSIX thread cancellation. APIs that wait on condition vars
     are now cancellation points. In PTHREAD_CANCEL_MASKED mode they may
     return ECANCELED. In PTHREAD_CANCEL_DEFERRED mode the POSIX threads
-    library will unwind the stack to unlock any locks and free waiters.
+    library will unwind the stack to re-acquire locks and free waiters.
     On the other hand the *NSYNC APIs for mutexes will now safely block
     thread cancellation, but you can still use *NSYNC notes to do that.

@@ -2,9 +2,6 @@
 #define COSMOPOLITAN_LIBC_SOCK_SOCK_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § system api » berkeley sockets                             ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define INET_ADDRSTRLEN 22
 #define IFHWADDRLEN     6
@@ -27,7 +24,6 @@ uint32_t inet_addr(const char *);
 int parseport(const char *);
 uint32_t *GetHostIps(void);
 
-int nointernet(void);
 int socket(int, int, int);
 int listen(int, int);
 int shutdown(int, int);

@@ -29,6 +29,7 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
+#include "libc/runtime/stack.h"
 #include "libc/stdio/ftw.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -168,9 +169,13 @@ int nftw(const char *dirpath,
 	 int fd_limit,
 	 int flags)
 {
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
+	char pathbuf[PATH_MAXIMUS+1];
+	CheckLargeStackAllocation(pathbuf, sizeof(pathbuf));
+#pragma GCC pop_options
 	int r, cs;
 	size_t l;
-	char pathbuf[PATH_MAXIMUS+1];
 
 	if (fd_limit <= 0) return 0;
 

@@ -70,7 +70,7 @@ ssize_t write(int fd, const void *buf, size_t size) {
 
   if (fd < 0) {
     rc = ebadf();
-  } else if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
+  } else if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = ebadf();  // posix specifies this when not open()'d for writing

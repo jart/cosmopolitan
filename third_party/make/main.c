@@ -971,6 +971,8 @@ reset_jobserver (void)
 int
 main (int argc, char **argv, char **envp)
 {
+  ShowCrashReports();
+
   static char *stdin_nm = 0;
   int makefile_status = MAKE_SUCCESS;
   struct goaldep *read_files;

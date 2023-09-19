@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/bo.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -49,18 +47,14 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
 
 __static_yoink("WinMainStdin");
 
 #ifdef __x86_64__
 
 __msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
-
-static textwindows void sys_read_nt_abort(int64_t handle,
-                                          struct NtOverlapped *overlapped) {
-  unassert(CancelIoEx(handle, overlapped) ||
-           GetLastError() == kNtErrorNotFound);
-}
 
 textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
                                      int64_t offset) {
@@ -69,20 +63,37 @@ textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
   bool32 ok;
   struct Fd *f;
   uint32_t got;
-  int filetype;
   int64_t handle;
   uint32_t remain;
   char *targetdata;
   uint32_t targetsize;
-  bool is_console_input;
-  int abort_errno = EAGAIN;
+  struct PosixThread *pt;
+
   f = g_fds.p + fd;
+  handle = __resolve_stdin_handle(f->handle);
+  pt = _pthread_self();
+
+  bool pwriting = offset != -1;
+  bool seekable = f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk;
+  bool nonblock = !!(f->flags & O_NONBLOCK);
+  pt->abort_errno = EAGAIN;
+
+  if (pwriting && !seekable) {
+    return espipe();
+  }
+  if (!pwriting) {
+    offset = 0;
+  }
+
+  uint32_t dwConsoleMode;
+  bool is_console_input =
+      g_fds.stdin.handle
+          ? f->handle == g_fds.stdin.handle
+          : !seekable && (f->kind == kFdConsole ||
+                          GetConsoleMode(handle, &dwConsoleMode));
+
 StartOver:
   size = MIN(size, 0x7ffff000);
-  handle = __resolve_stdin_handle(f->handle);
-  filetype = GetFileType(handle);
-  is_console_input = g_fds.stdin.handle ? f->handle == g_fds.stdin.handle
-                                        : f->handle == g_fds.p[0].handle;
 
   // the caller might be reading a single byte at a time. but we need to
   // be able to munge three bytes into just 1 e.g. "\342\220\200" → "\0"
@@ -103,78 +114,61 @@ StartOver:
     targetsize = size;
   }
 
-  if (filetype == kNtFileTypeChar || filetype == kNtFileTypePipe) {
-    struct NtOverlapped overlap = {0};
-    if (offset != -1) {
-      // pread() and pwrite() should not be called on a pipe or tty
-      return espipe();
+  if (!pwriting && seekable) {
+    pthread_mutex_lock(&f->lock);
+    offset = f->pointer;
+  }
+
+  struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0),
+                                 .Pointer = offset};
+  // the win32 manual says it's important to *not* put &got here
+  // since for overlapped i/o, we always use GetOverlappedResult
+  ok = ReadFile(handle, targetdata, targetsize, 0, &overlap);
+  if (!ok && GetLastError() == kNtErrorIoPending) {
+  BlockingOperation:
+    if (!nonblock) {
+      pt->ioverlap = &overlap;
+      pt->iohandle = handle;
     }
-    if ((overlap.hEvent = CreateEvent(0, 0, 0, 0))) {
-      // the win32 manual says it's important to *not* put &got here
-      // since for overlapped i/o, we always use GetOverlappedResult
-      ok = ReadFile(handle, targetdata, targetsize, 0, &overlap);
-      if (!ok && GetLastError() == kNtErrorIoPending) {
-        BEGIN_BLOCKING_OPERATION;
-        // the i/o operation is in flight; blocking is unavoidable
-        // if we're in a non-blocking mode, then immediately abort
-        // if an interrupt is pending then we abort before waiting
-        // otherwise wait for i/o periodically checking interrupts
-        if (f->flags & O_NONBLOCK) {
-          sys_read_nt_abort(handle, &overlap);
-        } else if (_check_interrupts(kSigOpRestartable)) {
-        Interrupted:
-          abort_errno = errno;
-          sys_read_nt_abort(handle, &overlap);
-        } else {
-          for (;;) {
-            uint32_t i;
-            if (g_fds.stdin.inisem) {
-              ReleaseSemaphore(g_fds.stdin.inisem, 1, 0);
-            }
-            i = WaitForSingleObject(overlap.hEvent, __SIG_POLLING_INTERVAL_MS);
-            if (i == kNtWaitTimeout) {
-              if (_check_interrupts(kSigOpRestartable)) {
-                goto Interrupted;
-              }
-            } else {
-              npassert(!i);
-              break;
-            }
-          }
-        }
-        ok = true;
-        END_BLOCKING_OPERATION;
-      }
-      if (ok) {
-        // overlapped is allocated on stack, so it's important we wait
-        // for windows to acknowledge that it's done using that memory
-        ok = GetOverlappedResult(handle, &overlap, &got, true);
-        if (!ok && GetLastError() == kNtErrorIoIncomplete) {
-          kprintf("you complete me\n");
-          ok = true;
-        }
-      }
-      __imp_CloseHandle(overlap.hEvent);
+    if (nonblock) {
+      CancelIoEx(handle, &overlap);
+    } else if (_check_interrupts(kSigOpRestartable)) {
+    Interrupted:
+      pt->abort_errno = errno;
+      CancelIoEx(handle, &overlap);
     } else {
-      ok = false;
+      for (;;) {
+        uint32_t i;
+        if (g_fds.stdin.inisem) {
+          ReleaseSemaphore(g_fds.stdin.inisem, 1, 0);
+        }
+        i = WaitForSingleObject(overlap.hEvent, __SIG_IO_INTERVAL_MS);
+        if (i == kNtWaitTimeout) {
+          if (_check_interrupts(kSigOpRestartable)) {
+            goto Interrupted;
+          }
+        } else {
+          break;
+        }
+      }
     }
-  } else if (offset == -1) {
-    // perform simple blocking file read
-    ok = ReadFile(handle, targetdata, targetsize, &got, 0);
-  } else {
-    // perform pread()-style file read at particular file offset
-    int64_t position;
-    // save file pointer which windows clobbers, even for overlapped i/o
-    if (!SetFilePointerEx(handle, 0, &position, SEEK_CUR)) {
-      return __winerr();  // f probably isn't seekable?
+    pt->ioverlap = 0;
+    pt->iohandle = 0;
+    ok = true;
+  }
+  if (ok) {
+    // overlapped is allocated on stack, so it's important we wait
+    // for windows to acknowledge that it's done using that memory
+    ok = GetOverlappedResult(handle, &overlap, &got, nonblock);
+    if (!ok && GetLastError() == kNtErrorIoIncomplete) {
+      goto BlockingOperation;
     }
-    struct NtOverlapped overlap = {0};
-    overlap.Pointer = (void *)(uintptr_t)offset;
-    ok = ReadFile(handle, targetdata, targetsize, 0, &overlap);
-    if (!ok && GetLastError() == kNtErrorIoPending) ok = true;
-    if (ok) ok = GetOverlappedResult(handle, &overlap, &got, true);
-    // restore file pointer which windows clobbers, even on error
-    unassert(SetFilePointerEx(handle, position, 0, SEEK_SET));
+  }
+  __imp_CloseHandle(overlap.hEvent);  // __imp_ to avoid log noise
+
+  if (!pwriting && seekable) {
+    if (ok) f->pointer = offset + got;
+    pthread_mutex_unlock(&f->lock);
   }
 
   if (ok) {
@@ -210,7 +204,7 @@ StartOver:
     case kNtErrorAccessDenied:  // read doesn't return EACCESS
       return ebadf();           //
     case kNtErrorOperationAborted:
-      errno = abort_errno;
+      errno = pt->abort_errno;
       return -1;
     default:
       return __winerr();
@@ -225,9 +219,16 @@ textwindows ssize_t sys_read_nt(int fd, const struct iovec *iov, size_t iovlen,
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {
+      // TODO(jart): disable cancelations after first iteration
       if (!iov[i].iov_len) continue;
       rc = sys_read_nt_impl(fd, iov[i].iov_base, iov[i].iov_len, opt_offset);
-      if (rc == -1) return -1;
+      if (rc == -1) {
+        if (total && errno != ECANCELED) {
+          return total;
+        } else {
+          return -1;
+        }
+      }
       total += rc;
       if (opt_offset != -1) opt_offset += rc;
       if (rc < iov[i].iov_len) break;

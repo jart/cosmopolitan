@@ -60,9 +60,9 @@ static void AppendUnit(struct State *s, int64_t x, const char *t) {
  * Generates process resource usage report.
  */
 void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
+  double ticks;
   struct State s;
   long utime, stime;
-  long double ticks;
   struct State *st = &s;
   s.b = b;
   s.nl = nl;
@@ -75,10 +75,10 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
     appends(b, "needed ");
     AppendInt(st, utime + stime);
     appends(b, "us cpu (");
-    AppendInt(st, (long double)stime / (utime + stime) * 100);
+    AppendInt(st, (double)stime / (utime + stime) * 100);
     appends(b, "% kernel)");
     AppendNl(st);
-    ticks = ceill((long double)(utime + stime) / (1000000.L / CLK_TCK));
+    ticks = ceill((double)(utime + stime) / (1000000.L / CLK_TCK));
     if (ru->ru_idrss) {
       AppendMetric(st, "needed ", lroundl(ru->ru_idrss / ticks),
                    "kb private on average");
@@ -96,8 +96,8 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
     appends(b, "caused ");
     AppendInt(st, ru->ru_minflt + ru->ru_majflt);
     appends(b, " page faults (");
-    AppendInt(
-        st, (long double)ru->ru_minflt / (ru->ru_minflt + ru->ru_majflt) * 100);
+    AppendInt(st,
+              (double)ru->ru_minflt / (ru->ru_minflt + ru->ru_majflt) * 100);
     appends(b, "% memcpy)");
     AppendNl(st);
   }
@@ -108,8 +108,7 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
       appendw(b, READ16LE("es"));
     }
     appendw(b, READ16LE(" ("));
-    AppendInt(st,
-              (long double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100);
+    AppendInt(st, (double)ru->ru_nvcsw / (ru->ru_nvcsw + ru->ru_nivcsw) * 100);
     appends(b, "% consensual)");
     AppendNl(st);
   }
@@ -129,7 +128,7 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
     AppendNl(st);
   }
   if (ru->ru_nsignals) {
-    appends(b, "received ");
+    appends(b, "delivered ");
     AppendUnit(st, ru->ru_nsignals, "signal");
     AppendNl(st);
   }

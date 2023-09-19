@@ -67,7 +67,6 @@ static bool __extend_memory(struct MemoryIntervals *mm) {
   base = (char *)kMemtrackStart;
   prot = PROT_READ | PROT_WRITE;
   flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED;
-  // TODO(jart): These map handles should not leak across NT fork()
   if (mm->p == mm->s) {
     // TODO(jart): How can we detect ASAN mode under GREG?
     if (1 || IsAsan()) {

@@ -10,6 +10,7 @@ o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/log			\
 		o/$(MODE)/test/libc/mem			\
 		o/$(MODE)/test/libc/nexgen32e		\
+		o/$(MODE)/test/libc/proc		\
 		o/$(MODE)/test/libc/release		\
 		o/$(MODE)/test/libc/runtime		\
 		o/$(MODE)/test/libc/sock		\

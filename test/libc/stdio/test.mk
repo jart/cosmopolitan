@@ -28,6 +28,7 @@ TEST_LIBC_STDIO_DIRECTDEPS =					\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_PROC						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
@@ -41,7 +42,6 @@ TEST_LIBC_STDIO_DIRECTDEPS =					\
 	THIRD_PARTY_GDTOA					\
 	THIRD_PARTY_MBEDTLS					\
 	THIRD_PARTY_MUSL					\
-	THIRD_PARTY_TR						\
 	THIRD_PARTY_NSYNC					\
 	THIRD_PARTY_ZLIB					\
 	THIRD_PARTY_ZLIB_GZ
@@ -63,18 +63,6 @@ o/$(MODE)/test/libc/stdio/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/stdio/system_test.com.dbg:			\
-		$(TEST_LIBC_STDIO_DEPS)				\
-		o/$(MODE)/test/libc/stdio/system_test.o		\
-		o/$(MODE)/test/libc/stdio/stdio.pkg		\
-		o/$(MODE)/tool/build/echo.com.zip.o		\
-		o/$(MODE)/tool/build/cocmd.com.zip.o		\
-		o/$(MODE)/tool/build/false.com.zip.o		\
-		$(LIBC_TESTMAIN)				\
-		$(CRT)						\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 o/$(MODE)/test/libc/stdio/popen_test.com.dbg:			\
 		$(TEST_LIBC_STDIO_DEPS)				\
 		o/$(MODE)/test/libc/stdio/popen_test.o		\
@@ -85,24 +73,11 @@ o/$(MODE)/test/libc/stdio/popen_test.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/stdio/posix_spawn_test.com.runs:		\
-		private QUOTA += -M8192m
-
-o/$(MODE)/test/libc/stdio/posix_spawn_test.com.dbg:		\
-		$(TEST_LIBC_STDIO_DEPS)				\
-		o/$(MODE)/test/libc/stdio/posix_spawn_test.o	\
-		o/$(MODE)/test/libc/stdio/stdio.pkg		\
-		o/$(MODE)/tool/build/echo.com.zip.o		\
-		o/$(MODE)/test/libc/mem/prog/life.com.zip.o	\
-		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
-		$(LIBC_TESTMAIN)				\
-		$(CRT)						\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 $(TEST_LIBC_STDIO_OBJS): private				\
 		DEFAULT_CCFLAGS +=				\
 			-fno-builtin
+
+$(TEST_LIBC_STDIO_OBJS): test/libc/stdio/test.mk
 
 .PHONY: o/$(MODE)/test/libc/stdio
 o/$(MODE)/test/libc/stdio:					\

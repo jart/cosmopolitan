@@ -49,13 +49,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
-#ifdef SYSDEBUG
-__static_yoink("strsignal");  // for kprintf()
-#endif
-
 #if SupportsWindows()
-__static_yoink("_init_onntconsoleevent");
-__static_yoink("_init_wincrash");
+__static_yoink("__sig_ctor");
 #endif
 
 #define SA_RESTORER 0x04000000
@@ -250,23 +245,21 @@ static int __sigaction(int sig, const struct sigaction *act,
   } else {
     if (oldact) {
       bzero(oldact, sizeof(*oldact));
-    }
-    rc = 0;
-  }
-  if (rc != -1 && !__vforked) {
-    if (oldact) {
       oldrva = __sighandrvas[sig];
+      oldact->sa_flags = __sighandflags[sig];
       oldact->sa_sigaction =
           (sigaction_f)(oldrva < kSigactionMinRva
                             ? oldrva
                             : (intptr_t)&__executable_start + oldrva);
     }
+    rc = 0;
+  }
+  if (rc != -1 && !__vforked) {
     if (act) {
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
       if (IsWindows()) {
-        if (rva == (intptr_t)SIG_IGN ||
-            (rva == (intptr_t)SIG_DFL && __sig_is_ignored(sig))) {
+        if (__sig_ignored(sig)) {
           __sig.pending &= ~(1ull << (sig - 1));
           if (__tls_enabled) {
             __get_tls()->tib_sigpending &= ~(1ull << (sig - 1));
@@ -281,7 +274,9 @@ static int __sigaction(int sig, const struct sigaction *act,
 /**
  * Installs handler for kernel interrupt to thread, e.g.:
  *
- *     void GotCtrlC(int sig, siginfo_t *si, void *ctx);
+ *     void GotCtrlC(int sig, siginfo_t *si, void *arg) {
+ *       ucontext_t *ctx = arg;
+ *     }
  *     struct sigaction sa = {.sa_sigaction = GotCtrlC,
  *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
  *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));

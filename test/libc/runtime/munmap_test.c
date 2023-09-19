@@ -26,7 +26,9 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(munmap, doesntExist_doesntCare) {
   EXPECT_SYS(0, 0, munmap(0, FRAMESIZE * 8));

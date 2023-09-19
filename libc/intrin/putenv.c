@@ -48,6 +48,8 @@ static char **GrowEnviron(char **a) {
       for (p = b; *a;) {
         *p++ = *a++;
       }
+    } else {
+      b[0] = 0;
     }
     environ = b;
     expected = b;

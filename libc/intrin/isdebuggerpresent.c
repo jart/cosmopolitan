@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/cp.internal.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -52,7 +52,7 @@ int IsDebuggerPresent(bool force) {
   if (!PLEDGED(RPATH)) return false;
   res = 0;
   e = errno;
-  BEGIN_CANCELLATION_POINT;
+  BLOCK_CANCELLATIONS;
   if ((fd = __sys_openat(AT_FDCWD, "/proc/self/status", O_RDONLY, 0)) >= 0) {
     if ((got = sys_read(fd, buf, sizeof(buf) - 1)) > 0) {
       buf[got] = '\0';
@@ -63,7 +63,7 @@ int IsDebuggerPresent(bool force) {
     }
     sys_close(fd);
   }
-  END_CANCELLATION_POINT;
+  ALLOW_CANCELLATIONS;
   errno = e;
   return res;
 }

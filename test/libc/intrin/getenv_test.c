@@ -21,6 +21,8 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
+__static_yoink("malloc");
+
 TEST(getenv, test) {
   putenv("X=y");
   EXPECT_STREQ("y", getenv("X"));

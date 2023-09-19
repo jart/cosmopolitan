@@ -380,7 +380,7 @@ static char *replace_extn(char *tmpl, char *extn) {
 }
 
 static char *create_tmpfile(void) {
-  char *path = xjoinpaths(kTmpPath, "chibicc-XXXXXX");
+  char *path = xjoinpaths(__get_tmpdir(), "chibicc-XXXXXX");
   int fd = mkstemp(path);
   if (fd == -1) error("%s: mkstemp failed: %s", path, strerror(errno));
   close(fd);

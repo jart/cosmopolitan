@@ -61,6 +61,7 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE             -0x6980  /*< None of the common ciphersuites is usable (eg, no suitable certificate, see debug messages). */
 #define MBEDTLS_ERR_SSL_WANT_READ                         -0x6900  /*< No data of requested type currently available on underlying transport. */
 #define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880  /*< Connection requires a write call. */
+#define MBEDTLS_ERR_SSL_CANCELED                          -0x9900  /*< The POSIX thread was canceled. */
 #define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800  /*< The operation timed out. */
 #define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780  /*< The client initiated a reconnect from the same port. */
 #define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700  /*< Record header looks valid but is not expected. */

@@ -64,7 +64,6 @@ int sys_gettid(void) {
   return tid;
 #elif defined(__aarch64__)
   // this can't be used on xnu
-  if (!IsLinux()) notpossible;
   register long res asm("x0");
   asm volatile("mov\tx8,%1\n\t"
                "svc\t0"

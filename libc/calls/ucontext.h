@@ -98,7 +98,7 @@ struct ucontext {
   uint8_t __unused[1024 / 8 - sizeof(sigset_t)];
   struct sigcontext uc_mcontext;
 #endif
-};
+} forcealign(16);
 
 typedef struct ucontext ucontext_t;
 

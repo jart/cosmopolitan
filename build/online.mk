@@ -25,7 +25,10 @@
 .PRECIOUS: o/$(MODE)/%.com.ok
 o/$(MODE)/%.com.ok: private .PLEDGE = stdio rpath wpath cpath proc fattr inet
 o/$(MODE)/%.com.ok:				\
-		o//tool/build/runit.com		\
-		o//tool/build/runitd.com	\
+		o/$(MODE)/tool/build/runit.com	\
+		o/$(MODE)/tool/build/runitd.com	\
 		o/$(MODE)/%.com
-	@$(COMPILE) -wATEST -tT$@ $^ $(HOSTS)
+	$(COMPILE) -wATEST -tT$@ $^ $(HOSTS)
+
+.PHONY:
+o/tiny/tool/build/runit.com:

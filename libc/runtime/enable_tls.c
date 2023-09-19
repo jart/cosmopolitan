@@ -27,20 +27,25 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/make/gnumake.h"
 
 #define I(x) ((uintptr_t)x)
 
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 
-static struct PosixThread _pthread_main;
 _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
 
 /**
@@ -191,7 +196,15 @@ textstartup void __enable_tls(void) {
   tib->tib_strace = __strace;
   tib->tib_ftrace = __ftrace;
   tib->tib_locale = (intptr_t)&__c_dot_utf8_locale;
-  tib->tib_pthread = (pthread_t)&_pthread_main;
+  tib->tib_pthread = (pthread_t)&_pthread_static;
+  if (IsWindows()) {
+    intptr_t threadhand, pseudo = GetCurrentThread();
+    DuplicateHandle(GetCurrentProcess(), pseudo, GetCurrentProcess(),
+                    &threadhand, 0, false, kNtDuplicateSameAccess);
+    atomic_store_explicit(&tib->tib_syshand, threadhand, memory_order_relaxed);
+  } else if (IsXnuSilicon()) {
+    tib->tib_syshand = __syslib->__pthread_self();
+  }
   if (IsLinux() || IsXnuSilicon()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
@@ -202,11 +215,14 @@ textstartup void __enable_tls(void) {
   atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
 
   // initialize posix threads
-  _pthread_main.tib = tib;
-  _pthread_main.flags = PT_STATIC;
-  _pthread_main.list.prev = _pthread_main.list.next =  //
-      _pthread_list = __veil("r", &_pthread_main.list);
-  atomic_store_explicit(&_pthread_main.ptid, tid, memory_order_relaxed);
+  _pthread_static.tib = tib;
+  _pthread_static.pt_flags = PT_STATIC;
+  dll_init(&_pthread_static.list);
+  _pthread_list = &_pthread_static.list;
+  atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_relaxed);
+  if (IsWindows()) {
+    npassert((_pthread_static.semaphore = CreateSemaphore(0, 0, 1, 0)));
+  }
 
   // copy in initialized data section
   if (I(_tdata_size)) {

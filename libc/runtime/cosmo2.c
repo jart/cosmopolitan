@@ -84,6 +84,17 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   // its used by --strace and also kprintf() %T
   kStartTsc = rdtsc();
 
+  // enable enough tls to survive until it can be allocated properly
+  struct CosmoTib tib = {
+      .tib_self = &tib,
+      .tib_self2 = &tib,
+      .tib_sigmask = -1,
+      .tib_sigstack_size = 57344,
+      .tib_sigstack_addr = (char *)__builtin_frame_address(0) - 57344,
+      .tib_tid = 1,
+  };
+  __set_tls(&tib);
+
   // extracts arguments from old sysv stack abi
   int argc = *sp;
   char **argv = (char **)(sp + 1);
@@ -118,7 +129,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   }
 
   // check system call abi compatibility
-  if (SupportsXnu() && __syslib && __syslib->version < SYSLIB_VERSION) {
+  if (SupportsXnu() && __syslib && __syslib->__version < SYSLIB_VERSION) {
     sys_write(2, "need newer ape loader\n", 22);
     _Exit(127);
   }

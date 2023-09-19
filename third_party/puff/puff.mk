@@ -33,6 +33,13 @@ $(THIRD_PARTY_PUFF_A).pkg:			\
 		$(THIRD_PARTY_PUFF_A_OBJS)	\
 		$(foreach x,$(THIRD_PARTY_PUFF_A_DIRECTDEPS),$($(x)_A).pkg)
 
+$(THIRD_PARTY_PUFF_A_OBJS): private			\
+		COPTS +=				\
+			-ffreestanding			\
+			-fno-sanitize=address		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
+
 THIRD_PARTY_PUFF_LIBS = $(foreach x,$(THIRD_PARTY_PUFF_ARTIFACTS),$($(x)))
 THIRD_PARTY_PUFF_SRCS = $(foreach x,$(THIRD_PARTY_PUFF_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_PUFF_HDRS = $(foreach x,$(THIRD_PARTY_PUFF_ARTIFACTS),$($(x)_HDRS))

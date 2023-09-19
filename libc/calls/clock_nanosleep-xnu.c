@@ -21,12 +21,18 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
                             struct timespec *rem) {
@@ -51,16 +57,25 @@ int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
 #else
   long res;
   struct timespec abs, now, rel;
+  if (_weaken(pthread_testcancel_np) &&  //
+      _weaken(pthread_testcancel_np)()) {
+    return ecanceled();
+  }
   if (flags & TIMER_ABSTIME) {
     abs = *req;
-    if (!(res = __syslib->clock_gettime(clock, &now))) {
+    if (!(res = __syslib->__clock_gettime(clock, &now))) {
       if (timespec_cmp(abs, now) > 0) {
         rel = timespec_sub(abs, now);
-        res = __syslib->nanosleep(&rel, 0);
+        res = __syslib->__nanosleep(&rel, 0);
       }
     }
   } else {
-    res = __syslib->nanosleep(req, rem);
+    res = __syslib->__nanosleep(req, rem);
+  }
+  if (res == -EINTR &&                    //
+      (_weaken(pthread_testcancel_np) &&  //
+       _weaken(pthread_testcancel_np))) {
+    return ecanceled();
   }
   return _sysret(res);
 #endif

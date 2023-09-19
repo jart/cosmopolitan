@@ -62,7 +62,6 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
   struct Garbage *p2;
   struct Garbages *g;
   struct CosmoTib *t;
-  __require_tls();
   t = __get_tls();
   g = t->tib_garbages;
   if (UNLIKELY(!g)) {

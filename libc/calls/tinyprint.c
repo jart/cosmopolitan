@@ -16,7 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/runtime/runtime.h"
+
+#define ASAN_ERROR "error: tinyprint() passed invalid memory, or missing NULL\n"
 
 static bool tinyflush(int fd, char *buf, size_t n, ssize_t *toto) {
   ssize_t rc;
@@ -50,8 +56,13 @@ ssize_t tinyprint(int fd, const char *s, ...) {
   va_list va;
   ssize_t toto;
   char buf[512];
+  BLOCK_CANCELLATIONS;
   va_start(va, s);
   for (toto = n = 0; s; s = va_arg(va, const char *)) {
+    if (IsAsan() && !__asan_is_valid_str(s)) {
+      write(2, ASAN_ERROR, sizeof(ASAN_ERROR) - 1);
+      abort();
+    }
     while ((c = *s++)) {
       buf[n++] = c;
       if (n == sizeof(buf)) {
@@ -64,5 +75,6 @@ ssize_t tinyprint(int fd, const char *s, ...) {
   }
   va_end(va);
   tinyflush(fd, buf, n, &toto);
+  ALLOW_CANCELLATIONS;
   return toto;
 }

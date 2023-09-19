@@ -21,7 +21,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/dll.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -31,17 +32,20 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/testlib/aspect.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
-static char g_olddir[PATH_MAX];
-static char g_tmpdir[PATH_MAX];
+struct Dll *testlib_aspects;
 static pthread_mutex_t testlib_error_lock;
 
 void testlib_finish(void) {
+  char b1[12], b2[12];
   if (g_testlib_failed) {
-    kprintf("%u / %u %s\n", g_testlib_failed, g_testlib_ran, "tests failed");
+    FormatInt32(b1, g_testlib_failed);
+    FormatInt32(b2, g_testlib_ran);
+    tinyprint(2, b1, " / ", b2, " tests failed\n", NULL);
   }
 }
 
@@ -69,37 +73,6 @@ wontreturn void testlib_abort(void) {
   _Exit(MAX(1, MIN(255, g_testlib_failed)));
 }
 
-static void SetupTmpDir(void) {
-  char number[21];
-  FormatInt64(number, _rand64() & INT64_MAX);
-  g_tmpdir[0] = 0;
-  if (*kTmpPath != '/') {
-    strlcat(g_tmpdir, g_olddir, sizeof(g_tmpdir));
-    strlcat(g_tmpdir, "/", sizeof(g_tmpdir));
-  }
-  strlcat(g_tmpdir, kTmpPath, sizeof(g_tmpdir));
-  strlcat(g_tmpdir, program_invocation_short_name, sizeof(g_tmpdir));
-  strlcat(g_tmpdir, ".", sizeof(g_tmpdir));
-  strlcat(g_tmpdir, number, sizeof(g_tmpdir));
-  if (makedirs(g_tmpdir, 0755) || chdir(g_tmpdir)) {
-    perror(g_tmpdir);
-    tinyprint(2, "testlib failed to setup tmpdir\n", NULL);
-    exit(1);
-  }
-}
-
-static void TearDownTmpDir(void) {
-  if (chdir(g_olddir)) {
-    perror(g_olddir);
-    exit(1);
-  }
-  if (rmrf(g_tmpdir)) {
-    perror(g_tmpdir);
-    tinyprint(2, "testlib failed to tear down tmpdir\n", NULL);
-    exit(1);
-  }
-}
-
 /**
  * Runs all test case functions in sorted order.
  */
@@ -116,45 +89,41 @@ void testlib_runtestcases(const testfn_t *start, const testfn_t *end,
   // Test cases are iterable via a decentralized section. Your TEST()
   // macro inserts .testcase.SUITENAME sections into the binary which
   // the linker sorts into an array.
-  //
-  // @see ape/ape.lds
+  char host[64];
+  struct Dll *e;
   const testfn_t *fn;
-  if (_weaken(testlib_enable_tmp_setup_teardown) ||
-      _weaken(testlib_enable_tmp_setup_teardown_once)) {
-    if (!getcwd(g_olddir, sizeof(g_olddir))) {
-      perror("getcwd");
-      exit(1);
-    }
-  }
-  if (_weaken(testlib_enable_tmp_setup_teardown_once)) {
-    SetupTmpDir();
-  }
-  if (_weaken(SetUpOnce)) _weaken(SetUpOnce)();
+  struct TestAspect *a;
+  strcpy(host, "unknown");
+  gethostname(host, sizeof(host)), errno = 0;
   for (fn = start; fn != end; ++fn) {
     STRACE("");
     STRACE("# setting up %t", fn);
-    if (_weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
+    for (e = dll_first(testlib_aspects); e; e = dll_next(testlib_aspects, e)) {
+      a = TESTASPECT_CONTAINER(e);
+      if (!a->once && a->setup) {
+        a->setup(fn);
+      }
+    }
     if (_weaken(SetUp)) _weaken(SetUp)();
     errno = 0;
-    if (IsWindows()) {
-      SetLastError(0);
-    }
+    if (IsWindows()) SetLastError(0);
     if (!IsWindows()) sys_getpid();
     if (warmup) warmup();
     testlib_clearxmmregisters();
     STRACE("");
-    STRACE("# running test %t", fn);
+    STRACE("# running test %t on %s@%s", fn, __getenv(environ, "USER").s, host);
     (*fn)();
     STRACE("");
     STRACE("# tearing down %t", fn);
     if (!IsWindows()) sys_getpid();
-    if (_weaken(TearDown)) _weaken(TearDown)();
-    if (_weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();
-  }
-  if (_weaken(TearDownOnce)) {
-    _weaken(TearDownOnce)();
-  }
-  if (_weaken(testlib_enable_tmp_setup_teardown_once)) {
-    TearDownTmpDir();
+    if (_weaken(TearDown)) {
+      _weaken(TearDown)();
+    }
+    for (e = dll_last(testlib_aspects); e; e = dll_prev(testlib_aspects, e)) {
+      a = TESTASPECT_CONTAINER(e);
+      if (!a->once && a->teardown) {
+        a->teardown(fn);
+      }
+    }
   }
 }

@@ -20,6 +20,8 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/nt/runtime.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
 

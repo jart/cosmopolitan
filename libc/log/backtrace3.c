@@ -67,7 +67,7 @@ dontinstrument dontasan int PrintBacktraceUsingSymbols(
     }
     addr = frame->addr;
 #ifdef __x86_64__
-    if (addr == (intptr_t)_weaken(__gc)) {
+    if (gi && addr == (intptr_t)_weaken(__gc)) {
       do {
         --gi;
       } while ((addr = garbage->p[gi].ret) == (intptr_t)_weaken(__gc));

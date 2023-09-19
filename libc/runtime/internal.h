@@ -44,8 +44,8 @@ int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
 int sys_mprotect_nt(void *, size_t, int);
 int __inflate(void *, size_t, const void *, size_t);
-void *__mmap_unlocked(void *, size_t, int, int, int, int64_t) dontasan;
-int __munmap_unlocked(char *, size_t) dontasan;
+void *__mmap_unlocked(void *, size_t, int, int, int, int64_t);
+int __munmap_unlocked(char *, size_t);
 void __on_arithmetic_overflow(void);
 void __init_fds(int, char **, char **);
 

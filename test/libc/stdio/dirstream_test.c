@@ -48,7 +48,9 @@ __static_yoink("usr/share/zoneinfo/New_York");
 __static_yoink("libc/testlib/hyperion.txt");
 __static_yoink("libc/testlib/moby.txt");
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 DIR *dir;
 struct dirent *ent;

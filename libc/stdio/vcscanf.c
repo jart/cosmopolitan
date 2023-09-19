@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -303,9 +302,9 @@ int __vcscanf(int callback(void *),    //
         if (discard) {
           buf = NULL;
         } else if (ismalloc) {
-          buf = _weaken(malloc)(bufsize * charbytes);
+          buf = malloc(bufsize * charbytes);
           struct FreeMe *entry;
-          if (buf && (entry = _weaken(calloc)(1, sizeof(struct FreeMe)))) {
+          if (buf && (entry = calloc(1, sizeof(struct FreeMe)))) {
             entry->ptr = buf;
             entry->next = freeme;
             freeme = entry;
@@ -317,7 +316,7 @@ int __vcscanf(int callback(void *),    //
           size_t j = 0;
           for (;;) {
             if (ismalloc && !width && j + 2 + 1 >= bufsize &&
-                !_weaken(__grow)(&buf, &bufsize, charbytes, 0)) {
+                !__grow(&buf, &bufsize, charbytes, 0)) {
               width = bufsize - 1;
             }
             if (c != -1 && j + !rawmode < bufsize && (rawmode || !isspace(c))) {
@@ -372,11 +371,11 @@ int __vcscanf(int callback(void *),    //
     }
   }
 Done:
-  while (freeme && _weaken(free)) {
+  while (freeme) {
     struct FreeMe *entry = freeme;
     freeme = entry->next;
-    if (items == -1) _weaken(free)(entry->ptr);
-    _weaken(free)(entry);
+    if (items == -1) free(entry->ptr);
+    free(entry);
   }
   return items;
 }

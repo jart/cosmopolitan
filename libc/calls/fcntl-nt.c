@@ -167,8 +167,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
   }
 
   bool32 ok;
-  struct NtOverlapped ov = {.hEvent = f->handle,
-                            .Pointer = (void *)(uintptr_t)off};
+  struct NtOverlapped ov = {.hEvent = f->handle, .Pointer = off};
 
   if (l->l_type == F_RDLCK || l->l_type == F_WRLCK) {
 
@@ -254,8 +253,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
     // allow a big range to unlock many small ranges
     for (flp = &g_locks.list, fl = *flp; fl;) {
       if (fl->fd == fd && EncompassesFileLock(fl, off, len)) {
-        struct NtOverlapped ov = {.hEvent = f->handle,
-                                  .Pointer = (void *)(uintptr_t)fl->off};
+        struct NtOverlapped ov = {.hEvent = f->handle, .Pointer = fl->off};
         if (UnlockFileEx(f->handle, 0, fl->len, fl->len >> 32, &ov)) {
           *flp = fl->next;
           ft = fl->next;
@@ -287,14 +285,13 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
             off + len >= fl->off &&  //
             off + len < fl->off + fl->len) {
           // cleave left side of lock
-          struct NtOverlapped ov = {.hEvent = f->handle,
-                                    .Pointer = (void *)(uintptr_t)fl->off};
+          struct NtOverlapped ov = {.hEvent = f->handle, .Pointer = fl->off};
           if (!UnlockFileEx(f->handle, 0, fl->len, fl->len >> 32, &ov)) {
             return -1;
           }
           fl->len = (fl->off + fl->len) - (off + len);
           fl->off = off + len;
-          ov.Pointer = (void *)(uintptr_t)fl->off;
+          ov.Pointer = fl->off;
           if (!LockFileEx(f->handle, kNtLockfileExclusiveLock, 0, fl->len,
                           fl->len >> 32, &ov)) {
             return -1;

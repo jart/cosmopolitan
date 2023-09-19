@@ -32,11 +32,13 @@ LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32				\
 	LIBC_NT_NTDLL					\
+	LIBC_PROC					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
+	LIBC_THREAD					\
 	LIBC_TIME					\
 	LIBC_TINYMATH					\
 	THIRD_PARTY_COMPILER_RT				\
@@ -54,10 +56,14 @@ $(LIBC_LOG_A).pkg:					\
 		$(LIBC_LOG_A_OBJS)			\
 		$(foreach x,$(LIBC_LOG_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/log/backtrace2.o				\
-o/$(MODE)/libc/log/backtrace3.o: private		\
-		CFLAGS +=				\
-			-fno-sanitize=all
+# offer assurances about the stack safety of cosmo libc
+$(LIBC_LOG_A_OBJS): private COPTS += -Wframe-larger-than=4096 -Walloca-larger-than=4096
+
+$(LIBC_RUNTIME_A_OBJS): private				\
+		COPTS +=				\
+			-fno-sanitize=all		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
 
 o/$(MODE)/libc/log/checkfail.o: private			\
 		CFLAGS +=				\
@@ -66,22 +72,6 @@ o/$(MODE)/libc/log/checkfail.o: private			\
 o/$(MODE)/libc/log/watch.o: private			\
 		CFLAGS +=				\
 			-ffreestanding
-
-o/$(MODE)/libc/log/watch.o				\
-o/$(MODE)/libc/log/attachdebugger.o			\
-o/$(MODE)/libc/log/checkaligned.o			\
-o/$(MODE)/libc/log/checkfail.o				\
-o/$(MODE)/libc/log/checkfail_ndebug.o			\
-o/$(MODE)/libc/log/restoretty.o				\
-o/$(MODE)/libc/log/oncrash_amd64.o			\
-o/$(MODE)/libc/log/oncrash_arm64.o			\
-o/$(MODE)/libc/log/onkill.o				\
-o/$(MODE)/libc/log/startfatal.o				\
-o/$(MODE)/libc/log/startfatal_ndebug.o			\
-o/$(MODE)/libc/log/ubsan.o				\
-o/$(MODE)/libc/log/die.o: private			\
-		CFLAGS +=				\
-			$(NO_MAGIC)
 
 LIBC_LOG_LIBS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)))
 LIBC_LOG_SRCS = $(foreach x,$(LIBC_LOG_ARTIFACTS),$($(x)_SRCS))

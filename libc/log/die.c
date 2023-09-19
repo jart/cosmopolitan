@@ -17,36 +17,40 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
-#include "libc/log/log.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-#if SupportsMetal()
-__static_yoink("_idt");
-#endif
-
 /**
- * Aborts process after printing a backtrace.
+ * Exits process with crash report.
+ *
+ * The `cosmoaddr2line` command may be copied and pasted into the shell
+ * to obtain further details such as function calls and source lines in
+ * the backtrace. Unlike abort() this function doesn't depend on signal
+ * handling infrastructure. If tcsetattr() was called earlier to change
+ * terminal settings, then they'll be restored automatically. Your exit
+ * handlers won't be called. The `KPRINTF_LOG` environment variable may
+ * configure the output location of these reports, defaulting to stderr
+ * which is duplicated at startup, in case the program closes the file.
+ *
+ * @see __minicrash() for signal handlers, e.g. handling abort()
+ * @asyncsignalsafe
+ * @threadsafe
+ * @vforksafe
  */
-relegated dontasan wontreturn void __die(void) {
-
-  // print vital error nubers reliably
-  // the surface are of code this calls is small and audited
-  kprintf("\r\n\e[1;31m__die %s pid %d tid %d bt %s\e[0m\n",
-          program_invocation_short_name, getpid(), sys_gettid(),
-          DescribeBacktrace(__builtin_frame_address(0)));
-
-  // print much friendlier backtrace less reliably
-  // we're in a broken runtime state and so much can go wrong
+relegated wontreturn void __die(void) {
+  char host[128];
   __restore_tty();
-  ShowBacktrace(2, __builtin_frame_address(0));
+  strcpy(host, "unknown");
+  gethostname(host, sizeof(host));
+  kprintf("%serror: %s on %s pid %d tid %d has perished%s\n"
+          "       cosmoaddr2line %s%s %s\n",
+          __nocolor ? "" : "\e[1;31m", program_invocation_short_name, host,
+          getpid(), gettid(), __nocolor ? "" : "\e[0m", __argv[0],
+          endswith(__argv[0], ".com") ? ".dbg" : "",
+          DescribeBacktrace(__builtin_frame_address(0)));
   _Exit(77);
 }

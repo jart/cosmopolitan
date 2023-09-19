@@ -13,7 +13,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/posix_spawn.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"

@@ -16,74 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
-#include "libc/x/x.h"
-
-__static_yoink("strnwidth");
 
 void __testlib_ezbenchreport(const char *form, double c1, double c2) {
-  long ns1, ns2;
   __warn_if_powersave();
-  ns1 = lrintl(ConvertTicksToNanos(c1));
-  ns2 = lrintl(ConvertTicksToNanos(c2));
-  (fprintf)(stderr,
-            __veil("r", " *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n"),
-            form, lrint(c1), ns1, lrint(c2), ns2);
+  kprintf(" *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n", form,
+          lrint(c1), lrint(c1 / 3), lrint(c2), lrint(c2 / 3));
 }
 
 void __testlib_ezbenchreport_n(const char *form, char z, size_t n, double c) {
-  char msg[128];
+  long cn, lat;
   uint64_t bps;
-  long double cn, lat;
+  char msg[128];
   __warn_if_powersave();
-  (snprintf)(msg, sizeof(msg), "%s %c=%d", form, z, n);
-  cn = ConvertTicksToNanos(c);
+  ksnprintf(msg, sizeof(msg), "%s %c=%d", form, z, n);
+  cn = lrint(c / 3);
   if (!n) {
-    (fprintf)(stderr, "\n");
-    (fprintf)(stderr, " *     %-28s", msg);
+    kprintf("\n");
+    kprintf(" *     %-28s", msg);
     if (cn < 1) {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(cn * 1024),
-                "picoseconds");
+      kprintf(" %'9lu %-12s", (int64_t)(cn * 1024), "picoseconds");
     } else if (cn > 1024) {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(cn / 1024),
-                "microseconds");
+      kprintf(" %'9lu %-12s", (int64_t)(cn / 1024), "microseconds");
     } else {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)cn,
-                "nanoseconds");
+      kprintf(" %'9lu %-12s", (int64_t)cn, "nanoseconds");
     }
   } else {
-    (fprintf)(stderr, " *     %-28s", msg);
+    kprintf(" *     %-28s", msg);
     bps = n / cn * 1e9;
     lat = cn / n;
     if (lat < 1e-3) {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"),
-                (int64_t)(lat * 1024 * 1024), "fs/byte");
+      kprintf(" %'9lu %-12s", (int64_t)(lat * 1024 * 1024), "fs/byte");
     } else if (lat < 1) {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(lat * 1024),
-                "ps/byte");
+      kprintf(" %'9lu %-12s", (int64_t)(lat * 1024), "ps/byte");
     } else if (lat > 1024) {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)(lat / 1024),
-                "µs/byte");
+      kprintf(" %'9lu %-12s", (int64_t)(lat / 1024), "µs/byte");
     } else {
-      (fprintf)(stderr, __veil("r", " %,9lu %-12s"), (int64_t)lat, "ns/byte");
+      kprintf(" %'9lu %-12s", (int64_t)lat, "ns/byte");
     }
     if (bps < 10 * 1000) {
-      (fprintf)(stderr, __veil("r", " %,9lu b/s"), bps);
+      kprintf(" %'9lu b/s", bps);
     } else if (bps < 10 * 1000 * 1024) {
-      (fprintf)(stderr, __veil("r", " %,9lu kb/s"), bps / 1024);
+      kprintf(" %'9lu kb/s", bps / 1024);
     } else if (bps < 10ul * 1000 * 1024 * 1024) {
-      (fprintf)(stderr, __veil("r", " %,9lu mb/s"), bps / (1024 * 1024));
+      kprintf(" %'9lu mb/s", bps / (1024 * 1024));
     } else if (bps < 10ul * 1000 * 1024 * 1024 * 1024) {
-      (fprintf)(stderr, __veil("r", " %,9lu GB/s"), bps / (1024 * 1024 * 1024));
+      kprintf(" %'9lu GB/s", bps / (1024 * 1024 * 1024));
     } else {
-      (fprintf)(stderr, __veil("r", " %,9lu TB/s"),
-                bps / (1024ul * 1024 * 1024 * 1024));
+      kprintf(" %'9lu TB/s", bps / (1024ul * 1024 * 1024 * 1024));
     }
   }
-  (fprintf)(stderr, "\n", form);
+  kprintf("\n", form);
 }

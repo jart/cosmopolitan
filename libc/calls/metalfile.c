@@ -52,7 +52,7 @@ __static_yoink("_init_metalfile");
 void *__ape_com_base;
 size_t __ape_com_size = 0;
 
-textstartup dontasan void InitializeMetalFile(void) {
+textstartup void InitializeMetalFile(void) {
   if (IsMetal()) {
     /*
      * Copy out a pristine image of the program — before the program might

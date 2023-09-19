@@ -27,7 +27,7 @@
  * @return number of shorts
  * @asyncsignalsafe
  */
-dontasan size_t strnlen16(const char16_t *s, size_t n) {
+size_t strnlen16(const char16_t *s, size_t n) {
   size_t i;
   for (i = 0;; ++i) {
     if (i == n || !s[i]) break;

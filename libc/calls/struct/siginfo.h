@@ -57,6 +57,11 @@ struct siginfo {
 
 typedef struct siginfo siginfo_t;
 
+#ifdef _COSMO_SOURCE
+void __minicrash(int, siginfo_t *, void *);
+char __is_stack_overflow(siginfo_t *, void *);
+#endif
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGINFO_H_ */

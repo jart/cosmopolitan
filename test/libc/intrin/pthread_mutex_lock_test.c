@@ -36,10 +36,8 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
 #include "third_party/nsync/mu.h"
 
 #define THREADS    8
@@ -50,10 +48,9 @@ atomic_int started;
 atomic_int finished;
 pthread_mutex_t mylock;
 pthread_spinlock_t slock;
-struct spawn th[THREADS];
+pthread_t th[THREADS];
 
 void SetUpOnce(void) {
-  __enable_threads();
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
@@ -107,7 +104,7 @@ TEST(pthread_mutex_lock, errorcheck) {
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
 }
 
-int MutexWorker(void *p, int tid) {
+void *MutexWorker(void *p) {
   int i;
   ++started;
   for (i = 0; i < ITERATIONS; ++i) {
@@ -132,10 +129,11 @@ TEST(pthread_mutex_lock, contention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_SYS(0, 0, _spawn(MutexWorker, (void *)(intptr_t)i, th + i));
+    ASSERT_SYS(0, 0,
+               pthread_create(th + i, 0, MutexWorker, (void *)(intptr_t)i));
   }
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_SYS(0, 0, _join(th + i));
+    ASSERT_SYS(0, 0, pthread_join(th[i], 0));
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
@@ -154,10 +152,10 @@ TEST(pthread_mutex_lock, rcontention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(-1, _spawn(MutexWorker, (void *)(intptr_t)i, th + i));
+    ASSERT_EQ(0, pthread_create(th + i, 0, MutexWorker, (void *)(intptr_t)i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _join(th + i);
+    ASSERT_EQ(0, pthread_join(th[i], 0));
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
@@ -176,10 +174,10 @@ TEST(pthread_mutex_lock, econtention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(-1, _spawn(MutexWorker, (void *)(intptr_t)i, th + i));
+    ASSERT_NE(-1, pthread_create(th + i, 0, MutexWorker, (void *)(intptr_t)i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _join(th + i);
+    pthread_join(th[i], 0);
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
@@ -187,7 +185,7 @@ TEST(pthread_mutex_lock, econtention) {
   EXPECT_EQ(0, pthread_mutex_destroy(&mylock));
 }
 
-int SpinlockWorker(void *p, int tid) {
+void *SpinlockWorker(void *p) {
   int i;
   ++started;
   for (i = 0; i < ITERATIONS; ++i) {
@@ -196,7 +194,7 @@ int SpinlockWorker(void *p, int tid) {
     pthread_spin_unlock(&slock);
   }
   ++finished;
-  STRACE("SpinlockWorker Finished %d", tid);
+  STRACE("SpinlockWorker Finished %d", gettid());
   return 0;
 }
 
@@ -213,10 +211,11 @@ TEST(pthread_spin_lock, test) {
   EXPECT_EQ(EBUSY, pthread_spin_trylock(&slock));
   EXPECT_EQ(0, pthread_spin_unlock(&slock));
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(-1, _spawn(SpinlockWorker, (void *)(intptr_t)i, th + i));
+    ASSERT_EQ(0,
+              pthread_create(th + i, 0, SpinlockWorker, (void *)(intptr_t)i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _join(th + i);
+    ASSERT_EQ(0, pthread_join(th[i], 0));
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);

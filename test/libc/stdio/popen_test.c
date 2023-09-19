@@ -39,7 +39,10 @@
 
 FILE *f;
 char buf[32];
-char testlib_enable_tmp_setup_teardown;
+
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 void CheckForFdLeaks(void) {
   int rc, i, l = 0, e = errno;

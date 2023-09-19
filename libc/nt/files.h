@@ -137,9 +137,6 @@ bool32 CreateSymbolicLink(const char16_t *lpSymlinkFileName,
                           const char16_t *lpTargetPathName, uint32_t dwFlags)
     paramsnonnull();
 
-uint32_t SetFilePointer(int64_t hFile, int32_t lDistanceToMove,
-                        int32_t *optional_lpDistanceToMoveHigh,
-                        int dwMoveMethod);
 bool32 SetFilePointerEx(int64_t hFile, int64_t liDistanceToMove,
                         int64_t *optional_lpNewFilePointer, int dwMoveMethod);
 

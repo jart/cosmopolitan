@@ -26,7 +26,9 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/handlock.internal.h"
 #include "libc/intrin/leaky.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/proc/proc.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -34,21 +36,17 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
+struct AtFork {
+  struct AtFork *p[2];
+  atfork_f f[3];
+};
+
 static struct AtForks {
   pthread_spinlock_t lock;
-  struct AtFork {
-    struct AtFork *p[2];
-    atfork_f f[3];
-  } * list;
+  struct AtFork *list;
+  struct AtFork pool[8];
+  atomic_int allocated;
 } _atforks;
-
-static void _pthread_purge(void) {
-  struct Dll *e;
-  while ((e = dll_first(_pthread_list))) {
-    dll_remove(&_pthread_list, e);
-    _pthread_free(POSIXTHREAD_CONTAINER(e));
-  }
-}
 
 static void _pthread_onfork(int i) {
   struct AtFork *a;
@@ -65,52 +63,48 @@ void _pthread_onfork_prepare(void) {
   _pthread_onfork(0);
   pthread_spin_lock(&_pthread_lock);
   __fds_lock();
-  __hand_lock();
+  if (IsWindows()) {
+    __hand_lock();
+  }
   __mmi_lock();
 }
 
 void _pthread_onfork_parent(void) {
   __mmi_unlock();
-  __hand_unlock();
+  if (IsWindows()) {
+    __hand_unlock();
+  }
   __fds_unlock();
   pthread_spin_unlock(&_pthread_lock);
   _pthread_onfork(1);
 }
 
 void _pthread_onfork_child(void) {
-  struct CosmoTib *tib;
-  struct PosixThread *pt;
+  if (IsWindows()) __hand_wipe();
   pthread_mutexattr_t attr;
-  extern pthread_mutex_t __mmi_lock_obj;
-  tib = __get_tls();
-  pt = (struct PosixThread *)tib->tib_pthread;
-
-  // let's choose to let the new process live.
-  // even though it's unclear what to do with this kind of race.
-  atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
-
-  // wipe core runtime locks
-  __hand_init();
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  extern pthread_mutex_t __mmi_lock_obj;
   pthread_mutex_init(&__mmi_lock_obj, &attr);
   pthread_mutex_init(&__fds_lock_obj, &attr);
   (void)pthread_spin_init(&_pthread_lock, 0);
-
-  // call user-supplied forked child callbacks
   _pthread_onfork(2);
+}
 
-  // delete other threads that existed before forking
-  // this must come after onfork, since it calls free
-  dll_remove(&_pthread_list, &pt->list);
-  _pthread_purge();
-  dll_make_first(&_pthread_list, &pt->list);
+static struct AtFork *_pthread_atfork_alloc(void) {
+  int i, n = ARRAYLEN(_atforks.pool);
+  if (atomic_load_explicit(&_atforks.allocated, memory_order_relaxed) < n &&
+      (i = atomic_fetch_add(&_atforks.allocated, 1)) < n) {
+    return _atforks.pool + i;
+  } else {
+    return malloc(sizeof(struct AtFork));
+  }
 }
 
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   int rc;
   struct AtFork *a;
-  if (!(a = malloc(sizeof(struct AtFork)))) return ENOMEM;
+  if (!(a = _pthread_atfork_alloc())) return ENOMEM;
   a->f[0] = prepare;
   a->f[1] = parent;
   a->f[2] = child;

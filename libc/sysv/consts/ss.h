@@ -4,6 +4,8 @@
 COSMOPOLITAN_C_START_
 
 extern const int SS_DISABLE;
+extern const int _SIGSTKSZ;
+extern const int _MINSIGSTKSZ;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -12,6 +14,5 @@ COSMOPOLITAN_C_END_
 #define MINSIGSTKSZ 32768 /* xnu defines the highest minimum */
 #define SS_ONSTACK  1
 #define SS_DISABLE  SS_DISABLE
-
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SS_H_ */

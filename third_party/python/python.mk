@@ -1167,6 +1167,7 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
 	LIBC_NT_KERNEL32						\
+	LIBC_PROC							\
 	LIBC_RUNTIME							\
 	LIBC_THREAD							\
 	LIBC_SOCK							\
@@ -2155,7 +2156,7 @@ o/$(MODE)/third_party/python/Lib/test/test_timeout.py.runs:		\
 PYTHONTESTER = o/$(MODE)/third_party/python/pythontester.com
 
 o/$(MODE)/third_party/python/Lib/test/test_grammar.py.runs: $(PYTHONTESTER)
-	$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_grammar $(PYTESTARGS)
+	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_grammar $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_set.py.runs: $(PYTHONTESTER)
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $(PYTHONTESTER) -m test.test_set $(PYTESTARGS)

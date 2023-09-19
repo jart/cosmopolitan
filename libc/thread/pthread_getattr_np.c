@@ -16,8 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
@@ -37,7 +47,7 @@
  *    thread. This is useful for knowing where the stack is. It can also
  *    be useful If you explicitly configured a stack too, since we might
  *    have needed to slightly tune the address and size to meet platform
- *    requirements. This function returns information that reflects that
+ *    requirements.
  *
  * 3. You can view changes pthread_create() may have made to the stack
  *    guard size by calling pthread_attr_getguardsize() on `attr`
@@ -61,6 +71,10 @@ errno_t pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
       break;
     default:
       __builtin_unreachable();
+  }
+  if (!attr->__stacksize && (pt->pt_flags & PT_STATIC)) {
+    __get_main_stack(&attr->__stackaddr, &attr->__stacksize,
+                     &attr->__guardsize);
   }
   return 0;
 }

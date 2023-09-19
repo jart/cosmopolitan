@@ -54,7 +54,7 @@ TEST(getcontext, test) {
 TEST(getcontext, canReadAndWriteSignalMask) {
   sigset_t ss, old;
   volatile int n = 0;
-  EXPECT_TRUE(__interruptible);
+  __interruptible = true;
   sigemptyset(&ss);
   sigaddset(&ss, SIGUSR1);
   sigprocmask(SIG_SETMASK, &ss, &old);

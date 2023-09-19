@@ -24,20 +24,32 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
-static errno_t pthread_setname_impl(pthread_t thread, const char *name) {
+static errno_t pthread_setname_impl(struct PosixThread *pt, const char *name) {
   char path[128], *p;
   int e, fd, rc, tid, len;
 
-  if ((rc = pthread_getunique_np(thread, &tid))) return rc;
   len = strlen(name);
+  tid = _pthread_tid(pt);
 
-  if (IsLinux()) {
+  if (IsXnuSilicon()) {
+    if (pt == _pthread_self()) {
+      __syslib->__pthread_setname_np(name);
+      return 0;
+    } else {
+      return EPERM;
+    }
+  } else if (IsLinux()) {
     e = errno;
     if (tid == gettid()) {
       if (prctl(PR_SET_NAME, name) == -1) {
@@ -111,13 +123,17 @@ static errno_t pthread_setname_impl(pthread_t thread, const char *name) {
  * @return 0 on success, or errno on error
  * @raise ERANGE if length of `name` exceeded system limit, in which
  *    case the name may have still been set with os using truncation
- * @raise ENOSYS on MacOS, and Windows
+ * @raise ENOSYS on Windows and AMD64-XNU
  * @see pthread_getname_np()
  */
 errno_t pthread_setname_np(pthread_t thread, const char *name) {
-  errno_t rc;
+  errno_t err;
+  struct PosixThread *pt;
+  pt = (struct PosixThread *)thread;
   BLOCK_CANCELLATIONS;
-  rc = pthread_setname_impl(thread, name);
+  err = pthread_setname_impl(pt, name);
   ALLOW_CANCELLATIONS;
-  return rc;
+  STRACE("pthread_setname_np(%d, %s) → %s", _pthread_tid(pt), name,
+         DescribeErrno(err));
+  return err;
 }

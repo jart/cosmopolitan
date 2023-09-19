@@ -53,7 +53,9 @@ int Lock(int fd, int type, long start, long len) {
   return 0;
 }
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(fcntl_getfl, testRemembersAccessMode) {
   int fd;

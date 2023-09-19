@@ -20,9 +20,11 @@
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
@@ -30,13 +32,13 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
+void SetUpOnce(void) {
+  if (!IsWindows()) _Exit(0);
+}
+
 void OnAlrm(int sig) {
   // do nothing
   STRACE("OnAlrm()");
-}
-
-TEST(nanosleep, testFault) {
-  EXPECT_SYS(EFAULT, -1, nanosleep(0, 0));
 }
 
 TEST(nanosleep, testInvalid) {

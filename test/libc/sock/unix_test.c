@@ -37,9 +37,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-char testlib_enable_tmp_setup_teardown;
-
 void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
   ASSERT_SYS(0, 0, pledge("stdio rpath cpath proc unix", 0));
 }
 

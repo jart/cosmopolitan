@@ -21,7 +21,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 
-static dontasan size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
+static size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
   uint64_t w;
   for (; i + 8 < n; i += 8) {
     w = *(uint64_t *)(s + i);
@@ -45,7 +45,7 @@ static dontasan size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
  * @return byte length
  * @asyncsignalsafe
  */
-dontasan size_t strnlen_s(const char *s, size_t n) {
+size_t strnlen_s(const char *s, size_t n) {
   size_t i;
   if (!s) return 0;
   if (IsAsan()) __asan_verify(s, n);

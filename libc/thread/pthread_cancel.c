@@ -18,19 +18,29 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/nt/enum/context.h"
+#include "libc/nt/enum/threadaccess.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/struct/context.h"
+#include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
@@ -42,42 +52,135 @@ int systemfive_cancel(void);
 extern const char systemfive_cancellable[];
 extern const char systemfive_cancellable_end[];
 
-long _pthread_cancel_sys(void) {
-  struct PosixThread *pt;
-  pt = (struct PosixThread *)__get_tls()->tib_pthread;
-  if (!(pt->flags & (PT_NOCANCEL | PT_MASKED)) || (pt->flags & PT_ASYNC)) {
+long _pthread_cancel_ack(void) {
+  struct PosixThread *pt = _pthread_self();
+  if (!(pt->pt_flags & (PT_NOCANCEL | PT_MASKED)) ||
+      (pt->pt_flags & PT_ASYNC)) {
     pthread_exit(PTHREAD_CANCELED);
   }
-  pt->flags |= PT_NOCANCEL | PT_OPENBSD_KLUDGE;
+  pt->pt_flags |= PT_NOCANCEL | PT_OPENBSD_KLUDGE;
   return ecanceled();
 }
 
-static void OnSigThr(int sig, siginfo_t *si, void *ctx) {
-  ucontext_t *uc = ctx;
-  struct CosmoTib *t;
+static void _pthread_cancel_sig(int sig, siginfo_t *si, void *arg) {
+  ucontext_t *ctx = arg;
+
+  // check thread runtime state is initialized and cancelled
   struct PosixThread *pt;
-  if ((t = __get_tls()) &&  // TODO: why can it be null on freebsd?
-      (pt = (struct PosixThread *)t->tib_pthread) &&
-      !(pt->flags & PT_NOCANCEL) &&
-      atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
-    sigaddset(&uc->uc_sigmask, sig);
-    if (systemfive_cancellable <= (char *)uc->uc_mcontext.PC &&
-        (char *)uc->uc_mcontext.PC < systemfive_cancellable_end) {
-      uc->uc_mcontext.PC = (intptr_t)systemfive_cancel;
-    } else if (pt->flags & PT_ASYNC) {
-      pthread_exit(PTHREAD_CANCELED);
-    } else {
-      __tkill(atomic_load_explicit(&t->tib_tid, memory_order_relaxed), sig, t);
+  if (!__tls_enabled) return;
+  if (!(pt = _pthread_self())) return;
+  if (pt->pt_flags & PT_NOCANCEL) return;
+  if (!atomic_load_explicit(&pt->cancelled, memory_order_acquire)) return;
+
+  // in asynchronous mode we'll just the exit asynchronously
+  if (pt->pt_flags & PT_ASYNC) {
+    sigaddset(&ctx->uc_sigmask, SIGTHR);
+    pthread_sigmask(SIG_SETMASK, &ctx->uc_sigmask, 0);
+    pthread_exit(PTHREAD_CANCELED);
+  }
+
+  // prevent this handler from being called again by thread
+  sigaddset(&ctx->uc_sigmask, SIGTHR);
+
+  // check for race condition between pre-check and syscall
+  // rewrite the thread's execution state to acknowledge it
+  if (systemfive_cancellable <= (char *)ctx->uc_mcontext.PC &&
+      (char *)ctx->uc_mcontext.PC < systemfive_cancellable_end) {
+    ctx->uc_mcontext.PC = (intptr_t)systemfive_cancel;
+    return;
+  }
+
+  // punts cancellation to start of next cancellation point
+  // we ensure sigthr is a pending signal in case unblocked
+  if (IsXnuSilicon()) {
+    __syslib->__pthread_kill(_pthread_syshand(pt), sig);
+  } else {
+    sys_tkill(_pthread_tid(pt), sig, __get_tls());
+  }
+}
+
+static void _pthread_cancel_listen(void) {
+  struct sigaction sa;
+  if (!IsWindows()) {
+    sa.sa_sigaction = _pthread_cancel_sig;
+    sa.sa_flags = SA_SIGINFO | SA_RESTART;
+    memset(&sa.sa_mask, -1, sizeof(sa.sa_mask));
+    npassert(!sigaction(SIGTHR, &sa, 0));
+  }
+}
+
+static void pthread_cancel_nt(struct PosixThread *pt, intptr_t hThread) {
+  uint32_t old_suspend_count;
+  if ((pt->pt_flags & PT_ASYNC) && !(pt->pt_flags & PT_NOCANCEL)) {
+    if ((old_suspend_count = SuspendThread(hThread)) != -1u) {
+      if (!old_suspend_count) {
+        struct NtContext cpu;
+        cpu.ContextFlags = kNtContextControl | kNtContextInteger;
+        if (GetThreadContext(hThread, &cpu)) {
+          pt->pt_flags |= PT_NOCANCEL;
+          cpu.Rip = (uintptr_t)pthread_exit;
+          cpu.Rdi = (uintptr_t)PTHREAD_CANCELED;
+          cpu.Rsp &= -16;
+          *(uintptr_t *)(cpu.Rsp -= sizeof(uintptr_t)) = cpu.Rip;
+          unassert(SetThreadContext(hThread, &cpu));
+          __sig_cancel(pt, 0);
+        }
+      }
+      ResumeThread(hThread);
     }
   }
 }
 
-static void ListenForSigThr(void) {
-  struct sigaction sa;
-  sa.sa_sigaction = OnSigThr;
-  sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_ONSTACK;
-  memset(&sa.sa_mask, -1, sizeof(sa.sa_mask));
-  npassert(!sigaction(SIGTHR, &sa, 0));
+static errno_t _pthread_cancel_impl(struct PosixThread *pt) {
+
+  // install our special signal handler
+  static bool once;
+  if (!once) {
+    _pthread_cancel_listen();
+    once = true;
+  }
+
+  // check if thread is already dead
+  switch (atomic_load_explicit(&pt->status, memory_order_acquire)) {
+    case kPosixThreadZombie:
+    case kPosixThreadTerminated:
+      return ESRCH;
+    default:
+      break;
+  }
+
+  // flip the bit indicating that this thread is cancelled
+  atomic_store_explicit(&pt->cancelled, 1, memory_order_release);
+
+  // does this thread want to cancel itself?
+  if (pt == _pthread_self()) {
+    unassert(!(pt->pt_flags & PT_NOCANCEL));
+    if (!(pt->pt_flags & (PT_NOCANCEL | PT_MASKED)) &&
+        (pt->pt_flags & PT_ASYNC)) {
+      pthread_exit(PTHREAD_CANCELED);
+    }
+    return 0;
+  }
+
+  errno_t err;
+  if (IsWindows()) {
+    pthread_cancel_nt(pt, _pthread_syshand(pt));
+    err = 0;
+  } else if (IsXnuSilicon()) {
+    err = __syslib->__pthread_kill(_pthread_syshand(pt), SIGTHR);
+  } else {
+    int e = errno;
+    if (!sys_tkill(_pthread_tid(pt), SIGTHR, pt->tib)) {
+      err = 0;
+    } else {
+      err = errno;
+      errno = e;
+    }
+  }
+  if (err == ESRCH) {
+    err = 0;  // we already reported this
+  }
+  return err;
 }
 
 /**
@@ -153,6 +256,7 @@ static void ListenForSigThr(void) {
  * - `nsync_cv_wait_with_deadline`
  * - `nsync_cv_wait`
  * - `opendir`
+ * - `openatemp`, 'mkstemp', etc.
  * - `pclose`
  * - `popen`
  * - `fwrite`, `printf`, `fprintf`, `putc`, etc.
@@ -174,7 +278,7 @@ static void ListenForSigThr(void) {
  * - `INFOF()`, `WARNF()`, etc.
  * - `getentropy`
  * - `gmtime_r`
- * - `kprintf`
+ * - `kprintf` (by virtue of asm(syscall) and write_nocancel() on xnu)
  * - `localtime_r`
  * - `nsync_mu_lock`
  * - `nsync_mu_unlock`
@@ -185,6 +289,7 @@ static void ListenForSigThr(void) {
  * - `pthread_setname_np`
  * - `sem_open`
  * - `system`
+ * - `openatemp`, 'mkstemp', etc.
  * - `timespec_sleep`
  * - `touch`
  *
@@ -254,53 +359,38 @@ static void ListenForSigThr(void) {
  *
  * Isn't safe to use in masked mode. That's because if a cancellation
  * occurs during the write() operation then cancellations are blocked
- * while running read(). Masked mode doesn't have second chances. You
+ * while running read(). MASKED MODE DOESN'T HAVE SECOND CHANCES. You
  * must rigorously check the results of each cancellation point call.
  *
  * Unit tests should be able to safely ignore the return value, or at
  * the very least be programmed to consider ESRCH a successful status
  *
+ * @param thread may be 0 to cancel all threads except self
  * @return 0 on success, or errno on error
  * @raise ESRCH if system thread wasn't alive or we lost a race
  */
 errno_t pthread_cancel(pthread_t thread) {
-  int e, rc, tid;
-  static bool once;
-  struct PosixThread *pt;
-  __require_tls();
-  if (!once) {
-    ListenForSigThr();
-    once = true;
-  }
-  pt = (struct PosixThread *)thread;
-  switch (atomic_load_explicit(&pt->status, memory_order_acquire)) {
-    case kPosixThreadZombie:
-    case kPosixThreadTerminated:
-      return ESRCH;
-    default:
-      break;
-  }
-  atomic_store_explicit(&pt->cancelled, 1, memory_order_release);
-  if (thread == __get_tls()->tib_pthread) {
-    if (!(pt->flags & (PT_NOCANCEL | PT_MASKED)) && (pt->flags & PT_ASYNC)) {
-      pthread_exit(PTHREAD_CANCELED);
-    }
-    return 0;
-  }
-  if (!(rc = pthread_getunique_np(thread, &tid))) {
-    if (!IsWindows()) {
-      e = errno;
-      if (!__tkill(tid, SIGTHR, pt->tib)) {
-        rc = 0;
-      } else {
-        rc = errno;
-        errno = e;
+  errno_t err;
+  struct Dll *e;
+  struct PosixThread *arg, *other;
+  if ((arg = (struct PosixThread *)thread)) {
+    err = _pthread_cancel_impl(arg);
+  } else {
+    err = ESRCH;
+    pthread_spin_lock(&_pthread_lock);
+    for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
+      other = POSIXTHREAD_CONTAINER(e);
+      if (other != _pthread_self() &&
+          atomic_load_explicit(&other->status, memory_order_acquire) <
+              kPosixThreadTerminated) {
+        _pthread_cancel_impl(other);
+        err = 0;
       }
-    } else {
-      rc = 0;
     }
+    pthread_spin_unlock(&_pthread_lock);
   }
-  return rc;
+  STRACE("pthread_cancel(%d) → %s", _pthread_tid(arg), DescribeErrno(err));
+  return err;
 }
 
 /**
@@ -317,9 +407,9 @@ errno_t pthread_cancel(pthread_t thread) {
 void pthread_testcancel(void) {
   struct PosixThread *pt;
   if (!__tls_enabled) return;
-  if (!(pt = (struct PosixThread *)__get_tls()->tib_pthread)) return;
-  if (pt->flags & PT_NOCANCEL) return;
-  if ((!(pt->flags & PT_MASKED) || (pt->flags & PT_ASYNC)) &&
+  if (!(pt = _pthread_self())) return;
+  if (pt->pt_flags & PT_NOCANCEL) return;
+  if ((!(pt->pt_flags & PT_MASKED) || (pt->pt_flags & PT_ASYNC)) &&
       atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
     pthread_exit(PTHREAD_CANCELED);
   }
@@ -344,13 +434,13 @@ void pthread_testcancel(void) {
 errno_t pthread_testcancel_np(void) {
   struct PosixThread *pt;
   if (!__tls_enabled) return 0;
-  if (!(pt = (struct PosixThread *)__get_tls()->tib_pthread)) return 0;
-  if (pt->flags & PT_NOCANCEL) return 0;
+  if (!(pt = _pthread_self())) return 0;
+  if (pt->pt_flags & PT_NOCANCEL) return 0;
   if (!atomic_load_explicit(&pt->cancelled, memory_order_acquire)) return 0;
-  if (!(pt->flags & PT_MASKED) || (pt->flags & PT_ASYNC)) {
+  if (!(pt->pt_flags & PT_MASKED) || (pt->pt_flags & PT_ASYNC)) {
     pthread_exit(PTHREAD_CANCELED);
   } else {
-    pt->flags |= PT_NOCANCEL;
+    pt->pt_flags |= PT_NOCANCEL;
     return ECANCELED;
   }
 }

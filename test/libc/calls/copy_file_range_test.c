@@ -32,7 +32,9 @@
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 void Make(const char *path, int mode) {
   int fd, n = lemur64() & 0xfffff;

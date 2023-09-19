@@ -18,36 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
-#include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/consolemodeflags.h"
-#include "libc/nt/enum/creationdisposition.h"
-#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/files.h"
-#include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/signals.h"
-#include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/teb.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -60,13 +46,13 @@
 
 #ifdef __x86_64__
 
+#define abi __msabi textwindows dontinstrument
+
 // clang-format off
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
-__msabi extern typeof(ExitProcess) *const __imp_ExitProcess;
 __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
 __msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
-__msabi extern typeof(GetCurrentProcess) *const __imp_GetCurrentProcess;
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW;
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
@@ -80,9 +66,9 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 // clang-format on
 
 void cosmo(int, char **, char **, long (*)[2]) wontreturn;
-void __switch_stacks(int, char **, char **, long (*)[2],
-                     void (*)(int, char **, char **, long (*)[2]),
-                     intptr_t) wontreturn;
+void __stack_call(int, char **, char **, long (*)[2],
+                  void (*)(int, char **, char **, long (*)[2]),
+                  intptr_t) wontreturn;
 
 static const signed char kNtStdio[3] = {
     (signed char)kNtStdInputHandle,
@@ -90,18 +76,12 @@ static const signed char kNtStdio[3] = {
     (signed char)kNtStdErrorHandle,
 };
 
-forceinline int IsAlpha(int c) {
+__funline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
-// implements all win32 apis on non-windows hosts
-__msabi long __oops_win32(void) {
-  assert(!"win32 api called on non-windows host");
-  return 0;
-}
-
 // https://nullprogram.com/blog/2022/02/18/
-__msabi static inline char16_t *MyCommandLine(void) {
+__funline char16_t *MyCommandLine(void) {
   void *cmd;
   asm("mov\t%%gs:(0x60),%0\n"
       "mov\t0x20(%0),%0\n"
@@ -110,8 +90,14 @@ __msabi static inline char16_t *MyCommandLine(void) {
   return cmd;
 }
 
+// implements all win32 apis on non-windows hosts
+static abi long __oops_win32(void) {
+  assert(!"win32 api called on non-windows host");
+  return 0;
+}
+
 // returns true if utf-8 path is a win32-style path that exists
-__msabi static textwindows bool32 WinFileExists(const char *path) {
+static abi bool32 WinFileExists(const char *path) {
   uint16_t path16[PATH_MAX];
   size_t z = ARRAYLEN(path16);
   size_t n = tprecode8to16(path16, z, path).ax;
@@ -120,14 +106,14 @@ __msabi static textwindows bool32 WinFileExists(const char *path) {
 }
 
 // this ensures close(1) won't accidentally close(2) for example
-__msabi static textwindows void DeduplicateStdioHandles(void) {
+static abi void DeduplicateStdioHandles(void) {
   for (long i = 0; i < 3; ++i) {
     int64_t h1 = __imp_GetStdHandle(kNtStdio[i]);
     for (long j = i + 1; j < 3; ++j) {
       int64_t h2 = __imp_GetStdHandle(kNtStdio[j]);
       if (h1 == h2) {
-        int64_t h3, proc = __imp_GetCurrentProcess();
-        __imp_DuplicateHandle(proc, h2, proc, &h3, 0, false,
+        int64_t h3;
+        __imp_DuplicateHandle(-1, h2, -1, &h3, 0, false,
                               kNtDuplicateSameAccess);
         __imp_SetStdHandle(kNtStdio[j], h3);
       }
@@ -137,7 +123,7 @@ __msabi static textwindows void DeduplicateStdioHandles(void) {
 
 // main function of windows init process
 // i.e. first process spawned that isn't forked
-__msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
+static abi wontreturn void WinInit(const char16_t *cmdline) {
   __oldstack = (intptr_t)__builtin_frame_address(0);
 
   // make console into utf-8 ansi/xterm style tty
@@ -177,26 +163,6 @@ __msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
   struct WinArgs *wa =
       (struct WinArgs *)(stackaddr + (stacksize - sizeof(struct WinArgs)));
 
-  // allocate asan memory if needed
-  if (IsAsan()) {
-    uintptr_t shadowaddr = 0x7fff8000 + (stackaddr >> 3);
-    uintptr_t shadowend = 0x7fff8000 + ((stackaddr + stacksize) >> 3);
-    uintptr_t shallocaddr = ROUNDDOWN(shadowaddr, FRAMESIZE);
-    uintptr_t shallocend = ROUNDUP(shadowend, FRAMESIZE);
-    uintptr_t shallocsize = shallocend - shallocaddr;
-    __imp_MapViewOfFileEx(
-        (_mmi.p[1].h = __imp_CreateFileMappingW(
-             -1, 0, kNtPageReadwrite, shallocsize >> 32, shallocsize, NULL)),
-        kNtFileMapWrite, 0, 0, shallocsize, (void *)shallocaddr);
-    _mmi.p[1].x = shallocaddr >> 16;
-    _mmi.p[1].y = (shallocaddr >> 16) + ((shallocsize - 1) >> 16);
-    _mmi.p[1].prot = PROT_READ | PROT_WRITE;
-    _mmi.p[1].flags = 0x00000022;  // private+anonymous
-    _mmi.p[1].size = shallocsize;
-    _mmi.i = 2;
-    __asan_poison((void *)stackaddr, GetGuardSize(), kAsanStackOverflow);
-  }
-
   // parse utf-16 command into utf-8 argv array in argument block
   int count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock),
                          wa->argv, ARRAYLEN(wa->argv));
@@ -235,12 +201,12 @@ __msabi static textwindows wontreturn void WinInit(const char16_t *cmdline) {
   __envp = &wa->envp[0];
 
   // handover control to cosmopolitan runtime
-  __switch_stacks(count, wa->argv, wa->envp, wa->auxv, cosmo,
-                  stackaddr + (stacksize - sizeof(struct WinArgs)));
+  __stack_call(count, wa->argv, wa->envp, wa->auxv, cosmo,
+               stackaddr + (stacksize - sizeof(struct WinArgs)));
 }
 
-__msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
-                                    const char *lpCmdLine, int64_t nCmdShow) {
+abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
+                    const char *lpCmdLine, int64_t nCmdShow) {
   const char16_t *cmdline;
   extern char os asm("__hostos");
   os = _HOSTWINDOWS;  // madness https://news.ycombinator.com/item?id=21019722

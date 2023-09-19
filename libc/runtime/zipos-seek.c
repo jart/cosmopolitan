@@ -19,48 +19,31 @@
 #include "libc/calls/calls.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/stdckdint.h"
-#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/zip.internal.h"
 
-static int64_t __zipos_seek_impl(struct ZiposHandle *h, int64_t offset,
-                                 unsigned whence) {
-  int64_t pos;
-  if (h->cfile == ZIPOS_SYNTHETIC_DIRECTORY ||
-      S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
-    return eisdir();
-  }
+static int64_t GetPosition(struct ZiposHandle *h, int whence) {
   switch (whence) {
     case SEEK_SET:
-      if (offset >= 0) {
-        return offset;
-      } else {
-        return einval();
-      }
+      return 0;
     case SEEK_CUR:
-      if (!ckd_add(&pos, h->pos, offset)) {
-        if (pos >= 0) {
-          return pos;
-        } else {
-          return einval();
-        }
-      } else {
-        return eoverflow();
-      }
+      return h->pos;
     case SEEK_END:
-      if (!ckd_sub(&pos, h->size, offset)) {
-        if (pos >= 0) {
-          return pos;
-        } else {
-          return einval();
-        }
-      } else {
-        return eoverflow();
-      }
+      return h->size;
     default:
       return einval();
+  }
+}
+
+static int64_t Seek(struct ZiposHandle *h, int64_t offset, int whence) {
+  int64_t pos;
+  if (!ckd_add(&pos, GetPosition(h, whence), offset)) {
+    if (pos >= 0) {
+      return pos;
+    } else {
+      return einval();
+    }
+  } else {
+    return eoverflow();
   }
 }
 
@@ -74,7 +57,7 @@ static int64_t __zipos_seek_impl(struct ZiposHandle *h, int64_t offset,
  */
 int64_t __zipos_seek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
   int64_t pos;
-  if ((pos = __zipos_seek_impl(h, offset, whence)) != -1) {
+  if ((pos = Seek(h, offset, whence)) != -1) {
     h->pos = pos;
   }
   return pos;

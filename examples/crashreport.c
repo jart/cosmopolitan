@@ -11,6 +11,7 @@
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/stdio.h"
 
 /**
  * @fileoverview How to print backtraces and cpu state on crash.
@@ -38,6 +39,7 @@ dontubsan int main(int argc, char *argv[]) {
   volatile double c = exp(b) / a;
   (void)c;
 
-  volatile int64_t x;
-  return 1 / (x = 0);
+  volatile int x = 0;
+  volatile int y = 1 / x;
+  return y;
 }

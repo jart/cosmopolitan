@@ -39,7 +39,9 @@
 #define RATIO      3
 #define ITERATIONS 10
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 _Thread_local const char *kind;
 

@@ -57,13 +57,13 @@ static void sem_open_unlock(void) {
   pthread_mutex_unlock(&g_semaphores.lock);
 }
 
-static void sem_open_funlock(void) {
+static void sem_open_wipe(void) {
   pthread_mutex_init(&g_semaphores.lock, 0);
 }
 
 static void sem_open_setup(void) {
-  sem_open_funlock();
-  pthread_atfork(sem_open_lock, sem_open_unlock, sem_open_funlock);
+  sem_open_wipe();
+  pthread_atfork(sem_open_lock, sem_open_unlock, sem_open_wipe);
 }
 
 static void sem_open_init(void) {

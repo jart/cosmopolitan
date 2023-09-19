@@ -19,8 +19,10 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/likely.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
 /**
@@ -43,5 +45,9 @@ int gettid(void) {
       return tid;
     }
   }
-  return sys_gettid();
+  if (IsXnuSilicon()) {
+    return enosys();
+  } else {
+    return sys_gettid();
+  }
 }

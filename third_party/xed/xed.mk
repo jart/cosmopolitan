@@ -50,6 +50,13 @@ o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
 		CFLAGS +=				\
 			-O3
 
+$(THIRD_PARTY_XED_A_OBJS): private			\
+		COPTS +=				\
+			-ffreestanding			\
+			-fno-sanitize=address		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
+
 HIRD_PARTY_XED_LIBS = $(foreach x,$(THIRD_PARTY_XED_ARTIFACTS),$($(x)))
 THIRD_PARTY_XED_SRCS = $(foreach x,$(THIRD_PARTY_XED_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_XED_HDRS = $(foreach x,$(THIRD_PARTY_XED_ARTIFACTS),$($(x)_HDRS))

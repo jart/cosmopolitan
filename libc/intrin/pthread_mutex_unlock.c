@@ -39,14 +39,9 @@
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int t;
 
-  if ((!__threaded && mutex->_pshared != PTHREAD_PROCESS_SHARED) || __vforked) {
-    return 0;
-  }
-
   LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
 
-  if (__tls_enabled &&                               //
-      mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
+  if (mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
       mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
       _weaken(nsync_mu_unlock)) {
     _weaken(nsync_mu_unlock)((nsync_mu *)mutex);

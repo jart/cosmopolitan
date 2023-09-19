@@ -141,7 +141,7 @@ static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
  *
  * @see libc/dce.h
  */
-__msabi dontasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
+__msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
                                     EFI_SYSTEM_TABLE *SystemTable) {
   struct mman *mm;
   uint32_t DescVersion;

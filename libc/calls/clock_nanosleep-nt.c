@@ -16,43 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/errno.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/timer.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
+#include "third_party/finger/finger.h"
 
-static textwindows int sys_clock_nanosleep_nt_impl(int clock, int flags,
-                                                   const struct timespec *req,
-                                                   struct timespec *rem) {
-  struct timespec now, abs;
-  if (flags & TIMER_ABSTIME) {
-    abs = *req;
-    for (;;) {
-      if (sys_clock_gettime_nt(clock, &now)) return -1;
-      if (timespec_cmp(now, abs) >= 0) return 0;
-      if (_check_interrupts(0)) return -1;
-      SleepEx(MIN(__SIG_POLLING_INTERVAL_MS,
-                  timespec_tomillis(timespec_sub(abs, now))),
-              false);
-    }
-  } else {
+static textwindows int sys_clock_nanosleep_nt_impl(int clock,
+                                                   struct timespec abs) {
+  struct timespec now;
+  struct PosixThread *pt = _pthread_self();
+  for (;;) {
     if (sys_clock_gettime_nt(clock, &now)) return -1;
-    abs = timespec_add(now, *req);
-    for (;;) {
-      sys_clock_gettime_nt(clock, &now);
-      if (timespec_cmp(now, abs) >= 0) return 0;
-      if (_check_interrupts(0)) {
-        if (rem) *rem = timespec_sub(abs, now);
-        return -1;
-      }
-      SleepEx(MIN(__SIG_POLLING_INTERVAL_MS,
-                  timespec_tomillis(timespec_sub(abs, now))),
-              false);
+    if (timespec_cmp(now, abs) >= 0) return 0;
+    if (_check_interrupts(0)) return -1;
+    pt->abort_errno = 0;
+    pt->pt_flags |= PT_INSEMAPHORE;
+    WaitForSingleObject(pt->semaphore,
+                        timespec_tomillis(timespec_sub(abs, now)));
+    pt->pt_flags &= ~PT_INSEMAPHORE;
+    if (pt->abort_errno) {
+      errno = pt->abort_errno;
+      return -1;
     }
   }
 }
@@ -61,8 +50,17 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
                                        const struct timespec *req,
                                        struct timespec *rem) {
   int rc;
-  BEGIN_BLOCKING_OPERATION;
-  rc = sys_clock_nanosleep_nt_impl(clock, flags, req, rem);
-  END_BLOCKING_OPERATION;
+  struct timespec abs, now;
+  if (flags & TIMER_ABSTIME) {
+    abs = *req;
+  } else {
+    if (sys_clock_gettime_nt(clock, &now)) return -1;
+    abs = timespec_add(now, *req);
+  }
+  rc = sys_clock_nanosleep_nt_impl(clock, abs);
+  if (rc == -1 && rem && errno == EINTR) {
+    sys_clock_gettime_nt(clock, &now);
+    *rem = timespec_subz(abs, now);
+  }
   return rc;
 }

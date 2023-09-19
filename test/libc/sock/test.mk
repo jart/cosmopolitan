@@ -28,6 +28,7 @@ TEST_LIBC_SOCK_DIRECTDEPS =					\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_PROC						\
 	LIBC_RUNTIME						\
 	LIBC_SOCK						\
 	LIBC_STDIO						\
@@ -69,8 +70,7 @@ o/$(MODE)/test/libc/sock/poll_test.com.runs			\
 o/$(MODE)/test/libc/sock/pollfd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
-o/$(MODE)/test/libc/sock/sendrecvmsg_test.com.runs		\
-o/$(MODE)/test/libc/sock/nointernet_test.com.runs:		\
+o/$(MODE)/test/libc/sock/sendrecvmsg_test.com.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
 
 o/$(MODE)/test/libc/sock/socket_test.com.runs:			\

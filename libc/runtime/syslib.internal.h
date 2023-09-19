@@ -1,9 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_SYSLIB_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_SYSLIB_H_
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -16,35 +12,43 @@ COSMOPOLITAN_C_START_
  */
 
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 2
+#define SYSLIB_VERSION 3
 
 typedef uint64_t dispatch_time_t;
 typedef uint64_t dispatch_semaphore_t;
 
 struct Syslib {
-  int magic;
-  int version;
-  long (*fork)(void);
-  long (*pipe)(int[2]);
-  long (*clock_gettime)(int, struct timespec *);
-  long (*nanosleep)(const struct timespec *, struct timespec *);
-  long (*mmap)(void *, size_t, int, int, int, int64_t);
-  int (*pthread_jit_write_protect_supported_np)(void);
-  void (*pthread_jit_write_protect_np)(int);
-  void (*sys_icache_invalidate)(void *, size_t);
-  int (*pthread_create)(pthread_t *, const pthread_attr_t *, void *(*)(void *),
-                        void *);
-  void (*pthread_exit)(void *);
-  int (*pthread_kill)(pthread_t, int);
-  int (*pthread_sigmask)(int, const sigset_t *restrict, sigset_t *restrict);
-  int (*pthread_setname_np)(const char *);
-  dispatch_semaphore_t (*dispatch_semaphore_create)(long);
-  long (*dispatch_semaphore_signal)(dispatch_semaphore_t);
-  long (*dispatch_semaphore_wait)(dispatch_semaphore_t, dispatch_time_t);
-  dispatch_time_t (*dispatch_walltime)(const struct timespec *, int64_t);
+  int __magic;
+  int __version;
+  long (*__fork)(void);
+  long (*__pipe)(int[2]);
+  long (*__clock_gettime)(int, void *);
+  long (*__nanosleep)(const void *, void *);
+  long (*__mmap)(void *, size_t, int, int, int, int64_t);
+  int (*__pthread_jit_write_protect_supported_np)(void);
+  void (*__pthread_jit_write_protect_np)(int);
+  void (*__sys_icache_invalidate)(void *, size_t);
+  int (*__pthread_create)(void *, const void *, void *(*)(void *), void *);
+  void (*__pthread_exit)(void *);
+  int (*__pthread_kill)(long, int);
+  int (*__pthread_sigmask)(int, const void *restrict, void *restrict);
+  int (*__pthread_setname_np)(const char *);
+  dispatch_semaphore_t (*__dispatch_semaphore_create)(long);
+  long (*__dispatch_semaphore_signal)(dispatch_semaphore_t);
+  long (*__dispatch_semaphore_wait)(dispatch_semaphore_t, dispatch_time_t);
+  dispatch_time_t (*__dispatch_walltime)(const void *, int64_t);
   /* v2 (2023-09-10) */
-  long (*pthread_self)(void);
-  void (*dispatch_release)(dispatch_semaphore_t);
+  long (*__pthread_self)(void);
+  void (*__dispatch_release)(dispatch_semaphore_t);
+  int (*__raise)(int);
+  int (*__pthread_join)(long, void **);
+  void (*__pthread_yield_np)(void);
+  int __pthread_stack_min;
+  int __sizeof_pthread_attr_t;
+  int (*__pthread_attr_init)(void *);
+  int (*__pthread_attr_destroy)(void *);
+  int (*__pthread_attr_setstacksize)(void *, size_t);
+  int (*__pthread_attr_setguardsize)(void *, size_t);
 };
 
 extern struct Syslib *__syslib;

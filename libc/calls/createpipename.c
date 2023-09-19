@@ -20,7 +20,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/runtime/internal.h"
 
-static dontasan textwindows char16_t *itoa16(char16_t p[21], uint64_t x) {
+static textwindows char16_t *itoa16(char16_t p[21], uint64_t x) {
   char t;
   size_t a, b, i = 0;
   do {
@@ -38,7 +38,7 @@ static dontasan textwindows char16_t *itoa16(char16_t p[21], uint64_t x) {
 }
 
 // This function is called very early by WinMain().
-dontasan textwindows char16_t *__create_pipe_name(char16_t *a) {
+textwindows char16_t *__create_pipe_name(char16_t *a) {
   char16_t *p = a;
   const char *q = "\\\\?\\pipe\\cosmo\\";
   static atomic_uint x;

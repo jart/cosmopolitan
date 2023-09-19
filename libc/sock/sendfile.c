@@ -40,19 +40,25 @@
 #include "libc/sock/sendfile.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 
 // sendfile() isn't specified as raising eintr
 static textwindows int SendfileBlock(int64_t handle,
                                      struct NtOverlapped *overlapped) {
+  struct PosixThread *pt;
   uint32_t i, got, flags = 0;
   if (WSAGetLastError() != kNtErrorIoPending &&
       WSAGetLastError() != WSAEINPROGRESS) {
     NTTRACE("TransmitFile failed %lm");
     return __winsockerr();
   }
+  pt = _pthread_self();
+  pt->abort_errno = 0;
+  pt->ioverlap = overlapped;
+  pt->iohandle = handle;
   for (;;) {
     i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
-                                 __SIG_POLLING_INTERVAL_MS, true);
+                                 __SIG_IO_INTERVAL_MS, true);
     if (i == kNtWaitFailed) {
       NTTRACE("WSAWaitForMultipleEvents failed %lm");
       return __winsockerr();
@@ -65,9 +71,14 @@ static textwindows int SendfileBlock(int64_t handle,
       break;
     }
   }
+  pt->ioverlap = 0;
+  pt->iohandle = 0;
   if (WSAGetOverlappedResult(handle, overlapped, &got, false, &flags)) {
     return got;
   } else {
+    if (WSAGetLastError() == kNtErrorOperationAborted) {
+      errno = pt->abort_errno;
+    }
     return -1;
   }
 }
@@ -99,7 +110,7 @@ static dontinline textwindows ssize_t sys_sendfile_nt(
     return ebadf();
   }
   struct NtOverlapped ov = {
-      .Pointer = (void *)(intptr_t)offset,
+      .Pointer = offset,
       .hEvent = WSACreateEvent(),
   };
   if (TransmitFile(oh, ih, uptobytes, 0, &ov, 0, 0)) {

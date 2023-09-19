@@ -19,12 +19,35 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
+
+static errno_t pthread_detach_impl(struct PosixThread *pt) {
+  enum PosixThreadStatus status, transition;
+  for (;;) {
+    status = atomic_load_explicit(&pt->status, memory_order_acquire);
+    if (status == kPosixThreadJoinable) {
+      transition = kPosixThreadDetached;
+    } else if (status == kPosixThreadTerminated) {
+      transition = kPosixThreadZombie;
+    } else {
+      return EINVAL;
+    }
+    if (atomic_compare_exchange_weak_explicit(&pt->status, &status, transition,
+                                              memory_order_release,
+                                              memory_order_relaxed)) {
+      if (transition == kPosixThreadZombie) {
+        _pthread_zombify(pt);
+      }
+      _pthread_decimate();
+      return 0;
+    }
+  }
+}
 
 /**
  * Asks POSIX thread to free itself automatically upon termination.
@@ -37,30 +60,13 @@
  * pthread_detach() can't be called twice on the same thread.
  *
  * @return 0 on success, or errno with error
+ * @raise EINVAL if `thread` isn't joinable
  * @returnserrno
  * @threadsafe
  */
 errno_t pthread_detach(pthread_t thread) {
-  struct PosixThread *pt;
-  enum PosixThreadStatus status, transition;
-  for (pt = (struct PosixThread *)thread;;) {
-    status = atomic_load_explicit(&pt->status, memory_order_acquire);
-    if (status == kPosixThreadJoinable) {
-      transition = kPosixThreadDetached;
-    } else if (status == kPosixThreadTerminated) {
-      transition = kPosixThreadZombie;
-    } else {
-      __builtin_unreachable();
-    }
-    if (atomic_compare_exchange_weak_explicit(&pt->status, &status, transition,
-                                              memory_order_release,
-                                              memory_order_relaxed)) {
-      break;
-    }
-  }
-  if (transition == kPosixThreadZombie) {
-    _pthread_zombify(pt);
-  }
-  pthread_decimate_np();
-  return 0;
+  struct PosixThread *pt = (struct PosixThread *)thread;
+  errno_t err = pthread_detach_impl(pt);
+  STRACE("pthread_detach(%d) → %s", _pthread_tid(pt), DescribeErrno(err));
+  return err;
 }

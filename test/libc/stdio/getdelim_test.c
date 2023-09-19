@@ -28,7 +28,9 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(getline, testEmpty) {
   FILE *f = fmemopen("", 0, "r+");

@@ -34,7 +34,7 @@ COSMOPOLITAN_C_START_
 int64_t CreateThread(const struct NtSecurityAttributes *lpThreadAttributes,
                      size_t dwStackSize, void *lpStartAddress,
                      void *lpParameter, uint32_t dwCreationFlags,
-                     uint32_t *opt_lpThreadId);
+                     uint32_t *opt_lpThreadId) paramsnonnull((3));
 
 void ExitThread(uint32_t dwExitCode) wontreturn;
 int64_t GetCurrentThread(void);

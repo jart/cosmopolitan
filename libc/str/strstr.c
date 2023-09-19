@@ -35,7 +35,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  * @see strcasestr()
  * @see memmem()
  */
-dontasan char *strstr(const char *haystack, const char *needle) {
+char *strstr(const char *haystack, const char *needle) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   size_t i;
   unsigned k, m;

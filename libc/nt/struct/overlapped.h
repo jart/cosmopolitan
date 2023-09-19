@@ -10,7 +10,7 @@ struct NtOverlapped {
       uint32_t Offset;
       uint32_t OffsetHigh;
     };
-    void *Pointer;
+    int64_t Pointer;
   };
   int64_t hEvent;
 };

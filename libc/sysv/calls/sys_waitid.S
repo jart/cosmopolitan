@@ -1,2 +1,2 @@
 #include "libc/sysv/macros.internal.h"
-.scall sys_waitid,0xfffffffff28ad8f7,95,173,globl
+.scall sys_waitid,0xfffffffff28ad8f7,95,2221,globl

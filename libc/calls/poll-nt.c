@@ -21,6 +21,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -42,6 +43,7 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 
 #ifdef __x86_64__
 
@@ -161,31 +163,31 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
     }
     // if we haven't found any good results yet then here we
     // compute a small time slice we don't mind sleeping for
-    waitfor = gotinvals || gotpipes ? 0 : MIN(__SIG_POLLING_INTERVAL_MS, *ms);
+    waitfor = gotinvals || gotpipes ? 0 : MIN(__SIG_POLL_INTERVAL_MS, *ms);
     if (sn) {
-      // we need to poll the socket handles separately because
-      // microsoft certainly loves to challenge us with coding
-      // please note that winsock will fail if we pass zero fd
 #if _NTTRACE
       POLLTRACE("WSAPoll(%p, %u, %'d) out of %'lu", sockfds, sn, waitfor, *ms);
 #endif
-      if ((gotsocks = WSAPoll(sockfds, sn, waitfor)) == -1) {
+      if ((gotsocks = WSAPoll(sockfds, sn, 0)) == -1) {
         rc = __winsockerr();
         goto ReturnPath;
       }
-      *ms -= waitfor;
     } else {
       gotsocks = 0;
-      if (!gotinvals && !gotpipes && waitfor) {
-        // if we've only got pipes and none of them are ready
-        // then we'll just explicitly sleep for the time left
-        POLLTRACE("SleepEx(%'d, false) out of %'lu", waitfor, *ms);
-        if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
-          POLLTRACE("IOCP EINTR");
-        } else {
-          *ms -= waitfor;
-        }
+    }
+    if (!gotinvals && !gotsocks && !gotpipes && waitfor) {
+      POLLTRACE("sleeping for %'d out of %'lu ms", waitfor, *ms);
+      struct PosixThread *pt = _pthread_self();
+      pt->abort_errno = 0;
+      pt->pt_flags |= PT_INSEMAPHORE;
+      WaitForSingleObject(pt->semaphore, waitfor);
+      pt->pt_flags &= ~PT_INSEMAPHORE;
+      if (pt->abort_errno) {
+        errno = pt->abort_errno;
+        rc = -1;
+        goto ReturnPath;
       }
+      *ms -= waitfor;  // todo: make more resilient
     }
     // we gave all the sockets and all the named pipes a shot
     // if we found anything at all then it's time to end work

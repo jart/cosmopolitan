@@ -17,18 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
-void(__fds_lock)(void) {
+void __fds_lock(void) {
   pthread_mutex_lock(&__fds_lock_obj);
 }
 
-void(__fds_unlock)(void) {
+void __fds_unlock(void) {
   pthread_mutex_unlock(&__fds_lock_obj);
-}
-
-void __fds_funlock(void) {
-  bzero(&__fds_lock_obj, sizeof(__fds_lock_obj));
-  __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
 }

@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
@@ -30,124 +32,113 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/ok.h"
 
-#define SIZE                       1024
 #define CTL_KERN                   1
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
 
-static struct ProgramExecutableName {
-  _Atomic(uint32_t) once;
-  char buf[PATH_MAX];
-} program_executable_name;
+static struct {
+  atomic_uint once;
+  union {
+    char buf[PATH_MAX];
+    char16_t buf16[PATH_MAX / 2];
+  } u;
+} g_prog;
 
 static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
-static inline char *StrCat(char buf[PATH_MAX], const char *a, const char *b) {
-  char *p, *e;
-  p = buf;
-  e = buf + PATH_MAX;
-  while (*a && p < e) *p++ = *a++;
-  while (*b && p < e) *p++ = *b++;
-  return buf;
-}
-
-static inline void GetProgramExecutableNameImpl(char *p, char *e) {
-  int c;
-  char *q;
-  char **ep;
-  ssize_t rc;
-  size_t i, n;
-  union {
-    int cmd[4];
-    char path[PATH_MAX];
-    char16_t path16[PATH_MAX];
-  } u;
+static inline void InitProgramExecutableNameImpl(void) {
 
   if (IsWindows()) {
-    n = GetModuleFileName(0, u.path16, ARRAYLEN(u.path16));
-    for (i = 0; i < n; ++i) {
+    int n = GetModuleFileName(0, g_prog.u.buf16, ARRAYLEN(g_prog.u.buf16));
+    for (int i = 0; i < n; ++i) {
       // turn c:\foo\bar into c:/foo/bar
-      if (u.path16[i] == '\\') {
-        u.path16[i] = '/';
+      if (g_prog.u.buf16[i] == '\\') {
+        g_prog.u.buf16[i] = '/';
       }
     }
-    if (IsAlpha(u.path16[0]) && u.path16[1] == ':' && u.path16[2] == '/') {
+    if (IsAlpha(g_prog.u.buf16[0]) &&  //
+        g_prog.u.buf16[1] == ':' &&    //
+        g_prog.u.buf16[2] == '/') {
       // turn c:/... into /c/...
-      u.path16[1] = u.path16[0];
-      u.path16[0] = '/';
-      u.path16[2] = '/';
+      g_prog.u.buf16[1] = g_prog.u.buf16[0];
+      g_prog.u.buf16[0] = '/';
+      g_prog.u.buf16[2] = '/';
     }
-    tprecode16to8(p, e - p, u.path16);
+    tprecode16to8(g_prog.u.buf, sizeof(g_prog.u.buf), g_prog.u.buf16);
     return;
   }
 
+  char c, *q;
   if (IsMetal()) {
-    if (!memccpy(p, APE_COM_NAME, 0, e - p - 1)) {
-      e[-1] = 0;
-    }
-    return;
+    q = APE_COM_NAME;
+    goto CopyString;
   }
 
   // if argv[0] exists then turn it into an absolute path. we also try
   // adding a .com suffix since the ape auto-appends it when resolving
-  if ((q = __argv[0]) && ((!sys_faccessat(AT_FDCWD, q, F_OK, 0)) ||
-                          ((q = StrCat(u.path, __argv[0], ".com")) &&
-                           !sys_faccessat(AT_FDCWD, q, F_OK, 0)))) {
+  if ((q = __argv[0])) {
+    char *p = g_prog.u.buf;
+    char *e = p + sizeof(g_prog.u.buf);
     if (*q != '/') {
       if (q[0] == '.' && q[1] == '/') {
         q += 2;
       }
-      if (getcwd(p, e - p)) {
+      if (getcwd(p, e - p - 1 - 4)) {  // for / and .com
         while (*p) ++p;
         *p++ = '/';
       }
     }
-    for (i = 0; *q && p + 1 < e; ++p, ++q) {
-      *p = *q;
+    while ((c = *q++)) {
+      if (p + 1 + 4 < e) {  // for nul and .com
+        *p++ = c;
+      }
     }
     *p = 0;
-    return;
+    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return;
+    p = WRITE32LE(p, READ32LE(".com"));
+    *p = 0;
+    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return;
   }
 
   // if getenv("_") exists then use that
-  for (ep = __envp; (q = *ep); ++ep) {
+  for (char **ep = __envp; (q = *ep); ++ep) {
     if (*q++ == '_' && *q++ == '=') {
-      while ((c = *q++)) {
-        if (p + 1 < e) {
-          *p++ = c;
-        }
-      }
-      *p = 0;
-      return;
+      goto CopyString;
     }
   }
 
   // if argv[0] doesn't exist, then fallback to interpreter name
-  if ((rc = sys_readlinkat(AT_FDCWD, "/proc/self/exe", p, e - p - 1)) > 0 ||
-      (rc = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", p, e - p - 1)) > 0) {
-    p[rc] = 0;
+  ssize_t got;
+  char *b = g_prog.u.buf;
+  size_t n = sizeof(g_prog.u.buf) - 1;
+  if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
+      (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
+    b[got] = 0;
     return;
   }
   if (IsFreebsd() || IsNetbsd()) {
-    u.cmd[0] = CTL_KERN;
-    u.cmd[1] = KERN_PROC;
+    int cmd[4];
+    cmd[0] = CTL_KERN;
+    cmd[1] = KERN_PROC;
     if (IsFreebsd()) {
-      u.cmd[2] = KERN_PROC_PATHNAME_FREEBSD;
+      cmd[2] = KERN_PROC_PATHNAME_FREEBSD;
     } else {
-      u.cmd[2] = KERN_PROC_PATHNAME_NETBSD;
+      cmd[2] = KERN_PROC_PATHNAME_NETBSD;
     }
-    u.cmd[3] = -1;  // current process
-    n = e - p;
-    if (sys_sysctl(u.cmd, ARRAYLEN(u.cmd), p, &n, 0, 0) != -1) {
+    cmd[3] = -1;  // current process
+    if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
       return;
     }
   }
 
-  // otherwise give up and just copy argv[0] into it
-  if (!*p && (q = __argv[0])) {
+  // give up and just copy argv[0] into it
+  if ((q = __argv[0])) {
+  CopyString:
+    char *p = g_prog.u.buf;
+    char *e = p + sizeof(g_prog.u.buf);
     while ((c = *q++)) {
       if (p + 1 < e) {
         *p++ = c;
@@ -155,14 +146,14 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
     }
     *p = 0;
   }
+
+  // if we don't even have that then empty the string
+  g_prog.u.buf[0] = 0;
 }
 
 static void InitProgramExecutableName(void) {
-  int e;
-  e = errno;
-  GetProgramExecutableNameImpl(
-      program_executable_name.buf,
-      program_executable_name.buf + sizeof(program_executable_name.buf));
+  int e = errno;
+  InitProgramExecutableNameImpl();
   errno = e;
 }
 
@@ -170,6 +161,6 @@ static void InitProgramExecutableName(void) {
  * Returns absolute path of program.
  */
 char *GetProgramExecutableName(void) {
-  cosmo_once(&program_executable_name.once, InitProgramExecutableName);
-  return program_executable_name.buf;
+  cosmo_once(&g_prog.once, InitProgramExecutableName);
+  return g_prog.u.buf;
 }

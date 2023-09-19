@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -26,7 +28,10 @@
  * @return 0 on success, or error number on failure
  */
 int pthread_yield(void) {
-  sched_yield();
-  STRACE("pthread_yield()");
+  if (IsXnuSilicon()) {
+    __syslib->__pthread_yield_np();
+  } else {
+    sched_yield();
+  }
   return 0;
 }

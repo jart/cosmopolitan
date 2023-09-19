@@ -16,14 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/rlimit.h"
 
 /**
- * Gets file descriptor table size.
- *
- * @return current limit on the number of open files per process
+ * Returns limit on number of open files.
  */
 int getdtablesize(void) {
-  return g_fds.n;
+  struct rlimit rl = {10000};
+  getrlimit(RLIMIT_NOFILE, &rl);
+  return MIN(rl.rlim_cur, INT_MAX);
 }

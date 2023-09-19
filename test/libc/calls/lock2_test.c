@@ -28,7 +28,9 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(lock, wholeFile) {
   ASSERT_SYS(0, 3, open("db", O_RDWR | O_CREAT | O_EXCL, 0644));

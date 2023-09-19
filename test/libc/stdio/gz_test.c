@@ -22,7 +22,9 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/zlib/zlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(gz, test) {
   int fd;

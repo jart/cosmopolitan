@@ -41,8 +41,12 @@
  * @cancellationpoint
  */
 int statfs(const char *path, struct statfs *sf) {
-  int rc;
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
   union statfs_meta m;
+  CheckLargeStackAllocation(&m, sizeof(m));
+#pragma GCC pop_options
+  int rc;
   struct ZiposUri zipname;
   BEGIN_CANCELLATION_POINT;
 

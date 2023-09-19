@@ -1094,13 +1094,12 @@ static bool HasPendingInput(void) {
 }
 
 static bool ShouldDraw(void) {
-  long double now, rate;
-  static long double next;
+  struct timespec now;
+  static struct timespec next;
   if (!isdragging) return true;
-  now = nowl();
-  rate = 1. / 24;
-  if (now > next && !HasPendingInput()) {
-    next = now + rate;
+  now = timespec_real();
+  if (timespec_cmp(now, next) > 0 && !HasPendingInput()) {
+    next = timespec_add(now, timespec_frommicros(1. / 24 * 1e6));
     return true;
   } else {
     return false;

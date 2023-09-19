@@ -142,6 +142,8 @@
 #define _SC_XOPEN_STREAMS                246
 #define _SC_THREAD_ROBUST_PRIO_INHERIT   247
 #define _SC_THREAD_ROBUST_PRIO_PROTECT   248
+#define _SC_SIGSTKSZ                     249
+#define _SC_MINSIGSTKSZ                  250
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

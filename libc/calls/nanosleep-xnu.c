@@ -46,6 +46,6 @@ int sys_nanosleep_xnu(const struct timespec *req, struct timespec *rem) {
   }
   return rc;
 #else
-  return _sysret(__syslib->nanosleep(req, rem));
+  return _sysret(__syslib->__nanosleep(req, rem));
 #endif
 }

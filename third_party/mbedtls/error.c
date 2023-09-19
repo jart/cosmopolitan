@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/error.h"
 #include "libc/fmt/fmt.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/aes.h"
@@ -31,7 +32,6 @@
 #include "third_party/mbedtls/dhm.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/entropy.h"
-#include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/gcm.h"
 #include "third_party/mbedtls/hkdf.h"
 #include "third_party/mbedtls/hmac_drbg.h"
@@ -358,6 +358,8 @@ const char * mbedtls_high_level_strerr( int error_code )
             return( "SSL - Connection requires a write call" );
         case -(MBEDTLS_ERR_SSL_TIMEOUT):
             return( "SSL - The operation timed out" );
+        case -(MBEDTLS_ERR_SSL_CANCELED):
+            return( "SSL - The POSIX thread was canceled" );
         case -(MBEDTLS_ERR_SSL_CLIENT_RECONNECT):
             return( "SSL - The client initiated a reconnect from the same port" );
         case -(MBEDTLS_ERR_SSL_UNEXPECTED_RECORD):

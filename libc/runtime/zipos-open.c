@@ -52,16 +52,16 @@ static char *__zipos_mapend;
 static size_t __zipos_maptotal;
 static pthread_mutex_t __zipos_lock_obj;
 
+static void __zipos_wipe(void) {
+  pthread_mutex_init(&__zipos_lock_obj, 0);
+}
+
 static void __zipos_lock(void) {
   pthread_mutex_lock(&__zipos_lock_obj);
 }
 
 static void __zipos_unlock(void) {
   pthread_mutex_unlock(&__zipos_lock_obj);
-}
-
-static void __zipos_funlock(void) {
-  pthread_mutex_init(&__zipos_lock_obj, 0);
 }
 
 static void *__zipos_mmap_space(size_t mapsize) {
@@ -268,5 +268,6 @@ int __zipos_open(struct ZiposUri *name, int flags) {
 }
 
 __attribute__((__constructor__)) static void __zipos_ctor(void) {
-  pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_funlock);
+  __zipos_wipe();
+  pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_wipe);
 }

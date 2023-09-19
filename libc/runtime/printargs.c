@@ -82,7 +82,7 @@ static const char *FindNameById(const struct IdName *names, unsigned long id) {
   return NULL;
 }
 
-static dontasan void PrintDependencies(const char *prologue) {
+static void PrintDependencies(const char *prologue) {
   struct NtLinkedList *head = &NtGetPeb()->Ldr->InLoadOrderModuleList;
   struct NtLinkedList *ldr = head->Next;
   do {
@@ -93,10 +93,10 @@ static dontasan void PrintDependencies(const char *prologue) {
   } while ((ldr = ldr->Next) && ldr != head);
 }
 
-static dontasan void Print(const char *prologue) {
+static void Print(const char *prologue) {
 }
 
-static dontasan const char *ConvertCcToStr(int cc) {
+static const char *ConvertCcToStr(int cc) {
   if (cc == _POSIX_VDISABLE) {
     return "_POSIX_VDISABLE";
   } else {
@@ -115,7 +115,16 @@ static dontasan const char *ConvertCcToStr(int cc) {
  *
  * @param prologue needs to be a .rodata kprintf string
  */
-dontasan textstartup void __printargs(const char *prologue) {
+textstartup void __printargs(const char *prologue) {
+
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
+  union {
+    char path[PATH_MAX];
+    struct pollfd pfds[128];
+  } u;
+  CheckLargeStackAllocation(&u, sizeof(u));
+#pragma GCC pop_options
 
   const struct AuxiliaryValue {
     const char *fmt;
@@ -172,10 +181,6 @@ dontasan textstartup void __printargs(const char *prologue) {
   struct sched_param sp;
   struct termios termios;
   const struct AuxiliaryValue *auxinfo;
-  union {
-    char path[PATH_MAX];
-    struct pollfd pfds[128];
-  } u;
 
   (void)x;
 
@@ -275,7 +280,9 @@ dontasan textstartup void __printargs(const char *prologue) {
   if (X86_HAVE(LA57)) kprintf(" LA57");
   if (X86_HAVE(FSGSBASE)) kprintf(" FSGSBASE");
 #elif defined(__aarch64__)
-  PRINT("  AARCH64");
+  kprintf("  AARCH64\n");
+#else
+  kprintf("\n");
 #endif
 
   PRINT("");
@@ -391,6 +398,7 @@ dontasan textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %p __oldstack ptr", __oldstack);
   PRINT(" ☼ %p __oldstack bot", ROUNDDOWN(__oldstack, foss_stack_size));
   PRINT(" ☼ %p __builtin_frame_address(0)", __builtin_frame_address(0));
+  PRINT(" ☼ %p GetStackPointer()", GetStackPointer());
 
   PRINT("");
   PRINT("ARGUMENTS (%p)", __argv);
@@ -448,7 +456,7 @@ dontasan textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %d", "geteuid()", geteuid());
   PRINT(" ☼ %s = %d", "getgid()", getgid());
   PRINT(" ☼ %s = %d", "getegid()", getegid());
-  PRINT(" ☼ %s = %#s", "kTmpPath", kTmpPath);
+  PRINT(" ☼ %s = %#s", "__get_tmpdir()", __get_tmpdir());
 #ifdef __x86_64__
   PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);

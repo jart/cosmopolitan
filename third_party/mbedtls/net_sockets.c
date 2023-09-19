@@ -93,7 +93,11 @@ int mbedtls_net_connect(mbedtls_net_context *ctx, const char *host,
       break;
     }
     close(ctx->fd);
-    ret = MBEDTLS_ERR_NET_CONNECT_FAILED;
+    if (errno == ECANCELED) {
+      ret = MBEDTLS_ERR_SSL_CANCELED;
+    } else {
+      ret = MBEDTLS_ERR_NET_CONNECT_FAILED;
+    }
   }
   freeaddrinfo(addr_list);
   return ret;
@@ -244,6 +248,7 @@ int mbedtls_net_accept(mbedtls_net_context *bind_ctx,
 #endif
   }
   if (ret < 0) {
+    if (errno == ECANCELED) return MBEDTLS_ERR_SSL_CANCELED;
     if (net_would_block(bind_ctx) != 0) return MBEDTLS_ERR_SSL_WANT_READ;
     return MBEDTLS_ERR_NET_ACCEPT_FAILED;
   }
@@ -252,8 +257,10 @@ int mbedtls_net_accept(mbedtls_net_context *bind_ctx,
   if (type != SOCK_STREAM) {
     struct sockaddr_storage local_addr;
     int one = 1;
-    if (connect(bind_ctx->fd, (struct sockaddr *)&client_addr, n) != 0)
+    if (connect(bind_ctx->fd, (struct sockaddr *)&client_addr, n) != 0) {
+      if (errno == ECANCELED) return MBEDTLS_ERR_SSL_CANCELED;
       return MBEDTLS_ERR_NET_ACCEPT_FAILED;
+    }
     client_ctx->fd = bind_ctx->fd;
     bind_ctx->fd = -1; /* In case we exit early */
     n = sizeof(struct sockaddr_storage);
@@ -369,7 +376,10 @@ int mbedtls_net_poll(mbedtls_net_context *ctx, uint32_t rw, uint32_t timeout) {
     ret = select(fd + 1, &read_fds, &write_fds, NULL,
                  timeout == (uint32_t)-1 ? NULL : &tv);
   } while (IS_EINTR(ret));
-  if (ret < 0) return MBEDTLS_ERR_NET_POLL_FAILED;
+  if (ret < 0) {
+    if (errno == ECANCELED) return MBEDTLS_ERR_SSL_CANCELED;
+    return MBEDTLS_ERR_NET_POLL_FAILED;
+  }
   ret = 0;
   if (FD_ISSET(fd, &read_fds)) ret |= MBEDTLS_NET_POLL_READ;
   if (FD_ISSET(fd, &write_fds)) ret |= MBEDTLS_NET_POLL_WRITE;
@@ -410,6 +420,7 @@ int mbedtls_net_recv(void *ctx, unsigned char *buf, size_t len) {
     if (errno == EPIPE || errno == ECONNRESET)
       return MBEDTLS_ERR_NET_CONN_RESET;
     if (errno == EINTR) return MBEDTLS_ERR_SSL_WANT_READ;
+    if (errno == ECANCELED) return MBEDTLS_ERR_SSL_CANCELED;
     return MBEDTLS_ERR_NET_RECV_FAILED;
   }
   return ret;
@@ -462,6 +473,7 @@ int mbedtls_net_recv_timeout(void *ctx, unsigned char *buf, size_t len,
   if (ret == 0) return MBEDTLS_ERR_SSL_TIMEOUT;
   if (ret < 0) {
     if (errno == EINTR) return MBEDTLS_ERR_SSL_WANT_READ;
+    if (errno == ECANCELED) return MBEDTLS_ERR_SSL_CANCELED;
     return MBEDTLS_ERR_NET_RECV_FAILED;
   }
   /* This call will not block */
@@ -490,6 +502,7 @@ int mbedtls_net_send(void *ctx, const unsigned char *buf, size_t len) {
     if (errno == EPIPE || errno == ECONNRESET)
       return MBEDTLS_ERR_NET_CONN_RESET;
     if (errno == EINTR) return MBEDTLS_ERR_SSL_WANT_WRITE;
+    if (errno == ECANCELED) return MBEDTLS_ERR_SSL_CANCELED;
     return MBEDTLS_ERR_NET_SEND_FAILED;
   }
   return ret;

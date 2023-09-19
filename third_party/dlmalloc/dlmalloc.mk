@@ -50,19 +50,14 @@ o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
 endif
 endif
 
-# we can't use address sanitizer because:
-#   address sanitizer depends on dlmalloc
-o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
-		CFLAGS +=					\
+$(THIRD_PARTY_DLMALLOC_A_OBJS): private				\
+		COPTS +=					\
 			-ffreestanding				\
-			-fno-sanitize=address
-
-# we must segregate codegen because:
-#   file contains multiple independently linkable apis
-o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
-		CFLAGS +=					\
+			-fdata-sections				\
 			-ffunction-sections			\
-			-fdata-sections
+			-fno-sanitize=address			\
+			-Wframe-larger-than=4096		\
+			-Walloca-larger-than=4096
 
 THIRD_PARTY_DLMALLOC_LIBS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)))
 THIRD_PARTY_DLMALLOC_SRCS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_SRCS))

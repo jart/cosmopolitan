@@ -74,6 +74,24 @@ TEST(fmt, u) {
   EXPECT_STREQ("042 ", _gc(xasprintf("%-4.3u", 42)));
 }
 
+TEST(fmt, c) {
+  char buf[8];
+  EXPECT_EQ(1, sprintf(buf, "%c", 'h'));
+  EXPECT_STREQ("h", buf);
+  EXPECT_EQ(3, sprintf(buf, "%`c", 'h'));
+  EXPECT_STREQ("'h'", buf);
+  EXPECT_EQ(4, sprintf(buf, "%`c", '\t'));
+  EXPECT_STREQ("'\\t'", buf);
+  EXPECT_EQ(4, sprintf(buf, "%`c", 0));
+  EXPECT_STREQ("'\\0'", buf);
+  EXPECT_EQ(3, sprintf(buf, "%#c", 1));
+  EXPECT_STREQ("☺", buf);
+  EXPECT_EQ(2, sprintf(buf, "%#c", 0));
+  EXPECT_STREQ(" ", buf);
+  EXPECT_EQ(4, sprintf(buf, "%#`c", 0));
+  EXPECT_STREQ("'\\0'", buf);
+}
+
 TEST(fmt, x) {
   EXPECT_STREQ("0x01   ", _gc(xasprintf("%#-07.2x", 1)));
   EXPECT_STREQ("0x00136d  ", _gc(xasprintf("%#-010.6x", 4973)));

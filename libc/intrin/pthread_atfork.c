@@ -34,6 +34,10 @@
  *       // data structures...
  *     } g_lib;
  *
+ *     static void lib_wipe(void) {
+ *       pthread_mutex_init(&g_lib.lock, 0);
+ *     }
+ *
  *     static void lib_lock(void) {
  *       pthread_mutex_lock(&g_lib.lock);
  *     }
@@ -42,13 +46,9 @@
  *       pthread_mutex_unlock(&g_lib.lock);
  *     }
  *
- *     static void lib_funlock(void) {
- *       pthread_mutex_init(&g_lib.lock, 0);
- *     }
- *
  *     static void lib_setup(void) {
- *       lib_funlock();
- *       pthread_atfork(lib_lock, lib_unlock, lib_funlock);
+ *       lib_wipe();
+ *       pthread_atfork(lib_lock, lib_unlock, lib_wipe);
  *     }
  *
  *     static void lib_init(void) {
@@ -61,14 +61,6 @@
  *       // do stuff...
  *       lib_unlock();
  *     }
- *
- * This won't actually aspect fork() until pthread_create() is called,
- * since we don't want normal non-threaded programs to have to acquire
- * exclusive locks on every resource in the entire app just to fork().
- *
- * The vfork() function is *never* aspected. What happens instead is a
- * global variable named `__vforked` is set to true in the child which
- * causes lock functions to do nothing. So far, it works like a charm.
  *
  * @param prepare is run by fork() before forking happens
  * @param parent is run by fork() after forking happens in parent process

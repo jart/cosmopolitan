@@ -27,7 +27,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/tls.h"
 
 #define I(x) ((uintptr_t)x)
@@ -132,7 +131,6 @@ static char *_mktls_above(struct CosmoTib **out_tib) {
  * @return buffer that must be released with free()
  */
 char *_mktls(struct CosmoTib **out_tib) {
-  __require_tls();
 #ifdef __x86_64__
   return _mktls_below(out_tib);
 #else

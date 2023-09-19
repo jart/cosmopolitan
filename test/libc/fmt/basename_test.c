@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/bits.h"
-#include "libc/mem/gc.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-#define BASENAME(x) basename(gc(strdup(x)))
+static char dup[128];
+
+#define BASENAME(x) basename(strcpy(dup, x))
 
 TEST(basename, testRegularExamples) {
   EXPECT_STREQ("lib", BASENAME("/usr/lib"));

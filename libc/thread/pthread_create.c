@@ -20,20 +20,28 @@
 #include "libc/atomic.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/crc32.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clone.h"
@@ -42,10 +50,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
 
 __static_yoink("nsync_mu_lock");
 __static_yoink("nsync_mu_unlock");
@@ -56,39 +62,44 @@ __static_yoink("_pthread_atfork");
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 
-static unsigned long roundup2pow(unsigned long x) {
-  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
-}
-
-void _pthread_free(struct PosixThread *pt) {
-  if (pt->flags & PT_STATIC) return;
-  free(pt->tls);
-  if ((pt->flags & PT_OWNSTACK) &&  //
-      pt->attr.__stackaddr &&       //
-      pt->attr.__stackaddr != MAP_FAILED) {
+void _pthread_free(struct PosixThread *pt, bool isfork) {
+  if (pt->pt_flags & PT_STATIC) return;
+  if (pt->pt_flags & PT_OWNSTACK) {
     unassert(!munmap(pt->attr.__stackaddr, pt->attr.__stacksize));
   }
+  if (!isfork) {
+    if (IsWindows()) {
+      if (pt->tib->tib_syshand) {
+        unassert(CloseHandle(pt->tib->tib_syshand));
+      }
+    } else if (IsXnuSilicon()) {
+      if (pt->tib->tib_syshand) {
+        __syslib->__pthread_join(pt->tib->tib_syshand, 0);
+      }
+    }
+  }
+  free(pt->tls);
   free(pt);
 }
 
 static int PosixThread(void *arg, int tid) {
   void *rc;
   struct PosixThread *pt = arg;
-  unassert(__get_tls()->tib_tid > 0);
   if (pt->attr.__inheritsched == PTHREAD_EXPLICIT_SCHED) {
-    _pthread_reschedule(pt);
+    unassert(_weaken(_pthread_reschedule));
+    _weaken(_pthread_reschedule)(pt);  // yoinked by attribute builder
   }
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
-    pt->next = __get_tls()->tib_pthread;
-    __get_tls()->tib_pthread = (pthread_t)pt;
-    unassert(!sigprocmask(SIG_SETMASK, (sigset_t *)pt->attr.__sigmask, 0));
+    pthread_sigmask(SIG_SETMASK, (sigset_t *)pt->attr.__sigmask, 0);
     rc = pt->start(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     unassert(!pt->cleanup);
     // calling pthread_exit() will either jump back here, or call exit
     pthread_exit(rc);
   }
+  // avoid signal handler being triggered after we trash our own stack
+  _sigblockall();
   // return to clone polyfill which clears tid, wakes futex, and exits
   return 0;
 }
@@ -160,7 +171,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     // assume they know what they're doing as much as possible
     if (IsOpenbsd()) {
       if ((rc = FixupCustomStackOnOpenbsd(&pt->attr))) {
-        _pthread_free(pt);
+        _pthread_free(pt, false);
         return rc;
       }
     }
@@ -168,23 +179,19 @@ static errno_t pthread_create_impl(pthread_t *thread,
     // cosmo is managing the stack
     // 1. in mono repo optimize for tiniest stack possible
     // 2. in public world optimize to *work* regardless of memory
-    unsigned long default_guardsize;
-    default_guardsize = getauxval(AT_PAGESZ);
-    pt->flags = PT_OWNSTACK;
-    pt->attr.__stacksize = MAX(pt->attr.__stacksize, GetStackSize());
-    pt->attr.__stacksize = roundup2pow(pt->attr.__stacksize);
-    pt->attr.__guardsize = ROUNDUP(pt->attr.__guardsize, default_guardsize);
-    if (pt->attr.__guardsize + default_guardsize >= pt->attr.__stacksize) {
-      _pthread_free(pt);
+    int granularity = FRAMESIZE;
+    int pagesize = getauxval(AT_PAGESZ);
+    pt->attr.__guardsize = ROUNDUP(pt->attr.__guardsize, pagesize);
+    pt->attr.__stacksize = ROUNDUP(pt->attr.__stacksize, granularity);
+    if (pt->attr.__guardsize + pagesize > pt->attr.__stacksize) {
+      _pthread_free(pt, false);
       return EINVAL;
     }
-    if (pt->attr.__guardsize == default_guardsize) {
-      // user is wisely using smaller stacks with default guard size
+    if (pt->attr.__guardsize == pagesize) {
       pt->attr.__stackaddr =
           mmap(0, pt->attr.__stacksize, PROT_READ | PROT_WRITE,
                MAP_STACK | MAP_ANONYMOUS, -1, 0);
     } else {
-      // user is tuning things, performance may suffer
       pt->attr.__stackaddr =
           mmap(0, pt->attr.__stacksize, PROT_READ | PROT_WRITE,
                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -203,9 +210,9 @@ static errno_t pthread_create_impl(pthread_t *thread,
         }
       }
     }
-    if (pt->attr.__stackaddr == MAP_FAILED) {
+    if (!pt->attr.__stackaddr || pt->attr.__stackaddr == MAP_FAILED) {
       rc = errno;
-      _pthread_free(pt);
+      _pthread_free(pt, false);
       errno = e;
       if (rc == EINVAL || rc == EOVERFLOW) {
         return EINVAL;
@@ -213,6 +220,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
         return EAGAIN;
       }
     }
+    pt->pt_flags |= PT_OWNSTACK;
     if (IsAsan() && pt->attr.__guardsize) {
       __asan_poison(pt->attr.__stackaddr, pt->attr.__guardsize,
                     kAsanStackOverflow);
@@ -220,6 +228,8 @@ static errno_t pthread_create_impl(pthread_t *thread,
   }
 
   // set initial status
+  pt->tib->tib_pthread = (pthread_t)pt;
+  atomic_store_explicit(&pt->tib->tib_sigmask, -1, memory_order_relaxed);
   if (!pt->attr.__havesigmask) {
     pt->attr.__havesigmask = true;
     memcpy(pt->attr.__sigmask, &oldsigs, sizeof(oldsigs));
@@ -234,15 +244,15 @@ static errno_t pthread_create_impl(pthread_t *thread,
                             memory_order_relaxed);
       break;
     default:
-      _pthread_free(pt);
+      _pthread_free(pt, false);
       return EINVAL;
   }
 
   // add thread to global list
-  // we add it to the end since zombies go at the beginning
+  // we add it to the beginning since zombies go at the end
   dll_init(&pt->list);
   pthread_spin_lock(&_pthread_lock);
-  dll_make_last(&_pthread_list, &pt->list);
+  dll_make_first(&_pthread_list, &pt->list);
   pthread_spin_unlock(&_pthread_lock);
 
   // launch PosixThread(pt) in new thread
@@ -256,12 +266,19 @@ static errno_t pthread_create_impl(pthread_t *thread,
     pthread_spin_lock(&_pthread_lock);
     dll_remove(&_pthread_list, &pt->list);
     pthread_spin_unlock(&_pthread_lock);
-    _pthread_free(pt);
+    _pthread_free(pt, false);
     return rc;
   }
 
   *thread = (pthread_t)pt;
   return 0;
+}
+
+static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
+  if (err) return "n/a";
+  if (!th) return "NULL";
+  FormatInt32(buf, _pthread_tid((struct PosixThread *)*th));
+  return buf;
 }
 
 /**
@@ -316,11 +333,13 @@ static errno_t pthread_create_impl(pthread_t *thread,
  */
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {
-  errno_t rc;
-  __require_tls();
-  pthread_decimate_np();
+  errno_t err;
+  _pthread_decimate();
   BLOCK_SIGNALS;
-  rc = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
+  err = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
   ALLOW_SIGNALS;
-  return rc;
+  STRACE("pthread_create([%s], %p, %t, %p) → %s",
+         DescribeHandle(alloca(12), err, thread), attr, start_routine, arg,
+         DescribeErrno(err));
+  return err;
 }

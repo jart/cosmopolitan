@@ -678,9 +678,6 @@ Objectify(void)
         } else if (insertlauncher) {
             elfwriter_yoink(elf, "LaunchPythonModule", STB_GLOBAL);
         }
-        if (isunittest) {
-            elfwriter_yoink(elf, "testlib_quota_handlers", STB_GLOBAL);
-        }
         elfwriter_finishsection(elf);
         if (insertrunner || insertlauncher) {
             n = strlen(modname) + 1;

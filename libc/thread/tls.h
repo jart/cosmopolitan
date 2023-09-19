@@ -17,6 +17,9 @@ struct CosmoFtrace {   /* 16 */
   int64_t ft_lastaddr; /*  8 */
 };
 
+/* NOTE: update aarch64 libc/errno.h if sizeof changes */
+/* NOTE: update aarch64 libc/proc/vfork.S if sizeof changes */
+/* NOTE: update aarch64 libc/nexgen32e/gc.S if sizeof changes */
 struct CosmoTib {
   struct CosmoTib *tib_self;      /* 0x00 */
   struct CosmoFtrace tib_ftracer; /* 0x08 */
@@ -29,54 +32,54 @@ struct CosmoTib {
   uint64_t tib_flags;             /* 0x40 */
   int tib_ftrace;                 /* inherited */
   int tib_strace;                 /* inherited */
-  uint64_t tib_sigmask;           /* inherited */
-  uint64_t tib_sigpending;
-  void *tib_reserved4;
-  void *tib_reserved5;
-  void *tib_reserved6;
-  void *tib_reserved7;
-  void *tib_keys[128];
+  _Atomic(uint64_t) tib_sigmask;  /* inherited */
+  _Atomic(uint64_t) tib_sigpending;
+  _Atomic(uint64_t) tib_syshand; /* win32=kThread, xnusilicon=pthread_t */
+  char *tib_sigstack_addr;
+  uint32_t tib_sigstack_size;
+  uint32_t tib_sigstack_flags;
+  void **tib_keys;
 };
 
 extern int __threaded;
 extern unsigned __tls_index;
 
+char *_mktls(struct CosmoTib **);
+void __bootstrap_tls(struct CosmoTib *, char *);
+
 #ifdef __x86_64__
 extern bool __tls_enabled;
 #define __tls_enabled_set(x) __tls_enabled = x
 #elif defined(__aarch64__)
-#define __tls_enabled                        \
-  ({                                         \
-    register struct CosmoTib *_t asm("x28"); \
-    !!_t;                                    \
-  })
+#define __tls_enabled        true
 #define __tls_enabled_set(x) (void)0
 #else
 #error "unsupported architecture"
 #endif
 
-void __require_tls(void);
 void __set_tls(struct CosmoTib *);
 
-#ifdef __x86_64__
 /**
  * Returns location of thread information block.
  *
  * This can't be used in privileged functions.
  */
-#define __get_tls()                                                \
-  ({                                                               \
-    struct CosmoTib *_t;                                           \
-    asm("mov\t%%fs:0,%0" : "=r"(_t) : /* no inputs */ : "memory"); \
-    _t;                                                            \
-  })
+__funline pureconst struct CosmoTib *__get_tls(void) {
+#ifdef __chibicc__
+  return 0;
+#elif __x86_64__
+  struct CosmoTib *__tib;
+  __asm__("mov\t%%fs:0,%0" : "=r"(__tib));
+  return __tib;
+#elif defined(__aarch64__)
+  register struct CosmoTib *__tls __asm__("x28");
+  return __tls - 1;
+#endif
+}
+
+#ifdef __x86_64__
 #define __adj_tls(tib) (tib)
 #elif defined(__aarch64__)
-#define __get_tls()                          \
-  ({                                         \
-    register struct CosmoTib *_t asm("x28"); \
-    _t - 1;                                  \
-  })
 #define __adj_tls(tib) ((struct CosmoTib *)(tib) + 1)
 #endif
 

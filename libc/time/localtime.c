@@ -47,6 +47,10 @@ __static_yoink("usr/share/zoneinfo/UTC");
 
 static pthread_mutex_t locallock;
 
+void localtime_wipe(void) {
+	pthread_mutex_init(&locallock, 0);
+}
+
 void localtime_lock(void) {
 	pthread_mutex_lock(&locallock);
 }
@@ -55,15 +59,11 @@ void localtime_unlock(void) {
 	pthread_mutex_unlock(&locallock);
 }
 
-void localtime_funlock(void) {
-	pthread_mutex_init(&locallock, 0);
-}
-
 __attribute__((__constructor__)) static void localtime_init(void) {
-	localtime_funlock();
+	localtime_wipe();
 	pthread_atfork(localtime_lock,
 		       localtime_unlock,
-		       localtime_funlock);
+		       localtime_wipe);
 }
 
 #ifndef TZ_ABBR_MAX_LEN

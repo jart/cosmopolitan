@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ntspawn.h"
+#include "libc/proc/ntspawn.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"

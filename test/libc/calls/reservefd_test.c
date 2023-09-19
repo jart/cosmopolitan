@@ -39,9 +39,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
@@ -55,7 +53,6 @@ void SetUpOnce(void) {
     close(i);
   }
   errno = 0;
-  __enable_threads();
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 

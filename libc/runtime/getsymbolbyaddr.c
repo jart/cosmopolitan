@@ -23,7 +23,7 @@
 /**
  * Returns name of symbol at address.
  */
-dontasan char *GetSymbolByAddr(int64_t addr) {
+char *GetSymbolByAddr(int64_t addr) {
   /* asan runtime depends on this function */
   int i;
   struct SymbolTable *st;

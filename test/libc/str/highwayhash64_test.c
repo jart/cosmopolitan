@@ -114,13 +114,15 @@ BENCH(highwayhash64, newbench) {
 BENCH(highwayhash64, bench) {
   EZBENCH2("knuth small", donothing,
            __expropriate(KnuthMultiplicativeHash32(__veil("r", "hello"), 5)));
-  EZBENCH2("crc32c small", donothing, crc32c(0, "hello", 5));
+  EZBENCH2("crc32c small", donothing, __expropriate(crc32c(0, "hello", 5)));
   EZBENCH2("crc32 small", donothing,
            __expropriate(crc32_z(0, __veil("r", "hello"), 5)));
   EZBENCH2("highwayhash64 small", donothing,
            HighwayHash64((void *)"hello", 5, kTestKey1));
-  EZBENCH2("crc32 big", donothing, crc32_z(0, kHyperion, kHyperionSize));
-  EZBENCH2("crc32c big", donothing, crc32c(0, kHyperion, kHyperionSize));
+  EZBENCH2("crc32 big", donothing,
+           __expropriate(crc32_z(0, kHyperion, kHyperionSize)));
+  EZBENCH2("crc32c big", donothing,
+           __expropriate(crc32c(0, kHyperion, kHyperionSize)));
   EZBENCH2("highwayhash64 big", donothing,
            HighwayHash64((void *)kHyperion, kHyperionSize, kTestKey1));
   EZBENCH2("knuth big", donothing,

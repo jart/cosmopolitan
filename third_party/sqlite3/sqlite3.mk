@@ -48,6 +48,7 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
+	LIBC_PROC							\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
 	LIBC_STR							\

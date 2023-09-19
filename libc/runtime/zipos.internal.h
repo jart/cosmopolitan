@@ -56,7 +56,7 @@ int64_t __zipos_seek(struct ZiposHandle *, int64_t, unsigned);
 int __zipos_fcntl(int, int, uintptr_t);
 int __zipos_notat(int, const char *);
 void *__zipos_mmap(void *, uint64_t, int32_t, int32_t, struct ZiposHandle *,
-                   int64_t) dontasan;
+                   int64_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

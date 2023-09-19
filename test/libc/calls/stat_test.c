@@ -37,7 +37,9 @@
 
 __static_yoink("zipos");
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 TEST(stat_010, testEmptyFile_sizeIsZero) {
   struct stat st;

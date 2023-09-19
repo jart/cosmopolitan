@@ -22,5 +22,5 @@
 #include "libc/runtime/syslib.internal.h"
 
 int sys_clock_gettime_m1(int clock, struct timespec *ts) {
-  return _sysret(__syslib->clock_gettime(clock, ts));
+  return _sysret(__syslib->__clock_gettime(clock, ts));
 }

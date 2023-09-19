@@ -25,7 +25,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 
-dontasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
+textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   int i, rc = 0;
   char *a, *b, *x, *y;
   __mmi_lock();

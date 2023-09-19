@@ -42,7 +42,7 @@ __static_yoink("__cxa_finalize");
  * @return 0 on success or nonzero w/ errno
  * @note folks have forked libc in past just to unbloat atexit()
  */
-dontasan int __cxa_atexit(void *fp, void *arg, void *pred) {
+int __cxa_atexit(void *fp, void *arg, void *pred) {
   /* asan runtime depends on this function */
   unsigned i;
   struct CxaAtexitBlock *b, *b2;

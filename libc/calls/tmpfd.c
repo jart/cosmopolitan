@@ -44,8 +44,7 @@ int _mkstemp(char *, int);
  *
  * This creates a secure temporary file inside $TMPDIR. If it isn't
  * defined, then /tmp is used on UNIX and GetTempPath() is used on the
- * New Technology. This resolution of $TMPDIR happens once in a ctor,
- * which is copied to the `kTmpPath` global.
+ * New Technology. This resolution of $TMPDIR happens once in a ctor.
  *
  * Once close() is called, the returned file is guaranteed to be deleted
  * automatically. On UNIX the file is unlink()'d before this function
@@ -81,14 +80,14 @@ int tmpfd(void) {
   char path[PATH_MAX + 1];
   if (IsLinux()) {
     e = errno;
-    if ((fd = open(kTmpPath, O_RDWR | O_TMPFILE_LINUX, 0600)) != -1) {
+    if ((fd = open(__get_tmpdir(), O_RDWR | O_TMPFILE_LINUX, 0600)) != -1) {
       return fd;
     } else {
       errno = e;
     }
   }
   path[0] = 0;
-  strlcat(path, kTmpPath, sizeof(path));
+  strlcat(path, __get_tmpdir(), sizeof(path));
   if (!(prog = program_invocation_short_name)) prog = "tmp";
   strlcat(path, prog, sizeof(path));
   strlcat(path, ".XXXXXX", sizeof(path));

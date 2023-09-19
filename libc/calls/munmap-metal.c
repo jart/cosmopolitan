@@ -20,7 +20,7 @@
 #include "libc/runtime/pc.internal.h"
 #ifdef __x86_64__
 
-dontasan int sys_munmap_metal(void *addr, size_t size) {
+int sys_munmap_metal(void *addr, size_t size) {
   size_t i;
   uint64_t *e, paddr;
   struct mman *mm = __get_mm();

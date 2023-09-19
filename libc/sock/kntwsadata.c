@@ -49,6 +49,6 @@ textwindows dontasan void WinSockInit(void) {
   NTTRACE("WSAStartup()");
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
-    ExitProcess(1 << 8);
+    _Exit(1);
   }
 }

@@ -25,13 +25,15 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
-
 void CheckPlatform(void) {
   if (IsOpenbsd()) return;                       // openbsd is ok
   if (IsLinux() && __is_linux_2_6_23()) return;  // non-ancient linux is ok
   kprintf("skipping openbsd_test\n");
   exit(0);
+}
+
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
 }
 
 void SetUp(void) {

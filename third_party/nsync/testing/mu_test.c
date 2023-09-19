@@ -227,7 +227,7 @@ static void counting_loop_try_mu (test_data *td, int id) {
 	int n = td->loop_count;
 	for (i = 0; i != n; i++) {
 		while (!nsync_mu_trylock (&td->mu)) {
-			sched_yield ();
+			pthread_yield ();
 		}
 		td->id = id;
 		td->i++;

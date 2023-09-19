@@ -40,7 +40,7 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
   if (!usage) return 0;
   me = GetCurrentProcess();
   if (!(who == RUSAGE_SELF ? GetProcessTimes : GetThreadTimes)(
-          (who == RUSAGE_SELF ? GetCurrentProcess : GetCurrentThread)(),
+          who == RUSAGE_SELF ? GetCurrentProcess() : GetCurrentThread(),
           &ftCreation, &ftExit, &ftKernel, &ftUser) ||
       !GetProcessMemoryInfo(me, &memcount, sizeof(memcount)) ||
       !GetProcessIoCounters(me, &iocount)) {

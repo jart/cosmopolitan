@@ -47,7 +47,7 @@ uint32_t getuid(void) {
   } else if (!IsWindows()) {
     rc = sys_getuid();
   } else {
-    rc = __synthesize_uid();
+    rc = sys_getuid_nt();
   }
   npassert(rc >= 0);
   STRACE("%s() → %d", "getuid", rc);
@@ -72,7 +72,7 @@ uint32_t getgid(void) {
   } else if (!IsWindows()) {
     rc = sys_getgid();
   } else {
-    rc = __synthesize_uid();
+    rc = sys_getuid_nt();
   }
   npassert(rc >= 0);
   STRACE("%s() → %d", "getgid", rc);

@@ -26,7 +26,7 @@
 axdx_t sys_gettimeofday_m1(struct timeval *tv, struct timezone *tz, void *wut) {
   axdx_t ad;
   struct timespec ts;
-  ad.ax = _sysret(__syslib->clock_gettime(CLOCK_REALTIME, &ts));
+  ad.ax = _sysret(__syslib->__clock_gettime(CLOCK_REALTIME, &ts));
   ad.dx = 0;
   if (!ad.ax && tv) {
     *tv = timespec_totimeval(ts);

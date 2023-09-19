@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
 #define ITERATIONS 50000
@@ -32,7 +32,7 @@ atomic_int writes;
 pthread_rwlock_t lock;
 pthread_barrier_t barrier;
 
-int Reader(void *arg, int tid) {
+void *Reader(void *arg) {
   pthread_barrier_wait(&barrier);
   for (int i = 0; i < ITERATIONS; ++i) {
     ASSERT_EQ(0, pthread_rwlock_rdlock(&lock));
@@ -42,7 +42,7 @@ int Reader(void *arg, int tid) {
   return 0;
 }
 
-int Writer(void *arg, int tid) {
+void *Writer(void *arg) {
   pthread_barrier_wait(&barrier);
   for (int i = 0; i < ITERATIONS; ++i) {
     ASSERT_EQ(0, pthread_rwlock_wrlock(&lock));
@@ -54,13 +54,14 @@ int Writer(void *arg, int tid) {
 
 TEST(pthread_rwlock_rdlock, test) {
   int i;
-  struct spawn *t = _gc(malloc(sizeof(struct spawn) * (READERS + WRITERS)));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * (READERS + WRITERS)));
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, READERS + WRITERS));
   for (i = 0; i < READERS + WRITERS; ++i) {
-    ASSERT_SYS(0, 0, _spawn(i < READERS ? Reader : Writer, 0, t + i));
+    ASSERT_SYS(0, 0,
+               pthread_create(t + i, 0, i < READERS ? Reader : Writer, 0));
   }
   for (i = 0; i < READERS + WRITERS; ++i) {
-    EXPECT_SYS(0, 0, _join(t + i));
+    EXPECT_SYS(0, 0, pthread_join(t[i], 0));
   }
   EXPECT_EQ(READERS * ITERATIONS, reads);
   EXPECT_EQ(WRITERS * ITERATIONS, writes);

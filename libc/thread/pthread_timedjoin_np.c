@@ -17,14 +17,67 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
+#include "third_party/nsync/futex.internal.h"
+
+// TODO(jart): Use condition variable for thread waiting.
+
+static const char *DescribeReturnValue(char buf[30], int err, void **value) {
+  char *p = buf;
+  if (!value) return "NULL";
+  if (err) return "[n/a]";
+  *p++ = '[';
+  p = FormatHex64(p, (uintptr_t)*value, 1);
+  *p++ = ']';
+  return buf;
+}
+
+/**
+ * Blocks until memory location becomes zero.
+ *
+ * This is intended to be used on the child thread id, which is updated
+ * by the clone() system call when a thread terminates. We need this in
+ * order to know when it's safe to free a thread's stack. This function
+ * uses futexes on Linux, FreeBSD, OpenBSD, and Windows. On other
+ * platforms this uses polling with exponential backoff.
+ *
+ * @return 0 on success, or errno on error
+ * @raise ECANCELED if calling thread was cancelled in masked mode
+ * @raise EBUSY if `abstime` was specified and deadline expired
+ * @cancellationpoint
+ */
+static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
+  int x, e, rc = 0;
+  unassert(ctid != &__get_tls()->tib_tid);
+  // "If the thread calling pthread_join() is canceled, then the target
+  //  thread shall not be detached."  ──Quoth POSIX.1-2017
+  if (!(rc = pthread_testcancel_np())) {
+    BEGIN_CANCELLATION_POINT;
+    while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
+      e = nsync_futex_wait_(ctid, x, !IsWindows(), abstime);
+      if (e == -ECANCELED) {
+        rc = ECANCELED;
+        break;
+      } else if (e == -ETIMEDOUT) {
+        rc = EBUSY;
+        break;
+      }
+    }
+    END_CANCELLATION_POINT;
+  }
+  return rc;
+}
 
 /**
  * Waits for thread to terminate.
@@ -50,7 +103,7 @@
  */
 errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
                              struct timespec *abstime) {
-  errno_t rc;
+  errno_t err;
   struct PosixThread *pt;
   enum PosixThreadStatus status;
   pt = (struct PosixThread *)thread;
@@ -59,15 +112,18 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   //  argument to pthread_join() does not refer to a joinable thread."
   //                                  ──Quoth POSIX.1-2017
   unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
-  if (!(rc = _wait0(&pt->tib->tib_tid, abstime))) {
+  if (!(err = _pthread_wait(&pt->tib->tib_tid, abstime))) {
     pthread_spin_lock(&_pthread_lock);
     dll_remove(&_pthread_list, &pt->list);
     pthread_spin_unlock(&_pthread_lock);
     if (value_ptr) {
       *value_ptr = pt->rc;
     }
-    _pthread_free(pt);
-    pthread_decimate_np();
+    _pthread_free(pt, false);
+    _pthread_decimate();
   }
-  return 0;
+  STRACE("pthread_timedjoin_np(%d, %s, %s) → %s", _pthread_tid(pt),
+         DescribeReturnValue(alloca(30), err, value_ptr),
+         DescribeTimespec(err ? -1 : 0, abstime), DescribeErrno(err));
+  return err;
 }

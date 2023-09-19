@@ -216,7 +216,7 @@ TEST(ksnprintf, testSymbols) {
   if (hassymbols) {
     ASSERT_STREQ("&strlen", b[0]);
   } else {
-    ksnprintf(b[1], 32, "&%x", strlen);
+    ksnprintf(b[1], 32, "&%lx", strlen);
     ASSERT_STREQ(b[1], b[0]);
   }
 }

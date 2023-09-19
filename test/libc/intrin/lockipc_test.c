@@ -70,7 +70,7 @@ TEST(lockipc, mutex) {
   // wait for processes to finish
   for (;;) {
     e = errno;
-    if ((pid = waitpid(0, &ws, 0)) != -1) {
+    if ((pid = waitpid(-1, &ws, 0)) != -1) {
       if (WIFSIGNALED(ws)) {
         kprintf("process %d terminated with %G\n", pid, WTERMSIG(ws));
         testlib_incrementfailed();

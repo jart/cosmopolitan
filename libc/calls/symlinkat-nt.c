@@ -31,6 +31,7 @@
 #include "libc/nt/struct/luid.h"
 #include "libc/nt/struct/tokenprivileges.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/stack.h"
 #include "libc/sysv/errfuns.h"
 
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
@@ -55,17 +56,23 @@ static textwindows void InitializeWinlink(void) {
 
 textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
                                  const char *linkpath) {
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wframe-larger-than="
+  struct {
+    char16_t target16[PATH_MAX];
+    char16_t linkpath16[PATH_MAX];
+  } M;
+  CheckLargeStackAllocation(&M, sizeof(M));
+#pragma GCC pop_options
   int targetlen;
   uint32_t attrs, flags;
-  char16_t target16[PATH_MAX];
-  char16_t linkpath16[PATH_MAX];
 
   // convert the paths
-  if (__mkntpathat(newdirfd, linkpath, 0, linkpath16) == -1) return -1;
-  if ((targetlen = __mkntpath(target, target16)) == -1) return -1;
+  if (__mkntpathat(newdirfd, linkpath, 0, M.linkpath16) == -1) return -1;
+  if ((targetlen = __mkntpath(target, M.target16)) == -1) return -1;
 
   // determine if we need directory flag
-  if ((attrs = __imp_GetFileAttributesW(target16)) != -1u) {
+  if ((attrs = __imp_GetFileAttributesW(M.target16)) != -1u) {
     if (attrs & kNtFileAttributeDirectory) {
       flags = kNtSymbolicLinkFlagDirectory;
     } else {
@@ -75,7 +82,7 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
     // win32 needs to know if it's a directory of a file symlink, but
     // that's hard to determine if we're creating a broken symlink so
     // we'll fall back to checking for trailing slash
-    if (targetlen && target16[targetlen - 1] == '\\') {
+    if (targetlen && M.target16[targetlen - 1] == '\\') {
       flags = kNtSymbolicLinkFlagDirectory;
     } else {
       flags = 0;
@@ -90,9 +97,9 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
   }
 
   // we can now proceed
-  if (CreateSymbolicLink(linkpath16, target16, flags)) {
+  if (CreateSymbolicLink(M.linkpath16, M.target16, flags)) {
     return 0;
   } else {
-    return __fix_enotdir(-1, linkpath16);
+    return __fix_enotdir(-1, M.linkpath16);
   }
 }

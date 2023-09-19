@@ -24,7 +24,9 @@
  * https://github.com/jart/cosmopolitan/issues/61#issuecomment-792214575
  */
 
-char testlib_enable_tmp_setup_teardown;
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 int writefile(const char* filename) {
   int stat = 0;

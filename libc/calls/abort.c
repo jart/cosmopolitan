@@ -40,5 +40,5 @@ wontreturn void abort(void) {
   raise(SIGABRT);
   signal(SIGABRT, SIG_DFL);
   raise(SIGABRT);
-  notpossible;
+  _Exit(128 + SIGABRT);
 }

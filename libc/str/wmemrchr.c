@@ -37,7 +37,7 @@ static inline const wchar_t *wmemrchr_pure(const wchar_t *s, wchar_t c,
 }
 
 #if defined(__x86_64__) && !defined(__chibicc__)
-dontasan static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
+static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
                                                    size_t n) {
   size_t i;
   unsigned m;

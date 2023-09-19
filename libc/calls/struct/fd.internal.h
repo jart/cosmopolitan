@@ -1,5 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_FD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_FD_INTERNAL_H_
+#include "libc/nt/struct/overlapped.h"
+#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -25,7 +27,6 @@ COSMOPOLITAN_C_START_
 
 struct Fd {
   char kind;
-  bool zombie;
   bool dontclose;
   char buflen;
   char buf[4];
@@ -33,6 +34,8 @@ struct Fd {
   unsigned mode;
   int64_t handle;
   int64_t extra;
+  int64_t pointer;
+  pthread_mutex_t lock;
 };
 
 struct StdinRelay {
@@ -42,6 +45,7 @@ struct StdinRelay {
   int64_t reader; /* ReadFile() use this instead */
   int64_t writer; /* only used by WinStdinThread */
   int64_t thread; /* handle for the stdio thread */
+  struct NtOverlapped overlap;
 };
 
 struct Fds {

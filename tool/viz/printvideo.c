@@ -33,6 +33,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
@@ -42,6 +43,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/xchg.internal.h"
 #include "libc/log/check.h"
@@ -88,6 +90,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 #include "libc/x/xsigaction.h"
 #include "third_party/getopt/getopt.internal.h"
@@ -174,11 +177,11 @@ mode.\n\
     *(B) = pvalloc(N);                      \
   })
 
-#define TIMEIT(OUT_NANOS, FORM)                        \
-  do {                                                 \
-    long double Start = nowl();                        \
-    FORM;                                              \
-    (OUT_NANOS) = (uint64_t)((nowl() - Start) * 1e9L); \
+#define TIMEIT(OUT_NANOS, FORM)                                           \
+  do {                                                                    \
+    struct timespec Start = timespec_real();                              \
+    FORM;                                                                 \
+    (OUT_NANOS) = timespec_tonanos(timespec_sub(timespec_real(), Start)); \
   } while (0)
 
 typedef bool (*openspeaker_f)(void);
@@ -278,9 +281,9 @@ static uint64_t t1, t2, t3, t4, t5, t6, t8;
 static const char *sox_, *ffplay_, *patharg_;
 static struct VtFrame vtframe_[2], *f1_, *f2_;
 static struct Graphic graphic_[2], *g1_, *g2_;
-static long double deadline_, dura_, starttime_;
+static struct timespec deadline_, dura_, starttime_;
 static bool yes_, stats_, dither_, ttymode_, istango_;
-static long double decode_start_, f1_start_, f2_start_;
+static struct timespec decode_start_, f1_start_, f2_start_;
 static int16_t pcm_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static int16_t pcmscale_[PLM_AUDIO_SAMPLES_PER_FRAME * 2 / 8][8];
 static bool fullclear_, historyclear_, tuned_, yonly_, gotvideo_;
@@ -308,23 +311,18 @@ static void StrikeDownCrapware(int sig) {
   kill(playpid_, SIGKILL);
 }
 
-static long AsMilliseconds(long double ts) {
-  return rintl(ts * 1e3);
-}
-
-static long AsNanoseconds(long double ts) {
-  return rintl(ts * 1e9);
-}
-
-static long double GetGraceTime(void) {
-  return deadline_ - nowl();
+static struct timespec GetGraceTime(void) {
+  return timespec_sub(deadline_, timespec_real());
 }
 
 static int GetNamedVector(const struct NamedVector *choices, size_t n,
                           const char *s) {
   int i;
   char name[sizeof(choices->name)];
-  strlcpy(name, s, sizeof(name));
+#pragma GCC push_options
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+  strncpy(name, s, sizeof(name));
+#pragma GCC pop_options
   strntoupper(name, sizeof(name));
   for (i = 0; i < n; ++i) {
     if (memcmp(choices[i].name, name, sizeof(name)) == 0) {
@@ -345,7 +343,7 @@ static int GetLighting(const char *s) {
 static bool CloseSpeaker(void) {
   int rc, wstatus;
   rc = 0;
-  sched_yield();
+  pthread_yield();
   if (playfd_) {
     rc |= close(playfd_);
     playfd_ = -1;
@@ -375,8 +373,13 @@ static void ResizeVtFrame(struct VtFrame *f, size_t yn, size_t xn) {
   f->i = f->n = 0;
 }
 
+static float timespec_tofloat(struct timespec ts) {
+  return ts.tv_sec + ts.tv_nsec * 1e-9;
+}
+
 static void RecordFactThatFrameWasFullyRendered(void) {
-  fcring_.p[fcring_.i] = nowl() - starttime_;
+  fcring_.p[fcring_.i] =
+      timespec_tofloat(timespec_sub(timespec_real(), starttime_));
   fcring_.n += 1;
   fcring_.i += 1;
   fcring_.i &= ARRAYLEN(fcring_.p) - 1;
@@ -521,7 +524,7 @@ static bool OpenSpeaker(void) {
     if (ffplay_) tryspeakerfns_[i++] = TryFfplay;
     if (sox_) tryspeakerfns_[i++] = TrySox;
   }
-  snprintf(fifopath_, sizeof(fifopath_), "%s%s.%d.%d.wav", kTmpPath,
+  snprintf(fifopath_, sizeof(fifopath_), "%s%s.%d.%d.wav", __get_tmpdir(),
            firstnonnull(program_invocation_short_name, "unknown"), getpid(),
            count);
   for (i = 0; i < ARRAYLEN(tryspeakerfns_); ++i) {
@@ -539,7 +542,7 @@ static bool OpenSpeaker(void) {
 
 static void OnAudio(plm_t *mpeg, plm_samples_t *samples, void *user) {
   if (playfd_ != -1) {
-    DEBUGF("OnAudio() [grace=%,ldns]", AsNanoseconds(GetGraceTime()));
+    DEBUGF("OnAudio() [grace=%,ldns]", timespec_tonanos(GetGraceTime()));
     CHECK_EQ(2, chans_);
     CHECK_EQ(ARRAYLEN(pcm_) * 8, samples->count * chans_);
     float2short(ARRAYLEN(pcm_), pcm_, (void *)samples->interleaved);
@@ -549,7 +552,7 @@ static void OnAudio(plm_t *mpeg, plm_samples_t *samples, void *user) {
   TryAgain:
     if (WriteAudio(playfd_, pcm_, sizeof(pcm_), 1000) != -1) {
       DEBUGF("WriteAudio(%d, %zu) ok [grace=%,ldns]", playfd_,
-             samples->count * 2, AsNanoseconds(GetGraceTime()));
+             samples->count * 2, timespec_tonanos(GetGraceTime()));
     } else {
       WARNF("WriteAudio(%d, %zu) failed: %s", playfd_, samples->count * 2,
             strerror(errno));
@@ -765,7 +768,7 @@ static void RasterIt(void) {
 static void TranscodeVideo(plm_frame_t *pf) {
   CHECK_EQ(pf->cb.width, pf->cr.width);
   CHECK_EQ(pf->cb.height, pf->cr.height);
-  DEBUGF("TranscodeVideo() [grace=%,ldns]", AsNanoseconds(GetGraceTime()));
+  DEBUGF("TranscodeVideo() [grace=%,ldns]", timespec_tonanos(GetGraceTime()));
   g2_ = &graphic_[1];
   t5 = 0;
 
@@ -879,8 +882,9 @@ static ssize_t WriteVideoCall(void) {
       if (plm_get_audio_enabled(plm_)) {
         plm_set_audio_lead_time(
             plm_,
-            MAX(0, MIN(nowl() - f1_start_, plm_get_samplerate(plm_) /
-                                               PLM_AUDIO_SAMPLES_PER_FRAME)));
+            max(0,
+                min(timespec_tofloat(timespec_sub(timespec_real(), f1_start_)),
+                    plm_get_samplerate(plm_) / PLM_AUDIO_SAMPLES_PER_FRAME)));
       }
       f1_start_ = f2_start_;
       f1_->i = f1_->n = 0;
@@ -904,10 +908,10 @@ static void DrainVideo(void) {
 
 static void WriteVideo(void) {
   ssize_t rc;
-  DEBUGF("write(tty) grace=%,ldns", AsNanoseconds(GetGraceTime()));
+  DEBUGF("write(tty) grace=%,ldns", timespec_tonanos(GetGraceTime()));
   if ((rc = WriteVideoCall()) != -1) {
     DEBUGF("write(tty) → %zd [grace=%,ldns]", rc,
-           AsNanoseconds(GetGraceTime()));
+           timespec_tonanos(GetGraceTime()));
   } else if (errno == EAGAIN || errno == EINTR) {
     DEBUGF("write(tty) → EINTR");
     longjmp(jbi_, 1);
@@ -1269,11 +1273,11 @@ static void PerformBestEffortIo(void) {
       {infd_, POLLIN},
       {outfd_, f1_ && f1_->n ? POLLOUT : 0},
   };
-  pollms = MAX(0, AsMilliseconds(GetGraceTime()));
+  pollms = MAX(0, timespec_tomillis(GetGraceTime()));
   DEBUGF("poll() ms=%,d", pollms);
   if ((toto = poll(fds, ARRAYLEN(fds), pollms)) != -1) {
     DEBUGF("poll() toto=%d [grace=%,ldns]", toto,
-           AsNanoseconds(GetGraceTime()));
+           timespec_tonanos(GetGraceTime()));
     if (toto) {
       if (fds[0].revents & (POLLIN | POLLERR)) ReadKeyboard();
       if (fds[1].revents & (POLLOUT | POLLERR)) WriteVideo();
@@ -1305,32 +1309,36 @@ static void HandleSignals(void) {
 }
 
 static void PrintVideo(void) {
-  long double decode_last, decode_end, next_tick, lag;
-  dura_ = MIN(MAX_FRAMERATE, 1 / plm_get_framerate(plm_));
+  struct timespec decode_last, decode_end, next_tick, lag;
+  dura_ = timespec_frommicros(min(MAX_FRAMERATE, 1 / plm_get_framerate(plm_)) *
+                              1e6);
   INFOF("framerate=%f dura=%f", plm_get_framerate(plm_), dura_);
-  next_tick = deadline_ = decode_last = nowl();
-  next_tick += dura_;
-  deadline_ += dura_;
+  next_tick = deadline_ = decode_last = timespec_real();
+  next_tick = timespec_add(next_tick, dura_);
+  deadline_ = timespec_add(deadline_, dura_);
   do {
-    DEBUGF("plm_decode [grace=%,ldns]", AsNanoseconds(GetGraceTime()));
-    decode_start_ = nowl();
-    plm_decode(plm_, decode_start_ - decode_last);
+    DEBUGF("plm_decode [grace=%,ldns]", timespec_tonanos(GetGraceTime()));
+    decode_start_ = timespec_real();
+    plm_decode(plm_,
+               timespec_tofloat(timespec_sub(decode_start_, decode_last)));
     decode_last = decode_start_;
-    decode_end = nowl();
-    lag = decode_end - decode_start_;
-    while (decode_end + lag > next_tick) next_tick += dura_;
-    deadline_ = next_tick - lag;
+    decode_end = timespec_real();
+    lag = timespec_sub(decode_end, decode_start_);
+    while (timespec_cmp(timespec_add(decode_end, lag), next_tick) > 0) {
+      next_tick = timespec_add(next_tick, dura_);
+    }
+    deadline_ = timespec_sub(next_tick, lag);
     if (gotvideo_ || !plm_get_video_enabled(plm_)) {
       gotvideo_ = false;
       INFOF("entering printvideo event loop (lag=%,ldns, grace=%,ldns)",
-            AsNanoseconds(lag), AsNanoseconds(GetGraceTime()));
+            timespec_tonanos(lag), timespec_tonanos(GetGraceTime()));
     }
     do {
       if (!setjmp(jbi_)) {
         PerformBestEffortIo();
       }
       HandleSignals();
-    } while (AsMilliseconds(GetGraceTime()) > 0);
+    } while (timespec_tomillis(GetGraceTime()) > 0);
   } while (plm_ && !plm_has_ended(plm_));
 }
 
@@ -1366,7 +1374,7 @@ static void PrintUsage(int rc, FILE *f) {
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
-  snprintf(logpath_, sizeof(logpath_), "%s%s.log", kTmpPath,
+  snprintf(logpath_, sizeof(logpath_), "%s%s.log", __get_tmpdir(),
            firstnonnull(program_invocation_short_name, "unknown"));
   while ((opt = getopt(argc, argv, "?34AGSTVYabdfhnpstxyzvL:")) != -1) {
     switch (opt) {
@@ -1533,6 +1541,7 @@ static void TryToOpenFrameBuffer(void) {
 int main(int argc, char *argv[]) {
   sigset_t wut;
   const char *s;
+  ShowCrashReports();
   gamma_ = 2.4;
   volscale_ -= 2;
   dither_ = true;
@@ -1581,7 +1590,7 @@ int main(int argc, char *argv[]) {
     if (t2 > t1) longjmp(jb_, 1);
     OpenVideo();
     DimensionDisplay();
-    starttime_ = nowl();
+    starttime_ = timespec_real();
     PrintVideo();
   }
   INFOF("jb_ triggered");

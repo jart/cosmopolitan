@@ -34,8 +34,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
-#include "libc/thread/wait0.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
 #define DUB(i) (union Dub){i}.x
@@ -53,11 +52,10 @@ union Dub {
 };
 
 void SetUpOnce(void) {
-  __enable_threads();
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-int Worker(void *p, int tid) {
+void *Worker(void *p) {
   int i;
   char str[64];
   for (i = 0; i < 256; ++i) {
@@ -70,9 +68,13 @@ int Worker(void *p, int tid) {
 
 TEST(dtoa, locks) {
   int i, n = 32;
-  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  }
+  for (i = 0; i < n; ++i) {
+    EXPECT_EQ(0, pthread_join(t[i], 0));
+  }
 }
 
 static const struct {

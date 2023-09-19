@@ -19,6 +19,7 @@ LIBC_TESTLIB_A_ASSETS =						\
 	libc/testlib/moby.txt
 
 LIBC_TESTLIB_A_HDRS =						\
+	libc/testlib/aspect.internal.h				\
 	libc/testlib/bench.h					\
 	libc/testlib/blocktronics.h				\
 	libc/testlib/ezbench.h					\
@@ -32,7 +33,6 @@ LIBC_TESTLIB_A_HDRS =						\
 LIBC_TESTLIB_A_SRCS_S =						\
 	libc/testlib/bench.S					\
 	libc/testlib/blocktronics.S				\
-	libc/testlib/combo.S					\
 	libc/testlib/fixture.S					\
 	libc/testlib/hyperion.S					\
 	libc/testlib/moby.S					\
@@ -45,7 +45,6 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/benchrunner.c				\
 	libc/testlib/binequals.c				\
 	libc/testlib/clearxmmregisters.c			\
-	libc/testlib/comborunner.c				\
 	libc/testlib/contains.c					\
 	libc/testlib/endswith.c					\
 	libc/testlib/extract.c					\
@@ -67,7 +66,6 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/hexequals.c				\
 	libc/testlib/incrementfailed.c				\
 	libc/testlib/memoryexists.c				\
-	libc/testlib/quota.c					\
 	libc/testlib/seterrno.c					\
 	libc/testlib/shoulddebugbreak.c				\
 	libc/testlib/showerror.c				\
@@ -77,6 +75,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/strerror.c					\
 	libc/testlib/testrunner.c				\
 	libc/testlib/thunks.c					\
+	libc/testlib/tmptest.c					\
 	libc/testlib/waitforexit.c				\
 	libc/testlib/waitforterm.c				\
 	libc/testlib/yield.c
@@ -98,6 +97,7 @@ LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_NT_KERNEL32					\
+	LIBC_PROC						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\
@@ -132,8 +132,6 @@ o/$(MODE)/libc/testlib/moby.o: libc/testlib/moby.txt
 o/$(MODE)/libc/testlib/bench.o: libc/testlib/bench.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/testlib/blocktronics.o: libc/testlib/blocktronics.S
-	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
-o/$(MODE)/libc/testlib/combo.o: libc/testlib/combo.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/libc/testlib/fixture.o: libc/testlib/fixture.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<

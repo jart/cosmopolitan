@@ -39,13 +39,13 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/append.h"
-#include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -249,8 +249,8 @@ void StartTcpServer(void) {
   uint32_t asize;
   g_servfd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
   if (g_servfd == -1) {
-    fprintf(stderr, program_invocation_short_name,
-            ": socket failed: ", strerror(errno), "\n", NULL);
+    fprintf(stderr, "%s: socket failed: %s\n", program_invocation_short_name,
+            strerror(errno));
     exit(1);
   }
   struct timeval timeo = {DEATH_CLOCK_SECONDS / 10};
@@ -259,8 +259,8 @@ void StartTcpServer(void) {
   setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
   if (bind(g_servfd, (struct sockaddr *)&g_servaddr, sizeof(g_servaddr)) ==
       -1) {
-    fprintf(stderr, program_invocation_short_name,
-            ": bind failed: ", strerror(errno), "\n", NULL);
+    fprintf(stderr, "%s: bind failed: %s\n", program_invocation_short_name,
+            strerror(errno));
     exit(1);
   }
   unassert(!listen(g_servfd, 10));
@@ -474,7 +474,7 @@ void *ClientWorker(void *arg) {
   crc = READ32BE(msg + 13);
   origname = gc(calloc(1, namesize + 1));
   Recv(client, origname, namesize);
-  INFOF("%s sent %#s (%'u bytes @ %#s)", addrstr, origname, filesize,
+  VERBF("%s sent %#s (%'u bytes @ %#s)", addrstr, origname, filesize,
         client->tmpexepath);
   char *exedata = gc(malloc(filesize));
   Recv(client, exedata, filesize);
@@ -490,14 +490,23 @@ void *ClientWorker(void *arg) {
   // thus we use an optimistic approach to avoid expensive locks
   sprintf(client->tmpexepath, "o/%s.XXXXXX.com", basename(origname));
   int exefd = openatemp(AT_FDCWD, client->tmpexepath, 4, O_CLOEXEC, 0700);
-  ftruncate(exefd, filesize);
+  if (exefd == -1) {
+    WARNF("%s failed to open temporary file %#s due to %m", addrstr,
+          client->tmpexepath);
+    pthread_exit(0);
+  }
+  if (ftruncate(exefd, filesize)) {
+    WARNF("%s failed to write %#s due to %m", addrstr, origname);
+    close(exefd);
+    pthread_exit(0);
+  }
   if (write(exefd, exedata, filesize) != filesize) {
-    WARNF("%s failed to write %#s", addrstr, origname);
+    WARNF("%s failed to write %#s due to %m", addrstr, origname);
     close(exefd);
     pthread_exit(0);
   }
   if (close(exefd)) {
-    WARNF("%s failed to close %#s", addrstr, origname);
+    WARNF("%s failed to close %#s due to %m", addrstr, origname);
     pthread_exit(0);
   }
 
@@ -534,9 +543,11 @@ RetryOnEtxtbsyRaceCondition:
     }
   }
   errno_t err;
+  struct timespec started;
   posix_spawnattr_t spawnattr;
   posix_spawn_file_actions_t spawnfila;
   sigemptyset(&sigmask);
+  started = timespec_real();
   pipe2(client->pipe, O_CLOEXEC);
   posix_spawnattr_init(&spawnattr);
   posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_SETPGROUP);
@@ -591,8 +602,8 @@ RetryOnEtxtbsyRaceCondition:
         INFOF("poll interrupted");
         continue;
       } else {
-        WARNF("killing %d %s and hanging up %d because poll failed", client->fd,
-              origname, client->pid);
+        WARNF("killing %d %s and hanging up %d because poll failed with %m",
+              client->fd, origname, client->pid);
         goto HangupClientAndTerminateJob;
       }
     }
@@ -615,6 +626,10 @@ RetryOnEtxtbsyRaceCondition:
           WARNF("%s (pid %d) is taking a really long time", origname,
                 client->pid);
           continue;
+        }
+        if (received == MBEDTLS_ERR_SSL_CANCELED) {  // EAGAIN SO_RCVTIMEO
+          WARNF("%s (pid %d) is is canceling job", origname, client->pid);
+          goto HangupClientAndTerminateJob;
         }
         WARNF("client ssl read failed with -0x%04x (%s) so killing %s",
               -received, GetTlsError(received), origname);
@@ -647,21 +662,28 @@ WaitAgain:
       kill(client->pid, SIGINT);
       goto WaitAgain;
     }
+    if (errno == ECANCELED) {
+      WARNF("thread is canceled; killing %s pid %d", origname, client->pid);
+      kill(client->pid, SIGKILL);
+      goto WaitAgain;
+    }
     WARNF("waitpid failed %m");
     client->pid = 0;
     goto HangupClientAndTerminateJob;
   }
   client->pid = 0;
   int exitcode;
+  struct timespec ended = timespec_real();
+  int64_t micros = timespec_tomicros(timespec_sub(ended, started));
   if (WIFEXITED(wstatus)) {
     if (WEXITSTATUS(wstatus)) {
-      WARNF("%s on %s exited with %d", origname, g_hostname,
-            WEXITSTATUS(wstatus));
-      appendf(&client->output, "------ %s %s $?=%d (0x%08x) ------\n",
-              g_hostname, origname, WEXITSTATUS(wstatus), wstatus);
+      WARNF("%s on %s exited with $?=%d after %'ldµs", origname, g_hostname,
+            WEXITSTATUS(wstatus), micros);
+      appendf(&client->output, "------ %s %s $?=%d (0x%08x) %,ldµs ------\n",
+              g_hostname, origname, WEXITSTATUS(wstatus), wstatus, micros);
     } else {
-      VERBF("%s on %s exited with %d", origname, g_hostname,
-            WEXITSTATUS(wstatus));
+      INFOF("%s on %s exited with $?=%d after %'ldµs", origname, g_hostname,
+            WEXITSTATUS(wstatus), micros);
     }
     exitcode = WEXITSTATUS(wstatus);
   } else if (WIFSIGNALED(wstatus)) {
@@ -670,14 +692,16 @@ WaitAgain:
       client->output = 0;
       goto RetryOnEtxtbsyRaceCondition;
     }
-    WARNF("%s on %s terminated with %s", origname, g_hostname,
-          strsignal(WTERMSIG(wstatus)));
+    char sigbuf[21];
+    WARNF("%s on %s terminated after %'ldµs with %s", origname, g_hostname,
+          micros, strsignal_r(WTERMSIG(wstatus), sigbuf));
     exitcode = 128 + WTERMSIG(wstatus);
-    appendf(&client->output, "------ %s %s $?=%s (0x%08x) ------\n", g_hostname,
-            origname, strsignal(WTERMSIG(wstatus)), wstatus);
+    appendf(&client->output, "------ %s %s $?=%s (0x%08x) %,ldµs ------\n",
+            g_hostname, origname, strsignal(WTERMSIG(wstatus)), wstatus,
+            micros);
   } else {
-    WARNF("%s on %s died with wait status 0x%08x", origname, g_hostname,
-          wstatus);
+    WARNF("%s on %s died after %'ldµs with wait status 0x%08x", origname,
+          g_hostname, micros, wstatus);
     exitcode = 127;
   }
   if (wstatus) {
@@ -701,6 +725,7 @@ void HandleClient(void) {
   client->addrsize = sizeof(client->addr);
   for (;;) {
     if (g_interrupted) {
+      pthread_cancel(0);
       free(client);
       return;
     }
@@ -765,7 +790,7 @@ void Daemonize(void) {
 }
 
 int main(int argc, char *argv[]) {
-#if IsModeDbg()
+#ifndef NDEBUG
   ShowCrashReports();
 #endif
   GetOpts(argc, argv);

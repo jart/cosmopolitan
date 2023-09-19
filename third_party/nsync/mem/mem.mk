@@ -38,10 +38,17 @@ $(THIRD_PARTY_NSYNC_MEM_A).pkg:			\
 		$(THIRD_PARTY_NSYNC_MEM_A_OBJS)	\
 		$(foreach x,$(THIRD_PARTY_NSYNC_MEM_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_NSYNC_MEM_A_OBJS): private	\
-		CCFLAGS +=			\
-			-ffunction-sections	\
-			-fdata-sections
+# offer assurances about the stack safety of cosmo libc
+$(THIRD_PARTY_NSYNC_MEM_A_OBJS): private COPTS += -Wframe-larger-than=4096 -Walloca-larger-than=4096
+
+$(THIRD_PARTY_NSYNC_MEM_A_OBJS): private		\
+		COPTS +=				\
+			-ffreestanding			\
+			-fdata-sections			\
+			-ffunction-sections		\
+			-fno-sanitize=address		\
+			-Wframe-larger-than=4096	\
+			-Walloca-larger-than=4096
 
 THIRD_PARTY_NSYNC_MEM_LIBS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)))
 THIRD_PARTY_NSYNC_MEM_SRCS = $(foreach x,$(THIRD_PARTY_NSYNC_MEM_ARTIFACTS),$($(x)_SRCS))

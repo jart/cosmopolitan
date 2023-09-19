@@ -42,7 +42,10 @@
 volatile bool gotsegv;
 volatile bool gotbusted;
 struct sigaction old[2];
-char testlib_enable_tmp_setup_teardown;
+
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
 
 #ifdef __x86_64__
 static const char kRet31337[] = {

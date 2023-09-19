@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/core/core.h"
 #include "dsp/core/illumination.h"
+#include "dsp/core/core.h"
 #include "libc/str/str.h"
 
 const double kIlluminantA[3] = {1.0985, 1, 0.35585};

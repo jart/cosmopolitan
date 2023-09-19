@@ -16,12 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
@@ -34,6 +39,13 @@ void SetUpOnce(void) {
 
 void OnSig(int sig, siginfo_t *si, void *ctx) {
   ++n;
+}
+
+const char *DescribeMask(void) {
+  sigset_t ss;
+  _Thread_local static char buf[128];
+  unassert(!sigprocmask(SIG_SETMASK, 0, &ss));
+  return (DescribeSigset)(buf, 0, &ss);
 }
 
 TEST(sigprocmask, testMultipleBlockedDeliveries) {

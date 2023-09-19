@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.internal.h"
 #include "libc/calls/prctl.internal.h"
@@ -57,15 +58,7 @@
  * self-imposed security model. That works best when programs perform
  * permission-hungry operations (e.g. calling GetSymbolTable) towards
  * the beginning of execution, and then relinquish privilege afterwards
- * by calling pledge(). Here's an example of where that matters. Your
- * Cosmopolitan C Library needs to code morph your executable in memory
- * once you start using threads. But that's only possible to do if you
- * used the `prot_exec` promise. So the right thing to do here, is to
- * call __enable_threads() before calling pledge() to force it early.
- *
- *     __enable_threads();
- *     ShowCrashReports();
- *     pledge("...", 0);
+ * by calling pledge().
  *
  * By default exit() is allowed. This is useful for processes that
  * perform pure computation and interface with the parent via shared
@@ -260,7 +253,9 @@ int pledge(const char *promises, const char *execpromises) {
     if (IsGenuineBlink()) return enosys();
     if (IsOpenbsd()) return sys_pledge(0, 0);
     if (!IsLinux()) return enosys();
-    if (!(rc = sys_prctl(PR_GET_SECCOMP, 0, 0, 0, 0))) return 0;
+    rc = sys_prctl(PR_GET_SECCOMP, 0, 0, 0, 0);
+    if (rc == 0 || rc == 2) return 0;  // 2 means we're already filtered
+    unassert(rc < 0);
     errno = -rc;
     return -1;
   } else if (!IsTiny() && IsGenuineBlink()) {

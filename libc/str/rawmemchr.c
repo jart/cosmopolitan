@@ -33,7 +33,7 @@ static inline const unsigned char *rawmemchr_pure(const unsigned char *s,
 
 #if defined(__x86_64__) && !defined(__chibicc__)
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-dontasan static inline const char *rawmemchr_sse(const char *s,
+static inline const char *rawmemchr_sse(const char *s,
                                                  unsigned char c) {
   unsigned k;
   unsigned m;
@@ -54,7 +54,7 @@ dontasan static inline const char *rawmemchr_sse(const char *s,
 }
 #endif
 
-static inline dontasan uint64_t UncheckedAlignedRead64(const unsigned char *p) {
+static inline uint64_t UncheckedAlignedRead64(const unsigned char *p) {
   return (uint64_t)p[7] << 070 | (uint64_t)p[6] << 060 | (uint64_t)p[5] << 050 |
          (uint64_t)p[4] << 040 | (uint64_t)p[3] << 030 | (uint64_t)p[2] << 020 |
          (uint64_t)p[1] << 010 | (uint64_t)p[0] << 000;

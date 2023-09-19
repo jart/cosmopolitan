@@ -80,7 +80,9 @@ o/$(MODE)/libc/sysv/sysret.o				\
 o/$(MODE)/libc/sysv/errfun2.o				\
 o/$(MODE)/libc/sysv/sysret.o: private			\
 		CFLAGS +=				\
-			$(NO_MAGIC)
+			-ffreestanding			\
+			-fno-stack-protector		\
+			-fno-sanitize=all
 
 ifeq ($(ARCH),aarch64)
 o/$(MODE)/libc/sysv/sysv.o: private			\

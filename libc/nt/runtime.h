@@ -18,6 +18,8 @@
 #define kNtStdOutputHandle    -11u
 #define kNtStdErrorHandle     -12u
 
+#define GetCurrentProcess() -1
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -32,7 +34,7 @@ bool32 WriteFile(int64_t hFile, const void *lpBuffer,
                  uint32_t *lpNumberOfBytesWritten,
                  struct NtOverlapped *opt_lpOverlapped);
 bool32 TerminateProcess(int64_t hProcess, uint32_t uExitCode);
-int64_t GetCurrentProcess(void) pureconst;
+void TerminateThisProcess(uint32_t dwWaitStatus) wontreturn;
 void ExitProcess(uint32_t uExitCode) wontreturn;
 uint32_t GetLastError(void) nosideeffect;
 bool32 CloseHandle(int64_t hObject) dontthrow nocallback;
