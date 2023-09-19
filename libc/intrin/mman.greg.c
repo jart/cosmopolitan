@@ -263,6 +263,7 @@ static textreal uint64_t __map_phdr(struct mman *mm, uint64_t *pml4t,
                                     uint64_t b, uint64_t m,
                                     struct Elf64_Phdr *p) {
   uint64_t i, f, v;
+  if (p->p_type != PT_LOAD) return m;
   f = PAGE_RSRV | PAGE_U;
   if (p->p_flags & PF_W)
     f |= PAGE_V | PAGE_RW;
@@ -303,6 +304,7 @@ textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
   }
   m = __map_phdr(mm, pml4t, b, m,
                  &(struct Elf64_Phdr){
+                     .p_type = PT_LOAD,
                      .p_flags = (uintptr_t)ape_stack_pf,
                      .p_offset = (uintptr_t)ape_stack_offset,
                      .p_vaddr = ABS64(ape_stack_vaddr),
