@@ -62,8 +62,7 @@ static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
   mo = ROUNDDOWN(lo, FRAMESIZE);
   if (mo) munmap(map, mo);
 
-  // this is supposed to reduce our rss usage but does it
-  pg = getauxval(AT_PAGESZ);
+  // this is supposed to reduce our rss usage but does it really?
   lo = ROUNDDOWN(lo, pg);
   hi = MIN(ROUNDUP(hi, pg), ROUNDDOWN(c, pg));
   if (hi > lo) {

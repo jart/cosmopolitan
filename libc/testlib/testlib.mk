@@ -87,7 +87,8 @@ LIBC_TESTLIB_A_SRCS =						\
 LIBC_TESTLIB_A_OBJS =						\
 	$(LIBC_TESTLIB_A_SRCS_C:%.c=o/$(MODE)/%.o)		\
 	$(LIBC_TESTLIB_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
-	$(LIBC_TESTLIB_A_ASSETS:%=o/$(MODE)/%.zip.o)
+	$(LIBC_TESTLIB_A_ASSETS:%=o/$(MODE)/%.zip.o)		\
+	o/$(MODE)/libc/testlib-test.txt.zip.o
 
 LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_CALLS						\

@@ -948,7 +948,7 @@ static textwindows int sock_update(struct PortState *port_state,
        updated event mask. */
   } else if (sock_state->poll_status == kPollPending) {
     /* A poll operation is already pending, but it's not monitoring for
-       all the *events that the user is interested in .Therefore, cancel
+       all the *events that the user is interested in. Therefore, cancel
        the pending *poll operation; when we receive it's completion
        package, a new poll *operation will be submitted with the correct
        event mask. */

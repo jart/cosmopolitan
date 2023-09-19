@@ -16,12 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.internal.h"
+
+static ssize_t __zipos_match(struct Zipos *z, struct ZiposUri *name, int len,
+                             int i) {
+  size_t cfile = z->index[i];
+  const char *zname = ZIP_CFILE_NAME(z->map + cfile);
+  int zsize = ZIP_CFILE_NAMESIZE(z->map + cfile);
+  if ((len == zsize || (len + 1 == zsize && zname[len] == '/')) &&
+      !memcmp(name->path, zname, len)) {
+    return cfile;
+  } else if (len + 1 < zsize && zname[len] == '/' &&
+             !memcmp(name->path, zname, len)) {
+    return ZIPOS_SYNTHETIC_DIRECTORY;
+  } else {
+    return -1;
+  }
+}
 
 ssize_t __zipos_scan(struct Zipos *zipos, struct ZiposUri *name) {
 
@@ -61,17 +78,32 @@ ssize_t __zipos_scan(struct Zipos *zipos, struct ZiposUri *name) {
     }
   }
 
-  // return pointer to leftmost record if it matches
   if (l < zipos->records) {
+    int dx;
     size_t cfile = zipos->index[l];
     const char *zname = ZIP_CFILE_NAME(zipos->map + cfile);
     int zsize = ZIP_CFILE_NAMESIZE(zipos->map + cfile);
-    if ((len == zsize || (len + 1 == zsize && zname[len] == '/')) &&
-        !memcmp(name->path, zname, len)) {
-      return cfile;
-    } else if (len + 1 < zsize && zname[len] == '/' &&
-               !memcmp(name->path, zname, len)) {
-      return ZIPOS_SYNTHETIC_DIRECTORY;
+    if (zsize > len && (dx = '/' - (zname[len] & 255))) {
+      // since the index is asciibetical, we need to specially handle
+      // the case where, when searching for a directory, regular files
+      // exist whose names share the same prefix as the directory name.
+      dx = dx > +1 ? +1 : dx;
+      dx = dx < -1 ? -1 : dx;
+      for (l += dx; 0 <= l && l < zipos->records; l += dx) {
+        ssize_t cf;
+        if ((cf = __zipos_match(zipos, name, len, l)) != -1) {
+          return cf;
+        }
+        cfile = zipos->index[l];
+        zname = ZIP_CFILE_NAME(zipos->map + cfile);
+        zsize = ZIP_CFILE_NAMESIZE(zipos->map + cfile);
+        if (zsize < len || (len && zname[len - 1] != name->path[len - 1])) {
+          break;
+        }
+      }
+    } else {
+      // otherwise just return pointer to leftmost record if it matches
+      return __zipos_match(zipos, name, len, l);
     }
   }
 

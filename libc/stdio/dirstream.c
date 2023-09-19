@@ -404,16 +404,22 @@ static struct dirent *readdir_zipos(DIR *dir) {
         s += dir->zip.prefix.len;
         n -= dir->zip.prefix.len;
         const char *p = memchr(s, '/', n);
-        if (p) n = p - s;
+        int d_type;
+        if (p) {
+          n = p - s;
+          d_type = DT_DIR;
+        } else if (S_ISDIR(GetZipCfileMode(dir->zip.zipos->map +
+                                           dir->zip.offset))) {
+          d_type = DT_DIR;
+        } else {
+          d_type = DT_REG;
+        }
         if ((n = MIN(n, sizeof(ent->d_name) - 1)) &&
             critbit0_emplace(&dir->zip.found, s, n) == 1) {
           ent = &dir->ent;
           ent->d_ino = dir->zip.offset;
           ent->d_off = dir->tell;
-          ent->d_type =
-              S_ISDIR(GetZipCfileMode(dir->zip.zipos->map + dir->zip.offset))
-                  ? DT_DIR
-                  : DT_REG;
+          ent->d_type = d_type;
           memcpy(ent->d_name, s, n);
           ent->d_name[n] = 0;
         }

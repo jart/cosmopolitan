@@ -172,15 +172,8 @@ int mbedtls_test_write(const char *fmt, ...) {
     n = vfprintf(stderr, fmt, va);
   } else {
     char buf[512];
-    const char *s;
     vsnprintf(buf, 512, fmt, va);
-    if ((s = strchr(buf, '\n')) &&     //
-        s == buf + strlen(buf) - 1 &&  //
-        strstr(buf, "PASS")) {
-      n = 0;  // ignore pointless success lines
-    } else {
-      n = appends(&output, buf);
-    }
+    n = appends(&output, buf);
   }
   va_end(va);
   return n;

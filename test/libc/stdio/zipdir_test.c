@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
@@ -28,39 +29,89 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/testlib/testlib.h"
 
 __static_yoink("zipos");
 __static_yoink("libc/testlib/hyperion.txt");
 __static_yoink("libc/testlib/moby.txt");
+__static_yoink("libc/testlib-test.txt");
+__static_yoink("usr/share/zoneinfo/");
 __static_yoink("usr/share/zoneinfo/New_York");
 
 DIR *dir;
 struct dirent *ent;
 
-TEST(zipdir, test) {
+TEST(zipdir, testDirectoryThatHasRealZipEntry) {
   const char *path = "/zip/libc/testlib///";
   ASSERT_NE(NULL, (dir = opendir(path)));
   ASSERT_EQ(0, telldir(dir));
   ASSERT_NE(NULL, (ent = readdir(dir)));
-  ASSERT_EQ(0, strcmp(ent->d_name, "."));
+  ASSERT_STREQ(".", ent->d_name);
   ASSERT_EQ(DT_DIR, ent->d_type);
   ASSERT_NE(NULL, (ent = readdir(dir)));
-  ASSERT_EQ(0, strcmp(ent->d_name, ".."));
+  ASSERT_STREQ("..", ent->d_name);
   ASSERT_EQ(DT_DIR, ent->d_type);
   ASSERT_NE(NULL, (ent = readdir(dir)));
-  ASSERT_EQ(0, strcmp(ent->d_name, "hyperion.txt"));
+  ASSERT_STREQ("hyperion.txt", ent->d_name);
   ASSERT_EQ(DT_REG, ent->d_type);
   long pos = telldir(dir);
   ASSERT_NE(NULL, (ent = readdir(dir)));
-  ASSERT_EQ(0, strcmp(ent->d_name, "moby.txt"));
+  ASSERT_STREQ("moby.txt", ent->d_name);
   ASSERT_EQ(DT_REG, ent->d_type);
   ASSERT_EQ(NULL, (ent = readdir(dir)));
   seekdir(dir, pos);
   ASSERT_NE(NULL, (ent = readdir(dir)));
-  ASSERT_EQ(0, strcmp(ent->d_name, "moby.txt"));
+  ASSERT_STREQ("moby.txt", ent->d_name);
   ASSERT_EQ(DT_REG, ent->d_type);
   ASSERT_EQ(NULL, (ent = readdir(dir)));
+  ASSERT_EQ(NULL, (ent = readdir(dir)));
+  ASSERT_SYS(0, 0, closedir(dir));
+}
+
+TEST(zipdir, testDirectoryWithSyntheticOrMissingEntry) {
+  const char *path = "/zip/libc/";
+  ASSERT_NE(NULL, (dir = opendir(path)));
+  ASSERT_EQ(0, telldir(dir));
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ(".", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("..", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("testlib", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("testlib-test.txt", ent->d_name);
+  ASSERT_EQ(DT_REG, ent->d_type);
+  ASSERT_EQ(NULL, (ent = readdir(dir)));
+  ASSERT_SYS(0, 0, closedir(dir));
+}
+
+TEST(zipdir, testListZip) {
+  const char *path = "/zip";
+  ASSERT_NE(NULL, (dir = opendir(path)));
+  ASSERT_EQ(0, telldir(dir));
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ(".", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("..", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("echo.com", ent->d_name);
+  ASSERT_EQ(DT_REG, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("libc", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ("usr", ent->d_name);
+  ASSERT_EQ(DT_DIR, ent->d_type);
+  ASSERT_NE(NULL, (ent = readdir(dir)));
+  ASSERT_STREQ(".cosmo", ent->d_name);
+  ASSERT_EQ(DT_REG, ent->d_type);
   ASSERT_EQ(NULL, (ent = readdir(dir)));
   ASSERT_SYS(0, 0, closedir(dir));
 }
@@ -70,6 +121,7 @@ TEST(dirstream, hasDirectoryEntry) {
   bool gotsome = false;
   const char *path = "/zip/usr/share/zoneinfo";
   ASSERT_SYS(0, 0, fstatat(AT_FDCWD, path, &st, 0));
+  ASSERT_TRUE(S_ISDIR(st.st_mode));
   ASSERT_NE(NULL, (dir = opendir(path)));
   while ((ent = readdir(dir))) {
     gotsome = true;
