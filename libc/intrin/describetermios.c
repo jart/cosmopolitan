@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/termios.internal.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -119,8 +120,15 @@ const char *(DescribeTermios)(char buf[N], ssize_t rc,
       {IEXTEN, "IEXTEN"},    //
       {EXTPROC, "EXTPROC"},  //
   };
-  append(", .c_lflag=%s",
-         DescribeFlags(b128, 128, kLocal, ARRAYLEN(kLocal), "", tio->c_lflag));
+  append(", "
+         ".c_lflag=%s, "
+         ".c_cc[VMIN]=%d, "
+         ".c_cc[VTIME]=%d, "
+         ".c_cc[VINTR]=CTRL(%#c), "
+         ".c_cc[VQUIT]=CTRL(%#c)",
+         DescribeFlags(b128, 128, kLocal, ARRAYLEN(kLocal), "", tio->c_lflag),
+         tio->c_cc[VMIN], tio->c_cc[VTIME], CTRL(tio->c_cc[VINTR]),
+         CTRL(tio->c_cc[VQUIT]));
 
   append("}");
 

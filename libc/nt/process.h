@@ -56,7 +56,8 @@ int64_t OpenProcess(uint32_t dwDesiredAccess, bool32 bInheritHandle,
 uint32_t GetCurrentProcessId(void); /* %gs:0x40 */
 uint32_t GetEnvironmentVariable(const char16_t *lpName, char16_t *lpBuffer,
                                 uint32_t nSize);
-uint32_t SetEnvironmentVariable(const char16_t *lpName, char16_t *lpValue);
+uint32_t SetEnvironmentVariable(const char16_t *lpName,
+                                const char16_t *lpValue);
 int32_t SetEnvironmentStrings(char16_t *NewEnvironment);
 bool32 GetProcessAffinityMask(int64_t hProcess, uint64_t *lpProcessAffinityMask,
                               uint64_t *lpSystemAffinityMask);

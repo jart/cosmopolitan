@@ -24,18 +24,22 @@ COSMOPOLITAN_C_START_
 #define kFdTtyMunging 4 /* enable input / output remappings */
 #define kFdTtyNoCr2Nl 8 /* don't map \r → \n (a.k.a !ICRNL) */
 #define kFdTtyNoIsigs 16
+#define kFdTtyNoBlock 32
+#define kFdTtyXtMouse 64
 
 struct Fd {
   char kind;
+  bool eoftty;
   bool dontclose;
-  char buflen;
-  char buf[4];
+  unsigned char buflen;
   unsigned flags;
   unsigned mode;
   int64_t handle;
   int64_t extra;
   int64_t pointer;
   pthread_mutex_t lock;
+  unsigned char mousebuttons;
+  char buf[32];
 };
 
 struct StdinRelay {
@@ -54,11 +58,6 @@ struct Fds {
   struct Fd *p, *e;
   struct StdinRelay stdin;
 };
-
-void WinMainStdin(void);
-int64_t __resolve_stdin_handle(int64_t);
-int __munge_terminal_input(char *, uint32_t *);
-void __echo_terminal_input(struct Fd *, char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

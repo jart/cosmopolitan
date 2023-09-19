@@ -55,13 +55,14 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
 
   bzero(tio, sizeof(*tio));
 
-  tio->c_cc[VMIN] = 1;
+  tio->c_cc[VMIN] = !(__ttymagic & kFdTtyNoBlock);
+  tio->c_cc[VEOF] = __veof;
+  tio->c_cc[VTIME] = __vtime;
   tio->c_cc[VINTR] = __vintr;
   tio->c_cc[VQUIT] = __vquit;
   tio->c_cc[VERASE] = CTRL('?');
   tio->c_cc[VWERASE] = CTRL('W');
   tio->c_cc[VKILL] = CTRL('U');
-  tio->c_cc[VEOF] = CTRL('D');
   tio->c_cc[VMIN] = CTRL('A');
   tio->c_cc[VSTART] = _POSIX_VDISABLE;
   tio->c_cc[VSTOP] = _POSIX_VDISABLE;

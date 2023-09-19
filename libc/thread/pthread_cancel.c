@@ -111,23 +111,27 @@ static void _pthread_cancel_listen(void) {
 
 static void pthread_cancel_nt(struct PosixThread *pt, intptr_t hThread) {
   uint32_t old_suspend_count;
-  if ((pt->pt_flags & PT_ASYNC) && !(pt->pt_flags & PT_NOCANCEL)) {
-    if ((old_suspend_count = SuspendThread(hThread)) != -1u) {
+  if (!(pt->pt_flags & PT_NOCANCEL) &&
+      (pt->pt_flags & (PT_ASYNC | PT_MASKED))) {
+    pt->pt_flags |= PT_NOCANCEL;
+    pt->abort_errno = ECANCELED;
+    if ((pt->pt_flags & PT_ASYNC) &&
+        (old_suspend_count = SuspendThread(hThread)) != -1u) {
       if (!old_suspend_count) {
         struct NtContext cpu;
         cpu.ContextFlags = kNtContextControl | kNtContextInteger;
         if (GetThreadContext(hThread, &cpu)) {
-          pt->pt_flags |= PT_NOCANCEL;
           cpu.Rip = (uintptr_t)pthread_exit;
           cpu.Rdi = (uintptr_t)PTHREAD_CANCELED;
           cpu.Rsp &= -16;
           *(uintptr_t *)(cpu.Rsp -= sizeof(uintptr_t)) = cpu.Rip;
+          pt->abort_errno = ECANCELED;
           unassert(SetThreadContext(hThread, &cpu));
-          __sig_cancel(pt, 0);
         }
       }
       ResumeThread(hThread);
     }
+    __sig_cancel(pt);
   }
 }
 

@@ -95,3 +95,15 @@ TEST(fionread, pipe) {
   ASSERT_SYS(0, 0, close(pfds[1]));
   ASSERT_SYS(0, 0, close(pfds[0]));
 }
+
+TEST(fionread, eof_returnsZeroWithoutError) {
+  char buf[8];
+  int pfds[2];
+  int pending;
+  ASSERT_SYS(0, 0, pipe(pfds));
+  ASSERT_SYS(0, 0, close(pfds[1]));
+  ASSERT_SYS(0, 0, ioctl(pfds[0], FIONREAD, &pending));
+  ASSERT_EQ(0, pending);
+  ASSERT_SYS(0, 0, read(pfds[0], buf, 8));
+  ASSERT_SYS(0, 0, close(pfds[0]));
+}

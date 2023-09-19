@@ -16,17 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/intrin/atomic.h"
-#include "libc/nt/synchronization.h"
+#include "libc/calls/console.internal.h"
+#include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
+#include "libc/macros.internal.h"
+#include "libc/nt/console.h"
+#include "libc/nt/struct/inputrecord.h"
+#ifdef __x86_64__
 
-textwindows int64_t __resolve_stdin_handle(int64_t handle) {
-  if (handle == g_fds.stdin.handle) {
-    if (g_fds.stdin.inisem) {
-      ReleaseSemaphore(g_fds.stdin.inisem, 1, 0);
+int CountConsoleInputBytes(int64_t handle) {
+  char buf[32];
+  int rc, e = errno;
+  uint16_t utf16hs = 0;
+  uint32_t i, n, count;
+  struct NtInputRecord records[64];
+  if (PeekConsoleInput(handle, records, ARRAYLEN(records), &n)) {
+    for (rc = i = 0; i < n; ++i) {
+      count = ConvertConsoleInputToAnsi(records + i, buf, &utf16hs, 0);
+      if (count == -1) {
+        unassert(errno == ENODATA);
+        if (!rc) {
+          rc = -1;
+        } else {
+          errno = e;
+        }
+        break;
+      }
+      rc += count;
     }
-    handle = g_fds.stdin.reader;
+  } else {
+    rc = __winerr();
   }
-  return handle;
+  return rc;
 }
+
+#endif /* __x86_64__ */

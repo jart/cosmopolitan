@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/console.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -31,6 +32,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/console.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -53,10 +55,6 @@
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
-
-#ifdef __x86_64__
-__static_yoink("WinMainStdin");
-#endif
 
 /* Maximum number of unicast addresses handled for each interface */
 #define MAX_UNICAST_ADDR 32
@@ -93,13 +91,14 @@ static int ioctl_default(int fd, unsigned long request, void *arg) {
 }
 
 static int ioctl_fionread(int fd, uint32_t *arg) {
-  int rc;
+  uint32_t cm;
   int64_t handle;
   uint32_t avail;
+  int rc, e = errno;
   if (!IsWindows()) {
     return sys_ioctl(fd, FIONREAD, arg);
   } else if (__isfdopen(fd)) {
-    handle = __resolve_stdin_handle(g_fds.p[fd].handle);
+    handle = g_fds.p[fd].handle;
     if (g_fds.p[fd].kind == kFdSocket) {
       if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, FIONREAD, arg)) != -1) {
         return rc;
@@ -113,6 +112,13 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
       } else {
         return __winerr();
       }
+    } else if (GetConsoleMode(handle, &cm)) {
+      avail = CountConsoleInputBytes(handle);
+      if (avail == -1u && errno == ENODATA) {
+        errno = e;
+        avail = 0;
+      }
+      return avail;
     } else {
       return eopnotsupp();
     }

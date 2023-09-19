@@ -119,6 +119,7 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
   }
   fds->p[1].flags = O_WRONLY | O_APPEND;
   fds->p[2].flags = O_WRONLY | O_APPEND;
+  __veof = CTRL('D');
   __vintr = CTRL('C');
   __vquit = CTRL('\\');
 }

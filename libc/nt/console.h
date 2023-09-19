@@ -49,8 +49,8 @@ bool32 ReadConsoleInput(int64_t hConsoleInput, struct NtInputRecord *lpBuffer,
                         uint32_t nLength, uint32_t *lpNumberOfEventsRead);
 bool32 PeekConsoleInput(int64_t hConsoleInput, struct NtInputRecord *lpBuffer,
                         uint32_t nLength, uint32_t *lpNumberOfEventsRead);
-bool32 GetNumberOfConsoleInputEvent(int64_t hConsoleInput,
-                                    uint32_t *lpNumberOfEvents);
+bool32 GetNumberOfConsoleInputEvents(int64_t hConsoleInput,
+                                     uint32_t *lpNumberOfEvents);
 bool32 ReadConsoleOutput(int64_t hConsoleOutput, struct NtCharInfo *lpBuffer,
                          struct NtCoord dwBufferSize,
                          struct NtCoord dwBufferCoord,

@@ -28,8 +28,6 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/x/xsigaction.h"
 
-__static_yoink("WinMainStdin");
-
 #define CTRL(C)                ((C) ^ 0b01000000)
 #define WRITE(FD, SLIT)        write(FD, SLIT, strlen(SLIT))
 #define ENABLE_SAFE_PASTE      "\e[?2004h"
@@ -69,7 +67,7 @@ int rawmode(void) {
   memcpy(&t, &oldterm, sizeof(t));
 
   t.c_cc[VMIN] = 1;
-  t.c_cc[VTIME] = 1;
+  t.c_cc[VTIME] = 0;
 
   // emacs does the following to remap ctrl-c to ctrl-g in termios
   //     t.c_cc[VINTR] = CTRL('G');

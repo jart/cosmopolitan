@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/console.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -26,6 +27,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/console.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -47,8 +49,6 @@
 
 #ifdef __x86_64__
 
-__static_yoink("WinMainStdin");
-
 /*
  * Polls on the New Technology.
  *
@@ -59,8 +59,8 @@ __static_yoink("WinMainStdin");
 textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
                             const sigset_t *sigmask) {
   bool ok;
-  uint32_t avail;
   sigset_t oldmask;
+  uint32_t avail, cm;
   struct sys_pollfd_nt pipefds[8];
   struct sys_pollfd_nt sockfds[64];
   int pipeindices[ARRAYLEN(pipefds)];
@@ -98,7 +98,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
         }
       } else if (pn < ARRAYLEN(pipefds)) {
         pipeindices[pn] = i;
-        pipefds[pn].handle = __resolve_stdin_handle(g_fds.p[fds[i].fd].handle);
+        pipefds[pn].handle = g_fds.p[fds[i].fd].handle;
         pipefds[pn].events = 0;
         pipefds[pn].revents = 0;
         switch (g_fds.p[fds[i].fd].flags & O_ACCMODE) {
@@ -150,6 +150,19 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
             }
           } else {
             pipefds[i].revents |= POLLERR;
+          }
+        } else if (GetConsoleMode(pipefds[i].handle, &cm)) {
+          int e = errno;
+          avail = CountConsoleInputBytes(pipefds[i].handle);
+          if (avail > 0) {
+            pipefds[i].revents |= POLLIN;
+          } else if (avail == -1u) {
+            if (errno == ENODATA) {
+              pipefds[i].revents |= POLLIN;
+            } else {
+              pipefds[i].revents |= POLLERR;
+            }
+            errno = e;
           }
         } else {
           // we have no way of polling if a non-socket is readable yet

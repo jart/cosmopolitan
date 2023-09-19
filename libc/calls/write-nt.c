@@ -23,9 +23,12 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/console.h"
+#include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
@@ -45,6 +48,13 @@
 #include "libc/thread/tls.h"
 
 __msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
+
+static bool IsMouseModeCommand(int x) {
+  return x == 1000 ||  // SET_VT200_MOUSE
+         x == 1002 ||  // SET_BTN_EVENT_MOUSE
+         x == 1006 ||  // SET_SGR_EXT_MODE_MOUSE
+         x == 1015;    // SET_URXVT_EXT_MODE_MOUSE
+}
 
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
@@ -79,6 +89,76 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   if (seekable && !pwriting) {
     pthread_mutex_lock(&f->lock);
     offset = f->pointer;
+  }
+
+  // To use the tty mouse events feature:
+  //   - write(1, "\e[?1000;1002;1015;1006h") to enable
+  //   - write(1, "\e[?1000;1002;1015;1006l") to disable
+  // See o//examples/ttyinfo.com and o//tool/viz/life.com
+  uint32_t cm;
+  if (!seekable && (f->kind == kFdConsole || GetConsoleMode(handle, &cm))) {
+    int64_t hin;
+    if (f->kind == kFdConsole) {
+      hin = f->handle;
+    } else {
+      hin = GetStdHandle(kNtStdInputHandle);
+    }
+    if (GetConsoleMode(hin, &cm)) {
+      int t = 0;
+      unsigned x;
+      bool m = false;
+      char *p = data;
+      uint32_t cm2 = cm;
+      for (int i = 0; i < size; ++i) {
+        switch (t) {
+          case 0:
+            if (p[i] == 033) {
+              t = 1;
+            }
+            break;
+          case 1:
+            if (p[i] == '[') {
+              t = 2;
+            } else {
+              t = 0;
+            }
+            break;
+          case 2:
+            if (p[i] == '?') {
+              t = 3;
+              x = 0;
+            } else {
+              t = 0;
+            }
+            break;
+          case 3:
+            if ('0' <= p[i] && p[i] <= '9') {
+              x *= 10;
+              x += p[i] - '0';
+            } else if (p[i] == ';') {
+              m |= IsMouseModeCommand(x);
+              x = 0;
+            } else {
+              m |= IsMouseModeCommand(x);
+              if (p[i] == 'h') {
+                __ttymagic |= kFdTtyXtMouse;
+                cm2 |= kNtEnableMouseInput;
+                cm2 &= kNtEnableQuickEditMode;  // precludes mouse events
+              } else if (p[i] == 'l') {
+                __ttymagic &= ~kFdTtyXtMouse;
+                cm2 |= kNtEnableQuickEditMode;  // disables mouse too
+              }
+              t = 0;
+            }
+            break;
+          default:
+            __builtin_unreachable();
+        }
+      }
+      if (cm2 != cm) {
+        SetConsoleMode(hin, cm2);
+      }
+    }
   }
 
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0),
@@ -143,7 +223,6 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
         _weaken(__sig_raise)(SIGPIPE, SI_KERNEL);
         return epipe();
       } else {
-        STRACE("broken pipe");
         TerminateThisProcess(SIGPIPE);
       }
     case kNtErrorAccessDenied:  // write doesn't return EACCESS

@@ -160,13 +160,12 @@ textwindows int __sig_raise(int sig, int sic) {
   return (flags & SA_RESTART) ? 2 : 1;
 }
 
-textwindows void __sig_cancel(struct PosixThread *pt, unsigned flags) {
+textwindows void __sig_cancel(struct PosixThread *pt) {
   atomic_int *futex;
   if (_weaken(WakeByAddressSingle) &&
       (futex = atomic_load_explicit(&pt->pt_futex, memory_order_acquire))) {
     _weaken(WakeByAddressSingle)(futex);
-  } else if (!(flags & SA_RESTART) && pt->iohandle > 0) {
-    pt->abort_errno = EINTR;
+  } else if (pt->iohandle > 0) {
     if (!CancelIoEx(pt->iohandle, pt->ioverlap)) {
       int err = GetLastError();
       if (err != kNtErrorNotFound) {
@@ -174,7 +173,6 @@ textwindows void __sig_cancel(struct PosixThread *pt, unsigned flags) {
       }
     }
   } else if (pt->pt_flags & PT_INSEMAPHORE) {
-    pt->abort_errno = EINTR;
     if (!ReleaseSemaphore(pt->semaphore, 1, 0)) {
       STRACE("ReleaseSemaphore() failed w/ %d", GetLastError());
     }
@@ -259,8 +257,9 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     STRACE("SetThreadContext failed w/ %d", GetLastError());
     return ESRCH;
   }
-  ResumeThread(th);         // doesn't actually resume if doing blocking i/o
-  __sig_cancel(pt, flags);  // we can wake it up immediately by canceling it
+  ResumeThread(th);  // doesn't actually resume if doing blocking i/o
+  pt->abort_errno = EINTR;
+  __sig_cancel(pt);  // we can wake it up immediately by canceling it
   return 0;
 }
 

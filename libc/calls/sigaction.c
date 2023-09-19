@@ -507,9 +507,6 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
         once = true;
       }
     }
-    if (IsWindows() && !rc && sig == SIGWINCH) {
-      _init_sigwinch();  // lazy b/c sigwinch is otherwise ignored
-    }
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),
          DescribeSigaction(rc, oldact), rc);

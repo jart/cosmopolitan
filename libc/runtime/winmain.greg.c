@@ -55,12 +55,14 @@ __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentString
 __msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW;
+__msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 __msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 __msabi extern typeof(MapViewOfFileEx) *const __imp_MapViewOfFileEx;
 __msabi extern typeof(SetConsoleCP) *const __imp_SetConsoleCP;
 __msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
 __msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
+__msabi extern typeof(SetEnvironmentVariable) *const __imp_SetEnvironmentVariableW;
 __msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 // clang-format on
@@ -92,8 +94,7 @@ __funline char16_t *MyCommandLine(void) {
 
 // implements all win32 apis on non-windows hosts
 static abi long __oops_win32(void) {
-  assert(!"win32 api called on non-windows host");
-  return 0;
+  notpossible;
 }
 
 // returns true if utf-8 path is a win32-style path that exists
@@ -131,11 +132,16 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
       (intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui) {
     __imp_SetConsoleCP(kNtCpUtf8);
     __imp_SetConsoleOutputCP(kNtCpUtf8);
-    for (int i = 1; i <= 2; ++i) {
+    for (int i = 0; i <= 2; ++i) {
       uint32_t m;
       intptr_t h = __imp_GetStdHandle(kNtStdio[i]);
       __imp_GetConsoleMode(h, &m);
-      __imp_SetConsoleMode(h, m | kNtEnableVirtualTerminalProcessing);
+      if (!i) {
+        m |= kNtEnableMouseInput | kNtEnableWindowInput;
+      } else {
+        m |= kNtEnableVirtualTerminalProcessing;
+      }
+      __imp_SetConsoleMode(h, m);
     }
   }
 
@@ -222,9 +228,6 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
     _weaken(WinSockInit)();
   }
   DeduplicateStdioHandles();
-  if (_weaken(WinMainStdin)) {
-    _weaken(WinMainStdin)();
-  }
   if (_weaken(WinMainForked)) {
     _weaken(WinMainForked)();
   }
