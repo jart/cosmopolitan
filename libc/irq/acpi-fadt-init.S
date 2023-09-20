@@ -41,3 +41,8 @@ _AcpiBootFlags:
 	.short	kAcpiFadtLegacyDevices | kAcpiFadt8042
 	.endobj	_AcpiBootFlags,globl
 	.previous
+	.bss
+_AcpiDefDevices:
+	.skip	8
+	.endobj	_AcpiDefDevices,globl
+	.previous

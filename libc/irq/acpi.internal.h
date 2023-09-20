@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_IRQ_ACPI_INTERNAL_H_
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bswap.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 
@@ -270,6 +271,23 @@ typedef struct thatispacked {
   uint8_t Aml[];
 } AcpiTableDsdt;
 
+/**
+ * @internal
+ * Private type for a device's hardware id.
+ */
+typedef uint64_t AcpiDeviceHid;
+
+/**
+ * @internal
+ * Private information about a device defined by an ACPI Device Package.
+ */
+typedef struct AcpiDefDevice {
+  struct AcpiDefDevice *next;
+  AcpiDeviceHid hid;
+  const uint8_t *crs;
+  size_t crs_size;
+} AcpiDefDevice;
+
 typedef uint32_t AcpiStatus;
 
 extern size_t _AcpiXsdtNumEntries, _AcpiNumIoApics;
@@ -277,6 +295,7 @@ extern void **_AcpiXsdtEntries;
 extern uint16_t _AcpiBootFlags;
 extern uint32_t _AcpiMadtFlags;
 extern const AcpiMadtIoApic **_AcpiIoApics;
+extern AcpiDefDevice *_AcpiDefDevices;
 
 extern void *_AcpiOsMapUncachedMemory(uintptr_t, size_t);
 extern void *_AcpiOsAllocate(size_t);
@@ -292,6 +311,75 @@ forceinline AcpiStatus _AcpiGetTable(const char __sig[4], uint32_t __inst,
                                      void **__phdr) {
   uint8_t __sig_copy[4] = { __sig[0], __sig[1], __sig[2], __sig[3] };
   return _AcpiGetTableImpl(READ32LE(__sig_copy), __inst, __phdr);
+}
+
+/**
+ * @internal
+ * Converts a hardware id for an EISA device from string form to numeric
+ * form.  If the HID is not an EISA type id, return 0.
+ *
+ * TODO: when the need arises, find a reasonable way to "compress" ACPI &
+ * PCI device ids as well.
+ */
+forceinline AcpiDeviceHid
+_AcpiCompressHid(const uint8_t *__hid, size_t __len) {
+  uint8_t __c;
+  unsigned __a0, __a1, __a2, __d0, __d1, __d2, __d3;
+  uint32_t __evalu;
+  if (__len != 7) return 0;
+  __c = __hid[0];
+  if (__c < 'A' || __c > 'Z') return 0;
+  __a0 = __c - 'A' + 1;
+  __c = __hid[1];
+  if (__c < 'A' || __c > 'Z') return 0;
+  __a1 = __c - 'A' + 1;
+  __c = __hid[2];
+  if (__c < 'A' || __c > 'Z') return 0;
+  __a2 = __c - 'A' + 1;
+  __c = __hid[3];
+  if (__c < '0' || __c > 'F' || (__c > '9' && __c < 'A')) return 0;
+  __d0 = __c <= '9' ? __c - '0' : __c - 'A' + 0xA;
+  __c = __hid[4];
+  if (__c < '0' || __c > 'F' || (__c > '9' && __c < 'A')) return 0;
+  __d1 = __c <= '9' ? __c - '0' : __c - 'A' + 0xA;
+  __c = __hid[5];
+  if (__c < '0' || __c > 'F' || (__c > '9' && __c < 'A')) return 0;
+  __d2 = __c <= '9' ? __c - '0' : __c - 'A' + 0xA;
+  __c = __hid[6];
+  if (__c < '0' || __c > 'F' || (__c > '9' && __c < 'A')) return 0;
+  __d3 = __c <= '9' ? __c - '0' : __c - 'A' + 0xA;
+  __evalu = (uint32_t)__a0 << 26 | (uint32_t)__a1 << 21 | (uint32_t)__a2 << 16 |
+          __d0 << 12 | __d1 << 8 | __d2 << 4 | __d3;
+  return bswap_32(__evalu);
+}
+
+#define kAcpiDecompressHidMax 8
+
+forceinline bool _AcpiDecompressHid(uintmax_t __hid,
+                                    char __str[kAcpiDecompressHidMax]) {
+  uint32_t __evalu;
+  unsigned char __a0, __a1, __a2, __d0, __d1, __d2, __d3;
+  if (__hid >= (1ul << 31)) return false;
+  __evalu = bswap_32((uint32_t)__hid);
+  __a0 = (__evalu >> 26) & 0x1F;
+  if (!__a0 || __a0 > 26) return false;
+  __a1 = (__evalu >> 21) & 0x1F;
+  if (!__a1 || __a1 > 26) return false;
+  __a2 = (__evalu >> 16) & 0x1F;
+  if (!__a2 || __a2 > 26) return false;
+  __d0 = (__evalu >> 12) & 0xF;
+  __d1 = (__evalu >>  8) & 0xF;
+  __d2 = (__evalu >>  4) & 0xF;
+  __d3 = (__evalu >>  0) & 0xF;
+  __str[0] = __a0 - 1 + 'A';
+  __str[1] = __a1 - 1 + 'A';
+  __str[2] = __a2 - 1 + 'A';
+  __str[3] = __d0 <= 9 ? __d0 + '0' : __d0 - 0xA + 'A';
+  __str[4] = __d1 <= 9 ? __d1 + '0' : __d1 - 0xA + 'A';
+  __str[5] = __d2 <= 9 ? __d2 + '0' : __d2 - 0xA + 'A';
+  __str[6] = __d3 <= 9 ? __d3 + '0' : __d3 - 0xA + 'A';
+  __str[7] = 0;
+  return true;
 }
 
 #define ACPI_INFO(FMT, ...)                                            \
