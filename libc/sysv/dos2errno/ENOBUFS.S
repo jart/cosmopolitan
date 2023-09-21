@@ -8,8 +8,7 @@
 	.long	\systemv
 	.endm
 	.section .sort.rodata.dos2errno.2,"a",@progbits
-	.globl	kDos2Errno.EFAULT
-	.type	kDos2Errno.EFAULT,@object
-kDos2Errno.EFAULT:
-	.e	kNtErrorNoaccess,EFAULT
-	.e	WSAEFAULT,EFAULT
+	.globl	kDos2Errno.ENOBUFS
+	.type	kDos2Errno.ENOBUFS,@object
+kDos2Errno.ENOBUFS:
+	.e	kNtErrorInsufficientBuffer,ENOBUFS

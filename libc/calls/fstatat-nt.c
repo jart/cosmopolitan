@@ -34,7 +34,7 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
   uint16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   if ((fh = CreateFile(
-           path16, kNtFileReadAttributes,
+           path16, kNtFileGenericRead,
            kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
            kNtOpenExisting,
            kNtFileAttributeNormal | kNtFileFlagBackupSemantics |

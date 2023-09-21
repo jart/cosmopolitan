@@ -47,7 +47,7 @@ dos	kNtErrorGenFailure              EACCES
 dos	kNtErrorGracefulDisconnect	EPIPE
 dos	kNtErrorHostDown                EHOSTUNREACH
 dos	kNtErrorHostUnreachable         EHOSTUNREACH
-dos	kNtErrorInsufficientBuffer	EFAULT
+dos	kNtErrorInsufficientBuffer	ENOBUFS
 dos	kNtErrorNoaccess                EFAULT
 dos	kNtErrorInvalidAddress          EADDRNOTAVAIL
 dos	kNtErrorNotAReparsePoint	EINVAL

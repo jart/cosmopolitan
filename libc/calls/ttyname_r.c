@@ -36,11 +36,9 @@
 #define FIODGNAME 0x80106678  // freebsd
 
 static textwindows errno_t sys_ttyname_nt(int fd, char *buf, size_t size) {
-  uint32_t mode;
-  if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
-    if (strlcpy(buf,
-                (mode & kNtEnableVirtualTerminalInput) ? "CONIN$" : "CONOUT$",
-                size) < size) {
+  uint32_t cmode;
+  if (GetConsoleMode(g_fds.p[fd].handle, &cmode)) {
+    if (strlcpy(buf, "/dev/tty", size) < size) {
       return 0;
     } else {
       return ERANGE;

@@ -26,6 +26,7 @@ int __ensurefds_unlocked(int);
 void __printfds(void);
 uint32_t sys_getuid_nt(void);
 int __pause_thread(uint32_t);
+int IsWindowsExecutable(int64_t);
 int CountConsoleInputBytes(int64_t);
 int FlushConsoleInputBytes(int64_t);
 

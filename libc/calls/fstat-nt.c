@@ -101,7 +101,11 @@ textwindows int sys_fstat_nt(int64_t handle, struct stat *out_st) {
       if (!GetFileInformationByHandle(handle, &wst)) {
         return __winerr();
       }
-      st.st_mode = 0555 & ~umask;
+      st.st_mode = 0444 & ~umask;
+      if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
+          IsWindowsExecutable(handle)) {
+        st.st_mode |= 0111 & ~umask;
+      }
       st.st_flags = wst.dwFileAttributes;
       if (!(wst.dwFileAttributes & kNtFileAttributeReadonly)) {
         st.st_mode |= 0222 & ~umask;

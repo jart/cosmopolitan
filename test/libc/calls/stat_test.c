@@ -33,7 +33,6 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
 
 __static_yoink("zipos");
 
@@ -59,6 +58,31 @@ TEST(stat, enotdir) {
   struct stat st;
   ASSERT_SYS(0, 0, close(creat("yo", 0644)));
   ASSERT_SYS(ENOTDIR, -1, stat("yo/there", &st));
+}
+
+TEST(stat, textFileIsntExecutable) {
+  struct stat st;
+  ASSERT_SYS(0, 0, touch("foo.txt", 0644));
+  ASSERT_SYS(0, 0, stat("foo.txt", &st));
+  ASSERT_FALSE(st.st_mode & 0111);
+}
+
+TEST(stat, shebangIsExecutable) {
+  struct stat st;
+  ASSERT_SYS(0, 3, creat("foo.sh", 0777));
+  ASSERT_SYS(0, 2, write(3, "#!", 2));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, stat("foo.sh", &st));
+  ASSERT_TRUE(!!(st.st_mode & 0111));
+}
+
+TEST(stat, portableExecutableIsExecutable) {
+  struct stat st;
+  ASSERT_SYS(0, 3, creat("foo.exe", 0777));
+  ASSERT_SYS(0, 2, write(3, "MZ", 2));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, stat("foo.exe", &st));
+  ASSERT_TRUE(!!(st.st_mode & 0111));
 }
 
 TEST(stat, zipos) {
