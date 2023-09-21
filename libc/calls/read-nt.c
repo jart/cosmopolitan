@@ -30,6 +30,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/vk.h"
@@ -319,14 +320,24 @@ static textwindows struct Keystroke *NewKeystroke(void) {
   if (atomic_load_explicit(&__keystroke.allocated, memory_order_acquire) < n &&
       (i = atomic_fetch_add(&__keystroke.allocated, 1)) < n) {
     k = __keystroke.pool + i;
-  } else if ((e = dll_first(__keystroke.free))) {
-    k = KEYSTROKE_CONTAINER(e);
-    dll_remove(&__keystroke.free, &k->elem);
   } else {
-    return 0;
+    if ((e = dll_first(__keystroke.free))) {
+      k = KEYSTROKE_CONTAINER(e);
+      dll_remove(&__keystroke.free, &k->elem);
+    }
+    if (!k) {
+      if (_weaken(malloc)) {
+        k = _weaken(malloc)(sizeof(struct Keystroke));
+      } else {
+        enomem();
+        return 0;
+      }
+    }
   }
-  bzero(k, sizeof(*k));
-  dll_init(&k->elem);
+  if (k) {
+    bzero(k, sizeof(*k));
+    dll_init(&k->elem);
+  }
   return k;
 }
 
