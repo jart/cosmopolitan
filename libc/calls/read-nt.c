@@ -214,10 +214,12 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
   }
 
   // handle ctrl-d the end of file keystroke
-  if (c == __veof && __veof != _POSIX_VDISABLE) {
-    STRACE("encountered CTRL(%#c) c_cc[VEOF] closing console input", CTRL(c));
-    __keystroke.end_of_file = true;
-    return 0;
+  if (!(__ttymagic & kFdTtyUncanon)) {
+    if (c == __veof && __veof != _POSIX_VDISABLE) {
+      STRACE("encountered CTRL(%#c) c_cc[VEOF] closing console input", CTRL(c));
+      __keystroke.end_of_file = true;
+      return 0;
+    }
   }
 
   // insert esc prefix when alt is held

@@ -82,7 +82,7 @@ int EnableRawMode(void) {
 
   t.c_iflag &= ~(INPCK | ISTRIP | PARMRK | INLCR | IGNCR | ICRNL | IXON |
                  IGNBRK | BRKINT);
-  t.c_lflag &= ~(IEXTEN | ICANON | ECHO | ECHONL /* | ISIG */);
+  t.c_lflag &= ~(IEXTEN | ICANON | ECHO | ECHONL);
   t.c_cflag &= ~(CSIZE | PARENB);
   t.c_oflag |= OPOST | ONLCR;
   t.c_cflag |= CS8;

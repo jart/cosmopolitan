@@ -62,3 +62,4 @@ longjmp:
 #endif
 	.endfn	longjmp,globl
 	.alias	longjmp,_longjmp
+	.alias	longjmp,siglongjmp

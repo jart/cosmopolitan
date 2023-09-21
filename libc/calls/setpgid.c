@@ -53,8 +53,8 @@ int setpgid(int pid, int pgid) {
         rc = __winerr();
       }
     } else {
-      // irregular use cases not supported on windows
-      rc = einval();
+      // avoid bash printing scary warnings for now
+      rc = 0;
     }
   }
   STRACE("setpgid(%d, %d) → %d% m", pid, pgid, rc);

@@ -34,6 +34,7 @@
 //	@return	eax 0 when set and !0 when longjmp'd
 //	@returnstwice
 sigsetjmp:
+#ifdef __x86_64__
 	test	%esi,%esi
 	jz	setjmp
 	popq	64(%rdi)
@@ -45,5 +46,19 @@ sigsetjmp:
 	mov	%eax,%esi
 	mov	72(%rdi),%rbx
 	jmp	__sigsetjmp_tail
+#elif defined(__aarch64__)
+	cbz	x1,setjmp
+	str	x30,[x0,#176]
+	str	x19,[x0,#176+8+8]
+	mov	x19,x0
+	bl	setjmp
+	mov	w1,w0
+	mov	x0,x19
+	ldr	x30,[x0,#176]
+	ldr	x19,[x0,#176+8+8]
+	b	__sigsetjmp_tail
+#else
+#error "unsupported architecture"
+#endif
 	.hidden	__sigsetjmp_tail
 	.endfn	sigsetjmp,globl

@@ -21,7 +21,7 @@ COSMOPOLITAN_C_START_
 
 #define kFdTtyEchoing 1 /* read()→write() (ECHO && !ICANON) */
 #define kFdTtyEchoRaw 2 /* don't ^X visualize control codes */
-#define kFdTtyMunging 4 /* enable input / output remappings */
+#define kFdTtyUncanon 4 /* enables non-canonical (raw) mode */
 #define kFdTtyNoCr2Nl 8 /* don't map \r → \n (a.k.a !ICRNL) */
 #define kFdTtyNoIsigs 16
 #define kFdTtyNoBlock 32

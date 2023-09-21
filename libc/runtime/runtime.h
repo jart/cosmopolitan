@@ -8,8 +8,10 @@ COSMOPOLITAN_C_START_
 
 #ifdef __x86_64__
 typedef long jmp_buf[8];
+typedef long sigjmp_buf[12];
 #elif defined(__aarch64__)
 typedef long jmp_buf[22];
+typedef long sigjmp_buf[26];
 #elif defined(__powerpc64__)
 typedef unsigned __int128 jmp_buf[32];
 #elif defined(__s390x__)
@@ -17,8 +19,6 @@ typedef unsigned long jmp_buf[18];
 #elif defined(__riscv)
 typedef unsigned long jmp_buf[26];
 #endif
-
-typedef long sigjmp_buf[12];
 
 void mcount(void);
 int daemon(int, int);

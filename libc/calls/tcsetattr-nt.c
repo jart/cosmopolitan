@@ -67,7 +67,7 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   }
 
   if (opt == TCSAFLUSH) {
-    tcflush(fd, TCIFLUSH);
+    FlushConsoleInputBytes(hInput);
   }
   inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |
               kNtEnableProcessedInput | kNtEnableVirtualTerminalInput);
@@ -78,7 +78,7 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
         kNtEnableLineInput | kNtEnableProcessedInput | kNtEnableQuickEditMode;
   } else {
     inmode &= ~kNtEnableQuickEditMode;
-    __ttymagic |= kFdTtyMunging;
+    __ttymagic |= kFdTtyUncanon;
     if (!tio->c_cc[VMIN]) {
       __ttymagic |= kFdTtyNoBlock;
     }

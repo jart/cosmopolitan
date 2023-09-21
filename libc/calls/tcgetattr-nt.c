@@ -95,7 +95,7 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   if (!(__ttymagic & kFdTtyNoIsigs)) {
     tio->c_lflag |= ISIG;
   }
-  if ((inmode & kNtEnableProcessedInput) || (__ttymagic & kFdTtyMunging)) {
+  if (inmode & kNtEnableProcessedInput) {
     tio->c_lflag |= IEXTEN;
   }
 
