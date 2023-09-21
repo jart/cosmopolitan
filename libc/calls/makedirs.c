@@ -20,7 +20,6 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
@@ -66,8 +65,8 @@ int makedirs(const char *path, unsigned mode) {
       break;
     }
     if (errno != ENOENT) return -1;
-    while (i && _isdirsep(buf[i - 1])) buf[--i] = 0;
-    while (i && !_isdirsep(buf[i - 1])) buf[--i] = 0;
+    while (i && buf[i - 1] == '/') buf[--i] = 0;
+    while (i && buf[i - 1] != '/') buf[--i] = 0;
   }
 
   // ascend
@@ -77,8 +76,8 @@ int makedirs(const char *path, unsigned mode) {
       if (i == n) goto CheckTop;
     }
     if (i == n) break;
-    while (i < n && !_isdirsep((c = path[i]))) buf[i++] = c;
-    while (i < n && _isdirsep((c = path[i]))) buf[i++] = c;
+    while (i < n && (c = path[i]) != '/') buf[i++] = c;
+    while (i < n && (c = path[i]) == '/') buf[i++] = c;
   }
 
 Finish:

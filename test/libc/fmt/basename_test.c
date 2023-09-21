@@ -47,8 +47,3 @@ TEST(basename, testTrailingSlash_isIgnored) {
 TEST(basename, testOnlySlashes_oneSlashOnlyVasily) {
   EXPECT_STREQ("/", BASENAME("///"));
 }
-
-TEST(basename, testWindows_isGrantedRespect) {
-  EXPECT_STREQ("there", BASENAME("hello\\there"));
-  EXPECT_STREQ("yo", BASENAME("hello\\there\\yo"));
-}

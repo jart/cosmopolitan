@@ -25,6 +25,10 @@
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
+void SetUpOnce(void) {
+  testlib_enable_tmp_setup_teardown();
+}
+
 TEST(makedirs, empty) {
   ASSERT_SYS(ENOENT, -1, makedirs("", 0755));
 }
@@ -52,15 +56,10 @@ TEST(makedirs, basic) {
   ASSERT_TRUE(isdirectory("a/b/c/d/e"));
 }
 
-#define DIR                                                                    \
-  "a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/A/B/C/D/E/F/G/H/I/J/K/" \
-  "L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z"
+#define DIR \
+  "a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/A/B/C/D/E/F/G/H/I/J"
 
 pthread_barrier_t barrier;
-
-void SetUpOnce(void) {
-  testlib_enable_tmp_setup_teardown();
-}
 
 void *Worker(void *arg) {
   pthread_barrier_wait(&barrier);
@@ -69,7 +68,6 @@ void *Worker(void *arg) {
 }
 
 TEST(makedirs, test) {
-  if (IsWindows()) return;  // todo: why won't long paths work on windows
   int i, n = 8;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));

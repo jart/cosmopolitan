@@ -18,120 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
-
-static bool IsExePath(const char *s, size_t n) {
-  return n >= 4 && (READ32LE(s + n - 4) == READ32LE(".exe") ||
-                    READ32LE(s + n - 4) == READ32LE(".EXE"));
-}
-
-static bool IsComPath(const char *s, size_t n) {
-  return n >= 4 && (READ32LE(s + n - 4) == READ32LE(".com") ||
-                    READ32LE(s + n - 4) == READ32LE(".COM"));
-}
-
-static bool IsComDbgPath(const char *s, size_t n) {
-  return n >= 8 && (READ64LE(s + n - 8) == READ64LE(".com.dbg") ||
-                    READ64LE(s + n - 8) == READ64LE(".COM.DBG"));
-}
-
-static bool AccessCommand(const char *name, char *path, size_t pathsz,
-                          size_t namelen, int *err, const char *suffix,
-                          size_t pathlen) {
-  size_t suffixlen;
-  suffixlen = strlen(suffix);
-  if (IsWindows() && suffixlen == 0 && !IsExePath(name, namelen) &&
-      !IsComPath(name, namelen))
-    return false;
-  if (pathlen + 1 + namelen + suffixlen + 1 > pathsz) return false;
-  if (pathlen && (path[pathlen - 1] != '/' && path[pathlen - 1] != '\\')) {
-    path[pathlen] = !IsWindows()                  ? '/'
-                    : memchr(path, '\\', pathlen) ? '\\'
-                                                  : '/';
-    pathlen++;
-  }
-  memcpy(path + pathlen, name, namelen);
-  memcpy(path + pathlen + namelen, suffix, suffixlen + 1);
-  if (!access(path, X_OK)) {
-    struct stat st;
-    if (!stat(path, &st)) {
-      if (S_ISREG(st.st_mode)) {
-        return true;
-      } else {
-        errno = EACCES;
-      }
-    }
-  }
-  if (errno == EACCES || *err != EACCES) *err = errno;
-  return false;
-}
-
-static bool SearchPath(const char *name, char *path, size_t pathsz,
-                       size_t namelen, int *err, const char *suffix) {
-  char sep;
-  size_t i;
-  const char *p;
-  if (!(p = getenv("PATH"))) p = "/bin:/usr/local/bin:/usr/bin";
-  sep = IsWindows() && strchr(p, ';') ? ';' : ':';
-  for (;;) {
-    for (i = 0; p[i] && p[i] != sep; ++i) {
-      if (i < pathsz) {
-        path[i] = p[i];
-      }
-    }
-    if (AccessCommand(name, path, pathsz, namelen, err, suffix, i)) {
-      return true;
-    }
-    if (p[i] == sep) {
-      p += i + 1;
-    } else {
-      break;
-    }
-  }
-  return false;
-}
-
-static bool FindCommand(const char *name, char *pb, size_t pbsz, size_t namelen,
-                        bool pri, const char *suffix, int *err) {
-  if (pri && (memchr(name, '/', namelen) || memchr(name, '\\', namelen))) {
-    pb[0] = 0;
-    return AccessCommand(name, pb, pbsz, namelen, err, suffix, 0);
-  }
-  if (IsWindows() && pri &&
-      pbsz > max(strlen(kNtSystemDirectory), strlen(kNtWindowsDirectory))) {
-    return AccessCommand(name, pb, pbsz, namelen, err, suffix,
-                         stpcpy(pb, kNtSystemDirectory) - pb) ||
-           AccessCommand(name, pb, pbsz, namelen, err, suffix,
-                         stpcpy(pb, kNtWindowsDirectory) - pb);
-  }
-  return (IsWindows() &&
-          (pbsz > 1 && AccessCommand(name, pb, pbsz, namelen, err, suffix,
-                                     stpcpy(pb, ".") - pb))) ||
-         SearchPath(name, pb, pbsz, namelen, err, suffix);
-}
-
-static bool FindVerbatim(const char *name, char *pb, size_t pbsz,
-                         size_t namelen, bool pri, int *err) {
-  return FindCommand(name, pb, pbsz, namelen, pri, "", err);
-}
-
-static bool FindSuffixed(const char *name, char *pb, size_t pbsz,
-                         size_t namelen, bool pri, int *err) {
-  return !IsExePath(name, namelen) && !IsComPath(name, namelen) &&
-         !IsComDbgPath(name, namelen) &&
-         (FindCommand(name, pb, pbsz, namelen, pri, ".com", err) ||
-          FindCommand(name, pb, pbsz, namelen, pri, ".exe", err));
-}
 
 /**
  * Resolves full pathname of executable.
@@ -143,35 +37,56 @@ static bool FindSuffixed(const char *name, char *pb, size_t pbsz,
  * @vforksafe
  */
 char *commandv(const char *name, char *pathbuf, size_t pathbufsz) {
-  int e, f;
-  char *res;
+
+  // bounce empty names
   size_t namelen;
-  res = 0;
-  if (!name) {
-    efault();
-  } else if (!(namelen = strlen(name))) {
+  if (!(namelen = strlen(name))) {
     enoent();
-  } else if (namelen + 1 > pathbufsz) {
-    enametoolong();
-  } else {
-    e = errno;
-    f = ENOENT;
-    if ((IsWindows() &&
-         (FindSuffixed(name, pathbuf, pathbufsz, namelen, true, &f) ||
-          FindVerbatim(name, pathbuf, pathbufsz, namelen, true, &f) ||
-          FindSuffixed(name, pathbuf, pathbufsz, namelen, false, &f) ||
-          FindVerbatim(name, pathbuf, pathbufsz, namelen, false, &f))) ||
-        (!IsWindows() &&
-         (FindVerbatim(name, pathbuf, pathbufsz, namelen, true, &f) ||
-          FindSuffixed(name, pathbuf, pathbufsz, namelen, true, &f) ||
-          FindVerbatim(name, pathbuf, pathbufsz, namelen, false, &f) ||
-          FindSuffixed(name, pathbuf, pathbufsz, namelen, false, &f)))) {
-      errno = e;
-      res = pathbuf;
-    } else {
-      errno = f;
-    }
+    return 0;
   }
-  STRACE("commandv(%#s, %p, %'zu) → %#s% m", name, pathbuf, pathbufsz, res);
-  return res;
+
+  // get system path
+  const char *syspath;
+  if (memchr(name, '/', namelen)) {
+    syspath = "";
+  } else if (!(syspath = getenv("PATH"))) {
+    syspath = _PATH_DEFPATH;
+  }
+
+  // iterate through directories
+  int old_errno = errno;
+  bool seen_eacces = false;
+  const char *b, *a = syspath;
+  errno = ENOENT;
+  do {
+    b = strchrnul(a, ':');
+    size_t dirlen = b - a;
+    if (dirlen + 1 + namelen < pathbufsz) {
+      if (dirlen) {
+        memcpy(pathbuf, a, dirlen);
+        pathbuf[dirlen] = '/';
+        memcpy(pathbuf + dirlen + 1, name, namelen + 1);
+      } else {
+        memcpy(pathbuf, name, namelen + 1);
+      }
+      if (!access(pathbuf, X_OK)) {
+        struct stat st;
+        if (!stat(pathbuf, &st) && S_ISREG(st.st_mode)) {
+          errno = old_errno;
+          return pathbuf;
+        }
+      } else if (errno == EACCES) {
+        seen_eacces = true;
+      }
+    } else {
+      enametoolong();
+    }
+    a = b + 1;
+  } while (*b);
+
+  // return error if not found
+  if (seen_eacces) {
+    errno = EACCES;
+  }
+  return 0;
 }

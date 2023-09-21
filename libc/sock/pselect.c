@@ -67,7 +67,6 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
     const sigset_t *s;
     size_t n;
   } ss;
-  BEGIN_CANCELLATION_POINT;
 
 #ifdef SYSDEBUG
   fd_set old_readfds;
@@ -78,6 +77,7 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   fd_set *old_exceptfds_ptr = 0;
 #endif
 
+  BEGIN_CANCELLATION_POINT;
   if (nfds < 0) {
     rc = einval();
   } else if (IsAsan() &&
@@ -126,8 +126,8 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
       rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, sigmask);
     }
   }
-
   END_CANCELLATION_POINT;
+
   STRACE("pselect(%d, %s → [%s], %s → [%s], %s → [%s], %s, %s) → %d% m", nfds,
          DescribeFdSet(rc, nfds, old_readfds_ptr),
          DescribeFdSet(rc, nfds, readfds),

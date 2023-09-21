@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/str/blake2.h"
-#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"

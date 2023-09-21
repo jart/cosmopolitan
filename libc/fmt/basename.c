@@ -16,8 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/str/path.h"
+#include "libc/fmt/libgen.h"
 #include "libc/str/str.h"
 
 /**
@@ -46,10 +45,10 @@ char *basename(char *path) {
   size_t i;
   if (path && *path) {
     i = strlen(path) - 1;
-    for (; i && _isdirsep(path[i]); i--) {
+    for (; i && path[i] == '/'; i--) {
       path[i] = 0;
     }
-    while (i && !_isdirsep(path[i - 1])) {
+    while (i && path[i - 1] != '/') {
       i--;
     }
     return path + i;

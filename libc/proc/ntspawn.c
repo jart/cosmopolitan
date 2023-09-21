@@ -81,12 +81,10 @@ textwindows int ntspawn(
     const char16_t *opt_lpCurrentDirectory,
     const struct NtStartupInfo *lpStartupInfo,
     struct NtProcessInformation *opt_out_lpProcessInformation) {
+  int rc = -1;
   int64_t handle;
-  int i, e, rc = -1;
   struct SpawnBlock *block = 0;
-  char16_t prog16[PATH_MAX + 5], *p;
-  char16_t suffixes[][5] = {u"", u".com", u".exe"};
-
+  char16_t prog16[PATH_MAX + 5];
   if (__mkntpath(prog, prog16) == -1) return -1;
   if ((handle = CreateFileMapping(-1, 0, pushpop(kNtPageReadwrite), 0,
                                   sizeof(*block), 0)) &&
@@ -94,28 +92,13 @@ textwindows int ntspawn(
                                sizeof(*block), 0)) &&
       mkntcmdline(block->cmdline, argv) != -1 &&
       mkntenvblock(block->envvars, envp, extravar, block->buf) != -1) {
-    p = prog16 + strlen16(prog16);
-    for (i = 0; i < ARRAYLEN(suffixes); ++i) {
-      if (suffixes[i][0] && endswith16(prog16, suffixes[i])) {
-        p -= strlen16(suffixes[i]);
-        *p = 0;
-      } else {
-        strcpy16(p, suffixes[i]);
-      }
-      e = errno;
-      if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
-                        opt_lpThreadAttributes, bInheritHandles,
-                        dwCreationFlags | kNtCreateUnicodeEnvironment |
-                            kNtInheritParentAffinity,
-                        block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
-                        opt_out_lpProcessInformation)) {
-        rc = 0;
-        break;
-      } else if (errno == ENOENT) {
-        errno = e;
-      } else {
-        break;
-      }
+    if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
+                      opt_lpThreadAttributes, bInheritHandles,
+                      dwCreationFlags | kNtCreateUnicodeEnvironment |
+                          kNtInheritParentAffinity,
+                      block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
+                      opt_out_lpProcessInformation)) {
+      rc = 0;
     }
   } else if (GetLastError() == kNtErrorSharingViolation) {
     etxtbsy();
