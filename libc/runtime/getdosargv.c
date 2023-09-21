@@ -87,8 +87,8 @@ static textwindows int Count(int c, struct DosArgv *st) {
 // @see test/libc/dosarg_test.c
 // @see libc/runtime/ntspawn.c
 // @note kudos to Simon Tatham for figuring out quoting behavior
-textwindows int GetDosArgv(const char16_t *cmdline, char *buf,
-                                    size_t size, char **argv, size_t max) {
+textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
+                           char **argv, size_t max) {
   bool inquote;
   int i, argc, slashes, quotes, ignore;
   static struct DosArgv st_;
@@ -107,32 +107,6 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf,
     if (!st->wc) break;
     if (++argc < max) {
       argv[argc - 1] = st->p < st->pe ? st->p : NULL;
-      if (argc == 1) {
-        // windows lets you run "foo.com" without saying "./foo.com"
-        // which caused emacs to crash after searching for itself :(
-        char16_t cmd[256];
-        uint32_t i, j, attr;
-        i = j = 0;
-        cmd[j++] = st->wc;
-        for (; st->s[i]; ++i) {
-          if (i == 255 || st->s[i] == '/' || st->s[i] == '\\') {
-            goto GiveUpAddingDotSlash;
-          }
-          if (st->s[i] == ' ' || st->s[i] == '\t') {
-            break;
-          }
-          cmd[j++] = st->s[i];
-        }
-        cmd[j] = 0;
-        if (IsWindows() &&                                    //
-            (attr = __imp_GetFileAttributesW(cmd)) != -1u &&  //
-            !(attr & kNtFileAttributeDirectory)) {
-          AppendDosArgv('.', st);
-          AppendDosArgv('\\', st);
-        }
-      GiveUpAddingDotSlash:
-        donothing;
-      }
     }
     inquote = false;
     while (st->wc) {

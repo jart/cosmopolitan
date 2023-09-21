@@ -16,20 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/console.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/iovec.internal.h"
-#include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/calls/wincrash.internal.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
@@ -39,95 +37,95 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"
-#include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/inputrecord.h"
-#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-
 #ifdef __x86_64__
 
 __msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
 
 static const struct {
-  uint16_t vk;
-  uint32_t normal_str;
-  uint32_t shift_str;
-  uint32_t ctrl_str;
-  uint32_t shift_ctrl_str;
+  int vk;
+  int normal_str;
+  int shift_str;
+  int ctrl_str;
+  int shift_ctrl_str;
 } kVirtualKey[] = {
-#define SW(s) W4(s "\0\0")
-#define W4(s) (s[3] + 0u) << 24 | s[2] << 16 | s[1] << 8 | s[0]
-#define VK(vk, normal_str, shift_str, ctrl_str, shift_ctrl_str) \
-  { vk, SW(normal_str), SW(shift_str), SW(ctrl_str), SW(shift_ctrl_str) }
-    VK(kNtVkInsert, "2~", "2;2~", "2;5~", "2;6~"),
-    VK(kNtVkEnd, "4~", "4;2~", "4;5~", "4;6~"),
-    VK(kNtVkDown, "B", "1;2B", "1;5B", "1;6B"),
-    VK(kNtVkNext, "6~", "6;2~", "6;5~", "6;6~"),
-    VK(kNtVkLeft, "D", "1;2D", "1;5D", "1;6D"),
-    VK(kNtVkClear, "G", "1;2G", "1;5G", "1;6G"),
-    VK(kNtVkRight, "C", "1;2C", "1;5C", "1;6C"),
-    VK(kNtVkUp, "A", "1;2A", "1;5A", "1;6A"),
-    VK(kNtVkHome, "1~", "1;2~", "1;5~", "1;6~"),
-    VK(kNtVkPrior, "5~", "5;2~", "5;5~", "5;6~"),
-    VK(kNtVkDelete, "3~", "3;2~", "3;5~", "3;6~"),
-    VK(kNtVkNumpad0, "2~", "2;2~", "2;5~", "2;6~"),
-    VK(kNtVkNumpad1, "4~", "4;2~", "4;5~", "4;6~"),
-    VK(kNtVkNumpad2, "B", "1;2B", "1;5B", "1;6B"),
-    VK(kNtVkNumpad3, "6~", "6;2~", "6;5~", "6;6~"),
-    VK(kNtVkNumpad4, "D", "1;2D", "1;5D", "1;6D"),
-    VK(kNtVkNumpad5, "G", "1;2G", "1;5G", "1;6G"),
-    VK(kNtVkNumpad6, "C", "1;2C", "1;5C", "1;6C"),
-    VK(kNtVkNumpad7, "A", "1;2A", "1;5A", "1;6A"),
-    VK(kNtVkNumpad8, "1~", "1;2~", "1;5~", "1;6~"),
-    VK(kNtVkNumpad9, "5~", "5;2~", "5;5~", "5;6~"),
-    VK(kNtVkDecimal, "3~", "3;2~", "3;5~", "3;6~"),
-    VK(kNtVkF1, "[A", "23~", "11^", "23^"),
-    VK(kNtVkF2, "[B", "24~", "12^", "24^"),
-    VK(kNtVkF3, "[C", "25~", "13^", "25^"),
-    VK(kNtVkF4, "[D", "26~", "14^", "26^"),
-    VK(kNtVkF5, "[E", "28~", "15^", "28^"),
-    VK(kNtVkF6, "17~", "29~", "17^", "29^"),
-    VK(kNtVkF7, "18~", "31~", "18^", "31^"),
-    VK(kNtVkF8, "19~", "32~", "19^", "32^"),
-    VK(kNtVkF9, "20~", "33~", "20^", "33^"),
-    VK(kNtVkF10, "21~", "34~", "21^", "34^"),
-    VK(kNtVkF11, "23~", "23$", "23^", "23@"),
-    VK(kNtVkF12, "24~", "24$", "24^", "24@"),
-#undef VK
-#undef W4
-#undef SW
+#define S(s) W(s "\0\0")
+#define W(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])
+    {kNtVkUp, S("A"), S("1;2A"), S("1;5A"), S("1;6A")},
+    {kNtVkDown, S("B"), S("1;2B"), S("1;5B"), S("1;6B")},
+    {kNtVkLeft, S("D"), S("1;2D"), S("1;5D"), S("1;6D")},
+    {kNtVkRight, S("C"), S("1;2C"), S("1;5C"), S("1;6C")},
+    {kNtVkInsert, S("2~"), S("2;2~"), S("2;5~"), S("2;6~")},
+    {kNtVkDelete, S("3~"), S("3;2~"), S("3;5~"), S("3;6~")},
+    {kNtVkHome, S("H"), S("1;2H"), S("1;5H"), S("1;6H")},
+    {kNtVkEnd, S("F"), S("1;2F"), S("1;5F"), S("1;6F")},
+    {kNtVkPrior, S("5~"), S("5;2~"), S("5;5~"), S("5;6~")},
+    {kNtVkNext, S("6~"), S("6;2~"), S("6;5~"), S("6;6~")},
+    {kNtVkF1, -S("OP"), S("1;2P"), S("11^"), S("1;6P")},
+    {kNtVkF2, -S("OQ"), S("1;2Q"), S("12^"), S("1;6Q")},
+    {kNtVkF3, -S("OR"), S("1;2R"), S("13^"), S("1;6R")},
+    {kNtVkF4, -S("OS"), S("1;2S"), S("14^"), S("1;6S")},
+    {kNtVkF5, S("15~"), S("28~"), S("15^"), S("28^")},
+    {kNtVkF6, S("17~"), S("29~"), S("17^"), S("29^")},
+    {kNtVkF7, S("18~"), S("31~"), S("18^"), S("31^")},
+    {kNtVkF8, S("19~"), S("32~"), S("19^"), S("32^")},
+    {kNtVkF9, S("20~"), S("33~"), S("20^"), S("33^")},
+    {kNtVkF10, S("21~"), S("34~"), S("21^"), S("34^")},
+    {kNtVkF11, S("23~"), S("23$"), S("23^"), S("23@")},
+    {kNtVkF12, S("24~"), S("24$"), S("24^"), S("24@")},
+#undef W
+#undef S
 };
 
-static textwindows int ProcessSignal(int sig, struct Fd *f) {
-  if (f) {
-    if (_weaken(__sig_raise)) {
-      pthread_mutex_unlock(&f->lock);
-      _weaken(__sig_raise)(sig, SI_KERNEL);
-      pthread_mutex_lock(&f->lock);
-      if (!(__sighandflags[sig] & SA_RESTART)) {
-        return eintr();
-      }
-    } else if (sig != SIGWINCH) {
-      TerminateThisProcess(sig);
-    }
-  }
-  return 0;
+#define KEYSTROKE_CONTAINER(e) DLL_CONTAINER(struct Keystroke, elem, e)
+
+struct Keystroke {
+  char buf[32];
+  unsigned buflen;
+  struct Dll elem;
+};
+
+struct Keystrokes {
+  struct Dll *list;
+  struct Dll *free;
+  bool end_of_file;
+  uint16_t utf16hs;
+  unsigned allocated;
+  pthread_mutex_t lock;
+  struct Keystroke pool[32];
+};
+
+static struct Keystrokes __keystroke;
+
+static textwindows void LockKeystrokes(void) {
+  pthread_mutex_lock(&__keystroke.lock);
 }
 
-static textwindows uint32_t GetVirtualKey(uint16_t vk, bool shift, bool ctrl) {
+static textwindows void UnlockKeystrokes(void) {
+  pthread_mutex_unlock(&__keystroke.lock);
+}
+
+static textwindows uint64_t BlockSignals(void) {
+  return atomic_exchange(&__get_tls()->tib_sigmask, -1);
+}
+
+static textwindows void UnblockSignals(uint64_t mask) {
+  atomic_store_explicit(&__get_tls()->tib_sigmask, mask, memory_order_release);
+}
+
+static textwindows int GetVirtualKey(uint16_t vk, bool shift, bool ctrl) {
   for (int i = 0; i < ARRAYLEN(kVirtualKey); ++i) {
     if (kVirtualKey[i].vk == vk) {
       if (shift && ctrl) {
@@ -144,33 +142,7 @@ static textwindows uint32_t GetVirtualKey(uint16_t vk, bool shift, bool ctrl) {
   return 0;
 }
 
-// Manual CMD.EXE echoing for when !ICANON && ECHO is the case.
-static textwindows void EchoTerminalInput(struct Fd *f, char *p, size_t n) {
-  int64_t hOutput;
-  if (f->kind == kFdConsole) {
-    hOutput = f->extra;
-  } else {
-    hOutput = g_fds.p[1].handle;
-  }
-  if (__ttymagic & kFdTtyEchoRaw) {
-    WriteFile(hOutput, p, n, 0, 0);
-  } else {
-    size_t i;
-    for (i = 0; i < n; ++i) {
-      if (isascii(p[i]) && iscntrl(p[i]) && p[i] != '\n' && p[i] != '\t') {
-        char ctl[2];
-        ctl[0] = '^';
-        ctl[1] = p[i] ^ 0100;
-        WriteFile(hOutput, ctl, 2, 0, 0);
-      } else {
-        WriteFile(hOutput, p + i, 1, 0, 0);
-      }
-    }
-  }
-}
-
-static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p,
-                                       uint16_t *utf16hs, struct Fd *f) {
+static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
 
   uint16_t c = r->Event.KeyEvent.uChar.UnicodeChar;
   uint16_t vk = r->Event.KeyEvent.wVirtualKeyCode;
@@ -181,23 +153,10 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p,
     return 0;
   }
 
-  // ignore numpad being used to compose a character
-  if ((cks & kNtLeftAltPressed) && !(cks & kNtEnhancedKey) &&
-      (vk == kNtVkInsert || vk == kNtVkEnd || vk == kNtVkDown ||
-       vk == kNtVkNext || vk == kNtVkLeft || vk == kNtVkClear ||
-       vk == kNtVkRight || vk == kNtVkHome || vk == kNtVkUp ||
-       vk == kNtVkPrior || vk == kNtVkNumpad0 || vk == kNtVkNumpad1 ||
-       vk == kNtVkNumpad2 || vk == kNtVkNumpad3 || vk == kNtVkNumpad4 ||
-       vk == kNtVkNumpad5 || vk == kNtVkNumpad6 || vk == kNtVkNumpad7 ||
-       vk == kNtVkNumpad8 || vk == kNtVkNumpad9)) {
-    return 0;
-  }
-
-  int n = 0;
-
   // process virtual keys
+  int n = 0;
   if (!c) {
-    uint32_t w;
+    int w;
     w = GetVirtualKey(vk, !!(cks & kNtShiftPressed),
                       !!(cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed)));
     if (!w) return 0;
@@ -205,7 +164,11 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p,
     if (cks & (kNtLeftAltPressed | kNtRightAltPressed)) {
       p[n++] = 033;
     }
-    p[n++] = '[';
+    if (w > 0) {
+      p[n++] = '[';
+    } else {
+      w = -w;
+    }
     do p[n++] = w;
     while ((w >>= 8));
     return n;
@@ -213,11 +176,11 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p,
 
   // translate utf-16 into utf-32
   if (IsHighSurrogate(c)) {
-    *utf16hs = c;
+    __keystroke.utf16hs = c;
     return 0;
   }
   if (IsLowSurrogate(c)) {
-    c = MergeUtf16(*utf16hs, c);
+    c = MergeUtf16(__keystroke.utf16hs, c);
   }
 
   // enter sends \r in a raw terminals
@@ -240,15 +203,21 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p,
   // handle ctrl-c and ctrl-\, which tcsetattr() is able to remap
   if (!(__ttymagic & kFdTtyNoIsigs)) {
     if (c == __vintr && __vintr != _POSIX_VDISABLE) {
-      return ProcessSignal(SIGINT, f);
+      STRACE("encountered CTRL(%#c) c_cc[VINTR] will raise SIGINT", CTRL(c));
+      __get_tls()->tib_sigpending |= 1ull << (SIGINT - 1);
+      return 0;
     } else if (c == __vquit && __vquit != _POSIX_VDISABLE) {
-      return ProcessSignal(SIGQUIT, f);
+      STRACE("encountered CTRL(%#c) c_cc[VQUITR] will raise SIGQUIT", CTRL(c));
+      __get_tls()->tib_sigpending |= 1ull << (SIGQUIT - 1);
+      return 0;
     }
   }
 
   // handle ctrl-d the end of file keystroke
   if (c == __veof && __veof != _POSIX_VDISABLE) {
-    return enodata();
+    STRACE("encountered CTRL(%#c) c_cc[VEOF] closing console input", CTRL(c));
+    __keystroke.end_of_file = true;
+    return 0;
   }
 
   // insert esc prefix when alt is held
@@ -269,11 +238,11 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p,
 //   - write(1, "\e[?1000;1002;1015;1006h") to enable
 //   - write(1, "\e[?1000;1002;1015;1006l") to disable
 // See o//examples/ttyinfo.com and o//tool/viz/life.com
-static textwindows int ProcessMouseEvent(const struct NtInputRecord *r, char *b,
-                                         struct Fd *f) {
+static textwindows int ProcessMouseEvent(const struct NtInputRecord *r,
+                                         char *b) {
   int e = 0;
   char *p = b;
-  uint32_t currentbs = f ? f->mousebuttons : 0;
+  uint32_t currentbs = __mousebuttons;
   uint32_t ev = r->Event.MouseEvent.dwEventFlags;
   uint32_t bs = r->Event.MouseEvent.dwButtonState;
   ev &= kNtMouseMoved | kNtMouseWheeled;
@@ -320,98 +289,195 @@ static textwindows int ProcessMouseEvent(const struct NtInputRecord *r, char *b,
     } else {
       *p++ = 'M';  // down
     }
-    if (f) {
-      f->mousebuttons = bs;
-    }
+    __mousebuttons = bs;
   }
   return p - b;
 }
 
-textwindows int ConvertConsoleInputToAnsi(const struct NtInputRecord *r,
-                                          char p[hasatleast 32],
-                                          uint16_t *utf16hs, struct Fd *f) {
+static textwindows int ConvertConsoleInputToAnsi(const struct NtInputRecord *r,
+                                                 char p[hasatleast 32]) {
   switch (r->EventType) {
     case kNtKeyEvent:
-      return ProcessKeyEvent(r, p, utf16hs, f);
+      return ProcessKeyEvent(r, p);
     case kNtMouseEvent:
-      return ProcessMouseEvent(r, p, f);
+      return ProcessMouseEvent(r, p);
     case kNtWindowBufferSizeEvent:
-      return ProcessSignal(SIGWINCH, f);
+      STRACE("detected console resize will raise SIGWINCH");
+      __get_tls()->tib_sigpending |= 1ull << (SIGWINCH - 1);
+      return 0;
     default:
       return 0;
   }
 }
 
-static textwindows ssize_t ReadFromWindowsConsole(struct Fd *f, void *data,
-                                                  size_t size) {
-  ssize_t rc;
-  int e = errno;
-  uint16_t utf16hs = 0;
-  pthread_mutex_lock(&f->lock);
-  for (;;) {
-    if (f->eoftty) {
-      rc = 0;
-      break;
-    }
-    uint32_t got = MIN(size, f->buflen);
-    uint32_t remain = f->buflen - got;
-    if (got) memcpy(data, f->buf, got);
-    if (remain) memmove(f->buf, f->buf + got, remain);
-    f->buflen = remain;
-    if (got) {
-      rc = got;
-      break;
-    }
-    uint32_t events_available;
-    if (!GetNumberOfConsoleInputEvents(f->handle, &events_available)) {
-      rc = __winerr();
-      break;
-    }
-    if (events_available) {
-      uint32_t n;
-      struct NtInputRecord r;
-      if (!ReadConsoleInput(f->handle, &r, 1, &n)) {
-        rc = __winerr();
-        break;
-      }
-      rc = ConvertConsoleInputToAnsi(&r, f->buf, &utf16hs, f);
-      if (rc == -1) {
-        if (errno == ENODATA) {
-          f->eoftty = true;
-          errno = e;
-          rc = 0;
-        }
-        break;
-      }
-      f->buflen = rc;
+static textwindows struct Keystroke *NewKeystroke(void) {
+  struct Dll *e;
+  struct Keystroke *k = 0;
+  int i, n = ARRAYLEN(__keystroke.pool);
+  if (atomic_load_explicit(&__keystroke.allocated, memory_order_acquire) < n &&
+      (i = atomic_fetch_add(&__keystroke.allocated, 1)) < n) {
+    k = __keystroke.pool + i;
+  } else if ((e = dll_first(__keystroke.free))) {
+    k = KEYSTROKE_CONTAINER(e);
+    dll_remove(&__keystroke.free, &k->elem);
+  } else {
+    return 0;
+  }
+  bzero(k, sizeof(*k));
+  dll_init(&k->elem);
+  return k;
+}
+
+static textwindows void IngestConsoleInputRecord(struct NtInputRecord *r) {
+  int len;
+  struct Keystroke *k;
+  char buf[sizeof(k->buf)];
+  if ((len = ConvertConsoleInputToAnsi(r, buf))) {
+    if ((k = NewKeystroke())) {
+      memcpy(k->buf, buf, sizeof(k->buf));
+      k->buflen = len;
+      dll_make_last(&__keystroke.list, &k->elem);
     } else {
-      if (f->flags & O_NONBLOCK) {
-        rc = 0;
-        break;
-      }
-      uint32_t ms = __SIG_POLL_INTERVAL_MS;
-      if (__ttymagic & kFdTtyNoBlock) {
-        if (!__vtime) {
-          rc = 0;
-          break;
-        } else {
-          ms = __vtime * 100;
+      STRACE("ran out of memory to hold keystroke %#.*s", len, buf);
+    }
+  }
+}
+
+static textwindows void IngestConsoleInput(int64_t handle) {
+  uint32_t i, n;
+  struct NtInputRecord records[16];
+  if (!__keystroke.end_of_file) {
+    do {
+      if (GetNumberOfConsoleInputEvents(handle, &n)) {
+        if (n) {
+          n = MIN(ARRAYLEN(records), n);
+          if (ReadConsoleInput(handle, records, n, &n)) {
+            for (i = 0; i < n && !__keystroke.end_of_file; ++i) {
+              IngestConsoleInputRecord(records + i);
+            }
+          } else {
+            STRACE("ReadConsoleInput failed w/ %d", GetLastError());
+            __keystroke.end_of_file = true;
+            break;
+          }
         }
-      }
-      if ((rc = _check_interrupts(kSigOpRestartable))) {
+      } else {
+        STRACE("GetNumberOfConsoleInputRecords failed w/ %d", GetLastError());
+        __keystroke.end_of_file = true;
         break;
       }
-      struct PosixThread *pt = _pthread_self();
-      pt->pt_flags |= PT_INSEMAPHORE;
-      WaitForSingleObject(pt->semaphore, ms);
-      pt->pt_flags &= ~PT_INSEMAPHORE;
-      if (pt->abort_errno == ECANCELED) {
-        rc = ecanceled();
-        break;
+    } while (n == ARRAYLEN(records));
+  }
+}
+
+textwindows int FlushConsoleInputBytes(int64_t handle) {
+  int rc;
+  uint64_t m;
+  m = BlockSignals();
+  LockKeystrokes();
+  if (FlushConsoleInputBuffer(handle)) {
+    dll_make_first(&__keystroke.free, __keystroke.list);
+    __keystroke.list = 0;
+    rc = 0;
+  } else {
+    rc = __winerr();
+  }
+  UnlockKeystrokes();
+  UnblockSignals(m);
+  return rc;
+}
+
+textwindows int CountConsoleInputBytes(int64_t handle) {
+  int count = 0;
+  struct Dll *e;
+  uint64_t m = BlockSignals();
+  LockKeystrokes();
+  IngestConsoleInput(handle);
+  for (e = dll_first(__keystroke.list); e; e = dll_next(__keystroke.list, e)) {
+    count += KEYSTROKE_CONTAINER(e)->buflen;
+  }
+  if (!count && __keystroke.end_of_file) {
+    count = -1;
+  }
+  UnlockKeystrokes();
+  UnblockSignals(m);
+  return count;
+}
+
+static textwindows bool DigestConsoleInput(void *data, size_t size, int *rc) {
+  struct Dll *e;
+  if ((e = dll_first(__keystroke.list))) {
+    struct Keystroke *k = KEYSTROKE_CONTAINER(e);
+    uint32_t got = MIN(size, k->buflen);
+    uint32_t remain = k->buflen - got;
+    if (got) memcpy(data, k->buf, got);
+    if (remain) memmove(k->buf, k->buf + got, remain);
+    if (!remain) {
+      dll_remove(&__keystroke.list, e);
+      dll_make_first(&__keystroke.free, e);
+    }
+    k->buflen = remain;
+    if (got) {
+      *rc = got;
+      return true;
+    }
+  } else if (__keystroke.end_of_file) {
+    *rc = 0;
+    return true;
+  }
+  return false;
+}
+
+// Manual CMD.EXE echoing for when !ICANON && ECHO is the case.
+static textwindows void EchoTerminalInput(struct Fd *f, char *p, size_t n) {
+  int64_t hOutput;
+  if (f->kind == kFdConsole) {
+    hOutput = f->extra;
+  } else {
+    hOutput = g_fds.p[1].handle;
+  }
+  if (__ttymagic & kFdTtyEchoRaw) {
+    WriteFile(hOutput, p, n, 0, 0);
+  } else {
+    size_t i;
+    for (i = 0; i < n; ++i) {
+      if (isascii(p[i]) && iscntrl(p[i]) && p[i] != '\n' && p[i] != '\t') {
+        char ctl[2];
+        ctl[0] = '^';
+        ctl[1] = p[i] ^ 0100;
+        WriteFile(hOutput, ctl, 2, 0, 0);
+      } else {
+        WriteFile(hOutput, p + i, 1, 0, 0);
       }
     }
   }
-  pthread_mutex_unlock(&f->lock);
+}
+
+static textwindows ssize_t ReadFromWindowsConsole(struct Fd *f, void *data,
+                                                  size_t size) {
+  int rc = -1;
+  for (;;) {
+    bool done = false;
+    uint64_t m;
+    m = BlockSignals();
+    LockKeystrokes();
+    IngestConsoleInput(f->handle);
+    done = DigestConsoleInput(data, size, &rc);
+    UnlockKeystrokes();
+    UnblockSignals(m);
+    if (done) break;
+    if (f->flags & O_NONBLOCK) return eagain();
+    uint32_t ms = __SIG_POLL_INTERVAL_MS;
+    if (__ttymagic & kFdTtyNoBlock) {
+      if (!__vtime) {
+        return 0;
+      } else {
+        ms = __vtime * 100;
+      }
+    }
+    if (_check_interrupts(kSigOpRestartable)) return -1;
+    if (__pause_thread(ms)) return -1;
+  }
   if (rc > 0 && (__ttymagic & kFdTtyEchoing)) {
     EchoTerminalInput(f, data, size);
   }
@@ -508,6 +574,12 @@ textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
 
   if (ok) {
     return got;
+  }
+
+  errno_t err;
+  if (_weaken(pthread_testcancel_np) &&
+      (err = _weaken(pthread_testcancel_np)())) {
+    return ecanceled();
   }
 
   switch (GetLastError()) {

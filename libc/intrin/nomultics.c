@@ -25,3 +25,4 @@ unsigned char __veof;
 unsigned char __vintr;
 unsigned char __vquit;
 unsigned char __vtime;
+unsigned char __mousebuttons;

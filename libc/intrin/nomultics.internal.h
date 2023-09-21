@@ -11,6 +11,7 @@ extern unsigned char __veof;
 extern unsigned char __vintr;
 extern unsigned char __vquit;
 extern unsigned char __vtime;
+extern unsigned char __mousebuttons;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

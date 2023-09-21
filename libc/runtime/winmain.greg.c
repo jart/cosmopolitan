@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
@@ -145,6 +146,12 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
     }
   }
 
+  // avoid programs like emacs nagging the user to define this
+  char16_t var[8];
+  if (!__imp_GetEnvironmentVariableW(u"TERM", var, 8)) {
+    __imp_SetEnvironmentVariableW(u"TERM", u"xterm-256color");
+  }
+
   // allocate memory for stack and argument block
   _Static_assert(sizeof(struct WinArgs) % FRAMESIZE == 0, "");
   _mmi.p = _mmi.s;
@@ -172,6 +179,21 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   // parse utf-16 command into utf-8 argv array in argument block
   int count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock),
                          wa->argv, ARRAYLEN(wa->argv));
+
+  // normalize executable path
+  if (wa->argv[0] && !WinFileExists(wa->argv[0])) {
+    unsigned i, n = 0;
+    while (wa->argv[0][n]) ++n;
+    if (n + 4 < sizeof(wa->argv0buf)) {
+      for (i = 0; i < n; ++i) {
+        wa->argv0buf[i] = wa->argv[0][i];
+      }
+      WRITE32LE(wa->argv0buf + i, READ32LE(".com"));
+      if (WinFileExists(wa->argv0buf)) {
+        wa->argv[0] = wa->argv0buf;
+      }
+    }
+  }
 
   // munge argv so dos paths become cosmo paths
   for (int i = 0; wa->argv[i]; ++i) {

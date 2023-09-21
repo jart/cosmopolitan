@@ -15,14 +15,12 @@ extern const int F_FULLFSYNC;
 extern const int F_GETFD;
 extern const int F_GETFL;
 extern const int F_GETLEASE;
-extern const int F_GETLK64;
 extern const int F_GETLK;
 extern const int F_GETNOSIGPIPE;
 extern const int F_GETOWN;
 extern const int F_GETPATH;
 extern const int F_GETPIPE_SZ;
 extern const int F_GETSIG;
-extern const int F_LOCK;
 extern const int F_MAXFD;
 extern const int F_NOCACHE;
 extern const int F_NOTIFY;
@@ -33,9 +31,7 @@ extern const int F_RDLCK;
 extern const int F_SETFD;
 extern const int F_SETFL;
 extern const int F_SETLEASE;
-extern const int F_SETLK64;
 extern const int F_SETLK;
-extern const int F_SETLKW64;
 extern const int F_SETLKW;
 extern const int F_SETNOSIGPIPE;
 extern const int F_SETOWN;
@@ -61,14 +57,11 @@ COSMOPOLITAN_C_END_
  * posix advisory locks
  * polyfilled poorly on windows
  */
-#define F_SETLK    F_SETLK
-#define F_SETLK64  F_SETLK64
-#define F_SETLKW   F_SETLKW
-#define F_SETLKW64 F_SETLKW64
-#define F_GETLK    F_GETLK
-#define F_GETLK64  F_GETLK64
-#define F_RDLCK    F_RDLCK
-#define F_UNLCK    F_UNLCK
-#define F_WRLCK    F_WRLCK
+#define F_SETLK  F_SETLK
+#define F_SETLKW F_SETLKW
+#define F_GETLK  F_GETLK
+#define F_RDLCK  F_RDLCK
+#define F_UNLCK  F_UNLCK
+#define F_WRLCK  F_WRLCK
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_F_H_ */

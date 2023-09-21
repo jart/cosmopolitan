@@ -27,6 +27,8 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/select.h"
+#include "libc/sock/select.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -88,7 +90,8 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   }
   END_CANCELLATION_POINT;
 
-  POLLTRACE("select(%d, %p, %p, %p, [%s]) → %d% m", nfds, readfds, writefds,
-            exceptfds, DescribeTimeval(rc, tvp), rc);
+  STRACE("select(%d, [%s], [%s], [%s], [%s]) → %d% m", nfds,
+         DescribeFdSet(rc, nfds, readfds), DescribeFdSet(rc, nfds, writefds),
+         DescribeFdSet(rc, nfds, exceptfds), DescribeTimeval(rc, tvp), rc);
   return rc;
 }

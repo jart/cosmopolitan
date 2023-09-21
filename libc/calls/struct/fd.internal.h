@@ -31,15 +31,12 @@ struct Fd {
   char kind;
   bool eoftty;
   bool dontclose;
-  unsigned char buflen;
   unsigned flags;
   unsigned mode;
   int64_t handle;
   int64_t extra;
   int64_t pointer;
   pthread_mutex_t lock;
-  unsigned char mousebuttons;
-  char buf[32];
 };
 
 struct StdinRelay {

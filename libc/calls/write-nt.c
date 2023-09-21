@@ -86,10 +86,6 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   if (!pwriting) {
     offset = 0;
   }
-  if (seekable && !pwriting) {
-    pthread_mutex_lock(&f->lock);
-    offset = f->pointer;
-  }
 
   // To use the tty mouse events feature:
   //   - write(1, "\e[?1000;1002;1015;1006h") to enable
@@ -161,6 +157,11 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     }
   }
 
+  if (seekable && !pwriting) {
+    pthread_mutex_lock(&f->lock);
+    offset = f->pointer;
+  }
+
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0),
                                  .Pointer = offset};
   ok = WriteFile(handle, data, size, 0, &overlap);
@@ -210,6 +211,12 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
 
   if (ok) {
     return sent;
+  }
+
+  errno_t err;
+  if (_weaken(pthread_testcancel_np) &&
+      (err = _weaken(pthread_testcancel_np)())) {
+    return ecanceled();
   }
 
   switch (GetLastError()) {

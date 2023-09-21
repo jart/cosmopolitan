@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,41 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/console.internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/console.h"
-#include "libc/nt/struct/inputrecord.h"
-#ifdef __x86_64__
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bsr.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/sock/select.h"
+#include "libc/sock/select.internal.h"
 
-int CountConsoleInputBytes(int64_t handle) {
-  char buf[32];
-  int rc, e = errno;
-  uint16_t utf16hs = 0;
-  uint32_t i, n, count;
-  struct NtInputRecord records[64];
-  if (PeekConsoleInput(handle, records, ARRAYLEN(records), &n)) {
-    for (rc = i = 0; i < n; ++i) {
-      count = ConvertConsoleInputToAnsi(records + i, buf, &utf16hs, 0);
-      if (count == -1) {
-        unassert(errno == ENODATA);
-        if (!rc) {
-          rc = -1;
-        } else {
-          errno = e;
-        }
-        break;
-      }
-      rc += count;
-    }
-  } else {
-    rc = __winerr();
+#define N 100
+
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
+
+const char *(DescribeFdSet)(char buf[N], ssize_t rc, int nfds, fd_set *fds) {
+  int o = 0;
+
+  if (!fds) return "NULL";
+  if ((!IsAsan() && kisdangerous(fds)) ||
+      (IsAsan() && !__asan_is_valid(fds, sizeof(*fds) * nfds))) {
+    ksnprintf(buf, N, "%p", fds);
+    return buf;
   }
-  return rc;
-}
 
-#endif /* __x86_64__ */
+  append("{");
+
+  bool gotsome = false;
+  for (int fd = 0; fd < nfds; fd += 64) {
+    uint64_t w = fds->fds_bits[fd >> 6];
+    while (w) {
+      unsigned o = _bsr(w);
+      w &= ~((uint64_t)1 << o);
+      if (fd + o < nfds) {
+        if (!gotsome) {
+          gotsome = true;
+          append(", ");
+          append("%d", fd);
+        }
+      }
+    }
+  }
+
+  append("}");
+
+  return buf;
+}

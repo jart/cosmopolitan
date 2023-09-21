@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
 
@@ -36,6 +37,9 @@ __static_yoink("zipos");
  * @see libc/runtime/_init.S for documentation
  */
 textstartup int ftrace_init(void) {
+  if (strace_enabled(0) > 0) {
+    GetSymbolTable();
+  }
   if (__intercept_flag(&__argc, __argv, "--ftrace")) {
     ftrace_install();
     ftrace_enabled(+1);

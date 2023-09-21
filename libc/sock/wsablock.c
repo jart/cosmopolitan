@@ -22,6 +22,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/enum/wsa.h"
 #include "libc/nt/errors.h"
@@ -113,6 +114,10 @@ BlockingOperation:
   if (WSAGetOverlappedResult(f->handle, overlapped, &got, nonblock, flags)) {
     rc = got;
   } else {
+    if (_weaken(pthread_testcancel_np) &&
+        (err = _weaken(pthread_testcancel_np)())) {
+      return ecanceled();
+    }
     rc = -1;
     err = WSAGetLastError();
     if (err == kNtErrorOperationAborted) {

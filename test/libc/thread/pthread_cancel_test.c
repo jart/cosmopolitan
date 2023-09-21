@@ -32,6 +32,7 @@
 #include "libc/thread/thread2.h"
 
 int pfds[2];
+atomic_bool ready;
 pthread_cond_t cv;
 pthread_mutex_t mu;
 atomic_int gotcleanup;
@@ -72,6 +73,7 @@ TEST(pthread_cancel, self_deferred_waitsForCancellationPoint) {
 
 void *Worker(void *arg) {
   char buf[8];
+  ready = true;
   pthread_cleanup_push(OnCleanup, 0);
   read(pfds[0], buf, sizeof(buf));
   pthread_cleanup_pop(0);
@@ -91,11 +93,12 @@ TEST(pthread_cancel, synchronous) {
   ASSERT_SYS(0, 0, close(pfds[0]));
 }
 
-TEST(pthread_cancel, synchronous_delayed) {
+TEST(pthread_cancel, synchronous_deferred) {
   void *rc;
   pthread_t th;
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
+  while (!ready) pthread_yield();
   ASSERT_SYS(0, 0, usleep(10));
   EXPECT_EQ(0, pthread_cancel(th));
   EXPECT_EQ(0, pthread_join(th, &rc));

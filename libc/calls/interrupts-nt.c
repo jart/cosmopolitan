@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
@@ -33,7 +34,9 @@ textwindows int _check_interrupts(int sigops) {
     goto Interrupted;
   }
   if (_weaken(__sig_check) && (status = _weaken(__sig_check)())) {
+    STRACE("syscall interrupted (status=%d, sigops=%d)", status, sigops);
     if (status == 2 && (sigops & kSigOpRestartable)) {
+      STRACE("restarting system call");
       return 0;
     }
     err = EINTR;

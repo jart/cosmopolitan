@@ -8,14 +8,17 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "dsp/tty/tty.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/select.h"
 #include "libc/stdio/dprintf.h"
@@ -36,29 +39,30 @@
 #define PROBE_DISPLAY_SIZE     "\e7\e[9979;9979H\e[6n\e8"
 
 char code[512];
+int infd, outfd;
 struct winsize wsize;
 struct termios oldterm;
 volatile bool resized, killed;
 
-void onresize(void) {
+void OnResize(int sig) {
   resized = true;
 }
 
-void onkilled(int sig) {
+void OnKilled(int sig) {
   killed = true;
 }
 
-void restoretty(void) {
-  WRITE(1, DISABLE_MOUSE_TRACKING);
-  tcsetattr(1, TCSANOW, &oldterm);
+void RestoreTty(void) {
+  WRITE(outfd, DISABLE_MOUSE_TRACKING);
+  tcsetattr(outfd, TCSANOW, &oldterm);
 }
 
-int rawmode(void) {
+int EnableRawMode(void) {
   static bool once;
   struct termios t;
   if (!once) {
-    if (!tcgetattr(1, &oldterm)) {
-      atexit(restoretty);
+    if (!tcgetattr(outfd, &oldterm)) {
+      atexit(RestoreTty);
     } else {
       perror("tcgetattr");
     }
@@ -78,26 +82,26 @@ int rawmode(void) {
 
   t.c_iflag &= ~(INPCK | ISTRIP | PARMRK | INLCR | IGNCR | ICRNL | IXON |
                  IGNBRK | BRKINT);
-  t.c_lflag &= ~(IEXTEN | ICANON | ECHO | ECHONL | ISIG);
+  t.c_lflag &= ~(IEXTEN | ICANON | ECHO | ECHONL /* | ISIG */);
   t.c_cflag &= ~(CSIZE | PARENB);
   t.c_oflag |= OPOST | ONLCR;
   t.c_cflag |= CS8;
   t.c_iflag |= IUTF8;
 
-  if (tcsetattr(1, TCSANOW, &t)) {
+  if (tcsetattr(outfd, TCSANOW, &t)) {
     perror("tcsetattr");
   }
 
-  /* WRITE(1, ENABLE_SAFE_PASTE); */
-  /* WRITE(1, ENABLE_MOUSE_TRACKING); */
-  /* WRITE(1, PROBE_DISPLAY_SIZE); */
+  WRITE(outfd, ENABLE_MOUSE_TRACKING);
+  /* WRITE(outfd, ENABLE_SAFE_PASTE); */
+  /* WRITE(outfd, PROBE_DISPLAY_SIZE); */
   return 0;
 }
 
-void getsize(void) {
-  if (tcgetwinsize(1, &wsize) != -1) {
-    printf("termios says terminal size is %hu×%hu\r\n", wsize.ws_col,
-           wsize.ws_row);
+void GetTtySize(void) {
+  if (tcgetwinsize(outfd, &wsize) != -1) {
+    dprintf(outfd, "termios says terminal size is %hu×%hu\r\n", wsize.ws_col,
+            wsize.ws_row);
   } else {
     perror("tcgetwinsize");
   }
@@ -144,50 +148,63 @@ const char *describemouseevent(int e) {
 // change the code above to enable ISIG if you want to trigger this
 // then press ctrl-c or ctrl-\ in your pseudoteletypewriter console
 void OnSignalThatWontEintrRead(int sig) {
-  dprintf(1, "got %s (read()ing will SA_RESTART)\n", strsignal(sig));
+  dprintf(outfd, "got %s (read()ing will SA_RESTART; try CTRL-D to exit)\n",
+          strsignal(sig));
+}
+
+void OnSignalThatWillEintrRead(int sig) {
+  dprintf(outfd, "got %s (read() operation will be aborted)\n", strsignal(sig));
 }
 
 int main(int argc, char *argv[]) {
   int e, c, y, x, n, yn, xn;
+  infd = 0;
+  outfd = 1;
+  /* infd = outfd = open("/dev/tty", O_RDWR); */
+  signal(SIGTERM, OnKilled);
+  signal(SIGCONT, OnResize);
+  signal(SIGWINCH, OnResize);
   signal(SIGINT, OnSignalThatWontEintrRead);
-  signal(SIGQUIT, OnSignalThatWontEintrRead);
-  xsigaction(SIGTERM, onkilled, 0, 0, NULL);
-  xsigaction(SIGWINCH, onresize, 0, 0, NULL);
-  xsigaction(SIGCONT, onresize, 0, 0, NULL);
-  rawmode();
-  getsize();
+  sigaction(SIGQUIT,
+            &(struct sigaction){.sa_handler = OnSignalThatWillEintrRead}, 0);
+  EnableRawMode();
+  GetTtySize();
   while (!killed) {
     if (resized) {
-      printf("SIGWINCH ");
-      getsize();
+      dprintf(outfd, "SIGWINCH ");
+      GetTtySize();
       resized = false;
     }
     bzero(code, sizeof(code));
-    if ((n = readansi(0, code, sizeof(code))) == -1) {
-      if (errno == EINTR) continue;
+    if ((n = read(infd, code, sizeof(code))) == -1) {
+      if (errno == EINTR) {
+        dprintf(outfd, "read() was interrupted\n");
+        continue;
+      }
       perror("read");
       exit(1);
     }
     if (!n) {
-      printf("got stdin eof\n");
+      dprintf(outfd, "got stdin eof\n");
       exit(0);
     }
-    printf("%`'.*s (got %d) ", n, code, n);
+    dprintf(outfd, "%`'.*s (got %d) ", n, code, n);
     if (iscntrl(code[0]) && !code[1]) {
-      printf("is CTRL-%c a.k.a. ^%c\r\n", CTRL(code[0]), CTRL(code[0]));
+      dprintf(outfd, "is CTRL-%c a.k.a. ^%c\r\n", CTRL(code[0]), CTRL(code[0]));
       if (code[0] == CTRL('C') || code[0] == CTRL('D')) break;
     } else if (startswith(code, "\e[") && endswith(code, "R")) {
       yn = 1, xn = 1;
       sscanf(code, "\e[%d;%dR", &yn, &xn);
-      printf("inband signalling says terminal size is %d×%d\r\n", xn, yn);
+      dprintf(outfd, "inband signalling says terminal size is %d×%d\r\n", xn,
+              yn);
     } else if (startswith(code, "\e[<") &&
                (endswith(code, "m") || endswith(code, "M"))) {
       e = 0, y = 1, x = 1;
       sscanf(code, "\e[<%d;%d;%d%c", &e, &y, &x, &c);
-      printf("mouse %s at %d×%d\r\n", describemouseevent(e | (c == 'm') << 2),
-             x, y);
+      dprintf(outfd, "mouse %s at %d×%d\r\n",
+              describemouseevent(e | (c == 'm') << 2), x, y);
     } else {
-      printf("\r\n");
+      dprintf(outfd, "\r\n");
     }
   }
   return 0;

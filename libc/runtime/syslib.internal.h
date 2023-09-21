@@ -12,7 +12,7 @@ COSMOPOLITAN_C_START_
  */
 
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 3
+#define SYSLIB_VERSION 4
 
 typedef uint64_t dispatch_time_t;
 typedef uint64_t dispatch_semaphore_t;
@@ -49,6 +49,16 @@ struct Syslib {
   int (*__pthread_attr_destroy)(void *);
   int (*__pthread_attr_setstacksize)(void *, size_t);
   int (*__pthread_attr_setguardsize)(void *, size_t);
+  /* v4 (2023-09-19) */
+  void (*__exit)(int);
+  long (*__close)(int);
+  long (*__munmap)(void *, size_t);
+  long (*__openat)(int, const void *, int, int);
+  long (*__write)(int, const void *, size_t);
+  long (*__read)(int, void *, size_t);
+  long (*__sigaction)(int, const void *, void *);
+  long (*__pselect)(int, void *, void *, void *, const void *, const void *);
+  long (*__mprotect)(void *, size_t, int);
 };
 
 extern struct Syslib *__syslib;

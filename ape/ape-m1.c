@@ -68,6 +68,16 @@ struct Syslib {
   int (*pthread_attr_destroy)(pthread_attr_t *);
   int (*pthread_attr_setstacksize)(pthread_attr_t *, size_t);
   int (*pthread_attr_setguardsize)(pthread_attr_t *, size_t);
+  /* v4 (2023-09-19) */
+  void (*exit)(int);
+  long (*close)(int);
+  long (*munmap)(void *, size_t);
+  long (*openat)(int, const char *, int, int);
+  long (*write)(int, const void *, size_t);
+  long (*read)(int, void *, size_t);
+  long (*sigaction)(int, const struct sigaction *, struct sigaction *);
+  long (*pselect)(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const sigset_t *);
+  long (*mprotect)(void *, size_t, int);
 };
 
 #define ELFCLASS32  1
@@ -792,12 +802,36 @@ static long sys_fork(void) {
   return sysret(fork());
 }
 
+static long sys_close(int fd) {
+  return sysret(close(fd));
+}
+
 static long sys_pipe(int pfds[2]) {
   return sysret(pipe(pfds));
 }
 
+static long sys_munmap(void *addr, size_t size) {
+  return sysret(munmap(addr, size));
+}
+
+static long sys_read(int fd, void *data, size_t size) {
+  return sysret(read(fd, data, size));
+}
+
+static long sys_mprotect(void *data, size_t size, int prot) {
+  return sysret(mprotect(data, size, prot));
+}
+
+static long sys_write(int fd, const void *data, size_t size) {
+  return sysret(write(fd, data, size));
+}
+
 static long sys_clock_gettime(int clock, struct timespec *ts) {
   return sysret(clock_gettime((clockid_t)clock, ts));
+}
+
+static long sys_openat(int fd, const char *path, int flags, int mode) {
+  return sysret(openat(fd, path, flags, mode));
 }
 
 static long sys_nanosleep(const struct timespec *req, struct timespec *rem) {
@@ -807,6 +841,15 @@ static long sys_nanosleep(const struct timespec *req, struct timespec *rem) {
 static long sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                      off_t off) {
   return sysret((long)mmap(addr, size, prot, flags, fd, off));
+}
+
+static long sys_sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
+  return sysret(sigaction(sig, act, oact));
+}
+
+static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
+                        const struct timespec *timeout, const sigset_t *sigmask) {
+  return sysret(pselect(nfds, readfds, writefds, errorfds, timeout, sigmask));
 }
 
 int main(int argc, char **argv, char **envp) {
@@ -852,6 +895,15 @@ int main(int argc, char **argv, char **envp) {
   M->lib.pthread_attr_destroy = pthread_attr_destroy;
   M->lib.pthread_attr_setstacksize = pthread_attr_setstacksize;
   M->lib.pthread_attr_setguardsize = pthread_attr_setguardsize;
+  M->lib.exit = exit;
+  M->lib.close = sys_close;
+  M->lib.munmap = sys_munmap;
+  M->lib.openat = sys_openat;
+  M->lib.write = sys_write;
+  M->lib.read = sys_read;
+  M->lib.sigaction = sys_sigaction;
+  M->lib.pselect = sys_pselect;
+  M->lib.mprotect = sys_mprotect;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;

@@ -219,3 +219,5 @@ ssize_t sendfile(int outfd, int infd, int64_t *opt_in_out_inoffset,
          DescribeInOutInt64(rc, opt_in_out_inoffset), uptobytes, rc);
   return rc;
 }
+
+__weak_reference(sendfile, sendfile64);

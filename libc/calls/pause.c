@@ -37,7 +37,9 @@
  *
  * However this has a tinier footprint and better logging.
  *
- * @return -1 w/ errno set to EINTR
+ * @return -1 w/ errno
+ * @raise ECANCELED if this thread was canceled in masked mode
+ * @raise EINTR if interrupted by a signal
  * @cancellationpoint
  * @see sigsuspend()
  * @norestart

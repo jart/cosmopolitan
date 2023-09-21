@@ -64,7 +64,6 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
           const sigset_t *sigmask) {
   size_t n;
   int e, rc;
-  uint64_t millis;
   sigset_t oldmask;
   struct timespec ts, *tsp;
   BEGIN_CANCELLATION_POINT;
@@ -84,22 +83,24 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     }
     rc = sys_ppoll(fds, nfds, tsp, sigmask, 8);
     if (rc == -1 && errno == ENOSYS) {
+      int ms;
       errno = e;
-      if (!timeout ||
-          ckd_add(&millis, timeout->tv_sec, timeout->tv_nsec / 1000000)) {
-        millis = -1;
+      if (!timeout || ckd_add(&ms, timeout->tv_sec,
+                              (timeout->tv_nsec + 999999) / 1000000)) {
+        ms = -1;
       }
       if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
-      rc = poll(fds, nfds, millis);
+      rc = poll(fds, nfds, ms);
       if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
+    uint32_t ms;
     if (!timeout ||
-        ckd_add(&millis, timeout->tv_sec, timeout->tv_nsec / 1000000)) {
-      millis = -1;
+        ckd_add(&ms, timeout->tv_sec, (timeout->tv_nsec + 999999) / 1000000)) {
+      ms = -1u;
     }
     BEGIN_BLOCKING_OPERATION;
-    rc = sys_poll_nt(fds, nfds, &millis, sigmask);
+    rc = sys_poll_nt(fds, nfds, &ms, sigmask);
     END_BLOCKING_OPERATION;
   }
 

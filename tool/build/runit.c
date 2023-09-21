@@ -122,6 +122,9 @@ long g_backoff;
 char *g_runitd;
 jmp_buf g_jmpbuf;
 uint16_t g_sshport;
+int connect_latency;
+int execute_latency;
+int handshake_latency;
 char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
@@ -174,6 +177,7 @@ void Connect(void) {
   LOGIFNEG1(sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, 0));
   DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
          ip4[1], ip4[2], ip4[3], g_prog);
+  struct timespec start = timespec_real();
 TryAgain:
   alarmed = false;
   LOGIFNEG1(setitimer(
@@ -199,6 +203,7 @@ TryAgain:
   }
   setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
   freeaddrinfo(ai);
+  connect_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
 }
 
 bool Send(int tmpfd, const void *output, size_t outputsize) {
@@ -309,6 +314,7 @@ bool Recv(char *p, int n) {
 
 int ReadResponse(void) {
   int exitcode;
+  struct timespec start = timespec_real();
   for (;;) {
     char msg[5];
     if (!Recv(msg, 5)) {
@@ -351,6 +357,7 @@ int ReadResponse(void) {
       break;
     }
   }
+  execute_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
   close(g_sock);
   return exitcode;
 }
@@ -373,7 +380,9 @@ int RunOnHost(char *spec) {
   for (;;) {
     Connect();
     EzFd(g_sock);
+    struct timespec start = timespec_real();
     err = EzHandshake2();
+    handshake_latency = timespec_tomicros(timespec_sub(timespec_real(), start));
     if (!err) break;
     WARNF("handshake with %s:%d failed -0x%04x (%s)",  //
           g_hostname, g_runitdport, err, GetTlsError(err));
@@ -381,7 +390,10 @@ int RunOnHost(char *spec) {
     return 1;
   }
   RelayRequest();
-  return ReadResponse();
+  int rc = ReadResponse();
+  kprintf("%s on %-16s %'11d µs %'8ld µs %'8ld µs\n", basename(g_prog),
+          g_hostname, execute_latency, connect_latency, handshake_latency);
+  return rc;
 }
 
 bool IsParallelBuild(void) {

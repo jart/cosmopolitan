@@ -70,17 +70,7 @@ int sigsuspend(const sigset_t *ignore) {
     } else {
       __sig_mask(SIG_SETMASK, arg, &save);
       while (!(rc = _check_interrupts(0))) {
-        struct PosixThread *pt;
-        pt = _pthread_self();
-        pt->abort_errno = 0;
-        pt->pt_flags |= PT_INSEMAPHORE;
-        WaitForSingleObject(pt->semaphore, __SIG_SIG_INTERVAL_MS);
-        pt->pt_flags &= ~PT_INSEMAPHORE;
-        if (pt->abort_errno) {
-          errno = pt->abort_errno;
-          rc = -1;
-          break;
-        }
+        if ((rc = __pause_thread(__SIG_SIG_INTERVAL_MS))) break;
       }
       __sig_mask(SIG_SETMASK, &save, 0);
     }

@@ -39,6 +39,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/syslib.internal.h"
@@ -149,6 +150,11 @@ static errno_t pthread_create_impl(pthread_t *thread,
   }
   pt->start = start_routine;
   pt->arg = arg;
+  if (IsWindows()) {
+    if (!(pt->semaphore = CreateSemaphore(0, 0, 1, 0))) {
+      notpossible;
+    }
+  }
 
   // create thread local storage memory
   if (!(pt->tls = _mktls(&pt->tib))) {

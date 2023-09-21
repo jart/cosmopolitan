@@ -66,3 +66,5 @@ int statfs(const char *path, struct statfs *sf) {
   STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
   return rc;
 }
+
+__weak_reference(statfs, statfs64);

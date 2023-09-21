@@ -16,64 +16,92 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/log/check.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/log/log.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/mem/internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-__static_yoink("strerror_wr");
+static char **expected;
+static size_t capacity;
+
+static size_t __lenenv(char **env) {
+  char **p = env;
+  while (*p) ++p;
+  return p - env;
+}
+
+static char **__growenv(char **a) {
+  size_t n, c;
+  char **b, **p;
+  if (!a) a = environ;
+  n = a ? __lenenv(a) : 0;
+  c = MAX(8ul, n) << 1;
+  if ((b = malloc(c * sizeof(char *)))) {
+    if (a) {
+      for (p = b; *a;) {
+        *p++ = *a++;
+      }
+    } else {
+      b[0] = 0;
+    }
+    environ = b;
+    expected = b;
+    capacity = c;
+    return b;
+  } else {
+    return 0;
+  }
+}
+
+IGNORE_LEAKS(__growenv)
+
+int __putenv(char *s, bool overwrite) {
+  char **p;
+  struct Env e;
+  if (!(p = environ)) {
+    if (!(p = __growenv(0))) {
+      return -1;
+    }
+  }
+  e = __getenv(p, s);
+  if (e.s && !overwrite) {
+    return 0;
+  }
+  if (e.s) {
+    p[e.i] = s;
+    return 0;
+  }
+  if (p != expected) {
+    capacity = e.i;
+  }
+  if (e.i + 1 >= capacity) {
+    if (!(p = __growenv(p))) {
+      return -1;
+    }
+  }
+  p[e.i + 1] = 0;
+  p[e.i] = s;
+  return 0;
+}
 
 /**
- * Handles failure of CHECK_xx() macros.
+ * Emplaces environment key=value.
+ *
+ * @param s should be a string that looks like `"name=value"` and it'll
+ *     become part of the environment; changes to its memory will change
+ *     the environment too
+ * @return 0 on success, or non-zero w/ errno on error
+ * @raise ENOMEM if out of memory
+ * @see setenv(), getenv()
+ * @threadunsafe
  */
-relegated void __check_fail(const char *suffix,   //
-                            const char *opstr,    //
-                            uint64_t want,        //
-                            const char *wantstr,  //
-                            uint64_t got,         //
-                            const char *gotstr,   //
-                            const char *file,     //
-                            int line,             //
-                            const char *fmt,      //
-                            ...) {
-  size_t i;
-  va_list va;
-  char hostname[32];
-  strace_enabled(-1);
-  ftrace_enabled(-1);
-  __start_fatal(file, line);
-  __stpcpy(hostname, "unknown");
-  gethostname(hostname, sizeof(hostname));
-  kprintf("check failed on %s pid %d\n"
-          "\tCHECK_%^s(%s, %s);\n"
-          "\t\t → %p (%s)\n"
-          "\t\t%s %p (%s)\n",       //
-          hostname, getpid(),       //
-          suffix, wantstr, gotstr,  //
-          want, wantstr,            //
-          opstr, got, gotstr);
-  if (!isempty(fmt)) {
-    kprintf("\t");
-    va_start(va, fmt);
-    kvprintf(fmt, va);
-    va_end(va);
-    kprintf("\n");
-  }
-  kprintf("\t%s\n\t%s%s", strerror(errno), SUBTLE, program_invocation_name);
-  for (i = 1; i < __argc; ++i) {
-    kprintf(" %s", __argv[i]);
-  }
-  kprintf("%s\n", RESET);
-  __die();
+int putenv(char *s) {
+  int rc;
+  rc = __putenv(s, true);
+  STRACE("putenv(%#s) → %d% m", s, rc);
+  return rc;
 }

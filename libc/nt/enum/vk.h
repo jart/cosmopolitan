@@ -28,8 +28,8 @@
 #define kNtVkAccept                       0x1E
 #define kNtVkModechange                   0x1F
 #define kNtVkSpace                        0x20
-#define kNtVkPrior                        0x21
-#define kNtVkNext                         0x22
+#define kNtVkPrior                        0x21 /* page up */
+#define kNtVkNext                         0x22 /* page down */
 #define kNtVkEnd                          0x23
 #define kNtVkHome                         0x24
 #define kNtVkLeft                         0x25

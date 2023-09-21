@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
-#include "libc/assert.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -120,8 +119,8 @@ textstartup void __enable_tls(void) {
   //     _tbss_start + _tbss_size:
   //     _tdata_start + _tls_size:
   //
-  unassert(_tbss_start == _tdata_start + I(_tbss_offset));
-  unassert(_tbss_start + I(_tbss_size) == _tdata_start + I(_tls_size));
+  // unassert(_tbss_start == _tdata_start + I(_tbss_offset));
+  // unassert(_tbss_start + I(_tbss_size) == _tdata_start + I(_tls_size));
 
 #ifdef __x86_64__
 
@@ -136,10 +135,7 @@ textstartup void __enable_tls(void) {
     // malloc() being linked, which links _mapanon().  otherwise
     // if you exceed this, you need to __static_yoink("_mapanon").
     // please note that it's probably too early to call calloc()
-    npassert(_weaken(_mapanon));
-    siz = ROUNDUP(siz, FRAMESIZE);
     mem = _weaken(_mapanon)(siz);
-    npassert(mem);
   }
 
   if (IsAsan()) {
@@ -158,10 +154,7 @@ textstartup void __enable_tls(void) {
   if (siz <= sizeof(__static_tls)) {
     mem = __static_tls;
   } else {
-    npassert(_weaken(_mapanon));
-    siz = ROUNDUP(siz, FRAMESIZE);
     mem = _weaken(_mapanon)(siz);
-    npassert(mem);
   }
 
   if (IsAsan()) {
@@ -221,7 +214,9 @@ textstartup void __enable_tls(void) {
   _pthread_list = &_pthread_static.list;
   atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_relaxed);
   if (IsWindows()) {
-    npassert((_pthread_static.semaphore = CreateSemaphore(0, 0, 1, 0)));
+    if (!(_pthread_static.semaphore = CreateSemaphore(0, 0, 1, 0))) {
+      notpossible;
+    }
   }
 
   // copy in initialized data section

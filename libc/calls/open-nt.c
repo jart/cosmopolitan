@@ -144,33 +144,13 @@ static textwindows int sys_open_nt_console(int dirfd,
                                            const struct NtMagicPaths *mp,
                                            uint32_t flags, int32_t mode,
                                            size_t fd) {
-  uint32_t cm;
-  int input, output;
-  if ((__isfdopen((input = STDIN_FILENO)) &&
-       GetConsoleMode(g_fds.p[input].handle, &cm)) &&
-      ((__isfdopen((output = STDOUT_FILENO)) &&
-        GetConsoleMode(g_fds.p[output].handle, &cm)) ||
-       (__isfdopen((output = STDERR_FILENO)) &&
-        GetConsoleMode(g_fds.p[output].handle, &cm)))) {
-    // this is an ugly hack that works for observed usage patterns
-    g_fds.p[fd].handle = g_fds.p[input].handle;
-    g_fds.p[fd].extra = g_fds.p[output].handle;
-    g_fds.p[fd].dontclose = true;
-    g_fds.p[input].dontclose = true;
-    g_fds.p[output].dontclose = true;
-  } else if ((g_fds.p[fd].handle = sys_open_nt_impl(
-                  dirfd, mp->conin, (flags & ~O_ACCMODE) | O_RDONLY, mode,
-                  kNtFileFlagOverlapped)) != -1) {
-    g_fds.p[fd].extra =
-        sys_open_nt_impl(dirfd, mp->conout, (flags & ~O_ACCMODE) | O_WRONLY,
-                         mode, kNtFileFlagOverlapped);
-    npassert(g_fds.p[fd].extra != -1);
-  } else {
-    return -1;
-  }
   g_fds.p[fd].kind = kFdConsole;
   g_fds.p[fd].flags = flags;
   g_fds.p[fd].mode = mode;
+  g_fds.p[fd].handle = CreateFile(u"CONIN$", kNtGenericRead | kNtGenericWrite,
+                                  kNtFileShareRead, 0, kNtOpenExisting, 0, 0);
+  g_fds.p[fd].extra = CreateFile(u"CONOUT$", kNtGenericRead | kNtGenericWrite,
+                                 kNtFileShareWrite, 0, kNtOpenExisting, 0, 0);
   return fd;
 }
 

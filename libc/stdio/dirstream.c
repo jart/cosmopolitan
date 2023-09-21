@@ -677,3 +677,4 @@ void seekdir(DIR *dir, long tell) {
 }
 
 __weak_reference(readdir, readdir64);
+__weak_reference(readdir_r, readdir_r64);

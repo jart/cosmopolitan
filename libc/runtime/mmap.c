@@ -157,9 +157,9 @@ static bool __auto_map(int count, int align, int *res) {
          *res + count <= FRAME(kAutomapStart + (kAutomapSize - 1));
 }
 
-static void *__finish_memory(void *addr, size_t size, int prot,
-                                      int flags, int fd, int64_t off, int f,
-                                      int x, int n, struct DirectMap dm) {
+static void *__finish_memory(void *addr, size_t size, int prot, int flags,
+                             int fd, int64_t off, int f, int x, int n,
+                             struct DirectMap dm) {
   if (!IsWindows() && (flags & MAP_FIXED)) {
     if (__untrack_memories(addr, size)) {
       __mmap_die("FIXED UNTRACK FAILED");
@@ -178,8 +178,8 @@ static void *__finish_memory(void *addr, size_t size, int prot,
   return addr;
 }
 
-static void *__map_memory(void *addr, size_t size, int prot, int flags,
-                                   int fd, int64_t off, int f, int x, int n) {
+static void *__map_memory(void *addr, size_t size, int prot, int flags, int fd,
+                          int64_t off, int f, int x, int n) {
   struct DirectMap dm;
   dm = sys_mmap(addr, size, prot, f, fd, off);
   if (VERY_UNLIKELY(dm.addr == MAP_FAILED)) {
@@ -200,9 +200,10 @@ static void *__map_memory(void *addr, size_t size, int prot, int flags,
  * This is useful on Windows since it allows us to partially unmap or
  * punch holes into existing mappings.
  */
-static textwindows dontinline void *__map_memories(
-    char *addr, size_t size, int prot, int flags, int fd, int64_t off, int f,
-    int x, int n) {
+static textwindows dontinline void *__map_memories(char *addr, size_t size,
+                                                   int prot, int flags, int fd,
+                                                   int64_t off, int f, int x,
+                                                   int n) {
   size_t i, m;
   int64_t oi, sz;
   struct DirectMap dm;
@@ -238,8 +239,8 @@ static textwindows dontinline void *__map_memories(
   return addr;
 }
 
-inline void *__mmap_unlocked(void *addr, size_t size, int prot,
-                                      int flags, int fd, int64_t off) {
+inline void *__mmap_unlocked(void *addr, size_t size, int prot, int flags,
+                             int fd, int64_t off) {
   char *p = addr;
   struct DirectMap dm;
   size_t requested_size;
@@ -480,3 +481,5 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
          toto);
   return res;
 }
+
+__strong_reference(mmap, mmap64);

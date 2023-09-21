@@ -26,6 +26,7 @@
 #include "libc/cosmo.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -38,6 +39,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 #ifdef __x86_64__
@@ -98,7 +100,7 @@ static textwindows int CheckZombies(int pid, int *wstatus,
 }
 
 static textwindows int WaitForProcess(int pid, int *wstatus, int options,
-                                      struct rusage *opt_out_rusage) {
+                                      struct rusage *rusage, uint64_t *m) {
   int rc, *wv;
   nsync_cv *cv;
   struct Dll *e;
@@ -106,7 +108,7 @@ static textwindows int WaitForProcess(int pid, int *wstatus, int options,
   struct timespec deadline = timespec_zero;
 
   // check list of processes that've already exited
-  if ((rc = CheckZombies(pid, wstatus, opt_out_rusage))) {
+  if ((rc = CheckZombies(pid, wstatus, rusage))) {
     return rc;
   }
 
@@ -139,16 +141,16 @@ CheckForInterrupt:
   if (_check_interrupts(kSigOpRestartable) == -1) return -1;
   deadline = GetNextDeadline(deadline);
 SpuriousWakeup:
-  BEGIN_BLOCKING_OPERATION;
   ++*wv;
+  atomic_store_explicit(&__get_tls()->tib_sigmask, *m, memory_order_release);
   rc = nsync_cv_wait_with_deadline(cv, &__proc.lock, deadline, 0);
+  *m = atomic_exchange(&__get_tls()->tib_sigmask, -1);
   --*wv;
-  END_BLOCKING_OPERATION;
   if (rc == ECANCELED) return ecanceled();
-  if (pr && pr->iszombie) return ReapZombie(pr, wstatus, opt_out_rusage);
+  if (pr && pr->iszombie) return ReapZombie(pr, wstatus, rusage);
   if (rc == ETIMEDOUT) goto CheckForInterrupt;
   unassert(!rc);
-  if (!pr && (rc = CheckZombies(pid, wstatus, opt_out_rusage))) return rc;
+  if (!pr && (rc = CheckZombies(pid, wstatus, rusage))) return rc;
   goto SpuriousWakeup;
 }
 
@@ -163,9 +165,12 @@ textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
   //      just does an "ignore ctrl-c" internally.
   if (pid == 0) pid = -1;
   if (pid < -1) pid = -pid;
+  uint64_t m = atomic_exchange(&__get_tls()->tib_sigmask, -1);
   __proc_lock();
-  rc = WaitForProcess(pid, opt_out_wstatus, options, opt_out_rusage);
-  __proc_unlock();
+  pthread_cleanup_push((void *)__proc_unlock, 0);
+  rc = WaitForProcess(pid, opt_out_wstatus, options, opt_out_rusage, &m);
+  pthread_cleanup_pop(true);
+  atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
   return rc;
 }
 

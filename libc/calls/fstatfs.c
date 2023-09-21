@@ -59,3 +59,5 @@ int fstatfs(int fd, struct statfs *sf) {
   STRACE("fstatfs(%d, [%s]) → %d% m", fd, DescribeStatfs(rc, sf));
   return rc;
 }
+
+__weak_reference(fstatfs, fstatfs64);

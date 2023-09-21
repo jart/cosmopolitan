@@ -35,7 +35,7 @@
  * Permits system operations, e.g.
  *
  *     __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS | PLEDGE_STDERR_LOGGING;
- *     if (pledge("stdio rfile tty", 0)) {
+ *     if (pledge("stdio rpath tty", 0)) {
  *       perror("pledge");
  *       exit(1);
  *     }

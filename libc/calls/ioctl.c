@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/console.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -91,10 +90,9 @@ static int ioctl_default(int fd, unsigned long request, void *arg) {
 }
 
 static int ioctl_fionread(int fd, uint32_t *arg) {
+  int rc;
   uint32_t cm;
   int64_t handle;
-  uint32_t avail;
-  int rc, e = errno;
   if (!IsWindows()) {
     return sys_ioctl(fd, FIONREAD, arg);
   } else if (__isfdopen(fd)) {
@@ -106,19 +104,18 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
         return _weaken(__winsockerr)();
       }
     } else if (GetFileType(handle) == kNtFileTypePipe) {
+      uint32_t avail;
       if (PeekNamedPipe(handle, 0, 0, 0, &avail, 0)) {
         *arg = avail;
+        return 0;
+      } else if (GetLastError() == kNtErrorBrokenPipe) {
         return 0;
       } else {
         return __winerr();
       }
     } else if (GetConsoleMode(handle, &cm)) {
-      avail = CountConsoleInputBytes(handle);
-      if (avail == -1u && errno == ENODATA) {
-        errno = e;
-        avail = 0;
-      }
-      return avail;
+      int bytes = CountConsoleInputBytes(handle);
+      return MAX(0, bytes);
     } else {
       return eopnotsupp();
     }

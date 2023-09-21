@@ -199,10 +199,7 @@ textwindows void WinMainForked(void) {
   char16_t fvar[21 + 1 + 21 + 1];
   uint32_t i, varlen, oldprot, savepid;
   long mapcount, mapcapacity, specialz;
-
-  struct StdinRelay stdin;
   struct Fds *fds = __veil("r", &g_fds);
-  stdin = fds->stdin;
 
   // check to see if the process was actually forked
   // this variable should have the pipe handle numba
@@ -282,7 +279,6 @@ textwindows void WinMainForked(void) {
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
-  fds->stdin = stdin;
   fds->p[0].handle = GetStdHandle(kNtStdInputHandle);
   fds->p[1].handle = GetStdHandle(kNtStdOutputHandle);
   fds->p[2].handle = GetStdHandle(kNtStdErrorHandle);

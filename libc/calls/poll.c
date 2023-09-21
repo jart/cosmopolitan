@@ -68,7 +68,6 @@
 int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
   int rc;
   size_t n;
-  uint64_t millis;
   BEGIN_CANCELLATION_POINT;
 
   if (IsAsan() &&
@@ -81,9 +80,9 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
       rc = sys_poll_metal(fds, nfds, timeout_ms);
     }
   } else {
-    millis = timeout_ms;
     BEGIN_BLOCKING_OPERATION;
-    rc = sys_poll_nt(fds, nfds, &millis, 0);
+    uint32_t ms = timeout_ms >= 0 ? timeout_ms : -1u;
+    rc = sys_poll_nt(fds, nfds, &ms, 0);
     END_BLOCKING_OPERATION;
   }
 

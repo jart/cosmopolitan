@@ -50,11 +50,40 @@ typedef uint32_t nlink_t; /* uint16_t on xnu */
 #define TIME_T_MIN (-TIME_T_MAX - 1)
 
 #if defined(_LARGEFILE64_SOURCE) || defined(_GNU_SOURCE)
-#define blkcnt64_t   blkcnt_t
-#define fsblkcnt64_t fsblkcnt_t
-#define fsfilcnt64_t fsfilcnt_t
-#define ino64_t      ino_t
-#define off64_t      off_t
+#define F_GETLK64         F_GETLK
+#define F_SETLK64         F_SETLK
+#define F_SETLKW64        F_SETLKW
+#define RLIM64_INFINITY   RLIM_INFINITY
+#define RLIM64_SAVED_CUR  RLIM_SAVED_CUR
+#define RLIM64_SAVED_MAX  RLIM_SAVED_MAX
+#define alphasort64       alphasort
+#define blkcnt64_t        blkcnt_t
+#define dirent64          dirent
+#define flock64           flock
+#define fsfilcnt64_t      fsfilcnt_t
+#define fstat64           fstat
+#define fstatat64         fstatat
+#define fstatfs64         fstatfs
+#define getrlimit64       getrlimit
+#define ino64_t           ino_t
+#define lockf64           lockf
+#define lstat64           lstat
+#define mmap64            mmap
+#define off64_t           off_t
+#define open64            open
+#define openat64          openat
+#define posix_fadvise64   posix_fadvise
+#define posix_fallocate64 posix_fallocate
+#define readdir64         readdir
+#define readdir64_r       readdir_r
+#define rlim64_t          rlim_t
+#define rlimit64          rlimit
+#define scandir64         scandir
+#define sendfile64        sendfile
+#define setrlimit64       setrlimit
+#define stat64            stat
+#define statfs64          statfs
+#define versionsort64     versionsort
 #endif
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

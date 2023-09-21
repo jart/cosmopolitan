@@ -19,6 +19,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/ttydefaults.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.internal.h"
 #include "libc/intrin/getenv.internal.h"
@@ -26,6 +27,12 @@
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/nt/console.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -116,10 +123,10 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
     SetupWinStd(fds, 0, kNtStdInputHandle, sockset);
     SetupWinStd(fds, 1, kNtStdOutputHandle, sockset);
     SetupWinStd(fds, 2, kNtStdErrorHandle, sockset);
+    __veof = CTRL('D');
+    __vintr = CTRL('C');
+    __vquit = CTRL('\\');
   }
   fds->p[1].flags = O_WRONLY | O_APPEND;
   fds->p[2].flags = O_WRONLY | O_APPEND;
-  __veof = CTRL('D');
-  __vintr = CTRL('C');
-  __vquit = CTRL('\\');
 }

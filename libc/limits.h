@@ -29,7 +29,7 @@
 #define INT16_MAX     __INT16_MAX__
 #define INT32_MAX     __INT32_MAX__
 #define INT64_MAX     __INT64_MAX__
-#define WINT_MAX      __WCHAR_MAX__
+#define WINT_MAX      __WINT_MAX__
 #define WCHAR_MAX     __WCHAR_MAX__
 #define INTPTR_MAX    __INTPTR_MAX__
 #define PTRDIFF_MAX   __PTRDIFF_MAX__
@@ -55,7 +55,7 @@
 #define INT64_MIN     (-INT64_MAX - 1)
 #define INTMAX_MIN    (-INTMAX_MAX - 1)
 #define INTPTR_MIN    (-INTPTR_MAX - 1)
-#define WINT_MIN      (-WINT_MAX - 1)
+#define WINT_MIN      __WINT_MIN__
 #define WCHAR_MIN     (-WCHAR_MAX - 1)
 #define PTRDIFF_MIN   (-PTRDIFF_MAX - 1)
 

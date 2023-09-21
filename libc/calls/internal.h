@@ -25,6 +25,9 @@ int __ensurefds(int);
 int __ensurefds_unlocked(int);
 void __printfds(void);
 uint32_t sys_getuid_nt(void);
+int __pause_thread(uint32_t);
+int CountConsoleInputBytes(int64_t);
+int FlushConsoleInputBytes(int64_t);
 
 forceinline int64_t __getfdhandleactual(int fd) {
   return g_fds.p[fd].handle;

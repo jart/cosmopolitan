@@ -25,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/baud.internal.h"

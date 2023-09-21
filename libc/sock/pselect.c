@@ -28,6 +28,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
+#include "libc/sock/select.internal.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/errfuns.h"
 
@@ -68,6 +69,15 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   } ss;
   BEGIN_CANCELLATION_POINT;
 
+#ifdef SYSDEBUG
+  fd_set old_readfds;
+  fd_set *old_readfds_ptr = 0;
+  fd_set old_writefds;
+  fd_set *old_writefds_ptr = 0;
+  fd_set old_exceptfds;
+  fd_set *old_exceptfds_ptr = 0;
+#endif
+
   if (nfds < 0) {
     rc = einval();
   } else if (IsAsan() &&
@@ -77,33 +87,55 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
               (timeout && !__asan_is_valid(timeout, sizeof(*timeout))) ||
               (sigmask && !__asan_is_valid(sigmask, sizeof(*sigmask))))) {
     rc = efault();
-  } else if (IsLinux()) {
-    if (timeout) {
-      ts = *timeout;
-      tsp = &ts;
-    } else {
-      tsp = 0;
-    }
-    ss.s = sigmask;
-    ss.n = 8;
-    rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, &ss);
-  } else if (!IsWindows()) {
-    rc = sys_pselect(nfds, readfds, writefds, exceptfds,
-                     (struct timespec *)timeout, sigmask);
   } else {
-    if (timeout) {
-      tv.tv_sec = timeout->tv_sec;
-      tv.tv_usec = timeout->tv_nsec / 1000;
-      tvp = &tv;
-    } else {
-      tvp = 0;
+#ifdef SYSDEBUG
+    if (readfds) {
+      old_readfds = *readfds;
+      old_readfds_ptr = &old_readfds;
     }
-    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, sigmask);
+    if (writefds) {
+      old_writefds = *writefds;
+      old_writefds_ptr = &old_writefds;
+    }
+    if (exceptfds) {
+      old_exceptfds = *exceptfds;
+      old_exceptfds_ptr = &old_exceptfds;
+    }
+#endif
+    if (IsLinux()) {
+      if (timeout) {
+        ts = *timeout;
+        tsp = &ts;
+      } else {
+        tsp = 0;
+      }
+      ss.s = sigmask;
+      ss.n = 8;
+      rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, &ss);
+    } else if (!IsWindows()) {
+      rc = sys_pselect(nfds, readfds, writefds, exceptfds,
+                       (struct timespec *)timeout, sigmask);
+    } else {
+      if (timeout) {
+        tv.tv_sec = timeout->tv_sec;
+        tv.tv_usec = timeout->tv_nsec / 1000;
+        tvp = &tv;
+      } else {
+        tvp = 0;
+      }
+      rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, sigmask);
+    }
   }
 
   END_CANCELLATION_POINT;
-  POLLTRACE("pselect(%d, %p, %p, %p, %s, %s) → %d% m", nfds, readfds, writefds,
-            exceptfds, DescribeTimespec(0, timeout), DescribeSigset(0, sigmask),
-            rc);
+  STRACE("pselect(%d, %s → [%s], %s → [%s], %s → [%s], %s, %s) → %d% m", nfds,
+         DescribeFdSet(rc, nfds, old_readfds_ptr),
+         DescribeFdSet(rc, nfds, readfds),
+         DescribeFdSet(rc, nfds, old_writefds_ptr),
+         DescribeFdSet(rc, nfds, writefds),
+         DescribeFdSet(rc, nfds, old_exceptfds_ptr),
+         DescribeFdSet(rc, nfds, exceptfds),  //
+         DescribeTimespec(0, timeout),        //
+         DescribeSigset(0, sigmask), rc);
   return rc;
 }

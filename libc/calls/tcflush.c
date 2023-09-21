@@ -67,30 +67,7 @@ static dontinline textwindows int sys_tcflush_nt(int fd, int queue) {
   if (queue == TCOFLUSH) {
     return 0;  // windows console output is never buffered
   }
-  FlushConsoleInputBuffer(hConin);
-  int rc = 0;
-  int e = errno;
-  int oldflags = g_fds.p[fd].flags;
-  g_fds.p[fd].flags |= O_NONBLOCK;
-  for (;;) {
-    char buf[512];
-    ssize_t got = sys_read_nt_impl(fd, buf, 512, -1);
-    if (!got) {
-      break;
-    } else if (got == -1) {
-      if (errno == EAGAIN) {
-        errno = e;
-      } else if (errno == EINTR) {
-        errno = e;
-        continue;
-      } else {
-        rc = -1;
-      }
-      break;
-    }
-  }
-  g_fds.p[fd].flags = oldflags;
-  return rc;
+  return FlushConsoleInputBytes(hConin);
 }
 
 /**

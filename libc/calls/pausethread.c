@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,16 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/sig.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/nt/synchronization.h"
+#include "libc/thread/posixthread.internal.h"
 
-textwindows int sys_pause_nt(void) {
-  int rc;
-  while (!(rc = _check_interrupts(0))) {
-    if ((rc = __pause_thread(__SIG_SIG_INTERVAL_MS))) {
-      break;
-    }
+textwindows int __pause_thread(uint32_t ms) {
+  uint32_t status;
+  struct PosixThread *pt = _pthread_self();
+  pt->pt_flags |= PT_INSEMAPHORE;
+  status = WaitForSingleObject(pt->semaphore, ms);
+  if (status == -1u) notpossible;
+  if (!(pt->pt_flags & PT_INSEMAPHORE)) {
+    errno = pt->abort_errno;
+    return -1;
   }
-  return rc;
+  pt->pt_flags &= ~PT_INSEMAPHORE;
+  return 0;
 }

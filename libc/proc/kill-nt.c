@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #ifdef __x86_64__
 
 static textwindows int sys_kill_nt_impl(int pid, int sig) {
@@ -50,7 +53,6 @@ static textwindows int sys_kill_nt_impl(int pid, int sig) {
 }
 
 textwindows int sys_kill_nt(int pid, int sig) {
-  int rc;
   if (!(0 <= sig && sig <= 64)) return einval();
 
   // XXX: NT doesn't really have process groups. For instance the
@@ -66,9 +68,14 @@ textwindows int sys_kill_nt(int pid, int sig) {
     return raise(sig);
   }
 
+  int rc;
+  uint64_t m;
+  m = atomic_exchange(&__get_tls()->tib_sigmask, -1);
   __proc_lock();
+  pthread_cleanup_push((void *)__proc_unlock, 0);
   rc = sys_kill_nt_impl(pid, sig);
-  __proc_unlock();
+  pthread_cleanup_pop(true);
+  atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
 
   return rc;
 }

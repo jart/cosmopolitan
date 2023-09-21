@@ -97,3 +97,5 @@ int setrlimit(int resource, const struct rlimit *rlim) {
          DescribeRlimit(0, rlim), rc);
   return rc;
 }
+
+__weak_reference(setrlimit, setrlimit64);

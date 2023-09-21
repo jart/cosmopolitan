@@ -47,7 +47,7 @@ relegated wontreturn void __die(void) {
   strcpy(host, "unknown");
   gethostname(host, sizeof(host));
   kprintf("%serror: %s on %s pid %d tid %d has perished%s\n"
-          "       cosmoaddr2line %s%s %s\n",
+          "cosmoaddr2line %s%s %s\n",
           __nocolor ? "" : "\e[1;31m", program_invocation_short_name, host,
           getpid(), gettid(), __nocolor ? "" : "\e[0m", __argv[0],
           endswith(__argv[0], ".com") ? ".dbg" : "",

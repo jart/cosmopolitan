@@ -40,6 +40,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/proc/posix_spawn.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sock/sock.h"
@@ -488,7 +489,8 @@ void *ClientWorker(void *arg) {
   // condition can happen, where etxtbsy is raised by our execve
   // we're using o_cloexec so it's guaranteed to fix itself fast
   // thus we use an optimistic approach to avoid expensive locks
-  sprintf(client->tmpexepath, "o/%s.XXXXXX.com", basename(origname));
+  sprintf(client->tmpexepath, "o/%s.XXXXXX.com",
+          basename(stripext(gc(strdup(origname)))));
   int exefd = openatemp(AT_FDCWD, client->tmpexepath, 4, O_CLOEXEC, 0700);
   if (exefd == -1) {
     WARNF("%s failed to open temporary file %#s due to %m", addrstr,

@@ -144,7 +144,7 @@ textwindows struct Proc *__proc_new(void) {
   struct Dll *e;
   struct Proc *proc = 0;
   int i, n = ARRAYLEN(__proc.pool);
-  if (atomic_load_explicit(&__proc.allocated, memory_order_relaxed) < n &&
+  if (atomic_load_explicit(&__proc.allocated, memory_order_acquire) < n &&
       (i = atomic_fetch_add(&__proc.allocated, 1)) < n) {
     proc = __proc.pool + i;
   } else {

@@ -28,7 +28,7 @@ o/$(MODE)/%.com.ok:				\
 		o/$(MODE)/tool/build/runit.com	\
 		o/$(MODE)/tool/build/runitd.com	\
 		o/$(MODE)/%.com
-	$(COMPILE) -wATEST -tT$@ $^ $(HOSTS)
+	@$(COMPILE) -wATEST -tT$@ $^ $(HOSTS)
 
 .PHONY:
 o/tiny/tool/build/runit.com:

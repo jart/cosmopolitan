@@ -396,9 +396,6 @@ syscon	fcntl	F_OFD_GETLK				36			36			-1			-1			-1			-1			-1			-1			# listed in 
 syscon	fcntl	F_RDLCK					0			0			1			1			1			1			1			0			# polyfilled nt; bsd consensus
 syscon	fcntl	F_WRLCK					1			1			3			3			3			3			3			1			# polyfilled nt; bsd consensus
 syscon	fcntl	F_UNLCK					2			2			2			2			2			2			2			2			# polyfilled nt; unix consensus
-syscon	compat	F_SETLK64				6			6			8			8			12			8			8			6			# polyfilled nt
-syscon	compat	F_SETLKW64				7			7			9			9			13			9			9			7
-syscon	compat	F_GETLK64				5			5			7			7			11			7			7			5			# polyfilled nt
 
 syscon	fcntl	F_SETSIG				10			10			-1			-1			-1			-1			-1			-1
 syscon	fcntl	F_GETSIG				11			11			-1			-1			-1			-1			-1			-1

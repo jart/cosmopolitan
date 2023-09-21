@@ -57,3 +57,5 @@ int getrlimit(int resource, struct rlimit *rlim) {
          DescribeRlimit(rc, rlim), rc);
   return rc;
 }
+
+__weak_reference(getrlimit, getrlimit64);
