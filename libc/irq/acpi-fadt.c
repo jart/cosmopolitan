@@ -493,14 +493,22 @@ textstartup void _AcpiFadtInit(void) {
       return;
     }
     length = fadt->Header.Length;
-    ACPI_INFO("FADT @ %p,+%#zx", fadt, length);
+    ACPI_INFO("FADT %.8!s @ %p,+%#zx", fadt->Header.OemTableId, fadt, length);
     _Static_assert(offsetof(AcpiTableFadt, Dsdt) == 40);
     _Static_assert(offsetof(AcpiTableFadt, BootFlags) == 109);
     _Static_assert(offsetof(AcpiTableFadt, XDsdt) == 140);
     if (length >= offsetof(AcpiTableFadt, BootFlags) + sizeof(fadt->BootFlags))
     {
-      _AcpiBootFlags = flags = fadt->BootFlags;
-      ACPI_INFO("FADT: boot flags %#x", (unsigned)flags);
+      flags = fadt->BootFlags;
+      if (READ64LE(fadt->Header.OemTableId) == READ64LE("BXPC    ")) {
+        /* Work around incomplete AML tables under QEMU. */
+        ACPI_WARN("FADT: boot flags %#x -> %#x (QEMU workaround)",
+                  (unsigned)flags, (unsigned)(flags | kAcpiFadtLegacyDevices));
+        flags |= kAcpiFadtLegacyDevices;
+      } else {
+        ACPI_INFO("FADT: boot flags %#x", (unsigned)flags);
+      }
+      _AcpiBootFlags = flags;
     }
     if (length >= offsetof(AcpiTableFadt, XDsdt) + sizeof(fadt->XDsdt) &&
         fadt->XDsdt) {

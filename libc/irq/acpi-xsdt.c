@@ -193,13 +193,14 @@ textstartup void _AcpiXsdtInit(void) {
       ACPI_INFO("no RSDP found");
       return;
     }
-    ACPI_INFO("RSDP @ %p", rsdp);
+    ACPI_INFO("RSDP OEM %.6!s @ %p", rsdp->OemId, rsdp);
     if (rsdp->Revision <= 1 ||
         rsdp->Length < offsetof(AcpiTableRsdp, Reserved) ||
         !rsdp->XsdtPhysicalAddress) {
       const AcpiTableRsdt *rsdt = _AcpiMapTable(rsdp->RsdtPhysicalAddress);
       nents = (rsdt->Header.Length - sizeof(rsdt->Header)) / sizeof(uint32_t);
-      ACPI_INFO("RSDT @ %p, %#zx entries", rsdt, nents);
+      ACPI_INFO("RSDT %.8!s @ %p, %#zx entries", rsdt->Header.OemTableId, rsdt,
+                                                 nents);
       ents = _AcpiOsAllocate(nents * sizeof(AcpiTableHeader *));
       if (ents) {
         for (i = 0; i < nents; ++i) {
@@ -209,7 +210,8 @@ textstartup void _AcpiXsdtInit(void) {
     } else {
       const AcpiTableXsdt *xsdt = _AcpiMapTable(rsdp->XsdtPhysicalAddress);
       nents = (xsdt->Header.Length - sizeof(xsdt->Header)) / sizeof(uint64_t);
-      ACPI_INFO("XSDT @ %p, %#zx entries", xsdt, nents);
+      ACPI_INFO("XSDT %.8!s @ %p, %#zx entries", xsdt->Header.OemTableId, xsdt,
+                                                 nents);
       ents = _AcpiOsAllocate(nents * sizeof(AcpiTableHeader *));
       if (ents) {
         for (i = 0; i < nents; ++i) {

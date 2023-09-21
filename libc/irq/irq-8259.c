@@ -34,7 +34,24 @@
 
 #ifdef __x86_64__
 
-textstartup void _Irq8259Init(void) {
+textstartup static const AcpiDefDevice *_AcpiFindDevice(AcpiDeviceHid hid) {
+  const AcpiDefDevice *dev = _AcpiDefDevices;
+  while (dev && dev->hid != hid) dev = dev->next;
+  return dev;
+}
+
+textstartup static void _Pit0Init(void) {
+  if (!(_AcpiBootFlags & kAcpiFadtLegacyDevices) &&
+      !_AcpiFindDevice(_AcpiMakePnpHid(0x0100))) {
+    ACPI_FATAL("no 8254 PIT");
+  }
+  ACPI_INFO("resetting 8254 PIT");
+  outb(PIT_CMD, PIT_SC0 | PIT_RW | PIT_SQW);
+  outb(PIT0_DATA, 0x00);
+  outb(PIT0_DATA, 0x00);
+}
+
+textstartup static void _Irq8259Init(void) {
   if (_weaken(_ApicDisableAll)) _weaken(_ApicDisableAll)();
   ACPI_INFO("starting 8259 IRQs");
   outb(PIC1_CMD, PIC_INIT | PIC_IC4);  /* ICW1 */
@@ -51,12 +68,14 @@ textstartup void _Irq8259Init(void) {
   /* Send EOIs for good measure. */
   outb(PIC1_CMD, PIC_EOI);
   outb(PIC2_CMD, PIC_EOI);
+  /* Reprogram PIT 0. */
   enable();
 }
 
 textstartup void _IrqHwInit(void) {
   if (!_weaken(_AcpiMadtFlags) ||
       (_AcpiMadtFlags & kAcpiMadtPcAtCompat) != 0) {
+    _Pit0Init();
     _Irq8259Init();
   } else {
     /* TODO */

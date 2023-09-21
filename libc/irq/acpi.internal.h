@@ -348,8 +348,8 @@ _AcpiCompressHid(const uint8_t *__hid, size_t __len) {
   __c = __hid[6];
   if (__c < '0' || __c > 'F' || (__c > '9' && __c < 'A')) return 0;
   __d3 = __c <= '9' ? __c - '0' : __c - 'A' + 0xA;
-  __evalu = (uint32_t)__a0 << 26 | (uint32_t)__a1 << 21 | (uint32_t)__a2 << 16 |
-          __d0 << 12 | __d1 << 8 | __d2 << 4 | __d3;
+  __evalu = (uint32_t)__a0 << 26 | (uint32_t)__a1 << 21 | (uint32_t)__a2 << 16
+            | __d0 << 12 | __d1 << 8 | __d2 << 4 | __d3;
   return bswap_32(__evalu);
 }
 
@@ -380,6 +380,12 @@ forceinline bool _AcpiDecompressHid(uintmax_t __hid,
   __str[6] = __d3 <= 9 ? __d3 + '0' : __d3 - 0xA + 'A';
   __str[7] = 0;
   return true;
+}
+
+forceinline AcpiDeviceHid _AcpiMakePnpHid(uint16_t __pnp_id) {
+  uint32_t __evalu = (uint32_t)16 << 26 | (uint32_t)14 << 21 |
+                     (uint32_t)16 << 16 | __pnp_id;
+  return bswap_32(__evalu);
 }
 
 #define ACPI_INFO(FMT, ...)                                            \

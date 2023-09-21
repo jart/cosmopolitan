@@ -147,6 +147,21 @@
 #define PIC_READ_IRR 0x0a /* OCW3 irq ready next CMD read */
 #define PIC_READ_ISR 0x0b /* OCW3 irq service next CMD read */
 
+/*
+ * @see Intel Corporation.  82C54 CHMOS Programmable Interval Timer.  1994.
+ *      Intel order number 23124-006.
+ */
+#define PIT       0x40       /* IO base address for PIT */
+#define PIT0_DATA (PIT + 0)
+#define PIT1_DATA (PIT + 1)
+#define PIT2_DATA (PIT + 2)
+#define PIT_CMD   (PIT + 3)
+#define PIT_SC0   0x00       /* select counter 0 */
+#define PIT_SC1   0x00       /* select counter 1 */
+#define PIT_SC2   0x00       /* select counter 2 */
+#define PIT_RW    0x30       /* read/write operation */
+#define PIT_SQW   0x06       /* square wave mode */
+
 /* Long Mode Paging
    @see Intel Manual V.3A §4.1 §4.5
                                           IsValid (ignored on CR3) V┐
