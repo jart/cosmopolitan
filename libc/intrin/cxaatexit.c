@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -60,7 +59,6 @@ int __cxa_atexit(void *fp, void *arg, void *pred) {
     }
   }
   i = _bsr(~b->mask);
-  unassert(i < ARRAYLEN(b->p));
   b->mask |= 1u << i;
   b->p[i].fp = fp;
   b->p[i].arg = arg;

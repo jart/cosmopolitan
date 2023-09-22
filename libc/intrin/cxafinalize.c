@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -60,7 +59,6 @@ StartOverLocked:
       if (!pred) {
         b2 = b->next;
         if (b2) {
-          unassert(b != &__cxa_blocks.root);
           if (_weaken(free)) {
             _weaken(free)(b);
           }

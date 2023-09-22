@@ -25,11 +25,13 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/thread/thread.h"
 #include "third_party/musl/passwd.h"
 
@@ -245,4 +247,11 @@ struct group *getgrnam(const char *name) {
   __getgr_a(name, 0, &g_getgrent->gr, &g_getgrent->line, &size,
             &g_getgrent->mem, &nmem, &res);
   return res;
+}
+
+int initgroups(const char *user, gid_t gid) {
+  gid_t groups[NGROUPS_MAX];
+  int count = NGROUPS_MAX;
+  if (getgrouplist(user, gid, groups, &count) < 0) return -1;
+  return setgroups(count, groups);
 }

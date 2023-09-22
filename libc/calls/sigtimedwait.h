@@ -6,6 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+int sigwait(const sigset_t *, int *);
 int sigtimedwait(const sigset_t *, siginfo_t *, const struct timespec *);
 int sigwaitinfo(const sigset_t *, siginfo_t *);
 

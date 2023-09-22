@@ -145,12 +145,12 @@ int uname(struct utsname *uts) {
   } else if (IsLinux()) {
     struct utsname_linux linux;
     if (!(rc = sys_uname_linux(&linux))) {
-      stpcpy(uts->sysname, linux.sysname);
-      stpcpy(uts->nodename, linux.nodename);
-      stpcpy(uts->release, linux.release);
-      stpcpy(uts->version, linux.version);
-      stpcpy(uts->machine, linux.machine);
-      stpcpy(uts->domainname, linux.domainname);
+      strlcpy(uts->sysname, linux.sysname, SYS_NMLN);
+      strlcpy(uts->nodename, linux.nodename, SYS_NMLN);
+      strlcpy(uts->release, linux.release, SYS_NMLN);
+      strlcpy(uts->version, linux.version, SYS_NMLN);
+      strlcpy(uts->machine, linux.machine, SYS_NMLN);
+      strlcpy(uts->domainname, linux.domainname, SYS_NMLN);
       if (!strcmp(uts->domainname, "(none)")) {
         uts->domainname[0] = 0;
       }
@@ -166,13 +166,24 @@ int uname(struct utsname *uts) {
   } else if (IsWindows()) {
     stpcpy(uts->sysname, "Windows");
     stpcpy(uts->machine, "x86_64");
-    GetNtVersion(stpcpy(uts->version, "Windows "));
     GetNtVersion(uts->release);
     GetNtName(uts->nodename, kNtComputerNamePhysicalDnsHostname);
     GetNtName(uts->domainname, kNtComputerNamePhysicalDnsDomain);
     rc = 0;
   } else {
     rc = enosys();
+  }
+  if (!rc) {
+    char buf[SYS_NMLN];
+    stpcpy(buf, "Cosmopolitan 3.0-alpha");
+    if (*MODE) {
+      strlcat(buf, " MODE=" MODE, SYS_NMLN);
+    }
+    if (*uts->version) {
+      strlcat(buf, "; ", SYS_NMLN);
+      strlcat(buf, uts->version, SYS_NMLN);
+    }
+    strlcpy(uts->version, buf, SYS_NMLN);
   }
   STRACE("uname([{%#s, %#s, %#s, %#s, %#s, %#s}]) → %d% m",
          Str(rc, uts->sysname), Str(rc, uts->nodename), Str(rc, uts->release),
