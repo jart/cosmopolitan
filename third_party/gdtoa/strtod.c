@@ -237,8 +237,8 @@ dig_done:
 							word1(&rv) = bits[0];
 						}
 						else {
-							word0(&rv) = NAN_WORD0;
-							word1(&rv) = NAN_WORD1;
+							word0(&rv) = 0x7ff80000;
+							word1(&rv) = 0x0;
 						}
 						goto ret;
 					}

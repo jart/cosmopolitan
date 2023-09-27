@@ -98,9 +98,9 @@ static void testlib_showerror_(int line,              //
   }
   if (!isempty(fmt)) {
     if (_weaken(kvprintf)) {
-      tinyprint(2, "\t");
+      tinyprint(2, "\t", NULL);
       _weaken(kvprintf)(fmt, va);
-      tinyprint(2, "\n");
+      tinyprint(2, "\n", NULL);
     } else {
       tinyprint(2, "\t[missing kvprintf]\n");
     }
