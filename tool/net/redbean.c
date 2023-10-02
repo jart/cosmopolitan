@@ -4957,12 +4957,15 @@ static const char *GetContentTypeExt(const char *path, size_t n) {
   if ((r = FindContentType(path, n))) return r;
 
   // extract the last .; use the entire path if none is present
-  if ((e = strrchr(path, '.'))) path = e + 1;
+  if ((e = memrchr(path, '.', n))) {
+    n -= e - path + 1;
+    path = e + 1;
+  }
   top = lua_gettop(L);
   lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
   CHECK_EQ(lua_gettable(L, LUA_REGISTRYINDEX), LUA_TTABLE);
 
-  lua_pushstring(L, path);
+  lua_pushlstring(L, path, n);
   if (lua_gettable(L, -2) == LUA_TSTRING)
     r = FreeLater(strdup(lua_tostring(L, -1)));
   lua_settop(L, top);
