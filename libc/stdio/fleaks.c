@@ -47,10 +47,11 @@ void CheckForFileLeaks(void) {
     }
   }
   if (gotsome) {
-    char proc[64];
     *p++ = '\n';
     *p = 0;
     write(2, msg, p - msg);
+    char proc[64];
+    p = proc;
     p = stpcpy(p, "ls -hal /proc/");
     p = FormatInt32(p, getpid());
     p = stpcpy(p, "/fd");
