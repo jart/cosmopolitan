@@ -40,7 +40,6 @@
  * @raise EFAULT if `ts` memory was invalid
  * @raise ENOSYS on RHEL5 or bare metal
  * @asyncsignalsafe
- * @threadsafe
  */
 int futimens(int fd, const struct timespec ts[2]) {
   int rc;

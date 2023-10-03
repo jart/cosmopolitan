@@ -37,7 +37,6 @@
  * @raise ENOSYS on RHEL5 or bare metal
  * @see futimens() for modern version
  * @asyncsignalsafe
- * @threadsafe
  */
 int futimes(int fd, const struct timeval tv[2]) {
   int rc;

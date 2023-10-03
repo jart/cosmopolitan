@@ -32,7 +32,6 @@
  * @note truncates to second precision on rhel5
  * @see utimensat() for modern version
  * @asyncsignalsafe
- * @threadsafe
  */
 int utimes(const char *path, const struct timeval tv[2]) {
   int rc;

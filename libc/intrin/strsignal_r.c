@@ -34,7 +34,6 @@
  * @return pointer to .rodata string, or to `buf` after mutating
  * @see sigaction()
  * @asyncsignalsafe
- * @threadsafe
  */
 privileged char *strsignal_r(int sig, char buf[21]) {
   const char *s;

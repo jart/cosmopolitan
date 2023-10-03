@@ -29,7 +29,6 @@
  * @param n number of bytes needed
  * @return memory address, or NULL w/ errno
  * @see valloc()
- * @threadsafe
  */
 void *pvalloc(size_t n) {
   if (ckd_add(&n, n, FRAMESIZE - 1)) {

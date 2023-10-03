@@ -34,7 +34,6 @@
  *
  * @return thread id greater than zero or -1 w/ errno
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int gettid(void) {

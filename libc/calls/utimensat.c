@@ -51,7 +51,6 @@
  * @raise ENOTSUP on XNU or RHEL5 when `dirfd` isn't `AT_FDCWD`
  * @raise ENOSYS on bare metal
  * @asyncsignalsafe
- * @threadsafe
  */
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {

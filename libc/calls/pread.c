@@ -52,7 +52,6 @@
  * @see pwrite(), write()
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {

@@ -26,7 +26,6 @@
  * @return 0 on success, or -1 w/ errno
  * @see utimensat() for modern version
  * @asyncsignalsafe
- * @threadsafe
  */
 int utime(const char *path, const struct utimbuf *times) {
   struct timeval tv[2];

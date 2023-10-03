@@ -1615,6 +1615,9 @@ gmtsub(struct state const *sp, time_t const *timep, int_fast32_t offset,
 * Re-entrant version of gmtime.
 */
 
+/**
+ * Converts UNIX timestamp to broken-down representation.
+ */
 struct tm *
 gmtime_r(const time_t *timep, struct tm *tmp)
 {
@@ -1622,6 +1625,10 @@ gmtime_r(const time_t *timep, struct tm *tmp)
 	return gmtsub(gmtptr, timep, 0, tmp);
 }
 
+/**
+ * Converts UNIX timestamp to broken-down representation.
+ * @threadunsafe (see gmtime_r)
+ */
 struct tm *
 gmtime(const time_t *timep)
 {

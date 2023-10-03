@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -27,15 +28,12 @@
  * @param s is non-empty environment key which can't contain `'='`
  * @return 0 on success, or -1 w/ errno and environment is unchanged
  * @raise EINVAL if `s` is an empty string or has a `'='` character
+ * @threadunsafe
  */
 int unsetenv(const char *s) {
   char **p;
   struct Env e;
-  const char *t;
-  if (!s || !*s) return einval();
-  for (t = s; *t; ++t) {
-    if (*t == '=') return einval();
-  }
+  if (!s || !*s || strchr(s, '=')) return einval();
   if ((p = environ)) {
     e = __getenv(p, s);
     while (p[e.i]) {

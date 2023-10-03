@@ -126,7 +126,7 @@
 #include "libc/sysv/consts/ok.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
-#include "libc/calls/sysparam.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/limits.h"
 #endif /* SQLITE_ENABLE_LOCKING_STYLE */
 

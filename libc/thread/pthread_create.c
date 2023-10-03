@@ -335,7 +335,6 @@ static const char *DescribeHandle(char buf[12], errno_t err, pthread_t *th) {
  * @raise EPERM if scheduling policy was requested and user account
  *     isn't authorized to use it
  * @returnserrno
- * @threadsafe
  */
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {

@@ -41,7 +41,6 @@ void *(*hook_malloc)(size_t) = dlmalloc;
  *
  * @param rdi is number of bytes needed, coerced to 1+
  * @return new memory, or NULL w/ errno
- * @threadsafe
  */
 void *malloc(size_t n) {
   return hook_malloc(n);

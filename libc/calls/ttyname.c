@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sysparam.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/paths.h"

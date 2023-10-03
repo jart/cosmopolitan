@@ -36,7 +36,6 @@
  * @return return 0 or EINVAL or ENOMEM w/o setting errno
  * @see memalign()
  * @returnserrno
- * @threadsafe
  */
 errno_t posix_memalign(void **pp, size_t alignment, size_t bytes) {
   int e;

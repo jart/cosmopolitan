@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/clock_gettime.internal.h"
-#include "libc/fmt/conv.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/errno.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/sysv/errfuns.h"
 
 textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
   struct NtFileTime ft;
@@ -32,6 +32,6 @@ textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
   } else if (clock == CLOCK_MONOTONIC) {
     return sys_clock_gettime_mono(ts);
   } else {
-    return einval();
+    return -EINVAL;
   }
 }

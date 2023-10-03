@@ -32,7 +32,6 @@
  * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
- * @threadsafe
  * @vforksafe
  */
 int open(const char *file, int flags, ...) {

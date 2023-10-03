@@ -22,7 +22,6 @@
  * Writes byte to stdout.
  *
  * @return c (as unsigned char) if written or -1 w/ errno
- * @threadsafe
  */
 int putchar(int c) {
   return fputc(c, stdout);

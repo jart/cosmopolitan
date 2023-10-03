@@ -21,7 +21,6 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -76,16 +75,15 @@ static errno_t sys_clock_nanosleep(int clock, int flags,
 static struct timespec GetNanosleepLatency(void) {
   errno_t rc;
   int64_t nanos;
-  clock_gettime_f *cgt;
   struct timespec x, y, w = {0, 1};
   if (!(nanos = g_nanosleep_latency)) {
     BLOCK_SIGNALS;
-    for (cgt = __clock_gettime_get(0);;) {
-      npassert(!cgt(CLOCK_REALTIME_PRECISE, &x));
+    for (;;) {
+      unassert(!clock_gettime(CLOCK_REALTIME_PRECISE, &x));
       rc = sys_clock_nanosleep(CLOCK_REALTIME, 0, &w, 0);
-      npassert(!rc || rc == EINTR);
+      unassert(!rc || rc == EINTR);
       if (!rc) {
-        npassert(!cgt(CLOCK_REALTIME_PRECISE, &y));
+        unassert(!clock_gettime(CLOCK_REALTIME_PRECISE, &y));
         nanos = timespec_tonanos(timespec_sub(y, x));
         g_nanosleep_latency = nanos;
         break;
@@ -107,7 +105,6 @@ static errno_t CheckCancel(void) {
 static errno_t SpinNanosleep(int clock, int flags, const struct timespec *req,
                              struct timespec *rem) {
   errno_t rc;
-  clock_gettime_f *cgt;
   struct timespec now, start, elapsed;
   if ((rc = CheckCancel())) {
     if (rc == EINTR && !flags && rem) {
@@ -115,11 +112,10 @@ static errno_t SpinNanosleep(int clock, int flags, const struct timespec *req,
     }
     return rc;
   }
-  cgt = __clock_gettime_get(0);
-  npassert(!cgt(CLOCK_REALTIME, &start));
+  unassert(!clock_gettime(CLOCK_REALTIME, &start));
   for (;;) {
     pthread_yield();
-    npassert(!cgt(CLOCK_REALTIME, &now));
+    unassert(!clock_gettime(CLOCK_REALTIME, &now));
     if (flags & TIMER_ABSTIME) {
       if (timespec_cmp(now, *req) >= 0) {
         return 0;
@@ -177,7 +173,7 @@ static bool ShouldUseSpinNanosleep(int clock, int flags,
     return false;
   }
   e = errno;
-  if (__clock_gettime_get(0)(clock, &now)) {
+  if (clock_gettime(clock, &now)) {
     // punt to the nanosleep system call
     errno = e;
     return false;
@@ -258,12 +254,8 @@ errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
   } else {
     rc = sys_clock_nanosleep(clock, flags, req, rem);
   }
-#if SYSDEBUG
-  if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
-    STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
-           DescribeSleepFlags(flags), DescribeTimespec(0, req),
-           DescribeTimespec(rc, rem), DescribeErrno(rc));
-  }
-#endif
+  TIMETRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
+            DescribeSleepFlags(flags), DescribeTimespec(0, req),
+            DescribeTimespec(rc, rem), DescribeErrno(rc));
   return rc;
 }

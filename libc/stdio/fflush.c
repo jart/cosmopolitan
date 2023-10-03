@@ -23,7 +23,6 @@
  *
  * @param f is the stream handle, or 0 for all streams
  * @return is 0 on success or -1 on error
- * @threadsafe
  */
 int fflush(FILE *f) {
   int rc;

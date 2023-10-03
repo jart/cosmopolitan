@@ -32,7 +32,6 @@
 //
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
-//	@threadsafe
 	.ftrace1
 __gc:	.ftrace2
 

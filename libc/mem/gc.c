@@ -115,7 +115,6 @@ void __defer(void *rbp, void *fn, void *arg) {
  * @warning do not realloc() with gc()'d pointer
  * @warning be careful about static keyword due to impact of inlining
  * @note you should use -fno-omit-frame-pointer
- * @threadsafe
  */
 void *(_gc)(void *thing) {
   struct StackFrame *frame;
@@ -135,7 +134,6 @@ void *(_gc)(void *thing) {
  * @warning do not realloc() with gc()'d pointer
  * @warning be careful about static keyword due to impact of inlining
  * @note you should use -fno-omit-frame-pointer
- * @threadsafe
  */
 void *(_defer)(void *fn, void *arg) {
   struct StackFrame *frame;

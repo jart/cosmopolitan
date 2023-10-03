@@ -9,7 +9,6 @@
 # KERNEL32.DLL
 #
 #	Name							Actual							DLL		Arity
-imp	''							CloseHandle						kernel32	1
 imp	''							CreateDirectoryW					kernel32	2
 imp	''							CreateFileA						kernel32	7
 imp	''							CreateFileMappingNumaW					kernel32	7
@@ -57,6 +56,7 @@ imp	'CancelIoEx'						CancelIoEx						kernel32	2
 imp	'CancelSynchronousIo'					CancelSynchronousIo					kernel32	1
 imp	'CheckRemoteDebuggerPresent'				CheckRemoteDebuggerPresent				kernel32	2
 imp	'ClearCommBreak'					ClearCommBreak						kernel32	1
+imp	'CloseHandle'						CloseHandle						kernel32	1
 imp	'ConnectNamedPipe'					ConnectNamedPipe					kernel32	2
 imp	'ContinueDebugEvent'					ContinueDebugEvent					kernel32	3
 imp	'CopyFile'						CopyFileW						kernel32	3

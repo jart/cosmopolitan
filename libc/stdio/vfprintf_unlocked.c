@@ -59,12 +59,11 @@ static int __vfprintf_nbuf(const char *s, struct state *t, size_t n) {
   for (i = 0; i < n; ++i) {
     t->b.p[t->b.n++] = s[i];
     if (t->b.n == sizeof(t->b.p)) {
-      if (!fwrite_unlocked(s, 1, t->b.n, t->f)) {
+      if (!fwrite_unlocked(t->b.p, 1, t->b.n, t->f)) {
         return -1;
       }
       t->b.n = 0;
-    }
-    if (ckd_add(&t->n, t->n, 1)) {
+    } else if (ckd_add(&t->n, t->n, 1)) {
       return eoverflow();
     }
   }

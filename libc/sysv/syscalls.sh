@@ -127,7 +127,6 @@ scall	sys_unlink		0x00a00a00a200a057	0x0b5	globl hidden
 scall	sys_fchmod		0x07c07c07c207c05b	0x034	globl hidden
 scall	sys_fchown		0x07b07b07b207b05d	0x037	globl hidden # @asyncsignalsafe
 scall	sys_umask		0x03c03c03c203c05f	0x0a6	globl hidden
-scall	sys_gettimeofday	0x1a20430742074060	0x0a9	globl hidden # xnu esi/edx=0
 scall	sys_getrlimit		0x0c20c20c220c2061	0x0a3	globl hidden
 scall	__sys_getrusage		0x1bd0130752075062	0x0a5	globl hidden
 scall	sys_sysinfo		0xfffffffffffff063	0x0b3	globl hidden
@@ -251,7 +250,6 @@ scall	sys_ktimer_getoverrun	0xffffff0effffffff	0xfff	globl # no wrapper
 scall	sys_ktimer_gettime	0xffffff0eefffffff	0xfff	globl # no wrapper
 scall	sys_ktimer_settime	0xffffff0edfffffff	0xfff	globl # no wrapper
 scall	sys_clock_settime	0x1ac0580e9ffff0e3	0x070	globl hidden # no wrapper
-scall	sys_clock_gettime	0x1ab0570e8ffff0e4	0x071	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	sys_clock_getres	0x1ad0590eaffff0e5	0x072	globl hidden
 scall	sys_mbind		0xfffffffffffff0ed	0x0eb	globl # no wrapper; numa numa yeah
 scall	set_mempolicy		0xfffffffffffff0ee	0x0ed	globl

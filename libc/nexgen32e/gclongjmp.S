@@ -28,7 +28,6 @@
 //	@param	esi is returned by setjmp() invocation (coerced nonzero)
 //	@assume	system five nexgen32e abi conformant
 //	@see	examples/ctrlc.c
-//	@threadsafe
 //	@noreturn
 	.ftrace1
 _gclongjmp:

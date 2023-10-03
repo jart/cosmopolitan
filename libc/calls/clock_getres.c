@@ -54,7 +54,6 @@ static int sys_clock_getres_xnu(int clock, struct timespec *ts) {
  * @error EPERM if pledge() is in play without stdio promise
  * @error EINVAL if `clock` isn't supported on this system
  * @error EFAULT if `ts` points to bad memory
- * @threadsafe
  */
 int clock_getres(int clock, struct timespec *ts) {
   int rc;

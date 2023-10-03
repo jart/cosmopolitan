@@ -15,6 +15,7 @@ char *ctime_r(const int64_t *, char[hasatleast 26]);
 double difftime(int64_t, int64_t) pureconst;
 int64_t posix2time(int64_t) pureconst;
 int64_t time2posix(int64_t) pureconst;
+int stime(const int64_t *);
 void tzset(void);
 
 #ifdef _COSMO_SOURCE

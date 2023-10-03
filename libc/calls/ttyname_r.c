@@ -85,7 +85,6 @@ static errno_t ttyname_linux(int fd, char *buf, size_t size) {
  * @return 0 on success, or error number on error
  * @raise ERANGE if `size` was too small
  * @returnserrno
- * @threadsafe
  */
 errno_t ttyname_r(int fd, char *buf, size_t size) {
   errno_t e, res;

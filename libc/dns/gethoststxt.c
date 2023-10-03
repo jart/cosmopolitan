@@ -51,7 +51,6 @@ static const char *GetHostsTxtPath(char *path, size_t size) {
  * Returns hosts.txt map.
  *
  * @note yoinking realloc() ensures there's no size limits
- * @threadsafe
  */
 const struct HostsTxt *GetHostsTxt(void) {
   FILE *f;

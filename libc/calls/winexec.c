@@ -17,12 +17,27 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/overlapped.h"
 
+// checks if file should be considered an executable on windows
 textwindows int IsWindowsExecutable(int64_t handle) {
+
+  // read first two bytes of file
+  // access() and stat() aren't cancelation points
   char buf[2];
   uint32_t got;
-  return ReadFile(handle, buf, 2, &got, 0) && got == 2 &&
+  struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
+  bool ok = (ReadFile(handle, buf, 2, 0, &overlap) ||
+             GetLastError() == kNtErrorIoPending) &&
+            GetOverlappedResult(handle, &overlap, &got, true);
+  CloseHandle(overlap.hEvent);
+
+  // it's an executable if it starts with `MZ` or `#!`
+  return ok && got == 2 &&                     //
          ((buf[0] == 'M' && buf[1] == 'Z') ||  //
           (buf[0] == '#' && buf[1] == '!'));
 }

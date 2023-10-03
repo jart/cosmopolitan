@@ -57,7 +57,6 @@
  * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  * @norestart
  */
 int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,

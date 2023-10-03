@@ -460,7 +460,6 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  * @note on Linux this function requires Linux Kernel 5.13+ and version 6.2+
  *     to properly support truncation operations
  * @see [1] https://docs.kernel.org/userspace-api/landlock.html
- * @threadsafe
  */
 int unveil(const char *path, const char *permissions) {
   int e, rc;

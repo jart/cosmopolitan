@@ -40,7 +40,6 @@
  * by hosing the interrupt descriptors and triple faulting the system.
  *
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  * @noreturn
  */

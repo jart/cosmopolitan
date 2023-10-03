@@ -214,7 +214,6 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
  *
  * @param uri is obtained via __zipos_parseuri()
  * @asyncsignalsafe
- * @threadsafe
  */
 int __zipos_open(struct ZiposUri *name, int flags) {
 

@@ -24,7 +24,6 @@
  * @param f is non-null file object stream pointer
  * @return wide character or -1 on EOF or error
  * @see fgetwc_unlocked()
- * @threadsafe
  */
 wint_t fgetwc(FILE *f) {
   wint_t wc;

@@ -28,7 +28,6 @@
  * @param s is a NUL-terminated string that's non-NULL
  * @param f is an open stream
  * @return bytes written, or -1 w/ errno
- * @threadsafe
  */
 int fputs(const char *s, FILE *f) {
   int rc;

@@ -19,7 +19,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"

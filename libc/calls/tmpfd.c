@@ -71,7 +71,6 @@ int _mkstemp(char *, int);
  * @see tmpfile() for stdio version
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int tmpfd(void) {

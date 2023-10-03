@@ -165,7 +165,6 @@ static struct Semaphore *sem_open_get(const sem_t *sem,
  * @raise ENFILE if system-wide file limit has been reached
  * @raise ENOMEM if we require more vespene gas
  * @raise EINTR if signal handler was called
- * @threadsafe
  */
 sem_t *sem_open(const char *name, int oflag, ...) {
   sem_t *sem;

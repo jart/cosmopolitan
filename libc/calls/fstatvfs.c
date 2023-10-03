@@ -35,3 +35,5 @@ int fstatvfs(int fd, struct statvfs *sv) {
     return -1;
   }
 }
+
+__weak_reference(fstatvfs, fstatvfs64);

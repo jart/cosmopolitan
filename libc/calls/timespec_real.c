@@ -31,6 +31,6 @@
  */
 struct timespec timespec_real(void) {
   struct timespec ts;
-  npassert(!clock_gettime(CLOCK_REALTIME, &ts));
+  unassert(!clock_gettime(CLOCK_REALTIME, &ts));
   return ts;
 }

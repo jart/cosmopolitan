@@ -38,7 +38,6 @@
  *
  * @see __minicrash() for signal handlers, e.g. handling abort()
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 relegated wontreturn void __die(void) {

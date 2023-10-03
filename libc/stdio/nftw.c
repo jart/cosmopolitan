@@ -160,6 +160,7 @@ static int do_nftw(char *path,
  *
  * @return 0 on success, -1 on error, or non-zero `fn` result
  * @see examples/walk.c for example
+ * @threadsafe
  */
 int nftw(const char *dirpath,
 	 int fn(const char *fpath,

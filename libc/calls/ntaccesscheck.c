@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -35,6 +36,7 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/genericmapping.h"
 #include "libc/nt/struct/privilegeset.h"
 #include "libc/nt/struct/securitydescriptor.h"
@@ -62,6 +64,7 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
   struct NtGenericMapping mapping;
   struct NtPrivilegeSet privileges;
   uint32_t secsize, granted, privsize;
+  struct NtByHandleFileInformation wst;
   int64_t hToken, hImpersonatedToken, hFile;
   intptr_t buffer[1024 / sizeof(intptr_t)];
   if (flags & X_OK) flags |= R_OK;
@@ -100,7 +103,9 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
                        0, kNtOpenExisting,
                        kNtFileAttributeNormal | kNtFileFlagBackupSemantics,
                        0)) != -1) {
-                if (IsWindowsExecutable(hFile)) {
+                unassert(GetFileInformationByHandle(hFile, &wst));
+                if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
+                    IsWindowsExecutable(hFile)) {
                   rc = 0;
                 } else {
                   rc = eacces();

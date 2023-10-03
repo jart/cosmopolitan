@@ -76,7 +76,8 @@ struct Syslib {
   long (*write)(int, const void *, size_t);
   long (*read)(int, void *, size_t);
   long (*sigaction)(int, const struct sigaction *, struct sigaction *);
-  long (*pselect)(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const sigset_t *);
+  long (*pselect)(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
+                  const sigset_t *);
   long (*mprotect)(void *, size_t, int);
 };
 
@@ -186,10 +187,6 @@ struct ApeLoader {
   struct Syslib lib;
   char rando[16];
 };
-
-static int ToLower(int c) {
-  return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;
-}
 
 static unsigned long StrLen(const char *s) {
   unsigned long n = 0;
@@ -349,38 +346,14 @@ __attribute__((__noreturn__)) static void Pexit(const char *c, int failed,
   _exit(127);
 }
 
-static char EndsWithIgnoreCase(const char *p, unsigned long n, const char *s) {
-  unsigned long i, m;
-  if (n >= (m = StrLen(s))) {
-    for (i = n - m; i < n; ++i) {
-      if (ToLower(p[i]) != *s++) {
-        return 0;
-      }
-    }
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-static char IsComPath(struct PathSearcher *ps) {
-  return EndsWithIgnoreCase(ps->name, ps->namelen, ".com") ||
-         EndsWithIgnoreCase(ps->name, ps->namelen, ".exe") ||
-         EndsWithIgnoreCase(ps->name, ps->namelen, ".com.dbg");
-}
-
-static char AccessCommand(struct PathSearcher *ps, const char *suffix,
-                          unsigned long pathlen) {
-  unsigned long suffixlen;
-  suffixlen = StrLen(suffix);
-  if (pathlen + 1 + ps->namelen + suffixlen + 1 > sizeof(ps->path)) return 0;
+static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
+  if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   MemMove(ps->path + pathlen, ps->name, ps->namelen);
-  MemMove(ps->path + pathlen + ps->namelen, suffix, suffixlen + 1);
   return !access(ps->path, X_OK);
 }
 
-static char SearchPath(struct PathSearcher *ps, const char *suffix) {
+static char SearchPath(struct PathSearcher *ps) {
   const char *p;
   unsigned long i;
   for (p = ps->syspath;;) {
@@ -389,7 +362,7 @@ static char SearchPath(struct PathSearcher *ps, const char *suffix) {
         ps->path[i] = p[i];
       }
     }
-    if (AccessCommand(ps, suffix, i)) {
+    if (AccessCommand(ps, i)) {
       return 1;
     } else if (p[i] == ':') {
       p += i + 1;
@@ -399,13 +372,13 @@ static char SearchPath(struct PathSearcher *ps, const char *suffix) {
   }
 }
 
-static char FindCommand(struct PathSearcher *ps, const char *suffix) {
+static char FindCommand(struct PathSearcher *ps) {
   ps->path[0] = 0;
 
   /* paths are always 100% taken literally when a slash exists
        $ ape foo/bar.com arg1 arg2 */
   if (MemChr(ps->name, '/', ps->namelen)) {
-    return AccessCommand(ps, suffix, 0);
+    return AccessCommand(ps, 0);
   }
 
   /* we don't run files in the current directory
@@ -416,12 +389,12 @@ static char FindCommand(struct PathSearcher *ps, const char *suffix) {
      however we will execute this
        $ ape - foo.com foo.com arg1 arg2
      because cosmo's execve needs it */
-  if (ps->literally && AccessCommand(ps, suffix, 0)) {
+  if (ps->literally && AccessCommand(ps, 0)) {
     return 1;
   }
 
   /* otherwise search for name on $PATH */
-  return SearchPath(ps, suffix);
+  return SearchPath(ps);
 }
 
 static char *Commandv(struct PathSearcher *ps, const char *name,
@@ -429,7 +402,7 @@ static char *Commandv(struct PathSearcher *ps, const char *name,
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
   if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
   if (ps->namelen + 1 > sizeof(ps->path)) return 0;
-  if (FindCommand(ps, "") || (!IsComPath(ps) && FindCommand(ps, ".com"))) {
+  if (FindCommand(ps)) {
     return ps->path;
   } else {
     return 0;
@@ -843,12 +816,14 @@ static long sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
   return sysret((long)mmap(addr, size, prot, flags, fd, off));
 }
 
-static long sys_sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
+static long sys_sigaction(int sig, const struct sigaction *act,
+                          struct sigaction *oact) {
   return sysret(sigaction(sig, act, oact));
 }
 
-static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
-                        const struct timespec *timeout, const sigset_t *sigmask) {
+static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds,
+                        fd_set *errorfds, const struct timespec *timeout,
+                        const sigset_t *sigmask) {
   return sysret(pselect(nfds, readfds, writefds, errorfds, timeout, sigmask));
 }
 

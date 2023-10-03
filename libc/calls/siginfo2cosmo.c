@@ -85,6 +85,14 @@ privileged void __siginfo2cosmo(struct siginfo *si,
     notpossible;
   }
 
+  // Turn BUS_OBJERR into BUS_ADRERR for consistency with Linux.
+  // See test/libc/calls/sigbus_test.c
+  if (IsFreebsd() || IsOpenbsd()) {
+    if (si_signo == 10 && si_code == 3) {
+      si_code = 2;
+    }
+  }
+
   *si = (struct siginfo){0};
   si->si_signo = si_signo;
   si->si_errno = si_errno;

@@ -584,7 +584,7 @@ syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			1			6			11			3			3			1			#
 syscon	clock	CLOCK_MONOTONIC_FAST			1			1			1			6			12			3			3			1			#
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			6			1			6			12			3			3			1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC_RAW			4			4			127			4			127			127			127			127			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
-syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			127			12			15			2			0x40000000		127			#
+syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			127			12			15			2			0x40000000		127			# NetBSD lets you bitwise a PID into clockid_t
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			127			16			14			4			0x20000000		127			#
 syscon	clock	CLOCK_PROF				127			127			127			127			2			127			2			127			#
 syscon	clock	CLOCK_BOOTTIME				7			7			127			127			127			6			127			127			#

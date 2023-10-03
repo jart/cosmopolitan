@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 
 int64_t TimeSpecToWindowsTime(struct timespec t) {
   return t.tv_nsec / 100 + (t.tv_sec + MODERNITYSECONDS) * HECTONANOSECONDS;

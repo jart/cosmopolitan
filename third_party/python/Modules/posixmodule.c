@@ -22,7 +22,7 @@
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/sysparam.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"

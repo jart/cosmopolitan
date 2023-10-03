@@ -16,15 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/cosmo.h"
+#include "libc/errno.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/errfuns.h"
+
+/**
+ * @fileoverview Fast Monotonic Clock Polyfill for XNU/NT.
+ */
 
 static struct {
-  _Atomic(uint32_t) once;
+  atomic_uint once;
   struct timespec base_wall;
   uint64_t base_tick;
 } g_mono;
@@ -37,13 +41,18 @@ static void sys_clock_gettime_mono_init(void) {
 int sys_clock_gettime_mono(struct timespec *time) {
   uint64_t nanos;
   uint64_t cycles;
-  if (X86_HAVE(INVTSC)) {
-    cosmo_once(&g_mono.once, sys_clock_gettime_mono_init);
-    cycles = rdtsc() - g_mono.base_tick;
-    nanos = cycles / 3;
-    *time = timespec_add(g_mono.base_wall, timespec_fromnanos(nanos));
-    return 0;
-  } else {
-    return einval();
-  }
+#ifdef __x86_64__
+  // intel architecture guarantees that a mapping exists between rdtsc &
+  // nanoseconds only if the cpu advertises invariant timestamps support
+  if (!X86_HAVE(INVTSC)) return -EINVAL;
+#endif
+  cosmo_once(&g_mono.once, sys_clock_gettime_mono_init);
+  cycles = rdtsc() - g_mono.base_tick;
+  // this is a crude approximation, that's worked reasonably well so far
+  // only the kernel knows the actual mapping between rdtsc and nanosecs
+  // which we could attempt to measure ourselves using clock_gettime but
+  // we'd need to impose 100 ms of startup latency for a guess this good
+  nanos = cycles / 3;
+  *time = timespec_add(g_mono.base_wall, timespec_fromnanos(nanos));
+  return 0;
 }

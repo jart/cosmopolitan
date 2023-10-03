@@ -6,6 +6,11 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § syscalls » system five » structless support               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+long __syscall2(long, long, int);
+int __syscall2i(long, long, int) asm("__syscall2");
+long __syscall3(long, long, long, int);
+int __syscall3i(long, long, long, int) asm("__syscall3");
+
 bool __is_linux_2_6_23(void);
 bool32 sys_isatty_metal(int);
 int __fixupnewfd(int, int);

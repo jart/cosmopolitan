@@ -89,15 +89,13 @@ void _intsort(int *, size_t);
 void _longsort(long *, size_t);
 /* diagnostics */
 void ShowCrashReports(void);
-void __printargs(const char *);
 int ftrace_install(void);
 int ftrace_enabled(int);
 int strace_enabled(int);
 bool strace_enter(void);
-void _bt(const char *, ...);
 void __print_maps(void);
-long _GetMaxFd(void);
-/* builtin shell language */
+void __printargs(const char *);
+/* builtin sh-like system/popen dsl */
 int _cocmd(int, char **, char **);
 /* executable program */
 char *GetProgramExecutableName(void);
@@ -105,9 +103,6 @@ char *GetInterpreterExecutableName(char *, size_t);
 int __open_executable(void);
 /* execution control */
 int verynice(void);
-axdx_t setlongerjmp(jmp_buf)
-libcesque returnstwice paramsnonnull();
-void longerjmp(jmp_buf, intptr_t) libcesque wontreturn paramsnonnull();
 void __warn_if_powersave(void);
 void _Exit1(int) libcesque wontreturn;
 void __paginate(int, const char *);
@@ -131,7 +126,6 @@ const char *GetCpuidOs(void);
 const char *GetCpuidEmulator(void);
 void GetCpuidBrand(char[13], uint32_t);
 long __get_rlimit(int);
-int __set_rlimit(int, int64_t);
 const char *__describe_os(void);
 long __get_sysctl(int, int);
 int __get_arg_max(void) pureconst;

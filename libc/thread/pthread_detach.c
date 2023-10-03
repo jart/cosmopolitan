@@ -62,7 +62,6 @@ static errno_t pthread_detach_impl(struct PosixThread *pt) {
  * @return 0 on success, or errno with error
  * @raise EINVAL if `thread` isn't joinable
  * @returnserrno
- * @threadsafe
  */
 errno_t pthread_detach(pthread_t thread) {
   struct PosixThread *pt = (struct PosixThread *)thread;

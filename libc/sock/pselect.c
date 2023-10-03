@@ -55,7 +55,6 @@
  * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  * @norestart
  */
 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,

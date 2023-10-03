@@ -35,7 +35,6 @@
 //
 //	@return	pid of child process or 0 if forked process
 //	@returnstwice
-//	@threadsafe
 //	@vforksafe
 	.ftrace1
 vfork:

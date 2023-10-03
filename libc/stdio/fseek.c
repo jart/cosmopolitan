@@ -32,7 +32,6 @@
  * @param offset is the byte delta
  * @param whence can be SEET_SET, SEEK_CUR, or SEEK_END
  * @returns 0 on success or -1 on error
- * @threadsafe
  */
 int fseek(FILE *f, int64_t offset, int whence) {
   int rc;

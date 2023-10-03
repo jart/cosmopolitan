@@ -40,7 +40,6 @@ __msabi extern typeof(ExitThread) *const __imp_ExitThread;
  *
  * @param rc only works on Linux and Windows
  * @see cthread_exit()
- * @threadsafe
  * @noreturn
  */
 privileged wontreturn void _Exit1(int rc) {

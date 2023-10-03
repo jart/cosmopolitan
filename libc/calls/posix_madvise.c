@@ -24,7 +24,6 @@
  *
  * @return 0 on success, or errno on error
  * @returnserrno
- * @threadsafe
  */
 errno_t posix_madvise(void *addr, uint64_t len, int advice) {
   int rc, e = errno;

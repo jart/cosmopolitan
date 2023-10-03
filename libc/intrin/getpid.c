@@ -38,7 +38,6 @@
  *
  * @return process id (always successful)
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int getpid(void) {

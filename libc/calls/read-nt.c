@@ -53,8 +53,6 @@
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
-__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
-
 static const struct {
   int vk;
   int normal_str;
@@ -578,7 +576,7 @@ textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
       goto BlockingOperation;
     }
   }
-  __imp_CloseHandle(overlap.hEvent);  // __imp_ to avoid log noise
+  CloseHandle(overlap.hEvent);
 
   if (!pwriting && seekable) {
     if (ok) f->pointer = offset + got;

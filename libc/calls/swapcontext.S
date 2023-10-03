@@ -35,7 +35,6 @@
 //
 //	@return	0 on success, or -1 w/ errno
 //	@returnstwice
-//	@threadsafe
 	.ftrace1
 swapcontext:
 	.ftrace2

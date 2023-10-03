@@ -290,9 +290,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 		}
 	} else {
 	Polyfill:
-		tib->tib_flags |= TIB_FLAG_TIME_CRITICAL;
 		rc = nsync_futex_polyfill_ (w, expect, timeout);
-		tib->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
 	}
 
 Finished:

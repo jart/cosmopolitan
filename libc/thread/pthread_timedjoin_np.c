@@ -99,7 +99,6 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
  * @raise EBUSY if `abstime` deadline elapsed
  * @cancellationpoint
  * @returnserrno
- * @threadsafe
  */
 errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
                              struct timespec *abstime) {

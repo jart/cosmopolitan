@@ -52,7 +52,7 @@ int64_t clock(void) {
   struct rusage ru;
   struct timespec ts;
   e = errno;
-  if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1) {
+  if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts)) {
     errno = e;
     if (getrusage(RUSAGE_SELF, &ru) != -1) {
       ts = timeval_totimespec(timeval_add(ru.ru_utime, ru.ru_stime));

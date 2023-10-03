@@ -35,3 +35,5 @@ int statvfs(const char *path, struct statvfs *sv) {
     return -1;
   }
 }
+
+__strong_reference(statvfs, statvfs64);

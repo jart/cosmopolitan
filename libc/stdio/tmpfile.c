@@ -57,7 +57,6 @@
  * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 FILE *tmpfile(void) {

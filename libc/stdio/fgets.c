@@ -34,7 +34,6 @@
  * @return s on success, NULL on error, or NULL if EOF happens when
  *     zero characters have been read
  * @see fgets_unlocked()
- * @threadsafe
  */
 char *fgets(char *s, int size, FILE *f) {
   char *res;

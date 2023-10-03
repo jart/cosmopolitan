@@ -34,7 +34,6 @@ void *(*hook_memalign)(size_t, size_t) = dlmemalign;
  * @param bytes is number of bytes needed, coerced to 1+
  * @return rax is memory address, or NULL w/ errno
  * @see valloc(), pvalloc()
- * @threadsafe
  */
 void *memalign(size_t align, size_t bytes) {
   return hook_memalign(align, bytes);

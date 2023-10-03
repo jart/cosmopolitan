@@ -38,6 +38,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"

@@ -19,6 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -26,6 +28,7 @@ static bool once;
 static double g_ezbenchcontrol;
 
 double __testlib_ezbenchcontrol(void) {
+  char host[64];
   char ibuf[12];
   int Core, Tries, Interrupts;
   if (!once) {
@@ -41,9 +44,11 @@ double __testlib_ezbenchcontrol(void) {
     if (Tries == 10) {
       tinyprint(2, "warning: failed to accurately benchmark control\n");
     }
+    strcpy(host, "unknown");
+    gethostname(host, 64);
     FormatInt32(ibuf, g_ezbenchcontrol);
-    tinyprint(2, "will subtract benchmark overhead of ", ibuf, " cycles\n\n",
-              NULL);
+    tinyprint(2, "benchmarks on ", host, " (", __describe_os(),
+              "; overhead of ", ibuf, " cycles)\n", NULL);
     once = true;
   }
   return g_ezbenchcontrol;

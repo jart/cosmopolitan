@@ -44,7 +44,6 @@
  * @raise ENOENT if `path` is an empty string
  * @raise ELOOP if loop was detected resolving components of `path`
  * @asyncsignalsafe
- * @threadsafe
  */
 int makedirs(const char *path, unsigned mode) {
   int c, e, i, n;

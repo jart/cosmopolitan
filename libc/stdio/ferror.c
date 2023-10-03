@@ -25,7 +25,6 @@
  * @return non-zero if and only if it's an error state
  * @see ferror_unlocked(), feof()
  * @note EOF doesn't count
- * @threadsafe
  */
 errno_t ferror(FILE *f) {
   int rc;

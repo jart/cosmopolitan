@@ -43,7 +43,6 @@ static int __contextmask(const sigset_t *opt_set, sigset_t *opt_out_oldset) {
  * @see swapcontext()
  * @see makecontext()
  * @see getcontext()
- * @threadsafe
  */
 int setcontext(const ucontext_t *uc) {
   if (__contextmask(&uc->uc_sigmask, 0)) return -1;

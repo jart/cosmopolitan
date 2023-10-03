@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,70 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/macros.internal.h"
-.privileged
 
-//	Performs raw System Five system call.
+//	Invokes system call w/ arity of three.
 //
-//	This function provides a direct path into system call support
-//	that's friendly to C code, since it doesn't need an intermediate
-//	thunk. It only supports arities up to six, since there's no way
-//	to do more safely; this isn't a problem with Linux, although
-//	certain BSD calls may not be available.
+//	This function takes four params. The first three are for
+//	args passed along to the system call. The 4th is for the
+//	the magic number, indicating which system call is called
 //
-//	@param	%rdi is system call ordinal, which isn't translated,
-//		and must be correct for the underlying host system
-//	@param	%rsi,%rdx,%rcx,%r8,%r9 may supply parameters 1 through 5
-//	@param	sixth is optionally pushed on the stack before call
-//	@return	%rax has result, or -1 w/ errno on failure
-	.ftrace1
-syscall:
-	.ftrace2
-	push	%rbp
-	mov	%rsp,%rbp
-
-//	slide arguments into their right places
-	mov	%rdi,%rax		// nr
-	mov	%rsi,%rdi		// arg 1
-	mov	%rdx,%rsi		// arg 2
-	mov	%rcx,%rdx		// arg 3
-	mov	%r8,%rcx		// arg 4
-	mov	%r9,%r8			// arg 5
-	mov	16(%rbp),%r9		// arg 6
-	push	32(%rbp)		// arg 8
-	push	24(%rbp)		// arg 7
-
-//	convert from consts.sh to syscalls.sh encoding
-	push	%rcx
-	mov	__hostos(%rip),%cl
-	test	$_HOSTLINUX,%cl
-	jnz	2f
-1:	test	$_HOSTFREEBSD,%cl
-	jz	1f
-	shl	$4*7,%rax
-	jmp	2f
-1:	test	$_HOSTOPENBSD,%cl
-	jz	1f
-	shl	$4*10,%rax
-	jmp	2f
-1:	test	$_HOSTNETBSD,%cl
-	jz	1f
-	shl	$4*13,%rax
-	jmp	2f
-1:	test	$_HOSTXNU,%cl
-	jz	2f
-	mov	%eax,%ecx
-	and	$0x0f000000,%ecx
-	and	$0x00000fff,%eax
-	shl	$4*3,%eax
-	or	%ecx,%eax
-2:	pop	%rcx
-
-//	trigger the system call
-	call	*__systemfive(%rip)
-
-//	clean up stack and return
-	leave
+//	The return value follows the Linux Kernel (System V) ABI
+//	where -errno is returned, rather than doing -1 w/ errno.
+__syscall3:
+#ifdef __aarch64__
+	mov	x8,x3				// syscall number (linux)
+	mov	x16,x3				// syscall number (xnu)
+	mov	x9,0				// clear carry flag
+	adds	x9,x9,0				// clear carry flag
+	svc	0
+	bcs	1f
 	ret
-	.endfn	syscall,globl
+1:	neg	x0,x0
+	ret
+#elif defined(__x86_64__)
+	mov	%ecx,%eax			// arg4 -> syscall number
+	clc					// linux saves carry flag
+	syscall					// bsds set carry on errs
+	jnc	1f
+	neg	%rax				// normalizes to system v
+1:	ret
+#else
+#error "unsupported architecture"
+#endif
+	.endfn	__syscall3,globl

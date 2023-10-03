@@ -33,7 +33,6 @@
  * for passing the magic memory handle on Windows NT to CloseHandle().
  *
  * @asyncsignalsafe
- * @threadsafe
  */
 struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off) {

@@ -103,7 +103,6 @@ int _fork(uint32_t dwCreationFlags) {
  * @raise EAGAIN if `RLIMIT_NPROC` was exceeded or system lacked resources
  * @raise ENOMEM if we require more vespene gas
  * @asyncsignalsafe
- * @threadsafe
  */
 int fork(void) {
   return _fork(0);

@@ -23,7 +23,6 @@
  *
  * @param f is file object stream pointer
  * @see	clearerr_unlocked()
- * @threadsafe
  */
 void clearerr(FILE *f) {
   flockfile(f);

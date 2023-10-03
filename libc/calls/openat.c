@@ -168,7 +168,6 @@
  * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
- * @threadsafe
  * @vforksafe
  */
 int openat(int dirfd, const char *path, int flags, ...) {

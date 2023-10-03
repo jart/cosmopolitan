@@ -72,7 +72,6 @@
  * @raise EINVAL if resulting offset would be negative
  * @raise EINVAL if `whence` isn't valid
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int64_t lseek(int fd, int64_t offset, int whence) {

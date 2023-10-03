@@ -43,7 +43,6 @@ static struct {
  * @note this function is not intended for cryptography
  * @note this function passes bigcrush and practrand
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 uint64_t _rand64(void) {

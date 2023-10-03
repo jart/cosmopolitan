@@ -39,6 +39,7 @@ asm(".include \"libc/disclaimer.inc\"");
  * @return 0 on success, -1 on error, or non-zero `fn` result
  * @see examples/walk.c for example
  * @see nftw()
+ * @threadsafe
  */
 int ftw(const char *dirpath,
 	int fn(const char *fpath,

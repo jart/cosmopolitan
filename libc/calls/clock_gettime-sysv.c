@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,43 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/sysv/consts/nr.h"
 
-//	Loads previously saved processor state.
-//
-//	@param	rdi points to the jmp_buf
-//	@param	rsi is returned by setlongerjmp() invocation
-//	@noreturn
-	.ftrace1
-longerjmp:
-	.ftrace2
-#ifdef __x86_64__
-	mov	$1,%eax
-	mov	%rsi,%rdx
-	mov	(%rdi),%rsp
-	mov	8(%rdi),%rbx
-	mov	16(%rdi),%rbp
-	mov	24(%rdi),%r12
-	mov	32(%rdi),%r13
-	mov	40(%rdi),%r14
-	mov	48(%rdi),%r15
-	jmp	*56(%rdi)
-#elif defined(__aarch64__)
-	ldp	x19,x20,[x0,#0]
-	ldp	x21,x22,[x0,#16]
-	ldp	x23,x24,[x0,#32]
-	ldp	x25,x26,[x0,#48]
-	ldp	x27,x28,[x0,#64]
-	ldp	x29,x30,[x0,#80]
-	ldr	x2,[x0,#104]
-	mov	sp,x2
-	ldp	d8 ,d9,[x0,#112]
-	ldp	d10,d11,[x0,#128]
-	ldp	d12,d13,[x0,#144]
-	ldp	d14,d15,[x0,#160]
-	mov	x0,x1
-	br	x30
-#else
-#error "unsupported architecture"
-#endif
-	.endfn	longerjmp,globl
+int sys_clock_gettime(int clock, struct timespec *ts) {
+  return __syscall2i(clock, (long)ts, __NR_clock_gettime);
+}

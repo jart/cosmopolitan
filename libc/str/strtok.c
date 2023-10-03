@@ -25,7 +25,7 @@
  * @param sep is a NUL-terminated set of bytes to consider separators
  * @return pointer to next token or NULL for end
  * @see strtok_r() and strsep() for superior functions
- * @notasyncsignalsafe
+ * @threadunsafe
  */
 char *strtok(char *s, const char *sep) {
   static char *state;

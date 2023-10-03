@@ -215,14 +215,27 @@ static struct GetgrentState {
   struct group gr;
 } g_getgrent[1];
 
+/**
+ * Closes group database.
+ * @threadunsafe
+ */
 void endgrent() {
   setgrent();
 }
+
+/**
+ * Rewinds to beginning of group database.
+ * @threadunsafe
+ */
 void setgrent() {
   if (g_getgrent->f) fclose(g_getgrent->f);
   g_getgrent->f = 0;
 }
 
+/**
+ * Returns successive entries in /etc/group database.
+ * @threadunsafe
+ */
 struct group *getgrent() {
   struct group *res;
   size_t size = 0, nmem = 0;

@@ -20,7 +20,6 @@
 
 /**
  * Pushes wide character back to stream.
- * @threadsafe
  */
 wint_t ungetwc(wint_t c, FILE *f) {
   wint_t rc;

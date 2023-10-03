@@ -2297,7 +2297,6 @@ static privileged void AppendPledge(struct Filter *f,   //
  * @param ipromises is inverted integer bitmask of pledge() promises
  * @return 0 on success, or negative error number on error
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 privileged int sys_pledge_linux(unsigned long ipromises, int mode) {

@@ -46,7 +46,6 @@
  *     status that can be accessed using macros like WEXITSTATUS(s),
  *     WIFSIGNALED(s), WTERMSIG(s), etc.
  * @see system()
- * @threadsafe
  */
 int systemvpe(const char *prog, char *const argv[], char *const envp[]) {
   char *exe;

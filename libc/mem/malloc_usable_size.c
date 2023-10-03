@@ -39,7 +39,6 @@ size_t (*hook_malloc_usable_size)(void *) = dlmalloc_usable_size;
  * @param p is address of allocation
  * @return total number of bytes
  * @see dlmalloc_usable_size()
- * @threadsafe
  */
 size_t malloc_usable_size(void *p) {
   return hook_malloc_usable_size(p);

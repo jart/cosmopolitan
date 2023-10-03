@@ -26,7 +26,6 @@
  *     portability, since that's guaranteed to work with all libraries
  * @return bytes written (excluding NUL) or -1 w/ errno
  * @see xasprintf() for a better API
- * @threadsafe
  */
 int asprintf(char **strp, const char *fmt, ...) {
   int res;

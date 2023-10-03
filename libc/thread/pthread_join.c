@@ -35,7 +35,6 @@
  * @raise ECANCELED if calling thread was cancelled in masked mode
  * @cancellationpoint
  * @returnserrno
- * @threadsafe
  */
 errno_t pthread_join(pthread_t thread, void **value_ptr) {
   return pthread_timedjoin_np(thread, value_ptr, 0);

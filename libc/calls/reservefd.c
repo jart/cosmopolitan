@@ -51,7 +51,6 @@ int __ensurefds_unlocked(int fd) {
 /**
  * Grows file descriptor array memory if needed.
  * @asyncsignalsafe
- * @threadsafe
  */
 int __ensurefds(int fd) {
   __fds_lock();
@@ -89,7 +88,6 @@ int __reservefd_unlocked(int start) {
 /**
  * Finds open file descriptor slot.
  * @asyncsignalsafe
- * @threadsafe
  */
 int __reservefd(int start) {
   int fd;

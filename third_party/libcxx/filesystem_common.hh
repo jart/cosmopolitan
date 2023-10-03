@@ -18,6 +18,7 @@
 #include "third_party/libcxx/cstdlib"
 #include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/calls/struct/timeval.h"
 #include "third_party/libcxx/climits"
 
 #define _LIBCPP_USE_UTIMENSAT

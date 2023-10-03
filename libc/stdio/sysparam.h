@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_CALLS_SYSPARAM_H_
-#define COSMOPOLITAN_LIBC_CALLS_SYSPARAM_H_
+#ifndef COSMOPOLITAN_LIBC_SYSPARAM_H_
+#define COSMOPOLITAN_LIBC_SYSPARAM_H_
 
 #define MAXSYMLINKS    20
 #define MAXHOSTNAMELEN 64
@@ -27,6 +27,16 @@ COSMOPOLITAN_C_START_
 #define powerof2(n)   !(((n)-1) & (n))
 #define howmany(n, d) (((n) + ((d)-1)) / (d))
 
+#ifdef MIN
+#undef MIN
+#endif
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+#ifdef MAX
+#undef MAX
+#endif
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_CALLS_SYSPARAM_H_ */
+#endif /* COSMOPOLITAN_LIBC_SYSPARAM_H_ */

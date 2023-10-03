@@ -75,6 +75,7 @@ o/$(MODE)/libc/str/iswseparator.o: private			\
 		CFLAGS +=					\
 			-fno-jump-tables
 
+# ensure that division is optimized
 o/$(MODE)/libc/str/bcmp.o					\
 o/$(MODE)/libc/str/strcmp.o					\
 o/$(MODE)/libc/str/windowsdurationtotimeval.o			\

@@ -10,7 +10,7 @@
 #include "libc/calls/struct/tms.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/clktck.h"

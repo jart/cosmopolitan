@@ -39,7 +39,6 @@
  * @param n is byte length of deflated data
  * @param m is byte length of inflated data
  * @return pointer to inflated data
- * @threadsafe
  */
 void *xload(_Atomic(void *) *a, const void *p, size_t n, size_t m) {
   void *r, *z;

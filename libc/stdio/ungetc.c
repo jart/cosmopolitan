@@ -20,7 +20,6 @@
 
 /**
  * Pushes byte back to stream.
- * @threadsafe
  */
 int ungetc(int c, FILE *f) {
   int rc;

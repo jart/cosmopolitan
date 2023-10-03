@@ -128,31 +128,6 @@ TEST(posix_spawn, ape) {
   ASSERT_EQ(42, WEXITSTATUS(ws));
 }
 
-TEST(posix_spawn, withoutComExtension_stillWorks) {
-  int ws, pid;
-  char *prog = "./life";
-  char *args[] = {prog, 0};
-  char *envs[] = {0};
-  testlib_extract("/zip/life.com", prog, 0755);
-  ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
-  ASSERT_NE(-1, waitpid(pid, &ws, 0));
-  ASSERT_TRUE(WIFEXITED(ws));
-  ASSERT_EQ(42, WEXITSTATUS(ws));
-}
-
-TEST(posix_spawn, execveAutoAppendsComSuffix) {
-  if (!IsWindows()) return;  // only on windows for now
-  int ws, pid;
-  char *prog = "./life";
-  char *args[] = {prog, 0};
-  char *envs[] = {0};
-  testlib_extract("/zip/life.com", "life.com", 0755);
-  ASSERT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
-  ASSERT_NE(-1, waitpid(pid, &ws, 0));
-  ASSERT_TRUE(WIFEXITED(ws));
-  ASSERT_EQ(42, WEXITSTATUS(ws));
-}
-
 TEST(posix_spawn, elf) {
   if (IsXnu() || IsWindows() || IsMetal()) return;
   int ws, pid;

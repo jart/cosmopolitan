@@ -24,7 +24,6 @@
  *
  * @param f is file stream object pointer
  * @return fd on success or -1 w/ errno;
- * @threadsafe
  */
 int fileno(FILE *f) {
   int rc;

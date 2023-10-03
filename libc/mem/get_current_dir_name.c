@@ -27,7 +27,6 @@
  * that'll be returned.
  *
  * @return pointer that must be free()'d, or NULL w/ errno
- * @threadsafe
  */
 char *get_current_dir_name(void) {
   const char *p;

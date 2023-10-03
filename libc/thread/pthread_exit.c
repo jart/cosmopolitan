@@ -94,7 +94,6 @@ void _pthread_unkey(struct CosmoTib *tib) {
  * destructors is also undefined.
  *
  * @param rc is reported later to pthread_join()
- * @threadsafe
  * @noreturn
  */
 wontreturn void pthread_exit(void *rc) {

@@ -33,8 +33,9 @@ static char g_strsignal[21];
  *
  * @param sig is signal number which should be in range 1 through 128
  * @return string which is valid code describing signal
- * @see strsignal_r() for better thread safety
+ * @see strsignal_r()
  * @see sigaction()
+ * @threadunsafe
  */
 char *strsignal(int sig) {
   return strsignal_r(sig, g_strsignal);

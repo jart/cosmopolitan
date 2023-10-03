@@ -10,6 +10,14 @@
  * @fileoverview Common C preprocessor, assembler, and linker macros.
  */
 
+#ifdef MAX
+#undef MAX
+#endif
+
+#ifdef MIN
+#undef MIN
+#endif
+
 #define TRUE  1
 #define FALSE 0
 

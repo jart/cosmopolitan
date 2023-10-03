@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dos.internal.h"
 #include "libc/elf/def.h"
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/gc.h"

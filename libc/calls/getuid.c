@@ -37,7 +37,6 @@
  *
  * @return user id (always successful)
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 uint32_t getuid(void) {
@@ -62,7 +61,6 @@ uint32_t getuid(void) {
  *
  * @return group id (always successful)
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 uint32_t getgid(void) {

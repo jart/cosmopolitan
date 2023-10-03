@@ -30,7 +30,6 @@ void *(*hook_calloc)(size_t, size_t) = dlcalloc;
  * @return rax is memory address, or NULL w/ errno
  * @note overreliance on memalign is a sure way to fragment space
  * @see dlcalloc()
- * @threadsafe
  */
 void *calloc(size_t n, size_t itemsize) {
   return hook_calloc(n, itemsize);

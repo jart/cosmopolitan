@@ -23,7 +23,6 @@
  *
  * @param f is file object stream pointer
  * @see	feof_unlocked()
- * @threadsafe
  */
 int feof(FILE *f) {
   int rc;

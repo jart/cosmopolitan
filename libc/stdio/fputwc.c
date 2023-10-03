@@ -24,7 +24,6 @@
  * @param wc has wide character
  * @param f is file object stream pointer
  * @return wide character if written or -1 w/ errno
- * @threadsafe
  */
 wint_t fputwc(wchar_t wc, FILE *f) {
   wint_t rc;

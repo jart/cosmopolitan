@@ -27,7 +27,6 @@
  * @param stride specifies the size of individual items
  * @param count is the number of strides to fetch
  * @return count on success, [0,count) on eof, or 0 on error or count==0
- * @threadsafe
  */
 size_t fread(void *buf, size_t stride, size_t count, FILE *f) {
   size_t rc;

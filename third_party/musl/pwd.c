@@ -240,6 +240,7 @@ static struct GetpwentState {
  * Closes global handle to password database.
  *
  * @see getpwent()
+ * @threadunsafe
  */
 void
 endpwent(void)
@@ -251,6 +252,7 @@ endpwent(void)
  * Rewinds global handle to password database.
  *
  * @see getpwent()
+ * @threadunsafe
  */
 void
 setpwent(void)
@@ -264,7 +266,8 @@ setpwent(void)
  * Returns next entry in password database.
  *
  * @return pointer to entry static memory, or NULL on EOF
- * @see getpwent()
+ * @see setpwent()
+ * @threadunsafe
  */
 struct passwd *
 getpwent()
@@ -287,6 +290,7 @@ getpwent()
  * if `/etc/passwd` doesn't exist, or is fake (e.g. MacOS).
  *
  * @return pointer to passwd entry static memory, or NULL if not found
+ * @threadunsafe
  */
 struct passwd *
 getpwuid(uid_t uid)
@@ -305,6 +309,7 @@ getpwuid(uid_t uid)
  * if `/etc/passwd` doesn't exist, or is fake (e.g. MacOS).
  *
  * @return pointer to passwd entry static memory, or NULL if not found
+ * @threadunsafe
  */
 struct passwd *
 getpwnam(const char *name)

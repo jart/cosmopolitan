@@ -36,7 +36,6 @@ void *(*hook_realloc_in_place)(void *, size_t) = dlrealloc_in_place;
  * @param n is number of bytes needed
  * @return rax is result, or NULL w/ errno
  * @see dlrealloc_in_place()
- * @threadsafe
  */
 void *realloc_in_place(void *p, size_t n) {
   return hook_realloc_in_place(p, n);

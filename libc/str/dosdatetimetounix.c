@@ -26,7 +26,7 @@
  * @note type signature supports dates greater than 2100
  * @see PKZIP, FAT
  */
-int64_t DosDateTimeToUnix(unsigned date, unsigned time) {
+int64_t DosDateTimeToUnix(uint32_t date, uint32_t time) {
   unsigned year, month, day, hour, minute, second, yday, leap;
   year = ((date & 0xfffffe00) >> 9) + 1980 - 1900;
   month = MAX(1, MIN(12, (date & 0x01e0) >> 5));

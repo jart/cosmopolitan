@@ -513,6 +513,7 @@ static struct dirent *readdir_impl(DIR *dir) {
  * @param dir is the object opendir() or fdopendir() returned
  * @return next entry or NULL on end or error, which can be
  *     differentiated by setting errno to 0 beforehand
+ * @threadunsafe
  */
 struct dirent *readdir(DIR *dir) {
   struct dirent *e;
@@ -535,7 +536,6 @@ struct dirent *readdir(DIR *dir) {
  * @param result will receive `output` pointer, or null on eof
  * @return 0 on success, or errno on error
  * @returnserrno
- * @threadsafe
  */
 errno_t readdir_r(DIR *dir, struct dirent *output, struct dirent **result) {
   int err, olderr;
@@ -587,7 +587,6 @@ int closedir(DIR *dir) {
 
 /**
  * Returns offset into directory data.
- * @threadsafe
  */
 long telldir(DIR *dir) {
   long rc;
@@ -599,7 +598,6 @@ long telldir(DIR *dir) {
 
 /**
  * Returns file descriptor associated with DIR object.
- * @threadsafe
  */
 int dirfd(DIR *dir) {
   return dir->fd;
@@ -607,7 +605,6 @@ int dirfd(DIR *dir) {
 
 /**
  * Seeks to beginning of directory stream.
- * @threadsafe
  */
 void rewinddir(DIR *dir) {
   lockdir(dir);
@@ -634,7 +631,6 @@ void rewinddir(DIR *dir) {
 
 /**
  * Seeks in directory stream.
- * @threadsafe
  */
 void seekdir(DIR *dir, long tell) {
   lockdir(dir);

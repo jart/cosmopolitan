@@ -28,7 +28,6 @@
  * @return parent process id (always successful)
  * @note slow on Windows; needs to iterate process tree
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int getppid(void) {

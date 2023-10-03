@@ -21,7 +21,6 @@
 /**
  * Writes wide character to stdout.
  * @return wc if written or -1 w/ errno
- * @threadsafe
  */
 wint_t putwchar(wchar_t wc) {
   return fputwc(wc, stdout);

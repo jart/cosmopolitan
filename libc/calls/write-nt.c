@@ -47,8 +47,6 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-__msabi extern typeof(CloseHandle) *const __imp_CloseHandle;
-
 static bool IsMouseModeCommand(int x) {
   return x == 1000 ||  // SET_VT200_MOUSE
          x == 1002 ||  // SET_BTN_EVENT_MOUSE
@@ -202,7 +200,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
       goto BlockingOperation;
     }
   }
-  __imp_CloseHandle(overlap.hEvent);  // __imp_ to avoid log noise
+  CloseHandle(overlap.hEvent);
 
   if (seekable && !pwriting) {
     if (ok) f->pointer = offset + sent;

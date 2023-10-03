@@ -44,7 +44,6 @@ static inline int64_t ftell_unlocked(FILE *f) {
  *
  * @param stream is a non-null stream handle
  * @returns current byte offset from beginning, or -1 w/ errno
- * @threadsafe
  */
 int64_t ftell(FILE *f) {
   int64_t rc;

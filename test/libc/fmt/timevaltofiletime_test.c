@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/time/time.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
 
 TEST(TimeValToFileTime, roundTrip) {
   struct timeval tv1, tv2;

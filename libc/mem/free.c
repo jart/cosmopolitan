@@ -31,7 +31,6 @@ void (*hook_free)(void *) = dlfree;
  *
  * @param p is allocation address, which may be NULL
  * @see dlfree()
- * @threadsafe
  */
 void free(void *p) {
   hook_free(p);

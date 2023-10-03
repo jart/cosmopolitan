@@ -21,7 +21,6 @@
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/proc/ntspawn.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/rlimit.h"
@@ -51,6 +50,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/startupinfo.h"
+#include "libc/proc/ntspawn.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
 #include "libc/proc/proc.internal.h"
@@ -305,7 +305,6 @@ static textwindows dontinline errno_t posix_spawn_windows(
  * @see posix_spawnp() for `$PATH` searching
  * @returnserrno
  * @tlsrequired
- * @threadsafe
  */
 errno_t posix_spawn(int *pid, const char *path,
                     const posix_spawn_file_actions_t *file_actions,

@@ -51,9 +51,7 @@ void end_cancellation_point(int state) {
 }
 
 void report_cancellation_point(void) {
-  BLOCK_CANCELLATIONS;
-  _bt("error: need BEGIN/END_CANCELLATION_POINT\n");
-  ALLOW_CANCELLATIONS;
+  __builtin_trap();
 }
 
 #endif /* MODE_DBG */

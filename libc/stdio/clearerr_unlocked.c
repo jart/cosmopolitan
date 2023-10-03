@@ -24,7 +24,6 @@
  *
  * @param f is file object stream pointer
  * @see	clearerr()
- * @threadsafe
  */
 void clearerr_unlocked(FILE *f) {
   f->state = 0;

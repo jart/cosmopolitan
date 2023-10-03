@@ -27,6 +27,7 @@
 #include "libc/elf/struct/verdaux.h"
 #include "libc/elf/struct/verdef.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/getauxval.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -55,7 +56,7 @@ static inline int CheckDsoSymbolVersion(Elf64_Verdef *vd, int sym,
 }
 
 /**
- * Returns address of vDSO function.
+ * Returns address of "Virtual Dynamic Shared Object" function on Linux.
  */
 void *__vdsosym(const char *version, const char *name) {
   void *p;
@@ -64,23 +65,19 @@ void *__vdsosym(const char *version, const char *name) {
   Elf64_Phdr *phdr;
   char *strtab = 0;
   size_t *dyn, base;
-  unsigned long *ap;
   Elf64_Sym *symtab = 0;
   uint16_t *versym = 0;
   Elf_Symndx *hashtab = 0;
   Elf64_Verdef *verdef = 0;
+  struct AuxiliaryValue av;
 
-  for (ehdr = 0, ap = __auxv; ap[0]; ap += 2) {
-    if (ap[0] == AT_SYSINFO_EHDR) {
-      ehdr = (void *)ap[1];
-      break;
-    }
-  }
-  if (!ehdr || READ32LE(ehdr->e_ident) != READ32LE("\177ELF")) {
-    KERNTRACE("__vdsosym() → AT_SYSINFO_EHDR ELF not found");
+  av = __getauxval(AT_SYSINFO_EHDR);
+  if (!av.isfound) {
+    KERNTRACE("__vdsosym() → missing AT_SYSINFO_EHDR");
     return 0;
   }
 
+  ehdr = (void *)av.value;
   phdr = (void *)((char *)ehdr + ehdr->e_phoff);
   for (base = -1, dyn = 0, i = 0; i < ehdr->e_phnum;
        i++, phdr = (void *)((char *)phdr + ehdr->e_phentsize)) {

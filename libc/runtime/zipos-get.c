@@ -159,7 +159,6 @@ static void __zipos_init(void) {
 /**
  * Returns pointer to zip central directory of current executable.
  * @asyncsignalsafe
- * @threadsafe
  */
 struct Zipos *__zipos_get(void) {
   cosmo_once(&__zipos_once, __zipos_init);

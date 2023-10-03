@@ -30,7 +30,6 @@
 //	@see	makecontext()
 //	@see	swapcontext()
 //	@see	setcontext()
-//	@threadsafe
 	.ftrace1
 getcontext:
 	.ftrace2

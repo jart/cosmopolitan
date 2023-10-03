@@ -59,7 +59,6 @@ void *(*hook_realloc)(void *, size_t) = dlrealloc;
  * @param n is number of bytes needed
  * @return rax is result, or NULL w/ errno w/o free(p)
  * @see dlrealloc()
- * @threadsafe
  */
 void *realloc(void *p, size_t n) {
   return hook_realloc(p, n);

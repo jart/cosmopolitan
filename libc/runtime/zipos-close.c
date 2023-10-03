@@ -27,7 +27,6 @@
  *
  * @param fd is vetted by close()
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int __zipos_close(int fd) {

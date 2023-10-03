@@ -45,7 +45,6 @@
  * @see makedirs() which is higher-level
  * @see mkdirat() for modern call
  * @asyncsignalsafe
- * @threadsafe
  */
 int mkdir(const char *path, unsigned mode) {
   return mkdirat(AT_FDCWD, path, mode);

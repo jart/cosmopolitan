@@ -49,7 +49,6 @@
  *
  * @see __die() for crashing from normal code without aborting
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 relegated dontinstrument void __minicrash(int sig, siginfo_t *si, void *arg) {

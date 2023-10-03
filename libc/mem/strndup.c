@@ -26,7 +26,6 @@
  * @param n if less than strlen(s) will truncate the string
  * @return new string or NULL w/ errno
  * @error ENOMEM
- * @threadsafe
  */
 char *strndup(const char *s, size_t n) {
   char *s2;

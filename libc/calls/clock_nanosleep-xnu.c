@@ -19,40 +19,40 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/calls/struct/timeval.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
                             struct timespec *rem) {
 #ifdef __x86_64__
-  struct timeval abs, now, rel;
-  if (clock == CLOCK_REALTIME) {
-    if (flags & TIMER_ABSTIME) {
-      abs = timespec_totimeval(*req);
-      sys_gettimeofday_xnu(&now, 0, 0);
-      if (timeval_cmp(abs, now) > 0) {
-        rel = timeval_sub(abs, now);
-        return sys_select(0, 0, 0, 0, &rel);
-      } else {
-        return 0;
-      }
+  if (flags & TIMER_ABSTIME) {
+    struct timespec now;
+    sys_clock_gettime_xnu(clock, &now);
+    if (timespec_cmp(*req, now) > 0) {
+      struct timeval rel = timespec_totimeval(timespec_sub(*req, now));
+      return sys_select(0, 0, 0, 0, &rel);
     } else {
-      return sys_nanosleep_xnu(req, rem);
+      return 0;
     }
   } else {
-    return enotsup();
+    int rc;
+    struct timespec beg;
+    if (rem) sys_clock_gettime_xnu(CLOCK_REALTIME, &beg);
+    struct timeval rel = timespec_totimeval(*req);  // rounds up
+    rc = sys_select(0, 0, 0, 0, &rel);
+    if (rc == -1 && rem && errno == EINTR) {
+      struct timespec end;
+      sys_clock_gettime_xnu(CLOCK_REALTIME, &end);
+      *rem = timespec_subz(*req, timespec_sub(end, beg));
+    }
+    return rc;
   }
 #else
   long res;

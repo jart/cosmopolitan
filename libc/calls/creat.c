@@ -34,7 +34,6 @@
  * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
- * @threadsafe
  * @vforksafe
  */
 int creat(const char *file, uint32_t mode) {

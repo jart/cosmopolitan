@@ -25,7 +25,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/cosmo.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"

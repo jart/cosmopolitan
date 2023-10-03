@@ -631,7 +631,6 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
  * @param ctid lets the child receive its thread id without having to
  *     call gettid() and is ignored if `CLONE_CHILD_SETTID` isn't set
  * @return 0 on success, or errno on errno
- * @threadsafe
  */
 errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
               void *ptid, void *tls, void *ctid) {

@@ -81,7 +81,6 @@ static void vflogf_onfail(FILE *f) {
  * time that it took to connect. This is great in forking applications.
  *
  * @asyncsignalsafe
- * @threadsafe
  */
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {

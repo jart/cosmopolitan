@@ -37,11 +37,11 @@
  * @norestart
  */
 int nanosleep(const struct timespec *req, struct timespec *rem) {
-  int rc;
-  if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, req, rem))) {
+  errno_t err;
+  if (!(err = clock_nanosleep(CLOCK_REALTIME, 0, req, rem))) {
     return 0;
   } else {
-    errno = rc;
+    errno = err;
     return -1;
   }
 }

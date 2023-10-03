@@ -62,7 +62,6 @@
  * @return pointer to nul terminator within `p`, cf. stpcpy()
  * @see iso8601() if microsecond resolution isn't desirable
  * @asyncsignalsafe
- * @threadsafe
  */
 char *iso8601us(char p[hasatleast 27], struct tm *tm, long ns) {
   p = iso8601(p, tm);

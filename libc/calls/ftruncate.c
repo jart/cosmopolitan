@@ -60,7 +60,6 @@
  * @raise ENOSYS on bare metal
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  */
 int ftruncate(int fd, int64_t length) {
   int rc;

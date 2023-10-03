@@ -62,7 +62,6 @@
  * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
- * @threadsafe
  * @norestart
  */
 int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {

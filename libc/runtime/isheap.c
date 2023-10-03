@@ -20,11 +20,14 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 
+// TODO(jart): DELETE
+
 /**
  * Returns true if address isn't stack and was malloc'd or mmap'd.
  *
  * @assume stack addresses are always greater than heap addresses
  * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
+ * @deprecated
  */
 optimizesize bool _isheap(void *p) {
   intptr_t x, y;

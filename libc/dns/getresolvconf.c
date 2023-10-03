@@ -37,7 +37,6 @@ static struct ResolvConfInitialStaticMemory {
 
 /**
  * Returns singleton with DNS server address.
- * @threadsafe
  */
 const struct ResolvConf *GetResolvConf(void) {
   int rc;

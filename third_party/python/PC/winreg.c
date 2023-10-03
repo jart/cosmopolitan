@@ -4,18 +4,44 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/isystem/windows.h"
 #include "libc/nt/registry.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
+
+#undef NULL
+#define NULL 0
+
+#define BOOL        bool32
+#define DWORD32     uint32_t
+#define HKEY        int64_t
+#define ULONG       uint32_t
+#define ACCESS_MASK ULONG
+#define REGSAM      ACCESS_MASK
+
+#define HKEY_CLASSES_ROOT                kNtHkeyClassesRoot
+#define HKEY_CURRENT_USER                kNtHkeyCurrentUser
+#define HKEY_LOCAL_MACHINE               kNtHkeyLocalMachine
+#define HKEY_USERS                       kNtHkeyUsers
+#define HKEY_PERFORMANCE_DATA            kNtHkeyPerformanceData
+#define HKEY_PERFORMANCE_TEXT            kNtHkeyPerformanceText
+#define HKEY_PERFORMANCE_NLSTEXT         kNtHkeyPerformanceNlstext
+#define HKEY_CURRENT_CONFIG              kNtHkeyCurrentConfig
+#define HKEY_DYN_DATA                    kNtHkeyDynData
+#define HKEY_CURRENT_USER_LOCAL_SETTINGS kNtHkeyCurrentUserLocalSettings
+#define KEY_READ                         kNtKeyRead
+#define KEY_WRITE                        kNtKeyWrite
+#define KEY_EXECUTE                      kNtKeyExecute
+#define KEY_ALL_ACCESS                   kNtKeyAllAccess
+
 /* clang-format off */
 
 /*

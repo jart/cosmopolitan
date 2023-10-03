@@ -55,7 +55,6 @@
  * @return pointer to nul terminator within `p`, cf. stpcpy()
  * @see iso8601us() for microsecond timestamps
  * @asyncsignalsafe
- * @threadsafe
  */
 char *iso8601(char p[hasatleast 20], struct tm *tm) {
   int x;

@@ -29,7 +29,6 @@
  * @param size is byte length of `s`
  * @param f is file stream object pointer
  * @see fgetws()
- * @threadsafe
  */
 wchar_t *fgetws(wchar_t *s, int size, FILE *f) {
   wchar_t *rc;

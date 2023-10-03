@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
+#include "libc/fmt/wintime.internal.h"
 
 struct timeval WindowsDurationToTimeVal(int64_t x) {
   return (struct timeval){x / HECTONANOSECONDS, x % HECTONANOSECONDS / 10};
