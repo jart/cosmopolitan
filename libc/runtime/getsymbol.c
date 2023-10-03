@@ -19,6 +19,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
+extern struct SymbolTable *__symtab;
+
 /**
  * Returns low index into symbol table for address.
  *
@@ -31,8 +33,8 @@ privileged int __get_symbol(struct SymbolTable *t, intptr_t a) {
   // we don't want function tracing because:
   //   function tracing depends on this function via kprintf
   unsigned l, m, r, n, k;
-  if (!t && __symtab.st) {
-    t = __symtab.st;
+  if (!t && __symtab) {
+    t = __symtab;
   }
   if (t) {
     l = 0;

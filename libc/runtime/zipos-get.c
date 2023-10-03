@@ -16,17 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/cosmo.h"
+#include "libc/fmt/conv.h"
+#include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/limits.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
 #include "libc/zip.internal.h"
 
@@ -34,162 +42,118 @@
 __static_yoink(APE_COM_NAME);
 #endif
 
-struct ZiposPlanner {
-  uint8_t buf[kZipLookbehindBytes];
-  struct stat st;
-};
-
 static struct Zipos __zipos;
+static atomic_uint __zipos_once;
 
-static void __zipos_wipe(void) {
-  pthread_mutex_init(&__zipos.lock, 0);
+static void __zipos_dismiss(uint8_t *map, const uint8_t *cdir, long pg) {
+  uint64_t i, n, c, ef, lf, mo, lo, hi;
+
+  // determine the byte range of zip file content (excluding central dir)
+  c = GetZipCdirOffset(cdir);
+  n = GetZipCdirRecords(cdir);
+  for (lo = c, hi = i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(map + c)) {
+    lf = GetZipCfileOffset(map + c);
+    if (lf < lo) lo = lf;
+    ef = lf + ZIP_LFILE_HDRSIZE(map + lf) + GetZipLfileCompressedSize(map + lf);
+    if (ef > hi) hi = ef;
+  }
+
+  // unmap the executable portion beneath the local files
+  mo = ROUNDDOWN(lo, FRAMESIZE);
+  if (mo) munmap(map, mo);
+
+  // this is supposed to reduce our rss usage but does it really?
+  lo = ROUNDDOWN(lo, pg);
+  hi = MIN(ROUNDUP(hi, pg), ROUNDDOWN(c, pg));
+  if (hi > lo) {
+    posix_madvise(map + lo, hi - lo, POSIX_MADV_DONTNEED);
+  }
 }
 
-void __zipos_lock(void) {
-  pthread_mutex_lock(&__zipos.lock);
-}
-
-void __zipos_unlock(void) {
-  pthread_mutex_unlock(&__zipos.lock);
-}
-
-static int __zipos_compare(const void *a, const void *b, void *c) {
-  uint8_t *cdir = (uint8_t *)c;
-  const int *x = (const int *)a;
-  const int *y = (const int *)b;
-  int xn = ZIP_CFILE_NAMESIZE(cdir + *x);
-  int yn = ZIP_CFILE_NAMESIZE(cdir + *y);
+static int __zipos_compare_names(const void *a, const void *b, void *c) {
+  const size_t *x = (const size_t *)a;
+  const size_t *y = (const size_t *)b;
+  struct Zipos *z = (struct Zipos *)c;
+  int xn = ZIP_CFILE_NAMESIZE(z->map + *x);
+  int yn = ZIP_CFILE_NAMESIZE(z->map + *y);
   int n = MIN(xn, yn);
   if (n) {
-    int res = memcmp(ZIP_CFILE_NAME(cdir + *x), ZIP_CFILE_NAME(cdir + *y), n);
+    int res =
+        memcmp(ZIP_CFILE_NAME(z->map + *x), ZIP_CFILE_NAME(z->map + *y), n);
     if (res) return res;
   }
   return xn - yn;  // xn and yn are 16-bit
 }
 
-static dontinline int __zipos_plan(int fd, struct ZiposPlanner *p) {
-
-  // get file size and dev/inode
-  // this might fail if a bad fd was passed via environment
-  if (fstat(fd, &p->st)) {
-    return kZipErrorOpenFailed;
+// creates binary searchable array of file offsets to cdir records
+static void __zipos_generate_index(struct Zipos *zipos) {
+  size_t c, i;
+  zipos->records = GetZipCdirRecords(zipos->cdir);
+  zipos->index = _mapanon(zipos->records * sizeof(size_t));
+  for (i = 0, c = GetZipCdirOffset(zipos->cdir); i < zipos->records;
+       ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
+    zipos->index[i] = c;
   }
-
-  // read the last 64kb of file
-  // the zip file format magic can be anywhere in there
-  int amt;
-  int64_t off;
-  if (p->st.st_size <= kZipLookbehindBytes) {
-    off = 0;
-    amt = p->st.st_size;
-  } else {
-    off = p->st.st_size - kZipLookbehindBytes;
-    amt = p->st.st_size - off;
-  }
-  if (pread(fd, p->buf, amt, off) != amt) {
-    return kZipErrorReadFailed;
-  }
-
-  // search backwards for the end-of-central-directory record
-  // the eocd (cdir) says where the central directory (cfile) array is located
-  // we consistency check some legacy fields, to be extra sure that it is eocd
-  int cnt = 0;
-  for (int i = amt - MIN(kZipCdirHdrMinSize, kZipCdir64LocatorSize); i; --i) {
-    uint32_t magic = READ32LE(p->buf + i);
-    if (magic == kZipCdir64LocatorMagic && i + kZipCdir64LocatorSize <= amt &&
-        pread(fd, p->buf, kZipCdirHdrMinSize,
-              ZIP_LOCATE64_OFFSET(p->buf + i)) == kZipCdirHdrMinSize &&
-        READ32LE(p->buf) == kZipCdir64HdrMagic &&
-        ZIP_CDIR64_RECORDS(p->buf) == ZIP_CDIR64_RECORDSONDISK(p->buf) &&
-        ZIP_CDIR64_RECORDS(p->buf) && ZIP_CDIR64_SIZE(p->buf) <= INT_MAX) {
-      cnt = ZIP_CDIR64_RECORDS(p->buf);
-      off = ZIP_CDIR64_OFFSET(p->buf);
-      amt = ZIP_CDIR64_SIZE(p->buf);
-      break;
-    }
-    if (magic == kZipCdirHdrMagic && i + kZipCdirHdrMinSize <= amt &&
-        ZIP_CDIR_RECORDS(p->buf + i) == ZIP_CDIR_RECORDSONDISK(p->buf + i) &&
-        ZIP_CDIR_RECORDS(p->buf + i) && ZIP_CDIR_SIZE(p->buf + i) <= INT_MAX) {
-      cnt = ZIP_CDIR_RECORDS(p->buf + i);
-      off = ZIP_CDIR_OFFSET(p->buf + i);
-      amt = ZIP_CDIR_SIZE(p->buf + i);
-      break;
-    }
-  }
-  if (cnt <= 0) {
-    return kZipErrorEocdNotFound;
-  }
-
-  // we'll store the entire central directory in memory
-  // in addition to a file name index that's bisectable
-  void *memory;
-  int cdirsize = amt;
-  size_t indexsize = cnt * sizeof(int);
-  size_t memorysize = indexsize + cdirsize;
-  if (!(memory = _mapanon(memorysize))) {
-    return kZipErrorMapFailed;
-  }
-  int *index = memory;
-  uint8_t *cdir = (uint8_t *)memory + indexsize;
-
-  // read the central directory
-  if (pread(fd, cdir, cdirsize, off) != cdirsize) {
-    return kZipErrorReadFailed;
-  }
-
-  // generate our file name index
   // smoothsort() isn't the fastest algorithm, but it guarantees
   // o(logn), won't smash the stack and doesn't depend on malloc
-  int entry_index, entry_offset;
-  for (entry_index = entry_offset = 0;
-       entry_index < cnt && entry_offset + kZipCfileHdrMinSize <= cdirsize &&
-       entry_offset + ZIP_CFILE_HDRSIZE(cdir + entry_offset) <= cdirsize;
-       ++entry_index, entry_offset += ZIP_CFILE_HDRSIZE(cdir + entry_offset)) {
-    index[entry_index] = entry_offset;
-  }
-  if (cnt != entry_index) {
-    return kZipErrorZipCorrupt;
-  }
-  smoothsort_r(index, cnt, sizeof(int), __zipos_compare, cdir);
-
-  // finally populate the global singleton
-  __zipos.cnt = cnt;
-  __zipos.cdir = cdir;
-  __zipos.index = index;
-  __zipos.dev = p->st.st_ino;
-  __zipos.cdirsize = cdirsize;
-  return kZipOk;
-}
-
-static dontinline int __zipos_setup(int fd) {
-  // allocates 64kb on the stack as scratch memory
-  // this should only be used from the main thread
-#pragma GCC push_options
-#pragma GCC diagnostic ignored "-Wframe-larger-than="
-  struct ZiposPlanner p;
-  CheckLargeStackAllocation(&p, sizeof(p));
-#pragma GCC pop_options
-  return __zipos_plan(fd, &p);
+  smoothsort_r(zipos->index, zipos->records, sizeof(size_t),
+               __zipos_compare_names, zipos);
 }
 
 static void __zipos_init(void) {
-  int status;
-  if (getenv("COSMOPOLITAN_DISABLE_ZIPOS")) return;
-  if (!(__zipos.progpath = getenv("COSMOPOLITAN_INIT_ZIPOS"))) {
-    __zipos.progpath = GetProgramExecutableName();
-  }
-  int fd = open(__zipos.progpath, O_RDONLY);
-  if (fd != -1) {
-    if (!(status = __zipos_setup(fd))) {
-      __zipos_wipe();
-      pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_wipe);
+  char *endptr;
+  const char *s;
+  struct stat st;
+  int x, fd, err, msg;
+  uint8_t *map, *cdir;
+  const char *progpath;
+  if (!(s = getenv("COSMOPOLITAN_DISABLE_ZIPOS"))) {
+    // this environment variable may be a filename or file descriptor
+    if ((progpath = getenv("COSMOPOLITAN_INIT_ZIPOS")) &&
+        (x = strtol(progpath, &endptr, 10)) >= 0 && !*endptr) {
+      fd = x;
+    } else {
+      fd = -1;
     }
-    close(fd);
+    if (fd != -1 || PLEDGED(RPATH)) {
+      if (fd == -1) {
+        if (!progpath) {
+          progpath = GetProgramExecutableName();
+        }
+        fd = open(progpath, O_RDONLY);
+      }
+      if (fd != -1) {
+        if (!fstat(fd, &st) && (map = mmap(0, st.st_size, PROT_READ, MAP_SHARED,
+                                           fd, 0)) != MAP_FAILED) {
+          if ((cdir = GetZipEocd(map, st.st_size, &err))) {
+            long pagesz = getauxval(AT_PAGESZ);
+            __zipos_dismiss(map, cdir, pagesz);
+            __zipos.map = map;
+            __zipos.cdir = cdir;
+            __zipos.dev = st.st_ino;
+            __zipos.pagesz = pagesz;
+            __zipos_generate_index(&__zipos);
+            msg = kZipOk;
+          } else {
+            munmap(map, st.st_size);
+            msg = !cdir ? err : kZipErrorRaceCondition;
+          }
+        } else {
+          msg = kZipErrorMapFailed;
+        }
+        close(fd);
+      } else {
+        msg = kZipErrorOpenFailed;
+      }
+    } else {
+      msg = -666;
+    }
   } else {
-    status = kZipErrorOpenFailed;
+    progpath = 0;
+    msg = -777;
   }
-  (void)status;
-  STRACE("__zipos_init(%#s) → %d% m", __zipos.progpath, status);
+  (void)msg;
+  STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
 }
 
 /**
@@ -197,6 +161,6 @@ static void __zipos_init(void) {
  * @asyncsignalsafe
  */
 struct Zipos *__zipos_get(void) {
-  cosmo_once(&__zipos.once, __zipos_init);
-  return __zipos.cnt ? &__zipos : 0;
+  cosmo_once(&__zipos_once, __zipos_init);
+  return __zipos.cdir ? &__zipos : 0;
 }

@@ -77,8 +77,8 @@ struct dirstream {
     struct {
       struct Zipos *zipos;
       uint64_t inode;
-      int offset;
-      int records;
+      uint64_t offset;
+      uint64_t records;
       struct ZiposUri prefix;
       struct critbit0 found;
     } zip;
@@ -298,7 +298,7 @@ DIR *fdopendir(int fd) {
   // ensure open /zip/... file is a directory
   struct ZiposHandle *h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
   if (h->cfile != ZIPOS_SYNTHETIC_DIRECTORY &&
-      !S_ISDIR(GetZipCfileMode(h->zipos->cdir + h->cfile))) {
+      !S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
     free(dir);
     enotdir();
     return 0;
@@ -308,8 +308,8 @@ DIR *fdopendir(int fd) {
   size_t len;
   const char *name;
   if (h->cfile != ZIPOS_SYNTHETIC_DIRECTORY) {
-    len = ZIP_CFILE_NAMESIZE(h->zipos->cdir + h->cfile);
-    name = ZIP_CFILE_NAME(h->zipos->cdir + h->cfile);
+    len = ZIP_CFILE_NAMESIZE(h->zipos->map + h->cfile);
+    name = ZIP_CFILE_NAME(h->zipos->map + h->cfile);
   } else {
     len = h->size;
     name = (const char *)h->data;
@@ -328,8 +328,8 @@ DIR *fdopendir(int fd) {
 
   // setup state values for directory iterator
   dir->zip.zipos = h->zipos;
-  dir->zip.offset = 0;
-  dir->zip.records = h->zipos->cnt;
+  dir->zip.offset = GetZipCdirOffset(h->zipos->cdir);
+  dir->zip.records = GetZipCdirRecords(h->zipos->cdir);
   dir->zip.inode = __zipos_inode(h->zipos, h->cfile, dir->zip.prefix.path,
                                  dir->zip.prefix.len);
 
@@ -397,8 +397,8 @@ static struct dirent *readdir_zipos(DIR *dir) {
       ent->d_ino = __zipos_inode(
           dir->zip.zipos, __zipos_scan(dir->zip.zipos, &p), p.path, p.len);
     } else {
-      const char *s = ZIP_CFILE_NAME(dir->zip.zipos->cdir + dir->zip.offset);
-      size_t n = ZIP_CFILE_NAMESIZE(dir->zip.zipos->cdir + dir->zip.offset);
+      const char *s = ZIP_CFILE_NAME(dir->zip.zipos->map + dir->zip.offset);
+      size_t n = ZIP_CFILE_NAMESIZE(dir->zip.zipos->map + dir->zip.offset);
       if (n > dir->zip.prefix.len &&
           !memcmp(dir->zip.prefix.path, s, dir->zip.prefix.len)) {
         s += dir->zip.prefix.len;
@@ -408,7 +408,7 @@ static struct dirent *readdir_zipos(DIR *dir) {
         if (p) {
           n = p - s;
           d_type = DT_DIR;
-        } else if (S_ISDIR(GetZipCfileMode(dir->zip.zipos->cdir +
+        } else if (S_ISDIR(GetZipCfileMode(dir->zip.zipos->map +
                                            dir->zip.offset))) {
           d_type = DT_DIR;
         } else {
@@ -425,7 +425,7 @@ static struct dirent *readdir_zipos(DIR *dir) {
         }
       }
       dir->zip.offset +=
-          ZIP_CFILE_HDRSIZE(dir->zip.zipos->cdir + dir->zip.offset);
+          ZIP_CFILE_HDRSIZE(dir->zip.zipos->map + dir->zip.offset);
     }
     dir->tell++;
   }
@@ -611,7 +611,7 @@ void rewinddir(DIR *dir) {
   if (dir->iszip) {
     critbit0_clear(&dir->zip.found);
     dir->tell = 0;
-    dir->zip.offset = 0;
+    dir->zip.offset = GetZipCdirOffset(dir->zip.zipos->cdir);
   } else if (!IsWindows()) {
     if (!lseek(dir->fd, 0, SEEK_SET)) {
       dir->buf_pos = dir->buf_end = 0;
@@ -637,7 +637,7 @@ void seekdir(DIR *dir, long tell) {
   if (dir->iszip) {
     critbit0_clear(&dir->zip.found);
     dir->tell = 0;
-    dir->zip.offset = 0;
+    dir->zip.offset = GetZipCdirOffset(dir->zip.zipos->cdir);
     while (dir->tell < tell) {
       if (!readdir_zipos(dir)) {
         break;

@@ -139,9 +139,9 @@ TEST(unveil, canBeUsedAgainAfterVfork) {
 TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
-  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   ASSERT_SYS(0, 0, unveil("folder", "rwc"));
   ASSERT_SYS(0, 0, unveil(0, 0));
+  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   SPAWN(fork);
   ASSERT_SYS(0, 0, stat("folder/life.elf", &st));
   ASSERT_SYS(EACCES, -1, execl("folder/life.elf", "folder/life.elf", 0));
@@ -152,9 +152,9 @@ TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
 TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
-  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   ASSERT_SYS(0, 0, unveil("folder", "rwcx"));
   ASSERT_SYS(0, 0, unveil(0, 0));
+  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   SPAWN(fork);
   ASSERT_SYS(0, 0, stat("folder/life.elf", &st));
   execl("folder/life.elf", "folder/life.elf", 0);

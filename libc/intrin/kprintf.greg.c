@@ -135,6 +135,7 @@ __msabi extern typeof(WriteFile) *const __imp_WriteFile;
 // clang-format on
 
 long __klog_handle;
+extern struct SymbolTable *__symtab;
 
 __funline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;
@@ -754,11 +755,11 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           // can be manually consulted to look up the faulting code.
           int idx;
           x = va_arg(va, intptr_t);
-          if (_weaken(__symtab) && _weaken(__symtab)->st &&
+          if (_weaken(__symtab) && *_weaken(__symtab) &&
               (idx = _weaken(__get_symbol)(0, x)) != -1) {
             if (p + 1 <= e) *p++ = '&';
-            s = _weaken(__symtab)->st->name_base +
-                _weaken(__symtab)->st->names[idx];
+            s = (*_weaken(__symtab))->name_base +
+                (*_weaken(__symtab))->names[idx];
             goto FormatString;
           }
           base = 4;

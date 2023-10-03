@@ -29,7 +29,7 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
   int i;
   int64_t b, x, y;
   if (h->cfile == ZIPOS_SYNTHETIC_DIRECTORY ||
-      S_ISDIR(GetZipCfileMode(h->zipos->cdir + h->cfile))) {
+      S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
     return eisdir();
   }
   if (opt_offset == -1) {
@@ -39,7 +39,7 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
   }
   for (i = 0; i < iovlen && y < h->size; ++i, y += b) {
     b = MIN(iov[i].iov_len, h->size - y);
-    if (b) memcpy(iov[i].iov_base, h->data + y, b);
+    if (b) memcpy(iov[i].iov_base, h->mem + y, b);
   }
   if (opt_offset == -1) {
     h->pos = y;

@@ -1,12 +1,11 @@
-#ifndef COSMOPOLITAN_ZIPOS_H_
-#define COSMOPOLITAN_ZIPOS_H_
-#include "libc/thread/thread.h"
+#ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
+#define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define ZIPOS_PATH_MAX 1024
 
-#define ZIPOS_SYNTHETIC_DIRECTORY -2
+#define ZIPOS_SYNTHETIC_DIRECTORY 0
 
 struct stat;
 struct iovec;
@@ -20,43 +19,37 @@ struct ZiposUri {
 struct ZiposHandle {
   struct ZiposHandle *next;
   struct Zipos *zipos;
-  int64_t handle;   /* original upstream open()'d handle */
-  uint64_t size;    /* accessible bytes stored at data[] */
-  uint64_t mapsize; /* the full byte size of this struct */
-  uint64_t pos;     /* the file position, relative start */
-  int cfile;        /* byte offset into zipos->cdir ents */
-  uint8_t data[];   /* original file content or dir name */
+  size_t size;
+  size_t mapsize;
+  size_t pos;
+  size_t cfile;
+  uint8_t *mem;
+  uint8_t data[];
 };
 
 struct Zipos {
-  _Atomic(unsigned) once;
-  int cnt;       /* element count, accessible via `index` */
-  int cdirsize;  /* number of bytes accessible via `cdir` */
-  uint64_t dev;  /* remembers st_dev, of zipos image file */
-  int *index;    /* points to cdirsize+cnt*4 mmap'd bytes */
-  uint8_t *cdir; /* points after index, in the above mmap */
-  const char *progpath;
+  long pagesz;
+  uint8_t *map;
+  uint8_t *cdir;
+  uint64_t dev;
+  size_t *index;
+  size_t records;
   struct ZiposHandle *freelist;
-  char *mapend;
-  size_t maptotal;
-  pthread_mutex_t lock;
 };
 
 int __zipos_close(int);
-void __zipos_lock(void);
-void __zipos_unlock(void);
 void __zipos_free(struct ZiposHandle *);
 struct Zipos *__zipos_get(void) pureconst;
 size_t __zipos_normpath(char *, const char *, size_t);
-int __zipos_find(struct Zipos *, struct ZiposUri *);
-int __zipos_scan(struct Zipos *, struct ZiposUri *);
+ssize_t __zipos_find(struct Zipos *, struct ZiposUri *);
+ssize_t __zipos_scan(struct Zipos *, struct ZiposUri *);
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *);
 uint64_t __zipos_inode(struct Zipos *, int64_t, const void *, size_t);
 int __zipos_open(struct ZiposUri *, int);
 int __zipos_access(struct ZiposUri *, int);
 int __zipos_stat(struct ZiposUri *, struct stat *);
 int __zipos_fstat(struct ZiposHandle *, struct stat *);
-int __zipos_stat_impl(struct Zipos *, int, struct stat *);
+int __zipos_stat_impl(struct Zipos *, size_t, struct stat *);
 ssize_t __zipos_read(struct ZiposHandle *, const struct iovec *, size_t,
                      ssize_t);
 int64_t __zipos_seek(struct ZiposHandle *, int64_t, unsigned);
@@ -67,4 +60,4 @@ void *__zipos_mmap(void *, uint64_t, int32_t, int32_t, struct ZiposHandle *,
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_ZIPOS_H_ */
+#endif /* COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_ */

@@ -39,14 +39,14 @@ int __zipos_access(struct ZiposUri *name, int amode) {
     return enoexec();
   }
 
-  int cf;
+  ssize_t cf;
   if ((cf = __zipos_find(z, name)) == -1) {
     return -1;
   }
 
   int mode;
   if (cf != ZIPOS_SYNTHETIC_DIRECTORY) {
-    mode = GetZipCfileMode(z->cdir + cf);
+    mode = GetZipCfileMode(z->map + cf);
   } else {
     mode = S_IFDIR | 0555;
   }

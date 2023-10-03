@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -31,14 +30,16 @@
  * @vforksafe
  */
 int __zipos_close(int fd) {
-  if (__vforked) {
-    sys_close(fd);
-    return 0;
+  int rc;
+  struct ZiposHandle *h;
+  h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
+  if (!IsWindows()) {
+    rc = sys_close(fd);
+  } else {
+    rc = 0;  // no system file descriptor needed on nt
   }
-  struct ZiposHandle *h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
-  g_fds.p[fd].handle = h->handle;
-  g_fds.p[fd].kind = kFdFile;
-  int rc = close(fd);
-  __zipos_free(h);
+  if (!__vforked) {
+    __zipos_free(h);
+  }
   return rc;
 }

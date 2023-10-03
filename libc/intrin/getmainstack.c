@@ -28,14 +28,9 @@
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 
-// Hack for guessing the unknowable boundaries of _start()'s stack
+// Hack for guessing boundaries of _start()'s stack
 //
-// This code always guesses correctly on Windows because WinMain()
-// is written to allocate a stack ourself. Local testing on Linux,
-// XNU, FreeBSD, OpenBSD, and NetBSD says that accuracy is ±1 page
-// and that error rate applies to both beginning and end addresses
-//
-// Every UNIX system in our support vector creates arg blocks like
+// Every UNIX system in our support vector creates arg blocks like:
 //
 //     <HIGHEST-STACK-ADDRESS>
 //     last environ string
@@ -60,6 +55,11 @@
 // up to the microprocessor page size (this computes the top addr)
 // and the bottom is computed by subtracting RLIMIT_STACK rlim_cur
 // It's simple but gets tricky if we consider environ can be empty
+//
+// This code always guesses correctly on Windows because WinMain()
+// is written to allocate a stack ourself. Local testing on Linux,
+// XNU, FreeBSD, OpenBSD, and NetBSD says that accuracy is ±1 page
+// and that error rate applies to both beginning and end addresses
 
 static char *__get_last(char **list) {
   char *res = 0;
