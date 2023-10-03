@@ -12,6 +12,7 @@
 #include "dsp/tty/tty.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
@@ -28,7 +29,6 @@
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/zipos.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
@@ -1808,19 +1808,12 @@ void GetOpts(int argc, char* argv[]) {
 }
 
 size_t FindZipGames(void) {
-  char* name;
-  size_t i, cf;
-  struct Zipos* zipos;
-  if ((zipos = __zipos_get())) {
-    for (i = 0, cf = ZIP_CDIR_OFFSET(zipos->cdir);
-         i < ZIP_CDIR_RECORDS(zipos->cdir);
-         ++i, cf += ZIP_CFILE_HDRSIZE(zipos->map + cf)) {
-      if (ZIP_CFILE_NAMESIZE(zipos->map + cf) > 4 &&
-          !memcmp((ZIP_CFILE_NAME(zipos->map + cf) +
-                   ZIP_CFILE_NAMESIZE(zipos->map + cf) - 4),
-                  ".nes", 4) &&
-          (name = xasprintf("/zip/%.*s", ZIP_CFILE_NAMESIZE(zipos->map + cf),
-                            ZIP_CFILE_NAME(zipos->map + cf)))) {
+  DIR* dir;
+  if ((dir = opendir("/zip/usr/share/rom"))) {
+    struct dirent* ent;
+    while ((ent = readdir(dir))) {
+      if (endswith(ent->d_name, ".nes")) {
+        char* name = xasprintf("/zip/usr/share/rom/%s", ent->d_name);
         APPEND(&zipgames_.p, &zipgames_.i, &zipgames_.n, &name);
       }
     }

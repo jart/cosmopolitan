@@ -27,7 +27,7 @@
  * @asyncsignalsafe
  */
 int __zipos_stat(struct ZiposUri *name, struct stat *st) {
-  ssize_t cf;
+  int cf;
   struct Zipos *zipos;
   if (!(zipos = __zipos_get())) return enoexec();
   if ((cf = __zipos_find(zipos, name)) == -1) return -1;

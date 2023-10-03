@@ -25,8 +25,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/zip.internal.h"
 
-int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
-  size_t lf;
+int __zipos_stat_impl(struct Zipos *zipos, int cf, struct stat *st) {
   bzero(st, sizeof(*st));
   st->st_nlink = 1;
   st->st_dev = zipos->dev;
@@ -35,12 +34,11 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
     st->st_mode = S_IFDIR | (0555 & ~atomic_load_explicit(
                                         &__umask, memory_order_acquire));
   } else {
-    lf = GetZipCfileOffset(zipos->map + cf);
-    st->st_mode = GetZipCfileMode(zipos->map + cf);
-    st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
+    st->st_mode = GetZipCfileMode(zipos->cdir + cf);
+    st->st_size = GetZipCfileUncompressedSize(zipos->cdir + cf);
     st->st_blocks =
-        roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;
-    GetZipCfileTimestamps(zipos->map + cf, &st->st_mtim, &st->st_atim,
+        roundup(GetZipCfileCompressedSize(zipos->cdir + cf), 512) / 512;
+    GetZipCfileTimestamps(zipos->cdir + cf, &st->st_mtim, &st->st_atim,
                           &st->st_ctim, 0);
     st->st_birthtim = st->st_ctim;
   }

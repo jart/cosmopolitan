@@ -50,7 +50,7 @@
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
 void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
-                            struct ZiposHandle *h, int64_t off) {
+                   struct ZiposHandle *h, int64_t off) {
 
   if (off < 0) {
     STRACE("negative zipos mmap offset");
@@ -58,7 +58,7 @@ void *__zipos_mmap(void *addr, size_t size, int prot, int flags,
   }
 
   if (h->cfile == ZIPOS_SYNTHETIC_DIRECTORY ||
-      S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
+      S_ISDIR(GetZipCfileMode(h->zipos->cdir + h->cfile))) {
     return VIP(eisdir());
   }
 

@@ -52,7 +52,7 @@ void *Worker(void *arg) {
 }
 
 TEST(zipos, test) {
-  int i, n = 16;
+  int i, n = 20;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   for (i = 0; i < n; ++i) {
     ASSERT_SYS(0, 0, pthread_create(t + i, 0, Worker, 0));
@@ -84,6 +84,14 @@ TEST(zipos, readPastEof) {
   EXPECT_SYS(EBADF, -1, pwrite(3, buf, 512, 0));
   EXPECT_SYS(0, 0, read(3, buf, 512));
   EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(zipos, simple) {
+  char buf[31] = {0};
+  ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  ASSERT_SYS(0, 30, read(3, buf, 30));
+  ASSERT_STREQ("The fall of Hyperion - a Dream", buf);
+  ASSERT_SYS(0, 0, close(3));
 }
 
 TEST(zipos_O_DIRECTORY, blocksOpeningOfNormalFiles) {

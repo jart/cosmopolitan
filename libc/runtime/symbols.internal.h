@@ -26,6 +26,12 @@ struct SymbolTable {
   struct Symbol symbols[];   /* sorted and non-overlapping intervals */
 };
 
+struct SymbolTableLoader {
+  _Atomic(unsigned) once;
+  struct SymbolTable *st;
+};
+
+extern struct SymbolTableLoader __symtab;
 struct SymbolTable *GetSymbolTable(void);
 const char *FindComBinary(void);
 const char *FindDebugBinary(void);

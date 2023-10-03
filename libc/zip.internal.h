@@ -36,6 +36,8 @@
 #define kZipErrorRaceCondition          _ZE(-12)
 #define kZipErrorMapFailed              _ZE(-13)
 #define kZipErrorOpenFailed             _ZE(-14)
+#define kZipErrorReadFailed             _ZE(-15)
+#define kZipErrorZipCorrupt             _ZE(-16)
 
 #define kZipCosmopolitanVersion kZipEra2001
 
@@ -69,6 +71,8 @@
 
 #define kZipCompressionNone    0
 #define kZipCompressionDeflate 8
+
+#define kZipLookbehindBytes 65536
 
 #define kZipCdirHdrMagic            ZM_(0x06054b50) /* PK♣♠ "PK\5\6" */
 #define kZipCdirHdrMagicTodo        ZM_(0x19184b50) /* PK♣♠ "PK\30\31" */
