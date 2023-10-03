@@ -65,7 +65,7 @@ static long dispatch_semaphore_signal (dispatch_semaphore_t ds) {
 }
 
 static dispatch_time_t dispatch_walltime (const struct timespec *base,
-					    int64_t offset) {
+					  int64_t offset) {
 	return __syslib->__dispatch_walltime (base, offset);
 }
 
@@ -114,7 +114,7 @@ errno_t nsync_mu_semaphore_p_with_deadline_gcd (nsync_semaphore *s,
 	    !_weaken (pthread_testcancel_np) ||
 	    !(pt = _pthread_self()) ||
 	    (pt->pt_flags & PT_NOCANCEL)) {
-		nsync_dispatch_semaphore_wait (s, abs_deadline);
+		result = nsync_dispatch_semaphore_wait (s, abs_deadline);
 	} else {
 		struct timespec now, until, slice;
 		slice = timespec_frommillis (__SIG_LOCK_INTERVAL_MS);
