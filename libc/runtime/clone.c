@@ -30,6 +30,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -197,12 +198,20 @@ XnuThreadMain(void *pthread,                    // rdi
   //                                %rsi = size_t freesize,
   //                                %rdx = uint32_t port,
   //                                %r10 = uint32_t sem);
-  asm volatile("movl\t$0,%0\n\t"         // *wt->ztid = 0
-               "xor\t%%r10d,%%r10d\n\t"  // sem = 0
-               "syscall"                 // __bsdthread_terminate()
-               : "=m"(*wt->ztid)
-               : "a"(0x2000000 | 361), "D"(0), "S"(0), "d"(0L)
-               : "rcx", "r10", "r11", "memory");
+  asm volatile("movl\t$0,(%%rsi)\n\t"        // *wt->ztid = 0
+               "mov\t$0x101,%%edi\n\t"       // wake all
+               "xor\t%%edx,%%edx\n\t"        // wake_value
+               "mov\t$0x02000204,%%eax\n\t"  // ulock_wake()
+               "syscall\n\t"                 //
+               "xor\t%%edi,%%edi\n\t"        // freeaddr
+               "xor\t%%esi,%%esi\n\t"        // freesize
+               "xor\t%%edx,%%edx\n\t"        // kport
+               "xor\t%%r10d,%%r10d\n\t"      // joinsem
+               "mov\t$0x02000169,%%eax\n\t"  // bsdthread_terminate()
+               "syscall"
+               : /* no outputs */
+               : "S"(wt->ztid)
+               : "rax", "rcx", "r10", "r11", "memory");
   __builtin_unreachable();
 }
 
@@ -443,6 +452,7 @@ static void *SiliconThreadMain(void *arg) {
   *wt->ctid = wt->this;
   __stack_call(wt->arg, wt->this, 0, 0, wt->func, wt);
   *wt->ztid = 0;
+  ulock_wake(UL_COMPARE_AND_WAIT | ULF_WAKE_ALL, wt->ztid, 0);
   return 0;
 }
 

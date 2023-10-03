@@ -19,6 +19,8 @@ LOCAL CHANGES
 
   - Double linked list API was so good that it's now in libc
 
+  - Support Apple's ulock futexes which are internal but nicer than GCD
+
   - Ensure resources such as POSIX semaphores are are released on fork.
 
   - Modified *NSYNC to allocate waiter objects on the stack. We need it

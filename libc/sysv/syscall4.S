@@ -18,20 +18,20 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Invokes system call w/ arity of three.
+//	Invokes system call w/ arity of four.
 //
-//	This function takes four params. The first three are for
-//	args passed along to the system call. The 4th is for the
+//	This function takes four params. The first four, are for
+//	args passed along to the system call. The 5th is for the
 //	the magic number, indicating which system call is called
 //
 //	The return value follows the Linux Kernel (System V) ABI
 //	where -errno is returned, rather than doing -1 w/ errno.
 //
 //	This helper should not be used to do cancelation points.
-__syscall3:
+__syscall4:
 #ifdef __aarch64__
-	mov	x8,x3				// syscall number (linux)
-	mov	x16,x3				// syscall number (xnu)
+	mov	x8,x4				// syscall number (linux)
+	mov	x16,x4				// syscall number (xnu)
 	mov	x9,0				// clear carry flag
 	adds	x9,x9,0				// clear carry flag
 	svc	0
@@ -40,7 +40,8 @@ __syscall3:
 1:	neg	x0,x0
 	ret
 #elif defined(__x86_64__)
-	mov	%ecx,%eax			// arg4 -> syscall number
+	mov	%rcx,%r10			// avoid intel cx clobber
+	mov	%r8d,%eax			// arg5 -> syscall number
 	clc					// linux saves carry flag
 	syscall					// bsds set carry on errs
 	jnc	1f
@@ -49,4 +50,4 @@ __syscall3:
 #else
 #error "unsupported architecture"
 #endif
-	.endfn	__syscall3,globl
+	.endfn	__syscall4,globl

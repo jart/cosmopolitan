@@ -206,6 +206,7 @@ textstartup void __enable_tls(void) {
     tid = sys_gettid();
   }
   atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
+  // TODO(jart): set_tid_address?
 
   // initialize posix threads
   _pthread_static.tib = tib;

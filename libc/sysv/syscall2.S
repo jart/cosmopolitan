@@ -26,6 +26,8 @@
 //
 //	The returned value follows the Linux kernel convention ie
 //	errors are returned as `-errno`, rather than -1 w/ errno.
+//
+//	This helper should not be used to do cancelation points.
 __syscall2:
 #ifdef __aarch64__
 	mov	x8,x2				// syscall number (linux)

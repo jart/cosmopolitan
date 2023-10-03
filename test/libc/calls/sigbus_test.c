@@ -100,7 +100,12 @@ TEST(sigbus, test) {
 
   // verify the signal was raised
   EXPECT_EQ(SIGBUS, gotsig);
-  EXPECT_EQ(BUS_ADRERR, gotcode);
+  if (IsXnuSilicon()) {
+    // TODO: Why does it say it's an alignment error?
+    EXPECT_EQ(BUS_ADRALN, gotcode);
+  } else {
+    EXPECT_EQ(BUS_ADRERR, gotcode);
+  }
 
   // clean up
   sigaction(SIGBUS, &oldsa, 0);

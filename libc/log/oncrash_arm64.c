@@ -230,6 +230,11 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
   }
   Append(b, " %s %s %s %s\n", names.sysname, names.version, names.nodename,
          names.release);
+  Append(
+      b, " cosmoaddr2line %s%s %lx %s\n", __argv[0],
+      endswith(__argv[0], ".com") ? ".dbg" : "", ctx ? ctx->uc_mcontext.PC : 0,
+      DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.BP
+                            : (struct StackFrame *)__builtin_frame_address(0)));
   if (ctx) {
     long pc;
     char *mem = 0;
@@ -240,6 +245,7 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
     struct StackFrame *fp;
     struct SymbolTable *st;
     struct fpsimd_context *vc;
+
     st = GetSymbolTable();
     debugbin = FindDebugBinary();
     addr2line = GetAddr2linePath();

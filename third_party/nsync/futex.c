@@ -32,6 +32,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -72,6 +73,12 @@ static void nsync_futex_init_ (void) {
 
 	if (IsWindows ()) {
 		nsync_futex_.is_supported = true;
+		return;
+	}
+
+	if (IsXnu ()) {
+		nsync_futex_.is_supported = true;
+		nsync_futex_.timeout_is_relative = true;
 		return;
 	}
 
@@ -256,6 +263,20 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 			// Windows 8 futexes don't support multiple processes :(
 			if (pshare) goto Polyfill;
 			rc = nsync_futex_wait_win32_ (w, expect, pshare, timeout, pt);
+		} else if (IsXnu ()) {
+			uint32_t op, us;
+			if (pshare) {
+				op = UL_COMPARE_AND_WAIT_SHARED;
+			} else {
+				op = UL_COMPARE_AND_WAIT;
+			}
+			if (timeout) {
+				us = timespec_tomicros (*timeout);
+			} else {
+				us = -1u;
+			}
+			rc = ulock_wait (op, w, expect, us);
+			if (rc > 0) rc = 0; // TODO(jart): What does it mean?
 		} else if (IsFreebsd ()) {
 			rc = sys_umtx_timedwait_uint (w, expect, pshare, timeout);
 		} else {
@@ -326,6 +347,22 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 				WakeByAddressAll (w);
 			}
 			rc = 0;
+		} else if (IsXnu ()) {
+			uint32_t op;
+			if (pshare) {
+				op = UL_COMPARE_AND_WAIT_SHARED;
+			} else {
+				op = UL_COMPARE_AND_WAIT;
+			}
+			if (count > 1) {
+				op |= ULF_WAKE_ALL;
+			}
+			rc = ulock_wake (op, w, 0);
+			if (!rc) {
+				rc = 1;
+			} else if (rc == -ENOENT) {
+				rc = 0;
+			}
 		} else if (IsFreebsd ()) {
 			if (pshare) {
 				fop = UMTX_OP_WAKE;

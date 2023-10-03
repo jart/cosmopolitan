@@ -100,8 +100,8 @@ scall	sys_killpg		0x092fff092fffffff	0xfff	globl hidden
 scall	sys_clone		0x11fffffffffff038	0x0dc	globl hidden
 scall	sys_tkill		0x13e0771b121480c8	0x082	globl hidden # thr_kill() on FreeBSD; _lwp_kill() on NetBSD; thrkill() on OpenBSD where arg3 should be 0 or tcb; __pthread_kill() on XNU
 scall	sys_tgkill		0xffffff1e1ffff0ea	0x083	globl hidden # thr_kill2() on FreeBSD
-scall	sys_futex		0x0a60531c6ffff0ca	0x062	globl hidden # raises SIGSYS on NetBSD; _umtx_op() on FreeBSD
-scall	sys_futex_cp		0x8a68539c6ffff8ca	0x862	globl hidden # intended for futex wait ops
+scall	sys_futex		0x0a60531c622030ca	0x062	globl hidden # raises SIGSYS on NetBSD; _umtx_op() on FreeBSD
+scall	sys_futex_cp		0x8a68539c62a038ca	0x862	globl hidden # intended for futex wait ops
 scall	sys_set_robust_list	0x0a7ffffffffff111	0x063	globl # no wrapper
 scall	sys_get_robust_list	0x0a8ffffffffff112	0x064	globl # no wrapper
 scall	sys_uname		0x0a4fff0a4ffff03f	0x0a0	globl hidden

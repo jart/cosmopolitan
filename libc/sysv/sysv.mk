@@ -40,6 +40,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall2.S				\
 	libc/sysv/syscall3.S				\
+	libc/sysv/syscall4.S				\
 	libc/sysv/systemfive.S				\
 	libc/sysv/sysret.c				\
 	libc/sysv/sysv.c				\
@@ -169,6 +170,8 @@ o/$(MODE)/libc/sysv/syscount.o: libc/sysv/syscount.S
 o/$(MODE)/libc/sysv/syscall2.o: libc/sysv/syscall2.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/syscall3.o: libc/sysv/syscall3.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
+o/$(MODE)/libc/sysv/syscall4.o: libc/sysv/syscall4.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/libc/sysv/restorert.o: libc/sysv/restorert.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
