@@ -7461,9 +7461,12 @@ void RedBean(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+  lua_progname = "redbean";
+
 #if !IsTiny()
   ShowCrashReports();
 #endif
+
   LoadZipArgs(&argc, &argv);
   RedBean(argc, argv);
 
