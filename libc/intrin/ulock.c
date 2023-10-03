@@ -36,8 +36,8 @@ int ulock_wait(uint32_t operation, void *addr, uint64_t value,
                uint32_t timeout_micros) {
   int rc;
   operation |= ULF_WAIT_CANCEL_POINT;
-  STRACE("ulock_wait(%#x, %p, %lx, %u) → ...", operation, addr, value,
-         timeout_micros);
+  LOCKTRACE("ulock_wait(%#x, %p, %lx, %u) → ...", operation, addr, value,
+            timeout_micros);
   rc = sys_ulock_wait(operation, addr, value, timeout_micros);
   STRACE("ulock_wait(%#x, %p, %lx, %u) → %d% m", operation, addr, value,
          timeout_micros, rc);
