@@ -11,6 +11,9 @@
 #define _LIBCPP_CSTDINT
 
 #include "libc/inttypes.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/literal.h"
 #include "libc/calls/weirdtypes.h"
 #include "third_party/libcxx/__config"
 
