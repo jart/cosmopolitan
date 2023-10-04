@@ -74,8 +74,7 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   inmode |= kNtEnableWindowInput;
   __ttyconf.magic = 0;
   if (tio->c_lflag & ICANON) {
-    inmode |=
-        kNtEnableLineInput | kNtEnableProcessedInput | kNtEnableQuickEditMode;
+    inmode |= kNtEnableLineInput | kNtEnableQuickEditMode;
   } else {
     inmode &= ~kNtEnableQuickEditMode;
     __ttyconf.magic |= kTtyUncanon;
@@ -101,7 +100,8 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   memcpy(__ttyconf.c_cc, tio->c_cc, NCCS);
   if ((tio->c_lflag & ISIG) && __ttyconf.vintr == CTRL('C')) {
     // allows ctrl-c to be delivered asynchronously via win32
-    inmode |= kNtEnableProcessedInput;
+    // TODO(jart): Fix up sig.c more.
+    // inmode |= kNtEnableProcessedInput;
   }
   ok = SetConsoleMode(hInput, inmode);
   (void)ok;

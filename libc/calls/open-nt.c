@@ -53,16 +53,6 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
     return kNtInvalidHandleValue;
   }
 
-  // strip trailing slash
-  size_t n = strlen16(path16);
-  if (n > 1 && path16[n - 1] == '\\') {
-    // path denormalization only goes so far. when a trailing / or /.
-    // exists the kernel interprets that as having O_DIRECTORY intent
-    // furthermore, windows will throw an error on unc paths with it!
-    flags |= O_DIRECTORY;
-    path16[--n] = 0;
-  }
-
   // implement no follow flag
   // you can't open symlinks; use readlink
   // this flag only applies to the final path component

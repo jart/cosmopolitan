@@ -58,7 +58,16 @@ int main(int argc, char *argv[]) {
     // posix guarantees atomic i/o if you use pipe_buf sized buffers
     // that way we don't need to worry about things like looping and
     // we can also be assured that multiple actors wont have tearing
-    char buf[4];
+    // 512 is the minimum permissible value for PIPE_BUF for all the
+    // platforms. when stdin is a terminal there are more guarantees
+    // about exactly how many bytes will be returned. in ICANON mode
+    // which is the default you can count on it returning one single
+    // line, including its \n (or VEOL, or VEOL2) per read. if using
+    // non-canonical raw mode, then a single logical keystroke shall
+    // be returned per read, so long as has VMIN characters or more,
+    // and the default VMIN is 1. you can also set VMIN w/ tcsetattr
+    // to 0 for a special kind of non-blocking mode.
+    char buf[512];
 
     // read data from standard input
     //
@@ -109,7 +118,7 @@ int main(int argc, char *argv[]) {
     // it's usually safe to ignore the return code of write. the
     // operating system will send SIGPIPE if there's any problem
     // which kills the process by default
+    write(1, "got: ", 5);
     write(1, buf, got);
-    write(1, "\n", 1);
   }
 }

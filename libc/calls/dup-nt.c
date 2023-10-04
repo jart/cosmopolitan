@@ -71,6 +71,10 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     if (g_fds.p[oldfd].kind == kFdSocket && _weaken(_dupsockfd)) {
       g_fds.p[newfd].extra =
           (intptr_t)_weaken(_dupsockfd)((struct SockFd *)g_fds.p[oldfd].extra);
+    } else if (g_fds.p[oldfd].kind == kFdConsole) {
+      unassert(DuplicateHandle(proc, g_fds.p[oldfd].extra, proc,
+                               &g_fds.p[newfd].extra, 0, false,
+                               kNtDuplicateSameAccess));
     } else {
       g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
     }

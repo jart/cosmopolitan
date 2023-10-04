@@ -34,7 +34,6 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"

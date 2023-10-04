@@ -106,7 +106,7 @@ struct Keystrokes {
   unsigned char pc;
   uint16_t utf16hs;
   pthread_mutex_t lock;
-  struct Keystroke pool[8];
+  struct Keystroke pool[512];
 };
 
 static struct Keystrokes __keystroke;
@@ -203,7 +203,7 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
   }
 
   // make it possible to distinguish ctrl-h (^H) from backspace (^?)
-  if (c == kNtVkBack) {
+  if (c == kNtVkBack && !(cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed))) {
     c = 0177;
   }
 
@@ -387,6 +387,25 @@ static textwindows void EchoTty(struct Fd *f, const char *p, size_t n) {
   }
 }
 
+static textwindows bool EraseKeystroke(struct Fd *f) {
+  struct Dll *e;
+  if ((e = dll_last(__keystroke.line))) {
+    struct Keystroke *k = KEYSTROKE_CONTAINER(e);
+    dll_remove(&__keystroke.line, e);
+    dll_make_first(&__keystroke.free, e);
+    for (int i = k->buflen; i--;) {
+      if ((k->buf[i] & 0300) == 0200) continue;
+      WriteTty(f, "\b \b", 3);
+      if (!(__ttyconf.magic & kTtyEchoRaw) && IsCtl(k->buf[i])) {
+        WriteTty(f, "\b \b", 3);
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 static textwindows void IngestConsoleInputRecord(struct Fd *f,
                                                  struct NtInputRecord *r) {
 
@@ -401,18 +420,15 @@ static textwindows void IngestConsoleInputRecord(struct Fd *f,
   if (len == 1 && buf[0] &&                  //
       (buf[0] & 255) == __ttyconf.verase &&  //
       !(__ttyconf.magic & kTtyUncanon)) {
-    struct Dll *e;
-    if ((e = dll_last(__keystroke.line))) {
-      struct Keystroke *k = KEYSTROKE_CONTAINER(e);
-      dll_remove(&__keystroke.line, e);
-      dll_make_first(&__keystroke.free, e);
-      for (int i = k->buflen; i--;) {
-        if ((k->buf[i] & 0300) == 0200) continue;
-        WriteTty(f, "\b \b", 3);
-        if (!(__ttyconf.magic & kTtyEchoRaw) && IsCtl(k->buf[i])) {
-          WriteTty(f, "\b \b", 3);
-        }
-      }
+    EraseKeystroke(f);
+    return;
+  }
+
+  // handle kill in canonical mode
+  if (len == 1 && buf[0] &&                 //
+      (buf[0] & 255) == __ttyconf.vkill &&  //
+      !(__ttyconf.magic & kTtyUncanon)) {
+    while (EraseKeystroke(f)) {
     }
     return;
   }
@@ -455,12 +471,21 @@ static textwindows void IngestConsoleInput(struct Fd *f) {
   struct NtInputRecord records[16];
   if (!__keystroke.end_of_file) {
     do {
-      if (ReadConsoleInput(f->handle, records, ARRAYLEN(records), &n)) {
-        for (i = 0; i < n && !__keystroke.end_of_file; ++i) {
-          IngestConsoleInputRecord(f, records + i);
+      if (GetNumberOfConsoleInputEvents(f->handle, &n)) {
+        if (n) {
+          n = MIN(ARRAYLEN(records), n);
+          if (ReadConsoleInput(f->handle, records, n, &n)) {
+            for (i = 0; i < n && !__keystroke.end_of_file; ++i) {
+              IngestConsoleInputRecord(f, records + i);
+            }
+          } else {
+            STRACE("ReadConsoleInput failed w/ %d", GetLastError());
+            __keystroke.end_of_file = true;
+            break;
+          }
         }
       } else {
-        STRACE("ReadConsoleInput failed w/ %d", GetLastError());
+        STRACE("GetNumberOfConsoleInputRecords failed w/ %d", GetLastError());
         __keystroke.end_of_file = true;
         break;
       }
@@ -513,7 +538,7 @@ static textwindows bool DigestConsoleInput(char *data, size_t size, int *rc) {
   // copy keystroke(s) into user buffer
   int toto = 0;
   struct Dll *e;
-  while ((e = dll_first(__keystroke.list))) {
+  while (size && (e = dll_first(__keystroke.list))) {
     struct Keystroke *k = KEYSTROKE_CONTAINER(e);
     uint32_t got = MIN(size, k->buflen);
     uint32_t remain = k->buflen - got;
@@ -567,7 +592,12 @@ static textwindows ssize_t ReadFromWindowsConsole(struct Fd *f, void *data,
       }
     }
     if (_check_interrupts(kSigOpRestartable)) return -1;
-    if (__pause_thread(ms)) return -1;
+    if (__pause_thread(ms)) {
+      if (errno == EAGAIN) {
+        errno = EINTR;  // TODO(jart): Why do we need it?
+      }
+      return -1;
+    }
   }
   return rc;
 }

@@ -92,7 +92,7 @@ int EnableRawMode(void) {
     perror("tcsetattr");
   }
 
-  WRITE(outfd, ENABLE_MOUSE_TRACKING);
+  /* WRITE(outfd, ENABLE_MOUSE_TRACKING); */
   /* WRITE(outfd, ENABLE_SAFE_PASTE); */
   /* WRITE(outfd, PROBE_DISPLAY_SIZE); */
   return 0;

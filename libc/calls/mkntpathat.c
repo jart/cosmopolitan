@@ -20,13 +20,17 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
-int __mkntpathat(int dirfd, const char *path, int flags,
-                 char16_t file[hasatleast PATH_MAX]) {
+__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
+
+static int __mkntpathat_impl(int dirfd, const char *path, int flags,
+                             char16_t file[hasatleast PATH_MAX]) {
   char16_t dir[PATH_MAX];
   uint32_t dirlen, filelen;
   if (!isutf8(path, -1)) return eilseq();  // thwart overlong nul in conversion
@@ -48,4 +52,31 @@ int __mkntpathat(int dirfd, const char *path, int flags,
   } else {
     return filelen;
   }
+}
+
+int __mkntpathat(int dirfd, const char *path, int flags,
+                 char16_t file[hasatleast PATH_MAX]) {
+
+  // convert the path.
+  int len;
+  if ((len = __mkntpathat_impl(dirfd, path, flags, file)) == -1) {
+    return -1;
+  }
+
+  // if path ends with a slash, then we need to manually do what linux
+  // does and check to make sure it's a directory, and return ENOTDIR,
+  // since WIN32 will reject the path with EINVAL if we don't do this.
+  if (len && file[len - 1] == '\\') {
+    uint32_t fattr;
+    if (len > 1 && !(len == 3 && file[1] == ':')) {
+      file[--len] = 0;
+    }
+    if ((fattr = __imp_GetFileAttributesW(file)) != -1u &&
+        !(fattr & kNtFileAttributeReparsePoint) &&
+        !(fattr & kNtFileAttributeDirectory)) {
+      return enotdir();
+    }
+  }
+
+  return len;
 }
