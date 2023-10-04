@@ -501,6 +501,8 @@ textwindows int FlushConsoleInputBytes(int64_t handle) {
   if (FlushConsoleInputBuffer(handle)) {
     dll_make_first(&__keystroke.free, __keystroke.list);
     __keystroke.list = 0;
+    dll_make_first(&__keystroke.free, __keystroke.line);
+    __keystroke.line = 0;
     rc = 0;
   } else {
     rc = __winerr();
