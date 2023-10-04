@@ -47,20 +47,19 @@
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
   int rc;
-  struct timeval tv, *tvp;
+#ifdef SYSDEBUG
+  fd_set old_readfds;
+  fd_set *old_readfds_ptr = 0;
+  fd_set old_writefds;
+  fd_set *old_writefds_ptr = 0;
+  fd_set old_exceptfds;
+  fd_set *old_exceptfds_ptr = 0;
+  struct timeval old_timeout;
+  struct timeval *old_timeout_ptr = 0;
+#endif
+
   POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout));
-
-  // the linux kernel modifies timeout
-  if (timeout) {
-    if (IsAsan() && !__asan_is_valid(timeout, sizeof(*timeout))) {
-      return efault();
-    }
-    tv = *timeout;
-    tvp = &tv;
-  } else {
-    tvp = 0;
-  }
 
   BEGIN_CANCELLATION_POINT;
   if (nfds < 0) {
@@ -68,29 +67,58 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   } else if (IsAsan() &&
              ((readfds && !__asan_is_valid(readfds, FD_SIZE(nfds))) ||
               (writefds && !__asan_is_valid(writefds, FD_SIZE(nfds))) ||
-              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))))) {
+              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))) ||
+              (timeout && !__asan_is_valid(timeout, sizeof(*timeout))))) {
     rc = efault();
-  } else if (!IsWindows()) {
-#ifdef __aarch64__
-    struct timespec ts, *tsp;
-    if (timeout) {
-      ts.tv_sec = timeout->tv_sec;
-      ts.tv_nsec = timeout->tv_usec * 1000;
-      tsp = &ts;
-    } else {
-      tsp = 0;
-    }
-    rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, 0);
-#else
-    rc = sys_select(nfds, readfds, writefds, exceptfds, tvp);
-#endif
   } else {
-    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, 0);
+#ifdef SYSDEBUG
+    if (readfds) {
+      old_readfds = *readfds;
+      old_readfds_ptr = &old_readfds;
+    }
+    if (writefds) {
+      old_writefds = *writefds;
+      old_writefds_ptr = &old_writefds;
+    }
+    if (exceptfds) {
+      old_exceptfds = *exceptfds;
+      old_exceptfds_ptr = &old_exceptfds;
+    }
+    if (timeout) {
+      old_timeout = *timeout;
+      old_timeout_ptr = &old_timeout;
+    }
+#endif
+    if (!IsWindows()) {
+#ifdef __aarch64__
+      struct timespec ts, *tsp;
+      if (timeout) {
+        ts = timeval_totimespec(*timeout);
+        tsp = &ts;
+      } else {
+        tsp = 0;
+      }
+      rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, 0);
+      if (timeout) {
+        *timeout = timespec_totimeval(ts);
+      }
+#else
+      rc = sys_select(nfds, readfds, writefds, exceptfds, timeout);
+#endif
+    } else {
+      rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, 0);
+    }
   }
   END_CANCELLATION_POINT;
 
-  STRACE("select(%d, [%s], [%s], [%s], [%s]) → %d% m", nfds,
-         DescribeFdSet(rc, nfds, readfds), DescribeFdSet(rc, nfds, writefds),
-         DescribeFdSet(rc, nfds, exceptfds), DescribeTimeval(rc, tvp), rc);
+  STRACE("select(%d, %s → [%s], %s → [%s], %s → [%s], %s → [%s]) → %d% m", nfds,
+         DescribeFdSet(rc, nfds, old_readfds_ptr),
+         DescribeFdSet(rc, nfds, readfds),
+         DescribeFdSet(rc, nfds, old_writefds_ptr),
+         DescribeFdSet(rc, nfds, writefds),
+         DescribeFdSet(rc, nfds, old_exceptfds_ptr),
+         DescribeFdSet(rc, nfds, exceptfds),    //
+         DescribeTimeval(rc, old_timeout_ptr),  //
+         DescribeTimeval(rc, timeout), rc);
   return rc;
 }
