@@ -14,7 +14,6 @@ long long atoll(const char *) paramsnonnull() libcesque;
 unsigned long strtoul(const char *, char **, int) paramsnonnull((1));
 long long strtoll(const char *, char **, int) paramsnonnull((1));
 unsigned long long strtoull(const char *, char **, int) paramsnonnull((1));
-long long strtonum(const char *, long long, long long, const char **);
 intmax_t strtoimax(const char *, char **, int) paramsnonnull((1));
 uintmax_t strtoumax(const char *, char **, int) paramsnonnull((1));
 intmax_t wcstoimax(const wchar_t *, wchar_t **, int);
