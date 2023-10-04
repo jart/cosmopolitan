@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
@@ -160,24 +161,57 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
     return 0;
   }
 
+#if 0
+  kprintf("bKeyDown=%hhhd wVirtualKeyCode=%s wVirtualScanCode=%s "
+          "UnicodeChar=%#x[%#lc] dwControlKeyState=%s\n",
+          r->Event.KeyEvent.bKeyDown,
+          DescribeVirtualKeyCode(r->Event.KeyEvent.wVirtualKeyCode),
+          DescribeVirtualKeyCode(r->Event.KeyEvent.wVirtualScanCode),
+          r->Event.KeyEvent.uChar.UnicodeChar,
+          r->Event.KeyEvent.uChar.UnicodeChar,
+          DescribeControlKeyState(r->Event.KeyEvent.dwControlKeyState));
+#endif
+
   // process arrow keys, function keys, etc.
   int n = 0;
-  if (!c) {
-    int w;
-    w = GetVirtualKey(vk, !!(cks & kNtShiftPressed),
-                      !!(cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed)));
-    if (!w) return 0;
+  int v = GetVirtualKey(vk, !!(cks & kNtShiftPressed),
+                        !!(cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed)));
+  if (v) {
     p[n++] = 033;
     if (cks & (kNtLeftAltPressed | kNtRightAltPressed)) {
       p[n++] = 033;
     }
-    if (w > 0) {
+    if (v > 0) {
       p[n++] = '[';
     } else {
-      w = -w;
+      v = -v;
     }
-    do p[n++] = w;
-    while ((w >>= 8));
+    do p[n++] = v;
+    while ((v >>= 8));
+    return n;
+  }
+
+  // ^/ should be interpreted as ^_
+  if (vk == kNtVkOem_2 && (cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed))) {
+    p[n++] = 037;
+    return n;
+  }
+
+  // everything needs a unicode mapping from here on out
+  // handle some stuff microsoft doesn't encode, e.g. ctrl+alt+b
+  if (!c) {
+    if (isgraph(vk) && (cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed))) {
+      c = CTRL(vk);
+    } else {
+      return 0;
+    }
+  }
+
+  // shift-tab is backtab or ^[Z
+  if (vk == kNtVkTab && (cks & (kNtShiftPressed))) {
+    p[n++] = 033;
+    p[n++] = '[';
+    p[n++] = 'Z';
     return n;
   }
 
@@ -230,7 +264,6 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
 
   // insert esc prefix when alt is held
   if ((cks & (kNtLeftAltPressed | kNtRightAltPressed)) &&
-      !(cks & (kNtLeftCtrlPressed | kNtRightCtrlPressed)) &&
       r->Event.KeyEvent.bKeyDown) {
     p[n++] = 033;
   }

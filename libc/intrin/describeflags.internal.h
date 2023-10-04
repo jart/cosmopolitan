@@ -16,6 +16,7 @@ const char *DescribeArchPrctlCode(char[12], int);
 const char *DescribeCancelState(char[12], int, int *);
 const char *DescribeCapability(char[32], int);
 const char *DescribeClockName(char[32], int);
+const char *DescribeControlKeyState(char[64], uint32_t);
 const char *DescribeDirfd(char[12], int);
 const char *DescribeDnotifyFlags(char[80], int);
 const char *DescribeErrno(char[20], int);
@@ -44,7 +45,6 @@ const char *DescribeNtPipeOpenFlags(char[64], uint32_t);
 const char *DescribeNtProcAccessFlags(char[256], uint32_t);
 const char *DescribeNtStartFlags(char[128], uint32_t);
 const char *DescribeNtSymlinkFlags(char[64], uint32_t);
-const char *DescribeThreadCreateFlags(char[64], uint32_t);
 const char *DescribeOpenFlags(char[128], int);
 const char *DescribeOpenMode(char[15], int, int);
 const char *DescribePersonalityFlags(char[128], int);
@@ -66,6 +66,8 @@ const char *DescribeSocketProtocol(char[12], int);
 const char *DescribeSocketType(char[64], int);
 const char *DescribeStdioState(char[12], int);
 const char *DescribeStringList(char[300], char *const[]);
+const char *DescribeThreadCreateFlags(char[64], uint32_t);
+const char *DescribeVirtualKeyCode(char[32], uint32_t);
 const char *DescribeWhence(char[12], int);
 const char *DescribeWhichPrio(char[12], int);
 
@@ -73,6 +75,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeCancelState(x, y)    DescribeCancelState(alloca(12), x, y)
 #define DescribeCapability(x)        DescribeCapability(alloca(32), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
+#define DescribeControlKeyState(x)   DescribeControlKeyState(alloca(64), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
 #define DescribeDnotifyFlags(x)      DescribeDnotifyFlags(alloca(80), x)
 #define DescribeErrno(x)             DescribeErrno(alloca(20), x)
@@ -120,6 +123,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeStdioState(x)        DescribeStdioState(alloca(12), x)
 #define DescribeStringList(x)        DescribeStringList(alloca(300), x)
 #define DescribeThreadCreateFlags(x) DescribeThreadCreateFlags(alloca(64), x)
+#define DescribeVirtualKeyCode(x)    DescribeVirtualKeyCode(alloca(32), x)
 #define DescribeWhence(x)            DescribeWhence(alloca(12), x)
 #define DescribeWhichPrio(x)         DescribeWhichPrio(alloca(12), x)
 
