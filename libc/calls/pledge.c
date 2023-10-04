@@ -239,6 +239,9 @@
 int pledge(const char *promises, const char *execpromises) {
   int e, rc;
   unsigned long ipromises, iexecpromises;
+  if (promises && !execpromises) {
+    execpromises = promises;
+  }
   if (!promises) {
     // OpenBSD says NULL argument means it doesn't change, i.e.
     // pledge(0,0) on OpenBSD does nothing. The Cosmopolitan Libc
