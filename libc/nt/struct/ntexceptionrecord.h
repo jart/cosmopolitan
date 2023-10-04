@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_NTEXCEPTIONRECORD_H_
 
 #define kNtExceptionMaximumParameters 15
-#define kNtExceptionNoncontinuable 1
+#define kNtExceptionNoncontinuable    1
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -12,7 +12,7 @@ struct NtExceptionRecord {
   struct NtExceptionRecord *ExceptionRecord; /* nested exceptions */
   void *ExceptionAddress;                    /* %rip */
   uint32_t NumberParameters;                 /* #ExceptionInformation */
-  uint32_t *ExceptionInformation[kNtExceptionMaximumParameters];
+  uint64_t ExceptionInformation[kNtExceptionMaximumParameters];
 };
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

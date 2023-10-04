@@ -239,9 +239,6 @@
 int pledge(const char *promises, const char *execpromises) {
   int e, rc;
   unsigned long ipromises, iexecpromises;
-  if (promises && !execpromises) {
-    execpromises = promises;
-  }
   if (!promises) {
     // OpenBSD says NULL argument means it doesn't change, i.e.
     // pledge(0,0) on OpenBSD does nothing. The Cosmopolitan Libc
@@ -262,8 +259,8 @@ int pledge(const char *promises, const char *execpromises) {
     return -1;
   } else if (!IsTiny() && IsGenuineBlink()) {
     rc = 0;  // blink doesn't support seccomp; avoid noisy log warnings
-  } else if (!ParsePromises(promises, &ipromises) &&
-             !ParsePromises(execpromises, &iexecpromises)) {
+  } else if (!ParsePromises(promises, &ipromises, __promises) &&
+             !ParsePromises(execpromises, &iexecpromises, __execpromises)) {
     if (IsLinux()) {
       // copy exec and execnative from promises to execpromises
       iexecpromises = ~(~iexecpromises | (~ipromises & (1ul << PROMISE_EXEC)));

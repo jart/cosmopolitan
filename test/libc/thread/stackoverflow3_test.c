@@ -1,12 +1,21 @@
-#if 0
-/*─────────────────────────────────────────────────────────────────╗
-│ To the extent possible under law, Justine Tunney has waived      │
-│ all copyright and related or neighboring rights to this file,    │
-│ as it is written in the following disclaimers:                   │
-│   • http://unlicense.org/                                        │
-│   • http://creativecommons.org/publicdomain/zero/1.0/            │
-╚─────────────────────────────────────────────────────────────────*/
-#endif
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/siginfo.h"
@@ -29,10 +38,6 @@
  * rewrite thread cpu state to call pthread_exit
  * this method returns gracefully from signal handlers
  * unfortunately it relies on cpu architecture knowledge
- *
- * @see test/libc/thread/stackoverflow1_test.c
- * @see test/libc/thread/stackoverflow2_test.c
- * @see test/libc/thread/stackoverflow3_test.c
  */
 
 volatile bool smashed_stack;
@@ -96,7 +101,7 @@ void *MyPosixThread(void *arg) {
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+TEST(stackoverflow, standardStack_altStack_thread_teleport) {
   void *res;
   pthread_t th;
   struct sigaltstack ss;
@@ -105,6 +110,7 @@ int main(int argc, char *argv[]) {
   pthread_join(th, &res);
   ASSERT_EQ((void *)123L, res);
   ASSERT_TRUE(smashed_stack);
+  // this should be SS_DISABLE but ShowCrashReports() creates an alt stack
   ASSERT_SYS(0, 0, sigaltstack(0, &ss));
-  ASSERT_EQ(SS_DISABLE, ss.ss_flags);
+  ASSERT_EQ(0, ss.ss_flags);
 }

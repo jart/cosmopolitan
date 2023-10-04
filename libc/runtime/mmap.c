@@ -28,6 +28,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -37,6 +38,9 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/enum/memflags.h"
+#include "libc/nt/enum/pageflags.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processmemorycounters.h"
@@ -396,9 +400,15 @@ inline void *__mmap_unlocked(void *addr, size_t size, int prot, int flags,
                     kAsanMmapSizeOverrun);
     }
     if (needguard) {
-      unassert(!mprotect(p, pagesize, PROT_NONE));
-      if (IsAsan()) {
-        __asan_poison(p, pagesize, kAsanStackOverflow);
+      if (!IsWindows()) {
+        unassert(!mprotect(p, pagesize, PROT_NONE));
+        if (IsAsan()) {
+          __asan_poison(p, pagesize, kAsanStackOverflow);
+        }
+      } else {
+        uint32_t oldattr;
+        unassert(VirtualProtect(p, pagesize, kNtPageReadwrite | kNtPageGuard,
+                                &oldattr));
       }
     }
   }

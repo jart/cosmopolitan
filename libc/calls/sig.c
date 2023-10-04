@@ -34,6 +34,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -72,9 +73,6 @@ struct ContextFrame {
   struct NtContext nc;
 };
 
-void __stack_call(int, siginfo_t *, void *, long,
-                  void (*)(int, siginfo_t *, void *), void *);
-
 static textwindows bool __sig_ignored_by_default(int sig) {
   return sig == SIGURG ||   //
          sig == SIGCONT ||  //
@@ -90,9 +88,21 @@ textwindows bool __sig_ignored(int sig) {
 
 static textwindows bool __sig_should_use_altstack(unsigned flags,
                                                   struct CosmoTib *tib) {
-  return (flags & SA_ONSTACK) &&    //
-         tib->tib_sigstack_size &&  //
-         !(tib->tib_sigstack_flags & (SS_DISABLE | SS_ONSTACK));
+  if (!(flags & SA_ONSTACK)) {
+    return false;  // signal handler didn't enable it
+  }
+  if (!tib->tib_sigstack_size) {
+    return false;  // sigaltstack() wasn't installed on this thread
+  }
+  if (tib->tib_sigstack_flags & SS_DISABLE) {
+    return false;  // sigaltstack() on this thread was disabled by user
+  }
+  char *bp = __builtin_frame_address(0);
+  if (tib->tib_sigstack_addr <= bp &&
+      bp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
+    return false;  // we're already on the alternate stack
+  }
+  return true;
 }
 
 static textwindows wontreturn void __sig_terminate(int sig) {
@@ -129,20 +139,6 @@ static textwindows sigaction_f __sig_handler(unsigned rva) {
   return (sigaction_f)(__executable_start + rva);
 }
 
-static textwindows void __sig_call(int sig, siginfo_t *si, ucontext_t *ctx,
-                                   unsigned rva, unsigned flags,
-                                   struct CosmoTib *tib) {
-  ++__sig.count;
-  if (__sig_should_use_altstack(flags, tib)) {
-    tib->tib_sigstack_flags |= SS_ONSTACK;
-    __stack_call(sig, si, ctx, 0, __sig_handler(rva),
-                 tib->tib_sigstack_addr + tib->tib_sigstack_size);
-    tib->tib_sigstack_flags &= ~SS_ONSTACK;
-  } else {
-    __sig_handler(rva)(sig, si, ctx);
-  }
-}
-
 textwindows int __sig_raise(int sig, int sic) {
   unsigned rva, flags;
   struct CosmoTib *tib = __get_tls();
@@ -160,7 +156,7 @@ textwindows int __sig_raise(int sig, int sic) {
   STRACE("entering raise(%G) signal handler %t with mask %s → %s", sig,
          __sig_handler(rva), DescribeSigset(0, &ctx.uc_sigmask),
          DescribeSigset(0, &(sigset_t){{pt->tib->tib_sigmask}}));
-  __sig_call(sig, &si, &ctx, rva, flags, tib);
+  __sig_handler(rva)(sig, &si, &ctx);
   STRACE("leaving raise(%G) signal handler %t with mask %s → %s", sig,
          __sig_handler(rva),
          DescribeSigset(0, &(sigset_t){{pt->tib->tib_sigmask}}),
@@ -258,9 +254,7 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   }
   uintptr_t sp;
   if (__sig_should_use_altstack(flags, pt->tib)) {
-    pt->tib->tib_sigstack_flags |= SS_ONSTACK;
     sp = (uintptr_t)pt->tib->tib_sigstack_addr + pt->tib->tib_sigstack_size;
-    pt->tib->tib_sigstack_flags &= ~SS_ONSTACK;
   } else {
     sp = (nc.Rsp - 128 - sizeof(struct ContextFrame)) & -16;
   }
@@ -338,11 +332,11 @@ static int __sig_crash_sig(struct NtExceptionPointers *ep, int *code) {
     case kNtSignalPrivInstruction:
       *code = ILL_PRVOPC;
       return SIGILL;
-    case kNtSignalGuardPage:
     case kNtSignalInPageError:
     case kNtStatusStackOverflow:
       *code = SEGV_MAPERR;
       return SIGSEGV;
+    case kNtSignalGuardPage:
     case kNtSignalAccessViolation:
       *code = SEGV_ACCERR;
       return SIGSEGV;
@@ -386,26 +380,25 @@ static int __sig_crash_sig(struct NtExceptionPointers *ep, int *code) {
   }
 }
 
-// abashed the devil stood, and felt how awful goodness is
-__msabi unsigned __sig_crash(struct NtExceptionPointers *ep) {
-  int code, sig = __sig_crash_sig(ep, &code);
+static void __sig_crasher(struct NtExceptionPointers *ep, int code, int sig,
+                          struct CosmoTib *tib) {
+
+  // increment the signal count for getrusage()
+  ++__sig.count;
+
+  // log vital crash information reliably for --strace before doing much
+  // we don't print this without the flag since raw numbers scare people
+  // this needs at least one page of stack memory in order to get logged
+  // otherwise it'll print a warning message about the lack of stack mem
   STRACE("win32 vectored exception 0x%08Xu raising %G "
          "cosmoaddr2line %s %lx %s",
          ep->ExceptionRecord->ExceptionCode, sig, program_invocation_name,
          ep->ContextRecord->Rip,
          DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
-  if (sig == SIGTRAP) {
-    ep->ContextRecord->Rip++;
-    if (__sig_ignored(sig)) {
-      return kNtExceptionContinueExecution;
-    }
-  }
-  struct PosixThread *pt = _pthread_self();
-  siginfo_t si = {.si_signo = sig,
-                  .si_code = code,
-                  .si_addr = ep->ExceptionRecord->ExceptionAddress};
+
+  // if the user didn't install a signal handler for this unmaskable
+  // exception, then print a friendly helpful hint message to stderr
   unsigned rva = __sighandrvas[sig];
-  unsigned flags = __sighandflags[sig];
   if (rva == (intptr_t)SIG_DFL || rva == (intptr_t)SIG_IGN) {
 #ifndef TINY
     intptr_t hStderr;
@@ -418,16 +411,74 @@ __msabi unsigned __sig_crash(struct NtExceptionPointers *ep) {
 #endif
     __sig_terminate(sig);
   }
+
+  // if this signal handler is configured to auto-reset to the default
+  // then that reset needs to happen before the user handler is called
+  unsigned flags = __sighandflags[sig];
   if (flags & SA_RESETHAND) {
     STRACE("resetting %G handler", sig);
     __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
   }
+
+  // determine the true memory address at which fault occurred
+  // if this is a stack overflow then reapply guard protection
+  void *si_addr;
+  if (ep->ExceptionRecord->ExceptionCode == kNtSignalGuardPage) {
+    si_addr = (void *)ep->ExceptionRecord->ExceptionInformation[1];
+  } else {
+    si_addr = ep->ExceptionRecord->ExceptionAddress;
+  }
+
+  // call the user signal handler
+  // with a temporarily replaced signal mask
+  // and a modifiable view of the faulting code's cpu state
+  // note ucontext_t is a hefty data structures on top of NtContext
   ucontext_t ctx = {0};
+  siginfo_t si = {.si_signo = sig, .si_code = code, .si_addr = si_addr};
   _ntcontext2linux(&ctx, ep->ContextRecord);
-  ctx.uc_sigmask.__bits[0] = pt->tib->tib_sigmask;
-  __sig_call(sig, &si, &ctx, rva, flags, pt->tib);
-  pt->tib->tib_sigmask = ctx.uc_sigmask.__bits[0];
+  ctx.uc_sigmask.__bits[0] = tib->tib_sigmask;
+  __sig_handler(rva)(sig, &si, &ctx);
+  tib->tib_sigmask = ctx.uc_sigmask.__bits[0];
   _ntlinux2context(ep->ContextRecord, &ctx);
+}
+
+void __stack_call(struct NtExceptionPointers *, int, int, struct CosmoTib *,
+                  void (*)(struct NtExceptionPointers *, int, int,
+                           struct CosmoTib *),
+                  void *);
+
+//
+//     abashed the devil stood
+//  and felt how awful goodness is
+//
+__msabi dontinstrument unsigned __sig_crash(struct NtExceptionPointers *ep) {
+
+  // translate win32 to unix si_signo and si_code
+  int code, sig = __sig_crash_sig(ep, &code);
+
+  // advance the instruction pointer to skip over debugger breakpoints
+  // this behavior is consistent with how unix kernels are implemented
+  if (sig == SIGTRAP) {
+    ep->ContextRecord->Rip++;
+    if (__sig_ignored(sig)) {
+      return kNtExceptionContinueExecution;
+    }
+  }
+
+  // win32 stack overflow detection executes INSIDE the guard page
+  // thus switch to the alternate signal stack as soon as possible
+  struct CosmoTib *tib = __get_tls();
+  unsigned flags = __sighandflags[sig];
+  if (__sig_should_use_altstack(flags, tib)) {
+    __stack_call(ep, code, sig, tib, __sig_crasher,
+                 tib->tib_sigstack_addr + tib->tib_sigstack_size);
+  } else {
+    __sig_crasher(ep, code, sig, tib);
+  }
+
+  // resume running user program
+  // hopefully the user fixed the cpu state
+  // otherwise the crash will keep happening
   return kNtExceptionContinueExecution;
 }
 

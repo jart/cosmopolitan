@@ -31,6 +31,7 @@
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
@@ -38,6 +39,9 @@
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/nt/enum/memflags.h"
+#include "libc/nt/enum/pageflags.h"
+#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/runtime.h"
@@ -210,9 +214,19 @@ static errno_t pthread_create_impl(pthread_t *thread,
                 -1, 0, 0) != pt->attr.__stackaddr) {
           notpossible;
         }
-        if (pt->attr.__guardsize && !IsWindows() &&
-            mprotect(pt->attr.__stackaddr, pt->attr.__guardsize, PROT_NONE)) {
-          notpossible;
+        if (pt->attr.__guardsize) {
+          if (!IsWindows()) {
+            if (mprotect(pt->attr.__stackaddr, pt->attr.__guardsize,
+                         PROT_NONE)) {
+              notpossible;
+            }
+          } else {
+            uint32_t oldattr;
+            if (!VirtualProtect(pt->attr.__stackaddr, pt->attr.__guardsize,
+                                kNtPageReadwrite | kNtPageGuard, &oldattr)) {
+              notpossible;
+            }
+          }
         }
       }
     }
@@ -227,7 +241,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
       }
     }
     pt->pt_flags |= PT_OWNSTACK;
-    if (IsAsan() && pt->attr.__guardsize) {
+    if (IsAsan() && !IsWindows() && pt->attr.__guardsize) {
       __asan_poison(pt->attr.__stackaddr, pt->attr.__guardsize,
                     kAsanStackOverflow);
     }

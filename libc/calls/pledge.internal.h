@@ -14,7 +14,7 @@ struct Pledges {
 extern const struct Pledges kPledge[PROMISE_LEN_];
 
 int sys_pledge_linux(unsigned long, int);
-int ParsePromises(const char *, unsigned long *);
+int ParsePromises(const char *, unsigned long *, unsigned long);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

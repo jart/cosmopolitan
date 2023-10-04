@@ -169,6 +169,9 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
     uint32_t old;
     __imp_VirtualProtect((void *)stackaddr, stacksize, kNtPageReadwrite, &old);
   }
+  uint32_t oldattr;
+  __imp_VirtualProtect((void *)stackaddr, GetGuardSize(),
+                       kNtPageReadwrite | kNtPageGuard, &oldattr);
   _mmi.p[0].x = stackaddr >> 16;
   _mmi.p[0].y = (stackaddr >> 16) + ((stacksize - 1) >> 16);
   _mmi.p[0].prot = prot;

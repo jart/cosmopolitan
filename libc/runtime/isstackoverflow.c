@@ -19,45 +19,19 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 /**
- * Returns true if signal is likely a stack overflow.
+ * Returns true if signal is most likely a stack overflow.
  */
-char __is_stack_overflow(siginfo_t *si, void *ucontext) {
-
-  // check if signal has the information we need
-  ucontext_t *uc = ucontext;
-  if (!si) return false;
-  if (!uc) return false;
+char __is_stack_overflow(siginfo_t *si, void *arg) {
+  ucontext_t *uc = arg;
+  if (!si || !uc) return false;
   if (si->si_signo != SIGSEGV && si->si_signo != SIGBUS) return false;
-
-  // with threads we know exactly where the guard page is
-  int pagesz = getauxval(AT_PAGESZ);
-  uintptr_t addr = (uintptr_t)si->si_addr;
-  struct PosixThread *pt = _pthread_self();
-  if (pt->attr.__stacksize) {
-    uintptr_t stack = (uintptr_t)pt->attr.__stackaddr;
-    uintptr_t guard = pt->attr.__guardsize;
-    uintptr_t bot, top;
-    if (guard) {
-      bot = stack;
-      top = bot + guard;
-    } else {
-      bot = stack - pagesz;
-      top = stack;
-    }
-    return addr >= bot && addr < top;
-  }
-
-  // it's easy to guess with the main stack
-  // even though it's hard to know its exact boundaries
-  uintptr_t sp = uc->uc_mcontext.SP;
-  return addr <= sp && addr >= sp - pagesz;
+  intptr_t sp = uc->uc_mcontext.SP;
+  intptr_t fp = (intptr_t)si->si_addr;
+  return ABS(fp - sp) < getauxval(AT_PAGESZ);
 }

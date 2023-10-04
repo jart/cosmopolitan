@@ -785,7 +785,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (ParsePromises(g_promises, &ipromises) == -1) {
+  if (ParsePromises(g_promises, &ipromises, 0) == -1) {
     kprintf("error: bad promises list: %s\n", g_promises);
     _Exit(21);
   }

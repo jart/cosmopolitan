@@ -552,6 +552,8 @@ TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
   }
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_FALSE(WIFSIGNALED(ws));
+  EXPECT_EQ(0, WTERMSIG(ws));
   EXPECT_EQ(3, WEXITSTATUS(ws));
 }
 

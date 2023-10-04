@@ -5,7 +5,6 @@
 COSMOPOLITAN_C_START_
 
 extern bool __nocolor;
-extern bool _wantcrashreports;
 extern bool g_isrunningundermake;
 
 void __start_fatal(const char *, int);

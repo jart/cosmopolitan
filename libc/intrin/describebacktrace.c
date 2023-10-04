@@ -24,20 +24,19 @@
 
 dontinstrument const char *(DescribeBacktrace)(char buf[N],
                                                struct StackFrame *fr) {
-  bool gotsome = false;
   char *p = buf;
   char *pe = p + N;
+  bool gotsome = false;
   while (fr) {
-    if (gotsome) {
-      if (p + 1 < pe) {
+    if (p + 16 + 1 + 1 <= pe) {
+      if (gotsome) {
         *p++ = ' ';
-        *p = 0;
+      } else {
+        gotsome = true;
       }
-    } else {
-      gotsome = true;
-    }
-    if (p + 17 <= pe) {
       p = __hexcpy(p, fr->addr);
+    } else {
+      break;
     }
     fr = fr->next;
   }

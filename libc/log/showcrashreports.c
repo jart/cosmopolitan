@@ -91,7 +91,6 @@ void ShowCrashReports(void) {
   InstallCrashHandler(SIGBUS, SA_RESETHAND);
   InstallCrashHandler(SIGABRT, SA_RESETHAND);
   InstallCrashHandler(SIGSEGV, SA_RESETHAND | SA_ONSTACK);
-  _wantcrashreports = true;
 }
 
 IGNORE_LEAKS(ShowCrashReports)

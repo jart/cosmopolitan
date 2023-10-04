@@ -1939,7 +1939,7 @@ child_execute_job (struct childbase *child,
                         (STRING_SIZE_TUPLE (".PLEDGE"),
                          c ? c->file : 0, 0));
       promises = ps ? xstrdup (ps) : 0;
-      if (ParsePromises (promises, &ipromises))
+      if (ParsePromises (promises, &ipromises, 0))
         {
           OSS (error, NILF, "%s: invalid .PLEDGE string: %s",
                argv[0], strerror (errno));

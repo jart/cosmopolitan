@@ -35,7 +35,8 @@ static int FindPromise(const char *name) {
  *
  * @return 0 on success, or -1 if invalid
  */
-int ParsePromises(const char *promises, unsigned long *out) {
+int ParsePromises(const char *promises, unsigned long *out,
+                  unsigned long current) {
   int rc = 0;
   int promise;
   unsigned long ipromises;
@@ -57,7 +58,7 @@ int ParsePromises(const char *promises, unsigned long *out) {
       rc = -1;
     }
   } else {
-    ipromises = 0;
+    ipromises = current;
   }
   if (!rc) {
     *out = ipromises;
