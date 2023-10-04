@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
@@ -136,13 +137,14 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
     for (int i = 0; i <= 2; ++i) {
       uint32_t m;
       intptr_t h = __imp_GetStdHandle(kNtStdio[i]);
-      __imp_GetConsoleMode(h, &m);
-      if (!i) {
-        m |= kNtEnableMouseInput | kNtEnableWindowInput;
-      } else {
-        m |= kNtEnableVirtualTerminalProcessing;
+      if (__imp_GetConsoleMode(h, &m)) {
+        if (!i) {
+          m |= kNtEnableMouseInput | kNtEnableWindowInput;
+        } else {
+          m |= kNtEnableVirtualTerminalProcessing;
+        }
+        __imp_SetConsoleMode(h, m);
       }
-      __imp_SetConsoleMode(h, m);
     }
   }
 

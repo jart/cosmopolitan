@@ -38,6 +38,7 @@
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/x86info.h"
+#include "libc/nt/console.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/startupinfo.h"
@@ -651,13 +652,20 @@ textstartup void __printargs(const char *prologue) {
       PRINT(" ☼ %s = %ld", "hStdError", startinfo.hStdError);
 
     PRINT("");
+    uint32_t cm;
     PRINT("STANDARD HANDLES");
     PRINT(" ☼ %s = %ld", "GetStdHandle(kNtStdInputHandle)",
           GetStdHandle(kNtStdInputHandle));
+    if (GetConsoleMode(GetStdHandle(kNtStdInputHandle), &cm))
+      PRINT("   %s", DescribeNtConsoleInFlags(cm));
     PRINT(" ☼ %s = %ld", "GetStdHandle(kNtStdOutputHandle)",
           GetStdHandle(kNtStdOutputHandle));
+    if (GetConsoleMode(GetStdHandle(kNtStdOutputHandle), &cm))
+      PRINT("   %s", DescribeNtConsoleOutFlags(cm));
     PRINT(" ☼ %s = %ld", "GetStdHandle(kNtStdErrorHandle)",
           GetStdHandle(kNtStdErrorHandle));
+    if (GetConsoleMode(GetStdHandle(kNtStdErrorHandle), &cm))
+      PRINT("   %s", DescribeNtConsoleOutFlags(cm));
 
     PRINT("");
     PRINT("TEB");

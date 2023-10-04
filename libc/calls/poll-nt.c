@@ -155,7 +155,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
             pipefds[i].revents |= POLLERR;
           }
         } else if (GetConsoleMode(pipefds[i].handle, &cm)) {
-          if (CountConsoleInputBytes(pipefds[i].handle)) {
+          if (CountConsoleInputBytes(g_fds.p + fds[pipeindices[i]].fd)) {
             pipefds[i].revents |= POLLIN;
           }
         } else {

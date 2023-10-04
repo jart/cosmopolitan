@@ -800,7 +800,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           // undocumented %r specifier
           // used for good carriage return
           // helps integrate loggers with repls
-          if (!__replstderr || __nocolor) {
+          if (!__ttyconf.replstderr || __nocolor) {
             break;
           } else {
             s = "\r\e[K";

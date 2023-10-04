@@ -72,45 +72,34 @@ textwindows int tcsetattr_nt(int fd, int opt, const struct termios *tio) {
   inmode &= ~(kNtEnableLineInput | kNtEnableEchoInput |
               kNtEnableProcessedInput | kNtEnableVirtualTerminalInput);
   inmode |= kNtEnableWindowInput;
-  __ttymagic = 0;
+  __ttyconf.magic = 0;
   if (tio->c_lflag & ICANON) {
     inmode |=
         kNtEnableLineInput | kNtEnableProcessedInput | kNtEnableQuickEditMode;
   } else {
     inmode &= ~kNtEnableQuickEditMode;
-    __ttymagic |= kFdTtyUncanon;
-    if (!tio->c_cc[VMIN]) {
-      __ttymagic |= kFdTtyNoBlock;
-    }
-    __vtime = tio->c_cc[VTIME];
+    __ttyconf.magic |= kTtyUncanon;
   }
   if (!(tio->c_iflag & ICRNL)) {
-    __ttymagic |= kFdTtyNoCr2Nl;
+    __ttyconf.magic |= kTtyNoCr2Nl;
   }
   if (!(tio->c_lflag & ECHOCTL)) {
-    __ttymagic |= kFdTtyEchoRaw;
+    __ttyconf.magic |= kTtyEchoRaw;
   }
   if (tio->c_lflag & ECHO) {
     // "kNtEnableEchoInput can be used only if the
     //  kNtEnableLineInput mode is also enabled." -MSDN
     if (tio->c_lflag & ICANON) {
       inmode |= kNtEnableEchoInput;
-    } else {
-      // If ECHO is enabled in raw mode, then read(0) needs to
-      // magically write(1) to simulate echoing. This normally
-      // visualizes control codes, e.g. \r → ^M unless ECHOCTL
-      // hasn't been specified.
-      __ttymagic |= kFdTtyEchoing;
     }
+  } else {
+    __ttyconf.magic |= kTtySilence;
   }
   if (!(tio->c_lflag & ISIG)) {
-    __ttymagic |= kFdTtyNoIsigs;
+    __ttyconf.magic |= kTtyNoIsigs;
   }
-  __veof = tio->c_cc[VEOF];
-  __vintr = tio->c_cc[VINTR];
-  __vquit = tio->c_cc[VQUIT];
-  if ((tio->c_lflag & ISIG) &&  //
-      tio->c_cc[VINTR] == CTRL('C')) {
+  memcpy(__ttyconf.c_cc, tio->c_cc, NCCS);
+  if ((tio->c_lflag & ISIG) && __ttyconf.vintr == CTRL('C')) {
     // allows ctrl-c to be delivered asynchronously via win32
     inmode |= kNtEnableProcessedInput;
   }

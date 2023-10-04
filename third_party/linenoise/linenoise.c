@@ -2485,13 +2485,13 @@ char *linenoise(const char *prompt) {
   if (linenoiseFallback(prompt, &res)) return res;
   fflush(stdout);
   fflush(stdout);
-  rm = __replmode;
-  rs = __replstderr;
-  __replmode = true;
-  if (isatty(2)) __replstderr = true;
+  rm = __ttyconf.replmode;
+  rs = __ttyconf.replstderr;
+  __ttyconf.replmode = true;
+  if (isatty(2)) __ttyconf.replstderr = true;
   res = linenoiseRaw(prompt, fileno(stdin), fileno(stdout));
-  __replstderr = rs;
-  __replmode = rm;
+  __ttyconf.replstderr = rs;
+  __ttyconf.replmode = rm;
   return res;
 }
 

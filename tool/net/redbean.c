@@ -2614,14 +2614,14 @@ static int LuaCallWithYield(lua_State *L) {
   // the second set of headers is not going to be sent
   struct sigaction sa, saold;
   lua_State *co = lua_newthread(L);
-  if (__replmode) {
+  if (__ttyconf.replmode) {
     sa.sa_flags = SA_RESETHAND;
     sa.sa_handler = OnLuaServerPageCtrlc;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGINT, &sa, &saold);
   }
   status = LuaCallWithTrace(L, 0, 0, co);
-  if (__replmode) {
+  if (__ttyconf.replmode) {
     sigaction(SIGINT, &saold, 0);
   }
   if (status == LUA_YIELD) {
@@ -7002,7 +7002,7 @@ static int HandlePoll(int ms) {
         }
       }
 #ifndef STATIC
-    } else if (__replmode) {
+    } else if (__ttyconf.replmode) {
       // handle refresh repl line
       rc = HandleReadline();
       if (rc < 0) return rc;

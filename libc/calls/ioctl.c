@@ -114,7 +114,7 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
         return __winerr();
       }
     } else if (GetConsoleMode(handle, &cm)) {
-      int bytes = CountConsoleInputBytes(handle);
+      int bytes = CountConsoleInputBytes(g_fds.p + fd);
       return MAX(0, bytes);
     } else {
       return eopnotsupp();

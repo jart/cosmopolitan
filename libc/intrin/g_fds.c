@@ -123,9 +123,6 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
     SetupWinStd(fds, 0, kNtStdInputHandle, sockset);
     SetupWinStd(fds, 1, kNtStdOutputHandle, sockset);
     SetupWinStd(fds, 2, kNtStdErrorHandle, sockset);
-    __veof = CTRL('D');
-    __vintr = CTRL('C');
-    __vquit = CTRL('\\');
   }
   fds->p[1].flags = O_WRONLY | O_APPEND;
   fds->p[2].flags = O_WRONLY | O_APPEND;

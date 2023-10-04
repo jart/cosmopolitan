@@ -1048,7 +1048,7 @@ int __fmt(void *fn, void *arg, const char *format, va_list va) {
         // undocumented %r specifier
         // used for good carriage return
         // helps integrate loggers with repls
-        if (!__replstderr) {
+        if (!__ttyconf.replstderr) {
           break;
         } else {
           p = "\r\e[K";

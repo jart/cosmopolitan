@@ -135,11 +135,11 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
             } else {
               m |= IsMouseModeCommand(x);
               if (p[i] == 'h') {
-                __ttymagic |= kFdTtyXtMouse;
+                __ttyconf.magic |= kTtyXtMouse;
                 cm2 |= kNtEnableMouseInput;
                 cm2 &= kNtEnableQuickEditMode;  // precludes mouse events
               } else if (p[i] == 'l') {
-                __ttymagic &= ~kFdTtyXtMouse;
+                __ttyconf.magic &= ~kTtyXtMouse;
                 cm2 |= kNtEnableQuickEditMode;  // disables mouse too
               }
               t = 0;

@@ -55,22 +55,7 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   }
 
   bzero(tio, sizeof(*tio));
-
-  tio->c_cc[VMIN] = !(__ttymagic & kFdTtyNoBlock);
-  tio->c_cc[VEOF] = __veof;
-  tio->c_cc[VTIME] = __vtime;
-  tio->c_cc[VINTR] = __vintr;
-  tio->c_cc[VQUIT] = __vquit;
-  tio->c_cc[VERASE] = CTRL('?');
-  tio->c_cc[VWERASE] = CTRL('W');
-  tio->c_cc[VKILL] = CTRL('U');
-  tio->c_cc[VMIN] = CTRL('A');
-  tio->c_cc[VSTART] = _POSIX_VDISABLE;
-  tio->c_cc[VSTOP] = _POSIX_VDISABLE;
-  tio->c_cc[VSUSP] = _POSIX_VDISABLE;
-  tio->c_cc[VREPRINT] = CTRL('R');
-  tio->c_cc[VDISCARD] = CTRL('O');
-  tio->c_cc[VLNEXT] = CTRL('V');
+  memcpy(tio->c_cc, __ttyconf.c_cc, NCCS);
 
   tio->c_iflag = IUTF8;
   tio->c_lflag = ECHOE;
@@ -78,21 +63,24 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   tio->_c_ispeed = B38400;
   tio->_c_ospeed = B38400;
 
-  if (inmode & kNtEnableLineInput) {
+  // kNtEnableLineInput and kNtEnableEchoInput only apply to programs
+  // that call ReadFile() or ReadConsole(). since we do not use them,
+  // the flags could serve the purpose of inter-process communication
+  if ((inmode & kNtEnableLineInput) || !(__ttyconf.magic & kTtyUncanon)) {
     tio->c_lflag |= ICANON;
   }
   // kNtEnableEchoInput only works with kNtEnableLineInput enabled.
-  if ((inmode & kNtEnableEchoInput) || (__ttymagic & kFdTtyEchoing)) {
+  if ((inmode & kNtEnableEchoInput) || !(__ttyconf.magic & kTtySilence)) {
     tio->c_lflag |= ECHO;
   }
   // The Windows console itself always echos control codes as ASCII.
-  if ((inmode & kNtEnableEchoInput) || !(__ttymagic & kFdTtyEchoRaw)) {
+  if ((inmode & kNtEnableEchoInput) || !(__ttyconf.magic & kTtyEchoRaw)) {
     tio->c_lflag |= ECHOCTL;
   }
-  if (!(__ttymagic & kFdTtyNoCr2Nl)) {
+  if (!(__ttyconf.magic & kTtyNoCr2Nl)) {
     tio->c_iflag |= ICRNL;
   }
-  if (!(__ttymagic & kFdTtyNoIsigs)) {
+  if (!(__ttyconf.magic & kTtyNoIsigs)) {
     tio->c_lflag |= ISIG;
   }
   if (inmode & kNtEnableProcessedInput) {

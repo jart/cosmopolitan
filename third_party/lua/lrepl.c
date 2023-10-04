@@ -347,8 +347,10 @@ void lua_initrepl(lua_State *L) {
     }
     lua_repl_linenoise = linenoiseBegin(prompt, 0, 1);
     lua_pop(L, 1);  /* remove prompt */
-    __replmode = true;
-    if (isatty(2)) __replstderr = true;
+    __ttyconf.replmode = true;
+    if (isatty(2)) {
+      __ttyconf.replstderr = true;
+    }
   }
   lua_repl_unlock();
 }
@@ -356,7 +358,7 @@ void lua_initrepl(lua_State *L) {
 
 void lua_freerepl(void) {
   lua_repl_lock();
-  __replmode = false;
+  __ttyconf.replmode = false;
   linenoiseEnd(lua_repl_linenoise);
   free(g_historypath);
   lua_repl_unlock();

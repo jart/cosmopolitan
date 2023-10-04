@@ -19,14 +19,6 @@ COSMOPOLITAN_C_START_
 #define kFdEpoll    7
 #define kFdReserved 8
 
-#define kFdTtyEchoing 1 /* read()→write() (ECHO && !ICANON) */
-#define kFdTtyEchoRaw 2 /* don't ^X visualize control codes */
-#define kFdTtyUncanon 4 /* enables non-canonical (raw) mode */
-#define kFdTtyNoCr2Nl 8 /* don't map \r → \n (a.k.a !ICRNL) */
-#define kFdTtyNoIsigs 16
-#define kFdTtyNoBlock 32
-#define kFdTtyXtMouse 64
-
 struct Fd {
   char kind;
   bool eoftty;
