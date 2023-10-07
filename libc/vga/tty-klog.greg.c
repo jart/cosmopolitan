@@ -33,8 +33,8 @@
 #ifdef __x86_64__
 
 /*
- * @fileoverview Instantiation of routines for emergency or system console
- * output in graphical video modes.
+ * @fileoverview Instantiation of routines for emergency console output in
+ * graphical video modes.
  *
  * @see libc/vga/tty-graph.inc
  */

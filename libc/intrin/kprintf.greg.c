@@ -385,14 +385,29 @@ privileged long kloghandle(void) {
   return __klog_handle;
 }
 
+privileged void _klog_serial(const char *b, size_t n) {
+  size_t i;
+  uint16_t dx;
+  unsigned char al;
+  for (i = 0; i < n; ++i) {
+    for (;;) {
+      dx = 0x3F8 + UART_LSR;
+      asm("inb\t%1,%0" : "=a"(al) : "dN"(dx));
+      if (al & UART_TTYTXR) break;
+      asm("pause");
+    }
+    dx = 0x3F8;
+    asm volatile("outb\t%0,%1"
+                 : /* no inputs */
+                 : "a"(b[i]), "dN"(dx));
+  }
+}
+
 privileged void klog(const char *b, size_t n) {
 #ifdef __x86_64__
   int e;
   long h;
-  size_t i;
-  uint16_t dx;
   uint32_t wrote;
-  unsigned char al;
   long rax, rdi, rsi, rdx;
   if ((h = kloghandle()) == -1) {
     return;
@@ -407,18 +422,7 @@ privileged void klog(const char *b, size_t n) {
     if (_weaken(_klog_vga)) {
       _weaken(_klog_vga)(b, n);
     }
-    for (i = 0; i < n; ++i) {
-      for (;;) {
-        dx = 0x3F8 + UART_LSR;
-        asm("inb\t%1,%0" : "=a"(al) : "dN"(dx));
-        if (al & UART_TTYTXR) break;
-        asm("pause");
-      }
-      dx = 0x3F8;
-      asm volatile("outb\t%0,%1"
-                   : /* no inputs */
-                   : "a"(b[i]), "dN"(dx));
-    }
+    _klog_serial(b, n);
   } else {
     asm volatile("syscall"
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
@@ -1152,3 +1156,6 @@ privileged void kprintf(const char *fmt, ...) {
   kvprintf(fmt, v);
   va_end(v);
 }
+
+__weak_reference(kprintf, uprintf);
+__weak_reference(kvprintf, uvprintf);
