@@ -27,12 +27,12 @@
 #include "libc/macros.internal.h"
 #include "libc/calls/metalfile.internal.h"
 
-	.init.start 101,_init_metalfile
+	.init.start 102,_init_metalfile
 	push	%rdi
 	push	%rsi
 	call	InitializeMetalFile
 	pop	%rsi
 	pop	%rdi
-	.init.end 101,_init_metalfile
+	.init.end 102,_init_metalfile
 APE_COM_NAME:
 	.endobj	APE_COM_NAME,globl,hidden

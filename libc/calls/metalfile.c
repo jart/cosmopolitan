@@ -30,6 +30,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/intrin/directmap.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -74,6 +75,7 @@ textstartup void InitializeMetalFile(void) {
     memcpy(copied_base, (void *)(BANE + IMAGE_BASE_PHYSICAL), size);
     __ape_com_base = copied_base;
     __ape_com_size = size;
+    KINFOF("%s @ %p,+%#zx", APE_COM_NAME, copied_base, size);
   }
 }
 
