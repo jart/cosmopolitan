@@ -38,13 +38,13 @@
  * @return number of bytes transmitted, or -1 w/ errno
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t send(int fd, const void *buf, size_t size, int flags) {
   ssize_t rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
@@ -68,7 +68,7 @@ ssize_t send(int fd, const void *buf, size_t size, int flags) {
     rc = ebadf();
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   DATATRACE("send(%d, %#.*hhs%s, %'zu, %#x) → %'ld% lm", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
   return rc;

@@ -91,11 +91,11 @@ struct ucontext {
 #ifdef __x86_64__
   struct sigcontext uc_mcontext;
   sigset_t uc_sigmask;
-  uint64_t __pad;
+  uint64_t __pad[2];
   struct FpuState __fpustate; /* for cosmo on non-linux */
 #elif defined(__aarch64__)
   sigset_t uc_sigmask;
-  uint8_t __unused[1024 / 8 - sizeof(sigset_t)];
+  uint8_t __unused[1024 / 8];
   struct sigcontext uc_mcontext;
 #endif
 } forcealign(16);

@@ -21,6 +21,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 textwindows ssize_t sys_writev_nt(int fd, const struct iovec *iov, int iovlen) {
   switch (g_fds.p[fd].kind) {
@@ -33,3 +34,5 @@ textwindows ssize_t sys_writev_nt(int fd, const struct iovec *iov, int iovlen) {
       return ebadf();
   }
 }
+
+#endif /* __x86_64__ */

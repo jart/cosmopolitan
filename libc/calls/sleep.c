@@ -32,7 +32,7 @@
  *     using the ceiling function, and finally `-1u` may be returned if
  *     thread was cancelled with `PTHREAD_CANCEL_MASKED` in play
  * @see clock_nanosleep()
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @norestart
  */

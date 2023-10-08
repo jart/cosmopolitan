@@ -112,15 +112,15 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
  * Reads with maximum generality.
  *
  * @return number of bytes actually read, or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @vforksafe
  */
 ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   rc = Preadv(fd, iov, iovlen, off);
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("preadv(%d, [%s], %d, %'ld) → %'ld% m", fd,
          DescribeIovec(rc, iov, iovlen), iovlen, off, rc);
   return rc;

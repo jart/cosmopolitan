@@ -17,43 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/calls/struct/winsize.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 textwindows int tcgetwinsize_nt(int fd, struct winsize *ws) {
 
   // The Linux man page doesn't list EBADF as an errno for this.
-  if (!__isfdopen(fd)) {
-    return enotty();
-  }
+  if (!sys_isatty(fd)) return enotty();
 
-  // Unlike _check_sigwinch() this is an API so be stricter.
-  intptr_t hConsoleOutput;
-  if (fd == STDIN_FILENO) {
-    uint32_t dwMode;
-    // WIN32 doesn't allow GetConsoleScreenBufferInfoEx(stdin)
-    if (g_fds.p[STDOUT_FILENO].kind != kFdEmpty &&
-        GetConsoleMode(g_fds.p[STDOUT_FILENO].handle, &dwMode)) {
-      hConsoleOutput = g_fds.p[STDOUT_FILENO].handle;
-    } else if (g_fds.p[STDERR_FILENO].kind != kFdEmpty &&
-               GetConsoleMode(g_fds.p[STDERR_FILENO].handle, &dwMode)) {
-      hConsoleOutput = g_fds.p[STDERR_FILENO].handle;
-    } else {
-      return enotty();
-    }
-  } else if (g_fds.p[fd].kind == kFdConsole) {
-    hConsoleOutput = g_fds.p[fd].extra;
-  } else {
-    hConsoleOutput = g_fds.p[fd].handle;
-  }
-
-  // Query the console.
+  // Query the console which might fail if fd is a serial device.
   struct NtConsoleScreenBufferInfoEx sr = {.cbSize = sizeof(sr)};
-  if (GetConsoleScreenBufferInfoEx(hConsoleOutput, &sr)) {
+  if (GetConsoleScreenBufferInfoEx(GetConsoleOutputHandle(), &sr)) {
     ws->ws_col = sr.srWindow.Right - sr.srWindow.Left + 1;
     ws->ws_row = sr.srWindow.Bottom - sr.srWindow.Top + 1;
     return 0;
@@ -61,3 +40,5 @@ textwindows int tcgetwinsize_nt(int fd, struct winsize *ws) {
     return enotty();
   }
 }
+
+#endif /* __x86_64__ */

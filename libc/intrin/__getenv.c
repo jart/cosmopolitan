@@ -19,9 +19,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/getenv.internal.h"
 
-#define ToUpper(c) \
-  (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
-
 privileged struct Env __getenv(char **p, const char *k) {
   char *t;
   int i, j;
@@ -32,7 +29,7 @@ privileged struct Env __getenv(char **p, const char *k) {
         if (t[j] == '=') return (struct Env){t + j + 1, i};
         break;
       }
-      if (ToUpper(k[j] & 255) != ToUpper(t[j] & 255)) {
+      if (k[j] != t[j]) {
         break;
       }
     }

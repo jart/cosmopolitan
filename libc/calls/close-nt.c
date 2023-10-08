@@ -16,43 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
-#include "libc/errno.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 
-void sys_fcntl_nt_lock_cleanup(int);
-
-textwindows int sys_close_nt(struct Fd *fd, int fildes) {
-  int e;
-  bool ok = true;
-
-  if (_weaken(sys_fcntl_nt_lock_cleanup)) {
-    _weaken(sys_fcntl_nt_lock_cleanup)(fildes);
+textwindows int sys_close_nt(int fd, int fildes) {
+  if (fd + 0u >= g_fds.n) return ebadf();
+  struct Fd *f = g_fds.p + fd;
+  switch (f->kind) {
+    case kFdFile:
+      void sys_fcntl_nt_lock_cleanup(int);
+      if (_weaken(sys_fcntl_nt_lock_cleanup)) {
+        _weaken(sys_fcntl_nt_lock_cleanup)(fildes);
+      }
+      if ((f->flags & O_ACCMODE) != O_RDONLY &&
+          GetFileType(f->handle) == kNtFileTypeDisk) {
+        // Like Linux, closing a file on Windows doesn't guarantee it is
+        // immediately synced to disk. But unlike Linux this could cause
+        // subsequent operations, e.g. unlink() to break w/ access error
+        FlushFileBuffers(f->handle);
+      }
+      break;
+    case kFdEpoll:
+      if (_weaken(sys_close_epoll_nt)) {
+        return _weaken(sys_close_epoll_nt)(fd);
+      }
+      break;
+    case kFdSocket:
+      if (_weaken(sys_closesocket_nt)) {
+        return _weaken(sys_closesocket_nt)(g_fds.p + fd);
+      }
+      break;
+    default:
+      break;
   }
-
-  if (fd->kind == kFdFile && ((fd->flags & O_ACCMODE) != O_RDONLY &&
-                              GetFileType(fd->handle) == kNtFileTypeDisk)) {
-    // Like Linux, closing a file on Windows doesn't guarantee it's
-    // immediately synced to disk. But unlike Linux, this could cause
-    // subsequent operations, e.g. unlink() to break w/ access error.
-    e = errno;
-    FlushFileBuffers(fd->handle);
-    errno = e;
-  }
-
-  // if this file descriptor is wrapped in a named pipe worker thread
-  // then we need to close our copy of the worker thread handle. it's
-  // also required that whatever install a worker use malloc, so free
-  if (!fd->dontclose) {
-    if (!CloseHandle(fd->handle)) ok = false;
-    if (fd->kind == kFdConsole && fd->extra && fd->extra != -1) {
-      if (!CloseHandle(fd->extra)) ok = false;
-    }
-  }
-
-  return ok ? 0 : -1;
+  return CloseHandle(f->handle) ? 0 : __winerr();
 }

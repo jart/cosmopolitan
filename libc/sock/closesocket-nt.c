@@ -21,6 +21,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
+#ifdef __x86_64__
 
 __msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
 
@@ -30,9 +31,6 @@ __msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
  * This function should only be called by close().
  */
 textwindows int sys_closesocket_nt(struct Fd *fd) {
-  struct SockFd *sockfd;
-  sockfd = (struct SockFd *)fd->extra;
-  free(sockfd);
   int rc = __imp_closesocket(fd->handle);
   if (rc != -1) {
     return 0;
@@ -40,3 +38,5 @@ textwindows int sys_closesocket_nt(struct Fd *fd) {
     return __winsockerr();
   }
 }
+
+#endif /* __x86_64__ */

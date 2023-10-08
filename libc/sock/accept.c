@@ -26,7 +26,7 @@
  * @param opt_out_addr will receive the remote address
  * @param opt_inout_addrsize provides and receives addr's byte length
  * @return client fd which needs close(), or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */

@@ -144,19 +144,4 @@ cosmo:	push	%rbp
 	.init.end 306,_init_ftrace
 #endif
 
-#if IsModeDbg()
-#ifdef SYSDEBUG
-	.init.start 307,_init_printargs
-	cmpl	$0,__strace(%rip)
-	jz	1f
-	push	%rdi
-	push	%rsi
-	loadstr	STRACE_PROLOGUE,di
-	call	__printargs
-	pop	%rsi
-	pop	%rdi
-1:	.init.end 307,_init_printargs
-#endif
-#endif
-
 #endif /* __x86_64__ */

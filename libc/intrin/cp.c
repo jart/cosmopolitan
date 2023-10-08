@@ -24,7 +24,7 @@
 #include "libc/thread/tls.h"
 #ifdef MODE_DBG
 
-int begin_cancellation_point(void) {
+int begin_cancelation_point(void) {
   int state = 0;
   struct CosmoTib *tib;
   struct PosixThread *pt;
@@ -38,7 +38,7 @@ int begin_cancellation_point(void) {
   return state;
 }
 
-void end_cancellation_point(int state) {
+void end_cancelation_point(int state) {
   struct CosmoTib *tib;
   struct PosixThread *pt;
   if (__tls_enabled) {
@@ -50,7 +50,7 @@ void end_cancellation_point(int state) {
   }
 }
 
-void report_cancellation_point(void) {
+void report_cancelation_point(void) {
   __builtin_trap();
 }
 

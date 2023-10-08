@@ -23,7 +23,6 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sicode.h"
-#include "libc/thread/tls.h"
 
 /**
  * Sends signal to self.

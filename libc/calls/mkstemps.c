@@ -36,7 +36,7 @@
  * @see mkstemp() if you don't need `suffixlen`
  * @see mktemp() if you don't need an fd
  * @see tmpfd() if you don't need a path
- * @cancellationpoint
+ * @cancelationpoint
  */
 int mkstemps(char *template, int suffixlen) {
   return openatemp(AT_FDCWD, template, suffixlen, 0, 0);

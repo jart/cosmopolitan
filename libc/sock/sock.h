@@ -21,7 +21,6 @@ uint32_t ntohl(uint32_t) pureconst;
 const char *inet_ntop(int, const void *, char *, uint32_t);
 int inet_pton(int, const char *, void *);
 uint32_t inet_addr(const char *);
-int parseport(const char *);
 uint32_t *GetHostIps(void);
 
 int socket(int, int, int);

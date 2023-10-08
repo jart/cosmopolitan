@@ -116,15 +116,15 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
  * call using pwrite().
  *
  * @return number of bytes actually sent, or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @vforksafe
  */
 ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   rc = Pwritev(fd, iov, iovlen, off);
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("pwritev(%d, %s, %d, %'ld) → %'ld% m", fd,
          DescribeIovec(rc != -1 ? rc : -2, iov, iovlen), iovlen, off, rc);
   return rc;

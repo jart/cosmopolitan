@@ -99,7 +99,7 @@ typedef struct pthread_attr_s {
   int __contentionscope;
   int __guardsize;
   size_t __stacksize;
-  uint32_t __sigmask[4];
+  uint64_t __sigmask;
   void *__stackaddr;
 } pthread_attr_t;
 

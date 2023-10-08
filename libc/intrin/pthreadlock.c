@@ -17,6 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 
-pthread_spinlock_t _pthread_lock;
+pthread_spinlock_t _pthread_lock_obj;
+
+void _pthread_lock(void) {
+  pthread_spin_lock(&_pthread_lock_obj);
+}
+
+void _pthread_unlock(void) {
+  pthread_spin_unlock(&_pthread_lock_obj);
+}

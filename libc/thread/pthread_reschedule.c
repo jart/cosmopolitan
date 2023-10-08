@@ -25,9 +25,9 @@
 #include "libc/thread/posixthread.internal.h"
 
 errno_t _pthread_reschedule(struct PosixThread *pt) {
-  int policy = pt->attr.__schedpolicy;
+  int policy = pt->pt_attr.__schedpolicy;
   int e, rc, tid = _pthread_tid(pt);
-  struct sched_param param = {pt->attr.__schedparam};
+  struct sched_param param = {pt->pt_attr.__schedparam};
   e = errno;
   if (IsNetbsd()) {
     rc = sys_sched_setparam_netbsd(0, tid, policy, &param);

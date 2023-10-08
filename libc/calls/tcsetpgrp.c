@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/console.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
@@ -30,7 +32,6 @@
  *
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `pgrp` is invalid
- * @raise ENOSYS on Windows and Bare Metal
  * @raise EBADF if `fd` isn't an open file descriptor
  * @raise EPERM if `pgrp` didn't match process in our group
  * @raise ENOTTY if `fd` is isn't controlling teletypewriter
@@ -43,7 +44,11 @@ int tcsetpgrp(int fd, int pgrp) {
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotty();
   } else if (IsWindows() || IsMetal()) {
-    rc = enosys();
+    if (sys_isatty(fd)) {
+      rc = 0;
+    } else {
+      rc = -1;  // ebadf, enotty
+    }
   } else {
     rc = sys_ioctl(fd, TIOCSPGRP, &pgrp);
   }

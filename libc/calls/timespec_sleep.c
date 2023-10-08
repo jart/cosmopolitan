@@ -31,11 +31,11 @@
 struct timespec timespec_sleep(struct timespec delay) {
   errno_t rc;
   struct timespec remain;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   bzero(&remain, sizeof(remain));
   if ((rc = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
     npassert(rc == EINTR);
   }
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return remain;
 }

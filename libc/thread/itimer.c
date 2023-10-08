@@ -18,10 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sysv/consts/itimer.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/itimerval.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/cosmo.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
@@ -31,7 +34,6 @@
 #include "libc/thread/itimer.internal.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
-
 #ifdef __x86_64__
 
 struct IntervalTimer __itimer;
@@ -80,7 +82,7 @@ static textwindows void __itimer_setup(void) {
                                  kNtStackSizeParamIsAReservation, 0);
 }
 
-textwindows void __itimer_reset(void) {
+textwindows void __itimer_wipe(void) {
   // this function is called by fork(), because
   // timers aren't inherited by forked subprocesses
   bzero(&__itimer, sizeof(__itimer));
@@ -99,6 +101,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
     // accommodate the usage setitimer(ITIMER_REAL, &it, &it) anyway
     config = *neu;
   }
+  BLOCK_SIGNALS;
   nsync_mu_lock(&__itimer.lock);
   if (old) {
     old->it_interval = __itimer.it.it_interval;
@@ -112,6 +115,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *neu,
     nsync_cv_signal(&__itimer.cond);
   }
   nsync_mu_unlock(&__itimer.lock);
+  ALLOW_SIGNALS;
   return 0;
 }
 

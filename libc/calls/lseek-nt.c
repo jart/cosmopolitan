@@ -67,11 +67,9 @@ textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
     int filetype = GetFileType(f->handle);
     if (filetype != kNtFileTypePipe && filetype != kNtFileTypeChar) {
       int64_t res;
-      pthread_mutex_lock(&f->lock);
       if ((res = Seek(f, offset, whence)) != -1) {
         f->pointer = res;
       }
-      pthread_mutex_unlock(&f->lock);
       return res;
     } else {
       return espipe();

@@ -8,10 +8,10 @@ COSMOPOLITAN_C_START_
 
 #ifdef __x86_64__
 typedef long jmp_buf[8];
-typedef long sigjmp_buf[12];
+typedef long sigjmp_buf[11];
 #elif defined(__aarch64__)
 typedef long jmp_buf[22];
-typedef long sigjmp_buf[26];
+typedef long sigjmp_buf[25];
 #elif defined(__powerpc64__)
 typedef unsigned __int128 jmp_buf[32];
 #elif defined(__s390x__)

@@ -13,8 +13,10 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
@@ -35,11 +37,14 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/w.h"
 #include "libc/thread/thread.h"
 #include "libc/time/time.h"
 #include "libc/x/xasprintf.h"
@@ -148,12 +153,8 @@ struct ZipGames {
 };
 
 static int frame_;
-static int drain_;
 static int playfd_;
 static int playpid_;
-static bool exited_;
-static bool timeout_;
-static bool resized_;
 static size_t vtsize_;
 static bool artifacts_;
 static long tyn_, txn_;
@@ -161,6 +162,9 @@ static struct Frame vf_[2];
 static struct Audio audio_;
 static const char* inputfn_;
 static struct Status status_;
+static volatile bool exited_;
+static volatile bool timeout_;
+static volatile bool resized_;
 static struct TtyRgb* ttyrgb_;
 static unsigned char *R, *G, *B;
 static struct ZipGames zipgames_;
@@ -235,12 +239,22 @@ void InitPalette(void) {
   }
 }
 
-static void WriteStringNow(const char* s) {
-  ttywrite(STDOUT_FILENO, s, strlen(s));
+static ssize_t Write(int fd, const void* p, size_t n) {
+  int rc;
+  sigset_t ss, oldss;
+  sigfillset(&ss);
+  sigprocmask(SIG_SETMASK, &ss, &oldss);
+  rc = write(fd, p, n);
+  sigprocmask(SIG_SETMASK, &oldss, 0);
+  return rc;
+}
+
+static void WriteString(const char* s) {
+  Write(STDOUT_FILENO, s, strlen(s));
 }
 
 void Exit(int rc) {
-  WriteStringNow("\r\n\e[0m\e[J");
+  WriteString("\r\n\e[0m\e[J");
   if (rc && errno) {
     fprintf(stderr, "%s%s\r\n", "error: ", strerror(errno));
   }
@@ -250,11 +264,19 @@ void Exit(int rc) {
 void Cleanup(void) {
   ttyraw((enum TtyRawFlags)(-1u));
   ttyshowcursor(STDOUT_FILENO);
-  if (playpid_) kill(playpid_, SIGTERM), pthread_yield();
+  if (playpid_) {
+    kill(playpid_, SIGKILL);
+    close(playfd_);
+    playfd_ = -1;
+  }
+}
+
+void OnCtrlC(void) {
+  exited_ = true;
 }
 
 void OnTimer(void) {
-  timeout_ = true;  // also sends EINTR to poll()
+  timeout_ = true;
 }
 
 void OnResize(void) {
@@ -265,12 +287,11 @@ void OnPiped(void) {
   exited_ = true;
 }
 
-void OnCtrlC(void) {
-  drain_ = exited_ = true;
-}
-
 void OnSigChld(void) {
-  exited_ = true, playpid_ = 0;
+  waitpid(-1, 0, WNOHANG);
+  close(playfd_);
+  playpid_ = 0;
+  playfd_ = -1;
 }
 
 void InitFrame(struct Frame* f) {
@@ -304,7 +325,8 @@ void GetTermSize(void) {
   frame_ = 0;
   InitFrame(&vf_[0]);
   InitFrame(&vf_[1]);
-  WriteStringNow("\e[0m\e[H\e[J");
+  WriteString("\e[0m\e[H\e[J");
+  resized_ = false;
 }
 
 void IoInit(void) {
@@ -329,13 +351,14 @@ void SetStatus(const char* fmt, ...) {
   status_.wait = FPS / 2;
 }
 
-void ReadKeyboard(void) {
+ssize_t ReadKeyboard(void) {
   int ch;
-  char b[20];
   ssize_t i, rc;
-  memset(b, -1, sizeof(b));
+  char b[20] = {0};
   if ((rc = read(STDIN_FILENO, b, 16)) != -1) {
-    if (!rc) exited_ = true;
+    if (!rc) {
+      Exit(0);
+    }
     for (i = 0; i < rc; ++i) {
       ch = b[i];
       if (b[i] == '\e') {
@@ -447,6 +470,7 @@ void ReadKeyboard(void) {
       }
     }
   }
+  return rc;
 }
 
 bool HasVideo(struct Frame* f) {
@@ -471,26 +495,29 @@ void TransmitVideo(void) {
   struct Frame* f;
   f = &vf_[frame_];
   if (!HasVideo(f)) f = FlipFrameBuffer();
-  if ((rc = write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
+  if ((rc = Write(STDOUT_FILENO, f->w, f->p - f->w)) != -1) {
     f->w += rc;
+  } else if (errno == EAGAIN) {
+    // slow teletypewriter
   } else if (errno == EPIPE) {
     Exit(0);
-  } else if (errno != EINTR) {
-    Exit(1);
   }
 }
 
 void TransmitAudio(void) {
   ssize_t rc;
+  if (!playpid_) return;
   if (!audio_.i) return;
-  if ((rc = write(playfd_, audio_.p, audio_.i * sizeof(short))) != -1) {
+  if (playfd_ == -1) return;
+  if ((rc = Write(playfd_, audio_.p, audio_.i * sizeof(short))) != -1) {
     rc /= sizeof(short);
     memmove(audio_.p, audio_.p + rc, (audio_.i - rc) * sizeof(short));
     audio_.i -= rc;
   } else if (errno == EPIPE) {
+    kill(playpid_, SIGKILL);
+    close(playfd_);
+    playfd_ = -1;
     Exit(0);
-  } else if (errno != EINTR) {
-    Exit(1);
   }
 }
 
@@ -534,36 +561,15 @@ void KeyCountdown(struct Action* a) {
 }
 
 void PollAndSynchronize(void) {
-  struct pollfd fds[3];
   do {
-    errno = 0;
-    fds[0].fd = STDIN_FILENO;
-    fds[0].events = POLLIN;
-    fds[1].fd = HasPendingVideo() ? STDOUT_FILENO : -1;
-    fds[1].events = POLLOUT;
-    fds[2].fd = HasPendingAudio() ? playfd_ : -1;
-    fds[2].events = POLLOUT;
-    if (poll(fds, ARRAYLEN(fds), 1. / FPS * 1e3) != -1) {
-      if (fds[0].revents & (POLLIN | POLLERR)) ReadKeyboard();
-      if (fds[1].revents & (POLLOUT | POLLERR)) TransmitVideo();
-      if (fds[2].revents & (POLLOUT | POLLERR)) TransmitAudio();
-    } else if (errno != EINTR) {
-      Exit(1);
-    }
-    if (exited_) {
-      if (drain_) {
-        while (HasPendingVideo()) {
-          TransmitVideo();
-        }
-      }
-      Exit(0);
-    }
-    if (resized_) {
-      resized_ = false;
-      GetTermSize();
-      break;
+    if (ReadKeyboard() == -1) {
+      if (errno != EINTR) Exit(1);
+      if (exited_) Exit(0);
+      if (resized_) GetTermSize();
     }
   } while (!timeout_);
+  TransmitVideo();
+  TransmitAudio();
   timeout_ = false;
   KeyCountdown(&arrow_);
   KeyCountdown(&button_);
@@ -1701,34 +1707,41 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
 
   // open speaker
   // todo: this needs plenty of work
-  if ((ffplay = commandvenv("FFPLAY", "ffplay"))) {
-    devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
-    pipe2(pipefds, O_CLOEXEC);
-    if (!(playpid_ = fork())) {
-      const char* const args[] = {
-          "ffplay",   "-nodisp", "-loglevel", "quiet", "-fflags",
-          "nobuffer", "-ac",     "1",         "-ar",   "1789773",
-          "-f",       "s16le",   "pipe:",     NULL,
-      };
-      dup2(pipefds[0], 0);
-      dup2(devnull, 1);
-      dup2(devnull, 2);
-      execv(ffplay, (char* const*)args);
-      abort();
-    }
-    close(pipefds[0]);
-    playfd_ = pipefds[1];
-  } else {
-    fputs("\nWARNING\n\
+  if (!IsWindows()) {
+    if ((ffplay = commandvenv("FFPLAY", "ffplay"))) {
+      devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
+      pipe2(pipefds, O_CLOEXEC);
+      if (!(playpid_ = fork())) {
+        const char* const args[] = {
+            ffplay,                  //
+            "-nodisp",               //
+            "-loglevel", "quiet",    //
+            "-ac",       "1",        //
+            "-ar",       "1789773",  //
+            "-f",        "s16le",    //
+            "pipe:",                 //
+            NULL,
+        };
+        dup2(pipefds[0], 0);
+        dup2(devnull, 1);
+        dup2(devnull, 2);
+        execv(ffplay, (char* const*)args);
+        abort();
+      }
+      close(pipefds[0]);
+      playfd_ = pipefds[1];
+    } else {
+      fputs("\nWARNING\n\
 \n\
   Need `ffplay` command to play audio\n\
   Try `sudo apt install ffmpeg` on Linux\n\
   You can specify it on `PATH` or in `FFPLAY`\n\
 \n\
 Press enter to continue without sound: ",
-          stdout);
-    fflush(stdout);
-    GetLine();
+            stdout);
+      fflush(stdout);
+      GetLine();
+    }
   }
 
   // Read the ROM file header

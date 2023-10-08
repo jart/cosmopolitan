@@ -63,6 +63,7 @@ THIRD_PARTY_GGML_A_DIRECTDEPS =						\
 	LIBC_STDIO							\
 	LIBC_THREAD							\
 	LIBC_STR							\
+        LIBC_PROC							\
 	LIBC_SYSV							\
 	LIBC_TINYMATH							\
 	THIRD_PARTY_COMPILER_RT
@@ -131,6 +132,7 @@ THIRD_PARTY_GGML_LLAMA_DIRECTDEPS =					\
 	LIBC_RUNTIME							\
 	LIBC_STDIO							\
 	LIBC_LOG							\
+        LIBC_PROC							\
 	LIBC_STR							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\

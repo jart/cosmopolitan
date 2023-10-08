@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SYSCALL_SUPPORT_NT_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALL_SUPPORT_NT_INTERNAL_H_
 #include "libc/limits.h"
+#include "libc/nt/struct/overlapped.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -20,6 +21,10 @@ int64_t __winerr(void) nocallback privileged;
 int64_t ntreturn(uint32_t);
 void *GetProcAddressModule(const char *, const char *);
 void WinMainForked(void);
+
+ssize_t sys_readwrite_nt(int, void *, size_t, ssize_t, int64_t, uint64_t,
+                         bool32 (*)(int64_t, void *, uint32_t, uint32_t *,
+                                    struct NtOverlapped *));
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

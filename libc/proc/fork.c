@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -44,9 +42,9 @@ int _fork(uint32_t dwCreationFlags) {
   struct CosmoTib *tib;
   int ax, dx, tid, parent;
   struct PosixThread *me, *other;
+  parent = __pid;
   (void)parent;
   BLOCK_SIGNALS;
-  BLOCK_CANCELLATIONS;
   if (IsWindows()) __proc_lock();
   if (__threaded && _weaken(_pthread_onfork_prepare)) {
     _weaken(_pthread_onfork_prepare)();
@@ -62,27 +60,26 @@ int _fork(uint32_t dwCreationFlags) {
     } else {
       dx = GetCurrentProcessId();
     }
-    parent = __pid;
     __pid = dx;
     tib = __get_tls();
     me = (struct PosixThread *)tib->tib_pthread;
     dll_remove(&_pthread_list, &me->list);
     for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
       other = POSIXTHREAD_CONTAINER(e);
-      atomic_store_explicit(&other->status, kPosixThreadZombie,
+      atomic_store_explicit(&other->pt_status, kPosixThreadZombie,
                             memory_order_relaxed);
-      other->tib->tib_syshand = 0;
     }
     dll_make_first(&_pthread_list, &me->list);
     tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
     atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
     atomic_store_explicit(&me->ptid, tid, memory_order_relaxed);
-    atomic_store_explicit(&me->cancelled, false, memory_order_relaxed);
-    if (IsWindows()) npassert((me->semaphore = CreateSemaphore(0, 0, 1, 0)));
+    atomic_store_explicit(&me->pt_canceled, false, memory_order_relaxed);
     if (__threaded && _weaken(_pthread_onfork_child)) {
       _weaken(_pthread_onfork_child)();
     }
-    if (IsWindows()) __proc_wipe();
+    if (IsWindows()) {
+      __proc_wipe();
+    }
     STRACE("fork() → 0 (child of %d)", parent);
   } else {
     if (__threaded && _weaken(_pthread_onfork_parent)) {
@@ -91,7 +88,6 @@ int _fork(uint32_t dwCreationFlags) {
     if (IsWindows()) __proc_unlock();
     STRACE("fork() → %d% m", ax);
   }
-  ALLOW_CANCELLATIONS;
   ALLOW_SIGNALS;
   return ax;
 }

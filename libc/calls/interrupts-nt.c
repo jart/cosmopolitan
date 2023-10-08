@@ -18,31 +18,28 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
+#ifdef __x86_64__
 
-textwindows int _check_interrupts(int sigops) {
-  int status;
-  errno_t err;
-  struct PosixThread *pt = _pthread_self();
-  if (_weaken(pthread_testcancel_np) &&
-      (err = _weaken(pthread_testcancel_np)())) {
-    goto Interrupted;
-  }
-  if (_weaken(__sig_check) && (status = _weaken(__sig_check)())) {
-    STRACE("syscall interrupted (status=%d, sigops=%d)", status, sigops);
-    if (status == 2 && (sigops & kSigOpRestartable)) {
-      STRACE("restarting system call");
-      return 0;
-    }
-    err = EINTR;
-  Interrupted:
-    pt->abort_errno = errno = err;
-    return -1;
+textwindows int _check_cancel(void) {
+  if (_weaken(_pthread_cancel_ack) &&  //
+      _pthread_self() && !(_pthread_self()->pt_flags & PT_NOCANCEL) &&
+      atomic_load_explicit(&_pthread_self()->pt_canceled,
+                           memory_order_acquire)) {
+    return _weaken(_pthread_cancel_ack)();
   }
   return 0;
 }
+
+textwindows int _check_signal(bool restartable) {
+  int status;
+  if (!_weaken(__sig_check)) return 0;
+  if (!(status = _weaken(__sig_check)())) return 0;
+  if (status == 2 && restartable) return 0;
+  return eintr();
+}
+
+#endif /* __x86_64__ */

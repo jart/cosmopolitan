@@ -17,23 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/nt/enum/filemovemethod.h"
+#include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
-  bool32 ok;
-  int64_t tell;
-  tell = -1;
-  if ((ok = SetFilePointerEx(handle, 0, &tell, kNtFileCurrent))) {
-    ok = SetFilePointerEx(handle, length, NULL, kNtFileBegin) &&
-         SetEndOfFile(handle);
-    npassert(SetFilePointerEx(handle, tell, NULL, kNtFileBegin));
-  }
-  if (ok) {
+  if (SetFileInformationByHandle(handle, kNtFileAllocationInfo, &length,
+                                 sizeof(length))) {
     return 0;
   } else if (GetLastError() == kNtErrorAccessDenied) {
     return einval();  // ftruncate() doesn't raise EACCES

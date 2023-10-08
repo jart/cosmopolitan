@@ -24,8 +24,8 @@
 void(pthread_cleanup_pop)(struct _pthread_cleanup_buffer *cb, int execute) {
   struct PosixThread *pt;
   if (__tls_enabled && (pt = _pthread_self())) {
-    unassert(cb == pt->cleanup);
-    pt->cleanup = cb->__prev;
+    unassert(cb == pt->pt_cleanup);
+    pt->pt_cleanup = cb->__prev;
   }
   if (execute) {
     cb->__routine(cb->__arg);

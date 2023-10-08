@@ -186,7 +186,7 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
 }
 
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
   ftrace_enabled(-1);
@@ -200,5 +200,5 @@ void ShowBacktrace(int fd, const struct StackFrame *bp) {
                     "\t-D__FNO_OMIT_FRAME_POINTER__\n"
                     "\t-fno-omit-frame-pointer\n");
 #endif
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
 }

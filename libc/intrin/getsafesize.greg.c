@@ -38,8 +38,8 @@ privileged long __get_safe_size(long want, long extraspace) {
       (char *)sp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
     bottom = (long)tib->tib_sigstack_addr;
   } else if ((pt = (struct PosixThread *)tib->tib_pthread) &&
-             pt->attr.__stacksize) {
-    bottom = (long)pt->attr.__stackaddr + pt->attr.__guardsize;
+             pt->pt_attr.__stacksize) {
+    bottom = (long)pt->pt_attr.__stackaddr + pt->pt_attr.__guardsize;
   } else {
     return want;
   }

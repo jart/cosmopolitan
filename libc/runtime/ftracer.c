@@ -93,8 +93,8 @@ privileged void ftracer(void) {
         (char *)sf <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
       st = (uintptr_t)tib->tib_sigstack_addr + tib->tib_sigstack_size;
     } else if ((pt = (struct PosixThread *)tib->tib_pthread) &&
-               pt->attr.__stacksize) {
-      st = (uintptr_t)pt->attr.__stackaddr + pt->attr.__stacksize;
+               pt->pt_attr.__stacksize) {
+      st = (uintptr_t)pt->pt_attr.__stackaddr + pt->pt_attr.__stacksize;
     }
   } else {
     ft = &g_ftrace;
@@ -108,7 +108,7 @@ privileged void ftracer(void) {
     sf = sf->next;
     fn = sf->addr + DETOUR_SKEW;
     if (fn != ft->ft_lastaddr) {
-      kprintf("%rFUN %6P %'16T %'*ld %*s%t\n", ftrace_stackdigs, stackuse,
+      kprintf("%rFUN %6P %6H %'18T %'*ld %*s%t\n", ftrace_stackdigs, stackuse,
               GetNestingLevel(ft, sf) * 2, "", fn);
       ft->ft_lastaddr = fn;
     }

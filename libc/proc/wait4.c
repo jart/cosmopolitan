@@ -35,14 +35,14 @@
  * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
  * @param opt_out_rusage optionally returns accounting data
  * @return process id of terminated child or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable
  */
 int wait4(int pid, int *opt_out_wstatus, int options,
           struct rusage *opt_out_rusage) {
   int rc, ws = 0;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (IsAsan() &&
       ((opt_out_wstatus &&
@@ -59,7 +59,7 @@ int wait4(int pid, int *opt_out_wstatus, int options,
     *opt_out_wstatus = ws;
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("wait4(%d, [%#x], %d, %p) → %d% m", pid, ws, options, opt_out_rusage,
          rc);
   return rc;

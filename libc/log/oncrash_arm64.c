@@ -371,9 +371,9 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
 
 relegated void __oncrash(int sig, struct siginfo *si, void *arg) {
   ucontext_t *ctx = arg;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   __oncrash_impl(sig, si, ctx);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
 }
 
 #endif /* __aarch64__ */

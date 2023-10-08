@@ -57,8 +57,7 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       g.uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
       g.uc.uc_stack.ss_size = ctx->uc_stack.ss_size;
       g.uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;
-      __repmovsb(&g.uc.uc_sigmask, ctx->uc_sigmask,
-                 MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
+      g.uc.uc_sigmask = ctx->uc_sigmask[0] | (uint64_t)ctx->uc_sigmask[0] << 32;
       g.uc.uc_mcontext.r8 = ctx->uc_mcontext.mc_r8;
       g.uc.uc_mcontext.r9 = ctx->uc_mcontext.mc_r9;
       g.uc.uc_mcontext.r10 = ctx->uc_mcontext.mc_r10;
@@ -88,8 +87,8 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       ctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
       ctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
       ctx->uc_flags = g.uc.uc_flags;
-      __repmovsb(ctx->uc_sigmask, &g.uc.uc_sigmask,
-                 MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
+      ctx->uc_sigmask[0] = g.uc.uc_sigmask;
+      ctx->uc_sigmask[1] = g.uc.uc_sigmask >> 32;
       ctx->uc_mcontext.mc_rdi = g.uc.uc_mcontext.rdi;
       ctx->uc_mcontext.mc_rsi = g.uc.uc_mcontext.rsi;
       ctx->uc_mcontext.mc_rdx = g.uc.uc_mcontext.rdx;

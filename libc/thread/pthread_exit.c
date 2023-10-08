@@ -34,8 +34,8 @@
 
 void _pthread_unwind(struct PosixThread *pt) {
   struct _pthread_cleanup_buffer *cb;
-  while ((cb = pt->cleanup)) {
-    pt->cleanup = cb->__prev;
+  while ((cb = pt->pt_cleanup)) {
+    pt->pt_cleanup = cb->__prev;
     cb->__routine(cb->__arg);
   }
 }
@@ -104,7 +104,7 @@ wontreturn void pthread_exit(void *rc) {
   tib = __get_tls();
   pt = (struct PosixThread *)tib->tib_pthread;
   pt->pt_flags |= PT_NOCANCEL;
-  pt->rc = rc;
+  pt->pt_rc = rc;
 
   STRACE("pthread_exit(%p)", rc);
 
@@ -122,7 +122,7 @@ wontreturn void pthread_exit(void *rc) {
   }
 
   // transition the thread to a terminated state
-  status = atomic_load_explicit(&pt->status, memory_order_acquire);
+  status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
   do {
     switch (status) {
       case kPosixThreadJoinable:
@@ -135,7 +135,7 @@ wontreturn void pthread_exit(void *rc) {
         __builtin_unreachable();
     }
   } while (!atomic_compare_exchange_weak_explicit(
-      &pt->status, &status, transition, memory_order_release,
+      &pt->pt_status, &status, transition, memory_order_release,
       memory_order_relaxed));
 
   // make this thread a zombie if it was detached
@@ -160,5 +160,5 @@ wontreturn void pthread_exit(void *rc) {
   }
 
   // this is a child thread
-  longjmp(pt->exiter, 1);
+  longjmp(pt->pt_exiter, 1);
 }

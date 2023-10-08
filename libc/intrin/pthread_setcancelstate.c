@@ -27,15 +27,15 @@
 /**
  * Sets cancelability state.
  *
- * This function may be used to temporarily disable cancellation for the
- * calling thread, which is necessary in cases when a @cancellationpoint
+ * This function may be used to temporarily disable cancelation for the
+ * calling thread, which is necessary in cases when a @cancelationpoint
  * function is invoked from an @asyncsignalsafe function.
  *
  * Cosmopolitan Libc supports the Musl Libc `PTHREAD_CANCEL_MASKED`
  * non-POSIX extension. Any thread may use this setting, in which case
- * the thread won't be abruptly destroyed upon a cancellation and have
+ * the thread won't be abruptly destroyed upon a cancelation and have
  * its stack unwound; instead, the thread will encounter an `ECANCELED`
- * errno the next time it calls a cancellation point.
+ * errno the next time it calls a cancelation point.
  *
  * @param state may be one of:
  *     - `PTHREAD_CANCEL_ENABLE` (default)
@@ -89,12 +89,12 @@ errno_t pthread_setcancelstate(int state, int *oldstate) {
   return err;
 }
 
-int _pthread_block_cancellations(void) {
+int _pthread_block_cancelation(void) {
   int oldstate;
   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
   return oldstate;
 }
 
-void _pthread_allow_cancellations(int oldstate) {
+void _pthread_allow_cancelation(int oldstate) {
   pthread_setcancelstate(oldstate, 0);
 }

@@ -16,47 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/termios.h"
-#include "libc/calls/ttydefaults.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/baud.internal.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   int64_t hInput, hOutput;
   uint32_t inmode, outmode;
 
-  if (__isfdkind(fd, kFdConsole)) {
-    hInput = g_fds.p[fd].handle;
-    hOutput = g_fds.p[fd].extra;
-  } else if (fd == STDIN_FILENO ||   //
-             fd == STDOUT_FILENO ||  //
-             fd == STDERR_FILENO) {
-    hInput = g_fds.p[STDIN_FILENO].handle;
-    hOutput = g_fds.p[MAX(STDOUT_FILENO, fd)].handle;
-  } else {
-    return enotty();
-  }
+  // validate file descriptor
+  if (!__isfdopen(fd)) return ebadf();
+  if (!__isfdkind(fd, kFdConsole)) return enotty();
 
-  if (!GetConsoleMode(hInput, &inmode) || !GetConsoleMode(hOutput, &outmode)) {
-    return enotty();
-  }
+  // then completely ignore it
+  hInput = GetConsoleInputHandle();
+  hOutput = GetConsoleOutputHandle();
+  unassert(GetConsoleMode(hInput, &inmode));
+  unassert(GetConsoleMode(hOutput, &outmode));
 
+  // now interpret the configuration
   bzero(tio, sizeof(*tio));
   memcpy(tio->c_cc, __ttyconf.c_cc, NCCS);
-
   tio->c_iflag = IUTF8;
   tio->c_lflag = ECHOE;
   tio->c_cflag = CS8 | CREAD;
@@ -86,7 +76,6 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
   if (inmode & kNtEnableProcessedInput) {
     tio->c_lflag |= IEXTEN;
   }
-
   if (outmode & kNtEnableProcessedOutput) {
     tio->c_oflag |= OPOST;
   }
@@ -96,3 +85,5 @@ textwindows int tcgetattr_nt(int fd, struct termios *tio) {
 
   return 0;
 }
+
+#endif /* __x86_64__ */

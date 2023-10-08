@@ -52,7 +52,7 @@ int IsDebuggerPresent(bool force) {
   if (!PLEDGED(RPATH)) return false;
   res = 0;
   e = errno;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   if ((fd = __sys_openat(AT_FDCWD, "/proc/self/status", O_RDONLY, 0)) >= 0) {
     if ((got = sys_read(fd, buf, sizeof(buf) - 1)) > 0) {
       buf[got] = '\0';
@@ -63,7 +63,7 @@ int IsDebuggerPresent(bool force) {
     }
     sys_close(fd);
   }
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   errno = e;
   return res;
 }

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -32,16 +33,14 @@
 
 #define G FRAMESIZE
 
-static void *_mapframe(void *p, int f) {
+static void *_mapframe_impl(void *p, int f) {
   int rc, prot, flags;
   struct DirectMap dm;
   prot = PROT_READ | PROT_WRITE;
   flags = f | MAP_ANONYMOUS | MAP_FIXED;
   if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p) {
-    __mmi_lock();
     rc = __track_memory(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
                         dm.maphandle, prot, flags, false, false, 0, G);
-    __mmi_unlock();
     if (!rc) {
       return p;
     } else {
@@ -52,6 +51,17 @@ static void *_mapframe(void *p, int f) {
     unassert(errno == ENOMEM);
     return 0;
   }
+}
+
+static void *_mapframe(void *p, int f) {
+  void *res;
+  // mmap isn't required to be @asyncsignalsafe but this is
+  BLOCK_SIGNALS;
+  __mmi_lock();
+  res = _mapframe_impl(p, f);
+  __mmi_unlock();
+  ALLOW_SIGNALS;
+  return res;
 }
 
 /**
@@ -72,6 +82,7 @@ static void *_mapframe(void *p, int f) {
  * @param f should be `MAP_PRIVATE` or `MAP_SHARED`
  * @return new value for `e` or null w/ errno
  * @raise ENOMEM if we require more vespene gas
+ * @asyncsignalsafe
  */
 void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;

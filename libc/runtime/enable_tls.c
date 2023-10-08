@@ -193,7 +193,7 @@ textstartup void __enable_tls(void) {
   if (IsWindows()) {
     intptr_t threadhand, pseudo = GetCurrentThread();
     DuplicateHandle(GetCurrentProcess(), pseudo, GetCurrentProcess(),
-                    &threadhand, 0, false, kNtDuplicateSameAccess);
+                    &threadhand, 0, true, kNtDuplicateSameAccess);
     atomic_store_explicit(&tib->tib_syshand, threadhand, memory_order_relaxed);
   } else if (IsXnuSilicon()) {
     tib->tib_syshand = __syslib->__pthread_self();
@@ -214,11 +214,6 @@ textstartup void __enable_tls(void) {
   dll_init(&_pthread_static.list);
   _pthread_list = &_pthread_static.list;
   atomic_store_explicit(&_pthread_static.ptid, tid, memory_order_relaxed);
-  if (IsWindows()) {
-    if (!(_pthread_static.semaphore = CreateSemaphore(0, 0, 1, 0))) {
-      notpossible;
-    }
-  }
 
   // copy in initialized data section
   if (I(_tdata_size)) {

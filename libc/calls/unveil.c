@@ -330,9 +330,9 @@ int sys_unveil_linux(const char *path, const char *permissions) {
   }
 
   // now we can open the path
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   rc = sys_openat(AT_FDCWD, path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   if (rc == -1) return rc;
 
   pb.parent_fd = rc;

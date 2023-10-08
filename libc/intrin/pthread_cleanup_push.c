@@ -26,7 +26,7 @@ void(pthread_cleanup_push)(struct _pthread_cleanup_buffer *cb,
   cb->__routine = routine;
   cb->__arg = arg;
   if (__tls_enabled && (pt = _pthread_self())) {
-    cb->__prev = pt->cleanup;
-    pt->cleanup = cb;
+    cb->__prev = pt->pt_cleanup;
+    pt->pt_cleanup = cb;
   }
 }

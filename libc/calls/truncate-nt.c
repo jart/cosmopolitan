@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/createfile.h"
@@ -30,6 +31,7 @@ textwindows int sys_truncate_nt(const char *path, uint64_t length) {
   int64_t fh;
   uint16_t path16[PATH_MAX];
   if (__mkntpath(path, path16) == -1) return -1;
+  BLOCK_SIGNALS;
   if ((fh = CreateFile(path16, kNtGenericWrite, kNtFileShareRead, NULL,
                        kNtOpenExisting, kNtFileAttributeNormal, 0)) != -1) {
     rc = sys_ftruncate_nt(fh, length);
@@ -37,5 +39,6 @@ textwindows int sys_truncate_nt(const char *path, uint64_t length) {
   } else {
     rc = -1;
   }
+  ALLOW_SIGNALS;
   return __fix_enotdir(rc, path16);
 }

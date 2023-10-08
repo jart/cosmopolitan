@@ -33,7 +33,7 @@
  * @raise EFAULT if `req` is NULL or `req` / `rem` is a bad pointer
  * @raise ENOSYS on bare metal
  * @see clock_nanosleep()
- * @cancellationpoint
+ * @cancelationpoint
  * @norestart
  */
 int nanosleep(const struct timespec *req, struct timespec *rem) {

@@ -19,6 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -67,6 +69,7 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
   struct NtByHandleFileInformation wst;
   int64_t hToken, hImpersonatedToken, hFile;
   intptr_t buffer[1024 / sizeof(intptr_t)];
+  BLOCK_SIGNALS;
   if (flags & X_OK) flags |= R_OK;
   granted = 0;
   result = false;
@@ -148,5 +151,6 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
   if (hToken != -1) {
     CloseHandle(hToken);
   }
+  ALLOW_SIGNALS;
   return rc;
 }

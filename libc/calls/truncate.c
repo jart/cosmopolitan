@@ -59,13 +59,13 @@
  * @raise ENOENT if `path` doesn't exist or is an empty string
  * @raise ETXTBSY if `path` is an executable being executed
  * @raise ENOSYS on bare metal
- * @cancellationpoint
+ * @cancelationpoint
  * @see ftruncate()
  */
 int truncate(const char *path, int64_t length) {
   int rc;
   struct ZiposUri zipname;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (IsMetal()) {
     rc = enosys();
@@ -83,7 +83,7 @@ int truncate(const char *path, int64_t length) {
     rc = sys_truncate_nt(path, length);
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("truncate(%#s, %'ld) → %d% m", path, length, rc);
   return rc;
 }

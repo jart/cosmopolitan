@@ -21,6 +21,7 @@ struct Proc {
   int64_t handle;
   struct Dll elem;
   nsync_cv onexit;
+  struct rusage ru;
 };
 
 struct Procs {
@@ -36,6 +37,7 @@ struct Procs {
   struct Proc pool[8];
   unsigned allocated;
   struct CosmoTib tls;
+  struct rusage ruchlds;
 };
 
 extern struct Procs __proc;
@@ -43,6 +45,8 @@ extern struct Procs __proc;
 void __proc_wipe(void);
 void __proc_lock(void);
 void __proc_unlock(void);
+int64_t __proc_handle(int);
+int64_t __proc_search(int);
 struct Proc *__proc_new(void);
 void __proc_add(struct Proc *);
 void __proc_free(struct Proc *);

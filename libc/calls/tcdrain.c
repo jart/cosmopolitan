@@ -19,6 +19,7 @@
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
@@ -32,8 +33,7 @@
 #define TIOCDRAIN 0x2000745e  // xnu, freebsd, openbsd, netbsd
 
 static dontinline textwindows int sys_tcdrain_nt(int fd) {
-  if (!__isfdopen(fd)) return ebadf();
-  if (_check_interrupts(0)) return -1;
+  if (!sys_isatty(fd)) return -1;  // ebadf, enotty
   // Tried FlushFileBuffers but it made Emacs hang when run in cmd.exe
   // "Console output is not buffered." -Quoth MSDN on FlushFileBuffers
   return 0;
@@ -50,12 +50,12 @@ static dontinline textwindows int sys_tcdrain_nt(int fd) {
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
  * @raise ENOSYS on bare metal
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  */
 int tcdrain(int fd) {
   int rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotty();
   } else if (IsLinux()) {
@@ -67,7 +67,7 @@ int tcdrain(int fd) {
   } else {
     rc = enosys();
   }
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("tcdrain(%d) → %d% m", fd, rc);
   return rc;
 }

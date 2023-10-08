@@ -3,8 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void __execve_lock(void);
-void __execve_unlock(void);
 bool IsApeLoadable(char[8]);
 
 COSMOPOLITAN_C_END_

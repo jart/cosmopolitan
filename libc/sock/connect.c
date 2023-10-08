@@ -37,13 +37,13 @@
  * also means getsockname() can be called to retrieve routing details.
  *
  * @return 0 on success or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
 int connect(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   int rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (addr && !(IsAsan() && !__asan_is_valid(addr, addrsize))) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
@@ -61,7 +61,7 @@ int connect(int fd, const struct sockaddr *addr, uint32_t addrsize) {
     rc = efault();
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("connect(%d, %s) → %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
   return rc;
 }

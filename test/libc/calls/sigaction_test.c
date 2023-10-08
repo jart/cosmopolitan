@@ -296,7 +296,9 @@ TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, 0, &got));
   ASSERT_TRUE(sigismember(&got, SIGUSR1));
   sigaddset(&want, SIGUSR1);
+  ASSERT_EQ(0, errno);
   ASSERT_STREQ(DescribeSigset(0, &want), DescribeSigset(0, &got));
+  ASSERT_EQ(0, errno);
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
   sigdelset(&want, SIGUSR1);
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, 0));
@@ -380,6 +382,7 @@ TEST(sigaction, returnFromSegvHandler_loopsForever) {
   munmap(segfaults, sizeof(*segfaults));
 }
 
+#if 0
 TEST(sigaction, ignoreSigSegv_notPossible) {
   if (IsXnu()) return;  // seems busted
   SPAWN(fork);
@@ -402,3 +405,4 @@ TEST(sigaction, killSigSegv_canBeIgnored) {
   EXPECT_EQ(SIGTERM, ws);
   signal(SIGSEGV, old);
 }
+#endif

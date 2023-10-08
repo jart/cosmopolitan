@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
-#include "libc/str/str.h"
 
 /**
  * Removes all signals from set.
@@ -26,6 +25,6 @@
  * @asyncsignalsafe
  */
 int sigemptyset(sigset_t *set) {
-  bzero(set->__bits, sizeof(set->__bits));
+  *set = 0;
   return 0;
 }

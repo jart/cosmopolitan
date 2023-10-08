@@ -22,7 +22,7 @@
  * Joins thread if it's already terminated.
  *
  * Multiple threads joining the same thread is undefined behavior. If a
- * deferred or masked cancellation happens to the calling thread either
+ * deferred or masked cancelation happens to the calling thread either
  * before or during the waiting process then the target thread will not
  * be joined. Calling pthread_join() on a non-joinable thread, e.g. one
  * that's been detached, is undefined behavior. If a thread attempts to
@@ -33,7 +33,7 @@
  *     pthread_cancel() destroyed the thread instead
  * @return 0 on success, or errno on error
  * @raise ECANCELED if calling thread was cancelled in masked mode
- * @cancellationpoint
+ * @cancelationpoint
  * @returnserrno
  */
 errno_t pthread_tryjoin_np(pthread_t thread, void **value_ptr) {

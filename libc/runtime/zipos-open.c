@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
@@ -141,7 +141,6 @@ static int __zipos_setfd(int fd, struct ZiposHandle *h, unsigned flags) {
   g_fds.p[fd].kind = kFdZip;
   g_fds.p[fd].handle = (intptr_t)h;
   g_fds.p[fd].flags = flags | O_CLOEXEC;
-  g_fds.p[fd].extra = 0;
   __fds_unlock();
   return fd;
 }

@@ -17,10 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/console.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
@@ -42,10 +45,10 @@ int tcgetpgrp(int fd) {
     rc = sys_ioctl(fd, TIOCGPGRP_linux, &pgrp);
   } else if (IsBsd()) {
     rc = sys_ioctl(fd, TIOCGPGRP_bsd, &pgrp);
-  } else if (IsWindows()) {
+  } else if (sys_isatty(fd)) {
     pgrp = rc = getpid();
   } else {
-    rc = enosys();
+    rc = -1;  // ebadf, enotty
   }
   STRACE("tcgetpgrp(%d) → %d% m", fd, rc == -1 ? rc : pgrp);
   return rc == -1 ? rc : pgrp;

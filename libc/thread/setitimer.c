@@ -66,6 +66,7 @@
  *     if this parameter is NULL, we'll polyfill getitimer() behavior
  * @param out_opt_old may receive remainder of previous op (if any)
  * @return 0 on success or -1 w/ errno
+ * @asyncsignalsafe
  */
 int setitimer(int which, const struct itimerval *newvalue,
               struct itimerval *oldvalue) {

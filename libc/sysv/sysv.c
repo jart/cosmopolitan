@@ -36,31 +36,30 @@ register long sysv_ordinal asm("x8");
 register long xnu_ordinal asm("x16");
 register long cosmo_tls_register asm("x28");
 
-void report_cancellation_point(void);
+void report_cancelation_point(void);
 
 dontinline long systemfive_cancel(void) {
   return _weaken(_pthread_cancel_ack)();
 }
 
-// special region of executable memory where cancellation is safe
+// special region of executable memory where cancelation is safe
 dontinline long systemfive_cancellable(void) {
 
-  // check (1) this is a cancellation point
-  // plus (2) cancellations aren't disabled
+  // check (1) this is a cancelation point
+  // plus (2) cancelations aren't disabled
   struct PosixThread *pth = 0;
-  struct CosmoTib *tib = __get_tls();
   if (cosmo_tls_register &&            //
       _weaken(_pthread_cancel_ack) &&  //
-      (pth = (struct PosixThread *)tib->tib_pthread)) {
-    // check if cancellation is already pending
+      (pth = _pthread_self())) {
+    // check if cancelation is already pending
     if (!(pth->pt_flags & PT_NOCANCEL) &&
-        atomic_load_explicit(&pth->cancelled, memory_order_acquire)) {
+        atomic_load_explicit(&pth->pt_canceled, memory_order_acquire)) {
       return systemfive_cancel();
     }
 #if IsModeDbg()
     if (!(pth->flags & PT_INCANCEL)) {
-      if (_weaken(report_cancellation_point)) {
-        _weaken(report_cancellation_point)();
+      if (_weaken(report_cancelation_point)) {
+        _weaken(report_cancelation_point)();
       }
       __builtin_trap();
     }
@@ -88,7 +87,7 @@ dontinline long systemfive_cancellable(void) {
 
   // check if i/o call was interrupted by sigthr
   if (pth && x0 == -EINTR && !(pth->pt_flags & PT_NOCANCEL) &&
-      atomic_load_explicit(&pth->cancelled, memory_order_acquire)) {
+      atomic_load_explicit(&pth->pt_canceled, memory_order_acquire)) {
     return systemfive_cancel();
   }
 
@@ -99,8 +98,8 @@ dontinline long systemfive_cancellable(void) {
 /**
  * System Five System Call Support.
  *
- * This supports POSIX thread cancellation only when the caller flips a
- * bit in TLS storage that indicates we're inside a cancellation point.
+ * This supports POSIX thread cancelation only when the caller flips a
+ * bit in TLS storage that indicates we're inside a cancelation point.
  *
  * @param x0 is first argument
  * @param x1 is second argument

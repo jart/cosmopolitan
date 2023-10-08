@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
 
 /**
  * Bitwise ORs two signal sets.
@@ -28,9 +26,6 @@
  * @vforksafe
  */
 int sigorset(sigset_t *set, const sigset_t *x, const sigset_t *y) {
-  int i;
-  for (i = 0; i < ARRAYLEN(set->__bits); ++i) {
-    set->__bits[i] = x->__bits[i] | y->__bits[i];
-  }
+  *set = *x | *y;
   return 0;
 }

@@ -53,9 +53,9 @@ bool SupportsOfdLocks(void) {
   // getrandom() was introduced in linux 3.17
   // testing for getrandom() should be a sure thing w/o creating an fd
   e = errno;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   r = !sys_getrandom(0, 0, 0);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   errno = e;
   return r;
 }

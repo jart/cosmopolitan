@@ -130,8 +130,8 @@ errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
   errno_t rc;
   struct PosixThread *pt;
   pt = (struct PosixThread *)thread;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   rc = pthread_getname_impl(pt, name, size);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return rc;
 }

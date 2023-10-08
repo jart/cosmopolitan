@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/copyfile.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
@@ -47,9 +46,9 @@
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nexgen32e/x86info.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
-#include "libc/proc/posix_spawn.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"

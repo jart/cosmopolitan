@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -28,8 +30,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
-                               int advice) {
+static textwindows int sys_fadvise_nt_impl(int fd, uint64_t offset,
+                                           uint64_t len, int advice) {
   int64_t h1, h2;
   int rc, flags, mode;
   uint32_t perm, share, attr;
@@ -83,5 +85,14 @@ textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
   }
   __fds_unlock();
 
+  return rc;
+}
+
+textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
+                               int advice) {
+  int rc;
+  BLOCK_SIGNALS;
+  rc = sys_fadvise_nt_impl(fd, offset, len, advice);
+  ALLOW_SIGNALS;
   return rc;
 }

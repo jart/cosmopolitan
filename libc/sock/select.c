@@ -40,12 +40,13 @@
  *
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @norestart
  */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
+
   int rc;
 #ifdef SYSDEBUG
   fd_set old_readfds;
@@ -61,7 +62,7 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout));
 
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   if (nfds < 0) {
     rc = einval();
   } else if (IsAsan() &&
@@ -109,7 +110,7 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
       rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, 0);
     }
   }
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
 
   STRACE("select(%d, %s → [%s], %s → [%s], %s → [%s], %s → [%s]) → %d% m", nfds,
          DescribeFdSet(rc, nfds, old_readfds_ptr),

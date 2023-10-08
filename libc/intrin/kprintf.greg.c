@@ -399,8 +399,10 @@ privileged void klog(const char *b, size_t n) {
   }
   if (IsWindows()) {
     e = __imp_GetLastError();
-    __imp_WriteFile(h, b, n, &wrote, 0);
-    __imp_SetLastError(e);
+    if (!__imp_WriteFile(h, b, n, &wrote, 0)) {
+      __imp_SetLastError(e);
+      __klog_handle = 0;
+    }
   } else if (IsMetal()) {
     if (_weaken(_klog_vga)) {
       _weaken(_klog_vga)(b, n);
@@ -424,7 +426,7 @@ privileged void klog(const char *b, size_t n) {
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 #elif defined(__aarch64__)
-  // this isn't a cancellation point because we don't acknowledge eintr
+  // this isn't a cancelation point because we don't acknowledge eintr
   // on xnu we use the "nocancel" version of the system call for safety
   register long r0 asm("x0") = kloghandle();
   register long r1 asm("x1") = (long)b;
@@ -586,7 +588,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             *p++ = '1';
             *p++ = ';';
             *p++ = '3';
-            *p++ = '0' + x % 8;
+            *p++ = '0' + x % 7;
             *p++ = 'm';
             ansi = 1;
           }

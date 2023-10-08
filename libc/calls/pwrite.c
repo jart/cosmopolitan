@@ -44,14 +44,14 @@
  * @return [1..size] bytes on success, or -1 w/ errno; noting zero is
  *     impossible unless size was passed as zero to do an error check
  * @see pread(), write()
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @vforksafe
  */
 ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   ssize_t rc;
   size_t wrote;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (offset < 0) {
     rc = einval();
@@ -79,7 +79,7 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
     }
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   DATATRACE("pwrite(%d, %#.*hhs%s, %'zu, %'zd) → %'zd% m", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;

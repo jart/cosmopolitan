@@ -226,8 +226,6 @@ void *memmove(void *dst, const void *src, size_t n) {
               *(xmm_t *)(d + n + 16) = w;
             } while (n >= 32);
           } else {
-            if (IsAsan()) __asan_verify(d, n);
-            if (IsAsan()) __asan_verify(s, n);
             asm("std\n\t"
                 "rep movsb\n\t"
                 "cld"
@@ -248,8 +246,6 @@ void *memmove(void *dst, const void *src, size_t n) {
             s += i;
             n -= i;
           } else {
-            if (IsAsan()) __asan_verify(d, n);
-            if (IsAsan()) __asan_verify(s, n);
             asm("rep movsb"
                 : "+D"(d), "+S"(s), "+c"(n), "=m"(*(char(*)[n])d)
                 : "m"(*(char(*)[n])s));

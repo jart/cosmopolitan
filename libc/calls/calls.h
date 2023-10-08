@@ -26,6 +26,8 @@
 #define _POSIX_MEMLOCK_RANGE              _POSIX_VERSION
 #define _POSIX_SPAWN                      _POSIX_VERSION
 
+#define NSIG 64
+
 #define SEEK_SET 0          /* relative to beginning */
 #define SEEK_CUR 1          /* relative to current position */
 #define SEEK_END 2          /* relative to end */

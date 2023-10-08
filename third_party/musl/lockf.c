@@ -42,7 +42,7 @@ asm(".include \"libc/disclaimer.inc\"");
 /**
  * Locks file.
  *
- * @cancellationpoint when `op` is `F_LOCK`
+ * @cancelationpoint when `op` is `F_LOCK`
  */
 int lockf(int fd, int op, off_t size)
 {

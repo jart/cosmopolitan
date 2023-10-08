@@ -26,7 +26,6 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
@@ -34,6 +33,8 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#ifdef __x86_64__
+#include "libc/sock/yoink.inc"
 
 __msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
 
@@ -44,11 +45,9 @@ __msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
  */
 __static_yoink("GetAdaptersAddresses");
 __static_yoink("tprecode16to8");
-__static_yoink("_dupsockfd");
 
 textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
-  struct SockFd *sockfd;
   int fd, oflags, truetype, yes = 1;
   fd = __reservefd(-1);
   if (fd == -1) return -1;
@@ -67,17 +66,13 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
     oflags = O_RDWR;
     if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
     if (type & SOCK_NONBLOCK) oflags |= O_NONBLOCK;
-    sockfd = calloc(1, sizeof(struct SockFd));
-    sockfd->family = family;
-    sockfd->type = truetype;
-    sockfd->protocol = protocol;
-    __fds_lock();
+    g_fds.p[fd].family = family;
+    g_fds.p[fd].type = truetype;
+    g_fds.p[fd].protocol = protocol;
     g_fds.p[fd].kind = kFdSocket;
     g_fds.p[fd].flags = oflags;
     g_fds.p[fd].mode = 0140666;
     g_fds.p[fd].handle = h;
-    g_fds.p[fd].extra = (uintptr_t)sockfd;
-    __fds_unlock();
 
     return fd;
   } else {
@@ -85,3 +80,5 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
     return __winsockerr();
   }
 }
+
+#endif /* __x86_64__ */

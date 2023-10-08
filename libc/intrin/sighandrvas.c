@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/thread/thread.h"
 
 unsigned __sighandrvas[NSIG + 1];
 unsigned __sighandflags[NSIG + 1];
+sigset_t __sighandmask[NSIG + 1];

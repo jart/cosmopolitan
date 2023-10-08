@@ -45,7 +45,7 @@
  * @return number of bytes transmitted, or -1 w/ errno
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
@@ -54,7 +54,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   struct msghdr msg2;
   union sockaddr_storage_bsd bsd;
 
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
   } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
@@ -84,7 +84,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   } else {
     rc = ebadf();
   }
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
 
 #if defined(SYSDEBUG) && _DATATRACE
   if (__strace > 0 && strace_enabled(0) > 0) {

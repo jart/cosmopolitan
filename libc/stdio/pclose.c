@@ -35,7 +35,7 @@
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ECHILD if child pid didn't exist
  * @raise EINTR if signal was delivered
- * @cancellationpoint
+ * @cancelationpoint
  */
 int pclose(FILE *f) {
   int e, rc, ws, pid;

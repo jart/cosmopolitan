@@ -17,14 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
-#include "libc/nt/console.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows bool32 sys_isatty_nt(int fd) {
+bool32 sys_isatty(int fd) {
   if (__isfdopen(fd)) {
-    uint32_t mode;
-    if (GetConsoleMode(g_fds.p[fd].handle, &mode)) {
+    if (__isfdkind(fd, kFdConsole) || __isfdkind(fd, kFdSerial)) {
       return true;
     } else {
       enotty();

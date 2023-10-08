@@ -26,7 +26,7 @@
  * @raise EINTR if signal was delivered instead
  * @raise EDEADLK if deadlock was detected
  * @raise EINVAL if `sem` is invalid
- * @cancellationpoint
+ * @cancelationpoint
  */
 int sem_wait(sem_t *sem) {
   return sem_timedwait(sem, 0);

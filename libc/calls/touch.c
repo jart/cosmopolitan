@@ -35,9 +35,9 @@ int touch(const char *file, uint32_t mode) {
   olderr = errno;
   if ((rc = utimes(file, 0)) == -1 && errno == ENOENT) {
     errno = olderr;
-    BLOCK_CANCELLATIONS;
+    BLOCK_CANCELATION;
     fd = open(file, O_CREAT | O_WRONLY, mode);
-    ALLOW_CANCELLATIONS;
+    ALLOW_CANCELATION;
     if (fd == -1) return -1;
     return close(fd);
   }

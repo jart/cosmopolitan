@@ -58,14 +58,14 @@
  *     or `SO_RCVTIMEO` is in play and the time interval elapsed
  * @raise ENOBUFS is specified by POSIX
  * @raise ENXIO is specified by POSIX
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable
  * @vforksafe
  */
 ssize_t read(int fd, void *buf, size_t size) {
   ssize_t rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (fd < 0) {
     rc = ebadf();
@@ -87,7 +87,7 @@ ssize_t read(int fd, void *buf, size_t size) {
     rc = enosys();
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   DATATRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd,
             (int)MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, rc);
   return rc;

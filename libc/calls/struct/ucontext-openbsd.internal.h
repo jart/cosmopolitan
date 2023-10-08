@@ -33,7 +33,7 @@ struct ucontext_openbsd {
   int64_t sc_ss;
   struct FpuState *sc_fpstate;
   int32_t __sc_unused;
-  int32_t sc_mask;
+  uint32_t sc_mask;
   int64_t sc_cookie;
 };
 

@@ -31,7 +31,7 @@ int xwrite(int fd, const void *p, uint64_t n) {
   int64_t i;
   uint64_t m;
   const char *buf;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   rc = 0;
   buf = p;
   while (n) {
@@ -46,6 +46,6 @@ int xwrite(int fd, const void *p, uint64_t n) {
     buf += i;
     n -= i;
   }
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return rc;
 }

@@ -44,10 +44,11 @@
  */
 int getaddrinfo(const char *name, const char *service,
                 const struct addrinfo *hints, struct addrinfo **res) {
+  char *eptr;
   int rc, port;
+  char proto[32];
   const char *canon;
   struct addrinfo *ai;
-  char proto[32];
   port = 0;
   if (!name && !service) {
     return EAI_NONAME;
@@ -55,7 +56,7 @@ int getaddrinfo(const char *name, const char *service,
   if (!name && hints && (hints->ai_flags & AI_CANONNAME)) {
     return EAI_BADFLAGS;
   }
-  if (service && (port = parseport(service)) == -1) {
+  if (service && ((port = strtol(service, &eptr, 10)), *eptr)) {
     if (hints && hints->ai_socktype == SOCK_STREAM) {
       strcpy(proto, "tcp");
     } else if (hints && hints->ai_socktype == SOCK_DGRAM) {
@@ -71,7 +72,10 @@ int getaddrinfo(const char *name, const char *service,
   if (!(ai = newaddrinfo(port))) {
     return EAI_MEMORY;
   }
-  if (service) ai->ai_addr4->sin_port = htons(port);
+  if (service) {
+    // if service isn't specified, port is left uninitialized
+    ai->ai_addr4->sin_port = htons(port);
+  }
   if (hints) {
     ai->ai_socktype = hints->ai_socktype;
     ai->ai_protocol = hints->ai_protocol;

@@ -157,8 +157,8 @@ static lua_Integer FixLimit(long x) {
   }
 }
 
-static void LuaPushSigset(lua_State *L, struct sigset set) {
-  struct sigset *sp = lua_newuserdatauv(L, sizeof(*sp), 1);
+static void LuaPushSigset(lua_State *L, sigset_t set) {
+  sigset_t *sp = lua_newuserdatauv(L, sizeof(*sp), 1);
   luaL_setmetatable(L, "unix.Sigset");
   *sp = set;
 }
@@ -1541,7 +1541,7 @@ static int LuaUnixAccept(lua_State *L) {
 //     └─→ nil, unix.Errno
 static int LuaUnixPoll(lua_State *L) {
   size_t nfds;
-  struct sigset *mask;
+  sigset_t *mask;
   struct timespec ts, *tsp;
   struct pollfd *fds, *fds2;
   int i, events, olderr = errno;
@@ -1693,8 +1693,8 @@ static int LuaUnixShutdown(lua_State *L) {
 //     ├─→ oldmask:unix.Sigset
 //     └─→ nil, unix.Errno
 static int LuaUnixSigprocmask(lua_State *L) {
+  sigset_t oldmask;
   int olderr = errno;
-  struct sigset oldmask;
   if (!sigprocmask(luaL_checkinteger(L, 1),
                    luaL_checkudata(L, 2, "unix.Sigset"), &oldmask)) {
     LuaPushSigset(L, oldmask);
@@ -1726,7 +1726,7 @@ static void LuaUnixOnSignal(int sig, siginfo_t *si, void *ctx) {
 //     ├─→ oldhandler:func|int, flags:int, mask:unix.Sigset
 //     └─→ nil, unix.Errno
 static int LuaUnixSigaction(lua_State *L) {
-  struct sigset *mask;
+  sigset_t *mask;
   int i, n, sig, olderr = errno;
   struct sigaction sa, oldsa, *saptr = &sa;
   sigemptyset(&sa.sa_mask);
@@ -1765,8 +1765,7 @@ static int LuaUnixSigaction(lua_State *L) {
   }
   if (!lua_isnoneornil(L, 4)) {
     mask = luaL_checkudata(L, 4, "unix.Sigset");
-    sa.sa_mask.__bits[0] |= mask->__bits[0];
-    sa.sa_mask.__bits[1] |= mask->__bits[1];
+    sigorset(&sa.sa_mask, &sa.sa_mask, mask);
     lua_remove(L, 4);
   }
   if (lua_isnoneornil(L, 3)) {
@@ -1817,8 +1816,8 @@ static int LuaUnixSigsuspend(lua_State *L) {
 //     ├─→ mask:unix.Sigset
 //     └─→ nil, unix.Errno
 static int LuaUnixSigpending(lua_State *L) {
+  sigset_t mask;
   int olderr = errno;
-  struct sigset mask;
   if (!sigpending(&mask)) {
     LuaPushSigset(L, mask);
     return 1;
@@ -2850,10 +2849,10 @@ static int LuaUnixMemoryWait(lua_State *L) {
     ts.tv_nsec = luaL_optinteger(L, 5, 0);
     deadline = &ts;
   }
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   rc = nsync_futex_wait_((atomic_int *)GetWord(L), expect,
                          PTHREAD_PROCESS_SHARED, deadline);
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   if (rc < 0) errno = -rc, rc = -1;
   return SysretInteger(L, "futex_wait", olderr, rc);
 }
@@ -2968,15 +2967,11 @@ static int LuaUnixMapshared(lua_State *L) {
 //     └─→ unix.Sigset
 static int LuaUnixSigset(lua_State *L) {
   int i, n;
-  lua_Integer sig;
-  struct sigset set;
+  sigset_t set;
   sigemptyset(&set);
   n = lua_gettop(L);
   for (i = 1; i <= n; ++i) {
-    sig = luaL_checkinteger(L, i);
-    if (1 <= sig && sig <= NSIG) {
-      set.__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
-    }
+    sigaddset(&set, luaL_checkinteger(L, i));
   }
   LuaPushSigset(L, set);
   return 1;
@@ -2984,61 +2979,54 @@ static int LuaUnixSigset(lua_State *L) {
 
 // unix.Sigset:add(sig:int)
 static int LuaUnixSigsetAdd(lua_State *L) {
+  sigset_t *set;
   lua_Integer sig;
-  struct sigset *set;
   set = luaL_checkudata(L, 1, "unix.Sigset");
   sig = luaL_checkinteger(L, 2);
-  if (1 <= sig && sig <= NSIG) {
-    set->__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
-  }
+  sigaddset(set, sig);
   return 0;
 }
 
 // unix.Sigset:remove(sig:int)
 static int LuaUnixSigsetRemove(lua_State *L) {
+  sigset_t *set;
   lua_Integer sig;
-  struct sigset *set;
   set = luaL_checkudata(L, 1, "unix.Sigset");
   sig = luaL_checkinteger(L, 2);
-  if (1 <= sig && sig <= NSIG) {
-    set->__bits[(sig - 1) >> 6] &= ~(1ull << ((sig - 1) & 63));
-  }
+  sigdelset(set, sig);
   return 0;
 }
 
 // unix.Sigset:fill()
 static int LuaUnixSigsetFill(lua_State *L) {
-  struct sigset *set;
+  sigset_t *set;
   set = luaL_checkudata(L, 1, "unix.Sigset");
-  memset(set, -1, sizeof(*set));
+  sigfillset(set);
   return 0;
 }
 
 // unix.Sigset:clear()
 static int LuaUnixSigsetClear(lua_State *L) {
-  struct sigset *set;
+  sigset_t *set;
   set = luaL_checkudata(L, 1, "unix.Sigset");
-  bzero(set, sizeof(*set));
+  sigemptyset(set);
   return 0;
 }
 
 // unix.Sigset:contains(sig:int)
 //     └─→ bool
 static int LuaUnixSigsetContains(lua_State *L) {
+  sigset_t *set;
   lua_Integer sig;
-  struct sigset *set;
   set = luaL_checkudata(L, 1, "unix.Sigset");
   sig = luaL_checkinteger(L, 2);
-  return ReturnBoolean(
-      L, (1 <= sig && sig <= NSIG)
-             ? !!(set->__bits[(sig - 1) >> 6] & (1ull << ((sig - 1) & 63)))
-             : false);
+  return ReturnBoolean(L, sigismember(set, sig));
 }
 
 static int LuaUnixSigsetTostring(lua_State *L) {
   char *b = 0;
+  sigset_t *ss;
   int sig, first;
-  struct sigset *ss;
   ss = luaL_checkudata(L, 1, "unix.Sigset");
   appends(&b, "unix.Sigset");
   appendw(&b, '(');

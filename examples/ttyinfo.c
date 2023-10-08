@@ -16,7 +16,6 @@
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
@@ -42,14 +41,19 @@ char code[512];
 int infd, outfd;
 struct winsize wsize;
 struct termios oldterm;
-volatile bool resized, killed;
+volatile bool killed, resized, resurrected;
+
+void OnKilled(int sig) {
+  killed = true;
+}
 
 void OnResize(int sig) {
   resized = true;
 }
 
-void OnKilled(int sig) {
-  killed = true;
+void OnResurrect(int sig) {
+  resized = true;
+  resurrected = true;
 }
 
 void RestoreTty(void) {
@@ -160,16 +164,20 @@ int main(int argc, char *argv[]) {
   int e, c, y, x, n, yn, xn;
   infd = 0;
   outfd = 1;
-  /* infd = outfd = open("/dev/tty", O_RDWR); */
-  signal(SIGTERM, OnKilled);
-  signal(SIGCONT, OnResize);
-  signal(SIGWINCH, OnResize);
+  infd = outfd = open("/dev/tty", O_RDWR);
   signal(SIGINT, OnSignalThatWontEintrRead);
   sigaction(SIGQUIT,
             &(struct sigaction){.sa_handler = OnSignalThatWillEintrRead}, 0);
+  sigaction(SIGTERM, &(struct sigaction){.sa_handler = OnKilled}, 0);
+  sigaction(SIGWINCH, &(struct sigaction){.sa_handler = OnResize}, 0);
+  sigaction(SIGCONT, &(struct sigaction){.sa_handler = OnResurrect}, 0);
   EnableRawMode();
   GetTtySize();
   while (!killed) {
+    if (resurrected) {
+      dprintf(outfd, "WE LIVE AGAIN ");
+      resurrected = false;
+    }
     if (resized) {
       dprintf(outfd, "SIGWINCH ");
       GetTtySize();

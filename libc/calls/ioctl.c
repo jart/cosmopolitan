@@ -91,7 +91,6 @@ static int ioctl_default(int fd, unsigned long request, void *arg) {
 
 static int ioctl_fionread(int fd, uint32_t *arg) {
   int rc;
-  uint32_t cm;
   int64_t handle;
   if (!IsWindows()) {
     return sys_ioctl(fd, FIONREAD, arg);
@@ -103,6 +102,10 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
       } else {
         return _weaken(__winsockerr)();
       }
+    } else if (g_fds.p[fd].kind == kFdConsole) {
+      int bytes = CountConsoleInputBytes();
+      *arg = MAX(0, bytes);
+      return 0;
     } else if (GetFileType(handle) == kNtFileTypePipe) {
       uint32_t avail;
       if (PeekNamedPipe(handle, 0, 0, 0, &avail, 0)) {
@@ -113,10 +116,6 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
       } else {
         return __winerr();
       }
-    } else if (GetConsoleMode(handle, &cm)) {
-      int bytes = CountConsoleInputBytes(g_fds.p + fd);
-      *arg = MAX(0, bytes);
-      return 0;
     } else {
       return eopnotsupp();
     }

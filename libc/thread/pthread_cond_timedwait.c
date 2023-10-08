@@ -44,7 +44,7 @@
  * @raise ECANCELED if calling thread was cancelled in masked mode
  * @see pthread_cond_broadcast()
  * @see pthread_cond_signal()
- * @cancellationpoint
+ * @cancelationpoint
  */
 errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
                                const struct timespec *abstime) {

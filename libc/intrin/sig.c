@@ -16,6 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sysv/consts/sig.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/weaken.h"
+#include "libc/thread/tls.h"
 
 struct Signals __sig;
+
+sigset_t __sig_block(void) {
+  if (IsWindows()) {
+    return atomic_exchange_explicit(&__get_tls()->tib_sigmask, -1,
+                                    memory_order_acq_rel);
+  } else {
+    sigset_t res, neu = -1;
+    sys_sigprocmask(SIG_SETMASK, &neu, &res);
+    return res;
+  }
+}
+
+void __sig_unblock(sigset_t m) {
+  if (IsWindows()) {
+    atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
+    if (_weaken(__sig_check)) {
+      _weaken(__sig_check)();
+    }
+  } else {
+    sys_sigprocmask(SIG_SETMASK, &m, 0);
+  }
+}
+
+textwindows int __sig_enqueue(int sig) {
+  __get_tls()->tib_sigpending |= 1ull << (sig - 1);
+  return 0;
+}
+
+textwindows sigset_t __sig_beginwait(sigset_t waitmask) {
+  return atomic_exchange_explicit(&__get_tls()->tib_sigmask, waitmask,
+                                  memory_order_acq_rel);
+}
+
+textwindows void __sig_finishwait(sigset_t m) {
+  atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
+}

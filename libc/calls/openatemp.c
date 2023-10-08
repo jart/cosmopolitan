@@ -95,7 +95,7 @@
  * @raise EINVAL if `template` (less the `suffixlen` region) didn't
  *     end with the string "XXXXXXX"
  * @raise EINVAL if `suffixlen` was negative or too large
- * @cancellationpoint
+ * @cancelationpoint
  */
 int openatemp(int dirfd, char *template, int suffixlen, int flags, int mode) {
   flags &= ~O_ACCMODE;

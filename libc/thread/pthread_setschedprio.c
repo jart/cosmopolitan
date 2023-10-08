@@ -24,6 +24,6 @@
  */
 errno_t pthread_setschedprio(pthread_t thread, int prio) {
   struct PosixThread *pt = (struct PosixThread *)thread;
-  pt->attr.__schedparam = prio;
+  pt->pt_attr.__schedparam = prio;
   return _pthread_reschedule(pt);
 }

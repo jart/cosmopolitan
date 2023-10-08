@@ -50,7 +50,7 @@ static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   const Elf64_Sym *symtab, *sym;
   ptrdiff_t names_offset, name_base_offset, stp_offset;
   map = MAP_FAILED;
-  if ((fd = open(filename, O_RDONLY)) == -1) return 0;
+  if ((fd = open(filename, O_RDONLY | O_CLOEXEC)) == -1) return 0;
   if ((filesize = lseek(fd, 0, SEEK_END)) == -1) goto SystemError;
   if (filesize > INT_MAX) goto RaiseE2big;
   if (filesize < 64) goto RaiseEnoexec;
@@ -146,8 +146,8 @@ SystemError:
  */
 struct SymbolTable *OpenSymbolTable(const char *filename) {
   struct SymbolTable *st;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   st = OpenSymbolTableImpl(filename);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return st;
 }

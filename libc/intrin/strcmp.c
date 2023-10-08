@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
@@ -34,8 +33,6 @@ int strcmp(const char *a, const char *b) {
   size_t i = 0;
   uint64_t v, w;
   if (a == b) return 0;
-  if (IsAsan()) __asan_verify_str(a);
-  if (IsAsan()) __asan_verify_str(b);
   if ((c = (*a & 255) - (*b & 255))) return c;
   if (!IsTiny() && ((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {

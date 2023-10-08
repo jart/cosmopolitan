@@ -17,6 +17,7 @@ THIRD_PARTY_XXHASH_A_DIRECTDEPS =				\
         LIBC_INTRIN						\
         LIBC_MEM						\
         LIBC_RUNTIME						\
+        LIBC_PROC						\
         LIBC_STDIO						\
         LIBC_STR						\
         LIBC_SYSV						\

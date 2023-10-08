@@ -1130,8 +1130,8 @@ syscon	prio	PRIO_MAX				20			20			20			20			20			20			20			20			# unix consensus
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			0			0			# unix consensus & faked nt
 syscon	rusage	RUSAGE_THREAD				1			1			99			99			1			1			1			1			# faked nt & unavailable on xnu
-syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
-syscon	rusage	RUSAGE_BOTH				-2			-2			99			99			99			99			99			99			# woop
+syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			-1			-1			-1			# unix consensus & unavailable on nt
+syscon	rusage	RUSAGE_BOTH				-2			-2			99			99			99			99			99			-2			# woop
 
 #	fast userspace mutexes
 #

@@ -17,7 +17,7 @@ struct IntervalTimer {
 
 extern struct IntervalTimer __itimer;
 
-void __itimer_reset(void);
+void __itimer_wipe(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

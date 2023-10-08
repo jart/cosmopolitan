@@ -58,7 +58,7 @@ errno_t _futex_wake (atomic_int *, int, int) asm ("_futex");
 int sys_futex_cp (atomic_int *, int, int, const struct timespec *, int *, int);
 
 static struct NsyncFutex {
-	_Atomic(uint32_t) once;
+	atomic_uint once;
 	int FUTEX_WAIT_;
 	int FUTEX_PRIVATE_FLAG_;
 	bool is_supported;
@@ -174,7 +174,6 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 				    const struct timespec *timeout,
 				    struct PosixThread *pt) {
-	int rc;
 	bool32 ok;
 	struct timespec deadline, interval, remain, wait, now;
 
@@ -184,29 +183,28 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 		deadline = timespec_max;
 	}
 
-	while (!(rc = _check_interrupts (0))) {
+	for (;;) {
 		now = timespec_real ();
 		if (timespec_cmp (now, deadline) > 0) {
-			rc = etimedout();
-			break;
+			return etimedout();
 		}
 		remain = timespec_sub (deadline, now);
 		interval = timespec_frommillis (__SIG_LOCK_INTERVAL_MS);
 		wait = timespec_cmp (remain, interval) > 0 ? interval : remain;
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
-			break;
+			return 0;
 		}
-		if (pt) atomic_store_explicit (&pt->pt_futex, w, memory_order_release);
+		if (pt) atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
+		if (_check_cancel() == -1) return -1;
+		if (_check_signal(false) == -1) return -1;
 		ok = WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait));
-		if (pt) atomic_store_explicit (&pt->pt_futex, 0, memory_order_release);
+		if (_check_cancel() == -1) return -1;
 		if (ok) {
-			break;
+			return 0;
 		} else {
 			ASSERT (GetLastError () == ETIMEDOUT);
 		}
 	}
-
-	return rc;
 }
 
 static struct timespec *nsync_futex_timeout_ (struct timespec *memory,

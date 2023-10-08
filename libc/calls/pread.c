@@ -50,13 +50,13 @@
  * @raise EINTR if signal was delivered instead
  * @raise ECANCELED if thread was cancelled in masked mode
  * @see pwrite(), write()
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @vforksafe
  */
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   ssize_t rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (offset < 0) {
     rc = einval();
@@ -79,7 +79,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   }
   npassert(rc == -1 || (size_t)rc <= size);
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   DATATRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;

@@ -737,14 +737,14 @@ localtime_tzloadbody_(char const *name, struct state *sp, bool doextend,
 	return 0;
 }
 
-static int /* [jart] pthread cancellation safe */
+static int /* [jart] pthread cancelation safe */
 localtime_tzloadbody(char const *name, struct state *sp, bool doextend,
 		     union local_storage *lsp)
 {
 	int rc;
-	BLOCK_CANCELLATIONS;
+	BLOCK_CANCELATION;
 	rc = localtime_tzloadbody_(name, sp, doextend, lsp);
-	ALLOW_CANCELLATIONS;
+	ALLOW_CANCELATION;
 	return rc;
 }
 

@@ -25,4 +25,4 @@ __static_yoink("_init__mmi");
 #endif
 
 struct MemoryIntervals _mmi;
-pthread_mutex_t __mmi_lock_obj;  // recursive :'(
+pthread_mutex_t __mmi_lock_obj = {._type = PTHREAD_MUTEX_RECURSIVE};

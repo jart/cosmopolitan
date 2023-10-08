@@ -108,3 +108,22 @@ TEST(ftruncate, test) {
   ASSERT_SYS(0, 10, lseek(3, 0, SEEK_CUR));  // position stays past eof
   ASSERT_SYS(0, 0, close(3));
 }
+
+TEST(ftruncate, isConsistentWithLseek) {
+  ASSERT_SYS(0, 3, creat("foo", 0666));
+  ASSERT_SYS(0, 0, lseek(3, 0, SEEK_END));
+  ASSERT_SYS(0, 0, ftruncate(3, 10));
+  ASSERT_SYS(0, 10, lseek(3, 0, SEEK_END));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(ftruncate, isConsistentWithFstat) {
+  struct stat st;
+  ASSERT_SYS(0, 3, creat("foo", 0666));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_EQ(0, st.st_size);
+  ASSERT_SYS(0, 0, ftruncate(3, 10));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_EQ(10, st.st_size);
+  ASSERT_SYS(0, 0, close(3));
+}

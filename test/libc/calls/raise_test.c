@@ -71,4 +71,5 @@ TEST(raise, threaded) {
   pthread_t worker;
   ASSERT_EQ(0, pthread_create(&worker, 0, Worker, 0));
   ASSERT_EQ(0, pthread_join(worker, 0));
+  pthread_exit(0);
 }

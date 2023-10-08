@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
@@ -35,10 +34,6 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  */
 char *strcpy(char *d, const char *s) {
   size_t i = 0;
-  if (IsAsan()) {
-    __asan_verify_str(s);
-    __asan_verify(d, strlen(s) + 1);
-  }
 #if defined(__x86_64__) && !defined(__chibicc__)
   for (; (uintptr_t)(s + i) & 15; ++i) {
     if (!(d[i] = s[i])) {

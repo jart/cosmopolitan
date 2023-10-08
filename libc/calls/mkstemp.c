@@ -34,7 +34,7 @@
  * @see mkstemps() if you you need a suffix
  * @see mktemp() if you don't need an fd
  * @see tmpfd() if you don't need a path
- * @cancellationpoint
+ * @cancelationpoint
  */
 int mkstemp(char *template) {
   return openatemp(AT_FDCWD, template, 0, 0, 0);

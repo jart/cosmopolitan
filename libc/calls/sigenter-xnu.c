@@ -507,8 +507,7 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
       __repstosb(&g, 0, sizeof(g));
 
       if (xnuctx) {
-        g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
-        g.uc.uc_sigmask.__bits[1] = 0;
+        g.uc.uc_sigmask = xnuctx->uc_sigmask;
         g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;
         g.uc.uc_stack.ss_flags = xnuctx->uc_stack.ss_flags;
         g.uc.uc_stack.ss_size = xnuctx->uc_stack.ss_size;
@@ -546,7 +545,7 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
         xnuctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
         xnuctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
         xnuctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
-        xnuctx->uc_sigmask = g.uc.uc_sigmask.__bits[0];
+        xnuctx->uc_sigmask = g.uc.uc_sigmask;
 #ifdef __x86_64__
         if (xnuctx->uc_mcontext) {
           if (xnuctx->uc_mcsize >=

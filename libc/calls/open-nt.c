@@ -120,11 +120,12 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
 
   // open the file, following symlinks
   int e = errno;
-  int64_t hand = CreateFile(path16, perm | extra_perm, share, 0, disp,
-                            attr | extra_attr, 0);
+  int64_t hand = CreateFile(path16, perm | extra_perm, share, &kNtIsInheritable,
+                            disp, attr | extra_attr, 0);
   if (hand == -1 && errno == EACCES && (flags & O_ACCMODE) == O_RDONLY) {
     errno = e;
-    hand = CreateFile(path16, perm, share, 0, disp, attr | extra_attr, 0);
+    hand = CreateFile(path16, perm, share, &kNtIsInheritable, disp,
+                      attr | extra_attr, 0);
   }
 
   return __fix_enotdir(hand, path16);
@@ -137,10 +138,9 @@ static textwindows int sys_open_nt_console(int dirfd,
   g_fds.p[fd].kind = kFdConsole;
   g_fds.p[fd].flags = flags;
   g_fds.p[fd].mode = mode;
-  g_fds.p[fd].handle = CreateFile(u"CONIN$", kNtGenericRead | kNtGenericWrite,
-                                  kNtFileShareRead, 0, kNtOpenExisting, 0, 0);
-  g_fds.p[fd].extra = CreateFile(u"CONOUT$", kNtGenericRead | kNtGenericWrite,
-                                 kNtFileShareWrite, 0, kNtOpenExisting, 0, 0);
+  g_fds.p[fd].handle =
+      CreateFile(u"CONIN$", kNtGenericRead | kNtGenericWrite, kNtFileShareRead,
+                 &kNtIsInheritable, kNtOpenExisting, 0, 0);
   return fd;
 }
 
@@ -163,6 +163,7 @@ textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
   int fd;
   ssize_t rc;
   __fds_lock();
+  if (!(flags & O_CREAT)) mode = 0;
   if ((rc = fd = __reservefd_unlocked(-1)) != -1) {
     if (!strcmp(file, kNtMagicPaths.devtty)) {
       rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);

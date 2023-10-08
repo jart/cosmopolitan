@@ -18,11 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/nt/console.h"
-#include "libc/sysv/errfuns.h"
 
 /**
  * Changes process group for process.
@@ -33,29 +30,11 @@
  * @vforksafe
  */
 int setpgid(int pid, int pgid) {
-  int rc, me;
+  int rc;
   if (!IsWindows()) {
     rc = sys_setpgid(pid, pgid);
   } else {
-    me = getpid();
-    if ((!pid || pid == me) && (!pgid || pgid == me)) {
-      // "When a process is created with kNtCreateNewProcessGroup
-      //  specified, an implicit call to SetConsoleCtrlHandler(NULL,TRUE)
-      //  is made on behalf of the new process; this means that the new
-      //  process has CTRL+C disabled. This lets shells handle CTRL+C
-      //  themselves, and selectively pass that signal on to
-      //  sub-processes. CTRL+BREAK is not disabled, and may be used to
-      //  interrupt the process/process group."
-      //                           ──Quoth MSDN § CreateProcessW()
-      if (SetConsoleCtrlHandler(0, 1)) {
-        rc = 0;
-      } else {
-        rc = __winerr();
-      }
-    } else {
-      // avoid bash printing scary warnings for now
-      rc = 0;
-    }
+    rc = 0;  // not sure what to do on windows yet
   }
   STRACE("setpgid(%d, %d) → %d% m", pid, pgid, rc);
   return rc;

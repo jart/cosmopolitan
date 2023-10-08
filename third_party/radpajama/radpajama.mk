@@ -81,6 +81,7 @@ THIRD_PARTY_RADPAJAMA_MAIN_DIRECTDEPS =					\
 	LIBC_LOG							\
 	LIBC_NEXGEN32E							\
 	LIBC_RUNTIME							\
+        LIBC_PROC							\
 	LIBC_STDIO							\
 	LIBC_STR							\
 	THIRD_PARTY_GGML						\

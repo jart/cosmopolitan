@@ -27,7 +27,7 @@
  *     may be inspected using WEXITSTATUS(), etc.
  * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
  * @return process id of terminated child or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable
  */

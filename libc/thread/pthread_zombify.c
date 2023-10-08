@@ -21,8 +21,8 @@
 #include "libc/thread/thread.h"
 
 void _pthread_zombify(struct PosixThread *pt) {
-  pthread_spin_lock(&_pthread_lock);
+  _pthread_lock();
   dll_remove(&_pthread_list, &pt->list);
   dll_make_last(&_pthread_list, &pt->list);
-  pthread_spin_unlock(&_pthread_lock);
+  _pthread_unlock();
 }

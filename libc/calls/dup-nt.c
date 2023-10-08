@@ -20,24 +20,26 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 // Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
-textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
-  int64_t rc, proc, handle;
+static textwindows int sys_dup_nt_impl(int oldfd, int newfd, int flags,
+                                       int start) {
+  int64_t rc, handle;
   unassert(!(flags & ~O_CLOEXEC));
 
   __fds_lock();
 
-  if (!__isfdopen(oldfd) || newfd < -1 ||
-      (g_fds.p[oldfd].kind != kFdFile && g_fds.p[oldfd].kind != kFdSocket &&
-       g_fds.p[oldfd].kind != kFdConsole)) {
+  if (!__isfdopen(oldfd) || newfd < -1) {
     __fds_unlock();
     return ebadf();
   }
@@ -54,29 +56,19 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
       return -1;
     }
     if (g_fds.p[newfd].kind) {
-      sys_close_nt(g_fds.p + newfd, newfd);
-      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
+      sys_close_nt(newfd, newfd);
     }
   }
 
-  handle = g_fds.p[oldfd].handle;
-  proc = GetCurrentProcess();
-
-  if (DuplicateHandle(proc, handle, proc, &g_fds.p[newfd].handle, 0, false,
+  if (DuplicateHandle(GetCurrentProcess(), g_fds.p[oldfd].handle,
+                      GetCurrentProcess(), &handle, 0, true,
                       kNtDuplicateSameAccess)) {
-    g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
-    g_fds.p[newfd].mode = g_fds.p[oldfd].mode;
-    g_fds.p[newfd].flags = g_fds.p[oldfd].flags & ~O_CLOEXEC;
-    if (flags & O_CLOEXEC) g_fds.p[newfd].flags |= O_CLOEXEC;
-    if (g_fds.p[oldfd].kind == kFdSocket && _weaken(_dupsockfd)) {
-      g_fds.p[newfd].extra =
-          (intptr_t)_weaken(_dupsockfd)((struct SockFd *)g_fds.p[oldfd].extra);
-    } else if (g_fds.p[oldfd].kind == kFdConsole) {
-      unassert(DuplicateHandle(proc, g_fds.p[oldfd].extra, proc,
-                               &g_fds.p[newfd].extra, 0, false,
-                               kNtDuplicateSameAccess));
+    g_fds.p[newfd] = g_fds.p[oldfd];
+    g_fds.p[newfd].handle = handle;
+    if (flags & O_CLOEXEC) {
+      g_fds.p[newfd].flags |= O_CLOEXEC;
     } else {
-      g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
+      g_fds.p[newfd].flags &= ~O_CLOEXEC;
     }
     rc = newfd;
   } else {
@@ -85,5 +77,13 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   }
 
   __fds_unlock();
+  return rc;
+}
+
+textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
+  int rc;
+  BLOCK_SIGNALS;
+  rc = sys_dup_nt_impl(oldfd, newfd, flags, start);
+  ALLOW_SIGNALS;
   return rc;
 }

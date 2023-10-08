@@ -36,7 +36,7 @@ static const char *DescribeCancelType(char buf[12], int err, int *t) {
 }
 
 /**
- * Sets cancellation strategy.
+ * Sets cancelation strategy.
  *
  * @param type may be one of:
  *     - `PTHREAD_CANCEL_DEFERRED` (default)

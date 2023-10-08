@@ -24,10 +24,12 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 /**
  * Blocks until SIG ∉ MASK is delivered to thread.
@@ -38,47 +40,29 @@
  * @param ignore is a bitset of signals to block temporarily, which if
  *     NULL is equivalent to passing an empty signal set
  * @return -1 w/ EINTR (or possibly EFAULT)
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @norestart
  */
 int sigsuspend(const sigset_t *ignore) {
   int rc;
-  const sigset_t *arg;
-  sigset_t save, mask = {0};
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
   } else if (IsXnu() || IsOpenbsd()) {
-    // openbsd and xnu only support 32 signals
-    // they use a register calling convention for sigsuspend
-    if (ignore) {
-      arg = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
-    } else {
-      arg = 0;
-    }
-    rc = sys_sigsuspend(arg, 8);
-  } else if (IsLinux() || IsFreebsd() || IsNetbsd() || IsWindows()) {
-    if (ignore) {
-      arg = ignore;
-    } else {
-      arg = &mask;
-    }
-    if (!IsWindows()) {
-      rc = sys_sigsuspend(arg, 8);
-    } else {
-      __sig_mask(SIG_SETMASK, arg, &save);
-      while (!(rc = _check_interrupts(0))) {
-        if ((rc = __pause_thread(__SIG_SIG_INTERVAL_MS))) break;
-      }
-      __sig_mask(SIG_SETMASK, &save, 0);
-    }
+    // openbsd and xnu use a 32 signal register convention
+    rc = sys_sigsuspend(ignore ? (void *)(intptr_t)(uint32_t)*ignore : 0, 8);
   } else {
-    rc = enosys();
+    sigset_t waitmask = ignore ? *ignore : 0;
+    if (IsWindows() || IsMetal()) {
+      while (!(rc = _park_norestart(-1u, waitmask))) donothing;
+    } else {
+      rc = sys_sigsuspend((uint64_t[2]){waitmask}, 8);
+    }
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("sigsuspend(%s) → %d% m", DescribeSigset(0, ignore), rc);
   return rc;
 }

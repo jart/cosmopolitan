@@ -17,8 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/intrin/popcnt.h"
-#include "libc/macros.internal.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/limits.h"
 
 /**
@@ -28,22 +29,7 @@
  * @asyncsignalsafe
  */
 int sigcountset(const sigset_t *set) {
-  int x, y;
-  switch (_NSIG) {
-    case 32:
-      x = (uint32_t)set->__bits[0];
-      y = 0;
-      break;
-    case 64:
-      x = set->__bits[0];
-      y = 0;
-      break;
-    case 128:
-      x = set->__bits[0];
-      y = set->__bits[1];
-      break;
-    default:
-      notpossible;
-  }
-  return popcnt(x) + popcnt(y);
+  uint64_t x = *set;
+  if (IsOpenbsd() || IsXnu()) x &= 0xffffffff;
+  return popcnt(x);
 }

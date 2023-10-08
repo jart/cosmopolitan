@@ -23,6 +23,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
@@ -42,7 +43,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/xorshift.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/auxv.h"
@@ -181,18 +181,18 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
     if (IsXnu() || IsOpenbsd()) {
       rc = GetRandomBsd(p, n, GetRandomEntropy);
     } else {
-      BEGIN_CANCELLATION_POINT;
+      BEGIN_CANCELATION_POINT;
       rc = sys_getrandom(p, n, f);
-      END_CANCELLATION_POINT;
+      END_CANCELATION_POINT;
     }
   } else if (IsFreebsd() || IsNetbsd()) {
     rc = GetRandomBsd(p, n, GetRandomArnd);
   } else if (IsMetal()) {
     rc = GetRandomMetal(p, n, f);
   } else {
-    BEGIN_CANCELLATION_POINT;
+    BEGIN_CANCELATION_POINT;
     rc = GetDevUrandom(p, n);
-    END_CANCELLATION_POINT;
+    END_CANCELATION_POINT;
   }
   return rc;
 }
@@ -222,7 +222,7 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
  * On BSD OSes, this entire process is uninterruptible so be careful
  * when using large sizes if interruptibility is needed.
  *
- * Unlike getentropy() this function is a cancellation point. But it
+ * Unlike getentropy() this function is a cancelation point. But it
  * shouldn't be a problem, unless you're using masked mode, in which
  * case extra care must be taken to consider the result.
  *
@@ -243,7 +243,7 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EFAULT if the `n` bytes at `p` aren't valid memory
  * @raise EINTR if we needed to block and a signal was delivered instead
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable
  * @vforksafe
@@ -264,13 +264,13 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
 __attribute__((__constructor__)) static textstartup void getrandom_init(void) {
   int e, rc;
   if (IsWindows() || IsMetal()) return;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   e = errno;
   if (!(rc = sys_getrandom(0, 0, 0))) {
     have_getrandom = true;
   } else {
     errno = e;
   }
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   STRACE("sys_getrandom(0,0,0) → %d% m", rc);
 }

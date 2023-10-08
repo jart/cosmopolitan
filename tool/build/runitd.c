@@ -232,7 +232,7 @@ void GetOpts(int argc, char *argv[]) {
       case 't':
         break;
       case 'p':
-        g_servaddr.sin_port = htons(parseport(optarg));
+        g_servaddr.sin_port = htons(atoi(optarg));
         break;
       case 'l':
         inet_pton(AF_INET, optarg, &g_servaddr.sin_addr);
@@ -792,9 +792,9 @@ void Daemonize(void) {
 }
 
 int main(int argc, char *argv[]) {
-#ifndef NDEBUG
+  /* #ifndef NDEBUG */
   ShowCrashReports();
-#endif
+  /* #endif */
   GetOpts(argc, argv);
   g_psk = GetRunitPsk();
   signal(SIGPIPE, SIG_IGN);

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
@@ -28,7 +27,6 @@ typedef long long xmm_a __attribute__((__vector_size__(16), __aligned__(16)));
 
 static void bzero128(char *p, size_t n) {
   xmm_t v = {0};
-  if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {
     *(xmm_t *)(p + n - 16) = v;
     *(xmm_t *)p = v;
@@ -46,7 +44,6 @@ static void bzero128(char *p, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
 _Microarchitecture("avx") static void bzero_avx(char *p, size_t n) {
   xmm_t v = {0};
-  if (IsAsan()) __asan_verify(p, n);
   if (n <= 32) {
     *(xmm_t *)(p + n - 16) = v;
     *(xmm_t *)p = v;

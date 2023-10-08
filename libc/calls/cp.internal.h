@@ -3,19 +3,19 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int begin_cancellation_point(void);
-void end_cancellation_point(int);
+int begin_cancelation_point(void);
+void end_cancelation_point(int);
 
 #ifndef MODE_DBG
-#define BEGIN_CANCELLATION_POINT (void)0
-#define END_CANCELLATION_POINT   (void)0
+#define BEGIN_CANCELATION_POINT (void)0
+#define END_CANCELATION_POINT   (void)0
 #else
-#define BEGIN_CANCELLATION_POINT \
+#define BEGIN_CANCELATION_POINT \
   do {                           \
     int _Cp;                     \
-  _Cp = begin_cancellation_point()
-#define END_CANCELLATION_POINT \
-  end_cancellation_point(_Cp); \
+  _Cp = begin_cancelation_point()
+#define END_CANCELATION_POINT \
+  end_cancelation_point(_Cp); \
   }                            \
   while (0)
 #endif

@@ -36,7 +36,7 @@ static errno_t sys_clock_nanosleep(int clock, int flags,
                                    const struct timespec *req,
                                    struct timespec *rem) {
   int e, rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   e = errno;
   if (IsLinux() || IsFreebsd() || IsNetbsd()) {
     rc = __sys_clock_nanosleep(clock, flags, req, rem);
@@ -53,7 +53,7 @@ static errno_t sys_clock_nanosleep(int clock, int flags,
     rc = errno;
     errno = e;
   }
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
 #if 0
   STRACE("sys_clock_nanosleep(%s, %s, %s, [%s]) → %d% m",
          DescribeClockName(clock), DescribeSleepFlags(flags),
@@ -197,7 +197,7 @@ static bool ShouldUseSpinNanosleep(int clock, int flags,
  * @raise EINVAL if `flags` has an unrecognized value
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
  * @raise ENOSYS on bare metal
- * @cancellationpoint
+ * @cancelationpoint
  * @returnserrno
  * @norestart
  */

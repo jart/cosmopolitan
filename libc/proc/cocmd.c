@@ -590,13 +590,17 @@ static int Shift(int i) {
   return 0;
 }
 
-static int Fake(int main(int, char **)) {
+static int Fake(int main(int, char **), bool wantexec) {
   int pid;
+  if (wantexec) {
+    goto RunProgram;
+  }
   if ((pid = fork()) == -1) {
     perror("fork");
     return 127;
   }
   if (!pid) {
+  RunProgram:
     // TODO(jart): Maybe nuke stdio too?
     if (_weaken(optind)) {
       *_weaken(optind) = 1;
@@ -660,7 +664,7 @@ static wontreturn void Exec(void) {
   }
 }
 
-static int TryBuiltin(void) {
+static int TryBuiltin(bool wantexec) {
   if (!n) return exitstatus;
   if (!strcmp(args[0], "exit")) Exit();
   if (!strcmp(args[0], "exec")) Exec();
@@ -686,16 +690,24 @@ static int TryBuiltin(void) {
   if (!strcmp(args[0], "mktemp")) return Mktemp();
   if (!strcmp(args[0], "usleep")) return Usleep();
   if (!strcmp(args[0], "toupper")) return Toupper();
-  if (_weaken(_tr) && !strcmp(args[0], "tr")) return Fake(_weaken(_tr));
-  if (_weaken(_sed) && !strcmp(args[0], "sed")) return Fake(_weaken(_sed));
-  if (_weaken(_awk) && !strcmp(args[0], "awk")) return Fake(_weaken(_awk));
-  if (_weaken(_curl) && !strcmp(args[0], "curl")) return Fake(_weaken(_curl));
+  if (_weaken(_tr) && !strcmp(args[0], "tr")) {
+    return Fake(_weaken(_tr), wantexec);
+  }
+  if (_weaken(_sed) && !strcmp(args[0], "sed")) {
+    return Fake(_weaken(_sed), wantexec);
+  }
+  if (_weaken(_awk) && !strcmp(args[0], "awk")) {
+    return Fake(_weaken(_awk), wantexec);
+  }
+  if (_weaken(_curl) && !strcmp(args[0], "curl")) {
+    return Fake(_weaken(_curl), wantexec);
+  }
   return -1;
 }
 
 static int ShellExec(void) {
   int rc;
-  if ((rc = TryBuiltin()) == -1) {
+  if ((rc = TryBuiltin(true)) == -1) {
     rc = SystemExec();
   }
   return (n = 0), rc;
@@ -718,14 +730,15 @@ static void Pipe(void) {
     if (pfds[1] != 1) unassert(!close(pfds[1]));
     _Exit(ShellExec());
   }
-  unassert(!dup2(pfds[0], 0));
-  if (pfds[1]) unassert(!close(pfds[1]));
+  unassert(dup2(pfds[0], 0) == 0);
+  if (pfds[0] != 0) unassert(!close(pfds[0]));
+  if (pfds[1] != 0) unassert(!close(pfds[1]));
   n = 0;
 }
 
 static int ShellSpawn(void) {
   int rc, pid;
-  if ((rc = TryBuiltin()) == -1) {
+  if ((rc = TryBuiltin(false)) == -1) {
     switch ((pid = fork())) {
       case 0:
         _Exit(SystemExec());

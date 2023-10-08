@@ -42,7 +42,7 @@
  * @raise EAGAIN if deadline expired
  * @raise ENOSYS on Windows, XNU, OpenBSD, Metal
  * @raise EFAULT if invalid memory was supplied
- * @cancellationpoint
+ * @cancelationpoint
  */
 int sigtimedwait(const sigset_t *set, siginfo_t *info,
                  const struct timespec *timeout) {
@@ -50,7 +50,7 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
   char strsig[21];
   struct timespec ts;
   union siginfo_meta si = {0};
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   (void)strsig;
 
   if (IsAsan() && (!__asan_is_valid(set, sizeof(*set)) ||
@@ -73,7 +73,7 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
     rc = enosys();
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("sigtimedwait(%s, [%s], %s) → %s% m", DescribeSigset(0, set),
          DescribeSiginfo(rc, info), DescribeTimespec(0, timeout),
          strsignal_r(rc, strsig));

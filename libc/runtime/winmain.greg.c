@@ -74,12 +74,6 @@ void __stack_call(int, char **, char **, long (*)[2],
                   void (*)(int, char **, char **, long (*)[2]),
                   intptr_t) wontreturn;
 
-static const signed char kNtStdio[3] = {
-    (signed char)kNtStdInputHandle,
-    (signed char)kNtStdOutputHandle,
-    (signed char)kNtStdErrorHandle,
-};
-
 __funline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
@@ -139,7 +133,8 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
       intptr_t h = __imp_GetStdHandle(kNtStdio[i]);
       if (__imp_GetConsoleMode(h, &m)) {
         if (!i) {
-          m |= kNtEnableMouseInput | kNtEnableWindowInput;
+          m |= kNtEnableMouseInput | kNtEnableWindowInput |
+               kNtEnableProcessedInput;
         } else {
           m |= kNtEnableVirtualTerminalProcessing;
         }
@@ -155,7 +150,6 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
   }
 
   // allocate memory for stack and argument block
-  _Static_assert(sizeof(struct WinArgs) % FRAMESIZE == 0, "");
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
   uintptr_t stackaddr = GetStaticStackAddr(0);

@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/createfile.h"
@@ -31,14 +33,19 @@ textwindows int sys_statfs_nt(const char *path, struct statfs *sf) {
   int64_t h;
   char16_t path16[PATH_MAX];
   if (__mkntpath(path, path16) == -1) return -1;
+  BLOCK_SIGNALS;
   h = __fix_enotdir(
       CreateFile(path16, kNtFileGenericRead,
                  kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
                  kNtOpenExisting,
                  kNtFileAttributeNormal | kNtFileFlagBackupSemantics, 0),
       path16);
-  if (h == -1) return -1;
-  rc = sys_fstatfs_nt(h, sf);
-  CloseHandle(h);
+  if (h != -1) {
+    rc = sys_fstatfs_nt(h, sf);
+    CloseHandle(h);
+  } else {
+    rc = -1;
+  }
+  ALLOW_SIGNALS;
   return rc;
 }

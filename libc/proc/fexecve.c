@@ -18,11 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
-#include "libc/proc/execve.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -35,6 +34,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
+#include "libc/proc/execve.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
@@ -201,14 +201,14 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       }
       if (!__isfdkind(fd, kFdZip)) {
         bool memfdReq;
-        BEGIN_CANCELLATION_POINT;
+        BEGIN_CANCELATION_POINT;
         BLOCK_SIGNALS;
         strace_enabled(-1);
         memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) &&
                    IsAPEFd(fd);
         strace_enabled(+1);
         ALLOW_SIGNALS;
-        END_CANCELLATION_POINT;
+        END_CANCELATION_POINT;
         if (rc == -1) {
           break;
         } else if (!memfdReq) {
@@ -221,13 +221,13 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       }
       int newfd;
       char *path = alloca(PATH_MAX);
-      BEGIN_CANCELLATION_POINT;
+      BEGIN_CANCELATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
       newfd = fd_to_mem_fd(fd, path);
       strace_enabled(+1);
       ALLOW_SIGNALS;
-      END_CANCELLATION_POINT;
+      END_CANCELATION_POINT;
       if (newfd == -1) {
         break;
       }
@@ -242,13 +242,13 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       if (!savedErr) {
         savedErr = errno;
       }
-      BEGIN_CANCELLATION_POINT;
+      BEGIN_CANCELATION_POINT;
       BLOCK_SIGNALS;
       strace_enabled(-1);
       close(newfd);
       strace_enabled(+1);
       ALLOW_SIGNALS;
-      END_CANCELLATION_POINT;
+      END_CANCELATION_POINT;
     } while (0);
     if (savedErr) {
       errno = savedErr;

@@ -16,6 +16,7 @@ COSMOPOLITAN_C_START_
 extern int __pid;
 extern char __runlevel;
 extern int ftrace_stackdigs;
+extern const signed char kNtStdio[3];
 extern const char v_ntsubsystem[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_end[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_start[] __attribute__((__weak__));

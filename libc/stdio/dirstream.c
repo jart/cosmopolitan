@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -183,6 +184,7 @@ static textwindows uint8_t GetNtDirentType(struct NtWin32FindData *w) {
 }
 
 static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
+TryAgain:
   if (dir->isdone) {
     return NULL;
   }
@@ -191,6 +193,7 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
   uint64_t ino = 0;
   char16_t jp[PATH_MAX];
   size_t i = dir->name16len - 1;  // foo\* -> foo\ (strip star)
+  bool pretend_this_file_doesnt_exist = false;
   memcpy(jp, dir->name16, i * sizeof(char16_t));
   char16_t *p = dir->windata.cFileName;
   if (p[0] == u'.' && p[1] == u'\0') {
@@ -213,7 +216,7 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
       if (i + 1 < ARRAYLEN(jp)) {
         jp[i++] = *p++;
       } else {
-        // ignore errors and set inode to zero
+        pretend_this_file_doesnt_exist = true;
         goto GiveUpOnGettingInode;
       }
     }
@@ -236,6 +239,7 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
     // ignore errors and set inode to zero
     STRACE("failed to get inode of path join(%#hs, %#hs) -> %#hs %m",
            dir->name16, dir->windata.cFileName, jp);
+    pretend_this_file_doesnt_exist = true;
   }
 
 GiveUpOnGettingInode:
@@ -247,6 +251,7 @@ GiveUpOnGettingInode:
                 dir->windata.cFileName);
   dir->ent.d_type = GetNtDirentType(&dir->windata);
   dir->isdone = !FindNextFile(dir->hand, &dir->windata);
+  if (pretend_this_file_doesnt_exist) goto TryAgain;
   return &dir->ent;
 }
 
@@ -351,7 +356,7 @@ DIR *fdopendir(int fd) {
  * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if we needed to block and a signal was delivered instead
- * @cancellationpoint
+ * @cancelationpoint
  * @see glob()
  */
 DIR *opendir(const char *name) {

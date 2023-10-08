@@ -49,25 +49,13 @@ static const char *DescribeFlush(char buf[12], int action) {
 }
 
 static dontinline textwindows int sys_tcflush_nt(int fd, int queue) {
-  if (!__isfdopen(fd)) {
-    return ebadf();
-  }
-  int64_t hConin;
-  if (__isfdkind(fd, kFdConsole)) {
-    hConin = g_fds.p[fd].handle;
-  } else if (fd == 0 || fd == 1 || fd == 2) {
-    hConin = g_fds.p[(fd = 0)].handle;
-  } else {
-    return enotty();
-  }
-  uint32_t inmode;
-  if (!GetConsoleMode(hConin, &inmode)) {
-    return enotty();
+  if (!sys_isatty(fd)) {
+    return -1;  // ebadf, enotty
   }
   if (queue == TCOFLUSH) {
     return 0;  // windows console output is never buffered
   }
-  return FlushConsoleInputBytes(hConin);
+  return FlushConsoleInputBytes();
 }
 
 /**

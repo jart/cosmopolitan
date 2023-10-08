@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
@@ -31,6 +33,7 @@
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
 const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
+  int olderr;
   bool gotsome;
   const char *s;
   int sig, o = 0;
@@ -43,13 +46,14 @@ const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
     ksnprintf(buf, N, "%p", ss);
     return buf;
   }
+  olderr = errno;
 
   if (sigcountset(ss) > 16) {
     append("~");
     sigemptyset(&sigset);
     for (sig = 1; sig <= _NSIG; ++sig) {
       if (!sigismember(ss, sig)) {
-        sigset.__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
+        sigaddset(&sigset, sig);
       }
     }
   } else {
@@ -74,5 +78,6 @@ const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
   }
   append("}");
 
+  errno = olderr;
   return buf;
 }

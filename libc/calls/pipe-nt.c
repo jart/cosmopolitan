@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/handlock.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -30,7 +31,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
+static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
   uint32_t mode;
   int64_t hin, hout;
   int reader, writer;
@@ -53,11 +54,11 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   }
   __fds_unlock();
   hin = CreateNamedPipe(pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
-                        mode, 1, PIPE_BUF, PIPE_BUF, 0, 0);
+                        mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
   __fds_lock();
   if (hin != -1) {
-    if ((hout = CreateFile(pipename, kNtGenericWrite, 0, 0, kNtOpenExisting,
-                           kNtFileFlagOverlapped, 0)) != -1) {
+    if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
+                           kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
       g_fds.p[reader].kind = kFdFile;
       g_fds.p[reader].flags = O_RDONLY | flags;
       g_fds.p[reader].mode = 0010444;
@@ -78,4 +79,12 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   __releasefd(reader);
   __fds_unlock();
   return -1;
+}
+
+textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
+  int rc;
+  BLOCK_SIGNALS;
+  rc = sys_pipe_nt_impl(pipefd, flags);
+  ALLOW_SIGNALS;
+  return rc;
 }

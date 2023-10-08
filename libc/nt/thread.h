@@ -66,6 +66,11 @@ uint32_t ResumeThread(int64_t hThread);
 bool32 GetThreadContext(int64_t hThread, struct NtContext *in_out_lpContext);
 bool32 SetThreadContext(int64_t hThread, const struct NtContext *lpContext);
 
+void *SetThreadDescription(int64_t hThread,
+                           const char16_t *lpThreadDescription);
+void *GetThreadDescription(int64_t hThread,
+                           char16_t *out_ppszThreadDescription);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/thread.inc"
 #endif /* ShouldUseMsabiAttribute() */

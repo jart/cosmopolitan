@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STATE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STATE_INTERNAL_H_
+#include "libc/calls/calls.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -9,6 +10,7 @@ extern int __vforked;
 extern pthread_mutex_t __fds_lock_obj;
 extern unsigned __sighandrvas[NSIG + 1];
 extern unsigned __sighandflags[NSIG + 1];
+extern uint64_t __sighandmask[NSIG + 1];
 extern const struct NtSecurityAttributes kNtIsInheritable;
 
 void __fds_wipe(void);

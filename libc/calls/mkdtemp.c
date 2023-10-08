@@ -35,7 +35,7 @@
  *     with random text on success (and not modified on error)
  * @return pointer to template on success, or NULL w/ errno
  * @raise EINVAL if template didn't end with XXXXXX
- * @cancellationpoint
+ * @cancelationpoint
  */
 char *mkdtemp(char *template) {
   int n;

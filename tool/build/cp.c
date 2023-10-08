@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/copyfile.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -109,12 +108,14 @@ void GetOpts(int argc, char *argv[]) {
         recursive = true;
         break;
       case 'n':
-        flags |= COPYFILE_NOCLOBBER;
+        // TODO(jart): restore functionality
+        // flags |= COPYFILE_NOCLOBBER;
         break;
       case 'a':
       case 'p':
-        flags |= COPYFILE_PRESERVE_OWNER;
-        flags |= COPYFILE_PRESERVE_TIMESTAMPS;
+        // TODO(jart): restore functionality
+        // flags |= COPYFILE_PRESERVE_OWNER;
+        // flags |= COPYFILE_PRESERVE_TIMESTAMPS;
         break;
       case 'h':
         PrintUsage(0, 1);

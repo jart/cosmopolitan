@@ -38,11 +38,11 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/handlock.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
@@ -50,6 +50,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/startupinfo.h"
+#include "libc/proc/describefds.internal.h"
 #include "libc/proc/ntspawn.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
@@ -57,6 +58,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
@@ -65,6 +67,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
@@ -86,156 +89,222 @@
 #define sigprocmask sys_sigprocmask
 #endif
 
+#define CLOSER_CONTAINER(e) DLL_CONTAINER(struct Closer, elem, e)
+
+struct Closer {
+  int64_t handle;
+  struct Dll elem;
+};
+
+struct SpawnFds {
+  int n;
+  struct Fd *p;
+  struct Dll *closers;
+};
+
 static atomic_bool has_vfork;  // i.e. not qemu/wsl/xnu/openbsd
 
-static void posix_spawn_unhand(int64_t hands[3]) {
-  for (int i = 0; i < 3; ++i) {
-    if (hands[i] != -1) {
-      CloseHandle(hands[i]);
-    }
+static textwindows int64_t spawnfds_handle(struct SpawnFds *fds, int fd) {
+  if (__is_cloexec(fds->p + fd)) return -1;
+  return fds->p[fd].handle;
+}
+
+static textwindows errno_t spawnfds_ensure(struct SpawnFds *fds, int fd) {
+  int n2;
+  struct Fd *p2;
+  if (fd < 0) return EBADF;
+  if (fd < fds->n) return 0;
+  n2 = fd + 1;
+  if (!(p2 = realloc(fds->p, n2 * sizeof(*fds->p)))) return ENOMEM;
+  bzero(p2 + fds->n, (n2 - fds->n) * sizeof(*fds->p));
+  fds->p = p2;
+  fds->n = n2;
+  return 0;
+}
+
+static textwindows void spawnfds_destroy(struct SpawnFds *fds) {
+  struct Dll *e;
+  while ((e = dll_first(fds->closers))) {
+    struct Closer *closer = CLOSER_CONTAINER(e);
+    dll_remove(&fds->closers, e);
+    CloseHandle(closer->handle);
+    free(closer);
+  }
+  free(fds->p);
+}
+
+static textwindows int spawnfds_closelater(struct SpawnFds *fds,
+                                           int64_t handle) {
+  struct Closer *closer;
+  if (!(closer = malloc(sizeof(struct Closer)))) return ENOMEM;
+  closer->handle = handle;
+  dll_init(&closer->elem);
+  dll_make_last(&fds->closers, &closer->elem);
+  return 0;
+}
+
+static textwindows bool spawnfds_exists(struct SpawnFds *fds, int fildes) {
+  return fildes + 0u < fds->n && fds->p[fildes].kind;
+}
+
+static textwindows void spawnfds_close(struct SpawnFds *fds, int fildes) {
+  if (spawnfds_exists(fds, fildes)) {
+    fds->p[fildes] = (struct Fd){0};
   }
 }
 
-static void posix_spawn_inherit(int64_t hands[3], bool32 bInherit) {
-  for (int i = 0; i < 3; ++i) {
-    if (hands[i] != -1) {
-      SetHandleInformation(hands[i], kNtHandleFlagInherit, bInherit);
-    }
+static textwindows errno_t spawnfds_dup2(struct SpawnFds *fds, int fildes,
+                                         int newfildes) {
+  errno_t err;
+  struct Fd *old;
+  if (spawnfds_exists(fds, fildes)) {
+    old = fds->p + fildes;
+  } else if (__isfdopen(fildes)) {
+    old = g_fds.p + fildes;
+  } else {
+    return EBADF;
+  }
+  if ((err = spawnfds_ensure(fds, newfildes))) return err;
+  struct Fd *neu = fds->p + newfildes;
+  memcpy(neu, old, sizeof(struct Fd));
+  neu->flags &= ~O_CLOEXEC;
+  if (!DuplicateHandle(GetCurrentProcess(), neu->handle, GetCurrentProcess(),
+                       &neu->handle, 0, true, kNtDuplicateSameAccess)) {
+    return EMFILE;
+  }
+  spawnfds_closelater(fds, neu->handle);
+  return 0;
+}
+
+static textwindows errno_t spawnfds_open(struct SpawnFds *fds, int fildes,
+                                         const char *path, int oflag,
+                                         int mode) {
+  int64_t h;
+  errno_t err;
+  char16_t path16[PATH_MAX];
+  uint32_t perm, share, disp, attr;
+  if ((err = spawnfds_ensure(fds, fildes))) return err;
+  if (__mkntpathat(AT_FDCWD, path, 0, path16) != -1 &&
+      GetNtOpenFlags(oflag, mode, &perm, &share, &disp, &attr) != -1 &&
+      (h = CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0))) {
+    spawnfds_closelater(fds, h);
+    fds->p[fildes].kind = kFdFile;
+    fds->p[fildes].flags = oflag;
+    fds->p[fildes].mode = mode;
+    fds->p[fildes].handle = h;
+    return 0;
+  } else {
+    return errno;
   }
 }
 
-static textwindows errno_t posix_spawn_windows_impl(
+static textwindows errno_t posix_spawn_nt_impl(
     int *pid, const char *path, const posix_spawn_file_actions_t *file_actions,
     const posix_spawnattr_t *attrp, char *const argv[], char *const envp[]) {
-  int i;
 
-  // create file descriptor work area
-  char stdio_kind[3] = {kFdEmpty, kFdEmpty, kFdEmpty};
-  intptr_t stdio_handle[3] = {-1, -1, -1};
-  for (i = 0; i < 3; ++i) {
-    if (g_fds.p[i].kind != kFdEmpty && !(g_fds.p[i].flags & O_CLOEXEC)) {
-      stdio_kind[i] = g_fds.p[i].kind;
-      stdio_handle[i] = g_fds.p[i].handle;
-    }
-  }
+  // signals, locks, and resources
+  char *fdspec = 0;
+  errno_t e = errno;
+  struct Proc *proc = 0;
+  struct SpawnFds fds = {0};
+  int64_t *lpExplicitHandles = 0;
+  uint32_t dwExplicitHandleCount = 0;
+  int64_t hCreatorProcess = GetCurrentProcess();
+  sigset_t m = __sig_block();
 
-  // reserve object for tracking proces
-  struct Proc *proc;
+  // reserve process tracking object
   __proc_lock();
   proc = __proc_new();
   __proc_unlock();
-  if (!proc) return -1;
 
-  // apply user file actions
-  intptr_t close_handle[3] = {-1, -1, -1};
-  if (file_actions) {
-    int err = 0;
-    for (struct _posix_faction *a = *file_actions; a && !err; a = a->next) {
-      switch (a->action) {
-        case _POSIX_SPAWN_CLOSE:
-          unassert(a->fildes < 3u);
-          stdio_kind[a->fildes] = kFdEmpty;
-          stdio_handle[a->fildes] = -1;
-          break;
-        case _POSIX_SPAWN_DUP2:
-          unassert(a->newfildes < 3u);
-          if (__isfdopen(a->fildes)) {
-            stdio_kind[a->newfildes] = g_fds.p[a->fildes].kind;
-            stdio_handle[a->newfildes] = g_fds.p[a->fildes].handle;
-          } else {
-            err = EBADF;
-          }
-          break;
-        case _POSIX_SPAWN_OPEN: {
-          int64_t hand;
-          int e = errno;
-          char16_t path16[PATH_MAX];
-          uint32_t perm, share, disp, attr;
-          unassert(a->fildes < 3u);
-          if (__mkntpathat(AT_FDCWD, a->path, 0, path16) != -1 &&
-              GetNtOpenFlags(a->oflag, a->mode,  //
-                             &perm, &share, &disp, &attr) != -1 &&
-              (hand = CreateFile(path16, perm, share, 0, disp, attr, 0))) {
-            stdio_kind[a->fildes] = kFdFile;
-            close_handle[a->fildes] = hand;
-            stdio_handle[a->fildes] = hand;
-          } else {
-            err = errno;
-            errno = e;
-          }
-          break;
-        }
-        default:
-          __builtin_unreachable();
-      }
-    }
-    if (err) {
-      posix_spawn_unhand(close_handle);
+  // setup return path
+  errno_t err;
+  if (!proc) {
+    err = ENOMEM;
+  ReturnErr:
+    __undescribe_fds(hCreatorProcess, lpExplicitHandles, dwExplicitHandleCount);
+    free(fdspec);
+    if (proc) {
       __proc_lock();
       __proc_free(proc);
       __proc_unlock();
-      return err;
     }
-  }
-
-  // create the windows process start info
-  int bits;
-  char buf[32], *v = 0;
-  if (_weaken(socket)) {
-    for (bits = i = 0; i < 3; ++i) {
-      if (stdio_kind[i] == kFdSocket) {
-        bits |= 1 << i;
-      }
-    }
-    FormatInt32(stpcpy(buf, "__STDIO_SOCKETS="), bits);
-    v = buf;
-  }
-  struct NtStartupInfo startinfo = {
-      .cb = sizeof(struct NtStartupInfo),
-      .dwFlags = kNtStartfUsestdhandles,
-      .hStdInput = stdio_handle[0],
-      .hStdOutput = stdio_handle[1],
-      .hStdError = stdio_handle[2],
-  };
-
-  // figure out the flags
-  short flags = 0;
-  bool bInheritHandles = false;
-  uint32_t dwCreationFlags = 0;
-  for (i = 0; i < 3; ++i) {
-    bInheritHandles |= stdio_handle[i] != -1;
-  }
-  if (attrp && *attrp) {
-    flags = (*attrp)->flags;
-    if (flags & POSIX_SPAWN_SETSID) {
-      dwCreationFlags |= kNtDetachedProcess;
-    }
-    if (flags & POSIX_SPAWN_SETPGROUP) {
-      dwCreationFlags |= kNtCreateNewProcessGroup;
-    }
-  }
-
-  // launch the process
-  int rc, e = errno;
-  struct NtProcessInformation procinfo;
-  if (!envp) envp = environ;
-  __hand_rlock();
-  posix_spawn_inherit(stdio_handle, true);
-  rc = ntspawn(path, argv, envp, v, 0, 0, bInheritHandles, dwCreationFlags, 0,
-               &startinfo, &procinfo);
-  posix_spawn_inherit(stdio_handle, false);
-  posix_spawn_unhand(close_handle);
-  __hand_runlock();
-  if (rc == -1) {
-    int err = errno;
-    __proc_lock();
-    __proc_free(proc);
-    __proc_unlock();
+    spawnfds_destroy(&fds);
+    __sig_unblock(m);
     errno = e;
     return err;
   }
 
-  // return the result
+  // fork file descriptor table
+  for (int fd = g_fds.n; fd--;) {
+    if (__is_cloexec(g_fds.p + fd)) continue;
+    if ((err = spawnfds_ensure(&fds, fd))) goto ReturnErr;
+    fds.p[fd] = g_fds.p[fd];
+  }
+
+  // apply user file actions
+  if (file_actions) {
+    for (struct _posix_faction *a = *file_actions; a && !err; a = a->next) {
+      switch (a->action) {
+        case _POSIX_SPAWN_CLOSE:
+          spawnfds_close(&fds, a->fildes);
+          break;
+        case _POSIX_SPAWN_DUP2:
+          err = spawnfds_dup2(&fds, a->fildes, a->newfildes);
+          if (err) {
+            STRACE("spawnfds_dup2(%d, %d) failed", a->fildes, a->newfildes);
+            goto ReturnErr;
+          }
+          break;
+        case _POSIX_SPAWN_OPEN:
+          err = spawnfds_open(&fds, a->fildes, a->path, a->oflag, a->mode);
+          if (err) {
+            STRACE("spawnfds_open(%d, %#s) failed", a->fildes, a->path);
+            goto ReturnErr;
+          }
+          break;
+        default:
+          __builtin_unreachable();
+      }
+    }
+  }
+
+  // figure out flags
+  uint32_t dwCreationFlags = 0;
+  if (attrp && *attrp) {
+    if ((*attrp)->flags & POSIX_SPAWN_SETSID) {
+      dwCreationFlags |= kNtDetachedProcess;
+    }
+    if ((*attrp)->flags & POSIX_SPAWN_SETPGROUP) {
+      dwCreationFlags |= kNtCreateNewProcessGroup;
+    }
+  }
+
+  // create process startinfo
+  struct NtStartupInfo startinfo = {
+      .cb = sizeof(struct NtStartupInfo),
+      .dwFlags = kNtStartfUsestdhandles,
+      .hStdInput = spawnfds_handle(&fds, 0),
+      .hStdOutput = spawnfds_handle(&fds, 1),
+      .hStdError = spawnfds_handle(&fds, 2),
+  };
+
+  // launch process
+  int rc = -1;
+  struct NtProcessInformation procinfo;
+  if (!envp) envp = environ;
+  if ((fdspec = __describe_fds(fds.p, fds.n, &startinfo, hCreatorProcess,
+                               &lpExplicitHandles, &dwExplicitHandleCount))) {
+    rc = ntspawn(path, argv, envp, (char *[]){fdspec, 0}, dwCreationFlags, 0, 0,
+                 lpExplicitHandles, dwExplicitHandleCount, &startinfo,
+                 &procinfo);
+  }
+  if (rc == -1) {
+    err = errno;
+    goto ReturnErr;
+  }
+
+  // return result
   CloseHandle(procinfo.hThread);
   proc->pid = procinfo.dwProcessId;
   proc->handle = procinfo.hProcess;
@@ -243,7 +312,9 @@ static textwindows errno_t posix_spawn_windows_impl(
   __proc_lock();
   __proc_add(proc);
   __proc_unlock();
-  return 0;
+  proc = 0;
+  err = 0;
+  goto ReturnErr;
 }
 
 static const char *DescribePid(char buf[12], int err, int *pid) {
@@ -253,7 +324,7 @@ static const char *DescribePid(char buf[12], int err, int *pid) {
   return buf;
 }
 
-static textwindows dontinline errno_t posix_spawn_windows(
+static textwindows dontinline errno_t posix_spawn_nt(
     int *pid, const char *path, const posix_spawn_file_actions_t *file_actions,
     const posix_spawnattr_t *attrp, char *const argv[], char *const envp[]) {
   int err;
@@ -263,7 +334,7 @@ static textwindows dontinline errno_t posix_spawn_windows(
                     (envp && !__asan_is_valid_strlist(envp))))) {
     err = EFAULT;
   } else {
-    err = posix_spawn_windows_impl(pid, path, file_actions, attrp, argv, envp);
+    err = posix_spawn_nt_impl(pid, path, file_actions, attrp, argv, envp);
   }
   STRACE("posix_spawn([%s], %#s, %s, %s) → %s",
          DescribePid(alloca(12), err, pid), path, DescribeStringList(argv),
@@ -272,7 +343,21 @@ static textwindows dontinline errno_t posix_spawn_windows(
 }
 
 /**
- * Spawns process, the POSIX way.
+ * Spawns process, the POSIX way, e.g.
+ *
+ *     int pid, status;
+ *     posix_spawnattr_t sa;
+ *     posix_spawnattr_init(&sa);
+ *     posix_spawnattr_setflags(&sa, POSIX_SPAWN_SETPGROUP);
+ *     posix_spawn_file_actions_t fa;
+ *     posix_spawn_file_actions_init(&fa);
+ *     posix_spawn_file_actions_addopen(&fa, 0, "/dev/null", O_RDWR, 0644);
+ *     posix_spawn_file_actions_adddup2(&fa, 0, 1);
+ *     posix_spawnp(&pid, "lol", &fa, &sa, (char *[]){"lol", 0}, 0);
+ *     posix_spawnp(&pid, "cat", &fa, &sa, (char *[]){"cat", 0}, 0);
+ *     posix_spawn_file_actions_destroy(&fa);
+ *     posix_spawnattr_destroy(&sa);
+ *     while (wait(&status) != -1);
  *
  * This provides superior process creation performance across systems
  *
@@ -311,7 +396,7 @@ errno_t posix_spawn(int *pid, const char *path,
                     const posix_spawnattr_t *attrp, char *const argv[],
                     char *const envp[]) {
   if (IsWindows()) {
-    return posix_spawn_windows(pid, path, file_actions, attrp, argv, envp);
+    return posix_spawn_nt(pid, path, file_actions, attrp, argv, envp);
   }
   int pfds[2];
   bool use_pipe;

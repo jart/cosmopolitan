@@ -79,8 +79,6 @@
 #define _PAGESIZE 4096
 #endif
 
-#define NSIG 128 /* b/c freebsd */
-
 #if defined(__LP64__) && !defined(__INT64_TYPE__)
 #include "libc/integral/lp64.inc"
 #elif defined(_MSC_VER) && !defined(__INT64_TYPE__)

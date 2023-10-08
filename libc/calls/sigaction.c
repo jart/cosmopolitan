@@ -19,7 +19,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
-#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -27,7 +26,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
@@ -35,6 +33,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
@@ -47,11 +46,9 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-
-#if SupportsWindows()
-__static_yoink("__sig_ctor");
-#endif
 
 #define SA_RESTORER 0x04000000
 
@@ -59,44 +56,43 @@ static void sigaction_cosmo2native(union metasigaction *sa) {
   void *handler;
   uint64_t flags;
   void *restorer;
-  uint32_t mask[4];
+  uint32_t masklo;
+  uint32_t maskhi;
   if (!sa) return;
   flags = sa->cosmo.sa_flags;
   handler = sa->cosmo.sa_handler;
   restorer = sa->cosmo.sa_restorer;
-  mask[0] = sa->cosmo.sa_mask.__bits[0];
-  mask[1] = sa->cosmo.sa_mask.__bits[0] >> 32;
-  mask[2] = sa->cosmo.sa_mask.__bits[1];
-  mask[3] = sa->cosmo.sa_mask.__bits[1] >> 32;
+  masklo = sa->cosmo.sa_mask;
+  maskhi = sa->cosmo.sa_mask >> 32;
   if (IsLinux()) {
     sa->linux.sa_flags = flags;
     sa->linux.sa_handler = handler;
     sa->linux.sa_restorer = restorer;
-    sa->linux.sa_mask[0] = mask[0];
-    sa->linux.sa_mask[1] = mask[1];
+    sa->linux.sa_mask[0] = masklo;
+    sa->linux.sa_mask[1] = maskhi;
   } else if (IsXnu()) {
     sa->xnu_in.sa_flags = flags;
     sa->xnu_in.sa_handler = handler;
     sa->xnu_in.sa_restorer = restorer;
-    sa->xnu_in.sa_mask[0] = mask[0];
+    sa->xnu_in.sa_mask[0] = masklo;
   } else if (IsFreebsd()) {
     sa->freebsd.sa_flags = flags;
     sa->freebsd.sa_handler = handler;
-    sa->freebsd.sa_mask[0] = mask[0];
-    sa->freebsd.sa_mask[1] = mask[1];
-    sa->freebsd.sa_mask[2] = mask[2];
-    sa->freebsd.sa_mask[3] = mask[3];
+    sa->freebsd.sa_mask[0] = masklo;
+    sa->freebsd.sa_mask[1] = maskhi;
+    sa->freebsd.sa_mask[2] = 0;
+    sa->freebsd.sa_mask[3] = 0;
   } else if (IsOpenbsd()) {
     sa->openbsd.sa_flags = flags;
     sa->openbsd.sa_handler = handler;
-    sa->openbsd.sa_mask[0] = mask[0];
+    sa->openbsd.sa_mask[0] = masklo;
   } else if (IsNetbsd()) {
     sa->netbsd.sa_flags = flags;
     sa->netbsd.sa_handler = handler;
-    sa->netbsd.sa_mask[0] = mask[0];
-    sa->netbsd.sa_mask[1] = mask[1];
-    sa->netbsd.sa_mask[2] = mask[2];
-    sa->netbsd.sa_mask[3] = mask[3];
+    sa->netbsd.sa_mask[0] = masklo;
+    sa->netbsd.sa_mask[1] = maskhi;
+    sa->netbsd.sa_mask[2] = 0;
+    sa->netbsd.sa_mask[3] = 0;
   }
 }
 
@@ -104,44 +100,40 @@ static void sigaction_native2cosmo(union metasigaction *sa) {
   void *handler;
   uint64_t flags;
   void *restorer = 0;
-  uint32_t mask[4] = {0};
+  uint32_t masklo;
+  uint32_t maskhi = 0;
   if (!sa) return;
   if (IsLinux()) {
     flags = sa->linux.sa_flags;
     handler = sa->linux.sa_handler;
     restorer = sa->linux.sa_restorer;
-    mask[0] = sa->linux.sa_mask[0];
-    mask[1] = sa->linux.sa_mask[1];
+    masklo = sa->linux.sa_mask[0];
+    maskhi = sa->linux.sa_mask[1];
   } else if (IsXnu()) {
     flags = sa->xnu_out.sa_flags;
     handler = sa->xnu_out.sa_handler;
-    mask[0] = sa->xnu_out.sa_mask[0];
+    masklo = sa->xnu_out.sa_mask[0];
   } else if (IsFreebsd()) {
     flags = sa->freebsd.sa_flags;
     handler = sa->freebsd.sa_handler;
-    mask[0] = sa->freebsd.sa_mask[0];
-    mask[1] = sa->freebsd.sa_mask[1];
-    mask[2] = sa->freebsd.sa_mask[2];
-    mask[3] = sa->freebsd.sa_mask[3];
+    masklo = sa->freebsd.sa_mask[0];
+    maskhi = sa->freebsd.sa_mask[1];
   } else if (IsOpenbsd()) {
     flags = sa->openbsd.sa_flags;
     handler = sa->openbsd.sa_handler;
-    mask[0] = sa->openbsd.sa_mask[0];
+    masklo = sa->openbsd.sa_mask[0];
   } else if (IsNetbsd()) {
     flags = sa->netbsd.sa_flags;
     handler = sa->netbsd.sa_handler;
-    mask[0] = sa->netbsd.sa_mask[0];
-    mask[1] = sa->netbsd.sa_mask[1];
-    mask[2] = sa->netbsd.sa_mask[2];
-    mask[3] = sa->netbsd.sa_mask[3];
+    masklo = sa->netbsd.sa_mask[0];
+    maskhi = sa->netbsd.sa_mask[1];
   } else {
     return;
   }
   sa->cosmo.sa_flags = flags;
   sa->cosmo.sa_handler = handler;
   sa->cosmo.sa_restorer = restorer;
-  sa->cosmo.sa_mask.__bits[0] = mask[0] | (uint64_t)mask[1] << 32;
-  sa->cosmo.sa_mask.__bits[1] = mask[2] | (uint64_t)mask[3] << 32;
+  sa->cosmo.sa_mask = masklo | (uint64_t)maskhi << 32;
 }
 
 static int __sigaction(int sig, const struct sigaction *act,
@@ -257,14 +249,10 @@ static int __sigaction(int sig, const struct sigaction *act,
   if (rc != -1 && !__vforked) {
     if (act) {
       __sighandrvas[sig] = rva;
+      __sighandmask[sig] = act->sa_mask;
       __sighandflags[sig] = act->sa_flags;
-      if (IsWindows()) {
-        if (__sig_ignored(sig)) {
-          __sig.pending &= ~(1ull << (sig - 1));
-          if (__tls_enabled) {
-            __get_tls()->tib_sigpending &= ~(1ull << (sig - 1));
-          }
-        }
+      if (IsWindows() && __sig_ignored(sig)) {
+        __sig_delete(sig);
       }
     }
   }
@@ -486,7 +474,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  * handler doesn't save / restore the `errno` global when calling wait,
  * then any i/o logic in the main program that checks `errno` will most
  * likely break. This is rare in practice, since systems usually design
- * signals to favor delivery from cancellation points before they block
+ * signals to favor delivery from cancelation points before they block
  * however that's not guaranteed.
  *
  * @return 0 on success or -1 w/ errno

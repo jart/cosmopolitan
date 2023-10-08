@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/nt/enum/status.h"
 #include "libc/nt/nt/process.h"
-#include "libc/nt/ntdll.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processbasicinformation.h"
@@ -31,7 +31,6 @@ textwindows int sys_getppid_nt(void) {
                                     sizeof(ProcessInformation), &gotsize)) &&
       gotsize >= sizeof(ProcessInformation) &&
       ProcessInformation.InheritedFromUniqueProcessId) {
-    /* TODO(jart): Fix type mismatch and do we need to close this? */
     return ProcessInformation.InheritedFromUniqueProcessId;
   }
   return GetCurrentProcessId();

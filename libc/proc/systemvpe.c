@@ -73,14 +73,14 @@ int systemvpe(const char *prog, char *const argv[], char *const envp[]) {
     sigemptyset(&ignore.sa_mask);
     sigaction(SIGINT, &ignore, &saveint);
     sigaction(SIGQUIT, &ignore, &savequit);
-    BLOCK_CANCELLATIONS;
+    BLOCK_CANCELATION;
     while (wait4(pid, &wstatus, 0, 0) == -1) {
       if (errno != EINTR) {
         wstatus = -1;
         break;
       }
     }
-    ALLOW_CANCELLATIONS;
+    ALLOW_CANCELATION;
     sigaction(SIGQUIT, &savequit, 0);
     sigaction(SIGINT, &saveint, 0);
   }

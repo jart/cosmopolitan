@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
 
 /**
  * Determines if signal set is empty.
@@ -28,11 +26,5 @@
  * @vforksafe
  */
 int sigisemptyset(const sigset_t *set) {
-  int i;
-  for (i = 0; i < ARRAYLEN(set->__bits); ++i) {
-    if (set->__bits[i]) {
-      return 0;
-    }
-  }
-  return 1;
+  return *set == 0;
 }

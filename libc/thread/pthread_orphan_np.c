@@ -24,9 +24,9 @@
  */
 int pthread_orphan_np(void) {
   bool res;
-  pthread_spin_lock(&_pthread_lock);
+  _pthread_lock();
   res = _pthread_list == _pthread_list->prev &&
         _pthread_list == _pthread_list->next;
-  pthread_spin_unlock(&_pthread_lock);
+  _pthread_unlock();
   return res;
 }

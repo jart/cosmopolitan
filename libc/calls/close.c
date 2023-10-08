@@ -23,12 +23,51 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
+
+// for performance reasons we want to avoid holding __fds_lock()
+// while sys_close() is happening. this leaves the kernel / libc
+// having a temporarily inconsistent state. routines that obtain
+// file descriptors the way __zipos_open() does need to retry if
+// there's indication this race condition happened.
+
+static int close_impl(int fd) {
+
+  if (fd < 0) {
+    return ebadf();
+  }
+
+  // give kprintf() the opportunity to dup() stderr
+  if (fd == 2 && _weaken(kloghandle)) {
+    _weaken(kloghandle)();
+  }
+
+  if (__isfdkind(fd, kFdZip)) {
+    if (_weaken(__zipos_close)) {
+      return _weaken(__zipos_close)(fd);
+    }
+    if (!IsWindows() && !IsMetal()) {
+      sys_close(fd);
+    }
+    return 0;
+  }
+
+  if (!IsWindows() && !IsMetal()) {
+    return sys_close(fd);
+  }
+
+  if (IsWindows()) {
+    return sys_close_nt(fd, fd);
+  }
+
+  return 0;
+}
 
 /**
  * Closes file descriptor.
@@ -56,42 +95,8 @@
  * @vforksafe
  */
 int close(int fd) {
-  int rc;
-  if (fd < 0) {
-    rc = ebadf();
-  } else {
-    // helps guarantee stderr log gets duplicated before user closes
-    if (_weaken(kloghandle)) _weaken(kloghandle)();
-    // for performance reasons we want to avoid holding __fds_lock()
-    // while sys_close() is happening. this leaves the kernel / libc
-    // having a temporarily inconsistent state. routines that obtain
-    // file descriptors the way __zipos_open() does need to retry if
-    // there's indication this race condition happened.
-    if (__isfdkind(fd, kFdZip)) {
-      rc = _weaken(__zipos_close)(fd);
-    } else {
-      if (!IsWindows() && !IsMetal()) {
-        rc = sys_close(fd);
-      } else if (IsMetal()) {
-        rc = 0;
-      } else {
-        if (__isfdkind(fd, kFdEpoll)) {
-          rc = _weaken(sys_close_epoll_nt)(fd);
-        } else if (__isfdkind(fd, kFdSocket)) {
-          rc = _weaken(sys_closesocket_nt)(g_fds.p + fd);
-        } else if (__isfdkind(fd, kFdFile) ||     //
-                   __isfdkind(fd, kFdConsole) ||  //
-                   __isfdkind(fd, kFdProcess)) {  //
-          rc = sys_close_nt(g_fds.p + fd, fd);
-        } else {
-          rc = eio();
-        }
-      }
-    }
-    if (!__vforked) {
-      __releasefd(fd);
-    }
-  }
+  int rc = close_impl(fd);
+  if (!__vforked) __releasefd(fd);
   STRACE("close(%d) → %d% m", fd, rc);
   return rc;
 }

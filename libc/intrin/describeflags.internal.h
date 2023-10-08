@@ -19,7 +19,7 @@ const char *DescribeClockName(char[32], int);
 const char *DescribeControlKeyState(char[64], uint32_t);
 const char *DescribeDirfd(char[12], int);
 const char *DescribeDnotifyFlags(char[80], int);
-const char *DescribeErrno(char[20], int);
+const char *DescribeErrno(char[30], int);
 const char *DescribeFcntlCmd(char[20], int);
 const char *DescribeFlockType(char[12], int);
 const char *DescribeFrame(char[32], int);
@@ -78,7 +78,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeControlKeyState(x)   DescribeControlKeyState(alloca(64), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
 #define DescribeDnotifyFlags(x)      DescribeDnotifyFlags(alloca(80), x)
-#define DescribeErrno(x)             DescribeErrno(alloca(20), x)
+#define DescribeErrno(x)             DescribeErrno(alloca(30), x)
 #define DescribeFcntlCmd(x)          DescribeFcntlCmd(alloca(20), x)
 #define DescribeFlockType(x)         DescribeFlockType(alloca(12), x)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)

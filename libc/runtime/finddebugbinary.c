@@ -19,7 +19,6 @@
 #include "ape/sections.internal.h"
 #include "libc/atomic.h"
 #include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/cosmo.h"
 #include "libc/elf/tinyelf.internal.h"
@@ -45,7 +44,7 @@ static bool IsMyDebugBinary(const char *path) {
   uintptr_t value;
   bool res = false;
   int fd, e = errno;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   if ((fd = open(path, O_RDONLY | O_CLOEXEC, 0)) != -1) {
     // sanity test that this .com.dbg file (1) is an elf image, and (2)
     // contains the same number of bytes of code as our .com executable
@@ -60,7 +59,7 @@ static bool IsMyDebugBinary(const char *path) {
     }
     close(fd);
   }
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   errno = e;
   return res;
 }

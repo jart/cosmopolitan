@@ -56,7 +56,7 @@ ssize_t tinyprint(int fd, const char *s, ...) {
   va_list va;
   ssize_t toto;
   char buf[512];
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   va_start(va, s);
   for (toto = n = 0; s; s = va_arg(va, const char *)) {
     if (IsAsan() && !__asan_is_valid_str(s)) {
@@ -75,6 +75,6 @@ ssize_t tinyprint(int fd, const char *s, ...) {
   }
   va_end(va);
   tinyflush(fd, buf, n, &toto);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return toto;
 }

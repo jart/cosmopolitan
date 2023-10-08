@@ -8,14 +8,14 @@ COSMOPOLITAN_C_START_
 typedef void (*sighandler_t)(int);
 typedef void (*sigaction_f)(int, struct siginfo *, void *);
 
-struct sigaction { /* cosmo abi */
+struct sigaction {
   union {
     sighandler_t sa_handler;
     sigaction_f sa_sigaction;
   };
   uint64_t sa_flags;
   void (*sa_restorer)(void);
-  struct sigset sa_mask;
+  sigset_t sa_mask;
 };
 
 sighandler_t signal(int, sighandler_t);

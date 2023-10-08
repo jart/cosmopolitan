@@ -61,9 +61,9 @@ void __restore_tty(void) {
   int e;
   if (__isrestorable && !__isworker && !__nocolor) {
     e = errno;
-    BEGIN_CANCELLATION_POINT;
+    BEGIN_CANCELATION_POINT;
     sys_write(0, ANSI_RESTORE, __strlen(ANSI_RESTORE));
-    END_CANCELLATION_POINT;
+    END_CANCELATION_POINT;
     tcsetattr(0, TCSAFLUSH, &__oldtermios);
     errno = e;
   }

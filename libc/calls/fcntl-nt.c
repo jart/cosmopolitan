@@ -21,6 +21,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
@@ -125,11 +126,17 @@ textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
   pthread_mutex_unlock(&g_locks.mu);
 }
 
+static textwindows int64_t GetfileSize(int64_t handle) {
+  struct NtByHandleFileInformation wst;
+  if (!GetFileInformationByHandle(handle, &wst)) return __winerr();
+  return (wst.nFileSizeHigh + 0ull) << 32 | wst.nFileSizeLow;
+}
+
 static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
                                          uintptr_t arg) {
   uint32_t flags;
   struct flock *l;
-  int64_t pos, off, len, end;
+  int64_t off, len, end;
   struct FileLock *fl, *ft, **flp;
 
   if (!_weaken(malloc)) {
@@ -144,16 +151,14 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
     case SEEK_SET:
       break;
     case SEEK_CUR:
-      pos = 0;
-      if (SetFilePointerEx(f->handle, 0, &pos, SEEK_CUR)) {
-        off = pos + off;
-      } else {
-        return __winerr();
-      }
+      off = f->pointer + off;
       break;
-    case SEEK_END:
-      off = INT64_MAX - off;
+    case SEEK_END: {
+      int64_t size;
+      if ((size = GetfileSize(f->handle)) == -1) return -1;
+      off = size - off;
       break;
+    }
     default:
       return einval();
   }
@@ -363,6 +368,7 @@ static textwindows int sys_fcntl_nt_setfl(int fd, unsigned *flags,
 
 textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   int rc;
+  BLOCK_SIGNALS;
   if (__isfdkind(fd, kFdFile) ||    //
       __isfdkind(fd, kFdSocket) ||  //
       __isfdkind(fd, kFdConsole)) {
@@ -397,5 +403,6 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   } else {
     rc = ebadf();
   }
+  ALLOW_SIGNALS;
   return rc;
 }

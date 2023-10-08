@@ -29,7 +29,7 @@
 static errno_t pthread_detach_impl(struct PosixThread *pt) {
   enum PosixThreadStatus status, transition;
   for (;;) {
-    status = atomic_load_explicit(&pt->status, memory_order_acquire);
+    status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
     if (status == kPosixThreadJoinable) {
       transition = kPosixThreadDetached;
     } else if (status == kPosixThreadTerminated) {
@@ -37,8 +37,8 @@ static errno_t pthread_detach_impl(struct PosixThread *pt) {
     } else {
       return EINVAL;
     }
-    if (atomic_compare_exchange_weak_explicit(&pt->status, &status, transition,
-                                              memory_order_release,
+    if (atomic_compare_exchange_weak_explicit(&pt->pt_status, &status,
+                                              transition, memory_order_release,
                                               memory_order_relaxed)) {
       if (transition == kPosixThreadZombie) {
         _pthread_zombify(pt);

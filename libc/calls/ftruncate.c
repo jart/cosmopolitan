@@ -58,12 +58,12 @@
  * @raise EINVAL if `fd` wasn't opened in a writeable mode
  * @raise EROFS if `fd` is on a read-only filesystem (e.g. zipos)
  * @raise ENOSYS on bare metal
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  */
 int ftruncate(int fd, int64_t length) {
   int rc;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (fd < 0) {
     rc = ebadf();
@@ -82,7 +82,7 @@ int ftruncate(int fd, int64_t length) {
     rc = ebadf();
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("ftruncate(%d, %'ld) → %d% m", fd, length, rc);
   return rc;
 }

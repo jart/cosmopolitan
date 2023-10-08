@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-bool32 sys_isatty_nt(int);
+bool32 sys_isatty(int);
 char *sys_getcwd_nt(char *, size_t);
 int sys_chdir_nt(const char *);
 int sys_close_epoll_nt(int);

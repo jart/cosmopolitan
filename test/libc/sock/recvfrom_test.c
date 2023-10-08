@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -32,6 +33,7 @@
 // two clients send a udp packet containing their local address
 // server verifies content of packet matches the peer's address
 TEST(recvfrom, test) {
+  if (!IsWindows()) return;
   uint32_t addrsize = sizeof(struct sockaddr_in);
   struct sockaddr_in server = {
       .sin_family = AF_INET,

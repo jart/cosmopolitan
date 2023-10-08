@@ -54,6 +54,7 @@ static inline axdx_t tprecode8to16_sse2(char16_t *dst, size_t dstsize,
  * @param src is NUL-terminated UTF-8 input string
  * @return ax shorts written excluding nul
  * @return dx index of character after nul word in src
+ * @asyncsignalsafe
  */
 axdx_t tprecode8to16(char16_t *dst, size_t dstsize, const char *src) {
   axdx_t r;

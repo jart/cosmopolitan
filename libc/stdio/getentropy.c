@@ -16,8 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/blocksigs.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -46,9 +45,7 @@ int getentropy(void *p, size_t n) {
     rc = 0;
   } else {
     BLOCK_SIGNALS;
-    BLOCK_CANCELLATIONS;
     if (__getrandom(p, n, 0) != n) notpossible;
-    ALLOW_CANCELLATIONS;
     ALLOW_SIGNALS;
     rc = 0;
   }

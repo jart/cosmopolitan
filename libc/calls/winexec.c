@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"
@@ -28,13 +29,16 @@ textwindows int IsWindowsExecutable(int64_t handle) {
 
   // read first two bytes of file
   // access() and stat() aren't cancelation points
+  bool ok;
   char buf[2];
   uint32_t got;
+  BLOCK_SIGNALS;
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0)};
-  bool ok = (ReadFile(handle, buf, 2, 0, &overlap) ||
-             GetLastError() == kNtErrorIoPending) &&
-            GetOverlappedResult(handle, &overlap, &got, true);
+  ok = (ReadFile(handle, buf, 2, 0, &overlap) ||
+        GetLastError() == kNtErrorIoPending) &&
+       GetOverlappedResult(handle, &overlap, &got, true);
   CloseHandle(overlap.hEvent);
+  ALLOW_SIGNALS;
 
   // it's an executable if it starts with `MZ` or `#!`
   return ok && got == 2 &&                     //

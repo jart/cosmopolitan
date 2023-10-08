@@ -130,9 +130,9 @@ errno_t pthread_setname_np(pthread_t thread, const char *name) {
   errno_t err;
   struct PosixThread *pt;
   pt = (struct PosixThread *)thread;
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   err = pthread_setname_impl(pt, name);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   STRACE("pthread_setname_np(%d, %s) → %s", _pthread_tid(pt), name,
          DescribeErrno(err));
   return err;

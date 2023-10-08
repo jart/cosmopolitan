@@ -13,9 +13,12 @@
 #define PT_NOCANCEL       8
 #define PT_MASKED         16
 #define PT_INCANCEL       32
-#define PT_POLLING        64   // windows only
-#define PT_INSEMAPHORE    128  // windows only
-#define PT_OPENBSD_KLUDGE 128  // openbsd only
+#define PT_RESTARTABLE    64
+#define PT_OPENBSD_KLUDGE 128
+
+#define PT_BLOCKER_CPU ((_Atomic(int) *)-0)
+#define PT_BLOCKER_SEM ((_Atomic(int) *)-1)
+#define PT_BLOCKER_IO  ((_Atomic(int) *)-2)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -76,48 +79,49 @@ enum PosixThreadStatus {
 #define POSIXTHREAD_CONTAINER(e) DLL_CONTAINER(struct PosixThread, list, e)
 
 struct PosixThread {
-  int pt_flags;            // 0x00: see PT_* constants
-  _Atomic(int) cancelled;  // 0x04: thread has bad beliefs
-  _Atomic(enum PosixThreadStatus) status;
-  _Atomic(int) ptid;       // transitions 0 → tid
-  void *(*start)(void *);  // creation callback
-  void *arg;               // start's parameter
-  void *rc;                // start's return value
-  char *tls;               // bottom of tls allocation
-  struct CosmoTib *tib;    // middle of tls allocation
-  struct Dll list;         // list of threads
-  _Atomic(_Atomic(int) *) pt_futex;
-  intptr_t semaphore;
-  intptr_t iohandle;
-  void *ioverlap;
-  jmp_buf exiter;
-  pthread_attr_t attr;
-  int abort_errno;
-  struct _pthread_cleanup_buffer *cleanup;
+  int pt_flags;              // 0x00: see PT_* constants
+  _Atomic(int) pt_canceled;  // 0x04: thread has bad beliefs
+  _Atomic(enum PosixThreadStatus) pt_status;
+  _Atomic(int) ptid;          // transitions 0 → tid
+  void *(*pt_start)(void *);  // creation callback
+  void *pt_arg;               // start's parameter
+  void *pt_rc;                // start's return value
+  char *pt_tls;               // bottom of tls allocation
+  struct CosmoTib *tib;       // middle of tls allocation
+  struct Dll list;            // list of threads
+  struct _pthread_cleanup_buffer *pt_cleanup;
+  _Atomic(_Atomic(int) *) pt_blocker;
+  _Atomic(int) pt_futex;
+  int64_t pt_semaphore;
+  intptr_t pt_iohandle;
+  void *pt_ioverlap;
+  jmp_buf pt_exiter;
+  pthread_attr_t pt_attr;
 };
 
 typedef void (*atfork_f)(void);
 
 extern struct Dll *_pthread_list;
-extern pthread_spinlock_t _pthread_lock;
 extern struct PosixThread _pthread_static;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];
 
-void _pthread_decimate(void);
-int _pthread_tid(struct PosixThread *);
-void _pthread_unkey(struct CosmoTib *);
-void _pthread_unwind(struct PosixThread *);
-int _pthread_reschedule(struct PosixThread *);
-intptr_t _pthread_syshand(struct PosixThread *);
 int _pthread_atfork(atfork_f, atfork_f, atfork_f);
+int _pthread_reschedule(struct PosixThread *);
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
-void _pthread_free(struct PosixThread *, bool);
-void _pthread_zombify(struct PosixThread *);
-void _pthread_onfork_prepare(void);
-void _pthread_onfork_parent(void);
-void _pthread_onfork_child(void);
+int _pthread_tid(struct PosixThread *);
+intptr_t _pthread_syshand(struct PosixThread *);
 long _pthread_cancel_ack(void);
+void _pthread_decimate(void);
+void _pthread_free(struct PosixThread *, bool);
+void _pthread_lock(void);
+void _pthread_onfork_child(void);
+void _pthread_onfork_parent(void);
+void _pthread_onfork_prepare(void);
 void _pthread_ungarbage(void);
+void _pthread_unkey(struct CosmoTib *);
+void _pthread_unlock(void);
+void _pthread_unwind(struct PosixThread *);
+void _pthread_zombify(struct PosixThread *);
 
 __funline pureconst struct PosixThread *_pthread_self(void) {
   return (struct PosixThread *)__get_tls()->tib_pthread;

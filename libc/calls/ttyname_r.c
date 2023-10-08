@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -36,16 +37,10 @@
 #define FIODGNAME 0x80106678  // freebsd
 
 static textwindows errno_t sys_ttyname_nt(int fd, char *buf, size_t size) {
-  uint32_t cmode;
-  if (GetConsoleMode(g_fds.p[fd].handle, &cmode)) {
-    if (strlcpy(buf, "/dev/tty", size) < size) {
-      return 0;
-    } else {
-      return ERANGE;
-    }
-  } else {
-    return ENOTTY;
-  }
+  if (fd + 0u >= g_fds.n) return EBADF;
+  if (g_fds.p[fd].kind != kFdConsole) return ENOTTY;
+  if (strlcpy(buf, "/dev/tty", size) >= size) return ERANGE;
+  return 0;
 }
 
 // clobbers errno
@@ -94,11 +89,7 @@ errno_t ttyname_r(int fd, char *buf, size_t size) {
   } else if (IsFreebsd()) {
     res = ttyname_freebsd(fd, buf, size);
   } else if (IsWindows()) {
-    if (__isfdopen(fd)) {
-      res = sys_ttyname_nt(fd, buf, size);
-    } else {
-      res = EBADF;
-    }
+    res = sys_ttyname_nt(fd, buf, size);
   } else {
     res = ENOSYS;
   }

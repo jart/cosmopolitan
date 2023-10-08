@@ -37,7 +37,7 @@
  * @param flags can have SOCK_{CLOEXEC,NONBLOCK}, which may apply to
  *     both the newly created socket and the server one
  * @return client fd which needs close(), or -1 w/ errno
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
@@ -45,7 +45,7 @@ int accept4(int fd, struct sockaddr *opt_out_addr, uint32_t *opt_inout_addrsize,
             int flags) {
   int rc;
   struct sockaddr_storage ss = {0};
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = enotsock();
@@ -66,7 +66,7 @@ int accept4(int fd, struct sockaddr *opt_out_addr, uint32_t *opt_inout_addrsize,
     __write_sockaddr(&ss, opt_out_addr, opt_inout_addrsize);
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("accept4(%d, [%s]) -> %d% lm", fd,
          DescribeSockaddr(opt_out_addr,
                           opt_inout_addrsize ? *opt_inout_addrsize : 0),

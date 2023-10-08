@@ -20,6 +20,7 @@
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -137,7 +138,7 @@ static textwindows errno_t CloneWindows(int (*func)(void *, int), char *stk,
   wt->func = func;
   wt->arg = arg;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
-  if ((h = CreateThread(0, 65536, (void *)WinThreadEntry, wt,
+  if ((h = CreateThread(&kNtIsInheritable, 65536, (void *)WinThreadEntry, wt,
                         kNtStackSizeParamIsAReservation, &wt->utid))) {
     if (flags & CLONE_SETTLS) {
       struct CosmoTib *tib = tls;

@@ -19,6 +19,7 @@
 #include "libc/atomic.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -32,18 +33,18 @@ void _pthread_decimate(void) {
   struct PosixThread *pt;
   enum PosixThreadStatus status;
 StartOver:
-  pthread_spin_lock(&_pthread_lock);
+  _pthread_lock();
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
     pt = POSIXTHREAD_CONTAINER(e);
     if (pt->tib == __get_tls()) continue;
-    status = atomic_load_explicit(&pt->status, memory_order_acquire);
+    status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
     if (status != kPosixThreadZombie) break;
     if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
       dll_remove(&_pthread_list, e);
-      pthread_spin_unlock(&_pthread_lock);
+      _pthread_unlock();
       _pthread_free(pt, false);
       goto StartOver;
     }
   }
-  pthread_spin_unlock(&_pthread_lock);
+  _pthread_unlock();
 }

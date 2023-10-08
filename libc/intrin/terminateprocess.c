@@ -26,12 +26,10 @@ __msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
 
 /**
  * Terminates the specified process and all of its threads.
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows bool32 TerminateProcess(int64_t hProcess, uint32_t uWaitStatus) {
   bool32 ok;
   ok = __imp_TerminateProcess(hProcess, uWaitStatus);
-  if (!ok) __winerr();
   NTTRACE("TerminateProcess(%ld, %u) → %hhhd% m", hProcess, uWaitStatus, ok);
   return ok;
 }

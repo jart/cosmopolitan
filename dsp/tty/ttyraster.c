@@ -628,15 +628,6 @@ static struct Pick PickBlockUnicodeTrue(struct TtyRgb tl, struct TtyRgb tr,
   memset(picks, 0x79, sizeof(picks));
   PickUnicode(picks, tl, tr, bl, br, tl, tr, bl, br);
   i = windex(picks, 96);
-  if (i >= 88) {
-    unsigned j;
-    fprintf(stderr, "uint16_t picks[96] = {");
-    for (j = 0; j < 96; ++j) {
-      fprintf(stderr, "%3d,", picks[j]);
-    }
-    fprintf(stderr, "}\n");
-  }
-  CHECK_LT(i, 88);
   return kPicksUnicode[i];
 }
 

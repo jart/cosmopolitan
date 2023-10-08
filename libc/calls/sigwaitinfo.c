@@ -28,7 +28,7 @@
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOSYS on OpenBSD, XNU, and Windows
  * @see sigtimedwait()
- * @cancellationpoint
+ * @cancelationpoint
  */
 int sigwaitinfo(const sigset_t *mask, siginfo_t *si) {
   return sigtimedwait(mask, si, 0);

@@ -59,8 +59,8 @@
  */
 errno_t pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
   struct PosixThread *pt = (struct PosixThread *)thread;
-  memcpy(attr, &pt->attr, sizeof(pt->attr));
-  switch (atomic_load_explicit(&pt->status, memory_order_relaxed)) {
+  memcpy(attr, &pt->pt_attr, sizeof(pt->pt_attr));
+  switch (atomic_load_explicit(&pt->pt_status, memory_order_relaxed)) {
     case kPosixThreadJoinable:
     case kPosixThreadTerminated:
       attr->__detachstate = PTHREAD_CREATE_JOINABLE;

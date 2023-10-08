@@ -47,7 +47,7 @@ errno_t pthread_kill(pthread_t thread, int sig) {
     err = EINVAL;
   } else if (thread == __get_tls()->tib_pthread) {
     err = raise(sig);  // XNU will EDEADLK it otherwise
-  } else if (atomic_load_explicit(&pt->status, memory_order_acquire) >=
+  } else if (atomic_load_explicit(&pt->pt_status, memory_order_acquire) >=
              kPosixThreadTerminated) {
     err = ESRCH;
   } else if (IsWindows()) {

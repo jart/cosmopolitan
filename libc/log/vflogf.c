@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -95,7 +96,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   if (!f) return;
   flockfile(f);
   strace_enabled(-1);
-  BLOCK_CANCELLATIONS;
+  BLOCK_SIGNALS;
 
   // We display TIMESTAMP.MICROS normally. However, when we log multiple
   // times in the same second, we display TIMESTAMP+DELTAMICROS instead.
@@ -137,7 +138,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     __die();
   }
 
-  ALLOW_CANCELLATIONS;
+  ALLOW_SIGNALS;
   strace_enabled(+1);
   funlockfile(f);
 }

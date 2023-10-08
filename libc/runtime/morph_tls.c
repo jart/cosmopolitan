@@ -63,11 +63,12 @@ privileged void __morph_tls(void) {
   }
 
   // iterate over modifiable code looking for 9 byte instruction
-  // this would take 30 ms using xed to enable tls on python.com
+  // this used to take 30ms with xed to enable tls on python.com
   for (p = _ereal; p + 9 <= __privileged_start; p += n) {
 
     // use sse to zoom zoom to fs register prefixes
     // that way it'll take 1 ms to morph python.com
+    // we recompiled a 13mb binary in 1 millisecond
     while (p + 9 + 16 <= __privileged_start) {
       if ((m = __builtin_ia32_pmovmskb128(
                *(xmm_t *)p == (xmm_t){0144, 0144, 0144, 0144, 0144, 0144, 0144,

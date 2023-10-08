@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/bo.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timeval.h"
@@ -30,7 +29,6 @@
 #include "libc/stdckdint.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
-
 #ifdef __x86_64__
 
 int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
@@ -71,10 +69,8 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // call our nt poll implementation
-  BEGIN_BLOCKING_OPERATION;
   fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
   unassert(fdcount < 64);
-  END_BLOCKING_OPERATION;
   if (fdcount < 0) return -1;
 
   // convert pollfd back to bitsets

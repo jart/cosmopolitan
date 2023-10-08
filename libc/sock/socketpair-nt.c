@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   uint32_t mode;
@@ -64,16 +65,16 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
     if (writer != -1) __releasefd(writer);
     return -1;
   }
-  if ((hpipe = CreateNamedPipe(pipename,
-                               kNtPipeAccessDuplex | kNtFileFlagOverlapped,
-                               mode, 1, 65536, 65536, 0, 0)) == -1) {
+  if ((hpipe = CreateNamedPipe(
+           pipename, kNtPipeAccessDuplex | kNtFileFlagOverlapped, mode, 1,
+           65536, 65536, 0, &kNtIsInheritable)) == -1) {
     __releasefd(writer);
     __releasefd(reader);
     return -1;
   }
 
-  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0, 0,
-                  kNtOpenExisting, kNtFileFlagOverlapped, 0);
+  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0,
+                  &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0);
 
   __fds_lock();
 
@@ -104,3 +105,5 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
 
   return rc;
 }
+
+#endif /* __x86_64__ */

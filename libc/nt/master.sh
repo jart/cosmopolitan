@@ -162,6 +162,7 @@ imp	'GetSystemTimes'					GetSystemTimes						kernel32	3
 imp	'GetTempPath'						GetTempPathW						kernel32	2
 imp	'GetTempPathA'						GetTempPathA						kernel32	2
 imp	'GetThreadContext'					GetThreadContext					kernel32	2
+imp	'GetThreadDescription'					GetThreadDescription					kernel32	2
 imp	'GetThreadIOPendingFlag'				GetThreadIOPendingFlag					kernel32	2
 imp	'GetThreadId'						GetThreadId						kernel32	1
 imp	'GetThreadPriority'					GetThreadPriority					kernel32	1
@@ -242,9 +243,9 @@ imp	'SetEndOfFile'						SetEndOfFile						kernel32	1
 imp	'SetEnvironmentVariable'				SetEnvironmentVariableW					kernel32	2
 imp	'SetErrorMode'						SetErrorMode						kernel32	1
 imp	'SetEvent'						SetEvent						kernel32	1
+imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	4
 imp	'SetFileAttributes'					SetFileAttributesW					kernel32	2
 imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	2
-imp	'SetFilePointerEx'					SetFilePointerEx					kernel32	4
 imp	'SetFileTime'						SetFileTime						kernel32	4
 imp	'SetFileValidData'					SetFileValidData					kernel32	2
 imp	'SetHandleCount'					SetHandleCount						kernel32	1
@@ -259,6 +260,7 @@ imp	'SetProcessWorkingSetSizeEx'				SetProcessWorkingSetSizeEx				kernel32	4
 imp	'SetStdHandle'						SetStdHandle						kernel32	2
 imp	'SetThreadAffinityMask'					SetThreadAffinityMask					kernel32	2
 imp	'SetThreadContext'					SetThreadContext					kernel32	2
+imp	'SetThreadDescription'					SetThreadDescription					kernel32	2
 imp	'SetThreadPriority'					SetThreadPriority					kernel32	2
 imp	'SetThreadPriorityBoost'				SetThreadPriorityBoost					kernel32	2
 imp	'SetUnhandledExceptionFilter'				SetUnhandledExceptionFilter				kernel32	1

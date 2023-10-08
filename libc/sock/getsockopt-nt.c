@@ -29,6 +29,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
 __msabi extern typeof(__sys_getsockopt_nt) *const __imp_getsockopt;
 
@@ -37,10 +38,8 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
                                   uint32_t *inout_optlen) {
   uint64_t ms;
   uint32_t in_optlen;
-  struct SockFd *sockfd;
   struct linger_nt linger;
   npassert(fd->kind == kFdSocket);
-  sockfd = (struct SockFd *)fd->extra;
 
   if (out_opt_optval && inout_optlen) {
     in_optlen = *inout_optlen;
@@ -52,9 +51,9 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
       (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)) {
     if (in_optlen >= sizeof(struct timeval)) {
       if (optname == SO_RCVTIMEO) {
-        ms = sockfd->rcvtimeo;
+        ms = fd->rcvtimeo;
       } else {
-        ms = sockfd->sndtimeo;
+        ms = fd->sndtimeo;
       }
       ((struct timeval *)out_opt_optval)->tv_sec = ms / 1000;
       ((struct timeval *)out_opt_optval)->tv_usec = ms % 1000 * 1000;
@@ -90,3 +89,5 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
 
   return 0;
 }
+
+#endif /* __x86_64__ */

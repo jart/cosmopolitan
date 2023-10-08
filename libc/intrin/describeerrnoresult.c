@@ -19,9 +19,10 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/str/str.h"
 
-const char *(DescribeErrno)(char buf[20], int ax) {
+const char *(DescribeErrno)(char buf[30], int ax) {
   char *p = buf;
   const char *s;
   if (ax < 0) {

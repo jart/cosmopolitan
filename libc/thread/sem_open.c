@@ -190,7 +190,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   if (!(path = sem_path_np(name, pathbuf, sizeof(pathbuf)))) {
     return SEM_FAILED;
   }
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   sem_open_init();
   sem_open_lock();
   if ((s = sem_open_reopen(path))) {
@@ -229,7 +229,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
     sem = SEM_FAILED;
   }
   sem_open_unlock();
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return sem;
 }
 

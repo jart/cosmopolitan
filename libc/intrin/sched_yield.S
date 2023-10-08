@@ -23,7 +23,6 @@
 //	Relinquishes scheduled quantum.
 //
 //	@return	0 on success, or -1 w/ errno
-//	@norestart
 	.ftrace1
 sched_yield:
 	.ftrace2
@@ -63,6 +62,7 @@ sched_yield:
 //	be polyfilled using select() with a zero timeout, which
 //	means to wait zero microseconds and then returns a zero
 //	and this hopefully will give other threads a chance too
+//	XNU has a special version we use called select_nocancel
 //
 //	"If the readfds, writefds, and errorfds arguments are
 //	 all null pointers and the timeout argument is not a

@@ -57,7 +57,7 @@ void *CancelSelfWorkerDeferred(void *arg) {
   return 0;
 }
 
-TEST(pthread_cancel, self_deferred_waitsForCancellationPoint) {
+TEST(pthread_cancel, self_deferred_waitsForCancelationPoint) {
   void *rc;
   pthread_t th;
   ASSERT_SYS(0, 0, pipe(pfds));

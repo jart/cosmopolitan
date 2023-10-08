@@ -57,7 +57,7 @@ void nsync_mu_semaphore_destroy (nsync_semaphore *s) {
    cancellation will occur by unwinding cleanup handlers pushed to the stack. */
 errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	errno_t err;
-	BEGIN_CANCELLATION_POINT;
+	BEGIN_CANCELATION_POINT;
 	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
 		err = nsync_mu_semaphore_p_gcd (s);
 	} else if (IsNetbsd ()) {
@@ -65,17 +65,17 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	} else {
 		err = nsync_mu_semaphore_p_futex (s);
 	}
-	END_CANCELLATION_POINT;
+	END_CANCELATION_POINT;
 	return err;
 }
 
 /* Like nsync_mu_semaphore_p() this waits for the count of *s to exceed 0,
    while additionally supporting a time parameter specifying at what point
-   in the future ETIMEDOUT should be returned, if neither cancellation, or
+   in the future ETIMEDOUT should be returned, if neither cancelation, or
    semaphore release happens. */
 errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
 	errno_t err;
-	BEGIN_CANCELLATION_POINT;
+	BEGIN_CANCELATION_POINT;
 	if (PREFER_GCD_OVER_ULOCK && IsXnuSilicon ()) {
 		err = nsync_mu_semaphore_p_with_deadline_gcd (s, abs_deadline);
 	} else if (IsNetbsd ()) {
@@ -83,7 +83,7 @@ errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_d
 	} else {
 		err = nsync_mu_semaphore_p_with_deadline_futex (s, abs_deadline);
 	}
-	END_CANCELLATION_POINT;
+	END_CANCELATION_POINT;
 	return err;
 }
 

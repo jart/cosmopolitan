@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
 #include "libc/limits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
@@ -71,7 +70,6 @@ static inline const unsigned char *memrchr_sse(const unsigned char *s,
 void *memrchr(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
-  if (IsAsan()) __asan_verify(s, n);
   r = memrchr_sse(s, c, n);
   return (void *)r;
 #else

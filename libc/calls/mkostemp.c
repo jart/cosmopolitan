@@ -34,7 +34,7 @@
  * @see mkstemp() if you don't need flags
  * @see mktemp() if you don't need an fd
  * @see tmpfd() if you don't need a path
- * @cancellationpoint
+ * @cancelationpoint
  */
 int mkostemp(char *template, unsigned flags) {
   return openatemp(AT_FDCWD, template, 0, flags, 0);

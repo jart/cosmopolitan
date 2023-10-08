@@ -147,7 +147,6 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   _mmi.i = 0;
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
-  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
   __virtualmax = -1;
 
   // initialize file system

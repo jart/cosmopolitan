@@ -48,7 +48,7 @@
  * @return number of bytes received, 0 on remote close, or -1 w/ errno
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
@@ -58,7 +58,7 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
   ssize_t rc;
   struct sockaddr_storage addr = {0};
   uint32_t addrsize = sizeof(addr);
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
@@ -90,7 +90,7 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
     __write_sockaddr(&addr, opt_out_srcaddr, opt_inout_srcaddrsize);
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   DATATRACE("recvfrom(%d, [%#.*hhs%s], %'zu, %#x) → %'ld% lm", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
   return rc;

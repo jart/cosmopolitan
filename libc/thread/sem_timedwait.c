@@ -49,7 +49,7 @@ static void sem_timedwait_cleanup(void *arg) {
  * @raise EDEADLK if deadlock was detected
  * @raise ETIMEDOUT if deadline expired
  * @raise EINVAL if `sem` is invalid
- * @cancellationpoint
+ * @cancelationpoint
  */
 int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   int e, i, v, rc;
@@ -67,7 +67,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
     }
   }
 
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
                                      memory_order_acq_rel) >= 0);
   pthread_cleanup_push(sem_timedwait_cleanup, sem);
@@ -102,7 +102,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
                              memory_order_relaxed)));
 
   pthread_cleanup_pop(1);
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
 
   return rc;
 }

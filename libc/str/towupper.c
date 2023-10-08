@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
-/* clang-format off */
+// clang-format off
 
 static const struct {
   unsigned short x;

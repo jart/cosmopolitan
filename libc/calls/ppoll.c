@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/bo.internal.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -55,7 +54,7 @@
  * @param sigmask may be null in which case no mask change happens
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  * @norestart
  */
@@ -65,7 +64,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
   int e, rc;
   sigset_t oldmask;
   struct timespec ts, *tsp;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   if (IsAsan() &&
       (ckd_mul(&n, nfds, sizeof(struct pollfd)) || !__asan_is_valid(fds, n) ||
@@ -98,12 +97,10 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
         ckd_add(&ms, timeout->tv_sec, (timeout->tv_nsec + 999999) / 1000000)) {
       ms = -1u;
     }
-    BEGIN_BLOCKING_OPERATION;
     rc = sys_poll_nt(fds, nfds, &ms, sigmask);
-    END_BLOCKING_OPERATION;
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("ppoll(%s, %'zu, %s, %s) → %d% lm", DescribePollFds(rc, fds, nfds),
          nfds, DescribeTimespec(0, timeout), DescribeSigset(0, sigmask), rc);
   return rc;

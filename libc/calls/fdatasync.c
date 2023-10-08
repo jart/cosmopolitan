@@ -39,13 +39,13 @@
  * @raise EIO if an i/o error happened
  * @see sync(), fsync(), sync_file_range()
  * @see __nosync to secretly disable
- * @cancellationpoint
+ * @cancelationpoint
  * @asyncsignalsafe
  */
 int fdatasync(int fd) {
   int rc;
   bool fake = __nosync == 0x5453455454534146;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   if (__isfdkind(fd, kFdZip)) {
     rc = erofs();
   } else if (!IsWindows()) {
@@ -57,7 +57,7 @@ int fdatasync(int fd) {
   } else {
     rc = sys_fdatasync_nt(fd, fake);
   }
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("fdatasync%s(%d) → %d% m", fake ? "_fake" : "", fd, rc);
   return rc;
 }

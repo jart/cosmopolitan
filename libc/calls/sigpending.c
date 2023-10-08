@@ -41,24 +41,19 @@ int sigpending(sigset_t *pending) {
     rc = efault();
   } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
     // 128 signals on NetBSD and FreeBSD, 64 on Linux, 32 on OpenBSD and XNU
-    rc = sys_sigpending(pending, 8);
-    // OpenBSD passes signal sets in words rather than pointers
+    uint64_t mem[2];
+    rc = sys_sigpending(mem, 8);
     if (IsOpenbsd()) {
-      pending->__bits[0] = (unsigned)rc;
-      rc = 0;
+      *pending = rc;
+    } else {
+      *pending = mem[0];
     }
-    // only modify memory on success
-    if (!rc) {
-      // clear unsupported bits
-      if (IsXnu()) {
-        pending->__bits[0] &= 0xFFFFFFFF;
-      }
-      if (IsLinux() || IsOpenbsd() || IsXnu()) {
-        pending->__bits[1] = 0;
-      }
+    if (IsXnu() || IsOpenbsd()) {
+      *pending &= 0xffffffff;
     }
+    rc = 0;
   } else if (IsWindows()) {
-    *pending = (sigset_t){{__sig.pending | __get_tls()->tib_sigpending}};
+    *pending = __sig.pending | __get_tls()->tib_sigpending;
     rc = 0;
   } else {
     rc = enosys();

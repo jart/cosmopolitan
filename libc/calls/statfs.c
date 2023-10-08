@@ -38,7 +38,7 @@
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
  * @raise ENOTSUP if /zip path
- * @cancellationpoint
+ * @cancelationpoint
  */
 int statfs(const char *path, struct statfs *sf) {
 #pragma GCC push_options
@@ -48,7 +48,7 @@ int statfs(const char *path, struct statfs *sf) {
 #pragma GCC pop_options
   int rc;
   struct ZiposUri zipname;
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
 
   CheckLargeStackAllocation(&m, sizeof(m));
   if (_weaken(__zipos_parseuri) &&
@@ -62,7 +62,7 @@ int statfs(const char *path, struct statfs *sf) {
     rc = sys_statfs_nt(path, sf);
   }
 
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
   STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
   return rc;
 }

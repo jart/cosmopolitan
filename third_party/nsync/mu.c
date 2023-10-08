@@ -53,7 +53,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 	uint32_t wait_count;
 	uint32_t long_wait;
 	unsigned attempts = 0; /* attempt count; used for spinloop backoff */
-	BLOCK_CANCELLATIONS;
+	BLOCK_CANCELATION;
 	w->cv_mu = NULL;      /* not a cv wait */
 	w->cond.f = NULL; /* Not using a conditional critical section. */
 	w->cond.v = NULL;
@@ -127,7 +127,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 		}
 		attempts = nsync_spin_delay_ (attempts);
 	}
-	ALLOW_CANCELLATIONS;
+	ALLOW_CANCELATION;
 }
 
 /* Attempt to acquire *mu in writer mode without blocking, and return non-zero

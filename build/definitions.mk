@@ -89,7 +89,7 @@ ARCH = aarch64
 HOSTS ?= pi silicon
 else
 ARCH = x86_64
-HOSTS ?= freebsd rhel7 rhel5 xnu win10 openbsd netbsd
+HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd
 endif
 
 ifeq ($(PREFIX),)

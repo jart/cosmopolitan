@@ -36,7 +36,7 @@
  * @see mkstemps() if you you need a file extension
  * @see openatemp() for one temp roller to rule them all
  * @see mkostemp() if you you need a `O_CLOEXEC`, `O_APPEND`, etc.
- * @cancellationpoint
+ * @cancelationpoint
  */
 char *mktemp(char *template) {
   int fd;

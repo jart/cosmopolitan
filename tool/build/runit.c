@@ -391,8 +391,8 @@ int RunOnHost(char *spec) {
   }
   RelayRequest();
   int rc = ReadResponse();
-  kprintf("%s on %-16s %'11d µs %'8ld µs %'8ld µs\n", basename(g_prog),
-          g_hostname, execute_latency, connect_latency, handshake_latency);
+  kprintf("%s on %-16s %'8ld µs %'8ld µs %'11d µs\n", basename(g_prog),
+          g_hostname, connect_latency, handshake_latency, execute_latency);
   return rc;
 }
 

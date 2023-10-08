@@ -28,6 +28,7 @@ TEST_LIBC_PROC_DIRECTDEPS =					\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
+	LIBC_NT_KERNEL32					\
 	LIBC_RUNTIME						\
 	LIBC_PROC						\
 	LIBC_STR						\
@@ -83,6 +84,32 @@ o/$(MODE)/test/libc/proc/system_test.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/proc/execve_test.com.dbg:				\
+		$(TEST_LIBC_PROC_DEPS)					\
+		o/$(MODE)/test/libc/proc/execve_test.o			\
+		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
+		o/$(MODE)/test/libc/proc/execve_test_prog1.com.zip.o	\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
+		o/$(MODE)/test/libc/proc/proc.pkg			\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/fexecve_test.com.dbg:				\
+		$(TEST_LIBC_PROC_DEPS)					\
+		o/$(MODE)/test/libc/proc/fexecve_test.o		\
+		o/$(MODE)/test/libc/proc/proc.pkg			\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
+		o/$(MODE)/test/libc/calls/zipread.com.zip.o		\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/proc/execve_test_prog1.com.zip.o		\
 o/$(MODE)/test/libc/proc/life-pe.com.zip.o: private		\
 		ZIPOBJ_FLAGS +=					\
 			-B

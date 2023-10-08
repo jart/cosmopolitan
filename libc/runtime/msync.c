@@ -40,7 +40,7 @@
  * @raise EINTR if we needed to block and a signal was delivered instead
  * @raise EINVAL if `MS_SYNC` and `MS_ASYNC` were both specified
  * @raise EINVAL if unknown `flags` were passed
- * @cancellationpoint
+ * @cancelationpoint
  */
 int msync(void *addr, size_t size, int flags) {
   int rc;
@@ -84,13 +84,13 @@ int msync(void *addr, size_t size, int flags) {
     sysflags >>= 1;
   }
 
-  BEGIN_CANCELLATION_POINT;
+  BEGIN_CANCELATION_POINT;
   if (!IsWindows()) {
     rc = sys_msync(addr, size, sysflags);
   } else {
     rc = sys_msync_nt(addr, size, sysflags);
   }
-  END_CANCELLATION_POINT;
+  END_CANCELATION_POINT;
 
 Finished:
   STRACE("msync(%p, %'zu, %#x) → %d% m", addr, size, flags, rc);

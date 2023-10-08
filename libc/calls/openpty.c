@@ -97,8 +97,8 @@ int openpty(int *mfd, int *sfd, char *name,  //
                    (wsz && !__asan_is_valid(wsz, sizeof(*wsz))))) {
     return efault();
   }
-  BLOCK_CANCELLATIONS;
+  BLOCK_CANCELATION;
   rc = openpty_impl(mfd, sfd, name, tio, wsz);
-  ALLOW_CANCELLATIONS;
+  ALLOW_CANCELATION;
   return rc;
 }

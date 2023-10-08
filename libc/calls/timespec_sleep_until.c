@@ -28,7 +28,7 @@
  * @return 0 on success, or EINTR if interrupted
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if signal was delivered
- * @cancellationpoint
+ * @cancelationpoint
  */
 errno_t timespec_sleep_until(struct timespec abs_deadline) {
   errno_t rc;

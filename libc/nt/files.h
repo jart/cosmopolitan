@@ -90,6 +90,9 @@ bool32 GetFileInformationByHandleEx(int64_t hFile,
 
 bool32 GetFileInformationByHandle(
     int64_t hFile, struct NtByHandleFileInformation *lpFileInformation);
+bool32 SetFileInformationByHandle(int64_t hFile, int FileInformationClass,
+                                  const void *lpFileInformation,
+                                  uint32_t dwBufferSize);
 
 uint32_t GetFileAttributes(const char16_t *lpFileName);
 bool32 GetFileAttributesEx(
@@ -136,9 +139,6 @@ bool32 CreateHardLink(const char16_t *lpFileName,
 bool32 CreateSymbolicLink(const char16_t *lpSymlinkFileName,
                           const char16_t *lpTargetPathName, uint32_t dwFlags)
     paramsnonnull();
-
-bool32 SetFilePointerEx(int64_t hFile, int64_t liDistanceToMove,
-                        int64_t *optional_lpNewFilePointer, int dwMoveMethod);
 
 bool32 SetEndOfFile(int64_t hFile);
 bool32 SetFileValidData(int64_t hFile, int64_t ValidDataLength);

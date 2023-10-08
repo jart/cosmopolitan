@@ -12,8 +12,7 @@ struct pollfd {
 };
 
 int poll(struct pollfd *, uint64_t, int32_t);
-int ppoll(struct pollfd *, uint64_t, const struct timespec *,
-          const struct sigset *);
+int ppoll(struct pollfd *, uint64_t, const struct timespec *, const sigset_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

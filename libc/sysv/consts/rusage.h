@@ -3,17 +3,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const int RUSAGE_BOTH;
-extern const int RUSAGE_CHILDREN;
-extern const int RUSAGE_SELF;
 extern const int RUSAGE_THREAD;
+extern const int RUSAGE_CHILDREN;
+extern const int RUSAGE_BOTH;
 
-#define RUSAGE_SELF 0
-
-#define RUSAGE_BOTH     RUSAGE_BOTH
+#define RUSAGE_SELF     0
 #define RUSAGE_CHILDREN RUSAGE_CHILDREN
-#define RUSAGE_THREAD   RUSAGE_THREAD
-
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

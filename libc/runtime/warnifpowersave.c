@@ -40,14 +40,14 @@ void __warn_if_powersave(void) {
   char buf[16] = {0};
   if (IsLinux()) {
     e = errno;
-    BLOCK_CANCELLATIONS;
+    BLOCK_CANCELATION;
     if ((fd = __sys_openat(AT_FDCWD, FILE, O_RDONLY, 0)) != -1) {
       sys_read(fd, buf, 15);
       sys_close(fd);
       if (!startswith(buf, "powersave")) return;
       sys_write(2, WARN, sizeof(WARN) - 1);
     }
-    ALLOW_CANCELLATIONS;
+    ALLOW_CANCELATION;
     errno = e;
   }
 }

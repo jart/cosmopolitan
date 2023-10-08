@@ -28,7 +28,7 @@
  * @raise EINTR if a signal was delivered while sleeping
  * @raise ECANCELED if thread was cancelled in masked mode
  * @see clock_nanosleep()
- * @cancellationpoint
+ * @cancelationpoint
  * @norestart
  */
 int usleep(uint32_t micros) {

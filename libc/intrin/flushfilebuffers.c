@@ -30,14 +30,12 @@ __msabi extern typeof(FlushFileBuffers) *const __imp_FlushFileBuffers;
  * file is opened in a direct non-caching mode. One main advantage here
  * seems to be coherency.
  *
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  * @note consider buying a ups
  * @see FlushViewOfFile()
  */
 textwindows bool32 FlushFileBuffers(int64_t hFile) {
   bool32 ok;
   ok = __imp_FlushFileBuffers(hFile);
-  if (!ok) __winerr();
   NTTRACE("FlushFileBuffers(%ld) → %hhhd% m", hFile, ok);
   return ok;
 }

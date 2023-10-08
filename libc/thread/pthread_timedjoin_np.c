@@ -31,8 +31,6 @@
 #include "libc/thread/tls.h"
 #include "third_party/nsync/futex.internal.h"
 
-// TODO(jart): Use condition variable for thread waiting.
-
 static const char *DescribeReturnValue(char buf[30], int err, void **value) {
   char *p = buf;
   if (!value) return "NULL";
@@ -55,7 +53,7 @@ static const char *DescribeReturnValue(char buf[30], int err, void **value) {
  * @return 0 on success, or errno on error
  * @raise ECANCELED if calling thread was cancelled in masked mode
  * @raise EBUSY if `abstime` was specified and deadline expired
- * @cancellationpoint
+ * @cancelationpoint
  */
 static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
   int x, e, rc = 0;
@@ -63,7 +61,7 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
   // "If the thread calling pthread_join() is canceled, then the target
   //  thread shall not be detached."  ──Quoth POSIX.1-2017
   if (!(rc = pthread_testcancel_np())) {
-    BEGIN_CANCELLATION_POINT;
+    BEGIN_CANCELATION_POINT;
     while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
       e = nsync_futex_wait_(ctid, x, !IsWindows() && !IsXnu(), abstime);
       if (e == -ECANCELED) {
@@ -74,7 +72,7 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
         break;
       }
     }
-    END_CANCELLATION_POINT;
+    END_CANCELATION_POINT;
   }
   return rc;
 }
@@ -83,7 +81,7 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
  * Waits for thread to terminate.
  *
  * Multiple threads joining the same thread is undefined behavior. If a
- * deferred or masked cancellation happens to the calling thread either
+ * deferred or masked cancelation happens to the calling thread either
  * before or during the waiting process then the target thread will not
  * be joined. Calling pthread_join() on a non-joinable thread, e.g. one
  * that's been detached, is undefined behavior. If a thread attempts to
@@ -97,7 +95,7 @@ static errno_t _pthread_wait(atomic_int *ctid, struct timespec *abstime) {
  * @return 0 on success, or errno on error
  * @raise ECANCELED if calling thread was cancelled in masked mode
  * @raise EBUSY if `abstime` deadline elapsed
- * @cancellationpoint
+ * @cancelationpoint
  * @returnserrno
  */
 errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
@@ -106,17 +104,17 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
   struct PosixThread *pt;
   enum PosixThreadStatus status;
   pt = (struct PosixThread *)thread;
-  status = atomic_load_explicit(&pt->status, memory_order_acquire);
+  status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() does not refer to a joinable thread."
   //                                  ──Quoth POSIX.1-2017
   unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
   if (!(err = _pthread_wait(&pt->tib->tib_tid, abstime))) {
-    pthread_spin_lock(&_pthread_lock);
+    _pthread_lock();
     dll_remove(&_pthread_list, &pt->list);
-    pthread_spin_unlock(&_pthread_lock);
+    _pthread_unlock();
     if (value_ptr) {
-      *value_ptr = pt->rc;
+      *value_ptr = pt->pt_rc;
     }
     _pthread_free(pt, false);
     _pthread_decimate();

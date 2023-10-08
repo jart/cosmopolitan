@@ -42,10 +42,8 @@ bool32 isatty(int fd) {
   if (__isfdkind(fd, kFdZip)) {
     enotty();
     res = false;
-  } else if (IsWindows()) {
-    res = sys_isatty_nt(fd);
-  } else if (IsMetal()) {
-    res = sys_isatty_metal(fd);
+  } else if (IsWindows() || IsMetal()) {
+    res = sys_isatty(fd);
   } else if (!sys_ioctl(fd, TIOCGWINSZ, &ws)) {
     res = true;
   } else {

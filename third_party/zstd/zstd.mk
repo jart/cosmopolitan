@@ -120,6 +120,7 @@ THIRD_PARTY_ZSTD_A_DIRECTDEPS =					\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
+        LIBC_PROC						\
 	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_THREAD						\

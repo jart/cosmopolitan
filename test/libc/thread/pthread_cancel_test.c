@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
-#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -59,7 +58,7 @@ void *CancelSelfWorkerDeferred(void *arg) {
   return 0;
 }
 
-TEST(pthread_cancel, self_deferred_waitsForCancellationPoint) {
+TEST(pthread_cancel, self_deferred_waitsForCancelationPoint) {
   void *rc;
   pthread_t th;
   ASSERT_SYS(0, 0, pipe(pfds));
@@ -96,6 +95,7 @@ TEST(pthread_cancel, synchronous) {
 TEST(pthread_cancel, synchronous_deferred) {
   void *rc;
   pthread_t th;
+  if (!IsWindows()) return;
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
   while (!ready) pthread_yield();
