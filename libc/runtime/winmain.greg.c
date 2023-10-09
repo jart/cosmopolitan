@@ -136,6 +136,7 @@ static abi wontreturn void WinInit(const char16_t *cmdline) {
           m |= kNtEnableMouseInput | kNtEnableWindowInput |
                kNtEnableProcessedInput;
         } else {
+          m &= ~kNtDisableNewlineAutoReturn;
           m |= kNtEnableProcessedOutput | kNtEnableVirtualTerminalProcessing;
         }
         __imp_SetConsoleMode(h, m);

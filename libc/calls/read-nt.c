@@ -727,7 +727,6 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   pt->pt_flags |= PT_RESTARTABLE;
   pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
   pthread_cleanup_push((void *)CloseHandle, (void *)sem);
-  atomic_store_explicit(&pt->pt_futex, 0, memory_order_release);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
   m = __sig_beginwait(waitmask);
   if ((rc = _check_cancel()) != -1 && (rc = _check_signal(true)) != -1) {

@@ -32,6 +32,8 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/bsf.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
@@ -64,16 +66,10 @@
  */
 
 struct SignalFrame {
-  struct PosixThread *pt;
-  struct NtContext *nc;
   unsigned rva;
   unsigned flags;
   siginfo_t si;
-};
-
-struct ContextFrame {
-  struct SignalFrame sf;
-  struct NtContext nc;
+  ucontext_t ctx;
 };
 
 static textwindows bool __sig_ignored_by_default(int sig) {
@@ -94,8 +90,7 @@ textwindows void __sig_delete(int sig) {
   __sig.pending &= ~(1ull << (sig - 1));
   _pthread_lock();
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
-    struct PosixThread *pt = POSIXTHREAD_CONTAINER(e);
-    pt->tib->tib_sigpending &= ~(1ull << (sig - 1));
+    POSIXTHREAD_CONTAINER(e)->tib->tib_sigpending &= ~(1ull << (sig - 1));
   }
   _pthread_unlock();
 }
@@ -160,7 +155,7 @@ textwindows int __sig_raise(int sig, int sic) {
   if (!__sig_start(pt, sig, &rva, &flags)) return 0;
   siginfo_t si = {.si_signo = sig, .si_code = sic};
   struct NtContext nc;
-  nc.ContextFlags = kNtContextAll;
+  nc.ContextFlags = kNtContextFull;
   GetThreadContext(GetCurrentThread(), &nc);
   _ntcontext2linux(&ctx, &nc);
   pt->tib->tib_sigmask |= __sighandmask[sig];
@@ -175,7 +170,8 @@ textwindows int __sig_raise(int sig, int sic) {
           __sig_handler(rva),
           DescribeSigset(0, (sigset_t *)&pt->tib->tib_sigmask),
           DescribeSigset(0, &ctx.uc_sigmask));
-  pt->tib->tib_sigmask = ctx.uc_sigmask;
+  atomic_store_explicit(&pt->tib->tib_sigmask, ctx.uc_sigmask,
+                        memory_order_release);
   return (flags & SA_RESTART) ? 2 : 1;
 }
 
@@ -223,41 +219,17 @@ textwindows void __sig_cancel(struct PosixThread *pt, int sig, unsigned flags) {
   WakeByAddressSingle(blocker);
 }
 
-static textwindows wontreturn void __sig_panic(const char *msg) {
-#ifndef TINY
-  char s[128], *p = s;
-  p = stpcpy(p, "sig panic: ");
-  p = stpcpy(p, msg);
-  p = stpcpy(p, " failed w/ ");
-  p = FormatInt32(p, GetLastError());
-  *p++ = '\n';
-  WriteFile(GetStdHandle(kNtStdErrorHandle), s, p - s, 0, 0);
-#endif
-  TerminateThisProcess(SIGVTALRM);
-}
-
 static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
-  ucontext_t ctx = {0};
-  int sig = sf->si.si_signo;
-  _ntcontext2linux(&ctx, sf->nc);
-  ctx.uc_sigmask = sf->pt->tib->tib_sigmask;
-  sf->pt->tib->tib_sigmask |= __sighandmask[sig];
-  if (!(sf->flags & SA_NODEFER)) {
-    sf->pt->tib->tib_sigmask |= 1ull << (sig - 1);
-  }
   ++__sig.count;
-  NTTRACE("entering __sig_tramp(%G, %t) with mask %s → %s", sig,
-          __sig_handler(sf->rva), DescribeSigset(0, &ctx.uc_sigmask),
-          DescribeSigset(0, (sigset_t *)&sf->pt->tib->tib_sigmask));
-  __sig_handler(sf->rva)(sig, &sf->si, &ctx);
-  NTTRACE("leaving __sig_tramp(%G, %t) with mask %s → %s", sig,
-          __sig_handler(sf->rva),
-          DescribeSigset(0, (sigset_t *)&sf->pt->tib->tib_sigmask),
-          DescribeSigset(0, &ctx.uc_sigmask));
-  sf->pt->tib->tib_sigmask = ctx.uc_sigmask;
-  _ntlinux2context(sf->nc, &ctx);
-  SetThreadContext(GetCurrentThread(), sf->nc);
-  __sig_panic("SetThreadContext(GetCurrentThread)");
+  int sig = sf->si.si_signo;
+  sigset_t blocksigs = __sighandmask[sig];
+  if (!(sf->flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+  sf->ctx.uc_sigmask = atomic_fetch_or_explicit(
+      &__get_tls()->tib_sigmask, blocksigs, memory_order_acq_rel);
+  __sig_handler(sf->rva)(sig, &sf->si, &sf->ctx);
+  atomic_store_explicit(&__get_tls()->tib_sigmask, sf->ctx.uc_sigmask,
+                        memory_order_release);
+  __sig_restore(&sf->ctx);
 }
 
 static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
@@ -278,7 +250,7 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     return 0;
   }
   struct NtContext nc;
-  nc.ContextFlags = kNtContextAll;
+  nc.ContextFlags = kNtContextFull;
   if (!GetThreadContext(th, &nc)) {
     STRACE("GetThreadContext failed w/ %d", GetLastError());
     return ESRCH;
@@ -287,20 +259,18 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   if (__sig_should_use_altstack(flags, pt->tib)) {
     sp = (uintptr_t)pt->tib->tib_sigstack_addr + pt->tib->tib_sigstack_size;
   } else {
-    sp = (nc.Rsp - 128 - sizeof(struct ContextFrame)) & -16;
+    sp = (nc.Rsp - 128 - sizeof(struct SignalFrame)) & -16;
   }
-  struct ContextFrame *cf = (struct ContextFrame *)sp;
-  bzero(&cf->sf.si, sizeof(cf->sf.si));
-  memcpy(&cf->nc, &nc, sizeof(nc));
-  cf->sf.pt = pt;
-  cf->sf.rva = rva;
-  cf->sf.nc = &cf->nc;
-  cf->sf.flags = flags;
-  cf->sf.si.si_code = sic;
-  cf->sf.si.si_signo = sig;
+  struct SignalFrame *sf = (struct SignalFrame *)sp;
+  _ntcontext2linux(&sf->ctx, &nc);
+  bzero(&sf->si, sizeof(sf->si));
+  sf->rva = rva;
+  sf->flags = flags;
+  sf->si.si_code = sic;
+  sf->si.si_signo = sig;
   *(uintptr_t *)(sp -= sizeof(uintptr_t)) = nc.Rip;
   nc.Rip = (intptr_t)__sig_tramp;
-  nc.Rdi = (intptr_t)&cf->sf;
+  nc.Rdi = (intptr_t)sf;
   nc.Rsp = sp;
   if (!SetThreadContext(th, &nc)) {
     STRACE("SetThreadContext failed w/ %d", GetLastError());
@@ -473,7 +443,8 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
     tib->tib_sigmask |= 1ull << (sig - 1);
   }
   __sig_handler(rva)(sig, &si, &ctx);
-  tib->tib_sigmask = ctx.uc_sigmask;
+  atomic_store_explicit(&tib->tib_sigmask, ctx.uc_sigmask,
+                        memory_order_release);
   _ntlinux2context(ep->ContextRecord, &ctx);
 }
 
@@ -482,10 +453,8 @@ void __stack_call(struct NtExceptionPointers *, int, int, struct CosmoTib *,
                            struct CosmoTib *),
                   void *);
 
-//
-//     abashed the devil stood
-//  and felt how awful goodness is
-//
+//                         abashed the devil stood
+//                      and felt how awful goodness is
 __msabi dontinstrument unsigned __sig_crash(struct NtExceptionPointers *ep) {
 
   // translate win32 to unix si_signo and si_code
@@ -539,23 +508,20 @@ __msabi textwindows dontinstrument bool32 __sig_console(uint32_t dwCtrlType) {
   return true;
 }
 
-static textwindows int __sig_checkem(atomic_ulong *sigs, struct CosmoTib *tib,
-                                     const char *thing, int id) {
-  int handler_was_called = 0;
-  uint64_t pending, masked, deliverable;
+static textwindows int __sig_checker(atomic_ulong *sigs, struct CosmoTib *tib) {
+  int sig, handler_was_called = 0;
+  sigset_t bit, pending, masked, deliverable;
   pending = atomic_load_explicit(sigs, memory_order_acquire);
   masked = atomic_load_explicit(&tib->tib_sigmask, memory_order_acquire);
-  deliverable = pending & ~masked;
-  POLLTRACE("%s %d blocks %d sigs w/ %d pending and %d deliverable", thing, id,
-            popcnt(masked), popcnt(pending), popcnt(deliverable));
-  if (deliverable) {
-    for (int sig = 1; sig <= 64; ++sig) {
-      if ((deliverable & (1ull << (sig - 1))) &&
-          atomic_fetch_and(sigs, ~(1ull << (sig - 1))) & (1ull << (sig - 1))) {
+  if ((deliverable = pending & ~masked)) {
+    do {
+      sig = _bsf(deliverable) + 1;
+      bit = 1ull << (sig - 1);
+      if (atomic_fetch_and_explicit(sigs, ~bit, memory_order_acq_rel) & bit) {
         STRACE("found pending %G we can raise now", sig);
         handler_was_called |= __sig_raise(sig, SI_KERNEL);
       }
-    }
+    } while ((deliverable &= ~bit));
   }
   return handler_was_called;
 }
@@ -567,10 +533,8 @@ static textwindows int __sig_checkem(atomic_ulong *sigs, struct CosmoTib *tib,
 textwindows int __sig_check(void) {
   int handler_was_called = false;
   struct CosmoTib *tib = __get_tls();
-  handler_was_called |=
-      __sig_checkem(&tib->tib_sigpending, tib, "tid", tib->tib_tid);
-  handler_was_called |= __sig_checkem(&__sig.pending, tib, "pid", getpid());
-  POLLTRACE("__sig_check() → %d", handler_was_called);
+  handler_was_called |= __sig_checker(&tib->tib_sigpending, tib);
+  handler_was_called |= __sig_checker(&__sig.pending, tib);
   return handler_was_called;
 }
 

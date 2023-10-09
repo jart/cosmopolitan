@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,58 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/ipc.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/macros.internal.h"
+.text.windows
 
-#define NT_PIPE_PATH_PREFIX u"\\\\.\\pipe\\"
+//	Restores thread to state before signal.
+//
+//	@param	rdi	points to ucontext_t with machine state
+//	@noreturn
+__sig_restore:
 
-/**
- * Creates named pipe.
- *
- * @param mode is octal, e.g. 0600 for owner-only read/write
- * @return 0 on success, or -1 w/ errno
- * @asyncsignalsafe
- */
-int mkfifo(const char *pathname, unsigned mode) {
-  // TODO(jart): Windows?
-  int rc;
-  if (IsAsan() && !__asan_is_valid_str(pathname)) {
-    rc = efault();
-  } else if (IsLinux()) {
-    rc = sys_mknodat(AT_FDCWD, pathname, mode | S_IFIFO, 0);
-  } else {
-    rc = sys_mkfifo(pathname, mode);
-  }
-  STRACE("mkfifo(%#s, %#o) → %d% m", pathname, mode, rc);
-  return rc;
-}
+//	restore vector registers
+	lea	608(%rdi),%rax
+	movaps	-0x80(%rax),%xmm0
+	movaps	-0x70(%rax),%xmm1
+	movaps	-0x60(%rax),%xmm2
+	movaps	-0x50(%rax),%xmm3
+	movaps	-0x40(%rax),%xmm4
+	movaps	-0x30(%rax),%xmm5
+	movaps	-0x20(%rax),%xmm6
+	movaps	-0x10(%rax),%xmm7
+	movaps	0x00(%rax),%xmm8
+	movaps	0x10(%rax),%xmm9
+	movaps	0x20(%rax),%xmm10
+	movaps	0x30(%rax),%xmm11
+	movaps	0x40(%rax),%xmm12
+	movaps	0x50(%rax),%xmm13
+	movaps	0x60(%rax),%xmm14
+	movaps	0x70(%rax),%xmm15
+
+//	restore general registers
+	lea	80(%rdi),%rax
+	mov	-40(%rax),%r8
+	mov	-32(%rax),%r9
+	mov	-24(%rax),%r10
+	mov	-16(%rax),%r11
+	mov	-8(%rax),%r12
+	mov	0(%rax),%r13
+	mov	8(%rax),%r14
+	mov	16(%rax),%r15
+	mov	24(%rax),%rdi
+	mov	32(%rax),%rsi
+	mov	48(%rax),%rbx
+	mov	56(%rax),%rdx
+	mov	72(%rax),%rcx
+	mov	40(%rax),%rbp
+	mov	80(%rax),%rsp
+
+//	this clobbers the red zone
+	push	88(%rax)		// rip
+	push	64(%rax)		// rax
+	push	96(%rax)		// flags
+	popf
+	pop	%rax
+	ret
+
+	.endfn	__sig_restore,globl

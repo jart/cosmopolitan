@@ -37,6 +37,8 @@ void nsync_mu_semaphore_init (nsync_semaphore *s) {
 		return nsync_mu_semaphore_init_gcd (s);
 	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_init_sem (s);
+	} else if (IsWindows ()) {
+		return nsync_mu_semaphore_init_win32 (s);
 	} else {
 		return nsync_mu_semaphore_init_futex (s);
 	}
@@ -48,6 +50,8 @@ void nsync_mu_semaphore_destroy (nsync_semaphore *s) {
 		return nsync_mu_semaphore_destroy_gcd (s);
 	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_destroy_sem (s);
+	} else if (IsWindows ()) {
+		return nsync_mu_semaphore_destroy_win32 (s);
 	}
 }
 
@@ -62,6 +66,8 @@ errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 		err = nsync_mu_semaphore_p_gcd (s);
 	} else if (IsNetbsd ()) {
 		err = nsync_mu_semaphore_p_sem (s);
+	} else if (IsWindows ()) {
+		err = nsync_mu_semaphore_p_win32 (s);
 	} else {
 		err = nsync_mu_semaphore_p_futex (s);
 	}
@@ -80,6 +86,8 @@ errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_d
 		err = nsync_mu_semaphore_p_with_deadline_gcd (s, abs_deadline);
 	} else if (IsNetbsd ()) {
 		err = nsync_mu_semaphore_p_with_deadline_sem (s, abs_deadline);
+	} else if (IsWindows ()) {
+		err = nsync_mu_semaphore_p_with_deadline_win32 (s, abs_deadline);
 	} else {
 		err = nsync_mu_semaphore_p_with_deadline_futex (s, abs_deadline);
 	}
@@ -93,6 +101,8 @@ void nsync_mu_semaphore_v (nsync_semaphore *s) {
 		return nsync_mu_semaphore_v_gcd (s);
 	} else if (IsNetbsd ()) {
 		return nsync_mu_semaphore_v_sem (s);
+	} else if (IsWindows ()) {
+		return nsync_mu_semaphore_v_win32 (s);
 	} else {
 		return nsync_mu_semaphore_v_futex (s);
 	}

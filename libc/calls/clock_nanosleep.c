@@ -18,26 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/intrin/weaken.h"
-#include "libc/nexgen32e/yield.h"
 #include "libc/runtime/clktck.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/thread.h"
 
-static errno_t sys_clock_nanosleep(int clock, int flags,
-                                   const struct timespec *req,
-                                   struct timespec *rem) {
-  int e, rc;
+static int sys_clock_nanosleep(int clock, int flags,  //
+                               const struct timespec *req,
+                               struct timespec *rem) {
+  int rc;
   BEGIN_CANCELATION_POINT;
-  e = errno;
   if (IsLinux() || IsFreebsd() || IsNetbsd()) {
     rc = __sys_clock_nanosleep(clock, flags, req, rem);
   } else if (IsXnu()) {
@@ -49,102 +45,59 @@ static errno_t sys_clock_nanosleep(int clock, int flags,
   } else {
     rc = enosys();
   }
-  if (rc == -1) {
-    rc = errno;
-    errno = e;
-  }
   END_CANCELATION_POINT;
-#if 0
   STRACE("sys_clock_nanosleep(%s, %s, %s, [%s]) → %d% m",
          DescribeClockName(clock), DescribeSleepFlags(flags),
          DescribeTimespec(0, req), DescribeTimespec(rc, rem), rc);
-#endif
   return rc;
 }
 
-// determine how many nanoseconds it takes before clock_nanosleep()
-// starts sleeping with 90 percent accuracy; in other words when we
-// ask it to sleep 1 second, it (a) must NEVER sleep for less time,
-// and (b) does not sleep for longer than 1.1 seconds of time. what
-// ever is below that, thanks but no thanks, we'll just spin yield,
-static struct timespec GetNanosleepThreshold(void) {
-  return timespec_fromnanos(1000000000 / CLK_TCK);
-}
+static int cosmo_clock_nanosleep(int clock, int flags,
+                                 const struct timespec *req,
+                                 struct timespec *rem) {
 
-static errno_t CheckCancel(void) {
-  if (_weaken(pthread_testcancel_np)) {
-    return _weaken(pthread_testcancel_np)();
+  // pick clocks
+  int time_clock;
+  int sleep_clock;
+  if (clock == CLOCK_REALTIME ||  //
+      clock == CLOCK_REALTIME_PRECISE) {
+    time_clock = clock;
+    sleep_clock = CLOCK_REALTIME_PRECISE;
+  } else if (clock == CLOCK_MONOTONIC ||  //
+             clock == CLOCK_MONOTONIC_PRECISE) {
+    time_clock = clock;
+    sleep_clock = CLOCK_MONOTONIC_PRECISE;
+  } else if (clock == CLOCK_REALTIME_COARSE ||  //
+             clock == CLOCK_REALTIME_FAST) {
+    return sys_clock_nanosleep(CLOCK_REALTIME, flags, req, rem);
+  } else if (clock == CLOCK_MONOTONIC_COARSE ||  //
+             clock == CLOCK_MONOTONIC_FAST) {
+    return sys_clock_nanosleep(CLOCK_MONOTONIC, flags, req, rem);
   } else {
-    return 0;
+    return sys_clock_nanosleep(clock, flags, req, rem);
   }
-}
 
-static errno_t SpinNanosleep(int clock, int flags, const struct timespec *req,
-                             struct timespec *rem) {
-  errno_t rc;
-  struct timespec now, start, elapsed;
-  if ((rc = CheckCancel())) {
-    if (rc == EINTR && !flags && rem) {
-      *rem = *req;
-    }
-    return rc;
-  }
-  unassert(!clock_gettime(CLOCK_REALTIME, &start));
-  for (;;) {
-    spin_yield();
-    unassert(!clock_gettime(CLOCK_REALTIME, &now));
-    if (flags & TIMER_ABSTIME) {
-      if (timespec_cmp(now, *req) >= 0) {
-        return 0;
+  // sleep bulk of time in kernel
+  struct timespec start, deadline, remain, waitfor, now;
+  struct timespec quantum = timespec_fromnanos(1000000000 / CLK_TCK);
+  unassert(!clock_gettime(time_clock, &start));
+  deadline = flags & TIMER_ABSTIME ? *req : timespec_add(start, *req);
+  if (timespec_cmp(start, deadline) >= 0) return 0;
+  remain = timespec_sub(deadline, start);
+  if (timespec_cmp(remain, quantum) > 0) {
+    waitfor = timespec_sub(remain, quantum);
+    if (sys_clock_nanosleep(sleep_clock, 0, &waitfor, rem) == -1) {
+      if (rem && errno == EINTR) {
+        *rem = timespec_add(*rem, quantum);
       }
-      if ((rc = CheckCancel())) {
-        return rc;
-      }
-    } else {
-      if (timespec_cmp(now, start) < 0) continue;
-      elapsed = timespec_sub(now, start);
-      if ((rc = CheckCancel())) {
-        if (rc == EINTR && rem) {
-          if (timespec_cmp(elapsed, *req) >= 0) {
-            bzero(rem, sizeof(*rem));
-          } else {
-            *rem = elapsed;
-          }
-        }
-        return rc;
-      }
-      if (timespec_cmp(elapsed, *req) >= 0) {
-        return 0;
-      }
+      return -1;
     }
   }
-}
 
-// clock_gettime() takes a few nanoseconds but sys_clock_nanosleep()
-// is incapable of sleeping for less than a millisecond on platforms
-// such as windows and it's not much prettior on unix systems either
-static bool ShouldUseSpinNanosleep(int clock, int flags,
-                                   const struct timespec *req) {
-  errno_t e;
-  struct timespec now;
-  if (clock != CLOCK_REALTIME &&          //
-      clock != CLOCK_REALTIME_PRECISE &&  //
-      clock != CLOCK_MONOTONIC &&         //
-      clock != CLOCK_MONOTONIC_RAW &&     //
-      clock != CLOCK_MONOTONIC_PRECISE) {
-    return false;
-  }
-  if (!flags) {
-    return timespec_cmp(*req, GetNanosleepThreshold()) < 0;
-  }
-  e = errno;
-  if (clock_gettime(clock, &now)) {
-    // punt to the nanosleep system call
-    errno = e;
-    return false;
-  }
-  return timespec_cmp(*req, now) < 0 ||
-         timespec_cmp(timespec_sub(*req, now), GetNanosleepThreshold()) < 0;
+  // spin through final scheduling quantum
+  do unassert(!clock_gettime(time_clock, &now));
+  while (timespec_cmp(now, deadline) < 0);
+  return 0;
 }
 
 /**
@@ -180,8 +133,11 @@ static bool ShouldUseSpinNanosleep(int clock, int flags,
  * This function has first-class support on Linux, FreeBSD, and NetBSD;
  * on OpenBSD it's good; on XNU it's bad; and on Windows it's ugly.
  *
- * @param clock should be `CLOCK_REALTIME` and you may consult the docs
- *     of your preferred platforms to see what other clocks might work
+ * @param clock may be
+ *     - `CLOCK_REALTIME` to have nanosecond-accurate wall time sleeps
+ *     - `CLOCK_REALTIME_COARSE` to not spin through scheduler quantum
+ *     - `CLOCK_MONOTONIC` to base the sleep off the monotinic clock
+ *     - `CLOCK_MONOTONIC_COARSE` to once again not do userspace spin
  * @param flags can be 0 for relative and `TIMER_ABSTIME` for absolute
  * @param req can be a relative or absolute time, depending on `flags`
  * @param rem shall be updated with the remainder of unslept time when
@@ -201,26 +157,21 @@ static bool ShouldUseSpinNanosleep(int clock, int flags,
  * @returnserrno
  * @norestart
  */
-errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
+errno_t clock_nanosleep(int clock, int flags,        //
+                        const struct timespec *req,  //
                         struct timespec *rem) {
-  int rc;
-  // threads on win32 stacks call this so we can't asan check *ts
-  LOCKTRACE("clock_nanosleep(%s, %s, %s) → ...", DescribeClockName(clock),
-            DescribeSleepFlags(flags), DescribeTimespec(0, req));
   if (IsMetal()) {
-    rc = ENOSYS;
-  } else if (clock == 127 ||              //
-             (flags & ~TIMER_ABSTIME) ||  //
-             req->tv_sec < 0 ||           //
-             !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
-    rc = EINVAL;
-  } else if (ShouldUseSpinNanosleep(clock, flags, req)) {
-    rc = SpinNanosleep(clock, flags, req, rem);
-  } else {
-    rc = sys_clock_nanosleep(clock, flags, req, rem);
+    return ENOSYS;
   }
-  TIMETRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
-            DescribeSleepFlags(flags), DescribeTimespec(0, req),
-            DescribeTimespec(rc, rem), DescribeErrno(rc));
-  return rc;
+  if (clock == 127 ||              //
+      (flags & ~TIMER_ABSTIME) ||  //
+      req->tv_sec < 0 ||           //
+      !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
+    return EINVAL;
+  }
+  errno_t old = errno;
+  int rc = cosmo_clock_nanosleep(clock, flags, req, rem);
+  errno_t err = !rc ? 0 : errno;
+  errno = old;
+  return err;
 }

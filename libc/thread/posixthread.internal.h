@@ -91,7 +91,6 @@ struct PosixThread {
   struct Dll list;            // list of threads
   struct _pthread_cleanup_buffer *pt_cleanup;
   _Atomic(_Atomic(int) *) pt_blocker;
-  _Atomic(int) pt_futex;
   int64_t pt_semaphore;
   intptr_t pt_iohandle;
   void *pt_ioverlap;

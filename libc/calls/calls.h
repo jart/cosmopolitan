@@ -129,8 +129,6 @@ int linkat(int, const char *, int, const char *, int);
 int mincore(void *, size_t, unsigned char *);
 int mkdir(const char *, unsigned);
 int mkdirat(int, const char *, unsigned);
-int mkfifo(const char *, unsigned);
-int mkfifoat(int, const char *, unsigned);
 int mknod(const char *, unsigned, uint64_t);
 int nice(int);
 int open(const char *, int, ...);

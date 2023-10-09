@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define nsync_atomic_uint32_ atomic_uint_fast32_t
+#define nsync_atomic_uint32_ atomic_uint
 
 #define NSYNC_ATOMIC_UINT32_INIT_        0
 #define NSYNC_ATOMIC_UINT32_LOAD_(p)     (*(p))

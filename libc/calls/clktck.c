@@ -40,7 +40,7 @@ static dontinline int __clk_tck_init(void) {
   size_t len;
   struct clockinfo_netbsd clock;
   if (IsWindows()) {
-    x = HECTONANOSECONDS;
+    x = 1000;
   } else if (IsXnu() || IsOpenbsd()) {
     x = 100;
   } else if (IsFreebsd()) {

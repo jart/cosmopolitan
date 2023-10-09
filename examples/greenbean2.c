@@ -20,6 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -36,45 +37,19 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 #include "net/http/http.h"
+#include "third_party/nsync/cv.h"
+#include "third_party/nsync/mu.h"
+#include "third_party/nsync/time.h"
 
 /**
- * @fileoverview greenbean lightweight threaded web server
+ * @fileoverview greenbean lightweight threaded web server no. 2
  *
- *     $ make -j8 o//tool/net/greenbean.com
- *     $ o//tool/net/greenbean.com &
- *     $ printf 'GET /\n\n' | nc 127.0.0.1 8080
- *     HTTP/1.1 200 OK
- *     Server: greenbean/1.o
- *     Referrer-Policy: origin
- *     Cache-Control: private; max-age=0
- *     Content-Type: text/html; charset=utf-8
- *     Date: Sat, 14 May 2022 14:13:07 GMT
- *     Content-Length: 118
- *
- *     <!doctype html>
- *     <title>hello world</title>
- *     <h1>hello world</h1>
- *     <p>this is a fun webpage
- *     <p>hosted by greenbean
- *
- * Like redbean, greenbean has superior performance too, with an
- * advantage on benchmarks biased towards high connection counts
- *
- *     $ wrk -c 300 -t 32 --latency http://127.0.0.1:8080/
- *     Running 10s test @ http://127.0.0.1:8080/
- *       32 threads and 300 connections
- *         Thread Stats   Avg      Stdev     Max   +/- Stdev
- *         Latency   661.06us    5.11ms  96.22ms   98.85%
- *         Req/Sec    42.38k     8.90k   90.47k    84.65%
- *       Latency Distribution
- *          50%  184.00us
- *          75%  201.00us
- *          90%  224.00us
- *          99%   11.99ms
- *       10221978 requests in 7.60s, 3.02GB read
- *     Requests/sec: 1345015.69
- *     Transfer/sec:    406.62MB
- *
+ * This web server is the same as greenbean.c except it supports having
+ * more than one thread on Windows. To do that we have to make the code
+ * more complicated by not using SO_REUSEPORT. The approach we take, is
+ * creating a single listener thread which adds accepted sockets into a
+ * queue that worker threads consume. This way, if you like Windows you
+ * can easily have a web server with 10,000+ connections.
  */
 
 #define PORT      8080
@@ -86,16 +61,33 @@
   "Referrer-Policy: origin\r\n"   \
   "Cache-Control: private; max-age=0\r\n"
 
+int server;
 int threads;
-int alwaysclose;
+pthread_t listener;
 atomic_int a_termsig;
 atomic_int a_workers;
 atomic_int a_messages;
-atomic_int a_listening;
 atomic_int a_connections;
 pthread_cond_t statuscond;
 pthread_mutex_t statuslock;
 const char *volatile status = "";
+
+struct Clients {
+  int pos;
+  int count;
+  pthread_mutex_t mu;
+  pthread_cond_t non_full;
+  pthread_cond_t non_empty;
+  struct Client {
+    int sock;
+    uint32_t size;
+    struct sockaddr_in addr;
+  } data[100];
+} g_clients;
+
+ssize_t Write(int fd, const char *s) {
+  return write(fd, s, strlen(s));
+}
 
 void SomethingHappened(void) {
   unassert(!pthread_cond_signal(&statuscond));
@@ -107,8 +99,59 @@ void SomethingImportantHappened(void) {
   unassert(!pthread_mutex_unlock(&statuslock));
 }
 
-void *Worker(void *id) {
-  int server, yes = 1;
+bool AddClient(struct Clients *q, const struct Client *v,
+               struct timespec *deadline) {
+  bool wake = false;
+  bool added = false;
+  pthread_mutex_lock(&q->mu);
+  while (q->count == ARRAYLEN(q->data)) {
+    if (pthread_cond_timedwait(&q->non_full, &q->mu, deadline)) {
+      break;  // must be ETIMEDOUT or ECANCELED
+    }
+  }
+  if (q->count != ARRAYLEN(q->data)) {
+    int i = q->pos + q->count;
+    if (ARRAYLEN(q->data) <= i) i -= ARRAYLEN(q->data);
+    memcpy(q->data + i, v, sizeof(*v));
+    if (!q->count) wake = true;
+    q->count++;
+    added = true;
+  }
+  pthread_mutex_unlock(&q->mu);
+  if (wake) pthread_cond_signal(&q->non_empty);
+  return added;
+}
+
+int GetClient(struct Clients *q, struct Client *out) {
+  int got = 0, len = 1;
+  pthread_mutex_lock(&q->mu);
+  while (!q->count) {
+    errno_t err;
+    unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
+    err = pthread_cond_wait(&q->non_empty, &q->mu);
+    unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
+    if (err) {
+      unassert(err == ECANCELED);
+      break;
+    }
+  }
+  while (got < len && q->count) {
+    memcpy(out + got, q->data + q->pos, sizeof(*out));
+    if (q->count == ARRAYLEN(q->data)) {
+      pthread_cond_broadcast(&q->non_full);
+    }
+    ++got;
+    q->pos++;
+    q->count--;
+    if (q->pos == ARRAYLEN(q->data)) q->pos = 0;
+  }
+  pthread_mutex_unlock(&q->mu);
+  return got;
+}
+
+void *ListenWorker(void *arg) {
+  int yes = 1;
+  pthread_setname_np(pthread_self(), "Listener");
 
   // load balance incoming connections for port 8080 across all threads
   // hangup on any browser clients that lag for more than a few seconds
@@ -118,11 +161,8 @@ void *Worker(void *id) {
   server = socket(AF_INET, SOCK_STREAM, 0);
   if (server == -1) {
     kprintf("\r\e[Ksocket() failed %m\n");
-    if (errno == ENFILE || errno == EMFILE) {
-    TooManyFileDescriptors:
-      kprintf("sudo prlimit --pid=$$ --nofile=%d\n", threads * 3);
-    }
-    goto WorkerFinished;
+    SomethingHappened();
+    return 0;
   }
 
   // we don't bother checking for errors here since OS support for the
@@ -130,7 +170,6 @@ void *Worker(void *id) {
   setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));
   setsockopt(server, SOL_SOCKET, SO_SNDTIMEO, &timeo, sizeof(timeo));
   setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-  setsockopt(server, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
   setsockopt(server, SOL_TCP, TCP_FASTOPEN, &yes, sizeof(yes));
   setsockopt(server, SOL_TCP, TCP_QUICKACK, &yes, sizeof(yes));
   errno = 0;
@@ -139,48 +178,82 @@ void *Worker(void *id) {
   // possible for our many threads to bind to the same interface!
   // otherwise we'd need to create a complex multi-threaded queue
   if (bind(server, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-    kprintf("\r\e[Ksocket() returned %m\n");
-    goto CloseWorker;
+    kprintf("\r\e[Kbind() returned %m\n");
+    SomethingHappened();
+    goto CloseServer;
   }
   unassert(!listen(server, 1));
 
-  // connection loop
-  ++a_listening;
-  SomethingImportantHappened();
   while (!a_termsig) {
-    uint32_t clientaddrsize;
-    struct sockaddr_in clientaddr;
-    int client, inmsglen, outmsglen;
-    char inbuf[512], outbuf[512], *p, *q;
+    struct Client client;
 
     // musl libc and cosmopolitan libc support a posix thread extension
-    // that makes thread cancellation work much better your io routines
-    // will just raise ECANCELED so you can check for cancellation with
+    // that makes thread cancelation work much better your i/o routines
+    // will just raise ECANCELED, so you can check for cancelation with
     // normal logic rather than needing to push and pop cleanup handler
     // functions onto the stack, or worse dealing with async interrupts
     unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
 
     // wait for client connection
-    // we don't bother with poll() because this is actually very speedy
-    clientaddrsize = sizeof(clientaddr);
-    client = accept(server, (struct sockaddr *)&clientaddr, &clientaddrsize);
+    client.size = sizeof(client.addr);
+    client.sock = accept(server, (struct sockaddr *)&client.addr, &client.size);
 
-    // turns cancellation off so we don't interrupt active http clients
+    // turn cancel off, so we don't need to check write() for ecanceled
     unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
 
-    if (client == -1) {
-      if (errno != EAGAIN && errno != ECANCELED) {
-        kprintf("\r\e[Kaccept() returned %m\n");
-        if (errno == ENFILE || errno == EMFILE) {
-          goto TooManyFileDescriptors;
-        }
-        usleep(10000);
-      }
+    if (client.sock == -1) {
+      // accept() errors are generally ephemeral or recoverable
+      if (errno == EAGAIN) continue;     // SO_RCVTIMEO interval churns
+      if (errno == ECANCELED) continue;  // pthread_cancel() was called
+      kprintf("\r\e[Kaccept() returned %m\n");
+      SomethingHappened();
+      usleep(10000);
+      errno = 0;
       continue;
     }
 
+#if LOGGING
+    // log the incoming http message
+    unsigned clientip = ntohl(client.addr.sin_addr.s_addr);
+    kprintf("\r\e[K%6P accepted connection from %hhu.%hhu.%hhu.%hhu:%hu\n",
+            clientip >> 24, clientip >> 16, clientip >> 8, clientip,
+            ntohs(client.addr.sin_port));
+    SomethingHappened();
+#endif
+
     ++a_connections;
     SomethingHappened();
+    struct timespec deadline =
+        timespec_add(timespec_real(), timespec_frommillis(100));
+    if (!AddClient(&g_clients, &client, &deadline)) {
+      Write(client.sock, "HTTP/1.1 503 Accept Queue Full\r\n"
+                         "Content-Type: text/plain\r\n"
+                         "Connection: close\r\n"
+                         "\r\n"
+                         "Accept Queue Full\n");
+      close(client.sock);
+    }
+  }
+
+CloseServer:
+  SomethingHappened();
+  close(server);
+  return 0;
+}
+
+void *Worker(void *id) {
+  pthread_setname_np(pthread_self(), "Worker");
+
+  // connection loop
+  while (!a_termsig) {
+    struct Client client;
+    int inmsglen, outmsglen;
+    char inbuf[512], outbuf[512], *p, *q;
+
+    // find a client to serve
+    if (!GetClient(&g_clients, &client)) {
+      continue;  // should be due to ecanceled
+    }
 
     // message loop
     ssize_t got, sent;
@@ -189,9 +262,9 @@ void *Worker(void *id) {
       // parse the incoming http message
       InitHttpMessage(&msg, kHttpRequest);
       // wait for http message (non-fragmented required)
-      // we're not terrible concerned when errors happen here
+      // we're not terribly concerned when errors happen here
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
-      if ((got = read(client, inbuf, sizeof(inbuf))) <= 0) break;
+      if ((got = read(client.sock, inbuf, sizeof(inbuf))) <= 0) break;
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
       // check that client message wasn't fragmented into more reads
       if ((inmsglen = ParseHttpMessage(&msg, inbuf, got)) <= 0) break;
@@ -200,10 +273,10 @@ void *Worker(void *id) {
 
 #if LOGGING
       // log the incoming http message
-      unsigned clientip = ntohl(clientaddr.sin_addr.s_addr);
+      unsigned clientip = ntohl(client.addr.sin_addr.s_addr);
       kprintf("\r\e[K%6P get some %hhu.%hhu.%hhu.%hhu:%hu %#.*s\n",
               clientip >> 24, clientip >> 16, clientip >> 8, clientip,
-              ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a,
+              ntohs(client.addr.sin_port), msg.uri.b - msg.uri.a,
               inbuf + msg.uri.a);
       SomethingHappened();
 #endif
@@ -226,13 +299,10 @@ void *Worker(void *id) {
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
-        if (alwaysclose) {
-          p = stpcpy(p, "\r\nConnection: close");
-        }
         p = stpcpy(p, "\r\n\r\n");
         p = stpcpy(p, q);
         outmsglen = p - outbuf;
-        sent = write(client, outbuf, outmsglen);
+        sent = write(client.sock, outbuf, outmsglen);
 
       } else {
         // display 404 not found error page for every thing else
@@ -247,38 +317,30 @@ void *Worker(void *id) {
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
-        if (alwaysclose) {
-          p = stpcpy(p, "\r\nConnection: close");
-        }
         p = stpcpy(p, "\r\n\r\n");
         p = stpcpy(p, q);
         outmsglen = p - outbuf;
-        sent = write(client, outbuf, p - outbuf);
+        sent = write(client.sock, outbuf, p - outbuf);
       }
 
       // if the client isn't pipelining and write() wrote the full
       // amount, then since we sent the content length and checked
       // that the client didn't attach a payload, we are so synced
       // thus we can safely process more messages
-    } while (!alwaysclose &&       //
-             got == inmsglen &&    //
+    } while (got == inmsglen &&    //
              sent == outmsglen &&  //
              !msg.headers[kHttpContentLength].a &&
              !msg.headers[kHttpTransferEncoding].a &&
              (msg.method == kHttpGet || msg.method == kHttpHead));
     DestroyHttpMessage(&msg);
-    close(client);
+    kprintf("\r\e[K%6P client disconnected\n");
+    SomethingHappened();
+    close(client.sock);
     --a_connections;
     SomethingHappened();
   }
-  --a_listening;
 
-  // inform the parent that this clone has finished
-CloseWorker:
-  close(server);
-WorkerFinished:
   --a_workers;
-
   SomethingImportantHappened();
   return 0;
 }
@@ -286,10 +348,9 @@ WorkerFinished:
 void PrintStatus(void) {
   kprintf("\r\e[K\e[32mgreenbean\e[0m "
           "workers=%d "
-          "listening=%d "
           "connections=%d "
           "messages=%d%s ",
-          a_workers, a_listening, a_connections, a_messages, status);
+          a_workers, a_connections, a_messages, status);
 }
 
 void OnTerm(int sig) {
@@ -327,16 +388,6 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  // caveat emptor microsofties
-  if (IsWindows()) {
-    kprintf("sorry but windows isn't supported by the greenbean demo yet\n"
-            "because it doesn't support SO_REUSEPORT which is a nice for\n"
-            "gaining great performance on UNIX systems, with simple code\n"
-            "however windows will work fine if we limit it to one thread\n");
-    threads = 1;      // we're going to make just one web server thread
-    alwaysclose = 1;  // don't let client idle, since it'd block others
-  }
-
   // secure the server
   //
   // pledge() and unveil() let us whitelist which system calls and files
@@ -360,6 +411,9 @@ int main(int argc, char *argv[]) {
   // by mike burrows in a library called *nsync we've tailored for libc
   unassert(!pthread_cond_init(&statuscond, 0));
   unassert(!pthread_mutex_init(&statuslock, 0));
+  unassert(!pthread_mutex_init(&g_clients.mu, 0));
+  unassert(!pthread_cond_init(&g_clients.non_full, 0));
+  unassert(!pthread_cond_init(&g_clients.non_empty, 0));
 
   // spawn over 9000 worker threads
   //
@@ -385,6 +439,8 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_attr_setstacksize(&attr, 65536));
   unassert(!pthread_attr_setguardsize(&attr, pagesz));
   unassert(!pthread_attr_setsigmask_np(&attr, &block));
+  unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
+  unassert(!pthread_create(&listener, &attr, ListenWorker, 0));
   pthread_t *th = gc(calloc(threads, sizeof(pthread_t)));
   for (i = 0; i < threads; ++i) {
     int rc;
@@ -393,6 +449,7 @@ int main(int argc, char *argv[]) {
       --a_workers;
       kprintf("\r\e[Kpthread_create failed: %s\n", strerror(rc));
       if (rc == EAGAIN) {
+        kprintf("sudo prlimit --pid=$$ --nofile=%d\n", threads * 3);
         kprintf("sudo prlimit --pid=$$ --nproc=%d\n", threads * 2);
       }
       if (!i) exit(1);
@@ -417,6 +474,8 @@ int main(int argc, char *argv[]) {
   // cancel all the worker threads so they shut down asap
   // and it'll wait on active clients to gracefully close
   // you've never seen a production server close so fast!
+  close(server);
+  pthread_cancel(listener);
   for (i = 0; i < threads; ++i) {
     pthread_cancel(th[i]);
   }
@@ -430,6 +489,7 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_mutex_unlock(&statuslock));
 
   // wait for final termination and free thread memory
+  unassert(!pthread_join(listener, 0));
   for (i = 0; i < threads; ++i) {
     unassert(!pthread_join(th[i], 0));
   }
@@ -438,8 +498,11 @@ int main(int argc, char *argv[]) {
   kprintf("\r\e[Kthank you for choosing \e[32mgreenbean\e[0m\n");
 
   // clean up more resources
-  unassert(!pthread_mutex_destroy(&statuslock));
   unassert(!pthread_cond_destroy(&statuscond));
+  unassert(!pthread_mutex_destroy(&statuslock));
+  unassert(!pthread_mutex_destroy(&g_clients.mu));
+  unassert(!pthread_cond_destroy(&g_clients.non_full));
+  unassert(!pthread_cond_destroy(&g_clients.non_empty));
 
   // quality assurance
   if (IsModeDbg()) {

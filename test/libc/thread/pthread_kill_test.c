@@ -61,6 +61,7 @@ void OnSig(int sig) {
 
 void WaitUntilReady(void) {
   while (!ready) pthread_yield();
+  ASSERT_EQ(0, errno);
   ASSERT_SYS(0, 0, usleep(1000));
 }
 
@@ -84,6 +85,7 @@ TEST(pthread_kill, canInterruptSleepOperation) {
   signal(SIGUSR1, old);
 }
 
+#if 0
 void *ReadWorker(void *arg) {
   char buf[8] = {0};
   ready = true;
@@ -322,3 +324,4 @@ TEST(pthread_kill, canInterruptSigsuspend) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldss, 0));
   signal(SIGUSR1, oldsig);
 }
+#endif

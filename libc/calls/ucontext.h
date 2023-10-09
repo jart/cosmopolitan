@@ -106,6 +106,7 @@ int getcontext(ucontext_t *) dontthrow;
 int setcontext(const ucontext_t *) dontthrow;
 int swapcontext(ucontext_t *, const ucontext_t *) dontthrow returnstwice;
 void makecontext(ucontext_t *, void (*)(), int, ...) dontthrow nocallback;
+void __sig_restore(const ucontext_t *) wontreturn;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
