@@ -42,8 +42,6 @@ static struct {
  * @note this function takes 5 cycles (30 if `__threaded`)
  * @note this function is not intended for cryptography
  * @note this function passes bigcrush and practrand
- * @asyncsignalsafe
- * @vforksafe
  */
 uint64_t _rand64(void) {
   void *p;

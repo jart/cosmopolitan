@@ -16,20 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #if defined(__x86_64__) && SupportsWindows()
 
 int main(int argc, char *argv[]) {
+
   if (!IsWindows()) {
-    kprintf("%s is intended for windows%n", argv[0]);
+    tinyprint(2, argv[0], " is intended for windows\n", NULL);
     return 1;
   }
+
+  // clear console and print old config
+  uint32_t cm;
+  tinyprint(1, "\e[H\e[J", NULL);
+  tinyprint(1, "broken console settings were\r\n", NULL);
+  GetConsoleMode(GetStdHandle(kNtStdInputHandle), &cm);
+  tinyprint(1, "stdin: ", DescribeNtConsoleInFlags(cm), "\r\n", NULL);
+  GetConsoleMode(GetStdHandle(kNtStdOutputHandle), &cm);
+  tinyprint(1, "stdout: ", DescribeNtConsoleOutFlags(cm), "\r\n", NULL);
+  GetConsoleMode(GetStdHandle(kNtStdErrorHandle), &cm);
+  tinyprint(1, "stderr: ", DescribeNtConsoleOutFlags(cm), "\r\n", NULL);
+
+  // fix console settings
   SetConsoleMode(GetStdHandle(kNtStdInputHandle),
                  kNtEnableProcessedInput | kNtEnableLineInput |
                      kNtEnableEchoInput | kNtEnableMouseInput |
@@ -40,13 +53,14 @@ int main(int argc, char *argv[]) {
   SetConsoleMode(GetStdHandle(kNtStdErrorHandle),
                  kNtEnableProcessedOutput | kNtEnableWrapAtEolOutput |
                      kNtEnableVirtualTerminalProcessing);
-  _Exit(0);
+
+  return 0;
 }
 
 #else
 int main(int argc, char *argv[]) {
-  fprintf(stderr,
-          "fixconsole not supported on this cpu arch or build config\n");
+  tinyprint(2, "fixconsole not supported on this cpu arch or build config\n",
+            NULL);
   return 1;
 }
 #endif /* __x86_64__ && SupportsWindows() */

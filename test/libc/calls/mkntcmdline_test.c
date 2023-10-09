@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/proc/ntspawn.h"
 #include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 char16_t cmdline[32767];
@@ -102,4 +104,12 @@ TEST(mkntcmdline, testWut) {
   char *argv[] = {"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛.com", "--strace", NULL};
   EXPECT_NE(-1, mkntcmdline(cmdline, argv));
   EXPECT_STREQ(u"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛.com --strace", cmdline);
+}
+
+BENCH(mkntcmdline, lotsOfArgs) {
+  static char *argv[1000];
+  for (int i = 0; i < 999; ++i) {
+    argv[i] = "hello there hello there";
+  }
+  EZBENCH2("mkntcmdline", donothing, unassert(!mkntcmdline(cmdline, argv)));
 }

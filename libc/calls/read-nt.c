@@ -133,11 +133,12 @@ struct Keystrokes {
   struct Dll *line;
   struct Dll *free;
   bool end_of_file;
+  bool ohno_decckm;
   unsigned char pc;
   uint16_t utf16hs;
   pthread_mutex_t lock;
-  struct Keystroke pool[512];
   const struct VirtualKey *vkt;
+  struct Keystroke pool[512];
 };
 
 static struct Keystrokes __keystroke;
@@ -352,11 +353,11 @@ static textwindows int ProcessMouseEvent(const struct NtInputRecord *r,
         // we disable mouse highlighting when the tty is put in raw mode
         // to mouse wheel events with widely understood vt100 arrow keys
         *p++ = 033;
-        *p++ = '[';
+        *p++ = !__keystroke.ohno_decckm ? '[' : 'O';
         if (isup) {
-          *p++ = 'A';  // \e[A up
+          *p++ = 'A';
         } else {
-          *p++ = 'B';  // \e[B down
+          *p++ = 'B';
         }
       }
     }
@@ -637,6 +638,7 @@ textwindows void InterceptTerminalCommands(const char *data, size_t size) {
         } else if (data[i] == 'h') {
           if (x == 1) {
             __keystroke.vkt = kDecckm;  // \e[?1h decckm on
+            __keystroke.ohno_decckm = true;
           } else if ((ismouse |= IsMouseModeCommand(x))) {
             __ttyconf.magic |= kTtyXtMouse;
             cm2 |= kNtEnableMouseInput;
@@ -646,6 +648,7 @@ textwindows void InterceptTerminalCommands(const char *data, size_t size) {
         } else if (data[i] == 'l') {
           if (x == 1) {
             __keystroke.vkt = kVirtualKey;  // \e[?1l decckm off
+            __keystroke.ohno_decckm = false;
           } else if ((ismouse |= IsMouseModeCommand(x))) {
             __ttyconf.magic &= ~kTtyXtMouse;
             cm2 |= kNtEnableQuickEditMode;  // release mouse
@@ -709,6 +712,7 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   sigset_t m;
   int64_t sem;
   uint32_t ms = -1u;
+  struct PosixThread *pt;
   if (!__ttyconf.vmin) {
     if (!__ttyconf.vtime) {
       return 0;  // non-blocking w/o raising eagain
@@ -719,7 +723,7 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   if (f->flags & O_NONBLOCK) {
     return eagain();  // standard unix non-blocking
   }
-  struct PosixThread *pt = _pthread_self();
+  pt = _pthread_self();
   pt->pt_flags |= PT_RESTARTABLE;
   pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
   pthread_cleanup_push((void *)CloseHandle, (void *)sem);
@@ -733,8 +737,8 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   }
   __sig_finishwait(m);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_CPU, memory_order_release);
-  pthread_cleanup_pop(true);
   pt->pt_flags &= ~PT_RESTARTABLE;
+  pthread_cleanup_pop(true);
   return rc;
 }
 

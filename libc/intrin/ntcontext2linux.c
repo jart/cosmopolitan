@@ -20,7 +20,6 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/nt/struct/context.h"
 #include "libc/str/str.h"
-
 #ifdef __x86_64__
 
 textwindows void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {

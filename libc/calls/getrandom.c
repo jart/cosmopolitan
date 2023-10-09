@@ -143,21 +143,12 @@ static void GetRandomArnd(char *p, size_t n) {
 }
 
 static ssize_t GetRandomBsd(char *p, size_t n, void impl(char *, size_t)) {
-  errno_t e;
   size_t m, i;
-  if (_weaken(pthread_testcancel_np) &&
-      (e = _weaken(pthread_testcancel_np)())) {
-    errno = e;
-    return -1;
-  }
   for (i = 0;;) {
     m = MIN(n - i, 256);
     impl(p + i, m);
     if ((i += m) == n) {
       return n;
-    }
-    if (_weaken(pthread_testcancel)) {
-      _weaken(pthread_testcancel)();
     }
   }
 }
@@ -165,11 +156,14 @@ static ssize_t GetRandomBsd(char *p, size_t n, void impl(char *, size_t)) {
 static ssize_t GetDevUrandom(char *p, size_t n) {
   int fd;
   ssize_t rc;
+  BLOCK_SIGNALS;
   fd = sys_openat(AT_FDCWD, "/dev/urandom", O_RDONLY | O_CLOEXEC, 0);
-  if (fd == -1) return -1;
-  pthread_cleanup_push((void *)sys_close, (void *)(intptr_t)fd);
-  rc = sys_read(fd, p, n);
-  pthread_cleanup_pop(1);
+  if (fd != -1) {
+    rc = sys_read(fd, p, n);
+  } else {
+    rc = -1;
+  }
+  ALLOW_SIGNALS;
   return rc;
 }
 
@@ -252,7 +246,7 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
   ssize_t rc;
   if ((!p && n) || (IsAsan() && !__asan_is_valid(p, n))) {
     rc = efault();
-  } else if ((f & ~(GRND_RANDOM | GRND_NONBLOCK))) {
+  } else if (f & ~(GRND_RANDOM | GRND_NONBLOCK)) {
     rc = einval();
   } else {
     rc = __getrandom(p, n, f);
