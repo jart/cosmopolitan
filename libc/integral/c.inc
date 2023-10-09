@@ -138,9 +138,14 @@ typedef signed __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 #endif
 #endif /* _COSMO_SOURCE */
+
+#ifndef __AXDX_T
+#define __AXDX_T
 typedef struct {
   intptr_t ax, dx;
 } axdx_t;
+#endif
+
 
 #ifndef __chibicc__
 #define va_list            __builtin_va_list
