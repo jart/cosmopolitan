@@ -30,10 +30,11 @@
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 4
+#define SYSLIB_VERSION 5
 
 struct Syslib {
   int magic;
@@ -79,6 +80,15 @@ struct Syslib {
   long (*pselect)(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
                   const sigset_t *);
   long (*mprotect)(void *, size_t, int);
+  /* v5 (2023-10-09) */
+  long (*sigaltstack)(const stack_t *, stack_t *);
+  long (*getentropy)(void *, size_t);
+  long (*sem_open)(const char *, int, uint16_t, unsigned);
+  long (*sem_unlink)(const char *);
+  long (*sem_close)(int *);
+  long (*sem_post)(int *);
+  long (*sem_wait)(int *);
+  long (*sem_trywait)(int *);
 };
 
 #define ELFCLASS32  1
@@ -350,6 +360,7 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   MemMove(ps->path + pathlen, ps->name, ps->namelen);
+  ps->path[pathlen + ps->namelen] = 0;
   return !access(ps->path, X_OK);
 }
 
@@ -795,6 +806,38 @@ static long sys_mprotect(void *data, size_t size, int prot) {
   return sysret(mprotect(data, size, prot));
 }
 
+static long sys_sigaltstack(const stack_t *ss, stack_t *oss) {
+  return sysret(sigaltstack(ss, oss));
+}
+
+static long sys_getentropy(void *buf, size_t buflen) {
+  return sysret(getentropy(buf, buflen));
+}
+
+static long sys_sem_open(const char *name, int oflags, mode_t mode, unsigned value) {
+  return sysret((long)sem_open(name, oflags, mode, value));
+}
+
+static long sys_sem_unlink(const char *name) {
+  return sysret(sem_unlink(name));
+}
+
+static long sys_sem_close(sem_t *sem) {
+  return sysret(sem_close(sem));
+}
+
+static long sys_sem_post(sem_t *sem) {
+  return sysret(sem_post(sem));
+}
+
+static long sys_sem_wait(sem_t *sem) {
+  return sysret(sem_wait(sem));
+}
+
+static long sys_sem_trywait(sem_t *sem) {
+  return sysret(sem_trywait(sem));
+}
+
 static long sys_write(int fd, const void *data, size_t size) {
   return sysret(write(fd, data, size));
 }
@@ -879,6 +922,14 @@ int main(int argc, char **argv, char **envp) {
   M->lib.sigaction = sys_sigaction;
   M->lib.pselect = sys_pselect;
   M->lib.mprotect = sys_mprotect;
+  M->lib.sigaltstack = sys_sigaltstack;
+  M->lib.getentropy = sys_getentropy;
+  M->lib.sem_open = sys_sem_open;
+  M->lib.sem_unlink = sys_sem_unlink;
+  M->lib.sem_close = sys_sem_close;
+  M->lib.sem_post = sys_sem_post;
+  M->lib.sem_wait = sys_sem_wait;
+  M->lib.sem_trywait = sys_sem_trywait;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;

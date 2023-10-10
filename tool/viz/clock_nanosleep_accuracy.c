@@ -26,11 +26,6 @@
 #define MAXIMUM    1e9
 #define ITERATIONS 10
 
-void WarmUp(void) {
-  struct timespec wf = {0, 1};
-  npassert(!clock_nanosleep(CLOCK_REALTIME, 0, &wf, 0));
-}
-
 void TestSleepRealRelative(void) {
   printf("\n");
   printf("testing: clock_nanosleep(CLOCK_REALTIME) with relative "
@@ -68,7 +63,6 @@ void TestSleepMonoRelative(void) {
 }
 
 int main(int argc, char *argv[]) {
-  WarmUp();
   TestSleepRealRelative();
   TestSleepMonoRelative();
 }

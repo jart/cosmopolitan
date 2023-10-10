@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,42 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/limits.h"
-#include "libc/runtime/syslib.internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/thread/semaphore.h"
-#include "third_party/nsync/futex.internal.h"
+#include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/fmt/itoa.h"
+#include "libc/sysv/consts/itimer.h"
+#include "libc/sysv/consts/sig.h"
 
-/**
- * Unlocks semaphore.
- *
- * @return 0 on success, or -1 w/ errno
- * @raise EINVAL if `sem` isn't valid
- */
-int sem_post(sem_t *sem) {
-  int rc, old, wakeups;
+#define HZ 120
 
-#if 0
-  if (IsXnuSilicon() && sem->sem_magic == SEM_MAGIC_KERNEL) {
-    return _sysret(__syslib->__sem_post(sem->sem_kernel));
+struct timeval start;
+struct timeval expect;
+struct timeval interval = {0, 1e6 / HZ};
+
+void OnTick(int sig) {
+  char ibuf[27];
+  struct timeval now = timeval_real();
+  switch (timeval_cmp(now, expect)) {
+    case 0:
+      tinyprint(1, "100% precise\n", NULL);
+      break;
+    case -1:
+      FormatInt64Thousands(ibuf, timeval_tomicros(timeval_sub(expect, now)));
+      tinyprint(1, ibuf, " µs early\n", NULL);
+      break;
+    case +1:
+      FormatInt64Thousands(ibuf, timeval_tomicros(timeval_sub(now, expect)));
+      tinyprint(1, ibuf, " µs late\n", NULL);
+      break;
+    default:
+      __builtin_unreachable();
   }
-#endif
+  expect = timeval_add(expect, interval);
+}
 
-  old = atomic_fetch_add_explicit(&sem->sem_value, 1, memory_order_acq_rel);
-  unassert(old > INT_MIN);
-  if (old >= 0) {
-    wakeups = nsync_futex_wake_(&sem->sem_value, 1, true);
-    npassert(wakeups >= 0);
-    rc = 0;
-  } else {
-    wakeups = 0;
-    rc = einval();
-  }
-  return rc;
+int main(int argc, char *argv[]) {
+  start = timeval_real();
+  expect = timeval_add(start, interval);
+  signal(SIGALRM, OnTick);
+  setitimer(ITIMER_REAL, &(struct itimerval){interval, interval}, 0);
+  for (;;) pause();
 }

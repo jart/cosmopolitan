@@ -22,20 +22,31 @@
 #include "libc/errno.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/thread/posixthread.internal.h"
 
 /**
  * Sleeps for specified delay.
  *
+ * This function may be canceled except when using masked mode in which
+ * case cancelation is temporarily disabled, because there is no way to
+ * report the ECANCELED state.
+ *
  * @return unslept time which may be non-zero if the call was interrupted
+ * @cancelationpoint
  */
 struct timespec timespec_sleep(struct timespec delay) {
-  errno_t rc;
+  int cs = -1;
+  errno_t err;
   struct timespec remain;
-  BLOCK_CANCELATION;
-  bzero(&remain, sizeof(remain));
-  if ((rc = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
-    npassert(rc == EINTR);
+  remain = timespec_zero;
+  if (_pthread_self()->pt_flags & PT_MASKED) {
+    cs = _pthread_block_cancelation();
   }
-  ALLOW_CANCELATION;
+  if ((err = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
+    unassert(err == EINTR);
+  }
+  if (cs != -1) {
+    _pthread_allow_cancelation(cs);
+  }
   return remain;
 }

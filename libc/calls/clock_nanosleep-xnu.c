@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
@@ -27,6 +28,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
@@ -74,7 +76,7 @@ int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
   }
   if (res == -EINTR &&                    //
       (_weaken(pthread_testcancel_np) &&  //
-       _weaken(pthread_testcancel_np))) {
+       _weaken(pthread_testcancel_np)())) {
     return ecanceled();
   }
   return _sysret(res);

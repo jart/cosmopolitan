@@ -486,9 +486,14 @@ static privileged void linuxssefpustate2xnu(
 
 #endif /* __x86_64__ */
 
+#ifdef __x86_64__
 privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
                                struct siginfo_xnu *xnuinfo,
                                struct __darwin_ucontext *xnuctx) {
+#else
+privileged void __sigenter_xnu(int sig, struct siginfo_xnu *xnuinfo,
+                               struct __darwin_ucontext *xnuctx) {
+#endif
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
   struct Goodies {
@@ -579,15 +584,6 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
                : "=a"(ax)
                : "0"(0x20000b8 /* sigreturn */), "D"(xnuctx), "S"(infostyle)
                : "rcx", "r11", "memory", "cc");
-#else
-  register long r0 asm("x0") = (long)xnuctx;
-  register long r1 asm("x1") = (long)infostyle;
-  asm volatile("mov\tx16,%0\n\t"
-               "svc\t0"
-               : /* no outputs */
-               : "i"(0x0b8 /* sigreturn */), "r"(r0), "r"(r1)
-               : "x16", "memory");
-#endif /* __x86_64__ */
-
   notpossible;
+#endif /* __x86_64__ */
 }

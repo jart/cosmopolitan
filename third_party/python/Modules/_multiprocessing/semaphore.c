@@ -207,7 +207,7 @@ semlock_release(SemLockObject *self, PyObject *args)
 #endif
 
 #ifndef HAVE_SEM_TIMEDWAIT
-#  define sem_timedwait(sem,deadline) sem_timedwait_save(sem,deadline,_save)
+#  define sem_timedwait_(sem,deadline) sem_timedwait_save(sem,deadline,_save)
 
 static int
 sem_timedwait_save(sem_t *sem, struct timespec *deadline, PyThreadState *_save)

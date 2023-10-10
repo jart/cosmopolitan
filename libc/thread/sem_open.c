@@ -20,6 +20,7 @@
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -27,6 +28,7 @@
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/map.h"
@@ -173,15 +175,32 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   struct Semaphore *s;
   char pathbuf[PATH_MAX];
   unsigned mode = 0, value = 0;
+
+  va_start(va, oflag);
+  mode = va_arg(va, unsigned);
+  value = va_arg(va, unsigned);
+  va_end(va);
+
+#if 0
+  if (IsXnuSilicon()) {
+    long kernel;
+    if (!(sem = calloc(1, sizeof(sem_t)))) return SEM_FAILED;
+    sem->sem_magic = SEM_MAGIC_KERNEL;
+    kernel = _sysret(__syslib->__sem_open(name, oflag, mode, value));
+    if (kernel == -1) {
+      free(sem);
+      return SEM_FAILED;
+    }
+    sem->sem_magic = SEM_MAGIC_KERNEL;
+    sem->sem_kernel = (int *)kernel;
+  }
+#endif
+
   if (oflag & ~(O_CREAT | O_EXCL)) {
     einval();
     return SEM_FAILED;
   }
   if (oflag & O_CREAT) {
-    va_start(va, oflag);
-    mode = va_arg(va, unsigned);
-    value = va_arg(va, unsigned);
-    va_end(va);
     if (value > SEM_VALUE_MAX) {
       einval();
       return SEM_FAILED;
@@ -250,6 +269,14 @@ int sem_close(sem_t *sem) {
   int prefs;
   bool unmap, delete;
   struct Semaphore *s, **p;
+
+#if 0
+  if (IsXnuSilicon()) {
+    npassert(sem->sem_magic == SEM_MAGIC_KERNEL);
+    return _sysret(__syslib->__sem_close(sem->sem_kernel));
+  }
+#endif
+
   npassert(sem->sem_magic == SEM_MAGIC_NAMED);
   sem_open_init();
   sem_open_lock();
@@ -298,6 +325,13 @@ int sem_unlink(const char *name) {
   int rc, e = errno;
   struct Semaphore *s;
   char pathbuf[PATH_MAX];
+
+#if 0
+  if (IsXnuSilicon()) {
+    return _sysret(__syslib->__sem_unlink(name));
+  }
+#endif
+
   if (!(path = sem_path_np(name, pathbuf, sizeof(pathbuf)))) return -1;
   if ((rc = unlink(path)) == -1 && IsWindows() && errno == EACCES) {
     sem_open_init();

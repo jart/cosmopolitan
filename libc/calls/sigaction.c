@@ -41,6 +41,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sa.h"
@@ -70,6 +71,10 @@ static void sigaction_cosmo2native(union metasigaction *sa) {
     sa->linux.sa_restorer = restorer;
     sa->linux.sa_mask[0] = masklo;
     sa->linux.sa_mask[1] = maskhi;
+  } else if (IsXnuSilicon()) {
+    sa->silicon.sa_flags = flags;
+    sa->silicon.sa_handler = handler;
+    sa->silicon.sa_mask[0] = masklo;
   } else if (IsXnu()) {
     sa->xnu_in.sa_flags = flags;
     sa->xnu_in.sa_handler = handler;
@@ -110,6 +115,10 @@ static void sigaction_native2cosmo(union metasigaction *sa) {
     masklo = sa->linux.sa_mask[0];
     maskhi = sa->linux.sa_mask[1];
   } else if (IsXnu()) {
+    flags = sa->silicon.sa_flags;
+    handler = sa->silicon.sa_handler;
+    masklo = sa->silicon.sa_mask[0];
+  } else if (IsXnu()) {
     flags = sa->xnu_out.sa_flags;
     handler = sa->xnu_out.sa_handler;
     masklo = sa->xnu_out.sa_mask[0];
@@ -142,6 +151,7 @@ static int __sigaction(int sig, const struct sigaction *act,
       (sizeof(struct sigaction) >= sizeof(struct sigaction_linux) &&
        sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_in) &&
        sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_out) &&
+       sizeof(struct sigaction) >= sizeof(struct sigaction_silicon) &&
        sizeof(struct sigaction) >= sizeof(struct sigaction_freebsd) &&
        sizeof(struct sigaction) >= sizeof(struct sigaction_openbsd) &&
        sizeof(struct sigaction) >= sizeof(struct sigaction_netbsd)),
@@ -193,6 +203,9 @@ static int __sigaction(int sig, const struct sigaction *act,
         // mitigate Rosetta signal handling strangeness
         // https://github.com/jart/cosmopolitan/issues/455
         ap->sa_flags |= SA_SIGINFO;
+      } else if (IsXnu()) {
+        sigenter = __sigenter_xnu;
+        ap->sa_flags |= SA_SIGINFO;  // couldn't hurt
       } else if (IsNetbsd()) {
         sigenter = __sigenter_netbsd;
       } else if (IsFreebsd()) {
@@ -231,7 +244,12 @@ static int __sigaction(int sig, const struct sigaction *act,
       arg4 = 8; /* or linux whines */
       arg5 = 0;
     }
-    if ((rc = sys_sigaction(sig, ap, oldact, arg4, arg5)) != -1) {
+    if (!IsXnuSilicon()) {
+      rc = sys_sigaction(sig, ap, oldact, arg4, arg5);
+    } else {
+      rc = _sysret(__syslib->__sigaction(sig, ap, oldact));
+    }
+    if (rc != -1) {
       sigaction_native2cosmo((union metasigaction *)oldact);
     }
   } else {

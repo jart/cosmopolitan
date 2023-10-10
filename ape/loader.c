@@ -538,6 +538,7 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   MemMove(ps->path + pathlen, ps->name, ps->namelen);
+  ps->path[pathlen + ps->namelen] = 0;
   return !Access(ps->path, X_OK, ps->os);
 }
 

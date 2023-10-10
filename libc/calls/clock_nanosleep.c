@@ -23,11 +23,14 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/clktck.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 static int sys_clock_nanosleep(int clock, int flags,  //
                                const struct timespec *req,
@@ -44,6 +47,16 @@ static int sys_clock_nanosleep(int clock, int flags,  //
     rc = sys_clock_nanosleep_nt(clock, flags, req, rem);
   } else {
     rc = enosys();
+  }
+  if (rc > 0) {
+    errno = rc;
+    rc = -1;
+  }
+  // system call support might not detect cancelation on bsds
+  if (rc == -1 && errno == EINTR &&      //
+      _weaken(pthread_testcancel_np) &&  //
+      _weaken(pthread_testcancel_np)()) {
+    rc = ecanceled();
   }
   END_CANCELATION_POINT;
   STRACE("sys_clock_nanosleep(%s, %s, %s, [%s]) → %d% m",
@@ -62,11 +75,11 @@ static int cosmo_clock_nanosleep(int clock, int flags,
   if (clock == CLOCK_REALTIME ||  //
       clock == CLOCK_REALTIME_PRECISE) {
     time_clock = clock;
-    sleep_clock = CLOCK_REALTIME_PRECISE;
+    sleep_clock = CLOCK_REALTIME;
   } else if (clock == CLOCK_MONOTONIC ||  //
              clock == CLOCK_MONOTONIC_PRECISE) {
     time_clock = clock;
-    sleep_clock = CLOCK_MONOTONIC_PRECISE;
+    sleep_clock = CLOCK_MONOTONIC;
   } else if (clock == CLOCK_REALTIME_COARSE ||  //
              clock == CLOCK_REALTIME_FAST) {
     return sys_clock_nanosleep(CLOCK_REALTIME, flags, req, rem);

@@ -130,6 +130,9 @@ void AppendResourceReport(char **b, struct rusage *ru, const char *nl) {
   if (ru->ru_nsignals) {
     appends(b, "delivered ");
     AppendUnit(st, ru->ru_nsignals, "signal");
+    if ((ru->ru_nsignals) > 1) {
+      appendw(b, READ16LE("s"));
+    }
     AppendNl(st);
   }
   if (ru->ru_nswap) {

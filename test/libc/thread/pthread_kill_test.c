@@ -21,7 +21,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -85,7 +84,6 @@ TEST(pthread_kill, canInterruptSleepOperation) {
   signal(SIGUSR1, old);
 }
 
-#if 0
 void *ReadWorker(void *arg) {
   char buf[8] = {0};
   ready = true;
@@ -324,4 +322,3 @@ TEST(pthread_kill, canInterruptSigsuspend) {
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldss, 0));
   signal(SIGUSR1, oldsig);
 }
-#endif

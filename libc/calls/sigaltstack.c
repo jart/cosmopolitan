@@ -25,6 +25,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
@@ -82,9 +83,17 @@ static textwindows int sigaltstack_cosmo(const struct sigaltstack *neu,
 
 static int sigaltstack_bsd(const struct sigaltstack *neu,
                            struct sigaltstack *old) {
+  int rc;
   struct sigaltstack_bsd oldbsd, neubsd, *neup = 0;
   if (neu) sigaltstack2bsd(&neubsd, neu), neup = &neubsd;
-  if (sys_sigaltstack(neup, &oldbsd) == -1) return -1;
+  if (IsXnuSilicon()) {
+    rc = _sysret(__syslib->__sigaltstack(neup, &oldbsd));
+  } else {
+    rc = sys_sigaltstack(neup, &oldbsd);
+  }
+  if (rc == -1) {
+    return -1;
+  }
   if (old) sigaltstack2linux(old, &oldbsd);
   return 0;
 }

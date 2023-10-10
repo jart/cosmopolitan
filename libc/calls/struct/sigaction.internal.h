@@ -31,6 +31,12 @@ struct sigaction_netbsd {
   uint32_t sa_flags;
 };
 
+struct sigaction_silicon {
+  void *sa_handler;
+  uint32_t sa_mask[1];
+  uint32_t sa_flags;
+};
+
 struct sigaction_xnu_in {
   void *sa_handler;
   void *sa_restorer;
@@ -50,6 +56,7 @@ union metasigaction {
   struct sigaction_freebsd freebsd;
   struct sigaction_openbsd openbsd;
   struct sigaction_netbsd netbsd;
+  struct sigaction_silicon silicon;
   struct sigaction_xnu_in xnu_in;
   struct sigaction_xnu_out xnu_out;
 };

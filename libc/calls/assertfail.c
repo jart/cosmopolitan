@@ -29,7 +29,7 @@
 void __assert_fail(const char *expr, const char *file, int line) {
   char ibuf[12];
   FormatInt32(ibuf, line);
-  tinyprint(2, "\n", file, ":", ibuf, ": assert(", expr, ") failed (",
+  tinyprint(2, file, ":", ibuf, ": assert(", expr, ") failed (",
             program_invocation_short_name, " ",
             DescribeBacktrace(__builtin_frame_address(0)), ")\n", NULL);
   abort();

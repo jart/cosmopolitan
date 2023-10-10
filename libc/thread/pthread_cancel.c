@@ -46,7 +46,9 @@ extern const char systemfive_cancellable[];
 extern const char systemfive_cancellable_end[];
 
 long _pthread_cancel_ack(void) {
-  struct PosixThread *pt = _pthread_self();
+  struct PosixThread *pt;
+  STRACE("_pthread_cancel_ack()");
+  pt = _pthread_self();
   if (!(pt->pt_flags & (PT_NOCANCEL | PT_MASKED)) ||
       (pt->pt_flags & PT_ASYNC)) {
     pthread_exit(PTHREAD_CANCELED);
@@ -58,6 +60,7 @@ long _pthread_cancel_ack(void) {
   return ecanceled();
 }
 
+// the purpose of this routine is to force a blocking system call to end
 static void _pthread_cancel_sig(int sig, siginfo_t *si, void *arg) {
   ucontext_t *ctx = arg;
 
@@ -231,6 +234,7 @@ static errno_t _pthread_cancel_everyone(void) {
  * - `nsync_cv_wait`
  * - `opendir`
  * - `openatemp`, 'mkstemp', etc.
+ * - `sleep`, `usleep`, `nanosleep`, `timespec_sleep`, etc.
  * - `pclose`
  * - `popen`
  * - `fwrite`, `printf`, `fprintf`, `putc`, etc.
@@ -344,15 +348,12 @@ static errno_t _pthread_cancel_everyone(void) {
  * @raise ESRCH if system thread wasn't alive or we lost a race
  */
 errno_t pthread_cancel(pthread_t thread) {
-  errno_t err;
   struct PosixThread *arg;
   if ((arg = (struct PosixThread *)thread)) {
-    err = _pthread_cancel_single(arg);
+    return _pthread_cancel_single(arg);
   } else {
-    err = _pthread_cancel_everyone();
+    return _pthread_cancel_everyone();
   }
-  STRACE("pthread_cancel(%d) → %s", _pthread_tid(arg), DescribeErrno(err));
-  return err;
 }
 
 /**

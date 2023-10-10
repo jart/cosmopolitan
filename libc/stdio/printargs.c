@@ -45,6 +45,7 @@
 #include "libc/nt/struct/ldrdatatableentry.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/runtime/clktck.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -457,6 +458,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %d", "geteuid()", geteuid());
   PRINT(" ☼ %s = %d", "getgid()", getgid());
   PRINT(" ☼ %s = %d", "getegid()", getegid());
+  PRINT(" ☼ %s = %d", "CLK_TCK", CLK_TCK);
   PRINT(" ☼ %s = %#s", "__get_tmpdir()", __get_tmpdir());
 #ifdef __x86_64__
   PRINT(" ☼ %s = %#s", "kNtSystemDirectory", kNtSystemDirectory);

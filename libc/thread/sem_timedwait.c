@@ -17,12 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
@@ -52,9 +57,48 @@ static void sem_timedwait_cleanup(void *arg) {
  * @cancelationpoint
  */
 int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
-  int e, i, v, rc;
+  int i, v, rc, e = errno;
 
-  e = errno;
+#if 0
+  if (IsXnuSilicon() && sem->sem_magic == SEM_MAGIC_KERNEL) {
+    if (!abstime) {
+      if (_weaken(pthread_testcancel_np) &&  //
+          _weaken(pthread_testcancel_np)()) {
+        return ecanceled();
+      }
+      rc = _sysret(__syslib->__sem_wait(sem->sem_kernel));
+      if (rc == -1 && errno == EINTR &&      //
+          _weaken(pthread_testcancel_np) &&  //
+          _weaken(pthread_testcancel_np)()) {
+        return ecanceled();
+      }
+      return rc;
+    }
+    for (;;) {
+      if (_weaken(pthread_testcancel_np) &&  //
+          _weaken(pthread_testcancel_np)()) {
+        return ecanceled();
+      }
+      rc = _sysret(__syslib->__sem_trywait(sem->sem_kernel));
+      if (!rc) return 0;
+      if (errno == EINTR &&                  //
+          _weaken(pthread_testcancel_np) &&  //
+          _weaken(pthread_testcancel_np)()) {
+        return ecanceled();
+      }
+      if (errno != EAGAIN) return -1;
+      errno = e;
+      struct timespec now = timespec_real();
+      if (timespec_cmp(*abstime, now) >= 0) {
+        return etimedout();
+      }
+      if (usleep(10 * 1000) == -1) {
+        return -1;
+      }
+    }
+  }
+#endif
+
   for (i = 0; i < 7; ++i) {
     rc = sem_trywait(sem);
     if (!rc) {

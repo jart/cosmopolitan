@@ -17,32 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 
 /**
  * Sleeps for particular number of seconds.
  *
+ * This function may be canceled except when using masked mode in which
+ * case cancelation is temporarily disabled, because there is no way to
+ * report the ECANCELED state.
+ *
  * @return 0 if the full time elapsed, otherwise we assume an interrupt
  *     was delivered, in which case the errno condition is ignored, and
  *     this function shall return the number of unslept seconds rounded
- *     using the ceiling function, and finally `-1u` may be returned if
- *     thread was cancelled with `PTHREAD_CANCEL_MASKED` in play
+ *     using the ceiling function
  * @see clock_nanosleep()
  * @cancelationpoint
  * @asyncsignalsafe
  * @norestart
  */
 unsigned sleep(unsigned seconds) {
-  errno_t rc;
+  int cs = -1;
+  errno_t err;
   unsigned unslept;
   struct timespec tv = {seconds};
-  if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, &tv, &tv))) return 0;
-  if (rc == ECANCELED) return -1u;
-  npassert(rc == EINTR);
+  if (_pthread_self()->pt_flags & PT_MASKED) {
+    cs = _pthread_block_cancelation();
+  }
+  err = clock_nanosleep(CLOCK_REALTIME, 0, &tv, &tv);
+  if (cs != -1) {
+    _pthread_allow_cancelation(cs);
+  }
+  if (!err) return 0;
+  unassert(err == EINTR);
   unslept = tv.tv_sec;
   if (tv.tv_nsec && unslept < UINT_MAX) {
     ++unslept;
