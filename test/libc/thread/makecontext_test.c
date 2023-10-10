@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
+#include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -86,6 +87,7 @@ TEST(makecontext, crash) {
 }
 
 TEST(makecontext, backtrace) {
+  if (IsTiny()) return;  // doesn't print full crash report
   SPAWN(fork);
   ASSERT_SYS(0, 0, close(2));
   ASSERT_SYS(0, 2, creat("log", 0644));
