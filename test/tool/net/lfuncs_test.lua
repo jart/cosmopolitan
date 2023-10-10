@@ -55,6 +55,14 @@ assert(EncodeBase32("12") == "64s0")
 assert(EncodeBase32("\33", "01") == "00100001")
 assert(EncodeBase32("\33", "0123456789abcdef") == "21")
 
+assert(DecodeBase32("64s36d1n6r") == "123456")
+assert(DecodeBase32("64s0") == "12")
+assert(DecodeBase32("64 \t\r\ns0") == "12")
+assert(DecodeBase32("64s0!64s0") == "12")
+
+assert(EncodeBase32("\1\2\3\4\255", "0123456789abcdef") == "01020304ff")
+assert(DecodeBase32("01020304ff", "0123456789abcdef") == "\1\2\3\4\255")
+
 assert(EscapeHtml(nil) == nil)
 assert(EscapeHtml("?hello&there<>") == "?hello&amp;there&lt;&gt;")
 
