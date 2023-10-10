@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
@@ -40,6 +42,8 @@ int getrlimit(int resource, struct rlimit *rlim) {
     rc = einval();
   } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
     rc = efault();
+  } else if (IsXnuSilicon()) {
+    rc = _sysret(__syslib->__getrlimit(resource, rlim));
   } else if (!IsWindows()) {
     rc = sys_getrlimit(resource, rlim);
   } else if (resource == RLIMIT_STACK) {

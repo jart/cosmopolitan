@@ -100,7 +100,7 @@ static int cosmo_clock_nanosleep(int clock, int flags,
   if (timespec_cmp(remain, quantum) > 0) {
     waitfor = timespec_sub(remain, quantum);
     if (sys_clock_nanosleep(sleep_clock, 0, &waitfor, rem) == -1) {
-      if (rem && errno == EINTR) {
+      if (!flags && rem && errno == EINTR) {
         *rem = timespec_add(*rem, quantum);
       }
       return -1;

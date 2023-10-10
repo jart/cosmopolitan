@@ -32,10 +32,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
-void SetUpOnce(void) {
-  if (!IsWindows()) _Exit(0);
-}
-
 void OnAlrm(int sig) {
   // do nothing
   STRACE("OnAlrm()");

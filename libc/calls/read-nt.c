@@ -342,23 +342,26 @@ static textwindows int ProcessMouseEvent(const struct NtInputRecord *r,
   bs &= kNtFromLeft1stButtonPressed | kNtRightmostButtonPressed;
   if (ev & kNtMouseWheeled) {
     // scroll wheel (unnatural mode)
-    if (!(r->Event.MouseEvent.dwControlKeyState &
-          (kNtShiftPressed | kNtLeftCtrlPressed | kNtRightCtrlPressed |
-           kNtLeftAltPressed | kNtRightAltPressed))) {
-      bool isup = ((int)r->Event.MouseEvent.dwButtonState >> 16) > 0;
-      if (__ttyconf.magic & kTtyXtMouse) {
+    bool isup = ((int)r->Event.MouseEvent.dwButtonState >> 16) > 0;
+    if (__ttyconf.magic & kTtyXtMouse) {
+      if (r->Event.MouseEvent.dwControlKeyState &
+          (kNtLeftCtrlPressed | kNtRightCtrlPressed)) {
         e = isup ? 80 : 81;
-        goto OutputXtermMouseEvent;
       } else {
-        // we disable mouse highlighting when the tty is put in raw mode
-        // to mouse wheel events with widely understood vt100 arrow keys
-        *p++ = 033;
-        *p++ = !__keystroke.ohno_decckm ? '[' : 'O';
-        if (isup) {
-          *p++ = 'A';
-        } else {
-          *p++ = 'B';
-        }
+        e = isup ? 64 : 65;
+      }
+      goto OutputXtermMouseEvent;
+    } else if (!(r->Event.MouseEvent.dwControlKeyState &
+                 (kNtShiftPressed | kNtLeftCtrlPressed | kNtRightCtrlPressed |
+                  kNtLeftAltPressed | kNtRightAltPressed))) {
+      // we disable mouse highlighting when the tty is put in raw mode
+      // to mouse wheel events with widely understood vt100 arrow keys
+      *p++ = 033;
+      *p++ = !__keystroke.ohno_decckm ? '[' : 'O';
+      if (isup) {
+        *p++ = 'A';
+      } else {
+        *p++ = 'B';
       }
     }
   } else if ((bs || currentbs) && (__ttyconf.magic & kTtyXtMouse)) {

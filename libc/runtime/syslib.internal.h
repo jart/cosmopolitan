@@ -68,6 +68,8 @@ struct Syslib {
   long (*__sem_post)(int *);
   long (*__sem_wait)(int *);
   long (*__sem_trywait)(int *);
+  long (*__getrlimit)(int, void *);
+  long (*__setrlimit)(int, const void *);
 };
 
 extern struct Syslib *__syslib;

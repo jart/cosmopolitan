@@ -31,10 +31,9 @@
 #include "libc/x/x.h"
 #include "third_party/libcxx/math.h"
 
-#if 0  // TODO(jart): fix me
-
 bool gotsome;
 ucontext_t uc, goback;
+extern long __klog_handle;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
@@ -90,18 +89,17 @@ TEST(makecontext, backtrace) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, close(2));
   ASSERT_SYS(0, 2, creat("log", 0644));
+  __klog_handle = 2;
   getcontext(&uc);
   uc.uc_link = 0;
   uc.uc_stack.ss_sp = NewCosmoStack();
   uc.uc_stack.ss_size = GetStackSize();
   makecontext(&uc, itsatrap, 2, 123, 456);
   setcontext(&uc);
-  EXITS(128 + SIGSEGV);
+  TERMS(SIGSEGV);
   if (!GetSymbolTable()) return;
   char *log = gc(xslurp("log", 0));
   EXPECT_NE(0, strstr(log, "itsatrap"));
   EXPECT_NE(0, strstr(log, "runcontext"));
   EXPECT_NE(0, strstr(log, "makecontext_backtrace"));
 }
-
-#endif

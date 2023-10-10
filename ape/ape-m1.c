@@ -22,6 +22,7 @@
 #include <libkern/OSCacheControl.h>
 #include <limits.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -30,7 +31,6 @@
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
-#include <semaphore.h>
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
@@ -89,6 +89,8 @@ struct Syslib {
   long (*sem_post)(int *);
   long (*sem_wait)(int *);
   long (*sem_trywait)(int *);
+  long (*getrlimit)(int, struct rlimit *);
+  long (*setrlimit)(int, const struct rlimit *);
 };
 
 #define ELFCLASS32  1
@@ -814,7 +816,8 @@ static long sys_getentropy(void *buf, size_t buflen) {
   return sysret(getentropy(buf, buflen));
 }
 
-static long sys_sem_open(const char *name, int oflags, mode_t mode, unsigned value) {
+static long sys_sem_open(const char *name, int oflags, mode_t mode,
+                         unsigned value) {
   return sysret((long)sem_open(name, oflags, mode, value));
 }
 
@@ -836,6 +839,14 @@ static long sys_sem_wait(sem_t *sem) {
 
 static long sys_sem_trywait(sem_t *sem) {
   return sysret(sem_trywait(sem));
+}
+
+static long sys_getrlimit(int which, struct rlimit *rlim) {
+  return sysret(getrlimit(which, rlim));
+}
+
+static long sys_setrlimit(int which, const struct rlimit *rlim) {
+  return sysret(setrlimit(which, rlim));
 }
 
 static long sys_write(int fd, const void *data, size_t size) {
@@ -930,6 +941,8 @@ int main(int argc, char **argv, char **envp) {
   M->lib.sem_post = sys_sem_post;
   M->lib.sem_wait = sys_sem_wait;
   M->lib.sem_trywait = sys_sem_trywait;
+  M->lib.getrlimit = sys_getrlimit;
+  M->lib.setrlimit = sys_setrlimit;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;
