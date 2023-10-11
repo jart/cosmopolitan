@@ -16,17 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/files.h"
-#include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
-
-__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
 struct DosArgv {
   const char16_t *s;
@@ -143,7 +136,7 @@ textwindows int GetDosArgv(const char16_t *cmdline, char *buf, size_t size,
     AppendDosArgv('\0', st);
   }
   AppendDosArgv('\0', st);
-  if (size) buf[min(st->p - buf, size - 1)] = '\0';
-  if (max) argv[min(argc, max - 1)] = NULL;
+  if (size) buf[MIN(st->p - buf, size - 1)] = '\0';
+  if (max) argv[MIN(argc, max - 1)] = NULL;
   return argc;
 }

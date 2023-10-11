@@ -16,9 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
 
@@ -26,15 +24,12 @@
  * Returns true if file exists and is a symbolic link on Windows NT.
  */
 bool issymlink_nt(const char *path) {
-  int e;
   uint32_t x;
   char16_t path16[PATH_MAX];
-  e = errno;
   if (__mkntpath(path, path16) == -1) return -1;
   if ((x = GetFileAttributes(path16)) != -1u) {
     return !!(x & kNtFileAttributeReparsePoint);
   } else {
-    errno = e;
     return false;
   }
 }

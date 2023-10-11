@@ -27,8 +27,6 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
-__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
-
 static int __mkntpathat_impl(int dirfd, const char *path, int flags,
                              char16_t file[hasatleast PATH_MAX]) {
   char16_t dir[PATH_MAX];
@@ -71,7 +69,7 @@ int __mkntpathat(int dirfd, const char *path, int flags,
     if (len > 1 && !(len == 3 && file[1] == ':')) {
       file[--len] = 0;
     }
-    if ((fattr = __imp_GetFileAttributesW(file)) != -1u &&
+    if ((fattr = GetFileAttributes(file)) != -1u &&
         !(fattr & kNtFileAttributeReparsePoint) &&
         !(fattr & kNtFileAttributeDirectory)) {
       return enotdir();

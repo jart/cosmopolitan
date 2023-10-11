@@ -57,7 +57,7 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
   // you can't open symlinks; use readlink
   // this flag only applies to the final path component
   // if O_NOFOLLOW_ANY is passed (-1 on NT) it'll be rejected later
-  uint32_t fattr = __imp_GetFileAttributesW(path16);
+  uint32_t fattr = GetFileAttributes(path16);
   if (flags & O_NOFOLLOW) {
     if (fattr != -1u && (fattr & kNtFileAttributeReparsePoint)) {
       return eloop();

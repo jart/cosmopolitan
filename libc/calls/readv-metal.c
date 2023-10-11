@@ -26,7 +26,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/vga/vga.internal.h"
-
 #ifdef __x86_64__
 
 ssize_t sys_readv_metal(int fd, const struct iovec *iov, int iovlen) {

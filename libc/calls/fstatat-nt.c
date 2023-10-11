@@ -21,31 +21,40 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/at.h"
 
 textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
                                int flags) {
-  int rc;
+  int rc, e;
   int64_t fh;
+  uint32_t dwDesiredAccess;
   uint16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   BLOCK_SIGNALS;
+  e = errno;
+  dwDesiredAccess = kNtFileGenericRead;
+TryAgain:
   if ((fh = CreateFile(
-           path16, kNtFileGenericRead,
-           kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
-           kNtOpenExisting,
+           path16, dwDesiredAccess, 0, 0, kNtOpenExisting,
            kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
                ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
                                               : 0),
            0)) != -1) {
     rc = st ? sys_fstat_nt(fh, st) : 0;
     CloseHandle(fh);
+  } else if (dwDesiredAccess == kNtFileGenericRead &&
+             GetLastError() == kNtErrorSharingViolation) {
+    dwDesiredAccess = kNtFileReadAttributes;
+    errno = e;
+    goto TryAgain;
   } else {
     rc = __winerr();
   }

@@ -24,20 +24,13 @@
 #include "libc/str/str.h"
 
 static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
-  int e;
   char16_t *p;
   uint32_t attrs;
-  e = errno;
   while ((p = strrchr16(path, '\\'))) {
     *p = u'\0';
-    if ((attrs = GetFileAttributes(path)) != -1u) {
-      if (attrs & kNtFileAttributeDirectory) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      errno = e;
+    if ((attrs = GetFileAttributes(path)) != -1u &&
+        !(attrs & kNtFileAttributeDirectory)) {
+      return true;
     }
   }
   return false;

@@ -14,9 +14,9 @@ struct NtWin32FindData {
   uint32_t dwReserved1;
   char16_t cFileName[260];
   char16_t cAlternateFileName[14];
-  uint32_t dwFileType;
-  uint32_t dwCreatorType;
-  uint16_t wFinderFlags;
+  uint32_t dwFileType;    /* obsolete */
+  uint32_t dwCreatorType; /* obsolete */
+  uint16_t wFinderFlags;  /* obsolete */
 };
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

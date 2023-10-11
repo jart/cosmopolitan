@@ -50,4 +50,4 @@ ssize_t sys_readv_serial(int fd, const struct iovec *iov, int iovlen) {
   }
 }
 
-#endif
+#endif /* __x86_64__ */

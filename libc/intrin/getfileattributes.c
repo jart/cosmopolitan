@@ -16,10 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
 #include "libc/nt/thunk/msabi.h"
 
@@ -27,15 +25,12 @@ __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
 /**
  * Gets file info on the New Technology.
- *
  * @return handle, or -1u on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows uint32_t GetFileAttributes(const char16_t *lpPathName) {
   uint32_t flags;
   flags = __imp_GetFileAttributesW(lpPathName);
-  if (flags == -1u) __winerr();
-  NTTRACE("GetFileAttributes(%#hs) → %s% m", lpPathName,
+  NTTRACE("GetFileAttributes(%#hs) → %s", lpPathName,
           DescribeNtFileFlagAttr(flags));
   return flags;
 }

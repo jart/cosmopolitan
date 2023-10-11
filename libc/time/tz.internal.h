@@ -487,12 +487,12 @@ char *ctime_r(int64_t const *, char *);
 #define DAYSPERNYEAR	365
 #define DAYSPERLYEAR	366
 #define SECSPERHOUR	(SECSPERMIN * MINSPERHOUR)
-#define SECSPERDAY	((int_fast32_t) SECSPERHOUR * HOURSPERDAY)
+#define SECSPERDAY	((int32_t) SECSPERHOUR * HOURSPERDAY)
 #define MONSPERYEAR	12
 
 #define YEARSPERREPEAT		400	/* years before a Gregorian repeat */
-#define DAYSPERREPEAT		((int_fast32_t) 400 * 365 + 100 - 4 + 1)
-#define SECSPERREPEAT		((int_fast64_t) DAYSPERREPEAT * SECSPERDAY)
+#define DAYSPERREPEAT		((int32_t) 400 * 365 + 100 - 4 + 1)
+#define SECSPERREPEAT		((int64_t) DAYSPERREPEAT * SECSPERDAY)
 #define AVGSECSPERYEAR		(SECSPERREPEAT / YEARSPERREPEAT)
 
 #define TM_SUNDAY	0

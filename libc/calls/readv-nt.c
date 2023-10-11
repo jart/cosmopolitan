@@ -22,7 +22,6 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
-
 #ifdef __x86_64__
 
 textwindows ssize_t sys_readv_nt(int fd, const struct iovec *iov, int iovlen) {

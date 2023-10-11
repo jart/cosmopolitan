@@ -185,6 +185,10 @@ static textwindows uint8_t GetNtDirentType(struct NtWin32FindData *w) {
 
 static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
 TryAgain:
+  while (!dir->isdone &&
+         (dir->windata.dwFileAttributes & kNtFileAttributeSystem)) {
+    dir->isdone = !FindNextFile(dir->hand, &dir->windata);
+  }
   if (dir->isdone) {
     return NULL;
   }

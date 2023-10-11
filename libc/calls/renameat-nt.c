@@ -28,9 +28,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
-__msabi extern typeof(RemoveDirectory) *const __imp_RemoveDirectoryW;
-
 static textwindows bool StripTrailingSlash(char16_t *path) {
   size_t n = strlen16(path);
   bool had_trailing_slash = false;
@@ -67,8 +64,8 @@ textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
   // test for some known error conditions ahead of time
   // the enotdir check can't be done reactively
   // ideally we should resolve symlinks first
-  uint32_t oldattr = __imp_GetFileAttributesW(M.oldpath16);
-  uint32_t newattr = __imp_GetFileAttributesW(M.newpath16);
+  uint32_t oldattr = GetFileAttributes(M.oldpath16);
+  uint32_t newattr = GetFileAttributes(M.newpath16);
   if ((old_must_be_dir && oldattr != -1u &&
        !(oldattr & kNtFileAttributeDirectory)) ||
       (new_must_be_dir && newattr != -1u &&
@@ -85,7 +82,7 @@ textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
     } else if ((oldattr & kNtFileAttributeDirectory) &&
                (newattr & kNtFileAttributeDirectory)) {
       // both old and new are directories
-      if (!__imp_RemoveDirectoryW(M.newpath16) &&
+      if (!RemoveDirectory(M.newpath16) &&
           GetLastError() == kNtErrorDirNotEmpty) {
         return enotempty();
       }

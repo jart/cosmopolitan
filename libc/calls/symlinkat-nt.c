@@ -34,8 +34,6 @@
 #include "libc/runtime/stack.h"
 #include "libc/sysv/errfuns.h"
 
-__msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
-
 static struct {
   _Atomic(uint32_t) once;
   _Bool allowed;
@@ -72,7 +70,7 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
   if ((targetlen = __mkntpath(target, M.target16)) == -1) return -1;
 
   // determine if we need directory flag
-  if ((attrs = __imp_GetFileAttributesW(M.target16)) != -1u) {
+  if ((attrs = GetFileAttributes(M.target16)) != -1u) {
     if (attrs & kNtFileAttributeDirectory) {
       flags = kNtSymbolicLinkFlagDirectory;
     } else {
