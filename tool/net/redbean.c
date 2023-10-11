@@ -506,7 +506,6 @@ static struct Strings hidepaths;
 static const char *launchbrowser;
 static const char ctIdx = 'c';  // a pseudo variable to get address of
 
-static pthread_t replth;
 static pthread_t monitorth;
 static struct Buffer inbuf_actual;
 static struct Buffer inbuf;
@@ -7447,12 +7446,6 @@ void RedBean(int argc, char *argv[]) {
         monitorth = 0;
       }
     }
-#ifndef STATIC
-    if (replth) {
-      pthread_join(replth, 0);
-      replth = 0;
-    }
-#endif
     HandleShutdown();
     CallSimpleHookIfDefined("OnServerStop");
   }
@@ -7478,10 +7471,6 @@ int main(int argc, char *argv[]) {
   // 2. unwound worker exit
   if (IsModeDbg()) {
     if (isexitingworker) {
-      if (replth) {
-        pthread_join(replth, 0);
-        replth = 0;
-      }
       linenoiseDisableRawMode();
       linenoiseHistoryFree();
     }
