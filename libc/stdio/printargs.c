@@ -358,25 +358,6 @@ textstartup void __printargs(const char *prologue) {
     }
   }
 
-  if (IsLinux()) {
-    PRINT("");
-    PRINT("CAPABILITIES");
-    if (prctl(PR_CAPBSET_READ, 0) != -1) {
-      for (gotsome = false, i = 0; i <= CAP_LAST_CAP; ++i) {
-        if (prctl(PR_CAPBSET_READ, i) == 1) {
-          char buf[64];
-          PRINT(" ☼ %s", (DescribeCapability)(buf, i));
-          gotsome = true;
-        }
-      }
-      if (!gotsome) {
-        PRINT(" ☼ %s", "none");
-      }
-    } else {
-      PRINT(" ☼ %s", strerror(errno));
-    }
-  }
-
   PRINT("");
   PRINT("RESOURCE LIMITS");
   for (gotsome = false, i = 0; i < RLIM_NLIMITS; ++i) {
@@ -624,34 +605,6 @@ textstartup void __printargs(const char *prologue) {
   if (IsWindows()) {
     struct NtStartupInfo startinfo;
     GetStartupInfo(&startinfo);
-
-    PRINT("");
-    PRINT("GETSTARTUPINFO");
-    if (startinfo.lpDesktop)
-      PRINT(" ☼ %s = %#!hs", "lpDesktop", startinfo.lpDesktop);
-    if (startinfo.lpTitle) PRINT(" ☼ %s = %#!hs", "lpTitle", startinfo.lpTitle);
-    if (startinfo.dwX) PRINT(" ☼ %s = %u", "dwX", startinfo.dwX);
-    if (startinfo.dwY) PRINT(" ☼ %s = %u", "dwY", startinfo.dwY);
-    if (startinfo.dwXSize) PRINT(" ☼ %s = %u", "dwXSize", startinfo.dwXSize);
-    if (startinfo.dwYSize) PRINT(" ☼ %s = %u", "dwYSize", startinfo.dwYSize);
-    if (startinfo.dwXCountChars)
-      PRINT(" ☼ %s = %u", "dwXCountChars", startinfo.dwXCountChars);
-    if (startinfo.dwYCountChars)
-      PRINT(" ☼ %s = %u", "dwYCountChars", startinfo.dwYCountChars);
-    if (startinfo.dwFillAttribute)
-      PRINT(" ☼ %s = %u", "dwFillAttribute", startinfo.dwFillAttribute);
-    if (startinfo.dwFlags)
-      PRINT(" ☼ %s = %s", "dwFlags", DescribeNtStartFlags(startinfo.dwFlags));
-    if (startinfo.wShowWindow)
-      PRINT(" ☼ %s = %hu", "wShowWindow", startinfo.wShowWindow);
-    if (startinfo.cbReserved2)
-      PRINT(" ☼ %s = %hu", "cbReserved2", startinfo.cbReserved2);
-    if (startinfo.hStdInput)
-      PRINT(" ☼ %s = %ld", "hStdInput", startinfo.hStdInput);
-    if (startinfo.hStdOutput)
-      PRINT(" ☼ %s = %ld", "hStdOutput", startinfo.hStdOutput);
-    if (startinfo.hStdError)
-      PRINT(" ☼ %s = %ld", "hStdError", startinfo.hStdError);
 
     PRINT("");
     uint32_t cm;

@@ -21,7 +21,7 @@
 
 /**
  * Searches sorted array for exact item in logarithmic time.
- * @see bsearch_r(), bisectcarleft()
+ * @see bsearch_r()
  */
 void *bsearch(const void *key, const void *base, size_t nmemb, size_t size,
               int cmp(const void *a, const void *b)) {

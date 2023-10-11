@@ -10,7 +10,7 @@
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/stdio.h"
 
-#define SYSCONF(NAME) printf("%s %,ld\n", #NAME, sysconf(NAME))
+#define SYSCONF(NAME) printf("%-24s %,ld\n", #NAME, sysconf(NAME))
 
 int main(int argc, char *argv[]) {
   SYSCONF(_SC_CLK_TCK);

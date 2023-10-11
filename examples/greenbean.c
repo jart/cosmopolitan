@@ -154,7 +154,7 @@ void *Worker(void *id) {
     char inbuf[512], outbuf[512], *p, *q;
 
     // musl libc and cosmopolitan libc support a posix thread extension
-    // that makes thread cancellation work much better your io routines
+    // that makes thread cancelation work much better. your io routines
     // will just raise ECANCELED so you can check for cancellation with
     // normal logic rather than needing to push and pop cleanup handler
     // functions onto the stack, or worse dealing with async interrupts

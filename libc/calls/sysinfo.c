@@ -29,9 +29,16 @@
 #include "libc/sysv/errfuns.h"
 
 #define CTL_KERN      1
+#define CTL_VM        2
 #define CTL_HW        6
+#define VM_LOADAVG    2
 #define KERN_BOOTTIME 21
 #define HW_PHYSMEM    (IsXnu() ? 24 : 5)
+
+struct loadavg {
+  uint32_t ldavg[3];
+  int64_t fscale;
+};
 
 static int64_t GetUptime(void) {
   if (IsNetbsd()) return 0;  // TODO(jart): Why?
@@ -50,7 +57,20 @@ static int64_t GetPhysmem(void) {
   return x;
 }
 
+static void GetLoads(uint64_t loads[3]) {
+  size_t size;
+  struct loadavg loadinfo;
+  int mib[2] = {CTL_VM, VM_LOADAVG};
+  size = sizeof(loadinfo);
+  if (sys_sysctl(mib, 2, &loadinfo, &size, 0, 0) != -1) {
+    for (int i = 0; i < 3; i++) {
+      loads[i] = (double)loadinfo.ldavg[i] / loadinfo.fscale * 65536;
+    }
+  }
+}
+
 static int sys_sysinfo_bsd(struct sysinfo *info) {
+  GetLoads(info->loads);
   info->uptime = GetUptime();
   info->totalram = GetPhysmem();
   info->bufferram = GetPhysmem();

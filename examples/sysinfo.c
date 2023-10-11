@@ -8,10 +8,12 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/struct/sysinfo.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/clock.h"
 
 int main(int argc, char *argv[]) {
   int64_t x;

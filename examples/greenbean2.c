@@ -188,7 +188,7 @@ void *ListenWorker(void *arg) {
     struct Client client;
 
     // musl libc and cosmopolitan libc support a posix thread extension
-    // that makes thread cancelation work much better your i/o routines
+    // that makes thread cancelation work much better. your io routines
     // will just raise ECANCELED, so you can check for cancelation with
     // normal logic rather than needing to push and pop cleanup handler
     // functions onto the stack, or worse dealing with async interrupts

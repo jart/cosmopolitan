@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/sock/select.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/struct/sigaction.h"
@@ -24,7 +25,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"

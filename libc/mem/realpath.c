@@ -44,15 +44,10 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-static inline bool IsSlash(char c)
-{
-	return c == '/' || c == '\\';
-}
-
 static size_t GetSlashLen(const char *s)
 {
 	const char *s0 = s;
-	while (IsSlash(*s)) s++;
+	while (*s == '/') s++;
 	return s-s0;
 }
 
@@ -123,7 +118,7 @@ restart:
 	for (; ; p+=GetSlashLen(stack+p)) {
 		/* If stack starts with /, the whole component is / or //
 		 * and the output state must be reset. */
-		if (IsSlash(stack[p])) {
+		if (stack[p] == '/') {
 			check_dir=0;
 			nup=0;
 			q=0;
@@ -147,7 +142,7 @@ restart:
 		/* Copy next component onto output at least temporarily, to
 		 * call readlink, but wait to advance output position until
 		 * determining it's not a link. */
-		if (q && !IsSlash(output[q-1])) {
+		if (q && output[q-1] != '/') {
 			if (!p) goto toolong;
 			stack[--p] = '/';
 			l++;
@@ -180,8 +175,8 @@ restart:
 skip_readlink:
 			check_dir = 0;
 			if (up) {
-				while(q && !IsSlash(output[q-1])) q--;
-				if (q>1 && (q>2 || !IsSlash(output[0]))) q--;
+				while(q && output[q-1] != '/') q--;
+				if (q>1 && (q>2 || output[0] != '/')) q--;
 				continue;
 			}
 			if (l0) q += l;
@@ -203,8 +198,8 @@ skip_readlink:
 
 		/* If link contents end in /, strip any slashes already on
 		 * stack to avoid /->// or //->/// or spurious toolong. */
-		if (IsSlash(stack[k-1])) {
-			while (IsSlash(stack[p]))
+		if (stack[k-1] == '/') {
+			while (stack[p] == '/')
 				p++;
 		}
 		p -= k;
@@ -217,18 +212,18 @@ skip_readlink:
 
  	output[q] = 0;
 
-	if (!IsSlash(output[0])) {
+	if (output[0] != '/') {
 		if (!getcwd(stack, sizeof(stack))) return 0;
 		l = strlen(stack);
 		/* Cancel any initial .. components. */
 		p = 0;
 		while (nup--) {
-			while(l>1 && !IsSlash(stack[l-1])) l--;
+			while(l>1 && stack[l-1] != '/') l--;
 			if (l>1) l--;
 			p += 2;
 			if (p<q) p++;
 		}
-		if (q-p && !IsSlash(stack[l-1])) stack[l++] = '/';
+		if (q-p && stack[l-1] != '/') stack[l++] = '/';
 		if (l + (q-p) + 1 >= PATH_MAX) goto toolong;
 		memmove(output + l, output + p, q - p + 1);
 		if (l) memcpy(output, stack, l);

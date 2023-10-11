@@ -21,6 +21,7 @@
 #include "libc/nt/accounting.h"
 #include "libc/nt/struct/memorystatusex.h"
 #include "libc/nt/struct/systeminfo.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/systeminfo.h"
 
 textwindows int sys_sysinfo_nt(struct sysinfo *info) {
@@ -29,10 +30,11 @@ textwindows int sys_sysinfo_nt(struct sysinfo *info) {
   GetSystemInfo(&sysinfo);
   memstat.dwLength = sizeof(struct NtMemoryStatusEx);
   if (GlobalMemoryStatusEx(&memstat)) {
+    info->mem_unit = 1;
     info->totalram = memstat.ullTotalPhys;
     info->freeram = memstat.ullAvailPhys;
     info->procs = sysinfo.dwNumberOfProcessors;
-    info->mem_unit = 1;
+    info->uptime = GetTickCount64() / 1000;
     return 0;
   } else {
     return __winerr();

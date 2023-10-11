@@ -587,7 +587,7 @@ syscon	clock	CLOCK_MONOTONIC_RAW			4			4			127			4			127			127			127			127			# a
 syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			127			12			15			2			0x40000000		127			# NetBSD lets you bitwise a PID into clockid_t
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			127			16			14			4			0x20000000		127			#
 syscon	clock	CLOCK_PROF				127			127			127			127			2			127			2			127			#
-syscon	clock	CLOCK_BOOTTIME				7			7			127			127			127			6			127			127			#
+syscon	clock	CLOCK_BOOTTIME				7			7			7			127			127			6			127			7			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			8			127			127			127			127			127			127			#
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			9			127			127			127			127			127			127			#
 syscon	clock	CLOCK_TAI				11			11			127			127			127			127			127			127			#
@@ -622,7 +622,7 @@ syscon	so	SO_TYPE					3			3			0x1008			0x1008			0x1008			0x1008			0x1008			0x100
 syscon	so	SO_ERROR				4			4			0x1007			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
 syscon	so	SO_ACCEPTCONN				30			30			2			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
 syscon	so	SO_REUSEPORT				15			15			0x0200			0x0200			0x0200			0x0200			0x0200			0			# bsd consensus; no windows support
-syscon	so	SO_REUSEADDR				2			2			4			4			4			4			4			4			# bsd consensus (default behavior on NT)
+syscon	so	SO_REUSEADDR				2			2			4			4			4			4			4			-5			# SO_EXCLUSIVEADDRUSE on Windows (see third_party/python/Lib/test/support/__init__.py)
 syscon	so	SO_KEEPALIVE				9			9			8			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			5			0x10			0x10			0x10			0x10			0x10			0x10			# bsd consensus
 syscon	so	SO_BROADCAST				6			6			0x20			0x20			0x20			0x20			0x20			0x20			# socket is configured for broadcast messages; bsd consensus

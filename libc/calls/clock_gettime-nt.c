@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
@@ -26,11 +27,16 @@
 textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
   struct NtFileTime ft;
   if (clock == CLOCK_REALTIME) {
+    if (!ts) return 0;
     GetSystemTimeAsFileTime(&ft);
     *ts = FileTimeToTimeSpec(ft);
     return 0;
   } else if (clock == CLOCK_MONOTONIC) {
+    if (!ts) return 0;
     return sys_clock_gettime_mono(ts);
+  } else if (clock == CLOCK_BOOTTIME) {
+    if (ts) *ts = timespec_frommillis(GetTickCount64());
+    return 0;
   } else {
     return -EINVAL;
   }
