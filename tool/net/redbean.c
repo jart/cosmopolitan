@@ -7407,7 +7407,7 @@ void RedBean(int argc, char *argv[]) {
     Daemonize();
   }
   if (pidpath) {
-    fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
+    fd = open(pidpath, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     WRITE(fd, ibuf, FormatInt32(ibuf, getpid()) - ibuf);
     close(fd);
   }
