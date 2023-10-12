@@ -7,19 +7,17 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "third_party/vqsort/vqsort.h"
-#include "libc/macros.internal.h"
-#include "libc/stdio/stdio.h"
-#include "third_party/vqsort/vqsort.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/itoa.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/stdio/sysparam.h"
 
-// how to sort one gigabyte of 64-bit integers per second
-
-int main(int argc, char *argv[]) {
-  int64_t A[] = {9, 3, -3, 5, 23, 7};
-  vqsort_int64(A, ARRAYLEN(A));
-  for (int i = 0; i < ARRAYLEN(A); ++i) {
-    if (i) printf(" ");
-    printf("%ld", A[i]);
-  }
-  printf("\n");
+int main() {
+  int nproc;
+  char ibuf[12];
+  nproc = __get_cpu_count();
+  nproc = MAX(1, nproc);
+  FormatInt32(ibuf, nproc);
+  tinyprint(1, ibuf, "\n", NULL);
 }

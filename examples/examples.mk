@@ -115,14 +115,6 @@ o/$(MODE)/examples/%.com.dbg:							\
 		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
-o/$(MODE)/examples/nomodifyself.com.dbg:					\
-		$(EXAMPLES_DEPS)						\
-		o/$(MODE)/examples/nomodifyself.o				\
-		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 o/$(MODE)/examples/hellolua.com.dbg:						\
 		$(EXAMPLES_DEPS)						\
 		o/$(MODE)/examples/hellolua.o					\

@@ -15,7 +15,6 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/xed/x86.h"
-
 #ifdef __x86_64__
 
 /**

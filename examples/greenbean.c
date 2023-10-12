@@ -60,14 +60,7 @@
 #endif
 
 /**
- * @fileoverview greenbean lightweight threaded web server no. 2
- *
- * This web server is the same as greenbean.c except it supports having
- * more than one thread on Windows. To do that we have to make the code
- * more complicated by not using SO_REUSEPORT. The approach we take, is
- * creating a single listener thread which adds accepted sockets into a
- * queue that worker threads consume. This way, if you like Windows you
- * can easily have a web server with 10,000+ connections.
+ * @fileoverview greenbean lightweight threaded web server
  */
 
 #define PORT      8080

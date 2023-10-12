@@ -1059,11 +1059,15 @@ privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
 privileged void kvprintf(const char *fmt, va_list v) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
-  long size = __get_safe_size(8000, 3000);
-  if (size < 80) {
-    klog(STACK_ERROR, sizeof(STACK_ERROR) - 1);
-    return;
-  }
+
+  long size = 3000;
+  /* long size = __get_safe_size(8000, 3000); */
+  /* if (size < 80) { */
+  /*   asm("int3"); */
+  /*   klog(STACK_ERROR, sizeof(STACK_ERROR) - 1); */
+  /*   return; */
+  /* } */
+
   char *buf = alloca(size);
   CheckLargeStackAllocation(buf, size);
 #pragma GCC pop_options

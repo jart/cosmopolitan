@@ -7,12 +7,12 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
-#include "libc/log/check.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
@@ -35,8 +35,8 @@ int main() {
   struct itimerval shot = {{0, 0}, {1, 500000}};
   struct sigaction handler = {.sa_sigaction = OnSigAlrm,
                               .sa_flags = SA_RESETHAND | SA_SIGINFO};
-  CHECK_EQ(0, sigaction(SIGALRM, &handler, 0));
-  CHECK_EQ(0, setitimer(ITIMER_REAL, &shot, 0));
+  unassert(!sigaction(SIGALRM, &handler, 0));
+  unassert(!setitimer(ITIMER_REAL, &shot, 0));
 
   // wait for alarm
   pause();
@@ -49,10 +49,10 @@ int main() {
   struct sigaction oldalrm;
   struct sigaction sigalrm = {.sa_sigaction = OnSigAlrm,
                               .sa_flags = SA_SIGINFO};
-  CHECK_EQ(0, sigaction(SIGALRM, &sigalrm, &oldalrm));
+  unassert(!sigaction(SIGALRM, &sigalrm, &oldalrm));
   struct itimerval oldtimer;
   struct itimerval timer = {{1, 500000}, {1, 500000}};
-  CHECK_EQ(0, setitimer(ITIMER_REAL, &timer, &oldtimer));
+  unassert(!setitimer(ITIMER_REAL, &timer, &oldtimer));
 
   // wait for three timeouts
   int i = 0;
@@ -67,6 +67,6 @@ int main() {
   }
 
   // teardown timer
-  CHECK_EQ(0, setitimer(ITIMER_REAL, &oldtimer, 0));
-  CHECK_EQ(0, sigaction(SIGALRM, &oldalrm, 0));
+  unassert(!setitimer(ITIMER_REAL, &oldtimer, 0));
+  unassert(!sigaction(SIGALRM, &oldalrm, 0));
 }

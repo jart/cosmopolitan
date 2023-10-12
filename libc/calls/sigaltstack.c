@@ -56,6 +56,15 @@ static void sigaltstack2linux(struct sigaltstack *linux,
   linux->ss_size = size;
 }
 
+static void sigaltstack_setnew(const struct sigaltstack *neu) {
+  if (neu) {
+    struct CosmoTib *tib = __get_tls();
+    tib->tib_sigstack_addr = (char *)ROUNDUP((uintptr_t)neu->ss_sp, 16);
+    tib->tib_sigstack_size = ROUNDDOWN(neu->ss_size, 16);
+    tib->tib_sigstack_flags = neu->ss_flags & SS_DISABLE;
+  }
+}
+
 static textwindows int sigaltstack_cosmo(const struct sigaltstack *neu,
                                          struct sigaltstack *old) {
   struct CosmoTib *tib = __get_tls();
@@ -65,11 +74,7 @@ static textwindows int sigaltstack_cosmo(const struct sigaltstack *neu,
     old->ss_size = tib->tib_sigstack_size;
     old->ss_flags = tib->tib_sigstack_flags & ~SS_ONSTACK;
   }
-  if (neu) {
-    tib->tib_sigstack_addr = (char *)ROUNDUP((uintptr_t)neu->ss_sp, 16);
-    tib->tib_sigstack_size = ROUNDDOWN(neu->ss_size, 16);
-    tib->tib_sigstack_flags = neu->ss_flags & SS_DISABLE;
-  }
+  sigaltstack_setnew(neu);
   if (tib->tib_sigstack_addr <= bp &&
       bp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {
     if (old) old->ss_flags |= SS_ONSTACK;
@@ -130,8 +135,10 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
     rc = enomem();
   } else if (IsLinux()) {
     rc = sys_sigaltstack(neu, old);
+    if (!rc) sigaltstack_setnew(neu);
   } else if (IsBsd()) {
     rc = sigaltstack_bsd(neu, old);
+    if (!rc) sigaltstack_setnew(neu);
   } else {
     rc = sigaltstack_cosmo(neu, old);
   }
