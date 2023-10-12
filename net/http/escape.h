@@ -34,6 +34,8 @@ char *EncodeLatin1(const char *, size_t, size_t *, int);
 char *EncodeHttpHeaderValue(const char *, size_t, size_t *);
 char *VisualizeControlCodes(const char *, size_t, size_t *);
 char *IndentLines(const char *, size_t, size_t *, size_t);
+char *EncodeBase32(const char *, size_t, const char *, size_t, size_t *);
+char *DecodeBase32(const char *, size_t, const char *, size_t, size_t *);
 char *EncodeBase64(const char *, size_t, size_t *);
 char *DecodeBase64(const char *, size_t, size_t *);
 

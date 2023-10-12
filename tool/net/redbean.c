@@ -5126,11 +5126,13 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Crc32", LuaCrc32},                                        //
     {"Crc32c", LuaCrc32c},                                      //
     {"Decimate", LuaDecimate},                                  //
+    {"DecodeBase32", LuaDecodeBase32},                          //
     {"DecodeBase64", LuaDecodeBase64},                          //
     {"DecodeHex", LuaDecodeHex},                                //
     {"DecodeJson", LuaDecodeJson},                              //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
     {"Deflate", LuaDeflate},                                    //
+    {"EncodeBase32", LuaEncodeBase32},                          //
     {"EncodeBase64", LuaEncodeBase64},                          //
     {"EncodeHex", LuaEncodeHex},                                //
     {"EncodeJson", LuaEncodeJson},                              //

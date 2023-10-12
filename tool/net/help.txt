@@ -737,8 +737,20 @@ FUNCTIONS
           Turns ASCII base-16 hexadecimal byte string into binary string,
           case-insensitively. Non-hex characters may not appear in string.
 
+  DecodeBase32(ascii:str[, alphabet:str]) → binary:str
+          Turns ASCII into binary using provided alphabet. The default
+          decoding uses Crockford's base32 alphabet in a permissive way
+          that ignores whitespaces and dash ('-') and stops at the first
+          character outside of the alphabet.
+
+  EncodeBase32(binary:str[, alphabet:str]) → ascii:str
+          Turns binary into ASCII using provided alphabet (using Crockford's
+          base32 encoding by default). Any alphabet that has a power of 2
+          length (up to 128) may be supplied for encoding and decoding,
+          which allows to provide alternative base32 encodings.
+
   DecodeBase64(ascii:str) → binary:str
-          Turns ASCII into binary, in a permissive way that ignores
+          Turns ASCII into binary in a permissive way that ignores
           characters outside the base64 alphabet, such as whitespace. See
           decodebase64.c.
 
