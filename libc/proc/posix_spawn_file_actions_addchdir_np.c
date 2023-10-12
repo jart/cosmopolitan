@@ -16,39 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/ulock.h"
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/errno.h"
+#include "libc/mem/mem.h"
+#include "libc/proc/posix_spawn.h"
+#include "libc/proc/posix_spawn.internal.h"
 
-// XNU futexes
-// https://opensource.apple.com/source/xnu/xnu-7195.50.7.100.1/bsd/sys/ulock.h.auto.html
-// https://opensource.apple.com/source/xnu/xnu-3789.41.3/bsd/kern/sys_ulock.c.auto.html
-
-int sys_ulock_wait(uint32_t operation, void *addr, uint64_t value,
-                   uint32_t timeout_micros) asm("sys_futex_cp");
-
-// returns -1 w/ errno
-int ulock_wait(uint32_t operation, void *addr, uint64_t value,
-               uint32_t timeout_micros) {
-  int rc;
-  operation |= ULF_WAIT_CANCEL_POINT;
-  LOCKTRACE("ulock_wait(%#x, %p, %lx, %u) → ...", operation, addr, value,
-            timeout_micros);
-  rc = sys_ulock_wait(operation, addr, value, timeout_micros);
-  LOCKTRACE("ulock_wait(%#x, %p, %lx, %u) → %d% m", operation, addr, value,
-            timeout_micros, rc);
-  return rc;
-}
-
-// returns -errno
-int ulock_wake(uint32_t operation, void *addr, uint64_t wake_value) {
-  int rc;
-  rc = __syscall3i(operation, (long)addr, wake_value, 0x2000000 | 516);
-  LOCKTRACE("ulock_wake(%#x, %p, %lx) → %s", operation, addr, wake_value,
-            DescribeErrno(rc));
-  return rc;
+/**
+ * Add chdir() action to spawn.
+ *
+ * @param file_actions was initialized by posix_spawn_file_actions_init()
+ * @param path will be safely copied
+ * @return 0 on success, or errno on error
+ * @raise ENOMEM if insufficient memory was available
+ */
+int posix_spawn_file_actions_addchdir_np(
+    posix_spawn_file_actions_t *file_actions, const char *path) {
+  char *path2;
+  if (!(path2 = strdup(path))) return ENOMEM;
+  return __posix_spawn_add_file_action(file_actions,
+                                       (struct _posix_faction){
+                                           .action = _POSIX_SPAWN_CHDIR,
+                                           .path = path2,
+                                       });
 }

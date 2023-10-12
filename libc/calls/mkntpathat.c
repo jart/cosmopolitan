@@ -27,37 +27,35 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
-static int __mkntpathat_impl(int dirfd, const char *path, int flags,
-                             char16_t file[hasatleast PATH_MAX]) {
+static textwindows int __mkntpathath_impl(int64_t dirhand, const char *path,
+                                          int flags,
+                                          char16_t file[hasatleast PATH_MAX]) {
+  size_t n;
   char16_t dir[PATH_MAX];
   uint32_t dirlen, filelen;
   if (!isutf8(path, -1)) return eilseq();  // thwart overlong nul in conversion
   if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;
   if (!filelen) return enoent();
-  if (file[0] != u'\\' && dirfd != AT_FDCWD) {  // ProTip: \\?\C:\foo
-    if (!__isfdkind(dirfd, kFdFile)) return ebadf();
-    dirlen = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
+  if (file[0] != u'\\' && dirhand != AT_FDCWD) {  // ProTip: \\?\C:\foo
+    dirlen = GetFinalPathNameByHandle(dirhand, dir, ARRAYLEN(dir),
                                       kNtFileNameNormalized | kNtVolumeNameDos);
     if (!dirlen) return __winerr();
-    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) {
-      STRACE("path too long: %#.*hs\\%#.*hs", dirlen, dir, filelen, file);
-      return enametoolong();
-    }
+    if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) return enametoolong();
     dir[dirlen] = u'\\';
     memcpy(dir + dirlen + 1, file, (filelen + 1) * sizeof(char16_t));
-    memcpy(file, dir, (dirlen + 1 + filelen + 1) * sizeof(char16_t));
-    return dirlen + 1 + filelen;
+    memcpy(file, dir, ((n = dirlen + 1 + filelen) + 1) * sizeof(char16_t));
+    return __normntpath(file, n);
   } else {
     return filelen;
   }
 }
 
-int __mkntpathat(int dirfd, const char *path, int flags,
-                 char16_t file[hasatleast PATH_MAX]) {
+textwindows int __mkntpathath(int64_t dirhand, const char *path, int flags,
+                              char16_t file[hasatleast PATH_MAX]) {
 
   // convert the path.
   int len;
-  if ((len = __mkntpathat_impl(dirfd, path, flags, file)) == -1) {
+  if ((len = __mkntpathath_impl(dirhand, path, flags, file)) == -1) {
     return -1;
   }
 
@@ -77,4 +75,17 @@ int __mkntpathat(int dirfd, const char *path, int flags,
   }
 
   return len;
+}
+
+textwindows int __mkntpathat(int dirfd, const char *path, int flags,
+                             char16_t file[hasatleast PATH_MAX]) {
+  int64_t dirhand;
+  if (dirfd == AT_FDCWD) {
+    dirhand = AT_FDCWD;
+  } else if (__isfdkind(dirfd, kFdFile)) {
+    dirhand = g_fds.p[dirfd].handle;
+  } else {
+    return ebadf();
+  }
+  return __mkntpathath(dirhand, path, flags, file);
 }

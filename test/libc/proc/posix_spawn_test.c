@@ -53,6 +53,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+#include "libc/x/x.h"
 #include "third_party/nsync/mu.h"
 
 const char kTinyLinuxExit[128] = {
@@ -159,6 +160,29 @@ TEST(posix_spawn, pipe) {
   ASSERT_SYS(0, 6, read(p[0], buf, sizeof(buf)));
   ASSERT_SYS(0, 0, close(p[0]));
   ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
+}
+
+TEST(posix_spawn, chdir) {
+  int ws, pid, p[2];
+  char buf[16] = {0};
+  char *args[] = {"cocmd.com", "-c", "cat hello.txt", 0};
+  char *envs[] = {0};
+  posix_spawn_file_actions_t fa;
+  testlib_extract("/zip/cocmd.com", "cocmd.com", 0755);
+  ASSERT_SYS(0, 0, mkdir("subdir", 0777));
+  ASSERT_SYS(0, 0, xbarf("subdir/hello.txt", "hello\n", -1));
+  ASSERT_SYS(0, 0, pipe2(p, O_CLOEXEC));
+  ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
+  ASSERT_EQ(0, posix_spawn_file_actions_adddup2(&fa, p[1], 1));
+  ASSERT_EQ(0, posix_spawn_file_actions_addchdir_np(&fa, "subdir"));
+  ASSERT_EQ(0, posix_spawn(&pid, "../cocmd.com", &fa, 0, args, envs));
+  ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
+  ASSERT_SYS(0, 0, close(p[1]));
+  ASSERT_NE(-1, waitpid(pid, &ws, 0));
+  ASSERT_EQ(0, ws);
+  ASSERT_SYS(0, 6, read(p[0], buf, sizeof(buf)));
+  ASSERT_STREQ("hello\n", buf);
+  ASSERT_SYS(0, 0, close(p[0]));
 }
 
 _Thread_local atomic_int gotsome;

@@ -7,8 +7,8 @@ COSMOPOLITAN_C_START_
 
 int mkntcmdline(char16_t[32767], char *const[]);
 int mkntenvblock(char16_t[32767], char *const[], char *const[], char[32767]);
-int ntspawn(const char *, char *const[], char *const[], char *const[], uint32_t,
-            const char16_t *, int64_t, int64_t *, uint32_t,
+int ntspawn(int64_t, const char *, char *const[], char *const[], char *const[],
+            uint32_t, const char16_t *, int64_t, int64_t *, uint32_t,
             const struct NtStartupInfo *, struct NtProcessInformation *);
 
 COSMOPOLITAN_C_END_

@@ -73,7 +73,7 @@ static void ntspawn_free(void *ptr) {
  * @asyncsignalsafe
  */
 textwindows int ntspawn(
-    const char *prog, char *const argv[], char *const envp[],
+    int64_t dirhand, const char *prog, char *const argv[], char *const envp[],
     char *const extravars[], uint32_t dwCreationFlags,
     const char16_t *opt_lpCurrentDirectory, int64_t opt_hParentProcess,
     int64_t *opt_lpExplicitHandleList, uint32_t dwExplicitHandleCount,
@@ -82,7 +82,8 @@ textwindows int ntspawn(
   int rc = -1;
   struct SpawnBlock *sb;
   BLOCK_SIGNALS;
-  if ((sb = ntspawn_malloc(sizeof(*sb))) && __mkntpath(prog, sb->path) != -1) {
+  if ((sb = ntspawn_malloc(sizeof(*sb))) &&
+      __mkntpathath(dirhand, prog, 0, sb->path) != -1) {
     if (!mkntcmdline(sb->cmdline, argv) &&
         !mkntenvblock(sb->envblock, envp, extravars, sb->envbuf)) {
       bool32 ok;
@@ -133,6 +134,8 @@ textwindows int ntspawn(
             STRACE("CreateProcess() failed w/ %d", GetLastError());
             if (GetLastError() == kNtErrorSharingViolation) {
               etxtbsy();
+            } else if (GetLastError() == kNtErrorInvalidName) {
+              enoent();
             }
           }
           rc = __fix_enotdir(rc, sb->path);

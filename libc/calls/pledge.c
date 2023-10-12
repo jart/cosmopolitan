@@ -24,6 +24,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -267,11 +268,13 @@ int pledge(const char *promises, const char *execpromises) {
       // if bits are missing in execpromises that exist in promises
       // then execpromises wouldn't be a monotonic access reduction
       // this check only matters when exec / execnative are allowed
-      if ((ipromises & ~iexecpromises) &&
-          (~ipromises & (1ul << PROMISE_EXEC))) {
+      bool notsubset = ((ipromises & ~iexecpromises) &&
+                        (~ipromises & (1ul << PROMISE_EXEC)));
+      if (notsubset && execpromises) {
         STRACE("execpromises must be a subset of promises");
         rc = einval();
       } else {
+        if (notsubset) iexecpromises = ipromises;
         rc = sys_pledge_linux(ipromises, __pledge_mode);
         if (rc > -4096u) errno = -rc, rc = -1;
       }

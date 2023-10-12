@@ -5,9 +5,11 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/proc/posix_spawn.h"
 
-#define _POSIX_SPAWN_CLOSE 1
-#define _POSIX_SPAWN_DUP2  2
-#define _POSIX_SPAWN_OPEN  3
+#define _POSIX_SPAWN_CLOSE  1
+#define _POSIX_SPAWN_DUP2   2
+#define _POSIX_SPAWN_OPEN   3
+#define _POSIX_SPAWN_CHDIR  4
+#define _POSIX_SPAWN_FCHDIR 5
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

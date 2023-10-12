@@ -133,7 +133,7 @@ errno_t pthread_setname_np(pthread_t thread, const char *name) {
   BLOCK_CANCELATION;
   err = pthread_setname_impl(pt, name);
   ALLOW_CANCELATION;
-  STRACE("pthread_setname_np(%d, %s) → %s", _pthread_tid(pt), name,
+  STRACE("pthread_setname_np(%d, %#s) → %s", _pthread_tid(pt), name,
          DescribeErrno(err));
   return err;
 }

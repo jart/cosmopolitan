@@ -127,6 +127,12 @@ void *Enclave(void *arg) {
   return 0;                  // exit
 }
 
+TEST(pledge, tester) {
+  SPAWN(fork);
+  ASSERT_EQ(0, pledge("stdio rpath wpath cpath proc exec", NULL));
+  EXITS(0);
+}
+
 TEST(pledge, withThreadMemory) {
   if (IsOpenbsd()) return;  // openbsd doesn't allow it, wisely
   pthread_t worker;

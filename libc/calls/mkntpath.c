@@ -54,6 +54,35 @@ textwindows static const char *FixNtMagicPath(const char *path,
   return path;
 }
 
+textwindows size_t __normntpath(char16_t *p, size_t n) {
+  size_t i, j;
+  for (j = i = 0; i < n; ++i) {
+    int c = p[i];
+    if (c == '/') {
+      c = '\\';
+    }
+    if (j > 1 && c == '\\' && p[j - 1] == '\\') {
+      // matched "^/" or "//" but not "^//"
+    } else if ((j && p[j - 1] == '\\') &&  //
+               c == '.' &&                 //
+               (i + 1 == n || IsSlash(p[i + 1]))) {
+      // matched "/./" or "/.$"
+      i += !(i + 1 == n);
+    } else if ((j && p[j - 1] == '\\') &&         //
+               c == '.' &&                        //
+               (i + 1 < n && p[i + 1] == '.') &&  //
+               (i + 2 == n || IsSlash(p[i + 2]))) {
+      // matched "/../" or "/..$"
+      while (j && p[j - 1] == '\\') --j;
+      while (j && p[j - 1] != '\\') --j;
+    } else {
+      p[j++] = c;
+    }
+  }
+  p[j] = 0;
+  return j;
+}
+
 textwindows int __mkntpath(const char *path,
                            char16_t path16[hasatleast PATH_MAX]) {
   return __mkntpath2(path, path16, -1);
@@ -78,7 +107,6 @@ textwindows int __mkntpath(const char *path,
  */
 textwindows int __mkntpath2(const char *path,
                             char16_t path16[hasatleast PATH_MAX], int flags) {
-
   // 1. Need +1 for NUL-terminator
   // 2. Need +1 for UTF-16 overflow
   // 3. Need ≥2 for SetCurrentDirectory trailing slash requirement
@@ -165,32 +193,7 @@ textwindows int __mkntpath2(const char *path,
   // normalize path
   // we need it because \\?\... paths have to be normalized
   // we don't remove the trailing slash since it is special
-  size_t i, j;
-  for (j = i = 0; i < n; ++i) {
-    int c = p[i];
-    if (c == '/') {
-      c = '\\';
-    }
-    if (j > 1 && c == '\\' && p[j - 1] == '\\') {
-      // matched "^/" or "//" but not "^//"
-    } else if ((j && p[j - 1] == '\\') &&  //
-               c == '.' &&                 //
-               (i + 1 == n || IsSlash(p[i + 1]))) {
-      // matched "/./" or "/.$"
-      i += !(i + 1 == n);
-    } else if ((j && p[j - 1] == '\\') &&         //
-               c == '.' &&                        //
-               (i + 1 < n && p[i + 1] == '.') &&  //
-               (i + 2 == n || IsSlash(p[i + 2]))) {
-      // matched "/../" or "/..$"
-      while (j && p[j - 1] == '\\') --j;
-      while (j && p[j - 1] != '\\') --j;
-    } else {
-      p[j++] = c;
-    }
-  }
-  p[j] = 0;
-  n = j;
+  n = __normntpath(p, n);
 
   // our path is now stored at `path16` with length `n`
   n = x + m + n;

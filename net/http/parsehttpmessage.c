@@ -57,7 +57,7 @@ void DestroyHttpMessage(struct HttpMessage *r) {
  * This parser is responsible for determining the length of a message
  * and slicing the strings inside it. Performance is attained using
  * perfect hash tables. No memory allocation is performed for normal
- * messages. Line folding is forbidden. State persists across calls so
+ * messagesy. Line folding is forbidden. State persists across calls so
  * that fragmented messages can be handled efficiently. A limitation on
  * message size is imposed to make the header data structures smaller.
  *

@@ -28,6 +28,7 @@
  */
 
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/cosmo.h"
@@ -59,6 +60,7 @@
 #include "libc/str/unicode.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
+#include "net/http/http.h"
 
 #ifdef COSMO_ALREADY_DEFINED
 #undef COSMO_ALREADY_DEFINED

@@ -64,6 +64,7 @@ o/$(MODE)/test/libc/proc/posix_spawn_test.com.dbg:		\
 		o/$(MODE)/test/libc/proc/posix_spawn_test.o	\
 		o/$(MODE)/test/libc/proc/proc.pkg		\
 		o/$(MODE)/tool/build/echo.com.zip.o		\
+		o/$(MODE)/tool/build/cocmd.com.zip.o		\
 		o/$(MODE)/test/libc/mem/prog/life.com.zip.o	\
 		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
 		o/$(MODE)/test/libc/proc/life-pe.com.zip.o	\

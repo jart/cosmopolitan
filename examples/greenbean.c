@@ -7,6 +7,22 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#ifdef __COSMOCC__
+#define _COSMO_SOURCE
+#include <assert.h>
+#include <cosmo.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdatomic.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/auxv.h>
+#include <sys/socket.h>
+#include <time.h>
+#else
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
@@ -20,65 +36,42 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
+#include "libc/sysv/consts/timer.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 #include "net/http/http.h"
+#endif
 
 /**
- * @fileoverview greenbean lightweight threaded web server
+ * @fileoverview greenbean lightweight threaded web server no. 2
  *
- *     $ make -j8 o//tool/net/greenbean.com
- *     $ o//tool/net/greenbean.com &
- *     $ printf 'GET /\n\n' | nc 127.0.0.1 8080
- *     HTTP/1.1 200 OK
- *     Server: greenbean/1.o
- *     Referrer-Policy: origin
- *     Cache-Control: private; max-age=0
- *     Content-Type: text/html; charset=utf-8
- *     Date: Sat, 14 May 2022 14:13:07 GMT
- *     Content-Length: 118
- *
- *     <!doctype html>
- *     <title>hello world</title>
- *     <h1>hello world</h1>
- *     <p>this is a fun webpage
- *     <p>hosted by greenbean
- *
- * Like redbean, greenbean has superior performance too, with an
- * advantage on benchmarks biased towards high connection counts
- *
- *     $ wrk -c 300 -t 32 --latency http://127.0.0.1:8080/
- *     Running 10s test @ http://127.0.0.1:8080/
- *       32 threads and 300 connections
- *         Thread Stats   Avg      Stdev     Max   +/- Stdev
- *         Latency   661.06us    5.11ms  96.22ms   98.85%
- *         Req/Sec    42.38k     8.90k   90.47k    84.65%
- *       Latency Distribution
- *          50%  184.00us
- *          75%  201.00us
- *          90%  224.00us
- *          99%   11.99ms
- *       10221978 requests in 7.60s, 3.02GB read
- *     Requests/sec: 1345015.69
- *     Transfer/sec:    406.62MB
- *
+ * This web server is the same as greenbean.c except it supports having
+ * more than one thread on Windows. To do that we have to make the code
+ * more complicated by not using SO_REUSEPORT. The approach we take, is
+ * creating a single listener thread which adds accepted sockets into a
+ * queue that worker threads consume. This way, if you like Windows you
+ * can easily have a web server with 10,000+ connections.
  */
 
 #define PORT      8080
-#define KEEPALIVE 30000
+#define KEEPALIVE 5000
 #define LOGGING   1
 
 #define STANDARD_RESPONSE_HEADERS \
@@ -86,21 +79,30 @@
   "Referrer-Policy: origin\r\n"   \
   "Cache-Control: private; max-age=0\r\n"
 
-int threads;
-int alwaysclose;
+int server;
 atomic_int a_termsig;
 atomic_int a_workers;
 atomic_int a_messages;
-atomic_int a_listening;
 atomic_int a_connections;
 pthread_cond_t statuscond;
 pthread_mutex_t statuslock;
 const char *volatile status = "";
 
+#if LOGGING
+// prints persistent status line
+//   \r moves cursor back to beginning of line
+// \e[K clears text from cursor to end of line
+#define LOG(FMT, ...) kprintf("\r\e[K" FMT "\n", ##__VA_ARGS__)
+#else
+#define LOG(FMT, ...) (void)0
+#endif
+
+// updates the status line if it's convenient to do so
 void SomethingHappened(void) {
   unassert(!pthread_cond_signal(&statuscond));
 }
 
+// performs a guaranteed update of the main thread status line
 void SomethingImportantHappened(void) {
   unassert(!pthread_mutex_lock(&statuslock));
   unassert(!pthread_cond_signal(&statuscond));
@@ -108,105 +110,96 @@ void SomethingImportantHappened(void) {
 }
 
 void *Worker(void *id) {
-  int server, yes = 1;
-
-  // load balance incoming connections for port 8080 across all threads
-  // hangup on any browser clients that lag for more than a few seconds
-  struct timeval timeo = {KEEPALIVE / 1000, KEEPALIVE % 1000};
-  struct sockaddr_in addr = {.sin_family = AF_INET, .sin_port = htons(PORT)};
-
-  server = socket(AF_INET, SOCK_STREAM, 0);
-  if (server == -1) {
-    kprintf("\r\e[Ksocket() failed %m\n");
-    if (errno == ENFILE || errno == EMFILE) {
-    TooManyFileDescriptors:
-      kprintf("sudo prlimit --pid=$$ --nofile=%d\n", threads * 3);
-    }
-    goto WorkerFinished;
-  }
-
-  // we don't bother checking for errors here since OS support for the
-  // advanced features tends to be a bit spotty and harmless to ignore
-  setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));
-  setsockopt(server, SOL_SOCKET, SO_SNDTIMEO, &timeo, sizeof(timeo));
-  setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-  setsockopt(server, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
-  setsockopt(server, SOL_TCP, TCP_FASTOPEN, &yes, sizeof(yes));
-  setsockopt(server, SOL_TCP, TCP_QUICKACK, &yes, sizeof(yes));
-  errno = 0;
-
-  // open our ears to incoming connections; so_reuseport makes it
-  // possible for our many threads to bind to the same interface!
-  // otherwise we'd need to create a complex multi-threaded queue
-  if (bind(server, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-    kprintf("\r\e[Ksocket() returned %m\n");
-    goto CloseWorker;
-  }
-  unassert(!listen(server, 1));
+  pthread_setname_np(pthread_self(), "Worker");
 
   // connection loop
-  ++a_listening;
-  SomethingImportantHappened();
   while (!a_termsig) {
-    uint32_t clientaddrsize;
+    int client;
+    uint32_t clientsize;
+    int inmsglen, outmsglen;
     struct sockaddr_in clientaddr;
-    int client, inmsglen, outmsglen;
-    char inbuf[512], outbuf[512], *p, *q;
+    char inbuf[1500], outbuf[1500], *p, *q;
 
     // musl libc and cosmopolitan libc support a posix thread extension
     // that makes thread cancelation work much better. your io routines
-    // will just raise ECANCELED so you can check for cancellation with
+    // will just raise ECANCELED, so you can check for cancelation with
     // normal logic rather than needing to push and pop cleanup handler
     // functions onto the stack, or worse dealing with async interrupts
     unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
 
     // wait for client connection
-    // we don't bother with poll() because this is actually very speedy
-    clientaddrsize = sizeof(clientaddr);
-    client = accept(server, (struct sockaddr *)&clientaddr, &clientaddrsize);
+    clientsize = sizeof(clientaddr);
+    client = accept(server, (struct sockaddr *)&clientaddr, &clientsize);
 
-    // turns cancellation off so we don't interrupt active http clients
+    // turn cancel off, so we don't need to check write() for ecanceled
     unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
 
     if (client == -1) {
-      if (errno != EAGAIN && errno != ECANCELED) {
-        kprintf("\r\e[Kaccept() returned %m\n");
-        if (errno == ENFILE || errno == EMFILE) {
-          goto TooManyFileDescriptors;
-        }
-        usleep(10000);
-      }
+      // accept() errors are generally ephemeral or recoverable
+      // it'd potentially be a good idea to exponential backoff here
+      if (errno == ECANCELED) continue;  // pthread_cancel() was called
+      LOG("accept() returned %m");
+      SomethingHappened();
       continue;
     }
 
+    // this causes read() and write() to raise eagain after some time
+    struct timeval timeo = {KEEPALIVE / 1000, KEEPALIVE % 1000};
+    setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));
+    setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &timeo, sizeof(timeo));
+
+    // log the incoming http message
+    unsigned clientip = ntohl(clientaddr.sin_addr.s_addr);
     ++a_connections;
+    LOG("%6H accepted connection from %hhu.%hhu.%hhu.%hhu:%hu", clientip >> 24,
+        clientip >> 16, clientip >> 8, clientip, ntohs(clientaddr.sin_port));
     SomethingHappened();
+    (void)clientip;
 
     // message loop
     ssize_t got, sent;
     struct HttpMessage msg;
     do {
-      // parse the incoming http message
-      InitHttpMessage(&msg, kHttpRequest);
-      // wait for http message (non-fragmented required)
-      // we're not terrible concerned when errors happen here
-      unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
-      if ((got = read(client, inbuf, sizeof(inbuf))) <= 0) break;
-      unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
-      // check that client message wasn't fragmented into more reads
-      if ((inmsglen = ParseHttpMessage(&msg, inbuf, got)) <= 0) break;
-      ++a_messages;
-      SomethingHappened();
 
-#if LOGGING
-      // log the incoming http message
-      unsigned clientip = ntohl(clientaddr.sin_addr.s_addr);
-      kprintf("\r\e[K%6P get some %hhu.%hhu.%hhu.%hhu:%hu %#.*s\n",
-              clientip >> 24, clientip >> 16, clientip >> 8, clientip,
-              ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a,
-              inbuf + msg.uri.a);
+      // wait for next http message (non-fragmented required)
+      unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
+      got = read(client, inbuf, sizeof(inbuf));
+      for (int i = 0; i < got; ++i) {
+        if (!inbuf[i]) inbuf[i] = 1;
+      }
+      unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
+      if (got <= 0) {
+        if (!got) {
+          LOG("%6H client disconnected");
+        } else if (errno == EAGAIN) {
+          LOG("%6H client timed out");
+        } else if (errno == ECANCELED) {
+          LOG("%6H disconnecting client due to shutdown");
+        } else {
+          LOG("%6H read() returned %m");
+        }
+        SomethingHappened();
+        break;
+      }
+
+      // check that client message wasn't fragmented into more reads
+      InitHttpMessage(&msg, kHttpRequest);
+      if ((inmsglen = ParseHttpMessage(&msg, inbuf, got)) <= 0) {
+        if (!inmsglen) {
+          LOG("%6H client sent fragmented message");
+        } else {
+          LOG("%6H client sent bad message");
+        }
+        SomethingHappened();
+        break;
+      }
+
+      // update server status with details of new message
+      ++a_messages;
+      LOG("%6H received message from %hhu.%hhu.%hhu.%hhu:%hu for path %#.*s",
+          clientip >> 24, clientip >> 16, clientip >> 8, clientip,
+          ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a, inbuf + msg.uri.a);
       SomethingHappened();
-#endif
 
       // display hello world html page for http://127.0.0.1:8080/
       struct tm tm;
@@ -226,9 +219,6 @@ void *Worker(void *id) {
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
-        if (alwaysclose) {
-          p = stpcpy(p, "\r\nConnection: close");
-        }
         p = stpcpy(p, "\r\n\r\n");
         p = stpcpy(p, q);
         outmsglen = p - outbuf;
@@ -247,9 +237,6 @@ void *Worker(void *id) {
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
-        if (alwaysclose) {
-          p = stpcpy(p, "\r\nConnection: close");
-        }
         p = stpcpy(p, "\r\n\r\n");
         p = stpcpy(p, q);
         outmsglen = p - outbuf;
@@ -260,36 +247,29 @@ void *Worker(void *id) {
       // amount, then since we sent the content length and checked
       // that the client didn't attach a payload, we are so synced
       // thus we can safely process more messages
-    } while (!alwaysclose &&       //
-             got == inmsglen &&    //
+    } while (got == inmsglen &&    //
              sent == outmsglen &&  //
              !msg.headers[kHttpContentLength].a &&
              !msg.headers[kHttpTransferEncoding].a &&
              (msg.method == kHttpGet || msg.method == kHttpHead));
+
     DestroyHttpMessage(&msg);
-    close(client);
     --a_connections;
     SomethingHappened();
+    close(client);
   }
-  --a_listening;
 
-  // inform the parent that this clone has finished
-CloseWorker:
-  close(server);
-WorkerFinished:
   --a_workers;
-
   SomethingImportantHappened();
   return 0;
 }
 
-void PrintStatus(void) {
+void PrintEphemeralStatusLine(void) {
   kprintf("\r\e[K\e[32mgreenbean\e[0m "
           "workers=%d "
-          "listening=%d "
           "connections=%d "
           "messages=%d%s ",
-          a_workers, a_listening, a_connections, a_messages, status);
+          a_workers, a_connections, a_messages, status);
 }
 
 void OnTerm(int sig) {
@@ -312,29 +292,38 @@ int main(int argc, char *argv[]) {
   unassert(!sigaction(SIGHUP, &sa, 0));
   unassert(!sigaction(SIGTERM, &sa, 0));
 
-  // print all the ips that 0.0.0.0 would bind
-  // Cosmo's GetHostIps() API is much easier than ioctl(SIOCGIFCONF)
-  uint32_t *hostips;
-  for (hostips = gc(GetHostIps()), i = 0; hostips[i]; ++i) {
-    kprintf("listening on http://%hhu.%hhu.%hhu.%hhu:%hu\n", hostips[i] >> 24,
-            hostips[i] >> 16, hostips[i] >> 8, hostips[i], PORT);
-  }
-
   // you can pass the number of threads you want as the first command arg
-  threads = argc > 1 ? atoi(argv[1]) : __get_cpu_count();
+  int threads = argc > 1 ? atoi(argv[1]) : __get_cpu_count();
   if (!(1 <= threads && threads <= 100000)) {
-    kprintf("\r\e[Kerror: invalid number of threads: %d\n", threads);
+    tinyprint(2, "error: invalid number of threads\n", NULL);
     exit(1);
   }
 
-  // caveat emptor microsofties
-  if (IsWindows()) {
-    kprintf("sorry but windows isn't supported by the greenbean demo yet\n"
-            "because it doesn't support SO_REUSEPORT which is a nice for\n"
-            "gaining great performance on UNIX systems, with simple code\n"
-            "however windows will work fine if we limit it to one thread\n");
-    threads = 1;      // we're going to make just one web server thread
-    alwaysclose = 1;  // don't let client idle, since it'd block others
+  // create listening socket that'll be shared by threads
+  int yes = 1;
+  struct sockaddr_in addr = {.sin_family = AF_INET, .sin_port = htons(PORT)};
+  server = socket(AF_INET, SOCK_STREAM, 0);
+  if (server == -1) {
+    perror("socket");
+    exit(1);
+  }
+  setsockopt(server, SOL_TCP, TCP_FASTOPEN, &yes, sizeof(yes));
+  setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+  if (bind(server, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    perror("bind");
+    exit(1);
+  }
+  if (listen(server, SOMAXCONN)) {
+    perror("listen");
+    exit(1);
+  }
+
+  // print all the ips that 0.0.0.0 would bind
+  // Cosmo's GetHostIps() API is much easier than ioctl(SIOCGIFCONF)
+  uint32_t *hostips;
+  for (hostips = _gc(GetHostIps()), i = 0; hostips[i]; ++i) {
+    kprintf("listening on http://%hhu.%hhu.%hhu.%hhu:%hu\n", hostips[i] >> 24,
+            hostips[i] >> 16, hostips[i] >> 8, hostips[i], PORT);
   }
 
   // secure the server
@@ -385,14 +374,16 @@ int main(int argc, char *argv[]) {
   unassert(!pthread_attr_setstacksize(&attr, 65536));
   unassert(!pthread_attr_setguardsize(&attr, pagesz));
   unassert(!pthread_attr_setsigmask_np(&attr, &block));
-  pthread_t *th = gc(calloc(threads, sizeof(pthread_t)));
+  unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
+  pthread_t *th = _gc(calloc(threads, sizeof(pthread_t)));
   for (i = 0; i < threads; ++i) {
     int rc;
     ++a_workers;
     if ((rc = pthread_create(th + i, &attr, Worker, (void *)(intptr_t)i))) {
       --a_workers;
-      kprintf("\r\e[Kpthread_create failed: %s\n", strerror(rc));
+      kprintf("pthread_create failed: %s\n", strerror(rc));
       if (rc == EAGAIN) {
+        kprintf("sudo prlimit --pid=$$ --nofile=%d\n", threads * 2);
         kprintf("sudo prlimit --pid=$$ --nproc=%d\n", threads * 2);
       }
       if (!i) exit(1);
@@ -400,17 +391,21 @@ int main(int argc, char *argv[]) {
       break;
     }
     if (!(i % 50)) {
-      PrintStatus();
+      PrintEphemeralStatusLine();
     }
   }
   unassert(!pthread_attr_destroy(&attr));
 
-  // wait for workers to terminate
+  // show status line on terminal until terminated
+  struct timespec tick = timespec_real();
   unassert(!pthread_mutex_lock(&statuslock));
   while (!a_termsig) {
-    PrintStatus();
+    PrintEphemeralStatusLine();
     unassert(!pthread_cond_wait(&statuscond, &statuslock));
-    usleep(10 * 1000);
+    // limit status line updates to sixty frames per second
+    do tick = timespec_add(tick, (struct timespec){0, 1e9 / 60});
+    while (timespec_cmp(tick, timespec_real()) < 0);
+    clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &tick, 0);
   }
   unassert(!pthread_mutex_unlock(&statuslock));
 
@@ -421,11 +416,14 @@ int main(int argc, char *argv[]) {
     pthread_cancel(th[i]);
   }
 
+  // on windows this is the only way accept() can be canceled
+  if (IsWindows()) close(server);
+
   // print status in terminal as the shutdown progresses
   unassert(!pthread_mutex_lock(&statuslock));
   while (a_workers) {
     unassert(!pthread_cond_wait(&statuscond, &statuslock));
-    PrintStatus();
+    PrintEphemeralStatusLine();
   }
   unassert(!pthread_mutex_unlock(&statuslock));
 
@@ -434,19 +432,18 @@ int main(int argc, char *argv[]) {
     unassert(!pthread_join(th[i], 0));
   }
 
+  // close the server socket
+  if (!IsWindows()) close(server);
+
   // clean up terminal line
-  kprintf("\r\e[Kthank you for choosing \e[32mgreenbean\e[0m\n");
+  LOG("thank you for choosing \e[32mgreenbean\e[0m");
 
   // clean up more resources
-  unassert(!pthread_mutex_destroy(&statuslock));
   unassert(!pthread_cond_destroy(&statuscond));
+  unassert(!pthread_mutex_destroy(&statuslock));
 
   // quality assurance
   if (IsModeDbg()) {
     CheckForMemoryLeaks();
   }
-
-  // propagate termination signal
-  signal(a_termsig, SIG_DFL);
-  raise(a_termsig);
 }

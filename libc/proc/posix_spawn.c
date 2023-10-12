@@ -44,6 +44,10 @@
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/files.h"
@@ -176,15 +180,15 @@ static textwindows errno_t spawnfds_dup2(struct SpawnFds *fds, int fildes,
   return 0;
 }
 
-static textwindows errno_t spawnfds_open(struct SpawnFds *fds, int fildes,
-                                         const char *path, int oflag,
-                                         int mode) {
+static textwindows errno_t spawnfds_open(struct SpawnFds *fds, int64_t dirhand,
+                                         int fildes, const char *path,
+                                         int oflag, int mode) {
   int64_t h;
   errno_t err;
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
   if ((err = spawnfds_ensure(fds, fildes))) return err;
-  if (__mkntpathat(AT_FDCWD, path, 0, path16) != -1 &&
+  if (__mkntpathath(dirhand, path, 0, path16) != -1 &&
       GetNtOpenFlags(oflag, mode, &perm, &share, &disp, &attr) != -1 &&
       (h = CreateFile(path16, perm, share, &kNtIsInheritable, disp, attr, 0))) {
     spawnfds_closelater(fds, h);
@@ -198,6 +202,39 @@ static textwindows errno_t spawnfds_open(struct SpawnFds *fds, int fildes,
   }
 }
 
+static textwindows errno_t spawnfds_chdir(struct SpawnFds *fds, int64_t dirhand,
+                                          const char *path,
+                                          int64_t *out_dirhand) {
+  int64_t h;
+  char16_t path16[PATH_MAX];
+  if (__mkntpathath(dirhand, path, 0, path16) != -1 &&
+      (h = CreateFile(path16, kNtFileGenericRead,
+                      kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
+                      0, kNtOpenExisting,
+                      kNtFileAttributeNormal | kNtFileFlagBackupSemantics,
+                      0))) {
+    spawnfds_closelater(fds, h);
+    *out_dirhand = h;
+    return 0;
+  } else {
+    return errno;
+  }
+}
+
+static textwindows errno_t spawnfds_fchdir(struct SpawnFds *fds, int fildes,
+                                           int64_t *out_dirhand) {
+  int64_t h;
+  if (spawnfds_exists(fds, fildes)) {
+    h = fds->p[fildes].handle;
+  } else if (__isfdopen(fildes)) {
+    h = g_fds.p[fildes].handle;
+  } else {
+    return EBADF;
+  }
+  *out_dirhand = h;
+  return 0;
+}
+
 static textwindows errno_t posix_spawn_nt_impl(
     int *pid, const char *path, const posix_spawn_file_actions_t *file_actions,
     const posix_spawnattr_t *attrp, char *const argv[], char *const envp[]) {
@@ -207,6 +244,7 @@ static textwindows errno_t posix_spawn_nt_impl(
   errno_t e = errno;
   struct Proc *proc = 0;
   struct SpawnFds fds = {0};
+  int64_t dirhand = AT_FDCWD;
   int64_t *lpExplicitHandles = 0;
   uint32_t dwExplicitHandleCount = 0;
   int64_t hCreatorProcess = GetCurrentProcess();
@@ -257,9 +295,24 @@ static textwindows errno_t posix_spawn_nt_impl(
           }
           break;
         case _POSIX_SPAWN_OPEN:
-          err = spawnfds_open(&fds, a->fildes, a->path, a->oflag, a->mode);
+          err = spawnfds_open(&fds, dirhand, a->fildes, a->path, a->oflag,
+                              a->mode);
           if (err) {
             STRACE("spawnfds_open(%d, %#s) failed", a->fildes, a->path);
+            goto ReturnErr;
+          }
+          break;
+        case _POSIX_SPAWN_CHDIR:
+          err = spawnfds_chdir(&fds, dirhand, a->path, &dirhand);
+          if (err) {
+            STRACE("spawnfds_chdir(%#s) failed", a->path);
+            goto ReturnErr;
+          }
+          break;
+        case _POSIX_SPAWN_FCHDIR:
+          err = spawnfds_fchdir(&fds, a->fildes, &dirhand);
+          if (err) {
+            STRACE("spawnfds_fchdir(%d) failed", a->fildes);
             goto ReturnErr;
           }
           break;
@@ -289,15 +342,26 @@ static textwindows errno_t posix_spawn_nt_impl(
       .hStdError = spawnfds_handle(&fds, 2),
   };
 
+  // determine spawn directory
+  char16_t *lpCurrentDirectory = 0;
+  if (dirhand != AT_FDCWD) {
+    lpCurrentDirectory = alloca(PATH_MAX * sizeof(char16_t));
+    if (!GetFinalPathNameByHandle(dirhand, lpCurrentDirectory, PATH_MAX,
+                                  kNtFileNameNormalized | kNtVolumeNameDos)) {
+      err = GetLastError();
+      goto ReturnErr;
+    }
+  }
+
   // launch process
   int rc = -1;
   struct NtProcessInformation procinfo;
   if (!envp) envp = environ;
   if ((fdspec = __describe_fds(fds.p, fds.n, &startinfo, hCreatorProcess,
                                &lpExplicitHandles, &dwExplicitHandleCount))) {
-    rc = ntspawn(path, argv, envp, (char *[]){fdspec, 0}, dwCreationFlags, 0, 0,
-                 lpExplicitHandles, dwExplicitHandleCount, &startinfo,
-                 &procinfo);
+    rc = ntspawn(dirhand, path, argv, envp, (char *[]){fdspec, 0},
+                 dwCreationFlags, lpCurrentDirectory, 0, lpExplicitHandles,
+                 dwExplicitHandleCount, &startinfo, &procinfo);
   }
   if (rc == -1) {
     err = errno;
@@ -479,6 +543,16 @@ errno_t posix_spawn(int *pid, const char *path,
             }
             break;
           }
+          case _POSIX_SPAWN_CHDIR:
+            if (chdir(a->path) == -1) {
+              goto ChildFailed;
+            }
+            break;
+          case _POSIX_SPAWN_FCHDIR:
+            if (fchdir(a->fildes) == -1) {
+              goto ChildFailed;
+            }
+            break;
           default:
             __builtin_unreachable();
         }
