@@ -140,8 +140,9 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
   if (eagained) {
     return eagain();
   }
-  if (WSAGetLastError() == kNtErrorOperationAborted && _check_cancel()) {
-    return ecanceled();
+  if (GetLastError() == kNtErrorOperationAborted) {
+    if (_check_cancel() == -1) return ecanceled();
+    if (!eintered && _check_signal(false)) return eintr();
   }
   if (eintered) {
     return eintr();

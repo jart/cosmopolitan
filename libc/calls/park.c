@@ -48,7 +48,10 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   if ((rc = _check_cancel()) != -1 && (rc = _check_signal(restartable)) != -1) {
     unassert((wi = WaitForSingleObject(sem, msdelay)) != -1u);
     if (wi != kNtWaitTimeout) {
+      _check_signal(false);
       rc = eintr();
+      _check_cancel();
+    } else if ((rc = _check_signal(restartable))) {
       _check_cancel();
     }
   }

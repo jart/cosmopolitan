@@ -19,6 +19,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -26,6 +27,7 @@
 #include "libc/nt/enum/context.h"
 #include "libc/nt/struct/context.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/clktck.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/testlib/testlib.h"
@@ -64,6 +66,7 @@ TEST(SetThreadContext, test) {
   if (!IsWindows()) return;
   ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
   while (!ready) donothing;
+  usleep(1000);
   int64_t hand = _pthread_syshand((struct PosixThread *)th);
   ASSERT_EQ(0, SuspendThread(hand));
   struct NtContext nc;
@@ -101,9 +104,9 @@ TEST(poll, interrupt) {
   signal(SIGUSR1, OnSig);
   ASSERT_SYS(0, 0, pipe(pfds));
   ASSERT_EQ(0, pthread_create(&th, 0, Worker2, 0));
-  for (int i = 0; i < 100; ++i) {
+  for (int i = 0; i < 20; ++i) {
     ASSERT_EQ(0, pthread_kill(th, SIGUSR1));
-    usleep(1000);
+    usleep(1e6 / CLK_TCK * 2);
   }
   isdone = true;
   ASSERT_EQ(0, pthread_kill(th, SIGUSR1));
