@@ -96,7 +96,7 @@ static textwindows bool OverlapsFileLock(struct FileLock *fl, int64_t off,
   EndA = off + (len - 1);
   BegB = fl->off;
   EndB = fl->off + (fl->len - 1);
-  return MAX(BegA, BegB) < MIN(EndA, EndB);
+  return MAX(BegA, BegB) <= MIN(EndA, EndB);
 }
 
 static textwindows bool EncompassesFileLock(struct FileLock *fl, int64_t off,

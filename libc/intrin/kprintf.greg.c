@@ -1061,7 +1061,6 @@ privileged void kvprintf(const char *fmt, va_list v) {
 #pragma GCC diagnostic ignored "-Walloca-larger-than="
   long size = __get_safe_size(8000, 3000);
   if (size < 80) {
-    asm("int3");
     klog(STACK_ERROR, sizeof(STACK_ERROR) - 1);
     return;
   }

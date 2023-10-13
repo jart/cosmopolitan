@@ -23,6 +23,7 @@
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
@@ -73,7 +74,8 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
     return -1;
   }
 
-  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0,
+  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead,
+                  kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
                   &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0);
 
   __fds_lock();

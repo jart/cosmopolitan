@@ -43,7 +43,9 @@ textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
   dwDesiredAccess = kNtFileGenericRead;
 TryAgain:
   if ((fh = CreateFile(
-           path16, dwDesiredAccess, 0, 0, kNtOpenExisting,
+           path16, dwDesiredAccess,
+           kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+           kNtOpenExisting,
            kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
                ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
                                               : 0),

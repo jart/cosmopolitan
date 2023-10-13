@@ -36,6 +36,7 @@
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
@@ -229,10 +230,13 @@ TryAgain:
 
   // get inode such that it's consistent with stat()
   // it's important that we not follow symlinks here
-  int64_t fh = CreateFile(jp, kNtFileReadAttributes, 0, 0, kNtOpenExisting,
-                          kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
-                              kNtFileFlagOpenReparsePoint,
-                          0);
+  int64_t fh =
+      CreateFile(jp, kNtFileReadAttributes,
+                 kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+                 kNtOpenExisting,
+                 kNtFileAttributeNormal | kNtFileFlagBackupSemantics |
+                     kNtFileFlagOpenReparsePoint,
+                 0);
   if (fh != kNtInvalidHandleValue) {
     struct NtByHandleFileInformation wst;
     if (GetFileInformationByHandle(fh, &wst)) {

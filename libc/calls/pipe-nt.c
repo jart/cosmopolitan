@@ -25,6 +25,7 @@
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/limits.h"
@@ -57,8 +58,11 @@ static textwindows int sys_pipe_nt_impl(int pipefd[2], unsigned flags) {
                         mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
   __fds_lock();
   if (hin != -1) {
-    if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
-                           kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
+    if ((hout = CreateFile(
+             pipename, kNtGenericWrite,
+             kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
+             &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0)) !=
+        -1) {
       g_fds.p[reader].kind = kFdFile;
       g_fds.p[reader].flags = O_RDONLY | flags;
       g_fds.p[reader].mode = 0010444;
