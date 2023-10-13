@@ -4823,6 +4823,7 @@ static int LuaBlackhole(lua_State *L) {
 wontreturn static void Replenisher(void) {
   struct timespec ts;
   VERBOSEF("(token) replenish worker started");
+  strace_enabled(-1);
   signal(SIGINT, OnTerm);
   signal(SIGHUP, OnTerm);
   signal(SIGTERM, OnTerm);
@@ -7149,7 +7150,7 @@ static void ReplEventLoop(void) {
   lua_repl_completions_callback = HandleCompletions;
   lua_initrepl(L);
   EnableRawMode();
-  EventLoop(100);
+  EventLoop(-1);
   DisableRawMode();
   lua_freerepl();
   lua_settop(L, 0);  // clear stack

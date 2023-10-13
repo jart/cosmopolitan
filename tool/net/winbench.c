@@ -12,6 +12,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -122,7 +123,7 @@ static void NewClient(struct Client *client, const struct sockaddr_in *addr) {
   }
 }
 
-void *Worker(void *arg) {
+static void *Worker(void *arg) {
   while (!a_finished) {
     bool32 ok;
     uint32_t dwFlags;
@@ -195,11 +196,16 @@ void *Worker(void *arg) {
   return 0;
 }
 
-void OnTerm(int sig) {
+static void OnTerm(int sig) {
   a_termsig = sig;
 }
 
 int main(int argc, char *argv[]) {
+
+  if (!IsWindows()) {
+    tinyprint(2, "error: this program is intended for windows\n", NULL);
+    return 1;
+  }
 
   prog = argv[0];
   if (!prog) {
