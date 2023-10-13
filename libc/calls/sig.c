@@ -259,8 +259,10 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
   if (__sig_should_use_altstack(flags, pt->tib)) {
     sp = (uintptr_t)pt->tib->tib_sigstack_addr + pt->tib->tib_sigstack_size;
   } else {
-    sp = (nc.Rsp - 128 - sizeof(struct SignalFrame)) & -16;
+    sp = nc.Rsp;
   }
+  sp -= sizeof(struct SignalFrame);
+  sp &= -16;
   struct SignalFrame *sf = (struct SignalFrame *)sp;
   _ntcontext2linux(&sf->ctx, &nc);
   bzero(&sf->si, sizeof(sf->si));
