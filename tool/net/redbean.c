@@ -2870,7 +2870,7 @@ static char *GetBasicAuthorization(size_t *z) {
 
 static const char *GetSystemUrlLauncherCommand(void) {
   if (IsWindows()) {
-    return "explorer";
+    return "explorer.exe";
   } else if (IsXnu()) {
     return "open";
   } else {
