@@ -42,7 +42,7 @@ __msabi extern typeof(ExitThread) *const __imp_ExitThread;
  * @see cthread_exit()
  * @noreturn
  */
-privileged wontreturn void _Exit1(int rc) {
+wontreturn void _Exit1(int rc) {
 #ifdef __x86_64__
   char cf;
   int ax, dx, di, si;

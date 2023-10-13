@@ -48,6 +48,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/temp.h"
 #include "libc/x/xasprintf.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/net_sockets.h"
@@ -399,18 +400,16 @@ bool ShouldRunInParallel(void) {
 }
 
 int SpawnSubprocesses(int argc, char *argv[]) {
-  const char *tpath;
   sigset_t chldmask, savemask;
-  int i, ws, pid, tmpfd, *pids, exitcode;
+  int i, ws, pid, *pids, exitcode;
   struct sigaction ignore, saveint, savequit;
   char *args[5] = {argv[0], argv[1], argv[2]};
 
   // create compressed network request ahead of time
-  CHECK_NE(-1, (tmpfd = open(
-                    (tpath = _gc(xasprintf(
-                         "%s/runit.%d", firstnonnull(getenv("TMPDIR"), "/tmp"),
-                         getpid()))),
-                    O_WRONLY | O_CREAT | O_TRUNC, 0755)));
+  const char *tmpdir = firstnonnull(getenv("TMPDIR"), "/tmp");
+  char *tpath = _gc(xasprintf("%s/runit.XXXXXX", tmpdir));
+  int tmpfd = mkstemp(tpath);
+  CHECK_NE(-1, tmpfd);
   CHECK(SendRequest(tmpfd));
   CHECK_NE(-1, close(tmpfd));
 

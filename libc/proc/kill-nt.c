@@ -20,9 +20,14 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/console.h"
+#include "libc/nt/enum/ctrlevent.h"
+#include "libc/nt/enum/processaccess.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/proc/proc.internal.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
 
@@ -55,17 +60,26 @@ textwindows int sys_kill_nt(int pid, int sig) {
   }
 
   // find existing handle we own for process
-  int64_t handle;
+  int64_t handle, closeme = 0;
   if (!(handle = __proc_handle(pid))) {
-    return esrch();
+    if ((handle = OpenProcess(kNtProcessTerminate, false, pid))) {
+      closeme = handle;
+    } else {
+      goto OnError;
+    }
   }
 
   // perform actual kill
   // process will report WIFSIGNALED with WTERMSIG(sig)
-  if (TerminateProcess(handle, sig)) return 0;
-  STRACE("TerminateProcess() failed with %d", GetLastError());
+  bool32 ok = TerminateProcess(handle, sig);
+  if (closeme) CloseHandle(closeme);
+  if (ok) return 0;
+
+  // handle error
+OnError:
   switch (GetLastError()) {
     case kNtErrorInvalidHandle:
+    case kNtErrorInvalidParameter:
       return esrch();
     default:
       return eperm();
