@@ -135,7 +135,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     (dprintf)(STDERR_FILENO,
               "exiting due to aforementioned error (host %s pid %d tid %d)\n",
               buf32, getpid(), gettid());
-    __die();
+    _Exit(22);
   }
 
   ALLOW_SIGNALS;

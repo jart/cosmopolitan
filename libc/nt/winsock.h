@@ -291,7 +291,7 @@ struct NtInterfaceInfo {
  */
 
 int32_t WSAStartup(uint16_t wVersionRequested, struct NtWsaData *lpWSAData)
-    paramsnonnull() __wur;
+    paramsnonnull();
 
 int WSACleanup(void);
 int WSAGetLastError(void) nosideeffect;

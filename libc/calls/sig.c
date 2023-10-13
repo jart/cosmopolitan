@@ -247,6 +247,7 @@ static textwindows int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     STRACE("kill contention of %u on tid %d", old_suspend_count,
            _pthread_tid(pt));
     pt->tib->tib_sigpending |= 1ull << (sig - 1);
+    ResumeThread(th);
     return 0;
   }
   struct NtContext nc;

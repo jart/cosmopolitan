@@ -16,6 +16,7 @@ TOOL_NET_BINS =									\
 
 TOOL_NET_COMS =									\
 	o/$(MODE)/tool/net/dig.com						\
+	o/$(MODE)/tool/net/winbench.com						\
 	o/$(MODE)/tool/net/redbean.com						\
 	o/$(MODE)/tool/net/redbean-demo.com					\
 	o/$(MODE)/tool/net/redbean-static.com					\
@@ -37,6 +38,7 @@ TOOL_NET_DIRECTDEPS =								\
 	LIBC_NEXGEN32E								\
 	LIBC_NT_IPHLPAPI							\
 	LIBC_NT_KERNEL32							\
+	LIBC_NT_WS2_32								\
 	LIBC_PROC								\
 	LIBC_RUNTIME								\
 	LIBC_SOCK								\

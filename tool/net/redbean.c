@@ -6894,7 +6894,7 @@ static int HandleConnection(size_t i) {
     } else if (errno == ECONNABORTED) {
       LockInc(&shared->c.accepterrors);
       LockInc(&shared->c.acceptresets);
-      WARNF("(srvr) %S accept error: %s", DescribeServer(),
+      WARNF("(srvr) %s accept error: %s", DescribeServer(),
             "acceptreset: connection reset before accept");
     } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
                errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
@@ -6903,7 +6903,7 @@ static int HandleConnection(size_t i) {
       WARNF("(srvr) accept error: %s ephemeral accept error: %m",
             DescribeServer());
     } else {
-      DIEF("(srvr) %s accept error: %m", DescribeServer());
+      WARNF("(srvr) %s accept error: %m", DescribeServer());
     }
     errno = 0;
   }

@@ -22,6 +22,7 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/cosmo.h"
+#include "libc/errno.h"
 #include "libc/nt/enum/wsaid.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -140,6 +141,9 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
 WeFailed:
   pthread_cleanup_pop(false);
   __sig_unblock(m);
+  if (client == -1 && errno == ECONNRESET) {
+    errno = ECONNABORTED;
+  }
   return client;
 }
 

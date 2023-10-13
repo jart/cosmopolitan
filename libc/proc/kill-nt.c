@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"
@@ -53,6 +55,16 @@ textwindows int sys_kill_nt(int pid, int sig) {
   // just call raise() if we're targeting self
   if (pid <= 0 || pid == getpid()) {
     if (sig) {
+      if (pid <= 0) {
+        struct Dll *e;
+        BLOCK_SIGNALS;
+        __proc_lock();
+        for (e = dll_first(__proc.list); e; e = dll_next(__proc.list, e)) {
+          TerminateProcess(PROC_CONTAINER(e)->handle, sig);
+        }
+        __proc_unlock();
+        ALLOW_SIGNALS;
+      }
       return raise(sig);
     } else {
       return 0;  // ability check passes

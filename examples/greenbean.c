@@ -157,9 +157,6 @@ void *Worker(void *id) {
       // wait for next http message (non-fragmented required)
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
       got = read(client, inbuf, sizeof(inbuf));
-      for (int i = 0; i < got; ++i) {
-        if (!inbuf[i]) inbuf[i] = 1;
-      }
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
       if (got <= 0) {
         if (!got) {
