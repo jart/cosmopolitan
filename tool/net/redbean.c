@@ -4947,6 +4947,7 @@ static int LuaProgramTokenBucket(lua_State *L) {
   int pid = fork();
   npassert(pid != -1);
   if (!pid) Replenisher();
+  ++shared->workers;
   return 0;
 }
 
