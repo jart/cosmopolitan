@@ -31,7 +31,7 @@
 int sys_ulock_wait(uint32_t operation, void *addr, uint64_t value,
                    uint32_t timeout_micros) asm("sys_futex_cp");
 
-// returns -1 w/ errno
+// returns number of other waiters, or -1 w/ errno
 int ulock_wait(uint32_t operation, void *addr, uint64_t value,
                uint32_t timeout_micros) {
   int rc;

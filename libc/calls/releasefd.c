@@ -25,6 +25,7 @@
 void __releasefd(int fd) {
   int f1, f2;
   if (!(0 <= fd && fd < g_fds.n)) return;
+  g_fds.p[fd].kind = kFdEmpty;
   bzero(g_fds.p + fd, sizeof(*g_fds.p));
   f1 = atomic_load_explicit(&g_fds.f, memory_order_relaxed);
   do {

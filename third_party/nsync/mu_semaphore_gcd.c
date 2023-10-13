@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/clktck.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
@@ -116,8 +117,7 @@ errno_t nsync_mu_semaphore_p_with_deadline_gcd (nsync_semaphore *s,
 	    (pt->pt_flags & PT_NOCANCEL)) {
 		result = nsync_dispatch_semaphore_wait (s, abs_deadline);
 	} else {
-		struct timespec now, until, slice;
-		slice = timespec_frommillis (__SIG_LOCK_INTERVAL_MS);
+		struct timespec now, until, slice = {0, 1000000000 / CLK_TCK};
 		for (;;) {
 			if (_weaken (pthread_testcancel_np) () == ECANCELED) {
 				result = ECANCELED;

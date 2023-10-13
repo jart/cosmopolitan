@@ -297,6 +297,7 @@ int WSACleanup(void);
 int WSAGetLastError(void) nosideeffect;
 void WSASetLastError(int);
 
+int64_t __sys_socket_nt(int, int, int);
 int __sys_bind_nt(uint64_t, const void *, int);
 int __sys_closesocket_nt(uint64_t);
 int __sys_getpeername_nt(uint64_t, void *, uint32_t *);
@@ -341,12 +342,6 @@ int64_t WSAAccept(uint64_t s, struct sockaddr *out_addr,
                   int32_t *opt_inout_addrlen,
                   const NtConditionProc opt_lpfnCondition,
                   const uint32_t *opt_dwCallbackData) paramsnonnull((2)) __wur;
-
-bool32 AcceptEx(int64_t sListenSocket, int64_t sAcceptSocket,
-                void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
-                uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
-                uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
-                struct NtOverlapped *inout_lpOverlapped);
 
 int WSASend(uint64_t s, const struct NtIovec *lpBuffers, uint32_t dwBufferCount,
             uint32_t *opt_out_lpNumberOfBytesSent, uint32_t dwFlags,
@@ -493,19 +488,6 @@ int WSASetService(const struct NtWsaQuerySet *lpqsRegInfo, int essoperation,
 int /* success==0 */ WSAGetServiceClassNameByClassId(
     const struct NtGuid *lpServiceClassId, char16_t *out_lpszServiceClassName,
     uint32_t *inout_lpdwBufferLength) paramsnonnull();
-
-bool32 TransmitFile(int64_t hSocket, int64_t hFile,
-                    uint32_t opt_nNumberOfBytesToWrite,
-                    uint32_t opt_nNumberOfBytesPerSend,
-                    struct NtOverlapped *opt_inout_lpOverlapped,
-                    const struct NtTransmitFileBuffers *opt_lpTransmitBuffers,
-                    uint32_t dwReserved);
-
-bool32 AcceptEx(int64_t sListenSocket, int64_t sAcceptSocket,
-                void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
-                uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
-                uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
-                struct NtOverlapped *inout_lpOverlapped);
 
 void GetAcceptExSockaddrs(
     const void *lpOutputBuffer /*[recvsize+addrsize+addrlen]*/,

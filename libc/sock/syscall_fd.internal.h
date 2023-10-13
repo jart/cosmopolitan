@@ -7,6 +7,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+void sys_connect_nt_cleanup(struct Fd *, bool);
 int sys_accept_nt(struct Fd *, struct sockaddr_storage *, int);
 int sys_bind_nt(struct Fd *, const void *, uint32_t);
 int sys_closesocket_nt(struct Fd *);

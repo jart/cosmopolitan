@@ -14,15 +14,17 @@ COSMOPOLITAN_C_START_
 
 struct Fd {
   char kind;
+  bool isbound;
   unsigned flags;
   unsigned mode;
-  int64_t handle;
-  int64_t pointer;
+  long handle;
+  long pointer;
   int family;
   int type;
   int protocol;
-  uint32_t rcvtimeo;
-  uint32_t sndtimeo;
+  unsigned rcvtimeo; /* millis; 0 means wait forever */
+  unsigned sndtimeo; /* millis; 0 means wait forever */
+  void *connect_op;
 };
 
 struct Fds {

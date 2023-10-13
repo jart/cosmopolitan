@@ -17,26 +17,47 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/enum/wsaid.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
+#include "libc/nt/struct/guid.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sendfile.internal.h"
-#include "libc/sock/sock.h"
+#include "libc/sock/wsaid.internal.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/sysv/errfuns.h"
+
+static struct {
+  atomic_uint once;
+  errno_t err;
+  bool32 (*__msabi lpTransmitFile)(
+      int64_t hSocket, int64_t hFile, uint32_t opt_nNumberOfBytesToWrite,
+      uint32_t opt_nNumberOfBytesPerSend,
+      struct NtOverlapped *opt_inout_lpOverlapped,
+      const struct NtTransmitFileBuffers *opt_lpTransmitBuffers,
+      uint32_t dwReserved);
+} g_transmitfile;
+
+static void transmitfile_init(void) {
+  static struct NtGuid TransmitfileGuid = WSAID_TRANSMITFILE;
+  g_transmitfile.lpTransmitFile = __get_wsaid(&TransmitfileGuid);
+}
 
 static dontinline textwindows ssize_t sys_sendfile_nt(
     int outfd, int infd, int64_t *opt_in_out_inoffset, uint32_t uptobytes) {
@@ -64,7 +85,8 @@ static dontinline textwindows ssize_t sys_sendfile_nt(
   }
   BLOCK_SIGNALS;
   struct NtOverlapped ov = {.hEvent = WSACreateEvent(), .Pointer = offset};
-  if (TransmitFile(oh, ih, uptobytes, 0, &ov, 0, 0) ||
+  cosmo_once(&g_transmitfile.once, transmitfile_init);
+  if (g_transmitfile.lpTransmitFile(oh, ih, uptobytes, 0, &ov, 0, 0) ||
       WSAGetLastError() == kNtErrorIoPending ||
       WSAGetLastError() == WSAEINPROGRESS) {
     if (WSAGetOverlappedResult(oh, &ov, &uptobytes, true, &flags)) {

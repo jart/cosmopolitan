@@ -221,27 +221,6 @@ $(LIBC_NT_IPHLPAPI_A).pkg:				\
 
 #───────────────────────────────────────────────────────────────────────────────
 
-LIBC_NT_ARTIFACTS += LIBC_NT_MSWSOCK_A
-LIBC_NT_MSWSOCK = $(LIBC_NT_MSWSOCK_A_DEPS) $(LIBC_NT_MSWSOCK_A)
-LIBC_NT_MSWSOCK_A = o/$(MODE)/libc/nt/MsWSock.a
-LIBC_NT_MSWSOCK_A_SRCS := $(wildcard libc/nt/MsWSock/*.S)
-LIBC_NT_MSWSOCK_A_OBJS = $(LIBC_NT_MSWSOCK_A_SRCS:%.S=o/$(MODE)/%.o)
-LIBC_NT_MSWSOCK_A_CHECKS = $(LIBC_NT_MSWSOCK_A).pkg
-LIBC_NT_MSWSOCK_A_DIRECTDEPS = LIBC_NT_KERNEL32
-LIBC_NT_MSWSOCK_A_DEPS :=				\
-	$(call uniq,$(foreach x,$(LIBC_NT_MSWSOCK_A_DIRECTDEPS),$($(x))))
-
-$(LIBC_NT_MSWSOCK_A):					\
-		libc/nt/MsWSock/			\
-		$(LIBC_NT_MSWSOCK_A).pkg		\
-		$(LIBC_NT_MSWSOCK_A_OBJS)
-
-$(LIBC_NT_MSWSOCK_A).pkg:				\
-		$(LIBC_NT_MSWSOCK_A_OBJS)		\
-		$(foreach x,$(LIBC_NT_MSWSOCK_A_DIRECTDEPS),$($(x)_A).pkg)
-
-#───────────────────────────────────────────────────────────────────────────────
-
 LIBC_NT_ARTIFACTS += LIBC_NT_IPHLPAPI_A
 LIBC_NT_IPHLPAPI = $(LIBC_NT_IPHLPAPI_A_DEPS) $(LIBC_NT_IPHLPAPI_A)
 LIBC_NT_IPHLPAPI_A = o/$(MODE)/libc/nt/iphlpapi.a

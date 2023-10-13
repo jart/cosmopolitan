@@ -30,7 +30,6 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/ulock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -667,7 +666,6 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
                         CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID)) !=
                  (CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                   CLONE_SIGHAND | CLONE_SYSVSEM)) {
-    STRACE("cosmo clone() is picky about flags, see clone.c");
     rc = EINVAL;
   } else if (IsXnu()) {
 #ifdef __x86_64__
@@ -694,9 +692,6 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
   if (SupportsBsd() && rc == EPROCLIM) {
     rc = EAGAIN;
   }
-
-  STRACE("clone(%t, %p, %'zu, %#x, %p, %p, %p, %p) → %s", func, stk, stksz,
-         flags, arg, ptid, tls, ctid, DescribeErrno(rc));
 
   return rc;
 }

@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -61,7 +62,7 @@ void OnSig(int sig) {
 void WaitUntilReady(void) {
   while (!ready) pthread_yield();
   ASSERT_EQ(0, errno);
-  ASSERT_SYS(0, 0, usleep(1000));
+  ASSERT_SYS(0, 0, usleep(100000));
 }
 
 void *SleepWorker(void *arg) {

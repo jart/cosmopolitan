@@ -28,12 +28,12 @@ void *Worker(void *arg) {
   int i;
   char *volatile p;
   char *volatile q;
-  for (i = 0; i < 256; ++i) {
+  for (i = 0; i < 3000; ++i) {
     p = malloc(17);
     free(p);
     p = malloc(17);
     q = malloc(17);
-    sched_yield();
+    pthread_yield();
     free(p);
     free(q);
   }
@@ -45,7 +45,7 @@ void SetUpOnce(void) {
 }
 
 TEST(memory, test) {
-  int i, n = 32;
+  int i, n = 8;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));

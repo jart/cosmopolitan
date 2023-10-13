@@ -1,14 +1,17 @@
 #include "third_party/dlmalloc/dlmalloc.h"
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/yield.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
@@ -19,7 +22,9 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "third_party/dlmalloc/vespene.internal.h"
+#include "third_party/nsync/mu.h"
 // clang-format off
 
 #define FOOTERS 0
@@ -45,7 +50,11 @@
 #endif
 
 #undef assert
-#define assert(x) npassert(x)
+#if IsTiny()
+#define assert(x) if(!(x)) __builtin_unreachable()
+#else
+#define assert(x) if(!(x)) ABORT
+#endif
 
 #include "third_party/dlmalloc/platform.inc"
 #include "third_party/dlmalloc/locks.inc"

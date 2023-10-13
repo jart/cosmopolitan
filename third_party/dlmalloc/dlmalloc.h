@@ -507,7 +507,7 @@ void mspace_inspect_all(mspace msp,
                         void* arg);
 
 void dlmalloc_atfork(void);
-void dlmalloc_abort(void);
+void dlmalloc_abort(void) relegated wontreturn;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

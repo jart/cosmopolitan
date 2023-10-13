@@ -17,29 +17,26 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/cosmo.h"
+#include "libc/nt/enum/wsaid.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/sockaddr.h"
-#include "libc/sock/syscall_fd.internal.h"
+#include "libc/sock/wsaid.internal.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/thread/thread.h"
 #ifdef __x86_64__
 
-__msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
 __msabi extern typeof(__sys_setsockopt_nt) *const __imp_setsockopt;
+__msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
 
 union AcceptExAddr {
   struct sockaddr_storage addr;
@@ -60,6 +57,21 @@ struct AcceptArgs {
   struct AcceptExBuffer *buffer;
 };
 
+static struct {
+  atomic_uint once;
+  bool32 (*__msabi lpAcceptEx)(
+      int64_t sListenSocket, int64_t sAcceptSocket,
+      void *out_lpOutputBuffer /*[recvlen+local+remoteaddrlen]*/,
+      uint32_t dwReceiveDataLength, uint32_t dwLocalAddressLength,
+      uint32_t dwRemoteAddressLength, uint32_t *out_lpdwBytesReceived,
+      struct NtOverlapped *inout_lpOverlapped);
+} g_acceptex;
+
+static void acceptex_init(void) {
+  static struct NtGuid AcceptExGuid = WSAID_ACCEPTEX;
+  g_acceptex.lpAcceptEx = __get_wsaid(&AcceptExGuid);
+}
+
 static void sys_accept_nt_unwind(void *arg) {
   struct AcceptResources *resources = arg;
   if (resources->handle != -1) {
@@ -70,9 +82,10 @@ static void sys_accept_nt_unwind(void *arg) {
 static int sys_accept_nt_start(int64_t handle, struct NtOverlapped *overlap,
                                uint32_t *flags, void *arg) {
   struct AcceptArgs *args = arg;
-  if (AcceptEx(args->listensock, handle, args->buffer, 0,
-               sizeof(args->buffer->local), sizeof(args->buffer->remote), 0,
-               overlap)) {
+  cosmo_once(&g_acceptex.once, acceptex_init);
+  if (g_acceptex.lpAcceptEx(args->listensock, handle, args->buffer, 0,
+                            sizeof(args->buffer->local),
+                            sizeof(args->buffer->remote), 0, overlap)) {
     // inherit properties of listening socket
     unassert(!__imp_setsockopt(args->listensock, SOL_SOCKET,
                                kNtSoUpdateAcceptContext, &handle,

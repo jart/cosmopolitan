@@ -23,7 +23,7 @@
 /* Apple's ulock (part by Cosmo futexes) is an internal API, but:
    1. Unlike GCD it's cancellable, i.e. can be EINTR'd by signals
    2. We currently always use ulock anyway for joining threads */
-#define PREFER_GCD_OVER_ULOCK 0
+#define PREFER_GCD_OVER_ULOCK 1
 
 asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\

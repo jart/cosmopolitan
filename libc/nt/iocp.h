@@ -39,13 +39,13 @@ typedef void (*NtOverlappedCompletionRoutine)(
 
 int64_t CreateIoCompletionPort(int64_t FileHandleOrNeg1,
                                int64_t opt_ExistingCompletionPortOrZero,
-                               void *StatePointer,
+                               uint64_t CompletionKey,
                                uint32_t NumberOfConcurrentThreads);
 
 bool32 GetQueuedCompletionStatus(int64_t CompletionPort,
                                  uint32_t *lpNumberOfBytesTransferred,
-                                 void *StatePointerPointer,
-                                 struct NtOverlapped **lpOverlapped,
+                                 uint64_t *out_lpCompletionKey,
+                                 struct NtOverlapped **out_lpOverlapped,
                                  uint32_t dwMilliseconds);
 
 bool32 GetQueuedCompletionStatusEx(
@@ -56,7 +56,7 @@ bool32 GetQueuedCompletionStatusEx(
 
 bool32 PostQueuedCompletionStatus(int64_t CompletionPort,
                                   uint32_t dwNumberOfBytesTransferred,
-                                  uint32_t *dwCompletionKey,
+                                  uint64_t dwCompletionKey,
                                   struct NtOverlapped *opt_lpOverlapped);
 
 bool32 SetFileCompletionNotificationModes(int64_t FileHandle,

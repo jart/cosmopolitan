@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -30,9 +31,11 @@ __msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
  *
  * This function should only be called by close().
  */
-textwindows int sys_closesocket_nt(struct Fd *fd) {
-  int rc = __imp_closesocket(fd->handle);
-  if (rc != -1) {
+textwindows int sys_closesocket_nt(struct Fd *f) {
+  if (_weaken(sys_connect_nt_cleanup)) {
+    _weaken(sys_connect_nt_cleanup)(f, true);
+  }
+  if (!__imp_closesocket(f->handle)) {
     return 0;
   } else {
     return __winsockerr();

@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 
 struct NtOverlappedEntry {
-  uint32_t *lpCompletionKey;
+  uint64_t lpCompletionKey;
   struct NtOverlapped *lpOverlapped;
   uint32_t *Internal;
   uint32_t dwNumberOfBytesTransferred;

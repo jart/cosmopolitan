@@ -17,12 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/str/str.h"
+#include "libc/errno.h"
+#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/nsync/common.internal.h"
 // clang-format off
 
 /* Aborts after printing the nul-terminated string s[]. */
 void nsync_panic_ (const char *s) {
-	tinyprint (2, "nsync panic: ", s, NULL);
-	notpossible;
+	tinyprint(2, "error: nsync panic: ", s, "\n",
+		"cosmoaddr2line ", program_invocation_name, " ",
+		DescribeBacktrace (__builtin_frame_address (0)), "\n",
+		NULL);
+	_Exit (44);
 }

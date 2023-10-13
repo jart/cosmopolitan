@@ -49,12 +49,12 @@ TEST(ipv4, test) {
   ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 5, send(4, "hello", 5, 0));
   PARENT();
-  EXPECT_SYS(0, 0, close(3));
-  EXPECT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  EXPECT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
-  EXPECT_SYS(0, 5, read(3, buf, 16));
-  EXPECT_STREQ("hello", buf);
-  EXPECT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 5, read(3, buf, 16));
+  ASSERT_STREQ("hello", buf);
+  ASSERT_SYS(0, 0, close(3));
   WAIT(exit, 0);
 }
 
@@ -77,12 +77,12 @@ TEST(ipv6, test) {
   ASSERT_SYS(0, 0, close(4));
   ASSERT_SYS(0, 0, close(3));
   PARENT();
-  EXPECT_SYS(0, 0, close(3));
-  EXPECT_SYS(0, 3, socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP));
-  EXPECT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
-  EXPECT_SYS(0, 5, read(3, buf, 16));
-  EXPECT_STREQ("hello", buf);
-  EXPECT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP));
+  ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 5, read(3, buf, 16));
+  ASSERT_STREQ("hello", buf);
+  ASSERT_SYS(0, 0, close(3));
   WAIT(exit, 0);
 }
 

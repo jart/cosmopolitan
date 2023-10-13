@@ -1,9 +1,4 @@
 // clang-format off
-#include "third_party/nsync/mu.h"
-#include "libc/atomic.h"
-#include "libc/intrin/atomic.h"
-#include "libc/calls/calls.h"
-#include "libc/thread/tls.h"
 
 /* --------------------------- Lock preliminaries ------------------------ */
 
@@ -35,51 +30,47 @@
 
 */
 
-static int malloc_lock(atomic_int *lk) {
-  if (!__threaded) return 0;
-  while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
-    donothing;
-  }
-  return 0;
-}
-
-static int malloc_trylock(atomic_int *lk) {
-  if (!__threaded) return 1;
-  return !atomic_exchange_explicit(lk, 1, memory_order_acquire);
-}
-
-static inline int malloc_unlock(atomic_int *lk) {
-  atomic_store_explicit(lk, 0, memory_order_release);
-  return 0;
-}
-
-#if !USE_LOCKS
-#define USE_LOCK_BIT               (0U)
-#define INITIAL_LOCK(l)            (0)
-#define DESTROY_LOCK(l)            (0)
-#define ACQUIRE_MALLOC_GLOBAL_LOCK()
-#define RELEASE_MALLOC_GLOBAL_LOCK()
-#elif defined(TINY)
-#define MLOCK_T               atomic_int
-#define ACQUIRE_LOCK(lk)      malloc_lock(lk)
-#define RELEASE_LOCK(lk)      malloc_unlock(lk)
-#define TRY_LOCK(lk)          malloc_trylock(lk)
-#define INITIAL_LOCK(lk)      (atomic_store_explicit(lk, 0, memory_order_relaxed), 0)
-#define DESTROY_LOCK(lk)
-#define ACQUIRE_MALLOC_GLOBAL_LOCK()  ACQUIRE_LOCK(&malloc_global_mutex);
-#define RELEASE_MALLOC_GLOBAL_LOCK()  RELEASE_LOCK(&malloc_global_mutex);
-static MLOCK_T malloc_global_mutex;
+#ifdef TINY
+#define MLOCK_T atomic_uint
 #else
-#define MLOCK_T               nsync_mu
-#define ACQUIRE_LOCK(lk)      (__threaded && (nsync_mu_lock(lk), 0))
-#define RELEASE_LOCK(lk)      (__threaded && (nsync_mu_unlock(lk), 0))
-#define TRY_LOCK(lk)          (__threaded ? nsync_mu_trylock(lk) : 1)
-#define INITIAL_LOCK(lk)      memset(lk, 0, sizeof(*lk))
-#define DESTROY_LOCK(lk)      memset(lk, -1, sizeof(*lk))
-#define ACQUIRE_MALLOC_GLOBAL_LOCK()  ACQUIRE_LOCK(&malloc_global_mutex);
-#define RELEASE_MALLOC_GLOBAL_LOCK()  RELEASE_LOCK(&malloc_global_mutex);
-static MLOCK_T malloc_global_mutex;
+#define MLOCK_T nsync_mu
 #endif
+
+static int malloc_wipe(MLOCK_T *lk) {
+  bzero(lk, sizeof(*lk));
+  return 0;
+}
+
+static int malloc_lock(MLOCK_T *lk) {
+  if (!__threaded) return 0;
+#ifdef TINY
+  while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
+    spin_yield();
+  }
+#else
+  nsync_mu_lock(lk);
+#endif
+  return 0;
+}
+
+static int malloc_unlock(MLOCK_T *lk) {
+  if (!__threaded) return 0;
+#ifdef TINY
+  atomic_store_explicit(lk, 0, memory_order_release);
+#else
+  nsync_mu_unlock(lk);
+#endif
+  return 0;
+}
+
+#define ACQUIRE_LOCK(lk) malloc_lock(lk)
+#define RELEASE_LOCK(lk) malloc_unlock(lk)
+#define INITIAL_LOCK(lk) malloc_wipe(lk)
+#define DESTROY_LOCK(lk)
+#define ACQUIRE_MALLOC_GLOBAL_LOCK() ACQUIRE_LOCK(&malloc_global_mutex);
+#define RELEASE_MALLOC_GLOBAL_LOCK() RELEASE_LOCK(&malloc_global_mutex);
+
+static MLOCK_T malloc_global_mutex;
 
 #define USE_LOCK_BIT               (2U)
 

@@ -18,7 +18,6 @@
 ╚────────────────────────────────────────────────────────────────'>/dev/null #*/
 dir=libc/sysv/consts
 . libc/sysv/gen.sh
-#include "libc/sysv/consts/ss.h"
 
 #	The Fifth Bell System, Community Edition
 #	» catalogue of carnage

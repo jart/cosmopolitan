@@ -38,6 +38,7 @@
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/runtime/clktck.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
@@ -129,46 +130,19 @@ static void nsync_futex_init_ (void) {
 }
 
 static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *abstime) {
-	int rc;
-	int64_t nanos, maxnanos;
-	struct timespec now, wait, remain, deadline;
-
-	if (!abstime) {
-		deadline = timespec_max;
-	} else {
-		deadline = *abstime;
-	}
-
-	nanos = 100;
-	maxnanos = __SIG_LOCK_INTERVAL_MS * 1000L * 1000;
 	for (;;) {
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			return 0;
 		}
-		now = timespec_real ();
-		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
-			return 0;
+		if (_weaken (pthread_testcancel_np) &&
+		    _weaken (pthread_testcancel_np) ()) {
+			return -ETIMEDOUT;
 		}
-		if (timespec_cmp (now, deadline) >= 0) {
-			break;
+		if (abstime && timespec_cmp (timespec_real (), *abstime) >= 0) {
+			return -ETIMEDOUT;
 		}
-		wait = timespec_fromnanos (nanos);
-		remain = timespec_sub (deadline, now);
-		if (timespec_cmp(wait, remain) > 0) {
-			wait = remain;
-		}
-		if ((rc = clock_nanosleep (CLOCK_REALTIME, 0, &wait, 0))) {
-			return -rc;
-		}
-		if (nanos < maxnanos) {
-			nanos <<= 1;
-			if (nanos > maxnanos) {
-				nanos = maxnanos;
-			}
-		}
+		pthread_yield ();
 	}
-
-	return -ETIMEDOUT;
 }
 
 static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
@@ -189,7 +163,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 			return etimedout();
 		}
 		remain = timespec_sub (deadline, now);
-		interval = timespec_frommillis (__SIG_LOCK_INTERVAL_MS);
+		interval = timespec_frommillis (5000);
 		wait = timespec_cmp (remain, interval) > 0 ? interval : remain;
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			return 0;
@@ -274,7 +248,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 				us = -1u;
 			}
 			rc = ulock_wait (op, w, expect, us);
-			if (rc > 0) rc = 0; // TODO(jart): What does it mean?
+			if (rc > 0) rc = 0; // don't care about #waiters
 		} else if (IsFreebsd ()) {
 			rc = sys_umtx_timedwait_uint (w, expect, pshare, timeout);
 		} else {
@@ -356,6 +330,7 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 				op |= ULF_WAKE_ALL;
 			}
 			rc = ulock_wake (op, w, 0);
+			ASSERT (!rc || rc == -ENOENT);
 			if (!rc) {
 				rc = 1;
 			} else if (rc == -ENOENT) {

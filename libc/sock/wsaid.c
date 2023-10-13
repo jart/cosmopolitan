@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,17 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/intrin/weaken.h"
-#include "libc/log/log.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "third_party/dlmalloc/dlmalloc.h"
+#include "libc/assert.h"
+#include "libc/nt/enum/sio.h"
+#include "libc/nt/struct/guid.h"
+#include "libc/nt/thunk/msabi.h"
+#include "libc/nt/winsock.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/wsaid.internal.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/sock.h"
 
-#define MESSAGE "dlmalloc_abort()\n"
+__msabi extern typeof(__sys_closesocket_nt) *const __imp_closesocket;
 
-void dlmalloc_abort(void) {
-  write(2, MESSAGE, strlen(MESSAGE));
-  if (_weaken(__die)) _weaken(__die)();
-  _Exit(44);
+// returns address of winsock function where msdn says we must do this
+// this should be called once, since WSAIoctl has ~2 microsec overhead
+void *__get_wsaid(const struct NtGuid *lpFunctionGuid) {
+  int r;
+  int64_t h;
+  void *lpFunc;
+  uint32_t dwBytes;
+  h = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0,
+                kNtWsaFlagOverlapped);
+  r = WSAIoctl(h, kNtSioGetExtensionFunctionPointer, lpFunctionGuid,
+               sizeof(struct NtGuid), &lpFunc, sizeof(lpFunc), &dwBytes, 0, 0);
+  unassert(r != -1);
+  __imp_closesocket(h);
+  return lpFunc;
 }

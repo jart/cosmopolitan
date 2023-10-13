@@ -17,24 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/yield.h"
+#include "libc/errno.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/syslib.internal.h"
-#include "libc/thread/thread.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
-/**
- * Yields current thread's remaining timeslice to operating system.
- *
- * @return 0 on success, or error number on failure
- */
-int pthread_yield(void) {
-  if (IsXnuSilicon()) {
-    __syslib->__pthread_yield_np();
-  } else if (IsOpenbsd()) {
-    spin_yield();  // sched_yield() is punishingly slow on OpenBSD
-  } else {
-    sched_yield();
-  }
-  return 0;
+void dlmalloc_abort(void) {
+  tinyprint(2,
+            "error: dlmalloc aborted\n"
+            "cosmoaddr2line ",
+            program_invocation_name, " ",
+            DescribeBacktrace(__builtin_frame_address(0)), "\n", NULL);
+  _Exit(44);
 }

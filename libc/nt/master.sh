@@ -483,15 +483,6 @@ imp	'GetSaveFileName'					GetSaveFileNameW					comdlg32	1
 imp	'PrintDlg'						PrintDlgW						comdlg32	1
 imp	'ReplaceText'						ReplaceTextW						comdlg32	1
 
-# MSWSOCK.DLL
-#
-#	Name							Actual							DLL		Arity
-imp	'AcceptEx'						AcceptEx						MsWSock		8
-imp	'DisconnectEx'						DisconnectEx						MsWSock		4
-imp	'GetAcceptExSockaddrs'					GetAcceptExSockaddrs					MsWSock		8
-imp	'TransmitFile'						TransmitFile						MsWSock		7
-imp	'WSARecvEx'						WSARecvEx						MsWSock		4
-
 # WS2_32.DLL
 #
 #	Name							Actual							DLL		Arity
@@ -514,6 +505,7 @@ imp	''							send							ws2_32		4	# we're using WSASendTo()
 imp	''							sendto							ws2_32		6	# we're using WSASendTo()
 imp	''							setsockopt						ws2_32		5
 imp	''							shutdown						ws2_32		2
+imp	''							socket							ws2_32		3
 imp	''							socket							ws2_32		3
 imp	''							socket							ws2_32		3
 imp	'FreeAddrInfo'						FreeAddrInfoW						ws2_32		1

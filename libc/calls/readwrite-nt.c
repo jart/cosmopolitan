@@ -33,6 +33,7 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/stdio/sysparam.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
@@ -67,10 +68,10 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   bool32 ok;
   uint64_t m;
   uint32_t exchanged;
+  int olderror = errno;
   bool eagained = false;
   bool eintered = false;
   bool canceled = false;
-  bool olderror = errno;
   struct PosixThread *pt;
   struct Fd *f = g_fds.p + fd;
 
@@ -124,7 +125,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   // can only be returned by a single system call in a thread's life
   // another thing we do is check if any pending signals exist, then
   // running as many of them as possible before entering a wait call
-  struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 0, 0, 0),
+  struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 1, 0, 0),
                                  .Pointer = offset};
   struct ReadwriteResources rwc = {handle, &overlap};
   pthread_cleanup_push(UnwindReadwrite, &rwc);

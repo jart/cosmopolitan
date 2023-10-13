@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/gc.internal.h"
@@ -172,7 +173,7 @@ TEST(fwrite, signalStorm) {
   if (!pid) {
     do {
       ASSERT_NE(-1, kill(getppid(), SIGINT));
-      usleep(25);
+      usleep(5000);
     } while (!gotsigint);
     _exit(0);
   }

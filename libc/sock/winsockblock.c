@@ -69,10 +69,10 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
   uint64_t m;
   uint32_t status;
   uint32_t exchanged;
+  int olderror = errno;
   bool eagained = false;
   bool eintered = false;
   bool canceled = false;
-  bool olderror = errno;
   struct PosixThread *pt;
   struct NtOverlapped overlap = {.hEvent = WSACreateEvent()};
   struct WinsockBlockResources wbr = {handle, &overlap};
