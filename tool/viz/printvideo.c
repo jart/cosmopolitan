@@ -315,6 +315,16 @@ static struct timespec GetGraceTime(void) {
   return timespec_sub(deadline_, timespec_real());
 }
 
+static char *strntoupper(char *s, size_t n) {
+  size_t i;
+  for (i = 0; s[i] && i < n; ++i) {
+    if ('a' <= s[i] && s[i] <= 'z') {
+      s[i] -= 'a' - 'A';
+    }
+  }
+  return s;
+}
+
 static int GetNamedVector(const struct NamedVector *choices, size_t n,
                           const char *s) {
   int i;

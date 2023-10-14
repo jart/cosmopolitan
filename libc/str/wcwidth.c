@@ -21,33 +21,10 @@
 #include "libc/str/unicode.h"
 #include "libc/str/wcwidth_osx.internal.h"
 
-extern const uint8_t kEastAsianWidth[];
-extern const uint32_t kEastAsianWidthBits;
-extern const uint8_t kCombiningChars[];
-extern const uint32_t kCombiningCharsBits;
-
 /**
  * Returns cell width of monospace character.
  */
 int wcwidth(wchar_t c) {
-#if defined(__x86_64__) && !defined(__chibicc__)
-  if (LIKELY(32 <= c && c < 127)) {
-    return 1;
-  } else if (!c) {
-    return 0;
-  } else if ((uint32_t)c > 0x10FFFD ||  //
-             (0 < c && c < 32) ||       //
-             (0x7f <= c && c < 0xA0)) {
-    return -1;
-  } else if ((0 <= c && c < kCombiningCharsBits) &&
-             !!(kCombiningChars[c >> 3] & (1 << (c & 7)))) {
-    return 0;
-  } else if (0 <= c && c < kEastAsianWidthBits) {
-    return 1 + !!(kEastAsianWidth[c >> 3] & (1 << (c & 7)));
-  } else {
-    return 1;
-  }
-#else
   int res;
   if (LIKELY(32 <= c && c < 127)) return 1;
   if (VERY_UNLIKELY((uint32_t)c >= 0x100000)) {
@@ -60,5 +37,4 @@ int wcwidth(wchar_t c) {
     if (iswcntrl(c)) return -1;
   }
   return res;
-#endif
 }

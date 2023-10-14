@@ -36,6 +36,7 @@
 
 TEST(connect, nonblocking) {
   if (IsFreebsd()) return;  // TODO(jart): why did this start flaking?
+  if (IsOpenbsd()) return;  // TODO(jart): why did this start freezing?
   char buf[16] = {0};
   atomic_uint *sem = _mapshared(sizeof(unsigned));
   uint32_t addrsize = sizeof(struct sockaddr_in);

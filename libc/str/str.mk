@@ -93,32 +93,6 @@ $(LIBC_STR_A_OBJS): private					\
 			-Wframe-larger-than=4096		\
 			-Walloca-larger-than=4096
 
-o/$(MODE)/libc/str/eastasianwidth.bin:				\
-		libc/str/eastasianwidth.txt			\
-		o/$(MODE)/tool/decode/mkwides.com
-	@$(COMPILE) -AMKWIDES -T$@ o/$(MODE)/tool/decode/mkwides.com -o $@ $<
-o/$(MODE)/libc/str/eastasianwidth.bin.lz4:			\
-		o/$(MODE)/libc/str/eastasianwidth.bin		\
-		o/$(MODE)/third_party/lz4cli/lz4cli.com
-	@$(COMPILE) -ALZ4 -T$@ o/$(MODE)/third_party/lz4cli/lz4cli.com -q -f -9 --content-size $< $@
-o/$(MODE)/libc/str/eastasianwidth.s:				\
-		o/$(MODE)/libc/str/eastasianwidth.bin.lz4	\
-		o/$(MODE)/tool/build/lz4toasm.com
-	@$(COMPILE) -ABIN2ASM -T$@ o/$(MODE)/tool/build/lz4toasm.com -s kEastAsianWidth -o $@ $<
-
-o/$(MODE)/libc/str/combiningchars.bin:				\
-		libc/str/strdata.txt				\
-		o/$(MODE)/tool/decode/mkcombos.com
-	@$(COMPILE) -AMKCOMBOS -T$@ o/$(MODE)/tool/decode/mkcombos.com -o $@ $<
-o/$(MODE)/libc/str/combiningchars.bin.lz4:			\
-		o/$(MODE)/libc/str/combiningchars.bin		\
-		o/$(MODE)/third_party/lz4cli/lz4cli.com
-	@$(COMPILE) -ALZ4 -T$@ o/$(MODE)/third_party/lz4cli/lz4cli.com -q -f -9 --content-size $< $@
-o/$(MODE)/libc/str/combiningchars.s:				\
-		o/$(MODE)/libc/str/combiningchars.bin.lz4	\
-		o/$(MODE)/tool/build/lz4toasm.com
-	@$(COMPILE) -ABIN2ASM -T$@ o/$(MODE)/tool/build/lz4toasm.com -s kCombiningChars -o $@ $<
-
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))
