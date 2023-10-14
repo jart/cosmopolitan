@@ -60,6 +60,7 @@ o/$(MODE)/test/libc/sock/%.com.dbg:				\
 o/$(MODE)/test/libc/sock/unix_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc unix
 
+o/$(MODE)/test/libc/sock/connect_test.com.runs			\
 o/$(MODE)/test/libc/sock/recvfrom_test.com.runs			\
 o/$(MODE)/test/libc/sock/nonblock_test.com.runs			\
 o/$(MODE)/test/libc/sock/socket_test.com.runs			\
