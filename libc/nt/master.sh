@@ -598,6 +598,10 @@ imp	'PdhOpenQuery'						PdhOpenQueryW						pdh		3	# Creates a new query that is 
 # PSAPI.DLL
 #
 #	Name							Actual							DLL		Arity
+imp	'EnumProcessModules'					EnumProcessModules					psapi		4
+imp	'EnumProcessModulesEx'					EnumProcessModulesEx					psapi		5
+imp	'EnumProcesses'						EnumProcesses						psapi		3
+imp	'GetModuleBaseName'					GetModuleBaseNameW					psapi		4
 imp	'GetProcessImageFileName'				GetProcessImageFileNameW				psapi		3
 imp	'GetProcessMemoryInfo'					GetProcessMemoryInfo					psapi		3
 

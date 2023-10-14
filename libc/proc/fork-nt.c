@@ -395,6 +395,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     __set_tls(tib);
     __morph_tls();
     __tls_enabled_set(true);
+    // get new main thread handle
     // clear pending signals
     tib->tib_sigpending = 0;
     atomic_store_explicit(&__sig.pending, 0, memory_order_relaxed);
@@ -404,9 +405,9 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     if (ftrace_stackdigs) {
       _weaken(__hook)(_weaken(ftrace_hook), _weaken(GetSymbolTable)());
     }
-    // reset console
+    // reset core runtime services
+    __proc_wipe();
     __keystroke_wipe();
-    // reset alarms
     if (_weaken(__itimer_wipe)) {
       _weaken(__itimer_wipe)();
     }

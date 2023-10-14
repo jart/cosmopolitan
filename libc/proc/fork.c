@@ -27,21 +27,22 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/nt/files.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 
 int _fork(uint32_t dwCreationFlags) {
   struct Dll *e;
-  struct CosmoTib *tib;
   int ax, dx, tid, parent;
-  struct PosixThread *me, *other;
   parent = __pid;
   (void)parent;
   BLOCK_SIGNALS;
@@ -55,33 +56,55 @@ int _fork(uint32_t dwCreationFlags) {
     ax = sys_fork_nt(dwCreationFlags);
   }
   if (!ax) {
+
+    // get new process id
     if (!IsWindows()) {
       dx = sys_getpid().ax;
     } else {
       dx = GetCurrentProcessId();
     }
     __pid = dx;
-    tib = __get_tls();
-    me = (struct PosixThread *)tib->tib_pthread;
-    dll_remove(&_pthread_list, &me->list);
+
+    // turn other threads into zombies
+    // we can't free() them since we're monopolizing all locks
+    // we assume the operating system already reclaimed system handles
+    struct CosmoTib *tib = __get_tls();
+    struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
+    dll_remove(&_pthread_list, &pt->list);
     for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
-      other = POSIXTHREAD_CONTAINER(e);
-      atomic_store_explicit(&other->pt_status, kPosixThreadZombie,
+      atomic_store_explicit(&POSIXTHREAD_CONTAINER(e)->pt_status,
+                            kPosixThreadZombie, memory_order_relaxed);
+      atomic_store_explicit(&POSIXTHREAD_CONTAINER(e)->tib->tib_syshand, 0,
                             memory_order_relaxed);
     }
-    dll_make_first(&_pthread_list, &me->list);
+    dll_make_first(&_pthread_list, &pt->list);
+
+    // get new main thread id
     tid = IsLinux() || IsXnuSilicon() ? dx : sys_gettid();
     atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
-    atomic_store_explicit(&me->ptid, tid, memory_order_relaxed);
-    atomic_store_explicit(&me->pt_canceled, false, memory_order_relaxed);
+    atomic_store_explicit(&pt->ptid, tid, memory_order_relaxed);
+
+    // get new system thread handle
+    intptr_t syshand = 0;
+    if (IsXnuSilicon()) {
+      syshand = __syslib->__pthread_self();
+    } else if (IsWindows()) {
+      DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
+                      GetCurrentProcess(), &syshand, 0, false,
+                      kNtDuplicateSameAccess);
+    }
+    atomic_store_explicit(&tib->tib_syshand, syshand, memory_order_relaxed);
+
+    // we can't be canceled if the canceler no longer exists
+    atomic_store_explicit(&pt->pt_canceled, false, memory_order_relaxed);
+
+    // run user fork callbacks
     if (__threaded && _weaken(_pthread_onfork_child)) {
       _weaken(_pthread_onfork_child)();
     }
-    if (IsWindows()) {
-      __proc_wipe();
-    }
     STRACE("fork() → 0 (child of %d)", parent);
   } else {
+    // this is the parent process
     if (__threaded && _weaken(_pthread_onfork_parent)) {
       _weaken(_pthread_onfork_parent)();
     }

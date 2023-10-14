@@ -29,7 +29,7 @@ struct Signals __sig;
 sigset_t __sig_block(void) {
   if (IsWindows()) {
     return atomic_exchange_explicit(&__get_tls()->tib_sigmask, -1,
-                                    memory_order_acq_rel);
+                                    memory_order_acquire);
   } else {
     sigset_t res, neu = -1;
     sys_sigprocmask(SIG_SETMASK, &neu, &res);
@@ -55,7 +55,7 @@ textwindows int __sig_enqueue(int sig) {
 
 textwindows sigset_t __sig_beginwait(sigset_t waitmask) {
   return atomic_exchange_explicit(&__get_tls()->tib_sigmask, waitmask,
-                                  memory_order_acq_rel);
+                                  memory_order_acquire);
 }
 
 textwindows void __sig_finishwait(sigset_t m) {

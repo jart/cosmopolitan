@@ -27,6 +27,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
@@ -191,10 +192,11 @@ textstartup void __enable_tls(void) {
   tib->tib_locale = (intptr_t)&__c_dot_utf8_locale;
   tib->tib_pthread = (pthread_t)&_pthread_static;
   if (IsWindows()) {
-    intptr_t threadhand, pseudo = GetCurrentThread();
-    DuplicateHandle(GetCurrentProcess(), pseudo, GetCurrentProcess(),
-                    &threadhand, 0, true, kNtDuplicateSameAccess);
-    atomic_store_explicit(&tib->tib_syshand, threadhand, memory_order_relaxed);
+    intptr_t hThread;
+    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
+                    GetCurrentProcess(), &hThread, 0, false,
+                    kNtDuplicateSameAccess);
+    atomic_store_explicit(&tib->tib_syshand, hThread, memory_order_relaxed);
   } else if (IsXnuSilicon()) {
     tib->tib_syshand = __syslib->__pthread_self();
   }
