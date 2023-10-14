@@ -15,7 +15,6 @@ COSMOPOLITAN_C_START_
   }                        \
   while (0)
 
-int __sig_enqueue(int);
 sigset_t __sig_block(void);
 void __sig_unblock(sigset_t);
 void __sig_finishwait(sigset_t);

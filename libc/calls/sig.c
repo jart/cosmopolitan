@@ -91,7 +91,8 @@ textwindows void __sig_delete(int sig) {
   BLOCK_SIGNALS;
   _pthread_lock();
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
-    POSIXTHREAD_CONTAINER(e)->tib->tib_sigpending &= ~(1ull << (sig - 1));
+    atomic_fetch_and_explicit(&POSIXTHREAD_CONTAINER(e)->tib->tib_sigpending,
+                              ~(1ull << (sig - 1)), memory_order_relaxed);
   }
   _pthread_unlock();
   ALLOW_SIGNALS;
@@ -157,7 +158,8 @@ static textwindows bool __sig_start(struct PosixThread *pt, int sig,
   }
   if (pt->tib->tib_sigmask & (1ull << (sig - 1))) {
     STRACE("enqueing %G on %d", sig, _pthread_tid(pt));
-    pt->tib->tib_sigpending |= 1ull << (sig - 1);
+    atomic_fetch_or_explicit(&pt->tib->tib_sigpending, 1ull << (sig - 1),
+                             memory_order_relaxed);
     return false;
   }
   if (*rva == (intptr_t)SIG_DFL) {
@@ -339,7 +341,8 @@ static int __sig_killer(struct PosixThread *pt, int sig, int sic) {
       !((uintptr_t)__executable_start <= nc.Rip &&
         nc.Rip < (uintptr_t)__privileged_start)) {
     STRACE("enqueing %G on %d rip %p", sig, _pthread_tid(pt), nc.Rip);
-    pt->tib->tib_sigpending |= 1ull << (sig - 1);
+    atomic_fetch_or_explicit(&pt->tib->tib_sigpending, 1ull << (sig - 1),
+                             memory_order_relaxed);
     ResumeThread(th);
     __sig_cancel(pt, sig, flags);
     return 0;

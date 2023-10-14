@@ -23,6 +23,7 @@
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -48,5 +49,6 @@ TEST(getcwd, testWindows_addsFunnyPrefix) {
   if (!IsWindows()) return;
   char path[PATH_MAX];
   ASSERT_NE(0, getcwd(path, sizeof(path)));
-  EXPECT_STARTSWITH("/C/", path);
+  path[1] = tolower(path[1]);
+  EXPECT_STARTSWITH("/c/", path);
 }

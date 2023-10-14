@@ -16,24 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
+#include "ape/sections.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/atomic.h"
 #include "libc/intrin/directmap.internal.h"
-#include "libc/intrin/dll.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -41,21 +35,17 @@
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/errors.h"
-#include "libc/nt/files.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/thread.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/proc/describefds.internal.h"
 #include "libc/proc/ntspawn.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -65,7 +55,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/itimer.internal.h"
-#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
@@ -395,10 +384,9 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     __set_tls(tib);
     __morph_tls();
     __tls_enabled_set(true);
-    // get new main thread handle
-    // clear pending signals
-    tib->tib_sigpending = 0;
+    // the child's pending signals is initially empty
     atomic_store_explicit(&__sig.pending, 0, memory_order_relaxed);
+    atomic_store_explicit(&tib->tib_sigpending, 0, memory_order_relaxed);
     // re-enable threads
     __enable_threads();
     // re-apply code morphing for function tracing

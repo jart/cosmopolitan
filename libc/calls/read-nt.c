@@ -31,7 +31,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -129,14 +128,14 @@ struct Keystroke {
 
 struct Keystrokes {
   atomic_uint once;
+  bool end_of_file;
+  bool ohno_decckm;
+  uint16_t utf16hs;
+  atomic_int_fast16_t used;
   int64_t cin, cot;
   struct Dll *list;
   struct Dll *line;
   struct Dll *free;
-  bool end_of_file;
-  bool ohno_decckm;
-  unsigned char pc;
-  uint16_t utf16hs;
   pthread_mutex_t lock;
   const struct VirtualKey *vkt;
   struct Keystroke pool[512];
@@ -154,6 +153,12 @@ static textwindows void OpenConsole(void) {
                                kNtFileShareRead, 0, kNtOpenExisting, 0, 0);
   __keystroke.cot = CreateFile(u"CONOUT$", kNtGenericRead | kNtGenericWrite,
                                kNtFileShareWrite, 0, kNtOpenExisting, 0, 0);
+}
+
+static textwindows int AddSignal(int sig) {
+  atomic_fetch_or_explicit(&__get_tls()->tib_sigpending, 1ull << (sig - 1),
+                           memory_order_relaxed);
+  return 0;
 }
 
 static textwindows void InitConsole(void) {
@@ -295,9 +300,9 @@ static textwindows int ProcessKeyEvent(const struct NtInputRecord *r, char *p) {
   // tcsetattr() lets anyone reconfigure these keybindings
   if (c && !(__ttyconf.magic & kTtyNoIsigs)) {
     if (c == __ttyconf.vintr) {
-      return __sig_enqueue(SIGINT);
+      return AddSignal(SIGINT);
     } else if (c == __ttyconf.vquit) {
-      return __sig_enqueue(SIGQUIT);
+      return AddSignal(SIGQUIT);
     }
   }
 
@@ -399,7 +404,7 @@ static textwindows int ConvertConsoleInputToAnsi(const struct NtInputRecord *r,
     case kNtMouseEvent:
       return ProcessMouseEvent(r, p);
     case kNtWindowBufferSizeEvent:
-      return __sig_enqueue(SIGWINCH);
+      return AddSignal(SIGWINCH);
     default:
       return 0;
   }
@@ -409,8 +414,8 @@ static textwindows struct Keystroke *NewKeystroke(void) {
   struct Dll *e;
   struct Keystroke *k = 0;
   int i, n = ARRAYLEN(__keystroke.pool);
-  if (atomic_load_explicit(&__keystroke.pc, memory_order_acquire) < n &&
-      (i = atomic_fetch_add(&__keystroke.pc, 1)) < n) {
+  if (atomic_load_explicit(&__keystroke.used, memory_order_acquire) < n &&
+      (i = atomic_fetch_add(&__keystroke.used, 1)) < n) {
     k = __keystroke.pool + i;
   } else {
     if ((e = dll_first(__keystroke.free))) {

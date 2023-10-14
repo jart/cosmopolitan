@@ -55,7 +55,8 @@ int sigpending(sigset_t *pending) {
     rc = 0;
   } else if (IsWindows()) {
     *pending = atomic_load_explicit(&__sig.pending, memory_order_acquire) |
-               __get_tls()->tib_sigpending;
+               atomic_load_explicit(&__get_tls()->tib_sigpending,
+                                    memory_order_acquire);
     rc = 0;
   } else {
     rc = enosys();

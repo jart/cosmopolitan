@@ -48,11 +48,6 @@ void __sig_unblock(sigset_t m) {
   }
 }
 
-textwindows int __sig_enqueue(int sig) {
-  __get_tls()->tib_sigpending |= 1ull << (sig - 1);
-  return 0;
-}
-
 textwindows sigset_t __sig_beginwait(sigset_t waitmask) {
   return atomic_exchange_explicit(&__get_tls()->tib_sigmask, waitmask,
                                   memory_order_acquire);
