@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
@@ -29,18 +28,43 @@
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/errfuns.h"
 
 textwindows int sys_fstatat_nt(int dirfd, const char *path, struct stat *st,
                                int flags) {
-  int rc, e;
-  int64_t fh;
-  uint32_t dwDesiredAccess;
+
+  // handle special files
+  if (startswith(path, "/dev/")) {
+    if (!strcmp(path + 5, "tty")) {
+      return sys_fstat_nt_special(kFdConsole, st);
+    } else if (!strcmp(path + 5, "null")) {
+      return sys_fstat_nt_special(kFdDevNull, st);
+    } else if (!strcmp(path + 5, "stdin")) {
+      return sys_fstat_nt(STDIN_FILENO, st);
+    } else if (!strcmp(path + 5, "stdout")) {
+      return sys_fstat_nt(STDOUT_FILENO, st);
+    } else if (!strcmp(path + 5, "stderr")) {
+      return sys_fstat_nt(STDERR_FILENO, st);
+    } else {
+      return enoent();
+    }
+  }
+
+  // convert path from utf-8 to utf-16
   uint16_t path16[PATH_MAX];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+  if (__mkntpathat(dirfd, path, 0, path16) == -1) {
+    return -1;
+  }
+
+  // open an actual file
+  int rc;
+  int64_t fh;
+  int e = errno;
+  uint32_t dwDesiredAccess = kNtFileGenericRead;
   BLOCK_SIGNALS;
-  e = errno;
-  dwDesiredAccess = kNtFileGenericRead;
 TryAgain:
   if ((fh = CreateFile(
            path16, dwDesiredAccess,
@@ -50,7 +74,7 @@ TryAgain:
                ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
                                               : 0),
            0)) != -1) {
-    rc = st ? sys_fstat_nt(fh, st) : 0;
+    rc = st ? sys_fstat_nt_handle(fh, st) : 0;
     CloseHandle(fh);
   } else if (dwDesiredAccess == kNtFileGenericRead &&
              GetLastError() == kNtErrorSharingViolation) {
@@ -61,5 +85,7 @@ TryAgain:
     rc = __winerr();
   }
   ALLOW_SIGNALS;
+
+  // mop up errors
   return __fix_enotdir(rc, path16);
 }

@@ -11,6 +11,7 @@ COSMOPOLITAN_C_START_
 #define kFdZip      6
 #define kFdEpoll    7
 #define kFdReserved 8
+#define kFdDevNull  9
 
 struct Fd {
   char kind;

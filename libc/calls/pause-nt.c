@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #ifdef __x86_64__
 

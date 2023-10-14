@@ -62,7 +62,9 @@ static textwindows int64_t Seek(struct Fd *f, int64_t offset, int whence) {
 }
 
 textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
-  if (__isfdkind(fd, kFdFile)) {
+  if (__isfdkind(fd, kFdDevNull)) {
+    return offset;
+  } else if (__isfdkind(fd, kFdFile)) {
     struct Fd *f = g_fds.p + fd;
     int filetype = GetFileType(f->handle);
     if (filetype != kNtFileTypePipe && filetype != kNtFileTypeChar) {

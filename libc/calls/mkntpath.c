@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/ntmagicpaths.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -34,24 +33,6 @@ static inline bool IsSlash(char c) {
 
 static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-}
-
-textwindows static const char *FixNtMagicPath(const char *path,
-                                              unsigned flags) {
-  const struct NtMagicPaths *mp = &kNtMagicPaths;
-  asm("" : "+r"(mp));
-  if (!IsSlash(path[0])) return path;
-  if (strcmp(path, mp->devtty) == 0) {
-    if ((flags & O_ACCMODE) == O_RDONLY) {
-      return mp->conin;
-    } else if ((flags & O_ACCMODE) == O_WRONLY) {
-      return mp->conout;
-    }
-  }
-  if (strcmp(path, mp->devnull) == 0) return mp->nul;
-  if (strcmp(path, mp->devstdin) == 0) return mp->conin;
-  if (strcmp(path, mp->devstdout) == 0) return mp->conout;
-  return path;
 }
 
 textwindows size_t __normntpath(char16_t *p, size_t n) {
@@ -116,7 +97,6 @@ textwindows int __mkntpath2(const char *path,
   if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     return efault();
   }
-  path = FixNtMagicPath(path, flags);
 
   size_t x, z;
   char16_t *p = path16;

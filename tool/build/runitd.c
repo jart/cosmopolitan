@@ -620,9 +620,8 @@ RetryOnEtxtbsyRaceCondition:
           goto TerminateJob;
         }
         if (received > 0) {
-          WARNF("%s client sent %d unexpected bytes so killing job", origname,
-                received);
-          goto HangupClientAndTerminateJob;
+          WARNF("%s client sent %d unexpected bytes", origname, received);
+          continue;
         }
         if (received == MBEDTLS_ERR_SSL_WANT_READ) {  // EAGAIN SO_RCVTIMEO
           WARNF("%s (pid %d) is taking a really long time", origname,

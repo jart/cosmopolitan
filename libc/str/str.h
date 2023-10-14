@@ -186,6 +186,7 @@ dontthrow nocallback;
 uint64_t tpenc(uint32_t) pureconst;
 char *chomp(char *) libcesque;
 wchar_t *wchomp(wchar_t *) libcesque;
+uint64_t __fnv(const void *, size_t) strlenesque;
 bool startswith(const char *, const char *) strlenesque;
 bool startswithi(const char *, const char *) strlenesque;
 bool endswith(const char *, const char *) strlenesque;

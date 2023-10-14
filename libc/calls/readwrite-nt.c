@@ -83,7 +83,9 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   // similar to the lseek() system call, they too raise ESPIPE when
   // operating on a non-seekable file.
   bool pwriting = offset != -1;
-  bool seekable = f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk;
+  bool seekable =
+      (f->kind == kFdFile && GetFileType(handle) == kNtFileTypeDisk) ||
+      f->kind == kFdDevNull;
   if (pwriting && !seekable) {
     return espipe();
   }

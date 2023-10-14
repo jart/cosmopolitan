@@ -21,6 +21,7 @@
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/wintime.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
@@ -75,7 +76,7 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
       .ru_majflt = memcount.PageFaultCount,
       .ru_inblock = iocount.ReadOperationCount,
       .ru_oublock = iocount.WriteOperationCount,
-      .ru_nsignals = __sig.count,
+      .ru_nsignals = atomic_load_explicit(&__sig.count, memory_order_acquire),
   };
 
   if (who == RUSAGE_BOTH) {

@@ -178,14 +178,18 @@ __static_yoink("blink_xnu_aarch64");    // is apple silicon
 #define MONITOR_MICROS   150000
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
 #define WRITE(F, P, N)   writev(F, &(struct iovec){P, N}, 1)
-#define LockInc(P)       (*(_Atomic(typeof(*(P))) *)(P))++
-#define LockDec(P)       (*(_Atomic(typeof(*(P))) *)(P))--
 #define AppendCrlf(P)    mempcpy(P, "\r\n", 2)
 #define HasHeader(H)     (!!cpm.msg.headers[H].a)
 #define HeaderData(H)    (inbuf.p + cpm.msg.headers[H].a)
 #define HeaderLength(H)  (cpm.msg.headers[H].b - cpm.msg.headers[H].a)
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
+#define LockInc(P)                                            \
+  atomic_fetch_add_explicit((_Atomic(typeof(*(P))) *)(P), +1, \
+                            memory_order_relaxed)
+#define LockDec(P)                                            \
+  atomic_fetch_add_explicit((_Atomic(typeof(*(P))) *)(P), -1, \
+                            memory_order_relaxed)
 
 #define TRACE_BEGIN         \
   do {                      \

@@ -169,10 +169,11 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 			return 0;
 		}
 		if (pt) atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
-		if (_check_cancel() == -1) return -1;
-		if (_check_signal(false) == -1) return -1;
+		if (_check_cancel () == -1) return -1;
+		if (_check_signal (false) == -1) return -1;
 		ok = WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait));
-		if (_check_cancel() == -1) return -1;
+		if (_check_signal (false) == -1) { _check_cancel (); return -1; }
+		if (_check_cancel () == -1) return -1;
 		if (ok) {
 			return 0;
 		} else {

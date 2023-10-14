@@ -18,14 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/str/str.h"
 
 /**
  * Configures process to ignore signal.
  */
 int sigignore(int sig) {
-  struct sigaction sa;
-  bzero(&sa, sizeof(sa));
-  sa.sa_handler = SIG_IGN;
+  struct sigaction sa = {.sa_handler = SIG_IGN};
   return sigaction(sig, &sa, 0);
 }

@@ -60,7 +60,6 @@ static char msg[128];
 static uint32_t msglen;
 static const char *prog;
 static atomic_int a_termsig;
-static atomic_long a_errors;
 static atomic_long a_requests;
 static atomic_bool a_finished;
 
@@ -125,23 +124,21 @@ static void NewClient(struct Client *client, const struct sockaddr_in *addr) {
 
 static void *Worker(void *arg) {
   while (!a_finished) {
-    bool32 ok;
+    uint32_t i;
     uint32_t dwFlags;
-    uint32_t dwBytes;
-    struct Client *client;
-    uint64_t CompletionKey;
-    struct NtOverlapped *lpOverlapped;
-    if (!(ok = GetQueuedCompletionStatus(iocp, &dwBytes, &CompletionKey,
-                                         &lpOverlapped, -1u)) &&
-        !lpOverlapped) {
+    uint32_t dwRecordCount;
+    struct NtOverlappedEntry records[8];
+    if (!GetQueuedCompletionStatusEx(iocp, records, ARRAYLEN(records),
+                                     &dwRecordCount, -1u, false)) {
       fprintf(stderr, "GetQueuedCompletionStatus() failed w/ %d\n",
               GetLastError());
       exit(1);
     }
-    client = (struct Client *)CompletionKey;
-    switch (client->state) {
-      case SENDING:
-        if (ok) {
+    for (i = 0; i < dwRecordCount; ++i) {
+      uint32_t dwBytes = records[i].dwNumberOfBytesTransferred;
+      struct Client *client = (struct Client *)records[i].lpCompletionKey;
+      switch (client->state) {
+        case SENDING:
           dwFlags = 0;
           client->state = RECEIVING;
           client->iov.buf = client->buf;
@@ -153,15 +150,8 @@ static void *Worker(void *arg) {
             fprintf(stderr, "WSARecv() failed w/ %d\n", WSAGetLastError());
             exit(1);
           }
-        } else {
-          fprintf(stderr, "WSAConnect() or WSASend() failed w/ %d\n",
-                  WSAGetLastError());
-          __imp_closesocket(client->handle);
-          ++a_errors;
-        }
-        break;
-      case RECEIVING:
-        if (ok) {
+          break;
+        case RECEIVING:
           if (!dwBytes) {
             fprintf(stderr, "got disconnect\n");
             break;
@@ -183,14 +173,10 @@ static void *Worker(void *arg) {
             fprintf(stderr, "WSASend() failed w/ %d\n", WSAGetLastError());
             exit(1);
           }
-        } else {
-          fprintf(stderr, "WSARecv() failed w/ %d\n", WSAGetLastError());
-          __imp_closesocket(client->handle);
-          ++a_errors;
-        }
-        break;
-      default:
-        __builtin_unreachable();
+          break;
+        default:
+          __builtin_unreachable();
+      }
     }
   }
   return 0;
@@ -209,12 +195,12 @@ int main(int argc, char *argv[]) {
 
   prog = argv[0];
   if (!prog) {
-    prog = "ab";
+    prog = "winbench";
   }
 
   int opt;
-  int nclients = 20;
-  int nthreads = GetMaximumProcessorCount(0xffff) * 2;
+  int nclients = 1000;
+  int nthreads = GetMaximumProcessorCount(0xffff);
   struct sockaddr_in destaddr = {AF_INET, htons(8080), {htonl(0x7f000001)}};
   while ((opt = getopt(argc, argv, "hH:P:")) != -1) {
     switch (opt) {
@@ -280,7 +266,7 @@ int main(int argc, char *argv[]) {
     NewClient(clients + i, &destaddr);
   }
 
-  sleep(5);
+  sleep(10);
 
   a_finished = true;
   long request_count = a_requests;

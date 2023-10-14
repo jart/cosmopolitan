@@ -67,10 +67,8 @@
 #include "libc/thread/itimer.internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
-
 #ifdef __x86_64__
 
-extern int64_t __wincrashearly;
 void __keystroke_wipe(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
@@ -399,7 +397,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     __tls_enabled_set(true);
     // clear pending signals
     tib->tib_sigpending = 0;
-    __sig.pending = 0;
+    atomic_store_explicit(&__sig.pending, 0, memory_order_relaxed);
     // re-enable threads
     __enable_threads();
     // re-apply code morphing for function tracing

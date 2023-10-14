@@ -116,8 +116,7 @@ errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
     if (value_ptr) {
       *value_ptr = pt->pt_rc;
     }
-    _pthread_free(pt, false);
-    _pthread_decimate();
+    _pthread_unref(pt);
   }
   STRACE("pthread_timedjoin_np(%d, %s, %s) → %s", _pthread_tid(pt),
          DescribeReturnValue(alloca(30), err, value_ptr),

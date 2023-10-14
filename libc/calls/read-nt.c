@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -733,8 +734,10 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
   m = __sig_beginwait(waitmask);
   if ((rc = _check_cancel()) != -1 && (rc = _check_signal(true)) != -1) {
-    WaitForMultipleObjects(2, (int64_t[2]){sem, __keystroke.cin}, 0, ms);
+    int64_t hands[2] = {sem, __keystroke.cin};
+    unassert(WaitForMultipleObjects(2, hands, 0, ms) != -1u);
     if (~pt->pt_flags & PT_RESTARTABLE) rc = eintr();
+    rc |= _check_signal(true);
     if (rc == -1 && errno == EINTR) _check_cancel();
   }
   __sig_finishwait(m);
@@ -763,6 +766,11 @@ textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
 
   // switch to terminal polyfill if reading from win32 console
   struct Fd *f = g_fds.p + fd;
+
+  if (f->kind == kFdDevNull) {
+    return 0;
+  }
+
   if (f->kind == kFdConsole) {
     return ReadFromConsole(f, data, size, waitmask);
   }

@@ -88,11 +88,13 @@ textwindows bool __sig_ignored(int sig) {
 textwindows void __sig_delete(int sig) {
   struct Dll *e;
   __sig.pending &= ~(1ull << (sig - 1));
+  BLOCK_SIGNALS;
   _pthread_lock();
   for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
     POSIXTHREAD_CONTAINER(e)->tib->tib_sigpending &= ~(1ull << (sig - 1));
   }
   _pthread_unlock();
+  ALLOW_SIGNALS;
 }
 
 static textwindows bool __sig_should_use_altstack(unsigned flags,
@@ -219,7 +221,7 @@ textwindows void __sig_cancel(struct PosixThread *pt, int sig, unsigned flags) {
 }
 
 static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
-  ++__sig.count;
+  atomic_fetch_add_explicit(&__sig.count, 1, memory_order_relaxed);
   int sig = sf->si.si_signo;
   sigset_t blocksigs = __sighandmask[sig];
   if (!(sf->flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
@@ -309,7 +311,9 @@ static int __sig_killer(struct PosixThread *pt, int sig, int sic) {
 textwindows int __sig_kill(struct PosixThread *pt, int sig, int sic) {
   int rc;
   BLOCK_SIGNALS;
+  _pthread_ref(pt);
   rc = __sig_killer(pt, sig, sic);
+  _pthread_unref(pt);
   ALLOW_SIGNALS;
   return rc;
 }
@@ -333,7 +337,7 @@ textwindows void __sig_generate(int sig, int sic) {
         atomic_load_explicit(&pt->pt_status, memory_order_acquire) <
             kPosixThreadTerminated &&
         !(pt->tib->tib_sigmask & (1ull << (sig - 1)))) {
-      mark = pt;
+      _pthread_ref((mark = pt));
       break;
     }
   }
@@ -345,6 +349,7 @@ textwindows void __sig_generate(int sig, int sic) {
     STRACE("all threads block %G so adding to pending signals of process", sig);
     __sig.pending |= 1ull << (sig - 1);
   }
+  _pthread_unref(mark);
   ALLOW_SIGNALS;
 }
 
@@ -411,7 +416,7 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
                              struct CosmoTib *tib) {
 
   // increment the signal count for getrusage()
-  ++__sig.count;
+  atomic_fetch_add_explicit(&__sig.count, 1, memory_order_relaxed);
 
   // log vital crash information reliably for --strace before doing much
   // we don't print this without the flag since raw numbers scare people

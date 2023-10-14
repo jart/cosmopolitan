@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -36,6 +37,7 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
   int i, rc;
   uint64_t elapsed, used;
   struct NtFileTime idle, kern, user;
+  BLOCK_SIGNALS;
   pthread_spin_lock(&lock);
   if (GetSystemTimes(&idle, &kern, &user)) {
     elapsed = (FT(kern) - FT(kern1)) + (FT(user) - FT(user1));
@@ -53,6 +55,7 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
     rc = __winerr();
   }
   pthread_spin_unlock(&lock);
+  ALLOW_SIGNALS;
   return rc;
 }
 

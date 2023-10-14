@@ -106,6 +106,9 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
       int bytes = CountConsoleInputBytes();
       *arg = MAX(0, bytes);
       return 0;
+    } else if (g_fds.p[fd].kind == kFdDevNull) {
+      *arg = 1;
+      return 0;
     } else if (GetFileType(handle) == kNtFileTypePipe) {
       uint32_t avail;
       if (PeekNamedPipe(handle, 0, 0, 0, &avail, 0)) {

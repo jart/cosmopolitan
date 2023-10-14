@@ -321,63 +321,18 @@ static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
   return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0), start);
 }
 
-static textwindows int sys_fcntl_nt_setfl(int fd, unsigned *flags,
-                                          unsigned mode, unsigned arg,
-                                          intptr_t *handle) {
-
-  // you may change the following:
-  //
-  // - O_NONBLOCK     make read() raise EAGAIN
-  // - O_APPEND       for toggling append mode
-  // - O_RANDOM       alt. for posix_fadvise()
-  // - O_SEQUENTIAL   alt. for posix_fadvise()
-  // - O_DIRECT       works but haven't tested
-  //
-  // the other bits are ignored.
-  unsigned allowed = O_APPEND | O_SEQUENTIAL | O_RANDOM | O_DIRECT | O_NONBLOCK;
-  unsigned needreo = O_APPEND | O_SEQUENTIAL | O_RANDOM | O_DIRECT;
-  unsigned newflag = (*flags & ~allowed) | (arg & allowed);
-
-  if ((*flags & needreo) ^ (arg & needreo)) {
-    unsigned perm, share, attr;
-    if (GetNtOpenFlags(newflag, mode, &perm, &share, 0, &attr) == -1) {
-      return -1;
-    }
-    // MSDN says only these are allowed, otherwise it returns EINVAL.
-    attr &= kNtFileFlagBackupSemantics | kNtFileFlagDeleteOnClose |
-            kNtFileFlagNoBuffering | kNtFileFlagOpenNoRecall |
-            kNtFileFlagOpenReparsePoint | kNtFileFlagOverlapped |
-            kNtFileFlagPosixSemantics | kNtFileFlagRandomAccess |
-            kNtFileFlagSequentialScan | kNtFileFlagWriteThrough;
-    intptr_t hand;
-    if ((hand = ReOpenFile(*handle, perm, share, attr)) != -1) {
-      if (hand != *handle) {
-        CloseHandle(*handle);
-        *handle = hand;
-      }
-    } else {
-      return __winerr();
-    }
-  }
-
-  // 1. ignore flags that aren't access mode flags
-  // 2. return zero if nothing's changed
-  *flags = newflag;
-  return 0;
-}
-
 textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   int rc;
   BLOCK_SIGNALS;
-  if (__isfdkind(fd, kFdFile) ||    //
-      __isfdkind(fd, kFdSocket) ||  //
-      __isfdkind(fd, kFdConsole)) {
+  if (__isfdkind(fd, kFdFile) ||     //
+      __isfdkind(fd, kFdSocket) ||   //
+      __isfdkind(fd, kFdConsole) ||  //
+      __isfdkind(fd, kFdDevNull)) {
     if (cmd == F_GETFL) {
       rc = g_fds.p[fd].flags & (O_ACCMODE | O_APPEND | O_DIRECT | O_NONBLOCK |
                                 O_RANDOM | O_SEQUENTIAL);
     } else if (cmd == F_SETFL) {
-      rc = sys_fcntl_nt_setfl(fd, &g_fds.p[fd].flags, g_fds.p[fd].mode, arg,
-                              &g_fds.p[fd].handle);
+      rc = sys_fcntl_nt_setfl(fd, arg);
     } else if (cmd == F_GETFD) {
       if (g_fds.p[fd].flags & O_CLOEXEC) {
         rc = FD_CLOEXEC;

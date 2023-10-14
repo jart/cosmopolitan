@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -26,7 +25,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -67,6 +65,7 @@ __static_yoink("_pthread_atfork");
 #define MAP_STACK_OPENBSD 0x4000
 
 void _pthread_free(struct PosixThread *pt, bool isfork) {
+  unassert(dll_is_alone(&pt->list) && &pt->list != _pthread_list);
   if (pt->pt_flags & PT_STATIC) return;
   if (pt->pt_flags & PT_OWNSTACK) {
     unassert(!munmap(pt->pt_attr.__stackaddr, pt->pt_attr.__stacksize));
@@ -84,6 +83,26 @@ void _pthread_free(struct PosixThread *pt, bool isfork) {
   }
   free(pt->pt_tls);
   free(pt);
+}
+
+void _pthread_decimate(void) {
+  struct Dll *e;
+  struct PosixThread *pt;
+  enum PosixThreadStatus status;
+StartOver:
+  _pthread_lock();
+  for (e = dll_last(_pthread_list); e; e = dll_prev(_pthread_list, e)) {
+    pt = POSIXTHREAD_CONTAINER(e);
+    status = atomic_load_explicit(&pt->pt_status, memory_order_acquire);
+    if (status != kPosixThreadZombie) break;
+    if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
+      dll_remove(&_pthread_list, e);
+      _pthread_unlock();
+      _pthread_unref(pt);
+      goto StartOver;
+    }
+  }
+  _pthread_unlock();
 }
 
 static int PosixThread(void *arg, int tid) {

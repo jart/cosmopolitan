@@ -195,6 +195,15 @@ TEST(system, exitStatusPreservedAfterSemiColon) {
   RestoreStdout();
 }
 
+TEST(system, devStdout) {
+  CaptureStdout();
+  ASSERT_EQ(0, GETEXITSTATUS(system("echo sup >/dev/stdout")));
+  char buf[16] = {0};
+  ASSERT_EQ(4, read(pipefd[0], buf, 16));
+  ASSERT_STREQ("sup\n", buf);
+  RestoreStdout();
+}
+
 TEST(system, globio) {
   char buf[9] = {0};
   CaptureStdout();

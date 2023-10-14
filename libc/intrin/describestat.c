@@ -60,11 +60,11 @@ const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
   }
 
   if (st->st_dev) {
-    append(", .st_%s=%lu", "dev", st->st_dev);
+    append(", .st_%s=%#lx", "dev", st->st_dev);
   }
 
   if (st->st_ino) {
-    append(", .st_%s=%lu", "ino", st->st_ino);
+    append(", .st_%s=%#lx", "ino", st->st_ino);
   }
 
   if (st->st_gen) {

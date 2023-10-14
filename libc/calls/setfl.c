@@ -16,55 +16,56 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/nt/enum/wait.h"
+#include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#ifdef __x86_64__
+#include "libc/sysv/consts/o.h"
 
-static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
-                                    bool restartable) {
-  int rc;
-  int64_t sem;
-  sigset_t om;
-  uint32_t wi;
-  struct PosixThread *pt;
-  pt = _pthread_self();
-  pt->pt_flags &= ~PT_RESTARTABLE;
-  if (restartable) pt->pt_flags |= PT_RESTARTABLE;
-  pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
-  pthread_cleanup_push((void *)CloseHandle, (void *)sem);
-  atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
-  om = __sig_beginwait(waitmask);
-  if ((rc = _check_cancel()) != -1 && (rc = _check_signal(restartable)) != -1) {
-    unassert((wi = WaitForSingleObject(sem, msdelay)) != -1u);
-    if (restartable && !(pt->pt_flags & PT_RESTARTABLE)) rc = eintr();
-    rc |= _check_signal(restartable);
-    if (rc == -1 && errno == EINTR) _check_cancel();
+textwindows int sys_fcntl_nt_setfl(int fd, unsigned flags) {
+
+  // you may change the following:
+  //
+  // - O_NONBLOCK     make read() raise EAGAIN
+  // - O_APPEND       for toggling append mode
+  // - O_RANDOM       alt. for posix_fadvise()
+  // - O_SEQUENTIAL   alt. for posix_fadvise()
+  // - O_DIRECT       works but haven't tested
+  //
+  // the other bits are ignored.
+  unsigned allowed = O_APPEND | O_SEQUENTIAL | O_RANDOM | O_DIRECT | O_NONBLOCK;
+  unsigned needreo = O_APPEND | O_SEQUENTIAL | O_RANDOM | O_DIRECT;
+  unsigned newflag = (g_fds.p[fd].flags & ~allowed) | (flags & allowed);
+
+  if (g_fds.p[fd].kind == kFdFile &&
+      ((g_fds.p[fd].flags & needreo) ^ (flags & needreo))) {
+    unsigned perm, share, attr;
+    if (GetNtOpenFlags(newflag, g_fds.p[fd].mode, &perm, &share, 0, &attr) ==
+        -1) {
+      return -1;
+    }
+    // MSDN says only these are allowed, otherwise it returns EINVAL.
+    attr &= kNtFileFlagBackupSemantics | kNtFileFlagDeleteOnClose |
+            kNtFileFlagNoBuffering | kNtFileFlagOpenNoRecall |
+            kNtFileFlagOpenReparsePoint | kNtFileFlagOverlapped |
+            kNtFileFlagPosixSemantics | kNtFileFlagRandomAccess |
+            kNtFileFlagSequentialScan | kNtFileFlagWriteThrough;
+    intptr_t hand;
+    if ((hand = ReOpenFile(g_fds.p[fd].handle, perm, share, attr)) != -1) {
+      if (hand != g_fds.p[fd].handle) {
+        CloseHandle(g_fds.p[fd].handle);
+        g_fds.p[fd].handle = hand;
+      }
+    } else {
+      return __winerr();
+    }
   }
-  __sig_finishwait(om);
-  atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_CPU, memory_order_release);
-  pt->pt_flags &= ~PT_RESTARTABLE;
-  pthread_cleanup_pop(true);
-  pt->pt_semaphore = 0;
-  return rc;
-}
 
-textwindows int _park_norestart(uint32_t msdelay, sigset_t waitmask) {
-  return _park_thread(msdelay, waitmask, false);
+  // 1. ignore flags that aren't access mode flags
+  // 2. return zero if nothing's changed
+  g_fds.p[fd].flags = newflag;
+  return 0;
 }
-
-textwindows int _park_restartable(uint32_t msdelay, sigset_t waitmask) {
-  return _park_thread(msdelay, waitmask, true);
-}
-
-#endif /* __x86_64__ */

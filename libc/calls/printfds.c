@@ -32,6 +32,8 @@ static const char *__fdkind2str(int x) {
       return "kFdSocket";
     case kFdConsole:
       return "kFdConsole";
+    case kFdDevNull:
+      return "kFdDevNull";
     case kFdSerial:
       return "kFdSerial";
     case kFdZip:

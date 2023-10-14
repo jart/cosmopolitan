@@ -58,10 +58,10 @@
 // Polls on the New Technology.
 //
 // This function is used to implement poll() and select(). You may poll
-// on both sockets and files at the same time. We also poll for signals
-// while poll is polling.
-textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
-                            const sigset_t *sigmask) {
+// on sockets, files and the console at the same time. We also poll for
+// both signals and posix thread cancelation, while the poll is polling
+static textwindows int sys_poll_nt_impl(struct pollfd *fds, uint64_t nfds,
+                                        uint32_t *ms, sigset_t sigmask) {
   bool ok;
   uint64_t millis;
   uint32_t cm, avail, waitfor;
@@ -72,7 +72,6 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
   struct timespec started, deadline, remain, now;
   int i, rc, sn, pn, gotinvals, gotpipes, gotsocks;
 
-  BLOCK_SIGNALS;
   started = timespec_real();
   deadline = timespec_add(started, timespec_frommillis(ms ? *ms : -1u));
 
@@ -128,7 +127,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
   __fds_unlock();
   if (rc) {
     // failed to create a polling solution
-    goto Finished;
+    return rc;
   }
 
   // perform the i/o and sleeping and looping
@@ -170,8 +169,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
     // compute a small time slice we don't mind sleeping for
     if (sn) {
       if ((gotsocks = WSAPoll(sockfds, sn, 0)) == -1) {
-        rc = __winsockerr();
-        goto Finished;
+        return __winsockerr();
       }
     } else {
       gotsocks = 0;
@@ -190,8 +188,8 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
         if (waitfor) {
           POLLTRACE("poll() sleeping for %'d out of %'lu ms", waitfor,
                     timespec_tomillis(remain));
-          if ((rc = _park_norestart(waitfor, sigmask ? *sigmask : 0)) == -1) {
-            goto Finished;  // eintr, ecanceled, etc.
+          if ((rc = _park_norestart(waitfor, sigmask)) == -1) {
+            return -1;  // eintr, ecanceled, etc.
           }
         }
       }
@@ -221,9 +219,14 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
   }
 
   // and finally return
-  rc = gotinvals + gotpipes + gotsocks;
+  return gotinvals + gotpipes + gotsocks;
+}
 
-Finished:
+textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint32_t *ms,
+                            const sigset_t *sigmask) {
+  int rc;
+  BLOCK_SIGNALS;
+  rc = sys_poll_nt_impl(fds, nfds, ms, sigmask ? *sigmask : 0);
   ALLOW_SIGNALS;
   return rc;
 }

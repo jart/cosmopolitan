@@ -1,7 +1,0 @@
-TAB(devtty, "/dev/tty")
-TAB(devnull, "/dev/null")
-TAB(devstdin, "/dev/stdin")
-TAB(devstdout, "/dev/stdout")
-TAB(nul, "NUL")
-TAB(conin, "CONIN$")
-TAB(conout, "CONOUT$")

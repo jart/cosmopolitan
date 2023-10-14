@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -53,7 +54,8 @@ int sigpending(sigset_t *pending) {
     }
     rc = 0;
   } else if (IsWindows()) {
-    *pending = __sig.pending | __get_tls()->tib_sigpending;
+    *pending = atomic_load_explicit(&__sig.pending, memory_order_acquire) |
+               __get_tls()->tib_sigpending;
     rc = 0;
   } else {
     rc = enosys();

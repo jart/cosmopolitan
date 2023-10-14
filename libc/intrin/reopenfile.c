@@ -28,14 +28,12 @@ __msabi extern typeof(ReOpenFile) *const __imp_ReOpenFile;
  * Reopens file on the New Technology.
  *
  * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 int64_t ReOpenFile(int64_t hOriginalFile, uint32_t dwDesiredAccess,
                    uint32_t dwShareMode, uint32_t dwFlagsAndAttributes) {
   int64_t hHandle;
   hHandle = __imp_ReOpenFile(hOriginalFile, dwDesiredAccess, dwShareMode,
                              dwFlagsAndAttributes);
-  if (hHandle == -1) __winerr();
   NTTRACE("ReOpenFile(%ld, %s, %s, %s) → %ld% m", hOriginalFile,
           DescribeNtFileAccessFlags(dwDesiredAccess),
           DescribeNtFileShareFlags(dwShareMode),

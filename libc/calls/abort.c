@@ -33,9 +33,7 @@
  * @noreturn
  */
 wontreturn void abort(void) {
-  sigset_t m;
-  sigemptyset(&m);
-  sigaddset(&m, SIGABRT);
+  sigset_t m = 1ull << (SIGABRT - 1);
   sigprocmask(SIG_UNBLOCK, &m, 0);
   raise(SIGABRT);
   signal(SIGABRT, SIG_DFL);

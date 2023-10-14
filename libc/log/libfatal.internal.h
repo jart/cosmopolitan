@@ -1,11 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
 #include "libc/macros.internal.h"
-#include "libc/nt/runtime.h"
-#include "libc/sysv/consts/nr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -28,15 +23,6 @@ __funline char *__stpcpy(char *d, const char *s) {
       return d + i;
     }
   }
-}
-
-__funline long __write_linux(int fd, const void *p, long n) {
-  long ax = 1;
-  asm volatile("syscall"
-               : "+a"(ax)
-               : "D"(fd), "S"(p), "d"(n)
-               : "rcx", "r11", "memory");
-  return ax;
 }
 
 __funline void *__repstosb(void *di, char al, size_t cx) {

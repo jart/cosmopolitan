@@ -96,10 +96,18 @@ static wontreturn void UnsupportedSyntax(unsigned char c) {
 }
 
 static void Open(const char *path, int fd, int flags) {
-  close(fd);
-  if (open(path, flags, 0644) == -1) {
+  int tmpfd;
+  // use open+dup2 to support things like >/dev/stdout
+  if ((tmpfd = open(path, flags, 0644)) == -1) {
     perror(path);
     _Exit(1);
+  }
+  if (tmpfd != fd) {
+    if (dup2(tmpfd, fd) == -1) {
+      perror("dup2");
+      _Exit(1);
+    }
+    close(tmpfd);
   }
 }
 
