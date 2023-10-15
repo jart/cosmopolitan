@@ -147,7 +147,11 @@ static int __hcreate_r(size_t nel, struct hsearch_data *htab)
 	}
 	return r;
 }
-weak_alias(__hcreate_r, hcreate_r);
+
+
+int hcreate_r(size_t nel, struct hsearch_data *htab) {
+    return __hcreate_r(nel, htab);
+}
 
 static void __hdestroy_r(struct hsearch_data *htab)
 {
@@ -155,7 +159,10 @@ static void __hdestroy_r(struct hsearch_data *htab)
 	free(htab->__tab);
 	htab->__tab = 0;
 }
-weak_alias(__hdestroy_r, hdestroy_r);
+
+void hdestroy_r(struct hsearch_data *htab) {
+    __hdestroy_r(htab);
+}
 
 static int __hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *htab)
 {
@@ -183,4 +190,8 @@ static int __hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch
 	*retval = e;
 	return 1;
 }
-weak_alias(__hsearch_r, hsearch_r);
+
+int hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *htab)
+{
+    return __hsearch_r(item, action, retval, htab);
+}

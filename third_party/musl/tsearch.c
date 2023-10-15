@@ -28,6 +28,7 @@
 #include "libc/isystem/stdlib.h"
 #include "libc/isystem/string.h"
 #include "third_party/musl/search.h"
+#include "third_party/musl/tsearch.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
