@@ -25,14 +25,14 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/isystem/stdlib.h"
-#include "libc/isystem/string.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "third_party/musl/search.h"
 #include "third_party/musl/tsearch.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
+Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
