@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "third_party/musl/search.h"
 
 asm(".ident\t\"\\n\\n\
