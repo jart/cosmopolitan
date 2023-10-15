@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRDPARTY_MUSL_SEARCH_H
 #define COSMOPOLITAN_THIRDPARTY_MUSL_SEARCH_H
+/* clang-format off */
 
 typedef enum { FIND, ENTER } ACTION;
 typedef enum { preorder, postorder, endorder, leaf } VISIT;
@@ -13,7 +14,7 @@ int hcreate(size_t);
 void hdestroy(void);
 ENTRY *hsearch(ENTRY, ACTION);
 
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) || defined(_COSMO_SOURCE)
 struct hsearch_data {
 	struct __tab *__tab;
 	unsigned int __unused1;
@@ -38,7 +39,7 @@ void *tfind(const void *, void *const *, int(*)(const void *, const void *));
 void *tsearch(const void *, void **, int (*)(const void *, const void *));
 void twalk(const void *, void (*)(const void *, VISIT, int));
 
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) || defined(_COSMO_SOURCE)
 struct qelem {
 	struct qelem *q_forw, *q_back;
 	char q_data[1];

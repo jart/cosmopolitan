@@ -27,8 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/musl/search.h"
-#include "third_party/musl/tsearch.h"
+#include "third_party/musl/tsearch.internal.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
