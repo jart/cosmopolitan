@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #define _GNU_SOURCE
 #include "third_party/musl/search.h"
 
