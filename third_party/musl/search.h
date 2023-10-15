@@ -1,14 +1,5 @@
-#ifndef _SEARCH_H
-#define _SEARCH_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <features.h>
-
-#define __NEED_size_t
-#include <bits/alltypes.h>
+#ifndef COSMOPOLITAN_THIRDPARTY_MUSL_SEARCH_H
+#define COSMOPOLITAN_THIRDPARTY_MUSL_SEARCH_H
 
 typedef enum { FIND, ENTER } ACTION;
 typedef enum { preorder, postorder, endorder, leaf } VISIT;
@@ -54,10 +45,6 @@ struct qelem {
 };
 
 void tdestroy(void *, void (*)(void *));
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif
