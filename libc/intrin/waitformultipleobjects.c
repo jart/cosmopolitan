@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thunk/msabi.h"
 
@@ -26,14 +27,15 @@ __msabi extern typeof(WaitForMultipleObjects)
 
 /**
  * Waits for handles to change status.
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ *
+ * @return -1u on error w/ GetLastError()
+ * @raise kNtErrorInvalidParameter if `bWaitAll` and `lpHandles` has dupes
  */
 uint32_t WaitForMultipleObjects(uint32_t nCount, const int64_t *lpHandles,
                                 bool32 bWaitAll, uint32_t dwMilliseconds) {
   uint32_t x;
   x = __imp_WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
-  if (x == -1u) __winerr();
-  POLLTRACE("WaitForMultipleObjects(%ld, %p, %hhhd, %'d) → %d% m", nCount,
-            lpHandles, bWaitAll, dwMilliseconds, x);
+  POLLTRACE("WaitForMultipleObjects(%ld, %p, %hhhd, %'d) → %d %d", nCount,
+            lpHandles, bWaitAll, dwMilliseconds, x, GetLastError());
   return x;
 }

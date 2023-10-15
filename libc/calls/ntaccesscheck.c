@@ -108,7 +108,7 @@ textwindows int ntaccesscheck(const char16_t *pathname, uint32_t flags) {
                        0)) != -1) {
                 unassert(GetFileInformationByHandle(hFile, &wst));
                 if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
-                    IsWindowsExecutable(hFile)) {
+                    IsWindowsExecutable(hFile, pathname)) {
                   rc = 0;
                 } else {
                   rc = eacces();

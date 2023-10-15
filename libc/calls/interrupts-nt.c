@@ -36,8 +36,10 @@ textwindows int _check_cancel(void) {
 
 textwindows int _check_signal(bool restartable) {
   int status;
+  if (_check_cancel() == -1) return -1;
   if (!_weaken(__sig_check)) return 0;
   if (!(status = _weaken(__sig_check)())) return 0;
+  if (_check_cancel() == -1) return -1;
   if (status == 2 && restartable) return 0;
   return eintr();
 }

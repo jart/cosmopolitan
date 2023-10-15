@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -36,8 +37,9 @@ textwindows int sys_fcntl_nt_setfl(int fd, unsigned flags) {
   // - O_DIRECT       works but haven't tested
   //
   // the other bits are ignored.
-  unsigned allowed = O_APPEND | O_SEQUENTIAL | O_RANDOM | O_DIRECT | O_NONBLOCK;
-  unsigned needreo = O_APPEND | O_SEQUENTIAL | O_RANDOM | O_DIRECT;
+  unsigned allowed =
+      _O_APPEND | _O_SEQUENTIAL | _O_RANDOM | _O_DIRECT | _O_NONBLOCK;
+  unsigned needreo = _O_APPEND | _O_SEQUENTIAL | _O_RANDOM | _O_DIRECT;
   unsigned newflag = (g_fds.p[fd].flags & ~allowed) | (flags & allowed);
 
   if (g_fds.p[fd].kind == kFdFile &&

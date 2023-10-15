@@ -47,6 +47,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/kcpuids.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -63,9 +64,13 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/x/x.h"
 #include "third_party/make/commands.h"
 #include "third_party/make/dep.h"
+#include "third_party/make/findprog.h"
 #include "third_party/make/os.h"
 #include "third_party/make/variable.h"
 // clang-format off
+
+#define USE_POSIX_SPAWN (!IsLinux() && !IsOpenbsd())
+#define HAVE_POSIX_SPAWNATTR_SETSIGMASK
 
 #ifdef WINDOWS32
 const char *default_shell = "sh.exe";
@@ -1891,6 +1896,153 @@ child_execute_job (struct childbase *child,
         fderr = child->output.err;
     }
 
+  if (USE_POSIX_SPAWN) {
+  char *cmd;
+  posix_spawnattr_t attr;
+  posix_spawn_file_actions_t fa;
+  short flags = 0;
+
+  if ((r = posix_spawnattr_init (&attr)) != 0)
+    goto done;
+
+  if ((r = posix_spawn_file_actions_init (&fa)) != 0)
+    {
+      posix_spawnattr_destroy (&attr);
+      goto done;
+    }
+
+  // [jart] use setrlimit on posix_spawn
+  // TODO(jart): support landlock make rlimit variables
+  if (stack_limit.rlim_cur && RLIMIT_STACK < RLIM_NLIMITS)
+    {
+      posix_spawnattr_setrlimit (&attr, RLIMIT_STACK, &stack_limit);
+      flags |= POSIX_SPAWN_SETRLIMIT;
+    }
+
+  /* Unblock all signals.  */
+#ifdef HAVE_POSIX_SPAWNATTR_SETSIGMASK
+  {
+    sigset_t mask;
+    sigemptyset (&mask);
+    r = posix_spawnattr_setsigmask (&attr, &mask);
+    if (r != 0)
+      goto cleanup;
+    flags |= POSIX_SPAWN_SETSIGMASK;
+  }
+#endif /* have posix_spawnattr_setsigmask() */
+
+  /* USEVFORK can give significant speedup on systems where it's available.  */
+#ifdef POSIX_SPAWN_USEVFORK
+  flags |= POSIX_SPAWN_USEVFORK;
+#endif
+
+  /* For any redirected FD, dup2() it to the standard FD.
+     They are all marked close-on-exec already.  */
+  if (fdin >= 0 && fdin != FD_STDIN)
+    if ((r = posix_spawn_file_actions_adddup2 (&fa, fdin, FD_STDIN)) != 0)
+      goto cleanup;
+  if (fdout != FD_STDOUT)
+    if ((r = posix_spawn_file_actions_adddup2 (&fa, fdout, FD_STDOUT)) != 0)
+      goto cleanup;
+  if (fderr != FD_STDERR)
+    if ((r = posix_spawn_file_actions_adddup2 (&fa, fderr, FD_STDERR)) != 0)
+      goto cleanup;
+
+  /* We can't use the POSIX_SPAWN_RESETIDS flag: when make is invoked under
+     restrictive environments like unshare it will fail with EINVAL.  */
+
+  /* Apply the spawn flags.  */
+  if ((r = posix_spawnattr_setflags (&attr, flags)) != 0)
+    goto cleanup;
+
+  /* Look up the program on the child's PATH, if needed.  */
+  {
+    const char *p = NULL;
+    char **pp;
+
+    for (pp = child->environment; *pp != NULL; ++pp)
+      if ((*pp)[0] == 'P' && (*pp)[1] == 'A' && (*pp)[2] == 'T'
+          && (*pp)[3] == 'H' &&(*pp)[4] == '=')
+        {
+          p = (*pp) + 5;
+          break;
+        }
+
+    /* execvp() will use a default PATH if none is set; emulate that.  */
+    if (p == NULL)
+      {
+        size_t l = confstr (_CS_PATH, NULL, 0);
+        if (l)
+          {
+            char *dp = alloca (l);
+            confstr (_CS_PATH, dp, l);
+            p = dp;
+          }
+      }
+
+    cmd = (char *)find_in_given_path (argv[0], p, NULL, 0);
+  }
+
+  if (!cmd)
+    {
+      r = errno;
+      goto cleanup;
+    }
+
+  /* Start the program.  */
+  while ((r = posix_spawn (&pid, cmd, &fa, &attr, argv,
+                           child->environment)) == EINTR)
+    ;
+
+  /* posix_spawn() doesn't provide sh fallback like exec() does; implement
+     it here.  POSIX doesn't specify the path to sh so use the default.  */
+
+  if (r == ENOEXEC)
+    {
+      char **nargv;
+      char **pp;
+      size_t l = 0;
+
+      for (pp = argv; *pp != NULL; ++pp)
+        ++l;
+
+      nargv = xmalloc (sizeof (char *) * (l + 3));
+      nargv[0] = (char *)default_shell;
+      nargv[1] = cmd;
+      memcpy (&nargv[2], &argv[1], sizeof (char *) * l);
+
+      while ((r = posix_spawn (&pid, nargv[0], &fa, &attr, nargv,
+                               child->environment)) == EINTR)
+        ;
+
+      free (nargv);
+    }
+
+  if (r == 0)
+    {
+      /* Spawn succeeded but may fail later: remember the command.  */
+      free (child->cmd_name);
+      if (cmd != argv[0])
+        child->cmd_name = cmd;
+      else
+        child->cmd_name = xstrdup(cmd);
+    }
+
+ cleanup:
+  posix_spawn_file_actions_destroy (&fa);
+  posix_spawnattr_destroy (&attr);
+
+ done:
+  if (r != 0)
+    pid = -1;
+
+  if (pid < 0)
+    OSS (error, NILF, "%s: %s", argv[0], strerror (r));
+
+  return pid;
+
+  }  // USE_POSIX_SPAWN
+
   pid = fork();
   if (pid != 0)
     return pid;
@@ -2446,17 +2598,23 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
     shell = default_shell;
   
   /* [jart] remove code that forces slow path if not using /bin/sh */
+  /* else if (strcmp (shell, default_shell)) */
+  /*   goto slow; */
 
   if (ifs)
     for (cap = ifs; *cap != '\0'; ++cap)
-      if (*cap != ' ' && *cap != '\t' && *cap != '\n')
+      if (*cap != ' ' && *cap != '\t' && *cap != '\n') {
+        // kprintf("slow because whitespace\n");
         goto slow;
+      }
 
   if (shellflags)
     if (shellflags[0] != '-'
         || ((shellflags[1] != 'c' || shellflags[2] != '\0')
-            && (shellflags[1] != 'e' || shellflags[2] != 'c' || shellflags[3] != '\0')))
+            && (shellflags[1] != 'e' || shellflags[2] != 'c' || shellflags[3] != '\0'))) {
+      // kprintf("slow because shell flags\n");
       goto slow;
+    }
 
   i = strlen (line) + 1;
 
@@ -2515,18 +2673,21 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
              If we see any of those, punt.
              But on MSDOS, if we use COMMAND.COM, double and single
              quotes have the same effect.  */
-          else if (instring == '"' && strchr ("\\$`", *p) != 0 && unixy_shell)
+          else if (instring == '"' && strchr ("\\$`", *p) != 0 && unixy_shell) {
+            // kprintf("slow because backslash\n");
             goto slow;
-          else
+          } else
             *ap++ = *p;
         }
-      else if (strchr (sh_chars, *p) != 0)
+      else if (strchr (sh_chars, *p) != 0) {
         /* Not inside a string, but it's a special char.  */
+        // kprintf("slow because %#c found in %#s\n", *p, line);
         goto slow;
-      else if (one_shell && *p == '\n')
+      } else if (one_shell && *p == '\n') {
         /* In .ONESHELL mode \n is a separator like ; or && */
+        // kprintf("slow because oneshell thing\n");
         goto slow;
-      else
+      } else
         /* Not a special char.  */
         switch (*p)
           {
@@ -2535,8 +2696,10 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
                first word with no equals sign in it.  This is not the case
                with sh -k, but we never get here when using nonstandard
                shell flags.  */
-            if (! seen_nonequals && unixy_shell)
+            if (! seen_nonequals && unixy_shell) {
+              // kprintf("slow because nonequals\n");
               goto slow;
+            }
             word_has_equals = 1;
             *ap++ = '=';
             break;
@@ -2590,10 +2753,12 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
             /* Update SEEN_NONEQUALS, which tells us if every word
                heretofore has contained an '='.  */
             seen_nonequals |= ! word_has_equals;
-            if (word_has_equals && ! seen_nonequals)
+            if (word_has_equals && ! seen_nonequals) {
               /* An '=' in a word before the first
                  word without one is magical.  */
+              // kprintf("slow because word equals\n");
               goto slow;
+            }
             word_has_equals = 0; /* Prepare for the next word.  */
 
             /* If this argument is the command name,
@@ -2604,8 +2769,10 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
                 int j;
                 for (j = 0; sh_cmds[j] != 0; ++j)
                   {
-                    if (streq (sh_cmds[j], new_argv[0]))
+                    if (streq (sh_cmds[j], new_argv[0])) {
+                      // kprintf("slow because builtin shell commands\n");
                       goto slow;
+                    }
                   }
               }
 
@@ -2621,9 +2788,11 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
     }
  end_of_line:
 
-  if (instring)
+  if (instring) {
     /* Let the shell deal with an unterminated quote.  */
+    // kprintf("slow because unterminated quote\n");
     goto slow;
+  }
 
   /* Terminate the last argument and the argument list.  */
 
@@ -2636,8 +2805,10 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
     {
       int j;
       for (j = 0; sh_cmds[j] != 0; ++j)
-        if (streq (sh_cmds[j], new_argv[0]))
+        if (streq (sh_cmds[j], new_argv[0])) {
+          // kprintf("slow because sh_cmds\n");
           goto slow;
+        }
     }
 
   if (new_argv[0] == 0)

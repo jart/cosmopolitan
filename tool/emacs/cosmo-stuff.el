@@ -25,8 +25,23 @@
 (require 'ld-script)
 (require 'make-mode)
 
-(setq cosmo-dbg-mode "dbg")
-(setq cosmo-default-mode "")
+(setq cosmo-arch
+      (let ((arch (string-trim-right
+                   (shell-command-to-string
+                    "uname -m"))))
+        (cond ((string= arch "amd64") "x86_64")
+              ((string= arch "arm64") "aarch64")
+              (t arch))))
+
+(setq cosmo-default-mode
+      (cond ((string= cosmo-arch "aarch64") "aarch64")
+            (t "")))
+
+;; TODO(jart): How do we get GCC to do only dead code elimination?
+(setq cosmo-dbg-mode
+      (cond ((string= cosmo-arch "aarch64") "aarch64")
+            (t "dbg")))
+
 (setq c-doc-comment-style 'javadown)
 
 (add-to-list 'auto-mode-alist '("\\.x$" . c-mode))  ;; -aux-info
@@ -161,14 +176,23 @@
          (cosmo-startswith "test/" pkg))))
 
 (defun cosmo--make-mode (arg &optional default)
-  (cond ((eq arg 1) "tiny")
+  (cond ((eq arg 1)
+         (cond ((string= cosmo-arch "aarch64") "aarch64-tiny")
+               (t "tiny")))
         ((eq arg 2) "opt")
         ((eq arg 3) "rel")
-        ((eq arg 4) cosmo-dbg-mode)
-        ((eq arg 5) "")
+        ((eq arg 4)
+         cosmo-dbg-mode)
+        ((eq arg 5)
+         (cond ((string= cosmo-arch "aarch64") "aarch64")
+               (t cosmo-default-mode)))
         ((eq arg 6) "llvm")
-        ((eq arg 7) "aarch64")
-        ((eq arg 8) "aarch64-tiny")
+        ((eq arg 7)
+         (cond ((string= cosmo-arch "aarch64") "x86_64")
+               (t "aarch64")))
+        ((eq arg 8)
+         (cond ((string= cosmo-arch "aarch64") "tiny")
+               (t "aarch64-tiny")))
         (default default)
         ((cosmo-intest) cosmo-dbg-mode)
         (t cosmo-default-mode)))

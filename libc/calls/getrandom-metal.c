@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,79 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
+#include "libc/intrin/asmflag.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/sysv/consts/grnd.h"
+#include "libc/sysv/errfuns.h"
+#ifdef __x86_64__
 
-__msabi extern typeof(FlushFileBuffers) *const __imp_FlushFileBuffers;
-__msabi extern typeof(GetLastError) *const __imp_GetLastError;
-
-/**
- * Flushes buffers of specified file to disk.
- *
- * This provides a stronger degree of assurance and blocking for things
- * to be sent to a physical medium, but it's not guaranteed unless your
- * file is opened in a direct non-caching mode. One main advantage here
- * seems to be coherency.
- *
- * @note consider buying a ups
- * @see FlushViewOfFile()
- */
-textwindows bool32 FlushFileBuffers(int64_t hFile) {
-  bool32 ok;
-  ok = __imp_FlushFileBuffers(hFile);
-  NTTRACE("FlushFileBuffers(%ld) → {%hhhd, %d}", hFile, ok,
-          __imp_GetLastError());
-  return ok;
+static bool GetRandomRdseed(uint64_t *out) {
+  int i;
+  char cf;
+  uint64_t x;
+  for (i = 0; i < 10; ++i) {
+    asm volatile(CFLAG_ASM("rdseed\t%1")
+                 : CFLAG_CONSTRAINT(cf), "=r"(x)
+                 : /* no inputs */
+                 : "cc");
+    if (cf) {
+      *out = x;
+      return true;
+    }
+    asm volatile("pause");
+  }
+  return false;
 }
+
+static bool GetRandomRdrand(uint64_t *out) {
+  int i;
+  char cf;
+  uint64_t x;
+  for (i = 0; i < 10; ++i) {
+    asm volatile(CFLAG_ASM("rdrand\t%1")
+                 : CFLAG_CONSTRAINT(cf), "=r"(x)
+                 : /* no inputs */
+                 : "cc");
+    if (cf) {
+      *out = x;
+      return true;
+    }
+    asm volatile("pause");
+  }
+  return false;
+}
+
+static ssize_t GetRandomCpu(char *p, size_t n, int f, bool impl(uint64_t *)) {
+  uint64_t x;
+  size_t i, j;
+  for (i = 0; i < n; i += j) {
+  TryAgain:
+    if (!impl(&x)) {
+      if (f || i >= 256) break;
+      goto TryAgain;
+    }
+    for (j = 0; j < 8 && i + j < n; ++j) {
+      p[i + j] = x;
+      x >>= 8;
+    }
+  }
+  return n;
+}
+
+ssize_t sys_getrandom_metal(char *p, size_t n, int f) {
+  if (f & GRND_RANDOM) {
+    if (X86_HAVE(RDSEED)) {
+      return GetRandomCpu(p, n, f, GetRandomRdseed);
+    } else {
+      return enosys();
+    }
+  } else {
+    if (X86_HAVE(RDRND)) {
+      return GetRandomCpu(p, n, f, GetRandomRdrand);
+    } else {
+      return enosys();
+    }
+  }
+}
+
+#endif /* __x86_64__ */

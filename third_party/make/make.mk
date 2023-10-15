@@ -29,7 +29,6 @@ THIRD_PARTY_MAKE_HDRS =					\
 	third_party/make/job.h				\
 	third_party/make/unistd.h			\
 	third_party/make/getprogname.h			\
-	third_party/make/dosname.h			\
 	third_party/make/config.h			\
 	third_party/make/concat-filename.h		\
 	third_party/make/findprog.h			\

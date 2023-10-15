@@ -90,12 +90,13 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
     if (nonblock) {
       CancelWinsockBlock(handle, &overlap);
       eagained = true;
-    } else if (_check_cancel()) {
-      CancelWinsockBlock(handle, &overlap);
-      canceled = true;
     } else if (_check_signal(true)) {
       CancelWinsockBlock(handle, &overlap);
-      eintered = true;
+      if (errno == ECANCELED) {
+        canceled = true;
+      } else {
+        eintered = true;
+      }
     } else {
       status = WSAWaitForMultipleEvents(1, &overlap.hEvent, 0,
                                         srwtimeout ? srwtimeout : -1u, 0);
@@ -142,7 +143,7 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
   }
   if (GetLastError() == kNtErrorOperationAborted) {
     if (_check_cancel() == -1) return ecanceled();
-    if (!eintered && _check_signal(false)) return eintr();
+    if (!eintered && _check_signal(false)) return -1;
   }
   if (eintered) {
     return eintr();

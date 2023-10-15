@@ -20,7 +20,7 @@
 
 #ifndef DIRNAME_H_
 # define DIRNAME_H_ 1
-#include "third_party/make/dosname.h"
+#include "third_party/make/filename.h"
 
 # ifndef DIRECTORY_SEPARATOR
 #  define DIRECTORY_SEPARATOR '/'

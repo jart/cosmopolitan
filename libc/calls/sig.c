@@ -33,9 +33,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsf.h"
-#include "libc/intrin/bsr.h"
 #include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -105,7 +103,7 @@ static textwindows int __sig_getter(struct CosmoTib *tib, atomic_ulong *sigs) {
     pending = atomic_load_explicit(sigs, memory_order_acquire);
     masked = atomic_load_explicit(&tib->tib_sigmask, memory_order_acquire);
     if ((deliverable = pending & ~masked)) {
-      sig = _bsf(deliverable) + 1;
+      sig = _bsfl(deliverable) + 1;
       bit = 1ull << (sig - 1);
       if (atomic_fetch_and_explicit(sigs, ~bit, memory_order_acq_rel) & bit) {
         return sig;
@@ -263,7 +261,7 @@ textwindows void __sig_cancel(struct PosixThread *pt, int sig, unsigned flags) {
   WakeByAddressSingle(blocker);
 }
 
-// the user's signal handler callback is composed with this trampoline
+// the user's signal handler callback is wrapped with this trampoline
 static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
   int sig = sf->si.si_signo;
   struct CosmoTib *tib = __get_tls();

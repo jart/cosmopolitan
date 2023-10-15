@@ -21,6 +21,8 @@
 #include "libc/macros.internal.h"
 #include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
+#include "libc/stdio/sysparam.h"
+#include "libc/sysv/consts/rlim.h"
 
 /**
  * Gets resource limit for spawned process.
@@ -31,7 +33,7 @@
  */
 int posix_spawnattr_getrlimit(const posix_spawnattr_t *attr, int resource,
                               struct rlimit *rlim) {
-  if ((0 <= resource && resource < ARRAYLEN((*attr)->rlim))) {
+  if (0 <= resource && resource < MIN(RLIM_NLIMITS, ARRAYLEN((*attr)->rlim))) {
     if (((*attr)->rlimset & (1u << resource))) {
       *rlim = (*attr)->rlim[resource];
       return 0;

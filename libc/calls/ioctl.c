@@ -115,6 +115,7 @@ static int ioctl_fionread(int fd, uint32_t *arg) {
         *arg = avail;
         return 0;
       } else if (GetLastError() == kNtErrorBrokenPipe) {
+        *arg = 0;  // win32 can give epipe on reader end
         return 0;
       } else {
         return __winerr();

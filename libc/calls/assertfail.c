@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describebacktrace.internal.h"
@@ -28,9 +29,11 @@
  */
 void __assert_fail(const char *expr, const char *file, int line) {
   char ibuf[12];
+  sigset_t m = __sig_block();
   FormatInt32(ibuf, line);
   tinyprint(2, file, ":", ibuf, ": assert(", expr, ") failed (",
             program_invocation_short_name, " ",
             DescribeBacktrace(__builtin_frame_address(0)), ")\n", NULL);
+  __sig_unblock(m);
   abort();
 }

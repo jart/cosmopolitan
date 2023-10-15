@@ -1,5 +1,4 @@
 #!/bin/sh
-
 PROG=${0##*/}
 MODE=${MODE:-${m:-aarch64}}
 COSMO=${COSMO:-/opt/cosmo}
@@ -9,8 +8,14 @@ fatal_error() {
   exit 1
 }
 
-if [ ! -x "$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-ar" ]; then
+if [ -x "$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-gcc" ]; then
+  BRAND=musl
+else
+  BRAND=cosmo
+fi
+
+if [ ! -x "$COSMO/o/third_party/gcc/bin/aarch64-linux-$BRAND-ar" ]; then
   fatal_error "you need to run: aarch64-unknown-cosmo-cc --update"
 fi
 
-exec "$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-ar" "$@"
+exec "$COSMO/o/third_party/gcc/bin/aarch64-linux-$BRAND-ar" "$@"

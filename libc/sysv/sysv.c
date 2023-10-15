@@ -57,7 +57,7 @@ dontinline long systemfive_cancellable(void) {
       return systemfive_cancel();
     }
 #if IsModeDbg()
-    if (!(pth->flags & PT_INCANCEL)) {
+    if (!(pth->pt_flags & PT_INCANCEL)) {
       if (_weaken(report_cancelation_point)) {
         _weaken(report_cancelation_point)();
       }

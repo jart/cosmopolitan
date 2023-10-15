@@ -12,6 +12,7 @@ int sys_execve_nt(const char *, char *const[], char *const[]);
 int sys_faccessat_nt(int, const char *, int, uint32_t);
 int sys_fadvise_nt(int, uint64_t, uint64_t, int);
 int sys_fchdir_nt(int);
+int sys_fchmod_nt(int, uint32_t);
 int sys_fchmodat_nt(int, const char *, uint32_t, int);
 int sys_fcntl_nt(int, int, uintptr_t);
 int sys_fdatasync_nt(int, bool);

@@ -55,77 +55,9 @@
 __static_yoink("rdrand_init");
 
 int sys_getentropy(void *, size_t) asm("sys_getrandom");
+ssize_t sys_getrandom_metal(char *, size_t, int);
 
 static bool have_getrandom;
-
-static bool GetRandomRdseed(uint64_t *out) {
-  int i;
-  char cf;
-  uint64_t x;
-  for (i = 0; i < 10; ++i) {
-    asm volatile(CFLAG_ASM("rdseed\t%1")
-                 : CFLAG_CONSTRAINT(cf), "=r"(x)
-                 : /* no inputs */
-                 : "cc");
-    if (cf) {
-      *out = x;
-      return true;
-    }
-    asm volatile("pause");
-  }
-  return false;
-}
-
-static bool GetRandomRdrand(uint64_t *out) {
-  int i;
-  char cf;
-  uint64_t x;
-  for (i = 0; i < 10; ++i) {
-    asm volatile(CFLAG_ASM("rdrand\t%1")
-                 : CFLAG_CONSTRAINT(cf), "=r"(x)
-                 : /* no inputs */
-                 : "cc");
-    if (cf) {
-      *out = x;
-      return true;
-    }
-    asm volatile("pause");
-  }
-  return false;
-}
-
-static ssize_t GetRandomCpu(char *p, size_t n, int f, bool impl(uint64_t *)) {
-  uint64_t x;
-  size_t i, j;
-  for (i = 0; i < n; i += j) {
-  TryAgain:
-    if (!impl(&x)) {
-      if (f || i >= 256) break;
-      goto TryAgain;
-    }
-    for (j = 0; j < 8 && i + j < n; ++j) {
-      p[i + j] = x;
-      x >>= 8;
-    }
-  }
-  return n;
-}
-
-static ssize_t GetRandomMetal(char *p, size_t n, int f) {
-  if (f & GRND_RANDOM) {
-    if (X86_HAVE(RDSEED)) {
-      return GetRandomCpu(p, n, f, GetRandomRdseed);
-    } else {
-      return enosys();
-    }
-  } else {
-    if (X86_HAVE(RDRND)) {
-      return GetRandomCpu(p, n, f, GetRandomRdrand);
-    } else {
-      return enosys();
-    }
-  }
-}
 
 static void GetRandomEntropy(char *p, size_t n) {
   unassert(n <= 256);
@@ -181,8 +113,10 @@ ssize_t __getrandom(void *p, size_t n, unsigned f) {
     }
   } else if (IsFreebsd() || IsNetbsd()) {
     rc = GetRandomBsd(p, n, GetRandomArnd);
+#ifdef __x86_64__
   } else if (IsMetal()) {
-    rc = GetRandomMetal(p, n, f);
+    rc = sys_getrandom_metal(p, n, f);
+#endif
   } else {
     BEGIN_CANCELATION_POINT;
     rc = GetDevUrandom(p, n);

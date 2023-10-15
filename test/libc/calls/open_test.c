@@ -495,3 +495,16 @@ TEST(open, mereOpen_doesntTouch) {
   EXPECT_EQ(0, timespec_cmp(st.st_mtim, birth));
   EXPECT_EQ(0, timespec_cmp(st.st_atim, birth));
 }
+
+TEST(open, canTruncateExistingFile) {
+  struct stat st;
+  ASSERT_SYS(0, 0, xbarf("foo", "hello", -1));
+  ASSERT_SYS(0, 0, stat("foo", &st));
+  ASSERT_EQ(5, st.st_size);
+  ASSERT_SYS(0, 3, open("foo", O_RDWR | O_TRUNC));
+  ASSERT_SYS(0, 0, fstat(3, &st));
+  ASSERT_EQ(0, st.st_size);
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, stat("foo", &st));
+  ASSERT_EQ(0, st.st_size);
+}

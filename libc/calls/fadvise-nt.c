@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -41,17 +42,17 @@ static textwindows int sys_fadvise_nt_impl(int fd, uint64_t offset,
   h1 = g_fds.p[fd].handle;
   mode = g_fds.p[fd].mode;
   flags = g_fds.p[fd].flags;
-  flags &= ~(O_SEQUENTIAL | O_RANDOM);
+  flags &= ~(_O_SEQUENTIAL | _O_RANDOM);
 
   switch (advice) {
     case MADV_NORMAL:
       break;
     case MADV_RANDOM:
-      flags |= O_RANDOM;
+      flags |= _O_RANDOM;
       break;
     case MADV_WILLNEED:
     case MADV_SEQUENTIAL:
-      flags |= O_SEQUENTIAL;
+      flags |= _O_SEQUENTIAL;
       break;
     default:
       return einval();

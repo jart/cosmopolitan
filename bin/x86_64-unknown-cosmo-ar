@@ -9,8 +9,14 @@ fatal_error() {
   exit 1
 }
 
-if [ ! -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar" ]; then
+if [ -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc" ]; then
+  BRAND=musl
+else
+  BRAND=cosmo
+fi
+
+if [ ! -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-$BRAND-ar" ]; then
   fatal_error "you need to run: x86_64-unknown-cosmo-cc --update"
 fi
 
-exec "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar" "$@"
+exec "$COSMO/o/third_party/gcc/bin/x86_64-linux-$BRAND-ar" "$@"

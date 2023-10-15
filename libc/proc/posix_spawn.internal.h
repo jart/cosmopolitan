@@ -19,8 +19,8 @@ struct _posix_spawna {
   bool schedparam_isset;
   bool schedpolicy_isset;
   int pgroup;
-  int rlimset;
   int schedpolicy;
+  int rlimset;
   struct sched_param schedparam;
   sigset_t sigmask;
   sigset_t sigdefault;

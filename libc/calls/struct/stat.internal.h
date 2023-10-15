@@ -9,7 +9,7 @@ int sys_fstat(int, struct stat *);
 int sys_fstatat(int, const char *, struct stat *, int);
 int sys_fstat_nt(int, struct stat *);
 int sys_fstat_nt_special(int, struct stat *);
-int sys_fstat_nt_handle(int64_t, struct stat *);
+int sys_fstat_nt_handle(int64_t, const char16_t *, struct stat *);
 int sys_fstatat_nt(int, const char *, struct stat *, int);
 int sys_lstat_nt(const char *, struct stat *);
 int sys_fstat_metal(int, struct stat *);

@@ -366,7 +366,7 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
     free(mem);
   }
   b->p[b->n - 1] = '\n';
-  sys_write(2, b->p, MIN(b->i, b->n));
+  klog(b->p, MIN(b->i, b->n));
 }
 
 relegated void __oncrash(int sig, struct siginfo *si, void *arg) {

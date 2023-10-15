@@ -26,14 +26,12 @@
  *
  * @param file_actions was initialized by posix_spawn_file_actions_init()
  * @return 0 on success, or errno on error
- * @raise ENOMEM if we require more vespene gas
  * @raise EBADF if 'fildes' or `newfildes` is negative
- * @raise ENOTSUP if `newfildes` isn't 0, 1, or 2 on Windows
+ * @raise ENOMEM if insufficient memory was available
  */
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
                                      int fildes, int newfildes) {
   if (fildes < 0 || newfildes < 0) return EBADF;
-  if (IsWindows() && newfildes > 2) return ENOTSUP;
   return __posix_spawn_add_file_action(file_actions,
                                        (struct _posix_faction){
                                            .action = _POSIX_SPAWN_DUP2,

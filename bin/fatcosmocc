@@ -182,6 +182,12 @@ if [ ! -f "$COSMOS/lib/libc.a" ] ||
   exit 1
 fi
 
+if [ -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc" ]; then
+  BRAND=musl
+else
+  BRAND=cosmo
+fi
+
 FIXUPOBJ="$COSMO/o//tool/build/fixupobj.com"
 TEMP_FILES=
 SAVE_TEMPS=0
@@ -371,11 +377,11 @@ if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
 
-CC_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc"
-CC_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-gcc"
+CC_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-$BRAND-gcc"
+CC_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-$BRAND-gcc"
 if [ x"$PROG" != x"${PROG%++}" ]; then
-  CC_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-g++"
-  CC_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-g++"
+  CC_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-$BRAND-g++"
+  CC_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-$BRAND-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
 fi
 

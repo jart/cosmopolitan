@@ -1,5 +1,4 @@
 #!/bin/sh
-
 PROG=${0##*/}
 MODE=${MODE:-$m}
 COSMO=${COSMO:-/opt/cosmo}
@@ -9,12 +8,18 @@ fatal_error() {
   exit 1
 }
 
-if [ ! -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar" ]; then
+if [ -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc" ]; then
+  BRAND=musl
+else
+  BRAND=cosmo
+fi
+
+if [ ! -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-$BRAND-ar" ]; then
   fatal_error "you need to run: fatcosmocc --update"
 fi
 
-AR_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-ar"
-AR_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-musl-ar"
+AR_X86_64="$COSMO/o/third_party/gcc/bin/x86_64-linux-$BRAND-ar"
+AR_AARCH64="$COSMO/o/third_party/gcc/bin/aarch64-linux-$BRAND-ar"
 if [ "$1" = "--version" ]; then
   # note: only the underlying gnu compiler binaries are gpl
   #       our shell script is released with the isc license

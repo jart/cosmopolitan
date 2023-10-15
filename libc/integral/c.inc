@@ -146,7 +146,6 @@ typedef struct {
 } axdx_t;
 #endif
 
-
 #ifndef __chibicc__
 #define va_list            __builtin_va_list
 #define va_arg(ap, type)   __builtin_va_arg(ap, type)
@@ -619,12 +618,6 @@ void abort(void) wontreturn;
 #define donothing \
   do {            \
   } while (0)
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define _Vector_size(k) __attribute__((__vector_size__(k)))
-#else
-#define _Vector_size(k) [k]
-#endif
 
 #ifndef __STRICT_ANSI__
 #define textstartup _Section(".text.startup")

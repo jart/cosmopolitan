@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -729,7 +730,7 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
       ms = __ttyconf.vtime * 100;
     }
   }
-  if (f->flags & O_NONBLOCK) {
+  if (f->flags & _O_NONBLOCK) {
     return eagain();  // standard unix non-blocking
   }
   pt = _pthread_self();
@@ -738,12 +739,14 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   pthread_cleanup_push((void *)CloseHandle, (void *)sem);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
   m = __sig_beginwait(waitmask);
-  if ((rc = _check_cancel()) != -1 && (rc = _check_signal(true)) != -1) {
+  if ((rc = _check_signal(true)) != -1) {
     int64_t hands[2] = {sem, __keystroke.cin};
-    unassert(WaitForMultipleObjects(2, hands, 0, ms) != -1u);
-    if (~pt->pt_flags & PT_RESTARTABLE) rc = eintr();
-    rc |= _check_signal(true);
-    if (rc == -1 && errno == EINTR) _check_cancel();
+    if (WaitForMultipleObjects(2, hands, 0, ms) != -1u) {
+      if (!(pt->pt_flags & PT_RESTARTABLE)) rc = eintr();
+      rc |= _check_signal(true);
+    } else {
+      rc = __winerr();
+    }
   }
   __sig_finishwait(m);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_CPU, memory_order_release);

@@ -286,12 +286,6 @@
 /* Define to 1 if you have the `pipe' function. */
 #define HAVE_PIPE 1
 
-/* Define to 1 if you have the `posix_spawn' function. */
-#define HAVE_POSIX_SPAWN 1
-
-/* Define to 1 if you have the `posix_spawnattr_setsigmask' function. */
-#define HAVE_POSIX_SPAWNATTR_SETSIGMASK 1
-
 /* Define to 1 if you have the `pselect' function. */
 #define HAVE_PSELECT 1
 

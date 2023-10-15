@@ -9,7 +9,8 @@
 
 #if defined(__x86_64__) && !defined(__STRICT_ANSI__)
 
-typedef char __intrin_xmm_t _Vector_size(16) forcealign(16) mayalias;
+typedef char __intrin_xmm_t
+    __attribute__((__vector_size__(16), __aligned__(16), __may_alias__));
 
 #define INTRIN_SSEVEX_X_X_X_(PURE, ISA, OP, FLAGS, A, B, C)                    \
   do {                                                                         \

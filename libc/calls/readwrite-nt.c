@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/fd.internal.h"
@@ -140,15 +141,16 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     pt->pt_flags |= PT_RESTARTABLE;
     atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_IO, memory_order_release);
     m = __sig_beginwait(waitmask);
-    if (f->flags & O_NONBLOCK) {
+    if (f->flags & _O_NONBLOCK) {
       CancelIoEx(handle, &overlap);
       eagained = true;
-    } else if (_check_cancel()) {
-      CancelIoEx(handle, &overlap);
-      canceled = true;
     } else if (_check_signal(true)) {
       CancelIoEx(handle, &overlap);
-      eintered = true;
+      if (errno == ECANCELED) {
+        canceled = true;
+      } else {
+        eintered = true;
+      }
     } else {
       WaitForSingleObject(overlap.hEvent, -1u);
     }
@@ -197,7 +199,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   // it's also fine to do nothing here; punt to next cancelation point
   if (GetLastError() == kNtErrorOperationAborted) {
     if (_check_cancel() == -1) return ecanceled();
-    if (!eintered && _check_signal(false)) return eintr();
+    if (!eintered && _check_signal(false)) return -1;
   }
 
   // if we chose to process a pending signal earlier then we preserve

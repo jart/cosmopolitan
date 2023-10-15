@@ -20,9 +20,11 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 
 __msabi extern typeof(ReOpenFile) *const __imp_ReOpenFile;
+__msabi extern typeof(GetLastError) *const __imp_GetLastError;
 
 /**
  * Reopens file on the New Technology.
@@ -34,9 +36,10 @@ int64_t ReOpenFile(int64_t hOriginalFile, uint32_t dwDesiredAccess,
   int64_t hHandle;
   hHandle = __imp_ReOpenFile(hOriginalFile, dwDesiredAccess, dwShareMode,
                              dwFlagsAndAttributes);
-  NTTRACE("ReOpenFile(%ld, %s, %s, %s) → %ld% m", hOriginalFile,
+  NTTRACE("ReOpenFile(%ld, %s, %s, %s) → {%ld, %d}", hOriginalFile,
           DescribeNtFileAccessFlags(dwDesiredAccess),
           DescribeNtFileShareFlags(dwShareMode),
-          DescribeNtFileFlagAttr(dwFlagsAndAttributes), hHandle);
+          DescribeNtFileFlagAttr(dwFlagsAndAttributes), hHandle,
+          __imp_GetLastError());
   return hHandle;
 }

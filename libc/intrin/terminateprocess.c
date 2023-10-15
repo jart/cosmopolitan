@@ -23,6 +23,7 @@
 #include "libc/nt/thunk/msabi.h"
 
 __msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
+__msabi extern typeof(GetLastError) *const __imp_GetLastError;
 
 /**
  * Terminates the specified process and all of its threads.
@@ -30,6 +31,7 @@ __msabi extern typeof(TerminateProcess) *const __imp_TerminateProcess;
 textwindows bool32 TerminateProcess(int64_t hProcess, uint32_t uWaitStatus) {
   bool32 ok;
   ok = __imp_TerminateProcess(hProcess, uWaitStatus);
-  NTTRACE("TerminateProcess(%ld, %u) → %hhhd% m", hProcess, uWaitStatus, ok);
+  NTTRACE("TerminateProcess(%ld, %u) → {%hhhd, %d}", hProcess, uWaitStatus, ok,
+          __imp_GetLastError());
   return ok;
 }

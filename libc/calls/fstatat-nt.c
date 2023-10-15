@@ -74,10 +74,11 @@ TryAgain:
                ((flags & AT_SYMLINK_NOFOLLOW) ? kNtFileFlagOpenReparsePoint
                                               : 0),
            0)) != -1) {
-    rc = st ? sys_fstat_nt_handle(fh, st) : 0;
+    rc = st ? sys_fstat_nt_handle(fh, path16, st) : 0;
     CloseHandle(fh);
   } else if (dwDesiredAccess == kNtFileGenericRead &&
-             GetLastError() == kNtErrorSharingViolation) {
+             (GetLastError() == kNtErrorAccessDenied ||
+              GetLastError() == kNtErrorSharingViolation)) {
     dwDesiredAccess = kNtFileReadAttributes;
     errno = e;
     goto TryAgain;

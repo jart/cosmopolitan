@@ -48,10 +48,25 @@ CreateFile(const char16_t *lpFileName,                         //
            int64_t opt_hTemplateFile) {
   int64_t hHandle;
   uint32_t micros = 1;
+  char buf_accessflags[512];
+  (void)buf_accessflags;
+  char buf_shareflags[64];
+  (void)buf_shareflags;
+  char buf_secattr[32];
+  (void)buf_secattr;
+  char buf_flagattr[256];
+  (void)buf_flagattr;
 TryAgain:
   hHandle = __imp_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode,
                               opt_lpSecurity, dwCreationDisposition,
                               dwFlagsAndAttributes, opt_hTemplateFile);
+  NTTRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → {%ld, %d}", lpFileName,
+          (DescribeNtFileAccessFlags)(buf_accessflags, dwDesiredAccess),
+          (DescribeNtFileShareFlags)(buf_shareflags, dwShareMode),
+          (DescribeNtSecurityAttributes)(buf_secattr, opt_lpSecurity),
+          DescribeNtCreationDisposition(dwCreationDisposition),
+          (DescribeNtFileFlagAttr)(buf_flagattr, dwFlagsAndAttributes),
+          opt_hTemplateFile, hHandle, __imp_GetLastError());
   if (hHandle == -1) {
     switch (__imp_GetLastError()) {
       case kNtErrorPipeBusy:
@@ -77,12 +92,5 @@ TryAgain:
     }
     __winerr();
   }
-  NTTRACE("CreateFile(%#hs, %s, %s, %s, %s, %s, %ld) → %ld% m", lpFileName,
-          DescribeNtFileAccessFlags(dwDesiredAccess),
-          DescribeNtFileShareFlags(dwShareMode),
-          DescribeNtSecurityAttributes(opt_lpSecurity),
-          DescribeNtCreationDisposition(dwCreationDisposition),
-          DescribeNtFileFlagAttr(dwFlagsAndAttributes), opt_hTemplateFile,
-          hHandle);
   return hHandle;
 }

@@ -91,7 +91,12 @@ errno_t ttyname_r(int fd, char *buf, size_t size) {
   } else if (IsWindows()) {
     res = sys_ttyname_nt(fd, buf, size);
   } else {
-    res = ENOSYS;
+    // TODO(jart): Use that fstat(dev/ino) + readdir(/dev/) trick.
+    if (strlcpy(buf, "/dev/tty", size) < size) {
+      res = 0;
+    } else {
+      res = ERANGE;
+    }
   }
   errno = e;
   STRACE("ttyname_r(%d, %#.*hhs) → %s", fd, (int)size, buf,

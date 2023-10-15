@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -25,23 +26,6 @@
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
-
-// code size optimization
-// <sync libc/sysv/consts.sh>
-#define _O_APPEND     0x00000400  // kNtFileAppendData
-#define _O_CREAT      0x00000040  // kNtOpenAlways
-#define _O_EXCL       0x00000080  // kNtCreateNew
-#define _O_TRUNC      0x00000200  // kNtCreateAlways
-#define _O_DIRECTORY  0x00010000  // kNtFileFlagBackupSemantics
-#define _O_UNLINK     0x04000100  // kNtFileAttributeTemporary|DeleteOnClose
-#define _O_DIRECT     0x00004000  // kNtFileFlagNoBuffering
-#define _O_NONBLOCK   0x00000800  // kNtFileFlagWriteThrough (not sent to win32)
-#define _O_RANDOM     0x80000000  // kNtFileFlagRandomAccess
-#define _O_SEQUENTIAL 0x40000000  // kNtFileFlagSequentialScan
-#define _O_COMPRESSED 0x20000000  // kNtFileAttributeCompressed
-#define _O_INDEXED    0x10000000  // !kNtFileAttributeNotContentIndexed
-#define _O_CLOEXEC    0x00080000
-// </sync libc/sysv/consts.sh>
 
 textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
                                uint32_t *out_share, uint32_t *out_disp,

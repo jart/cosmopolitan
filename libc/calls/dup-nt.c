@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -65,10 +66,10 @@ static textwindows int sys_dup_nt_impl(int oldfd, int newfd, int flags,
                       kNtDuplicateSameAccess)) {
     g_fds.p[newfd] = g_fds.p[oldfd];
     g_fds.p[newfd].handle = handle;
-    if (flags & O_CLOEXEC) {
-      g_fds.p[newfd].flags |= O_CLOEXEC;
+    if (flags & _O_CLOEXEC) {
+      g_fds.p[newfd].flags |= _O_CLOEXEC;
     } else {
-      g_fds.p[newfd].flags &= ~O_CLOEXEC;
+      g_fds.p[newfd].flags &= ~_O_CLOEXEC;
     }
     rc = newfd;
   } else {

@@ -21,6 +21,11 @@
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -89,9 +94,14 @@ TEST(makecontext, crash) {
 TEST(makecontext, backtrace) {
   if (IsTiny()) return;  // doesn't print full crash report
   SPAWN(fork);
-  ASSERT_SYS(0, 0, close(2));
-  ASSERT_SYS(0, 2, creat("log", 0644));
-  __klog_handle = 2;
+  if (IsWindows()) {
+    __klog_handle =
+        CreateFile(u"log", kNtFileAppendData,
+                   kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete, 0,
+                   kNtOpenAlways, kNtFileAttributeNormal, 0);
+  } else {
+    __klog_handle = creat("log", 0644);
+  }
   getcontext(&uc);
   uc.uc_link = 0;
   uc.uc_stack.ss_sp = NewCosmoStack();

@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/nt/enum/wait.h"
@@ -45,11 +46,13 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   pthread_cleanup_push((void *)CloseHandle, (void *)sem);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
   om = __sig_beginwait(waitmask);
-  if ((rc = _check_cancel()) != -1 && (rc = _check_signal(restartable)) != -1) {
-    unassert((wi = WaitForSingleObject(sem, msdelay)) != -1u);
-    if (restartable && !(pt->pt_flags & PT_RESTARTABLE)) rc = eintr();
-    rc |= _check_signal(restartable);
-    if (rc == -1 && errno == EINTR) _check_cancel();
+  if ((rc = _check_signal(restartable)) != -1) {
+    if ((wi = WaitForSingleObject(sem, msdelay)) != -1u) {
+      if (restartable && !(pt->pt_flags & PT_RESTARTABLE)) rc = eintr();
+      rc |= _check_signal(restartable);
+    } else {
+      rc = __winerr();
+    }
   }
   __sig_finishwait(om);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_CPU, memory_order_release);

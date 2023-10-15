@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/flock.h"
@@ -318,7 +319,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int fd, int cmd,
 
 static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
   if (start < 0) return einval();
-  return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0), start);
+  return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? _O_CLOEXEC : 0), start);
 }
 
 textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
@@ -329,21 +330,21 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       __isfdkind(fd, kFdConsole) ||  //
       __isfdkind(fd, kFdDevNull)) {
     if (cmd == F_GETFL) {
-      rc = g_fds.p[fd].flags & (O_ACCMODE | O_APPEND | O_DIRECT | O_NONBLOCK |
-                                O_RANDOM | O_SEQUENTIAL);
+      rc = g_fds.p[fd].flags & (O_ACCMODE | _O_APPEND | _O_DIRECT |
+                                _O_NONBLOCK | _O_RANDOM | _O_SEQUENTIAL);
     } else if (cmd == F_SETFL) {
       rc = sys_fcntl_nt_setfl(fd, arg);
     } else if (cmd == F_GETFD) {
-      if (g_fds.p[fd].flags & O_CLOEXEC) {
+      if (g_fds.p[fd].flags & _O_CLOEXEC) {
         rc = FD_CLOEXEC;
       } else {
         rc = 0;
       }
     } else if (cmd == F_SETFD) {
       if (arg & FD_CLOEXEC) {
-        g_fds.p[fd].flags |= O_CLOEXEC;
+        g_fds.p[fd].flags |= _O_CLOEXEC;
       } else {
-        g_fds.p[fd].flags &= ~O_CLOEXEC;
+        g_fds.p[fd].flags &= ~_O_CLOEXEC;
       }
       rc = 0;
     } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {

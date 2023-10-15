@@ -1,5 +1,4 @@
 #!/bin/sh
-
 PROG=${0##*/}
 COSMO=${COSMO:-/opt/cosmo}
 
@@ -67,8 +66,14 @@ if [ ! -d "$COSMO" ]; then
   fatal_error "you need to clone cosmopolitan to your $COSMO directory"
 fi
 
+if [ -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc" ]; then
+  BRAND=musl
+else
+  BRAND=cosmo
+fi
+
 if [ ! -f "$COSMO/o//tool/build/zipcopy.com" ] ||
-   [ ! -f "$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-objcopy" ]; then
+   [ ! -f "$COSMO/o/third_party/gcc/bin/$ARCH-linux-$BRAND-objcopy" ]; then
   if [ $CROSS -eq 0 ]; then
     fatal_error "you need to run: cosmocc --update"
   else
@@ -88,7 +93,7 @@ elif [ x"$INPUT" = x"$OUTPUT" ]; then
   fatal_error "$INPUT: input and output file can't be the same"
 fi
 
-"$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-objcopy" \
+"$COSMO/o/third_party/gcc/bin/$ARCH-linux-$BRAND-objcopy" \
   $OBJCOPYFLAGS \
   "$INPUT" \
   "$OUTPUT" || exit

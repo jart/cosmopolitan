@@ -138,13 +138,19 @@ else
   COSMOS=${COSMOS:-/opt/cosmos/$ARCH}
 fi
 
-CC="$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-gcc"
+if [ -x "$COSMO/o/third_party/gcc/bin/x86_64-linux-musl-gcc" ]; then
+  BRAND=musl
+else
+  BRAND=cosmo
+fi
+
+CC="$COSMO/o/third_party/gcc/bin/$ARCH-linux-$BRAND-gcc"
 CRT="$COSMO/o/$MODE/libc/crt/crt.o"
 LDLIBS="$COSMO/o/$MODE/cosmopolitan.a"
 CPPFLAGS="$CPPFLAGS -isystem $COSMOS/include -isystem $COSMO/libc/isystem"
 LDFLAGS="$LDFLAGS -L$COSMOS/lib"
 if [ x"$PROG" != x"${PROG%++}" ]; then
-  CC="$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-g++"
+  CC="$COSMO/o/third_party/gcc/bin/$ARCH-linux-$BRAND-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
   LDLIBS="$COSMO/o/$MODE/third_party/libcxx/libcxx.a $LDLIBS"
 fi
@@ -360,7 +366,7 @@ if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
       # -> foo.com (ape)
       # -> foo.com.dbg (elf)
       mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
-      "$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-objcopy" \
+      "$COSMO/o/third_party/gcc/bin/$ARCH-linux-$BRAND-objcopy" \
         $OBJCOPYFLAGS \
         "$OUTPUT.dbg" \
         "$OUTPUT" || exit
@@ -368,7 +374,7 @@ if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
         "$OUTPUT.dbg" \
         "$OUTPUT" || exit
     elif [ $SFLAG -eq 1 ]; then
-      "$COSMO/o/third_party/gcc/bin/$ARCH-linux-musl-strip" \
+      "$COSMO/o/third_party/gcc/bin/$ARCH-linux-$BRAND-strip" \
         "$OUTPUT" || exit
     fi
   fi

@@ -1,6 +1,29 @@
 #!/bin/sh
+COSMO=${COSMO:-/opt/cosmo}
+
+if [ -n "$OBJDUMP" ]; then
+  exec "$OBJDUMP" "$@"
+fi
+
+find_objdump() {
+  if [ -x o/third_party/gcc/bin/$1-linux-cosmo-objdump ]; then
+    OBJDUMP=o/third_party/gcc/bin/$1-linux-cosmo-objdump
+  elif [ -x o/third_party/gcc/bin/$1-linux-musl-objdump ]; then
+    OBJDUMP=o/third_party/gcc/bin/$1-linux-musl-objdump
+  elif [ -x "$COSMO/o/third_party/gcc/bin/$1-linux-cosmo-objdump" ]; then
+    OBJDUMP="$COSMO/o/third_party/gcc/bin/$1-linux-cosmo-objdump"
+  elif [ -x "$COSMO/o/third_party/gcc/bin/$1-linux-musl-objdump" ]; then
+    OBJDUMP="$COSMO/o/third_party/gcc/bin/$1-linux-musl-objdump"
+  else
+    echo "error: toolchain not found (try running 'cosmocc --update' or 'make' in the cosmo monorepo)" >&2
+    exit 1
+  fi
+}
+
 if printf '%s\n' "$*" | grep aarch64 >/dev/null 2>&1; then
-  exec o/third_party/gcc/bin/aarch64-linux-musl-objdump "$@"
+  find_objdump aarch64
+  exec "$OBJDUMP" "$@"
 else
-  exec o/third_party/gcc/bin/x86_64-linux-musl-objdump "$@"
+  find_objdump x86_64
+  exec "$OBJDUMP" "$@"
 fi

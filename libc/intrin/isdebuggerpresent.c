@@ -33,7 +33,11 @@
 #define kPid     "TracerPid:\t"
 
 static textwindows bool IsBeingDebugged(void) {
+#ifdef __x86_64__
   return !!NtGetPeb()->BeingDebugged;
+#else
+  return false;
+#endif
 }
 
 /**

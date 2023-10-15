@@ -36,9 +36,8 @@ textwindows int sys_fdatasync_nt(int fd, bool fake) {
     // kNtGenericWrite access, and MSDN doesn't document it.
     return 0;
   }
-  if (_check_cancel() == -1) return -1;
-  if (_check_signal(false) == -1) return -1;
   if (fake) return 0;
+  if (_check_signal(false) == -1) return -1;
   return FlushFileBuffers(g_fds.p[fd].handle) ? 0 : __winerr();
 }
 

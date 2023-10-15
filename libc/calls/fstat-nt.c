@@ -107,11 +107,12 @@ textwindows int sys_fstat_nt(int fd, struct stat *st) {
     case kFdSocket:
       return sys_fstat_nt_socket(g_fds.p[fd].kind, st);
     default:
-      return sys_fstat_nt_handle(g_fds.p[fd].handle, st);
+      return sys_fstat_nt_handle(g_fds.p[fd].handle, 0, st);
   }
 }
 
-textwindows int sys_fstat_nt_handle(int64_t handle, struct stat *out_st) {
+textwindows int sys_fstat_nt_handle(int64_t handle, const char16_t *path,
+                                    struct stat *out_st) {
   struct stat st = {0};
 
   // Always set st_blksize to avoid divide by zero issues.
@@ -143,7 +144,7 @@ textwindows int sys_fstat_nt_handle(int64_t handle, struct stat *out_st) {
       }
       st.st_mode = 0444 & ~umask;
       if ((wst.dwFileAttributes & kNtFileAttributeDirectory) ||
-          IsWindowsExecutable(handle)) {
+          IsWindowsExecutable(handle, path)) {
         st.st_mode |= 0111 & ~umask;
       }
       st.st_flags = wst.dwFileAttributes;

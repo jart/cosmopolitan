@@ -24,11 +24,11 @@ int __ensurefds(int);
 uint32_t sys_getuid_nt(void);
 int __ensurefds_unlocked(int);
 void __printfds(struct Fd *, size_t);
-int IsWindowsExecutable(int64_t);
 int CountConsoleInputBytes(void);
 int FlushConsoleInputBytes(void);
 int64_t GetConsoleInputHandle(void);
 int64_t GetConsoleOutputHandle(void);
+int IsWindowsExecutable(int64_t, const char16_t *);
 void InterceptTerminalCommands(const char *, size_t);
 
 forceinline int64_t __getfdhandleactual(int fd) {

@@ -73,9 +73,38 @@ MODE := $(m)
 endif
 endif
 
+UNAME_M = $(shell uname -m)
+UNAME_S = $(shell uname -s)
+
+# apple still distributes a 17 year old version of gnu make
+ifeq ($(MAKE_VERSION), 3.81)
+$(error please use build/bootstrap/make.com)
+endif
+
+# provide instructions to non-linux users on unbundling gcc
+ifeq ($(TOOLCHAIN),)                                                # if TOOLCHAIN isn't defined
+ifeq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")  # if our gcc isn't unbundled
+ifneq ($(UNAME_M)-$(UNAME_S), x86_64-Linux)                         # if this is not amd64 linux
+$(error you need to download https://justine.lol/cosmocc-0.0.12.zip and unzip it inside the cosmo directory)
+endif
+endif
+endif
+
+# the default build modes is empty string
+# on x86_64 hosts, MODE= is the same as MODE=x86_64
+# on aarch64 hosts, MODE= is changed to MODE=aarch64
+ifeq ($(MODE),)
+ifeq ($(UNAME_M),arm64)
+MODE := aarch64
+endif
+ifeq ($(UNAME_M),aarch64)
+MODE := aarch64
+endif
+endif
+
+# primary build rules
 all:	o
 o:	o/$(MODE)
-
 o/$(MODE):			\
 	o/$(MODE)/ape		\
 	o/$(MODE)/dsp		\
@@ -86,18 +115,23 @@ o/$(MODE):			\
 	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
+# check if we're using o//third_party/make/make.com
+# we added sandboxing to guarantee cosmo's makefile is hermetic
+# it also shaves away 200ms of startup latency with native $(uniq)
 ifneq ($(LANDLOCKMAKE_VERSION),)
+ifeq ($(UNAME_S),Linux)
 ifeq ($(wildcard /usr/bin/ape),)
 $(warning please run ape/apeinstall.sh if you intend to use landlock make)
 $(shell sleep .5)
+endif
 endif
 ifeq ($(USE_SYSTEM_TOOLCHAIN),)
 .STRICT = 1
 endif
 endif
 
-.PLEDGE = stdio rpath wpath cpath fattr proc
-.UNVEIL =					\
+.PLEDGE += stdio rpath wpath cpath fattr proc
+.UNVEIL +=					\
 	libc/integral				\
 	libc/stdbool.h				\
 	libc/disclaimer.inc			\

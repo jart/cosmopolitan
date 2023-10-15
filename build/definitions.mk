@@ -94,17 +94,24 @@ endif
 
 ifeq ($(PREFIX),)
 ifeq ($(USE_SYSTEM_TOOLCHAIN),)
-ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
-PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
+ifeq ($(ARCH),x86_64)
+ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")
+PREFIX = o/third_party/gcc/bin/x86_64-linux-cosmo-
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
 endif
-ifeq ($(ARCH), aarch64)
+endif # ($(ARCH),x86_64))
+ifeq ($(ARCH),aarch64)
+ifneq ("$(wildcard o/third_party/gcc/bin/aarch64-linux-cosmo-*)","")
+PREFIX = o/third_party/gcc/bin/aarch64-linux-cosmo-
+else
+IGNORE := $(shell build/bootstrap/unbundle.com)
 PREFIX = o/third_party/gcc/bin/aarch64-linux-musl-
 endif
-endif
-endif
+endif # ($(ARCH),aarch64)
+endif # ($(USE_SYSTEM_TOOLCHAIN),)
+endif # ($(PREFIX),)
 
 AS = $(PREFIX)as
 CC = $(PREFIX)gcc
@@ -116,7 +123,7 @@ GCC = $(PREFIX)gcc
 STRIP = $(PREFIX)strip
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
-ifneq ($(wildcard $(PWD)/$(PREFIX)addr2line), )
+ifneq ($(wildcard $(PWD)/$(PREFIX)addr2line),)
 ADDR2LINE = $(PWD)/$(PREFIX)addr2line
 else
 ADDR2LINE = $(PREFIX)addr2line

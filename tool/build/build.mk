@@ -108,6 +108,7 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 		-s					\
 		-shared					\
 		-nostdlib				\
+		-fuse-ld=bfd				\
 		-Wl,--gc-sections			\
 		o/$(MODE)/tool/build/dso/sandbox.o	\
 		o/$(MODE)/libc/calls/pledge-linux.o	\

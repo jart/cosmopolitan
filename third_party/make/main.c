@@ -971,7 +971,7 @@ reset_jobserver (void)
 int
 main (int argc, char **argv, char **envp)
 {
-  ShowCrashReports();
+  // ShowCrashReports();
 
   static char *stdin_nm = 0;
   int makefile_status = MAKE_SUCCESS;
@@ -982,7 +982,7 @@ main (int argc, char **argv, char **envp)
   int argv_slots;
 
   // [jart] workaround to prevent make -j fork bomb
-  default_load_average = __get_cpu_count();
+  default_load_average = __get_cpu_count() * 1.5;
   max_load_average = default_load_average;
 
   /* Useful for attaching debuggers, etc.  */
@@ -1041,10 +1041,6 @@ main (int argc, char **argv, char **envp)
   FATAL_SIG (SIGPIPE); /* [jart] handle case of piped into less */
 
 #undef  FATAL_SIG
-
-#ifndef NDEBUG
-  ShowCrashReports();
-#endif
 
   /* Do not ignore the child-death signal.  This must be done before
      any children could possibly be created; otherwise, the wait

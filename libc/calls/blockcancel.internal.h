@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_BLOCKCANCEL_H_
 #define COSMOPOLITAN_LIBC_CALLS_BLOCKCANCEL_H_
-#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

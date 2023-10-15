@@ -18,14 +18,57 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/overlapped.h"
+#include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
+#include "third_party/linenoise/linenoise.h"
+
+#define EXT(s) READ32LE(s "\0\0")
+
+static bool IsGraph(wint_t c) {
+  return 0x21 <= c && c <= 0x7E;
+}
+
+static uint32_t GetFileExtension(const char16_t *s) {
+  uint32_t w;
+  size_t i, n;
+  n = s ? strlen16(s) : 0;
+  for (i = w = 0; n--;) {
+    wint_t c = s[n];
+    if (!IsGraph(c)) return 0;
+    if (c == '.') break;
+    if (++i > 4) return 0;
+    w <<= 8;
+    w |= kToLower[c];
+  }
+  return w;
+}
 
 // checks if file should be considered an executable on windows
-textwindows int IsWindowsExecutable(int64_t handle) {
+textwindows int IsWindowsExecutable(int64_t handle, const char16_t *path) {
+
+  // fast path known file extensions
+  // shaves away 100ms of gnu make latency in cosmo monorepo
+  uint32_t ext;
+  if (!IsTiny() && (ext = GetFileExtension(path))) {
+    if (ext == EXT("c") ||   // c code
+        ext == EXT("cc") ||  // c++ code
+        ext == EXT("h") ||   // c/c++ header
+        ext == EXT("s") ||   // assembly code
+        ext == EXT("o")) {   // object file
+      return false;
+    }
+    if (ext == EXT("com") ||  // mz executable
+        ext == EXT("exe") ||  // mz executable
+        ext == EXT("sh")) {   // bourne shells
+      return true;
+    }
+  }
 
   // read first two bytes of file
   // access() and stat() aren't cancelation points

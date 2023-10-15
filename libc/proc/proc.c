@@ -103,12 +103,8 @@ static textwindows dontinstrument uint32_t __proc_worker(void *arg) {
     __proc_unlock();
 
     // wait for win32 to report any status change
-    millis = n == 64 ? __SIG_PROC_INTERVAL_MS : -1u;
-    i = WaitForMultipleObjects(n, handles, false, millis);
-    if (i == -1u) {
-      STRACE("PROC WORKER DYING: WAIT FAILED: %s", strerror(errno));
-      break;
-    }
+    millis = n == 64 ? 20 : -1u;
+    unassert((i = WaitForMultipleObjects(n, handles, false, millis)) != -1u);
     i &= ~kNtWaitAbandoned;
     if (!i || i == kNtWaitTimeout) continue;
     GetExitCodeProcess(handles[i], &status);
