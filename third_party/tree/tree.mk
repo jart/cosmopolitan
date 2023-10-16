@@ -42,7 +42,7 @@ $(THIRD_PARTY_TREE_A).pkg:				\
 
 o/$(MODE)/third_party/tree/tree.com.dbg:		\
 		$(THIRD_PARTY_TREE)			\
-		o/$(MODE)/third_party/tree/cmd.o	\
+		o/$(MODE)/third_party/tree/tree.o	\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
