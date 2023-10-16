@@ -186,7 +186,7 @@ compile. The only exception is the C preprocessor mode, which actually
 runs x86-64 GCC except with macros like `__x86_64__` undefined.
 
 This toolchain works great for C projects that are written in a portable
-way and don't produce architecturue-specific artifacts. One example of a
+way and don't produce architecture-specific artifacts. One example of a
 large project that can be easily built is GNU coreutils.
 
 ```sh
@@ -421,8 +421,8 @@ header file. If you're doing your development work on Linux or BSD then
 you need just five files to get started. Here's what you do on Linux:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-2.2.zip
-unzip cosmopolitan-amalgamation-2.2.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-3.0.zip
+unzip cosmopolitan-amalgamation-3.0.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs -gdwarf-4 \

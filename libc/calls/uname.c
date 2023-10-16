@@ -47,6 +47,12 @@
 #define CTL_HW     6
 #define HW_MACHINE 1
 
+#define COSMOPOLITAN_VERSION_STR__(x, y, z) #x "." #y "." #z
+#define COSMOPOLITAN_VERSION_STR_(x, y, z)  COSMOPOLITAN_VERSION_STR__(x, y, z)
+#define COSMOPOLITAN_VERSION_STR                                            \
+  COSMOPOLITAN_VERSION_STR_(__COSMOPOLITAN_MAJOR__, __COSMOPOLITAN_MINOR__, \
+                            __COSMOPOLITAN_PATCH__)
+
 // Gets BSD sysctl() string, guaranteeing NUL-terminator.
 // We ignore errors since this syscall mutates on ENOMEM.
 // In that case, sysctl() doesn't guarantee the nul term.
@@ -175,7 +181,7 @@ int uname(struct utsname *uts) {
   }
   if (!rc) {
     char buf[SYS_NMLN];
-    stpcpy(buf, "Cosmopolitan 3.0-alpha");
+    stpcpy(buf, "Cosmopolitan " COSMOPOLITAN_VERSION_STR);
     if (*MODE) {
       strlcat(buf, " MODE=" MODE, SYS_NMLN);
     }

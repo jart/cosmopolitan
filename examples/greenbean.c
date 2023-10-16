@@ -73,6 +73,7 @@
   "Cache-Control: private; max-age=0\r\n"
 
 int server;
+int threads;
 atomic_int a_termsig;
 atomic_int a_workers;
 atomic_int a_messages;
@@ -102,6 +103,14 @@ void SomethingImportantHappened(void) {
   unassert(!pthread_mutex_unlock(&statuslock));
 }
 
+wontreturn void ExplainPrlimit(void) {
+  kprintf("error: you need more resources; try running:\n"
+          "sudo prlimit --pid=$$ --nofile=%d\n"
+          "sudo prlimit --pid=$$ --nproc=%d\n",
+          threads * 2, threads * 2);
+  exit(1);
+}
+
 void *Worker(void *id) {
   pthread_setname_np(pthread_self(), "Worker");
 
@@ -111,7 +120,7 @@ void *Worker(void *id) {
     uint32_t clientsize;
     int inmsglen, outmsglen;
     struct sockaddr_in clientaddr;
-    char inbuf[1500], outbuf[1500], *p, *q;
+    char buf[1000], *p, *q;
 
     // musl libc and cosmopolitan libc support a posix thread extension
     // that makes thread cancelation work much better. your io routines
@@ -131,6 +140,7 @@ void *Worker(void *id) {
       // accept() errors are generally ephemeral or recoverable
       // it'd potentially be a good idea to exponential backoff here
       if (errno == ECANCELED) continue;  // pthread_cancel() was called
+      if (errno == EMFILE) ExplainPrlimit();
       LOG("accept() returned %m");
       SomethingHappened();
       continue;
@@ -156,7 +166,7 @@ void *Worker(void *id) {
 
       // wait for next http message (non-fragmented required)
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_MASKED, 0));
-      got = read(client, inbuf, sizeof(inbuf));
+      got = read(client, buf, sizeof(buf));
       unassert(!pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0));
       if (got <= 0) {
         if (!got) {
@@ -174,7 +184,7 @@ void *Worker(void *id) {
 
       // check that client message wasn't fragmented into more reads
       InitHttpMessage(&msg, kHttpRequest);
-      if ((inmsglen = ParseHttpMessage(&msg, inbuf, got)) <= 0) {
+      if ((inmsglen = ParseHttpMessage(&msg, buf, got)) <= 0) {
         if (!inmsglen) {
           LOG("%6H client sent fragmented message");
         } else {
@@ -188,7 +198,7 @@ void *Worker(void *id) {
       ++a_messages;
       LOG("%6H received message from %hhu.%hhu.%hhu.%hhu:%hu for path %#.*s",
           clientip >> 24, clientip >> 16, clientip >> 8, clientip,
-          ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a, inbuf + msg.uri.a);
+          ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a, buf + msg.uri.a);
       SomethingHappened();
 
       // display hello world html page for http://127.0.0.1:8080/
@@ -196,41 +206,40 @@ void *Worker(void *id) {
       int64_t unixts;
       struct timespec ts;
       if (msg.method == kHttpGet &&
-          (msg.uri.b - msg.uri.a == 1 && inbuf[msg.uri.a + 0] == '/')) {
+          (msg.uri.b - msg.uri.a == 1 && buf[msg.uri.a + 0] == '/')) {
         q = "<!doctype html>\r\n"
             "<title>hello world</title>\r\n"
             "<h1>hello world</h1>\r\n"
             "<p>this is a fun webpage\r\n"
             "<p>hosted by greenbean\r\n";
-        p = stpcpy(outbuf, "HTTP/1.1 200 OK\r\n" STANDARD_RESPONSE_HEADERS
-                           "Content-Type: text/html; charset=utf-8\r\n"
-                           "Date: ");
+        p = stpcpy(buf, "HTTP/1.1 200 OK\r\n" STANDARD_RESPONSE_HEADERS
+                        "Content-Type: text/html; charset=utf-8\r\n"
+                        "Date: ");
         clock_gettime(0, &ts), unixts = ts.tv_sec;
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
         p = stpcpy(p, "\r\n\r\n");
         p = stpcpy(p, q);
-        outmsglen = p - outbuf;
-        sent = write(client, outbuf, outmsglen);
+        outmsglen = p - buf;
+        sent = write(client, buf, outmsglen);
 
       } else {
         // display 404 not found error page for every thing else
         q = "<!doctype html>\r\n"
             "<title>404 not found</title>\r\n"
             "<h1>404 not found</h1>\r\n";
-        p = stpcpy(outbuf,
-                   "HTTP/1.1 404 Not Found\r\n" STANDARD_RESPONSE_HEADERS
-                   "Content-Type: text/html; charset=utf-8\r\n"
-                   "Date: ");
+        p = stpcpy(buf, "HTTP/1.1 404 Not Found\r\n" STANDARD_RESPONSE_HEADERS
+                        "Content-Type: text/html; charset=utf-8\r\n"
+                        "Date: ");
         clock_gettime(0, &ts), unixts = ts.tv_sec;
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
         p = stpcpy(p, "\r\n\r\n");
         p = stpcpy(p, q);
-        outmsglen = p - outbuf;
-        sent = write(client, outbuf, p - outbuf);
+        outmsglen = p - buf;
+        sent = write(client, buf, p - buf);
       }
 
       // if the client isn't pipelining and write() wrote the full
@@ -283,7 +292,7 @@ int main(int argc, char *argv[]) {
   unassert(!sigaction(SIGTERM, &sa, 0));
 
   // you can pass the number of threads you want as the first command arg
-  int threads = argc > 1 ? atoi(argv[1]) : __get_cpu_count();
+  threads = argc > 1 ? atoi(argv[1]) : __get_cpu_count();
   if (!(1 <= threads && threads <= 100000)) {
     tinyprint(2, "error: invalid number of threads\n", NULL);
     exit(1);
@@ -372,10 +381,7 @@ int main(int argc, char *argv[]) {
     if ((rc = pthread_create(th + i, &attr, Worker, (void *)(intptr_t)i))) {
       --a_workers;
       kprintf("pthread_create failed: %s\n", strerror(rc));
-      if (rc == EAGAIN) {
-        kprintf("sudo prlimit --pid=$$ --nofile=%d\n", threads * 2);
-        kprintf("sudo prlimit --pid=$$ --nproc=%d\n", threads * 2);
-      }
+      if (rc == EAGAIN) ExplainPrlimit();
       if (!i) exit(1);
       threads = i;
       break;
