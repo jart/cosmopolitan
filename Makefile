@@ -224,6 +224,7 @@ include third_party/maxmind/maxmind.mk
 include net/finger/finger.mk
 include third_party/double-conversion/test/test.mk
 include third_party/lua/lua.mk
+include third_party/tree/tree.mk
 include third_party/zstd/zstd.mk
 include third_party/tr/tr.mk
 include third_party/sed/sed.mk

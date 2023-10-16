@@ -1,0 +1,512 @@
+.\" $Copyright: $
+.\" Copyright (c) 1996 - 2022 by Steve Baker
+.\" All Rights reserved
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+.\"
+...
+.TH TREE 1 "" "Tree 2.1.1"
+.SH NAME
+tree \- list contents of directories in a tree-like format.
+.SH SYNOPSIS
+\fBtree\fP
+[\fB-acdfghilnpqrstuvxACDFJQNSUX\fP]
+[\fB-L\fP \fIlevel\fP [\fB-R\fP]]
+[\fB-H\fP \fIbaseHREF\fP]
+[\fB-T\fP \fItitle\fP]
+[\fB-o\fP \fIfilename\fP]
+[\fB-P\fP \fIpattern\fP]
+[\fB-I\fP \fIpattern\fP]
+[\fB--gitignore\fP]
+[\fB--gitfile\fP[\fB=\fP]\fIfile\fP]
+[\fB--matchdirs\fP]
+[\fB--metafirst\fP]
+[\fB--ignore-case\fP]
+[\fB--nolinks\fP]
+[\fB--hintro\fP[\fB=\fP]\fIfile\fP]
+[\fB--houtro\fP[\fB=\fP]\fIfile\fP]
+[\fB--inodes\fP]
+[\fB--device\fP]
+[\fB--sort\fP[\fB=\fP]\fIname\fP]
+[\fB--dirsfirst\fP]
+[\fB--filesfirst\fP]
+[\fB--filelimit\fP \fI#\fP]
+[\fB--si\fP]
+[\fB--du\fP]
+[\fB--prune\fP]
+[\fB--charset[\fB=\fP]X\fP]
+[\fB--timefmt\fP[\fB=\fP]\fIformat\fP]
+[\fB--fromfile\fP]
+[\fB--fromtabfile\fP]
+[\fB--fflinks\fP]
+[\fB--info\fP]
+[\fB--infofile\fP[\fB=\fP]\fIfile\fP]
+[\fB--noreport\fP]
+[\fB--version\fP]
+[\fB--help\fP]
+[\fB--\fP] [\fIdirectory\fP ...]
+
+.br
+.SH DESCRIPTION
+\fITree\fP is a recursive directory listing program that produces a depth
+indented listing of files, which is colorized ala \fIdircolors\fP if the
+\fBLS_COLORS\fP environment variable is set and output is to tty.  With no
+arguments, \fItree\fP lists the files in the current directory.  When directory
+arguments are given, \fItree\fP lists all the files and/or directories found in
+the given directories each in turn.  Upon completion of listing all
+files/directories found, \fItree\fP returns the total number of files and/or
+directories listed.
+
+By default, when a symbolic link is encountered, the path that the symbolic
+link refers to is printed after the name of the link in the format:
+.br
+
+    name -> real-path
+.br
+
+If the `\fB-l\fP' option is given and the symbolic link refers to an actual
+directory, then \fItree\fP will follow the path of the symbolic link as if
+it were a real directory.
+.br
+
+.SH OPTIONS
+\fITree\fP understands the following command line switches:
+
+.SH LISTING OPTIONS
+
+.TP
+.B -a
+All files are printed.  By default tree does not print hidden files (those
+beginning with a dot `.').  In no event does tree print the file system
+constructs `.' (current directory) and `..' (previous directory).
+.PP
+.TP
+.B -d
+List directories only.
+.PP
+.TP
+.B -l
+Follows symbolic links if they point to directories, as if they were
+directories. Symbolic links that will result in recursion are avoided when
+detected.
+.PP
+.TP
+.B -f
+Prints the full path prefix for each file.
+.PP
+.TP
+.B -x
+Stay on the current file-system only.  Ala \fBfind \fI-xdev\fP.
+.PP
+.TP
+.B -L \fIlevel\fP
+Max display depth of the directory tree.
+.PP
+.TP
+.B -R
+Recursively cross down the tree each \fIlevel\fP directories (see \fB-L\fP
+option), and at each level outputting to a file named \fB00Tree.html\fP
+(ala \fB-o\fP).
+.PP
+.TP
+.B -P \fIpattern\fP
+List only those files that match the wild-card \fIpattern\fP.  You may have
+multiple -P options. Note: you must use the \fI-a\fP option to also consider
+those files beginning with a dot `.' for matching.  Valid wildcard operators
+are `*' (any zero or more characters), `**` (any zero or more characters as
+well as null /'s, i.e. /**/ may match a single /), `?' (any single character),
+`[...]' (any single character listed between brackets (optional - (dash) for
+character range may be used: ex: [A-Z]), and `[^...]' (any single character
+not listed in brackets) and `|' separates alternate patterns. A '/' at the
+end of the pattern matches directories, but not files.
+.PP
+.TP
+.B -I \fIpattern\fP
+Do not list those files that match the wild-card \fIpattern\fP.  You may have
+multiple -I options.  See \fI-P\fP above for information on wildcard patterns.
+.PP
+.TP
+.B --gitignore
+Uses git \fB.gitignore\fP files for filtering files and directories.  Also
+uses \fB$GIT_DIR/info/exclude\fP if present.
+.PP
+.TP
+.B --gitfile\fR[\fB=\fR]\fIfile\fP
+Use \fIfile\fP explicitly as a gitignore file.
+.PP
+.TP
+.B --ignore-case
+If a match pattern is specified by the \fB-P\fP or \fB-I\fP option, this will
+cause the pattern to match without regard to the case of each letter.
+.PP
+.TP
+.B --matchdirs
+If a match pattern is specified by the \fB-P\fP option, this will cause the
+pattern to be applied to directory names (in addition to filenames).  In the
+event of a match on the directory name, matching is disabled for the directory's
+contents. If the \fB--prune\fP option is used, empty folders that match the
+pattern will not be pruned.
+.PP
+.TP
+.B --metafirst
+Print the meta-data information at the beginning of the line rather than
+after the indentation lines.
+.PP
+.TP
+.B --prune
+Makes tree prune empty directories from the output, useful when used in
+conjunction with \fB-P\fP or \fB-I\fP.  See \fBBUGS AND NOTES\fP below for
+more information on this option. 
+.PP
+.TP
+.B --info
+Prints file comments found in .info files.  See \fB.INFO FILES\fP below
+for more information on the format of .info files.
+.PP
+.TP
+.B --infofile\fR[\fB=\fR]\fIfile\fP
+Use \fIfile\fP explicitly as a info file.
+.PP
+.TP
+.B --noreport
+Omits printing of the file and directory report at the end of the tree
+listing.
+.PP
+.TP
+.B --charset\fR[\fB=\fR]\fIcharset\fP
+Set the character set to use when outputting HTML and for line drawing.
+.PP
+.TP
+.B --filelimit\fR[\fB=\fR]\fI#\fP
+Do not descend directories that contain more than \fI#\fP entries.
+.PP
+.TP
+.B --timefmt\fR[\fB=\fR]\fIformat\fP
+Prints (implies -D) and formats the date according to the format string
+which uses the \fBstrftime\fP(3) syntax.
+.PP
+.TP
+.B -o \fIfilename\fP
+Send output to \fIfilename\fP.
+.PP
+
+.SH FILE OPTIONS
+
+.TP
+.B -q
+Print non-printable characters in filenames as question marks instead of the
+default.
+.PP
+.TP
+.B -N
+Print non-printable characters as is instead of as escaped octal numbers.
+.PP
+.TP
+.B -Q
+Quote the names of files in double quotes.
+.PP
+.TP
+.B -p
+Print the file type and permissions for each file (as per ls -l).
+.PP
+.TP
+.B -u
+Print the username, or UID # if no username is available, of the file.
+.PP
+.TP
+.B -g
+Print the group name, or GID # if no group name is available, of the file.
+.PP
+.TP
+.B -s
+Print the size of each file in bytes along with the name.
+.PP
+.TP
+.B -h
+Print the size of each file but in a more human readable way, e.g. appending a
+size letter for kilobytes (K), megabytes (M), gigabytes (G), terabytes (T),
+petabytes (P) and exabytes (E).
+.PP
+.TP
+.B --si
+Like \fB-h\fP but use SI units (powers of 1000) instead.
+.PP
+.TP
+.B --du
+For each directory report its size as the accumulation of sizes of all its files
+and sub-directories (and their files, and so on).  The total amount of used
+space is also given in the final report (like the 'du -c' command.) This option
+requires tree to read the entire directory tree before emitting it, see
+\fBBUGS AND NOTES\fP below.  Implies \fB-s\fP.
+.PP
+.TP
+.B -D
+Print the date of the last modification time or if \fB-c\fP is used, the last
+status change time for the file listed.
+.PP
+.TP
+.B -F
+Append a `/' for directories, a `=' for socket files, a `*' for executable
+files, a `>' for doors (Solaris) and a `|' for FIFO's, as per ls -F
+.PP
+.TP
+.B --inodes
+Prints the inode number of the file or directory
+.PP
+.TP
+.B --device
+Prints the device number to which the file or directory belongs
+.PP
+
+.SH SORTING OPTIONS
+
+.TP
+.B -v
+Sort the output by version.
+.PP
+.TP
+.B -t
+Sort the output by last modification time instead of alphabetically.
+.PP
+.TP
+.B -c
+Sort the output by last status change instead of alphabetically.  Modifies the
+\fB-D\fP option (if used) to print the last status change instead of
+modification time.
+.PP
+.TP
+.B -U
+Do not sort.  Lists files in directory order. Disables \fB--dirsfirst\fP.
+.PP
+.TP
+.B -r
+Sort the output in reverse order.  This is a meta-sort that alter the above sorts.
+This option is disabled when \fB-U\fP is used.
+.PP
+.TP
+.B --dirsfirst
+List directories before files. This is a meta-sort that alters the above sorts.
+This option is disabled when \fB-U\fP is used.
+.PP
+.TP
+.B --filesfirst
+List files before directories. This is a meta-sort that alters the above sorts.
+This option is disabled when \fB-U\fP is used.
+.PP
+.TP
+.B --sort\fR[\fB=\fR]\fItype\fR
+Sort the output by \fItype\fR instead of name. Possible values are:
+\fBctime\fR (\fB-c\fP),
+\fBmtime\fR (\fB-t\fB), \fBsize\fR, or \fBversion\fR (\fB-v\fB).
+
+.SH GRAPHICS OPTIONS
+
+.TP
+.B -i
+Makes tree not print the indentation lines, useful when used in conjunction
+with the \fB-f\fP option.  Also removes as much whitespace as possible when used
+with the \fB-J\fP or \fB-X\fP options.
+.PP
+.TP
+.B -A
+Turn on ANSI line graphics hack when printing the indentation lines.
+.PP
+.TP
+.B -S
+Turn on CP437 line graphics (useful when using Linux console mode fonts). This
+option is now equivalent to `\fB--charset=IBM437\fP' and may eventually be depreciated.
+.PP
+.TP
+.B -n
+Turn colorization off always, over-ridden by the \fB-C\fP option, however
+overrides CLICOLOR_FORCE if present.
+.PP
+.TP
+.B -C
+Turn colorization on always, using built-in color defaults if the LS_COLORS or
+TREE_COLORS environment variables are not set.  Useful to colorize output to a
+pipe.
+.PP
+
+.SH XML/JSON/HTML OPTIONS
+
+.TP
+.B -X
+Turn on XML output. Outputs the directory tree as an XML formatted file.
+.PP
+.TP
+.B -J
+Turn on JSON output. Outputs the directory tree as a JSON formatted array.
+.PP
+.TP
+.B -H \fIbaseHREF\fP
+Turn on HTML output, including HTTP references. Useful for ftp sites.
+\fIbaseHREF\fP gives the base ftp location when using HTML output. That is, the
+local directory may be `/local/ftp/pub', but it must be referenced as
+`ftp://hostname.organization.domain/pub' (\fIbaseHREF\fP should be
+`ftp://hostname.organization.domain'). Hint: don't use ANSI lines with this
+option, and don't give more than one directory in the directory list. If you
+wish to use colors via CSS style-sheet, use the -C option in addition to this
+option to force color output.
+.PP
+.TP
+.B --hintro\fR[\fB=\fR]\fIfile\fP
+Use \fIfile\fP as the HTML intro in place of the default one.  Use an empty
+file or \fI/dev/null\fP to eliminate the intro altogether.
+.PP
+.TP
+.B --houtro\fR[\fB=\fR]\fIfile\fP
+Use \fIfile\fP as the HTML outro in place of the default one.  Use an empty
+file or \fI/dev/null\fP to eliminate the outro altogether.
+.PP
+.TP
+.B -T \fItitle\fP
+Sets the title and H1 header string in HTML output mode.
+.PP
+.TP
+.B --nolinks
+Turns off hyperlinks in HTML output.
+.PP
+
+.SH INPUT OPTIONS
+
+.TP
+.B --fromfile
+Reads a directory listing from a file rather than the file-system.  Paths
+provided on the command line are files to read from rather than directories to
+search.  The dot (.) directory indicates that tree should read paths from
+standard input. NOTE: this is only suitable for reading the output of a program
+such as find, not 'tree -fi' as symlinks are not distinguished from files that
+simply contain ' -> ' as part of the filename unless the \fB--fflinks\fP option
+is used.
+.PP
+.TP
+.B --fromtabfile
+Like \fB--fromfile\fP, tree reads a directory tree from a text file where the
+files are tab indented in a tree like format to indicate the directory nesting
+level.
+.PP
+.TP
+.B --fflinks
+Processes symbolic link information found in a file, as from the output of
+\fB'tree -fi --noreport'\fP.  Only the first occurrence of the string \fB' -> '\fP
+is used to denote the separation of the filename from the link.
+.PP
+
+.SH MISC OPTIONS
+
+.TP
+.B --help
+Outputs a verbose usage listing.
+.PP
+.TP
+.B --version
+Outputs the version of tree.
+.PP
+.TP
+.B --
+Option processing terminator.  No further options will be processed after this.
+.PP
+
+.SH .INFO FILES
+
+\fB.info\fP files are similar to \.gitignore files, if a .info file is found
+while scanning a directory it is read and added to a stack of .info
+information. Each file is composed of comments (lines starting with hash marks
+(#),) or wild-card patterns which may match a file relative to the directory
+the \.info file is found in.  If a file should match a pattern, the tab indented
+comment that follows the pattern is used as the file comment.  A comment is
+terminated by a non-tab indented line. Multiple patterns, each to a line, may
+share the same comment.
+
+.br
+.SH FILES
+\fB/etc/DIR_COLORS\fP		System color database.
+.br
+\fB~/.dircolors\fP			Users color database.
+.br
+\fB.gitignore\fP			Git exclusion file
+.br
+\fB$GIT_DIR/info/exclude\fP	Global git file exclusion list
+.br
+\fB.info\fP				File comment file
+.br
+\fB/usr/share/finfo/global_info\fP	Global file comment file
+
+
+.SH ENVIRONMENT
+\fBLS_COLORS\fP		Color information created by dircolors
+.br
+\fBTREE_COLORS\fP	Uses this for color information over LS_COLORS if it is set.
+.br
+\fBTREE_CHARSET\fP	Character set for tree to use in HTML mode.
+.br
+\fBCLICOLOR\fP		Enables colorization even if TREE_COLORS or LS_COLORS is not set.
+.br
+\fBCLICOLOR_FORCE\fP	Always enables colorization (effectively -C)
+.br
+\fBNO_COLOR\fP		Disable colorization (effectively -n) (see \fBhttps://no-color.org/\fP)
+.br
+\fBLC_CTYPE\fP		Locale for filename output.
+.br
+\fBLC_TIME\fP		Locale for timefmt output, see \fBstrftime\fP(3).
+.br
+\fBTZ\fP			Timezone for timefmt output, see \fBstrftime\fP(3).
+.br
+\fBSTDDATA_FD\fP	Enable the stddata feature, optionally set descriptor to use.
+
+.SH AUTHOR
+Steve Baker (ice@mama.indstate.edu)
+.br
+HTML output hacked by Francesc Rocher (rocher@econ.udg.es)
+.br
+Charsets and OS/2 support by Kyosuke Tokoro (NBG01720@nifty.ne.jp)
+
+.SH BUGS AND NOTES
+Tree does not prune "empty" directories when the -P and -I options are used by
+default. Use the --prune option.
+
+The -h and --si options round to the nearest whole number unlike the ls
+implementations which rounds up always.
+
+Pruning files and directories with the -I, -P and --filelimit options will
+lead to incorrect file/directory count reports.
+
+The --prune and --du options cause tree to accumulate the entire tree in memory
+before emitting it. For large directory trees this can cause a significant delay
+in output and the use of large amounts of memory.
+
+The timefmt expansion buffer is limited to a ridiculously large 255 characters.
+Output of time strings longer than this will be undefined, but are guaranteed
+to not exceed 255 characters.
+
+XML/JSON trees are not colored, which is a bit of a shame.
+
+Probably more.
+
+As of version 2.0.0, in Linux, tree will attempt to automatically output a
+compact JSON tree on file descriptor 3 (what I call stddata,) if present and the
+environment variable STDDATA_FD is defined or set to a positive non-zero file
+descriptor value to use to output on.  It is hoped that some day a better
+Linux/Unix shell may take advantage of this feature, though BSON would probably
+be a better format for this.
+
+.SH SEE ALSO
+.BR dircolors (1),
+.BR ls (1),
+.BR find (1),
+.BR du (1),
+.BR strftime (3)
+.BR gitignore (5)

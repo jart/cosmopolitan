@@ -1,0 +1,19 @@
+DESCRIPTION
+
+  The tree command prints a chart of files and directories.
+
+ORIGIN
+
+  https://mama.indstate.edu/users/ice/tree/
+  https://github.com/Old-Man-Programmer/tree
+  84fa3ddff51b30835a0f9c4a9e4c9225970f9aff
+
+LICENSE
+
+  GPL v2+
+
+LOCAL MODIFICATIONS
+
+  - Make the default mode a colorful mode. You no longer need to define
+    the CLICOLOR enviroment variable or pass the -C flag to get color
+    when standard output is a terminal.
