@@ -920,6 +920,15 @@ static int pusherrstr(lua_State *L, char *str) {
     return 2;
 }
 
+static int db_readonly(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    const char *zDb = luaL_optstring(L, 2, "main");
+    int res = sqlite3_db_readonly(db->db, zDb);
+    if (res == -1) return pusherrstr(L, "unknown (not attached) database name");
+    lua_pushboolean(L, res);
+    return 1;
+}
+
 static int db_wal_checkpoint(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     int eMode = luaL_optinteger(L, 2, SQLITE_CHECKPOINT_PASSIVE);
@@ -2612,6 +2621,7 @@ static const struct {
 
 static const luaL_Reg dblib[] = {
     {"isopen",              db_isopen               },
+    {"readonly",            db_readonly             },
     {"last_insert_rowid",   db_last_insert_rowid    },
     {"changes",             db_changes              },
     {"total_changes",       db_total_changes        },
