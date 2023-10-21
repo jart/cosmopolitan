@@ -908,6 +908,12 @@ static int pusherr(lua_State *L, int rc) {
     return 2;
 }
 
+static int pusherrstr(lua_State *L, char *str) {
+    lua_pushnil(L);
+    lua_pushstring(L, str);
+    return 2;
+}
+
 static int db_wal_checkpoint(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     int eMode = luaL_optinteger(L, 2, SQLITE_CHECKPOINT_PASSIVE);
@@ -1748,16 +1754,15 @@ static int db_gc(lua_State *L) {
     return 0;
 }
 
+#ifdef SQLITE_ENABLE_DESERIALIZE
+
 static int db_serialize(lua_State *L) {
-    sdb *db = lsqlite_getdb(L, 1);
+    sdb *db = lsqlite_checkdb(L, 1);
     sqlite_int64 size = 0;
 
-    if (db->db == NULL) /* ignore closed databases */
-        return 0;
-    
     char *buffer = (char *)sqlite3_serialize(db->db, "main", &size, 0);
-    if (buffer == NULL) /* ignore failed database serialization */
-        return 0;
+    if (buffer == NULL)
+        return pusherrstr(L, "failed to serialize");
 
     lua_pushlstring(L, buffer, size);
     free(buffer);
@@ -1765,21 +1770,20 @@ static int db_serialize(lua_State *L) {
 }
 
 static int db_deserialize(lua_State *L) {
-    sdb *db = lsqlite_getdb(L, 1);
+    sdb *db = lsqlite_checkdb(L, 1);
     size_t size = 0;
 
-    if (db->db == NULL) /* ignore closed databases */
-        return 0;
-
     const char *buffer = luaL_checklstring(L, 2, &size);
-    if (buffer == NULL || size == 0) /* ignore empty database content */
-        return 0;
+    if (buffer == NULL || size == 0)
+        return pusherrstr(L, "failed to deserialize");
 
     const char *sqlbuf = memcpy(sqlite3_malloc(size), buffer, size);
     sqlite3_deserialize(db->db, "main", (void *)sqlbuf, size, size,
         SQLITE_DESERIALIZE_FREEONCLOSE + SQLITE_DESERIALIZE_RESIZEABLE);
     return 0;
 }
+
+#endif
 
 #ifdef SQLITE_ENABLE_SESSION
 
@@ -2634,9 +2638,6 @@ static const luaL_Reg dblib[] = {
     {"close",               db_close                },
     {"close_vm",            db_close_vm             },
 
-    {"serialize",           db_serialize            },
-    {"deserialize",         db_deserialize          },
-
 #ifdef SQLITE_ENABLE_SESSION
     {"create_session",      db_create_session       },
     {"create_rebaser",      db_create_rebaser       },
@@ -2644,6 +2645,11 @@ static const luaL_Reg dblib[] = {
     {"invert_changeset",    db_invert_changeset     },
     {"concat_changeset",    db_concat_changeset     },
     {"iterate_changeset",   db_iterate_changeset    },
+#endif
+
+#ifdef SQLITE_ENABLE_DESERIALIZE
+    {"serialize",           db_serialize            },
+    {"deserialize",         db_deserialize          },
 #endif
 
     {"__tostring",          db_tostring             },
