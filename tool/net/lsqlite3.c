@@ -234,6 +234,12 @@ static int dbvm_isopen(lua_State *L) {
     return 1;
 }
 
+static int dbvm_readonly(lua_State *L) {
+    sdb_vm *svm = lsqlite_checkvm(L, 1);
+    lua_pushboolean(L, sqlite3_stmt_readonly(svm->vm));
+    return 1;
+}
+
 static int dbvm_tostring(lua_State *L) {
     char buff[40];
     sdb_vm *svm = lsqlite_getvm(L, 1);
@@ -2660,6 +2666,7 @@ static const luaL_Reg dblib[] = {
 
 static const luaL_Reg vmlib[] = {
     {"isopen",              dbvm_isopen             },
+    {"readonly",            dbvm_readonly           },
 
     {"step",                dbvm_step               },
     {"reset",               dbvm_reset              },
