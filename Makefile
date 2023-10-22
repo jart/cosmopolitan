@@ -136,11 +136,13 @@ include third_party/puff/puff.mk		# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
 include libc/fmt/fmt.mk				# │
-include libc/vga/vga.mk				#─┘
+include libc/vga/vga.mk				# │
+include libc/irq/irq.mk				#─┘
 include libc/calls/calls.mk			#─┐
-include third_party/nsync/nsync.mk		# │
-include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
-include third_party/double-conversion/dc.mk	# │  You can issue system calls
+include libc/irq/irq.mk				# ├──SYSTEMS RUNTIME
+include third_party/nsync/nsync.mk		# │  You can issue system calls
+include libc/runtime/runtime.mk			# │
+include third_party/double-conversion/dc.mk	# │
 include libc/crt/crt.mk				# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
@@ -340,6 +342,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_RUNTIME			\
 	THIRD_PARTY_NSYNC		\
 	LIBC_ELF			\
+	LIBC_IRQ			\
 	LIBC_CALLS			\
 	LIBC_SYSV_CALLS			\
 	LIBC_VGA			\
