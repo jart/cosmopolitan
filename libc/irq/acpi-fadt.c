@@ -24,80 +24,57 @@
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/newbie.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/mman.internal.h"
-#include "libc/str/str.h"
-#include "libc/vga/vga.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/irq/acpi.internal.h"
 
 #ifdef __x86_64__
 
-/*
- * @fileoverview Instantiation of routines for emergency console output in
- * graphical video modes.
- *
- * @see libc/vga/tty-graph.inc
- */
+textstartup static void _AcpiDsdtInit(uintptr_t dsdt_phy) {
+  const AcpiTableDsdt *dsdt;
+  size_t length;
+  if (!dsdt_phy) {
+    KWARNF("FADT: no DSDT");
+    return;
+  }
+  dsdt = _AcpiMapTable(dsdt_phy);
+  KINFOF("FADT: DSDT @ %p", dsdt);
+  length = dsdt->Header.Length;
+  if (length <= offsetof(AcpiTableDsdt, Aml)) {
+    KWARNF("DSDT: no AML?");
+    return;
+  }
+  /* TODO: parse AML to discover hardware configuration */
+}
 
-#ifndef __llvm__
-#pragma GCC optimize("s")
-#endif
-
-#define KLOGTTY
-#define MAYUNROLLLOOPS /* do not unroll loops; keep the code small! */
-
-/* Instantiate output routines for 16-bit pixel formats. */
-#define COLOR          uint16_t
-#define BPP            16
-#define MAPCOLOR       TtyKlog16MapColor
-#define DIRTY          TtyKlog16Dirty
-#define UPDATE         _TtyKlog16Update
-#define RESETDIRTY     TtyKlog16ResetDirty
-#define DRAWBITMAP     TtyKlog16DrawBitmap
-#define FILLRECT       TtyKlog16FillRect
-#define MOVERECT       TtyKlog16MoveRect
-#define DRAWCHAR       _TtyKlog16DrawChar
-#define ERASELINECELLS _TtyKlog16EraseLineCells
-#define MOVELINECELLS  _TtyKlog16MoveLineCells
-#include "libc/vga/tty-graph.inc"
-
-#undef COLOR
-#undef BPP
-#undef MAPCOLOR
-#undef BG
-#undef DIRTY
-#undef UPDATE
-#undef RESETDIRTY
-#undef DRAWBITMAP
-#undef FILLRECT
-#undef MOVERECT
-#undef DRAWCHAR
-#undef ERASELINECELLS
-#undef MOVELINECELLS
-
-/* Instantiate output routines for 32-bit pixel formats. */
-#define COLOR          uint32_t
-#define BPP            32
-#define MAPCOLOR       TtyKlog32MapColor
-#define DIRTY          TtyKlog32Dirty
-#define UPDATE         _TtyKlog32Update
-#define RESETDIRTY     TtyKlog32ResetDirty
-#define DRAWBITMAP     TtyKlog32DrawBitmap
-#define FILLRECT       TtyKlog32FillRect
-#define MOVERECT       TtyKlog32MoveRect
-#define DRAWCHAR       _TtyKlog32DrawChar
-#define ERASELINECELLS _TtyKlog32EraseLineCells
-#define MOVELINECELLS  _TtyKlog32MoveLineCells
-#include "libc/vga/tty-graph.inc"
-
-static unsigned short klog_y = 0, klog_x = 0;
-
-void _klog_vga(const char *b, size_t n) {
-  struct Tty tty;
-  _vga_reinit(&tty, klog_y, klog_x, kTtyKlog);
-  _TtyWrite(&tty, b, n);
-  klog_y = _TtyGetY(&tty);
-  klog_x = _TtyGetX(&tty);
+textstartup void _AcpiFadtInit(void) {
+  if (IsMetal()) {
+    const AcpiTableFadt *fadt;
+    size_t length;
+    uint16_t flags;
+    uintptr_t dsdt_phy = 0;
+    if (!_AcpiSuccess(_AcpiGetTable("FACP", 0, (void **)&fadt))) {
+      KINFOF("no FADT found");
+      return;
+    }
+    length = fadt->Header.Length;
+    KINFOF("FADT @ %p,+%#zx", fadt, length);
+    _Static_assert(offsetof(AcpiTableFadt, Dsdt) == 40);
+    _Static_assert(offsetof(AcpiTableFadt, BootFlags) == 109);
+    _Static_assert(offsetof(AcpiTableFadt, XDsdt) == 140);
+    if (length >= offsetof(AcpiTableFadt, BootFlags) + sizeof(fadt->BootFlags))
+    {
+      _AcpiBootFlags = flags = fadt->BootFlags;
+      KINFOF("FADT: boot flags %#x", (unsigned)flags);
+    }
+    if (length >= offsetof(AcpiTableFadt, XDsdt) + sizeof(fadt->XDsdt) &&
+        fadt->XDsdt) {
+      dsdt_phy = fadt->XDsdt;
+    } else if (length >= offsetof(AcpiTableFadt, Dsdt) + sizeof(fadt->Dsdt)) {
+      dsdt_phy = fadt->Dsdt;
+    }
+    _AcpiDsdtInit(dsdt_phy);
+  }
 }
 
 #endif /* __x86_64__ */

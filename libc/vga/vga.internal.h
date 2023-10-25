@@ -255,8 +255,7 @@ void _TtyGraphMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
                             size_t);
 
 /*
- * Routines that implement emergency or system console output in graphical
- * video modes.
+ * Routines that implement emergency console output in graphical video modes.
  */
 void _TtyKlog16Update(struct Tty *);
 void _TtyKlog16DrawChar(struct Tty *, size_t, size_t, wchar_t);

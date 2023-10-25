@@ -25,7 +25,10 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/pc.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"
 
@@ -71,5 +74,48 @@ textstartup void _vga_init(void) {
     _vga_reinit(&_vga_tty, starty, startx, 0);
   }
 }
+
+#if !IsTiny()
+/**
+ * Non-emergency console vprintf(), useful for dumping debugging or
+ * informational messages at program startup.
+ *
+ * @see uprintf()
+ */
+void uvprintf(const char *fmt, va_list v) {
+  if (!IsMetal()) {
+    kvprintf(fmt, v);
+  } else {
+    long size = __get_safe_size(8000, 3000);
+    char *buf = alloca(size);
+    CheckLargeStackAllocation(buf, size);
+    size_t count = kvsnprintf(buf, size, fmt, v);
+    if (count >= size) count = size - 1;
+    _TtyWrite(&_vga_tty, buf, count);
+    _klog_serial(buf, count);
+  }
+}
+
+/**
+ * Non-emergency console printf(), useful for dumping debugging or
+ * informational messages at program startup.
+ *
+ * uprintf() is similar to kprintf(), but on bare metal with VGA support, it
+ * uses the normal, fast graphical console, rather than initializing an
+ * emergency console.  This makes uprintf() faster — on bare metal — at the
+ * expense of being less crash-proof.
+ *
+ * (The uprintf() function name comes from the FreeBSD kernel.)
+ *
+ * @see kprintf()
+ * @see https://man.freebsd.org/cgi/man.cgi?query=uprintf&sektion=9&n=1
+ */
+void uprintf(const char *fmt, ...) {
+  va_list v;
+  va_start(v, fmt);
+  uvprintf(fmt, v);
+  va_end(v);
+}
+#endif /* !IsTiny() */
 
 #endif /* __x86_64__ */

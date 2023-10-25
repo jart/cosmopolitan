@@ -39,9 +39,12 @@ struct mman {
   struct {                               /* 0x1d48 — starting cursor pos. */
     unsigned short y, x;
   } pc_video_curs_info;
-  unsigned short pc_video_char_height; /* 0x1d4c — character height (useful
-                                                   for setting cursor shape
-                                                   in text mode) */
+  unsigned short pc_video_char_height;   /* 0x1d4c — character height (useful
+                                                     for setting cursor shape
+                                                     in text mode) */
+  uint64_t pc_acpi_rsdp;                 /* 0x1d50 — pointer to ACPI RSDP;
+                                                     NULL means to search for
+                                                     it in legacy BIOS areas */
 };
 
 COSMOPOLITAN_C_END_

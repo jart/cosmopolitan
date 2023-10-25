@@ -728,6 +728,8 @@ void abort(void) wontreturn;
 #endif
 
 #define __weak_reference(sym, alias)       \
+  __weak_reference_impl(sym, alias)
+#define __weak_reference_impl(sym, alias)  \
   __asm__(".weak\t" #alias "\n\t"          \
           ".equ\t" #alias ", " #sym "\n\t" \
           ".type\t" #alias ",@notype")

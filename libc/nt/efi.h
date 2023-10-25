@@ -103,6 +103,18 @@
       0x96, 0xFB, 0x7A, 0xDE, 0xD0, 0x80, 0x51, 0x6A \
     }                                                \
   }
+#define ACPI_20_TABLE_GUID                           \
+  {                                                  \
+    0x8868E871, 0xE4F1, 0x11D3, {                    \
+      0xBC, 0x22, 0x00, 0x80, 0xC7, 0x3C, 0x88, 0x81 \
+    }                                                \
+  }
+#define ACPI_10_TABLE_GUID                           \
+  {                                                  \
+    0xEB9D2D30, 0x2D88, 0x11D3, {                    \
+      0x9A, 0x16, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D \
+    }                                                \
+  }
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

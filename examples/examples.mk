@@ -46,6 +46,7 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_DNS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\
+	LIBC_IRQ								\
 	LIBC_LOG								\
 	LIBC_MEM								\
 	LIBC_NEXGEN32E								\
