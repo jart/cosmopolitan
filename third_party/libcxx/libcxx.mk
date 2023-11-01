@@ -111,6 +111,7 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/regex				\
 	third_party/libcxx/scoped_allocator			\
 	third_party/libcxx/set					\
+	third_party/libcxx/shared_mutex				\
 	third_party/libcxx/span					\
 	third_party/libcxx/sstream				\
 	third_party/libcxx/stack				\
@@ -163,6 +164,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/optional.cc				\
 	third_party/libcxx/random.cc				\
 	third_party/libcxx/regex.cc				\
+	third_party/libcxx/shared_mutex.cc			\
 	third_party/libcxx/stdexcept.cc				\
 	third_party/libcxx/string.cc				\
 	third_party/libcxx/strstream.cc				\
