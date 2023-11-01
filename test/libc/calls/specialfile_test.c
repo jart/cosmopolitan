@@ -46,7 +46,8 @@ void RestoreStdout(void) {
 
 TEST(specialfile, devNull) {
   ASSERT_SYS(0, 3, creat("/dev/null", 0644));
-  ASSERT_EQ(O_WRONLY, fcntl(3, F_GETFL) & ~O_LARGEFILE);
+  // qemu-aarch64 defines o_largefile wrong
+  ASSERT_EQ(O_WRONLY, fcntl(3, F_GETFL) & ~(O_LARGEFILE | 0x00008000));
   ASSERT_SYS(0, 2, write(3, "hi", 2));
   ASSERT_SYS(0, 2, pwrite(3, "hi", 2, 0));
   ASSERT_SYS(0, 2, pwrite(3, "hi", 2, 2));
@@ -63,7 +64,8 @@ TEST(specialfile, devNull) {
 TEST(specialfile, devNullRead) {
   char buf[8] = {0};
   ASSERT_SYS(0, 3, open("/dev/null", O_RDONLY));
-  ASSERT_EQ(O_RDONLY, fcntl(3, F_GETFL) & ~O_LARGEFILE);
+  // qemu-aarch64 defines o_largefile wrong
+  ASSERT_EQ(O_RDONLY, fcntl(3, F_GETFL) & ~(O_LARGEFILE | 0x00008000));
   ASSERT_SYS(0, 0, read(3, buf, 8));
   ASSERT_SYS(0, 0, close(3));
 }
