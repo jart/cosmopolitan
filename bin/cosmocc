@@ -227,8 +227,7 @@ for x; do
     continue
   fi
   if [ x"$x" = x"-" ] ||           # is an argument
-     [ x"$x" = x"${x#-*}" ] ||     # !startswith(x, "-")
-     [ x"$x" = x"-Wl,--version" ]; then
+     [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
     GOT_SOME=1
   elif [ x"$x" = x"-static-libstdc++" ]; then
     continue
@@ -294,6 +293,8 @@ for x; do
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     exit 0
+  elif [ x"$x" = x"-Wl,--version" ]; then
+    GOT_SOME=1
   fi
   set -- "$@" "$x"
 done
