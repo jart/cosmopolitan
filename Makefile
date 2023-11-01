@@ -85,7 +85,7 @@ endif
 ifeq ($(TOOLCHAIN),)                                                # if TOOLCHAIN isn't defined
 ifeq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")  # if our gcc isn't unbundled
 ifneq ($(UNAME_M)-$(UNAME_S), x86_64-Linux)                         # if this is not amd64 linux
-$(error you need to download https://justine.lol/cosmocc-0.0.14.zip and unzip it inside the cosmo directory)
+$(error you need to download https://justine.lol/cosmocc-0.0.16.zip and unzip it inside the cosmo directory)
 endif
 endif
 endif
