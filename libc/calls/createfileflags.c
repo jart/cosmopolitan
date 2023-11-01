@@ -91,11 +91,9 @@ textwindows int GetNtOpenFlags(int flags, int mode, uint32_t *out_perm,
 
   // Be as generous as possible in sharing file access. Not doing this
   // you'll quickly find yourself no longer able to administer Windows
-  if (flags & _O_EXCL) {
-    share = kNtFileShareExclusive;
-  } else {
-    share = kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete;
-  }
+  // and we need this to be the case even in O_EXCL mode otherwise the
+  // shm_open_test.c won't behave consistently on Windows like on UNIX
+  share = kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete;
 
   // These POSIX to WIN32 mappings are relatively straightforward.
   if (flags & _O_EXCL) {

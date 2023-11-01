@@ -46,7 +46,7 @@ void IgnoreStderr(void) {
 
 const char *SemPath(const char *name) {
   static _Thread_local char buf[PATH_MAX];
-  return sem_path_np(name, buf, sizeof(buf));
+  return shm_path_np(name, buf, sizeof(buf));
 }
 
 void SetUp(void) {

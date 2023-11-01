@@ -38,7 +38,6 @@ int sem_getvalue(sem_t *, int *);
 sem_t *sem_open(const char *, int, ...);
 int sem_close(sem_t *);
 int sem_unlink(const char *);
-const char *sem_path_np(const char *, char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

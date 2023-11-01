@@ -171,9 +171,8 @@ static struct Semaphore *sem_open_get(const sem_t *sem,
 sem_t *sem_open(const char *name, int oflag, ...) {
   sem_t *sem;
   va_list va;
-  const char *path;
+  char path[78];
   struct Semaphore *s;
-  char pathbuf[PATH_MAX];
   unsigned mode = 0, value = 0;
 
   va_start(va, oflag);
@@ -206,9 +205,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
       return SEM_FAILED;
     }
   }
-  if (!(path = sem_path_np(name, pathbuf, sizeof(pathbuf)))) {
-    return SEM_FAILED;
-  }
+  shm_path_np(name, path);
   BLOCK_CANCELATION;
   sem_open_init();
   sem_open_lock();
@@ -321,10 +318,9 @@ int sem_close(sem_t *sem) {
  * @raise ENAMETOOLONG if too long
  */
 int sem_unlink(const char *name) {
-  const char *path;
+  char path[78];
   int rc, e = errno;
   struct Semaphore *s;
-  char pathbuf[PATH_MAX];
 
 #if 0
   if (IsXnuSilicon()) {
@@ -332,7 +328,7 @@ int sem_unlink(const char *name) {
   }
 #endif
 
-  if (!(path = sem_path_np(name, pathbuf, sizeof(pathbuf)))) return -1;
+  shm_path_np(name, path);
   if ((rc = unlink(path)) == -1 && IsWindows() && errno == EACCES) {
     sem_open_init();
     sem_open_lock();
