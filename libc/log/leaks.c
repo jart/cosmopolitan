@@ -20,6 +20,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/mem/mem.h"
@@ -94,6 +95,7 @@ dontasan void CheckForMemoryLeaks(void) {
     exit(0);
   }
   _pthread_unwind(_pthread_self());
+  __cxa_thread_finalize();
   _pthread_unkey(__get_tls());
   _pthread_ungarbage();
   __cxa_finalize(0);

@@ -20,6 +20,7 @@
 #include "libc/atomic.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -110,6 +111,9 @@ wontreturn void pthread_exit(void *rc) {
 
   // free resources
   _pthread_unwind(pt);
+  if (_weaken(__cxa_thread_finalize)) {
+    _weaken(__cxa_thread_finalize)();
+  }
   _pthread_unkey(tib);
   _pthread_ungarbage();
   _pthread_decimate();
