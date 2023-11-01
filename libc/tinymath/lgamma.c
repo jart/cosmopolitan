@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/tinymath/kernel.internal.h"
 
 /**
  * Returns natural logarithm of absolute value of gamma function.
@@ -25,3 +24,7 @@
 double lgamma(double x) {
   return lgamma_r(x, &signgam);
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(lgamma, lgammal);
+#endif

@@ -319,3 +319,7 @@ double lgamma_r(double x, int *signgamp)
 		r = nadj - r;
 	return r;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(lgamma_r, lgammal_r);
+#endif

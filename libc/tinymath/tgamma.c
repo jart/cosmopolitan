@@ -208,3 +208,7 @@ double tgamma(double x)
 	y = r * z * z;
 	return y;
 }
+
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
+__weak_reference(tgamma, tgammal);
+#endif
