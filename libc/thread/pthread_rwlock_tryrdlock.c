@@ -16,18 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/nexgen32e/yield.h"
-#include "libc/thread/posixthread.internal.h"
+#include "libc/errno.h"
+#include "libc/thread/thread.h"
+#include "third_party/nsync/mu.h"
 
-intptr_t _pthread_syshand(struct PosixThread *pt) {
-  intptr_t syshand;
-  unassert(IsWindows() || IsXnuSilicon());
-  for (;;) {
-    syshand = atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
-    if (syshand) return syshand;
-    spin_yield();
+/**
+ * Attempts acquiring read lock on read-write lock.
+ *
+ * @return 0 if lock was acquired, otherwise an errno
+ * @raise EBUSY if lock is currently held in write mode
+ * @raise EAGAIN if maximum number of read locks are held
+ * @raise EINVAL if `rwlock` doesn't refer to an initialized r/w lock
+ */
+errno_t pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock) {
+  if (nsync_mu_rtrylock((nsync_mu *)rwlock)) {
+    return 0;
+  } else {
+    return EBUSY;
   }
 }

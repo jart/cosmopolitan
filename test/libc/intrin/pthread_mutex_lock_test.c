@@ -43,6 +43,8 @@
 #define THREADS    8
 #define ITERATIONS 512
 
+#define MAX_RECURSIVE_LOCKS 64
+
 int count;
 atomic_int started;
 atomic_int finished;
@@ -79,11 +81,18 @@ TEST(pthread_mutex_lock, recursive) {
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
-  ASSERT_EQ(0, pthread_mutex_lock(&lock));
-  ASSERT_EQ(0, pthread_mutex_lock(&lock));
-  ASSERT_EQ(0, pthread_mutex_trylock(&lock));
-  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
-  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
+  for (int i = 0; i < MAX_RECURSIVE_LOCKS; ++i) {
+    if (i & 1) {
+      ASSERT_EQ(0, pthread_mutex_lock(&lock));
+    } else {
+      ASSERT_EQ(0, pthread_mutex_trylock(&lock));
+    }
+  }
+  ASSERT_EQ(EAGAIN, pthread_mutex_lock(&lock));
+  ASSERT_EQ(EAGAIN, pthread_mutex_trylock(&lock));
+  for (int i = 0; i < MAX_RECURSIVE_LOCKS; ++i) {
+    ASSERT_EQ(0, pthread_mutex_unlock(&lock));
+  }
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
@@ -99,7 +108,7 @@ TEST(pthread_mutex_lock, errorcheck) {
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(EDEADLK, pthread_mutex_lock(&lock));
-  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&lock));
+  ASSERT_EQ(EDEADLK, pthread_mutex_trylock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
 }

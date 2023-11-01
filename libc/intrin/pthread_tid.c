@@ -17,12 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
+#include "libc/nexgen32e/yield.h"
 #include "libc/thread/posixthread.internal.h"
 
 int _pthread_tid(struct PosixThread *pt) {
   int tid = 0;
   while (pt && !(tid = atomic_load_explicit(&pt->ptid, memory_order_acquire))) {
-    pthread_yield();
+    spin_yield();
   }
   return tid;
 }

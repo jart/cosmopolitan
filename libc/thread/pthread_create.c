@@ -57,6 +57,7 @@
 
 __static_yoink("nsync_mu_lock");
 __static_yoink("nsync_mu_unlock");
+__static_yoink("nsync_mu_trylock");
 __static_yoink("nsync_mu_rlock");
 __static_yoink("nsync_mu_runlock");
 __static_yoink("_pthread_atfork");

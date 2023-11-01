@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -19,27 +19,29 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/internal.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
 
 /**
- * Locks mutex if it isn't locked already.
+ * Attempts acquiring lock.
  *
  * Unlike pthread_mutex_lock() this function won't block and instead
  * returns an error immediately if the lock couldn't be acquired.
  *
- * @return 0 on success, or errno on error
- * @raise EBUSY if lock is already held
- * @raise ENOTRECOVERABLE if `mutex` is corrupted
+ * @return 0 if lock was acquired, otherwise an errno
+ * @raise EAGAIN if maximum number of recursive locks is held
+ * @raise EBUSY if lock is currently held in read or write mode
+ * @raise EINVAL if `mutex` doesn't refer to an initialized lock
+ * @raise EDEADLK if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the
+ *     current thread already holds this mutex
  */
 errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
   int t;
 
-  if (__tls_enabled &&                               //
-      mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
+  // delegate to *NSYNC if possible
+  if (mutex->_type == PTHREAD_MUTEX_NORMAL &&
       mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
       _weaken(nsync_mu_trylock)) {
     if (_weaken(nsync_mu_trylock)((nsync_mu *)mutex)) {
@@ -49,6 +51,7 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
     }
   }
 
+  // handle normal mutexes
   if (mutex->_type == PTHREAD_MUTEX_NORMAL) {
     if (!atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
       return 0;
@@ -57,6 +60,7 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
     }
   }
 
+  // handle recursive and error check mutexes
   t = gettid();
   if (mutex->_owner == t) {
     if (mutex->_type != PTHREAD_MUTEX_ERRORCHECK) {
@@ -67,15 +71,17 @@ errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
         return EAGAIN;
       }
     } else {
-      return EBUSY;
+      return EDEADLK;
     }
   }
 
-  if (!atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
-    mutex->_depth = 0;
-    mutex->_owner = t;
-    return 0;
-  } else {
+  if (atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
     return EBUSY;
   }
+
+  mutex->_depth = 0;
+  mutex->_owner = t;
+  mutex->_pid = __pid;
+
+  return 0;
 }

@@ -34,7 +34,7 @@
  * @raises EPERM if in error check mode and not owned by caller
  * @vforksafe
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+errno_t pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int t;
 
   LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
