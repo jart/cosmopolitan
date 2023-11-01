@@ -16,15 +16,54 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
+#include "libc/str/str.h"
 
 /**
- * Returns true if executable image is supported by APE Loader.
+ * Joins paths, e.g.
+ *
+ *     0    + 0    → 0
+ *     ""   + ""   → ""
+ *     "a"  + 0    → "a"
+ *     "a"  + ""   → "a/"
+ *     0    + "b"  → "b"
+ *     ""   + "b"  → "b"
+ *     "."  + "b"  → "./b"
+ *     "b"  + "."  → "b/."
+ *     "a"  + "b"  → "a/b"
+ *     "a/" + "b"  → "a/b"
+ *     "a"  + "b/" → "a/b/"
+ *     "a"  + "/b" → "/b"
+ *
+ * @return joined path, which may be `buf`, `path`, or `other`, or null
+ *     if (1) `buf` didn't have enough space, or (2) both `path` and
+ *     `other` were null
  */
-bool IsApeLoadable(char buf[8]) {
-  return READ32LE(buf) == READ32LE("\177ELF") ||
-         READ64LE(buf) == READ64LE("MZqFpD='") ||
-         READ64LE(buf) == READ64LE("jartsr='") ||
-         READ64LE(buf) == READ64LE("APEDBG='");
+char *__join_paths(char *buf, size_t size, const char *path,
+                   const char *other) {
+  size_t pathlen, otherlen;
+  if (!other) return (char *)path;
+  if (!path) return (char *)other;
+  pathlen = strlen(path);
+  if (!pathlen || *other == '/') {
+    return (/*unconst*/ char *)other;
+  }
+  otherlen = strlen(other);
+  if (path[pathlen - 1] == '/') {
+    if (pathlen + otherlen + 1 <= size) {
+      memmove(buf, path, pathlen);
+      memmove(buf + pathlen, other, otherlen + 1);
+      return buf;
+    } else {
+      return 0;
+    }
+  } else {
+    if (pathlen + 1 + otherlen + 1 <= size) {
+      memmove(buf, path, pathlen);
+      buf[pathlen] = '/';
+      memmove(buf + pathlen + 1, other, otherlen + 1);
+      return buf;
+    } else {
+      return 0;
+    }
+  }
 }

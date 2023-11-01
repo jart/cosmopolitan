@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -37,13 +38,12 @@
  * @raise EBADF on OpenBSD if `first` is greater than highest fd
  * @raise EINVAL if flags are bad or first is greater than last
  * @raise EMFILE if a weird race condition happens on Linux
- * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR possibly on OpenBSD
  * @raise ENOMEM on Linux maybe
  */
 int closefrom(int first) {
-  int rc, err;
-  (void)err;
+  int rc;
+  BLOCK_CANCELATION;
   if (first < 0) {
     // consistent with openbsd
     // freebsd allows this but it's dangerous
@@ -58,6 +58,7 @@ int closefrom(int first) {
   } else {
     rc = enosys();
   }
+  ALLOW_CANCELATION;
   STRACE("closefrom(%d) → %d% m", first, rc);
   return rc;
 }

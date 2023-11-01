@@ -188,56 +188,6 @@ static int unveil_init(void) {
   return 0;
 }
 
-/**
- * Joins paths, e.g.
- *
- *     0    + 0    → 0
- *     ""   + ""   → ""
- *     "a"  + 0    → "a"
- *     "a"  + ""   → "a/"
- *     0    + "b"  → "b"
- *     ""   + "b"  → "b"
- *     "."  + "b"  → "./b"
- *     "b"  + "."  → "b/."
- *     "a"  + "b"  → "a/b"
- *     "a/" + "b"  → "a/b"
- *     "a"  + "b/" → "a/b/"
- *     "a"  + "/b" → "/b"
- *
- * @return joined path, which may be `buf`, `path`, or `other`, or null
- *     if (1) `buf` didn't have enough space, or (2) both `path` and
- *     `other` were null
- */
-static char *JoinPaths(char *buf, size_t size, const char *path,
-                       const char *other) {
-  size_t pathlen, otherlen;
-  if (!other) return (char *)path;
-  if (!path) return (char *)other;
-  pathlen = strlen(path);
-  if (!pathlen || *other == '/') {
-    return (/*unconst*/ char *)other;
-  }
-  otherlen = strlen(other);
-  if (path[pathlen - 1] == '/') {
-    if (pathlen + otherlen + 1 <= size) {
-      memmove(buf, path, pathlen);
-      memmove(buf + pathlen, other, otherlen + 1);
-      return buf;
-    } else {
-      return 0;
-    }
-  } else {
-    if (pathlen + 1 + otherlen + 1 <= size) {
-      memmove(buf, path, pathlen);
-      buf[pathlen] = '/';
-      memmove(buf + pathlen + 1, other, otherlen + 1);
-      return buf;
-    } else {
-      return 0;
-    }
-  }
-}
-
 int sys_unveil_linux(const char *path, const char *permissions) {
 #pragma GCC push_options
 #pragma GCC diagnostic ignored "-Wframe-larger-than="
@@ -302,7 +252,7 @@ int sys_unveil_linux(const char *path, const char *permissions) {
         // next = join(dirname(next), link)
         strcpy(b.buf2, next);
         dir = dirname(b.buf2);
-        if ((next = JoinPaths(b.buf3, PATH_MAX, dir, b.lbuf))) {
+        if ((next = __join_paths(b.buf3, PATH_MAX, dir, b.lbuf))) {
           // next now points to either: buf3, buf2, lbuf, rodata
           strcpy(b.buf4, next);
           next = b.buf4;

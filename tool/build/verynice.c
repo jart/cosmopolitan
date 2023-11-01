@@ -17,14 +17,45 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "third_party/getopt/getopt.internal.h"
 
 /**
- * Returns true if executable image is supported by APE Loader.
+ * @fileoverview `verynice foo` launches `foo` as low priority as possible
+ *
+ * This is particularly useful on Linux systems with a spinning disk
+ * where the classic `nice` command doesn't do much.
  */
-bool IsApeLoadable(char buf[8]) {
-  return READ32LE(buf) == READ32LE("\177ELF") ||
-         READ64LE(buf) == READ64LE("MZqFpD='") ||
-         READ64LE(buf) == READ64LE("jartsr='") ||
-         READ64LE(buf) == READ64LE("APEDBG='");
+
+const char *prog;
+
+static wontreturn void PrintUsage(int rc, int fd) {
+  tinyprint(fd, "Usage: ", prog, " COMMAND...\n", NULL);
+  exit(rc);
+}
+
+int main(int argc, char *argv[]) {
+
+  prog = argv[0];
+  if (!prog) prog = "verynice";
+
+  int opt;
+  while ((opt = getopt(argc, argv, "h")) != -1) {
+    switch (opt) {
+      case 'h':
+        PrintUsage(0, 1);
+      default:
+        PrintUsage(1, 2);
+    }
+  }
+  if (optind == argc) {
+    tinyprint(2, prog, ": missing command\n", NULL);
+    exit(1);
+  }
+
+  verynice();
+  execvp(argv[optind], argv + optind);
+  perror(argv[optind]);
+  exit(127);
 }

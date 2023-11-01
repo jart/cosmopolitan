@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/pledge.h"
-#include "libc/assert.h"
+#include "ape/ape.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/pledge.internal.h"
@@ -26,6 +26,7 @@
 #include "libc/calls/struct/seccomp.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
@@ -35,6 +36,7 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
@@ -42,13 +44,14 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/mem/gc.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/mem/alloca.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ioprio.h"
 #include "libc/sysv/consts/map.h"
@@ -75,7 +78,7 @@ __static_yoink("zipos");
 
 #define USAGE \
   "\
-usage: pledge.com [-hnN] PROG ARGS...\n\
+usage: pledge [-hnN] PROG ARGS...\n\
   -h              show help\n\
   -g GID          call setgid()\n\
   -u UID          call setuid()\n\
@@ -116,7 +119,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
      - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
-pledge.com v1.8\n\
+Cosompolitan Pledge v1.9\n\
 copyright 2022 justine alexandra roberts tunney\n\
 notice licenses are embedded in the binary\n\
 https://twitter.com/justinetunney\n\
@@ -130,13 +133,27 @@ the https://justine.lol/pledge/ page for online documentation.\n\
 \n\
 "
 
+#ifdef __x86_64__
+#define ARCH_NAME "x86_64"
+#elif defined(__aarch64__)
+#define ARCH_NAME "aarch64"
+#else
+#error "unsupported architecture"
+#endif
+
+enum Strategy {
+  kStrategyNull,
+  kStrategyStatic,
+  kStrategyDynamic,
+  kStrategyApe,
+};
+
 int g_gflag;
 int g_uflag;
 int g_kflag;
 int g_hflag;
 bool g_nice;
 bool g_qflag;
-bool isdynamic;
 bool g_noclose;
 long g_cpuquota;
 long g_fszquota;
@@ -147,19 +164,60 @@ long g_dontdrop;
 long g_dontunveil;
 const char *g_test;
 const char *g_chroot;
-const char *g_promises;
+char pledgevar[64];
+char g_promises[256];
 char dsopath[PATH_MAX];
 char tmppath[PATH_MAX];
+char preloadvar[PATH_MAX];
 
 struct {
   int n;
-  char **p;
+  char *p[10000];
 } unveils;
 
-static void GetOpts(int argc, char *argv[]) {
+unsigned long HasPromise(unsigned long ipromises, int promise) {
+  return ~ipromises & (1ul << promise);
+}
+
+long Atoi(const char *s) {
+  long i;
+  char *ep;
+  errno = 0;
+  i = strtol(s, &ep, 0);
+  if (*ep || errno) {
+    tinyprint(2, program_invocation_name, ": invalid integer: ", s, "\n", NULL);
+    exit(1);
+  }
+  return i;
+}
+
+long ParseSiSize(const char *s, long b) {
+  long i;
+  errno = 0;
+  i = sizetol(s, b);
+  if (errno) {
+    tinyprint(2, program_invocation_name, ": invalid size: ", s, "\n", NULL);
+    exit(1);
+  }
+  return i;
+}
+
+void AddPromise(const char *s) {
+  while (isspace(*s)) ++s;
+  if (!*s) return;
+  if (*g_promises) {
+    strlcat(g_promises, " ", sizeof(g_promises));
+  }
+  if (strlcat(g_promises, s, sizeof(g_promises)) >= sizeof(g_promises)) {
+    tinyprint(2, program_invocation_name, ": too many promises\n", NULL);
+    exit(1);
+  }
+}
+
+void GetOpts(int argc, char *argv[]) {
   int opt;
   struct sysinfo si;
-  g_promises = 0;
+  bool got_promise_flag = false;
   g_nfdquota = 64;
   g_fszquota = 256 * 1000 * 1000;
   if (!sysinfo(&si)) {
@@ -196,46 +254,36 @@ static void GetOpts(int argc, char *argv[]) {
         g_chroot = optarg;
         break;
       case 'g':
-        g_gflag = atoi(optarg);
+        g_gflag = Atoi(optarg);
         break;
       case 'u':
-        g_uflag = atoi(optarg);
+        g_uflag = Atoi(optarg);
         break;
       case 'C':
-        g_cpuquota = atoi(optarg);
+        g_cpuquota = Atoi(optarg);
         break;
       case 'P':
-        g_proquota = atoi(optarg);
+        g_proquota = Atoi(optarg);
         break;
       case 'O':
-        g_nfdquota = atoi(optarg);
+        g_nfdquota = Atoi(optarg);
         break;
       case 'F':
-        errno = 0;
-        g_fszquota = sizetol(optarg, 1000);
-        if (errno) {
-          kprintf("error: invalid size: -F %s\n", optarg);
-          exit(1);
-        }
+        g_fszquota = ParseSiSize(optarg, 1024);
         break;
       case 'M':
-        errno = 0;
-        g_memquota = sizetol(optarg, 1024);
-        if (errno) {
-          kprintf("error: invalid size: -F %s\n", optarg);
-          exit(1);
-        }
+        g_memquota = ParseSiSize(optarg, 1024);
         break;
       case 'p':
-        if (g_promises) {
-          g_promises = xstrcat(g_promises, ' ', optarg);
-        } else {
-          g_promises = optarg;
-        }
+        AddPromise(optarg);
+        got_promise_flag = true;
         break;
       case 'v':
-        unveils.p = realloc(unveils.p, ++unveils.n * sizeof(*unveils.p));
-        unveils.p[unveils.n - 1] = optarg;
+        if (unveils.n == ARRAYLEN(unveils.p)) {
+          tinyprint(2, program_invocation_name, ": too many unveils\n", NULL);
+          exit(1);
+        }
+        unveils.p[unveils.n++] = optarg;
         break;
       case 'h':
       case '?':
@@ -246,16 +294,16 @@ static void GetOpts(int argc, char *argv[]) {
         exit(64);
     }
   }
-  if (!g_promises) {
-    g_promises = "stdio rpath";
+  if (!got_promise_flag) {
+    stpcpy(g_promises, "stdio rpath");
   }
 }
 
-const char *prog;
+const char *g_prog;
 char pathbuf[PATH_MAX];
 struct pollfd pfds[256];
 
-static bool SupportsLandlock(void) {
+bool SupportsLandlock(void) {
   int e = errno;
   bool r = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION) >= 0;
   errno = e;
@@ -265,7 +313,7 @@ static bool SupportsLandlock(void) {
 int GetPollMaxFds(void) {
   int n;
   struct rlimit rl;
-  if (getrlimit(RLIMIT_NOFILE, &rl) != -1) {
+  if (!getrlimit(RLIMIT_NOFILE, &rl)) {
     n = rl.rlim_cur;
   } else {
     n = 64;
@@ -274,27 +322,26 @@ int GetPollMaxFds(void) {
 }
 
 void NormalizeFileDescriptors(void) {
-  int e, i, n, fd;
+  int i, n, fd;
+  closefrom(3);  // faster and more secure if linux 5.9+ or bsd
   n = GetPollMaxFds();
-  e = errno;
-  closefrom(3);  // more secure if linux 5.9+
-  errno = e;
   for (i = 0; i < n; ++i) {
     pfds[i].fd = i;
     pfds[i].events = POLLIN;
   }
   if (poll(pfds, n, 0) == -1) {
-    kprintf("error: poll() failed: %m\n");
+    perror("poll");
     exit(1);
   }
   for (i = 0; i < 3; ++i) {
     if (pfds[i].revents & POLLNVAL) {
       if ((fd = open("/dev/null", O_RDWR)) == -1) {
-        kprintf("error: open(\"/dev/null\") failed: %m\n");
+        perror("/dev/null");
         exit(2);
       }
       if (fd != i) {
-        kprintf("error: open() is broken: %d vs. %d\n", fd, i);
+        tinyprint(2, program_invocation_name, ": poll() or open() is broken\n",
+                  NULL);
         exit(3);
       }
     }
@@ -302,7 +349,7 @@ void NormalizeFileDescriptors(void) {
   for (i = 3; i < n; ++i) {
     if (~pfds[i].revents & POLLNVAL) {
       if (close(pfds[i].fd) == -1) {
-        kprintf("error: close(%d) failed: %m\n", pfds[i].fd);
+        perror("close");
         exit(4);
       }
     }
@@ -354,8 +401,8 @@ bool PathExists(const char *path) {
 
 void Unveil(const char *path, const char *perm) {
   if (unveil(path, perm) == -1) {
-    kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
-    _Exit(20);
+    perror(path);
+    exit(20);
   }
 }
 
@@ -368,11 +415,51 @@ int UnveilIfExists(const char *path, const char *perm) {
     } else if (errno == ENOENT) {
       errno = err;
     } else {
-      kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
-      _Exit(20);
+      perror(path);
+      exit(20);
     }
   }
   return -1;
+}
+
+enum Strategy GetStrategy(void) {
+  static enum Strategy strategy;
+  if (strategy == kStrategyNull) {
+    strategy = kStrategyStatic;
+    int fd;
+    if ((fd = open(g_prog, O_RDONLY)) != -1) {
+      union {
+        char magic[8];
+        Elf64_Ehdr ehdr;
+      } hdr = {0};
+      if (pread(fd, &hdr, sizeof(hdr), 0) == sizeof(hdr)) {
+        if (READ64LE(hdr.magic) == READ64LE("MZqFpD='") ||
+            READ64LE(hdr.magic) == READ64LE("jartsr='") ||
+            READ64LE(hdr.magic) == READ64LE("APEDBG='")) {
+          strategy = kStrategyApe;
+        } else if ((IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) &&
+                   IsElf64Binary(&hdr.ehdr, sizeof(hdr))) {
+          if (hdr.ehdr.e_type == ET_DYN) {
+            strategy = kStrategyDynamic;
+          } else {
+            Elf64_Phdr phdrs[16];
+            int count = MIN(hdr.ehdr.e_phnum, ARRAYLEN(phdrs));
+            int bytes = count * sizeof(Elf64_Phdr);
+            if (pread(fd, phdrs, bytes, hdr.ehdr.e_phoff) == bytes) {
+              for (int i = 0; i < count; ++i) {
+                if (phdrs[i].p_type == PT_INTERP ||
+                    phdrs[i].p_type == PT_DYNAMIC) {
+                  strategy = kStrategyDynamic;
+                }
+              }
+            }
+          }
+        }
+      }
+      close(fd);
+    }
+  }
+  return strategy;
 }
 
 void ApplyFilesystemPolicy(unsigned long ipromises) {
@@ -381,9 +468,9 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
   if (g_dontunveil) return;
   if (!SupportsLandlock()) return;
 
-  Unveil(prog, "rx");
+  Unveil(g_prog, "rx");
 
-  if (isdynamic) {
+  if (GetStrategy() == kStrategyDynamic) {
     Unveil(dsopath, "rx");
     UnveilIfExists("/lib", "rx");
     UnveilIfExists("/lib64", "rx");
@@ -391,14 +478,16 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/usr/lib64", "rx");
     UnveilIfExists("/usr/local/lib", "rx");
     UnveilIfExists("/usr/local/lib64", "rx");
-    UnveilIfExists("/etc/ld-musl-x86_64.path", "r");
+    UnveilIfExists("/etc/ld-musl-" ARCH_NAME ".path", "r");
     UnveilIfExists("/etc/ld.so.conf", "r");
     UnveilIfExists("/etc/ld.so.cache", "r");
     UnveilIfExists("/etc/ld.so.conf.d", "r");
     UnveilIfExists("/etc/ld.so.preload", "r");
+    // in case musl is symlinked somewhere else
+    UnveilIfExists("/lib/ld-musl-" ARCH_NAME ".so.1", "rx");
   }
 
-  if (~ipromises & (1ul << PROMISE_STDIO)) {
+  if (HasPromise(ipromises, PROMISE_STDIO)) {
     UnveilIfExists("/dev/fd", "r");
     UnveilIfExists("/dev/log", "w");
     UnveilIfExists("/dev/zero", "r");
@@ -422,15 +511,15 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/proc/sys/vm/overcommit_memory", "r");
   }
 
-  if (~ipromises & (1ul << PROMISE_INET)) {
+  if (HasPromise(ipromises, PROMISE_INET)) {
     UnveilIfExists("/etc/ssl/certs/ca-certificates.crt", "r");
   }
 
-  if (~ipromises & (1ul << PROMISE_RPATH)) {
+  if (HasPromise(ipromises, PROMISE_RPATH)) {
     UnveilIfExists("/proc/filesystems", "r");
   }
 
-  if (~ipromises & (1ul << PROMISE_DNS)) {
+  if (HasPromise(ipromises, PROMISE_DNS)) {
     UnveilIfExists("/etc/hosts", "r");
     UnveilIfExists("/etc/hostname", "r");
     UnveilIfExists("/etc/services", "r");
@@ -438,7 +527,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/etc/resolv.conf", "r");
   }
 
-  if (~ipromises & (1ul << PROMISE_TTY)) {
+  if (HasPromise(ipromises, PROMISE_TTY)) {
     UnveilIfExists(ttyname(0), "rw");
     UnveilIfExists("/dev/tty", "rw");
     UnveilIfExists("/dev/console", "rw");
@@ -447,18 +536,21 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/usr/share/terminfo", "r");
   }
 
-  if (~ipromises & (1ul << PROMISE_PROT_EXEC)) {
+  if (GetStrategy() == kStrategyApe) {
     if (UnveilIfExists("/usr/bin/ape", "rx") == -1) {
+      char buf[PATH_MAX];
       if ((p = getenv("TMPDIR"))) {
-        UnveilIfExists(xjoinpaths(p, ".ape"), "rx");
+        UnveilIfExists(
+            __join_paths(buf, sizeof(buf), p, ".ape-" APE_VERSION_STR), "rx");
       }
       if ((p = getenv("HOME"))) {
-        UnveilIfExists(xjoinpaths(p, ".ape"), "rx");
+        UnveilIfExists(
+            __join_paths(buf, sizeof(buf), p, ".ape-" APE_VERSION_STR), "rx");
       }
     }
   }
 
-  if (~ipromises & (1ul << PROMISE_VMINFO)) {
+  if (HasPromise(ipromises, PROMISE_VMINFO)) {
     UnveilIfExists("/proc/stat", "r");
     UnveilIfExists("/proc/meminfo", "r");
     UnveilIfExists("/proc/cpuinfo", "r");
@@ -467,7 +559,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/sys/devices/system/cpu", "r");
   }
 
-  if (~ipromises & (1ul << PROMISE_TMPPATH)) {
+  if (HasPromise(ipromises, PROMISE_TMPPATH)) {
     UnveilIfExists("/tmp", "rwc");
     UnveilIfExists(getenv("TMPPATH"), "rwc");
   }
@@ -489,21 +581,22 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
   }
 
   if (unveil(0, 0) == -1) {
-    kprintf("error: unveil(0, 0) failed: %m\n");
-    _Exit(20);
+    perror("unveil");
+    exit(20);
   }
 }
 
 void DropCapabilities(void) {
   int e, i;
+  if (!IsLinux()) return;
   for (e = errno, i = 0;; ++i) {
     if (prctl(PR_CAPBSET_DROP, i) == -1) {
       if (errno == EINVAL || errno == EPERM) {
         errno = e;
         break;
       } else {
-        kprintf("error: prctl(PR_CAPBSET_DROP, %d) failed: %m\n", i);
-        _Exit(25);
+        perror("prctl(PR_CAPBSET_DROP)");
+        exit(25);
       }
     }
   }
@@ -533,67 +626,19 @@ int Extract(const char *from, const char *to, int mode) {
   return close(fdout) | close(fdin);
 }
 
-/**
- * Returns true if ELF executable uses dynamic loading magic.
- */
-static bool IsDynamicExecutable(const char *prog) {
-  bool res;
-  Elf64_Ehdr *e;
-  Elf64_Phdr *p;
-  struct stat st;
-  int i, fd, err;
-  fd = -1;
-  err = errno;
-  e = MAP_FAILED;
-  if ((fd = open(prog, O_RDONLY)) == -1) {
-    res = false;
-    goto Finish;
-  }
-  if (fstat(fd, &st) == -1 || st.st_size < 64) {
-    res = false;
-    goto Finish;
-  }
-  if ((e = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
-    res = false;
-    goto Finish;
-  }
-  if (READ32LE(e->e_ident) != READ32LE(ELFMAG)) {
-    res = false;
-    goto Finish;
-  }
-  if (e->e_type == ET_DYN) {
-    res = true;
-    goto Finish;
-  }
-  for (i = 0; i < e->e_phnum; ++i) {
-    p = GetElfProgramHeaderAddress(e, st.st_size, i);
-    if (p->p_type == PT_INTERP || p->p_type == PT_DYNAMIC) {
-      res = true;
-      goto Finish;
-    }
-  }
-  res = false;
-  goto Finish;
-Finish:
-  if (e != MAP_FAILED) munmap(e, st.st_size);
-  if (fd != -1) close(fd);
-  errno = err;
+int CountEnviron(char **ep) {
+  int res = 0;
+  while (*ep++) ++res;
   return res;
 }
 
 int main(int argc, char *argv[]) {
   const char *s;
   bool hasfunbits;
-  char buf[PATH_MAX];
   int useruid, usergid;
   int owneruid, ownergid;
   int oldfsuid, oldfsgid;
   unsigned long ipromises;
-
-  if (!IsLinux()) {
-    kprintf("error: this program is only intended for linux\n");
-    exit(5);
-  }
 
   // parse flags
   GetOpts(argc, argv);
@@ -612,41 +657,33 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
     }
-    kprintf("error: unknown test: %s\n", g_test);
+    tinyprint(2, g_test, ": unknown test\n", NULL);
     exit(2);
   }
   if (optind == argc) {
-    kprintf("error: too few args\n");
+    tinyprint(2, "error: missing command\n", NULL);
     write(2, USAGE, sizeof(USAGE) - 1);
     exit(64);
   }
 
+  // perform process setup
   if (!g_noclose) {
     NormalizeFileDescriptors();
   }
-
   if (g_nice) {
     verynice();
   }
-
   if (SetCpuLimit(g_cpuquota) == -1) {
-    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_CPU");
-    exit(1);
+    perror("setrlimit(RLIMIT_CPU)");
   }
-
   if (SetLimit(RLIMIT_FSIZE, g_fszquota, g_fszquota * 1.5) == -1) {
-    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_FSIZE");
-    exit(1);
+    perror("setrlimit(RLIMIT_FSIZE)");
   }
-
   if (SetLimit(RLIMIT_AS, g_memquota, g_memquota) == -1) {
-    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_AS");
-    exit(1);
+    perror("setrlimit(RLIMIT_AS)");
   }
-
   if (SetLimit(RLIMIT_NPROC, g_proquota, g_proquota) == -1) {
-    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_NPROC");
-    exit(1);
+    perror("setrlimit(RLIMIT_NPROC)");
   }
 
   // test for weird chmod bits
@@ -664,8 +701,9 @@ int main(int argc, char *argv[]) {
   // some flags can't be allowed if binary has setuid bits
   if (hasfunbits) {
     if (g_uflag || g_gflag) {
-      kprintf("error: setuid flags forbidden on setuid binaries\n");
-      _Exit(6);
+      tinyprint(2, program_invocation_name,
+                ": setuid flags forbidden on setuid binaries\n", NULL);
+      exit(6);
     }
   }
 
@@ -674,8 +712,8 @@ int main(int argc, char *argv[]) {
     oldfsuid = setfsuid(useruid);
     oldfsgid = setfsgid(usergid);
     if (access(g_chroot, R_OK) == -1) {
-      kprintf("error: access(%#s) failed: %m\n", g_chroot);
-      _Exit(7);
+      perror(g_chroot);
+      exit(7);
     }
     setfsuid(oldfsuid);
     setfsgid(oldfsgid);
@@ -684,12 +722,12 @@ int main(int argc, char *argv[]) {
   // change root fs path
   if (g_chroot) {
     if (chdir(g_chroot) == -1) {
-      kprintf("error: chdir(%#s) failed: %m\n", g_chroot);
-      _Exit(8);
+      perror(g_chroot);
+      exit(8);
     }
     if (chroot(g_chroot) == -1) {
-      kprintf("error: chroot(%#s) failed: %m\n", g_chroot);
-      _Exit(9);
+      perror(g_chroot);
+      exit(9);
     }
   }
 
@@ -698,42 +736,63 @@ int main(int argc, char *argv[]) {
     oldfsuid = setfsuid(useruid);
     oldfsgid = setfsgid(usergid);
   }
-  if (!(prog = commandv(argv[optind], pathbuf, sizeof(pathbuf)))) {
-    kprintf("error: command not found: %m\n", argv[optind]);
-    _Exit(10);
+  if (!(g_prog = commandv(argv[optind], pathbuf, sizeof(pathbuf)))) {
+    perror(argv[optind]);
+    exit(10);
   }
   if (hasfunbits) {
     setfsuid(oldfsuid);
     setfsgid(oldfsgid);
   }
 
+  // copy environment
+  // to setup child environment
+  // and remove variables we might create
+  unsetenv("_PLEDGE");
+  unsetenv("LD_PRELOAD");
+  int child_environ_count = CountEnviron(environ);
+  int child_environ_capacity = child_environ_count + 2 + 1;
+  int child_environ_bytes = child_environ_capacity * sizeof(char *);
+  char **child_environ = alloca(child_environ_bytes);
+  CheckLargeStackAllocation(child_environ, child_environ_bytes);
+  memcpy(child_environ, environ, child_environ_count * sizeof(char *));
+  bzero(child_environ + child_environ_count,
+        (child_environ_capacity - child_environ_count) * sizeof(char *));
+
   // figure out where we want the dso
-  if (IsDynamicExecutable(prog)) {
-    isdynamic = true;
+  if (GetStrategy() == kStrategyDynamic) {
     if ((s = getenv("TMPDIR")) ||  //
         (s = getenv("HOME")) ||    //
         (s = ".")) {
-      ksnprintf(dsopath, sizeof(dsopath), "%s/sandbox.so", s);
+      strlcpy(dsopath, s, sizeof(dsopath));
+      strlcat(dsopath, "/.pledge-sandbox.so", sizeof(dsopath));
       if (!FileExistsAndIsNewerThan(dsopath, GetProgramExecutableName())) {
-        ksnprintf(tmppath, sizeof(tmppath), "%s/sandbox.so.%d", s, getpid());
-        if (Extract("/zip/sandbox.so", tmppath, 0755) == -1) {
-          kprintf("error: extract dso failed: %m\n");
+        errno = 0;
+        char pidstr[21];
+        FormatInt64(pidstr, getpid());
+        strlcpy(tmppath, s, sizeof(tmppath));
+        strlcat(tmppath, "/.pledge-sandbox.so.", sizeof(tmppath));
+        strlcat(tmppath, pidstr, sizeof(tmppath));
+        if (Extract("/zip/sandbox-" ARCH_NAME ".so", tmppath, 0755) == -1) {
+          perror(tmppath);
           exit(1);
         }
         if (rename(tmppath, dsopath) == -1) {
-          kprintf("error: rename dso failed: %m\n");
+          perror(dsopath);
           exit(1);
         }
       }
-      ksnprintf(buf, sizeof(buf), "LD_PRELOAD=%s", dsopath);
-      putenv(buf);
+      stpcpy(preloadvar, "LD_PRELOAD=");
+      strlcat(preloadvar, dsopath, sizeof(preloadvar));
+      child_environ[child_environ_count++] = preloadvar;
     }
   }
 
   if (g_dontdrop) {
     if (hasfunbits) {
-      kprintf("error: -D flag forbidden on setuid binaries\n");
-      _Exit(6);
+      tinyprint(2, program_invocation_name,
+                ": -D flag forbidden on setuid binaries\n", NULL);
+      exit(6);
     }
   } else {
     DropCapabilities();
@@ -743,22 +802,22 @@ int main(int argc, char *argv[]) {
   if (usergid != ownergid) {
     // setgid binaries must use the gid of the user that ran it
     if (setgid(usergid) == -1) {
-      kprintf("error: setgid(%d) failed: %m\n", usergid);
-      _Exit(11);
+      perror("setgid");
+      exit(11);
     }
     if (getgid() != usergid || getegid() != usergid) {
-      kprintf("error: setgid() broken\n");
-      _Exit(12);
+      tinyprint(2, "error: setgid() broken\n", NULL);
+      exit(12);
     }
   } else if (g_gflag) {
     // otherwise we trust the gid flag
     if (setgid(g_gflag) == -1) {
-      kprintf("error: setgid(%d) failed: %m\n", g_gflag);
-      _Exit(13);
+      perror("setgid");
+      exit(13);
     }
     if (getgid() != g_gflag || getegid() != g_gflag) {
-      kprintf("error: setgid() broken\n");
-      _Exit(14);
+      tinyprint(2, "error: setgid() broken\n", NULL);
+      exit(14);
     }
   }
 
@@ -766,30 +825,34 @@ int main(int argc, char *argv[]) {
   if (useruid != owneruid) {
     // setuid binaries must use the uid of the user that ran it
     if (setuid(useruid) == -1) {
-      kprintf("error: setuid(%d) failed: %m\n", useruid);
-      _Exit(15);
+      perror("setuid");
+      exit(15);
     }
     if (getuid() != useruid || geteuid() != useruid) {
-      kprintf("error: setuid() broken\n");
-      _Exit(16);
+      tinyprint(2, "error: setuid() broken\n", NULL);
+      exit(16);
     }
   } else if (g_uflag) {
     // otherwise we trust the uid flag
     if (setuid(g_uflag) == -1) {
-      kprintf("error: setuid(%d) failed: %m\n", g_uflag);
-      _Exit(17);
+      perror("setuid");
+      exit(17);
     }
     if (getuid() != g_uflag || geteuid() != g_uflag) {
-      kprintf("error: setuid() broken\n");
-      _Exit(18);
+      tinyprint(2, "error: setuid() broken\n", NULL);
+      exit(18);
     }
   }
 
+  // parse requested promises
+  // further changes to g_promises will be *effective* transient promises
   if (ParsePromises(g_promises, &ipromises, 0) == -1) {
-    kprintf("error: bad promises list: %s\n", g_promises);
-    _Exit(21);
+    tinyprint(2, program_invocation_name, ": bad promises list: ", g_promises,
+              "\n", NULL);
+    exit(21);
   }
 
+  // perform unveiling
   ApplyFilesystemPolicy(ipromises);
 
   // pledge.com uses the return eperm instead of killing the process
@@ -802,38 +865,70 @@ int main(int argc, char *argv[]) {
     __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
   }
 
-  // we need to be able to call execv and mmap the dso
-  // it'll be pledged away once/if the dso gets loaded
-  if (!(~ipromises & (1ul << PROMISE_EXEC))) {
-    g_promises = xstrcat(g_promises, ' ', "exec");
+  // weaken system call policy to allow execution
+  //
+  // 1. we always need to pledge("exec") in order to use execve(). this
+  //    is the primary disadvantage to using the `pledge` command to
+  //    bolt security onto unsecured programs (as opposed to using
+  //    pledge as it was intended, by having the program authors update
+  //    their code to invoke the pledge() system call from within their
+  //    programs at the appropriate moments)
+  //
+  // 2. we usually need to force pledge("rpath prot_exec") too; dynamic
+  //    executables need it mmap() shared objects during initialization
+  //    and actually portable executables need it so /usr/bin/ape can
+  //    mmap() the ELF program headers. the only time we don't require
+  //    `prot_exec` is when launching a native ELF PT_EXEC binaries,
+  //    e.g. assimilated actually portable executables.
+  //
+  // 3. in some cases we can remove the `exec` and `prot_exec` promises
+  //    later on in the loading process. on musl and glibc systems, we
+  //    do that by injecting an LD_PRELOAD DSO which calls pledge()
+  //    again with the requested promises.
+  if (!HasPromise(ipromises, PROMISE_EXEC)) {
+    AddPromise("exec");
     if (!g_qflag) {
       // TODO(jart): Fix me.
       // __pledge_mode |= PLEDGE_STDERR_LOGGING;
     }
   }
-  if (isdynamic) {
-    g_promises = xstrcat(g_promises, ' ', "prot_exec");
+  if (GetStrategy() != kStrategyStatic) {
+    if (!HasPromise(ipromises, PROMISE_RPATH)) {
+      AddPromise("rpath");
+    }
+    if (!HasPromise(ipromises, PROMISE_PROT_EXEC)) {
+      AddPromise("prot_exec");
+    }
   }
 
-  // pass arguments to pledge() inside the dso
-  if (isdynamic) {
-    ksnprintf(buf, sizeof(buf), "_PLEDGE=%ld,%ld", ~ipromises, __pledge_mode);
-    putenv(buf);
+  // pass parameters to injected dso
+  if (GetStrategy() == kStrategyDynamic) {
+    char *p = pledgevar;
+    p = stpcpy(p, "_PLEDGE=");
+    p = FormatInt64(p, ~ipromises);
+    p = stpcpy(p, ",");
+    p = FormatInt64(p, __pledge_mode);
+    child_environ[child_environ_count++] = pledgevar;
   }
 
+  // this limit needs to come last since unveil() opens fds
   if (SetLimit(RLIMIT_NOFILE, g_nfdquota, g_nfdquota) == -1) {
-    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_NOFILE");
+    perror("setrlimit(RLIMIT_NOFILE)");
     exit(1);
   }
 
   // apply sandbox
   if (pledge(g_promises, g_promises) == -1) {
-    kprintf("error: pledge(%#s) failed: %m\n", g_promises);
-    _Exit(19);
+    perror("pledge");
+    exit(19);
   }
 
   // launch program
-  sys_execve(prog, argv + optind, environ);
-  kprintf("%s: execve failed: %m\n", prog);
+  if (!IsWindows()) {
+    sys_execve(g_prog, argv + optind, child_environ);
+  } else {
+    sys_execve_nt(g_prog, argv + optind, child_environ);
+  }
+  perror(g_prog);
   return 127;
 }

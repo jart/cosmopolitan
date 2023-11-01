@@ -77,7 +77,7 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/build/dso/sandbox.so.zip.o		\
+o/$(MODE)/tool/build/dso/sandbox-$(ARCH).so.zip.o	\
 o/$(MODE)/tool/build/false.com.zip.o			\
 o/$(MODE)/tool/build/echo.com.zip.o			\
 o/$(MODE)/tool/build/cocmd.com.zip.o: private		\
@@ -99,7 +99,7 @@ o/$(MODE)/tool/build/dso/sandbox.o:			\
 		libc/intrin/promises.internal.h		\
 		tool/build/build.mk
 
-o/$(MODE)/tool/build/dso/sandbox.so:			\
+o/$(MODE)/tool/build/dso/sandbox-$(ARCH).so:		\
 		o/$(MODE)/tool/build/dso/sandbox.o	\
 		o/$(MODE)/libc/calls/pledge-linux.o	\
 		o/$(MODE)/libc/sysv/restorert.o
@@ -118,7 +118,7 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 o/$(MODE)/tool/build/pledge.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\
 		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/dso/sandbox.so.zip.o \
+		o/$(MODE)/tool/build/dso/sandbox-$(ARCH).so.zip.o \
 		o/$(MODE)/tool/build/pledge.o		\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)

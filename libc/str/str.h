@@ -217,6 +217,7 @@ axdx_t tprecode8to16(char16_t *, size_t, const char *);
 axdx_t tprecode16to8(char *, size_t, const char16_t *);
 bool wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
+char *__join_paths(char *, size_t, const char *, const char *) __wur;
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_

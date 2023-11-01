@@ -6,7 +6,7 @@ if [ $# = 0 ]; then
   if ! [ $(id -u) = 0 ]; then
     make -j16 MODE=fastbuild \
          o/fastbuild/examples/ls.com \
-         o/fastbuild/examples/curl.com \
+         o/fastbuild/tool/curl/curl.com \
          o/fastbuild/examples/life.com \
          o/fastbuild/examples/hello.com \
          o/fastbuild/examples/printargs.com \
@@ -14,7 +14,7 @@ if [ $# = 0 ]; then
          o/fastbuild/tool/build/pledge.com || exit
     make -j16 MODE=$m \
          o/$m/examples/ls.com \
-         o/$m/examples/curl.com \
+         o/$m/tool/curl/curl.com \
          o/$m/examples/life.com \
          o/$m/examples/hello.com \
          o/$m/examples/printargs.com \
@@ -76,7 +76,7 @@ elif [ "$1" = ape_binfmt_test_suite ]; then
   checkem
 
   startit ape binfmt curl.com
-  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = ape_loader_test_suite ]; then
@@ -93,7 +93,7 @@ elif [ "$1" = ape_loader_test_suite ]; then
   checkem
 
   startit ape loader curl.com
-  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
   ape/apeinstall.sh >/dev/null 2>&1
@@ -116,7 +116,7 @@ elif [ "$1" = ape_assimilated_test_suite ]; then
   checkem
 
   startit ape assimilated curl.com
-  cp o/fastbuild/examples/curl.com $t/assimilated
+  cp o/fastbuild/tool/curl/curl.com $t/assimilated
   o/fastbuild/tool/build/assimilate.com $t/assimilated/curl.com
   [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' $t/assimilated/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
@@ -133,7 +133,7 @@ elif [ "$1" = ape_native_test_suite ]; then
   checkem
 
   startit ape native curl.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' o/$m/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' o/$m/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = setuid_test_suite ]; then
@@ -148,7 +148,7 @@ elif [ "$1" = setuid_test_suite ]; then
   checkem
 
   startit setuid curl.com
-  [ "$($t/pledge.com -p 'stdio rpath inet dns' o/$m/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$($t/pledge.com -p 'stdio rpath inet dns' o/$m/tool/curl/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
   startit setuid getuid

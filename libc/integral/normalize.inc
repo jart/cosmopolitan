@@ -1,3 +1,7 @@
+#ifdef __COSMOPOLITAN__
+#undef __COSMOPOLITAN__
+#endif
+
 #define __COSMOPOLITAN_MAJOR__ 3
 #define __COSMOPOLITAN_MINOR__ 0
 #define __COSMOPOLITAN_PATCH__ 0

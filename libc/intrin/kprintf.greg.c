@@ -430,6 +430,9 @@ privileged void klog(const char *b, size_t n) {
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
                  : "0"(__NR_write), "1"(h), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
+    if (rax < 0) {
+      __klog_handle = 0;
+    }
   }
 #elif defined(__aarch64__)
   // this isn't a cancelation point because we don't acknowledge eintr
@@ -444,6 +447,9 @@ privileged void klog(const char *b, size_t n) {
                : "=r"(res_x0)
                : "r"(r0), "r"(r1), "r"(r2), "r"(r8), "r"(r16)
                : "memory");
+  if (res_x0 < 0) {
+    __klog_handle = 0;
+  }
 #else
 #error "unsupported architecture"
 #endif

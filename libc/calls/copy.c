@@ -44,7 +44,7 @@ ssize_t copyfd(int in, int out, size_t n) {
     if (dw != dr) {
       // POSIX requires atomic IO up to PIPE_BUF
       // The minimum permissible PIPE_BUF is 512
-      abort();
+      notpossible;
     }
   }
   return i;

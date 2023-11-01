@@ -16,27 +16,55 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/sysinfo.h"
-#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/calls/struct/sysinfo.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/accounting.h"
+#include "libc/nt/process.h"
 #include "libc/nt/struct/memorystatusex.h"
-#include "libc/nt/struct/systeminfo.h"
 #include "libc/nt/synchronization.h"
-#include "libc/nt/systeminfo.h"
+
+static textwindows uint16_t GetProcessCount(void) {
+  uint16_t res;
+  uint32_t have, got, *pids;
+  uint32_t stack_memory[1000];
+  have = 0xFFFF * 4;
+  if (!_weaken(malloc) || !(pids = _weaken(malloc)(have))) {
+    pids = stack_memory;
+    have = sizeof(stack_memory);
+  }
+  if (EnumProcesses(pids, have, &got)) {
+    res = got / 4;
+  } else {
+    res = 0;
+  }
+  if (pids != stack_memory && _weaken(free)) {
+    _weaken(free)(pids);
+  }
+  return res;
+}
 
 textwindows int sys_sysinfo_nt(struct sysinfo *info) {
+  int i;
+  double load[3];
   struct NtMemoryStatusEx memstat;
-  struct NtSystemInfo sysinfo;
-  GetSystemInfo(&sysinfo);
+  BLOCK_SIGNALS;
+  if (sys_getloadavg_nt(load, 3) != -1) {
+    for (i = 0; i < 3; ++i) {
+      info->loads[i] = load[i] * 65536;
+    }
+  }
   memstat.dwLength = sizeof(struct NtMemoryStatusEx);
   if (GlobalMemoryStatusEx(&memstat)) {
-    info->mem_unit = 1;
     info->totalram = memstat.ullTotalPhys;
     info->freeram = memstat.ullAvailPhys;
-    info->procs = sysinfo.dwNumberOfProcessors;
-    info->uptime = GetTickCount64() / 1000;
-    return 0;
-  } else {
-    return __winerr();
   }
+  info->uptime = GetTickCount64() / 1000;
+  info->procs = GetProcessCount();
+  info->mem_unit = 1;
+  ALLOW_SIGNALS;
+  return 0;
 }

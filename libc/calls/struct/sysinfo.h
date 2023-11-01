@@ -12,7 +12,7 @@ struct sysinfo {
   uint64_t bufferram; /* lingering disk pages; see fadvise */
   uint64_t totalswap; /* size of emergency memory */
   uint64_t freeswap;  /* hopefully equal to totalswap */
-  int16_t procs;      /* number of processes */
+  uint16_t procs;     /* number of processes */
   int16_t __ignore1;  /* padding */
   int32_t __ignore2;  /* padding */
   uint64_t totalhigh; /* wut */

@@ -33,6 +33,9 @@ static int FindPromise(const char *name) {
 /**
  * Parses the arguments to pledge() into a bitmask.
  *
+ * @param out receives the integral promises mask, which zero is defined
+ *     as the set of all promises, and -1 is defined as the empty set of
+ *     promises, which is equivalent to `promises` being an empty string
  * @return 0 on success, or -1 if invalid
  */
 int ParsePromises(const char *promises, unsigned long *out,

@@ -535,7 +535,10 @@ static const struct thatispacked SyscallName {
 };
 
 static const uint16_t kPledgeDefault[] = {
-    __NR_linux_exit,  // thread return / exit()
+    __NR_linux_exit,          // thread return / exit()
+#ifdef __NR_linux_arch_prctl  //
+    __NR_linux_arch_prctl,    // or else launching musl process crashes (tls)
+#endif                        //
 };
 
 // stdio contains all the benign system calls. openbsd makes the
