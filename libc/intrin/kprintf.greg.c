@@ -385,6 +385,7 @@ privileged long kloghandle(void) {
   return __klog_handle;
 }
 
+#ifdef __x86_64__
 privileged void _klog_serial(const char *b, size_t n) {
   size_t i;
   uint16_t dx;
@@ -402,6 +403,7 @@ privileged void _klog_serial(const char *b, size_t n) {
                  : "a"(b[i]), "dN"(dx));
   }
 }
+#endif /* __x86_64__ */
 
 privileged void klog(const char *b, size_t n) {
 #ifdef __x86_64__
