@@ -102,6 +102,7 @@ int __vcscanf(int callback(void *),    //
         break;
       case '%': {
         uint128_t number;
+	double fp;
         unsigned width = 0;
         unsigned char bits = 32;
         unsigned char charbytes = sizeof(char);
