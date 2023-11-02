@@ -391,6 +391,7 @@ int __vcscanf(int callback(void *),    //
                     if (c == 't' || c == 'T') {
                       c = BUFFER;
                       if (c == 'y' || c == 'Y') {
+                        c = BUFFER;
                       } else {
                         goto Done;
                       }
