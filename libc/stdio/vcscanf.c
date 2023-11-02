@@ -393,5 +393,6 @@ Done:
     if (items == -1) free(entry->ptr);
     free(entry);
   }
+  if (buf) free(buf);
   return items;
 }
