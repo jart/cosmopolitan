@@ -60,7 +60,7 @@ int __vcscanf(int callback(void *),    //
     struct FreeMe *next;
     void *ptr;
   } *freeme = NULL;
-  void *buf = NULL;
+  unsigned char *buf = NULL;
   size_t bufsize;
   const unsigned char *p = (const unsigned char *)fmt;
   int *n_ptr;
@@ -321,7 +321,7 @@ int __vcscanf(int callback(void *),    //
             }
             if (c != -1 && j + !rawmode < bufsize && (rawmode || !isspace(c))) {
               if (charbytes == 1) {
-                ((unsigned char *)buf)[j++] = (unsigned char)c;
+                buf[j++] = (unsigned char)c;
                 c = READ;
               } else if (tpdecodecb((wint_t *)&c, c, (void *)callback, arg) !=
                          -1) {
@@ -343,7 +343,7 @@ int __vcscanf(int callback(void *),    //
                 goto Done;
               } else if (!rawmode && j < bufsize) {
                 if (charbytes == sizeof(char)) {
-                  ((unsigned char *)buf)[j] = '\0';
+                  buf[j] = '\0';
                 } else if (charbytes == sizeof(char16_t)) {
                   ((char16_t *)buf)[j] = u'\0';
                 } else if (charbytes == sizeof(wchar_t)) {
@@ -355,7 +355,7 @@ int __vcscanf(int callback(void *),    //
           }
           ++items;
           if (ismalloc) {
-            *va_arg(va, char **) = buf;
+            *va_arg(va, char **) = (void *) buf;
           }
         } else {
           do {
