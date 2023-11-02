@@ -86,8 +86,9 @@ static inline void InitProgramExecutableNameImpl(void) {
       if (q[0] == '.' && q[1] == '/') {
         q += 2;
       }
-      if (getcwd(p, e - p - 1 - 4)) {  // for / and .com
-        while (*p) ++p;
+      int got = __getcwd(p, e - p - 1 - 4);  // for / and .com
+      if (got != -1) {
+        p += got - 1;
         *p++ = '/';
       }
     }

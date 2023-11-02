@@ -219,6 +219,7 @@ bool32 isexecutable(const char *);
 bool32 isregularfile(const char *);
 bool32 issymlink(const char *);
 char *commandv(const char *, char *, size_t);
+int __getcwd(char *, size_t);
 int clone(void *, void *, size_t, int, void *, void *, void *, void *);
 int fadvise(int, uint64_t, uint64_t, int);
 int makedirs(const char *, unsigned);

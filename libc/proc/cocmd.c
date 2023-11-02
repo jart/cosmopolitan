@@ -305,9 +305,11 @@ static int Chmod(void) {
 }
 
 static int Pwd(void) {
-  char path[PATH_MAX + 2];
-  if (getcwd(path, PATH_MAX)) {
-    strlcat(path, "\n", sizeof(path));
+  int got;
+  char path[PATH_MAX];
+  if ((got = __getcwd(path, PATH_MAX - 1)) != -1) {
+    path[got - 1] = '\n';
+    path[got] = 0;
     Write(1, path);
     return 0;
   } else {
@@ -790,7 +792,7 @@ static const char *GetVar(const char *key) {
   } else if (key[0] == '?' && !key[1]) {
     return IntToStr(exitstatus);
   } else if (!strcmp(key, "PWD")) {
-    npassert(getcwd(vbuf, sizeof(vbuf)));
+    npassert(__getcwd(vbuf, sizeof(vbuf)) != -1);
     return vbuf;
   } else if (!strcmp(key, "UID")) {
     FormatInt32(vbuf, getuid());

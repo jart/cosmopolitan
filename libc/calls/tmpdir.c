@@ -45,7 +45,7 @@ static void __tmpdir_init(void) {
 
   if ((s = getenv("TMPDIR"))) {
     if (*s != '/') {
-      if (!getcwd(__tmpdir.path, PATH_MAX)) {
+      if (__getcwd(__tmpdir.path, PATH_MAX) == -1) {
         goto GiveUp;
       }
       strlcat(__tmpdir.path, "/", sizeof(__tmpdir.path));

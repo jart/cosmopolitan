@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,69 +16,62 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/files.h"
+#include "libc/calls/calls.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows char *sys_getcwd_nt(char *buf, size_t size) {
-  uint64_t w;
-  wint_t x, y;
-  uint32_t n, i, j;
-  char16_t p[PATH_MAX];
-  if ((n = GetCurrentDirectory(ARRAYLEN(p), p))) {
-    if (4 + n + 1 <= size && 4 + n + 1 <= ARRAYLEN(p)) {
-      tprecode16to8(buf, size, p);
-      i = 0;
-      j = 0;
-      if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
-        // turn c:\... into \c\...
-        p[1] = p[0];
-        p[0] = '\\';
-      } else if (n >= 7 && p[0] == '\\' && p[1] == '\\' && p[2] == '?' &&
-                 p[3] == '\\' && isalpha(p[4]) && p[5] == ':' && p[6] == '\\') {
-        // turn \\?\c:\... into \c\...
-        buf[j++] = '/';
-        buf[j++] = p[4];
-        buf[j++] = '/';
-        i += 7;
-      }
-      while (i < n) {
-        x = p[i++] & 0xffff;
-        if (!IsUcs2(x)) {
-          if (i < n) {
-            y = p[i++] & 0xffff;
-            x = MergeUtf16(x, y);
-          } else {
-            x = 0xfffd;
-          }
-        }
-        if (x < 0200) {
-          if (x == '\\') {
-            x = '/';
-          }
-          w = x;
-        } else {
-          w = tpenc(x);
-        }
-        do {
-          if (j < size) {
-            buf[j++] = w;
-          }
-          w >>= 8;
-        } while (w);
-      }
-      if (j < size) {
-        buf[j] = 0;
-        return buf;
-      }
+/**
+ * Returns current working directory, e.g.
+ *
+ *     const char *dirname = gc(getcwd(0,0)); // if malloc is linked
+ *     const char *dirname = getcwd(alloca(PATH_MAX),PATH_MAX);
+ *
+ * @param buf is where UTF-8 NUL-terminated path string gets written,
+ *     which may be NULL to ask this function to malloc a buffer
+ * @param size is number of bytes available in buf, e.g. PATH_MAX+1,
+ *     which may be 0 if buf is NULL
+ * @return buf containing system-normative path or NULL w/ errno
+ * @raise EACCES if the current directory path couldn't be accessed
+ * @raise ERANGE if `size` wasn't big enough for path and nul byte
+ * @raise ENOMEM on failure to allocate the requested buffer
+ * @raise EINVAL if `size` is zero and `buf` is non-null
+ * @raise EFAULT if `buf` points to invalid memory
+ */
+char *getcwd(char *buf, size_t size) {
+
+  // setup memory per api
+  char *path;
+  if (buf) {
+    path = buf;
+    if (!size) {
+      einval();
+      return 0;
     }
-    erange();
-    return NULL;
   } else {
-    __winerr();
-    return NULL;
+    if (!size) size = 4096;
+    if (!(path = malloc(size))) {
+      return 0;  // enomem
+    }
   }
+
+  // invoke the real system call
+  int got = __getcwd(path, size);
+  if (got == -1) {
+    if (path != buf) {
+      free(path);
+    }
+    return 0;  // eacces, erange, or efault
+  }
+
+  // cut allocation down to size
+  if (path != buf) {
+    char *p;
+    if ((p = realloc(path, strlen(path) + 1))) {
+      path = p;
+    }
+  }
+
+  // return result
+  return path;
 }

@@ -17,21 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 
 /**
  * Returns current working directory.
  *
- * If the `PWD` environment variable is set, and it seems legit, then
- * that'll be returned.
+ * If the `PWD` environment variable is set, and it's correct, then
+ * that'll be returned in its exact canonical or non-canonical form
+ * instead of calling getcwd().
  *
  * @return pointer that must be free()'d, or NULL w/ errno
  */
 char *get_current_dir_name(void) {
-  const char *p;
-  if ((p = getenv("PWD")) && *p == '/') {
-    return strdup(p);
+  const char *res;
+  struct stat st1, st2;
+  if ((res = getenv("PWD")) && *res &&  //
+      !stat(res, &st1) &&               //
+      !stat(".", &st2) &&               //
+      st1.st_dev == st2.st_dev &&       //
+      st1.st_ino == st2.st_ino) {
+    return strdup(res);
   } else {
     return getcwd(0, 0);
   }

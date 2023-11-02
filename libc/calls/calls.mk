@@ -99,8 +99,6 @@ o//libc/calls/prctl.o:					\
 # we always want -Os because:
 #   it's early runtime mandatory and quite huge without it
 o//libc/calls/getcwd.greg.o				\
-o//libc/calls/getcwd-nt.greg.o				\
-o//libc/calls/getcwd-xnu.greg.o				\
 o//libc/calls/statfs2cosmo.o: private			\
 		CFLAGS +=				\
 			-Os

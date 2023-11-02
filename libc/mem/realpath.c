@@ -213,7 +213,7 @@ skip_readlink:
  	output[q] = 0;
 
 	if (output[0] != '/') {
-		if (!getcwd(stack, sizeof(stack))) return 0;
+		if (__getcwd(stack, sizeof(stack)) == -1) return 0;
 		l = strlen(stack);
 		/* Cancel any initial .. components. */
 		p = 0;
