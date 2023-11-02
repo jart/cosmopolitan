@@ -396,14 +396,11 @@ TEST(sscanf, floating_point_infinity_double_precision) {
 }
 
 TEST(sscanf, floating_point_documentation_examples) {
-  float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h;
+  float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h, j = i;
 
   EXPECT_EQ(2, sscanf("111.11 -2.22", "%f %f", &a, &b));
-  EXPECT_EQ(2, sscanf("Nan nan(2)", "%f %f", &c, &d));
-  EXPECT_EQ(1, sscanf("inF", "%f", &e));
-  EXPECT_EQ(2, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz", "%f %f", &f, &g));
-  EXPECT_EQ(1, sscanf("-0.0000000123junk", "%f", &h));
-  EXPECT_EQ(1, sscanf("junk", "%f", &i));
+  EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%f %f %f", &c, &d, &e));
+  EXPECT_EQ(5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk", "%f %f %f %f %f", &f, &g, &h, &i, &j));
 
   EXPECT_EQ(111.11f, a);
   EXPECT_EQ(-2.22f, b);
@@ -414,17 +411,15 @@ TEST(sscanf, floating_point_documentation_examples) {
   EXPECT_TRUE(isinf(g));
   EXPECT_EQ(-0.0000000123f, h);
   EXPECT_EQ(.0f, i);
+  EXPECT_EQ(.0f, j);
 }
 
 TEST(sscanf, floating_point_documentation_examples_double_precision) {
-  double a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h;
+  double a = 666.666, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h, j = i;
 
   EXPECT_EQ(2, sscanf("111.11 -2.22", "%lf %lf", &a, &b));
-  EXPECT_EQ(2, sscanf("Nan nan(2)", "%lf %lf", &c, &d));
-  EXPECT_EQ(1, sscanf("inF", "%lf", &e));
-  EXPECT_EQ(2, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz", "%lf %lf", &f, &g));
-  EXPECT_EQ(1, sscanf("-0.0000000123junk", "%lf", &h));
-  EXPECT_EQ(1, sscanf("junk", "%lf", &i));
+  EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%lf %lf %lf", &c, &d, &e));
+  EXPECT_EQ(5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk", "%lf %lf %lf %lf %lf", &f, &g, &h, &i, &j));
 
   EXPECT_EQ(111.11, a);
   EXPECT_EQ(-2.22, b);
@@ -435,6 +430,7 @@ TEST(sscanf, floating_point_documentation_examples_double_precision) {
   EXPECT_TRUE(isinf(g));
   EXPECT_EQ(-0.0000000123, h);
   EXPECT_EQ(.0, i);
+  EXPECT_EQ(.0, j);
 }
 
 TEST(sscanf, luplus) {
