@@ -59,7 +59,15 @@
 #
 #   build/config.mk
 
+# Some versions of make can't invoke the bundled
+# cocmd.com directly. If we can invoke it, use it
+# directly as the shell. Otherwise, invoke it as a
+# shell script to work around this.
+ifeq ($((build/bootstrap/cocmd.com)),build/bootstrap/cocmd.com: error: wrong number of args)
 SHELL      = build/bootstrap/cocmd.com
+else
+.SHELLFLAGS = build/bootstrap/cocmd.com -c
+endif
 MAKEFLAGS += --no-builtin-rules
 
 .SUFFIXES:
