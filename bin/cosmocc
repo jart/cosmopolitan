@@ -295,6 +295,8 @@ for x; do
     exit 0
   elif [ x"$x" = x"-Wl,--version" ]; then
     GOT_SOME=1
+  elif [ x"$x" = x"-dumpmachine" ]; then
+    GOT_SOME=1
   fi
   set -- "$@" "$x"
 done
