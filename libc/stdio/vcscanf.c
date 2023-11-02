@@ -26,6 +26,7 @@
 #include "libc/str/tpdecodecb.internal.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
+#include "third_party/gdtoa/gdtoa.h"
 
 #define READ                 \
   ({                         \
