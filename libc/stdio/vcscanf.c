@@ -60,6 +60,8 @@ int __vcscanf(int callback(void *),    //
     struct FreeMe *next;
     void *ptr;
   } *freeme = NULL;
+  void *buf = NULL;
+  size_t bufsize;
   const unsigned char *p = (const unsigned char *)fmt;
   int *n_ptr;
   int items = 0;
@@ -84,8 +86,6 @@ int __vcscanf(int callback(void *),    //
         break;
       case '%': {
         uint128_t number;
-        void *buf;
-        size_t bufsize;
         unsigned width = 0;
         unsigned char bits = 32;
         unsigned char charbytes = sizeof(char);
