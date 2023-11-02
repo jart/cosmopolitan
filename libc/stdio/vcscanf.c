@@ -34,6 +34,21 @@
     c;                       \
   })
 
+#define BUFFER_GROW 48
+#define BUFFER                                         \
+  ({                                                   \
+    int c = READ;                                      \
+    if (bufcur >= bufsize - 1) {                       \
+      bufsize = bufsize + BUFFER_GROW;                 \
+      buf = realloc(buf, bufsize);                     \
+    }                                                  \
+    if (c != -1) {                                     \
+      buf[bufcur++] = c;                               \
+      buf[bufcur] = '\0';                              \
+    }                                                  \
+    c;                                                 \
+  })
+
 /**
  * String / file / stream decoder.
  *
