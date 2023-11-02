@@ -540,6 +540,7 @@ int __vcscanf(int callback(void *),    //
           if (ismalloc) {
             *va_arg(va, char **) = (void *) buf;
           }
+	  buf = NULL;
         } else {
           do {
             if (isspace(c)) break;
