@@ -62,6 +62,7 @@ int __vcscanf(int callback(void *),    //
   } *freeme = NULL;
   unsigned char *buf = NULL;
   size_t bufsize;
+  size_t bufcur;
   const unsigned char *p = (const unsigned char *)fmt;
   int *n_ptr;
   int items = 0;
