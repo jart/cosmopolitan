@@ -438,7 +438,9 @@ int __vcscanf(int callback(void *),    //
                 } else if (isdecexp || (hexadecimal && ishexp)) {
                   state = SIGN;
                   goto Continue;
-                } else goto Break;
+                } else {
+                  goto Break;
+                }
               case SIGN:
                 if (issign) {
                   state = EXPONENT;
