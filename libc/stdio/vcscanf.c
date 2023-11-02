@@ -225,6 +225,27 @@ int __vcscanf(int callback(void *),    //
                 base = 10;
               }
               goto DecodeNumber;
+            case 'a':
+            case 'A':
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'F':
+            case 'g':
+            case 'G': // floating point number
+              if (!(charbytes == sizeof(char) || charbytes == sizeof(wchar_t))) {
+                items = -1;
+                goto Done;
+              }
+              while (isspace(c)) {
+                c = READ;
+              }
+              bufsize = BUFFER_GROW;
+              buf = malloc(bufsize);
+              bufcur = 0;
+              buf[bufcur++] = c;
+              buf[bufcur] = '\0';
+              goto ConsumeFloatingPointNumber;
             default:
               items = einval();
               goto Done;
