@@ -451,7 +451,9 @@ int __vcscanf(int callback(void *),    //
               case EXPONENT:
                 if (isdecdigit) {
                   goto Continue;
-                } else goto Break;
+                } else {
+                  goto Break;
+                }
               default:
                 goto Break;
             }
