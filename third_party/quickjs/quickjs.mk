@@ -79,6 +79,7 @@ THIRD_PARTY_QUICKJS_A_OBJS =							\
 
 THIRD_PARTY_QUICKJS_A_DIRECTDEPS =						\
 	LIBC_CALLS								\
+	LIBC_DLOPEN								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\
 	LIBC_LOG								\

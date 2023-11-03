@@ -176,6 +176,7 @@ include libc/calls/calls.mk			#─┐
 include libc/irq/irq.mk				# ├──SYSTEMS RUNTIME
 include third_party/nsync/nsync.mk		# │  You can issue system calls
 include libc/runtime/runtime.mk			# │
+include libc/dlopen/dlopen.mk			# │
 include third_party/double-conversion/dc.mk	# │
 include libc/crt/crt.mk				# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘

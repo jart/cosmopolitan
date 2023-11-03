@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define loadlib_c
 #define LUA_LIB
+#include "libc/dlopen/dlfcn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"

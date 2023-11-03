@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_RUNTIME_DLFCN_H_
-#define COSMOPOLITAN_LIBC_RUNTIME_DLFCN_H_
+#ifndef COSMOPOLITAN_LIBC_DLFCN_H_
+#define COSMOPOLITAN_LIBC_DLFCN_H_
 
 #define RTLD_LOCAL  0
 #define RTLD_LAZY   1
@@ -20,4 +20,4 @@ int dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_RUNTIME_DLFCN_H_ */
+#endif /* COSMOPOLITAN_LIBC_DLFCN_H_ */

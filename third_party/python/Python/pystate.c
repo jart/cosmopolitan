@@ -7,7 +7,7 @@
 #include "third_party/python/Include/pystate.h"
 #include "libc/errno.h"
 #include "libc/intrin/pushpop.internal.h"
-#include "libc/runtime/dlfcn.h"
+#include "libc/dlopen/dlfcn.h"
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/listobject.h"

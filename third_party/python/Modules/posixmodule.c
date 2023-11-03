@@ -37,7 +37,7 @@
 #include "libc/nt/enum/sw.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/dlfcn.h"
+#include "libc/dlopen/dlfcn.h"
 #include "libc/runtime/pathconf.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sendfile.internal.h"

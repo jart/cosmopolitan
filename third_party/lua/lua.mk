@@ -117,6 +117,7 @@ THIRD_PARTY_LUA_A_OBJS =						\
 
 THIRD_PARTY_LUA_A_DIRECTDEPS =						\
 	LIBC_CALLS							\
+	LIBC_DLOPEN							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_MEM							\

@@ -16,6 +16,7 @@ endif
 .PHONY:		o/$(MODE)/libc
 o/$(MODE)/libc:	o/$(MODE)/libc/calls		\
 		o/$(MODE)/libc/crt		\
+		o/$(MODE)/libc/dlopen		\
 		o/$(MODE)/libc/dns		\
 		o/$(MODE)/libc/elf		\
 		o/$(MODE)/libc/fmt		\

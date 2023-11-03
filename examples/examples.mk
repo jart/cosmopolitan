@@ -43,6 +43,7 @@ EXAMPLES_DIRECTDEPS =								\
 	DSP_SCALE								\
 	DSP_TTY									\
 	LIBC_CALLS								\
+	LIBC_DLOPEN								\
 	LIBC_DNS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\

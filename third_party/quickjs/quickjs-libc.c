@@ -37,7 +37,7 @@
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/synchronization.h"
-#include "libc/runtime/dlfcn.h"
+#include "libc/dlopen/dlfcn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/select.h"

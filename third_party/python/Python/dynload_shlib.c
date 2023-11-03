@@ -5,7 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
-#include "libc/runtime/dlfcn.h"
+#include "libc/dlopen/dlfcn.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/pyerrors.h"

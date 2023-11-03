@@ -31,10 +31,11 @@
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
+#include <dlfcn.h>
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 5
+#define SYSLIB_VERSION 6
 
 struct Syslib {
   int magic;
@@ -91,6 +92,11 @@ struct Syslib {
   long (*sem_trywait)(int *);
   long (*getrlimit)(int, struct rlimit *);
   long (*setrlimit)(int, const struct rlimit *);
+  // v6 (2023-11-03)
+  void *(*dlopen)(const char *, int);
+  void *(*dlsym)(void *, const char *);
+  int (*dlclose)(void *);
+  char *(*dlerror)(void);
 };
 
 #define ELFCLASS32  1
@@ -943,6 +949,10 @@ int main(int argc, char **argv, char **envp) {
   M->lib.sem_trywait = sys_sem_trywait;
   M->lib.getrlimit = sys_getrlimit;
   M->lib.setrlimit = sys_setrlimit;
+  M->lib.dlopen = dlopen;
+  M->lib.dlsym = dlsym;
+  M->lib.dlclose = dlclose;
+  M->lib.dlerror = dlerror;
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;

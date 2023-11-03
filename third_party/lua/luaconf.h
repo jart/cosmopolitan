@@ -58,10 +58,10 @@
 #endif
 
 
-#if defined(LUA_USE_LINUX)
+//#if defined(LUA_USE_LINUX)
 #define LUA_USE_POSIX
 #define LUA_USE_DLOPEN		/* needs an extra library: -ldl */
-#endif
+//#endif
 
 
 #if defined(LUA_USE_MACOSX)
