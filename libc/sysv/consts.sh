@@ -1391,9 +1391,6 @@ syscon	misc	IP6F_MORE_FRAG				0x0100			0x0100			0x0100			0x0100			0x0100			0x010
 syscon	misc	IP6F_OFF_MASK				0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			# consensus
 syscon	misc	IP6F_RESERVED_MASK			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			0x0600			# consensus
 
-syscon	misc	NO_SENSE				0			0			0			0			0			0			0			0			# consensus
-syscon	misc	NO_ADDRESS				4			4			4			4			4			4			4			0x2afc			# unix consensus
-
 syscon	misc	L_SET					0			0			0			0			0			0			0			0			# consensus
 syscon	misc	L_INCR					1			1			1			1			1			1			1			0			# unix consensus
 syscon	misc	L_XTND					2			2			2			2			2			2			2			0			# unix consensus
