@@ -93,6 +93,7 @@ EXAMPLES_DIRECTDEPS =								\
 	THIRD_PARTY_VQSORT							\
 	THIRD_PARTY_XED								\
 	THIRD_PARTY_ZLIB							\
+	TOOL_ARGS								\
 	TOOL_BUILD_LIB								\
 	TOOL_VIZ_LIB
 

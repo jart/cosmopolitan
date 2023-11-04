@@ -48,6 +48,8 @@
  * @fileoverview Zip File Disassembler.
  */
 
+uint8_t *map;
+
 static __wur char *FormatDosDate(uint16_t dosdate) {
   return xasprintf("%04u-%02u-%02u", ((dosdate >> 9) & 0b1111111) + 1980,
                    (dosdate >> 5) & 0b1111, dosdate & 0b11111);
@@ -60,9 +62,9 @@ static __wur char *FormatDosTime(uint16_t dostime) {
 
 void AdvancePosition(uint8_t *map, size_t *pos, size_t off) {
   if (off > *pos) {
-    printf("\n/\t<%s>\n", "LIMBO");
-    disassemblehex(&map[*pos], off - *pos, stdout);
-    printf("/\t</%s>\n", "LIMBO");
+    /* printf("\n/\t<%s>\n", "LIMBO"); */
+    /* disassemblehex(&map[*pos], off - *pos, stdout); */
+    /* printf("/\t</%s>\n", "LIMBO"); */
   }
   *pos = off;
 }
@@ -288,8 +290,8 @@ void ShowLocalFileHeader(uint8_t *lf, uint16_t idx) {
 }
 
 void ShowCentralFileHeader(uint8_t *cf) {
-  printf("\n/\t%s (%zu %s)\n", "central directory file header",
-         ZIP_CFILE_HDRSIZE(cf), "bytes");
+  printf("\n/\t%s (%zu %s @ %#lx)\n", "central directory file header",
+         ZIP_CFILE_HDRSIZE(cf), "bytes", cf - map);
   show(".ascii", format(b1, "%`'.*s", 4, cf), "magic");
   show(".byte", _gc(xasprintf("%d", ZIP_CFILE_VERSIONMADE(cf))),
        "zip version made");
@@ -485,7 +487,6 @@ void DisassembleZip(const char *path, uint8_t *p, size_t n) {
 
 int main(int argc, char *argv[]) {
   int fd;
-  uint8_t *map;
   struct stat st;
   ShowCrashReports();
   CHECK_EQ(2, argc);

@@ -42,6 +42,9 @@ int IsZipEocd32(const uint8_t *p, size_t n, size_t i) {
   if (ZIP_CDIR_RECORDS(p + i) * kZipCfileHdrMinSize > ZIP_CDIR_SIZE(p + i)) {
     return kZipErrorEocdRecordsOverflow;
   }
+  if (ZIP_CDIR_OFFSET(p + i) == 0xFFFFFFFFu) {
+    return kZipErrorEocdRecordsOverflow;
+  }
   if (ckd_add(&offset, ZIP_CDIR_OFFSET(p + i), ZIP_CDIR_SIZE(p + i))) {
     return kZipErrorEocdOffsetSizeOverflow;
   }
