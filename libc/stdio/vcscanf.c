@@ -344,7 +344,6 @@ int __vcscanf(int callback(void *),    //
             hexadecimal = true;
             goto BufferFloatingPointNumber;
           } else if (c == -1) {
-            fp = strtod((char *) buf, NULL);
             goto GotFloatingPointNumber;
           } else {
             goto BufferFloatingPointNumber;
@@ -367,10 +366,8 @@ int __vcscanf(int callback(void *),    //
                 if (c == ')') {
                   c = BUFFER;
                 }
-                fp = strtod((char *) buf, NULL);
                 goto GotFloatingPointNumber;
               } else {
-                fp = strtod((char *) buf, NULL);
                 goto GotFloatingPointNumber;
               }
             } else {
@@ -411,7 +408,6 @@ int __vcscanf(int callback(void *),    //
                 if (c != -1 && unget) {
                   unget(c, arg);
                 }
-                fp = strtod((char *) buf, NULL);
                 goto GotFloatingPointNumber;
               }
             } else {
@@ -469,8 +465,8 @@ int __vcscanf(int callback(void *),    //
               }
               break;
           } while ((c = BUFFER) != -1);
-          fp = strtod((char *)buf, NULL);
         GotFloatingPointNumber:
+          fp = strtod((char *)buf, NULL);
           if (!discard) {
             ++items;
             void *out = va_arg(va, void *);
