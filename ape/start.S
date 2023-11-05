@@ -23,6 +23,7 @@
 #ifdef __aarch64__
 
 _start:	mov	x1,sp
+	and     sp,x1,#-16
 	mov	x29,0
 	bl	ApeLoader
 	.endfn	_start,globl
@@ -33,6 +34,7 @@ XnuEntrypoint:
 	mov	$_HOSTXNU,%dl			// xnu's not unix!
 ElfEntrypoint:
 	mov	%rsp,%rsi			// save real stack
+	andq    $-16,%rsp                       // force SSE alignment
 	call	ApeLoader
 	.endfn	ElfEntrypoint,globl
 	.endfn	XnuEntrypoint,globl

@@ -947,6 +947,11 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     os = OPENBSD;
   }
 
+  /* xnu passes auxv as an array of strings */
+  if (os == XNU) {
+    *auxv = 0;
+  }
+
   /* detect netbsd and find end of words */
   pagesz = 0;
   for (ap = auxv; ap[0]; ap += 2) {
