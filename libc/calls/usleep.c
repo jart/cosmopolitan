@@ -19,6 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/utime.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
@@ -32,7 +33,7 @@
  * @cancelationpoint
  * @norestart
  */
-int usleep(uint32_t micros) {
+int usleep(uint64_t micros) {
   errno_t err;
   struct timespec ts = timespec_frommicros(micros);
   err = clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0);

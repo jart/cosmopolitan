@@ -168,7 +168,7 @@ int truncate(const char *, int64_t);
 int ttyname_r(int, char *, size_t);
 int unlink(const char *);
 int unlinkat(int, const char *, int);
-int usleep(unsigned);
+int usleep(uint64_t);
 int vfork(void) returnstwice;
 int wait(int *);
 int waitpid(int, int *, int);
