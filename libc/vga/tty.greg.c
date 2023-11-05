@@ -33,6 +33,7 @@
 #ifdef __x86_64__
 
 /**
+ * @internal
  * @fileoverview ECMA-48 / VT100 video terminal implementation for bare
  * metal VGA.
  *
@@ -325,6 +326,7 @@ static void TtySetCodepage(struct Tty *tty, char id) {
 }
 
 /**
+ * @internal
  * Map the given direct color value to one of the 16 basic foreground colors
  * or one of the 16 background colors.
  *
@@ -344,6 +346,7 @@ static uint8_t TtyGetTextColor(TtyCanvasColor color) {
 }
 
 /**
+ * @internal
  * Map the currently active foreground & background colors & terminal
  * configuration to a VGA text character attribute byte.
  *
@@ -794,12 +797,18 @@ static void TtyCsiN(struct Tty *tty) {
   }
 }
 
-/** Create a direct color pixel value. */
+/**
+ * @internal
+ * Create a direct color pixel value.
+ */
 static TtyCanvasColor TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b) {
   return (TtyCanvasColor){.bgr.r = r, .bgr.g = g, .bgr.b = b, .bgr.x = 0xff};
 }
 
-/** Map the given 256-color code to a direct color. */
+/**
+ * @internal
+ * Map the given 256-color code to a direct color.
+ */
 static TtyCanvasColor TtyMapXtermColor(uint8_t color) {
   uint8_t r, g, b;
   if (color < 8) {
@@ -822,7 +831,10 @@ static TtyCanvasColor TtyMapXtermColor(uint8_t color) {
   return TtyMapTrueColor(r, g, b);
 }
 
-/** Map the given ECMA-48 / VT100 SGR color code to a direct color. */
+/**
+ * @internal
+ * Map the given ECMA-48 / VT100 SGR color code to a direct color.
+ */
 static TtyCanvasColor TtyMapEcma48Color(uint8_t color) {
   return TtyMapXtermColor(color % 16);
 }
