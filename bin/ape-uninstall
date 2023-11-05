@@ -37,6 +37,9 @@ done
 if [ -f /usr/bin/ape ]; then
   $SUDO rm -f /usr/bin/ape
 fi
+if [ -f /usr/local/bin/ape ]; then
+  $SUDO rm -f /usr/local/bin/ape
+fi
 
 # legacy installations
 rm -f o/tmp/ape /tmp/ape "${TMPDIR:-/tmp}/ape"

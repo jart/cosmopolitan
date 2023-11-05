@@ -2,6 +2,7 @@
 
 PROG=${0##*/}
 MODE=${MODE:-$m}
+TMPDIR=${TMPDIR:-/tmp}
 COSMO=${COSMO:-/opt/cosmo}
 COSMOS=${COSMOS:-/opt/cosmos}
 
@@ -17,6 +18,19 @@ fi
 
 echo "Actually Portable Executable (APE) Installer" >&2
 echo "Author:  Justine Tunney <jtunney@gmail.com>"  >&2
+
+# special installation process for apple silicon
+if [ "$(uname -s)" = "Darwin" ] && [ "$(uname -m)" = "arm64" ]; then
+  echo "cc -O -o $TMPDIR/ape.$$ ape/ape-m1.c" >&2
+  cc -O -o "$TMPDIR/ape.$$" ape/ape-m1.c || exit
+  if [ ! -d /usr/local/bin ]; then
+    echo "$SUDO mkdir -p /usr/local/bin" >&2
+    $SUDO mkdir -p /usr/local/bin || exit
+  fi
+  echo "$SUDO mv -f $TMPDIR/ape.$$ /usr/local/bin/ape" >&2
+  $SUDO mv -f "$TMPDIR/ape.$$" /usr/local/bin/ape || exit
+  exit
+fi
 
 ################################################################################
 # INSTALL APE LOADER SYSTEMWIDE
@@ -50,8 +64,8 @@ fi
 if [ "$(uname -s)" = "Darwin" ]; then
   if ! [ /usr/bin/ape -nt o//ape/ape.macho ]; then
     echo >&2
-    echo "installing o//ape/ape.elf to /usr/bin/ape" >&2
-    echo "$SUDO mv -f o//ape/ape.elf /usr/bin/ape" >&2
+    echo "installing o//ape/ape.macho to /usr/bin/ape" >&2
+    echo "$SUDO cp -f o//ape/ape.macho /usr/bin/ape" >&2
     $SUDO cp -f o//ape/ape.macho /usr/bin/ape || exit
     echo "done" >&2
   fi
