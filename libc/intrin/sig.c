@@ -48,11 +48,11 @@ void __sig_unblock(sigset_t m) {
   }
 }
 
-textwindows sigset_t __sig_beginwait(sigset_t waitmask) {
+textwindows sigset_t __sig_begin(sigset_t waitmask) {
   return atomic_exchange_explicit(&__get_tls()->tib_sigmask, waitmask,
                                   memory_order_acquire);
 }
 
-textwindows void __sig_finishwait(sigset_t m) {
+textwindows void __sig_finish(sigset_t m) {
   atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
 }

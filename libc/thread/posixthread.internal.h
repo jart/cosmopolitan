@@ -14,10 +14,8 @@
 #define PT_NOCANCEL       8
 #define PT_MASKED         16
 #define PT_INCANCEL       32
-#define PT_RESTARTABLE    64
-#define PT_OPENBSD_KLUDGE 128
+#define PT_OPENBSD_KLUDGE 64
 
-#define PT_BLOCKER_CPU ((atomic_int *)-0)
 #define PT_BLOCKER_SEM ((atomic_int *)-1)
 #define PT_BLOCKER_IO  ((atomic_int *)-2)
 
@@ -93,6 +91,7 @@ struct PosixThread {
   struct Dll list;            // list of threads
   struct _pthread_cleanup_buffer *pt_cleanup;
   _Atomic(atomic_int *) pt_blocker;
+  uint64_t pt_blkmask;
   int64_t pt_semaphore;
   intptr_t pt_iohandle;
   void *pt_ioverlap;

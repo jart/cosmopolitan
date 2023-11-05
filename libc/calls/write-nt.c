@@ -49,7 +49,6 @@ static inline void RaiseSignal(int sig) {
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset,
                                              uint64_t waitmask) {
-  uint64_t m;
   struct Fd *f = g_fds.p + fd;
   bool isconsole = f->kind == kFdConsole;
 
@@ -78,9 +77,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     //   return edquot(); /* handled by consts.sh */
     case kNtErrorBrokenPipe:  // broken pipe
     case kNtErrorNoData:      // closing named pipe
-      m = __sig_beginwait(waitmask);
       RaiseSignal(SIGPIPE);
-      __sig_finishwait(m);
       return epipe();
     case kNtErrorAccessDenied:  // write doesn't return EACCESS
       return ebadf();
@@ -111,7 +108,6 @@ static textwindows ssize_t sys_write_nt2(int fd, const struct iovec *iov,
       total += rc;
       if (opt_offset != -1) opt_offset += rc;
       if (rc < iov[i].iov_len) break;
-      waitmask = -1;  // disable eintr/ecanceled for remaining iovecs
     }
     return total;
   } else {

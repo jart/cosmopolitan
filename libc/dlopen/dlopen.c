@@ -39,7 +39,6 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/elf_loader.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdio/stdio.h"

@@ -36,6 +36,7 @@
 #include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -67,12 +68,12 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
                  bool32 ReadOrWriteFile(int64_t, void *, uint32_t, uint32_t *,
                                         struct NtOverlapped *)) {
   bool32 ok;
-  uint64_t m;
+  int sig = 0;
   uint32_t exchanged;
   int olderror = errno;
   bool eagained = false;
-  bool eintered = false;
   bool canceled = false;
+  int handler_was_called;
   struct PosixThread *pt;
   struct Fd *f = g_fds.p + fd;
 
@@ -104,73 +105,50 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     }
   }
 
-  // managing an overlapped i/o operation is tricky to do using just
-  // imperative procedural logic. its design lends itself more to be
-  // something that's abstracted in an object-oriented design, which
-  // easily manages the unusual lifecycles requirements of the thing
-  // the game here is to not return until win32 is done w/ `overlap`
-  // next we need to allow signal handlers to re-enter this function
-  // while we're performing a read in the same thread. this needs to
-  // be thread safe too of course. read() / write() are cancelation
-  // points so pthread_cancel() might teleport the execution here to
-  // pthread_exit(), so we need cleanup handlers that pthread_exit()
-  // can call, pushed onto the stack, so we don't leak win32 handles
-  // or worse trash the thread stack containing `overlap` that win32
-  // temporarily owns while the overlapped i/o op is being performed
-  // we implement a non-blocking iop by optimistically performing io
-  // and then aborting the operation if win32 says it needs to block
-  // with cancelation points, we need to be able to raise eintr when
-  // this thread is pre-empted to run a signal handler but only when
-  // that signal handler wasn't installed using this SA_RESTART flag
-  // in which case read() and write() will keep going afterwards. we
-  // support a second kind of eintr in cosmo/musl which is ecanceled
-  // and it's mission critical that it be relayed properly, since it
-  // can only be returned by a single system call in a thread's life
-  // another thing we do is check if any pending signals exist, then
-  // running as many of them as possible before entering a wait call
+RestartOperation:
+  // signals have already been fully blocked by caller
+  // perform i/o operation with atomic signal/cancel checking
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 1, 0, 0),
                                  .Pointer = offset};
   struct ReadwriteResources rwc = {handle, &overlap};
   pthread_cleanup_push(UnwindReadwrite, &rwc);
   ok = ReadOrWriteFile(handle, data, size, 0, &overlap);
   if (!ok && GetLastError() == kNtErrorIoPending) {
-  BlockingOperation:
-    pt = _pthread_self();
-    pt->pt_iohandle = handle;
-    pt->pt_ioverlap = &overlap;
-    pt->pt_flags |= PT_RESTARTABLE;
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_IO, memory_order_release);
-    m = __sig_beginwait(waitmask);
+    // win32 says this i/o operation needs to block
     if (f->flags & _O_NONBLOCK) {
+      // abort the i/o operation if file descriptor is in non-blocking mode
       CancelIoEx(handle, &overlap);
       eagained = true;
-    } else if (_check_signal(true)) {
+    } else if (_check_cancel()) {
+      // _check_cancel() can go three ways:
+      // 1. it'll return 0 if we're fine and no thread cancelation happened
+      // 2. it'll pthread_exit() and cleanup, when cancelation was deferred
+      // 3. it'll return -1 and raise ECANCELED if a cancelation was masked
       CancelIoEx(handle, &overlap);
-      if (errno == ECANCELED) {
-        canceled = true;
-      } else {
-        eintered = true;
-      }
+      canceled = true;
+    } else if ((sig = __sig_get(waitmask))) {
+      // we've dequeued a signal that was pending per caller's old sigmask
+      // we can't call the signal handler until we release win32 resources
+      CancelIoEx(handle, &overlap);
     } else {
+      // wait until i/o either completes or is canceled by another thread
+      // we avoid a race condition by having a second mask for unblocking
+      pt = _pthread_self();
+      pt->pt_blkmask = waitmask;
+      pt->pt_iohandle = handle;
+      pt->pt_ioverlap = &overlap;
+      atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_IO,
+                            memory_order_release);
       WaitForSingleObject(overlap.hEvent, -1u);
+      atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
     }
-    __sig_finishwait(m);
-    atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_CPU,
-                          memory_order_release);
-    pt->pt_flags &= ~PT_RESTARTABLE;
-    pt->pt_ioverlap = 0;
-    pt->pt_iohandle = 0;
     ok = true;
   }
   if (ok) {
-    bool32 should_wait = canceled || eagained;
-    ok = GetOverlappedResult(handle, &overlap, &exchanged, should_wait);
-    if (!ok && GetLastError() == kNtErrorIoIncomplete) {
-      goto BlockingOperation;
-    }
+    ok = GetOverlappedResult(handle, &overlap, &exchanged, true);
   }
-  CloseHandle(overlap.hEvent);
   pthread_cleanup_pop(false);
+  CloseHandle(overlap.hEvent);
 
   // if we acknowledged a pending masked mode cancelation request then
   // we must pass it to the caller immediately now that cleanup's done
@@ -178,8 +156,16 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     return ecanceled();
   }
 
-  // sudden success trumps interrupts and/or failed i/o abort attempts
-  // plenty of code above might clobber errno, so we always restore it
+  // if we removed a pending signal then we must raise it
+  // it's now safe to call a signal handler that longjmps
+  if (sig) {
+    handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+    if (_check_cancel() == -1) return -1;
+  } else {
+    handler_was_called = 0;
+  }
+
+  // if i/o succeeded then return its result
   if (ok) {
     if (!pwriting && seekable) {
       f->pointer = offset + exchanged;
@@ -188,23 +174,24 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
     return exchanged;
   }
 
-  // if we backed out of the i/o operation intentionally ignore errors
-  if (eagained) {
-    return eagain();
-  }
-
-  // if another thread canceled our win32 i/o operation then we should
-  // check and see if it was pthread_cancel() which committed the deed
-  // in which case _check_cancel() can acknowledge the cancelation now
-  // it's also fine to do nothing here; punt to next cancelation point
+  // only raise EINTR or EAGAIN if I/O got canceled
   if (GetLastError() == kNtErrorOperationAborted) {
-    if (_check_cancel() == -1) return ecanceled();
-    if (!eintered && _check_signal(false)) return -1;
-  }
-
-  // if we chose to process a pending signal earlier then we preserve
-  // that original error explicitly here even though aborted == eintr
-  if (eintered) {
+    // raise EAGAIN if it's due to O_NONBLOCK mmode
+    if (eagained) {
+      return eagain();
+    }
+    // at this point the i/o must have been canceled due to a signal.
+    // this could be because we found the signal earlier and canceled
+    // ourself. otherwise it's due to a kill from another thread that
+    // added something to our mask and canceled our i/o, so we check.
+    if (!handler_was_called && (sig = __sig_get(waitmask))) {
+      handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+      if (_check_cancel() == -1) return -1;
+    }
+    // read() is @restartable unless non-SA_RESTART hands were called
+    if (handler_was_called != 1) {
+      goto RestartOperation;
+    }
     return eintr();
   }
 

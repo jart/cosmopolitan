@@ -124,7 +124,7 @@ syscon	errno	ECANCELED				125			125			89			89			85			88			87			1223			# kNtError
 syscon	errno	EOWNERDEAD				130			130			105			105			96			94			97			105			# kNtErrorSemOwnerDied; raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENOTRECOVERABLE				131			131			104			104			95			93			98			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENONET					64			64			317			317			317			317			317			0			# made up on BSDs; raised by accept(2)
-syscon	errno	ERESTART				85			85			-1			-1			-1			-1			-3			0			# should only be seen in ptrace()
+syscon	errno	ERESTART				85			85			318			318			318			318			-3			20000			# should only be seen in ptrace()
 syscon	errno	ENODATA					61			61			96			96			0			0			89			232			# no message is available in xsi stream or named pipe is being closed; no data available; barely in posix; returned by ioctl; very close in spirit to EPIPE?
 syscon	errno	ENOSR					63			63			98			98			0			90			90			0			# out of streams resources; something like EAGAIN; it's in POSIX; maybe some commercial UNIX returns it with openat, putmsg, putpmsg, posix_openpt, ioctl, open
 syscon	errno	ENOSTR					60			60			99			99			0			0			91			0			# not a stream; returned by getmsg, putmsg, putpmsg, getpmsg

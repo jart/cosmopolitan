@@ -23,6 +23,8 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -40,6 +42,7 @@
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/clktck.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
@@ -147,9 +150,11 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ab
 
 static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 				    const struct timespec *timeout,
-				    struct PosixThread *pt) {
+				    struct PosixThread *pt,
+				    sigset_t waitmask) {
+	int sig;
 	bool32 ok;
-	struct timespec deadline, interval, remain, wait, now;
+	struct timespec deadline, wait, now;
 
 	if (timeout) {
 		deadline = *timeout;
@@ -162,16 +167,36 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare,
 		if (timespec_cmp (now, deadline) > 0) {
 			return etimedout();
 		}
-		remain = timespec_sub (deadline, now);
-		interval = timespec_frommillis (5000);
-		wait = timespec_cmp (remain, interval) > 0 ? interval : remain;
+		wait = timespec_sub (deadline, now);
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			return 0;
 		}
-		if (pt) atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
-		if (_check_signal (false) == -1) return -1;
+		if (pt) {
+			if (_check_cancel () == -1) {
+				return -1; /* ECANCELED */
+			}
+			if ((sig = __sig_get (waitmask))) {
+				__sig_relay (sig, SI_KERNEL, waitmask);
+				if (_check_cancel () == -1) {
+					return -1; /* ECANCELED */
+				}
+				return eintr ();
+			}
+			pt->pt_blkmask = waitmask;
+			atomic_store_explicit (&pt->pt_blocker, w, memory_order_release);
+		}
 		ok = WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait));
-		if (_check_signal (false) == -1) return -1;
+		if (pt) {
+			/* __sig_cancel wakes our futex without changing `w` after enqueing signals */
+			atomic_store_explicit (&pt->pt_blocker, 0, memory_order_release);
+			if (ok && atomic_load_explicit (w, memory_order_acquire) == expect && (sig = __sig_get (waitmask))) {
+				__sig_relay (sig, SI_KERNEL, waitmask);
+				if (_check_cancel () == -1) {
+					return -1; /* ECANCELED */
+				}
+				return eintr ();
+			}
+		}
 		if (ok) {
 			return 0;
 		} else {
@@ -233,7 +258,9 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, const struct time
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
 			if (pshare) goto Polyfill;
-			rc = nsync_futex_wait_win32_ (w, expect, pshare, timeout, pt);
+			sigset_t m = __sig_block ();
+			rc = nsync_futex_wait_win32_ (w, expect, pshare, timeout, pt, m);
+			__sig_unblock (m);
 		} else if (IsXnu ()) {
 			uint32_t op, us;
 			if (pshare) {

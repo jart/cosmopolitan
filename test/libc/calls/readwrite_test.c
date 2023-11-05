@@ -16,48 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/sig.internal.h"
-#include "libc/intrin/atomic.h"
-#include "libc/nt/synchronization.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/thread/posixthread.internal.h"
-#ifdef __x86_64__
+#include "libc/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/runtime/clktck.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
-// returns 0 on timeout or spurious wakeup
-// raises EINTR if a signal delivery interrupted wait operation
-// raises ECANCELED if this POSIX thread was canceled in masked mode
-static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
-                                    bool restartable) {
-  int sig;
-  if (_check_cancel() == -1) return -1;
-  if ((sig = __sig_get(waitmask))) {
-    int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-    if (!restartable || handler_was_called == 1) return eintr();
+jmp_buf jb;
+int pfds[2];
+atomic_bool isdone;
+volatile bool canjmp;
+
+void OnSignal(int sig) {
+  if (canjmp) {
+    canjmp = false;
+    longjmp(jb, 1);
   }
-  int expect = 0;
-  atomic_int futex = 0;
-  struct PosixThread *pt = _pthread_self();
-  pt->pt_blkmask = waitmask;
-  atomic_store_explicit(&pt->pt_blocker, &futex, memory_order_release);
-  bool32 ok = WaitOnAddress(&futex, &expect, sizeof(int), msdelay);
-  atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-  if (ok && (sig = __sig_get(waitmask))) {
-    int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-    if (!restartable || handler_was_called == 1) return eintr();
+}
+
+void *ReadWorker(void *arg) {
+  int got;
+  char buf[8];
+  while (!isdone) {
+    if (!(got = setjmp(jb))) {
+      canjmp = true;
+      read(pfds[0], buf, sizeof(buf));
+      abort();
+    }
   }
   return 0;
 }
 
-textwindows int _park_norestart(uint32_t msdelay, sigset_t waitmask) {
-  return _park_thread(msdelay, waitmask, false);
+TEST(eintr, longjmp) {
+  pthread_t th;
+  struct sigaction sa = {
+      .sa_handler = OnSignal,
+      .sa_flags = SA_SIGINFO | SA_NODEFER,
+  };
+  sigaction(SIGUSR1, &sa, 0);
+  ASSERT_SYS(0, 0, pipe(pfds));
+  ASSERT_EQ(0, pthread_create(&th, 0, ReadWorker, 0));
+  for (int i = 0; i < 10; ++i) {
+    pthread_kill(th, SIGUSR1);
+    usleep(1. / CLK_TCK * 1e6);
+  }
+  isdone = true;
+  pthread_kill(th, SIGUSR1);
+  ASSERT_EQ(0, pthread_join(th, 0));
+  ASSERT_SYS(0, 0, close(pfds[1]));
+  ASSERT_SYS(0, 0, close(pfds[0]));
 }
-
-textwindows int _park_restartable(uint32_t msdelay, sigset_t waitmask) {
-  return _park_thread(msdelay, waitmask, true);
-}
-
-#endif /* __x86_64__ */

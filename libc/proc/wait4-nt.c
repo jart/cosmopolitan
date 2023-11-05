@@ -130,11 +130,11 @@ WaitMore:
 SpuriousWakeup:
   ++*wv;
   pthread_cleanup_push(UnwindWaiterCount, wv);
-  m = __sig_beginwait(waitmask);
+  m = __sig_begin(waitmask);
   if ((rc = _check_signal(true)) != -1) {
     rc = nsync_cv_wait_with_deadline(cv, &__proc.lock, deadline, 0);
   }
-  __sig_finishwait(m);
+  __sig_finish(m);
   pthread_cleanup_pop(true);
   if (rc == -1) return -1;
   if (rc == ETIMEDOUT) goto WaitMore;

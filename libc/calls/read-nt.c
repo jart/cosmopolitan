@@ -44,6 +44,7 @@
 #include "libc/nt/enum/creationdisposition.h"
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/vk.h"
+#include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/inputrecord.h"
@@ -51,6 +52,7 @@
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
@@ -718,10 +720,10 @@ static textwindows bool DigestConsoleInput(char *data, size_t size, int *rc) {
 }
 
 static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
-  int rc;
-  sigset_t m;
+  int sig;
   int64_t sem;
-  uint32_t ms = -1u;
+  uint32_t wi, ms = -1;
+  int handler_was_called;
   struct PosixThread *pt;
   if (!__ttyconf.vmin) {
     if (!__ttyconf.vtime) {
@@ -733,39 +735,42 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   if (f->flags & _O_NONBLOCK) {
     return eagain();  // standard unix non-blocking
   }
+  if (_check_cancel() == -1) return -1;
+  if ((sig = __sig_get(waitmask))) {
+    handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+    if (_check_cancel() == -1) return -1;
+    if (handler_was_called != 1) return -2;
+    return eintr();
+  }
   pt = _pthread_self();
-  pt->pt_flags |= PT_RESTARTABLE;
   pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
   pthread_cleanup_push((void *)CloseHandle, (void *)sem);
+  pt->pt_blkmask = waitmask;
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
-  m = __sig_beginwait(waitmask);
-  if ((rc = _check_signal(true)) != -1) {
-    int64_t hands[2] = {sem, __keystroke.cin};
-    if (WaitForMultipleObjects(2, hands, 0, ms) != -1u) {
-      if (!(pt->pt_flags & PT_RESTARTABLE)) rc = eintr();
-      rc |= _check_signal(true);
-    } else {
-      rc = __winerr();
-    }
-  }
-  __sig_finishwait(m);
-  atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_CPU, memory_order_release);
-  pt->pt_flags &= ~PT_RESTARTABLE;
+  wi = WaitForMultipleObjects(2, (int64_t[2]){__keystroke.cin, sem}, 0, ms);
+  atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
   pthread_cleanup_pop(true);
-  return rc;
+  if (wi == kNtWaitTimeout) return 0;  // vtime elapsed
+  if (wi == 0) return -2;              // console data
+  if (wi != 1) return __winerr();      // wait failed
+  if (!(sig = __sig_get(waitmask))) return eintr();
+  handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+  if (_check_cancel() == -1) return -1;
+  if (handler_was_called != 1) return -2;
+  return eintr();
 }
 
 static textwindows ssize_t ReadFromConsole(struct Fd *f, void *data,
                                            size_t size, sigset_t waitmask) {
   int rc;
-  bool done = false;
   InitConsole();
   do {
     LockKeystrokes();
     IngestConsoleInput();
-    done = DigestConsoleInput(data, size, &rc);
+    bool done = DigestConsoleInput(data, size, &rc);
     UnlockKeystrokes();
-  } while (!done && !(rc = WaitForConsole(f, waitmask)));
+    if (done) return rc;
+  } while ((rc = WaitForConsole(f, waitmask)) == -2);
   return rc;
 }
 
@@ -823,7 +828,6 @@ static textwindows ssize_t sys_read_nt2(int fd, const struct iovec *iov,
       total += rc;
       if (opt_offset != -1) opt_offset += rc;
       if (rc < iov[i].iov_len) break;
-      waitmask = -1;  // disable eintr/ecanceled for remaining iovecs
     }
     return total;
   } else {
