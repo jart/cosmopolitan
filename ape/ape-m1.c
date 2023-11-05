@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include <dispatch/dispatch.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libkern/OSCacheControl.h>
@@ -26,16 +27,16 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/random.h>
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
-#include <dlfcn.h>
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 6
+#define SYSLIB_VERSION 7
 
 struct Syslib {
   int magic;
@@ -231,60 +232,6 @@ static const char *BaseName(const char *s) {
   return b;
 }
 
-static void Bzero(void *a, unsigned long n) {
-  long z;
-  char *p, *e;
-  p = (char *)a;
-  e = p + n;
-  z = 0;
-  while (p + sizeof(z) <= e) {
-    __builtin_memcpy(p, &z, sizeof(z));
-    p += sizeof(z);
-  }
-  while (p < e) {
-    *p++ = 0;
-  }
-}
-
-static const char *MemChr(const char *s, unsigned char c, unsigned long n) {
-  for (; n; --n, ++s) {
-    if ((*s & 255) == c) {
-      return s;
-    }
-  }
-  return 0;
-}
-
-static void *MemMove(void *a, const void *b, unsigned long n) {
-  long w;
-  char *d;
-  const char *s;
-  unsigned long i;
-  d = (char *)a;
-  s = (const char *)b;
-  if (d > s) {
-    while (n >= sizeof(w)) {
-      n -= sizeof(w);
-      __builtin_memcpy(&w, s + n, sizeof(n));
-      __builtin_memcpy(d + n, &w, sizeof(n));
-    }
-    while (n--) {
-      d[n] = s[n];
-    }
-  } else {
-    i = 0;
-    while (i + sizeof(w) <= n) {
-      __builtin_memcpy(&w, s + i, sizeof(i));
-      __builtin_memcpy(d + i, &w, sizeof(i));
-      i += sizeof(w);
-    }
-    for (; i < n; ++i) {
-      d[i] = s[i];
-    }
-  }
-  return d;
-}
-
 static char *GetEnv(char **p, const char *s) {
   unsigned long i, j;
   if (p) {
@@ -367,7 +314,7 @@ __attribute__((__noreturn__)) static void Pexit(const char *c, int failed,
 static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
-  MemMove(ps->path + pathlen, ps->name, ps->namelen);
+  memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
   return !access(ps->path, X_OK);
 }
@@ -396,7 +343,7 @@ static char FindCommand(struct PathSearcher *ps) {
 
   /* paths are always 100% taken literally when a slash exists
        $ ape foo/bar.com arg1 arg2 */
-  if (MemChr(ps->name, '/', ps->namelen)) {
+  if (memchr(ps->name, '/', ps->namelen)) {
     return AccessCommand(ps, 0);
   }
 
@@ -480,310 +427,6 @@ static void pthread_jit_write_protect_np_workaround(int enabled) {
       return;
   }
   Pexit("ape", 0, "failed to set jit write protection");
-}
-
-__attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
-                                                long *sp, struct ElfEhdr *e,
-                                                struct ElfPhdr *p,
-                                                struct Syslib *lib) {
-  long rc;
-  int prot;
-  int flags;
-  int found_entry;
-  unsigned long dynbase;
-  unsigned long virtmin, virtmax;
-  unsigned long a, b, c, d, i, j;
-
-  /* validate elf */
-  found_entry = 0;
-  virtmin = virtmax = 0;
-  for (i = 0; i < e->e_phnum; ++i) {
-    if (p[i].p_type != PT_LOAD) {
-      continue;
-    }
-    if (p[i].p_filesz > p[i].p_memsz) {
-      Pexit(exe, 0, "ELF p_filesz exceeds p_memsz");
-    }
-    if ((p[i].p_flags & (PF_W | PF_X)) == (PF_W | PF_X)) {
-      Pexit(exe, 0, "Apple Silicon doesn't allow RWX memory");
-    }
-    if ((p[i].p_vaddr & (pagesz - 1)) != (p[i].p_offset & (pagesz - 1))) {
-      Pexit(exe, 0, "ELF p_vaddr incongruent w/ p_offset modulo 16384");
-    }
-    if (p[i].p_vaddr + p[i].p_memsz < p[i].p_vaddr ||
-        p[i].p_vaddr + p[i].p_memsz + (pagesz - 1) < p[i].p_vaddr) {
-      Pexit(exe, 0, "ELF p_vaddr + p_memsz overflow");
-    }
-    if (p[i].p_offset + p[i].p_filesz < p[i].p_offset ||
-        p[i].p_offset + p[i].p_filesz + (pagesz - 1) < p[i].p_offset) {
-      Pexit(exe, 0, "ELF p_offset + p_filesz overflow");
-    }
-    a = p[i].p_vaddr & -pagesz;
-    b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
-    for (j = i + 1; j < e->e_phnum; ++j) {
-      if (p[j].p_type != PT_LOAD) continue;
-      c = p[j].p_vaddr & -pagesz;
-      d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
-      if (MAX(a, c) < MIN(b, d)) {
-        Pexit(exe, 0, "ELF segments overlap each others virtual memory");
-      }
-    }
-    if (p[i].p_flags & PF_X) {
-      if (p[i].p_vaddr <= e->e_entry &&
-          e->e_entry < p[i].p_vaddr + p[i].p_memsz) {
-        found_entry = 1;
-      }
-    }
-    if (p[i].p_vaddr < virtmin) {
-      virtmin = p[i].p_vaddr;
-    }
-    if (p[i].p_vaddr + p[i].p_memsz > virtmax) {
-      virtmax = p[i].p_vaddr + p[i].p_memsz;
-    }
-  }
-  if (!found_entry) {
-    Pexit(exe, 0, "ELF entrypoint not found in PT_LOAD with PF_X");
-  }
-
-  /* choose loading address for dynamic elf executables
-     that maintains relative distances between segments */
-  if (e->e_type == ET_DYN) {
-    rc = (long)mmap(0, virtmax - virtmin, PROT_NONE,
-                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (rc < 0) Pexit(exe, rc, "pie mmap");
-    dynbase = rc;
-    if (dynbase & (pagesz - 1)) {
-      Pexit(exe, 0, "OS mmap incongruent w/ AT_PAGESZ");
-    }
-    if (dynbase + virtmin < dynbase) {
-      Pexit(exe, 0, "ELF dynamic base overflow");
-    }
-  } else {
-    dynbase = 0;
-  }
-
-  /* load elf */
-  for (i = 0; i < e->e_phnum; ++i) {
-    void *addr;
-    unsigned long size;
-    if (p[i].p_type != PT_LOAD) continue;
-
-    /* configure mapping */
-    prot = 0;
-    flags = MAP_FIXED | MAP_PRIVATE;
-    if (p[i].p_flags & PF_R) prot |= PROT_READ;
-    if (p[i].p_flags & PF_W) prot |= PROT_WRITE;
-    if (p[i].p_flags & PF_X) prot |= PROT_EXEC;
-
-    /* load from file */
-    if (p[i].p_filesz) {
-      int prot1, prot2;
-      unsigned long wipe;
-      prot1 = prot;
-      prot2 = prot;
-      /* when we ask the system to map the interval [vaddr,vaddr+filesz)
-         it might schlep extra file content into memory on both the left
-         and the righthand side. that's because elf doesn't require that
-         either side of the interval be aligned on the system page size.
-         normally we can get away with ignoring these junk bytes. but if
-         the segment defines bss memory (i.e. memsz > filesz) then we'll
-         need to clear the extra bytes in the page, if they exist. since
-         we can't do that if we're mapping a read-only page, we can just
-         map it with write permissions and call mprotect on it afterward */
-      a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
-      b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
-      c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
-      wipe = MIN(b - a, c - a);
-      if (wipe && (~prot1 & PROT_WRITE)) {
-        prot1 = PROT_READ | PROT_WRITE;
-      }
-      addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
-      size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
-      rc = (long)mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
-      if (rc < 0) Pexit(exe, rc, "prog mmap");
-      if (wipe) Bzero((void *)(dynbase + a), wipe);
-      if (prot2 != prot1) {
-        rc = mprotect(addr, size, prot2);
-        if (rc < 0) Pexit(exe, rc, "prog mprotect");
-      }
-      /* allocate extra bss */
-      if (c > b) {
-        flags |= MAP_ANONYMOUS;
-        rc = (long)mmap((void *)(dynbase + b), c - b, prot, flags, -1, 0);
-        if (rc < 0) Pexit(exe, rc, "extra bss mmap");
-      }
-    } else {
-      /* allocate pure bss */
-      addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
-      size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_memsz;
-      flags |= MAP_ANONYMOUS;
-      rc = (long)mmap(addr, size, prot, flags, -1, 0);
-      if (rc < 0) Pexit(exe, rc, "bss mmap");
-    }
-  }
-
-  /* finish up */
-  close(fd);
-
-  register long *x0 __asm__("x0") = sp;
-  register struct Syslib *x15 __asm__("x15") = lib;
-  register long x16 __asm__("x16") = e->e_entry;
-  __asm__ volatile("mov\tx1,#0\n\t"
-                   "mov\tx2,#0\n\t"
-                   "mov\tx3,#0\n\t"
-                   "mov\tx4,#0\n\t"
-                   "mov\tx5,#0\n\t"
-                   "mov\tx6,#0\n\t"
-                   "mov\tx7,#0\n\t"
-                   "mov\tx8,#0\n\t"
-                   "mov\tx9,#0\n\t"
-                   "mov\tx10,#0\n\t"
-                   "mov\tx11,#0\n\t"
-                   "mov\tx12,#0\n\t"
-                   "mov\tx13,#0\n\t"
-                   "mov\tx14,#0\n\t"
-                   "mov\tx17,#0\n\t"
-                   "mov\tx19,#0\n\t"
-                   "mov\tx20,#0\n\t"
-                   "mov\tx21,#0\n\t"
-                   "mov\tx22,#0\n\t"
-                   "mov\tx23,#0\n\t"
-                   "mov\tx24,#0\n\t"
-                   "mov\tx25,#0\n\t"
-                   "mov\tx26,#0\n\t"
-                   "mov\tx27,#0\n\t"
-                   "mov\tx28,#0\n\t"
-                   "mov\tx29,#0\n\t"
-                   "mov\tx30,#0\n\t"
-                   "mov\tsp,x0\n\t"
-                   "mov\tx0,#0\n\t"
-                   "br\tx16"
-                   : /* no outputs */
-                   : "r"(x0), "r"(x15), "r"(x16)
-                   : "memory");
-  __builtin_unreachable();
-}
-
-static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, int fd, long *sp, long *auxv,
-                          char *execfn) {
-  long i, rc;
-  unsigned size;
-  struct ElfEhdr *e;
-  struct ElfPhdr *p;
-
-  /* validate elf header */
-  e = &ebuf->ehdr;
-  if (READ32(ebuf->buf) != READ32("\177ELF")) {
-    return "didn't embed ELF magic";
-  }
-  if (e->e_ident[EI_CLASS] == ELFCLASS32) {
-    return "32-bit ELF isn't supported";
-  }
-  if (e->e_type != ET_EXEC && e->e_type != ET_DYN) {
-    return "ELF not ET_EXEC or ET_DYN";
-  }
-  if (e->e_machine != EM_AARCH64) {
-    return "couldn't find ELF header with ARM64 machine type";
-  }
-  if (e->e_phentsize != sizeof(struct ElfPhdr)) {
-    Pexit(exe, 0, "e_phentsize is wrong");
-  }
-  size = e->e_phnum;
-  if ((size *= sizeof(struct ElfPhdr)) > sizeof(M->phdr.buf)) {
-    Pexit(exe, 0, "too many ELF program headers");
-  }
-
-  /* read program headers */
-  rc = pread(fd, M->phdr.buf, size, ebuf->ehdr.e_phoff);
-  if (rc < 0) return "failed to read ELF program headers";
-  if (rc != size) return "truncated read of ELF program headers";
-
-  /* bail on recoverable program header errors */
-  p = &M->phdr.phdr;
-  for (i = 0; i < e->e_phnum; ++i) {
-    if (p[i].p_type == PT_INTERP) {
-      return "ELF has PT_INTERP which isn't supported";
-    }
-    if (p[i].p_type == PT_DYNAMIC) {
-      return "ELF has PT_DYNAMIC which isn't supported";
-    }
-  }
-
-  /* remove empty program headers */
-  for (i = 0; i < e->e_phnum;) {
-    if (p[i].p_type == PT_LOAD && !p[i].p_memsz) {
-      if (i + 1 < e->e_phnum) {
-        MemMove(p + i, p + i + 1,
-                (e->e_phnum - (i + 1)) * sizeof(struct ElfPhdr));
-      }
-      --e->e_phnum;
-    } else {
-      ++i;
-    }
-  }
-
-  /*
-   * merge adjacent loads that are contiguous with equal protection,
-   * which prevents our program header overlap check from needlessly
-   * failing later on; it also shaves away a microsecond of latency,
-   * since every program header requires invoking at least 1 syscall
-   */
-  for (i = 0; i + 1 < e->e_phnum;) {
-    if (p[i].p_type == PT_LOAD && p[i + 1].p_type == PT_LOAD &&
-        ((p[i].p_flags & (PF_R | PF_W | PF_X)) ==
-         (p[i + 1].p_flags & (PF_R | PF_W | PF_X))) &&
-        ((p[i].p_offset + p[i].p_filesz + (pagesz - 1)) & -pagesz) -
-                (p[i + 1].p_offset & -pagesz) <=
-            pagesz &&
-        ((p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz) -
-                (p[i + 1].p_vaddr & -pagesz) <=
-            pagesz) {
-      p[i].p_memsz = (p[i + 1].p_vaddr + p[i + 1].p_memsz) - p[i].p_vaddr;
-      p[i].p_filesz = (p[i + 1].p_offset + p[i + 1].p_filesz) - p[i].p_offset;
-      if (i + 2 < e->e_phnum) {
-        MemMove(p + i + 1, p + i + 2,
-                (e->e_phnum - (i + 2)) * sizeof(struct ElfPhdr));
-      }
-      --e->e_phnum;
-    } else {
-      ++i;
-    }
-  }
-
-  /* simulate linux auxiliary values */
-  auxv[0] = AT_PHDR;
-  auxv[1] = (long)&M->phdr.phdr;
-  auxv[2] = AT_PHENT;
-  auxv[3] = ebuf->ehdr.e_phentsize;
-  auxv[4] = AT_PHNUM;
-  auxv[5] = ebuf->ehdr.e_phnum;
-  auxv[6] = AT_ENTRY;
-  auxv[7] = ebuf->ehdr.e_entry;
-  auxv[8] = AT_PAGESZ;
-  auxv[9] = pagesz;
-  auxv[10] = AT_UID;
-  auxv[11] = getuid();
-  auxv[12] = AT_EUID;
-  auxv[13] = geteuid();
-  auxv[14] = AT_GID;
-  auxv[15] = getgid();
-  auxv[16] = AT_EGID;
-  auxv[17] = getegid();
-  auxv[18] = AT_HWCAP;
-  auxv[19] = 0xffb3ffffu;
-  auxv[20] = AT_HWCAP2;
-  auxv[21] = 0x181;
-  auxv[22] = AT_SECURE;
-  auxv[23] = issetugid();
-  auxv[24] = AT_RANDOM;
-  auxv[25] = (long)M->rando;
-  auxv[26] = AT_EXECFN;
-  auxv[27] = (long)execfn;
-  auxv[28] = 0;
-
-  /* we're now ready to load */
-  Spawn(exe, fd, sp, e, p, &M->lib);
 }
 
 __attribute__((__noinline__)) static long sysret(long rc) {
@@ -885,6 +528,330 @@ static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds,
                         fd_set *errorfds, const struct timespec *timeout,
                         const sigset_t *sigmask) {
   return sysret(pselect(nfds, readfds, writefds, errorfds, timeout, sigmask));
+}
+
+__attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
+                                                long *sp, struct ElfEhdr *e,
+                                                struct ElfPhdr *p,
+                                                struct Syslib *lib) {
+  long rc;
+  int prot;
+  int flags;
+  int found_entry;
+  unsigned long dynbase;
+  unsigned long virtmin, virtmax;
+  unsigned long a, b, c, d, i, j;
+
+  /* validate elf */
+  found_entry = 0;
+  virtmin = virtmax = 0;
+  for (i = 0; i < e->e_phnum; ++i) {
+    if (p[i].p_type != PT_LOAD) {
+      continue;
+    }
+    if (p[i].p_filesz > p[i].p_memsz) {
+      Pexit(exe, 0, "ELF p_filesz exceeds p_memsz");
+    }
+    if ((p[i].p_flags & (PF_W | PF_X)) == (PF_W | PF_X)) {
+      Pexit(exe, 0, "Apple Silicon doesn't allow RWX memory");
+    }
+    if ((p[i].p_vaddr & (pagesz - 1)) != (p[i].p_offset & (pagesz - 1))) {
+      Pexit(exe, 0, "ELF p_vaddr incongruent w/ p_offset modulo 16384");
+    }
+    if (p[i].p_vaddr + p[i].p_memsz < p[i].p_vaddr ||
+        p[i].p_vaddr + p[i].p_memsz + (pagesz - 1) < p[i].p_vaddr) {
+      Pexit(exe, 0, "ELF p_vaddr + p_memsz overflow");
+    }
+    if (p[i].p_offset + p[i].p_filesz < p[i].p_offset ||
+        p[i].p_offset + p[i].p_filesz + (pagesz - 1) < p[i].p_offset) {
+      Pexit(exe, 0, "ELF p_offset + p_filesz overflow");
+    }
+    a = p[i].p_vaddr & -pagesz;
+    b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
+    for (j = i + 1; j < e->e_phnum; ++j) {
+      if (p[j].p_type != PT_LOAD) continue;
+      c = p[j].p_vaddr & -pagesz;
+      d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
+      if (MAX(a, c) < MIN(b, d)) {
+        Pexit(exe, 0, "ELF segments overlap each others virtual memory");
+      }
+    }
+    if (p[i].p_flags & PF_X) {
+      if (p[i].p_vaddr <= e->e_entry &&
+          e->e_entry < p[i].p_vaddr + p[i].p_memsz) {
+        found_entry = 1;
+      }
+    }
+    if (p[i].p_vaddr < virtmin) {
+      virtmin = p[i].p_vaddr;
+    }
+    if (p[i].p_vaddr + p[i].p_memsz > virtmax) {
+      virtmax = p[i].p_vaddr + p[i].p_memsz;
+    }
+  }
+  if (!found_entry) {
+    Pexit(exe, 0, "ELF entrypoint not found in PT_LOAD with PF_X");
+  }
+
+  /* choose loading address for dynamic elf executables
+     that maintains relative distances between segments */
+  if (e->e_type == ET_DYN) {
+    rc = sys_mmap(0, virtmax - virtmin, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
+                  -1, 0);
+    if (rc < 0) Pexit(exe, rc, "pie mmap");
+    dynbase = rc;
+    if (dynbase & (pagesz - 1)) {
+      Pexit(exe, 0, "OS mmap incongruent w/ AT_PAGESZ");
+    }
+    if (dynbase + virtmin < dynbase) {
+      Pexit(exe, 0, "ELF dynamic base overflow");
+    }
+  } else {
+    dynbase = 0;
+  }
+
+  /* load elf */
+  for (i = 0; i < e->e_phnum; ++i) {
+    void *addr;
+    unsigned long size;
+    if (p[i].p_type != PT_LOAD) continue;
+
+    /* configure mapping */
+    prot = 0;
+    flags = MAP_FIXED | MAP_PRIVATE;
+    if (p[i].p_flags & PF_R) prot |= PROT_READ;
+    if (p[i].p_flags & PF_W) prot |= PROT_WRITE;
+    if (p[i].p_flags & PF_X) prot |= PROT_EXEC;
+
+    /* load from file */
+    if (p[i].p_filesz) {
+      long map1, map2;
+      int prot1, prot2;
+      unsigned long wipe;
+      prot1 = prot;
+      prot2 = prot;
+      /* when we ask the system to map the interval [vaddr,vaddr+filesz)
+         it might schlep extra file content into memory on both the left
+         and the righthand side. that's because elf doesn't require that
+         either side of the interval be aligned on the system page size.
+         normally we can get away with ignoring these junk bytes. but if
+         the segment defines bss memory (i.e. memsz > filesz) then we'll
+         need to clear the extra bytes in the page, if they exist. since
+         we can't do that if we're mapping a read-only page, we can just
+         map it with write permissions and call mprotect on it afterward */
+      a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
+      b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
+      c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
+      wipe = MIN(b - a, c - a);
+      if (wipe && (~prot1 & PROT_WRITE)) {
+        prot1 = PROT_READ | PROT_WRITE;
+      }
+      addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
+      size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
+      if (prot1 & PROT_EXEC) {
+        // if sip is disabled then we can load the executable segments
+        // of the binary into memory without needing to copy anything!
+        rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
+        if (rc < 0) {
+          if (rc != -EPERM) Pexit(exe, rc, "mmap(exec)");
+          // apple arm64 won't allow PROT_EXEC mapping any unsigned file
+          // however we are allowed to copy it into an anonymous mapping
+          map1 = sys_mmap(0, size, PROT_READ, MAP_PRIVATE, fd,
+                          p[i].p_offset & -pagesz);
+          if (map1 < 0) Pexit(exe, map1, "mmap(exec) workaround input");
+          map2 = sys_mmap(addr, size, (prot1 = PROT_READ | PROT_WRITE),
+                          MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
+          if (map2 < 0) Pexit(exe, map2, "mmap(exec) workaround output");
+          memcpy((void *)map2, (void *)map1, size);
+          munmap((void *)map1, size);
+        }
+      } else {
+        rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
+        if (rc < 0) Pexit(exe, rc, "prog mmap");
+      }
+      if (wipe) memset((void *)(dynbase + a), 0, wipe);
+      if (prot2 != prot1) {
+        rc = sys_mprotect(addr, size, prot2);
+        if (rc < 0) Pexit(exe, rc, "prog mprotect");
+      }
+      /* allocate extra bss */
+      if (c > b) {
+        flags |= MAP_ANONYMOUS;
+        rc = sys_mmap((void *)(dynbase + b), c - b, prot, flags, -1, 0);
+        if (rc < 0) Pexit(exe, rc, "extra bss mmap");
+      }
+    } else {
+      /* allocate pure bss */
+      addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
+      size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_memsz;
+      flags |= MAP_ANONYMOUS;
+      rc = sys_mmap(addr, size, prot, flags, -1, 0);
+      if (rc < 0) Pexit(exe, rc, "bss mmap");
+    }
+  }
+
+  /* finish up */
+  close(fd);
+
+  register long *x0 __asm__("x0") = sp;
+  register struct Syslib *x15 __asm__("x15") = lib;
+  register long x16 __asm__("x16") = e->e_entry;
+  __asm__ volatile("mov\tx1,#0\n\t"
+                   "mov\tx2,#0\n\t"
+                   "mov\tx3,#0\n\t"
+                   "mov\tx4,#0\n\t"
+                   "mov\tx5,#0\n\t"
+                   "mov\tx6,#0\n\t"
+                   "mov\tx7,#0\n\t"
+                   "mov\tx8,#0\n\t"
+                   "mov\tx9,#0\n\t"
+                   "mov\tx10,#0\n\t"
+                   "mov\tx11,#0\n\t"
+                   "mov\tx12,#0\n\t"
+                   "mov\tx13,#0\n\t"
+                   "mov\tx14,#0\n\t"
+                   "mov\tx17,#0\n\t"
+                   "mov\tx19,#0\n\t"
+                   "mov\tx20,#0\n\t"
+                   "mov\tx21,#0\n\t"
+                   "mov\tx22,#0\n\t"
+                   "mov\tx23,#0\n\t"
+                   "mov\tx24,#0\n\t"
+                   "mov\tx25,#0\n\t"
+                   "mov\tx26,#0\n\t"
+                   "mov\tx27,#0\n\t"
+                   "mov\tx28,#0\n\t"
+                   "mov\tx29,#0\n\t"
+                   "mov\tx30,#0\n\t"
+                   "mov\tsp,x0\n\t"
+                   "mov\tx0,#0\n\t"
+                   "br\tx16"
+                   : /* no outputs */
+                   : "r"(x0), "r"(x15), "r"(x16)
+                   : "memory");
+  __builtin_unreachable();
+}
+
+static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
+                          const char *exe, int fd, long *sp, long *auxv,
+                          char *execfn) {
+  long i, rc;
+  unsigned size;
+  struct ElfEhdr *e;
+  struct ElfPhdr *p;
+
+  /* validate elf header */
+  e = &ebuf->ehdr;
+  if (READ32(ebuf->buf) != READ32("\177ELF")) {
+    return "didn't embed ELF magic";
+  }
+  if (e->e_ident[EI_CLASS] == ELFCLASS32) {
+    return "32-bit ELF isn't supported";
+  }
+  if (e->e_type != ET_EXEC && e->e_type != ET_DYN) {
+    return "ELF not ET_EXEC or ET_DYN";
+  }
+  if (e->e_machine != EM_AARCH64) {
+    return "couldn't find ELF header with ARM64 machine type";
+  }
+  if (e->e_phentsize != sizeof(struct ElfPhdr)) {
+    Pexit(exe, 0, "e_phentsize is wrong");
+  }
+  size = e->e_phnum;
+  if ((size *= sizeof(struct ElfPhdr)) > sizeof(M->phdr.buf)) {
+    Pexit(exe, 0, "too many ELF program headers");
+  }
+
+  /* read program headers */
+  rc = pread(fd, M->phdr.buf, size, ebuf->ehdr.e_phoff);
+  if (rc < 0) return "failed to read ELF program headers";
+  if (rc != size) return "truncated read of ELF program headers";
+
+  /* bail on recoverable program header errors */
+  p = &M->phdr.phdr;
+  for (i = 0; i < e->e_phnum; ++i) {
+    if (p[i].p_type == PT_INTERP) {
+      return "ELF has PT_INTERP which isn't supported";
+    }
+    if (p[i].p_type == PT_DYNAMIC) {
+      return "ELF has PT_DYNAMIC which isn't supported";
+    }
+  }
+
+  /* remove empty program headers */
+  for (i = 0; i < e->e_phnum;) {
+    if (p[i].p_type == PT_LOAD && !p[i].p_memsz) {
+      if (i + 1 < e->e_phnum) {
+        memmove(p + i, p + i + 1,
+                (e->e_phnum - (i + 1)) * sizeof(struct ElfPhdr));
+      }
+      --e->e_phnum;
+    } else {
+      ++i;
+    }
+  }
+
+  /*
+   * merge adjacent loads that are contiguous with equal protection,
+   * which prevents our program header overlap check from needlessly
+   * failing later on; it also shaves away a microsecond of latency,
+   * since every program header requires invoking at least 1 syscall
+   */
+  for (i = 0; i + 1 < e->e_phnum;) {
+    if (p[i].p_type == PT_LOAD && p[i + 1].p_type == PT_LOAD &&
+        ((p[i].p_flags & (PF_R | PF_W | PF_X)) ==
+         (p[i + 1].p_flags & (PF_R | PF_W | PF_X))) &&
+        ((p[i].p_offset + p[i].p_filesz + (pagesz - 1)) & -pagesz) -
+                (p[i + 1].p_offset & -pagesz) <=
+            pagesz &&
+        ((p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz) -
+                (p[i + 1].p_vaddr & -pagesz) <=
+            pagesz) {
+      p[i].p_memsz = (p[i + 1].p_vaddr + p[i + 1].p_memsz) - p[i].p_vaddr;
+      p[i].p_filesz = (p[i + 1].p_offset + p[i + 1].p_filesz) - p[i].p_offset;
+      if (i + 2 < e->e_phnum) {
+        memmove(p + i + 1, p + i + 2,
+                (e->e_phnum - (i + 2)) * sizeof(struct ElfPhdr));
+      }
+      --e->e_phnum;
+    } else {
+      ++i;
+    }
+  }
+
+  /* simulate linux auxiliary values */
+  auxv[0] = AT_PHDR;
+  auxv[1] = (long)&M->phdr.phdr;
+  auxv[2] = AT_PHENT;
+  auxv[3] = ebuf->ehdr.e_phentsize;
+  auxv[4] = AT_PHNUM;
+  auxv[5] = ebuf->ehdr.e_phnum;
+  auxv[6] = AT_ENTRY;
+  auxv[7] = ebuf->ehdr.e_entry;
+  auxv[8] = AT_PAGESZ;
+  auxv[9] = pagesz;
+  auxv[10] = AT_UID;
+  auxv[11] = getuid();
+  auxv[12] = AT_EUID;
+  auxv[13] = geteuid();
+  auxv[14] = AT_GID;
+  auxv[15] = getgid();
+  auxv[16] = AT_EGID;
+  auxv[17] = getegid();
+  auxv[18] = AT_HWCAP;
+  auxv[19] = 0xffb3ffffu;
+  auxv[20] = AT_HWCAP2;
+  auxv[21] = 0x181;
+  auxv[22] = AT_SECURE;
+  auxv[23] = issetugid();
+  auxv[24] = AT_RANDOM;
+  auxv[25] = (long)M->rando;
+  auxv[26] = AT_EXECFN;
+  auxv[27] = (long)execfn;
+  auxv[28] = 0;
+
+  /* we're now ready to load */
+  Spawn(exe, fd, sp, e, p, &M->lib);
 }
 
 int main(int argc, char **argv, char **envp) {
@@ -997,7 +964,7 @@ int main(int argc, char **argv, char **envp) {
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
   }
-  MemMove(sp2, sp, (auxv - sp) * sizeof(long));
+  memmove(sp2, sp, (auxv - sp) * sizeof(long));
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
   auxv = sp2 + (auxv - sp);
@@ -1013,10 +980,10 @@ int main(int argc, char **argv, char **envp) {
   /* search for executable */
   if (!(exe = Commandv(&M->ps, prog, GetEnv(envp, "PATH")))) {
     Pexit(prog, 0, "not found (maybe chmod +x)");
-  } else if ((fd = openat(AT_FDCWD, exe, O_RDONLY)) < 0) {
-    Pexit(exe, -1, "open");
-  } else if ((rc = read(fd, ebuf->buf, sizeof(ebuf->buf))) < 0) {
-    Pexit(exe, -1, "read");
+  } else if ((fd = sys_openat(AT_FDCWD, exe, O_RDONLY, 0)) < 0) {
+    Pexit(exe, fd, "open");
+  } else if ((rc = sys_read(fd, ebuf->buf, sizeof(ebuf->buf))) < 0) {
+    Pexit(exe, rc, "read");
   } else if ((unsigned long)rc < sizeof(ebuf->ehdr)) {
     Pexit(exe, 0, "too small");
   }
@@ -1029,8 +996,8 @@ int main(int argc, char **argv, char **envp) {
   }
 
   /* generate some hard random data */
-  if (getentropy(M->rando, sizeof(M->rando))) {
-    Pexit(argv[0], -1, "getentropy");
+  if ((rc = sys_getentropy(M->rando, sizeof(M->rando))) < 0) {
+    Pexit(argv[0], rc, "getentropy");
   }
 
   /* ape intended behavior
