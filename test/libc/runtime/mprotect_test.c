@@ -197,6 +197,7 @@ TEST(mprotect, testRwxMap_vonNeumannRules) {
 }
 
 TEST(mprotect, testExecuteFlatFileMapOpenedAsReadonly) {
+  if (IsXnuSilicon()) return;  // TODO(jart): Use APE Loader SIP workaround?
   int (*p)(void);
   size_t n = sizeof(kRet31337);
   ASSERT_SYS(0, 3, creat("return31337", 0755));
