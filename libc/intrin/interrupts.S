@@ -92,6 +92,7 @@ __excep0_isr:
 	mov	%eax,%ss
 	mov	%eax,%ds
 	mov	%eax,%es
+	cld				# make sure DF is reset, for C code
 	ezlea	.excep_msg,di		# stack should be 16-byte aligned now
 	xor	%eax,%eax		# kprintf is variadic, remember to
 					# pass no. of vector regs. used (= 0)
