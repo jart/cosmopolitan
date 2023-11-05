@@ -91,7 +91,18 @@ vfork:
 	ldr	w0,[x0,#:lo12:__hostos]
 	tbz	x0,3,1f			// bit 3 is xnu
 	b	fork			// which doesn't support vfork()
-1:	mov	x8,#220			// __NR_clone
+1:
+
+#ifdef SYSDEBUG
+	stp	x29,x30,[sp,-16]!
+	adrp	x0,.Llog
+	add	x0,x0,:lo12:.Llog
+	mov	x29,sp
+	bl	__stracef
+	ldp	x29,x30,[sp],16
+#endif
+
+	mov	x8,#220			// __NR_clone
 	mov	x0,#0x4111		// SIGCHLD | CLONE_VM | CLONE_VFORK
 	mov	x1,#0
 	svc	0
