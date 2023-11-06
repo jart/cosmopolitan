@@ -20,10 +20,12 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
@@ -67,9 +69,19 @@ void *Worker(void *arg) {
 }
 
 TEST(raise, threaded) {
+  SPAWN(fork);
   signal(SIGILL, SIG_DFL);
   pthread_t worker;
   ASSERT_EQ(0, pthread_create(&worker, 0, Worker, 0));
   ASSERT_EQ(0, pthread_join(worker, 0));
   pthread_exit(0);
+  EXITS(0);
+}
+
+void OnRaise(int sig) {
+}
+
+BENCH(raise, bench) {
+  signal(SIGUSR1, OnRaise);
+  EZBENCH2("raise", donothing, raise(SIGUSR1));
 }

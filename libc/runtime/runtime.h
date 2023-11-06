@@ -72,7 +72,6 @@ extern int __argc;
 extern char **__argv;
 extern char **__envp;
 extern unsigned long *__auxv;
-extern bool __interruptible;
 extern intptr_t __oldstack;
 extern uint64_t __nosync;
 extern int __strace;

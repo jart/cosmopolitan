@@ -64,7 +64,6 @@ void check_args(long x0, long x1, long x2, long x3, long x4, long x5, double f0,
 
 TEST(makecontext, args) {
   char stack[1024];
-  __interruptible = false;
   getcontext(&uc);
   uc.uc_link = &goback;
   uc.uc_stack.ss_sp = stack;

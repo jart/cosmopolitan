@@ -34,6 +34,7 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -169,53 +170,59 @@ static textwindows bool __sig_start(struct PosixThread *pt, int sig,
 }
 
 static textwindows sigaction_f __sig_handler(unsigned rva) {
+  atomic_fetch_add_explicit(&__sig.count, 1, memory_order_relaxed);
   return (sigaction_f)(__executable_start + rva);
 }
 
-textwindows int __sig_raise(int sig, int sic) {
+textwindows int __sig_raise(volatile int sig, int sic) {
 
-  // create machine context object
-  struct PosixThread *pt = _pthread_self();
-  ucontext_t ctx = {.uc_sigmask = pt->tib->tib_sigmask};
-  struct NtContext nc;
-  nc.ContextFlags = kNtContextFull;
-  GetThreadContext(GetCurrentThread(), &nc);
-  _ntcontext2linux(&ctx, &nc);
+  // bitset of kinds of handlers called
+  volatile int handler_was_called = 0;
+
+  // loop over pending signals
+  ucontext_t ctx;
+  getcontext(&ctx);
+  if (!sig) {
+    if ((sig = __sig_get(ctx.uc_sigmask))) {
+      sic = SI_KERNEL;
+    } else {
+      return handler_was_called;
+    }
+  }
 
   // process signal(s)
-  int handler_was_called = 0;
-  do {
-    // start the signal
-    unsigned rva, flags;
-    if (__sig_start(pt, sig, &rva, &flags)) {
-      if (flags & SA_RESETHAND) {
-        STRACE("resetting %G handler", sig);
-        __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
-      }
-
-      // update the signal mask in preparation for signal handller
-      sigset_t blocksigs = __sighandmask[sig];
-      if (!(flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
-      ctx.uc_sigmask = atomic_fetch_or_explicit(
-          &pt->tib->tib_sigmask, blocksigs, memory_order_acquire);
-
-      // call the user's signal handler
-      char ssbuf[2][128];
-      siginfo_t si = {.si_signo = sig, .si_code = sic};
-      STRACE("__sig_raise(%G, %t) mask %s → %s", sig, __sig_handler(rva),
-             (DescribeSigset)(ssbuf[0], 0, &ctx.uc_sigmask),
-             (DescribeSigset)(ssbuf[1], 0, (sigset_t *)&pt->tib->tib_sigmask));
-      __sig_handler(rva)(sig, &si, &ctx);
-      (void)ssbuf;
-
-      // restore the original signal mask
-      atomic_store_explicit(&pt->tib->tib_sigmask, ctx.uc_sigmask,
-                            memory_order_release);
-      handler_was_called |= (flags & SA_RESTART) ? 2 : 1;
+  unsigned rva, flags;
+  struct PosixThread *pt = _pthread_self();
+  if (__sig_start(pt, sig, &rva, &flags)) {
+    if (flags & SA_RESETHAND) {
+      STRACE("resetting %G handler", sig);
+      __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
     }
-    sic = SI_KERNEL;
-  } while ((sig = __sig_get(ctx.uc_sigmask)));
-  return handler_was_called;
+
+    // update the signal mask in preparation for signal handller
+    sigset_t blocksigs = __sighandmask[sig];
+    if (!(flags & SA_NODEFER)) blocksigs |= 1ull << (sig - 1);
+    ctx.uc_sigmask = atomic_fetch_or_explicit(&pt->tib->tib_sigmask, blocksigs,
+                                              memory_order_acquire);
+
+    // call the user's signal handler
+    char ssbuf[2][128];
+    siginfo_t si = {.si_signo = sig, .si_code = sic};
+    STRACE("__sig_raise(%G, %t) mask %s → %s", sig, __sig_handler(rva),
+           (DescribeSigset)(ssbuf[0], 0, &ctx.uc_sigmask),
+           (DescribeSigset)(ssbuf[1], 0, (sigset_t *)&pt->tib->tib_sigmask));
+    __sig_handler(rva)(sig, &si, &ctx);
+    (void)ssbuf;
+
+    // record this handler
+    handler_was_called |= (flags & SA_RESTART) ? 2 : 1;
+  }
+
+  // restore sigmask
+  // loop back to top
+  // jump where handler says
+  sig = 0;
+  return setcontext(&ctx);
 }
 
 textwindows int __sig_relay(int sig, int sic, sigset_t waitmask) {
@@ -258,7 +265,6 @@ static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
   struct CosmoTib *tib = __get_tls();
   struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
   for (;;) {
-    atomic_fetch_add_explicit(&__sig.count, 1, memory_order_relaxed);
 
     // update the signal mask in preparation for signal handller
     sigset_t blocksigs = __sighandmask[sig];
@@ -512,9 +518,6 @@ static int __sig_crash_sig(struct NtExceptionPointers *ep, int *code) {
 
 static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
                              struct CosmoTib *tib) {
-
-  // increment the signal count for getrusage()
-  atomic_fetch_add_explicit(&__sig.count, 1, memory_order_relaxed);
 
   // log vital crash information reliably for --strace before doing much
   // we don't print this without the flag since raw numbers scare people

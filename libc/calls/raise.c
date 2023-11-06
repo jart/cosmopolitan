@@ -23,6 +23,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Sends signal to self.
@@ -35,6 +36,7 @@
  *
  * @param sig can be SIGALRM, SIGINT, SIGTERM, SIGKILL, etc.
  * @return 0 on success, or nonzero on failure
+ * @raise EINVAL if `sig` is invalid
  * @asyncsignalsafe
  */
 int raise(int sig) {
@@ -42,8 +44,12 @@ int raise(int sig) {
   if (IsXnuSilicon()) {
     rc = __syslib->__raise(sig);
   } else if (IsWindows()) {
-    __sig_raise(sig, SI_TKILL);
-    rc = 0;
+    if (0 <= sig && sig <= 64) {
+      __sig_raise(sig, SI_TKILL);
+      rc = 0;
+    } else {
+      rc = einval();
+    }
   } else {
     rc = sys_tkill(gettid(), sig, 0);
   }

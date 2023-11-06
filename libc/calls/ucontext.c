@@ -24,20 +24,12 @@
 int __tailcontext(const ucontext_t *);
 
 static int __contextmask(const sigset_t *opt_set, sigset_t *opt_out_oldset) {
-  if (!__interruptible) return 0;
-  // signal handling functions might exist
   // now context switching needs to go 14x slower
   return sigprocmask(SIG_SETMASK, opt_set, opt_out_oldset);
 }
 
 /**
  * Sets machine context.
- *
- * This function goes 14x slower if sigaction() has ever been used to
- * install a signal handling function. If you don't care about signal
- * safety and just want fast fibers, then you may override the global
- * variable `__interruptible` to disable the sigprocmask() calls, for
- * pure userspace context switching.
  *
  * @return -1 on error w/ errno, otherwise won't return unless sent back
  * @see swapcontext()
