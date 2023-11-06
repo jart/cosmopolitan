@@ -146,6 +146,8 @@ o/$(MODE)/libc/calls/stackjump.o: libc/calls/stackjump.S
 o/$(MODE)/libc/calls/sched_yield.o: libc/calls/sched_yield.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
+o/$(MODE)/libc/calls/uname.o: libc/integral/normalize.inc
+
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))
 LIBC_CALLS_HDRS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_HDRS))
