@@ -25,7 +25,12 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
+
+#define _MSG_OOB       1
+#define _MSG_DONTROUTE 4
+#define _MSG_DONTWAIT  64
 
 struct SendArgs {
   const struct iovec *iov;
@@ -44,11 +49,14 @@ static textwindows int sys_send_nt_start(int64_t handle,
 
 textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
+  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_DONTROUTE)) return einval();
   ssize_t rc;
   struct Fd *f = g_fds.p + fd;
   sigset_t m = __sig_block();
-  rc = __winsock_block(f->handle, flags, !!(f->flags & O_NONBLOCK), f->sndtimeo,
-                       m, sys_send_nt_start, &(struct SendArgs){iov, iovlen});
+  bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
+  flags &= ~_MSG_DONTWAIT;
+  rc = __winsock_block(f->handle, flags, nonblock, f->sndtimeo, m,
+                       sys_send_nt_start, &(struct SendArgs){iov, iovlen});
   __sig_unblock(m);
   return rc;
 }

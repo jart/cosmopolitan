@@ -16,19 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
 
 /**
  * Specifies scheduler policy override for spawned process.
  *
- * Using this setter automatically sets `POSIX_SPAWN_SETSCHEDULER`.
+ * You also need to pass `POSIX_SPAWN_SETSCHEDULER` to
+ * posix_spawnattr_setflags() for it to take effect.
  *
  * @param attr was initialized by posix_spawnattr_init()
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_setschedpolicy(posix_spawnattr_t *attr, int schedpolicy) {
-  (*attr)->flags |= POSIX_SPAWN_SETSCHEDULER;
   (*attr)->schedpolicy = schedpolicy;
   return 0;
 }

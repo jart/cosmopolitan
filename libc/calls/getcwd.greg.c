@@ -164,6 +164,6 @@ int __getcwd(char *buf, size_t size) {
   } else {
     rc = sys_getcwd_metal(buf, size);
   }
-  STRACE("__getcwd([%#hhs], %'zu) → %d% m", rc != -1 ? buf : "n/a", size, rc);
+  STRACE("getcwd([%#hhs], %'zu) → %d% m", rc != -1 ? buf : "n/a", size, rc);
   return rc;
 }

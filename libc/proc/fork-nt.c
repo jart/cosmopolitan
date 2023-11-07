@@ -401,7 +401,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     }
   }
   if (rc == -1) {
-    __proc_free(proc);
+    dll_make_first(&__proc.free, &proc->elem);
   }
   ftrace_enabled(+1);
   strace_enabled(+1);

@@ -16,15 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
@@ -34,27 +31,9 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/stdio/sysparam.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #ifdef __x86_64__
-
-struct ReadwriteResources {
-  int64_t handle;
-  struct NtOverlapped *overlap;
-};
-
-static void UnwindReadwrite(void *arg) {
-  uint32_t got;
-  struct ReadwriteResources *rwc = arg;
-  CancelIoEx(rwc->handle, rwc->overlap);
-  GetOverlappedResult(rwc->handle, rwc->overlap, &got, true);
-  CloseHandle(rwc->overlap->hEvent);
-}
 
 /**
  * Runs code that's common to read/write/pread/pwrite/etc on Windows.
@@ -64,17 +43,11 @@ static void UnwindReadwrite(void *arg) {
  */
 textwindows ssize_t
 sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
-                 int64_t handle, uint64_t waitmask,
+                 int64_t handle, sigset_t waitmask,
                  bool32 ReadOrWriteFile(int64_t, void *, uint32_t, uint32_t *,
                                         struct NtOverlapped *)) {
-  bool32 ok;
-  int sig = 0;
+  int sig;
   uint32_t exchanged;
-  int olderror = errno;
-  bool eagained = false;
-  bool canceled = false;
-  int handler_was_called;
-  struct PosixThread *pt;
   struct Fd *f = g_fds.p + fd;
 
   // win32 i/o apis generally take 32-bit values thus we implicitly
@@ -106,33 +79,26 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   }
 
 RestartOperation:
+  bool eagained = false;
+  // check for signals and cancelation
+  if (_check_cancel() == -1) return -1;  // ECANCELED
+  if ((sig = __sig_get(waitmask))) goto HandleInterrupt;
+
   // signals have already been fully blocked by caller
   // perform i/o operation with atomic signal/cancel checking
   struct NtOverlapped overlap = {.hEvent = CreateEvent(0, 1, 0, 0),
                                  .Pointer = offset};
-  struct ReadwriteResources rwc = {handle, &overlap};
-  pthread_cleanup_push(UnwindReadwrite, &rwc);
-  ok = ReadOrWriteFile(handle, data, size, 0, &overlap);
+  bool32 ok = ReadOrWriteFile(handle, data, size, 0, &overlap);
   if (!ok && GetLastError() == kNtErrorIoPending) {
     // win32 says this i/o operation needs to block
     if (f->flags & _O_NONBLOCK) {
       // abort the i/o operation if file descriptor is in non-blocking mode
       CancelIoEx(handle, &overlap);
       eagained = true;
-    } else if (_check_cancel()) {
-      // _check_cancel() can go three ways:
-      // 1. it'll return 0 if we're fine and no thread cancelation happened
-      // 2. it'll pthread_exit() and cleanup, when cancelation was deferred
-      // 3. it'll return -1 and raise ECANCELED if a cancelation was masked
-      CancelIoEx(handle, &overlap);
-      canceled = true;
-    } else if ((sig = __sig_get(waitmask))) {
-      // we've dequeued a signal that was pending per caller's old sigmask
-      // we can't call the signal handler until we release win32 resources
-      CancelIoEx(handle, &overlap);
     } else {
       // wait until i/o either completes or is canceled by another thread
       // we avoid a race condition by having a second mask for unblocking
+      struct PosixThread *pt;
       pt = _pthread_self();
       pt->pt_blkmask = waitmask;
       pt->pt_iohandle = handle;
@@ -147,30 +113,13 @@ RestartOperation:
   if (ok) {
     ok = GetOverlappedResult(handle, &overlap, &exchanged, true);
   }
-  pthread_cleanup_pop(false);
   CloseHandle(overlap.hEvent);
-
-  // if we acknowledged a pending masked mode cancelation request then
-  // we must pass it to the caller immediately now that cleanup's done
-  if (canceled) {
-    return ecanceled();
-  }
-
-  // if we removed a pending signal then we must raise it
-  // it's now safe to call a signal handler that longjmps
-  if (sig) {
-    handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-  } else {
-    handler_was_called = 0;
-  }
 
   // if i/o succeeded then return its result
   if (ok) {
     if (!pwriting && seekable) {
       f->pointer = offset + exchanged;
     }
-    errno = olderror;
     return exchanged;
   }
 
@@ -180,17 +129,15 @@ RestartOperation:
     if (eagained) {
       return eagain();
     }
-    // at this point the i/o must have been canceled due to a signal.
-    // this could be because we found the signal earlier and canceled
-    // ourself. otherwise it's due to a kill from another thread that
-    // added something to our mask and canceled our i/o, so we check.
-    if (!handler_was_called && (sig = __sig_get(waitmask))) {
-      handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-      if (_check_cancel() == -1) return -1;
-    }
-    // read() is @restartable unless non-SA_RESTART hands were called
-    if (handler_was_called != 1) {
-      goto RestartOperation;
+    // otherwise it must be due to a kill() via __sig_cancel()
+    if ((sig = __sig_get(waitmask))) {
+    HandleInterrupt:
+      int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+      if (_check_cancel() == -1) return -1;  // possible if we SIGTHR'd
+      // read() is @restartable unless non-SA_RESTART hands were called
+      if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) {
+        goto RestartOperation;
+      }
     }
     return eintr();
   }

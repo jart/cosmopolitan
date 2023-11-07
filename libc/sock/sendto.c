@@ -43,7 +43,7 @@
  * @param fd is the file descriptor returned by socket()
  * @param buf is the data to send, which we'll copy if necessary
  * @param size is the byte-length of buf
- * @param flags MSG_OOB, MSG_DONTROUTE, MSG_PARTIAL, MSG_NOSIGNAL, etc.
+ * @param flags can have `MSG_OOB`, `MSG_DONTROUTE`, and `MSG_DONTWAIT`
  * @param opt_addr is a binary ip:port destination override, which is
  *     mandatory for UDP if connect() wasn't called
  * @param addrsize is the byte-length of addr's true polymorphic form

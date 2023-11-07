@@ -723,8 +723,6 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   int sig;
   int64_t sem;
   uint32_t wi, ms = -1;
-  int handler_was_called;
-  struct PosixThread *pt;
   if (!__ttyconf.vmin) {
     if (!__ttyconf.vtime) {
       return 0;  // non-blocking w/o raising eagain
@@ -732,31 +730,24 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
       ms = __ttyconf.vtime * 100;
     }
   }
-  if (f->flags & _O_NONBLOCK) {
-    return eagain();  // standard unix non-blocking
-  }
   if (_check_cancel() == -1) return -1;
-  if ((sig = __sig_get(waitmask))) {
-    handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-    if (handler_was_called != 1) return -2;
-    return eintr();
-  }
-  pt = _pthread_self();
-  pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
-  pthread_cleanup_push((void *)CloseHandle, (void *)sem);
+  if (f->flags & _O_NONBLOCK) return eagain();
+  if ((sig = __sig_get(waitmask))) goto DeliverSignal;
+  struct PosixThread *pt = _pthread_self();
   pt->pt_blkmask = waitmask;
+  pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
   atomic_store_explicit(&pt->pt_blocker, PT_BLOCKER_SEM, memory_order_release);
   wi = WaitForMultipleObjects(2, (int64_t[2]){__keystroke.cin, sem}, 0, ms);
   atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-  pthread_cleanup_pop(true);
+  CloseHandle(sem);
   if (wi == kNtWaitTimeout) return 0;  // vtime elapsed
   if (wi == 0) return -2;              // console data
   if (wi != 1) return __winerr();      // wait failed
   if (!(sig = __sig_get(waitmask))) return eintr();
-  handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+DeliverSignal:
+  int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
   if (_check_cancel() == -1) return -1;
-  if (handler_was_called != 1) return -2;
+  if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) return -2;
   return eintr();
 }
 

@@ -71,7 +71,7 @@ TryAgain:
     switch (__imp_GetLastError()) {
       case kNtErrorPipeBusy:
         if (micros >= 1024) __imp_Sleep(micros / 1024);
-        if (micros / 1024 < __SIG_IO_INTERVAL_MS) micros <<= 1;
+        if (micros < 1024 * 1024) micros <<= 1;
         goto TryAgain;
       case kNtErrorAccessDenied:
         // GetNtOpenFlags() always greedily requests execute permissions

@@ -34,7 +34,7 @@
  * @param fd is the file descriptor returned by socket()
  * @param buf is the data to send, which we'll copy if necessary
  * @param size is the byte-length of buf
- * @param flags MSG_OOB, MSG_DONTROUTE, MSG_PARTIAL, MSG_NOSIGNAL, etc.
+ * @param flags can have `MSG_OOB`, `MSG_DONTROUTE`, and `MSG_DONTWAIT`
  * @return number of bytes transmitted, or -1 w/ errno
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.

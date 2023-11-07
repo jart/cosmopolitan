@@ -309,9 +309,9 @@ textstartup void __printargs(const char *prologue) {
     PRINT("");
     PRINT("SIGNAL MASK %#lx", ss);
     if (ss) {
-      for (i = 0; i < 32; ++i) {
-        if (ss & (1u << i)) {
-          PRINT(" ☼ %G (%d) is masked", i + 1, i + 1);
+      for (i = 1; i <= NSIG; ++i) {
+        if (ss & (1ull << (i - 1))) {
+          PRINT(" ☼ %G (%d) is masked", i, i);
         }
       }
     } else {

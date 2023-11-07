@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sigset.h"
-#include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
 
 /**
@@ -32,13 +30,13 @@
  * set the signals to `SIG_IGN` earlier (since posix_spawn() will not
  * issue O(128) system calls just to be totally pedantic about that).
  *
- * Using this setter automatically sets `POSIX_SPAWN_SETSIGDEF`.
+ * You also need to pass `POSIX_SPAWN_SETSIGDEF` to
+ * posix_spawnattr_setflags() for it to take effect.
  *
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *attr,
                                   const sigset_t *sigdefault) {
-  (*attr)->flags |= POSIX_SPAWN_SETSIGDEF;
   (*attr)->sigdefault = *sigdefault;
   return 0;
 }

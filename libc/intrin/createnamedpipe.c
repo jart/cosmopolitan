@@ -50,7 +50,7 @@ TryAgain:
                                    nDefaultTimeOutMs, opt_lpSecurityAttributes);
   if (hServer == -1 && __imp_GetLastError() == kNtErrorPipeBusy) {
     if (micros >= 1024) __imp_Sleep(micros / 1024);
-    if (micros / 1024 < __SIG_IO_INTERVAL_MS) micros <<= 1;
+    if (micros < 1024 * 1024) micros <<= 1;
     goto TryAgain;
   }
   if (hServer == -1) __winerr();

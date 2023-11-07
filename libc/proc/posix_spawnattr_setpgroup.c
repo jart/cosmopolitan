@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
 
 /**
@@ -25,14 +24,14 @@
  * Setting `pgroup` to zero will ensure newly created processes are
  * placed within their own brand new process group.
  *
- * This setter also sets the `POSIX_SPAWN_SETPGROUP` flag.
+ * You also need to pass `POSIX_SPAWN_SETPGROUP` to
+ * posix_spawnattr_setflags() for it to take effect.
  *
  * @param attr was initialized by posix_spawnattr_init()
  * @param pgroup is the process group id, or 0 for self
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_setpgroup(posix_spawnattr_t *attr, int pgroup) {
-  (*attr)->flags |= POSIX_SPAWN_SETPGROUP;
   (*attr)->pgroup = pgroup;
   return 0;
 }

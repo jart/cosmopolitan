@@ -41,10 +41,10 @@ int sys_futex(int *, int, int, const struct timespec *, int *);
 static inline struct timespec timespec_fromseconds(int64_t __x) {
   return (struct timespec){__x};
 }
-static inline bool timespec_iszero(struct timespec __ts) {
+static inline int timespec_iszero(struct timespec __ts) {
   return !(__ts.tv_sec | __ts.tv_nsec);
 }
-static inline bool timespec_isvalid(struct timespec __ts) {
+static inline int timespec_isvalid(struct timespec __ts) {
   return __ts.tv_sec >= 0 && __ts.tv_nsec + 0ull < 1000000000ull;
 }
 #endif /* _COSMO_SOURCE */

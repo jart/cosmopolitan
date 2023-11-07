@@ -16,49 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/winsock.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/syscall_fd.internal.h"
-#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 #ifdef __x86_64__
-
-struct WinsockBlockResources {
-  int64_t handle;
-  struct NtOverlapped *overlap;
-};
-
-static void UnwindWinsockBlock(void *arg) {
-  struct WinsockBlockResources *wbr = arg;
-  uint32_t got, flags;
-  CancelIoEx(wbr->handle, wbr->overlap);
-  WSAGetOverlappedResult(wbr->handle, wbr->overlap, &got, true, &flags);
-  WSACloseEvent(wbr->overlap->hEvent);
-}
-
-static void CancelWinsockBlock(int64_t handle, struct NtOverlapped *overlap) {
-  if (!CancelIoEx(handle, overlap)) {
-    unassert(WSAGetLastError() == kNtErrorNotFound);
-  }
-}
 
 textwindows ssize_t
 __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
@@ -67,31 +38,20 @@ __winsock_block(int64_t handle, uint32_t flags, bool nonblock,
                                   uint32_t *flags, void *arg),
                 void *arg) {
 
-  int rc;
-  int sig = 0;
-  uint32_t status;
-  uint32_t exchanged;
-  int olderror = errno;
-  bool eagained = false;
-  bool canceled = false;
-  int handler_was_called;
-  struct PosixThread *pt;
-
 RestartOperation:
+  int rc, sig, reason = 0;
+  uint32_t status, exchanged;
+  if (_check_cancel() == -1) return -1;  // ECANCELED
+  if ((sig = __sig_get(waitmask))) goto HandleInterrupt;
+
   struct NtOverlapped overlap = {.hEvent = WSACreateEvent()};
-  struct WinsockBlockResources wbr = {handle, &overlap};
-  pthread_cleanup_push(UnwindWinsockBlock, &wbr);
   rc = StartSocketOp(handle, &overlap, &flags, arg);
   if (rc && WSAGetLastError() == kNtErrorIoPending) {
     if (nonblock) {
-      CancelWinsockBlock(handle, &overlap);
-      eagained = true;
-    } else if (_check_cancel()) {
-      CancelWinsockBlock(handle, &overlap);
-      canceled = true;
-    } else if ((sig = __sig_get(waitmask))) {
-      CancelWinsockBlock(handle, &overlap);
+      CancelIoEx(handle, &overlap);
+      reason = EAGAIN;
     } else {
+      struct PosixThread *pt;
       pt = _pthread_self();
       pt->pt_blkmask = waitmask;
       pt->pt_iohandle = handle;
@@ -101,10 +61,13 @@ RestartOperation:
       status = WSAWaitForMultipleEvents(1, &overlap.hEvent, 0,
                                         srwtimeout ? srwtimeout : -1u, 0);
       atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
-      if (status == kNtWaitTimeout) {
-        // SO_RCVTIMEO or SO_SNDTIMEO elapsed
-        CancelWinsockBlock(handle, &overlap);
-        eagained = true;
+      if (status) {
+        if (status == kNtWaitTimeout) {
+          reason = EAGAIN;  // SO_RCVTIMEO or SO_SNDTIMEO elapsed
+        } else {
+          reason = WSAGetLastError();  // ENETDOWN or ENOBUFS
+        }
+        CancelIoEx(handle, &overlap);
       }
     }
     rc = 0;
@@ -114,30 +77,21 @@ RestartOperation:
              ? 0
              : -1;
   }
-  pthread_cleanup_pop(false);
   WSACloseEvent(overlap.hEvent);
 
-  if (canceled) {
-    return ecanceled();
-  }
-  if (sig) {
-    handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-  } else {
-    handler_was_called = 0;
-  }
   if (!rc) {
-    errno = olderror;
     return exchanged;
   }
   if (WSAGetLastError() == kNtErrorOperationAborted) {
-    if (eagained) return eagain();
-    if (!handler_was_called && (sig = __sig_get(waitmask))) {
-      handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-      if (_check_cancel() == -1) return -1;
+    if (reason) {
+      errno = reason;
+      return -1;
     }
-    if (handler_was_called != 1) {
-      goto RestartOperation;
+    if ((sig = __sig_get(waitmask))) {
+    HandleInterrupt:
+      int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+      if (_check_cancel() == -1) return -1;
+      if (handler_was_called != 1) goto RestartOperation;
     }
     return eintr();
   }

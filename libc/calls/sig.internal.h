@@ -3,13 +3,8 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/thread/posixthread.internal.h"
 
-#define __SIG_LOCK_INTERVAL_MS    1000 /* semaphore synchronization: solid */
-#define __SIG_SIG_INTERVAL_MS     1000 /* posix signal polyfill also solid */
-#define __SIG_PROC_INTERVAL_MS    1000 /* process waiting also pretty good */
-#define __SIG_IO_INTERVAL_MS      1000 /* read/write cancel/notify is good */
-#define __SIG_POLL_INTERVAL_MS    20   /* poll on windows is dumpster fire */
-#define __SIG_LOGGING_INTERVAL_MS 1700
-#define __SIG_QUEUE_LENGTH        32
+#define SIG_HANDLED_NO_RESTART 1
+#define SIG_HANDLED_SA_RESTART 2
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

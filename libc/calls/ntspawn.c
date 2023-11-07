@@ -126,7 +126,8 @@ textwindows int ntspawn(
           if (CreateProcess(sb->path, sb->cmdline, 0, 0, true,
                             dwCreationFlags | kNtCreateUnicodeEnvironment |
                                 kNtExtendedStartupinfoPresent |
-                                kNtInheritParentAffinity,
+                                kNtInheritParentAffinity |
+                                GetPriorityClass(GetCurrentProcess()),
                             sb->envblock, opt_lpCurrentDirectory,
                             &info.StartupInfo, opt_out_lpProcessInformation)) {
             rc = 0;

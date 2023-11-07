@@ -24,6 +24,7 @@
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
@@ -47,6 +48,18 @@ extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 
 _Alignas(TLS_ALIGNMENT) static char __static_tls[6016];
+
+static unsigned long ParseMask(const char *str) {
+  int c;
+  unsigned long x = 0;
+  if (str) {
+    while ((c = *str++)) {
+      x *= 10;
+      x += c - '0';
+    }
+  }
+  return x;
+}
 
 /**
  * Enables thread local storage for main process.
@@ -209,6 +222,13 @@ textstartup void __enable_tls(void) {
   }
   atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
   // TODO(jart): set_tid_address?
+
+  // inherit signal mask
+  if (IsWindows()) {
+    atomic_store_explicit(&tib->tib_sigmask,
+                          ParseMask(__getenv(environ, "_MASK").s),
+                          memory_order_relaxed);
+  }
 
   // initialize posix threads
   _pthread_static.tib = tib;

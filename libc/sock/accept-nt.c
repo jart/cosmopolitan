@@ -109,7 +109,7 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
   if ((resources.handle = WSASocket(f->family, f->type, f->protocol, 0, 0,
                                     kNtWsaFlagOverlapped)) == -1) {
     client = __winsockerr();
-    goto WeFailed;
+    goto Finish;
   }
 
   // accept network connection
@@ -118,7 +118,10 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
   ssize_t bytes_received = __winsock_block(
       resources.handle, 0, !!(f->flags & O_NONBLOCK), f->rcvtimeo, m,
       sys_accept_nt_start, &(struct AcceptArgs){f->handle, &buffer});
-  if (bytes_received == -1) goto WeFailed;
+  if (bytes_received == -1) {
+    __imp_closesocket(resources.handle);
+    goto Finish;
+  }
 
   // create file descriptor for new socket
   // don't inherit the file open mode bits
@@ -138,7 +141,7 @@ textwindows int sys_accept_nt(struct Fd *f, struct sockaddr_storage *addr,
   memcpy(addr, &buffer.remote.addr, sizeof(*addr));
   g_fds.p[client].kind = kFdSocket;
 
-WeFailed:
+Finish:
   pthread_cleanup_pop(false);
   __sig_unblock(m);
   if (client == -1 && errno == ECONNRESET) {

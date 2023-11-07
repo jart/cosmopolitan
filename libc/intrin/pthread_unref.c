@@ -23,9 +23,7 @@
 
 static bool _pthread_deref(struct PosixThread *pt) {
   int refs = atomic_load_explicit(&pt->pt_refs, memory_order_acquire);
-  if (!refs) return true;
-  unassert(refs > 0);
-  return !atomic_fetch_sub(&pt->pt_refs, 1);
+  return !refs || !atomic_fetch_sub(&pt->pt_refs, 1);
 }
 
 void _pthread_unref(struct PosixThread *pt) {

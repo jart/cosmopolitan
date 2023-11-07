@@ -39,10 +39,10 @@ static inline struct timeval timeval_fromseconds(int64_t __x) {
 static inline struct timespec timeval_totimespec(struct timeval __tv) {
   return (struct timespec){__tv.tv_sec, __tv.tv_usec * 1000};
 }
-static inline bool timeval_iszero(struct timeval __tv) {
+static inline int timeval_iszero(struct timeval __tv) {
   return !(__tv.tv_sec | __tv.tv_usec);
 }
-static inline bool timeval_isvalid(struct timeval __tv) {
+static inline int timeval_isvalid(struct timeval __tv) {
   return __tv.tv_sec >= 0 && __tv.tv_usec + 0ull < 1000000ull;
 }
 #endif /* _COSMO_SOURCE */

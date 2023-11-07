@@ -27,6 +27,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
@@ -58,8 +59,10 @@ void SetUp(void) {
   // tune down the main process's stack size to a reasonable amount
   // some operating systems, e.g. freebsd, will do things like have
   // 500mb RLIMIT_STACK by default, even on machines with 400mb RAM
-  struct rlimit rl = {2 * 1024 * 1024, 2 * 1024 * 1024};
   if (!IsWindows() && !IsXnu()) {
+    struct rlimit rl;
+    getrlimit(RLIMIT_STACK, &rl);
+    rl.rlim_cur = MIN(rl.rlim_cur, 2 * 1024 * 1024);
     ASSERT_SYS(0, 0, setrlimit(RLIMIT_STACK, &rl));
   }
 

@@ -30,9 +30,7 @@ __msabi extern typeof(WSARecv) *const __imp_WSARecv;
 
 /**
  * Receives data from Windows socket.
- *
  * @return 0 on success, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
  */
 textwindows int WSARecv(
     uint64_t s, const struct NtIovec *inout_lpBuffers, uint32_t dwBufferCount,
@@ -57,9 +55,6 @@ textwindows int WSARecv(
   if (opt_out_lpNumberOfBytesRecvd) {
     *opt_out_lpNumberOfBytesRecvd = NumberOfBytesRecvd;
   }
-  if (rc == -1) {
-    __winsockerr();
-  }
   if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "WSARecv(%lu, [", s);
     DescribeIovNt(inout_lpBuffers, dwBufferCount,
@@ -73,9 +68,6 @@ textwindows int WSARecv(
   rc = __imp_WSARecv(s, inout_lpBuffers, dwBufferCount,
                      opt_out_lpNumberOfBytesRecvd, inout_lpFlags,
                      opt_inout_lpOverlapped, opt_lpCompletionRoutine);
-  if (rc == -1) {
-    __winsockerr();
-  }
 #endif
   return rc;
 }

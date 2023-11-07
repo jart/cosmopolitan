@@ -248,9 +248,9 @@ static textwindows errno_t posix_spawn_nt_impl(
   struct SpawnFds fds = {0};
   int64_t dirhand = AT_FDCWD;
   int64_t *lpExplicitHandles = 0;
+  sigset_t sigmask = __sig_block();
   uint32_t dwExplicitHandleCount = 0;
   int64_t hCreatorProcess = GetCurrentProcess();
-  sigset_t m = __sig_block();
 
   // reserve process tracking object
   __proc_lock();
@@ -266,11 +266,11 @@ static textwindows errno_t posix_spawn_nt_impl(
     free(fdspec);
     if (proc) {
       __proc_lock();
-      __proc_free(proc);
+      dll_make_first(&__proc.free, &proc->elem);
       __proc_unlock();
     }
     spawnfds_destroy(&fds);
-    __sig_unblock(m);
+    __sig_unblock(sigmask);
     errno = e;
     return err;
   }
@@ -360,13 +360,17 @@ static textwindows errno_t posix_spawn_nt_impl(
     }
   }
 
+  // inherit signal mask
+  char maskvar[6 + 21];
+  FormatUint64(stpcpy(maskvar, "_MASK="), sigmask);
+
   // launch process
   int rc = -1;
   struct NtProcessInformation procinfo;
   if (!envp) envp = environ;
   if ((fdspec = __describe_fds(fds.p, fds.n, &startinfo, hCreatorProcess,
                                &lpExplicitHandles, &dwExplicitHandleCount))) {
-    rc = ntspawn(dirhand, path, argv, envp, (char *[]){fdspec, 0},
+    rc = ntspawn(dirhand, path, argv, envp, (char *[]){fdspec, maskvar, 0},
                  dwCreationFlags, lpCurrentDirectory, 0, lpExplicitHandles,
                  dwExplicitHandleCount, &startinfo, &procinfo);
   }

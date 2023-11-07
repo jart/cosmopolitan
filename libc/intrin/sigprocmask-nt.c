@@ -42,7 +42,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
     if (how == SIG_BLOCK) {
       oldmask = atomic_fetch_or_explicit(mask, *neu, memory_order_acq_rel);
     } else if (how == SIG_UNBLOCK) {
-      oldmask = atomic_fetch_and_explicit(mask, *neu, memory_order_acq_rel);
+      oldmask = atomic_fetch_and_explicit(mask, ~*neu, memory_order_acq_rel);
     } else {  // SIG_SETMASK
       oldmask = atomic_exchange_explicit(mask, *neu, memory_order_acq_rel);
     }

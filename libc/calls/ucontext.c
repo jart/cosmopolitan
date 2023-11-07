@@ -17,16 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ucontext.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/runtime/runtime.h"
+#include "libc/calls/struct/sigset.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/tls.h"
 
 int __tailcontext(const ucontext_t *);
-
-static int __contextmask(const sigset_t *opt_set, sigset_t *opt_out_oldset) {
-  // now context switching needs to go 14x slower
-  return sigprocmask(SIG_SETMASK, opt_set, opt_out_oldset);
-}
 
 /**
  * Sets machine context.
@@ -37,14 +34,31 @@ static int __contextmask(const sigset_t *opt_set, sigset_t *opt_out_oldset) {
  * @see getcontext()
  */
 int setcontext(const ucontext_t *uc) {
-  if (__contextmask(&uc->uc_sigmask, 0)) return -1;
+  if (IsWindows()) {
+    atomic_store_explicit(&__get_tls()->tib_sigmask, uc->uc_sigmask,
+                          memory_order_release);
+  } else {
+    sys_sigprocmask(SIG_SETMASK, &uc->uc_sigmask, 0);
+  }
   return __tailcontext(uc);
 }
 
 int __getcontextsig(ucontext_t *uc) {
-  return __contextmask(0, &uc->uc_sigmask);
+  if (IsWindows()) {
+    uc->uc_sigmask =
+        atomic_load_explicit(&__get_tls()->tib_sigmask, memory_order_acquire);
+    return 0;
+  } else {
+    return sys_sigprocmask(SIG_SETMASK, 0, &uc->uc_sigmask);
+  }
 }
 
 int __swapcontextsig(ucontext_t *x, const ucontext_t *y) {
-  return __contextmask(&y->uc_sigmask, &x->uc_sigmask);
+  if (IsWindows()) {
+    x->uc_sigmask = atomic_exchange_explicit(
+        &__get_tls()->tib_sigmask, y->uc_sigmask, memory_order_acquire);
+    return 0;
+  } else {
+    return sys_sigprocmask(SIG_SETMASK, &y->uc_sigmask, &x->uc_sigmask);
+  }
 }

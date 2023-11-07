@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/sysv/consts/ioprio.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/sched.h"
@@ -31,7 +32,7 @@
  */
 int verynice(void) {
   int e = errno;
-  setpriority(PRIO_PROCESS, 0, 10);
+  setpriority(PRIO_PROCESS, 0, NZERO);
   sys_ioprio_set(IOPRIO_WHO_PROCESS, 0,
                  IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0));
   struct sched_param param = {sched_get_priority_min(SCHED_IDLE)};

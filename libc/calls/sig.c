@@ -18,8 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sysv/consts/sig.h"
 #include "ape/sections.internal.h"
-#include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
@@ -30,34 +28,26 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/describebacktrace.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/popcnt.h"
+#include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/context.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/enum/status.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/signals.h"
-#include "libc/nt/struct/context.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #ifdef __x86_64__
 
 /**
@@ -206,16 +196,19 @@ textwindows int __sig_raise(volatile int sig, int sic) {
                                               memory_order_acquire);
 
     // call the user's signal handler
-    char ssbuf[2][128];
+    char ssbuf[128];
     siginfo_t si = {.si_signo = sig, .si_code = sic};
-    STRACE("__sig_raise(%G, %t) mask %s → %s", sig, __sig_handler(rva),
-           (DescribeSigset)(ssbuf[0], 0, &ctx.uc_sigmask),
-           (DescribeSigset)(ssbuf[1], 0, (sigset_t *)&pt->tib->tib_sigmask));
+    STRACE("__sig_raise(%G, %t) mask %s", sig, __sig_handler(rva),
+           (DescribeSigset)(ssbuf, 0, (sigset_t *)&pt->tib->tib_sigmask));
     __sig_handler(rva)(sig, &si, &ctx);
     (void)ssbuf;
 
     // record this handler
-    handler_was_called |= (flags & SA_RESTART) ? 2 : 1;
+    if (flags & SA_RESTART) {
+      handler_was_called |= SIG_HANDLED_SA_RESTART;
+    } else {
+      handler_was_called |= SIG_HANDLED_NO_RESTART;
+    }
   }
 
   // restore sigmask
@@ -320,12 +313,18 @@ static int __sig_killer(struct PosixThread *pt, int sig, int sic) {
     __sig_terminate(sig);
   }
 
+  // ignore signals already pending
+  uintptr_t th = _pthread_syshand(pt);
+  if (atomic_load_explicit(&pt->tib->tib_sigpending, memory_order_acquire) &
+      (1ull << (sig - 1))) {
+    return 0;
+  }
+
   // take control of thread
   // suspending the thread happens asynchronously
   // however getting the context blocks until it's frozen
   static pthread_spinlock_t killer_lock;
   pthread_spin_lock(&killer_lock);
-  uintptr_t th = _pthread_syshand(pt);
   if (SuspendThread(th) == -1u) {
     STRACE("SuspendThread failed w/ %d", GetLastError());
     pthread_spin_unlock(&killer_lock);
@@ -414,6 +413,10 @@ textwindows void __sig_generate(int sig, int sic) {
     STRACE("terminating on %G due to no handler", sig);
     __sig_terminate(sig);
   }
+  if (atomic_load_explicit(&__sig.pending, memory_order_acquire) &
+      (1ull << (sig - 1))) {
+    return;
+  }
   BLOCK_SIGNALS;
   _pthread_lock();
   for (e = dll_first(_pthread_list); e; e = dll_next(_pthread_list, e)) {
@@ -428,7 +431,6 @@ textwindows void __sig_generate(int sig, int sic) {
     // choose this thread if it isn't masking sig
     if (!(atomic_load_explicit(&pt->tib->tib_sigmask, memory_order_acquire) &
           (1ull << (sig - 1)))) {
-      STRACE("generating %G by killing %d", sig, _pthread_tid(pt));
       _pthread_ref(pt);
       mark = pt;
       break;
@@ -439,7 +441,6 @@ textwindows void __sig_generate(int sig, int sic) {
     if (atomic_load_explicit(&pt->pt_blocker, memory_order_acquire) &&
         !(atomic_load_explicit(&pt->pt_blkmask, memory_order_relaxed) &
           (1ull << (sig - 1)))) {
-      STRACE("generating %G by unblocking %d", sig, _pthread_tid(pt));
       _pthread_ref(pt);
       mark = pt;
       break;
@@ -450,7 +451,6 @@ textwindows void __sig_generate(int sig, int sic) {
     __sig_killer(mark, sig, sic);
     _pthread_unref(mark);
   } else {
-    STRACE("all threads block %G so adding to pending signals of process", sig);
     atomic_fetch_or_explicit(&__sig.pending, 1ull << (sig - 1),
                              memory_order_relaxed);
   }

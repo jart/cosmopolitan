@@ -32,11 +32,7 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
                                     bool restartable) {
   int sig;
   if (_check_cancel() == -1) return -1;
-  if ((sig = __sig_get(waitmask))) {
-    int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-    if (_check_cancel() == -1) return -1;
-    if (!restartable || handler_was_called == 1) return eintr();
-  }
+  if ((sig = __sig_get(waitmask))) goto HandleSignal;
   int expect = 0;
   atomic_int futex = 0;
   struct PosixThread *pt = _pthread_self();
@@ -45,9 +41,12 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   bool32 ok = WaitOnAddress(&futex, &expect, sizeof(int), msdelay);
   atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
   if (ok && (sig = __sig_get(waitmask))) {
+  HandleSignal:
     int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
     if (_check_cancel() == -1) return -1;
-    if (!restartable || handler_was_called == 1) return eintr();
+    if (!restartable || (handler_was_called & SIG_HANDLED_NO_RESTART)) {
+      return eintr();
+    }
   }
   return 0;
 }

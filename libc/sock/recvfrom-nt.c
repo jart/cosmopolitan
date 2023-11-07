@@ -24,8 +24,14 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
+#include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
 #ifdef __x86_64__
+
+#define _MSG_OOB      1
+#define _MSG_PEEK     2
+#define _MSG_DONTWAIT 64
 
 struct RecvFromArgs {
   const struct iovec *iov;
@@ -48,11 +54,14 @@ textwindows ssize_t sys_recvfrom_nt(int fd, const struct iovec *iov,
                                     size_t iovlen, uint32_t flags,
                                     void *opt_out_srcaddr,
                                     uint32_t *opt_inout_srcaddrsize) {
+  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_PEEK)) return einval();
   ssize_t rc;
   struct Fd *f = g_fds.p + fd;
   sigset_t m = __sig_block();
-  rc = __winsock_block(f->handle, flags, !!(f->flags & O_NONBLOCK), f->rcvtimeo,
-                       m, sys_recvfrom_nt_start,
+  bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
+  flags &= ~_MSG_DONTWAIT;
+  rc = __winsock_block(f->handle, flags, nonblock, f->rcvtimeo, m,
+                       sys_recvfrom_nt_start,
                        &(struct RecvFromArgs){iov, iovlen, opt_out_srcaddr,
                                               opt_inout_srcaddrsize});
   __sig_unblock(m);

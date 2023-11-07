@@ -16,53 +16,71 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/nt/struct/iovec.h"
-#include "libc/nt/winsock.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/syscall_fd.internal.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
-#ifdef __x86_64__
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigaltstack.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/ucontext.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
+#include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/ss.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
-#define _MSG_OOB       1
-#define _MSG_DONTROUTE 4
-#define _MSG_DONTWAIT  64
+/**
+ * stack overflow recovery technique #4
+ * just call pthread_exit() and let the thread die
+ */
 
-struct SendToArgs {
-  const struct iovec *iov;
-  size_t iovlen;
-  void *opt_in_addr;
-  uint32_t in_addrsize;
-  struct NtIovec iovnt[16];
-};
+volatile bool smashed_stack;
 
-static textwindows int sys_sendto_nt_start(int64_t handle,
-                                           struct NtOverlapped *overlap,
-                                           uint32_t *flags, void *arg) {
-  struct SendToArgs *args = arg;
-  return WSASendTo(handle, args->iovnt,
-                   __iovec2nt(args->iovnt, args->iov, args->iovlen), 0, *flags,
-                   args->opt_in_addr, args->in_addrsize, overlap, 0);
+void CrashHandler(int sig) {
+  smashed_stack = true;
+  pthread_exit((void *)123L);
 }
 
-textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
-                                  size_t iovlen, uint32_t flags,
-                                  void *opt_in_addr, uint32_t in_addrsize) {
-  if (flags & ~(_MSG_DONTWAIT | _MSG_OOB | _MSG_DONTROUTE)) return einval();
-  ssize_t rc;
-  struct Fd *f = g_fds.p + fd;
-  sigset_t m = __sig_block();
-  bool nonblock = (f->flags & O_NONBLOCK) || (flags & _MSG_DONTWAIT);
-  flags &= ~_MSG_DONTWAIT;
-  rc = __winsock_block(
-      f->handle, flags, nonblock, f->sndtimeo, m, sys_sendto_nt_start,
-      &(struct SendToArgs){iov, iovlen, opt_in_addr, in_addrsize});
-  __sig_unblock(m);
-  return rc;
+int StackOverflow(int f(), int n) {
+  if (n < INT_MAX) {
+    return f(f, n + 1) - 1;
+  } else {
+    return INT_MAX;
+  }
 }
 
-#endif /* __x86_64__ */
+int (*pStackOverflow)(int (*)(), int) = StackOverflow;
+
+void *MyPosixThread(void *arg) {
+  struct sigaction sa;
+  struct sigaltstack ss;
+  ss.ss_flags = 0;
+  ss.ss_size = sysconf(_SC_MINSIGSTKSZ) + 4096;
+  ss.ss_sp = gc(malloc(ss.ss_size));
+  ASSERT_SYS(0, 0, sigaltstack(&ss, 0));
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;  // <-- important
+  sigemptyset(&sa.sa_mask);
+  sa.sa_handler = CrashHandler;
+  sigaction(SIGBUS, &sa, 0);
+  sigaction(SIGSEGV, &sa, 0);
+  exit(pStackOverflow(pStackOverflow, 0));
+  return 0;
+}
+
+TEST(stackoverflow, standardStack_altStack_thread_teleport) {
+  void *res;
+  pthread_t th;
+  struct sigaltstack ss;
+  smashed_stack = false;
+  pthread_create(&th, 0, MyPosixThread, 0);
+  pthread_join(th, &res);
+  ASSERT_EQ((void *)123L, res);
+  ASSERT_TRUE(smashed_stack);
+  // this should be SS_DISABLE but ShowCrashReports() creates an alt stack
+  ASSERT_SYS(0, 0, sigaltstack(0, &ss));
+  ASSERT_EQ(0, ss.ss_flags);
+}

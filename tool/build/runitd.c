@@ -552,7 +552,8 @@ RetryOnEtxtbsyRaceCondition:
   started = timespec_real();
   pipe2(client->pipe, O_CLOEXEC);
   posix_spawnattr_init(&spawnattr);
-  posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_SETPGROUP);
+  posix_spawnattr_setflags(&spawnattr,
+                           POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETPGROUP);
   posix_spawnattr_setsigmask(&spawnattr, &sigmask);
   posix_spawn_file_actions_init(&spawnfila);
   posix_spawn_file_actions_adddup2(&spawnfila, g_bogusfd, 0);

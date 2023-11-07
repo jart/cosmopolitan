@@ -16,20 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sigset.h"
-#include "libc/proc/posix_spawn.h"
 #include "libc/proc/posix_spawn.internal.h"
 
 /**
  * Specifies signal mask for sigprocmask() in child process.
  *
- * This setter also sets the `POSIX_SPAWN_SETSIGMASK` flag.
+ * You also need to pass `POSIX_SPAWN_SETSIGMASK` to
+ * posix_spawnattr_setflags() for it to take effect.
  *
  * @return 0 on success, or errno on error
  */
 int posix_spawnattr_setsigmask(posix_spawnattr_t *attr,
                                const sigset_t *sigmask) {
-  (*attr)->flags |= POSIX_SPAWN_SETSIGMASK;
   (*attr)->sigmask = *sigmask;
   return 0;
 }

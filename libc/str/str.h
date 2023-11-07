@@ -56,17 +56,14 @@ int iswseparator(wint_t);
 wint_t towlower(wint_t);
 wint_t towupper(wint_t);
 
-void bzero(void *, size_t) memcpyesque;
 void *memset(void *, int, size_t) memcpyesque;
 void *memmove(void *, const void *, size_t) memcpyesque;
 void *memcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *mempcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 char *hexpcpy(char *restrict, const void *restrict, size_t) memcpyesque;
 void *memccpy(void *restrict, const void *restrict, int, size_t) memcpyesque;
-void bcopy(const void *, void *, size_t) memcpyesque;
 void explicit_bzero(void *, size_t);
 
-int bcmp(const void *, const void *, size_t) strlenesque;
 int memcmp(const void *, const void *, size_t) strlenesque;
 int timingsafe_bcmp(const void *, const void *, size_t);
 int timingsafe_memcmp(const void *, const void *, size_t);
@@ -75,7 +72,6 @@ size_t strlen(const char *) strlenesque;
 size_t strnlen(const char *, size_t) strlenesque;
 size_t strnlen_s(const char *, size_t);
 char *strchr(const char *, int) strlenesque;
-char *index(const char *, int) strlenesque;
 void *memchr(const void *, int, size_t) strlenesque;
 char *strchrnul(const char *, int) strlenesque returnsnonnull;
 void *rawmemchr(const void *, int) strlenesque returnsnonnull;
@@ -219,6 +215,17 @@ bool wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 char *__join_paths(char *, size_t, const char *, const char *) __wur;
 #endif /* _COSMO_SOURCE */
+
+#if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || \
+    defined(_POSIX_SOURCE) ||                                                 \
+    (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE + 0 < 200809L) ||            \
+    (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE + 0 < 700)
+int bcmp(const void *, const void *, size_t) strlenesque;
+void bcopy(const void *, void *, size_t) memcpyesque;
+void bzero(void *, size_t) memcpyesque;
+char *index(const char *, int) strlenesque;
+char *rindex(const char *, int) strlenesque;
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -637,6 +637,8 @@ int Launch(void) {
 
   posix_spawnattr_init(&spawnattr);
   posix_spawnattr_setsigmask(&spawnattr, &savemask);
+  posix_spawnattr_setflags(&spawnattr,
+                           POSIX_SPAWN_SETSIGMASK | POSIX_SPAWN_SETRLIMIT);
   SetCpuLimit(cpuquota);
   SetFszLimit(fszquota);
   SetMemLimit(memquota);

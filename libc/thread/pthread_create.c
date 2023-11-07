@@ -115,7 +115,12 @@ static int PosixThread(void *arg, int tid) {
   }
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->pt_exiter)) {
-    pthread_sigmask(SIG_SETMASK, &pt->pt_attr.__sigmask, 0);
+    if (IsWindows()) {
+      atomic_store_explicit(&__get_tls()->tib_sigmask, pt->pt_attr.__sigmask,
+                            memory_order_release);
+    } else {
+      sys_sigprocmask(SIG_SETMASK, &pt->pt_attr.__sigmask, 0);
+    }
     rc = pt->pt_start(pt->pt_arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     unassert(!pt->pt_cleanup);
