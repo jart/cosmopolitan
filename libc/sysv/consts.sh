@@ -1044,7 +1044,7 @@ syscon	mount	MNT_SNAPSHOT				0			0			0x40000000		0x40000000		0x01000000		0			0		
 #	limits
 #
 #	group	name					GNU/Systemd		GNU/Systemd (Aarch64)	XNU's Not UNIX!		MacOS (Arm64)		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	limits	PIPE_BUF				4096			4096			512			512			512			512			512			512			# bsd consensus
+syscon	limits	PIPE_BUF				4096			4096			512			512			512			512			512			4096			# bsd consensus
 syscon	limits	NGROUPS_MAX				65536			65536			16			16			1023			16			16			0			#
 syscon	limits	LINK_MAX				127			127			32767			32767			32767			32767			32767			64			# freebsd/windows are educated guesses
 syscon	limits	MAX_CANON				255			255			1024			1024			255			255			255			255			# windows is guessed

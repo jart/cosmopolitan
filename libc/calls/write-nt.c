@@ -59,7 +59,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
   }
 
   // intercept ansi tty configuration sequences
-  if (isconsole && _weaken(InterceptTerminalCommands)) {
+  if (isconsole && _weaken(GetConsoleOutputHandle)) {
     _weaken(InterceptTerminalCommands)(data, size);
   }
 
