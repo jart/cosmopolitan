@@ -723,7 +723,6 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   int sig;
   int64_t sem;
   uint32_t wi, ms = -1;
-  int handler_was_called;
   if (!__ttyconf.vmin) {
     if (!__ttyconf.vtime) {
       return 0;  // non-blocking w/o raising eagain
@@ -746,7 +745,7 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   if (wi != 1) return __winerr();      // wait failed
   if (!(sig = __sig_get(waitmask))) return eintr();
 DeliverSignal:
-  handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+  int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
   if (_check_cancel() == -1) return -1;
   if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) return -2;
   return eintr();

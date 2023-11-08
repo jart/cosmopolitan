@@ -72,7 +72,7 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
   for (;;) {
 
     // check for signals and cancelation
-    int rc, sig, handler_was_called;
+    int sig, handler_was_called;
     if (_check_cancel() == -1) {
       return -1;
     }
@@ -89,7 +89,7 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
     // check for zombie to harvest
     __proc_lock();
   CheckForZombies:
-    rc = __proc_check(pid, wstatus, rusage);
+    int rc = __proc_check(pid, wstatus, rusage);
     if (rc || (options & WNOHANG)) {
       __proc_unlock();
       return rc;

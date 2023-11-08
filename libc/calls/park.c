@@ -35,7 +35,6 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   if ((sig = __sig_get(waitmask))) goto HandleSignal;
   int expect = 0;
   atomic_int futex = 0;
-  int handler_was_called;
   struct PosixThread *pt = _pthread_self();
   pt->pt_blkmask = waitmask;
   atomic_store_explicit(&pt->pt_blocker, &futex, memory_order_release);
@@ -43,7 +42,7 @@ static textwindows int _park_thread(uint32_t msdelay, sigset_t waitmask,
   atomic_store_explicit(&pt->pt_blocker, 0, memory_order_release);
   if (ok && (sig = __sig_get(waitmask))) {
   HandleSignal:
-    handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+    int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
     if (_check_cancel() == -1) return -1;
     if (!restartable || (handler_was_called & SIG_HANDLED_NO_RESTART)) {
       return eintr();

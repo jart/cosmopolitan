@@ -28,8 +28,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-void sys_fcntl_nt_lock_cleanup(int);
-
 textwindows int sys_close_nt(int fd, int fildes) {
   if (fd + 0u >= g_fds.n) return ebadf();
   struct Fd *f = g_fds.p + fd;
@@ -37,6 +35,7 @@ textwindows int sys_close_nt(int fd, int fildes) {
     case kFdEmpty:
       return ebadf();
     case kFdFile:
+      void sys_fcntl_nt_lock_cleanup(int);
       if (_weaken(sys_fcntl_nt_lock_cleanup)) {
         _weaken(sys_fcntl_nt_lock_cleanup)(fildes);
       }
