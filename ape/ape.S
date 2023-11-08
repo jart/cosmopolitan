@@ -592,7 +592,8 @@ ape_disk:
 
 #ifdef APE_IS_SHELL_SCRIPT
 apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
-	.ascii	"m=\"$(uname -m)\"\n"
+	.ascii	"m=\"$(/bin/uname -m >/dev/null)\" || "
+	.ascii	"m=\"$(/usr/bin/uname -m)\"\n"
 
 	.ascii	"if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]; then\n"
 //	Until all operating systems can be updated to support APE,
@@ -615,15 +616,15 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	     APE_VERSION_STR
 	.ascii	     "\"\n"
 	.ascii	    "[ -x \"$t\" ] || {\n"
-	.ascii	      "mkdir -p \"${t%/*}\" &&\n"
-	.ascii	      "dd if=\"$o\" of=\"$t.$$\" skip="
+	.ascii	      "/bin/mkdir -p \"${t%/*}\" &&\n"
+	.ascii	      "/bin/dd if=\"$o\" of=\"$t.$$\" skip="
 	.shstub	        ape_loader_dd_skip,2
 	.ascii	        " count="
 	.shstub	        ape_loader_dd_count,2
 	.ascii	        " bs=64 2>/dev/null\n"
 #if SupportsXnu()
 	.ascii	      "[ -d /Applications ] && "
-	.ascii	        "dd if=\"$t.$$\""
+	.ascii	        "/bin/dd if=\"$t.$$\""
 	.ascii	          " of=\"$t.$$\""
 	.ascii	          " skip=5"
 	.ascii	          " count=8"
@@ -631,8 +632,8 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	          " conv=notrunc"
 	.ascii	          " 2>/dev/null\n"
 #endif /* SupportsXnu() */
-	.ascii	      "chmod 755 \"$t.$$\"\n"
-	.ascii	      "mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	      "/bin/chmod 755 \"$t.$$\"\n"
+	.ascii	      "/bin/mv -f \"$t.$$\" \"$t\"\n"
 	.ascii	    "}\n"
 	.ascii	    "exec \"$t\" \"$o\" \"$@\"\n"
 	.ascii	  "}\n"
@@ -648,9 +649,9 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/$0\"\n"
 	.ascii	  "[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
 	.ascii	    "[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	      "mkdir -p \"${t%/*}\" 2>/dev/null\n"
-	.ascii	      "cp -f \"$o\" \"$t.$$\" &&\n"
-	.ascii	      "mv -f \"$t.$$\" \"$t\" || exit 120\n"
+	.ascii	      "/bin/mkdir -p \"${t%/*}\" 2>/dev/null\n"
+	.ascii	      "/bin/cp -f \"$o\" \"$t.$$\" &&\n"
+	.ascii	      "/bin/mv -f \"$t.$$\" \"$t\" || exit 120\n"
 	.ascii	      "o=\"$t\"\n"
 	.ascii	    "}\n"
 #endif /* APE_NO_MODIFY_SELF */
@@ -681,7 +682,7 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 	.ascii	  "exec 7<&-\n"
 #if SupportsXnu()
 	.ascii	  "[ -d /Applications ] && "
-	.ascii	    "dd if=\"$o\""
+	.ascii	    "/bin/dd if=\"$o\""
 	.ascii	      " of=\"$o\""
 	.ascii	      " bs=8"
 	.ascii	      " skip="
@@ -710,7 +711,8 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	because they need to be in the first 4096 bytes
         .section .emushprologue,"a",@progbits
 emush:	.ascii	"\n@\n#'\"\n"
-	.ascii	"s=\"$(uname -s)\"\n"
+	.ascii	"s=\"$(/bin/uname -s >/dev/null)\" || "
+	.ascii	"s=\"$(/usr/bin/uname -s)\"\n"
 //	our script is running on a non-x86_64 architecture
 //	1. `dd` out the appropriate blink vm blob
 //	2. gunzip the blink virtual machine executable

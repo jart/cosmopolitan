@@ -1944,7 +1944,8 @@ int main(int argc, char *argv[]) {
     }
 
     // otherwise this is a fresh install so consider the platform
-    p = stpcpy(p, "m=$(uname -m)\n");
+    p = stpcpy(p, "m=\"$(/bin/uname -m >/dev/null)\" || "
+                  "m=\"$(/usr/bin/uname -m)\"\n");
     if (support_vector & _HOSTXNU) {
       p = stpcpy(p, "if [ ! -d /Applications ]; then\n");
     }
@@ -2044,7 +2045,7 @@ int main(int argc, char *argv[]) {
           p = stpcpy(p, "if [ x\"$1\" = x--assimilate ]; then\n");
         }
         p = GenerateScriptIfMachine(p, in);
-        p = stpcpy(p, "dd if=\"$o\" of=\"$o\" bs=1");
+        p = stpcpy(p, "/bin/dd if=\"$o\" of=\"$o\" bs=1");
         p = stpcpy(p, " skip=");
         in->ddarg_macho_skip = p;
         p = GenerateDecimalOffsetRelocation(p);
@@ -2070,8 +2071,8 @@ int main(int argc, char *argv[]) {
         if ((loader = GetLoader(in->elf->e_machine, _HOSTXNU))) {
           loader->used = true;
           p = GenerateScriptIfMachine(p, in);  // <if-machine>
-          p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
-                        "dd if=\"$o\"");
+          p = stpcpy(p, "/bin/mkdir -p \"${t%/*}\" ||exit\n"
+                        "/bin/dd if=\"$o\"");
           p = stpcpy(p, " skip=");
           loader->ddarg_skip1 = p;
           p = GenerateDecimalOffsetRelocation(p);
@@ -2080,15 +2081,15 @@ int main(int argc, char *argv[]) {
           p = GenerateDecimalOffsetRelocation(p);
           p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n");
           if (loader->macho_offset) {
-            p = stpcpy(p, "dd if=\"$t.$$\" of=\"$t.$$\"");
+            p = stpcpy(p, "/bin/dd if=\"$t.$$\" of=\"$t.$$\"");
             p = stpcpy(p, " skip=");
             p = FormatInt32(p, loader->macho_offset / 64);
             p = stpcpy(p, " count=");
             p = FormatInt32(p, ROUNDUP(loader->macho_length, 64) / 64);
             p = stpcpy(p, " bs=64 conv=notrunc 2>/dev/null ||exit\n");
           }
-          p = stpcpy(p, "chmod 755 \"$t.$$\" ||exit\n"
-                        "mv -f \"$t.$$\" \"$t\" ||exit\n");
+          p = stpcpy(p, "/bin/chmod 755 \"$t.$$\" ||exit\n"
+                        "/bin/mv -f \"$t.$$\" \"$t\" ||exit\n");
           p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
                         "fi\n");  // </if-machine>
           gotsome = true;
@@ -2107,8 +2108,8 @@ int main(int argc, char *argv[]) {
                       "echo \"$0: please run: xcode-select --install\" >&2\n"
                       "exit 1\n"
                       "fi\n"
-                      "mkdir -p \"${t%/*}\" ||exit\n"
-                      "dd if=\"$o\"");
+                      "/bin/mkdir -p \"${t%/*}\" ||exit\n"
+                      "/bin/dd if=\"$o\"");
         p = stpcpy(p, " skip=");
         macos_silicon_loader_source_ddarg_skip = p;
         p = GenerateDecimalOffsetRelocation(p);
@@ -2142,8 +2143,8 @@ int main(int argc, char *argv[]) {
       if ((loader = GetLoader(in->elf->e_machine, ~_HOSTXNU))) {
         loader->used = true;
         p = GenerateScriptIfMachine(p, in);
-        p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
-                      "dd if=\"$o\"");
+        p = stpcpy(p, "/bin/mkdir -p \"${t%/*}\" ||exit\n"
+                      "/bin/dd if=\"$o\"");
         p = stpcpy(p, " skip=");
         loader->ddarg_skip2 = p;
         p = GenerateDecimalOffsetRelocation(p);
@@ -2151,8 +2152,8 @@ int main(int argc, char *argv[]) {
         loader->ddarg_size2 = p;
         p = GenerateDecimalOffsetRelocation(p);
         p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n"
-                      "chmod 755 \"$t.$$\" ||exit\n"
-                      "mv -f \"$t.$$\" \"$t\" ||exit\n");
+                      "/bin/chmod 755 \"$t.$$\" ||exit\n"
+                      "/bin/mv -f \"$t.$$\" \"$t\" ||exit\n");
         p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
                       "fi\n");
       }
