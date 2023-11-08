@@ -136,10 +136,11 @@ static inline void InitProgramExecutableNameImpl(void) {
   }
 
   // give up and just copy argv[0] into it
+  char *p, *e;
   if ((q = __argv[0])) {
   CopyString:
-    char *p = g_prog.u.buf;
-    char *e = p + sizeof(g_prog.u.buf);
+    p = g_prog.u.buf;
+    e = p + sizeof(g_prog.u.buf);
     while ((c = *q++)) {
       if (p + 1 < e) {
         *p++ = c;

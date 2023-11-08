@@ -47,7 +47,9 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
                  bool32 ReadOrWriteFile(int64_t, void *, uint32_t, uint32_t *,
                                         struct NtOverlapped *)) {
   int sig;
+  bool eagained;
   uint32_t exchanged;
+  int handler_was_called;
   struct Fd *f = g_fds.p + fd;
 
   // win32 i/o apis generally take 32-bit values thus we implicitly
@@ -79,7 +81,7 @@ sys_readwrite_nt(int fd, void *data, size_t size, ssize_t offset,
   }
 
 RestartOperation:
-  bool eagained = false;
+  eagained = false;
   // check for signals and cancelation
   if (_check_cancel() == -1) return -1;  // ECANCELED
   if ((sig = __sig_get(waitmask))) goto HandleInterrupt;
@@ -132,7 +134,7 @@ RestartOperation:
     // otherwise it must be due to a kill() via __sig_cancel()
     if ((sig = __sig_get(waitmask))) {
     HandleInterrupt:
-      int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+      handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
       if (_check_cancel() == -1) return -1;  // possible if we SIGTHR'd
       // read() is @restartable unless non-SA_RESTART hands were called
       if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) {

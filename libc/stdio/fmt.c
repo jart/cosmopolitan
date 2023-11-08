@@ -705,7 +705,7 @@ haveinc:
   return prec;
 }
 
-static int __fmt_noop(const char *, void *, size_t) {
+static int __fmt_noop(const char *x, void *y, size_t z) {
   return 0;
 }
 

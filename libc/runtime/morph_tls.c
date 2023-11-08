@@ -55,11 +55,13 @@ privileged void __morph_tls(void) {
     // address 0x30 was promised to us, according to Go team
     // https://github.com/golang/go/issues/23617
     dis = 0x30;
-  } else {
+  } else if (IsWindows()) {
     // MSVC __declspec(thread) generates binary code for this
     // %gs:0x1480 abi. So long as TlsAlloc() isn't called >64
     // times we should be good.
     dis = 0x1480 + __tls_index * 8;
+  } else {
+    dis = 0;
   }
 
   // iterate over modifiable code looking for 9 byte instruction
@@ -112,6 +114,7 @@ privileged void __morph_tls(void) {
     }
   }
 
+  __tls_morphed = true;
   __morph_end();
 #endif
 }

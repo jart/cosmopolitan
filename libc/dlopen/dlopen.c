@@ -39,6 +39,7 @@
 #include "libc/nt/errors.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/stdio/stdio.h"
@@ -75,17 +76,6 @@ __static_yoink(".dlopen.aarch64.glibc.elf");
 #define XNU_RTLD_LOCAL  4
 #define XNU_RTLD_GLOBAL 8
 
-#define BEGIN_FOREIGN                         \
-  {                                           \
-    struct CosmoTib *cosmo_tib = __get_tls(); \
-    pthread_mutex_lock(&foreign.lock);        \
-    __set_tls(foreign.tib)
-
-#define END_FOREIGN                    \
-  __set_tls(cosmo_tib);                \
-  pthread_mutex_unlock(&foreign.lock); \
-  }
-
 struct loaded {
   char *base;
   char *entry;
@@ -96,8 +86,6 @@ struct loaded {
 static struct {
   atomic_uint once;
   bool is_supported;
-  struct CosmoTib *tib;
-  pthread_mutex_t lock;
   void *(*dlopen)(const char *, int);
   void *(*dlsym)(void *, const char *);
   int (*dlclose)(void *);
@@ -312,7 +300,6 @@ static void foreign_setup(void) {
   if (!dlopen_helper) {
     return;  // this platform isn't supported yet
   }
-  struct CosmoTib *cosmo_tib = __get_tls();
   if (!setjmp(foreign.jb)) {
     elf_exec(dlopen_helper, interp, 2,
              (char *[]){
@@ -323,8 +310,6 @@ static void foreign_setup(void) {
              environ);
     return;  // if it returns then it failed
   }
-  foreign.tib = __get_tls();
-  __set_tls(cosmo_tib);
   foreign.is_supported = true;
 }
 
@@ -391,15 +376,17 @@ static char *dlsym_nt_alloc_rwx_block(void) {
 static void *dlsym_nt_alloc_rwx(size_t n) {
   void *res;
   static char *block;
-  pthread_mutex_lock(&foreign.lock);
+  static pthread_spinlock_t lock;
+  pthread_spin_lock(&lock);
   if (!block || READ32LE(block) + n > 65536) {
     if (!(block = dlsym_nt_alloc_rwx_block())) {
+      pthread_spin_unlock(&lock);
       return 0;
     }
   }
   res = block + READ32LE(block);
   WRITE32LE(block, READ32LE(block) + n);
-  pthread_mutex_unlock(&foreign.lock);
+  pthread_spin_unlock(&lock);
   return res;
 }
 
@@ -495,9 +482,7 @@ void *dlopen(const char *path, int mode) {
     last_dlerror = "dlopen() isn't supported on x86-64 MacOS";
     res = 0;
   } else if (foreign_init()) {
-    BEGIN_FOREIGN;
     res = foreign.dlopen(path, mode);
-    END_FOREIGN;
   } else {
     res = 0;
   }
@@ -524,9 +509,7 @@ void *dlsym(void *handle, const char *name) {
     last_dlerror = "dlopen() isn't supported on x86-64 MacOS";
     res = 0;
   } else if (foreign_init()) {
-    BEGIN_FOREIGN;
     res = foreign.dlsym(handle, name);
-    END_FOREIGN;
   } else {
     res = 0;
   }
@@ -550,9 +533,7 @@ int dlclose(void *handle) {
     last_dlerror = "dlopen() isn't supported on x86-64 MacOS";
     res = -1;
   } else if (foreign_init()) {
-    BEGIN_FOREIGN;
     res = foreign.dlclose(handle);
-    END_FOREIGN;
   } else {
     res = -1;
   }
@@ -570,12 +551,24 @@ char *dlerror(void) {
   } else if (IsWindows() || IsXnu()) {
     res = (char *)last_dlerror;
   } else if (foreign_init()) {
-    BEGIN_FOREIGN;
     res = foreign.dlerror();
-    END_FOREIGN;
   } else {
     res = (char *)last_dlerror;
   }
   STRACE("dlerror() → %#s", res);
   return res;
 }
+
+#ifdef __x86_64__
+static textstartup void dlopen_init() {
+  if (IsLinux() || IsFreebsd() || IsNetbsd()) {
+    // switch from %fs to %gs for tls
+    struct CosmoTib *tib = __get_tls();
+    __morph_tls();
+    __set_tls(tib);
+  }
+}
+const void *const dlopen_ctor[] initarray = {
+    dlopen_init,
+};
+#endif
