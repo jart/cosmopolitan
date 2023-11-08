@@ -81,7 +81,7 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
     founddots = false;
     AddZipArg(&n, &args, (*argv)[0]);
     while ((arg = strtok_r(start, "\r\n", &state))) {
-      if (!strcmp(arg, "...")) {
+      if (!strcmp(arg, "...") && !state) {
         founddots = true;
         for (i = 1; i < *argc; ++i) {
           AddZipArg(&n, &args, (*argv)[i]);
