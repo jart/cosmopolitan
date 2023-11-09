@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/limits.h"
@@ -81,7 +82,8 @@
   "  INPUT      should be source or @args.txt\n"         \
   "\n"
 
-#define kIncludePrefix "include \""
+#define kIncludePrefix  "include "
+#define kSystemIncludes "libc/isystem/"
 
 struct Source {
   unsigned hash;
@@ -267,14 +269,17 @@ static void LoadRelationships(int argc, char *argv[]) {
   char *map;
   ssize_t rc;
   struct GetArgs ga;
+  char srcdirbuf[256];
   size_t n, size, inclen;
   unsigned srcid, dependency;
-  const char *p, *pe, *src, *path, *pathend;
+  const char *p, *pe, *src, *path, *pathend, *srcdir;
   getargs_init(&ga, argv + optind);
   inclen = strlen(kIncludePrefix);
   while ((src = getargs_next(&ga))) {
     n = strlen(src);
     srcid = GetSourceId(src, n);
+    strlcpy(srcdirbuf, src, sizeof(srcdirbuf));
+    srcdir = dirname(srcdirbuf);
     if ((fd = open(src, O_RDONLY)) == -1) {
       if (errno == ENOENT && ga.path) {
         // This code helps GNU Make automatically fix itself when we
@@ -296,13 +301,33 @@ static void LoadRelationships(int argc, char *argv[]) {
         DieSys(src);
       }
       for (p = map + 1, pe = map + size; p < pe; ++p) {
+        int right;
+        char juf[256], *jb;
+        char buf[256], *bp = buf;
         if (!(p = memmem(p, pe - p, kIncludePrefix, inclen))) break;
-        path = p + inclen;
-        pathend = memchr(path, '"', pe - path);
-        if (pathend &&                          //
-            (p[-1] == '#' || p[-1] == '.') &&   //
-            (p - map == 1 || p[-2] == '\n')) {  //
-          dependency = GetSourceId(path, pathend - path);
+        path = p + inclen + 1;
+        if (path[-1] == '"') {
+          right = '"';
+        } else if (path[-1] == '<') {
+          bp = mempcpy(bp, kSystemIncludes, strlen(kSystemIncludes));
+          right = '>';
+        } else {
+          continue;
+        }
+        pathend = memchr(path, right, pe - path);
+        if (pathend && pathend - path > 0 &&                //
+            (p[-1] == '#' || p[-1] == '.') &&               //
+            (p - map == 1 || p[-2] == '\n') &&              //
+            (bp - buf) + (pathend - path) < sizeof(buf)) {  //
+          *(bp = mempcpy(bp, path, pathend - path)) = 0;
+          if (right == '>' && !isregularfile(buf)) continue;
+          if (!strchr(buf, '/') && !isregularfile(buf)) {
+            if (!(jb = __join_paths(juf, sizeof(juf), srcdir, buf))) continue;
+            if (!isregularfile(jb)) continue;
+            dependency = GetSourceId(jb, strlen(jb));
+          } else {
+            dependency = GetSourceId(buf, bp - buf);
+          }
           AppendEdge(&edges, dependency, srcid);
           p = pathend;
         }

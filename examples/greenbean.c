@@ -7,8 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#ifdef __COSMOCC__
+#ifndef _COSMO_SOURCE
 #define _COSMO_SOURCE
+#endif
 #include <assert.h>
 #include <cosmo.h>
 #include <errno.h>
@@ -22,42 +23,6 @@
 #include <sys/auxv.h>
 #include <sys/socket.h>
 #include <time.h>
-#else
-#include "libc/assert.h"
-#include "libc/atomic.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/pledge.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sock/sock.h"
-#include "libc/sock/struct/sockaddr.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/auxv.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/so.h"
-#include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
-#include "libc/sysv/consts/tcp.h"
-#include "libc/sysv/consts/timer.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/thread2.h"
-#include "net/http/http.h"
-#endif
 
 /**
  * @fileoverview greenbean lightweight threaded web server

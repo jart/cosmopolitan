@@ -100,8 +100,6 @@ EXAMPLES_DIRECTDEPS =								\
 EXAMPLES_DEPS :=								\
 	$(call uniq,$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x))))
 
-$(EXAMPLES_OBJS): override CFLAGS += -isystem libc/isystem
-
 o/$(MODE)/examples/examples.pkg:						\
 		$(EXAMPLES_OBJS)						\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)

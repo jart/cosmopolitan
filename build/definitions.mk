@@ -222,7 +222,8 @@ DEFAULT_CPPFLAGS +=							\
 	-D_COSMO_SOURCE							\
 	-DMODE='"$(MODE)"'						\
 	-nostdinc							\
-	-iquote .
+	-iquote.							\
+	-isystem libc/isystem
 
 DEFAULT_CFLAGS =							\
 	-std=gnu2x

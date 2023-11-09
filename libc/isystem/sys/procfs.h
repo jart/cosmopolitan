@@ -1,6 +1,7 @@
 #ifndef _SYS_PROCFS_H
 #define _SYS_PROCFS_H
 #include <sys/user.h>
+#include "libc/calls/weirdtypes.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
