@@ -174,18 +174,9 @@ typedef struct {
 #endif
 
 #ifndef forcealign
-#ifndef __STRICT_ANSI__
 #define forcealign(bytes) __attribute__((__aligned__(bytes)))
-#else
-#define forcealign(bytes)
 #endif
-#endif
-
-#ifndef __STRICT_ANSI__
 #define thatispacked __attribute__((__packed__))
-#else
-#define thatispacked
-#endif
 
 #ifndef __STRICT_ANSI__
 #define printfesque(n)   __attribute__((__format__(__gnu_printf__, n, n + 1)))
@@ -727,8 +718,7 @@ void abort(void) wontreturn;
 #define __static_yoink_source(PATH)
 #endif
 
-#define __weak_reference(sym, alias)       \
-  __weak_reference_impl(sym, alias)
+#define __weak_reference(sym, alias) __weak_reference_impl(sym, alias)
 #define __weak_reference_impl(sym, alias)  \
   __asm__(".weak\t" #alias "\n\t"          \
           ".equ\t" #alias ", " #sym "\n\t" \
