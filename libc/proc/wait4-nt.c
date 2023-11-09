@@ -157,7 +157,7 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
 
     // check if killed or win32 error
     if (wi) {
-      if (pr && --pr->waiters && pr->status == PROC_UNDEAD) {
+      if (pr && !--pr->waiters && pr->status == PROC_UNDEAD) {
         __proc_free(pr);
       }
       __proc_unlock();
@@ -180,6 +180,10 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
       case PROC_ALIVE:
         // exit caused by execve() reparenting
         __proc_unlock();
+        if (!pr->waiters) {
+          // avoid deadlock that could theoretically happen
+          SetEvent(__proc.onbirth);
+        }
         break;
       case PROC_ZOMBIE:
         // exit happened and we're the first to know
