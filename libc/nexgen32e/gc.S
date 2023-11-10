@@ -67,7 +67,7 @@ __gc:	.ftrace2
 
 //	if this code fails
 //	check if CosmoTib's size changed
-	sub	x8,x28,#128			// __get_tls()
+	sub	x8,x28,#192			// __get_tls()
 	ldr	x9,[x8,0x18]			// tib::garbages
 	ldr	x10,[x9]			// g->i
 	ldr	x8,[x9,8]			// g->p

@@ -37,6 +37,8 @@ struct CosmoTib {
   uint32_t tib_sigstack_size;
   uint32_t tib_sigstack_flags;
   void **tib_keys;
+  void *tib_nsync;
+  void *tib_todo[63];
 };
 
 extern int __threaded;

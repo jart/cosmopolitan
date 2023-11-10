@@ -112,7 +112,7 @@ vfork:
 //	} else {
 //	  __get_tls()->tib_flags &= ~TIB_FLAG_VFORKED;
 //	}
-	sub	x1,x28,#0x80		// RELIES ON TLS TIB ABI!
+	sub	x1,x28,#192		// sizeof(CosmoTib)
 	ldr	x2,[x1,64]
 	cbnz	x0,2f
 	orr	x2,x2,#TIB_FLAG_VFORKED

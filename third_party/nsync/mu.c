@@ -156,10 +156,9 @@ void nsync_mu_lock (nsync_mu *mu) {
 		if ((old_word&MU_WZERO_TO_ACQUIRE) != 0 ||
 		    !ATM_CAS_ACQ (&mu->word, old_word,
 				  (old_word+MU_WADD_TO_ACQUIRE) & ~MU_WCLEAR_ON_ACQUIRE)) {
-			waiter w;
-			nsync_waiter_init_ (&w);
-			nsync_mu_lock_slow_ (mu, &w, 0, nsync_writer_type_);
-			nsync_waiter_destroy_ (&w);
+			waiter *w = nsync_waiter_new_ ();
+			nsync_mu_lock_slow_ (mu, w, 0, nsync_writer_type_);
+			nsync_waiter_free_ (w);
 		}
 	}
 	IGNORE_RACES_END ();
@@ -192,10 +191,9 @@ void nsync_mu_rlock (nsync_mu *mu) {
 		if ((old_word&MU_RZERO_TO_ACQUIRE) != 0 ||
 		    !ATM_CAS_ACQ (&mu->word, old_word,
 				  (old_word+MU_RADD_TO_ACQUIRE) & ~MU_RCLEAR_ON_ACQUIRE)) {
-			waiter w;
-			nsync_waiter_init_ (&w);
-			nsync_mu_lock_slow_ (mu, &w, 0, nsync_reader_type_);
-			nsync_waiter_destroy_ (&w);
+			waiter *w = nsync_waiter_new_ ();
+			nsync_mu_lock_slow_ (mu, w, 0, nsync_reader_type_);
+			nsync_waiter_free_ (w);
 		}
 	}
 	IGNORE_RACES_END ();

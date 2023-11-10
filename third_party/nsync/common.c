@@ -15,7 +15,13 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/dll.h"
+#include "libc/nt/memory.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
@@ -143,25 +149,112 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 /* -------------------------------- */
 
-/* Initializes waiter struct. */
-void nsync_waiter_init_ (waiter *w) {
-	w->tag = WAITER_TAG;
-	w->nw.tag = NSYNC_WAITER_TAG;
-	nsync_mu_semaphore_init (&w->sem);
-	w->nw.sem = &w->sem;
-	dll_init (&w->nw.q);
-	NSYNC_ATOMIC_UINT32_STORE_ (&w->nw.waiting, 0);
-	w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
-	ATM_STORE (&w->remove_count, 0);
-	dll_init (&w->same_condition);
-	w->flags = WAITER_IN_USE;
+#define kMallocBlockSize 16384
+
+static struct {
+	nsync_atomic_uint32_ mu;
+	size_t used;
+	char *block;
+} malloc;
+
+static void *nsync_malloc (size_t size) {
+	void *res;
+	ASSERT (size <= kMallocBlockSize);
+	if (IsWindows ()) {
+		res = HeapAlloc (GetProcessHeap (), 0, size);
+		if (!res) {
+			nsync_panic_ ("out of memory\n");
+		}
+	} else {
+		nsync_spin_test_and_set_ (&malloc.mu, 1, 1, 0);
+		if (!malloc.block || malloc.used + size > kMallocBlockSize) {
+			malloc.used = 0;
+			malloc.block = __sys_mmap (0, kMallocBlockSize, PROT_READ | PROT_WRITE,
+						   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
+			if (malloc.block == MAP_FAILED) {
+				nsync_panic_ ("out of memory\n");
+			}
+		}
+		res = malloc.block + malloc.used;
+		malloc.used = (malloc.used + size + 15) & -16;
+		ATM_STORE_REL (&malloc.mu, 0);
+	}
+	return res;
 }
 
-/* Destroys waiter struct. */
-void nsync_waiter_destroy_ (waiter *w) {
-	if (w->tag) {
-		nsync_mu_semaphore_destroy (&w->sem);
-		w->tag = 0;
+/* -------------------------------- */
+
+static struct Dll *free_waiters = NULL;
+
+/* free_waiters points to a doubly-linked list of free waiter structs. */
+static nsync_atomic_uint32_ free_waiters_mu; /* spinlock; protects free_waiters */
+
+#define waiter_for_thread __get_tls()->tib_nsync
+
+void nsync_waiter_destroy (void *v) {
+	waiter *w = (waiter *) v;
+	/* Reset waiter_for_thread in case another thread-local variable reuses
+	   the waiter in its destructor while the waiter is taken by the other
+	   thread from free_waiters. This can happen as the destruction order
+	   of thread-local variables can be arbitrary in some platform e.g.
+	   POSIX. */
+	waiter_for_thread = NULL;
+	IGNORE_RACES_START ();
+	ASSERT ((w->flags & (WAITER_RESERVED|WAITER_IN_USE)) == WAITER_RESERVED);
+	w->flags &= ~WAITER_RESERVED;
+	nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
+	dll_make_first (&free_waiters, &w->nw.q);
+	ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
+	IGNORE_RACES_END ();
+}
+
+/* Return a pointer to an unused waiter struct.
+   Ensures that the enclosed timer is stopped and its channel drained. */
+waiter *nsync_waiter_new_ (void) {
+	struct Dll *q;
+	waiter *tw;
+	waiter *w;
+	tw = waiter_for_thread;
+	w = tw;
+	if (w == NULL || (w->flags & (WAITER_RESERVED|WAITER_IN_USE)) != WAITER_RESERVED) {
+		w = NULL;
+		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
+		q = dll_first (free_waiters);
+		if (q != NULL) { /* If free list is non-empty, dequeue an item. */
+			dll_remove (&free_waiters, q);
+			w = DLL_WAITER (q);
+		}
+		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
+		if (w == NULL) { /* If free list was empty, allocate an item. */
+			w = (waiter *) nsync_malloc (sizeof (*w));
+			w->tag = WAITER_TAG;
+			w->nw.tag = NSYNC_WAITER_TAG;
+			nsync_mu_semaphore_init (&w->sem);
+			w->nw.sem = &w->sem;
+			dll_init (&w->nw.q);
+			NSYNC_ATOMIC_UINT32_STORE_ (&w->nw.waiting, 0);
+			w->nw.flags = NSYNC_WAITER_FLAG_MUCV;
+			ATM_STORE (&w->remove_count, 0);
+			dll_init (&w->same_condition);
+			w->flags = 0;
+		}
+		if (tw == NULL) {
+			w->flags |= WAITER_RESERVED;
+			waiter_for_thread = w;
+		}
+	}
+	w->flags |= WAITER_IN_USE;
+	return (w);
+}
+
+/* Return an unused waiter struct *w to the free pool. */
+void nsync_waiter_free_ (waiter *w) {
+	ASSERT ((w->flags & WAITER_IN_USE) != 0);
+	w->flags &= ~WAITER_IN_USE;
+	if ((w->flags & WAITER_RESERVED) == 0) {
+		nsync_spin_test_and_set_ (&free_waiters_mu, 1, 1, 0);
+		dll_make_first (&free_waiters, &w->nw.q);
+		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
 	}
 }
 

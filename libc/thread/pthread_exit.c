@@ -32,6 +32,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/futex.internal.h"
+#include "third_party/nsync/wait_s.internal.h"
 
 void _pthread_unwind(struct PosixThread *pt) {
   struct _pthread_cleanup_buffer *cb;
@@ -115,6 +116,9 @@ wontreturn void pthread_exit(void *rc) {
     _weaken(__cxa_thread_finalize)();
   }
   _pthread_unkey(tib);
+  if (tib->tib_nsync) {
+    nsync_waiter_destroy(tib->tib_nsync);
+  }
   _pthread_ungarbage();
   _pthread_decimate();
 

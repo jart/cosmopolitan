@@ -25,9 +25,6 @@ void nsync_yield_(void);
 /* Retrieve the per-thread cache of the waiter object.  Platform specific. */
 void *nsync_per_thread_waiter_(void (*dest)(void *));
 
-/* Set the per-thread cache of the waiter object.  Platform specific. */
-void nsync_set_per_thread_waiter_(void *v, void (*dest)(void *));
-
 /* Used in spinloops to delay resumption of the loop.
    Usage:
        unsigned attempts = 0;
@@ -244,8 +241,12 @@ waiter *nsync_dll_waiter_(struct Dll *e);
                : DLL_CONTAINER(struct waiter_s, same_condition, e))
 waiter *nsync_dll_waiter_samecond_(struct Dll *e);
 
-void nsync_waiter_init_(waiter *);
-void nsync_waiter_destroy_(waiter *);
+/* Return a pointer to an unused waiter struct.
+   Ensures that the enclosed timer is stopped and its channel drained. */
+waiter *nsync_waiter_new_(void);
+
+/* Return an unused waiter struct *w to the free pool. */
+void nsync_waiter_free_(waiter *w);
 
 /* ---------- */
 
