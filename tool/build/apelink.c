@@ -1944,8 +1944,9 @@ int main(int argc, char *argv[]) {
     }
 
     // otherwise this is a fresh install so consider the platform
-    p = stpcpy(p, "m=\"$(/bin/uname -m >/dev/null)\" || "
-                  "m=\"$(/usr/bin/uname -m)\"\n");
+    p = stpcpy(p, "m=$(/bin/uname -m 2>/dev/null) || "
+                  "m=$(/usr/bin/uname -m 2>/dev/null) || "
+                  "m=x86_64\n");
     if (support_vector & _HOSTXNU) {
       p = stpcpy(p, "if [ ! -d /Applications ]; then\n");
     }

@@ -592,8 +592,9 @@ ape_disk:
 
 #ifdef APE_IS_SHELL_SCRIPT
 apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
-	.ascii	"m=\"$(/bin/uname -m >/dev/null)\" || "
-	.ascii	"m=\"$(/usr/bin/uname -m)\"\n"
+	.ascii	"m=$(/bin/uname -m 2>/dev/null) || "
+	.ascii	"m=$(/usr/bin/uname -m 2>/dev/null) || "
+	.ascii	"m=x86_64\n"
 
 	.ascii	"if [ \"$m\" = x86_64 ] || [ \"$m\" = amd64 ]; then\n"
 //	Until all operating systems can be updated to support APE,
