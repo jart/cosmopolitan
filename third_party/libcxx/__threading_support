@@ -22,7 +22,7 @@
 #endif
 
 #if defined(_LIBCPP_HAS_THREAD_API_EXTERNAL)
-# include "third_party/libcxx/__external_threading"
+//# include "third_party/libcxx/__external_threading"
 #elif !defined(_LIBCPP_HAS_NO_THREADS)
 
 #if defined(_LIBCPP_HAS_THREAD_API_PTHREAD)

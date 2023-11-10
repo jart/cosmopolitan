@@ -67,10 +67,6 @@
 
 #define st_mtime st_mtim.tv_sec
 
-#if defined( UNIX) && defined( __APPLE__)
-#include "third_party/unzip/unix/macosx.h"
-#endif /* defined( UNIX) && defined( __APPLE__) */
-
 /* setup of codepage conversion for decryption passwords */
 #if CRYPT
 #  if (defined(CRYP_USES_ISO2OEM) && !defined(IZ_ISO2OEM_ARRAY))

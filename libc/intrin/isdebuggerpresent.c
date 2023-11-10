@@ -50,7 +50,7 @@ int IsDebuggerPresent(bool force) {
   int e, fd, res;
   char *p, buf[1024];
   if (!force && IsGenuineBlink()) return 0;
-  if (!force && __getenv(environ, "HEISENDEBUG").s) return 0;
+  if (!force && environ && __getenv(environ, "HEISENDEBUG").s) return 0;
   if (IsWindows()) return IsBeingDebugged();
   if (__isworker) return false;
   if (!PLEDGED(RPATH)) return false;

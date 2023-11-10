@@ -33,7 +33,10 @@ void __cxa_unlock(void) {
   pthread_mutex_unlock(&__cxa_lock_obj);
 }
 
-__attribute__((__constructor__)) static void __cxa_init(void) {
-  __cxa_wipe();
+static textstartup void __cxa_init() {
   pthread_atfork(__cxa_lock, __cxa_unlock, __cxa_wipe);
 }
+
+const void *const __cxa_ctor[] initarray = {
+    __cxa_init,
+};

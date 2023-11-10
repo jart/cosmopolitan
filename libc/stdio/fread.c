@@ -19,7 +19,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Reads data from stream.

@@ -23,7 +23,7 @@
 #include "third_party/libcxx/version"
 
 #if defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS) && _LIBCPP_STD_VER >= 17
-# include "third_party/libcxx/__pstl_algorithm"
+//# include "third_party/libcxx/__pstl_algorithm"
 #endif
 
 #include "third_party/libcxx/__debug"

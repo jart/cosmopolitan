@@ -75,7 +75,7 @@ static int ioctl_default(int fd, unsigned long request, void *arg) {
     return sys_ioctl(fd, request, arg);
   } else if (__isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdSocket) {
-      handle = __getfdhandleactual(fd);
+      handle = g_fds.p[fd].handle;
       if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, request, arg)) != -1) {
         return rc;
       } else {

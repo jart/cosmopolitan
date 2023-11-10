@@ -399,7 +399,9 @@ _init_systemfive_magnums:
 	jz	5f
 	ezlea	.Llog,di
 	mov	%r8d,%esi
+	push	%rax
 	call	*%rax
+	pop	%rax
 5:	pop	%rsi
 	pop	%rdi
 #endif /* DEBUGSYS */

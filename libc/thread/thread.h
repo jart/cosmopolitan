@@ -213,6 +213,14 @@ void pthread_testcancel(void);
   pthread_cleanup_pop(&_buffer, (execute)); \
   }
 
+#if defined(__GNUC__) && defined(__aarch64__)
+#define pthread_pause_np() __asm__ volatile("yield")
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+#define pthread_pause_np() __asm__ volatile("pause")
+#else
+#define pthread_pause_np() (void)0
+#endif
+
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 && \
     !defined(__STRICT_ANSI__) && !defined(MODE_DBG)
 extern const errno_t EBUSY;
@@ -220,6 +228,7 @@ extern const errno_t EBUSY;
   ({                                                              \
     pthread_spinlock_t *_s = pSpin;                               \
     while (__atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE)) { \
+      pthread_pause_np();                                         \
     }                                                             \
     0;                                                            \
   })

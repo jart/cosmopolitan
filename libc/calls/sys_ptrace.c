@@ -22,6 +22,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/runtime.h"
 
 #define IsPeek(request) (IsLinux() && (request)-1u < 3)
 

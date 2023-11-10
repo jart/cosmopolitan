@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/nexgen32e/yield.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/thread/thread.h"
@@ -32,7 +31,7 @@ int pthread_yield(void) {
   if (IsXnuSilicon()) {
     __syslib->__pthread_yield_np();
   } else if (IsOpenbsd()) {
-    spin_yield();  // sched_yield() is punishingly slow on OpenBSD
+    pthread_pause_np();  // sched_yield() is punishingly slow on OpenBSD
   } else {
     sched_yield();
   }

@@ -165,9 +165,9 @@
 ** disabled.
 */
 #if defined(_HAVE_MINGW_H)
-# include "mingw.h"
+//# include "mingw.h"
 #elif defined(_HAVE__MINGW_H)
-# include "_mingw.h"
+//# include "_mingw.h"
 #endif
 
 /*

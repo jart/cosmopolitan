@@ -38,7 +38,6 @@ struct NtWsaData kNtWsaData;
 
 static textwindows void WinSockCleanup(void) {
   int rc;
-  (void)rc;
   rc = WSACleanup();
   NTTRACE("WSACleanup() → %d% lm", rc);
 }

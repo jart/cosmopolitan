@@ -1,7 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
-#include "libc/intrin/likely.h"
-#include "libc/runtime/runtime.h"
+
+#ifndef SYSDEBUG
+#define SYSDEBUG 1
+#endif
 
 #define _NTTRACE    0 /* not configurable w/ flag yet */
 #define _POLLTRACE  0 /* not configurable w/ flag yet */
@@ -16,60 +18,40 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#ifdef SYSDEBUG
-#define STRACE(FMT, ...)                                  \
-  do {                                                    \
-    if (UNLIKELY(strace_enter())) {                       \
-      __stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__); \
-      ftrace_enabled(+1);                                 \
-    }                                                     \
-  } while (0)
-#else
-#define STRACE(FMT, ...) (void)0
-#endif
+#define STRACE(FMT, ...)                       \
+  ((void)(SYSDEBUG && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
-#if defined(SYSDEBUG) && _DATATRACE
-#define DATATRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
-#else
-#define DATATRACE(FMT, ...) (void)0
-#endif
+#define DATATRACE(FMT, ...)                                  \
+  ((void)(SYSDEBUG && _DATATRACE && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
-#if defined(SYSDEBUG) && _POLLTRACE
-#define POLLTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
-#else
-#define POLLTRACE(FMT, ...) (void)0
-#endif
+#define POLLTRACE(FMT, ...)                                  \
+  ((void)(SYSDEBUG && _POLLTRACE && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
-#if defined(SYSDEBUG) && _KERNTRACE
-#define KERNTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
-#else
-#define KERNTRACE(FMT, ...) (void)0
-#endif
+#define KERNTRACE(FMT, ...)                                  \
+  ((void)(SYSDEBUG && _KERNTRACE && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
-#if defined(SYSDEBUG) && _STDIOTRACE
-#define STDIOTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
-#else
-#define STDIOTRACE(FMT, ...) (void)0
-#endif
+#define STDIOTRACE(FMT, ...)                                  \
+  ((void)(SYSDEBUG && _STDIOTRACE && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
-#if defined(SYSDEBUG) && _NTTRACE
-#define NTTRACE(FMT, ...) STRACE("\e[2m" FMT "\e[0m", ##__VA_ARGS__)
-#else
-#define NTTRACE(FMT, ...) (void)0
-#endif
+#define NTTRACE(FMT, ...)                                                   \
+  ((void)(SYSDEBUG && _NTTRACE && strace_enabled(0) > 0 &&                  \
+          (__stracef(STRACE_PROLOGUE "\e[2m" FMT "\e[0m\n", ##__VA_ARGS__), \
+           0)))
 
-#if defined(SYSDEBUG) && _LOCKTRACE
-#define LOCKTRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
-#else
-#define LOCKTRACE(FMT, ...) (void)0
-#endif
+#define LOCKTRACE(FMT, ...)                                  \
+  ((void)(SYSDEBUG && _LOCKTRACE && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
-#if defined(SYSDEBUG) && _TIMETRACE
-#define TIMETRACE(FMT, ...) STRACE(FMT, ##__VA_ARGS__)
-#else
-#define TIMETRACE(FMT, ...) (void)0
-#endif
+#define TIMETRACE(FMT, ...)                                  \
+  ((void)(SYSDEBUG && _TIMETRACE && strace_enabled(0) > 0 && \
+          (__stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__), 0)))
 
+int strace_enabled(int);
 void __stracef(const char *, ...);
 
 COSMOPOLITAN_C_END_

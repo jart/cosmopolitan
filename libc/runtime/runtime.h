@@ -91,7 +91,6 @@ void ShowCrashReports(void);
 int ftrace_install(void);
 int ftrace_enabled(int);
 int strace_enabled(int);
-bool strace_enter(void);
 void __print_maps(void);
 void __printargs(const char *);
 /* builtin sh-like system/popen dsl */
@@ -139,10 +138,10 @@ __funline int __trace_disabled(int x) {
   return 0;
 }
 #ifndef FTRACE
-#define ftrace_enabled __trace_disabled
+#define ftrace_enabled(...) __trace_disabled(__VA_ARGS__)
 #endif
 #ifndef SYSDEBUG
-#define strace_enabled __trace_disabled
+#define strace_enabled(...) __trace_disabled(__VA_ARGS__)
 #endif
 #endif /* _COSMO_SOURCE */
 

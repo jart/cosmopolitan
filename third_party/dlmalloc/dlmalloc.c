@@ -11,7 +11,6 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/yield.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"

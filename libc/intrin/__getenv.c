@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/kprintf.h"
 
 privileged struct Env __getenv(char **p, const char *k) {
   char *t;

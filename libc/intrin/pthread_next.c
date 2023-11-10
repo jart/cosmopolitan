@@ -19,8 +19,8 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/nexgen32e/yield.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 intptr_t _pthread_syshand(struct PosixThread *pt) {
   intptr_t syshand;
@@ -28,6 +28,6 @@ intptr_t _pthread_syshand(struct PosixThread *pt) {
   for (;;) {
     syshand = atomic_load_explicit(&pt->tib->tib_syshand, memory_order_acquire);
     if (syshand) return syshand;
-    spin_yield();
+    pthread_pause_np();
   }
 }

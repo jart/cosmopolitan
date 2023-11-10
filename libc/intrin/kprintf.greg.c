@@ -345,7 +345,7 @@ privileged long kloghandle(void) {
         // it's too early in the initialization process for kprintf
         return -1;
       }
-      path = __getenv(__envp, "KPRINTF_LOG").s;
+      path = environ ? __getenv(environ, "KPRINTF_LOG").s : 0;
       closefd = false;
       if (!path) {
         fd = STDERR_FILENO;

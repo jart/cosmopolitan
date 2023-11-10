@@ -91,8 +91,10 @@ void testlib_runtestcases(const testfn_t *start, const testfn_t *end,
   // the linker sorts into an array.
   char host[64];
   struct Dll *e;
+  const char *user;
   const testfn_t *fn;
   struct TestAspect *a;
+  user = getenv("USER");
   strcpy(host, "unknown");
   gethostname(host, sizeof(host)), errno = 0;
   for (fn = start; fn != end; ++fn) {
@@ -111,7 +113,7 @@ void testlib_runtestcases(const testfn_t *start, const testfn_t *end,
     if (warmup) warmup();
     testlib_clearxmmregisters();
     STRACE("");
-    STRACE("# running test %t on %s@%s", fn, __getenv(environ, "USER").s, host);
+    STRACE("# running test %t on %s@%s", fn, user, host);
     (*fn)();
     STRACE("");
     STRACE("# tearing down %t", fn);

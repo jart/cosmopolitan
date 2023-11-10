@@ -21,6 +21,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * Flushes file system changes to disk by any means necessary.

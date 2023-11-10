@@ -25,7 +25,7 @@
  * @param delta is added to enabled state
  * @return enabled state before `delta` was applied
  */
-dontinstrument int strace_enabled(int delta) {
+dontinstrument int(strace_enabled)(int delta) {
   int res;
   struct CosmoTib *tib;
   if (__tls_enabled) {

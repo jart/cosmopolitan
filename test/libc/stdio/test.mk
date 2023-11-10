@@ -3,7 +3,9 @@
 
 PKGS += TEST_LIBC_STDIO
 
-TEST_LIBC_STDIO_SRCS := $(wildcard test/libc/stdio/*.c)
+TEST_LIBC_STDIO_FILES := $(wildcard test/libc/stdio/*)
+TEST_LIBC_STDIO_SRCS = $(filter %.c,$(TEST_LIBC_STDIO_FILES))
+TEST_LIBC_STDIO_INCS = $(filter %.inc,$(TEST_LIBC_STDIO_FILES))
 TEST_LIBC_STDIO_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_STDIO_SRCS))
 
 TEST_LIBC_STDIO_OBJS =						\

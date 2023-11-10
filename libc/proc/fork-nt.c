@@ -58,7 +58,7 @@
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
-void __keystroke_wipe(void);
+void WipeKeystrokes(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
 #ifdef SYSDEBUG
@@ -310,9 +310,9 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
       bzero(&startinfo, sizeof(startinfo));
       startinfo.cb = sizeof(struct NtStartupInfo);
       startinfo.dwFlags = kNtStartfUsestdhandles;
-      startinfo.hStdInput = __getfdhandleactual(0);
-      startinfo.hStdOutput = __getfdhandleactual(1);
-      startinfo.hStdError = __getfdhandleactual(2);
+      startinfo.hStdInput = g_fds.p[0].handle;
+      startinfo.hStdOutput = g_fds.p[1].handle;
+      startinfo.hStdError = g_fds.p[2].handle;
       args = __argv;
 #ifdef SYSDEBUG
       // If --strace was passed to this program, then propagate it the
@@ -395,7 +395,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     }
     // reset core runtime services
     __proc_wipe();
-    __keystroke_wipe();
+    WipeKeystrokes();
     if (_weaken(__itimer_wipe)) {
       _weaken(__itimer_wipe)();
     }

@@ -152,7 +152,6 @@ static void __zipos_init(void) {
     progpath = 0;
     msg = -777;
   }
-  (void)msg;
   STRACE("__zipos_get(%#s) → %d% m", progpath, msg);
 }
 

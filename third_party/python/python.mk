@@ -297,6 +297,7 @@ THIRD_PARTY_PYTHON_INCS =						\
 	third_party/python/Modules/clinic/_pickle.inc			\
 	third_party/python/Modules/clinic/cmathmodule.inc		\
 	third_party/python/Modules/clinic/_elementtree.inc		\
+	third_party/python/Modules/clinic/_struct.inc			\
 	third_party/python/Modules/clinic/pwdmodule.inc			\
 	third_party/python/Modules/clinic/audioop.inc
 

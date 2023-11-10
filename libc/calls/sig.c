@@ -201,7 +201,6 @@ textwindows int __sig_raise(volatile int sig, int sic) {
     STRACE("__sig_raise(%G, %t) mask %s", sig, __sig_handler(rva),
            (DescribeSigset)(ssbuf, 0, (sigset_t *)&pt->tib->tib_sigmask));
     __sig_handler(rva)(sig, &si, &ctx);
-    (void)ssbuf;
 
     // record this handler
     if (flags & SA_RESTART) {
@@ -271,7 +270,6 @@ static textwindows wontreturn void __sig_tramp(struct SignalFrame *sf) {
            (DescribeSigset)(ssbuf[0], 0, &sf->ctx.uc_sigmask),
            (DescribeSigset)(ssbuf[1], 0, (sigset_t *)&tib->tib_sigmask));
     __sig_handler(sf->rva)(sig, &sf->si, &sf->ctx);
-    (void)ssbuf;
 
     // restore the signal mask that was used by the interrupted code
     // this may have been modified by the signal handler in the callback

@@ -63,6 +63,10 @@ THIRD_PARTY_LUA_A_HDRS =						\
 	third_party/lua/tms.h						\
 	third_party/lua/visitor.h
 
+THIRD_PARTY_LUA_A_INCS =						\
+	third_party/lua/ljumptab.inc					\
+	third_party/lua/lopnames.inc
+
 THIRD_PARTY_LUA_A_SRCS =						\
 	third_party/lua/lapi.c						\
 	third_party/lua/lauxlib.c					\
@@ -294,6 +298,7 @@ THIRD_PARTY_LUA_SRCS =							\
 
 THIRD_PARTY_LUA_LIBS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)))
 THIRD_PARTY_LUA_HDRS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_HDRS))
+THIRD_PARTY_LUA_INCS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_INCS))
 THIRD_PARTY_LUA_OBJS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_OBJS))
 $(THIRD_PARTY_LUA_OBJS): third_party/lua/lua.mk
 

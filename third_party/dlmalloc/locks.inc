@@ -45,7 +45,7 @@ static int malloc_lock(MLOCK_T *lk) {
   if (!__threaded) return 0;
 #ifdef TINY
   while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
-    spin_yield();
+    pthread_pause_np();
   }
 #else
   nsync_mu_lock(lk);

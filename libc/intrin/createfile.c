@@ -49,13 +49,9 @@ CreateFile(const char16_t *lpFileName,                         //
   int64_t hHandle;
   uint32_t micros = 1;
   char buf_accessflags[512];
-  (void)buf_accessflags;
   char buf_shareflags[64];
-  (void)buf_shareflags;
   char buf_secattr[32];
-  (void)buf_secattr;
   char buf_flagattr[256];
-  (void)buf_flagattr;
 TryAgain:
   hHandle = __imp_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode,
                               opt_lpSecurity, dwCreationDisposition,

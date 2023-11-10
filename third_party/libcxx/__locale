@@ -18,29 +18,6 @@
 #include "third_party/libcxx/cstdint"
 #include "third_party/libcxx/cctype"
 #include "third_party/libcxx/locale.h"
-#if defined(_LIBCPP_MSVCRT_LIKE)
-# include "third_party/libcxx/cstring"
-# include "third_party/libcxx/support/win32/locale_win32.h"
-#elif defined(_AIX)
-# include "third_party/libcxx/support/ibm/xlocale.h"
-#elif defined(__ANDROID__)
-# include "third_party/libcxx/support/android/locale_bionic.h"
-#elif defined(__sun__)
-# include "third_party/libcxx/xlocale.h"
-# include "third_party/libcxx/support/solaris/xlocale.h"
-#elif defined(_NEWLIB_VERSION)
-# include "third_party/libcxx/support/newlib/xlocale.h"
-#elif (defined(__APPLE__)      || defined(__FreeBSD__) \
-    || defined(__EMSCRIPTEN__) || defined(__IBMCPP__))
-# include "third_party/libcxx/xlocale.h"
-#elif defined(__Fuchsia__)
-# include "third_party/libcxx/support/fuchsia/xlocale.h"
-#elif defined(__wasi__)
-// WASI libc uses musl's locales support.
-# include "third_party/libcxx/support/musl/xlocale.h"
-#elif defined(_LIBCPP_HAS_MUSL_LIBC)
-# include "third_party/libcxx/support/musl/xlocale.h"
-#endif
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

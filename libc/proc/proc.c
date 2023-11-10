@@ -269,10 +269,9 @@ textwindows void __proc_wipe(void) {
 textwindows struct Proc *__proc_new(void) {
   struct Dll *e;
   struct Proc *proc = 0;
-  int i, n = ARRAYLEN(__proc.pool);
-  if (atomic_load_explicit(&__proc.allocated, memory_order_acquire) < n &&
-      (i = atomic_fetch_add(&__proc.allocated, 1)) < n) {
-    proc = __proc.pool + i;
+  // fork() + wait() don't depend on malloc() so neither shall we
+  if (__proc.allocated < ARRAYLEN(__proc.pool)) {
+    proc = __proc.pool + __proc.allocated++;
   } else {
     if ((e = dll_first(__proc.free))) {
       proc = PROC_CONTAINER(e);

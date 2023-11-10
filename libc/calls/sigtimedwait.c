@@ -51,7 +51,6 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
   struct timespec ts;
   union siginfo_meta si = {0};
   BEGIN_CANCELATION_POINT;
-  (void)strsig;
 
   if (IsAsan() && (!__asan_is_valid(set, sizeof(*set)) ||
                    (info && !__asan_is_valid(info, sizeof(*info))) ||

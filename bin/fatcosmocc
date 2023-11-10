@@ -240,6 +240,8 @@ NEED_JOIN=
 NEED_EQUAL=
 NEED_OUTPUT=
 APELINKFLAGS=
+FLAGS_X86_64=
+FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
@@ -335,6 +337,14 @@ for x; do
     continue
   elif [ x"$x" = x"-march=native" ]; then
     fatal_error "-march=native can't be used when building fat binaries"
+  elif [ x"$x" != x"${x#-Xx86_64}" ]; then
+    x=${x#-Xx86_64}  # e.g. -Xx86_64,-msse3,-mavx,-mavx2,-mf16c,-mfma
+    FLAGS_X86_64="$FLAGS_X86_64 ${x//,/ }"
+    continue
+  elif [ x"$x" != x"${x#-Xaarch64}" ]; then
+    x=${x#-Xaarch64}
+    FLAGS_aarch64="$FLAGS_aarch64 ${x//,/ }"
+    continue
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     Exit 0
@@ -473,6 +483,7 @@ build_object() {
         $CFLAGS_X86_64 \
         $CPPFLAGS_X86_64 \
         "$@" \
+        $FLAGS_X86_64 \
         $PRECIOUS
     log_command "$@"
     "$@" || exit
@@ -492,6 +503,7 @@ build_object() {
         $CFLAGS_AARCH64 \
         $CPPFLAGS_AARCH64 \
         "$@" \
+        $FLAGS_AARCH64 \
         $PRECIOUS &&
     log_command "$@"
     "$@" || exit

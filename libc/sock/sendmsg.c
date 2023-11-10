@@ -27,6 +27,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/msghdr.h"
@@ -87,7 +88,8 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   END_CANCELATION_POINT;
 
 #if defined(SYSDEBUG) && _DATATRACE
-  if (__strace > 0 && strace_enabled(0) > 0) {
+  // TODO(jart): Write a DescribeMsg() function.
+  if (strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "sendmsg(");
     if ((!IsAsan() && kisdangerous(msg)) ||
         (IsAsan() && !__asan_is_valid(msg, sizeof(*msg)))) {

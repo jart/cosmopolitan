@@ -31,10 +31,6 @@ int64_t GetConsoleOutputHandle(void);
 int IsWindowsExecutable(int64_t, const char16_t *);
 void InterceptTerminalCommands(const char *, size_t);
 
-forceinline int64_t __getfdhandleactual(int fd) {
-  return g_fds.p[fd].handle;
-}
-
 forceinline bool __isfdopen(int fd) {
   return 0 <= fd && fd < g_fds.n && g_fds.p[fd].kind != kFdEmpty;
 }

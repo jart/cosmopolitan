@@ -26,11 +26,11 @@
 #include "third_party/libcxx/cstdio"
 #ifdef _LIBCPP_HAS_CATOPEN
 # include "libc/str/locale.h"
-# include "third_party/libcxx/nl_types.h"
+//# include "third_party/libcxx/nl_types.h"
 #endif
 
 #ifdef _LIBCPP_LOCALE__L_EXTENSIONS
-# include "third_party/libcxx/__bsd_locale_defaults.h"
+//# include "third_party/libcxx/__bsd_locale_defaults.h"
 #else
 #include "third_party/libcxx/__bsd_locale_fallbacks.h"
 #endif

@@ -6,6 +6,7 @@ PKGS += TOOL_NET
 TOOL_NET_FILES := $(wildcard tool/net/*)
 TOOL_NET_SRCS = $(filter %.c,$(TOOL_NET_FILES))
 TOOL_NET_HDRS = $(filter %.h,$(TOOL_NET_FILES))
+TOOL_NET_INCS = $(filter %.inc,$(TOOL_NET_FILES))
 
 TOOL_NET_OBJS =									\
 	$(TOOL_NET_SRCS:%.c=o/$(MODE)/%.o)

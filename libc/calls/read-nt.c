@@ -142,7 +142,7 @@ struct Keystrokes {
 
 static struct Keystrokes __keystroke;
 
-textwindows void __keystroke_wipe(void) {
+textwindows void WipeKeystrokes(void) {
   bzero(&__keystroke, sizeof(__keystroke));
 }
 
@@ -754,8 +754,8 @@ static textwindows ssize_t ReadFromConsole(struct Fd *f, void *data,
   return rc;
 }
 
-textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
-                                     int64_t offset, sigset_t waitmask) {
+textwindows ssize_t ReadBuffer(int fd, void *data, size_t size, int64_t offset,
+                               sigset_t waitmask) {
 
   // switch to terminal polyfill if reading from win32 console
   struct Fd *f = g_fds.p + fd;
@@ -786,9 +786,9 @@ textwindows ssize_t sys_read_nt_impl(int fd, void *data, size_t size,
   }
 }
 
-static textwindows ssize_t sys_read_nt2(int fd, const struct iovec *iov,
-                                        size_t iovlen, int64_t opt_offset,
-                                        sigset_t waitmask) {
+static textwindows ssize_t ReadIovecs(int fd, const struct iovec *iov,
+                                      size_t iovlen, int64_t opt_offset,
+                                      sigset_t waitmask) {
   ssize_t rc;
   size_t i, total;
   if (opt_offset < -1) return einval();
@@ -796,8 +796,8 @@ static textwindows ssize_t sys_read_nt2(int fd, const struct iovec *iov,
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {
       if (!iov[i].iov_len) continue;
-      rc = sys_read_nt_impl(fd, iov[i].iov_base, iov[i].iov_len, opt_offset,
-                            waitmask);
+      rc =
+          ReadBuffer(fd, iov[i].iov_base, iov[i].iov_len, opt_offset, waitmask);
       if (rc == -1) {
         if (total && errno != ECANCELED) {
           return total;
@@ -811,7 +811,7 @@ static textwindows ssize_t sys_read_nt2(int fd, const struct iovec *iov,
     }
     return total;
   } else {
-    return sys_read_nt_impl(fd, NULL, 0, opt_offset, waitmask);
+    return ReadBuffer(fd, NULL, 0, opt_offset, waitmask);
   }
 }
 
@@ -819,7 +819,7 @@ textwindows ssize_t sys_read_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 int64_t opt_offset) {
   ssize_t rc;
   sigset_t m = __sig_block();
-  rc = sys_read_nt2(fd, iov, iovlen, opt_offset, m);
+  rc = ReadIovecs(fd, iov, iovlen, opt_offset, m);
   __sig_unblock(m);
   return rc;
 }

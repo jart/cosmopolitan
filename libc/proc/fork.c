@@ -44,7 +44,6 @@ int _fork(uint32_t dwCreationFlags) {
   struct Dll *e;
   int ax, dx, tid, parent;
   parent = __pid;
-  (void)parent;
   BLOCK_SIGNALS;
   if (IsWindows()) __proc_lock();
   if (__threaded && _weaken(_pthread_onfork_prepare)) {

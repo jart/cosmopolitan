@@ -587,7 +587,7 @@ _LIBCPP_END_NAMESPACE_STD
 _LIBCPP_POP_MACROS
 
 #if defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS) && _LIBCPP_STD_VER >= 17
-#   include "third_party/libcxx/__pstl_numeric"
+//#   include "third_party/libcxx/__pstl_numeric"
 #endif
 
 #endif  // _LIBCPP_NUMERIC

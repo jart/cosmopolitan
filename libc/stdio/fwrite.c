@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/stdio/internal.h"
 
 /**
  * Writes data to stream.

@@ -303,7 +303,7 @@ struct __invoke_return
 
 #else // defined(_LIBCPP_CXX03_LANG)
 
-#include "third_party/libcxx/__functional_base_03"
+//#include "third_party/libcxx/__functional_base_03"
 
 #endif  // !defined(_LIBCPP_CXX03_LANG)
 

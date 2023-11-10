@@ -28,9 +28,10 @@
 #include "libc/str/tab.internal.h"
 #include "third_party/linenoise/linenoise.h"
 
-#define EXT(s) READ32LE(s "\0\0")
+#define Read32(s) (s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0])
+#define EXT(s)    Read32(s "\0\0")
 
-static bool IsGraph(wint_t c) {
+static inline bool IsGraph(wint_t c) {
   return 0x21 <= c && c <= 0x7E;
 }
 
