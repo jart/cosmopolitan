@@ -6556,6 +6556,7 @@ static int ExitWorker(void) {
       monitorth = 0;
     }
   }
+  LuaDestroy();
   _Exit(0);
 }
 
