@@ -175,6 +175,7 @@ int main(int argc, char *argv[]) {
              ? " (disabled by operating system)"
              : "");
 
+  CANIUSE(AVXVNNI);
   CANIUSE(AVX512BW);
   CANIUSE(AVX512CD);
   CANIUSE(AVX512DQ);

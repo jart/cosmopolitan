@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_X86COMPILER_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_X86COMPILER_H_
+#ifdef __x86_64__
 
 /**
  * @fileoverview x86 cpu feature compile-time requirement detection.
@@ -22,6 +23,42 @@
 #define _X86_CC_AVX2 1
 #else
 #define _X86_CC_AVX2 0
+#endif
+
+#ifdef __AVXVNNI__
+#define _X86_CC_AVXVNNI 1
+#else
+#define _X86_CC_AVXVNNI 0
+#endif
+
+#ifdef __AVX512F__
+#define _X86_CC_AVX512F 1
+#else
+#define _X86_CC_AVX512F 0
+#endif
+
+#ifdef __AVX512BF16__
+#define _X86_CC_AVX512BF16 1
+#else
+#define _X86_CC_AVX512BF16 0
+#endif
+
+#ifdef __AVX512VBMI__
+#define _X86_CC_AVX512VBMI 1
+#else
+#define _X86_CC_AVX512VBMI 0
+#endif
+
+#ifdef __AVX512VNNI__
+#define _X86_CC_AVX512VNNI 1
+#else
+#define _X86_CC_AVX512VNNI 0
+#endif
+
+#ifdef __AVX5124VNNIW__
+#define _X86_CC_AVX5124VNNIW 1
+#else
+#define _X86_CC_AVX5124VNNIW 0
 #endif
 
 #ifdef __ABM__
@@ -138,4 +175,5 @@
 #define _X86_CC_RDPID 0
 #endif
 
+#endif /* __x86_64__ */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_X86COMPILER_H_ */
