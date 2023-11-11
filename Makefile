@@ -85,7 +85,7 @@ endif
 ifeq ($(TOOLCHAIN),)                                                # if TOOLCHAIN isn't defined
 ifeq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")  # if our gcc isn't unbundled
 ifneq ($(UNAME_M)-$(UNAME_S), x86_64-Linux)                         # if this is not amd64 linux
-$(error you need to download https://justine.lol/cosmocc-0.0.18.zip and unzip it inside the cosmo directory)
+$(error you need to download https://cosmo.zip/pub/cosmocc/cosmocc-0.0.18.zip and unzip it inside the cosmo directory)
 endif
 endif
 endif
@@ -436,19 +436,30 @@ COSMOPOLITAN_HEADERS =			\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_REGEX
 
+COSMOCC_HEADERS =			\
+	THIRD_PARTY_AARCH64		\
+	THIRD_PARTY_LIBCXX		\
+	THIRD_PARTY_INTEL
+
 o/$(MODE)/cosmopolitan.a:		\
 		$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS))
 
-o/cosmopolitan.h:							\
-		o/$(MODE)/tool/build/rollup.com				\
+o/cosmocc.h.txt: $(foreach x,$(COSMOCC_HEADERS),$($(x)_HDRS))
+	$(file >$@, $^)
+
+o/cosmopolitan.h.txt:							\
+		libc/integral/normalize.inc				\
+		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
+	$(file >$@, $^)
+
+o/cosmopolitan.h: o/cosmopolitan.h.txt					\
 		libc/integral/normalize.inc				\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))	\
 		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_INCS))
-	$(file >$(TMPDIR)/$(subst /,_,$@),libc/integral/normalize.inc $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS)))
 	@$(ECHO) '#ifndef __STRICT_ANSI__' >$@
 	@$(ECHO) '#define _COSMO_SOURCE' >>$@
 	@$(ECHO) '#endif' >>$@
-	@$(COMPILE) -AROLLUP -T$@ o/$(MODE)/tool/build/rollup.com @$(TMPDIR)/$(subst /,_,$@) >>$@
+	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup.com @$< >>$@
 
 o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\

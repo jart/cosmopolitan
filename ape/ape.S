@@ -712,8 +712,9 @@ apesh:	.ascii	"\n@\n#'\"\n"			// sixth edition shebang
 //	because they need to be in the first 4096 bytes
         .section .emushprologue,"a",@progbits
 emush:	.ascii	"\n@\n#'\"\n"
-	.ascii	"s=\"$(/bin/uname -s >/dev/null)\" || "
-	.ascii	"s=\"$(/usr/bin/uname -s)\"\n"
+	.ascii	"s=$(/bin/uname -s 2>/dev/null) || "
+	.ascii	"s=$(/usr/bin/uname -s 2>/dev/null) || "
+	.ascii	"s=Darwin\n"
 //	our script is running on a non-x86_64 architecture
 //	1. `dd` out the appropriate blink vm blob
 //	2. gunzip the blink virtual machine executable

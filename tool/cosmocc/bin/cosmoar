@@ -1,0 +1,108 @@
+#!/bin/sh
+BIN=${0%/*}
+PROG=${0##*/}
+
+fatal_error() {
+  echo "$PROG: $1" >&2
+  exit 1
+}
+
+AR_X86_64="$BIN/x86_64-linux-cosmo-ar"
+AR_AARCH64="$BIN/aarch64-linux-cosmo-ar"
+if [ "$1" = "--version" ]; then
+  # note: only the underlying gnu compiler binaries are gpl
+  #       our shell script is released with the isc license
+  cat <<EOF
+$PROG (GNU Binutils) 2.38
+Copyright (C) 2022 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) any later version.
+This program has absolutely no warranty.
+EOF
+  exit 0
+elif [ "$1" = "--help" ]; then
+  "$AR_X86_64" --help |
+    sed "s!$AR_X86_64!$PROG!g" 2>/dev/null ||
+    "$AR_X86_64" --help
+  exit
+fi
+
+FIRST=1
+STATE=0
+OUTPUT_X86_64=
+OUTPUT_AARCH64=
+INPUTS=
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ $STATE -eq 0 ]; then
+    if [ x"$x" != x"${x#--*}" ]; then  # startswith(x, "--")
+      set -- "$@" "$x"  # this is a flag
+    else
+      set -- "$@" "$x"  # command argument, e.g. rcu, rcsD
+      STATE=1
+    fi
+  elif [ $STATE -eq 1 ]; then
+    OUTPUT_X86_64=$x
+    STATE=2
+  elif [ x"$x" != x"${x#* }" ]; then
+    fatal_error "input arguments containing spaces unsupported"
+  elif [ x"$x" != x"${x#@}" ]; then
+    fatal_error "input argument @file not supported yet"
+  elif [ -z "$INPUTS" ]; then
+    INPUTS=$x
+  else
+    INPUTS="$INPUTS $x"
+  fi
+done
+if [ -z "$OUTPUT_X86_64" ]; then
+  fatal_error "missing output path"
+fi
+
+mangle_object_path() {
+  path=$1
+  arch=$2
+  outdir=${path%/*}
+  outbas=${path##*/}
+  if [ x"$outdir" = x"$path" ]; then
+    outdir=
+  elif [ -n "$outdir" ]; then
+    outdir="$outdir/"
+  fi
+  if [ ! -d "$outdir.$arch" ]; then
+    mkdir -p "$outdir.$arch" || Exit
+  fi
+  mangled_path="${outdir}.$arch/$outbas"
+}
+
+OBJECTS_X86_64=
+OBJECTS_AARCH64=
+for x in $INPUTS; do
+  if [ ! -f "$x" ]; then
+    fatal_error "$x: no such file"
+  fi
+  mangle_object_path "$x" aarch64
+  if [ ! -f "$mangled_path" ]; then
+    fatal_error "$x: missing concomitant $mangled_path file"
+  fi
+  OBJECTS_X86_64="${OBJECTS_X86_64} $x"
+  OBJECTS_AARCH64="${OBJECTS_AARCH64} $mangled_path"
+done
+
+mangle_object_path "$OUTPUT_X86_64" aarch64
+OUTPUT_AARCH64="$mangled_path"
+
+"$AR_X86_64" "$@" "$OUTPUT_X86_64" $OBJECTS_X86_64 &
+pid1=$!
+
+"$AR_AARCH64" "$@" "$OUTPUT_AARCH64" $OBJECTS_AARCH64 &
+pid2=$!
+
+if ! wait $pid1; then
+  kill $pid2 2>/dev/null
+  wait
+  exit 1
+fi
+wait $pid2 || exit

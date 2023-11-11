@@ -1,0 +1,238 @@
+#!/bin/sh
+# cosmopolitan c/c++ cross compiler
+# https://github.com/jart/cosmopolitan
+# https://cosmo.zip/
+
+BIN=${0%/*}
+PROG=${0##*/}
+GCC_VERSION=11.2.0
+
+if [ "$1" = "--version" ]; then
+cat <<EOF
+$PROG (GCC) $GCC_VERSION
+Copyright (c) 2023 Justine Alexandra Roberts Tunney
+Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
+notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
+our copyright notices. This toolchain is configured to do so default.
+Cosmopolitan comes with absolutely NO WARRANTY of any kind.
+For more information, see the Cosmopolitan LICENSE files.
+Copyright (C) 2019 Free Software Foundation, Inc.
+This launches GNU GCC/Binutils subprocesses, which is free software; see
+Cosmopolitan's third_party/gcc/ for source code and copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+EOF
+exit
+fi
+
+if [ "$1" = "--help" ]; then
+  if [ -t 1 ]; then
+    exec less "$BIN/../README.md"
+  else
+    exec cat "$BIN/../README.md"
+  fi
+fi
+
+fatal_error() {
+  echo "$PROG: fatal error: $1" >&2
+  echo "compilation terminated." >&2
+  exit 1
+}
+
+log_command() {
+  if [ -n "$BUILDLOG" ]; then
+    printf '# %s\n(cd %s; %s)\n' "$ORIGINAL" "$PWD" "$*" >>"$BUILDLOG"
+  fi
+}
+
+ORIGINAL="$0 $*"
+PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__"
+PREDEF="-include libc/integral/normalize.inc"
+CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -isystem $BIN/../include"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd"
+APEFLAGS="-Wl,--gc-sections"
+PRECIOUS="-fno-omit-frame-pointer"
+
+CROSS=1
+ARCH=${PROG%%-*}
+if [ x"$ARCH" = x"$PROG" ]; then
+  fatal_error "cosmocross must be run via cross compiler"
+fi
+
+CC="$BIN/$ARCH-linux-cosmo-gcc"
+CRT="$BIN/../$ARCH-linux-cosmo/lib/crt.o"
+LDLIBS="-lcosmo"
+LDFLAGS="$LDFLAGS -L$BIN/../$ARCH-linux-cosmo/lib"
+if [ x"$PROG" != x"${PROG%++}" ]; then
+  CC="$BIN/$ARCH-linux-cosmo-g++"
+  CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  LDLIBS="-lcxx $LDLIBS"
+fi
+
+PAGESZ=4096
+if [ x"$ARCH" = x"x86_64" ]; then
+  OBJCOPYFLAGS="-S -O binary"
+  CRT="$BIN/../$ARCH-linux-cosmo/lib/ape-no-modify-self.o $CRT"
+  CPPFLAGS="$CPPFLAGS -mno-red-zone"
+  CFLAGS="$CFLAGS -mno-tls-direct-seg-refs"
+  LDFLAGS="$LDFLAGS -Wl,-T,$BIN/../$ARCH-linux-cosmo/lib/ape.lds"
+elif [ x"$ARCH" = x"aarch64" ]; then
+  OBJCOPYFLAGS="-S"
+  PAGESZ=16384
+  CFLAGS="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
+  LDFLAGS="$LDFLAGS -Wl,-T,$BIN/../$ARCH-linux-cosmo/lib/aarch64.lds"
+else
+  fatal_error "$ARCH: unsupported architecture"
+fi
+
+LDFLAGS="$LDFLAGS -Wl,-z,common-page-size=$PAGESZ -Wl,-z,max-page-size=16384"
+
+OPT=
+FIRST=1
+OUTPUT=
+SFLAG=0
+INTENT=ld
+GOT_SOME=0
+NEED_OUTPUT=
+RELOCATABLE=0
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ -n "$NEED_OUTPUT" ]; then
+    NEED_OUTPUT=
+    OUTPUT=$x
+    set -- "$@" "$x"
+    continue
+  fi
+  if [ x"$x" = x"-" ] ||           # is an argument
+     [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
+    GOT_SOME=1
+  elif [ x"$x" = x"-static-libstdc++" ]; then
+    continue
+  elif [ x"$x" = x"-static-libgcc" ]; then
+    continue
+  elif [ x"$x" != x"${x#-O}" ]; then
+    OPT=$x
+  elif [ x"$x" = x"-c" ]; then
+    INTENT=cc
+  elif [ x"$x" = x"-s" ]; then
+    SFLAG=1
+    continue
+  elif [ x"$x" = x"-r" ]; then
+    RELOCATABLE=1
+  elif [ x"$x" = x"-E" ]; then
+    INTENT=cpp
+  elif [ x"$x" = x"-o" ]; then
+    NEED_OUTPUT=1
+  elif [ x"$x" = x"-mcosmo" ]; then
+    CPPFLAGS="$CPPFLAGS -D_COSMO_SOURCE"
+    continue
+  elif [ x"$x" != x"${x#-o}" ]; then
+    OUTPUT=${x#-o}
+  elif [ x"$x" = x"-fpic" ]; then
+    continue
+  elif [ x"$x" = x"-fPIC" ]; then
+    continue
+  elif [ x"$x" = x"-r" ] ||
+       [ x"$x" = x"-pie" ] ||
+       [ x"$x" = x"-frtti" ] ||
+       [ x"$x" = x"-shared" ] ||
+       [ x"$x" = x"-nostdlib" ] ||
+       [ x"$x" = x"-mred-zone" ] ||
+       [ x"$x" = x"-fexceptions" ] ||
+       [ x"$x" = x"-fsanitize=thread" ]; then
+    echo "$PROG: $x not supported" >&2
+    exit 1
+  elif [ x"$x" = x"-fomit-frame-pointer" ]; then
+    # Quoth Apple "The frame pointer register must always address a
+    # valid frame record. Some functions — such as leaf functions or
+    # tail calls — may opt not to create an entry in this list. As a
+    # result, stack traces are always meaningful, even without debug
+    # information."
+    set -- "$@" -momit-leaf-frame-pointer -foptimize-sibling-calls
+    continue
+  elif [ x"$x" != x"${x#-Werror}" ] || \
+       [ x"$x" = x"-pedantic-errors" ]; then
+    # this toolchain is intended for building other people's code
+    # elevating warnings into errors, should only be done by devs
+    continue
+  elif [ x"$x" = x"-march=native" ]; then
+    if [ $CROSS -eq 0 ]; then
+      set -- "$@" $("$BIN/march-native")
+    else
+      fatal_error "-march=native can't be used when cross compiling"
+    fi
+    continue
+  elif [ x"$x" = x"-dumpversion" ]; then
+    echo $GCC_VERSION
+    exit 0
+  elif [ x"$x" = x"-Wl,--version" ]; then
+    GOT_SOME=1
+  elif [ x"$x" = x"-dumpmachine" ]; then
+    GOT_SOME=1
+  fi
+  set -- "$@" "$x"
+done
+
+if [ "$GOT_SOME" -eq 0 ]; then
+  fatal_error "no input files"
+fi
+
+if [ $RELOCATABLE -eq 1 ]; then
+  LDFLAGS="$LDFLAGS -r"
+fi
+
+# support --ftrace unless optimizing for size
+if [ x"$OPT" != x"-Os" ] &&                # $OPT != -Os
+   [ x"${MODE%tiny}" = x"${MODE}" ]; then  # $MODE not in (tiny, aarch64-tiny)
+  if [ x"$ARCH" = x"x86_64" ]; then
+    CFLAGS="$CFLAGS -fpatchable-function-entry=18,16"
+  elif [ x"$ARCH" = x"aarch64" ]; then
+    CFLAGS="$CFLAGS -fpatchable-function-entry=7,6"
+  fi
+fi
+
+# maximize frame pointers unless optimizing for size
+if [ x"$OPT" != x"-Os" ] &&               # $OPT != "-Os"
+   [ x"$MODE" != x"${MODE%tiny}" ]; then  # endswith($MODE, "tiny")
+  CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+
+if [ $INTENT = cpp ]; then
+  set -- "$CC" $PLATFORM $CPPFLAGS "$@"
+elif [ $INTENT = cc ]; then
+  set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS "$@" $PRECIOUS
+else
+  set -- "$CC" $PLATFORM $PREDEF $CFLAGS $CPPFLAGS $CRT "$@" $LDFLAGS $LDLIBS $PRECIOUS
+fi
+
+log_command "$@"
+"$@" || exit
+
+if [ -n "$OUTPUT" ] && [ -f "$OUTPUT" ]; then
+  if [ $INTENT = cc ] || [ $INTENT = ld ]; then
+    "$BIN/fixupobj" "$OUTPUT" || exit
+  fi
+  if [ $INTENT = ld ]; then
+    if [ x"$OUTPUT" != x"${OUTPUT%.com}" ] ||
+       [ x"$OUTPUT" != x"${OUTPUT%.exe}" ]; then
+      # cosmocc -o foo.com ...
+      # -> foo.com (ape)
+      # -> foo.com.dbg (elf)
+      mv -f "$OUTPUT" "$OUTPUT.dbg" || exit
+      "$BIN/$ARCH-linux-cosmo-objcopy" \
+        $OBJCOPYFLAGS \
+        "$OUTPUT.dbg" \
+        "$OUTPUT" || exit
+      "$BIN/zipcopy" \
+        "$OUTPUT.dbg" \
+        "$OUTPUT" || exit
+    elif [ $SFLAG -eq 1 ]; then
+      "$BIN/$ARCH-linux-cosmo-strip" \
+        "$OUTPUT" || exit
+    fi
+  fi
+fi

@@ -16,15 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/relocations.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/errno.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
@@ -44,13 +37,38 @@ struct Visited {
 };
 
 char *output;
+const char *prog;
 struct Interner *visited;
 
 void Visit(const char *);
 
+static wontreturn void Die(const char *reason) {
+  tinyprint(2, prog, ": ", reason, "\n", NULL);
+  exit(1);
+}
+
+static wontreturn void DieSys(const char *thing) {
+  perror(thing);
+  exit(1);
+}
+
+static wontreturn void DieOom(void) {
+  Die("out of memory");
+}
+
+static void Appends(char **b, const char *s) {
+  if (appends(b, s) == -1) DieOom();
+}
+
+static void Appendd(char **b, const void *p, size_t n) {
+  if (appendd(b, p, n) == -1) DieOom();
+}
+
 size_t GetFdSize(int fd) {
   struct stat st;
-  CHECK_NE(-1, fstat(fd, &st));
+  if (fstat(fd, &st)) {
+    DieSys("fstat");
+  }
   return st.st_size;
 }
 
@@ -84,12 +102,11 @@ void Process(const char *p, const char *pe, const char *path, bool isheader) {
         continue;
       }
     }
-    appendd(&output, p, p2 - p);
+    Appendd(&output, p, p2 - p);
   }
   if (noformat) {
-    appends(&output, "/* clang-format on */\n");
+    Appends(&output, "/* clang-format on */\n");
   }
-  kprintf("finished%n");
 }
 
 void Visit(const char *path) {
@@ -105,55 +122,40 @@ void Visit(const char *path) {
   if (startswith(path, "libc/isystem/")) return;
   isheader = endswith(path, ".h");
   if (isheader && isinterned(visited, path)) return;
-  appends(&output, "\n\f\n/*!BEGIN ");
-  appends(&output, path);
-  appends(&output, " */\n\n");
+  Appends(&output, "\n\f\n/*!BEGIN ");
+  Appends(&output, path);
+  Appends(&output, " */\n\n");
   intern(visited, path);
-  if ((fd = open(path, O_RDONLY)) == -1) {
-    fprintf(stderr, "error: %s: failed to open\n", path);
-    exit(1);
-  }
+  if ((fd = open(path, O_RDONLY)) == -1) DieSys(path);
   if ((size = GetFdSize(fd))) {
-    kprintf("size 1 = %'zu%n", size);
-    CHECK_NE(MAP_FAILED,
-             (map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0)));
+    map = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (map == MAP_FAILED) DieSys(path);
     Process(map, map + size, path, isheader);
-    kprintf("size = %'zu%n", size);
-    CHECK_EQ(0, munmap(map, size), "p=%p z=%'zu path=%s", map, size, path);
+    if (munmap(map, size)) DieSys(path);
   }
-  CHECK_EQ(0, close(fd));
-}
-
-ssize_t WriteAll(int fd, const char *p, size_t n) {
-  ssize_t rc;
-  size_t i, got;
-  for (i = 0; i < n;) {
-    rc = write(fd, p + i, n - i);
-    if (rc != -1) {
-      got = rc;
-      i += got;
-    } else if (errno != EINTR) {
-      return -1;
-    }
-  }
-  return i;
+  if (close(fd)) DieSys(path);
 }
 
 int main(int argc, char *argv[]) {
+  size_t bytes;
   const char *src;
   struct GetArgs ga;
-  ShowCrashReports();
+  prog = argv[0];
+  if (!prog) prog = "rollup";
   visited = newinterner();
-  appends(&output, "#ifndef COSMOPOLITAN_H_\n");
-  appends(&output, "#define COSMOPOLITAN_H_\n");
+  Appends(&output, "#ifndef COSMOPOLITAN_H_\n");
+  Appends(&output, "#define COSMOPOLITAN_H_\n");
   getargs_init(&ga, argv + 1);
   while ((src = getargs_next(&ga))) {
     Visit(src);
   }
   getargs_destroy(&ga);
-  appends(&output, "\n");
-  appends(&output, "#endif /* COSMOPOLITAN_H_ */\n");
-  CHECK_NE(-1, WriteAll(1, output, appendz(output).i));
+  Appends(&output, "\n");
+  Appends(&output, "#endif /* COSMOPOLITAN_H_ */\n");
+  bytes = appendz(output).i;
+  if (write(1, output, bytes) != bytes) {
+    DieSys(prog);
+  }
   freeinterner(visited);
   return 0;
 }

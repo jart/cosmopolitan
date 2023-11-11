@@ -35,6 +35,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
@@ -50,17 +51,6 @@
 #define COSMO_TLS_REG     28
 #define MRS_TPIDR_EL0     0xd53bd040u
 #define MOV_REG(DST, SRC) (0xaa0003e0u | (SRC) << 16 | (DST))
-
-const unsigned char kFatNops[8][8] = {
-    {},                                          //
-    {0x90},                                      // nop
-    {0x66, 0x90},                                // xchg %ax,%ax
-    {0x0f, 0x1f, 0x00},                          // nopl (%rax)
-    {0x0f, 0x1f, 0x40, 0x00},                    // nopl 0x00(%rax)
-    {0x0f, 0x1f, 0x44, 0x00, 0x00},              // nopl 0x00(%rax,%rax,1)
-    {0x66, 0x0f, 0x1f, 0x44, 0x00, 0x00},        // nopw 0x00(%rax,%rax,1)
-    {0x0f, 0x1f, 0x80, 0x00, 0x00, 0x00, 0x00},  // nopl 0x00000000(%rax)
-};
 
 static int mode;
 static int fildes;
@@ -138,6 +128,70 @@ static void GetOpts(int argc, char *argv[]) {
   }
 }
 
+// Official Intel Multibyte No-Operation Instructions. See
+// Intel's Six Thousand Page Manual, Volume 2, Table 4-12:
+// On "Recommended Multi-Byte Sequence of NOP Instruction"
+static const unsigned char kNops[10][10] = {
+    {},                                          //
+    {/***/ /***/ 0x90},                          // nop
+    {0x66, /***/ 0x90},                          // xchg %ax,%ax
+    {/***/ 0x0f, 0x1f, 0000},                    // nopl (%rax)
+    {/***/ 0x0f, 0x1f, 0100, /***/ 0},           // nopl 0x00(%rax)
+    {/***/ 0x0f, 0x1f, 0104, 0000, 0},           // nopl 0x00(%rax,%rax,1)
+    {0x66, 0x0f, 0x1f, 0104, 0000, 0},           // nopw 0x00(%rax,%rax,1)
+    {/***/ 0x0f, 0x1f, 0200, 0000, 0, 0, 0},     // nopl 0x00000000(%rax)
+    {/***/ 0x0F, 0x1F, 0204, 0000, 0, 0, 0, 0},  // nopl 0x00000000(%rax,%rax,1)
+    {0x66, 0x0F, 0x1F, 0204, 0000, 0, 0, 0, 0},  // nopw 0x00000000(%rax,%rax,1)
+    // osz  map  op   modrm  sib   displacement  //
+};
+
+/**
+ * Rewrites leading NOP instructions to have fewer instructions.
+ *
+ * For example, the following code:
+ *
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     nop
+ *     ret
+ *     nop
+ *     nop
+ *
+ * Would be morphed into the following:
+ *
+ *     nopw 0x00000000(%rax,%rax,1)
+ *     xchg %ax,%ax
+ *     ret
+ *     nop
+ *     nop
+ *
+ * @param p points to memory region that shall be modified
+ * @param e points to end of memory region, i.e. `p + #bytes`
+ * @return p advanced past last morphed byte
+ */
+static unsigned char *CoalesceNops(unsigned char *p, const unsigned char *e) {
+  long n;
+  for (; p + 1 < e; p += n) {
+    if (p[0] != 0x90) break;
+    if (p[1] != 0x90) break;
+    for (n = 2; p + n < e; ++n) {
+      if (p[n] != 0x90) break;
+      if (n == ARRAYLEN(kNops) - 1) break;
+    }
+    memcpy(p, kNops[n], n);
+  }
+  return p;
+}
+
 static void CheckPrivilegedCrossReferences(void) {
   unsigned long x;
   const char *secname;
@@ -202,40 +256,32 @@ static void RewriteTlsCode(void) {
  * `STT_FUNC` and `st_size` must have the function's byte length.
  */
 static void OptimizePatchableFunctionEntries(void) {
-#ifdef __x86_64__
-  long i, n;
+  long i;
   Elf64_Shdr *shdr;
-  unsigned char *p, *pe;
-  for (i = 0; i < symcount; ++i) {
-    if (!syms[i].st_size) continue;
-    if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
-    if (!(shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx))) {
-      Die("elf header overflow #3");
-    }
-    if (shdr->sh_type != SHT_PROGBITS) continue;
-    if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
-      Die("elf header overflow #4");
-    }
-    if (syms[i].st_value < shdr->sh_addr) {
-      Die("elf symbol beneath section");
-    }
-    if ((syms[i].st_value - shdr->sh_addr > esize ||
-         (p += syms[i].st_value - shdr->sh_addr) >=
-             (unsigned char *)elf + esize) ||
-        (syms[i].st_size >= esize ||
-         (pe = p + syms[i].st_size) >= (unsigned char *)elf + esize)) {
-      Die("elf symbol overflow");
-    };
-    for (; p + 1 < pe; p += n) {
-      if (p[0] != 0x90) break;
-      if (p[1] != 0x90) break;
-      for (n = 2; p + n < pe && n < ARRAYLEN(kFatNops); ++n) {
-        if (p[n] != 0x90) break;
+  unsigned char *p;
+  Elf64_Addr sym_rva;
+  if (elf->e_machine == EM_NEXGEN32E) {
+    for (i = 0; i < symcount; ++i) {
+      if (!syms[i].st_size) continue;
+      if (ELF64_ST_TYPE(syms[i].st_info) != STT_FUNC) continue;
+      if (!(shdr = GetElfSectionHeaderAddress(elf, esize, syms[i].st_shndx))) {
+        Die("elf header overflow #3");
       }
-      memcpy(p, kFatNops[n], n);
+      if (shdr->sh_type != SHT_PROGBITS) continue;
+      if (!(p = GetElfSectionAddress(elf, esize, shdr))) {
+        Die("elf section overflow");
+      }
+      if (ckd_sub(&sym_rva, syms[i].st_value, shdr->sh_addr)) {
+        Die("elf symbol beneath section");
+      }
+      if (sym_rva > esize - shdr->sh_offset ||               //
+          (p += sym_rva) >= (unsigned char *)elf + esize ||  //
+          syms[i].st_size >= esize - sym_rva) {
+        Die("elf symbol overflow");
+      }
+      CoalesceNops(p, p + syms[i].st_size);
     }
   }
-#endif /* __x86_64__ */
 }
 
 /**

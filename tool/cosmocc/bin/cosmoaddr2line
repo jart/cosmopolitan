@@ -1,0 +1,15 @@
+#!/bin/sh
+BIN=${0%/*}
+
+set -- -apifCe "$@"
+
+if [ -n "$ADDR2LINE" ]; then
+  exec "$ADDR2LINE" "$@"
+fi
+
+for arch in x86_64 aarch64; do
+  "$BIN/$arch-linux-cosmo-addr2line" "$@" 2>/dev/null && exit
+done
+
+echo "error: addr2line failed" >&2
+exit 1
