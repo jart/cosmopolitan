@@ -288,9 +288,6 @@ static textwindows errno_t posix_spawn_nt_impl(
       char errno_buf[30];
       char oflags_buf[128];
       char openmode_buf[15];
-      (void)errno_buf;
-      (void)oflags_buf;
-      (void)openmode_buf;
       switch (a->action) {
         case _POSIX_SPAWN_CLOSE:
           err = spawnfds_close(&fds, a->fildes);
@@ -331,13 +328,12 @@ static textwindows errno_t posix_spawn_nt_impl(
 
   // figure out flags
   uint32_t dwCreationFlags = 0;
-  if (attrp && *attrp) {
-    if ((*attrp)->flags & POSIX_SPAWN_SETSID) {
-      dwCreationFlags |= kNtDetachedProcess;
-    }
-    if ((*attrp)->flags & POSIX_SPAWN_SETPGROUP) {
-      dwCreationFlags |= kNtCreateNewProcessGroup;
-    }
+  short flags = attrp && *attrp ? (*attrp)->flags : 0;
+  if (flags & POSIX_SPAWN_SETSID) {
+    dwCreationFlags |= kNtDetachedProcess;
+  }
+  if (flags & POSIX_SPAWN_SETPGROUP) {
+    dwCreationFlags |= kNtCreateNewProcessGroup;
   }
 
   // create process startinfo
@@ -361,8 +357,14 @@ static textwindows errno_t posix_spawn_nt_impl(
   }
 
   // inherit signal mask
+  sigset_t childmask;
   char maskvar[6 + 21];
-  FormatUint64(stpcpy(maskvar, "_MASK="), sigmask);
+  if (flags & POSIX_SPAWN_SETSIGMASK) {
+    childmask = (*attrp)->sigmask;
+  } else {
+    childmask = sigmask;
+  }
+  FormatUint64(stpcpy(maskvar, "_MASK="), childmask);
 
   // launch process
   int rc = -1;
@@ -490,7 +492,7 @@ errno_t posix_spawn(int *pid, const char *path,
   }
   if (!(child = vfork())) {
     can_clobber = true;
-    sigset_t *childmask;
+    sigset_t childmask;
     bool lost_cloexec = 0;
     struct sigaction dfl = {0};
     short flags = attrp && *attrp ? (*attrp)->flags : 0;
@@ -599,11 +601,11 @@ errno_t posix_spawn(int *pid, const char *path,
       fcntl(pfds[1], F_SETFD, FD_CLOEXEC);
     }
     if (flags & POSIX_SPAWN_SETSIGMASK) {
-      childmask = &(*attrp)->sigmask;
+      childmask = (*attrp)->sigmask;
     } else {
-      childmask = &oldmask;
+      childmask = oldmask;
     }
-    sigprocmask(SIG_SETMASK, childmask, 0);
+    sigprocmask(SIG_SETMASK, &childmask, 0);
     if (!envp) envp = environ;
     execve(path, argv, envp);
   ChildFailed:

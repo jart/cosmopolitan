@@ -55,12 +55,24 @@ static struct {
 static nsync_semaphore *sem_big_enough_for_sem = (nsync_semaphore *) (uintptr_t)(1 /
 	(sizeof (struct sem) <= sizeof (*sem_big_enough_for_sem)));
 
+static void nsync_mu_semaphore_sem_create (struct sem *f) {
+	int lol;
+	f->id = 0;
+	ASSERT (!sys_sem_init (0, &f->id));
+	if ((lol = __sys_fcntl (f->id, F_DUPFD_CLOEXEC, 50)) >= 50) {
+		sys_close (f->id);
+		f->id = lol;
+	}
+}
+
 static void nsync_mu_semaphore_sem_fork_child (void) {
 	struct Dll *e;
+	struct sem *f;
 	for (e = dll_first (g_sems.list); e; e = dll_next (g_sems.list, e)) {
-		sys_close (SEM_CONTAINER (e)->id);
+		f = SEM_CONTAINER (e);
+		sys_close (f->id);
+		nsync_mu_semaphore_sem_create (f);
 	}
-	g_sems.list = 0;  /* list memory is on dead thread stacks */
 	(void) pthread_spin_init (&g_sems.lock, 0);
 }
 
@@ -70,31 +82,14 @@ static void nsync_mu_semaphore_sem_init (void) {
 
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init_sem (nsync_semaphore *s) {
-	int lol;
 	struct sem *f = (struct sem *) s;
-	f->id = 0;
-	ASSERT (!sys_sem_init (0, &f->id));
-	if ((lol = __sys_fcntl (f->id, F_DUPFD_CLOEXEC, 50)) >= 50) {
-		sys_close (f->id);
-		f->id = lol;
-	}
+	nsync_mu_semaphore_sem_create (f);
 	cosmo_once (&g_sems.once, nsync_mu_semaphore_sem_init);
 	pthread_spin_lock (&g_sems.lock);
 	dll_init (&f->list);
 	dll_make_first (&g_sems.list, &f->list);
 	pthread_spin_unlock (&g_sems.lock);
 	STRACE ("sem_init(0, [%ld]) → 0", f->id);
-}
-
-/* Releases system resources associated with *s. */
-void nsync_mu_semaphore_destroy_sem (nsync_semaphore *s) {
-	int rc;
-	struct sem *f = (struct sem *) s;
-	ASSERT (!(rc = sys_sem_destroy (f->id)));
-	pthread_spin_lock (&g_sems.lock);
-	dll_remove (&g_sems.list, &f->list);
-	pthread_spin_unlock (&g_sems.lock);
-	STRACE ("sem_destroy(%ld) → %d", f->id, rc);
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations

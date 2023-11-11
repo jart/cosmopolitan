@@ -64,7 +64,7 @@
 #define X86_DTES64               1H,        ECX,  2, 0
 #define X86_ERMS                 7H,        EBX,  9, 0                        /* broaadwell c. 2014 */
 #define X86_EST                  1H,        ECX,  7, 0
-#define X86_F16C                 1H,        ECX, 29, 0
+#define X86_F16C                 1H,        ECX, 29, _X86_CC_F16C
 #define X86_FDP_EXCPTN_ONLY      7H,        EBX,  6, 0
 #define X86_FLUSH_L1D            7H,        EDX, 28, 0
 #define X86_FMA                  1H,        ECX, 12, _X86_CC_FMA              /* haswell c. 2013 */

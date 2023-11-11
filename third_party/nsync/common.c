@@ -19,7 +19,12 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/dll.h"
+#include "libc/intrin/extend.internal.h"
+#include "libc/nt/enum/filemapflags.h"
+#include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
@@ -149,36 +154,28 @@ waiter *nsync_dll_waiter_samecond_ (struct Dll *e) {
 
 /* -------------------------------- */
 
-#define kMallocBlockSize 16384
-
 static struct {
 	nsync_atomic_uint32_ mu;
 	size_t used;
-	char *block;
+	char *p, *e;
 } malloc;
 
 static void *nsync_malloc (size_t size) {
-	void *res;
-	ASSERT (size <= kMallocBlockSize);
-	if (IsWindows ()) {
-		res = HeapAlloc (GetProcessHeap (), 0, size);
-		if (!res) {
+	void *res = 0;
+	nsync_spin_test_and_set_ (&malloc.mu, 1, 1, 0);
+	if (malloc.p + malloc.used + size > malloc.e) {
+		if (!malloc.p) {
+			malloc.p = malloc.e = (char *)kMemtrackNsyncStart;
+		}
+		malloc.e = _extend (malloc.p, malloc.used + size, malloc.e, MAP_PRIVATE,
+				    kMemtrackNsyncStart + kMemtrackNsyncSize);
+		if (!malloc.e) {
 			nsync_panic_ ("out of memory\n");
 		}
-	} else {
-		nsync_spin_test_and_set_ (&malloc.mu, 1, 1, 0);
-		if (!malloc.block || malloc.used + size > kMallocBlockSize) {
-			malloc.used = 0;
-			malloc.block = __sys_mmap (0, kMallocBlockSize, PROT_READ | PROT_WRITE,
-						   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
-			if (malloc.block == MAP_FAILED) {
-				nsync_panic_ ("out of memory\n");
-			}
-		}
-		res = malloc.block + malloc.used;
-		malloc.used = (malloc.used + size + 15) & -16;
-		ATM_STORE_REL (&malloc.mu, 0);
 	}
+	res = malloc.p + malloc.used;
+	malloc.used = (malloc.used + size + 15) & -16;
+	ATM_STORE_REL (&malloc.mu, 0);
 	return res;
 }
 

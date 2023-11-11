@@ -25,6 +25,12 @@
 #define _X86_CC_AVX2 0
 #endif
 
+#ifdef __F16C__
+#define _X86_CC_F16C 1
+#else
+#define _X86_CC_F16C 0
+#endif
+
 #ifdef __AVXVNNI__
 #define _X86_CC_AVXVNNI 1
 #else

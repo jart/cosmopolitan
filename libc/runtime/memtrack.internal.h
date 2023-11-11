@@ -17,6 +17,8 @@ COSMOPOLITAN_C_START_
 #define kMemtrackSize       (0x1ffffffc0000 - kMemtrackStart)
 #define kFixedmapStart      0x300000040000
 #define kFixedmapSize       (0x400000040000 - kFixedmapStart)
+#define kMemtrackNsyncStart 0x6fc000040000
+#define kMemtrackNsyncSize  (0x6fcffffc0000 - kMemtrackNsyncStart)
 #define kMemtrackFdsStart   0x6fe000040000
 #define kMemtrackFdsSize    (0x6feffffc0000 - kMemtrackFdsStart)
 #define kMemtrackZiposStart 0x6fd000040000
@@ -112,6 +114,11 @@ forceinline pureconst bool IsMemtrackFrame(int x) {
 forceinline pureconst bool IsGfdsFrame(int x) {
   return (int)(kMemtrackFdsStart >> 16) <= x &&
          x <= (int)((kMemtrackFdsStart + kMemtrackFdsSize - 1) >> 16);
+}
+
+forceinline pureconst bool IsNsyncFrame(int x) {
+  return (int)(kMemtrackNsyncStart >> 16) <= x &&
+         x <= (int)((kMemtrackNsyncStart + kMemtrackNsyncSize - 1) >> 16);
 }
 
 forceinline pureconst bool IsZiposFrame(int x) {

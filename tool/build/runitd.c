@@ -792,9 +792,6 @@ void Daemonize(void) {
 }
 
 int main(int argc, char *argv[]) {
-  /* #ifndef NDEBUG */
-  ShowCrashReports();
-  /* #endif */
   GetOpts(argc, argv);
   g_psk = GetRunitPsk();
   signal(SIGPIPE, SIG_IGN);

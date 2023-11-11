@@ -90,11 +90,6 @@ void nsync_mu_semaphore_init_gcd (nsync_semaphore *s) {
 	*(dispatch_semaphore_t *)s = dispatch_semaphore_create (0);
 }
 
-/* Releases system resources associated with *s. */
-void nsync_mu_semaphore_destroy_gcd (nsync_semaphore *s) {
-	dispatch_release (*(dispatch_semaphore_t *)s);
-}
-
 /* Wait until the count of *s exceeds 0, and decrement it. If POSIX cancellations
    are currently disabled by the thread, then this function always succeeds. When
    they're enabled in MASKED mode, this function may return ECANCELED. Otherwise,

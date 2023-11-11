@@ -157,8 +157,12 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
 
     // check if killed or win32 error
     if (wi) {
-      if (pr && !--pr->waiters && pr->status == PROC_UNDEAD) {
-        __proc_free(pr);
+      if (pr) {
+        if (!--pr->waiters && pr->status == PROC_UNDEAD) {
+          __proc_free(pr);
+        }
+      } else {
+        --__proc.waiters;
       }
       __proc_unlock();
       if (wi == 1) {

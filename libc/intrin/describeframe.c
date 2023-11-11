@@ -41,6 +41,8 @@ static const char *GetFrameName(int x) {
     return "stack";
   } else if (IsGfdsFrame(x)) {
     return "g_fds";
+  } else if (IsNsyncFrame(x)) {
+    return "nsync";
   } else if (IsZiposFrame(x)) {
     return "zipos";
   } else if (IsMemtrackFrame(x)) {

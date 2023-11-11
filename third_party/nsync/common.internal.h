@@ -40,7 +40,7 @@ uint32_t nsync_spin_test_and_set_(nsync_atomic_uint32_ *w, uint32_t test,
                                   uint32_t set, uint32_t clear);
 
 /* Abort after printing the nul-temrinated string s[]. */
-void nsync_panic_(const char *s);
+void nsync_panic_(const char *s) wontreturn;
 
 /* ---------- */
 

@@ -20,6 +20,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/describentoverlapped.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"

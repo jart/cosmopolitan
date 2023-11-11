@@ -44,11 +44,9 @@ static void *_mapframe_impl(void *p, int f) {
     if (!rc) {
       return p;
     } else {
-      unassert(errno == ENOMEM);
       return 0;
     }
   } else {
-    unassert(errno == ENOMEM);
     return 0;
   }
 }
@@ -86,12 +84,16 @@ static void *_mapframe(void *p, int f) {
  */
 void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
-  unassert(!((uintptr_t)SHADOW(p) & (G - 1)));
-  unassert((uintptr_t)p + (G << kAsanScale) <= h);
+#ifndef NDEBUG
+  if ((uintptr_t)SHADOW(p) & (G - 1)) notpossible;
+  if ((uintptr_t)p + (G << kAsanScale) > h) notpossible;
+#endif
   // TODO(jart): Make this spin less in non-ASAN mode.
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
-      unassert(q + G <= (char *)h);
+#ifndef NDEBUG
+      if (q + G > (char *)h) notpossible;
+#endif
       if (!_mapframe(q, f)) return 0;
       if (IsAsan()) {
         if (!((uintptr_t)SHADOW(q) & (G - 1))) {

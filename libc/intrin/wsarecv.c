@@ -21,9 +21,11 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/describentoverlapped.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 
 __msabi extern typeof(WSARecv) *const __imp_WSARecv;
