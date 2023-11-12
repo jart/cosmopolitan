@@ -156,7 +156,7 @@ static void FlushTables(struct ElfWriter *elf) {
   elfwriter_commit(elf, size);
 }
 
-struct ElfWriter *elfwriter_open(const char *path, int mode) {
+struct ElfWriter *elfwriter_open(const char *path, int mode, int arch) {
   struct ElfWriter *elf;
   CHECK_NOTNULL((elf = calloc(1, sizeof(struct ElfWriter))));
   CHECK_NOTNULL((elf->path = strdup(path)));
@@ -166,15 +166,22 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
                                         elf->mapsize, PROT_READ | PROT_WRITE,
                                         MAP_SHARED | MAP_FIXED, elf->fd, 0)));
   elf->ehdr = memcpy(elf->map, &kObjHeader, (elf->wrote = sizeof(kObjHeader)));
-  if (strstr(path, "/aarch64")) {
-    elf->ehdr->e_machine = EM_AARCH64;
-  } else if (strstr(path, "/powerpc64")) {
-    elf->ehdr->e_machine = EM_PPC64;
-  } else if (strstr(path, "/riscv")) {
-    elf->ehdr->e_machine = EM_RISCV;
-  } else if (strstr(path, "/s390")) {
+  if (!arch) {
+#ifdef __x86_64__
+    arch = EM_NEXGEN32E;
+#elif defined(__aarch64__)
+    arch = EM_AARCH64;
+#elif defined(__powerpc64__)
+    arch = EM_PPC64;
+#elif defined(__riscv)
+    arch = EM_RISCV;
+#elif defined(__s390x__)
     elf->ehdr->e_machine = EM_S390;
+#else
+#error "unsupported architecture"
+#endif
   }
+  elf->ehdr->e_machine = arch;
   elf->strtab = newinterner();
   elf->shstrtab = newinterner();
   intern(elf->strtab, "");

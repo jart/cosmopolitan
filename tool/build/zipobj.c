@@ -43,6 +43,7 @@
 #include "tool/build/lib/elfwriter.h"
 #include "tool/build/lib/stripcomponents.h"
 
+int arch_;
 char *name_;
 char *yoink_;
 char *symbol_;
@@ -76,6 +77,7 @@ FLAGS\n\
   -o PATH         output path\n\
   -0              disable compression\n\
   -B              basename-ify zip filename\n\
+  -a ARCH         microprocessor architecture\n\
   -N ZIPPATH      zip filename (defaults to input arg)\n\
   -P ZIPPATH      prepend path zip filename using join\n\
   -C INTEGER      strips leading path components from zip filename\n\
@@ -86,13 +88,33 @@ FLAGS\n\
   exit(rc);
 }
 
+static int ParseArch(const char *s) {
+  if (startswith(s, "x86")) {
+    return EM_NEXGEN32E;
+  } else if (startswith(s, "arm") || !strcmp(s, "aarch64")) {
+    return EM_AARCH64;
+  } else if (startswith(s, "ppc") || startswith(s, "powerpc")) {
+    return EM_PPC64;
+  } else if (startswith(s, "riscv")) {
+    return EM_RISCV;
+  } else if (startswith(s, "s390")) {
+    return EM_S390;
+  } else {
+    tinyprint(2, "error: unrecognized microprocessor architecture\n", NULL);
+    exit(1);
+  }
+}
+
 void GetOpts(int *argc, char ***argv) {
   int opt;
   yoink_ = "__zip_eocd";
-  while ((opt = getopt(*argc, *argv, "?0nhBN:C:P:o:s:y:")) != -1) {
+  while ((opt = getopt(*argc, *argv, "?0nhBN:C:P:o:s:y:a:")) != -1) {
     switch (opt) {
       case 'o':
         outpath_ = optarg;
+        break;
+      case 'a':
+        arch_ = ParseArch(optarg);
         break;
       case 'n':
         exit(0);
@@ -192,18 +214,18 @@ void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
 }
 
 void CheckFilenameKosher(const char *path) {
-  CHECK_LE(kZipCfileHdrMinSize + strlen(path), 65535);
-  CHECK(!startswith(path, "/"));
-  CHECK(!strstr(path, ".."));
+  unassert(kZipCfileHdrMinSize + strlen(path) <= 65535);
+  unassert(!startswith(path, "/"));
+  unassert(!strstr(path, ".."));
 }
 
 void zipobj(int argc, char **argv) {
   size_t i;
   struct ElfWriter *elf;
-  CHECK_LT(argc, UINT16_MAX / 3 - 64); /* ELF 64k section limit */
+  unassert(argc < UINT16_MAX / 3 - 64); /* ELF 64k section limit */
   GetOpts(&argc, &argv);
   for (i = 0; i < argc; ++i) CheckFilenameKosher(argv[i]);
-  elf = elfwriter_open(outpath_, 0644);
+  elf = elfwriter_open(outpath_, 0644, arch_);
   elfwriter_cargoculting(elf);
   for (i = 0; i < argc; ++i) ProcessFile(elf, argv[i]);
   PullEndOfCentralDirectoryIntoLinkage(elf);
@@ -211,7 +233,6 @@ void zipobj(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-  ShowCrashReports();
   timestamp.tv_sec = 1647414000; /* determinism */
   /* clock_gettime(CLOCK_REALTIME, &timestamp); */
   zipobj(argc, argv);

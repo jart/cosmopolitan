@@ -3944,7 +3944,7 @@ static void Objectify(struct As *a, int path) {
   char *p;
   int i, j, s, e;
   struct ElfWriter *elf;
-  elf = elfwriter_open(a->strings.p[path], 0644);
+  elf = elfwriter_open(a->strings.p[path], 0644, EM_NEXGEN32E);
   for (i = 0; i < a->symbols.n; ++i) {
     if (!IsLiveSymbol(a, i)) continue;
     p = strndup(a->slices.p[a->symbols.p[i].name].p,

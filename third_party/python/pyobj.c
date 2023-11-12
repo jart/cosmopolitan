@@ -646,7 +646,7 @@ Objectify(void)
     memcpy(pycdata + sizeof(header), mardata, marsize);
     yoinked = newinterner();
     forcepulls = newinterner();
-    elf = elfwriter_open(outpath, 0644);
+    elf = elfwriter_open(outpath, 0644, 0);
     elfwriter_cargoculting(elf);
     if (ispkg) {
         elfwriter_zip(elf, zipdir, zipdir, strlen(zipdir),

@@ -54,7 +54,7 @@ struct ElfWriter {
   struct Interner *shstrtab;
 };
 
-struct ElfWriter *elfwriter_open(const char *, int) __wur;
+struct ElfWriter *elfwriter_open(const char *, int, int) __wur;
 void elfwriter_cargoculting(struct ElfWriter *);
 void elfwriter_close(struct ElfWriter *);
 void elfwriter_align(struct ElfWriter *, size_t, size_t);
