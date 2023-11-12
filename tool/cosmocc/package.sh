@@ -30,6 +30,7 @@ make -j8 m=x86_64 \
   o/x86_64/tool/build/fixupobj.com.dbg \
   o/x86_64/tool/build/zipcopy.com.dbg \
   o/x86_64/tool/build/mkdeps.com.dbg \
+  o/x86_64/tool/build/zipobj.com.dbg \
   o/x86_64/tool/build/apelink.com.dbg \
   o/x86_64/tool/build/pecheck.com.dbg \
   o/x86_64/third_party/make/make.com.dbg \
@@ -49,6 +50,7 @@ make -j8 m=aarch64 \
   o/aarch64/tool/build/fixupobj.com.dbg \
   o/aarch64/tool/build/zipcopy.com.dbg \
   o/aarch64/tool/build/mkdeps.com.dbg \
+  o/aarch64/tool/build/zipobj.com.dbg \
   o/aarch64/tool/build/apelink.com.dbg \
   o/aarch64/tool/build/pecheck.com.dbg \
   o/aarch64/third_party/make/make.com.dbg \
@@ -114,7 +116,7 @@ cp -af tool/cosmocc/bin/* "$OUTDIR/bin/"
 cp -f o/x86_64/ape/ape.elf "$OUTDIR/bin/"
 cp -f o/x86_64/ape/ape.macho "$OUTDIR/bin/"
 cp -f o/aarch64/ape/ape.elf "$OUTDIR/bin/ape.aarch64"
-for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps; do
+for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj; do
   o//tool/build/apelink.com \
     -l o/x86_64/ape/ape.elf \
     -l o/aarch64/ape/ape.elf \

@@ -30,11 +30,7 @@
 
 */
 
-#ifdef TINY
 #define MLOCK_T atomic_uint
-#else
-#define MLOCK_T nsync_mu
-#endif
 
 static int malloc_wipe(MLOCK_T *lk) {
   bzero(lk, sizeof(*lk));
@@ -43,23 +39,15 @@ static int malloc_wipe(MLOCK_T *lk) {
 
 static int malloc_lock(MLOCK_T *lk) {
   if (!__threaded) return 0;
-#ifdef TINY
   while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
     pthread_pause_np();
   }
-#else
-  nsync_mu_lock(lk);
-#endif
   return 0;
 }
 
 static int malloc_unlock(MLOCK_T *lk) {
   if (!__threaded) return 0;
-#ifdef TINY
   atomic_store_explicit(lk, 0, memory_order_release);
-#else
-  nsync_mu_unlock(lk);
-#endif
   return 0;
 }
 
