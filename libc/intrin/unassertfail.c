@@ -16,24 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/errno.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/describebacktrace.internal.h"
-#include "libc/runtime/runtime.h"
 
-/**
- * Handles assert() failure.
- */
-void __assert_fail(const char *expr, const char *file, int line) {
-  char ibuf[12];
-  sigset_t m = __sig_block();
-  FormatInt32(ibuf, line);
-  tinyprint(2, file, ":", ibuf, ": \e[31;1massert(", expr,
-            ") failed\e[0m (cosmoaddr2line ", program_invocation_name, " ",
-            DescribeBacktrace(__builtin_frame_address(0)), ")\n", NULL);
-  __sig_unblock(m);
-  abort();
+// stub version of unassert() to keep the build a dag
+__attribute__((__weak__)) void __unassert_fail(const char *expr,
+                                               const char *file, int line) {
+  notpossible;
 }

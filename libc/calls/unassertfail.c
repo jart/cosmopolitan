@@ -25,15 +25,20 @@
 #include "libc/runtime/runtime.h"
 
 /**
- * Handles assert() failure.
+ * Handles unassert() failure.
+ *
+ * Unlike __assert_fail() this doesn't call abort() and instead uses a
+ * trapping assembly opcode. Standards require that abort() do a great
+ * number of things. By doing this instead, we guarantee the backtrace
+ * reported to the signal handler is clean and focused on the problem.
  */
-void __assert_fail(const char *expr, const char *file, int line) {
+void __unassert_fail(const char *expr, const char *file, int line) {
   char ibuf[12];
   sigset_t m = __sig_block();
   FormatInt32(ibuf, line);
-  tinyprint(2, file, ":", ibuf, ": \e[31;1massert(", expr,
+  tinyprint(2, file, ":", ibuf, ": \e[31;1munassert(", expr,
             ") failed\e[0m (cosmoaddr2line ", program_invocation_name, " ",
             DescribeBacktrace(__builtin_frame_address(0)), ")\n", NULL);
   __sig_unblock(m);
-  abort();
+  notpossible;
 }

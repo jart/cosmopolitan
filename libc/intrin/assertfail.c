@@ -20,5 +20,5 @@
 // stub version of assert() to keep the build a dag
 __attribute__((__weak__)) void __assert_fail(const char *expr, const char *file,
                                              int line) {
-  __builtin_trap();
+  notpossible;
 }

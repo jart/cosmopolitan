@@ -601,6 +601,13 @@ void abort(void) wontreturn;
         "nop");              \
     __builtin_unreachable(); \
   } while (0)
+#elif defined(__aarch64__)
+#define notpossible          \
+  do {                       \
+    asm("udf\t#0\n\t"        \
+        "nop");              \
+    __builtin_unreachable(); \
+  } while (0)
 #else
 #define notpossible __builtin_trap()
 #endif
