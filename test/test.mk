@@ -5,4 +5,5 @@
 o/$(MODE)/test:	o/$(MODE)/test/dsp	\
 		o/$(MODE)/test/libc	\
 		o/$(MODE)/test/net	\
+		o/$(MODE)/test/posix	\
 		o/$(MODE)/test/tool

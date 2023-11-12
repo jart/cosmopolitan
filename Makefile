@@ -221,6 +221,7 @@ include third_party/nsync/testing/testing.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
 include tool/args/args.mk
+include test/posix/test.mk
 include test/tool/args/test.mk
 include third_party/linenoise/linenoise.mk
 include third_party/maxmind/maxmind.mk
