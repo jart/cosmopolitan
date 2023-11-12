@@ -36,7 +36,6 @@ int ftrace_init(void);
 void ftrace_hook(void);
 void __morph_tls(void);
 void __enable_tls(void);
-void *__cxa_finalize(void *);
 void __stack_chk_fail(void) wontreturn relegated;
 void __stack_chk_fail_local(void) wontreturn relegated;
 long _setstack(void *, void *, ...);

@@ -36,7 +36,6 @@ void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
 void quick_exit(int) wontreturn;
 void abort(void) wontreturn;
-int __cxa_atexit(void *, void *, void *) paramsnonnull((1)) libcesque;
 int atexit(void (*)(void)) paramsnonnull() libcesque;
 char *getenv(const char *) paramsnonnull() __wur nosideeffect libcesque;
 int putenv(char *);

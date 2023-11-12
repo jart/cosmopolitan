@@ -37,6 +37,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
+#include "libc/cxxabi.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -1586,7 +1587,7 @@ int main(int argc, char *argv[]) {
     xsigaction(SIGCHLD, OnSigChld, 0, 0, NULL);
     xsigaction(SIGPIPE, OnSigPipe, 0, 0, NULL);
     if (ttyraw(kTtyLfToCrLf) != -1) ttymode_ = true;
-    __cxa_atexit(OnExit, NULL, NULL);
+    __cxa_atexit((void *)OnExit, NULL, NULL);
     __log_file = fopen(logpath_, "a");
     if (ischardev(infd_) && ischardev(outfd_)) {
       /* CHECK_NE(-1, fcntl(infd_, F_SETFL, O_NONBLOCK)); */

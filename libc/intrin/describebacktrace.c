@@ -20,7 +20,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 
-#define N 100
+#define N 160
 
 dontinstrument const char *(DescribeBacktrace)(char buf[N],
                                                struct StackFrame *fr) {

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/cxxabi.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cxaatexit.internal.h"

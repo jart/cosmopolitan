@@ -5,8 +5,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-const char *DescribeBacktrace(char[100], struct StackFrame *);
-#define DescribeBacktrace(x) DescribeBacktrace(alloca(100), x)
+const char *DescribeBacktrace(char[160], struct StackFrame *);
+#define DescribeBacktrace(x) DescribeBacktrace(alloca(160), x)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

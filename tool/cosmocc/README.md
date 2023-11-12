@@ -16,14 +16,6 @@ GCC compiler with the strongest GPL barrier possible. The preprocessor
 advertises cross compilers as both `__COSMOCC__` and `__COSMOPOLITAN__`
 whereas `cosmocc` additionally defines `__FATCOSMOCC__`.
 
-The `cosmocc` compiler is designed to generate deterministic output
-across platforms. With this release we've confirmed that hello world
-binary output is identical on Linux x86+Arm, MacOS x86+Arm, FreeBSD,
-OpenBSD, and Windows. Please note that users who need reproducible
-builds may also want to look into explicitly defining environment
-variables like `LC_ALL=C` and `SOURCE_DATE_EPOCH=0`, in addition to
-undefining macros such as `-U__DATE__` and `-U__TIME__`.
-
 ## Getting Started
 
 Once your toolchain has been extracted, you can compile hello world:
@@ -32,14 +24,33 @@ Once your toolchain has been extracted, you can compile hello world:
 bin/cosmocc -o hello hello.c  # creates multi-os multi-arch binary
 ```
 
-The `cosmocc` program is shorthand for `unknown-unknown-cosmo-cc`.
-For advanced builds it's possible to use `x86_64-unknown-cosmo-cc` and
+You now have an [actually portable
+executable](https://justine.lol/ape.html) that'll run on your host
+system. If anything goes wrong, see the Gotchas and Troubleshoot
+sections below. It should have also outputted two ELF executables as
+well, named `hello.com.dbg` (x86-64 Linux ELF) and `hello.aarch64.elf`
+(AARCH64 Linux ELF). On Linux systems, those files are also runnable,
+which is useful for easily running programs in GDB. On other OSes GDB
+can still debug APE programs if the ELF is loaded in a second step using
+the `add-symbol-file` command.
+
+## Overview
+
+The `cosmocc` program is shorthand for `unknown-unknown-cosmo-cc`. For
+advanced builds it's possible to use `x86_64-unknown-cosmo-cc` and
 `aarch64-unknown-cosmo-cc` separately and then join the results together
 with the provided `apelink` program. Lastly, the `x86_64-linux-cosmo-cc`
 and `aarch64-linux-cosmo-cc` toolchain is the actual physical compiler,
-but it's not intended to be called directly. Both cross compilers are
-aliases for the `cosmocc` script, which is a thin wrapper around the
-Linux toolchain.
+which isn't intended to be called directly (unless one's goal is maximum
+configurability or a freestanding environment).
+
+The `cosmocc` compiler is designed to generate deterministic output
+across platforms. With this release we've confirmed that hello world
+binary output is identical on Linux x86+Arm, MacOS x86+Arm, FreeBSD,
+OpenBSD, and Windows. Please note that users who need reproducible
+builds may also want to look into explicitly defining environment
+variables like `LC_ALL=C` and `SOURCE_DATE_EPOCH=0`, in addition to
+undefining macros such as `-U__DATE__` and `-U__TIME__`.
 
 ## Installation
 
@@ -48,13 +59,15 @@ any particular system folder, and it needn't be added to your `$PATH`.
 There's no external dependencies required to use this toolchain, other
 than the UNIX shell.
 
-It's recommended that you install APE loader systemwide, rather than
-depending on the APE shell script to self-extract a user's own version.
-Apple M1 users should compile `cc -o ape bin/ape-m1.c` and move `ape` to
+It's recommended that the APE Loader be installed systemwide, rather
+than depending on the default behavior of the APE shell script, which is
+to self-extract an APE loader to each user's `$TMPDIR` or `$HOME`. Apple
+Arm64 users should compile `cc -O -o ape bin/ape-m1.c` and move `ape` to
 `/usr/local/bin/ape`. All other platforms use `/usr/bin/ape` as the
 canonical path. Linux and BSD users can simply copy `bin/ape.elf` to
 `/usr/bin/ape`. MacOS x86-64 users will want `bin/ape.macho`. On Linux,
-it's also a good idea to have APE Loader registered with binfmt_misc.
+it's possible to have APE executables run 400 microseconds faster by
+registering APE with binfmt_misc.
 
 ```sh
 sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
@@ -103,6 +116,136 @@ tricked-out assembly instructions. It's not possible to build these
 kinds of codebases using `cosmocc` which is just a convenient wrapper
 around the cross compilers, which would be a better choice to use in
 this type of circumstance.
+
+## Troubleshooting
+
+Your `cosmocc` compiler runs a number commands under the hood. If
+something goes wrong, you can gain more visibility into its process by
+setting the `BUILDLOG` environment variable.
+
+```sh
+export BUILDLOG=log
+bin/cosmocc -o hello hello.c
+```
+
+The log will then contain a log of commands you can copy and paste into
+your shell to reproduce the build process, or simply see what flags are
+being passed to the freestanding Linux compiler.
+
+```sh
+# bin/cosmocc -o hello hello.c
+(cd /home/jart/cosmocc; bin/x86_64-linux-cosmo-gcc -o/tmp/fatcosmocc.i5lugr6bc0gu0.o -D__COSMOPOL...
+(cd /home/jart/cosmocc; bin/aarch64-linux-cosmo-gcc -o/tmp/fatcosmocc.w48k03qgw8692.o -D__COSMOPO...
+(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.i5lugr6bc0gu0.o)
+(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.w48k03qgw8692.o)
+(cd /home/jart/cosmocc; bin/x86_64-linux-cosmo-gcc -o/tmp/fatcosmocc.ovdo2nqvkjjg3.com.dbg c...
+(cd /home/jart/cosmocc; bin/aarch64-linux-cosmo-gcc -o/tmp/fatcosmocc.d3ca1smuot0k0.aarch64.elf /...
+(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.d3ca1smuot0k0.aarch64.elf)
+(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.ovdo2nqvkjjg3.com.dbg)
+(cd /home/jart/cosmocc; bin/apelink -l bin/ape.elf -l bin/ape.aarch64 -...
+(cd /home/jart/cosmocc; bin/pecheck hello)
+```
+
+## Tools
+
+While the GNU GCC and Binutils programs included in your `cosmocc`
+toolchain require no explanation, other programs are included that many
+users might not be familiar with.
+
+### `assimilate`
+
+The `assimilate` program may be used to convert actually portable
+executables into native executables. By default, this tool converts to
+the format used by the host operating system and architecture. However
+flags may be passed to convert APE binaries for foreign platforms too.
+
+### `ctags`
+
+The `ctags` program is exuberant-ctags 1:5.9~svn20110310-14 built from
+the Cosmopolitan Libc third_party sources. It may be used to generate an
+index of symbols for your your text editor that enables easy source code
+navigation.
+
+### `apelink`
+
+The `apelink` program is the actually portable executable linker. It
+accepts as input (1) multiple executables that were linked by GNU
+ld.bfd, (2) the paths of native APE Loader executables for ELF
+platforms, and (3) the source code for the Apple Silicon APE loader. It
+then weaves them all together into a shell script that self-extracts the
+appropriate tiny ~10kb APE Loader, when is then re-exec'd to map the
+bulk of the appropriate embedded executable into memory.
+
+### `mkdeps`
+
+The `mkdeps` program can be used to generate a deps file for your
+Makefile, which declares which source files include which headers. This
+command is impressively fast. Much more so than relying on `gcc -MMD`.
+This was originally built for the Cosmopolitan Libc repository, which
+has ~10,000 source files. Using `mkdeps`, Cosmo is able to generate an
+`o//depend` file with ~100,000 lines in ~70 milliseconds.
+
+It can be used by adding something like this to your `Makefile`.
+
+```make
+FILES := $(wildcard src/*)
+SRCS = $(filter %.c,$(FILES))
+HDRS = $(filter %.h,$(FILES))
+
+o/$(MODE)/depend: $(SRCS) $(HDRS)
+	@mkdir -o $(@D)
+	mkdeps -o $@ -r o/$(MODE)/ $(SRCS) $(HDRS)
+
+$(SRCS):
+$(HDRS):
+.DEFAULT:
+	@echo
+	@echo NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@
+	@echo
+	rm -f o/$(MODE)/depend
+
+-include o/$(MODE)/depend
+```
+
+If your project is very large like Cosmopolitan, then `mkdeps` supports
+arguments files. That's particularly helpful on Windows, which has a
+32768 character limit on command arguments.
+
+```make
+SRCS = $(foreach x,$(PKGS),$($(x)_SRCS))
+HDRS = $(foreach x,$(PKGS),$($(x)_HDRS))
+
+o/$(MODE)/depend: $(SRCS) $(HDRS)
+	$(file >$@.args,$(SRCS) $(HDRS))
+	@mkdir -o $(@D)
+	mkdeps -o $@ -r o/$(MODE)/ @$@.args
+```
+
+### `cosmoaddr2line`
+
+The `cosmoaddr2line` program may be used to print backtraces, based on
+DWARF data, whenever one of your programs reports a crash. It accepts as
+an argument the ELF executable produced by `cosmocc`, which is different
+from the APE executable. For example, if `cosmocc` compiles a program
+named `hello` then you'll need to pass either `hello.com.dbg` (x86-64)
+or `hello.aarch64.elf` to cosmoaddr2line to get the backtrace. After the
+ELf executable comes the program counter (instruction pointer) addresses
+which are easily obtained using `__builtin_frame_address(0)`. Cosmo can
+make this easier in certain cases. The `ShowCrashReports()` feature may
+print the `cosmoaddr2line` command you'll need to run, to get a better
+backtrace. On Windows, the Cosmopolitan runtime will output the command
+to the `--strace` log whenever your program dies due to a fatal signal
+that's blocked or in the `SIG_DFL` disposition.
+
+### `mktemper`
+
+The `mktemper` command is a portable replacement for the traditional
+`mktemp` command, which isn't available on platforms like MacOS. Our
+version also offers improvements, such as formatting a 64-bit random
+value obtained from a cryptographic `getrandom()` entropy source. Using
+this command requires passing an argument such as
+`/tmp/foo.XXXXXXXXXXXXX` where the X's are replaced by a random value.
+The newly created file is then printed to standard output.
 
 ## About
 

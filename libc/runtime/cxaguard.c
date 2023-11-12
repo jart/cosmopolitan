@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "libc/atomic.h"
+#include "libc/cxxabi.h"
 #include "libc/intrin/atomic.h"
 #include "libc/limits.h"
 #include "third_party/nsync/futex.internal.h"

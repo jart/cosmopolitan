@@ -30,6 +30,7 @@
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/cxxabi.h"
 #include "libc/errno.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/describeflags.internal.h"

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/cxxabi.h"
 #include "libc/dce.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/fmt/fmt.h"
@@ -48,7 +49,7 @@ const struct ResolvConf *GetResolvConf(void) {
     g_resolvconf = &init->rv;
     pushmov(&init->rv.nameservers.n, ARRAYLEN(init->nameservers));
     init->rv.nameservers.p = init->nameservers;
-    __cxa_atexit(FreeResolvConf, &g_resolvconf, NULL);
+    __cxa_atexit((void *)FreeResolvConf, &g_resolvconf, NULL);
     if (!IsWindows()) {
       if ((f = fopen("/etc/resolv.conf", "r"))) {
         rc = ParseResolvConf(g_resolvconf, f);

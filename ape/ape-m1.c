@@ -62,7 +62,7 @@ struct Syslib {
   /* v2 (2023-09-10) */
   pthread_t (*pthread_self)(void);
   void (*dispatch_release)(dispatch_semaphore_t);
-  int (*raise)(int);
+  long (*raise)(int);
   int (*pthread_join)(pthread_t, void **);
   void (*pthread_yield_np)(void);
   int pthread_stack_min;
@@ -439,6 +439,10 @@ static long sys_fork(void) {
 
 static long sys_close(int fd) {
   return sysret(close(fd));
+}
+
+static long sys_raise(int sig) {
+  return sysret(raise(sig));
 }
 
 static long sys_pipe(int pfds[2]) {
@@ -888,7 +892,7 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dispatch_walltime = dispatch_walltime;
   M->lib.pthread_self = pthread_self;
   M->lib.dispatch_release = dispatch_release;
-  M->lib.raise = raise;
+  M->lib.raise = sys_raise;
   M->lib.pthread_join = pthread_join;
   M->lib.pthread_yield_np = pthread_yield_np;
   M->lib.pthread_stack_min = PTHREAD_STACK_MIN;

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/cxxabi.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/pushpop.internal.h"
@@ -111,7 +112,7 @@ textstartup int __fflush_register(FILE *f) {
   if (!sf->handles.p) {
     sf->handles.p = sf->handles_initmem;
     pushmov(&sf->handles.n, ARRAYLEN(sf->handles_initmem));
-    __cxa_atexit(fflush_unlocked, 0, 0);
+    __cxa_atexit((void *)fflush_unlocked, 0, 0);
   }
   for (i = sf->handles.i; i; --i) {
     if (!sf->handles.p[i - 1]) {

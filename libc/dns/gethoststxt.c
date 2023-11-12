@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/cxxabi.h"
 #include "libc/dce.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dns/servicestxt.h"
@@ -64,7 +65,7 @@ const struct HostsTxt *GetHostsTxt(void) {
     init->ht.entries.p = init->entries;
     init->ht.strings.n = pushpop(ARRAYLEN(init->strings));
     init->ht.strings.p = init->strings;
-    __cxa_atexit(FreeHostsTxt, &g_hoststxt, NULL);
+    __cxa_atexit((void *)FreeHostsTxt, &g_hoststxt, NULL);
     if ((f = fopen(GetHostsTxtPath(pathbuf, sizeof(pathbuf)), "r"))) {
       if (ParseHostsTxt(g_hoststxt, f) == -1) {
         /* TODO(jart): Elevate robustness. */

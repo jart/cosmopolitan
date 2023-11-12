@@ -403,13 +403,14 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_NT_KERNEL32		\
 	LIBC_NEXGEN32E
 
-COSMOPOLITAN_HEADERS =			\
+COSMOPOLITAN_H_PKGS =			\
 	APE				\
 	LIBC				\
 	LIBC_CALLS			\
 	LIBC_DNS			\
 	LIBC_ELF			\
 	LIBC_FMT			\
+	LIBC_DLOPEN			\
 	LIBC_INTRIN			\
 	LIBC_LOG			\
 	LIBC_MEM			\
@@ -436,7 +437,8 @@ COSMOPOLITAN_HEADERS =			\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_REGEX
 
-COSMOCC_HEADERS =			\
+COSMOCC_PKGS =				\
+	$(COSMOPOLITAN_H_PKGS)		\
 	THIRD_PARTY_AARCH64		\
 	THIRD_PARTY_LIBCXX		\
 	THIRD_PARTY_INTEL
@@ -444,18 +446,25 @@ COSMOCC_HEADERS =			\
 o/$(MODE)/cosmopolitan.a:		\
 		$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS))
 
-o/cosmocc.h.txt: $(foreach x,$(COSMOCC_HEADERS),$($(x)_HDRS))
-	$(file >$@, $^)
+COSMOCC_HDRS =								\
+	$(wildcard libc/integral/*)					\
+	$(foreach x,$(COSMOCC_PKGS),$($(x)_HDRS))			\
+	$(foreach x,$(COSMOCC_PKGS),$($(x)_INCS))
 
-o/cosmopolitan.h.txt:							\
-		libc/integral/normalize.inc				\
-		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
-	$(file >$@, $^)
+o/cosmocc.h.txt: Makefile
+	$(file >$@, $(call uniq,$(COSMOCC_HDRS)))
+
+COSMOPOLITAN_H_ROOT_HDRS =						\
+	libc/integral/normalize.inc					\
+	$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))
+
+o/cosmopolitan.h.txt: Makefile
+	$(file >$@, $(call uniq,$(COSMOPOLITAN_H_ROOT_HDRS)))
 
 o/cosmopolitan.h: o/cosmopolitan.h.txt					\
-		libc/integral/normalize.inc				\
-		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))	\
-		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_INCS))
+		$(wildcard libc/integral/*)				\
+		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))	\
+		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_INCS))
 	@$(ECHO) '#ifndef __STRICT_ANSI__' >$@
 	@$(ECHO) '#define _COSMO_SOURCE' >>$@
 	@$(ECHO) '#endif' >>$@

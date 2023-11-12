@@ -34,15 +34,19 @@
  *
  * Note `SIG_DFL` still results in process death for most signals.
  *
+ * POSIX defines raise() errors as returning non-zero and makes setting
+ * `errno` optional. Every platform we've tested in our support vector
+ * returns -1 with `errno` on error (like a normal system call).
+ *
  * @param sig can be SIGALRM, SIGINT, SIGTERM, SIGKILL, etc.
- * @return 0 on success, or nonzero on failure
+ * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `sig` is invalid
  * @asyncsignalsafe
  */
 int raise(int sig) {
   int rc;
   if (IsXnuSilicon()) {
-    rc = __syslib->__raise(sig);
+    rc = _sysret(__syslib->__raise(sig));
   } else if (IsWindows()) {
     if (0 <= sig && sig <= 64) {
       __sig_raise(sig, SI_TKILL);

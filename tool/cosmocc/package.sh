@@ -15,7 +15,6 @@ make -j8 m= \
 
 make -j8 m=x86_64 \
   o/cosmocc.h.txt \
-  o/cosmopolitan.h.txt \
   o/x86_64/ape/ape.lds \
   o/x86_64/libc/crt/crt.o \
   o/x86_64/ape/ape.elf \
@@ -33,7 +32,8 @@ make -j8 m=x86_64 \
   o/x86_64/tool/build/mkdeps.com.dbg \
   o/x86_64/tool/build/apelink.com.dbg \
   o/x86_64/tool/build/pecheck.com.dbg \
-  o/x86_64/third_party/make/make.com.dbg
+  o/x86_64/third_party/make/make.com.dbg \
+  o/x86_64/third_party/ctags/ctags.com.dbg
 
 make -j8 m=aarch64 \
   o/aarch64/ape/ape.elf \
@@ -51,7 +51,8 @@ make -j8 m=aarch64 \
   o/aarch64/tool/build/mkdeps.com.dbg \
   o/aarch64/tool/build/apelink.com.dbg \
   o/aarch64/tool/build/pecheck.com.dbg \
-  o/aarch64/third_party/make/make.com.dbg
+  o/aarch64/third_party/make/make.com.dbg \
+  o/aarch64/third_party/ctags/ctags.com.dbg
 
 mkdir -p "$OUTDIR/bin/"
 cp tool/cosmocc/README.md "$OUTDIR/"
@@ -60,7 +61,7 @@ cp tool/cosmocc/LICENSE.* "$OUTDIR/"
 mkdir -p "$OUTDIR/include/"
 cp -R libc/isystem/* "$OUTDIR/include/"
 cp -R libc/integral "$OUTDIR/include/libc/"
-for x in $(cat o/cosmocc.h.txt o/cosmopolitan.h.txt); do
+for x in $(cat o/cosmocc.h.txt); do
   mkdir -p "$OUTDIR/include/${x%/*}/"
   cp -f $x "$OUTDIR/include/${x%/*}/"
 done
@@ -68,12 +69,12 @@ done
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  wget https://cosmo.zip/pub/cosmocc/cosmocc-0.0.18.zip
-  unzip cosmocc-0.0.18.zip
-  cp -af o/third_party/gcc/bin/* bin/
-  cp -aR o/third_party/gcc/libexec .
-  rm -f cosmocc-0.0.18.zip
-  rm -rf o/
+  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.18/aarch64-gcc.zip
+  unzip aarch64-gcc.zip
+  rm -f aarch64-gcc.zip
+  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.18/x86_64-gcc.zip
+  unzip x86_64-gcc.zip
+  rm -f x86_64-gcc.zip
 fi
 rm -f bin/*-cpp
 rm -f bin/*-gcc-*
