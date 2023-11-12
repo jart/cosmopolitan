@@ -251,16 +251,24 @@ static int __sigaction(int sig, const struct sigaction *act,
     }
     if (rc != -1) {
       sigaction_native2cosmo((union metasigaction *)oldact);
+      if (oldact &&                         //
+          oldact->sa_handler != SIG_DFL &&  //
+          oldact->sa_handler != SIG_IGN &&  //
+          (IsFreebsd() || IsOpenbsd() || IsNetbsd() || IsXnu())) {
+        oldact->sa_handler =
+            (sighandler_t)((uintptr_t)__executable_start + __sighandrvas[sig]);
+      }
     }
   } else {
     if (oldact) {
       bzero(oldact, sizeof(*oldact));
       oldrva = __sighandrvas[sig];
+      oldact->sa_mask = __sighandmask[sig];
       oldact->sa_flags = __sighandflags[sig];
       oldact->sa_sigaction =
           (sigaction_f)(oldrva < kSigactionMinRva
                             ? oldrva
-                            : (intptr_t)&__executable_start + oldrva);
+                            : (uintptr_t)&__executable_start + oldrva);
     }
     rc = 0;
   }
