@@ -937,6 +937,21 @@ int main(int argc, char **argv, char **envp) {
   sp = (long *)(argv - 1);
   auxv = (long *)(envp + i + 1);
 
+  /* create new bottom of stack for spawned program
+     system v abi aligns this on a 16-byte boundary
+     grows down the alloc by poking the guard pages */
+  n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
+  sp2 = (long *)__builtin_alloca(n);
+  if ((long)sp2 & 15) ++sp2;
+  for (; n > 0; n -= pagesz) {
+    ((char *)sp2)[n - 1] = 0;
+  }
+  memmove(sp2, sp, (auxv - sp) * sizeof(long));
+  argv = (char **)(sp2 + 1);
+  envp = (char **)(sp2 + 1 + argc + 1);
+  auxv = sp2 + (auxv - sp);
+  sp = sp2;
+
   /* interpret command line arguments */
   if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
@@ -958,21 +973,6 @@ int main(int argc, char **argv, char **envp) {
     argc = sp[1] = sp[0] - 1;
     argv = (char **)((sp += 1) + 1);
   }
-
-  /* create new bottom of stack for spawned program
-     system v abi aligns this on a 16-byte boundary
-     grows down the alloc by poking the guard pages */
-  n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
-  sp2 = (long *)__builtin_alloca(n);
-  if ((long)sp2 & 15) ++sp2;
-  for (; n > 0; n -= pagesz) {
-    ((char *)sp2)[n - 1] = 0;
-  }
-  memmove(sp2, sp, (auxv - sp) * sizeof(long));
-  argv = (char **)(sp2 + 1);
-  envp = (char **)(sp2 + 1 + argc + 1);
-  auxv = sp2 + (auxv - sp);
-  sp = sp2;
 
   /* allocate ephemeral memory for reading file */
   n = sizeof(union ElfEhdrBuf);
