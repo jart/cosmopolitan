@@ -57,6 +57,7 @@ libc/isystem/ctime \
 libc/isystem/ctype.h \
 libc/isystem/cwchar \
 libc/isystem/cwctype \
+libc/isystem/cxxabi.h \
 libc/isystem/deque \
 libc/isystem/dirent.h \
 libc/isystem/dlfcn.h \
@@ -77,6 +78,7 @@ libc/isystem/forward_list \
 libc/isystem/fstream \
 libc/isystem/ftw.h \
 libc/isystem/functional \
+libc/isystem/future \
 libc/isystem/getopt.h \
 libc/isystem/glob.h \
 libc/isystem/grp.h \
