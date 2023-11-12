@@ -18,6 +18,14 @@ void *dlsym(void *, const char *);
 int dlclose(void *);
 int dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
 
+#ifdef _COSMO_SOURCE
+char *cosmo_dlerror(void);
+void *cosmo_dlopen(const char *, int);
+void *cosmo_dlsym(void *, const char *);
+int cosmo_dlclose(void *);
+int cosmo_dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
+#endif
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_DLFCN_H_ */

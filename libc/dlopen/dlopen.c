@@ -19,6 +19,7 @@
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
@@ -77,6 +78,7 @@ __static_yoink(".dlopen.aarch64.glibc.elf");
 
 #define BEGIN_FOREIGN                         \
   {                                           \
+    BLOCK_SIGNALS;                            \
     struct CosmoTib *cosmo_tib = __get_tls(); \
     pthread_mutex_lock(&foreign.lock);        \
     __set_tls(foreign.tib)
@@ -84,6 +86,7 @@ __static_yoink(".dlopen.aarch64.glibc.elf");
 #define END_FOREIGN                    \
   __set_tls(cosmo_tib);                \
   pthread_mutex_unlock(&foreign.lock); \
+  ALLOW_SIGNALS;                       \
   }
 
 struct loaded {
@@ -478,6 +481,27 @@ static void *dlopen_silicon(const char *path, int mode) {
  * this wrapper will automatically change it to `.dll` or `.dylib` to
  * increase its chance of successfully loading.
  *
+ * WARNING: This isn't supported on MacOS x86-64, OpenBSD, and NetBSD.
+ *
+ * WARNING: This dlopen() implementation is highly limited. Cosmo
+ * binaries are always statically linked. You can import functions from
+ * dynamic shared objects, but you can't export any. This dlopen() won't
+ * work for language plugins, but might help you access GUI and GPU DRM.
+ *
+ * WARNING: Do not expect this dlopen() is in any way safe to use. It's
+ * mostly due to thread local storage. On Windows it should be safe. On
+ * Apple Silicon it should be safe so long as foreign functions don't
+ * issue callbacks. On libre OSes we currently only make dlopen() APIs
+ * safe to use. In order for it to be safe, four system calls need to be
+ * issued for every dlopen() related API call, and that's assuming this
+ * API is only used from the main of your program. Most importantly
+ * there are no safeguards added around imported functions, since it'd
+ * make them go 1000x slower. It's the responsibility of the caller to
+ * ensure that imported functions never touch TLS, don't install signal
+ * handlers, will never spawn threads, and don't issue callbacks. Care
+ * should also be taken on all platforms, to ensure dynamic memory is
+ * being passed to the correct malloc() and free() implementations.
+ *
  * @param mode is a bitmask that can contain:
  *     - `RTLD_LOCAL` (default)
  *     - `RTLD_GLOBAL` (not supported on Windows)
@@ -485,7 +509,7 @@ static void *dlopen_silicon(const char *path, int mode) {
  *     - `RTLD_NOW`
  * @return dso handle, or NULL w/ dlerror()
  */
-void *dlopen(const char *path, int mode) {
+void *cosmo_dlopen(const char *path, int mode) {
   void *res;
   if (IsWindows()) {
     res = dlopen_nt(path, mode);
@@ -514,7 +538,7 @@ void *dlopen(const char *path, int mode) {
  * @param handle was opened by dlopen()
  * @return address of symbol, or NULL w/ dlerror()
  */
-void *dlsym(void *handle, const char *name) {
+void *cosmo_dlsym(void *handle, const char *name) {
   void *res;
   if (IsWindows()) {
     res = dlsym_nt(handle, name);
@@ -540,7 +564,7 @@ void *dlsym(void *handle, const char *name) {
  * @param handle was opened by dlopen()
  * @return 0 on success, or -1 w/ dlerror()
  */
-int dlclose(void *handle) {
+int cosmo_dlclose(void *handle) {
   int res;
   if (IsWindows()) {
     res = dlclose_nt(handle);
@@ -563,7 +587,7 @@ int dlclose(void *handle) {
 /**
  * Returns string describing last dlopen/dlsym/dlclose error.
  */
-char *dlerror(void) {
+char *cosmo_dlerror(void) {
   char *res;
   if (IsXnuSilicon()) {
     res = __syslib->__dlerror();

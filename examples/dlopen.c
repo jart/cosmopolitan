@@ -17,7 +17,7 @@
 /**
  * @fileoverview cosmopolitan dynamic runtime linking demo
  *
- * Our dlopen() interface currently supports:
+ * Our cosmo_dlopen() interface currently supports:
  *
  * - x86-64 Linux w/ Glibc
  * - x86-64 Linux w/ Musl Libc
@@ -31,16 +31,16 @@
 int main(int argc, char **argv, char **envp) {
 
   // open the host system's zlib library
-  void *libc = dlopen("libz.so", RTLD_LAZY);
+  void *libc = cosmo_dlopen("libz.so", RTLD_LAZY);
   if (!libc) {
-    tinyprint(2, dlerror(), "\n", NULL);
+    tinyprint(2, cosmo_dlerror(), "\n", NULL);
     exit(1);
   }
 
   // load crc() function address
-  unsigned (*crc32)(unsigned, void *, int) = dlsym(libc, "crc32");
+  unsigned (*crc32)(unsigned, void *, int) = cosmo_dlsym(libc, "crc32");
   if (!crc32) {
-    tinyprint(2, dlerror(), "\n", NULL);
+    tinyprint(2, cosmo_dlerror(), "\n", NULL);
     exit(1);
   }
 
@@ -50,6 +50,6 @@ int main(int argc, char **argv, char **envp) {
   tinyprint(1, "crc(hi) = ", ibuf, "\n", NULL);
 
   // mop up
-  dlclose(libc);
+  cosmo_dlclose(libc);
   exit(0);
 }
