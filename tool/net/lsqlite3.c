@@ -2312,7 +2312,7 @@ static int db_concat_changeset(lua_State *L) {
     int rc = sqlite3changegroup_new(&pGrp);
     for (int i = 1; rc == SQLITE_OK && i <= n; i++) {
         lua_rawgeti(L, 2, i);
-        cset = gc(strdup(lua_tostring(L, -1)));
+        cset = (void *)lua_tostring(L, -1);
         nset = lua_rawlen(L, -1);
         rc = sqlite3changegroup_add(pGrp, nset, cset);
         lua_pop(L, 1);  // pop the string
@@ -2328,7 +2328,7 @@ static int db_concat_changeset(lua_State *L) {
 
 static int db_apply_changeset(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
-    char *cset = gc(strdup(luaL_checkstring(L, 2)));
+    void *cset = (void *)luaL_checkstring(L, 2);
     int nset = lua_rawlen(L, 2);
     int top = lua_gettop(L);
     int rc;
