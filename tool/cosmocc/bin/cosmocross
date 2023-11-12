@@ -63,7 +63,12 @@ fi
 CC="$BIN/$ARCH-linux-cosmo-gcc"
 CRT="$BIN/../$ARCH-linux-cosmo/lib/crt.o"
 LDLIBS="-lcosmo"
-LDFLAGS="$LDFLAGS -L$BIN/../$ARCH-linux-cosmo/lib"
+if [ -z "$COSMOS" ]; then
+    LDFLAGS="$LDFLAGS -L$BIN/../$ARCH-linux-cosmo/lib"
+else
+    LDFLAGS="$LDFLAGS -L$COSMOS/lib -L$BIN/../$ARCH-linux-cosmo/lib"
+    CPPFLAGS="$CPPFLAGS -I$COSMOS/include"
+fi
 if [ x"$PROG" != x"${PROG%++}" ]; then
   CC="$BIN/$ARCH-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
