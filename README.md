@@ -196,6 +196,29 @@ You normally run the `.com.dbg` file under gdb. If you need to debug the
 gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 ```
 
+## Platform Notes
+
+### Linux
+
+Linux systems with WINE installed might have issues running APE programs
+if WINE is registered with `binnfmt_misc`. To work around this, you need
+to remove WINE from `binfmt_misc`. You could also disable `binfmt_misc`
+entirely.
+
+```
+sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/status'
+```
+
+### WSL
+
+It's normally unsafe to use APE in a WSL environment, because it tries
+to run them as WIN32 binaries within the WSL environment. In order to
+make it safe to use Cosmopolitan software on WSL, you have to run:
+
+```sh
+sh -c "echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop"
+```
+
 ## Discord Chatroom
 
 The Cosmopolitan development team collaborates on the Redbean Discord
