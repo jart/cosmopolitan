@@ -72,170 +72,98 @@ make -j
 make install
 ```
 
-## Monolithic Source Builds
+## Cosmopolitan Source Builds
 
-Cosmopolitan can be compiled from source on any Linux distro. First, you
-need to download or clone the repository.
+Cosmopolitan can be compiled from source on any of our supported
+platforms. First, you need to download or clone the repository. If
+you're not using x86-64 Linux then you'll need cosmocc too.
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan.tar.gz
-tar xf cosmopolitan.tar.gz  # see releases page
-cd cosmopolitan
+git clone https://github.com/jart/cosmopolitan cosmo
+cd cosmo
+mkdir -p o/third_party/gcc
+pushd o/third_party/gcc
+wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
+unzip cosmocc.zip
+popd
 ```
 
-This will build the entire repository and run all the tests:
+It's recommended that you install a systemwide APE Loader. This command
+requires `sudo` access to copy the `ape` command to a system folder and
+register with binfmt_misc on Linux, for even more performance.
 
 ```sh
-build/bootstrap/make.com
+ape/apeinstall.sh
+```
+
+You can now build the mono repo with any modern version of GNU Make. To
+make life easier, we've included one in the cosmocc toolchain, which is
+guaranteed to be compatible and furthermore includes our extensions for
+doing build system sandboxing.
+
+```sh
+o//third_party/gcc/bin/make -j8
 o//examples/hello.com
-find o -name \*.com | xargs ls -rShal | less
-```
-
-If you get an error running make.com then it's probably because you have
-WINE installed to `binfmt_misc`. You can fix that by installing the the
-APE loader as an interpreter. It'll improve build performance too!
-
-```sh
-bin/ape-install
 ```
 
 Since the Cosmopolitan repository is very large, you might only want to
-build a particular thing. Cosmopolitan's build config does a good job at
-having minimal deterministic builds. For example, if you wanted to build
-only hello.com then you could do that as follows:
+build one particular thing. Here's an example of a target that can be
+compiled relatively quickly, which is a simple POSIX test that only
+depends on core LIBC packages.
 
 ```sh
-build/bootstrap/make.com o//examples/hello.com
+rm -rf o//libc o//test
+o//third_party/gcc/bin/make o//test/posix/signal_test.com
+o//test/posix/signal_test.com
 ```
 
 Sometimes it's desirable to build a subset of targets, without having to
-list out each individual one. You can do that by asking make to build a
-directory name. For example, if you wanted to build only the targets and
-subtargets of the chibicc package including its tests, you would say:
+list out each individual one. For example if you wanted to build and run
+all the unit tests in the `TEST_POSIX` package, you could say:
 
 ```sh
-build/bootstrap/make.com o//third_party/chibicc
-o//third_party/chibicc/chibicc.com --help
+o//third_party/gcc/bin/make o//test/posix
 ```
 
 Cosmopolitan provides a variety of build modes. For example, if you want
 really tiny binaries (as small as 12kb in size) then you'd say:
 
 ```sh
-build/bootstrap/make.com m=tiny
+o//third_party/gcc/bin/make m=tiny
 ```
 
-Here's some other build modes you can try:
+You can furthermore cut out the bloat of other operating systems, and
+have Cosmopolitan become much more similar to Musl Libc.
 
 ```sh
-build/bootstrap/make.com m=dbg       # asan + ubsan + debug
-build/bootstrap/make.com m=asan      # production memory safety
-build/bootstrap/make.com m=opt       # -march=native optimizations
-build/bootstrap/make.com m=rel       # traditional release binaries
-build/bootstrap/make.com m=optlinux  # optimal linux-only performance
-build/bootstrap/make.com m=fastbuild # build 28% faster w/o debugging
-build/bootstrap/make.com m=tinylinux # tiniest linux-only 4kb binaries
+o//third_party/gcc/bin/make m=tinylinux
 ```
 
 For further details, see [//build/config.mk](build/config.mk).
 
-## Cosmopolitan Amalgamation
+## Debugging
 
-Another way to use Cosmopolitan is via our amalgamated release, where
-we've combined everything into a single static archive and a single
-header file. If you're doing your development work on Linux or BSD then
-you need just five files to get started. Here's what you do on Linux:
+To print a log of system calls to stderr:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-3.0.2.zip
-unzip cosmopolitan-amalgamation-3.0.2.zip
-printf 'main() { printf("hello world\\n"); }\n' >hello.c
-gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
-  -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs -gdwarf-4 \
-  -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds -Wl,--gc-sections \
-  -Wl,-z,common-page-size=0x1000 -Wl,-z,max-page-size=0x1000 \
-  -include cosmopolitan.h crt.o ape-no-modify-self.o cosmopolitan.a
-objcopy -S -O binary hello.com.dbg hello.com
+cosmocc -o hello hello.c
+./hello --strace
 ```
 
-You now have a portable program.
+To print a log of function calls to stderr:
 
 ```sh
-./hello.com
-bash -c './hello.com'  # older zsh/fish workaround (patched in zsh 5.9 and fish 3.3.0)
+cosmocc -o hello hello.c
+./hello --ftrace
 ```
 
-If `./hello.com` executed on Linux throws an error about not finding an
-interpreter, it should be fixed by running the following command (although
-note that it may not survive a system restart):
+Both strace and ftrace use the unbreakable kprintf() facility, which is
+able to be sent to a file by setting an environment variable.
 
 ```sh
-sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+export KPRINTF_LOG=log
+./hello --strace
 ```
-
-If the same command produces puzzling errors on WSL or WINE when using
-Redbean 2.x, they may be fixed by disabling binfmt_misc:
-
-```sh
-sudo sh -c 'echo -1 >/proc/sys/fs/binfmt_misc/status'
-```
-
-Since we used the `ape-no-modify-self.o` bootloader (rather than
-`ape.o`) your executable will not modify itself when it's run. What
-it'll instead do, is extract a 4kb program (the [APE loader](https://justine.lol/apeloader/))
-to `${TMPDIR:-${HOME:-.}}` that maps your program into memory without
-needing to copy it. The APE loader must be in an executable location
-(e.g. not stored on a `noexec` mount) for it to run. See below for
-alternatives:
-
-It's possible to install the APE loader systemwide as follows.
-
-```sh
-# System-Wide APE Install
-# for Linux, Darwin, and BSDs
-# 1. Copies APE Loader to /usr/bin/ape
-# 2. Registers w/ binfmt_misc too if Linux
-bin/ape-install
-
-# System-Wide APE Uninstall
-# for Linux, Darwin, and BSDs
-bin/ape-uninstall
-```
-
-It's also possible to convert APE binaries into the system-local format
-by using the `--assimilate` flag. Please note that if binfmt_misc is in
-play, you'll need to unregister it temporarily before doing this, since
-the assimilate feature is part of the shell script header.
-
-```sh
-$ file hello.com
-hello.com: DOS/MBR boot sector
-./hello.com --assimilate
-$ file hello.com
-hello.com: ELF 64-bit LSB executable
-```
-
-Now that you're up and running with Cosmopolitan Libc and APE, here's
-some of the most important troubleshooting tools APE offers that you
-should know, in case you encounter any issues:
-
-```sh
-./hello.com --strace   # log system calls to stderr
-./hello.com --ftrace   # log function calls to stderr
-```
-
-Do you love tiny binaries? If so, you may not be happy with Cosmo adding
-heavyweight features like tracing to your binaries by default. In that
-case, you may want to consider using our build system:
-
-```sh
-make m=tiny
-```
-
-Which will cause programs such as `hello.com` and `life.com` to shrink
-from 60kb in size to about 16kb. There's also a prebuilt amalgamation
-online <https://justine.lol/cosmopolitan/cosmopolitan-tiny.zip> hosted
-on our download page <https://justine.lol/cosmopolitan/download.html>.
 
 ## GDB
 
@@ -266,41 +194,6 @@ You normally run the `.com.dbg` file under gdb. If you need to debug the
 
 ```sh
 gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
-```
-
-## Alternative Development Environments
-
-### MacOS
-
-If you're developing on MacOS you can install the GNU compiler
-collection for x86_64-elf via homebrew:
-
-```sh
-brew install x86_64-elf-gcc
-```
-
-Then in the above scripts just replace `gcc` and `objcopy` with
-`x86_64-elf-gcc` and `x86_64-elf-objcopy` to compile your APE binary.
-
-### Windows
-
-If you're developing on Windows then you need to download an
-x86_64-pc-linux-gnu toolchain beforehand. See the [Compiling on
-Windows](https://justine.lol/cosmopolitan/windows-compiling.html)
-tutorial. It's needed because the ELF object format is what makes
-universal binaries possible.
-
-Cosmopolitan officially only builds on Linux. However, one highly
-experimental (and currently broken) thing you could try, is building the
-entire cosmo repository from source using the cross9 toolchain.
-
-```sh
-mkdir -p o/third_party
-rm -rf o/third_party/gcc
-wget https://justine.lol/linux-compiler-on-windows/cross9.zip
-unzip cross9.zip
-mv cross9 o/third_party/gcc
-build/bootstrap/make.com
 ```
 
 ## Discord Chatroom

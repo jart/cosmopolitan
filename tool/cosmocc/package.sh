@@ -71,10 +71,10 @@ done
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.18/aarch64-gcc.zip
+  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.19/aarch64-gcc.zip
   unzip aarch64-gcc.zip
   rm -f aarch64-gcc.zip
-  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.18/x86_64-gcc.zip
+  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.19/x86_64-gcc.zip
   unzip x86_64-gcc.zip
   rm -f x86_64-gcc.zip
 fi
@@ -83,9 +83,18 @@ rm -f bin/*-gcc-*
 rm -f bin/*-gprof
 rm -f bin/*-strings
 for arch in aarch64 x86_64; do
-  ln -sf $arch-linux-cosmo-gcc bin/$arch-linux-cosmo-cc
+  ln -sf $arch-linux-cosmo-addr2line bin/$arch-unknown-cosmo-addr2line
+  ln -sf $arch-linux-cosmo-ar bin/$arch-unknown-cosmo-ar
+  ln -sf $arch-linux-cosmo-as bin/$arch-unknown-cosmo-as
+  ln -sf $arch-linux-cosmo-c++filt bin/$arch-unknown-cosmo-c++filt
   ln -sf $arch-linux-cosmo-g++ bin/$arch-linux-cosmo-c++
+  ln -sf $arch-linux-cosmo-gcc bin/$arch-linux-cosmo-cc
   ln -sf $arch-linux-cosmo-gcc bin/$arch-linux-cosmo-cpp
+  ln -sf $arch-linux-cosmo-nm bin/$arch-unknown-cosmo-nm
+  ln -sf $arch-linux-cosmo-objcopy bin/$arch-unknown-cosmo-objcopy
+  ln -sf $arch-linux-cosmo-objdump bin/$arch-unknown-cosmo-objdump
+  ln -sf $arch-linux-cosmo-readelf bin/$arch-unknown-cosmo-readelf
+  ln -sf $arch-linux-cosmo-strip bin/$arch-unknown-cosmo-strip
   cmp -s libexec/gcc/$arch-linux-cosmo/11.2.0/ld.bfd libexec/gcc/$arch-linux-cosmo/11.2.0/ld
   ln -sf ld.bfd libexec/gcc/$arch-linux-cosmo/11.2.0/ld
   cmp -s libexec/gcc/$arch-linux-cosmo/11.2.0/ld.bfd bin/$arch-linux-cosmo-ld
