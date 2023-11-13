@@ -35,17 +35,17 @@
     c;                       \
   })
 
-#define BUFFER_GROW 48
+#define FP_BUFFER_GROW 48
 #define BUFFER                                         \
   ({                                                   \
     int c = READ;                                      \
-    if (bufcur >= bufsize - 1) {                       \
-      bufsize = bufsize + BUFFER_GROW;                 \
-      buf = realloc(buf, bufsize);                     \
+    if (fpbufcur >= fpbufsize - 1) {                   \
+      fpbufsize = fpbufsize + FP_BUFFER_GROW;          \
+      fpbuf = realloc(fpbuf, fpbufsize);               \
     }                                                  \
     if (c != -1) {                                     \
-      buf[bufcur++] = c;                               \
-      buf[bufcur] = '\0';                              \
+      fpbuf[fpbufcur++] = c;                           \
+      fpbuf[fpbufcur] = '\0';                          \
     }                                                  \
     c;                                                 \
   })
@@ -76,9 +76,9 @@ int __vcscanf(int callback(void *),    //
     struct FreeMe *next;
     void *ptr;
   } *freeme = NULL;
-  unsigned char *buf = NULL;
-  size_t bufsize;
-  size_t bufcur;
+  unsigned char *fpbuf = NULL;
+  size_t fpbufsize;
+  size_t fpbufcur;
   const unsigned char *p = (const unsigned char *)fmt;
   int *n_ptr;
   int items = 0;
@@ -103,6 +103,8 @@ int __vcscanf(int callback(void *),    //
         break;
       case '%': {
         uint128_t number;
+        unsigned char *buf;
+        size_t bufsize;
         double fp;
         unsigned width = 0;
         unsigned char bits = 32;
@@ -241,11 +243,11 @@ int __vcscanf(int callback(void *),    //
               while (isspace(c)) {
                 c = READ;
               }
-              bufsize = BUFFER_GROW;
-              buf = malloc(bufsize);
-              bufcur = 0;
-              buf[bufcur++] = c;
-              buf[bufcur] = '\0';
+              fpbufsize = FP_BUFFER_GROW;
+              fpbuf = malloc(fpbufsize);
+              fpbufcur = 0;
+              fpbuf[fpbufcur++] = c;
+              fpbuf[fpbufcur] = '\0';
               goto ConsumeFloatingPointNumber;
             default:
               items = einval();
@@ -466,7 +468,7 @@ int __vcscanf(int callback(void *),    //
               break;
           } while ((c = BUFFER) != -1);
         GotFloatingPointNumber:
-          fp = strtod((char *)buf, NULL);
+          fp = strtod((char *)fpbuf, NULL);
           if (!discard) {
             ++items;
             void *out = va_arg(va, void *);
@@ -476,9 +478,9 @@ int __vcscanf(int callback(void *),    //
               *(double *)out = (double)fp;
             }
           }
-        free(buf);
-        buf = NULL;
-        bufcur = bufsize = 0;
+        free(fpbuf);
+        fpbuf = NULL;
+        fpbufcur = fpbufsize = 0;
         continue;
       ReportConsumed:
         n_ptr = va_arg(va, int *);
@@ -565,6 +567,6 @@ Done:
     if (items == -1) free(entry->ptr);
     free(entry);
   }
-  if (buf) free(buf);
+  if (fpbuf) free(fpbuf);
   return items;
 }
