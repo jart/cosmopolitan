@@ -118,7 +118,7 @@ TEST(sem_close, withUnnamedSemaphore_isUndefinedBehavior) {
   SPAWN(fork);
   IgnoreStderr();
   sem_close(&sem);
-  TERMS(SIGABRT);  // see __assert_fail
+  TERMS(SIGILL);  // see __assert_fail
   ASSERT_SYS(0, 0, sem_destroy(&sem));
 }
 

@@ -47,48 +47,48 @@ TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
   sem_t sem;
   SPAWN(fork);
-  signal(SIGABRT, SIG_DFL);
+  signal(SIGILL, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_post(&sem);
-  TERMS(SIGABRT);
+  TERMS(SIGILL);
 }
 
 TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
   sem_t sem;
   SPAWN(fork);
-  signal(SIGABRT, SIG_DFL);
+  signal(SIGILL, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_trywait(&sem);
-  TERMS(SIGABRT);
+  TERMS(SIGILL);
 }
 
 TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
   sem_t sem;
   SPAWN(fork);
-  signal(SIGABRT, SIG_DFL);
+  signal(SIGILL, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_wait(&sem);
-  TERMS(SIGABRT);
+  TERMS(SIGILL);
 }
 
 TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
   sem_t sem;
   SPAWN(fork);
-  signal(SIGABRT, SIG_DFL);
+  signal(SIGILL, SIG_DFL);
   ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   ASSERT_SYS(0, 0, sem_destroy(&sem));
   IgnoreStderr();
   sem_timedwait(&sem, 0);
-  TERMS(SIGABRT);
+  TERMS(SIGILL);
 }
 
 void *Worker(void *arg) {

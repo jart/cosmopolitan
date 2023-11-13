@@ -93,7 +93,7 @@ struct loaded {
   char *base;
   char *entry;
   Elf64_Ehdr eh;
-  Elf64_Phdr ph[32];
+  Elf64_Phdr ph[30];
 };
 
 static struct {
