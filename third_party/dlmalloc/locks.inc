@@ -30,6 +30,8 @@
 
 */
 
+#ifdef USE_SPIN_LOCKS
+
 #define MLOCK_T atomic_uint
 
 static int malloc_wipe(MLOCK_T *lk) {
@@ -50,6 +52,27 @@ static int malloc_unlock(MLOCK_T *lk) {
   atomic_store_explicit(lk, 0, memory_order_release);
   return 0;
 }
+
+#else
+
+#define MLOCK_T nsync_mu
+
+static int malloc_wipe(MLOCK_T *lk) {
+  bzero(lk, sizeof(*lk));
+  return 0;
+}
+
+static int malloc_lock(MLOCK_T *lk) {
+  nsync_mu_lock(lk);
+  return 0;
+}
+
+static int malloc_unlock(MLOCK_T *lk) {
+  nsync_mu_unlock(lk);
+  return 0;
+}
+
+#endif
 
 #define ACQUIRE_LOCK(lk) malloc_lock(lk)
 #define RELEASE_LOCK(lk) malloc_unlock(lk)

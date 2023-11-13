@@ -298,8 +298,8 @@ void nsync_mu_unlock_slow_ (nsync_mu *mu, lock_type *l_type) {
 				return;
 			}
 		} else if ((old_word&MU_SPINLOCK) == 0 &&
-			   ATM_CAS_ACQ (&mu->word, old_word,
-					(old_word-early_release_mu)|MU_SPINLOCK|MU_DESIG_WAKER)) {
+			   ATM_CAS_SEQCST (&mu->word, old_word, /* [jart] fixes issues on apple silicon */
+                                           (old_word-early_release_mu)|MU_SPINLOCK|MU_DESIG_WAKER)) {
 			struct Dll *wake;
 			lock_type *wake_type;
 			uint32_t clear_on_release;
