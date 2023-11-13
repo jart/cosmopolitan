@@ -73,6 +73,14 @@ MODE := $(m)
 endif
 endif
 
+# detect wsl2 running cosmopolitan binaries on the host by checking whether:
+# - user ran build/bootstrap/make.com, in which case make's working directory is in wsl
+# - user ran make, in which case cocmd.com's working directory is in wsl
+ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(shell pwd)),)
+$(warning wsl2 interop is enabled)
+$(error you need to run sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop')
+endif
+
 UNAME_M = $(shell uname -m)
 UNAME_S = $(shell uname -s)
 
