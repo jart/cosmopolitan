@@ -81,8 +81,8 @@ $(warning wsl2 interop is enabled)
 $(error you need to run sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop')
 endif
 
-UNAME_M = $(shell uname -m)
-UNAME_S = $(shell uname -s)
+UNAME_M := $(shell uname -m)
+UNAME_S := $(shell uname -s)
 
 # apple still distributes a 17 year old version of gnu make
 ifeq ($(MAKE_VERSION), 3.81)
