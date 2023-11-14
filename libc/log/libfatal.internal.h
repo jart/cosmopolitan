@@ -32,8 +32,11 @@ __funline void *__repstosb(void *di, char al, size_t cx) {
       : "0"(di), "1"(cx), "a"(al));
   return di;
 #else
-  volatile char *volatile d = di;
-  while (cx--) *d++ = al;
+  char *d = di;
+  while (cx--) {
+    *d++ = al;
+    asm volatile("" ::: "memory");
+  }
   return (void *)d;
 #endif
 }
@@ -45,9 +48,12 @@ __funline void *__repmovsb(void *di, const void *si, size_t cx) {
       : "0"(di), "1"(si), "2"(cx), "m"(*(char(*)[cx])si));
   return di;
 #else
-  volatile char *volatile d = di;
-  volatile const char *volatile s = si;
-  while (cx--) *d++ = *s++;
+  char *d = di;
+  const char *s = si;
+  while (cx--) {
+    *d++ = *s++;
+    asm volatile("" ::: "memory");
+  }
   return (void *)d;
 #endif
 }
@@ -56,6 +62,7 @@ __funline void *__mempcpy(void *d, const void *s, size_t n) {
   size_t i;
   for (i = 0; i < n; ++i) {
     ((char *)d)[i] = ((const char *)s)[i];
+    asm volatile("" ::: "memory");
   }
   return (char *)d + n;
 }

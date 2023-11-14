@@ -629,7 +629,6 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 
     /* load from file */
     if (p[i].p_filesz) {
-      long map1, map2;
       int prot1, prot2;
       unsigned long wipe;
       prot1 = prot;
@@ -653,22 +652,33 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       addr = (void *)(dynbase + (p[i].p_vaddr & -pagesz));
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
       if (prot1 & PROT_EXEC) {
+#ifdef SIP_DISABLED
         // if sip is disabled then we can load the executable segments
-        // of the binary into memory without needing to copy anything!
+        // off the binary into memory without needing to copy anything
+        // which provides considerably better performance for building
         rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
         if (rc < 0) {
-          if (rc != -EPERM) Pexit(exe, rc, "mmap(exec)");
-          // apple arm64 won't allow PROT_EXEC mapping any unsigned file
-          // however we are allowed to copy it into an anonymous mapping
-          map1 = sys_mmap(0, size, PROT_READ, MAP_PRIVATE, fd,
-                          p[i].p_offset & -pagesz);
-          if (map1 < 0) Pexit(exe, map1, "mmap(exec) workaround input");
-          map2 = sys_mmap(addr, size, (prot1 = PROT_READ | PROT_WRITE),
-                          MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
-          if (map2 < 0) Pexit(exe, map2, "mmap(exec) workaround output");
-          memcpy((void *)map2, (void *)map1, size);
-          munmap((void *)map1, size);
+          if (rc == -EPERM) {
+            Pexit(exe, rc,
+                  "map(exec) failed because SIP (System Integrity Protection) "
+                  "is enabled, but APE Loader was compiled with SIP_DISABLED");
+          } else {
+            Pexit(exe, rc, "map(exec) failed");
+          }
         }
+#else
+        // the issue is that if sip is enabled then, attempting to map
+        // it with exec permission will cause xnu to phone home a hash
+        // of the entire file to apple intelligence as a one time cost
+        // which is literally minutes for executables holding big data
+        // since there's no public apple api for detecting sip we read
+        // as the default strategy which is slow but it works for both
+        rc = sys_mmap(addr, size, (prot1 = PROT_READ | PROT_WRITE),
+                      MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
+        if (rc < 0) Pexit(exe, rc, "prog mmap anon");
+        rc = pread(fd, addr, p[i].p_filesz, p[i].p_offset & -pagesz);
+        if (rc != p[i].p_filesz) Pexit(exe, -errno, "prog pread");
+#endif
       } else {
         rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
         if (rc < 0) Pexit(exe, rc, "prog mmap");
