@@ -5,6 +5,17 @@
 #include "libc/log/color.internal.h"
 
 /**
+ * @internal
+ * @fileoverview Declarations for bare metal code to interact with ACPI
+ *
+ * @see UEFI Forum, Inc.  Advanced Configuration and Power Interface (ACPI)
+ *      Specification, Version 6.5, 2022.  https://uefi.org/specifications
+ * @see Intel Corporation.  ACPI Component Architecture: User Guide and
+ *      Programmer Reference, Revision 6.2, 2017.  https://acpica.org
+ */
+
+/**
+ * @internal
  * AcpiStatus values.
  */
 #define kAcpiOk             0x0000
@@ -13,11 +24,13 @@
 #define kAcpiExBadChecksum  0x2003
 
 /**
+ * @internal
  * Flags for AcpiTableMadt::Flags.
  */
 #define kAcpiMadtPcAtCompat 0x0001
 
 /**
+ * @internal
  * Flags for AcpiTableFadt::BootFlags.
  */
 #define kAcpiFadtLegacyDevices 0x0001
@@ -28,6 +41,7 @@
 #define kAcpiFadtNoCmosRtc     0x0020
 
 /**
+ * @internal
  * Values for AcpiSubtableHeader::Type under an AcpiTableMadt.
  */
 #define kAcpiMadtLocalApic    0
@@ -35,15 +49,6 @@
 #define kAcpiMadtIntOverride  2
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-/**
- * @fileoverview Declarations for bare metal code to interact with ACPI
- *
- * @see UEFI Forum, Inc.  Advanced Configuration and Power Interface (ACPI)
- *      Specification, Version 6.5, 2022.  https://uefi.org/specifications
- * @see Intel Corporation.  ACPI Component Architecture: User Guide and
- *      Programmer Reference, Revision 6.2, 2017.  https://acpica.org
- */
 
 COSMOPOLITAN_C_START_
 

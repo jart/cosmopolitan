@@ -173,6 +173,7 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   uint64_t Address;
   uintptr_t Args, MapKey, DescSize;
   uint64_t *pd, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
+  const char16_t *CmdLine;
 
   extern char os asm("__hostos");
   os = _HOSTMETAL;
@@ -194,7 +195,7 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   Address = 0x79000;
   SystemTable->BootServices->AllocatePages(
       AllocateAddress, EfiRuntimeServicesData,
-      (0x7e000 - 0x79000 + sizeof(struct EfiArgs) + 4095) / 4096, &Address);
+      (0x7f000 - 0x79000 + sizeof(struct EfiArgs) + 4095) / 4096, &Address);
   Address = IMAGE_BASE_PHYSICAL;
   SystemTable->BootServices->AllocatePages(
       AllocateAddress, EfiRuntimeServicesData,
@@ -202,7 +203,7 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   mm = __get_mm_phy();
   SystemTable->BootServices->SetMem(mm, sizeof(*mm), 0);
   SystemTable->BootServices->SetMem(
-      (void *)0x79000, 0x7e000 - 0x79000 + sizeof(struct EfiArgs), 0);
+      (void *)0x79000, 0x7f000 - 0x79000 + sizeof(struct EfiArgs), 0);
   SystemTable->BootServices->CopyMem((void *)IMAGE_BASE_PHYSICAL,
                                      __executable_start,
                                      _end - __executable_start);
@@ -210,10 +211,12 @@ __msabi EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   /*
    * Converts UEFI shell arguments to argv.
    */
-  ArgBlock = (struct EfiArgs *)0x7e000;
+  ArgBlock = (struct EfiArgs *)0x7f000;
   SystemTable->BootServices->HandleProtocol(ImageHandle,
                                             &kEfiLoadedImageProtocol, &ImgInfo);
-  Args = GetDosArgv(ImgInfo->LoadOptions, ArgBlock->ArgBlock,
+  CmdLine = (const char16_t *)ImgInfo->LoadOptions;
+  if (!CmdLine || !CmdLine[0]) CmdLine = u"BOOTX64.EFI";
+  Args = GetDosArgv(CmdLine, ArgBlock->ArgBlock,
                     sizeof(ArgBlock->ArgBlock), ArgBlock->Args,
                     ARRAYLEN(ArgBlock->Args));
 

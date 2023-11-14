@@ -2,11 +2,20 @@
 #define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 #include "libc/runtime/mman.internal.h"
 
-/** Preferred width of the video screen, in character units. */
+/**
+ * @internal
+ * Preferred width of the video screen, in character units.
+ */
 #define VGA_PREFER_TTY_HEIGHT 30
-/** Preferred width of the video screen, in character units. */
+/**
+ * @internal
+ * Preferred width of the video screen, in character units.
+ */
 #define VGA_PREFER_TTY_WIDTH 80
-/** Assumed height of each character in pixels, in graphics modes. */
+/**
+ * @internal
+ * Assumed height of each character in pixels, in graphics modes.
+ */
 #define VGA_ASSUME_CHAR_HEIGHT_PX 16
 /** Assumed width of each character in pixels, in graphics modes. */
 #define VGA_ASSUME_CHAR_WIDTH_PX 8
@@ -18,6 +27,7 @@
  */
 
 /**
+ * @internal
  * If VGA_USE_WCS is defined, the tty code can maintain an array of the
  * Unicode characters "underlying" the 8-bit (or 9-bit) characters that are
  * actually displayed on the text screen.  This Unicode character
@@ -33,6 +43,7 @@
  */
 #undef VGA_USE_WCS
 /**
+ * @internal
  * The VGA hardware can be configured — via the IBM BIOS, or via port I/O —
  * to either support blinking characters, or support the use of bright
  * background colors, but not both.  There is a hardware setting that
@@ -67,6 +78,7 @@
  */
 #undef VGA_USE_BLINK
 /**
+ * @internal
  * If VGA_PERSNICKETY_STATUS is defined, then when deciding how to return
  * status response codes (e.g. "\e[0n"), the tty code will pay attention to
  * the terminal's termios mode (TODO).  If undefined, the tty code will
@@ -75,7 +87,10 @@
  */
 #undef VGA_PERSNICKETY_STATUS
 
-/* Flags which are passed to _StartTty(). */
+/**
+ * @internal
+ * Flags which are passed to _StartTty().
+ */
 #define kTtyAllocWcs                       \
   0x01 /* allocate Unicode character array \
           (if VGA_USE_WCS also defined) */
@@ -85,6 +100,7 @@
           to show system messages */
 
 /**
+ * @internal
  * Flags for Tty::pr.  These govern properties of individual character cells.
  */
 #define kTtyFg      0x0001
@@ -102,6 +118,7 @@
 #define kTtyConceal 0x1000
 
 /**
+ * @internal
  * Flags for Tty::conf.  These govern the current state of the teletypewriter
  * as a whole.
  */
@@ -153,6 +170,10 @@ typedef union {
 typedef TtyBgrxColor TtyCanvasColor;
 struct Tty;
 
+/**
+ * @internal
+ * Video console object type.
+ */
 struct Tty {
   /**
    * Cursor position.  (y, x) = (0, 0) means the cursor is on the top left

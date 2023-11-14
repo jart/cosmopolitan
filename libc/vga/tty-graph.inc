@@ -31,6 +31,7 @@
 #include "libc/vga/vga.internal.h"
 
 /**
+ * @internal
  * @fileoverview Template for routines to support output in graphical video
  * modes for bare metal VGA.
  *

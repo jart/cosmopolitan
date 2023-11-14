@@ -30,6 +30,7 @@
 #include "libc/vga/vga.internal.h"
 
 /**
+ * @internal
  * @fileoverview Instantiation of routines for normal console output in
  * graphical video modes.
  *
