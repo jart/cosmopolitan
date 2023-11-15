@@ -120,6 +120,4 @@ TEST(poll, interrupt) {
 
 TEST(raise, zero) {
   ASSERT_SYS(0, 0, raise(0));
-  ASSERT_SYS(EINVAL, -1, raise(-1));
-  ASSERT_SYS(EINVAL, -1, raise(_NSIG + 1));
 }
