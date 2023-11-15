@@ -32,6 +32,15 @@ _apple:	mov	$_HOSTXNU,%cl
 	.endfn	_apple,weak,hidden
 #endif
 
+#if SupportsWindows() && defined(__x86_64__) && !IsTiny()
+//	implements all win32 apis on non-windows hosts
+//	it is just enough code to get a good backtrace
+__oops_win32:
+	ud2
+	nop
+	.endfn	__oops_win32
+#endif
+
 //	System Five userspace program entrypoint.
 //
 //	@param	rsp is [n,argv₀..argvₙ₋₁,0,envp₀..,0,auxv₀..,0,..]
@@ -76,7 +85,6 @@ _start:
 //	make win32 imps crash
 	.weak	ape_idata_iat
 	.weak	ape_idata_iatend
-	.weak	__oops_win32
 	ezlea	__oops_win32,ax
 	ezlea	ape_idata_iat,di
 	ezlea	ape_idata_iatend,cx

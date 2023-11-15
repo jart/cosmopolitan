@@ -200,23 +200,42 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 
 ### Linux
 
-Linux systems with WINE installed might have issues running APE programs
-if WINE is registered with `binnfmt_misc`. To work around this, you need
-to remove WINE from `binfmt_misc`. You could also disable `binfmt_misc`
-entirely.
+Some Linux systems are configured to launch MZ executables under WINE.
+Other distros configure their stock installs so that APE programs will
+print "run-detectors: unable to find an interpreter". For example:
 
+```sh
+jart@ubuntu:~$ wget https://cosmo.zip/pub/cosmos/bin/dash
+jart@ubuntu:~$ chmod +x dash
+jart@ubuntu:~$ ./dash
+run-detectors: unable to find an interpreter for ./dash
 ```
-sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/status'
+
+You can fix that by registering APE with `binfmt_misc`:
+
+```sh
+sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+sudo sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+```
+
+You should be good now. APE will not only work, it'll launch executables
+400µs faster now too. However if things still didn't work out, it's also
+possible to disable `binfmt_misc` as follows:
+
+```sh
+sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/cli'     # remove Ubuntu's MZ interpreter
+sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/status'  # remove ALL binfmt_misc entries
 ```
 
 ### WSL
 
 It's normally unsafe to use APE in a WSL environment, because it tries
-to run them as WIN32 binaries within the WSL environment. In order to
-make it safe to use Cosmopolitan software on WSL, you have to run:
+to run MZ executables as WIN32 binaries within the WSL environment. In
+order to make it safe to use Cosmopolitan software on WSL, run this:
 
 ```sh
-sh -c "echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop"
+sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop"
 ```
 
 ## Discord Chatroom

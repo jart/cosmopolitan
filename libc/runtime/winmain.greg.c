@@ -23,7 +23,6 @@
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
@@ -45,7 +44,6 @@
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
-
 #ifdef __x86_64__
 
 #define abi __msabi textwindows dontinstrument
@@ -55,6 +53,7 @@ __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
 __msabi extern typeof(DuplicateHandle) *const __imp_DuplicateHandle;
 __msabi extern typeof(FreeEnvironmentStrings) *const __imp_FreeEnvironmentStringsW;
 __msabi extern typeof(GetConsoleMode) *const __imp_GetConsoleMode;
+__msabi extern typeof(GetCurrentDirectory) *const __imp_GetCurrentDirectoryW;
 __msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
 __msabi extern typeof(GetEnvironmentStrings) *const __imp_GetEnvironmentStringsW;
 __msabi extern typeof(GetEnvironmentVariable) *const __imp_GetEnvironmentVariableW;
@@ -67,6 +66,7 @@ __msabi extern typeof(SetConsoleOutputCP) *const __imp_SetConsoleOutputCP;
 __msabi extern typeof(SetEnvironmentVariable) *const __imp_SetEnvironmentVariableW;
 __msabi extern typeof(SetStdHandle) *const __imp_SetStdHandle;
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
+__msabi extern typeof(WriteFile) *const __imp_WriteFile;
 // clang-format on
 
 void cosmo(int, char **, char **, long (*)[2]) wontreturn;
@@ -88,9 +88,33 @@ __funline char16_t *MyCommandLine(void) {
   return cmd;
 }
 
-// implements all win32 apis on non-windows hosts
-static abi long __oops_win32(void) {
-  notpossible;
+static abi char16_t *StrStr(const char16_t *haystack, const char16_t *needle) {
+  size_t i;
+  for (;;) {
+    for (i = 0;; ++i) {
+      if (!needle[i]) return (/*unconst*/ char16_t *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+    }
+    if (!*haystack++) break;
+  }
+  return 0;
+}
+
+static abi void PrintError(const char *s, size_t n) {
+#define PrintError(s) PrintError(s, sizeof(s) - 1)
+  __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), s, n, 0, 0);
+}
+
+// detect the unholiest of environments
+static abi bool32 IsWslChimera(void) {
+  char16_t path[PATH_MAX];
+  return __imp_GetCurrentDirectoryW(PATH_MAX, path) &&  //
+         path[0] == '\\' &&                             //
+         path[1] == '\\' &&                             //
+         path[2] == 'w' &&                              //
+         path[3] == 's' &&                              //
+         path[4] == 'l';
 }
 
 // returns true if utf-8 path is a win32-style path that exists
@@ -239,12 +263,17 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   extern char os asm("__hostos");
   os = _HOSTWINDOWS;  // madness https://news.ycombinator.com/item?id=21019722
   kStartTsc = rdtsc();
+  if (!IsTiny() && IsWslChimera()) {
+    PrintError("error: APE is running on WIN32 inside WSL. You need to run: "
+               "sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop'\n");
+    return 77 << 8;  // exit(77)
+  }
   __umask = 077;
   __pid = __imp_GetCurrentProcessId();
   cmdline = MyCommandLine();
 #ifdef SYSDEBUG
   // sloppy flag-only check for early initialization
-  if (__strstr16(cmdline, u"--strace")) ++__strace;
+  if (StrStr(cmdline, u"--strace")) ++__strace;
 #endif
   if (_weaken(WinSockInit)) {
     _weaken(WinSockInit)();

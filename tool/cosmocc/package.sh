@@ -122,9 +122,9 @@ cp -f o/x86_64/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/"
 
 cp -f ape/ape-m1.c "$OUTDIR/bin/"
 cp -af tool/cosmocc/bin/* "$OUTDIR/bin/"
-cp -f o/x86_64/ape/ape.elf "$OUTDIR/bin/"
-cp -f o/x86_64/ape/ape.macho "$OUTDIR/bin/"
-cp -f o/aarch64/ape/ape.elf "$OUTDIR/bin/ape.aarch64"
+cp -f o/x86_64/ape/ape.elf "$OUTDIR/bin/ape-x86_64.elf"
+cp -f o/x86_64/ape/ape.macho "$OUTDIR/bin/ape-x86_64.macho"
+cp -f o/aarch64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
 for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj; do
   o//tool/build/apelink.com \
     -l o/x86_64/ape/ape.elf \

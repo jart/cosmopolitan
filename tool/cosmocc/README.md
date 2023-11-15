@@ -93,14 +93,30 @@ If you use zsh and have trouble running APE programs try `sh -c ./prog`
 or simply upgrade to zsh 5.9+ (since we patched it two years ago). The
 same is the case for Python `subprocess`, old versions of fish, etc.
 
+If you're on Linux, then `binfmt_misc` might try to run APE programs
+under WINE, or say "run-detectors: unable to find an interpreter". You
+can fix that by running these commands:
+
+```sh
+sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+sudo sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+```
+
 On Apple Silicon, `aarch64-unknown-cosmo-cc` produces ELF binaries. If
-you build a hello world program, then you need to say `ape ./hello` to
-run it. Note this isn't an issue for `cosmocc` which will wrap the ELF
-program in a shell script that'll compile your APE loader automatically
-as needed. This also isn't an issue if your login shell was built using
-Cosmopolitan Libc, e.g. <https://cosmo.zip/pub/cosmos/bin/bash> because
-Cosmo's `execve()` implementation will seamlessly launch ELF files via
-your APE Loader.
+you build a hello world program, then you need to say `ape ./hello`. If
+you don't have an `ape` command then run `cc -o ape bin/ape-m1.c` which
+should be moved to `/usr/local/bin/ape`. Your APE interpreter might
+already exist under a path like `$TMPDIR/.ape-1.9`. It's important to
+note this is only a gotcha for the cross compiler. Your `cosmocc`
+compiler wraps the actual ELF binaries with a shell script that'll
+extract and compile an APE loader automatically, as needed. This also
+isn't an issue if your login shell was built using Cosmopolitan Libc,
+e.g. <https://cosmo.zip/pub/cosmos/bin/bash>. That's because Cosmo's
+`execve()` implementation will automatically react to `ENOEXEC` from the
+kernel by re-launching the program under `/usr/local/bin/ape`. Lastly
+note that all other platforms that aren't Apple Arm64 use `/usr/bin/ape`
+as the hard-coded canonical interpreter path.
 
 On Windows, you need a shell in order to run the shell script wrappers
 from this toolchain. It's recommended that you download Cosmos binaries
