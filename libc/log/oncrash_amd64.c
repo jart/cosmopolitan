@@ -147,6 +147,9 @@ relegated static char *ShowGeneralRegisters(char *p, ucontext_t *ctx) {
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->swd : 0,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->mxcsr : 0);
   *p++ = '\n';
+  p = stpcpy(p, "TLS ");
+  p = HexCpy(p, (long)__get_tls(), 64);
+  *p++ = '\n';
   return p;
 }
 

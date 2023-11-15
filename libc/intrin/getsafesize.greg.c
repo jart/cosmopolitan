@@ -16,6 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/sections.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
@@ -33,6 +36,11 @@ privileged long __get_safe_size(long want, long extraspace) {
   if (!__tls_enabled) return want;
   struct PosixThread *pt;
   struct CosmoTib *tib = __get_tls_privileged();
+  if (!IsAutoFrame((uintptr_t)tib >> 16) &&
+      !(__executable_start <= (const unsigned char *)tib &&
+        (const unsigned char *)tib < _end)) {
+    return want;
+  }
   long bottom, sp = GetStackPointer();
   if ((char *)sp >= tib->tib_sigstack_addr &&
       (char *)sp <= tib->tib_sigstack_addr + tib->tib_sigstack_size) {

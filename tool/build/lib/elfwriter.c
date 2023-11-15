@@ -176,7 +176,7 @@ struct ElfWriter *elfwriter_open(const char *path, int mode, int arch) {
 #elif defined(__riscv)
     arch = EM_RISCV;
 #elif defined(__s390x__)
-    elf->ehdr->e_machine = EM_S390;
+    arch = EM_S390;
 #else
 #error "unsupported architecture"
 #endif
