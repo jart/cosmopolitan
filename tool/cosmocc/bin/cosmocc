@@ -478,8 +478,8 @@ fi
 
 set -- \
 "$BIN/apelink" \
-  -l "$BIN/ape.elf" \
-  -l "$BIN/ape.aarch64" \
+  -l "$BIN/ape-x86_64.elf" \
+  -l "$BIN/ape-aarch64.elf" \
   -M "$BIN/ape-m1.c" \
   -o "$OUTPUT" \
   $APELINKFLAGS \
