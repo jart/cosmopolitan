@@ -19,39 +19,54 @@
 #include "libc/calls/calls.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
-#include "libc/runtime/runtime.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/temp.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+
+#define RUN(fd, ofd, pfd, func) \
+  do {                          \
+    int i;                      \
+    for (i = 0; i < 2; i++) {   \
+      if (i == fd) {            \
+        ofd = dup(fd);          \
+        dup2(pfd[i], fd);       \
+      }                         \
+      close(pfd[i]);            \
+    }                           \
+    func;                       \
+    dup2(ofd, fd);              \
+    close(ofd);                 \
+  } while (0)
 
 /**
  * Displays wall of text in terminal with pagination.
  */
 void __paginate(int fd, const char *s) {
-  int tfd, pid;
-  char *args[3] = {0};
-  char tmppath[] = "/tmp/paginate.XXXXXX";
-  char progpath[PATH_MAX];
-  if (strcmp(nulltoempty(getenv("TERM")), "dumb") && isatty(0) && isatty(1) &&
-      ((args[0] = commandv("less", progpath, sizeof(progpath))) ||
-       (args[0] = commandv("more", progpath, sizeof(progpath))))) {
-    if ((tfd = mkstemp(tmppath)) != -1) {
-      write(tfd, s, strlen(s));
-      close(tfd);
-      args[1] = tmppath;
-      if ((pid = fork()) != -1) {
-        putenv("LC_ALL=C.UTF-8");
-        putenv("LESSCHARSET=utf-8");
-        putenv("LESS=-RS");
-        if (!pid) {
-          execv(args[0], args);
-          _Exit(127);
-        }
-        waitpid(pid, 0, 0);
-        unlink(tmppath);
-        return;
+  int ofd, pid, pfd[2];
+  char *prog;
+  if (isatty(STDIN_FILENO) && isatty(STDOUT_FILENO) &&
+      strcmp(nulltoempty(getenv("TERM")), "dumb") &&
+      ((prog = commandv("less", _gc(malloc(PATH_MAX)), PATH_MAX)) ||
+       (prog = commandv("more", _gc(malloc(PATH_MAX)), PATH_MAX))) &&
+      !pipe2(pfd, O_CLOEXEC)) {
+    if ((pid = fork()) != -1) {
+      putenv("LC_ALL=C.UTF-8");
+      putenv("LESSCHARSET=utf-8");
+      putenv("LESS=-RS");
+      if (!pid) {
+        RUN(STDIN_FILENO, ofd, pfd, execv(prog, (char *const[]){prog, NULL}));
+        _Exit(127);
+      } else {
+        RUN(STDOUT_FILENO, ofd, pfd, write(STDOUT_FILENO, s, strlen(s)));
+        waitpid(pid, NULL, 0);
       }
-      unlink(tmppath);
+      return;
     }
+    close(pfd[0]);
+    close(pfd[1]);
   }
   write(fd, s, strlen(s));
 }

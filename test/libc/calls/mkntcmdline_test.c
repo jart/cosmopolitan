@@ -64,39 +64,27 @@ TEST(mkntcmdline, justSlash) {
 }
 
 TEST(mkntcmdline, testUnicode) {
-  char *argv1[] = {
+  char *argv[] = {
       gc(strdup("(╯°□°)╯")),
       gc(strdup("要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非")),
       NULL,
   };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
   EXPECT_STREQ(u"(╯°□°)╯ \"要依法治国是赞美那些谁是公义的和惩罚恶人。 - 韩非\"",
                cmdline);
 }
 
-TEST(mkntcmdline, fixAsBestAsWeCanForNow1) {
-  char *argv1[] = {
+TEST(mkntcmdline, testPathlikeArgv0) {
+  char *argv[] = {
       "/C/WINDOWS/system32/cmd.exe",
-      "/C",
-      "more <\"/C/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
+      "/S",
+      "/D/c",
+      "less C:\\Users\\jart\\AppData\\Local\\Temp\\tmplquaa_d6",
       NULL,
   };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
-  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more <"
-               u"\"\"\"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\"\"\"\"",
-               cmdline);
-}
-
-TEST(mkntcmdline, fixAsBestAsWeCanForNow2) {
-  char *argv1[] = {
-      "/C/WINDOWS/system32/cmd.exe",
-      "/C",
-      "less /C/Users/jart/AppData/Local/Temp/tmplquaa_d6",
-      NULL,
-  };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
-  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"less "
-               u"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv));
+  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /S /D/c \"less "
+               u"C:\\Users\\jart\\AppData\\Local\\Temp\\tmplquaa_d6\"",
                cmdline);
 }
 

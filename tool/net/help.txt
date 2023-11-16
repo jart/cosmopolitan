@@ -260,7 +260,7 @@ SECURITY
   redbean provides hardened ASAN (Address Sanitizer) builds that
   proactively guard against any potential memory weaknesses that may be
   discovered, such as buffer overruns, use after free, etc. MDOE=asan is
-  recomended when serving on the public Internet.
+  recommended when serving on the public Internet.
 
   redbean also supports robust sandboxing on Linux Kernel 5.13+ and
   OpenBSD. The recommended way to harden your redbean is to call the

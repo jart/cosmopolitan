@@ -90,26 +90,13 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
         }
       }
       if (!x) break;
-      if (x == '/' || x == '\\') {
-        if (!i) {
-          // turn / into \ for first argv[i]
-          x = '\\';
-          // turn \c\... into c:\ for first argv[i]
-          if (k == 2 && IsAlpha(cmdline[1]) && cmdline[0] == '\\') {
-            cmdline[0] = cmdline[1];
-            cmdline[1] = ':';
-          }
-        } else {
-          // turn stuff like `less /c/...`
-          //            into `less c:/...`
-          // turn stuff like `more <"/c/..."`
-          //            into `more <"c:/..."`
-          if (k > 3 && IsAlpha(cmdline[k - 1]) &&
-              (cmdline[k - 2] == '/' || cmdline[k - 2] == '\\') &&
-              (cmdline[k - 3] == '"' || cmdline[k - 3] == ' ')) {
-            cmdline[k - 2] = cmdline[k - 1];
-            cmdline[k - 1] = ':';
-          }
+      if (!i && (x == '/' || x == '\\')) {
+        // turn / into \ for first argv[i]
+        x = '\\';
+        // turn \c\... into c:\ for first argv[i]
+        if (k == 2 && IsAlpha(cmdline[1]) && cmdline[0] == '\\') {
+          cmdline[0] = cmdline[1];
+          cmdline[1] = ':';
         }
       }
       if (x == '\\') {
