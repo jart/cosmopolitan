@@ -289,7 +289,6 @@ scall	sys_faccessat		0x1ce1391e921d210d	0x030	globl hidden
 scall	sys_unshare		0xfffffffffffff110	0x061	globl # no wrapper
 scall	sys_splice		0xfffffffffffff113	0x04c	globl hidden # Linux 2.6.17+ (c. 2007)
 scall	sys_tee			0xfffffffffffff114	0x04d	globl        # Linux 2.6.17+; no wrapper
-scall	sys_sync_file_range	0xfffffffffffff115	0x054	globl hidden # Linux 2.6.17+
 scall	sys_vmsplice		0xfffffffffffff116	0x04b	globl hidden
 scall	sys_migrate_pages	0xfffffffffffff100	0x0ee	globl        # no wrapper; numa numa yay
 scall	sys_move_pages		0xfffffffffffff117	0x0ef	globl        # no wrapper; NOTE: We view Red Hat versions as "epochs" for all distros.

@@ -108,7 +108,6 @@ i32 sys_sigaction(i32, const void *, void *, i64, i64);
 i32 sys_sigaltstack(const void *, void *);
 i32 sys_symlinkat(const char *, i32, const char *);
 i32 sys_sync(void);
-i32 sys_sync_file_range(i32, i64, i64, u32);
 i32 sys_syncfs(i32);
 i32 sys_syslog(i32, char *, i32);
 i32 sys_tgkill(i32, i32, i32);

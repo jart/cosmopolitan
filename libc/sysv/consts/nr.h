@@ -269,7 +269,6 @@ extern const int __NR_faccessat;
 extern const int __NR_unshare;
 extern const int __NR_splice;
 extern const int __NR_tee;
-extern const int __NR_sync_file_range;
 extern const int __NR_vmsplice;
 extern const int __NR_migrate_pages;
 extern const int __NR_move_pages;

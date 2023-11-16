@@ -29,6 +29,11 @@
 /**
  * Blocks until kernel flushes non-metadata buffers for fd to disk.
  *
+ * NOTE: For `IsXnu()` it's recommended that `fcntl(F_FULLFSYNC)` be
+ * favored instead of this function, and if that fails, the fallback
+ * path should call `fsync()` see the SQLite codebase. In the future
+ * Cosmopolitan might do this automatically.
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EROFS if `fd` is on a read-only filesystem e.g. /zip
@@ -37,8 +42,8 @@
  * @raise EBADF if `fd` isn't an open file
  * @raise EINTR if signal was delivered
  * @raise EIO if an i/o error happened
- * @see sync(), fsync(), sync_file_range()
  * @see __nosync to secretly disable
+ * @see sync(), fsync()
  * @cancelationpoint
  * @asyncsignalsafe
  */

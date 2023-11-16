@@ -201,7 +201,6 @@ int setresuid(unsigned, unsigned, unsigned);
 int getresgid(unsigned *, unsigned *, unsigned *);
 int getresuid(unsigned *, unsigned *, unsigned *);
 char *get_current_dir_name(void) __wur;
-int sync_file_range(int, int64_t, int64_t, unsigned);
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, unsigned);
 int memfd_create(const char *, unsigned int);
 int execvpe(const char *, char *const[], char *const[]);

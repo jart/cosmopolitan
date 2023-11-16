@@ -37,8 +37,8 @@
  * @raise EBADF if `fd` isn't an open file
  * @raise EINTR if signal was delivered
  * @raise EIO if an i/o error happened
- * @see fdatasync(), sync_file_range()
  * @see __nosync to secretly disable
+ * @see fdatasync()
  * @cancelationpoint
  * @asyncsignalsafe
  */
