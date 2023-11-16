@@ -198,6 +198,12 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 
 ## Platform Notes
 
+### Shells
+
+If you use zsh and have trouble running APE programs try `sh -c ./prog`
+or simply upgrade to zsh 5.9+ (since we patched it two years ago). The
+same is the case for Python `subprocess`, old versions of fish, etc.
+
 ### Linux
 
 Some Linux systems are configured to launch MZ executables under WINE.
