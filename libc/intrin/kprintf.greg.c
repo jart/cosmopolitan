@@ -204,7 +204,7 @@ privileged static bool kismapped(int x) {
   }
 }
 
-privileged bool kisdangerous(const void *p) {
+privileged bool32 kisdangerous(const void *p) {
   int frame;
   if (kisimagepointer(p)) return false;
   if (kiskernelpointer(p)) return false;

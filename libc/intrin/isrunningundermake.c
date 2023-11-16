@@ -21,12 +21,12 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 
-bool g_isrunningundermake;
+bool32 g_isrunningundermake;
 
 /**
  * Returns true if current process was spawned by GNU Make.
  */
-bool IsRunningUnderMake(void) {
+bool32 IsRunningUnderMake(void) {
   return g_isrunningundermake;
 }
 

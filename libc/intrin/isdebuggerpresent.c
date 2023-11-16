@@ -44,7 +44,7 @@ static textwindows bool IsBeingDebugged(void) {
  * Determines if gdb, strace, windbg, etc. is controlling process.
  * @return non-zero if attached, otherwise 0
  */
-int IsDebuggerPresent(bool force) {
+bool32 IsDebuggerPresent(bool32 force) {
   /* asan runtime depends on this function */
   ssize_t got;
   int e, fd, res;

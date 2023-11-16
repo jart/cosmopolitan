@@ -25,7 +25,7 @@
  * @param z ensures it starts with zero
  * @return pointer to nul byte
  */
-char *FormatOctal64(char p[hasatleast 24], uint64_t x, bool z) {
+char *FormatOctal64(char p[hasatleast 24], uint64_t x, bool32 z) {
   char t;
   size_t i, a, b;
   i = 0;

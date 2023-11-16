@@ -81,7 +81,7 @@ extern const char kNtSystemDirectory[];
 extern const char kNtWindowsDirectory[];
 extern size_t __virtualmax;
 extern size_t __stackmax;
-extern bool __isworker;
+extern bool32 __isworker;
 /* utilities */
 void _intsort(int *, size_t);
 void _longsort(long *, size_t);
@@ -111,14 +111,14 @@ void CheckForMemoryLeaks(void);
 void CheckForFileLeaks(void);
 void __enable_threads(void);
 void __oom_hook(size_t);
-bool _isheap(void *);
+bool32 _isheap(void *);
 /* code morphing */
 void __morph_begin(void);
 void __morph_end(void);
 /* portability */
 int NtGetVersion(void) pureconst;
-bool IsGenuineBlink(void);
-bool IsCygwin(void);
+bool32 IsGenuineBlink(void);
+bool32 IsCygwin(void);
 const char *GetCpuidOs(void);
 const char *GetCpuidEmulator(void);
 void GetCpuidBrand(char[13], uint32_t);

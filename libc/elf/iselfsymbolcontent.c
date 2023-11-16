@@ -19,7 +19,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 
-bool IsElfSymbolContent(const Elf64_Sym *sym) {
+bool32 IsElfSymbolContent(const Elf64_Sym *sym) {
   return sym->st_size > 0 && (ELF64_ST_TYPE(sym->st_info) == STT_FUNC ||
                               ELF64_ST_TYPE(sym->st_info) == STT_OBJECT);
 }

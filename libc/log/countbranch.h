@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_COUNTBRANCH_H_
 #define COSMOPOLITAN_LIBC_LOG_COUNTBRANCH_H_
 #include "libc/macros.internal.h"
+#include "libc/stdbool.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

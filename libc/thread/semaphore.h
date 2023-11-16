@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SEMAPHORE_H_
 #define COSMOPOLITAN_LIBC_CALLS_SEMAPHORE_H_
 #include "libc/calls/struct/timespec.h"
-#include "libc/stdbool.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -20,8 +19,8 @@ typedef struct {
       int64_t sem_dev;     /* named only */
       int64_t sem_ino;     /* named only */
       int sem_pid;         /* unnamed only */
-      bool sem_lazydelete; /* named only */
-      bool sem_pshared;
+      char sem_lazydelete; /* named only */
+      char sem_pshared;
       int *sem_kernel;
     };
     void *sem_space[32];

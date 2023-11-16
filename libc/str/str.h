@@ -178,11 +178,11 @@ uint64_t tpenc(uint32_t) pureconst;
 char *chomp(char *) libcesque;
 wchar_t *wchomp(wchar_t *) libcesque;
 uint64_t __fnv(const void *, size_t) strlenesque;
-bool startswith(const char *, const char *) strlenesque;
-bool startswithi(const char *, const char *) strlenesque;
-bool endswith(const char *, const char *) strlenesque;
-bool istext(const void *, size_t) libcesque;
-bool isutf8(const void *, size_t) libcesque;
+bool32 startswith(const char *, const char *) strlenesque;
+bool32 startswithi(const char *, const char *) strlenesque;
+bool32 endswith(const char *, const char *) strlenesque;
+bool32 istext(const void *, size_t) libcesque;
+bool32 isutf8(const void *, size_t) libcesque;
 char *strsignal_r(int, char[21]) returnsnonnull libcesque __wur;
 int strerror_wr(int, uint32_t, char *, size_t)
 dontthrow nocallback;
@@ -207,12 +207,12 @@ char16_t *strcat16(char16_t *, const char16_t *) memcpyesque;
 char16_t *strcpy16(char16_t *, const char16_t *) memcpyesque;
 char16_t *strncat16(char16_t *, const char16_t *, size_t) memcpyesque;
 char16_t *memset16(char16_t *, char16_t, size_t) memcpyesque;
-bool startswith16(const char16_t *, const char16_t *) strlenesque;
-bool endswith16(const char16_t *, const char16_t *) strlenesque;
+bool32 startswith16(const char16_t *, const char16_t *) strlenesque;
+bool32 endswith16(const char16_t *, const char16_t *) strlenesque;
 axdx_t tprecode8to16(char16_t *, size_t, const char *);
 axdx_t tprecode16to8(char *, size_t, const char16_t *);
-bool wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
-bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
+bool32 wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
+bool32 wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 char *__join_paths(char *, size_t, const char *, const char *) __wur;
 #endif /* _COSMO_SOURCE */
 

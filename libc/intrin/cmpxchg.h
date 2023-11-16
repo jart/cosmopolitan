@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86__)
 #define _cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                       \
   ({                                                                          \
-    bool DidIt;                                                               \
+    bool32 DidIt;                                                             \
     autotype(IFTHING) IfThing = (IFTHING);                                    \
     typeof(*IfThing) IsEqualToMe = (ISEQUALTOME);                             \
     typeof(*IfThing) ReplaceItWithMe = (REPLACEITWITHME);                     \

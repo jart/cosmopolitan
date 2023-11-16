@@ -24,7 +24,7 @@
  * @param s is a NUL-terminated string
  * @param suffix is also NUL-terminated
  */
-bool wcsendswith(const wchar_t *s, const wchar_t *suffix) {
+bool32 wcsendswith(const wchar_t *s, const wchar_t *suffix) {
   size_t n, m;
   n = wcslen(s);
   m = wcslen(suffix);

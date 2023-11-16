@@ -19,6 +19,7 @@
 #include "dsp/tty/tty.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/x/x.h"
 
 /* TODO(jart): DELETE */

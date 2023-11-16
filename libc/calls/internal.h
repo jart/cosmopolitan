@@ -5,6 +5,7 @@
 #include "libc/calls/struct/sigval.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
+#include "libc/stdbool.h"
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */
 
@@ -45,6 +46,12 @@ int sys_close_nt(int, int);
 int _park_norestart(uint32_t, uint64_t);
 int _park_restartable(uint32_t, uint64_t);
 int sys_openat_metal(int, const char *, int, unsigned);
+
+#ifdef __x86_64__
+bool __iswsl1(void);
+#else
+#define __iswsl1() false
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

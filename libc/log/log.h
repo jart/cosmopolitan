@@ -39,12 +39,11 @@ int __watch(void *, size_t);
 void __die(void) relegated wontreturn; /* print backtrace and abort() */
 void _meminfo(int);                    /* shows malloc statistics &c. */
 void _memsummary(int);                 /* light version of same thing */
-bool IsTerminalInarticulate(void) nosideeffect;
 const char *commandvenv(const char *, const char *);
 const char *GetAddr2linePath(void);
 const char *GetGdbPath(void);
-bool32 IsDebuggerPresent(bool);
-bool IsRunningUnderMake(void);
+bool32 IsDebuggerPresent(bool32);
+bool32 IsRunningUnderMake(void);
 char *GetSymbolByAddr(int64_t);
 void PrintGarbage(void);
 void PrintGarbageNumeric(FILE *);

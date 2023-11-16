@@ -9,8 +9,8 @@
 COSMOPOLITAN_C_START_
 
 struct CosmoFtrace {   /* 16 */
-  bool ft_once;        /*  0 */
-  bool ft_noreentry;   /*  1 */
+  char ft_once;        /*  0 */
+  char ft_noreentry;   /*  1 */
   int ft_skew;         /*  4 */
   int64_t ft_lastaddr; /*  8 */
 };
@@ -48,7 +48,7 @@ char *_mktls(struct CosmoTib **);
 void __bootstrap_tls(struct CosmoTib *, char *);
 
 #ifdef __x86_64__
-extern bool __tls_enabled;
+extern char __tls_enabled;
 #define __tls_enabled_set(x) __tls_enabled = x
 #elif defined(__aarch64__)
 #define __tls_enabled        true

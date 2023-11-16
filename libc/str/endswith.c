@@ -24,7 +24,7 @@
  * @param s is a NUL-terminated string
  * @param suffix is also NUL-terminated
  */
-bool endswith(const char *s, const char *suffix) {
+bool32 endswith(const char *s, const char *suffix) {
   size_t n, m;
   n = strlen(s);
   m = strlen(suffix);

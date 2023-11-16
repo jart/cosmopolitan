@@ -119,12 +119,6 @@ COSMOPOLITAN_C_START_
 
 extern const int __hostos;
 
-#ifdef __x86_64__
-bool __iswsl1(void);
-#else
-#define __iswsl1() false
-#endif
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COSMO_SOURCE */

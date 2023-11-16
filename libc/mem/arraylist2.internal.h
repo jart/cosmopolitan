@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ALG_ARRAYLIST2_H_
 #define COSMOPOLITAN_LIBC_ALG_ARRAYLIST2_H_
-#include "libc/mem/mem.h"
+#include "libc/mem/internal.h"
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

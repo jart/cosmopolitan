@@ -24,7 +24,7 @@
 int __threaded;
 
 #ifdef __x86_64__
-bool __tls_enabled;
+char __tls_enabled;
 #endif
 
 unsigned __tls_index;

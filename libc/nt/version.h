@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-bool IsAtLeastWindows10(void) pureconst;
+bool32 IsAtLeastWindows10(void) pureconst;
 bool32 GetVersionEx(struct NtOsVersionInfo *lpVersionInformation);
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86_64__)

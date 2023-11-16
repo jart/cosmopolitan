@@ -22,7 +22,7 @@
 /**
  * Checks if string starts with prefix, case insensitively.
  */
-bool startswithi(const char *s, const char *prefix) {
+bool32 startswithi(const char *s, const char *prefix) {
   for (;;) {
     if (!*prefix) return true;
     if (!*s) return false;

@@ -176,7 +176,7 @@ typedef enum {
 typedef struct {
   uint32_t Resolution;
   uint32_t Accuracy;
-  bool SetsToZero;
+  bool32 SetsToZero;
 } EFI_TIME_CAPABILITIES;
 
 typedef struct {
@@ -231,7 +231,7 @@ typedef struct {
   int32_t Attribute;
   int32_t CursorColumn;
   int32_t CursorRow;
-  bool CursorVisible;
+  bool32 CursorVisible;
 } EFI_SIMPLE_TEXT_OUTPUT_MODE;
 
 typedef enum {
@@ -359,10 +359,10 @@ typedef EFI_STATUS(EFIAPI *EFI_UPDATE_CAPSULE)(
 typedef EFI_STATUS(EFIAPI *EFI_QUERY_CAPSULE_CAPABILITIES)(
     EFI_CAPSULE_HEADER **CapsuleHeaderArray, uintptr_t CapsuleCount,
     uint64_t *out_MaximumCapsuleSize, EFI_RESET_TYPE *out_ResetType);
-typedef EFI_STATUS(EFIAPI *EFI_GET_WAKEUP_TIME)(bool *out_Enabled,
-                                                bool *out_Pending,
+typedef EFI_STATUS(EFIAPI *EFI_GET_WAKEUP_TIME)(bool32 *out_Enabled,
+                                                bool32 *out_Pending,
                                                 EFI_TIME *out_Time);
-typedef EFI_STATUS(EFIAPI *EFI_SET_WAKEUP_TIME)(bool Enable,
+typedef EFI_STATUS(EFIAPI *EFI_SET_WAKEUP_TIME)(bool32 Enable,
                                                 EFI_TIME *opt_Time);
 typedef EFI_STATUS(EFIAPI *EFI_SET_WATCHDOG_TIMER)(uintptr_t Timeout,
                                                    uint64_t WatchdogCode,
@@ -390,12 +390,12 @@ typedef EFI_STATUS(EFIAPI *EFI_CONVERT_POINTER)(uintptr_t DebugDisposition,
                                                 void **inout_Address);
 
 typedef EFI_STATUS(EFIAPI *EFI_INPUT_RESET)(
-    EFI_SIMPLE_TEXT_INPUT_PROTOCOL *This, bool ExtendedVerification);
+    EFI_SIMPLE_TEXT_INPUT_PROTOCOL *This, bool32 ExtendedVerification);
 typedef EFI_STATUS(EFIAPI *EFI_INPUT_READ_KEY)(
     EFI_SIMPLE_TEXT_INPUT_PROTOCOL *This, EFI_INPUT_KEY *out_Key);
 
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_RESET)(
-    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool ExtendedVerification);
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool32 ExtendedVerification);
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_STRING)(
     EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, char16_t *String);
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_TEST_STRING)(
@@ -412,7 +412,7 @@ typedef EFI_STATUS(EFIAPI *EFI_TEXT_CLEAR_SCREEN)(
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_SET_CURSOR_POSITION)(
     EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, uint64_t Column, uint64_t Row);
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_ENABLE_CURSOR)(
-    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool Visible);
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool32 Visible);
 
 typedef EFI_STATUS(EFIAPI *EFI_GRAPHICS_OUTPUT_PROTOCOL_QUERY_MODE)(
     EFI_GRAPHICS_OUTPUT_PROTOCOL *This, uint32_t ModeNumber,
@@ -430,7 +430,7 @@ typedef EFI_STATUS(EFIAPI *EFI_HANDLE_PROTOCOL)(EFI_HANDLE Handle,
                                                 EFI_GUID *Protocol,
                                                 void *out_Interface);
 
-typedef EFI_STATUS(EFIAPI *EFI_IMAGE_LOAD)(bool BootPolicy,
+typedef EFI_STATUS(EFIAPI *EFI_IMAGE_LOAD)(bool32 BootPolicy,
                                            EFI_HANDLE ParentImageHandle,
                                            EFI_DEVICE_PATH_PROTOCOL *DevicePath,
                                            void *opt_SourceBuffer,

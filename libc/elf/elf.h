@@ -12,8 +12,8 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 /* clang-format off */
 
-bool IsElfSymbolContent(const Elf64_Sym *);
-bool IsElf64Binary(const Elf64_Ehdr *, size_t);
+bool32 IsElfSymbolContent(const Elf64_Sym *);
+bool32 IsElf64Binary(const Elf64_Ehdr *, size_t);
 char *GetElfStringTable(const Elf64_Ehdr *, size_t, const char *);
 Elf64_Sym *GetElfSymbols(const Elf64_Ehdr *, size_t, int, Elf64_Xword *);
 Elf64_Shdr *GetElfSymbolTable(const Elf64_Ehdr *, size_t, int, Elf64_Xword *);

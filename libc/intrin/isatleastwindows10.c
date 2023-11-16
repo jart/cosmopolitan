@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nt/version.h"
 
-bool(IsAtLeastWindows10)(void) {
+bool32(IsAtLeastWindows10)(void) {
 #ifdef __x86_64__
   return IsAtLeastWindows10();
 #else

@@ -35,8 +35,8 @@ COSMOPOLITAN_C_START_
  */
 #define rdpid()                                                           \
   ({                                                                      \
-    bool Ok;                                                              \
     long Msr;                                                             \
+    bool32 Ok;                                                            \
     Ok = false;                                                           \
     if (X86_HAVE(RDPID)) {                                                \
       asm volatile("rdpid\t%0" : "=r"(Msr) : /* no inputs */ : "memory"); \

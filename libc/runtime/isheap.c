@@ -29,7 +29,7 @@
  * @assume stack memory isn't stored beneath %rsp (-mno-red-zone)
  * @deprecated
  */
-optimizesize bool _isheap(void *p) {
+optimizesize bool32 _isheap(void *p) {
   intptr_t x, y;
   x = kAutomapStart;
   y = x + kAutomapSize;

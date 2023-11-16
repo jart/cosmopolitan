@@ -20,6 +20,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-bool IsGenuineBlink(void) {
+bool32 IsGenuineBlink(void) {
   return X86_HAVE(HYPERVISOR) && !strcmp(GetCpuidEmulator(), "GenuineBlink");
 }

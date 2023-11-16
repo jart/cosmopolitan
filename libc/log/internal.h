@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 
 extern bool __nocolor;
-extern bool g_isrunningundermake;
+extern bool32 g_isrunningundermake;
 
 void __start_fatal(const char *, int);
 void __restore_tty(void);

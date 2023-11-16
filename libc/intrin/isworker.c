@@ -25,4 +25,4 @@
  * server is a good idea since it'll ask the C runtime to not pull
  * magical stunts like attaching GDB to the process on crash.
  */
-bool __isworker;
+bool32 __isworker;

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ALG_CRITBIT0_H_
 #define COSMOPOLITAN_LIBC_ALG_CRITBIT0_H_
+#include "libc/stdbool.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗

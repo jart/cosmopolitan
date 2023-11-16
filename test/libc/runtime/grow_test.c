@@ -19,6 +19,7 @@
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/version.h"
 #include "libc/runtime/runtime.h"

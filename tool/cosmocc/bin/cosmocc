@@ -242,9 +242,6 @@ CPPFLAGS_X86_64="$CPPFLAGS -mno-red-zone"
 CFLAGS_X86_64="$CFLAGS -mno-tls-direct-seg-refs"
 LDFLAGS_X86_64="$LDFLAGS -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$BIN/../x86_64-linux-cosmo/lib/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
 LDLIBS_X86_64="-lcosmo"
-if [ $MCOSMO -eq 1 ]; then
-  CPPFLAGS_X86_64="${CPPFLAGS_X86_64} -D_COSMO_SOURCE"
-fi
 
 CRT_AARCH64="$BIN/../aarch64-linux-cosmo/lib/crt.o"
 CPPFLAGS_AARCH64="$CPPFLAGS"
@@ -260,6 +257,11 @@ fi
 if [ x"$PROG" != x"${PROG%++}" ]; then
   LDLIBS_X86_64="-lcxx ${LDLIBS_X86_64}"
   LDLIBS_AARCH64="-lcxx ${LDLIBS_AARCH64}"
+fi
+
+if [ $MCOSMO -eq 1 ]; then
+  CPPFLAGS_X86_64="${CPPFLAGS_X86_64} -D_COSMO_SOURCE"
+  CPPFLAGS_AARCH64="${CPPFLAGS_AARCH64} -D_COSMO_SOURCE"
 fi
 
 log_original

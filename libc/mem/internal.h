@@ -10,6 +10,7 @@ struct CritbitNode {
 };
 
 int __putenv(char *, bool);
+bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

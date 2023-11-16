@@ -19,6 +19,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-bool IsCygwin(void) {
+bool32 IsCygwin(void) {
   return IsGenuineBlink() && !strcmp(GetCpuidOs(), "Cygwin");
 }

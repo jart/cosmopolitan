@@ -49,7 +49,7 @@ static const char kUtf8Dispatch[] = {
  *
  * @param size if -1 implies strlen
  */
-bool isutf8(const void *data, size_t size) {
+bool32 isutf8(const void *data, size_t size) {
   long c;
   const char *p, *e;
   if (size == -1) size = data ? strlen(data) : 0;
