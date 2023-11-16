@@ -15,16 +15,9 @@ LIBC_DLOPEN_A_SRCS =							\
 	$(LIBC_DLOPEN_A_SRCS_S)						\
 	$(LIBC_DLOPEN_A_SRCS_C)
 
-LIBC_DLOPEN_DSOS =							\
-	o/$(MODE)/libc/dlopen/.dlopen.aarch64.glibc.elf.zip.o		\
-	o/$(MODE)/libc/dlopen/.dlopen.x86_64.freebsd.elf.zip.o		\
-	o/$(MODE)/libc/dlopen/.dlopen.x86_64.glibc.elf.zip.o		\
-	o/$(MODE)/libc/dlopen/.dlopen.x86_64.musl.elf.zip.o
-
 LIBC_DLOPEN_A_OBJS =							\
 	$(LIBC_DLOPEN_A_SRCS_S:%.S=o/$(MODE)/%.o)			\
-	$(LIBC_DLOPEN_A_SRCS_C:%.c=o/$(MODE)/%.o)			\
-	$(LIBC_DLOPEN_DSOS)
+	$(LIBC_DLOPEN_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 LIBC_DLOPEN_A_CHECKS =							\
 	$(LIBC_DLOPEN_A).pkg						\
@@ -36,6 +29,7 @@ LIBC_DLOPEN_A_DIRECTDEPS =						\
 	LIBC_INTRIN							\
 	LIBC_NEXGEN32E							\
 	LIBC_NT_KERNEL32						\
+	LIBC_PROC							\
 	LIBC_RUNTIME							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
@@ -57,8 +51,6 @@ $(LIBC_DLOPEN_A_OBJS): private						\
 		COPTS +=						\
 			-Wframe-larger-than=4096			\
 			-Walloca-larger-than=4096
-
-$(LIBC_DLOPEN_DSOS): private ZIPOBJ_FLAGS += -B
 
 LIBC_DLOPEN_LIBS = $(foreach x,$(LIBC_DLOPEN_ARTIFACTS),$($(x)))
 LIBC_DLOPEN_SRCS = $(foreach x,$(LIBC_DLOPEN_ARTIFACTS),$($(x)_SRCS))

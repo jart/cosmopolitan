@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/cosmo.h"
@@ -28,31 +28,30 @@
 #include "libc/dlopen/dlfcn.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
+#include "libc/elf/scalar.h"
 #include "libc/elf/struct/auxv.h"
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
+#include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/temp.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
@@ -69,17 +68,43 @@
  * @kudos jacereda for figuring out how to do this
  */
 
-__static_yoink(".dlopen.x86_64.musl.elf");
-__static_yoink(".dlopen.x86_64.glibc.elf");
-__static_yoink(".dlopen.x86_64.freebsd.elf");
-__static_yoink(".dlopen.aarch64.glibc.elf");
-
-#define PAGE_SIZE 4096
-
 #define XNU_RTLD_LAZY   1
 #define XNU_RTLD_NOW    2
 #define XNU_RTLD_LOCAL  4
 #define XNU_RTLD_GLOBAL 8
+
+#define AMD_REXB    0x41
+#define AMD_REXW    0x48
+#define AMD_MOV_IMM 0xb8
+
+#define ARM_REG_OFF 0
+#define ARM_IMM_OFF 5
+#define ARM_IDX_OFF 21
+#define ARM_MOV_NEX 0xf2800000u
+
+#define HELPER \
+  "#include <dlfcn.h>\n\
+#include <stdio.h>\n\
+#include <stdlib.h>\n\
+int main(int argc, char *argv[]) {\n\
+  char *ep;\n\
+  long addr;\n\
+  if (argc != 2) {\n\
+    fprintf(stderr, \"%s: not intended to be run directly\\n\", argv[0]);\n\
+    return 1;\n\
+  }\n\
+  addr = strtol(argv[1], &ep, 10);\n\
+  if (*ep) {\n\
+    fprintf(stderr, \"%s: invalid function address\\n\", argv[0]);\n\
+    return 2;\n\
+  }\n\
+  return ((int (*)(void *))addr)((void *[]){\n\
+      dlopen,\n\
+      dlsym,\n\
+      dlclose,\n\
+      dlerror,\n\
+  });\n\
+}\n"
 
 struct Loaded {
   char *base;
@@ -103,25 +128,51 @@ long __sysv2nt14();
 
 static _Thread_local char dlerror_buf[128];
 
+static const char *get_tmp_dir(void) {
+  const char *tmpdir;
+  if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir) {
+    if (!(tmpdir = getenv("HOME")) || !*tmpdir) {
+      tmpdir = ".";
+    }
+  }
+  return tmpdir;
+}
+
+static int is_file_newer_than(const char *path, const char *other) {
+  struct stat st1, st2;
+  if (stat(path, &st1)) {
+    return -1;
+  }
+  if (stat(other, &st2)) {
+    if (errno == ENOENT) {
+      return true;
+    } else {
+      return -1;
+    }
+  }
+  return timespec_cmp(st1.st_mtim, st2.st_mtim) > 0;
+}
+
 // on system five we sadly need this brutal trampoline
 // todo(jart): add tls trampoline to sigaction() handlers
 // todo(jart): morph binary to get tls from host c library
 static long foreign_tramp(long a, long b, long c, long d, long e,
                           long func(long, long, long, long, long)) {
   long res;
-  sigset_t mask;
-  sigset_t block = -1;
-  struct CosmoTib *tib;
-  sys_sigprocmask(SIG_SETMASK, &block, &mask);
-  tib = __get_tls();
+  BLOCK_SIGNALS;
+#ifdef __x86_64__
+  struct CosmoTib *tib = __get_tls();
   __set_tls(foreign.tib);
+#endif
   res = func(a, b, c, d, e);
+#ifdef __x86_64__
   __set_tls(tib);
-  sys_sigprocmask(SIG_SETMASK, &mask, 0);
+#endif
+  ALLOW_SIGNALS;
   return res;
 }
 
-static unsigned get_elf_prot(unsigned x) {
+static unsigned elf2prot(unsigned x) {
   unsigned r = 0;
   if (x & PF_R) r += PROT_READ;
   if (x & PF_W) r += PROT_WRITE;
@@ -145,53 +196,52 @@ static int get_host_elf_machine(void) {
 #endif
 }
 
-static char *elf_map(int fd, Elf64_Ehdr *ehdr, Elf64_Phdr *phdr) {
-  uintptr_t maxva = 0;
-  uintptr_t minva = -1;
+static char *elf_map(int fd, Elf64_Ehdr *ehdr, Elf64_Phdr *phdr, long pagesz,
+                     char *interp_path, size_t interp_size) {
+  Elf64_Addr maxva = 0;
+  Elf64_Addr minva = -1;
   for (Elf64_Phdr *p = phdr; p < &phdr[ehdr->e_phnum]; p++) {
     if (p->p_type != PT_LOAD) {
       continue;
     }
     if (p->p_vaddr < minva) {
-      minva = p->p_vaddr;
+      minva = p->p_vaddr & -pagesz;
     }
     if (p->p_vaddr + p->p_memsz > maxva) {
       maxva = p->p_vaddr + p->p_memsz;
     }
   }
-  minva = minva & -PAGE_SIZE;
   uint8_t *base =
       __sys_mmap(0, maxva - minva, PROT_NONE,
                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0, 0);
   if (base == MAP_FAILED) {
     return MAP_FAILED;
   }
-  __sys_munmap(base, maxva - minva);
-  for (Elf64_Phdr *p = phdr; p < &phdr[ehdr->e_phnum]; p++) {
+  for (Elf64_Phdr *p = phdr; p < phdr + ehdr->e_phnum; p++) {
     if (p->p_type != PT_LOAD) {
+      if (p->p_type == PT_INTERP && interp_size &&
+          (p->p_filesz >= interp_size - 1 ||
+           pread(fd, interp_path, p->p_filesz, p->p_offset) != p->p_filesz)) {
+        return MAP_FAILED;
+      }
       continue;
     }
-    uintptr_t skew = p->p_vaddr & (PAGE_SIZE - 1);
-    uint8_t *start = base + p->p_vaddr - skew;
-    size_t mapsize = skew + p->p_memsz;
-    uint8_t *m = __sys_mmap(start, mapsize, PROT_READ | PROT_WRITE,
-                            MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
-    if (m == MAP_FAILED) {
+    int prot = elf2prot(p->p_flags);
+    Elf64_Addr skew = p->p_vaddr & (pagesz - 1);
+    Elf64_Off off = p->p_offset - skew;
+    if (__sys_mmap(base + p->p_vaddr - skew, skew + p->p_filesz, prot,
+                   MAP_FIXED | MAP_PRIVATE, fd, off, off) == MAP_FAILED) {
       return MAP_FAILED;
     }
-    ssize_t rr = pread(fd, m + skew, p->p_filesz, p->p_offset);
-    if (rr != (ssize_t)p->p_filesz) {
-      return MAP_FAILED;
-    }
-    if (sys_mprotect(m, mapsize, get_elf_prot(p->p_flags))) {
+    Elf64_Addr fend = (p->p_vaddr + p->p_filesz + (pagesz - 1)) & -pagesz;
+    Elf64_Addr mend = p->p_vaddr + p->p_memsz;
+    if (mend > fend && __sys_mmap(base + fend, mend - fend, prot,
+                                  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1,
+                                  0, 0) == MAP_FAILED) {
       return MAP_FAILED;
     }
   }
   return (void *)base;
-}
-
-static int elf_open(const char *file) {
-  return open(file, O_RDONLY | O_CLOEXEC);
 }
 
 static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
@@ -212,45 +262,22 @@ static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
   return true;
 }
 
-static bool elf_load(struct Loaded *l, const char *file) {
+static bool elf_load(struct Loaded *l, const char *file, long pagesz,
+                     char *interp_path, size_t interp_size) {
   int fd;
-  if ((fd = elf_open(file)) == -1) {
+  if ((fd = open(file, O_RDONLY | O_CLOEXEC)) == -1) {
     return false;
   }
   if (!elf_slurp(l, fd, file)) {
     close(fd);
     return false;
   }
-  if ((l->base = elf_map(fd, &l->eh, l->ph)) == MAP_FAILED) {
+  if ((l->base = elf_map(fd, &l->eh, l->ph, pagesz, interp_path,
+                         interp_size)) == MAP_FAILED) {
     close(fd);
     return false;
   }
   l->entry += (uintptr_t)l->base;
-  close(fd);
-  return true;
-}
-
-static bool elf_interp(char *buf, size_t bsz, const char *file) {
-  int fd;
-  if ((fd = elf_open(file)) == -1) {
-    return false;
-  }
-  struct Loaded l;
-  if (!elf_slurp(&l, fd, file)) {
-    close(fd);
-    return false;
-  }
-  for (unsigned i = 0; i < l.eh.e_phnum; i++) {
-    if (l.ph[i].p_type == PT_INTERP) {
-      if (l.ph[i].p_filesz >= bsz ||
-          pread(fd, buf, l.ph[i].p_filesz, l.ph[i].p_offset) !=
-              l.ph[i].p_filesz) {
-        close(fd);
-        return false;
-      }
-      break;
-    }
-  }
   close(fd);
   return true;
 }
@@ -261,13 +288,31 @@ static long *push_strs(long *sp, char **list, int count) {
   return sp;
 }
 
-static void elf_exec(const char *file, const char *iinterp, int argc,
-                     char **argv, char **envp) {
-  struct Loaded prog;
-  if (!elf_load(&prog, file)) return;
+static wontreturn dontinstrument void foreign_helper(void **p) {
+  foreign.dlopen = p[0];
+  foreign.dlsym = p[1];
+  foreign.dlclose = p[2];
+  foreign.dlerror = p[3];
+  longjmp(foreign.jb, 1);
+}
 
+static dontinline void elf_exec(const char *file, char **envp) {
+
+  // get microprocessor page size
+  long pagesz = getauxval(AT_PAGESZ);
+
+  // load executable
+  struct Loaded prog;
+  char interp_path[256] = {0};
+  if (!elf_load(&prog, file, pagesz, interp_path, sizeof(interp_path))) {
+    return;
+  }
+
+  // load platform libc
   struct Loaded interp;
-  if (!elf_load(&interp, iinterp)) return;
+  if (!elf_load(&interp, interp_path, pagesz, 0, 0)) {
+    return;
+  }
 
   // count environment variables
   int envc = 0;
@@ -283,14 +328,18 @@ static void elf_exec(const char *file, const char *iinterp, int argc,
   // we need just enough stack memory beneath it for initialization
   char *map;
   size_t stksize = 65536;
-  size_t stkalign = sizeof(char *) * 2;
-  size_t argsize = (argc + 1 + envc + 1 + auxc * 2 + 1) * sizeof(char *);
-  size_t mapsize = (stksize + argsize + (PAGE_SIZE - 1)) & -PAGE_SIZE;
+  size_t stkalign = 8 * 2;
+  size_t argsize = (1 + 2 + 1 + envc + 1 + auxc * 2 + 1 + 3) * 8;
+  size_t mapsize = (stksize + argsize + (pagesz - 1)) & -pagesz;
   size_t skew = (mapsize - argsize) & (stkalign - 1);
   map = __sys_mmap(0, mapsize, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
   if (map == MAP_FAILED) return;
   long *sp = (long *)(map + mapsize - skew);
+
+  // push argument string
+  char *address_argument = (char *)(sp -= 3);
+  FormatInt64(address_argument, (uintptr_t)foreign_helper);
 
   // push auxiliary values
   *--sp = 0;
@@ -300,18 +349,26 @@ static void elf_exec(const char *file, const char *iinterp, int argc,
     if (key == AT_PHDR) val = (long)(prog.base + prog.eh.e_phoff);
     if (key == AT_PHENT) val = prog.eh.e_phentsize;
     if (key == AT_PHNUM) val = prog.eh.e_phnum;
-    if (key == AT_PAGESZ) val = PAGE_SIZE;
+    if (key == AT_PAGESZ) val = pagesz;
     if (key == AT_BASE) val = (long)interp.base;
     if (key == AT_FLAGS) val = 0;
     if (key == AT_ENTRY) val = (long)prog.entry;
-    if (key == AT_EXECFN) val = (long)argv[0];
+    if (key == AT_EXECFN) val = (long)program_invocation_name;
     *--sp = val;
     *--sp = key;
   }
 
-  // push main() arguments
+  // push environment variable pointers
   sp = push_strs(sp, envp, envc);
-  sp = push_strs(sp, argv, argc);
+  envp = (char **)sp;
+
+  // push argument pointers
+  *--sp = 0;
+  *--sp = (long)address_argument;
+  *--sp = (long)program_invocation_name;
+  char **argv = (char **)sp;
+  (void)argv;
+  int argc = 2;
   *--sp = argc;
 
   STRACE("running dlopen importer %p...", interp.entry);
@@ -391,26 +448,74 @@ static void *foreign_alloc(size_t n) {
   return res;
 }
 
+static uint8_t *movimm(uint8_t p[static 16], int reg, uint64_t val) {
+#ifdef __x86_64__
+  int rex;
+  rex = AMD_REXW;
+  if (reg & 8) {
+    rex |= AMD_REXB;
+  }
+  *p++ = rex;
+  *p++ = AMD_MOV_IMM | (reg & 7);
+  p = WRITE64LE(p, val);
+#elif defined(__aarch64__)
+  // ARM immediate moves are encoded as:
+  //
+  //     ┌64-bit
+  //     │
+  //     │┌{sign,???,zero,non}-extending
+  //     ││
+  //     ││       ┌short[4] index
+  //     ││       │
+  //     ││  MOV  │    immediate   register
+  //     │├┐┌─┴──┐├┐┌──────┴───────┐┌─┴─┐
+  //   0bmxx100101iivvvvvvvvvvvvvvvvrrrrr
+  //
+  // Which allows 16 bits to be loaded into a register at a time, with
+  // tricks for clearing other parts of the register. For example, the
+  // sign-extending mode will set the higher order shorts to all ones,
+  // and it expects the immediate to be encoded using ones' complement
+  uint32_t op;
+  for (unsigned i = 0; i < 4; ++i) {
+    op = ARM_MOV_NEX;
+    op |= i << ARM_IDX_OFF;
+    op |= reg << ARM_REG_OFF;
+    op |= (val & 0xffff) << ARM_IMM_OFF;
+    val >>= 16;
+    *(uint32_t *)p = op;
+    p += sizeof(uint32_t);
+  }
+#else
+#error "unsupported architecture"
+#endif
+  return p;
+}
+
 static void *foreign_thunk_sysv(void *func) {
-  unsigned char *code;
-  if (!(code = foreign_alloc(23))) return 0;
+  uint8_t *code, *p;
+#ifdef __x86_64__
   // movabs $func,%r9
-  code[0] = 0x49;
-  code[1] = 0xb9;
-  WRITE64LE(code + 2, (uintptr_t)func);
-  // movabs $tramp,%r10
-  code[10] = 0x49;
-  code[11] = 0xba;
-  WRITE64LE(code + 12, (uintptr_t)foreign_tramp);
+  // movabs $foreign_tramp,%r10
   // jmp *%r10
-  code[20] = 0x41;
-  code[21] = 0xff;
-  code[22] = 0xe2;
+  if (!(p = code = foreign_alloc(23))) return 0;  // 10 + 10 + 3 = 23
+  p = movimm(p, 9, (uintptr_t)func);
+  p = movimm(p, 10, (uintptr_t)foreign_tramp);
+  *p++ = 0x41;
+  *p++ = 0xff;
+  *p++ = 0xe2;
+#elif defined(__aarch64__)
+  if (!(p = code = foreign_alloc(36))) return 0;  // 16 + 16 + 4 = 36
+  p = movimm(p, 5, (uintptr_t)func);
+  p = movimm(p, 10, (uintptr_t)foreign_tramp);
+  *(uint32_t *)p = 0xd63f0140;  // blr x10
+#else
+#error "unsupported architecture"
+#endif
   return code;
 }
 
 static void *foreign_thunk_nt(void *func) {
-  unsigned char *code;
+  uint8_t *code;
   if (!(code = foreign_alloc(27))) return 0;
   // push %rbp
   code[0] = 0x55;
@@ -433,52 +538,117 @@ static void *foreign_thunk_nt(void *func) {
   return code;
 }
 
-static wontreturn dontinstrument void foreign_helper(void **p) {
-  foreign.dlopen = foreign_thunk_sysv(p[0]);
-  foreign.dlsym = foreign_thunk_sysv(p[1]);
-  foreign.dlclose = foreign_thunk_sysv(p[2]);
-  foreign.dlerror = foreign_thunk_sysv(p[3]);
-  longjmp(foreign.jb, 1);
+static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
+
+  // construct path
+  strlcpy(exe, get_tmp_dir(), PATH_MAX);
+  strlcat(exe, "/.cosmo/", PATH_MAX);
+  if (mkdir(exe, 0755) && errno != EEXIST) {
+    return false;
+  }
+  strlcat(exe, "dlopen-helper", PATH_MAX);
+
+  // skip build if helper exists and this program is older
+  switch (is_file_newer_than(GetProgramExecutableName(), exe)) {
+    case -1:
+      return false;
+    case false:
+      return true;
+    case true:
+      break;
+    default:
+      __builtin_unreachable();
+  }
+
+  // skip build if helper has same source code
+  int fd;
+  char src[PATH_MAX];
+  char sauce[sizeof(HELPER)];
+  strlcpy(src, exe, PATH_MAX);
+  strlcat(src, ".c", PATH_MAX);
+  if ((fd = open(src, O_RDONLY | O_CLOEXEC)) != -1) {
+    ssize_t got = pread(fd, sauce, sizeof(HELPER), 0);
+    close(fd);
+    if (got == sizeof(HELPER) - 1 &&
+        !memcmp(sauce, HELPER, sizeof(HELPER) - 1)) {
+      return true;
+    }
+  }
+
+  // create source file
+  char tmp[PATH_MAX];
+  strlcpy(tmp, src, PATH_MAX);
+  strlcat(tmp, ".XXXXXX", PATH_MAX);
+  if ((fd = mkostemp(tmp, O_CLOEXEC)) == -1) {
+    return false;
+  }
+  if (write(fd, HELPER, sizeof(HELPER) - 1) != sizeof(HELPER) - 1) {
+    close(fd);
+    unlink(tmp);
+    return false;
+  }
+  if (close(fd)) {
+    unlink(tmp);
+    return false;
+  }
+  if (rename(tmp, src)) {
+    unlink(tmp);
+    return false;
+  }
+
+  // create executable
+  strlcpy(tmp, exe, PATH_MAX);
+  strlcat(tmp, ".XXXXXX", PATH_MAX);
+  if ((fd = mkostemp(tmp, O_CLOEXEC)) == -1) {
+    return false;
+  }
+  int pid, ws;
+  char *args[] = {"cc", "-pie", "-fPIC", src, "-o", tmp, "-ldl", 0};
+  errno_t err = posix_spawnp(&pid, args[0], NULL, NULL, args, environ);
+  if (err) {
+    unlink(tmp);
+    errno = err;
+    return false;
+  }
+  while (waitpid(pid, &ws, 0) == -1) {
+    if (errno != EINTR) {
+      unlink(tmp);
+      return false;
+    }
+  }
+  if (ws) {
+    unlink(tmp);
+    return false;
+  }
+  if (rename(tmp, exe)) {
+    unlink(tmp);
+    return false;
+  }
+  return true;
 }
 
 static bool foreign_setup(void) {
-  char interp[256] = {0};
-  if (!elf_interp(interp, sizeof(interp), "/usr/bin/env")) {
+  // geth path of helper executable
+  char exe[PATH_MAX];
+  if (!foreign_compile(exe)) {
     return false;
   }
-  const char *dlopen_helper = 0;
+  // load helper executable into address space
 #ifdef __x86_64__
-  if (IsFreebsd()) {
-    dlopen_helper = "/zip/.dlopen.x86_64.freebsd.elf";
-  } else if (IsLinux()) {
-    if (fileexists("/lib64/ld-linux-x86-64.so.2")) {
-      dlopen_helper = "/zip/.dlopen.x86_64.glibc.elf";
-    } else {
-      dlopen_helper = "/zip/.dlopen.x86_64.musl.elf";
-    }
-  }
-#elif defined(__aarch64__)
-  if (0 && IsLinux()) {  // TODO(jart): implement me
-    dlopen_helper = "/zip/.dlopen.aarch64.glibc.elf";
-  }
-#endif
-  if (!dlopen_helper) {
-    enosys();
-    return false;  // this platform isn't supported yet
-  }
   struct CosmoTib *cosmo_tib = __get_tls();
+#endif
   if (!setjmp(foreign.jb)) {
-    elf_exec(dlopen_helper, interp, 2,
-             (char *[]){
-                 program_invocation_name,
-                 (char *)foreign_helper,
-                 NULL,
-             },
-             environ);
+    elf_exec(exe, environ);
     return false;  // if elf_exec() returns, it failed
   }
+#ifdef __x86_64__
   foreign.tib = __get_tls();
   __set_tls(cosmo_tib);
+#endif
+  foreign.dlopen = foreign_thunk_sysv(foreign.dlopen);
+  foreign.dlsym = foreign_thunk_sysv(foreign.dlsym);
+  foreign.dlclose = foreign_thunk_sysv(foreign.dlclose);
+  foreign.dlerror = foreign_thunk_sysv(foreign.dlerror);
   foreign.is_supported = true;
   return true;
 }
@@ -615,6 +785,7 @@ static void *dlopen_silicon(const char *path, int mode) {
  */
 void *cosmo_dlopen(const char *path, int mode) {
   void *res;
+  BLOCK_SIGNALS;
   if (IsWindows()) {
     res = dlopen_nt(path, mode);
   } else if (IsXnuSilicon()) {
@@ -628,6 +799,7 @@ void *cosmo_dlopen(const char *path, int mode) {
   } else {
     res = 0;
   }
+  ALLOW_SIGNALS;
   STRACE("dlopen(%#s, %d) → %p% m", path, mode, res);
   return res;
 }
@@ -646,7 +818,9 @@ void *cosmo_dlsym(void *handle, const char *name) {
   if (IsWindows()) {
     func = dlsym_nt(handle, name);
   } else if (IsXnuSilicon()) {
-    func = __syslib->__dlsym(handle, name);
+    if ((func = __syslib->__dlsym(handle, name))) {
+      func = foreign_thunk_sysv(func);
+    }
   } else if (IsXnu()) {
     dlerror_set("dlopen() isn't supported on x86-64 MacOS");
     func = 0;

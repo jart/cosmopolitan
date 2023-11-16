@@ -184,7 +184,6 @@ include libc/calls/calls.mk			#─┐
 include libc/irq/irq.mk				# ├──SYSTEMS RUNTIME
 include third_party/nsync/nsync.mk		# │  You can issue system calls
 include libc/runtime/runtime.mk			# │
-include libc/dlopen/dlopen.mk			# │
 include third_party/double-conversion/dc.mk	# │
 include libc/crt/crt.mk				# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
@@ -192,8 +191,9 @@ include libc/mem/mem.mk				#─┐
 include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
 include third_party/nsync/mem/mem.mk		# │  You can now use stdio
 include libc/proc/proc.mk			# │  You can now use threads
-include libc/thread/thread.mk			# │  You can now use processes
-include tool/hello/hello.mk			# │  You can finally call malloc()
+include libc/dlopen/dlopen.mk			# │  You can now use processes
+include libc/thread/thread.mk			# │  You can finally call malloc()
+include tool/hello/hello.mk			# │
 include third_party/zlib/zlib.mk		# │
 include libc/stdio/stdio.mk			# │
 include libc/time/time.mk			# │
