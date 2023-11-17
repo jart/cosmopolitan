@@ -12,7 +12,7 @@ COSMOPOLITAN_C_START_
  */
 
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 6
+#define SYSLIB_VERSION 8
 
 typedef uint64_t dispatch_time_t;
 typedef uint64_t dispatch_semaphore_t;

@@ -45,7 +45,7 @@ scall	sys_ppoll		0xfff86da21ffff90f	0x849	globl hidden # consider INTON/INTOFF t
 scall	sys_lseek		0x0c70a61de20c7008	0x03e	globl hidden # netbsd:evilpad, OpenBSD 7.3+
 scall	__sys_mmap		0x0c50311dd20c5009	0x0de	globl hidden # netbsd:pad, OpenBSD 7.3+
 scall	sys_msync		0x915900841284181a	0x8e3	globl hidden
-scall	sys_mprotect		0x04a04a04a204a00a	0x0e2	globl hidden
+scall	__sys_mprotect		0x04a04a04a204a00a	0x0e2	globl hidden
 scall	__sys_munmap		0x049049049204900b	0x0d7	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	0x086	globl hidden # rt_sigaction on Lunix; __sigaction_sigtramp() on NetBSD
 scall	__sys_sigprocmask	0x125030154214900e	0x087	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask

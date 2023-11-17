@@ -20,6 +20,7 @@ i32 __sys_fcntl_cp(i32, i32, ...);
 i32 __sys_fstat(i32, void *);
 i32 __sys_fstatat(i32, const char *, void *, i32);
 i32 __sys_gettid(i64 *);
+i32 __sys_mprotect(void *, u64, i32);
 i32 __sys_munmap(void *, u64);
 i32 __sys_openat(i32, const char *, i32, u32);
 i32 __sys_openat_nc(i32, const char *, i32, u32);

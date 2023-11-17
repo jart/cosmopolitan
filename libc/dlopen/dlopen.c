@@ -424,12 +424,12 @@ static char *dlerror_set(const char *str) {
   return dlerror_buf;
 }
 
-static char *foreign_alloc_block(void) {
+static dontinline char *foreign_alloc_block(void) {
   char *p = 0;
   size_t sz = 65536;
   if (!IsWindows()) {
     p = __sys_mmap(0, sz, PROT_READ | PROT_WRITE | PROT_EXEC,
-                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
+                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_JIT, -1, 0, 0);
     if (p == MAP_FAILED) {
       p = 0;
     }
@@ -448,7 +448,7 @@ static char *foreign_alloc_block(void) {
   return p;
 }
 
-static void *foreign_alloc(size_t n) {
+static dontinline void *foreign_alloc(size_t n) {
   void *res;
   static char *block;
   static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -520,11 +520,14 @@ static void *foreign_thunk_sysv(void *func) {
   *p++ = 0xff;
   *p++ = 0xe2;
 #elif defined(__aarch64__)
-  if (!(p = code = foreign_alloc(36))) return 0;  // 16 + 16 + 4 = 36
-  p = movimm(p, 5, (uintptr_t)func);
-  p = movimm(p, 10, (uintptr_t)foreign_tramp);
-  *(uint32_t *)p = 0xd61f0140;  // br x10
-  __clear_cache(code, p + 4);
+  __jit_begin();
+  if ((p = code = foreign_alloc(36))) {
+    p = movimm(p, 5, (uintptr_t)func);
+    p = movimm(p, 10, (uintptr_t)foreign_tramp);
+    *(uint32_t *)p = 0xd61f0140;  // br x10
+    __clear_cache(code, p + 4);
+  }
+  __jit_end();
 #else
 #error "unsupported architecture"
 #endif

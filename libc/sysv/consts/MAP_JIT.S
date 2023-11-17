@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon rlimit,RLIMIT_AS,9	,9,5,5,10,2,10,0
+.syscon mmap,MAP_JIT,0,0,0,0x00000800,0,0,0,0

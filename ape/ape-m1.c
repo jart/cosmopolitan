@@ -36,7 +36,7 @@
 
 #define pagesz         16384
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 7
+#define SYSLIB_VERSION 8
 
 struct Syslib {
   int magic;
@@ -891,6 +891,7 @@ int main(int argc, char **argv, char **envp) {
   M->lib.pthread_jit_write_protect_supported_np =
       pthread_jit_write_protect_supported_np;
   M->lib.pthread_jit_write_protect_np = pthread_jit_write_protect_np_workaround;
+  M->lib.sys_icache_invalidate = sys_icache_invalidate;
   M->lib.pthread_create = pthread_create;
   M->lib.pthread_exit = pthread_exit;
   M->lib.pthread_kill = pthread_kill;

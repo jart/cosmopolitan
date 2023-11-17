@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/syslib.internal.h"
 
 /**
  * Obtains memory mapping directly from system.
@@ -37,7 +39,11 @@
 struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off) {
   struct DirectMap d;
-  if (!IsWindows() && !IsMetal()) {
+  if (IsXnuSilicon()) {
+    long p = _sysret(__syslib->__mmap(addr, size, prot, flags, fd, off));
+    d.maphandle = kNtInvalidHandleValue;
+    d.addr = (void *)p;
+  } else if (!IsWindows() && !IsMetal()) {
     d.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);
     d.maphandle = kNtInvalidHandleValue;
   } else if (IsMetal()) {

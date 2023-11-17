@@ -33,8 +33,7 @@ LIBC_DLOPEN_A_DIRECTDEPS =						\
 	LIBC_RUNTIME							\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
-	LIBC_STR							\
-	THIRD_PARTY_COMPILER_RT
+	LIBC_STR
 
 LIBC_DLOPEN_A_DEPS :=							\
 	$(call uniq,$(foreach x,$(LIBC_DLOPEN_A_DIRECTDEPS),$($(x))))

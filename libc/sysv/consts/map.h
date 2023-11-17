@@ -14,6 +14,7 @@ extern const int MAP_FIXED;
 extern const int MAP_FIXED_NOREPLACE;
 extern const int MAP_HASSEMAPHORE;
 extern const int MAP_INHERIT;
+extern const int MAP_JIT;
 extern const int MAP_LOCKED;
 extern const int MAP_NONBLOCK;
 extern const int MAP_NORESERVE;
@@ -42,6 +43,5 @@ COSMOPOLITAN_C_END_
 
 #define MAP_ANON   MAP_ANONYMOUS
 #define MAP_NOCORE MAP_CONCEAL
-
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_MAP_H_ */
