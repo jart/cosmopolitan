@@ -383,6 +383,8 @@ scall	sys_memfd_secret	0xfffffffffffff1bf	0xfff	globl # no wrapper
 scall	sys_process_mrelease	0xfffffffffffff1c0	0xfff	globl # no wrapper
 scall	sys_futex_waitv		0xfffffffffffff1c1	0xfff	globl # no wrapper
 scall	sys_set_mempolicy_home_node 0xfffffffffffff1c2	0xfff	globl # no wrapper
+scall	sys_cachestat		0xfffffffffffff1c3	0x1c3	globl # Linux 6.5+
+scall	sys_fchmodat2		0xfffffffffffff1c4	0x1c4	globl # no wrapper Linux 6.6+
 
 #	The Fifth Bell System Interface, Community Edition
 #	» besiyata dishmaya
