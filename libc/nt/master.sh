@@ -45,6 +45,7 @@ imp	''							WaitForMultipleObjects					kernel32	4
 imp	''							WaitForSingleObject					kernel32	2
 imp	'AcquireSRWLockExclusive'				AcquireSRWLockExclusive					kernel32	1
 imp	'AcquireSRWLockShared'					AcquireSRWLockShared					kernel32	1
+imp	'AddDllDirectory'					AddDllDirectory						kernel32	1
 imp	'AddVectoredContinueHandler'				AddVectoredContinueHandler				kernel32	2
 imp	'AddVectoredExceptionHandler'				AddVectoredExceptionHandler				kernel32	2
 imp	'AllocConsole'						AllocConsole						kernel32	0
@@ -244,9 +245,9 @@ imp	'SetEndOfFile'						SetEndOfFile						kernel32	1
 imp	'SetEnvironmentVariable'				SetEnvironmentVariableW					kernel32	2
 imp	'SetErrorMode'						SetErrorMode						kernel32	1
 imp	'SetEvent'						SetEvent						kernel32	1
-imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	4
 imp	'SetFileAttributes'					SetFileAttributesW					kernel32	2
 imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	2
+imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	4
 imp	'SetFileTime'						SetFileTime						kernel32	4
 imp	'SetFileValidData'					SetFileValidData					kernel32	2
 imp	'SetHandleCount'					SetHandleCount						kernel32	1
