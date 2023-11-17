@@ -112,7 +112,7 @@ struct Loaded {
   char *base;
   char *entry;
   Elf64_Ehdr eh;
-  Elf64_Phdr ph[30];
+  Elf64_Phdr ph[25];
 };
 
 static struct {
@@ -277,8 +277,8 @@ static bool elf_slurp(struct Loaded *l, int fd, const char *file) {
   return true;
 }
 
-static bool elf_load(struct Loaded *l, const char *file, long pagesz,
-                     char *interp_path, size_t interp_size) {
+static dontinline bool elf_load(struct Loaded *l, const char *file, long pagesz,
+                                char *interp_path, size_t interp_size) {
   int fd;
   if ((fd = open(file, O_RDONLY | O_CLOEXEC)) == -1) {
     return false;

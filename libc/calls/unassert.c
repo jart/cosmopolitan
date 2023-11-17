@@ -23,6 +23,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 
 /**
  * Handles unassert() failure.
@@ -32,12 +33,12 @@
  * number of things. By doing this instead, we guarantee the backtrace
  * reported to the signal handler is clean and focused on the problem.
  */
-void __unassert_fail(const char *expr, const char *file, int line) {
+void(unassert)(const char *expr, const char *file, int line) {
   char ibuf[12];
   sigset_t m = __sig_block();
   FormatInt32(ibuf, line);
   tinyprint(2, file, ":", ibuf, ": \e[31;1munassert(", expr,
-            ") failed\e[0m (cosmoaddr2line ", program_invocation_name, " ",
+            ") failed\e[0m (cosmoaddr2line ", FindDebugBinary(), " ",
             DescribeBacktrace(__builtin_frame_address(0)), ")\n", NULL);
   __sig_unblock(m);
   notpossible;

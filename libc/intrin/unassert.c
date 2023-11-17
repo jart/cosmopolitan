@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
 // stub version of unassert() to keep the build a dag
-__attribute__((__weak__)) void __unassert_fail(const char *expr,
-                                               const char *file, int line) {
+__attribute__((__weak__)) void(unassert)(const char *expr, const char *file,
+                                         int line) {
   notpossible;
 }

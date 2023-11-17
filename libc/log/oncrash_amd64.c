@@ -74,8 +74,8 @@ static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   kprintf(
-      "cosmoaddr2line %s%s %lx %s\n\n", __argv[0],
-      endswith(__argv[0], ".com") ? ".dbg" : "", ctx ? ctx->uc_mcontext.PC : 0,
+      "cosmoaddr2line %s %lx %s\n\n", FindDebugBinary(),
+      ctx ? ctx->uc_mcontext.PC : 0,
       DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.BP
                             : (struct StackFrame *)__builtin_frame_address(0)));
   ShowBacktrace(2, &(struct StackFrame){

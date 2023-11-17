@@ -28,7 +28,7 @@
 #include "libc/tinymath/internal.h"
 // clang-format off
 
-double __math_oflow(uint32_t sign)
+dontinstrument double __math_oflow(uint32_t sign)
 {
 	return __math_xflow(sign, 0x1p769);
 }

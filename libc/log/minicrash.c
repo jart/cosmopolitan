@@ -26,6 +26,7 @@
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -64,12 +65,12 @@ relegated dontinstrument void __minicrash(int sig, siginfo_t *si, void *arg) {
   gethostname(host, sizeof(host));
   kprintf(
       "%serror: %s on %s pid %d tid %d got %G%s code %d addr %p%s\n"
-      "cosmoaddr2line %s%s %lx %s\n",
+      "cosmoaddr2line %s %lx %s\n",
       __nocolor ? "" : "\e[1;31m", program_invocation_short_name, host,
       getpid(), gettid(), sig,
       __is_stack_overflow(si, ctx) ? " (stack overflow)" : "", si->si_code,
-      si->si_addr, __nocolor ? "" : "\e[0m", __argv[0],
-      endswith(__argv[0], ".com") ? ".dbg" : "", ctx ? ctx->uc_mcontext.PC : 0,
+      si->si_addr, __nocolor ? "" : "\e[0m", FindDebugBinary(),
+      ctx ? ctx->uc_mcontext.PC : 0,
       DescribeBacktrace(ctx ? (struct StackFrame *)ctx->uc_mcontext.BP
                             : (struct StackFrame *)__builtin_frame_address(0)));
 }

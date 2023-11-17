@@ -15,7 +15,7 @@
 COSMOPOLITAN_C_START_
 
 void __assert_fail(const char *, const char *, int);
-void __unassert_fail(const char *, const char *, int);
+void unassert(const char *, const char *, int);
 
 #ifdef NDEBUG
 #define assert(x) ((void)0)
@@ -32,14 +32,14 @@ void __unassert_fail(const char *, const char *, int);
 #ifndef NDEBUG
 #define unassert(x) __assert_macro(x, #x)
 #define npassert(x) __assert_macro(x, #x)
-#define __assert_macro(x, s)                  \
-  ({                                          \
-    if (__builtin_expect(!(x), 0)) {          \
-      __unassert_fail(s, __FILE__, __LINE__); \
-      __asm__("nop");                         \
-      __builtin_unreachable();                \
-    }                                         \
-    (void)0;                                  \
+#define __assert_macro(x, s)             \
+  ({                                     \
+    if (__builtin_expect(!(x), 0)) {     \
+      (unassert)(s, __FILE__, __LINE__); \
+      __asm__("nop");                    \
+      __builtin_unreachable();           \
+    }                                    \
+    (void)0;                             \
   })
 #else
 #define npassert(x)                  \

@@ -20,13 +20,17 @@
 #include "libc/atomic.h"
 #include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/cosmo.h"
+#include "libc/dce.h"
+#include "libc/elf/def.h"
 #include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
-#include "libc/macros.internal.h"
+#include "libc/intrin/directmap.internal.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -38,24 +42,57 @@ static struct {
   char buf[PATH_MAX];
 } g_comdbg;
 
+static const char *kDbgExts[] = {
+    ".dbg",
+    ".com.dbg",
+#ifdef __aarch64__
+    ".aarch64.elf",
+#elif defined(__powerpc64__)
+    ".ppc64.elf",
+#endif
+};
+
+static int GetElfMachine(void) {
+#ifdef __x86_64__
+  return EM_NEXGEN32E;
+#elif defined(__aarch64__)
+  return EM_AARCH64;
+#elif defined(__powerpc64__)
+  return EM_PPC64;
+#elif defined(__riscv)
+  return EM_RISCV;
+#elif defined(__s390x__)
+  return EM_S390;
+#else
+#error "unsupported architecture"
+#endif
+}
+
 static bool IsMyDebugBinary(const char *path) {
-  void *map;
   int64_t size;
   uintptr_t value;
   bool res = false;
   int fd, e = errno;
+  struct DirectMap dm;
   BLOCK_CANCELATION;
   if ((fd = open(path, O_RDONLY | O_CLOEXEC, 0)) != -1) {
     // sanity test that this .com.dbg file (1) is an elf image, and (2)
     // contains the same number of bytes of code as our .com executable
     // which is currently running in memory.
     if ((size = lseek(fd, 0, SEEK_END)) != -1 &&
-        (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
-      if (READ32LE((char *)map) == READ32LE("\177ELF") &&
-          GetElfSymbolValue(map, "_etext", &value)) {
+        (dm = sys_mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)).addr !=
+            MAP_FAILED) {
+      if (READ32LE((char *)dm.addr) == READ32LE("\177ELF") &&
+          ((Elf64_Ehdr *)dm.addr)->e_machine == GetElfMachine() &&
+          GetElfSymbolValue(dm.addr, "_etext", &value)) {
         res = !_etext || value == (uintptr_t)_etext;
       }
-      munmap(map, size);
+      if (!IsWindows()) {
+        sys_munmap(dm.addr, size);
+      } else {
+        CloseHandle(dm.maphandle);
+        UnmapViewOfFile(dm.addr);
+      }
     }
     close(fd);
   }
@@ -65,20 +102,21 @@ static bool IsMyDebugBinary(const char *path) {
 }
 
 static void FindDebugBinaryInit(void) {
-  char *p = GetProgramExecutableName();
-  size_t n = strlen(p);
-  if ((n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) ||
-      IsMyDebugBinary(p)) {
-    g_comdbg.res = p;
-  } else if (n + 4 < ARRAYLEN(g_comdbg.buf)) {
-    mempcpy(mempcpy(g_comdbg.buf, p, n), ".dbg", 5);
+  const char *comdbg;
+  if ((comdbg = getenv("COMDBG")) && IsMyDebugBinary(comdbg)) {
+    g_comdbg.res = comdbg;
+    return;
+  }
+  char *prog = GetProgramExecutableName();
+  for (int i = 0; i < ARRAYLEN(kDbgExts); ++i) {
+    strlcpy(g_comdbg.buf, prog, sizeof(g_comdbg.buf));
+    strlcat(g_comdbg.buf, kDbgExts[i], sizeof(g_comdbg.buf));
     if (IsMyDebugBinary(g_comdbg.buf)) {
       g_comdbg.res = g_comdbg.buf;
+      return;
     }
   }
-  if (!g_comdbg.res) {
-    g_comdbg.res = getenv("COMDBG");
-  }
+  g_comdbg.res = prog;
 }
 
 /**

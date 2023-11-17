@@ -76,6 +76,7 @@ static void InstallCrashHandler(int sig, int flags) {
 void ShowCrashReports(void) {
   struct sigaltstack ss;
   static char crashstack[65536];
+  FindDebugBinary();
   ss.ss_flags = 0;
   ss.ss_size = sizeof(crashstack);
   ss.ss_sp = crashstack;
