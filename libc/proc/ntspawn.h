@@ -5,6 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+void mungentpath(char *);
 int mkntcmdline(char16_t[32767], char *const[]);
 int mkntenvblock(char16_t[32767], char *const[], char *const[], char[32767]);
 int ntspawn(int64_t, const char *, char *const[], char *const[], char *const[],

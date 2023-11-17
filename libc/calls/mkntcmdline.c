@@ -16,11 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/files.h"
 #include "libc/proc/ntspawn.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
 #define APPEND(c)     \
@@ -54,6 +60,12 @@ static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
+static bool LooksLikeCosmoDrivePath(const char *s) {
+  return s[0] == '/' &&    //
+         IsAlpha(s[1]) &&  //
+         s[2] == '/';
+}
+
 // Converts System V argv to Windows-style command line.
 //
 // Escaping is performed and it's designed to round-trip with
@@ -68,20 +80,31 @@ static inline int IsAlpha(int c) {
 // @see libc/runtime/getdosargv.c
 // @asyncsignalsafe
 textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
+  char *arg;
   int slashes, n;
   bool needsquote;
   size_t i, j, k, s;
+  char argbuf[PATH_MAX];
   for (k = i = 0; argv[i]; ++i) {
     if (i) APPEND(u' ');
-    if ((needsquote = NeedsQuotes(argv[i]))) APPEND(u'"');
+    if (LooksLikeCosmoDrivePath(argv[i]) &&
+        strlcpy(argbuf, argv[i], PATH_MAX) < PATH_MAX) {
+      mungentpath(argbuf);
+      arg = argbuf;
+    } else {
+      arg = argv[i];
+    }
+    if ((needsquote = NeedsQuotes(arg))) {
+      APPEND(u'"');
+    }
     for (slashes = j = 0;;) {
-      wint_t x = argv[i][j++] & 255;
+      wint_t x = arg[j++] & 255;
       if (x >= 0300) {
         n = ThomPikeLen(x);
         x = ThomPikeByte(x);
         while (--n) {
           wint_t y;
-          if ((y = argv[i][j++] & 255)) {
+          if ((y = arg[j++] & 255)) {
             x = ThomPikeMerge(x, y);
           } else {
             x = 0;
@@ -90,28 +113,6 @@ textwindows int mkntcmdline(char16_t cmdline[32767], char *const argv[]) {
         }
       }
       if (!x) break;
-      if (x == '/' || x == '\\') {
-        if (!i) {
-          // turn / into \ for first argv[i]
-          x = '\\';
-          // turn \c\... into c:\ for first argv[i]
-          if (k == 2 && IsAlpha(cmdline[1]) && cmdline[0] == '\\') {
-            cmdline[0] = cmdline[1];
-            cmdline[1] = ':';
-          }
-        } else {
-          // turn stuff like `less /c/...`
-          //            into `less c:/...`
-          // turn stuff like `more <"/c/..."`
-          //            into `more <"c:/..."`
-          if (k > 3 && IsAlpha(cmdline[k - 1]) &&
-              (cmdline[k - 2] == '/' || cmdline[k - 2] == '\\') &&
-              (cmdline[k - 3] == '"' || cmdline[k - 3] == ' ')) {
-            cmdline[k - 2] = cmdline[k - 1];
-            cmdline[k - 1] = ':';
-          }
-        }
-      }
       if (x == '\\') {
         ++slashes;
       } else if (x == '"') {

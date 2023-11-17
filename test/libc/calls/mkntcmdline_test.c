@@ -74,30 +74,14 @@ TEST(mkntcmdline, testUnicode) {
                cmdline);
 }
 
-TEST(mkntcmdline, fixAsBestAsWeCanForNow1) {
+TEST(mkntcmdline, fixit) {
   char *argv1[] = {
-      "/C/WINDOWS/system32/cmd.exe",
-      "/C",
-      "more <\"/C/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
+      "/C/Program Files/doom/doom.exe",
+      "--version",
       NULL,
   };
   EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
-  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more <"
-               u"\"\"\"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\"\"\"\"",
-               cmdline);
-}
-
-TEST(mkntcmdline, fixAsBestAsWeCanForNow2) {
-  char *argv1[] = {
-      "/C/WINDOWS/system32/cmd.exe",
-      "/C",
-      "less /C/Users/jart/AppData/Local/Temp/tmplquaa_d6",
-      NULL,
-  };
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv1));
-  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"less "
-               u"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
-               cmdline);
+  EXPECT_STREQ(u"\"C:\\Program Files\\doom\\doom.exe\" --version", cmdline);
 }
 
 TEST(mkntcmdline, testWut) {

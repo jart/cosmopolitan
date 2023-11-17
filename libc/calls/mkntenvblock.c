@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/mem/alloca.h"
+#include "libc/proc/ntspawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
@@ -51,38 +52,6 @@ static textwindows int Compare(const char *l, const char *r) {
   return a - b;
 }
 
-static textwindows void FixPath(char *path) {
-  char *p;
-
-  // turn colon into semicolon
-  // unless it already looks like a dos path
-  for (p = path; *p; ++p) {
-    if (p[0] == ':' && p[1] != '\\') {
-      p[0] = ';';
-    }
-  }
-
-  // turn /c/... into c:\...
-  p = path;
-  if (p[0] == '/' && IsAlpha(p[1]) && p[2] == '/') {
-    p[0] = p[1];
-    p[1] = ':';
-  }
-  for (; *p; ++p) {
-    if (p[0] == ';' && p[1] == '/' && IsAlpha(p[2]) && p[3] == '/') {
-      p[1] = p[2];
-      p[2] = ':';
-    }
-  }
-
-  // turn slash into backslash
-  for (p = path; *p; ++p) {
-    if (*p == '/') {
-      *p = '\\';
-    }
-  }
-}
-
 static textwindows int InsertString(struct EnvBuilder *env, const char *str) {
   int c, i, cmp;
   char *var, *path = 0;
@@ -101,7 +70,7 @@ static textwindows int InsertString(struct EnvBuilder *env, const char *str) {
   } while (c);
 
   // fixup key=/c/... → key=c:\...
-  if (path) FixPath(path);
+  if (path) mungentpath(path);
 
   // append key=val to sorted list using insertion sort technique
   for (i = env->vari;; --i) {
