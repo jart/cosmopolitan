@@ -7,7 +7,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/mem/mem.h"

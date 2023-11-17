@@ -30,7 +30,6 @@
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/atomic.h"
 #include "libc/inttypes.h"
 #include "libc/literal.h"

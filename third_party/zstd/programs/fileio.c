@@ -28,7 +28,6 @@
 #include "third_party/zstd/programs/util.h"       /* UTIL_getFileSize, UTIL_isRegularFile, UTIL_isSameFile */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"

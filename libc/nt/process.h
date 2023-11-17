@@ -51,6 +51,9 @@ void SetLastError(uint32_t dwErrCode);
 uint32_t FormatMessage(uint32_t dwFlags, const void *lpSource,
                        uint32_t dwMessageId, uint32_t dwLanguageId,
                        char16_t *lpBuffer, uint32_t nSize, va_list *Arguments);
+uint32_t FormatMessageA(uint32_t dwFlags, const void *lpSource,
+                        uint32_t dwMessageId, uint32_t dwLanguageId,
+                        char *lpBuffer, uint32_t nSize, va_list *Arguments);
 int64_t OpenProcess(uint32_t dwDesiredAccess, bool32 bInheritHandle,
                     uint32_t dwProcessId);
 uint32_t GetCurrentProcessId(void); /* %gs:0x40 */

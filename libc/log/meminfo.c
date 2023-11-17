@@ -17,14 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/stdio/dprintf.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/dprintf.h"
 
 static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
-  (dprintf)(*(int *)arg, "%p - %p : %08zx / %08lx\n", start, end, used_bytes,
-            (intptr_t)end - (intptr_t)start);
+  dprintf(*(int *)arg, "%p - %p : %08zx / %08lx\n", start, end, used_bytes,
+          (intptr_t)end - (intptr_t)start);
 }
 
 /**
@@ -32,7 +31,6 @@ static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
  */
 void _meminfo(int fd) {
   _memsummary(fd);
-  (dprintf)(fd, "%*s   %*s   %*s   %*s\n", POINTER_XDIGITS, "start",
-            POINTER_XDIGITS, "end", 8, "used", 8, "size");
+  dprintf(fd, "%12s   %12s   %8s   %8s\n", "start", "end", "used", "size");
   malloc_inspect_all(onmemchunk, &fd);
 }

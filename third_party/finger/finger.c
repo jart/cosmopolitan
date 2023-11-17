@@ -37,7 +37,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/struct/msg.h"

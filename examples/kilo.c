@@ -62,7 +62,6 @@ Contact: antirez@gmail.com\"\n\
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/arraylist2.internal.h"

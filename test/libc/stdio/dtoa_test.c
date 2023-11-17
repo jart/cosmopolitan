@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
-#include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/gc.internal.h"

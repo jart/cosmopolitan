@@ -58,9 +58,6 @@
 #include "libc/thread/tls.h"
 #ifdef __x86_64__
 
-__static_yoink("strerror_wr");  // for kprintf %m
-__static_yoink("strsignal_r");  // for kprintf %G
-
 #define STACK_ERROR "error: not enough room on stack to print crash report\n"
 
 static const char kGregOrder[17] forcealign(1) = {

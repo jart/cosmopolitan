@@ -1,4 +1,3 @@
-#include "libc/fmt/fmt.h"
 #include "libc/str/str.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"

@@ -21,7 +21,6 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"

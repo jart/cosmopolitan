@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
@@ -26,8 +25,7 @@
  *
  * This returns `"0"` for 0 which is the empty value. Symbolic names
  * should be available for signals 1 through 32. If the system supports
- * real-time signals, they're returned as `SIGRTMIN+%d`. For all other
- * 32-bit signed integer, a plain integer representation is returned.
+ * real-time signals, they're returned as `SIGRTMIN+%d`.
  *
  * @param sig is signal number which should be in range 1 through 128
  * @param buf may be used to store output having at least 15 bytes
@@ -35,13 +33,14 @@
  * @see sigaction()
  * @asyncsignalsafe
  */
-privileged char *strsignal_r(int sig, char buf[21]) {
+privileged const char *strsignal_r(int sig, char buf[21]) {
+  char *p;
   const char *s;
   if (!sig) {
     return "0";
   }
   if ((s = GetMagnumStr(kSignalNames, sig))) {
-    return (char *)s;
+    return s;
   }
   if (SIGRTMIN <= sig && sig <= SIGRTMAX) {
     sig -= SIGRTMIN;
@@ -54,9 +53,13 @@ privileged char *strsignal_r(int sig, char buf[21]) {
     buf[6] = 'I';
     buf[7] = 'N';
     buf[8] = '+';
-    FormatInt32(buf + 9, sig);
+    p = buf + 9;
   } else {
-    FormatInt32(buf, sig);
+    p = buf;
   }
+  if (sig >= 100) *p++ = '0' + (unsigned char)sig / 100 % 10;
+  if (sig >= 10) *p++ = '0' + (unsigned char)sig / 10 % 10;
+  *p++ = '0' + (unsigned char)sig % 10;
+  *p = 0;
   return buf;
 }

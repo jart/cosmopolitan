@@ -1,6 +1,5 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

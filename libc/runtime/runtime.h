@@ -115,6 +115,7 @@ bool32 _isheap(void *);
 /* code morphing */
 void __morph_begin(void);
 void __morph_end(void);
+void __clear_cache(void *, void *);
 /* portability */
 int NtGetVersion(void) pureconst;
 bool32 IsGenuineBlink(void);

@@ -11,7 +11,6 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"

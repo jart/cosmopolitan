@@ -23,7 +23,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"

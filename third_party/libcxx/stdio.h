@@ -102,10 +102,8 @@ void perror(const char* s);
 #pragma GCC system_header
 #endif
 
-#include "libc/fmt/fmt.h"
 #include "libc/calls/calls.h"
 #include "libc/temp.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/stdio.h"
 
 #ifdef __cplusplus

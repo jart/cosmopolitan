@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/strace.internal.h"

@@ -16,10 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -30,25 +29,25 @@
  */
 
 TEST(strerror, e2big) {
-  EXPECT_STARTSWITH("E2BIG", strerror(E2BIG));
+  EXPECT_STARTSWITH("Arg list too long", strerror(E2BIG));
 }
 
 TEST(strerror, enosys) {
-  EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));
+  EXPECT_STARTSWITH("Function not implemented", strerror(ENOSYS));
 }
 
 TEST(strerror, einval) {
-  EXPECT_STARTSWITH("EINVAL", strerror(EINVAL));
+  EXPECT_STARTSWITH("Invalid argument", strerror(EINVAL));
 }
 
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
-  EXPECT_STARTSWITH("EUNKNOWN", strerror(0));
+  EXPECT_STARTSWITH("No error information", strerror(0));
 }
 
 TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  EXPECT_STARTSWITH("ENOTCONN", strerror(ENOTCONN));
+  EXPECT_STARTSWITH("Transport endpoint is not connected", strerror(ENOTCONN));
 }
 
 TEST(strerror, exfull_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
+  EXPECT_STARTSWITH("Text file busy", strerror(ETXTBSY));
 }

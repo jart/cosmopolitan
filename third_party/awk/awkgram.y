@@ -23,13 +23,9 @@ THIS SOFTWARE.
 ****************************************************************/
 
 %{
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/stdio/stdio.h"
-#include "libc/temp.h"
-#include "libc/mem/alg.h"
-#include "libc/str/str.h"
-#include "third_party/awk/awk.h"
+#include <stdio.h>
+#include <string.h>
+#include "awk.h"
 
 void checkdup(Node *list, Cell *item);
 int yywrap(void) { return(1); }

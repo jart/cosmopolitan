@@ -66,7 +66,6 @@
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"
@@ -131,7 +130,6 @@ UTIL_time_t UTIL_getTime(void)
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"
@@ -179,7 +177,6 @@ UTIL_time_t UTIL_getTime(void)
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"

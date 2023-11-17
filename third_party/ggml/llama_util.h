@@ -3,7 +3,6 @@
 #define LLAMA_UTIL_H
 #include "libc/calls/struct/rlimit.h"
 #include "libc/dce.h"
-#include "libc/fmt/fmt.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"

@@ -16,25 +16,61 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define ShouldUseMsabiAttribute() 1
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/errno.h"
+#include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thunk/msabi.h"
 #include "libc/str/str.h"
-// clang-format off
-
-#if defined(SYSDEBUG) && _NTTRACE
-privileged
-#endif
 
 /**
  * Converts errno value to string.
  *
  * @param err is error number or zero if unknown
- * @return 0 on success, or error code
+ * @return 0 on success, or errno on error
+ * @raise ERANGE if insufficient buffer was available, in which case a
+ *     nul-terminated string is still copied to `buf`
  */
-int strerror_r(int err, char *buf, size_t size) {
-  int winerr = IsWindows() ? __imp_GetLastError() : 0;
-  return strerror_wr(err, winerr, buf, size);
+errno_t strerror_r(int err, char *buf, size_t size) {
+
+  int c;
+  char tmp[32];
+  char *p = buf;
+  char *pe = p + size;
+
+  // copy unix error information
+  const char *msg;
+  if (!err) {
+    msg = "No error information";
+  } else if (!(msg = _strerdoc(err))) {
+    FormatInt32(stpcpy(tmp, "Error "), err);
+    msg = tmp;
+  }
+  while ((c = *msg++) && p + 1 < pe) {
+    *p++ = c;
+  }
+
+  // copy windows error information
+  if (IsWindows()) {
+    uint32_t winerr;
+    if ((winerr = GetLastError()) != err) {
+      stpcpy(FormatUint32(stpcpy(tmp, " (win32 error "), winerr), ")");
+      msg = tmp;
+      while ((c = *msg++) && p + 1 < pe) {
+        *p++ = c;
+      }
+    }
+  }
+
+  // force nul terminator
+  if (p < pe) {
+    *p++ = 0;
+  }
+
+  // return result code
+  if (p < pe) {
+    return 0;
+  } else {
+    return ERANGE;
+  }
 }

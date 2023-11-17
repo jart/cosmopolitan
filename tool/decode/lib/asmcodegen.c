@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "tool/decode/lib/asmcodegen.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"

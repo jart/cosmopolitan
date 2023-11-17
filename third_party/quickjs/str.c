@@ -25,7 +25,6 @@
 #include "libc/str/str.h"
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/runtime/fenv.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/quickjs/internal.h"

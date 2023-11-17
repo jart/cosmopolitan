@@ -51,9 +51,6 @@
 #include "libc/thread/thread.h"
 #ifdef __aarch64__
 
-__static_yoink("strerror_wr");  // for kprintf %m
-__static_yoink("strsignal_r");  // for kprintf %G
-
 #define STACK_ERROR "error: not enough room on stack to print crash report\n"
 
 #define RESET   "\e[0m"

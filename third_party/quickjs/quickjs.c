@@ -27,8 +27,6 @@
 #include "third_party/quickjs/list.h"
 #include "third_party/quickjs/quickjs.h"
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
-#include "libc/fmt/fmt.h"
 #include "libc/inttypes.h"
 #include "libc/mem/alloca.h"
 #include "third_party/gdtoa/gdtoa.h"

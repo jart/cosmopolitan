@@ -13,7 +13,6 @@
 #include "third_party/tidy/entities.h"
 #include "third_party/tidy/tidy-int.h"
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "third_party/tidy/tmbstr.h"
 
 struct _entity;

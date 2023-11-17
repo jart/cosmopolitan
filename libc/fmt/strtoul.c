@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/strtol.internal.h"
+#include "libc/fmt/internal.h"
 #include "libc/limits.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"

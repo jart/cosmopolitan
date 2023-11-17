@@ -76,17 +76,6 @@ o/$(MODE)/libc/fmt/wcstoumax.o: private		\
 		CFLAGS +=			\
 			-Os
 
-# we can't use compiler magic because:
-#   kprintf() depends on these functions
-o/$(MODE)/libc/fmt/strerrno.greg.o		\
-o/$(MODE)/libc/fmt/strerrdoc.greg.o		\
-o/$(MODE)/libc/fmt/strerror_wr.greg.o: private	\
-		COPTS +=			\
-			-fpie			\
-			-fno-sanitize=all	\
-			-fno-stack-protector	\
-			-fpatchable-function-entry=0,0
-
 LIBC_FMT_LIBS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)))
 LIBC_FMT_SRCS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_SRCS))
 LIBC_FMT_HDRS = $(foreach x,$(LIBC_FMT_ARTIFACTS),$($(x)_HDRS))

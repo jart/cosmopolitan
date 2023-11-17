@@ -22,7 +22,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"

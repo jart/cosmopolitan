@@ -168,10 +168,8 @@ wint_t towctrans(wint_t, wctrans_t);
 int getsubopt(char **, char *const *, char **) paramsnonnull();
 char *strsignal(int) returnsnonnull libcesque;
 char *strerror(int) returnsnonnull dontthrow nocallback;
-int strerror_r(int, char *, size_t)
-dontthrow nocallback;
-int __xpg_strerror_r(int, char *, size_t)
-dontthrow nocallback;
+errno_t strerror_r(int, char *, size_t) libcesque;
+char *__xpg_strerror_r(int, char *, size_t) libcesque;
 
 #ifdef _COSMO_SOURCE
 uint64_t tpenc(uint32_t) pureconst;
@@ -183,9 +181,7 @@ bool32 startswithi(const char *, const char *) strlenesque;
 bool32 endswith(const char *, const char *) strlenesque;
 bool32 istext(const void *, size_t) libcesque;
 bool32 isutf8(const void *, size_t) libcesque;
-char *strsignal_r(int, char[21]) returnsnonnull libcesque __wur;
-int strerror_wr(int, uint32_t, char *, size_t)
-dontthrow nocallback;
+const char *strsignal_r(int, char[21]) returnsnonnull libcesque __wur;
 char16_t *chomp16(char16_t *) libcesque;
 size_t strlen16(const char16_t *) strlenesque;
 size_t strnlen16(const char16_t *, size_t) strlenesque;

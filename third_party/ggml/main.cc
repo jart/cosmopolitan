@@ -31,7 +31,6 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"

@@ -22,7 +22,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/quickjs/cutils.h"

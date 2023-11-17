@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "third_party/python/Modules/unicodedata.h"
-#include "libc/fmt/fmt.h"
 #include "libc/nexgen32e/kompressor.h"
 #include "third_party/python/Include/floatobject.h"
 #include "third_party/python/Include/import.h"

@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"

@@ -38,7 +38,6 @@ extern "C" {
 #include "libc/calls/calls.h"
 #include "libc/time/time.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/time/struct/utimbuf.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/dirent.h"

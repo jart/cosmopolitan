@@ -16,7 +16,6 @@
 │ IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED               │
 │ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.          │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
 #include "libc/inttypes.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/locale.h"

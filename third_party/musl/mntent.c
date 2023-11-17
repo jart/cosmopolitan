@@ -27,7 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

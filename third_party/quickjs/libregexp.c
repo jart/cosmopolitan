@@ -23,7 +23,6 @@
  */
 #include "libc/assert.h"
 #include "libc/intrin/likely.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"

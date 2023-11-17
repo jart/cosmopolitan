@@ -15,7 +15,6 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"

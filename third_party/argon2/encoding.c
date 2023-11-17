@@ -16,7 +16,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/argon2/encoding.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

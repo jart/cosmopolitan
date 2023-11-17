@@ -122,7 +122,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"

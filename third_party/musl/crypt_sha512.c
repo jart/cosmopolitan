@@ -28,7 +28,6 @@
 #include "libc/mem/alg.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/literal.h"
 #include "libc/mem/mem.h"

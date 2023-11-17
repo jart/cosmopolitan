@@ -16,7 +16,6 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/error.h"
-#include "libc/fmt/fmt.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/asn1.h"

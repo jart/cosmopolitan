@@ -38,7 +38,6 @@
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"
@@ -125,7 +124,6 @@ PTime UTIL_getSpanTimeNano(UTIL_time_t clockStart, UTIL_time_t clockEnd)
 #include "third_party/musl/rand48.h"   /* abort */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"

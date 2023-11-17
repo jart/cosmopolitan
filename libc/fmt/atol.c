@@ -31,9 +31,8 @@
 long atol(const char *s) {
   long x;
   int c, d;
-  do {
-    c = *s++;
-  } while (c == ' ' || c == '\t');
+  do c = *s++;
+  while (c == ' ' || c == '\t');
   d = c == '-' ? -1 : 1;
   if (c == '-' || c == '+') c = *s++;
   for (x = 0; isdigit(c); c = *s++) {

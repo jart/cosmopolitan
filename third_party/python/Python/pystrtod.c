@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/str/locale.h"
 #include "third_party/python/Include/dtoa.h"
 #include "third_party/python/Include/object.h"

@@ -10,7 +10,6 @@
 #include "libc/calls/calls.h"
 #include "libc/dlopen/dlfcn.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/runtime.h"
 
@@ -24,6 +23,7 @@
  * - x86-64 FreeBSD
  * - x86-64 Windows
  * - aarch64 Linux w/ Glibc
+ * - aarch64 Linux w/ Musl Libc
  * - aarch64 MacOS
  *
  */

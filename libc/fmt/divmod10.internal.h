@@ -8,7 +8,7 @@ forceinline uint64_t __divmod10(uint64_t __x, unsigned *__r) {
   *__r = __x % 10;
   return __x / 10;
 #else
-  uint128_t __dw;
+  unsigned __int128 __dw;
   unsigned long long __hi, __rm;
   __dw = __x;
   __dw *= 0xcccccccccccccccdull;

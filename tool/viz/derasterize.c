@@ -22,7 +22,6 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

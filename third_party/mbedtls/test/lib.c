@@ -22,7 +22,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/safemacros.internal.h"

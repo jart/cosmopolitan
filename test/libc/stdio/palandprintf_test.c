@@ -657,8 +657,6 @@ BENCH(palandprintf, bench) {
   EZBENCH2("LONG_MIN %ld", donothing, Format("%ld", __veil("r", LONG_MIN)));
   EZBENCH2("INT128_MIN %jjd", donothing, Format("%jjd", INT128_MIN));
   EZBENCH2("INT128_MIN %jjx", donothing, Format("%jjx", INT128_MIN));
-  EZBENCH2("int64toarray 23", donothing, FormatInt64(buffer, 23));
-  EZBENCH2("int64toarray min", donothing, FormatInt64(buffer, INT_MIN));
 #ifdef __x86__
   EZBENCH2("%Lf M_PI", donothing, Format("%Lf", __veil("t", M_PI)));
   EZBENCH2("%Lg M_PI", donothing, Format("%Lg", __veil("t", M_PI)));

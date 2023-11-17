@@ -122,7 +122,6 @@
 #include "dsp/core/core.h"
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"

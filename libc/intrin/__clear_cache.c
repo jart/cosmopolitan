@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,26 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/conv.h"
-#include "libc/fmt/itoa.h"
-#include "libc/mem/reverse.internal.h"
 
-dontinline size_t uint64toarray(uint64_t i, char *a, int r) {
-  size_t j;
-  j = 0;
-  do {
-    a[j++] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i % r];
-    i /= r;
-  } while (i > 0);
-  a[j] = '\0';
-  reverse(a, j);
-  return j;
-}
-
-size_t int64toarray(int64_t i, char *a, int r) {
-  if (i < 0) {
-    *a++ = '-';
-    i = -(uint64_t)i;
+void __clear_cache2(const void *base, const void *end) {
+#ifdef __aarch64__
+  int icache, dcache;
+  const char *p, *pe = end;
+  static unsigned int ctr_el0 = 0;
+  if (!ctr_el0) asm volatile("mrs\t%0,ctr_el0" : "=r"(ctr_el0));
+  icache = 4 << (ctr_el0 & 15);
+  dcache = 4 << ((ctr_el0 >> 16) & 15);
+  for (p = (const char *)((uintptr_t)base & -dcache); p < pe; p += dcache) {
+    asm volatile("dc\tcvau,%0" : : "r"(p) : "memory");
   }
-  return uint64toarray(i, a, r);
+  asm volatile("dsb\tish" ::: "memory");
+  for (p = (const char *)((uintptr_t)base & -icache); p < pe; p += icache) {
+    asm volatile("ic\tivau,%0" : : "r"(p) : "memory");
+  }
+  asm volatile("dsb\tish\nisb" ::: "memory");
+#endif
 }

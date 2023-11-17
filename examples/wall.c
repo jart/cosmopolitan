@@ -11,7 +11,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"

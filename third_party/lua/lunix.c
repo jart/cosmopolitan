@@ -43,7 +43,6 @@
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/atomic.h"
@@ -53,6 +52,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/clktck.h"
@@ -2628,7 +2628,8 @@ static int LuaUnixErrnoToString(lua_State *L) {
   struct UnixErrno *e;
   e = GetUnixErrno(L);
   if (e->call) {
-    strerror_wr(e->errno_, e->winerr, msg, sizeof(msg));
+    if (IsWindows()) SetLastError(e->winerr);
+    strerror_r(e->errno_, msg, sizeof(msg));
     lua_pushfstring(L, "%s() failed: %s", e->call, msg);
   } else {
     lua_pushstring(L, _strerrno(e->errno_));

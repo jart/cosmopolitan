@@ -31,7 +31,6 @@
 #include "libc/dns/resolvconf.h"
 #include "libc/dns/servicestxt.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"

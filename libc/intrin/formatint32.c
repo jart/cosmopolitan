@@ -24,7 +24,7 @@
  * @param p needs at least 12 bytes
  * @return pointer to nul byte
  */
-privileged dontinline char *FormatUint32(char p[hasatleast 12], uint32_t x) {
+dontinline char *FormatUint32(char p[hasatleast 12], uint32_t x) {
   char t;
   size_t i, a, b;
   i = 0;
@@ -49,7 +49,7 @@ privileged dontinline char *FormatUint32(char p[hasatleast 12], uint32_t x) {
  * @param p needs at least 12 bytes
  * @return pointer to nul byte
  */
-privileged char *FormatInt32(char p[hasatleast 12], int32_t x) {
+char *FormatInt32(char p[hasatleast 12], int32_t x) {
   if (x < 0) *p++ = '-', x = -(uint32_t)x;
   return FormatUint32(p, x);
 }

@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/quickjs/internal.h"

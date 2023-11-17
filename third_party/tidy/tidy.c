@@ -23,7 +23,6 @@
 #include "third_party/tidy/tidy.h"
 #include "third_party/tidy/tidybuffio.h"
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "libc/mem/alg.h"
 #include "libc/str/str.h"
 #include "libc/runtime/runtime.h"

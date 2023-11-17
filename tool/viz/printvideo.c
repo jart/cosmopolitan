@@ -41,7 +41,6 @@
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"

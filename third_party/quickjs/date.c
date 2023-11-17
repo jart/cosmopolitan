@@ -24,7 +24,6 @@
  */
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "third_party/quickjs/internal.h"

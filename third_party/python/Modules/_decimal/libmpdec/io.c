@@ -28,7 +28,6 @@
 │ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/str/locale.h"
 #include "libc/str/unicode.h"
 #include "third_party/python/Modules/_decimal/libmpdec/bits.h"

@@ -24,7 +24,6 @@
  */
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"

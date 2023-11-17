@@ -18,32 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "ape/sections.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
-#include "libc/fmt/fmt.h"
-#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/getenv.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/limits.h"
 #include "libc/log/internal.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/alloca.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/createfile.h"
@@ -56,25 +42,21 @@
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
-#include "libc/nt/winsock.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.internal.h"
 #include "libc/vga/vga.internal.h"
@@ -766,16 +748,9 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             break;
           } else {
             type = 0;
-#if defined(SYSDEBUG) && _NTTRACE
-            strerror_r(e, z, sizeof(z));
-            s = z;
-#else
-            s = _strerrno(e);
-            if (!s) {
-              FormatInt32(z, e);
-              s = z;
+            if (!(s = _strerrno(e))) {
+              s = "EUNKNOWN";
             }
-#endif
             goto FormatString;
           }
         }
@@ -1145,8 +1120,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  *
  * Error numbers:
  *
- * - `%m` formats error (if strerror_wr if is linked)
- * - `%m` formats errno number (if strerror_wr isn't linked)
+ * - `%m` formats errno as string
  * - `% m` formats error with leading space if errno isn't zero
  * - `%lm` means favor WSAGetLastError() over GetLastError() if linked
  *

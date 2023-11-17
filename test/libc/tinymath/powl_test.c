@@ -20,7 +20,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"

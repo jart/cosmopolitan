@@ -15,7 +15,6 @@
 
 #include "third_party/libcxx/stdlib.h"
 #include "libc/str/unicode.h"
-#include "libc/fmt/fmt.h"
 #include "libc/str/locale.h"
 #include "third_party/libcxx/memory"
 #include "third_party/libcxx/__locale"

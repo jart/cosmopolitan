@@ -35,7 +35,6 @@
  */
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/fmt/fmt.h"
 #include "libc/paths.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

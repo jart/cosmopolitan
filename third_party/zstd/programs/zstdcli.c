@@ -50,7 +50,6 @@
 #include "libc/str/str.h"   /* strcmp, strlen */
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/dprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"

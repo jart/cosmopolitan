@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "third_party/python/Include/pyerrors.h"
 /* clang-format off */
 

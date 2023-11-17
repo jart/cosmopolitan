@@ -18,7 +18,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"

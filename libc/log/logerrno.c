@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

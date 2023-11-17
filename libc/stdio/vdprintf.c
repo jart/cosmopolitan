@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
-#include "libc/fmt/fmt.h"
+#include "libc/fmt/internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"

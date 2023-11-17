@@ -8,7 +8,6 @@
 
 #include "third_party/tidy/forward.h"
 #include "third_party/tidy/tmbstr.h"
-#include "libc/fmt/fmt.h"
 #include "third_party/tidy/lexer.h"
 
 /* like strdup but using an allocator */

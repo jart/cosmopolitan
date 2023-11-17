@@ -73,7 +73,6 @@
 //     test/tool/build/pledge_test.sh
 //
 
-__static_yoink("strerror_wr");
 __static_yoink("zipos");
 
 #define USAGE \

@@ -17,21 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
 
+_Alignas(1) static char strerror_buf[128];
+
 /**
- * Converts errno value to string non-reentrantly.
+ * Returns string describing `err`.
+ *
+ * The application shall not modify the string returned.
+ *
  * @see strerror_r()
+ * @threadunsafe
  */
 char *strerror(int err) {
-  if (IsTiny()) {
-    return (char *)firstnonnull(_strerrno(err), "EUNKNOWN");
-  } else {
-    _Alignas(1) static char buf[512];
-    strerror_r(err, buf, sizeof(buf));
-    return buf;
-  }
+  strerror_r(err, strerror_buf, sizeof(strerror_buf));
+  return strerror_buf;
 }

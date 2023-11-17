@@ -72,17 +72,6 @@ imaxdiv_t imaxdiv(intmax_t, intmax_t) pureconst;
 #define lldiv(num, den) ((lldiv_t){(num) / (den), (num) % (den)})
 #endif
 
-#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)) && \
-    !defined(__STRICT_ANSI__) && defined(_COSMO_SOURCE) &&           \
-    !defined(__COSMOCC__)
-int128_t i128abs(int128_t)
-libcesque pureconst;
-int128_t strtoi128(const char *, char **, int) paramsnonnull((1));
-uint128_t strtou128(const char *, char **, int) paramsnonnull((1));
-int128_t wcstoi128(const wchar_t *, wchar_t **, int);
-uint128_t wcstou128(const wchar_t *, wchar_t **, int);
-#endif /* gcc 4.6+ */
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_CONV_H_ */

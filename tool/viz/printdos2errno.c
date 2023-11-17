@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/dos2errno.internal.h"
 #include "libc/intrin/kprintf.h"

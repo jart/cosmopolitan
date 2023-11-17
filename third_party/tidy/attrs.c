@@ -11,7 +11,6 @@
 #include "third_party/tidy/message.h"
 #include "third_party/tidy/tmbstr.h"
 #include "libc/assert.h"
-#include "libc/fmt/fmt.h"
 #include "third_party/tidy/utf8.h"
 
 #if __GNUC__ >= 11 /* [jart] this one looks legit */

@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
     // get pids of all processes on system
     uint32_t n;
     if (!EnumProcesses(pids, sizeof(pids), &n)) {
-      fprintf(stderr, "%s: EnumProcesses() failed: %s\n", prog,
+      fprintf(stderr, "%s: EnumProcesses() failed: %hs\n", prog,
               DescribeError(GetLastError()));
       exit(1);
     }

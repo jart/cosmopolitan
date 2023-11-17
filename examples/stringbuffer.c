@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/append.h"

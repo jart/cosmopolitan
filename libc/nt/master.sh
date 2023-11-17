@@ -87,6 +87,7 @@ imp	'FindNextVolume'					FindNextVolumeW						kernel32	3
 imp	'FindVolumeClose'					FindVolumeClose						kernel32	1
 imp	'FlushConsoleInputBuffer'				FlushConsoleInputBuffer					kernel32	1
 imp	'FormatMessage'						FormatMessageW						kernel32	7
+imp	'FormatMessageA'					FormatMessageA						kernel32	7
 imp	'FreeConsole'						FreeConsole						kernel32	0
 imp	'FreeEnvironmentStrings'				FreeEnvironmentStringsW					kernel32	1
 imp	'FreeLibrary'						FreeLibrary						kernel32	1

@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
 #include "third_party/python/Include/pyctype.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"

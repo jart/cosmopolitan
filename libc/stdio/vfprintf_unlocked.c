@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
+#include "libc/fmt/internal.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"

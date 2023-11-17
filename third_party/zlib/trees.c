@@ -7,7 +7,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
 #include "libc/stdio/stdio.h"
 #include "libc/temp.h"
 #include "libc/str/str.h"

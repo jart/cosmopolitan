@@ -38,5 +38,5 @@ static char g_strsignal[21];
  * @threadunsafe
  */
 char *strsignal(int sig) {
-  return strsignal_r(sig, g_strsignal);
+  return (char *)strsignal_r(sig, g_strsignal);
 }
