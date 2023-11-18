@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/limits.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
+#include "libc/str/str.h"
 
 textwindows int sys_fchmodat_nt(int dirfd, const char *path, uint32_t mode,
                                 int flags) {

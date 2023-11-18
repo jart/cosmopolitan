@@ -180,12 +180,12 @@ for x; do
   elif [ x"$x" = x"-march=native" ]; then
     fatal_error "-march=native can't be used when building fat binaries"
   elif [ x"$x" != x"${x#-Xx86_64}" ]; then
-    x=${x#-Xx86_64}  # e.g. -Xx86_64,-msse3,-mavx,-mavx2,-mf16c,-mfma
-    FLAGS_X86_64="$FLAGS_X86_64 ${x//,/ }"
+    x=${x#-Xx86_64}  # e.g. cosmocc "-Xx86_64 -msse3 -mavx -mavx2 -mf16c -mfma"
+    FLAGS_X86_64="$FLAGS_X86_64 ${x#-Xx86_64}"
     continue
   elif [ x"$x" != x"${x#-Xaarch64}" ]; then
     x=${x#-Xaarch64}
-    FLAGS_aarch64="$FLAGS_aarch64 ${x//,/ }"
+    FLAGS_aarch64="$FLAGS_aarch64 $x"
     continue
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION

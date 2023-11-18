@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/limits.h"
+#include "libc/str/str.h"
 
 textwindows int sys_faccessat_nt(int dirfd, const char *path, int mode,
                                  uint32_t flags) {

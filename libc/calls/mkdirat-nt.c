@@ -19,6 +19,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/files.h"
+#include "libc/str/str.h"
 
 textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
   char16_t path16[PATH_MAX];

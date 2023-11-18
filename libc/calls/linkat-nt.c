@@ -18,9 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/limits.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/str/str.h"
 
 textwindows int sys_linkat_nt(int olddirfd, const char *oldpath, int newdirfd,
                               const char *newpath) {

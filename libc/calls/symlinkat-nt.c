@@ -32,6 +32,7 @@
 #include "libc/nt/struct/tokenprivileges.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/stack.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 static struct {

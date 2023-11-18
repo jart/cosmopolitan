@@ -210,6 +210,7 @@ axdx_t tprecode16to8(char *, size_t, const char16_t *);
 bool32 wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
 bool32 wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 char *__join_paths(char *, size_t, const char *, const char *) __wur;
+int __mkntpathat(int, const char *, int, char16_t[hasatleast 1024]);
 #endif /* _COSMO_SOURCE */
 
 #if defined(_COSMO_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || \

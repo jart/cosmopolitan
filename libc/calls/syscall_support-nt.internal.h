@@ -13,7 +13,6 @@ char16_t *__create_pipe_name(char16_t *);
 size_t __normntpath(char16_t *, size_t);
 int __mkntpath(const char *, char16_t[hasatleast PATH_MAX]);
 int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX], int);
-int __mkntpathat(int, const char *, int, char16_t[hasatleast PATH_MAX]);
 int __mkntpathath(int64_t, const char *, int, char16_t[hasatleast PATH_MAX]);
 int ntaccesscheck(const char16_t *, uint32_t) paramsnonnull();
 int sys_fcntl_nt_setfl(int, unsigned);
