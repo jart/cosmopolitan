@@ -22,6 +22,7 @@
  * - x86-64 Linux w/ Musl Libc
  * - x86-64 FreeBSD
  * - x86-64 Windows
+ * - x86-64 NetBSD
  * - aarch64 Linux w/ Glibc
  * - aarch64 Linux w/ Musl Libc
  * - aarch64 MacOS

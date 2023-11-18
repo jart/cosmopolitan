@@ -37,6 +37,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/nt/dll.h"
@@ -147,7 +148,7 @@ static int is_file_newer_than(const char *path, const char *other) {
   }
   if (stat(other, &st2)) {
     if (errno == ENOENT) {
-      return true;
+      return 2;
     } else {
       return -1;
     }
@@ -347,6 +348,7 @@ static dontinline void elf_exec(const char *file, char **envp) {
   size_t argsize = (1 + 2 + 1 + envc + 1 + auxc * 2 + 1 + 3) * 8;
   size_t mapsize = (stksize + argsize + (pagesz - 1)) & -pagesz;
   size_t skew = (mapsize - argsize) & (stkalign - 1);
+  if (IsFreebsd()) skew += 8;  // FreeBSD calls _start() like a C function
   map = __sys_mmap(0, mapsize, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, 0);
   if (map == MAP_FAILED) return;
@@ -569,12 +571,17 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   strlcat(exe, "dlopen-helper", PATH_MAX);
 
   // skip build if helper exists and this program is older
+  bool helper_exe_exists;
   switch (is_file_newer_than(GetProgramExecutableName(), exe)) {
     case -1:
       return false;
-    case false:
+    case 0:
       return true;
-    case true:
+    case 1:
+      helper_exe_exists = true;
+      break;
+    case 2:
+      helper_exe_exists = false;
       break;
     default:
       __builtin_unreachable();
@@ -586,12 +593,14 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   char sauce[sizeof(HELPER)];
   strlcpy(src, exe, PATH_MAX);
   strlcat(src, ".c", PATH_MAX);
-  if ((fd = open(src, O_RDONLY | O_CLOEXEC)) != -1) {
-    ssize_t got = pread(fd, sauce, sizeof(HELPER), 0);
-    close(fd);
-    if (got == sizeof(HELPER) - 1 &&
-        !memcmp(sauce, HELPER, sizeof(HELPER) - 1)) {
-      return true;
+  if (helper_exe_exists) {
+    if ((fd = open(src, O_RDONLY | O_CLOEXEC)) != -1) {
+      ssize_t got = pread(fd, sauce, sizeof(HELPER), 0);
+      close(fd);
+      if (got == sizeof(HELPER) - 1 &&
+          !memcmp(sauce, HELPER, sizeof(HELPER) - 1)) {
+        return true;
+      }
     }
   }
 
@@ -623,7 +632,7 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
     return false;
   }
   int pid, ws;
-  char *args[] = {"cc", "-pie", "-fPIC", src, "-o", tmp, "-ldl", 0};
+  char *args[] = {"cc", "-pie", "-fPIC", src, "-o", tmp, 0};
   errno_t err = posix_spawnp(&pid, args[0], NULL, NULL, args, environ);
   if (err) {
     unlink(tmp);
