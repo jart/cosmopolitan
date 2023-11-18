@@ -20,6 +20,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -325,6 +326,110 @@ TEST(sscanf, flexdecimal_hex) {
   EXPECT_EQ(1, sscanf("0x19a", "%i%d", &x, &y));
   EXPECT_EQ(0x19a, x);
   EXPECT_EQ(666, y);
+}
+
+TEST(sscanf, floating_point_simple) {
+  float x = 666.666f, y = x, z = y;
+  EXPECT_EQ(3, sscanf("0.3715 .3715 3715", "%f %f %f", &x, &y, &z));
+  EXPECT_EQ(0.3715f, x);
+  EXPECT_EQ(0.3715f, y);
+  EXPECT_EQ(3715.0f, z);
+}
+
+TEST(sscanf, floating_point_simple_double_precision) {
+  double x = 666.666, y = x, z = y;
+  EXPECT_EQ(3, sscanf("0.3715 .3715 3715", "%lf %lf %lf", &x, &y, &z));
+  EXPECT_EQ(0.3715, x);
+  EXPECT_EQ(0.3715, y);
+  EXPECT_EQ(3715.0, z);
+}
+
+TEST(sscanf, floating_point_nan) {
+  float a = 666.666f, b = a, c = b, d = c, e = d, f = e;
+  EXPECT_EQ(4, sscanf("nan -NAN nAn NaN", "%f %f %f %f", &a, &b, &c, &d));
+  EXPECT_EQ(2, sscanf("nan(2) -NaN(_ABCDzxcv1234_)", "%f %f", &e, &f));
+  EXPECT_TRUE(isnan(a));
+  EXPECT_TRUE(isnan(b));
+  EXPECT_TRUE(isnan(c));
+  EXPECT_TRUE(isnan(d));
+  EXPECT_TRUE(isnan(e));
+  EXPECT_TRUE(isnan(f));
+}
+
+TEST(sscanf, floating_point_nan_double_precision) {
+  double a = 666.666, b = a, c = b, d = c, e = d, f = e;
+  EXPECT_EQ(4, sscanf("nan -NAN nAn NaN", "%lf %lf %lf %lf", &a, &b, &c, &d));
+  EXPECT_EQ(2, sscanf("nan(2) -NAN(_ABCDzxcv1234_)", "%lf %lf", &e, &f));
+  EXPECT_TRUE(isnan(a));
+  EXPECT_TRUE(isnan(b));
+  EXPECT_TRUE(isnan(c));
+  EXPECT_TRUE(isnan(d));
+  EXPECT_TRUE(isnan(e));
+  EXPECT_TRUE(isnan(f));
+}
+
+TEST(sscanf, floating_point_infinity) {
+  float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f;
+  EXPECT_EQ(4, sscanf("inf +INF -iNf InF", "%f %f %f %f", &a, &b, &c, &d));
+  EXPECT_EQ(3, sscanf("+infinity -INFINITY iNfInItY", "%f %f %f", &e, &f, &g));
+  EXPECT_TRUE(isinf(a));
+  EXPECT_TRUE(isinf(b));
+  EXPECT_TRUE(isinf(c));
+  EXPECT_TRUE(isinf(d));
+  EXPECT_TRUE(isinf(e));
+  EXPECT_TRUE(isinf(f));
+  EXPECT_TRUE(isinf(g));
+}
+
+TEST(sscanf, floating_point_infinity_double_precision) {
+  double a = 666.666, b = a, c = b, d = c, e = d, f = e, g = f;
+  EXPECT_EQ(4, sscanf("inf +INF -iNf InF", "%lf %lf %lf %lf", &a, &b, &c, &d));
+  EXPECT_EQ(3, sscanf("+infinity -INFINITY iNfInItY", "%lf %lf %lf", &e, &f, &g));
+  EXPECT_TRUE(isinf(a));
+  EXPECT_TRUE(isinf(b));
+  EXPECT_TRUE(isinf(c));
+  EXPECT_TRUE(isinf(d));
+  EXPECT_TRUE(isinf(e));
+  EXPECT_TRUE(isinf(f));
+  EXPECT_TRUE(isinf(g));
+}
+
+TEST(sscanf, floating_point_documentation_examples) {
+  float a = 666.666f, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h, j = i;
+
+  EXPECT_EQ(2, sscanf("111.11 -2.22", "%f %f", &a, &b));
+  EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%f %f %f", &c, &d, &e));
+  EXPECT_EQ(5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk", "%f %f %f %f %f", &f, &g, &h, &i, &j));
+
+  EXPECT_EQ(111.11f, a);
+  EXPECT_EQ(-2.22f, b);
+  EXPECT_TRUE(isnan(c));
+  EXPECT_TRUE(isnan(d));
+  EXPECT_TRUE(isinf(e));
+  EXPECT_EQ(0X1.BC70A3D70A3D7P+6f, f);
+  EXPECT_TRUE(isinf(g));
+  EXPECT_EQ(-0.0000000123f, h);
+  EXPECT_EQ(.0f, i);
+  EXPECT_EQ(.0f, j);
+}
+
+TEST(sscanf, floating_point_documentation_examples_double_precision) {
+  double a = 666.666, b = a, c = b, d = c, e = d, f = e, g = f, h = g, i = h, j = i;
+
+  EXPECT_EQ(2, sscanf("111.11 -2.22", "%lf %lf", &a, &b));
+  EXPECT_EQ(3, sscanf("Nan nan(2) inF", "%lf %lf %lf", &c, &d, &e));
+  EXPECT_EQ(5, sscanf("0X1.BC70A3D70A3D7P+6 1.18973e+4932zzz -0.0000000123junk junk", "%lf %lf %lf %lf %lf", &f, &g, &h, &i, &j));
+
+  EXPECT_EQ(111.11, a);
+  EXPECT_EQ(-2.22, b);
+  EXPECT_TRUE(isnan(c));
+  EXPECT_TRUE(isnan(d));
+  EXPECT_TRUE(isinf(e));
+  EXPECT_EQ(0X1.BC70A3D70A3D7P+6, f);
+  EXPECT_TRUE(isinf(g));
+  EXPECT_EQ(-0.0000000123, h);
+  EXPECT_EQ(.0, i);
+  EXPECT_EQ(.0, j);
 }
 
 TEST(sscanf, luplus) {
