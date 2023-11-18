@@ -24,6 +24,20 @@ void CPU_AND(cpu_set_t *, cpu_set_t *, cpu_set_t *);
 void CPU_OR(cpu_set_t *, cpu_set_t *, cpu_set_t *);
 void CPU_XOR(cpu_set_t *, cpu_set_t *, cpu_set_t *);
 
+#define CPU_ALLOC_SIZE(n) \
+  ((((n) + (8 * sizeof(long) - 1)) & -(8 * sizeof(long))) / sizeof(long))
+#define CPU_ALLOC(n)                  ((cpu_set_t *)calloc(1, CPU_ALLOC_SIZE(n)))
+#define CPU_FREE(set)                 free(set)
+#define CPU_ZERO_S(size, set)         memset(set, 0, size)
+#define CPU_EQUAL_S(size, set1, set2) (!memcmp(set1, set2, size))
+#define _CPU_S(i, size, set, op)                                              \
+  ((i) / 8U >= (size) ? 0                                                     \
+                      : (((unsigned long *)(set))[(i) / 8 / sizeof(long)] op( \
+                            1UL << ((i) % (8 * sizeof(long))))))
+#define CPU_SET_S(i, size, set)   _CPU_S(i, size, set, |=)
+#define CPU_CLR_S(i, size, set)   _CPU_S(i, size, set, &= ~)
+#define CPU_ISSET_S(i, size, set) _CPU_S(i, size, set, &)
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_CPUSET_H_ */

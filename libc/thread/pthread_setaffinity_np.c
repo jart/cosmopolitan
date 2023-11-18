@@ -27,6 +27,7 @@
 #include "libc/nt/enum/threadaccess.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
+#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 
@@ -51,8 +52,14 @@ static dontinline textwindows int sys_pthread_setaffinity_nt(
 errno_t pthread_setaffinity_np(pthread_t thread, size_t size,
                                const cpu_set_t *bitset) {
   int e, rc, tid;
+  cpu_set_t bs = {0};
   struct PosixThread *pt;
   e = errno;
+  if (size < sizeof(cpu_set_t)) {
+    memcpy(&bs, bitset, size);
+    bitset = &bs;
+    size = sizeof(cpu_set_t);
+  }
   pt = (struct PosixThread *)thread;
   tid = _pthread_tid(pt);
   if (size != sizeof(cpu_set_t)) {
