@@ -21,17 +21,18 @@
 /**
  * Returns compressed size in bytes from zip local file header.
  */
-uint64_t GetZipLfileCompressedSize(const uint8_t *z) {
-  uint64_t x;
-  const uint8_t *p, *pe;
-  if ((x = ZIP_LFILE_COMPRESSEDSIZE(z)) == 0xFFFFFFFF) {
-    for (p = ZIP_LFILE_EXTRA(z), pe = p + ZIP_LFILE_EXTRASIZE(z); p < pe;
-         p += ZIP_EXTRA_SIZE(p)) {
-      if (ZIP_EXTRA_HEADERID(p) == kZipExtraZip64 &&
-          8 + 8 <= ZIP_EXTRA_CONTENTSIZE(p)) {
-        return READ64LE(ZIP_EXTRA_CONTENT(p) + 8);
+int64_t GetZipLfileCompressedSize(const uint8_t *z) {
+  if (ZIP_LFILE_COMPRESSEDSIZE(z) != 0xFFFFFFFFu) {
+    return ZIP_LFILE_COMPRESSEDSIZE(z);
+  }
+  const uint8_t *p = ZIP_LFILE_EXTRA(z);
+  const uint8_t *pe = p + ZIP_LFILE_EXTRASIZE(z);
+  for (; p < pe; p += ZIP_EXTRA_SIZE(p)) {
+    if (ZIP_EXTRA_HEADERID(p) == kZipExtraZip64) {
+      if (8 <= ZIP_EXTRA_CONTENTSIZE(p)) {
+        return READ64LE(ZIP_EXTRA_CONTENT(p));
       }
     }
   }
-  return x;
+  return -1;
 }

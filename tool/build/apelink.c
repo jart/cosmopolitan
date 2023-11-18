@@ -676,7 +676,7 @@ static void LoadSymbols(Elf64_Ehdr *e, Elf64_Off size, const char *path) {
   WRITE32LE(cfile, kZipCfileHdrMagic);
   cfile[4] = kZipCosmopolitanVersion;
   cfile[5] = kZipOsUnix;
-  cfile[6] = kZipEra1993;
+  cfile[6] = kZipEra2001;
   WRITE16LE(cfile + kZipCfileOffsetCompressionmethod, kZipCompressionDeflate);
   WRITE16LE(cfile + kZipCfileOffsetLastmodifieddate, DOS_DATE(2023, 7, 29));
   WRITE16LE(cfile + kZipCfileOffsetLastmodifiedtime, DOS_TIME(0, 0, 0));
@@ -690,8 +690,8 @@ static void LoadSymbols(Elf64_Ehdr *e, Elf64_Off size, const char *path) {
   unsigned char *lfile = Malloc(lfile_size);
   bzero(lfile, lfile_size);
   WRITE32LE(lfile, kZipLfileHdrMagic);
-  cfile[4] = kZipEra1993;
-  cfile[5] = kZipOsDos;
+  WRITE16LE(lfile + kZipLfileOffsetVersionNeeded, kZipEra2001);
+  WRITE16LE(lfile + kZipLfileOffsetGeneralflag, kZipGflagUtf8);
   WRITE16LE(lfile + kZipLfileOffsetCompressionmethod, kZipCompressionDeflate);
   WRITE16LE(lfile + kZipLfileOffsetLastmodifieddate, DOS_DATE(2023, 7, 29));
   WRITE16LE(lfile + kZipLfileOffsetLastmodifiedtime, DOS_TIME(0, 0, 0));

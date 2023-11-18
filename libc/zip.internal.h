@@ -102,6 +102,7 @@
 
 #define kZipLfileHdrMagic                ZM_(0x04034b50) /* PK♥♦ "PK\3\4" */
 #define kZipLfileHdrMinSize              30
+#define kZipLfileOffsetVersionNeeded     4
 #define kZipLfileOffsetGeneralflag       6
 #define kZipLfileOffsetCompressionmethod 8
 #define kZipLfileOffsetLastmodifiedtime  10
@@ -228,11 +229,11 @@ uint64_t GetZipCdirRecords(const uint8_t *);
 const void *GetZipCdirComment(const uint8_t *);
 uint64_t GetZipCdirSize(const uint8_t *);
 uint64_t GetZipCdirCommentSize(const uint8_t *);
-uint64_t GetZipCfileUncompressedSize(const uint8_t *);
-uint64_t GetZipCfileCompressedSize(const uint8_t *);
-uint64_t GetZipCfileOffset(const uint8_t *);
-uint64_t GetZipLfileUncompressedSize(const uint8_t *);
-uint64_t GetZipLfileCompressedSize(const uint8_t *);
+int64_t GetZipCfileCompressedSize(const uint8_t *);
+int64_t GetZipCfileUncompressedSize(const uint8_t *);
+int64_t GetZipCfileOffset(const uint8_t *);
+int64_t GetZipLfileCompressedSize(const uint8_t *);
+int64_t GetZipLfileUncompressedSize(const uint8_t *);
 void GetZipCfileTimestamps(const uint8_t *, struct timespec *,
                            struct timespec *, struct timespec *, int);
 
