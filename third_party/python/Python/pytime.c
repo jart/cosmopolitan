@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/python/Include/pytime.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/math.h"
 #include "libc/nt/synchronization.h"
@@ -15,7 +16,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymath.h"
-#include "third_party/python/Include/pytime.h"
 /* clang-format off */
 
 #define _PyTime_check_mul_overflow(a, b) \
@@ -539,9 +539,9 @@ _PyTime_AsTimevalTime_t(_PyTime_t t, time_t *p_secs, int *us,
 }
 
 static int
-win_perf_counter_frequency(int64_t *pfrequency, int raise)
+win_perf_counter_frequency(uint64_t *pfrequency, int raise)
 {
-    int64_t frequency;
+    uint64_t frequency;
     if (!QueryPerformanceFrequency(&frequency)) {
         if (raise) {
             PyErr_SetFromWindowsErr(0);
@@ -585,7 +585,7 @@ win_perf_counter_frequency(int64_t *pfrequency, int raise)
 static int
 py_get_win_perf_counter(_PyTime_t *tp, _Py_clock_info_t *info, int raise)
 {
-    static int64_t frequency;
+    static uint64_t frequency;
     if (!frequency) {
         if (win_perf_counter_frequency(&frequency, raise) < 0) {
             return -1;
@@ -597,7 +597,7 @@ py_get_win_perf_counter(_PyTime_t *tp, _Py_clock_info_t *info, int raise)
         info->monotonic = 1;
         info->adjustable = 0;
     }
-    int64_t ticksll;
+    uint64_t ticksll;
     QueryPerformanceCounter(&ticksll);
     /* Make sure that casting int64_t to _PyTime_t cannot overflow,
        both types are signed */
