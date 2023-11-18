@@ -18,26 +18,61 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/wintime.internal.h"
-#include "libc/nt/struct/filetime.h"
 #include "libc/nt/synchronization.h"
-#include "libc/sysv/consts/clock.h"
+
+#define _CLOCK_REALTIME        0
+#define _CLOCK_MONOTONIC       1
+#define _CLOCK_REALTIME_COARSE 2
+#define _CLOCK_BOOTTIME        3
+
+static struct {
+  uint64_t base;
+  uint64_t freq;
+} g_winclock;
 
 textwindows int sys_clock_gettime_nt(int clock, struct timespec *ts) {
+  uint64_t t;
   struct NtFileTime ft;
-  if (clock == CLOCK_REALTIME) {
-    if (!ts) return 0;
-    GetSystemTimeAsFileTime(&ft);
-    *ts = FileTimeToTimeSpec(ft);
-    return 0;
-  } else if (clock == CLOCK_MONOTONIC) {
-    if (!ts) return 0;
-    return sys_clock_gettime_mono(ts);
-  } else if (clock == CLOCK_BOOTTIME) {
-    if (ts) *ts = timespec_frommillis(GetTickCount64());
-    return 0;
-  } else {
-    return -EINVAL;
+  switch (clock) {
+    case _CLOCK_REALTIME:
+      if (ts) {
+        GetSystemTimePreciseAsFileTime(&ft);
+        *ts = FileTimeToTimeSpec(ft);
+      }
+      return 0;
+    case _CLOCK_REALTIME_COARSE:
+      if (ts) {
+        GetSystemTimeAsFileTime(&ft);
+        *ts = FileTimeToTimeSpec(ft);
+      }
+      return 0;
+    case _CLOCK_MONOTONIC:
+      if (ts) {
+        QueryPerformanceCounter(&t);
+        t = ((t - g_winclock.base) * 1000000000) / g_winclock.freq;
+        *ts = timespec_fromnanos(t);
+      }
+      return 0;
+    case _CLOCK_BOOTTIME:
+      if (ts) {
+        *ts = timespec_frommillis(GetTickCount64());
+      }
+      return 0;
+    default:
+      return -EINVAL;
   }
 }
+
+static textstartup void winclock_init() {
+  if (IsWindows()) {
+    QueryPerformanceCounter(&g_winclock.base);
+    QueryPerformanceFrequency(&g_winclock.freq);
+  }
+}
+
+const void *const winclock_ctor[] initarray = {
+    winclock_init,
+};

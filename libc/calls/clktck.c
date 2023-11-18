@@ -40,7 +40,11 @@ static dontinline int __clk_tck_init(void) {
   size_t len;
   struct clockinfo_netbsd clock;
   if (IsWindows()) {
-    x = 1000;
+    // MSVC defines CLK_TCK as 1000 but 1ms is obviously not the
+    // scheduling quantum Windows actually uses. If we define it
+    // as 30 rather than 1000, then clock_nanosleep is much more
+    // accurately able to predict the duration of its busy waits
+    x = 30;
   } else if (IsXnu() || IsOpenbsd()) {
     x = 100;
   } else if (IsFreebsd()) {

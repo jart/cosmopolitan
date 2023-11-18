@@ -50,7 +50,7 @@ TEST(clock_gettime, testClockRealtime) {
   EXPECT_LT((unsigned)ABS(ts.tv_sec - tv.tv_sec), 5u);
 }
 
-BENCH(clock_gettime, bench) {
+TEST(clock_gettime, bench) {
   struct timeval tv;
   struct timespec ts;
   gettimeofday(&tv, 0);   // trigger init

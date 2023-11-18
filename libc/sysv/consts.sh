@@ -578,7 +578,7 @@ syscon	close	CLOSE_RANGE_CLOEXEC			4			4			-1			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			0			0			# consensus
 syscon	clock	CLOCK_REALTIME_PRECISE			0			0			0			0			9			0			0			0			#
 syscon	clock	CLOCK_REALTIME_FAST			0			0			0			0			10			0			0			0			#
-syscon	clock	CLOCK_REALTIME_COARSE			5			5			0			0			10			0			0			0			# Linux 2.6.32+; bsd consensus; not available on RHEL5
+syscon	clock	CLOCK_REALTIME_COARSE			5			5			0			0			10			0			0			2			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC				1			1			1			6			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
 syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			1			6			11			3			3			1			#
 syscon	clock	CLOCK_MONOTONIC_FAST			1			1			1			6			12			3			3			1			#
@@ -587,7 +587,7 @@ syscon	clock	CLOCK_MONOTONIC_RAW			4			4			127			4			127			127			127			127			# a
 syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			2			127			12			15			2			0x40000000		127			# NetBSD lets you bitwise a PID into clockid_t
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			3			127			16			14			4			0x20000000		127			#
 syscon	clock	CLOCK_PROF				127			127			127			127			2			127			2			127			#
-syscon	clock	CLOCK_BOOTTIME				7			7			7			127			127			6			127			7			#
+syscon	clock	CLOCK_BOOTTIME				7			7			7			127			127			6			127			3			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			8			127			127			127			127			127			127			#
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			9			127			127			127			127			127			127			#
 syscon	clock	CLOCK_TAI				11			11			127			127			127			127			127			127			#

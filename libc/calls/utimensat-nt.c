@@ -65,7 +65,7 @@ static textwindows int sys_utimensat_nt_impl(int dirfd, const char *path,
   }
 
   if (!ts || ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
-    GetSystemTimeAsFileTime(ft);
+    GetSystemTimePreciseAsFileTime(ft);
   }
   if (ts) {
     for (i = 0; i < 2; ++i) {

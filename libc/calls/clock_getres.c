@@ -25,14 +25,20 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
-static int sys_clock_getres_poly(int clock, struct timespec *ts, int64_t real) {
+static int sys_clock_getres_poly(int clock, struct timespec *ts, int64_t real,
+                                 int64_t real_coarse, int64_t boot) {
+  ts->tv_sec = 0;
   if (clock == CLOCK_REALTIME) {
-    ts->tv_sec = 0;
     ts->tv_nsec = real;
     return 0;
+  } else if (clock == CLOCK_REALTIME_COARSE) {
+    ts->tv_nsec = real_coarse;
+    return 0;
   } else if (clock == CLOCK_MONOTONIC) {
-    ts->tv_sec = 0;
-    ts->tv_nsec = 1;
+    ts->tv_nsec = 10;
+    return 0;
+  } else if (clock == CLOCK_BOOTTIME) {
+    ts->tv_nsec = boot;
     return 0;
   } else {
     return einval();
@@ -40,11 +46,11 @@ static int sys_clock_getres_poly(int clock, struct timespec *ts, int64_t real) {
 }
 
 static int sys_clock_getres_nt(int clock, struct timespec *ts) {
-  return sys_clock_getres_poly(clock, ts, 100);
+  return sys_clock_getres_poly(clock, ts, 100, 1000000, 1000000);
 }
 
 static int sys_clock_getres_xnu(int clock, struct timespec *ts) {
-  return sys_clock_getres_poly(clock, ts, 1000);
+  return sys_clock_getres_poly(clock, ts, 1000, 1000, 1000);
 }
 
 /**

@@ -59,7 +59,7 @@ uint32_t SleepEx(uint32_t dwMilliseconds, bool32 bAlertable);
 void GetSystemTime(struct NtSystemTime *lpSystemTime);
 bool32 SystemTimeToFileTime(const struct NtSystemTime *lpSystemTime,
                             struct NtFileTime *lpFileTime);
-void GetSystemTimeAsFileTime(struct NtFileTime *);        /* win8+ */
+void GetSystemTimeAsFileTime(struct NtFileTime *);
 void GetSystemTimePreciseAsFileTime(struct NtFileTime *); /* win8+ */
 
 uint32_t WaitForSingleObject(int64_t hHandle, uint32_t dwMilliseconds);
@@ -110,8 +110,8 @@ void TryAcquireSRWLockShared(intptr_t *);
 
 uint64_t GetTickCount64(void);
 
-bool32 QueryPerformanceFrequency(int64_t *lpFrequency);
-bool32 QueryPerformanceCounter(int64_t *lpPerformanceCount);
+bool32 QueryPerformanceFrequency(uint64_t *lpFrequency);
+bool32 QueryPerformanceCounter(uint64_t *lpPerformanceCount);
 bool32 GetSystemTimeAdjustment(uint32_t *lpTimeAdjustment,
                                uint32_t *lpTimeIncrement,
                                bool32 *lpTimeAdjustmentDisabled);
