@@ -29,6 +29,7 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -401,29 +402,31 @@ void ShowCentralDirHeader64(uint8_t *cd) {
 }
 
 uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
-  size_t i;
+  int64_t i, e;
   if (n >= kZipCdirHdrMinSize) {
     i = n - kZipCdirHdrMinSize;
-    do {
+    e = MAX(0, n - 65536);
+    for (; i >= e; --i) {
       if (READ32LE(p + i) == kZipCdirHdrMagic &&
           IsZipEocd32(p, n, i) == kZipOk) {
         return (/*unconst*/ uint8_t *)(p + i);
       }
-    } while (i--);
+    }
   }
   return NULL;
 }
 
 uint8_t *GetZipCdir64(const uint8_t *p, size_t n) {
-  uint64_t i, j;
+  int64_t e, i, j;
   if (n >= kZipCdir64LocatorSize) {
     i = n - kZipCdir64LocatorSize;
-    do {
+    e = MAX(0, n - 65536);
+    for (; i >= e; --i) {
       if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
           (j = ZIP_LOCATE64_OFFSET(p + i)) + kZipCdir64HdrMinSize <= n) {
         return (uint8_t *)p + j;
       }
-    } while (i--);
+    }
   }
   return NULL;
 }
