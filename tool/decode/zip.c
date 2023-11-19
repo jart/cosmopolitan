@@ -454,41 +454,6 @@ void ShowCentralDirHeader64(uint8_t *cd) {
   show(".long", format(b1, "%d", READ32LE(cd + 4 + 4 + 8)), "totaldisks");
 }
 
-static const char *DescribeZipError(int err) {
-  switch (err) {
-    case kZipErrorEocdNotFound:
-      return "kZipErrorEocdNotFound";
-    case kZipErrorEocdOffsetOverflow:
-      return "kZipErrorEocdOffsetOverflow";
-    case kZipErrorEocdMagicNotFound:
-      return "kZipErrorEocdMagicNotFound";
-    case kZipErrorEocdSizeOverflow:
-      return "kZipErrorEocdSizeOverflow";
-    case kZipErrorEocdDiskMismatch:
-      return "kZipErrorEocdDiskMismatch";
-    case kZipErrorEocdOffsetSizeOverflow:
-      return "kZipErrorEocdOffsetSizeOverflow";
-    case kZipErrorEocdRecordsMismatch:
-      return "kZipErrorEocdRecordsMismatch";
-    case kZipErrorEocdRecordsOverflow:
-      return "kZipErrorEocdRecordsOverflow";
-    case kZipErrorCdirOffsetPastEocd:
-      return "kZipErrorCdirOffsetPastEocd";
-    case kZipErrorEocdLocatorMagic:
-      return "kZipErrorEocdLocatorMagic";
-    case kZipErrorEocdLocatorOffset:
-      return "kZipErrorEocdLocatorOffset";
-    case kZipErrorRaceCondition:
-      return "kZipErrorRaceCondition";
-    case kZipErrorMapFailed:
-      return "kZipErrorMapFailed";
-    case kZipErrorOpenFailed:
-      return "kZipErrorOpenFailed";
-    default:
-      return "unknown";
-  }
-}
-
 int IsZipEocd32(const uint8_t *p, size_t n, size_t i) {
   size_t offset;
   if (i > n || n - i < kZipCdirHdrMinSize) {
@@ -529,8 +494,8 @@ uint8_t *GetZipCdir32(const uint8_t *p, size_t n) {
           return (/*unconst*/ uint8_t *)(p + i);
         }
         kprintf("warning: found eocd32 magic at offset 0x%lx that didn't look "
-                "like an eocd32 record: %s\n",
-                i, DescribeZipError(err));
+                "like an eocd32 record\n",
+                i);
       }
     }
   }
