@@ -114,7 +114,7 @@ struct Packages {
         Elf64_Xword symcount;    // not persisted
         int section_offset;
         int section_count;
-      } * p;
+      } *p;
     } objects;
     struct Sections {
       size_t i, n;
@@ -128,7 +128,7 @@ struct Packages {
           kBss,
           kOther,
         } kind;
-      } * p;
+      } *p;
     } sections;
     struct Symbols {
       size_t i, n;
@@ -139,9 +139,9 @@ struct Packages {
         uint8_t type : 4;
         uint16_t object;   // pkg->objects.p[object]
         uint16_t section;  // pkg->sections.p[section]
-      } * p;               // persisted as pkg+RVA
+      } *p;                // persisted as pkg+RVA
     } symbols, undefs;     // TODO(jart): hash undefs?
-  } * *p;                  // persisted across multiple files
+  } **p;                   // persisted across multiple files
 };
 
 struct Relas {
@@ -150,7 +150,7 @@ struct Relas {
   struct Rela {
     const char *symbol_name;
     const char *object_path;
-  } * p;
+  } *p;
 } prtu;
 
 static wontreturn void Die(const char *path, const char *reason) {
@@ -649,7 +649,7 @@ int main(int argc, char *argv[]) {
   if (argc == 2 && !strcmp(argv[1], "-n")) {
     exit(0);
   }
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
   bzero(&pkg, sizeof(pkg));

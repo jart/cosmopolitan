@@ -27,7 +27,7 @@ int64_t GetZipCfileOffset(const uint8_t *z) {
   }
   const uint8_t *p = ZIP_CFILE_EXTRA(z);
   const uint8_t *pe = p + ZIP_CFILE_EXTRASIZE(z);
-  for (; p < pe; p += ZIP_EXTRA_SIZE(p)) {
+  for (; p + ZIP_EXTRA_SIZE(p) <= pe; p += ZIP_EXTRA_SIZE(p)) {
     if (ZIP_EXTRA_HEADERID(p) == kZipExtraZip64) {
       int offset = 0;
       if (ZIP_CFILE_COMPRESSEDSIZE(z) == 0xFFFFFFFFu) {

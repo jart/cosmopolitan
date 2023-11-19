@@ -809,7 +809,7 @@ int main(int argc, char *argv[]) {
   if (g_daemonize) Daemonize();
   Serve();
   free(g_psk);
-#if IsModeDbg()
+#ifdef MODE_DBG
   CheckForMemoryLeaks();
   CheckForFileLeaks();
 #endif

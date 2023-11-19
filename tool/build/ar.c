@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
   struct ar_hdr header1;
   struct ar_hdr header2;
 
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
 

@@ -124,6 +124,8 @@ static const uint32_t kSourceExts[] = {
     EXT("c"),    // c
     EXT("cc"),   // c++
     EXT("cpp"),  // c++
+    EXT("cu"),   // cuda
+    EXT("m"),    // objective c
 };
 
 static char *names;
@@ -667,7 +669,7 @@ int main(int argc, char *argv[]) {
   ssize_t rc;
   size_t i, n;
   char *makefile;
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
   prog = argv[0];

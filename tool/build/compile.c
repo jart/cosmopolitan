@@ -837,7 +837,7 @@ int main(int argc, char *argv[]) {
   char *s, *q, **envp;
   int ws, opt, exitcode;
 
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
 

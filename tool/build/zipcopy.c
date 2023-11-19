@@ -211,7 +211,7 @@ static void CopyZip(void) {
 }
 
 int main(int argc, char *argv[]) {
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
   prog = argv[0];

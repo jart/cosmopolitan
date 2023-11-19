@@ -71,7 +71,7 @@
   "  INPUT      is an elf executable made by the unix linker\n"  \
   "\n"
 
-#ifndef NDEBUG
+#ifdef MODE_DBG
 #define DEBUG(...) kprintf("DEBUG: " __VA_ARGS__)
 #else
 #define DEBUG(...) (void)0

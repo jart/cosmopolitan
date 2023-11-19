@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
   void *map;
   ssize_t size;
   const char *path;
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
   for (i = 1; i < argc; ++i) {

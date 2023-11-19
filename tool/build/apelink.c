@@ -674,9 +674,10 @@ static void LoadSymbols(Elf64_Ehdr *e, Elf64_Off size, const char *path) {
   unsigned char *cfile = Malloc(cfile_size);
   bzero(cfile, cfile_size);
   WRITE32LE(cfile, kZipCfileHdrMagic);
-  cfile[4] = kZipCosmopolitanVersion;
-  cfile[5] = kZipOsUnix;
-  cfile[6] = kZipEra2001;
+  WRITE16LE(cfile + kZipCfileOffsetVersionMadeBy,
+            kZipOsUnix << 8 | kZipCosmopolitanVersion);
+  WRITE16LE(cfile + kZipCfileOffsetVersionNeeded, kZipEra2001);
+  WRITE16LE(cfile + kZipCfileOffsetGeneralflag, kZipGflagUtf8);
   WRITE16LE(cfile + kZipCfileOffsetCompressionmethod, kZipCompressionDeflate);
   WRITE16LE(cfile + kZipCfileOffsetLastmodifieddate, DOS_DATE(2023, 7, 29));
   WRITE16LE(cfile + kZipCfileOffsetLastmodifiedtime, DOS_TIME(0, 0, 0));
@@ -1813,9 +1814,11 @@ int main(int argc, char *argv[]) {
   int i, j;
   Elf64_Off offset;
   Elf64_Xword prologue_bytes;
-#ifndef NDEBUG
+
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
+
   prog = argv[0];
   if (!prog) prog = "apelink";
 
@@ -2080,7 +2083,8 @@ int main(int argc, char *argv[]) {
           p = stpcpy(p, " count=");
           loader->ddarg_size1 = p;
           p = GenerateDecimalOffsetRelocation(p);
-          p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n");
+          p = stpcpy(
+              p, " bs=1 2>/dev/null | /usr/bin/gzip -dc >\"$t.$$\" ||exit\n");
           if (loader->macho_offset) {
             p = stpcpy(p, "/bin/dd if=\"$t.$$\" of=\"$t.$$\"");
             p = stpcpy(p, " skip=");

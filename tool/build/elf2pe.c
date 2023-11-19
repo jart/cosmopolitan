@@ -1078,7 +1078,7 @@ static void Pwrite(int fd, const void *data, size_t size, uint64_t offset) {
 }
 
 int main(int argc, char *argv[]) {
-#ifndef NDEBUG
+#ifdef MODE_DBG
   ShowCrashReports();
 #endif
   // get program name
