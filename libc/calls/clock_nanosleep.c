@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/cp.internal.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
@@ -27,6 +28,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/clktck.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
@@ -108,9 +110,17 @@ static int cosmo_clock_nanosleep(int clock, int flags,
   }
 
   // spin through final scheduling quantum
-  do unassert(!clock_gettime(time_clock, &now));
-  while (timespec_cmp(now, deadline) < 0);
-  return 0;
+  int rc = 0;
+  ftrace_enabled(-1);
+  do {
+    if (_check_cancel()) {
+      rc = -1;
+      break;
+    }
+    unassert(!clock_gettime(time_clock, &now));
+  } while (timespec_cmp(now, deadline) < 0);
+  ftrace_enabled(+1);
+  return rc;
 }
 
 /**

@@ -20,9 +20,8 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/weaken.h"
 #include "libc/thread/posixthread.internal.h"
-#ifdef __x86_64__
 
-textwindows int _check_cancel(void) {
+int _check_cancel(void) {
   if (_weaken(_pthread_cancel_ack) &&  //
       _pthread_self() && !(_pthread_self()->pt_flags & PT_NOCANCEL) &&
       atomic_load_explicit(&_pthread_self()->pt_canceled,
@@ -31,5 +30,3 @@ textwindows int _check_cancel(void) {
   }
   return 0;
 }
-
-#endif /* __x86_64__ */
