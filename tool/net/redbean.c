@@ -7349,6 +7349,9 @@ static void GetOpts(int argc, char *argv[]) {
 void RedBean(int argc, char *argv[]) {
   char ibuf[21];
   int fd;
+  // don't complain about --assimilate if it's the only parameter,
+  // as it can only get here if it's already native or assimilated
+  if (argc == 2 && strcmp(argv[1], "--assimilate") == 0) return;
   if (IsLinux()) {
     // disable weird linux capabilities
     for (int e = errno, i = 0;; ++i) {
