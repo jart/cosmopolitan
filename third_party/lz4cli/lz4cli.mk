@@ -27,8 +27,7 @@ THIRD_PARTY_LZ4CLI_OBJS =				\
 	o/$(MODE)/third_party/lz4cli/lz4io.o		\
 	o/$(MODE)/third_party/lz4cli/lz4hc.o		\
 	o/$(MODE)/third_party/lz4cli/lz4frame.o		\
-	o/$(MODE)/third_party/lz4cli/datagen.o		\
-	o/$(MODE)/third_party/lz4cli/xxhash.o
+	o/$(MODE)/third_party/lz4cli/datagen.o		
 
 o/$(MODE)/third_party/lz4cli/lz4.o			\
 o/$(MODE)/third_party/lz4cli/lz4io.o			\
@@ -42,7 +41,8 @@ THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_STDIO					\
 	LIBC_LOG					\
-	LIBC_TIME
+	LIBC_TIME					\
+	THIRD_PARTY_XXHASH
 
 THIRD_PARTY_LZ4CLI_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LZ4CLI_DIRECTDEPS),$($(x))))
