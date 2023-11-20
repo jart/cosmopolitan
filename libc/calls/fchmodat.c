@@ -20,6 +20,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -28,6 +29,7 @@
 #include "libc/sysv/errfuns.h"
 
 int sys_fchmodat_linux(int, const char *, unsigned, int);
+int sys_fchmodat2(int, const char *, unsigned, int);
 
 /**
  * Changes permissions on file, e.g.:
@@ -40,6 +42,9 @@ int sys_fchmodat_linux(int, const char *, unsigned, int);
  * @param mode contains octal flags (base 8)
  * @param flags can have `AT_SYMLINK_NOFOLLOW`
  * @raise EROFS if `dirfd` or `path` use zip file system
+ * @raise EOPNOTSUP on Linux if `path` is a symbolic link, `AT_SYMLINK_NOFOLLOW`
+ * is set in `flags`, and filesystem does not support setting the mode of
+ * symbolic links.
  * @errors ENOENT, ENOTDIR, ENOSYS
  * @asyncsignalsafe
  * @see fchmod()
@@ -53,7 +58,12 @@ int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
     rc = erofs();
   } else if (!IsWindows()) {
     if (IsLinux() && flags) {
-      rc = sys_fchmodat_linux(dirfd, path, mode, flags);
+      int serrno = errno;
+      rc = sys_fchmodat2(dirfd, path, mode, flags);
+      if (rc == -1 && errno == ENOSYS) {
+        errno = serrno;
+        rc = sys_fchmodat_linux(dirfd, path, mode, flags);
+      }
     } else {
       rc = sys_fchmodat(dirfd, path, mode, flags);
     }
