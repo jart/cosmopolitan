@@ -5150,6 +5150,9 @@ static int LuaReadWS(lua_State *L) {
       luaL_error(L, "Could not read WS data");
   }
 
+  if ((wshdr[0] & 0xF) == 0x8)
+    luaL_error(L, "WS connection closed");
+
   for (i = 0, amt = amtread; i < got; ++i, ++amt) inbuf.p[amt] ^= mask[i & 0x3];
 
   lua_pushlstring(L, inbuf.p + amtread, got);
@@ -6479,14 +6482,12 @@ static bool StreamWS(char *p) {
     if (Send(iov, 4) == -1) break;
   }
 
-  if (rc != -1) {
-    wshdr[0] = 0x8;
-    wshdr[1] = 0;
-    iov[0].iov_len = 2;
-    Send(iov, 1);
-  } else {
-    connectionclose = true;
-  }
+  wshdr[0] = 0x8 | (1 << 7);
+  wshdr[1] = 0;
+  iov[0].iov_len = 2;
+  Send(iov, 1);
+  connectionclose = true;
+
   return true;
 }
 
