@@ -6444,8 +6444,9 @@ static bool StreamResponse(char *p) {
 
 static bool StreamWS(char *p) {
   ssize_t rc;
-  struct iovec iov[4];
+  struct iovec iov[2];
   char *s, wshdr[10], *extlen;
+  int nresults, status;
 
   p = AppendCrlf(p);
   CHECK_LE(p - hdrbuf.p, hdrbuf.n);
@@ -6459,13 +6460,25 @@ static bool StreamWS(char *p) {
   bzero(iov, sizeof(iov));
   iov[0].iov_base = wshdr;
 
-  wshdr[0] = 0x1 | (0x1 << 7);
+  wshdr[0] = 0x1 | (1 << 7);
   extlen = &wshdr[2];
 
-  cpm.isyielding = 2;  // skip first YieldGenerator
-
   for (;;) {
-    if ((rc = cpm.generator(iov + 1)) <= 0) break;
+    if (!YL || lua_status(YL) != LUA_YIELD) break;  // done yielding
+    cpm.contentlength = 0;
+    status = lua_resume(YL, NULL, 0, &nresults);
+    if (status != LUA_OK && status != LUA_YIELD) {
+      LogLuaError("resume", lua_tostring(YL, -1));
+      lua_pop(YL, 1);
+      break;
+    }
+    lua_pop(YL, nresults);
+    if (!cpm.contentlength) UseOutput();
+
+    DEBUGF("(lua) ws yielded with %ld bytes generated", cpm.contentlength);
+
+    iov[1].iov_base = cpm.content;
+    iov[1].iov_len = rc = cpm.contentlength;
 
     if (rc < 126) {
       wshdr[1] = rc;
@@ -6479,7 +6492,7 @@ static bool StreamWS(char *p) {
       *(uint64_t *)extlen = htobe64(rc);
       iov[0].iov_len = 10;
     }
-    if (Send(iov, 4) == -1) break;
+    if (Send(iov, 2) == -1) break;
   }
 
   wshdr[0] = 0x8 | (1 << 7);
