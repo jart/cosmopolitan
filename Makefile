@@ -166,153 +166,153 @@ include build/definitions.mk			# ├──META
 include build/config.mk				# │  You can build
 include build/rules.mk				# │  You can topologically order
 include build/online.mk				#─┘
-include libc/nexgen32e/nexgen32e.mk		#─┐
-include libc/sysv/sysv.mk			# ├──SYSTEM SUPPORT
-include libc/nt/nt.mk				# │  You can do math
-include libc/intrin/intrin.mk			# │  You can use the stack
-include third_party/compiler_rt/compiler_rt.mk	# │  You can manipulate arrays
-include libc/tinymath/tinymath.mk		# │  You can issue raw system calls
-include libc/str/str.mk				# │
-include third_party/xed/xed.mk			# │
-include third_party/puff/puff.mk		# │
-include libc/elf/elf.mk				# │
-include ape/ape.mk				# │
-include libc/fmt/fmt.mk				# │
-include libc/vga/vga.mk				# │
-include libc/irq/irq.mk				#─┘
-include libc/calls/calls.mk			#─┐
-include libc/irq/irq.mk				# ├──SYSTEMS RUNTIME
-include third_party/nsync/nsync.mk		# │  You can issue system calls
-include libc/runtime/runtime.mk			# │
-include third_party/double-conversion/dc.mk	# │
-include libc/crt/crt.mk				# │
-include third_party/dlmalloc/dlmalloc.mk	#─┘
-include libc/mem/mem.mk				#─┐
-include third_party/gdtoa/gdtoa.mk		# ├──DYNAMIC RUNTIME
-include third_party/nsync/mem/mem.mk		# │  You can now use stdio
-include libc/proc/proc.mk			# │  You can now use threads
-include libc/dlopen/dlopen.mk			# │  You can now use processes
-include libc/thread/thread.mk			# │  You can finally call malloc()
-include tool/hello/hello.mk			# │
-include third_party/zlib/zlib.mk		# │
-include libc/stdio/stdio.mk			# │
-include libc/time/time.mk			# │
-include net/net.mk				# │
-include third_party/vqsort/vqsort.mk		# │
-include libc/log/log.mk				# │
-include third_party/getopt/getopt.mk		# │
-include third_party/bzip2/bzip2.mk		# │
-include dsp/core/core.mk			# │
-include third_party/musl/musl.mk		# │
-include libc/x/x.mk				# │
-include third_party/stb/stb.mk			# │
-include dsp/scale/scale.mk			# │
-include dsp/mpeg/mpeg.mk			# │
-include dsp/dsp.mk				# │
-include third_party/zlib/gz/gz.mk		# │
-include third_party/intel/intel.mk		# │
-include third_party/aarch64/aarch64.mk		# │
-include libc/libc.mk				#─┘
-include libc/sock/sock.mk			#─┐
-include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
-include libc/dns/dns.mk				# │  You can communicate with the network
-include net/http/http.mk			# │
-include third_party/mbedtls/mbedtls.mk		# │
-include third_party/libcxx/libcxx.mk		# │
-include third_party/ggml/ggml.mk		# │
-include third_party/radpajama/radpajama.mk	# │
-include net/https/https.mk			# │
-include third_party/regex/regex.mk		#─┘
-include third_party/tidy/tidy.mk
-include third_party/third_party.mk
-include third_party/nsync/testing/testing.mk
-include libc/testlib/testlib.mk
-include tool/viz/lib/vizlib.mk
-include tool/args/args.mk
-include test/posix/test.mk
-include test/tool/args/test.mk
-include third_party/linenoise/linenoise.mk
-include third_party/maxmind/maxmind.mk
-include net/finger/finger.mk
-include third_party/double-conversion/test/test.mk
-include third_party/lua/lua.mk
-include third_party/tree/tree.mk
-include third_party/zstd/zstd.mk
-include third_party/tr/tr.mk
-include third_party/sed/sed.mk
-include third_party/awk/awk.mk
-include third_party/hiredis/hiredis.mk
-include third_party/make/make.mk
-include third_party/ctags/ctags.mk
-include third_party/finger/finger.mk
-include third_party/argon2/argon2.mk
-include third_party/smallz4/smallz4.mk
-include third_party/sqlite3/sqlite3.mk
-include third_party/mbedtls/test/test.mk
-include third_party/quickjs/quickjs.mk
-include third_party/lz4cli/lz4cli.mk
-include third_party/zip/zip.mk
-include third_party/xxhash/xxhash.mk
-include third_party/unzip/unzip.mk
-include tool/build/lib/buildlib.mk
-include third_party/chibicc/chibicc.mk
-include third_party/chibicc/test/test.mk
-include third_party/python/python.mk
-include tool/build/build.mk
-include tool/curl/curl.mk
-include third_party/qemu/qemu.mk
-include examples/examples.mk
-include examples/pyapp/pyapp.mk
-include examples/pylife/pylife.mk
-include tool/decode/lib/decodelib.mk
-include tool/decode/decode.mk
-include tool/lambda/lib/lib.mk
-include tool/lambda/lambda.mk
-include tool/plinko/lib/lib.mk
-include tool/plinko/plinko.mk
-include test/tool/plinko/test.mk
-include tool/net/net.mk
-include tool/viz/viz.mk
-include tool/tool.mk
-include net/turfwar/turfwar.mk
-include test/libc/tinymath/test.mk
-include test/libc/intrin/test.mk
-include test/libc/mem/test.mk
-include test/libc/nexgen32e/test.mk
-include test/libc/runtime/test.mk
-include test/libc/thread/test.mk
-include test/libc/sock/test.mk
-include test/libc/str/test.mk
-include test/libc/log/test.mk
-include test/libc/str/test.mk
-include test/libc/calls/test.mk
-include test/libc/x/test.mk
-include test/libc/xed/test.mk
-include test/libc/fmt/test.mk
-include test/libc/dns/test.mk
-include test/libc/time/test.mk
-include test/libc/proc/test.mk
-include test/libc/stdio/test.mk
-include test/libc/release/test.mk
-include test/libc/test.mk
-include test/net/http/test.mk
-include test/net/https/test.mk
-include test/net/finger/test.mk
-include test/net/test.mk
-include test/tool/build/lib/test.mk
-include test/tool/build/test.mk
-include test/tool/viz/lib/test.mk
-include test/tool/viz/test.mk
-include test/tool/net/test.mk
-include test/tool/test.mk
-include test/dsp/core/test.mk
-include test/dsp/scale/test.mk
-include test/dsp/tty/test.mk
-include test/dsp/test.mk
-include examples/package/lib/build.mk
-include examples/package/build.mk
+include libc/nexgen32e/BUILD.mk			#─┐
+include libc/sysv/BUILD.mk			# ├──SYSTEM SUPPORT
+include libc/nt/BUILD.mk			# │  You can do math
+include libc/intrin/BUILD.mk			# │  You can use the stack
+include third_party/compiler_rt/BUILD.mk	# │  You can manipulate arrays
+include libc/tinymath/BUILD.mk			# │  You can issue raw system calls
+include libc/str/BUILD.mk			# │
+include third_party/xed/BUILD.mk		# │
+include third_party/puff/BUILD.mk		# │
+include libc/elf/BUILD.mk			# │
+include ape/BUILD.mk				# │
+include libc/fmt/BUILD.mk			# │
+include libc/vga/BUILD.mk			# │
+include libc/irq/BUILD.mk			#─┘
+include libc/calls/BUILD.mk			#─┐
+include libc/irq/BUILD.mk			# ├──SYSTEMS RUNTIME
+include third_party/nsync/BUILD.mk		# │  You can issue system calls
+include libc/runtime/BUILD.mk			# │
+include third_party/double-conversion/BUILD.mk	# │
+include libc/crt/BUILD.mk			# │
+include third_party/dlmalloc/BUILD.mk		#─┘
+include libc/mem/BUILD.mk			#─┐
+include third_party/gdtoa/BUILD.mk		# ├──DYNAMIC RUNTIME
+include third_party/nsync/mem/BUILD.mk		# │  You can now use stdio
+include libc/proc/BUILD.mk			# │  You can now use threads
+include libc/dlopen/BUILD.mk			# │  You can now use processes
+include libc/thread/BUILD.mk			# │  You can finally call malloc()
+include tool/hello/BUILD.mk			# │
+include third_party/zlib/BUILD.mk		# │
+include libc/stdio/BUILD.mk			# │
+include libc/time/BUILD.mk			# │
+include net/BUILD.mk				# │
+include third_party/vqsort/BUILD.mk		# │
+include libc/log/BUILD.mk			# │
+include third_party/getopt/BUILD.mk		# │
+include third_party/bzip2/BUILD.mk		# │
+include dsp/core/BUILD.mk			# │
+include third_party/musl/BUILD.mk		# │
+include libc/x/BUILD.mk				# │
+include third_party/stb/BUILD.mk		# │
+include dsp/scale/BUILD.mk			# │
+include dsp/mpeg/BUILD.mk			# │
+include dsp/BUILD.mk				# │
+include third_party/zlib/gz/BUILD.mk		# │
+include third_party/intel/BUILD.mk		# │
+include third_party/aarch64/BUILD.mk		# │
+include libc/BUILD.mk				#─┘
+include libc/sock/BUILD.mk			#─┐
+include dsp/tty/BUILD.mk			# ├──ONLINE RUNTIME
+include libc/dns/BUILD.mk			# │  You can communicate with the network
+include net/http/BUILD.mk			# │
+include third_party/mbedtls/BUILD.mk		# │
+include third_party/libcxx/BUILD.mk		# │
+include third_party/ggml/BUILD.mk		# │
+include third_party/radpajama/BUILD.mk		# │
+include net/https/BUILD.mk			# │
+include third_party/regex/BUILD.mk		#─┘
+include third_party/tidy/BUILD.mk
+include third_party/BUILD.mk
+include third_party/nsync/testing/BUILD.mk
+include libc/testlib/BUILD.mk
+include tool/viz/lib/BUILD.mk
+include tool/args/BUILD.mk
+include test/posix/BUILD.mk
+include test/tool/args/BUILD.mk
+include third_party/linenoise/BUILD.mk
+include third_party/maxmind/BUILD.mk
+include net/finger/BUILD.mk
+include third_party/double-conversion/test/BUILD.mk
+include third_party/lua/BUILD.mk
+include third_party/tree/BUILD.mk
+include third_party/zstd/BUILD.mk
+include third_party/tr/BUILD.mk
+include third_party/sed/BUILD.mk
+include third_party/awk/BUILD.mk
+include third_party/hiredis/BUILD.mk
+include third_party/make/BUILD.mk
+include third_party/ctags/BUILD.mk
+include third_party/finger/BUILD.mk
+include third_party/argon2/BUILD.mk
+include third_party/smallz4/BUILD.mk
+include third_party/sqlite3/BUILD.mk
+include third_party/mbedtls/test/BUILD.mk
+include third_party/quickjs/BUILD.mk
+include third_party/lz4cli/BUILD.mk
+include third_party/zip/BUILD.mk
+include third_party/xxhash/BUILD.mk
+include third_party/unzip/BUILD.mk
+include tool/build/lib/BUILD.mk
+include third_party/chibicc/BUILD.mk
+include third_party/chibicc/test/BUILD.mk
+include third_party/python/BUILD.mk
+include tool/build/BUILD.mk
+include tool/curl/BUILD.mk
+include third_party/qemu/BUILD.mk
+include examples/BUILD.mk
+include examples/pyapp/BUILD.mk
+include examples/pylife/BUILD.mk
+include tool/decode/lib/BUILD.mk
+include tool/decode/BUILD.mk
+include tool/lambda/lib/BUILD.mk
+include tool/lambda/BUILD.mk
+include tool/plinko/lib/BUILD.mk
+include tool/plinko/BUILD.mk
+include test/tool/plinko/BUILD.mk
+include tool/net/BUILD.mk
+include tool/viz/BUILD.mk
+include tool/BUILD.mk
+include net/turfwar/BUILD.mk
+include test/libc/tinymath/BUILD.mk
+include test/libc/intrin/BUILD.mk
+include test/libc/mem/BUILD.mk
+include test/libc/nexgen32e/BUILD.mk
+include test/libc/runtime/BUILD.mk
+include test/libc/thread/BUILD.mk
+include test/libc/sock/BUILD.mk
+include test/libc/str/BUILD.mk
+include test/libc/log/BUILD.mk
+include test/libc/str/BUILD.mk
+include test/libc/calls/BUILD.mk
+include test/libc/x/BUILD.mk
+include test/libc/xed/BUILD.mk
+include test/libc/fmt/BUILD.mk
+include test/libc/dns/BUILD.mk
+include test/libc/time/BUILD.mk
+include test/libc/proc/BUILD.mk
+include test/libc/stdio/BUILD.mk
+include test/libc/release/BUILD.mk
+include test/libc/BUILD.mk
+include test/net/http/BUILD.mk
+include test/net/https/BUILD.mk
+include test/net/finger/BUILD.mk
+include test/net/BUILD.mk
+include test/tool/build/lib/BUILD.mk
+include test/tool/build/BUILD.mk
+include test/tool/viz/lib/BUILD.mk
+include test/tool/viz/BUILD.mk
+include test/tool/net/BUILD.mk
+include test/tool/BUILD.mk
+include test/dsp/core/BUILD.mk
+include test/dsp/scale/BUILD.mk
+include test/dsp/tty/BUILD.mk
+include test/dsp/BUILD.mk
+include examples/package/lib/BUILD.mk
+include examples/package/BUILD.mk
 #-φ-examples/package/new.sh
-include test/test.mk
+include test/BUILD.mk
 
 OBJS	 = $(foreach x,$(PKGS),$($(x)_OBJS))
 SRCS	:= $(foreach x,$(PKGS),$($(x)_SRCS))
