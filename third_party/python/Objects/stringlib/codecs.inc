@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 
 /* stringlib: codec implementations */
 

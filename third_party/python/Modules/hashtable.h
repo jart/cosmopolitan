@@ -3,7 +3,6 @@
 #include "libc/assert.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/pyport.h"
-/* clang-format off */
 #ifndef Py_LIMITED_API
 
 /* Single linked list */

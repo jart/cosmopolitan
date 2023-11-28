@@ -20,7 +20,6 @@
 
 #define GetCurrentProcess() -1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 char16_t *GetCommandLine(void) nosideeffect;
@@ -49,5 +48,4 @@ uint32_t GetModuleFileName(int64_t hModule, char16_t *lpFilename,
 #include "libc/nt/thunk/runtime.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_RUNTIME_H_ */

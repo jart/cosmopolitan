@@ -1,4 +1,3 @@
-// clang-format off
 /*
  *	$Id: sql.c 761 2010-06-04 12:40:28Z dfishburn $
  *

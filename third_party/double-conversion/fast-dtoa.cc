@@ -28,7 +28,6 @@
 #include "third_party/double-conversion/diy-fp.h"
 #include "third_party/double-conversion/fast-dtoa.h"
 #include "third_party/double-conversion/ieee.h"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 double-conversion (BSD-3 License)\\n\

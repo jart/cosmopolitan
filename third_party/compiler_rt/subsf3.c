@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/subsf3.c - Single-precision subtraction ---------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

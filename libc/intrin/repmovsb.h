@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_REPMOVSB_H_
 #define COSMOPOLITAN_LIBC_INTRIN_REPMOVSB_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifdef _COSMO_SOURCE
 
 forceinline void repmovsb(void **dest, const void **src, size_t cx) {
@@ -24,5 +23,4 @@ forceinline void repmovsb(void **dest, const void **src, size_t cx) {
 #endif
 
 #endif /* _COSMO_SOURCE */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_REPMOVSB_H_ */

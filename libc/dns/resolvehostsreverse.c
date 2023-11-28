@@ -19,7 +19,7 @@
 #include "libc/dns/consts.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/mem/alg.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"

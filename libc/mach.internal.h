@@ -38,12 +38,10 @@
 #define kXnuNtNsBase     0x060 /* uint64_t */
 #define kXnuNtGeneration 0x068 /* uint32_t */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool swtch(void);
 bool swtch_pri(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MACH_H_ */

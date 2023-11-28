@@ -1,4 +1,3 @@
-/* clang-format off */
 //===----- lib/fp_add_impl.inc - floaing point addition -----------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

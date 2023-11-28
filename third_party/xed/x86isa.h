@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_XED_X86ISA_H_
 #define COSMOPOLITAN_THIRD_PARTY_XED_X86ISA_H_
 #include "third_party/xed/x86.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define XED_CHIP_INVALID           1
@@ -257,5 +256,4 @@ void xed_get_chip_features(struct XedChipFeatures *, int);
 bool xed_isa_set_is_valid_for_chip(int, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_XED_X86ISA_H_ */

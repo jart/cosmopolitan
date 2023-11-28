@@ -3,7 +3,6 @@
 
 #define CPU_SETSIZE 1024
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct cpu_set_t {
@@ -55,5 +54,4 @@ int CPU_COUNT_S(size_t, const cpu_set_t *);
 #define CPU_ISSET_S(i, size, set) _CPU_S(i, size, set, &)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_CPUSET_H_ */

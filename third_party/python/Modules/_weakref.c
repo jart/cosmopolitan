@@ -14,7 +14,6 @@
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/clinic/_weakref.inc"
-/* clang-format off */
 
 PYTHON_PROVIDE("_weakref");
 PYTHON_PROVIDE("_weakref.CallableProxyType");

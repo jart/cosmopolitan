@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- ffsti2.c - Implement __ffsti2 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

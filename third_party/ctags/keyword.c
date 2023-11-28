@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: keyword.c 715 2009-07-06 03:31:00Z dhiebert $
 *

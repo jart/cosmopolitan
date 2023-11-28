@@ -1,7 +1,6 @@
 #ifndef __CLEAN_H__
 #define __CLEAN_H__
 #include "third_party/tidy/forward.h"
-/* clang-format off */
 
 /* clean.h -- clean up misuse of presentation markup
 

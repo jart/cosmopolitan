@@ -19,7 +19,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/tupleobject.h"
-/* clang-format off */
 
 /*
  * New exceptions.c written in Iceland by Richard Jones and Georg Brandl.

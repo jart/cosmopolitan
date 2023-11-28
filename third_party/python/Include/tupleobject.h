@@ -2,7 +2,6 @@
 #define Py_TUPLEOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
 Another generally useful object type is a tuple of object pointers.

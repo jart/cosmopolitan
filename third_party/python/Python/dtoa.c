@@ -10,7 +10,6 @@
 #include "libc/runtime/runtime.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pyport.h"
-/* clang-format off */
 
 /****************************************************************
  *

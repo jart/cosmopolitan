@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_
 #define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_
 #include "third_party/python/pyconfig.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 double _Py_acosh(double);
@@ -47,5 +46,4 @@ double _Py_log1p(double);
 #define m_log1p _Py_log1p
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__MATH_H_ */

@@ -1,6 +1,5 @@
 #ifndef NSYNC_TESTING_TESTING_H_
 #define NSYNC_TESTING_TESTING_H_
-/* clang-format off */
 
 typedef struct testing_base_s *testing_base;
 typedef const struct testing_base_s *const_testing_base;

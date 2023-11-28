@@ -28,7 +28,6 @@
 #include "third_party/double-conversion/utils.h"
 #include "third_party/libcxx/algorithm"
 #include "third_party/libcxx/cstring"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 double-conversion (BSD-3 License)\\n\

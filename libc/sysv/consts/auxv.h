@@ -12,7 +12,6 @@
 #define AT_FLAGS  8
 #define AT_ENTRY  9
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*
@@ -64,5 +63,4 @@ extern const unsigned long AT_TIMEKEEP;
 extern const unsigned long AT_UCACHEBSIZE;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_AUXV_H_ */

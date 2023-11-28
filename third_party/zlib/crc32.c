@@ -13,7 +13,6 @@
 #include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/macros.internal.h"
-// clang-format off
 
 /* @(#) $Id$ */
 

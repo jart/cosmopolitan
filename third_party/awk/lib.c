@@ -35,7 +35,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/awk/awk.h"
-// clang-format off
 
 char	EMPTY[] = { '\0' };
 static FILE	*infile	= NULL;

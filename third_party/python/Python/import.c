@@ -10,7 +10,6 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/gc.h"
@@ -51,8 +50,8 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/yoink.h"
+#include "libc/serialize.h"
 #include "third_party/python/Python/importdl.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_imp");
 PYTHON_PROVIDE("_imp.__doc__");

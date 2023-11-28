@@ -1,4 +1,3 @@
-/* clang-format off */
 
 #define JISX0201_R_ENCODE(c, assi)                      \
     if ((c) < 0x80 && (c) != 0x5c && (c) != 0x7e) {     \

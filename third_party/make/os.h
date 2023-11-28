@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Declarations for operating system interfaces for GNU Make.
 Copyright (C) 2016-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

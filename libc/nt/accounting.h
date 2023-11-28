@@ -4,7 +4,6 @@
 #include "libc/nt/struct/iocounters.h"
 #include "libc/nt/struct/memorystatusex.h"
 #include "libc/nt/thunk/msabi.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -70,5 +69,4 @@ int32_t SetProcessWorkingSetSizeEx(int64_t hProcess,
 #include "libc/nt/thunk/accounting.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ACCOUNTING_H_ */

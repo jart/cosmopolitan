@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/extendsftf2.c - single -> quad conversion -------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

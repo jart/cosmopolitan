@@ -38,7 +38,6 @@ asm(".ident\t\"\\n\\n\
 pysqlite (zlib license)\\n\
 Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /* #if SQLITE_VERSION_NUMBER >= 3003003 */
 /* #define HAVE_SHARED_CACHE */

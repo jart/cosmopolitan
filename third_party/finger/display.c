@@ -42,7 +42,6 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/termios.h"
 #include "third_party/finger/finger.h"
-// clang-format off
 
 int
 getscreenwidth(void)

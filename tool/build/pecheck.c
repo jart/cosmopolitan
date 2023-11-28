@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/nt/struct/imageimportbyname.internal.h"
 #include "libc/nt/struct/imageimportdescriptor.internal.h"

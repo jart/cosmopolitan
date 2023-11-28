@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_BASE64_H_
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL   -0x002A  /*< Output buffer too small. */
 #define MBEDTLS_ERR_BASE64_INVALID_CHARACTER  -0x002C  /*< Invalid character in input. */

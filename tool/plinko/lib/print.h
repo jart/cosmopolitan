@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_PLINKO_LIB_PRINT_H_
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_PRINT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int Print(int, int);
@@ -27,5 +26,4 @@ void PrintNewline(int);
 void PrintTree(int, int, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_PRINT_H_ */

@@ -9,8 +9,6 @@
 #include "third_party/libcxx/unordered_map"
 #include "third_party/libcxx/vector"
 #include "third_party/radpajama/gptneox.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-// clang-format off
 // Various helper functions and utilities
 
 //
@@ -110,5 +108,4 @@ void win32_console_init(bool enable_color);
 void win32_utf8_encode(const std::wstring & wstr, std::string & str);
 #endif
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_RADPAJAMA_COMMON_GPTNEOX_H_ */

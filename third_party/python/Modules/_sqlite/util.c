@@ -30,7 +30,6 @@ asm(".ident\t\"\\n\\n\
 pysqlite (zlib license)\\n\
 Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 int pysqlite_step(sqlite3_stmt* statement, pysqlite_Connection* connection)
 {

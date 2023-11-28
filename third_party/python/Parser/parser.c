@@ -13,7 +13,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/token.h"
 #include "third_party/python/Parser/parser.h"
-/* clang-format off */
 
 /*
 

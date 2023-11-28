@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_ALG_H_
 #define COSMOPOLITAN_LIBC_SOCK_ALG_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct sockaddr_alg {
@@ -25,5 +24,4 @@ struct af_alg_iv {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_ALG_H_ */

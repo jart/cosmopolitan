@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_PLINKO_LIB_GC_H_
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_GC_H_
 #include "tool/plinko/lib/types.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Gc {
@@ -30,5 +29,4 @@ forceinline void Mark(struct Gc *G, int x) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_GC_H_ */

@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 char*
 g_ffmt(char *buf, float *f, int ndig, size_t bufsize)

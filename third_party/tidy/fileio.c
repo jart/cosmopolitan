@@ -1,4 +1,3 @@
-/* clang-format off */
 /* fileio.c -- does standard I/O
 
   (c) 1998-2007 (W3C) MIT, ERCIM, Keio University

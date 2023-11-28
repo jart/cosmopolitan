@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/addsf3.c - Single-precision addition ------------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

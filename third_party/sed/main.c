@@ -46,7 +46,6 @@
 #include "third_party/sed/cmd.h"
 #include "third_party/sed/defs.h"
 #include "third_party/sed/extern.h"
-// clang-format off
 
 /*
  * Linked list of units (strings and files) to be compiled

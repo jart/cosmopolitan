@@ -5,7 +5,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/platform.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_MPI_FILE_IO_ERROR                     -0x0002  /*< An error occurred while reading from or writing to a file. */
 #define MBEDTLS_ERR_MPI_BAD_INPUT_DATA                    -0x0004  /*< Bad input parameters to function. */

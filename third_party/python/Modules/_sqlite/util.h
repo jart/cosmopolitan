@@ -1,6 +1,5 @@
 #ifndef PYSQLITE_UTIL_H
 #define PYSQLITE_UTIL_H
-/* clang-format off */
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Modules/_sqlite/connection.h"

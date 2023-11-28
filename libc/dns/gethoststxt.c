@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dns/servicestxt.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/pushpop.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_CORE_ITUROUND_H_
 #define COSMOPOLITAN_DSP_CORE_ITUROUND_H_
 #include "libc/math.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * An ITU recommended rounding function.
@@ -19,5 +18,4 @@ __funline int ituroundf(float x) {
   return floorf(x + .5f);
 }
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_ITUROUND_H_ */

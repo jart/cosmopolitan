@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_CONSOLESCREENBUFFERINFO_H_
 #include "libc/nt/struct/coord.h"
 #include "libc/nt/struct/smallrect.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtConsoleScreenBufferInfo {
   struct NtCoord dwSize;
@@ -12,5 +11,4 @@ struct NtConsoleScreenBufferInfo {
   struct NtCoord dwMaximumWindowSize;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CONSOLESCREENBUFFERINFO_H_ */

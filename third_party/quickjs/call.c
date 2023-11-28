@@ -33,7 +33,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 static const uint16_t func_kind_to_class_id[] = {
     [JS_FUNC_NORMAL] = JS_CLASS_BYTECODE_FUNCTION,

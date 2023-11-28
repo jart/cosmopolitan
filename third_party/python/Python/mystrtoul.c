@@ -10,7 +10,6 @@
 #include "third_party/python/Include/pyctype.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /* Static overflow check values for bases 2 through 36.
  * smallmax[base] is the largest unsigned long i such that

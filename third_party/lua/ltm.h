@@ -3,7 +3,6 @@
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/tms.h"
-/* clang-format off */
 
 /*
 ** Mask with 1 in all fast-access methods. A 1 in any of these bits

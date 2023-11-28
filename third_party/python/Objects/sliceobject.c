@@ -17,7 +17,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 /*
 Written by Jim Hugunin and Chris Chase.

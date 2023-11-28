@@ -24,7 +24,6 @@
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /*[clinic input]
 class bytearray "PyByteArrayObject *" "&PyByteArray_Type"

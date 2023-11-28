@@ -3,7 +3,6 @@
 #include "libc/tinymath/atanf_data.internal.h"
 #include "libc/tinymath/estrin_wrap.internal.h"
 #include "libc/tinymath/hornerf.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 // clang-format off
 
@@ -42,5 +41,4 @@ eval_poly (FLT_T z, FLT_T az, FLT_T shift)
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_ATANF_COMMON_H_ */

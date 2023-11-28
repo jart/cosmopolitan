@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_Q8_1_H_
 #define COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_Q8_1_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define V1_QK8_1 32
@@ -16,5 +15,4 @@ void quantize_row_v1_q8_1_reference(const float* restrict,
                                     block_v1_q8_1* restrict, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_Q8_1_H_ */

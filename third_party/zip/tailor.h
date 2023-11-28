@@ -1,4 +1,3 @@
-// clang-format off
 /*
   tailor.h - Zip 3
 

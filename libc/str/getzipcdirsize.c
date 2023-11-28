@@ -22,7 +22,7 @@
  * Returns size of zip central directory.
  */
 uint64_t GetZipCdirSize(const uint8_t *eocd) {
-  if (READ32LE(eocd) == kZipCdir64HdrMagic) {
+  if (ZIP_READ32(eocd) == kZipCdir64HdrMagic) {
     return ZIP_CDIR64_SIZE(eocd);
   } else {
     return ZIP_CDIR_SIZE(eocd);

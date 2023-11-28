@@ -1,7 +1,6 @@
 #ifndef MBEDTLS_VERSION_H
 #define MBEDTLS_VERSION_H
 #include "third_party/mbedtls/config.h"
-/* clang-format off */
 
 /**
  * The version number x.y.z is split into three parts.

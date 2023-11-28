@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- ucmpti2.c - Implement __ucmpti2 -----------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

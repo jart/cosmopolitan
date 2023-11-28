@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"

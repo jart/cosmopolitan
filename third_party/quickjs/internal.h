@@ -4,9 +4,7 @@
 #include "third_party/quickjs/libbf.h"
 #include "third_party/quickjs/list.h"
 #include "third_party/quickjs/quickjs.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define OPTIMIZE         1
 #define SHORT_OPCODES    1
@@ -2210,5 +2208,4 @@ static inline void js_async_function_free(JSRuntime *rt, JSAsyncFunctionData *s)
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_INTERNAL_H_ */

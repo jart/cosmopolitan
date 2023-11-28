@@ -1,4 +1,3 @@
-/* clang-format off */
 /* tags.c
  * Recognize HTML tags.
  *

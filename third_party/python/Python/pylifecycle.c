@@ -49,7 +49,6 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /* Python interpreter top-level routines, including init/exit */
 

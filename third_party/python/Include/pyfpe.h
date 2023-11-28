@@ -1,7 +1,6 @@
 #ifndef Py_PYFPE_H
 #define Py_PYFPE_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 #ifdef WANT_SIGFPE_HANDLER
 extern jmp_buf PyFPE_jbuf;
 extern int PyFPE_counter;

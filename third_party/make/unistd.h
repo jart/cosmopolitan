@@ -1,4 +1,3 @@
-/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* Substitute for and wrapper around <unistd.h>.
    Copyright (C) 2003-2020 Free Software Foundation, Inc.

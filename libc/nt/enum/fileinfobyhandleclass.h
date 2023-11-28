@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_FILEINFOBYHANDLECLASS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_FILEINFOBYHANDLECLASS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kNtFileBasicInfo                  0 /* struct NtFileBasicInformation */
 #define kNtFileStandardInfo               1 /* struct NtFileStandardInformation */
@@ -27,5 +26,4 @@
 #define kNtFileDispositionInfoEx  22 /* win10+ */
 #define kNtFileRenameInfoEx       23 /* win10+ */
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_FILEINFOBYHANDLECLASS_H_ */

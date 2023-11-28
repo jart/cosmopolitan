@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_CONSOLESCREENBUFFERINFOEX_H_
 #include "libc/nt/struct/coord.h"
 #include "libc/nt/struct/smallrect.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtConsoleScreenBufferInfoEx {
   uint32_t cbSize; /* sizeof(struct NtConsoleScreenBufferInfoEx) */
@@ -16,5 +15,4 @@ struct NtConsoleScreenBufferInfoEx {
   uint32_t ColorTable[16]; /* 0x00BBGGRR */
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CONSOLESCREENBUFFERINFOEX_H_ */

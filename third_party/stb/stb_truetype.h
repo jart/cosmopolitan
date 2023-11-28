@@ -69,7 +69,6 @@
 
 #define STBTT_POINT_SIZE(x) (-(x))
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef int16_t stbtt_vertex_type;
@@ -258,5 +257,4 @@ const char *stbtt_GetFontNameString(const stbtt_fontinfo *, int *, int, int,
                                     int, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_STB_STB_TRUETYPE_H_ */

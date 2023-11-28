@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: eiffel.c 748 2009-11-06 02:44:42Z dhiebert $
 *

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_ALG_ARRAYLIST2_H_
 #include "libc/mem/internal.h"
 #include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* TODO(jart): Fully develop these better macros. */
@@ -35,5 +34,4 @@ COSMOPOLITAN_C_START_
 #endif /* CONCAT */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ALG_ARRAYLIST2_H_ */

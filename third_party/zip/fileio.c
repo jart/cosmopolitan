@@ -1,4 +1,3 @@
-// clang-format off
 /*
   fileio.c - Zip 3
 

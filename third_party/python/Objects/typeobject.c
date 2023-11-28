@@ -30,7 +30,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/weakrefobject.h"
-/* clang-format off */
 
 static const short slotoffsets[] = {
     -1, /* invalid slot */

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Error handler for noninteractive utilities
    Copyright (C) 1990-1998, 2000-2007, 2009-2020 Free Software Foundation, Inc.
    This file is part of the GNU C Library.

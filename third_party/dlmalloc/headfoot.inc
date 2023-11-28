@@ -1,4 +1,3 @@
-// clang-format off
 
 /* ------------------ Operations on head and foot fields ----------------- */
 

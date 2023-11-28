@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_ATOMIC_H_
 #define COSMOPOLITAN_LIBC_BITS_ATOMIC_H_
 #include "libc/atomic.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * @fileoverview Cosmopolitan C11 Atomics Library
@@ -217,5 +216,4 @@ enum {
 #error "atomic operations not supported with this compiler and/or architecture"
 #endif
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_ATOMIC_H_ */

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGERUNTIMEFUNCTIONENTRY_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGERUNTIMEFUNCTIONENTRY_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageRuntimeFunctionEntry {
   uint32_t BeginAddress;
@@ -11,5 +10,4 @@ struct NtImageRuntimeFunctionEntry {
   };
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGERUNTIMEFUNCTIONENTRY_H_ */

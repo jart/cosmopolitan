@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/unicodedata.h"
-/* clang-format off */
 
 int
 _PyUnicode_FindNfcIndex(const _PyUnicode_Reindex *nfc, Py_UCS4 code)

@@ -24,7 +24,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/puff/puff.h"
 #include "libc/runtime/runtime.h"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 puff (zlib License)\\n\

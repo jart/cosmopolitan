@@ -123,6 +123,9 @@ o/$(MODE):			\
 	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
+.PHONY: o/$(MODE)/.
+o/$(MODE)/.: o/$(MODE)
+
 # check if we're using o//third_party/make/make.com
 # we added sandboxing to guarantee cosmo's makefile is hermetic
 # it also shaves away 200ms of startup latency with native $(uniq)

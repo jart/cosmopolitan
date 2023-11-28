@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/aes.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -33,7 +33,6 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /**
  * @fileoverview FIPS-197 compliant AES implementation

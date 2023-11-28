@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_RUNTIME_UTMPX_H_
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/weirdtypes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct utmpx {
@@ -47,5 +46,4 @@ int utmpxname(const char *);
 #define DEAD_PROCESS  8
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_UTMPX_H_ */

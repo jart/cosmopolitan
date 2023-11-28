@@ -38,7 +38,6 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/awk/awk.h"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 Copyright (C) Lucent Technologies 1997\\n\

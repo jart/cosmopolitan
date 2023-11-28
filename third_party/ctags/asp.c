@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: asp.c 711 2009-07-04 16:52:11Z dhiebert $
 *

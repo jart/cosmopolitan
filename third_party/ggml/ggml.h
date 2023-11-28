@@ -1,9 +1,7 @@
 // -*- c; c-basic-offset:4 -*-
 #ifndef COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_
 #define COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-// clang-format off
 
 //
 // GGML Tensor Library
@@ -1156,5 +1154,4 @@ COSMOPOLITAN_C_START_
     extern const quantize_chunk_f *const *GGML_QUANTIZE_CHUNK;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_LLAMA_CPP_GGML_H_ */

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALL_SUPPORT_NT_INTERNAL_H_
 #include "libc/limits.h"
 #include "libc/nt/struct/overlapped.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool isdirectory_nt(const char *);
@@ -29,5 +28,4 @@ ssize_t sys_readwrite_nt(int, void *, size_t, ssize_t, int64_t, uint64_t,
                                     struct NtOverlapped *));
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_SYSCALL_SUPPORT_NT_INTERNAL_H_ */

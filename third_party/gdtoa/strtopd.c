@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 int
 strtopd(const char *s, char **sp, double *d)

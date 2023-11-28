@@ -12,7 +12,6 @@
 #include "libc/str/str.h"
 #include "third_party/zlib/gz/gzguts.inc"
 #include "third_party/zlib/zlib.h"
-// clang-format off
 
 /* Local functions */
 local int gz_load OF((gz_statep, unsigned char *, unsigned, unsigned *));

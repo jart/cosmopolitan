@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ====-- ashldi3.c - Implement __ashldi3 -----------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

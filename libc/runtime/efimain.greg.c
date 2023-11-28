@@ -19,7 +19,6 @@
 #include "ape/relocations.h"
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/newbie.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"

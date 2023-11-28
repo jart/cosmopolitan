@@ -29,7 +29,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/winreparse.h"
-/* clang-format off */
 
 #define kNtIoReparseTagMountPoint 0xA0000003L
 

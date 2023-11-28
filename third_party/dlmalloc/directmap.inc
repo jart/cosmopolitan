@@ -1,4 +1,3 @@
-// clang-format off
 
 /* -----------------------  Direct-mmapping chunks ----------------------- */
 

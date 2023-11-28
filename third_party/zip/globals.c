@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   globals.c - Zip 3
 

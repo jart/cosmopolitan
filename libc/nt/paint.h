@@ -4,7 +4,6 @@
 #include "libc/nt/struct/paintstruct.h"
 #include "libc/nt/struct/rect.h"
 #include "libc/nt/thunk/msabi.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § new technology » cpu graphics                             ─╬─│┼
@@ -42,5 +41,4 @@ bool32 RestoreDC(int64_t hdc, int nSavedDC);
 #include "libc/nt/thunk/paint.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_PAINT_H_ */

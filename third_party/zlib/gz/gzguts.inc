@@ -4,7 +4,6 @@
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zlib.h"
 #include "third_party/zlib/zutil.internal.h"
-// clang-format off
 
 /* gzguts.h -- zlib internal header definitions for gz* operations
  * Copyright (C) 2004, 2005, 2010, 2011, 2012, 2013, 2016 Mark Adler

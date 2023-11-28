@@ -20,7 +20,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Objects/dict-common.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /* Dictionary object implementation using a hash table */
 

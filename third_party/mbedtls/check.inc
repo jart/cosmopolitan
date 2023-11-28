@@ -1,4 +1,3 @@
-/* clang-format off */
 
 #if defined(TARGET_LIKE_MBED) && \
     ( defined(MBEDTLS_NET_C) || defined(MBEDTLS_TIMING_C) )

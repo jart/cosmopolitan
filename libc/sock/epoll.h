@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_WEPOLL_H_
 #define COSMOPOLITAN_LIBC_SOCK_WEPOLL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #include "libc/calls/struct/sigset.h"
 
@@ -23,5 +22,4 @@ int epoll_wait(int, struct epoll_event *, int, int);
 int epoll_pwait(int, struct epoll_event *, int, int, const sigset_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_WEPOLL_H_ */

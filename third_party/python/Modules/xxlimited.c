@@ -13,7 +13,6 @@
 #include "third_party/python/Include/typeslots.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("xxlimited");
 PYTHON_PROVIDE("xxlimited.Null");

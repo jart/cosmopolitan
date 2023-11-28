@@ -15,7 +15,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/ctags/readtags.h"
-// clang-format off
 
 /*
 *   MACROS

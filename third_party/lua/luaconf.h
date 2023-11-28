@@ -10,7 +10,6 @@
 #define LUA_USE_POSIX
 #define LUA_USE_LINENOISE
 
-/* clang-format off */
 
 /*
 ** ===================================================================

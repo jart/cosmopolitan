@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * Brute force collision tester for 64-bit hashes
  * Part of the xxHash project

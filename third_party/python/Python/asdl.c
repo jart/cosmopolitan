@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/asdl.h"
 #include "third_party/python/Include/pyerrors.h"
-/* clang-format off */
 
 asdl_seq *
 _Py_asdl_seq_new(Py_ssize_t size, PyArena *arena)

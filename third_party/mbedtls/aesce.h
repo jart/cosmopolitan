@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_AESCE_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_AESCE_H_
 #include "third_party/mbedtls/aes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /**
@@ -58,5 +57,4 @@ int mbedtls_aesce_setkey_enc(unsigned char *rk, const unsigned char *key,
                              size_t bits);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_AESCE_H_ */

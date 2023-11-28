@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
    LZ4 HC - High Compression Mode of LZ4
    Header File

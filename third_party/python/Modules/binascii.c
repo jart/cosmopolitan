@@ -19,7 +19,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/zlib/zlib.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("binascii");
 PYTHON_PROVIDE("binascii.Error");

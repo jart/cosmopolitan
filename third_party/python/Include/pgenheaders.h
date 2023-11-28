@@ -2,7 +2,6 @@
 #define Py_PGENHEADERS_H
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 void PySys_WriteStdout(const char *format, ...)
 			Py_GCC_ATTRIBUTE((format(printf, 1, 2)));

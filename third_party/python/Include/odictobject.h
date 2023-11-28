@@ -2,7 +2,6 @@
 #define Py_ODICTOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* OrderedDict */
 /* This API is optional and mostly redundant. */

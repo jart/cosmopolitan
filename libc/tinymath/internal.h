@@ -3,7 +3,6 @@
 
 #define WANT_ROUNDING 1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define issignalingf_inline(x) 0
@@ -82,5 +81,4 @@ long double __math_invalidl(long double);
   } while (0)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_INTERNAL_H_ */

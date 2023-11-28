@@ -25,7 +25,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /* Abstract Object Interface (many thanks to Jim Fulton) */
 

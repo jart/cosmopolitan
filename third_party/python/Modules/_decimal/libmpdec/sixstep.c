@@ -34,7 +34,6 @@
 #include "third_party/python/Modules/_decimal/libmpdec/sixstep.h"
 #include "third_party/python/Modules/_decimal/libmpdec/transpose.h"
 #include "third_party/python/Modules/_decimal/libmpdec/umodarith.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 libmpdec (BSD-2)\\n\

@@ -19,6 +19,7 @@
 #include "libc/dos.internal.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/wintime.internal.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/gc.h"

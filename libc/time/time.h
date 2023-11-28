@@ -3,7 +3,6 @@
 
 #define TIME_UTC 1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern char *tzname[2];
@@ -28,5 +27,4 @@ void RefreshTime(void);
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TIME_TIME_H_ */

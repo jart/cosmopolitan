@@ -40,7 +40,6 @@ asm(".ident\t\"\\n\\n\
 pysqlite (zlib license)\\n\
 Copyright (C) 2005-2010 Gerhard Häring <gh@ghaering.de>\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 #define ACTION_FINALIZE 1
 #define ACTION_RESET 2

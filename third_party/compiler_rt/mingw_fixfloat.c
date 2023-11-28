@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- mingw_fixfloat.c - Wrap int/float conversions for arm/windows -----===
  *
  *                     The LLVM Compiler Infrastructure

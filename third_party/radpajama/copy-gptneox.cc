@@ -32,7 +32,6 @@
 #include "third_party/libcxx/map"
 #include "third_party/libcxx/string"
 #include "third_party/radpajama/gptneox.h"
-// clang-format off
 
 static const std::map<std::string, enum gptneox_ftype> GPTNEOX_FTYPE_MAP = {
   {"q4_0", GPTNEOX_FTYPE_MOSTLY_Q4_0},

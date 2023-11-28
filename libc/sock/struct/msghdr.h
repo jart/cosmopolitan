@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_STRUCT_MSGHDR_H_
 #define COSMOPOLITAN_LIBC_SOCK_STRUCT_MSGHDR_H_
 #include "libc/calls/struct/iovec.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct msghdr {            /* Linux+NT ABI */
@@ -18,5 +17,4 @@ ssize_t recvmsg(int, struct msghdr *, int);
 ssize_t sendmsg(int, const struct msghdr *, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_MSGHDR_H_ */

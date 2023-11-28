@@ -4,7 +4,6 @@
 #define DYNAMIC_ANNOTATIONS_ENABLED 0
 #endif
 #if DYNAMIC_ANNOTATIONS_ENABLED != 0
-/* clang-format off */
 
 /* Copyright (c) 2008-2009, Google Inc.
  * All rights reserved.

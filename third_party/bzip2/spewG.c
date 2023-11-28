@@ -1,6 +1,5 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
-/* clang-format off */
 
 /* spew out a thoroughly gigantic file designed so that bzip2
    can compress it reasonably rapidly.  This is to help test

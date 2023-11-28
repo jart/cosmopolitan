@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_STRUCT_SYM_H_
 #define COSMOPOLITAN_LIBC_ELF_STRUCT_SYM_H_
 #include "libc/elf/scalar.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 typedef struct Elf64_Sym {
 
@@ -92,5 +91,4 @@ typedef struct Elf64_Sym {
 
 } Elf64_Sym;
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_STRUCT_SYM_H_ */

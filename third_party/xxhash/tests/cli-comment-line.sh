@@ -1,4 +1,3 @@
-// clang-format off
 #!/bin/bash
 
 # Exit immediately if any command fails.

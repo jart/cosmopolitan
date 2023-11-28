@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_SQLITE3_EXTENSIONS_H_
 #include "libc/stdio/stdio.h"
 #include "third_party/sqlite3/sqlite3.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int sqlite3MemTraceActivate(FILE *);
@@ -21,5 +20,4 @@ int sqlite3_uint_init(sqlite3 *, char **, const sqlite3_api_routines *);
 int sqlite3_zipfile_init(sqlite3 *, char **, const sqlite3_api_routines *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_SQLITE3_EXTENSIONS_H_ */

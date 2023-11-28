@@ -3,9 +3,7 @@
 #include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/zconf.h"
 #include "third_party/zlib/zutil.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-// clang-format off
 
 /*
  * crc32_sse42_simd_(): compute the crc32 of the buffer, where the buffer
@@ -53,5 +51,4 @@ uint32_t ZLIB_INTERNAL armv8_crc32_pmull_little(const unsigned char* buf,
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_CRC32_SIMD_INTERNAL_H_ */

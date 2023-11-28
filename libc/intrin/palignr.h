@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_INTRIN_PALIGNR_H_
 #include "libc/intrin/macros.h"
 #include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void palignr(void *, const void *, const void *, unsigned long);
@@ -43,5 +42,4 @@ __intrin_xmm_t __palignrs(__intrin_xmm_t, __intrin_xmm_t);
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_PALIGNR_H_ */

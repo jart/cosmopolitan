@@ -12,7 +12,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/quickjs/quickjs.h"
-/* clang-format off */
 
 #define GET_WEAKREFS_LISTPTR(o) \
         ((PyWeakReference **) PyObject_GET_WEAKREFS_LISTPTR(o))

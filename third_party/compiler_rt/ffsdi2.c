@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- ffsdi2.c - Implement __ffsdi2 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

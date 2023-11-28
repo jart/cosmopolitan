@@ -1,7 +1,6 @@
 #ifndef NSYNC_ONCE_H_
 #define NSYNC_ONCE_H_
 #include "third_party/nsync/atomic.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* An nsync_once allows a function to be called exactly once, when first
@@ -33,5 +32,4 @@ void nsync_run_once_arg_spin(nsync_once *once, void (*farg)(void *arg),
                              void *arg);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_ONCE_H_ */

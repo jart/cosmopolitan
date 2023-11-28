@@ -1,7 +1,6 @@
 #ifndef IO_H
 #define IO_H
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 #if SIZE_MAX == MPD_SIZE_MAX
   #define mpd_strtossize _mpd_strtossize

@@ -31,7 +31,6 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/quickjs/internal.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_pickle");
 PYTHON_PROVIDE("_pickle.PickleError");

@@ -37,7 +37,6 @@
 #include "third_party/lua/lstate.h"
 #include "third_party/lua/ltm.h"
 #include "third_party/lua/lua.h"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 Lua 5.4.3 (MIT License)\\n\

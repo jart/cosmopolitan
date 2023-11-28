@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_FILEDIRECTORYINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_FILEDIRECTORYINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtFileDirectoryInformation {
   uint32_t NextEntryOffset;
@@ -16,5 +15,4 @@ struct NtFileDirectoryInformation {
   char16_t FileName[1];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_FILEDIRECTORYINFORMATION_H_ */

@@ -2,7 +2,6 @@
 #define Py_DICTOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Dictionary object type -- mapping from hashable object to object */
 

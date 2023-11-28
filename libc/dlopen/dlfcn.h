@@ -6,7 +6,6 @@
 #define RTLD_NOW    2
 #define RTLD_GLOBAL 256
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define RTLD_NEXT    ((void *)-1)
@@ -27,5 +26,4 @@ int cosmo_dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_DLFCN_H_ */

@@ -29,6 +29,7 @@
 #include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/map.h"

@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/object.h"
-/* clang-format off */
 
 PyObject *PyInit_posix(void);
 PyObject *PyInit__codecs(void);

@@ -17,7 +17,6 @@
 #include "libc/assert.h"
 #include "third_party/sqlite3/sqlite3ext.h"
 #include "third_party/zlib/zlib.h"
-// clang-format off
 
 SQLITE_EXTENSION_INIT1
 

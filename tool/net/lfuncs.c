@@ -26,7 +26,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/popcnt.h"
@@ -606,16 +606,16 @@ int LuaEncodeLatin1(lua_State *L) {
 }
 
 dontinline int LuaBase32Impl(lua_State *L,
-    char *B32(const char *, size_t, const char *, size_t, size_t *)) {
+                             char *B32(const char *, size_t, const char *,
+                                       size_t, size_t *)) {
   char *p;
-  size_t sl, al; // source/output and alphabet lengths
+  size_t sl, al;  // source/output and alphabet lengths
   const char *s = luaL_checklstring(L, 1, &sl);
   // use an empty string, as EncodeBase32 provides a default value
   const char *a = luaL_optlstring(L, 2, "", &al);
   if (!IS2POW(al) || al > 128 || al == 1)
     return luaL_error(L, "alphabet length is not a power of 2 in range 2..128");
-  if (!(p = B32(s, sl, a, al, &sl)))
-    return luaL_error(L, "out of memory");
+  if (!(p = B32(s, sl, a, al, &sl))) return luaL_error(L, "out of memory");
   lua_pushlstring(L, p, sl);
   free(p);
   return 1;

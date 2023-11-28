@@ -9,7 +9,6 @@
 #include "libc/stdio/append.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 Python 3.6 (https://docs.python.org/3/license.html)\\n\

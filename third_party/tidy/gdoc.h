@@ -1,7 +1,6 @@
 #ifndef __GDOC_H__
 #define __GDOC_H__
 #include "third_party/tidy/forward.h"
-/* clang-format off */
 
 /* gdoc.h -- clean up html exported by Google Docs
 

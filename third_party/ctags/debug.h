@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: debug.h 558 2007-06-15 19:17:02Z elliotth $
 *

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* API for GNU Make dynamic objects.
 Copyright (C) 2013-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

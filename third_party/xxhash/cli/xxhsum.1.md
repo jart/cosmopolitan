@@ -1,4 +1,3 @@
-// clang-format off
 xxhsum(1) -- print or check xxHash non-cryptographic checksums
 ==============================================================
 

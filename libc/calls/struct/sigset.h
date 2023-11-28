@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGSET_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGSET_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef uint64_t sigset_t;
@@ -20,5 +19,4 @@ int sigpending(sigset_t *);
 int pthread_sigmask(int, const sigset_t *, sigset_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGSET_H_ */

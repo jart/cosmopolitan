@@ -4,7 +4,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/mem/alloca.h"
 #include "libc/sock/struct/pollfd.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int32_t sys_poll(struct pollfd *, uint64_t, signed);
@@ -18,5 +17,4 @@ const char *DescribePollFds(char[300], ssize_t, struct pollfd *, size_t);
 #define DescribePollFds(x, y, z) DescribePollFds(alloca(300), x, y, z)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_POLLFD_INTERNAL_H_ */

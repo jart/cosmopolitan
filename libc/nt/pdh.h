@@ -27,7 +27,6 @@
 │ cosmopolitan § new technology » performance counters                     ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int PdhOpenQuery(const char16_t *opt_szDataSource, uint32_t *dwUserData,
@@ -44,5 +43,4 @@ int PdhGetFormattedCounterValue(int64_t hCounter, uint32_t dwFormat,
                                 struct NtPdhFmtCountervalue *out_pValue);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_PDH_H_ */

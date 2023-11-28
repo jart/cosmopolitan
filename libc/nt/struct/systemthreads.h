@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMTHREADS_H_
 #include "libc/nt/enum/kwaitreason.h"
 #include "libc/nt/struct/clientid.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtSystemThreads {
   int64_t KernelTime;
@@ -18,5 +17,4 @@ struct NtSystemThreads {
   uint32_t WaitReason;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMTHREADS_H_ */

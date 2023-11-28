@@ -1,4 +1,3 @@
-/* clang-format off */
 /* External interfaces usable by dynamic objects loaded into GNU Make.
    --THIS API IS A "TECHNOLOGY PREVIEW" ONLY.  IT IS NOT A STABLE INTERFACE--
 

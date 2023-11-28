@@ -10,7 +10,6 @@
 #include "third_party/python/Include/pycapsule.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
-/* clang-format off */
 
 /* Wrap void * pointers to be passed between C modules */
 

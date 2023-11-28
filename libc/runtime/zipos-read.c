@@ -19,6 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/stdio/sysparam.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"

@@ -10,7 +10,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/runpythonmodule.h"
 #include "tool/args/args.h"
-// clang-format off
 
 STATIC_STACK_ALIGN(GetStackSize());
 

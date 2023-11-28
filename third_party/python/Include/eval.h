@@ -2,7 +2,6 @@
 #define Py_EVAL_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 PyObject * PyEval_EvalCode(PyObject *, PyObject *, PyObject *);
 

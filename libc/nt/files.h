@@ -44,7 +44,6 @@
 #define kNtDuplicateCloseSource 1
 #define kNtDuplicateSameAccess  2
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 intptr_t LoadResource(int64_t hModule, int64_t hResInfo);
@@ -230,5 +229,4 @@ bool32 GetVolumeInformationByHandle(int64_t hFile,
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_FILES_H_ */

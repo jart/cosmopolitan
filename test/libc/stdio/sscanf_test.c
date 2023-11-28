@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/math.h"

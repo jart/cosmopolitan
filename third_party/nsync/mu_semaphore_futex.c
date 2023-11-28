@@ -23,7 +23,6 @@
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
-// clang-format off
 
 /**
  * @fileoverview Semaphores w/ Linux Futexes API.

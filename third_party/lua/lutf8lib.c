@@ -12,7 +12,6 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
 
-/* clang-format off */
 
 #define MAXUNICODE	0x10FFFFu
 

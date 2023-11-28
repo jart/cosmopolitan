@@ -1,4 +1,3 @@
-/* clang-format off */
 /* intprops.h -- properties of integer types
 
    Copyright (C) 2001-2020 Free Software Foundation, Inc.

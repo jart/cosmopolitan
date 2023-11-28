@@ -38,7 +38,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 STATIC_STACK_ALIGN(GetStackSize());
 

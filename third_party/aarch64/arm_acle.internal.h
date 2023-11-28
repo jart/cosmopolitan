@@ -1,4 +1,3 @@
-/* clang-format off */
 #if defined(__aarch64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef _GCC_ARM_ACLE_H
 #define _GCC_ARM_ACLE_H

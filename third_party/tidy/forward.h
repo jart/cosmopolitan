@@ -1,6 +1,5 @@
 #ifndef __FORWARD_H__
 #define __FORWARD_H__
-/* clang-format off */
 
 /* forward.h -- Forward declarations for major Tidy structures
 

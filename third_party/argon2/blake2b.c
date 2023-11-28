@@ -15,12 +15,11 @@
 │ - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0            │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "third_party/argon2/blake2-impl.h"
 #include "third_party/argon2/blake2.h"
 #include "third_party/argon2/core.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 argon2 (CC0 or Apache2)\\n\

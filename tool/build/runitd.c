@@ -30,7 +30,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/check.h"

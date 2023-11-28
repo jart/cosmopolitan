@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_FILEPIPELOCALINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_FILEPIPELOCALINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtFilePipeLocalInformation {
   uint32_t NamedPipeType;
@@ -15,5 +14,4 @@ struct NtFilePipeLocalInformation {
   uint32_t NamedPipeEnd;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_FILEPIPELOCALINFORMATION_H_ */

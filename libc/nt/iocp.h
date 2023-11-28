@@ -30,7 +30,6 @@
 #define kNtFileSkipCompletionPortOnSuccess 1
 #define kNtFileSkipSetEventOnHandle        2
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef void (*NtOverlappedCompletionRoutine)(
@@ -73,5 +72,4 @@ bool32 WriteFileEx(int64_t hFile, const void *lpBuffer,
                    NtOverlappedCompletionRoutine lpCompletionRoutine);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_IOCP_H_ */

@@ -60,7 +60,6 @@ asm(".include \"libc/disclaimer.inc\"");
 
 #define MAXPATH 1024
 
-/* clang-format off */
 
 /* TODO:
    - add socket calls

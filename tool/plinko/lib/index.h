@@ -3,7 +3,6 @@
 #include "tool/plinko/lib/error.h"
 #include "tool/plinko/lib/plinko.h"
 #include "tool/plinko/lib/stack.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 forceinline nosideeffect int Head(int x) {
@@ -131,5 +130,4 @@ static inline nosideeffect int Cddddr(int X) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_INDEX_H_ */

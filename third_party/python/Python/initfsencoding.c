@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 _Py_IDENTIFIER(name);
 

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: pascal.c 536 2007-06-02 06:09:00Z elliotth $
 *

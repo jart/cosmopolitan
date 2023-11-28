@@ -1,4 +1,3 @@
-// clang-format off
 
 /* ------------------------- Operations on trees ------------------------- */
 

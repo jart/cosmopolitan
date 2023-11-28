@@ -3,7 +3,6 @@
 #include "libc/nt/struct/procthreadattributelist.h"
 #include "libc/nt/struct/startupinfo.h"
 #include "libc/nt/thunk/msabi.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define kNtProcThreadAttributeParentProcess 0x00020000
@@ -25,5 +24,4 @@ void DeleteProcThreadAttributeList(
 #include "libc/nt/thunk/startupinfo.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NTSTARTUPINFO_H_ */

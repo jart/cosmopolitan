@@ -27,7 +27,6 @@
 │ cosmopolitan § new technology » aol hacking                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int64_t GetShellWindow(void);
@@ -49,5 +48,4 @@ intptr_t CallNextHookEx(int64_t hhk, int nCode, uintptr_t wParam,
                         intptr_t lParam);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_AUTOMATION_H_ */

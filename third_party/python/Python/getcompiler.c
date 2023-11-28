@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 #ifndef COMPILER
 #ifdef __llvm__

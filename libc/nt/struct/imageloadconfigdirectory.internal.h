@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGELOADCONFIGDIRECTORY_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGELOADCONFIGDIRECTORY_H_
 #include "libc/nt/struct/imageloadconfigcodeintegrity.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageLoadConfigDirectory {
   uint32_t Size;
@@ -47,5 +46,4 @@ struct NtImageLoadConfigDirectory {
   uint64_t EnclaveConfigurationPointer;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGELOADCONFIGDIRECTORY_H_ */

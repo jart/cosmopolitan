@@ -6,7 +6,6 @@
 #define SIG_HANDLED_NO_RESTART 1
 #define SIG_HANDLED_SA_RESTART 2
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Signals {
@@ -28,5 +27,4 @@ void __sig_generate(int, int);
 void __sig_init(void);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_SIGNALS_INTERNAL_H_ */

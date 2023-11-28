@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED        -0x0034  /*< The entropy source failed. */
 #define MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG              -0x0036  /*< The requested random buffer length is too big. */

@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 #include "third_party/python/pyconfig.h"
 #include "third_party/python/Include/pyfpe.h"
 /*

@@ -1,7 +1,6 @@
 // -*- c++; c-basic-offset:4 -*-
 #ifndef GPTNEOX_H
 #define GPTNEOX_H
-// clang-format off
 
 #ifdef GPTNEOX_SHARED
 #    if defined(_WIN32) && !defined(__MINGW32__)

@@ -2,7 +2,6 @@
 #define XmlTok_INCLUDED 1
 #include "third_party/python/Modules/expat/expat_external.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* The following token may be returned by XmlContentTok */
 #define XML_TOK_TRAILING_RSQB                                                  \

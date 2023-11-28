@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/truncdfhf2.c - double -> half conversion --------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

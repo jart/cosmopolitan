@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_ITIMERVAL_INTERNAL_H_
 #include "libc/calls/struct/itimerval.h"
 #include "libc/mem/alloca.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int sys_getitimer(int, struct itimerval *);
@@ -13,5 +12,4 @@ const char *DescribeItimerval(char[90], int, const struct itimerval *);
 #define DescribeItimerval(rc, ts) DescribeItimerval(alloca(90), rc, ts)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_ITIMERVAL_INTERNAL_H_ */

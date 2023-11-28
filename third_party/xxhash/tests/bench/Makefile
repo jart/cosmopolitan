@@ -1,4 +1,3 @@
-// clang-format off
 # ################################################################
 # xxHash benchHash Makefile
 # Copyright (C) 2019-2021 Yann Collet

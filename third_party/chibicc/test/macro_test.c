@@ -1,6 +1,5 @@
 #include "third_party/chibicc/test/include1.h"
 #include "third_party/chibicc/test/test.h"
-/* clang-format off */
 char *main_filename1 = __FILE__;
 int main_line1 = __LINE__;
 #define LINE() __LINE__
@@ -341,8 +340,8 @@ int main() {
   ASSERT(1, __STDC__);
 
   ASSERT(0, strcmp(main_filename1, "third_party/chibicc/test/macro_test.c"));
-  ASSERT(5, main_line1);
-  ASSERT(7, main_line2);
+  ASSERT(4, main_line1);
+  ASSERT(6, main_line2);
   ASSERT(0, strcmp(include1_filename, "third_party/chibicc/test/include1.h"));
   ASSERT(4, include1_line);
 

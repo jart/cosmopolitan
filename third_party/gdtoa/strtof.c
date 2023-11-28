@@ -32,7 +32,6 @@
 #include "libc/fmt/conv.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 float
 strtof(const char *s, char **sp)

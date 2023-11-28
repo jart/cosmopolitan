@@ -1,4 +1,3 @@
-/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A GNU-like <stdio.h>.
 

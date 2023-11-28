@@ -34,7 +34,7 @@ int64_t GetZipLfileUncompressedSize(const uint8_t *z) {
         offset += 8;
       }
       if (offset + 8 <= ZIP_EXTRA_CONTENTSIZE(p)) {
-        return READ64LE(ZIP_EXTRA_CONTENT(p) + offset);
+        return ZIP_READ64(ZIP_EXTRA_CONTENT(p) + offset);
       }
     }
   }

@@ -37,7 +37,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"

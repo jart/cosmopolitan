@@ -1,6 +1,5 @@
 #include "libc/x/x.h"
 #include "third_party/python/Modules/cjkcodecs/xloadzd.h"
-/* clang-format off */
 
 static _Atomic(void *) __gb2312_decmap_ptr;
 static const unsigned char __gb2312_decmap_rodata[11651] = {

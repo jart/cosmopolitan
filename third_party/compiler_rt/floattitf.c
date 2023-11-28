@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/floattitf.c - int128 -> quad-precision conversion -----*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

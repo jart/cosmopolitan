@@ -65,7 +65,6 @@
 #define tmpfd         __tmpfd
 #endif
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls                                              ─╬─│┼
@@ -260,5 +259,4 @@ int __wifsignaled(int) pureconst;
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_SYSCALLS_H_ */

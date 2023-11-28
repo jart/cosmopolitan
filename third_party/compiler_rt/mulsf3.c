@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/mulsf3.c - Single-precision multiplication ------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

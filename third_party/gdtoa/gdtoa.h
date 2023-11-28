@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GDTOA_GDTOA_H_
 #define COSMOPOLITAN_THIRD_PARTY_GDTOA_GDTOA_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define dtoa      __dtoa
@@ -135,5 +134,4 @@ int strtopx(const char *, char **, void *);
 int strtopxL(const char *, char **, void *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GDTOA_GDTOA_H_ */

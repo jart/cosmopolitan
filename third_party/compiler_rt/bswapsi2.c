@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- bswapsi2.c - Implement __bswapsi2 ---------------------------------===
  *
  *               The LLVM Compiler Infrastructure

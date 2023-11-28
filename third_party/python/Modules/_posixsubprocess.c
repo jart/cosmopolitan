@@ -27,7 +27,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_posixsubprocess");
 PYTHON_PROVIDE("_posixsubprocess.fork_exec");

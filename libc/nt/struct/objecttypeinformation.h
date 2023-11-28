@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_OBJECTTYPEINFORMATION_H_
 #include "libc/nt/struct/genericmapping.h"
 #include "libc/nt/struct/unicodestring.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtObjectTypeInformation {
   struct NtUnicodeString TypeName;
@@ -28,5 +27,4 @@ struct NtObjectTypeInformation {
   uint32_t DefaultNonPagedPoolCharge;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_OBJECTTYPEINFORMATION_H_ */

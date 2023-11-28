@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_STRUCT_SHDR_H_
 #define COSMOPOLITAN_LIBC_ELF_STRUCT_SHDR_H_
 #include "libc/elf/scalar.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * Section header.
@@ -48,5 +47,4 @@ typedef struct Elf64_Shdr {
 
 } Elf64_Shdr;
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_STRUCT_SHDR_H_ */

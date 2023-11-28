@@ -1,6 +1,5 @@
 #ifndef __STREAMIO_H__
 #define __STREAMIO_H__
-/* clang-format off */
 
 /* streamio.h -- handles character stream I/O
 

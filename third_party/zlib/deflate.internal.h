@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_DEFLATE_INTERNAL_H_
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zutil.internal.h"
-/* clang-format off */
 
 #define DIST_CODE_LEN  512 /* see definition of array dist_code below */
 
@@ -40,7 +39,6 @@
 #define FINISH_STATE 666    /* stream complete */
 /* Stream status */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* define NO_GZIP when compiling if you want to disable gzip header and
@@ -349,5 +347,4 @@ void ZLIB_INTERNAL crc_fold_copy(deflate_state* const s,
 unsigned ZLIB_INTERNAL crc_fold_512to32(deflate_state* const s);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_DEFLATE_INTERNAL_H_ */

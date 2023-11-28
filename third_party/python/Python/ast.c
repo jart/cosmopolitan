@@ -30,7 +30,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Modules/unicodedata.h"
-/* clang-format off */
 
 static int validate_stmts(asdl_seq *);
 static int validate_exprs(asdl_seq *, expr_context_ty, int);

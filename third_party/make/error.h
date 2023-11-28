@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Declaration for error-reporting function
    Copyright (C) 1995-1997, 2003, 2006, 2008-2020 Free Software Foundation,
    Inc.

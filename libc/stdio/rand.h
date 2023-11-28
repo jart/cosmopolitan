@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RAND_RAND_H_
 #define COSMOPOLITAN_LIBC_RAND_RAND_H_
 #define RAND_MAX __INT_MAX__
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § random                                                    ─╬─│┼
@@ -46,5 +45,4 @@ void rt_end(double *, double *, double *, double *, double *);
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RAND_RAND_H_ */

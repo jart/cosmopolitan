@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_MLOCK_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_MLOCK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int MCL_CURRENT;
@@ -8,7 +7,6 @@ extern const int MCL_FUTURE;
 extern const int MCL_ONFAULT;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define MCL_CURRENT 1
 #define MCL_FUTURE  2

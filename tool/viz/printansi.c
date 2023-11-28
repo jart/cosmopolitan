@@ -29,7 +29,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"

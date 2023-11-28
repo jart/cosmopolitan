@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_NT_EVENT_H_
 #include "libc/nt/enum/status.h"
 #include "libc/nt/struct/objectattributes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -44,5 +43,4 @@ NtStatus NtWaitForKeyedEvent(int64_t KeyedEventHandle, void *KeyValue,
                              bool32 Alertable, int64_t *Timeout);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_EVENT_H_ */

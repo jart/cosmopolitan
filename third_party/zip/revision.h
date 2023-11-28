@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   revision.h - Zip 3
 

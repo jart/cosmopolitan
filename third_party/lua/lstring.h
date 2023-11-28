@@ -5,7 +5,6 @@
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lstate.h"
 
-/* clang-format off */
 
 /*
 ** Memory-allocation error message must be preallocated (it cannot

@@ -1,7 +1,6 @@
 #ifndef PYSQLITE_MODULE_H
 #define PYSQLITE_MODULE_H
 #include "third_party/python/Include/Python.h"
-/* clang-format off */
 
 #define PYSQLITE_VERSION "2.6.0"
 

@@ -1,4 +1,3 @@
-/* clang-format off */
 //=== lib/fp_trunc.h - high precision -> low precision conversion *- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

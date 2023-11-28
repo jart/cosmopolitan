@@ -13,7 +13,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_bisect");
 PYTHON_PROVIDE("_bisect.bisect");

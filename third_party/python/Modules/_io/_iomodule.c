@@ -21,7 +21,6 @@
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_io");
 PYTHON_PROVIDE("_io.BlockingIOError");

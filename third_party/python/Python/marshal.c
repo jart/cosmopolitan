@@ -32,7 +32,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashtable.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("marshal");
 

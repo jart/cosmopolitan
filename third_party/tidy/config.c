@@ -1,4 +1,3 @@
-/* clang-format off */
 /* config.c
  * Read configuration files and manage configuration properties.
  *

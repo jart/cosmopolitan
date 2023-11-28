@@ -30,7 +30,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /* Check if an object has a generalized numeric property. Return value:
    -1 for exception,

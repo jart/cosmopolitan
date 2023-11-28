@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_DSP_CORE_C1331S_H_
 #define COSMOPOLITAN_DSP_CORE_C1331S_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * Byte sized kernel for resampling difference samples in half.
@@ -22,5 +21,4 @@ __funline signed char C1331S(signed char al, signed char bl, signed char cl,
   return ax;
 }
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_C1331S_H_ */

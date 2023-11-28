@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"

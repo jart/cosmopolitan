@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_STB_STB_VORBIS_H_
 #define COSMOPOLITAN_THIRD_PARTY_STB_STB_VORBIS_H_
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 enum STBVorbisError {
@@ -260,5 +259,4 @@ int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buffer,
 // no more samples in the file, returns 0.
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_STB_STB_VORBIS_H_ */

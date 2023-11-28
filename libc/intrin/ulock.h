@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_ULOCK_H_
 #define COSMOPOLITAN_ULOCK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* both wake and wait take one of these */
@@ -23,5 +22,4 @@ int ulock_wake(uint32_t, void *, uint64_t);
 int ulock_wait(uint32_t, void *, uint64_t, uint32_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_ULOCK_H_ */

@@ -1,5 +1,4 @@
 #include "libc/x/x.h"
-/* clang-format off */
 
 static _Atomic(void *) gbcommon_encmap_ptr;
 static const unsigned char gbcommon_encmap_rodata[] = {

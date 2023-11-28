@@ -15,7 +15,6 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
@@ -24,7 +23,6 @@
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/profile.h"
-/* clang-format off */
 
 void Mul(uint64_t *c, const uint64_t *A, unsigned n, const uint64_t *B, unsigned m)
 {

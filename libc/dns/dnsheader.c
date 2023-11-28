@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/dnsheader.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/sysv/errfuns.h"
 
 /**

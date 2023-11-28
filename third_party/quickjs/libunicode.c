@@ -36,7 +36,6 @@ Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 
 #include "third_party/quickjs/libunicode-table.inc"
 

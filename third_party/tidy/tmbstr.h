@@ -1,6 +1,5 @@
 #ifndef __TMBSTR_H__
 #define __TMBSTR_H__
-/* clang-format off */
 
 /* tmbstr.h - Tidy string utility functions
 

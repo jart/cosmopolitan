@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_DNS_RESOLVCONF_H_
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Nameservers {
@@ -20,5 +19,4 @@ void FreeResolvConf(struct ResolvConf **) paramsnonnull();
 int GetNtNameServers(struct ResolvConf *) paramsnonnull();
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_DNS_RESOLVCONF_H_ */

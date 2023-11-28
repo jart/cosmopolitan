@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
     util.h - utility functions
     Copyright (C) 2016-present, Przemyslaw Skibinski, Yann Collet

@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/truncdfsf2.c - quad -> double conversion --------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

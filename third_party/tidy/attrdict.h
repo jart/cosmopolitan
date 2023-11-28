@@ -1,6 +1,5 @@
 #ifndef __ATTRDICT_H__
 #define __ATTRDICT_H__
-/* clang-format off */
 
 /* attrdict.h -- extended attribute information
 

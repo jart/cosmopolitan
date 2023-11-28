@@ -34,7 +34,6 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /*
  *  SSLv3/TLSv1 server-side functions
  *

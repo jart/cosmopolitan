@@ -1,6 +1,5 @@
 #ifndef TKINTER_H
 #define TKINTER_H
-/* clang-format off */
 
 /* This header is used to share some macros between _tkinter.c and
  * tkappinit.c.

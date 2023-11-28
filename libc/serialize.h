@@ -1,60 +1,73 @@
-#ifndef COSMOPOLITAN_LIBC_BITS_H_
-#define COSMOPOLITAN_LIBC_BITS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
+#ifndef COSMOPOLITAN_SERIALIZE_H_
+#define COSMOPOLITAN_SERIALIZE_H_
 #ifdef _COSMO_SOURCE
-COSMOPOLITAN_C_START_
 
-int _bitreverse8(int) pureconst;
-int _bitreverse16(int) pureconst;
-uint32_t _bitreverse32(uint32_t) pureconst;
-uint64_t _bitreverse64(uint64_t) pureconst;
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define __SWAPBE16(x) (x)
+#define __SWAPBE32(x) (x)
+#define __SWAPBE64(x) (x)
+#else
+#define __SWAPBE16(x) __builtin_bswap16(x)
+#define __SWAPBE32(x) __builtin_bswap32(x)
+#define __SWAPBE64(x) __builtin_bswap64(x)
+#endif
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define __SWAPLE16(x) (x)
+#define __SWAPLE32(x) (x)
+#define __SWAPLE64(x) (x)
+#else
+#define __SWAPLE16(x) __builtin_bswap16(x)
+#define __SWAPLE32(x) __builtin_bswap32(x)
+#define __SWAPLE64(x) __builtin_bswap64(x)
+#endif
 
 #define READ16LE(P)                    \
   (__extension__({                     \
     uint16_t __x;                      \
     __builtin_memcpy(&__x, P, 16 / 8); \
-    __x;                               \
+    __SWAPLE16(__x);                   \
   }))
 
 #define READ16BE(P)                    \
   (__extension__({                     \
     uint16_t __x;                      \
     __builtin_memcpy(&__x, P, 16 / 8); \
-    __builtin_bswap16(__x);            \
+    __SWAPBE16(__x);                   \
   }))
 
 #define READ32LE(P)                    \
   (__extension__({                     \
     uint32_t __x;                      \
     __builtin_memcpy(&__x, P, 32 / 8); \
-    __x;                               \
+    __SWAPLE32(__x);                   \
   }))
 
 #define READ32BE(P)                    \
   (__extension__({                     \
     uint32_t __x;                      \
     __builtin_memcpy(&__x, P, 32 / 8); \
-    __builtin_bswap32(__x);            \
+    __SWAPBE32(__x);                   \
   }))
 
 #define READ64LE(P)                    \
   (__extension__({                     \
     uint64_t __x;                      \
     __builtin_memcpy(&__x, P, 64 / 8); \
-    __x;                               \
+    __SWAPLE32(__x);                   \
   }))
 
 #define READ64BE(P)                    \
   (__extension__({                     \
     uint64_t __x;                      \
     __builtin_memcpy(&__x, P, 64 / 8); \
-    __builtin_bswap64(__x);            \
+    __SWAPBE64(__x);                   \
   }))
 
 #define WRITE16LE(P, X)                  \
   (__extension__({                       \
     __typeof__(&(P)[0]) __p = (P);       \
-    uint16_t __x = (X);                  \
+    uint16_t __x = __SWAPLE16(X);        \
     __builtin_memcpy(__p, &__x, 16 / 8); \
     __p + 16 / 8;                        \
   }))
@@ -62,7 +75,7 @@ uint64_t _bitreverse64(uint64_t) pureconst;
 #define WRITE16BE(P, X)                  \
   (__extension__({                       \
     __typeof__(&(P)[0]) __p = (P);       \
-    uint16_t __x = __builtin_bswap16(X); \
+    uint16_t __x = __SWAPBE16(X);        \
     __builtin_memcpy(__p, &__x, 16 / 8); \
     __p + 16 / 8;                        \
   }))
@@ -70,7 +83,7 @@ uint64_t _bitreverse64(uint64_t) pureconst;
 #define WRITE32LE(P, X)                  \
   (__extension__({                       \
     __typeof__(&(P)[0]) __p = (P);       \
-    uint32_t __x = (X);                  \
+    uint32_t __x = __SWAPLE32(X);        \
     __builtin_memcpy(__p, &__x, 32 / 8); \
     __p + 32 / 8;                        \
   }))
@@ -78,7 +91,7 @@ uint64_t _bitreverse64(uint64_t) pureconst;
 #define WRITE32BE(P, X)                  \
   (__extension__({                       \
     __typeof__(&(P)[0]) __p = (P);       \
-    uint32_t __x = __builtin_bswap32(X); \
+    uint32_t __x = __SWAPBE32(X);        \
     __builtin_memcpy(__p, &__x, 32 / 8); \
     __p + 32 / 8;                        \
   }))
@@ -86,7 +99,7 @@ uint64_t _bitreverse64(uint64_t) pureconst;
 #define WRITE64LE(P, X)                  \
   (__extension__({                       \
     __typeof__(&(P)[0]) __p = (P);       \
-    uint64_t __x = (X);                  \
+    uint64_t __x = __SWAPLE64(X);        \
     __builtin_memcpy(__p, &__x, 64 / 8); \
     __p + 64 / 8;                        \
   }))
@@ -94,12 +107,10 @@ uint64_t _bitreverse64(uint64_t) pureconst;
 #define WRITE64BE(P, X)                  \
   (__extension__({                       \
     __typeof__(&(P)[0]) __p = (P);       \
-    uint64_t __x = __builtin_bswap64(X); \
+    uint64_t __x = __SWAPBE64(X);        \
     __builtin_memcpy(__p, &__x, 64 / 8); \
     __p + 64 / 8;                        \
   }))
 
-COSMOPOLITAN_C_END_
 #endif /* _COSMO_SOURCE */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_BITS_H_ */
+#endif /* COSMOPOLITAN_SERIALIZE_H_ */

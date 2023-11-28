@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SOCK_H_
 #define COSMOPOLITAN_LIBC_SOCK_SOCK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define INET_ADDRSTRLEN 22
@@ -35,5 +34,4 @@ int socketpair(int, int, int, int[2]);
 int sockatmark(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_SOCK_H_ */

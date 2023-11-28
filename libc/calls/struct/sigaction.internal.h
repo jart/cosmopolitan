@@ -3,7 +3,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/mem/alloca.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct sigaction_linux {
@@ -73,5 +72,4 @@ const char *DescribeSigaction(char[256], int, const struct sigaction *);
 void _init_onntconsoleevent(void);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_INTERNAL_H_ */

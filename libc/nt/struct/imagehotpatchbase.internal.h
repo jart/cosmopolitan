@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEHOTPATCHBASE_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEHOTPATCHBASE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageHotPatchBase {
   uint32_t SequenceNumber;
@@ -13,5 +12,4 @@ struct NtImageHotPatchBase {
   uint32_t BufferOffset;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEHOTPATCHBASE_H_ */

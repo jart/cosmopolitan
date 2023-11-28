@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * sort.cc - C++ sort functions
  * Copyright (C) 2019-2021 Yann Collet

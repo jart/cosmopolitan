@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_LDRDATATABLEENTRY_H_
 #include "libc/nt/struct/linkedlist.h"
 #include "libc/nt/struct/unicodestring.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtLdrDataTableEntry {
   struct NtLinkedList InLoadOrderLinks; /* msdn:reserved */
@@ -40,5 +39,4 @@ struct NtLdrDataTableEntry {
   int64_t LoadTime;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_LDRDATATABLEENTRY_H_ */

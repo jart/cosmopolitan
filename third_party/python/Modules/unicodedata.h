@@ -14,9 +14,7 @@
 #define _Hanghoul_NCount (_Hanghoul_VCount * _Hanghoul_TCount)
 #define _Hanghoul_SCount (_Hanghoul_LCount * _Hanghoul_NCount)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
  * [jart] if it adds 1.2megs to each binary then it should have an api
@@ -97,5 +95,4 @@ int _PyUnicode_GetCode(PyObject *, const char *, int, Py_UCS4 *, int);
 void _PyUnicode_GetDecompRecord(PyObject *, Py_UCS4, int *, int *, int *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_UNICODEDATA_H_ */

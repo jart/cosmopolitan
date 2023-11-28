@@ -14,7 +14,6 @@
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
-/* clang-format off */
 
 /* This expects a filename containing the grammar as argv[1] (UNIX)
    or asks the console for such a file name (THINK C).

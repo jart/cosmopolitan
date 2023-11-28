@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_CPU_FEATURES_H_
 #include "libc/nexgen32e/x86feature.h"
 #include "third_party/zlib/zconf.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #ifdef __x86_64__
 
@@ -28,5 +27,4 @@ void cpu_check_features(void);
 
 #endif
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_CPU_FEATURES_H_ */

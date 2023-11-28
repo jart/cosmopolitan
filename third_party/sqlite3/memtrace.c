@@ -25,7 +25,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/sqlite3/sqlite3.h"
-// clang-format off
 
 /* The original memory allocation routines */
 static sqlite3_mem_methods memtraceBase;

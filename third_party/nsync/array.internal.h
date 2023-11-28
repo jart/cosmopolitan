@@ -1,6 +1,5 @@
 #ifndef NSYNC_ARRAY_H_
 #define NSYNC_ARRAY_H_
-/* clang-format off */
 
 /* Return the number of elements in a C array a.
    A constant expression if a is a constant expression. */

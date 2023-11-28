@@ -35,7 +35,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 #if 0
 /* OS dependent: return the UTC time in ms since 1970. */

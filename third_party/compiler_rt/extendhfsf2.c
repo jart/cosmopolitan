@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/extendhfsf2.c - half -> single conversion -------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -5,7 +5,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-/* clang-format off */
 
 /*-----------------------------------------------------------*/
 /*--- Block recoverer program for bzip2                   ---*/

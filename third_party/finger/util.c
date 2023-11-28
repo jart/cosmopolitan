@@ -44,7 +44,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/finger/finger.h"
-// clang-format off
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)util.c	5.14 (Berkeley) 1/17/91";*/

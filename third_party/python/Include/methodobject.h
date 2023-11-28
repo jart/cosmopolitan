@@ -3,7 +3,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* This is about the type 'builtin_function_or_method',
    not Python methods in user-defined classes.  See classobject.h

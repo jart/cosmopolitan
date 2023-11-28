@@ -1,4 +1,3 @@
-// clang-format off
 //===------------------------- mutex.cpp ----------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.

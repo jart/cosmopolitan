@@ -1,4 +1,3 @@
-// clang-format off
 /*
   unix/osdep.h - Zip 3
 

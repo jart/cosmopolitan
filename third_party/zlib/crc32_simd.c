@@ -8,7 +8,6 @@
 asm(".ident\t\"\\n\\n\
 Chromium (BSD-3 License)\\n\
 Copyright 2017 The Chromium Authors\"");
-// clang-format off
 
 #include "third_party/intel/x86gprintrin.internal.h"
 #include "third_party/zlib/crc32_simd.internal.h"

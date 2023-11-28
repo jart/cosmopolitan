@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/ceval.h"
-/* clang-format off */
 
 int
 (Py_EnterRecursiveCall)(const char *where)

@@ -1,6 +1,5 @@
 #ifndef __TIDY_MAPPED_IO_H__
 #define __TIDY_MAPPED_IO_H__
-/* clang-format off */
 
 /* Interface to mmap style I/O
 

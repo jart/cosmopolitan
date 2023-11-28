@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_DSP_CORE_C1331_H_
 #define COSMOPOLITAN_DSP_CORE_C1331_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * Byte sized kernel for resampling memory in half.
@@ -24,5 +23,4 @@ __funline unsigned char C1331(unsigned char al, unsigned char bl,
   return al;
 }
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_C1331_H_ */

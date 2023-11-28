@@ -24,7 +24,6 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /*
  * FIPS-180-1 test vectors

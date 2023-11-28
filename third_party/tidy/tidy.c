@@ -1,4 +1,3 @@
-/* clang-format off */
 /***************************************************************************//**
  * @file
  * HTML TidyLib command line driver.

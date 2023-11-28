@@ -17,7 +17,6 @@
 #include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 /* set object implementation
 

@@ -8,7 +8,6 @@
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_YOINK("io");
 

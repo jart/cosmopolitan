@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "net/https/https.h"
 
 bool CertHasIp(const mbedtls_x509_crt *cert, uint32_t ip) {

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/runtime/pc.internal.h"

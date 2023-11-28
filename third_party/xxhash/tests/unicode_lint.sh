@@ -1,4 +1,3 @@
-// clang-format off
 #!/bin/bash
 
 # `unicode_lint.sh' determines whether source files under ${dirs} directories

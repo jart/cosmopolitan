@@ -2,7 +2,6 @@
 #define MBEDTLS_AES_H_
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1 /*< AES encryption. */

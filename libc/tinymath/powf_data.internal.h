@@ -10,7 +10,6 @@
 #endif
 #define POWF_SCALE ((double)(1 << POWF_SCALE_BITS))
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const struct powf_log2_data {
@@ -21,5 +20,4 @@ extern const struct powf_log2_data {
 } __powf_log2_data;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_POWF_DATA_INTERNAL_H_ */

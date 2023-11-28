@@ -14,7 +14,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Parser/parser.h"
 #include "third_party/python/Parser/tokenizer.h"
-/* clang-format off */
 
 static node *parsetok(struct tok_state *, grammar *, int, perrdetail *, int *);
 static int initerr(perrdetail *err_ret, PyObject * filename);

@@ -32,7 +32,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/hilbert.h"
 #include "libc/intrin/kprintf.h"
@@ -311,7 +311,7 @@ struct Worker {
   atomic_int shutdown;
   atomic_int connected;
   struct timespec startread;
-} * g_worker;
+} *g_worker;
 
 // recentworker wakeup
 struct Recent {

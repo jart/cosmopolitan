@@ -5,7 +5,6 @@
 #include "third_party/python/Include/compile.h"
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef enum _block_type { FunctionBlock, ClassBlock, ModuleBlock }
     _Py_block_ty;

@@ -9,7 +9,6 @@
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/node.h"
 #include "third_party/python/Include/objimpl.h"
-/* clang-format off */
 
 node *
 PyNode_New(int type)

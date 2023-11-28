@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- muldc3.c - Implement __muldc3 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

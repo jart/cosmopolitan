@@ -1,4 +1,3 @@
-/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Table for randomising repetitive blocks               ---*/

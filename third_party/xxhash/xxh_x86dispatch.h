@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * xxHash - XXH3 Dispatcher for x86-based targets
  * Copyright (C) 2020-2021 Yann Collet

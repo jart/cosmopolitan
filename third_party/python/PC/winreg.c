@@ -42,7 +42,6 @@
 #define KEY_EXECUTE                      kNtKeyExecute
 #define KEY_ALL_ACCESS                   kNtKeyAllAccess
 
-/* clang-format off */
 
 /*
   winreg.c

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_MPEG_DEMUX_H_
 #define COSMOPOLITAN_DSP_MPEG_DEMUX_H_
 #include "dsp/mpeg/mpeg.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define START_PACK 0xBA
@@ -27,5 +26,4 @@ plm_packet_t *plm_demux_decode_packet(plm_demux_t *self, int start_code);
 plm_packet_t *plm_demux_get_packet(plm_demux_t *self);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_MPEG_DEMUX_H_ */

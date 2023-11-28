@@ -17,7 +17,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /* Undo the effect of Py_Initialize().
 

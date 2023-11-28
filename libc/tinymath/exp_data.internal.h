@@ -6,7 +6,6 @@
 #define EXP_USE_TOINT_NARROW 0
 #define EXP2_POLY_ORDER      5
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const struct exp_data {
@@ -21,5 +20,4 @@ extern const struct exp_data {
 } __exp_data;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_EXP_DATA_H_ */

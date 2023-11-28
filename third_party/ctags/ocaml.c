@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   Copyright (c) 2009, Vincent Berthoux
 *

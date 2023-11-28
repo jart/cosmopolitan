@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/floatsisf.c - integer -> single-precision conversion --*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_WNDCLASSEX_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_WNDCLASSEX_H_
 #include "libc/nt/typedef/wndproc.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct NtWndClassEx {
@@ -20,5 +19,4 @@ struct NtWndClassEx {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_WNDCLASSEX_H_ */

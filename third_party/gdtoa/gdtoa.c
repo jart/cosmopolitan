@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 static Bigint *
 bitstob(ULong *bits, int nbits, int *bbits, ThInfo **PTI)

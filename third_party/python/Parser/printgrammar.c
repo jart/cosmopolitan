@@ -7,7 +7,6 @@
 #define PGEN
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/pgenheaders.h"
-/* clang-format off */
 
 /* Print a bunch of C initializers that represent a grammar */
 

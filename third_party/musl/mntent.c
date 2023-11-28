@@ -36,7 +36,6 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 static char *internal_buf;
 static size_t internal_bufsize;

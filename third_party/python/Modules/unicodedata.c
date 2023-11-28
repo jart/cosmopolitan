@@ -21,7 +21,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/bextra.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("unicodedata");
 PYTHON_PROVIDE("unicodedata.UCD");

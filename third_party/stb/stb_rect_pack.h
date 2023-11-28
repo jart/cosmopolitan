@@ -8,7 +8,6 @@
 #define STBRP_HEURISTIC_Skyline_BL_sortHeight 0
 #define STBRP_HEURISTIC_Skyline_BF_sortHeight 1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct stbrp_context stbrp_context;
@@ -46,5 +45,4 @@ void stbrp_setup_heuristic(stbrp_context *, int);
 int stbrp_pack_rects(stbrp_context *, stbrp_rect *, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_STB_STB_RECT_PACK_H_ */

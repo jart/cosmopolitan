@@ -26,7 +26,6 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/elf/struct/verdaux.h"
 #include "libc/elf/struct/verdef.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/getauxval.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"

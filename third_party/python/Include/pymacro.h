@@ -1,6 +1,5 @@
 #ifndef Py_PYMACRO_H
 #define Py_PYMACRO_H
-/* clang-format off */
 
 /* Minimum value between x and y */
 #define Py_MIN(x, y) (((x) > (y)) ? (y) : (x))

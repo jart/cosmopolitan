@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 
 /*
  * _codecs_kr.c: Codecs collection for Korean encodings

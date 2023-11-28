@@ -1,4 +1,3 @@
-/* clang-format off */
 /* xmalloc.c -- malloc with out of memory checking
 
    Copyright (C) 1990-2000, 2002-2006, 2008-2020 Free Software Foundation, Inc.

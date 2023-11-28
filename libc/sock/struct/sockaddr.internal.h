@@ -3,7 +3,6 @@
 #include "libc/mem/alloca.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr6-bsd.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct sockaddr_bsd {
@@ -55,5 +54,4 @@ void sockaddr2linux(const union sockaddr_storage_bsd *, uint32_t,
                     union sockaddr_storage_linux *, uint32_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_SOCKADDR_INTERNAL_H_ */

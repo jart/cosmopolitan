@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_ISYSTEM_LINUX_TYPES_H_
 #define COSMOPOLITAN_LIBC_ISYSTEM_LINUX_TYPES_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef uint16_t __u16;
@@ -21,5 +20,4 @@ typedef __u32 __wsum;
 #define __aligned_le64 __le64 __attribute__((__aligned__(8)))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ISYSTEM_LINUX_TYPES_H_ */

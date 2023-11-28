@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
  *  LZ4 - Fast LZ compression algorithm
  *  Header File

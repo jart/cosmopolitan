@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_AESNI_AES      0x02000000u
 #define MBEDTLS_AESNI_CLMUL    0x00000002u

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_IMPORTOBJECTTYPE_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_IMPORTOBJECTTYPE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 enum NtImportObjectType {
   IMPORT_OBJECT_CODE,
@@ -8,5 +7,4 @@ enum NtImportObjectType {
   IMPORT_OBJECT_CONST
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_IMPORTOBJECTTYPE_H_ */

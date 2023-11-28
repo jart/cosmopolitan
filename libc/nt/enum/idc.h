@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_IDC_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_IDC_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define kNtIdcArrow    ((const char16_t *)32512)
@@ -20,5 +19,4 @@ COSMOPOLITAN_C_START_
 #define kNtIdcPerson   ((const char16_t *)32672)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_IDC_H_ */

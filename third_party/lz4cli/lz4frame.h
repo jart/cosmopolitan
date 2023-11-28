@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
    LZ4 auto-framing library
    Header File

@@ -10,7 +10,6 @@
 #define BLAKE2B256_Final   __BLAKE2B256_Final
 #define BLAKE2B256         __BLAKE2B256
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Blake2b {
@@ -31,5 +30,4 @@ int BLAKE2B256_Final(struct Blake2b *, uint8_t[BLAKE2B256_DIGEST_LENGTH]);
 int BLAKE2B256(const void *, size_t, uint8_t[BLAKE2B256_DIGEST_LENGTH]);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_BLAKE2_H_ */

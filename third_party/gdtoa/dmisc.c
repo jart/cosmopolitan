@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 void
 freedtoa(char *s)

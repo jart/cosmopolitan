@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: parsers.h 771 2010-11-30 13:15:12Z vberthoux $
 *

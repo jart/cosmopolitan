@@ -2,7 +2,6 @@
 #define ltests_h
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
 
 /* test Lua with compatibility code */
 #define LUA_COMPAT_MATHLIB

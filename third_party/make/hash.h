@@ -1,4 +1,3 @@
-/* clang-format off */
 /* hash.h -- decls for hash table
 Copyright (C) 1995, 1999, 2002, 2010 Free Software Foundation, Inc.
 Written by Greg McGary <gkm@gnu.org> <greg@mcgary.org>

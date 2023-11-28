@@ -5,7 +5,6 @@
 #include "libc/math.h"
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
 
 /*
 ** 'lu_mem' and 'l_mem' are unsigned/signed integers big enough to count

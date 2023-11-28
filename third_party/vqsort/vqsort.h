@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_VQSORT_H_
 #define COSMOPOLITAN_THIRD_PARTY_VQSORT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void vqsort_int64(int64_t *, size_t);
@@ -16,5 +15,4 @@ void vqsort_int32_ssse3(int32_t *, size_t);
 void vqsort_int32_sse2(int32_t *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_VQSORT_H_ */

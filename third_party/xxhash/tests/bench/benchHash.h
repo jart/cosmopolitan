@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *  Hash benchmark module
 *  Part of the xxHash project

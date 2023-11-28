@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"

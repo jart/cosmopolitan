@@ -2,7 +2,6 @@
 #define _PYTHON_MULTIBYTECODEC_H_
 #include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
  * multibytecodec.h: Common Multibyte Codec Implementation

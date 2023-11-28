@@ -33,7 +33,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /* Should only be used for debug. */
 const char *JS_AtomGetStrRT(JSRuntime *rt, char *buf, int buf_size, JSAtom atom)

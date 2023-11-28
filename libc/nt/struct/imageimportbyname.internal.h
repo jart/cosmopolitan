@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEIMPORTBYNAME_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEIMPORTBYNAME_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageImportByName {
   uint16_t Hint;
   char Name[1];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEIMPORTBYNAME_H_ */

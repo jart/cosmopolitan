@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_IFADDRS_H_
 #define COSMOPOLITAN_LIBC_SOCK_IFADDRS_H_
 #include "libc/sock/struct/sockaddr.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct ifaddrs {
@@ -21,5 +20,4 @@ void freeifaddrs(struct ifaddrs *);
 int getifaddrs(struct ifaddrs **);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_IFADDRS_H_ */

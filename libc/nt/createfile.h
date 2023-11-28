@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_CREATEFILE_H_
 #define COSMOPOLITAN_LIBC_NT_CREATEFILE_H_
 #include "libc/nt/struct/securityattributes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int64_t CreateFile(
@@ -21,5 +20,4 @@ int64_t CreateFileA(
 int GetNtOpenFlags(int, int, uint32_t *, uint32_t *, uint32_t *, uint32_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_CREATEFILE_H_ */

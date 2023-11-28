@@ -21,7 +21,6 @@
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_math.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("cmath");
 PYTHON_PROVIDE("cmath.acos");

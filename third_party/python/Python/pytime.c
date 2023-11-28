@@ -16,7 +16,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymath.h"
-/* clang-format off */
 
 #define _PyTime_check_mul_overflow(a, b) \
     (assert(b > 0), \

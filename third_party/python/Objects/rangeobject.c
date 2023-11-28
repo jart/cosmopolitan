@@ -14,7 +14,6 @@
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /* Support objects whose length is > PY_SSIZE_T_MAX.
 

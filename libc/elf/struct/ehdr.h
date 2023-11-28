@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_STRUCT_EHDR_H_
 #define COSMOPOLITAN_LIBC_ELF_STRUCT_EHDR_H_
 #include "libc/elf/scalar.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /*
  * ELF header.
@@ -159,5 +158,4 @@ typedef struct Elf64_Ehdr {
 
 } Elf64_Ehdr;
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_STRUCT_EHDR_H_ */

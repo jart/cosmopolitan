@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
     platform.h - compiler and OS detection
     Copyright (C) 2016-present, Przemyslaw Skibinski, Yann Collet

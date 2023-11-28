@@ -14,7 +14,6 @@
 #include "third_party/ctags/args.h"
 #include "third_party/ctags/debug.h"
 #include "third_party/ctags/routines.h"
-// clang-format off
 
 /*
 *   FUNCTION DEFINITIONS

@@ -3,7 +3,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #ifndef Py_LIMITED_API
 /* PyException_HEAD defines the initial segment of every exception class. */

@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_HMAC_DRBG_REQUEST_TOO_BIG              -0x0003  /*< Too many random requested in single call. */
 #define MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG                -0x0005  /*< Input too large (Entropy + additional). */

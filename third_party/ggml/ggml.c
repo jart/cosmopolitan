@@ -55,7 +55,6 @@ asm(".ident\t\"\\n\\n\
 GGML (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 typedef void* thread_ret_t;
 

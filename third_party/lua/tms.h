@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_LUA_TMS_H_
 #define COSMOPOLITAN_THIRD_PARTY_LUA_TMS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*
@@ -37,5 +36,4 @@ typedef enum {
 } TMS;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_LUA_TMS_H_ */

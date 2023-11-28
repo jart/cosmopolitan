@@ -1,7 +1,6 @@
 #ifndef PYSQLITE_CURSOR_H
 #define PYSQLITE_CURSOR_H
 #include "third_party/python/Include/Python.h"
-/* clang-format off */
 
 #include "third_party/python/Modules/_sqlite/statement.h"
 #include "third_party/python/Modules/_sqlite/connection.h"

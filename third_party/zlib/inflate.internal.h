@@ -3,9 +3,7 @@
 #include "third_party/zlib/inftrees.internal.h"
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zlib.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* WARNING: this file should *not* be used by applications. It is
    part of the implementation of the compression library and is
@@ -130,5 +128,4 @@ struct inflate_state {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_INFLATE_H_ */

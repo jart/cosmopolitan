@@ -9,7 +9,6 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/zlib/gz/gzguts.inc"
-// clang-format off
 
 /* Local functions */
 local int gz_init OF((gz_statep));

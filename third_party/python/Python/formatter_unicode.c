@@ -19,7 +19,6 @@
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 /* implements the unicode (as opposed to string) version of the
    built-in formatters for string, int, float.  that is, the versions

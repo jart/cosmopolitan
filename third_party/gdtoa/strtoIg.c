@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 int
 __gdtoa_strtoIg(const char *s00, char **se, const FPI *fpi, Long *exp, Bigint **B, int *rvp)

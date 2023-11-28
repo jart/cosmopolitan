@@ -43,7 +43,6 @@ asm(".include \"libc/disclaimer.inc\"");
 /* #undef __AVX2__ */
 /* #endif */
 
-/* clang-format off */
 
 /* enable it to check the multiplication result */
 //#define USE_MUL_CHECK

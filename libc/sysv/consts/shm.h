@@ -17,7 +17,6 @@
 #define SHM_UNLOCK    SHM_UNLOCK
 #define SHM_W         SHM_W
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const char *SHM_ANON;
@@ -37,5 +36,4 @@ extern const int SHM_UNLOCK;
 extern const int SHM_W;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SHM_H_ */

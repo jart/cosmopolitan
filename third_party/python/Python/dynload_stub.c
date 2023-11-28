@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Python/importdl.h"
-/* clang-format off */
 
 /* This module provides the necessary stubs for when dynamic loading is
    not present. */

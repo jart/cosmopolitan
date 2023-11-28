@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   ttyio.h - Zip 3
 

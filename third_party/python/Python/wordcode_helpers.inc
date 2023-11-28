@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/code.h"
-/* clang-format off */
 
 /* This file contains code shared by the compiler and the peephole
    optimizer.

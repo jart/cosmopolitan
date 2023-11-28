@@ -15,10 +15,11 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/mbedtls/x509_crt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -31,8 +32,6 @@
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/pem.h"
 #include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/x509_crt.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\

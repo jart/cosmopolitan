@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/aesni.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 
@@ -26,7 +26,6 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /*
  * [AES-WP] http://software.intel.com/en-us/articles/intel-advanced-encryption-standard-aes-instructions-set
  * [CLMUL-WP] http://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/

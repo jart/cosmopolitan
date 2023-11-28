@@ -1,5 +1,4 @@
 #include "libc/x/x.h"
-/* clang-format off */
 
 static _Atomic(void *) __jisx0213_2_emp_decmap_ptr;
 static const unsigned char __jisx0213_2_emp_decmap_rodata[] = {

@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 
 /* this is sort of a hack.  there's at least one place (formatting
    floats) where some stringlib code takes a different path if it's

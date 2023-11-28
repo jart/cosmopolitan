@@ -23,7 +23,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("fcntl");
 PYTHON_PROVIDE("fcntl.FD_CLOEXEC");

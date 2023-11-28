@@ -5,7 +5,6 @@
 #include "libc/nt/struct/iostatusblock.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/typedef/ioapcroutine.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -94,5 +93,4 @@ NtStatus RtlNtStatusToDosError(NtStatus Status);
 #include "libc/nt/thunk/ntfile.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_FILE_H_ */

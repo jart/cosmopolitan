@@ -23,7 +23,6 @@
 #include "third_party/ggml/ggml.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/libcxx/math.h"
-// clang-format off
 
 static_assert(sizeof(block_v1_q8_1) == 3 * sizeof(float) + V1_QK8_1,
               "wrong q8_1 block size/padding");

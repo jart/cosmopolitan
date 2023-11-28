@@ -1,6 +1,5 @@
 #ifndef _COMPLEX_H
 #define _COMPLEX_H
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #if __STDC_VERSION__ + 0 >= 201112 && !defined(__STDC_NO_COMPLEX__)
 
@@ -117,5 +116,4 @@ complex long double cpowl(complex long double, complex long double);
 
 #endif /* C11 */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COMPLEX_H */

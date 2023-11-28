@@ -1,4 +1,3 @@
-// clang-format off
 /*
  *	 $Id: jscript.c 763 2010-07-28 14:22:42Z dfishburn $
  *

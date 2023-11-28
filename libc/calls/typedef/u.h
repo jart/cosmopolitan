@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_TYPEDEF_U_H_
 #define COSMOPOLITAN_LIBC_CALLS_TYPEDEF_U_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef unsigned char u_int8_t;
@@ -15,5 +14,4 @@ typedef long long quad_t;
 typedef unsigned long long u_quad_t;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_TYPEDEF_U_H_ */

@@ -46,7 +46,6 @@ o/$(MODE)/ape: $(APE)
 o/$(MODE)/ape/aarch64.lds:			\
 	ape/aarch64.lds				\
 	libc/zip.internal.h			\
-	libc/intrin/bits.h			\
 	libc/thread/tls.h			\
 	libc/calls/struct/timespec.h		\
 	libc/macros.internal.h			\
@@ -274,7 +273,6 @@ o/$(MODE)/ape/ape.lds:				\
 		ape/macros.internal.h		\
 		ape/relocations.h		\
 		ape/ape.internal.h		\
-		libc/intrin/bits.h		\
 		libc/thread/tls.h		\
 		libc/calls/struct/timespec.h	\
 		libc/thread/thread.h		\

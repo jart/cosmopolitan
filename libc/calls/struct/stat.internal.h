@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STAT_INTERNAL_H_
 #include "libc/calls/struct/stat.h"
 #include "libc/mem/alloca.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int sys_fstat(int, struct stat *);
@@ -18,5 +17,4 @@ const char *DescribeStat(char[300], int, const struct stat *);
 #define DescribeStat(rc, st) DescribeStat(alloca(300), rc, st)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STAT_INTERNAL_H_ */

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_DNS_HOSTSTXT_H_
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct HostsTxtEntry {
@@ -36,5 +35,4 @@ int ResolveHostsReverse(const struct HostsTxt *, int, const uint8_t *, char *,
                         size_t) paramsnonnull((1, 3));
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_DNS_HOSTSTXT_H_ */

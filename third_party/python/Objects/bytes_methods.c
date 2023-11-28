@@ -13,7 +13,6 @@
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/pyctype.h"
 #include "third_party/python/Include/pyerrors.h"
-/* clang-format off */
 
 PyDoc_STRVAR_shared(_Py_isspace__doc__,
 "B.isspace() -> bool\n\

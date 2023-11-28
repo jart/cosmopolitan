@@ -2,7 +2,6 @@
 #define MBEDTLS_DHM_H
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
-/* clang-format off */
 
 /*
  * DHM Error codes

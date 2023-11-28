@@ -17,7 +17,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 typedef struct {
     PyObject_HEAD

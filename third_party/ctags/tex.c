@@ -1,4 +1,3 @@
-// clang-format off
 /*
  *	 $Id: tex.c 666 2008-05-15 17:47:31Z dfishburn $
  *

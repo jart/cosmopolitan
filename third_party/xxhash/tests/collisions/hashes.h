@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * List of hashes for the brute force collision tester
  * Part of xxHash project

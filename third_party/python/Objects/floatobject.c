@@ -29,7 +29,6 @@
 #include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /* XXX There should be overflow checks here, but it's hard to check
    for any kind of float exception without losing portability. */

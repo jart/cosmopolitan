@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_PUNPCKLBW_H_
 #define COSMOPOLITAN_LIBC_INTRIN_PUNPCKLBW_H_
 #include "libc/intrin/macros.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void punpcklbw(uint8_t[16], const uint8_t[16], const uint8_t[16]);
@@ -11,5 +10,4 @@ void punpcklbw(uint8_t[16], const uint8_t[16], const uint8_t[16]);
                        B, C)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_PUNPCKLBW_H_ */

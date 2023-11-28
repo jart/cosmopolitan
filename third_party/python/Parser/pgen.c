@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pgen.h"
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/token.h"
-/* clang-format off */
 
 /*
 

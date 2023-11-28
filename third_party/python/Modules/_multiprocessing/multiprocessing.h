@@ -5,7 +5,6 @@
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structmember.h"
-/* clang-format off */
 
 /*
  * Platform includes and definitions

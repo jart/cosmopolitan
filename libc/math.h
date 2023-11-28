@@ -66,7 +66,6 @@
 #define FP_ILOGB0    (-2147483647 - 1)
 #define FP_ILOGBNAN  (-2147483647 - 1)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define NAN       __builtin_nanf("")
@@ -326,5 +325,4 @@ float y1f(float);
 float ynf(int, float);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MATH_H_ */

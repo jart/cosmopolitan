@@ -28,7 +28,6 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » windows                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int64_t CreateWindowEx(uint32_t dwExStyle, const char16_t *lpClassName,
@@ -97,5 +96,4 @@ int WideCharToMultiByte(unsigned int CodePage, uint32_t dwFlags,
                         uint16_t *lpDefaultChar, int *lpUsedDefaultChar);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_WINDOWS_H_ */

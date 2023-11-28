@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBUNICODE_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBUNICODE_H_
 #include "third_party/quickjs/libunicode.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define LRE_BOOL  int       /* for documentation purposes */
 
@@ -102,5 +100,4 @@ int unicode_prop(CharRange *cr, const char *prop_name);
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBUNICODE_H_ */

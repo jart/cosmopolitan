@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_YCBCR_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_YCBCR_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct YCbCr;
@@ -30,5 +29,4 @@ void *YCbCr2RgbScale(long dyn, long dxn, unsigned char[restrict 3][dyn][dxn],
                      double, double, double, double, struct YCbCr **);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_VIZ_LIB_YCBCR_H_ */

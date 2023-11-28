@@ -3,7 +3,6 @@
 #include "libc/stdio/stdio.h"
 #include "third_party/python/Include/bitset.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* A label of an arc */
 typedef struct {

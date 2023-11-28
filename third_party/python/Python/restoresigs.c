@@ -7,7 +7,6 @@
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 /* Restore signals that the interpreter has called SIG_IGN on to SIG_DFL.
  *

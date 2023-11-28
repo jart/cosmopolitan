@@ -16,7 +16,6 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/nsync/testing/closure.h"
-// clang-format off
 
 void nsync_start_thread_ (void (*f) (void *), void *arg);
 

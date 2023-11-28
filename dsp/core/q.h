@@ -3,7 +3,6 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * @fileoverview Fixed point arithmetic macros.
@@ -23,5 +22,4 @@ long GetIntegerCoefficients(long[static 6], const double[static 6], long, long,
 long GetIntegerCoefficients8(long[static 8], const double[static 8], long, long,
                              long);
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_Q_H_ */

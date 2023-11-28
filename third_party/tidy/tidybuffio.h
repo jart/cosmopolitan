@@ -1,6 +1,5 @@
 #ifndef __TIDY_BUFFIO_H__
 #define __TIDY_BUFFIO_H__
-/* clang-format off */
 
 /**************************************************************************//**
  * @file

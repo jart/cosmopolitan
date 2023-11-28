@@ -51,7 +51,6 @@ asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 static std::string replace_all(std::string const& original,
                                std::string const& before,

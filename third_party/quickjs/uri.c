@@ -30,7 +30,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 static int string_get_hex(JSString *p, int k, int n) {
     int c = 0, h;

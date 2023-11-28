@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Do not renumber the file; these numbers are part of the stable ABI. */
 /* Disabled, see #10181 */
 #undef Py_bf_getbuffer

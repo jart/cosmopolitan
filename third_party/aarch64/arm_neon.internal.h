@@ -1,4 +1,3 @@
-/* clang-format off */
 #if defined(__aarch64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef _AARCH64_NEON_H_
 #define _AARCH64_NEON_H_

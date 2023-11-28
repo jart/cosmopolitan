@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_RTLUSERPROCESSINFORMATION_H_
 #include "libc/nt/struct/clientid.h"
 #include "libc/nt/struct/sectionimageinformation.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtRtlUserProcessInformation {
   uint32_t SizeOfThis;
@@ -12,5 +11,4 @@ struct NtRtlUserProcessInformation {
   struct NtSectionImageInformation ImageInformation;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_RTLUSERPROCESSINFORMATION_H_ */

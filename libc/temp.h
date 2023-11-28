@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TEMP_H_
 #define COSMOPOLITAN_LIBC_TEMP_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 char *mktemp(char *) returnsnonnull paramsnonnull();
@@ -18,5 +17,4 @@ int openatemp(int, char *, int, int, int) paramsnonnull() __wur;
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TEMP_H_ */

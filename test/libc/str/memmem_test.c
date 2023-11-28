@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/likely.h"
 #include "libc/mem/alg.h"
 #include "libc/stdio/rand.h"

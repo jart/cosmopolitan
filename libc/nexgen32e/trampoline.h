@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_TRAMPOLINE_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_TRAMPOLINE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define TRAMPOLINE(FUNCTION, THUNK)   \
   ({                                  \
@@ -16,5 +15,4 @@
     Tramp;                            \
   })
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_TRAMPOLINE_H_ */

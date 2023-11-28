@@ -21,7 +21,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 /*
     An implementation of Text I/O as defined by PEP 3116 - "New I/O"

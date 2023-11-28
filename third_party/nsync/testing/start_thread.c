@@ -17,7 +17,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/thread/thread.h"
-// clang-format off
 
 struct thd_args {
 	void (*f) (void *);

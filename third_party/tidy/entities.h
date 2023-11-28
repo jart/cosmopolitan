@@ -1,6 +1,5 @@
 #ifndef __ENTITIES_H__
 #define __ENTITIES_H__
-/* clang-format off */
 
 /* entities.h -- recognize character entities
 

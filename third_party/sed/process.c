@@ -48,7 +48,6 @@
 #include "libc/sysv/consts/termios.h"
 #include "third_party/sed/defs.h"
 #include "third_party/sed/extern.h"
-// clang-format off
 
 static SPACE HS, PS, SS, YS;
 #define	pd		PS.deleted

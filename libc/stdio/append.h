@@ -14,7 +14,6 @@
 #define kappendf  __kappendf
 #define kvappendf __kvappendf
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct appendz {
@@ -33,6 +32,5 @@ ssize_t kappendf(char **, const char *, ...);
 ssize_t kvappendf(char **, const char *, va_list);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_STDIO_APPEND_H_ */

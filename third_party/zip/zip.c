@@ -1,4 +1,3 @@
-// clang-format off
 /*
   zip.c - Zip 3
 

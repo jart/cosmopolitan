@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPERFORMANCEINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPERFORMANCEINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtSystemPerformanceInformation {
   int64_t IdleTime;
@@ -79,5 +78,4 @@ struct NtSystemPerformanceInformation {
   uint32_t SystemCalls;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPERFORMANCEINFORMATION_H_ */

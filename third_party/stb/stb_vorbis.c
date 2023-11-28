@@ -32,17 +32,18 @@
 //    manxorist@github   saga musix          github:infatum
 //    Timur Gagiev       Maxwell Koo
 //
+#include "third_party/stb/stb_vorbis.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
+#include "libc/intrin/bswap.h"
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/stb/stb_vorbis.h"
 
 // STB_VORBIS_NO_PUSHDATA_API
 //     does not compile the code for the various stb_vorbis_*_pushdata()
@@ -66,7 +67,7 @@
 // STB_VORBIS_NO_FAST_SCALED_FLOAT
 //      does not use a fast float-to-int trick to accelerate float-to-int on
 //      most platforms which requires endianness be defined correctly.
-//#define STB_VORBIS_NO_FAST_SCALED_FLOAT
+// #define STB_VORBIS_NO_FAST_SCALED_FLOAT
 
 // STB_VORBIS_MAX_CHANNELS [number]
 //     globally define this to the maximum number of channels you need.
@@ -141,7 +142,7 @@
 //     because otherwise an integer divide-per-vector-element is required to
 //     unpack the index. If you define STB_VORBIS_DIVIDES_IN_CODEBOOK, you can
 //     trade off storage for speed.
-//#define STB_VORBIS_DIVIDES_IN_CODEBOOK
+// #define STB_VORBIS_DIVIDES_IN_CODEBOOK
 
 #ifdef STB_VORBIS_CODEBOOK_SHORTS
 #error \
@@ -613,6 +614,17 @@ static void add_entry(Codebook *c, uint32 huff_code, int symbol, int count,
   }
 }
 
+/**
+ * Reverses bits in 32-bit word.
+ */
+static uint32_t ReverseBits32(uint32_t x) {
+  x = bswap_32(x);
+  x = (x & 0xaaaaaaaa) >> 1 | (x & 0x55555555) << 1;
+  x = (x & 0xcccccccc) >> 2 | (x & 0x33333333) << 2;
+  x = (x & 0xf0f0f0f0) >> 4 | (x & 0x0f0f0f0f) << 4;
+  return x;
+}
+
 static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values) {
   int i, k, m = 0;
   uint32 available[32];
@@ -649,7 +661,7 @@ static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values) {
     res = available[z];
     assert(z >= 0 && z < 32);
     available[z] = 0;
-    add_entry(c, _bitreverse32(res), i, m++, len[i], values);
+    add_entry(c, ReverseBits32(res), i, m++, len[i], values);
     // propagate availability up the tree
     if (z != len[i]) {
       assert(len[i] >= 0 && len[i] < 32);
@@ -675,7 +687,7 @@ static void compute_accelerated_huffman(Codebook *c) {
   for (i = 0; i < len; ++i) {
     if (c->codeword_lengths[i] <= STB_VORBIS_FAST_HUFFMAN_LENGTH) {
       uint32 z =
-          c->sparse ? _bitreverse32(c->sorted_codewords[i]) : c->codewords[i];
+          c->sparse ? ReverseBits32(c->sorted_codewords[i]) : c->codewords[i];
       // set table entries for all bit combinations in the higher bits
       while (z < FAST_HUFFMAN_TABLE_SIZE) {
         c->fast_huffman[z] = i;
@@ -720,11 +732,11 @@ static void compute_sorted_huffman(Codebook *c, uint8 *lengths,
     int k = 0;
     for (i = 0; i < c->entries; ++i)
       if (include_in_sort(c, lengths[i]))
-        c->sorted_codewords[k++] = _bitreverse32(c->codewords[i]);
+        c->sorted_codewords[k++] = ReverseBits32(c->codewords[i]);
     assert(k == c->sorted_entries);
   } else {
     for (i = 0; i < c->sorted_entries; ++i)
-      c->sorted_codewords[i] = _bitreverse32(c->codewords[i]);
+      c->sorted_codewords[i] = ReverseBits32(c->codewords[i]);
   }
 
   qsort(c->sorted_codewords, c->sorted_entries, sizeof(c->sorted_codewords[0]),
@@ -740,7 +752,7 @@ static void compute_sorted_huffman(Codebook *c, uint8 *lengths,
   for (i = 0; i < len; ++i) {
     int huff_len = c->sparse ? lengths[values[i]] : lengths[i];
     if (include_in_sort(c, huff_len)) {
-      uint32 code = _bitreverse32(c->codewords[i]);
+      uint32 code = ReverseBits32(c->codewords[i]);
       int x = 0, n = c->sorted_entries;
       while (n > 1) {
         // invariant: sc[x] <= code < sc[x+n]
@@ -808,7 +820,7 @@ static void compute_window(int n, float *window) {
 static void compute_bitreverse(int n, uint16 *rev) {
   int ld = ilog(n) - 1;  // ilog is off-by-one from normal definitions
   int i, n8 = n >> 3;
-  for (i = 0; i < n8; ++i) rev[i] = (_bitreverse32(i) >> (32 - ld + 3)) << 2;
+  for (i = 0; i < n8; ++i) rev[i] = (ReverseBits32(i) >> (32 - ld + 3)) << 2;
 }
 
 static int init_blocksize(vorb *f, int b, int n) {
@@ -1182,7 +1194,7 @@ static int codebook_decode_scalar_raw(vorb *f, Codebook *c) {
   //                             sorted_codewords && c->entries > 8
   if (c->entries > 8 ? c->sorted_codewords != NULL : !c->codewords) {
     // binary search
-    uint32 code = _bitreverse32(f->acc);
+    uint32 code = ReverseBits32(f->acc);
     int x = 0, n = c->sorted_entries, len;
 
     while (n > 1) {
@@ -2560,7 +2572,7 @@ void inverse_mdct_naive(float *buffer, int n)
 
    // step 4
    for (i=0; i < n8; ++i) {
-      int j = _bitreverse32(i) >> (32-ld+3);
+      int j = ReverseBits32(i) >> (32-ld+3);
       assert(j < n8);
       if (i == j) {
          // paper bug: original code probably swapped in place; if copying,

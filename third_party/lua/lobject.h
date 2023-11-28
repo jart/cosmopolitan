@@ -5,7 +5,6 @@
 #include "third_party/lua/llimits.h"
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
 
 /*
 ** Extra types for collectable non-values

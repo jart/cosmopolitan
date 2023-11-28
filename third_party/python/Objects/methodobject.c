@@ -15,7 +15,6 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/structmember.h"
-/* clang-format off */
 
 /* Free list for method objects to safe malloc/free overhead
  * The m_self element is used to chain the objects.

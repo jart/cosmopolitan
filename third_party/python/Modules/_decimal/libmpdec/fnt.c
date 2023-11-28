@@ -33,7 +33,6 @@
 #include "third_party/python/Modules/_decimal/libmpdec/fnt.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/numbertheory.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 libmpdec (BSD-2)\\n\

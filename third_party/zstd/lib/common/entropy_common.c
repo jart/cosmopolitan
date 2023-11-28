@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * Common functions of New Generation Entropy library
  * Copyright (c) Meta Platforms, Inc. and affiliates.

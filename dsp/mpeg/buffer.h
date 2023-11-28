@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_MPEG_BUFFER_H_
 #define COSMOPOLITAN_DSP_MPEG_BUFFER_H_
 #include "dsp/mpeg/mpeg.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct FILE;
@@ -159,5 +158,4 @@ forceinline uint16_t plm_buffer_read_vlc_uint(plm_buffer_t *self,
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_MPEG_BUFFER_H_ */

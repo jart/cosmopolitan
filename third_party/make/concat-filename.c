@@ -21,7 +21,6 @@
 #include "third_party/make/concat-filename.h"
 #include "third_party/make/filename.h"
 #include "third_party/make/config.h"
-/* clang-format off */
 
 /* Concatenate a directory filename, a relative filename and an optional
    suffix.  The directory may end with the directory separator.  The second

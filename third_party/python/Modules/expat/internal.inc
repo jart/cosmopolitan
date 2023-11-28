@@ -1,4 +1,3 @@
-/* clang-format off */
 /* internal.h
 
    Note: Use of these macros is based on judgement, not hard rules,

@@ -32,7 +32,6 @@
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/time.h"
-// clang-format off
 
 /**
  * @fileoverview Semaphores w/ POSIX Semaphores API.

@@ -22,6 +22,5 @@ LOCAL CHANGES
   - Normalization of header / build config for platform / repository
     sed -i -e '/# *include  *<.*/d'  *.*
     sed -i -e 's!# *include  *"!#include "third_party/unzip/!' *.*
-    sed -i -e '1 i\// clang-format off' *.c *.h
 
   - Fixed a lot of static analysis buffer overflow warnings.

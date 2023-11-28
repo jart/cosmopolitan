@@ -1,4 +1,3 @@
-// clang-format off
 /*
   unix/zipup.h - Zip 3
 

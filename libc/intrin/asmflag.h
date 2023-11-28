@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_ASMFLAG_H_
 #define COSMOPOLITAN_LIBC_BITS_ASMFLAG_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /*
  * Constraints for virtual machine flags.
@@ -30,5 +29,4 @@
 #define ABOVEFLAG_ASM(OP) OP "\n\tseta\t%b0"
 #endif
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_ASMFLAG_H_ */

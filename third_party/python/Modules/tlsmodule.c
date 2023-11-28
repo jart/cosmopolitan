@@ -37,7 +37,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 /**
  * @fileoverview Enough TLS support for HttpsClient so far.

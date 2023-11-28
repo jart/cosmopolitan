@@ -35,7 +35,6 @@ asm(".ident\t\"\\n\\n\
 GGML (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 #if defined(__ARM_NEON) || defined(__wasm_simd128__)
 #define B1(c,s,n)  0x ## n ## c ,  0x ## n ## s

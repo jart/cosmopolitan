@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- powixf2.cpp - Implement __powixf2 ---------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

@@ -8,7 +8,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/pythonrun.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Interface to random parts in ceval.c */
 

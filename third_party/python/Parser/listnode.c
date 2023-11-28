@@ -8,7 +8,6 @@
 #include "third_party/python/Include/node.h"
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/token.h"
-/* clang-format off */
 
 static void list1node(FILE *, node *);
 static void listnode(FILE *, node *);

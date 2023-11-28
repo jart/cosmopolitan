@@ -3,7 +3,6 @@
 
 #include "third_party/lua/lstate.h"
 
-/* clang-format off */
 
 
 #define pcRel(pc, p)	(cast_int((pc) - (p)->code) - 1)

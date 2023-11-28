@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_WIN32FINDDATA_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_WIN32FINDDATA_H_
 #include "libc/nt/struct/filetime.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtWin32FindData {
   uint32_t dwFileAttributes;
@@ -19,5 +18,4 @@ struct NtWin32FindData {
   uint16_t wFinderFlags;  /* obsolete */
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_WIN32FINDDATA_H_ */

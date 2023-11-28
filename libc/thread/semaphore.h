@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SEMAPHORE_H_
 #define COSMOPOLITAN_LIBC_CALLS_SEMAPHORE_H_
 #include "libc/calls/struct/timespec.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define SEM_FAILED        ((sem_t *)0)
@@ -39,5 +38,4 @@ int sem_close(sem_t *);
 int sem_unlink(const char *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_SEMAPHORE_H_ */

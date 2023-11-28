@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
 #include "libc/macros.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 __funline unsigned long __strlen(const char *s) {
@@ -197,5 +196,4 @@ __funline void *__memmove(void *a, const void *b, unsigned long n) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_ */

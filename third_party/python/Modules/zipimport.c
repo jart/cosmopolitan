@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/intrin/bits.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
@@ -33,8 +32,8 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/unicodeobject.h"
+#include "libc/serialize.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("zipimport");
 PYTHON_PROVIDE("zipimport.ZipImportError");

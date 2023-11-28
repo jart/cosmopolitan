@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ARGON2_ENCODING_H_
 #define COSMOPOLITAN_THIRD_PARTY_ARGON2_ENCODING_H_
 #include "third_party/argon2/argon2.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define ARGON2_MAX_DECODED_LANES    UINT32_C(255)
@@ -14,5 +13,4 @@ size_t b64len(uint32_t);
 size_t numlen(uint32_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ARGON2_ENCODING_H_ */

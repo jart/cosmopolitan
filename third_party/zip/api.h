@@ -1,4 +1,3 @@
-// clang-format off
 /*
   api.h - Zip 3
 

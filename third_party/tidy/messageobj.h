@@ -1,6 +1,5 @@
 #ifndef messageobj_h
 #define messageobj_h
-/* clang-format off */
 
 /**************************************************************************//**
  * @file

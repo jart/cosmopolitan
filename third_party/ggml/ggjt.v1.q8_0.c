@@ -24,7 +24,6 @@
 #include "third_party/ggml/ggjt.v1.q8_0.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/libcxx/math.h"
-// clang-format off
 
 static_assert(sizeof(block_v1_q8_0) == sizeof(float) + V1_QK8_0,
               "wrong q8_0 block size/padding");

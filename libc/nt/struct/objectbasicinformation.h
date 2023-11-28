@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_OBJECTBASICINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_OBJECTBASICINFORMATION_H_
 #include "libc/nt/enum/accessmask.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtObjectBasicInformation {
   uint32_t Attributes;
@@ -17,5 +16,4 @@ struct NtObjectBasicInformation {
   int64_t CreateTime;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_OBJECTBASICINFORMATION_H_ */

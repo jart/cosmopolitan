@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Definitions of dependency data structures for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

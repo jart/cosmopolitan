@@ -1,4 +1,3 @@
-// clang-format off
 This directory contains source code dedicated to the `xxhsum` command line utility,
 which is a user program of `libxxhash`.
 

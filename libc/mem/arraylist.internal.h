@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_ALG_ARRAYLIST_H_
 #define COSMOPOLITAN_LIBC_ALG_ARRAYLIST_H_
-#include "libc/intrin/bits.h"
 #include "libc/mem/internal.h"
 #include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /* TODO(jart): DELETE */
 
@@ -27,5 +25,4 @@
   })
 #endif /* concat */
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ALG_ARRAYLIST_H_ */

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef void (*sighandler_t)(int);
@@ -22,5 +21,4 @@ sighandler_t signal(int, sighandler_t);
 int sigaction(int, const struct sigaction *, struct sigaction *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_ */

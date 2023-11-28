@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
+#include "libc/proc/execve.internal.h"
 
 /**
  * Returns true if executable image is supported by APE Loader.

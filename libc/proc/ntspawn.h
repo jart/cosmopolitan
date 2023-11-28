@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_NTSPAWN_H_
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/startupinfo.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void mungentpath(char *);
@@ -13,5 +12,4 @@ int ntspawn(int64_t, const char *, char *const[], char *const[], char *const[],
             const struct NtStartupInfo *, struct NtProcessInformation *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_NTSPAWN_H_ */

@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * xxhsum - Command line interface for xxhash algorithms
  * Copyright (C) 2013-2021 Yann Collet

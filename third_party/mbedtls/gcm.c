@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/gcm.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -36,7 +36,6 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /*
  *  NIST SP800-38D compliant GCM implementation
  *

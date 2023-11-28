@@ -22,7 +22,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"

@@ -9,7 +9,6 @@
 
 #define kSigactionMinRva 8 /* >SIG_{ERR,DFL,IGN,...} */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define kIoMotion ((const int8_t[3]){1, 0, 0})
@@ -54,5 +53,4 @@ bool __iswsl1(void);
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_ */

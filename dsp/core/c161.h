@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_CORE_C161_H_
 #define COSMOPOLITAN_DSP_CORE_C161_H_
 #include "libc/macros.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define EXTRA_SHARP 2
 
@@ -28,5 +27,4 @@ __funline unsigned char C161(unsigned char al, unsigned char bl,
   return MIN(255, MAX(0, ax));
 }
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_C161_H_ */

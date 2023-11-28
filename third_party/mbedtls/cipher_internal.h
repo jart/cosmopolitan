@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /**
  * Base cipher information. The non-mode specific functions and values.

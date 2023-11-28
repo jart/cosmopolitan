@@ -23,7 +23,6 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("gc");
 PYTHON_PROVIDE("gc.DEBUG_COLLECTABLE");

@@ -1,4 +1,3 @@
-/* clang-format off */
 #if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #if !defined _X86GPRINTRIN_H_INCLUDED
 # error "Never use <hresetintrin.h> directly; include <x86gprintrin.h> instead."

@@ -1,4 +1,3 @@
-// clang-format off
 
 #define LACKS_UNISTD_H
 #define LACKS_FCNTL_H

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"

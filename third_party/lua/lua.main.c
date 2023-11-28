@@ -50,7 +50,6 @@
 #include "third_party/lua/lualib.h"
 #include "third_party/lua/lunix.h"
 #include "tool/args/args.h"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 Lua 5.4.3 (MIT License)\\n\

@@ -3,7 +3,6 @@
 #define DATETIME_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
 /* Fields are packed into successive bytes, each viewed as unsigned and

@@ -3,7 +3,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/tupleobject.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef struct PyStructSequence_Field {
     char *name;

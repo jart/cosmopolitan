@@ -24,7 +24,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 /*
  * Author: Daniel Stutzbach

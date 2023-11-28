@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_MESSAGEBOX_H_
 #define COSMOPOLITAN_LIBC_NT_MESSAGEBOX_H_
 #include "libc/nt/enum/dialogresult.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int MessageBox(int64_t hWnd, const char16_t *lpText, const char16_t *lpCaption,
@@ -11,5 +10,4 @@ int MessageBoxEx(int64_t hWnd, const char16_t *lpText,
                  uint16_t wLanguageId);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_MESSAGEBOX_H_ */

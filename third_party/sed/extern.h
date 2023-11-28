@@ -4,9 +4,7 @@
 #include "libc/stdio/stdio.h"
 #include "third_party/regex/regex.h"
 #include "third_party/sed/defs.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-// clang-format off
 
 extern struct s_command *prog;
 extern struct s_appends *appends_;
@@ -33,5 +31,4 @@ void	*xrealloc(void *, size_t);
 void	*xcalloc(size_t, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_SED_EXTERN_H_ */

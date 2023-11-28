@@ -10,7 +10,6 @@ COSMOPOLITAN_C_START_
 #define Py_eval_input   258
 
 #ifndef Py_LIMITED_API
-/* clang-format off */
 
 /* Public interface */
 struct _node; /* Declare the existence of this type */

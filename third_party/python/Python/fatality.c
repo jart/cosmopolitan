@@ -14,7 +14,6 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
-/* clang-format off */
 
 _Py_IDENTIFIER(flush);
 _Py_IDENTIFIER(stderr);

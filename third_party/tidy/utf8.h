@@ -1,6 +1,5 @@
 #ifndef __UTF8_H__
 #define __UTF8_H__
-/* clang-format off */
 
 /* utf8.h -- convert characters to/from UTF-8
 

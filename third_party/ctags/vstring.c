@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: vstring.c 558 2007-06-15 19:17:02Z elliotth $
 *

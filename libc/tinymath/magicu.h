@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TINYMATH_MAGICU_H_
 #define COSMOPOLITAN_LIBC_TINYMATH_MAGICU_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct magicu {
@@ -31,5 +30,4 @@ static inline bool32 __magicu_valid(struct magicu d) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_MAGICU_H_ */

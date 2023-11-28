@@ -1,4 +1,3 @@
-/* clang-format off */
 /* xalloc.h -- malloc with out-of-memory checking
 
    Copyright (C) 1990-2000, 2003-2004, 2006-2020 Free Software Foundation, Inc.

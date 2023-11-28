@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TIME_CLOCKSTONANOS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_TIME_CLOCKSTONANOS_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
@@ -11,5 +10,4 @@ static inline uint64_t ClocksToNanos(uint64_t x, uint64_t y) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TIME_CLOCKSTONANOS_INTERNAL_H_ */

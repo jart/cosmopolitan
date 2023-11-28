@@ -1,4 +1,3 @@
-/* clang-format off */
 /* language.c -- localization support for HTML Tidy.
 
   Copyright 2015 HTACG

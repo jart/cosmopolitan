@@ -28,7 +28,6 @@
 │ cosmopolitan § new technology » signals                                  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef int (*NtTopLevelExceptionFilter)(const struct NtExceptionPointers *);
@@ -51,5 +50,4 @@ NtTopLevelExceptionFilter SetUnhandledExceptionFilter(
 #include "libc/nt/thunk/signals.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_EXCEPTIONS_H_ */

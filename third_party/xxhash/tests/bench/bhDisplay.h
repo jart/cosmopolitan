@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *  CSV Display module for the hash benchmark program
 *  Part of the xxHash project

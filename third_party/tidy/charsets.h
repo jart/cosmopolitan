@@ -2,7 +2,6 @@
 #define __CHARSETS_H__
 #include "third_party/tidy/access.h"
 #include "third_party/tidy/tidyplatform.h"
-/* clang-format off */
 
 /* charsets.h -- character set information and mappings
 

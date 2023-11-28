@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_NT_MEMORY_H_
 #include "libc/nt/enum/memoryinformationclass.h"
 #include "libc/nt/enum/status.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -53,5 +52,4 @@ NtStatus NtWriteVirtualMemory(int64_t ProcessHandle, void *BaseAddress,
                               size_t *opt_out_ReturnLength);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_MEMORY_H_ */

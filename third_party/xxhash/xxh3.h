@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * xxHash - Extremely Fast Hash algorithm
  * Development source file for `xxh3`

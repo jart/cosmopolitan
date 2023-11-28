@@ -32,7 +32,6 @@
 #include "third_party/ggml/fp16.internal.h"
 #include "third_party/ggml/ggjt.v2.internal.h"
 #include "third_party/ggml/ggjt.v2.q8_1.h"
-// clang-format off
 
 static_assert(sizeof(block_v2_q5_1) == 2 * sizeof(ggml_fp16_t) + sizeof(uint32_t) + V2_QK5_1 / 2,
               "wrong q5_1 block size/padding");

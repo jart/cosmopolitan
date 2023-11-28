@@ -1,4 +1,3 @@
-// clang-format off
 /* $Copyright: $
  * Copyright (c) 1996 - 2023 by Steve Baker (ice@mama.indstate.edu)
  *

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: ruby.c 571 2007-06-24 23:32:14Z elliotth $
 *

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.internal.h"
@@ -27,10 +27,8 @@
 #include "net/http/ip.h"
 #include "third_party/maxmind/maxminddb.h"
 
-#define PATH(...)         \
-  (const char *const[]) { \
-    __VA_ARGS__, 0        \
-  }
+#define PATH(...) \
+  (const char *const[]) { __VA_ARGS__, 0 }
 
 MMDB_s *ipdb, *asdb;
 

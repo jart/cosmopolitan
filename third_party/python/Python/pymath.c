@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 #ifdef X87_DOUBLE_ROUNDING
 /* On x86 platforms using an x87 FPU, this function is called from the

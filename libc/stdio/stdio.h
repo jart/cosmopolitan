@@ -16,7 +16,6 @@
 #define TMP_MAX      10000
 #define BUFSIZ       4096
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -181,5 +180,4 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
     paramsnonnull() dontthrow nocallback;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STDIO_H_ */

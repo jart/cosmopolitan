@@ -19,7 +19,6 @@
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
-/* clang-format off */
 
 /*
 ** The header string that appears at the beginning of every

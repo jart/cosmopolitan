@@ -23,7 +23,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 #define NAME_CHARS \
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"

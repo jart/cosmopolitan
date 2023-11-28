@@ -34,7 +34,6 @@
 #include "third_party/python/Include/token.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 /* Python interpreter top-level routines, including init/exit */
 

@@ -30,7 +30,7 @@
 #include "libc/dns/dnsheader.h"
 #include "libc/dns/dnsquestion.h"
 #include "libc/dns/resolvconf.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"

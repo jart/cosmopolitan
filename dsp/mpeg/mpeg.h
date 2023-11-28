@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_DSP_MPEG_MPEG_H_
 #define COSMOPOLITAN_DSP_MPEG_MPEG_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct FILE;
@@ -446,5 +445,4 @@ plm_samples_t *plm_audio_decode(plm_audio_t *self);
 extern long plmpegdecode_latency_;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_MPEG_MPEG_H_ */

@@ -23,7 +23,7 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"

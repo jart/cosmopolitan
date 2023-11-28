@@ -19,7 +19,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
    All of these are chained together through 'next'.  */
 
 #include "third_party/make/hash.h"
-/* clang-format off */
 
 struct commands;
 struct dep;

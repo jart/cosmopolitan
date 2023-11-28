@@ -9,7 +9,6 @@
 #include "libc/thread/thread2.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Python/condvar.h"
-/* clang-format off */
 
 /*
  * Implementation of the Global Interpreter Lock (GIL).

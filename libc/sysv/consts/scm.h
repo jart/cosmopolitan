@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_SCM_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_SCM_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int SCM_TIMESTAMP;
@@ -10,7 +9,6 @@ extern const int SCM_TIMESTAMPNS;
 extern const int SCM_WIFI_STATUS;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define SCM_RIGHTS       1
 #define SCM_TIMESTAMP    SCM_TIMESTAMP

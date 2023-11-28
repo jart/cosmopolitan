@@ -1,4 +1,3 @@
-// clang-format off
 /*
  *	 $Id: flex.c 666 2008-05-15 17:47:31Z dfishburn $
  *

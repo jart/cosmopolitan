@@ -53,7 +53,6 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/time.h"
-// clang-format off
 
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
 

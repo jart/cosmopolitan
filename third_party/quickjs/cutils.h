@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
 #include "libc/intrin/bswap.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* set if CPU is big endian */
 #undef WORDS_BIGENDIAN
@@ -258,5 +256,4 @@ void rqsort(void *base, size_t nmemb, size_t size,
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_ */

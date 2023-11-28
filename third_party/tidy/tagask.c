@@ -1,4 +1,3 @@
-/* clang-format off */
 /* tagask.c -- Interrogate node type
 
   (c) 1998-2006 (W3C) MIT, ERCIM, Keio University

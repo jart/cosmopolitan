@@ -39,7 +39,6 @@
 #include "third_party/awk/awk.h"
 #include "third_party/awk/awkgram.tab.h"
 #include "third_party/libcxx/math.h"
-// clang-format off
 
 static void stdinit(void);
 static void flush_all(void);

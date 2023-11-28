@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 
 /* Poor-man's template.  Macros used:
    TESTNAME     name of the test (like test_long_api_inner)

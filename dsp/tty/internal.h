@@ -3,7 +3,6 @@
 #include "dsp/tty/quant.h"
 #include "dsp/tty/ttyrgb.h"
 #include "third_party/intel/xmmintrin.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct TtyRgb rgb2tty24f_(ttyrgb_m128);
@@ -30,5 +29,4 @@ char *setbgfg24_(char *, struct TtyRgb, struct TtyRgb);
 struct TtyRgb rgb2ansi8_(int, int, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_TTY_INTERNAL_H_ */

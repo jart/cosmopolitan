@@ -1,5 +1,4 @@
 #include "third_party/dlmalloc/dlmalloc.h"
-// clang-format off
 
 static mstate init_user_mstate(char* tbase, size_t tsize) {
   size_t msize = pad_request(sizeof(struct malloc_state));

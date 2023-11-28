@@ -21,7 +21,6 @@
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\

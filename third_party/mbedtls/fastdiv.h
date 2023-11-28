@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_FASTDIV_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_FASTDIV_H_
 #include "libc/macros.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Divisor {
@@ -30,5 +29,4 @@ forceinline uint64_t Divide(uint64_t x, struct Divisor d) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_FASTDIV_H_ */

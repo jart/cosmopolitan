@@ -1,4 +1,3 @@
-// clang-format off
 
 /* ------------------- Chunks sizes and alignments ----------------------- */
 

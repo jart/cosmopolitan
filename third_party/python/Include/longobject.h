@@ -4,7 +4,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/unicodeobject.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Long (arbitrary precision) integer object interface */
 

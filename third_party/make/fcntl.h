@@ -1,4 +1,3 @@
-/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* Like <fcntl.h>, but with non-working flags defined to 0.
 

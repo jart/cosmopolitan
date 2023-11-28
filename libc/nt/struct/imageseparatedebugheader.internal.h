@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESEPARATEDEBUGHEADER_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESEPARATEDEBUGHEADER_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageSeparateDebugHeader {
   uint16_t Signature;
@@ -18,5 +17,4 @@ struct NtImageSeparateDebugHeader {
   uint32_t Reserved[2];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESEPARATEDEBUGHEADER_H_ */

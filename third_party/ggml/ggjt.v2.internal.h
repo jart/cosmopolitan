@@ -3,7 +3,6 @@
 #include "libc/str/str.h"
 #include "third_party/aarch64/arm_neon.internal.h"
 #include "third_party/intel/immintrin.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #if __AVX__ || __AVX2__ || __AVX512F__
@@ -148,5 +147,4 @@ static inline __m256i bytes_from_nibbles_32(const uint8_t *rsi) {
 #endif /* AVX */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V2_INTERNAL_H_ */

@@ -2,7 +2,6 @@
 #define Py_NODE_H
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef struct _node {
     short		n_type;

@@ -21,7 +21,6 @@
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
 #include "third_party/nsync/time.h"
-// clang-format off
 
 /* Verify the properties of a prenotified note. */
 static void test_note_prenotified (testing t) {

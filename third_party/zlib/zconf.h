@@ -162,7 +162,6 @@
 #define zlibCompileFlags         _Cz_zlibCompileFlags
 #define zlibVersion              _Cz_zlibVersion
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 typedef unsigned char Byte;
 typedef unsigned int uInt;   /* 16 bits or more */
@@ -179,5 +178,4 @@ typedef uint32_t z_crc_t;
 typedef int64_t z_off64_t;
 typedef size_t z_size_t;
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_ZCONF_H_ */

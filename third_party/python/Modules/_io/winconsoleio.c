@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 /*
     An implementation of Windows console I/O

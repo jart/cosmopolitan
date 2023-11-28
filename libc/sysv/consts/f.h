@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_F_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_F_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*
@@ -41,7 +40,6 @@ extern const int F_UNLCK;
 extern const int F_WRLCK;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 /*
  * portable fcntl() commands

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGETLSDIRECTORY_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGETLSDIRECTORY_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageTlsDirectory {
   uint64_t StartAddressOfRawData;
@@ -11,5 +10,4 @@ struct NtImageTlsDirectory {
   uint32_t Characteristics;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGETLSDIRECTORY_H_ */

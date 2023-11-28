@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/modsupport.h"
-/* clang-format off */
 
 /* stringlib: find/index implementation */
 

@@ -32,7 +32,6 @@
 #include "third_party/ggml/fp16.internal.h"
 #include "third_party/ggml/ggjt.v1.internal.h"
 #include "third_party/ggml/ggjt.v1.q8_0.h"
-// clang-format off
 
 static_assert(sizeof(block_v1_q5_0) ==
                   sizeof(ggml_fp16_t) + sizeof(uint32_t) + V1_QK5_0 / 2,

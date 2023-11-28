@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- parityti2.c - Implement __parityti2 -------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

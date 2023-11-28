@@ -18,7 +18,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("syslog");
 PYTHON_PROVIDE("syslog.LOG_ALERT");

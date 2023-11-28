@@ -43,7 +43,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/make/getopt.h"
-// clang-format off
 
 STATIC_STACK_SIZE(0x00800000);  // 8mb stack
 

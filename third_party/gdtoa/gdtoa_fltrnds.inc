@@ -1,4 +1,3 @@
-/* clang-format off */
 
 	FPI fpi1;
 	int Rounding;

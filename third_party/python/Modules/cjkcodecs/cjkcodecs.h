@@ -10,7 +10,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Modules/cjkcodecs/multibytecodec.h"
 #include "third_party/python/Modules/cjkcodecs/somanyencodings.h"
-/* clang-format off */
 
 /* a unicode "undefined" code point */
 #define UNIINV  0xFFFE

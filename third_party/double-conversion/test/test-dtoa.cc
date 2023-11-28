@@ -31,7 +31,6 @@
 #include "third_party/double-conversion/test/gay-precision.h"
 #include "third_party/double-conversion/test/gay-shortest-single.h"
 #include "third_party/double-conversion/test/gay-shortest.h"
-// clang-format off
 
 
 using namespace double_conversion;

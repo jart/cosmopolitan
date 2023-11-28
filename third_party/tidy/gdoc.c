@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   clean.c -- clean up misuse of presentation markup
 

@@ -26,7 +26,6 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /*
  *  TLS 1.3 key schedule
  *

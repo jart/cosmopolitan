@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * xsum_bench - Benchmark functions for xxhsum
  * Copyright (C) 2013-2021 Yann Collet

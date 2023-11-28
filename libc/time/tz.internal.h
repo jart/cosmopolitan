@@ -8,7 +8,6 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/ok.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* clang-format off */
@@ -539,5 +538,4 @@ char *ctime_r(int64_t const *, char *);
 #define isleap_sum(a, b)	isleap((a) % 400 + (b) % 400)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_TZ_PRIVATE_H_ */

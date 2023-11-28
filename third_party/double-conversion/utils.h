@@ -7,7 +7,6 @@
 #include "third_party/libcxx/cassert"
 #include "third_party/libcxx/cstdlib"
 #include "third_party/libcxx/cstring"
-// clang-format off
 
 // [jart] use undefined behaavior to make code tinier
 //        use ubsan build mode to troubleshoot errors

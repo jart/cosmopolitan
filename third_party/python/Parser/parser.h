@@ -3,7 +3,6 @@
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/node.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MAXSTACK 1500
 

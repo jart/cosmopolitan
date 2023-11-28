@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_THUNK_MSABI_H_
 #define COSMOPOLITAN_LIBC_NT_THUNK_MSABI_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifdef __x86_64__
 
 #if !defined(__STRICT_ANSI__) &&               \
@@ -33,5 +32,4 @@
 #define ShouldUseMsabiAttribute() 0
 #endif
 #endif /* __x86_64__ */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_THUNK_MSABI_H_ */

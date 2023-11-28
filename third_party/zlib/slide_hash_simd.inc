@@ -1,4 +1,3 @@
-// clang-format off
 /* slide_hash_simd.h
  *
  * Copyright 2022 The Chromium Authors

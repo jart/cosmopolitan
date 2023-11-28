@@ -14,7 +14,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pystate.h"
-/* clang-format off */
 
 /* Readline interface for tokenizer.c and [raw_]input() in bltinmodule.c.
    By default, or when stdin is not a tty device, we have a super

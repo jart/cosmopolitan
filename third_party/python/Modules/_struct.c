@@ -23,7 +23,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_struct");
 PYTHON_PROVIDE("_struct.Struct");

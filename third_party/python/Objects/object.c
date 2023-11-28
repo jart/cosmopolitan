@@ -39,7 +39,6 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/weakrefobject.h"
-/* clang-format off */
 
 _Py_IDENTIFIER(Py_Repr);
 _Py_IDENTIFIER(__bytes__);

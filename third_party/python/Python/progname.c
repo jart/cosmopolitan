@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 #ifdef MS_WINDOWS
 static wchar_t *progname = L"python";

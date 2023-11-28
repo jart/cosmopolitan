@@ -1,6 +1,5 @@
 #ifndef DOCSTRINGS_H
 #define DOCSTRINGS_H
-/* clang-format off */
 
 #include "third_party/python/Include/pymacro.h"
 

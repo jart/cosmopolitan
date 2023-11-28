@@ -9,7 +9,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 /*
     Return the file system path representation of the object.

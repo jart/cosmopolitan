@@ -1,4 +1,3 @@
-// clang-format off
 /*
   zipnote.c - Zip 3
 

@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/str/str.h"

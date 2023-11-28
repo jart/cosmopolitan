@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
     datagen.h - compressible data generator header
     Copyright (C) Yann Collet 2012-2016

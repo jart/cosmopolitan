@@ -145,11 +145,9 @@
 #define _SC_SIGSTKSZ                     249
 #define _SC_MINSIGSTKSZ                  250
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 long sysconf(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_SYSCONF_H_ */

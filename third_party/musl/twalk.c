@@ -31,7 +31,6 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 
 static void walk(const struct node *r, void (*action)(const void *, VISIT, int), int d)

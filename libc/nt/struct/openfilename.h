@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_OPENFILENAME_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_OPENFILENAME_H_
 #include "libc/nt/struct/editmenu.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtOpenFilename {
   uint32_t lStructSize;
@@ -29,5 +28,4 @@ struct NtOpenFilename {
   uint32_t FlagsEx;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_OPENFILENAME_H_ */

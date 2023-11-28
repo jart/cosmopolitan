@@ -23,7 +23,6 @@
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
-// clang-format off
 
 /* A cv_stress_data represents the data used by the threads of the tests below. */
 typedef struct cv_stress_data_s {

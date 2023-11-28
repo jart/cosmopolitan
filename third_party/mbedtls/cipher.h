@@ -2,7 +2,6 @@
 #define MBEDTLS_CIPHER_H
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/platform.h"
-/* clang-format off */
 
 #define MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE  -0x6080  /*< The selected feature is not available. */
 #define MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA       -0x6100  /*< Bad input parameters. */

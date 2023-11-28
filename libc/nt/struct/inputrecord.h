@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_INPUTRECORD_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_INPUTRECORD_H_
 #include "libc/nt/struct/coord.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtKeyEventRecord {
   bool32 bKeyDown;
@@ -68,5 +67,4 @@ struct NtInputRecord {
   } Event;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_INPUTRECORD_H_ */

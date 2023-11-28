@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_HASCHARACTER_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_HASCHARACTER_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 forceinline bool HasCharacter(char c, const char *s) {
   unsigned i;
@@ -32,5 +31,4 @@ forceinline bool HasCharacterWide(wchar_t c, const wchar_t *s) {
   return false;
 }
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_HASCHARACTER_H_ */

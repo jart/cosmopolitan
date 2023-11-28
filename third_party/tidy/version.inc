@@ -1,4 +1,3 @@
-/* clang-format off */
 /* version information
 
   (c) 2007-2015 (W3C) MIT, ERCIM, Keio University

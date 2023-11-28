@@ -27,7 +27,6 @@
 #include "third_party/double-conversion/fixed-dtoa.h"
 #include "third_party/double-conversion/ieee.h"
 #include "third_party/libcxx/cmath"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 double-conversion (BSD-3 License)\\n\

@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_FILEATTRIBUTETAGINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_FILEATTRIBUTETAGINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtFileAttributeTagInformation {
   uint32_t FileAttributes;
   uint32_t ReparseTag;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_FILEATTRIBUTETAGINFORMATION_H_ */

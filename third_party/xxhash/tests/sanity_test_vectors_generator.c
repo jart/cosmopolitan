@@ -1,4 +1,3 @@
-// clang-format off
 // xxHash/tests/sanity_test_vectors_generator.c
 // SPDX-License-Identifier: GPL-2.0-only
 //

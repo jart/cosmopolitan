@@ -21,7 +21,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Python/wordcode_helpers.inc"
 #include "third_party/quickjs/internal.h"
-/* clang-format off */
 
 /* Peephole optimizations for bytecode compiler. */
 

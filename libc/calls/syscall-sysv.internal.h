@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SYSCALL_SYSV_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALL_SYSV_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #define i32 int32_t
 #define i64 int64_t
@@ -146,5 +145,4 @@ void sys_exit(i32);
 #undef u32
 #undef u64
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_SYSCALL_SYSV_INTERNAL_H_ */

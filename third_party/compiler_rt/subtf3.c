@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/subtf3.c - Quad-precision subtraction -----------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

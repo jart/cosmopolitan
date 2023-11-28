@@ -30,7 +30,6 @@
 #define _LOG_TINY 0
 #endif
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern FILE *__log_file;
@@ -225,6 +224,5 @@ void vffatalf(ARGS, va_list) asm("vflogf") ATTRV relegated wontreturn libcesque;
 
 #endif /* __STRICT_ANSI__ */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_LOG_LOG_H_ */

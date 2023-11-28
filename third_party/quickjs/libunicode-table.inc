@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Compressed unicode tables */
 /* Automatically generated file - do not edit */
 

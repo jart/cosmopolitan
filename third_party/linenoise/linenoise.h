@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_LINENOISE_LINENOISE_H_
 #include "libc/calls/struct/winsize.h"
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct linenoiseState;
@@ -51,5 +50,4 @@ void linenoiseRefreshLine(struct linenoiseState *);
 char *linenoiseRaw(const char *, int, int) __wur;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_LINENOISE_LINENOISE_H_ */

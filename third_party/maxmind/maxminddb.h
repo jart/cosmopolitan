@@ -41,7 +41,6 @@
 #define MMDB_INVALID_NODE_NUMBER_ERROR             10
 #define MMDB_IPV6_LOOKUP_IN_IPV4_DATABASE_ERROR    11
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* This is a pointer into the data section for a given IP address lookup */
@@ -178,5 +177,4 @@ const char *MMDB_strerror(int);
 const char *GetMetroName(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MAXMIND_MAXMINDDB_H_ */

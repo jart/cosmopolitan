@@ -1,6 +1,5 @@
 #ifndef __ACCESS_H__
 #define __ACCESS_H__
-/* clang-format off */
 
 /*********************************************************************
  * carry out accessibility checks

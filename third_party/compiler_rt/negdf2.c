@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/negdf2.c - double-precision negation ------------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

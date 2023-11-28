@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- int_endianness.h - configuration header for compiler-rt ------------===
  *
  *		       The LLVM Compiler Infrastructure

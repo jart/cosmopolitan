@@ -24,7 +24,7 @@
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"

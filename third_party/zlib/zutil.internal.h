@@ -28,7 +28,6 @@
 #define HAVE_MEMCPY
 #endif
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #ifndef local
@@ -135,5 +134,4 @@ typedef unsigned long ulg;
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* ZUTIL_H */

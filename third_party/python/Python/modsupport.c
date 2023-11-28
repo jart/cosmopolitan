@@ -15,7 +15,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/tupleobject.h"
-/* clang-format off */
 
 #define FLAG_SIZE_T 1
 typedef double va_double;

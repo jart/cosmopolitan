@@ -3,7 +3,6 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/mem/alloca.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 ssize_t __robust_writev(int, struct iovec *, int);
@@ -28,5 +27,4 @@ const char *DescribeIovec(char[300], ssize_t, const struct iovec *, int);
 #define DescribeIovec(x, y, z) DescribeIovec(alloca(300), x, y, z)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_IOVEC_INTERNAL_H_ */

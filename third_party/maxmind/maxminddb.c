@@ -22,7 +22,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"

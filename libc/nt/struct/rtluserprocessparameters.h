@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_RTLUSERPROCESSPARAMETERS_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_RTLUSERPROCESSPARAMETERS_H_
 #include "libc/nt/struct/unicodestring.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtRtlUserProcessParameters {
   uint32_t MaximumLength;
@@ -34,5 +33,4 @@ struct NtRtlUserProcessParameters {
   struct NtUnicodeString *RuntimeData;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_RTLUSERPROCESSPARAMETERS_H_ */

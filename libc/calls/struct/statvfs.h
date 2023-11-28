@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_STATVFS_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STATVFS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct statvfs {
@@ -21,5 +20,4 @@ int statvfs(const char *, struct statvfs *);
 int fstatvfs(int, struct statvfs *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STATVFS_H_ */

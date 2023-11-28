@@ -3,7 +3,6 @@
 #include "libc/nt/struct/iocounters.h"
 #include "libc/nt/struct/unicodestring.h"
 #include "libc/nt/struct/vmcounters.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtSystemProcessInformation {
   uint32_t NextEntryOffset;
@@ -24,5 +23,4 @@ struct NtSystemProcessInformation {
   struct NtIoCounters IoCounters;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMPROCESSINFORMATION_H_ */

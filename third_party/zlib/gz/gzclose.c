@@ -7,7 +7,6 @@
  */
 #include "third_party/zlib/gz/gzguts.inc"
 #include "third_party/zlib/macros.internal.h"
-// clang-format off
 
 /* gzclose() is in a separate file so that it is linked in only if it is used.
    That way the other gzclose functions can be used instead to avoid linking in

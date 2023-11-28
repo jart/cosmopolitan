@@ -87,7 +87,6 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/time/time.h"
 #include "third_party/sqlite3/sqlite3ext.h"
-// clang-format off
 
 SQLITE_EXTENSION_INIT1
 

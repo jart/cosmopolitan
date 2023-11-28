@@ -1,7 +1,6 @@
 #ifndef BITS_H
 #define BITS_H
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 /*
  * Check if 𝑛 is a power of 2.

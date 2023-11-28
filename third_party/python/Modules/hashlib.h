@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_HASHLIB_H_
 #define COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_HASHLIB_H_
-/* clang-format off */
 /* Common code for use by all hashlib related modules. */
 
 /*

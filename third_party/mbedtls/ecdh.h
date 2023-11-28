@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ecdh_everest.h"
 #include "third_party/mbedtls/ecp.h"
-/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

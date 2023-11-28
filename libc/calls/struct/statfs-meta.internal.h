@@ -6,7 +6,6 @@
 #include "libc/calls/struct/statfs-openbsd.internal.h"
 #include "libc/calls/struct/statfs-xnu.internal.h"
 #include "libc/calls/struct/statfs.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 union statfs_meta {
@@ -20,5 +19,4 @@ union statfs_meta {
 void statfs2cosmo(struct statfs *, const union statfs_meta *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_META_INTERNAL_H_ */

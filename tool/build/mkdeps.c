@@ -21,7 +21,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"

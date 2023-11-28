@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_WINARGS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_WINARGS_INTERNAL_H_
 #include "libc/limits.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct WinArgs {
@@ -14,5 +13,4 @@ struct WinArgs {
 } forcealign(16);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_WINARGS_INTERNAL_H_ */

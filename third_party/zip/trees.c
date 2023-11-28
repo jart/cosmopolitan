@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   trees.h - Zip 3
 

@@ -30,7 +30,6 @@
 #include "libc/str/str.h"
 #include "third_party/awk/awk.h"
 #include "third_party/awk/awkgram.tab.h"
-// clang-format off
 
 Node *nodealloc(int n)
 {

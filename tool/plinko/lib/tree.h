@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_TREE_H_
 #include "tool/plinko/lib/cons.h"
 #include "tool/plinko/lib/plinko.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int PutTree(int, int, int);
@@ -43,5 +42,4 @@ forceinline int Bkn(int N) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_TREE_H_ */

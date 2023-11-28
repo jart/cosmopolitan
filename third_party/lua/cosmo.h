@@ -4,7 +4,6 @@
 #include "net/http/url.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/visitor.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct EncoderConfig {
@@ -39,5 +38,4 @@ int SerializeObjectEnd(char **, struct Serializer *, int, bool);
 int SerializeObjectIndent(char **, struct Serializer *, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_LUA_COSMO_H_ */

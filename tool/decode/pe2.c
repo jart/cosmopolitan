@@ -20,7 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"

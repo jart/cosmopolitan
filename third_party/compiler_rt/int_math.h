@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- int_math.h - internal math inlines ---------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

@@ -4,7 +4,6 @@
 #define kNtExceptionMaximumParameters 15
 #define kNtExceptionNoncontinuable    1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtExceptionRecord {
   uint32_t ExceptionCode;                    /* kNtException... */
@@ -15,5 +14,4 @@ struct NtExceptionRecord {
   uint64_t ExceptionInformation[kNtExceptionMaximumParameters];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_NTEXCEPTIONRECORD_H_ */

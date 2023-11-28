@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_IO_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_IO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define _IOC(a, b, c, d) (((a) << 30) | ((b) << 8) | (c) | ((d) << 16))
@@ -14,5 +13,4 @@ COSMOPOLITAN_C_START_
 #define _IOWR(a, b, c) _IOC(_IOC_READ | _IOC_WRITE, (a), (b), sizeof(c))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_IO_H_ */

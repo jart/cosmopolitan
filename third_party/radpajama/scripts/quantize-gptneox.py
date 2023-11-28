@@ -1,4 +1,3 @@
-// clang-format off
 #!/usr/bin/env python3
 
 """Script to execute the "quantize" script on a given set of models."""

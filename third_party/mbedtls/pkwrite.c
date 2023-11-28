@@ -33,7 +33,6 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /*
  *  Public Key layer for writing key files and structures
  *

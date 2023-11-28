@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * Copyright (C) 2016-2021 Yann Collet, Facebook, Inc.
  * All rights reserved.

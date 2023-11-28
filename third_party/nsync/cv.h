@@ -3,7 +3,6 @@
 #include "libc/intrin/dll.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/time.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define NSYNC_CV_INIT \
@@ -157,5 +156,4 @@ int nsync_cv_wait_with_deadline_generic(nsync_cv *cv, void *mu,
                                         struct nsync_note_s_ *cancel_note);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_CV_H_ */

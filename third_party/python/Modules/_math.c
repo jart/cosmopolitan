@@ -8,7 +8,6 @@
 #include "third_party/python/Include/pymath.h"
 #include "third_party/python/Modules/_math.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /* Definitions of some C99 math library functions, for those platforms
    that don't implement these functions already. */

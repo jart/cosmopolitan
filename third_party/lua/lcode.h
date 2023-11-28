@@ -6,7 +6,6 @@
 #include "third_party/lua/lopcodes.h"
 #include "third_party/lua/lparser.h"
 
-/* clang-format off */
 
 /*
 ** Marks the end of a patch list. It is an invalid value both as an absolute

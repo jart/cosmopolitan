@@ -3,9 +3,7 @@
 #include "libc/calls/typedef/u.h"
 #include "libc/limits.h"
 #include "third_party/regex/regex.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-// clang-format off
 
 /*
  * Types of address specifications
@@ -122,5 +120,4 @@ typedef struct {
 } SPACE;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_SED_DEFS_H_ */

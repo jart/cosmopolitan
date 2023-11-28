@@ -30,7 +30,6 @@
 #include "third_party/double-conversion/strtod.h"
 #include "third_party/double-conversion/test/cctest.h"
 #include "third_party/double-conversion/utils.h"
-// clang-format off
 
 using namespace double_conversion;
 

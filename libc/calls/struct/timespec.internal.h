@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMESPEC_INTERNAL_H_
 #include "libc/calls/struct/timespec.h"
 #include "libc/mem/alloca.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -31,5 +30,4 @@ const char *DescribeTimespec(char[45], int, const struct timespec *);
 #define DescribeTimespec(rc, ts) DescribeTimespec(alloca(45), rc, ts)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMESPEC_INTERNAL_H_ */

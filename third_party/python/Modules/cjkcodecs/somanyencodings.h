@@ -3,7 +3,6 @@
 
 #define JISX0213_ENCPAIRS 46
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct CjkIndex {
@@ -79,5 +78,4 @@ const uint16_t *__ksx1001_decmap(void) pureconst;
 const uint32_t *__jisx0213_pair_decmap(void) pureconst;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /*COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES_CJKCODECS_SOMANYENCODINGS_H_*/

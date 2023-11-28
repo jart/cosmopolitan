@@ -1,7 +1,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 #define MULMOD(a, b) x64_mulmod(a, b, umod)
 #define MULMOD2C(a0, a1, w) x64_mulmod2c(a0, a1, w, umod)

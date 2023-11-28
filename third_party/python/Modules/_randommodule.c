@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
@@ -22,7 +21,6 @@
 #include "third_party/python/Include/pytime.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_random");
 PYTHON_PROVIDE("_random.Random");

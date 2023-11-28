@@ -1,4 +1,3 @@
-/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* Copyright (C) 2001-2002, 2004-2020 Free Software Foundation, Inc.
    Written by Paul Eggert, Bruno Haible, Sam Steingold, Peter Burwood.

@@ -1,4 +1,3 @@
-/* clang-format off */
 #ifndef language_en_h
 #define language_en_h
 /*

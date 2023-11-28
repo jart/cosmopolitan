@@ -1,4 +1,3 @@
-// clang-format off
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #define YYBYACC 1

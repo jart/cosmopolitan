@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 /* Global configuration variable declarations are in pydebug.h */
 /* XXX (ncoghlan): move those declarations to pylifecycle.h? */

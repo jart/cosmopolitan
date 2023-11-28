@@ -1,4 +1,3 @@
-// clang-format off
 #ifdef __x86_64__
 
 /*

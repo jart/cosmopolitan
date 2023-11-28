@@ -1,7 +1,6 @@
 #ifndef Py_LIMITED_API
 #ifndef PY_NO_SHORT_FLOAT_REPR
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 double _Py_dg_strtod(const char *str, char **ptr);
 char * _Py_dg_dtoa(double d, int mode, int ndigits,

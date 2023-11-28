@@ -29,7 +29,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 libmpdec (BSD-2)\\n\

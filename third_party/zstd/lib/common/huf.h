@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * huff0 huffman codec,
  * part of Finite State Entropy library

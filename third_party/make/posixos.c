@@ -25,7 +25,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/debug.h"
 #include "third_party/make/job.h"
 #include "third_party/make/os.h"
-/* clang-format off */
 
 #ifdef MAKE_JOBSERVER
 

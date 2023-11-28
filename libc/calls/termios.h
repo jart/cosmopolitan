@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_TERMIOS_H_
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -41,5 +40,4 @@ int tcsetwinsize(int, const struct winsize *);
 int tcgetwinsize(int, struct winsize *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_TERMIOS_H_ */

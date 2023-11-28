@@ -2,7 +2,6 @@
 #define Py_HASH_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Helpers for hash functions */
 #ifndef Py_LIMITED_API

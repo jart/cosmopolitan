@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * bitstream
  * Part of FSE library

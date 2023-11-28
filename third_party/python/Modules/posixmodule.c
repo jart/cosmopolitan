@@ -90,7 +90,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("posix");
 PYTHON_PROVIDE("posix._getfinalpathname");

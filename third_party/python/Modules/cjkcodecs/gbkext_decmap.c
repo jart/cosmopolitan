@@ -1,5 +1,4 @@
 #include "libc/x/x.h"
-/* clang-format off */
 
 static _Atomic(void *) gbkext_decmap_ptr;
 static const unsigned char gbkext_decmap_rodata[] = {

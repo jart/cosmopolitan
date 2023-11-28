@@ -20,7 +20,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/dep.h"
 #include "third_party/make/filedef.h"
 #include "third_party/musl/fnmatch.h"
-/* clang-format off */
 
 /* Return nonzero if NAME is an archive-member reference, zero if not.  An
    archive-member reference is a name like 'lib(member)' where member is a

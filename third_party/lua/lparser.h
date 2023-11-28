@@ -5,7 +5,6 @@
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/lzio.h"
 
-/* clang-format off */
 
 /*
 ** Expression and variable descriptor.

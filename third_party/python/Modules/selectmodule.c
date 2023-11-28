@@ -33,7 +33,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("select");
 PYTHON_PROVIDE("select.EPOLLERR");

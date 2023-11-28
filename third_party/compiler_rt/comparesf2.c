@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/comparesf2.c - Single-precision comparisons -----------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

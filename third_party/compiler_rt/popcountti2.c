@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- popcountti2.c - Implement __popcountti2 ----------------------------===
  *
  *                     The LLVM Compiler Infrastructure

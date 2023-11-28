@@ -10,7 +10,6 @@
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("__main__");
 

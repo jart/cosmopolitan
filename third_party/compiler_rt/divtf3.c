@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/divtf3.c - Quad-precision division --------------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

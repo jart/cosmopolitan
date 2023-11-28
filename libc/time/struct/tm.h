@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TIME_STRUCT_TM_H_
 #define COSMOPOLITAN_LIBC_TIME_STRUCT_TM_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct tm {
@@ -40,5 +39,4 @@ char *iso8601us(char[hasatleast 27], struct tm *, long);
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TIME_STRUCT_TM_H_ */

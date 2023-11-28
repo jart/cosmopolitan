@@ -36,7 +36,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"

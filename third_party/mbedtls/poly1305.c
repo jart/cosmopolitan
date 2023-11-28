@@ -15,12 +15,12 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "third_party/mbedtls/poly1305.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/platform.h"
-#include "third_party/mbedtls/poly1305.h"
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\
@@ -28,7 +28,6 @@ Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 /**
  * \file poly1305.c
  *

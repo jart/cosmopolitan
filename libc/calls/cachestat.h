@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_CACHESTAT_H_
 #define COSMOPOLITAN_LIBC_CALLS_CACHESTAT_H_
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct cachestat_range {
@@ -30,5 +29,4 @@ struct cachestat {
 int cachestat(int, struct cachestat_range *, struct cachestat *, uint32_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_LANDLOCK_H_ */

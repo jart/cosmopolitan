@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Basic filename support macros.
    Copyright (C) 2001-2004, 2007-2020 Free Software Foundation, Inc.
 

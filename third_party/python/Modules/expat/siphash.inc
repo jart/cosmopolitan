@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ==========================================================================
  * siphash.h - SipHash-2-4 in a single header file
  * --------------------------------------------------------------------------
@@ -281,7 +280,6 @@ siphash24(const void *src, size_t len, const struct sipkey *key) {
  */
 static int
 sip24_valid(void) {
-  /* clang-format off */
   static const unsigned char vectors[64][8] = {
     { 0x31, 0x0e, 0x0e, 0xdd, 0x47, 0xdb, 0x6f, 0x72, },
     { 0xfd, 0x67, 0xdc, 0x93, 0xc5, 0x39, 0xf8, 0x74, },

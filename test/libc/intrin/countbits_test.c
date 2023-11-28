@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.internal.h"

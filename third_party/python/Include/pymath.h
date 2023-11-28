@@ -2,7 +2,6 @@
 #define Py_PYMATH_H
 #include "libc/math.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /**************************************************************************
 Symbols and macros to supply platform-independent interfaces to mathematical

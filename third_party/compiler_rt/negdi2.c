@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- negdi2.c - Implement __negdi2 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEROMOPTIONALHEADER_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEROMOPTIONALHEADER_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageRomOptionalHeader {
   uint16_t Magic;
@@ -18,5 +17,4 @@ struct NtImageRomOptionalHeader {
   uint32_t GpValue;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEROMOPTIONALHEADER_H_ */

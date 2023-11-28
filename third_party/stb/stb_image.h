@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_H_
 #define COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 enum {
@@ -114,5 +113,4 @@ int stbi_zlib_decode_noheader_buffer(char *obuffer, int olen,
                                      const char *ibuffer, int ilen);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_H_ */

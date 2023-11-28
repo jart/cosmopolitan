@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Provide file descriptor control.
 
    Copyright (C) 2009-2020 Free Software Foundation, Inc.

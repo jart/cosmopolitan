@@ -30,7 +30,6 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "third_party/ggml/ggjt.v2.internal.h"
-// clang-format off
 
 static_assert(sizeof(block_v2_q8_0) == sizeof(float) + V2_QK8_0,
               "wrong q8_0 block size/padding");

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_TOOL_DECODE_LIB_ASMCODEGEN_H_
 #include "libc/stdio/stdio.h"
 #include "tool/decode/lib/idname.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define COLUMN_WIDTH 24
@@ -24,5 +23,4 @@ char *tabpad(const char *s, unsigned width) __wur;
 void show(const char *directive, const char *value, const char *comment);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_DECODE_LIB_ASMCODEGEN_H_ */

@@ -9,7 +9,6 @@
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
-/* clang-format off */
 
 static wchar_t *default_home = NULL;
 static wchar_t env_home[MAXPATHLEN+1];

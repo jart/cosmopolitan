@@ -3,7 +3,6 @@
 #define Py_BYTES_CTYPE_H
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pymacro.h"
-/* clang-format off */
 
 /*
  * The internal implementation behind PyBytes (bytes) and PyByteArray (bytearray)

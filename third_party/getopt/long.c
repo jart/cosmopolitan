@@ -3,7 +3,6 @@
 #include "libc/str/str.h"
 #include "third_party/getopt/long1.h"
 #include "third_party/getopt/long2.h"
-// clang-format off
 
 /*	$OpenBSD: getopt_long.c,v 1.32 2020/05/27 22:25:09 schwarze Exp $	*/
 /*	$NetBSD: getopt_long.c,v 1.15 2002/01/31 22:43:40 tv Exp $	*/

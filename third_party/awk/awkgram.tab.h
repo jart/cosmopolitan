@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_AWK_AWKGRAM_TAB_H_
 #define COSMOPOLITAN_THIRD_PARTY_AWK_AWKGRAM_TAB_H_
 #include "third_party/awk/awk.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define FIRSTTOKEN 257
@@ -111,5 +110,4 @@ typedef union {
 extern YYSTYPE yylval;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_AWK_AWKGRAM_TAB_H_ */

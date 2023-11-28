@@ -22,7 +22,6 @@
  * THE SOFTWARE.
  */
 
-/* clang-format off */
 
 #ifdef DEF
 

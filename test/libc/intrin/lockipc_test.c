@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"

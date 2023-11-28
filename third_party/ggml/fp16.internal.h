@@ -5,7 +5,6 @@
 #include "third_party/ggml/fp16.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/libcxx/math.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define GGML_GELU_FP16
@@ -28,7 +27,6 @@ inline static void ggml_vec_gelu_f16(const int n, ggml_fp16_t* y,
   }
 }
 
-// clang-format off
 
 // 16-bit float
 // on Arm, we use __fp16
@@ -188,5 +186,4 @@ inline static float ggml_lookup_fp16_to_fp32(ggml_fp16_t f) {
 
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_FP16_INTERNAL_H_ */

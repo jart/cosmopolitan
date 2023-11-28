@@ -4,7 +4,6 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
 
 #if STRINGLIB_IS_UNICODE
 # error "transmogrify.h only compatible with byte-wise strings"

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEENCLAVECONFIG_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEENCLAVECONFIG_H_
 #include "libc/nt/pedef.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageEnclaveConfig {
   uint32_t Size;
@@ -19,5 +18,4 @@ struct NtImageEnclaveConfig {
   uint32_t EnclaveFlags;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEENCLAVECONFIG_H_ */

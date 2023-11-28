@@ -2,7 +2,6 @@
 #define Py_ITEROBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 extern PyTypeObject PySeqIter_Type;
 extern PyTypeObject PyCallIter_Type;

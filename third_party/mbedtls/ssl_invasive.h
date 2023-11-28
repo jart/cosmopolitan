@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_INVASIVE_H_
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/md.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC)
 
@@ -72,5 +71,4 @@ void mbedtls_ssl_cf_memcpy_offset(unsigned char *dst,
 
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_SSL_INVASIVE_H_ */

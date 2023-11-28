@@ -25,7 +25,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Python/wordcode_helpers.inc"
-/* clang-format off */
 
 /*
  * This file compiles an abstract syntax tree (AST) into Python bytecode.

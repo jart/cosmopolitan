@@ -10,7 +10,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/clinic/spwdmodule.inc"
-/* clang-format off */
 
 PYTHON_PROVIDE("spwd");
 PYTHON_PROVIDE("spwd.getspall");

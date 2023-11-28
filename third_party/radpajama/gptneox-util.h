@@ -39,7 +39,6 @@
 #include "third_party/libcxx/vector"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
-// clang-format off
 
 // Internal header to be included only by llama.cpp.
 // Contains wrappers around OS interfaces.

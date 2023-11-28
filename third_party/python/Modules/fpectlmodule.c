@@ -13,7 +13,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pyport.h"
-/* clang-format off */
 
 /*
      ---------------------------------------------------------------------

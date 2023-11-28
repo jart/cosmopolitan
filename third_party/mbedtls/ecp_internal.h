@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_INTERNAL_H_
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ecp.h"
-/* clang-format off */
 
 #if defined(MBEDTLS_ECP_INTERNAL_ALT)
 

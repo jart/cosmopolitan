@@ -26,6 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/mem/alloca.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"

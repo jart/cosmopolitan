@@ -8,7 +8,6 @@
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/thread/tls.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define kAutomapStart       0x100080040000
@@ -188,5 +187,4 @@ forceinline pureconst bool OverlapsShadowSpace(const void *p, size_t n) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_ */

@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/addtf3.c - Quad-precision addition --------------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * dummy.c,
  * A fake hash algorithm, just to test integration capabilities.

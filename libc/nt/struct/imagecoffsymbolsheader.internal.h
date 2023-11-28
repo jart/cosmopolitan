@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGECOFFSYMBOLSHEADER_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGECOFFSYMBOLSHEADER_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageCoffSymbolsHeader {
   uint32_t NumberOfSymbols;
@@ -13,5 +12,4 @@ struct NtImageCoffSymbolsHeader {
   uint32_t RvaToLastByteOfData;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGECOFFSYMBOLSHEADER_H_ */

@@ -2,7 +2,6 @@
 #define Py_PYTHREAD_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef void *PyThread_type_lock;
 typedef void *PyThread_type_sema;

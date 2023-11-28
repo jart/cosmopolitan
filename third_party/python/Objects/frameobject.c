@@ -19,7 +19,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
-/* clang-format off */
 
 #define OFF(x) offsetof(PyFrameObject, x)
 

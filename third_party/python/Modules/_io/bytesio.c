@@ -23,7 +23,6 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 /*[clinic input]
 module _io

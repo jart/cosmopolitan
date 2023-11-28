@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: parse.h 443 2006-05-30 04:37:13Z darren $
 *

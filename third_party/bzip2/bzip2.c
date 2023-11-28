@@ -15,7 +15,6 @@
 #include "libc/time/struct/utimbuf.h"
 #include "libc/time/time.h"
 #include "third_party/bzip2/bzlib.h"
-/* clang-format off */
 
 /*-----------------------------------------------------------*/
 /*--- A block-sorting, lossless compressor        bzip2.c ---*/

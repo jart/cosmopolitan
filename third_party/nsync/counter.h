@@ -2,7 +2,6 @@
 #define NSYNC_COUNTER_H_
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/time.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* An nsync_counter represents an unsigned integer that can count up and down,
@@ -37,5 +36,4 @@ uint32_t nsync_counter_value(nsync_counter c);
 uint32_t nsync_counter_wait(nsync_counter c, nsync_time abs_deadline);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_COUNTER_H_ */

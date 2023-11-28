@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: python.c 752 2010-02-27 17:52:46Z elliotth $
 *

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- modti3.c - Implement __modti3 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

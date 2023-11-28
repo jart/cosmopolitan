@@ -42,7 +42,6 @@
 #error oh no entropy
 #endif
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define WRITE mbedtls_test_write
@@ -249,5 +248,4 @@ int check_test(size_t);
 char *GetTlsError(long);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_TEST_LIB_H_ */

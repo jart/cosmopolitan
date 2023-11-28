@@ -10,7 +10,6 @@
 #include "third_party/nsync/note.h"
 #include "third_party/nsync/time.h"
 #include "third_party/nsync/wait_s.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #ifdef MODE_DBG
@@ -278,5 +277,4 @@ int nsync_sem_wait_with_cancel_(waiter *w, nsync_time abs_deadline,
                                 nsync_note cancel_note);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_COMMON_H_ */

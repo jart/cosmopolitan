@@ -10,7 +10,6 @@
 #include "third_party/lua/lmem.h"
 #include "third_party/lua/lua.h"
 
-/* clang-format off */
 
 #define EOZ	(-1)			/* end of stream */
 

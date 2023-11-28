@@ -1,7 +1,6 @@
 #ifndef Py_INTRCHECK_H
 #define Py_INTRCHECK_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 int PyOS_InterruptOccurred(void);
 void PyOS_InitInterrupts(void);

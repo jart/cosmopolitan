@@ -20,7 +20,6 @@
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/time_extra.h"
 #include "third_party/nsync/time.h"
-// clang-format off
 
 char *nsync_time_str (nsync_time t, int decimals) {
 	static const struct {

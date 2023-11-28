@@ -1,4 +1,3 @@
-/* clang-format off */
 /* GNU Guile interface for GNU Make.
 Copyright (C) 2011-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

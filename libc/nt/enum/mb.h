@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_MB_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_MB_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kNtMbOk                      0x00000000
 #define kNtMbOkcancel                0x00000001
@@ -40,5 +39,4 @@
 #define kNtMbModemask                0x00003000
 #define kNtMbMiscmask                0x0000C000
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_MB_H_ */

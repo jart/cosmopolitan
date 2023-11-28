@@ -28,7 +28,6 @@
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
 
-/* clang-format off */
 
 #ifndef SQLITE_OMIT_SHARED_CACHE
 /*

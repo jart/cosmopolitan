@@ -1,4 +1,3 @@
-/* clang-format off */
 /*===-- floatdisf.c - Implement __floatdisf -------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

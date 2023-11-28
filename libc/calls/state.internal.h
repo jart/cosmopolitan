@@ -4,7 +4,6 @@
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern int __vforked;
@@ -21,5 +20,4 @@ void __fds_unlock(void);
 #define __vforked (__tls_enabled && (__get_tls()->tib_flags & TIB_FLAG_VFORKED))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STATE_INTERNAL_H_ */

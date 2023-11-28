@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_REGEX_FNMATCH_H_
 #define COSMOPOLITAN_THIRD_PARTY_REGEX_FNMATCH_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define FNM_PATHNAME    0x1
@@ -16,5 +15,4 @@ COSMOPOLITAN_C_START_
 int fnmatch(const char *, const char *, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_REGEX_FNMATCH_H_ */

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: sml.c 536 2007-06-02 06:09:00Z elliotth $
 *

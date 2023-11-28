@@ -1,7 +1,6 @@
 #ifndef NSYNC_TIME_H_
 #define NSYNC_TIME_H_
 #include "libc/calls/struct/timespec.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define NSYNC_TIME_SEC(t)  ((t).tv_sec)
@@ -56,5 +55,4 @@ typedef struct timespec nsync_time;
 #define nsync_time_s_ns(s, ns) ((nsync_time){(int64_t)(s), (unsigned)(ns)})
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_TIME_H_ */

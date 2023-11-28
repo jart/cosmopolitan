@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMBASICINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMBASICINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtSystemBasicInformation {
   unsigned char Reserved1[4];
@@ -16,5 +15,4 @@ struct NtSystemBasicInformation {
   char NumberOfProcessors;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMBASICINFORMATION_H_ */

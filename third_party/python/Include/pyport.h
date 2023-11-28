@@ -3,7 +3,6 @@
 #include "libc/limits.h"
 #include "third_party/python/Include/pymath.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 #define HAVE_LONG_LONG 1
 #define PY_LONG_LONG long long

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/packsswb.h"
 #include "libc/intrin/pandn.h"

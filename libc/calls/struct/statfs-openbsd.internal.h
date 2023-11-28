@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_OPENBSD_H_
 #include "libc/calls/struct/fsid.h"
 #include "libc/sock/struct/sockaddr.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct xucred_openbsd {
@@ -132,5 +131,4 @@ struct statfs_openbsd {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_OPENBSD_H_ */

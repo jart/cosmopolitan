@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_LINUX_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_LINUX_INTERNAL_H_
 #include "libc/calls/struct/fsid.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct statfs_linux {
@@ -20,5 +19,4 @@ struct statfs_linux {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_LINUX_INTERNAL_H_ */

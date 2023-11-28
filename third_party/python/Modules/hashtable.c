@@ -7,7 +7,6 @@
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Modules/hashtable.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 cfuhash (bsd-3)\\n\

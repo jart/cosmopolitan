@@ -1,6 +1,5 @@
 #ifndef NSYNC_TESTING_HEAP_H_
 #define NSYNC_TESTING_HEAP_H_
-/* clang-format off */
 
 /* A heap.
    Optionally, elements may have storage for the index to allow deletions from

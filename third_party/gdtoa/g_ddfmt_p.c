@@ -32,7 +32,6 @@
 #include "libc/runtime/fenv.h"
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 extern ULong __gdtoa_NanDflt_d[2];
 

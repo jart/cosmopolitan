@@ -26,7 +26,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/tinyelf.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"

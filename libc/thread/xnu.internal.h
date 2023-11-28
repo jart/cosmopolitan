@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_XNU_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_XNU_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*
@@ -27,5 +26,4 @@ int thread_selfcounts(int type, void *buf, uint64_t nbytes);
 int thread_fast_set_cthread_self(void *tls);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_XNU_INTERNAL_H_ */

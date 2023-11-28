@@ -19,10 +19,8 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
+#include "libc/thread/pt.internal.h"
 #include "libc/nexgen32e/macros.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/thread/posixthread.internal.h"
-#include "libc/sysv/consts/nr.h"
 
 #define SIG_IGN 1
 
@@ -436,7 +434,7 @@ _init_systemfive_sigsys:
 	push	%rax
 	push	$SIG_IGN				// sigaction_meta size 48
 	mov	__NR_sigaction(%rip),%eax		// mag
-	mov	SIGSYS,%edi				// sig
+	mov	SIGSYS(%rip),%edi			// sig
 	mov	%rsp,%rsi				// new
 	xor	%edx,%edx				// old
 	mov	$8,%r10d				// for linux

@@ -28,7 +28,6 @@
 #include "third_party/double-conversion/ieee.h"
 #include "third_party/double-conversion/test/cctest.h"
 #include "third_party/double-conversion/utils.h"
-// clang-format off
 
 // DoubleToString is already tested in test-dtoa.cc.
 

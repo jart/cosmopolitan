@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/log/rop.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
@@ -165,7 +165,6 @@ int main(int argc, char *argv[]) {
 }
 #endif
 
-// clang-format off
 static const char kLuaStrXlat[256] = {
   1,1,1,1,1,1,1,'a','b','t','n','v','f','r',1,1, // 0x00
   1,1,1,1,1,1,1,1,1,1,1,'e',1,1,1,1, // 0x10

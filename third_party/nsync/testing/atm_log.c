@@ -18,7 +18,6 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/thread/thread.h"
-// clang-format off
 
 #ifndef NSYNC_ATM_LOG
 #define NSYNC_ATM_LOG 0

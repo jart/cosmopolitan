@@ -2,7 +2,6 @@
 #ifndef DOUBLE_CONVERSION_DOUBLE_TO_STRING_H_
 #define DOUBLE_CONVERSION_DOUBLE_TO_STRING_H_
 #include "third_party/double-conversion/utils.h"
-// clang-format off
 
 namespace double_conversion {
 

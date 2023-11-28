@@ -1,4 +1,3 @@
-/* clang-format off */
 /* xalloc-oversized.h -- memory allocation size checking
 
    Copyright (C) 1990-2000, 2003-2004, 2006-2020 Free Software Foundation, Inc.

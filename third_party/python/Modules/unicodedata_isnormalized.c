@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/unicodedata.h"
-/* clang-format off */
 
 /**
  * Returns 1 if the input is certainly normalized, 0 if it might not be. 

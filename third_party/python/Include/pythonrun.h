@@ -5,7 +5,6 @@
 #include "third_party/python/Include/pyarena.h"
 #include "third_party/python/Include/pystate.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define PyCF_MASK (CO_FUTURE_DIVISION | CO_FUTURE_ABSOLUTE_IMPORT | \
                    CO_FUTURE_WITH_STATEMENT | CO_FUTURE_PRINT_FUNCTION | \

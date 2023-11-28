@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ELF_STRUCT_RELA_H_
 #define COSMOPOLITAN_LIBC_ELF_STRUCT_RELA_H_
 #include "libc/elf/scalar.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /*
  * ELF relocation w/ explicit addend.
@@ -62,5 +61,4 @@ typedef struct Elf64_Rela {
 
 } Elf64_Rela;
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_STRUCT_RELA_H_ */

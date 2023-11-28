@@ -7,7 +7,6 @@
 #include "libc/thread/semaphore.h"
 #include "libc/sysv/consts/o.h"
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
-/* clang-format off */
 
 /*
  * A type which wraps a semaphore

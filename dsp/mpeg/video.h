@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_MPEG_VIDEO_H_
 #define COSMOPOLITAN_DSP_MPEG_VIDEO_H_
 #include "dsp/mpeg/mpeg.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct {
@@ -58,5 +57,4 @@ void plm_video_process_macroblock_16(plm_video_t *, uint8_t *restrict,
                                      uint8_t *restrict, int, int, bool);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_MPEG_VIDEO_H_ */

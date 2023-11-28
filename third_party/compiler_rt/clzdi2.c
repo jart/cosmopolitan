@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- clzdi2.c - Implement __clzdi2 -------------------------------------===
  *
  *               The LLVM Compiler Infrastructure

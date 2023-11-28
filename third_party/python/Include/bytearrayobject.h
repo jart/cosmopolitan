@@ -3,7 +3,6 @@
 #include "libc/assert.h"
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Type PyByteArrayObject represents a mutable array of bytes.
  * The Python API is that of a sequence;

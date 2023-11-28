@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: ctags.h 702 2009-03-14 03:52:21Z dhiebert $
 *

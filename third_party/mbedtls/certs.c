@@ -23,7 +23,6 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 #if defined(MBEDTLS_CERTS_C)
 

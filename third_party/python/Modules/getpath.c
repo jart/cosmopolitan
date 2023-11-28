@@ -22,7 +22,6 @@
 #include "third_party/python/Include/osdefs.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
-/* clang-format off */
 /* Return the initial module search path. */
 
 #pragma GCC diagnostic ignored "-Wunused-function" // search_for_exec_prefix

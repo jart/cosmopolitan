@@ -18,7 +18,6 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 static Py_ssize_t max_module_number;
 

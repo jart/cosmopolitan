@@ -4,9 +4,7 @@
 #include "libc/limits.h"
 #include "libc/literal.h"
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef double	Awkfloat;
 
@@ -412,5 +410,4 @@ extern	Cell	*gsub(Node **, int);
 extern  const char	*flags2str(int flags);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_AWK_AWK_H_ */

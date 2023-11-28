@@ -31,7 +31,6 @@
 │ cosmopolitan § new technology » processes                                ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool32 CreateProcess(const char16_t *opt_lpApplicationName,
@@ -96,5 +95,4 @@ uint32_t GetModuleBaseName(int64_t hProcess, int64_t opt_hModule,
 #include "libc/nt/thunk/process.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_PROCESS_H_ */

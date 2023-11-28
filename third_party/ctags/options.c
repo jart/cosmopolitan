@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: options.c 576 2007-06-30 04:16:23Z elliotth $
 *

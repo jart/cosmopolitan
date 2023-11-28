@@ -1,4 +1,3 @@
-/* clang-format off */
 /* entities.c -- recognize HTML ISO entities
 
   (c) 1998-2008 (W3C) MIT, ERCIM, Keio University

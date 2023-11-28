@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_FILEZERODATAINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_FILEZERODATAINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtFileZeroDataInformation {
   uint64_t FileOffset;
   uint64_t BeyondFinalZero;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_FILEZERODATAINFORMATION_H_ */

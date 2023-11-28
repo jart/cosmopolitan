@@ -3,9 +3,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "third_party/python/Include/moduleobject.h"
 #include "third_party/python/Include/object.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* ABCs */
 extern PyTypeObject PyIOBase_Type;
@@ -193,5 +191,4 @@ extern PyObject *_PyIO_zero;
 extern PyTypeObject _PyBytesIOBuffer_Type;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_MODULES__IO__IOMODULE_H_ */

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_SQLITE3_SQLITE3EXPERT_H_
 #define COSMOPOLITAN_THIRD_PARTY_SQLITE3_SQLITE3EXPERT_H_
 #include "third_party/sqlite3/sqlite3.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct sqlite3expert sqlite3expert;
@@ -155,5 +154,4 @@ const char *sqlite3_expert_report(sqlite3expert *, int iStmt, int eReport);
 void sqlite3_expert_destroy(sqlite3expert *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_SQLITE3_SQLITE3EXPERT_H_ */

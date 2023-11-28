@@ -17,7 +17,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/tupleobject.h"
-/* clang-format off */
 
 /* Tuple object implementation */
 

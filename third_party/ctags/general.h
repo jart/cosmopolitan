@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: general.h 508 2007-05-03 03:20:59Z dhiebert $
 *

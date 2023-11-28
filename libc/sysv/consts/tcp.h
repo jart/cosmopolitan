@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_TCP_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_TCP_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int TCP_CC_INFO;
@@ -69,5 +68,4 @@ extern const int TCP_WINDOW_CLAMP;
 
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_TCP_H_ */

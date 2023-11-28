@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: make.c 751 2010-02-27 17:41:57Z elliotth $
 *

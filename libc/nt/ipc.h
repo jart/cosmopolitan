@@ -49,7 +49,6 @@
 #define kNtPipeClientEnd 0x00000000
 #define kNtPipeServerEnd 0x00000001
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool32 CreatePipe(int64_t *out_hReadPipe, int64_t *out_hWritePipe,
@@ -91,5 +90,4 @@ bool32 GetNamedPipeInfo(int64_t hNamedPipe, uint32_t *opt_out_lpFlags,
                         uint32_t *opt_out_lpMaxInstances);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_IPC_H_ */

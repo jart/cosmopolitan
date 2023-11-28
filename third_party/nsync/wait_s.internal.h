@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_
 #include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* Implementations of "struct nsync_waitable_s" must provide functions
@@ -24,5 +23,4 @@ struct nsync_waiter_s {
 void nsync_waiter_destroy(void *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_ */

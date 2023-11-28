@@ -1,4 +1,3 @@
-/* clang-format off */
 /* utf8.c -- convert characters to/from UTF-8
 
   (c) 1998-2007 (W3C) MIT, ERCIM, Keio University

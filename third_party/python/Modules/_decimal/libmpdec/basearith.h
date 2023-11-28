@@ -2,7 +2,6 @@
 #define BASEARITH_H
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
-/* clang-format off */
 
 /* Internal header file: all symbols have local scope in the DSO */
 

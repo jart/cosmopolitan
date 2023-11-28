@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_STRUCT_SOCKADDR_H_
 #define COSMOPOLITAN_LIBC_SOCK_STRUCT_SOCKADDR_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct sockaddr {     /* Linux+NT ABI */
@@ -46,5 +45,4 @@ ssize_t sendto(int, const void *, size_t, int, const struct sockaddr *,
                uint32_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_SOCKADDR_H_ */

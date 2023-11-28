@@ -18,7 +18,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 /* PYTHON_YOINK("io"); */
 /* PYTHON_YOINK("encodings.aliases"); */

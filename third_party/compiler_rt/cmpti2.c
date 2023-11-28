@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- cmpti2.c - Implement __cmpti2 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

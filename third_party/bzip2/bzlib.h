@@ -23,7 +23,6 @@
 
 #define BZ_MAX_UNUSED 5000
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct {
@@ -87,5 +86,4 @@ void BZ2_bzclose(BZFILE *);
 const char *BZ2_bzerror(BZFILE *, int *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _BZLIB_H */

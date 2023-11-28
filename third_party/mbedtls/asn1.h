@@ -3,7 +3,6 @@
 #include "libc/str/str.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
-/* clang-format off */
 
 /**
  * \addtogroup asn1_module

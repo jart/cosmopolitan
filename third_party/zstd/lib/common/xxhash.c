@@ -1,4 +1,3 @@
-// clang-format off
 /*
  *  xxHash - Fast Hash algorithm
  *  Copyright (c) Meta Platforms, Inc. and affiliates.

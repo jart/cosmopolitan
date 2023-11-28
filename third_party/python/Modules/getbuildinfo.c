@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 #define GITVERSION "3.6"
 #define GITTAG "3.6"

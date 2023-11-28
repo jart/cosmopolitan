@@ -2,7 +2,6 @@
 #define MBEDTLS_NIST_KW_H
 #include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/config.h"
-/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

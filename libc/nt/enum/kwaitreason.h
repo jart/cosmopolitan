@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_KWAITREASON_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_KWAITREASON_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kNtExecutive 0
 #define kNtFreePage 1
@@ -31,5 +30,4 @@
 #define kNtWrKernel 26
 #define kNtMaximumWaitReason 27
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_KWAITREASON_H_ */

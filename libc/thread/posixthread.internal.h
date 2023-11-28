@@ -5,21 +5,13 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/dll.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/pt.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-
-#define PT_OWNSTACK       1
-#define PT_STATIC         2
-#define PT_ASYNC          4
-#define PT_NOCANCEL       8
-#define PT_MASKED         16
-#define PT_INCANCEL       32
-#define PT_OPENBSD_KLUDGE 64
 
 #define PT_BLOCKER_SEM ((atomic_int *)-1)
 #define PT_BLOCKER_IO  ((atomic_int *)-2)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 // LEGAL TRANSITIONS             ┌──> TERMINATED ─┐
@@ -133,5 +125,4 @@ __funline void _pthread_ref(struct PosixThread *pt) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_ */

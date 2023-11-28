@@ -3,7 +3,6 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/macros.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define SHADOW(x)   ((signed char *)(((intptr_t)(x) >> kAsanScale) + kAsanMagic))
@@ -43,5 +42,4 @@ void __asan_memset(void *, char, size_t);
 void *__asan_memcpy(void *, const void *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_ASAN_H_ */

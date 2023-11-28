@@ -1,7 +1,6 @@
 #ifndef Py_ERRCODE_H
 #define Py_ERRCODE_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 
 /* Error codes passed around between file input, tokenizer, parser and

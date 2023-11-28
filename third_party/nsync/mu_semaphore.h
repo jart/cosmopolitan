@@ -1,7 +1,6 @@
 #ifndef NSYNC_SEM_H_
 #define NSYNC_SEM_H_
 #include "third_party/nsync/time.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct nsync_semaphore_s_ {
@@ -24,5 +23,4 @@ errno_t nsync_mu_semaphore_p_with_deadline(nsync_semaphore *s,
 void nsync_mu_semaphore_v(nsync_semaphore *s);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_SEM_H_ */

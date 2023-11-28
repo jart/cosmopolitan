@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_DSP_TTY_ITOA8_H_
 #define COSMOPOLITAN_DSP_TTY_ITOA8_H_
 #include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Itoa8 {
@@ -17,5 +16,4 @@ forceinline char *itoa8(char *p, uint8_t c) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_TTY_ITOA8_H_ */

@@ -23,12 +23,10 @@
 #define _PC_SYMLINK_MAX        19
 #define _PC_2_SYMLINKS         20
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 long fpathconf(int, int);
 long pathconf(const char *, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_PATHCONF_H_ */

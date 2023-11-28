@@ -137,7 +137,6 @@
 /* The deflate compression method (the only one supported in this version) */
 #define Z_NULL 0 /* for initializing zalloc, zfree, opaque */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef voidpf (*alloc_func)(voidpf opaque, uInt items, uInt size);
@@ -1751,5 +1750,4 @@ int gzvprintf(gzFile file, const char *format, va_list va);
 void inflate_fast_chunk(z_streamp strm, unsigned start);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_ZLIB_H_ */

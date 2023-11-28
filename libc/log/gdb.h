@@ -6,7 +6,6 @@
 #include "libc/proc/proc.internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/w.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /**
@@ -63,5 +62,4 @@ int AttachDebugger(intptr_t);
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_GDB_H_ */

@@ -27,7 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/awk/awk.h"
 #include "third_party/awk/awkgram.tab.h"
-// clang-format off
 
 static const char * const printname[95] = {
 	"FIRSTTOKEN",	/* 258 */

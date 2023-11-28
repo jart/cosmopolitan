@@ -7,7 +7,6 @@
 #include "libc/calls/calls.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 /*
  * The file descriptor fd is considered ``interactive'' if either

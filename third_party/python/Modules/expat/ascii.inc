@@ -1,4 +1,3 @@
-/* clang-format off */
 
 #define ASCII_A 0x41
 #define ASCII_B 0x42

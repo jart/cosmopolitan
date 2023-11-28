@@ -4,7 +4,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyatomic.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* This limitation is for performance and simplicity. If needed it can be
 removed (with effort). */

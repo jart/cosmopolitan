@@ -1,4 +1,3 @@
-/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* Memory allocation on the stack.
 

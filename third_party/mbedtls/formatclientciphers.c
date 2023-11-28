@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/macros.internal.h"
 #include "libc/stdio/append.h"
 #include "third_party/mbedtls/iana.h"

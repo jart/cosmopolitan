@@ -20,7 +20,8 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
+#include "libc/intrin/bswap.h"
 #include "libc/limits.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
@@ -2937,11 +2938,23 @@ typedef struct {
   uint16_t value[288];
 } stbi__zhuffman;
 
+static uint32_t ReverseBits32(uint32_t x) {
+  x = bswap_32(x);
+  x = (x & 0xaaaaaaaa) >> 1 | (x & 0x55555555) << 1;
+  x = (x & 0xcccccccc) >> 2 | (x & 0x33333333) << 2;
+  x = (x & 0xf0f0f0f0) >> 4 | (x & 0x0f0f0f0f) << 4;
+  return x;
+}
+
+static int ReverseBits16(int x) {
+  return ReverseBits32(x) >> 16;
+}
+
 forceinline int stbi__bit_reverse(int v, int bits) {
   assert(bits <= 16);
   // to bit reverse n bits, reverse 16 and shift
   // e.g. 11 bits, bit reverse and shift away 5
-  return _bitreverse16(v) >> (16 - bits);
+  return ReverseBits16(v) >> (16 - bits);
 }
 
 static int stbi__zbuild_huffman(stbi__zhuffman *z,

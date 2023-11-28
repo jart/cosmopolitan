@@ -10,7 +10,6 @@
 #include "third_party/mbedtls/x509_crl.h"
 #include "third_party/mbedtls/x509_crt.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
  * SSL Error codes

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: vstring.h 719 2009-07-07 03:46:59Z dhiebert $
 *

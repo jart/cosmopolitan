@@ -27,7 +27,6 @@ asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\
 Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
-// clang-format off
 
 /* Attempt to remove waiter *w from *mu's
    waiter queue.  If successful, leave the lock held in mode *l_type, and

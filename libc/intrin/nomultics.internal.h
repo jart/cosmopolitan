@@ -8,7 +8,6 @@
 #define kTtyNoIsigs 16 /* don't auto-raise signals on keys */
 #define kTtyXtMouse 32 /* enables eXtreme Xterm mouse mode */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct TtyConf {
@@ -44,5 +43,4 @@ struct TtyConf {
 extern struct TtyConf __ttyconf;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_NOMULTICS_H_ */

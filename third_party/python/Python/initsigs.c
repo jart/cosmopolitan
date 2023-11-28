@@ -9,7 +9,6 @@
 #include "third_party/python/Include/intrcheck.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
-/* clang-format off */
 
 void
 _Py_InitSigs(void)

@@ -4,11 +4,9 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "third_party/python/Modules/bextra.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
-/* clang-format off */
 
 void
 _PyUnicode_GetDecompRecord(PyObject *self,

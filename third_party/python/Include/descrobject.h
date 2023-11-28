@@ -4,7 +4,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef PyObject *(*getter)(PyObject *, void *);
 typedef int (*setter)(PyObject *, PyObject *, void *);

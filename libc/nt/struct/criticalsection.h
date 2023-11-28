@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTION_H_
 #include "libc/nt/struct/criticalsectiondebug.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtCriticalSection {
   struct NtCriticalSectionDebug *DebugInfo;
@@ -12,5 +11,4 @@ struct NtCriticalSection {
   uintptr_t SpinCount;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTION_H_ */

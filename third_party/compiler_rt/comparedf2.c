@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/comparedf2.c - Double-precision comparisons -----------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

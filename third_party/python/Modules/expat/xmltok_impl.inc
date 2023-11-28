@@ -1,4 +1,3 @@
-/* clang-format off */
 /* This file is included!
                             __  __            _
                          ___\ \/ /_ __   __ _| |_

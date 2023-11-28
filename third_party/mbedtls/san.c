@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/san.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
 #include "third_party/mbedtls/asn1.h"

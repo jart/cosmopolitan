@@ -1,4 +1,3 @@
-/* clang-format off */
 /* DO NOT EDIT! GENERATED AUTOMATICALLY! */
 /* A substitute for POSIX 2008 <stddef.h>, for platforms that have issues.
 

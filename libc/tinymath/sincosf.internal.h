@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TINYMATH_SINCOSF_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_TINYMATH_SINCOSF_INTERNAL_H_
 #include "libc/tinymath/internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 // clang-format off
 
@@ -156,5 +155,4 @@ reduce_large (uint32_t xi, int *np)
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_SINCOSF_INTERNAL_H_ */

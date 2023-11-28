@@ -3,7 +3,6 @@
 #define Py_ACCU_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #undef small /* defined by some Windows headers */
 

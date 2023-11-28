@@ -1,4 +1,3 @@
-/* clang-format off */
 #if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #if !defined _X86INTRIN_H_INCLUDED && !defined _IMMINTRIN_H_INCLUDED
 # error "Never use <f16intrin.h> directly; include <x86intrin.h> or <immintrin.h> instead."

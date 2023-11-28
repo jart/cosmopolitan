@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/highwayhash64.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 
 asm(".ident\t\"\\n\\n\
 HighwayHash (Apache 2.0)\\n\

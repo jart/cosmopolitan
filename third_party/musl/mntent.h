@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MUSL_MNTENT_H_
 #define COSMOPOLITAN_THIRD_PARTY_MUSL_MNTENT_H_
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define MOUNTED "/etc/mtab"
@@ -33,5 +32,4 @@ int addmntent(FILE *, const struct mntent *);
 char *hasmntopt(const struct mntent *, const char *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MUSL_MNTENT_H_ */

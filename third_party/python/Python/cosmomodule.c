@@ -44,7 +44,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/xed/x86.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("cosmo");
 PYTHON_PROVIDE("cosmo.exit1");

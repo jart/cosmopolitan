@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SECTIONIMAGEINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SECTIONIMAGEINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtSectionImageInformation {
   void *EntryPoint;
@@ -18,5 +17,4 @@ struct NtSectionImageInformation {
   uint32_t __wut2[3];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SECTIONIMAGEINFORMATION_H_ */

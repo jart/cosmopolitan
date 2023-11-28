@@ -7,7 +7,6 @@
 #include "third_party/lua/lzio.h"
 #include "third_party/lua/tms.h"
 
-/* clang-format off */
 
 /*
 ** Some notes about garbage-collected objects: All objects in Lua must

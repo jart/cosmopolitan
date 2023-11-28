@@ -9,7 +9,6 @@
 #include "libc/nt/struct/filenameinformation.h"
 #include "libc/nt/struct/filepositioninformation.h"
 #include "libc/nt/struct/filestandardinformation.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtFileAllInformation {
   struct NtFileBasicInformation BasicInformation;
@@ -23,5 +22,4 @@ struct NtFileAllInformation {
   struct NtFileNameInformation NameInformation;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_FILEALLINFORMATION_H_ */

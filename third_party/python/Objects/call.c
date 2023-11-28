@@ -28,7 +28,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 int
 _PyObject_HasFastCall(PyObject *callable)

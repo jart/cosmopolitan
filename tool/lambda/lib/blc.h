@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_LAMBDA_LIB_BLC_H_
 #define COSMOPOLITAN_TOOL_LAMBDA_LIB_BLC_H_
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define BUILTINS 4
@@ -61,5 +60,4 @@ void PrintVar(int, FILE *);
 void *Calloc(size_t, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_LAMBDA_LIB_BLC_H_ */

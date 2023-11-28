@@ -36,7 +36,6 @@
  */
 #define LANDLOCK_ACCESS_FS_TRUNCATE 0x4000ul
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 enum landlock_rule_type {
@@ -58,5 +57,4 @@ int landlock_create_ruleset(const struct landlock_ruleset_attr *, size_t,
                             uint32_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_LANDLOCK_H_ */

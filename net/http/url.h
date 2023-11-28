@@ -5,7 +5,6 @@
 #define kUrlLatin1 2
 #define kUrlOpaque 4
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct UrlView {
@@ -39,5 +38,4 @@ char *ParseHost(const char *, size_t, struct Url *);
 char *EscapeUrlView(char *, struct UrlView *, const char[256]);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_NET_HTTP_URL_H_ */

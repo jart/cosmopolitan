@@ -9,7 +9,6 @@
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PyOS_sighandler_t
 PyOS_getsig(int sig)

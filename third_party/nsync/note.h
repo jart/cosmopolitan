@@ -1,7 +1,6 @@
 #ifndef NSYNC_NOTE_H_
 #define NSYNC_NOTE_H_
 #include "third_party/nsync/time.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* An nsync_note represents a single bit that can transition from 0 to 1
@@ -47,5 +46,4 @@ int nsync_note_wait(nsync_note n, nsync_time abs_deadline);
 nsync_time nsync_note_expiry(nsync_note n);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_NOTE_H_ */

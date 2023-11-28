@@ -2,7 +2,6 @@
 #define Py_BITSET_H
 #include "third_party/python/Include/pgenheaders.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define BYTE		char
 

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_TINYMATH_COMPLEX_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_TINYMATH_COMPLEX_INTERNAL_H_
 #include "libc/tinymath/internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define EXTRACT_WORDS(hi, lo, d) \
@@ -44,5 +43,4 @@ _Complex double __ldexp_cexp(_Complex double, int);
 _Complex float __ldexp_cexpf(_Complex float, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_COMPLEX_INTERNAL_H_ */

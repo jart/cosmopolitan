@@ -34,7 +34,6 @@
 #include "third_party/awk/awk.h"
 #include "third_party/awk/awkgram.tab.h"
 #include "third_party/gdtoa/gdtoa.h"
-// clang-format off
 
 extern bool	infunc;
 

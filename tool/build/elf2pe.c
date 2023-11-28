@@ -25,7 +25,7 @@
 #include "libc/elf/struct/shdr.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/limits.h"

@@ -42,7 +42,6 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/sock.h"
 #include "third_party/finger/finger.h"
-// clang-format off
 
 #ifndef lint
 /*static char sccsid[] = "from: @(#)net.c	5.5 (Berkeley) 6/1/90";*/

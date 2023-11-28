@@ -5,10 +5,9 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define GetStr(tab, rva)     ((char *)(tab) + (rva))
@@ -88,5 +87,4 @@ static inline bool GetElfSymbolValue(const Elf64_Ehdr *ehdr, const char *name,
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ELF_TINYELF_INTERNAL_H_ */

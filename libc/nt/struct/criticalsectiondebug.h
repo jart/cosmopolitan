@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTIONDEBUG_H_
 #include "libc/nt/struct/criticalsection.h"
 #include "libc/nt/struct/linkedlist.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtCriticalSectionDebug {
   uint16_t Type;
@@ -14,5 +13,4 @@ struct NtCriticalSectionDebug {
   uint32_t Spare[2];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_CRITICALSECTIONDEBUG_H_ */

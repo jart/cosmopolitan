@@ -9,7 +9,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
 #include "third_party/python/Modules/cjkcodecs/somanyencodings.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_codecs_hk");
 PYTHON_PROVIDE("_codecs_hk.__map_big5hkscs");

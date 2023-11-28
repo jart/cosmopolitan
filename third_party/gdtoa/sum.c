@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 Bigint *
 __gdtoa_sum(Bigint *a, Bigint *b, ThInfo **PTI)

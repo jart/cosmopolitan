@@ -1,4 +1,3 @@
-/* clang-format off */
 
 /* These routines may be quite inefficient, but it's used only to emulate old
  * standards. */

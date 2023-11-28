@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- os_version_check.c - OS version checking  -------------------------===
  *
  *                     The LLVM Compiler Infrastructure

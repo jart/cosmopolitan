@@ -1,4 +1,3 @@
-/* clang-format off */
 //===---- lib/fp_mul_impl.inc - floating point multiplication -----*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

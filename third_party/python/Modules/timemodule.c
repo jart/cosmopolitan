@@ -36,7 +36,6 @@
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("time");
 PYTHON_PROVIDE("time.CLOCK_MONOTONIC");

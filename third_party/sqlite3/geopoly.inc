@@ -17,7 +17,6 @@
 ** access to all of the R-Tree internals.
 */
 #include "libc/fmt/conv.h"
-/* clang-format off */
 
 /* Enable -DGEOPOLY_ENABLE_DEBUG for debugging facilities */
 #ifdef GEOPOLY_ENABLE_DEBUG

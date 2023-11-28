@@ -24,7 +24,7 @@
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -66,7 +66,7 @@ static struct HostAdapterInfoNode {
   struct sockaddr netmask;
   struct sockaddr broadcast;
   short flags;
-} * __hostInfo;
+} *__hostInfo;
 
 static int ioctl_default(int fd, unsigned long request, void *arg) {
   int rc;

@@ -5,7 +5,6 @@
 
 #define ARGON2_NO_THREADS
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*
@@ -210,5 +209,4 @@ size_t argon2_encodedlen(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
                          argon2_type);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ARGON2_ARGON2_H_ */

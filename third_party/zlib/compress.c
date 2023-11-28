@@ -8,7 +8,6 @@
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zlib.h"
-// clang-format off
 
 /* @(#) $Id$ */
 

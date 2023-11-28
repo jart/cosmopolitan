@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_COLOR_H_
 #define COSMOPOLITAN_LIBC_LOG_COLOR_H_
 #include "libc/log/internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define CLS    (!__nocolor ? "\r\e[J" : "")
 #define RED    (!__nocolor ? "\e[30;101m" : "")
@@ -13,5 +12,4 @@
 #define RESET  (!__nocolor ? "\e[0m" : "")
 #define SUBTLE (!__nocolor ? "\e[35m" : "")
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_COLOR_H_ */

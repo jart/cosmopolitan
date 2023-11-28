@@ -34,7 +34,6 @@
 #include "libc/log/bsd.h"
 #include "libc/mem/mem.h"
 #include "third_party/sed/extern.h"
-// clang-format off
 
 /*
  * malloc with result test

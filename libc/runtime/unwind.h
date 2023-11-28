@@ -3,7 +3,6 @@
 
 #define UNW_TDEP_CURSOR_LEN 127
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef enum {
@@ -38,5 +37,4 @@ _Unwind_Reason_Code _Unwind_Backtrace(_Unwind_Trace_Fn, void *);
 void *_Unwind_FindEnclosingFunction(void *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_UNWIND_H_ */

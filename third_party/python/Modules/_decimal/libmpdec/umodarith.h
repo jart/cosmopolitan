@@ -3,7 +3,6 @@
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
-/* clang-format off */
 
 /* Bignum: Low level routines for unsigned modular arithmetic. These are
    used in the fast convolution functions for very large coefficients. */

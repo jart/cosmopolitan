@@ -8,7 +8,6 @@
 #include "third_party/mbedtls/sha512.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
-/* clang-format off */
 
 /* Determine minimum supported version */
 #define MBEDTLS_SSL_MIN_MAJOR_VERSION           MBEDTLS_SSL_MAJOR_VERSION_3

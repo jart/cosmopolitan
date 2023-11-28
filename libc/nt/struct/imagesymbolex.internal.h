@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESYMBOLEX_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESYMBOLEX_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageSymbolEx {
   union {
@@ -18,5 +17,4 @@ struct NtImageSymbolEx {
   uint8_t NumberOfAuxSymbols;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESYMBOLEX_H_ */

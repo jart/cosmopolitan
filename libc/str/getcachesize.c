@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/bits.h"
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
 #ifdef __x86_64__

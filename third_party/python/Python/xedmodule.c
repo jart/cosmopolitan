@@ -25,7 +25,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/xed/x86.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("xed");
 PYTHON_PROVIDE("xed.ild");

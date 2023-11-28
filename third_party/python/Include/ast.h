@@ -4,7 +4,6 @@
 #include "third_party/python/Include/node.h"
 #include "third_party/python/Include/pythonrun.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 extern int foo;
 int PyAST_Validate(mod_ty);

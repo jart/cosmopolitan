@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_STRUCT_IFREQ_H_
 #define COSMOPOLITAN_LIBC_SOCK_STRUCT_IFREQ_H_
 #include "libc/sock/struct/sockaddr.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define IF_NAMESIZE 16
@@ -29,5 +28,4 @@ struct ifreq {
 #define ifr_flags     ifr_ifru.ifru_flags /* flags */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_IFREQ_H_ */

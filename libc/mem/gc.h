@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_MEM_GC_H_
 #define COSMOPOLITAN_LIBC_MEM_GC_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void *_gc(void *);
@@ -23,5 +22,4 @@ void _gc_free(void *);
 #endif /* defined(__GNUC__) && !defined(__STRICT_ANSI__) */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MEM_GC_H_ */

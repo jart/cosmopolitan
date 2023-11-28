@@ -1,4 +1,3 @@
-// clang-format off
 # ################################################################
 # xxHash Makefile
 # Copyright (C) 2012-2021 Yann Collet

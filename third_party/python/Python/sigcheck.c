@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/intrcheck.h"
 #include "third_party/python/Include/pyerrors.h"
-/* clang-format off */
 
 /* Sigcheck is similar to intrcheck() but sets an exception when an
    interrupt occurs.  It can't be in the intrcheck.c file since that

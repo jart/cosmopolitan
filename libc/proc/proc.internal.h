@@ -6,7 +6,6 @@
 #include "libc/intrin/dll.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/mu.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define PROC_ALIVE  0
@@ -56,5 +55,4 @@ int __proc_harvest(struct Proc *, bool);
 int sys_wait4_nt(int, int *, int, struct rusage *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_PROC_H_ */

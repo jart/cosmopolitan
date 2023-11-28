@@ -4,7 +4,6 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "tool/viz/lib/formatstringtable.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * Tests matrix contains expected content w/ string compare.
@@ -64,5 +63,4 @@
 void testlib_showerror_expect_matrixeq(int, const char *, const char *, char *,
                                        char *, const char *, ...);
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_VIZ_LIB_FORMATSTRINGTABLE_TESTLIB_H_ */

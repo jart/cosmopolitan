@@ -7,7 +7,6 @@
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/ssl_ciphersuites.h"
 #include "third_party/mbedtls/x509_crt.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Cert {
@@ -40,5 +39,4 @@ struct Cert FinishCertificate(struct Cert *, mbedtls_x509write_cert *,
                               mbedtls_pk_context *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_NET_HTTPS_HTTPS_H_ */

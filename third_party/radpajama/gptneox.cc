@@ -27,7 +27,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/radpajama/gptneox.h"
-#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/posix.h"
 #include "third_party/ggml/fp16.h"
@@ -53,8 +52,8 @@
 #include "third_party/libcxx/sstream"
 #include "third_party/libcxx/thread"
 #include "third_party/libcxx/unordered_map"
+#include "libc/serialize.h"
 #include "third_party/radpajama/gptneox-util.h"
-// clang-format off
 // Defines fileno on msys:
 
 // TODO: Add back in n_ctx (max_position_embeddings) to ggml model, it is currently hard-coded to 2048 max for llama

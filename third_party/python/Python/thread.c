@@ -18,7 +18,6 @@
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 /* Thread package.
    This is intended to be usable independently from Python.

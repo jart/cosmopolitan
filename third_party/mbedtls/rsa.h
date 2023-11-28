@@ -3,9 +3,7 @@
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
  * RSA Error codes
@@ -1004,5 +1002,4 @@ void mbedtls_rsa_free( mbedtls_rsa_context *ctx );
 int mbedtls_rsa_self_test( int );
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_RSA_H_ */

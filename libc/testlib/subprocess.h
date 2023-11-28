@@ -4,7 +4,6 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /**
@@ -79,5 +78,4 @@ void testlib_waitforexit(const char *, int, const char *, int, int);
 void testlib_waitforterm(const char *, int, const char *, int, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TESTLIB_SUBPROCESS_H_ */

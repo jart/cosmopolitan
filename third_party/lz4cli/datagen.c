@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
     datagen.c - compressible data generator test tool
     Copyright (C) Yann Collet 2012-2016

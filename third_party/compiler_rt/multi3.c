@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- multi3.c - Implement __multi3 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

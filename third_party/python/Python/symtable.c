@@ -17,7 +17,6 @@
 #include "third_party/python/Include/setobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/symtable.h"
-/* clang-format off */
 
 /* error strings used for warnings */
 #define GLOBAL_AFTER_ASSIGN \

@@ -24,7 +24,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/sre.h"
 #include "third_party/python/Modules/sre_constants.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_sre");
 PYTHON_PROVIDE("_sre.CODESIZE");
@@ -44,7 +43,6 @@ asm(".ident\t\"\\n\\n\
 SRE 2.2.2 (Python license)\\n\
 Copyright 1997-2002 Secret Labs AB\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /*
  * Secret Labs' Regular Expression Engine

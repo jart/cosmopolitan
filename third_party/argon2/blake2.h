@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ARGON2_BLAKE2_H_
 #define COSMOPOLITAN_THIRD_PARTY_ARGON2_BLAKE2_H_
 #include "third_party/argon2/argon2.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 enum blake2b_constant {
@@ -48,5 +47,4 @@ int blake2b(void *, size_t, const void *, size_t, const void *, size_t);
 int blake2b_long(void *, size_t, const void *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ARGON2_BLAKE2_H_ */

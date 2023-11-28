@@ -1,4 +1,3 @@
-/* clang-format off */
 /*===-- divmodsi4.c - Implement __divmodsi4 --------------------------------===
  *
  *                    The LLVM Compiler Infrastructure

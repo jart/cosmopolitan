@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/fixdfsi.c - Double-precision -> integer conversion ----*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -2,7 +2,6 @@
 #define BLAKE_ROUND_MKA_H
 #include "third_party/argon2/blake2-impl.h"
 #include "third_party/argon2/blake2.h"
-/* clang-format off */
 
 /* designed by the Lyra PHC team */
 static inline uint64_t fBlaMka(uint64_t x, uint64_t y) {

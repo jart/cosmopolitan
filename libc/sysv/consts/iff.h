@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_IFF_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_IFF_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int IFF_UP;
@@ -21,7 +20,6 @@ extern const int IFF_RUNNING;
 extern const int IFF_SLAVE;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define IFF_UP          1
 #define IFF_BROADCAST   2

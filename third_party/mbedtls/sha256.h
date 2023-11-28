@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/platform.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_SHA256_HW_ACCEL_FAILED                -0x0037  /*< SHA-256 hardware accelerator failed */
 #define MBEDTLS_ERR_SHA256_BAD_INPUT_DATA                 -0x0074  /*< SHA-256 input data was malformed. */

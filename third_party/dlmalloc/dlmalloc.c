@@ -24,7 +24,6 @@
 #include "libc/thread/tls.h"
 #include "third_party/dlmalloc/vespene.internal.h"
 #include "third_party/nsync/mu.h"
-// clang-format off
 
 #define FOOTERS 0
 #define MSPACES 0

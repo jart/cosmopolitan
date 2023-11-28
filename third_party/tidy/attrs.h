@@ -1,6 +1,5 @@
 #ifndef __ATTRS_H__
 #define __ATTRS_H__
-/* clang-format off */
 
 /* attrs.h -- recognize HTML attributes
 

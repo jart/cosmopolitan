@@ -8,7 +8,6 @@
 #include "third_party/python/Include/metagrammar.h"
 #include "third_party/python/Include/pgen.h"
 #include "third_party/python/Include/pgenheaders.h"
-/* clang-format off */
 
 static arc arcs_0_0[3] = {
     {2, 0},

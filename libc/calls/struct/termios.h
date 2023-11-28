@@ -3,7 +3,6 @@
 
 #define NCCS 20
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct termios {      /* cosmo abi */
@@ -17,5 +16,4 @@ struct termios {      /* cosmo abi */
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TERMIOS_H_ */

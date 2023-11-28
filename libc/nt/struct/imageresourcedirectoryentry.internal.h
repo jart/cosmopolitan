@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGERESOURCEDIRECTORYENTRY_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGERESOURCEDIRECTORYENTRY_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageResourceDirectoryEntry {
   /* TODO(jart): No bitfields. */
@@ -21,5 +20,4 @@ struct NtImageResourceDirectoryEntry {
   };
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGERESOURCEDIRECTORYENTRY_H_ */

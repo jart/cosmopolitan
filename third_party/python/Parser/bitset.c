@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/bitset.h"
 #include "third_party/python/Include/objimpl.h"
-/* clang-format off */
 
 bitset
 newbitset(int nbits)

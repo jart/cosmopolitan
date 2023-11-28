@@ -18,7 +18,6 @@
 #include "third_party/libcxx/cstring"
 #include "third_party/libcxx/string"
 #include "third_party/libcxx/vector"
-// clang-format off
 
 // Internal header to be included only by llama.cpp.
 // Contains wrappers around OS interfaces.

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_SCHED_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_SCHED_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int SCHED_BATCH;
@@ -22,5 +21,4 @@ extern const int SCHED_RR;
 
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SCHED_H_ */

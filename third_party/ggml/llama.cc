@@ -28,7 +28,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/ggml/llama.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/posix.h"
@@ -60,7 +59,6 @@ asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 #define LLAMA_USE_SCRATCH
 #define LLAMA_MAX_SCRATCH_BUFFERS 16

@@ -28,7 +28,7 @@ int IsZipEocd64(const uint8_t *p, size_t n, size_t i) {
   if (i > n || i + kZipCdir64HdrMinSize > n) {
     return kZipErrorEocdOffsetOverflow;
   }
-  if (READ32LE(p + i) != kZipCdir64HdrMagic) {
+  if (ZIP_READ32(p + i) != kZipCdir64HdrMagic) {
     return kZipErrorEocdMagicNotFound;
   }
   if (ckd_add(&loc, i, ZIP_CDIR64_HDRSIZE(p + i)) ||  //

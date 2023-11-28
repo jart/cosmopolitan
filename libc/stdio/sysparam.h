@@ -13,7 +13,6 @@
 #define DEV_BSIZE      512
 #define NOGROUP        (-1)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define __bitop(x, i, o) ((x)[(i) / 8] o(1 << (i) % 8))
@@ -38,5 +37,4 @@ COSMOPOLITAN_C_START_
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSPARAM_H_ */

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_CONV_H_
 #define COSMOPOLITAN_LIBC_FMT_CONV_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int abs(int) libcesque pureconst;
@@ -73,5 +72,4 @@ imaxdiv_t imaxdiv(intmax_t, intmax_t) pureconst;
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_CONV_H_ */

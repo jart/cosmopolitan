@@ -5,7 +5,6 @@
 
 #define PUSHBACK 12
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct FILE {
@@ -37,5 +36,4 @@ FILE *__stdio_alloc(void);
 void __stdio_free(FILE *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STDIO_INTERNAL_H_ */

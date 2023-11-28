@@ -43,7 +43,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"

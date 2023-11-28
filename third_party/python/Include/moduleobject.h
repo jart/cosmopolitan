@@ -3,7 +3,6 @@
 #include "third_party/python/Include/methodobject.h"
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 extern PyTypeObject PyModule_Type;
 

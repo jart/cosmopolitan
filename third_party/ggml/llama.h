@@ -1,10 +1,8 @@
 // -*- c++; c-basic-offset:4 -*-
 #ifndef LLAMA_H
 #define LLAMA_H
-#include "libc/intrin/bits.h"
 #include "third_party/libcxx/string"
 #include "third_party/libcxx/vector"
-// clang-format off
 
 #ifdef LLAMA_SHARED
 #    if defined(_WIN32) && !defined(__MINGW32__)

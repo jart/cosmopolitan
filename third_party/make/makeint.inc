@@ -51,7 +51,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/time/time.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/musl/glob.h"
-/* clang-format off */
 
 /* We use <config.h> instead of "config.h" so that a compilation
    using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h

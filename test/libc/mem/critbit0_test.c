@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/critbit0.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

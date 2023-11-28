@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_KD_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_KD_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const uint64_t GIO_FONT;
@@ -15,7 +14,6 @@ extern const uint64_t PIO_FONTRESET;
 extern const uint64_t KDFONTOP;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define GIO_FONT      GIO_FONT
 #define PIO_FONT      PIO_FONT

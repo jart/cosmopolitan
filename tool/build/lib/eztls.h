@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/x509_crt.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct EzTlsBio {
@@ -41,5 +40,4 @@ forceinline void SetupPresharedKeySsl(int endpoint, char psk[32]) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_BUILD_LIB_EZTLS_H_ */

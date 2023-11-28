@@ -1,4 +1,3 @@
-/* clang-format off */
 /* access.c -- carry out accessibility checks
 
   Copyright University of Toronto

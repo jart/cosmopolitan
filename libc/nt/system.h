@@ -24,7 +24,6 @@
 ╔────────────────────────────────────────────────────────────────▀▀▀─────────│─╗
 │ cosmopolitan § new technology » system control                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool32 SetSuspendState(bool32 bHibernate, bool32 bForce,
@@ -35,5 +34,4 @@ uint32_t InitiateShutdown(const char16_t *lpMachineName,
                           uint32_t dwShutdownFlags, uint32_t dwReason);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_SYSTEM_H_ */

@@ -14,7 +14,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/typeslots.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_testmultiphase");
 PYTHON_PROVIDE("_testmultiphase.Example");

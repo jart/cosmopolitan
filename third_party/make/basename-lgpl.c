@@ -1,4 +1,3 @@
-/* clang-format off */
 /* basename.c -- return the last element in a file name
 
    Copyright (C) 1990, 1998-2001, 2003-2006, 2009-2020 Free Software
@@ -21,7 +20,6 @@
 /**/
 #include "libc/str/str.h"
 #include "third_party/make/dirname.h"
-/* clang-format off */
 
 /* Return the address of the last file name component of NAME.  If
    NAME has no relative file name components because it is a file

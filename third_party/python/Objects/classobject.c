@@ -16,7 +16,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
-/* clang-format off */
 
 /* Class object implementation (dead now except for methods) */
 

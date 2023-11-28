@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * Multi-include test program
  * Validates that xxhash.h can be included multiple times and in any order

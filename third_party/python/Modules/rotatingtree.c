@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/rotatingtree.h"
-/* clang-format off */
 
 #define KEY_LOWER_THAN(key1, key2)  ((char*)(key1) < (char*)(key2))
 

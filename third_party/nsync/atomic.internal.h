@@ -3,7 +3,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
 #include "third_party/nsync/atomic.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* Atomic operations on nsync_atomic_uint32_ quantities
@@ -118,5 +117,4 @@ static inline int atm_cas_seqcst_u32_(nsync_atomic_uint32_ *p, uint32_t o,
                          memory_order_release))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_ATOMIC_INTERNAL_H_ */

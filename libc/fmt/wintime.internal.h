@@ -7,7 +7,6 @@
 #define MODERNITYSECONDS 11644473600ull
 #define HECTONANOSECONDS 10000000ull
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int64_t DosDateTimeToUnix(uint32_t, uint32_t) pureconst;
@@ -37,5 +36,4 @@ struct timeval WindowsTimeToTimeVal(int64_t) pureconst;
 #define TimeValToFileTime(x)  MakeFileTime(TimeValToWindowsTime(x))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_FMT_WINTIME_H_ */

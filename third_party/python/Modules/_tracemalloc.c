@@ -29,7 +29,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/hashtable.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_tracemalloc");
 PYTHON_PROVIDE("_tracemalloc._get_object_traceback");

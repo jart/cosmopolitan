@@ -9,7 +9,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/sysmodule.h"
-/* clang-format off */
 
 _Py_IDENTIFIER(flush);
 _Py_IDENTIFIER(stdout);

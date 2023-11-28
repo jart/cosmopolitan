@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ARGON2_CORE_H_
 #define COSMOPOLITAN_THIRD_PARTY_ARGON2_CORE_H_
 #include "third_party/argon2/argon2.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 enum argon2_core_constants {
@@ -83,5 +82,4 @@ void fill_segment(const argon2_instance_t *, argon2_position_t);
 int fill_memory_blocks(argon2_instance_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ARGON2_CORE_H_ */

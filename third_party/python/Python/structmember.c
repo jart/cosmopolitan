@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /* Map C struct members to Python object attributes */
 

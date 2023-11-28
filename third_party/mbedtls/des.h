@@ -1,7 +1,6 @@
 #ifndef MBEDTLS_DES_H
 #define MBEDTLS_DES_H
 #include "third_party/mbedtls/config.h"
-/* clang-format off */
 
 #define MBEDTLS_DES_ENCRYPT     1
 #define MBEDTLS_DES_DECRYPT     0

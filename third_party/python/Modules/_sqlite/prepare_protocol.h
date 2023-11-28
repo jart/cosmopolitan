@@ -1,7 +1,6 @@
 #ifndef PYSQLITE_PREPARE_PROTOCOL_H
 #define PYSQLITE_PREPARE_PROTOCOL_H
 #include "third_party/python/Include/Python.h"
-/* clang-format off */
 
 typedef struct
 {

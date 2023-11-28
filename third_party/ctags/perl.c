@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: perl.c 601 2007-08-02 04:45:16Z perlguy0 $
 *

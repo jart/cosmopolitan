@@ -10,7 +10,6 @@
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/token.h"
-/* clang-format off */
 
 extern int Py_DebugFlag;
 

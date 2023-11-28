@@ -25,7 +25,6 @@
 #include "third_party/python/Include/token.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("parser");
 PYTHON_PROVIDE("parser.ParserError");

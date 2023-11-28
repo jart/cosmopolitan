@@ -39,7 +39,6 @@ asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\
 Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
-// clang-format off
 
 /* This package provides a mutex nsync_mu and a Mesa-style condition
  * variable nsync_cv. */

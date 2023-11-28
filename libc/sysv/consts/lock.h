@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_LOCK_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_LOCK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int LOCK_EX;
@@ -10,7 +9,6 @@ extern const int LOCK_UN;
 extern const int LOCK_UNLOCK_CACHE;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define LOCK_EX 2
 #define LOCK_NB LOCK_NB

@@ -4,7 +4,6 @@
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/md.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /**
  * \brief           Maximum ECDSA signature size for a given curve bit size

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_NT_DEBUG_H_
 #include "libc/nt/enum/status.h"
 #include "libc/nt/struct/context.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -36,5 +35,4 @@ COSMOPOLITAN_C_START_
 NtStatus NtContinue(struct NtContext *Context, int32_t TestAlert);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_DEBUG_H_ */

@@ -1,4 +1,3 @@
-// clang-format off
 /* Hash table implementation.
  *
  * This file implements in memory hash tables with insert/del/replace/find/

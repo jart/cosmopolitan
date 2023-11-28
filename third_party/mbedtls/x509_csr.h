@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/x509.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /**
  * Certificate Signing Request (CSR) structure.

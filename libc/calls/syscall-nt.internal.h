@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SYSCALL_NT_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_SYSCALL_NT_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool32 sys_isatty(int);
@@ -41,5 +40,4 @@ ssize_t sys_read_nt_impl(int, void *, size_t, int64_t);
 ssize_t sys_readlinkat_nt(int, const char *, char *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_SYSCALL_NT_INTERNAL_H_ */

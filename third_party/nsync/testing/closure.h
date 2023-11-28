@@ -1,6 +1,5 @@
 #ifndef NSYNC_TESTING_CLOSURE_H_
 #define NSYNC_TESTING_CLOSURE_H_
-/* clang-format off */
 #include "libc/mem/mem.h"
 
 /* A run-once, self-freeing closure. */

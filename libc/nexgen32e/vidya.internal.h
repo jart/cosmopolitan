@@ -17,7 +17,6 @@
 #define VIDYA_SET_BLINKING      0x1003
 #define VIDYA_SET_BLINKING_NONE 0x0000
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 enum VidyaMode {
   kVidyaModeMda = VIDYA_MODE_MDA,
@@ -79,5 +78,4 @@ __far VidyaCell *vputs(__far VidyaCell *pos, const char *str);
 __far VidyaCell *vtput(__far VidyaCell *pos, const void *data, size_t size);
 __far VidyaCell *vscroll(__far VidyaCell *pos, size_t bytes);
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_VIDYA_H_ */

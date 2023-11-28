@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 #ifndef __aarch64__
 

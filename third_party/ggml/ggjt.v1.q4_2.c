@@ -35,7 +35,6 @@
 #include "third_party/ggml/ggjt.v1.q8_0.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/libcxx/math.h"
-// clang-format off
 
 static_assert(sizeof(block_v1_q4_2) == sizeof(ggml_fp16_t) + V1_QK4_2 / 2,
               "wrong q4_2 block size/padding");

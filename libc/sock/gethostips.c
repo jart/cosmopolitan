@@ -20,7 +20,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/errors.h"

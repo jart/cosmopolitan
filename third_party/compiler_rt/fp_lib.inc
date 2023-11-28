@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/fp_lib.h - Floating-point utilities -------------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

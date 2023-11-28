@@ -24,7 +24,6 @@
 #include "third_party/ggml/ggjt.v2.q8_0.h"
 #include "third_party/ggml/ggjt.v2.q8_1.h"
 #include "third_party/ggml/ggml.h"
-// clang-format off
 
 static const int ggjt_v2_blck_size[GGML_TYPE_COUNT] = {
     [GGML_TYPE_F32]  = 1,

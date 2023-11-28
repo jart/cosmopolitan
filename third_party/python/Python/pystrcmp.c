@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyctype.h"
-/* clang-format off */
 
 /* Cross platform case insensitive string compare functions
  */

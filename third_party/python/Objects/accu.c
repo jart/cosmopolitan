@@ -8,7 +8,6 @@
 #include "third_party/python/Include/accu.h"
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 static PyObject *
 join_list_unicode(PyObject *lst)

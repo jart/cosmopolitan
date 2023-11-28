@@ -2,10 +2,8 @@
 #define DSP_TTY_QUANT_H_
 #include "dsp/tty/ttyrgb.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define TL 0
@@ -90,5 +88,4 @@ forceinline bool ttyeq(struct TtyRgb x, struct TtyRgb y) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* DSP_TTY_QUANT_H_ */

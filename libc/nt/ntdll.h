@@ -10,7 +10,6 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/typedef/ioapcroutine.h"
 #include "libc/nt/typedef/pknormalroutine.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -229,5 +228,4 @@ NtStatus RtlWalkHeap(int64_t heap, void *out_Info);
 #include "libc/nt/thunk/ntdll.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NTDLL_H_ */

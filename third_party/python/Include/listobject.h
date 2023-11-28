@@ -2,7 +2,6 @@
 #define Py_LISTOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* List object interface
 

@@ -31,7 +31,6 @@
 
 #define kNtNumaNoPreferredNode 0xffffffffu
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void *LocalFree(void *hMem);
@@ -93,5 +92,4 @@ void *GlobalFree(void *hMem);
 #include "libc/nt/thunk/memory.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_MEMORY_H_ */

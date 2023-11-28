@@ -22,7 +22,6 @@
 #define kIpFuture     18
 #define kIpAnonymous  19
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Cidr {
@@ -49,5 +48,4 @@ const char *GetIpCategoryName(int);
 bool IsCloudflareIp(uint32_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_NET_HTTP_IP_H_ */

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/bits.h"
 #include "libc/nexgen32e/x86feature.h"
 
 /**

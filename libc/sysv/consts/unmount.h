@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_MOUNT_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_MOUNT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int MNT_FORCE;
@@ -10,7 +9,6 @@ extern const int UMOUNT_NOFOLLOW;
 extern const int MNT_BYFSID;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define MNT_FORCE       MNT_FORCE
 #define MNT_DETACH      MNT_DETACH

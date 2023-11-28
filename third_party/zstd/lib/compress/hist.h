@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * hist : Histogram functions
  * part of Finite State Entropy project

@@ -1,4 +1,3 @@
-// clang-format off
 
 /* ------------- Global malloc_state and malloc_params ------------------- */
 

@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/dynamic_annotations.h"
-/* clang-format off */
 
 /* Copyright (c) 2008-2009, Google Inc.
  * All rights reserved.

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 

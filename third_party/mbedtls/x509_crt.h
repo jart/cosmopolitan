@@ -5,7 +5,6 @@
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crl.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /**
  * Container for an X.509 certificate. The certificate may be chained.

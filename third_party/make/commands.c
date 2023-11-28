@@ -24,7 +24,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
 #include "third_party/make/commands.h"
-/* clang-format off */
 
 #define FILE_LIST_SEPARATOR ' '
 

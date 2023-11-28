@@ -7,7 +7,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
-/* clang-format off */
 
 const _PyUnicode_Record *
 _PyUnicode_GetRecord(Py_UCS4 c)

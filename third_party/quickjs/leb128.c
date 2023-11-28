@@ -30,7 +30,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 int get_leb128(uint32_t *pval, const uint8_t *buf, const uint8_t *buf_end)
 {

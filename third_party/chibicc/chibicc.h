@@ -24,7 +24,6 @@
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "tool/build/lib/javadown.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -664,5 +663,4 @@ void Assembler(int, char **);
 void output_bindings_python(const char *, Obj *, Token *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_CHIBICC_CHIBICC_H_ */

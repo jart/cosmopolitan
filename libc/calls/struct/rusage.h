@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_RUSAGE_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_RUSAGE_H_
 #include "libc/calls/struct/timeval.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct rusage {
@@ -29,5 +28,4 @@ int wait4(int, int *, int, struct rusage *);
 void rusage_add(struct rusage *, const struct rusage *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_RUSAGE_H_ */

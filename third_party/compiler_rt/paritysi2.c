@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- paritysi2.c - Implement __paritysi2 -------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

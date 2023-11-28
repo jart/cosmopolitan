@@ -4,7 +4,6 @@
 #define POW_LOG_TABLE_BITS 7
 #define POW_LOG_POLY_ORDER 8
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const struct pow_log_data {
@@ -18,5 +17,4 @@ extern const struct pow_log_data {
 } __pow_log_data;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_POW_DATA_INTERNAL_H_ */

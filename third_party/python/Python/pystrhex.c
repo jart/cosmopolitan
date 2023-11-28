@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 /* bytes to hex implementation */
 

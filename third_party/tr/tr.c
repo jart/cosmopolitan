@@ -41,7 +41,6 @@
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/tr/cmd.h"
 #include "third_party/tr/extern.h"
-// clang-format off
 
 int delete[NCHARS], squeeze[NCHARS];
 int translate[NCHARS] = {

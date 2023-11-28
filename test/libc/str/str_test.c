@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-#include "libc/intrin/bits.h"
 #include "libc/testlib/testlib.h"
 
 TEST(strlen16, testEmpty) {

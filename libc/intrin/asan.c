@@ -24,7 +24,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/directmap.internal.h"

@@ -2,9 +2,7 @@
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INFTREES_INTERNAL_H_
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zutil.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 /* inftrees.h -- header to use inftrees.c
  * Copyright (C) 1995-2005, 2010 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
@@ -69,5 +67,4 @@ int ZLIB_INTERNAL inflate_table OF((codetype type, unsigned short FAR *lens,
                              unsigned FAR *bits, unsigned short FAR *work));
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_INFTREES_INTERNAL_H_ */

@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "third_party/python/Include/pyhash.h"
-/* clang-format off */
 
 /* Set of hash utility functions to help maintaining the invariant that
     if a==b then hash(a)==hash(b)

@@ -30,7 +30,6 @@ asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\
 Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
-// clang-format off
 
 int nsync_wait_n (void *mu, void (*lock) (void *), void (*unlock) (void *),
 		  nsync_time abs_deadline,

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Report a memory allocation failure and exit.
 
    Copyright (C) 1997-2000, 2002-2004, 2006, 2009-2020 Free Software

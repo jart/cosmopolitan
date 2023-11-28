@@ -2,7 +2,6 @@
 #define Py_RANGEOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
 A range object represents an integer range.  This is an immutable object;

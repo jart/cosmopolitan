@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- absvsi2.c - Implement __absvsi2 -----------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

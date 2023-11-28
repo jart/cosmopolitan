@@ -21,7 +21,6 @@
 // not so large that we're drowning in virtual memory pages!
 #define TERM 0x20000
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #if IsModeDbg()
@@ -34,5 +33,4 @@ COSMOPOLITAN_C_START_
 #define DWBITS (sizeof(dword) * CHAR_BIT)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_CONFIG_H_ */

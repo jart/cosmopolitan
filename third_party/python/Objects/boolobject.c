@@ -8,7 +8,6 @@
 #include "third_party/python/Include/longintrepr.h"
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/pymacro.h"
-/* clang-format off */
 
 /* Boolean type, a subtype of int */
 

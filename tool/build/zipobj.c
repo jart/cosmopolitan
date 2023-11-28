@@ -29,6 +29,7 @@
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"

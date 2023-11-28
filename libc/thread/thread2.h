@@ -6,7 +6,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/runtime/stack.h"
 #include "libc/thread/thread.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
@@ -23,5 +22,4 @@ int pthread_timedjoin_np(pthread_t, void **, struct timespec *);
 
 /* clang-format off */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_PTHREAD2_H_ */

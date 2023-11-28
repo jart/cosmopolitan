@@ -31,7 +31,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 int
 __gdtoa_gethex(const char **sp, const FPI *fpi,

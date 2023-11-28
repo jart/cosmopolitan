@@ -6,7 +6,6 @@
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/rsa.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_PK_ALLOC_FAILED        -0x3F80  /*< Memory allocation failed. */
 #define MBEDTLS_ERR_PK_TYPE_MISMATCH       -0x3F00  /*< Type mismatch, eg attempt to encrypt with an ECDSA key */

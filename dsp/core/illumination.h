@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_DSP_CORE_ILLUMINANT_H_
 #define COSMOPOLITAN_DSP_CORE_ILLUMINANT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const double kBradford[3][3];
@@ -27,5 +26,4 @@ void *GetChromaticAdaptationMatrix(double[3][3], const double[3],
                                    const double[3]);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_ILLUMINANT_H_ */

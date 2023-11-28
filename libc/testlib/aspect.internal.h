@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_TESTLIB_ASPECT_INTERNAL_H_
 #include "libc/intrin/dll.h"
 #include "libc/testlib/testlib.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define TESTASPECT_CONTAINER(e) DLL_CONTAINER(struct TestAspect, elem, e)
@@ -17,5 +16,4 @@ struct TestAspect {
 extern struct Dll *testlib_aspects;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TESTLIB_ASPECT_INTERNAL_H_ */

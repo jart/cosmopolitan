@@ -3,7 +3,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pystate.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 struct _frame;
 

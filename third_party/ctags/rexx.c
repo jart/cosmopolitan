@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: rexx.c 443 2006-05-30 04:37:13Z darren $
 *

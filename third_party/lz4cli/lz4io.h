@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   LZ4io.h - LZ4 File/Stream Interface
   Copyright (C) Yann Collet 2011-2016

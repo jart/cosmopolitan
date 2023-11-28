@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_BITS_PUSHPOP_H_
 #ifdef _COSMO_SOURCE
 #include "libc/macros.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #if !defined(__GNUC__) || defined(__STRICT_ANSI__) || !defined(__x86_64__) || \
     !defined(__MNO_RED_ZONE__)
@@ -54,6 +53,5 @@
   })
 #endif
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_BITS_PUSHPOP_H_ */

@@ -1,4 +1,3 @@
-/* clang-format off */
 #ifndef __TIDY_INT_H__
 #define __TIDY_INT_H__
 

@@ -1,7 +1,6 @@
 #ifndef MBEDTLS_ERROR_H
 #define MBEDTLS_ERROR_H
 #include "third_party/mbedtls/config.h"
-/* clang-format off */
 
 /**
  * Error code layout.

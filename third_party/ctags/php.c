@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: php.c 734 2009-08-20 23:33:54Z jafl $
 *

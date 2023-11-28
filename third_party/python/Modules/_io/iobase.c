@@ -18,7 +18,6 @@
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 /*
     An implementation of the I/O abstract base classes hierarchy

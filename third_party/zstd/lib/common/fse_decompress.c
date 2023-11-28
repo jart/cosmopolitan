@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * FSE : Finite State Entropy decoder
  * Copyright (c) Meta Platforms, Inc. and affiliates.

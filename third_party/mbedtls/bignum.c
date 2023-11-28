@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/bignum.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
@@ -39,7 +39,6 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /**
  * @fileoverview Big Numbers.

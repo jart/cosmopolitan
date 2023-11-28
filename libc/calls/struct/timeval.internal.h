@@ -3,7 +3,6 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/mem/alloca.h"
 #include "libc/time/struct/timezone.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int sys_settimeofday(const struct timeval *, const struct timezone *);
@@ -16,5 +15,4 @@ const char *DescribeTimeval(char[45], int, const struct timeval *);
 #define DescribeTimeval(rc, ts) DescribeTimeval(alloca(45), rc, ts)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMEVAL_INTERNAL_H_ */

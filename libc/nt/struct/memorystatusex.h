@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_MEMORYSTATUSEX_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_MEMORYSTATUSEX_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtMemoryStatusEx {
   uint32_t dwLength;
@@ -14,5 +13,4 @@ struct NtMemoryStatusEx {
   uint64_t ullAvailExtendedVirtual;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_MEMORYSTATUSEX_H_ */

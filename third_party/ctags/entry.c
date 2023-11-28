@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: entry.c 766 2010-09-11 18:59:45Z dhiebert $
 *

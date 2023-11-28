@@ -116,7 +116,6 @@
     }                                                \
   }
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #if defined(__GNUC__) && __GNUC__ >= 6 && !defined(__chibicc__) && \
@@ -565,5 +564,4 @@ typedef struct {
 } EFI_LOADED_IMAGE;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_EFI_H_ */

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMINFO_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMINFO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtSystemInfo {
   union {
@@ -21,5 +20,4 @@ struct NtSystemInfo {
   uint16_t wProcessorRevision;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SYSTEMINFO_H_ */

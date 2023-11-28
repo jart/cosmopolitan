@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Python/importdl.h"
-/* clang-format off */
 
 #define SOABI "cpython36m-x86_64-cosmo"
 

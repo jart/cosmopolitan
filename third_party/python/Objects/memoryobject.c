@@ -22,7 +22,6 @@
 #include "third_party/python/Include/pystrhex.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 /****************************************************************************/
 /*                           ManagedBuffer Object                           */

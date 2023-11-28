@@ -26,7 +26,6 @@ asm(".ident\t\"\\n\\n\
 argon2 (CC0 or Apache2)\\n\
 Copyright 2016 Daniel Dinu, Dmitry Khovratovich\\n\
 Copyright 2016 Jean-Philippe Aumasson, Samuel Neves\"");
-/* clang-format off */
 
 /*
  * Argon2 reference source code package - reference C implementations

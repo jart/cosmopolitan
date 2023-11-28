@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Interface to mmap style I/O
 
    (c) 2006-2008 (W3C) MIT, ERCIM, Keio University

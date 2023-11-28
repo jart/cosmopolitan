@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_DSP_SCALE_SCALE_H_
 #define COSMOPOLITAN_DSP_SCALE_SCALE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern long gyarados_latency_;
@@ -33,5 +32,4 @@ void *EzGyarados(long, long, long, void *, long, long, long, const void *, long,
                  long, long, long, long, long, double, double, double, double);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_SCALE_SCALE_H_ */

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- fixsfsi.c - Implement __fixsfsi -----------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

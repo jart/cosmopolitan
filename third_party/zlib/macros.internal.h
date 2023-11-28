@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_MACROS_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_MACROS_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #ifndef OF /* function prototypes */
 #  ifdef STDC
@@ -100,5 +98,4 @@ COSMOPOLITAN_C_START_
 #define z_off_t long
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_MACROS_INTERNAL_H_ */

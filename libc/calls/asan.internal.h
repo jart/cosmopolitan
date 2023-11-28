@@ -4,7 +4,6 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asmflag.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 forceinline bool __asan_is_valid_timespec(const struct timespec *ts) {
@@ -25,5 +24,4 @@ forceinline bool __asan_is_valid_timeval(const struct timeval *tv) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_ASAN_INTERNAL_H_ */

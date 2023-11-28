@@ -20,7 +20,6 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_frozen_importlib");
 PYTHON_PROVIDE("_frozen_importlib_external");

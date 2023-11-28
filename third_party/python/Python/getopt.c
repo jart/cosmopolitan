@@ -7,12 +7,10 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/pygetopt.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 python getopt (isc license)\\n\
 Copyright 1992-1994 David Gottner\"");
-/* clang-format off */
 
 /*---------------------------------------------------------------------------*
  * <RCS keywords>

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.internal.h"
-#include "libc/intrin/bits.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
 #include "libc/nt/files.h"

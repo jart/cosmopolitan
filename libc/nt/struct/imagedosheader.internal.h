@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEDOSHEADER_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEDOSHEADER_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageDosHeader {
   uint16_t e_magic;
@@ -24,5 +23,4 @@ struct NtImageDosHeader {
   uint32_t e_lfanew;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEDOSHEADER_H_ */

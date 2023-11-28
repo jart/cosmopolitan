@@ -22,7 +22,7 @@
  * Returns comment of zip central directory.
  */
 uint64_t GetZipCdirCommentSize(const uint8_t *eocd) {
-  if (READ32LE(eocd) == kZipCdir64HdrMagic && ZIP_CDIR64_COMMENTSIZE(eocd)) {
+  if (ZIP_READ32(eocd) == kZipCdir64HdrMagic && ZIP_CDIR64_COMMENTSIZE(eocd)) {
     return ZIP_CDIR64_COMMENTSIZE(eocd);
   } else {
     return ZIP_CDIR_COMMENTSIZE(eocd);

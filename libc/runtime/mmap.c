@@ -25,7 +25,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/directmap.internal.h"

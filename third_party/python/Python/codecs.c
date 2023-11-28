@@ -22,7 +22,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/ucnhash.h"
 #include "third_party/python/Modules/unicodedata.h"
-/* clang-format off */
 
 /* ------------------------------------------------------------------------
 

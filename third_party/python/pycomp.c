@@ -21,7 +21,6 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
@@ -41,8 +40,8 @@
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/ucnhash.h"
 #include "third_party/python/Include/yoink.h"
+#include "libc/serialize.h"
 #include "tool/build/lib/stripcomponents.h"
-/* clang-format off */
 
 __static_yoink("_PyUnicode_GetCode");
 

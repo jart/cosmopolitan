@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_LOG_COUNTEXPR_H_
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bench.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /**
@@ -80,5 +79,4 @@ extern struct countexpr countexpr_data[];
 void countexpr_report(void);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_COUNTEXPR_H_ */

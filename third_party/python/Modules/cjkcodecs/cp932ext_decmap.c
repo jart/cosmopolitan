@@ -1,5 +1,4 @@
 #include "libc/x/x.h"
-/* clang-format off */
 
 static _Atomic(void *) cp932ext_decmap_ptr;
 static const unsigned char cp932ext_decmap_rodata[] = {

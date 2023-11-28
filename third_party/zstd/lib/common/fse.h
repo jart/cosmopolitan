@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * FSE : Finite State Entropy codec
  * Public Prototypes declaration

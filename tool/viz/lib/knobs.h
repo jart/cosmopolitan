@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_KNOBS_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_KNOBS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern bool pf1_;
@@ -17,5 +16,4 @@ extern bool pf11_;
 extern bool pf12_;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_VIZ_LIB_KNOBS_H_ */

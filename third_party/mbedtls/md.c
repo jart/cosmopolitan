@@ -27,7 +27,6 @@
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\

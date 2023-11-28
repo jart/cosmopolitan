@@ -5,7 +5,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pystate.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef struct {
     int b_type;                 /* what kind of block this is */

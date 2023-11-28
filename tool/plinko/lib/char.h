@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_PLINKO_LIB_CHAR_H_
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_CHAR_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 static inline pureconst bool IsC0(int c) {
@@ -39,5 +38,4 @@ int GetMonospaceCharacterWidth(int) pureconst;
 bool IsWide(int) pureconst;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_CHAR_H_ */

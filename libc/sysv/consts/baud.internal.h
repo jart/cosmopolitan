@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_BAUD_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_BAUD_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const uint32_t B0;
@@ -64,5 +63,4 @@ extern const uint32_t B4000000;
 #define B4000000 B4000000
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_BAUD_H_ */

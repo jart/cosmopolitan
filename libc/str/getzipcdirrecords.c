@@ -22,7 +22,7 @@
  * Returns number of records in zip central directory.
  */
 uint64_t GetZipCdirRecords(const uint8_t *eocd) {
-  if (READ32LE(eocd) == kZipCdir64HdrMagic) {
+  if (ZIP_READ32(eocd) == kZipCdir64HdrMagic) {
     return ZIP_CDIR64_RECORDS(eocd);
   } else {
     return ZIP_CDIR_RECORDS(eocd);

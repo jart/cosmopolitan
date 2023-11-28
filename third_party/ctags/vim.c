@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *	$Id: vim.c 762 2010-07-28 11:38:19Z dfishburn $
 *

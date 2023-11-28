@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_PLEDGE_INTERNAL_H_
 #include "libc/calls/pledge.h"
 #include "libc/intrin/promises.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct Pledges {
@@ -17,5 +16,4 @@ int sys_pledge_linux(unsigned long, int);
 int ParsePromises(const char *, unsigned long *, unsigned long);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_PLEDGE_INTERNAL_H_ */

@@ -18,7 +18,6 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/sqlite3/sqlite3ext.h"
-// clang-format off
 
 SQLITE_EXTENSION_INIT1
 

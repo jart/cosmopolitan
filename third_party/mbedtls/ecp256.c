@@ -26,7 +26,6 @@
 #include "third_party/mbedtls/math.h"
 #include "third_party/mbedtls/profile.h"
 #include "third_party/mbedtls/select.h"
-/* clang-format off */
 
 static bool
 mbedtls_p256_isz( uint64_t p[4] )

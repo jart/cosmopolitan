@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/zip.internal.h"
 
 typedef char v16qi __attribute__((__vector_size__(16)));
@@ -48,8 +47,9 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
   do {
 #if defined(__x86_64__) && defined(__GNUC__) && !defined(__llvm__) && \
     !defined(__chibicc__)
-    v8hi pk = {READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK"),
-               READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
+    v8hi pk = {ZIP_READ16("PK"), ZIP_READ16("PK"), ZIP_READ16("PK"),
+               ZIP_READ16("PK"), ZIP_READ16("PK"), ZIP_READ16("PK"),
+               ZIP_READ16("PK"), ZIP_READ16("PK")};
     asm("" : "+x"(pk));
     if (i >= 14) {
       v2di x = *(const v2di *)(p + i - 14);
@@ -62,9 +62,9 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
       }
     }
 #endif
-    while (magic = READ32LE(p + i), magic != kZipCdir64LocatorMagic &&
-                                        magic != kZipCdirHdrMagic &&
-                                        i + 0x10000 + 0x1000 >= n && i > 0) {
+    while (magic = ZIP_READ32(p + i), magic != kZipCdir64LocatorMagic &&
+                                          magic != kZipCdirHdrMagic &&
+                                          i + 0x10000 + 0x1000 >= n && i > 0) {
       --i;
     }
     if (magic == kZipCdir64LocatorMagic && i + kZipCdir64LocatorSize <= n &&
@@ -74,7 +74,7 @@ void *GetZipEocd(const void *f, size_t n, int *e) {
                (err = IsZipEocd32(p, n, i)) == kZipOk) {
       j = i;
       do {
-        if (READ32LE(p + j) == kZipCdir64LocatorMagic &&
+        if (ZIP_READ32(p + j) == kZipCdir64LocatorMagic &&
             j + kZipCdir64LocatorSize <= n &&
             IsZipEocd64(p, n, ZIP_LOCATE64_OFFSET(p + j)) == kZipOk) {
           return (void *)(p + ZIP_LOCATE64_OFFSET(p + j));

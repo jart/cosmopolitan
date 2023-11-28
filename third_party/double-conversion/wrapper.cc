@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/double-conversion/wrapper.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "third_party/double-conversion/double-conversion.h"
 #include "third_party/double-conversion/double-to-string.h"

@@ -30,7 +30,6 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 Bigint *
 __gdtoa_s2b(const char *s, int nd0, int nd, ULong y9, int dplen, ThInfo **PTI)

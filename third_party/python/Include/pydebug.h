@@ -2,7 +2,6 @@
 #ifndef Py_PYDEBUG_H
 #define Py_PYDEBUG_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 #include "libc/runtime/runtime.h"
 
 /* These global variable are defined in pylifecycle.c */

@@ -5,7 +5,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pytime.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Python module and C API name */
 #define PySocket_MODULE_NAME    "_socket"

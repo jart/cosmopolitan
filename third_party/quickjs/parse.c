@@ -33,7 +33,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 static __exception int js_parse_assign_expr(JSParseState *);
 static __exception int js_parse_assign_expr2(JSParseState *, int);

@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_BENCH_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_BENCH_H_
 #include "libc/nexgen32e/rdtsc.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * @fileoverview NexGen32e Microbenchmarking.
@@ -73,5 +72,4 @@
     Res;                                   \
   })
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_BENCH_H_ */

@@ -19,7 +19,6 @@
 #include "libc/cxxabi.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/kprintf.h"

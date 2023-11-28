@@ -2,7 +2,6 @@
 #define XmlRole_INCLUDED 1
 #include "third_party/python/Modules/expat/xmltok.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 enum {
   XML_ROLE_ERROR = -1,

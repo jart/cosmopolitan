@@ -19,7 +19,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/ehdr.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 
 /**
  * Returns true if `elf` is a 64-bit elf executable.

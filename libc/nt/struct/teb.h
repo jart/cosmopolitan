@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_TEB_H_
 #include "libc/intrin/segmentation.h"
 #include "libc/nt/struct/peb.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 
 /*
@@ -24,5 +23,4 @@
 #define _NtGetTls()          gs((void **)(0x58)) /* cf. gs((long *)0x1480 + i0..64) */
 
 #endif /* __GNUC__ && !__STRICT_ANSI__ */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_TEB_H_ */

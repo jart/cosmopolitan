@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_FRAMEBUFFERVIRTUALSCREENINFO_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_FRAMEBUFFERVIRTUALSCREENINFO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct FrameBufferBitField {
   uint32_t offset;
@@ -40,5 +39,4 @@ struct FrameBufferVirtualScreenInfo {
   uint32_t reserved[4];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_FRAMEBUFFERVIRTUALSCREENINFO_H_ */

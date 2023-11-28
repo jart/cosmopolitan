@@ -7,7 +7,6 @@
 #define Z_CRC32_SSE42_MINIMUM_LENGTH 64
 #define Z_CRC32_SSE42_CHUNKSIZE_MASK 15
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define zmemzero bzero
@@ -27,5 +26,4 @@ void *zcalloc(void *, uInt, uInt);
 void zcfree(void *, void *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_INTERNAL_H_ */

@@ -53,7 +53,6 @@ void m(const char *s, void *p, size_t n) {
   q = Deflate(p, n, &m);
   f = fopen(xstrcat("third_party/python/Modules/cjkcodecs/", s, ".c"), "wb");
   fprintf(f, "#include \"libc/x/x.h\"\n");
-  fprintf(f, "/* clang-format off */\n");
   fprintf(f, "\n");
   fprintf(f, "static _Atomic(void *) %s_ptr;\n", s);
   fprintf(f, "static const unsigned char %s_rodata[] = {", s);
@@ -94,7 +93,6 @@ void dzd(const char *s, void *p, size_t n, size_t z) {
   q = Deflate(r, appendz(r).i, &m);
   f = fopen(xstrcat("third_party/python/Modules/cjkcodecs/", s, ".c"), "wb");
   fprintf(f, "#include \"libc/x/x.h\"\n");
-  fprintf(f, "/* clang-format off */\n");
   fprintf(f, "\n");
   fprintf(f, "static _Atomic(void *) %s_ptr;\n", s);
   fprintf(f, "static const unsigned char %s_rodata[%zu] = {", s, m);

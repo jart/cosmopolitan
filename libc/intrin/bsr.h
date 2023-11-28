@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NEXGEN32E_BSR_H_
 #define COSMOPOLITAN_LIBC_NEXGEN32E_BSR_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int _bsr(int) pureconst;
@@ -14,5 +13,4 @@ int _bsrll(long long) pureconst;
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_BSR_H_ */

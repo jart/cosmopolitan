@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 /* PYTHON_YOINK("site"); */
 /* PYTHON_YOINK("_sysconfigdata_m_cosmo_x86_64_cosmo"); */

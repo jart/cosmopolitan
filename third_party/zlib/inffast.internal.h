@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_INFFAST_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INFFAST_INTERNAL_H_
 #include "third_party/zlib/zlib.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* INFLATE_FAST_MIN_INPUT: the minimum number of input bytes needed so that
    we can safely call inflate_fast() with only one up-front bounds check. One
@@ -23,5 +21,4 @@ COSMOPOLITAN_C_START_
 void inflate_fast(z_streamp strm, unsigned start);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_ZLIB_INFFAST_INTERNAL_H_ */

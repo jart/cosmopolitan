@@ -7,7 +7,6 @@
 #include "libc/stdio/stdio.h"
 #include "third_party/python/pyconfig.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MPD_VERSION "2.4.2"
 #define MPD_MAJOR_VERSION 2

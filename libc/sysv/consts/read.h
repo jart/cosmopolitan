@@ -14,7 +14,6 @@
 #define READ_REVERSE READ_REVERSE
 #define READ_TOC READ_TOC
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const long READ_10;
@@ -31,5 +30,4 @@ extern const long READ_REVERSE;
 extern const long READ_TOC;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_READ_H_ */

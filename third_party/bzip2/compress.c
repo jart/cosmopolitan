@@ -1,4 +1,3 @@
-/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Compression machinery (not incl block sorting)        ---*/

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Definitions for managing subprocesses in GNU Make.
 Copyright (C) 1992-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

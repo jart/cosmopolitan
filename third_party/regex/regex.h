@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_REGEX_REGEX_H_
 #define COSMOPOLITAN_LIBC_REGEX_REGEX_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #if 0
@@ -57,5 +56,4 @@ size_t regerror(int, const regex_t *, char *, size_t);
 void regfree(regex_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_REGEX_REGEX_H_ */

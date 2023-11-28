@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const unsigned RLIMIT_AS;
@@ -46,5 +45,4 @@ extern const unsigned RLIMIT_VMEM;
 #define RLIMIT_VMEM       RLIMIT_VMEM
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_RLIMIT_H_ */

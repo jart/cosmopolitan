@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEOPTIONALHEADER_H_
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/struct/imagedatadirectory.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * Portable Executable Optional Header.
@@ -139,5 +138,4 @@ struct NtImageOptionalHeader {
   struct NtImageDataDirectory DataDirectory[];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEOPTIONALHEADER_H_ */

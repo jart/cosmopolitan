@@ -1,7 +1,6 @@
 #ifndef PYSQLITE_ROW_H
 #define PYSQLITE_ROW_H
 #include "third_party/python/Include/Python.h"
-/* clang-format off */
 
 typedef struct _Row
 {

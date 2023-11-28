@@ -3,7 +3,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct StdioFlushHandles {
@@ -23,5 +22,4 @@ void __fflush_lock(void);
 void __fflush_unlock(void);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STDIO_FFLUSH_H_ */

@@ -3,7 +3,6 @@
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Modules/_sqlite/connection.h"
 #include "third_party/sqlite3/sqlite3.h"
-/* clang-format off */
 
 #define PYSQLITE_TOO_MUCH_SQL (-100)
 #define PYSQLITE_SQL_WRONG_TYPE (-101)

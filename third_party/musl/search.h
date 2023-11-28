@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRDPARTY_MUSL_SEARCH_H
 #define COSMOPOLITAN_THIRDPARTY_MUSL_SEARCH_H
-/* clang-format off */
 
 typedef enum { FIND, ENTER } ACTION;
 typedef enum { preorder, postorder, endorder, leaf } VISIT;

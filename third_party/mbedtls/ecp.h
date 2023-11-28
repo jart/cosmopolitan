@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80  /*< Bad input parameters to function. */
 #define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  -0x4F00  /*< The buffer is too small to write to. */

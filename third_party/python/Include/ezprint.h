@@ -6,7 +6,6 @@
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/unicodeobject.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 static void EzPrint(PyObject *x, const char *s) {
@@ -34,5 +33,4 @@ static void EzPrint(PyObject *x, const char *s) {
 #define EZPRINT(x) EzPrint(x, #x)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_EZPRINT_H_ */

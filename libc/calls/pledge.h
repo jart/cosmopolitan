@@ -7,11 +7,9 @@
 #define PLEDGE_PENALTY_MASK         0x000f
 #define PLEDGE_STDERR_LOGGING       0x0010
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern int __pledge_mode;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_PLEDGE_H_ */

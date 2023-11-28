@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_STR_MB_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_STR_MB_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define SA             0xc2u
@@ -15,5 +14,4 @@ COSMOPOLITAN_C_START_
 extern const uint32_t kMbBittab[51];
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_MB_INTERNAL_H_ */

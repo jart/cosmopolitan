@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_THREADINFOCLASS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_THREADINFOCLASS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 enum NtThreadInfoClass {
   kNtThreadBasicInformation,
@@ -24,5 +23,4 @@ enum NtThreadInfoClass {
   kNtThreadInfoClass_MAX
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_THREADINFOCLASS_H_ */

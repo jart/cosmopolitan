@@ -11,7 +11,6 @@
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zutil.internal.h"
-// clang-format off
 
 /*
    This code is largely copied from inflate.c.  Normally either infback.o or

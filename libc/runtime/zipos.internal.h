@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define ZIPOS_PATH_MAX 1024
@@ -59,5 +58,4 @@ void *__zipos_mmap(void *, uint64_t, int32_t, int32_t, struct ZiposHandle *,
                    int64_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_ */

@@ -30,7 +30,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 static JSValue js_map_constructor(JSContext *ctx, JSValueConst new_target,
                                   int argc, JSValueConst *argv, int magic)

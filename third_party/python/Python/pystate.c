@@ -16,7 +16,6 @@
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
-/* clang-format off */
 
 #if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_UNDEFINED__)
 __static_yoink("__die"); /* to guarantee backtraces */

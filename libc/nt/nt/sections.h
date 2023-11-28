@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_NT_SECTIONS_H_
 #include "libc/nt/enum/status.h"
 #include "libc/nt/struct/objectattributes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 NtStatus NtCreateSection(int64_t *out_SectionHandle, uint32_t DesiredAccess,
@@ -23,5 +22,4 @@ NtStatus NtQuerySection(int64_t SectionHandle, int SectionInformationClass,
                         uint32_t *opt_out_ResultLength);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_SECTIONS_H_ */

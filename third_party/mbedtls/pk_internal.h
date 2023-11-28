@@ -2,7 +2,6 @@
 #define MBEDTLS_PK_WRAP_H
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/pk.h"
-/* clang-format off */
 
 struct mbedtls_pk_info_t
 {

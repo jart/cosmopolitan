@@ -19,7 +19,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Modules/_io/_iomodule.h"
-/* clang-format off */
 
 /* Implementation note: the buffer is always at least one character longer
    than the enclosed string, for proper functioning of _PyIO_find_line_ending.

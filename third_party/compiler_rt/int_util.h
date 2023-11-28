@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- int_util.h - internal utility functions ----------------------------===
  *
  *                     The LLVM Compiler Infrastructure

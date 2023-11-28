@@ -32,7 +32,6 @@
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-// clang-format off
 
 /**
  * Converts quadruple-precision floating-point number to string.

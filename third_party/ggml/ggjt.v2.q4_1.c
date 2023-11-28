@@ -31,7 +31,6 @@
 #include "libc/math.h"
 #include "third_party/ggml/ggjt.v2.internal.h"
 #include "third_party/ggml/ggjt.v2.q8_1.h"
-// clang-format off
 
 static_assert(sizeof(block_v2_q4_1) == 2 * sizeof(float) + V2_QK4_1 / 2,
               "wrong q4_1 block size/padding");

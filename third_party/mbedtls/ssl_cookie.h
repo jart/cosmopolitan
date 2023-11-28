@@ -2,7 +2,6 @@
 #define MBEDTLS_SSL_COOKIE_H
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ssl.h"
-/* clang-format off */
 
 /**
  * \name SECTION: Module settings

@@ -5,7 +5,6 @@
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/pk.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
  * Supported ciphersuites (Official IANA names)

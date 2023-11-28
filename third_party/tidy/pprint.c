@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   pprint.c -- pretty print parse tree
 

@@ -12,7 +12,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Python/importdl.h"
-/* clang-format off */
 
 /* Support for dynamic loading of extension modules */
 

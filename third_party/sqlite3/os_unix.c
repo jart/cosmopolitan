@@ -1,4 +1,3 @@
-// clang-format off
 /*
 ** 2004 May 22
 **

@@ -3,7 +3,6 @@
 #define Py_CLASSOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 typedef struct {
     PyObject_HEAD

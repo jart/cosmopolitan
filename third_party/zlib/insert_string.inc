@@ -1,4 +1,3 @@
-// clang-format off
 /* insert_string.h
  *
  * Copyright 2019 The Chromium Authors
@@ -19,7 +18,6 @@
 
 #include "third_party/zlib/cpu_features.internal.h"
 
-// clang-format off
 #if defined(CRC32_SIMD_SSE42_PCLMUL)
 #include "third_party/intel/smmintrin.internal.h"  /* Required to make MSVC bot build pass. */
 

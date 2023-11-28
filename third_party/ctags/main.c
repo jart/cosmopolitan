@@ -31,7 +31,6 @@
 #include "third_party/ctags/options.h"
 #include "third_party/ctags/read.h"
 #include "third_party/ctags/routines.h"
-// clang-format off
 
 /*
 *   MACROS

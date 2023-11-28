@@ -2,7 +2,6 @@
 #ifndef DOUBLE_CONVERSION_CACHED_POWERS_H_
 #define DOUBLE_CONVERSION_CACHED_POWERS_H_
 #include "third_party/double-conversion/diy-fp.h"
-// clang-format off
 
 namespace double_conversion {
 

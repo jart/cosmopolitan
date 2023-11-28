@@ -42,7 +42,6 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/unicodedata.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_string");
 PYTHON_PROVIDE("_string.__doc__");

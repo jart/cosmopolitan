@@ -20,7 +20,6 @@
 #include "third_party/ctags/config.h"
 #include "third_party/ctags/debug.h"
 #include "third_party/ctags/routines.h"
-// clang-format off
 
 /*
  *  Miscellaneous macros

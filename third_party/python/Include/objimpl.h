@@ -7,7 +7,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/tupleobject.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 void * PyObject_Malloc(size_t);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03050000

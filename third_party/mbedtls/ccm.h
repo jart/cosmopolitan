@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_CCM_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_CCM_H_
 #include "third_party/mbedtls/cipher.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define MBEDTLS_ERR_CCM_BAD_INPUT \
@@ -49,5 +48,4 @@ int mbedtls_ccm_star_auth_decrypt(mbedtls_ccm_context *, size_t,
 int mbedtls_ccm_self_test(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_CCM_H_ */

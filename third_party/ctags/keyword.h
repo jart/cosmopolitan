@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: keyword.h 658 2008-04-20 23:21:35Z elliotth $
 *

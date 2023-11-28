@@ -5,7 +5,6 @@
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/rsa.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
  
 #define MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE              -0x2080  /*< Unavailable feature, e.g. RSA hashing/encryption combination. */
 #define MBEDTLS_ERR_X509_UNKNOWN_OID                      -0x2100  /*< Requested OID is unknown. */

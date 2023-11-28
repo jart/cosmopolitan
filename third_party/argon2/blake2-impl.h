@@ -1,7 +1,6 @@
 #ifndef PORTABLE_BLAKE2_IMPL_H
 #define PORTABLE_BLAKE2_IMPL_H
 #include "libc/str/str.h"
-/* clang-format off */
 
 static inline uint64_t load64(const void *src) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

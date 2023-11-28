@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "windows.h"
-/* clang-format off */
 
 /* Return the initial module search path. */
 /* Used by DOS, Windows 3.1, Windows 95/98, Windows NT. */

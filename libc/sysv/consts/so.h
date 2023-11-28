@@ -3,7 +3,6 @@
 
 #define SO_DEBUG 1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int SO_TYPE;
@@ -48,5 +47,4 @@ extern const int SO_REUSEPORT;
 #define SO_REUSEPORT SO_REUSEPORT
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SO_H_ */

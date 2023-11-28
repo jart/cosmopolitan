@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_ERRFUNS_H_
 #define COSMOPOLITAN_LIBC_SYSV_ERRFUNS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * @fileoverview Optimized error return paths.
@@ -295,5 +294,4 @@ intptr_t ehwpoison(void) relegated;
 #define ehwpoison()       __ERRFUN("ehwpoison")
 #endif
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_ERRFUNS_H_ */

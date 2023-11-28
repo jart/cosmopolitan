@@ -1,4 +1,3 @@
-// clang-format off
 
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS5) 
 

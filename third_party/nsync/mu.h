@@ -2,7 +2,6 @@
 #define NSYNC_MU_H_
 #include "libc/intrin/dll.h"
 #include "third_party/nsync/atomic.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* An nsync_mu is a lock. If initialized to zero, it's valid and unlocked.
@@ -99,5 +98,4 @@ void nsync_mu_rassert_held(const nsync_mu *mu);
 int nsync_mu_is_reader(const nsync_mu *mu);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_MU_H_ */

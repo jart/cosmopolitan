@@ -5,7 +5,6 @@
 #include "libc/runtime/runtime.h"
 #include "tool/plinko/lib/config.h"
 #include "tool/plinko/lib/types.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define LO(x)      (int)(x)
@@ -333,5 +332,4 @@ static inline int Keep(int x, int y) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_PLINKO_H_ */

@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMPORTOBJECTHEADER_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMPORTOBJECTHEADER_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImportObjectHeader {
   /* TODO(jart): No bitfields. */
@@ -19,5 +18,4 @@ struct NtImportObjectHeader {
   uint16_t Reserved : 11;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMPORTOBJECTHEADER_H_ */

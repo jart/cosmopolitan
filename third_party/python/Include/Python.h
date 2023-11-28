@@ -1,6 +1,5 @@
 #ifndef Py_PYTHON_H
 #define Py_PYTHON_H
-/* clang-format off */
 
 /* 
  * PYTHON DIAMOND DEPENDENCY HEADER 

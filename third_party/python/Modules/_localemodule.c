@@ -20,7 +20,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_locale");
 PYTHON_PROVIDE("_locale.CHAR_MAX");

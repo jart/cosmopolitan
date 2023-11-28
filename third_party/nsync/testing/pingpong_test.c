@@ -27,7 +27,6 @@
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/waiter.h"
-// clang-format off
 
 /* The benchmarks in this file use various mechanisms to
    ping-pong back and forth between two threads as they count i from

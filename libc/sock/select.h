@@ -7,7 +7,6 @@
 
 #define FD_SETSIZE 1024 /* it's 64 on windows */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 typedef struct fd_set {
@@ -25,5 +24,4 @@ int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
             const sigset_t *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_SELECT_H_ */

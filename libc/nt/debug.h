@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_DEBUG_H_
 #define COSMOPOLITAN_LIBC_NT_DEBUG_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -37,5 +36,4 @@ int32_t ContinueDebugEvent(uint32_t dwProcessId, uint32_t dwThreadId,
 void FatalExit(int uExitCode);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_DEBUG_H_ */

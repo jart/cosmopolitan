@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/extendsfdf2.c - single -> double conversion -----------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

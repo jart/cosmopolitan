@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_THREAD_TLS2_H_
 #include "libc/dce.h"
 #include "libc/thread/tls.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
 
@@ -42,5 +41,4 @@ __funline void __set_tls_win32(void *tls) {
 #define __set_tls_win32(tls)   (void)0
 #endif /* GNU x86-64 */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_TLS2_H_ */

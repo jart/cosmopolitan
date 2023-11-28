@@ -37,7 +37,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/libgen.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/backtrace.internal.h"
@@ -65,8 +64,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/dep.h"
 #include "third_party/make/findprog.h"
 #include "third_party/make/os.h"
+#include "libc/serialize.h"
 #include "third_party/make/variable.h"
-// clang-format off
 
 #define USE_POSIX_SPAWN (!IsLinux() && !IsOpenbsd())
 #define HAVE_POSIX_SPAWNATTR_SETSIGMASK

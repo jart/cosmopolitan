@@ -42,7 +42,6 @@
 #define xed_sib_scale(M)           (((M)&0xff) >> 6)
 #define xed_get_modrm_reg_field(M) (((M)&0x38) >> 3)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define XED_MACHINE_MODE_REAL           XED_MODE_REAL
@@ -246,5 +245,4 @@ int xed_instruction_length_decode(struct XedDecodedInst *, const void *,
                                   size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_XED_X86_H_ */

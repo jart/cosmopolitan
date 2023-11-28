@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Basic dependency engine for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

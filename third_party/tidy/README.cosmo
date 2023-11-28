@@ -27,5 +27,4 @@ LOCAL CHANGES
   - Rename a few .h files to .inc
   - Normalize header includes for cosmopolitan repo
   - Delete ugly no-op macros, e.g. TIDY_CALL, TIDY_EXPORT, etc.
-  - Add clang-format off directives
   - Delete trailing whitespace

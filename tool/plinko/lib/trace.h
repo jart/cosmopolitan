@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_PLINKO_LIB_TRACE_H_
 #define COSMOPOLITAN_TOOL_PLINKO_LIB_TRACE_H_
 #include "libc/str/str.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define START_TRACE                    \
@@ -36,5 +35,4 @@ COSMOPOLITAN_C_START_
 void EnableTracing(void);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_PLINKO_LIB_TRACE_H_ */

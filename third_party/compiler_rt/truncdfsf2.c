@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/truncdfsf2.c - double -> single conversion ------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -22,7 +22,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/filedef.h"
 #include "third_party/make/hash.h"
 #include "third_party/musl/glob.h"
-/* clang-format off */
 
 #ifndef __ptr_t
 #define __ptr_t void *

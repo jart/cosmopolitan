@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_BIGNUM_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_BIGNUM_INTERNAL_H_
 #include "third_party/mbedtls/platform.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define MPI_VALIDATE_RET(cond) \
@@ -36,5 +35,4 @@ void mbedtls_mpi_mul_hlp(size_t, const uint64_t *, uint64_t *, uint64_t);
 void mbedtls_mpi_mul_hlp1(size_t, const uint64_t *, uint64_t *, uint64_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_BIGNUM_INTERNAL_H_ */

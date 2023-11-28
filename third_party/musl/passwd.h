@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_PASSWD_H_
 #define COSMOPOLITAN_LIBC_PASSWD_H_
 #include "libc/calls/weirdtypes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct FILE;
@@ -46,5 +45,4 @@ int getgrouplist(const char *, gid_t, gid_t *, int *);
 int initgroups(const char *, gid_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_PASSWD_H_ */

@@ -121,11 +121,9 @@
 #define KW___ATOMIC_COMPARE_EXCHANGE_N  137
 #define KW___ATOMIC_EXCHANGE_N          138
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 unsigned char GetKw(const char *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_CHIBICC_KW_H_ */

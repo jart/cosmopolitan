@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/truncsfhf2.c - single -> half conversion --------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

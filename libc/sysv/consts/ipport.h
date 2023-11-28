@@ -58,11 +58,9 @@
 #define IPPORT_IMAPS       993
 #define IPPORT_POP3S       995
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int IPPORT_USERRESERVED;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_IPPORT_H_ */

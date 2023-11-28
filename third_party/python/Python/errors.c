@@ -27,7 +27,6 @@
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 _Py_IDENTIFIER(builtins);
 _Py_IDENTIFIER(stderr);

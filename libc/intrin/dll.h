@@ -5,7 +5,6 @@
 #define dll_make_last    __dll_make_last
 #define dll_remove       __dll_remove
 #define dll_splice_after __dll_splice_after
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define DLL_CONTAINER(t, f, p) ((t *)(((char *)(p)) - offsetof(t, f)))
@@ -56,6 +55,5 @@ void dll_make_first(struct Dll **, struct Dll *) paramsnonnull((1)) libcesque;
 void dll_splice_after(struct Dll *, struct Dll *) paramsnonnull((1)) libcesque;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_DLL_H_ */

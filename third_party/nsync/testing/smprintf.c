@@ -19,7 +19,6 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-// clang-format off
 
 char *smprintf (const char *fmt, ...) {
 	int m = strlen (fmt) * 2 + 1;

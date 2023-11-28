@@ -8,7 +8,6 @@
 #define UT_HOSTSIZE 256
 #define UT_LINESIZE 32
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct lastlog {
@@ -43,5 +42,4 @@ void updwtmp(const char *, const struct utmp *);
 #define WTMP_FILENAME _PATH_WTMP
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_UTMP_H_ */

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_RESIZE_H_
 #define COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_RESIZE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 // Easy-to-use API:
@@ -188,5 +187,4 @@ int stbir_resize_region(
 // style: [0, 1]x[0, 1]) of a region of the input image to use.
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_RESIZE_H_ */

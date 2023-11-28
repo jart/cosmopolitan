@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_INFO_H_
 #include "libc/nt/struct/systeminfo.h"
 #include "libc/nt/thunk/msabi.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void GetSystemInfo(struct NtSystemInfo *lpSystemInfo);
@@ -18,5 +17,4 @@ bool32 GetComputerNameEx(/* enum/computernameformat.h */ int NameType,
 #include "libc/nt/thunk/systeminfo.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_INFO_H_ */

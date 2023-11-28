@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_BSD_H_
 #define COSMOPOLITAN_LIBC_LOG_BSD_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void err(int, const char *, ...) wontreturn;
@@ -18,5 +17,4 @@ void vwarnx(const char *, va_list);
 void err_set_exit(void (*)(int));
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_BSD_H_ */

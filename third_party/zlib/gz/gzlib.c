@@ -14,7 +14,6 @@
 #include "third_party/zlib/gz/gzguts.inc"
 #include "third_party/zlib/zlib.h"
 #include "third_party/zlib/zutil.internal.h"
-// clang-format off
 
 #define LSEEK lseek
 

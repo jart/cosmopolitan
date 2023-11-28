@@ -4,7 +4,6 @@
 #include "libc/complex.h"
 #include "libc/math.h"
 #include "libc/runtime/fenv.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 // clang-format off
 
@@ -1036,5 +1035,4 @@ __ldexp_cexpl(long double complex z, int expt)
 #endif /* _COMPLEX_H */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_FREEBSD_INTERNAL_H_ */

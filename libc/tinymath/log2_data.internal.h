@@ -5,7 +5,6 @@
 #define LOG2_POLY_ORDER  7
 #define LOG2_POLY1_ORDER 11
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const struct log2_data {
@@ -24,5 +23,4 @@ extern const struct log2_data {
 } __log2_data;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_LOG2_DATA_INTERNAL_H_ */

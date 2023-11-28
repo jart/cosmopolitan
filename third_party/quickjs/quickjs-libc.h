@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBC_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBC_H_
 #include "third_party/quickjs/quickjs.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 JSModuleDef *js_init_module_std(JSContext *ctx, const char *module_name);
 JSModuleDef *js_init_module_os(JSContext *ctx, const char *module_name);
@@ -26,5 +24,4 @@ void js_std_set_worker_new_context_func(JSContext *(*func)(JSRuntime *rt));
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBC_H_ */

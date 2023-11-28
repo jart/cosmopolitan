@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- divxc3.c - Implement __divxc3 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

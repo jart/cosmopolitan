@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: lregex.c 747 2009-11-06 02:33:37Z dhiebert $
 *

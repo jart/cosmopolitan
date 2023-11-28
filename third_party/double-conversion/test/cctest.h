@@ -27,7 +27,6 @@
 #ifndef CCTEST_H_
 #define CCTEST_H_
 #include "third_party/double-conversion/utils.h"
-// clang-format off
 
 #ifndef TEST
 #define TEST(Name)                                                       \

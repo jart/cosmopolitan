@@ -6,7 +6,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Modules/_multiprocessing/multiprocessing.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_multiprocessing");
 PYTHON_PROVIDE("_multiprocessing.flags");

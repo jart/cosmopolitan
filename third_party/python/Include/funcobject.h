@@ -3,7 +3,6 @@
 #define Py_FUNCOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Function objects and code objects should not be confused with each other:
  *

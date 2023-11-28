@@ -28,12 +28,10 @@
 
 #define PLEDGED(x) ((~__promises >> PROMISE_##x) & 1)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern unsigned long __promises;
 extern unsigned long __execpromises;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_PROMISES_H_ */

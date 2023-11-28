@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_MEM_HOOK_H_
 #define COSMOPOLITAN_LIBC_MEM_HOOK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern void (*hook_free)(void *);
@@ -14,5 +13,4 @@ extern size_t (*hook_malloc_usable_size)(void *);
 extern size_t (*hook_bulk_free)(void *[], size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MEM_HOOK_H_ */

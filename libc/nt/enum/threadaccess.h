@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_THREADACCESS_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_THREADACCESS_H_
 #include "libc/nt/enum/accessmask.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kNtThreadTerminate 0x0001
 #define kNtThreadSuspendResume 0x0002
@@ -17,5 +16,4 @@
 #define kNtThreadResume 0x1000
 #define kNtThreadAllAccess (kNtStandardRightsRequired | kNtSynchronize | 0xFFFF)
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_THREADACCESS_H_ */

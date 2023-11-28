@@ -27,7 +27,6 @@
 #include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /*[clinic input]
 class bytes "PyBytesObject *" "&PyBytes_Type"

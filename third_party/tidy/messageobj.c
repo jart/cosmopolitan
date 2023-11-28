@@ -1,4 +1,3 @@
-/* clang-format off */
 /* messageobj.c
  * Provides an external, extensible API for message reporting.
  *

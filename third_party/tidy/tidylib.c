@@ -1,4 +1,3 @@
-/* clang-format off */
 /* tidylib.c -- internal library definitions
 
   (c) 1998-2008 (W3C) MIT, ERCIM, Keio University

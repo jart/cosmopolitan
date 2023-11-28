@@ -25,7 +25,6 @@
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 #ifdef Py_DEBUG
 int _Py_HashSecret_Initialized = 0;

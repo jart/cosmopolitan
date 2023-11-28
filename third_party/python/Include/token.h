@@ -2,7 +2,6 @@
 #ifndef Py_TOKEN_H
 #define Py_TOKEN_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #undef TILDE   /* Prevent clash of our definition with system macro. Ex AIX, ioctl.h */
 

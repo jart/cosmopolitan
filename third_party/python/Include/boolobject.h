@@ -2,7 +2,6 @@
 #define Py_BOOLOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 extern PyTypeObject PyBool_Type;
 

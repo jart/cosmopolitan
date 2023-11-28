@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_INTRIN_MACROS_H_
 #include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define INTRIN_COMMUTATIVE "%"
 #define INTRIN_NONCOMMUTATIVE
@@ -80,5 +79,4 @@ typedef char __intrin_xmm_t
 #define INTRIN_SSEVEX_X_X_(PURE, ISA, OP, A, B)             PURE(A, B)
 #endif /* X86 && !ANSI */
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_MACROS_H_ */

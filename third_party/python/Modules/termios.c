@@ -24,7 +24,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("termios");
 PYTHON_PROVIDE("termios.B1000000");

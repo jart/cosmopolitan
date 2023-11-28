@@ -19,7 +19,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Objects/dict-common.h"
-/* clang-format off */
 
 /* Ordered Dictionary object implementation.
 

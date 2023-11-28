@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_Q4_2_H_
 #define COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_Q4_2_H_
 #include "third_party/ggml/fp16.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define V1_QK4_2 16
@@ -19,5 +18,4 @@ void quantize_row_v1_q4_2_reference(const float* restrict,
                                     block_v1_q4_2* restrict, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_Q4_2_H_ */

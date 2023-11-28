@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- umodsi3.c - Implement __umodsi3 -----------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

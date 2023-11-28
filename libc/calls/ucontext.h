@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_CALLS_UCONTEXT_H_
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #ifdef __x86_64__
@@ -135,5 +134,4 @@ void makecontext(ucontext_t *, void (*)(), int, ...) dontthrow nocallback;
 void __sig_restore(const ucontext_t *) wontreturn;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_UCONTEXT_H_ */

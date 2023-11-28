@@ -8,7 +8,6 @@
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/token.h"
-/* clang-format off */
 
 /* Return the DFA for the given type */
 dfa *

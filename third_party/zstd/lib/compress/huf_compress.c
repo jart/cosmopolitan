@@ -1,4 +1,3 @@
-// clang-format off
 /* ******************************************************************
  * Huffman encoder, part of New Generation Entropy library
  * Copyright (c) Meta Platforms, Inc. and affiliates.

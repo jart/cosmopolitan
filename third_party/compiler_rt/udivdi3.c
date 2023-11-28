@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- udivdi3.c - Implement __udivdi3 -----------------------------------===
  *
  *                    The LLVM Compiler Infrastructure

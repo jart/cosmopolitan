@@ -65,7 +65,6 @@ typedef double fenv_t;
 #define FLT_EVAL_METHOD 0
 #endif
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define FLT_ROUNDS (__flt_rounds())
@@ -85,5 +84,4 @@ int __flt_rounds(void);
 int __fesetround(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_FENV_H_ */

@@ -1,6 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MMAN_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MMAN_H_
 #include "libc/runtime/e820.internal.h"
+
+/* Values for mman::pc_video_type. */
+#define PC_VIDEO_TEXT     0
+#define PC_VIDEO_BGR565   1
+#define PC_VIDEO_BGR555   2
+#define PC_VIDEO_BGRX8888 3
+#define PC_VIDEO_RGBX8888 4
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -39,22 +47,14 @@ struct mman {
   struct {                               /* 0x1d48 — starting cursor pos. */
     unsigned short y, x;
   } pc_video_curs_info;
-  unsigned short pc_video_char_height;   /* 0x1d4c — character height (useful
-                                                     for setting cursor shape
-                                                     in text mode) */
-  uint64_t pc_acpi_rsdp;                 /* 0x1d50 — pointer to ACPI RSDP;
-                                                     NULL means to search for
-                                                     it in legacy BIOS areas */
+  unsigned short pc_video_char_height; /* 0x1d4c — character height (useful
+                                                   for setting cursor shape
+                                                   in text mode) */
+  uint64_t pc_acpi_rsdp;               /* 0x1d50 — pointer to ACPI RSDP;
+                                                   NULL means to search for
+                                                   it in legacy BIOS areas */
 };
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-/* Values for mman::pc_video_type. */
-#define PC_VIDEO_TEXT     0
-#define PC_VIDEO_BGR565   1
-#define PC_VIDEO_BGR555   2
-#define PC_VIDEO_BGRX8888 3
-#define PC_VIDEO_RGBX8888 4
-
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_MMAN_H_ */

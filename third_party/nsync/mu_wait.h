@@ -2,7 +2,6 @@
 #define NSYNC_MU_WAIT_H_
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/time.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* nsync_mu_wait() and nsync_mu_wait_with_deadline() can be used instead
@@ -114,5 +113,4 @@ int nsync_mu_wait_with_deadline(
 void nsync_mu_unlock_without_wakeup(nsync_mu *mu);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_MU_WAIT_H_ */

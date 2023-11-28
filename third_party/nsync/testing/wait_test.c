@@ -25,7 +25,6 @@
 #include "third_party/nsync/testing/time_extra.h"
 #include "third_party/nsync/time.h"
 #include "third_party/nsync/waiter.h"
-// clang-format off
 
 static void decrement_at (nsync_counter c, nsync_time abs_deadline, nsync_counter done) {
 	nsync_time_sleep_until (abs_deadline);

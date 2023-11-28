@@ -63,7 +63,6 @@ done
 
 for f in third_party/aarch64/*.h; do
   (
-    printf %s\\n '/* clang-format off */'
     printf %s\\n '#if defined(__aarch64__) && !(__ASSEMBLER__ + __LINKER__ + 0)'
     cat $f
     printf %s\\n '#endif'

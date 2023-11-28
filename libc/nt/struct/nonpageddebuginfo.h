@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_NONPAGEDDEBUGINFO_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_NONPAGEDDEBUGINFO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtNonPagedDebugInfo {
   uint16_t Signature;
@@ -14,5 +13,4 @@ struct NtNonPagedDebugInfo {
   uint64_t ImageBase;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_NONPAGEDDEBUGINFO_H_ */

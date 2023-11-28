@@ -28,7 +28,7 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macho.internal.h"
 #include "libc/macros.internal.h"

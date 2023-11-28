@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MUSL_FTW_H_
 #define COSMOPOLITAN_THIRD_PARTY_MUSL_FTW_H_
 #include "libc/calls/struct/stat.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /**
@@ -86,5 +85,4 @@ int nftw(const char *,
          int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MUSL_FTW_H_ */

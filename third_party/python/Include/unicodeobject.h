@@ -4,7 +4,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/pyconfig.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define Py_USING_UNICODE
 

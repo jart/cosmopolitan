@@ -15,7 +15,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/sysmodule.h"
-/* clang-format off */
 
 #ifdef MS_WINDOWS
 extern void PyWinFreeze_ExeInit(void);

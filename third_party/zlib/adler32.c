@@ -1,8 +1,6 @@
-// clang-format off
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
-// clang-format off
 /* adler32.c -- compute the Adler-32 checksum of a data stream
  * Copyright (C) 1995-2011, 2016 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h

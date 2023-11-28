@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/divsf3.c - Single-precision division ------------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: lisp.c 717 2009-07-07 03:40:50Z dhiebert $
 *

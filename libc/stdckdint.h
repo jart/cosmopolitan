@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_STDCKDINT_H_
 #define COSMOPOLITAN_LIBC_STDCKDINT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 /* clang-format off */
 
 /**
@@ -625,5 +624,4 @@ __ckd_declare_mul(__ckd_mul_uint128, unsigned __int128)
 #define ckd_mul(res, x, y) (*(res) = (x) * (y), 0)
 
 #endif /* GNU */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STDCKDINT_H_ */

@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * Generates a Unicode test for xxhsum without using Unicode in the source files.
  *

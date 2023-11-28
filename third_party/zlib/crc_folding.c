@@ -7,7 +7,6 @@
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/intel/wmmintrin.internal.h"
 #include "third_party/zlib/deflate.internal.h"
-// clang-format off
 
 /*
  * Compute the CRC32 using a parallelized folding approach with the PCLMULQDQ

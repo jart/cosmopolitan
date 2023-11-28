@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
   deflate.c - Zip 3
 

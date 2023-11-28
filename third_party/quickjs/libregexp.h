@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBREGEXP_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBREGEXP_H_
 #include "third_party/quickjs/libunicode.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define LRE_BOOL  int       /* for documentation purposes */
 
@@ -68,5 +66,4 @@ static inline int lre_js_is_ident_next(int c)
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBREGEXP_H_ */

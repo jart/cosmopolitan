@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Debugging macros and interface.
 Copyright (C) 1999-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

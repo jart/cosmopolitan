@@ -18,7 +18,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
-/* clang-format off */
 
 #define FLAG_COMPAT 1
 #define FLAG_SIZE_T 2

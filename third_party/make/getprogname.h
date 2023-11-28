@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Program name management.
    Copyright (C) 2016-2020 Free Software Foundation, Inc.
 

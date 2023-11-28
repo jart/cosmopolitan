@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_FUTEX_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_FUTEX_H_
 #ifdef _COSMO_SOURCE
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int FUTEX_WAIT;
@@ -22,6 +21,5 @@ extern const int FUTEX_REQUEUE;
 #define FUTEX_BITSET_MATCH_ANY 0xffffffff
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _COSMO_SOURCE */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_FUTEX_H_ */

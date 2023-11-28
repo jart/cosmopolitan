@@ -8,7 +8,6 @@
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define kNtFdRead                   1
@@ -83,5 +82,4 @@ int64_t GetNtBaseSocket(int64_t);
 int sys_close_epoll(int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_ */

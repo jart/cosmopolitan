@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/adddf3.c - Double-precision subtraction ---------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: vhdl.c 652 2008-04-18 03:51:47Z elliotth $
 * 

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- assembly.h - compiler-rt assembler support macros -----------------===
  *
  *                     The LLVM Compiler Infrastructure

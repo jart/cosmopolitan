@@ -24,7 +24,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/traceback.h"
-/* clang-format off */
 
 #define OFF(x) offsetof(PyTracebackObject, x)
 

@@ -1,4 +1,3 @@
-/* clang-format off */
 /* message.c -- General Message Writing Routines
 
   (c) 1998-2017 (W3C) MIT, ERCIM, Keio University, University of

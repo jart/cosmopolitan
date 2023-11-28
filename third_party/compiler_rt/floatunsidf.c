@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/floatunsidf.c - uint -> double-precision conversion ---*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

@@ -1,4 +1,3 @@
-// clang-format off
 /*	$NetBSD: compile.c,v 1.48 2019/10/05 20:23:55 christos Exp $	*/
 
 /*-

@@ -33,7 +33,6 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /*
 open addressing hash table with 2^n table size

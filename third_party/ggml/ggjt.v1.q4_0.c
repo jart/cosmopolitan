@@ -34,7 +34,6 @@
 #include "third_party/ggml/ggjt.v1.q8_0.h"
 #include "third_party/intel/immintrin.internal.h"
 #include "third_party/libcxx/math.h"
-// clang-format off
 
 // quantization for the ggjt.v1.q4_0 file format
 

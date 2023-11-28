@@ -21,7 +21,6 @@
 #include "third_party/mbedtls/pem.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/x509_csr.h"
-/* clang-format off */
 
 asm(".ident\t\"\\n\\n\
 Mbed TLS (Apache 2.0)\\n\

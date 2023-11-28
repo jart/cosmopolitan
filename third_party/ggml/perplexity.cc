@@ -33,7 +33,6 @@ asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 std::vector<float> softmax(const std::vector<float>& logits) {
     std::vector<float> probs(logits.size());

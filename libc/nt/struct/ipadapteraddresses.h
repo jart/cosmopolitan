@@ -90,7 +90,6 @@
 #define kNtTunnelTypeTeredo  14
 #define kNtTunnelTypeIphttps 15
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* Inner Types --------------------------------------------------------- */
@@ -200,5 +199,4 @@ struct NtIpAdapterAddresses {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IP_ADAPTER_ADDRESSES_H_ */

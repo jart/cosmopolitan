@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TINYMATH_KERNEL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_TINYMATH_KERNEL_INTERNAL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 double __cos(double, double);
@@ -18,5 +17,4 @@ int __rem_pio2_large(double *, double *, int, int, int);
 int __rem_pio2f(float, double *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_KERNEL_INTERNAL_H_ */

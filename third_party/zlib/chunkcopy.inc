@@ -1,4 +1,3 @@
-// clang-format off
 /* chunkcopy.h -- fast chunk copy and set operations
  * Copyright (C) 2017 ARM, Inc.
  * Copyright 2017 The Chromium Authors

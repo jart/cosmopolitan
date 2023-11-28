@@ -1,4 +1,3 @@
-// clang-format off
 /*
   zipsplit.c - Zip 3
 

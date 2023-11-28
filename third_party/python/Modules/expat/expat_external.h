@@ -2,7 +2,6 @@
 #define Expat_External_INCLUDED 1
 #include "third_party/python/Modules/expat/pyexpatns.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #if defined(__GNUC__)                                                          \
     && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 96))

@@ -7,7 +7,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
-/* clang-format off */
 
 /*
  * Unicode character type helpers.

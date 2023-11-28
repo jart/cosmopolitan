@@ -31,7 +31,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /* Compute memory used by various object types */
 /* XXX: poor man's approach to handling multiply referenced objects */

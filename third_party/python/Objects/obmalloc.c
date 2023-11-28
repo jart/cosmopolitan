@@ -8,7 +8,6 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
@@ -20,8 +19,8 @@
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pymem.h"
+#include "libc/serialize.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 /* Python's malloc wrappers (see pymem.h) */
 

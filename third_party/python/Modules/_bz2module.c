@@ -18,7 +18,6 @@
 #include "third_party/python/Include/pythread.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_bz2");
 PYTHON_PROVIDE("_bz2.BZ2Compressor");

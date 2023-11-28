@@ -25,7 +25,6 @@
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/expat/expat.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_elementtree");
 PYTHON_PROVIDE("_elementtree.Element");

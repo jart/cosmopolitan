@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_LOG_CHECK_H_
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define CHECK(X, ...)         __CHK(ne, !=, false, "false", !!(X), #X, "" __VA_ARGS__)
@@ -107,5 +106,4 @@ void __check_fail_aligned(unsigned, uint64_t, const char *, int, const char *,
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LOG_CHECK_H_ */

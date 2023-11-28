@@ -4,7 +4,6 @@
 #include "third_party/python/Include/op.h"
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Object and type object interface */
 

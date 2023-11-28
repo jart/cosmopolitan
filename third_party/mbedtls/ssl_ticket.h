@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/cipher.h"
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ssl.h"
-/* clang-format off */
 
 /*
  * This implementation of the session ticket callbacks includes key

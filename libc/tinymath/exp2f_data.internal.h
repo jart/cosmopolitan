@@ -4,7 +4,6 @@
 #define EXP2F_TABLE_BITS 5
 #define EXP2F_POLY_ORDER 3
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const struct exp2f_data {
@@ -17,5 +16,4 @@ extern const struct exp2f_data {
 } __exp2f_data;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_EXP2F_DATA_INTERNAL_H_ */

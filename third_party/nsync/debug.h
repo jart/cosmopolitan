@@ -2,7 +2,6 @@
 #define NSYNC_DEBUG_H_
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/mu.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* Debugging operations for mutexes and condition variables.
@@ -35,5 +34,4 @@ char *nsync_mu_debugger(nsync_mu *mu);
 char *nsync_cv_debugger(nsync_cv *cv);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* NSYNC_DEBUG_H_ */

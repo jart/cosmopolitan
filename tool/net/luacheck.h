@@ -4,7 +4,6 @@
 #include "libc/mem/mem.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lua.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define AssertLuaStackIsAt(L, level)      \
@@ -19,5 +18,4 @@ COSMOPOLITAN_C_START_
   } while (0)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_NET_LUACHECK_H_ */

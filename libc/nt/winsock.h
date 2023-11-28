@@ -71,7 +71,6 @@
 #define kNtNspNotifyPort        3
 #define kNtNspNotifyApc         4
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct NtMsgHdr {
@@ -505,5 +504,4 @@ bool32 DisconnectEx(int64_t s, struct NtOverlapped *inout_opt_lpOverlapped,
 #include "libc/nt/thunk/winsock.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_WINSOCK_H_ */

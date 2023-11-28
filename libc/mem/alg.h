@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_ALG_ALG_H_
 #define COSMOPOLITAN_LIBC_ALG_ALG_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 void *bsearch(const void *, const void *, size_t, size_t,
@@ -33,5 +32,4 @@ int radix_sort_int32(int32_t *, size_t);
 int radix_sort_int64(int64_t *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ALG_ALG_H_ */

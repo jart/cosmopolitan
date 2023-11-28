@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_VERSION_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_VERSION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 /**
  * Known versions of the New Technology executive.
@@ -17,5 +16,4 @@
 #define kNtVersionWindows2000  0x0500 /* the golden age */
 #define kNtVersionFuture       0x0b00
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_VERSION_H_ */

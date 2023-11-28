@@ -89,7 +89,6 @@
 #include "third_party/python/Include/weakrefobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_thread");
 PYTHON_PROVIDE("_thread.LockType");

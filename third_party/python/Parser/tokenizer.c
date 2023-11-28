@@ -25,7 +25,6 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/unicodeobject.h"
 #endif
-/* clang-format off */
 
 /* Tokenizer implementation */
 

@@ -11,7 +11,6 @@
 #include "third_party/python/Modules/bextra.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
-/* clang-format off */
 
 /* macros used to determine if the given code point is in the PUA range that
  * we are using to store aliases and named sequences */

@@ -3,9 +3,7 @@
 #include "libc/intrin/likely.h"
 #include "libc/math.h"
 #include "libc/stdio/stdio.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #if (defined(__GNUC__) || defined(__clang__)) && !defined(__STRICT_ANSI__)
 #define __js_printf_like(f, a)   __attribute__((__format__(__printf__, f, a)))
@@ -1010,5 +1008,4 @@ int JS_SetModuleExportList(JSContext *ctx, JSModuleDef *m,
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_QUICKJS_H_ */

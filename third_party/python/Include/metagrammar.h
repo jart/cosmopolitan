@@ -1,7 +1,6 @@
 #ifndef Py_METAGRAMMAR_H
 #define Py_METAGRAMMAR_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MSTART 256
 #define RULE 257

@@ -10,7 +10,6 @@
 #include "libc/mem/mem.h"
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/zutil.internal.h"
-// clang-format off
 
 #pragma GCC diagnostic ignored "-Wimplicit-int"
 

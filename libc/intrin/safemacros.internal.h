@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define min(x, y)              \
@@ -67,5 +66,4 @@ COSMOPOLITAN_C_START_
   })
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_ */

@@ -1,6 +1,5 @@
 #include "libc/x/x.h"
 #include "third_party/python/Modules/cjkcodecs/xloadzd.h"
-/* clang-format off */
 
 static _Atomic(void *) __jisx0213_1_bmp_decmap_ptr;
 static const unsigned char __jisx0213_1_bmp_decmap_rodata[2205] = {

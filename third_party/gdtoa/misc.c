@@ -35,7 +35,6 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 static ThInfo TI0;
 static pthread_mutex_t __gdtoa_lock_obj;

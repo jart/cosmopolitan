@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ASN1_CHK_ADD(g, f)                      \
     do                                                  \

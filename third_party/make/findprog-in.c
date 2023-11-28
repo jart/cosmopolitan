@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Locating a program in a given path.
    Copyright (C) 2001-2004, 2006-2020 Free Software Foundation, Inc.
    Written by Bruno Haible <haible@clisp.cons.org>, 2001, 2019.

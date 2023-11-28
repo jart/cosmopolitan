@@ -13,7 +13,6 @@
 #include "third_party/python/Include/symtable.h"
 #include "third_party/python/Include/token.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 #define UNDEFINED_FUTURE_FEATURE "future feature %.100s is not defined"
 #define ERR_LATE_FUTURE \

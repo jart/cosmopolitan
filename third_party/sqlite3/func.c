@@ -20,7 +20,6 @@
 #include "libc/math.h"
 #endif
 #include "third_party/sqlite3/vdbeInt.inc"
-/* clang-format off */
 
 /*
 ** Return the collating function associated with a function.

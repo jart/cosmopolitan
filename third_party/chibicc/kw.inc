@@ -1,7 +1,6 @@
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf kw.gperf  */
 /* Computed positions: -k'1,4,11,14,17,$' */
-// clang-format off
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \

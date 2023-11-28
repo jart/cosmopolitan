@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_ENUM_COMPUTERNAMEFORMAT_H_
 #define COSMOPOLITAN_LIBC_NT_ENUM_COMPUTERNAMEFORMAT_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kNtComputerNameNetBios                   0
 #define kNtComputerNameDnsHostname               1
@@ -12,5 +11,4 @@
 #define kNtComputerNamePhysicalDnsFullyQualified 7
 #define kNtComputerName_MAX                      8
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_ENUM_COMPUTERNAMEFORMAT_H_ */

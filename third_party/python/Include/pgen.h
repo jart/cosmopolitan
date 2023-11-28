@@ -2,7 +2,6 @@
 #define Py_PGEN_H
 #include "third_party/python/Include/grammar.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* Parser generator interface */
 

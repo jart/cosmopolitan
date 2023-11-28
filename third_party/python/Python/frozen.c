@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/import.h"
-/* clang-format off */
 
 #include "o//third_party/python/Python/importlib.inc"
 #include "o//third_party/python/Python/importlib_external.inc"

@@ -6,7 +6,6 @@
 #define EXTRA_MAGIC  0x45585401
 #define SVE_MAGIC    0x53564501
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct _aarch64_ctx {
@@ -40,5 +39,4 @@ struct sve_context {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_AARCH64_H_ */

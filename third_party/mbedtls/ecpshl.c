@@ -17,7 +17,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/math.h"
-/* clang-format off */
 
 static void mbedtls_mpi_shift_l_mod_p256( const mbedtls_ecp_group *G,
                                           mbedtls_mpi *X )

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/blake2.h"
 #include "third_party/mbedtls/md.h"
-/* clang-format off */
 
 const mbedtls_md_info_t mbedtls_blake2b256_info = {
     "BLAKE2B256",

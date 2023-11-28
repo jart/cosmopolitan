@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 #define _PyUnicode_STATE(op)                            \
     (((PyASCIIObject *)(op))->state)

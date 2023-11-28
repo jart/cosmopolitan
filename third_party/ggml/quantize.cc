@@ -38,7 +38,6 @@ asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 static const std::map<std::string, llama_ftype> LLAMA_FTYPE_MAP = {
     {"f32",  LLAMA_FTYPE_ALL_F32 },

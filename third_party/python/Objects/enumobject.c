@@ -14,7 +14,6 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymacro.h"
-/* clang-format off */
 
 typedef struct {
     PyObject_HEAD

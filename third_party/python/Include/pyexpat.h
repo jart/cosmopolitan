@@ -2,9 +2,7 @@
 #define COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYEXPAT_H_
 #include "third_party/python/Modules/expat/expat.h"
 #include "third_party/python/Modules/expat/expat_external.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define PyExpat_CAPI_MAGIC  "pyexpat.expat_CAPI 1.1"
 #define PyExpat_CAPSULE_NAME "pyexpat.expat_CAPI"
@@ -58,5 +56,4 @@ struct PyExpat_CAPI
 
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_PYTHON_INCLUDE_PYEXPAT_H_ */

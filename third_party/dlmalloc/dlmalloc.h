@@ -25,7 +25,6 @@
 #define dlrealloc_in_place           __dlrealloc_in_place
 #define dlrealloc_in_place           __dlrealloc_in_place
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /*
@@ -510,5 +509,4 @@ void dlmalloc_atfork(void);
 void dlmalloc_abort(void) relegated wontreturn;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_DLMALLOC_DLMALLOC_H_ */

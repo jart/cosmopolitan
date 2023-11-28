@@ -2,7 +2,6 @@
 #define Py_BYTESOBJECT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /*
 Type PyBytesObject represents a character string.  An extra zero byte is

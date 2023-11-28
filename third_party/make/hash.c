@@ -17,14 +17,13 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/makeint.inc"
 /**/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
+#include "libc/serialize.h"
 #include "third_party/make/hash.h"
-/* clang-format off */
 
 #define CALLOC(t, n) ((t *) xcalloc (1, sizeof (t) * (n)))
 #define MALLOC(t, n) ((t *) xmalloc (sizeof (t) * (n)))

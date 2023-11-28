@@ -10,7 +10,6 @@
 #include "third_party/python/Modules/bextra.h"
 #include "third_party/python/Modules/unicodedata.h"
 #include "third_party/python/Modules/unicodedata_unidata.h"
-/* clang-format off */
 
 PyObject *
 _PyUnicode_NfcNfkc(PyObject *self, PyObject *input, int k)

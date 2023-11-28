@@ -2,7 +2,6 @@
 #define TYPEARITH_H
 #include "libc/assert.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
 

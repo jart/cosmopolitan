@@ -3,7 +3,6 @@
 #include "libc/complex.h"
 #include "libc/imag.internal.h"
 #include "libc/math.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if __STDC_VERSION__ + 0 >= 201112
 
 /* from https://en.cppreference.com/w/c/numeric/tgmath */
@@ -328,5 +327,4 @@
            : cprojl)(x)
 
 #endif /* C11 */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* _TGMATH_H */

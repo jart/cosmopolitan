@@ -43,7 +43,6 @@ Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 
 /* enable test262 thread support to test SharedArrayBuffer and Atomics */
 /* #define CONFIG_AGENT */

@@ -22,7 +22,6 @@
 #include "third_party/nsync/array.internal.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
-// clang-format off
 
 /* This tests internal abstractions. */
 

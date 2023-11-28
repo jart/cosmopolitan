@@ -6,7 +6,6 @@
 #define O_RDWR    2
 #define O_ACCMODE 3
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const unsigned O_APPEND;
@@ -62,5 +61,4 @@ extern const unsigned O_VERIFY;
 #define O_UNLINK     O_UNLINK
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_O_H_ */

@@ -6,7 +6,6 @@
 #define FSETLOCKING_INTERNAL 1
 #define FSETLOCKING_BYCALLER 2
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 size_t __fbufsize(FILE *);
@@ -25,5 +24,4 @@ size_t __freadahead(FILE *);
 void __freadptrinc(FILE *, size_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STDIO_STDIO_EXT_H_ */

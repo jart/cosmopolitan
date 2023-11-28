@@ -47,7 +47,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/_decimal/docstrings.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_decimal");
 PYTHON_PROVIDE("_decimal.BasicContext");

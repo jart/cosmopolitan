@@ -1,4 +1,3 @@
-/* clang-format off */
 #if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #if !defined _IMMINTRIN_H_INCLUDED
 # error "Never use <avx5124vnniwintrin.h> directly; include <x86intrin.h> instead."

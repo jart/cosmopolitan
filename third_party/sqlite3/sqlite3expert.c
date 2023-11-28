@@ -15,7 +15,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/sqlite3/sqlite3expert.h"
-// clang-format off
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE 
 

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEAUXSYMBOLEX_H_
 #include "libc/nt/struct/imageauxsymboltokendef.internal.h"
 #include "libc/nt/struct/imagesymbolex.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 union NtImageAuxSymbolEx {
   struct {
@@ -34,5 +33,4 @@ union NtImageAuxSymbolEx {
   } CRC;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEAUXSYMBOLEX_H_ */

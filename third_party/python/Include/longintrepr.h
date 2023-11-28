@@ -5,7 +5,6 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pyport.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* This is published for the benefit of "friends" marshal.c and _decimal.c. */
 

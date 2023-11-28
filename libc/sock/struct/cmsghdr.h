@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_STRUCT_CMSGHDR_H_
 #define COSMOPOLITAN_LIBC_SOCK_STRUCT_CMSGHDR_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define CMSG_DATA(cmsg) ((unsigned char *)(((struct cmsghdr *)(cmsg)) + 1))
@@ -38,5 +37,4 @@ struct cmsghdr { /* linux abi */
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_CMSGHDR_H_ */

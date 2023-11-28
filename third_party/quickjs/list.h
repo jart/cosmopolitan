@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIST_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIST_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 struct list_head {
     struct list_head *prev;
@@ -75,5 +73,4 @@ static inline int list_empty(struct list_head *el)
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIST_H_ */

@@ -2,9 +2,7 @@
 #define COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_INTERNAL_H_
 #include "libc/str/str.h"
 #include "third_party/intel/immintrin.internal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-// clang-format off
 
 #ifdef __AVX__
 // horizontally add 8 floats
@@ -130,5 +128,4 @@ static inline __m128i packNibbles( __m128i bytes1, __m128i bytes2 ) {
 #endif /* __AVX__ */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_GGJT_V1_INTERNAL_H_ */

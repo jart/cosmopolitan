@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_PTRACE_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_PTRACE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int PTRACE_TRACEME;
@@ -55,7 +54,6 @@ extern const int PTRACE_EVENT_STOP;
 extern const int PTRACE_EVENT_SECCOMP;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define PTRACE_TRACEME              PTRACE_TRACEME
 #define PTRACE_PEEKTEXT             PTRACE_PEEKTEXT

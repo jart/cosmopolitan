@@ -5,7 +5,6 @@
 #define M_GRANULARITY    (-2)
 #define M_MMAP_THRESHOLD (-3)
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § dynamic memory                                            ─╬─│┼
@@ -58,5 +57,4 @@ size_t malloc_set_footprint_limit(size_t);
 void malloc_inspect_all(void (*)(void *, void *, size_t, void *), void *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_MEM_MEM_H_ */

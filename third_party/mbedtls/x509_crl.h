@@ -2,7 +2,6 @@
 #define MBEDTLS_X509_CRL_H
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/x509.h"
-/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

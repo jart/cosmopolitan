@@ -50,8 +50,6 @@ def FixThirdParty(path):
 
   start = 0
   res = []
-  if not code.startswith('// clang-format off\n'):
-    res.append('// clang-format off\n')
   for m in re.finditer(r'(?:/[/*] MISSING )?#\s*include\s*"([^"]+)"(?: \*/)?', code):
     end, newstart = m.span()
     res.append(code[start:end])

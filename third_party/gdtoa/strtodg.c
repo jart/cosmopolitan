@@ -31,7 +31,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 static const int
 fivesbits[] = {	  0,  3,  5,  7, 10, 12, 14, 17, 19, 21,

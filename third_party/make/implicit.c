@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Implicit rule searching for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.

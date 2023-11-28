@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_FPODATA_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_FPODATA_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtFpoData {
   /* TODO(jart): No bitfields. */
@@ -16,5 +15,4 @@ struct NtFpoData {
   uint16_t cbFrame : 2;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_FPODATA_H_ */

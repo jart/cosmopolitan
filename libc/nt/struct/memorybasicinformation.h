@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_MEMORYBASICINFORMATION_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_MEMORYBASICINFORMATION_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtMemoryBasicInformation {
   void *BaseAddress;
@@ -12,5 +11,4 @@ struct NtMemoryBasicInformation {
   uint32_t Type;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_MEMORYBASICINFORMATION_H_ */

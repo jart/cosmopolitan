@@ -11,7 +11,6 @@
 #include "third_party/python/Include/modsupport.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/structmember.h"
-/* clang-format off */
 
 /* Implementation helper: a struct that looks like a tuple.  See timemodule
    and posixmodule for example uses. */

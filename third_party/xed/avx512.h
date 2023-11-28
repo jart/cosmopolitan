@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_XED_AVX512_H_
 #define COSMOPOLITAN_THIRD_PARTY_XED_AVX512_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 union XedAvx512Payload1 {
@@ -40,5 +39,4 @@ union XedAvx512Payload3 {
 };
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_XED_AVX512_H_ */

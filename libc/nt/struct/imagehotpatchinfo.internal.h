@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEHOTPATCHINFO_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEHOTPATCHINFO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageHotPatchInfo {
   uint32_t Version;
@@ -11,5 +10,4 @@ struct NtImageHotPatchInfo {
   uint32_t BufferOffset;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGEHOTPATCHINFO_H_ */

@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *  List hash algorithms to benchmark
 *  Part of xxHash project

@@ -44,7 +44,6 @@
 #define kNtHkeyDynData                  0x80000006l
 #define kNtHkeyCurrentUserLocalSettings 0x80000007l
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int RegOpenKey(int64_t hKey, const char16_t *opt_lpSubKey,
@@ -133,5 +132,4 @@ int RegSetKeySecurity(int64_t hKey, uint32_t SecurityInformation,
 int RegUnLoadKey(int64_t hKey, const char16_t *lpSubKey);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_REGISTRY_H_ */

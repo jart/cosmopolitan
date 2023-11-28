@@ -1,5 +1,4 @@
 #include "libc/x/x.h"
-/* clang-format off */
 
 static _Atomic(void *) ksx1001_decmap_ptr;
 static const unsigned char ksx1001_decmap_rodata[] = {

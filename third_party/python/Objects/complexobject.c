@@ -20,7 +20,6 @@
 #include "third_party/python/Include/pymath.h"
 #include "third_party/python/Include/pystrtod.h"
 #include "third_party/python/Include/structmember.h"
-/* clang-format off */
 
 /* Borrows heavily from floatobject.c */
 /* Submitted by Jim Hugunin */

@@ -36,7 +36,6 @@
 #include "third_party/libcxx/iterator"
 #include "third_party/libcxx/sstream"
 #include "third_party/libcxx/string"
-// clang-format off
 
 bool gpt_params_parse(int argc, char ** argv, gpt_params & params) {
     params.n_threads = std::min(20., (unsigned)__get_cpu_count() * 0.75);

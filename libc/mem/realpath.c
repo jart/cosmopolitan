@@ -28,7 +28,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"

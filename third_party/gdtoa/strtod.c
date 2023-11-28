@@ -33,7 +33,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/runtime/fenv.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 #define Avoid_Underflow
 #define dplen 1

@@ -6,7 +6,6 @@
 #define UTF16_MOAR 0xd800 /* 0xD800..0xDBFF */
 #define UTF16_CONT 0xdc00 /* 0xDC00..0xDFFF */
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define IsSurrogate(wc)     ((0xf800 & (wc)) == 0xd800)
@@ -25,5 +24,4 @@ COSMOPOLITAN_C_START_
        : 0xFFFD)
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_UTF16_H_ */

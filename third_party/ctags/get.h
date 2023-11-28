@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: get.h 525 2007-05-28 01:50:41Z elliotth $
 *

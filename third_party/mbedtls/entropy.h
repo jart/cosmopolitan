@@ -4,7 +4,6 @@
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #if defined(MBEDTLS_SHA512_C) && !defined(MBEDTLS_ENTROPY_FORCE_SHA256)
 #define MBEDTLS_ENTROPY_SHA512_ACCUMULATOR

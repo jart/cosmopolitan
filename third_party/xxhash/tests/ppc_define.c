@@ -1,4 +1,3 @@
-// clang-format off
 /*
  * Multi-include test program
  * ensure that pixel, bool and vector are not redefined

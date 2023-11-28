@@ -1,4 +1,3 @@
-/* clang-format off */
 /* buffio.c -- Treat buffer as an I/O stream.
 
   (c) 1998-2007 (W3C) MIT, ERCIM, Keio University

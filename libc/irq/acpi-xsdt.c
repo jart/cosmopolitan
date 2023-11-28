@@ -26,7 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/irq/acpi.internal.h"
@@ -41,8 +41,7 @@
 #ifdef __x86_64__
 
 textstartup static void *_AcpiOsMapRoMemory(uintptr_t phy, size_t n) {
-  __invert_and_perm_ref_memory_area(__get_mm(), __get_pml4t(), phy, n,
-                                    PAGE_XD);
+  __invert_and_perm_ref_memory_area(__get_mm(), __get_pml4t(), phy, n, PAGE_XD);
   return (void *)(BANE + phy);
 }
 
@@ -108,10 +107,10 @@ textstartup static AcpiStatus _AcpiRsdpVerifyChecksums(const uint8_t *p) {
   if (q->Revision <= 1) return kAcpiOk;
   length = q->Length;
   if (length < offsetof(AcpiTableRsdp, Reserved)) {
-    KWARNF("malformed ACPI 2+ RSDP, length %#zx < %#zx",
-              length, offsetof(AcpiTableRsdp, Reserved));
-    if (length < offsetof(AcpiTableRsdp, RsdtPhysicalAddress)
-                 + sizeof(q->RsdtPhysicalAddress)) {
+    KWARNF("malformed ACPI 2+ RSDP, length %#zx < %#zx", length,
+           offsetof(AcpiTableRsdp, Reserved));
+    if (length < offsetof(AcpiTableRsdp, RsdtPhysicalAddress) +
+                     sizeof(q->RsdtPhysicalAddress)) {
       return kAcpiExBadHeader;
     }
     return kAcpiOk;

@@ -50,7 +50,6 @@
 #include "libc/time/time.h"
 #include "third_party/getopt/getopt.internal.h"
 #include "third_party/musl/passwd.h"
-// clang-format off
 
 /*
  * Mail status reporting added 931007 by Luke Mewburn, <zak@rmit.edu.au>.

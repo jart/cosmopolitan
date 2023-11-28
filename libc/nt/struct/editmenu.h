@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_EDITMENU_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_EDITMENU_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtEditMenu {
   int64_t hmenu;
@@ -12,5 +11,4 @@ struct NtEditMenu {
   uint16_t idUndo;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_EDITMENU_H_ */

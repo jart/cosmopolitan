@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_STR_WCWIDTH_OSX_H_
 #define COSMOPOLITAN_LIBC_STR_WCWIDTH_OSX_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const uint32_t kWcwidthOsx[591];
@@ -18,5 +17,4 @@ static inline int _wcwidth_osx(uint32_t codePoint) {
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_WCWIDTH_OSX_H_ */

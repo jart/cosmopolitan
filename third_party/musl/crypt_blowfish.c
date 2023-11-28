@@ -37,7 +37,6 @@ asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 /* Modified by Rich Felker in for inclusion in musl libc, based on
  * Solar Designer's second size-optimized version sent to the musl

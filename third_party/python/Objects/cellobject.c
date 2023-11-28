@@ -9,7 +9,6 @@
 #include "third_party/python/Include/descrobject.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
-/* clang-format off */
 
 PyObject *
 PyCell_New(PyObject *obj)

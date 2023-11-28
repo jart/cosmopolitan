@@ -18,7 +18,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/traceback.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 static PyObject *gen_close(PyGenObject *, PyObject *);
 static PyObject *async_gen_asend_new(PyAsyncGenObject *, PyObject *);

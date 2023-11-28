@@ -10,8 +10,6 @@
 #include "third_party/libcxx/thread"
 #include "third_party/libcxx/unordered_map"
 #include "third_party/libcxx/vector"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-// clang-format off
 // Various helper functions and utilities
 
 //
@@ -133,5 +131,4 @@ void win32_console_init(bool enable_color);
 void win32_utf8_encode(const std::wstring & wstr, std::string & str);
 #endif
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_COMMON_H_ */

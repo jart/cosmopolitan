@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- popcountsi2.c - Implement __popcountsi2 ---------------------------===
  *
  *                     The LLVM Compiler Infrastructure

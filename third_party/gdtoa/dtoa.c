@@ -31,7 +31,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/fenv.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
-/* clang-format off */
 
 /* dtoa for IEEE arithmetic (dmg): convert double to ASCII string.
  *

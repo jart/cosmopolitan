@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_NT_IPC_H_
 #define COSMOPOLITAN_LIBC_NT_NT_IPC_H_
 #include "libc/nt/enum/status.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -46,5 +45,4 @@ NtStatus NtCreateNamedPipeFile(int64_t *out_FileHandle, uint32_t DesiredAccess,
                                int64_t *opt_DefaultTimeout);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_IPC_H_ */

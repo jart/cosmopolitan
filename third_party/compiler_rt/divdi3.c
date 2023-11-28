@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- divdi3.c - Implement __divdi3 -------------------------------------===
  *
  *                     The LLVM Compiler Infrastructure

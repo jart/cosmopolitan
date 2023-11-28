@@ -12,7 +12,6 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
@@ -50,7 +49,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/xed/x86.h"
-// clang-format off
 
 STATIC_STACK_SIZE(0x100000);
 

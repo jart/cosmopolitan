@@ -21,7 +21,6 @@
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/nsync/common.internal.h"
-// clang-format off
 
 /* Aborts after printing the nul-terminated string s[]. */
 void nsync_panic_ (const char *s) {

@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
  * _codecs_tw.c: Codecs collection for Taiwan's encodings
  *

@@ -12,10 +12,8 @@
 
 #define DNS_CLASS_IN 1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kMinSockaddr4Size \
   (offsetof(struct sockaddr_in, sin_addr) + sizeof(struct in_addr))
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_DNS_CONSTS_H_ */

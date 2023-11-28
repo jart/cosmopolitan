@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_DSP_CORE_C331_H_
 #define COSMOPOLITAN_DSP_CORE_C331_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /**
@@ -25,5 +24,4 @@ __funline unsigned char C331(unsigned char al, unsigned char bl,
 }
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_DSP_CORE_C331_H_ */

@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/python/Include/structmember.h"
-/* clang-format off */
 
 /*
  * Support for overlapped IO

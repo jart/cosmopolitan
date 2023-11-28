@@ -1,4 +1,3 @@
-// clang-format off
 /*
   zipcloak.c - Zip 3
 

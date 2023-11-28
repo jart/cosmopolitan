@@ -14,7 +14,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-/* clang-format off */
 #include "third_party/make/config.h"
 #include "third_party/make/getprogname.h"
 #include "libc/intrin/safemacros.internal.h"

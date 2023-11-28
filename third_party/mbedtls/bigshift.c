@@ -20,7 +20,6 @@
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/platform.h"
-/* clang-format off */
 
 typedef long long xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 

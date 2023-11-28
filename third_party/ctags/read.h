@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: read.h 769 2010-09-11 21:00:16Z dhiebert $
 *

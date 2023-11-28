@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GGML_F16_H_
 #define COSMOPOLITAN_THIRD_PARTY_GGML_F16_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #ifdef __ARM_NEON
@@ -20,5 +19,4 @@ void ggml_fp16_to_fp32_row(const ggml_fp16_t* x, float* y, size_t n);
 void ggml_fp32_to_fp16_row(const float* x, ggml_fp16_t* y, size_t n);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_GGML_F16_H_ */

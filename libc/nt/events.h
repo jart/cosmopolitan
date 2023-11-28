@@ -28,7 +28,6 @@
 │ cosmopolitan § new technology » events                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int32_t GetMessage(struct NtMsg *lpMsg, int64_t hWnd, uint32_t wMsgFilterMin,
@@ -67,5 +66,4 @@ int32_t ResetEvent(int64_t hEvent);
 int32_t PulseEvent(int64_t hEvent);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_EVENTS_H_ */

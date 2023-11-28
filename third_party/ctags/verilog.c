@@ -1,4 +1,3 @@
-// clang-format off
 /*
 *   $Id: verilog.c 753 2010-02-27 17:53:32Z elliotth $
 * 

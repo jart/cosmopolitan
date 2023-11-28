@@ -25,7 +25,6 @@
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Include/pyport.h"
 #include "third_party/python/Include/unicodeobject.h"
-/* clang-format off */
 
 wchar_t* _Py_DecodeUTF8_surrogateescape(const char *, Py_ssize_t);
 

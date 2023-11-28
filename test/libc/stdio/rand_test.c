@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
+#include "libc/serialize.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

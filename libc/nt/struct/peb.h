@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_STRUCT_PEB_H_
 #include "libc/nt/struct/ldr.h"
 #include "libc/nt/struct/unicodestring.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtPeb {
   union {
@@ -92,5 +91,4 @@ struct NtPeb {
   uint64_t MinimumStackCommit;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_PEB_H_ */

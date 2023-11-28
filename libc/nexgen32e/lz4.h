@@ -1,10 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_LZ4_H_
 #define COSMOPOLITAN_LIBC_LZ4_H_
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § lz4                                                       ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝
-  LZ4 is a framing format for REP MOVSB designed by Yann Collet.
+  LZ4 is a brilliant framing format for REP MOVSB designed by Yann Collet.
 
   @see https://github.com/lz4/lz4/blob/master/doc/lz4_Frame_format.md
   @see https://github.com/lz4/lz4/blob/master/doc/lz4_Block_format.md
@@ -21,7 +21,6 @@
 #define LZ4_BLOCKMAXSIZE_1MB   6
 #define LZ4_BLOCKMAXSIZE_4MB   7
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § lz4 » frames                                              ─╬─│┼
@@ -68,5 +67,4 @@ COSMOPOLITAN_C_START_
    (LZ4_FRAME_BLOCKCHECKSUMFLAG(frame) ? sizeof(uint8_t) : 0))
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LZ4_H_ */

@@ -27,7 +27,6 @@ asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\
 Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
-// clang-format off
 
 /* An once_sync_s struct contains a lock, and a condition variable on which
    threads may wait for an nsync_once to be initialized by another thread.

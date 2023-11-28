@@ -5,7 +5,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* clang-format off */
 
 #define MAXINDENT 100   /* Max indentation level */
 

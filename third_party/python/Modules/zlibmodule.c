@@ -16,7 +16,6 @@
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/zlib/zlib.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("zlib");
 PYTHON_PROVIDE("zlib.DEFLATED");

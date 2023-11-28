@@ -2,7 +2,6 @@
 
 #define BZ_NO_STDIO
 
-/* clang-format off */
 
 /*-------------------------------------------------------------*/
 /*--- Private header file for the library.                  ---*/

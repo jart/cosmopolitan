@@ -126,7 +126,6 @@ done
 
 for f in third_party/intel/*.h; do
   (
-    printf %s\\n '/* clang-format off */'
     printf %s\\n '#if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)'
     cat $f
     printf %s\\n '#endif'

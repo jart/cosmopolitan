@@ -11,7 +11,6 @@
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pyfpe.h"
 #include "third_party/python/Include/pythonrun.h"
-/* clang-format off */
 
 /*
      ---------------------------------------------------------------------

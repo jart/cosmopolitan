@@ -10,7 +10,6 @@
 
 #define RUNLEVEL_MALLOC 1
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern int __pid;
@@ -50,6 +49,5 @@ void __on_arithmetic_overflow(void);
 void __init_fds(int, char **, char **);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* ANSI */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_INTERNAL_H_ */

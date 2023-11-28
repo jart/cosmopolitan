@@ -16,7 +16,6 @@
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/posixmodule.h"
-/* clang-format off */
 
 #include "third_party/python/Modules/clinic/pwdmodule.inc"
 

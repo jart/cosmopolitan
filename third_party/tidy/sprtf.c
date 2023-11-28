@@ -1,4 +1,3 @@
-/* clang-format off */
 /* sprtf.c
  * SPRTF - Log output utility - part of the HTML Tidy project
  *

@@ -25,7 +25,6 @@
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"
-// clang-format off
 
 /* The state shared between the threads in each of the tests below. */
 typedef struct test_data_s {

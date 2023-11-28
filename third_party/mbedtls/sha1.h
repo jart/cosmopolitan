@@ -3,7 +3,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/platform.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 /* MBEDTLS_ERR_SHA1_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_SHA1_HW_ACCEL_FAILED  -0x0035  /*< SHA-1 hardware accelerator failed */

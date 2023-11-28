@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_STACK_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifdef _COSMO_SOURCE
 
 /**
@@ -158,5 +157,4 @@ int FreeCosmoStack(void *) libcesque;
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
 #endif /* _COSMO_SOURCE */
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_STACK_H_ */

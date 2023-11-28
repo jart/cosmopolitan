@@ -32,7 +32,6 @@ QuickJS (MIT License)\\n\
 Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /* It is valid to call string_buffer_end() and all string_buffer functions even
    if string_buffer_init() or another string_buffer function returns an error.

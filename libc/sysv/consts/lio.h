@@ -7,7 +7,6 @@
 #define LIO_WAIT LIO_WAIT
 #define LIO_WRITE LIO_WRITE
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int LIO_NOP;
@@ -17,5 +16,4 @@ extern const int LIO_WAIT;
 extern const int LIO_WRITE;
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_LIO_H_ */

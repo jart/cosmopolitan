@@ -7,7 +7,6 @@
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/cjkcodecs/cjkcodecs.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_codecs_cn");
 PYTHON_PROVIDE("_codecs_cn.__map_gb18030ext");

@@ -29,7 +29,6 @@
 │ SUCH DAMAGE.                                                                 │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
-// clang-format off
 
 /*
  * The SVID interface to getsubopt provides no way of figuring out which

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_NT_NT_LOADER_H_
 #include "libc/nt/enum/status.h"
 #include "libc/nt/typedef/wambda.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*                            ░░░░
                        ▒▒▒░░░▒▒▒▒▒▒▒▓▓▓░
@@ -50,5 +49,4 @@ NtStatus LdrGetDllHandle(const char16_t *opt_PathToFile, uint32_t opt_Unused,
                          void **out_ModuleHandle);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NT_LOADER_H_ */

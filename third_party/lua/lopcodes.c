@@ -29,7 +29,6 @@
 #define LUA_CORE
 #include "third_party/lua/lopcodes.h"
 #include "third_party/lua/lprefix.h"
-// clang-format off
 
 asm(".ident\t\"\\n\\n\
 Lua 5.4.3 (MIT License)\\n\

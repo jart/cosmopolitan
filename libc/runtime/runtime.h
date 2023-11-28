@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § runtime                                                   ─╬─│┼
@@ -148,5 +147,4 @@ __funline int __trace_disabled(int x) {
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_ */

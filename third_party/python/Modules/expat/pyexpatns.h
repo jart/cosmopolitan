@@ -1,6 +1,5 @@
 #ifndef PYEXPATNS_H
 #define PYEXPATNS_H
-/* clang-format off */
 
 #define XML_DefaultCurrent              PyExpat_XML_DefaultCurrent
 #define XML_ErrorString                 PyExpat_XML_ErrorString

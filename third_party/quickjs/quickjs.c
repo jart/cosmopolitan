@@ -54,7 +54,6 @@ Copyright (c) 2017-2021 Fabrice Bellard\\n\
 Copyright (c) 2017-2021 Charlie Gordon\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-/* clang-format off */
 
 static const char js_atom_init[] =
 #define DEF(name, str) str "\0"

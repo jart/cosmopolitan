@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGECERUNTIMEFUNCTIONENTRY_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGECERUNTIMEFUNCTIONENTRY_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageCeRuntimeFunctionEntry {
   uint32_t FuncStart;
@@ -10,5 +9,4 @@ struct NtImageCeRuntimeFunctionEntry {
   uint32_t ExceptionFlag : 1;
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_IMAGECERUNTIMEFUNCTIONENTRY_H_ */

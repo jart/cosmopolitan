@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_FASTRANDOMSTRING_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_FASTRANDOMSTRING_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 static inline const char *FastRandomString(void) {
   static unsigned long t;
@@ -12,5 +11,4 @@ static inline const char *FastRandomString(void) {
   return u.b;
 }
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TESTLIB_FASTRANDOMSTRING_H_ */

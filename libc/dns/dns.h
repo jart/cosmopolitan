@@ -45,7 +45,6 @@
 #define NI_MAXSERV      32
 #define NI_MAXHOST      1025
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct addrinfo {
@@ -77,5 +76,4 @@ int ResolveDnsReverse(const struct ResolvConf *, int, const char *, char *,
 struct addrinfo *newaddrinfo(uint16_t);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_DNS_DNS_H_ */

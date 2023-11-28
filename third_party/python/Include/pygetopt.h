@@ -1,7 +1,6 @@
 #ifndef Py_PYGETOPT_H
 #define Py_PYGETOPT_H
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #ifndef Py_LIMITED_API
 extern int _PyOS_opterr;

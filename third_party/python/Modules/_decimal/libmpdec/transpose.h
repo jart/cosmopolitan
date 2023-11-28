@@ -1,7 +1,6 @@
 #ifndef TRANSPOSE_H
 #define TRANSPOSE_H
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
-/* clang-format off */
 
 /* Internal header file: all symbols have local scope in the DSO */
 

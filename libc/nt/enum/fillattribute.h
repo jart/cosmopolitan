@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_NT_NTFILLATTRIBUTE_H_
 #define COSMOPOLITAN_LIBC_NT_NTFILLATTRIBUTE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 #define kNtForegroundBlue 0x0001
 #define kNtForegroundGreen 0x0002
@@ -11,5 +10,4 @@
 #define kNtBackgroundRed 0x0040
 #define kNtBackgroundIntensity 0x0080
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_NTFILLATTRIBUTE_H_ */

@@ -1,4 +1,3 @@
-/* clang-format off */
 #if defined(__x86_64__) && !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifndef _MM_MALLOC_H_INCLUDED
 #define _MM_MALLOC_H_INCLUDED

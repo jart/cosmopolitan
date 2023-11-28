@@ -1,4 +1,3 @@
-// clang-format off
 
 __collisionsTest__ is a brute force hash analyzer
 which will measure a 64-bit hash algorithm's collision rate

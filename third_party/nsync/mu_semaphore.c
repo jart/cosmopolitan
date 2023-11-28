@@ -29,7 +29,6 @@ asm(".ident\t\"\\n\\n\
 *NSYNC (Apache 2.0)\\n\
 Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
-// clang-format off
 
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init (nsync_semaphore *s) {

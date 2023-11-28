@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-- lib/muldf3.c - Double-precision multiplication ------------*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

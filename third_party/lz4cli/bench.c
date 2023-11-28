@@ -1,4 +1,3 @@
-/* clang-format off */
 /*
     bench.c - Demo program to benchmark open-source compression algorithms
     Copyright (C) Yann Collet 2012-2016

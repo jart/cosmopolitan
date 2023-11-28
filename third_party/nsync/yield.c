@@ -20,7 +20,6 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/common.internal.h"
-// clang-format off
 
 void nsync_yield_ (void) {
 	pthread_yield ();

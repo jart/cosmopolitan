@@ -5,7 +5,6 @@
 #include "libc/calls/struct/siginfo-openbsd.internal.h"
 #include "libc/calls/struct/siginfo-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 union siginfo_meta {
@@ -19,5 +18,4 @@ union siginfo_meta {
 void __siginfo2cosmo(struct siginfo *, const union siginfo_meta *);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGINFO_META_INTERNAL_H_ */

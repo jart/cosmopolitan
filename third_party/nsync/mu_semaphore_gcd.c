@@ -31,7 +31,6 @@
 #include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
 #include "third_party/nsync/time.h"
-// clang-format off
 
 /**
  * @fileoverview Semaphores w/ Apple's Grand Central Dispatch API.

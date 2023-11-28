@@ -23,7 +23,6 @@
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("resource");
 PYTHON_PROVIDE("resource.RLIMIT_AS");

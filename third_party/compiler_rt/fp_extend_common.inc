@@ -1,4 +1,3 @@
-/* clang-format off */
 //===-lib/fp_extend.h - low precision -> high precision conversion -*- C -*-===//
 //
 //                     The LLVM Compiler Infrastructure

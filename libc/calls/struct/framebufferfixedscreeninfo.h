@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_FRAMEBUFFERFIXEDSCREENINFO_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_FRAMEBUFFERFIXEDSCREENINFO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct FrameBufferFixedScreenInfo {
   char id[16];
@@ -20,5 +19,4 @@ struct FrameBufferFixedScreenInfo {
   uint16_t reserved[2];
 };
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_FRAMEBUFFERFIXEDSCREENINFO_H_ */

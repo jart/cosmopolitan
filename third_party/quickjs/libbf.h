@@ -2,9 +2,7 @@
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBBF_H_
 #include "libc/limits.h"
 #include "libc/literal.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #if INTPTR_MAX >= INT64_MAX
 #define LIMB_LOG2_BITS 6
@@ -513,5 +511,4 @@ int bfdec_normalize_and_round(bfdec_t *r, limb_t prec1, bf_flags_t flags);
 
 /* clang-format on */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_QUICKJS_LIBBF_H_ */

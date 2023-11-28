@@ -37,7 +37,6 @@
 
 #define kNtAttachParentProcess -1u
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 bool32 WriteConsoleOutput(int64_t hConsoleOutput,
@@ -111,5 +110,4 @@ bool32 SetConsoleCursorInfo(
 #include "libc/nt/thunk/console.inc"
 #endif /* ShouldUseMsabiAttribute() */
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_CONSOLE_H_ */

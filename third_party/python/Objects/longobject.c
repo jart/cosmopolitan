@@ -26,7 +26,6 @@
 #include "third_party/python/Include/structseq.h"
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
-/* clang-format off */
 
 /* Long (arbitrary precision) integer object implementation */
 /* XXX The functional organization of this file is terrible */

@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_IRQ_ACPI_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_IRQ_ACPI_INTERNAL_H_
-#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/log/color.internal.h"
 
 /**
  * @internal
@@ -18,10 +16,10 @@
  * @internal
  * AcpiStatus values.
  */
-#define kAcpiOk             0x0000
-#define kAcpiExNotFound     0x0005
-#define kAcpiExBadHeader    0x2002
-#define kAcpiExBadChecksum  0x2003
+#define kAcpiOk            0x0000
+#define kAcpiExNotFound    0x0005
+#define kAcpiExBadHeader   0x2002
+#define kAcpiExBadChecksum 0x2003
 
 /**
  * @internal
@@ -44,9 +42,9 @@
  * @internal
  * Values for AcpiSubtableHeader::Type under an AcpiTableMadt.
  */
-#define kAcpiMadtLocalApic    0
-#define kAcpiMadtIoApic       1
-#define kAcpiMadtIntOverride  2
+#define kAcpiMadtLocalApic   0
+#define kAcpiMadtIoApic      1
+#define kAcpiMadtIntOverride 2
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -131,9 +129,9 @@ typedef struct thatispacked {
  */
 typedef struct thatispacked {
   AcpiTableHeader Header;
-  uint32_t Address;  /* local APIC address */
-  uint32_t Flags;    /* multiple APIC flags */
-  char Subtable[];   /* ...interrupt controller structures... */
+  uint32_t Address; /* local APIC address */
+  uint32_t Flags;   /* multiple APIC flags */
+  char Subtable[];  /* ...interrupt controller structures... */
 } AcpiTableMadt;
 
 /**
@@ -228,8 +226,11 @@ forceinline bool _AcpiSuccess(AcpiStatus __sta) {
 
 forceinline AcpiStatus _AcpiGetTable(const char __sig[4], uint32_t __inst,
                                      void **__phdr) {
-  uint8_t __sig_copy[4] = { __sig[0], __sig[1], __sig[2], __sig[3] };
-  return _AcpiGetTableImpl(READ32LE(__sig_copy), __inst, __phdr);
+  unsigned sig32le = (unsigned)(unsigned char)__sig[0] |
+                     (unsigned)(unsigned char)__sig[1] << 8 |
+                     (unsigned)(unsigned char)__sig[2] << 16 |
+                     (unsigned)(unsigned char)__sig[3] << 24;
+  return _AcpiGetTableImpl(sig32le, __inst, __phdr);
 }
 
 COSMOPOLITAN_C_END_

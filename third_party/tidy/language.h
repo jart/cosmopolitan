@@ -1,6 +1,5 @@
 #ifndef language_h
 #define language_h
-/* clang-format off */
 
 /*********************************************************************
  * Localization support for HTML Tidy.

@@ -3,7 +3,6 @@
 
 #include "third_party/lua/llimits.h"
 
-/* clang-format off */
 
 /*===========================================================================
   We assume that instructions are unsigned 32-bit integers.

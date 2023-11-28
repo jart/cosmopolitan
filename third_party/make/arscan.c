@@ -16,7 +16,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "libc/sysv/consts/o.h"
 #include "third_party/make/makeint.inc"
-/* clang-format off */
 
 #ifdef TEST
 /* Hack, the real error() routine eventually pulls in die from main.c */

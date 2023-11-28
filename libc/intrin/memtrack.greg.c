@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/log/libfatal.internal.h"

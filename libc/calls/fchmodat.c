@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -62,7 +63,9 @@ int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
       rc = sys_fchmodat2(dirfd, path, mode, flags);
       if (rc == -1 && errno == ENOSYS) {
         errno = serrno;
+        BLOCK_CANCELATION;
         rc = sys_fchmodat_linux(dirfd, path, mode, flags);
+        ALLOW_CANCELATION;
       }
     } else {
       rc = sys_fchmodat(dirfd, path, mode, flags);

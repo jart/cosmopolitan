@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLUTION_H_
 #define COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLUTION_H_
 #include "dsp/core/q.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 /* clang-format off */
 
 #define CONVROUND(X) ((int)rint(X))
@@ -63,5 +62,4 @@
 
 unsigned *convoindex(unsigned, unsigned, unsigned) mallocesque;
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_TOOL_VIZ_LIB_CONVOLUTION_H_ */

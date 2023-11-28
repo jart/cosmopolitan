@@ -1,4 +1,3 @@
-/* clang-format off */
 
 /* Python version identification scheme.
 

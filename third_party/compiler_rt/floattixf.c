@@ -1,4 +1,3 @@
-/* clang-format off */
 /* ===-- floattixf.c - Implement __floattixf -------------------------------===
  *
  *      	       The LLVM Compiler Infrastructure

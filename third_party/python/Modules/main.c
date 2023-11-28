@@ -27,7 +27,6 @@
 #include "third_party/python/Include/sysmodule.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 __static_yoink("PyInit__codecs");      // for pylifecycle.o
 __static_yoink("PyInit__collections"); // for pylifecycle.o

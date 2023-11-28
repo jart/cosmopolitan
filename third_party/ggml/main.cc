@@ -31,7 +31,6 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/intrin/bits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -50,6 +49,7 @@
 #include "third_party/libcxx/atomic"
 #include "third_party/libcxx/iostream"
 #include "third_party/libcxx/string"
+#include "libc/serialize.h"
 #include "third_party/libcxx/vector"
 
 #define EPHEMERAL(fmt) "\r\e[K\033[1;35m" fmt " \033[0m"
@@ -58,7 +58,6 @@ asm(".ident\t\"\\n\\n\
 llama.cpp (MIT License)\\n\
 Copyright (c) 2023 Georgi Gerganov\"");
 asm(".include \"libc/disclaimer.inc\"");
-// clang-format off
 
 static gpt_params params;
 static llama_context * ctx;

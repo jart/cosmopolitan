@@ -2,7 +2,6 @@
 #define Py_IMPORT_H
 #include "third_party/python/Include/object.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #ifndef Py_LIMITED_API
 void _PyImportZip_Init(void);

@@ -24,7 +24,6 @@
  *
  *     x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x+1
  *     0b00011110110111000110111101000001
- *     _bitreverse32(0x1edc6f41)
  *
  * @param init is the initial hash value
  * @param data points to the data

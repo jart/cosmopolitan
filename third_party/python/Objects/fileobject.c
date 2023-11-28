@@ -23,7 +23,6 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/unicodeobject.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 /* File object implementation (what's left of it -- see io.py) */
 

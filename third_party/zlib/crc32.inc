@@ -1,4 +1,3 @@
-// clang-format off
 
 /* crc32.inc -- tables for rapid CRC calculation
  * Generated automatically by crc32.c

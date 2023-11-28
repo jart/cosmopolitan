@@ -19,7 +19,6 @@
 #define LC_ALL_MASK      0x1fbf
 #define LOCALE_NAME_MAX  23
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define LC_GLOBAL_LOCALE ((locale_t)-1)
@@ -85,5 +84,4 @@ int strncasecmp_l(const char *, const char *, size_t, locale_t);
 ssize_t strfmon_l(char *, size_t, locale_t, const char *, ...);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_STR_LOCALE_H_ */

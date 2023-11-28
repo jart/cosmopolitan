@@ -2,7 +2,6 @@
 #define MBEDTLS_CHACHA20_H_
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_CHACHA20_BAD_INPUT_DATA         -0x0051 /*< Invalid input parameter(s). */
 

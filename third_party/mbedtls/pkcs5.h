@@ -4,7 +4,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  -0x2f80  /*< Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS5_INVALID_FORMAT                  -0x2f00  /*< Unexpected ASN.1 data. */

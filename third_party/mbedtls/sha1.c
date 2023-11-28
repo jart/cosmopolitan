@@ -17,7 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/mbedtls/sha1.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/bits.h"
+#include "libc/serialize.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/sha.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -33,7 +33,6 @@ Mbed TLS (Apache 2.0)\\n\
 Copyright ARM Limited\\n\
 Copyright Mbed TLS Contributors\"");
 asm(".include \"libc/disclaimer.inc\"");
-/* clang-format off */
 
 /**
  * @fileoverview FIPS-180-1 compliant SHA-1 implementation

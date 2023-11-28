@@ -10,11 +10,9 @@
 #define IPC_EXCL    02000
 #define IPC_NOWAIT  04000
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 int ftok(const char *, int);
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_IPC_H_ */

@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_POLL_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_POLL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 extern const int16_t POLLERR;
@@ -30,5 +29,4 @@ extern const int16_t POLLWRNORM;
 
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_POLL_H_ */

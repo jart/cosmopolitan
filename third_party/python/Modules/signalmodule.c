@@ -33,7 +33,6 @@
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/Modules/posixmodule.h"
 #include "third_party/python/pyconfig.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("_signal");
 PYTHON_PROVIDE("_signal.ITIMER_PROF");

@@ -18,7 +18,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/math.h"
-/* clang-format off */
 
 /**
  * Computes 512-bit product of 256-bit and 256-bit numbers.

@@ -58,7 +58,6 @@
 #include "third_party/musl/lockf.h"
 #include "third_party/radpajama/common-gptneox.h"
 #include "third_party/radpajama/gptneox.h"
-// clang-format off
 
 static console_state con_st;
 static gptneox_context ** g_ctx;

@@ -6,7 +6,6 @@
 #include "third_party/python/Modules/_sqlite/cache.h"
 #include "third_party/python/Modules/_sqlite/module.h"
 #include "third_party/sqlite3/sqlite3.h"
-/* clang-format off */
 
 typedef struct
 {

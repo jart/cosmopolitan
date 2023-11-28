@@ -19,7 +19,6 @@
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/pythonrun.h"
 #include "third_party/python/Include/yoink.h"
-/* clang-format off */
 
 PYTHON_PROVIDE("atexit");
 PYTHON_PROVIDE("atexit._clear");

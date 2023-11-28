@@ -3,7 +3,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/nexgen32e/x86feature.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #define TSC_AUX_CORE(MSR) ((MSR)&0xfff)
@@ -61,5 +60,4 @@ COSMOPOLITAN_C_START_
   })
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_RDTSCP_H_ */

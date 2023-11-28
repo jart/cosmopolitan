@@ -5,7 +5,6 @@
 #include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/pk.h"
-/* clang-format off */
 
 #define MBEDTLS_ERR_OID_NOT_FOUND                         -0x002E  /*< OID is not found. */
 #define MBEDTLS_ERR_OID_BUF_TOO_SMALL                     -0x000B  /*< output buffer is too small */

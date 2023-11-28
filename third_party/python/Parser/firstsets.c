@@ -9,7 +9,6 @@
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/token.h"
-/* clang-format off */
 
 extern int Py_DebugFlag;
 

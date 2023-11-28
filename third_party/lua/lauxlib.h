@@ -4,7 +4,6 @@
 #include "libc/stdio/stdio.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
-/* clang-format off */
 
 /* global table */
 #define LUA_GNAME	"_G"

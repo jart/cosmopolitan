@@ -2,7 +2,6 @@
 #define PSYCOPG_MICROPROTOCOLS_H 1
 #include "third_party/python/Include/Python.h"
 #include "third_party/python/Modules/_sqlite/cursor.h"
-/* clang-format off */
 
 /** adapters registry **/
 

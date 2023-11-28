@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_NET_SOCKETS_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_NET_SOCKETS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/* clang-format off */
 
 #define MBEDTLS_ERR_NET_SOCKET_FAILED                     -0x0042  /*< Failed to open a socket. */
 #define MBEDTLS_ERR_NET_CONNECT_FAILED                    -0x0044  /*< The connection to the given server / port failed. */
@@ -54,5 +52,4 @@ void mbedtls_net_init( mbedtls_net_context * );
 void mbedtls_net_usleep( unsigned long );
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_THIRD_PARTY_MBEDTLS_NET_SOCKETS_H_ */

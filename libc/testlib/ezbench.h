@@ -6,7 +6,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/testlib/bench.h"
 #include "libc/testlib/testlib.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 #ifndef EZBENCH_COUNT
@@ -196,5 +195,4 @@ void __testlib_ezbenchreport_n(const char *, char, size_t, double);
 #endif
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_ */

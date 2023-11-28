@@ -1,4 +1,3 @@
-// clang-format off
 #ifndef CRYPT_DES_H
 #define CRYPT_DES_H
 

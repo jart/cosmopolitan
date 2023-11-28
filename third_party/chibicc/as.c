@@ -20,7 +20,6 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/log/check.h"
@@ -38,6 +37,7 @@
 #include "libc/x/xasprintf.h"
 #include "third_party/chibicc/file.h"
 #include "third_party/gdtoa/gdtoa.h"
+#include "libc/serialize.h"
 #include "tool/build/lib/elfwriter.h"
 
 #define OSZ  0x66

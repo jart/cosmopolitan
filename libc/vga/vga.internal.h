@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
-#define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
+#ifndef COSMOPOLITAN_LIBC_VGA_VGA_H_
+#define COSMOPOLITAN_LIBC_VGA_VGA_H_
 #include "libc/runtime/mman.internal.h"
 
 /**
@@ -135,10 +135,6 @@
 #define kTtyLed4        0x400
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/iovec.internal.h"
-
 COSMOPOLITAN_C_START_
 
 struct VgaTextCharCell {
@@ -310,9 +306,12 @@ extern struct Tty _vga_tty;
 
 void _vga_reinit(struct Tty *, unsigned short, unsigned short, unsigned);
 void _klog_vga(const char *, size_t);
+
+struct Fd;
+struct iovec;
 ssize_t sys_readv_vga(struct Fd *, const struct iovec *, int);
 ssize_t sys_writev_vga(struct Fd *, const struct iovec *, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_ */
+#endif /* COSMOPOLITAN_LIBC_VGA_VGA_H_ */

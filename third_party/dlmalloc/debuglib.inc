@@ -1,4 +1,3 @@
-// clang-format off
 
 #if DEBUG
 /* ------------------------- Debugging Support --------------------------- */
