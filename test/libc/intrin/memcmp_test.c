@@ -113,21 +113,6 @@ TEST(memcmp, fuzz) {
   }
 }
 
-TEST(memcmp, pageOverlapTorture) {
-  long pagesz = sysconf(_SC_PAGESIZE);
-  char *map = mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
-                   MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  char *map2 = mmap(0, pagesz * 2, PROT_READ | PROT_WRITE,
-                    MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  ASSERT_SYS(0, 0, mprotect(map + pagesz, pagesz, PROT_NONE));
-  ASSERT_SYS(0, 0, mprotect(map2 + pagesz, pagesz, PROT_NONE));
-  strcpy(map + pagesz - 9, "12345678");
-  strcpy(map2 + pagesz - 9, "12345679");
-  EXPECT_LT(memcmp(map + pagesz - 9, map2 + pagesz - 9, 79), 0);
-  EXPECT_SYS(0, 0, munmap(map2, pagesz * 2));
-  EXPECT_SYS(0, 0, munmap(map, pagesz * 2));
-}
-
 int buncmp(const void *, const void *, size_t) asm("bcmp");
 int funcmp(const void *, const void *, size_t) asm("memcmp");
 

@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #ifndef __aarch64__
 
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 static inline const unsigned char *memchr_pure(const unsigned char *s,
                                                unsigned char c, size_t n) {
@@ -69,15 +70,8 @@ static inline const unsigned char *memchr_sse(const unsigned char *s,
 void *memchr(const void *s, int c, size_t n) {
 #if defined(__x86_64__) && !defined(__chibicc__)
   const void *r;
-  const unsigned char *p = (const unsigned char *)s;
-  while (n && ((intptr_t)p & 15)) {
-    if (*p == (unsigned char)c) {
-      return (void *)p;
-    }
-    ++p;
-    --n;
-  }
-  r = memchr_sse(p, c, n);
+  if (IsAsan()) __asan_verify(s, n);
+  r = memchr_sse(s, c, n);
   return (void *)r;
 #else
   return (void *)memchr_pure(s, c, n);
