@@ -92,6 +92,8 @@ ARCH = x86_64
 HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd
 endif
 
+ZIPOBJ_FLAGS += -a$(ARCH)
+
 ifeq ($(PREFIX),)
 ifeq ($(USE_SYSTEM_TOOLCHAIN),)
 ifeq ($(ARCH),x86_64)
