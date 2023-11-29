@@ -47,12 +47,3 @@ void __sig_unblock(sigset_t m) {
     sys_sigprocmask(SIG_SETMASK, &m, 0);
   }
 }
-
-textwindows sigset_t __sig_begin(sigset_t waitmask) {
-  return atomic_exchange_explicit(&__get_tls()->tib_sigmask, waitmask,
-                                  memory_order_acquire);
-}
-
-textwindows void __sig_finish(sigset_t m) {
-  atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
-}

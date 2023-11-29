@@ -22,6 +22,7 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/events.h"
@@ -82,7 +83,9 @@ RestartOperation:
   bool eagained = false;
   // check for signals and cancelation
   if (_check_cancel() == -1) return -1;  // ECANCELED
-  if ((sig = __sig_get(waitmask))) goto HandleInterrupt;
+  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+    goto HandleInterrupt;
+  }
 
   // signals have already been fully blocked by caller
   // perform i/o operation with atomic signal/cancel checking
@@ -130,9 +133,9 @@ RestartOperation:
       return eagain();
     }
     // otherwise it must be due to a kill() via __sig_cancel()
-    if ((sig = __sig_get(waitmask))) {
+    if (_weaken(__sig_relay) && (sig = _weaken(__sig_get)(waitmask))) {
     HandleInterrupt:
-      int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+      int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
       if (_check_cancel() == -1) return -1;  // possible if we SIGTHR'd
       // read() is @restartable unless non-SA_RESTART hands were called
       if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) {

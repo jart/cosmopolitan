@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
@@ -76,8 +77,8 @@ static textwindows int __proc_wait(int pid, int *wstatus, int options,
     if (_check_cancel() == -1) {
       return -1;
     }
-    if ((sig = __sig_get(waitmask))) {
-      handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+    if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+      handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
       if (_check_cancel() == -1) {
         return -1;  // ECANCELED because SIGTHR was just handled
       }

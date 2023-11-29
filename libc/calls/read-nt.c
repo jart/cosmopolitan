@@ -31,6 +31,7 @@
 #include "libc/intrin/dll.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
@@ -721,7 +722,9 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   }
   if (_check_cancel() == -1) return -1;
   if (f->flags & _O_NONBLOCK) return eagain();
-  if ((sig = __sig_get(waitmask))) goto DeliverSignal;
+  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+    goto DeliverSignal;
+  }
   struct PosixThread *pt = _pthread_self();
   pt->pt_blkmask = waitmask;
   pt->pt_semaphore = sem = CreateSemaphore(0, 0, 1, 0);
@@ -732,11 +735,13 @@ static textwindows int WaitForConsole(struct Fd *f, sigset_t waitmask) {
   if (wi == kNtWaitTimeout) return 0;  // vtime elapsed
   if (wi == 0) return -2;              // console data
   if (wi != 1) return __winerr();      // wait failed
-  if (!(sig = __sig_get(waitmask))) return eintr();
-DeliverSignal:
-  int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
-  if (_check_cancel() == -1) return -1;
-  if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) return -2;
+  if (_weaken(__sig_get)) {
+    if (!(sig = _weaken(__sig_get)(waitmask))) return eintr();
+  DeliverSignal:
+    int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
+    if (_check_cancel() == -1) return -1;
+    if (!(handler_was_called & SIG_HANDLED_NO_RESTART)) return -2;
+  }
   return eintr();
 }
 

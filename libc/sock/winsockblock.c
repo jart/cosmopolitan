@@ -20,6 +20,7 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/struct/overlapped.h"
@@ -42,7 +43,9 @@ RestartOperation:
   int rc, sig, reason = 0;
   uint32_t status, exchanged;
   if (_check_cancel() == -1) return -1;  // ECANCELED
-  if ((sig = __sig_get(waitmask))) goto HandleInterrupt;
+  if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
+    goto HandleInterrupt;
+  }
 
   struct NtOverlapped overlap = {.hEvent = WSACreateEvent()};
   rc = StartSocketOp(handle, &overlap, &flags, arg);
@@ -87,9 +90,9 @@ RestartOperation:
       errno = reason;
       return -1;
     }
-    if ((sig = __sig_get(waitmask))) {
+    if (_weaken(__sig_get) && (sig = _weaken(__sig_get)(waitmask))) {
     HandleInterrupt:
-      int handler_was_called = __sig_relay(sig, SI_KERNEL, waitmask);
+      int handler_was_called = _weaken(__sig_relay)(sig, SI_KERNEL, waitmask);
       if (_check_cancel() == -1) return -1;
       if (handler_was_called != 1) goto RestartOperation;
     }

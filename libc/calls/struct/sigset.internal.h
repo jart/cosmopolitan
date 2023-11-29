@@ -15,9 +15,7 @@ COSMOPOLITAN_C_START_
   while (0)
 
 sigset_t __sig_block(void);
-void __sig_finish(sigset_t);
 void __sig_unblock(sigset_t);
-sigset_t __sig_begin(sigset_t);
 int __sys_sigprocmask(int, const uint64_t *, uint64_t *, uint64_t);
 int sys_sigprocmask(int, const sigset_t *, sigset_t *);
 int sys_sigsuspend(const uint64_t *, uint64_t);

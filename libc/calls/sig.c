@@ -218,10 +218,12 @@ textwindows int __sig_raise(volatile int sig, int sic) {
 }
 
 textwindows int __sig_relay(int sig, int sic, sigset_t waitmask) {
+  sigset_t m;
   int handler_was_called;
-  sigset_t m = __sig_begin(waitmask);
+  m = atomic_exchange_explicit(&__get_tls()->tib_sigmask, waitmask,
+                               memory_order_acquire);
   handler_was_called = __sig_raise(sig, SI_KERNEL);
-  __sig_finish(m);
+  atomic_store_explicit(&__get_tls()->tib_sigmask, m, memory_order_release);
   return handler_was_called;
 }
 
