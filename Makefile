@@ -93,7 +93,7 @@ endif
 ifeq ($(TOOLCHAIN),)                                                # if TOOLCHAIN isn't defined
 ifeq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")  # if our gcc isn't unbundled
 ifneq ($(UNAME_M)-$(UNAME_S), x86_64-Linux)                         # if this is not amd64 linux
-$(error you need to download https://cosmo.zip/pub/cosmocc/cosmocc-0.0.18.zip and unzip it inside the cosmo directory)
+$(error please run tool/cosmocc/fetch.sh)
 endif
 endif
 endif
@@ -123,7 +123,9 @@ o/$(MODE):			\
 	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
-.PHONY: o/$(MODE)/.
+# TODO(jart): Make Emacs `C-c C-c` shortcut not need this.
+.PHONY: o/$(MODE)/ o/$(MODE)/.
+o/$(MODE)/: o/$(MODE)
 o/$(MODE)/.: o/$(MODE)
 
 # check if we're using o//third_party/make/make.com

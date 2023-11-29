@@ -71,10 +71,10 @@ done
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.19/aarch64-gcc.zip
+  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.23/aarch64-gcc.zip
   unzip aarch64-gcc.zip
   rm -f aarch64-gcc.zip
-  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.19/x86_64-gcc.zip
+  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.23/x86_64-gcc.zip
   unzip x86_64-gcc.zip
   rm -f x86_64-gcc.zip
 fi
