@@ -16,9 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/thread/thread.h"
 
 /**
@@ -39,24 +37,9 @@
  * @see pthread_spin_unlock
  * @see pthread_spin_init
  */
-errno_t(pthread_spin_lock)(pthread_spinlock_t *spin) {
-  int x;
-#if defined(SYSDEBUG) && _LOCKTRACE
-  for (;;) {
-    x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
-    if (!x) {
-      LOCKTRACE("pthread_spin_lock(%t)", spin);
-      break;
-    }
-    unassert(x == 1);
-    LOCKTRACE("pthread_spin_lock(%t) trying...", spin);
+errno_t pthread_spin_lock(pthread_spinlock_t *spin) {
+  while (atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire)) {
+    pthread_pause_np();
   }
-#else
-  for (;;) {
-    x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
-    if (!x) break;
-    unassert(x == 1);
-  }
-#endif
   return 0;
 }

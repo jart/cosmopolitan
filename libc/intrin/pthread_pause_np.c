@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2023 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
 /**
- * Initializes spin lock.
- *
- * @param pshared is ignored, since this implementation always permits
- *     multiple processes to operate on the same spin locks
- * @return 0 on success, or errno on error
- * @see pthread_spin_destroy
- * @see pthread_spin_lock
+ * Yields hyperthread.
  */
-errno_t pthread_spin_init(pthread_spinlock_t *spin, int pshared) {
-  atomic_store_explicit(&spin->_lock, 0, memory_order_relaxed);
-  return 0;
+void pthread_pause_np(void) {
+#if defined(__GNUC__) && defined(__aarch64__)
+  __asm__ volatile("yield");
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+  __asm__ volatile("pause");
+#endif
 }

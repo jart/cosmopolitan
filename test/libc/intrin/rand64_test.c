@@ -24,6 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 

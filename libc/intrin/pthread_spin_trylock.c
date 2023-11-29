@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
@@ -30,10 +29,10 @@
  * @return 0 on success, or errno on error
  * @raise EBUSY if lock is already held
  */
-errno_t(pthread_spin_trylock)(pthread_spinlock_t *spin) {
-  int x;
-  x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
-  if (!x) return 0;
-  unassert(x == 1);
-  return EBUSY;
+errno_t pthread_spin_trylock(pthread_spinlock_t *spin) {
+  if (!atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire)) {
+    return 0;
+  } else {
+    return EBUSY;
+  }
 }

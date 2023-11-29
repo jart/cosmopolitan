@@ -267,12 +267,7 @@ LIBC_HDRS = $(filter %.h,$(LIBC_FILES)) $(LIBC_ISYSTEM)
 LIBC_HDRS_H = $(filter %.h,$(LIBC_HDRS))
 LIBC_INCS = $(filter %.inc,$(LIBC_FILES))
 LIBC_CHECKS = $(LIBC_HDRS_H:%=o/$(MODE)/%.ok)
-
-ifneq ($(MODE), llvm)
 LIBC_FILES := $(wildcard libc/*)
-else
-LIBC_FILES := $(wildcard libc/*)
-endif
 
 .PHONY:		o/$(MODE)/libc
 o/$(MODE)/libc:	o/$(MODE)/libc/calls		\

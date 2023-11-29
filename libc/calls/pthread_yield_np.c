@@ -27,7 +27,7 @@
  *
  * @return 0 on success, or error number on failure
  */
-int pthread_yield(void) {
+int pthread_yield_np(void) {
   if (IsXnuSilicon()) {
     __syslib->__pthread_yield_np();
   } else if (IsOpenbsd()) {
@@ -37,3 +37,5 @@ int pthread_yield(void) {
   }
   return 0;
 }
+
+__weak_reference(pthread_yield_np, pthread_yield);

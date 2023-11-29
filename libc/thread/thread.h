@@ -193,6 +193,7 @@ int pthread_spin_trylock(pthread_spinlock_t *) paramsnonnull();
 int pthread_spin_unlock(pthread_spinlock_t *) paramsnonnull();
 int pthread_testcancel_np(void);
 int pthread_tryjoin_np(pthread_t, void **);
+int pthread_yield_np(void);
 int pthread_yield(void);
 pthread_id_np_t pthread_getthreadid_np(void);
 pthread_t pthread_self(void) pureconst;
@@ -201,6 +202,7 @@ void pthread_cleanup_pop(struct _pthread_cleanup_buffer *, int) paramsnonnull();
 void pthread_cleanup_push(struct _pthread_cleanup_buffer *, void (*)(void *), void *) paramsnonnull((1));
 void pthread_exit(void *) wontreturn;
 void pthread_testcancel(void);
+void pthread_pause_np(void);
 
 /* clang-format on */
 
@@ -212,42 +214,6 @@ void pthread_testcancel(void);
 #define pthread_cleanup_pop(execute)        \
   pthread_cleanup_pop(&_buffer, (execute)); \
   }
-
-#if defined(__GNUC__) && defined(__aarch64__)
-#define pthread_pause_np() __asm__ volatile("yield")
-#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
-#define pthread_pause_np() __asm__ volatile("pause")
-#else
-#define pthread_pause_np() (void)0
-#endif
-
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 && \
-    !defined(__STRICT_ANSI__) && !defined(MODE_DBG)
-extern const errno_t EBUSY;
-#define pthread_spin_lock(pSpin)                                  \
-  ({                                                              \
-    pthread_spinlock_t *_s = pSpin;                               \
-    while (__atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE)) { \
-      pthread_pause_np();                                         \
-    }                                                             \
-    0;                                                            \
-  })
-#define pthread_spin_unlock(pSpin)                     \
-  ({                                                   \
-    pthread_spinlock_t *_s = pSpin;                    \
-    __atomic_store_n(&_s->_lock, 0, __ATOMIC_RELEASE); \
-    0;                                                 \
-  })
-#define pthread_spin_trylock(pSpin)                                  \
-  ({                                                                 \
-    pthread_spinlock_t *_s = pSpin;                                  \
-    __atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE) ? EBUSY : 0; \
-  })
-#define pthread_spin_init(pSpin, multiprocess) \
-  (__atomic_store_n(&(pSpin)->_lock, 0, __ATOMIC_RELAXED), 0)
-#define pthread_spin_destroy(pSpin) \
-  (__atomic_store_n(&(pSpin)->_lock, -1, __ATOMIC_RELAXED), 0)
-#endif /* GCC 4.7+ */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
