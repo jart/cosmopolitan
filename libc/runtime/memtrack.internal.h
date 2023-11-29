@@ -57,7 +57,7 @@ int __untrack_memory(struct MemoryIntervals *, int, int,
                      void (*)(struct MemoryIntervals *, int, int));
 void __release_memory_nt(struct MemoryIntervals *, int, int);
 int __untrack_memories(void *, size_t);
-size_t __get_memtrack_size(struct MemoryIntervals *);
+size_t __get_memtrack_size(struct MemoryIntervals *) nosideeffect;
 
 #ifdef __x86_64__
 /*

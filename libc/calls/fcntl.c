@@ -136,7 +136,7 @@ int fcntl(int fd, int cmd, ...) {
     rc = ebadf();
   }
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
   if (rc != -1 && cmd == F_GETFL) {
     STRACE("fcntl(%d, F_GETFL) → %s", fd, DescribeOpenFlags(rc));
   } else if (cmd == F_SETFL) {

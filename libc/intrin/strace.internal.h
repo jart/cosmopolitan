@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 
 #ifndef SYSDEBUG
-#define SYSDEBUG 1
+#define SYSDEBUG 0
 #endif
 
 #define _NTTRACE    0 /* not configurable w/ flag yet */

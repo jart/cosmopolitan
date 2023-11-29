@@ -228,6 +228,27 @@ PYFLAGS +=				\
 	-O2				\
 	-B
 endif
+ifeq ($(MODE), x86_64-tiny)
+CONFIG_CPPFLAGS +=			\
+	-DTINY				\
+	-DNDEBUG			\
+	-DTRUSTWORTHY
+CONFIG_CCFLAGS +=			\
+	-Os				\
+	-fno-align-functions		\
+	-fno-align-jumps		\
+	-fno-align-labels		\
+	-fno-align-loops		\
+	-fschedule-insns2		\
+	-momit-leaf-frame-pointer	\
+	-foptimize-sibling-calls	\
+	-DDWARFLESS
+TARGET_ARCH ?=				\
+	-msse3
+PYFLAGS +=				\
+	-O2				\
+	-B
+endif
 ifeq ($(MODE), aarch64-tiny)
 # TODO(jart): -mcmodel=tiny
 CONFIG_CPPFLAGS +=			\

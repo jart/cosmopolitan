@@ -53,7 +53,7 @@ int prctl(int operation, ...) {
     rc = enosys();
   }
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
   if (operation == PR_CAPBSET_READ || operation == PR_CAPBSET_DROP) {
     STRACE("prctl(%s, %s) → %d% m", DescribePrctlOperation(operation),
            DescribeCapability(a), rc);

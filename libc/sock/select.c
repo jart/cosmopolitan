@@ -48,7 +48,6 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
 
   int rc;
-#ifdef SYSDEBUG
   fd_set old_readfds;
   fd_set *old_readfds_ptr = 0;
   fd_set old_writefds;
@@ -57,7 +56,6 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   fd_set *old_exceptfds_ptr = 0;
   struct timeval old_timeout;
   struct timeval *old_timeout_ptr = 0;
-#endif
 
   POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout));
@@ -72,7 +70,6 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
               (timeout && !__asan_is_valid(timeout, sizeof(*timeout))))) {
     rc = efault();
   } else {
-#ifdef SYSDEBUG
     if (readfds) {
       old_readfds = *readfds;
       old_readfds_ptr = &old_readfds;
@@ -89,7 +86,6 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
       old_timeout = *timeout;
       old_timeout_ptr = &old_timeout;
     }
-#endif
     if (!IsWindows()) {
 #ifdef __aarch64__
       struct timespec ts, *tsp;

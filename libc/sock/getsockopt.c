@@ -64,7 +64,7 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
     rc = enotsock();
   }
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
   if (out_opt_optval && out_optlen && rc != -1) {
     STRACE("getsockopt(%d, %s, %s, [%#.*hhs], [%d]) → %d% lm", fd,
            DescribeSockLevel(level), DescribeSockOptname(level, optname),

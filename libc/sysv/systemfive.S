@@ -379,12 +379,12 @@ _init_systemfive_magnums:
 	jnz	3b
 	xchg	%rbx,%rax
 	stosq
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	inc	%r8d
 #endif
 	jmp	2b
 5:	nop
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	push	%rdi
 	push	%rsi
 	push	%r8
@@ -449,7 +449,7 @@ _init_systemfive_done:
 	nop
 	.init.end 300,_init_systemfive,globl,hidden
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	.rodata.str1.1
 .Llog:	.ascii	STRACE_PROLOGUE
 	.ascii	"bell system five system call support"

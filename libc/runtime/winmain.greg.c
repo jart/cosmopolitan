@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/serialize.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -41,6 +40,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/winargs.internal.h"
+#include "libc/serialize.h"
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/prot.h"
@@ -271,7 +271,7 @@ abi int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   __umask = 077;
   __pid = __imp_GetCurrentProcessId();
   cmdline = MyCommandLine();
-#ifdef SYSDEBUG
+#if SYSDEBUG
   // sloppy flag-only check for early initialization
   if (StrStr(cmdline, u"--strace")) ++__strace;
 #endif

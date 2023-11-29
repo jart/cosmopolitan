@@ -153,9 +153,7 @@ int munmap(void *p, size_t n) {
   int rc;
   __mmi_lock();
   rc = __munmap_unlocked(p, n);
-#if SYSDEBUG
   size_t toto = __strace > 0 ? __get_memtrack_size(&_mmi) : 0;
-#endif
   __mmi_unlock();
   STRACE("munmap(%.12p, %'zu) → %d% m (%'zu bytes total)", p, n, rc, toto);
   return rc;

@@ -86,7 +86,7 @@ int setsockopt(int fd, int level, int optname, const void *optval,
     rc = enotsock();
   }
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
   if (!(rc == -1 && errno == EFAULT)) {
     STRACE("setsockopt(%d, %s, %s, %#.*hhs, %'u) → %d% lm", fd,
            DescribeSockLevel(level), DescribeSockOptname(level, optname),

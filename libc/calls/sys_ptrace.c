@@ -46,7 +46,7 @@ int sys_ptrace(int op, ...) {
   data = va_arg(va, long *);
   va_end(va);
   rc = __sys_ptrace(op, pid, addr, data);
-#ifdef SYSDEBUG
+#if SYSDEBUG
   if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     if (rc != -1 && IsPeek(op) && data) {
       STRACE("sys_ptrace(%s, %d, %p, [%p]) → %p% m", DescribePtrace(op), pid,

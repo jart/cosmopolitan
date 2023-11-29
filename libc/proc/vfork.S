@@ -55,7 +55,7 @@ vfork:
 #if !IsTiny()
 	push	%rbp
 	mov	%rsp,%rbp
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	ezlea	.Llog,di
 	call	__stracef
 #endif
@@ -93,7 +93,7 @@ vfork:
 	b	fork			// which doesn't support vfork()
 1:
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	stp	x29,x30,[sp,-16]!
 	adrp	x0,.Llog
 	add	x0,x0,:lo12:.Llog
@@ -130,7 +130,7 @@ vfork:
 #endif
 	.endfn	vfork,globl
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	.rodata.str1.1
 .Llog:	.ascii	STRACE_PROLOGUE
 	.asciz	"vfork()\n"

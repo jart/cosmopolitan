@@ -466,7 +466,7 @@ inline void *__mmap_unlocked(void *addr, size_t size, int prot, int flags,
  */
 void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
-#ifdef SYSDEBUG
+#if SYSDEBUG
   size_t toto = 0;
 #if _KERNTRACE || _NTTRACE
   if (IsWindows()) {
@@ -487,9 +487,11 @@ void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   toto = __strace > 0 ? __get_memtrack_size(&_mmi) : 0;
 #endif
   __mmi_unlock();
+#if SYSDEBUG
   STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m (%'zu bytes total)", addr,
          size, DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res,
          toto);
+#endif
   return res;
 }
 

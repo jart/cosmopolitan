@@ -40,7 +40,7 @@ cosmo:	push	%rbp
 	mov	%rdx,%r14
 	mov	%rcx,%r15
 
-#ifdef SYSDEBUG
+#if SYSDEBUG
 	call	__strace_init
 	mov	%eax,%r12d
 #endif /* SYSDEBUG */

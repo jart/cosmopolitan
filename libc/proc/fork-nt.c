@@ -61,7 +61,7 @@
 void WipeKeystrokes(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
-#ifdef SYSDEBUG
+#if SYSDEBUG
   kprintf("fork() %s() failed with win32 error %d\n", func, GetLastError());
 #endif
   TerminateThisProcess(SIGSTKFLT);
@@ -104,7 +104,7 @@ static dontinline textwindows bool WriteAll(int64_t h, void *buf, size_t n) {
 #ifndef NDEBUG
   if (ok) ok = ForkIo2(h, &n, sizeof(n), WriteFile, "WriteFile", false);
 #endif
-#ifdef SYSDEBUG
+#if SYSDEBUG
   if (!ok) {
     kprintf("failed to write %zu bytes to forked child: %d\n", n,
             GetLastError());
@@ -194,7 +194,7 @@ textwindows void WinMainForked(void) {
   if (!varlen || varlen >= ARRAYLEN(fvar)) return;
   NTTRACE("WinMainForked()");
   SetEnvironmentVariable(u"_FORK", NULL);
-#ifdef SYSDEBUG
+#if SYSDEBUG
   int64_t oncrash = AddVectoredExceptionHandler(1, (void *)OnForkCrash);
 #endif
   ParseInt(fvar, &reader);
@@ -271,7 +271,7 @@ textwindows void WinMainForked(void) {
   fds->p[2].handle = GetStdHandle(kNtStdErrorHandle);
 
   // restore the crash reporting stuff
-#ifdef SYSDEBUG
+#if SYSDEBUG
   RemoveVectoredExceptionHandler(oncrash);
 #endif
   if (_weaken(__sig_init)) {
@@ -314,7 +314,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
       startinfo.hStdOutput = g_fds.p[1].handle;
       startinfo.hStdError = g_fds.p[2].handle;
       args = __argv;
-#ifdef SYSDEBUG
+#if SYSDEBUG
       // If --strace was passed to this program, then propagate it the
       // forked process since the flag was removed by __intercept_flag
       if (strace_enabled(0) > 0) {

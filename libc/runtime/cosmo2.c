@@ -163,7 +163,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
 
   _init();
   // initialize program
-#ifdef SYSDEBUG
+#if SYSDEBUG
   argc = __strace_init(argc, argv, envp, auxv);
 #endif
   for (init_f **fp = __init_array_end; fp-- > __init_array_start;) {

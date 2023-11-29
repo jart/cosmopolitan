@@ -67,14 +67,12 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
     size_t n;
   } ss;
 
-#ifdef SYSDEBUG
   fd_set old_readfds;
   fd_set *old_readfds_ptr = 0;
   fd_set old_writefds;
   fd_set *old_writefds_ptr = 0;
   fd_set old_exceptfds;
   fd_set *old_exceptfds_ptr = 0;
-#endif
 
   BEGIN_CANCELATION_POINT;
   if (nfds < 0) {
@@ -87,7 +85,6 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
               (sigmask && !__asan_is_valid(sigmask, sizeof(*sigmask))))) {
     rc = efault();
   } else {
-#ifdef SYSDEBUG
     if (readfds) {
       old_readfds = *readfds;
       old_readfds_ptr = &old_readfds;
@@ -100,7 +97,6 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
       old_exceptfds = *exceptfds;
       old_exceptfds_ptr = &old_exceptfds;
     }
-#endif
     if (IsLinux()) {
       if (timeout) {
         ts = *timeout;
