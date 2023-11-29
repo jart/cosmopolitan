@@ -53,7 +53,7 @@ errno_t strerror_r(int err, char *buf, size_t size) {
   // copy windows error information
   if (IsWindows()) {
     uint32_t winerr;
-    if ((winerr = GetLastError()) != err) {
+    if ((winerr = GetLastError()) != err && winerr) {
       stpcpy(FormatUint32(stpcpy(tmp, " (win32 error "), winerr), ")");
       msg = tmp;
       while ((c = *msg++) && p + 1 < pe) {
