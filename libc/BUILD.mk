@@ -147,6 +147,7 @@ libc/isystem/pmmintrin.h \
 libc/isystem/poll.h \
 libc/isystem/popcntintrin.h \
 libc/isystem/pthread.h \
+libc/isystem/pty.h \
 libc/isystem/pwd.h \
 libc/isystem/queue \
 libc/isystem/random \
