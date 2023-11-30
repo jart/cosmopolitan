@@ -448,7 +448,7 @@ static JSValue get_date_string(JSContext *ctx, JSValueConst this_val,
             break;
         case 3:
             pos += snprintf(buf + pos, sizeof(buf) - pos,
-                            "%02d:%02d:%02d %cM", (h + 1) % 12 - 1, m, s,
+                            "%02d:%02d:%02d %cM", (h + 11) % 12 + 1, m, s,
                             (h < 12) ? 'A' : 'P');
             break;
         }

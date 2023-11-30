@@ -652,6 +652,31 @@ static JSValue js_object_hasOwnProperty(JSContext *ctx, JSValueConst this_val,
         return JS_NewBool(ctx, ret);
 }
 
+static JSValue js_object_hasOwn(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv)
+{
+    JSValue obj;
+    JSAtom atom;
+    JSObject *p;
+    BOOL ret;
+    obj = JS_ToObject(ctx, argv[0]);
+    if (JS_IsException(obj))
+        return obj;
+    atom = JS_ValueToAtom(ctx, argv[1]);
+    if (UNLIKELY(atom == JS_ATOM_NULL)) {
+        JS_FreeValue(ctx, obj);
+        return JS_EXCEPTION;
+    }
+    p = JS_VALUE_GET_OBJ(obj);
+    ret = JS_GetOwnPropertyInternal(ctx, NULL, p, atom);
+    JS_FreeAtom(ctx, atom);
+    JS_FreeValue(ctx, obj);
+    if (ret < 0)
+        return JS_EXCEPTION;
+    else
+        return JS_NewBool(ctx, ret);
+}
+
 static JSValue js_object_valueOf(JSContext *ctx, JSValueConst this_val,
                                  int argc, JSValueConst *argv)
 {
@@ -1195,6 +1220,7 @@ static const JSCFunctionListEntry js_object_funcs[] = {
     //JS_CFUNC_DEF("__getObjectData", 1, js_object___getObjectData ),
     //JS_CFUNC_DEF("__setObjectData", 2, js_object___setObjectData ),
     JS_CFUNC_DEF("fromEntries", 1, js_object_fromEntries ),
+    JS_CFUNC_DEF("hasOwn", 2, js_object_hasOwn ),
 };
 
 static const JSCFunctionListEntry js_object_proto_funcs[] = {

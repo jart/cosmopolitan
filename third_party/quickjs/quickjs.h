@@ -683,6 +683,7 @@ JSValue JS_NewObject(JSContext *ctx);
 JS_BOOL JS_IsFunction(JSContext* ctx, JSValueConst val);
 JS_BOOL JS_IsConstructor(JSContext* ctx, JSValueConst val);
 JS_BOOL JS_SetConstructorBit(JSContext *ctx, JSValueConst func_obj, JS_BOOL val);
+JS_BOOL JS_IsArrayBuffer(JSContext *ctx, JSValueConst val);
 
 JSValue JS_NewArray(JSContext *ctx);
 int JS_IsArray(JSContext *ctx, JSValueConst val);

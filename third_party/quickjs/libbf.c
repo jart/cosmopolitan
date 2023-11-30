@@ -240,8 +240,12 @@ int bf_set_ui(bf_t *r, uint64_t a)
         a0 = a;
         a1 = a >> 32;
         shift = clz(a1);
+        /* shift < 32 because a > 0xffffffff */
         r->tab[0] = a0 << shift;
-        r->tab[1] = (a1 << shift) | (a0 >> (LIMB_BITS - shift));
+        if (shift == 0)
+            r->tab[1] = a1;
+        else
+            r->tab[1] = (a1 << shift) | (a0 >> (LIMB_BITS - shift));
         r->expn = 2 * LIMB_BITS - shift;
     }
 #endif

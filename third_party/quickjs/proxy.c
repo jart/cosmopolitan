@@ -841,6 +841,10 @@ int js_proxy_isArray(JSContext *ctx, JSValueConst obj)
     JSProxyData *s = JS_GetOpaque(obj, JS_CLASS_PROXY);
     if (!s)
         return FALSE;
+    if (js_check_stack_overflow(ctx->rt, 0)) {
+        JS_ThrowStackOverflow(ctx);
+        return -1;
+    }
     if (s->is_revoked) {
         JS_ThrowTypeErrorRevokedProxy(ctx);
         return -1;
