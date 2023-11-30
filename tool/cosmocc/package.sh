@@ -8,12 +8,20 @@
 
 set -ex
 
+mode() {
+  case $(uname -m) in
+    arm64|aarch64)  echo aarch64  ;;
+    *)              echo          ;;
+  esac
+}
+
 OUTDIR=${1:-cosmocc}
+APELINK=o/$(mode)/tool/build/apelink.com
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
 
 make -j8 m= \
-  o//tool/build/apelink.com
+  $APELINK
 
 make -j8 m=$AMD64 \
   o/cosmocc.h.txt \
@@ -70,13 +78,21 @@ for x in $(cat o/cosmocc.h.txt); do
   cp -f $x "$OUTDIR/include/${x%/*}/"
 done
 
+fetch() {
+  if command -v wget >/dev/null; then
+    wget $1
+  else
+    curl -LO $1
+  fi
+}
+
 OLD=$PWD
 cd "$OUTDIR/"
 if [ ! -x bin/x86_64-linux-cosmo-gcc ]; then
-  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.24/aarch64-gcc.zip
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.24/aarch64-gcc.zip
   unzip aarch64-gcc.zip
   rm -f aarch64-gcc.zip
-  wget https://github.com/ahgamut/superconfigure/releases/download/z0.0.24/x86_64-gcc.zip
+  fetch https://github.com/ahgamut/superconfigure/releases/download/z0.0.24/x86_64-gcc.zip
   unzip x86_64-gcc.zip
   rm -f x86_64-gcc.zip
 fi
@@ -128,7 +144,7 @@ cp -f o/$AMD64/ape/ape.elf "$OUTDIR/bin/ape-x86_64.elf"
 cp -f o/$AMD64/ape/ape.macho "$OUTDIR/bin/ape-x86_64.macho"
 cp -f o/$ARM64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
 for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj; do
-  o//tool/build/apelink.com \
+  ape $APELINK \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
@@ -137,7 +153,7 @@ for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdep
     o/$ARM64/tool/build/$x.com.dbg
 done
 for x in make ctags; do
-  o//tool/build/apelink.com \
+  ape $APELINK \
     -l o/$AMD64/ape/ape.elf \
     -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
