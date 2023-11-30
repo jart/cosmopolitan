@@ -9,52 +9,54 @@
 set -ex
 
 OUTDIR=${1:-cosmocc}
+AMD64=${2:-x86_64}
+ARM64=${3:-aarch64}
 
 make -j8 m= \
   o//tool/build/apelink.com
 
-make -j8 m=x86_64 \
+make -j8 m=$AMD64 \
   o/cosmocc.h.txt \
-  o/x86_64/ape/ape.lds \
-  o/x86_64/libc/crt/crt.o \
-  o/x86_64/ape/ape.elf \
-  o/x86_64/ape/ape.macho \
-  o/x86_64/ape/ape.o \
-  o/x86_64/ape/ape-copy-self.o \
-  o/x86_64/ape/ape-no-modify-self.o \
-  o/x86_64/cosmopolitan.a \
-  o/x86_64/third_party/libcxx/libcxx.a \
-  o/x86_64/tool/build/assimilate.com.dbg \
-  o/x86_64/tool/build/march-native.com.dbg \
-  o/x86_64/tool/build/mktemper.com.dbg \
-  o/x86_64/tool/build/fixupobj.com.dbg \
-  o/x86_64/tool/build/zipcopy.com.dbg \
-  o/x86_64/tool/build/mkdeps.com.dbg \
-  o/x86_64/tool/build/zipobj.com.dbg \
-  o/x86_64/tool/build/apelink.com.dbg \
-  o/x86_64/tool/build/pecheck.com.dbg \
-  o/x86_64/third_party/make/make.com.dbg \
-  o/x86_64/third_party/ctags/ctags.com.dbg
+  o/$AMD64/ape/ape.lds \
+  o/$AMD64/libc/crt/crt.o \
+  o/$AMD64/ape/ape.elf \
+  o/$AMD64/ape/ape.macho \
+  o/$AMD64/ape/ape.o \
+  o/$AMD64/ape/ape-copy-self.o \
+  o/$AMD64/ape/ape-no-modify-self.o \
+  o/$AMD64/cosmopolitan.a \
+  o/$AMD64/third_party/libcxx/libcxx.a \
+  o/$AMD64/tool/build/assimilate.com.dbg \
+  o/$AMD64/tool/build/march-native.com.dbg \
+  o/$AMD64/tool/build/mktemper.com.dbg \
+  o/$AMD64/tool/build/fixupobj.com.dbg \
+  o/$AMD64/tool/build/zipcopy.com.dbg \
+  o/$AMD64/tool/build/mkdeps.com.dbg \
+  o/$AMD64/tool/build/zipobj.com.dbg \
+  o/$AMD64/tool/build/apelink.com.dbg \
+  o/$AMD64/tool/build/pecheck.com.dbg \
+  o/$AMD64/third_party/make/make.com.dbg \
+  o/$AMD64/third_party/ctags/ctags.com.dbg
 
-make -j8 m=aarch64 \
-  o/aarch64/ape/ape.elf \
-  o/aarch64/ape/aarch64.lds \
-  o/aarch64/libc/crt/crt.o \
-  o/aarch64/ape/ape-copy-self.o \
-  o/aarch64/ape/ape-no-modify-self.o \
-  o/aarch64/cosmopolitan.a \
-  o/aarch64/third_party/libcxx/libcxx.a \
-  o/aarch64/tool/build/assimilate.com.dbg \
-  o/aarch64/tool/build/march-native.com.dbg \
-  o/aarch64/tool/build/mktemper.com.dbg \
-  o/aarch64/tool/build/fixupobj.com.dbg \
-  o/aarch64/tool/build/zipcopy.com.dbg \
-  o/aarch64/tool/build/mkdeps.com.dbg \
-  o/aarch64/tool/build/zipobj.com.dbg \
-  o/aarch64/tool/build/apelink.com.dbg \
-  o/aarch64/tool/build/pecheck.com.dbg \
-  o/aarch64/third_party/make/make.com.dbg \
-  o/aarch64/third_party/ctags/ctags.com.dbg
+make -j8 m=$ARM64 \
+  o/$ARM64/ape/ape.elf \
+  o/$ARM64/ape/aarch64.lds \
+  o/$ARM64/libc/crt/crt.o \
+  o/$ARM64/ape/ape-copy-self.o \
+  o/$ARM64/ape/ape-no-modify-self.o \
+  o/$ARM64/cosmopolitan.a \
+  o/$ARM64/third_party/libcxx/libcxx.a \
+  o/$ARM64/tool/build/assimilate.com.dbg \
+  o/$ARM64/tool/build/march-native.com.dbg \
+  o/$ARM64/tool/build/mktemper.com.dbg \
+  o/$ARM64/tool/build/fixupobj.com.dbg \
+  o/$ARM64/tool/build/zipcopy.com.dbg \
+  o/$ARM64/tool/build/mkdeps.com.dbg \
+  o/$ARM64/tool/build/zipobj.com.dbg \
+  o/$ARM64/tool/build/apelink.com.dbg \
+  o/$ARM64/tool/build/pecheck.com.dbg \
+  o/$ARM64/third_party/make/make.com.dbg \
+  o/$ARM64/third_party/ctags/ctags.com.dbg
 
 mkdir -p "$OUTDIR/bin/"
 cp tool/cosmocc/README.md "$OUTDIR/"
@@ -106,7 +108,7 @@ for arch in aarch64 x86_64; do
 done
 cd "$OLD"
 
-for arch in x86_64 aarch64; do
+for arch in $AMD64 $ARM64; do
   mkdir -p "$OUTDIR/$arch-linux-cosmo/lib/"
   cp -f o/$arch/libc/crt/crt.o "$OUTDIR/$arch-linux-cosmo/lib/"
   cp -f o/$arch/cosmopolitan.a "$OUTDIR/$arch-linux-cosmo/lib/libcosmo.a"
@@ -115,31 +117,31 @@ for arch in x86_64 aarch64; do
     printf '\041\074\141\162\143\150\076\012' >"$OUTDIR/$arch-linux-cosmo/lib/lib$lib.a"
   done
 done
-cp -f o/x86_64/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/"
-cp -f o/x86_64/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/"
-cp -f o/aarch64/ape/aarch64.lds "$OUTDIR/aarch64-linux-cosmo/lib/"
-cp -f o/x86_64/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/"
+cp -f o/$AMD64/ape/ape.o "$OUTDIR/x86_64-linux-cosmo/lib/"
+cp -f o/$AMD64/ape/ape.lds "$OUTDIR/x86_64-linux-cosmo/lib/"
+cp -f o/$ARM64/ape/aarch64.lds "$OUTDIR/aarch64-linux-cosmo/lib/"
+cp -f o/$AMD64/ape/ape-no-modify-self.o "$OUTDIR/x86_64-linux-cosmo/lib/"
 
 cp -f ape/ape-m1.c "$OUTDIR/bin/"
 cp -af tool/cosmocc/bin/* "$OUTDIR/bin/"
-cp -f o/x86_64/ape/ape.elf "$OUTDIR/bin/ape-x86_64.elf"
-cp -f o/x86_64/ape/ape.macho "$OUTDIR/bin/ape-x86_64.macho"
-cp -f o/aarch64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
+cp -f o/$AMD64/ape/ape.elf "$OUTDIR/bin/ape-x86_64.elf"
+cp -f o/$AMD64/ape/ape.macho "$OUTDIR/bin/ape-x86_64.macho"
+cp -f o/$ARM64/ape/ape.elf "$OUTDIR/bin/ape-aarch64.elf"
 for x in assimilate march-native mktemper fixupobj zipcopy apelink pecheck mkdeps zipobj; do
   o//tool/build/apelink.com \
-    -l o/x86_64/ape/ape.elf \
-    -l o/aarch64/ape/ape.elf \
+    -l o/$AMD64/ape/ape.elf \
+    -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
     -o "$OUTDIR/bin/$x" \
-    o/x86_64/tool/build/$x.com.dbg \
-    o/aarch64/tool/build/$x.com.dbg
+    o/$AMD64/tool/build/$x.com.dbg \
+    o/$ARM64/tool/build/$x.com.dbg
 done
 for x in make ctags; do
   o//tool/build/apelink.com \
-    -l o/x86_64/ape/ape.elf \
-    -l o/aarch64/ape/ape.elf \
+    -l o/$AMD64/ape/ape.elf \
+    -l o/$ARM64/ape/ape.elf \
     -M ape/ape-m1.c \
     -o "$OUTDIR/bin/$x" \
-    o/x86_64/third_party/$x/$x.com.dbg \
-    o/aarch64/third_party/$x/$x.com.dbg
+    o/$AMD64/third_party/$x/$x.com.dbg \
+    o/$ARM64/third_party/$x/$x.com.dbg
 done
