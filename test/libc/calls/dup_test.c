@@ -33,6 +33,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xspawn.h"
 
+__static_yoink("zipos");
 __static_yoink("libc/testlib/hyperion.txt");
 
 void SetUpOnce(void) {
