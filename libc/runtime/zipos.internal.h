@@ -20,8 +20,9 @@ struct ZiposHandle {
   struct Zipos *zipos;
   size_t size;
   size_t mapsize;
-  size_t pos;
   size_t cfile;
+  _Atomic(int) refs;
+  size_t pos;         // TODO atomic
   uint8_t *mem;
   uint8_t data[];
 };
@@ -38,6 +39,7 @@ struct Zipos {
 
 int __zipos_close(int);
 void __zipos_free(struct ZiposHandle *);
+struct ZiposHandle *__zipos_keep(struct ZiposHandle *);
 struct Zipos *__zipos_get(void) pureconst;
 size_t __zipos_normpath(char *, const char *, size_t);
 ssize_t __zipos_find(struct Zipos *, struct ZiposUri *);
@@ -45,6 +47,7 @@ ssize_t __zipos_scan(struct Zipos *, struct ZiposUri *);
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *);
 uint64_t __zipos_inode(struct Zipos *, int64_t, const void *, size_t);
 int __zipos_open(struct ZiposUri *, int);
+void __zipos_postdup(int, int);
 int __zipos_access(struct ZiposUri *, int);
 int __zipos_stat(struct ZiposUri *, struct stat *);
 int __zipos_fstat(struct ZiposHandle *, struct stat *);

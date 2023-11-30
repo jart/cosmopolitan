@@ -32,6 +32,9 @@
 #include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
+__static_yoink("libc/testlib/hyperion.txt");
+__static_yoink("zipos");
+
 int Lock(int fd, int type, long start, long len) {
   int e;
   struct flock lock = {
@@ -119,6 +122,17 @@ TEST(fcntl, F_DUPFD_CLOEXEC) {
   ASSERT_SYS(0, FD_CLOEXEC, fcntl(5, F_GETFD));
   ASSERT_SYS(0, 0, close(5));
   ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(fcntl, ziposDupFd) {
+  char b[8];
+  ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  ASSERT_SYS(0, 4, fcntl(3, F_DUPFD, 4));
+  ASSERT_SYS(0, 8, read(3, b, 8));
+  ASSERT_SYS(0, 0, lseek(4, 0, SEEK_SET));
+  ASSERT_SYS(0, 8, read(4, b, 8));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, close(4));
 }
 
 void OnSig(int sig) {

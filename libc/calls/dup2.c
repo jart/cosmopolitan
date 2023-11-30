@@ -67,20 +67,24 @@ int dup2(int oldfd, int newfd) {
   int rc;
   // helps guarantee stderr log gets duplicated before user closes
   if (_weaken(kloghandle)) _weaken(kloghandle)();
-  if (__isfdkind(oldfd, kFdZip)) {
-    rc = enotsup();
 #ifdef __aarch64__
-  } else if (oldfd == newfd) {
+  if (oldfd == newfd) {
     // linux aarch64 defines dup3() but not dup2(), which wasn't such a
     // great decision, since the two syscalls don't behave the same way
     if (!(rc = read(oldfd, 0, 0))) rc = oldfd;
+  } else
 #endif
-  } else if (!IsWindows()) {
-    rc = sys_dup2(oldfd, newfd, 0);
-    if (rc != -1 && oldfd != newfd && __isfdkind(newfd, kFdZip) && !__vforked) {
-      _weaken(__zipos_free)(
-          (struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
-      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
+  if (!IsWindows()) {
+    if (__isfdkind(oldfd, kFdZip) || __isfdkind(newfd, kFdZip)) {
+      if (__vforked) {
+        return enotsup();
+      }
+      rc = sys_dup2(oldfd, newfd, 0);
+      if (rc != -1) {
+        _weaken(__zipos_postdup)(oldfd, newfd);
+      }
+    } else {
+      rc = sys_dup2(oldfd, newfd, 0);
     }
   } else if (newfd < 0) {
     rc = ebadf();

@@ -16,12 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/createfileflags.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+
+static int __zipos_dupfd(int fd, int cmd, int start) {
+  int rc;
+  if (start < 0) return einval();
+  if (IsWindows()) {
+    return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? _O_CLOEXEC : 0),
+                      start);
+  }
+  rc = sys_fcntl(fd, cmd, start, __sys_fcntl);
+  if (rc != -1) {
+    __zipos_postdup(fd, rc);
+  }
+  return rc;
+}
 
 int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
   if (cmd == F_GETFD) {
@@ -38,6 +55,8 @@ int __zipos_fcntl(int fd, int cmd, uintptr_t arg) {
       g_fds.p[fd].flags &= ~O_CLOEXEC;
       return 0;
     }
+  } else if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) {
+    return __zipos_dupfd(fd, cmd, arg);
   } else {
     return einval();
   }

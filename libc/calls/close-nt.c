@@ -24,6 +24,7 @@
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/zipos.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -32,6 +33,8 @@ textwindows int sys_close_nt(int fd, int fildes) {
   if (fd + 0u >= g_fds.n) return ebadf();
   struct Fd *f = g_fds.p + fd;
   switch (f->kind) {
+    case kFdZip:
+      return _weaken(__zipos_close)(fd);
     case kFdEmpty:
       return ebadf();
     case kFdFile:

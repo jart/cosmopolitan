@@ -70,14 +70,17 @@ int dup3(int oldfd, int newfd, int flags) {
     rc = einval();  // NetBSD doesn't do this
   } else if (oldfd < 0 || newfd < 0) {
     rc = ebadf();
-  } else if (__isfdkind(oldfd, kFdZip)) {
-    rc = enotsup();
   } else if (!IsWindows()) {
-    rc = sys_dup3(oldfd, newfd, flags);
-    if (rc != -1 && __isfdkind(newfd, kFdZip) && !__vforked) {
-      _weaken(__zipos_free)(
-          (struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
-      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
+    if (__isfdkind(oldfd, kFdZip) || __isfdkind(newfd, kFdZip)) {
+      if (__vforked) {
+        return enotsup();
+      }
+      rc = sys_dup3(oldfd, newfd, flags);
+      if (rc != -1) {
+        _weaken(__zipos_postdup)(oldfd, newfd);
+      }
+    } else {
+      rc = sys_dup3(oldfd, newfd, flags);
     }
   } else {
     rc = sys_dup_nt(oldfd, newfd, flags, -1);

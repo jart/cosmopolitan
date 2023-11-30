@@ -28,6 +28,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/zipos.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/errfuns.h"
 
@@ -125,6 +126,10 @@ int fcntl(int fd, int cmd, ...) {
           END_CANCELATION_POINT;
         } else {
           rc = sys_fcntl(fd, cmd, arg, __sys_fcntl);
+          if (rc != -1 && (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) &&
+              __isfdkind(rc, kFdZip)) {
+            _weaken(__zipos_postdup)(fd, rc);
+          }
         }
       } else {
         rc = sys_fcntl_nt(fd, cmd, arg);
