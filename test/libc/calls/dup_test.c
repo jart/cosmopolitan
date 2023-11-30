@@ -33,6 +33,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/xspawn.h"
 
+__static_yoink("libc/testlib/hyperion.txt");
+
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
 }
@@ -50,7 +52,6 @@ static textstartup void TestInit(int argc, char **argv) {
 
 const void *const TestCtor[] initarray = {TestInit};
 
-#if 0
 TEST(dup, ebadf) {
   ASSERT_SYS(EBADF, -1, dup(-1));
   ASSERT_SYS(EBADF, -1, dup2(-1, 0));
@@ -72,7 +73,17 @@ TEST(dup, bigNumber) {
   ASSERT_SYS(0, 100, dup2(0, 100));
   ASSERT_SYS(0, 0, close(100));
 }
-#endif
+
+TEST(dup2, zipos) {
+  ASSERT_SYS(0, 3, creat("real", 0644));
+  ASSERT_SYS(0, 4, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  ASSERT_SYS(0, 2, write(3, "hi", 2));
+  ASSERT_SYS(EBADF, -1, write(4, "hi", 2));
+  ASSERT_SYS(0, 4, dup2(3, 4));
+  ASSERT_SYS(0, 2, write(4, "hi", 2));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+}
 
 #ifdef __x86_64__
 TEST(dup, clearsCloexecFlag) {

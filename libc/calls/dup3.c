@@ -18,12 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/zipos.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -71,6 +74,11 @@ int dup3(int oldfd, int newfd, int flags) {
     rc = enotsup();
   } else if (!IsWindows()) {
     rc = sys_dup3(oldfd, newfd, flags);
+    if (rc != -1 && __isfdkind(newfd, kFdZip) && !__vforked) {
+      _weaken(__zipos_free)(
+          (struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
+      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
+    }
   } else {
     rc = sys_dup_nt(oldfd, newfd, flags, -1);
   }
