@@ -202,8 +202,9 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
         return eio();
     }
   }
-  h->pos = 0;
+  atomic_store_explicit(&h->pos, 0, memory_order_relaxed);
   h->cfile = cf;
+  unassert(size < SIZE_MAX);
   h->size = size;
   if (h->mem) {
     minfd = 3;
