@@ -28,6 +28,7 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macho.internal.h"
 #include "libc/macros.internal.h"
@@ -39,7 +40,6 @@
 #include "libc/nt/struct/imagesectionheader.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/serialize.h"
 #include "libc/stdalign.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
@@ -1459,9 +1459,10 @@ static char *SecondPass2(char *p, struct Input *in) {
     // the new file size. that's only possible if all the fat ape hdrs
     // we generate are able to fit inside the prologue.
     p = ALIGN(p, 8);
+    // TODO(jart): Figure out why not skewing corrupts pe import table
     in->we_must_skew_pe_vaspace =
-        ROUNDUP(p - prologue + in->size_of_pe_headers,
-                (int)in->pe->OptionalHeader.FileAlignment) > in->minload;
+        1 || ROUNDUP(p - prologue + in->size_of_pe_headers,
+                     (int)in->pe->OptionalHeader.FileAlignment) > in->minload;
     if (!in->we_must_skew_pe_vaspace) {
       in->pe_e_lfanew = p - prologue;
       in->pe_SizeOfHeaders = in->pe->OptionalHeader.SizeOfHeaders;
