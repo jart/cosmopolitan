@@ -51,7 +51,7 @@
 #include "libc/thread/tls.h"
 #include "libc/zip.internal.h"
 
-#define MAX_REFS (INT_MAX >> 1)
+#define MAX_REFS SSIZE_MAX
 
 static char *__zipos_mapend;
 static size_t __zipos_maptotal;
