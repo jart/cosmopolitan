@@ -66,7 +66,7 @@ int64_t __zipos_seek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
         new_pos = einval();
     }
     if (LIKELY(atomic_compare_exchange_weak_explicit(
-            &h->pos, &pos, new_pos < 0 ? pos : new_pos, memory_order_acquire,
+            &h->pos, &pos, new_pos < 0 ? pos : new_pos, memory_order_release,
             memory_order_relaxed))) {
       break;
     }
