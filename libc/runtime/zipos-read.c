@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/likely.h"
+#include "libc/limits.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/stdio/sysparam.h"
 #include "libc/str/str.h"
@@ -29,13 +32,24 @@
 static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
                                  size_t iovlen, ssize_t opt_offset) {
   int i;
-  int64_t b, x, y;
+  int64_t b, x, y, start_pos;
   if (h->cfile == ZIPOS_SYNTHETIC_DIRECTORY ||
       S_ISDIR(GetZipCfileMode(h->zipos->map + h->cfile))) {
     return eisdir();
   }
   if (opt_offset == -1) {
-    x = y = h->pos;
+    while (true) {
+      start_pos = atomic_load_explicit(&h->pos, memory_order_relaxed);
+      if (UNLIKELY(start_pos == SIZE_MAX)) {
+        continue;
+      }
+      if (LIKELY(atomic_compare_exchange_weak_explicit(
+              &h->pos, &start_pos, SIZE_MAX, memory_order_acquire,
+              memory_order_relaxed))) {
+        break;
+      }
+    }
+    x = y = start_pos;
   } else {
     x = y = opt_offset;
   }
@@ -44,7 +58,7 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
     if (b) memcpy(iov[i].iov_base, h->mem + y, b);
   }
   if (opt_offset == -1) {
-    h->pos = y;
+    atomic_store_explicit(&h->pos, y, memory_order_release);
   }
   return y - x;
 }

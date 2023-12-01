@@ -17,28 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/likely.h"
+#include "libc/limits.h"
 #include "libc/runtime/zipos.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/sysv/errfuns.h"
 
-static int64_t GetPosition(struct ZiposHandle *h, int whence) {
-  switch (whence) {
-    case SEEK_SET:
-      return 0;
-    case SEEK_CUR:
-      return h->pos;
-    case SEEK_END:
-      return h->size;
-    default:
-      return einval();
-  }
-}
-
-static int64_t Seek(struct ZiposHandle *h, int64_t offset, int whence) {
-  int64_t pos;
-  if (!ckd_add(&pos, GetPosition(h, whence), offset)) {
-    if (pos >= 0) {
-      return pos;
+static int64_t Seek(int64_t pos, int64_t offset) {
+  int64_t rc;
+  if (!ckd_add(&rc, pos, offset)) {
+    if (rc >= 0) {
+      return rc;
     } else {
       return einval();
     }
@@ -56,9 +46,30 @@ static int64_t Seek(struct ZiposHandle *h, int64_t offset, int whence) {
  * @asyncsignalsafe
  */
 int64_t __zipos_seek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
-  int64_t pos;
-  if ((pos = Seek(h, offset, whence)) != -1) {
-    h->pos = pos;
+  int64_t pos, new_pos;
+  while (true) {
+    pos = atomic_load_explicit(&h->pos, memory_order_relaxed);
+    if (UNLIKELY(pos == SIZE_MAX)) {
+      continue;
+    }
+    switch (whence) {
+      case SEEK_SET:
+        new_pos = Seek(0, offset);
+        break;
+      case SEEK_CUR:
+        new_pos = Seek(pos, offset);
+        break;
+      case SEEK_END:
+        new_pos = Seek(h->size, offset);
+        break;
+      default:
+        new_pos = einval();
+    }
+    if (LIKELY(atomic_compare_exchange_weak_explicit(
+            &h->pos, &pos, new_pos < 0 ? pos : new_pos, memory_order_acquire,
+            memory_order_relaxed))) {
+      break;
+    }
   }
-  return pos;
+  return new_pos;
 }

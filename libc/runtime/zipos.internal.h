@@ -22,7 +22,7 @@ struct ZiposHandle {
   size_t mapsize;
   size_t cfile;
   _Atomic(int) refs;
-  size_t pos;         // TODO atomic
+  _Atomic(size_t) pos;
   uint8_t *mem;
   uint8_t data[];
 };

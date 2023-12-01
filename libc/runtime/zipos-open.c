@@ -31,8 +31,10 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/extend.internal.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/zipos.internal.h"
@@ -48,6 +50,8 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/zip.internal.h"
+
+#define MAX_REFS (INT_MAX >> 1)
 
 static char *__zipos_mapend;
 static size_t __zipos_maptotal;
@@ -79,13 +83,17 @@ static void *__zipos_mmap_space(size_t mapsize) {
 }
 
 struct ZiposHandle *__zipos_keep(struct ZiposHandle *h) {
-  atomic_fetch_add_explicit(&h->refs, 1, memory_order_relaxed);
+  int refs = atomic_fetch_add_explicit(&h->refs, 1, memory_order_relaxed);
+  unassert(!VERY_UNLIKELY(refs > MAX_REFS));
   return h;
 }
 
 static bool __zipos_drop(struct ZiposHandle *h) {
-  int refs = atomic_load_explicit(&h->refs, memory_order_acquire);
-  return -1 == refs || -1 == atomic_fetch_sub(&h->refs, 1);
+  if (!atomic_fetch_sub_explicit(&h->refs, 1, memory_order_release)) {
+    atomic_thread_fence(memory_order_acquire);
+    return true;
+  }
+  return false;
 }
 
 void __zipos_free(struct ZiposHandle *h) {
@@ -113,7 +121,7 @@ StartOver:
   while ((h = *ph)) {
     if (h->mapsize >= mapsize) {
       if (!_cmpxchg(ph, h, h->next)) goto StartOver;
-      atomic_init(&h->refs, 0);
+      atomic_store_explicit(&h->refs, 0, memory_order_relaxed);
       break;
     }
     ph = &h->next;
@@ -194,8 +202,9 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
         return eio();
     }
   }
-  h->pos = 0;
+  atomic_store_explicit(&h->pos, 0, memory_order_relaxed);
   h->cfile = cf;
+  unassert(size < SIZE_MAX);
   h->size = size;
   if (h->mem) {
     minfd = 3;
