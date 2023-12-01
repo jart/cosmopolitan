@@ -22,7 +22,9 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/runtime/zipos.internal.h"
 
 /**
  * Duplicates file descriptor.
@@ -51,10 +53,11 @@
  */
 int dup(int fd) {
   int rc;
-  if (__isfdkind(fd, kFdZip)) {
-    rc = enotsup();
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     rc = sys_dup(fd);
+    if (rc != -1 && __isfdkind(fd, kFdZip)) {
+      _weaken(__zipos_postdup)(fd, rc);
+    }
   } else {
     rc = sys_dup_nt(fd, -1, 0, -1);
   }

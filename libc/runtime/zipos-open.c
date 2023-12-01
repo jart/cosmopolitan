@@ -78,7 +78,20 @@ static void *__zipos_mmap_space(size_t mapsize) {
   return start + offset;
 }
 
+struct ZiposHandle *__zipos_keep(struct ZiposHandle *h) {
+  atomic_fetch_add_explicit(&h->refs, 1, memory_order_relaxed);
+  return h;
+}
+
+static bool __zipos_drop(struct ZiposHandle *h) {
+  int refs = atomic_load_explicit(&h->refs, memory_order_acquire);
+  return -1 == refs || -1 == atomic_fetch_sub(&h->refs, 1);
+}
+
 void __zipos_free(struct ZiposHandle *h) {
+  if (!__zipos_drop(h)) {
+    return;
+  }
   if (IsAsan()) {
     __asan_poison((char *)h + sizeof(struct ZiposHandle),
                   h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
@@ -100,7 +113,7 @@ StartOver:
   while ((h = *ph)) {
     if (h->mapsize >= mapsize) {
       if (!_cmpxchg(ph, h, h->next)) goto StartOver;
-      h->next = 0;
+      atomic_init(&h->refs, 0);
       break;
     }
     ph = &h->next;
@@ -207,6 +220,27 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, int flags,
   }
   __zipos_free(h);
   return -1;
+}
+
+void __zipos_postdup(int oldfd, int newfd) {
+  if (oldfd == newfd) {
+    return;
+  }
+  if (__isfdkind(newfd, kFdZip)) {
+    __zipos_free((struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
+    if (!__isfdkind(oldfd, kFdZip)) {
+      __fds_lock();
+      bzero(g_fds.p + newfd, sizeof(*g_fds.p));
+      __fds_unlock();
+    }
+  }
+  if (__isfdkind(oldfd, kFdZip)) {
+    __zipos_keep((struct ZiposHandle *)(intptr_t)g_fds.p[oldfd].handle);
+    __fds_lock();
+    __ensurefds_unlocked(newfd);
+    g_fds.p[newfd] = g_fds.p[oldfd];
+    __fds_unlock();
+  }
 }
 
 /**
