@@ -21,6 +21,8 @@ this program.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "job.h"
 #include "os.h"
 #include "commands.h"
+#include "libc/mem/critbit0.h"
+#include "libc/log/rop.internal.h"
 #include "debug.h"
 
 
@@ -1367,6 +1369,45 @@ func_intcmp (char *o, char **argv, const char *funcname UNUSED)
 }
 
 /*
+  chop argv[0] into words, and remove duplicates.
+ */
+static char *
+func_uniq (char *o, char **argv, const char *funcname UNUSED)
+{
+  char *p;
+  size_t len;
+  int mutated;
+  bool once = false;
+  const char *s = argv[0];
+  struct critbit0 t = {0};
+
+  while ((p = find_next_token (&s, &len)))
+    {
+      ++s;
+      p[len] = 0;
+      RETURN_ON_ERROR ((mutated = critbit0_insert (&t, p)));
+      if (mutated)
+        {
+          if (once)
+            o = variable_buffer_output (o, " ", 1);
+          else
+            once = true;
+          o = variable_buffer_output (o, p, len);
+        }
+    }
+
+  critbit0_clear (&t);
+
+  return o;
+
+OnError:
+  critbit0_clear (&t);
+  OSS (error, NILF, "%s: function failed: %s",
+       "uniq", strerror (errno));
+  exit (1);
+}
+
+/*
   $(if condition,true-part[,false-part])
 
   CONDITION is false iff it evaluates to an empty string.  White
@@ -2522,6 +2563,7 @@ static struct function_table_entry function_table_init[] =
   FT_ENTRY ("value",         0,  1,  1,  func_value),
   FT_ENTRY ("eval",          0,  1,  1,  func_eval),
   FT_ENTRY ("file",          1,  2,  1,  func_file),
+  FT_ENTRY ("uniq",          0,  1,  1,  func_uniq),
 #ifdef EXPERIMENTAL
   FT_ENTRY ("eq",            2,  2,  1,  func_eq),
   FT_ENTRY ("not",           0,  1,  1,  func_not),

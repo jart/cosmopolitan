@@ -16,7 +16,10 @@ LICENSE
 LOCAL CHANGES
 
   - Introduce $(uniq token...) native function
-  - .INTERNET variable to allow internet access
+  - Remove code that forces slow path if not using /bin/sh
+
+TODO
+
   - .PLEDGE variable which restricts system calls
   - .UNVEIL variable which controls Landlock LSM
   - .STRICT variable to disable implicit unveiling
@@ -28,5 +31,3 @@ LOCAL CHANGES
   - .NPROC variable which tunes fork() / clone() limit
   - .NOFILE variable which tunes file descriptor limit
   - .MAXCORE variable to set upper limit on core dumps
-  - Do automatic setup and teardown of TMPDIR per rule
-  - Remove code that forces slow path if not using /bin/sh
