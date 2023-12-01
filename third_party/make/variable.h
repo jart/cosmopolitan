@@ -1,5 +1,5 @@
 /* Definitions for using variables in GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,9 +12,11 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/hash.h"
+#include "hash.h"
+
+struct file;
 
 /* Codes in a variable definition saying where the definition came from.
    Increasing numeric values signify less-overridable definitions.  */
@@ -35,11 +37,20 @@ enum variable_flavor
     f_bogus,            /* Bogus (error) */
     f_simple,           /* Simple definition (:= or ::=) */
     f_recursive,        /* Recursive definition (=) */
+    f_expand,           /* POSIX :::= assignment */
     f_append,           /* Appending definition (+=) */
     f_conditional,      /* Conditional definition (?=) */
     f_shell,            /* Shell assignment (!=) */
     f_append_value      /* Append unexpanded value */
   };
+
+enum variable_export
+{
+    v_default = 0,      /* Decide in target_environment.  */
+    v_export,           /* Export this variable.  */
+    v_noexport,         /* Don't export this variable.  */
+    v_ifset             /* Export it if it has a non-default value.  */
+};
 
 /* Structure that represents one variable definition.
    Each bucket of the hash table is a chain of these,
@@ -73,12 +84,7 @@ struct variable
     enum variable_origin
       origin ENUM_BITFIELD (3); /* Variable origin.  */
     enum variable_export
-      {
-        v_export,               /* Export this variable.  */
-        v_noexport,             /* Don't export this variable.  */
-        v_ifset,                /* Export it if it has a non-default value.  */
-        v_default               /* Decide in target_environment.  */
-      } export ENUM_BITFIELD (2);
+      export ENUM_BITFIELD (2); /* Export control. */
   };
 
 /* Structure that represents a variable set.  */
@@ -108,6 +114,7 @@ struct pattern_var
     struct variable variable;
   };
 
+extern unsigned long long env_recursion;
 extern char *variable_buffer;
 extern struct variable_set_list *current_variable_set_list;
 extern struct variable *default_goal_var;
@@ -126,6 +133,7 @@ char *allocated_variable_expand_for_file (const char *line, struct file *file);
   allocated_variable_expand_for_file (line, (struct file *) 0)
 char *expand_argument (const char *str, const char *end);
 char *variable_expand_string (char *line, const char *string, size_t length);
+char *initialize_variable_output (void);
 void install_variable_buffer (char **bufp, size_t *lenp);
 void restore_variable_buffer (char *buf, size_t len);
 
@@ -174,6 +182,8 @@ void define_new_function(const floc *flocp, const char *name,
                          unsigned int min, unsigned int max, unsigned int flags,
                          gmk_func_ptr func);
 struct variable *lookup_variable (const char *name, size_t length);
+struct variable *lookup_variable_for_file (const char *name, size_t length,
+                                           struct file *file);
 struct variable *lookup_variable_in_set (const char *name, size_t length,
                                          const struct variable_set *set);
 
@@ -183,6 +193,7 @@ struct variable *define_variable_in_set (const char *name, size_t length,
                                          int recursive,
                                          struct variable_set *set,
                                          const floc *flocp);
+void warn_undefined (const char* name, size_t length);
 
 /* Define a variable in the current variable set.  */
 
@@ -221,16 +232,7 @@ void undefine_variable_in_set (const char *name, size_t length,
 #define undefine_variable_global(n,l,o) \
           undefine_variable_in_set((n),(l),(o),NULL)
 
-/* Warn that NAME is an undefined variable.  */
-
-#define warn_undefined(n,l) do{\
-                              if (warn_undefined_variables_flag)        \
-                                error (reading_file, (l),               \
-                                       _("warning: undefined variable '%.*s'"), \
-                                       (int)(l), (n));                  \
-                              }while(0)
-
-char **target_environment (struct file *file);
+char **target_environment (struct file *file, int recursive);
 
 struct pattern_var *create_pattern_var (const char *target,
                                         const char *suffix);

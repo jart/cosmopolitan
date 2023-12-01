@@ -1,5 +1,5 @@
 /* Constant string caching for GNU Make.
-Copyright (C) 2006-2020 Free Software Foundation, Inc.
+Copyright (C) 2006-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,10 +12,14 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-#include "third_party/make/hash.h"
+#include "makeint.h"
+
+#include <stddef.h>
+#include <assert.h>
+
+#include "hash.h"
 
 /* A string cached here will never be freed, so we don't need to worry about
    reference counting.  We just store the string, and then remember it in a
@@ -49,7 +53,7 @@ static unsigned long total_size = 0;
 
 /* Add a new buffer to the cache.  Add it at the front to reduce search time.
    This can also increase the overhead, since it's less likely that older
-   buffers will be filled in.  However, GNU make has so many smaller strings
+   buffers will be filled in.  However, GNU Make has so many smaller strings
    that this doesn't seem to be much of an issue in practice.
  */
 static struct strcache *
@@ -252,8 +256,7 @@ strcache_add_len (const char *str, size_t len)
 void
 strcache_init (void)
 {
-  // [jart] increased from 8000
-  hash_init (&strings, 131072, str_hash_1, str_hash_2, str_hash_cmp);
+  hash_init (&strings, 8000, str_hash_1, str_hash_2, str_hash_cmp);
 }
 
 

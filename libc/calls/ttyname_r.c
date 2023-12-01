@@ -98,7 +98,7 @@ errno_t ttyname_r(int fd, char *buf, size_t size) {
     }
   }
   errno = e;
-  STRACE("ttyname_r(%d, %#.*hhs) → %s", fd, (int)size, buf,
+  STRACE("ttyname_r(%d, %#.*hhs) → %s", fd, (int)strnlen(buf, size), buf,
          !res ? "0" : _strerrno(res));
   return res;
 }

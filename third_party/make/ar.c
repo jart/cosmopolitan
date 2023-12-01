@@ -1,5 +1,5 @@
 /* Interface to 'ar' archives for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 
 This file is part of GNU Make.
 
@@ -13,13 +13,16 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
-#include "third_party/make/makeint.inc"
-/**/
-#include "libc/mem/alg.h"
-#include "third_party/make/dep.h"
-#include "third_party/make/filedef.h"
-#include "third_party/musl/fnmatch.h"
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
+
+#include "makeint.h"
+
+#ifndef NO_ARCHIVES
+
+#include "filedef.h"
+#include "dep.h"
+#include <fnmatch.h>
+#include <intprops.h>
 
 /* Return nonzero if NAME is an archive-member reference, zero if not.  An
    archive-member reference is a name like 'lib(member)' where member is a
@@ -33,7 +36,7 @@ ar_name (const char *name)
   const char *p = strchr (name, '(');
   const char *end;
 
-  if (p == 0 || p == name)
+  if (p == NULL || p == name)
     return 0;
 
   end = p + strlen (p) - 1;
@@ -58,6 +61,9 @@ ar_parse_name (const char *name, char **arname_p, char **memname_p)
 
   *arname_p = xstrdup (name);
   p = strchr (*arname_p, '(');
+  /* This is never called unless ar_name() is true so p cannot be NULL.  */
+  if (!p)
+    OS (fatal, NILF, "Internal: ar_parse_name: bad name '%s'", *arname_p);
   *(p++) = '\0';
   p[strlen (p) - 1] = '\0';
   *memname_p = p;
@@ -67,10 +73,10 @@ ar_parse_name (const char *name, char **arname_p, char **memname_p)
 /* This function is called by 'ar_scan' to find which member to look at.  */
 
 /* ARGSUSED */
-static long int
+static intmax_t
 ar_member_date_1 (int desc UNUSED, const char *mem, int truncated,
                   long int hdrpos UNUSED, long int datapos UNUSED,
-                  long int size UNUSED, long int date,
+                  long int size UNUSED, intmax_t date,
                   int uid UNUSED, int gid UNUSED, unsigned int mode UNUSED,
                   const void *name)
 {
@@ -84,7 +90,7 @@ ar_member_date (const char *name)
 {
   char *arname;
   char *memname;
-  long int val;
+  intmax_t val;
 
   ar_parse_name (name, &arname, &memname);
 
@@ -109,11 +115,19 @@ ar_member_date (const char *name)
 
   free (arname);
 
-  return (val <= 0 ? (time_t) -1 : (time_t) val);
+  return 0 < val && val <= TYPE_MAXIMUM (time_t) ? val : -1;
 }
 
 /* Set the archive-member NAME's modtime to now.  */
 
+#ifdef VMS
+int
+ar_touch (const char *name)
+{
+  O (error, NILF, _("touch archive member is not available on VMS"));
+  return -1;
+}
+#else
 int
 ar_touch (const char *name)
 {
@@ -158,7 +172,7 @@ ar_touch (const char *name)
 
   return val;
 }
-
+#endif /* !VMS */
 
 /* State of an 'ar_glob' run, passed to 'ar_glob_match'.  */
 
@@ -173,6 +187,9 @@ struct ar_glob_state
   {
     const char *arname;
     const char *pattern;
+#ifdef VMS
+    char *suffix;
+#endif
     size_t size;
     struct nameseq *chain;
     unsigned int n;
@@ -181,10 +198,10 @@ struct ar_glob_state
 /* This function is called by 'ar_scan' to match one archive
    element against the pattern in STATE.  */
 
-static long int
+static intmax_t
 ar_glob_match (int desc UNUSED, const char *mem, int truncated UNUSED,
                long int hdrpos UNUSED, long int datapos UNUSED,
-               long int size UNUSED, long int date UNUSED, int uid UNUSED,
+               long int size UNUSED, intmax_t date UNUSED, int uid UNUSED,
                int gid UNUSED, unsigned int mode UNUSED, const void *arg)
 {
   struct ar_glob_state *state = (struct ar_glob_state *)arg;
@@ -192,14 +209,20 @@ ar_glob_match (int desc UNUSED, const char *mem, int truncated UNUSED,
   if (fnmatch (state->pattern, mem, FNM_PATHNAME|FNM_PERIOD) == 0)
     {
       /* We have a match.  Add it to the chain.  */
-      struct nameseq *new = xcalloc (1, state->size);
+      struct nameseq *new = xcalloc (state->size);
+#ifdef VMS
+      if (state->suffix)
+        new->name = strcache_add(
+            concat(5, state->arname, "(", mem, state->suffix, ")"));
+      else
+#endif
         new->name = strcache_add(concat(4, state->arname, "(", mem, ")"));
       new->next = state->chain;
       state->chain = new;
       ++state->n;
     }
 
-  return 0L;
+  return 0;
 }
 
 /* Return nonzero if PATTERN contains any metacharacters.
@@ -245,7 +268,9 @@ ar_glob (const char *arname, const char *member_pattern, size_t size)
   struct nameseq *n;
   const char **names;
   unsigned int i;
-
+#ifdef VMS
+  char *vms_member_pattern;
+#endif
   if (! ar_glob_pattern_p (member_pattern, 1))
     return 0;
 
@@ -253,10 +278,35 @@ ar_glob (const char *arname, const char *member_pattern, size_t size)
      ar_glob_match will accumulate them in STATE.chain.  */
   state.arname = arname;
   state.pattern = member_pattern;
+#ifdef VMS
+    {
+      /* In a copy of the pattern, find the suffix, save it and  remove it from
+         the pattern */
+      char *lastdot;
+      vms_member_pattern = xstrdup(member_pattern);
+      lastdot = strrchr(vms_member_pattern, '.');
+      state.suffix = lastdot;
+      if (lastdot)
+        {
+          state.suffix = xstrdup(lastdot);
+          *lastdot = 0;
+        }
+      state.pattern = vms_member_pattern;
+    }
+#endif
   state.size = size;
   state.chain = 0;
   state.n = 0;
   ar_scan (arname, ar_glob_match, &state);
+
+#ifdef VMS
+  /* Deallocate any duplicated string */
+  free(vms_member_pattern);
+  if (state.suffix)
+    {
+      free(state.suffix);
+    }
+#endif
 
   if (state.chain == 0)
     return 0;
@@ -278,3 +328,5 @@ ar_glob (const char *arname, const char *member_pattern, size_t size)
 
   return state.chain;
 }
+
+#endif  /* Not NO_ARCHIVES.  */

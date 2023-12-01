@@ -1,5 +1,5 @@
-/* Record version and build host architecture for GNU Make.
-Copyright (C) 1988-2023 Free Software Foundation, Inc.
+/* Declarations for target shuffling support.
+Copyright (C) 2022-2022 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -14,20 +14,13 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-/* We use <config.h> instead of "config.h" so that a compilation
-   using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
-   (which it would do because makeint.h was found in $srcdir).  */
-#include "config.h"
+struct dep;
+struct goaldep;
 
-#ifndef MAKE_HOST
-# define MAKE_HOST "unknown"
-#endif
+void shuffle_set_mode (const char *cmdarg);
+const char *shuffle_get_mode (void);
+void shuffle_deps_recursive (struct dep* g);
 
-const char *version_string = PACKAGE_VERSION;
-const char *make_host = MAKE_HOST;
-
-/*
-  Local variables:
-  version-control: never
-  End:
- */
+#define shuffle_goaldeps_recursive(_g) do{              \
+        shuffle_deps_recursive ((struct dep *)_g);      \
+    } while(0)

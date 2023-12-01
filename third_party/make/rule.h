@@ -1,5 +1,5 @@
 /* Definitions for using pattern rules in GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,7 +12,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 
 /* Structure used for pattern (implicit) rules.  */
@@ -25,6 +25,7 @@ struct rule
     const char **suffixes;      /* Suffixes (after '%') of each target.  */
     struct dep *deps;           /* Dependencies of the rule.  */
     struct commands *cmds;      /* Commands to execute.  */
+    char *_defn;                /* Definition of the rule. */
     unsigned short num;         /* Number of targets.  */
     char terminal;              /* If terminal (double-colon).  */
     char in_use;                /* If in use by a parent pattern_search.  */
@@ -54,4 +55,5 @@ void install_pattern_rule (struct pspec *p, int terminal);
 void create_pattern_rule (const char **targets, const char **target_percents,
                           unsigned short num, int terminal, struct dep *deps,
                           struct commands *commands, int override);
+const char *get_rule_defn (struct rule *rule);
 void print_rule_data_base (void);

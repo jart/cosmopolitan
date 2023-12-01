@@ -1,5 +1,5 @@
 /* Variable expansion functions for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,16 +12,18 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-/**/
-#include "third_party/make/filedef.h"
-#include "third_party/make/job.h"
-#include "third_party/make/commands.h"
-#include "third_party/make/variable.h"
-#include "libc/x/x.h"
-#include "third_party/make/rule.h"
+#include "makeint.h"
+
+#include <assert.h>
+
+#include "commands.h"
+#include "debug.h"
+#include "filedef.h"
+#include "job.h"
+#include "variable.h"
+#include "rule.h"
 
 /* Initially, any errors reported when expanding strings will be reported
    against the file where the error appears.  */
@@ -66,14 +68,14 @@ variable_buffer_output (char *ptr, const char *string, size_t length)
       ptr = variable_buffer + offset;
     }
 
-  memcpy (ptr, string, length);
-  return ptr + length;
+  return mempcpy (ptr, string, length);
 }
 
-/* Return a pointer to the beginning of the variable buffer.  */
+/* Return a pointer to the beginning of the variable buffer.
+   This is called from main() and it should never be null afterward.  */
 
-static char *
-initialize_variable_output (void)
+char *
+initialize_variable_output ()
 {
   /* If we don't have a variable output buffer yet, get one.  */
 
@@ -99,6 +101,29 @@ recursively_expand_for_file (struct variable *v, struct file *file)
   const floc **saved_varp;
   struct variable_set_list *save = 0;
   int set_reading = 0;
+
+  /* If we're expanding to put into the environment of a shell function then
+     ignore any recursion issues: for backward-compatibility we will use
+     the value of the environment variable we were started with.  */
+  if (v->expanding && env_recursion)
+    {
+      size_t nl = strlen (v->name);
+      char **ep;
+      DB (DB_VERBOSE,
+          (_("%s:%lu: not recursively expanding %s to export to shell function\n"),
+           v->fileinfo.filenm, v->fileinfo.lineno, v->name));
+
+      /* We could create a hash for the original environment for speed, but a
+         reasonably written makefile shouldn't hit this situation...  */
+      for (ep = environ; *ep != 0; ++ep)
+        if ((*ep)[nl] == '=' && strncmp (*ep, v->name, nl) == 0)
+          return xstrdup ((*ep) + nl + 1);
+
+      /* If there's nothing in the parent environment, use the empty string.
+         This isn't quite correct since the variable should not exist at all,
+         but getting that to work would be involved. */
+      return xstrdup ("");
+    }
 
   /* Don't install a new location if this location is empty.
      This can happen for command-line variables, builtin variables, etc.  */
@@ -152,7 +177,10 @@ recursively_expand_for_file (struct variable *v, struct file *file)
 
 /* Expand a simple reference to variable NAME, which is LENGTH chars long.  */
 
-static inline char *
+#ifdef __GNUC__
+__inline
+#endif
+static char *
 reference_variable (char *o, const char *name, size_t length)
 {
   struct variable *v;
@@ -203,7 +231,7 @@ variable_expand_string (char *line, const char *string, size_t length)
   if (length == 0)
     {
       variable_buffer_output (o, "", 1);
-      return (variable_buffer);
+      return variable_buffer;
     }
 
   /* We need a copy of STRING: due to eval, it's possible that it will get
@@ -441,8 +469,7 @@ expand_argument (const char *str, const char *end)
 
   r = allocated_variable_expand (tmp);
 
-  if (alloc)
-    free (alloc);
+  free (alloc);
 
   return r;
 }

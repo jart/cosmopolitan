@@ -1,5 +1,5 @@
 /* Miscellaneous generic support functions for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,15 +12,97 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-#include "third_party/make/filedef.h"
-#include "third_party/make/dep.h"
-#include "third_party/make/debug.h"
-#include "libc/calls/calls.h"
+#include "makeint.h"
+#include "filedef.h"
+#include "dep.h"
+#include "os.h"
+#include "debug.h"
 
-/* GNU make no longer supports pre-ANSI89 environments.  */
+#include <assert.h>
+#include <stdarg.h>
+
+#ifdef WINDOWS32
+# include <windows.h>
+# include <io.h>
+#endif
+
+#ifdef __EMX__
+# define INCL_DOS
+# include <os2.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#else
+# include <sys/file.h>
+#endif
+
+unsigned int
+make_toui (const char *str, const char **error)
+{
+  char *end;
+  unsigned long val = strtoul (str, &end, 10);
+
+  if (error)
+    {
+      if (str[0] == '\0')
+        *error = "Missing value";
+      else if (*end != '\0')
+        *error = "Invalid value";
+      else
+        *error = NULL;
+    }
+
+  return val;
+}
+
+/* Convert val into a string, written to buf.  buf must be large enough
+   to hold the largest possible value, plus a nul byte.  Returns buf.
+   We can't use standard PRI* here: those are based on intNN_t types.  */
+
+char *
+make_lltoa (long long val, char *buf)
+{
+  sprintf (buf, "%" MK_PRI64_PREFIX "d", val);
+  return buf;
+}
+
+char *
+make_ulltoa (unsigned long long val, char *buf)
+{
+  sprintf (buf, "%" MK_PRI64_PREFIX "u", val);
+  return buf;
+}
+
+/* Simple random number generator, for use with shuffle.
+   This doesn't need to be truly random, just pretty random.  Use our own
+   implementation rather than relying on the C runtime's rand() so we always
+   get the same results for a given seed, regardless of C runtime.  */
+
+static unsigned int mk_state = 0;
+
+void
+make_seed (unsigned int seed)
+{
+  mk_state = seed;
+}
+
+unsigned int
+make_rand ()
+{
+  /* mk_state must never be 0.  */
+  if (mk_state == 0)
+    mk_state = (unsigned int)(time (NULL) ^ make_pid ()) + 1;
+
+  /* A simple xorshift RNG.  */
+  mk_state ^= mk_state << 13;
+  mk_state ^= mk_state >> 17;
+  mk_state ^= mk_state << 5;
+
+  return mk_state;
+}
 
 /* Compare strings *S1 and *S2.
    Return negative if the first is less, positive if it is greater,
@@ -81,7 +163,7 @@ collapse_continuations (char *line)
       if (i & 1)
         {
           /* Backslash/newline handling:
-             In traditional GNU make all trailing whitespace, consecutive
+             In traditional GNU Make all trailing whitespace, consecutive
              backslash/newlines, and any leading non-newline whitespace on the
              next line is reduced to a single space.
              In POSIX, each backslash/newline and is replaced by a space.  */
@@ -162,6 +244,85 @@ concat (unsigned int num, ...)
 }
 
 
+#ifndef HAVE_UNISTD_H
+pid_t getpid ();
+#endif
+
+pid_t make_pid ()
+{
+  return getpid ();
+}
+
+/* Like malloc but get fatal error if memory is exhausted.  */
+/* Don't bother if we're using dmalloc; it provides these for us.  */
+
+#ifndef HAVE_DMALLOC_H
+
+#undef xmalloc
+#undef xcalloc
+#undef xrealloc
+#undef xstrdup
+
+void *
+xmalloc (size_t size)
+{
+  /* Make sure we don't allocate 0, for pre-ISO implementations.  */
+  void *result = malloc (size ? size : 1);
+  if (result == 0)
+    out_of_memory ();
+  return result;
+}
+
+
+void *
+xcalloc (size_t size)
+{
+  /* Make sure we don't allocate 0, for pre-ISO implementations.  */
+  void *result = calloc (size ? size : 1, 1);
+  if (result == 0)
+    out_of_memory ();
+  return result;
+}
+
+
+void *
+xrealloc (void *ptr, size_t size)
+{
+  void *result;
+
+  /* Some older implementations of realloc() don't conform to ISO.  */
+  if (! size)
+    size = 1;
+  result = ptr ? realloc (ptr, size) : malloc (size);
+  if (result == 0)
+    out_of_memory ();
+  return result;
+}
+
+
+char *
+xstrdup (const char *ptr)
+{
+  char *result;
+
+#ifdef HAVE_STRDUP
+  result = strdup (ptr);
+#else
+  result = malloc (strlen (ptr) + 1);
+#endif
+
+  if (result == 0)
+    out_of_memory ();
+
+#ifdef HAVE_STRDUP
+  return result;
+#else
+  return strcpy (result, ptr);
+#endif
+}
+
+#endif  /* HAVE_DMALLOC_H */
+
 char *
 xstrndup (const char *str, size_t length)
 {
@@ -180,6 +341,29 @@ xstrndup (const char *str, size_t length)
 
   return result;
 }
+
+#ifndef HAVE_MEMRCHR
+void *
+memrchr(const void* str, int ch, size_t len)
+{
+  const char* sp = str;
+  const char* cp = sp;
+
+  if (len == 0)
+    return NULL;
+
+  cp += len - 1;
+
+  while (cp[0] != ch)
+    {
+      if (cp == sp)
+        return NULL;
+      --cp;
+    }
+
+  return (void*)cp;
+}
+#endif
 
 
 
@@ -204,7 +388,8 @@ lindex (const char *s, const char *limit, int c)
 char *
 end_of_token (const char *s)
 {
-  END_OF_TOKEN (s);
+  while (! END_OF_TOKEN (*s))
+    ++s;
   return (char *)s;
 }
 
@@ -340,9 +525,29 @@ spin (const char* type)
     {
       fprintf (stderr, "SPIN on %s\n", filenm);
       do
+#ifdef WINDOWS32
+        Sleep (1000);
+#else
         sleep (1);
+#endif
       while (stat (filenm, &dummy) == 0);
     }
+}
+
+void
+dbg (const char *fmt, ...)
+{
+  FILE *fp = fopen ("/tmp/gmkdebug.log", "a+");
+  va_list args;
+  char buf[4096];
+
+  va_start (args, fmt);
+  vsprintf (buf, fmt, args);
+  va_end (args);
+
+  fprintf(fp, "%u: %s\n", (unsigned) make_pid (), buf);
+  fflush (fp);
+  fclose (fp);
 }
 
 #endif
@@ -359,283 +564,314 @@ char *mktemp (char *template);
 # endif
 #endif
 
-FILE *
-get_tmpfile (char **name, const char *template)
+#ifndef HAVE_UMASK
+mode_t
+umask (mode_t mask)
 {
-  FILE *file;
-#ifdef HAVE_FDOPEN
-  int fd;
+  return 0;
+}
 #endif
 
+#ifdef VMS
+# define DEFAULT_TMPFILE    "sys$scratch:gnv$make_cmdXXXXXX.com"
+#else
+# define DEFAULT_TMPFILE    "GmXXXXXX"
+#endif
+
+const char *
+get_tmpdir ()
+{
+  static const char *tmpdir = NULL;
+
+  if (!tmpdir)
+    {
+#if defined (__MSDOS__) || defined (WINDOWS32) || defined (__EMX__)
+# define TMP_EXTRAS   "TMP", "TEMP",
+#else
+# define TMP_EXTRAS
+#endif
+      const char *tlist[] = { "MAKE_TMPDIR", "TMPDIR", TMP_EXTRAS NULL };
+      const char **tp;
+      unsigned int found = 0;
+
+      for (tp = tlist; *tp; ++tp)
+        if ((tmpdir = getenv (*tp)) && *tmpdir != '\0')
+          {
+            struct stat st;
+            int r;
+            found = 1;
+            EINTRLOOP(r, stat (tmpdir, &st));
+            if (r < 0)
+              OSSS (error, NILF,
+                    _("%s value %s: %s"), *tp, tmpdir, strerror (errno));
+            else if (! S_ISDIR (st.st_mode))
+              OSS (error, NILF,
+                   _("%s value %s: not a directory"), *tp, tmpdir);
+            else
+              return tmpdir;
+          }
+
+      tmpdir = DEFAULT_TMPDIR;
+
+      if (found)
+        OS (error, NILF, _("using default temporary directory '%s'"), tmpdir);
+    }
+
+  return tmpdir;
+}
+
+static char *
+get_tmptemplate ()
+{
+  const char *tmpdir = get_tmpdir ();
+  char *template;
+  char *cp;
+
+  template = xmalloc (strlen (tmpdir) + CSTRLEN (DEFAULT_TMPFILE) + 2);
+  cp = stpcpy (template, tmpdir);
+
+#if !defined VMS
+  /* It's not possible for tmpdir to be empty.  */
+  if (! ISDIRSEP (cp[-1]))
+    *(cp++) = '/';
+#endif
+
+  strcpy (cp, DEFAULT_TMPFILE);
+
+  return template;
+}
+
+#if !HAVE_MKSTEMP || !HAVE_FDOPEN
+/* Generate a temporary filename.  This is not safe as another program could
+   snipe our filename after we've generated it: use this only on systems
+   without more secure alternatives.  */
+
+static char *
+get_tmppath ()
+{
+  char *path;
+
+# ifdef HAVE_MKTEMP
+  path = get_tmptemplate ();
+  if (*mktemp (path) == '\0')
+    {
+      OSS (error, NILF,
+           _("cannot generate temp path from %s: %s"), path, strerror (errno));
+      return NULL;
+    }
+# else
+  path = xmalloc (L_tmpnam + 1);
+  if (tmpnam (path) == NULL)
+    {
+      OS (error, NILF,
+        _("cannot generate temp name: %s"), strerror (errno));
+      return NULL;
+    }
+# endif
+
+  return path;
+}
+#endif
+
+/* Generate a temporary file and return an fd for it.  If name is NULL then
+   the temp file is anonymous and will be deleted when the process exits.  If
+   name is not null then *name will point to an allocated buffer, or set to
+   NULL on failure.  */
+int
+get_tmpfd (char **name)
+{
+  int fd = -1;
+  char *tmpnm;
+  mode_t mask;
+
+  if (name)
+    *name = NULL;
+  else
+    {
+      /* If there's an os-specific way to get an anonymous temp file use it.  */
+      fd = os_anontmp ();
+      if (fd >= 0)
+        return fd;
+    }
+
+  /* Preserve the current umask, and set a restrictive one for temp files.
+     Only really needed for mkstemp() but won't hurt for the open method.  */
+  mask = umask (0077);
+
+#if defined(HAVE_MKSTEMP)
+  tmpnm = get_tmptemplate ();
+
+  /* It's safest to use mkstemp(), if we can.  */
+  EINTRLOOP (fd, mkstemp (tmpnm));
+#else
+  tmpnm = get_tmppath ();
+  if (!tmpnm)
+    return -1;
+
+  /* Can't use mkstemp(), but try to guard against a race condition.  */
+  EINTRLOOP (fd, open (tmpnm, O_CREAT|O_EXCL|O_RDWR, 0600));
+#endif
+  if (fd < 0)
+    {
+      OSS (error, NILF,
+           _("cannot create temporary file %s: %s"), tmpnm, strerror (errno));
+      free (tmpnm);
+      return -1;
+    }
+
+  if (name)
+    *name = tmpnm;
+  else
+    {
+      int r;
+      EINTRLOOP (r, unlink (tmpnm));
+      if (r < 0)
+        OSS (error, NILF,
+             _("cannot unlink temporary file %s: %s"), tmpnm, strerror (errno));
+      free (tmpnm);
+    }
+
+  umask (mask);
+
+  return fd;
+}
+
+/* Return a FILE* for a temporary file, opened in the safest way possible.
+   Set name to point to an allocated buffer containing the name of the file,
+   or NULL on failure.  Note, name cannot be NULL!  */
+FILE *
+get_tmpfile (char **name)
+{
+  /* Be consistent with tmpfile, which opens as if by "wb+".  */
+  const char *tmpfile_mode = "wb+";
+  FILE *file;
+
+#if defined(HAVE_FDOPEN)
+  int fd;
+  assert (name);
+  fd = get_tmpfd (name);
+  if (fd < 0)
+    return NULL;
+  assert (*name);
+
+  ENULLLOOP (file, fdopen (fd, tmpfile_mode));
+  if (file == NULL)
+    OSS (error, NILF,
+         _("fdopen: temporary file %s: %s"), *name, strerror (errno));
+#else
   /* Preserve the current umask, and set a restrictive one for temp files.  */
   mode_t mask = umask (0077);
 
-#if defined(HAVE_MKSTEMP) || defined(HAVE_MKTEMP)
-# define TEMPLATE_LEN   strlen (template)
-#else
-# define TEMPLATE_LEN   L_tmpnam
-#endif
-  *name = xmalloc (TEMPLATE_LEN + 1);
-  strcpy (*name, template);
+  assert (name);
+  *name = get_tmppath ();
+  if (!*name)
+    return NULL;
 
-#if defined(HAVE_MKSTEMP) && defined(HAVE_FDOPEN)
-  /* It's safest to use mkstemp(), if we can.  */
-  EINTRLOOP (fd, mkstemp (*name));
-  if (fd == -1)
-    file = NULL;
-  else
-    file = fdopen (fd, "w");
-#else
-# ifdef HAVE_MKTEMP
-  (void) mktemp (*name);
-# else
-  (void) tmpnam (*name);
-# endif
+  /* Although this fopen is insecure, it is executed only on non-fdopen
+     platforms, which should be a rarity nowadays.  */
 
-# ifdef HAVE_FDOPEN
-  /* Can't use mkstemp(), but guard against a race condition.  */
-  EINTRLOOP (fd, open (*name, O_CREAT|O_EXCL|O_WRONLY, 0600));
-  if (fd == -1)
-    return 0;
-  file = fdopen (fd, "w");
-# else
-  /* Not secure, but what can we do?  */
-  file = fopen (*name, "w");
-# endif
-#endif
+  ENULLLOOP (file, fopen (*name, tmpfile_mode));
+  if (file == NULL)
+    {
+      OSS (error, NILF,
+           _("fopen: temporary file %s: %s"), *name, strerror (errno));
+      free (*name);
+      *name = NULL;
+    }
 
   umask (mask);
+#endif
 
   return file;
 }
 
-#ifdef  GETLOADAVG_PRIVILEGED
 
-#ifdef POSIX
-
-/* Hopefully if a system says it's POSIX.1 and has the setuid and setgid
-   functions, they work as POSIX.1 says.  Some systems (Alpha OSF/1 1.2,
-   for example) which claim to be POSIX.1 also have the BSD setreuid and
-   setregid functions, but they don't work as in BSD and only the POSIX.1
-   way works.  */
-
-#undef HAVE_SETREUID
-#undef HAVE_SETREGID
-
-#else   /* Not POSIX.  */
-
-/* Some POSIX.1 systems have the seteuid and setegid functions.  In a
-   POSIX-like system, they are the best thing to use.  However, some
-   non-POSIX systems have them too but they do not work in the POSIX style
-   and we must use setreuid and setregid instead.  */
-
-#undef HAVE_SETEUID
-#undef HAVE_SETEGID
-
-#endif  /* POSIX.  */
-
-/* Keep track of the user and group IDs for user- and make- access.  */
-static int user_uid = -1, user_gid = -1, make_uid = -1, make_gid = -1;
-#define access_inited   (user_uid != -1)
-static enum { make, user } current_access;
-
-
-/* Under -d, write a message describing the current IDs.  */
-
-static void
-log_access (const char *flavor)
+#if HAVE_TTYNAME && defined(__EMX__)
+/* OS/2 kLIBC has a declaration for ttyname(), so configure finds it.
+   But, it is not implemented!  Roll our own.  */
+char *ttyname (int fd)
 {
-  if (! ISDB (DB_JOBS))
-    return;
+  ULONG type;
+  ULONG attr;
+  ULONG rc;
 
-  /* All the other debugging messages go to stdout,
-     but we write this one to stderr because it might be
-     run in a child fork whose stdout is piped.  */
+  rc = DosQueryHType (fd, &type, &attr);
+  if (rc)
+    {
+      errno = EBADF;
+      return NULL;
+    }
 
-  fprintf (stderr, _("%s: user %lu (real %lu), group %lu (real %lu)\n"),
-           flavor, (unsigned long) geteuid (), (unsigned long) getuid (),
-           (unsigned long) getegid (), (unsigned long) getgid ());
-  fflush (stderr);
+  if (type == HANDTYPE_DEVICE)
+    {
+      if (attr & 3)     /* 1 = KBD$, 2 = SCREEN$ */
+        return (char *) "/dev/con";
+
+      if (attr & 4)     /* 4 = NUL */
+        return (char *) "/dev/nul";
+
+      if (attr & 8)     /* 8 = CLOCK$ */
+        return (char *) "/dev/clock$";
+    }
+
+  errno = ENOTTY;
+  return NULL;
 }
+#endif
+
 
+#if !HAVE_STRCASECMP && !HAVE_STRICMP && !HAVE_STRCMPI
+/* If we don't have strcasecmp() (from POSIX), or anything that can substitute
+   for it, define our own version.  */
 
-static void
-init_access (void)
+int
+strcasecmp (const char *s1, const char *s2)
 {
-  user_uid = getuid ();
-  user_gid = getgid ();
+  while (1)
+    {
+      int c1 = (unsigned char) *(s1++);
+      int c2 = (unsigned char) *(s2++);
 
-  make_uid = geteuid ();
-  make_gid = getegid ();
+      if (isalpha (c1))
+        c1 = tolower (c1);
+      if (isalpha (c2))
+        c2 = tolower (c2);
 
-  /* Do these ever fail?  */
-  if (user_uid == -1 || user_gid == -1 || make_uid == -1 || make_gid == -1)
-    pfatal_with_name ("get{e}[gu]id");
+      if (c1 != '\0' && c1 == c2)
+        continue;
 
-  log_access (_("Initialized access"));
-
-  current_access = make;
+      return (c1 - c2);
+    }
 }
+#endif
 
-#endif  /* GETLOADAVG_PRIVILEGED */
+#if !HAVE_STRNCASECMP && !HAVE_STRNICMP && !HAVE_STRNCMPI
+/* If we don't have strncasecmp() (from POSIX), or anything that can
+   substitute for it, define our own version.  */
 
-/* Give the process appropriate permissions for access to
-   user data (i.e., to stat files, or to spawn a child process).  */
-void
-user_access (void)
+int
+strncasecmp (const char *s1, const char *s2, size_t n)
 {
-#ifdef  GETLOADAVG_PRIVILEGED
+  while (n-- > 0)
+    {
+      int c1 = (unsigned char) *(s1++);
+      int c2 = (unsigned char) *(s2++);
 
-  if (!access_inited)
-    init_access ();
+      if (isalpha (c1))
+        c1 = tolower (c1);
+      if (isalpha (c2))
+        c2 = tolower (c2);
 
-  if (current_access == user)
-    return;
+      if (c1 != '\0' && c1 == c2)
+        continue;
 
-  /* We are in "make access" mode.  This means that the effective user and
-     group IDs are those of make (if it was installed setuid or setgid).
-     We now want to set the effective user and group IDs to the real IDs,
-     which are the IDs of the process that exec'd make.  */
+      return (c1 - c2);
+    }
 
-#ifdef  HAVE_SETEUID
-
-  /* Modern systems have the seteuid/setegid calls which set only the
-     effective IDs, which is ideal.  */
-
-  if (seteuid (user_uid) < 0)
-    pfatal_with_name ("user_access: seteuid");
-
-#else   /* Not HAVE_SETEUID.  */
-
-#ifndef HAVE_SETREUID
-
-  /* System V has only the setuid/setgid calls to set user/group IDs.
-     There is an effective ID, which can be set by setuid/setgid.
-     It can be set (unless you are root) only to either what it already is
-     (returned by geteuid/getegid, now in make_uid/make_gid),
-     the real ID (return by getuid/getgid, now in user_uid/user_gid),
-     or the saved set ID (what the effective ID was before this set-ID
-     executable (make) was exec'd).  */
-
-  if (setuid (user_uid) < 0)
-    pfatal_with_name ("user_access: setuid");
-
-#else   /* HAVE_SETREUID.  */
-
-  /* In 4BSD, the setreuid/setregid calls set both the real and effective IDs.
-     They may be set to themselves or each other.  So you have two alternatives
-     at any one time.  If you use setuid/setgid, the effective will be set to
-     the real, leaving only one alternative.  Using setreuid/setregid, however,
-     you can toggle between your two alternatives by swapping the values in a
-     single setreuid or setregid call.  */
-
-  if (setreuid (make_uid, user_uid) < 0)
-    pfatal_with_name ("user_access: setreuid");
-
-#endif  /* Not HAVE_SETREUID.  */
-#endif  /* HAVE_SETEUID.  */
-
-#ifdef  HAVE_SETEGID
-  if (setegid (user_gid) < 0)
-    pfatal_with_name ("user_access: setegid");
-#else
-#ifndef HAVE_SETREGID
-  if (setgid (user_gid) < 0)
-    pfatal_with_name ("user_access: setgid");
-#else
-  if (setregid (make_gid, user_gid) < 0)
-    pfatal_with_name ("user_access: setregid");
-#endif
-#endif
-
-  current_access = user;
-
-  log_access (_("User access"));
-
-#endif  /* GETLOADAVG_PRIVILEGED */
+  return 0;
 }
-
-/* Give the process appropriate permissions for access to
-   make data (i.e., the load average).  */
-void
-make_access (void)
-{
-#ifdef  GETLOADAVG_PRIVILEGED
-
-  if (!access_inited)
-    init_access ();
-
-  if (current_access == make)
-    return;
-
-  /* See comments in user_access, above.  */
-
-#ifdef  HAVE_SETEUID
-  if (seteuid (make_uid) < 0)
-    pfatal_with_name ("make_access: seteuid");
-#else
-#ifndef HAVE_SETREUID
-  if (setuid (make_uid) < 0)
-    pfatal_with_name ("make_access: setuid");
-#else
-  if (setreuid (user_uid, make_uid) < 0)
-    pfatal_with_name ("make_access: setreuid");
 #endif
-#endif
-
-#ifdef  HAVE_SETEGID
-  if (setegid (make_gid) < 0)
-    pfatal_with_name ("make_access: setegid");
-#else
-#ifndef HAVE_SETREGID
-  if (setgid (make_gid) < 0)
-    pfatal_with_name ("make_access: setgid");
-#else
-  if (setregid (user_gid, make_gid) < 0)
-    pfatal_with_name ("make_access: setregid");
-#endif
-#endif
-
-  current_access = make;
-
-  log_access (_("Make access"));
-
-#endif  /* GETLOADAVG_PRIVILEGED */
-}
-
-/* Give the process appropriate permissions for a child process.
-   This is like user_access, but you can't get back to make_access.  */
-void
-child_access (void)
-{
-#ifdef  GETLOADAVG_PRIVILEGED
-
-  if (!access_inited)
-    abort ();
-
-  /* Set both the real and effective UID and GID to the user's.
-     They cannot be changed back to make's.  */
-
-#ifndef HAVE_SETREUID
-  if (setuid (user_uid) < 0)
-    pfatal_with_name ("child_access: setuid");
-#else
-  if (setreuid (user_uid, user_uid) < 0)
-    pfatal_with_name ("child_access: setreuid");
-#endif
-
-#ifndef HAVE_SETREGID
-  if (setgid (user_gid) < 0)
-    pfatal_with_name ("child_access: setgid");
-#else
-  if (setregid (user_gid, user_gid) < 0)
-    pfatal_with_name ("child_access: setregid");
-#endif
-
-  log_access (_("Child access"));
-
-#endif  /* GETLOADAVG_PRIVILEGED */
-}
+
 
 #ifdef NEED_GET_PATH_MAX
 unsigned int
@@ -645,13 +881,163 @@ get_path_max (void)
 
   if (value == 0)
     {
-      long int x = pathconf ("/", _PC_PATH_MAX);
+      long x = pathconf ("/", _PC_PATH_MAX);
       if (x > 0)
-        value = x;
+        value = (unsigned int) x;
       else
-        return MAXPATHLEN;
+        value = PATH_MAX;
     }
 
   return value;
+}
+#endif
+
+#if !HAVE_MEMPCPY
+void *
+mempcpy (void *dest, const void *src, size_t n)
+{
+  return (char *) memcpy (dest, src, n) + n;
+}
+#endif
+
+#if !HAVE_STPCPY
+char *
+stpcpy (char *dest, const char *src)
+{
+  char *d = dest;
+  const char *s = src;
+
+  do
+    *d++ = *s;
+  while (*s++ != '\0');
+
+  return d - 1;
+}
+#endif
+
+#if !HAVE_STRTOLL
+# undef UNSIGNED
+# undef USE_NUMBER_GROUPING
+# undef USE_WIDE_CHAR
+# define QUAD 1
+# include <strtol.c>
+#endif
+
+#if !HAVE_STRERROR
+char *
+strerror (int errnum)
+{
+  static char msg[256];
+
+#define SETMSG(_e, _m) case _e: strcpy(msg, _m); break
+
+  switch (errnum)
+    {
+#ifdef EPERM
+    SETMSG (EPERM  , "Operation not permitted");
+#endif
+#ifdef ENOENT
+    SETMSG (ENOENT , "No such file or directory");
+#endif
+#ifdef ESRCH
+    SETMSG (ESRCH  , "No such process");
+#endif
+#ifdef EINTR
+    SETMSG (EINTR  , "Interrupted system call");
+#endif
+#ifdef EIO
+    SETMSG (EIO    , "I/O error");
+#endif
+#ifdef ENXIO
+    SETMSG (ENXIO  , "No such device or address");
+#endif
+#ifdef E2BIG
+    SETMSG (E2BIG  , "Argument list too long");
+#endif
+#ifdef ENOEXEC
+    SETMSG (ENOEXEC, "Exec format error");
+#endif
+#ifdef EBADF
+    SETMSG (EBADF  , "Bad file number");
+#endif
+#ifdef ECHILD
+    SETMSG (ECHILD , "No child processes");
+#endif
+#ifdef EAGAIN
+    SETMSG (EAGAIN , "Try again");
+#endif
+#ifdef ENOMEM
+    SETMSG (ENOMEM , "Out of memory");
+#endif
+#ifdef EACCES
+    SETMSG (EACCES , "Permission denied");
+#endif
+#ifdef EFAULT
+    SETMSG (EFAULT , "Bad address");
+#endif
+#ifdef ENOTBLK
+    SETMSG (ENOTBLK, "Block device required");
+#endif
+#ifdef EBUSY
+    SETMSG (EBUSY  , "Device or resource busy");
+#endif
+#ifdef EEXIST
+    SETMSG (EEXIST , "File exists");
+#endif
+#ifdef EXDEV
+    SETMSG (EXDEV  , "Cross-device link");
+#endif
+#ifdef ENODEV
+    SETMSG (ENODEV , "No such device");
+#endif
+#ifdef ENOTDIR
+    SETMSG (ENOTDIR, "Not a directory");
+#endif
+#ifdef EISDIR
+    SETMSG (EISDIR , "Is a directory");
+#endif
+#ifdef EINVAL
+    SETMSG (EINVAL , "Invalid argument");
+#endif
+#ifdef ENFILE
+    SETMSG (ENFILE , "File table overflow");
+#endif
+#ifdef EMFILE
+    SETMSG (EMFILE , "Too many open files");
+#endif
+#ifdef ENOTTY
+    SETMSG (ENOTTY , "Not a typewriter");
+#endif
+#ifdef ETXTBSY
+    SETMSG (ETXTBSY, "Text file busy");
+#endif
+#ifdef EFBIG
+    SETMSG (EFBIG  , "File too large");
+#endif
+#ifdef ENOSPC
+    SETMSG (ENOSPC , "No space left on device");
+#endif
+#ifdef ESPIPE
+    SETMSG (ESPIPE , "Illegal seek");
+#endif
+#ifdef EROFS
+    SETMSG (EROFS  , "Read-only file system");
+#endif
+#ifdef EMLINK
+    SETMSG (EMLINK , "Too many links");
+#endif
+#ifdef EPIPE
+    SETMSG (EPIPE  , "Broken pipe");
+#endif
+#ifdef EDOM
+    SETMSG (EDOM   , "Math argument out of domain of func");
+#endif
+#ifdef ERANGE
+    SETMSG (ERANGE , "Math result not representable");
+#endif
+    default: sprintf (msg, "Unknown error %d", errnum); break;
+    }
+
+  return msg;
 }
 #endif

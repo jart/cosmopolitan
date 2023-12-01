@@ -1,26 +1,31 @@
 /* Construct a full filename from a directory and a relative filename.
-   Copyright (C) 2001-2004, 2006-2020 Free Software Foundation, Inc.
+   Copyright (C) 2001-2004, 2006-2023 Free Software Foundation, Inc.
 
-   This program is free software: you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 3 of the License, or any
-   later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
+   You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Written by Bruno Haible <haible@clisp.cons.org>.  */
 
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "third_party/make/concat-filename.h"
-#include "third_party/make/filename.h"
-#include "third_party/make/config.h"
+#include "config.h"
+
+/* Specification.  */
+#include "concat-filename.h"
+
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "filename.h"
 
 /* Concatenate a directory filename, a relative filename and an optional
    suffix.  The directory may end with the directory separator.  The second

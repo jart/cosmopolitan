@@ -5,8 +5,8 @@ DESCRIPTION
 
 ORIGIN
 
-  GNU Make 4.3
-  http://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+  GNU Make 4.4.1
+  http://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz
 
 LICENSE
 
@@ -30,4 +30,3 @@ LOCAL CHANGES
   - .MAXCORE variable to set upper limit on core dumps
   - Do automatic setup and teardown of TMPDIR per rule
   - Remove code that forces slow path if not using /bin/sh
-  - Remove 200,000 lines of VAX/OS2/DOS/AMIGA/etc. code

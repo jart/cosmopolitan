@@ -12,20 +12,13 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-/**/
-#include "libc/assert.h"
-#include "libc/intrin/bsr.h"
-#include "libc/intrin/likely.h"
-#include "libc/log/check.h"
-#include "libc/runtime/runtime.h"
-#include "libc/x/x.h"
-#include "libc/serialize.h"
-#include "third_party/make/hash.h"
+#include "makeint.h"
+#include "hash.h"
+#include <assert.h>
 
-#define CALLOC(t, n) ((t *) xcalloc (1, sizeof (t) * (n)))
+#define CALLOC(t, n) ((t *) xcalloc (sizeof (t) * (n)))
 #define MALLOC(t, n) ((t *) xmalloc (sizeof (t) * (n)))
 #define REALLOC(o, t, n) ((t *) xrealloc ((o), sizeof (t) * (n)))
 #define CLONE(o, t, n) ((t *) memcpy (MALLOC (t, (n)), (o), sizeof (t) * (n)))
@@ -51,11 +44,11 @@ hash_init (struct hash_table *ht, unsigned long size,
 {
   ht->ht_size = round_up_2 (size);
   ht->ht_empty_slots = ht->ht_size;
-  ht->ht_vec = (void**) CALLOC (struct token *, ht->ht_size);
+  ht->ht_vec = CALLOC (void *, ht->ht_size);
   if (ht->ht_vec == 0)
     {
       fprintf (stderr, _("can't allocate %lu bytes for hash table: memory exhausted"),
-               ht->ht_size * (unsigned long) sizeof (struct token *));
+               ht->ht_size * (unsigned long) sizeof (void *));
       exit (MAKE_TROUBLE);
     }
 
@@ -267,7 +260,7 @@ hash_rehash (struct hash_table *ht)
       ht->ht_capacity = ht->ht_size - (ht->ht_size >> 4);
     }
   ht->ht_rehashes++;
-  ht->ht_vec = (void **) CALLOC (struct token *, ht->ht_size);
+  ht->ht_vec = CALLOC (void *, ht->ht_size);
 
   for (ovp = old_vec; ovp < &old_vec[old_ht_size]; ovp++)
     {
@@ -322,8 +315,18 @@ hash_dump (struct hash_table *ht, void **vector_0, qsort_cmp_t compare)
 static unsigned long
 round_up_2 (unsigned long n)
 {
-  if (UNLIKELY(!n)) return 1;
-  return 2ul << _bsrl(n);
+  n |= (n >> 1);
+  n |= (n >> 2);
+  n |= (n >> 4);
+  n |= (n >> 8);
+  n |= (n >> 16);
+
+#if !defined(HAVE_LIMITS_H) || ULONG_MAX > 4294967295
+  /* We only need this on systems where unsigned long is >32 bits.  */
+  n |= (n >> 32);
+#endif
+
+  return n + 1;
 }
 
 #define rol32(v, n) \
@@ -358,7 +361,7 @@ round_up_2 (unsigned long n)
 #define sum_get_unaligned_32(r, p)              \
   do {                                          \
     unsigned int val;                           \
-    memcpy(&val, (p), 4);                       \
+    memcpy (&val, (p), 4);                      \
     r += val;                                   \
   } while(0);
 
@@ -409,17 +412,39 @@ jhash(unsigned const char *k, int length)
 
 #define UINTSZ sizeof (unsigned int)
 
+#ifdef WORDS_BIGENDIAN
+/* The ifs are ordered from the first byte in memory to the last.
+   Help the compiler optimize by using static memcpy length.  */
+#define sum_up_to_nul(r, p, plen, flag)   \
+  do {                                    \
+    unsigned int val = 0;                 \
+    size_t pn = (plen);                   \
+    if (pn >= UINTSZ)                     \
+      memcpy (&val, (p), UINTSZ);         \
+    else                                  \
+      memcpy (&val, (p), pn);             \
+    if ((val & 0xFF000000) == 0)          \
+      flag = 1;                           \
+    else if ((val & 0xFF0000) == 0)       \
+      r += val & ~0xFFFF, flag = 1;       \
+    else if ((val & 0xFF00) == 0)         \
+      r += val & ~0xFF, flag = 1;         \
+    else                                  \
+      r += val, flag = (val & 0xFF) == 0; \
+  } while (0)
+#else
 /* First detect the presence of zeroes.  If there is none, we can
    sum the 4 bytes directly.  Otherwise, the ifs are ordered as in the
-   big endian case, from the first byte in memory to the last.  */
+   big endian case, from the first byte in memory to the last.
+   Help the compiler optimize by using static memcpy length.  */
 #define sum_up_to_nul(r, p, plen, flag)              \
   do {                                               \
     unsigned int val = 0;                            \
     size_t pn = (plen);                              \
     if (pn >= UINTSZ)                                \
-      memcpy(&val, (p), UINTSZ);                     \
+      memcpy (&val, (p), UINTSZ);                    \
     else                                             \
-      memcpy(&val, (p), pn);                         \
+      memcpy (&val, (p), pn);                        \
     flag = ((val - 0x01010101) & ~val) & 0x80808080; \
     if (!flag)                                       \
       r += val;                                      \
@@ -433,6 +458,7 @@ jhash(unsigned const char *k, int length)
           r += val;                                  \
       }                                              \
   } while (0)
+#endif
 
 unsigned int
 jhash_string(unsigned const char *k)
@@ -445,35 +471,27 @@ jhash_string(unsigned const char *k)
   /* Set up the internal state */
   a = b = c = JHASH_INITVAL;
 
-  for (; klen > 12; k += 12, klen -= 12)
-    {
-      a += READ32LE (k + 0);
-      b += READ32LE (k + 4);
-      c += READ32LE (k + 8);
-      jhash_mix (a, b, c);
-    }
-
   /* All but the last block: affect some 32 bits of (a,b,c) */
   for (;;) {
     sum_up_to_nul(a, k, klen, have_nul);
     if (have_nul)
       break;
     k += UINTSZ;
-    DCHECK (klen >= UINTSZ);
+    assert (klen >= UINTSZ);
     klen -= UINTSZ;
 
     sum_up_to_nul(b, k, klen, have_nul);
     if (have_nul)
       break;
     k += UINTSZ;
-    DCHECK (klen >= UINTSZ);
+    assert (klen >= UINTSZ);
     klen -= UINTSZ;
 
     sum_up_to_nul(c, k, klen, have_nul);
     if (have_nul)
       break;
     k += UINTSZ;
-    DCHECK (klen >= UINTSZ);
+    assert (klen >= UINTSZ);
     klen -= UINTSZ;
     jhash_mix(a, b, c);
   }

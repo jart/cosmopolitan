@@ -1,5 +1,5 @@
 /* getopt_long and getopt_long_only entry points for GNU getopt.
-Copyright (C) 1987-1994, 1996-2020 Free Software Foundation, Inc.
+Copyright (C) 1987-1994, 1996-2023 Free Software Foundation, Inc.
 
 NOTE: The canonical source of this file is maintained with the GNU C Library.
 Bugs can be reported to bug-glibc@gnu.org.
@@ -14,13 +14,23 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
-
-#include "third_party/make/getopt.h"
-
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
+
 #ifdef HAVE_CONFIG_H
-#include "third_party/make/config.h"
+#include "config.h"
 #endif
+
+#include "getopt.h"
+
+#if !defined __STDC__ || !__STDC__
+/* This is a separate conditional since some stdc systems
+   reject `defined (const)'.  */
+#ifndef const
+#define const
+#endif
+#endif
+
+#include <stdio.h>
 
 /* Comment out all this code if we are using the GNU C Library, and are not
    actually compiling the library itself.  This code is part of the GNU C
@@ -32,12 +42,24 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define GETOPT_INTERFACE_VERSION 2
 #if !defined _LIBC && defined __GLIBC__ && __GLIBC__ >= 2
+#include <gnu-versions.h>
 #if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #define ELIDE_CODE
 #endif
 #endif
 
 #ifndef ELIDE_CODE
+
+
+/* This needs to come after some library #include
+   to get __GNU_LIBRARY__ defined.  */
+#ifdef __GNU_LIBRARY__
+#include <stdlib.h>
+#endif
+
+#ifndef	NULL
+#define NULL 0
+#endif
 
 int
 getopt_long (int argc, char *const *argv, const char *options,
@@ -62,6 +84,8 @@ getopt_long_only (int argc, char *const *argv, const char *options,
 #endif	/* Not ELIDE_CODE.  */
 
 #ifdef TEST
+
+#include <stdio.h>
 
 int
 main (int argc, char **argv)

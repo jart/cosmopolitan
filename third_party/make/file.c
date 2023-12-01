@@ -1,5 +1,5 @@
 /* Target file management for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,20 +12,20 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-/**/
-#include "third_party/make/filedef.h"
-#include "third_party/make/dep.h"
-#include "third_party/make/job.h"
-#include "third_party/make/commands.h"
-#include "third_party/make/variable.h"
-#include "third_party/make/debug.h"
-#include "libc/assert.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/runtime/runtime.h"
-#include "third_party/make/hash.h"
+#include "makeint.h"
+
+#include <assert.h>
+
+#include "filedef.h"
+#include "dep.h"
+#include "job.h"
+#include "commands.h"
+#include "variable.h"
+#include "debug.h"
+#include "hash.h"
+#include "shuffle.h"
 
 
 /* Remember whether snap_deps has been invoked: we need this to be sure we
@@ -73,23 +73,42 @@ lookup_file (const char *name)
 {
   struct file *f;
   struct file file_key;
+#ifdef VMS
+  int want_vmsify;
+#ifndef WANT_CASE_SENSITIVE_TARGETS
+  char *lname;
+#endif
+#endif
 
   assert (*name != '\0');
 
-  while (name[0] == '.'
-#ifdef HAVE_DOS_PATHS
-         && (name[1] == '/' || name[1] == '\\')
-#else
-         && name[1] == '/'
+  /* This is also done in parse_file_seq, so this is redundant
+     for names read from makefiles.  It is here for names passed
+     on the command line.  */
+#ifdef VMS
+   want_vmsify = (strpbrk (name, "]>:^") != NULL);
+# ifndef WANT_CASE_SENSITIVE_TARGETS
+  if (*name != '.')
+    {
+      const char *n;
+      char *ln;
+      lname = xstrdup (name);
+      for (n = name, ln = lname; *n != '\0'; ++n, ++ln)
+        *ln = isupper ((unsigned char)*n) ? tolower ((unsigned char)*n) : *n;
+      *ln = '\0';
+      name = lname;
+    }
+# endif
+
+  while (name[0] == '[' && name[1] == ']' && name[2] != '\0')
+      name += 2;
+  while (name[0] == '<' && name[1] == '>' && name[2] != '\0')
+      name += 2;
 #endif
-         && name[2] != '\0')
+  while (name[0] == '.' && ISDIRSEP (name[1]) && name[2] != '\0')
     {
       name += 2;
-      while (*name == '/'
-#ifdef HAVE_DOS_PATHS
-             || *name == '\\'
-#endif
-             )
+      while (ISDIRSEP (*name))
         /* Skip following slashes: ".//foo" is "foo", not "/foo".  */
         ++name;
     }
@@ -97,10 +116,23 @@ lookup_file (const char *name)
   if (*name == '\0')
     {
       /* It was all slashes after a dot.  */
+#if defined(_AMIGA)
+      name = "";
+#else
       name = "./";
+#endif
+#if defined(VMS)
+      /* TODO - This section is probably not needed. */
+      if (want_vmsify)
+        name = "[]";
+#endif
     }
   file_key.hname = name;
   f = hash_find_item (&files, &file_key);
+#if defined(VMS) && !defined(WANT_CASE_SENSITIVE_TARGETS)
+  if (*name != '.')
+    free (lname);
+#endif
 
   return f;
 }
@@ -121,6 +153,24 @@ enter_file (const char *name)
   assert (*name != '\0');
   assert (! verify_flag || strcache_iscached (name));
 
+#if defined(VMS) && !defined(WANT_CASE_SENSITIVE_TARGETS)
+  if (*name != '.')
+    {
+      const char *n;
+      char *lname, *ln;
+      lname = xstrdup (name);
+      for (n = name, ln = lname; *n != '\0'; ++n, ++ln)
+        if (isupper ((unsigned char)*n))
+          *ln = tolower ((unsigned char)*n);
+        else
+          *ln = *n;
+
+      *ln = '\0';
+      name = strcache_add (lname);
+      free (lname);
+    }
+#endif
+
   file_key.hname = name;
   file_slot = (struct file **) hash_find_slot (&files, &file_key);
   f = *file_slot;
@@ -130,7 +180,7 @@ enter_file (const char *name)
       return f;
     }
 
-  new = xcalloc (1, sizeof (struct file));
+  new = xcalloc (sizeof (struct file));
   new->name = new->hname = name;
   new->update_status = us_none;
 
@@ -211,14 +261,14 @@ rehash_file (struct file *from_file, const char *to_hname)
         {
           size_t l = strlen (from_file->name);
           /* We have two sets of commands.  We will go with the
-             one given in the rule explicitly mentioning this name,
+             one given in the rule found through directory search,
              but give a message to let the user know what's going on.  */
           if (to_file->cmds->fileinfo.filenm != 0)
             error (&from_file->cmds->fileinfo,
                    l + strlen (to_file->cmds->fileinfo.filenm) + INTSTR_LENGTH,
                    _("Recipe was specified for file '%s' at %s:%lu,"),
-                   from_file->name, to_file->cmds->fileinfo.filenm,
-                   to_file->cmds->fileinfo.lineno);
+                   from_file->name, from_file->cmds->fileinfo.filenm,
+                   from_file->cmds->fileinfo.lineno);
           else
             error (&from_file->cmds->fileinfo, l,
                    _("Recipe for file '%s' was found by implicit rule search,"),
@@ -229,7 +279,7 @@ rehash_file (struct file *from_file, const char *to_hname)
                  from_file->name, to_hname);
           error (&from_file->cmds->fileinfo, l,
                  _("Recipe for '%s' will be ignored in favor of the one for '%s'."),
-                 to_hname, from_file->name);
+                 from_file->name, to_hname);
         }
     }
 
@@ -268,14 +318,19 @@ rehash_file (struct file *from_file, const char *to_hname)
 
 #define MERGE(field) to_file->field |= from_file->field
   MERGE (precious);
+  MERGE (loaded);
   MERGE (tried_implicit);
   MERGE (updating);
   MERGE (updated);
   MERGE (is_target);
   MERGE (cmd_target);
   MERGE (phony);
-  MERGE (loaded);
+  /* Don't merge intermediate because this file might be pre-existing */
+  MERGE (is_explicit);
+  MERGE (secondary);
+  MERGE (notintermediate);
   MERGE (ignore_vpath);
+  MERGE (snapped);
 #undef MERGE
 
   to_file->builtin = 0;
@@ -310,7 +365,7 @@ remove_intermediates (int sig)
   int doneany = 0;
 
   /* If there's no way we will ever remove anything anyway, punt early.  */
-  if (question_flag || touch_flag || all_secondary)
+  if (question_flag || touch_flag || all_secondary || no_intermediates)
     return;
 
   if (sig && just_print_flag)
@@ -327,7 +382,7 @@ remove_intermediates (int sig)
            given on the command line, and it's either a -include makefile or
            it's not precious.  */
         if (f->intermediate && (f->dontcare || !f->precious)
-            && !f->secondary && !f->cmd_target)
+            && !f->secondary && !f->notintermediate && !f->cmd_target)
           {
             int status;
             if (f->update_status == us_none)
@@ -365,7 +420,11 @@ remove_intermediates (int sig)
                       }
                   }
                 if (status < 0)
-                  perror_with_name ("unlink: ", f->name);
+                  {
+                    perror_with_name ("\nunlink: ", f->name);
+                    /* Start printing over.  */
+                    doneany = 0;
+                  }
               }
           }
       }
@@ -383,8 +442,7 @@ remove_intermediates (int sig)
 struct dep *
 split_prereqs (char *p)
 {
-  struct dep *new = PARSE_FILE_SEQ (&p, struct dep, MAP_PIPE, NULL,
-                                    PARSEFS_NONE);
+  struct dep *new = PARSE_FILE_SEQ (&p, struct dep, MAP_PIPE, NULL, PARSEFS_WAIT);
 
   if (*p)
     {
@@ -393,7 +451,7 @@ split_prereqs (char *p)
       struct dep *ood;
 
       ++p;
-      ood = PARSE_SIMPLE_SEQ (&p, struct dep);
+      ood = PARSE_FILE_SEQ (&p, struct dep, MAP_NUL, NULL, PARSEFS_WAIT);
 
       if (! new)
         new = ood;
@@ -427,7 +485,6 @@ enter_prereqs (struct dep *deps, const char *stem)
   if (stem)
     {
       const char *pattern = "%";
-      char *buffer = variable_expand ("");
       struct dep *dp = deps, *dl = 0;
 
       while (dp != 0)
@@ -447,14 +504,15 @@ enter_prereqs (struct dep *deps, const char *stem)
               if (stem[0] == '\0')
                 {
                   memmove (percent, percent+1, strlen (percent));
-                  o = variable_buffer_output (buffer, nm, strlen (nm) + 1);
+                  o = variable_buffer_output (variable_buffer, nm,
+                                              strlen (nm) + 1);
                 }
               else
-                o = patsubst_expand_pat (buffer, stem, pattern, nm,
+                o = patsubst_expand_pat (variable_buffer, stem, pattern, nm,
                                          pattern+1, percent+1);
 
               /* If the name expanded to the empty string, ignore it.  */
-              if (buffer[0] == '\0')
+              if (variable_buffer[0] == '\0')
                 {
                   struct dep *df = dp;
                   if (dp == deps)
@@ -466,7 +524,8 @@ enter_prereqs (struct dep *deps, const char *stem)
                 }
 
               /* Save the name.  */
-              dp->name = strcache_add_len (buffer, o - buffer);
+              dp->name = strcache_add_len (variable_buffer,
+                                           o - variable_buffer);
             }
           dp->stem = stem;
           dp->staticpattern = 1;
@@ -486,21 +545,29 @@ enter_prereqs (struct dep *deps, const char *stem)
         d1->file = enter_file (d1->name);
       d1->staticpattern = 0;
       d1->name = 0;
+      if (!stem)
+        /* This file is explicitly mentioned as a prereq.  */
+        d1->file->is_explicit = 1;
     }
 
   return deps;
 }
 
-/* Expand and parse each dependency line. */
-static void
+/* Expand and parse each dependency line.
+   For each dependency of the file, make the 'struct dep' point
+   at the appropriate 'struct file' (which may have to be created).  */
+void
 expand_deps (struct file *f)
 {
   struct dep *d;
   struct dep **dp;
-  const char *file_stem = f->stem;
+  const char *fstem;
   int initialized = 0;
+  int changed_dep = 0;
 
-  f->updating = 0;
+  if (f->snapped)
+    return;
+  f->snapped = 1;
 
   /* Walk through the dependencies.  For any dependency that needs 2nd
      expansion, expand it then insert the result into the list.  */
@@ -510,7 +577,6 @@ expand_deps (struct file *f)
     {
       char *p;
       struct dep *new, *next;
-      char *name = (char *)d->name;
 
       if (! d->name || ! d->need_2nd_expansion)
         {
@@ -520,16 +586,46 @@ expand_deps (struct file *f)
           continue;
         }
 
-      /* If it's from a static pattern rule, convert the patterns into
-         "$*" so they'll expand properly.  */
+      /* If it's from a static pattern rule, convert the initial pattern in
+         each word to "$*" so they'll expand properly.  */
       if (d->staticpattern)
         {
-          char *o = variable_expand ("");
-          o = subst_expand (o, name, "%", "$*", 1, 2, 0);
-          *o = '\0';
-          free (name);
-          d->name = name = xstrdup (variable_buffer);
-          d->staticpattern = 0;
+          const char *cs = d->name;
+          size_t nperc = 0;
+
+          /* Count the number of % in the string.  */
+          while ((cs = strchr (cs, '%')) != NULL)
+            {
+              ++nperc;
+              ++cs;
+            }
+
+          if (nperc)
+            {
+              /* Allocate enough space to replace all % with $*.  */
+              size_t slen = strlen (d->name) + nperc + 1;
+              const char *pcs = d->name;
+              char *name = xmalloc (slen);
+              char *s = name;
+
+              /* Substitute the first % in each word.  */
+              cs = strchr (pcs, '%');
+
+              while (cs)
+                {
+                  s = mempcpy (s, pcs, cs - pcs);
+                  *(s++) = '$';
+                  *(s++) = '*';
+                  pcs = ++cs;
+
+                  /* Find the first % after the next whitespace.  */
+                  cs = strchr (end_of_token (cs), '%');
+                }
+              strcpy (s, pcs);
+
+              free ((char*)d->name);
+              d->name = name;
+            }
         }
 
       /* We're going to do second expansion so initialize file variables for
@@ -541,39 +637,53 @@ expand_deps (struct file *f)
           initialized = 1;
         }
 
-      if (d->stem != 0)
-        f->stem = d->stem;
+      set_file_variables (f, d->stem ? d->stem : f->stem);
 
-      set_file_variables (f);
-
+      /* Perform second expansion.  */
       p = variable_expand_for_file (d->name, f);
 
-      if (d->stem != 0)
-        f->stem = file_stem;
-
-      /* At this point we don't need the name anymore: free it.  */
-      free (name);
+      /* Free the un-expanded name.  */
+      free ((char*)d->name);
 
       /* Parse the prerequisites and enter them into the file database.  */
-      new = enter_prereqs (split_prereqs (p), d->stem);
+      new = split_prereqs (p);
 
       /* If there were no prereqs here (blank!) then throw this one out.  */
       if (new == 0)
         {
           *dp = d->next;
+          changed_dep = 1;
           free_dep (d);
           d = *dp;
           continue;
         }
 
       /* Add newly parsed prerequisites.  */
+      fstem = d->stem;
       next = d->next;
+      changed_dep = 1;
+      free_dep (d);
       *dp = new;
-      for (dp = &new->next, d = new->next; d != 0; dp = &d->next, d = d->next)
-        ;
+      for (dp = &new, d = new; d != 0; dp = &d->next, d = d->next)
+        {
+          d->file = lookup_file (d->name);
+          if (d->file == 0)
+            d->file = enter_file (d->name);
+          d->name = 0;
+          d->stem = fstem;
+          if (!fstem)
+            /* This file is explicitly mentioned as a prereq.  */
+            d->file->is_explicit = 1;
+        }
       *dp = next;
       d = *dp;
     }
+
+    /* Shuffle mode assumes '->next' and '->shuf' links both traverse the same
+       dependencies (in different sequences).  Regenerate '->shuf' so we don't
+       refer to stale data.  */
+    if (changed_dep)
+      shuffle_deps_recursive (f->deps);
 }
 
 /* Add extra prereqs to the file in question.  */
@@ -608,9 +718,17 @@ snap_file (const void *item, void *arg)
   if (!second_expansion)
     f->updating = 0;
 
-  /* If .SECONDARY is set with no deps, mark all targets as intermediate.  */
-  if (all_secondary)
+  /* More specific setting has priority.  */
+
+  /* If .SECONDARY is set with no deps, mark all targets as intermediate,
+     unless the target is a prereq of .NOTINTERMEDIATE.  */
+  if (all_secondary && !f->notintermediate)
     f->intermediate = 1;
+
+  /* If .NOTINTERMEDIATE is set with no deps, mark all targets as
+     notintermediate, unless the target is a prereq of .INTERMEDIATE.  */
+  if (no_intermediates && !f->intermediate && !f->secondary)
+    f->notintermediate = 1;
 
   /* If .EXTRA_PREREQS is set, add them as ignored by automatic variables.  */
   if (f->variables)
@@ -642,10 +760,7 @@ snap_file (const void *item, void *arg)
     }
 }
 
-/* For each dependency of each file, make the 'struct dep' point
-   at the appropriate 'struct file' (which may have to be created).
-
-   Also mark the files depended on by .PRECIOUS, .PHONY, .SILENT,
+/* Mark the files depended on by .PRECIOUS, .PHONY, .SILENT,
    and various other special targets.  */
 
 void
@@ -658,37 +773,6 @@ snap_deps (void)
   /* Remember that we've done this.  Once we start snapping deps we can no
      longer define new targets.  */
   snapped_deps = 1;
-
-  /* Perform second expansion and enter each dependency name as a file.  We
-     must use hash_dump() here because within these loops we likely add new
-     files to the table, possibly causing an in-situ table expansion.
-
-     We only need to do this if second_expansion has been defined; if it
-     hasn't then all deps were expanded as the makefile was read in.  If we
-     ever change make to be able to unset .SECONDARY_EXPANSION this will have
-     to change.  */
-
-  if (second_expansion)
-    {
-      struct file **file_slot_0 = (struct file **) hash_dump (&files, 0, 0);
-      struct file **file_end = file_slot_0 + files.ht_fill;
-      struct file **file_slot;
-      const char *suffixes;
-
-      /* Expand .SUFFIXES: its prerequisites are used for $$* calc.  */
-      f = lookup_file (".SUFFIXES");
-      suffixes = f ? f->name : 0;
-      for (; f != 0; f = f->prev)
-        expand_deps (f);
-
-      /* For every target that's not .SUFFIXES, expand its prerequisites.  */
-
-      for (file_slot = file_slot_0; file_slot < file_end; file_slot++)
-        for (f = *file_slot; f != 0; f = f->prev)
-          if (f->name != suffixes)
-            expand_deps (f);
-      free (file_slot_0);
-    }
 
   /* Now manage all the special targets.  */
 
@@ -713,11 +797,32 @@ snap_deps (void)
           f2->mtime_before_update = NONEXISTENT_MTIME;
         }
 
+  for (f = lookup_file (".NOTINTERMEDIATE"); f != 0; f = f->prev)
+    /* Mark .NOTINTERMEDIATE deps as notintermediate files.  */
+    if (f->deps)
+        for (d = f->deps; d != 0; d = d->next)
+          for (f2 = d->file; f2 != 0; f2 = f2->prev)
+            f2->notintermediate = 1;
+    /* .NOTINTERMEDIATE with no deps marks all files as notintermediate.  */
+    else
+      no_intermediates = 1;
+
+  /* The same file cannot be both .INTERMEDIATE and .NOTINTERMEDIATE.
+     However, it is possible for a file to be .INTERMEDIATE and also match a
+     .NOTINTERMEDIATE pattern.  In that case, the intermediate file has
+     priority over the notintermediate pattern.  This priority is enforced by
+     pattern_search.  */
+
   for (f = lookup_file (".INTERMEDIATE"); f != 0; f = f->prev)
     /* Mark .INTERMEDIATE deps as intermediate files.  */
     for (d = f->deps; d != 0; d = d->next)
       for (f2 = d->file; f2 != 0; f2 = f2->prev)
-        f2->intermediate = 1;
+        if (f2->notintermediate)
+          OS (fatal, NILF,
+              _("%s cannot be both .NOTINTERMEDIATE and .INTERMEDIATE"),
+              f2->name);
+        else
+          f2->intermediate = 1;
     /* .INTERMEDIATE with no deps does nothing.
        Marking all files as intermediates is useless since the goal targets
        would be deleted after they are built.  */
@@ -727,10 +832,19 @@ snap_deps (void)
     if (f->deps)
       for (d = f->deps; d != 0; d = d->next)
         for (f2 = d->file; f2 != 0; f2 = f2->prev)
+        if (f2->notintermediate)
+          OS (fatal, NILF,
+              _("%s cannot be both .NOTINTERMEDIATE and .SECONDARY"),
+              f2->name);
+        else
           f2->intermediate = f2->secondary = 1;
     /* .SECONDARY with no deps listed marks *all* files that way.  */
     else
       all_secondary = 1;
+
+  if (no_intermediates && all_secondary)
+    O (fatal, NILF,
+       _(".NOTINTERMEDIATE and .SECONDARY are mutually exclusive"));
 
   f = lookup_file (".EXPORT_ALL_VARIABLES");
   if (f != 0 && f->is_target)
@@ -760,7 +874,19 @@ snap_deps (void)
 
   f = lookup_file (".NOTPARALLEL");
   if (f != 0 && f->is_target)
-    not_parallel = 1;
+    {
+      struct dep *d2;
+
+      if (!f->deps)
+        not_parallel = 1;
+      else
+        /* Set a wait point between every prerequisite of each target.  */
+        for (d = f->deps; d != NULL; d = d->next)
+          for (f2 = d->file; f2 != NULL; f2 = f2->prev)
+            if (f2->deps)
+              for (d2 = f2->deps->next; d2 != NULL; d2 = d2->next)
+                d2->wait_here = 1;
+    }
 
   {
     struct dep *prereqs = expand_extra_prereqs (lookup_variable (STRING_SIZE_TUPLE(".EXTRA_PREREQS")));
@@ -812,7 +938,7 @@ file_timestamp_cons (const char *fname, time_t stamp, long int ns)
       char buf[FILE_TIMESTAMP_PRINT_LEN_BOUND + 1];
       const char *f = fname ? fname : _("Current time");
       ts = s <= OLD_MTIME ? ORDINARY_MTIME_MIN : ORDINARY_MTIME_MAX;
-      file_timestamp_sprintf (buf, sizeof(buf), ts);
+      file_timestamp_sprintf (buf, ts);
       OSS (error, NILF,
            _("%s: Timestamp out of range; substituting %s"), f, buf);
     }
@@ -832,6 +958,8 @@ file_timestamp_now (int *resolution)
   /* Don't bother with high-resolution clocks if file timestamps have
      only one-second resolution.  The code below should work, but it's
      not worth the hassle of debugging it on hosts where it fails.  */
+#if FILE_TIMESTAMP_HI_RES
+# if HAVE_CLOCK_GETTIME && defined CLOCK_REALTIME
   {
     struct timespec timespec;
     if (clock_gettime (CLOCK_REALTIME, &timespec) == 0)
@@ -842,6 +970,8 @@ file_timestamp_now (int *resolution)
         goto got_time;
       }
   }
+# endif
+# if HAVE_GETTIMEOFDAY
   {
     struct timeval timeval;
     if (gettimeofday (&timeval, 0) == 0)
@@ -852,12 +982,16 @@ file_timestamp_now (int *resolution)
         goto got_time;
       }
   }
+# endif
+#endif
 
   r = 1000000000;
   s = time ((time_t *) 0);
   ns = 0;
 
+#if FILE_TIMESTAMP_HI_RES
  got_time:
+#endif
   *resolution = r;
   return file_timestamp_cons (0, s, ns);
 }
@@ -865,37 +999,30 @@ file_timestamp_now (int *resolution)
 /* Place into the buffer P a printable representation of the file
    timestamp TS.  */
 void
-file_timestamp_sprintf (char *p, int n, FILE_TIMESTAMP ts)
+file_timestamp_sprintf (char *p, FILE_TIMESTAMP ts)
 {
-  /*
-   * [jart] patch weakness upstream because buffer can probably overflow
-   *        if integer timestamp is irreguular
-   */
-  int m;
   time_t t = FILE_TIMESTAMP_S (ts);
   struct tm *tm = localtime (&t);
 
   if (tm)
-    snprintf (p, n, "%04d-%02d-%02d %02d:%02d:%02d",
-              tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-              tm->tm_hour, tm->tm_min, tm->tm_sec);
+    {
+      intmax_t year = tm->tm_year;
+      sprintf (p, "%04" PRIdMAX "-%02d-%02d %02d:%02d:%02d",
+               year + 1900, tm->tm_mon + 1, tm->tm_mday,
+               tm->tm_hour, tm->tm_min, tm->tm_sec);
+    }
   else if (t < 0)
-    snprintf (p, n, "%ld", (long) t);
+    sprintf (p, "%" PRIdMAX, (intmax_t) t);
   else
-    snprintf (p, n, "%lu", (unsigned long) t);
-  m = strlen (p);
-  p += m;
-  n -= m;
-  if (n <= 0) return;
+    sprintf (p, "%" PRIuMAX, (uintmax_t) t);
+  p += strlen (p);
 
   /* Append nanoseconds as a fraction, but remove trailing zeros.  We don't
      know the actual timestamp resolution, since clock_getres applies only to
      local times, whereas this timestamp might come from a remote filesystem.
      So removing trailing zeros is the best guess that we can do.  */
-  snprintf (p, n, ".%09d", FILE_TIMESTAMP_NS (ts));
-  m = strlen (p) - 1;
-  p += m;
-  n += m;
+  sprintf (p, ".%09d", FILE_TIMESTAMP_NS (ts));
+  p += strlen (p) - 1;
   while (*p == '0')
     p--;
   p += *p != '.';
@@ -913,17 +1040,17 @@ print_prereqs (const struct dep *deps)
   /* Print all normal dependencies; note any order-only deps.  */
   for (; deps != 0; deps = deps->next)
     if (! deps->ignore_mtime)
-      printf (" %s", dep_name (deps));
+      printf (" %s%s", deps->wait_here ? ".WAIT " : "", dep_name (deps));
     else if (! ood)
       ood = deps;
 
   /* Print order-only deps, if we have any.  */
   if (ood)
     {
-      printf (" | %s", dep_name (ood));
+      printf (" | %s%s", ood->wait_here ? ".WAIT " : "", dep_name (ood));
       for (ood = ood->next; ood != 0; ood = ood->next)
         if (ood->ignore_mtime)
-          printf (" %s", dep_name (ood));
+          printf (" %s%s", ood->wait_here ? ".WAIT " : "", dep_name (ood));
     }
 
   putchar ('\n');
@@ -977,6 +1104,10 @@ print_file (const void *item)
     printf (_("#  Implicit/static pattern stem: '%s'\n"), f->stem);
   if (f->intermediate)
     puts (_("#  File is an intermediate prerequisite."));
+  if (f->notintermediate)
+    puts (_("#  File is a prerequisite of .NOTINTERMEDIATE."));
+  if (f->secondary)
+    puts (_("#  File is secondary (prerequisite of .SECONDARY)."));
   if (f->also_make != 0)
     {
       const struct dep *d;
@@ -994,7 +1125,7 @@ print_file (const void *item)
   else
     {
       char buf[FILE_TIMESTAMP_PRINT_LEN_BOUND + 1];
-      file_timestamp_sprintf (buf, sizeof(buf), f->last_mtime);
+      file_timestamp_sprintf (buf, f->last_mtime);
       printf (_("#  Last modified %s\n"), buf);
     }
   puts (f->updated
@@ -1124,8 +1255,7 @@ build_target_list (char *value)
                 p = &value[off];
               }
 
-            memcpy (p, f->name, l);
-            p += l;
+            p = mempcpy (p, f->name, l);
             *(p++) = ' ';
           }
       *(p-1) = '\0';
@@ -1139,8 +1269,7 @@ build_target_list (char *value)
 void
 init_hash_files (void)
 {
-  // [jart] increased from 1000
-  hash_init (&files, 32768, file_hash_1, file_hash_2, file_hash_cmp);
+  hash_init (&files, 1000, file_hash_1, file_hash_2, file_hash_cmp);
 }
 
 /* EOF */

@@ -1,5 +1,5 @@
 /* Definition of target file data structures for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,13 +12,14 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
+
 
 /* Structure that represents the info on one file
    that the makefile says how to make.
    All of these are chained together through 'next'.  */
 
-#include "third_party/make/hash.h"
+#include "hash.h"
 
 struct commands;
 struct dep;
@@ -62,8 +63,6 @@ struct file
     FILE_TIMESTAMP last_mtime;  /* File's modtime, if already known.  */
     FILE_TIMESTAMP mtime_before_update; /* File's modtime before any updating
                                            has been performed.  */
-    FILE_TIMESTAMP touched;     /* Set if file was created in order for
-                                   Landlock LSM to sandbox it.  */
     unsigned int considered;    /* equal to 'considered' if file has been
                                    considered on current scan of goal chain */
     int command_flags;          /* Flags OR'd in for cmds; see commands.h.  */
@@ -85,6 +84,7 @@ struct file
     unsigned int builtin:1;     /* True if the file is a builtin rule. */
     unsigned int precious:1;    /* Non-0 means don't delete file on quit */
     unsigned int loaded:1;      /* True if the file is a loaded object. */
+    unsigned int unloaded:1;    /* True if this loaded object was unloaded. */
     unsigned int low_resolution_time:1; /* Nonzero if this file's time stamp
                                            has only one-second resolution.  */
     unsigned int tried_implicit:1; /* Nonzero if have searched
@@ -97,8 +97,11 @@ struct file
     unsigned int phony:1;       /* Nonzero if this is a phony file
                                    i.e., a prerequisite of .PHONY.  */
     unsigned int intermediate:1;/* Nonzero if this is an intermediate file.  */
+    unsigned int is_explicit:1; /* Nonzero if explicitly mentioned. */
     unsigned int secondary:1;   /* Nonzero means remove_intermediates should
                                    not delete it.  */
+    unsigned int notintermediate:1; /* Nonzero means a file is a prereq to
+                                       .NOTINTERMEDIATE.  */
     unsigned int dontcare:1;    /* Nonzero if no complaint is to be made if
                                    this target cannot be remade.  */
     unsigned int ignore_vpath:1;/* Nonzero if we threw out VPATH name.  */
@@ -106,6 +109,10 @@ struct file
                                    pattern-specific variables.  */
     unsigned int no_diag:1;     /* True if the file failed to update and no
                                    diagnostics has been issued (dontcare). */
+    unsigned int was_shuffled:1; /* Did we already shuffle 'deps'? used when
+                                    --shuffle passes through the graph.  */
+    unsigned int snapped:1;     /* True if the deps of this file have been
+                                   secondary expanded.  */
   };
 
 
@@ -116,6 +123,7 @@ struct file *lookup_file (const char *name);
 struct file *enter_file (const char *name);
 struct dep *split_prereqs (char *prereqstr);
 struct dep *enter_prereqs (struct dep *prereqs, const char *stem);
+void expand_deps (struct file *f);
 struct dep *expand_extra_prereqs (const struct variable *extra);
 void remove_intermediates (int sig);
 void snap_deps (void);
@@ -165,14 +173,14 @@ int stemlen_compare (const void *v1, const void *v2);
    add 4 to allow for any 4-digit epoch year (e.g. 1970);
    add 25 to allow for "-MM-DD HH:MM:SS.NNNNNNNNN".  */
 #define FLOOR_LOG2_SECONDS_PER_YEAR 24
-#define FILE_TIMESTAMP_PRINT_LEN_BOUND /* 62 */                            \
+#define FILE_TIMESTAMP_PRINT_LEN_BOUND \
   (((sizeof (FILE_TIMESTAMP) * CHAR_BIT - 1 - FLOOR_LOG2_SECONDS_PER_YEAR) \
     * 302 / 1000) \
    + 1 + 1 + 4 + 25)
 
 FILE_TIMESTAMP file_timestamp_cons (char const *, time_t, long int);
 FILE_TIMESTAMP file_timestamp_now (int *);
-void file_timestamp_sprintf (char *, int, FILE_TIMESTAMP );
+void file_timestamp_sprintf (char *p, FILE_TIMESTAMP ts);
 
 /* Return the mtime of file F (a struct file *), caching it.
    The value is NONEXISTENT_MTIME if the file does not exist.  */
@@ -203,6 +211,8 @@ FILE_TIMESTAMP f_mtime (struct file *file, int search);
 #define ORDINARY_MTIME_MAX ((FILE_TIMESTAMP_S (NEW_MTIME) \
                              << FILE_TIMESTAMP_LO_BITS) \
                             + ORDINARY_MTIME_MIN + FILE_TIMESTAMPS_PER_S - 1)
+
+#define is_ordinary_mtime(_t) ((_t) >= ORDINARY_MTIME_MIN && (_t) <= ORDINARY_MTIME_MAX)
 
 /* Modtime value to use for 'infinitely new'.  We used to get the current time
    from the system and use that whenever we wanted 'new'.  But that causes

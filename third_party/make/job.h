@@ -1,5 +1,5 @@
 /* Definitions for managing subprocesses in GNU Make.
-Copyright (C) 1992-2020 Free Software Foundation, Inc.
+Copyright (C) 1992-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,16 +12,24 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/output.h"
+#include "output.h"
 
 /* Structure describing a running or dead child process.  */
 
+#ifdef VMS
+#define VMSCHILD                                                        \
+    char *comname;              /* Temporary command file name */       \
+    int efn;                    /* Completion event flag number */      \
+    int cstatus;                /* Completion status */                 \
+    int vms_launch_status;      /* non-zero if lib$spawn, etc failed */
+#else
 #define VMSCHILD
+#endif
 
 #define CHILDBASE                                               \
-    char *cmd_name;       /* Alloced copy of command run.  */   \
+    char *cmd_name;       /* Allocated copy of command run.  */ \
     char **environment;   /* Environment for commands. */       \
     VMSCHILD                                                    \
     struct output output  /* Output for this child.  */
@@ -40,7 +48,6 @@ struct child
 
     struct file *file;          /* File being remade.  */
 
-    char *tmpdir;               /* Temporary directory */
     char *sh_batch_file;        /* Script file for shell commands */
     char **command_lines;       /* Array of variable-expanded cmd lines.  */
     char *command_ptr;          /* Ptr into command_lines[command_line].  */
@@ -61,28 +68,25 @@ struct child
 extern struct child *children;
 
 /* A signal handler for SIGCHLD, if needed.  */
-RETSIGTYPE child_handler (int sig);
+void child_handler (int sig);
 int is_bourne_compatible_shell(const char *path);
 void new_job (struct file *file);
 void reap_children (int block, int err);
 void start_waiting_jobs (void);
+void free_childbase (struct childbase* child);
 
 char **construct_command_argv (char *line, char **restp, struct file *file,
                                int cmd_flags, char** batch_file);
 
-pid_t child_execute_job (struct childbase *, int, char **, bool);
+pid_t child_execute_job (struct childbase *child, int good_stdin, char **argv);
 
 #ifdef _AMIGA
 void exec_command (char **argv) NORETURN;
-#elif defined(__EMX__)
-int exec_command (char **argv, char **envp);
 #else
-void exec_command (char **argv, char **envp) NORETURN;
+pid_t exec_command (char **argv, char **envp);
 #endif
 
 void unblock_all_sigs (void);
 
 extern unsigned int job_slots_used;
 extern unsigned int jobserver_tokens;
-
-void delete_tmpdir (struct child *);

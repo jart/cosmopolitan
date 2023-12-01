@@ -1,5 +1,5 @@
 /* Library function for scanning an archive file.
-Copyright (C) 1987-2020 Free Software Foundation, Inc.
+Copyright (C) 1987-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,14 +12,288 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "libc/sysv/consts/o.h"
-#include "third_party/make/makeint.inc"
+#include "makeint.h"
 
 #ifdef TEST
 /* Hack, the real error() routine eventually pulls in die from main.c */
 #define error(a, b, c, d)
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#else
+#include <sys/file.h>
+#endif
+
+#ifndef NO_ARCHIVES
+
+#ifdef VMS
+#include <lbrdef.h>
+#include <mhddef.h>
+#include <credef.h>
+#include <descrip.h>
+#include <ctype.h>
+#include <ssdef.h>
+#include <stsdef.h>
+#include <rmsdef.h>
+
+/* This symbol should be present in lbrdef.h. */
+#if !defined LBR$_HDRTRUNC
+#pragma extern_model save
+#pragma extern_model globalvalue
+extern unsigned int LBR$_HDRTRUNC;
+#pragma extern_model restore
+#endif
+
+#include <unixlib.h>
+#include <lbr$routines.h>
+
+const char *
+vmsify (const char *name, int type);
+
+/* Time conversion from VMS to Unix
+   Conversion from local time (stored in library) to GMT (needed for gmake)
+   Note: The tm_gmtoff element is a VMS extension to the ANSI standard. */
+static time_t
+vms_time_to_unix(void *vms_time)
+{
+  struct tm *tmp;
+  time_t unix_time;
+
+  unix_time = decc$fix_time(vms_time);
+  tmp = localtime(&unix_time);
+  unix_time -= tmp->tm_gmtoff;
+
+  return unix_time;
+}
+
+
+/* VMS library routines need static variables for callback */
+static void *VMS_lib_idx;
+
+static const void *VMS_saved_arg;
+
+static intmax_t (*VMS_function) ();
+
+static intmax_t VMS_function_ret;
+
+
+/* This is a callback procedure for lib$get_index */
+static int
+VMS_get_member_info(struct dsc$descriptor_s *module, unsigned long *rfa)
+{
+  int status, i;
+  const int truncated = 0; /* Member name may be truncated */
+  time_t member_date; /* Member date */
+  char *filename;
+  unsigned int buffer_length; /* Actual buffer length */
+
+  /* Unused constants - Make does not actually use most of these */
+  const int file_desc = -1; /* archive file descriptor for reading the data */
+  const int header_position = 0; /* Header position */
+  const int data_position = 0; /* Data position in file */
+  const int data_size = 0; /* Data size */
+  const int uid = 0; /* member gid */
+  const int gid = 0; /* member gid */
+  const int mode = 0; /* member protection mode */
+  /* End of unused constants */
+
+  static struct dsc$descriptor_s bufdesc =
+    { 0, DSC$K_DTYPE_T, DSC$K_CLASS_S, NULL };
+
+  /* Only need the module definition */
+  struct mhddef *mhd;
+
+  /* If a previous callback is non-zero, just return that status */
+  if (VMS_function_ret)
+    {
+      return SS$_NORMAL;
+    }
+
+  /* lbr_set_module returns more than just the module header. So allocate
+     a buffer which is big enough: the maximum LBR$C_MAXHDRSIZ. That's at
+     least bigger than the size of struct mhddef.
+     If the request is too small, a buffer truncated warning is issued so
+     it can be reissued with a larger buffer.
+     We do not care if the buffer is truncated, so that is still a success. */
+  mhd = xmalloc(LBR$C_MAXHDRSIZ);
+  bufdesc.dsc$a_pointer = (char *) mhd;
+  bufdesc.dsc$w_length = LBR$C_MAXHDRSIZ;
+
+  status = lbr$set_module(&VMS_lib_idx, rfa, &bufdesc, &buffer_length, 0);
+
+  if ((status != LBR$_HDRTRUNC) && !$VMS_STATUS_SUCCESS(status))
+    {
+      ON(error, NILF,
+          _("lbr$set_module() failed to extract module info, status = %d"),
+          status);
+
+      lbr$close(&VMS_lib_idx);
+
+      return status;
+    }
+
+#ifdef TEST
+  /* When testing this code, it is useful to know the length returned */
+  printf ("Input length = %d, actual = %u\n",
+          bufdesc.dsc$w_length, buffer_length);
+#endif
+
+  /* Conversion from VMS time to C time.
+     VMS defectlet - mhddef is sub-optimal, for the time, it has a 32 bit
+     longword, mhd$l_datim, and a 32 bit fill instead of two longwords, or
+     equivalent. */
+  member_date = vms_time_to_unix(&mhd->mhd$l_datim);
+  free(mhd);
+
+  /* Here we have a problem.  The module name on VMS does not have
+     a file type, but the filename pattern in the "VMS_saved_arg"
+     may have one.
+     But only the method being called knows how to interpret the
+     filename pattern.
+     There are currently two different formats being used.
+     This means that we need a VMS specific code in those methods
+     to handle it. */
+  filename = xmalloc(module->dsc$w_length + 1);
+
+  /* TODO: We may need an option to preserve the case of the module
+     For now force the module name to lower case */
+  for (i = 0; i < module->dsc$w_length; i++)
+    filename[i] = _tolower((unsigned char )module->dsc$a_pointer[i]);
+
+  filename[i] = '\0';
+
+  VMS_function_ret = (*VMS_function)(file_desc, filename, truncated,
+      header_position, data_position, data_size, member_date, uid, gid, mode,
+      VMS_saved_arg);
+
+  free(filename);
+  return SS$_NORMAL;
+}
+
+
+/* Takes three arguments ARCHIVE, FUNCTION and ARG.
+
+   Open the archive named ARCHIVE, find its members one by one,
+   and for each one call FUNCTION with the following arguments:
+     archive file descriptor for reading the data,
+     member name,
+     member name might be truncated flag,
+     member header position in file,
+     member data position in file,
+     member data size,
+     member date,
+     member uid,
+     member gid,
+     member protection mode,
+     ARG.
+
+   NOTE: on VMS systems, only name, date, and arg are meaningful!
+
+   The descriptor is poised to read the data of the member
+   when FUNCTION is called.  It does not matter how much
+   data FUNCTION reads.
+
+   If FUNCTION returns nonzero, we immediately return
+   what FUNCTION returned.
+
+   Returns -1 if archive does not exist,
+   Returns -2 if archive has invalid format.
+   Returns 0 if have scanned successfully.  */
+
+intmax_t
+ar_scan (const char *archive, ar_member_func_t function, const void *varg)
+{
+  char *vms_archive;
+
+  static struct dsc$descriptor_s libdesc =
+    { 0, DSC$K_DTYPE_T, DSC$K_CLASS_S, NULL };
+
+  const unsigned long func = LBR$C_READ;
+  const unsigned long type = LBR$C_TYP_UNK;
+  const unsigned long index = 1;
+  unsigned long lib_idx;
+  int status;
+
+  VMS_saved_arg = varg;
+
+  /* Null archive string can show up in test and cause an access violation */
+  if (archive == NULL)
+    {
+      /* Null filenames do not exist */
+      return -1;
+    }
+
+  /* archive path name must be in VMS format */
+  vms_archive = (char *) vmsify(archive, 0);
+
+  status = lbr$ini_control(&VMS_lib_idx, &func, &type, 0);
+
+  if (!$VMS_STATUS_SUCCESS(status))
+    {
+      ON(error, NILF, _("lbr$ini_control() failed with status = %d"), status);
+      return -2;
+    }
+
+  libdesc.dsc$a_pointer = vms_archive;
+  libdesc.dsc$w_length = strlen(vms_archive);
+
+  status = lbr$open(&VMS_lib_idx, &libdesc, 0, NULL, 0, NULL, 0);
+
+  if (!$VMS_STATUS_SUCCESS(status))
+    {
+
+      /* TODO: A library format failure could mean that this is a file
+         generated by the GNU AR utility and in that case, we need to
+         take the UNIX codepath.  This will also take a change to the
+         GNV AR wrapper program. */
+
+      switch (status)
+        {
+      case RMS$_FNF:
+        /* Archive does not exist */
+        return -1;
+      default:
+#ifndef TEST
+        OSN(error, NILF,
+            _("unable to open library '%s' to lookup member status %d"),
+            archive, status);
+#endif
+        /* For library format errors, specification says to return -2 */
+        return -2;
+        }
+    }
+
+  VMS_function = function;
+
+  /* Clear the return status, as we are supposed to stop calling the
+     callback function if it becomes non-zero, and this is a static
+     variable. */
+  VMS_function_ret = 0;
+
+  status = lbr$get_index(&VMS_lib_idx, &index, VMS_get_member_info, NULL, 0);
+
+  lbr$close(&VMS_lib_idx);
+
+  /* Unless a failure occurred in the lbr$ routines, return the
+     the status from the 'function' routine. */
+  if ($VMS_STATUS_SUCCESS(status))
+    {
+      return VMS_function_ret;
+    }
+
+  /* This must be something wrong with the library and an error
+     message should already have been printed. */
+  return -2;
+}
+
+#else /* !VMS */
+
+/* SCO Unix's compiler defines both of these.  */
+#ifdef  M_UNIX
+#undef  M_XENIX
 #endif
 
 /* On the sun386i and in System V rel 3, ar.h defines two different archive
@@ -57,7 +331,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifndef WINDOWS32
-# if 0 && !defined (__ANDROID__) && !defined (__BEOS__)
+# if !defined (__ANDROID__) && !defined (__BEOS__) && !defined(MK_OS_ZOS)
+#  include <ar.h>
 # else
    /* These platforms don't have <ar.h> but have archives in the same format
     * as many other Unices.  This was taken from GNU binutils for BeOS.
@@ -80,6 +355,9 @@ struct ar_hdr
 /* These should allow us to read Windows (VC++) libraries (according to Frank
  * Libbrecht <frankl@abzx.belgium.hp.com>)
  */
+# include <windows.h>
+# include <windef.h>
+# include <io.h>
 # define ARMAG      IMAGE_ARCHIVE_START
 # define SARMAG     IMAGE_ARCHIVE_START_SIZE
 # define ar_hdr     _IMAGE_ARCHIVE_MEMBER_HEADER
@@ -98,8 +376,41 @@ struct ar_hdr
 # define   AR_HDR_SIZE  (sizeof (struct ar_hdr))
 #endif
 
-#include "third_party/make/output.h"
+#include "intprops.h"
+
+#include "output.h"
 
+
+static uintmax_t
+parse_int (const char *ptr, const size_t len, const int base, uintmax_t max,
+           const char *type, const char *archive, const char *name)
+{
+  const char *const ep = ptr + len;
+  const int maxchar = '0' + base - 1;
+  uintmax_t val = 0;
+
+  /* In all the versions I know of the spaces come last, but be safe.  */
+  while (ptr < ep && *ptr == ' ')
+    ++ptr;
+
+  while (ptr < ep && *ptr != ' ')
+    {
+      uintmax_t nv;
+
+      if (*ptr < '0' || *ptr > maxchar)
+        OSSS (fatal, NILF,
+              _("Invalid %s for archive %s member %s"), type, archive, name);
+      nv = (val * base) + (*ptr - '0');
+      if (nv < val || nv > max)
+        OSSS (fatal, NILF,
+              _("Invalid %s for archive %s member %s"), type, archive, name);
+      val = nv;
+      ++ptr;
+    }
+
+  return val;
+}
+
 /* Takes three arguments ARCHIVE, FUNCTION and ARG.
 
    Open the archive named ARCHIVE, find its members one by one,
@@ -127,7 +438,7 @@ struct ar_hdr
    Returns -2 if archive has invalid format.
    Returns 0 if have scanned successfully.  */
 
-long int
+intmax_t
 ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 {
 #ifdef AIAMAG
@@ -138,7 +449,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 # endif
 #endif
   char *namemap = 0;
-  int namemap_size = 0;
+  unsigned int namemap_size = 0;
   int desc = open (archive, O_RDONLY, 0);
   if (desc < 0)
     return -1;
@@ -238,7 +549,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 
     while (1)
       {
-        int nread;
+        ssize_t nread;
         struct ar_hdr member_header;
 #ifdef AIAMAGBIG
         struct ar_hdr_big member_header_big;
@@ -247,7 +558,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 # define ARNAME_MAX 255
         char name[ARNAME_MAX + 1];
         int name_len;
-        long int dateval;
+        intmax_t dateval;
         int uidval, gidval;
         long int data_offset;
 #else
@@ -259,8 +570,12 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 #endif
         long int eltsize;
         unsigned int eltmode;
-        long int fnval;
+        intmax_t eltdate;
+        int eltuid, eltgid;
+        intmax_t fnval;
         off_t o;
+
+        memset(&member_header, '\0', sizeof (member_header));
 
         EINTRLOOP (o, lseek (desc, member_offset, 0));
         if (o < 0)
@@ -288,7 +603,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 
             name[name_len] = '\0';
 
-            sscanf (member_header_big.ar_date, "%12ld", &dateval);
+            sscanf (member_header_big.ar_date, "%12" SCNdMAX, &dateval);
             sscanf (member_header_big.ar_uid, "%12d", &uidval);
             sscanf (member_header_big.ar_gid, "%12d", &gidval);
             sscanf (member_header_big.ar_mode, "%12o", &eltmode);
@@ -316,7 +631,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
 
             name[name_len] = '\0';
 
-            sscanf (member_header.ar_date, "%12ld", &dateval);
+            sscanf (member_header.ar_date, "%12" SCNdMAX, &dateval);
             sscanf (member_header.ar_uid, "%12d", &uidval);
             sscanf (member_header.ar_gid, "%12d", &gidval);
             sscanf (member_header.ar_mode, "%12o", &eltmode);
@@ -391,10 +706,11 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
               && (name[0] == ' ' || name[0] == '/')
               && namemap != 0)
             {
-              int name_off = atoi (name + 1);
-              int name_len;
+              const char* err;
+              unsigned int name_off = make_toui (name + 1, &err);
+              size_t name_len;
 
-              if (name_off < 0 || name_off >= namemap_size)
+              if (err|| name_off >= namemap_size)
                 goto invalid;
 
               name = namemap + name_off;
@@ -407,14 +723,15 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
                    && name[1] == '1'
                    && name[2] == '/')
             {
-              int name_len = atoi (name + 3);
+              const char* err;
+              unsigned int name_len = make_toui (name + 3, &err);
 
-              if (name_len < 1)
+              if (err || name_len == 0 || name_len >= MIN (PATH_MAX, INT_MAX))
                 goto invalid;
 
               name = alloca (name_len + 1);
               nread = readbuf (desc, name, name_len);
-              if (nread != name_len)
+              if (nread < 0 || (unsigned int) nread != name_len)
                 goto invalid;
 
               name[name_len] = '\0';
@@ -425,8 +742,16 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
         }
 
 #ifndef M_XENIX
-        sscanf (TOCHAR (member_header.ar_mode), "%8o", &eltmode);
-        eltsize = atol (TOCHAR (member_header.ar_size));
+#define PARSE_INT(_m, _t, _b, _n) \
+        (_t) parse_int (TOCHAR (member_header._m), sizeof (member_header._m), \
+                        _b, TYPE_MAXIMUM (_t), _n, archive, name)
+
+        eltmode = PARSE_INT (ar_mode, unsigned int, 8, "mode");
+        eltsize = PARSE_INT (ar_size, long, 10, "size");
+        eltdate = PARSE_INT (ar_date, intmax_t, 10, "date");
+        eltuid = PARSE_INT (ar_uid, int, 10, "uid");
+        eltgid = PARSE_INT (ar_gid, int, 10, "gid");
+#undef PARSE_INT
 #else   /* Xenix.  */
         eltmode = (unsigned short int) member_header.ar_mode;
         eltsize = member_header.ar_size;
@@ -436,9 +761,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
           (*function) (desc, name, ! long_name, member_offset,
                        member_offset + AR_HDR_SIZE, eltsize,
 #ifndef M_XENIX
-                       atol (TOCHAR (member_header.ar_date)),
-                       atoi (TOCHAR (member_header.ar_uid)),
-                       atoi (TOCHAR (member_header.ar_gid)),
+                       eltdate, eltuid, eltgid,
 #else   /* Xenix.  */
                        member_header.ar_date,
                        member_header.ar_uid,
@@ -518,7 +841,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *arg)
   close (desc);
   return -2;
 }
-
+#endif /* !VMS */
 
 /* Return nonzero iff NAME matches MEM.
    If TRUNCATED is nonzero, MEM may be truncated to
@@ -578,10 +901,10 @@ ar_name_equal (const char *name, const char *mem, int truncated)
 
 #ifndef VMS
 /* ARGSUSED */
-static long int
+static intmax_t
 ar_member_pos (int desc UNUSED, const char *mem, int truncated,
                long int hdrpos, long int datapos UNUSED, long int size UNUSED,
-               long int date UNUSED, int uid UNUSED, int gid UNUSED,
+               intmax_t date UNUSED, int uid UNUSED, int gid UNUSED,
                unsigned int mode UNUSED, const void *name)
 {
   if (!ar_name_equal (name, mem, truncated))
@@ -599,12 +922,13 @@ ar_member_pos (int desc UNUSED, const char *mem, int truncated,
 int
 ar_member_touch (const char *arname, const char *memname)
 {
-  long int pos = ar_scan (arname, ar_member_pos, memname);
+  intmax_t pos = ar_scan (arname, ar_member_pos, memname);
+  off_t opos;
   int fd;
   struct ar_hdr ar_hdr;
   off_t o;
   int r;
-  unsigned int ui;
+  int datelen;
   struct stat statbuf;
 
   if (pos < 0)
@@ -612,11 +936,13 @@ ar_member_touch (const char *arname, const char *memname)
   if (!pos)
     return 1;
 
+  opos = (off_t) pos;
+
   EINTRLOOP (fd, open (arname, O_RDWR, 0666));
   if (fd < 0)
     return -3;
   /* Read in this member's header */
-  EINTRLOOP (o, lseek (fd, pos, 0));
+  EINTRLOOP (o, lseek (fd, opos, 0));
   if (o < 0)
     goto lose;
   r = readbuf (fd, &ar_hdr, AR_HDR_SIZE);
@@ -628,15 +954,16 @@ ar_member_touch (const char *arname, const char *memname)
     goto lose;
   /* Advance member's time to that time */
 #if defined(ARFMAG) || defined(ARFZMAG) || defined(AIAMAG) || defined(WINDOWS32)
-  for (ui = 0; ui < sizeof ar_hdr.ar_date; ui++)
-    ar_hdr.ar_date[ui] = ' ';
-  sprintf (TOCHAR (ar_hdr.ar_date), "%lu", (long unsigned) statbuf.st_mtime);
-  ar_hdr.ar_date[strlen ((char *) ar_hdr.ar_date)] = ' ';
+  datelen = snprintf (TOCHAR (ar_hdr.ar_date), sizeof ar_hdr.ar_date,
+                      "%" PRIdMAX, (intmax_t) statbuf.st_mtime);
+  if (! (0 <= datelen && datelen < (int) sizeof ar_hdr.ar_date))
+    goto lose;
+  memset (ar_hdr.ar_date + datelen, ' ', sizeof ar_hdr.ar_date - datelen);
 #else
   ar_hdr.ar_date = statbuf.st_mtime;
 #endif
   /* Write back this member's header */
-  EINTRLOOP (o, lseek (fd, pos, 0));
+  EINTRLOOP (o, lseek (fd, opos, 0));
   if (o < 0)
     goto lose;
   r = writebuf (fd, &ar_hdr, AR_HDR_SIZE);
@@ -655,18 +982,21 @@ ar_member_touch (const char *arname, const char *memname)
 
 #ifdef TEST
 
-long int
+intmax_t
 describe_member (int desc, const char *name, int truncated,
                  long int hdrpos, long int datapos, long int size,
-                 long int date, int uid, int gid, unsigned int mode,
+                 intmax_t date, int uid, int gid, unsigned int mode,
                  const void *arg)
 {
   extern char *ctime ();
+  time_t d = date;
+  char const *ds;
 
   printf (_("Member '%s'%s: %ld bytes at %ld (%ld).\n"),
           name, truncated ? _(" (name might be truncated)") : "",
           size, hdrpos, datapos);
-  printf (_("  Date %s"), ctime (&date));
+  ds = ctime (&d);
+  printf (_("  Date %s"), ds ? ds : "?");
   printf (_("  uid = %d, gid = %d, mode = 0%o.\n"), uid, gid, mode);
 
   return 0;
@@ -680,3 +1010,4 @@ main (int argc, char **argv)
 }
 
 #endif  /* TEST.  */
+#endif  /* NO_ARCHIVES.  */

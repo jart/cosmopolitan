@@ -1,5 +1,5 @@
 /* Reading and parsing of makefiles for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,22 +12,33 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-#include "third_party/make/filedef.h"
-#include "third_party/make/dep.h"
-#include "third_party/make/job.h"
-#include "third_party/make/os.h"
-#include "third_party/make/commands.h"
-#include "third_party/make/variable.h"
-#include "third_party/make/rule.h"
-#include "third_party/make/debug.h"
 #include "third_party/musl/passwd.h"
-#include "libc/runtime/runtime.h"
-#include "third_party/make/hash.h"
+#include "makeint.h"
 
-# define GLOB_ALTDIRFUNC (1 << 9)/* Use gl_opendir et al functions.  */
+#include <assert.h>
+
+#include "filedef.h"
+#include "dep.h"
+#include "job.h"
+#include "os.h"
+#include "commands.h"
+#include "variable.h"
+#include "rule.h"
+#include "debug.h"
+#include "hash.h"
+
+
+#ifdef WINDOWS32
+#else  /* !WINDOWS32 */
+#ifndef _AMIGA
+#ifndef VMS
+#else
+struct passwd *getpwnam (char *name);
+#endif
+#endif
+#endif /* !WINDOWS32 */
 
 /* A 'struct ebuffer' controls the origin of the makefile we are currently
    eval'ing.
@@ -50,9 +61,9 @@ struct vmodifiers
     unsigned int assign_v:1;
     unsigned int define_v:1;
     unsigned int undefine_v:1;
-    unsigned int export_v:1;
     unsigned int override_v:1;
     unsigned int private_v:1;
+    enum variable_export export_v ENUM_BITFIELD (2);
   };
 
 /* Types of "words" that can be read in a makefile.  */
@@ -94,7 +105,9 @@ static const char *default_include_directories[] =
    This is defined as a placeholder.  */
 # define INCLUDEDIR "."
 #endif
+#if defined(INCLUDEDIR)
     INCLUDEDIR,
+#endif
 #ifndef _AMIGA
     "/usr/gnu/include",
     "/usr/local/include",
@@ -129,6 +142,8 @@ static void do_undefine (char *name, enum variable_origin origin,
 static struct variable *do_define (char *name, enum variable_origin origin,
                                    struct ebuffer *ebuf);
 static int conditional_line (char *line, size_t len, const floc *flocp);
+static void check_specials (struct nameseq *filep, int set_default);
+static void check_special_file (struct file *filep, const floc *flocp);
 static void record_files (struct nameseq *filenames, int are_also_makes,
                           const char *pattern,
                           const char *pattern_percent, char *depstr,
@@ -148,9 +163,8 @@ static char *unescape_char (char *string, int c);
 
 
 /* Compare a word, both length and contents.
-   P must point to the word to be tested, and WLEN must be the length.
-*/
-#define word1eq(s)      (wlen == CSTRLEN (s) && strneq (s, p, CSTRLEN (s)))
+   P must point to the word to be tested, and WLEN must be the length.  */
+#define word1eq(s)  (wlen == CSTRLEN (s) && memcmp (s, p, CSTRLEN (s)) == 0)
 
 
 /* Read in all the makefiles and return a chain of targets to rebuild.  */
@@ -176,15 +190,7 @@ read_all_makefiles (const char **makefiles)
     char *name, *p;
     size_t length;
 
-    {
-      /* Turn off --warn-undefined-variables while we expand MAKEFILES.  */
-      int save = warn_undefined_variables_flag;
-      warn_undefined_variables_flag = 0;
-
-      value = allocated_variable_expand ("$(MAKEFILES)");
-
-      warn_undefined_variables_flag = save;
-    }
+    value = allocated_variable_expand ("$(MAKEFILES)");
 
     /* Set NAME to the start of next token and LENGTH to its length.
        MAKEFILES is updated for finding remaining tokens.  */
@@ -250,10 +256,6 @@ read_all_makefiles (const char **makefiles)
         {
           /* No default makefile was found.  Add the default makefiles to the
              'read_files' chain so they will be updated if possible.  */
-          struct goaldep *tail = read_files;
-          /* Add them to the tail, after any MAKEFILES variable makefiles.  */
-          while (tail != 0 && tail->next != 0)
-            tail = tail->next;
           for (p = default_makefiles; *p != 0; ++p)
             {
               struct goaldep *d = alloc_goaldep ();
@@ -261,14 +263,9 @@ read_all_makefiles (const char **makefiles)
               /* Tell update_goal_chain to bail out as soon as this file is
                  made, and main not to die if we can't make this file.  */
               d->flags = RM_DONTCARE;
-              if (tail == 0)
-                read_files = d;
-              else
-                tail->next = d;
-              tail = d;
+              d->next = read_files;
+              read_files = d;
             }
-          if (tail != 0)
-            tail->next = 0;
         }
     }
 
@@ -348,35 +345,43 @@ eval_makefile (const char *filename, unsigned short flags)
   deps->error = errno;
 
   /* Check for unrecoverable errors: out of mem or FILE slots.  */
+  switch (deps->error)
     {
-    if (0 ||
 #ifdef EMFILE
-    deps->error == EMFILE ||
+    case EMFILE:
 #endif
 #ifdef ENFILE
-    deps->error == ENFILE ||
+    case ENFILE:
 #endif
-    deps->error == ENOMEM)
+    case ENOMEM:
       {
         const char *err = strerror (deps->error);
         OS (fatal, reading_file, "%s", err);
       }
     }
 
-  /* If the makefile wasn't found and it's either a makefile from
-     the 'MAKEFILES' variable or an included makefile,
-     search the included makefile search path for this makefile.  */
-  if (ebuf.fp == 0 && (flags & RM_INCLUDED) && *filename != '/')
+  /* If the makefile wasn't found and it's either a makefile from the
+     'MAKEFILES' variable or an included makefile, search the included
+     makefile search path for this makefile.  */
+  if (ebuf.fp == NULL && deps->error == ENOENT && include_directories
+      && ANY_SET (flags, RM_INCLUDED)
+      && !HAS_DRIVESPEC (filename) && !ISDIRSEP (*filename))
     {
-      unsigned int i;
-      for (i = 0; include_directories[i] != 0; ++i)
+      const char **dir;
+      for (dir = include_directories; *dir != NULL; ++dir)
         {
-          const char *included = concat (3, include_directories[i],
-                                         "/", filename);
-          ebuf.fp = fopen (included, "r");
+          const char *included = concat (3, *dir, "/", filename);
+
+          ENULLLOOP(ebuf.fp, fopen (included, "r"));
           if (ebuf.fp)
             {
               filename = included;
+              break;
+            }
+          if (errno != ENOENT)
+            {
+              filename = included;
+              deps->error = errno;
               break;
             }
         }
@@ -389,6 +394,7 @@ eval_makefile (const char *filename, unsigned short flags)
     deps->file = enter_file (filename);
   filename = deps->file->name;
   deps->flags = flags;
+  deps->file->is_explicit = 1;
 
   free (expanded);
 
@@ -404,6 +410,11 @@ eval_makefile (const char *filename, unsigned short flags)
 
   /* Success; clear errno.  */
   deps->error = 0;
+
+  /* If we tried and failed to read the included file before but this
+     time we succeeded, reset the last mtime.  */
+  if (deps->file->last_mtime == NONEXISTENT_MTIME)
+    deps->file->last_mtime = 0;
 
   /* Avoid leaking the makefile to children.  */
   fd_noinherit (fileno (ebuf.fp));
@@ -427,10 +438,7 @@ eval_makefile (const char *filename, unsigned short flags)
   fclose (ebuf.fp);
 
   free (ebuf.bufstart);
-
-  /* [jart] breaks gcc11 (also wat) */
-  void *volatile wat = alloca (0);
-  (void)wat;
+  free_alloca ();
 
   errno = 0;
   return deps;
@@ -472,9 +480,7 @@ eval_buffer (char *buffer, const floc *flocp)
 
   reading_file = curfile;
 
-  /* [jart] breaks gcc11 (also wat) */
-  void *volatile wat = alloca (0);
-  (void)wat;
+  free_alloca ();
 }
 
 /* Check LINE to see if it's a variable assignment or undefine.
@@ -489,7 +495,7 @@ eval_buffer (char *buffer, const floc *flocp)
    based on the modifiers found if any, plus V_ASSIGN is 1.
  */
 static char *
-parse_var_assignment (const char *line, struct vmodifiers *vmod)
+parse_var_assignment (const char *line, int targvar, struct vmodifiers *vmod)
 {
   const char *p;
   memset (vmod, '\0', sizeof (*vmod));
@@ -517,19 +523,21 @@ parse_var_assignment (const char *line, struct vmodifiers *vmod)
       wlen = p2 - p;
 
       if (word1eq ("export"))
-        vmod->export_v = 1;
+        vmod->export_v = v_export;
+      else if (word1eq ("unexport"))
+        vmod->export_v = v_noexport;
       else if (word1eq ("override"))
         vmod->override_v = 1;
       else if (word1eq ("private"))
         vmod->private_v = 1;
-      else if (word1eq ("define"))
+      else if (!targvar && word1eq ("define"))
         {
           /* We can't have modifiers after 'define' */
           vmod->define_v = 1;
           p = next_token (p2);
           break;
         }
-      else if (word1eq ("undefine"))
+      else if (!targvar && word1eq ("undefine"))
         {
           /* We can't have modifiers after 'undefine' */
           vmod->undefine_v = 1;
@@ -714,7 +722,7 @@ eval (struct ebuffer *ebuf, int set_default)
 
       /* See if this is a variable assignment.  We need to do this early, to
          allow variables with names like 'ifdef', 'export', 'private', etc.  */
-      p = parse_var_assignment (p, &vmod);
+      p = parse_var_assignment (p, 0, &vmod);
       if (vmod.assign_v)
         {
           struct variable *v;
@@ -743,8 +751,8 @@ eval (struct ebuffer *ebuf, int set_default)
 
           assert (v != NULL);
 
-          if (vmod.export_v)
-            v->export = v_export;
+          if (vmod.export_v != v_default)
+            v->export = vmod.export_v;
           if (vmod.private_v)
             v->private_var = 1;
 
@@ -898,9 +906,7 @@ eval (struct ebuffer *ebuf, int set_default)
                                       | (set_default ? 0 : RM_NO_DEFAULT_GOAL));
 
               struct goaldep *d = eval_makefile (files->name, flags);
-
-              if (errno)
-                d->floc = *fstart;
+              d->floc = *fstart;
 
               free_ns (files);
               files = next;
@@ -944,28 +950,38 @@ eval (struct ebuffer *ebuf, int set_default)
               struct nameseq *next = files->next;
               const char *name = files->name;
               struct goaldep *deps;
+              struct file *f;
               int r;
 
-              /* Load the file.  0 means failure.  */
-              r = load_file (&ebuf->floc, &name, noerror);
-              if (! r && ! noerror)
-                OS (fatal, &ebuf->floc, _("%s: failed to load"), name);
+              {
+                struct file file = {0};
+                file.name = name;
+                /* Load the file.  0 means failure.  */
+                r = load_file (&ebuf->floc, &file, noerror);
+                if (! r && ! noerror)
+                  OS (fatal, &ebuf->floc, _("%s: failed to load"), name);
+                name = file.name;
+              }
+
+              f = lookup_file (name);
+              if (!f)
+                f = enter_file (name);
+              f->loaded = 1;
+              f->unloaded = 0;
 
               free_ns (files);
               files = next;
 
-              /* Return of -1 means a special load: don't rebuild it.  */
+              /* Return of -1 means don't ever try to rebuild.  */
               if (r == -1)
                 continue;
 
-              /* It succeeded, so add it to the list "to be rebuilt".  */
+              /* Otherwise add it to the list to be rebuilt.  */
               deps = alloc_goaldep ();
               deps->next = read_files;
+              deps->floc = ebuf->floc;
               read_files = deps;
-              deps->file = lookup_file (name);
-              if (deps->file == 0)
-                deps->file = enter_file (name);
-              deps->file->loaded = 1;
+              deps->file = f;
             }
 
           continue;
@@ -989,7 +1005,7 @@ eval (struct ebuffer *ebuf, int set_default)
 
       {
         enum make_word_type wtype;
-        char *cmdleft, *semip, *lb_next;
+        char *cmdleft, *semip = 0, *lb_next;
         size_t plen = 0;
         char *colonp;
         const char *end, *beg; /* Helpers for whitespace stripping. */
@@ -1009,9 +1025,11 @@ eval (struct ebuffer *ebuf, int set_default)
             cmdleft = 0;
           }
         else if (cmdleft != 0)
-          /* Found one.  Cut the line short there before expanding it.  */
-          *(cmdleft++) = '\0';
-        semip = cmdleft;
+          {
+            /* Found one.  Cut the line short there before expanding it.  */
+            semip = cmdleft++;
+            *semip = '\0';
+          }
 
         collapse_continuations (line);
 
@@ -1085,7 +1103,7 @@ eval (struct ebuffer *ebuf, int set_default)
                  Note that the only separators of targets in this context are
                  whitespace and a left paren.  If others are possible, add them
                  to the string in the call to strchr.  */
-              while (colonp && (colonp[1] == '/' || colonp[1] == '\\') &&
+              while (colonp && ISDIRSEP (colonp[1]) &&
                      isalpha ((unsigned char) colonp[-1]) &&
                      (colonp == p2 + 1 || strchr (" \t(", colonp[-2]) != 0))
                 colonp = find_char_unquote (colonp + 1, ':');
@@ -1114,20 +1132,29 @@ eval (struct ebuffer *ebuf, int set_default)
 
         p2 = next_token (variable_buffer);
 
-        /* If the word we're looking at is EOL, see if there's _anything_
-           on the line.  If not, a variable expanded to nothing, so ignore
-           it.  If so, we can't parse this line so punt.  */
+        /* If we're at EOL we didn't find a separator so we don't know what
+           kind of line this is.  */
         if (wtype == w_eol)
           {
+            /* Ignore an empty line.  */
             if (*p2 == '\0')
               continue;
 
-            /* There's no need to be ivory-tower about this: check for
-               one of the most common bugs found in makefiles...  */
+            /* Check for spaces instead of TAB.  */
             if (cmd_prefix == '\t' && strneq (line, "        ", 8))
               O (fatal, fstart, _("missing separator (did you mean TAB instead of 8 spaces?)"));
-            else
-              O (fatal, fstart, _("missing separator"));
+
+            /* Check for conditionals without whitespace afterward.
+               We don't check ifdef/ifndef because there's no real way to miss
+               whitespace there.  */
+            p2 = next_token (line);
+            if (strneq (p2, "if", 2) &&
+                ((strneq (&p2[2], "neq", 3) && !STOP_SET (p2[5], MAP_BLANK))
+                 || (strneq (&p2[2], "eq", 2) && !STOP_SET (p2[4], MAP_BLANK))))
+              O (fatal, fstart, _("missing separator (ifeq/ifneq must be followed by whitespace)"));
+
+            /* No idea...  */
+            O (fatal, fstart, _("missing separator"));
           }
 
         {
@@ -1174,7 +1201,7 @@ eval (struct ebuffer *ebuf, int set_default)
             p2 = variable_buffer + l;
           }
 
-        p2 = parse_var_assignment (p2, &vmod);
+        p2 = parse_var_assignment (p2, 1, &vmod);
         if (vmod.assign_v)
           {
             /* If there was a semicolon found, add it back, plus anything
@@ -1182,7 +1209,7 @@ eval (struct ebuffer *ebuf, int set_default)
             if (semip)
               {
                 size_t l = p2 - variable_buffer;
-                *__veil("r", (--semip)) = ';';
+                *semip = ';';
                 collapse_continuations (semip);
                 variable_buffer_output (p2 + strlen (p2),
                                         semip, strlen (semip)+1);
@@ -1256,8 +1283,7 @@ eval (struct ebuffer *ebuf, int set_default)
           do {
             check_again = 0;
             /* For DOS-style paths, skip a "C:\..." or a "C:/..." */
-            if (p != 0 && (p[1] == '\\' || p[1] == '/') &&
-                isalpha ((unsigned char)p[-1]) &&
+            if (p != 0 && ISDIRSEP (p[1]) && isalpha ((unsigned char)p[-1]) &&
                 (p == p2 + 1 || strchr (" \t:(", p[-2]) != 0)) {
               p = strchr (p + 1, ':');
               check_again = 1;
@@ -1314,79 +1340,7 @@ eval (struct ebuffer *ebuf, int set_default)
             commands[commands_idx++] = '\n';
           }
 
-        /* Determine if this target should be made default. We used to do
-           this in record_files() but because of the delayed target recording
-           and because preprocessor directives are legal in target's commands
-           it is too late. Consider this fragment for example:
-
-           foo:
-
-           ifeq ($(.DEFAULT_GOAL),foo)
-              ...
-           endif
-
-           Because the target is not recorded until after ifeq directive is
-           evaluated the .DEFAULT_GOAL does not contain foo yet as one
-           would expect. Because of this we have to move the logic here.  */
-
-        if (set_default && default_goal_var->value[0] == '\0')
-          {
-            struct dep *d;
-            struct nameseq *t = filenames;
-
-            for (; t != 0; t = t->next)
-              {
-                int reject = 0;
-                const char *name = t->name;
-
-                /* We have nothing to do if this is an implicit rule. */
-                if (strchr (name, '%') != 0)
-                  break;
-
-                /* See if this target's name does not start with a '.',
-                   unless it contains a slash.  */
-                if (*name == '.' && strchr (name, '/') == 0
-#ifdef HAVE_DOS_PATHS
-                    && strchr (name, '\\') == 0
-#endif
-                    )
-                  continue;
-
-
-                /* If this file is a suffix, don't let it be
-                   the default goal file.  */
-                for (d = suffix_file->deps; d != 0; d = d->next)
-                  {
-                    struct dep *d2;
-                    if (*dep_name (d) != '.' && streq (name, dep_name (d)))
-                      {
-                        reject = 1;
-                        break;
-                      }
-                    for (d2 = suffix_file->deps; d2 != 0; d2 = d2->next)
-                      {
-                        size_t l = strlen (dep_name (d2));
-                        if (!strneq (name, dep_name (d2), l))
-                          continue;
-                        if (streq (name + l, dep_name (d)))
-                          {
-                            reject = 1;
-                            break;
-                          }
-                      }
-
-                    if (reject)
-                      break;
-                  }
-
-                if (!reject)
-                  {
-                    define_variable_global (".DEFAULT_GOAL", 13, t->name,
-                                            o_file, 0, NILF);
-                    break;
-                  }
-              }
-          }
+        check_specials (filenames, set_default);
       }
     }
 
@@ -1904,7 +1858,8 @@ record_target_var (struct nameseq *filenames, char *defn,
       /* Set up the variable to be *-specific.  */
       v->per_target = 1;
       v->private_var = vmod->private_v;
-      v->export = vmod->export_v ? v_export : v_default;
+      if (vmod->export_v != v_default)
+        v->export = vmod->export_v;
 
       /* If it's not an override, check to see if there was a command-line
          setting.  If so, reset the value.  */
@@ -1924,6 +1879,131 @@ record_target_var (struct nameseq *filenames, char *defn,
               v->append = 0;
             }
         }
+    }
+}
+
+
+/* Check for special targets.  We used to do this in record_files() but that's
+   too late: by the time we get there we'll have already parsed the next line
+   and it have been mis-parsed because these special targets haven't been
+   considered yet.  */
+
+static void
+check_specials (struct nameseq *files, int set_default)
+{
+  struct nameseq *t;
+
+  for (t = files; t != NULL; t = t->next)
+    {
+      const char* nm = t->name;
+
+      if (!posix_pedantic && streq (nm, ".POSIX"))
+        {
+          posix_pedantic = 1;
+          define_variable_cname (".SHELLFLAGS", "-ec", o_default, 0);
+          /* These default values are based on IEEE Std 1003.1-2008.
+             It requires '-O 1' for [CF]FLAGS, but GCC doesn't allow
+             space between -O and the number so omit it here.  */
+          define_variable_cname ("CC", "c99", o_default, 0);
+          define_variable_cname ("CFLAGS", "-O1", o_default, 0);
+          define_variable_cname ("FC", "fort77", o_default, 0);
+          define_variable_cname ("FFLAGS", "-O1", o_default, 0);
+          define_variable_cname ("SCCSGETFLAGS", "-s", o_default, 0);
+          define_variable_cname ("ARFLAGS", "-rv", o_default, 0);
+          continue;
+        }
+
+      if (!second_expansion && streq (nm, ".SECONDEXPANSION"))
+        {
+          second_expansion = 1;
+          continue;
+        }
+
+#if !defined (__MSDOS__) && !defined (__EMX__)
+      if (!one_shell && streq (nm, ".ONESHELL"))
+        {
+          one_shell = 1;
+          continue;
+        }
+#endif
+
+      /* Determine if this target should be made default.  */
+
+      if (set_default && default_goal_var->value[0] == '\0')
+        {
+          struct dep *d;
+          int reject = 0;
+
+          /* We have nothing to do if this is an implicit rule. */
+          if (strchr (nm, '%') != 0)
+            break;
+
+          /* See if this target's name does not start with a '.',
+             unless it contains a slash.  */
+          if (*nm == '.' && strchr (nm, '/') == 0
+#ifdef HAVE_DOS_PATHS
+              && strchr (nm, '\\') == 0
+#endif
+              )
+            continue;
+
+          /* If this file is a suffix, it can't be the default goal file.  */
+          for (d = suffix_file->deps; d != 0; d = d->next)
+            {
+              struct dep *d2;
+              if (*dep_name (d) != '.' && streq (nm, dep_name (d)))
+                {
+                  reject = 1;
+                  break;
+                }
+              for (d2 = suffix_file->deps; d2 != 0; d2 = d2->next)
+                {
+                  size_t l = strlen (dep_name (d2));
+                  if (!strneq (nm, dep_name (d2), l))
+                    continue;
+                  if (streq (nm + l, dep_name (d)))
+                    {
+                      reject = 1;
+                      break;
+                    }
+                }
+
+              if (reject)
+                break;
+            }
+
+          if (!reject)
+            define_variable_global (".DEFAULT_GOAL", 13, t->name,
+                                    o_file, 0, NILF);
+        }
+    }
+}
+
+/* Check for special targets.  We used to do this in record_files() but that's
+   too late: by the time we get there we'll have already parsed the next line
+   and it have been mis-parsed because these special targets haven't been
+   considered yet.  */
+
+static void
+check_special_file (struct file *file, const floc *flocp)
+{
+  if (streq (file->name, ".WAIT"))
+    {
+      static unsigned int wpre = 0, wcmd = 0;
+
+      if (!wpre && file->deps)
+        {
+          O (error, flocp, _(".WAIT should not have prerequisites"));
+          wpre = 1;
+        }
+
+      if (!wcmd && file->cmds)
+        {
+          O (error, flocp, _(".WAIT should not have commands"));
+          wcmd = 1;
+        }
+
+      return;
     }
 }
 
@@ -2068,29 +2148,6 @@ record_files (struct nameseq *filenames, int are_also_makes,
 
       free_ns (filenames);
 
-      /* Check for special targets.  Do it here instead of, say, snap_deps()
-         so that we can immediately use the value.  */
-      if (!posix_pedantic && streq (name, ".POSIX"))
-        {
-          posix_pedantic = 1;
-          define_variable_cname (".SHELLFLAGS", "-ec", o_default, 0);
-          /* These default values are based on IEEE Std 1003.1-2008.
-             It requires '-O 1' for [CF]FLAGS, but GCC doesn't allow space
-             between -O and the number so omit it here.  */
-          define_variable_cname ("ARFLAGS", "-rv", o_default, 0);
-          define_variable_cname ("CC", "c99", o_default, 0);
-          define_variable_cname ("CFLAGS", "-O1", o_default, 0);
-          define_variable_cname ("FC", "fort77", o_default, 0);
-          define_variable_cname ("FFLAGS", "-O1", o_default, 0);
-          define_variable_cname ("SCCSGETFLAGS", "-s", o_default, 0);
-        }
-      else if (!second_expansion && streq (name, ".SECONDEXPANSION"))
-        second_expansion = 1;
-#if !defined (__MSDOS__) && !defined (__EMX__)
-      else if (!one_shell && streq (name, ".ONESHELL"))
-        one_shell = 1;
-#endif
-
       /* If this is a static pattern rule:
          'targets: target%pattern: prereq%pattern; recipe',
          make sure the pattern matches this target name.  */
@@ -2147,6 +2204,11 @@ record_files (struct nameseq *filenames, int are_also_makes,
               free_dep_chain (f->deps);
               f->deps = 0;
             }
+          /* This file is explicitly mentioned as a target.  There is no need
+             to set is_explicit in the case of double colon below, because an
+             implicit double colon rule only applies when the prerequisite
+             exists. A prerequisite which exists is not intermediate anyway. */
+          f->is_explicit = 1;
         }
       else
         {
@@ -2189,10 +2251,9 @@ record_files (struct nameseq *filenames, int are_also_makes,
       if (pattern)
         {
           static const char *percent = "%";
-          char *buffer = variable_expand ("");
-          char *o = patsubst_expand_pat (buffer, name, pattern, percent,
-                                         pattern_percent+1, percent+1);
-          f->stem = strcache_add_len (buffer, o - buffer);
+          char *o = patsubst_expand_pat (variable_buffer, name, pattern,
+                                         percent, pattern_percent+1, percent+1);
+          f->stem = strcache_add_len (variable_buffer, o - variable_buffer);
           if (this)
             {
               if (! this->need_2nd_expansion)
@@ -2232,6 +2293,8 @@ record_files (struct nameseq *filenames, int are_also_makes,
         }
 
       name = f->name;
+
+      check_special_file (f, flocp);
 
       /* All done!  Set up for the next one.  */
       if (nextf == 0)
@@ -2343,8 +2406,12 @@ find_map_unquote (char *string, int stopmap)
             string_len = strlen (string);
           /* The number of backslashes is now -I.
              Copy P over itself to swallow half of them.  */
-          memmove (&p[i], &p[i/2], (string_len - (p - string)) - (i/2) + 1);
-          p += i/2;
+          {
+            /* Avoid arithmetic conversion of negative values to unsigned.  */
+            int hi = -(i/2);
+            memmove (&p[i], &p[i/2], (string_len - (p - string)) + hi + 1);
+            p += i/2;
+          }
           if (i % 2 == 0)
             /* All the backslashes quoted each other; the STOPCHAR was
                unquoted.  */
@@ -2386,8 +2453,12 @@ find_char_unquote (char *string, int stop)
             string_len = strlen (string);
           /* The number of backslashes is now -I.
              Copy P over itself to swallow half of them.  */
-          memmove (&p[i], &p[i/2], (string_len - (p - string)) - (i/2) + 1);
-          p += i/2;
+          {
+            /* Avoid arithmetic conversion of negative values to unsigned.  */
+            int hi = -(i/2);
+            memmove (&p[i], &p[i/2], (string_len - (p - string)) + hi + 1);
+            p += i/2;
+          }
           if (i % 2 == 0)
             /* All the backslashes quoted each other; the STOPCHAR was
                unquoted.  */
@@ -2457,81 +2528,65 @@ find_percent (char *pattern)
   return find_char_unquote (pattern, '%');
 }
 
-/* Search STRING for an unquoted % and handle quoting.  Returns a pointer to
-   the % or NULL if no % was found.
+/* Return a pointer to the first unescaped %, or NULL if there isn't one.
+   Compress any escape chars up to the first unescaped %, but not afterward.
    This version is used with strings in the string cache: if there's a need to
-   modify the string a new version will be added to the string cache and
-   *STRING will be set to that.  */
+   modify the string to handle escape chars a new version will be added to the
+   string cache and *STRING will be set to that.  */
 
 const char *
 find_percent_cached (const char **string)
 {
-  const char *p = *string;
-  char *new = 0;
-  size_t slen = 0;
+  const char *p = strchr (*string, '%');
+  char *new, *np;
+  size_t slen;
 
-  /* If the first char is a % return now.  This lets us avoid extra tests
-     inside the loop.  */
-  if (*p == '%')
+  /* If there is no % or there is but it's not escaped, reuse this string.  */
+  if (!p || p == *string || p[-1] != '\\')
     return p;
 
-  while (1)
+  /* We must create a new cached string with backslashes compressed.  */
+  slen = strlen (*string);
+  new = alloca (slen + 1);
+  memcpy (new, *string, slen + 1);
+  np = new + (p - *string);
+
+  do
     {
-      p = strchr(p, '%');
+      /* Remember where the percent is.  */
+      char *pp = np;
+      int i = -2;
 
-      if (!p)
-        break;
+      /* This % is preceded by a backslash; search for more backslashes.  */
+      while (&np[i] >= new && np[i] == '\\')
+        --i;
+      ++i;
 
-      /* See if this % is escaped with a backslash; if not we're done.  */
-      if (p[-1] != '\\')
-        break;
-
+      /* The number of backslashes is -I.  Copy the string over itself to
+         swallow half of them.  */
       {
-        /* Search for more backslashes.  */
-        char *pv;
-        int i = -2;
-
-        while (&p[i] >= *string && p[i] == '\\')
-          --i;
-        ++i;
-
-        /* At this point we know we'll need to allocate a new string.
-           Make a copy if we haven't yet done so.  */
-        if (! new)
-          {
-            slen = strlen (*string);
-            /* [jart] can't prove alloca() isn't returned; let's just leak */
-            new = malloc (slen + 1);
-            memcpy (new, *string, slen + 1);
-            p = new + (p - *string);
-            *string = new;
-          }
-
-        /* At this point *string, p, and new all point into the same string.
-           Get a non-const version of p so we can modify new.  */
-        pv = new + (p - *string);
-
-        /* The number of backslashes is now -I.
-           Copy P over itself to swallow half of them.  */
-        memmove (&pv[i], &pv[i/2], (slen - (pv - new)) - (i/2) + 1);
-        p += i/2;
-
-        /* If the backslashes quoted each other; the % was unquoted.  */
-        if (i % 2 == 0)
-          break;
+        /* Avoid arithmetic conversion of negative values to unsigned.  */
+        int hi = -(i/2);
+        memmove (&pp[i], &pp[i/2], (slen - (pp - new)) + hi + 1);
       }
-    }
 
-  /* If we had to change STRING, add it to the strcache.  */
-  if (new)
-    {
-      *string = strcache_add (*string);
-      if (p)
-        p = *string + (p - new);
+      /* Update SLEN and set NP to point after the %.  */
+      slen += i/2 + i%2;
+      np += i/2;
+
+      /* If all backslashes quoted each other then % was unquoted.  */
+      if (i % 2 == 0)
+        break;
+
+      np = strchr (np, '%');
     }
+  while (np && np[-1] == '\\');
+
+  /* Add the new string to the strcache.  */
+  *string = strcache_add (new);
 
   /* If we didn't find a %, return NULL.  Otherwise return a ptr to it.  */
-  return p;
+  return np ? *string + (np - new) : NULL;
 }
 
 /* Find the next line of text in an eval buffer, combining continuation lines
@@ -2723,7 +2778,7 @@ get_next_mword (char *buffer, char **startp, size_t *length)
   char c;
 
   /* Skip any leading whitespace.  */
-  while (ISBLANK (*p))
+  while (ISSPACE (*p))
     ++p;
 
   beg = p;
@@ -2809,11 +2864,11 @@ get_next_mword (char *buffer, char **startp, size_t *length)
       char closeparen;
       int count;
 
+      if (END_OF_TOKEN (c))
+        goto done_word;
+
       switch (c)
         {
-        case '\0':
-        case ' ':
-        case '\t':
         case '=':
           goto done_word;
 
@@ -2913,6 +2968,7 @@ construct_include_path (const char **arg_dirs)
   const char **dirs;
   const char **cpp;
   size_t idx;
+  int disable = 0;
 
   /* Compute the number of pointers we need in the table.  */
   idx = sizeof (default_include_directories) / sizeof (const char *);
@@ -2931,7 +2987,8 @@ construct_include_path (const char **arg_dirs)
   max_incl_len = 0;
 
   /* First consider any dirs specified with -I switches.
-     Ignore any that don't exist.  Remember the maximum string length.  */
+     Ignore any that don't exist.  Restart if we find "-".
+     Remember the maximum string length.  */
 
   if (arg_dirs)
     while (*arg_dirs != 0)
@@ -2939,6 +2996,14 @@ construct_include_path (const char **arg_dirs)
         const char *dir = *(arg_dirs++);
         char *expanded = 0;
         int e;
+
+        if (dir[0] == '-' && dir[1] == '\0')
+          {
+            disable = 1;
+            idx = 0;
+            max_incl_len = 0;
+            continue;
+          }
 
         if (dir[0] == '~')
           {
@@ -2963,41 +3028,40 @@ construct_include_path (const char **arg_dirs)
       }
 
   /* Now add the standard default dirs at the end.  */
-
-#ifdef  __MSDOS__
-  {
-    /* The environment variable $DJDIR holds the root of the DJGPP directory
-       tree; add ${DJDIR}/include.  */
-    struct variable *djdir = lookup_variable ("DJDIR", 5);
-
-    if (djdir)
-      {
-        size_t len = strlen (djdir->value) + 8;
-        char *defdir = alloca (len + 1);
-
-        strcat (strcpy (defdir, djdir->value), "/include");
-        dirs[idx++] = strcache_add (defdir);
-
-        if (len > max_incl_len)
-          max_incl_len = len;
-      }
-  }
-#endif
-
-  for (cpp = default_include_directories; *cpp != 0; ++cpp)
+  if (!disable)
     {
-      int e;
+#ifdef  __MSDOS__
+      /* The environment variable $DJDIR holds the root of the DJGPP directory
+         tree; add ${DJDIR}/include.  */
+      struct variable *djdir = lookup_variable ("DJDIR", 5);
 
-      EINTRLOOP (e, stat (*cpp, &stbuf));
-      if (e == 0 && S_ISDIR (stbuf.st_mode))
+      if (djdir)
         {
-          size_t len = strlen (*cpp);
-          /* If dir name is written with trailing slashes, discard them.  */
-          while (len > 1 && (*cpp)[len - 1] == '/')
-            --len;
+          size_t len = strlen (djdir->value) + 8;
+          char *defdir = alloca (len + 1);
+
+          strcat (strcpy (defdir, djdir->value), "/include");
+          dirs[idx++] = strcache_add (defdir);
+
           if (len > max_incl_len)
             max_incl_len = len;
-          dirs[idx++] = strcache_add_len (*cpp, len);
+        }
+#endif
+      for (cpp = default_include_directories; *cpp != 0; ++cpp)
+        {
+          int e;
+
+          EINTRLOOP (e, stat (*cpp, &stbuf));
+          if (e == 0 && S_ISDIR (stbuf.st_mode))
+            {
+              size_t len = strlen (*cpp);
+              /* If dir name is written with trailing slashes, discard them.  */
+              while (len > 1 && (*cpp)[len - 1] == '/')
+                --len;
+              if (len > max_incl_len)
+                max_incl_len = len;
+              dirs[idx++] = strcache_add_len (*cpp, len);
+            }
         }
     }
 
@@ -3005,10 +3069,12 @@ construct_include_path (const char **arg_dirs)
 
   /* Now add each dir to the .INCLUDE_DIRS variable.  */
 
+  do_variable_definition (NILF, ".INCLUDE_DIRS", "", o_default, f_simple, 0);
   for (cpp = dirs; *cpp != 0; ++cpp)
     do_variable_definition (NILF, ".INCLUDE_DIRS", *cpp,
                             o_default, f_append, 0);
 
+  free ((void *) include_directories);
   include_directories = dirs;
 }
 
@@ -3018,7 +3084,7 @@ construct_include_path (const char **arg_dirs)
 char *
 tilde_expand (const char *name)
 {
-#ifndef VMS
+#if !defined(VMS)
   if (name[1] == '/' || name[1] == '\0')
     {
       char *home_dir;
@@ -3073,8 +3139,9 @@ tilde_expand (const char *name)
         {
           if (userend == 0)
             return xstrdup (pwent->pw_dir);
-          else
-            return xstrdup (concat (3, pwent->pw_dir, "/", userend + 1));
+
+          *userend = '/';
+          return xstrdup (concat (3, pwent->pw_dir, "/", userend + 1));
         }
       else if (userend != 0)
         *userend = '/';
@@ -3107,6 +3174,8 @@ tilde_expand (const char *name)
         PARSEFS_EXISTS  - Only return globbed files that actually exist
                           (cannot also set NOGLOB)
         PARSEFS_NOCACHE - Do not add filenames to the strcache (caller frees)
+        PARSEFS_ONEWORD - Don't break the sequence on whitespace
+        PARSEFS_WAIT    - Assume struct dep and handle .WAIT
   */
 
 void *
@@ -3122,16 +3191,22 @@ parse_file_seq (char **stringp, size_t size, int stopmap,
   struct nameseq *new = 0;
   struct nameseq **newp = &new;
 #define NEWELT(_n)  do { \
-                        const char *__n = (_n); \
-                        *newp = xcalloc (1, size);                       \
-                        (*newp)->name = (cachep ? strcache_add (__n) : xstrdup (__n)); \
-                        newp = &(*newp)->next; \
+                        struct nameseq *_ns = xcalloc (size);       \
+                        const char *__n = (_n);                     \
+                        _ns->name = (cachep ? strcache_add (__n) : xstrdup (__n)); \
+                        if (found_wait) {                           \
+                          ((struct dep*)_ns)->wait_here = 1;        \
+                          found_wait = 0;                           \
+                        }                                           \
+                        *newp = _ns;                                \
+                        newp = &_ns->next;                          \
                     } while(0)
 
   char *p;
   glob_t gl;
   char *tp;
   int findmap = stopmap|MAP_VMSCOMMA|MAP_NUL;
+  int found_wait = 0;
 
   if (NONE_SET (flags, PARSEFS_ONEWORD))
     findmap |= MAP_BLANK;
@@ -3198,20 +3273,28 @@ parse_file_seq (char **stringp, size_t size, int stopmap,
          Tokens separated by spaces are treated as separate paths since make
          doesn't allow path names with spaces.  */
       if (p && p == s+1 && p[0] == ':'
-          && isalpha ((unsigned char)s[0]) && STOP_SET (p[1], MAP_DIRSEP))
+          && isalpha ((unsigned char)s[0]) && ISDIRSEP (p[1]))
         p = find_map_unquote (p+1, findmap);
 #endif
 
       if (!p)
         p = s + strlen (s);
 
+      if (ANY_SET (flags, PARSEFS_WAIT) && p - s == CSTRLEN (".WAIT")
+          && memcmp (s, ".WAIT", CSTRLEN (".WAIT")) == 0)
+        {
+          /* Note that we found a .WAIT for the next dep but skip it.  */
+          found_wait = 1;
+          continue;
+        }
+
       /* Strip leading "this directory" references.  */
       if (NONE_SET (flags, PARSEFS_NOSTRIP))
 #ifdef VMS
-        /* Skip leading '[]'s. should only be one set or bug somwhere else */
+        /* Skip leading '[]'s. should only be one set or bug somewhere else */
         if (p - s > 2 && s[0] == '[' && s[1] == ']')
             s += 2;
-        /* Skip leading '<>'s. should only be one set or bug somwhere else */
+        /* Skip leading '<>'s. should only be one set or bug somewhere else */
         if (p - s > 2 && s[0] == '<' && s[1] == '>')
             s += 2;
 #endif

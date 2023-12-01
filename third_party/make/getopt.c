@@ -3,7 +3,7 @@ NOTE: getopt is now part of the C library, so if you don't know what
 "Keep this file name-space clean" means, talk to drepper@gnu.org
 before changing it!
 
-Copyright (C) 1987-2020 Free Software Foundation, Inc.
+Copyright (C) 1987-2023 Free Software Foundation, Inc.
 
 NOTE: The canonical source of this file is maintained with the GNU C Library.
 Bugs can be reported to bug-glibc@gnu.org.
@@ -18,10 +18,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
-
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* This tells Alpha OSF/1 not to define a getopt prototype in <stdio.h>.
    Ditto for AIX 3.2 and <stdlib.h>.  */
@@ -30,9 +27,18 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef HAVE_CONFIG_H
-#include "third_party/make/config.h"
+#include "config.h"
 #endif
-#pragma GCC diagnostic ignored "-Wredundant-decls"
+
+#if !defined __STDC__ || !__STDC__
+/* This is a separate conditional since some stdc systems
+   reject `defined (const)'.  */
+# ifndef const
+#  define const
+# endif
+#endif
+
+#include <stdio.h>
 
 /* Comment out all this code if we are using the GNU C Library, and are not
    actually compiling the library itself.  This code is part of the GNU C
@@ -44,6 +50,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define GETOPT_INTERFACE_VERSION 2
 #if !defined _LIBC && defined __GLIBC__ && __GLIBC__ >= 2
+# include <gnu-versions.h>
 # if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #  define ELIDE_CODE
 # endif
@@ -51,9 +58,26 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef ELIDE_CODE
 
+
+/* This needs to come after some library #include
+   to get __GNU_LIBRARY__ defined.  */
+#ifdef	__GNU_LIBRARY__
+/* Don't include stdlib.h for non-GNU C libraries because some of them
+   contain conflicting prototypes for getopt.  */
+# include <stdlib.h>
+# include <unistd.h>
+#endif	/* GNU C library.  */
+
+#ifdef VMS
+# include <unixlib.h>
+# if HAVE_STRING_H - 0
+#  include <string.h>
+# endif
+#endif
+
 /* This is for other GNU distributions with internationalized messages.
    When compiling libc, the _ macro is predefined.  */
-#include "third_party/make/gettext.h"
+#include "gettext.h"
 #define _(msgid)    gettext (msgid)
 
 
@@ -71,7 +95,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
    GNU application programs can use a third alternative mode in which
    they can distinguish the relative order of options and other arguments.  */
 
-#include "third_party/make/getopt.h"
+#include "getopt.h"
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
@@ -164,8 +188,15 @@ static char *posixly_correct;
    because there are many ways it can cause trouble.
    On some systems, it contains special magic macros that don't work
    in GCC.  */
+# include <string.h>
 # define my_index	strchr
 #else
+
+# if HAVE_STRING_H
+#  include <string.h>
+# else
+#  include <strings.h>
+# endif
 
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
@@ -404,6 +435,10 @@ _getopt_initialize (int argc, char *const *argv, const char *optstring)
   else
     nonoption_flags_len = 0;
 #endif
+
+  /* Make the compiler happy.  */
+  (void)argc;
+  (void)argv;
 
   return optstring;
 }
@@ -645,18 +680,19 @@ _getopt_internal (int argc, char *const *argv, const char *optstring,
 		optarg = nameend + 1;
 	      else
 		{
-		  if (opterr) {
-		   if (argv[optind - 1][1] == '-')
-		    /* --option */
-		    fprintf (stderr,
-		     _("%s: option '--%s' doesn't allow an argument\n"),
-		     argv[0], pfound->name);
-		   else
-		    /* +option or -option */
-		    fprintf (stderr,
-		     _("%s: option '%c%s' doesn't allow an argument\n"),
-		     argv[0], argv[optind - 1][0], pfound->name);
-                  }
+		  if (opterr)
+		    {
+		      if (argv[optind - 1][1] == '-')
+		        /* --option */
+		        fprintf (stderr,
+		                 _("%s: option '--%s' doesn't allow an argument\n"),
+		                 argv[0], pfound->name);
+		      else
+		        /* +option or -option */
+		        fprintf (stderr,
+		                 _("%s: option '%c%s' doesn't allow an argument\n"),
+		                 argv[0], argv[optind - 1][0], pfound->name);
+		    }
 		  nextchar += strlen (nextchar);
 
 		  optopt = pfound->val;

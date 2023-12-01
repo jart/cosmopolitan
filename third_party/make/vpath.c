@@ -1,5 +1,5 @@
 /* Implementation of pattern-matching file search paths for GNU Make.
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,11 +12,11 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include "third_party/make/makeint.inc"
-#include "third_party/make/filedef.h"
-#include "third_party/make/variable.h"
+#include "makeint.h"
+#include "filedef.h"
+#include "variable.h"
 
 
 /* Structure used to represent a selective VPATH searchpath.  */
@@ -65,19 +65,10 @@ build_vpath_lists (void)
 
   vpaths = new;
 
-  /* If there is a VPATH variable with a nonnull value, construct the
-     general VPATH list from it.  We use variable_expand rather than just
-     calling lookup_variable so that it will be recursively expanded.  */
+  /* If there is a VPATH variable with a nonnull expanded value, construct the
+     general VPATH list from it.  */
 
-  {
-    /* Turn off --warn-undefined-variables while we expand SHELL and IFS.  */
-    int save = warn_undefined_variables_flag;
-    warn_undefined_variables_flag = 0;
-
-    p = variable_expand ("$(strip $(VPATH))");
-
-    warn_undefined_variables_flag = save;
-  }
+  p = variable_expand ("$(strip $(VPATH))");
 
   if (*p != '\0')
     {
@@ -98,19 +89,10 @@ build_vpath_lists (void)
       vpaths = save_vpaths;
     }
 
-  /* If there is a GPATH variable with a nonnull value, construct the
-     GPATH list from it.  We use variable_expand rather than just
-     calling lookup_variable so that it will be recursively expanded.  */
+  /* If there is a GPATH variable with a nonnull expanded value, construct the
+     GPATH list from it.  */
 
-  {
-    /* Turn off --warn-undefined-variables while we expand SHELL and IFS.  */
-    int save = warn_undefined_variables_flag;
-    warn_undefined_variables_flag = 0;
-
-    p = variable_expand ("$(strip $(GPATH))");
-
-    warn_undefined_variables_flag = save;
-  }
+  p = variable_expand ("$(strip $(GPATH))");
 
   if (*p != '\0')
     {
@@ -236,8 +218,7 @@ construct_vpath_list (char *pattern, char *dirpath)
                 also define HAVE_DOS_PATHS would like us to recognize
                 colons after the drive letter in the likes of
                 "D:/foo/bar:C:/xyzzy".  */
-             && (*p != PATH_SEPARATOR_CHAR
-                 || (p == v + 1 && (p[1] == '/' || p[1] == '\\')))
+             && (*p != PATH_SEPARATOR_CHAR || (p == v + 1 && ISDIRSEP (p[1])))
 #else
              && *p != PATH_SEPARATOR_CHAR
 #endif
@@ -274,7 +255,7 @@ construct_vpath_list (char *pattern, char *dirpath)
          entry, to where the nil-pointer terminator goes.
          Usually this is maxelem - 1.  If not, shrink down.  */
       if (elem < (maxelem - 1))
-        vpath = xrealloc (vpath, (elem+1) * sizeof (const char *));
+        vpath = xrealloc ((void *)vpath, (elem+1) * sizeof (const char *));
 
       /* Put the nil-pointer terminator on the end of the VPATH list.  */
       vpath[elem] = NULL;
@@ -376,15 +357,19 @@ selective_vpath_search (struct vpath *path, const char *file,
       size_t vlen = strlen (vpath[i]);
 
       /* Put the next VPATH entry into NAME at P and increment P past it.  */
-      memcpy (p, vpath[i], vlen);
-      p += vlen;
+      p = mempcpy (p, vpath[i], vlen);
 
       /* Add the directory prefix already in *FILE.  */
       if (name_dplen > 0)
         {
+#ifndef VMS
           *p++ = '/';
-          memcpy (p, file, name_dplen);
-          p += name_dplen;
+#else
+          /* VMS: if this is not in VMS format, treat as Unix format */
+          if ((*p != ':') && (*p != ']') && (*p != '>'))
+            *p++ = '/';
+#endif
+          p = mempcpy (p, file, name_dplen);
         }
 
 #ifdef HAVE_DOS_PATHS
@@ -393,12 +378,23 @@ selective_vpath_search (struct vpath *path, const char *file,
         p[-1] = '/';
 #endif
       /* Now add the name-within-directory at the end of NAME.  */
+#ifndef VMS
       if (p != name && p[-1] != '/')
         {
           *p = '/';
           memcpy (p + 1, filename, flen + 1);
         }
       else
+#else
+      /* VMS use a slash if no directory terminator present */
+      if (p != name && p[-1] != '/' && p[-1] != ':' &&
+          p[-1] != '>' && p[-1] != ']')
+        {
+          *p = '/';
+          memcpy (p + 1, filename, flen + 1);
+        }
+      else
+#endif
         memcpy (p, filename, flen + 1);
 
       /* Check if the file is mentioned in a makefile.  If *FILE is not
@@ -440,13 +436,22 @@ selective_vpath_search (struct vpath *path, const char *file,
         {
           /* That file wasn't mentioned in the makefile.
              See if it actually exists.  */
-          /* Clobber a null into the name at the last slash.
-             Now NAME is the name of the directory to look in.  */
-          *p = '\0';
-          /* We know the directory is in the hash table now because either
-             construct_vpath_list or the code just above put it there.
-             Does the file we seek exist in it?  */
-          exists_in_cache = exists = dir_file_exists_p (name, filename);
+
+#ifdef VMS
+          /* For VMS syntax just use the original vpath */
+          if (*p != '/')
+            exists_in_cache = exists = dir_file_exists_p (vpath[i], filename);
+          else
+#endif
+            {
+              /* Clobber a null into the name at the last slash.
+                 Now NAME is the name of the directory to look in.  */
+              *p = '\0';
+              /* We know the directory is in the hash table now because either
+                 construct_vpath_list or the code just above put it there.
+                 Does the file we seek exist in it?  */
+              exists_in_cache = exists = dir_file_exists_p (name, filename);
+            }
         }
 
       if (exists)
@@ -459,8 +464,14 @@ selective_vpath_search (struct vpath *path, const char *file,
 
           struct stat st;
 
+#ifndef VMS
           /* Put the slash back in NAME.  */
           *p = '/';
+#else
+          /* If the slash was removed, put it back */
+          if (*p == 0)
+            *p = '/';
+#endif
 
           if (exists_in_cache)  /* Makefile-mentioned file need not exist.  */
             {
@@ -553,6 +564,8 @@ vpath_search (const char *file, FILE_TIMESTAMP *mtime_ptr,
 
   return 0;
 }
+
+
 
 
 /* Print the data base of VPATH search paths.  */
