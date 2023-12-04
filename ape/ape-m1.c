@@ -947,8 +947,21 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlclose = dlclose;
   M->lib.dlerror = dlerror;
 
+  /* there is a common convention of shells being told that they
+     are login shells via the OS prepending a - to their argv[0].
+     the APE system doesn't like it when argv[0] is not the full
+     path of the binary. to rectify this, the loader puts a "-l"
+     flag in argv[1] and ignores the dash. */
+  if ((islogin = argc > 0 && *argv[0] == '-' && (shell = GetEnv(envp, "SHELL"))
+       && !StrCmp(argv[0] + 1, BaseName(shell)))) {
+    execfn = shell;
+    dash_l = __builtin_alloca(3);
+    memmove(dash_l, "-l", 3);
+  } else {
+    execfn = argc > 0 ? argv[0] : 0;
+  }
+
   /* getenv("_") is close enough to at_execfn */
-  execfn = argc > 0 ? argv[0] : 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
@@ -959,21 +972,9 @@ int main(int argc, char **argv, char **envp) {
   sp = (long *)(argv - 1);
   auxv = (long *)(envp + i + 1);
 
-  /* there is a common convention of shells being told that they
-     are login shells via the OS prepending a - to their argv[0].
-     the APE system doesn't like it when argv[0] is not the full
-     path of the binary. to rectify this, the loader puts a "-l"
-     flag in argv[1] and ignores the dash. */
-  islogin = argc > 0 && *argv[0] == '-' && (shell = GetEnv(envp, "SHELL")) &&
-    !StrCmp(argv[0] + 1, BaseName(shell));
-
   /* create new bottom of stack for spawned program
      system v abi aligns this on a 16-byte boundary
      grows down the alloc by poking the guard pages */
-
-  if (islogin) {
-    dash_l = __builtin_alloca(3);
-  }
   n = (auxv - sp + islogin + AUXV_WORDS + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
   if ((long)sp2 & 15) ++sp2;
@@ -982,7 +983,6 @@ int main(int argc, char **argv, char **envp) {
   }
   if (islogin) {
     memmove(sp2, sp, 2 * sizeof(long));
-    memmove(dash_l, "-l", 3);
     *((char **)sp2 + 2) = dash_l;
     memmove(sp2 + 3, sp + 2, (auxv - sp - 2) * sizeof(long));
     ++argc;
