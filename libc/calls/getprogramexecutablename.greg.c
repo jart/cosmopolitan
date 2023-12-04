@@ -36,6 +36,8 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
+#define VARNAME                    "COSMOPOLITAN_PROGRAM_EXECUTABLE="
+#define VARSIZE                    (sizeof(VARNAME) - 1)
 
 static struct {
   atomic_uint once;
@@ -75,6 +77,13 @@ static inline void InitProgramExecutableNameImpl(void) {
   if (IsMetal()) {
     q = APE_COM_NAME;
     goto CopyString;
+  }
+
+  /* new-style loader supplies the full program path as the first
+    environment variable; if it is defined, trust it as-is. */
+  if (*__envp && !strncmp(*__envp, VARNAME, VARSIZE)) {
+    strlcpy(g_prog.u.buf, *__envp + VARSIZE, sizeof(g_prog.u.buf));
+    return;
   }
 
   // if argv[0] exists then turn it into an absolute path. we also try
@@ -146,6 +155,7 @@ static inline void InitProgramExecutableNameImpl(void) {
       }
     }
     *p = 0;
+    return;
   }
 
   // if we don't even have that then empty the string
