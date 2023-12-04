@@ -993,7 +993,7 @@ int main(int argc, char **argv, char **envp) {
 
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
-  auxv = sp2 + (auxv - sp) + 1;
+  auxv = (long *)(envp + i + 1);
   sp = sp2;
 
   /* interpret command line arguments */
