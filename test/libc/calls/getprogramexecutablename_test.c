@@ -27,7 +27,7 @@
 #include "libc/testlib/testlib.h"
 
 static char *self;
-static bool skipexectests;
+static bool skipcosmotests;
 
 void SetUp(void) {
   self = GetProgramExecutableName();
@@ -37,7 +37,7 @@ void SetUpOnce(void) {
   if (!getenv("COSMOPOLITAN_PROGRAM_EXECUTABLE")) {
     fprintf(stderr,
             "warning: old ape loader detected; skipping some tests %m\n");
-    skipexectests = true;
+    skipcosmotests = true;
   }
   testlib_enable_tmp_setup_teardown();
 }
@@ -57,21 +57,19 @@ TEST(GetProgramExecutableName, ofThisFile) {
 }
 
 TEST(GetProgramExecutableName, nullEnv) {
-  if (skipexectests) return;
   SPAWN(fork);
   execve(self, (char *[]){self, "Child", self, 0}, (char *[]){ 0 });
   EXITS(0);
 }
 
 TEST(GetProramExecutableName, weirdArgv0NullEnv) {
-  if (skipexectests) return;
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, 0}, (char *[]){ 0 });
   EXITS(0);
 }
 
 TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
-  if (skipexectests) return;
+  if (skipcosmotests) return;
   char buf[32 + PATH_MAX];
   stpcpy(stpcpy(buf, "COSMOPOLITAN_PROGRAM_EXECUTABLE="), self);
   SPAWN(fork);
@@ -80,7 +78,7 @@ TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
-  if (skipexectests) return;
+  if (skipcosmotests) return;
   char *bad = "COSMOPOLITAN_PROGRAM_EXECUTABLE=hi";
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, 0}, (char *[]){ bad, 0});
@@ -88,7 +86,6 @@ TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
 }
 
 TEST(GetProgramExecutableName, MovedSelf) {
-  if (skipexectests) return;
   char buf[BUFSIZ];
   ASSERT_SYS(0, 3, open(GetProgramExecutableName(), O_RDONLY));
   ASSERT_SYS(0, 4, creat("test", 0755));
