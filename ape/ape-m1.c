@@ -203,11 +203,11 @@ struct PathSearcher {
   unsigned long namelen;
   const char *name;
   const char *syspath;
-  char varname[VARSIZE];  // stores "$VARNAME=". must immediately precede path.
+  char varname[VARSIZE];
   char path[PATHSIZE];
 };
-_Static_assert(sizeof(struct PathSearcher) == PATHSIZE + 64,
-               "struct layout");
+_Static_assert(offsetof(struct PathSearcher, varname) + VARSIZE ==
+               offsetof(struct PathSearcher, path), "struct layout");
 
 struct ApeLoader {
   struct PathSearcher ps;
