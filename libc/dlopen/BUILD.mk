@@ -8,16 +8,8 @@ LIBC_DLOPEN = $(LIBC_DLOPEN_A_DEPS) $(LIBC_DLOPEN_A)
 LIBC_DLOPEN_A = o/$(MODE)/libc/dlopen/dlopen.a
 LIBC_DLOPEN_A_FILES := $(wildcard libc/dlopen/*)
 LIBC_DLOPEN_A_HDRS = $(filter %.h,$(LIBC_DLOPEN_A_FILES))
-LIBC_DLOPEN_A_SRCS_S = $(filter %.S,$(LIBC_DLOPEN_A_FILES))
-LIBC_DLOPEN_A_SRCS_C = $(filter %.c,$(LIBC_DLOPEN_A_FILES))
-
-LIBC_DLOPEN_A_SRCS =							\
-	$(LIBC_DLOPEN_A_SRCS_S)						\
-	$(LIBC_DLOPEN_A_SRCS_C)
-
-LIBC_DLOPEN_A_OBJS =							\
-	$(LIBC_DLOPEN_A_SRCS_S:%.S=o/$(MODE)/%.o)			\
-	$(LIBC_DLOPEN_A_SRCS_C:%.c=o/$(MODE)/%.o)
+LIBC_DLOPEN_A_SRCS = $(filter %.c,$(LIBC_DLOPEN_A_FILES))
+LIBC_DLOPEN_A_OBJS = $(LIBC_DLOPEN_A_SRCS:%.c=o/$(MODE)/%.o)
 
 LIBC_DLOPEN_A_CHECKS =							\
 	$(LIBC_DLOPEN_A).pkg						\

@@ -3792,24 +3792,5 @@ construct_command_argv (char *line, char **restp, struct file *file,
 
   return argv;
 }
-
-#if !defined(HAVE_DUP2) && !defined(_AMIGA)
-int
-dup2 (int old, int new)
-{
-  int fd;
-
-  (void) close (new);
-  EINTRLOOP (fd, dup (old));
-  if (fd != new)
-    {
-      (void) close (fd);
-      errno = EMFILE;
-      return -1;
-    }
-
-  return fd;
-}
-#endif /* !HAVE_DUP2 && !_AMIGA */
 
 /* On VMS systems, include special VMS functions.  */
