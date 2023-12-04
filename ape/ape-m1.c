@@ -194,6 +194,7 @@ union ElfPhdrBuf {
 
 struct PathSearcher {
   int literally;
+  int indirect;
   unsigned long namelen;
   const char *name;
   const char *syspath;
@@ -220,16 +221,8 @@ static int StrCmp(const char *l, const char *r) {
 }
 
 static const char *BaseName(const char *s) {
-  int c;
-  const char *b = "";
-  if (s) {
-    while ((c = *s++)) {
-      if (c == '/') {
-        b = s;
-      }
-    }
-  }
-  return b;
+  const char *b = strrchr(s, '/');
+  return b ? b + 1 : s;
 }
 
 static char *GetEnv(char **p, const char *s) {
@@ -297,6 +290,14 @@ static long Print(int fd, const char *s, ...) {
   return write(fd, b, n);
 }
 
+static int GetIndirectOffset(const char *arg0) {
+  char *tail = strrchr(arg0, '.');
+  if (tail && !StrCmp(tail + 1, "ape")) {
+    return tail - arg0;
+  }
+  return 0;
+}
+
 static void Perror(const char *thing, long rc, const char *reason) {
   char ibuf[21];
   ibuf[0] = 0;
@@ -316,7 +317,17 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
-  return !access(ps->path, X_OK);
+  if (!access(ps->path, X_OK)) {
+    if (ps->indirect) {
+      ps->namelen -= 4;
+      ps->path[pathlen + ps->namelen] = 0;
+      if (access(ps->path, X_OK) < 0) {
+        Pexit(ps->path, -errno, "access(X_OK)");
+      }
+    }
+    return 1;
+  }
+  return 0;
 }
 
 static char SearchPath(struct PathSearcher *ps) {
@@ -870,11 +881,11 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
 
 int main(int argc, char **argv, char **envp) {
   unsigned i;
-  int c, n, fd, rc;
   struct ApeLoader *M;
   long *sp, *sp2, *auxv;
   union ElfEhdrBuf *ebuf;
-  char *p, *pe, *exe, *prog, *execfn;
+  int c, islogin, n, fd, rc;
+  char *p, *pe, *dash_l, *exe, *prog, *shell, *execfn;
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
@@ -936,8 +947,21 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlclose = dlclose;
   M->lib.dlerror = dlerror;
 
+  /* there is a common convention of shells being told that they
+     are login shells via the OS prepending a - to their argv[0].
+     the APE system doesn't like it when argv[0] is not the full
+     path of the binary. to rectify this, the loader puts a "-l"
+     flag in argv[1] and ignores the dash. */
+  if ((islogin = argc > 0 && *argv[0] == '-' && (shell = GetEnv(envp, "SHELL"))
+       && !StrCmp(argv[0] + 1, BaseName(shell)))) {
+    execfn = shell;
+    dash_l = __builtin_alloca(3);
+    memmove(dash_l, "-l", 3);
+  } else {
+    execfn = argc > 0 ? argv[0] : 0;
+  }
+
   /* getenv("_") is close enough to at_execfn */
-  execfn = argc > 0 ? argv[0] : 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
@@ -951,20 +975,47 @@ int main(int argc, char **argv, char **envp) {
   /* create new bottom of stack for spawned program
      system v abi aligns this on a 16-byte boundary
      grows down the alloc by poking the guard pages */
-  n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
+  n = (auxv - sp + islogin + AUXV_WORDS + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
   if ((long)sp2 & 15) ++sp2;
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
   }
-  memmove(sp2, sp, (auxv - sp) * sizeof(long));
+  if (islogin) {
+    memmove(sp2, sp, 2 * sizeof(long));
+    *((char **)sp2 + 2) = dash_l;
+    memmove(sp2 + 3, sp + 2, (auxv - sp - 2) * sizeof(long));
+    ++argc;
+    sp2[0] = argc;
+  } else {
+    memmove(sp2, sp, (auxv - sp) * sizeof(long));
+  }
+
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
-  auxv = sp2 + (auxv - sp);
+  auxv = (long *)(envp + i + 1);
   sp = sp2;
 
   /* interpret command line arguments */
-  if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
+  if ((M->ps.indirect = argc > 0 ? GetIndirectOffset(argv[0]) : 0)) {
+    M->ps.literally = 0;
+    /* if argv[0] is $prog.ape, then we strip off the .ape and run
+       $prog. This allows you to use symlinks to trick the OS when
+       a native executable is required. For example, let's say you
+       want to use the APE binary /opt/cosmos/bin/bash as a system
+       shell in /etc/shells, or perhaps in shebang lines like e.g.
+       `#!/opt/cosmos/bin/bash`. That won't work with APE normally,
+       but it will if you say:
+           ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
+       and then use #!/opt/cosmos/bin/bash.ape instead. */
+    prog = (char *)sp[1];
+    argc = sp[0];
+    argv = (char **)(sp + 1);
+    if (islogin) {
+      ++argv[0];
+      prog = shell;
+    }
+  } else if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
        systems don't permit the omission of argv[0] but we do, b/c
@@ -975,6 +1026,7 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
+         "  ($0 = PROG.ape) [ARGV1,ARGV2,...]\n"
          "actually portable executable loader silicon 1.9\n"
          "copyright 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
@@ -1006,7 +1058,7 @@ int main(int argc, char **argv, char **envp) {
 
   /* resolve argv[0] to reflect path search */
   if (argc > 0 && ((*prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
-                   !StrCmp(BaseName(prog), argv[0]))) {
+                   M->ps.indirect || !StrCmp(BaseName(prog), argv[0]))) {
     argv[0] = exe;
   }
 
