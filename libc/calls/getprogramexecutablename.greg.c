@@ -23,6 +23,7 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -49,6 +50,38 @@ static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
+static inline const char *BaseName(const char *path) {
+  const char *b = strrchr(path, '/');
+  return b ? b + 1 : path;
+}
+
+static inline bool TryAbsolutize(char *q) {
+  char c;
+  char *p = g_prog.u.buf;
+  char *e = p + sizeof(g_prog.u.buf);
+  if (*q != '/') {
+    if (q[0] == '.' && q[1] == '/') {
+      q += 2;
+    }
+    int got = __getcwd(p, e - p - 1 - 4);  // for / and .com
+    if (got != -1) {
+      p += got - 1;
+      *p++ = '/';
+    }
+  }
+  while ((c = *q++)) {
+    if (p + 1 + 4 < e) {  // for nul and .com
+      *p++ = c;
+    }
+  }
+  *p = 0;
+  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return true;
+  p = WRITE32LE(p, READ32LE(".com"));
+  *p = 0;
+  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return true;
+  return false;
+}
+
 static inline void InitProgramExecutableNameImpl(void) {
 
   if (IsWindows()) {
@@ -71,7 +104,7 @@ static inline void InitProgramExecutableNameImpl(void) {
     return;
   }
 
-  char c, *q;
+  char c, *q, *shell;
   if (IsMetal()) {
     q = APE_COM_NAME;
     goto CopyString;
@@ -80,38 +113,19 @@ static inline void InitProgramExecutableNameImpl(void) {
   // if argv[0] exists then turn it into an absolute path. we also try
   // adding a .com suffix since the ape auto-appends it when resolving
   if ((q = __argv[0])) {
-    char *p = g_prog.u.buf;
-    char *e = p + sizeof(g_prog.u.buf);
-    if (*q != '/') {
-      if (q[0] == '.' && q[1] == '/') {
-        q += 2;
-      }
-      int got = __getcwd(p, e - p - 1 - 4);  // for / and .com
-      if (got != -1) {
-        p += got - 1;
-        *p++ = '/';
-      }
+    if (*q == '-' && (shell = __getenv(__envp, "SHELL").s) &&
+        !strcmp(q + 1, BaseName(shell))) {
+      q = shell;
     }
-    while ((c = *q++)) {
-      if (p + 1 + 4 < e) {  // for nul and .com
-        *p++ = c;
-      }
+    if (TryAbsolutize(q)) {
+      return;
     }
-    *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return;
-    p = WRITE32LE(p, READ32LE(".com"));
-    *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return;
-  }
-
-  // if getenv("_") exists then use that
-  for (char **ep = __envp; (q = *ep); ++ep) {
-    if (*q++ == '_' && *q++ == '=') {
-      goto CopyString;
+    if ((q = __getenv(__envp, "_").s) && TryAbsolutize(q)) {
+      return;
     }
   }
 
-  // if argv[0] doesn't exist, then fallback to interpreter name
+  // if argv[0] and _ don't exist, then fallback to interpreter name
   ssize_t got;
   char *b = g_prog.u.buf;
   size_t n = sizeof(g_prog.u.buf) - 1;
@@ -146,6 +160,7 @@ static inline void InitProgramExecutableNameImpl(void) {
       }
     }
     *p = 0;
+    return;
   }
 
   // if we don't even have that then empty the string
