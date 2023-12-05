@@ -896,12 +896,12 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
 
 int main(int argc, char **argv, char **envp) {
   unsigned i;
+  int c, n, fd, rc;
   struct ApeLoader *M;
   long *sp, *sp2, *auxv;
   union ElfEhdrBuf *ebuf;
-  int c, n, fd, rc;
-  char *p, *pe, *exe, *prog, *shell, *execfn;
-  char **varpos;
+  char *p, *pe, *exe, *prog,
+       *execfn, *shell, **varpos;
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
@@ -989,7 +989,6 @@ int main(int argc, char **argv, char **envp) {
     ((char *)sp2)[n - 1] = 0;
   }
   memmove(sp2, sp, (auxv - sp) * sizeof(long));
-
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
   if (varpos) {
@@ -1003,7 +1002,6 @@ int main(int argc, char **argv, char **envp) {
 
   /* interpret command line arguments */
   if ((M->ps.indirect = argc > 0 ? GetIndirectOffset(argv[0]) : 0)) {
-    M->ps.literally = 0;
     /* if argv[0] is $prog.ape, then we strip off the .ape and run
        $prog. This allows you to use symlinks to trick the OS when
        a native executable is required. For example, let's say you
@@ -1013,6 +1011,7 @@ int main(int argc, char **argv, char **envp) {
        but it will if you say:
            ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
        and then use #!/opt/cosmos/bin/bash.ape instead. */
+    M->ps.literally = 0;
     if (*argv[0] == '-' && (shell = GetEnv(envp, "SHELL")) &&
         !StrCmp(argv[0] + 1, BaseName(shell))) {
       execfn = prog = shell;
