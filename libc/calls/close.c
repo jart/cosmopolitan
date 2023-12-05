@@ -49,7 +49,7 @@ static int close_impl(int fd) {
   }
 
   if (__isfdkind(fd, kFdZip)) {
-    if (_weaken(__zipos_close)) {
+    if (!__vforked && _weaken(__zipos_close)) {
       return _weaken(__zipos_close)(fd);
     }
     if (!IsWindows() && !IsMetal()) {
