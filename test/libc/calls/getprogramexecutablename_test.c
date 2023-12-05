@@ -23,6 +23,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
@@ -59,12 +60,14 @@ TEST(GetProgramExecutableName, ofThisFile) {
 TEST(GetProgramExecutableName, nullEnv) {
   SPAWN(fork);
   execve(self, (char *[]){self, "Child", self, 0}, (char *[]){ 0 });
+  abort();
   EXITS(0);
 }
 
 TEST(GetProramExecutableName, weirdArgv0NullEnv) {
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, 0}, (char *[]){ 0 });
+  abort();
   EXITS(0);
 }
 
@@ -74,6 +77,7 @@ TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
   stpcpy(stpcpy(buf, "COSMOPOLITAN_PROGRAM_EXECUTABLE="), self);
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, 0}, (char *[]){ buf, 0});
+  abort();
   EXITS(0);
 }
 
@@ -82,10 +86,11 @@ TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
   char *bad = "COSMOPOLITAN_PROGRAM_EXECUTABLE=hi";
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, 0}, (char *[]){ bad, 0});
+  abort();
   EXITS(0);
 }
 
-TEST(GetProgramExecutableName, MovedSelf) {
+TEST(GetProgramExecutableName, movedSelf) {
   char buf[BUFSIZ];
   ASSERT_SYS(0, 3, open(GetProgramExecutableName(), O_RDONLY));
   ASSERT_SYS(0, 4, creat("test", 0755));
@@ -100,5 +105,12 @@ TEST(GetProgramExecutableName, MovedSelf) {
   stpcpy(buf + strlen(buf), "/test");
   SPAWN(fork);
   execve(buf, (char *[]){"hello", "Child", buf, 0}, (char *[]){ 0 });
+  abort();
   EXITS(0);
+}
+
+void __InitProgramExecutableName(void);
+
+BENCH(GetProgramExecutableName, bench) {
+  EZBENCH2("Init", donothing, __InitProgramExecutableName());
 }

@@ -23,6 +23,7 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/getenv.internal.h"
 #include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -36,8 +37,6 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
-#define VARNAME                    "COSMOPOLITAN_PROGRAM_EXECUTABLE="
-#define VARSIZE                    (sizeof(VARNAME) - 1)
 
 static struct {
   atomic_uint once;
@@ -79,10 +78,11 @@ static inline void InitProgramExecutableNameImpl(void) {
     goto CopyString;
   }
 
-  /* new-style loader supplies the full program path as the first
-    environment variable; if it is defined, trust it as-is. */
-  if (*__envp && !strncmp(*__envp, VARNAME, VARSIZE)) {
-    strlcpy(g_prog.u.buf, *__envp + VARSIZE, sizeof(g_prog.u.buf));
+  /* the new-style loader supplies the full program path as the first
+     environment variable. in the spirit of Postel's Law ("be liberal
+     in what you accept"), we use __getenv to read it. */
+  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s)) {
+    strlcpy(g_prog.u.buf, q, sizeof(g_prog.u.buf));
     return;
   }
 
@@ -162,7 +162,7 @@ static inline void InitProgramExecutableNameImpl(void) {
   g_prog.u.buf[0] = 0;
 }
 
-static void InitProgramExecutableName(void) {
+void __InitProgramExecutableName(void) {
   int e = errno;
   InitProgramExecutableNameImpl();
   errno = e;
@@ -172,6 +172,6 @@ static void InitProgramExecutableName(void) {
  * Returns absolute path of program.
  */
 char *GetProgramExecutableName(void) {
-  cosmo_once(&g_prog.once, InitProgramExecutableName);
+  cosmo_once(&g_prog.once, __InitProgramExecutableName);
   return g_prog.u.buf;
 }
