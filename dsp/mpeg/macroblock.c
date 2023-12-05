@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:4;tab-width:4;coding:utf-8   -*-│
-│vi: set et ft=c ts=4 sw=4 fenc=utf-8                                       :vi│
+│ vi: set et ft=c ts=4 sw=4 fenc=utf-8                                     :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │  PL_MPEG - MPEG1 Video decoder, MP2 Audio decoder, MPEG-PS demuxer           │
 │  Dominic Szablewski - https://phoboslab.org                                  │

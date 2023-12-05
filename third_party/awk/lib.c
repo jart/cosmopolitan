@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+│ vi: set et ft=c ts=8 tw=8 fenc=utf-8                                     :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │ Copyright (C) Lucent Technologies 1997                                       │

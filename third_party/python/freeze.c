@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+│ vi: set noet ft=c ts=4 sts=4 sw=4 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
@@ -22,7 +22,7 @@ STATIC_STACK_ALIGN(GetStackSize());
 
 #define HEADER "\
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│\n\
-│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│\n\
+│ vi: set noet ft=c ts=4 sts=4 sw=4 fenc=utf-8                             :vi │\n\
 ╞══════════════════════════════════════════════════════════════════════════════╡\n\
 │ Python 3                                                                     │\n\
 │ https://docs.python.org/3/license.html                                       │\n\

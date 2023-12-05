@@ -1,5 +1,5 @@
 /*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
-│vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
+│ vi: set et sts=2 tw=2 fenc=utf-8                                         :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
