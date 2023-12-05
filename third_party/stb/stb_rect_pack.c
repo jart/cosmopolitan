@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:3;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=3 sts=3 sw=3 fenc=utf-8                                :vi│
+│ vi: set noet ft=c ts=3 sts=3 sw=3 fenc=utf-8                             :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │                                                                              │
 │  stb_truetype                                                                │
