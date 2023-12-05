@@ -239,17 +239,21 @@ static int StrCmp(const char *l, const char *r) {
   return (l[i] & 255) - (r[i] & 255);
 }
 
-static const char *BaseName(const char *s) {
-  int c;
-  const char *b = "";
+static const char *StrRChr(const char *s, int c) {
+  const char *b = 0;
   if (s) {
-    while ((c = *s++)) {
-      if (c == '/') {
+    for (; *s; ++s) {
+      if (*s == c) {
         b = s;
       }
     }
   }
   return b;
+}
+
+static const char *BaseName(const char *s) {
+  const char *b = StrRChr(s, '/');
+  return b ? b + 1 : s;
 }
 
 static void Bzero(void *a, unsigned long n) {
