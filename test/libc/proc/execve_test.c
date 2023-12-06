@@ -40,7 +40,7 @@ __static_yoink("zipos");
 
 int fds[2];
 char buf[8];
-bool HasProcFSAndMemfd = false;
+bool SupportsFexecve = false;
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
 }
@@ -54,18 +54,18 @@ void GenBuf(char buf[8], int x) {
   }
 }
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUp(void) {
   char buf[8];
   if (__argc == 4 && !strcmp(__argv[1], "-")) {
     GenBuf(buf, atoi(__argv[2]));
     ASSERT_STREQ(buf, __argv[3]);
     exit(0);
   }
-  // zipos execve requires /proc and memfd_create
-  // TODO check for memfd
   if (IsLinux()) {
+    if (!__is_linux_2_6_23()) return;
+    // TODO check for memfd
     struct stat st;
-    HasProcFSAndMemfd = stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
+    SupportsFexecve = stat("/proc/self/fd", &st) == 0 && S_ISDIR(st.st_mode);
   }
 }
 
@@ -104,10 +104,8 @@ TEST(execve, elfIsUnreadable_mayBeExecuted) {
 }
 
 TEST(execve, ziposELF) {
-  if (IsFreebsd()) return;                        // TODO: fixme on freebsd
-  if (IsLinux() && !__is_linux_2_6_23()) return;  // TODO: fixme on old linux
-  if (IsLinux() && !HasProcFSAndMemfd) return;
-  if (!IsLinux() && !IsFreebsd()) {
+  if (IsWindows()) return;
+  if (!SupportsFexecve) {
     EXPECT_SYS(ENOSYS, -1,
                execve("/zip/life.elf", (char *const[]){0}, (char *const[]){0}));
     return;
@@ -119,10 +117,7 @@ TEST(execve, ziposELF) {
 }
 
 TEST(execve, ziposAPE) {
-  if (IsFreebsd()) return;                        // TODO: fixme on freebsd
-  if (IsLinux() && !__is_linux_2_6_23()) return;  // TODO: fixme on old linux
-  if (IsLinux() && !HasProcFSAndMemfd) return;
-  if (!IsLinux() && !IsFreebsd()) {
+  if (!SupportsFexecve) {
     EXPECT_EQ(-1, execve("/zip/life-nomod.com", (char *const[]){0},
                          (char *const[]){0}));
     return;
