@@ -160,14 +160,17 @@ static int is_file_newer_than(const char *path, const char *other) {
 // todo(jart): add tls trampoline to sigaction() handlers
 // todo(jart): morph binary to get tls from host c library
 static long foreign_tramp(long a, long b, long c, long d, long e,
-                          long func(long, long, long, long, long)) {
+                          long func(long, long, long, long, long, double,
+                                    double, double, double, double, double),
+                          double A, double B, double C, double D, double E,
+                          double F) {
   long res;
   BLOCK_SIGNALS;
 #ifdef __x86_64__
   struct CosmoTib *tib = __get_tls();
   __set_tls(foreign.tib);
 #endif
-  res = func(a, b, c, d, e);
+  res = func(a, b, c, d, e, A, B, C, D, E, F);
 #ifdef __x86_64__
   __set_tls(tib);
 #endif
