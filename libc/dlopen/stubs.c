@@ -18,12 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dlopen/dlfcn.h"
 
-char *dlerror(void) {
-  return "dlopen() isn't supported by cosmo";
-}
-
+/**
+ * Opens dynamic shared object using host platform libc.
+ *
+ * Cosmo's `dlopen()` function is a stub that always returns NULL. An
+ * alternative `cosmo_dlopen()` implementation is provided, which can
+ * help some users with tasks like talking to GPU and GUI libraries.
+ *
+ * @return null always
+ */
 void *dlopen(const char *, int) {
   return 0;
+}
+
+char *dlerror(void) {
+  return "dlopen() isn't supported by cosmo; try using cosmo_dlopen()";
 }
 
 void *dlsym(void *, const char *) {

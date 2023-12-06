@@ -36,7 +36,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
-#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
@@ -48,6 +47,7 @@
 #include "libc/proc/posix_spawn.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
@@ -786,26 +786,16 @@ static void *dlopen_silicon(const char *path, int mode) {
  * this wrapper will automatically change it to `.dll` or `.dylib` to
  * increase its chance of successfully loading.
  *
- * WARNING: This isn't supported on MacOS x86-64, OpenBSD, and NetBSD.
- *
- * WARNING: This dlopen() implementation is highly limited. Cosmo
- * binaries are always statically linked. You can import functions from
- * dynamic shared objects, but you can't export any. This dlopen() won't
- * work for language plugins, but might help you access GUI and GPU DRM.
- *
- * WARNING: Do not expect this dlopen() is in any way safe to use. It's
- * mostly due to thread local storage. On Windows it should be safe. On
- * Apple Silicon it should be safe so long as foreign functions don't
- * issue callbacks. On libre OSes we currently only make dlopen() APIs
- * safe to use. In order for it to be safe, four system calls need to be
- * issued for every dlopen() related API call, and that's assuming this
- * API is only used from the main of your program. Most importantly
- * there are no safeguards added around imported functions, since it'd
- * make them go 1000x slower. It's the responsibility of the caller to
- * ensure that imported functions never touch TLS, don't install signal
- * handlers, will never spawn threads, and don't issue callbacks. Care
- * should also be taken on all platforms, to ensure dynamic memory is
- * being passed to the correct malloc() and free() implementations.
+ * WARNING: Our API uses a different naming because cosmo_dlopen() lacks
+ * many of the features one would reasonably expect from a UNIX dlopen()
+ * implementation; and we don't want to lead ./configure scripts astray.
+ * You're limited to 5 integral function parameters maximum. Calling an
+ * imported function currently goes much slower than a normal function
+ * call. You can't pass callback function pointers to foreign libraries
+ * safely. Foreign libraries also can't link symbols defined by your
+ * executable; that means using this for high-level language plugins is
+ * completely out of the question. What cosmo_dlopen() can do is help
+ * you talk to GPU and GUI libraries like CUDA and SDL.
  *
  * @param mode is a bitmask that can contain:
  *     - `RTLD_LOCAL` (default)
@@ -813,6 +803,8 @@ static void *dlopen_silicon(const char *path, int mode) {
  *     - `RTLD_LAZY`
  *     - `RTLD_NOW`
  * @return dso handle, or NULL w/ dlerror()
+ * @note this non-standard API is feature gated; you need to pass the
+ *     `-mcosmo` flag to `cosmocc` so that `<dlfcn.h>` will define it
  */
 void *cosmo_dlopen(const char *path, int mode) {
   void *res;
@@ -824,8 +816,11 @@ void *cosmo_dlopen(const char *path, int mode) {
   } else if (IsXnu()) {
     dlerror_set("dlopen() isn't supported on x86-64 MacOS");
     res = 0;
+  } else if (IsOpenbsd()) {
+    // TODO(jart): implement workaround for msyscall() dilemma
+    dlerror_set("dlopen() isn't supported on OpenBSD yet");
+    res = 0;
   } else if (foreign_init()) {
-    STRACE("calling platform dlopen %p tib %p...", foreign.dlopen, foreign.tib);
     res = foreign.dlopen(path, mode);
   } else {
     res = 0;
