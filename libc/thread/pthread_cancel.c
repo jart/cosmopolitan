@@ -71,7 +71,7 @@ static void _pthread_cancel_sig(int sig, siginfo_t *si, void *arg) {
   if (pt->pt_flags & PT_NOCANCEL) return;
   if (!atomic_load_explicit(&pt->pt_canceled, memory_order_acquire)) return;
 
-  // in asynchronous mode we'll just the exit asynchronously
+  // in asynchronous mode the asynchronous signal calls exit
   if (pt->pt_flags & PT_ASYNC) {
     sigaddset(&ctx->uc_sigmask, SIGTHR);
     pthread_sigmask(SIG_SETMASK, &ctx->uc_sigmask, 0);
