@@ -22,6 +22,7 @@ extern uint8_t __data_start[] __attribute__((__weak__));
 extern uint8_t __data_end[] __attribute__((__weak__));
 extern uint8_t __bss_start[] __attribute__((__weak__));
 extern uint8_t __bss_end[] __attribute__((__weak__));
+extern unsigned char ape_phdrs[] __attribute__((__weak__));
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_APE_SECTIONS_INTERNAL_H_ */

@@ -752,6 +752,8 @@ ape_loader_end:
 #if SupportsSystemv() || SupportsMetal()
 	.section .elf.phdrs,"a",@progbits
 
+	.globl	ape_phdrs
+ape_phdrs:
 	.long	PT_LOAD
 	.long	PF_R|PF_X
 	.stub	ape_cod_offset,quad
