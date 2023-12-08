@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MUSL_SHADOW_H_
 #define COSMOPOLITAN_THIRD_PARTY_MUSL_SHADOW_H_
-#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
 COSMOPOLITAN_C_START_
 
 #define	SHADOW "/etc/shadow"

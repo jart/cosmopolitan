@@ -18,7 +18,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/calls/typedef/u.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/stdio/internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/macros.internal.h"
 
