@@ -46,8 +46,8 @@ static unsigned atou(char **s) {
   return x;
 }
 
-static int __getgrent_a(FILE *f, struct group *gr, char **line, size_t *size,
-                        char ***mem, size_t *nmem, struct group **res) {
+int __getgrent_a(FILE *f, struct group *gr, char **line, size_t *size,
+		 char ***mem, size_t *nmem, struct group **res) {
   ssize_t l;
   char *s, *mems;
   size_t i;
@@ -103,9 +103,9 @@ end:
   return rv;
 }
 
-static int __getgr_a(const char *name, gid_t gid, struct group *gr, char **buf,
-                     size_t *size, char ***mem, size_t *nmem,
-                     struct group **res) {
+int __getgr_a(const char *name, gid_t gid, struct group *gr, char **buf,
+	      size_t *size, char ***mem, size_t *nmem,
+	      struct group **res) {
   FILE *f;
   int rv = 0;
   int cs;
