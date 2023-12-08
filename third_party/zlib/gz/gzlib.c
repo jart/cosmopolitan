@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│ vi: set noet ft=c ts=4 sts=4 sw=4 fenc=utf-8                             :vi │
+│ vi: set et ft=c ts=4 sts=4 sw=4 fenc=utf-8                               :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 /* gzlib.c -- zlib functions common to reading and writing gzip files
  * Copyright (C) 2004-2017 Mark Adler

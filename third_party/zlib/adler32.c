@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
-│ vi: set noet ft=c ts=4 sts=4 sw=4 fenc=utf-8                             :vi │
+│ vi: set et ft=c ts=4 sts=4 sw=4 fenc=utf-8                               :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 /* adler32.c -- compute the Adler-32 checksum of a data stream
  * Copyright (C) 1995-2011, 2016 Mark Adler
