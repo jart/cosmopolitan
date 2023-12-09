@@ -21,6 +21,7 @@ TOOL_NET_COMS =									\
 	o/$(MODE)/tool/net/redbean.com						\
 	o/$(MODE)/tool/net/redbean-demo.com					\
 	o/$(MODE)/tool/net/redbean-static.com					\
+	o/$(MODE)/tool/net/libresolv_query.com					\
 	o/$(MODE)/tool/net/redbean-unsecure.com					\
 	o/$(MODE)/tool/net/redbean-original.com
 
@@ -62,6 +63,7 @@ TOOL_NET_DIRECTDEPS =								\
 	THIRD_PARTY_LUA								\
 	THIRD_PARTY_LUA_UNIX							\
 	THIRD_PARTY_MAXMIND							\
+	THIRD_PARTY_MUSL							\
 	THIRD_PARTY_MBEDTLS							\
 	THIRD_PARTY_REGEX							\
 	THIRD_PARTY_SQLITE3							\

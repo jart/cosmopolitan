@@ -14,6 +14,7 @@ libc/isystem/arm_bf16.h \
 libc/isystem/arm_fp16.h \
 libc/isystem/arm_neon.h \
 libc/isystem/arpa/inet.h \
+libc/isystem/arpa/nameser.h \
 libc/isystem/array \
 libc/isystem/assert.h \
 libc/isystem/atomic \
@@ -98,6 +99,7 @@ libc/isystem/langinfo.h \
 libc/isystem/libgen.h \
 libc/isystem/limits \
 libc/isystem/limits.h \
+libc/isystem/link.h \
 libc/isystem/linux/futex.h \
 libc/isystem/linux/limits.h \
 libc/isystem/linux/param.h \
@@ -154,6 +156,7 @@ libc/isystem/random \
 libc/isystem/ratio \
 libc/isystem/regex \
 libc/isystem/regex.h \
+libc/isystem/resolv.h \
 libc/isystem/sched.h \
 libc/isystem/scoped_allocator \
 libc/isystem/search.h \

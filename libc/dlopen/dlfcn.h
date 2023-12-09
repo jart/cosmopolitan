@@ -15,14 +15,12 @@ char *dlerror(void);
 void *dlopen(const char *, int);
 void *dlsym(void *, const char *);
 int dlclose(void *);
-int dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
 
 #ifdef _COSMO_SOURCE
 char *cosmo_dlerror(void);
 void *cosmo_dlopen(const char *, int);
 void *cosmo_dlsym(void *, const char *);
 int cosmo_dlclose(void *);
-int cosmo_dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
 #endif
 
 COSMOPOLITAN_C_END_

@@ -23,6 +23,7 @@
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/o.h"

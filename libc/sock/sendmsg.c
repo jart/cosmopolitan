@@ -87,10 +87,10 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   }
   END_CANCELATION_POINT;
 
-#if defined(SYSDEBUG) && _DATATRACE
+#if SYSDEBUG && _DATATRACE
   // TODO(jart): Write a DescribeMsg() function.
   if (strace_enabled(0) > 0) {
-    kprintf(STRACE_PROLOGUE "sendmsg(");
+    kprintf(STRACE_PROLOGUE "sendmsg(%d, ", fd);
     if ((!IsAsan() && kisdangerous(msg)) ||
         (IsAsan() && !__asan_is_valid(msg, sizeof(*msg)))) {
       kprintf("%p", msg);

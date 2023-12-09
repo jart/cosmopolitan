@@ -39,7 +39,9 @@ struct servent {
   char *s_proto;    /* protocol to use */
 };
 
-extern int h_errno;
+#define h_errno (*__h_errno_location())
+errno_t *__h_errno_location(void) dontthrow pureconst;
+
 void herror(const char *);
 const char *hstrerror(int);
 
