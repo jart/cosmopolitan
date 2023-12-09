@@ -24,11 +24,9 @@ int posix_openpt(int) __wur;
 
 int tcdrain(int);
 int tcgetsid(int);
-int tcgetpgrp(int);
 int tcflow(int, int);
 int tcflush(int, int);
 int tcsetsid(int, int);
-int tcsetpgrp(int, int);
 int tcsendbreak(int, int);
 void cfmakeraw(struct termios *);
 int cfsetspeed(struct termios *, uint32_t);

@@ -163,6 +163,8 @@ int sigignore(int);
 int siginterrupt(int, int);
 int symlink(const char *, const char *);
 int symlinkat(const char *, int, const char *);
+int tcgetpgrp(int);
+int tcsetpgrp(int, int);
 int truncate(const char *, int64_t);
 int ttyname_r(int, char *, size_t);
 int unlink(const char *);
