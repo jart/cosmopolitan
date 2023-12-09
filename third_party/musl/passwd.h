@@ -8,8 +8,8 @@ struct FILE;
 struct passwd {
   char *pw_name;
   char *pw_passwd;
-  uint32_t pw_uid;
-  uint32_t pw_gid;
+  uid_t pw_uid;
+  gid_t pw_gid;
   char *pw_gecos;
   char *pw_dir;
   char *pw_shell;
@@ -18,9 +18,9 @@ struct passwd {
 void setpwent(void);
 void endpwent(void);
 struct passwd *getpwent(void);
-struct passwd *getpwuid(uint32_t);
+struct passwd *getpwuid(uid_t);
 struct passwd *getpwnam(const char *);
-int getpwuid_r(uint32_t, struct passwd *, char *, size_t, struct passwd **);
+int getpwuid_r(uid_t, struct passwd *, char *, size_t, struct passwd **);
 int getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
 struct passwd *fgetpwent(struct FILE *);
 int putpwent(const struct passwd *, struct FILE *);
@@ -28,7 +28,7 @@ int putpwent(const struct passwd *, struct FILE *);
 struct group {
   char *gr_name;
   char *gr_passwd;
-  int32_t gr_gid;
+  gid_t gr_gid;
   char **gr_mem;
 };
 
