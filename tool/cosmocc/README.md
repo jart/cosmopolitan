@@ -163,6 +163,23 @@ being passed to the freestanding Linux compiler.
 (cd /home/jart/cosmocc; bin/pecheck hello)
 ```
 
+## Building Open Source Software
+
+Assuming you put `cosmocc/bin/` on your `$PATH`, integrating with GNU
+Autotools projects becomes easy. The trick here is to use a `--prefix`
+that *only* contains software that's been built by cosmocc. That's
+because Cosmopolitan Libc uses a different ABI than your distro.
+
+```sh
+export CC="cosmocc -I/opt/cosmos/include -L/opt/cosmos/lib"
+export CXX="cosmoc++ -I/opt/cosmos/include -L/opt/cosmos/lib"
+export INSTALL=cosmoinstall
+export AR=cosmoar
+./configure --prefix=/opt/cosmos
+make -j
+make install
+```
+
 ## Tools
 
 While the GNU GCC and Binutils programs included in your `cosmocc`
