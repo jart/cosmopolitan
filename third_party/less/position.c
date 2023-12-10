@@ -166,8 +166,8 @@ public int empty_lines(int s, int e)
 public void get_scrpos(struct scrpos *scrpos, int where)
 {
 	int i;
-	int dir;
-	int last;
+	int dir = 0;
+	int last = 0;
 
 	switch (where)
 	{
