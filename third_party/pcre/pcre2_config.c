@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #ifdef HAVE_CONFIG_H
+#include "libc/str/str.h"
 #include "config.h"
 #endif
 

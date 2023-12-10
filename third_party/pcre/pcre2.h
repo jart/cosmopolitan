@@ -91,10 +91,6 @@ not have stdint.h, which is why we use inttypes.h, which according to the C
 standard is a superset of stdint.h. If inttypes.h is not available the build
 will break and the relevant values must be provided by some other means. */
 
-#include <limits.h>
-#include <stdlib.h>
-#include <inttypes.h>
-
 /* Allow for C++ users compiling this directly. */
 
 #ifdef __cplusplus

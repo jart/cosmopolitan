@@ -1,3 +1,6 @@
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+
 /*************************************************
 *      Perl-Compatible Regular Expressions       *
 *************************************************/

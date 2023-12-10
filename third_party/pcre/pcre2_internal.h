@@ -53,13 +53,6 @@ pcre2test.c with CODE_UNIT_WIDTH == 0. */
 
 /* Standard C headers */
 
-#include <ctype.h>
-#include <limits.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /* Macros to make boolean values more obvious. The #ifndef is to pacify
 compiler warnings in environments where these macros are defined elsewhere.
 Unfortunately, there is no way to do the same for the typedef. */
@@ -71,10 +64,6 @@ typedef int BOOL;
 #endif
 
 /* Valgrind (memcheck) support */
-
-#ifdef SUPPORT_VALGRIND
-#include <valgrind/memcheck.h>
-#endif
 
 /* -ftrivial-auto-var-init support supports initializing all local variables
 to avoid some classes of bug, but this can cause an unacceptable slowdown
@@ -140,6 +129,7 @@ only if it is not already set. */
 /* Include the public PCRE2 header and the definitions of UCP character
 property values. This must follow the setting of PCRE2_EXP_DECL above. */
 
+#include "libc/limits.h"
 #include "pcre2.h"
 #include "pcre2_ucp.h"
 
