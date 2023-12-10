@@ -58,6 +58,7 @@ imp	'CancelSynchronousIo'					CancelSynchronousIo					kernel32	1
 imp	'CheckRemoteDebuggerPresent'				CheckRemoteDebuggerPresent				kernel32	2
 imp	'ClearCommBreak'					ClearCommBreak						kernel32	1
 imp	'CloseHandle'						CloseHandle						kernel32	1
+imp	'ClosePseudoConsole'					ClosePseudoConsole					kernel32	1	# Windows 10+
 imp	'ConnectNamedPipe'					ConnectNamedPipe					kernel32	2
 imp	'ContinueDebugEvent'					ContinueDebugEvent					kernel32	3
 imp	'CopyFile'						CopyFileW						kernel32	3
@@ -65,6 +66,7 @@ imp	'CreateEvent'						CreateEventW						kernel32	4
 imp	'CreateEventEx'						CreateEventExW						kernel32	4
 imp	'CreateHardLink'					CreateHardLinkW						kernel32	3
 imp	'CreateIoCompletionPort'				CreateIoCompletionPort					kernel32	4
+imp	'CreatePseudoConsole'					CreatePseudoConsole					kernel32	5	# Windows 10+
 imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	4
 imp	'CreateToolhelp32Snapshot'				CreateToolhelp32Snapshot				kernel32	2
 imp	'CreateWaitableTimer'					CreateWaitableTimerW					kernel32	3
@@ -227,6 +229,7 @@ imp	'ReleaseSemaphore'					ReleaseSemaphore					kernel32	3
 imp	'RemoveVectoredContinueHandler'				RemoveVectoredContinueHandler				kernel32	1
 imp	'RemoveVectoredExceptionHandler'			RemoveVectoredExceptionHandler				kernel32	1
 imp	'ResetEvent'						ResetEvent						kernel32	1
+imp	'ResizePseudoConsole'					ResizePseudoConsole					kernel32	2	# Windows 10+
 imp	'ResumeThread'						ResumeThread						kernel32	1
 imp	'SetConsoleActiveScreenBuffer'				SetConsoleActiveScreenBuffer				kernel32	1	# TODO(jart): 6.2 and higher
 imp	'SetConsoleCP'						SetConsoleCP						kernel32	1	# TODO(jart): 6.2 and higher
