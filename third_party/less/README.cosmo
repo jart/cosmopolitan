@@ -1,0 +1,15 @@
+DESCRIPTION
+
+  less is a text paginator for the terminal
+
+LICENSE
+
+  BSD-2 license
+
+ORIGIN
+
+  https://ftp.gnu.org/gnu/less/less-643.tar.gz
+
+LOCAL CHANGES
+
+  None.

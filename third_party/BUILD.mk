@@ -14,6 +14,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/gdtoa		\
 	o/$(MODE)/third_party/getopt		\
 	o/$(MODE)/third_party/hiredis		\
+	o/$(MODE)/third_party/less		\
 	o/$(MODE)/third_party/libcxx		\
 	o/$(MODE)/third_party/linenoise		\
 	o/$(MODE)/third_party/lua		\
