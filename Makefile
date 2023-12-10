@@ -224,9 +224,7 @@ include dsp/BUILD.mk				# │
 include third_party/stb/BUILD.mk		# │
 include third_party/mbedtls/BUILD.mk		# │
 include third_party/libcxx/BUILD.mk		# │
-include third_party/ggml/BUILD.mk		# │
 include third_party/pcre/BUILD.mk		# │
-include third_party/radpajama/BUILD.mk		# │
 include net/https/BUILD.mk			# │
 include third_party/regex/BUILD.mk		#─┘
 include third_party/tidy/BUILD.mk
