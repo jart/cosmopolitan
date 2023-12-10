@@ -40,7 +40,7 @@ $(THIRD_PARTY_PCRE_A).pkg:				\
 		$(THIRD_PARTY_PCRE_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_PCRE_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_PCRE_A_OBJS): private CPPFLAGS += -DHAVE_CONFIG_H
+$(THIRD_PARTY_PCRE_A_OBJS): private CPPFLAGS += -DHAVE_CONFIG_H -DNDEBUG
 
 o/$(MODE)/third_party/pcre/%.com.dbg:			\
 		$(THIRD_PARTY_PCRE)			\

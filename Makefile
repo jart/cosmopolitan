@@ -223,6 +223,7 @@ include dsp/tty/BUILD.mk			# │
 include dsp/BUILD.mk				# │
 include third_party/stb/BUILD.mk		# │
 include third_party/mbedtls/BUILD.mk		# │
+include third_party/ncurses/BUILD.mk		# │
 include third_party/libcxx/BUILD.mk		# │
 include third_party/pcre/BUILD.mk		# │
 include net/https/BUILD.mk			# │
