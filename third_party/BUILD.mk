@@ -24,6 +24,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/mbedtls		\
 	o/$(MODE)/third_party/musl		\
 	o/$(MODE)/third_party/nsync		\
+	o/$(MODE)/third_party/pcre		\
 	o/$(MODE)/third_party/puff		\
 	o/$(MODE)/third_party/python		\
 	o/$(MODE)/third_party/quickjs		\
