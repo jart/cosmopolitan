@@ -1,0 +1,15 @@
+DESCRIPTION
+
+  readline is a teletypewriter line editing library
+
+LICENSE
+
+  GPL v3
+
+ORIGIN
+
+  https://ftp.gnu.org/gnu/readline/readline-8.2.tar.gz
+
+LOCAL CHANGES
+
+  - Favor FIONREAD in _rl_input_available()
