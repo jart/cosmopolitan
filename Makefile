@@ -229,7 +229,8 @@ include third_party/libcxx/BUILD.mk		# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
 include net/https/BUILD.mk			# │
-include third_party/regex/BUILD.mk		#─┘
+include third_party/regex/BUILD.mk		# │
+include third_party/bash/BUILD.mk		#─┘
 include third_party/tidy/BUILD.mk
 include third_party/BUILD.mk
 include third_party/nsync/testing/BUILD.mk
