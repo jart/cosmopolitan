@@ -12,10 +12,11 @@ possible performance and the tiniest footprint imaginable.
 
 ## Background
 
-For an introduction to this project, please read the [αcτµαlly pδrταblε
-εxεcµταblε](https://justine.lol/ape.html) blog post and [cosmopolitan
+For an introduction to this project, please read the [actually portable
+executable](https://justine.lol/ape.html) blog post and [cosmopolitan
 libc](https://justine.lol/cosmopolitan/index.html) website. We also have
-[API documentation](https://justine.lol/cosmopolitan/documentation.html).
+[API
+documentation](https://justine.lol/cosmopolitan/documentation.html).
 
 ## Getting Started
 
