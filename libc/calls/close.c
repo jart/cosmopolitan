@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
@@ -49,13 +50,8 @@ static int close_impl(int fd) {
   }
 
   if (__isfdkind(fd, kFdZip)) {
-    if (_weaken(__zipos_close)) {
-      return _weaken(__zipos_close)(fd);
-    }
-    if (!IsWindows() && !IsMetal()) {
-      sys_close(fd);
-    }
-    return 0;
+    unassert(_weaken(__zipos_close));
+    return _weaken(__zipos_close)(fd);
   }
 
   if (!IsWindows() && !IsMetal()) {
