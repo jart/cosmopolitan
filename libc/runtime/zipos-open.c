@@ -83,7 +83,7 @@ static void *__zipos_mmap_space(size_t mapsize) {
 }
 
 struct ZiposHandle *__zipos_keep(struct ZiposHandle *h) {
-  int refs = atomic_fetch_add_explicit(&h->refs, 1, memory_order_relaxed);
+  size_t refs = atomic_fetch_add_explicit(&h->refs, 1, memory_order_relaxed);
   unassert(!VERY_UNLIKELY(refs > MAX_REFS));
   return h;
 }
