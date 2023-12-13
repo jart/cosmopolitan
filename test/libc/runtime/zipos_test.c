@@ -28,6 +28,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/hyperion.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
@@ -110,4 +111,16 @@ TEST(zipos, lseek) {
   EXPECT_SYS(0, 512, read(3, b1, 512));
   EXPECT_EQ(0, memcmp(b1, b2, 512));
   EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(zipos, closeAfterVfork) {
+  ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  SPAWN(vfork);
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, open("/etc/hosts", O_RDONLY));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(EBADF, -1, close(3));
+  EXITS(0);
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(EBADF, -1, close(3));
 }
