@@ -64,6 +64,54 @@ textwindows size_t __normntpath(char16_t *p, size_t n) {
   return j;
 }
 
+/**
+ * Copies path for unix sockets on Windows NT.
+ *
+ * This function does the following chores:
+ *
+ * 1. Fixing drive letter paths, e.g. `/c/` → `c:\`
+ * 2. Turn `/tmp` into GetTempPath()
+ *
+ * I don't think we need normalize the path here.
+ *
+ * @param path is input unix-style path
+ * @return short count excluding NUL on success, or -1 w/ errno
+ * @error ENAMETOOLONG
+ */
+textwindows int __mkwin32_sun_path(
+    const char *path, char sun_path[hasatleast UNIX_SOCKET_NAME_MAX]) {
+  // 1. Need +1 for NUL-terminator
+  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
+    return efault();
+  }
+  char16_t tmp_path[UNIX_SOCKET_NAME_MAX];
+  char *p = sun_path;
+  const char *q = path;
+  size_t n = 0;
+  if (IsSlash(q[0]) && IsAlpha(q[1]) && IsSlash(q[2])) {
+    // turn "\c\foo" into "c:\foo"
+    p[0] = q[1];
+    p[1] = ':';
+    p[2] = '\\';
+    p += 3;
+    n = 3;
+  } else if (IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
+             (IsSlash(q[4]) || !q[4])) {
+    if (!q[4] || !q[5]) return efault();
+    GetTempPath(UNIX_SOCKET_NAME_MAX, tmp_path);
+    n = tprecode16to8(p, UNIX_SOCKET_NAME_MAX, tmp_path).ax;
+    p += n;
+    q += 5;
+  }
+  for (; n < UNIX_SOCKET_NAME_MAX; n++) {
+    if (!(*p++ = *q++)) break;
+  }
+  if (n == UNIX_SOCKET_NAME_MAX) {
+    return efault();
+  }
+  return n;
+}
+
 textwindows int __mkntpath(const char *path,
                            char16_t path16[hasatleast PATH_MAX]) {
   return __mkntpath2(path, path16, -1);

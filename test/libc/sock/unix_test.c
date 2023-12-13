@@ -70,17 +70,20 @@ TEST(unix, datagram) {
   munmap(ready, 1);
 }
 
-void StreamServer(atomic_bool *ready) {
+void StreamServer(atomic_bool *ready, const char *path, bool check_path) {
   char buf[256] = {0};
   uint32_t len = sizeof(struct sockaddr_un);
-  struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
+  struct sockaddr_un addr = {AF_UNIX};
+  strcpy(addr.sun_path, path);
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
+  unlink(path);
+  errno = 0;
   ASSERT_SYS(0, 0, bind(3, (void *)&addr, len));
   bzero(&addr, sizeof(addr));
   ASSERT_SYS(0, 0, getsockname(3, (void *)&addr, &len));
-  ASSERT_EQ(2 + 8 + 1, len);
+  if (check_path) ASSERT_EQ(2 + strlen(path) + 1, len);
   ASSERT_EQ(AF_UNIX, addr.sun_family);
-  ASSERT_STREQ("foo.sock", addr.sun_path);
+  if (check_path) ASSERT_STREQ(path, addr.sun_path);
   ASSERT_SYS(0, 0, listen(3, 10));
   bzero(&addr, sizeof(addr));
   len = sizeof(addr);
@@ -101,12 +104,35 @@ TEST(unix, stream) {
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
   if (!fork()) {
     close(3);
-    StreamServer(ready);
+    StreamServer(ready, "foo.sock", true);
     _Exit(0);
   }
   while (!*ready) sched_yield();
   uint32_t len = sizeof(struct sockaddr_un);
   struct sockaddr_un addr = {AF_UNIX, "foo.sock"};
+  ASSERT_SYS(0, 0, connect(3, (void *)&addr, len));
+  ASSERT_SYS(0, 5, write(3, "hello", 5));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+  munmap(ready, 1);
+}
+
+TEST(unix, stream_absolute) {
+  int ws;
+  if (IsWindows() && !IsAtLeastWindows10()) return;
+  atomic_bool *ready = _mapshared(1);
+  // TODO(jart): move this line down when kFdProcess is gone
+  ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
+  if (!fork()) {
+    close(3);
+    StreamServer(ready, "/tmp/foo.sock", !IsWindows());
+    _Exit(0);
+  }
+  while (!*ready) sched_yield();
+  uint32_t len = sizeof(struct sockaddr_un);
+  struct sockaddr_un addr = {AF_UNIX, "/tmp/foo.sock"};
   ASSERT_SYS(0, 0, connect(3, (void *)&addr, len));
   ASSERT_SYS(0, 5, write(3, "hello", 5));
   ASSERT_SYS(0, 0, close(3));
