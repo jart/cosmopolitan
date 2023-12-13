@@ -28,7 +28,7 @@ __static_yoink("usr/share/terminfo/8/8510");
 __static_yoink("usr/share/terminfo/9/955-hb");
 __static_yoink("usr/share/terminfo/9/955-w");
 __static_yoink("usr/share/terminfo/9/9term");
-__static_yoink("usr/share/terminfo/A/Apple_Terminal");
+__static_yoink("usr/share/terminfo/a/Apple_Terminal");
 __static_yoink("usr/share/terminfo/a/a210");
 __static_yoink("usr/share/terminfo/a/a80");
 __static_yoink("usr/share/terminfo/a/a980");
@@ -3445,7 +3445,7 @@ make_dir_filename(char *filename,
 
 	if (need <= limit) {
 	    _nc_SPRINTF(filename, _nc_SLIMIT(limit)
-			"%s/" LEAF_FMT "/%s", path, *name, name);
+			"%s/" LEAF_FMT "/%s", path, tolower(*name), name);
 	    result = TRUE;
 	}
     }
