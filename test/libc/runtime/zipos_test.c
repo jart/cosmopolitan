@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
@@ -147,8 +146,6 @@ static void *pthread_main(void *ptr) {
   struct State *s = ptr;
   struct State children[2];
   int fd, rc;
-
-  kprintf("pthread_main depth:%d fd:%d\n", s->depth, s->fd);
 
   fd = s->fd;
   if (s->depth < 3) {
