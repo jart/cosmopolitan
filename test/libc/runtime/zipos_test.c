@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
@@ -123,4 +124,64 @@ TEST(zipos, closeAfterVfork) {
   EXITS(0);
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(EBADF, -1, close(3));
+}
+
+struct State {
+  int depth;
+  int fd;
+  pthread_t thread;
+};
+
+#define READS()                         \
+  for (int i = 0; i < 4; ++i) {         \
+    char buf[8];                        \
+    ASSERT_SYS(0, 8, read(fd, buf, 8)); \
+  }
+#define SEEKS()                         \
+  for (int i = 0; i < 4; ++i) {         \
+    rc = lseek(fd, 8, SEEK_CUR);        \
+    ASSERT_NE(rc, -1);                  \
+  }
+
+static void *pthread_main(void *ptr) {
+  struct State *s = ptr;
+  struct State children[2];
+  int fd, rc;
+
+  kprintf("pthread_main depth:%d fd:%d\n", s->depth, s->fd);
+
+  fd = s->fd;
+  if (s->depth < 3) {
+    for (int i = 0; i < 2; ++i) {
+      rc = dup(fd);
+      ASSERT_NE(-1, rc);
+      children[i].fd = rc;
+      children[i].depth = 1 + s->depth;
+      ASSERT_SYS(0, 0, pthread_create(&children[i].thread, NULL, pthread_main,
+                                      children + i));
+    }
+  }
+  if (s->depth & 1) {
+    SEEKS();
+    READS();
+  } else {
+    READS();
+    SEEKS();
+  }
+  ASSERT_SYS(0, 0, close(fd));
+  if (s->depth < 3) {
+    for (int i = 0; i < 2; ++i) {
+      ASSERT_SYS(0, 0, pthread_join(children[i].thread, NULL));
+    }
+  }
+  return NULL;
+}
+
+TEST(zipos, ultraPosixAtomicSeekRead) {
+  struct State s = { 0, 4 };
+  ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
+  ASSERT_SYS(0, 4, dup(3));
+  pthread_main((void *)&s);
+  EXPECT_EQ(960, lseek(3, 0, SEEK_CUR));
+  ASSERT_SYS(0, 0, close(3));
 }
