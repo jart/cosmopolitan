@@ -126,7 +126,7 @@ TEST(zipos, closeAfterVfork) {
 }
 
 struct State {
-  int depth;
+  int id;
   int fd;
   pthread_t thread;
 };
@@ -148,17 +148,17 @@ static void *pthread_main(void *ptr) {
   int fd, rc;
 
   fd = s->fd;
-  if (s->depth < 3) {
+  if (s->id < 8) {
     for (int i = 0; i < 2; ++i) {
       rc = dup(fd);
       ASSERT_NE(-1, rc);
       children[i].fd = rc;
-      children[i].depth = 1 + s->depth;
+      children[i].id = 2 * s->id + i;
       ASSERT_SYS(0, 0, pthread_create(&children[i].thread, NULL, pthread_main,
                                       children + i));
     }
   }
-  if (s->depth & 1) {
+  if (s->id & 1) {
     SEEKS();
     READS();
   } else {
@@ -166,7 +166,7 @@ static void *pthread_main(void *ptr) {
     SEEKS();
   }
   ASSERT_SYS(0, 0, close(fd));
-  if (s->depth < 3) {
+  if (s->id < 8) {
     for (int i = 0; i < 2; ++i) {
       ASSERT_SYS(0, 0, pthread_join(children[i].thread, NULL));
     }
@@ -175,7 +175,7 @@ static void *pthread_main(void *ptr) {
 }
 
 TEST(zipos, ultraPosixAtomicSeekRead) {
-  struct State s = { 0, 4 };
+  struct State s = { 1, 4 };
   ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
   ASSERT_SYS(0, 4, dup(3));
   pthread_main((void *)&s);
