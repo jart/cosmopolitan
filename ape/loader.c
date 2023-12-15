@@ -948,6 +948,12 @@ __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
   Exit(rc, os);
 }
 
+__attribute__((__noreturn__)) static void ShowError(int os, const char *ape,
+                                                    const char *s) {
+  Print(os, 2, ape, ": ", s, " (pass -h for help)\n", 0l);
+  Exit(1, os);
+}
+
 EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
                                                       char dl) {
   int rc, n;
@@ -1017,20 +1023,6 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     os = LINUX;
   }
 
-  /* parse flags */
-  while (argc > 1) {
-    if (argv[1][0] != '-') break; /* normal argument */
-    if (!argv[1][1]) break;       /* hyphen argument */
-    if (!StrCmp(argv[1], "-h") || !StrCmp(argv[1], "--help")) {
-      ShowUsage(os, 1, 0);
-    } else {
-      Print(os, 2, ape, ": invalid flag (pass -h for help)\n", 0l);
-      Exit(1, os);
-    }
-    *++sp = --argc;
-    ++argv;
-  }
-
   /* we can load via shell, shebang, or binfmt_misc */
   if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
@@ -1041,9 +1033,16 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
   } else if (argc < 2) {
-    Print(os, 2, ape, ": missing command name (pass -h for help)\n", 0l);
-    Exit(1, os);
+    ShowError(os, ape, "missing command name");
   } else {
+    if (argv[1][0] == '-') {
+      if ((argv[1][1] == 'h' && !argv[1][2]) ||
+          !StrCmp(argv[1] + 1, "-help")) {
+        ShowUsage(os, 1, 0);
+      } else {
+        ShowError(os, ape, "invalid flag");
+      }
+    }
     prog = (char *)sp[2];
     argc = sp[1] = sp[0] - 1;
     argv = (char **)((sp += 1) + 1);
