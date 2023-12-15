@@ -108,9 +108,3 @@ TEST(GetProgramExecutableName, movedSelf) {
   abort();
   EXITS(0);
 }
-
-void __InitProgramExecutableName(void);
-
-BENCH(GetProgramExecutableName, bench) {
-  EZBENCH2("Init", donothing, __InitProgramExecutableName());
-}

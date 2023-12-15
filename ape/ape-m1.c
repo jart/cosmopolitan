@@ -36,8 +36,6 @@
 #include <unistd.h>
 
 #define pagesz         16384
-#define VARNAME        "COSMOPOLITAN_PROGRAM_EXECUTABLE="
-#define VARSIZE        (sizeof(VARNAME) - 1)
 /* maximum path size that cosmo can take */
 #define PATHSIZE       (PATH_MAX < 1024 ? PATH_MAX : 1024)
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
@@ -203,11 +201,8 @@ struct PathSearcher {
   unsigned long namelen;
   const char *name;
   const char *syspath;
-  char varname[VARSIZE];
   char path[PATHSIZE];
 };
-_Static_assert(offsetof(struct PathSearcher, varname) + VARSIZE ==
-               offsetof(struct PathSearcher, path), "struct layout");
 
 struct ApeLoader {
   struct PathSearcher ps;
@@ -563,7 +558,8 @@ static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds,
 __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
                                                 long *sp, struct ElfEhdr *e,
                                                 struct ElfPhdr *p,
-                                                struct Syslib *lib) {
+                                                struct Syslib *lib,
+                                                char *path) {
   long rc;
   int prot;
   int flags;
@@ -734,10 +730,10 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   close(fd);
 
   register long *x0 __asm__("x0") = sp;
+  register char *x2 __asm__("x2") = path;
   register struct Syslib *x15 __asm__("x15") = lib;
   register long x16 __asm__("x16") = e->e_entry;
   __asm__ volatile("mov\tx1,#0\n\t"
-                   "mov\tx2,#0\n\t"
                    "mov\tx3,#0\n\t"
                    "mov\tx4,#0\n\t"
                    "mov\tx5,#0\n\t"
@@ -767,7 +763,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
                    "mov\tx0,#0\n\t"
                    "br\tx16"
                    : /* no outputs */
-                   : "r"(x0), "r"(x15), "r"(x16)
+                   : "r"(x0), "r"(x2), "r"(x15), "r"(x16)
                    : "memory");
   __builtin_unreachable();
 }
@@ -891,7 +887,7 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   auxv[28] = 0;
 
   /* we're now ready to load */
-  Spawn(exe, fd, sp, e, p, &M->lib);
+  Spawn(exe, fd, sp, e, p, &M->lib, M->ps.path);
 }
 
 int main(int argc, char **argv, char **envp) {
@@ -901,7 +897,7 @@ int main(int argc, char **argv, char **envp) {
   long *sp, *sp2, *auxv;
   union ElfEhdrBuf *ebuf;
   char *p, *pe, *exe, *prog,
-       *execfn, *shell, **varpos;
+       *execfn, *shell;
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
@@ -965,13 +961,9 @@ int main(int argc, char **argv, char **envp) {
 
   /* getenv("_") is close enough to at_execfn */
   execfn = argc > 0 ? argv[0] : 0;
-  varpos = 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
-    } else if (!memcmp(VARNAME, envp[i], VARSIZE)) {
-      assert(!varpos);
-      varpos = envp + i;
     }
   }
 
@@ -982,7 +974,7 @@ int main(int argc, char **argv, char **envp) {
   /* create new bottom of stack for spawned program
      system v abi aligns this on a 16-byte boundary
      grows down the alloc by poking the guard pages */
-  n = (auxv - sp + !varpos + AUXV_WORDS + 1) * sizeof(long);
+  n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
   if ((long)sp2 & 15) ++sp2;
   for (; n > 0; n -= pagesz) {
@@ -991,12 +983,6 @@ int main(int argc, char **argv, char **envp) {
   memmove(sp2, sp, (auxv - sp) * sizeof(long));
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
-  if (varpos) {
-    varpos = (char **)((long *)varpos - sp + sp2);
-  } else {
-    varpos = envp + i++;
-    *(envp + i) = 0;
-  }
   auxv = (long *)(envp + i + 1);
   sp = sp2;
 
@@ -1060,12 +1046,6 @@ int main(int argc, char **argv, char **envp) {
     Pexit(exe, 0, "too small");
   }
   pe = ebuf->buf + rc;
-
-  /* inject program executable as first environment variable,
-     swapping the old first variable for it. */
-  memmove(M->ps.varname, VARNAME, VARSIZE);
-  *varpos = *envp;
-  *envp = M->ps.varname;
 
   /* generate some hard random data */
   if ((rc = sys_getentropy(M->rando, sizeof(M->rando))) < 0) {

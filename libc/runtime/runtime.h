@@ -71,6 +71,7 @@ extern char **__argv;
 extern char **__envp;
 extern unsigned long *__auxv;
 extern intptr_t __oldstack;
+extern char *__myname;
 extern uint64_t __nosync;
 extern int __strace;
 extern int __ftrace;

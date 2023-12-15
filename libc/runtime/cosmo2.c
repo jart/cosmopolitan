@@ -78,7 +78,7 @@ static const char *DecodeMagnum(const char *p, long *r) {
   return *r = x, p;
 }
 
-wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
+wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *myname) {
 
   // get startup timestamp as early as possible
   // its used by --strace and also kprintf() %T
@@ -110,6 +110,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1) {
   environ = envp;
   program_invocation_name = argv[0];
   __oldstack = (intptr_t)sp;
+  __myname = myname;
 
   // detect apple m1 environment
   const char *magnums;
