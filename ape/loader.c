@@ -224,7 +224,8 @@ struct ApeLoader {
 };
 
 EXTERN_C long SystemCall(long, long, long, long, long, long, long, int);
-EXTERN_C void Launch(void *, long, void *, int) __attribute__((__noreturn__));
+EXTERN_C void
+Launch(void *, long, void *, void *, int) __attribute__((__noreturn__));
 
 extern char __executable_start[];
 extern char _end[];
@@ -643,7 +644,8 @@ static char *Commandv(struct PathSearcher *ps, int os, const char *name,
   }
 }
 
-__attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
+__attribute__((__noreturn__)) static void Spawn(int os, const char *exe,
+                                                const char *path, int fd,
                                                 long *sp, unsigned long pagesz,
                                                 struct ElfEhdr *e,
                                                 struct ElfPhdr *p) {
@@ -801,12 +803,12 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   Msyscall(dynbase + code, codesize, os);
 
   /* call program entrypoint */
-  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, sp, os);
+  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, path, sp, os);
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, int fd, long *sp, long *auxv,
-                          unsigned long pagesz, int os) {
+                          const char *exe, const char *path, int fd, long *sp,
+                          long *auxv, unsigned long pagesz, int os) {
   long i, rc;
   unsigned size;
   struct ElfEhdr *e;
@@ -921,7 +923,7 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   }
 
   /* we're now ready to load */
-  Spawn(os, exe, fd, sp, pagesz, e, p);
+  Spawn(os, exe, path, fd, sp, pagesz, e, p);
 }
 
 __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
@@ -1088,11 +1090,6 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   }
   pe = ebuf->buf + rc;
 
-  /* change argv[0] to resolved path (TODO remove) */
-  if (argc > 0 && prog) {
-    argv[0] = prog;
-  }
-
   /* ape intended behavior
      1. if ape, will scan shell script for elf printf statements
      2. shell script may have multiple lines producing elf headers
@@ -1125,9 +1122,9 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
         }
       }
       if (i >= sizeof(ebuf->ehdr)) {
-        TryElf(M, ebuf, exe, fd, sp, auxv, pagesz, os);
+        TryElf(M, ebuf, exe, prog, fd, sp, auxv, pagesz, os);
       }
     }
   }
-  Pexit(os, exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, pagesz, os));
+  Pexit(os, exe, 0, TryElf(M, ebuf, exe, prog, fd, sp, auxv, pagesz, os));
 }
