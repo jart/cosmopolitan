@@ -235,7 +235,7 @@ void __zipos_postdup(int oldfd, int newfd) {
   if (oldfd == newfd) {
     return;
   }
-  // XXX signals
+  BLOCK_SIGNALS;
   __fds_lock();
   if (__isfdkind(newfd, kFdZip)) {
     __zipos_free((struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
@@ -249,6 +249,7 @@ void __zipos_postdup(int oldfd, int newfd) {
     g_fds.p[newfd] = g_fds.p[oldfd];
   }
   __fds_unlock();
+  ALLOW_SIGNALS;
 }
 
 /**
