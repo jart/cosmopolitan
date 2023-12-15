@@ -116,12 +116,6 @@ static inline void InitProgramExecutableNameImpl(void) {
     goto UseEmpty;
   }
 
-  /* the previous loader supplied the full program path as the first
-     environment variable. */
-  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s)) {
-    goto CopyString;
-  }
-
   // if argv[0] exists then turn it into an absolute path. we also try
   // adding a .com suffix since the ape auto-appends it when resolving
   if ((q = __argv[0])) {
@@ -149,8 +143,10 @@ static inline void InitProgramExecutableNameImpl(void) {
     if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
   }
 
-  // if getenv("_") exists then use that
-  if ((q = __getenv(__envp, "_").s)) {
+  /* the previous loader supplied the full program path as the first
+     environment variable. we also try "_". */
+  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s) ||
+      (q = __getenv(__envp, "_").s)) {
     goto CopyString;
   }
 
