@@ -18,4 +18,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
 
-char *__myname;
+char *__program_executable_name;

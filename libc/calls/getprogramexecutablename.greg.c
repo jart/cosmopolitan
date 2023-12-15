@@ -52,7 +52,8 @@ static inline int IsAlpha(int c) {
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
-  if (__myname) {
+  if (__program_executable_name) {
+    /* already set by the loader */
     return;
   }
   npassert(!issetugid());   // TODO(mrdomino): pathname security
@@ -80,7 +81,7 @@ static inline void InitProgramExecutableNameImpl(void) {
 
   char c, *q;
   if (IsMetal()) {
-    __myname = APE_COM_NAME;
+    __program_executable_name = APE_COM_NAME;
     return;
   }
 
@@ -167,7 +168,7 @@ static inline void InitProgramExecutableNameImpl(void) {
   g_prog.u.buf[0] = 0;
 
 UseBuf:
-  __myname = g_prog.u.buf;
+  __program_executable_name = g_prog.u.buf;
 }
 
 static void InitProgramExecutableName(void) {
@@ -181,5 +182,5 @@ static void InitProgramExecutableName(void) {
  */
 char *GetProgramExecutableName(void) {
   cosmo_once(&g_prog.once, InitProgramExecutableName);
-  return __myname;
+  return __program_executable_name;
 }
