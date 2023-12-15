@@ -1021,7 +1021,7 @@ int main(int argc, char **argv, char **envp) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
          "  ($0 = PROG.ape) [ARGV1,ARGV2,...]\n"
-         "actually portable executable loader silicon 1.9\n"
+         "actually portable executable loader silicon 2.0\n"
          "copyright 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
     _exit(1);
