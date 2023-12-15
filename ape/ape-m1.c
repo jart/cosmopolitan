@@ -316,17 +316,21 @@ __attribute__((__noreturn__)) static void Pexit(const char *c, int failed,
 }
 
 static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
-  if (!pathlen && *ps->name != '/') {
-    if (!getcwd(ps->path, sizeof(ps->path) - 1 - ps->namelen)) {
-      Pexit("getcwd", -errno, "failed");
-    }
-    pathlen = strlen(ps->path);
-  } else if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) {
+  char buf[PATH_MAX];
+  size_t n;
+  if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) {
     return 0;
   }
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
+  if (!realpath(ps->path, buf)) {
+    Pexit(ps->path, -errno, "realpath");
+  }
+  if ((n = strlen(buf)) >= sizeof(ps->path)) {
+    Pexit(buf, 0, "too long");
+  }
+  memcpy(ps->path, buf, n + 1);
   if (!access(ps->path, X_OK)) {
     if (ps->indirect) {
       ps->namelen -= 4;
