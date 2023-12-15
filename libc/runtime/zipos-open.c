@@ -235,21 +235,21 @@ void __zipos_postdup(int oldfd, int newfd) {
   if (oldfd == newfd) {
     return;
   }
+  BLOCK_SIGNALS;
+  __fds_lock();
   if (__isfdkind(newfd, kFdZip)) {
     __zipos_free((struct ZiposHandle *)(intptr_t)g_fds.p[newfd].handle);
     if (!__isfdkind(oldfd, kFdZip)) {
-      __fds_lock();
       bzero(g_fds.p + newfd, sizeof(*g_fds.p));
-      __fds_unlock();
     }
   }
   if (__isfdkind(oldfd, kFdZip)) {
     __zipos_keep((struct ZiposHandle *)(intptr_t)g_fds.p[oldfd].handle);
-    __fds_lock();
     __ensurefds_unlocked(newfd);
     g_fds.p[newfd] = g_fds.p[oldfd];
-    __fds_unlock();
   }
+  __fds_unlock();
+  ALLOW_SIGNALS;
 }
 
 /**
