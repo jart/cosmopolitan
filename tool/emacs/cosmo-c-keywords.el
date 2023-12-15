@@ -9,6 +9,14 @@
            "_Pragma"
            "_Complex"))
 
+        (cuda
+         '("__device__"
+           "__forceinline__"
+           "__global__"
+           "__shared__"
+           "__host__"
+           "__constant__"))
+
         (c11
          '("_Atomic"
            "alignas"
@@ -217,6 +225,7 @@
         )
     (concat "\\_<"
             (regexp-opt (append
+                         cuda
                          c11
                          gnu
                          clang
