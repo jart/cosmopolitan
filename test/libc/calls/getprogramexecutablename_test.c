@@ -36,10 +36,11 @@ void SetUpOnce(void) {
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   static bool skiparg0tests;
-  if (!__program_executable_name && !IsFreebsd() && !IsNetbsd()) {
+  if (IsLinux()) {
+    /* see also: https://github.com/jart/cosmopolitan/issues/1014 */
     skiparg0tests = true;
     if (argc < 2) {
-      fprintf(stderr, "warning: old/no loader; skipping argv[0] tests\n");
+      fprintf(stderr, "warning: skipping argv[0] tests\n");
     }
   }
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
