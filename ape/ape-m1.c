@@ -896,8 +896,7 @@ int main(int argc, char **argv, char **envp) {
   struct ApeLoader *M;
   long *sp, *sp2, *auxv;
   union ElfEhdrBuf *ebuf;
-  char *p, *pe, *exe, *prog,
-       *execfn, *shell;
+  char *p, *pe, *exe, *prog, *execfn, *shell;
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
