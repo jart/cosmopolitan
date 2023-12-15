@@ -936,13 +936,13 @@ __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
         "\n"
         "USAGE\n"
         "\n"
-        "  ape [FLAGS]   PROG [ARGV1,ARGV2,...]\n"
-        "  ape [FLAGS] - PROG [ARGV0,ARGV1,...]\n"
+        "  ape -h\n"
+        "  ape   PROG [ARGV1,ARGV2,...]\n"
+        "  ape - PROG [ARGV0,ARGV1,...]\n"
         "\n"
         "FLAGS\n"
         "\n"
-        "  -h     show this help\n"
-        "  -f     force loading of program (do not use execve)\n"
+        "  -h    show this help\n"
         "\n",
         0l);
   Exit(rc, os);
