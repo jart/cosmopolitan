@@ -29,19 +29,25 @@
 
 static char *self;
 
-void SetUp(void) {
-  self = GetProgramExecutableName();
-}
-
 void SetUpOnce(void) {
+  self = GetProgramExecutableName();
   testlib_enable_tmp_setup_teardown();
 }
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
+  static bool skiparg0tests;
+  if (!__program_executable_name && !IsFreebsd() && !IsNetbsd()) {
+    skiparg0tests = true;
+    if (argc < 2) {
+      fprintf(stderr, "warning: old/no loader; skipping argv[0] tests\n");
+    }
+  }
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
     ASSERT_EQ(argc, 4);
     EXPECT_STREQ(argv[2], GetProgramExecutableName());
-    EXPECT_STREQ(argv[3], argv[0]);
+    if (!skiparg0tests) {
+      EXPECT_STREQ(argv[3], argv[0]);
+    }
     exit(g_testlib_failed);
   }
 }
