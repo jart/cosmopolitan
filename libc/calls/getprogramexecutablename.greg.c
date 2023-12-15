@@ -51,7 +51,14 @@ static inline int IsAlpha(int c) {
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
+  size_t n;
+  ssize_t got;
+  char c, *q, *b;
 
+  if (__program_executable_name) {
+    /* already set by the loader */
+    return;
+  }
   if (IsWindows()) {
     int n = GetModuleFileName(0, g_prog.u.buf16, ARRAYLEN(g_prog.u.buf16));
     for (int i = 0; i < n; ++i) {
@@ -69,21 +76,44 @@ static inline void InitProgramExecutableNameImpl(void) {
       g_prog.u.buf16[2] = '/';
     }
     tprecode16to8(g_prog.u.buf, sizeof(g_prog.u.buf), g_prog.u.buf16);
-    return;
+    goto UseBuf;
   }
-
-  char c, *q;
   if (IsMetal()) {
-    q = APE_COM_NAME;
-    goto CopyString;
+    __program_executable_name = APE_COM_NAME;
+    return;
   }
 
-  /* the new-style loader supplies the full program path as the first
-     environment variable. in the spirit of Postel's Law ("be liberal
-     in what you accept"), we use __getenv to read it. */
-  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s)) {
-    strlcpy(g_prog.u.buf, q, sizeof(g_prog.u.buf));
-    return;
+  b = g_prog.u.buf;
+  n = sizeof(g_prog.u.buf) - 1;
+  if (IsFreebsd() || IsNetbsd()) {
+    int cmd[4];
+    cmd[0] = CTL_KERN;
+    cmd[1] = KERN_PROC;
+    if (IsFreebsd()) {
+      cmd[2] = KERN_PROC_PATHNAME_FREEBSD;
+    } else {
+      cmd[2] = KERN_PROC_PATHNAME_NETBSD;
+    }
+    cmd[3] = -1;  // current process
+    if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
+      if (strcmp(b, "/usr/bin/ape")) {  // XX old loader; warn?
+        goto UseBuf;
+      }
+    }
+  }
+  if (IsLinux()) {
+    if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
+        (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
+      b[got] = 0;
+      if (strcmp(b, "/usr/bin/ape")) {
+        goto UseBuf;
+      }
+    }
+  }
+
+  if (issetugid()) {
+    /* give up prior to using less secure methods */
+    goto UseEmpty;
   }
 
   // if argv[0] exists then turn it into an absolute path. we also try
@@ -107,41 +137,17 @@ static inline void InitProgramExecutableNameImpl(void) {
       }
     }
     *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return;
+    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
     p = WRITE32LE(p, READ32LE(".com"));
     *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return;
+    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
   }
 
-  // if getenv("_") exists then use that
-  for (char **ep = __envp; (q = *ep); ++ep) {
-    if (*q++ == '_' && *q++ == '=') {
-      goto CopyString;
-    }
-  }
-
-  // if argv[0] doesn't exist, then fallback to interpreter name
-  ssize_t got;
-  char *b = g_prog.u.buf;
-  size_t n = sizeof(g_prog.u.buf) - 1;
-  if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
-      (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
-    b[got] = 0;
-    return;
-  }
-  if (IsFreebsd() || IsNetbsd()) {
-    int cmd[4];
-    cmd[0] = CTL_KERN;
-    cmd[1] = KERN_PROC;
-    if (IsFreebsd()) {
-      cmd[2] = KERN_PROC_PATHNAME_FREEBSD;
-    } else {
-      cmd[2] = KERN_PROC_PATHNAME_NETBSD;
-    }
-    cmd[3] = -1;  // current process
-    if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
-      return;
-    }
+  /* the previous loader supplied the full program path as the first
+     environment variable. we also try "_". */
+  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s) ||
+      (q = __getenv(__envp, "_").s)) {
+    goto CopyString;
   }
 
   // give up and just copy argv[0] into it
@@ -155,14 +161,18 @@ static inline void InitProgramExecutableNameImpl(void) {
       }
     }
     *p = 0;
-    return;
+    goto UseBuf;
   }
 
   // if we don't even have that then empty the string
+UseEmpty:
   g_prog.u.buf[0] = 0;
+
+UseBuf:
+  __program_executable_name = g_prog.u.buf;
 }
 
-void __InitProgramExecutableName(void) {
+static void InitProgramExecutableName(void) {
   int e = errno;
   InitProgramExecutableNameImpl();
   errno = e;
@@ -172,6 +182,6 @@ void __InitProgramExecutableName(void) {
  * Returns absolute path of program.
  */
 char *GetProgramExecutableName(void) {
-  cosmo_once(&g_prog.once, __InitProgramExecutableName);
-  return g_prog.u.buf;
+  cosmo_once(&g_prog.once, InitProgramExecutableName);
+  return __program_executable_name;
 }
