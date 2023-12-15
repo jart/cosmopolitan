@@ -97,14 +97,18 @@ static inline void InitProgramExecutableNameImpl(void) {
     }
     cmd[3] = -1;  // current process
     if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
-      goto UseBuf;
+      if (strcmp(b, "/usr/bin/ape")) {  // XX old loader; warn?
+        goto UseBuf;
+      }
     }
   }
   if (IsLinux()) {
     if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
         (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
       b[got] = 0;
-      goto UseBuf;
+      if (strcmp(b, "/usr/bin/ape")) {
+        goto UseBuf;
+      }
     }
   }
 
