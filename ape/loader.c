@@ -645,8 +645,8 @@ static char *Commandv(struct PathSearcher *ps, int os, const char *name,
 }
 
 __attribute__((__noreturn__)) static void Spawn(int os, const char *exe,
-                                                const char *path, int fd,
-                                                long *sp, unsigned long pagesz,
+                                                char *path, int fd, long *sp,
+                                                unsigned long pagesz,
                                                 struct ElfEhdr *e,
                                                 struct ElfPhdr *p) {
   long rc;
@@ -807,7 +807,7 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe,
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, const char *path, int fd, long *sp,
+                          const char *exe, char *path, int fd, long *sp,
                           long *auxv, unsigned long pagesz, int os) {
   long i, rc;
   unsigned size;
