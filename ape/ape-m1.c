@@ -325,10 +325,11 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
   if (!realpath(ps->path, buf)) {
-    Pexit(ps->path, -errno, "realpath");
+    return 0;
   }
   if ((n = strlen(buf)) >= sizeof(ps->path)) {
-    Pexit(buf, 0, "too long");
+    Perror(buf, 0, "too long");
+    return 0;
   }
   memcpy(ps->path, buf, n + 1);
   if (!access(ps->path, X_OK)) {
