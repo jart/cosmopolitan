@@ -5053,6 +5053,213 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
   return !!a;
 }
 
+#ifndef UNSECURE
+typedef struct TlsConnection_s {
+  mbedtls_ssl_context ctx;
+  struct TlsBio bio;
+} TlsConnection;
+
+/**
+ * Set up and perform the handshake for a new TLS Connection.
+ * 
+ * If setup fails, the socket will be closed.
+ * 
+ * @param conn A TLS connection struct. Caller is responsible for managing this memory.
+ * @param sock The file descriptor number for an open socket on which to negotiate TLS.
+ * @param hostname The hostname of the remote server, for certificate checks.
+ * @return 1 on success, 0 on failure.
+*/
+int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
+  int ret;
+  if (!sslinitialized) TlsInit();
+  // TODO(s0ph0s): Do I need to check any errors here?
+  mbedtls_ssl_setup(&(conn->ctx), &confcli);
+  if (!evadedragnetsurveillance) {
+    mbedtls_ssl_set_hostname(&(conn->ctx), hostname);
+  }
+  conn->bio.fd = sock;
+  conn->bio.a = 0;
+  conn->bio.b = 0;
+  conn->bio.c = -1;
+  mbedtls_ssl_set_bio(&(conn->ctx), &(conn->bio), TlsSend, 0, TlsRecvImpl);
+
+  while ((ret = mbedtls_ssl_handshake(&(conn->ctx)))) {
+    switch (ret) {
+      case MBEDTLS_ERR_SSL_WANT_READ:
+        break;
+      case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
+        LockInc(&shared->c.sslverifyfailed);
+        close(sock);
+        return ret;
+      default:
+        close(sock);
+        return ret;
+    }
+  }
+  LockInc(&shared->c.sslhandshakes);
+  VERBOSEF("(tlsc) shaken %s %s %s", hostname,
+            mbedtls_ssl_get_ciphersuite(&(conn->ctx)),
+            mbedtls_ssl_get_version(&(conn->ctx)));
+  return 1;
+}
+
+/**
+ * Write data to a TLS connection.
+ * 
+ * @param conn A TlsConnection that has alreday been setup.
+ * @param buf Arbitrary data that should be encrypted and sent on the connection.
+ * @param len The number of bytes of data in the buffer that should be sent.
+ * @return >0 if the write was successful, 0 or less if the write failed.
+ *   Values greater than 0 indicate the number of bytes written.
+*/
+#define TlsConnectionWrite(C, B, L) mbedtls_ssl_write(&(C->ctx), B, L)
+
+/**
+ * Read data from a TLS connection.
+ * 
+ * @param conn A TlsConnection that has alreday been setup.
+ * @param buf A buffer into which to write the received data.
+ * @param len The maximum number of bytes to read. `buf` must be at least this big.
+ * @return >0 if the read was successful, 0 or less if the read failed. Values greater
+ *   than 0 indicate the number of bytes read.
+*/
+#define TlsConnectionRead(C, B, L) mbedtls_ssl_read(&(C->ctx), B, L)
+
+/**
+ * Close a TLS connection.
+ * 
+ * @param conn A TlsConnection that should be closed. Note that the caller is responsible
+ *   for cleaning up the memory occupied by the TlsConnection.
+ * @return 1
+*/
+int TlsConnectionClose(TlsConnection *conn) {
+  // TODO(s0ph0s): loop on EINTR
+  close(conn->bio.fd);
+  mbedtls_ssl_free(&(conn->ctx));
+  return 1;
+}
+
+static TlsConnection *GetTlsConnection(lua_State *L) {
+  return luaL_checkudata(L, 1, "crypto.tls.Connection");
+}
+
+int LuaCryptoTlsConnectionRead(lua_State *L) {
+  int rc;
+  char *buf;
+  size_t got;
+  lua_Integer bufsiz;
+  bufsiz = luaL_optinteger(L, 2, BUFSIZ);
+  bufsiz = MIN(bufsiz, 0x7ffff00);
+  buf = _gc(malloc(bufsiz));
+  rc = TlsConnectionRead(GetTlsConnection(L), buf, bufsiz);
+  if (rc != -1) {
+    got = rc;
+    lua_pushlstring(L, buf, got);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int LuaCryptoTlsConnectionWrite(lua_State *L) {
+  size_t size;
+  const char *data;
+  data = luaL_checklstring(L, 2, &size);
+  return TlsConnectionWrite(GetTlsConnection(L), data, size);
+}
+
+int LuaCryptoTlsConnectionClose(lua_State *L) {
+  TlsConnectionClose(GetTlsConnection(L));
+  lua_pop(L, 1);
+  return 1;
+}
+
+static int LuaCryptoTlsConnectionTostring(lua_State *L) {
+  char s[128];
+  TlsConnection *conn;
+  conn = GetTlsConnection(L);
+  snprintf(s, sizeof(s), "crypto.tls.Connection(fd=%d)", conn->bio.fd);
+  lua_pushstring(L, s);
+  return 1;
+}
+
+static const luaL_Reg kLuaCryptoTlsConnectionMeth[] = {
+    {"read", LuaCryptoTlsConnectionRead},    //
+    {"write", LuaCryptoTlsConnectionWrite},  //
+    {"close", LuaCryptoTlsConnectionClose},  //
+    {0},                                     //
+};
+
+static const luaL_Reg kLuaCryptoTlsConnectionMeta[] = {
+    {"__gc", LuaCryptoTlsConnectionClose},           //
+    {"__tostring", LuaCryptoTlsConnectionTostring},  //
+    {"__repr", LuaCryptoTlsConnectionTostring},      //
+    {0},                                             //
+};
+
+static void LuaCryptoTlsConnectionObj(lua_State *L) {
+  luaL_newmetatable(L, "crypto.tls.Connection");
+  luaL_setfuncs(L, kLuaCryptoTlsConnectionMeta, 0);
+  luaL_newlibtable(L, kLuaCryptoTlsConnectionMeth);
+  luaL_setfuncs(L, kLuaCryptoTlsConnectionMeth, 0);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+}
+
+int LuaCryptoTlsWrap(lua_State *L) {
+  TlsConnection *conn;
+  int sock, rc;
+  const char *hostname;
+  conn = lua_newuserdata(L, sizeof(TlsConnection));
+  luaL_setmetatable(L, "crypto.tls.Connection");
+  sock = luaL_checkinteger(L, 1);
+  hostname = luaL_checkstring(L, 2);
+  rc = TlsConnectionSetup(conn, sock, hostname);
+  if (rc > 0) {
+    return 1;
+  } else if (rc == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
+    lua_pop(L, 1);
+    return LuaNilTlsError(
+      L, _gc(DescribeSslVerifyFailure(conn->ctx.session_negotiate->verify_result)), rc
+    );
+  } else {
+    lua_pop(L, 1);
+    return LuaNilTlsError(L, "handshake", rc);
+  }
+}
+
+static const luaL_Reg kLuaCryptoTls[] = {
+    {"wrap", LuaCryptoTlsWrap},  //
+    {0},                         //
+};
+
+int LuaCryptoTls(lua_State *L) {
+  luaL_newlib(L, kLuaCryptoTls);
+  return 1;
+}
+
+static const luaL_Reg kLuaCrypto[] = {
+    {"tls", LuaCryptoTls},  //
+    {0},                    //
+};
+
+void lua_settables(lua_State *L, const luaL_Reg *l) {
+  for (; l->name != NULL; l++) {
+    l->func(L);
+    lua_setfield(L, -2, l->name);
+  }
+}
+
+int LuaCrypto(lua_State *L) {
+  // This is done via tables so that other kinds of cryptography functions
+  // can be added in the future.
+  luaL_newlibtable(L, kLuaCrypto);
+  lua_settables(L, kLuaCrypto);
+  LuaCryptoTlsConnectionObj(L);
+  return 1;
+}
+#endif /* ifndef UNSECURE */
+
 // <SORTED>
 // list of functions that can't be run from the repl
 static const char *const kDontAutoComplete[] = {
@@ -5317,6 +5524,9 @@ static const luaL_Reg kLuaLibs[] = {
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
+#ifndef UNSECURE
+    {"crypto", LuaCrypto},           //
+#endif
 };
 
 static void LuaSetArgv(lua_State *L) {
