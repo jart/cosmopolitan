@@ -1,0 +1,34 @@
+# Cosmopolitan zsh make helper.
+# Setup (in ~/.zshrc, for instance):
+#    fpath+=($COSMO/tool/zsh)
+#    autoload -Uz mmake
+# e.g.:
+#    mmake tiny -j8 ape/ape.elf
+local mode
+case $1 in
+  (m|MODE)=*)
+    mode=${1#*=}; shift ;;
+  aarch64|x86_64|aarch64-(zero|tiny)|x86_64-tiny) ;&
+  zero|fastbuild|opt|optlinux|rel|asan|dbg|sysv)  ;&
+  tiny(|linux(|bsd)|sysv|nowin)|nox87|llvm|ansi)
+    mode=$1; shift ;;
+  *)
+    mode=${MODE:-${m}} ;;
+esac
+[[ -z $mode ]] && {
+  local arch=$(uname -m)
+  case $arch in
+    arm64|aarch64)  mode=aarch64  ;;
+  esac
+}
+local -a flags
+while (( $# > 0 )); do
+  case $1 in
+    -*|*=*) flags+=($1); shift ;;
+    *) break ;;
+  esac
+done
+local make
+[[ -x /opt/cosmocc/bin/make ]] && make=/opt/cosmocc/bin/make
+[[ -z $make ]] && make=build/bootstrap/make.com
+$make $flags MODE=$mode ${(@)@/#/o/$mode/}
