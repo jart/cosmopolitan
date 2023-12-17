@@ -23,8 +23,7 @@ esac
 }
 local -a targs
 local -a flags
-whence nproc >/dev/null 2>&1 || autoload -Uz nproc
-local j=-j$(nproc)
+local j
 while (( $# > 0 )); do
   case $1 in
     -j*)    j=$1;         shift ;;
@@ -33,6 +32,10 @@ while (( $# > 0 )); do
     *)      targs+=($1);  shift ;;
   esac
 done
+[[ -z $j ]] && {
+  whence nproc >/dev/null 2>&1 || autoload -Uz nproc
+  j=-j$(nproc)
+}
 local make
 [[ -x /opt/cosmocc/bin/make ]] && make=/opt/cosmocc/bin/make
 [[ -z $make ]] && make=build/bootstrap/make.com
