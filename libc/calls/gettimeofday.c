@@ -38,8 +38,8 @@
  * @param tz is completely ignored
  * @return 0 on success, or -1 w/ errno
  * @raise EFAULT if `tv` points to invalid memory
- * @see	clock_gettime() for nanosecond precision
- * @see	strftime() for string formatting
+ * @see clock_gettime() for nanosecond precision
+ * @see strftime() for string formatting
  * @asyncsignalsafe
  * @vforksafe
  */

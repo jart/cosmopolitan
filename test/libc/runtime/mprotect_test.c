@@ -53,7 +53,7 @@ static const char kRet31337[] = {
 };
 #elif defined(__aarch64__)
 static const uint32_t kRet31337[] = {
-    0x528f4d20,  // mov	w0,#31337
+    0x528f4d20,  // mov w0,#31337
     0xd65f03c0,  // ret
 };
 #else

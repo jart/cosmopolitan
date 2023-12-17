@@ -157,14 +157,14 @@
 
 /*
  * The follow should be set to reflect the type of system you have:
- *	JOBS -> 1 if you have Berkeley job control, 0 otherwise.
- *	SHORTNAMES -> 1 if your linker cannot handle long names.
- *	define BSD if you are running 4.2 BSD or later.
- *	define SYSV if you are running under System V.
- *	define DEBUG=1 to compile in debugging ('set -o debug' to turn on)
- *	define DEBUG=2 to compile in and turn on debugging.
- *	define DO_SHAREDVFORK to indicate that vfork(2) shares its address
- *	       with its parent.
+ *  JOBS -> 1 if you have Berkeley job control, 0 otherwise.
+ *  SHORTNAMES -> 1 if your linker cannot handle long names.
+ *  define BSD if you are running 4.2 BSD or later.
+ *  define SYSV if you are running under System V.
+ *  define DEBUG=1 to compile in debugging ('set -o debug' to turn on)
+ *  define DEBUG=2 to compile in and turn on debugging.
+ *  define DO_SHAREDVFORK to indicate that vfork(2) shares its address
+ *         with its parent.
  *
  * When debugging is on, debugging info will be written to ./trace and
  * a quit signal will generate a core dump.
@@ -6604,10 +6604,10 @@ static struct job *growjobtab(void) {
  * own process group.  Jp is a job structure that the job is to be added to.
  * N is the command that will be evaluated by the child.  Both jp and n may
  * be NULL.  The mode parameter can be one of the following:
- *	FORK_FG - Fork off a foreground process.
- *	FORK_BG - Fork off a background process.
- *	FORK_NOJOB - Like FORK_FG, but don't give the process its own
- *		     process group even if job control is on.
+ *  FORK_FG - Fork off a foreground process.
+ *  FORK_BG - Fork off a background process.
+ *  FORK_NOJOB - Like FORK_FG, but don't give the process its own
+ *               process group even if job control is on.
  *
  * When job control is turned off, background processes have their standard
  * input redirected to /dev/null (except for the second and later processes
@@ -8403,10 +8403,10 @@ static void nlnoprompt(void) {
 /*
  * Read the next input token.
  * If the token is a word, we set backquotelist to the list of cmds in
- *	backquotes.  We set quoteflag to true if any part of the word was
- *	quoted.
+ *  backquotes.  We set quoteflag to true if any part of the word was
+ *  quoted.
  * If the token is TREDIR, then we set redirnode to a structure containing
- *	the redirection.
+ *  the redirection.
  *
  * [Change comment:  here documents and internal procedures]
  * [Readtoken shouldn't have any arguments.  Perhaps we should make the
@@ -9767,7 +9767,7 @@ out:
 
 /*
  * Print SysV echo(1) style escape string
- *	Halts processing string if a \c escape is encountered.
+ *  Halts processing string if a \c escape is encountered.
  */
 static int conv_escape_str(char *str, char **sp) {
   int c;
@@ -9941,10 +9941,10 @@ static int echocmd(int argc, char **argv) {
  */
 
 /* test(1) accepts the following grammar:
-        oexpr	::= aexpr | aexpr "-o" oexpr ;
-        aexpr	::= nexpr | nexpr "-a" aexpr ;
-        nexpr	::= primary | "!" primary
-        primary	::= unary-operator operand
+        oexpr ::= aexpr | aexpr "-o" oexpr ;
+        aexpr ::= nexpr | nexpr "-a" aexpr ;
+        nexpr ::= primary | "!" primary
+        primary ::= unary-operator operand
                 | operand binary-operator operand
                 | operand
                 | "(" oexpr ")"

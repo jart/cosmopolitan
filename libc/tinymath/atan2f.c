@@ -55,7 +55,7 @@ biased_exponent (float f)
   if (UNLIKELY (ex == 0))
     {
       /* Subnormal case - we still need to get the exponent right for subnormal
-	 numbers as division may take us back inside the normal range.  */
+         numbers as division may take us back inside the normal range.  */
       return ex - __builtin_clz (fi << 9);
     }
   return ex;
@@ -64,7 +64,7 @@ biased_exponent (float f)
 /* Fast implementation of scalar atan2f. Largest observed error is
    2.88ulps in [99.0, 101.0] x [99.0, 101.0]:
    atan2f(0x1.9332d8p+6, 0x1.8cb6c4p+6) got 0x1.964646p-1
-				       want 0x1.964640p-1.  */
+                                       want 0x1.964640p-1.  */
 float
 atan2f (float y, float x)
 {
@@ -96,15 +96,15 @@ atan2f (float y, float x)
   if (UNLIKELY (iay == 0 || (exp_diff >= POLY_UFLOW_BOUND && m >= 2)))
     {
       switch (m)
-	{
-	case 0:
-	case 1:
-	  return y; /* atan(+-0,+anything)=+-0.  */
-	case 2:
-	  return Pi; /* atan(+0,-anything) = pi.  */
-	case 3:
-	  return -Pi; /* atan(-0,-anything) =-pi.  */
-	}
+        {
+        case 0:
+        case 1:
+          return y; /* atan(+-0,+anything)=+-0.  */
+        case 2:
+          return Pi; /* atan(+0,-anything) = pi.  */
+        case 3:
+          return -Pi; /* atan(-0,-anything) =-pi.  */
+        }
     }
   /* Special case for (x, y) either on or very close to the y axis. Either x =
      0, or x is tiny and y is huge (difference in exponents >=
@@ -116,33 +116,33 @@ atan2f (float y, float x)
   if (iax == 0x7f800000)
     {
       if (iay == 0x7f800000)
-	{
-	  switch (m)
-	    {
-	    case 0:
-	      return PiOver4; /* atan(+INF,+INF).  */
-	    case 1:
-	      return -PiOver4; /* atan(-INF,+INF).  */
-	    case 2:
-	      return 3.0f * PiOver4; /* atan(+INF,-INF).  */
-	    case 3:
-	      return -3.0f * PiOver4; /* atan(-INF,-INF).  */
-	    }
-	}
+        {
+          switch (m)
+            {
+            case 0:
+              return PiOver4; /* atan(+INF,+INF).  */
+            case 1:
+              return -PiOver4; /* atan(-INF,+INF).  */
+            case 2:
+              return 3.0f * PiOver4; /* atan(+INF,-INF).  */
+            case 3:
+              return -3.0f * PiOver4; /* atan(-INF,-INF).  */
+            }
+        }
       else
-	{
-	  switch (m)
-	    {
-	    case 0:
-	      return 0.0f; /* atan(+...,+INF).  */
-	    case 1:
-	      return -0.0f; /* atan(-...,+INF).  */
-	    case 2:
-	      return Pi; /* atan(+...,-INF).  */
-	    case 3:
-	      return -Pi; /* atan(-...,-INF).  */
-	    }
-	}
+        {
+          switch (m)
+            {
+            case 0:
+              return 0.0f; /* atan(+...,+INF).  */
+            case 1:
+              return -0.0f; /* atan(-...,+INF).  */
+            case 2:
+              return Pi; /* atan(+...,-INF).  */
+            case 3:
+              return -Pi; /* atan(-...,-INF).  */
+            }
+        }
     }
   /* y is INF.  */
   if (iay == 0x7f800000)
@@ -164,7 +164,7 @@ atan2f (float y, float x)
   if (UNLIKELY (m < 2 && exp_diff >= POLY_UFLOW_BOUND))
     {
       /* If (x, y) is very close to x axis and x is positive, the polynomial
-	 will underflow and evaluate to z.  */
+         will underflow and evaluate to z.  */
       ret = z;
     }
   else
