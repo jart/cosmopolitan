@@ -53,7 +53,7 @@ static void cleanup(void *p)
 	struct pollfd *pfd = p;
 	for (int i=0; pfd[i].fd >= -1; i++)
 		if (pfd[i].fd >= 0)
-                        close(pfd[i].fd);
+			close(pfd[i].fd);
 }
 
 static unsigned long mtime()
@@ -299,51 +299,51 @@ int __res_msend_rc(int nqueries, const unsigned char *const *queries,
 		}
 
 		for (i=0; i<nqueries; i++) {
-                        if (pfd[i].revents & POLLOUT) {
-                                struct msghdr mh = {
-                                        .msg_iovlen = 2,
-                                        .msg_iov = (struct iovec [2]){
-                                                { .iov_base = (uint8_t[]){ qlens[i]>>8, qlens[i] }, .iov_len = 2 },
-                                                { .iov_base = (void *)queries[i], .iov_len = qlens[i] } }
-                                };
-                                step_mh(&mh, qpos[i]);
-                                r = sendmsg(pfd[i].fd, &mh, MSG_NOSIGNAL);
-                                if (r < 0) goto out;
-                                qpos[i] += r;
-                                if (qpos[i] == qlens[i]+2)
-                                        pfd[i].events = POLLIN;
-                        }
-                }
+			if (pfd[i].revents & POLLOUT) {
+				struct msghdr mh = {
+					.msg_iovlen = 2,
+					.msg_iov = (struct iovec [2]){
+						{ .iov_base = (uint8_t[]){ qlens[i]>>8, qlens[i] }, .iov_len = 2 },
+						{ .iov_base = (void *)queries[i], .iov_len = qlens[i] } }
+				};
+				step_mh(&mh, qpos[i]);
+				r = sendmsg(pfd[i].fd, &mh, MSG_NOSIGNAL);
+				if (r < 0) goto out;
+				qpos[i] += r;
+				if (qpos[i] == qlens[i]+2)
+					pfd[i].events = POLLIN;
+			}
+		}
 
 		for (i=0; i<nqueries; i++) {
-                        if (pfd[i].revents & POLLIN) {
-                                struct msghdr mh = {
-                                        .msg_iovlen = 2,
-                                        .msg_iov = (struct iovec [2]){
-                                                { .iov_base = alen_buf[i], .iov_len = 2 },
-                                                { .iov_base = answers[i], .iov_len = asize } }
-                                };
-                                step_mh(&mh, apos[i]);
-                                r = recvmsg(pfd[i].fd, &mh, 0);
-                                if (r <= 0) goto out;
-                                apos[i] += r;
-                                if (apos[i] < 2) continue;
-                                int alen = alen_buf[i][0]*256 + alen_buf[i][1];
-                                if (alen < 13) goto out;
-                                if (apos[i] < alen+2 && apos[i] < asize+2)
-                                        continue;
-                                int rcode = answers[i][3] & 15;
-                                if (rcode != 0 && rcode != 3)
-                                        goto out;
+			if (pfd[i].revents & POLLIN) {
+				struct msghdr mh = {
+					.msg_iovlen = 2,
+					.msg_iov = (struct iovec [2]){
+						{ .iov_base = alen_buf[i], .iov_len = 2 },
+						{ .iov_base = answers[i], .iov_len = asize } }
+				};
+				step_mh(&mh, apos[i]);
+				r = recvmsg(pfd[i].fd, &mh, 0);
+				if (r <= 0) goto out;
+				apos[i] += r;
+				if (apos[i] < 2) continue;
+				int alen = alen_buf[i][0]*256 + alen_buf[i][1];
+				if (alen < 13) goto out;
+				if (apos[i] < alen+2 && apos[i] < asize+2)
+					continue;
+				int rcode = answers[i][3] & 15;
+				if (rcode != 0 && rcode != 3)
+					goto out;
 
-                                /* Storing the length here commits the accepted answer.
-                                 * Immediately close TCP socket so as not to consume
-                                 * resources we no longer need. */
-                                alens[i] = alen;
-                                close(pfd[i].fd);
-                                pfd[i].fd = -1;
-                        }
-                }
+				/* Storing the length here commits the accepted answer.
+				 * Immediately close TCP socket so as not to consume
+				 * resources we no longer need. */
+				alens[i] = alen;
+				close(pfd[i].fd);
+				pfd[i].fd = -1;
+			}
+		}
 	}
 out:
 	pthread_cleanup_pop(1);

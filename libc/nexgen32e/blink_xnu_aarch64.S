@@ -36,7 +36,7 @@ blink_xnu_aarch64:
 	.endobj	blink_xnu_aarch64,globl
 blink_xnu_aarch64_size = . - blink_xnu_aarch64
 
-        .section .emush,"a",@progbits
+	.section .emush,"a",@progbits
 	.ascii	"if [ \"$s\" = Darwin ] && [ \"$m\" = arm64 ]; then\n"
 	.ascii	"if ! [ -x \"$e\" ]; then\n"
 	.ascii	"echo \"extracting blink-darwin-aarch64 to ${e}\" >&2\n"
