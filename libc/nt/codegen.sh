@@ -1,5 +1,5 @@
 /usr/bin/env echo ' -*-mode:sh;indent-tabs-mode:nil;tab-width:8;coding:utf-8-*-│
-│ vi: set et ft=sh ts=2 sts=2 sw=2 fenc=utf-8                              :vi │
+│ vi: set et ft=sh ts=8 sts=2 sw=2 fenc=utf-8                              :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -61,9 +61,9 @@ imp() {
 thunk() {
   printf '
 	.text.windows
-        .ftrace1
+	.ftrace1
 %s:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
@@ -81,9 +81,9 @@ thunk() {
 thunk0() {
   printf '
 	.text.windows
-        .ftrace1
+	.ftrace1
 %s:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
@@ -102,9 +102,9 @@ thunk0() {
 thunk1() {
   printf '
 	.text.windows
-        .ftrace1
+	.ftrace1
 %s:
-        .ftrace2
+	.ftrace2
 #ifdef __x86_64__
 	push	%%rbp
 	mov	%%rsp,%%rbp
