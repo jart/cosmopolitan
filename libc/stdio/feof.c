@@ -22,7 +22,7 @@
  * Returns true if stream is in end-of-file state.
  *
  * @param f is file object stream pointer
- * @see	feof_unlocked()
+ * @see feof_unlocked()
  */
 int feof(FILE *f) {
   int rc;

@@ -37,5 +37,5 @@ asm(".include \"libc/disclaimer.inc\"");
    algorithm, see tools/log1pf.sollya for details.  */
 const struct log1pf_data __log1pf_data
   = {.coeffs = {-0x1p-1f, 0x1.5555aap-2f, -0x1.000038p-2f, 0x1.99675cp-3f,
-		-0x1.54ef78p-3f, 0x1.28a1f4p-3f, -0x1.0da91p-3f, 0x1.abcb6p-4f,
-		-0x1.6f0d5ep-5f}};
+                -0x1.54ef78p-3f, 0x1.28a1f4p-3f, -0x1.0da91p-3f, 0x1.abcb6p-4f,
+                -0x1.6f0d5ep-5f}};

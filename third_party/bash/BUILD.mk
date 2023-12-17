@@ -1,5 +1,5 @@
 #-*-mode:bashfile-gbash;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#── vi: set et ft=bash ts=8 sw=8 fenc=utf-8 :vi ──────────────────────┘
+#── vi: set noet ft=bash ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_BASH
 

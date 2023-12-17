@@ -77,7 +77,7 @@ const sincos_t __sincosf_table[2] =
    only 8 new bits are added per entry, making the table 4 times larger.  */
 const uint32_t __inv_pio4[24] =
 {
-  0xa2,       0xa2f9,	  0xa2f983,   0xa2f9836e,
+  0xa2,       0xa2f9,     0xa2f983,   0xa2f9836e,
   0xf9836e4e, 0x836e4e44, 0x6e4e4415, 0x4e441529,
   0x441529fc, 0x1529fc27, 0x29fc2757, 0xfc2757d1,
   0x2757d1f5, 0x57d1f534, 0xd1f534dd, 0xf534ddc0,
