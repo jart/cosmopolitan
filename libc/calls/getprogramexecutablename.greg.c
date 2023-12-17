@@ -60,6 +60,10 @@ static int TryPath(const char *q, int com) {
   int c, f_ok;
   if ((f_ok = !sys_faccessat(AT_FDCWD, q, F_OK, 0))) {
     com = 0;
+  } else {
+    if (!com) {
+      return 0;
+    }
   }
   if (*q != '/') {
     if (q[0] == '.' && q[1] == '/') {
@@ -80,7 +84,6 @@ static int TryPath(const char *q, int com) {
     *p = 0;
     return 1;
   }
-  if (!com) return 0;
   p = WRITE32LE(p, READ32LE(".com"));
   *p = 0;
   return !sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0);
@@ -159,9 +162,8 @@ static inline void InitProgramExecutableNameImpl(void) {
 
   // Try what the loader supplied first. Fall back to argv[0],
   // then argv[0].com, then $_, then $_.com.
-  if (TryPath(__program_executable_name, 0) ||
-      TryPath(__argv[0], 0) || TryPath(__argv[0], 1) ||
-      TryPath((q = __getenv(__envp, "_").s), 0) || TryPath(q, 1)) {
+  if (TryPath(__program_executable_name, 0) || TryPath(__argv[0], 1) ||
+      TryPath(__getenv(__envp, "_").s, 1)) {
     goto UseBuf;
   }
 
