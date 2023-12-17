@@ -28,7 +28,9 @@ while (( $# > 0 )); do
   case $1 in
     -j*)        j=$1;                     shift ;;
     -*|*=*)     flags+=($1);              shift ;;
-    o/$mode/*)  targs+=($1);              shift ;;
+    all|o|bins|check|test|depend|tags|aarch64)  ;&
+    clean|toolchain|clean_toolchain|o/$mode/*)
+                targs+=($1);              shift ;;
     o/*)        targs+=(o/$mode/${1#*/}); shift ;;
     *)          targs+=(o/$mode/$1);      shift ;;
   esac
