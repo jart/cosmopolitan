@@ -3,7 +3,7 @@
 #    fpath+=($COSMO/tool/zsh)
 #    autoload -Uz mmake
 # e.g.:
-#    mmake tiny -j8 ape/ape.elf
+#    mmake tiny ape/ape.elf
 local mode
 case $1 in
   (m|MODE)=*)
@@ -26,10 +26,11 @@ local -a flags
 local j
 while (( $# > 0 )); do
   case $1 in
-    -j*)    j=$1;         shift ;;
-    -*|*=*) flags+=($1);  shift ;;
-    o/*)    flags+=($1);  shift ;;  # cheat; passthru
-    *)      targs+=($1);  shift ;;
+    -j*)        j=$1;                     shift ;;
+    -*|*=*)     flags+=($1);              shift ;;
+    o/$mode/*)  targs+=($1);              shift ;;
+    o/*)        targs+=(o/$mode/${1#*/}); shift ;;
+    *)          targs+=(o/$mode/$1);      shift ;;
   esac
 done
 [[ -z $j ]] && {
@@ -40,4 +41,4 @@ local make
 [[ -x /opt/cosmocc/bin/make ]] && make=/opt/cosmocc/bin/make
 [[ -z $make ]] && make=build/bootstrap/make.com
 ( set -x
-  exec $make $j $flags MODE=$mode ${(@)targs/#/o/$mode/} )
+  exec $make $j $flags MODE=$mode $targs )
