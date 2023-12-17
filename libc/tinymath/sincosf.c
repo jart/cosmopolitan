@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
@@ -52,14 +52,14 @@ sincosf (float y, float *sinp, float *cosp)
       double x2 = x * x;
 
       if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-12f)))
-        {
-          if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-126f)))
-            /* Force underflow for tiny y.  */
-            FORCE_EVAL (x2);
-          *sinp = y;
-          *cosp = 1.0f;
-          return;
-        }
+	{
+	  if (UNLIKELY (abstop12 (y) < abstop12 (0x1p-126f)))
+	    /* Force underflow for tiny y.  */
+	    FORCE_EVAL (x2);
+	  *sinp = y;
+	  *cosp = 1.0f;
+	  return;
+	}
 
       sincosf_poly (x, x2, p, 0, sinp, cosp);
     }
@@ -71,7 +71,7 @@ sincosf (float y, float *sinp, float *cosp)
       s = p->sign[n & 3];
 
       if (n & 2)
-        p = &__sincosf_table[1];
+	p = &__sincosf_table[1];
 
       sincosf_poly (x * s, x * x, p, n, sinp, cosp);
     }
@@ -86,7 +86,7 @@ sincosf (float y, float *sinp, float *cosp)
       s = p->sign[(n + sign) & 3];
 
       if ((n + sign) & 2)
-        p = &__sincosf_table[1];
+	p = &__sincosf_table[1];
 
       sincosf_poly (x * s, x * x, p, n, sinp, cosp);
     }
@@ -96,8 +96,8 @@ sincosf (float y, float *sinp, float *cosp)
       *sinp = *cosp = y - y;
 #if WANT_ERRNO
       /* Needed to set errno for +-Inf, the add is a hack to work
-         around a gcc register allocation issue: just passing y
-         affects code generation in the fast path.  */
+	 around a gcc register allocation issue: just passing y
+	 affects code generation in the fast path.  */
       __math_invalidf (y + y);
 #endif
     }

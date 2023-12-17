@@ -81,11 +81,11 @@ expm1f(float x)
 	/* filter out huge and non-finite argument */
 	if(hx >= 0x4195b844) {			/* if |x|>=27*ln2 */
 	    if(hx >= 0x42b17218) {		/* if |x|>=88.721... */
-		if(hx>0x7f800000)
+                if(hx>0x7f800000)
 		    return x+x; 	 /* NaN */
 		if(hx==0x7f800000)
 		    return (xsb==0)? x:-1.0;/* exp(+-inf)={inf,-1} */
-		if(x > o_threshold) return huge*huge; /* overflow */
+	        if(x > o_threshold) return huge*huge; /* overflow */
 	    }
 	    if(xsb!=0) { /* x < -27*ln2, return -1.0 with inexact */
 		if(x+tiny<(float)0.0)	/* raise inexact */
@@ -132,14 +132,14 @@ expm1f(float x)
 	       	else 	      return  one+(float)2.0*(x-e);
 	    }
 	    if (k <= -2 || k>56) {   /* suffice to return exp(x)-1 */
-		y = one-(e-x);
+	        y = one-(e-x);
 		if (k == 128) y = y*2.0F*0x1p127F;
 		else y = y*twopk;
-		return y-one;
+	        return y-one;
 	    }
 	    t = one;
 	    if(k<23) {
-		SET_FLOAT_WORD(t,0x3f800000 - (0x1000000>>k)); /* t=1-2^-k */
+	        SET_FLOAT_WORD(t,0x3f800000 - (0x1000000>>k)); /* t=1-2^-k */
 	       	y = t-(e-x);
 		y = y*twopk;
 	   } else {

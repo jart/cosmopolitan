@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
+│ vi: set et ft=c ts=8 sts=2 sw=2 fenc=utf-8                               :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Optimized Routines                                                          │
@@ -105,35 +105,35 @@ log1pf (float x)
 
   /* Handle special cases first.  */
   if (UNLIKELY (ia12 >= 0x7f8 || ix >= 0xbf800000 || ix == 0x80000000
-                || e <= TINY_BOUND_BEXP))
+		|| e <= TINY_BOUND_BEXP))
     {
       if (ix == 0xff800000)
-        {
-          /* x == -Inf => log1pf(x) =  NaN.  */
-          return NAN;
-        }
+	{
+	  /* x == -Inf => log1pf(x) =  NaN.  */
+	  return NAN;
+	}
       if ((ix == 0x7f800000 || e <= TINY_BOUND_BEXP) && ia12 <= 0x7f8)
-        {
-          /* |x| < TinyBound => log1p(x)  =  x.
-              x ==       Inf => log1pf(x) = Inf.  */
-          return x;
-        }
+	{
+	  /* |x| < TinyBound => log1p(x)  =  x.
+	      x ==       Inf => log1pf(x) = Inf.  */
+	  return x;
+	}
       if (ix == 0xbf800000)
-        {
-          /* x == -1.0 => log1pf(x) = -Inf.  */
-          return __math_divzerof (-1);
-        }
+	{
+	  /* x == -1.0 => log1pf(x) = -Inf.  */
+	  return __math_divzerof (-1);
+	}
       if (ia12 >= 0x7f8)
-        {
-          /* x == +/-NaN => log1pf(x) = NaN.  */
-          return __math_invalidf (asfloat (ia));
-        }
+	{
+	  /* x == +/-NaN => log1pf(x) = NaN.  */
+	  return __math_invalidf (asfloat (ia));
+	}
       /* x <    -1.0 => log1pf(x) = NaN.  */
       return __math_invalidf (x);
     }
 
   /* With x + 1 = t * 2^k (where t = m + 1 and k is chosen such that m
-                           is in [-0.25, 0.5]):
+			   is in [-0.25, 0.5]):
      log1p(x) = log(t) + log(2^k) = log1p(m) + k*log(2).
 
      We approximate log1p(m) with a polynomial, then scale by
@@ -144,8 +144,8 @@ log1pf (float x)
   if (ix <= 0x3f000000 || ia <= 0x3e800000)
     {
       /* If x is in [-0.25, 0.5] then we can shortcut all the logic
-         below, as k = 0 and m = x.  All we need is to return the
-         polynomial.  */
+	 below, as k = 0 and m = x.  All we need is to return the
+	 polynomial.  */
       return eval_poly (x, e);
     }
 
@@ -154,10 +154,10 @@ log1pf (float x)
   /* k is used scale the input. 0x3f400000 is chosen as we are trying to
      reduce x to the range [-0.25, 0.5]. Inside this range, k is 0.
      Outside this range, if k is reinterpreted as (NOT CONVERTED TO) float:
-         let k = sign * 2^p      where sign = -1 if x < 0
-                                               1 otherwise
-         and p is a negative integer whose magnitude increases with the
-         magnitude of x.  */
+	 let k = sign * 2^p      where sign = -1 if x < 0
+					       1 otherwise
+	 and p is a negative integer whose magnitude increases with the
+	 magnitude of x.  */
   int k = (asuint (m) - 0x3f400000) & 0xff800000;
 
   /* By using integer arithmetic, we obtain the necessary scaling by
