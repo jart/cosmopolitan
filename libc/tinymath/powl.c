@@ -292,229 +292,229 @@ static long double powil(long double, int);
 
 long double powl(long double x, long double y)
 {
-	/* double F, Fa, Fb, G, Ga, Gb, H, Ha, Hb */
-	int i, nflg, iyflg, yoddint;
-	long e;
-	volatile long double z=0;
-	long double w=0, W=0, Wa=0, Wb=0, ya=0, yb=0, u=0;
+  /* double F, Fa, Fb, G, Ga, Gb, H, Ha, Hb */
+  int i, nflg, iyflg, yoddint;
+  long e;
+  volatile long double z=0;
+  long double w=0, W=0, Wa=0, Wb=0, ya=0, yb=0, u=0;
 
-	/* make sure no invalid exception is raised by nan comparision */
-	if (isnan(x)) {
-		if (!isnan(y) && y == 0.0)
-			return 1.0;
-		return x;
-	}
-	if (isnan(y)) {
-		if (x == 1.0)
-			return 1.0;
-		return y;
-	}
-	if (x == 1.0)
-		return 1.0; /* 1**y = 1, even if y is nan */
-	if (x == -1.0 && !isfinite(y))
-		return 1.0; /* -1**inf = 1 */
-	if (y == 0.0)
-		return 1.0; /* x**0 = 1, even if x is nan */
-	if (y == 1.0)
-		return x;
-	if (y >= LDBL_MAX) {
-		if (x > 1.0 || x < -1.0)
-			return INFINITY;
-		if (x != 0.0)
-			return 0.0;
-	}
-	if (y <= -LDBL_MAX) {
-		if (x > 1.0 || x < -1.0)
-			return 0.0;
-		if (x != 0.0 || y == -INFINITY)
-			return INFINITY;
-	}
-	if (x >= LDBL_MAX) {
-		if (y > 0.0)
-			return INFINITY;
-		return 0.0;
-	}
+  /* make sure no invalid exception is raised by nan comparision */
+  if (isnan(x)) {
+    if (!isnan(y) && y == 0.0)
+      return 1.0;
+    return x;
+  }
+  if (isnan(y)) {
+    if (x == 1.0)
+      return 1.0;
+    return y;
+  }
+  if (x == 1.0)
+    return 1.0; /* 1**y = 1, even if y is nan */
+  if (x == -1.0 && !isfinite(y))
+    return 1.0; /* -1**inf = 1 */
+  if (y == 0.0)
+    return 1.0; /* x**0 = 1, even if x is nan */
+  if (y == 1.0)
+    return x;
+  if (y >= LDBL_MAX) {
+    if (x > 1.0 || x < -1.0)
+      return INFINITY;
+    if (x != 0.0)
+      return 0.0;
+  }
+  if (y <= -LDBL_MAX) {
+    if (x > 1.0 || x < -1.0)
+      return 0.0;
+    if (x != 0.0 || y == -INFINITY)
+      return INFINITY;
+  }
+  if (x >= LDBL_MAX) {
+    if (y > 0.0)
+      return INFINITY;
+    return 0.0;
+  }
 
-	w = floorl(y);
+  w = floorl(y);
 
-	/* Set iyflg to 1 if y is an integer. */
-	iyflg = 0;
-	if (w == y)
-		iyflg = 1;
+  /* Set iyflg to 1 if y is an integer. */
+  iyflg = 0;
+  if (w == y)
+    iyflg = 1;
 
-	/* Test for odd integer y. */
-	yoddint = 0;
-	if (iyflg) {
-		ya = fabsl(y);
-		ya = floorl(0.5 * ya);
-		yb = 0.5 * fabsl(w);
-		if( ya != yb )
-			yoddint = 1;
-	}
+  /* Test for odd integer y. */
+  yoddint = 0;
+  if (iyflg) {
+    ya = fabsl(y);
+    ya = floorl(0.5 * ya);
+    yb = 0.5 * fabsl(w);
+    if( ya != yb )
+      yoddint = 1;
+  }
 
-	if (x <= -LDBL_MAX) {
-		if (y > 0.0) {
-			if (yoddint)
-				return -INFINITY;
-			return INFINITY;
-		}
-		if (y < 0.0) {
-			if (yoddint)
-				return -0.0;
-			return 0.0;
-		}
-	}
-	nflg = 0; /* (x<0)**(odd int) */
-	if (x <= 0.0) {
-		if (x == 0.0) {
-			if (y < 0.0) {
-				if (signbit(x) && yoddint)
-					/* (-0.0)**(-odd int) = -inf, divbyzero */
-					return -1.0/0.0;
-				/* (+-0.0)**(negative) = inf, divbyzero */
-				return 1.0/0.0;
-			}
-			if (signbit(x) && yoddint)
-				return -0.0;
-			return 0.0;
-		}
-		if (iyflg == 0)
-			return (x - x) / (x - x); /* (x<0)**(non-int) is NaN */
-		/* (x<0)**(integer) */
-		if (yoddint)
-			nflg = 1; /* negate result */
-		x = -x;
-	}
-	/* (+integer)**(integer)  */
-	if (iyflg && floorl(x) == x && fabsl(y) < 32768.0) {
-		w = powil(x, (int)y);
-		return nflg ? -w : w;
-	}
+  if (x <= -LDBL_MAX) {
+    if (y > 0.0) {
+      if (yoddint)
+        return -INFINITY;
+      return INFINITY;
+    }
+    if (y < 0.0) {
+      if (yoddint)
+        return -0.0;
+      return 0.0;
+    }
+  }
+  nflg = 0; /* (x<0)**(odd int) */
+  if (x <= 0.0) {
+    if (x == 0.0) {
+      if (y < 0.0) {
+        if (signbit(x) && yoddint)
+          /* (-0.0)**(-odd int) = -inf, divbyzero */
+          return -1.0/0.0;
+        /* (+-0.0)**(negative) = inf, divbyzero */
+        return 1.0/0.0;
+      }
+      if (signbit(x) && yoddint)
+        return -0.0;
+      return 0.0;
+    }
+    if (iyflg == 0)
+      return (x - x) / (x - x); /* (x<0)**(non-int) is NaN */
+    /* (x<0)**(integer) */
+    if (yoddint)
+      nflg = 1; /* negate result */
+    x = -x;
+  }
+  /* (+integer)**(integer)  */
+  if (iyflg && floorl(x) == x && fabsl(y) < 32768.0) {
+    w = powil(x, (int)y);
+    return nflg ? -w : w;
+  }
 
-	/* separate significand from exponent */
-	x = frexpl(x, &i);
-	e = i;
+  /* separate significand from exponent */
+  x = frexpl(x, &i);
+  e = i;
 
-	/* find significand in antilog table A[] */
-	i = 1;
-	if (x <= A[17])
-		i = 17;
-	if (x <= A[i+8])
-		i += 8;
-	if (x <= A[i+4])
-		i += 4;
-	if (x <= A[i+2])
-		i += 2;
-	if (x >= A[1])
-		i = -1;
-	i += 1;
+  /* find significand in antilog table A[] */
+  i = 1;
+  if (x <= A[17])
+    i = 17;
+  if (x <= A[i+8])
+    i += 8;
+  if (x <= A[i+4])
+    i += 4;
+  if (x <= A[i+2])
+    i += 2;
+  if (x >= A[1])
+    i = -1;
+  i += 1;
 
-	/* Find (x - A[i])/A[i]
-	 * in order to compute log(x/A[i]):
-	 *
-	 * log(x) = log( a x/a ) = log(a) + log(x/a)
-	 *
-	 * log(x/a) = log(1+v),  v = x/a - 1 = (x-a)/a
-	 */
-	x -= A[i];
-	x -= B[i/2];
-	x /= A[i];
+  /* Find (x - A[i])/A[i]
+   * in order to compute log(x/A[i]):
+   *
+   * log(x) = log( a x/a ) = log(a) + log(x/a)
+   *
+   * log(x/a) = log(1+v),  v = x/a - 1 = (x-a)/a
+   */
+  x -= A[i];
+  x -= B[i/2];
+  x /= A[i];
 
-	/* rational approximation for log(1+v):
-	 *
-	 * log(1+v)  =  v  -  v**2/2  +  v**3 P(v) / Q(v)
-	 */
-	z = x*x;
-	w = x * (z * __polevll(x, P, 3) / __p1evll(x, Q, 3));
-	w = w - 0.5*z;
+  /* rational approximation for log(1+v):
+   *
+   * log(1+v)  =  v  -  v**2/2  +  v**3 P(v) / Q(v)
+   */
+  z = x*x;
+  w = x * (z * __polevll(x, P, 3) / __p1evll(x, Q, 3));
+  w = w - 0.5*z;
 
-	/* Convert to base 2 logarithm:
-	 * multiply by log2(e) = 1 + LOG2EA
-	 */
-	z = LOG2EA * w;
-	z += w;
-	z += LOG2EA * x;
-	z += x;
+  /* Convert to base 2 logarithm:
+   * multiply by log2(e) = 1 + LOG2EA
+   */
+  z = LOG2EA * w;
+  z += w;
+  z += LOG2EA * x;
+  z += x;
 
-	/* Compute exponent term of the base 2 logarithm. */
-	w = -i;
-	w /= NXT;
-	w += e;
-	/* Now base 2 log of x is w + z. */
+  /* Compute exponent term of the base 2 logarithm. */
+  w = -i;
+  w /= NXT;
+  w += e;
+  /* Now base 2 log of x is w + z. */
 
-	/* Multiply base 2 log by y, in extended precision. */
+  /* Multiply base 2 log by y, in extended precision. */
 
-	/* separate y into large part ya
-	 * and small part yb less than 1/NXT
-	 */
-	ya = reducl(y);
-	yb = y - ya;
+  /* separate y into large part ya
+   * and small part yb less than 1/NXT
+   */
+  ya = reducl(y);
+  yb = y - ya;
 
-	/* (w+z)(ya+yb)
-	 * = w*ya + w*yb + z*y
-	 */
-	F = z * y  +  w * yb;
-	Fa = reducl(F);
-	Fb = F - Fa;
+  /* (w+z)(ya+yb)
+   * = w*ya + w*yb + z*y
+   */
+  F = z * y  +  w * yb;
+  Fa = reducl(F);
+  Fb = F - Fa;
 
-	G = Fa + w * ya;
-	Ga = reducl(G);
-	Gb = G - Ga;
+  G = Fa + w * ya;
+  Ga = reducl(G);
+  Gb = G - Ga;
 
-	H = Fb + Gb;
-	Ha = reducl(H);
-	w = (Ga + Ha) * NXT;
+  H = Fb + Gb;
+  Ha = reducl(H);
+  w = (Ga + Ha) * NXT;
 
-	/* Test the power of 2 for overflow */
-	if (w > MEXP)
-		return huge * huge;  /* overflow */
-	if (w < MNEXP)
-		return twom10000 * twom10000;  /* underflow */
+  /* Test the power of 2 for overflow */
+  if (w > MEXP)
+    return huge * huge;  /* overflow */
+  if (w < MNEXP)
+    return twom10000 * twom10000;  /* underflow */
 
-	e = w;
-	Hb = H - Ha;
+  e = w;
+  Hb = H - Ha;
 
-	if (Hb > 0.0) {
-		e += 1;
-		Hb -= 1.0/NXT;  /*0.0625L;*/
-	}
+  if (Hb > 0.0) {
+    e += 1;
+    Hb -= 1.0/NXT;  /*0.0625L;*/
+  }
 
-	/* Now the product y * log2(x)  =  Hb + e/NXT.
-	 *
-	 * Compute base 2 exponential of Hb,
-	 * where -0.0625 <= Hb <= 0.
-	 */
-	z = Hb * __polevll(Hb, R, 6);  /*  z = 2**Hb - 1  */
+  /* Now the product y * log2(x)  =  Hb + e/NXT.
+   *
+   * Compute base 2 exponential of Hb,
+   * where -0.0625 <= Hb <= 0.
+   */
+  z = Hb * __polevll(Hb, R, 6);  /*  z = 2**Hb - 1  */
 
-	/* Express e/NXT as an integer plus a negative number of (1/NXT)ths.
-	 * Find lookup table entry for the fractional power of 2.
-	 */
-	if (e < 0)
-		i = 0;
-	else
-		i = 1;
-	i = e/NXT + i;
-	e = NXT*i - e;
-	w = A[e];
-	z = w * z;  /*  2**-e * ( 1 + (2**Hb-1) )  */
-	z = z + w;
-	z = scalbnl(z, i);  /* multiply by integer power of 2 */
+  /* Express e/NXT as an integer plus a negative number of (1/NXT)ths.
+   * Find lookup table entry for the fractional power of 2.
+   */
+  if (e < 0)
+    i = 0;
+  else
+    i = 1;
+  i = e/NXT + i;
+  e = NXT*i - e;
+  w = A[e];
+  z = w * z;  /*  2**-e * ( 1 + (2**Hb-1) )  */
+  z = z + w;
+  z = scalbnl(z, i);  /* multiply by integer power of 2 */
 
-	if (nflg)
-		z = -z;
-	return z;
+  if (nflg)
+    z = -z;
+  return z;
 }
 
 
 /* Find a multiple of 1/NXT that is within 1/NXT of x. */
 static long double reducl(long double x)
 {
-	long double t;
+  long double t;
 
-	t = x * NXT;
-	t = floorl(t);
-	t = t / NXT;
-	return t;
+  t = x * NXT;
+  t = floorl(t);
+  t = t / NXT;
+  return t;
 }
 
 /*
@@ -551,66 +551,66 @@ static long double reducl(long double x)
 
 static long double powil(long double x, int nn)
 {
-	long double ww, y;
-	long double s;
-	int n, e, sign, lx;
+  long double ww, y;
+  long double s;
+  int n, e, sign, lx;
 
-	if (nn == 0)
-		return 1.0;
+  if (nn == 0)
+    return 1.0;
 
-	if (nn < 0) {
-		sign = -1;
-		n = -nn;
-	} else {
-		sign = 1;
-		n = nn;
-	}
+  if (nn < 0) {
+    sign = -1;
+    n = -nn;
+  } else {
+    sign = 1;
+    n = nn;
+  }
 
-	/* Overflow detection */
+  /* Overflow detection */
 
-	/* Calculate approximate logarithm of answer */
-	s = x;
-	s = frexpl( s, &lx);
-	e = (lx - 1)*n;
-	if ((e == 0) || (e > 64) || (e < -64)) {
-		s = (s - 7.0710678118654752e-1L) / (s +  7.0710678118654752e-1L);
-		s = (2.9142135623730950L * s - 0.5 + lx) * nn * LOGE2L;
-	} else {
-		s = LOGE2L * e;
-	}
+  /* Calculate approximate logarithm of answer */
+  s = x;
+  s = frexpl( s, &lx);
+  e = (lx - 1)*n;
+  if ((e == 0) || (e > 64) || (e < -64)) {
+    s = (s - 7.0710678118654752e-1L) / (s +  7.0710678118654752e-1L);
+    s = (2.9142135623730950L * s - 0.5 + lx) * nn * LOGE2L;
+  } else {
+    s = LOGE2L * e;
+  }
 
-	if (s > MAXLOGL)
-		return huge * huge;  /* overflow */
+  if (s > MAXLOGL)
+    return huge * huge;  /* overflow */
 
-	if (s < MINLOGL)
-		return twom10000 * twom10000;  /* underflow */
-	/* Handle tiny denormal answer, but with less accuracy
-	 * since roundoff error in 1.0/x will be amplified.
-	 * The precise demarcation should be the gradual underflow threshold.
-	 */
-	if (s < -MAXLOGL+2.0) {
-		x = 1.0/x;
-		sign = -sign;
-	}
+  if (s < MINLOGL)
+    return twom10000 * twom10000;  /* underflow */
+  /* Handle tiny denormal answer, but with less accuracy
+   * since roundoff error in 1.0/x will be amplified.
+   * The precise demarcation should be the gradual underflow threshold.
+   */
+  if (s < -MAXLOGL+2.0) {
+    x = 1.0/x;
+    sign = -sign;
+  }
 
-	/* First bit of the power */
-	if (n & 1)
-		y = x;
-	else
-		y = 1.0;
+  /* First bit of the power */
+  if (n & 1)
+    y = x;
+  else
+    y = 1.0;
 
-	ww = x;
-	n >>= 1;
-	while (n) {
-		ww = ww * ww;   /* arg to the 2-to-the-kth power */
-		if (n & 1)     /* if that bit is set, then include in product */
-			y *= ww;
-		n >>= 1;
-	}
+  ww = x;
+  n >>= 1;
+  while (n) {
+    ww = ww * ww;   /* arg to the 2-to-the-kth power */
+    if (n & 1)     /* if that bit is set, then include in product */
+      y *= ww;
+    n >>= 1;
+  }
 
-	if (sign < 0)
-		y = 1.0/y;
-	return y;
+  if (sign < 0)
+    y = 1.0/y;
+  return y;
 }
 
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384
@@ -649,35 +649,35 @@ Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>\"");
 
 /* powl(x,y) return x**y
  *
- *		      n
+ *                    n
  * Method:  Let x =  2   * (1+f)
- *	1. Compute and return log2(x) in two pieces:
- *		log2(x) = w1 + w2,
- *	   where w1 has 113-53 = 60 bit trailing zeros.
- *	2. Perform y*log2(x) = n+y' by simulating multi-precision
- *	   arithmetic, where |y'|<=0.5.
- *	3. Return x**y = 2**n*exp(y'*log2)
+ *      1. Compute and return log2(x) in two pieces:
+ *              log2(x) = w1 + w2,
+ *         where w1 has 113-53 = 60 bit trailing zeros.
+ *      2. Perform y*log2(x) = n+y' by simulating multi-precision
+ *         arithmetic, where |y'|<=0.5.
+ *      3. Return x**y = 2**n*exp(y'*log2)
  *
  * Special cases:
- *	1.  (anything) ** 0  is 1
- *	2.  (anything) ** 1  is itself
- *	3.  (anything) ** NAN is NAN
- *	4.  NAN ** (anything except 0) is NAN
- *	5.  +-(|x| > 1) **  +INF is +INF
- *	6.  +-(|x| > 1) **  -INF is +0
- *	7.  +-(|x| < 1) **  +INF is +0
- *	8.  +-(|x| < 1) **  -INF is +INF
- *	9.  +-1         ** +-INF is NAN
- *	10. +0 ** (+anything except 0, NAN)               is +0
- *	11. -0 ** (+anything except 0, NAN, odd integer)  is +0
- *	12. +0 ** (-anything except 0, NAN)               is +INF
- *	13. -0 ** (-anything except 0, NAN, odd integer)  is +INF
- *	14. -0 ** (odd integer) = -( +0 ** (odd integer) )
- *	15. +INF ** (+anything except 0,NAN) is +INF
- *	16. +INF ** (-anything except 0,NAN) is +0
- *	17. -INF ** (anything)  = -0 ** (-anything)
- *	18. (-anything) ** (integer) is (-1)**(integer)*(+anything**integer)
- *	19. (-anything except 0 and inf) ** (non-integer) is NAN
+ *      1.  (anything) ** 0  is 1
+ *      2.  (anything) ** 1  is itself
+ *      3.  (anything) ** NAN is NAN
+ *      4.  NAN ** (anything except 0) is NAN
+ *      5.  +-(|x| > 1) **  +INF is +INF
+ *      6.  +-(|x| > 1) **  -INF is +0
+ *      7.  +-(|x| < 1) **  +INF is +0
+ *      8.  +-(|x| < 1) **  -INF is +INF
+ *      9.  +-1         ** +-INF is NAN
+ *      10. +0 ** (+anything except 0, NAN)               is +0
+ *      11. -0 ** (+anything except 0, NAN, odd integer)  is +0
+ *      12. +0 ** (-anything except 0, NAN)               is +INF
+ *      13. -0 ** (-anything except 0, NAN, odd integer)  is +INF
+ *      14. -0 ** (odd integer) = -( +0 ** (odd integer) )
+ *      15. +INF ** (+anything except 0,NAN) is +INF
+ *      16. +INF ** (-anything except 0,NAN) is +0
+ *      17. -INF ** (anything)  = -0 ** (-anything)
+ *      18. (-anything) ** (integer) is (-1)**(integer)*(+anything**integer)
+ *      19. (-anything except 0 and inf) ** (non-integer) is NAN
  *
  */
 
@@ -792,10 +792,10 @@ powl(long double x, long double y)
   /* +-NaN return x+y */
   if ((ix > 0x7fff0000)
       || ((ix == 0x7fff0000)
-	  && ((p.parts32.mswlo | p.parts32.lswhi | p.parts32.lswlo) != 0))
+          && ((p.parts32.mswlo | p.parts32.lswhi | p.parts32.lswlo) != 0))
       || (iy > 0x7fff0000)
       || ((iy == 0x7fff0000)
-	  && ((q.parts32.mswlo | q.parts32.lswhi | q.parts32.lswlo) != 0)))
+          && ((q.parts32.mswlo | q.parts32.lswhi | q.parts32.lswlo) != 0)))
     return nan_mix(x, y);
 
   /* determine if y is an odd int when x < 0
@@ -806,48 +806,48 @@ powl(long double x, long double y)
   yisint = 0;
   if (hx < 0)
     {
-      if (iy >= 0x40700000)	/* 2^113 */
-	yisint = 2;		/* even integer y */
-      else if (iy >= 0x3fff0000)	/* 1.0 */
-	{
-	  if (floorl (y) == y)
-	    {
-	      z = 0.5 * y;
-	      if (floorl (z) == z)
-		yisint = 2;
-	      else
-		yisint = 1;
-	    }
-	}
+      if (iy >= 0x40700000)     /* 2^113 */
+        yisint = 2;             /* even integer y */
+      else if (iy >= 0x3fff0000)        /* 1.0 */
+        {
+          if (floorl (y) == y)
+            {
+              z = 0.5 * y;
+              if (floorl (z) == z)
+                yisint = 2;
+              else
+                yisint = 1;
+            }
+        }
     }
 
   /* special value of y */
   if ((q.parts32.mswlo | q.parts32.lswhi | q.parts32.lswlo) == 0)
     {
-      if (iy == 0x7fff0000)	/* y is +-inf */
-	{
-	  if (((ix - 0x3fff0000) | p.parts32.mswlo | p.parts32.lswhi |
-	    p.parts32.lswlo) == 0)
-	    return y - y;	/* +-1**inf is NaN */
-	  else if (ix >= 0x3fff0000)	/* (|x|>1)**+-inf = inf,0 */
-	    return (hy >= 0) ? y : zero;
-	  else			/* (|x|<1)**-,+inf = inf,0 */
-	    return (hy < 0) ? -y : zero;
-	}
+      if (iy == 0x7fff0000)     /* y is +-inf */
+        {
+          if (((ix - 0x3fff0000) | p.parts32.mswlo | p.parts32.lswhi |
+            p.parts32.lswlo) == 0)
+            return y - y;       /* +-1**inf is NaN */
+          else if (ix >= 0x3fff0000)    /* (|x|>1)**+-inf = inf,0 */
+            return (hy >= 0) ? y : zero;
+          else                  /* (|x|<1)**-,+inf = inf,0 */
+            return (hy < 0) ? -y : zero;
+        }
       if (iy == 0x3fff0000)
-	{			/* y is  +-1 */
-	  if (hy < 0)
-	    return one / x;
-	  else
-	    return x;
-	}
+        {                       /* y is  +-1 */
+          if (hy < 0)
+            return one / x;
+          else
+            return x;
+        }
       if (hy == 0x40000000)
-	return x * x;		/* y is  2 */
+        return x * x;           /* y is  2 */
       if (hy == 0x3ffe0000)
-	{			/* y is  0.5 */
-	  if (hx >= 0)		/* x >= +0 */
-	    return sqrtl (x);
-	}
+        {                       /* y is  0.5 */
+          if (hx >= 0)          /* x >= +0 */
+            return sqrtl (x);
+        }
     }
 
   ax = fabsl (x);
@@ -855,21 +855,21 @@ powl(long double x, long double y)
   if ((p.parts32.mswlo | p.parts32.lswhi | p.parts32.lswlo) == 0)
     {
       if (ix == 0x7fff0000 || ix == 0 || ix == 0x3fff0000)
-	{
-	  z = ax;		/*x is +-0,+-inf,+-1 */
-	  if (hy < 0)
-	    z = one / z;	/* z = (1/|x|) */
-	  if (hx < 0)
-	    {
-	      if (((ix - 0x3fff0000) | yisint) == 0)
-		{
-		  z = (z - z) / (z - z);	/* (-1)**non-int is NaN */
-		}
-	      else if (yisint == 1)
-		z = -z;		/* (x<0)**odd = -(|x|**odd) */
-	    }
-	  return z;
-	}
+        {
+          z = ax;               /*x is +-0,+-inf,+-1 */
+          if (hy < 0)
+            z = one / z;        /* z = (1/|x|) */
+          if (hx < 0)
+            {
+              if (((ix - 0x3fff0000) | yisint) == 0)
+                {
+                  z = (z - z) / (z - z);        /* (-1)**non-int is NaN */
+                }
+              else if (yisint == 1)
+                z = -z;         /* (x<0)**odd = -(|x|**odd) */
+            }
+          return z;
+        }
     }
 
   /* (x<0)**(non-int) is NaN */
@@ -883,17 +883,17 @@ powl(long double x, long double y)
     {
       /* if (1 - 2^-113)^y underflows, y > 1.1873e38 */
       if (iy > 0x407d654b)
-	{
-	  if (ix <= 0x3ffeffff)
-	    return (hy < 0) ? huge * huge : tiny * tiny;
-	  if (ix >= 0x3fff0000)
-	    return (hy > 0) ? huge * huge : tiny * tiny;
-	}
+        {
+          if (ix <= 0x3ffeffff)
+            return (hy < 0) ? huge * huge : tiny * tiny;
+          if (ix >= 0x3fff0000)
+            return (hy > 0) ? huge * huge : tiny * tiny;
+        }
       /* over/underflow if x is not close to one */
       if (ix < 0x3ffeffff)
-	return (hy < 0) ? huge * huge : tiny * tiny;
+        return (hy < 0) ? huge * huge : tiny * tiny;
       if (ix > 0x3fff0000)
-	return (hy > 0) ? huge * huge : tiny * tiny;
+        return (hy > 0) ? huge * huge : tiny * tiny;
     }
 
   n = 0;
@@ -908,11 +908,11 @@ powl(long double x, long double y)
   n += ((ix) >> 16) - 0x3fff;
   j = ix & 0x0000ffff;
   /* determine interval */
-  ix = j | 0x3fff0000;		/* normalize ix */
+  ix = j | 0x3fff0000;          /* normalize ix */
   if (j <= 0x3988)
-    k = 0;			/* |x|<sqrt(3/2) */
+    k = 0;                      /* |x|<sqrt(3/2) */
   else if (j < 0xbb67)
-    k = 1;			/* |x|<sqrt(3)   */
+    k = 1;                      /* |x|<sqrt(3)   */
   else
     {
       k = 0;
@@ -925,7 +925,7 @@ powl(long double x, long double y)
   ax = o.value;
 
   /* compute s = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) */
-  u = ax - bp[k];		/* bp[0]=1.0, bp[1]=1.5 */
+  u = ax - bp[k];               /* bp[0]=1.0, bp[1]=1.5 */
   v = one / (ax + bp[k]);
   s = u * v;
   s_h = s;
@@ -965,7 +965,7 @@ powl(long double x, long double y)
   o.parts32.lswhi &= 0xf8000000;
   p_h = o.value;
   p_l = v - (p_h - u);
-  z_h = cp_h * p_h;		/* cp_h+cp_l = 2/(3*log2) */
+  z_h = cp_h * p_h;             /* cp_h+cp_l = 2/(3*log2) */
   z_l = cp_l * p_h + p_l * cp + dp_l[k];
   /* log2(ax) = (s+..)*2/(3*log2) = n + dp_h + z_h + z_l */
   t = (long double) n;
@@ -979,7 +979,7 @@ powl(long double x, long double y)
   /* s (sign of result -ve**odd) = -1 else = 1 */
   s = one;
   if (((((uint32_t) hx >> 31) - 1) | (yisint - 1)) == 0)
-    s = -one;			/* (-ve)**(odd int) */
+    s = -one;                   /* (-ve)**(odd int) */
 
   /* split up y into yy1+y2 and compute (yy1+y2)*(t1+t2) */
   yy1 = y;
@@ -996,33 +996,33 @@ powl(long double x, long double y)
     {
       /* if z > 16384 */
       if (((j - 0x400d0000) | o.parts32.mswlo | o.parts32.lswhi |
-	o.parts32.lswlo) != 0)
-	return s * huge * huge;	/* overflow */
+        o.parts32.lswlo) != 0)
+        return s * huge * huge; /* overflow */
       else
-	{
-	  if (p_l + ovt > z - p_h)
-	    return s * huge * huge;	/* overflow */
-	}
+        {
+          if (p_l + ovt > z - p_h)
+            return s * huge * huge;     /* overflow */
+        }
     }
-  else if ((j & 0x7fffffff) >= 0x400d01b9)	/* z <= -16495 */
+  else if ((j & 0x7fffffff) >= 0x400d01b9)      /* z <= -16495 */
     {
       /* z < -16495 */
       if (((j - 0xc00d01bc) | o.parts32.mswlo | o.parts32.lswhi |
-	o.parts32.lswlo)
-	  != 0)
-	return s * tiny * tiny;	/* underflow */
+        o.parts32.lswlo)
+          != 0)
+        return s * tiny * tiny; /* underflow */
       else
-	{
-	  if (p_l <= z - p_h)
-	    return s * tiny * tiny;	/* underflow */
-	}
+        {
+          if (p_l <= z - p_h)
+            return s * tiny * tiny;     /* underflow */
+        }
     }
   /* compute 2**(p_h+p_l) */
   i = j & 0x7fffffff;
   k = (i >> 16) - 0x3fff;
   n = 0;
   if (i > 0x3ffe0000)
-    {				/* if |z| > 0.5, set n = [z+0.5] */
+    {                           /* if |z| > 0.5, set n = [z+0.5] */
       n = floorl (z + 0.5L);
       t = n;
       p_h -= t;
@@ -1047,7 +1047,7 @@ powl(long double x, long double y)
   j = o.parts32.mswhi;
   j += (n << 16);
   if ((j >> 16) <= 0)
-    z = scalbnl (z, n);	/* subnormal output */
+    z = scalbnl (z, n); /* subnormal output */
   else
     {
       o.parts32.mswhi = j;
