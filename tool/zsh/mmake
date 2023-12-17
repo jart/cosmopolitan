@@ -21,14 +21,16 @@ esac
     arm64|aarch64)  mode=aarch64  ;;
   esac
 }
+local -a targs
 local -a flags
 while (( $# > 0 )); do
   case $1 in
     -*|*=*) flags+=($1); shift ;;
-    *) break ;;
+    *)      targs+=($1); shift ;;
   esac
 done
 local make
 [[ -x /opt/cosmocc/bin/make ]] && make=/opt/cosmocc/bin/make
 [[ -z $make ]] && make=build/bootstrap/make.com
-$make $flags MODE=$mode ${(@)@/#/o/$mode/}
+( set -x
+  exec $make $flags MODE=$mode ${(@)targs/#/o/$mode/} )
