@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│ vi: set noet ft=c ts=8 sw=8 fenc=utf-8                                   :vi │
+│ vi: set et ft=c ts=8 sw=8 fenc=utf-8                                     :vi │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
@@ -47,7 +47,7 @@ static unsigned atou(char **s) {
 }
 
 int __getgrent_a(FILE *f, struct group *gr, char **line, size_t *size,
-		 char ***mem, size_t *nmem, struct group **res) {
+                 char ***mem, size_t *nmem, struct group **res) {
   ssize_t l;
   char *s, *mems;
   size_t i;
@@ -104,8 +104,8 @@ end:
 }
 
 int __getgr_a(const char *name, gid_t gid, struct group *gr, char **buf,
-	      size_t *size, char ***mem, size_t *nmem,
-	      struct group **res) {
+              size_t *size, char ***mem, size_t *nmem,
+              struct group **res) {
   FILE *f;
   int rv = 0;
   int cs;
