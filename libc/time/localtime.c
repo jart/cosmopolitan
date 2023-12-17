@@ -118,7 +118,7 @@ static const char	gmt[] = "GMT";
 #endif
 
 struct ttinfo {				/* time type information */
-	int32_t	tt_utoff;	/* UT offset in seconds */
+	int32_t		tt_utoff;	/* UT offset in seconds */
 	bool		tt_isdst;	/* used to set tm_isdst */
 	int		tt_desigidx;	/* abbreviation list index */
 	bool		tt_ttisstd;	/* transition is std time */
@@ -127,7 +127,7 @@ struct ttinfo {				/* time type information */
 
 struct lsinfo {				/* leap second information */
 	time_t		ls_trans;	/* transition time */
-	int32_t	ls_corr;	/* correction to apply */
+	int32_t		ls_corr;	/* correction to apply */
 };
 
 #define SMALLEST(a, b)	(((a) < (b)) ? (a) : (b))
@@ -1093,8 +1093,8 @@ localtime_tzparse(const char *name, struct state *sp, struct state *basep)
 	size_t				stdlen;
 	size_t				dstlen;
 	size_t				charcnt;
-	int32_t			stdoffset;
-	int32_t			dstoffset;
+	int32_t				stdoffset;
+	int32_t				dstoffset;
 	register char *			cp;
 	register bool			load_ok;
 	time_t atlo = TIME_T_MIN, leaplo = TIME_T_MIN;
