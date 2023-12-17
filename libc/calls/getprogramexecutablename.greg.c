@@ -37,6 +37,7 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
+#define DEV_FD                     "/dev/fd/"
 
 static struct {
   atomic_uint once;
@@ -50,15 +51,49 @@ static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
+// if q exists then turn it into an absolute path. we also try adding
+// a .com suffix since the ape auto-appends it when resolving
+static int TryPath(const char *q, int com) {
+  if (!q) return 0;
+  char *p = g_prog.u.buf;
+  char *e = p + sizeof(g_prog.u.buf);
+  int c, f_ok;
+  if ((f_ok = !sys_faccessat(AT_FDCWD, q, F_OK, 0))) {
+    com = 0;
+  } else {
+    if (!com) {
+      return 0;
+    }
+  }
+  if (*q != '/') {
+    if (q[0] == '.' && q[1] == '/') {
+      q += 2;
+    }
+    int got = __getcwd(p, e - p - 1 - com * 4);   // for / and .com
+    if (got != -1) {
+      p += got - 1;
+      *p++ = '/';
+    }
+  }
+  while ((c = *q++)) {
+    if (p + 1 + com * 4 < e) {  // for nul and .com
+      *p++ = c;
+    }
+  }
+  if (f_ok) {
+    *p = 0;
+    return 1;
+  }
+  p = WRITE32LE(p, READ32LE(".com"));
+  *p = 0;
+  return !sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0);
+}
+
 static inline void InitProgramExecutableNameImpl(void) {
   size_t n;
   ssize_t got;
   char c, *q, *b;
 
-  if (__program_executable_name) {
-    /* already set by the loader */
-    return;
-  }
   if (IsWindows()) {
     int n = GetModuleFileName(0, g_prog.u.buf16, ARRAYLEN(g_prog.u.buf16));
     for (int i = 0; i < n; ++i) {
@@ -81,6 +116,20 @@ static inline void InitProgramExecutableNameImpl(void) {
   if (IsMetal()) {
     __program_executable_name = APE_COM_NAME;
     return;
+  }
+
+  if (issetugid() && __program_executable_name) {
+    if ((IsNetbsd() || IsOpenbsd() || IsXnu()) /* any others? */ &&
+        !strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) &&
+        isdigit(__program_executable_name[sizeof(DEV_FD)]) &&
+        !strchr(__program_executable_name + sizeof(DEV_FD) + 1, '/')) {
+      /* loader passed us a secure path */
+      return;
+    } else {
+      /* we cannot use KERN_PROC_PATHNAME or its ilk in the loader case. they
+         will report the path of the loader, not the path of the binary. */
+      goto UseEmpty;
+    }
   }
 
   b = g_prog.u.buf;
@@ -116,43 +165,15 @@ static inline void InitProgramExecutableNameImpl(void) {
     goto UseEmpty;
   }
 
-  // if argv[0] exists then turn it into an absolute path. we also try
-  // adding a .com suffix since the ape auto-appends it when resolving
-  if ((q = __argv[0])) {
-    char *p = g_prog.u.buf;
-    char *e = p + sizeof(g_prog.u.buf);
-    if (*q != '/') {
-      if (q[0] == '.' && q[1] == '/') {
-        q += 2;
-      }
-      int got = __getcwd(p, e - p - 1 - 4);  // for / and .com
-      if (got != -1) {
-        p += got - 1;
-        *p++ = '/';
-      }
-    }
-    while ((c = *q++)) {
-      if (p + 1 + 4 < e) {  // for nul and .com
-        *p++ = c;
-      }
-    }
-    *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
-    p = WRITE32LE(p, READ32LE(".com"));
-    *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
-  }
-
-  /* the previous loader supplied the full program path as the first
-     environment variable. we also try "_". */
-  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s) ||
-      (q = __getenv(__envp, "_").s)) {
-    goto CopyString;
+  // Try what the loader supplied first. Fall back to argv[0],
+  // then argv[0].com, then $_, then $_.com.
+  if (TryPath(__program_executable_name, 0) || TryPath(__argv[0], 1) ||
+      TryPath(__getenv(__envp, "_").s, 1)) {
+    goto UseBuf;
   }
 
   // give up and just copy argv[0] into it
   if ((q = __argv[0])) {
-  CopyString:
     char *p = g_prog.u.buf;
     char *e = p + sizeof(g_prog.u.buf);
     while ((c = *q++)) {
