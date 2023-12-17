@@ -23,6 +23,7 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/libgen.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/serialize.h"
 #include "libc/limits.h"
@@ -48,6 +49,25 @@ static struct {
 
 static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+static inline int AllNumDot(const char *s) {
+  while (true) {
+    switch (*s++) {
+      default:  return 0;
+      case 0:   return 1;
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9': case '.':
+        /* continue */
+      }
+  }
+}
+
+static int IsApeLoader(char *s) {
+  char *b;
+  return !strcmp(s, "/usr/bin/ape") ||
+         (!strncmp((b = basename(s)), ".ape-", 5) &&
+          AllNumDot(b + 5));
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
@@ -96,7 +116,7 @@ static inline void InitProgramExecutableNameImpl(void) {
     }
     cmd[3] = -1;  // current process
     if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
-      if (strcmp(b, "/usr/bin/ape")) {  // XX old loader; warn?
+      if (!IsApeLoader(b)) {
         goto UseBuf;
       }
     }
@@ -105,7 +125,7 @@ static inline void InitProgramExecutableNameImpl(void) {
     if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
         (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
       b[got] = 0;
-      if (strcmp(b, "/usr/bin/ape")) {
+      if (!IsApeLoader(b)) {
         goto UseBuf;
       }
     }
