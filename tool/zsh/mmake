@@ -23,14 +23,17 @@ esac
 }
 local -a targs
 local -a flags
+local j=-j$(autoload -Uz nproc >/dev/null 2>&1 ; nproc)
 while (( $# > 0 )); do
   case $1 in
-    -*|*=*) flags+=($1); shift ;;
-    *)      targs+=($1); shift ;;
+    -j*)    j=$1;         shift ;;
+    -*|*=*) flags+=($1);  shift ;;
+    o/*)    flags+=($1);  shift ;;  # cheat; passthru
+    *)      targs+=($1);  shift ;;
   esac
 done
 local make
 [[ -x /opt/cosmocc/bin/make ]] && make=/opt/cosmocc/bin/make
 [[ -z $make ]] && make=build/bootstrap/make.com
 ( set -x
-  exec $make $flags MODE=$mode ${(@)targs/#/o/$mode/} )
+  exec $make $j $flags MODE=$mode ${(@)targs/#/o/$mode/} )
