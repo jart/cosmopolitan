@@ -1603,11 +1603,16 @@ FUNCTIONS
   ProgramGid(int)
           Same as the -G flag if called from .init.lua for setgid()
 
-  ProgramDirectory(str)
+  ProgramDirectory([directory:str]) → {directory, ...}
           Same as the -D flag if called from .init.lua for overlaying local
           file system directories. This may be called multiple times. The
           first directory programmed is preferred. These currently do not
           show up in the index page listing.
+          This call also modifies `package.path` value to either prepend
+          the added directory in front of the default path (if found) or
+          to append it (in all other cases).
+          If no directory is provided, then a table with previously set
+          directories is returned.
 
   ProgramLogMessages(bool)
           Same as the -m flag if called from .init.lua for logging message
