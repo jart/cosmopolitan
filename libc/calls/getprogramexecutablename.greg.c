@@ -118,13 +118,18 @@ static inline void InitProgramExecutableNameImpl(void) {
     return;
   }
 
-  if (issetugid() && __program_executable_name &&
-      (IsNetbsd() || IsOpenbsd() || IsXnu()) &&
-      !strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) &&
-      isdigit(__program_executable_name[sizeof(DEV_FD)]) &&
-      !strchr(__program_executable_name + sizeof(DEV_FD) + 1, '/')) {
-    /* loader passed us a secure path */
-    return;
+  if (issetugid() && __program_executable_name) {
+    if ((IsNetbsd() || IsOpenbsd() || IsXnu()) /* any others? */ &&
+        !strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) &&
+        isdigit(__program_executable_name[sizeof(DEV_FD)]) &&
+        !strchr(__program_executable_name + sizeof(DEV_FD) + 1, '/')) {
+      /* loader passed us a secure path */
+      return;
+    } else {
+      /* we cannot use KERN_PROC_PATHNAME or its ilk in the loader case. they
+         will report the path of the loader, not the path of the binary. */
+      goto UseEmpty;
+    }
   }
 
   b = g_prog.u.buf;
