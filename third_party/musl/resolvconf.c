@@ -128,7 +128,7 @@ int __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz)
 		} else {
 			return -1;
 		}
-	}
+        }
 
 	while (fgets(line, sizeof line, f)) {
 		char *p, *z;
