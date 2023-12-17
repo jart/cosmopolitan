@@ -37,6 +37,7 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
+#define DEV_FD                     "/dev/fd/"
 
 static struct {
   atomic_uint once;
@@ -111,6 +112,15 @@ static inline void InitProgramExecutableNameImpl(void) {
   }
   if (IsMetal()) {
     __program_executable_name = APE_COM_NAME;
+    return;
+  }
+
+  if (issetugid() && __program_executable_name &&
+      (IsNetbsd() || IsOpenbsd() || IsXnu()) &&
+      !strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) &&
+      isdigit(__program_executable_name[sizeof(DEV_FD)]) &&
+      !strchr(__program_executable_name + sizeof(DEV_FD) + 1, '/')) {
+    /* loader passed us a secure path */
     return;
   }
 
