@@ -23,7 +23,8 @@ esac
 }
 local -a targs
 local -a flags
-local j=-j$(autoload -Uz nproc >/dev/null 2>&1 ; nproc)
+whence nproc >/dev/null 2>&1 || autoload -Uz nproc
+local j=-j$(nproc)
 while (( $# > 0 )); do
   case $1 in
     -j*)    j=$1;         shift ;;
