@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/intrin/atomic.h"
@@ -34,6 +35,12 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   if (cf == ZIPOS_SYNTHETIC_DIRECTORY) {
     st->st_mode = S_IFDIR | (0555 & ~atomic_load_explicit(
                                         &__umask, memory_order_acquire));
+    /* report that /zip is user-modifiable to clarify to programs that check
+       transitive writability of a secure file like doas.conf. at this time,
+       doas itself does not actually do this check (it only checks the file)
+       but it probably ought to. */
+    st->st_uid = getuid();
+    st->st_mode |= S_IWUSR;
   } else {
     lf = GetZipCfileOffset(zipos->map + cf);
     st->st_mode = GetZipCfileMode(zipos->map + cf);

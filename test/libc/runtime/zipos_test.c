@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
@@ -111,6 +112,18 @@ TEST(zipos, lseek) {
   EXPECT_SYS(0, 512, read(3, b1, 512));
   EXPECT_EQ(0, memcmp(b1, b2, 512));
   EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(zipos, stat) {
+  struct stat st;
+  umask(0777);
+  ASSERT_SYS(0, 0, stat("/zip", &st));
+  EXPECT_EQ(getuid(), st.st_uid);
+  EXPECT_TRUE(S_ISDIR(st.st_mode));
+  EXPECT_TRUE((st.st_mode & S_IWUSR) != 0);
+  ASSERT_SYS(0, 0, stat("/zip/libc/testlib/hyperion.txt", &st));
+  EXPECT_EQ(0, st.st_uid);
+  EXPECT_EQ(0100644, st.st_mode);
 }
 
 TEST(zipos, closeAfterVfork) {
