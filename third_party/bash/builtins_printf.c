@@ -193,6 +193,14 @@ static intmax_t tw;
 static char *conv_buf;
 static size_t conv_bufsize;
 
+#ifdef __aarch64__
+#define _COSMO_SOURCE
+#include "libc/assert.h"
+void __floatditf(int a) {   // XXX TODO FIXME missing symbol not found in source
+  npassert(false);
+}
+#endif /* __arch64__ */
+
 int
 printf_builtin (list)
      WORD_LIST *list;
