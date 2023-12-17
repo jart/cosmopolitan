@@ -1,5 +1,5 @@
 /*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
-│ vi: set noet sts=2 sw=2 fenc=utf-8                                       :vi │
+│ vi: set et sts=2 sw=2 fenc=utf-8                                         :vi │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/tls.h"
 
