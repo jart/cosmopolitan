@@ -545,40 +545,6 @@ __attribute__((__noreturn__)) static void Pexit(int os, const char *c, int rc,
   Exit(127, os);
 }
 
-#define PSFD "/proc/self/fd/"
-
-static int RealPath(int os, int fd, char *path, char **resolved) {
-  char buf[PATH_MAX];
-  int rc;
-  if (IsLinux()) {
-    char psfd[sizeof(PSFD) + 19];
-    MemMove(psfd, PSFD, sizeof(PSFD) - 1);
-    Utoa(psfd + sizeof(PSFD) - 1, fd);
-    rc = SystemCall(-100, (long)psfd, (long)buf, PATH_MAX, 0, 0, 0,
-                    IsAarch64() ? 78 : 267);
-    if (rc >= 0) {
-      if (rc == PATH_MAX) {
-        rc = -36;
-      } else {
-        buf[rc] = 0;
-      }
-    }
-  } else if (IsXnu()) {
-    rc = SystemCall(fd, 50, (long)buf, 0, 0, 0, 0, 92 | 0x2000000);
-  } else if (IsOpenbsd()) {
-    rc = SystemCall((long)path, (long)buf, 0, 0, 0, 0, 0, 115);
-  } else {
-    *resolved = 0;
-    return 0;
-  }
-  if (rc >= 0) {
-    MemMove(path, buf, StrLen(buf) + 1);
-    *resolved = path;
-    rc = 0;
-  }
-  return rc;
-}
-
 static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
@@ -644,9 +610,8 @@ static char *Commandv(struct PathSearcher *ps, int os, const char *name,
   }
 }
 
-__attribute__((__noreturn__)) static void Spawn(int os, const char *exe,
-                                                char *path, int fd, long *sp,
-                                                unsigned long pagesz,
+__attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
+                                                long *sp, unsigned long pagesz,
                                                 struct ElfEhdr *e,
                                                 struct ElfPhdr *p) {
   long rc;
@@ -803,12 +768,12 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe,
   Msyscall(dynbase + code, codesize, os);
 
   /* call program entrypoint */
-  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, path, sp, os);
+  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, exe, sp, os);
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, char *path, int fd, long *sp,
-                          long *auxv, unsigned long pagesz, int os) {
+                          char *exe, int fd, long *sp, long *auxv,
+                          unsigned long pagesz, int os) {
   long i, rc;
   unsigned size;
   struct ElfEhdr *e;
@@ -923,7 +888,7 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   }
 
   /* we're now ready to load */
-  Spawn(os, exe, path, fd, sp, pagesz, e, p);
+  Spawn(os, exe, fd, sp, pagesz, e, p);
 }
 
 __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
@@ -1081,8 +1046,6 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     Pexit(os, prog, 0, "not found (maybe chmod +x or ./ needed)");
   } else if ((fd = Open(exe, O_RDONLY, 0, os)) < 0) {
     Pexit(os, exe, fd, "open");
-  } else if ((rc = RealPath(os, fd, exe, &prog)) < 0) {
-    Pexit(os, exe, rc, "realpath");
   } else if ((rc = Pread(fd, ebuf->buf, sizeof(ebuf->buf), 0, os)) < 0) {
     Pexit(os, exe, rc, "read");
   } else if ((unsigned long)rc < sizeof(ebuf->ehdr)) {
@@ -1122,9 +1085,9 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
         }
       }
       if (i >= sizeof(ebuf->ehdr)) {
-        TryElf(M, ebuf, exe, prog, fd, sp, auxv, pagesz, os);
+        TryElf(M, ebuf, exe, fd, sp, auxv, pagesz, os);
       }
     }
   }
-  Pexit(os, exe, 0, TryElf(M, ebuf, exe, prog, fd, sp, auxv, pagesz, os));
+  Pexit(os, exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, pagesz, os));
 }
