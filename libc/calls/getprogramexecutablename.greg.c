@@ -145,6 +145,7 @@ static inline void InitProgramExecutableNameImpl(void) {
        */
       if ((!IsNetbsd() && !IsOpenbsd() && !IsXnu()) /* any others? */ ||
           0 != strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) ||
+          !__program_executable_name[sizeof(DEV_FD) - 1] ||
           __program_executable_name[sizeof(DEV_FD) - 1] == '.' ||
           strchr(__program_executable_name + sizeof(DEV_FD) - 1, '/')) {
         goto UseEmpty;
