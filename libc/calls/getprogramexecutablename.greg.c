@@ -38,8 +38,12 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
-#define DEV_FD                     "/dev/fd/"
-#define STRLEN_DEV_FD              (sizeof(DEV_FD) - 1)
+#define DevFd() \
+  (IsBsd() ? "/dev/fd/" : IsLinux() ? "/proc/self/fd/" : 0)
+#define StrlenDevFd()                         \
+  ((IsBsd()   ? sizeof("/dev/fd/") :          \
+    IsLinux() ? sizeof("/proc/self/fd/") : 0) \
+   - 1)
 
 static struct {
   atomic_uint once;
@@ -144,11 +148,11 @@ static inline void InitProgramExecutableNameImpl(void) {
          /dev/fd/ path. check for the latter and allow that. otherwise, use the
          empty string to obviate the TOCTOU problem between loader and binary.
        */
-      if ((!IsNetbsd() && !IsOpenbsd() && !IsXnu()) /* any others? */ ||
-          0 != strncmp(DEV_FD, __program_executable_name, STRLEN_DEV_FD) ||
-          !__program_executable_name[STRLEN_DEV_FD] ||
-          __program_executable_name[STRLEN_DEV_FD] == '.' ||
-          strchr(__program_executable_name + STRLEN_DEV_FD, '/')) {
+      if (!(b = DevFd()) ||
+          0 != strncmp(b, __program_executable_name, StrlenDevFd()) ||
+          !__program_executable_name[StrlenDevFd()] ||
+          __program_executable_name[StrlenDevFd()] == '.' ||
+          strchr(__program_executable_name + StrlenDevFd(), '/')) {
         goto UseEmpty;
       }
     }
