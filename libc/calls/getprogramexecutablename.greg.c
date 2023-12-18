@@ -154,6 +154,7 @@ static inline void InitProgramExecutableNameImpl(void) {
     if (*__program_executable_name == '/') {
       return;
     }
+    // loader passed us a relative path; prepend cwd.
     if (TryPath(__program_executable_name, 0)) {
       goto UseBuf;
     }
