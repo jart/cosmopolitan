@@ -39,6 +39,7 @@
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
 #define DEV_FD                     "/dev/fd/"
+#define STRLEN_DEV_FD              (sizeof(DEV_FD) - 1)
 
 static struct {
   atomic_uint once;
@@ -144,10 +145,10 @@ static inline void InitProgramExecutableNameImpl(void) {
          empty string to obviate the TOCTOU problem between loader and binary.
        */
       if ((!IsNetbsd() && !IsOpenbsd() && !IsXnu()) /* any others? */ ||
-          0 != strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) ||
-          !__program_executable_name[sizeof(DEV_FD) - 1] ||
-          __program_executable_name[sizeof(DEV_FD) - 1] == '.' ||
-          strchr(__program_executable_name + sizeof(DEV_FD) - 1, '/')) {
+          0 != strncmp(DEV_FD, __program_executable_name, STRLEN_DEV_FD) ||
+          !__program_executable_name[STRLEN_DEV_FD] ||
+          __program_executable_name[STRLEN_DEV_FD] == '.' ||
+          strchr(__program_executable_name + STRLEN_DEV_FD, '/')) {
         goto UseEmpty;
       }
     }
