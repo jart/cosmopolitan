@@ -5081,8 +5081,8 @@ typedef struct TlsConnection_s {
 int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
   int ret;
   if (!sslinitialized) TlsInit();
-  // TODO(s0ph0s): Do I need to check any errors here?
-  mbedtls_ssl_setup(&(conn->ctx), &confcli);
+  mbedtls_ssl_init(&(conn->ctx));
+  DCHECK_EQ(0, mbedtls_ssl_setup(&(conn->ctx), &confcli));
   if (!evadedragnetsurveillance) {
     mbedtls_ssl_set_hostname(&(conn->ctx), hostname);
   }
@@ -5115,9 +5115,9 @@ int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
 /**
  * Write data to a TLS connection.
  * 
- * @param conn A TlsConnection that has alreday been setup.
- * @param buf Arbitrary data that should be encrypted and sent on the connection.
- * @param len The number of bytes of data in the buffer that should be sent.
+ * @param C A TlsConnection that has alreday been setup.
+ * @param B Arbitrary data that should be encrypted and sent on the connection.
+ * @param L The number of bytes of data in the buffer that should be sent.
  * @return >0 if the write was successful, 0 or less if the write failed.
  *   Values greater than 0 indicate the number of bytes written.
 */
@@ -5126,9 +5126,9 @@ int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
 /**
  * Read data from a TLS connection.
  * 
- * @param conn A TlsConnection that has alreday been setup.
- * @param buf A buffer into which to write the received data.
- * @param len The maximum number of bytes to read. `buf` must be at least this big.
+ * @param C A TlsConnection that has alreday been setup.
+ * @param B A buffer into which to write the received data.
+ * @param L The maximum number of bytes to read. `buf` must be at least this big.
  * @return >0 if the read was successful, 0 or less if the read failed. Values greater
  *   than 0 indicate the number of bytes read.
 */
@@ -5142,9 +5142,9 @@ int TlsConnectionSetup(TlsConnection *conn, int sock, const char *hostname) {
  * @return 1
 */
 int TlsConnectionClose(TlsConnection *conn) {
+  mbedtls_ssl_free(&(conn->ctx));
   // TODO(s0ph0s): loop on EINTR
   close(conn->bio.fd);
-  mbedtls_ssl_free(&(conn->ctx));
   return 1;
 }
 
