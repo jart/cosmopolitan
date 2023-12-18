@@ -141,6 +141,10 @@ static int LuaFetch(lua_State *L) {
    */
   gc(ParseUrl(urlarg, urlarglen, &url, true));
   gc(url.params.p);
+  DEBUGF("(ftch) client fetching %`'s (host=%`'.*s, port=%.*s, path=%`'.*s)",
+         urlarg, url.host.n, url.host.p, url.port.n, url.port.p,
+         url.path.n, url.path.p);
+
   usingssl = false;
   if (url.scheme.n) {
 #ifndef UNSECURE
@@ -178,6 +182,9 @@ static int LuaFetch(lua_State *L) {
   }
   if (!IsAcceptableHost(host, -1)) {
     return LuaNilError(L, "invalid host");
+  }
+  if (!IsAcceptablePort(port, -1)) {
+    return LuaNilError(L, "invalid port");
   }
   if (!hosthdr) hosthdr = gc(xasprintf("%s:%s", host, port));
 
@@ -496,9 +503,47 @@ Finished:
 
     lua_pushinteger(L, numredirects + 1);
     lua_setfield(L, -2, "numredirects");
-    // replace URL with Location header
-    lua_pushlstring(L, FetchHeaderData(kHttpLocation),
-                    FetchHeaderLength(kHttpLocation));
+    // replace URL with Location header, which
+    // can be a relative or absolute URL:
+    // https://www.rfc-editor.org/rfc/rfc3986#section-4.2
+    gc(ParseUrl(FetchHeaderData(kHttpLocation),
+                FetchHeaderLength(kHttpLocation), &url, true));
+    free(url.params.p);
+    VERBOSEF("(ftch) client redirecting %`'.*s "
+             "(scheme=%`'.*s, host=%`'.*s, port=%.*s, path=%`'.*s)",
+             FetchHeaderLength(kHttpLocation), FetchHeaderData(kHttpLocation),
+             url.scheme.n, url.scheme.p, url.host.n, url.host.p,
+             url.port.n, url.port.p, url.path.n, url.path.p);
+    // while it's possible to check for IsAcceptableHost/IsAcceptablePort
+    // it's not clear what to do if they are not;
+    // if they are invalid, redirect returns "invalid host" message
+    if (url.host.n && url.scheme.n) {
+      lua_pushlstring(L, FetchHeaderData(kHttpLocation),
+                      FetchHeaderLength(kHttpLocation));
+    } else {
+      gc(ParseUrl(urlarg, urlarglen, &url, true));
+      free(url.params.p);
+      // remove user/pass/fragment for the redirect
+      url.fragment.p = 0, url.fragment.n = 0;
+      url.user.p = 0, url.user.n = 0;
+      url.pass.p = 0, url.pass.n = 0;
+      if (FetchHeaderData(kHttpLocation)[0] == '/') {
+        // if the path is absolute, then use it
+        // so `/redir/more` -> `/less` becomes `/less`
+        url.path.n = 0; // replace the path
+      } else {
+        // if the path is relative, then merge it,
+        // so `/redir/more` -> `less` becomes `/redir/less`
+        while (url.path.n > 0 && url.path.p[url.path.n - 1] != '/') {
+          --url.path.n;
+        }
+      }
+      url.path.p = gc(xasprintf("%.*s%.*s", url.path.n, url.path.p,
+                      FetchHeaderLength(kHttpLocation),
+                      FetchHeaderData(kHttpLocation)));
+      url.path.n = strlen(url.path.p);
+      lua_pushstring(L, gc(EncodeUrl(&url, 0)));
+    }
     lua_replace(L, -3);
 
     DestroyHttpMessage(&msg);
