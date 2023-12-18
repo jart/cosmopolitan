@@ -23,6 +23,7 @@
 #include "libc/cosmo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/getenv.internal.h"
 #include "libc/serialize.h"
@@ -32,12 +33,14 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/ok.h"
 
 #define CTL_KERN                   1
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
+#define DEV_FD                     "/dev/fd/"
 
 static struct {
   atomic_uint once;
@@ -46,6 +49,8 @@ static struct {
     char16_t buf16[PATH_MAX / 2];
   } u;
 } g_prog;
+
+static bool g_ape_loaded;
 
 static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
@@ -104,6 +109,29 @@ static int TryPath(const char *q, int com) {
   return 0;
 }
 
+__attribute__((__constructor__)) static void setugidNameCheck(void) {
+  char *end;
+  unsigned long rc;
+  if (__program_executable_name) {
+    g_ape_loaded = true;
+    if (issetugid()) {
+      /* we are running as a set-id interpreter script. this is highly unusual.
+         it means either someone installed their ape loader set-id, or they are
+         running a system that supports secure set-id interpreter scripts via a
+         /dev/fd/ path. check for the latter and allow that. otherwise, set the
+         __program_executable_name to NULL since there is an unavoidable TOCTOU
+         problem between the kernel and the loader. */
+      if ((!IsNetbsd() && !IsOpenbsd() && !IsXnu()) /* any others? */ ||
+          0 != strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) ||
+          (rc = strtoul(__program_executable_name + sizeof(DEV_FD) - 1, &end,
+                        10)) > INT_MAX ||
+          *end || rc < 3 || fcntl((int)rc, F_GETFD) == -1) {
+        __program_executable_name = NULL;
+      }
+    }
+  }
+}
+
 static inline void InitProgramExecutableNameImpl(void) {
   size_t n;
   ssize_t got;
@@ -133,8 +161,13 @@ static inline void InitProgramExecutableNameImpl(void) {
     return;
   }
 
-  // loader passed us a path. it may be relative.
-  if (__program_executable_name) {
+  if (g_ape_loaded) {
+    /* the loader passed us a path. it may be relative. */
+    if (!__program_executable_name) {
+      /* we rejected the loader path because we are running set-id and it
+         looked insecure. use the empty string. */
+      goto UseEmpty;
+    }
     if (*__program_executable_name == '/') {
       return;
     }
