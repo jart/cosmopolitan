@@ -38,7 +38,6 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
-#define DEV_FD                     "/dev/fd/"
 
 static struct {
   atomic_uint once;
@@ -64,7 +63,9 @@ static inline int AllNumDot(const char *s) {
   }
 }
 
-static int IsApeLoader(char *s) {
+// old loaders do not pass __program_executable_name, so we need to
+// check for them when we use KERN_PROC_PATHNAME et al.
+static int OldApeLoader(char *s) {
   char *b;
   return !strcmp(s, "/usr/bin/ape") ||
          (!strncmp((b = basename(s)), ".ape-", 5) &&
@@ -74,39 +75,33 @@ static int IsApeLoader(char *s) {
 // if q exists then turn it into an absolute path. we also try adding
 // a .com suffix since the ape auto-appends it when resolving
 static int TryPath(const char *q, int com) {
+  char c, *p, *e;
   if (!q) return 0;
-  char *p = g_prog.u.buf;
-  char *e = p + sizeof(g_prog.u.buf);
-  int c, f_ok;
-  if ((f_ok = !sys_faccessat(AT_FDCWD, q, F_OK, 0))) {
-    com = 0;
-  } else {
-    if (!com) {
-      return 0;
-    }
-  }
+  p = g_prog.u.buf;
+  e = p + sizeof(g_prog.u.buf);
   if (*q != '/') {
     if (q[0] == '.' && q[1] == '/') {
       q += 2;
     }
-    int got = __getcwd(p, e - p - 1 - com * 4);   // for / and .com
+    int got = __getcwd(p, e - p - 1 /* '/' */ - com * 4);
     if (got != -1) {
       p += got - 1;
       *p++ = '/';
     }
   }
   while ((c = *q++)) {
-    if (p + 1 + com * 4 < e) {  // for nul and .com
+    if (p + com * 4 + 1 /* nul */ < e) {
       *p++ = c;
+    } else {
+      return 0;
     }
   }
-  if (f_ok) {
-    *p = 0;
-    return 1;
-  }
+  *p = 0;
+  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
   p = WRITE32LE(p, READ32LE(".com"));
   *p = 0;
-  return !sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0);
+  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
+  return 0;
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
@@ -138,18 +133,20 @@ static inline void InitProgramExecutableNameImpl(void) {
     return;
   }
 
-  if (issetugid() && __program_executable_name) {
-    if ((IsNetbsd() || IsOpenbsd() || IsXnu()) /* any others? */ &&
-        !strncmp(DEV_FD, __program_executable_name, sizeof(DEV_FD) - 1) &&
-        isdigit(__program_executable_name[sizeof(DEV_FD)]) &&
-        !strchr(__program_executable_name + sizeof(DEV_FD) + 1, '/')) {
-      /* loader passed us a secure path */
+  // loader passed us a path. it may be relative.
+  if (__program_executable_name) {
+    if (*__program_executable_name == '/') {
       return;
-    } else {
-      /* we cannot use KERN_PROC_PATHNAME or its ilk in the loader case. they
-         will report the path of the loader, not the path of the binary. */
-      goto UseEmpty;
     }
+    if (TryPath(__program_executable_name, 0)) {
+      goto UseBuf;
+    }
+    /* if TryPath fails, it probably failed because getcwd() was too long.
+       we are out of options now; KERN_PROC_PATHNAME et al will return the
+       name of the loader not the binary, and argv et al will at best have
+       the same problem. just use the relative path we got from the loader
+       as-is, and accept that if we chdir then things will break. */
+    return;
   }
 
   b = g_prog.u.buf;
@@ -165,7 +162,7 @@ static inline void InitProgramExecutableNameImpl(void) {
     }
     cmd[3] = -1;  // current process
     if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
-      if (!IsApeLoader(b)) {
+      if (!OldApeLoader(b)) {
         goto UseBuf;
       }
     }
@@ -174,20 +171,19 @@ static inline void InitProgramExecutableNameImpl(void) {
     if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
         (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
       b[got] = 0;
-      if (!IsApeLoader(b)) {
+      if (!OldApeLoader(b)) {
         goto UseBuf;
       }
     }
   }
 
+  // don't trust argument parsing if set-id.
   if (issetugid()) {
-    /* give up prior to using less secure methods */
     goto UseEmpty;
   }
 
-  // try what the loader supplied first. fall back to argv[0],
-  // then argv[0].com, then $_, then $_.com.
-  if (TryPath(__program_executable_name, 0) || TryPath(__argv[0], 1) ||
+  // try argv[0], then argv[0].com, then $_, then $_.com.
+  if (TryPath(__argv[0], 1) ||
       /* TODO(mrdomino): remove after next loader mint */
       TryPath(__getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s, 0) ||
       TryPath(__getenv(__envp, "_").s, 1)) {
@@ -207,8 +203,8 @@ static inline void InitProgramExecutableNameImpl(void) {
     goto UseBuf;
   }
 
-  // if we don't even have that then empty the string
 UseEmpty:
+  // if we don't even have that then empty the string
   g_prog.u.buf[0] = 0;
 
 UseBuf:
