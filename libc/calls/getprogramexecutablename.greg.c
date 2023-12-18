@@ -63,11 +63,45 @@ static inline int AllNumDot(const char *s) {
   }
 }
 
-static int IsApeLoader(char *s) {
+// old loaders do not pass __program_executable_name, so we need to
+// check for them when we use KERN_PROC_PATHNAME et al.
+static int OldApeLoader(char *s) {
   char *b;
   return !strcmp(s, "/usr/bin/ape") ||
          (!strncmp((b = basename(s)), ".ape-", 5) &&
           AllNumDot(b + 5));
+}
+
+// if q exists then turn it into an absolute path. we also try adding
+// a .com suffix since the ape auto-appends it when resolving
+static int TryPath(const char *q, int com) {
+  char c, *p, *e;
+  if (!q) return 0;
+  p = g_prog.u.buf;
+  e = p + sizeof(g_prog.u.buf);
+  if (*q != '/') {
+    if (q[0] == '.' && q[1] == '/') {
+      q += 2;
+    }
+    int got = __getcwd(p, e - p - 1 /* '/' */ - com * 4);
+    if (got != -1) {
+      p += got - 1;
+      *p++ = '/';
+    }
+  }
+  while ((c = *q++)) {
+    if (p + com * 4 + 1 /* nul */ < e) {
+      *p++ = c;
+    } else {
+      return 0;
+    }
+  }
+  *p = 0;
+  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
+  p = WRITE32LE(p, READ32LE(".com"));
+  *p = 0;
+  if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
+  return 0;
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
@@ -75,10 +109,6 @@ static inline void InitProgramExecutableNameImpl(void) {
   ssize_t got;
   char c, *q, *b;
 
-  if (__program_executable_name) {
-    /* already set by the loader */
-    return;
-  }
   if (IsWindows()) {
     int n = GetModuleFileName(0, g_prog.u.buf16, ARRAYLEN(g_prog.u.buf16));
     for (int i = 0; i < n; ++i) {
@@ -103,6 +133,22 @@ static inline void InitProgramExecutableNameImpl(void) {
     return;
   }
 
+  // loader passed us a path. it may be relative.
+  if (__program_executable_name) {
+    if (*__program_executable_name == '/') {
+      return;
+    }
+    if (TryPath(__program_executable_name, 0)) {
+      goto UseBuf;
+    }
+    /* if TryPath fails, it probably failed because getcwd() was too long.
+       we are out of options now; KERN_PROC_PATHNAME et al will return the
+       name of the loader not the binary, and argv et al will at best have
+       the same problem. just use the relative path we got from the loader
+       as-is, and accept that if we chdir then things will break. */
+    return;
+  }
+
   b = g_prog.u.buf;
   n = sizeof(g_prog.u.buf) - 1;
   if (IsFreebsd() || IsNetbsd()) {
@@ -116,7 +162,7 @@ static inline void InitProgramExecutableNameImpl(void) {
     }
     cmd[3] = -1;  // current process
     if (sys_sysctl(cmd, ARRAYLEN(cmd), b, &n, 0, 0) != -1) {
-      if (!IsApeLoader(b)) {
+      if (!OldApeLoader(b)) {
         goto UseBuf;
       }
     }
@@ -125,54 +171,27 @@ static inline void InitProgramExecutableNameImpl(void) {
     if ((got = sys_readlinkat(AT_FDCWD, "/proc/self/exe", b, n)) > 0 ||
         (got = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", b, n)) > 0) {
       b[got] = 0;
-      if (!IsApeLoader(b)) {
+      if (!OldApeLoader(b)) {
         goto UseBuf;
       }
     }
   }
 
+  // don't trust argument parsing if set-id.
   if (issetugid()) {
-    /* give up prior to using less secure methods */
     goto UseEmpty;
   }
 
-  // if argv[0] exists then turn it into an absolute path. we also try
-  // adding a .com suffix since the ape auto-appends it when resolving
-  if ((q = __argv[0])) {
-    char *p = g_prog.u.buf;
-    char *e = p + sizeof(g_prog.u.buf);
-    if (*q != '/') {
-      if (q[0] == '.' && q[1] == '/') {
-        q += 2;
-      }
-      int got = __getcwd(p, e - p - 1 - 4);  // for / and .com
-      if (got != -1) {
-        p += got - 1;
-        *p++ = '/';
-      }
-    }
-    while ((c = *q++)) {
-      if (p + 1 + 4 < e) {  // for nul and .com
-        *p++ = c;
-      }
-    }
-    *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
-    p = WRITE32LE(p, READ32LE(".com"));
-    *p = 0;
-    if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) goto UseBuf;
-  }
-
-  /* the previous loader supplied the full program path as the first
-     environment variable. we also try "_". */
-  if ((q = __getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s) ||
-      (q = __getenv(__envp, "_").s)) {
-    goto CopyString;
+  // try argv[0], then argv[0].com, then $_, then $_.com.
+  if (TryPath(__argv[0], 1) ||
+      /* TODO(mrdomino): remove after next loader mint */
+      TryPath(__getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s, 0) ||
+      TryPath(__getenv(__envp, "_").s, 1)) {
+    goto UseBuf;
   }
 
   // give up and just copy argv[0] into it
   if ((q = __argv[0])) {
-  CopyString:
     char *p = g_prog.u.buf;
     char *e = p + sizeof(g_prog.u.buf);
     while ((c = *q++)) {
@@ -184,8 +203,8 @@ static inline void InitProgramExecutableNameImpl(void) {
     goto UseBuf;
   }
 
-  // if we don't even have that then empty the string
 UseEmpty:
+  // if we don't even have that then empty the string
   g_prog.u.buf[0] = 0;
 
 UseBuf:
