@@ -38,17 +38,15 @@ static ssize_t __zipos_read_impl(struct ZiposHandle *h, const struct iovec *iov,
     return eisdir();
   }
   if (opt_offset == -1) {
-    while (true) {
-      start_pos = atomic_load_explicit(&h->pos, memory_order_relaxed);
+  Restart:
+    start_pos = atomic_load_explicit(&h->pos, memory_order_relaxed);
+    do {
       if (UNLIKELY(start_pos == SIZE_MAX)) {
-        continue;
+        goto Restart;
       }
-      if (LIKELY(atomic_compare_exchange_weak_explicit(
-              &h->pos, &start_pos, SIZE_MAX, memory_order_acquire,
-              memory_order_relaxed))) {
-        break;
-      }
-    }
+    } while (!LIKELY(atomic_compare_exchange_weak_explicit(
+        &h->pos, &start_pos, SIZE_MAX, memory_order_acquire,
+        memory_order_relaxed)));
     x = y = start_pos;
   } else {
     x = y = opt_offset;
