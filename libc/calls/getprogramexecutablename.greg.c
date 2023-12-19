@@ -98,6 +98,7 @@ static int TryPath(const char *q, int com) {
   }
   *p = 0;
   if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
+  if (!com) return 0;
   p = WRITE32LE(p, READ32LE(".com"));
   *p = 0;
   if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
