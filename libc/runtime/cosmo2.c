@@ -78,7 +78,8 @@ static const char *DecodeMagnum(const char *p, long *r) {
   return *r = x, p;
 }
 
-wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename) {
+wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, int, int os,
+                                  char *exename) {
 
   // get startup timestamp as early as possible
   // its used by --strace and also kprintf() %T
@@ -112,17 +113,24 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename) {
   program_invocation_name = argv[0];
   __oldstack = (intptr_t)sp;
 
-  // detect apple m1 environment
   const char *magnums;
-  if (SupportsXnu() && (__syslib = m1)) {
-    hostos = _HOSTXNU;
-    magnums = syscon_xnu;
-  } else if (SupportsLinux()) {
-    hostos = _HOSTLINUX;
-    magnums = syscon_linux;
-  } else {
-    notpossible;
+  switch (os) {
+    case _HOSTXNU: {
+      npassert(SupportsXnu() && m1);
+      __syslib = m1;
+      magnums = syscon_xnu;
+      break;
+    }
+    case _HOSTLINUX: {
+      npassert(SupportsLinux());
+      magnums = syscon_linux;
+      break;
+    }
+    default: {
+      npassert(!"supported-os");
+    }
   }
+  hostos = os;
 
   // setup system magic numbers
   for (long *mp = syscon_start; mp < syscon_end; ++mp) {

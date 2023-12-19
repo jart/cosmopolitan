@@ -17,74 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#include "libc/notice.inc"
 
-//	Calls _start() function of loaded program.
-//
-//	When the program entrypoint is called, all registers shall be
-//	cleared, with the exception of (1) %rdi will be equal to %rsp
-//	on FreeBSD and (2) %cl will contain the detected host OS code
-//
-//	We clear all the general registers we can to have some wiggle
-//	room, to extend the behavior of this loader in the future. We
-//	don't need to clear the XMM registers because your APE loader
-//	should be compiled using gcc/clang's -mgeneral-regs-only flag
-//
-//	@param	rdi is passed through as-is
-//	@param	rsi is address of entrypoint (becomes zero)
-//	@param	rdx is stack pointer (becomes zero)
-//	@param	rcx is passed through as-is
-//	@param	r8  is passed through as-is
-//	@noreturn
-Launch:
-#ifdef __aarch64__
+	.initbss 300,_init_program_executable_name
+//	Global variable holding the binary that we are running as
+__program_executable_name:
+	.quad	0
+	.endobj	__program_executable_name,globl
+	.previous
 
-	mov	x16,x1
-	mov	sp,x2
-	mov	x1,0
-	mov	x2,0
-	mov	x5,0
-	mov	x6,0
-	mov	x7,0
-	mov	x8,0
-	mov	x9,0
-	mov	x10,0
-	mov	x11,0
-	mov	x12,0
-	mov	x13,0
-	mov	x14,0
-	mov	x15,0
-	mov	x17,0
-	mov	x19,0
-	mov	x20,0
-	mov	x21,0
-	mov	x22,0
-	mov	x23,0
-	mov	x24,0
-	mov	x25,0
-	mov	x26,0
-	mov	x27,0
-	mov	x28,0
-	mov	x29,0
-	mov	x30,0
-	br	x16
-
-#else
-
-	xor	%r9d,%r9d
-	xor	%r10d,%r10d
-	xor	%r11d,%r11d
-	xor	%r12d,%r12d
-	xor	%r13d,%r13d
-	xor	%r14d,%r14d
-	xor	%r15d,%r15d
-	mov	%rdx,%rsp
-	xor	%edx,%edx
-	push	%rsi
-	xor	%esi,%esi
-	xor	%ebp,%ebp
-	xor	%ebx,%ebx
-	xor	%eax,%eax
-	ret
-
-#endif
-	.endfn	Launch,globl
+	.init.start 300,_init_program_executable_name
+	mov	%r8,%rax
+	stosq
+	.init.end 300,_init_program_executable_name

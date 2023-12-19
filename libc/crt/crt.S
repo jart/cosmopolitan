@@ -62,8 +62,6 @@ _start:
 //	set operating system when already detected
 1:	mov	%cl,__hostos(%rip)
 
-	mov	%rdx,__program_executable_name(%rip)
-
 //	get startup timestamp as early as possible
 //	its used by --strace flag and kprintf() %T
 	rdtsc
@@ -142,7 +140,9 @@ _start:
 //	should be set to zero on other platforms
 	mov	x1,x15
 
-//	third arg (x2) is the program path passed by ape-m1.c
+//	3rd arg (x2) is unused (stack pointer on x86_64)
+//	4th arg (x3) is os passed by loader
+//	5th arg (x4) is program executable name passed by loader
 
 //	switch to c code
 	bl	cosmo
