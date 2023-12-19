@@ -62,6 +62,8 @@ _start:
 //	set operating system when already detected
 1:	mov	%cl,__hostos(%rip)
 
+	mov	%r8,__program_executable_name(%rip)
+
 //	get startup timestamp as early as possible
 //	its used by --strace flag and kprintf() %T
 	rdtsc
