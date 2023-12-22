@@ -143,6 +143,7 @@ _start:
 	mov	x1,x15
 
 //	third arg (x2) is the program path passed by ape-m1.c
+//	fourth arg (x3) is os
 
 //	switch to c code
 	bl	cosmo

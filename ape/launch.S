@@ -32,15 +32,15 @@
 //	@param	rdi is passed through as-is
 //	@param	rsi is address of entrypoint (becomes zero)
 //	@param	rdx is passed through as-is
-//	@param	rcx is stack pointer (becomes r8)
+//	@param	rcx is passed through as-is
+//	@param	r8  is stack pointer (becomes zero)
 //	@noreturn
 Launch:
 #ifdef __aarch64__
 
 	mov	x16,x1
-	mov	sp,x3
+	mov	sp,x4
 	mov	x1,0
-	mov	x3,x4
 	mov	x4,0
 	mov	x5,0
 	mov	x6,0
@@ -70,8 +70,7 @@ Launch:
 
 #else
 
-	mov	%rcx,%rsp
-	mov	%r8,%rcx
+	mov	%r8,%rsp
 	xor	%r8d,%r8d
 	xor	%r9d,%r9d
 	xor	%r10d,%r10d
