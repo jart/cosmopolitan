@@ -88,7 +88,7 @@ o/$(MODE)/ape/ape.elf.dbg:			\
 	@$(COMPILE) -ALINK.elf $(LD) $(APE_LOADER_LDFLAGS) -o $@ $(patsubst %.lds,-T %.lds,$^)
 
 o/$(MODE)/ape/loader.o: ape/loader.c ape/ape.h
-	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=1 -g $(APE_LOADER_FLAGS)
+	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=33 -g $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/start.o: ape/start.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 o/$(MODE)/ape/launch.o: ape/launch.S
