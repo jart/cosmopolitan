@@ -9,8 +9,9 @@ int mulaw(int);
 int unmulaw(int);
 void *double2byte(long, const void *, double, double) vallocesque;
 void *byte2double(long, const void *, double, double) vallocesque;
-void *dct(float[8][8], float, float, float, float, float);
-void *dctjpeg(float[8][8]);
+void *dct(float[restrict hasatleast 8][8], unsigned,
+          float, float, float, float, float);
+void *dctjpeg(float[restrict hasatleast 8][8], unsigned);
 double det3(const double[3][3]) nosideeffect;
 void *inv3(double[restrict 3][3], const double[restrict 3][3], double);
 void *matmul3(double[restrict 3][3], const double[3][3], const double[3][3]);
