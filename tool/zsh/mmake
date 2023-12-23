@@ -6,11 +6,11 @@
 #     mmake tiny ape/ape.elf
 local mode
 case $1 in
-  (m|MODE)=*)       mode=${1#*=};               shift ;;
   aarch64|x86_64|aarch64-(zero|tiny)|x86_64-tiny)     ;&
   zero|fastbuild|opt|optlinux|rel|asan|dbg|sysv)      ;&
   tiny(|linux(|bsd)|sysv|nowin)|nox87|llvm|ansi)      ##
                     mode=$1;                    shift ;;
+  (m|MODE)=*)       mode=${1#*=};               shift ;;
   *)                mode=${MODE:-${m}}                ;;
 esac
 [[ -z $mode ]] && {
