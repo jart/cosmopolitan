@@ -63,7 +63,7 @@ static inline void	 swapfunc(char *, char *, size_t, int);
 		TYPE	t = *pi;			\
 		*pi++ = *pj;				\
 		*pj++ = t;				\
-        } while (--i > 0);				\
+	} while (--i > 0);				\
 }
 
 static inline void
@@ -110,7 +110,7 @@ med3(char *a, char *b, char *c, CMPPAR)
 {
 	return CMP(a, b) < 0 ?
 	       (CMP(b, c) < 0 ? b : (CMP(a, c) < 0 ? c : a ))
-              :(CMP(b, c) > 0 ? b : (CMP(a, c) < 0 ? a : c ));
+	      :(CMP(b, c) > 0 ? b : (CMP(a, c) < 0 ? a : c ));
 }
 
 static void

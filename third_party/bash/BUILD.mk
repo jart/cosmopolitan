@@ -1,5 +1,5 @@
 #-*-mode:bashfile-gbash;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
-#── vi: set et ft=bash ts=8 sw=8 fenc=utf-8 :vi ──────────────────────┘
+#── vi: set noet ft=bash ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
 PKGS += THIRD_PARTY_BASH
 
@@ -31,6 +31,7 @@ THIRD_PARTY_BASH_DIRECTDEPS =						\
 	LIBC_SYSV							\
 	LIBC_THREAD							\
 	LIBC_TIME							\
+	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_GETOPT						\
 	THIRD_PARTY_MUSL						\

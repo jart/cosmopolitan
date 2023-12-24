@@ -22,7 +22,7 @@
  * Clears eof and error state indicators on stream.
  *
  * @param f is file object stream pointer
- * @see	clearerr_unlocked()
+ * @see clearerr_unlocked()
  */
 void clearerr(FILE *f) {
   flockfile(f);

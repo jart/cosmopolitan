@@ -20,7 +20,7 @@
 /**
  * Timestamp of process start.
  *
- * @see	libc/runtime/winmain.greg.h
- * @see	libc/crt/crt.S
+ * @see libc/runtime/winmain.greg.h
+ * @see libc/crt/crt.S
  */
 uint64_t kStartTsc;

@@ -1,5 +1,5 @@
 /usr/bin/env echo ' -*-mode:sh;indent-tabs-mode:nil;tab-width:8;coding:utf-8-*-│
-│ vi: set et ft=sh ts=2 sts=2 sw=2 fenc=utf-8                              :vi │
+│ vi: set noet ft=sh ts=8 sts=8 sw=8 fenc=utf-8                            :vi │
 ╚────────────────────────────────────────────────────────────────'>/dev/null #*/
 . libc/nt/codegen.sh
 
