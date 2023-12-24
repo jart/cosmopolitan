@@ -20,12 +20,25 @@
 #include "libc/elf/def.h"
 #include "libc/elf/struct/ehdr.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 
 int main(int argc, char *argv[]) {
-  open(argv[1], O_RDWR);
-  Elf64_Ehdr *e = mmap(0, 64, PROT_READ | PROT_WRITE, MAP_SHARED, 3, 0);
+  int fd;
+  Elf64_Ehdr *e;
+  if (argc != 2) {
+    fprintf(stderr, "usage: %s <file>\n", argv[0]);
+    exit(1);
+  } else if ((fd = open(argv[1], O_RDWR)) < 0) {
+    perror("open");
+    exit(1);
+  } else if ((e = mmap(0, 64, PROT_READ | PROT_WRITE, MAP_SHARED, 3, 0)) ==
+             MAP_FAILED) {
+    perror("mmap");
+    exit(2);
+  }
   e->e_ident[EI_OSABI] = ELFOSABI_FREEBSD;
+  return 0;
 }
