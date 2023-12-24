@@ -936,22 +936,11 @@ __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
         "\n"
         "USAGE\n"
         "\n"
-        "  ape -h\n"
         "  ape   PROG [ARGV1,ARGV2,...]\n"
         "  ape - PROG [ARGV0,ARGV1,...]\n"
-        "\n"
-        "FLAGS\n"
-        "\n"
-        "  -h    show this help\n"
         "\n",
         0l);
   Exit(rc, os);
-}
-
-__attribute__((__noreturn__)) static void ShowError(int os, const char *ape,
-                                                    const char *s) {
-  Print(os, 2, ape, ": ", s, " (pass -h for help)\n", 0l);
-  Exit(1, os);
 }
 
 EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
@@ -1033,15 +1022,12 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
   } else if (argc < 2) {
-    ShowError(os, ape, "missing command name");
+    ShowUsage(os, 2, 1);
   } else {
     if (argv[1][0] == '-') {
-      if ((argv[1][1] == 'h' && !argv[1][2]) ||
-          !StrCmp(argv[1] + 1, "-help")) {
-        ShowUsage(os, 1, 0);
-      } else {
-        ShowError(os, ape, "invalid flag");
-      }
+      rc = !(argv[1][1] == 'h' && !argv[1][2]) || !StrCmp(argv[1] + 1,
+                                                          "-help");
+      ShowUsage(os, 1 + rc, rc);
     }
     prog = (char *)sp[2];
     argc = sp[1] = sp[0] - 1;
