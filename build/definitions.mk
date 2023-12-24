@@ -78,6 +78,7 @@ PECHECK = build/bootstrap/pecheck.com
 FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
 COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
+SYSV2FREEBSD = build/bootstrap/sysv2freebsd.com
 
 COMMA := ,
 PWD := $(shell build/bootstrap/pwd.com)

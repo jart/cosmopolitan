@@ -79,6 +79,7 @@ APE_LOADER_FLAGS =				\
 
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
 	$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -g $< $@
+	$(SYSV2FREEBSD) $@
 
 o/$(MODE)/ape/ape.elf.dbg:			\
 		o/$(MODE)/ape/start.o		\
