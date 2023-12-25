@@ -36,10 +36,15 @@ void SetUpOnce(void) {
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   static bool skiparg0tests;
-  if (!__program_executable_name && !IsFreebsd() && !IsNetbsd()) {
+  if (!IsXnuSilicon()) {
+    /* TODO(mrdomino): these tests only pass on XnuSilicon right now because
+                       __sys_execve fails there, so the ape loader is used.
+                       the correct check here is "we have been invoked either
+                       as an assimilated binary or via the ape loader, and not
+                       via a raw __sys_execve." */
     skiparg0tests = true;
     if (argc < 2) {
-      fprintf(stderr, "warning: old/no loader; skipping argv[0] tests\n");
+      fprintf(stderr, "warning: skipping argv[0] tests\n");
     }
   }
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
