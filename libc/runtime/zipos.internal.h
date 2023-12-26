@@ -38,7 +38,7 @@ struct Zipos {
 };
 
 int __zipos_close(int);
-void __zipos_free(struct ZiposHandle *);
+void __zipos_drop(struct ZiposHandle *);
 struct ZiposHandle *__zipos_keep(struct ZiposHandle *);
 struct Zipos *__zipos_get(void) pureconst;
 size_t __zipos_normpath(char *, const char *, size_t);
