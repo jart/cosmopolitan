@@ -38,8 +38,7 @@ done
   whence nproc >/dev/null || autoload -Uz nproc
   j=-j$(nproc)
 }
-local make
-[[ -x /opt/cosmocc/bin/make ]] && make=/opt/cosmocc/bin/make
+local make=${MAKE:-$(echo /opt/cosmocc/bin/make(X) 2>/dev/null)}
 [[ -z $make ]] && make=build/bootstrap/make.com
 ( set -x
   exec $make $j $flags MODE=$mode $targs )
