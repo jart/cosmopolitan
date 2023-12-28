@@ -17,46 +17,43 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/macros.internal.h"
 #include "libc/nt/enum/offerpriority.h"
-#include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/memoryrangeentry.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/errfuns.h"
 
-forceinline typeof(PrefetchVirtualMemory) *GetPrefetchVirtualMemory(void) {
-  static bool once;
-  static typeof(PrefetchVirtualMemory) *PrefetchVirtualMemory_;
-  if (!once) {
+typedef bool32 (*__msabi PrefetchVirtualMemoryPtr)(
+    int64_t hProcess, uintptr_t NumberOfEntries,
+    struct NtMemoryRangeEntry *VirtualAddresses, uint32_t reserved_Flags);
+
+textwindows static PrefetchVirtualMemoryPtr GetPrefetchVirtualMemory(void) {
+  static PrefetchVirtualMemoryPtr PrefetchVirtualMemory_;
+  if (!PrefetchVirtualMemory_) {
     PrefetchVirtualMemory_ = /* win8.1+ */
         GetProcAddressModule("Kernel32.dll", "PrefetchVirtualMemory");
-    once = true;
   }
   return PrefetchVirtualMemory_;
 }
 
-forceinline typeof(OfferVirtualMemory) *GetOfferVirtualMemory(void) {
-  static bool once;
-  static typeof(OfferVirtualMemory) *OfferVirtualMemory_;
-  if (!once) {
+typedef bool32 (*__msabi OfferVirtualMemoryPtr)(void *inout_VirtualAddress,
+                                                size_t Size, int Priority);
+
+textwindows static OfferVirtualMemoryPtr GetOfferVirtualMemory(void) {
+  static OfferVirtualMemoryPtr OfferVirtualMemory_;
+  if (!OfferVirtualMemory_) {
     OfferVirtualMemory_ = /* win8.1+ */
         GetProcAddressModule("Kernel32.dll", "OfferVirtualMemory");
-    once = true;
   }
   return OfferVirtualMemory_;
 }
 
 textwindows int sys_madvise_nt(void *addr, size_t length, int advice) {
-  uint32_t rangecount;
-  struct NtMemoryRangeEntry ranges[1];
   if (advice == MADV_WILLNEED || advice == MADV_SEQUENTIAL) {
-    typeof(PrefetchVirtualMemory) *fn = GetPrefetchVirtualMemory();
+    PrefetchVirtualMemoryPtr fn = GetPrefetchVirtualMemory();
     if (fn) {
-      ranges[0].VirtualAddress = addr;
-      ranges[0].NumberOfBytes = length;
-      rangecount = ARRAYLEN(ranges);
-      if (fn(GetCurrentProcess(), &rangecount, ranges, 0)) {
+      if (fn(GetCurrentProcess(), 1, &(struct NtMemoryRangeEntry){addr, length},
+             0)) {
         return 0;
       } else {
         return __winerr();
@@ -65,7 +62,7 @@ textwindows int sys_madvise_nt(void *addr, size_t length, int advice) {
       return enosys();
     }
   } else if (advice == MADV_FREE) {
-    typeof(OfferVirtualMemory) *fn = GetOfferVirtualMemory();
+    OfferVirtualMemoryPtr fn = GetOfferVirtualMemory();
     if (fn) {
       if (fn(addr, length, kNtVmOfferPriorityNormal)) {
         return 0;

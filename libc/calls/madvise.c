@@ -29,21 +29,21 @@
  *
  * @param advice can be MADV_WILLNEED, MADV_SEQUENTIAL, MADV_FREE, etc.
  * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `advice` isn't valid or supported by system
+ * @raise EINVAL on Linux if addr/length isn't page size aligned with
+ *     respect to `getauxval(AT_PAGESZ)`
+ * @raise ENOMEM on Linux if addr/length overlaps unmapped regions
  * @see libc/sysv/consts.sh
  * @see fadvise()
  */
 int madvise(void *addr, size_t length, int advice) {
   int rc;
-  if (advice != 127 /* see consts.sh */) {
-    if (IsAsan() && !__asan_is_valid(addr, length)) {
-      rc = efault();
-    } else if (!IsWindows()) {
-      rc = sys_madvise(addr, length, advice);
-    } else {
-      rc = sys_madvise_nt(addr, length, advice);
-    }
+  if (IsAsan() && !__asan_is_valid(addr, length)) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_madvise(addr, length, advice);
   } else {
-    rc = einval();
+    rc = sys_madvise_nt(addr, length, advice);
   }
   STRACE("madvise(%p, %'zu, %d) → %d% m", addr, length, advice, rc);
   return rc;
