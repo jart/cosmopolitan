@@ -29,7 +29,7 @@
 
 */
 
-#ifdef USE_SPIN_LOCKS
+#if USE_SPIN_LOCKS
 
 #define MLOCK_T atomic_uint
 
@@ -62,11 +62,13 @@ static int malloc_wipe(MLOCK_T *lk) {
 }
 
 static int malloc_lock(MLOCK_T *lk) {
+  if (!__threaded) return 0;
   nsync_mu_lock(lk);
   return 0;
 }
 
 static int malloc_unlock(MLOCK_T *lk) {
+  if (!__threaded) return 0;
   nsync_mu_unlock(lk);
   return 0;
 }
