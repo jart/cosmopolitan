@@ -4956,10 +4956,11 @@ static int LuaProgramTokenBucket(lua_State *L) {
 }
 
 static const char *GetContentTypeExt(const char *path, size_t n) {
-  const char *r, *e;
+  const char *r = NULL, *e;
+  if ((r = FindContentType(path, n))) return r;
+#ifndef STATIC
   int top;
   lua_State *L = GL;
-  if ((r = FindContentType(path, n))) return r;
 
   // extract the last .; use the entire path if none is present
   if ((e = memrchr(path, '.', n))) {
@@ -4974,6 +4975,7 @@ static const char *GetContentTypeExt(const char *path, size_t n) {
   if (lua_gettable(L, -2) == LUA_TSTRING)
     r = FreeLater(strdup(lua_tostring(L, -1)));
   lua_settop(L, top);
+#endif
   return r;
 }
 
