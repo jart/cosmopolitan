@@ -146,7 +146,8 @@
 #define kHttpCfIpcountry                   90
 #define kHttpSecChUaPlatform               91
 #define kHttpCdnLoop                       92
-#define kHttpHeadersMax                    93
+#define kHttpWebsocketKey                  93
+#define kHttpHeadersMax                    94
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

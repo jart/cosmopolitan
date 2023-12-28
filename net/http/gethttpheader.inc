@@ -39,7 +39,7 @@
 #line 12 "gethttpheader.gperf"
 struct thatispacked HttpHeaderSlot { char *name; char code; };
 
-#define TOTAL_KEYWORDS 93
+#define TOTAL_KEYWORDS 94
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 32
 #define MIN_HASH_VALUE 3
@@ -387,7 +387,10 @@ LookupHttpHeader (register const char *str, register size_t len)
 #line 87 "gethttpheader.gperf"
       {"Strict-Transport-Security",        kHttpStrictTransportSecurity},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 107 "gethttpheader.gperf"
+      {"Sec-WebSocket-Key",                kHttpWebsocketKey},
+      {""}, {""},
 #line 22 "gethttpheader.gperf"
       {"X-Forwarded-For",                  kHttpXForwardedFor},
       {""},

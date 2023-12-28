@@ -5066,23 +5066,14 @@ static int LuaUpgradeWS(lua_State *L) {
   unsigned char hash[20];
   OnlyCallDuringRequest(L, "UpgradeWS");
 
-  haskey = true;
-  for (i = 0; i < cpm.msg.xheaders.n; ++i) {
-    if (SlicesEqualCase(
-            "Sec-WebSocket-Key", strlen("Sec-WebSocket-Key"),
-            inbuf.p + cpm.msg.xheaders.p[i].k.a,
-            cpm.msg.xheaders.p[i].k.b - cpm.msg.xheaders.p[i].k.a)) {
-      mbedtls_sha1_init(&ctx);
-      mbedtls_sha1_starts_ret(&ctx);
-      mbedtls_sha1_update_ret(
-          &ctx, (unsigned char *)inbuf.p + cpm.msg.xheaders.p[i].v.a,
-          cpm.msg.xheaders.p[i].v.b - cpm.msg.xheaders.p[i].v.a);
-      haskey = true;
-      break;
-    }
-  }
+  if (!HasHeader(kHttpWebsocketKey))
+    luaL_error(L, "No Sec-WebSocket-Key header");
 
-  if (!haskey) luaL_error(L, "No Sec-WebSocket-Key header");
+  mbedtls_sha1_init(&ctx);
+  mbedtls_sha1_starts_ret(&ctx);
+  mbedtls_sha1_update_ret(&ctx, (unsigned char*)
+                          HeaderData(kHttpWebsocketKey),
+                          HeaderLength(kHttpWebsocketKey));
 
   p = SetStatus(101, "Switching Protocols");
   while (p - hdrbuf.p + (20 + 21 + (20 + 28 + 4)) + 512 > hdrbuf.n) {
