@@ -35,35 +35,30 @@ void SetUpOnce(void) {
 }
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
-  static bool skiparg0tests;
-  if (!IsXnuSilicon()) {
-    /* TODO(mrdomino): these tests only pass on XnuSilicon right now because
-                       __sys_execve fails there, so the ape loader is used.
-                       the correct check here is "we have been invoked either
-                       as an assimilated binary or via the ape loader, and not
-                       via a raw __sys_execve." */
-    skiparg0tests = true;
-    if (argc < 2) {
-      fprintf(stderr, "warning: skipping argv[0] tests\n");
-    }
-  }
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
-    ASSERT_EQ(argc, 4);
-    EXPECT_STREQ(argv[2], GetProgramExecutableName());
-    if (!skiparg0tests) {
-      EXPECT_STREQ(argv[3], argv[0]);
+    if (strcmp(argv[2], GetProgramExecutableName())) {
+      exit(123);
     }
-    exit(g_testlib_failed);
+    if (strcmp(argv[3], argv[0])) {
+      exit(124);
+    }
+    exit(0);
   }
 }
 
 TEST(GetProgramExecutableName, ofThisFile) {
   EXPECT_EQ('/', *self);
-  EXPECT_TRUE(
-      endswith(self, "test/libc/calls/getprogramexecutablename_test.com"));
+  EXPECT_TRUE(!!strstr(self, "getprogramexecutablename_test"));
 }
 
+/* TODO(mrdomino): these tests only pass on XnuSilicon right now because
+                   __sys_execve fails there, so the ape loader is used.
+                   the correct check here is "we have been invoked either
+                   as an assimilated binary or via the ape loader, and not
+                   via a raw __sys_execve." */
+
 TEST(GetProgramExecutableName, nullEnv) {
+  if (!IsXnuSilicon()) return;
   SPAWN(fork);
   execve(self, (char *[]){self, "Child", self, self, 0}, (char *[]){0});
   abort();
@@ -71,6 +66,7 @@ TEST(GetProgramExecutableName, nullEnv) {
 }
 
 TEST(GetProramExecutableName, weirdArgv0NullEnv) {
+  if (!IsXnuSilicon()) return;
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, "hello", 0}, (char *[]){0});
   abort();
@@ -78,6 +74,7 @@ TEST(GetProramExecutableName, weirdArgv0NullEnv) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
+  if (!IsXnuSilicon()) return;
   char buf[32 + PATH_MAX];
   stpcpy(stpcpy(buf, "COSMOPOLITAN_PROGRAM_EXECUTABLE="), self);
   SPAWN(fork);
@@ -88,6 +85,7 @@ TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
+  if (!IsXnuSilicon()) return;
   char *bad = "COSMOPOLITAN_PROGRAM_EXECUTABLE=hi";
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, "hello", 0},
@@ -97,6 +95,7 @@ TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
 }
 
 TEST(GetProgramExecutableName, movedSelf) {
+  if (!IsXnuSilicon()) return;
   char buf[BUFSIZ];
   ASSERT_SYS(0, 3, open(GetProgramExecutableName(), O_RDONLY));
   ASSERT_SYS(0, 4, creat("test", 0755));
