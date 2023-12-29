@@ -32,7 +32,6 @@ Musl libc (MIT License)\\n\
 Copyright 2005-2020 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 
-
 struct node {
 	struct node *next;
 	struct node *prev;

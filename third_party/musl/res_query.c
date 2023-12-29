@@ -25,8 +25,8 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/ent.h"
 #include "third_party/musl/resolv.h"
+#include "third_party/musl/netdb.h"
 #include "third_party/musl/resolv.internal.h"
 
 asm(".ident\t\"\\n\\n\

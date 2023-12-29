@@ -26,7 +26,6 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"

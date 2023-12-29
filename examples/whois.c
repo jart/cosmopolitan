@@ -30,12 +30,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/log/bsd.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
@@ -44,6 +45,7 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sock.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "third_party/musl/netdb.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

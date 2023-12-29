@@ -30,6 +30,7 @@
 #include "libc/str/str.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
+#include "libc/sock/sock.h"
 #include "third_party/musl/lookup.internal.h"
 
 asm(".ident\t\"\\n\\n\

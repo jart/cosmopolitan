@@ -3,7 +3,7 @@
 #include "libc/stdio/stdio.h"
 COSMOPOLITAN_C_START_
 
-char *xgetline(struct FILE *) paramsnonnull() mallocesque;
+char *xgetline(FILE *) paramsnonnull() mallocesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_X_XGETLINE_H_ */
