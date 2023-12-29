@@ -5058,13 +5058,15 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
   return !!a;
 }
 
-static int LuaUpgradeWS(lua_State *L) {
+static int LuaWSUpgrade(lua_State *L) {
   size_t i;
   char *p, *q;
   bool haskey;
   mbedtls_sha1_context ctx;
   unsigned char hash[20];
-  OnlyCallDuringRequest(L, "UpgradeWS");
+
+  if (cpm.generator)
+    luaL_error(L, "Cannot upgrade to websocket after yielding normally");
 
   if (!HasHeader(kHttpWebsocketKey))
     luaL_error(L, "No Sec-WebSocket-Key header");
@@ -5094,17 +5096,18 @@ static int LuaUpgradeWS(lua_State *L) {
 
   cpm.luaheaderp = p;
   cpm.wstype = 1;
+
   return 0;
 }
 
-static int LuaReadWS(lua_State *L) {
+static int LuaWSRead(lua_State *L) {
   ssize_t rc;
   size_t i, got, amt, bufsize;
   unsigned char wshdr[10], wshdrlen, *extlen, *mask, op;
   char *bufstart;
   uint64_t len;
   struct iovec iov[2];
-  OnlyCallDuringRequest(L, "ReadWS");
+  OnlyCallDuringRequest(L, "ws.Read");
 
   got = 0;
   do {
@@ -5176,21 +5179,21 @@ static int LuaReadWS(lua_State *L) {
 
       if (op == 0x1 && !isutf8(bufstart, bufsize)) goto close;
       lua_pushlstring(L, bufstart, bufsize);
-      lua_pushnumber(L, wshdr[0]);
+      lua_pushinteger(L, op);
     } else {
       bufstart = inbuf.p + amtread;
       bufsize = (wsfragread - amtread) + got;
 
       if (wsfragtype == 0x1 && !isutf8(bufstart, bufsize)) goto close;
       lua_pushlstring(L, bufstart, bufsize);
-      lua_pushnumber(L, wsfragtype);
+      lua_pushinteger(L, wsfragtype);
 
       wsfragread = amtread;
       wsfragtype = 0;
     }
   } else {
     lua_pushnil(L);
-    lua_pushnumber(L, 0);
+    lua_pushinteger(L, 0);
 
     if (!wsfragtype) wsfragtype = op;
     wsfragread += got;
@@ -5200,19 +5203,48 @@ static int LuaReadWS(lua_State *L) {
 
 close:
   lua_pushnil(L);
-  lua_pushnumber(L, 0x08);
+  lua_pushinteger(L, 0x08);
   return 2;
 }
 
-static int LuaSetWSFlags(lua_State *L) {
-  OnlyCallDuringRequest(L, "SetWSFlags");
-  char flags = lround(lua_tonumber(L, 1));
-  if (flags & 0x01) {
-    cpm.wstype = 1;
-  } else if (flags & 0x02) {
-    cpm.wstype = 2;
+static int LuaWSWrite(lua_State *L) {
+  int type;
+  size_t size;
+  const char *data;
+
+  OnlyCallDuringRequest(L, "ws.Write");
+  if (!cpm.wstype)
+    LuaWSUpgrade(L);
+
+  type = luaL_optinteger(L, 2, -1);
+  if (type == 1 || type == 2) {
+    cpm.wstype = type;
+  } else if (type != -1) {
+    luaL_error(L, "Invalid WS type");
+  }
+
+  if (!lua_isnil(L, 1)) {
+    data = luaL_checklstring(L, 1, &size);
+    appendd(&cpm.outbuf, data, size);
   }
   return 0;
+}
+
+static const luaL_Reg kLuaWS[] = {
+  {"Read", LuaWSRead},            //
+  {"Write", LuaWSWrite},          //
+  {0}                             //
+};
+
+int LuaWS(lua_State *L) {
+  luaL_newlib(L, kLuaWS);
+  lua_pushinteger(L,  0); lua_setfield(L, -2, "CONT");
+  lua_pushinteger(L,  1); lua_setfield(L, -2, "TEXT");
+  lua_pushinteger(L,  2); lua_setfield(L, -2, "BIN");
+  lua_pushinteger(L,  8); lua_setfield(L, -2, "CLOSE");
+  lua_pushinteger(L,  9); lua_setfield(L, -2, "PING");
+  lua_pushinteger(L, 10); lua_setfield(L, -2, "PONG");
+  return 1;
 }
 
 // <SORTED>
@@ -5414,7 +5446,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramUid", LuaProgramUid},                              //
     {"ProgramUniprocess", LuaProgramUniprocess},                //
     {"Rand64", LuaRand64},                                      //
-    {"ReadWS", LuaReadWS},                                      // undocumented
     {"Rdrand", LuaRdrand},                                      //
     {"Rdseed", LuaRdseed},                                      //
     {"Rdtsc", LuaRdtsc},                                        //
@@ -5432,7 +5463,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"SetHeader", LuaSetHeader},                                //
     {"SetLogLevel", LuaSetLogLevel},                            //
     {"SetStatus", LuaSetStatus},                                //
-    {"SetWSFlags", LuaSetWSFlags},                              // undocumented
     {"Sha1", LuaSha1},                                          //
     {"Sha224", LuaSha224},                                      //
     {"Sha256", LuaSha256},                                      //
@@ -5443,7 +5473,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"StoreAsset", LuaStoreAsset},                              //
     {"Uncompress", LuaUncompress},                              //
     {"Underlong", LuaUnderlong},                                //
-    {"UpgradeWS", LuaUpgradeWS},                                // undocumented
     {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
     {"Write", LuaWrite},                                        //
     {"bin", LuaBin},                                            //
@@ -5482,6 +5511,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"path", LuaPath},               //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
+    {"ws", LuaWS}                    //
 };
 
 static void LuaSetArgv(lua_State *L) {
