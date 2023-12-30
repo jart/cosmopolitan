@@ -64,8 +64,8 @@ static inline int AllNumDot(const char *s) {
       case 0:   return 1;
       case '0': case '1': case '2': case '3': case '4':
       case '5': case '6': case '7': case '8': case '9': case '.':
-        /* continue */
-      }
+        ; /* continue */
+    }
   }
 }
 
@@ -104,6 +104,7 @@ static int TryPath(const char *q, int com) {
   }
   *p = 0;
   if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
+  if (!com) return 0;
   p = WRITE32LE(p, READ32LE(".com"));
   *p = 0;
   if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;

@@ -5,8 +5,8 @@ LOCAL CHANGES
   - Removed undefined behavior
   - Removed BMP [endian code made it 100x slower than PNG/JPEG]
   - Removed PIC [never heard of it]
-  - Removed TGA [consider imaagemagick convert command]
-  - Removed PSD [consider imaagemagick convert command]
+  - Removed TGA [consider imagemagick convert command]
+  - Removed PSD [consider imagemagick convert command]
   - Removed HDR [mine eyes and wikipedia agree stb gamma math is off]
   - Patched PNG loading edge case
   - Fixed code C standard says is undefined
@@ -14,10 +14,25 @@ LOCAL CHANGES
   - Removed unnecessary ifdefs
   - Removed MSVC torture code
 
-SYNCHRONIZATION POINT
+SYNCHRONIZATION POINT (`--date=format:"%a %b %d %H:%M:%S %Y %z"`)
 
-  commit f67165c2bb2af3060ecae7d20d6f731173485ad0
-  Author: Sean Barrett <sean2@nothings.org>
-  Date:   Mon Oct 28 09:30:02 2019 -0700
+  commit 5736b15f7ea0ffb08dd38af21067c314d6a3aae9
+  Author: Sean Barrett <seanb@radgametools.com>
+  Date:   Sun Jan 29 10:46:04 2023 -0800
 
-      Update README.md
+      re-add perlin noise again
+
+ADDITIONAL CHANGES/FIXES:
+
+  - https://github.com/nothings/stb/pull/1299
+  - https://github.com/nothings/stb/pull/1402
+  - https://github.com/nothings/stb/pull/1404
+  - https://github.com/nothings/stb/pull/1420
+  - https://github.com/nothings/stb/pull/1445
+  - https://github.com/nothings/stb/pull/1487
+  - https://github.com/nothings/stb/pull/1490
+  - https://github.com/nothings/stb/pull/1496
+  - https://github.com/nothings/stb/pull/1497
+  - https://github.com/nothings/stb/pull/1498
+  - https://github.com/nothings/stb/pull/1499
+  - https://github.com/nothings/stb/pull/1500

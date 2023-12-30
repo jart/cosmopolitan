@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/dns.h"
+#include "tool/decode/lib/socknames.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
-#include "tool/decode/lib/socknames.h"
+#include "third_party/musl/netdb.h"
 
 const struct IdName kAddressFamilyNames[] = {
     {AF_UNSPEC, "AF_UNSPEC"},

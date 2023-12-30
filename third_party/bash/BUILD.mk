@@ -18,7 +18,6 @@ THIRD_PARTY_BASH_BINS =							\
 
 THIRD_PARTY_BASH_DIRECTDEPS =						\
 	LIBC_CALLS							\
-	LIBC_DNS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
@@ -31,6 +30,7 @@ THIRD_PARTY_BASH_DIRECTDEPS =						\
 	LIBC_SYSV							\
 	LIBC_THREAD							\
 	LIBC_TIME							\
+	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_GETOPT						\
 	THIRD_PARTY_MUSL						\

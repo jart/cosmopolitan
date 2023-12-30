@@ -4,7 +4,6 @@
 .PHONY:		o/$(MODE)/test/libc
 o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/calls		\
-		o/$(MODE)/test/libc/dns			\
 		o/$(MODE)/test/libc/fmt			\
 		o/$(MODE)/test/libc/intrin		\
 		o/$(MODE)/test/libc/log			\

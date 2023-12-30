@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MUSL_LOOKUP_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_MUSL_LOOKUP_INTERNAL_H_
 #include "libc/sock/struct/sockaddr6.h"
+#include "third_party/musl/netdb.h"
 #include "libc/sock/struct/sockaddr.h"
-#include "libc/dns/dns.h"
 COSMOPOLITAN_C_START_
 
 struct aibuf {
@@ -11,8 +11,8 @@ struct aibuf {
 		struct sockaddr_in sin;
 		struct sockaddr_in6 sin6;
 	} sa;
-	volatile int lock[1];
-	short slot, ref;
+	int slot;
+        _Atomic(int) ref;
 };
 
 struct address {

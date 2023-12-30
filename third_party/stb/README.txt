@@ -1,13 +1,12 @@
-/*
- * stb_image - v2.23 - public domain image loader - http://nothings.org/stb
+/* stb_image - v2.29 - public domain image loader - http://nothings.org/stb
  *                                no warranty implied; use at your own risk
  *
  * [heavily modified by justine tunney]
  *
  *    JPEG baseline & progressive (12 bpc/arithmetic not supported, same
- *                      as stock IJG lib) PNG 1/2/4/8/16-bit-per-channel
+ *                      as stock IJG lib)
+ *    PNG 1/2/4/8/16-bit-per-channel
  *    GIF (*comp always reports as 4-channel)
- *    HDR (radiance rgbE format)
  *    PNM (PPM and PGM binary only)
  *
  *    Animated GIF still needs a proper API, but here's one way to do it:
@@ -18,45 +17,53 @@
  *
  * ============================    Contributors    =========================
  *
- * Image formats                          Extensions, features
- *  Sean Barrett (jpeg, png, bmp)          Jetro Lauha (stbi_info)
- *  Nicolas Schulz (hdr, psd)              Martin "SpartanJ" Golini (stbi_info)
- *  Jonathan Dummer (tga)                  James "moose2000" Brown (iPhone PNG)
- *  Jean-Marc Lienher (gif)                Ben "Disch" Wenger (io callbacks)
- *  Tom Seddon (pic)                       Omar Cornut (1/2/4-bit PNG)
- *  Thatcher Ulrich (psd)                  Nicolas Guillemot (vertical flip)
- *  Ken Miller (pgm, ppm)                  Richard Mitton (16-bit PSD)
- *  github:urraka (animated gif)           Junggon Kim (PNM comments)
- *  Christopher Forseth (animated gif)     Daniel Gibson (16-bit TGA)
- *                                         socks-the-fox (16-bit PNG)
- *                                         Jeremy Sawicki (ImageNet JPGs)
- *                                         Mikhail Morozov (1-bit BMP)
- * Optimizations & bugfixes                Anael Seghezzi (is-16-bit query)
- *  Fabian "ryg" Giesen
- *  Arseny Kapoulkine
- *  John-Mark Allen
+ * Image formats                         Extensions, features
+ *  Sean Barrett (jpeg, png, bmp)         Jetro Lauha (stbi_info)
+ *  Nicolas Schulz (hdr, psd)             Martin "SpartanJ" Golini (stbi_info)
+ *  Jonathan Dummer (tga)                 James "moose2000" Brown (iPhone PNG)
+ *  Jean-Marc Lienher (gif)               Ben "Disch" Wenger (io callbacks)
+ *  Tom Seddon (pic)                      Omar Cornut (1/2/4-bit PNG)
+ *  Thatcher Ulrich (psd)                 Nicolas Guillemot (vertical flip)
+ *  Ken Miller (pgm, ppm)                 Richard Mitton (16-bit PSD)
+ *  github:urraka (animated gif)          Junggon Kim (PNM comments)
+ *  Christopher Forseth (animated gif)    Daniel Gibson (16-bit TGA)
+ *                                        socks-the-fox (16-bit PNG)
+ * Optimizations & bugfixes               Jeremy Sawicki (ImageNet JPGs)
+ *  Fabian "ryg" Giesen                   Mikhail Morozov (1-bit BMP)
+ *  Arseny Kapoulkine                     Anael Seghezzi (is-16-bit query)
+ *  John-Mark Allen                       Simon Breuss (16-bit PNM)
  *  Carmelo J Fdez-Aguera
  *
  * Bug & warning fixes
- * Marc LeBlanc            David Woo          Guillaume George   Martins Mozeiko
- * Christpher Lloyd        Jerry Jansson      Joseph Thomson     Phil Jordan
- * Dave Moore              Roy Eltham         Hayaki Saito       Nathan Reed
- * Won Chun                Luke Graham        Johan Duparc       Nick Verigakis
- * the Horde3D community   Thomas Ruf         Ronny Chevalier    github:rlyeh
- * Janez Zemva             John Bartholomew   Michal Cichon github:romigrou
- * Jonathan Blow           Ken Hamada         Tero Hanninen      github:svdijk
- * Laurent Gomila          Cort Stratton      Sergio Gonzalez    github:snagar
- * Aruelien Pocheville     Thibault Reuille   Cass Everitt       github:Zelex
- * Ryamond Barbiero        Paul Du Bois       Engin Manap        github:grim210
- * Aldo Culquicondor       Philipp Wiesemann  Dale Weiler        github:sammyhw
- * Oriol Ferrer Mesia      Josh Tobin         Matthew Gregan     github:phprus
- * Julian Raschke          Gregory Mullen     Baldur Karlsson
- * github:poppolopoppo Christian Floisand      Kevin Schmidt      JR Smith
- * github:darealshinji Blazej Dariusz Roszkowski github:Michaelangel007
- */
-
-/*
- * DOCUMENTATION
+ *  Marc LeBlanc            Laurent Gomila         JR Smith
+ *  Christpher Lloyd        Sergio Gonzalez        Matvey Cherevko
+ *  Phil Jordan             Ryamond Barbiero       Zack Middleton
+ *  Hayaki Saito            Engin Manap
+ *  Luke Graham             Dale Weiler            Martins Mozeiko
+ *  Thomas Ruf              Neil Bickford          Blazej Dariusz Roszkowski
+ *  Janez Zemva             Gregory Mullen         Roy Eltham
+ *  Jonathan Blow           Kevin Schmidt
+ *  Eugene Golushkov        Brad Weinberger        the Horde3D community
+ *  Aruelien Pocheville     Alexander Veselov      github:rlyeh
+ *  Cass Everitt            [reserved]             github:romigrou
+ *  Paul Du Bois                                   github:svdijk
+ *  Philipp Wiesemann       Guillaume George       github:snagar
+ *  Josh Tobin              Joseph Thomson         github:Zelex
+ *  Julian Raschke          Dave Moore             github:grim210
+ *  Baldur Karlsson         Won Chun               github:sammyhw
+ *                          Nick Verigakis         github:phprus
+ *  Luca Sas                                       github:poppolopoppo
+ *  Ryan C. Gordon          Michal Cichon          github:darealshinji
+ *  David Woo               Tero Hanninen          github:Michaelangel007
+ *  Jerry Jansson           Cort Stratton          github:mosra
+ *                          Thibault Reuille       [reserved]
+ *  Nathan Reed                                    [reserved]
+ *  Johan Duparc            Aldo Culquicondor
+ *  Ronny Chevalier         Oriol Ferrer           Jacko Dirks
+ *  John Bartholomew        Matthew Gregan
+ *  Ken Hamada              Christian Floisand
+ *
+ * ============================    Documentation   =========================
  *
  * Limitations:
  *    - no 12-bit-per-channel JPEG
@@ -70,14 +77,15 @@
  *    // ... x = width, y = height, n = # 8-bit components per pixel ...
  *    // ... replace '0' with '1'..'4' to force that many components per pixel
  *    // ... but 'n' will always be the number that it would have been if you
- *    said 0 stbi_image_free(data)
+ *    // ... said 0
+ *    stbi_image_free(data);
  *
  * Standard parameters:
  *    int *x                 -- outputs image width in pixels
  *    int *y                 -- outputs image height in pixels
  *    int *channels_in_file  -- outputs # of image components in image file
  *    int desired_channels   -- if non-zero, # of image components requested in
- *    result
+ *                              result
  *
  * The return value from an image loader is an 'unsigned char *' which points
  * to the pixel data, or NULL on an allocation failure or if the image is
@@ -109,6 +117,32 @@
  * slightly more user-friendly ones.
  *
  * Paletted PNG, BMP, GIF, and PIC images are automatically depalettized.
+ *
+ * To query the width, height and component count of an image without having to
+ * decode the full file, you can use the stbi_info family of functions:
+ *
+ *   int x,y,n,ok;
+ *   ok = stbi_info(filename, &x, &y, &n);
+ *   // returns ok=1 and sets x, y, n if image is a supported format,
+ *   // 0 otherwise.
+ *
+ * Note that stb_image pervasively uses ints in its public API for sizes,
+ * including sizes of memory buffers. This is now part of the API and thus
+ * hard to change without causing breakage. As a result, the various image
+ * loaders all have certain limits on image size; these differ somewhat
+ * by format but generally boil down to either just under 2GB or just under
+ * 1GB. When the decoded image would be larger than this, stb_image decoding
+ * will fail.
+ *
+ * Additionally, stb_image will reject image files that have any of their
+ * dimensions set to a larger value than the configurable STBI_MAX_DIMENSIONS,
+ * which defaults to 2**24 = 16777216 pixels. Due to the above memory limit,
+ * the only way to have an image with such dimensions load correctly
+ * is for it to have a rather extreme aspect ratio. Either way, the
+ * assumption here is that such larger images are likely to be malformed
+ * or malicious. If you do need to load an image with individual dimensions
+ * larger than that, and it still fits in the overall size limit, you can
+ * #define STBI_MAX_DIMENSIONS on your own to be something larger.
  *
  * ===========================================================================
  *
@@ -163,11 +197,10 @@
  *
  * iPhone PNG support:
  *
- * By default we convert iphone-formatted PNGs back to RGB, even though
- * they are internally encoded differently. You can disable this conversion
- * by calling stbi_convert_iphone_png_to_rgb(0), in which case
- * you will always just get the native iphone "format" through (which
- * is BGR stored in RGB).
+ * We optionally support converting iPhone-formatted PNGs (which store
+ * premultiplied BGRA) back to RGB, even though they're internally encoded
+ * differently. To enable this conversion, call
+ * stbi_convert_iphone_png_to_rgb(1).
  *
  * Call stbi_set_unpremultiply_on_load(1) as well to force a divide per
  * pixel to remove any premultiplied alpha *only* if the image file explicitly
@@ -191,9 +224,18 @@
  *   - If you use STBI_NO_PNG (or _ONLY_ without PNG), and you still
  *     want the zlib decoder to be available, #define STBI_SUPPORT_ZLIB
  *
+ *  - If you define STBI_MAX_DIMENSIONS, stb_image will reject images greater
+ *    than that size (in either width or height) without further processing.
+ *    This is to let programs in the wild set an upper bound to prevent
+ *    denial-of-service attacks on untrusted data, as one could generate a
+ *    valid image of gigantic dimensions and force stb_image to allocate a
+ *    huge block of memory and spend disproportionate time decoding it. By
+ *    default this is set to (1 << 24), which is 16777216, but that's still
+ *    very big.
+ *
  */
 
-/* stb_image_resize - v0.96 - public domain image resizing
+/* stb_image_resize - v0.97 - public domain image resizing
  * by Jorge L Rodriguez (@VinoBS) - 2014
  * http://github.com/nothings/stb
  *
@@ -214,9 +256,7 @@
  *                             output_pixels, out_w, out_h, 0,
  *                             num_channels , alpha_chan  , 0, STBIR_EDGE_CLAMP)
  *                                                          // WRAP/REFLECT/ZERO
- */
-
-/*
+ *
  * DOCUMENTATION
  *
  *    SRGB & FLOATING POINT REPRESENTATION
@@ -348,6 +388,7 @@
  *    Nathan Reed: warning fixes
  *
  * REVISIONS
+ *    0.97 (2020-02-02) fixed warning
  *    0.96 (2019-03-04) fixed warnings
  *    0.95 (2017-07-23) fixed warnings
  *    0.94 (2017-03-18) fixed warnings

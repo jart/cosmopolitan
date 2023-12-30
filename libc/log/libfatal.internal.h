@@ -164,6 +164,7 @@ __funline void *__memset(void *a, int c, unsigned long n) {
   char *d = a;
   unsigned long i;
   for (i = 0; i < n; ++i) {
+    __asm__ volatile("" ::: "memory");
     d[i] = c;
   }
   return d;
@@ -174,6 +175,7 @@ __funline void *__memcpy(void *a, const void *b, unsigned long n) {
   unsigned long i;
   const char *s = b;
   for (i = 0; i < n; ++i) {
+    __asm__ volatile("" ::: "memory");
     d[i] = s[i];
   }
   return d;
@@ -185,10 +187,12 @@ __funline void *__memmove(void *a, const void *b, unsigned long n) {
   const char *s = b;
   if (d > s) {
     for (i = n; i--;) {
+      __asm__ volatile("" ::: "memory");
       d[i] = s[i];
     }
   } else {
     for (i = 0; i < n; ++i) {
+      __asm__ volatile("" ::: "memory");
       d[i] = s[i];
     }
   }

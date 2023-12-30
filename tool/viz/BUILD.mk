@@ -21,7 +21,6 @@ TOOL_VIZ_DIRECTDEPS =				\
 	DSP_SCALE				\
 	DSP_TTY					\
 	LIBC_CALLS				\
-	LIBC_DNS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\
 	LIBC_LOG				\
