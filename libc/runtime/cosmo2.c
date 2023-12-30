@@ -78,7 +78,8 @@ static const char *DecodeMagnum(const char *p, long *r) {
   return *r = x, p;
 }
 
-wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename) {
+wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
+                                  long *is_freebsd) {
 
   // get startup timestamp as early as possible
   // its used by --strace and also kprintf() %T
@@ -94,6 +95,11 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename) {
       .tib_tid = 1,
   };
   __set_tls(&tib);
+
+  // check for freebsd
+  if (is_freebsd) {
+    sp = is_freebsd;
+  }
 
   // extracts arguments from old sysv stack abi
   int argc = *sp;
@@ -114,7 +120,10 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename) {
 
   // detect apple m1 environment
   const char *magnums;
-  if (SupportsXnu() && (__syslib = m1)) {
+  if (SupportsFreebsd() && is_freebsd) {
+    hostos = _HOSTFREEBSD;
+    magnums = syscon_freebsd;
+  } else if (SupportsXnu() && (__syslib = m1)) {
     hostos = _HOSTXNU;
     magnums = syscon_xnu;
   } else if (SupportsLinux()) {

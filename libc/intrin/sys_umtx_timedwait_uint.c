@@ -19,7 +19,6 @@
 #include "libc/atomic.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/thread/freebsd.internal.h"
-#ifdef __x86_64__
 
 int sys_umtx_timedwait_uint_cp(atomic_int *, int, int, size_t,
                                struct _umtx_time *) asm("sys_futex_cp");
@@ -46,5 +45,3 @@ int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
   }
   return sys_umtx_timedwait_uint_cp(p, op, expect, size, tm_p);
 }
-
-#endif

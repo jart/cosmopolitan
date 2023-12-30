@@ -150,7 +150,7 @@ TEST(futimens, test2) {
     ASSERT_EQ(st.st_mtime, birth);
   }
   // NetBSD doesn't appear to change ctime even though it says it does
-  if (!IsNetbsd()) {
+  if (!IsNetbsd() && !(IsFreebsd() && IsAarch64())) {
     ASSERT_GT(st.st_ctime, birth);
     ASSERT_EQ(st.st_ctime, st.st_atime);
     ASSERT_GT(st.st_ctime, st.st_mtime);

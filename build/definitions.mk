@@ -86,7 +86,7 @@ IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
-HOSTS ?= pi studio
+HOSTS ?= pi studio freebsdarm
 else
 ARCH = x86_64
 HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd

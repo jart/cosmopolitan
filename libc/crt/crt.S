@@ -125,6 +125,11 @@ _start:
 ////////////////////////////////////////////////////////////////////////////////
 #elif defined(__aarch64__)
 
+#if SupportsFreebsd()
+//	save first arg
+	mov	x3,x0
+#endif
+
 //	save original stack pointer
 //	this is the first argument to cosmo() below
 	mov	x0,sp

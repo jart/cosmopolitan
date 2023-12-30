@@ -33,6 +33,7 @@ register long x3 asm("x3");
 register long x4 asm("x4");
 register long x5 asm("x5");
 register long sysv_ordinal asm("x8");
+register long freebsd_ordinal asm("x9");
 register long xnu_ordinal asm("x16");
 register long cosmo_tls_register asm("x28");
 
@@ -68,7 +69,7 @@ dontinline long systemfive_cancellable(void) {
 
   // invoke cancellable system call
   // this works for both linux and bsd
-  asm volatile("mov\tx9,0\n\t"      // clear carry flag
+  asm volatile("mov\tx9,0\n\t"      // clear carry flag (for linux)
                "adds\tx9,x9,0\n\t"  // clear carry flag
                "svc\t0\n"
                "systemfive_cancellable_end:\n\t"
@@ -114,7 +115,10 @@ dontinline long systemfive_cancellable(void) {
 long systemfive(void) {
 
   // handle special cases
-  if (IsLinux()) {
+  if (IsLinux() || IsFreebsd()) {
+    if (IsFreebsd()) {
+      sysv_ordinal = freebsd_ordinal;
+    }
     if (sysv_ordinal == 0xfff) {
       return _sysret(-ENOSYS);
     }
@@ -135,9 +139,7 @@ long systemfive(void) {
 
   // invoke non-blocking system call
   // this works for both linux and bsd
-  asm volatile("mov\tx9,0\n\t"      // clear carry flag
-               "adds\tx9,x9,0\n\t"  // clear carry flag
-               "svc\t0\n\t"
+  asm volatile("svc\t0\n\t"
                "bcs\t1f\n\t"
                "b\t2f\n1:\t"
                "neg\tx0,x0\n2:"

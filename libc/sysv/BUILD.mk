@@ -96,6 +96,7 @@ o/$(MODE)/libc/sysv/sysv.o: private			\
 			-ffixed-x4			\
 			-ffixed-x5			\
 			-ffixed-x8			\
+			-ffixed-x9			\
 			-ffixed-x16			\
 			-fomit-frame-pointer		\
 			-foptimize-sibling-calls	\
