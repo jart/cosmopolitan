@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/metalfile.internal.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
@@ -36,6 +38,7 @@ void SetUpOnce(void) {
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
+    if (IsMetal()) exit(0);
     if (strcmp(argv[2], GetProgramExecutableName())) {
       exit(123);
     }
@@ -53,8 +56,13 @@ __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
 }
 
 TEST(GetProgramExecutableName, ofThisFile) {
-  EXPECT_EQ('/', *self);
-  EXPECT_TRUE(!!strstr(self, "getprogramexecutablename_test"));
+  if (IsMetal()) {
+    EXPECT_STREQ(self, APE_COM_NAME);
+  } else {
+    EXPECT_EQ('/', *self);
+    EXPECT_TRUE(!!strstr(self, "getprogramexecutablename_test"));
+    ASSERT_SYS(0, 0, access(self, X_OK));
+  }
 }
 
 TEST(GetProgramExecutableName, nullEnv) {
