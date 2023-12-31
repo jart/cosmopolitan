@@ -38,7 +38,6 @@ void SetUpOnce(void) {
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
-    if (IsMetal()) exit(0);
     if (strcmp(argv[2], GetProgramExecutableName())) {
       exit(123);
     }
@@ -66,6 +65,7 @@ TEST(GetProgramExecutableName, ofThisFile) {
 }
 
 TEST(GetProgramExecutableName, nullEnv) {
+  if (IsMetal()) return;
   SPAWN(fork);
   execve(self, (char *[]){self, "Child", self, self, 0}, (char *[]){0});
   abort();
@@ -73,6 +73,7 @@ TEST(GetProgramExecutableName, nullEnv) {
 }
 
 TEST(GetProramExecutableName, weirdArgv0NullEnv) {
+  if (IsMetal()) return;
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, "hello", 0}, (char *[]){0});
   abort();
@@ -80,6 +81,7 @@ TEST(GetProramExecutableName, weirdArgv0NullEnv) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
+  if (IsMetal()) return;
   char buf[32 + PATH_MAX];
   stpcpy(stpcpy(buf, "COSMOPOLITAN_PROGRAM_EXECUTABLE="), self);
   SPAWN(fork);
@@ -90,6 +92,7 @@ TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
+  if (IsMetal()) return;
   char *bad = "COSMOPOLITAN_PROGRAM_EXECUTABLE=hi";
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, "hello", 0},
@@ -99,6 +102,7 @@ TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
 }
 
 TEST(GetProgramExecutableName, movedSelf) {
+  if (IsMetal()) return;
   char buf[BUFSIZ];
   ASSERT_SYS(0, 3, open(GetProgramExecutableName(), O_RDONLY));
   ASSERT_SYS(0, 4, creat("test", 0755));
