@@ -127,7 +127,7 @@ _start:
 
 #if SupportsFreebsd()
 //	save first arg
-	mov	x3,x0
+	mov	x4,x0
 #endif
 
 //	save original stack pointer
