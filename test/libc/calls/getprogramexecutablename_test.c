@@ -79,7 +79,7 @@ TEST(GetProgramExecutableName, ofThisFile) {
   } else {
     EXPECT_EQ('/', *self);
     EXPECT_TRUE(!!strstr(self, "getprogramexecutablename_test"));
-    ASSERT_SYS(0, 0, access(self, X_OK));
+    EXPECT_SYS(0, 0, access(self, X_OK));
   }
 }
 
