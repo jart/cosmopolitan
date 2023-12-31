@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/dns.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"
+
+#define DNS_NAME_MAX 253
 
 extern const char kHostChars[256];  // -_0-9A-Za-z
 

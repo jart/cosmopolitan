@@ -27,11 +27,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/musl/resolv.h"
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 int dn_skipname(const unsigned char *s, const unsigned char *end)
 {
 	const unsigned char *p = s;

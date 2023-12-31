@@ -23,10 +23,8 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
-#include "libc/serialize.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
@@ -35,6 +33,7 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/sock/ipclassify.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -53,6 +52,7 @@
 #include "net/https/https.h"
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
+#include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
@@ -154,15 +154,16 @@ void Connect(void) {
     FATALF("%s:%hu: EAI_%s %m", g_hostname, g_runitdport, gai_strerror(rc));
     __builtin_unreachable();
   }
-  ip4 = (const char *)&ai->ai_addr4->sin_addr;
-  if (ispublicip(ai->ai_family, &ai->ai_addr4->sin_addr)) {
+  ip4 = (const char *)&((struct sockaddr_in *)ai->ai_addr)->sin_addr;
+  if (ispublicip(ai->ai_family,
+                 &((struct sockaddr_in *)ai->ai_addr)->sin_addr)) {
     FATALF("%s points to %hhu.%hhu.%hhu.%hhu"
            " which isn't part of a local/private/testing subnet",
            g_hostname, ip4[0], ip4[1], ip4[2], ip4[3]);
     __builtin_unreachable();
   }
   DEBUGF("connecting to %d.%d.%d.%d port %d", ip4[0], ip4[1], ip4[2], ip4[3],
-         ntohs(ai->ai_addr4->sin_port));
+         ntohs(((struct sockaddr_in *)ai->ai_addr)->sin_port));
   CHECK_NE(-1,
            (g_sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)));
   expo = INITIAL_CONNECT_TIMEOUT;
@@ -185,7 +186,8 @@ TryAgain:
       expo *= 1.5;
       if (timespec_cmp(timespec_real(), deadline) >= 0) {
         FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
-               ip4[0], ip4[1], ip4[2], ip4[3], ntohs(ai->ai_addr4->sin_port));
+               ip4[0], ip4[1], ip4[2], ip4[3],
+               ntohs(((struct sockaddr_in *)ai->ai_addr)->sin_port));
         __builtin_unreachable();
       }
       goto TryAgain;

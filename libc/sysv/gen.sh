@@ -32,11 +32,12 @@ scall() {
     amd=$2
     arm_linux=$(($3 + 0))
     arm_xnu=$((($amd & 0xfff000) >> 12))
+    arm_freebsd=$((($amd & 0x000000fff0000000) >> 28))
     if [ $arm_xnu != 4095 ]; then
       arm_xnu=$(($arm_xnu & 0xfff))
     fi
     shift 3
-    set -- "$name" "$amd" "$arm_linux" "$arm_xnu" "$*"
+    set -- "$name" "$amd" "$arm_linux" "$arm_xnu" "$arm_freebsd" "$*"
     echo "#include \"libc/sysv/macros.internal.h\""
     echo ".scall" "$*"
   } >"$dir/${1/$/-}.S"

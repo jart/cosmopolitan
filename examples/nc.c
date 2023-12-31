@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/dns/dns.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -26,6 +25,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "third_party/getopt/getopt.internal.h"
+#include "third_party/musl/netdb.h"
 
 /**
  * @fileoverview netcat clone
@@ -60,9 +60,7 @@ int main(int argc, char *argv[]) {
         halfclose = false;
         break;
       case 'h':
-        fputs("Usage: ", stdout);
-        fputs(argv[0], stdout);
-        fputs(" [-hH] IP PORT\n", stdout);
+        tinyprint(1, "Usage: ", argv[0], " [-hH] IP PORT\n", NULL);
         exit(0);
       default:
         fprintf(stderr, "bad option %d\n", opt);
@@ -76,17 +74,9 @@ int main(int argc, char *argv[]) {
   host = argv[optind + 0];
   port = argv[optind + 1];
 
-  switch ((rc = getaddrinfo(host, port, &hint, &ai))) {
-    case EAI_SUCCESS:
-      break;
-    case EAI_SYSTEM:
-      perror("getaddrinfo");
-      exit(1);
-    default:
-      fputs("EAI_", stderr);
-      fputs(gai_strerror(rc), stderr);
-      fputs("\n", stderr);
-      exit(1);
+  if ((rc = getaddrinfo(host, port, &hint, &ai))) {
+    tinyprint(2, host, ": ", gai_strerror(rc), "\n", NULL);
+    exit(1);
   }
 
   if ((sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) == -1) {
@@ -95,12 +85,12 @@ int main(int argc, char *argv[]) {
   }
 
   if (setsockopt(sock, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) == -1) {
-    perror("setsockopt(SO_LINGER)");
+    perror("SO_LINGER");
     exit(1);
   }
 
   if (connect(sock, ai->ai_addr, ai->ai_addrlen) == -1) {
-    perror("connect");
+    perror(host);
     exit(1);
   }
 

@@ -87,7 +87,7 @@
 #define MIN(X, Y) ((Y) > (X) ? (X) : (Y))
 #define MAX(X, Y) ((Y) < (X) ? (X) : (Y))
 
-#define PATH_MAX 1024   /* XXX verify */
+#define PATH_MAX 1024 /* XXX verify */
 
 #define SupportsLinux()   (SUPPORT_VECTOR & LINUX)
 #define SupportsXnu()     (SUPPORT_VECTOR & XNU)
@@ -224,8 +224,8 @@ struct ApeLoader {
 };
 
 EXTERN_C long SystemCall(long, long, long, long, long, long, long, int);
-EXTERN_C void
-Launch(void *, long, void *, void *, int) __attribute__((__noreturn__));
+EXTERN_C void Launch(void *, long, void *, void *, int)
+    __attribute__((__noreturn__));
 
 extern char __executable_start[];
 extern char _end[];

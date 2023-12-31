@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/dns.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -25,6 +24,7 @@
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
+#include "third_party/musl/netdb.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/idname.h"
 #include "tool/decode/lib/socknames.h"
@@ -34,7 +34,7 @@ void lookup(const char *name) {
   struct addrinfo *ai = NULL;
   struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
   switch ((rc = getaddrinfo(name, "80", &hint, &ai))) {
-    case EAI_SUCCESS:
+    case 0:
       break;
     case EAI_SYSTEM:
       perror("getaddrinfo");

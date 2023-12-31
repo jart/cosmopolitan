@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_H_
 #define COSMOPOLITAN_THIRD_PARTY_STB_STB_IMAGE_H_
+#include "libc/stdio/stdio.h"
 COSMOPOLITAN_C_START_
 
 enum {
@@ -9,8 +10,6 @@ enum {
   STBI_rgb = 3,
   STBI_rgb_alpha = 4
 };
-
-struct FILE;
 
 typedef struct {
   // fill 'data' with 'size' bytes.  return number of bytes actually read
@@ -37,7 +36,7 @@ unsigned char *stbi_load_from_callbacks(stbi_io_callbacks const *clbk,
 
 unsigned char *stbi_load(char const *filename, int *x, int *y,
                          int *channels_in_file, int desired_channels);
-unsigned char *stbi_load_from_file(struct FILE *f, int *x, int *y,
+unsigned char *stbi_load_from_file(FILE *f, int *x, int *y,
                                    int *channels_in_file, int desired_channels);
 // for stbi_load_from_file, file pointer is left pointing immediately after
 // image
@@ -60,7 +59,7 @@ unsigned short *stbi_load_16_from_callbacks(stbi_io_callbacks const *clbk,
 
 unsigned short *stbi_load_16(char const *filename, int *x, int *y,
                              int *channels_in_file, int desired_channels);
-unsigned short *stbi_load_from_file_16(struct FILE *f, int *x, int *y,
+unsigned short *stbi_load_from_file_16(FILE *f, int *x, int *y,
                                        int *channels_in_file,
                                        int desired_channels);
 
@@ -79,9 +78,9 @@ int stbi_is_16_bit_from_memory(unsigned char const *buffer, int len);
 int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const *clbk, void *user);
 
 int stbi_info(char const *filename, int *x, int *y, int *comp);
-int stbi_info_from_file(struct FILE *f, int *x, int *y, int *comp);
+int stbi_info_from_file(FILE *f, int *x, int *y, int *comp);
 int stbi_is_16_bit(char const *filename);
-int stbi_is_16_bit_from_file(struct FILE *f);
+int stbi_is_16_bit_from_file(FILE *f);
 
 // for image formats that explicitly notate that they have premultiplied alpha,
 // we just return the colors as stored in the file. set this flag to force

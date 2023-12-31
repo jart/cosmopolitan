@@ -32,15 +32,12 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
-#include "libc/dns/dns.h"
-#include "libc/dns/hoststxt.h"
 #include "libc/dos.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/wintime.internal.h"
 #include "libc/intrin/atomic.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
@@ -64,6 +61,7 @@
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/serialize.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
@@ -128,6 +126,7 @@
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
+#include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/args/args.h"
 #include "tool/build/lib/case.h"
@@ -835,10 +834,10 @@ static void ProgramAddr(const char *addr) {
       struct addrinfo *ai = NULL;
       struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM,
                               IPPROTO_TCP};
-      if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
+      if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != 0) {
         FATALF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
       }
-      ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
+      ip = ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr);
       freeaddrinfo(ai);
     } else {
       FATALF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
@@ -1888,57 +1887,74 @@ static bool TlsSetup(void) {
 
 static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
                                  int usage, int type) {
-  int r;
-  const char *s;
-  bool isduplicate;
-  size_t i, j, k, nsan;
-  struct mbedtls_san *san;
-  const struct HostsTxt *htxt;
-  char *name, *subject, *issuer, notbefore[16], notafter[16], hbuf[256];
-  san = 0;
-  nsan = 0;
-  name = 0;
-  htxt = GetHostsTxt();
-  strcpy(hbuf, "localhost");
-  gethostname(hbuf, sizeof(hbuf));
-  for (i = 0; i < htxt->entries.i; ++i) {
-    for (j = 0; j < ips.n; ++j) {
-      if (IsLoopbackIp(ips.p[j])) continue;
-      if (ips.p[j] == READ32BE(htxt->entries.p[i].ip)) {
-        isduplicate = false;
-        s = htxt->strings.p + htxt->entries.p[i].name;
-        if (!name) name = (void *)s;
-        for (k = 0; k < nsan; ++k) {
-          if (san[k].tag == MBEDTLS_X509_SAN_DNS_NAME &&
-              !strcasecmp(s, san[k].val)) {
-            isduplicate = true;
-            break;
-          }
+  int nsan = 0;
+  char *name = 0;
+  struct mbedtls_san *san = 0;
+
+  // for each ip address owned by this system
+  //
+  //   1. determine its full-qualified domain name
+  //   2. add subject alt name (san) entry to cert for hostname
+  //   3. add subject alt name (san) entry to cert for *.hostname
+  //
+  for (int i = 0; i < ips.n; ++i) {
+    uint32_t ip = ips.p[i];
+    if (IsLoopbackIp(ip)) continue;
+    char rname[NI_MAXHOST];
+    struct sockaddr_in addr4 = {AF_INET, 0, {htonl(ip)}};
+    if (getnameinfo((struct sockaddr *)&addr4, sizeof(addr4), rname,
+                    sizeof(rname), 0, 0, NI_NAMEREQD) == 0) {
+      char *s = _gc(strdup(rname));
+      if (!name) name = s;
+      bool isduplicate = false;
+      for (int j = 0; j < nsan; ++j) {
+        if (san[j].tag == MBEDTLS_X509_SAN_DNS_NAME &&
+            !strcasecmp(s, san[j].val)) {
+          isduplicate = true;
+          break;
         }
-        if (!isduplicate) {
-          san = realloc(san, (nsan += 2) * sizeof(*san));
-          san[nsan - 2].tag = MBEDTLS_X509_SAN_DNS_NAME;
-          san[nsan - 2].val = s;
-          san[nsan - 1].tag = MBEDTLS_X509_SAN_DNS_NAME;
-          san[nsan - 1].val = _gc(xasprintf("*.%s", s));
-        }
+      }
+      if (!isduplicate) {
+        san = realloc(san, (nsan += 2) * sizeof(*san));
+        san[nsan - 2].tag = MBEDTLS_X509_SAN_DNS_NAME;
+        san[nsan - 2].val = s;
+        san[nsan - 1].tag = MBEDTLS_X509_SAN_DNS_NAME;
+        san[nsan - 1].val = _gc(xasprintf("*.%s", s));
       }
     }
   }
-  for (i = 0; i < ips.n; ++i) {
-    if (IsLoopbackIp(ips.p[i])) continue;
+
+  // add san entry to cert for each ip address owned by system
+  for (int i = 0; i < ips.n; ++i) {
+    uint32_t ip = ips.p[i];
+    if (IsLoopbackIp(ip)) continue;
     san = realloc(san, ++nsan * sizeof(*san));
     san[nsan - 1].tag = MBEDTLS_X509_SAN_IP_ADDRESS;
-    san[nsan - 1].ip4 = ips.p[i];
+    san[nsan - 1].ip4 = ip;
   }
+  char notbefore[16], notafter[16];
   ChooseCertificateLifetime(notbefore, notafter);
-  subject = xasprintf("CN=%s", name ? name : hbuf);
+
+  // pick common name for certificate
+  char hbuf[256];
+  if (!name) {
+    strcpy(hbuf, "localhost");
+    gethostname(hbuf, sizeof(hbuf));
+    name = hbuf;
+  }
+  char *subject = xasprintf("CN=%s", name);
+
+  // pick issuer name for certificate
+  char *issuer;
   if (ca) {
     issuer = calloc(1, 1000);
     CHECK_GT(mbedtls_x509_dn_gets(issuer, 1000, &ca->cert->subject), 0);
   } else {
     issuer = strdup(subject);
   }
+
+  // call the mbedtls apis
+  int r;
   if ((r = mbedtls_x509write_crt_set_subject_alternative_name(cw, san, nsan)) ||
       (r = mbedtls_x509write_crt_set_validity(cw, notbefore, notafter)) ||
       (r = mbedtls_x509write_crt_set_basic_constraints(cw, false, -1)) ||
@@ -4956,10 +4972,11 @@ static int LuaProgramTokenBucket(lua_State *L) {
 }
 
 static const char *GetContentTypeExt(const char *path, size_t n) {
-  const char *r, *e;
+  const char *r = NULL, *e;
+  if ((r = FindContentType(path, n))) return r;
+#ifndef STATIC
   int top;
   lua_State *L = GL;
-  if ((r = FindContentType(path, n))) return r;
 
   // extract the last .; use the entire path if none is present
   if ((e = memrchr(path, '.', n))) {
@@ -4974,6 +4991,7 @@ static const char *GetContentTypeExt(const char *path, size_t n) {
   if (lua_gettable(L, -2) == LUA_TSTRING)
     r = FreeLater(strdup(lua_tostring(L, -1)));
   lua_settop(L, top);
+#endif
   return r;
 }
 
@@ -7442,8 +7460,6 @@ void RedBean(int argc, char *argv[]) {
 #ifdef STATIC
   EventLoop(timespec_tomillis(heartbeatinterval));
 #else
-  GetHostsTxt();    // for effect
-  GetResolvConf();  // for effect
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(timespec_tomillis(heartbeatinterval));
   } else {

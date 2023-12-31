@@ -52,6 +52,7 @@ o/$(MODE)/libc/nexgen32e/ktolower.o			\
 o/$(MODE)/libc/nexgen32e/ktoupper.o			\
 o/$(MODE)/libc/nexgen32e/runlevel.o			\
 o/$(MODE)/libc/nexgen32e/pid.o				\
+o/$(MODE)/libc/nexgen32e/program_executable_name.o	\
 o/$(MODE)/libc/nexgen32e/program_invocation_name2.o	\
 o/$(MODE)/libc/nexgen32e/threaded.o: private		\
 		CFLAGS +=				\

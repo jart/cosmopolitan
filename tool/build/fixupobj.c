@@ -29,12 +29,12 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -245,6 +245,10 @@ static void RewriteTlsCode(void) {
   }
 }
 
+static void UseFreebsdOsAbi(void) {
+  elf->e_ident[EI_OSABI] = ELFOSABI_FREEBSD;
+}
+
 /**
  * Improve GCC11 `-fpatchable-function-entry` codegen.
  *
@@ -391,6 +395,9 @@ static void FixupObject(void) {
         OptimizePatchableFunctionEntries();
       } else if (elf->e_machine == EM_AARCH64) {
         RewriteTlsCode();
+        if (elf->e_type != ET_REL) {
+          UseFreebsdOsAbi();
+        }
       }
       if (elf->e_type != ET_REL) {
         RelinkZipFiles();
