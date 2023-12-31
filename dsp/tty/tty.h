@@ -5,7 +5,6 @@
 
 COSMOPOLITAN_C_START_
 
-struct FILE;
 struct termios;
 
 struct TtyIdent {

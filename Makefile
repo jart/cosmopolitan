@@ -198,9 +198,9 @@ include third_party/nsync/mem/BUILD.mk		# │  You can now use stdio
 include libc/proc/BUILD.mk			# │  You can now use threads
 include libc/dlopen/BUILD.mk			# │  You can now use processes
 include libc/thread/BUILD.mk			# │  You can finally call malloc()
-include tool/hello/BUILD.mk			# │
 include third_party/zlib/BUILD.mk		# │
 include libc/stdio/BUILD.mk			# │
+include tool/hello/BUILD.mk			# │
 include libc/time/BUILD.mk			# │
 include net/BUILD.mk				# │
 include third_party/vqsort/BUILD.mk		# │
@@ -213,9 +213,8 @@ include third_party/intel/BUILD.mk		# │
 include third_party/aarch64/BUILD.mk		# │
 include libc/BUILD.mk				#─┘
 include libc/sock/BUILD.mk			#─┐
-include libc/dns/BUILD.mk			# ├──ONLINE RUNTIME
-include net/http/BUILD.mk			# │  You can communicate with the network
-include third_party/musl/BUILD.mk		# │
+include net/http/BUILD.mk			# ├──ONLINE RUNTIME
+include third_party/musl/BUILD.mk		# │  You can communicate with the network
 include libc/x/BUILD.mk				# │
 include dsp/scale/BUILD.mk			# │
 include dsp/mpeg/BUILD.mk			# │
@@ -297,7 +296,6 @@ include test/libc/calls/BUILD.mk
 include test/libc/x/BUILD.mk
 include test/libc/xed/BUILD.mk
 include test/libc/fmt/BUILD.mk
-include test/libc/dns/BUILD.mk
 include test/libc/time/BUILD.mk
 include test/libc/proc/BUILD.mk
 include test/libc/stdio/BUILD.mk
@@ -373,7 +371,6 @@ loc: o/$(MODE)/tool/build/summy.com
 COSMOPOLITAN_OBJECTS =			\
 	TOOL_ARGS			\
 	NET_HTTP			\
-	LIBC_DNS			\
 	LIBC_SOCK			\
 	LIBC_NT_WS2_32			\
 	LIBC_NT_IPHLPAPI		\
@@ -424,7 +421,6 @@ COSMOPOLITAN_H_PKGS =			\
 	APE				\
 	LIBC				\
 	LIBC_CALLS			\
-	LIBC_DNS			\
 	LIBC_ELF			\
 	LIBC_FMT			\
 	LIBC_DLOPEN			\

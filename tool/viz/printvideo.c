@@ -38,7 +38,6 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
 #include "libc/cxxabi.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"

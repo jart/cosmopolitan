@@ -1,8 +1,6 @@
 #ifndef _NETDB_H
 #define _NETDB_H
 #include "libc/calls/weirdtypes.h"
-#include "libc/dns/dns.h"
-#include "libc/dns/ent.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/in6_pktinfo.h"
 #include "libc/sock/struct/in_pktinfo.h"
@@ -19,4 +17,5 @@
 #include "libc/sysv/consts/mcast.h"
 #include "libc/sysv/consts/pf.h"
 #include "libc/sysv/consts/sock.h"
+#include "third_party/musl/netdb.h"
 #endif /* _NETDB_H */

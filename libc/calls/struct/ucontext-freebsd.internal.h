@@ -2,6 +2,22 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_FREEBSD_INTERNAL_H_
 COSMOPOLITAN_C_START_
 
+struct gpregs_freebsd_aarch64 {
+  int64_t gp_x[30];
+  int64_t gp_lr;
+  int64_t gp_sp;
+  int64_t gp_elr;   /* pc */
+  uint64_t gp_spsr; /* pstate or cpsr */
+};
+
+struct fpregs_freebsd_aarch64 {
+  uint128_t fp_q[32];
+  uint32_t fp_sr;
+  uint32_t fp_cr;
+  int fp_flags;
+  int fp_pad;
+};
+
 struct stack_freebsd {
   void *ss_sp;
   uint64_t ss_size;
@@ -9,6 +25,7 @@ struct stack_freebsd {
 };
 
 struct mcontext_freebsd {
+#ifdef __x86_64__
   int64_t mc_onstack;
   int64_t mc_rdi;
   int64_t mc_rsi;
@@ -47,6 +64,14 @@ struct mcontext_freebsd {
   int64_t mc_xfpustate;
   int64_t mc_xfpustate_len;
   int64_t mc_spare[4];
+#elif defined(__aarch64__)
+  struct gpregs_freebsd_aarch64 mc_gpregs;
+  struct fpregs_freebsd_aarch64 mc_fpregs;
+  int mc_flags;
+#define _MC_FP_VALID 0x1 /* Set when mc_fpregs has valid data */
+  int mc_pad;           /* Padding */
+  uint64_t mc_spare[8]; /* Space for expansion, set to zero */
+#endif
 };
 
 struct ucontext_freebsd {

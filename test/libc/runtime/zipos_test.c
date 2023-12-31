@@ -117,7 +117,7 @@ TEST(zipos, closeAfterVfork) {
   ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
   SPAWN(vfork);
   ASSERT_SYS(0, 0, close(3));
-  ASSERT_SYS(0, 3, open("/etc/hosts", O_RDONLY));
+  ASSERT_SYS(0, 3, open("/dev/null", O_RDONLY));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(EBADF, -1, close(3));
   EXITS(0);
@@ -136,10 +136,10 @@ struct State {
     char buf[8];                        \
     ASSERT_SYS(0, 8, read(fd, buf, 8)); \
   }
-#define SEEKS()                         \
-  for (int i = 0; i < 4; ++i) {         \
-    rc = lseek(fd, 8, SEEK_CUR);        \
-    ASSERT_NE(rc, -1);                  \
+#define SEEKS()                  \
+  for (int i = 0; i < 4; ++i) {  \
+    rc = lseek(fd, 8, SEEK_CUR); \
+    ASSERT_NE(rc, -1);           \
   }
 
 static void *pthread_main(void *ptr) {
@@ -154,8 +154,9 @@ static void *pthread_main(void *ptr) {
       ASSERT_NE(-1, rc);
       children[i].fd = rc;
       children[i].id = 2 * s->id + i;
-      ASSERT_SYS(0, 0, pthread_create(&children[i].thread, NULL, pthread_main,
-                                      children + i));
+      ASSERT_SYS(0, 0,
+                 pthread_create(&children[i].thread, NULL, pthread_main,
+                                children + i));
     }
   }
   if (s->id & 1) {
@@ -175,7 +176,7 @@ static void *pthread_main(void *ptr) {
 }
 
 TEST(zipos, ultraPosixAtomicSeekRead) {
-  struct State s = { 1, 4 };
+  struct State s = {1, 4};
   ASSERT_SYS(0, 3, open("/zip/libc/testlib/hyperion.txt", O_RDONLY));
   ASSERT_SYS(0, 4, dup(3));
   pthread_main((void *)&s);

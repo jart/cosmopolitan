@@ -22,11 +22,9 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsf.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/popcnt.h"
@@ -41,6 +39,7 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/highwayhash64.h"
@@ -70,6 +69,7 @@
 #include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
+#include "third_party/musl/netdb.h"
 #include "third_party/zlib/zlib.h"
 
 static int Rdpid(void) {
@@ -558,8 +558,9 @@ int LuaResolveIp(lua_State *L) {
   if ((ip = ParseIp(host, -1)) != -1) {
     lua_pushinteger(L, ip);
     return 1;
-  } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == EAI_SUCCESS) {
-    lua_pushinteger(L, ntohl(ai->ai_addr4->sin_addr.s_addr));
+  } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == 0) {
+    lua_pushinteger(
+        L, ntohl(((struct sockaddr_in *)ai->ai_addr)->sin_addr.s_addr));
     freeaddrinfo(ai);
     return 1;
   } else {

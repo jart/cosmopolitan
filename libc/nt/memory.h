@@ -73,12 +73,6 @@ uint64_t VirtualQuery(const void *lpAddress,
 void *VirtualAllocEx(int64_t hProcess, void *lpAddress, uint64_t dwSize,
                      uint32_t flAllocationType, uint32_t flProtect);
 
-bool32 PrefetchVirtualMemory(int64_t hProcess, const uint32_t *NumberOfEntries,
-                             struct NtMemoryRangeEntry *VirtualAddresses,
-                             uint32_t reserved_Flags);
-bool32 OfferVirtualMemory(void *inout_VirtualAddress, size_t Size,
-                          int Priority);
-
 int64_t GetProcessHeap(void);
 void *HeapAlloc(int64_t hHeap, uint32_t dwFlags, size_t dwBytes) __wur;
 bool32 HeapFree(int64_t hHeap, uint32_t dwFlags, void *opt_lpMem);

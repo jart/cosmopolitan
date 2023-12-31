@@ -58,6 +58,8 @@ $(LIBC_SOCK_A).pkg:				\
 # these assembly files are safe to build on aarch64
 o/$(MODE)/libc/sock/sys_sendfile_xnu.o: libc/sock/sys_sendfile_xnu.S
 	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
+o/$(MODE)/libc/sock/sys_sendfile_freebsd.o: libc/sock/sys_sendfile_freebsd.S
+	@$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) -c $<
 
 LIBC_SOCK_LIBS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)))
 LIBC_SOCK_SRCS = $(foreach x,$(LIBC_SOCK_ARTIFACTS),$($(x)_SRCS))

@@ -40,7 +40,6 @@
 #include "libc/intrin/newbie.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/select.h"
-#include "libc/dns/dns.h"
 #include "libc/sysv/consts/endian.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
@@ -62,6 +61,8 @@
 #include "libc/sysv/consts/tcp.h"
 #include "libc/mem/alg.h"
 #include "libc/str/str.h"
+#include "libc/sock/struct/sockaddr.h"
+#include "third_party/musl/netdb.h"
 #include "libc/errno.h"
 
 #include "libc/calls/calls.h"

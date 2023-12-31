@@ -44,7 +44,6 @@ EXAMPLES_DIRECTDEPS =								\
 	DSP_TTY									\
 	LIBC_CALLS								\
 	LIBC_DLOPEN								\
-	LIBC_DNS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\
 	LIBC_IRQ								\

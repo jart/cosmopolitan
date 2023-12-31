@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/seccomp.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/seccomp.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -62,16 +62,20 @@ int seccomp(unsigned operation, unsigned flags, void *args) {
       rc = -1;
     }
 #elif defined(__aarch64__)
-    register long r0 asm("x0") = (long)operation;
-    register long r1 asm("x1") = (long)flags;
-    register long r2 asm("x2") = (long)args;
-    register long res_x0 asm("x0");
-    asm volatile("mov\tx8,%1\n\t"
-                 "svc\t0"
-                 : "=r"(res_x0)
-                 : "i"(211), "r"(r0), "r"(r1), "r"(r2)
-                 : "x8", "memory");
-    rc = _sysret(res_x0);
+    if (IsLinux()) {
+      register long r0 asm("x0") = (long)operation;
+      register long r1 asm("x1") = (long)flags;
+      register long r2 asm("x2") = (long)args;
+      register long res_x0 asm("x0");
+      asm volatile("mov\tx8,%1\n\t"
+                   "svc\t0"
+                   : "=r"(res_x0)
+                   : "i"(211), "r"(r0), "r"(r1), "r"(r2)
+                   : "x8", "memory");
+      rc = _sysret(res_x0);
+    } else {
+      rc = enosys();
+    }
 #else
 #error "arch unsupported"
 #endif

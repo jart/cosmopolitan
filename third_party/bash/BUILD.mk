@@ -18,7 +18,6 @@ THIRD_PARTY_BASH_BINS =							\
 
 THIRD_PARTY_BASH_DIRECTDEPS =						\
 	LIBC_CALLS							\
-	LIBC_DNS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
 	LIBC_MEM							\

@@ -60,7 +60,11 @@ int sys_fork(void) {
   } else if (__syslib) {
     return _sysret(__syslib->__fork());
   } else {
-    return enosys();
+    int ax;
+    axdx_t ad;
+    ad = __sys_fork();
+    ax = ad.ax;
+    return ax;
   }
 
 #else

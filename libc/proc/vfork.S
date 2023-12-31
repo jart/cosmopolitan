@@ -87,9 +87,9 @@ vfork:
 
 #elif defined(__aarch64__)
 
-	adrp	x0,__hostos
-	ldr	w0,[x0,#:lo12:__hostos]
-	tbz	x0,3,1f			// bit 3 is xnu
+	adrp	x8,__hostos
+	ldr	w8,[x8,#:lo12:__hostos]
+	tbz	x8,3,1f			// bit 3 is xnu
 	b	fork			// which doesn't support vfork()
 1:
 
@@ -102,10 +102,19 @@ vfork:
 	ldp	x29,x30,[sp],16
 #endif
 
-	mov	x8,#220			// __NR_clone
+	tbnz	w8,5,1f			// bit 5 is freebsd
+
+	mov	x8,#220			// clone (linux)
 	mov	x0,#0x4111		// SIGCHLD | CLONE_VM | CLONE_VFORK
 	mov	x1,#0
 	svc	0
+	b	2f
+
+1:	mov	x8,#66			// vfork (freebsd)
+	svc	0			// call kernel
+	bcc	2f			// jump if not carry
+	neg	x0,x0			// linux style errno
+2:
 
 //	if (!rc) {
 //	  __get_tls()->tib_flags |= TIB_FLAG_VFORKED;
