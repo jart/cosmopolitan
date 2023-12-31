@@ -117,10 +117,7 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   __program_executable_name = exename;
   program_invocation_name = argv[0];
   __oldstack = (intptr_t)sp;
-  if (os) {
-    hostos = os;
-  } else {
-    /* old/no loader */
+  if (!(hostos = os)) {
     if (SupportsFreebsd() && is_freebsd) {
       hostos = _HOSTFREEBSD;
     } else if (SupportsXnu() && m1) {
