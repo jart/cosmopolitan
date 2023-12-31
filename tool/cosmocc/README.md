@@ -108,7 +108,7 @@ On Apple Silicon, `aarch64-unknown-cosmo-cc` produces ELF binaries. If
 you build a hello world program, then you need to say `ape ./hello`. If
 you don't have an `ape` command then run `cc -o ape bin/ape-m1.c` which
 should be moved to `/usr/local/bin/ape`. Your APE interpreter might
-already exist under a path like `$TMPDIR/.ape-1.9`. It's important to
+already exist under a path like `$TMPDIR/.ape-1.10`. It's important to
 note this is only a gotcha for the cross compiler. Your `cosmocc`
 compiler wraps the actual ELF binaries with a shell script that'll
 extract and compile an APE loader automatically, as needed. This also
