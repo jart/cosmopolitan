@@ -25,11 +25,11 @@
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/getenv.internal.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/ok.h"
@@ -38,6 +38,13 @@
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
 #define KERN_PROC_PATHNAME_NETBSD  5
+
+#define DevFd() (IsBsd() ? "/dev/fd/" : IsLinux() ? "/proc/self/fd/" : 0)
+#define StrlenDevFd()                      \
+  ((IsBsd()     ? sizeof("/dev/fd/")       \
+    : IsLinux() ? sizeof("/proc/self/fd/") \
+                : 0) -                     \
+   1)
 
 static struct {
   atomic_uint once;
@@ -54,11 +61,21 @@ static inline int IsAlpha(int c) {
 static inline int AllNumDot(const char *s) {
   while (true) {
     switch (*s++) {
-      default:  return 0;
-      case 0:   return 1;
-      case '0': case '1': case '2': case '3': case '4':
-      case '5': case '6': case '7': case '8': case '9': case '.':
-        ; /* continue */
+      default:
+        return 0;
+      case 0:
+        return 1;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '.':; /* continue */
     }
   }
 }
@@ -68,8 +85,7 @@ static inline int AllNumDot(const char *s) {
 static int OldApeLoader(char *s) {
   char *b;
   return !strcmp(s, "/usr/bin/ape") ||
-         (!strncmp((b = basename(s)), ".ape-", 5) &&
-          AllNumDot(b + 5));
+         (!strncmp((b = basename(s)), ".ape-", 5) && AllNumDot(b + 5));
 }
 
 // if q exists then turn it into an absolute path. we also try adding
@@ -134,11 +150,27 @@ static inline void InitProgramExecutableNameImpl(void) {
     return;
   }
 
-  // loader passed us a path. it may be relative.
+  // see if the loader passed us a path.
   if (__program_executable_name) {
+    if (issetugid()) {
+      /* we are running as a set-id interpreter script. this is highly unusual.
+         it means either someone installed their ape loader set-id, or they are
+         running a system that supports secure set-id interpreter scripts via a
+         /dev/fd/ path. check for the latter and allow that. otherwise, use the
+         empty string to obviate the TOCTOU problem between loader and binary.
+       */
+      if (!(b = DevFd()) ||
+          0 != strncmp(b, __program_executable_name, StrlenDevFd()) ||
+          !__program_executable_name[StrlenDevFd()] ||
+          __program_executable_name[StrlenDevFd()] == '.' ||
+          strchr(__program_executable_name + StrlenDevFd(), '/')) {
+        goto UseEmpty;
+      }
+    }
     if (*__program_executable_name == '/') {
       return;
     }
+    // loader passed us a relative path; prepend cwd.
     if (TryPath(__program_executable_name, 0)) {
       goto UseBuf;
     }
