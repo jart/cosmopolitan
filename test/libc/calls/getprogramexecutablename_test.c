@@ -31,11 +31,14 @@
 #include "libc/testlib/testlib.h"
 
 static char *self;
+static bool skiptests;
 
 void SetUpOnce(void) {
   self = GetProgramExecutableName();
   testlib_enable_tmp_setup_teardown();
-  if (IsOpenbsd() || (IsXnu() && !IsXnuSilicon())) {
+  if (IsMetal()) {
+    skiptests = true;
+  } else if (IsOpenbsd() || (IsXnu() && !IsXnuSilicon())) {
     ASSERT_STRNE(self, "");
     ASSERT_SYS(0, 3, open(self, O_RDONLY));
     char buf[8];
@@ -45,9 +48,9 @@ void SetUpOnce(void) {
         READ64LE(buf) != READ64LE("jartsr='") &&
         READ64LE(buf) != READ64LE("APEDBG='")) {
       fprintf(stderr,
-              "GetProgramExecutableName is unreliable on this platform for\n"
-              "assimilated binaries\n");
-      exit(0);
+              "we appear to be running as an assimilated binary on OpenBSD or "
+              "x86_64 XNU;\nGetProgramExecutableName is unreliable here\n");
+      skiptests = true;
     }
   }
 }
@@ -81,7 +84,7 @@ TEST(GetProgramExecutableName, ofThisFile) {
 }
 
 TEST(GetProgramExecutableName, nullEnv) {
-  if (IsMetal()) return;
+  if (skiptests) return;
   SPAWN(fork);
   execve(self, (char *[]){self, "Child", self, self, 0}, (char *[]){0});
   abort();
@@ -89,7 +92,7 @@ TEST(GetProgramExecutableName, nullEnv) {
 }
 
 TEST(GetProramExecutableName, weirdArgv0NullEnv) {
-  if (IsMetal()) return;
+  if (skiptests) return;
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, "hello", 0}, (char *[]){0});
   abort();
@@ -97,7 +100,7 @@ TEST(GetProramExecutableName, weirdArgv0NullEnv) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
-  if (IsMetal()) return;
+  if (skiptests) return;
   char buf[32 + PATH_MAX];
   stpcpy(stpcpy(buf, "COSMOPOLITAN_PROGRAM_EXECUTABLE="), self);
   SPAWN(fork);
@@ -108,7 +111,7 @@ TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
 }
 
 TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
-  if (IsMetal()) return;
+  if (skiptests) return;
   char *bad = "COSMOPOLITAN_PROGRAM_EXECUTABLE=hi";
   SPAWN(fork);
   execve(self, (char *[]){"hello", "Child", self, "hello", 0},
@@ -118,7 +121,7 @@ TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
 }
 
 TEST(GetProgramExecutableName, movedSelf) {
-  if (IsMetal()) return;
+  if (skiptests) return;
   char buf[BUFSIZ];
   ASSERT_SYS(0, 3, open(GetProgramExecutableName(), O_RDONLY));
   ASSERT_SYS(0, 4, creat("test", 0755));
