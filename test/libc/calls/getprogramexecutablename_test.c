@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -34,6 +35,21 @@ static char *self;
 void SetUpOnce(void) {
   self = GetProgramExecutableName();
   testlib_enable_tmp_setup_teardown();
+  if (IsOpenbsd() || (IsXnu() && !IsXnuSilicon())) {
+    ASSERT_STRNE(self, "");
+    ASSERT_SYS(0, 3, open(self, O_RDONLY));
+    char buf[8];
+    ASSERT_SYS(0, 8, pread(3, buf, 8, 0));
+    ASSERT_SYS(0, 0, close(3));
+    if (READ64LE(buf) != READ64LE("MZqFpD='") &&
+        READ64LE(buf) != READ64LE("jartsr='") &&
+        READ64LE(buf) != READ64LE("APEDBG='")) {
+      fprintf(stderr,
+              "GetProgramExecutableName is unreliable on this platform for\n"
+              "assimilated binaries\n");
+      exit(0);
+    }
+  }
 }
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
