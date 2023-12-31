@@ -221,7 +221,7 @@ static relegated void __oncrash_impl(int sig, struct siginfo *si,
   Append(b, "%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n", strong, reset,
          sig, kind, host, getpid(), gettid());
   if (program_invocation_name) {
-    Append(b, " %s\n", program_invocation_name);
+    Append(b, " %s\n", __program_executable_name);
   }
   if (errno) {
     Append(b, " %s\n", strerror(errno));

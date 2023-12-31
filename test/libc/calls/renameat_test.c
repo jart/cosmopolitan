@@ -95,6 +95,8 @@ TEST(rename, moveIntoNonWritableDirectory_raisesEacces) {
   if (IsNetbsd() || IsOpenbsd()) return;
   // windows doesn't really have permissions
   if (IsWindows()) return;
+  // looks like a freebsd kernel bug
+  if (IsAarch64() && IsFreebsd()) return;
   // posix specifies this behavior
   ASSERT_SYS(0, 0, mkdir("foo", 0111));
   ASSERT_SYS(0, 0, touch("lol", 0644));

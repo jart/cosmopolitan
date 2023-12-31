@@ -3,8 +3,6 @@
 #include "dsp/mpeg/mpeg.h"
 COSMOPOLITAN_C_START_
 
-struct FILE;
-
 enum plm_buffer_mode {
   PLM_BUFFER_MODE_FILE,
   PLM_BUFFER_MODE_FIXED_MEM,
@@ -17,7 +15,7 @@ typedef struct plm_buffer_t {
   unsigned length;
   int free_when_done;
   int close_when_done;
-  struct FILE *fh;
+  FILE *fh;
   plm_buffer_load_callback load_callback;
   void *load_callback_user_data;
   unsigned char *bytes;

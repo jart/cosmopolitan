@@ -238,7 +238,7 @@ static int LuaFetch(lua_State *L) {
      * Perform DNS lookup.
      */
     DEBUGF("(ftch) client resolving %s", host);
-    if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
+    if ((rc = getaddrinfo(host, port, &hints, &addr)) != 0) {
       return LuaNilError(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
                          gai_strerror(rc), strerror(errno));
     }

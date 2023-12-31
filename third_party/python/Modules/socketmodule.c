@@ -8,8 +8,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
-#include "libc/dns/dns.h"
-#include "libc/dns/ent.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/version.h"
@@ -55,6 +53,7 @@
 #include "third_party/python/Include/tupleobject.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/musl/netdb.h"
 #include "third_party/python/pyconfig.h"
 
 PYTHON_PROVIDE("_socket");

@@ -28,15 +28,12 @@
 #include "third_party/musl/resolv.h"
 #include "libc/str/str.h"
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-
 /* RFC 1035 message compression */
 
 /* label start offsets of a compressed domain name s */
-static int getoffs(short *offs, const unsigned char *base, const unsigned char *s)
+static int getoffs(short *offs,
+		   const unsigned char *base,
+		   const unsigned char *s)
 {
 	int i=0;
 	for (;;) {
@@ -65,8 +62,12 @@ static int getlens(unsigned char *lens, const char *s, int l)
 }
 
 /* longest suffix match of an ascii domain with a compressed domain name dn */
-static int match(int *offset, const unsigned char *base, const unsigned char *dn,
-	const char *end, const unsigned char *lens, int nlen)
+static int match(int *offset,
+		 const unsigned char *base,
+		 const unsigned char *dn,
+		 const char *end,
+		 const unsigned char *lens,
+		 int nlen)
 {
 	int l, o, m=0;
 	short offs[128];
@@ -86,7 +87,11 @@ static int match(int *offset, const unsigned char *base, const unsigned char *dn
 	}
 }
 
-int dn_comp(const char *src, unsigned char *dst, int space, unsigned char **dnptrs, unsigned char **lastdnptr)
+int dn_comp(const char *src,
+	    unsigned char *dst,
+	    int space,
+	    unsigned char **dnptrs,
+	    unsigned char **lastdnptr)
 {
 	int i, j, n, m=0, offset, bestlen=0, bestoff;
 	unsigned char lens[127];

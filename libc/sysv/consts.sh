@@ -427,8 +427,8 @@ syscon	utime	UTIME_OMIT				0x3ffffffe		0x3ffffffe		-2			-2			-2			-1			0x3ffffff
 syscon	auxv	AT_EXECFN				31			31			31			31			15			31			2014			31			# address of string containing first argument passed to execve() used when running program; AT_EXECPATH on FreeBSD
 syscon	auxv	AT_SECURE				23			23			23			23			0			23			0			23
 syscon	auxv	AT_RANDOM				25			25			25			25			16			25			0			25			# address of sixteen bytes of random data; AT_CANARY on FreeBSD whose AT_CANARYLEN should be 64
-syscon	auxv	AT_HWCAP				16			16			16			16			0			16			0			16
-syscon	auxv	AT_HWCAP2				26			26			26			26			0			26			0			26
+syscon	auxv	AT_HWCAP				16			16			16			16			25			16			0			16
+syscon	auxv	AT_HWCAP2				26			26			26			26			26			26			0			26
 syscon	auxv	AT_UID					11			11			11			11			0			11			2001			11
 syscon	auxv	AT_EUID					12			12			12			12			0			12			2000			12
 syscon	auxv	AT_GID					13			13			13			13			0			13			2003			13

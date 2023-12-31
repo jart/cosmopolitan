@@ -83,6 +83,7 @@ static errno_t pthread_setname_impl(struct PosixThread *pt, const char *name) {
     }
     return 0;
 
+#ifdef __x86_64__
   } else if (IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
     int ax;
     if (IsFreebsd()) {
@@ -97,6 +98,16 @@ static errno_t pthread_setname_impl(struct PosixThread *pt, const char *name) {
                  : /* no inputs */
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
     return ax;
+#endif
+
+#ifdef __aarch64__
+  } else if (IsFreebsd()) {
+    register int x0 asm("x0") = tid;
+    register long x1 asm("x1") = (long)name;
+    register int x8 asm("x8") = 464;  // thr_set_name
+    asm volatile("svc\t0" : "+r"(x0) : "r"(x1), "r"(x8) : "memory");
+    return x0;
+#endif
 
   } else {
     return ENOSYS;

@@ -96,7 +96,6 @@ THIRD_PARTY_MBEDTLS_TEST_CHECKS =										\
 
 THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_CALLS												\
-	LIBC_DNS												\
 	LIBC_FMT												\
 	LIBC_INTRIN												\
 	LIBC_LOG												\
@@ -112,7 +111,8 @@ THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_X													\
 	THIRD_PARTY_COMPILER_RT											\
 	THIRD_PARTY_GDTOA											\
-	THIRD_PARTY_MBEDTLS
+	THIRD_PARTY_MBEDTLS											\
+	THIRD_PARTY_MUSL
 
 THIRD_PARTY_MBEDTLS_TEST_DEPS :=										\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS),$($(x))))

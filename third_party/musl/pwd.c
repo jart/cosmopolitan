@@ -100,7 +100,7 @@ __fopen_passwd(void)
 		return f;
 	if (!(s = __create_synthetic_passwd_file()))
 		return 0;
-	if (!(f = fmemopen(s, strlen(s), "rb")))
+	if (!(f = fmemopen(s, strlen(s), "rbe")))
 		free(s);
 	return f;
 }

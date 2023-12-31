@@ -40,7 +40,6 @@
 #include "libc/calls/ucontext.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
@@ -114,6 +113,8 @@
 #include "third_party/lua/luaconf.h"
 #include "third_party/nsync/futex.internal.h"
 #include "tool/net/luacheck.h"
+
+#define DNS_NAME_MAX  253
 
 /**
  * @fileoverview UNIX system calls thinly wrapped for Lua

@@ -59,12 +59,12 @@ wontreturn void _Exit(int exitcode) {
                    : "rcx", "r11", "memory");
 #elif defined(__aarch64__)
       register long x0 asm("x0") = exitcode;
-      asm volatile("mov\tx8,%0\n\t"
-                   "mov\tx16,%1\n\t"
+      register long x8 asm("x8") = IsLinux() ? 94 : 1;
+      asm volatile("mov\tx16,%1\n\t"
                    "svc\t0"
                    : /* no outputs */
-                   : "i"(94), "i"(1), "r"(x0)
-                   : "x8", "x16", "memory");
+                   : "r"(x8), "i"(1), "r"(x0)
+                   : "x16", "memory");
 #else
 #error "unsupported architecture"
 #endif
@@ -77,12 +77,12 @@ wontreturn void _Exit(int exitcode) {
                  : "rcx", "r11", "memory");
 #else
     register long r0 asm("x0") = exitcode;
-    asm volatile("mov\tx8,%0\n\t"
-                 "mov\tx16,%1\n\t"
+    register long x8 asm("x8") = IsLinux() ? 93 : 431;
+    asm volatile("mov\tx16,%1\n\t"
                  "svc\t0"
                  : /* no outputs */
-                 : "i"(93), "i"(0x169), "r"(r0)
-                 : "x8", "memory");
+                 : "r"(x8), "i"(0x169), "r"(r0)
+                 : "memory");
 #endif
   } else if (IsWindows()) {
     uint32_t waitstatus;

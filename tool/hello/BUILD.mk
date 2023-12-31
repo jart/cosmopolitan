@@ -19,7 +19,7 @@ TOOL_HELLO_COMS =						\
 
 TOOL_HELLO_DIRECTDEPS =						\
 	LIBC_CALLS						\
-	LIBC_RUNTIME						\
+	LIBC_RUNTIME
 
 TOOL_HELLO_DEPS :=						\
 	$(call uniq,$(foreach x,$(TOOL_HELLO_DIRECTDEPS),$($(x))))

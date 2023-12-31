@@ -551,8 +551,8 @@ static int ParseNumberOption(const char *arg) {
   return x;
 }
 
-static void PrintUsage(int rc, FILE *f) {
-  fputs(HELPTEXT, f);
+static void PrintUsage(int rc, int fd) {
+  tinyprint(fd, HELPTEXT, NULL);
   exit(rc);
 }
 
@@ -573,9 +573,12 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case '?':
       case 'H':
-        PrintUsage(EXIT_SUCCESS, stdout);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        if (opt == optopt) {
+          PrintUsage(EXIT_SUCCESS, STDOUT_FILENO);
+        } else {
+          PrintUsage(EX_USAGE, STDERR_FILENO);
+        }
     }
   }
 }

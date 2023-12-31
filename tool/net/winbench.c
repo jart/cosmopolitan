@@ -13,7 +13,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
-#include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"

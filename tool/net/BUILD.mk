@@ -32,7 +32,6 @@ TOOL_NET_CHECKS =								\
 TOOL_NET_DIRECTDEPS =								\
 	DSP_SCALE								\
 	LIBC_CALLS								\
-	LIBC_DNS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\
 	LIBC_LOG								\

@@ -27,12 +27,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "third_party/musl/resolv.internal.h"
 
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
-asm(".include \"libc/disclaimer.inc\"");
-
-int __dn_expand(const unsigned char *base, const unsigned char *end, const unsigned char *src, char *dest, int space)
+int __dn_expand(const unsigned char *base,
+		const unsigned char *end,
+		const unsigned char *src,
+		char *dest,
+		int space)
 {
 	const unsigned char *p = src;
 	char *dend, *dbegin = dest;

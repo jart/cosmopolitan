@@ -47,10 +47,11 @@ static int64_t Seek(int64_t pos, int64_t offset) {
  */
 int64_t __zipos_seek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
   int64_t pos, new_pos;
-  while (true) {
-    pos = atomic_load_explicit(&h->pos, memory_order_relaxed);
+Restart:
+  pos = atomic_load_explicit(&h->pos, memory_order_relaxed);
+  do {
     if (UNLIKELY(pos == SIZE_MAX)) {
-      continue;
+      goto Restart;
     }
     switch (whence) {
       case SEEK_SET:
@@ -65,11 +66,8 @@ int64_t __zipos_seek(struct ZiposHandle *h, int64_t offset, unsigned whence) {
       default:
         new_pos = einval();
     }
-    if (LIKELY(atomic_compare_exchange_weak_explicit(
-            &h->pos, &pos, new_pos < 0 ? pos : new_pos, memory_order_release,
-            memory_order_relaxed))) {
-      break;
-    }
-  }
+  } while (!LIKELY(atomic_compare_exchange_weak_explicit(
+      &h->pos, &pos, new_pos < 0 ? pos : new_pos, memory_order_release,
+      memory_order_relaxed)));
   return new_pos;
 }

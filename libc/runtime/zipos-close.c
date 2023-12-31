@@ -39,7 +39,7 @@ int __zipos_close(int fd) {
   if (!__vforked) {
     struct ZiposHandle *h;
     h = (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle;
-    __zipos_free(h);
+    __zipos_drop(h);
   }
   return rc;
 }
