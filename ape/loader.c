@@ -224,7 +224,7 @@ struct ApeLoader {
 };
 
 EXTERN_C long SystemCall(long, long, long, long, long, long, long, int);
-EXTERN_C void Launch(void *, long, void *, void *, int)
+EXTERN_C void Launch(void *, long, void *, int, void *)
     __attribute__((__noreturn__));
 
 extern char __executable_start[];
@@ -768,7 +768,7 @@ __attribute__((__noreturn__)) static void Spawn(int os, char *exe, int fd,
   Msyscall(dynbase + code, codesize, os);
 
   /* call program entrypoint */
-  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, exe, sp, os);
+  Launch(IsFreebsd() ? sp : 0, dynbase + e->e_entry, exe, os, sp);
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
