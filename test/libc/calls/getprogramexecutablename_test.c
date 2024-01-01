@@ -103,27 +103,6 @@ TEST(GetProramExecutableName, weirdArgv0NullEnv) {
   EXITS(0);
 }
 
-TEST(GetProgramExecutableName, weirdArgv0CosmoVar) {
-  if (skiptests) return;
-  char buf[32 + PATH_MAX];
-  stpcpy(stpcpy(buf, "COSMOPOLITAN_PROGRAM_EXECUTABLE="), self);
-  SPAWN(fork);
-  execve(self, (char *[]){"hello", "Child", self, "hello", 0},
-         (char *[]){buf, 0});
-  abort();
-  EXITS(0);
-}
-
-TEST(GetProgramExecutableName, weirdArgv0WrongCosmoVar) {
-  if (skiptests) return;
-  char *bad = "COSMOPOLITAN_PROGRAM_EXECUTABLE=hi";
-  SPAWN(fork);
-  execve(self, (char *[]){"hello", "Child", self, "hello", 0},
-         (char *[]){bad, 0});
-  abort();
-  EXITS(0);
-}
-
 TEST(GetProgramExecutableName, movedSelf) {
   if (skiptests) return;
   char buf[BUFSIZ];

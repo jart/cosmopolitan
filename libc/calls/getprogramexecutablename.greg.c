@@ -225,8 +225,6 @@ static inline void InitProgramExecutableNameImpl(void) {
 
   // try argv[0], then argv[0].com, then $_, then $_.com.
   if (TryPath(__argv[0], 1) ||
-      /* TODO(mrdomino): remove after next loader mint */
-      TryPath(__getenv(__envp, "COSMOPOLITAN_PROGRAM_EXECUTABLE").s, 0) ||
       TryPath(__getenv(__envp, "_").s, 1)) {
     goto UseBuf;
   }
