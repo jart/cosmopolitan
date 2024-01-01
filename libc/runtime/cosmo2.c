@@ -172,6 +172,9 @@ wontreturn textstartup void cosmo(long *sp, struct Syslib *m1, char *exename,
   // initialize file system
   __init_fds(argc, argv, envp);
 
+  // prepend cwd to executable path
+  __init_program_executable_name();
+
   __enable_tls();
 
 #if 0

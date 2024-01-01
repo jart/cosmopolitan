@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/metalfile.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
@@ -57,6 +58,9 @@ void SetUpOnce(void) {
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
+    if (sys_chdir("/")) {
+      exit(122);
+    }
     if (strcmp(argv[2], GetProgramExecutableName())) {
       exit(123);
     }
@@ -136,6 +140,11 @@ TEST(GetProgramExecutableName, movedSelf) {
   stpcpy(buf + strlen(buf), "/test");
   SPAWN(fork);
   execve(buf, (char *[]){"hello", "Child", buf, "hello", 0}, (char *[]){0});
+  abort();
+  EXITS(0);
+  SPAWN(fork);
+  execve("./test", (char *[]){"hello", "Child", buf, "hello", 0},
+         (char *[]){0});
   abort();
   EXITS(0);
 }
