@@ -168,7 +168,6 @@ o/$(MODE)/ape/ape-no-modify-self.o:		\
 		libc/macros.internal.h		\
 		libc/nexgen32e/uart.internal.h	\
 		libc/calls/metalfile.internal.h	\
-		libc/nexgen32e/vidya.internal.h	\
 		libc/nt/pedef.internal.h	\
 		libc/runtime/e820.internal.h	\
 		libc/runtime/mman.internal.h	\
@@ -199,7 +198,6 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		libc/macros.internal.h		\
 		libc/nexgen32e/uart.internal.h	\
 		libc/calls/metalfile.internal.h	\
-		libc/nexgen32e/vidya.internal.h	\
 		libc/nt/pedef.internal.h	\
 		libc/runtime/e820.internal.h	\
 		libc/runtime/mman.internal.h	\
