@@ -134,7 +134,7 @@ static int TryPath(const char *q, int com) {
 // if the loader passed a relative path, prepend cwd to it.
 // called early in init.
 void __init_program_executable_name(void) {
-  if (__program_executable_name &&
+  if (__program_executable_name && *__program_executable_name != '/' &&
       CopyWithCwd(__program_executable_name, g_prog.u.buf,
                   g_prog.u.buf + sizeof(g_prog.u.buf))) {
     __program_executable_name = g_prog.u.buf;
