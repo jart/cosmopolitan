@@ -34,6 +34,10 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/ok.h"
 
+#ifdef __x86_64__
+__static_yoink("_init_program_executable_name");
+#endif
+
 #define CTL_KERN                   1
 #define KERN_PROC                  14
 #define KERN_PROC_PATHNAME_FREEBSD 12
@@ -88,37 +92,53 @@ static int OldApeLoader(char *s) {
          (!strncmp((b = basename(s)), ".ape-", 5) && AllNumDot(b + 5));
 }
 
-// if q exists then turn it into an absolute path. we also try adding
-// a .com suffix since the ape auto-appends it when resolving
-static int TryPath(const char *q, int com) {
-  char c, *p, *e;
-  if (!q) return 0;
-  p = g_prog.u.buf;
-  e = p + sizeof(g_prog.u.buf);
+static char *CopyWithCwd(const char *q, char *p, char *e) {
+  char c;
   if (*q != '/') {
     if (q[0] == '.' && q[1] == '/') {
       q += 2;
     }
-    int got = __getcwd(p, e - p - 1 /* '/' */ - com * 4);
+    int got = __getcwd(p, e - p - 1 /* '/' */);
     if (got != -1) {
       p += got - 1;
       *p++ = '/';
     }
   }
   while ((c = *q++)) {
-    if (p + com * 4 + 1 /* nul */ < e) {
+    if (p + 1 /* nul */ < e) {
       *p++ = c;
     } else {
-      return 0;
+      return NULL;
     }
   }
   *p = 0;
+  return p;
+}
+
+// if q exists then turn it into an absolute path. we also try adding
+// a .com suffix since the ape auto-appends it when resolving
+static int TryPath(const char *q, int com) {
+  char *p;
+  if (!(p = CopyWithCwd(q, g_prog.u.buf,
+                        g_prog.u.buf + sizeof(g_prog.u.buf) - com * 4))) {
+    return 0;
+  }
   if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
   if (!com) return 0;
   p = WRITE32LE(p, READ32LE(".com"));
   *p = 0;
   if (!sys_faccessat(AT_FDCWD, g_prog.u.buf, F_OK, 0)) return 1;
   return 0;
+}
+
+// if the loader passed a relative path, prepend cwd to it.
+// called early in init.
+void __init_program_executable_name(void) {
+  if (__program_executable_name && *__program_executable_name != '/' &&
+      CopyWithCwd(__program_executable_name, g_prog.u.buf,
+                  g_prog.u.buf + sizeof(g_prog.u.buf))) {
+    __program_executable_name = g_prog.u.buf;
+  }
 }
 
 static inline void InitProgramExecutableNameImpl(void) {
@@ -167,18 +187,6 @@ static inline void InitProgramExecutableNameImpl(void) {
         goto UseEmpty;
       }
     }
-    if (*__program_executable_name == '/') {
-      return;
-    }
-    // loader passed us a relative path; prepend cwd.
-    if (TryPath(__program_executable_name, 0)) {
-      goto UseBuf;
-    }
-    /* if TryPath fails, it probably failed because getcwd() was too long.
-       we are out of options now; KERN_PROC_PATHNAME et al will return the
-       name of the loader not the binary, and argv et al will at best have
-       the same problem. just use the relative path we got from the loader
-       as-is, and accept that if we chdir then things will break. */
     return;
   }
 
