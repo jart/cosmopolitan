@@ -59,7 +59,6 @@ typedef struct sigaction sighandler_cxt;
 #  define rl_sigaction(s, nh, oh)	sigaction(s, nh, oh)
 #else
 typedef struct { SigHandler *sa_handler; int sa_mask, sa_flags; } sighandler_cxt;
-#  define sigemptyset(m)
 #endif /* !HAVE_POSIX_SIGNALS */
 
 #ifndef SA_RESTART
