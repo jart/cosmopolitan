@@ -896,7 +896,7 @@ __attribute__((__noreturn__)) static void ShowUsage(int os, int fd, int rc) {
         "NAME\n"
         "\n"
         "  actually portable executable loader version " APE_VERSION_STR "\n"
-        "  copyright 2023 justine alexandra roberts tunney\n"
+        "  copyrights 2023 justine alexandra roberts tunney\n"
         "  https://justine.lol/ape.html\n"
         "\n"
         "USAGE\n"
