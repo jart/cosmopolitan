@@ -555,7 +555,7 @@ clean:
 # even if the rule is empty and does nothing. Otherwise, the .DEFAULT
 # rule gets triggered.
 #
-# This is a normal and neecssary behavior when source files get deleted.
+# This is a normal and necessary behavior when source files get deleted.
 # The build reacts automatically to this happening, by simply deleting
 # and regenerating the dependency graph; so we can safely use wildcard.
 #
