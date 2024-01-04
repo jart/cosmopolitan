@@ -28,7 +28,6 @@
 #include "libc/elf/struct/phdr.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macho.internal.h"
 #include "libc/macros.internal.h"
@@ -40,6 +39,7 @@
 #include "libc/nt/struct/imagesectionheader.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/serialize.h"
 #include "libc/stdalign.internal.h"
 #include "libc/stdckdint.h"
 #include "libc/stdio/stdio.h"
@@ -1947,9 +1947,7 @@ int main(int argc, char *argv[]) {
     }
 
     // otherwise this is a fresh install so consider the platform
-    p = stpcpy(p, "m=$(/bin/uname -m 2>/dev/null) || "
-                  "m=$(/usr/bin/uname -m 2>/dev/null) || "
-                  "m=x86_64\n");
+    p = stpcpy(p, "m=$(uname -m 2>/dev/null) || m=x86_64\n");
     if (support_vector & _HOSTXNU) {
       p = stpcpy(p, "if [ ! -d /Applications ]; then\n");
     }
@@ -2049,7 +2047,7 @@ int main(int argc, char *argv[]) {
           p = stpcpy(p, "if [ x\"$1\" = x--assimilate ]; then\n");
         }
         p = GenerateScriptIfMachine(p, in);
-        p = stpcpy(p, "/bin/dd if=\"$o\" of=\"$o\" bs=1");
+        p = stpcpy(p, "dd if=\"$o\" of=\"$o\" bs=1");
         p = stpcpy(p, " skip=");
         in->ddarg_macho_skip = p;
         p = GenerateDecimalOffsetRelocation(p);
@@ -2075,26 +2073,25 @@ int main(int argc, char *argv[]) {
         if ((loader = GetLoader(in->elf->e_machine, _HOSTXNU))) {
           loader->used = true;
           p = GenerateScriptIfMachine(p, in);  // <if-machine>
-          p = stpcpy(p, "/bin/mkdir -p \"${t%/*}\" ||exit\n"
-                        "/bin/dd if=\"$o\"");
+          p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
+                        "dd if=\"$o\"");
           p = stpcpy(p, " skip=");
           loader->ddarg_skip1 = p;
           p = GenerateDecimalOffsetRelocation(p);
           p = stpcpy(p, " count=");
           loader->ddarg_size1 = p;
           p = GenerateDecimalOffsetRelocation(p);
-          p = stpcpy(
-              p, " bs=1 2>/dev/null | /usr/bin/gzip -dc >\"$t.$$\" ||exit\n");
+          p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n");
           if (loader->macho_offset) {
-            p = stpcpy(p, "/bin/dd if=\"$t.$$\" of=\"$t.$$\"");
+            p = stpcpy(p, "dd if=\"$t.$$\" of=\"$t.$$\"");
             p = stpcpy(p, " skip=");
             p = FormatInt32(p, loader->macho_offset / 64);
             p = stpcpy(p, " count=");
             p = FormatInt32(p, ROUNDUP(loader->macho_length, 64) / 64);
             p = stpcpy(p, " bs=64 conv=notrunc 2>/dev/null ||exit\n");
           }
-          p = stpcpy(p, "/bin/chmod 755 \"$t.$$\" ||exit\n"
-                        "/bin/mv -f \"$t.$$\" \"$t\" ||exit\n");
+          p = stpcpy(p, "chmod 755 \"$t.$$\" ||exit\n"
+                        "mv -f \"$t.$$\" \"$t\" ||exit\n");
           p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
                         "fi\n");  // </if-machine>
           gotsome = true;
@@ -2113,8 +2110,8 @@ int main(int argc, char *argv[]) {
                       "echo \"$0: please run: xcode-select --install\" >&2\n"
                       "exit 1\n"
                       "fi\n"
-                      "/bin/mkdir -p \"${t%/*}\" ||exit\n"
-                      "/bin/dd if=\"$o\"");
+                      "mkdir -p \"${t%/*}\" ||exit\n"
+                      "dd if=\"$o\"");
         p = stpcpy(p, " skip=");
         macos_silicon_loader_source_ddarg_skip = p;
         p = GenerateDecimalOffsetRelocation(p);
@@ -2148,8 +2145,8 @@ int main(int argc, char *argv[]) {
       if ((loader = GetLoader(in->elf->e_machine, ~_HOSTXNU))) {
         loader->used = true;
         p = GenerateScriptIfMachine(p, in);
-        p = stpcpy(p, "/bin/mkdir -p \"${t%/*}\" ||exit\n"
-                      "/bin/dd if=\"$o\"");
+        p = stpcpy(p, "mkdir -p \"${t%/*}\" ||exit\n"
+                      "dd if=\"$o\"");
         p = stpcpy(p, " skip=");
         loader->ddarg_skip2 = p;
         p = GenerateDecimalOffsetRelocation(p);
@@ -2157,8 +2154,8 @@ int main(int argc, char *argv[]) {
         loader->ddarg_size2 = p;
         p = GenerateDecimalOffsetRelocation(p);
         p = stpcpy(p, " bs=1 2>/dev/null | gzip -dc >\"$t.$$\" ||exit\n"
-                      "/bin/chmod 755 \"$t.$$\" ||exit\n"
-                      "/bin/mv -f \"$t.$$\" \"$t\" ||exit\n");
+                      "chmod 755 \"$t.$$\" ||exit\n"
+                      "mv -f \"$t.$$\" \"$t\" ||exit\n");
         p = stpcpy(p, "exec \"$t\" \"$o\" \"$@\"\n"
                       "fi\n");
       }
