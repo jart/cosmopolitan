@@ -164,6 +164,7 @@ libc/isystem/semaphore.h \
 libc/isystem/set \
 libc/isystem/setjmp.h \
 libc/isystem/sgxintrin.h \
+libc/isystem/shadow.h \
 libc/isystem/shared_mutex \
 libc/isystem/signal.h \
 libc/isystem/smmintrin.h \
