@@ -22,7 +22,7 @@
 #include "libc/errno.h"
 
 /**
- * Returns true if process is running under qemu-x86_64 or qemu-x86_64.
+ * Returns true if process is running under qemu-x86_64 or qemu-aarch64.
  */
 int IsQemu(void) {
   // qemu doesn't validate the advice argument
