@@ -70,6 +70,7 @@ TEST(madvise, subPages) {
 TEST(madvise, misalign) {
   char *p;
   if (!IsLinux()) return;  // most platforms don't care
+  if (IsQemu()) return;    // qemu claims to be linux but doesn't care
   ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   ASSERT_SYS(EINVAL, -1, madvise(p + 1, FRAMESIZE - 1, MADV_WILLNEED));
@@ -78,6 +79,7 @@ TEST(madvise, misalign) {
 
 TEST(madvise, badAdvice) {
   char *p;
+  if (IsAarch64() && IsQemu()) return;  // qemu doesn't validate advice
   ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)));
   ASSERT_SYS(EINVAL, -1, madvise(p, FRAMESIZE, 127));
@@ -85,7 +87,8 @@ TEST(madvise, badAdvice) {
 }
 
 TEST(madvise, missingMemory) {
-  if (!IsLinux()) return;
+  if (!IsLinux()) return;  // most platforms don't care
+  if (IsQemu()) return;    // qemu claims to be linux but doesn't care
   ASSERT_SYS(ENOMEM, -1,
              madvise((char *)0x83483838000, FRAMESIZE, MADV_WILLNEED));
 }

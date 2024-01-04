@@ -20,10 +20,10 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
-#include "libc/serialize.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/serialize.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -33,6 +33,7 @@ void SetUpOnce(void) {
 }
 
 TEST(__getcwd, zero) {
+  if (IsQemu()) return;
   ASSERT_SYS(ERANGE, -1, __getcwd(0, 0));
 }
 

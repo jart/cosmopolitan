@@ -126,9 +126,8 @@ TEST(writev, empty_stillPerformsIoOperation) {
   ASSERT_NE(-1, (fd = open("file", O_RDONLY)));
   errno = 0;
   EXPECT_SYS(EBADF, -1, writev(fd, iov, ARRAYLEN(iov)));
-#ifndef __aarch64__
-  // Can't test this due to qemu-aarch64 bug
-  EXPECT_EQ(-1, writev(fd, NULL, 0));
-#endif
+  if (!(IsAarch64() && IsQemu())) {
+    EXPECT_EQ(-1, writev(fd, NULL, 0));
+  }
   EXPECT_NE(-1, close(fd));
 }

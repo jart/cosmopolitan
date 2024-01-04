@@ -597,8 +597,9 @@ static char FindCommand(struct PathSearcher *ps) {
   return SearchPath(ps);
 }
 
-static char *Commandv(struct PathSearcher *ps, int os, const char *name,
-                      const char *syspath) {
+static char *Commandv(struct PathSearcher *ps, int os, char *name,
+                      const char *syspath, int may_path_search) {
+  if (!may_path_search) return name;
   ps->os = os;
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
   if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
@@ -978,6 +979,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   }
 
   /* we can load via shell, shebang, or binfmt_misc */
+  int may_path_search = 1;
   if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
@@ -986,12 +988,12 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     prog = (char *)sp[3];
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
+    may_path_search = 0;
   } else if (argc < 2) {
     ShowUsage(os, 2, 1);
   } else {
     if (argv[1][0] == '-') {
-      rc = !(argv[1][1] == 'h' && !argv[1][2]) || !StrCmp(argv[1] + 1,
-                                                          "-help");
+      rc = !(argv[1][1] == 'h' && !argv[1][2]) || !StrCmp(argv[1] + 1, "-help");
       ShowUsage(os, 1 + rc, rc);
     }
     prog = (char *)sp[2];
@@ -1027,7 +1029,8 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   }
 
   /* resolve path of executable and read its first page */
-  if (!(exe = Commandv(&M->ps, os, prog, GetEnv(envp, "PATH")))) {
+  if (!(exe = Commandv(&M->ps, os, prog, GetEnv(envp, "PATH"),
+                       may_path_search))) {
     Pexit(os, prog, 0, "not found (maybe chmod +x or ./ needed)");
   } else if ((fd = Open(exe, O_RDONLY, 0, os)) < 0) {
     Pexit(os, exe, fd, "open");

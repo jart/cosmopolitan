@@ -81,7 +81,7 @@ TEST(tmpfile, test) {
 }
 
 #ifndef __aarch64__
-// TODO(jart): Find way to detect qemu-aarch64
+// TODO(jart): Why does this apply to pi and qemu-aarch64?
 TEST(tmpfile, renameToRealFile) {
   if (!(IsLinux() && __is_linux_2_6_23())) return;  // need non-ancient linux
   FILE *f;
