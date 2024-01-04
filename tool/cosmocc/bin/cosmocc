@@ -185,7 +185,7 @@ for x; do
     continue
   elif [ x"$x" != x"${x#-Xaarch64}" ]; then
     x=${x#-Xaarch64}
-    FLAGS_aarch64="$FLAGS_aarch64 $x"
+    FLAGS_AARCH64="$FLAGS_AARCH64 $x"
     continue
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
