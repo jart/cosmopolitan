@@ -23,6 +23,6 @@ const char *GetHostsTxtPath(char *path, size_t size) {
   if (!IsWindows()) {
     return "/etc/hosts";
   } else {
-    return GetSystemDirectoryPath(path, "drivers\\etc\\hosts", size);
+    return GetSystemDirectoryPath(path, "\\drivers\\etc\\hosts", size);
   }
 }

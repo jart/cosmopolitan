@@ -33,6 +33,7 @@
 #include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/dll.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/context.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
@@ -43,6 +44,7 @@
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
+#include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
@@ -525,7 +527,9 @@ static void __sig_unmaskable(struct NtExceptionPointers *ep, int code, int sig,
   // otherwise it'll print a warning message about the lack of stack mem
   STRACE("win32 vectored exception 0x%08Xu raising %G "
          "cosmoaddr2line %s %lx %s",
-         ep->ExceptionRecord->ExceptionCode, sig, program_invocation_name,
+         ep->ExceptionRecord->ExceptionCode, sig,
+         _weaken(FindDebugBinary) ? _weaken(FindDebugBinary)()
+                                  : program_invocation_name,
          ep->ContextRecord->Rip,
          DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
 

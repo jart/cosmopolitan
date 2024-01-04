@@ -445,6 +445,9 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "kNtWindowsDirectory", kNtWindowsDirectory);
 #endif
   PRINT(" ☼ %s = %#s", "__argv[0]", __argv[0]);
+  PRINT(" ☼ %s = %#s", "program_invocation_name", program_invocation_name);
+  PRINT(" ☼ %s = %#s", "program_invocation_short_name",
+        program_invocation_short_name);
   PRINT(" ☼ %s = %#s", "getenv(\"_\")", getenv("_"));
   PRINT(" ☼ %s = %#s", "getauxval(AT_EXECFN)", getauxval(AT_EXECFN));
   PRINT(" ☼ %s = %#s", "GetProgramExecutableName", GetProgramExecutableName());

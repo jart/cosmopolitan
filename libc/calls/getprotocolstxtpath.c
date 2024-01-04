@@ -23,6 +23,6 @@ const char *GetProtocolsTxtPath(char *buf, size_t size) {
   if (!IsWindows()) {
     return "/etc/protocols";
   } else {
-    return GetSystemDirectoryPath(buf, "drivers\\etc\\protocol", size);
+    return GetSystemDirectoryPath(buf, "\\drivers\\etc\\protocol", size);
   }
 }

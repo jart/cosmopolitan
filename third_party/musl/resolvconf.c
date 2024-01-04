@@ -63,6 +63,7 @@ static dontinline textwindows int __get_resolv_conf_nt(struct resolvconf *conf)
 		return __winerr();
 	}
 
+	conf->nns = 0;
 	for (i = 0; i < keycount; ++i) {
 		char value8[128];
 		uint32_t valuebytes, uuidlen;

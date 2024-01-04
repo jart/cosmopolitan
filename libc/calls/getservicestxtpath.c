@@ -23,6 +23,6 @@ const char *GetServicesTxtPath(char *path, size_t size) {
   if (!IsWindows()) {
     return "/etc/services";
   } else {
-    return GetSystemDirectoryPath(path, "drivers\\etc\\services", size);
+    return GetSystemDirectoryPath(path, "\\drivers\\etc\\services", size);
   }
 }
