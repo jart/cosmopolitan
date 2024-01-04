@@ -116,7 +116,7 @@ struct Loaded {
   Elf64_Phdr ph[25];
 };
 
-static struct {
+struct {
   atomic_uint once;
   bool is_supported;
   struct CosmoTib *tib;
@@ -125,9 +125,10 @@ static struct {
   int (*dlclose)(void *);
   char *(*dlerror)(void);
   jmp_buf jb;
-} foreign;
+} __foreign;
 
 long __sysv2nt14();
+long foreign_tramp();
 
 static _Thread_local char dlerror_buf[128];
 
@@ -154,28 +155,6 @@ static int is_file_newer_than(const char *path, const char *other) {
     }
   }
   return timespec_cmp(st1.st_mtim, st2.st_mtim) > 0;
-}
-
-// on system five we sadly need this brutal trampoline
-// todo(jart): add tls trampoline to sigaction() handlers
-// todo(jart): morph binary to get tls from host c library
-static long foreign_tramp(long a, long b, long c, long d, long e,
-                          long func(long, long, long, long, long, double,
-                                    double, double, double, double, double),
-                          double A, double B, double C, double D, double E,
-                          double F) {
-  long res;
-  BLOCK_SIGNALS;
-#ifdef __x86_64__
-  struct CosmoTib *tib = __get_tls();
-  __set_tls(foreign.tib);
-#endif
-  res = func(a, b, c, d, e, A, B, C, D, E, F);
-#ifdef __x86_64__
-  __set_tls(tib);
-#endif
-  ALLOW_SIGNALS;
-  return res;
 }
 
 static unsigned elf2prot(unsigned x) {
@@ -308,11 +287,11 @@ static long *push_strs(long *sp, char **list, int count) {
 }
 
 static wontreturn dontinstrument void foreign_helper(void **p) {
-  foreign.dlopen = p[0];
-  foreign.dlsym = p[1];
-  foreign.dlclose = p[2];
-  foreign.dlerror = p[3];
-  longjmp(foreign.jb, 1);
+  __foreign.dlopen = p[0];
+  __foreign.dlsym = p[1];
+  __foreign.dlclose = p[2];
+  __foreign.dlerror = p[3];
+  longjmp(__foreign.jb, 1);
 }
 
 static dontinline void elf_exec(const char *file, char **envp) {
@@ -515,11 +494,11 @@ static uint8_t *movimm(uint8_t p[static 16], int reg, uint64_t val) {
 static void *foreign_thunk_sysv(void *func) {
   uint8_t *code, *p;
 #ifdef __x86_64__
-  // movabs $func,%r9
+  // movabs $func,%rax
   // movabs $foreign_tramp,%r10
   // jmp *%r10
   if (!(p = code = foreign_alloc(23))) return 0;  // 10 + 10 + 3 = 23
-  p = movimm(p, 9, (uintptr_t)func);
+  p = movimm(p, 0, (uintptr_t)func);
   p = movimm(p, 10, (uintptr_t)foreign_tramp);
   *p++ = 0x41;
   *p++ = 0xff;
@@ -527,7 +506,7 @@ static void *foreign_thunk_sysv(void *func) {
 #elif defined(__aarch64__)
   __jit_begin();
   if ((p = code = foreign_alloc(36))) {
-    p = movimm(p, 5, (uintptr_t)func);
+    p = movimm(p, 8, (uintptr_t)func);
     p = movimm(p, 10, (uintptr_t)foreign_tramp);
     *(uint32_t *)p = 0xd61f0140;  // br x10
     __clear_cache(code, p + 4);
@@ -671,19 +650,19 @@ static bool foreign_setup(void) {
 #ifdef __x86_64__
   struct CosmoTib *cosmo_tib = __get_tls();
 #endif
-  if (!setjmp(foreign.jb)) {
+  if (!setjmp(__foreign.jb)) {
     elf_exec(exe, environ);
     return false;  // if elf_exec() returns, it failed
   }
 #ifdef __x86_64__
-  foreign.tib = __get_tls();
+  __foreign.tib = __get_tls();
   __set_tls(cosmo_tib);
 #endif
-  foreign.dlopen = foreign_thunk_sysv(foreign.dlopen);
-  foreign.dlsym = foreign_thunk_sysv(foreign.dlsym);
-  foreign.dlclose = foreign_thunk_sysv(foreign.dlclose);
-  foreign.dlerror = foreign_thunk_sysv(foreign.dlerror);
-  foreign.is_supported = true;
+  __foreign.dlopen = foreign_thunk_sysv(__foreign.dlopen);
+  __foreign.dlsym = foreign_thunk_sysv(__foreign.dlsym);
+  __foreign.dlclose = foreign_thunk_sysv(__foreign.dlclose);
+  __foreign.dlerror = foreign_thunk_sysv(__foreign.dlerror);
+  __foreign.is_supported = true;
   return true;
 }
 
@@ -693,8 +672,8 @@ static void foreign_once(void) {
 
 static bool foreign_init(void) {
   bool res;
-  cosmo_once(&foreign.once, foreign_once);
-  if (!(res = foreign.is_supported)) {
+  cosmo_once(&__foreign.once, foreign_once);
+  if (!(res = __foreign.is_supported)) {
     dlerror_set("dlopen() isn't supported on this platform");
   }
   return res;
@@ -824,7 +803,7 @@ void *cosmo_dlopen(const char *path, int mode) {
     dlerror_set("dlopen() isn't supported on OpenBSD yet");
     res = 0;
   } else if (foreign_init()) {
-    res = foreign.dlopen(path, mode);
+    res = __foreign.dlopen(path, mode);
   } else {
     res = 0;
   }
@@ -854,7 +833,7 @@ void *cosmo_dlsym(void *handle, const char *name) {
     dlerror_set("dlopen() isn't supported on x86-64 MacOS");
     func = 0;
   } else if (foreign_init()) {
-    if ((func = foreign.dlsym(handle, name))) {
+    if ((func = __foreign.dlsym(handle, name))) {
       func = foreign_thunk_sysv(func);
     }
   } else {
@@ -880,7 +859,7 @@ int cosmo_dlclose(void *handle) {
     dlerror_set("dlopen() isn't supported on x86-64 MacOS");
     res = -1;
   } else if (foreign_init()) {
-    res = foreign.dlclose(handle);
+    res = __foreign.dlclose(handle);
   } else {
     res = -1;
   }
@@ -898,7 +877,7 @@ char *cosmo_dlerror(void) {
   } else if (IsWindows() || IsXnu()) {
     res = dlerror_buf;
   } else if (foreign_init()) {
-    res = foreign.dlerror();
+    res = __foreign.dlerror();
     res = dlerror_set(res);
   } else {
     res = dlerror_buf;
