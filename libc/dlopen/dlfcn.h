@@ -20,6 +20,7 @@ int dlclose(void *);
 char *cosmo_dlerror(void);
 void *cosmo_dlopen(const char *, int);
 void *cosmo_dlsym(void *, const char *);
+void *cosmo_dltramp(void *);
 int cosmo_dlclose(void *);
 #endif
 

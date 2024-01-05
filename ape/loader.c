@@ -113,41 +113,44 @@
 #define EXTERN_C
 #endif
 
-#define O_RDONLY           0
-#define PROT_NONE          0
-#define PROT_READ          1
-#define PROT_WRITE         2
-#define PROT_EXEC          4
-#define MAP_SHARED         1
-#define MAP_PRIVATE        2
-#define MAP_FIXED          16
-#define MAP_ANONYMOUS      (IsLinux() ? 32 : 4096)
-#define MAP_NORESERVE      (IsLinux() ? 16384 : 0)
-#define ELFCLASS32         1
-#define ELFDATA2LSB        1
-#define EM_NEXGEN32E       62
-#define EM_AARCH64         183
-#define ET_EXEC            2
-#define ET_DYN             3
-#define PT_LOAD            1
-#define PT_DYNAMIC         2
-#define PT_INTERP          3
-#define EI_CLASS           4
-#define EI_DATA            5
-#define PF_X               1
-#define PF_W               2
-#define PF_R               4
-#define AT_PHDR            3
-#define AT_PHENT           4
-#define AT_PHNUM           5
-#define AT_PAGESZ          6
-#define AT_EXECFN_LINUX    31
-#define AT_EXECFN_NETBSD   2014
-#define X_OK               1
-#define XCR0_SSE           2
-#define XCR0_AVX           4
-#define PR_SET_MM          35
-#define PR_SET_MM_EXE_FILE 13
+#define O_RDONLY                    0
+#define PROT_NONE                   0
+#define PROT_READ                   1
+#define PROT_WRITE                  2
+#define PROT_EXEC                   4
+#define MAP_SHARED                  1
+#define MAP_PRIVATE                 2
+#define MAP_FIXED                   16
+#define MAP_ANONYMOUS               (IsLinux() ? 32 : 4096)
+#define MAP_NORESERVE               (IsLinux() ? 16384 : 0)
+#define ELFCLASS32                  1
+#define ELFDATA2LSB                 1
+#define EM_NEXGEN32E                62
+#define EM_AARCH64                  183
+#define ET_EXEC                     2
+#define ET_DYN                      3
+#define PT_LOAD                     1
+#define PT_DYNAMIC                  2
+#define PT_INTERP                   3
+#define EI_CLASS                    4
+#define EI_DATA                     5
+#define PF_X                        1
+#define PF_W                        2
+#define PF_R                        4
+#define AT_PHDR                     3
+#define AT_PHENT                    4
+#define AT_PHNUM                    5
+#define AT_PAGESZ                   6
+#define AT_FLAGS                    8
+#define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+#define AT_FLAGS_PRESERVE_ARGV0     (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+#define AT_EXECFN_LINUX             31
+#define AT_EXECFN_NETBSD            2014
+#define X_OK                        1
+#define XCR0_SSE                    2
+#define XCR0_AVX                    4
+#define PR_SET_MM                   35
+#define PR_SET_MM_EXE_FILE          13
 
 #define READ32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
@@ -572,39 +575,15 @@ static char SearchPath(struct PathSearcher *ps) {
   }
 }
 
-static char FindCommand(struct PathSearcher *ps) {
-  ps->path[0] = 0;
-
-  /* paths are always 100% taken literally when a slash exists
-       $ ape foo/bar.com arg1 arg2 */
-  if (MemChr(ps->name, '/', ps->namelen)) {
-    return AccessCommand(ps, 0);
-  }
-
-  /* we don't run files in the current directory
-       $ ape foo.com arg1 arg2
-     unless $PATH has an empty string entry, e.g.
-       $ expert PATH=":/bin"
-       $ ape foo.com arg1 arg2
-     however we will execute this
-       $ ape - foo.com foo.com arg1 arg2
-     because cosmo's execve needs it */
-  if (ps->literally && AccessCommand(ps, 0)) {
-    return 1;
-  }
-
-  /* otherwise search for name on $PATH */
-  return SearchPath(ps);
-}
-
 static char *Commandv(struct PathSearcher *ps, int os, char *name,
-                      const char *syspath, int may_path_search) {
-  if (!may_path_search) return name;
+                      const char *syspath) {
+  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
+  if (ps->literally || MemChr(ps->name, '/', ps->namelen)) return name;
   ps->os = os;
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
-  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
   if (ps->namelen + 1 > sizeof(ps->path)) return 0;
-  if (FindCommand(ps)) {
+  ps->path[0] = 0;
+  if (SearchPath(ps)) {
     return ps->path;
   } else {
     return 0;
@@ -913,10 +892,10 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
                                                       char dl) {
   int rc, n;
   unsigned i;
-  char literally;
   const char *ape;
   int c, fd, os, argc;
   struct ApeLoader *M;
+  char arg0, literally;
   unsigned long pagesz;
   union ElfEhdrBuf *ebuf;
   long *auxv, *ap, *endp, *sp2;
@@ -961,11 +940,14 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
 
   /* detect netbsd and find end of words */
   pagesz = 0;
+  arg0 = 0;
   for (ap = auxv; ap[0]; ap += 2) {
     if (ap[0] == AT_PAGESZ) {
       pagesz = ap[1];
     } else if (SupportsNetbsd() && !os && ap[0] == AT_EXECFN_NETBSD) {
       os = NETBSD;
+    } else if (SupportsLinux() && ap[0] == AT_FLAGS) {
+      arg0 = !!(ap[1] & AT_FLAGS_PRESERVE_ARGV0);
     }
   }
   if (!pagesz) {
@@ -979,8 +961,12 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   }
 
   /* we can load via shell, shebang, or binfmt_misc */
-  int may_path_search = 1;
-  if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
+  if (arg0) {
+    literally = 1;
+    prog = (char *)sp[2];
+    argc = sp[2] = sp[0] - 2;
+    argv = (char **)((sp += 2) + 1);
+  } else if ((literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
        systems don't permit the omission of argv[0] but we do, b/c
@@ -988,7 +974,6 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     prog = (char *)sp[3];
     argc = sp[3] = sp[0] - 3;
     argv = (char **)((sp += 3) + 1);
-    may_path_search = 0;
   } else if (argc < 2) {
     ShowUsage(os, 2, 1);
   } else {
@@ -1029,8 +1014,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
   }
 
   /* resolve path of executable and read its first page */
-  if (!(exe = Commandv(&M->ps, os, prog, GetEnv(envp, "PATH"),
-                       may_path_search))) {
+  if (!(exe = Commandv(&M->ps, os, prog, GetEnv(envp, "PATH")))) {
     Pexit(os, prog, 0, "not found (maybe chmod +x or ./ needed)");
   } else if ((fd = Open(exe, O_RDONLY, 0, os)) < 0) {
     Pexit(os, exe, fd, "open");
