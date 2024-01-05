@@ -22,6 +22,16 @@ else
   SUDO=sudo
 fi
 
+if command -v install >/dev/null 2>&1; then
+  if [ x"$(uname -s)" = xLinux ]; then
+    INSTALL="install -o root -g root -m 755"
+  else
+    INSTALL="install -o root -g wheel -m 755"
+  fi
+else
+  INSTALL="cp -f"
+fi
+
 echo "Actually Portable Executable (APE) Installer" >&2
 echo "Author:  Justine Tunney <jtunney@gmail.com>"  >&2
 
@@ -29,12 +39,13 @@ echo "Author:  Justine Tunney <jtunney@gmail.com>"  >&2
 if [ x"$(uname -s)" = xDarwin ] && [ x"$(uname -m)" = xarm64 ]; then
   echo "cc -O -o $TMPDIR/ape.$$ ape/ape-m1.c" >&2
   cc -O -o "$TMPDIR/ape.$$" ape/ape-m1.c || exit
+  trap 'rm "$TMPDIR/ape.$$"' EXIT
   if [ ! -d /usr/local/bin ]; then
     echo "$SUDO mkdir -p /usr/local/bin" >&2
     $SUDO mkdir -p /usr/local/bin || exit
   fi
-  echo "$SUDO mv -f $TMPDIR/ape.$$ /usr/local/bin/ape" >&2
-  $SUDO mv -f "$TMPDIR/ape.$$" /usr/local/bin/ape || exit
+  echo "$SUDO $INSTALL $TMPDIR/ape.$$ /usr/local/bin/ape" >&2
+  $SUDO $INSTALL "$TMPDIR/ape.$$" /usr/local/bin/ape || exit
   exit
 fi
 
@@ -83,8 +94,8 @@ fi
 if ! [ /usr/bin/ape -nt o/$MODE/ape/ape.$EXT ]; then
   echo >&2
   echo "installing o/$MODE/ape/ape.$EXT to /usr/bin/ape" >&2
-  echo "$SUDO cp -f o/$MODE/ape/ape.$EXT /usr/bin/ape" >&2
-  $SUDO cp -f o/$MODE/ape/ape.$EXT /usr/bin/ape || exit
+  echo "$SUDO $INSTALL o/$MODE/ape/ape.$EXT /usr/bin/ape" >&2
+  $SUDO $INSTALL o/$MODE/ape/ape.$EXT /usr/bin/ape || exit
   echo "done" >&2
 fi
 
