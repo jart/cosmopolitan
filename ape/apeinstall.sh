@@ -132,13 +132,20 @@ if [ x"$(uname -s)" = xLinux ]; then
     echo done >&2
   fi
 
+  uname_r="$(uname -r)"
+  if printf '%s\n%s\n' 5.12 "$uname_r" | sort -CV; then
+    FLAGS=FP
+  else
+    FLAGS=F
+  fi
+
   echo >&2
   echo registering APE with binfmt_misc >&2
   echo you may need to edit configs to persist across reboot >&2
-  echo '$SUDO sh -c "echo '"'"':APE:M::MZqFpD::/usr/bin/ape:FP'"'"' >/proc/sys/fs/binfmt_misc/register"' >&2
-  $SUDO sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:FP' >/proc/sys/fs/binfmt_misc/register" || exit
-  echo '$SUDO sh -c "echo '"'"':APE-jart:M::jartsr::/usr/bin/ape:FP'"'"' >/proc/sys/fs/binfmt_misc/register"' >&2
-  $SUDO sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:FP' >/proc/sys/fs/binfmt_misc/register" || exit
+  echo '$SUDO sh -c "echo '"'"':APE:M::MZqFpD::/usr/bin/ape:'"$FLAGS'"' >/proc/sys/fs/binfmt_misc/register"' >&2
+  $SUDO sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:$FLAGS' >/proc/sys/fs/binfmt_misc/register" || exit
+  echo '$SUDO sh -c "echo '"'"':APE-jart:M::jartsr::/usr/bin/ape:'"$FLAGS'"' >/proc/sys/fs/binfmt_misc/register"' >&2
+  $SUDO sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:$FLAGS' >/proc/sys/fs/binfmt_misc/register" || exit
   echo done >&2
 
   if [ x"$(cat /proc/sys/fs/binfmt_misc/status)" = xdisabled ]; then
