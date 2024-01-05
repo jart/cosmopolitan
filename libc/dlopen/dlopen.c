@@ -844,6 +844,17 @@ void *cosmo_dlsym(void *handle, const char *name) {
 }
 
 /**
+ * Trampolines foreign function pointer so it can be called safely.
+ */
+void *cosmo_dltramp(void *foreign_func) {
+  if (!IsWindows()) {
+    return foreign_thunk_sysv(foreign_func);
+  } else {
+    return foreign_thunk_nt(foreign_func);
+  }
+}
+
+/**
  * Closes dynamic shared object.
  *
  * @param handle was opened by dlopen()
