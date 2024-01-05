@@ -329,6 +329,7 @@ include tool/build/BUILD.mk
 include tool/curl/BUILD.mk
 include third_party/qemu/BUILD.mk
 include third_party/libunwind/BUILD.mk
+include third_party/libcxxabi/BUILD.mk
 include examples/BUILD.mk
 include examples/pyapp/BUILD.mk
 include examples/pylife/BUILD.mk
