@@ -73,10 +73,13 @@ MODE := $(m)
 endif
 endif
 
+COMMA := ,
+PWD := $(shell pwd)
+
 # detect wsl2 running cosmopolitan binaries on the host by checking whether:
 # - user ran build/bootstrap/make.com, in which case make's working directory is in wsl
 # - user ran make, in which case cocmd.com's working directory is in wsl
-ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(shell pwd)),)
+ifneq ($(findstring //wsl.localhost/,$(CURDIR) $(PWD)),)
 $(warning wsl2 interop is enabled)
 $(error you need to run sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WSLInterop')
 endif
@@ -89,13 +92,70 @@ ifeq ($(MAKE_VERSION), 3.81)
 $(error please use build/bootstrap/make.com)
 endif
 
-# provide instructions to non-linux users on unbundling gcc
-ifeq ($(TOOLCHAIN),)                                                # if TOOLCHAIN isn't defined
-ifeq ("$(wildcard o/third_party/gcc/bin/x86_64-linux-cosmo-*)","")  # if our gcc isn't unbundled
-ifneq ($(UNAME_M)-$(UNAME_S), x86_64-Linux)                         # if this is not amd64 linux
-$(error please run tool/cosmocc/fetch.sh)
+LC_ALL = C
+SOURCE_DATE_EPOCH = 0
+
+ARFLAGS = rcsD
+ZFLAGS ?=
+XARGS ?= xargs -P4 -rs8000
+DOT ?= dot
+CLANG = clang
+TMPDIR = o/tmp
+
+AR = build/bootstrap/ar.com
+CP = build/bootstrap/cp.com
+RM = build/bootstrap/rm.com -f
+GZIP = build/bootstrap/gzip.com
+ECHO = build/bootstrap/echo.com
+CHMOD = build/bootstrap/chmod.com
+TOUCH = build/bootstrap/touch.com
+PKG = build/bootstrap/package.com
+MKDEPS = build/bootstrap/mkdeps.com
+ZIPOBJ = build/bootstrap/zipobj.com
+ZIPCOPY = build/bootstrap/zipcopy.com
+PECHECK = build/bootstrap/pecheck.com
+FIXUPOBJ = build/bootstrap/fixupobj.com
+MKDIR = build/bootstrap/mkdir.com -p
+COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
+
+IGNORE := $(shell $(MKDIR) $(TMPDIR))
+
+ifneq ($(findstring aarch64,$(MODE)),)
+ARCH = aarch64
+HOSTS ?= pi studio freebsdarm
+else
+ARCH = x86_64
+HOSTS ?= freebsd rhel7 xnu win10 openbsd netbsd
 endif
-endif
+
+ZIPOBJ_FLAGS += -a$(ARCH)
+IGNORE := $(shell $(MKDIR) $(TMPDIR))
+
+export ADDR2LINE
+export LC_ALL
+export MKDIR
+export MODE
+export SOURCE_DATE_EPOCH
+export TMPDIR
+
+COSMOCC = cosmocc/3.2
+TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
+DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.2 28b48682595f0f46b45ab381118cdffdabc8fcfa29aa54e301fe6ffe35269f5e)
+
+AS = $(TOOLCHAIN)as
+CC = $(TOOLCHAIN)gcc
+CXX = $(TOOLCHAIN)g++
+CXXFILT = $(TOOLCHAIN)c++filt
+LD = $(TOOLCHAIN)ld.bfd
+NM = $(TOOLCHAIN)nm
+GCC = $(TOOLCHAIN)gcc
+STRIP = $(TOOLCHAIN)strip
+OBJCOPY = $(TOOLCHAIN)objcopy
+OBJDUMP = $(TOOLCHAIN)objdump
+ifneq ($(wildcard $(PWD)/$(TOOLCHAIN)addr2line),)
+ADDR2LINE = $(PWD)/$(TOOLCHAIN)addr2line
+else
+ADDR2LINE = $(TOOLCHAIN)addr2line
 endif
 
 # the default build modes is empty string
@@ -138,7 +198,7 @@ $(warning please run ape/apeinstall.sh if you intend to use landlock make)
 $(shell sleep .5)
 endif
 endif
-ifeq ($(USE_SYSTEM_TOOLCHAIN),)
+ifneq ($(TOOLCHAIN),)
 .STRICT = 1
 endif
 endif
@@ -149,8 +209,8 @@ endif
 	libc/stdbool.h				\
 	libc/disclaimer.inc			\
 	rwc:/dev/shm				\
+	rx:cosmocc				\
 	rx:build/bootstrap			\
-	rx:o/third_party/gcc			\
 	r:build/portcosmo.h			\
 	/proc/stat				\
 	rw:/dev/null				\

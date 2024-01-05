@@ -1,6 +1,7 @@
 # -*- conf -*-
 
 /o
+/cosmocc
 /.prompt.jtlp
 
 # TODO: Find some way to have Python write to o/

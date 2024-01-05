@@ -18,9 +18,8 @@ Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
 Copyright (C) 2019 Free Software Foundation, Inc.
 This launches GNU GCC/Binutils subprocesses, which is free software; see
-Cosmopolitan's third_party/gcc/ for source code and copying conditions.
-There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
+cosmocc's LICENSE files for source code and copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 exit
 fi

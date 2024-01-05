@@ -76,18 +76,7 @@ make install
 ## Cosmopolitan Source Builds
 
 Cosmopolitan can be compiled from source on any of our supported
-platforms. First, you need to download or clone the repository. If
-you're not using x86-64 Linux then you'll need cosmocc too.
-
-```sh
-git clone https://github.com/jart/cosmopolitan cosmo
-cd cosmo
-mkdir -p o/third_party/gcc
-pushd o/third_party/gcc
-wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
-unzip cosmocc.zip
-popd
-```
+platforms. The Makefile will download cosmocc automatically.
 
 It's recommended that you install a systemwide APE Loader. This command
 requires `sudo` access to copy the `ape` command to a system folder and
@@ -103,7 +92,7 @@ guaranteed to be compatible and furthermore includes our extensions for
 doing build system sandboxing.
 
 ```sh
-o//third_party/gcc/bin/make -j8
+build/bootstrap/make.com -j8
 o//examples/hello.com
 ```
 
@@ -114,7 +103,7 @@ depends on core LIBC packages.
 
 ```sh
 rm -rf o//libc o//test
-o//third_party/gcc/bin/make o//test/posix/signal_test.com
+build/bootstrap/make.com o//test/posix/signal_test.com
 o//test/posix/signal_test.com
 ```
 
@@ -123,21 +112,21 @@ list out each individual one. For example if you wanted to build and run
 all the unit tests in the `TEST_POSIX` package, you could say:
 
 ```sh
-o//third_party/gcc/bin/make o//test/posix
+build/bootstrap/make.com o//test/posix
 ```
 
 Cosmopolitan provides a variety of build modes. For example, if you want
 really tiny binaries (as small as 12kb in size) then you'd say:
 
 ```sh
-o//third_party/gcc/bin/make m=tiny
+build/bootstrap/make.com m=tiny
 ```
 
 You can furthermore cut out the bloat of other operating systems, and
 have Cosmopolitan become much more similar to Musl Libc.
 
 ```sh
-o//third_party/gcc/bin/make m=tinylinux
+build/bootstrap/make.com m=tinylinux
 ```
 
 For further details, see [//build/config.mk](build/config.mk).
