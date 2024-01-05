@@ -10,73 +10,93 @@ if [ ! -f ape/loader.c ]; then
   cd "$COSMO" || exit
 fi
 
+if [ -x build/bootstrap/make.com ]; then
+  MAKE=build/bootstrap/make.com
+else
+  MAKE=make
+fi
+
 if [ "$(id -u)" -eq 0 ]; then
   SUDO=
 else
   SUDO=sudo
 fi
 
+if command -v install >/dev/null 2>&1; then
+  if [ x"$(uname -s)" = xLinux ]; then
+    INSTALL="install -o root -g root -m 755"
+  else
+    INSTALL="install -o root -g wheel -m 755"
+  fi
+else
+  INSTALL="cp -f"
+fi
+
 echo "Actually Portable Executable (APE) Installer" >&2
 echo "Author:  Justine Tunney <jtunney@gmail.com>"  >&2
 
 # special installation process for apple silicon
-if [ "$(uname -s)" = "Darwin" ] && [ "$(uname -m)" = "arm64" ]; then
+if [ x"$(uname -s)" = xDarwin ] && [ x"$(uname -m)" = xarm64 ]; then
   echo "cc -O -o $TMPDIR/ape.$$ ape/ape-m1.c" >&2
   cc -O -o "$TMPDIR/ape.$$" ape/ape-m1.c || exit
+  trap 'rm "$TMPDIR/ape.$$"' EXIT
   if [ ! -d /usr/local/bin ]; then
     echo "$SUDO mkdir -p /usr/local/bin" >&2
     $SUDO mkdir -p /usr/local/bin || exit
   fi
-  echo "$SUDO mv -f $TMPDIR/ape.$$ /usr/local/bin/ape" >&2
-  $SUDO mv -f "$TMPDIR/ape.$$" /usr/local/bin/ape || exit
+  echo "$SUDO $INSTALL $TMPDIR/ape.$$ /usr/local/bin/ape" >&2
+  $SUDO $INSTALL "$TMPDIR/ape.$$" /usr/local/bin/ape || exit
+  exit
+fi
+
+if [ x"$(uname -m)" = xarm64 ] || [ x"$(uname -m)" = xaarch64 ]; then
+  MODE=aarch64
+  EXT=elf
+  BEXT=aarch64
+elif [ x"$(uname -m)" = xx86_64 ]; then
+  MODE=
+  if [ x"$(uname -s)" = xDarwin ]; then
+    EXT=macho
+  else
+    EXT=elf
+  fi
+  BEXT=$EXT
+else
+  echo "unsupported architecture $(uname -m)" >&2
   exit
 fi
 
 ################################################################################
 # INSTALL APE LOADER SYSTEMWIDE
 
-if [ -f o/depend ] && make -j8 o//ape; then
+if [ -f o/$MODE/depend ] && $MAKE -j8 o/$MODE/ape; then
   echo "successfully recompiled ape loader" >&2
-elif [ -x o//ape/ape.elf ] && [ -x o//ape/ape.macho ]; then
+elif [ -x o/$MODE/ape/ape.$EXT ]; then
   echo "using ape loader you compiled earlier" >&2
 elif [ -d build/bootstrap ]; then
   # if make isn't being used then it's unlikely the user changed the sources
   # in that case the prebuilt binaries should be completely up-to-date
   echo "using prebuilt ape loader from cosmo repo" >&2
-  mkdir -p o//ape || exit
-  cp -af build/bootstrap/ape.elf o//ape/ape.elf || exit
-  cp -af build/bootstrap/ape.macho o//ape/ape.macho || exit
+  mkdir -p o/$MODE/ape || exit
+  cp -af build/bootstrap/ape.$BEXT o/$MODE/ape/ape.$EXT || exit
 else
   echo "no cosmopolitan libc repository here" >&2
-  echo "fetching ape loader from justine.lol"  >&2
-  mkdir -p o//ape || exit
+  echo "fetching ape loader from justine.lol" >&2
+  mkdir -p o/$MODE/ape || exit
   if command -v wget >/dev/null 2>&1; then
-    wget -qO o//ape/ape.elf https://justine.lol/ape.elf || exit
-    wget -qO o//ape/ape.macho https://justine.lol/ape.macho || exit
+    wget -qO o/$MODE/ape/ape.$EXT https://justine.lol/ape.$BEXT || exit
   else
-    curl -Rso o//ape/ape.elf https://justine.lol/ape.elf || exit
-    curl -Rso o//ape/ape.macho https://justine.lol/ape.macho || exit
+    curl -Rso o/$MODE/ape/ape.$EXT https://justine.lol/ape.$BEXT || exit
   fi
-  chmod +x o//ape/ape.elf || exit
-  chmod +x o//ape/ape.macho || exit
+  chmod +x o/$MODE/ape/ape.$EXT || exit
 fi
 
-if [ "$(uname -s)" = "Darwin" ]; then
-  if ! [ /usr/bin/ape -nt o//ape/ape.macho ]; then
-    echo >&2
-    echo "installing o//ape/ape.macho to /usr/bin/ape" >&2
-    echo "$SUDO cp -f o//ape/ape.macho /usr/bin/ape" >&2
-    $SUDO cp -f o//ape/ape.macho /usr/bin/ape || exit
-    echo "done" >&2
-  fi
-else
-  if ! [ /usr/bin/ape -nt o//ape/ape.elf ]; then
-    echo >&2
-    echo "installing o//ape/ape.elf to /usr/bin/ape" >&2
-    echo "$SUDO mv -f o//ape/ape.elf /usr/bin/ape" >&2
-    $SUDO cp -f o//ape/ape.elf /usr/bin/ape || exit
-    echo "done" >&2
-  fi
+if ! [ /usr/bin/ape -nt o/$MODE/ape/ape.$EXT ]; then
+  echo >&2
+  echo "installing o/$MODE/ape/ape.$EXT to /usr/bin/ape" >&2
+  echo "$SUDO $INSTALL o/$MODE/ape/ape.$EXT /usr/bin/ape" >&2
+  $SUDO $INSTALL o/$MODE/ape/ape.$EXT /usr/bin/ape || exit
+  echo "done" >&2
 fi
 
 ################################################################################
@@ -115,10 +135,10 @@ if [ x"$(uname -s)" = xLinux ]; then
   echo >&2
   echo registering APE with binfmt_misc >&2
   echo you may need to edit configs to persist across reboot >&2
-  echo '$SUDO sh -c "echo '"'"':APE:M::MZqFpD::/usr/bin/ape:'"'"' >/proc/sys/fs/binfmt_misc/register"' >&2
-  $SUDO sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register" || exit
-  echo '$SUDO sh -c "echo '"'"':APE-jart:M::jartsr::/usr/bin/ape:'"'"' >/proc/sys/fs/binfmt_misc/register"' >&2
-  $SUDO sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register" || exit
+  echo '$SUDO sh -c "echo '"'"':APE:M::MZqFpD::/usr/bin/ape:FP'"'"' >/proc/sys/fs/binfmt_misc/register"' >&2
+  $SUDO sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:FP' >/proc/sys/fs/binfmt_misc/register" || exit
+  echo '$SUDO sh -c "echo '"'"':APE-jart:M::jartsr::/usr/bin/ape:FP'"'"' >/proc/sys/fs/binfmt_misc/register"' >&2
+  $SUDO sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:FP' >/proc/sys/fs/binfmt_misc/register" || exit
   echo done >&2
 
   if [ x"$(cat /proc/sys/fs/binfmt_misc/status)" = xdisabled ]; then
