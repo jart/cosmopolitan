@@ -291,7 +291,7 @@ static wontreturn dontinstrument void foreign_helper(void **p) {
   __foreign.dlsym = p[1];
   __foreign.dlclose = p[2];
   __foreign.dlerror = p[3];
-  longjmp(__foreign.jb, 1);
+  _longjmp(__foreign.jb, 1);
 }
 
 static dontinline void elf_exec(const char *file, char **envp) {

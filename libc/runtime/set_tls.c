@@ -28,12 +28,13 @@
 
 int sys_set_tls();
 
-textstartup void __set_tls(struct CosmoTib *tib) {
+// we can't allow --ftrace here because cosmo_dlopen() calls this
+// function to fix the tls register, and ftrace needs it unbroken
+dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
   tib = __adj_tls(tib);
 #ifdef __x86_64__
   // ask the operating system to change the x86 segment register
   if (IsWindows()) {
-    npassert(0 <= __tls_index && __tls_index < 64);
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
     sys_set_tls(129 /*AMD64_SET_FSBASE*/, tib);
