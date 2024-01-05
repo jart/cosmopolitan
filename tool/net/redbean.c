@@ -4580,6 +4580,18 @@ static int LuaProgramBrand(lua_State *L) {
 }
 
 static int LuaProgramDirectory(lua_State *L) {
+  size_t i;
+  // if no parameter is provided, then return current directories
+  if (lua_isnoneornil(L, 1)) {
+    lua_newtable(L);
+    if (stagedirs.n) {
+      for (i = 0; i < stagedirs.n; ++i) {
+        lua_pushlstring(L, stagedirs.p[i].s, stagedirs.p[i].n);
+        lua_seti(L, -2, i + 1);
+      }
+    }
+    return 1;
+  }
   struct stat st;
   const char *path = luaL_checkstring(L, 1);
   // check to raise a Lua error, to allow it to be handled
