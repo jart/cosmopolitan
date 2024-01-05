@@ -180,10 +180,10 @@ static inline void InitProgramExecutableNameImpl(void) {
          empty string to obviate the TOCTOU problem between loader and binary.
        */
       if (!(b = DevFd()) ||
-          0 != strncmp(b, __program_executable_name, StrlenDevFd()) ||
-          !__program_executable_name[StrlenDevFd()] ||
-          __program_executable_name[StrlenDevFd()] == '.' ||
-          strchr(__program_executable_name + StrlenDevFd(), '/')) {
+          0 != strncmp(b, __program_executable_name, (n = StrlenDevFd())) ||
+          !__program_executable_name[n] ||
+          __program_executable_name[n] == '.' ||
+          strchr(__program_executable_name + n, '/')) {
         goto UseEmpty;
       }
     }
