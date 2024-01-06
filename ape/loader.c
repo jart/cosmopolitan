@@ -978,7 +978,8 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     ShowUsage(os, 2, 1);
   } else {
     if (argv[1][0] == '-') {
-      rc = !(argv[1][1] == 'h' && !argv[1][2]) || !StrCmp(argv[1] + 1, "-help");
+      rc = !((argv[1][1] == 'h' && !argv[1][2]) ||
+             !StrCmp(argv[1] + 1, "-help"));
       ShowUsage(os, 1 + rc, rc);
     }
     prog = (char *)sp[2];
