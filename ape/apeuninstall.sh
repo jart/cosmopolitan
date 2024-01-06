@@ -11,8 +11,13 @@ fi
 
 if [ "$UID" = "0" ]; then
   SUDO=
-else
+elif command -v sudo >/dev/null 2>&1; then
   SUDO=sudo
+elif command -v doas >/dev/null 2>&1; then
+  SUDO=doas
+else
+  echo "need root or sudo" >&2
+  exit
 fi
 
 {
