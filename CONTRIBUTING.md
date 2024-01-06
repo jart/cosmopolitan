@@ -2,23 +2,41 @@
 
 We'd love to accept your patches! Please read this guide first.
 
+## Identity Disclosure
+
+This project does not accept anonymous contributions. Justine Tunney
+won't merge pull requests from strangers. In order to change the Cosmo
+codebase, and have your changes be upstreamed, she has to know who you
+are. You're encouraged to disclose your full name and email address to
+the public too, by including them in your git commit messages; however
+that's not a requirement; as we're happy to respect the wishes of
+contributors who prefer to remain anonymous to the public.
+
 ## Copyright Assignment
 
-Please send an email to Justine Tunney <jtunney@gmail.com> stating that
-you intend to assign her the copyright to the changes you contribute to
-Cosmopolitan. Please use the same email address you use for git commits
-which should only contain original source code from you or other people
-who are also assigning copyright. Please note that, if you're employed,
-you may need to get your employer's approval beforehand. If you can not
-assign copyright due to local laws, then you may alternatively consider
-disclaiming it using the language in [Unlicense](https://unlicense.org)
-or [CC-0](http://creativecommons.org/share-your-work/public-domain/cc0)
+The first time you send a pull request, you need to send an email to
+Justine Tunney <jtunney@gmail.com> stating that you intend to assign her
+the copyright to the changes you contribute to Cosmopolitan. This only
+applies to the code you *choose* to contribute. It only has to happen
+once. The email should be sent from an email address associated with
+your identity. Your email should link to your pull request.
 
-This is important because we can't produce 12kb single-file executables
-that comply with license requirements if we have to embed lots of them.
-Although that's less of an issue depending on the purpose of the files.
-For example, ownership is much less of a concern in the unit test files
-so you're encouraged to put your copyright on those, provided it's ISC.
+Please note that in order to give Justine the copyright, it has to be
+yours to give in the first place. If you're employed, then you should
+get your employer's approval to do this beforehand. Even with big
+companies like Google, this process is quick and painless. Usually we
+see employers granting authorization in less than one day.
+
+If you live in a country that doesn't recognize one's ability to assign
+copyright, then you may alternatively consider disclaiming it using the
+language in [Unlicense](https://unlicense.org) or
+[CC-0](http://creativecommons.org/share-your-work/public-domain/cc0).
+
+If you're checking-in third party code, then you need to have headers at
+the top of each source file (but never header files) documenting its
+owners and the code should go in the `third_party/` folder. Every third
+party project should have a `README.cosmo` file that documents its
+provenance as well as any local changes you've made.
 
 ## Style Guide
 
