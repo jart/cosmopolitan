@@ -35,44 +35,43 @@
 #include "libc/testlib/testlib.h"
 
 static char *self;
-static bool skiptests, skiparg0;
+static bool loaded, skiptests, skiparg0;
 
 void SetUpOnce(void) {
   testlib_enable_tmp_setup_teardown();
+  if (IsMetal()) {
+    skiptests = true;
+  } else if (IsWindows()) {
+    /* do all tests */
+  } else if (!loaded) {
+    ASSERT_STRNE(self, "");
+    ASSERT_SYS(0, 3, open(self, O_RDONLY));
+    char buf[8];
+    ASSERT_SYS(0, 8, pread(3, buf, 8, 0));
+    ASSERT_SYS(0, 0, close(3));
+    if (READ64LE(buf) != READ64LE("MZqFpD='") &&
+        READ64LE(buf) != READ64LE("jartsr='") &&
+        READ64LE(buf) != READ64LE("APEDBG='")) {
+      // GetProgramExecutableName does not work reliably for assimilated
+      // OpenBSD or XNU binaries.
+      skiptests = IsOpenbsd() || (IsXnu() && !IsXnuSilicon());
+    }
+  } else {
+    skiparg0 =
+        !(IsXnuSilicon() || (getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0));
+  }
+  fprintf(stderr, loaded ? "loaded\n" : "not loaded\n");
+  if (skiptests) {
+    fprintf(stderr, "skipping most GetProgramExecutableName tests\n");
+  } else if (skiparg0) {
+    fprintf(stderr, "skipping argv[0] tests\n");
+  }
 }
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
-  if (argc < 2 || strcmp(argv[1], "Child")) {
-    bool loaded = !!__program_executable_name;
-    self = GetProgramExecutableName();
-    if (IsMetal()) {
-      skiptests = true;
-    } else if (IsWindows()) {
-      /* do all tests */
-    } else if (!loaded) {
-      ASSERT_STRNE(self, "");
-      ASSERT_SYS(0, 3, open(self, O_RDONLY));
-      char buf[8];
-      ASSERT_SYS(0, 8, pread(3, buf, 8, 0));
-      ASSERT_SYS(0, 0, close(3));
-      if (READ64LE(buf) != READ64LE("MZqFpD='") &&
-          READ64LE(buf) != READ64LE("jartsr='") &&
-          READ64LE(buf) != READ64LE("APEDBG='")) {
-        // GetProgramExecutableName does not work reliably for assimilated
-        // OpenBSD or XNU binaries.
-        skiptests = IsOpenbsd() || (IsXnu() && !IsXnuSilicon());
-      }
-    } else {
-      skiparg0 =
-          !(IsXnuSilicon() || (getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0));
-    }
-    fprintf(stderr, loaded ? "loaded\n" : "not loaded\n");
-    if (skiptests) {
-      fprintf(stderr, "skipping most GetProgramExecutableName tests\n");
-    } else if (skiparg0) {
-      fprintf(stderr, "skipping argv[0] tests\n");
-    }
-  } else {
+  loaded = !!__program_executable_name;
+  self = GetProgramExecutableName();
+  if (argc >= 2 && !strcmp(argv[1], "Child")) {
     int rc;
     if (!IsWindows()) {
       rc = sys_chdir("/");
@@ -82,7 +81,7 @@ __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
     if (rc) {
       exit(122);
     }
-    if (strcmp(argv[2], GetProgramExecutableName())) {
+    if (strcmp(argv[2], self)) {
       exit(123);
     }
     if (argc >= 4) {
