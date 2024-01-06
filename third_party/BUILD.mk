@@ -17,6 +17,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/hiredis		\
 	o/$(MODE)/third_party/less		\
 	o/$(MODE)/third_party/libcxx		\
+	o/$(MODE)/third_party/libunwind		\
 	o/$(MODE)/third_party/linenoise		\
 	o/$(MODE)/third_party/lua		\
 	o/$(MODE)/third_party/lz4cli		\
