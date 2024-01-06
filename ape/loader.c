@@ -947,6 +947,7 @@ EXTERN_C __attribute__((__noreturn__)) void ApeLoader(long di, long *sp,
     } else if (SupportsNetbsd() && !os && ap[0] == AT_EXECFN_NETBSD) {
       os = NETBSD;
     } else if (SupportsLinux() && ap[0] == AT_FLAGS) {
+      // TODO(mrdomino): maybe set/insert this when we are called as "ape -".
       arg0 = !!(ap[1] & AT_FLAGS_PRESERVE_ARGV0);
     }
   }

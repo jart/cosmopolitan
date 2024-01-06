@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/libgen.h"
 #include "libc/intrin/getenv.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
@@ -260,5 +261,6 @@ static void InitProgramExecutableName(void) {
  */
 char *GetProgramExecutableName(void) {
   cosmo_once(&g_prog.once, InitProgramExecutableName);
+  STRACE("GetProgramExecutableName() → %#s", __program_executable_name);
   return __program_executable_name;
 }
