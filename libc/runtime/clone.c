@@ -48,6 +48,7 @@
 #include "libc/sock/internal.h"
 #include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/arch.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
@@ -62,6 +63,9 @@
 
 #define kMaxThreadIds 32768
 #define kMinThreadId  262144
+
+#define AMD64_SET_FSBASE 129
+#define AMD64_SET_GSBASE 131
 
 #define __NR_thr_new                      455
 #define __NR_clone_linux                  56
@@ -90,6 +94,7 @@ struct CloneArgs {
   void *arg;
 };
 
+int sys_set_tls();
 int __stack_call(void *, int, long, long, int (*)(void *, int), void *);
 
 static struct CloneArgs *AllocateCloneArgs(char *stk, size_t stksz) {
@@ -390,14 +395,14 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // FREE BESIYATA DISHMAYA
 
-void bone(struct CloneArgs *wt) {
-  *wt->ztid = 0;
-}
-
 static wontreturn void FreebsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
 #ifdef __aarch64__
   asm volatile("mov\tx28,%0" : /* no outputs */ : "r"(wt->tls));
+#elif defined(__x86_64__)
+  if (__tls_morphed) {
+    sys_set_tls(AMD64_SET_GSBASE, wt->tls);
+  }
 #endif
   *wt->ctid = wt->tid;
   wt->func(wt->arg, wt->tid);
@@ -534,6 +539,13 @@ static errno_t CloneSilicon(int (*fn)(void *, int), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // GNU/SYSTEMD
 
+struct LinuxCloneArgs {
+  int (*func)(void *, int);
+  void *arg;
+  char *tls;
+  int ctid;
+};
+
 int sys_clone_linux(int flags,   // rdi
                     long sp,     // rsi
                     int *ptid,   // rdx
@@ -542,24 +554,40 @@ int sys_clone_linux(int flags,   // rdi
                     void *func,  // r9
                     void *arg);  // 8(rsp)
 
+static int LinuxThreadEntry(void *arg, int tid) {
+  struct LinuxCloneArgs *wt = arg;
+  sys_set_tls(ARCH_SET_GS, wt->tls);
+  return wt->func(wt->arg, tid);
+}
+
 static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
                       int flags, void *arg, void *tls, int *ptid, int *ctid) {
   int rc;
   long sp;
+  struct LinuxCloneArgs *wt;
   sp = (intptr_t)(stk + stksz);
-  if (~flags & CLONE_CHILD_SETTID) {
-    flags |= CLONE_CHILD_SETTID;
-    sp -= sizeof(int);
-    sp = sp & -alignof(int);
-    ctid = (int *)sp;
-    sp -= 8;  // experiment
-  }
+  sp -= sizeof(struct LinuxCloneArgs);
   // align the stack
 #ifdef __aarch64__
   sp = sp & -128;  // for kernel 4.6 and earlier
 #else
   sp = sp & -16;
 #endif
+  wt = (struct LinuxCloneArgs *)sp;
+#ifdef __x86_64__
+  if ((flags & CLONE_SETTLS) && __tls_morphed) {
+    flags &= ~CLONE_SETTLS;
+    wt->arg = arg;
+    wt->tls = tls;
+    wt->func = func;
+    func = LinuxThreadEntry;
+    arg = wt;
+  }
+#endif
+  if (~flags & CLONE_CHILD_SETTID) {
+    flags |= CLONE_CHILD_SETTID;
+    ctid = &wt->ctid;
+  }
   if ((rc = sys_clone_linux(flags, sp, ptid, ctid, tls, func, arg)) >= 0) {
     // clone() is documented as setting ptid before return
     return 0;

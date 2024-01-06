@@ -45,6 +45,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/proc/posix_spawn.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/syslib.internal.h"
 #include "libc/serialize.h"
@@ -494,6 +495,8 @@ static uint8_t *movimm(uint8_t p[static 16], int reg, uint64_t val) {
 static void *foreign_thunk_sysv(void *func) {
   uint8_t *code, *p;
 #ifdef __x86_64__
+  // it is no longer needed
+  if (1) return func;
   // movabs $func,%rax
   // movabs $foreign_tramp,%r10
   // jmp *%r10
@@ -896,3 +899,17 @@ char *cosmo_dlerror(void) {
   STRACE("dlerror() → %#s", res);
   return res;
 }
+
+#ifdef __x86_64__
+static textstartup void dlopen_init() {
+  if (IsLinux() || IsFreebsd()) {
+    // switch from %fs to %gs for tls
+    struct CosmoTib *tib = __get_tls();
+    __morph_tls();
+    __set_tls(tib);
+  }
+}
+const void *const dlopen_ctor[] initarray = {
+    dlopen_init,
+};
+#endif

@@ -42,6 +42,7 @@ struct CosmoTib {
 };
 
 extern int __threaded;
+extern char __tls_morphed;
 extern unsigned __tls_index;
 
 char *_mktls(struct CosmoTib **);

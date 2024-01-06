@@ -26,6 +26,9 @@
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.internal.h"
 
+#define AMD64_SET_FSBASE 129
+#define AMD64_SET_GSBASE 131
+
 int sys_set_tls();
 
 // we can't allow --ftrace here because cosmo_dlopen() calls this
@@ -37,9 +40,9 @@ dontinstrument textstartup void __set_tls(struct CosmoTib *tib) {
   if (IsWindows()) {
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
-    sys_set_tls(129 /*AMD64_SET_FSBASE*/, tib);
+    sys_set_tls(__tls_morphed ? AMD64_SET_GSBASE : AMD64_SET_FSBASE, tib);
   } else if (IsLinux()) {
-    sys_set_tls(ARCH_SET_FS, tib);
+    sys_set_tls(__tls_morphed ? ARCH_SET_GS : ARCH_SET_FS, tib);
   } else if (IsNetbsd()) {
     // netbsd has sysarch(X86_SET_FSBASE) but we can't use that because
     // signal handlers will cause it to be reset due to not setting the
