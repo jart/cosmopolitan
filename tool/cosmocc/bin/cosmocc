@@ -196,6 +196,8 @@ for x; do
        [ x"$x" = x"-I" ] ||
        [ x"$x" = x"-D" ] ||
        [ x"$x" = x"-U" ] ||
+       [ x"$x" = x"-MF" ] ||
+       [ x"$x" = x"-MT" ] ||
        [ x"$x" = x"-iquote" ] ||
        [ x"$x" = x"-isystem" ] ||
        [ x"$x" = x"-include" ]; then
