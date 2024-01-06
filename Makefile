@@ -120,6 +120,18 @@ COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
 
 IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
+# the default build modes is empty string
+# on x86_64 hosts, MODE= is the same as MODE=x86_64
+# on aarch64 hosts, MODE= is changed to MODE=aarch64
+ifeq ($(MODE),)
+ifeq ($(UNAME_M),arm64)
+MODE := aarch64
+endif
+ifeq ($(UNAME_M),aarch64)
+MODE := aarch64
+endif
+endif
+
 ifneq ($(findstring aarch64,$(MODE)),)
 ARCH = aarch64
 HOSTS ?= pi studio freebsdarm
@@ -156,18 +168,6 @@ ifneq ($(wildcard $(PWD)/$(TOOLCHAIN)addr2line),)
 ADDR2LINE = $(PWD)/$(TOOLCHAIN)addr2line
 else
 ADDR2LINE = $(TOOLCHAIN)addr2line
-endif
-
-# the default build modes is empty string
-# on x86_64 hosts, MODE= is the same as MODE=x86_64
-# on aarch64 hosts, MODE= is changed to MODE=aarch64
-ifeq ($(MODE),)
-ifeq ($(UNAME_M),arm64)
-MODE := aarch64
-endif
-ifeq ($(UNAME_M),aarch64)
-MODE := aarch64
-endif
 endif
 
 # primary build rules
