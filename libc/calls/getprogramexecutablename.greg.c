@@ -224,8 +224,7 @@ static inline void InitProgramExecutableNameImpl(void) {
   }
 
   // try argv[0], then argv[0].com, then $_, then $_.com.
-  if (TryPath(__argv[0], 1) ||
-      TryPath(__getenv(__envp, "_").s, 1)) {
+  if (TryPath(__argv[0], 1) || TryPath(__getenv(__envp, "_").s, 1)) {
     goto UseBuf;
   }
 
