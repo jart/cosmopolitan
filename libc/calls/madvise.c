@@ -39,7 +39,7 @@
 int madvise(void *addr, size_t length, int advice) {
   int rc;
   if (IsAsan() && !__asan_is_valid(addr, length)) {
-    rc = efault();
+    rc = enomem();
   } else if (!IsWindows()) {
     rc = sys_madvise(addr, length, advice);
   } else {

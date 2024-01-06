@@ -85,6 +85,7 @@ $(THIRD_PARTY_BASH_OBJS): private					\
 			-Wno-missing-braces				\
 			-Wno-unused-label				\
 			-Wno-unused-value				\
+			-Wno-return-type				\
 			-Wno-parentheses				\
 			-fportcosmo
 
