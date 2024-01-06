@@ -38,6 +38,7 @@ static char *self;
 static bool loaded, skiptests, skiparg0;
 
 void SetUpOnce(void) {
+  self = GetProgramExecutableName();
   testlib_enable_tmp_setup_teardown();
   if (IsMetal()) {
     skiptests = true;
@@ -70,7 +71,6 @@ void SetUpOnce(void) {
 
 __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
   loaded = !!__program_executable_name;
-  self = GetProgramExecutableName();
   if (argc >= 2 && !strcmp(argv[1], "Child")) {
     int rc;
     if (!IsWindows()) {
@@ -81,7 +81,7 @@ __attribute__((__constructor__)) static void Child(int argc, char *argv[]) {
     if (rc) {
       exit(122);
     }
-    if (strcmp(argv[2], self)) {
+    if (strcmp(argv[2], GetProgramExecutableName())) {
       exit(123);
     }
     if (argc >= 4) {
