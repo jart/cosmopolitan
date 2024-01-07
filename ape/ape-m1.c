@@ -953,13 +953,9 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlclose = dlclose;
   M->lib.dlerror = dlerror;
 
-  /* getenv("_") is close enough to at_execfn */
-  execfn = argc > 0 ? argv[0] : 0;
   for (i = 0; envp[i]; ++i) {
-    if (envp[i][0] == '_' && envp[i][1] == '=') {
-      execfn = envp[i] + 2;
-    }
   }
+  execfn = GetEnv(envp + i + 1, "executable_path");
 
   /* sneak the system five abi back out of args */
   sp = (long *)(argv - 1);
@@ -994,7 +990,7 @@ int main(int argc, char **argv, char **envp) {
     M->ps.literally = 0;
     if (*argv[0] == '-' && (shell = GetEnv(envp, "SHELL")) &&
         !StrCmp(argv[0] + 1, BaseName(shell))) {
-      execfn = prog = shell;
+      prog = shell;
     } else {
       prog = (char *)sp[1];
     }
