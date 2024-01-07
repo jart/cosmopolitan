@@ -768,7 +768,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
                           const char *exe, int fd, long *sp, long *auxv,
-                          char *execfn, char literally) {
+                          char *execfn) {
   long i, rc;
   unsigned size;
   struct ElfEhdr *e;
@@ -865,7 +865,7 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   auxv[8] = AT_PAGESZ;
   auxv[9] = pagesz;
   auxv[10] = AT_FLAGS;
-  auxv[11] = literally ? AT_FLAGS_PRESERVE_ARGV0 : 0;
+  auxv[11] = M->ps.literally ? AT_FLAGS_PRESERVE_ARGV0 : 0;
   auxv[12] = AT_UID;
   auxv[13] = getuid();
   auxv[14] = AT_EUID;
@@ -1081,9 +1081,9 @@ int main(int argc, char **argv, char **envp) {
         }
       }
       if (i >= sizeof(ebuf->ehdr)) {
-        TryElf(M, ebuf, exe, fd, sp, auxv, execfn, M->ps.literally);
+        TryElf(M, ebuf, exe, fd, sp, auxv, execfn);
       }
     }
   }
-  Pexit(exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, execfn, M->ps.literally));
+  Pexit(exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, execfn));
 }
