@@ -997,7 +997,7 @@ int main(int argc, char **argv, char **envp) {
        but it will if you say:
            ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
        and then use #!/opt/cosmos/bin/bash.ape instead. */
-    M->ps.literally = 0;
+    M->ps.literally = 1;
     argc = sp[0];
     argv = (char **)(sp + 1);
   } else if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
