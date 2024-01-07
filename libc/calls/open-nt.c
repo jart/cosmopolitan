@@ -181,10 +181,25 @@ static textwindows int sys_open_nt_dup(int fd, int flags, int mode, int oldfd) {
   }
 }
 
+static int Atoi(const char *str) {
+  int c;
+  unsigned x = 0;
+  if (!*str) return -1;
+  while ((c = *str++)) {
+    if ('0' <= c && c <= '9') {
+      x *= 10;
+      x += c - '0';
+    } else {
+      return -1;
+    }
+  }
+  return x;
+}
+
 textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
                             int32_t mode) {
-  int fd;
   ssize_t rc;
+  int fd, oldfd;
   BLOCK_SIGNALS;
   __fds_lock();
   if (!(flags & _O_CREAT)) mode = 0;
@@ -200,6 +215,9 @@ textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
         rc = sys_open_nt_dup(fd, flags, mode, STDOUT_FILENO);
       } else if (!strcmp(file + 5, "stderr")) {
         rc = sys_open_nt_dup(fd, flags, mode, STDERR_FILENO);
+      } else if (startswith(file + 5, "fd/") &&
+                 (oldfd = Atoi(file + 8)) != -1) {
+        rc = sys_open_nt_dup(fd, flags, mode, oldfd);
       } else {
         rc = enoent();
       }

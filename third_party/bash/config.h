@@ -542,7 +542,7 @@
 #define HAVE_HASH_BANG_EXEC 1
 
 /* Define if you have the /dev/fd devices to map open files into the file system. */
-/* #define HAVE_DEV_FD 1 */
+#define HAVE_DEV_FD 1
 
 /* Defined to /dev/fd or /proc/self/fd (linux). */
 #define DEV_FD_PREFIX "/dev/fd/"
@@ -1160,7 +1160,7 @@
 
 /* #undef GETCWD_BROKEN */
 
-/* #undef DEV_FD_STAT_BROKEN */
+#define DEV_FD_STAT_BROKEN
 
 /* An array implementation that prioritizes speed (O(1) access) over space,
    in array2.c */

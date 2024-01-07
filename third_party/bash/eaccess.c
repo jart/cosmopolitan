@@ -1,3 +1,4 @@
+#include "libc/dce.h"
 /* eaccess.c - eaccess replacement for the shell, plus other access functions. */
 
 /* Copyright (C) 2006-2020 Free Software Foundation, Inc.
@@ -93,7 +94,8 @@ sh_stat (path, finfo)
     {
       /* If stating /dev/fd/n doesn't produce the same results as fstat of
 	 FD N, then define DEV_FD_STAT_BROKEN */
-#if !defined (HAVE_DEV_FD) || defined (DEV_FD_STAT_BROKEN)
+//#if !defined (HAVE_DEV_FD) || defined (DEV_FD_STAT_BROKEN)
+if (IsBsd()) {//[jart]
       intmax_t fd;
       int r;
 
@@ -105,7 +107,8 @@ sh_stat (path, finfo)
         }
       errno = ENOENT;
       return (-1);
-#else
+//#else
+} else {//[jart]
   /* If HAVE_DEV_FD is defined, DEV_FD_PREFIX is defined also, and has a
      trailing slash.  Make sure /dev/fd/xx really uses DEV_FD_PREFIX/xx.
      On most systems, with the notable exception of linux, this is
@@ -114,7 +117,8 @@ sh_stat (path, finfo)
       strcpy (pbuf, DEV_FD_PREFIX);
       strcat (pbuf, path + 8);
       return (stat (pbuf, finfo));
-#endif /* !HAVE_DEV_FD */
+//#endif /* !HAVE_DEV_FD */
+}//[jart]
     }
 #if !defined (HAVE_DEV_STDIN)
   else if (STREQN (path, "/dev/std", 8))

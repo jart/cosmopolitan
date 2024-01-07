@@ -13,3 +13,4 @@ ORIGIN
 LOCAL CHANGES
 
   - Force disable mkfifo() code
+  - Added runtime check for broken BSD /dev/fd stuff
