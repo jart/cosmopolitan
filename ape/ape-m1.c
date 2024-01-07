@@ -960,6 +960,7 @@ int main(int argc, char **argv, char **envp) {
       execfn = envp[i] + 2;
     }
   }
+  prog = GetEnv(envp + i + 1, "executable_path");
 
   /* sneak the system five abi back out of args */
   sp = (long *)(argv - 1);
@@ -981,8 +982,8 @@ int main(int argc, char **argv, char **envp) {
   sp = sp2;
 
   /* interpret command line arguments */
-  if ((M->ps.indirect = argc > 0 ? GetIndirectOffset(argv[0]) : 0)) {
-    /* if argv[0] is $prog.ape, then we strip off the .ape and run
+  if ((M->ps.indirect = GetIndirectOffset(prog))) {
+    /* if called as $prog.ape, then strip off the .ape and run the
        $prog. This allows you to use symlinks to trick the OS when
        a native executable is required. For example, let's say you
        want to use the APE binary /opt/cosmos/bin/bash as a system
@@ -992,11 +993,8 @@ int main(int argc, char **argv, char **envp) {
            ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
        and then use #!/opt/cosmos/bin/bash.ape instead. */
     M->ps.literally = 0;
-    if (*argv[0] == '-' && (shell = GetEnv(envp, "SHELL")) &&
-        !StrCmp(argv[0] + 1, BaseName(shell))) {
-      execfn = prog = shell;
-    } else {
-      prog = (char *)sp[1];
+    if (!execfn) {
+      execfn = prog;
     }
     argc = sp[0];
     argv = (char **)(sp + 1);
