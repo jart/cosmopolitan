@@ -325,17 +325,7 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
-  if (!access(ps->path, X_OK)) {
-    if (ps->indirect) {
-      ps->namelen -= 4;
-      ps->path[pathlen + ps->namelen] = 0;
-      if (access(ps->path, X_OK) < 0) {
-        Pexit(ps->path, -errno, "access(X_OK)");
-      }
-    }
-    return 1;
-  }
-  return 0;
+  return !access(ps->path, X_OK);
 }
 
 static char SearchPath(struct PathSearcher *ps) {
@@ -382,6 +372,7 @@ static char *Commandv(struct PathSearcher *ps, const char *name,
                       const char *syspath) {
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
   if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
+  if (ps->indirect) ps->namelen -= 4;
   if (ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (FindCommand(ps)) {
     return ps->path;
