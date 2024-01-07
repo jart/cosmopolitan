@@ -1001,7 +1001,7 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
-         "  ($0 = PROG.ape) [ARGV1,ARGV2,...]\n"
+         "         PROG.ape [ARGV1,ARGV2,...]\n"
          "actually portable executable loader silicon 1.10\n"
          "copyrights 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
