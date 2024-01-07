@@ -103,36 +103,39 @@ struct Syslib {
   char *(*dlerror)(void);
 };
 
-#define ELFCLASS32  1
-#define ELFDATA2LSB 1
-#define EM_AARCH64  183
-#define ET_EXEC     2
-#define ET_DYN      3
-#define PT_LOAD     1
-#define PT_DYNAMIC  2
-#define PT_INTERP   3
-#define EI_CLASS    4
-#define EI_DATA     5
-#define PF_X        1
-#define PF_W        2
-#define PF_R        4
-#define AT_PHDR     3
-#define AT_PHENT    4
-#define AT_PHNUM    5
-#define AT_PAGESZ   6
-#define AT_BASE     7
-#define AT_ENTRY    9
-#define AT_UID      11
-#define AT_EUID     12
-#define AT_GID      13
-#define AT_EGID     14
-#define AT_HWCAP    16
-#define AT_HWCAP2   16
-#define AT_SECURE   23
-#define AT_RANDOM   25
-#define AT_EXECFN   31
+#define ELFCLASS32                  1
+#define ELFDATA2LSB                 1
+#define EM_AARCH64                  183
+#define ET_EXEC                     2
+#define ET_DYN                      3
+#define PT_LOAD                     1
+#define PT_DYNAMIC                  2
+#define PT_INTERP                   3
+#define EI_CLASS                    4
+#define EI_DATA                     5
+#define PF_X                        1
+#define PF_W                        2
+#define PF_R                        4
+#define AT_PHDR                     3
+#define AT_PHENT                    4
+#define AT_PHNUM                    5
+#define AT_PAGESZ                   6
+#define AT_BASE                     7
+#define AT_FLAGS                    8
+#define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+#define AT_FLAGS_PRESERVE_ARGV0     (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+#define AT_ENTRY                    9
+#define AT_UID                      11
+#define AT_EUID                     12
+#define AT_GID                      13
+#define AT_EGID                     14
+#define AT_HWCAP                    16
+#define AT_HWCAP2                   16
+#define AT_SECURE                   23
+#define AT_RANDOM                   25
+#define AT_EXECFN                   31
 
-#define AUXV_WORDS 29
+#define AUXV_WORDS 31
 
 /* from the xnu codebase */
 #define _COMM_PAGE_START_ADDRESS      0x0000000FFFFFC000ul
@@ -322,17 +325,7 @@ static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
   if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
-  if (!access(ps->path, X_OK)) {
-    if (ps->indirect) {
-      ps->namelen -= 4;
-      ps->path[pathlen + ps->namelen] = 0;
-      if (access(ps->path, X_OK) < 0) {
-        Pexit(ps->path, -errno, "access(X_OK)");
-      }
-    }
-    return 1;
-  }
-  return 0;
+  return !access(ps->path, X_OK);
 }
 
 static char SearchPath(struct PathSearcher *ps) {
@@ -358,12 +351,8 @@ static char FindCommand(struct PathSearcher *ps) {
   ps->path[0] = 0;
 
   /* paths are always 100% taken literally when a slash exists
-       $ ape foo/bar.com arg1 arg2 */
-  if (memchr(ps->name, '/', ps->namelen)) {
-    return AccessCommand(ps, 0);
-  }
-
-  /* we don't run files in the current directory
+       $ ape foo/bar.com arg1 arg2
+     we don't run files in the current directory
        $ ape foo.com arg1 arg2
      unless $PATH has an empty string entry, e.g.
        $ expert PATH=":/bin"
@@ -371,8 +360,8 @@ static char FindCommand(struct PathSearcher *ps) {
      however we will execute this
        $ ape - foo.com foo.com arg1 arg2
      because cosmo's execve needs it */
-  if (ps->literally && AccessCommand(ps, 0)) {
-    return 1;
+  if (ps->literally || memchr(ps->name, '/', ps->namelen)) {
+    return AccessCommand(ps, 0);
   }
 
   /* otherwise search for name on $PATH */
@@ -382,7 +371,8 @@ static char FindCommand(struct PathSearcher *ps) {
 static char *Commandv(struct PathSearcher *ps, const char *name,
                       const char *syspath) {
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
-  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
+  ps->name = name;
+  if (!(ps->namelen = ps->indirect ? ps->indirect : StrLen(ps->name))) return 0;
   if (ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (FindCommand(ps)) {
     return ps->path;
@@ -861,25 +851,27 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   auxv[7] = ebuf->ehdr.e_entry;
   auxv[8] = AT_PAGESZ;
   auxv[9] = pagesz;
-  auxv[10] = AT_UID;
-  auxv[11] = getuid();
-  auxv[12] = AT_EUID;
-  auxv[13] = geteuid();
-  auxv[14] = AT_GID;
-  auxv[15] = getgid();
-  auxv[16] = AT_EGID;
-  auxv[17] = getegid();
-  auxv[18] = AT_HWCAP;
-  auxv[19] = 0xffb3ffffu;
-  auxv[20] = AT_HWCAP2;
-  auxv[21] = 0x181;
-  auxv[22] = AT_SECURE;
-  auxv[23] = issetugid();
-  auxv[24] = AT_RANDOM;
-  auxv[25] = (long)M->rando;
-  auxv[26] = AT_EXECFN;
-  auxv[27] = (long)execfn;
-  auxv[28] = 0;
+  auxv[10] = AT_FLAGS;
+  auxv[11] = M->ps.literally ? AT_FLAGS_PRESERVE_ARGV0 : 0;
+  auxv[12] = AT_UID;
+  auxv[13] = getuid();
+  auxv[14] = AT_EUID;
+  auxv[15] = geteuid();
+  auxv[16] = AT_GID;
+  auxv[17] = getgid();
+  auxv[18] = AT_EGID;
+  auxv[19] = getegid();
+  auxv[20] = AT_HWCAP;
+  auxv[21] = 0xffb3ffffu;
+  auxv[22] = AT_HWCAP2;
+  auxv[23] = 0x181;
+  auxv[24] = AT_SECURE;
+  auxv[25] = issetugid();
+  auxv[26] = AT_RANDOM;
+  auxv[27] = (long)M->rando;
+  auxv[28] = AT_EXECFN;
+  auxv[29] = (long)execfn;
+  auxv[30] = 0;
 
   /* we're now ready to load */
   Spawn(exe, fd, sp, e, p, &M->lib, M->ps.path);
@@ -891,7 +883,7 @@ int main(int argc, char **argv, char **envp) {
   struct ApeLoader *M;
   long *sp, *sp2, *auxv;
   union ElfEhdrBuf *ebuf;
-  char *p, *pe, *exe, *prog, *execfn, *shell;
+  char *p, *pe, *exe, *prog, *execfn;
 
   /* allocate loader memory in program's arg block */
   n = sizeof(struct ApeLoader);
@@ -954,11 +946,15 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlerror = dlerror;
 
   /* getenv("_") is close enough to at_execfn */
-  execfn = argc > 0 ? argv[0] : 0;
+  execfn = 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
     }
+  }
+  prog = GetEnv(envp + i + 1, "executable_path");
+  if (!execfn) {
+    execfn = prog;
   }
 
   /* sneak the system five abi back out of args */
@@ -981,8 +977,8 @@ int main(int argc, char **argv, char **envp) {
   sp = sp2;
 
   /* interpret command line arguments */
-  if ((M->ps.indirect = argc > 0 ? GetIndirectOffset(argv[0]) : 0)) {
-    /* if argv[0] is $prog.ape, then we strip off the .ape and run
+  if ((M->ps.indirect = GetIndirectOffset(prog))) {
+    /* if called as $prog.ape, then strip off the .ape and run the
        $prog. This allows you to use symlinks to trick the OS when
        a native executable is required. For example, let's say you
        want to use the APE binary /opt/cosmos/bin/bash as a system
@@ -991,13 +987,7 @@ int main(int argc, char **argv, char **envp) {
        but it will if you say:
            ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
        and then use #!/opt/cosmos/bin/bash.ape instead. */
-    M->ps.literally = 0;
-    if (*argv[0] == '-' && (shell = GetEnv(envp, "SHELL")) &&
-        !StrCmp(argv[0] + 1, BaseName(shell))) {
-      execfn = prog = shell;
-    } else {
-      prog = (char *)sp[1];
-    }
+    M->ps.literally = 1;
     argc = sp[0];
     argv = (char **)(sp + 1);
   } else if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {

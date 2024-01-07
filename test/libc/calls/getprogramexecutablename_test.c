@@ -58,8 +58,7 @@ void SetUpOnce(void) {
       skiptests = IsOpenbsd() || (IsXnu() && !IsXnuSilicon());
     }
   } else {
-    skiparg0 =
-        !(IsXnuSilicon() || (getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0));
+    skiparg0 = !(getauxval(AT_FLAGS) & AT_FLAGS_PRESERVE_ARGV0);
   }
   fprintf(stderr, loaded ? "loaded\n" : "not loaded\n");
   if (skiptests) {
