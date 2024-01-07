@@ -966,6 +966,9 @@ int main(int argc, char **argv, char **envp) {
     }
   }
   prog = GetEnv(envp + i + 1, "executable_path");
+  if (!execfn) {
+    execfn = prog;
+  }
 
   /* sneak the system five abi back out of args */
   sp = (long *)(argv - 1);
@@ -1020,9 +1023,6 @@ int main(int argc, char **argv, char **envp) {
     prog = (char *)sp[2];
     argc = sp[1] = sp[0] - 1;
     argv = (char **)((sp += 1) + 1);
-  }
-  if (!execfn) {
-    execfn = prog;
   }
 
   /* allocate ephemeral memory for reading file */
