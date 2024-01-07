@@ -284,6 +284,8 @@ include third_party/stb/BUILD.mk		# │
 include third_party/mbedtls/BUILD.mk		# │
 include third_party/ncurses/BUILD.mk		# │
 include third_party/readline/BUILD.mk		# │
+include third_party/libunwind/BUILD.mk		# |
+include third_party/libcxxabi/BUILD.mk		# |
 include third_party/libcxx/BUILD.mk		# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
@@ -328,8 +330,6 @@ include third_party/python/BUILD.mk
 include tool/build/BUILD.mk
 include tool/curl/BUILD.mk
 include third_party/qemu/BUILD.mk
-include third_party/libunwind/BUILD.mk
-include third_party/libcxxabi/BUILD.mk
 include examples/BUILD.mk
 include examples/pyapp/BUILD.mk
 include examples/pylife/BUILD.mk

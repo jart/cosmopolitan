@@ -10,7 +10,7 @@
 
 #include "third_party/libcxx/new"
 #include "third_party/libcxx/atomic_support.hh"
-#include "third_party/libcxx/new_handler_fallback.hh"
+#include "third_party/libcxxabi/include/cxxabi.h"
 
 namespace std {
 
