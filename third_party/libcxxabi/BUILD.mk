@@ -90,6 +90,7 @@ $(THIRD_PARTY_LIBCXXABI_A_OBJS): private				\
 			-frtti						\
 			-D_LIBCXXABI_BUILDING_LIBRARY			\
 			-D_LIBCPP_BUILDING_LIBRARY			\
+			-DHAVE___CXA_THREAD_ATEXIT_IMPL			\
 			-D_LIBCPP_CONSTINIT=__constinit			\
 			-Dconstinit=__constinit
 

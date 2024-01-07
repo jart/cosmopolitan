@@ -15,3 +15,4 @@ LOCAL CHANGES
 
   - Add <__memory/aligned_alloc.h> (contains a few inline functions) from
   upstream libcxx.
+  - Enable __cxa_thread_atexit for Cosmopolitan.
