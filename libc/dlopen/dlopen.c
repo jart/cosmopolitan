@@ -722,14 +722,13 @@ static void *dlopen_nt(const char *path, int mode) {
 
 static void *dlsym_nt(void *handle, const char *name) {
   void *x64_abi_func;
-  void *sysv_abi_func = 0;
   if ((x64_abi_func = GetProcAddress((uintptr_t)handle, name))) {
-    sysv_abi_func = foreign_thunk_nt(x64_abi_func);
+    return x64_abi_func;
   } else {
     dlerror_set("symbol not found: ");
     strlcat(dlerror_buf, name, sizeof(dlerror_buf));
+    return 0;
   }
-  return sysv_abi_func;
 }
 
 static void *dlopen_silicon(const char *path, int mode) {
