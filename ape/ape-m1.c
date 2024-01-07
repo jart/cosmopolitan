@@ -371,8 +371,8 @@ static char FindCommand(struct PathSearcher *ps) {
 static char *Commandv(struct PathSearcher *ps, const char *name,
                       const char *syspath) {
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
-  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
-  if (ps->indirect) ps->namelen -= 4;
+  ps->name = name;
+  if (!(ps->namelen = ps->indirect ? ps->indirect : StrLen(ps->name))) return 0;
   if (ps->namelen + 1 > sizeof(ps->path)) return 0;
   if (FindCommand(ps)) {
     return ps->path;
