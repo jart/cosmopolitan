@@ -361,12 +361,8 @@ static char FindCommand(struct PathSearcher *ps) {
   ps->path[0] = 0;
 
   /* paths are always 100% taken literally when a slash exists
-       $ ape foo/bar.com arg1 arg2 */
-  if (memchr(ps->name, '/', ps->namelen)) {
-    return AccessCommand(ps, 0);
-  }
-
-  /* we don't run files in the current directory
+       $ ape foo/bar.com arg1 arg2
+     we don't run files in the current directory
        $ ape foo.com arg1 arg2
      unless $PATH has an empty string entry, e.g.
        $ expert PATH=":/bin"
@@ -374,8 +370,8 @@ static char FindCommand(struct PathSearcher *ps) {
      however we will execute this
        $ ape - foo.com foo.com arg1 arg2
      because cosmo's execve needs it */
-  if (ps->literally && AccessCommand(ps, 0)) {
-    return 1;
+  if (ps->literally || memchr(ps->name, '/', ps->namelen)) {
+    return AccessCommand(ps, 0);
   }
 
   /* otherwise search for name on $PATH */
