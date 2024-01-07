@@ -103,36 +103,39 @@ struct Syslib {
   char *(*dlerror)(void);
 };
 
-#define ELFCLASS32  1
-#define ELFDATA2LSB 1
-#define EM_AARCH64  183
-#define ET_EXEC     2
-#define ET_DYN      3
-#define PT_LOAD     1
-#define PT_DYNAMIC  2
-#define PT_INTERP   3
-#define EI_CLASS    4
-#define EI_DATA     5
-#define PF_X        1
-#define PF_W        2
-#define PF_R        4
-#define AT_PHDR     3
-#define AT_PHENT    4
-#define AT_PHNUM    5
-#define AT_PAGESZ   6
-#define AT_BASE     7
-#define AT_ENTRY    9
-#define AT_UID      11
-#define AT_EUID     12
-#define AT_GID      13
-#define AT_EGID     14
-#define AT_HWCAP    16
-#define AT_HWCAP2   16
-#define AT_SECURE   23
-#define AT_RANDOM   25
-#define AT_EXECFN   31
+#define ELFCLASS32                  1
+#define ELFDATA2LSB                 1
+#define EM_AARCH64                  183
+#define ET_EXEC                     2
+#define ET_DYN                      3
+#define PT_LOAD                     1
+#define PT_DYNAMIC                  2
+#define PT_INTERP                   3
+#define EI_CLASS                    4
+#define EI_DATA                     5
+#define PF_X                        1
+#define PF_W                        2
+#define PF_R                        4
+#define AT_PHDR                     3
+#define AT_PHENT                    4
+#define AT_PHNUM                    5
+#define AT_PAGESZ                   6
+#define AT_BASE                     7
+#define AT_FLAGS                    8
+#define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+#define AT_FLAGS_PRESERVE_ARGV0     (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+#define AT_ENTRY                    9
+#define AT_UID                      11
+#define AT_EUID                     12
+#define AT_GID                      13
+#define AT_EGID                     14
+#define AT_HWCAP                    16
+#define AT_HWCAP2                   16
+#define AT_SECURE                   23
+#define AT_RANDOM                   25
+#define AT_EXECFN                   31
 
-#define AUXV_WORDS 29
+#define AUXV_WORDS 31
 
 /* from the xnu codebase */
 #define _COMM_PAGE_START_ADDRESS      0x0000000FFFFFC000ul
@@ -765,7 +768,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
                           const char *exe, int fd, long *sp, long *auxv,
-                          char *execfn) {
+                          char *execfn, char literally) {
   long i, rc;
   unsigned size;
   struct ElfEhdr *e;
@@ -861,25 +864,27 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   auxv[7] = ebuf->ehdr.e_entry;
   auxv[8] = AT_PAGESZ;
   auxv[9] = pagesz;
-  auxv[10] = AT_UID;
-  auxv[11] = getuid();
-  auxv[12] = AT_EUID;
-  auxv[13] = geteuid();
-  auxv[14] = AT_GID;
-  auxv[15] = getgid();
-  auxv[16] = AT_EGID;
-  auxv[17] = getegid();
-  auxv[18] = AT_HWCAP;
-  auxv[19] = 0xffb3ffffu;
-  auxv[20] = AT_HWCAP2;
-  auxv[21] = 0x181;
-  auxv[22] = AT_SECURE;
-  auxv[23] = issetugid();
-  auxv[24] = AT_RANDOM;
-  auxv[25] = (long)M->rando;
-  auxv[26] = AT_EXECFN;
-  auxv[27] = (long)execfn;
-  auxv[28] = 0;
+  auxv[10] = AT_FLAGS;
+  auxv[11] = literally ? AT_FLAGS_PRESERVE_ARGV0 : 0;
+  auxv[12] = AT_UID;
+  auxv[13] = getuid();
+  auxv[14] = AT_EUID;
+  auxv[15] = geteuid();
+  auxv[16] = AT_GID;
+  auxv[17] = getgid();
+  auxv[18] = AT_EGID;
+  auxv[19] = getegid();
+  auxv[20] = AT_HWCAP;
+  auxv[21] = 0xffb3ffffu;
+  auxv[22] = AT_HWCAP2;
+  auxv[23] = 0x181;
+  auxv[24] = AT_SECURE;
+  auxv[25] = issetugid();
+  auxv[26] = AT_RANDOM;
+  auxv[27] = (long)M->rando;
+  auxv[28] = AT_EXECFN;
+  auxv[29] = (long)execfn;
+  auxv[30] = 0;
 
   /* we're now ready to load */
   Spawn(exe, fd, sp, e, p, &M->lib, M->ps.path);
@@ -1076,9 +1081,9 @@ int main(int argc, char **argv, char **envp) {
         }
       }
       if (i >= sizeof(ebuf->ehdr)) {
-        TryElf(M, ebuf, exe, fd, sp, auxv, execfn);
+        TryElf(M, ebuf, exe, fd, sp, auxv, execfn, M->ps.literally);
       }
     }
   }
-  Pexit(exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, execfn));
+  Pexit(exe, 0, TryElf(M, ebuf, exe, fd, sp, auxv, execfn, M->ps.literally));
 }
