@@ -28,6 +28,8 @@
 
 #if defined(_LIBUNWIND_BUILD_SJLJ_APIS)
 
+typedef uintptr_t _Unwind_Word __attribute__((__mode__(__unwind_word__)));
+
 struct _Unwind_FunctionContext {
   // next function in stack of handlers
   struct _Unwind_FunctionContext *prev;
@@ -47,7 +49,7 @@ struct _Unwind_FunctionContext {
   uint32_t                        resumeLocation;
 
   // set by personality handler to be parameters passed to landing pad function
-  uint32_t                        resumeParameters[4];
+  _Unwind_Word                    resumeParameters[4];
 #endif
 
   // set by calling function before registering
