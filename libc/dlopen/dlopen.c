@@ -618,7 +618,15 @@ static dontinline bool foreign_compile(char exe[hasatleast PATH_MAX]) {
   }
   int pid, ws;
   char *args[] = {
-      "cc", "-pie", "-fPIC", src, "-o", tmp, IsNetbsd() ? 0 : "-ldl", 0,
+      "cc",
+      "-pie",
+      "-fPIC",
+      src,
+      "-o",
+      tmp,
+      IsLinux() ? "-Wl,-z,execstack" : "-DIGNORE",
+      IsNetbsd() ? 0 : "-ldl",
+      0,
   };
   errno_t err = posix_spawnp(&pid, args[0], NULL, NULL, args, environ);
   if (err) {
