@@ -954,7 +954,7 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlerror = dlerror;
 
   /* getenv("_") is close enough to at_execfn */
-  execfn = argc > 0 ? argv[0] : 0;
+  execfn = 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
@@ -993,9 +993,6 @@ int main(int argc, char **argv, char **envp) {
            ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
        and then use #!/opt/cosmos/bin/bash.ape instead. */
     M->ps.literally = 0;
-    if (!execfn) {
-      execfn = prog;
-    }
     argc = sp[0];
     argv = (char **)(sp + 1);
   } else if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
@@ -1018,6 +1015,9 @@ int main(int argc, char **argv, char **envp) {
     prog = (char *)sp[2];
     argc = sp[1] = sp[0] - 1;
     argv = (char **)((sp += 1) + 1);
+  }
+  if (!execfn) {
+    execfn = prog;
   }
 
   /* allocate ephemeral memory for reading file */
