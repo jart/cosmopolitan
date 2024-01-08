@@ -1,0 +1,1 @@
+sudo mount -t tmpfs -o size=10G,noatime,nodiratime /dev/shm ${COSMO:-$PWD}/o
