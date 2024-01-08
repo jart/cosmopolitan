@@ -142,11 +142,9 @@ for x; do
     continue
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-pie" ] ||
-       [ x"$x" = x"-frtti" ] ||
        [ x"$x" = x"-shared" ] ||
        [ x"$x" = x"-nostdlib" ] ||
        [ x"$x" = x"-mred-zone" ] ||
-       [ x"$x" = x"-fexceptions" ] ||
        [ x"$x" = x"-fsanitize=thread" ]; then
     echo "$PROG: $x not supported" >&2
     exit 1

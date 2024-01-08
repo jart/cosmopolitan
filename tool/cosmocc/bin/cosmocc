@@ -151,11 +151,9 @@ for x; do
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-S" ] ||
        [ x"$x" = x"-pie" ] ||
-       [ x"$x" = x"-frtti" ] ||
        [ x"$x" = x"-shared" ] ||
        [ x"$x" = x"-nostdlib" ] ||
        [ x"$x" = x"-mred-zone" ] ||
-       [ x"$x" = x"-fexceptions" ] ||
        [ x"$x" = x"-fsanitize=thread" ]; then
     fatal_error "$x flag not supported"
   elif [ x"$x" = x"-mno-red-zone" ]; then
