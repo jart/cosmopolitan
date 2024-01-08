@@ -514,12 +514,14 @@ COSMOPOLITAN_H_PKGS =			\
 	THIRD_PARTY_GETOPT		\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB		\
+	THIRD_PARTY_ZLIB_GZ		\
 	THIRD_PARTY_REGEX
 
 COSMOCC_PKGS =				\
 	$(COSMOPOLITAN_H_PKGS)		\
 	THIRD_PARTY_AARCH64		\
 	THIRD_PARTY_LIBCXX		\
+	THIRD_PARTY_LIBCXXABI		\
 	THIRD_PARTY_INTEL
 
 o/$(MODE)/cosmopolitan.a:		\
@@ -550,9 +552,9 @@ o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\
-		$(SRCS)							\
+		$(filter-out %.cc,$(SRCS))				\
 		$(HDRS)
-	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))
+	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter-out %.cc,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
 		-DCOSMO @$(TMPDIR)/$(subst /,_,$@)

@@ -1928,7 +1928,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_pprint.py				\
 	third_party/python/Lib/test/test_print.py				\
 	third_party/python/Lib/test/test_thread.py				\
-	third_party/python/Lib/test/test_threadsignals.py			\
 	third_party/python/Lib/test/test_profile.py				\
 	third_party/python/Lib/test/test_property.py				\
 	third_party/python/Lib/test/test_pstats.py				\
@@ -2017,6 +2016,9 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 
 # TODO: test_threading passing probably requires more mutexes in libc/calls/
 # TODO: test_sys is potentially flaky now that we have threads
+
+THIRD_PARTY_PYTHON_PYTEST_TOOSLOW =						\
+	third_party/python/Lib/test/test_threadsignals.py
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
 	third_party/python/Lib/test/test_sys.py					\

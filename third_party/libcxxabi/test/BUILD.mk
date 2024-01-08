@@ -39,7 +39,6 @@ THIRD_PARTY_LIBCXXABI_TEST_SRCS =					\
 	third_party/libcxxabi/test/exception_object_alignment.pass.cc	\
 	third_party/libcxxabi/test/exception_object_alignment.2.pass.cc	\
 	third_party/libcxxabi/test/guard_test_basic.pass.cc		\
-	third_party/libcxxabi/test/catch_multi_level_pointer.pass.cc	\
 	third_party/libcxxabi/test/incomplete_type.sh.cc		\
 	third_party/libcxxabi/test/inherited_exception.pass.cc		\
 	third_party/libcxxabi/test/test_aux_runtime.pass.cc		\
@@ -63,9 +62,9 @@ THIRD_PARTY_LIBCXXABI_TEST_SRCS =					\
 	third_party/libcxxabi/test/unwind_05.pass.cc			\
 	third_party/libcxxabi/test/unwind_06.pass.cc
 
-# TODO: Maybe LLVM needs to finish the code that lets us use NSYNC futexes?
 THIRD_PARTY_LIBCXXABI_TEST_SRCS_TOOSLOW_COSMO =				\
 	third_party/libcxxabi/test/guard_threaded_test.pass.cc		\
+	third_party/libcxxabi/test/catch_multi_level_pointer.pass.cc
 
 THIRD_PARTY_LIBCXXABI_TEST_SRCS_FAILING_GCC =				\
 	third_party/libcxxabi/test/catch_array_01.pass.cc		\

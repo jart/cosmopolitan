@@ -2,7 +2,7 @@
 # cosmopolitan toolchain packager
 #
 #     tool/cosmocc/package.sh
-#     cd cosmocc/latest
+#     cd cosmocc
 #     zip -ry9 ../cosmocc.zip .
 #
 
@@ -15,7 +15,7 @@ mode() {
   esac
 }
 
-OUTDIR=${1:-cosmocc/latest}
+OUTDIR=${1:-cosmocc}
 APELINK=o/$(mode)/tool/build/apelink.com
 AMD64=${2:-x86_64}
 ARM64=${3:-aarch64}
