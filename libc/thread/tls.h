@@ -65,7 +65,7 @@ void __set_tls(struct CosmoTib *);
  *
  * This can't be used in privileged functions.
  */
-__funline pureconst struct CosmoTib *__get_tls(void) {
+forceinline pureconst struct CosmoTib *__get_tls(void) {
 #ifdef __chibicc__
   return 0;
 #elif __x86_64__

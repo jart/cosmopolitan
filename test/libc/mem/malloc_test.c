@@ -26,7 +26,7 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -210,7 +210,7 @@ void *Worker(void *arg) {
 
 BENCH(malloc, torture) {
   int i, n = __get_cpu_count() * 2;
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   if (!n) return;
   printf("\nmalloc torture test w/ %d threads and %d iterations\n", n,
          ITERATIONS);

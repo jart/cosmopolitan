@@ -477,7 +477,7 @@ int main(int argc, char **argv)
 {
     int c, i, verbose;
     const char *out_filename, *cname;
-    char *cfilename = _gc(malloc(1024));
+    char *cfilename = gc(malloc(1024));
     FILE *fo;
     JSRuntime *rt;
     JSContext *ctx;

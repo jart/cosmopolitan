@@ -6,7 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/accu.h"
 #include "third_party/python/Include/boolobject.h"

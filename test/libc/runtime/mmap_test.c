@@ -236,15 +236,15 @@ TEST(isheap, nullPtr) {
 }
 
 TEST(isheap, malloc) {
-  ASSERT_TRUE(_isheap(_gc(malloc(1))));
+  ASSERT_TRUE(_isheap(gc(malloc(1))));
 }
 
 /* TEST(isheap, emptyMalloc) { */
-/*   ASSERT_TRUE(_isheap(_gc(malloc(0)))); */
+/*   ASSERT_TRUE(_isheap(gc(malloc(0)))); */
 /* } */
 
 /* TEST(isheap, mallocOffset) { */
-/*   char *p = _gc(malloc(131072)); */
+/*   char *p = gc(malloc(131072)); */
 /*   ASSERT_TRUE(_isheap(p + 100000)); */
 /* } */
 

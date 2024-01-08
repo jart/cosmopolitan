@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/describebacktrace.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
@@ -27,3 +29,14 @@ dontinstrument void __stracef(const char *fmt, ...) {
   kvprintf(fmt, v);
   va_end(v);
 }
+
+#if IsModeDbg()
+void report_cancellation_point(void) {
+  kprintf("error: cancelable raw system call not annotated in wrapper\n"
+          "choice #1 use BLOCK_CANCELATION / ALLOW_CANCELATION\n"
+          "choice #2 use BEGIN_CANCELATION_POINT / END_CANCELATION_POINT\n"
+          "backtrace: %s\n",
+          DescribeBacktrace(__builtin_frame_address(0)));
+  __builtin_trap();
+}
+#endif

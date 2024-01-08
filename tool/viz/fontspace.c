@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
   }
   n = end + 1 - start;
   m = ROUNDUP(n, 16);
-  present = _gc(malloc(m));
-  intotal = _gc(calloc(1, m));
+  present = gc(malloc(m));
+  intotal = gc(calloc(1, m));
   if (optind < argc) {
     for (arg = optind; arg < argc; ++arg) {
       ttf = xslurp(argv[arg], &ttfsize);

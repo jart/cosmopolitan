@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/atomic.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.h"
@@ -798,6 +799,7 @@ static void *dlopen_silicon(const char *path, int mode) {
 void *cosmo_dlopen(const char *path, int mode) {
   void *res;
   BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
   if (IsWindows()) {
     res = dlopen_nt(path, mode);
   } else if (IsXnuSilicon()) {
@@ -814,6 +816,7 @@ void *cosmo_dlopen(const char *path, int mode) {
   } else {
     res = 0;
   }
+  ALLOW_CANCELATION;
   ALLOW_SIGNALS;
   STRACE("dlopen(%#s, %d) → %p% m", path, mode, res);
   return res;

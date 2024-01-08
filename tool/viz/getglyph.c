@@ -137,14 +137,14 @@ int main(int argc, char *argv[]) {
     }
   }
   m = argc - optind;
-  w = _gc(calloc(m, sizeof(*w)));
-  h = _gc(calloc(m, sizeof(*h)));
-  ttf = _gc(calloc(m, sizeof(*ttf)));
-  font = _gc(calloc(m, sizeof(*font)));
-  rasters = _gc(calloc(m, sizeof(*rasters)));
-  fasters = _gc(calloc(m, sizeof(*fasters)));
+  w = gc(calloc(m, sizeof(*w)));
+  h = gc(calloc(m, sizeof(*h)));
+  ttf = gc(calloc(m, sizeof(*ttf)));
+  font = gc(calloc(m, sizeof(*font)));
+  rasters = gc(calloc(m, sizeof(*rasters)));
+  fasters = gc(calloc(m, sizeof(*fasters)));
   for (j = 0; j < m; ++j) {
-    ttf[j] = _gc(xslurp(argv[optind + j], &ttfsize));
+    ttf[j] = gc(xslurp(argv[optind + j], &ttfsize));
     if (!ttf[j]) {
       fprintf(stderr, "%s: not found\n", argv[optind + j]);
       exit(1);

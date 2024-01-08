@@ -19,7 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 #if SupportsWindows()
 

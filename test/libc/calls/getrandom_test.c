@@ -22,7 +22,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
-#include "libc/serialize.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
@@ -30,6 +29,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
+#include "libc/serialize.h"
 #include "libc/stdio/lcg.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
@@ -70,7 +70,7 @@ void *TortureWorker(void *arg) {
 TEST(getrandom, test) {
   int i, n = 999;
   double e, w = 7.7;
-  char *buf = _gc(calloc(1, n));
+  char *buf = gc(calloc(1, n));
   ASSERT_SYS(0, 0, getrandom(0, 0, 0));
   ASSERT_SYS(0, n, getrandom(buf, n, 0));
   ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
@@ -92,7 +92,7 @@ TEST(getrandom, test2) {
   double e, w = 7.7;
   struct sigaction sa;
   int i, k, m, n = 999;
-  char *buf = _gc(calloc(1, n));
+  char *buf = gc(calloc(1, n));
   sa.sa_flags = 0;
   sa.sa_handler = OnSig;
   sigemptyset(&sa.sa_mask);

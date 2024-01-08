@@ -136,7 +136,7 @@ long __get_minsigstksz(void) pureconst;
 void __get_main_stack(void **, size_t *, int *);
 long __get_safe_size(long, long);
 char *__get_tmpdir(void);
-__funline int __trace_disabled(int x) {
+forceinline int __trace_disabled(int x) {
   return 0;
 }
 #ifndef FTRACE

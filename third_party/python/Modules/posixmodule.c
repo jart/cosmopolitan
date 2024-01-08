@@ -29,7 +29,7 @@
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/enum/creationdisposition.h"

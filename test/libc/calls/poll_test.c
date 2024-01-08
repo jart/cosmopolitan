@@ -96,7 +96,7 @@ TEST(poll, testNegativeOneFd_isIgnored) {
   EXPECT_SYS(0, 0, poll(fds, ARRAYLEN(fds), 1));
   EXPECT_STREQ("fd:-1 revents:<TODO:kPollNames>\n"
                "fd:3 revents:<TODO:kPollNames>\n",
-               _gc(FormatPollFd(&fds[0])));
+               gc(FormatPollFd(&fds[0])));
   ASSERT_SYS(0, 0, close(3));
 }
 

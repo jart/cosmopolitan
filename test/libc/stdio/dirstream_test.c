@@ -27,7 +27,7 @@
 #include "libc/limits.h"
 #include "libc/mem/critbit0.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.h"

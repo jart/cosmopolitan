@@ -232,7 +232,7 @@ void *CpuBoundWorker(void *arg) {
   wontleak1 = malloc(123);
   (void)wontleak1;
   pthread_cleanup_push(free, wontleak1);
-  wontleak2 = _gc(malloc(123));
+  wontleak2 = gc(malloc(123));
   (void)wontleak2;
   ASSERT_EQ(0, pthread_setspecific(key, (void *)31337));
   ASSERT_EQ(0, pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0));

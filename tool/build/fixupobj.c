@@ -32,7 +32,7 @@
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/serialize.h"
 #include "libc/stdckdint.h"

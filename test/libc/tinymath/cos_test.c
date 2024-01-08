@@ -27,26 +27,26 @@ float _cosf(float) asm("cosf");
 long double _cosl(long double) asm("cosl");
 
 TEST(cos, test) {
-  EXPECT_STREQ("1", _gc(xasprintf("%.15g", _cos(0.))));
-  EXPECT_STREQ("1", _gc(xasprintf("%.15g", _cos(-0.))));
-  EXPECT_STREQ("0.995004165278026", _gc(xasprintf("%.15g", _cos(.1))));
-  EXPECT_STREQ("0.995004165278026", _gc(xasprintf("%.15g", _cos(-.1))));
-  EXPECT_STREQ("0.877582561890373", _gc(xasprintf("%.15g", _cos(.5))));
-  EXPECT_STREQ("0.877582561890373", _gc(xasprintf("%.15g", _cos(-.5))));
-  EXPECT_STREQ("0.54030230586814", _gc(xasprintf("%.15g", _cos(1.))));
-  EXPECT_STREQ("0.54030230586814", _gc(xasprintf("%.15g", _cos(-1.))));
-  EXPECT_STREQ("0.0707372016677029", _gc(xasprintf("%.15g", _cos(1.5))));
-  EXPECT_STREQ("0.0707372016677029", _gc(xasprintf("%.15g", _cos(-1.5))));
-  EXPECT_STREQ("-0.416146836547142", _gc(xasprintf("%.15g", _cos(2.))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", _cos(0.))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", _cos(-0.))));
+  EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15g", _cos(.1))));
+  EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15g", _cos(-.1))));
+  EXPECT_STREQ("0.877582561890373", gc(xasprintf("%.15g", _cos(.5))));
+  EXPECT_STREQ("0.877582561890373", gc(xasprintf("%.15g", _cos(-.5))));
+  EXPECT_STREQ("0.54030230586814", gc(xasprintf("%.15g", _cos(1.))));
+  EXPECT_STREQ("0.54030230586814", gc(xasprintf("%.15g", _cos(-1.))));
+  EXPECT_STREQ("0.0707372016677029", gc(xasprintf("%.15g", _cos(1.5))));
+  EXPECT_STREQ("0.0707372016677029", gc(xasprintf("%.15g", _cos(-1.5))));
+  EXPECT_STREQ("-0.416146836547142", gc(xasprintf("%.15g", _cos(2.))));
   EXPECT_TRUE(isnan(_cos(NAN)));
   EXPECT_TRUE(isnan(_cos(-NAN)));
   EXPECT_TRUE(isnan(_cos(INFINITY)));
   EXPECT_TRUE(isnan(_cos(-INFINITY)));
-  EXPECT_STREQ("1", _gc(xasprintf("%.15g", _cos(__DBL_MIN__))));
-  EXPECT_STREQ("-0.99998768942656", _gc(xasprintf("%.15g", _cos(__DBL_MAX__))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", _cos(__DBL_MIN__))));
+  EXPECT_STREQ("-0.99998768942656", gc(xasprintf("%.15g", _cos(__DBL_MAX__))));
   EXPECT_STREQ("0.54030230586814",
-               _gc(xasprintf("%.15g", _cos(-1.0000000000000002))));
-  EXPECT_STREQ("1", _gc(xasprintf("%.15g", _cos(-2.1073424255447e-08))));
+               gc(xasprintf("%.15g", _cos(-1.0000000000000002))));
+  EXPECT_STREQ("1", gc(xasprintf("%.15g", _cos(-2.1073424255447e-08))));
 }
 
 BENCH(cos, bench) {

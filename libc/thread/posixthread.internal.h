@@ -116,11 +116,11 @@ void _pthread_unref(struct PosixThread *);
 void _pthread_unwind(struct PosixThread *);
 void _pthread_zombify(struct PosixThread *);
 
-__funline pureconst struct PosixThread *_pthread_self(void) {
+forceinline pureconst struct PosixThread *_pthread_self(void) {
   return (struct PosixThread *)__get_tls()->tib_pthread;
 }
 
-__funline void _pthread_ref(struct PosixThread *pt) {
+forceinline void _pthread_ref(struct PosixThread *pt) {
   atomic_fetch_add_explicit(&pt->pt_refs, 1, memory_order_relaxed);
 }
 

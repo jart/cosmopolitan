@@ -11,7 +11,7 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/log/log.h"
 #include "libc/mem/alloca.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

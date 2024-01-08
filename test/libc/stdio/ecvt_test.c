@@ -25,7 +25,7 @@
 TEST(fcvt, test) {
   int decpt, sign;
   ASSERT_STREQ("3.14159265358979",
-               _gc(xasprintf("%.14f", 3.14159265358979323846)));
+               gc(xasprintf("%.14f", 3.14159265358979323846)));
   ASSERT_STREQ("3141592653589793",
                fcvt(3.14159265358979323846, 15, &decpt, &sign));
   ASSERT_EQ(1, decpt);

@@ -33,8 +33,10 @@ o/$(MODE)/test/libc/release/smoke.o:					\
 		-o $@							\
 		-c							\
 		-Os							\
+		-Werror							\
 		-fno-pie						\
 		-nostdinc						\
+		-D_COSMO_SOURCE						\
 		-Wl,--gc-sections					\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\
@@ -114,10 +116,12 @@ o/$(MODE)/test/libc/release/smoke-chibicc.o:				\
 		-c							\
 		-Os							\
 		-static							\
+		-Werror							\
 		-fno-pie						\
 		-nostdlib						\
 		-nostdinc						\
 		-mno-red-zone						\
+		-D_COSMO_SOURCE						\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\
 		$<
@@ -188,9 +192,11 @@ o/$(MODE)/test/libc/release/smokeansi.o:				\
 		-c							\
 		-Os							\
 		-ansi							\
+		-Werror							\
 		-static							\
 		-fno-pie						\
 		-nostdinc						\
+		-D_COSMO_SOURCE						\
 		-Wl,--gc-sections					\
 		-fno-omit-frame-pointer					\
 		-include o/cosmopolitan.h				\

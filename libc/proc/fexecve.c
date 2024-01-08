@@ -201,14 +201,14 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       }
       if (!__isfdkind(fd, kFdZip)) {
         bool memfdReq;
-        BEGIN_CANCELATION_POINT;
         BLOCK_SIGNALS;
+        BLOCK_CANCELATION;
         strace_enabled(-1);
         memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) &&
                    IsAPEFd(fd);
         strace_enabled(+1);
+        ALLOW_CANCELATION;
         ALLOW_SIGNALS;
-        END_CANCELATION_POINT;
         if (rc == -1) {
           break;
         } else if (!memfdReq) {
@@ -221,13 +221,13 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       }
       int newfd;
       char *path = alloca(PATH_MAX);
-      BEGIN_CANCELATION_POINT;
       BLOCK_SIGNALS;
+      BLOCK_CANCELATION;
       strace_enabled(-1);
       newfd = fd_to_mem_fd(fd, path);
       strace_enabled(+1);
+      ALLOW_CANCELATION;
       ALLOW_SIGNALS;
-      END_CANCELATION_POINT;
       if (newfd == -1) {
         break;
       }
@@ -242,13 +242,13 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
       if (!savedErr) {
         savedErr = errno;
       }
-      BEGIN_CANCELATION_POINT;
       BLOCK_SIGNALS;
+      BLOCK_CANCELATION;
       strace_enabled(-1);
       close(newfd);
       strace_enabled(+1);
+      ALLOW_CANCELATION;
       ALLOW_SIGNALS;
-      END_CANCELATION_POINT;
     } while (0);
     if (savedErr) {
       errno = savedErr;

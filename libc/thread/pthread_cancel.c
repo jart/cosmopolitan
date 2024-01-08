@@ -291,7 +291,7 @@ static errno_t _pthread_cancel_everyone(void) {
  * Consider using Cosmopolitan Libc's garbage collector since it will be
  * executed when a thread exits due to a cancelation.
  *
- *     void *p = _gc(malloc(123));
+ *     void *p = gc(malloc(123));
  *     read(0, p, 123);
  *
  * It's possible to put a thread in asynchronous cancelation mode with

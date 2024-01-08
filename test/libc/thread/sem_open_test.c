@@ -86,7 +86,7 @@ void *Worker(void *arg) {
 TEST(sem_open, test) {
   sem_t *a, *b;
   int i, r, n = 8;
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   errno = 0;
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
   ASSERT_NE(SEM_FAILED, (a = sem_open(name1, O_CREAT, 0644, 0)));

@@ -23,5 +23,5 @@
 
 TEST(csqrt, test) {
   complex double x = csqrt(-1);
-  EXPECT_STREQ("0 1", _gc(xasprintf("%g %g", creal(x), cimag(x))));
+  EXPECT_STREQ("0 1", gc(xasprintf("%g %g", creal(x), cimag(x))));
 }

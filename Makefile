@@ -150,7 +150,7 @@ export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
 
-COSMOCC = cosmocc/3.2
+COSMOCC = .cosmocc/3.2
 TOOLCHAIN = $(COSMOCC)/bin/$(ARCH)-linux-cosmo-
 DOWNLOAD := $(shell build/download-cosmocc.sh $(COSMOCC) 3.2 28b48682595f0f46b45ab381118cdffdabc8fcfa29aa54e301fe6ffe35269f5e)
 
@@ -543,9 +543,6 @@ o/cosmopolitan.h: o/cosmopolitan.h.txt					\
 		$(wildcard libc/integral/*)				\
 		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_HDRS))	\
 		$(foreach x,$(COSMOPOLITAN_H_PKGS),$($(x)_INCS))
-	@$(ECHO) '#ifndef __STRICT_ANSI__' >$@
-	@$(ECHO) '#define _COSMO_SOURCE' >>$@
-	@$(ECHO) '#endif' >>$@
 	@$(COMPILE) -AROLLUP -T$@ build/bootstrap/rollup.com @$< >>$@
 
 o/cosmopolitan.html: private .UNSANDBOXED = 1

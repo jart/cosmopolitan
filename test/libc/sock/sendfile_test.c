@@ -22,7 +22,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"

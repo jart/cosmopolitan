@@ -4,7 +4,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
 #include "libc/fmt/libgen.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/xasprintf.h"

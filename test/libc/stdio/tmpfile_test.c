@@ -88,7 +88,7 @@ TEST(tmpfile, renameToRealFile) {
   f = tmpfile();
   ASSERT_EQ(2, fputs("hi", f));
   ASSERT_SYS(0, 0,
-             linkat(AT_FDCWD, _gc(xasprintf("/proc/self/fd/%d", fileno(f))),
+             linkat(AT_FDCWD, gc(xasprintf("/proc/self/fd/%d", fileno(f))),
                     AT_FDCWD, "real", AT_SYMLINK_FOLLOW));
   ASSERT_EQ(0, fclose(f));
   ASSERT_NE(NULL, (f = fopen("real", "r")));

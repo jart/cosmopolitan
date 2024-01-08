@@ -20,7 +20,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"

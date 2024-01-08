@@ -18,9 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -32,7 +30,7 @@
 #ifdef __x86_64__
 // TODO(jart): get gclongjmp() working properly on aarch64
 
-#define GC(x) _defer(Free, x)
+#define GC(x) defer(Free, x)
 
 char *x;
 char *y;
@@ -83,7 +81,7 @@ TEST(gclongjmp, test) {
 
 void crawl(const char *path) {
   if (!strcmp(path, "/") || !strcmp(path, ".")) return;
-  crawl(_gc(xdirname(path)));
+  crawl(gc(xdirname(path)));
 }
 
 void *Worker(void *arg) {
@@ -99,8 +97,8 @@ TEST(gc, torture) {
 }
 
 void crawl2(jmp_buf jb, const char *path) {
-  if (!strcmp(path, "/") || !strcmp(path, ".")) _gclongjmp(jb, 1);
-  crawl2(jb, _gc(xdirname(path)));
+  if (!strcmp(path, "/") || !strcmp(path, ".")) gclongjmp(jb, 1);
+  crawl2(jb, gc(xdirname(path)));
 }
 
 void *Worker2(void *arg) {
@@ -111,7 +109,7 @@ void *Worker2(void *arg) {
   return 0;
 }
 
-TEST(_gclongjmp, torture) {
+TEST(gclongjmp, torture) {
   int i, n = 32;
   pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   for (i = 0; i < n; ++i) {

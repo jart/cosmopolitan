@@ -49,7 +49,7 @@
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -687,7 +687,7 @@ static void UseCertificate(mbedtls_ssl_config *c, struct Cert *kp,
                            const char *role) {
   VERBOSEF("(ssl) using %s certificate %`'s for HTTPS %s",
            mbedtls_pk_get_name(&kp->cert->pk),
-           _gc(FormatX509Name(&kp->cert->subject)), role);
+           gc(FormatX509Name(&kp->cert->subject)), role);
   CHECK_EQ(0, mbedtls_ssl_conf_own_cert(c, kp->cert, kp->key));
 }
 
@@ -704,21 +704,21 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
   if (prev) {
     if (mbedtls_x509_crt_check_parent(prev, cert, 1)) {
       DEBUGF("(ssl) unbundling %`'s from %`'s",
-             _gc(FormatX509Name(&prev->subject)),
-             _gc(FormatX509Name(&cert->subject)));
+             gc(FormatX509Name(&prev->subject)),
+             gc(FormatX509Name(&cert->subject)));
       prev->next = 0;
     } else if ((r = mbedtls_x509_crt_check_signature(prev, cert, 0))) {
       WARNF("(ssl) invalid signature for %`'s -> %`'s (-0x%04x)",
-            _gc(FormatX509Name(&prev->subject)),
-            _gc(FormatX509Name(&cert->subject)), -r);
+            gc(FormatX509Name(&prev->subject)),
+            gc(FormatX509Name(&cert->subject)), -r);
     }
   }
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
     WARNF("(ssl) certificate %`'s is expired",
-          _gc(FormatX509Name(&cert->subject)));
+          gc(FormatX509Name(&cert->subject)));
   } else if (mbedtls_x509_time_is_future(&cert->valid_from)) {
     WARNF("(ssl) certificate %`'s is from the future",
-          _gc(FormatX509Name(&cert->subject)));
+          gc(FormatX509Name(&cert->subject)));
   }
   for (i = 0; i < certs.n; ++i) {
     if (!certs.p[i].cert && certs.p[i].key &&
@@ -1044,8 +1044,8 @@ static void ProgramCache(long x, const char *s) {
 }
 
 static void SetDefaults(void) {
-  ProgramBrand(_gc(xasprintf("%s/%hhd.%hhd.%hhd", REDBEAN, VERSION >> 020,
-                             VERSION >> 010, VERSION >> 000)));
+  ProgramBrand(gc(xasprintf("%s/%hhd.%hhd.%hhd", REDBEAN, VERSION >> 020,
+                            VERSION >> 010, VERSION >> 000)));
   __log_level = kLogInfo;
   maxpayloadsize = 64 * 1024;
   ProgramCache(-1, "must-revalidate");
@@ -1094,7 +1094,7 @@ static void UpdateLuaPath(const char *s) {
       // if the DEFAULT path is not found, append to the end
       respath = xasprintf("%s;%s/.lua/?.lua;%s/.lua/?/init.lua", curpath, s, s);
     }
-    lua_pushstring(L, _gc(respath));
+    lua_pushstring(L, gc(respath));
     lua_setfield(L, -3, "path");
   }
   lua_settop(L, n);
@@ -1210,7 +1210,7 @@ static void LuaEvalCode(const char *code) {
 
 // handle `-F PATH` arg
 static void LuaEvalFile(const char *path) {
-  char *f = _gc(xslurp(path, 0));
+  char *f = gc(xslurp(path, 0));
   if (!f) FATALF("(cfg) error: failed to read file %`'s", path);
   LuaEvalCode(f);
 }
@@ -1731,7 +1731,7 @@ static bool TlsRouteFind(mbedtls_pk_type_t type, mbedtls_ssl_context *ssl,
           0, mbedtls_ssl_set_hs_own_cert(ssl, certs.p[i].cert, certs.p[i].key));
       DEBUGF("(ssl) TlsRoute(%s, %`'.*s) %s %`'s", mbedtls_pk_type_name(type),
              size, host, mbedtls_pk_get_name(&certs.p[i].cert->pk),
-             _gc(FormatX509Name(&certs.p[i].cert->subject)));
+             gc(FormatX509Name(&certs.p[i].cert->subject)));
       return true;
     }
   }
@@ -1746,7 +1746,7 @@ static bool TlsRouteFirst(mbedtls_pk_type_t type, mbedtls_ssl_context *ssl) {
           0, mbedtls_ssl_set_hs_own_cert(ssl, certs.p[i].cert, certs.p[i].key));
       DEBUGF("(ssl) TlsRoute(%s) %s %`'s", mbedtls_pk_type_name(type),
              mbedtls_pk_get_name(&certs.p[i].cert->pk),
-             _gc(FormatX509Name(&certs.p[i].cert->subject)));
+             gc(FormatX509Name(&certs.p[i].cert->subject)));
       return true;
     }
   }
@@ -1811,7 +1811,7 @@ static bool TlsSetup(void) {
                ssl.session->compression ? " COMPRESSED" : "",
                ssl.curve ? ssl.curve->name : "uncurved");
       DEBUGF("(ssl) client ciphersuite preference was %s",
-             _gc(FormatSslClientCiphers(&ssl)));
+             gc(FormatSslClientCiphers(&ssl)));
       return true;
     } else if (r == MBEDTLS_ERR_SSL_WANT_READ) {
       LockInc(&shared->c.handshakeinterrupts);
@@ -1835,12 +1835,12 @@ static bool TlsSetup(void) {
         case MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN:
           LockInc(&shared->c.sslnociphers);
           WARNF("(ssl) %s %s %s", DescribeClient(), "sslnociphers",
-                _gc(FormatSslClientCiphers(&ssl)));
+                gc(FormatSslClientCiphers(&ssl)));
           return false;
         case MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE:
           LockInc(&shared->c.sslcantciphers);
           WARNF("(ssl) %s %s %s", DescribeClient(), "sslcantciphers",
-                _gc(FormatSslClientCiphers(&ssl)));
+                gc(FormatSslClientCiphers(&ssl)));
           return false;
         case MBEDTLS_ERR_SSL_BAD_HS_PROTOCOL_VERSION:
           LockInc(&shared->c.sslnoversion);
@@ -1859,7 +1859,7 @@ static bool TlsSetup(void) {
         case MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:
           LockInc(&shared->c.sslverifyfailed);
           WARNF("(ssl) %s SSL %s", DescribeClient(),
-                _gc(DescribeSslVerifyFailure(
+                gc(DescribeSslVerifyFailure(
                     ssl.session_negotiate->verify_result)));
           return false;
         case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
@@ -1904,7 +1904,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
     struct sockaddr_in addr4 = {AF_INET, 0, {htonl(ip)}};
     if (getnameinfo((struct sockaddr *)&addr4, sizeof(addr4), rname,
                     sizeof(rname), 0, 0, NI_NAMEREQD) == 0) {
-      char *s = _gc(strdup(rname));
+      char *s = gc(strdup(rname));
       if (!name) name = s;
       bool isduplicate = false;
       for (int j = 0; j < nsan; ++j) {
@@ -1919,7 +1919,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
         san[nsan - 2].tag = MBEDTLS_X509_SAN_DNS_NAME;
         san[nsan - 2].val = s;
         san[nsan - 1].tag = MBEDTLS_X509_SAN_DNS_NAME;
-        san[nsan - 1].val = _gc(xasprintf("*.%s", s));
+        san[nsan - 1].val = gc(xasprintf("*.%s", s));
       }
     }
   }
@@ -2050,7 +2050,7 @@ static void LoadCertificates(void) {
   if (!havecert && (!psks.n || ksk.key)) {
     if ((ksk = GetKeySigningKey()).key) {
       DEBUGF("(ssl) generating ssl certificates using %`'s",
-             _gc(FormatX509Name(&ksk.cert->subject)));
+             gc(FormatX509Name(&ksk.cert->subject)));
     } else {
       VERBOSEF("(ssl) could not find non-CA SSL certificate key pair with"
                " -addext keyUsage=digitalSignature"
@@ -2913,10 +2913,10 @@ static void LaunchBrowser(const char *path) {
   }
   // assign a loopback address if no server or unknown server address
   if (!servers.n || !addr.s_addr) addr.s_addr = htonl(INADDR_LOOPBACK);
-  if (*path != '/') path = _gc(xasprintf("/%s", path));
-  if ((prog = commandv(GetSystemUrlLauncherCommand(), _gc(malloc(PATH_MAX)),
+  if (*path != '/') path = gc(xasprintf("/%s", path));
+  if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX)),
                        PATH_MAX))) {
-    u = _gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port, path));
+    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port, path));
     DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
@@ -3587,7 +3587,7 @@ static int LuaGetSslIdentity(lua_State *L) {
                       psks.p[sslpskindex - 1].identity_len);
     } else {
       cert = mbedtls_ssl_get_peer_cert(&ssl);
-      lua_pushstring(L, cert ? _gc(FormatX509Name(&cert->subject)) : "");
+      lua_pushstring(L, cert ? gc(FormatX509Name(&cert->subject)) : "");
     }
   }
   return 1;
@@ -3858,7 +3858,7 @@ static void StorePath(const char *dirpath) {
   while ((e = readdir(d))) {
     if (strcmp(e->d_name, ".") == 0) continue;
     if (strcmp(e->d_name, "..") == 0) continue;
-    path = _gc(xjoinpaths(dirpath, e->d_name));
+    path = gc(xjoinpaths(dirpath, e->d_name));
     if (e->d_type == DT_DIR) {
       StorePath(path);
     } else {
@@ -3930,7 +3930,7 @@ static int LuaNilError(lua_State *L, const char *fmt, ...) {
 static int LuaNilTlsError(lua_State *L, const char *s, int r) {
   return LuaNilError(L, "tls %s failed (%s %s)", s,
                      IsTiny() ? "grep" : GetTlsError(r),
-                     _gc(xasprintf("-0x%04x", -r)));
+                     gc(xasprintf("-0x%04x", -r)));
 }
 
 #include "tool/net/fetch.inc"
@@ -4001,7 +4001,7 @@ static int LuaLog(lua_State *L) {
       module = ar.short_src;
       line = ar.currentline;
     } else {
-      module = _gc(strndup(effectivepath.p, effectivepath.n));
+      module = gc(strndup(effectivepath.p, effectivepath.n));
       line = -1;
     }
     flogf(level, module, line, NULL, "%s", msg);
@@ -4298,7 +4298,7 @@ static int LuaSetHeader(lua_State *L) {
 static int LuaGetCookie(lua_State *L) {
   char *cookie = 0, *cookietmpl, *cookieval;
   OnlyCallDuringRequest(L, "GetCookie");
-  cookietmpl = _gc(xasprintf(" %s=", luaL_checkstring(L, 1)));
+  cookietmpl = gc(xasprintf(" %s=", luaL_checkstring(L, 1)));
   if (HasHeader(kHttpCookie)) {
     appends(&cookie, " ");  // prepend space to simplify cookie search
     appendd(&cookie, HeaderData(kHttpCookie), HeaderLength(kHttpCookie));
@@ -4343,7 +4343,7 @@ static int LuaSetCookie(lua_State *L) {
   if ((ishostpref || issecurepref) && !usingssl) {
     luaL_argerror(
         L, 1,
-        _gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
+        gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
     __builtin_unreachable();
   }
 
@@ -4674,7 +4674,7 @@ static int LuaProgramCertificate(lua_State *L) {
 
 static int LuaProgramHeader(lua_State *L) {
   ProgramHeader(
-      _gc(xasprintf("%s: %s", luaL_checkstring(L, 1), luaL_checkstring(L, 2))));
+      gc(xasprintf("%s: %s", luaL_checkstring(L, 1), luaL_checkstring(L, 2))));
   return 0;
 }
 
@@ -5824,7 +5824,7 @@ static char *OpenAsset(struct Asset *a) {
           UnmapLater(fd, data, size);
           cpm.content = data;
           cpm.contentlength = size;
-        } else if ((st = _gc(malloc(sizeof(struct stat)))) &&
+        } else if ((st = gc(malloc(sizeof(struct stat)))) &&
                    fstat(fd, st) != -1 && (data = malloc(st->st_size))) {
           /* probably empty file or zipos handle */
           LockInc(&shared->c.slurps);

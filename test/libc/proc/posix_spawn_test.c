@@ -36,7 +36,7 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/proc/proc.internal.h"
 #include "libc/runtime/internal.h"
@@ -245,7 +245,7 @@ void *Torturer(void *arg) {
 
 TEST(posix_spawn, agony) {
   int i, n = 4;
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_create(t + i, 0, Torturer, 0));

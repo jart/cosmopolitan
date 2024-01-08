@@ -87,8 +87,8 @@ static void MakeRelaSection(struct ElfWriter *elf, size_t section) {
   elfwriter_align(elf, alignof(Elf64_Rela), sizeof(Elf64_Rela));
   shdr = elfwriter_startsection(
       elf,
-      _gc(xasprintf("%s%s", ".rela",
-                    &elf->shstrtab->p[elf->shdrs->p[section].sh_name])),
+      gc(xasprintf("%s%s", ".rela",
+                   &elf->shstrtab->p[elf->shdrs->p[section].sh_name])),
       SHT_RELA, SHF_INFO_LINK);
   elf->shdrs->p[shdr].sh_info = section;
   elfwriter_reserve(elf, size);

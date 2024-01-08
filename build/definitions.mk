@@ -146,8 +146,6 @@ DEFAULT_CFLAGS =							\
 	-std=gnu2x
 
 DEFAULT_CXXFLAGS =							\
-	-fno-rtti							\
-	-fno-exceptions							\
 	-fuse-cxa-atexit						\
 	-Wno-int-in-bool-context					\
 	-Wno-narrowing							\

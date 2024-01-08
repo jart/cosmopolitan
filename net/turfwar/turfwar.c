@@ -32,7 +32,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
-#include "libc/serialize.h"
 #include "libc/intrin/bsr.h"
 #include "libc/intrin/hilbert.h"
 #include "libc/intrin/kprintf.h"
@@ -49,6 +48,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/serialize.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -815,13 +815,13 @@ void *ListenWorker(void *arg) {
 void *HttpWorker(void *arg) {
   struct Client client;
   int id = (intptr_t)arg;
-  char *msgbuf = _gc(xmalloc(MSG_BUF));
+  char *msgbuf = gc(xmalloc(MSG_BUF));
   char *inbuf = NewSafeBuffer(INBUF_SIZE);
   char *outbuf = NewSafeBuffer(OUTBUF_SIZE);
-  struct HttpMessage *msg = _gc(xcalloc(1, sizeof(struct HttpMessage)));
+  struct HttpMessage *msg = gc(xcalloc(1, sizeof(struct HttpMessage)));
 
   BlockSignals();
-  pthread_setname_np(pthread_self(), _gc(xasprintf("HTTP%d", id)));
+  pthread_setname_np(pthread_self(), gc(xasprintf("HTTP%d", id)));
 
   // connection loop
   while (GetClient(&g_clients, &client)) {
@@ -1761,7 +1761,7 @@ void *ClaimWorker(void *arg) {
   long processed;
   sqlite3_stmt *stmt;
   bool warmedup = false;
-  struct Claim *v = _gc(xcalloc(BATCH_MAX, sizeof(struct Claim)));
+  struct Claim *v = gc(xcalloc(BATCH_MAX, sizeof(struct Claim)));
   BlockSignals();
   pthread_setname_np(pthread_self(), "ClaimWorker");
   LOG("%P ClaimWorker started\n");

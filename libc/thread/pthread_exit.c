@@ -84,8 +84,8 @@ void _pthread_unkey(struct CosmoTib *tib) {
  * the callback function that was supplied to pthread_create(). This may
  * be used if the thread wishes to exit at any other point in the thread
  * lifecycle, in which case this function is responsible for ensuring we
- * invoke _gc(), _defer(), and pthread_cleanup_push() callbacks, as well
- * as pthread_key_create() destructors.
+ * invoke gc(), _defer(), and pthread_cleanup_push() callbacks, and also
+ * pthread_key_create() destructors.
  *
  * If the current thread is an orphaned thread, or is the main thread
  * when no other threads were created, then this will terminated your

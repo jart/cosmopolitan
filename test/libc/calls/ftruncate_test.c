@@ -23,7 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

@@ -29,7 +29,7 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -177,8 +177,8 @@ TEST(pthread_create, testCustomStack_withReallySmallSize) {
 void *JoinMainWorker(void *arg) {
   void *rc;
   pthread_t main_thread = (pthread_t)arg;
-  _gc(malloc(32));
-  _gc(malloc(32));
+  gc(malloc(32));
+  gc(malloc(32));
   ASSERT_EQ(0, pthread_join(main_thread, &rc));
   ASSERT_EQ(123, (intptr_t)rc);
   return 0;
@@ -186,8 +186,8 @@ void *JoinMainWorker(void *arg) {
 
 TEST(pthread_join, mainThread) {
   pthread_t id;
-  _gc(malloc(32));
-  _gc(malloc(32));
+  gc(malloc(32));
+  gc(malloc(32));
   SPAWN(fork);
   ASSERT_EQ(0, pthread_create(&id, 0, JoinMainWorker, (void *)pthread_self()));
   pthread_exit((void *)123);
@@ -196,8 +196,8 @@ TEST(pthread_join, mainThread) {
 
 TEST(pthread_join, mainThreadDelayed) {
   pthread_t id;
-  _gc(malloc(32));
-  _gc(malloc(32));
+  gc(malloc(32));
+  gc(malloc(32));
   SPAWN(fork);
   ASSERT_EQ(0, pthread_create(&id, 0, JoinMainWorker, (void *)pthread_self()));
   usleep(10000);

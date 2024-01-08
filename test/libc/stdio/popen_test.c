@@ -162,7 +162,7 @@ TEST(popen, torture) {
     return;
   }
   int i, n = 4;
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));

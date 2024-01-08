@@ -86,12 +86,12 @@ void *BilinearScale(long dcw, long dyw, long dxw,
       DCHECK_LT(_bsrl(cn) + _bsrl(dyn) + _bsrl(dxn), 32);
       BilinearScaler(dcw, dyw, dxw, dst, scw, syw, sxw, src, c0, cn, dyn, dxn,
                      syn, sxn, ry, rx, oy, ox,
-                     _gc(xmemalign(64, ROUNDUP(sizeof(int) * (dyn + 1), 64))),
-                     _gc(xmemalign(64, ROUNDUP(dyn + 1, 64))),
-                     _gc(xmemalign(64, ROUNDUP(sizeof(int) * (dxn + 1), 64))),
-                     _gc(xmemalign(64, ROUNDUP(dxn + 1, 64))),
-                     _gc(xmemalign(64, ROUNDUP(dxn, 64))),
-                     _gc(xmemalign(64, ROUNDUP(sxn, 64) * 2)));
+                     gc(xmemalign(64, ROUNDUP(sizeof(int) * (dyn + 1), 64))),
+                     gc(xmemalign(64, ROUNDUP(dyn + 1, 64))),
+                     gc(xmemalign(64, ROUNDUP(sizeof(int) * (dxn + 1), 64))),
+                     gc(xmemalign(64, ROUNDUP(dxn + 1, 64))),
+                     gc(xmemalign(64, ROUNDUP(dxn, 64))),
+                     gc(xmemalign(64, ROUNDUP(sxn, 64) * 2)));
     } else {
       bzero(dst[c0], &dst[cn][0][0] - &dst[c0][0][0]);
     }

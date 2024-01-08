@@ -26,26 +26,26 @@
 
 TEST(VisualizeControlCodes, test) {
   size_t n;
-  EXPECT_STREQ("hello", _gc(VisualizeControlCodes("hello", -1, 0)));
-  EXPECT_STREQ("hello\r\n", _gc(VisualizeControlCodes("hello\r\n", -1, 0)));
-  EXPECT_STREQ("hello␁␂␡", _gc(VisualizeControlCodes("hello\1\2\177", -1, 0)));
+  EXPECT_STREQ("hello", gc(VisualizeControlCodes("hello", -1, 0)));
+  EXPECT_STREQ("hello\r\n", gc(VisualizeControlCodes("hello\r\n", -1, 0)));
+  EXPECT_STREQ("hello␁␂␡", gc(VisualizeControlCodes("hello\1\2\177", -1, 0)));
   EXPECT_STREQ("hello\\u0085",
-               _gc(VisualizeControlCodes("hello\302\205", -1, 0)));
-  EXPECT_STREQ("hi", _gc(VisualizeControlCodes("hi", -1, &n)));
+               gc(VisualizeControlCodes("hello\302\205", -1, 0)));
+  EXPECT_STREQ("hi", gc(VisualizeControlCodes("hi", -1, &n)));
   EXPECT_EQ(2, n);
 }
 
 TEST(VisualizeControlCodes, testOom_returnsNullAndSetsSizeToZero) {
   size_t n = 31337;
-  EXPECT_EQ(NULL, _gc(VisualizeControlCodes("hello", 0x1000000000000, &n)));
+  EXPECT_EQ(NULL, gc(VisualizeControlCodes("hello", 0x1000000000000, &n)));
   EXPECT_EQ(0, n);
 }
 
 TEST(VisualizeControlCodes, testWeirdHttp) {
   size_t n = 31337;
   char *p, B[] = "\0GET /redbean.lua\n\n";
-  ASSERT_NE(0, (p = _gc(VisualizeControlCodes(B, sizeof(B), &n))));
-  EXPECT_STREQ("\"␀GET /redbean.lua\\n\\n␀\"", _gc(xasprintf("%`'.*s", n, p)));
+  ASSERT_NE(0, (p = gc(VisualizeControlCodes(B, sizeof(B), &n))));
+  EXPECT_STREQ("\"␀GET /redbean.lua\\n\\n␀\"", gc(xasprintf("%`'.*s", n, p)));
 }
 
 BENCH(VisualizeControlCodes, bench) {

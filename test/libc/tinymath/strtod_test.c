@@ -394,19 +394,19 @@ TEST(strtod, test) {
 TEST(strtod, testNearest) {
   fesetround(FE_TONEAREST);
   EXPECT_STREQ("-1.79769313486231e+308",
-               _gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
+               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testDownward) {
   fesetround(FE_DOWNWARD);
   EXPECT_STREQ("-1.79769313486232e+308",
-               _gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
+               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testUpward) {
   fesetround(FE_UPWARD);
   EXPECT_STREQ("-1.7976931348623e+308",
-               _gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
+               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testTowardzero) {

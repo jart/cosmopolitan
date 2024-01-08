@@ -64,7 +64,7 @@ TEST(getentropy, test) {
   double e, w = 7.7;
   struct sigaction sa;
   int i, k, m, n = 999;
-  char *buf = _gc(calloc(1, n));
+  char *buf = gc(calloc(1, n));
   sa.sa_flags = 0;
   sa.sa_handler = OnSig;
   sigemptyset(&sa.sa_mask);

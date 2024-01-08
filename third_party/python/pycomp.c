@@ -118,15 +118,15 @@ main(int argc, char *argv[])
     GetOpts(argc, argv);
     marshalled = 0;
     if (stat(inpath, &st) == -1) perror(inpath), exit(1);
-    CHECK_NOTNULL((p = _gc(xslurp(inpath, &n))));
+    CHECK_NOTNULL((p = gc(xslurp(inpath, &n))));
     Py_NoUserSiteDirectory++;
     Py_NoSiteFlag++;
     Py_IgnoreEnvironmentFlag++;
     Py_FrozenFlag++;
     /* Py_VerboseFlag++; */
-    Py_SetProgramName(_gc(utf8to32(argv[0], -1, 0)));
+    Py_SetProgramName(gc(utf8to32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
-    name = _gc(xjoinpaths("/zip/.python", StripComponents(inpath, 3)));
+    name = gc(xjoinpaths("/zip/.python", StripComponents(inpath, 3)));
     code = Py_CompileStringExFlags(p, name, Py_file_input, NULL, optimize);
     if (!code) goto error;
     marshalled = PyMarshal_WriteObjectToString(code, Py_MARSHAL_VERSION);

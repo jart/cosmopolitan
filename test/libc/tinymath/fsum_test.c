@@ -41,11 +41,11 @@ void SetUp(void) {
 }
 
 TEST(fsum, test) {
-  EXPECT_STREQ("500000000.6", _gc(xasprintf("%.15g", fsum(D, N) / N)));
+  EXPECT_STREQ("500000000.6", gc(xasprintf("%.15g", fsum(D, N) / N)));
 }
 
 TEST(fsumf, test) {
-  EXPECT_STREQ("500.6", _gc(xasprintf("%.7g", fsumf(F, N) / N)));
+  EXPECT_STREQ("500.6", gc(xasprintf("%.7g", fsumf(F, N) / N)));
 }
 
 BENCH(fsum, bench) {

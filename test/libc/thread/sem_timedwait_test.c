@@ -104,7 +104,7 @@ void *Worker(void *arg) {
 TEST(sem_timedwait, threads) {
   int i, r, n = 4;
   sem_t sm[2], *s[2] = {sm, sm + 1};
-  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  pthread_t *t = gc(malloc(sizeof(pthread_t) * n));
   ASSERT_SYS(0, 0, sem_init(s[0], 0, 0));
   ASSERT_SYS(0, 0, sem_init(s[1], 0, 0));
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, s));

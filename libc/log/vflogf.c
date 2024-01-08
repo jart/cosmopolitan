@@ -95,6 +95,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   flockfile(f);
   strace_enabled(-1);
   BLOCK_SIGNALS;
+  BLOCK_CANCELATION;
 
   // We display TIMESTAMP.MICROS normally. However, when we log multiple
   // times in the same second, we display TIMESTAMP+DELTAMICROS instead.
@@ -136,6 +137,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     _Exit(22);
   }
 
+  ALLOW_CANCELATION;
   ALLOW_SIGNALS;
   strace_enabled(+1);
   funlockfile(f);

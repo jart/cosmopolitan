@@ -70,7 +70,7 @@
 #include "third_party/unzip/crypt.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "third_party/unzip/unzvers.h"
 #include "third_party/unzip/globals.h"
 

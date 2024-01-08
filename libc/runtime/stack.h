@@ -96,7 +96,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * since it'll not only ensure stack overflows are detected, it
  * will also trigger the stack to grow down safely.
  */
-__funline void CheckLargeStackAllocation(void *p, ssize_t n) {
+forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
   for (; n > 0; n -= 4096) {
     ((char *)p)[n - 1] = 0;
   }

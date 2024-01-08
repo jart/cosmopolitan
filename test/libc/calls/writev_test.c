@@ -23,7 +23,7 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -55,7 +55,7 @@ TEST(writev, negative_einvalOrEfault) {
 TEST(writev, exceedsIovMax_einval) {
   if (IsWindows()) return;  // it's complicated
   int i, n = IOV_MAX + 1;
-  struct iovec *v = _gc(malloc(sizeof(struct iovec) * n));
+  struct iovec *v = gc(malloc(sizeof(struct iovec) * n));
   for (i = 0; i < n; ++i) {
     v[i].iov_base = "x";
     v[i].iov_len = 1;

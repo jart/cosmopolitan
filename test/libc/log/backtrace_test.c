@@ -115,7 +115,7 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
   }
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, _gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
+  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
   EXPECT_EQ(78 << 8, ws);
   ASSERT_TRUE(!!strstr(output, "UNFREED MEMORY"));
   if (IsAsan()) {
@@ -207,7 +207,7 @@ TEST(ShowCrashReports, testDivideByZero) {
   }
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, _gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
+  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
   if (IsModeDbg()) {
     EXPECT_EQ(77 << 8, ws);
   } else {
@@ -222,32 +222,32 @@ TEST(ShowCrashReports, testDivideByZero) {
     // UBSAN handled it
   } else {
     // ShowCrashReports() handled it
-    if (!strstr(output, _gc(xasprintf("%d", pid)))) {
+    if (!strstr(output, gc(xasprintf("%d", pid)))) {
       fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
-              _gc(IndentLines(output, -1, 0, 4)));
+              gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "SIGFPE")) {
       fprintf(stderr, "ERROR: crash report didn't have signal name\n%s\n",
-              _gc(IndentLines(output, -1, 0, 4)));
+              gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     // XXX: WSL doesn't save and restore x87 registers to ucontext_t
     if (!__iswsl1()) {
       if (!strstr(output, "3.141")) {
         fprintf(stderr, "ERROR: crash report didn't have fpu register\n%s\n",
-                _gc(IndentLines(output, -1, 0, 4)));
+                gc(IndentLines(output, -1, 0, 4)));
         __die();
       }
     }
     if (!strstr(output, "0f0e0d0c0b0a09080706050403020100")) {
       fprintf(stderr, "ERROR: crash report didn't have sse register\n%s\n",
-              _gc(IndentLines(output, -1, 0, 4)));
+              gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "3133731337")) {
       fprintf(stderr, "ERROR: crash report didn't have general register\n%s\n",
-              _gc(IndentLines(output, -1, 0, 4)));
+              gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   }
@@ -332,7 +332,7 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   }
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, _gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
+  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
   EXPECT_EQ(77 << 8, ws);
   /* NULL is stopgap until we can copy symbol tablces into binary */
 #ifdef __FNO_OMIT_FRAME_POINTER__
@@ -407,7 +407,7 @@ TEST(ShowCrashReports, testNpeCrash) {
   }
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, _gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
+  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
   EXPECT_EQ(77 << 8, ws);
   /* NULL is stopgap until we can copy symbol tables into binary */
   ASSERT_TRUE(!!strstr(output, "null pointer"));
@@ -451,7 +451,7 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
   }
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, _gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
+  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
   EXPECT_EQ(77 << 8, ws);
   /* NULL is stopgap until we can copy symbol tablces into binary */
 #ifdef __FNO_OMIT_FRAME_POINTER__
@@ -499,7 +499,7 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   }
   close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
-  // tinyprint(2, _gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
+  // tinyprint(2, gc(IndentLines(output, -1, 0, 4)), "\n", NULL);
   if (IsModeDbg()) {
     EXPECT_EQ(77 << 8, ws);
   } else {
@@ -509,13 +509,13 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   /* NULL is stopgap until we can copy symbol tables into binary */
   if (!strstr(output, IsAsan() ? "null pointer" : "Uncaught SIGSEGV (SEGV_")) {
     fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
-            _gc(IndentLines(output, -1, 0, 4)));
+            gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "NpeCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            _gc(IndentLines(output, -1, 0, 4)));
+            gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif

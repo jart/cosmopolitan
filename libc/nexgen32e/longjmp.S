@@ -23,7 +23,7 @@
 //	@param	rdi points to the jmp_buf
 //	@param	esi is returned by setjmp() invocation (coerced nonzero)
 //	@noreturn
-//	@see	_gclongjmp()
+//	@see	gclongjmp()
 //	@see	siglongjmp()
 	.ftrace1
 longjmp:

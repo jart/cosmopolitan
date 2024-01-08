@@ -149,7 +149,7 @@ void Connect(void) {
   int rc, err, expo;
   struct addrinfo *ai;
   struct timespec deadline;
-  if ((rc = getaddrinfo(g_hostname, _gc(xasprintf("%hu", g_runitdport)),
+  if ((rc = getaddrinfo(g_hostname, gc(xasprintf("%hu", g_runitdport)),
                         &kResolvHints, &ai)) != 0) {
     FATALF("%s:%hu: EAI_%s %m", g_hostname, g_runitdport, gai_strerror(rc));
     __builtin_unreachable();
@@ -210,7 +210,7 @@ bool Send(int tmpfd, const void *output, size_t outputsize) {
   static bool once;
   static z_stream zs;
   zsize = 32768;
-  zbuf = _gc(malloc(zsize));
+  zbuf = gc(malloc(zsize));
   if (!once) {
     CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
                                 Z_DEFAULT_STRATEGY));
@@ -249,7 +249,7 @@ bool SendRequest(int tmpfd) {
   CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_LE((namesize = strlen((name = basename(g_prog)))), PATH_MAX);
   CHECK_LE((progsize = st.st_size), INT_MAX);
-  CHECK_NOTNULL((hdr = _gc(calloc(1, (hdrsize = 17 + namesize)))));
+  CHECK_NOTNULL((hdr = gc(calloc(1, (hdrsize = 17 + namesize)))));
   crc = crc32_z(0, (unsigned char *)p, st.st_size);
   q = hdr;
   q = WRITE32BE(q, RUNITD_MAGIC);
@@ -269,7 +269,7 @@ bool SendRequest(int tmpfd) {
 
 void RelayRequest(void) {
   int i, rc, have, transferred;
-  char *buf = _gc(malloc(PIPE_BUF));
+  char *buf = gc(malloc(PIPE_BUF));
   for (transferred = 0;;) {
     rc = read(13, buf, PIPE_BUF);
     CHECK_NE(-1, rc);
@@ -409,7 +409,7 @@ int SpawnSubprocesses(int argc, char *argv[]) {
 
   // create compressed network request ahead of time
   const char *tmpdir = firstnonnull(getenv("TMPDIR"), "/tmp");
-  char *tpath = _gc(xasprintf("%s/runit.XXXXXX", tmpdir));
+  char *tpath = gc(xasprintf("%s/runit.XXXXXX", tmpdir));
   int tmpfd = mkstemp(tpath);
   CHECK_NE(-1, tmpfd);
   CHECK(SendRequest(tmpfd));
