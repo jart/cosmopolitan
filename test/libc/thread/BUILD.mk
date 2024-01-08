@@ -3,24 +3,30 @@
 
 PKGS += TEST_LIBC_THREAD
 
-TEST_LIBC_THREAD_SRCS := $(wildcard test/libc/thread/*.c)
-TEST_LIBC_THREAD_SRCS_TEST = $(filter %_test.c,$(TEST_LIBC_THREAD_SRCS))
+TEST_LIBC_THREAD_FILES := $(wildcard test/libc/thread/*)
+TEST_LIBC_THREAD_SRCS_C = $(filter %_test.c,$(TEST_LIBC_THREAD_FILES))
+TEST_LIBC_THREAD_SRCS_CC = $(filter %_test.cc,$(TEST_LIBC_THREAD_FILES))
+
+TEST_LIBC_THREAD_SRCS =					\
+	$(TEST_LIBC_THREAD_SRCS_C)			\
+	$(TEST_LIBC_THREAD_SRCS_CC)
 
 TEST_LIBC_THREAD_OBJS =					\
-	$(TEST_LIBC_THREAD_SRCS:%.c=o/$(MODE)/%.o)
+	$(TEST_LIBC_THREAD_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	$(TEST_LIBC_THREAD_SRCS_CC:%.cc=o/$(MODE)/%.o)
 
 TEST_LIBC_THREAD_COMS =					\
-	$(TEST_LIBC_THREAD_SRCS:%.c=o/$(MODE)/%.com)
+	$(TEST_LIBC_THREAD_OBJS:%.o=%.com)
 
 TEST_LIBC_THREAD_BINS =					\
 	$(TEST_LIBC_THREAD_COMS)			\
 	$(TEST_LIBC_THREAD_COMS:%=%.dbg)
 
 TEST_LIBC_THREAD_TESTS =				\
-	$(TEST_LIBC_THREAD_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
+	$(TEST_LIBC_THREAD_OBJS:%.o=%.com.ok)
 
 TEST_LIBC_THREAD_CHECKS =				\
-	$(TEST_LIBC_THREAD_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
+	$(TEST_LIBC_THREAD_OBJS:%.o=%.com.runs)
 
 TEST_LIBC_THREAD_DIRECTDEPS =				\
 	LIBC_CALLS					\
@@ -60,10 +66,6 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-o/$(MODE)/test/libc/thread/pthread_create_test.o:	\
-		private CPPFLAGS +=			\
-			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/test/libc/thread/pthread_kill_test.com.runs:	\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet

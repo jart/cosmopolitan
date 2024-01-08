@@ -73,13 +73,6 @@ void OnMainThreadExit(void *arg) {
   _Exit((long)arg);
 }
 
-TEST(__cxa_thread_atexit, exit_wontInvokeThreadDestructors) {
-  SPAWN(fork);
-  __cxa_thread_atexit(OnMainThreadExit, (void *)123L, 0);
-  exit(0);
-  EXITS(0);
-}
-
 TEST(__cxa_thread_atexit, pthread_exit_willInvokeThreadDestructors) {
   SPAWN(fork);
   __cxa_thread_atexit(OnMainThreadExit, (void *)123L, 0);

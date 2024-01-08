@@ -52,6 +52,7 @@ THIRD_PARTY_LIBCXXABI_TEST_SRCS =					\
 	third_party/libcxxabi/test/test_guard.pass.cc			\
 	third_party/libcxxabi/test/test_vector1.pass.cc			\
 	third_party/libcxxabi/test/test_vector2.pass.cc			\
+	third_party/libcxxabi/test/thread_local_destruction_order.pass.cc	\
 	third_party/libcxxabi/test/test_vector3.pass.cc			\
 	third_party/libcxxabi/test/uncaught_exception.pass.cc		\
 	third_party/libcxxabi/test/uncaught_exceptions.pass.cc		\
@@ -66,10 +67,6 @@ THIRD_PARTY_LIBCXXABI_TEST_SRCS =					\
 # TODO: LLVM needs to finish the code that lets us use NSYNC futexes
 THIRD_PARTY_LIBCXXABI_TEST_SRCS_TOOSLOW_COSMO =				\
 	third_party/libcxxabi/test/guard_threaded_test.pass.cc		\
-
-# TODO: Add this test when #1073 is fixed
-THIRD_PARTY_LIBCXXABI_TEST_SRCS_FAILING_COSMO =				\
-	third_party/libcxxabi/test/thread_local_destruction_order.pass.cc
 
 THIRD_PARTY_LIBCXXABI_TEST_SRCS_FAILING_GCC =				\
 	third_party/libcxxabi/test/catch_array_01.pass.cc		\
