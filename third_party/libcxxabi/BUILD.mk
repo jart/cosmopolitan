@@ -107,6 +107,7 @@ THIRD_PARTY_LIBCXXABI_CHECKS = $(foreach x,$(THIRD_PARTY_LIBCXXABI_ARTIFACTS),$(
 THIRD_PARTY_LIBCXXABI_OBJS = $(foreach x,$(THIRD_PARTY_LIBCXXABI_ARTIFACTS),$($(x)_OBJS))
 
 .PHONY: o/$(MODE)/third_party/libcxxabi
-o/$(MODE)/third_party/libcxxabi: \
-	$(THIRD_PARTY_LIBCXXABI_CHECKS)	\
+o/$(MODE)/third_party/libcxxabi: 					\
+	o/$(MODE)/third_party/libcxxabi/test				\
+	$(THIRD_PARTY_LIBCXXABI_CHECKS)					\
 	$(THIRD_PARTY_LIBCXXABI_A)
