@@ -167,6 +167,7 @@ o/$(MODE)/third_party/libcxxabi/test/incomplete_type.sh.com.dbg:	\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+$(THIRD_PARTY_LIBCXXABI_TEST_OBJS): private CONFIG_CPPFLAGS += -UNDEBUG
 o/$(MODE)/third_party/libcxxabi/test/catch_multi_level_pointer.pass.o: private COPTS += -O0
 o/$(MODE)/third_party/libcxxabi/test/catch_multi_level_pointer.pass.o: private QUOTA += -C30 -M4000m
 
