@@ -16,3 +16,4 @@ nproc() {
   echo 2
 }
 nproc
+# vim:ft=zsh
