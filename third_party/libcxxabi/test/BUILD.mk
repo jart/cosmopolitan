@@ -1,8 +1,6 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #── vi: set noet ft=make ts=8 sw=8 fenc=utf-8 :vi ────────────────────┘
 
-ifeq ($(MODE), )
-
 PKGS += THIRD_PARTY_LIBCXXABI_TEST
 
 THIRD_PARTY_LIBCXXABI_TEST_A = o/$(MODE)/third_party/libcxxabi/test/test.a
@@ -109,6 +107,7 @@ THIRD_PARTY_LIBCXXABI_TEST_CHECKS =					\
 
 THIRD_PARTY_LIBCXXABI_TEST_DIRECTDEPS =					\
 	LIBC_NEXGEN32E							\
+	LIBC_LOG							\
 	THIRD_PARTY_LIBCXX						\
 	THIRD_PARTY_LIBCXXABI
 
@@ -167,8 +166,6 @@ o/$(MODE)/third_party/libcxxabi/test/incomplete_type.sh.com.dbg:	\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-endif
 
 o/$(MODE)/third_party/libcxxabi/test/catch_multi_level_pointer.pass.o: private COPTS += -O0
 o/$(MODE)/third_party/libcxxabi/test/catch_multi_level_pointer.pass.o: private QUOTA += -C30 -M4000m
