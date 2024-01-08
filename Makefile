@@ -249,7 +249,6 @@ include libc/calls/BUILD.mk			#─┐
 include libc/irq/BUILD.mk			# ├──SYSTEMS RUNTIME
 include third_party/nsync/BUILD.mk		# │  You can issue system calls
 include libc/runtime/BUILD.mk			# │
-include third_party/double-conversion/BUILD.mk	# │
 include libc/crt/BUILD.mk			# │
 include third_party/dlmalloc/BUILD.mk		#─┘
 include libc/mem/BUILD.mk			#─┐
@@ -287,6 +286,7 @@ include third_party/readline/BUILD.mk		# │
 include third_party/libunwind/BUILD.mk		# |
 include third_party/libcxxabi/BUILD.mk		# |
 include third_party/libcxx/BUILD.mk		# │
+include third_party/double-conversion/BUILD.mk	# │
 include third_party/pcre/BUILD.mk		# │
 include third_party/less/BUILD.mk		# │
 include net/https/BUILD.mk			# │
@@ -442,6 +442,7 @@ COSMOPOLITAN_OBJECTS =			\
 	LIBC_TIME			\
 	THIRD_PARTY_MUSL		\
 	THIRD_PARTY_ZLIB_GZ		\
+	THIRD_PARTY_LIBCXXABI		\
 	THIRD_PARTY_LIBUNWIND		\
 	LIBC_STDIO			\
 	THIRD_PARTY_GDTOA		\
