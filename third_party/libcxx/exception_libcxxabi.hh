@@ -7,20 +7,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/new"
-#include "third_party/libcxx/atomic_support.hh"
+#include "third_party/libcxxabi/include/cxxabi.h"
+#include "third_party/libcxx/exception"
+using namespace __cxxabiv1;
 
 namespace std {
 
-_LIBCPP_SAFE_STATIC static std::new_handler __new_handler;
+bool uncaught_exception() _NOEXCEPT { return uncaught_exceptions() > 0; }
 
-new_handler set_new_handler(new_handler handler) _NOEXCEPT {
-  return __libcpp_atomic_exchange(&__new_handler, handler);
-}
-
-new_handler get_new_handler() _NOEXCEPT {
-  return __libcpp_atomic_load(&__new_handler);
+int uncaught_exceptions() _NOEXCEPT
+{
+# if _LIBCPPABI_VERSION > 1001
+    return __cxa_uncaught_exceptions();
+# else
+    return __cxa_uncaught_exception() ? 1 : 0;
+# endif
 }
 
 } // namespace std
