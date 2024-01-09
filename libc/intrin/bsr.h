@@ -2,9 +2,9 @@
 #define COSMOPOLITAN_LIBC_NEXGEN32E_BSR_H_
 COSMOPOLITAN_C_START_
 
-int _bsr(int) pureconst;
-int _bsrl(long) pureconst;
-int _bsrll(long long) pureconst;
+libcesque int _bsr(int) pureconst;
+libcesque int _bsrl(long) pureconst;
+libcesque int _bsrll(long long) pureconst;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define _bsr(x)   (__builtin_clz(x) ^ (sizeof(int) * 8 - 1))

@@ -22,10 +22,10 @@ struct rusage {
   int64_t ru_nivcsw;       /* involuntary context switches */
 };
 
-int getrusage(int, struct rusage *);
-int wait3(int *, int, struct rusage *);
-int wait4(int, int *, int, struct rusage *);
-void rusage_add(struct rusage *, const struct rusage *);
+int getrusage(int, struct rusage *) libcesque;
+int wait3(int *, int, struct rusage *) libcesque;
+int wait4(int, int *, int, struct rusage *) libcesque;
+void rusage_add(struct rusage *, const struct rusage *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_RUSAGE_H_ */

@@ -270,24 +270,24 @@
 #define ZIP_EXTRA_CONTENT(P)     ((P) + 4)
 #define ZIP_EXTRA_SIZE(P)        (ZIP_EXTRA_CONTENTSIZE(P) + kZipExtraHdrSize)
 
-void *GetZipEocd(const void *, size_t, int *);
-int IsZipEocd32(const uint8_t *, size_t, size_t);
-int IsZipEocd64(const uint8_t *, size_t, size_t);
-int GetZipCfileMode(const uint8_t *);
-uint64_t GetZipCdirOffset(const uint8_t *);
-uint64_t GetZipCdirRecords(const uint8_t *);
-const void *GetZipCdirComment(const uint8_t *);
-uint64_t GetZipCdirSize(const uint8_t *);
-uint64_t GetZipCdirCommentSize(const uint8_t *);
-int64_t GetZipCfileCompressedSize(const uint8_t *);
-int64_t GetZipCfileUncompressedSize(const uint8_t *);
-int64_t GetZipCfileOffset(const uint8_t *);
-int64_t GetZipLfileCompressedSize(const uint8_t *);
-int64_t GetZipLfileUncompressedSize(const uint8_t *);
+void *GetZipEocd(const void *, size_t, int *) libcesque;
+int IsZipEocd32(const uint8_t *, size_t, size_t) libcesque;
+int IsZipEocd64(const uint8_t *, size_t, size_t) libcesque;
+int GetZipCfileMode(const uint8_t *) libcesque;
+uint64_t GetZipCdirOffset(const uint8_t *) libcesque;
+uint64_t GetZipCdirRecords(const uint8_t *) libcesque;
+const void *GetZipCdirComment(const uint8_t *) libcesque;
+uint64_t GetZipCdirSize(const uint8_t *) libcesque;
+uint64_t GetZipCdirCommentSize(const uint8_t *) libcesque;
+int64_t GetZipCfileCompressedSize(const uint8_t *) libcesque;
+int64_t GetZipCfileUncompressedSize(const uint8_t *) libcesque;
+int64_t GetZipCfileOffset(const uint8_t *) libcesque;
+int64_t GetZipLfileCompressedSize(const uint8_t *) libcesque;
+int64_t GetZipLfileUncompressedSize(const uint8_t *) libcesque;
 
 struct timespec;
 void GetZipCfileTimestamps(const uint8_t *, struct timespec *,
-                           struct timespec *, struct timespec *, int);
+                           struct timespec *, struct timespec *, int) libcesque;
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_ZIP_H_ */

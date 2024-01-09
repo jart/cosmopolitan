@@ -18,8 +18,8 @@ COSMOPOLITAN_C_START_
 #define ULF_WAIT_CANCEL_POINT          0x00020000 /* raises eintr */
 #define ULF_WAIT_ADAPTIVE_SPIN         0x00040000
 
-int ulock_wake(uint32_t, void *, uint64_t);
-int ulock_wait(uint32_t, void *, uint64_t, uint32_t);
+int ulock_wake(uint32_t, void *, uint64_t) libcesque;
+int ulock_wait(uint32_t, void *, uint64_t, uint32_t) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_ULOCK_H_ */

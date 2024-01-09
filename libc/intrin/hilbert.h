@@ -5,8 +5,8 @@ COSMOPOLITAN_C_START_
 #define hilbert   __hilbert
 #define unhilbert __unhilbert
 
-long hilbert(long, long, long) pureconst;
-axdx_t unhilbert(long, long) pureconst;
+libcesque long hilbert(long, long, long) pureconst;
+libcesque axdx_t unhilbert(long, long) pureconst;
 
 COSMOPOLITAN_C_END_
 #endif /* _COSMO_SOURCE */

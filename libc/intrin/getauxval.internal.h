@@ -7,7 +7,7 @@ struct AuxiliaryValue {
   bool isfound;
 };
 
-struct AuxiliaryValue __getauxval(unsigned long);
+struct AuxiliaryValue __getauxval(unsigned long) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_INTRIN_GETAUXVAL_H_ */

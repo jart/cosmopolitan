@@ -17,8 +17,8 @@ struct sigaction {
   sigset_t sa_mask;
 };
 
-sighandler_t signal(int, sighandler_t);
-int sigaction(int, const struct sigaction *, struct sigaction *);
+sighandler_t signal(int, sighandler_t) libcesque;
+int sigaction(int, const struct sigaction *, struct sigaction *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_ */

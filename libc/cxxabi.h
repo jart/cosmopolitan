@@ -6,7 +6,7 @@ union CxaGuardValue;
 
 char *__cxa_demangle(const char *, char *, size_t *, int *);
 int __cxa_atexit(void (*)(void *), void *, void *) paramsnonnull((1)) dontthrow;
-int __cxa_guard_acquire(union CxaGuardValue *);
+int __cxa_guard_acquire(union CxaGuardValue *) libcesque;
 int __cxa_thread_atexit(void *, void *, void *) dontthrow;
 void __cxa_finalize(void *);
 void __cxa_guard_abort(union CxaGuardValue *) dontthrow;

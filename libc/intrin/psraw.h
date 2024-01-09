@@ -3,8 +3,8 @@
 #include "libc/intrin/macros.h"
 COSMOPOLITAN_C_START_
 
-void psraw(int16_t[8], const int16_t[8], unsigned char);
-void psrawv(int16_t[8], const int16_t[8], const uint64_t[2]);
+void psraw(int16_t[8], const int16_t[8], unsigned char) libcesque;
+void psrawv(int16_t[8], const int16_t[8], const uint64_t[2]) libcesque;
 
 #define psraw(A, B, I) INTRIN_SSEVEX_X_I_(psraw, SSE2, "psraw", A, B, I)
 #define psrawv(A, B, C) \

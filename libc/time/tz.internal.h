@@ -273,28 +273,26 @@ typedef time_tz tz_int64_t;
 #  define altzone tz_altzone
 # endif
 
-char *asctime(struct tm const *);
-char *asctime_r(struct tm const *restrict, char *restrict);
-char *ctime(int64_t const *);
-char *ctime_r(int64_t const *, char *);
-double difftime(int64_t, int64_t) pureconst;
+char *asctime(struct tm const *) libcesque;
+char *asctime_r(struct tm const *restrict, char *restrict) libcesque;
+char *ctime(int64_t const *) libcesque;
+char *ctime_r(int64_t const *, char *) libcesque;
+double difftime(int64_t, int64_t) libcesque pureconst;
 size_t strftime(char *restrict, size_t, char const *restrict,
-		struct tm const *restrict);
-# if HAVE_STRFTIME_L
+		struct tm const *restrict) libcesque;
 size_t strftime_l(char *restrict, size_t, char const *restrict,
-		  struct tm const *restrict, locale_t);
-# endif
-struct tm *gmtime(int64_t const *);
-struct tm *gmtime_r(int64_t const *restrict, struct tm *restrict);
-struct tm *localtime(int64_t const *);
-struct tm *localtime_r(int64_t const *restrict, struct tm *restrict);
-int64_t mktime(struct tm *);
-int64_t time(int64_t *);
-void tzset(void);
+		  struct tm const *restrict, locale_t) libcesque;
+struct tm *gmtime(int64_t const *) libcesque;
+struct tm *gmtime_r(int64_t const *restrict, struct tm *restrict) libcesque;
+struct tm *localtime(int64_t const *) libcesque;
+struct tm *localtime_r(int64_t const *restrict, struct tm *restrict) libcesque;
+int64_t mktime(struct tm *) libcesque;
+int64_t time(int64_t *) libcesque;
+void tzset(void) libcesque;
 #endif
 
 #if !HAVE_DECL_ASCTIME_R && !defined asctime_r
-extern char *asctime_r(struct tm const *restrict, char *restrict);
+extern char *asctime_r(struct tm const *restrict, char *restrict) libcesque;
 #endif
 
 #ifndef HAVE_DECL_ENVIRON

@@ -19,9 +19,9 @@ typedef struct fd_set {
 #define FD_ZERO(SET)      bzero((SET)->fds_bits, sizeof((SET)->fds_bits))
 #define FD_SIZE(bits)     (((bits) + (sizeof(long) * 8) - 1) / sizeof(long))
 
-int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+int select(int, fd_set *, fd_set *, fd_set *, struct timeval *) libcesque;
 int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
-            const sigset_t *);
+            const sigset_t *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_SOCK_SELECT_H_ */

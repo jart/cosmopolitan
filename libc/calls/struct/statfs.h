@@ -20,8 +20,8 @@ struct statfs {       /* cosmo abi */
   char f_fstypename[16];
 };
 
-int statfs(const char *, struct statfs *);
-int fstatfs(int, struct statfs *);
+int statfs(const char *, struct statfs *) libcesque;
+int fstatfs(int, struct statfs *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_H_ */

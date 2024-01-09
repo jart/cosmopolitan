@@ -85,4 +85,4 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   return rc;
 }
 
-__strong_reference(pread, pread64);
+__weak_reference(pread, pread64);

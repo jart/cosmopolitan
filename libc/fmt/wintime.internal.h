@@ -9,13 +9,13 @@
 
 COSMOPOLITAN_C_START_
 
-int64_t DosDateTimeToUnix(uint32_t, uint32_t) pureconst;
-int64_t TimeSpecToWindowsTime(struct timespec) pureconst;
-int64_t TimeValToWindowsTime(struct timeval) pureconst;
-struct timespec WindowsDurationToTimeSpec(int64_t) pureconst;
-struct timespec WindowsTimeToTimeSpec(int64_t) pureconst;
-struct timeval WindowsDurationToTimeVal(int64_t) pureconst;
-struct timeval WindowsTimeToTimeVal(int64_t) pureconst;
+libcesque int64_t DosDateTimeToUnix(uint32_t, uint32_t) pureconst;
+libcesque int64_t TimeSpecToWindowsTime(struct timespec) pureconst;
+libcesque int64_t TimeValToWindowsTime(struct timeval) pureconst;
+libcesque struct timespec WindowsDurationToTimeSpec(int64_t) pureconst;
+libcesque struct timespec WindowsTimeToTimeSpec(int64_t) pureconst;
+libcesque struct timeval WindowsDurationToTimeVal(int64_t) pureconst;
+libcesque struct timeval WindowsTimeToTimeVal(int64_t) pureconst;
 
 #define MakeFileTime(x)                                        \
   ({                                                           \

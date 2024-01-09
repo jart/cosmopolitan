@@ -57,8 +57,8 @@ struct siginfo {
 typedef struct siginfo siginfo_t;
 
 #ifdef _COSMO_SOURCE
-void __minicrash(int, siginfo_t *, void *);
-char __is_stack_overflow(siginfo_t *, void *);
+void __minicrash(int, siginfo_t *, void *) libcesque;
+char __is_stack_overflow(siginfo_t *, void *) libcesque;
 #endif
 
 COSMOPOLITAN_C_END_

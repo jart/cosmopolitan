@@ -9,16 +9,16 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-int pthread_attr_getschedparam(const pthread_attr_t *, struct sched_param *) paramsnonnull();
-int pthread_attr_getsigmask_np(const pthread_attr_t *, sigset_t *) paramsnonnull((1));
-int pthread_attr_setschedparam(pthread_attr_t *, const struct sched_param *) paramsnonnull();
-int pthread_attr_setsigmask_np(pthread_attr_t *, const sigset_t *) paramsnonnull((1));
-int pthread_cond_timedwait(pthread_cond_t *, pthread_mutex_t *, const struct timespec *) paramsnonnull((1, 2));
-int pthread_getaffinity_np(pthread_t, size_t, cpu_set_t *) paramsnonnull();
-int pthread_getschedparam(pthread_t, int *, struct sched_param *) paramsnonnull();
-int pthread_setaffinity_np(pthread_t, size_t, const cpu_set_t *) paramsnonnull();
-int pthread_setschedparam(pthread_t, int, const struct sched_param *) paramsnonnull();
-int pthread_timedjoin_np(pthread_t, void **, struct timespec *);
+int pthread_attr_getschedparam(const pthread_attr_t *, struct sched_param *) libcesque paramsnonnull();
+int pthread_attr_getsigmask_np(const pthread_attr_t *, sigset_t *) libcesque paramsnonnull((1));
+int pthread_attr_setschedparam(pthread_attr_t *, const struct sched_param *) libcesque paramsnonnull();
+int pthread_attr_setsigmask_np(pthread_attr_t *, const sigset_t *) libcesque paramsnonnull((1));
+int pthread_cond_timedwait(pthread_cond_t *, pthread_mutex_t *, const struct timespec *) libcesque paramsnonnull((1, 2));
+int pthread_getaffinity_np(pthread_t, size_t, cpu_set_t *) libcesque paramsnonnull();
+int pthread_getschedparam(pthread_t, int *, struct sched_param *) libcesque paramsnonnull();
+int pthread_setaffinity_np(pthread_t, size_t, const cpu_set_t *) libcesque paramsnonnull();
+int pthread_setschedparam(pthread_t, int, const struct sched_param *) libcesque paramsnonnull();
+int pthread_timedjoin_np(pthread_t, void **, struct timespec *) libcesque;
 
 /* clang-format off */
 COSMOPOLITAN_C_END_

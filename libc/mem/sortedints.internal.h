@@ -8,10 +8,10 @@ struct SortedInts {
   int *p;
 };
 
-bool ContainsInt(const struct SortedInts *, int);
-bool InsertInt(struct SortedInts *, int, bool);
-int CountInt(const struct SortedInts *, int);
-int LeftmostInt(const struct SortedInts *, int);
+bool ContainsInt(const struct SortedInts *, int) libcesque;
+bool InsertInt(struct SortedInts *, int, bool) libcesque;
+int CountInt(const struct SortedInts *, int) libcesque;
+int LeftmostInt(const struct SortedInts *, int) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_MEM_SORTEDINTS_INTERNAL_H_ */

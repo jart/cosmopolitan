@@ -14,7 +14,7 @@ struct utsname {             /* cosmo abi */
   char domainname[SYS_NMLN]; /* domain name */
 };
 
-int uname(struct utsname *);
+int uname(struct utsname *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_UTSNAME_H_ */

@@ -7,8 +7,8 @@ struct rlimit {
   uint64_t rlim_max; /* maximum limit in bytes */
 };
 
-int getrlimit(int, struct rlimit *);
-int setrlimit(int, const struct rlimit *);
+int getrlimit(int, struct rlimit *) libcesque;
+int setrlimit(int, const struct rlimit *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_RLIMIT_H_ */

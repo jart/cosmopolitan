@@ -9,11 +9,11 @@ COSMOPOLITAN_C_START_
 #define unzleb64 __unzleb64
 #define unuleb64 __unuleb64
 
-char *sleb64(char *, int64_t);
-char *zleb64(char[hasatleast 10], int64_t);
-char *uleb64(char[hasatleast 10], uint64_t);
-int unzleb64(const char *, size_t, int64_t *);
-int unuleb64(const char *, size_t, uint64_t *);
+char *sleb64(char *, int64_t) libcesque;
+char *zleb64(char[hasatleast 10], int64_t) libcesque;
+char *uleb64(char[hasatleast 10], uint64_t) libcesque;
+int unzleb64(const char *, size_t, int64_t *) libcesque;
+int unuleb64(const char *, size_t, uint64_t *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* _COSMO_SOURCE */

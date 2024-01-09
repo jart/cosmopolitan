@@ -43,16 +43,16 @@ struct Procs {
 
 extern struct Procs __proc;
 
-void __proc_wipe(void);
-void __proc_lock(void);
-void __proc_unlock(void);
-int64_t __proc_handle(int);
-int64_t __proc_search(int);
-struct Proc *__proc_new(void);
-void __proc_add(struct Proc *);
-void __proc_free(struct Proc *);
-int __proc_harvest(struct Proc *, bool);
-int sys_wait4_nt(int, int *, int, struct rusage *);
+void __proc_wipe(void) libcesque;
+void __proc_lock(void) libcesque;
+void __proc_unlock(void) libcesque;
+int64_t __proc_handle(int) libcesque;
+int64_t __proc_search(int) libcesque;
+struct Proc *__proc_new(void) libcesque;
+void __proc_add(struct Proc *) libcesque;
+void __proc_free(struct Proc *) libcesque;
+int __proc_harvest(struct Proc *, bool) libcesque;
+int sys_wait4_nt(int, int *, int, struct rusage *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_PROC_H_ */

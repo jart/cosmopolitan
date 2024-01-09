@@ -14,8 +14,8 @@
 #define _ASSERT_H
 COSMOPOLITAN_C_START_
 
-void __assert_fail(const char *, const char *, int);
-void unassert(const char *, const char *, int);
+void __assert_fail(const char *, const char *, int) libcesque;
+void unassert(const char *, const char *, int) libcesque;
 
 #ifdef NDEBUG
 #define assert(x) ((void)0)

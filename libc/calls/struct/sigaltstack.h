@@ -10,7 +10,7 @@ struct sigaltstack {
 
 typedef struct sigaltstack stack_t;
 
-int sigaltstack(const struct sigaltstack *, struct sigaltstack *);
+int sigaltstack(const struct sigaltstack *, struct sigaltstack *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGALTSTACK_H_ */

@@ -85,4 +85,4 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   return rc;
 }
 
-__strong_reference(pwrite, pwrite64);
+__weak_reference(pwrite, pwrite64);

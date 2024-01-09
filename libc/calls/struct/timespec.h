@@ -8,35 +8,38 @@ struct timespec {
   int64_t tv_nsec; /* nanoseconds */
 };
 
-int clock_getres(int, struct timespec *);
-int clock_gettime(int, struct timespec *);
-int clock_settime(int, const struct timespec *);
+int clock_getres(int, struct timespec *) libcesque;
+int clock_gettime(int, struct timespec *) libcesque;
+int clock_settime(int, const struct timespec *) libcesque;
 int clock_nanosleep(int, int, const struct timespec *, struct timespec *);
-int futimens(int, const struct timespec[2]);
-int nanosleep(const struct timespec *, struct timespec *);
-int utimensat(int, const char *, const struct timespec[2], int);
-int timespec_getres(struct timespec *, int);
-int timespec_get(struct timespec *, int);
+int futimens(int, const struct timespec[2]) libcesque;
+int nanosleep(const struct timespec *, struct timespec *) libcesque;
+int utimensat(int, const char *, const struct timespec[2], int) libcesque;
+int timespec_getres(struct timespec *, int) libcesque;
+int timespec_get(struct timespec *, int) libcesque;
 
 #ifdef _COSMO_SOURCE
 /* cosmopolitan libc's non-posix timespec library
    removed by default due to emacs codebase clash */
 #define timespec_zero ((struct timespec){0})
 #define timespec_max  ((struct timespec){0x7fffffffffffffff, 999999999})
-int timespec_cmp(struct timespec, struct timespec) pureconst;
-int64_t timespec_tomicros(struct timespec) pureconst;
-int64_t timespec_tomillis(struct timespec) pureconst;
-int64_t timespec_tonanos(struct timespec) pureconst;
-struct timespec timespec_add(struct timespec, struct timespec) pureconst;
-struct timespec timespec_fromnanos(int64_t) pureconst;
-struct timespec timespec_frommicros(int64_t) pureconst;
-struct timespec timespec_frommillis(int64_t) pureconst;
-struct timespec timespec_real(void);
-struct timespec timespec_mono(void);
-struct timespec timespec_sleep(struct timespec);
-int timespec_sleep_until(struct timespec);
-struct timespec timespec_sub(struct timespec, struct timespec) pureconst;
-struct timespec timespec_subz(struct timespec, struct timespec) pureconst;
+libcesque int timespec_cmp(struct timespec, struct timespec) pureconst;
+libcesque int64_t timespec_tomicros(struct timespec) pureconst;
+libcesque int64_t timespec_tomillis(struct timespec) pureconst;
+libcesque int64_t timespec_tonanos(struct timespec) pureconst;
+libcesque struct timespec timespec_add(struct timespec,
+                                       struct timespec) pureconst;
+libcesque struct timespec timespec_fromnanos(int64_t) pureconst;
+libcesque struct timespec timespec_frommicros(int64_t) pureconst;
+libcesque struct timespec timespec_frommillis(int64_t) pureconst;
+libcesque struct timespec timespec_real(void) libcesque;
+libcesque struct timespec timespec_mono(void) libcesque;
+libcesque struct timespec timespec_sleep(struct timespec) libcesque;
+libcesque int timespec_sleep_until(struct timespec) libcesque;
+libcesque struct timespec timespec_sub(struct timespec,
+                                       struct timespec) pureconst;
+libcesque struct timespec timespec_subz(struct timespec,
+                                        struct timespec) pureconst;
 int sys_futex(int *, int, int, const struct timespec *, int *);
 static inline struct timespec timespec_fromseconds(int64_t __x) {
   return (struct timespec){__x};

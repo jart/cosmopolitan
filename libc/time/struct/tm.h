@@ -16,26 +16,27 @@ struct tm {
   const char *tm_zone;
 };
 
-char *asctime(const struct tm *);
-char *asctime_r(const struct tm *, char[hasatleast 26]);
-char *strptime(const char *, const char *, struct tm *);
-int64_t mktime(struct tm *);
-int64_t timegm(struct tm *);
-int64_t timelocal(struct tm *);
-int64_t timeoff(struct tm *, long);
-size_t strftime(char *, size_t, const char *, const struct tm *)
-    strftimeesque(3);
-size_t wcsftime(wchar_t *, size_t, const wchar_t *, const struct tm *);
-struct tm *gmtime(const int64_t *);
-struct tm *gmtime_r(const int64_t *, struct tm *);
-struct tm *localtime(const int64_t *);
-struct tm *localtime_r(const int64_t *, struct tm *);
+char *asctime(const struct tm *) libcesque;
+char *asctime_r(const struct tm *, char[hasatleast 26]) libcesque;
+char *strptime(const char *, const char *, struct tm *) libcesque;
+int64_t mktime(struct tm *) libcesque;
+int64_t timegm(struct tm *) libcesque;
+int64_t timelocal(struct tm *) libcesque;
+int64_t timeoff(struct tm *, long) libcesque;
+size_t strftime(char *, size_t, const char *, const struct tm *) libcesque
+    strftimeesque(3) libcesque;
+size_t wcsftime(wchar_t *, size_t, const wchar_t *,
+                const struct tm *) libcesque;
+struct tm *gmtime(const int64_t *) libcesque;
+struct tm *gmtime_r(const int64_t *, struct tm *) libcesque;
+struct tm *localtime(const int64_t *) libcesque;
+struct tm *localtime_r(const int64_t *, struct tm *) libcesque;
 
 #ifdef _COSMO_SOURCE
 #define iso8601   __iso8601
 #define iso8601us __iso8601us
-char *iso8601(char[hasatleast 20], struct tm *);
-char *iso8601us(char[hasatleast 27], struct tm *, long);
+char *iso8601(char[hasatleast 20], struct tm *) libcesque;
+char *iso8601us(char[hasatleast 27], struct tm *, long) libcesque;
 #endif /* _COSMO_SOURCE */
 
 COSMOPOLITAN_C_END_

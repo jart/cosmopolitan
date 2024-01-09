@@ -2,7 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_EXTEND_INTERNAL_H_
 COSMOPOLITAN_C_START_
 
-void *_extend(void *, size_t, void *, int, intptr_t);
+void *_extend(void *, size_t, void *, int, intptr_t) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_EXTEND_INTERNAL_H_ */

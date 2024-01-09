@@ -19,7 +19,7 @@ struct sysinfo {
   uint32_t mem_unit;  /* ram stuff above is multiples of this */
 };
 
-int sysinfo(struct sysinfo *);
+int sysinfo(struct sysinfo *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SYSINFO_H_ */
