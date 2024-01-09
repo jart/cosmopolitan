@@ -73,7 +73,7 @@ static void showstrata(void) {
 void showcachesizes(void) {
   unsigned i;
   CPUID4_ITERATE(i, {
-    printf("%-19s%s%s %u-way %,7u byte cache w/%s %,5u sets of %u byte lines "
+    printf("%-19s%s%s %2u-way %,9u byte cache w/%s %,6u sets of %u byte lines "
            "shared across %u threads\n",
            gc(xasprintf("Level %u%s", CPUID4_CACHE_LEVEL,
                         CPUID4_CACHE_TYPE == 1   ? " data"
