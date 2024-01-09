@@ -1196,6 +1196,7 @@ __cxa_call_unexpected(void* arg)
     }
     else
     {
+        ttypeIndex = 0; // TODO(jart): why?
         t_handler = std::get_terminate();
         u_handler = std::get_unexpected();
     }

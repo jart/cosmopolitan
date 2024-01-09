@@ -299,6 +299,7 @@ include libc/testlib/BUILD.mk
 include tool/viz/lib/BUILD.mk
 include tool/args/BUILD.mk
 include test/posix/BUILD.mk
+include test/libcxx/BUILD.mk
 include test/tool/args/BUILD.mk
 include third_party/linenoise/BUILD.mk
 include third_party/maxmind/BUILD.mk
