@@ -66,8 +66,8 @@ Restart:
       default:
         new_pos = einval();
     }
-  } while (!LIKELY(atomic_compare_exchange_weak_explicit(
-      &h->pos, &pos, new_pos < 0 ? pos : new_pos, memory_order_release,
-      memory_order_relaxed)));
+  } while (new_pos >= 0 && !LIKELY(atomic_compare_exchange_weak_explicit(
+                               &h->pos, &pos, new_pos, memory_order_release,
+                               memory_order_relaxed)));
   return new_pos;
 }
