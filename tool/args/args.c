@@ -91,6 +91,15 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
       }
       start = 0;
     }
+
+    if (!founddots)
+    {
+        founddots = true;
+        for (i = 1; i < *argc; ++i) {
+          AddZipArg(&n, &args, (*argv)[i]);
+        }
+    }
+
     if (founddots || *argc <= 1) {
       if (!g_zipargs.initialized) {
         atexit(FreeZipArgs);
@@ -118,8 +127,9 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
  *
  * Your `.args` file should have one argument per line.
  *
- * If the special argument `...` is *not* encountered, then the
- * replacement will only happen if *no* CLI args are specified.
+ * If the special argument `...` is *not* encountered, then it would be assumed
+ * that the developer intent is for whatever CLI args were specified by the user
+ * to be appended to the end
  *
  * If the special argument `...` *is* encountered, then it'll be
  * replaced with whatever CLI args were specified by the user.
