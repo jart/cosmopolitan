@@ -74,7 +74,7 @@ hello o\r\n\
 -y\r\n\
 world\r\n\
 ")));
-  ASSERT_EQ(2, argc);
+  ASSERT_EQ(6, argc);
   EXPECT_STREQ("prog", argv[0]);
   EXPECT_STREQ("-x", argv[1]);
   EXPECT_STREQ("hell o", argv[2]);
