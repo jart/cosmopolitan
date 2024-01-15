@@ -88,6 +88,7 @@ APELINKFLAGS=
 FLAGS_X86_64=
 FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
+OUTPUT_IS_TEXT=0
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
     fatal_error "arguments containing spaces unsupported: $x"
@@ -204,6 +205,12 @@ for x; do
   elif [ x"$x" = x"--param" ]; then
     NEED_EQUAL=$x
     continue
+  elif [ x"$x" = x"-M" ] ||
+       [ x"$x" = x"-MM" ] ||
+       [ x"$x" = x"-MD" ] ||
+       [ x"$x" = x"-MMD" ] ||
+       [ x"$x" = x"-E" ]; then
+    OUTPUT_IS_TEXT=1
   fi
   FLAGS="$FLAGS $x"
   ARGS="$ARGS $x"
@@ -325,11 +332,15 @@ build_object() {
         $PRECIOUS
     log_command "$@"
     "$@" || exit
-    set -- \
-        "$BIN/fixupobj" \
-        "$OUTPUT_X86_64"
-    log_command "$@"
-    exec "$@"
+    if [ $OUTPUT_IS_TEXT -eq 0 ]; then
+      set -- \
+          "$BIN/fixupobj" \
+          "$OUTPUT_X86_64"
+      log_command "$@"
+      exec "$@"
+    else
+      exit
+    fi
   ) &
   pid1=$!
   (
@@ -345,11 +356,15 @@ build_object() {
         $PRECIOUS
     log_command "$@"
     "$@" || exit
-    set -- \
-        "$BIN/fixupobj" \
-        "$OUTPUT_AARCH64"
-    log_command "$@"
-    exec "$@"
+    if [ $OUTPUT_IS_TEXT -eq 0 ]; then
+      set -- \
+          "$BIN/fixupobj" \
+          "$OUTPUT_AARCH64"
+      log_command "$@"
+      exec "$@"
+    else
+      exit
+    fi
   ) 2>"$out2" &
   pid2=$!
   if ! wait $pid1; then
