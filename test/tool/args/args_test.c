@@ -64,20 +64,24 @@ world\r\n\
   EXPECT_EQ(NULL, __argv[5]);
 }
 
-TEST(LoadZipArgs, testDefaultArgs_hasCliArgs_doesNothing) {
+TEST(LoadZipArgs, testDefaultArgs_hasCliArgs_impliedMergeThem) {
   int argc = 2;
   char *args[] = {"prog", "yo", 0};
   char **argv = &args[0];
   EXPECT_EQ(0, LoadZipArgsImpl(&argc, &argv, strdup("\
 -x\r\n\
-hello\r\n\
+hello o\r\n\
 -y\r\n\
 world\r\n\
 ")));
-  ASSERT_EQ(2, argc);
+  ASSERT_EQ(6, argc);
   EXPECT_STREQ("prog", argv[0]);
-  EXPECT_STREQ("yo", argv[1]);
-  EXPECT_EQ(NULL, argv[2]);
+  EXPECT_STREQ("-x", argv[1]);
+  EXPECT_STREQ("hello o", argv[2]);
+  EXPECT_STREQ("-y", argv[3]);
+  EXPECT_STREQ("world", argv[4]);
+  EXPECT_STREQ("yo", argv[5]);
+  EXPECT_EQ(NULL, argv[6]);
 }
 
 TEST(LoadZipArgs, testDots_hasCliArgs_mergesThem) {
