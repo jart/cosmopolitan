@@ -59,7 +59,6 @@
 #include "third_party/mbedtls/sha256.h"
 #include "third_party/mbedtls/sha512.h"
 #include "third_party/mbedtls/x509.h"
-#include "third_party/quickjs/libbf.h"
 #include "third_party/zlib/zlib.h"
 
 uint64_t rng[12];
