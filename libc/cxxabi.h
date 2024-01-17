@@ -8,7 +8,7 @@ namespace __cxxabiv1 {
 
 char *__cxa_demangle(const char *, char *, size_t *, int *);
 int __cxa_atexit(void (*)(void *), void *, void *) paramsnonnull((1)) dontthrow;
-int __cxa_thread_atexit(void *, void *, void *) dontthrow;
+int __cxa_thread_atexit(void (*)(void *), void *, void *) dontthrow;
 void __cxa_finalize(void *);
 
 #ifdef __cplusplus
