@@ -141,6 +141,7 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 
 THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/algorithm.cc				\
+	third_party/libcxx/any.cc				\
 	third_party/libcxx/charconv.cc				\
 	third_party/libcxx/chrono.cc				\
 	third_party/libcxx/condition_variable.cc		\
@@ -170,6 +171,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/system_error.cc			\
 	third_party/libcxx/thread.cc				\
 	third_party/libcxx/valarray.cc				\
+	third_party/libcxx/variant.cc				\
 	third_party/libcxx/vector.cc
 
 THIRD_PARTY_LIBCXX_A_SRCS =					\
