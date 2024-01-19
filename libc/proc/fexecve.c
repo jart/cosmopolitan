@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -199,9 +200,9 @@ static int fd_to_mem_fd(const int infd, char *path) {
     bool success = readRc != -1;
     if (success) {
       int ziperror;
-      if ((st.st_size > 8) && IsApeMagic(space)) {
-        success = ape_to_elf(space, st.st_size);
-      }
+      //if ((st.st_size > 8) && IsApeMagic(space)) {
+      //  success = ape_to_elf(space, st.st_size);
+      //}
       // we need to preserve the fd over exec if there's zipos
       if (success && _weaken(GetZipEocd) && _weaken(GetZipEocd)(space, st.st_size, &ziperror)) {
         int flags = fcntl(fd, F_GETFD);
@@ -232,6 +233,30 @@ static int fd_to_mem_fd(const int infd, char *path) {
   return -1;
 }
 
+static int isZipFd(const int fd) {
+  if (!_weaken(mmap) || !_weaken(munmap) || !_weaken(GetZipEocd)) {
+    return enosys();
+  }
+  if (__vforked) {
+    return 0;
+  }
+  struct stat st;
+  if (fstat(fd, &st) == -1) {
+    return -1;
+  }
+  void *space = _weaken(mmap)(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  if (space == MAP_FAILED) {
+    STRACE("map failed");
+    return -1;
+  }
+  int ziperror;
+  int rc = _weaken(GetZipEocd)(space, st.st_size, &ziperror) != NULL;
+  if(_weaken(munmap)(space, st.st_size) == -1) {
+    return -1;
+  }
+  return rc;
+}
+
 /**
  * Executes binary executable at file descriptor.
  *
@@ -260,55 +285,81 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
         rc = enosys();
         break;
       }
-      if (!__isfdkind(fd, kFdZip)) {
-        bool memfdReq;
+      int newfd = fd;
+      if (__isfdkind(fd, kFdZip)) {
         BLOCK_SIGNALS;
         BLOCK_CANCELATION;
         strace_enabled(-1);
-        memfdReq = ((rc = fcntl(fd, F_GETFD)) != -1) && (rc & FD_CLOEXEC) &&
-                   IsAPEFd(fd);
+        newfd = fd_to_mem_fd(fd, NULL);
         strace_enabled(+1);
         ALLOW_CANCELATION;
         ALLOW_SIGNALS;
-        if (rc == -1) {
+        if (newfd == -1) {
           break;
-        } else if (!memfdReq) {
-          fexecve_impl(fd, argv, envp);
-          if (errno != ENOEXEC) {
-            break;
-          }
-          savedErr = ENOEXEC;
         }
       }
-      int newfd;
-      char *path = alloca(PATH_MAX);
+      int isZipFdRc;
       BLOCK_SIGNALS;
       BLOCK_CANCELATION;
-      strace_enabled(-1);
-      newfd = fd_to_mem_fd(fd, path);
+      //strace_enabled(-1);
+      isZipFdRc = isZipFd(newfd);
       strace_enabled(+1);
       ALLOW_CANCELATION;
       ALLOW_SIGNALS;
-      if (newfd == -1) {
+      if (isZipFdRc == -1) {
+        //savedErr = EACCES;
+        //STRACE("EACCESS 1");
+        //break;
+        isZipFdRc = 0;
+      }
+      bool isAPE;
+      BLOCK_SIGNALS;
+      BLOCK_CANCELATION;
+      isAPE = IsAPEFd(newfd);
+      ALLOW_CANCELATION;
+      ALLOW_SIGNALS;
+      if ((isZipFdRc == 1) || isAPE) {
+        int flags = fcntl(newfd, F_GETFD);
+        if ((flags == -1) || (fcntl(newfd, F_SETFD, flags & (~FD_CLOEXEC)) == -1)) {
+          savedErr = EACCES;
+          STRACE("EACCESS 2");
+          break;
+        }
+        const int highfd = fcntl(newfd, F_DUPFD, 9001);
+        if (highfd != -1) {
+          close(newfd);
+          newfd = highfd;
+        }
+      }
+      if (isZipFdRc == 1) {
+        char *path = alloca(PATH_MAX);
+        FormatInt32(stpcpy(path, "COSMOPOLITAN_INIT_ZIPOS="), newfd);
+        size_t numenvs;
+        for (numenvs = 0; envp[numenvs];) ++numenvs;
+        static _Thread_local char *envs[500];
+        memcpy(envs, envp, numenvs * sizeof(char *));
+        envs[numenvs] = path;
+        envs[numenvs + 1] = NULL;
+        envp = envs;
+      }
+      if (isAPE) {
+        char path[14 + 12];
+        FormatInt32(stpcpy(path, "/proc/self/fd/"), newfd);
+        rc = sys_execve(path, argv, envp);
+        savedErr = errno;
+        BLOCK_SIGNALS;
+        BLOCK_CANCELATION;
+        strace_enabled(-1);
+        if (newfd != fd) {
+          close(newfd);
+        }
+        strace_enabled(+1);
+        ALLOW_CANCELATION;
+        ALLOW_SIGNALS;
         break;
       }
-      size_t numenvs;
-      for (numenvs = 0; envp[numenvs];) ++numenvs;
-      static _Thread_local char *envs[500];
-      memcpy(envs, envp, numenvs * sizeof(char *));
-      envs[numenvs] = path;
-      envs[numenvs + 1] = NULL;
-      fexecve_impl(newfd, argv, envs);
-      if (!savedErr) {
-        savedErr = errno;
-      }
-      BLOCK_SIGNALS;
-      BLOCK_CANCELATION;
-      strace_enabled(-1);
-      close(newfd);
-      strace_enabled(+1);
-      ALLOW_CANCELATION;
-      ALLOW_SIGNALS;
+      fexecve_impl(newfd, argv, envp);
+      savedErr = errno;
     } while (0);
     if (savedErr) {
       errno = savedErr;
