@@ -18,6 +18,7 @@ int LuaCategorizeIp(lua_State *);
 int LuaCompress(lua_State *);
 int LuaCrc32(lua_State *);
 int LuaCrc32c(lua_State *);
+int LuaCurve25519(lua_State *);
 int LuaDecimate(lua_State *);
 int LuaDecodeBase32(lua_State *);
 int LuaDecodeBase64(lua_State *);

@@ -49,7 +49,6 @@
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/gc.h"
-#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -5161,6 +5160,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Compress", LuaCompress},                                  //
     {"Crc32", LuaCrc32},                                        //
     {"Crc32c", LuaCrc32c},                                      //
+    {"Curve25519", LuaCurve25519},                              //
     {"Decimate", LuaDecimate},                                  //
     {"DecodeBase32", LuaDecodeBase32},                          //
     {"DecodeBase64", LuaDecodeBase64},                          //

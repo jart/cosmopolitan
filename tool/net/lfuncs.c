@@ -63,6 +63,7 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/lunix.h"
+#include "third_party/mbedtls/everest.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/platform.h"
@@ -1134,5 +1135,40 @@ int LuaInflate(lua_State *L) {
   }
 
   luaL_pushresultsize(&buf, actualoutsize);
+  return 1;
+}
+
+static void GetCurve25519Arg(lua_State *L, int arg, uint8_t buf[static 32]) {
+  size_t len;
+  const char *val;
+  val = luaL_checklstring(L, arg, &len);
+  bzero(buf, 32);
+  if (len) {
+    if (len > 32) {
+      len = 32;
+    }
+    memcpy(buf, val, len);
+  }
+}
+
+/*
+ * Example usage:
+ *
+ *     >: secret1 = "\1"
+ *     >: secret2 = "\2"
+ *     >: public1 = Curve25519(secret1, "\9")
+ *     >: public2 = Curve25519(secret2, "\9")
+ *     >: Curve25519(secret1, public2)
+ *     "\x93\xfe\xa2\xa7\xc1\xae\xb6,\xfddR\xff...
+ *     >: Curve25519(secret2, public1)
+ *     "\x93\xfe\xa2\xa7\xc1\xae\xb6,\xfddR\xff...
+ *
+ */
+int LuaCurve25519(lua_State *L) {
+  uint8_t mypublic[32], secret[32], basepoint[32];
+  GetCurve25519Arg(L, 1, secret);
+  GetCurve25519Arg(L, 2, basepoint);
+  curve25519(mypublic, secret, basepoint);
+  lua_pushlstring(L, (const char *)mypublic, 32);
   return 1;
 }
