@@ -1137,6 +1137,22 @@ FUNCTIONS
           The name can be one of the following strings: MD5, SHA1, SHA224,
           SHA256, SHA384, SHA512, and BLAKE2B256.
 
+  Curve25519(secret:str, public_or_basepoint:str) -> str
+          Returns the shared key for the specified secret and public values.
+          The second argument can be either a public key or a basepoint, used
+          for generating a shared or public key.
+
+          Here a small usage sample :
+
+            >: secret1 = GetRandomBytes(32)
+            >: public1 = Curve25519(secret1, "\9")
+            >: secret2 = GetRandomBytes(32)
+            >: public2 = Curve25519(secret2, "\9")
+            >: shared_key1 = Curve25519(secret1, public2)
+            >: shared_key2 = Curve25519(secret2, public1)
+            >: shared_key1 == shared_key2
+            true
+
   GetRemoteAddr() → ip:uint32,port:uint16
           Returns client ip4 address and port, e.g. 0x01020304,31337 would
           represent 1.2.3.4:31337. This is the same as GetClientAddr except
