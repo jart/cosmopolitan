@@ -3900,8 +3900,8 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): private ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): private PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): private ZIPOBJ_FLAGS += -P.python -C3
 
-o/$(MODE)/third_party/python/Python/ceval.o: private QUOTA = -C64 -M1024m -L300
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: private QUOTA += -C64 -M1024m -L300
+o/$(MODE)/third_party/python/Python/ceval.o: private QUOTA = -C64 -L300
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: private QUOTA += -C64 -L300
 
 o/$(MODE)/third_party/python/Objects/unicodeobject.o:			\
 		third_party/python/Objects/unicodeobject.c		\
@@ -3944,18 +3944,13 @@ o/$(MODE)/third_party/python/Lib/test/pystone.o: private PYFLAGS += -m -O2 -P.py
 o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: private QUOTA = -C64 -L180
 o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: private QUOTA = -C64
 o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: private QUOTA = -C64
-o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: private QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: private QUOTA = -M512m -C64 -L300
-o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: private QUOTA = -M1024m
-o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: private QUOTA = -M1400m -L300
+o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: private QUOTA = -C64 -L300
+o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: private QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: private QUOTA = -C64 -L300
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: private QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_itertools.py.runs: private QUOTA = -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: private QUOTA = -L300 -C64
 o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: private QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: private QUOTA = -L120
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: private QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: private QUOTA = -C32 -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: private QUOTA = -C32
 o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: private QUOTA = -L180
 o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: private QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: private QUOTA = -C128 -L600 -L300

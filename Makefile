@@ -116,7 +116,7 @@ ZIPCOPY = build/bootstrap/zipcopy.com
 PECHECK = build/bootstrap/pecheck.com
 FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
-COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
+COMPILE = build/bootstrap/compile.com -V9 -M2048m -P8192 $(QUOTA)
 
 IGNORE := $(shell $(MKDIR) $(TMPDIR))
 
